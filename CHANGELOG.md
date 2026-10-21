@@ -1,5 +1,30 @@
 # Änderungen
 
+## 2.555.0 – 2026-10-21 – Abstimmung mit Überschrift und mehreren Fragen (KC-CLUB-ABSTIMMUNG-PAKET)
+Wunsch Hansi („Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen, z. B. Tablets jetzt beschaffen oder Leihgeräte, Stand vernetzen, Kommen/Gehen per QR-Code, Barcode mit Metallschildern“).
+- Vorschläge → ＋ Neu → 🗳️ Abstimmung: neu die Wahl „❓ Eine Frage“ (wie bisher) oder „📋 Mehrere Fragen mit Überschrift“. Dann: Überschrift, Beschreibung, Bereiche (z. B. Technik, Abrechnung) mit beliebig vielen Fragen (höchstens 30), jede Frage mit eigenen Antworten (eine pro Zeile, vorbelegt Ja/Nein/Enthaltung). Geheim, Frist, „An wen?“, Termin und Anlage (z. B. Muster) gelten für die ganze Abstimmung.
+- In der Liste eine Kachel je Abstimmung („📋 4 Fragen“, „👉 noch 3 offen“). Antippen zeigt alle Fragen nach Bereichen, jede mit Antwortknöpfen und Ergebnis; das Fenster bleibt beim Abstimmen offen und an derselben Stelle. Oben „Du hast 1 von 4 Fragen beantwortet“.
+- Eine Benachrichtigung für die ganze Abstimmung (Push/Mail mit allen Fragen nach Bereichen); am Ende ein Ergebnis mit allen Fragen. „🏁 Abstimmung beenden“, „Zurückziehen“ und „🗑️ Löschen“ wirken auf alle Fragen (nur Clubleitung). Einzelne Fragen lassen sich mit ✏️ bearbeiten wie bisher.
+- Je Frage zusätzlich: **Erklärung** (z. B. „Vorteil: genaue Auswertung nach dem Weihnachtsmarkt“), **☑️ Mehrere Antworten ankreuzen** (bis 12 Antworten; offen sofort gespeichert, geheim erst ankreuzen und einmal abgeben) und **„Nur zeigen, wenn …“** (Auswahl aus den Antworten der Fragen davor, z. B. „Wer zählt zu den Helfern?“ nur bei „Ja“ zu „Speisen/Getränke für Helfer kostenlos?“). Ändert jemand seine Antwort, fällt die eigene Stimme bei der nicht mehr passenden Folgefrage weg.
+- **📄 Vorlage** (KC-CLUB-ABSTIMMUNG-VORLAGE): fertige Abstimmungen aus `vorlagen/abstimmungen.json` übernehmen, danach frei änderbar. Erste Vorlage „Technik, Bilderrechner, Abrechnung“ mit 12 Fragen (Technik 2, Bilderrechner 6, Abrechnung 4).
+- Jede Frage bleibt eine normale Abstimmung (gleiche Stimmen-, Geheim- und Fristregeln); einzelne Abstimmungen unverändert. Mehrfach-Stimmen stehen als Liste in `wahl` und werden je Antwort gezählt (Liste, Ergebnis, Clubleben).
+- Server 2.555.0: Aktion abstimmungspaket_speichern; vorschlag_status/vorschlag_loeschen mit „paket: true“. Datenbank: Spalte kc_club_vorschlaege.paket (Migration 20261021_kc_club_v2555_abstimmung_paket.sql – vor dem Server einspielen).
+- Test: tools/abstimmung-paket/ap-browser.mjs (anlegen, Kachel, Fenster nach Bereichen, abstimmen, beenden, Einzelfrage wie bisher, Vorlage, Folgefrage, Mehrfachauswahl), Vertragstest-Block 2.555.0. Rückweg: App/Server 2.554.0; Spalte kann bleiben.
+
+## 2.554.0 – 2026-10-21 – Pinnwand: Zettel nur bei Lesern abnehmen (KC-CLUB-PINNWAND-TEIL-AB)
+- „🗑️ abnehmen“ fragt, wenn manche den Zettel schon gesehen haben und andere nicht: „🧹 Nur bei denen abnehmen, die ihn gelesen haben“ oder „Für alle abnehmen“.
+- Wer ihn noch nicht gesehen hat, behält ihn; nach dem Lesen (30 Min. Zeit für Antworten/✓) fällt er auch dort ab. Haben ihn alle gesehen, ist er ganz weg.
+- Verfasser/Clubleitung sehen „🧹 Bei Lesern abgenommen – hängt noch bei …“. Server 2.554.0, Spalte kc_club_pinnwand.teil_ab.
+
+## 2.553.0 – 2026-10-21 – Geburtstags-Vogel größer, langsamer, mit Runde und Lied
+- Vogel und Paket gut anderthalbmal so groß, Flug etwa doppelt so lang, eine Runde im Kreis vor dem Abwurf.
+- Dazu leise das Ständchen „Happy Birthday“ (vorhandene Melodie), nur wenn Töne an sind.
+
+## 2.552.0 – 2026-10-21 – Einstellungen als Übersicht (KC-CLUB-EINST-UEBERSICHT)
+- Einstellungen beginnen mit einer Übersicht wie beim Handy: Gruppen „Für mich“, „Aussehen“, „Technik“, „Nur Admin“; jede Zeile mit Symbol, Inhalt und „x von y an“. Antippen öffnet den Bereich als eigene Seite (‹ Alle Einstellungen / Zurück-Taste).
+- Klappfelder gut sichtbar (Goldrand, runder weinroter Knopf), Häkchen als Schalter (grün = an).
+- Suche, Hilfe-Sprünge, Wegweiser unverändert; 🗂️ Kartei weiter wählbar (einmalig auf Übersicht zurückgestellt).
+
 ## 2.551.0 – 2026-10-20 – Geplante Nachricht vorher abrufen (KC-CLUB-GEPLANT-VORAB)
 - Beim Planen einer einmaligen Nachricht fragt die App: Darf der Empfänger sie schon vorher abrufen? Bei Ja bekommt er sofort einen Hinweis (ohne Text) und im Chat einen Knopf „📩 Jetzt abrufen“; sonst kommt sie zur geplanten Zeit.
 - Unter ⏰ bei der geplanten Nachricht: „📩 Vorher abrufen erlauben / 🔒 ausschalten“ (auch für schon geplante). Der Absender bekommt einen Push, wenn abgerufen wurde.

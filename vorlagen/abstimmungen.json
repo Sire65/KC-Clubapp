@@ -1,0 +1,39 @@
+{
+  "hinweis": "2.555.0 KC-CLUB-ABSTIMMUNG-VORLAGE: fertige Abstimmungen für „📄 Vorlage“ (Vorschläge → ＋ Neu → 🗳️ Abstimmung). optionen fehlt = Ja/Nein/Enthaltung; wenn.nr = laufende Nummer der Frage ab 0 (über alle Bereiche); mehrfach = mehrere Antworten ankreuzen.",
+  "vorlagen": [
+    {
+      "titel": "Technik, Bilderrechner, Abrechnung",
+      "beschreibung": "Bitte bei jeder Frage abstimmen. Weitere Punkte können noch dazukommen.",
+      "bereiche": [
+        {
+          "name": "Technik",
+          "fragen": [
+            { "frage": "Sollen Tablets und Halterungen schon jetzt beschafft werden (wie beschlossen) oder arbeiten wir dieses Jahr mit Leihgeräten?", "beschreibung": "Hansi stellt z. B. 1 Gerät zur Verfügung.", "optionen": ["Jetzt beschaffen (wie beschlossen)", "Dieses Jahr mit Leihgeräten", "Enthaltung"] },
+            { "frage": "Sollen der Stand bzw. die Geräte vernetzt werden, um alle Vorteile zu nutzen?" }
+          ]
+        },
+        {
+          "name": "Bilderrechner",
+          "fragen": [
+            { "frage": "Sollen alle Verkäufe im Bilderrechner erfasst werden – auch einzelne, z. B. nur ein Eierpunsch?", "beschreibung": "Vorteil: nach dem Weihnachtsmarkt genaue Auswertung, Übersicht und Kalkulation." },
+            { "frage": "Sollen alle von Mitarbeitern verzehrten Speisen und Getränke – auch zum Mitnehmen – auf „Personal“ gebucht werden (ohne Namen)?" },
+            { "frage": "Sollen Speisen und Getränke für Helfer kostenlos abgegeben werden?" },
+            { "frage": "Wer zählt zu den Helfern?", "beschreibung": "Mehrere Antworten möglich.", "mehrfach": true, "wenn": { "nr": 4, "antwort": "Ja" },
+              "optionen": ["Bauhof", "Bühne", "Artisten und Künstler", "Feuerwehr", "Stromlieferant", "Stadtmarketing", "Küchenmitarbeiter Küche Dortmund", "Freunde", "Bekannte", "Gönner", "Weitere (bitte in der Sitzung nennen)"] },
+            { "frage": "Sollen andere Standbeschicker Speisen und Getränke vergünstigt bekommen – und wenn ja, um wie viel?", "optionen": ["Nein", "Ja, 10 % günstiger", "Ja, 20 % günstiger", "Ja, 50 % günstiger", "Ja, 100 % (gratis)", "Enthaltung"] },
+            { "frage": "Sollen Entnahmen aus der Kasse für Personalverpflegung (Speisen/Getränke) möglichst eingegeben und im Bilderrechner verbucht werden?" }
+          ]
+        },
+        {
+          "name": "Abrechnung",
+          "fragen": [
+            { "frage": "Sollen Kommen und Gehen per QR-Code erfasst werden, um die Stundenabrechnung zu vereinfachen?", "beschreibung": "Mit dem Clubausweis oder neu auch mit dem QR-Code in der Club-App.", "optionen": ["Ja, mit dem Clubausweis", "Ja, mit dem QR-Code in der Club-App", "Ja, beides", "Nein", "Enthaltung"] },
+            { "frage": "Sollen Barcode-Erfassung und die passenden Metallschilder (siehe Muster) eingesetzt werden?" },
+            { "frage": "Sollen finanzielle Zuwendungen generell als Spende verbucht werden oder aufgeteilt nach Spende und Trinkgeld?", "optionen": ["Alles als Spende", "Aufteilen: Spende und Trinkgeld", "Enthaltung"] },
+            { "frage": "Und bei „Stimmt so“ und Aufrunden – wie soll das verbucht werden?", "optionen": ["Als Spende", "Als Trinkgeld", "Aufteilen: Spende und Trinkgeld", "Enthaltung"] }
+          ]
+        }
+      ]
+    }
+  ]
+}

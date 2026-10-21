@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.551.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.555.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1286,7 +1286,9 @@ function pwZeigen() {
     if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}',${jsArg(z.von.vorname)})">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erledigt ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ Erledigt</button>`);
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
-    if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ abnehmen</button>`);
+    if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ ${z.teilAb ? "ganz abnehmen" : "abnehmen"}</button>`);
+    // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: für Verfasser/Clubleitung sichtbar, bei wem er noch hängt
+    const teil = z.teilAb && z.leser ? `<div class="zteil">🧹 Bei Lesern abgenommen${z.offen?.length ? ` – hängt noch bei ${esc(z.offen.map((n) => n.split(" ")[0]).join(", "))}` : ""}</div>` : "";
     const leser = z.leser && z.fuer !== "ich" ? `<details><summary>👁️ gelesen ${z.leser.length}/${z.anzahl} · ✓ erl. ${z.leser.filter((l) => l.erledigt).length}</summary>`
       + z.leser.map((l) => `<div>${esc(l.name.split(" ")[0])}: gesehen ${zeitKurz(l.gesehen)}${l.erledigt ? ` · ✓ ${zeitKurz(l.erledigt)}` : ""}</div>`).join("")
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
@@ -1294,7 +1296,7 @@ function pwZeigen() {
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
-      + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
+      + teil + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
 }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
 function pwAushangHtml() {
@@ -1339,14 +1341,14 @@ const pwWillkText = (z) => (z?.willkommen?.art === "geburtstag" ? "🎂 Ich möc
 // Ton aus (Einstellung) oder Handy blockiert den Ton → die Karte kommt trotzdem, das Ständchen dann per Antippen.
 const HB_MELODIE = [[392, .75], [392, .25], [440, 1], [392, 1], [523.25, 1], [493.88, 2], [392, .75], [392, .25], [440, 1], [392, 1], [587.33, 1], [523.25, 2],
   [392, .75], [392, .25], [783.99, 1], [659.25, 1], [523.25, 1], [493.88, 1], [440, 2], [698.46, .75], [698.46, .25], [659.25, 1], [523.25, 1], [587.33, 1], [523.25, 3]];
-function hbSpielen() {
+function hbSpielen(laut = 0.22, schlag = 0.42) { // 2.553.0: Lautstärke/Tempo wählbar (Geburtstags-Vogel: leiser, gemütlicher)
   try {
     audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
-    const schlag = 0.42; let t = audio.currentTime + 0.1;
+    let t = audio.currentTime + 0.1;
     for (const [f, d] of HB_MELODIE) {
       const o = audio.createOscillator(), g = audio.createGain(), dauer = d * schlag;
       o.type = "triangle"; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer * 0.95);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer * 0.95);
       o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dauer); t += dauer;
     }
     return true;
@@ -1440,8 +1442,28 @@ async function hilfeWichtig(id, an) {
     melde(an ? (r.versand?.gesendet ? `❗ Wichtig – ${r.versand.gesendet} ${r.versand.gesendet === 1 ? "Person hat" : "Personen haben"} Bescheid bekommen` : "❗ Hilfe-Aufruf ist jetzt als wichtig markiert") : "Nicht mehr als wichtig markiert"); await pwLaden(); }
   catch (e) { meldeFehler(e); }
 }
+// 2.554.0 KC-CLUB-PINNWAND-TEIL-AB (Wunsch Hansi): haben ihn manche schon gelesen und andere noch nicht, fragt „Abnehmen“, ob er nur bei den Lesern
+// abgenommen werden soll – bei den anderen hängt er weiter, bis sie ihn gesehen haben (danach fällt er auch dort ab; haben ihn alle gesehen, ist er ganz weg)
+function pwTeilWahl(z) {
+  return new Promise((fertig) => {
+    const f = blattAuf("pwTeilBlatt", `<h3 style="margin:0 0 6px">📌 Zettel abnehmen</h3>
+      <p style="margin:0 0 4px">👁️ Gelesen: <b>${z.leser.length}</b> · noch nicht gesehen: <b>${z.offen.length}</b> (${esc(z.offen.map((n) => n.split(" ")[0]).join(", "))})</p>
+      <button class="knopf haupt" data-w="teil">🧹 Nur bei denen abnehmen, die ihn gelesen haben</button>
+      <p class="hinweis" style="margin:2px 0 10px">Bei ${esc(z.offen.length === 1 ? z.offen[0].split(" ")[0] : z.offen.length + " anderen")} hängt er weiter – bis ${z.offen.length === 1 ? "er/sie" : "sie"} ihn gesehen ${z.offen.length === 1 ? "hat" : "haben"}. Danach ist er ganz weg.</p>
+      <button class="knopf gefahr" data-w="ganz">🗑️ Für alle abnehmen</button>
+      <button class="knopf" data-w="">Abbrechen</button>`);
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); fertig(b.dataset.w); }));
+  });
+}
 async function pwAbnehmen(id, ausFormular) {
-  if (!(await frage("Zettel von der Pinnwand abnehmen?"))) return;
+  const z = PW.zettel.find((x) => x.id === id);
+  if (z && z.fuer !== "ich" && !z.teilAb && z.leser?.length && z.offen?.length) {
+    const w = await pwTeilWahl(z); if (!w) return;
+    if (w === "teil") {
+      try { const r = await api("pinnwand_teil_abnehmen", { id }); melde(r.ganz ? "🗑️ Alle hatten ihn schon gelesen – ganz abgenommen" : `🧹 Bei den Lesern abgenommen – hängt noch bei ${r.offen.join(", ")}`); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { meldeFehler(e); }
+      return;
+    }
+  } else if (!(await frage(z?.teilAb ? "Zettel ganz abnehmen?\nAuch bei denen, die ihn noch nicht gesehen haben." : "Zettel von der Pinnwand abnehmen?"))) return;
   try { await api("pinnwand_abnehmen", { id }); await reisswolf(document.querySelector(`.zettel[data-zid="${CSS.escape(id)}"]`)); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { meldeFehler(e); }
 }
 
@@ -1501,6 +1523,7 @@ function ansichtAnwenden() {
   if (einfach() && kaBearb) kaBearbeiten(false);
   ansichtInfo();
   if (INIT) { registerZeigen(); kachelnZeigen(); infoFelderAktualisieren(); heroZeigen(0); }
+  try { euZeichnen(); } catch {} // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Zeilen der jeweiligen Ansicht
 }
 // einfache Ansicht: oben immer „Nächstes Treffen“ (kein Blättern)
 function ansichtInfo() { if (!einfach()) return; const i = INFO_FELDER.findIndex((f) => f.id === "treffen"); if (i >= 0) INFO_I = i; }
@@ -22219,8 +22242,12 @@ function einstSuchen(q, leeren) {
   w.querySelectorAll(".such-weg, .such-treffer").forEach((x) => x.classList.remove("such-weg", "such-treffer"));
   const alle = [...w.querySelectorAll("details")];
   if (q.length < 2) {
+    const warSuche = !!EINST_SUCHE.offen;
     if (EINST_SUCHE.offen) { alle.forEach((d) => (d.open = EINST_SUCHE.offen.has(d))); EINST_SUCHE.offen = null; }
-    $("einstSucheNichts")?.classList.add("versteckt"); w.classList.remove("sucht"); if (RK.einst?.an) rkAufbauen(RK.einst); return;
+    $("einstSucheNichts")?.classList.add("versteckt"); w.classList.remove("sucht");
+    if (RK.einst?.an) rkAufbauen(RK.einst);
+    if (warSuche && euAn()) { if (EU.bereich) euOeffnen(EU.bereich, true); else euUebersicht(); } // 2.552.0 KC-CLUB-EINST-UEBERSICHT: zurück zur Seite, auf der man war
+    return;
   }
   if (!EINST_SUCHE.offen) EINST_SUCHE.offen = new Set(alle.filter((d) => d.open));
   w.classList.add("sucht");
@@ -22240,6 +22267,81 @@ function einstSuchen(q, leeren) {
   $("einstSucheNichts")?.classList.toggle("versteckt", irgendwas);
   if (RK.einst?.an) rkAufbauen(RK.einst);
 }
+// ---------- 2.552.0 KC-CLUB-EINST-UEBERSICHT (Wunsch Hansi „Einstellungen übersichtlich, bedienerfreundlich, logisch – Deluxe, nichts überladen“):
+// Übersicht wie beim Handy: Gruppen mit je einer Zeile pro Bereich (Symbol, Name, was drin ist, wie viele Schalter an sind) → antippen zeigt den
+// Bereich als eigene Seite („‹ Alle Einstellungen“ bzw. Zurück-Taste führt zurück). Die Bereiche selbst bleiben die bisherigen Karten (alle Schalter,
+// IDs, Suche, Hilfe-Sprünge, Wegweiser unverändert); hier steht nur, welche Karte in welche Zeile gehört. Neue Karte → hier eintragen (sonst „Weitere“).
+// Mit „🗂️ Kartei“ oben gibt es weiter die Rollkartei; die Suche zeigt wie bisher alle Treffer untereinander.
+const EU_GRUPPEN = [
+  ["Für mich", [
+    { id: "einfach", sym: "⚙️", t: "Das Wichtigste", info: "Neuigkeiten, Nicht stören, Farbe, Schrift, Hilfe", karten: ["einfach"] },
+    { id: "benachrichtigung", sym: "🔔", t: "Benachrichtigungen", info: "Push, Warnton, Nicht stören, @Erwähnungen", karten: ["benachrichtigung"] },
+    { id: "ansagen", sym: "🗣️", t: "Ansagen, Töne & Tipps", info: "Tipp des Tages, Vorlesen, Sprachsteuerung, Einweisungen", karten: ["ansagen"] },
+    { id: "privat", sym: "🔒", t: "Privatsphäre", info: "Online-Anzeige, Anklopfen, Spiele, was andere von mir sehen", karten: ["privat"] }]],
+  ["Aussehen", [
+    { id: "darstellung", sym: "🎨", t: "Darstellung", info: "Farben, Themen, Schriftgröße, Tag/Nacht, Sparmodus", karten: ["darstellung"] },
+    { id: "effekte", sym: "✨", t: "Effekte", info: "Uhr, Jahreszeiten, Fee, Senden, Reißwolf …", karten: ["effekte"] },
+    { id: "startseite", sym: "🧩", t: "Startseite & Ansicht", info: "Kacheln, Schnellstart, Info-Feld, einfache Ansicht", karten: ["startseite", "schnellstart", "leitung_start"] }]],
+  ["Technik", [
+    { id: "handykalender", sym: "📆", t: "Termine im Handy-Kalender", info: "Club-Termine im eigenen Kalender", karten: ["handykalender"] },
+    { id: "app", sym: "📲", t: "App & Geräte", info: "Installation, PC/Tablet, Version", karten: ["install", "app"], stand: () => "Version " + APP_VERSION }]],
+  ["Nur Admin", [
+    { id: "admin", sym: "🛠️", t: "Admin-Einstellungen", info: "Pinnwand, Anrufe, Einstieg, Erstattung, Wetter", karten: ["admin"] }]],
+];
+const EU = { bereich: null };
+const euWurzel = () => $("v-einstellungen");
+const euAn = () => !RK.einst?.an; // in der Rollkartei (🗂️) bleibt alles wie bisher
+const euKarten = () => [...(euWurzel()?.children || [])].filter((d) => d.matches("details.karte[data-klappe]"));
+// gleiche Sicht wie die Seite: ausgeblendet (Rolle) nie, einfache Ansicht nur ihre Karten, „Das Wichtigste“ nur in der einfachen
+const euSichtbar = (d) => !d.classList.contains("versteckt") && (einfach() ? d.hasAttribute("data-einfach") || d.classList.contains("einfach-sichtbar") : d.dataset.klappe !== "einfach");
+function euZeilen() { // alle Zeilen; Karten, die (noch) in keiner Zeile stehen, kommen unter „Weitere“ – so geht nie eine Einstellung verloren
+  const bekannt = new Set(EU_GRUPPEN.flatMap(([, l]) => l.flatMap((z) => z.karten)));
+  const rest = euKarten().filter((d) => !bekannt.has(d.dataset.klappe)).map((d) => ({ id: "k_" + d.dataset.klappe, sym: "📁", t: (d.querySelector(":scope > summary")?.firstChild?.textContent || d.dataset.klappe).trim(), info: "", karten: [d.dataset.klappe] }));
+  return rest.length ? [...EU_GRUPPEN, ["Weitere", rest]] : EU_GRUPPEN;
+}
+const euKarteZu = (z) => z.karten.map((k) => euWurzel()?.querySelector(`:scope > details[data-klappe="${k}"]`)).filter(Boolean);
+function euStand(z) { // wie viele Schalter in diesem Bereich an sind (nur, was man in dieser Ansicht auch sieht)
+  const l = euKarteZu(z).filter(euSichtbar).flatMap((d) => [...d.querySelectorAll(".schalter > input[type=checkbox]")])
+    .filter((x) => !x.closest(".versteckt") && !(einfach() && x.closest(".nur-erweitert")));
+  const an = l.filter((x) => x.checked).length;
+  return [z.stand?.(), l.length ? `${an} von ${l.length} an` : ""].filter(Boolean).join(" · ");
+}
+function euZeichnen() {
+  const box = $("euListe"), w = euWurzel(); if (!box || !w) return;
+  if (w.classList.contains("eu-an") !== euAn()) w.classList.toggle("eu-an");
+  if (!euAn()) return;
+  box.innerHTML = euZeilen().map(([g, l]) => { const z = l.filter((x) => euKarteZu(x).some(euSichtbar)); if (!z.length) return "";
+    return `<div class="eu-gruppe">${esc(g)}</div><div class="eu-block">${z.map((x) => { const st = euStand(x);
+      return `<button type="button" class="eu-zeile" data-eu="${esc(x.id)}" onclick="euOeffnen('${esc(x.id)}')"><span class="eu-sym" aria-hidden="true">${x.sym}</span><span class="eu-tx"><b>${esc(x.t)}</b>${x.info ? `<small>${esc(x.info)}</small>` : ""}${st ? `<span class="eu-stand">${esc(st)}</span>` : ""}</span><span class="eu-pfeil" aria-hidden="true">›</span></button>`; }).join("")}</div>`; }).join("")
+    + `<div class="eu-gruppe">Hilfe</div><div class="eu-block"><button type="button" class="eu-zeile" onclick="ewStart()"><span class="eu-sym" aria-hidden="true">🧭</span><span class="eu-tx"><b>Einstellungen erklärt</b><small>Was jede Einstellung bewirkt – zum Nachlesen</small></span><span class="eu-pfeil" aria-hidden="true">›</span></button></div>`;
+}
+function euOeffnen(id, ohneVerlauf) {
+  const w = euWurzel(), z = euZeilen().flatMap(([, l]) => l).find((x) => x.id === id); if (!w || !z || !euAn()) return;
+  const karten = euKarteZu(z), neu = EU.bereich !== id;
+  EU.bereich = id; if (!w.classList.contains("eu-offen")) w.classList.add("eu-offen");
+  euKarten().forEach((d) => { if (d.classList.contains("eu-aktiv") !== karten.includes(d)) d.classList.toggle("eu-aktiv"); });
+  karten.forEach((d) => { if (!d.open) d.open = true; });
+  if (neu && !ohneVerlauf) { history.pushState({ ...(history.state || {}), eu: id, tiefe: (history.state?.tiefe || 1) + 1 }, "", location.href); window.scrollTo(0, 0); }
+}
+// Übersicht ↔ Kartei: Klassen nur ändern, wenn sich etwas ändert – die Kartei beobachtet die Klassen der Seite (sonst Endlosschleife)
+function euModus() {
+  const w = euWurzel(); if (!w || w.classList.contains("eu-an") === euAn()) return;
+  if (euAn()) return euUebersicht();
+  EU.bereich = null; w.classList.remove("eu-an", "eu-offen"); euKarten().forEach((d) => d.classList.contains("eu-aktiv") && d.classList.remove("eu-aktiv"));
+}
+function euUebersicht() {
+  const w = euWurzel(); if (!w) return;
+  EU.bereich = null; if (w.classList.contains("eu-offen")) w.classList.remove("eu-offen");
+  euKarten().forEach((d) => { if (d.classList.contains("eu-aktiv")) d.classList.remove("eu-aktiv"); if (euAn() && !w.classList.contains("sucht")) d.open = false; }); // zu, damit ein Sprung (open = true) den Bereich wieder öffnet
+  euZeichnen();
+}
+function einstZurueck() { if (EU.bereich && euAn() && history.state?.eu) history.back(); else if (EU.bereich && euAn()) euUebersicht(); else zurueck("start"); }
+// Sprünge aus Hilfe, Tipps, Wegweiser, Rundgang („Bereich aufklappen“) öffnen den passenden Bereich als Seite
+if (typeof document !== "undefined") document.addEventListener("toggle", (e) => {
+  const d = e.target, w = euWurzel(); if (!d.open || !w || d.parentElement !== w || !d.matches("details.karte[data-klappe]")) return;
+  if (!euAn() || w.classList.contains("versteckt") || w.classList.contains("sucht") || d.classList.contains("eu-aktiv")) return;
+  const z = euZeilen().flatMap(([, l]) => l).find((x) => x.karten.includes(d.dataset.klappe)); if (z) euOeffnen(z.id);
+}, true);
 // ---------- 2.534.0 KC-CLUB-EINST-WEGWEISER (Wunsch Hansi „spezielle Anleitung: Voreinstellungen leicht gemacht – alle Möglichkeiten auflisten und kurz
 // erklären … als eigene Kachel unter Technik, wie der Explorer bei Windows: Überschrift z. B. ‚Farben einstellen‘, antippen, dann kommt die Erklärung“) ----------
 // Liest die Einstellungen direkt aus der Seite ⚙️ (Bereiche = Ordner, Schalter/Auswahlen = Einträge, ihr grauer Hinweis = Kurz-Erklärung) – neue Einstellungen
@@ -25732,7 +25834,7 @@ function klappenMerken(wurzel = document) {
 const RK = {};
 // 2.482.0 KC-CLUB-EINST-LISTE-EINFACH (TÜV 18.10., Hansi „2“): in der einfachen Ansicht starten die Einstellungen als ruhige Liste mit Klappbereichen
 // (eine Ebene statt Reiter + Kartenstapel + ▲▼). Wer die Kartei einmal selbst gewählt hat, behält sie – „🗂️ Kartei“ bleibt oben erreichbar.
-const rkAn = (k) => { try { const w = localStorage.getItem("kc_club_rk_" + k); return k === "chats" ? w === "an" : k === "einst" && einfach() && !w ? false : w !== "aus"; } catch { return k !== "chats" && !(k === "einst" && einfach()); } }; // Chats ab Werk aus (2.191.0)
+const rkAn = (k) => { try { const w = localStorage.getItem("kc_club_rk_" + k); return k === "chats" ? w === "an" : k === "einst" && !w ? false : w !== "aus"; } catch { return k !== "chats" && k !== "einst"; } }; // Chats ab Werk aus (2.191.0); 2.552.0 Einstellungen ab Werk Übersicht
 function rkKarten(w) { return [...w.children].filter((d) => d.matches("details.karte[data-klappe]") && getComputedStyle(d).display !== "none" && !d.classList.contains("versteckt")); }
 function rkEinrichten(wurzelId, schluessel) {
   const w = $(wurzelId); if (!w || typeof MutationObserver === "undefined") return;
@@ -25771,7 +25873,8 @@ function rkSchalten(k, an) {
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  if (z.knopf) { z.knopf.textContent = an ? "☰ Liste" : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
+  if (z.knopf) { z.knopf.textContent = an ? (z.schluessel === "einst" ? "☰ Übersicht" : "☰ Liste") : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
+  if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
   if (!z.an) {
     z.an = true; w.classList.add("rk");
@@ -25857,6 +25960,8 @@ function rkZu(z, el) {
   scrollTo({ top: 0 });
   setTimeout(() => { d.scrollTop = Math.max(0, el.getBoundingClientRect().top - d.getBoundingClientRect().top + d.scrollTop - d.clientHeight / 3); }, Math.abs(i - z.i) * 90 + 120);
 }
+// 2.552.0 KC-CLUB-EINST-UEBERSICHT: einmalig – wer früher die Kartei gewählt hatte, sieht zuerst die neue Übersicht (🗂️ Kartei oben geht weiter)
+try { if (typeof localStorage !== "undefined" && !localStorage.getItem("kc_club_eu_neu")) { if (localStorage.getItem("kc_club_rk_einst") === "an") localStorage.removeItem("kc_club_rk_einst"); localStorage.setItem("kc_club_eu_neu", "1"); } } catch {}
 if (typeof document !== "undefined") { const rkStart = () => rkEinrichten("v-einstellungen", "einst"); if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", rkStart); else rkStart(); }
 if (typeof document !== "undefined") { const zkLos = () => { try { zkStart(); } catch {} }; if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zkLos); else zkLos(); } // KC-CLUB-ZYKLUS (2.206.0)
 // 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi): kommt eine Karte nach vorn, fährt eine Jalousie sehr schnell hoch (≈ 0,35 s) und gibt
@@ -25919,11 +26024,12 @@ function gbvPruefen() {
   try { localStorage.setItem(k, String(Date.now())); } catch {}
   setTimeout(() => gbvFlug(g.map((x) => x.person_id === ICH?.person_id ? "dir" : x.vorname || String(x.name || "").split(" ")[0])), 1500);
 }
-const GBV_VOGEL = `<svg viewBox="0 0 90 70" width="90" height="70"><path class="gbv-schnur" d="M45 40 L45 52" stroke="#5a3718" stroke-width="1.5"/>
+const GBV_F = 1.55; // 2.553.0 (Wunsch Hansi „zu klein“): Vogel und Paket gut anderthalbmal so groß
+const GBV_VOGEL = `<svg viewBox="0 0 90 70" width="${90 * GBV_F}" height="${70 * GBV_F}"><path class="gbv-schnur" d="M45 40 L45 52" stroke="#5a3718" stroke-width="1.5"/>
   <g class="gbv-paket-am"><rect x="33" y="50" width="24" height="18" rx="2" fill="#741521"/><rect x="43" y="50" width="4" height="18" fill="#c9a46a"/><rect x="33" y="57" width="24" height="4" fill="#c9a46a"/></g>
   <ellipse cx="45" cy="32" rx="20" ry="11" fill="#3d6fb6"/><circle cx="64" cy="25" r="8" fill="#3d6fb6"/><circle cx="67" cy="23" r="1.8" fill="#fff"/><circle cx="67.5" cy="23" r=".9" fill="#111"/>
   <path d="M71 25 L80 27 L71 29 Z" fill="#f2a900"/><path d="M25 30 L10 24 L14 34 Z" fill="#2c5592"/><path class="gbv-fluegel" d="M40 28 Q32 6 52 10 Q50 22 48 28 Z" fill="#5b8fd8"/></svg>`;
-const GBV_PAKET = `<svg viewBox="0 0 28 26" width="28" height="26"><rect x="2" y="6" width="24" height="18" rx="2" fill="#741521"/><rect x="12" y="6" width="4" height="18" fill="#c9a46a"/><rect x="2" y="13" width="24" height="4" fill="#c9a46a"/><path d="M14 6 Q8 0 6 4 Q8 7 14 6 Q20 7 22 4 Q20 0 14 6" fill="#c9a46a"/></svg>`;
+const GBV_PAKET = `<svg viewBox="0 0 28 26" width="${28 * GBV_F}" height="${26 * GBV_F}"><rect x="2" y="6" width="24" height="18" rx="2" fill="#741521"/><rect x="12" y="6" width="4" height="18" fill="#c9a46a"/><rect x="2" y="13" width="24" height="4" fill="#c9a46a"/><path d="M14 6 Q8 0 6 4 Q8 7 14 6 Q20 7 22 4 Q20 0 14 6" fill="#c9a46a"/></svg>`;
 async function gbvFlug(namen = ["dir"]) {
   const h = document.querySelector("#v-start .hero"); if (!h || !h.getClientRects().length || typeof h.animate !== "function" || h.querySelector(".gbv")) return;
   const W = h.offsetWidth, H = h.offsetHeight, warten = (a) => a.finished.catch(() => {});
@@ -25933,22 +26039,32 @@ async function gbvFlug(namen = ["dir"]) {
   h.append(b);
   try {
     const v = b.querySelector(".gbv-vogel"), pk = b.querySelector(".gbv-paket"), am = v.querySelector(".gbv-paket-am"), schnur = v.querySelector(".gbv-schnur");
-    const y0 = Math.max(10, H * 0.12), abwurfX = W * 0.5 - 45, boden = H - 34, FLUG = 4200, ANTEIL = (abwurfX + 100) / (W + 200);
-    const flug = v.animate([{ transform: `translate(-100px, ${y0 + 20}px)` }, { transform: `translate(${abwurfX}px, ${y0}px)`, offset: ANTEIL }, { transform: `translate(${W + 100}px, ${y0 - 30}px)` }], { duration: FLUG, easing: "linear", fill: "forwards" });
-    await new Promise((r) => setTimeout(r, FLUG * ANTEIL)); // über der Mitte: Paket los
+    // 2.553.0 (Wunsch Hansi „zu klein, zu schnell – langsamer, einen kleinen Kreis fliegen, mit Happy Birthday als Begleitlied“):
+    // gemütlich herein, eine Runde im Kreis (beim Wenden dreht er sich), über der Mitte Paket los, dann hinaus – dazu das Ständchen (wenn Töne an)
+    const VB = 90 * GBV_F, VH = 70 * GBV_F, boden = H - 26 * GBV_F - 8, abwurfX = W * 0.5 - VB / 2;
+    const R = Math.max(22, Math.min(55, W * 0.15, (boden - VH - 40) / 2)), yU = Math.max(6, Math.min(H * 0.12, boden - VH - 30)) + 2 * R, cy = yU - R; // unterster Punkt des Kreises = Abwurfhöhe
+    const T_REIN = 3000, T_KREIS = 3600, T_RAUS = 3000, FLUG = T_REIN + T_KREIS + T_RAUS, k = [];
+    const kf = (x, y, s, t) => k.push({ transform: `translate(${x}px, ${y}px) scaleX(${s})`, offset: t / FLUG });
+    kf(-VB - 20, yU + 24, 1, 0);
+    for (let i = 0; i <= 24; i++) { const w = (i / 24) * Math.PI * 2, c = Math.cos(w); kf(abwurfX + R * Math.sin(w), cy + R * c, Math.sign(c || 1) * Math.max(0.55, Math.abs(c)), T_REIN + (i / 24) * T_KREIS); }
+    kf(W + 30, yU - 40, 1, FLUG);
+    v.style.transformOrigin = `${VB / 2}px ${VH / 2}px`;
+    if (einst("ton", true)) hbSpielen(0.12, 0.45);
+    const flug = v.animate(k, { duration: FLUG, easing: "linear", fill: "forwards" });
+    await new Promise((r) => setTimeout(r, T_REIN + T_KREIS)); // nach der Runde, über der Mitte: Paket los
     am.style.visibility = "hidden"; schnur.style.visibility = "hidden";
-    const px = abwurfX + 31, py = y0 + 46;
+    const px = abwurfX + 33 * GBV_F, py = yU + 50 * GBV_F;
     pk.style.opacity = "1";
-    await warten(pk.animate([{ transform: `translate(${px}px, ${py}px) rotate(0deg)` }, { transform: `translate(${px}px, ${boden}px) rotate(18deg)` }], { duration: 900, easing: "cubic-bezier(.45,0,1,1)", fill: "forwards" }));
+    await warten(pk.animate([{ transform: `translate(${px}px, ${py}px) rotate(0deg)` }, { transform: `translate(${px}px, ${boden}px) rotate(18deg)` }], { duration: 1200, easing: "cubic-bezier(.45,0,1,1)", fill: "forwards" }));
     // Aufprall: kurz stauchen, dann platzt es – Konfetti-Fetzen, der Strauß springt heraus
     await warten(pk.animate([{ transform: `translate(${px}px, ${boden}px) scale(1.25, .7)` }, { transform: `translate(${px}px, ${boden - 6}px) scale(1.5)`, opacity: 0 }], { duration: 260, fill: "forwards" }));
     for (let i = 0; i < 14; i++) { const f = document.createElement("u"); f.className = "gbv-fetzen"; f.style.background = ["#741521", "#c9a46a", "#e94b3c", "#3d6fb6", "#2fa36b", "#f2a900"][i % 6]; b.append(f);
       const wink = (i / 14) * Math.PI * 2, wx = Math.cos(wink) * (40 + (i % 3) * 18), wy = Math.sin(wink) * 30 - 40;
-      f.animate([{ transform: `translate(${px + 12}px, ${boden + 8}px)`, opacity: 1 }, { transform: `translate(${px + 12 + wx}px, ${boden + 8 + wy}px) rotate(${i * 50}deg)`, opacity: 0 }], { duration: 900, easing: "cubic-bezier(.2,.7,.4,1)", fill: "forwards" }); }
-    const st = b.querySelector(".gbv-strauss"), sx = W / 2 - 30, sy = boden - 44;
+      f.animate([{ transform: `translate(${px + 20}px, ${boden + 14}px)`, opacity: 1 }, { transform: `translate(${px + 20 + wx}px, ${boden + 14 + wy}px) rotate(${i * 50}deg)`, opacity: 0 }], { duration: 900, easing: "cubic-bezier(.2,.7,.4,1)", fill: "forwards" }); }
+    const st = b.querySelector(".gbv-strauss"), sx = W / 2 - 37, sy = boden - 56;
     st.animate([{ transform: `translate(${sx}px, ${sy + 30}px) scale(.1)`, opacity: 0 }, { transform: `translate(${sx}px, ${sy - 8}px) scale(1.15)`, opacity: 1, offset: .6 }, { transform: `translate(${sx}px, ${sy}px) scale(1)`, opacity: 1 }], { duration: 700, easing: "ease-out", fill: "forwards" });
-    const tx = b.querySelector(".gbv-text"), nm = b.querySelector(".gbv-name"), ty = Math.max(y0 + 50, sy - 70);
-    tx.style.top = ty + "px"; nm.style.top = ty + 44 + "px"; b.classList.add("gbv-feier");
+    const tx = b.querySelector(".gbv-text"), nm = b.querySelector(".gbv-name"), ty = Math.max(cy - R + 20, sy - 84);
+    tx.style.top = ty + "px"; nm.style.top = ty + 50 + "px"; b.classList.add("gbv-feier");
     await warten(nm.animate([{ opacity: 0 }, { opacity: 0, offset: .4 }, { opacity: 1 }], { duration: 1200, fill: "forwards" }));
     await new Promise((r) => setTimeout(r, 5000));
     await warten(b.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 800, fill: "forwards" }));
@@ -26379,6 +26495,7 @@ function zeige(v, ausHistorie) {
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
   if (v === "einstellungen") akSichtbarSetzen(); // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG
   if (v === "einstellungen") einstFuellen(); // 2.534.0: eigene Funktion – der Einstellungs-Wegweiser füllt die Werte genauso
+  if (v === "einstellungen") euUebersicht(); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: immer mit der Übersicht beginnen (auch „Zurück“ aus einem Bereich)
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -26994,9 +27111,14 @@ async function vorschlaegeLaden() {
     const { vorschlaege, treffen, spenden: spCfg } = await api("vorschlaege_liste");
     VORSCHLAG_TREFFEN = treffen; if (spCfg) VORSCHLAG_SPENDEN = spCfg;
     VORSCHLAG_MAP = new Map(vorschlaege.map((v) => [v.id, v]));
-    if (document.getElementById("vorschlagInfo")) vorschlagInfo(document.getElementById("vorschlagInfo").dataset.id); // offenes Info-Fenster auffrischen
+    VS_PAKETE = vsPakete(vorschlaege); // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
+    const offenesInfo = document.getElementById("vorschlagInfo");
+    if (offenesInfo) offenesInfo.dataset.paket ? vorschlagPaketInfo(offenesInfo.dataset.paket) : vorschlagInfo(offenesInfo.dataset.id); // offenes Info-Fenster auffrischen
     buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
-    const offen = vorschlaege.filter((v) => v.status === "offen"), fertig = vorschlaege.filter((v) => v.status !== "offen");
+    // Abstimmungen mit mehreren Fragen erscheinen als eine Kachel (bei der ersten Frage); offen, solange noch eine Frage offen ist
+    const paketOffen = (v) => VS_PAKETE.get(v.paket.id).some((x) => x.status === "offen");
+    const sichtbar = vorschlaege.filter((v) => !v.paket || v === VS_PAKETE.get(v.paket.id)[0]);
+    const offen = sichtbar.filter((v) => (v.paket ? paketOffen(v) : v.status === "offen")), fertig = sichtbar.filter((v) => !offen.includes(v));
     const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema"), spenden = offen.filter((v) => v.art === "spende");
     $("vorschlagListe").innerHTML =
       (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div><div class="mini-kacheln">${abst.map(vorschlagKachel).join("")}</div>` : "")
@@ -27015,7 +27137,7 @@ function balken(v) {
 }
 function vorschlagKarte(v) {
   const offen = v.status === "offen";
-  const kopf = `${v.art === "abstimmung" ? `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
+  const kopf = `${v.art === "abstimmung" ?`<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
     ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
     ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
   const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
@@ -27041,7 +27163,7 @@ function vorschlagKarte(v) {
     ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${oaAnzeige(v.anlagen)}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
 }
 async function stimme(id, wahl) {
-  try { await api("vorschlag_stimme", { id, wahl }); melde(wahl ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); }
+  try { await api("vorschlag_stimme", { id, wahl }); melde(wahl && wahl.length !== 0 ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); } // 2.555.0: Mehrfachauswahl leer = zurückgenommen
   catch (e) { meldeFehler(e); }
 }
 async function vorschlagStatus(id, status, art) {
@@ -27071,7 +27193,7 @@ function vorschlagBearbeiten(id) {
       const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, ...vsTerminWert($("vbTreffen").value), anlagen: oaIds("vb") });
       oaLeeren("vb"); f.remove();
       melde(r.anlagen?.neu ? `💾 Gespeichert – ${r.anlagen.neu} Anlage${r.anlagen.neu > 1 ? "n" : ""} dazu` : "💾 Gespeichert");
-      await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id);
+      await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id); // 2.555.0: Frage im Paket → öffnet die ganze Abstimmung
     } catch (e) { meldeFehler(e); }
   });
 }
@@ -27092,6 +27214,7 @@ function spendeKachel(v) {
 const vsAnlagenZahl = (v) => { const n = v.anlagen?.length || 0; return n ? `<span class="mk-unter mk-anlagen">📎 ${n} ${n === 1 ? "Anlage" : "Anlagen"}</span>` : ""; };
 // KC-CLUB-VORSCHLAG-KACHELN (1.46.1): Themen, Abstimmungen und Erledigtes als kleine Kacheln – Antippen öffnet alles groß
 function vorschlagKachel(v) {
+  if (v.paket?.id && VS_PAKETE.has(v.paket.id)) return paketKachel(v.paket.id); // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: eine Kachel je Abstimmung
   if (v.art === "spende" && v.status === "offen") return spendeKachel(v);
   const offen = v.status === "offen", e = v.ergebnis?.[0]?.anzahl || 0;
   const sym = v.art === "abstimmung" ? "🗳️" : v.art === "spende" ? "💝" : "💡";
@@ -27106,8 +27229,103 @@ function vorschlagKachel(v) {
 function vorschlagInfo(id) {
   const v = VORSCHLAG_MAP.get(id);
   if (!v) { document.getElementById("vorschlagInfo")?.remove(); return; }
+  if (v.paket?.id && VS_PAKETE.has(v.paket.id)) return vorschlagPaketInfo(v.paket.id); // 2.555.0: Frage einer Abstimmung mit mehreren Fragen → ganze Abstimmung
   const f = blattAuf("vorschlagInfo", `<div class="info-gross">${vorschlagKarte(v)}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
   f.dataset.id = id;
+}
+// ---------- 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“) ----------
+// Eine Abstimmung mit Überschrift, Bereichen (z. B. Technik) und mehreren Fragen. Jede Frage ist eine normale Abstimmung mit eigenen Antworten;
+// zusammengehalten über v.paket = { id, titel, beschreibung, abschnitt, nr }. In der Liste eine Kachel, im Fenster alle Fragen nach Bereichen.
+let VS_PAKETE = new Map();
+function vsPakete(liste) {
+  const m = new Map();
+  for (const v of liste) if (v.paket?.id) (m.get(v.paket.id) || m.set(v.paket.id, []).get(v.paket.id)).push(v);
+  for (const l of m.values()) l.sort((a, b) => (a.paket.nr ?? 0) - (b.paket.nr ?? 0));
+  return m;
+}
+const pkBeantwortet = (l) => l.filter((x) => (Array.isArray(x.meine) ? x.meine.length : x.meine) || x.abgestimmt).length;
+// 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: Folgefrage nur zeigen, wenn die eigene Antwort auf die frühere Frage passt (geheim: Antwort unbekannt → immer zeigen, mit Hinweis)
+function pkSichtbar(v, l) {
+  const w = v.paket?.wenn; if (!w || v.status !== "offen") return true;
+  const vor = l.find((x) => x.paket?.nr === w.nr); if (!vor || vor.geheim) return true;
+  return (Array.isArray(vor.meine) ? vor.meine : [vor.meine]).includes(w.antwort);
+}
+const pkMeine = (l) => l.filter((x) => x.fuerMich !== false && pkSichtbar(x, l));
+const PK_AUSWAHL = {}; // geheime Mehrfachauswahl: erst ankreuzen, dann einmal abgeben
+function paketKachel(pid) {
+  const l = VS_PAKETE.get(pid) || [], v = l[0]; if (!v) return "";
+  const offen = l.some((x) => x.status === "offen"), mir = pkMeine(l), fehlt = offen && pkBeantwortet(mir) < mir.length;
+  const lage = !offen ? (l.some((x) => x.status === "abgeschlossen") ? '<span class="marke gruen">✔ beendet</span>' : '<span class="marke rot">zurückgezogen</span>')
+    : fehlt ? `<span class="marke gelb">👉 ${pkBeantwortet(mir) ? `noch ${mir.length - pkBeantwortet(mir)} offen` : "Stimme fehlt"}</span>` : '<span class="marke gruen">✔ Du hast abgestimmt</span>';
+  return `<button class="mini-kachel${fehlt ? " mk-offen" : ""}" onclick="vorschlagPaketInfo('${esc(pid)}')"><span class="mk-sym">🗳️</span>
+    <span class="mk-titel">${esc(v.paket.titel || v.titel)}</span>${lage}<span class="mk-unter">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</span>
+    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl({ anlagen: l.flatMap((x) => x.anlagen || []) })}</button>`;
+}
+// Eine Frage im Paket: Frage, freiwillige Erklärung, Antwortknöpfe, Ergebnis – ohne Kopfzeilen (die stehen einmal oben)
+function paketFrageKarte(v, l = []) {
+  const offen = v.status === "offen", kannWaehlen = offen && v.fuerMich !== false && !(v.geheim && v.abgestimmt);
+  const knoepfe = v.darfBearbeiten ? `<div class="knoepfe"><button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button></div>` : "";
+  const w = v.paket?.wenn, vor = w && l.find((x) => x.paket?.nr === w.nr);
+  const wennText = w && vor ? `<p class="hinweis pk-wenn">↪️ Folgefrage zu „${esc(vor.titel)}“${vor.geheim && offen ? ` – nur beantworten, wenn du dort „${esc(w.antwort)}“ gewählt hast` : ` (bei „${esc(w.antwort)}“)`}</p>` : "";
+  // 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH: ankreuzen; offen sofort gespeichert, geheim erst ankreuzen und einmal abgeben
+  const mehr = !!v.paket?.mehrfach, gew = mehr ? new Set(v.geheim ? PK_AUSWAHL[v.id] || [] : v.meine || []) : null;
+  const wahl = !kannWaehlen ? "" : mehr
+    ? `<p class="hinweis" style="margin:6px 0 0">☑️ Mehrere Antworten möglich</p><div class="wahl">${v.optionen.map((o) => `<button class="${gew.has(o) ? "an" : ""}" onclick='pkKreuz("${v.id}", ${hlJs(o)})'>${gew.has(o) ? "☑️ " : "⬜ "}${esc(o)}</button>`).join("")}</div>`
+      + (v.geheim ? `<div class="knoepfe"><button class="knopf haupt klein" ${gew.size ? "" : "disabled"} onclick="pkAbgeben('${v.id}')">🗳️ Stimme abgeben (${gew.size})</button></div>` : "")
+    : `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${hlJs(o)})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>`;
+  return `<div class="karte pk-frage"><div class="pk-frage-titel">${esc(v.titel)}${!offen ? ` <span class="marke ${v.status === "abgeschlossen" ? "gruen" : "rot"}">${v.status === "abgeschlossen" ? "✔ beendet" : "zurückgezogen"}</span>` : ""}</div>
+    ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:4px 0 0">${esc(v.beschreibung)}</p>` : ""}${v.paket?.nr ? oaAnzeige(v.anlagen) : ""}
+    ${wennText}${wahl}
+    ${offen && v.geheim && v.abgestimmt ? '<p><span class="marke gruen">✔ Du hast abgestimmt</span></p>' : ""}${balken(v)}${knoepfe}</div>`;
+}
+function vorschlagPaketInfo(pid) {
+  const l = VS_PAKETE.get(pid), alt = document.querySelector("#vorschlagInfo .blatt-innen")?.scrollTop || 0;
+  if (!l?.length) { document.getElementById("vorschlagInfo")?.remove(); return; }
+  const v = l[0], offen = l.some((x) => x.status === "offen"), mir = pkMeine(l);
+  const kopf = `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span> <span class="marke">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}</span>
+    ${!offen ? ' <span class="marke gruen">✔ beendet</span>' : v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
+  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</div>`;
+  const stand = offen && mir.length ? `<p class="hinweis" style="margin:8px 0 0">Du hast <b>${pkBeantwortet(mir)} von ${mir.length}</b> Fragen beantwortet.${v.geheim ? " 🔒 Geheim: Niemand sieht, wie du stimmst; jede Stimme gilt sofort und lässt sich nicht mehr ändern." : " Bis zum Ende kannst du deine Antworten noch ändern."}</p>` : "";
+  let bereich, fragen = "";
+  for (const x of l) {
+    if (!pkSichtbar(x, l)) continue; // 2.555.0: Folgefrage erst nach passender Antwort
+    const b = x.paket.abschnitt || "";
+    if (b !== bereich) { bereich = b; if (b) fragen += `<h4 class="pk-bereich">📂 ${esc(b)}</h4>`; }
+    fragen += paketFrageKarte(x, l);
+  }
+  const knoepfe = [
+    offen && v.darfAbschliessen ? `<button class="knopf klein" onclick="paketStatus('${esc(pid)}','abgeschlossen')">🏁 Abstimmung beenden</button>` : "",
+    offen && ICH?.vorstand ? `<button class="knopf klein" onclick="paketStatus('${esc(pid)}','zurueckgezogen')">Zurückziehen</button>` : "",
+    ICH?.vorstand ? `<button class="knopf klein" onclick="paketLoeschen('${esc(pid)}')">🗑️ Löschen</button>` : "",
+  ].join("");
+  const f = blattAuf("vorschlagInfo", `<div class="info-gross"><div class="karte">${kopf}<div class="wann" style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(v.paket.titel || v.titel)}</div>${unter}
+    ${v.paket.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.paket.beschreibung)}</p>` : ""}${oaAnzeige(v.anlagen)}${stand}</div>
+    ${fragen}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
+  f.dataset.paket = pid;
+  const innen = f.querySelector(".blatt-innen"); if (innen && alt) innen.scrollTop = alt; // nach dem Abstimmen an derselben Stelle bleiben
+}
+function pkKreuz(id, o) {
+  const v = VORSCHLAG_MAP.get(id); if (!v) return;
+  const gew = new Set(v.geheim ? PK_AUSWAHL[id] || [] : v.meine || []);
+  gew.has(o) ? gew.delete(o) : gew.add(o);
+  const liste = v.optionen.filter((x) => gew.has(x));
+  if (v.geheim) { PK_AUSWAHL[id] = liste; if (v.paket?.id) vorschlagPaketInfo(v.paket.id); return; }
+  stimme(id, liste);
+}
+async function pkAbgeben(id) {
+  const liste = PK_AUSWAHL[id] || []; if (!liste.length) return;
+  if (!(await frage(`Deine Stimme: ${liste.join(", ")}\n\nGeheim – sie lässt sich danach nicht mehr ändern. Abgeben?`))) return;
+  await stimme(id, liste); delete PK_AUSWAHL[id];
+}
+async function paketStatus(pid, status) {
+  const v = VS_PAKETE.get(pid)?.[0]; if (!v) return;
+  if (!(await frage(status === "abgeschlossen" ? "Abstimmung mit allen Fragen jetzt beenden? Alle bekommen das Ergebnis." : "Abstimmung mit allen Fragen wirklich zurückziehen?"))) return;
+  try { await api("vorschlag_status", { id: v.id, status, paket: true }); melde("💾 Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
+}
+async function paketLoeschen(pid) {
+  const v = VS_PAKETE.get(pid)?.[0]; if (!v) return;
+  if (!(await frage("Diese Abstimmung mit allen Fragen endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll."))) return;
+  try { await api("vorschlag_loeschen", { id: v.id, paket: true }); $("vorschlagInfo")?.remove(); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-SPENDE (1.23.0): Spendenprojekte – Empfänger und Betrag per Kachel, Tippen nur für Neues
 // KC-CLUB-ALT-ANDROID (2.52.1): bei Euro ist „mindestens 2 Stellen“ voreingestellt – ältere Browser (z. B. Chrome 81) brechen bei max 0 mit
@@ -27189,18 +27407,66 @@ function oaBilderBeobachten() {
     requestAnimationFrame(() => { geplant = false; document.querySelectorAll("img.oa-bild[data-anlage]:not([data-oa])").forEach((img) => { img.dataset.oa = "1"; bildLaden(img); }); }); });
   oaBeobachter.observe(document.body, { childList: true, subtree: true });
 }
-function vorschlagForm(art) {
+// 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: bei 🗳️ Abstimmung „❓ Eine Frage“ (wie bisher) oder „📋 Mehrere Fragen mit Überschrift“ (Bereiche + Fragen)
+let vfPaket = false, VF_PK = [];
+let VF_PK_NR = 0;
+const vfPkFrage = (x = {}) => ({ key: "q" + ++VF_PK_NR, frage: "", beschreibung: "", optionen: "Ja\nNein\nEnthaltung", mehrfach: false, wenn: null, ...x });
+const vfPkAnzahl = () => VF_PK.reduce((s, b) => s + b.fragen.length, 0);
+const vfPkOpt = (f) => String(f.optionen || "").split("\n").map((x) => x.trim()).filter(Boolean);
+function vfPkZeigen() {
+  const z = $("vfPaket"); if (!z) return;
+  const voll = vfPkAnzahl() >= 30, eine = vfPkAnzahl() <= 1, alle = VF_PK.flatMap((b) => b.fragen);
+  // 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: „Nur zeigen, wenn …“ – Auswahl aus den Antworten der Fragen davor (kein Tippen)
+  const wennWahl = (f, i, j) => { const vorher = alle.slice(0, alle.indexOf(f)); if (!vorher.length) return "";
+    const an = f.wenn ? f.wenn.key + "|" + f.wenn.antwort : "";
+    return `<label class="feld">Nur zeigen, wenn …<select onchange="vfPkWenn(${i},${j},this.value)"><option value="">– immer zeigen –</option>${vorher.map((g, k) => vfPkOpt(g).map((o) => `<option value="${esc(g.key + "|" + o)}" ${an === g.key + "|" + o ? "selected" : ""}>Frage ${k + 1} (${esc((g.frage || "…").slice(0, 40))}) = ${esc(o)}</option>`).join("")).join("")}</select></label>`; };
+  z.innerHTML = VF_PK.map((b, i) => `<div class="sp-projekt"><div class="hl-frage" style="margin-top:0">📂 Bereich ${i + 1}${VF_PK.length > 1 ? ` <button aria-label="Bereich löschen" class="knopf klein" style="float:right" onclick="VF_PK.splice(${i},1);vfPkZeigen()">🗑️</button>` : ""}</div>
+      <label class="feld">Name des Bereichs (freiwillig)<input maxlength="80" placeholder="z. B. Technik" value="${esc(b.name)}" oninput="VF_PK[${i}].name=this.value"></label>
+      ${b.fragen.map((f, j) => `<div class="pk-frage"><div class="hinweis" style="margin:4px 0">❓ Frage ${alle.indexOf(f) + 1}${!eine ? ` <button aria-label="Frage löschen" class="knopf klein" style="float:right" onclick="vfPkWeg(${i},${j})">🗑️</button>` : ""}</div>
+        <label class="feld">Frage<input maxlength="150" placeholder="z. B. Sollen Tablets und Halterungen beschafft werden?" value="${esc(f.frage)}" oninput="VF_PK[${i}].fragen[${j}].frage=this.value" onchange="vfPkZeigen()"></label>
+        <label class="feld">Erklärung (freiwillig)<input maxlength="1000" placeholder="z. B. Vorteil: genaue Auswertung nach dem Weihnachtsmarkt" value="${esc(f.beschreibung || "")}" oninput="VF_PK[${i}].fragen[${j}].beschreibung=this.value"></label>
+        <label class="feld">Antworten (eine pro Zeile, höchstens 12)<textarea rows="3" oninput="VF_PK[${i}].fragen[${j}].optionen=this.value" onchange="vfPkZeigen()">${esc(f.optionen)}</textarea></label>
+        <label class="schalter"><span>☑️ Mehrere Antworten ankreuzen erlauben</span><input type="checkbox" ${f.mehrfach ? "checked" : ""} onchange="VF_PK[${i}].fragen[${j}].mehrfach=this.checked"></label>
+        ${wennWahl(f, i, j)}</div>`).join("")}
+      <button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK[${i}].fragen.push(vfPkFrage());vfPkZeigen()">＋ Frage in diesem Bereich</button></div>`).join("")
+    + `<button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK.push({ name: '', fragen: [vfPkFrage()] });vfPkZeigen()">＋ weiterer Bereich</button>${voll ? '<p class="hinweis">Höchstens 30 Fragen.</p>' : ""}`;
+}
+function vfPkWenn(i, j, wert) { const t = wert.indexOf("|"); VF_PK[i].fragen[j].wenn = t > 0 ? { key: wert.slice(0, t), antwort: wert.slice(t + 1) } : null; }
+// 2.555.0 KC-CLUB-ABSTIMMUNG-VORLAGE: fertige Abstimmungen aus vorlagen/abstimmungen.json übernehmen – danach frei änderbar, nichts wird ohne „Abstimmung starten“ gesendet
+async function vfVorlagen() {
+  let l; try { l = (await (await fetch("vorlagen/abstimmungen.json", { cache: "no-cache", signal: zeitSignal(10000) })).json()).vorlagen || []; } catch { return melde("Vorlagen gerade nicht erreichbar.", true); }
+  if (!l.length) return melde("Noch keine Vorlagen.", true);
+  const f = blattAuf("vfVorlageBlatt", `<h3 style="margin:0 0 6px">📄 Vorlage übernehmen</h3><p class="hinweis" style="margin:0 0 8px">Füllt Überschrift, Bereiche und Fragen aus – danach kannst du alles ändern.</p>
+    ${l.map((v, i) => `<button class="knopf" style="display:block;width:100%;text-align:left;margin:6px 0" data-i="${i}"><b>${esc(v.titel)}</b><br><small class="hinweis">${v.bereiche.map((b) => `${esc(b.name)} (${b.fragen.length})`).join(" · ")}</small></button>`).join("")}
+    <div class="knoepfe bs-fuss"><button class="knopf" onclick="$('vfVorlageBlatt').remove()">Abbrechen</button></div>`);
+  f.querySelectorAll("[data-i]").forEach((k) => (k.onclick = () => { vfVorlageNehmen(l[Number(k.dataset.i)]); f.remove(); }));
+}
+function vfVorlageNehmen(v) {
+  const keys = []; // wenn.nr in der Vorlage = laufende Nummer der Frage (ab 0)
+  VF_PK = v.bereiche.map((b) => ({ name: b.name || "", fragen: b.fragen.map((x) => { const f = vfPkFrage({ frage: x.frage, beschreibung: x.beschreibung || "", optionen: (x.optionen || ["Ja", "Nein", "Enthaltung"]).join("\n"), mehrfach: !!x.mehrfach }); f._wenn = x.wenn; keys.push(f.key); return f; }) }));
+  VF_PK.forEach((b) => b.fragen.forEach((f) => { f.wenn = f._wenn && keys[f._wenn.nr] ? { key: keys[f._wenn.nr], antwort: f._wenn.antwort } : null; delete f._wenn; }));
+  vorschlagForm("abstimmung", true); $("vfTitel").value = v.titel || ""; $("vfBeschr").value = v.beschreibung || "";
+  melde("📄 Vorlage übernommen – bitte prüfen und dann „Abstimmung starten“");
+}
+function vfPkWeg(i, j) { VF_PK[i].fragen.splice(j, 1); if (!VF_PK[i].fragen.length) VF_PK.splice(i, 1); vfPkZeigen(); }
+function vorschlagForm(art, paket) {
   vfArt = art || "thema";
+  if (vfArt === "abstimmung" && paket !== undefined) vfPaket = !!paket;
+  if (vfArt === "abstimmung" && vfPaket && !VF_PK.length) VF_PK = [{ name: "", fragen: [vfPkFrage()] }];
+  const pk = vfArt === "abstimmung" && vfPaket;
+  const behalten = paket !== undefined ? { t: $("vfTitel")?.value || "", b: $("vfBeschr")?.value || "" } : null; // Umschalten Eine/Mehrere: Eingaben bleiben
   if (vfArt === "spende") VF_SP = [{ empfaenger: VORSCHLAG_SPENDEN.empfaenger[0] || "", betrag: 0 }];
   const t0 = (VS_ZIEL && VORSCHLAG_TREFFEN.some((t) => t.id === VS_ZIEL) ? VS_ZIEL : VORSCHLAG_TREFFEN[0]?.id) || ""; // 1.24.1: nach Zusage die zugesagte Sitzung vorwählen
   $("vorschlagNeuKnopf")?.classList.remove("vs-puls");
   $("vorschlagForm").innerHTML = `<h3>Neuer Vorschlag</h3>
     <div class="artwahl drei"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
-    <label class="feld">${vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
+    ${vfArt === "abstimmung" ? `<div class="hl-chips" id="vfPaketWahl" style="margin-top:8px"><button type="button" class="chip${pk ? "" : " an"}" onclick="vorschlagForm('abstimmung', false)">❓ Eine Frage</button><button type="button" class="chip${pk ? " an" : ""}" onclick="vorschlagForm('abstimmung', true)">📋 Mehrere Fragen mit Überschrift</button><button type="button" class="chip" onclick="vfVorlagen()">📄 Vorlage</button></div>` : ""}
+    <label class="feld">${pk ? "Überschrift" : vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${pk ? "z. B. Technik, Bilderrechner, Abrechnung" : vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
     <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
-    ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
+    ${pk ? '<div class="feld"><b>Bereiche und Fragen</b><div id="vfPaket"></div></div>' : vfArt === "abstimmung" ? '<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>' : ""}
+    ${vfArt === "abstimmung" ? `
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>
       <div class="feld"><b>An wen?</b><div id="vfZiel"></div></div>` : ""}
@@ -27209,6 +27475,8 @@ function vorschlagForm(art) {
     <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
   if (vfArt === "spende") vfSpZeigen();
+  if (behalten) { $("vfTitel").value = behalten.t; $("vfBeschr").value = behalten.b; }
+  if (pk) vfPkZeigen();
   if (vfArt === "abstimmung") { VF_ZIEL = { art: "alle", gruppe: null, ids: [] }; vfZielZeigen(); vfGruppenLaden(); }
 }
 // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an 👥 alle, 🧑‍🤝‍🧑 eine Gruppe (alle Gruppen zur Auswahl) oder ☑️ eine Auswahl
@@ -27259,8 +27527,21 @@ async function vorschlagSpeichern(knopf) {
     const fehlt = daten.spenden.find((x) => !x.empfaenger || !(x.betrag > 0));
     if (fehlt) return melde(!fehlt.empfaenger ? "Bitte bei jedem Projekt antippen, an wen gespendet wird." : `Bitte für „${fehlt.empfaenger}“ einen Betrag antippen.`, true);
   }
+  const pk = vfArt === "abstimmung" && vfPaket;
+  if (pk) { // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
+    if (!daten.titel.trim()) return melde("Bitte eine Überschrift eingeben.", true);
+    const alle = VF_PK.flatMap((b) => b.fragen.map((f) => ({ b, f }))), nrVon = (key) => alle.findIndex((x) => x.f.key === key);
+    daten.fragen = alle.map(({ b, f }) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), beschreibung: (f.beschreibung || "").trim(), optionen: vfPkOpt(f), mehrfach: !!f.mehrfach,
+      wenn: f.wenn && nrVon(f.wenn.key) >= 0 ? { nr: nrVon(f.wenn.key), antwort: f.wenn.antwort } : null }));
+    const leer = daten.fragen.findIndex((f) => !f.frage);
+    if (leer >= 0) return melde(`Bitte Frage ${leer + 1} ausfüllen oder mit 🗑️ löschen.`, true);
+    const kurz = daten.fragen.find((f) => f.optionen.length < 2 || f.optionen.length > 12);
+    if (kurz) return melde(`Bitte bei „${kurz.frage}“ 2 bis 12 Antworten angeben (eine pro Zeile).`, true);
+    const falsch = daten.fragen.findIndex((f, i) => f.wenn && !(f.wenn.nr < i && daten.fragen[f.wenn.nr].optionen.includes(f.wenn.antwort)));
+    if (falsch >= 0) return melde(`Frage ${falsch + 1}: „Nur zeigen, wenn …“ passt nicht mehr – bitte neu wählen.`, true);
+  }
   if (vfArt === "abstimmung") {
-    daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
+    if (!pk) daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
     daten.geheim = $("vfGeheim").checked;
     if ($("vfFristDatum").value) daten.frist = new Date(taZeitpunkt($("vfFristDatum").value, $("vfFristZeit").value || "20:00")).toISOString();
     // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73)
@@ -27270,8 +27551,9 @@ async function vorschlagSpeichern(knopf) {
   await einmal(knopf, async () => {
     try {
       daten.anlagen = oaIds("vf"); // 2.448.0
-      const r = await api("vorschlag_speichern", daten);
+      const r = await api(pk ? "abstimmungspaket_speichern" : "vorschlag_speichern", daten);
       oaLeeren("vf"); $("vorschlagForm").classList.add("versteckt");
+      if (pk) VF_PK = [];
       melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
     } catch (e) { meldeFehler(e); }
   });

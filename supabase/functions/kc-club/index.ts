@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.551.0";
+const SERVER_VERSION = "2.555.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2404,11 +2404,20 @@ function nachrichtKurz(von: string, o: { grp?: { name: string } | null; andere: 
   return txt(o.betreff ? `${satz} – „${o.betreff}“` : satz, 140);
 }
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
+// 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: ein „bei Lesern abgenommener“ Zettel hängt nur noch bei denen, die ihn noch nicht gesehen haben.
+// Wer ihn danach zum ersten Mal sieht, hat ihn noch PINNWAND_TEIL_MIN Minuten (Lesen, Antworten, ✓) – dann fällt er auch bei ihm ab.
+const PINNWAND_TEIL_MIN = 30, pwZeit = (x: unknown) => (x ? Date.parse(String(x)) || 0 : 0);
 async function pinnwandSichtbar(ich: Ich) {
-  const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am,farbe").is("entfernt_am", null)
+  const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am,farbe,teil_ab").is("entfernt_am", null)
     .or(`person_id.eq.${ich.person_id},fuer.eq.alle,personen.cs.{${ich.person_id}}`)
     .order("wichtig", { ascending: false }).order("erstellt_am", { ascending: false }).limit(100);
-  return data ?? [];
+  const l = data ?? [], teil = l.filter((z: any) => z.teil_ab && z.person_id !== ich.person_id);
+  if (!teil.length) return l;
+  const { data: gl } = await db.from("kc_club_pinnwand_gelesen").select("zettel_id,gesehen_am").eq("person_id", ich.person_id).in("zettel_id", teil.map((z: any) => z.id));
+  const frist = Date.now() - PINNWAND_TEIL_MIN * 60000, weg = new Set((gl ?? []).filter((g: any) => {
+    const z: any = teil.find((x: any) => x.id === g.zettel_id), t = pwZeit(g.gesehen_am);
+    return t <= pwZeit(z?.teil_ab) || t < frist; }).map((g: any) => g.zettel_id));
+  return l.filter((z: any) => !weg.has(z.id));
 }
 const MAX_TESTDATEN = 2 * 1024 * 1024; // Verbindungstest: höchstens 2 MB je Richtung
 // KC-CLUB-START-SPARSAM-2: MERK_MS lang gemerkt (nur fehlerfreie Antworten); Ein-/Ausschalten hier leert den Merker sofort
@@ -3984,7 +3993,7 @@ async function archivAuto(ich: Ich) {
       ]) : [leer, leer];
       for (const v of vs ?? []) {
         const s = (v.geheim ? geh : st) ?? [];
-        const erg = (v.optionen ?? []).map((o: string) => `${o}: ${s.filter((x: any) => x.vorschlag_id === v.id && x.wahl === o).length}`).join(" · ");
+        const erg = (v.optionen ?? []).map((o: string) => `${o}: ${s.filter((x: any) => x.vorschlag_id === v.id && wahlTrifft(x.wahl, o)).length}`).join(" · ");
         e.push({ art: "abstimmung", id: v.id, titel: v.titel, datum: berlinTag(new Date(v.abgeschlossen_am || v.erstellt_am)), text: (v.geheim ? "🔒 " : "") + erg });
       }
     }),
@@ -4068,6 +4077,38 @@ function suchTag(v: unknown, plus = 0) {
 
 // ---------- Vorschläge & Abstimmungen (KC-CLUB-VORSCHLAG) ----------
 const STANDARD_OPTIONEN = ["Ja", "Nein", "Enthaltung"];
+// 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH: bei Mehrfachauswahl steht die Stimme als JSON-Liste in wahl ('["Bauhof","Feuerwehr"]'), sonst als Text
+const wahlListe = (w: unknown): string[] => { if (typeof w !== "string" || !w) return []; if (w[0] !== "[") return [w]; try { const l = JSON.parse(w); return Array.isArray(l) ? l.map(String) : []; } catch { return [w]; } };
+const wahlTrifft = (w: unknown, o: string) => wahlListe(w).includes(o);
+function abstimmungFrist(roh: unknown) {
+  const frist = roh ? new Date(String(roh)) : null;
+  if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Frist liegt in der Vergangenheit.");
+  return frist;
+}
+// KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an alle, eine Gruppe oder eine Auswahl – nur aktive Mitglieder, ich immer dabei
+async function abstimmungZiel(p: any, ich: Ich) {
+  if (!p.ziel || typeof p.ziel !== "object" || (p.ziel.art !== "gruppe" && p.ziel.art !== "auswahl")) return { zielIds: null as string[] | null, zielText: null as string | null };
+  const aktiv = new Set((await aktiveMitglieder()).map((x) => x.person_id));
+  const zielIds = [...new Set<string>([...(Array.isArray(p.ziel.ids) ? p.ziel.ids : []).map(String).filter((id: string) => aktiv.has(id)), ich.person_id])].slice(0, 300);
+  if (zielIds.length < 2) throw new Fehler("Bitte mindestens eine weitere Person auswählen.");
+  return { zielIds, zielText: p.ziel.art === "gruppe" ? `Gruppe ${txt(p.ziel.name, 60) || ""}`.trim() : `${zielIds.length} ausgewählte Mitglieder` };
+}
+// 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: Abstimmung mit Überschrift, Bereichen und mehreren Fragen (Zeilen mit gleicher paket.id)
+const PAKET_MAX_FRAGEN = 30, PAKET_MAX_ANTWORTEN = 12; // 2.555.0: bis 12 Antworten (z. B. „Wer zählt zu den Helfern?“)
+const paketNr = (v: any) => Number(v?.paket?.nr ?? 0);
+async function paketZeilen(paketId: string) {
+  const { data } = await db.from("kc_club_vorschlaege").select("*").eq("paket->>id", paketId);
+  return (data ?? []).sort((a: any, b: any) => paketNr(a) - paketNr(b));
+}
+// Fragen als Text, nach Bereichen gegliedert (für E-Mail): „Technik“, darunter „• Frage – Antworten / Ergebnis“
+function paketFragenText(fragen: { abschnitt?: string | null; frage?: string; titel?: string; zeile?: string }[]) {
+  let bereich: string | null | undefined, out = "";
+  for (const f of fragen) {
+    if ((f.abschnitt || null) !== bereich) { bereich = f.abschnitt || null; if (bereich) out += (out ? "\n" : "") + `▸ ${bereich}\n`; }
+    out += `• ${f.frage ?? f.titel}${f.zeile ? `\n   ${f.zeile}` : ""}\n`;
+  }
+  return out.trimEnd();
+}
 // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi „bei Vorschlägen: jetziges Datum oder nächste oder übernächste Sitzung – Datum noch nicht bekannt –,
 // aber schon mal vorwählen“): ein Vorschlag kann sich „die K-te Sitzung ab Wahl“ merken (sitzung_nr 1–3, sitzung_ab = Zeitpunkt der Wahl). Sobald es so
 // viele Sitzungen (Termine der Art „Treffen“, nicht abgesagt) nach sitzung_ab gibt, bekommt er die passende Sitzung fest zugeordnet. Läuft beim Laden
@@ -4111,18 +4152,19 @@ async function vorschlaegeListe(ich: Ich) {
     // geheim: Ergebnis erst nach Abschluss und nie mit Namen
     const ergebnis = !v.geheim || v.status !== "offen" ? optionen.map((o: string) => ({
       option: o,
-      anzahl: v.geheim ? (geh ?? []).filter((g: any) => g.vorschlag_id === v.id && g.wahl === o).length : s.filter((x: any) => x.wahl === o).length,
-      ...(v.geheim ? {} : { namen: s.filter((x: any) => x.wahl === o).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id).sort() }),
+      anzahl: v.geheim ? (geh ?? []).filter((g: any) => g.vorschlag_id === v.id && wahlTrifft(g.wahl, o)).length : s.filter((x: any) => wahlTrifft(x.wahl, o)).length,
+      ...(v.geheim ? {} : { namen: s.filter((x: any) => wahlTrifft(x.wahl, o)).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id).sort() }),
     })) : null;
     const eigener = v.erstellt_von === ich.person_id;
     const t: any = v.treffen_id ? treffen.get(v.treffen_id) : null;
     return {
       id: v.id, art: v.art, titel: v.titel, beschreibung: v.beschreibung, optionen: unterstuetzbar(v.art) ? [] : v.optionen, geheim: v.geheim, anlagen: anl.get(v.id) ?? [],
+      paket: v.paket ?? null, // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
       ...(v.art === "spende" ? { spenden: v.spenden ?? [], summe: spendenSumme(v.spenden) } : {}),
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
       treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null, sitzungSpaeter: t ? null : v.sitzung_nr ?? null, // 2.527.0
-      abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
+      abgestimmt: !!mein, meine: v.geheim ? null : v.paket?.mehrfach ? wahlListe(mein?.wahl) : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
       ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
       darfZurueckziehen: v.status === "offen" && (ich.vorstand || eigener),
@@ -4137,6 +4179,7 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
     .eq("id", v.id).eq("status", "offen").select("id");
   if (!ok?.length) return null;
   if (v.art !== "abstimmung") return { gesendet: 0 };
+  if (v.paket?.id) return await paketErgebnisSenden(v);
   const erg = await abstimmungsErgebnis(v);
   const ziel = v.ziel_ids ?? (await aktiveMitglieder()).map((x) => x.person_id); // KC-CLUB-ABSTIMMUNG-ZIEL: Ergebnis an die Zielgruppe
   return await senden("club_vorschlag", ziel, {
@@ -4150,8 +4193,24 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
 async function abstimmungsErgebnis(v: any) {
   const { data: s } = await db.from(v.geheim ? "kc_club_geheime_stimmen" : "kc_club_stimmen").select("wahl").eq("vorschlag_id", v.id);
   const zaehl = new Map<string, number>();
-  (s ?? []).forEach((x: any) => x.wahl && zaehl.set(x.wahl, (zaehl.get(x.wahl) ?? 0) + 1));
+  (s ?? []).forEach((x: any) => wahlListe(x.wahl).forEach((w) => zaehl.set(w, (zaehl.get(w) ?? 0) + 1))); // 2.555.0: Mehrfachauswahl zählt jede Antwort
   return v.optionen.map((o: string) => `${o}: ${zaehl.get(o) ?? 0}`).join(" · ");
+}
+// 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: das Ergebnis geht erst raus, wenn die letzte Frage des Pakets beendet ist – einmal, mit allen Fragen
+async function paketErgebnisSenden(v: any) {
+  const zeilen = await paketZeilen(v.paket.id);
+  if (zeilen.some((z: any) => z.status === "offen")) return { gesendet: 0 };
+  const beendet = zeilen.filter((z: any) => z.status === "abgeschlossen");
+  if (!beendet.length) return { gesendet: 0 };
+  const fragen = await Promise.all(beendet.map(async (z: any) => ({ abschnitt: z.paket?.abschnitt, titel: z.titel, zeile: await abstimmungsErgebnis(z) })));
+  const titel = v.paket.titel || v.titel;
+  const ziel = v.ziel_ids ?? (await aktiveMitglieder()).map((x) => x.person_id);
+  return await senden("club_vorschlag", ziel, {
+    titel: "🗳️ Ergebnis: " + titel, kurz: `${fragen.length} ${fragen.length === 1 ? "Frage" : "Fragen"} – Ergebnis in der App`,
+    betreff: `Köcheclub Werne – Ergebnis der Abstimmung: ${titel}`,
+    text: `Hallo,\n\ndie Abstimmung „${titel}“ ist beendet.\n\n${paketFragenText(fragen)}\n\nDetails in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
+    url: APP_URL + "#vorschlaege",
+  }, `club-ergebnis:${v.paket.id}`);
 }
 
 // ---------- KC-CLUB-SPENDE (1.23.0): Spendenprojekte als Vorschlag (Empfänger + Betrag, ein oder mehrere) ----------
@@ -7660,16 +7719,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           optionen = [...new Set((Array.isArray(p.optionen) ? p.optionen : STANDARD_OPTIONEN).map((o: unknown) => txt(o, 60)).filter(Boolean))] as string[];
           if (optionen.length < 2 || optionen.length > 8) throw new Fehler("Bitte 2 bis 8 Antworten angeben.");
         }
-        const frist = p.frist ? new Date(String(p.frist)) : null;
-        if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Frist liegt in der Vergangenheit.");
-        // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an alle, eine Gruppe oder eine Auswahl – nur aktive Mitglieder, ich immer dabei
-        let zielIds: string[] | null = null, zielText: string | null = null;
-        if (art === "abstimmung" && p.ziel && typeof p.ziel === "object" && (p.ziel.art === "gruppe" || p.ziel.art === "auswahl")) {
-          const aktiv = new Set((await aktiveMitglieder()).map((x) => x.person_id));
-          zielIds = [...new Set<string>([...(Array.isArray(p.ziel.ids) ? p.ziel.ids : []).map(String).filter((id: string) => aktiv.has(id)), ich.person_id])].slice(0, 300);
-          if (zielIds.length < 2) throw new Fehler("Bitte mindestens eine weitere Person auswählen.");
-          zielText = p.ziel.art === "gruppe" ? `Gruppe ${txt(p.ziel.name, 60) || ""}`.trim() : `${zielIds.length} ausgewählte Mitglieder`;
-        }
+        const frist = abstimmungFrist(p.frist);
+        const { zielIds, zielText } = art === "abstimmung" ? await abstimmungZiel(p, ich) : { zielIds: null, zielText: null };
         const { data: v, error } = await db.from("kc_club_vorschlaege").insert({ ziel_ids: zielIds, ziel_text: zielText,
           art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim, spenden,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
@@ -7700,6 +7751,54 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, id: v.id, versand });
       }
 
+      // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“):
+      // eine Abstimmung mit Überschrift, Bereichen und mehreren Fragen. Jede Frage ist eine normale Abstimmung (eigene Antworten, Stimmen,
+      // Ergebnis); zusammengehalten über die Spalte paket = { id, titel, beschreibung, abschnitt, nr }. Geheim, Frist, Zielgruppe und Termin
+      // gelten für alle Fragen. Eine Benachrichtigung für das ganze Paket, ein Ergebnis am Ende (vorschlagAbschliessen).
+      case "abstimmungspaket_speichern": {
+        nurVorstand(ich);
+        const titel = txt(p.titel, 150);
+        if (!titel) throw new Fehler("Bitte eine Überschrift eingeben.");
+        const fragen = (Array.isArray(p.fragen) ? p.fragen : []).map((f: any) => ({
+          abschnitt: txt(f?.abschnitt, 80) || null, frage: txt(f?.frage, 150), beschreibung: txt(f?.beschreibung, 1000) || null,
+          optionen: [...new Set((Array.isArray(f?.optionen) ? f.optionen : STANDARD_OPTIONEN).map((o: unknown) => txt(o, 60)).filter(Boolean))] as string[],
+          mehrfach: !!f?.mehrfach, wenn: f?.wenn && typeof f.wenn === "object" ? { nr: Number(f.wenn.nr), antwort: txt(f.wenn.antwort, 60) } : null,
+        })).filter((f: any) => f.frage);
+        if (!fragen.length) throw new Fehler("Bitte mindestens eine Frage eingeben.");
+        if (fragen.length > PAKET_MAX_FRAGEN) throw new Fehler(`Höchstens ${PAKET_MAX_FRAGEN} Fragen in einer Abstimmung.`);
+        const zuWenig = fragen.find((f: any) => f.optionen.length < 2 || f.optionen.length > PAKET_MAX_ANTWORTEN);
+        if (zuWenig) throw new Fehler(`Bitte bei „${zuWenig.frage}“ 2 bis ${PAKET_MAX_ANTWORTEN} Antworten angeben.`);
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: „nur einblenden, wenn Frage nr mit … beantwortet“ – nur auf eine frühere Frage und eine ihrer Antworten
+        fragen.forEach((f: any, i: number) => { if (f.wenn && !(Number.isInteger(f.wenn.nr) && f.wenn.nr >= 0 && f.wenn.nr < i && fragen[f.wenn.nr].optionen.includes(f.wenn.antwort))) f.wenn = null; });
+        const frist = abstimmungFrist(p.frist);
+        const { zielIds, zielText } = await abstimmungZiel(p, ich);
+        const paketId = crypto.randomUUID(), beschreibung = txt(p.beschreibung, 2000) || null, geheim = !!p.geheim;
+        const sitzung = !p.treffen_id && sitzungNrPruefen(p.sitzung_nr) ? { sitzung_nr: sitzungNrPruefen(p.sitzung_nr), sitzung_ab: jetzt() } : {};
+        // erstellt_am je Frage um 1 ms versetzt: die Reihenfolge bleibt auch dort erhalten, wo nach erstellt_am sortiert wird
+        const t0 = Date.now();
+        const { data: zeilen, error } = await db.from("kc_club_vorschlaege").insert(fragen.map((f: any, nr: number) => ({
+          ziel_ids: zielIds, ziel_text: zielText, art: "abstimmung", titel: f.frage, beschreibung: f.beschreibung, optionen: f.optionen, geheim,
+          treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
+          erstellt_am: new Date(t0 + nr).toISOString(), paket: { id: paketId, titel, beschreibung, abschnitt: f.abschnitt, nr, ...(f.mehrfach ? { mehrfach: true } : {}), ...(f.wenn ? { wenn: f.wenn } : {}) }, ...sitzung,
+        }))).select("id,paket");
+        if (error || !zeilen?.length) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        const erste = zeilen.find((z: any) => z.paket?.nr === 0) ?? zeilen[0];
+        await objAnlagenSetzen(ich, "vorschlag", erste.id, p.anlagen); // Anlagen (z. B. Muster) hängen an der ersten Frage und gelten fürs Paket
+        let versand = null;
+        if (p.benachrichtigen !== false) {
+          const ziel = zielIds ?? (await aktiveMitglieder()).map((x) => x.person_id);
+          const fristText = frist ? ` Abstimmen bis ${wann(frist.toISOString())}.` : "";
+          versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), {
+            titel: "🗳️ Abstimmung: " + titel, kurz: `${fragen.length} ${fragen.length === 1 ? "Frage" : "Fragen"} – bitte in der App abstimmen.${fristText}`,
+            betreff: `Köcheclub Werne – Abstimmung: ${titel}`,
+            text: `Hallo,\n\nes gibt eine neue Abstimmung${geheim ? " (geheim)" : ""}${zielText ? ` (nur für: ${zielText})` : ""}:\n\n🗳️ ${titel}${beschreibung ? "\n\n" + beschreibung : ""}\n\n${paketFragenText(fragen)}${fristText ? "\n\n" + fristText.trim() : ""}\n\nAbstimmen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#vorschlaege",
+          }, `club-vorschlag:${paketId}`);
+        }
+        await protokoll(ich.person_id, "abstimmungspaket_angelegt", { paket: paketId, fragen: zeilen.length, geheim, versand });
+        return json({ ok: true, paket: paketId, ids: zeilen.map((z: any) => z.id), versand });
+      }
+
       case "vorschlag_stimme": {
         const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
@@ -7712,6 +7811,21 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { error: se } = p.wahl ? await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: "dafuer", geaendert_am: jetzt() })
             : await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
           if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // nie mehr still verlieren
+        } else if (v.paket?.mehrfach) {
+          // 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH: Liste der angekreuzten Antworten (Reihenfolge wie die Antworten); leer = Stimme zurücknehmen (nur offen)
+          const gewaehlt = new Set((Array.isArray(p.wahl) ? p.wahl : []).map(String));
+          const liste = v.optionen.filter((o: string) => gewaehlt.has(o));
+          if (gewaehlt.size !== liste.length) throw new Fehler("Bitte nur die angebotenen Antworten wählen.");
+          if (v.geheim) {
+            if (!liste.length) throw new Fehler("Bitte mindestens eine Antwort ankreuzen.");
+            const { data: ok, error } = await db.rpc("kc_club_geheim_abstimmen", { p_vorschlag: v.id, p_person: ich.person_id, p_wahl: JSON.stringify(liste) });
+            if (error) throw new Fehler("Stimme konnte nicht gespeichert werden.", 500);
+            if (!ok) throw new Fehler("Du hast hier schon abgestimmt – bei geheimen Abstimmungen geht das nur einmal.", 409);
+          } else {
+            const { error: se } = liste.length ? await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: JSON.stringify(liste), geaendert_am: jetzt() })
+              : await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
+            if (se) throw new Fehler("Deine Auswahl konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+          }
         } else {
           const wahl = String(p.wahl || "");
           if (!v.optionen.includes(wahl)) throw new Fehler("Bitte eine der Antworten wählen.");
@@ -7721,6 +7835,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             if (!ok) throw new Fehler("Du hast hier schon abgestimmt – bei geheimen Abstimmungen geht das nur einmal.", 409);
           } else { const { error: se } = await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl, geaendert_am: jetzt() });
             if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); }
+        }
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: passt eine geänderte Antwort nicht mehr zur Bedingung einer Folgefrage, fällt die eigene Stimme dort weg
+        if (v.paket?.id && !v.geheim) {
+          const folge = (await paketZeilen(v.paket.id)).filter((z: any) => z.paket?.wenn?.nr === paketNr(v) && z.status === "offen" && !(Array.isArray(p.wahl) ? p.wahl.map(String) : wahlListe(p.wahl)).includes(z.paket.wenn.antwort));
+          if (folge.length) await db.from("kc_club_stimmen").delete().eq("person_id", ich.person_id).in("vorschlag_id", folge.map((z: any) => z.id));
         }
         // bei geheimer Abstimmung keine Wahl ins Protokoll
         await protokoll(ich.person_id, "vorschlag_stimme", { vorschlag: v.id, ...(v.geheim ? {} : { wahl: p.wahl ?? null }) });
@@ -7732,6 +7851,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!v || v.status !== "offen") throw new Fehler("Vorschlag nicht gefunden oder schon erledigt.", 404);
         const eigener = v.erstellt_von === ich.person_id;
         let versand = null;
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: „paket: true“ beendet bzw. zieht alle noch offenen Fragen der Abstimmung auf einmal zurück
+        if (p.paket && v.paket?.id) {
+          if (!ich.vorstand) throw new Fehler("Abstimmungen beenden Clubsprecher, Kassenwart oder Admin.", 403);
+          if (p.status !== "abgeschlossen" && p.status !== "zurueckgezogen") throw new Fehler("Unbekannter Status.");
+          const offen = (await paketZeilen(v.paket.id)).filter((z: any) => z.status === "offen");
+          for (const z of offen) {
+            if (p.status === "abgeschlossen") versand = (await vorschlagAbschliessen(z, ich.person_id)) ?? versand;
+            else await db.from("kc_club_vorschlaege").update({ status: "zurueckgezogen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id }).eq("id", z.id).eq("status", "offen");
+          }
+          await protokoll(ich.person_id, "abstimmungspaket_" + p.status, { paket: v.paket.id, fragen: offen.length, versand });
+          return json({ ok: true, versand });
+        }
         if (p.status === "zurueckgezogen") {
           if (!ich.vorstand && !eigener) throw new Fehler("Das darf nur, wer den Vorschlag gemacht hat, oder Clubsprecher/Kassenwart.", 403);
           await db.from("kc_club_vorschlaege").update({ status: "zurueckgezogen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id }).eq("id", v.id);
@@ -7774,6 +7905,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "vorschlag_loeschen": {
         const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: „paket: true“ löscht die ganze Abstimmung (nur Clubleitung), jede Frage mit Sicherung wie bisher
+        if (p.paket && v.paket?.id) {
+          if (!ich.vorstand) throw new Fehler("Ganze Abstimmungen löschen Clubsprecher, Kassenwart oder Admin.", 403);
+          const zeilen = await paketZeilen(v.paket.id);
+          for (const z of zeilen) {
+            const [{ data: zs }, { data: zg }] = await Promise.all([
+              db.from("kc_club_stimmen").select("*").eq("vorschlag_id", z.id),
+              db.from("kc_club_geheime_stimmen").select("wahl").eq("vorschlag_id", z.id),
+            ]);
+            await geloescht(ich, "vorschlag", { vorschlag: z, stimmen: z.geheim ? [] : zs ?? [], geheim: (zg ?? []).map((g: any) => g.wahl) });
+            await db.from("kc_club_vorschlaege").delete().eq("id", z.id);
+          }
+          return json({ ok: true, geloescht: zeilen.length });
+        }
         const [{ data: st }, { data: geh }] = await Promise.all([
           db.from("kc_club_stimmen").select("*").eq("vorschlag_id", v.id),
           db.from("kc_club_geheime_stimmen").select("wahl").eq("vorschlag_id", v.id),
@@ -12502,11 +12647,19 @@ Köcheclub Werne`,
         const leute = await personen([...zettel.map((z: any) => z.person_id), ...zettel.flatMap((z: any) => z.personen || []), ...(gl ?? []).map((g: any) => g.person_id)]);
         const nm = (id: string) => leute.get(id)?.display_name || aktiv.find((m) => m.person_id === id)?.display_name || id;
         const wk = await willkommenFuer(zettel.filter((z: any) => z.fuer === "alle").map((z: any) => z.id)).catch(() => new Map());
+        // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: haben jetzt alle Empfänger einen „bei Lesern abgenommenen“ Zettel gesehen → ganz abnehmen
+        for (const z of zettel.filter((x: any) => x.teil_ab && x.fuer !== "ich")) {
+          const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : (z.personen || []);
+          if (empf.every((id: string) => (gl ?? []).some((g: any) => g.zettel_id === z.id && g.person_id === id))) { // „gesehen“ ist oben schon eingetragen
+            const { data: w } = await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: null }).eq("id", z.id).is("entfernt_am", null).select("id");
+            if (w?.length) await protokoll(null, "pinnwand_teil_ab_fertig", { zettel: z.id, empfaenger: empf.length });
+          }
+        }
         return json({ max: PINNWAND_MAX, zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
           const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
           const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
-          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, antworten: z.antworten !== false, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1, willkommen: wk.get(z.id) ?? null,
+          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, antworten: z.antworten !== false, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1, willkommen: wk.get(z.id) ?? null, teilAb: z.teil_ab ?? null,
             von: { person_id: z.person_id, vorname: vorname(leute.get(z.person_id) ?? null) || nm(z.person_id) },
             empfaenger: z.fuer === "personen" ? empf.map(nm) : [],
             erledigt: z.fuer === "ich" ? null : meine?.erledigt_am ?? null,
@@ -12617,6 +12770,27 @@ Köcheclub Werne`,
         return json({ stimmen: Object.fromEntries((data ?? []).filter((x: any) => x.wert?.art === "m" || x.wert?.art === "w").map((x: any) => [x.person_id, x.wert.art])) });
       }
 
+      // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB (Wunsch Hansi „Zettel abnehmen – aber nur für die, die schon gelesen haben; für die anderen hängen lassen“):
+      // „gelesen“ = hat ihn an der Pinnwand oder im Post-it-Fenster gesehen (wie 👁️). Wer ihn noch nicht gesehen hat, behält ihn, bis er ihn gesehen hat.
+      case "pinnwand_teil_abnehmen": {
+        const { data: z } = await db.from("kc_club_pinnwand").select("id,person_id,fuer,personen,teil_ab").eq("id", String(p.id)).is("entfernt_am", null).maybeSingle();
+        if (!z) throw new Fehler("Zettel nicht gefunden (vielleicht schon abgenommen).", 404);
+        if (z.person_id !== ich.person_id && !ich.vorstand) throw new Fehler("Abnehmen darf nur, wer den Zettel angeheftet hat.", 403);
+        if (z.fuer === "ich") throw new Fehler("Diesen Zettel siehst nur du – bitte ganz abnehmen.");
+        if (p.zurueck) { await db.from("kc_club_pinnwand").update({ teil_ab: null, teil_von: null }).eq("id", z.id); await protokoll(ich.person_id, "pinnwand_teil_ab_zurueck", { zettel: z.id }); return json({ ok: true, zurueck: true }); }
+        const empf = z.fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== z.person_id) : (z.personen ?? []);
+        const { data: gl } = empf.length ? await db.from("kc_club_pinnwand_gelesen").select("person_id").eq("zettel_id", z.id).in("person_id", empf) : { data: [] as any[] };
+        const gelesen = new Set((gl ?? []).map((g: any) => g.person_id)), offen = empf.filter((id: string) => !gelesen.has(id));
+        if (!offen.length) { // alle haben ihn schon gesehen → ganz abnehmen
+          await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: ich.person_id }).eq("id", z.id);
+          await protokoll(ich.person_id, "pinnwand_abgenommen", { zettel: z.id, fremd: z.person_id !== ich.person_id, teil: true, alleGelesen: true });
+          return json({ ok: true, ganz: true, offen: [] });
+        }
+        await db.from("kc_club_pinnwand").update({ teil_ab: jetzt(), teil_von: ich.person_id }).eq("id", z.id);
+        const leute = await personen(offen);
+        await protokoll(ich.person_id, "pinnwand_teil_ab", { zettel: z.id, gelesen: gelesen.size, offen: offen.length });
+        return json({ ok: true, ganz: false, gelesen: gelesen.size, offen: offen.map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || id).sort() });
+      }
       case "pinnwand_abnehmen": {
         const { data: z } = await db.from("kc_club_pinnwand").select("id,person_id").eq("id", String(p.id)).is("entfernt_am", null).maybeSingle();
         if (!z) throw new Fehler("Zettel nicht gefunden (vielleicht schon abgenommen).", 404);

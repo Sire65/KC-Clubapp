@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6941,7 +6941,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.482.0 KC-CLUB-EINST-LISTE-EINFACH + KC-CLUB-KLAPPE-EINHEIT (TÜV, Hansi „2, 3“)
 {
   const ix = lies("index.html");
-  assert.ok(/k === "einst" && einfach\(\) && !w \? false/.test(html), "einfache Ansicht: Einstellungen als Liste (eigene Wahl bleibt)");
+  assert.ok(/k === "einst" && !w \? false/.test(html), "Einstellungen ohne eigene Wahl: Übersicht/Liste statt Kartei (2.552.0: in beiden Ansichten; eigene Wahl bleibt)");
   assert.ok(/RK\.einst && \(RK\.einst\.an \|\| rkAn\("einst"\)\)\) rkAufbauen\(RK\.einst\)/.test(html), "Ansichtswechsel wechselt Liste/Kartei mit");
   assert.ok(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/.test(ix) && /details\[open\]:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ transform: rotate\(90deg\); \}/.test(ix), "alle kleinen Klappbereiche: gleicher Pfeil");
   assert.ok(!/summary::before \{ content/.test(ix.replace(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/, "").replace(/\.iv-ordner > summary::before \{ content: "▸";/, "")), "kein zweites eigenes Klapp-Zeichen");
@@ -9226,7 +9226,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/function rkEinrichten\(wurzelId, schluessel\)/.test(html) && /rkEinrichten\("v-einstellungen", "einst"\)/.test(html), "wiederverwendbarer Kern, Einstellungen eingebunden");
-  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /z\.knopf\.textContent = an \? "☰ Liste" : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
+  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /z\.knopf\.textContent = an \? \(z\.schluessel === "einst" \? "☰ Übersicht" : "☰ Liste"\) : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
   assert.ok(/if \(z\.an && e\.target\.parentElement === w && e\.target\.classList\.contains\("rk-karte"\)\) e\.stopPropagation\(\);/.test(html) && /d\.open = d\.dataset\.rkVorher === "1"/.test(html), "gemerkte Auf/Zu-Stände der Liste bleiben unverändert");
   assert.ok(/m\.target\.classList\?\.contains\("hervor"\)\) \{ rkZu\(z, m\.target\)/.test(html), "Suche/Tipps/„zeig mir wo“ blättern zur richtigen Karte");
   assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");
@@ -9306,7 +9306,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(!ich\.nurLesen && p\.vorschau !== true\) await db\.from\("kc_communication_thread_participants"\)\.update\(\{ last_read_at: jetzt\(\) \}\)/.test(server), "Vorschau in der Kartei zählt nicht als gelesen");
   assert.ok(/api\("unterhaltung", \{ id, vorschau: true \}\)/.test(html) && /\.slice\(-6\)/.test(html) && /\[0, 1\]\.forEach\(\(k\) => uhkLaden/.test(html), "vorne die letzten 6 Nachrichten, nur vordere + nächste Karte geladen");
   assert.ok(/onclick="chatOeffnen\('\$\{esc\(u\.id\)\}'\)">💬 Öffnen &amp; antworten/.test(html), "gelesen erst mit „Öffnen & antworten“");
-  assert.ok(/return k === "chats" \? w === "an" : (k === "einst" && einfach\(\) && !w \? false : )?w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
+  assert.ok(/return k === "chats" \? w === "an" : (k === "einst"( && einfach\(\))? && !w \? false : )?w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
   assert.ok(/esc\(String\(m\.text \|\| \(m\.anlagen\?\.length \? "📎 Anhang" : ""\)\)\.slice\(0, 220\)\)/.test(html), "Nachrichtentext immer maskiert");
 }
 
@@ -11762,4 +11762,67 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/sperreFuer\(absender\.person_id\)/.test(ab) && /\.eq\("status", "offen"\)\.select\("id"\)/.test(ab) && /geplantSenden\(g, absender\)/.test(ab), "Absender-Sperre, erst belegen, dann im Namen des Absenders senden");
   assert.ok(/"geplant_abrufen"/.test(programm) && /"geplant_jetzt", "geplant_abrufen",/.test(server), "Zugangsliste App = Server");
   assert.ok(/const vorab = GP\.wdh === "einmal" && \(await gpVorabFrage\(\)\);/.test(programm) && /function gpVorabZeigen\(z\)/.test(programm) && /gpVorab\('\$\{esc\(g\.id\)\}', \$\{!g\.vorab\}\)/.test(programm), "App: Frage, Abruf-Kasten, Schalter unter ⏰");
+}
+// 2.552.0 KC-CLUB-EINST-UEBERSICHT (Wunsch Hansi „Einstellungen unübersichtlich, Klappfelder sieht man kaum – Deluxe, gut zusammengefasst, nichts überladen“)
+{
+  const ix = lies("index.html");
+  assert.ok(/<nav id="euListe" class="eu-liste"/.test(ix) && /onclick="einstZurueck\(\)">‹ Alle Einstellungen<\/button>/.test(ix) && /<button class="zurueck" onclick="einstZurueck\(\)"/.test(ix), "Übersicht + „‹ Alle Einstellungen“ + Zurück-Knopf");
+  assert.ok(/const EU_GRUPPEN = \[/.test(html) && /\["Für mich", \[/.test(html) && /\["Aussehen", \[/.test(html) && /\["Technik", \[/.test(html) && /\["Nur Admin", \[/.test(html), "vier Gruppen aus einer Liste (Registry)");
+  const karten = [...ix.slice(ix.indexOf('<section id="v-einstellungen"'), ix.indexOf("</section>", ix.indexOf('<section id="v-einstellungen"'))).matchAll(/<details class="karte(?! innen)[^"]*" data-klappe="(\w+)"/g)].map((m) => m[1]);
+  const eu = html.slice(html.indexOf("const EU_GRUPPEN = ["), html.indexOf("const EU = { bereich: null };"));
+  assert.ok(karten.length >= 12 && karten.every((k) => eu.includes(`"${k}"`)), "jede Einstellungs-Karte steht in einer Zeile: " + karten.filter((k) => !eu.includes(`"${k}"`)).join(","));
+  assert.ok(/\["Weitere", rest\]/.test(html), "neue Karte ohne Eintrag geht nie verloren (Weitere)");
+  assert.ok(/const euAn = \(\) => !RK\.einst\?\.an;/.test(html) && /k === "einst" && !w \? false/.test(html), "Kartei bleibt wählbar; ab Werk Übersicht");
+  assert.ok(/if \(!euAn\(\) \|\| w\.classList\.contains\("versteckt"\) \|\| w\.classList\.contains\("sucht"\)/.test(html), "Sprünge (Hilfe, Wegweiser) öffnen den Bereich – nicht während der Suche");
+  assert.ok(/function euModus\(\) \{\n  const w = euWurzel\(\); if \(!w \|\| w\.classList\.contains\("eu-an"\) === euAn\(\)\) return;/.test(html), "Klassen nur bei Änderung (keine Endlosschleife mit der Kartei)");
+  assert.ok(/if \(v === "einstellungen"\) euUebersicht\(\);/.test(html) && /history\.pushState\(\{ \.\.\.\(history\.state \|\| \{\}\), eu: id,/.test(html), "beginnt mit Übersicht; Zurück-Taste führt aus dem Bereich zurück");
+  assert.ok(/#v-einstellungen \.schalter > input\[type="checkbox"\] \{ appearance: none;/.test(ix) && /#v-einstellungen details:not\(\.karte\):not\(\.iv-ordner\) > summary::after \{ content: "⌄";/.test(ix), "Schalter wie beim Handy + gut sichtbare Klappen");
+}
+// 2.553.0 KC-CLUB-GEBURTSTAG-VOGEL-2 (Wunsch Hansi „zu klein, zu schnell – langsamer, kleinen Kreis fliegen, Begleitlied Happy Birthday“)
+{
+  const g = html.slice(html.indexOf("const GBV_F = "), html.indexOf("function gbvVorschau()"));
+  assert.ok(/const GBV_F = 1\.55;/.test(g) && /width="\$\{90 \* GBV_F\}"/.test(g), "Vogel gut anderthalbmal so groß");
+  assert.ok(/const T_REIN = 3000, T_KREIS = 3600, T_RAUS = 3000/.test(g) && /Math\.PI \* 2/.test(g), "langsamer, eine Runde im Kreis");
+  assert.ok(/if \(einst\("ton", true\)\) hbSpielen\(0\.12, 0\.45\);/.test(g) && /function hbSpielen\(laut = 0\.22, schlag = 0\.42\)/.test(html), "Ständchen (vorhandene Melodie) leiser als Begleitlied – nur wenn Töne an");
+}
+// 2.554.0 KC-CLUB-PINNWAND-TEIL-AB (Wunsch Hansi „Zettel abnehmen – aber nur für die, die schon gelesen haben; für die anderen hängen lassen“)
+{
+  const mig = lies("supabase/migrations/20261021_kc_club_pinnwand_teil_ab.sql");
+  assert.ok(/add column if not exists teil_ab timestamptz/.test(mig), "Spalte teil_ab");
+  const ps = server.slice(server.indexOf("async function pinnwandSichtbar"), server.indexOf("const MAX_TESTDATEN"));
+  assert.ok(/z\.teil_ab && z\.person_id !== ich\.person_id/.test(ps) && /return t <= pwZeit\(z\?\.teil_ab\) \|\| t < frist;/.test(ps), "fällt nur bei Lesern ab (vorher gelesen, oder seit dem Lesen > 30 Min.); Verfasser sieht ihn immer");
+  const ta = server.slice(server.indexOf('case "pinnwand_teil_abnehmen":'), server.indexOf('case "pinnwand_abnehmen":'));
+  assert.ok(/z\.person_id !== ich\.person_id && !ich\.vorstand/.test(ta) && /if \(!offen\.length\) \{/.test(ta), "nur Verfasser/Clubleitung; haben alle gelesen → ganz ab");
+  assert.ok(/empf\.every\(\(id: string\) => \(gl \?\? \[\]\)\.some/.test(server), "letzter Leser → Zettel ist ganz weg");
+  assert.ok(/if \(z && z\.fuer !== "ich" && !z\.teilAb && z\.leser\?\.length && z\.offen\?\.length\)/.test(html) && /api\("pinnwand_teil_abnehmen", \{ id \}\)/.test(html) && /🧹 Bei Lesern abgenommen/.test(html), "App: Auswahl beim Abnehmen + Anzeige, bei wem er noch hängt");
+}
+// 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“)
+{
+  const mig = lies("supabase/migrations/20261021_kc_club_v2555_abstimmung_paket.sql");
+  assert.ok(/alter table public\.kc_club_vorschlaege add column if not exists paket jsonb;/.test(mig), "Spalte paket");
+  const sp = server.slice(server.indexOf('case "abstimmungspaket_speichern":'), server.indexOf('case "vorschlag_stimme":'));
+  assert.ok(/nurVorstand\(ich\);/.test(sp) && /fragen\.length > PAKET_MAX_FRAGEN/.test(sp) && /f\.optionen\.length < 2 \|\| f\.optionen\.length > PAKET_MAX_ANTWORTEN/.test(sp), "nur Clubleitung, höchstens 30 Fragen, je Frage 2–12 Antworten");
+  assert.ok(/paket: \{ id: paketId, titel, beschreibung, abschnitt: f\.abschnitt, nr,/.test(sp) && /art: "abstimmung"/.test(sp) && /await abstimmungZiel\(p, ich\)/.test(sp), "jede Frage eine normale Abstimmung, gleiche Zielgruppe");
+  assert.ok((sp.match(/await senden\(/g) || []).length === 1 && /`club-vorschlag:\$\{paketId\}`/.test(sp), "eine Benachrichtigung fürs ganze Paket");
+  assert.ok(/if \(v\.paket\?\.id\) return await paketErgebnisSenden\(v\);/.test(server) && /if \(zeilen\.some\(\(z: any\) => z\.status === "offen"\)\) return \{ gesendet: 0 \};/.test(server), "Ergebnis einmal, wenn die letzte Frage beendet ist");
+  assert.ok(/if \(p\.paket && v\.paket\?\.id\) \{\s*if \(!ich\.vorstand\) throw new Fehler\("Abstimmungen beenden/.test(server) && /if \(p\.paket && v\.paket\?\.id\) \{\s*if \(!ich\.vorstand\) throw new Fehler\("Ganze Abstimmungen löschen/.test(server), "ganzes Paket beenden/löschen nur Clubleitung");
+  assert.ok(/paket: v\.paket \?\? null, \/\/ 2\.555\.0/.test(server), "Liste liefert paket");
+  assert.ok(/onclick="vorschlagForm\('abstimmung', true\)">📋 Mehrere Fragen mit Überschrift/.test(html) && /api\(pk \? "abstimmungspaket_speichern" : "vorschlag_speichern", daten\)/.test(html), "App: Formular mit Bereichen und Fragen");
+  assert.ok(/if \(v\.paket\?\.id && VS_PAKETE\.has\(v\.paket\.id\)\) return paketKachel\(v\.paket\.id\);/.test(html) && /function vorschlagPaketInfo\(pid\)/.test(html) && /api\("vorschlag_status", \{ id: v\.id, status, paket: true \}\)/.test(html), "App: eine Kachel, Fenster nach Bereichen, beenden fürs ganze Paket");
+}
+// 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH / -WENN / -VORLAGE (Wunsch Hansi: Bilderrechner-Fragen – „Wer zählt zu den Helfern?“ nur bei Ja einblenden, mehrere ankreuzen)
+{
+  assert.ok(/const wahlListe = \(w: unknown\): string\[\] =>/.test(server) && /wahlTrifft\(x\.wahl, o\)\)\.length/.test(server) && /wahlListe\(x\.wahl\)\.forEach/.test(server), "Mehrfachauswahl wird je Antwort gezählt (Liste, Ergebnis, Clubleben)");
+  const st = server.slice(server.indexOf('case "vorschlag_stimme":'), server.indexOf('case "vorschlag_status":'));
+  assert.ok(/\} else if \(v\.paket\?\.mehrfach\) \{/.test(st) && /if \(gewaehlt\.size !== liste\.length\) throw/.test(st) && /p_wahl: JSON\.stringify\(liste\)/.test(st), "Mehrfach: nur angebotene Antworten, geheim nur einmal");
+  assert.ok(/z\.paket\?\.wenn\?\.nr === paketNr\(v\)/.test(st), "geänderte Antwort → Stimme bei nicht mehr passender Folgefrage fällt weg");
+  assert.ok(/f\.wenn\.nr < i && fragen\[f\.wenn\.nr\]\.optionen\.includes\(f\.wenn\.antwort\)/.test(server), "Bedingung nur auf frühere Frage und vorhandene Antwort");
+  assert.ok(/function pkSichtbar\(v, l\)/.test(html) && /if \(!pkSichtbar\(x, l\)\) continue;/.test(html) && /function pkKreuz\(id, o\)/.test(html) && /async function pkAbgeben\(id\)/.test(html), "App: Folgefrage nur bei passender Antwort, ankreuzen, geheim einmal abgeben");
+  assert.ok(/<select onchange="vfPkWenn\(/.test(html) && /onclick="vfVorlagen\(\)">📄 Vorlage/.test(html), "App: Bedingung per Auswahl, Vorlage übernehmen");
+  const vl = JSON.parse(lies("vorlagen/abstimmungen.json")).vorlagen;
+  for (const v of vl) { const alle = v.bereiche.flatMap((b) => b.fragen);
+    assert.ok(v.titel && alle.length >= 1 && alle.length <= 30, "Vorlage " + v.titel + ": 1–30 Fragen");
+    alle.forEach((f, i) => { const o = f.optionen || ["Ja", "Nein", "Enthaltung"]; assert.ok(f.frage && f.frage.length <= 150 && o.length >= 2 && o.length <= 12 && o.every((x) => x.length <= 60), "Vorlage-Frage gültig: " + f.frage);
+      if (f.wenn) assert.ok(f.wenn.nr < i && (alle[f.wenn.nr].optionen || ["Ja", "Nein", "Enthaltung"]).includes(f.wenn.antwort), "Vorlage-Bedingung gültig: " + f.frage); });
+  }
 }
