@@ -27,7 +27,7 @@
         {
           "name": "Abrechnung",
           "fragen": [
-            { "frage": "Sollen Kommen und Gehen per QR-Code erfasst werden, um die Stundenabrechnung zu vereinfachen?", "beschreibung": "Mit dem Clubausweis oder neu auch mit dem QR-Code in der Club-App.", "optionen": ["Ja, mit dem Clubausweis", "Ja, mit dem QR-Code in der Club-App", "Ja, beides", "Nein", "Enthaltung"] },
+            { "frage": "Sollen Kommen und Gehen per QR-Code erfasst werden, um die Stundenabrechnung zu vereinfachen?", "beschreibung": "Beides geht: mit dem Mitgliedsausweis oder mit dem QR-Code in der Club-App am Handy." },
             { "frage": "Sollen Barcode-Erfassung und die passenden Metallschilder (siehe Muster) eingesetzt werden?" },
             { "frage": "Sollen finanzielle Zuwendungen generell als Spende verbucht werden oder aufgeteilt nach Spende und Trinkgeld?", "optionen": ["Alles als Spende", "Aufteilen: Spende und Trinkgeld", "Enthaltung"] },
             { "frage": "Und bei „Stimmt so“ und Aufrunden – wie soll das verbucht werden?", "optionen": ["Als Spende", "Als Trinkgeld", "Aufteilen: Spende und Trinkgeld", "Enthaltung"] }

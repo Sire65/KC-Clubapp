@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.562.0 – 2026-10-21 – Vorlage: Kommen/Gehen mit Ausweis UND Handy-QR (KC-CLUB-ABSTIMMUNG-VORLAGE)
+Wunsch Hansi („bei der Stundenberechnung nicht entweder oder, sondern beides – Mitgliedsausweis / QR-Code am Handy“).
+- Frage 9: Antworten jetzt Ja / Nein / Enthaltung; Erklärung „Beides geht: mit dem Mitgliedsausweis oder mit dem QR-Code in der Club-App am Handy.“
+- Nur die Vorlage – App und Server unverändert. Rückweg: App 2.561.0.
+
 ## 2.561.0 – 2026-10-21 – Vorlage „Technik, Bilderrechner, Abrechnung“: Einleitung und zwei Änderungen (KC-CLUB-ABSTIMMUNG-VORLAGE)
 Wunsch Hansi nach Durchsicht.
 - Neue Einleitung oben: „Für den kommenden Weihnachtsmarkt sollten im Vorfeld einige Entscheidungen getroffen werden. So ist sichergestellt, dass alle nach den gleichen Regeln arbeiten und keine Unsicherheiten entstehen. Alle, die bei Hansi in der Bilderrechner-Schulung waren, wurden über die verschiedenen Vorgehensweisen informiert.“
