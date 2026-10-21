@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.575.0 – 2026-10-21 – Push-Zeichen aus dem Club-Logo
+- Fund Hansi „falsche Kochmütze – nimm das richtige Logo“: das Push-Zeichen oben in der Leiste ist jetzt aus dem Club-Logo (dieselbe Kochmütze wie oben links in der App), Linien für die kleine Leiste leicht verstärkt – statt der selbst gezeichneten Mütze.
+
 ## 2.574.0 – 2026-10-21 – Große Standuhr mit echtem Klang (KC-CLUB-STANDUHR-ECHT)
 - Neue Stundenuhr „🕰️ Große Standuhr – echt“: echte alte Großvateruhr (London-Hackney, gemeinfreie Aufnahme von radio aporee über archive.org) – erst das Ticken mit dem Anlauf des Schlagwerks, dann so viele echte Stundenschläge, wie es Uhr ist, im Takt der Uhr (0,85 s).
 - Pause nach der Melodie jetzt je Uhr einstellbar (diese Uhr schlägt wie das Original direkt nach dem Anlauf).
