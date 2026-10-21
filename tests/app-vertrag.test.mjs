@@ -11956,3 +11956,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.equal(png.readUInt32BE(16), 96, "Statusleisten-Zeichen 96 px breit"); assert.equal(png.readUInt32BE(20), 96, "96 px hoch");
   assert.ok(/badge: "badge-muetze\.png"/.test(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8")), "Push nutzt das Mützen-Zeichen");
 }
+
+// 2.577.0 KC-CLUB-CHAT-FILTER (Wunsch Hansi „nur seine, nur die des Partners oder wieder alle – Knopf in der kleinen Zeile“)
+{
+  assert.ok(/id="chatFilterKnopf"[^>]*onclick="chatFilterWeiter\(\)"/.test(seite) && /#chat\.nur-andere \.blase\.eigen, #chat\.nur-meine \.blase:not\(\.eigen\) \{ display: none; \}/.test(seite), "Knopf in der kleinen Zeile, Filter nur per Anzeige");
+  assert.ok(/const CHAT_FILTER = \["alle", "andere", "meine"\];/.test(programm) && /chatFilterSetzen\("alle", true\); \/\/ 2\.577\.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle/.test(programm), "Reihenfolge alle → andere → meine; beim Öffnen alle");
+}
+

@@ -8486,6 +8486,22 @@ function tippTonSetzen(w) { try { localStorage.setItem("kc_club_tippton", TIPP_T
 // 2.509.0 KC-CLUB-TIPPTON-KNOPF (Wunsch Hansi „im Chat neben dem kleinen Pfeil und der kleinen Tastatur ein Mini-Lautsprecher, der den Tastatur-
 // Anschlag-Sound abschaltet“): 🔊 = Tippgeräusche an → antippen schaltet aus (🔇); nochmal → wieder die zuletzt gewählte Art (sonst Tastatur).
 // Dieselbe Einstellung wie ⚙️ → Benachrichtigungen → „⌨️ Tippgeräusche“; gilt für dieses Gerät.
+// ---------- 2.577.0 KC-CLUB-CHAT-FILTER (Wunsch Hansi „nur seine, nur die des Partners oder wieder alle“) ----------
+// Knopf 👥 in der kleinen Zeile über dem Schreibfeld: 1× = nur die der anderen, 2× = nur meine, 3× = wieder alle. Nur Anzeige (CSS), lädt nichts.
+const CHAT_FILTER = ["alle", "andere", "meine"];
+let CHAT_FILTER_STAND = "alle";
+function chatFilterWeiter() { chatFilterSetzen(CHAT_FILTER[(CHAT_FILTER.indexOf(CHAT_FILTER_STAND) + 1) % CHAT_FILTER.length]); }
+function chatFilterSetzen(w, still) {
+  CHAT_FILTER_STAND = CHAT_FILTER.includes(w) ? w : "alle";
+  const c = $("chat"), k = $("chatFilterKnopf"), h = $("chatFilterHinweis"); if (!c) return;
+  c.classList.toggle("nur-andere", CHAT_FILTER_STAND === "andere"); c.classList.toggle("nur-meine", CHAT_FILTER_STAND === "meine");
+  const zweier = !CHAT?.gruppe && (CHAT?.teilnehmer || []).length <= 2, wer = zweier ? ($("chatTitel")?.textContent || "").trim() || "der anderen" : "der anderen";
+  const text = { alle: "Alle Nachrichten", andere: `Nur Nachrichten von ${wer}`, meine: "Nur meine Nachrichten" }[CHAT_FILTER_STAND];
+  const naechst = { alle: "antippen: nur die der anderen", andere: "antippen: nur meine", meine: "antippen: wieder alle" }[CHAT_FILTER_STAND];
+  if (k) { k.textContent = { alle: "👥", andere: "👤", meine: "🙋" }[CHAT_FILTER_STAND]; k.setAttribute("aria-pressed", String(CHAT_FILTER_STAND !== "alle")); k.title = `${text} – ${naechst}`; k.setAttribute("aria-label", text); }
+  if (h) { h.classList.toggle("versteckt", CHAT_FILTER_STAND === "alle"); h.textContent = CHAT_FILTER_STAND === "alle" ? "" : `${CHAT_FILTER_STAND === "andere" ? "👤" : "🙋"} ${text} · ✕ alle zeigen`; }
+  if (!still) melde(`${k?.textContent || ""} ${text}`);
+}
 function tippTonKnopf() {
   const an = tippTonWahl() !== "aus";
   let zuletzt = "tastatur"; try { const z = localStorage.getItem("kc_club_tippton_zuletzt"); if (TIPP_TOENE[z] && z !== "aus") zuletzt = z; } catch {}
@@ -30730,6 +30746,7 @@ async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
+  chatFilterSetzen("alle", true); // 2.577.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle Nachrichten
   if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); versandZurueck(); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG / -VERSANDART
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
   if (id !== chatId || aktuelleAnsicht !== "chat") spur("chat", id); // KC-CLUB-SPUR: welche Unterhaltung (ohne Inhalt)
