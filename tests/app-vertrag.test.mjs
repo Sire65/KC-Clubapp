@@ -1053,7 +1053,10 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)(;entwurfMerken\(\))?(;entwurfMarkeZeigen\(\))?"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
-  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?(, u\.diktiert \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n(    else if \(u\.diktiert\?\.length && andere\.length === 1\)[^\n]*\n)?    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
+  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?(, u\.diktiert \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n(    else if \(u\.diktiert\?\.length && andere\.length === 1\)[^\n]*\n)?    const stand = /.test(html)
+    // 2.578.0 KC-CLUB-CHAT-SOFORT: „schreibt …“/„diktiert …“ stehen jetzt im Kopf-Schritt kopf(), der ebenfalls VOR dem frühen Ausstieg läuft
+    || (/else if \(u\.tippt\?\.length && andere\.length === 1\) \$\("chatTeilnehmer"\)\.textContent = "✍️ schreibt …";/.test(html)
+      && /kopf\(\); zustellZeigen\(\);[\s\S]{0,900}tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\], u\.spricht \|\| \[\], u\.diktiert \|\| \[\]\); chatAbstand\(\);\n    const stand = /.test(html)), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft( \|\| document\.hidden)?\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
@@ -5909,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7176,7 +7179,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.540.0 KC-CLUB-SPERRE-NOTPAKET + KC-CLUB-SPERRE-OFFLINE: Gesperrte ohne Notfall-Paket und ohne gespeicherten Offline-Stand
 {
   assert.ok(/if \(spf\) throw new Error\("Sperren nicht lesbar/.test(server) && /const zug = \(zug0 \?\? \[\]\)\.filter\(\(z: any\) => !gesperrt\.has\(z\.person_id\)\);/.test(server), "Notfall-Paket ohne Gesperrte, Lesefehler → kein Bau");
-  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ try \{ localStorage\.removeItem\(STAND_KEY\); \} catch \{\}/.test(programm), "gesperrt: Offline-Stand gelöscht");
+  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ try \{ localStorage\.removeItem\(STAND_KEY\);( localStorage\.removeItem\("kc_club_chat_merk"\);)? \} catch \{\}/.test(programm), "gesperrt: Offline-Stand gelöscht (2.578.0: auch gemerkte Chats)");
 }
 // 2.541.0 KC-CLUB-SPERRE-MELDUNG: Push an die Admins, wenn ein Gesperrter die App öffnen will (gedrosselt wie der Protokolleintrag)
 {
@@ -11508,11 +11511,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/case when not exists \(select 1 from tn where tn\.person_id = p_person\) then null/.test(mig) && /case when tn\.person_id = p_person then '' else coalesce\(tn\.last_read_at::text, ''\) end/.test(mig), "nur Teilnehmer; eigenes „gelesen bis“ zählt nicht");
   assert.ok(/p_online_sek: ONLINE_SEK,\s+p_zuletzt_tage: ZULETZT_TAGE, p_einmal_tage: EINMAL_TAGE, p_bearbeiten_min: BEARBEITEN_MIN/.test(server), "Zeitgrenzen kommen aus dem Server (eine Stelle)");
   const uh = server.slice(server.indexOf('case "unterhaltung": {'), server.indexOf('case "unterhaltung_stand": {'));
-  assert.ok(/const pStand = chatStand\(id, ich\.person_id\);/.test(uh) && uh.indexOf("const pStand") < uh.indexOf('db.from("kc_communication_messages")') && /return json\(\{ id, betreff: t\?\.subject \?\? "", stand,/.test(uh), "Stand VOR dem Lesen berechnet und mitgeliefert");
+  assert.ok(/const pStand = (pk \? Promise\.resolve\(pk\.stand \?\? null\) : )?chatStand\(id, ich\.person_id\);/.test(uh) /* 2.578.0 KC-CLUB-CHAT-PAKET: Stand aus demselben Lese-Stand wie die Daten */ && uh.indexOf("const pStand") < uh.indexOf('db.from("kc_communication_messages")') && /return json\(\{ id, betreff: t\?\.subject \?\? "", stand,/.test(uh), "Stand VOR dem Lesen berechnet und mitgeliefert");
   assert.ok(/case "unterhaltung_stand": \{\s*const s = await chatStand\(String\(p\.id \|\| ""\), ich\.person_id\);\s*if \(s === null\) throw new Fehler\("Unterhaltung nicht gefunden\.", 404\);/.test(server), "kurze Nachfrage nur für Teilnehmer");
   const cn = html.slice(html.indexOf("async function chatNachsehen()"), html.indexOf("async function chatNachsehen()") + 600);
   assert.ok(/if \(r\?\.stand && r\.stand === CHAT\?\.stand\) return;/.test(cn) && /Date\.now\(\) - CHAT_VOLL_AM < CHAT_VOLL_MS/.test(cn) && /return chatLaden\(false\);/.test(cn) && /const CHAT_VOLL_MS = 5 \* 60000;/.test(html), "App: gleich → nichts laden; sonst/Fehler/alle 5 Min. ganz laden");
-  assert.ok(/chatTakt\.laeuft = true; chatNachsehen\(\)\.finally/.test(html) && /CHAT = u; CHAT_VOLL_AM = Date\.now\(\);/.test(html), "nur der Takt fragt kurz nach; Signale laden weiter ganz");
+  assert.ok(/chatTakt\.laeuft = true; chatNachsehen\(\)\.finally/.test(html) && /CHAT = u; (if \(!merk\) )?CHAT_VOLL_AM = Date\.now\(\);/.test(html), "nur der Takt fragt kurz nach; Signale laden weiter ganz (2.578.0: gemerkter Stand zählt nicht als frisch)");
   assert.ok(fs.existsSync(new URL("../tools/chat-sparsam/chat-stand-test.mjs", import.meta.url)), "Änderungstest (Postgres im Speicher) vorhanden");
 }
 
@@ -11692,7 +11695,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.531.0: Korrektur – nach CHAT = u laufen owZeigen/gpZeigen/slAnzeigen wieder (nicht in einem Kommentar versteckt)
 {
-  assert.ok(/\n    CHAT = u; CHAT_VOLL_AM = Date\.now\(\); setTimeout\(owZeigen, 0\); setTimeout\(gpZeigen, 0\); slAnzeigen\(\);/.test(html), "geplante/selbstlöschende/vorgemerkte Nachrichten werden nach dem Laden gezeigt");
+  assert.ok(/\n    CHAT = u; (if \(!merk\) )?CHAT_VOLL_AM = Date\.now\(\); setTimeout\(owZeigen, 0\); setTimeout\(gpZeigen, 0\); slAnzeigen\(\);/.test(html), "geplante/selbstlöschende/vorgemerkte Nachrichten werden nach dem Laden gezeigt");
   assert.ok(!/\/\/[^\n]*setTimeout\(owZeigen, 0\)/.test(html), "kein Aufruf in einem Kommentar");
 }
 // 2.532.0 KC-CLUB-WILDWEST-2 (Wunsch Hansi): Indianer und Häuptling am Feuer, Saguaro-Kakteen, Steppenläufer im Wind, Duell mit Abtransport
@@ -11963,3 +11966,33 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const CHAT_FILTER = \["alle", "andere", "meine"\];/.test(programm) && /chatFilterSetzen\("alle", true\); \/\/ 2\.577\.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle/.test(programm), "Reihenfolge alle → andere → meine; beim Öffnen alle");
 }
 
+// 2.578.0 KC-CLUB-CHAT-PAKET + KC-CLUB-CHAT-SOFORT (Fund Hansi „das Laden der Daten in einem Chat dauert, bis die Nachrichten erscheinen“, „schön vorsichtig“)
+{
+  const mig = lies("supabase/migrations/20261022_kc_club_unterhaltung_paket.sql");
+  const uh = server.slice(server.indexOf('case "unterhaltung": {'), server.indexOf('case "unterhaltung_stand": {'));
+  // Server: ein Aufruf, Teilnehmer-Prüfung, Rückfall, Not-Aus, Vergleich
+  assert.ok(/db\.rpc\("kc_club_unterhaltung_paket", \{ p_thread: threadId, p_person: person, p_jetzt: jetzt\(\), p_online_sek: ONLINE_SEK,/.test(server), "ein Aufruf für die Chat-Rohdaten");
+  assert.ok(/konfigZeile\("chat_paket"\)/.test(server) && /if \(k\?\.data\?\.wert\?\.aus\) return null;/.test(server) && /\} catch \{ return null; \}\n\}\nasync function chatPaketVergleich/.test(server), "Not-Aus + Fehler → bisheriger Weg");
+  assert.ok(/if \(pk\) \{ if \(!pk\.tn\.some\(\(x: any\) => x\.person_id === ich\.person_id\)\) throw new Fehler\("Unterhaltung nicht gefunden\.", 404\); \}\n\s*else await binTeilnehmer\(id, ich\.person_id\);/.test(uh), "nur Teilnehmer bekommen etwas – mit und ohne Paket");
+  assert.ok(/protokoll\(person, "chat_paket_abweichung", \{ thread: threadId, teile: abw \}\)/.test(server) && /Math\.random\(\) < 1 \/ CHAT_PAKET_VERGLEICH\) nebenbei\(chatPaketVergleich/.test(uh), "Vergleich alt ↔ neu nebenbei");
+  for (const [teil, alt] of [["msgs", 'db.from("kc_communication_messages").select("id,sender_person_id,body,created_at,reply_to_message_id")'], ["weg", 'db.from("kc_communication_message_hidden")'],
+    ["ablauf", 'db.from("kc_club_nachricht_ablauf")'], ["ma", 'db.from("kc_communication_message_attachments")'], ["att", 'db.from("kc_communication_attachments")'], ["einm", "einmalFotos(aids)"],
+    ["einmGes", 'db.from("kc_club_einmal_foto_gesehen")'], ["seE", '"sende_effekt"'], ["auftr", 'db.from("kc_communication_requests")'], ["zg", 'db.from("kc_club_zugang")'], ["inko", "inkognitoSet("],
+    ["rk", 'db.from("kc_club_reaktionen")'], ["ew", 'db.from("kc_club_erwaehnungen")'], ["bearb", 'db.from("kc_club_nachricht_bearbeitet")'], ["pins", 'db.from("kc_club_angeheftet")'],
+    ["umf", 'db.from("kc_club_chat_umfrage")'], ["stim", 'db.from("kc_club_chat_stimme")'], ["lvs", 'db.from("kc_club_link_vorschau")'], ["ex", 'db.from("kc_club_express").select("message_id")'],
+    ["exAnt", 'db.from("kc_club_express_antwort")'], ["exZu", 'db.from("kc_club_express_zustellung")'], ["exEv", 'db.from("kc_communication_delivery_events")'], ["gr", 'db.from("kc_club_gruppen")'], ["tippen", 'db.from("kc_club_tippen")']])
+    assert.ok(uh.includes("pk." + teil) && uh.includes(alt) && new RegExp(`'${teil}',`).test(mig), "Teil aus dem Paket + bisheriger Weg bleibt: " + teil);
+  assert.ok(/'stand', kc_club_chat_stand\(p_thread, p_person, p_jetzt,/.test(mig) && /language plpgsql stable set search_path = public/.test(mig) && !/security definer/.test(mig), "Fingerabdruck im selben Lese-Stand, nur lesend");
+  assert.ok(!/\b(insert|update|delete)\b/i.test(mig.replace(/^--.*$/gm, "")), "Paket schreibt nichts");
+  assert.ok(/revoke all on function public\.kc_club_unterhaltung_paket\(uuid, text, timestamptz, integer, integer, integer, integer\) from public, anon, authenticated;/.test(mig)
+    && /grant execute on function public\.kc_club_unterhaltung_paket\(uuid, text, timestamptz, integer, integer, integer, integer\) to service_role;/.test(mig), "nur der Server darf das Paket holen");
+  assert.ok(/quittungMerken\(ich, \[id\], "gelesen"\)/.test(uh) && /update\(\{ last_read_at: jetzt\(\) \}\)/.test(uh), "Lesen/Haken setzen bleibt wie bisher");
+  // App: gemerkter Stand sofort, deutlich markiert, ohne Nebenwirkungen; frisch lädt danach wie bisher
+  assert.ok(/const merk = CHAT\?\.id !== id \? chatAusMerk\(id\) : null;\n\s*if \(merk\) \{ const s0 = chatStand, i0 = NA\.idStand; await chatLaden\(true, merk\); chatStand = s0; NA\.idStand = i0; \}\n\s*await chatLaden\(true\);/.test(html), "erst gemerkt, dann frisch");
+  assert.ok(/🔄 Stand von \$\{fZeit\.format\(new Date\(merk\.zeit\)\)\} Uhr – wird aktualisiert …/.test(html), "Regel 11: gemerkter Stand sichtbar als nicht aktuell");
+  assert.ok(/if \(!merk\) vorlesenNeue\(u\.nachrichten\);/.test(html) && /if \(!merk && neuVonAnderen && einst\("ton", true\)/.test(html) && /if \(!merk\) empfangsEffekt\(u\);/.test(html), "kein Vorlesen/Ton/Effekt aus dem Merker");
+  assert.ok(/tippt: \[\], entwurf: \[\], spricht: \[\], diktiert: \[\] \}/.test(html) && /if \(merk && CHAT\?\.id === fuer\) return;/.test(html), "kein altes „schreibt …“; frische Antwort wird nie überschrieben");
+  assert.ok(/g\.schluessel === KEY\.slice\(-8\) && g\.person === ICH\?\.person_id/.test(html) && /CHAT_MERK_TAGE = 14, CHAT_MERK_MAX = 600000/.test(html) && /removeItem\("kc_club_chat_merk"\)/.test(html), "nur eigener Zugang, begrenzt, bei Sperre gelöscht");
+  assert.ok(/"kc_club_chat_merk"/.test(html) && /\^\(kc_club_\|kc_buero_\|kc-clubapp\\\.\|kcclub\)/.test(html), "beim Verlassen der App mit allen kc_club_-Daten gelöscht");
+  assert.ok(/if \(andere\.length === 1 && !MITGLIEDER\) chatMgHolen\(\)\.then\(\(\) => \{ if \(chatId === fuer && CHAT === u\) kopf\(\); \}, \(\) => \{\}\);/.test(html) && !/await mitgliederHolen\(\)\.catch\(\(\) => \{\}\);\n\s*\$\("chatKopfBild"\)/.test(html), "nicht mehr auf die Mitgliederliste warten");
+}

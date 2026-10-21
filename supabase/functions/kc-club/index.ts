@@ -125,7 +125,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.576.0";
+const SERVER_VERSION = "2.578.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5900,6 +5900,54 @@ async function chatStand(threadId: string, person: string): Promise<string | nul
   if (r.error) { console.error("chat stand", String(r.error?.message ?? r.error)); return undefined; }
   return typeof r.data === "string" ? r.data : null;
 }
+// 2.578.0 KC-CLUB-CHAT-PAKET (Fund Hansi „das Laden der Daten in einem Chat dauert, bis die Nachrichten erscheinen“, Wahl Hansi „schön vorsichtig,
+// damit alles lauffähig bleibt“): beim Öffnen eines Chats die Rohdaten in EINEM Datenbank-Aufruf (kc_club_unterhaltung_paket) statt ~28 nacheinander.
+// Jeder Teil ist genau die bisherige Abfrage; gerechnet wird wie bisher. Klappt der Aufruf nicht oder ist der Not-Aus gesetzt
+// (kc_club_konfig 'chat_paket' = {"aus": true}), nimmt jede Stelle von selbst den bisherigen Weg. Jeder CHAT_PAKET_VERGLEICH-te Aufruf vergleicht
+// nebenbei alt ↔ neu und schreibt Abweichungen ins Protokoll (chat_paket_abweichung).
+const CHAT_PAKET_VERGLEICH = 10;
+async function chatPaket(threadId: string, person: string): Promise<any | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(threadId)) return null;
+  try {
+    const k: any = await konfigZeile("chat_paket").catch(() => ({ data: null }));
+    if (k?.data?.wert?.aus) return null;
+    const r: any = await Promise.resolve(db.rpc("kc_club_unterhaltung_paket", { p_thread: threadId, p_person: person, p_jetzt: jetzt(), p_online_sek: ONLINE_SEK,
+      p_zuletzt_tage: ZULETZT_TAGE, p_einmal_tage: EINMAL_TAGE, p_bearbeiten_min: BEARBEITEN_MIN }));
+    const d = r?.data;
+    return !r?.error && d && typeof d === "object" && Array.isArray(d.msgs) && Array.isArray(d.tn) ? d : null;
+  } catch { return null; }
+}
+async function chatPaketVergleich(threadId: string, person: string, pk: any) { // nebenbei: bisherige Einzelabfragen gegen das Paket (ohne „tippen“/Lesestand – ändern sich laufend)
+  const [{ data: t }, { data: msgsRoh }] = await Promise.all([
+    db.from("kc_communication_threads").select("id,subject,created_by_person_id").eq("id", threadId).single(),
+    db.from("kc_communication_messages").select("id,sender_person_id,body,created_at,reply_to_message_id").eq("thread_id", threadId).order("created_at").limit(500),
+  ]);
+  const alleIds = (msgsRoh ?? []).map((m: any) => m.id), leer = { data: [] as any[] };
+  const [{ data: weg }, { data: ablauf }] = alleIds.length ? await Promise.all([
+    db.from("kc_communication_message_hidden").select("message_id").eq("person_id", person).in("message_id", alleIds),
+    db.from("kc_club_nachricht_ablauf").select("message_id,loescht_am").in("message_id", alleIds),
+  ]) : [leer, leer];
+  const wegIds = new Set([...(weg ?? []).map((x: any) => x.message_id), ...(ablauf ?? []).filter((x: any) => Date.parse(String(x.loescht_am)) <= Date.now()).map((x: any) => x.message_id)]);
+  const mids = alleIds.filter((x: string) => !wegIds.has(x));
+  const [{ data: ma }, { data: rk }, { data: ew }, { data: bearb }, { data: umf }, { data: stim }, { data: wicht }, { data: lvs }, { data: ex }] = mids.length ? await Promise.all([
+    db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids),
+    db.from("kc_club_reaktionen").select("message_id,person_id,emoji").in("message_id", mids),
+    db.from("kc_club_erwaehnungen").select("message_id,person_id").in("message_id", mids),
+    db.from("kc_club_nachricht_bearbeitet").select("message_id,bearbeitet_am").in("message_id", mids),
+    db.from("kc_club_chat_umfrage").select("message_id,frage,optionen,mehrfach").in("message_id", mids),
+    db.from("kc_club_chat_stimme").select("message_id,person_id,option").in("message_id", mids),
+    db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", mids),
+    db.from("kc_club_link_vorschau").select("message_id,url,titel,text,bild,seite").in("message_id", mids),
+    db.from("kc_club_express").select("message_id").in("message_id", mids),
+  ]) : [leer, leer, leer, leer, leer, leer, leer, leer, leer];
+  const aids = (ma ?? []).map((x: any) => x.attachment_id);
+  const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : leer;
+  const abw: string[] = [], pr = (k: string, alt: any, neu: any) => { if (!spGleich(alt, neu)) abw.push(k); };
+  pr("t", t, pk.t); pr("msgs", msgsRoh, pk.msgs); pr("weg", (weg ?? []).map((x: any) => x.message_id), pk.weg); pr("ablauf", ablauf, pk.ablauf); pr("ma", ma, pk.ma); pr("att", att, pk.att);
+  pr("rk", rk, pk.rk); pr("ew", ew, pk.ew); pr("bearb", bearb, pk.bearb); pr("umf", umf, pk.umf); pr("stim", stim, pk.stim); pr("wicht", wicht, pk.wicht); pr("lvs", lvs, pk.lvs);
+  pr("ex", (ex ?? []).map((x: any) => x.message_id), pk.ex);
+  if (abw.length) await protokoll(person, "chat_paket_abweichung", { thread: threadId, teile: abw });
+}
 async function binTeilnehmer(threadId: string, person: string) {
   const { data } = await db.from("kc_communication_thread_participants").select("thread_id").eq("thread_id", threadId).eq("person_id", person).maybeSingle();
   if (!data) throw new Fehler("Unterhaltung nicht gefunden.", 404);
@@ -9858,19 +9906,25 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       case "unterhaltung": {
         const id = String(p.id || "");
-        await binTeilnehmer(id, ich.person_id);
-        const pStand = chatStand(id, ich.person_id); // KC-CLUB-CHAT-STAND: VOR dem Lesen – was sich danach ändert, fällt beim nächsten Nachsehen auf
-        const [{ data: t }, { data: tn }, { data: msgsRoh }] = await Promise.all([
+        // 2.578.0 KC-CLUB-CHAT-PAKET: alle Rohdaten in einem Aufruf (null = bisheriger Weg; jede Stelle unten fällt von selbst zurück).
+        // Teilnehmer-Prüfung wie bisher (nur wer im Chat ist, bekommt etwas); der Fingerabdruck kommt aus demselben Lese-Stand.
+        const pk = await chatPaket(id, ich.person_id);
+        if (pk) { if (!pk.tn.some((x: any) => x.person_id === ich.person_id)) throw new Fehler("Unterhaltung nicht gefunden.", 404); }
+        else await binTeilnehmer(id, ich.person_id);
+        if (pk && Math.random() < 1 / CHAT_PAKET_VERGLEICH) nebenbei(chatPaketVergleich(id, ich.person_id, pk).catch((e) => console.error("chat paket vergleich", String(e))));
+        const pGeplant = geplantMeine(ich, id).catch(() => []), pGeplantVorab = geplantVorabFuerMich(ich, id).catch(() => []); // 2.578.0: gleichzeitig statt am Ende nacheinander
+        const pStand = pk ? Promise.resolve(pk.stand ?? null) : chatStand(id, ich.person_id); // KC-CLUB-CHAT-STAND: VOR dem Lesen – was sich danach ändert, fällt beim nächsten Nachsehen auf
+        const [{ data: t }, { data: tn }, { data: msgsRoh }] = pk ? [{ data: pk.t }, { data: pk.tn }, { data: pk.msgs }] : await Promise.all([
           db.from("kc_communication_threads").select("id,subject,created_by_person_id").eq("id", id).single(),
           db.from("kc_communication_thread_participants").select("person_id,last_read_at").eq("thread_id", id),
           db.from("kc_communication_messages").select("id,sender_person_id,body,created_at,reply_to_message_id").eq("thread_id", id).order("created_at").limit(500),
         ]);
         // KC-CLUB-WISCHEN (1.6.0): „nur für mich gelöscht“ (kc_communication_message_hidden) nicht anzeigen
         const alleIds = (msgsRoh ?? []).map((m: any) => m.id);
-        const { data: weg } = alleIds.length ? await db.from("kc_communication_message_hidden").select("message_id").eq("person_id", ich.person_id).in("message_id", alleIds) : { data: [] as any[] };
+        const { data: weg } = pk ? { data: (pk.weg ?? []).map((message_id: string) => ({ message_id })) } : alleIds.length ? await db.from("kc_communication_message_hidden").select("message_id").eq("person_id", ich.person_id).in("message_id", alleIds) : { data: [] as any[] };
         const wegIds = new Set((weg ?? []).map((x: any) => x.message_id));
         // KC-CLUB-SELBSTLOESCHEN (2.148.0): Ablaufzeit je Nachricht + Einstellung des Chats; Abgelaufenes nie zeigen (der Zeitplaner löscht es)
-        const [{ data: ablauf }, { data: slChat }] = await Promise.all([
+        const [{ data: ablauf }, { data: slChat }] = pk ? [{ data: pk.ablauf }, { data: pk.sl }] : await Promise.all([
           alleIds.length ? db.from("kc_club_nachricht_ablauf").select("message_id,loescht_am").in("message_id", alleIds) : Promise.resolve({ data: [] as any[] }),
           db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", id).maybeSingle(),
         ]);
@@ -9880,12 +9934,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (abgelaufen) db.rpc("kc_club_selbstloeschen_ausfuehren").then(() => {}, () => {});
         const msgs = (msgsRoh ?? []).filter((m: any) => !wegIds.has(m.id));
         const mids = (msgs ?? []).map((m: any) => m.id);
-        const { data: ma } = mids.length ? await db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids) : { data: [] as any[] };
+        const { data: ma } = pk ? { data: pk.ma } : mids.length ? await db.from("kc_communication_message_attachments").select("message_id,attachment_id").in("message_id", mids) : { data: [] as any[] };
         const aids = (ma ?? []).map((x: any) => x.attachment_id);
-        const { data: att } = aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
+        const { data: att } = pk ? { data: pk.att } : aids.length ? await db.from("kc_communication_attachments").select("id,file_name,mime_type,size_bytes").in("id", aids) : { data: [] as any[] };
         // KC-CLUB-EINMAL-FOTO: Kennzeichnung je Anlage (gesehen? weg?), Absender sieht wer wann; alte/fertige räumt es nebenbei auf
-        const einm = await einmalFotos(aids);
-        const { data: einmGes } = einm.size ? await db.from("kc_club_einmal_foto_gesehen").select("attachment_id,person_id,gesehen_am").in("attachment_id", [...einm.keys()]) : { data: [] as any[] };
+        const einm = pk ? new Map<string, any>((pk.einm ?? []).map((x: any) => [x.attachment_id, x])) : await einmalFotos(aids);
+        const { data: einmGes } = pk ? { data: pk.einmGes } : einm.size ? await db.from("kc_club_einmal_foto_gesehen").select("attachment_id,person_id,gesehen_am").in("attachment_id", [...einm.keys()]) : { data: [] as any[] };
         for (const e of einm.values()) if (!e.entfernt_am && Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000) nebenbei(einmalDateiWeg(e).catch(() => {})); // KC-CLUB-RC-PRUEFUNG (20.10.2026): waitUntil
         const einmalInfo = (aid: string) => { const e = einm.get(aid); if (!e) return null; const g = (einmGes ?? []).filter((x: any) => x.attachment_id === aid);
           const weg = !!e.entfernt_am || Date.now() - Date.parse(e.erstellt_am) > EINMAL_TAGE * 86400000;
@@ -9893,13 +9947,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             ...(e.absender === ich.person_id ? { gesehenVon: g.map((x: any) => ({ person_id: x.person_id, am: x.gesehen_am })) } : {}) }; };
         // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): gewählter Sende-Effekt der Teilnehmer – parallel zu den Namen, nur kurze Kennung
         const [leute, { data: seE }] = await Promise.all([personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]),
-          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sende_effekt").in("person_id", (tn ?? []).map((x: any) => x.person_id))]);
+          pk ? { data: pk.seE } : db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "sende_effekt").in("person_id", (tn ?? []).map((x: any) => x.person_id))]);
         const sendeEffekte = Object.fromEntries((seE ?? []).map((x: any) => [x.person_id, x.wert?.art]).filter(([, a]: any) => SENDE_EFFEKT_ARTEN.includes(a)));
         const andere = (tn ?? []).filter((x: any) => x.person_id !== ich.person_id);
         // KC-CLUB-QUITTUNG (0.34.0): Zustellung meiner Nachrichten aus dem Communicator (Push angezeigt/geöffnet, Mail verschickt)
         const eigeneIds = (msgs ?? []).filter((m: any) => m.sender_person_id === ich.person_id).slice(-60).map((m: any) => m.id);
         const kor = eigeneIds.flatMap((mid: string) => [`club-nachricht:${mid}`, `club-nachricht:${mid}:push`]);
-        const { data: auftr } = kor.length ? await db.from("kc_communication_requests").select("id,correlation_id,channel,status,recipient_refs").in("correlation_id", kor) : { data: [] };
+        const { data: auftr } = pk ? { data: pk.auftr } : kor.length ? await db.from("kc_communication_requests").select("id,correlation_id,channel,status,recipient_refs").in("correlation_id", kor) : { data: [] };
         const RANG: Record<string, number> = { sent: 1, delivered: 2, displayed: 3, opened: 4 };
         // KC-CLUB-HAKEN (1.55.0, Wunsch Hansi „wie WhatsApp“): je Empfänger „auf dem Handy angekommen“ – Push dort angezeigt/geöffnet
         // (Rückmeldung des Handys) oder seine App war nach der Nachricht online (hat sie geladen). Gelesen = Chat geöffnet.
@@ -9910,10 +9964,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           for (const r of Array.isArray(x.recipient_refs) ? x.recipient_refs : []) if (r?.personId) set.add(String(r.personId));
           pushDa.set(mid, set);
         }
-        const { data: zgAndere } = eigeneIds.length && andere.length ? await db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", andere.map((x: any) => x.person_id)).not("zuletzt_gesehen", "is", null) : { data: [] as any[] };
+        const { data: zgAndere } = pk ? { data: pk.zg } : eigeneIds.length && andere.length ? await db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", andere.map((x: any) => x.person_id)).not("zuletzt_gesehen", "is", null) : { data: [] as any[] };
         const zuletztDa = new Map<string, string>();
         // 2.6.1 (Prüfung): Inkognito-Admin nicht über den Haken verraten – bei ihm zählen nur Push-Rückmeldung und Lesen
-        const inkoAndere = (zgAndere ?? []).length ? await inkognitoSet((zgAndere ?? []).map((z: any) => z.person_id)) : new Set<string>();
+        const inkoAndere = pk ? new Set<string>(pk.inko ?? []) : (zgAndere ?? []).length ? await inkognitoSet((zgAndere ?? []).map((z: any) => z.person_id)) : new Set<string>();
         for (const z of zgAndere ?? []) if (!inkoAndere.has(z.person_id) && (!zuletztDa.has(z.person_id) || String(z.zuletzt_gesehen) > String(zuletztDa.get(z.person_id)))) zuletztDa.set(z.person_id, String(z.zuletzt_gesehen));
         const angekommenBei = (m: any) => andere.filter((x: any) => (x.last_read_at && x.last_read_at >= m.created_at) || pushDa.get(m.id)?.has(x.person_id) || (zuletztDa.get(x.person_id) ?? "") >= m.created_at).length;
         const zustellung = (mid: string) => {
@@ -9923,17 +9977,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return { push: push >= 4 ? "geoeffnet" : push === 3 ? "angezeigt" : push >= 1 ? "gesendet" : null, mail: a.some((x: any) => x.channel === "email" && (RANG[x.status] ?? 0) >= 1) };
         };
         // KC-CLUB-REAKTION / -ANTWORT / -ERWAEHNUNG (0.97.0)
-        const [{ data: rk }, { data: ew }] = mids.length ? await Promise.all([
+        const [{ data: rk }, { data: ew }] = pk ? [{ data: pk.rk }, { data: pk.ew }] : mids.length ? await Promise.all([
           db.from("kc_club_reaktionen").select("message_id,person_id,emoji").in("message_id", mids),
           db.from("kc_club_erwaehnungen").select("message_id,person_id").in("message_id", mids),
         ]) : [{ data: [] as any[] }, { data: [] as any[] }];
         const rkLeute = await personen([...(rk ?? []).map((x: any) => x.person_id), ...(ew ?? []).map((x: any) => x.person_id)]);
         // KC-CLUB-BEARBEITEN (1.9.0): Kennzeichen „bearbeitet“
-        const { data: bearb } = mids.length ? await db.from("kc_club_nachricht_bearbeitet").select("message_id,bearbeitet_am").in("message_id", mids) : { data: [] as any[] };
+        const { data: bearb } = pk ? { data: pk.bearb } : mids.length ? await db.from("kc_club_nachricht_bearbeitet").select("message_id,bearbeitet_am").in("message_id", mids) : { data: [] as any[] };
         const bearbMap = new Map((bearb ?? []).map((x: any) => [x.message_id, x.bearbeitet_am]));
         // KC-CLUB-ANHEFTEN / -MERKEN / -CHATUMFRAGE / -KONTAKT (1.10.0)
         const leer = { data: [] as any[] };
-        const [{ data: pins }, { data: gem }, { data: umf }, { data: stim }, { data: kon }, { data: wicht }, { data: lvs }] = mids.length ? await Promise.all([
+        const [{ data: pins }, { data: gem }, { data: umf }, { data: stim }, { data: kon }, { data: wicht }, { data: lvs }] = pk
+          ? [{ data: pk.pins }, { data: pk.gem }, { data: pk.umf }, { data: pk.stim }, { data: pk.kon }, { data: pk.wicht }, { data: pk.lvs }] : mids.length ? await Promise.all([
           db.from("kc_club_angeheftet").select("message_id,am").eq("thread_id", id).order("am", { ascending: false }),
           db.from("kc_club_gemerkt").select("message_id").eq("person_id", ich.person_id).in("message_id", mids),
           db.from("kc_club_chat_umfrage").select("message_id,frage,optionen,mehrfach").in("message_id", mids),
@@ -9944,17 +9999,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         ]) : [leer, leer, leer, leer, leer, leer, leer];
         const lvMap = new Map((lvs ?? []).map((x: any) => [x.message_id, lvSicht(x)]));
         // 2.362.0 KC-CLUB-EXPRESS: welche Nachrichten Express sind; der Absender sieht, wer den Empfang bestätigt hat
-        const { data: exRows } = mids.length ? await db.from("kc_club_express").select("message_id").in("message_id", mids) : leer;
+        const { data: exRows } = pk ? { data: (pk.ex ?? []).map((message_id: string) => ({ message_id })) } : mids.length ? await db.from("kc_club_express").select("message_id").in("message_id", mids) : leer;
         const exIds = new Set((exRows ?? []).map((x: any) => x.message_id));
-        const { data: exAnt } = exIds.size ? await db.from("kc_club_express_antwort").select("message_id,person_id,bestaetigt_am").in("message_id", [...exIds]).not("bestaetigt_am", "is", null) : leer;
+        const { data: exAnt } = pk ? { data: pk.exAnt } : exIds.size ? await db.from("kc_club_express_antwort").select("message_id,person_id,bestaetigt_am").in("message_id", [...exIds]).not("bestaetigt_am", "is", null) : leer;
         const exLeute = await personen((exAnt ?? []).map((x: any) => x.person_id));
         const exQuittung = (mid: string) => (exAnt ?? []).filter((x: any) => x.message_id === mid).map((x: any) => ({ name: vorname(exLeute.get(x.person_id)) || "?", am: x.bestaetigt_am }));
         // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG: je Empfänger „angekommen um“ (früheste Rückmeldung: Push auf dem Handy angezeigt, in der App
         // angekommen oder gelesen) und „gelesen um“ (Chat geöffnet). Ältere Sendungen ohne festgehaltene Lesezeit: „gelesen“ ohne Uhrzeit.
         const exEigen = (msgs ?? []).filter((m: any) => exIds.has(m.id) && m.sender_person_id === ich.person_id).map((m: any) => m.id);
-        const { data: exZu } = exEigen.length ? await db.from("kc_club_express_zustellung").select("message_id,person_id,angekommen_am,gelesen_am").in("message_id", exEigen) : leer;
+        const { data: exZu } = pk ? { data: pk.exZu } : exEigen.length ? await db.from("kc_club_express_zustellung").select("message_id,person_id,angekommen_am,gelesen_am").in("message_id", exEigen) : leer;
         const exPushAuftr = ((auftr ?? []) as any[]).filter((x) => x.channel === "push" && (RANG[x.status] ?? 0) >= 3 && exEigen.includes(String(x.correlation_id).split(":")[1]));
-        const { data: exEv } = exPushAuftr.length ? await db.from("kc_communication_delivery_events").select("request_id,detail,created_at").in("request_id", exPushAuftr.map((x) => x.id)).in("event_type", ["displayed", "opened"]) : leer;
+        const { data: exEv } = pk ? { data: pk.exEv } : exPushAuftr.length ? await db.from("kc_communication_delivery_events").select("request_id,detail,created_at").in("request_id", exPushAuftr.map((x) => x.id)).in("event_type", ["displayed", "opened"]) : leer;
         const exPushZeit = new Map<string, string>(); // „mid|person“ → früheste Anzeige auf dem Handy
         for (const e of (exEv ?? []) as any[]) {
           const a = exPushAuftr.find((x) => x.id === e.request_id); if (!a) continue;
@@ -10020,7 +10075,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const exFremd = (msgs ?? []).filter((m: any) => exIds.has(m.id) && m.sender_person_id !== ich.person_id).map((m: any) => ({ message_id: m.id, absender: m.sender_person_id, thread_id: id }));
           if (exFremd.length) await expressZustellung(ich, exFremd, true).catch((e) => console.error("express gelesen", String(e)));
         }
-        const [{ data: gr }, { data: tippen }] = await Promise.all([
+        const [{ data: gr }, { data: tippen }] = pk ? [{ data: pk.gr }, { data: pk.tippen }] : await Promise.all([
           db.from("kc_club_gruppen").select("*").eq("thread_id", id).maybeSingle(),
           db.from("kc_club_tippen").select("person_id,text,art").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
         ]);
@@ -10053,8 +10108,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           }
           runde = { ersteller: t?.created_by_person_id === ich.person_id || ich.admin, gleiche };
         }
-        const geplant = await geplantMeine(ich, id).catch(() => []); // KC-CLUB-SPAETER-SENDEN (2.362.0): nur meine, nur in diesem Chat
-        const geplantVorab = await geplantVorabFuerMich(ich, id).catch(() => []); // 2.551.0 KC-CLUB-GEPLANT-VORAB: für mich bereit (ohne Text)
+        const geplant = await pGeplant; // KC-CLUB-SPAETER-SENDEN (2.362.0): nur meine, nur in diesem Chat
+        const geplantVorab = await pGeplantVorab; // 2.551.0 KC-CLUB-GEPLANT-VORAB: für mich bereit (ohne Text)
         const stand = (await pStand) ?? null; // KC-CLUB-CHAT-STAND
         return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, diktiert, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant, geplantVorab,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });

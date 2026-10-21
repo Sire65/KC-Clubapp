@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.578.0 – 2026-10-21 – Chats öffnen sofort (KC-CLUB-CHAT-SOFORT / KC-CLUB-CHAT-PAKET)
+Ein Chat zeigt beim Öffnen sofort den zuletzt geladenen Stand (markiert „wird aktualisiert“); der Server holt die Chat-Daten in einem einzigen Datenbank-Aufruf statt rund 28 nacheinander. Bisheriger Weg bleibt als Rückfall, Not-Aus eingebaut.
+
 ## 2.577.0 – 2026-10-21 – 🧑‍🍳 Kochmütze in der Handy-Statusleiste größer + 👥 Chat-Filter (KC-CLUB-PUSH-MUETZE-GROSS, KC-CLUB-CHAT-FILTER)
 Wunsch Hansi Chat-Filter („Texte in Nachrichten nur seine oder nur die des Partners oder wieder alle … Togglebutton in der kleinen Zeile mit Tastatur, Lautsprecher, Schloss. Beim Öffnen immer alles, 1× nur Fremduser, nochmals nur meine, dann wieder alles“).
 - Chat: neuer Knopf **👥** in der kleinen Zeile über dem Schreibfeld (neben ⌨️ 🔊 🔒). 1× → **👤 nur die Nachrichten der anderen** (im Zweierchat „Nur Nachrichten von Dieter“), 2× → **🙋 nur meine**, 3× → wieder alle. Oben im Chat steht dann „👤 Nur Nachrichten von Dieter · ✕ alle zeigen“ (antippen = alle). Beim Öffnen eines Chats immer alle. Nur Anzeige, lädt nichts nach.

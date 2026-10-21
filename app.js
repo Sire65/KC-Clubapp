@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.577.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.578.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14245,7 +14245,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
-  if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
+  if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt });
   return j;
@@ -30740,6 +30740,41 @@ async function unterhEntfernen(id, fuerAlle) {
     melde(fuerAlle ? "🗑️ Für alle gelöscht" : "🙈 Aus deiner Liste entfernt"); UH.wahl = null; await unterhLaden();
   } catch (e) { meldeFehler(e); }
 }
+// ---------- 2.578.0 KC-CLUB-CHAT-SOFORT (Fund Hansi „das Laden der Daten in einem Chat dauert, bis die Nachrichten erscheinen“) ----------
+// Wie WhatsApp: beim Öffnen sofort den zuletzt geladenen Stand dieses Chats zeigen (nur auf diesem Gerät, nur der eigene Zugang, höchstens
+// CHAT_MERK_TAGE alt) – oben deutlich markiert „Stand von … – wird aktualisiert …“ (AGENTS Regel 11), bis die frische Antwort ihn ersetzt.
+// Ohne „schreibt …“, Vorlesen, Ton und Empfangs-Effekt (die kommen nur mit frischen Daten). Gemerkt werden die letzten CHAT_MERK_ANZAHL Chats
+// mit je den letzten CHAT_MERK_NACHR Nachrichten; beim Verlassen der App wird es mit allen kc_club_-Daten gelöscht.
+const CHAT_MERK_KEY = "kc_club_chat_merk", CHAT_MERK_ANZAHL = 12, CHAT_MERK_NACHR = 60, CHAT_MERK_TAGE = 14, CHAT_MERK_MAX = 600000;
+let CHAT_MERK = null; // Map: Chat-ID → { zeit, u }
+function chatMerkAlle() {
+  if (CHAT_MERK) return CHAT_MERK;
+  if (!KEY || !ICH) return new Map(); // noch nicht angemeldet: nichts lesen und nichts festhalten
+  CHAT_MERK = new Map();
+  try {
+    const g = JSON.parse(localStorage.getItem(CHAT_MERK_KEY) || "null");
+    if (g && KEY && g.schluessel === KEY.slice(-8) && g.person === ICH?.person_id)
+      for (const [id, e] of g.chats || []) if (e?.u && Array.isArray(e.u.nachrichten) && Date.now() - e.zeit < CHAT_MERK_TAGE * 86400000) CHAT_MERK.set(id, e);
+  } catch {}
+  return CHAT_MERK;
+}
+function chatMerken(id, u) {
+  if (!id || !u || !Array.isArray(u.nachrichten) || !KEY || !ICH) return;
+  const m = chatMerkAlle(); m.delete(id);
+  m.set(id, { zeit: Date.now(), u: { ...u, nachrichten: u.nachrichten.slice(-CHAT_MERK_NACHR), tippt: [], entwurf: [], spricht: [], diktiert: [] } });
+  while (m.size > CHAT_MERK_ANZAHL) m.delete(m.keys().next().value);
+  clearTimeout(chatMerken.t);
+  chatMerken.t = setTimeout(() => { // gebündelt schreiben; zu groß → älteste Chats weglassen
+    try {
+      let liste = [...m.entries()], t;
+      while ((t = JSON.stringify({ schluessel: KEY.slice(-8), person: ICH?.person_id, chats: liste })).length > CHAT_MERK_MAX && liste.length > 1) liste = liste.slice(1);
+      if (t.length <= CHAT_MERK_MAX) localStorage.setItem(CHAT_MERK_KEY, t);
+    } catch {}
+  }, 1500);
+}
+function chatAusMerk(id) { const e = chatMerkAlle().get(id); return e && Date.now() - e.zeit < CHAT_MERK_TAGE * 86400000 ? e : null; }
+let CHAT_MG_HOLEN = null; // Mitgliederliste nur einmal gleichzeitig holen
+const chatMgHolen = () => CHAT_MG_HOLEN || (CHAT_MG_HOLEN = mitgliederHolen().finally(() => { CHAT_MG_HOLEN = null; }));
 async function chatOeffnen(id, ausHistorie) {
   if (TH.thread === id) tippHinweisWeg(); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
   vorlesenZeigen(); // KC-CLUB-VORLESEN: Lautsprecher oben zeigt den gespeicherten Zustand
@@ -30752,43 +30787,56 @@ async function chatOeffnen(id, ausHistorie) {
   if (id !== chatId || aktuelleAnsicht !== "chat") spur("chat", id); // KC-CLUB-SPUR: welche Unterhaltung (ohne Inhalt)
   chatId = id; zeige("chat", ausHistorie); chatId = id;
   history.replaceState({ v: "chat", id, tiefe: history.state?.tiefe }, "", location.pathname + "#nachricht=" + id); // 2.1.1: Tiefe behalten (sonst ‹-Schleife)
-  const offenId = chatId; await chatLaden(true);
+  const offenId = chatId;
+  // 2.578.0 KC-CLUB-CHAT-SOFORT: gemerkten Stand sofort zeigen, dann wie bisher frisch laden (Vergleichsstand bleibt wie ohne Merker)
+  const merk = CHAT?.id !== id ? chatAusMerk(id) : null;
+  if (merk) { const s0 = chatStand, i0 = NA.idStand; await chatLaden(true, merk); chatStand = s0; NA.idStand = i0; }
+  await chatLaden(true);
   clearInterval(chatTimer); if (chatId === offenId && aktuelleAnsicht === "chat") chatTimer = setInterval(chatTakt, CHAT_TAKT_MS); // 1.97.0: nie zwei Takte
   $("liveHinweis").classList.toggle("versteckt", !liveTippen() || !ONL.zeigen);
 }
 let chatStand = "";
-async function chatLaden(scrollen) {
+async function chatLaden(scrollen, merk) {
   if (!chatId) return;
   try {
-    const fuer = chatId, u = await api("unterhaltung", { id: fuer });
+    // 2.578.0 KC-CLUB-CHAT-SOFORT: merk = gemerkter Stand (nur anzeigen, abgelaufene Selbstlösch-Nachrichten weglassen), sonst frisch vom Server
+    const fuer = chatId, u = merk ? { ...merk.u, nachrichten: merk.u.nachrichten.filter((m) => !m.loeschtAm || Date.parse(m.loeschtAm) > Date.now()) } : await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
+    if (merk && CHAT?.id === fuer) return; // frische Antwort war schneller – nichts Älteres drüberzeichnen
+    if (!merk) chatMerken(fuer, u);
     if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde
-    CHAT = u; CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
+    CHAT = u; if (!merk) CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
     $("chatTitel").textContent = (u.gruppe ? u.gruppe.name : u.betreff || andere.map((x) => x.name).join(", ")) + (stummAn(chatId) ? " 🔕" : "");
-    if (andere.length === 1 && !u.gruppe && !MITGLIEDER) await mitgliederHolen().catch(() => {});
+    // 2.578.0 KC-CLUB-CHAT-SOFORT: Kopf (Bild, Status, „schreibt …“) als eigener Schritt – fehlt die Mitgliederliste, wird NICHT mehr auf sie
+    // gewartet: die Nachrichten erscheinen sofort, Bild und Status kommen nach, sobald die Liste da ist
+    const kopf = () => {
     $("chatKopfBild").innerHTML = u.gruppe || andere.length > 1 ? uhRundeKreis({ gruppe: u.gruppe, teilnehmer: andere.map((x) => x.name), personen: andere.map((x) => x.person_id) })
       : andere.length === 1 ? kreis(MITGLIEDER?.find((m) => m.person_id === andere[0].person_id) || { person_id: andere[0].person_id }, andere[0].name, 40) : "";
-    zustellZeigen();
     let st = "";
-    if (andere.length === 1) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
+    if (andere.length === 1) { const m = MITGLIEDER?.find((x) => x.person_id === andere[0].person_id); if (m?.status) st = statusText(m.status); }
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
+    if (merk) $("chatTeilnehmer").textContent = `🔄 Stand von ${fZeit.format(new Date(merk.zeit))} Uhr – wird aktualisiert …`; // Regel 11: nicht als aktuell zeigen
+    else if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
+    else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
+    };
+    kopf(); zustellZeigen();
+    if (andere.length === 1 && !MITGLIEDER) chatMgHolen().then(() => { if (chatId === fuer && CHAT === u) kopf(); }, () => {});
     rundeAngebotZeigen(u); // KC-CLUB-GRUPPE-AUS-RUNDE
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
     tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || [], u.diktiert || []); chatAbstand();
-    if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
-    else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, m.express?.quittungen?.length, JSON.stringify(m.express?.empfaenger || null), (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(","), m.loeschtAm ? slRest(m.loeschtAm) : ""])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
-    vorlesenNeue(u.nachrichten); // KC-CLUB-VORLESEN
+    if (!merk) vorlesenNeue(u.nachrichten); // KC-CLUB-VORLESEN (nur frische Daten)
     if (NA.antwort && !u.nachrichten.some((m) => m.id === NA.antwort.id)) naAntwortWeg(); // Antwort gehört zu einem anderen Chat
     if (stand === chatStand && !scrollen) return;
     const neuVonAnderen = chatStand && u.nachrichten.length && !u.nachrichten[u.nachrichten.length - 1].eigen && stand !== chatStand && NA.idStand !== idStand;
     chatStand = stand; NA.idStand = idStand; CHAT_AKTIV = Date.now(); // KC-CLUB-SPARTAKT: etwas hat sich getan
     // KC-CLUB-NEU-LINIE (1.12.0): beim Öffnen Linie über der ersten ungelesenen Nachricht anderer und dorthin springen
-    if (NA.trennerChat !== chatId) {
+    if (merk) { NA.trennerVor = null; NA.trennerSprung = false; } // gemerkter Stand: Linie „Neue Nachrichten“ erst mit den frischen Daten
+    else if (NA.trennerChat !== chatId) {
       NA.trennerChat = chatId;
       const erste = u.nachrichten.find((m) => !m.eigen && (!u.gelesenBis || m.zeit > u.gelesenBis));
       NA.trennerVor = erste && u.gelesenBis ? erste.id : null; NA.trennerSprung = !!NA.trennerVor;
@@ -30806,14 +30854,14 @@ async function chatLaden(scrollen) {
     naWischenEinrichten();
     naReaktionenZeigen(u.nachrichten);
     if (CS.offen) chatSucheJetzt(false); // KC-CLUB-CHATSUCHE: Markierung nach dem Neuzeichnen behalten
-    if (neuVonAnderen && einst("ton", true) && !stummAn(chatId)) ton();
+    if (!merk && neuVonAnderen && einst("ton", true) && !stummAn(chatId)) ton();
     // KC-CLUB-NACH-UNTEN (1.12.0): beim Lesen älterer Nachrichten nicht nach unten reißen – stattdessen ⬇️ mit Punkt
     // 2.571.0 (Wunsch Hansi „wenn es in einen Chat geht, immer sofort die neueste anzeigen“): beim Öffnen ganz nach unten – die Linie „Neue Nachrichten“
     // bleibt als Markierung; ein zweites Mal nach dem Laden der Bilder, damit die neueste wirklich ganz zu sehen ist
     if (NA.trennerSprung) { NA.trennerSprung = false; [50, 400].forEach((ms) => setTimeout(() => window.scrollTo(0, document.body.scrollHeight), ms)); }
     else if (scrollen || (neuVonAnderen && !weitOben())) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
     else if (neuVonAnderen) NA.neuUnten = true;
-    empfangsEffekt(u); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT
+    if (!merk) empfangsEffekt(u); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT (nur frische Daten)
     setTimeout(nachUntenPruefen, 120);
   } catch (e) { meldeFehler(e); }
 }
