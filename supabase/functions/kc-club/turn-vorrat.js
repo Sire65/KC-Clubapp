@@ -31,3 +31,16 @@ export function turnIce(host, username, credential) {
 
 // wie lange die App die Wege merken darf: höchstens bis 1 Std. vor Ablauf, höchstens 6 Std.
 export const turnAppBis = (gueltigBis, t) => new Date(Math.min(Date.parse(gueltigBis) - TURN.restMs, t + 6 * 3600000)).toISOString();
+
+// 2.565.0 KC-CLUB-ANRUF-TURN-GRUND (Wunsch Hansi „Fehlermeldung erkennen“): Absage von Metered in einen verständlichen Grund mit
+// Handlungsanweisung übersetzen – fürs Admin-Lämpchen. Schlüssel/Passwörter werden vorher geschwärzt; unbekannte Meldungen gekürzt.
+export function turnGrund(fehler) {
+  const t = String(fehler ?? "").replace(/secretKey=[^&\s"]*/g, "secretKey=…").replace(/"(password|credential|secretKey|apiKey)"\s*:\s*"[^"]*"/g, '"$1":"…"');
+  if (/subscribe to a TURN Server plan/i.test(t)) return { code: "kein_plan", kurz: "kein Plan gewählt", text: "Bei Metered ist noch kein TURN-Plan gewählt. Im Metered-Dashboard links unten „Plans & pricing“ öffnen und den Free-Plan ($0) wählen – bei einer Abfrage nach Karte oder PayPal abbrechen." };
+  if (/Metered (401|403)\b|invalid secret|unauthori[sz]ed|forbidden/i.test(t)) return { code: "schluessel", kurz: "Schlüssel falsch", text: "Metered lehnt den Schlüssel ab. Bei Supabase (Edge Functions → Secrets) METERED_TURN_SECRET_KEY prüfen – der Wert steht bei Metered unter „Developers“ → Secret Key." };
+  if (/Metered 404\b/i.test(t)) return { code: "app", kurz: "App nicht gefunden", text: "Metered kennt die App „koecheclub-anrufe“ nicht. Im Metered-Dashboard den App-Namen (Domain …metered.live) prüfen." };
+  if (/quota|limit exceeded|exceed|overage|insufficient|balance/i.test(t)) return { code: "kontingent", kurz: "Kontingent erschöpft", text: "Das freie Kontingent bei Metered ist aufgebraucht. Ab dem nächsten Monat geht es wieder; bis dahin laufen Anrufe nur direkt. Kein Guthaben aufladen." };
+  if (/TimeoutError|AbortError|timed out|fetch failed|network|dns|Metered 5\d\d\b/i.test(t)) return { code: "netz", kurz: "nicht erreichbar", text: "Metered ist gerade nicht erreichbar. Der Server versucht es selbst wieder (spätestens in 10 Min.)." };
+  const m = /"message"\s*:\s*"([^"]{1,160})"/.exec(t)?.[1];
+  return { code: "unbekannt", kurz: "gestört", text: `Metered hat abgelehnt${m ? `: „${m}“` : t ? `: ${t.slice(0, 120)}` : ""}.` };
+}

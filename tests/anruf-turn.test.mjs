@@ -64,7 +64,7 @@ const z = (name, erstellt, nutzbar, gueltig) => ({ username: name, password: "pw
   assert.ok(/\} catch \{ return null; \}\n\}/.test(zg), "turnZugang wirft nie (ein Anruf scheitert nicht an der Umleitung)");
   assert.ok(/TURN_FEHLER_BIS = t \+ TURN\.fehlerPauseMs/.test(zg) && /replace\(\/secretKey=/.test(zg), "Fehler: Pause, Schlüssel nie im Protokoll");
   assert.ok(/signal: AbortSignal\.timeout\(6000\)/.test(server.slice(server.indexOf("async function turnAbruf("))), "Metered-Abruf mit Zeitgrenze");
-  assert.ok(/import \{ TURN, turnPlan, turnZeile, turnIce, turnAppBis \} from "\.\/turn-vorrat\.js";/.test(server), "Server nutzt das geprüfte Modul");
+  assert.ok(/import \{ TURN, turnPlan, turnZeile, turnIce, turnAppBis, turnGrund \} from "\.\/turn-vorrat\.js";/.test(server), "Server nutzt das geprüfte Modul");
 }
 // Datenbank: nur der Server, nie gespiegelt
 assert.ok(/enable row level security/.test(mig) && /revoke all on public\.kc_club_turn_vorrat from public, anon, authenticated;/.test(mig), "Vorrat: RLS, keine Rechte für App/öffentlich");
@@ -88,3 +88,30 @@ assert.ok(/"🛰️ Umleitung für Anrufe \(Metered\)"/.test(app) && /async func
 assert.ok(/kurz: "unbekannt"/.test(app.slice(app.indexOf("async function adTurnLaden("), app.indexOf("async function adZweitLaden("))), "Lämpchen: unbekannt bleibt grau, nie grün");
 
 console.log("anruf-turn: alles ok");
+
+// ---------- 4. 2.565.0 KC-CLUB-ANRUF-TURN-GRUND: Absagen von Metered verständlich machen ----------
+{
+  const { turnGrund } = await import("../supabase/functions/kc-club/turn-vorrat.js");
+  const echt = 'Metered 400: {"message":"please subscribe to a TURN Server plan before using this API"}';
+  assert.equal(turnGrund(echt).code, "kein_plan", "echte Meldung vom 21.10. → „kein Plan gewählt“");
+  assert.ok(/Plans & pricing/.test(turnGrund(echt).text) && /Free-Plan/.test(turnGrund(echt).text) && /Karte/.test(turnGrund(echt).text), "Anweisung: Free-Plan wählen, keine Karte");
+  assert.equal(turnGrund("Metered 401: unauthorized").code, "schluessel");
+  assert.equal(turnGrund("Metered 403: {}").code, "schluessel");
+  assert.ok(/METERED_TURN_SECRET_KEY/.test(turnGrund("Metered 401").text), "Schlüssel-Hinweis nennt das Geheimnis");
+  assert.equal(turnGrund("Metered 404: not found").code, "app");
+  assert.equal(turnGrund('Metered 400: {"message":"quota exceeded"}').code, "kontingent");
+  assert.ok(/Kein Guthaben aufladen/.test(turnGrund("quota exceeded").text), "Kontingent: nie aufladen (kostenlos bleiben)");
+  assert.equal(turnGrund("TimeoutError: Signal timed out.").code, "netz");
+  assert.equal(turnGrund("Metered 502: bad gateway").code, "netz");
+  const u = turnGrund('Metered 400: {"message":"irgendwas Neues"}');
+  assert.equal(u.code, "unbekannt"); assert.ok(u.text.includes("„irgendwas Neues“"), "unbekannte Meldung wird gezeigt");
+  const geheim = turnGrund('Metered 400: https://x.metered.live/api?secretKey=GEHEIM123 {"password":"pw9","message":"x"}');
+  assert.ok(!/GEHEIM123|pw9/.test(JSON.stringify(geheim)), "Schlüssel und Passwort nie im Grund");
+  assert.equal(turnGrund(undefined).code, "unbekannt", "leer wirft nicht");
+  const s = fall("turn_status");
+  assert.ok(/TURN_FEHLER_BIS = 0; const z = await turnZugang\(\);/.test(s), "Admin-Abfrage versucht sofort neu (keine 10-Min.-Pause)");
+  assert.ok(/grund: !z && TURN_GRUND \? \{ code: TURN_GRUND\.code, kurz: TURN_GRUND\.kurz, text: TURN_GRUND\.text \} : null/.test(s), "Grund nur ohne nutzbare Zugangsdaten, ohne Rohtext");
+  assert.ok(/try \{ await turnNeu\(\); TURN_GRUND = null; \} catch \(e\) \{[^}]*TURN_GRUND = \{ \.\.\.turnGrund\(/.test(server), "Erfolg löscht den Grund, Fehler setzt ihn");
+  assert.ok(/r\.grund\?\.text \? \{ f: "rot", kurz: String\(r\.grund\.kurz \|\| "gestört"\)/.test(app), "Lämpchen zeigt den erkannten Grund");
+}
+console.log("anruf-turn (Grund): alles ok");

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.563.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.565.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23049,6 +23049,7 @@ async function adTurnLaden(erzwingen) {
     AD.turn = { zeit: Date.now(), ...(!r.eingerichtet ? { f: "grau", kurz: "nicht eingerichtet", text: "Kein Metered-Schlüssel bei Supabase hinterlegt – Anrufe laufen nur direkt (wie bisher)." }
       : r.nutzbar ? { f: voll != null && voll >= 0.8 ? "gelb" : "gruen", kurz: voll != null && voll >= 0.8 ? "Kontingent fast voll" : "bereit ✓", text: `Zugangsdaten gültig bis ${fKurz.format(new Date(r.gueltig_bis))} (werden selbst erneuert).${vt}` }
       : r.wartet ? { f: "gelb", kurz: "wird vorbereitet", text: "Neue Zugangsdaten sind angelegt und in wenigen Minuten nutzbar. Bis dahin laufen Anrufe nur direkt." }
+      : r.grund?.text ? { f: "rot", kurz: String(r.grund.kurz || "gestört"), text: `${r.grund.text} Bis dahin laufen Anrufe nur direkt.` } // 2.565.0 KC-CLUB-ANRUF-TURN-GRUND: erkannter Grund mit Handlungsanweisung
       : { f: "rot", kurz: "gestört", text: `Metered hat keine Zugangsdaten geliefert${r.fehlerPause ? " (neuer Versuch in spätestens 10 Min.)" : ""} – Anrufe laufen nur direkt.` }) };
   } catch { AD.turn = { zeit: Date.now() - 25 * 60000, f: "grau", kurz: "unbekannt", text: "⚠️ Stand gerade nicht abrufbar." }; }
 }
