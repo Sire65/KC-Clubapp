@@ -23,3 +23,5 @@ jobs:
       - run: node tests/migration-rechte.test.mjs
       # KC-CLUB-ANRUF-TURN (2.563.0): Umleitungs-Server für Anrufe
       - run: node tests/anruf-turn.test.mjs
+      # KC-CLUB-ANKLOPFEN-VERPASST (2.567.0): verpasstes Anklopfen + Stand der Mitteilung
+      - run: node tests/anklopfen-verpasst.test.mjs

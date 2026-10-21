@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.567.0 – 2026-10-21 – 👋 Verpasstes Anklopfen + „ist angekommen“ für den Anklopfenden (KC-CLUB-ANKLOPFEN-VERPASST)
+Wunsch Hansi nach Fall Dieter („Hat er es nicht bekommen?“ – die Mitteilung war 2 s nach dem Anklopfen angezeigt, aber nicht geöffnet worden; „baue beides und spiel sofort ein“).
+- Wer ein Anklopfen verpasst hat, sieht beim nächsten Besuch einmal: „👋 Hansi hat bei dir angeklopft – du hast den Gesprächswunsch nicht angenommen. Möchtest du Hansi jetzt erreichen oder eine Nachricht schreiben?“ mit **👋 Zurück anklopfen**, **💬 Nachricht schreiben**, **Später**. Nur die letzten 24 h, je Person das neueste, höchstens 3 in einem Fenster; nicht, wenn ihr danach telefoniert oder im Zweiergespräch geschrieben habt. „Gesehen“ steht auf dem Server (gilt für alle Geräte, ohne neue Tabelle: kc_club_person_einstellung „klopf_verpasst“).
+- Wer anklopft, sieht im Warte-Fenster „📲 Ist um 16:58 Uhr auf dem Handy von Dieter angekommen“ bzw. „hat die Mitteilung geöffnet“; nach dem Auflegen: „Dieter hat die Mitteilung um 16:58 Uhr auf dem Handy bekommen, aber nicht geöffnet (vielleicht lautlos oder weggelegt)“ oder „… hat den Empfang nicht bestätigt (aus, kein Netz oder Stromsparen)“. Ob ein Handy stumm ist, verrät kein Browser.
+- Server 2.567.0: Online-Abfrage liefert verpasstes Anklopfen aus derselben Anklopfen-Abfrage (24 h statt 3 Min. für „an mich“); Zusatzabfragen nur, wenn es ein verpasstes gibt bzw. solange angeklopft wird. Neue Aktion anklopfen_verpasst_gesehen; anklopfen_abbrechen meldet den Stand der Mitteilung.
+- Test: tests/anklopfen-verpasst.test.mjs (Regeln, Stand der Mitteilung, Fall Dieter), Vertragstest-Block 2.567.0. Rückweg: App 2.566.0, Server 2.565.0.
+
 ## 2.566.0 – 2026-10-21 – 🌀 Kacheln: 9 Effekte, Abwechselnd, Start, Welle, Wackeln, Abschied (KC-CLUB-KACHEL-WIRBEL, KC-CLUB-KACHEL-EXTRAS)
 Wunsch Hansi („dass die Kacheln reingedreht kommen“, dann „baue alle, baue in Zahnrad und mach dass die auch Abwechslung gehen“).
 - ⚙️ → ✨ Effekte → „🎬 Effekt beim Register-Wechsel“ – neu: **🌀 Hereindrehen** (klein und gedreht von außen herein, linke Spalte von links, rechte von rechts), **🎰 Spielautomat** (Spalten rollen wie Walzen herein und rasten nacheinander ein), **🫧 Seifenblasen** (steigen schwankend auf und ploppen auf), **🧲 Magnet** (fliegen aus der Mitte auf ihren Platz), **🍳 Pfanne** (hochgeworfen, in der Luft gewendet, landen federnd) und **🔁 Abwechselnd** (jedes Mal der nächste Effekt der Reihe, gemerkt je Gerät). 🎲 Zufall nimmt jetzt alle neun.
