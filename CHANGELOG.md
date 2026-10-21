@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.566.0 – 2026-10-21 – 🌀 Kacheln: 9 Effekte, Abwechselnd, Start, Welle, Wackeln, Abschied (KC-CLUB-KACHEL-WIRBEL, KC-CLUB-KACHEL-EXTRAS)
+Wunsch Hansi („dass die Kacheln reingedreht kommen“, dann „baue alle, baue in Zahnrad und mach dass die auch Abwechslung gehen“).
+- ⚙️ → ✨ Effekte → „🎬 Effekt beim Register-Wechsel“ – neu: **🌀 Hereindrehen** (klein und gedreht von außen herein, linke Spalte von links, rechte von rechts), **🎰 Spielautomat** (Spalten rollen wie Walzen herein und rasten nacheinander ein), **🫧 Seifenblasen** (steigen schwankend auf und ploppen auf), **🧲 Magnet** (fliegen aus der Mitte auf ihren Platz), **🍳 Pfanne** (hochgeworfen, in der Luft gewendet, landen federnd) und **🔁 Abwechselnd** (jedes Mal der nächste Effekt der Reihe, gemerkt je Gerät). 🎲 Zufall nimmt jetzt alle neun.
+- Neue Schalter darunter (je Gerät, Standard an): **🚀 Kacheln beim Öffnen der App** (einmal mit dem gewählten Effekt, höchstens einmal pro Stunde), **💧 Welle beim Antippen** (Wellenring vom Finger aus), **🔔 Neues wackelt** (Kacheln mit Zahl wackeln beim Öffnen der Startseite einmal, höchstens alle 30 s), **👋 Abschied beim Abmelden** (Kacheln verschwinden – abwechselnd Jalousie zu, weggewirbelt oder fallend).
+- Wie bisher: nur Bewegung (transform/opacity), keine Datenbank-Abfragen; aus bei „✨ Animierte Knöpfe“ aus, im Sparmodus und in der einfachen Ansicht.
+- Erklär-Video „Effekte“, Hilfe-Texte und Suche ergänzt.
+- Test: Vertragstest-Blöcke 2.566.0 (Effekte, Abwechselnd, Schalter, Grenzen), Browser-Bilder der Abläufe. Server unverändert (2.565.0). Rückweg: App 2.565.0.
+
 ## 2.565.0 – 2026-10-21 – 🛰️ Umleitung: Lämpchen nennt den Grund und was zu tun ist (KC-CLUB-ANRUF-TURN-GRUND)
 Wunsch Hansi („Kannst du nicht die Fehlermeldung erkennen“, „bau es und spiel ein“). Anlass: Metered meldete „please subscribe to a TURN Server plan before using this API“.
 - Server 2.565.0: erkennt die Absagen von Metered und übersetzt sie – kein Plan gewählt, Schlüssel falsch, App nicht gefunden, Kontingent erschöpft, nicht erreichbar, sonst die Meldung selbst (gekürzt). Schlüssel und Passwörter werden geschwärzt. Fragt der Admin ausdrücklich nach, versucht der Server es sofort neu (ohne 10-Min.-Pause).

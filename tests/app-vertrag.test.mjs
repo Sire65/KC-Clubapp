@@ -11854,3 +11854,22 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/id="vfBogenKnopf" onclick="vfBogenVorschau\(\)">🖨️ Bogen ansehen \/ senden/.test(programm) && /function vfBogenVorschau\(\)/.test(programm) && /abBogenDrucken\("ENTWURF"\)/.test(programm), "Bogen schon aus dem Formular (vor dem Start)");
   assert.ok(/const abDruckListe = \(pid\) => \(pid === "ENTWURF" \? VF_ENTWURF : null\)/.test(programm) && /daten\.fragen = vfPkFragen\(\);/.test(programm), "gleiche Fragen wie beim Starten, nichts wird gespeichert");
 }
+// 2.566.0 KC-CLUB-KACHEL-WIRBEL (Wunsch Hansi „dass die Kacheln reingedreht kommen“)
+{
+  assert.ok(/\["wirbel", "🌀 Hereindrehen"\]/.test(programm) && /if \(w === "zufall"\) w = REG_ARTEN\[Math\.floor\(Math\.random\(\) \* REG_ARTEN\.length\)\];/.test(programm), "Hereindrehen wählbar und im Zufall");
+  const w = programm.slice(programm.indexOf('} else if (w === "wirbel") {'), programm.indexOf('} else if (w === "walze") {'));
+  assert.ok(/rotate\(\$\{rein \* -540\}deg\) scale\(\.15\)/.test(w) && /\{ transform: "none", opacity: 1 \}/.test(w) && !/left|top|width|margin/.test(w), "von außen gedreht herein, endet gerade – nur transform/opacity");
+  assert.ok(/if \(w === "aus" \|\| !einst\("animiert", true\) \|\| SPAR\?\.an \|\| kaBearb \|\| einfach\(\)\) return false;/.test(programm), "aus bei Animationen aus, Sparmodus, einfacher Ansicht");
+}
+// 2.566.0 KC-CLUB-KACHEL-EXTRAS (Wunsch Hansi „baue alle, im Zahnrad, mit Abwechslung“)
+{
+  for (const [k, t] of [["walze", "🎰 Spielautomat"], ["blasen", "🫧 Seifenblasen"], ["magnet", "🧲 Magnet"], ["pfanne", "🍳 Pfanne"], ["wechsel", "🔁 Abwechselnd"]]) assert.ok(programm.includes(`["${k}", "${t}"]`), "Effekt wählbar: " + t);
+  for (const k of ["walze", "blasen", "magnet", "pfanne"]) assert.ok(programm.includes(`} else if (w === "${k}") {`), "Effekt gebaut: " + k);
+  assert.ok(/const REG_ARTEN = REG_EFFEKTE\.map\(\(\[k\]\) => k\)\.filter\(\(k\) => !\["wechsel", "zufall", "aus"\]\.includes\(k\)\);/.test(programm) && /else if \(w === "wechsel"\) w = regEffektNaechster\(\);/.test(programm) && /kc_club_regEffektNr/.test(programm), "Abwechselnd: jedes Mal der nächste, gemerkt");
+  for (const k of ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"]) assert.ok(html.includes(`id="set_${k}"`) && html.includes(`einstellung('${k}', this.checked)`), "Schalter im Zahnrad: " + k);
+  assert.ok(/const kxAn = \(k\) => einst\(k, true\) && fxAn\(\) && !einfach\(\) && !kaBearb;/.test(programm), "alle Extras: abschaltbar, aus bei Animationen aus/Sparmodus/einfacher Ansicht");
+  assert.ok(/if \(Date\.now\(\) - alt < 3600000\) return;/.test(programm) && /kachelStartEffekt\(\); kachelNeuWackeln\(1300\);/.test(programm), "Start-Effekt höchstens einmal pro Stunde");
+  assert.ok(/Date\.now\(\) - KX_WACKEL < 30000/.test(programm), "Wackeln höchstens alle 30 s");
+  assert.ok(/try \{ await kachelAbschied\(\); \} catch \{\}[^\n]*\n  try \{ Object\.keys\(localStorage\)/.test(programm) && /\["zu", "weg", "fall"\]\[n % 3\]/.test(programm), "Abschied vor dem Löschen, abwechselnd");
+  assert.ok(/\.kachel-welle \{ position: absolute;[^}]*pointer-events: none/.test(html), "Welle stört kein Antippen");
+}
