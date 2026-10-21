@@ -1603,7 +1603,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .filter(([id, b]) => /^[0-9a-f-]{36}$/.test(id) && (b === "immer" || (typeof b === "string" && !isNaN(Date.parse(b)) && Date.parse(b) > Date.now())))
     .slice(0, 200).map(([id, b]) => [id, b === "immer" ? "immer" : new Date(String(b)).toISOString()])) }),
   // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): darf man bei mir anklopfen (Standard: ja) + welcher Anklopfton (Registry in der App)
-  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf" }),
+  // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG: ab = knopf (nur auf Knopfdruck, Standard) · spaeter (nach 1 Min. ohne Antwort) · sofort (gleich, ohne zu stören)
+  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf", ab: ["spaeter", "sofort"].includes(w?.ab) ? w.ab : "knopf" }),
   // KC-CLUB-SCHNELLSTART (1.8.0): große Kachel mit Symbolen (nur erweiterte Ansicht) – an/aus und eigene Auswahl (höchstens 8,
   // Reihenfolge = Auswahl; null = Grundeinstellung der App)
   schnellstart: (w) => ({ an: w?.an !== false,
@@ -11226,7 +11227,7 @@ Köcheclub-App`,
           for (const r of req ?? []) pushStand.set(String(r.idempotency_key).slice(15), klopfPushStand(r));
         }
         on.delete(ich.person_id);
-        const klopfbar = new Map([...on].map((id) => [id, einst.get("anklopfen")?.get(id)?.erlaubt !== false])); // wie anklopfenErlaubtMap
+        const klopfbar = new Map([...on].map((id) => [id, einst.get("anklopfen")?.get(id)?.erlaubt !== false || einst.get("anklopfen")?.get(id)?.ab === "sofort"])); // wie anklopfenErlaubtMap; 2.568.0: Anrufbeantworter „sofort“ nimmt auch dann auf
         // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“): seit wann jemand ohne Pause online ist (Sekunden,
         // vom Server gerechnet – keine Uhrenabweichung) – die App sagt beim Zurückkommen an, wer in den letzten 3 Min. dazugekommen ist
         const seitMap = new Map<string, number>();
@@ -11436,7 +11437,16 @@ Köcheclub-App`,
         const an = String(p.an || "");
         if (an === ich.person_id) throw new Fehler("Bei dir selbst kannst du nicht anklopfen 🙂");
         if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
-        if ((await anklopfenErlaubtMap([an])).get(an) === false) {
+        // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG: „sofort“ → gleich auf den Anrufbeantworter, ohne Mitteilung (auch wenn Anklopfen aus ist)
+        const { data: kE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", an).eq("schluessel", "anklopfen").maybeSingle();
+        const abModus = ["spaeter", "sofort"].includes((kE?.wert as any)?.ab) ? (kE?.wert as any).ab : "knopf";
+        if (abModus === "sofort") {
+          const { data: k0, error: e0 } = await db.from("kc_club_anklopfen").insert({ von: ich.person_id, an, status: "anrufbeantworter", beantwortet_am: jetzt(), antwort: "📼 Anrufbeantworter ist an" }).select("id").single();
+          if (e0 || !k0) throw new Fehler("Anklopfen hat nicht geklappt.", 500);
+          await protokoll(ich.person_id, "angeklopft", { an, ab: "sofort" });
+          return json({ ok: true, id: k0.id, ab: true });
+        }
+        if ((kE?.wert as any)?.erlaubt === false) {
           const pa = (await personen([an])).get(an) ?? null;
           throw new Fehler(`${vorname(pa) || "Das Mitglied"} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`, 409);
         }
@@ -11460,7 +11470,7 @@ Köcheclub-App`,
           eilig: true,
         }, `club-anklopfen:${k.id}`);
         await protokoll(ich.person_id, "angeklopft", { an, versand, ohnePush });
-        return json({ ok: true, id: k.id, push: versand.gesendet > 0, ohnePush });
+        return json({ ok: true, id: k.id, push: versand.gesendet > 0, ohnePush, ...(abModus === "spaeter" ? { abSpaeter: true } : {}) });
       }
 
       // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0): wer anklopft, legt auf → beim Gegenüber verschwindet die Frage
@@ -11483,6 +11493,16 @@ Köcheclub-App`,
       }
 
       // ----- 2.568.0 KC-CLUB-ANRUFBEANTWORTER -----
+      // Einstellung „spaeter“: nach 1 Min. ohne Antwort schaltet sich der Anrufbeantworter von selbst ein (die App des Anklopfenden fragt)
+      case "anklopfen_ab": {
+        const { data: k } = await db.from("kc_club_anklopfen").select("id,an,status,erstellt_am").eq("id", String(p.id || "")).eq("von", ich.person_id).maybeSingle();
+        if (!k) throw new Fehler("Anklopfen nicht gefunden.", 404);
+        if (k.status === "anrufbeantworter") return json({ ok: true, ab: true });
+        const { data: kE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", k.an).eq("schluessel", "anklopfen").maybeSingle();
+        if (k.status !== "offen" || (kE?.wert as any)?.ab !== "spaeter" || Date.now() - Date.parse(k.erstellt_am) < 50000) return json({ ok: true, ab: false });
+        const { data: upd } = await db.from("kc_club_anklopfen").update({ status: "anrufbeantworter", beantwortet_am: jetzt(), antwort: "📼 Anrufbeantworter ist an" }).eq("id", k.id).eq("status", "offen").select("id");
+        return json({ ok: true, ab: !!upd?.length });
+      }
       case "ab_aufsprechen": {
         const an = String(p.an || ""), sek = Math.round(Number(p.sek)), aid = String(p.anlage || "");
         if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);

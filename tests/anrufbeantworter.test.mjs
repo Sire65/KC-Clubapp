@@ -49,6 +49,11 @@ assert.ok(!abAnlageOk(null, "KC-P-002"));
   assert.ok(/📼 Anrufbeantworter einschalten/.test(app) && /else if \(a\.status === "anrufbeantworter"\) abAngebot\(a\.an, a\.id\)/.test(app) && /if \(s\.art === "ab"\) \{ abStandHolen\(\); return; \}/.test(app), "App: Knopf, Angebot, Signal");
   assert.ok(/const AB_MAX_SEK = \(\) => \(ICH\?\.admin \? 900 : 120\);/.test(app) && /if \(rest <= 0\)/.test(app), "Uhr läuft rückwärts, stoppt bei 0");
   assert.ok(/◀ Neuere/.test(app) && /Ältere ▶/.test(app) && /🗑️ Löschen/.test(app) && /wurde am \$\{esc\(fTag\.format/.test(app) && /id="abMerker"/.test(html), "Blättern, Löschen, Quittung, Merker");
+  // Einstellung: nur auf Knopfdruck (Standard) · nach 1 Minute · immer sofort
+  assert.ok(/ab: \["spaeter", "sofort"\]\.includes\(w\?\.ab\) \? w\.ab : "knopf"/.test(server) && /if \(abModus === "sofort"\) \{/.test(server) && /case "anklopfen_ab": \{/.test(server)
+    && /Date\.now\(\) - Date\.parse\(k\.erstellt_am\) < 50000/.test(server), "Server: Einstellung, sofort ohne Mitteilung, nach 1 Min. erst nach 50 s");
+  assert.ok(/id="setKlopfAb"/.test(html) && /<option value="knopf">/.test(html) && /<option value="spaeter">/.test(html) && /<option value="sofort">/.test(html), "Auswahl in den Einstellungen");
+  assert.ok(/if \(r\.ab\) \{ ONL\.erledigt\.add\("a" \+ r\.id\); return abAngebot/.test(app) && /if \(KW\.abSpaeter\) klopfAbAuto\(\); else klopfWartenFrage\(\);/.test(app), "App: sofort → gleich aufsprechen, nach 1 Min. automatisch");
   const tests = lies(".github/workflows/tests.yml"); assert.ok(tests.includes("node tests/anrufbeantworter.test.mjs"), "läuft in der CI");
 }
 console.log("anrufbeantworter: alle Prüfungen bestanden");

@@ -5212,6 +5212,10 @@
       </details>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
+      <!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG (Wunsch Hansi „auch in Voreinstellungen Anrufbeantworterfunktion einschalten“) -->
+      <label class="feld" style="margin:6px 0 2px">📼 Anrufbeantworter beim Anklopfen<select id="setKlopfAb" onchange="anklopfenSetzen({ ab: this.value })">
+        <option value="knopf">Nur, wenn ich ihn beim Anklopfen einschalte</option><option value="spaeter">Automatisch, wenn ich nicht innerhalb 1 Minute annehme</option><option value="sofort">Immer sofort an – ich möchte nicht gestört werden</option></select></label>
+      <div class="hinweis" style="margin:0 0 8px">Wer bei dir anklopft, kann dir dann eine Nachricht aufsprechen (bis zu 2 Minuten). „Immer sofort“ gilt auch, wenn Anklopfen ausgeschaltet ist. Abhören: 💬 Nachrichten → 📼 Mein Anrufbeantworter.</div>
       <details class="abh-klappe" data-abh="setAnklopfen"><summary>🔔 Anklopfton</summary> <!-- 2.478.0 KC-CLUB-EINST-KLAPPEN: klappt mit dem Häkchen darüber auf -->
         <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
       </details>

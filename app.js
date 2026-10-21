@@ -7890,7 +7890,8 @@ async function anklopfen(pid) {
   spur("anklopfen", pid); // KC-CLUB-SPUR
   try {
     const r = await api("anklopfen", { an: pid });
-    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush);
+    if (r.ab) { ONL.erledigt.add("a" + r.id); return abAngebot({ person_id: pid, vorname: name, name }, r.id); } // 2.568.0: Anrufbeantworter steht auf „sofort“
+    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush, r.abSpaeter);
   } catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) klopfGesperrt(pid, name); else meldeFehler(e); }
 }
 // 2.481.0 KC-CLUB-ANKLOPFEN-GESPERRT (Wunsch Hansi „klopfe ich bei jemandem an, der das blockiert hat: Meldung ‚Dieter hat Anklopfen blockiert –
@@ -7908,9 +7909,9 @@ function klopfGesperrt(pid, name) {
 // weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
 const KLOPF_WARTEN_SEK = 60;
 let KW = null;
-function klopfWartenStart(id, pid, name, ohnePush) {
+function klopfWartenStart(id, pid, name, ohnePush, abSpaeter) {
   klopfWartenEnde();
-  KW = { id, pid, name, ohnePush: !!ohnePush, bis: Date.now() + KLOPF_WARTEN_SEK * 1000, timer: null };
+  KW = { id, pid, name, ohnePush: !!ohnePush, abSpaeter: !!abSpaeter, bis: Date.now() + KLOPF_WARTEN_SEK * 1000, timer: null };
   const f = blattAuf("klopfWarten", `<div id="kwInhalt"></div>`); f.onclick = null; // nicht aus Versehen wegtippen
   klopfWartenZeichnen(); KW.timer = setInterval(klopfWartenZeichnen, 1000);
 }
@@ -7923,7 +7924,16 @@ function klopfWartenZeichnen() {
     ${KW.push && klopfPushText(KW.push, KW.name, false) ? `<p class="hinweis kw-push" style="text-align:center;margin:0 0 10px">${esc(klopfPushText(KW.push, KW.name, false))}</p>` : ""}
     ${KW.ohnePush ? `<p class="hinweis" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:#fff3d6;color:#5a4410">⚠️ <b>${esc(KW.name)}</b> hat auf dem Handy gerade keine Benachrichtigungen an – das Anklopfen sieht ${esc(KW.name)} erst, wenn die App offen ist. Schick lieber eine Nachricht.</p>` : ""}
     <button class="knopf" style="width:100%;text-align:center" onclick="klopfAuflegen()">📵 Auflegen</button>`;
-  if (sek <= 0) { clearInterval(KW.timer); KW.timer = null; klopfWartenFrage(); }
+  if (sek <= 0) { clearInterval(KW.timer); KW.timer = null; if (KW.abSpaeter) klopfAbAuto(); else klopfWartenFrage(); }
+}
+// 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG: der andere hat „nach 1 Minute Anrufbeantworter“ eingestellt
+async function klopfAbAuto() {
+  if (!KW) return; const { id, pid, name } = KW;
+  let r = null; try { r = await api("anklopfen_ab", { id }); } catch {}
+  if (!KW || KW.id !== id) return;
+  if (!r?.ab) return klopfWartenFrage();
+  klopfWartenEnde(); ONL.erledigt.add("a" + id); if (ONL.wartet === id) { ONL.wartet = null; onlineTakt(); }
+  abAngebot({ person_id: pid, vorname: name, name }, id);
 }
 function klopfWartenFrage() {
   if (!KW || !$("kwInhalt")) return;
@@ -7937,7 +7947,8 @@ const klopfMeldeText = () => `Melde dich doch mal bei mir. Gruß ${ICH?.vorname 
 async function klopfWeiter() {
   if (!KW) return;
   const { pid, name } = KW;
-  try { const r = await api("anklopfen", { an: pid }); ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush); }
+  try { const r = await api("anklopfen", { an: pid }); if (r.ab) { klopfWartenEnde(); ONL.erledigt.add("a" + r.id); return abAngebot({ person_id: pid, vorname: name, name }, r.id); }
+    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush, r.abSpaeter); }
   catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) { klopfWartenEnde(); klopfGesperrt(pid, name); } else meldeFehler(e); }
 }
 async function klopfAuflegen(still) {
@@ -8210,12 +8221,14 @@ async function zuletztZeigen(an) {
 function anklopfenZeigen() {
   const w = klopfStand();
   if ($("setAnklopfen")) $("setAnklopfen").checked = w.erlaubt !== false;
+  if ($("setKlopfAb")) $("setKlopfAb").value = ["spaeter", "sofort"].includes(w.ab) ? w.ab : "knopf"; // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG
   if ($("setKlopfTon")) $("setKlopfTon").innerHTML = KLOPF_TOENE.map((x) => `<option value="${x.id}"${x.id === w.ton ? " selected" : ""}>${esc(x.t)}</option>`).join("");
 }
+const AB_MODUS_TEXT = { knopf: "📼 Anrufbeantworter: nur, wenn du ihn beim Anklopfen einschaltest", spaeter: "📼 Anrufbeantworter: schaltet sich nach 1 Minute ohne Antwort ein", sofort: "📼 Anrufbeantworter ist an – wer anklopft, spricht gleich aufs Band" };
 async function anklopfenSetzen(teil) {
   const w = { ...klopfStand(), ...teil };
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), anklopfen: w };
-  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "🔔 Anklopfton gespeichert"); }
+  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "ab" in teil ? AB_MODUS_TEXT[w.ab] || "📼 Gespeichert" : "🔔 Anklopfton gespeichert"); }
   catch (e) { meldeFehler(e); }
   if ("ton" in teil) klopfTonSpielen(w.ton);
 }

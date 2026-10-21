@@ -1574,7 +1574,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ids\.length >= 8\) return melde/.test(html) && /schnellstart: \(w\) =>[\s\S]{0,250}\.slice\(0, 8\)/.test(server), "Schnellstart: höchstens 8 (App + Server)");
   assert.ok(/!x\.kachel \|\| kachelDa\(x\.kachel\)/.test(html), "Schnellstart: nur Symbole, für die das Mitglied Rechte hat");
   const ak = server.slice(server.indexOf('case "anklopfen":'), server.indexOf('case "anklopfen_antwort"'));
-  assert.ok(/anklopfenErlaubtMap\(\[an\]\)\)\.get\(an\) === false/.test(ak) && ak.indexOf("anklopfenErlaubtMap") < ak.indexOf('.insert('), "Anklopfen aus: Server lehnt vor dem Anlegen ab");
+  // 2.568.0: Einstellung „Anrufbeantworter sofort“ legt vorher ein Anklopfen MIT Status „anrufbeantworter“ an (ohne Mitteilung); das normale Anklopfen bleibt hinter der Prüfung
+  assert.ok(/if \(\(kE\?\.wert as any\)\?\.erlaubt === false\) \{/.test(ak) && ak.indexOf("?.erlaubt === false") < ak.indexOf('.insert({ von: ich.person_id, an })') && /insert\(\{ von: ich\.person_id, an, status: "anrufbeantworter"/.test(ak), "Anklopfen aus: Server lehnt vor dem Anlegen ab");
   assert.ok(/anklopfen: \(w\) => \(\{ erlaubt: w\?\.erlaubt !== false/.test(server) && /id="setAnklopfen" checked/.test(html), "Anklopfen erlauben (Standard an)");
   const aa = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anruf_start"'));
   assert.ok(/KLOPF_ANTWORTEN\[p\.antwort\]/.test(aa) && /status: "spaeter"/.test(aa), "Kurzantwort nur aus der Registry, beendet das Anklopfen");
@@ -6066,8 +6067,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(sub && r\.diesesBekannt\) \{ try \{ await sub\.unsubscribe\(\); \} catch \{\} sub = null; \}/.test(html) && /await api\("push_anmelden", \{ subscription: sub\.toJSON\(\), userAgent: navigator\.userAgent, wieder: true \}\);/.test(html), "Selbstheilung bei Erlaubnis, aber totem Zugang");
   assert.ok(/if \(!r\.frueher \|\| \(r\.aktiv \|\| 0\) - altHier > 0\) return;/.test(html) && /lsSetzen\("kc_club_push_wieder_gefragt", heute\)/.test(html) && /🔔 Jetzt wieder einschalten/.test(html), "nur wenn früher Push lief und kein anderes Gerät mehr (2.481.0: alte Abos dieses Geräts zählen nicht) – höchstens einmal am Tag");
   assert.ok(/if \(!PUSH_PRUEF\.lief\) \{ PUSH_PRUEF\.lief = true; setTimeout\(\(\) => pushPruefen\(\)\.catch\(\(\) => \{\}\), 6000\); \}/.test(html), "einmal je Start, nicht im Startweg");
-  assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
-  assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
+  assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush(, \.\.\.\(abModus === "spaeter" \? \{ abSpaeter: true \} : \{\}\))? \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
+  assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush(, r\.abSpaeter)?\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
 }
 // 2.322.0 KC-CLUB-EIS-TAKT (Fund Hansi „noch keinen fallenden Eiszapfen gesehen“): Tropfen-/Eis-Takt auch bei „Bewegung reduzieren“, erstes Stück sofort
 {
