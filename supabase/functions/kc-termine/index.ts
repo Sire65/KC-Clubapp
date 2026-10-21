@@ -153,6 +153,14 @@ function artKurz(art: string) {
 type Versand = { name: string; mail: boolean; push: boolean; hinweis?: string };
 async function senden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, test = false): Promise<Versand[]> {
   if (test) return [{ name: "Test", mail: false, push: false, hinweis: "Testlauf – nichts versendet" }];
+  // 2.536.0 KC-CLUB-KOMMUNIKATION-AUS: wer aus der Club-Kommunikation herausgenommen ist, bekommt auch von den Terminen nichts
+  // (Liste nicht lesbar → nichts senden, Regel 11)
+  const { data: aus, error: ausFehler } = await db.from("kc_club_kommunikation_aus").select("person_id").in("person_id", personIds.length ? personIds : ["-"]);
+  if (ausFehler) return [{ name: "Versand", mail: false, push: false, hinweis: "Liste „keine Benachrichtigungen“ nicht lesbar – nichts gesendet" }];
+  const ohneKomm = new Set((aus ?? []).map((x: any) => String(x.person_id)));
+  const still: Versand[] = [...ohneKomm].map((id) => ({ name: id, mail: false, push: false, hinweis: "möchte keine Benachrichtigungen" }));
+  personIds = personIds.filter((id) => !ohneKomm.has(id));
+  if (!personIds.length) return still;
   // Jede Mail an Mitglieder geht als echtes BCC auch an Hansi (KC-COMM-CCBCC im Communicator) – das Mitglied sieht davon nichts
   const bcc = MITGLIED_EREIGNISSE.includes(eventKey) && !personIds.includes(HANSI) ? [{ personId: HANSI }] : undefined;
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, {
@@ -168,7 +176,7 @@ async function senden(eventKey: string, personIds: string[], vars: Record<string
     // 1.3.9: ein vom Communicator verworfener Doppelversand ist KEIN neuer Versand – sichtbar machen statt still „Mail“
     const doppelt = (x.attempts ?? []).filter((a: any) => a.result === "deduplicated").map((a: any) => `${a.channel}: schon früher zugestellt – jetzt nicht erneut gesendet`);
     return { name: x.displayName || x.personId, mail: ok("email"), push: ok("push"), hinweis: [...fehl, ...doppelt].join(", ") || undefined };
-  });
+  }).concat(still);
 }
 const MITGLIED_EREIGNISSE = ["termin_einladung", "termin_bestaetigung", "termin_info_mitglied"];
 const versandText = (v: Versand[]) => v.map((x) => `${x.name}: ${[x.mail && "Mail", x.push && "Push"].filter(Boolean).join(" + ") || "nicht zugestellt"}${x.hinweis ? ` (${x.hinweis})` : ""}`).join("; ");

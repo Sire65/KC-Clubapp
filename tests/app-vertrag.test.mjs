@@ -1053,7 +1053,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/kc_club_tippen"\)\.delete\(\)\.eq\("thread_id", threadId\)/.test(server), "Senden beendet „schreibt …“ nicht");
   assert.ok(/if \(!chatId \|\| !ONL\.zeigen\) return;/.test(html) && /abstand = live \? 1000 : 3000/.test(html) && /Date\.now\(\) - TIPP\.zuletzt < abstand/.test(html), "Tipp-Meldung ohne Privatsphäre/Drosselung");
   assert.ok(/tippenMelden\(\)(;entwurfMerken\(\))?(;entwurfMarkeZeigen\(\))?"><\/textarea>/.test(html) && /id="tipptAnzeige"/.test(html) && /"tippen"(, "[a-z_]+")*\]\);/.test(html), "Anzeige/Eingabe/WARTEN_STILL fehlt");
-  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
+  assert.ok(/tipptZeigen\(u\.tippt \|\| \[\], u\.entwurf \|\| \[\](, u\.spricht \|\| \[\])?(, u\.diktiert \|\| \[\])?\);( chatAbstand\(\);)?\n    if \(u\.tippt\?\.length && andere\.length === 1\)[^\n]*\n(    else if \(u\.diktiert\?\.length && andere\.length === 1\)[^\n]*\n)?    const stand = /.test(html), "Anzeige muss vor dem frühen Ausstieg aktualisiert werden");
   assert.ok(/if \(chatTakt\.laeuft( \|\| document\.hidden)?\) return;/.test(html) && !/setInterval\(chatTakt, 4000\)/.test(html), "Chat-Takt überlappt / alter Takt");
   assert.ok(/if \(v !== "chat" && TIPP\.id\) tippenAus\(\);/.test(html), "Verlassen beendet „schreibt …“ nicht");
   assert.ok(/mirror_enabled, backup_enabled, note, updated_at\)\nvalues \('kc_club_tippen', 'Club-App', 'sensitive', false, false, false/.test(lies("supabase/migrations/20260929_kc_club_v54_tippen.sql")), "Spiegel-Regel für kc_club_tippen fehlt");
@@ -1090,8 +1090,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
   assert.ok(/eq\("schluessel", "live_tippen"\)/.test(ti) && /e\?\.wert\?\.an === true\) text = /.test(ti) && /slice\(-LIVE_TIPPEN_ZEICHEN\)/.test(ti), "Server speichert Entwurf ohne Zustimmung/Begrenzung");
-  assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
-  assert.ok(/\.\.\.\(live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
+  assert.ok(/entwurf = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.text( && x\.art !== "sprache")?\)/.test(server) && /tippt, entwurf,/.test(server), "Entwurf wird nicht geliefert");
+  assert.ok(/\.\.\.\((diktiert \? \{ diktat: true \} : )?live \? \{ text:/.test(html) && /id="setLiveTippen"/.test(html) && /id="liveHinweis"/.test(html), "App: Entwurf nur bei eingeschaltetem Live-Tippen / Hinweis fehlt");
   assert.ok(/'\*\/5 \* \* \* \*', \$\$delete from public\.kc_club_tippen where bis < now\(\)\$\$/.test(lies("supabase/migrations/20260929_kc_club_v56_live_tippen.sql")), "Entwürfe bleiben zu lange liegen");
 }
 
@@ -1172,7 +1172,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 83. 0.61.0: Druckvorschau vor jedem Ausdruck (KC-CLUB-DRUCKVORSCHAU)
 {
   assert.ok(!/window\.print\(\)/.test(html.replace("function druckJetzt() { setTimeout(() => window.print(), 60); }", "")), "Gedruckt wird nur aus der Vorschau");
-  assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken \/ als PDF<\/button>/.test(html) && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
+  assert.ok(/onclick="druckJetzt\(\)">🖨️ Drucken( \/ als PDF)?<\/button>/.test(html) /* 2.526.0: PDF eigener Knopf */ && /id="druckVorschau"/.test(html) && /id="druckVorschauRahmen"/.test(html), "Vorschau mit Druckknopf fehlt");
   assert.ok(/onclick="druckVorschau\(\)">👁️ Vorschau ansehen<\/button>/.test(html) && !/druckLos/.test(html), "Auswahlfenster druckt noch direkt");
   assert.ok(/rahmen\.srcdoc = druckHtml\(true\)/.test(html) && /const html = druckHtml\(false\);/.test(html), "Vorschau/Teilen nicht aus derselben Druckseite");
 }
@@ -1637,8 +1637,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/padding: 8px 0 var\(--chatUnten, 160px\)/.test(html) && /function chatAbstand\(\)/.test(html) && /new ResizeObserver\((chatAbstand|\(\) => requestAnimationFrame\(chatAbstand\))\)/.test(html), "Abstand unten gemessen");
   assert.ok(/@keyframes tippWelle/.test(html) && /\.punkte3 i \{ width: 9px; height: 9px/.test(html), "Punkte größer + Welle");
   const ti = server.slice(server.indexOf('case "tippen"'), server.indexOf('case "nachricht_senden"'));
-  assert.ok(/const art = p\.sprache \? "sprache" : "text"/.test(ti) && /text: art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
-  assert.ok(/const spricht = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache"\)/.test(server), "Server liefert spricht");
+  assert.ok(/const art = p\.sprache( \|\| p\.diktat)? \? "sprache" : "text"/.test(ti) && /text: (p\.diktat \? "diktat" : )?art === "sprache" \? null : text, art/.test(ti), "Server: Sprachaufnahme ohne Text");
+  assert.ok(/const spricht = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache"( && x\.text !== "diktat")?\)/.test(server), "Server liefert spricht");
   assert.ok(/function sprichtMelden\(\) \{\n  if \(!SPR \|\| !chatId \|\| !ONL\.zeigen\) return;/.test(html) && /getByteTimeDomainData/.test(html) && /osziStopp\(\); if \(s\.meldeId\) api\("tippen", \{ id: s\.meldeId, aus: true \}\)/.test(html), "App: melden nur bei Online-Status, echtes Oszilloskop, Ende meldet ab");
   const mig = lies("supabase/migrations/20261001_kc_club_v1110_spricht.sql");
   assert.ok(/add column if not exists art text not null default 'text'/.test(mig), "Migration additiv");
@@ -2429,9 +2429,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 217. 1.53.0: Wichtige Nachricht (KC-CLUB-WICHTIG)
 {
   const srv = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261002_kc_club_v1530_wichtig.sql");
-  assert.match(html, /id="wichtigKnopf" onclick="wichtigUmschalten\(\)">❗<\/button>/, "❗-Knopf unter dem Schreibfeld");
+  assert.match(html, /id="wichtigKnopf" [^>]*onclick="wichtigUmschalten\(\)"[^>]*>❗ Wichtig<\/button>/, "❗ Wichtig in der Versand-Leiste (2.524.0 KC-CLUB-VERSANDART)");
   assert.match(html, /\.\.\.\(WICHTIG \? \{ wichtig: true \} : \{\}\)/, "senden schickt wichtig nur wenn an");
-  assert.match(html, /wichtigUmschalten\(false\);( expressUmschalten\(false\);)?( slZurueck\(\);)? \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
+  assert.match(html, /(wichtigUmschalten\(false\);( expressUmschalten\(false\);)?|versandZurueck\(\);)( slZurueck\(\);)? \/\/ KC-CLUB-ENTWURF \/ -RUHIGE-EINGABE \/ -WICHTIG/, "nach dem Senden wieder normal");
   assert.match(html, /\$\{m\.wichtig \? " wichtig" : ""\}/, "Blase bekommt Klasse wichtig");
   assert.match(html, /\.blase\.wichtig \{ border: 3px solid #ff9800/, "wichtige Nachricht orange umrandet");
   assert.match(html, /u\.wichtigNeu \? " wichtig-neu" : ""/, "Chat-Liste markiert ungelesene wichtige Nachricht");
@@ -4026,7 +4026,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/<details class="karte versteckt" data-klappe="leitung_start" id="leitungStart">/.test(html) && /id="setTagesinfo" onchange="leitungStartSetzen\('tagesinfo', this\.checked\)"/.test(html) && /id="setEkHinweis" onchange="leitungStartSetzen\('eingang', this\.checked\)"/.test(html), "zwei Schalter");
   assert.ok(/const key = was === "tagesinfo" \? "kc_buero_frage_aus" : EKH_AUS;/.test(html) && /localStorage\.getItem\("kc_buero_frage_aus"\)/.test(html), "Tages-Übersicht nutzt den vorhandenen Merker (kein zweiter)");
-  assert.ok(/!buDarf\(\) \|\| ekhLies\(EKH_AUS\) === "1"\) return;/.test(html) && /if \(v === "einstellungen"\) \{ leitungStartZeigen\(\);/.test(html) && /k\.classList\.toggle\("versteckt", !darf\)/.test(html), "Hinweis respektiert Aus; nur Clubleitung sieht den Bereich");
+  assert.ok(/!buDarf\(\) \|\| ekhLies\(EKH_AUS\) === "1"\) return;/.test(html) && /function einstFuellen\(\) \{ leitungStartZeigen\(\);/.test(html) && /k\.classList\.toggle\("versteckt", !darf\)/.test(html), "Hinweis respektiert Aus; nur Clubleitung sieht den Bereich");
 }
 // 396. 2.23.47: 🎤 Diktieren in Feldern (KC-CLUB-DIKTAT-FELD)
 {
@@ -4329,16 +4329,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 428. 2.23.77: einzelne Personen sperren – Hinweisfenster Wartung / nicht erreichbar (KC-CLUB-PERSON-SPERRE)
 {
-  assert.ok(/const gesperrt = ich\.admin \? null : await sperreFuer\(ich\.person_id\);[^\n]*\n\s*if \(gesperrt\) return json\(\{ error: SPERRE_TEXT\[gesperrt\.art\] \|\| SPERRE_TEXT\.wartung, gesperrt: gesperrt\.art, bis: gesperrt\.bis \}, 423\);/.test(server), "Server sperrt nach der Anmeldung, nie Admins");
+  assert.ok(/const gesperrt = ich\.admin \? null : await sperreFuer\(ich\.person_id\);[^\n]*\n\s*if \(gesperrt\) \{\n[^\n]*sperreVersuchMerken[^\n]*\n\s*return json\(\{ error: SPERRE_TEXT\[gesperrt\.art\] \|\| SPERRE_TEXT\.wartung, gesperrt: gesperrt\.art, bis: gesperrt\.bis \}, 423\);/.test(server), "Server sperrt nach der Anmeldung, nie Admins");
   assert.ok(/Zur Zeit führen wir für Sie Wartungsarbeiten durch\. Bitte versuchen Sie es später nochmals\. Wir bitten um Verständnis\./.test(server), "Wortlaut Wartung");
   assert.ok(/if \(!error\) \{ SPERREN\.zeilen = /.test(server), "Lesefehler sperren nie alle");
   const g = server.slice(server.indexOf('case "sperre_liste"'), server.indexOf('case "wartung_setzen"'));
-  assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 4, "alle Sperr-Aktionen nur Admin (2.23.79: + sperre_stumm)");
+  assert.equal((g.match(/nurAdmin\(ich\);/g) || []).length, 6, "alle Sperr-Aktionen nur Admin (2.23.79: + sperre_stumm · 2.537.0: + komm_aus_liste/_setzen)");
   assert.ok(/x !== ich\.person_id && !admins\.has\(x\)/.test(g) && /aktiv: false, aufgehoben_am: jetzt\(\)/.test(g) && /"person_gesperrt"/.test(g) && /"person_entsperrt"/.test(g), "nicht sich selbst/Admins, Aufheben ohne Löschen, Protokoll");
-  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ sperreZeigen\(j\.gesperrt, j\.error, j\.bis\);/.test(html) && /function sperreZeigen\(art, text, bis\)/.test(html), "App zeigt das Hinweisfenster");
+  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ [^\n]*?sperreZeigen\(j\.gesperrt, j\.error, j\.bis\);/.test(html) && /function sperreZeigen\(art, text, bis\)/.test(html), "App zeigt das Hinweisfenster");
   assert.ok(/adKnopf\("🔒 Personen sperren", "sperreAuswahl\(\)", true\)/.test(html) && /api\("sperre_setzen", \{ personen: \[\.\.\.gew\]\.map/.test(html) && /api\("sperre_aufheben"/.test(html), "Verwaltung im Wartungs-Blatt");
   const rs = server.slice(server.indexOf("async function routerSendenRoh"), server.indexOf("const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`"));
-  assert.ok(/const stumm = \(await sperrenAktuell\(\)\)\.stumm;/.test(rs) && /personIds = personIds\.filter\(\(id\) => !stumm\.has\(id\)\)/.test(rs), "Benachrichtigungen aus: zentral im Versandweg gefiltert");
+  assert.ok(/const stumm = new Set\(\[\.\.\.\(await sperrenAktuell\(\)\)\.stumm, \.\.\.await kommunikationAus\(\)\]\);/.test(rs) && /personIds = personIds\.filter\(\(id\) => !stumm\.has\(id\)\)/.test(rs), "Benachrichtigungen aus: zentral im Versandweg gefiltert");
   assert.ok(/data-s="\$\{esc\(m\.person_id\)\}"/.test(html), "2.23.79: je Person 🔔/📵 zum Anklicken");
   const mig = lies("supabase/migrations/20261005_kc_club_v22377_person_sperre.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_person_sperre from anon, authenticated/.test(mig) && /check \(art in \('wartung', 'stoerung'\)\)/.test(mig), "Tabelle geschützt");
@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6102,7 +6102,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.332.0 KC-CLUB-THEMEN-BUEHNE-2 (Wunsch Hansi „weitere Themen: Ostern, Karneval und Halloween“)
 {
   for (const [id, jz] of [["ostern", "fruehling"], ["karneval", "karneval"], ["halloween", "halloween"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln")?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
+  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
   assert.ok(/const txt = name \? `Helau, \$\{name\}!` : "Helau!";/.test(html) && /const txt = name \? `Buuuh, \$\{name\}!` : "Buuuh!";/.test(html), "Vorname auf dem Wagen und beim Gespenst");
   assert.ok(/if \(te === "ostern" && J\.saison === "fruehling"\) x\.ostern = true;/.test(html) && /J\.gaeste\.push\(\{ typ: "osterhase", x: J\.w \+ 24, t: 0 \}\)/.test(html) && /if \(e\.da === false && hase\) continue;/.test(html) && /!v\.gef && v\.da !== false/.test(html), "Ostern: Osterhase legt die Eier, erst dann sicht- und findbar");
   assert.ok(/function osterSonntag\(jahr\)/.test(html) && /const ostern = osterSonntag\(jahr\);/.test(html), "eine Osterformel für Feiertage und Themen");
@@ -6322,7 +6322,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/async function expressStand\(ich: Ich\) \{\n\s+if \(ich\.admin\) return \{ genutzt: 0, max: EXPRESS_MAX, unbegrenzt: true/.test(server) && /case "express_stand": \{[^\n]*\n\s+const st: any = await expressStand\(ich\);/.test(server), "Server: Stand je Person, Admin unbegrenzt");
   assert.ok(/const EXPRESS_MAX = 5,/.test(server) && /if \(express && !ich\.admin\) \{/.test(server) && /\.\.\.\(express \? \{ expressStand: await expressStand\(ich\) \} : \{\}\)/.test(server), "Grenze bleibt 5, Antwort liefert neuen Stand");
-  assert.ok(/const z = EXPRESS && st && !st\.unbegrenzt \? `\$\{st\.genutzt\}\/\$\{st\.max\}` : "";/.test(html) && /#expressKnopf\[data-zahl\]::after \{ content: attr\(data-zahl\);/.test(html), "„2/5“ am 🏎️-Knopf");
+  assert.ok(/const z = EXPRESS && st && !st\.unbegrenzt \? `\$\{st\.genutzt\}\/\$\{st\.max\}` : "";/.test(html) && /#expressKnopf\[data-zahl\]::after \{ content: attr\(data-zahl\);/.test(html), "„2/5“ am 🏎️-Haken");
   assert.ok(/if \(st && !st\.unbegrenzt && st\.genutzt >= st\.max\) \{\n\s+expressUmschalten\(false\);/.test(html) && /\(heute \$\{st\.genutzt\}\/\$\{st\.max\}\)/.test(html), "voll → Express geht nicht an, Hinweis; nach dem Senden „heute 3/5“");
 }
 // 2.392.0 KC-CLUB-HERBST-MITTE-FREI (Fund Hansi): Pilze kleiner, höchstens 2 Fliegenpilze, in der Mitte (Name aus Nüssen) nur Laub
@@ -6553,7 +6553,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2): Thema Weltraum mit eigener Szene (Sterne, Planet, Rakete, Astronaut schreibt den Namen, UFO)
 {
   assert.ok(/\{ id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "weltraum"\) return jzbWrSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "weltraum"\) jzbWeltraumMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const w = programm.slice(programm.indexOf("function jzbWrSchritt("), programm.indexOf("function jzbWrBahn("));
   assert.ok(/if \(t >= JZB_WR_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(w), "Lauf endet, neuer Lauf");
@@ -6564,7 +6564,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3): Thema Bauernhof – ein Tag von Morgen bis Nacht, dann wieder Morgen
 {
   assert.ok(/\{ id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "bauernhof"\) return jzbBhSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "bauernhof"\) jzbBauernhofMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const b = programm.slice(programm.indexOf("function jzbBhSchritt("), programm.indexOf("function jzbBhHimmel("));
   assert.ok(/if \(t >= JZB_BH_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(b) && /if \(abend\) \{ T\.ziel = st\.tuer;/.test(b) && /B\.tor = Math\.max\(0, B\.tor - dt \* \.8\)/.test(b), "abends in den Stall, Tor zu, neuer Lauf");
@@ -6576,7 +6576,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4): Thema Kegelabend – 6 Würfe, Tafel mit Namen und Strichen, „Alle Neune“, Tafel wischen
 {
   assert.ok(/\{ id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "kegeln"\) return jzbKgSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "kegeln"\) jzbKegelnMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbKgNeu("), programm.indexOf("function jzbKgKegelMalen("));
   assert.ok(/i === JZB_KG_WUERFE - 1 \? 9 :/.test(g) && /if \(t >= JZB_KG_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(g) && /K\.wisch = Math\.min\(1, K\.wisch \+ dt \/ 3\)/.test(g), "letzter Wurf alle Neune, Tafel wischen, neuer Lauf");
@@ -6795,7 +6795,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const seiteE = lies("index.html");
   assert.ok(!/EINST_GRUPPEN|function einstGruppieren/.test(html) && !/data-klappe="hilfe"/.test(seiteE), "Hauptbereiche aus 2.469.0 wieder entfernt (alte Aufteilung)");
-  assert.ok(/if \(v === "einstellungen"\) \{ leitungStartZeigen\(\); setTimeout\(abhKlappen, 900\);/.test(html), "beim Öffnen Häkchen neu prüfen");
+  assert.ok(/function einstFuellen\(\) \{ leitungStartZeigen\(\); setTimeout\(abhKlappen, 900\);/.test(html), "beim Öffnen Häkchen neu prüfen");
   assert.ok(/<input type="search" id="einstSuche"[^>]*oninput="einstSuchen\(this\.value\)"/.test(seiteE) && /function einstSuchen\(q, leeren\)/.test(html) && /alle\.forEach\(\(d\) => \(d\.open = EINST_SUCHE\.offen\.has\(d\)\)\)/.test(html), "Suche + Zurückstellen der Auf/Zu-Stände");
   for (const id of ["setTipps", "setWasNeu", "setSchrittHilfe", "setEinw"]) assert.equal((seiteE.match(new RegExp(`id="${id}"`, "g")) || []).length, 1, "genau einmal: " + id);
   assert.ok(/<div class="schalter nur-erweitert"><div><b>❓ Fragezeichen unten rechts<\/b>/.test(seiteE) && /body\.einfach #v-einstellungen \.nur-erweitert \{ display: none; \}/.test(seiteE), "kein doppeltes Fragezeichen in der einfachen Ansicht");
@@ -7010,7 +7010,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const tg = html.slice(html.indexOf("function tippGeraeusche(entwurf) {"), html.indexOf("function tipptZeigen("));
   assert.ok(/if \(alt !== undefined\)/.test(tg) && /if \(TT\.chat !== chatId\)/.test(tg), "beim Öffnen kein Geprassel für vorhandenen Text");
   assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "chat" \|\| \(chatId && stummAn\(chatId\)\)/.test(tg) && /n = Math\.min\(n, 24\)/.test(tg), "nur offene, nicht stumme Unterhaltung, begrenzt");
-  assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\]\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
+  assert.ok(/function tipptZeigen\(namen, entwurf = \[\], sprechen = \[\](, diktiert = \[\])?\) \{\s*const e = \$\("tipptAnzeige"\); if \(!e\) return;\s*tippGeraeusche\(entwurf\);/.test(html), "hängt an der Live-Tippen-Anzeige (nur Entwurf, nicht bloß „schreibt …“)");
 }
 
 // 2.506.0 KC-CLUB-PROTOKOLL-SCHNELL (Hansi: Veröffentlichen dauerte 21 s): Benachrichtigung im Hintergrund, Antwort sofort
@@ -7078,6 +7078,169 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/revoke all on function public\.kc_dp_nicht_planbar\(text\) from public, anon;/.test(m) && /grant execute on function public\.kc_dp_nicht_planbar\(text\) to authenticated;/.test(m), "kein anonymer Zugriff");
 }
 
+// 2.523.0 KC-CLUB-MELDUNG-AUFFAELLIG + KC-CLUB-DLG-SCHLIESSEN (Wunsch Hansi): Meldung oben kontrastreich, blinkt 2×; Schlüsselbund-Fenster mit ✕
+{
+  assert.ok(/\.meldung \{ background: #140a0b; color: #fff; font-weight: 700; border: 3px solid #c9a46a;[^}]*animation: meldung-blink \.42s ease-in-out 2; \}/.test(html), "kontrastreich (CD-Gold-Rand), blinkt genau 2×");
+  assert.ok(/@keyframes meldung-blink \{ 50% \{ background: #c9a46a; color: #140a0b;/.test(html) && /\.meldung\.fehler \{[^}]*animation-name: meldung-blink-fehler; \}/.test(html), "Fehlermeldungen blinken rot/weiß");
+  assert.ok(!/@keyframes meldung-blink[^{]*\{[^}]*transform/.test(html), "Blinken ohne Bewegung (transform bleibt für die Mittelung)");
+  assert.ok(/dlgOeffnen\(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕<\/button><h3 class="dlg-kopf">🔑 Schlüsselbund/.test(html) && /\.dlg-x \{ position: absolute; top: 8px; right: 8px; min-width: 44px; min-height: 44px;/.test(html), "Schließkreuz oben rechts, 44 px Tippfläche");
+}
+
+// 2.524.0 KC-CLUB-VERSANDART (Wunsch Hansi): ❗ und 🏎️ raus aus der Knopfreihe – Versand-Leiste über dem Schreibfeld:
+// 📝 Normal vorgewählt; Wichtig oder Express nimmt den Haken bei Normal raus; Wichtig + Express zusammen; nach dem Senden wieder Normal
+{
+  const vm = await import("node:vm"), ix = lies("index.html"), js = lies("app.js");
+  const innen = ix.slice(ix.indexOf('<div class="innen">'), ix.indexOf("</div>", ix.indexOf('id="bfChatKnopf"')));
+  assert.ok(!/id="wichtigKnopf"|id="expressKnopf"/.test(innen), "❗ und 🏎️ nicht mehr in der Knopfreihe");
+  assert.ok(/id="waKnopf" onclick="waSenden\(\)">WA<\/button>/.test(innen), "WA bleibt am bisherigen Platz (Variante A)");
+  const l = ix.indexOf('id="versandLeiste"');
+  assert.ok(l > ix.indexOf('class="eg-griffe"') && l < ix.indexOf('<div class="innen">'), "Leiste unter der kleinen Zeile (▾ ⌨️ 🔊 🔒), direkt über dem Schreibfeld");
+  const leiste = ix.slice(l, ix.indexOf("</div>", l));
+  const ids = [...leiste.matchAll(/id="(\w+Knopf)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ["normalKnopf", "wichtigKnopf", "expressKnopf"], "Reihenfolge Normal – Wichtig – Express");
+  assert.ok(/class="vs-wahl an" id="normalKnopf"[^>]*aria-pressed="true"/.test(leiste), "Normal ist von Anfang an markiert");
+  assert.equal((leiste.match(/onpointerdown="event\.preventDefault\(\)"/g) || []).length, 3, "Antippen lässt die Tastatur offen");
+  // Verhalten: echte Funktionen aus app.js in einer kleinen Umgebung ausführen
+  const fn = (n) => { const i = js.indexOf(`function ${n}(`); assert.ok(i >= 0, n); let t = 0, k = js.indexOf("{", i); for (let j = k; j < js.length; j++) { if (js[j] === "{") t++; else if (js[j] === "}" && !--t) return js.slice(i, j + 1); } };
+  const el = () => ({ classList: { s: new Set(), toggle(c, an) { an ?? !this.s.has(c) ? this.s.add(c) : this.s.delete(c); }, contains(c) { return this.s.has(c); } }, attr: {}, setAttribute(k, v) { this.attr[k] = v; }, dataset: {}, value: "", placeholder: "" });
+  const dom = { versandLeiste: el(), text: el(), normalKnopf: el(), wichtigKnopf: el(), expressKnopf: el() };
+  const ctx = { $: (id) => dom[id], melde: () => {}, anlagen: [], ICH: { admin: true }, /* 2.528.0: auch der Admin standardmäßig erst beim Schreiben */ localStorage: { getItem: () => null }, EXS: { stand: null }, expressStandHolen: () => {} };
+  vm.createContext(ctx);
+  vm.runInContext(`var WICHTIG = false, EXPRESS = false; const WF_KEY = "kc_versand_immer";\n${["versandImmerAn", "versandZeigen", "versandNormal", "versandZurueck", "wichtigUmschalten", "expressUmschalten", "expressZahlZeigen"].map(fn).join("\n")}`, ctx);
+  const stand = () => ({ n: dom.normalKnopf.classList.contains("an"), w: !!ctx.WICHTIG, x: !!ctx.EXPRESS });
+  const tippe = (f) => vm.runInContext(f, ctx);
+  tippe("versandZeigen()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "Start: Normal");
+  assert.ok(dom.versandLeiste.classList.contains("versteckt"), "ohne Text versteckt");
+  dom.text.value = "Hallo"; tippe("versandZeigen()"); assert.ok(!dom.versandLeiste.classList.contains("versteckt"), "mit Text sichtbar");
+  tippe("expressUmschalten()"); assert.deepEqual(stand(), { n: false, w: false, x: true }, "Express → Haken bei Normal raus");
+  tippe("wichtigUmschalten()"); assert.deepEqual(stand(), { n: false, w: true, x: true }, "Wichtig und Express zusammen");
+  assert.equal(dom.text.placeholder, "🏎️❗ Wichtige Express-Sendung schreiben …");
+  tippe("expressUmschalten()"); assert.deepEqual(stand(), { n: false, w: true, x: false }, "Express weg – Wichtig bleibt");
+  tippe("wichtigUmschalten()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "beides weg → Normal wieder markiert");
+  tippe("wichtigUmschalten(); expressUmschalten(); versandNormal()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "Normal antippen nimmt Wichtig und Express weg");
+  tippe("wichtigUmschalten(); expressUmschalten(); versandZurueck()"); assert.deepEqual(stand(), { n: true, w: false, x: false }, "nach dem Senden wieder Normal");
+  dom.text.value = ""; tippe("versandZeigen()"); assert.ok(dom.versandLeiste.classList.contains("versteckt"), "leeres Feld → wieder versteckt");
+  ctx.localStorage.getItem = () => "1"; tippe("versandZeigen()"); assert.ok(!dom.versandLeiste.classList.contains("versteckt"), "Schalter „immer zeigen“");
+  // Senden und Aufräumen
+  assert.ok(!/wichtigkeitFragen/.test(js), "keine Frage mehr vor dem Senden");
+  assert.ok((js.match(/versandZurueck\(\);/g) || []).length >= 3, "Senden, Mehrfach-Senden und Chatwechsel setzen auf Normal zurück");
+  assert.ok(/versandZeigen\(\); \} \/\/ 2\.524\.0 KC-CLUB-VERSANDART/.test(js) && /function chipsZeigen\(\) \{\n  versandZeigen\(\);/.test(js), "Leiste erscheint beim Schreiben und mit Anhang");
+}
+
+// 2.535.0 KC-CLUB-NOTPAKET-FEHLERPAUSE (Server) + KC-CLUB-TEILEN-GROESSE
+{
+  assert.ok(/if \(!erzwingen && fehlerAm > \(zeitVon\(st\.hochgeladen_am\) \|\| 0\) && Date\.now\(\) - fehlerAm < 30 \* 60000\)/.test(server), "Notfall-Paket: Pause nach Fehlschlag");
+  assert.ok(/return \{ ok: true, gedrosselt: true, nachFehler: true,/.test(server), "Pause meldet gedrosselt");
+  assert.ok(/await protokoll\(null, "notpaket_fehler", \{ erzwungen: erzwingen, fehler \}\)\.catch\(\(\) => \{\}\);/.test(server), "Fehlschlag kommt ins Protokoll");
+  const swq = lies("sw.js");
+  assert.ok(/anzahl: dateien\.length, groesse: Number\(req\.headers\.get\("content-length"\)\) \|\| null,/.test(swq), "Teilen: Größe der Sendung immer festhalten");
+  assert.ok(/Das Handy hat beim Teilen keine Datei mitgeschickt/.test(programm) && !/kennt diesen Dateityp noch nicht/.test(programm), "Teilen-leer: kein falscher Grund");
+}
+// 2.536.0 KC-CLUB-KOMMUNIKATION-AUS: Registry, zentral im Versand (kc-club + kc-termine), keine Person fest im Programm
+{
+  const termine = lies("supabase/functions/kc-termine/index.ts"), mig = lies("supabase/migrations/20261020_kc_club_kommunikation_aus.sql");
+  assert.ok(/create table if not exists public\.kc_club_kommunikation_aus/.test(mig) && /revoke all on public\.kc_club_kommunikation_aus from public, anon, authenticated;/.test(mig), "Registry nur für den Server");
+  assert.ok(/const stumm = new Set\(\[\.\.\.\(await sperrenAktuell\(\)\)\.stumm, \.\.\.await kommunikationAus\(\)\]\);/.test(server), "kc-club: jeder Versand (auch Express/Notfall/Kopie) prüft die Liste");
+  assert.ok(/if \(error\) \{ if \(KA_STAND\) return KA_STAND\.ids; throw new Error/.test(server), "Liste unbekannt → nicht senden");
+  assert.ok(/from\("kc_club_kommunikation_aus"\)/.test(termine) && /if \(ausFehler\) return \[/.test(termine) && /personIds = personIds\.filter\(\(id\) => !ohneKomm\.has\(id\)\);/.test(termine), "kc-termine prüft die Liste");
+  assert.ok(!/KC-P-M0012/.test(server + termine), "keine Person fest im Programm");
+}
+// 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER: Admin-Kachel 📵, nur Admin, Rückfrage, Liste sofort neu
+{
+  assert.ok(/\["stumm", "📵", "Ohne Benachrichtigungen", "app"\]/.test(programm) && /case "stumm": \/\/ 2\.537\.0/.test(programm), "Admin-Kachel Ohne Benachrichtigungen");
+  assert.ok(/async function kommAusSetzen\(pid, aus, knopf\) \{\n  const name = vfName\(pid\);\n  if \(!\(await frage\(/.test(programm), "Schalter fragt vorher (frage statt confirm)");
+  const ka = server.slice(server.indexOf('case "komm_aus_liste"'), server.indexOf('case "sperre_aufheben"'));
+  assert.ok((ka.match(/nurAdmin\(ich\);/g) || []).length === 2 && /KA_STAND = null;/.test(ka) && /if \(id === ich\.person_id\) throw/.test(ka), "nur Admin, nicht sich selbst, Liste sofort neu");
+}
+// 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU: ausgegraut und nicht wählbar in allen Empfänger-Listen, „Alle“ ohne sie
+{
+  assert.ok(/\.\.\.\(ohneKomm\.has\(m\.person_id\) \? \{ ohne_komm: true \} : \{\}\),/.test(server), "Mitgliederliste meldet ohne_komm");
+  assert.ok(/const okAttr = \(m, gewaehlt = false\) => \(okAus\(m\) && !gewaehlt \? ' disabled/.test(programm), "nicht wählbar (schon Gewählte abwählbar)");
+  for (const f of ["function empfListe()", "function taEmpfListe()", "function zeListe()", "function mfListe()", "function pwListe()", "function grListe()", "function personenListe()", "async function vfAuswahl()"]) {
+    const i = programm.indexOf(f), seg = programm.slice(i, i + 3000);
+    assert.ok(i > 0 && /okAttr\(m/.test(seg) && /okZusatz\(m\)/.test(seg), "ausgegraut in " + f);
+  }
+  assert.ok(/const empfGruppe = \(a\) => MITGLIEDER\.filter\(\(m\) => m\.person_id !== ICH\.person_id && okFrei\(m\)/.test(programm), "Alle/Ämter/Online ohne sie");
+  assert.ok(/function taAlle\(\) \{ TA\.wahl = \{ personen: MITGLIEDER\.filter\(\(m\) => m\.person_id !== ICH\.person_id && okFrei\(m\)\)/.test(programm), "Terminanfrage Alle ohne sie");
+  assert.ok(/label\.ok-grau \{ opacity: \.5;/.test(seite), "ausgegraut sichtbar");
+}
+// 2.539.0 KC-CLUB-SPERRE-VERSUCHE: Öffnungsversuche Gesperrter protokolliert (gedrosselt) und in der Sperrliste angezeigt
+{
+  assert.ok(/if \(gesperrt\) \{\n\s*await sperreVersuchMerken\(ich\.person_id, gesperrt\.art, a\)\.catch\(\(\) => \{\}\);/.test(server), "Versuch wird gemerkt, bevor 423 kommt");
+  assert.ok(/if \(Date\.now\(\) - \(SPV_ZULETZT\.get\(pid\) \?\? 0\) < 10 \* 60000\) return;/.test(server) && /await protokoll\(pid, "gesperrt_versuch", \{ art, aktion: txt\(aktion, 40\) \}\);/.test(server), "höchstens 1× je 10 Min., keine Inhalte");
+  assert.ok(/if \(vf\) return \{ \.\.\.x, versuche: null \};/.test(server) && /x\.versuche == null \? "👀 Öffnungsversuche: unbekannt"/.test(programm), "unbekannt ≠ 0");
+  assert.ok(/\.\.\.\(await sperrenAktuell\(\)\)\.stumm\]\); \/\/ 2\.539\.0/.test(server), "gesperrt mit 📵 ist auch ausgegraut");
+}
+// 2.540.0 KC-CLUB-SPERRE-NOTPAKET + KC-CLUB-SPERRE-OFFLINE: Gesperrte ohne Notfall-Paket und ohne gespeicherten Offline-Stand
+{
+  assert.ok(/if \(spf\) throw new Error\("Sperren nicht lesbar/.test(server) && /const zug = \(zug0 \?\? \[\]\)\.filter\(\(z: any\) => !gesperrt\.has\(z\.person_id\)\);/.test(server), "Notfall-Paket ohne Gesperrte, Lesefehler → kein Bau");
+  assert.ok(/if \(r\.status === 423 && j\?\.gesperrt\) \{ try \{ localStorage\.removeItem\(STAND_KEY\); \} catch \{\}/.test(programm), "gesperrt: Offline-Stand gelöscht");
+}
+// 2.541.0 KC-CLUB-SPERRE-MELDUNG: Push an die Admins, wenn ein Gesperrter die App öffnen will (gedrosselt wie der Protokolleintrag)
+{
+  const f = server.slice(server.indexOf("async function sperreVersuchMerken"), server.indexOf("async function sperrenAktuell"));
+  assert.ok(/if \(Date\.now\(\) - \(SPV_ZULETZT\.get\(pid\) \?\? 0\) < 10 \* 60000\) return;/.test(f) && /if \(!error && count\) return;/.test(f), "gedrosselt vor dem Push");
+  assert.ok(/nebenbei\(routerSenden\("club_nachricht_push", adm,/.test(f) && /const adm = await adminIds\(\)/.test(f), "Push nur an Admins, im Hintergrund");
+}
+// 2.542.0 KC-CLUB-CHAT-NEU-MARKIERT: Chats mit neuen Nachrichten markiert (getönt + Leiste), Ameisenrahmen beim Öffnen, Zahl pulsiert
+{
+  assert.ok(/const uhUngelesen = \(u\) => \(u\?\.ungelesen \|\| 0\) > 0 && !stummAn\(u\.id\);/.test(programm), "nur ungelesen und nicht stumm");
+  assert.ok(/\$\{uhUngelesen\(u\) \? " uh-neu" : ""\}" data-id=/.test(programm) && /<details class="karte uhk\$\{uhUngelesen\(u\) \? " uh-neu" : ""\}"/.test(programm), "Liste und Kartei markiert");
+  assert.ok(/const ziele = UH\.liste\.filter\(\(u\) => uhUngelesen\(u\) \|\| uhHervor\(u\)\);/.test(programm) && /const uhHervor = \(u\) => !!u\.gruppe && UH_HERVOR\.some/.test(programm), "Ameisenrahmen (vorhandener Kern) für neue und hervorgehobene Gruppe");
+  assert.ok(/\.unterh\.uh-neu \.punkt, \.uhk\.uh-neu > summary \.punkt \{ animation: chatNeuPuls \.7s ease-in-out 3; \}/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.unterh\.uh-neu \.punkt/.test(seite), "Zahl pulsiert 3×, ruhig bei reduzierter Bewegung");
+}
+// 2.543.0 KC-CLUB-VIDEO-GEHEIM-2: Video „Geheim schreiben“ zeigt die Empfänger-Seite (Mitteilung, Agent, Schlüssel eingeben, falsch, Schlüsselbund)
+{
+  const i = programm.indexOf("const RG_GEHEIM = ["), seg = programm.slice(i, programm.indexOf("];", i));
+  for (const t of ["📲 Beim Empfänger: die Mitteilung", "🕵️ Der Agent liefert ab", "🔑 Einmal-Schlüssel: eintippen", "❌ Falscher Schlüssel", "🔑 Mit Schlüsselbund: öffnet sich von selbst"])
+    assert.ok(seg.includes(`t: "${t}"`), "Video-Station: " + t);
+  assert.ok(/ankunftEffekt\(el, "agent"\)/.test(seg), "Agent kommt beim Empfänger an (vorhandener Effekt)");
+  assert.ok(/\{ id: "geheim", stand: "2", sym: "🕵️"/.test(programm), "Video-Stand 2");
+}
+// 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: bei eingerolltem Kopf blinkt der Pfeil der Stellung, wenn Neues (Nachrichten, Mitglieder) ankommt
+{
+  assert.ok(/function heroZeigen\(richtung\) \{\n  kopfNeuPruefen\(\);/.test(programm), "Prüfung läuft bei jedem Neuzeichnen des Kopfes (Abgleich, Online-Takt)");
+  assert.ok(/\(ersterBlick \? n > 0 : n > KPN\.n\) \|\| \(KPN\.mg !== null && mg > KPN\.mg\) \|\| \(KPN\.ids && ids && \[\.\.\.ids\]\.some\(\(id\) => !KPN\.ids\.has\(id\)\)\)/.test(programm), "neue Nachricht, neue Mitglieder, neu online");
+  assert.ok(/\[\["kopfPfeil", "ganz"\], \["kopfPfeilHalb", "halb"\]\]/.test(programm) && /if \(stand === "offen"\) KPN\.an = false;/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet");
+  assert.ok(/\.kopf-pfeil\.kp-neu \{[^}]*animation: kpNeu/.test(seite) && /\.kopf-pfeil\.kp-neu\.still \{ animation: none;/.test(seite), "Blinken, ohne Bewegung fest leuchtend");
+}
+// 2.545.0 KC-CLUB-KOPF-SEIT: „since 1991“ klein unter der Kochmütze im Kopf
+{
+  assert.ok(/<img src="kc-kochmuetze-weiss\.webp" alt="Kochmütze"><span class="kopf-seit">since 1991<\/span><\/button><button class="kopf-version"/.test(seite), "since 1991 unter der Kochmütze – im Knopf der Mütze (2.546.0)");
+  assert.ok(/\.kopf-seit \{[^}]*color: #f3e9dc;/.test(seite), "in CD-Beige");
+}
+// 2.546.0 KC-CLUB-KOPF-SEIT-2: „since 1991“ im Knopf der Kochmütze
+{
+  assert.ok(/\.kopflogo \.logo \{ display: flex; flex-direction: column;/.test(seite) && /\.kopflogo \.logo img \{ width: 34px; \}/.test(seite), "Mütze und Schriftzug untereinander im Knopf");
+}
+// 2.547.0 KC-CLUB-KOPF-EMBLEM: Kochmütze + „since 1991“ auf der Holzklappe und der Servierglocke
+{
+  assert.ok(/const KE_MARKE = '<span class="ke-marke" aria-hidden="true"><img src="kc-kochmuetze-weiss\.webp" alt=""><small>since 1991<\/small><\/span>';/.test(programm), "Emblem aus der CD-Kochmütze");
+  assert.ok(/<i class="ke-glocke"><b class="ke-glanz"><\/b><u class="ke-knauf"><\/u>\$\{KE_MARKE\}<\/i>/.test(programm) && /<i class="ke-bude-klappe">\$\{KE_MARKE\}<b class="ke-bude-schild">Geschlossen<\/b><\/i>/.test(programm), "auf Glocke und Holzklappe");
+}
+// 2.548.0 KC-CLUB-WUESTE + KC-CLUB-FRIEDENSPFEIFE-2: Thema Wüste (Pyramiden, Karawane, Oase, Pharao, Flaschengeist, Goldstaub-Name, Sonnenuntergang) · Pfeife langsamer
+{
+  assert.ok(/\{ id: "wueste", sym: "🐪", name: "Wüste", design: "sonnenuntergang", jz: "wueste"/.test(programm), "Thema eingetragen");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest", "wueste"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest", "wueste"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/if \(J\.saison === "wueste"\) return jzbWuSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wueste"\) jzbWuesteMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
+  assert.ok(/JZB_WU_NAME_AB = 47, JZB_WU_TAKT = 2\.6/.test(programm) && /const jzbWuName = \(\) => \[\.\.\.\(jzbEisNameText\(\) \|\| "Köcheclub"\)\]\.slice\(0, 12\);/.test(programm), "Name langsam aus Goldstaub, ohne Namen Köcheclub");
+  assert.ok(/jahreszeitVorschau\('wueste'\)">🐪 Wüste</.test(seite) && /\{ id: "wueste", thema: "darstellung"/.test(programm) && /\{ id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao\?"/.test(programm), "Vorschau, Hilfe, Twinkey");
+  assert.ok(fs.existsSync(new URL("../tools/wueste/wu-browser.mjs", import.meta.url)), "Browser-Test vorhanden");
+  assert.ok(/const jzbWwNameTakt = \(\) => Math\.min\(2\.8, 16 \/ Math\.max\(1, jzbWwNameText\(\)\.length\)\);/.test(programm) && /JZB_WW_WOLKE = 2\.4/.test(programm), "Friedenspfeife: Name langsamer");
+}
+// 2.549.0 KC-CLUB-GEPLANT-WECKER: ⏰ neben geplanten Nachrichten, Infos + „✏️ Ändern“ (Zeit/Wiederholung oder Text)
+{
+  assert.ok(/class="gp-wecker" onclick="gpMenue\('\$\{esc\(g\.id\)\}'\)"/.test(programm) && /\.gp-wecker \{[^}]*animation: gpKlingeln/.test(seite), "Wecker rechts neben der geplanten Nachricht");
+  assert.ok(/<table class="gp-infos">/.test(programm) && /onclick="gpAendernWahl\('\$\{esc\(g\.id\)\}'\)">✏️ Ändern<\/button>/.test(programm), "Infos und Ändern-Knopf");
+  assert.ok(/async function gpTextAendern\(id\)/.test(programm) && /if \(typeof p\.text === "string"\) \{ neuText = txt\(p\.text, 4000\);/.test(server) && /\.eq\("person_id", ich\.person_id\)\.eq\("status", "offen"\)\.maybeSingle\(\);/.test(server), "Text ändern – nur eigene, offene");
+}
+// 2.550.0 KC-CLUB-FEHLVERSUCHE: wiederholte Versuche ohne gültigen Link vom selben Gerät → Push an Admins (gedrosselt, ohne IP)
+{
+  const f = server.slice(server.indexOf("async function fehlversucheMelden"), server.indexOf("async function fehlversucheMelden") + 2600);
+  assert.ok(/const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;/.test(server) && /if \(\(n \?\? 0\) < FV_SCHWELLE \|\| \(schon \?\? 0\) > 0 \|\| \(heute \?\? 0\) >= FV_MAX_TAG\) return;/.test(f), "Schwelle und Drossel");
+  assert.ok(/const adm = await adminIds\(\);/.test(f) && /routerSenden\("club_nachricht_push", adm,/.test(f) && !/x-forwarded-for|cf-connecting-ip/i.test(f), "Push nur an Admins, keine IP");
+  assert.ok(/\["ohne_link", "link_ungueltig"\]\.includes\(fpArt\(e\?\.art\)\)/.test(server) && /google-read-aloud\/i;/.test(server), "Auslöser: ohne/ungültiger Link · Vorlesedienst ist Roboter");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -8449,7 +8612,9 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   // Regel: kein Ausdruck ohne CD-Rahmen – eigene Layouts (ohneRahmen) nur Brief (mit cdKopf) und Originalseiten als Bild
   const ohne = [...programm.matchAll(/return \{[^}]*ohneRahmen: true[^}]*\}/g)].map((m) => m[0]);
   // 2.150.0: Schilder (KC-CLUB-SCHILDER) haben ihr CD im Bild selbst (Kochmütze im weinroten Kreis + „Köcheclub Werne“ unten)
-  assert.ok(ohne.length === 4 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Erstattungsantrag als Briefbogen-Blatt (erstBlatt mit cdKopf + cdFuss) – zwei Einstiege
+  assert.ok(ohne.length === 5 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
   assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"))), "kein altes Logo in Ausdrucken");
@@ -9027,7 +9192,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/\["postauto", "🚐 Postauto"\]/.test(html) && /const SENDE_REIHE = \["flieger", "taube", "postauto"(, "[a-z]+")*\];/.test(html), "Postauto als dritte Wahl, Abwechselnd über alle drei");
-  assert.ok(/const fxArt = \(wahl, wichtig, mid(, express)?\) => wahl === "aus" \? null : (express \? "express" : )?wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null(, express = [^)]+)?\)/.test(html), "❗ wichtig → Blaulicht");
+  assert.ok(/const fxArt = \(wahl, wichtig, mid(, express(, geheim)?)?\) => wahl === "aus" \? null : (express \? "express" : (geheim \? "agent" : )?)?wichtig \? "blaulicht" :/.test(html) && /function papierflieger\(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null(, express = [^)]+?(, geheim = false)?)?\)/.test(html), "❗ wichtig → Blaulicht");
   assert.ok(/if \(wahl === "aus"\) return;/.test(html), "Aus bleibt aus – auch bei wichtig");
   assert.ok(/const POSTAUTO_SVG = /.test(html) && /const BLAULICHT_SVG = /.test(html) && /KÖCHECLUB-POST/.test(html) && !/Deutsche Post|POLIZEI/i.test(html.slice(html.indexOf("const POSTAUTO_SVG"), html.indexOf("function sendeFahrzeug"))), "neutral, kein fremdes Zeichen");
   assert.ok(/blaulichtVorschau\(this\)/.test(idx), "Vorschau „wichtig“");
@@ -9038,7 +9203,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/sende_effekt: \(w\) => \(\{ art: SENDE_EFFEKT_ARTEN\.includes\(w\?\.art\) \? w\.art : "wechsel" \}\)/.test(server), "Server merkt nur bekannte Kennungen");
   assert.ok(/\.eq\("schluessel", "sende_effekt"\)\.in\("person_id", \(tn \?\? \[\]\)\.map/.test(server) && /selbstloeschen: slStd\(slChat\?\.stunden\), sendeEffekte,/.test(server), "Unterhaltung liefert Effekte der Teilnehmer");
   assert.ok(/return json\(\{ ok: true, id: threadId, versand, mid: m\.id(?:, \.\.\.\(express \? \{ expressStand: await expressStand\(ich\) \} : \{\}\))? \}\);/.test(server), "Senden liefert Nachrichten-Kennung");
-  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id(, !!ziel\.express)?\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
+  assert.ok(/const fxReihe = \(mid\) =>/.test(html) && /fxArt\(u\.sendeEffekte\?\.\[ziel\.vonId\], ziel\.wichtig, ziel\.id(, !!ziel\.express(, vnIst\(ziel\.text\))?)?\)/.test(html), "gleicher Effekt bei Absender und Empfänger");
   assert.ok(/const neu = !erst && letzte\.id !== EMPF\.letzte;/.test(html) && /Date\.now\(\) - Date\.parse\(ziel\.zeit\) > \(neu \? 120000 : 7 \* 86400000\)\) return;/.test(html) && /sendeEffektWahl\(\) === "aus"/.test(html), "nur neue, frische Nachrichten, nicht beim Öffnen, abschaltbar");
   assert.ok(/empfangsEffekt\(u\); \/\/ 2\.177\.0/.test(html) && /sendeEffektMelden\(\); \/\/ 2\.177\.0/.test(html), "eingebunden in Chat-Laden und Start");
   assert.ok(/class="tb-brief"/.test(html) && /if \(brief\) brief\.style\.visibility = "hidden";/.test(html) && /\} finally \{ fertig\(\); \}/.test(html), "Taube lässt das Kuvert fallen, alles wird sicher weggeräumt");
@@ -9699,7 +9864,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln")?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
@@ -9821,8 +9986,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function ampelHtml\(stufen\)/.test(html) && /e\.ampel \? ampelHtml\(\[/.test(html) && /\$\{scVersandStand\(e\)\}\$\{scAmpel\(e\)\}/.test(html), "Ampel in Nachrichten-Infos und Schulungs-Karte");
   assert.ok(/e\.ampel = \{ gesendet, gesendetWie/.test(server) && /j\.ampel = await schulungAmpel\(j\)\.catch\(\(\) => \(\{\}\)\)/.test(server), "Server liefert die Ampel");
   assert.ok(/!inko\.has\(e\.person_id\)/.test(server) && /!inko\.has\(pid\)/.test(server), "Inkognito-Admin wird über „Club-App geöffnet“ nicht verraten");
-  assert.ok(/await wichtigkeitFragen\(\); \/\/ KC-CLUB-WICHTIGKEIT-FRAGE/.test(html) && /id="setWichtigFrage" onchange="wichtigFrageSetzen\(this\.checked\)"/.test(html), "Frage vor dem Senden + Schalter");
-  assert.ok(/Date\.now\(\) - \(WF_ZULETZT\[k\] \|\| 0\) < 30 \* 60000/.test(html), "je Chat höchstens alle 30 Min.");
+  // 2.524.0 KC-CLUB-VERSANDART: die Frage vor dem Senden ist durch die Versand-Leiste ersetzt (Freigabe Hansi) – der Schalter heißt jetzt „Versand-Leiste immer zeigen“
+  assert.ok(!/wichtigkeitFragen/.test(html) && /id="setWichtigFrage" onchange="versandImmerSetzen\(this\.checked\)"/.test(html), "Versand-Leiste statt Frage + Schalter");
   assert.ok(/const wege = notfall \|\| wichtig (\|\| express )?\? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
   assert.ok(/await wichtigUngelesenMelden\(\)/.test(server) && /await protokoll\(null, "wichtig_ungelesen"[^\n]*\n\s*if \(!offen\.length\) continue;/.test(server), "24-Std.-Hinweis einmal (erst merken, dann senden)");
 }
@@ -10252,7 +10417,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.351.0 KC-CLUB-VIDEOS-NEU + KC-CLUB-VIDEO-STIMMEN (+ -DOWNLOAD)
 {
   for (const id of ["push", "privat", "probleme", "chatprofi", "gruppen", "terminfinden", "todo", "einfach", "raetsel", "buehne", "buero"]) {
-    assert.ok(new RegExp(`\\{ id: "${id}", stand: "1"[^\\n]*st: \\(\\) => RG_${id.toUpperCase()}`).test(html) && html.includes(`const RG_${id.toUpperCase()} = [`), "Video " + id);
+    assert.ok(new RegExp(`\\{ id: "${id}", stand: "\\d+"[^\\n]*st: \\(\\) => RG_${id.toUpperCase()}`).test(html) && html.includes(`const RG_${id.toUpperCase()} = [`), "Video " + id);
     assert.ok(new RegExp(`videos: \\[[^\\]]*"${id}"`).test(html), "Video " + id + " in den Themen");
   }
   assert.ok(/rgMitErg\(RG_DIENST, RG_DIENST_ERG,/.test(html) && /rgMitErg\(RG_MITGLIEDER, RG_MITGLIEDER_ERG,/.test(html), "Dienst/Mitglieder ergänzt");
@@ -10359,7 +10524,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.362.0 KC-CLUB-EXPRESS + KC-CLUB-BOTEN
 {
-  assert.ok(/id="expressKnopf" onclick="expressUmschalten\(\)">🏎️<\/button>/.test(seite) && /\.\.\.\(EXPRESS \? \{ express: true \} : \{\}\)/.test(html), "🏎️-Knopf und Express beim Senden");
+  assert.ok(/id="expressKnopf" [^>]*onclick="expressUmschalten\(\)"[^>]*>🏎️ Express<\/button>/.test(seite) && /\.\.\.\(EXPRESS \? \{ express: true \} : \{\}\)/.test(html), "🏎️ Express (Versand-Leiste) und Express beim Senden");
   assert.ok(/if \(notfall \|\| express\) stumm\.clear\(\);/.test(server) && /\{ notfall: notfall \|\| express \}\);/.test(server) && /EXPRESS_MAX = 5/.test(server), "Express durchbricht Stumm/Ruhezeit, höchstens 5 am Tag");
   assert.ok(server.includes('case "express_antwort": {') && /\["geoeffnet", "spaeter", "nein"\]/.test(server) && /📬 Express angekommen/.test(server), "Antwort + Empfangsbestätigung an den Absender");
   assert.ok(/const express = await pExpress;/.test(server) && /async function expressOffen\(ich: Ich, zahlen: any\[\]\)/.test(server), "init liefert offene Express-Sendungen");
@@ -10949,7 +11114,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.434.0 KC-CLUB-UNTERWASSER: Thema Unterwasserwelt mit eigener Szene (Regen füllt, Stöpsel leert)
 {
   assert.ok(/\{ id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "unterwasser"\) return jzbUwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "unterwasser"\) jzbUnterwasserMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const u = programm.slice(programm.indexOf("function jzbUwSchritt("), programm.indexOf("function jzbUwSog("));
   assert.ok(/U\.phase = "ablauf"; U\.at = 0; U\.plopp = 0;/.test(u) && /J\.fest = null; return jzbLaufEnde\(\);/.test(u), "Stöpsel → ablaufen → neuer Lauf");
@@ -11460,4 +11625,141 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   const v = server.slice(server.indexOf('case "admin_verlauf"'), server.indexOf('case "admin_verlauf"') + 4000);
   assert.ok(/\.range\(seite \* 1000, seite \* 1000 \+ 999\)/.test(v) && /if \(\(teil \?\? \[\]\)\.length < 1000\) break;/.test(v) && !/\.limit\(12000\)/.test(v), "Verlauf seitenweise");
+}
+
+// 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN / KC-CLUB-DRUCK-PDF / KC-CLUB-FOTO-DIASHOW (Wünsche Hansi)
+{
+  assert.ok(/erstAnsehen\(blatt, \(\) => erstattungAblageFragen\(kopie, r\)\)/.test(programm) && /data-fn="ekErstBlatt\('\$\{x\.id\}'\)">📄 Antrag als PDF \/ Drucken/.test(programm), "Antrag angeboten: nach dem Einreichen und im Eingang");
+  assert.ok(/<div>Datum, Unterschrift Antragsteller<\/div><div>Sachlich geprüft \/ ausgezahlt am – Kassenwart<\/div><div>Freigabe – Leitungsteam<\/div>/.test(programm), "drei Unterschriften");
+  assert.ok(/id="druckVorschauPdf" onclick="druckPdf\(\)"/.test(seite) && /function pdfAusCanvas\(c, quer\)/.test(programm) && /<foreignObject/.test(programm), "PDF in der Vorschau, selbst gebaut");
+  assert.ok(/onclick="faDiashow\(\)"/.test(seite) && /esSchreib\("album", id\); esSchreib\("diaMusik"/.test(programm), "Diashow im Fotoalbum mit Album und Musik");
+}
+
+// 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi): übernächste Sitzung ohne Datum schon vorwählen
+{
+  assert.ok(/📅 \$\{VS_SITZ\[k - 1\]\} Sitzung – Datum noch offen/.test(programm) && /\.\.\.vsTerminWert\(\$\("vfTreffen"\)\.value\)/.test(programm) && /\.\.\.vsTerminWert\(\$\("vbTreffen"\)\.value\)/.test(programm), "Auswahl beim Anlegen und Bearbeiten");
+  assert.ok(/async function vorschlaegeSitzungZuordnen\(\)/.test(server) && /await vorschlaegeSitzungZuordnen\(\)\.catch\(\(\) => \{\}\); \/\/ 2\.527\.0/.test(server) && /sitzung_nr: sitzungNrPruefen\(p\.sitzung_nr\), sitzung_ab: jetzt\(\)/.test(server), "Server merkt und ordnet zu");
+  assert.ok(/add column if not exists sitzung_nr smallint check \(sitzung_nr is null or sitzung_nr between 1 and 3\)/.test(lies("supabase/migrations/20261020_kc_club_v2527_vorschlag_sitzung_spaeter.sql")), "Migration");
+}
+// DB 20.10.2026 KC-CLUB-CHAT-STAND-TEMPO: Fingerabdruck als plpgsql (Plan je Verbindung gemerkt) – gleiche Abfrage, gleiche Rechte
+{
+  const alt = lies("supabase/migrations/20261020_kc_club_chat_stand.sql"), neu = lies("supabase/migrations/20261020_kc_club_chat_stand_plpgsql.sql");
+  const kern = (x) => x.slice(x.indexOf("with tn as ("), x.indexOf(")) end") + 6).replace(/^\s*--.*$/gm, "").replace(/\s+/g, " ").trim();
+  assert.ok(kern(alt).length > 3000 && kern(alt) === kern(neu), "plpgsql-Fassung: dieselbe Abfrage wie die SQL-Fassung");
+  assert.ok(/language plpgsql\s+stable/.test(neu) && /into v_stand;\s+return v_stand;/.test(neu) && !/\b(insert into|update public|delete from|truncate)\b/i.test(neu.replace(/^--.*$/gm, "")), "nur lesend, gibt den Fingerabdruck zurück");
+  assert.ok(/revoke all on function public\.kc_club_chat_stand\(uuid, text, timestamptz, integer, integer, integer, integer\) from public, anon, authenticated;/.test(neu) && /to service_role;/.test(neu), "Rechte unverändert: nur der Server");
+}
+// DB 20.10.2026 KC-CLUB-RT-PUSH-ANGEZEIGT (Wunsch Hansi „graue Haken wie bei WhatsApp“): Push angezeigt/geöffnet → Signal an den Absender
+{
+  const mig = lies("supabase/migrations/20261020_kc_club_rt_push_angezeigt.sql");
+  assert.ok(/create trigger kc_club_rt_push_angezeigt after update of status on public\.kc_communication_requests/.test(mig) && /new\.source_program = 'kc-club' and new\.channel = 'push' and new\.correlation_id like 'club-nachricht:%'/.test(mig) && /new\.status in \('displayed', 'opened'\) and old\.status is distinct from new\.status/.test(mig), "nur Chat-Pushes der Club-App, nur beim Wechsel auf angezeigt/geöffnet");
+  assert.ok(/kc_club_rt_klingeln\(array\[v_von\], 'gelesen', v_thread\)/.test(mig) && /exception when others then null;/.test(mig) && /security definer set search_path = ''/.test(mig) && !/\b(insert into|update public|delete from|truncate)\b/i.test(mig.replace(/^--.*$/gm, "")), "nur Signal an den Absender, stört die Zustellung nie");
+  assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"/.test(html), "App lädt bei diesem Signal den offenen Chat");
+  assert.ok(fs.existsSync(new URL("../tools/chat-sparsam/rt-push-angezeigt-test.mjs", import.meta.url)), "Test (Postgres im Speicher) vorhanden");
+}
+// 2.529.0 KC-CLUB-WILDWEST (Wunsch Hansi): Thema Wilder Westen – Tipi, Lagerfeuer, Büffel am Horizont, Cowboys, Postkutsche, Herde trampelt alles nieder, Staubwolke, von vorn
+{
+  assert.ok(/\{ id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest"/.test(programm), "Thema eingetragen");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/if \(J\.saison === "wildwest"\) return jzbWwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wildwest"\) jzbWildwestMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
+  const g = programm.slice(programm.indexOf("function jzbWwSchritt("), programm.indexOf("function jzbWwBueffelMalen("));
+  assert.ok(/if \(t >= JZB_WW_DAUER\) \{ J\.fest = null; J\.wwStaub = true; return jzbLaufEnde\(\); \}/.test(g) && /W\.zeltFall = Math\.min\(1, W\.zeltFall \+ dt \* 1\.6\)/.test(g) && /W\.feuerAus = Math\.min\(1, W\.feuerAus \+ dt \* 3\)/.test(g), "Herde trampelt Zelt und Feuer nieder, nächster Lauf aus der Staubwolke");
+  assert.ok(/for \(const s of JZB_WW_REITER\)/.test(g) && /for \(const s of JZB_WW_KUTSCHE\)/.test(g) && /const JZB_WW_COWBOYS = \[\{ hemd: "#c1121f"/.test(programm) && /c\.fillText\("KÖCHECLUB"/.test(programm), "Cowboys und Postkutsche");
+  assert.ok(/jahreszeitVorschau\('wildwest'\)">🤠 Wilder Westen</.test(seite) && /wildwest: \["🤠", "🐃", "🌵", "🔥"\]/.test(programm) && /\{ id: "wildwest", thema: "darstellung"/.test(programm) && /wildwest: \["wimpel", "western"\]/.test(programm), "Vorschau, Ersatz-Bild, Hilfe, Deko");
+  assert.ok(fs.existsSync(new URL("../tools/wildwest/ww-browser.mjs", import.meta.url)), "Browser-Test vorhanden");
+}
+// 2.529.0 KC-CLUB-VN-RUECKFRAGE (Fund Hansi „soll eine Verschlüsselungsnummer eingeben – ich will gar nicht verschlüsseln“) + KC-CLUB-SCHREIBT-HINWEIS
+// (Wunsch Hansi „Hansi schreibt gerade an dich / diktiert gerade eine Nachricht“ auch außerhalb des Chats)
+{
+  assert.ok(/\{ ja: "🔒 Ja, mit Schlüssel", nein: "✉️ Normal senden" \}\)\)\) \{ vnUmschalten\(false\); return text; \}/.test(html) && /if \(VN\.an && VN\.chat !== fuer\) vnUmschalten\(false\);/.test(html) && /VN\.chat = VN\.an \? chatId : null;/.test(html), "Schloss: Rückfrage „Normal senden“, gilt nur im eigenen Chat");
+  assert.ok(/const diktiert = typeof DT !== "undefined" && DT\.aktiv && DT\.ziel === "text";/.test(html) && /if \(DT\.ziel === "text" && chatId\) tippenMelden\(\);/.test(html), "Diktat meldet „diktiert“");
+  assert.ok(/text: p\.diktat \? "diktat" : art === "sprache" \? null : text, art/.test(server) && /const diktiert = \(tippen \?\? \[\]\)\.filter\(\(x: any\) => x\.art === "sprache" && x\.text === "diktat"\)/.test(server) && /stand, tippt, entwurf, spricht, diktiert,/.test(server), "Server: Diktat ohne Text, eigene Liste");
+  const th = html.slice(html.indexOf("function tippHinweisSignal("), html.indexOf("function tippHinweisWeg("));
+  assert.ok(/s\.thread === chatId && aktuelleAnsicht === "chat"\)\) return;/.test(th) && /stummAn\(s\.thread\)\) return;/.test(th) && /if \(!u \|\| u\.gruppe \|\| \(u\.teilnehmer \|\| \[\]\)\.length !== 1/.test(th) && /el\.onclick = \(\) => \{ tippHinweisWeg\(\); chatOeffnen\(thread\); \};/.test(th), "Hinweis nur außerhalb des offenen Chats, nur Einzelchats, nicht stumm, Antippen öffnet");
+  assert.ok(/if \(s\.art === "tippt" \|\| s\.art === "spricht" \|\| s\.art === "diktiert"\) tippHinweisSignal\(s\);/.test(html) && /if \(s\.art === "chat" && TH\.thread === s\.thread\) tippHinweisWeg\(\);/.test(html), "Signal zeigt den Hinweis, die Nachricht nimmt ihn weg");
+  const mig = lies("supabase/migrations/20261020_kc_club_rt_spricht.sql");
+  assert.ok(/create trigger kc_club_rt_spricht after insert or update on public\.kc_club_tippen\s+for each row when \(new\.art = 'sprache'\)/.test(mig) && /case when new\.text = 'diktat' then 'diktiert' else 'spricht' end/.test(mig) && /exception when others then null;/.test(mig), "DB: Signal „spricht“/„diktiert“ an die anderen");
+  assert.ok(/\.schreibt-hinweis \{ position: fixed;/.test(seite), "Aussehen des Hinweises");
+}
+// 2.530.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „Schlüssel kurz anzeigen … besondere Figur bringt die verschlüsselte weg“ → Geheimagent)
+{
+  assert.ok(/express \? "express" : geheim \? "agent" : wichtig \? "blaulicht"/.test(html), "verschlüsselt → Geheimagent (Express hat Vorrang)");
+  assert.ok(/if \(vnIst\(text\)\) \{ vnSchluesselZeigen\(\$\("sendenKnopf"\)\); setTimeout\(\(\) => papierflieger\(\$\("sendenKnopf"\), undefined, r\?\.mid, undefined, true\), 650\); \}/.test(html), "beim Senden erst der Schlüssel, dann der Agent");
+  assert.ok(/agent: \(b\) => AGENT_SVG\(b\)/.test(html) && /function vnSchluesselZeigen\(/.test(html) && /function agentLaufen\(/.test(html), "Figur, Schlüssel und Laufen vorhanden");
+  assert.ok(/Geheimagent/.test(html.slice(html.indexOf('id: "boten"'), html.indexOf('id: "boten"') + 1200)), "Hilfe nennt den Geheimagenten");
+}
+// 2.531.0: Korrektur – nach CHAT = u laufen owZeigen/gpZeigen/slAnzeigen wieder (nicht in einem Kommentar versteckt)
+{
+  assert.ok(/\n    CHAT = u; CHAT_VOLL_AM = Date\.now\(\); setTimeout\(owZeigen, 0\); setTimeout\(gpZeigen, 0\); slAnzeigen\(\);/.test(html), "geplante/selbstlöschende/vorgemerkte Nachrichten werden nach dem Laden gezeigt");
+  assert.ok(!/\/\/[^\n]*setTimeout\(owZeigen, 0\)/.test(html), "kein Aufruf in einem Kommentar");
+}
+// 2.532.0 KC-CLUB-WILDWEST-2 (Wunsch Hansi): Indianer und Häuptling am Feuer, Saguaro-Kakteen, Steppenläufer im Wind, Duell mit Abtransport
+{
+  assert.ok(/JZB_WW_DUELL = 29/.test(programm) && /const dd = t - JZB_WW_DUELL; if \(dd >= 0 && dd < 27\) jzbWwDuellMalen\(c, dd, O, k, T\);/.test(programm), "Duell eingeplant und gemalt");
+  const d = programm.slice(programm.indexOf("function jzbWwDuellMalen("), programm.indexOf("// ---- 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER"));
+  assert.ok(/c\.fillText\("PENG!"/.test(d) && /jzbWwWagenMalen\(c, wx/.test(d) && /verband: true/.test(d), "PENG, Wagen, Verwundeter mit Kopfverband");
+  assert.ok(/haube: true/.test(programm) && /jzbWwKaktusMalen\(c, J\.w - JZB_RAND - 12 \* k, O\.boden, 46, k, false\)/.test(programm) && /W\.ballen\.push\(/.test(programm), "Häuptling, große Kakteen, Steppenläufer");
+  assert.ok(/const flucht = t > JZB_WW_HERDE - 3 \?/.test(programm), "Indianer laufen vor der Herde davon");
+}
+// 2.533.0 KC-CLUB-HILFE-NACHTRAG-4 + KC-CLUB-VIDEO-GEHEIM (Wunsch Hansi „Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion,
+// Sprachsuche, Video auch mit Verschlüsselung“)
+{
+  for (const id of ["schluesselbund", "versand_leiste", "schreibt_hinweis", "druck_pdf", "meldung_oben"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym:`).test(html), "Hilfe-Eintrag " + id);
+  const vn = html.slice(html.indexOf('{ id: "verschluesselt", thema'), html.indexOf('{ id: "verschluesselt", thema') + 2200);
+  assert.ok(/✉️ Normal senden/.test(vn) && /Geheimagent/.test(vn) && /zeig: \(\) => rgListeAbspielen\(\["geheim"\]\)/.test(vn), "Hilfe „verschlüsselt senden“: Rückfrage, Geheimagent, Video");
+  assert.ok(/zwei graue Haken<\/b> heißen auf dem Handy angekommen/.test(html) && /Es landet im <b>📥 Ablagekorb<\/b>/.test(html), "Haken und Teilen auf dem neuen Stand");
+  for (const id of ["verschluesseln", "schluessel-frage", "schluessel-oeffnen", "schluesselbund", "geheimagent", "versand-leiste", "teilen-ablagekorb", "schreibt-dir", "tippton-aus", "graue-haken", "erstattung-pdf", "vorschlag-sitzung-offen", "wildwest"])
+    assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+[?!]", x: `).test(html), "Twinkey-Frage " + id);
+  assert.ok(/"f:verschluesseln": \["geheim"\]/.test(html) && /"f:verschluesseln": "h:verschluesselt"/.test(html) && /"t:ruhe": \["push"\]/.test(html), "Twinkey bietet Video und Hilfetext an (Tipp „ruhe“ mit t:)");
+  assert.ok(/\["verschluesseln", "verschluesselt", "verschluesselung", "geheim", "schluessel", "schloss"/.test(html), "Twinkey kennt andere Wörter fürs Verschlüsseln");
+  const su = html.slice(html.indexOf("function suAppListe"), html.indexOf("function suAppListe") + 30000);
+  assert.ok(/\["🔒", "Nachricht verschlüsselt senden/.test(su) && /\["🔑", "Schlüsselbund/.test(su) && /\["📥", "Teilen → Köcheclub \(Ablagekorb\)"/.test(su) && /\["📝", "Normal, Wichtig, Express/.test(su), "Lupe findet die Neuheiten");
+  assert.ok(/\[\/verschlüssel\|geheime\? nachricht\|geheim schreiben\/, "verschlüsselt"\]/.test(html) && html.indexOf("[/verschlüssel|") < html.indexOf("let q; if ((q = t.match(/^(?:such"), "Sprachsuche: Verschlüsseln & Co. → Lupe");
+  assert.ok(/\{ id: "geheim", stand: "\d+", sym: "🕵️"[^\n]*st: \(\) => RG_GEHEIM \}/.test(html) && /videos: \[[^\]]*"chatprofi", "geheim"/.test(html), "Video „Geheim schreiben“ registriert und im Thema");
+  const g = html.slice(html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"), html.indexOf("const RG_GR_ID"));
+  assert.ok(g.length > 3000 && !/vnVer\(|vnUmschalten\(|vbMenue\(|localStorage\.setItem|senden\(/.test(g), "Video verschlüsselt, speichert und sendet nichts");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{\s*RG\.ghAn = false; api = alt\.api;/.test(g) && /VN\.klar\.delete\(rgGeheimAuf2\(\)\)/.test(g), "am Ende alles zurück");
+  assert.ok(/function rgHilfeLupe\(\)/.test(html) && /SU\.offen = true; sucheAuf\(""\); SU\.q = \$\("suEingabe"\)\.value = "verschlüsselt"; SU\.ergebnis = \[\]; suZeigen\(\);/.test(html), "Hilfe-Video: Lupe nur mit App-Treffern, ohne Server und ohne Verlaufseintrag");
+  assert.ok(/\{ id: "hilfe", stand: "2"/.test(html) && /\{ id: "chatprofi", stand: "2"/.test(html) && /t: "✍️ Anne schreibt dir gerade"/.test(html), "Fassung 2 für Hilfe und Chat-Profi");
+}
+// 2.533.0 KC-CLUB-FRIEDENSPFEIFE (Wunsch Hansi „Der Häuptling soll eine Friedenspfeife rauchen und daraus entsteht wieder Buchstabe für Buchstabe der Username“)
+{
+  assert.ok(/haube: true, lauf, dir: -1, pfeife: flucht \? 0 : jzbWwPfeifeGlut\(t\) \}/.test(programm) && /if \(o\.pfeife\) \{ \/\/ 2\.533\.0: Friedenspfeife/.test(programm), "Häuptling hält die Pfeife (nicht beim Weglaufen)");
+  assert.ok(/const jzbWwNameText = \(\) => \[\.\.\.\(jzbEisNameText\(\) \|\| "Köcheclub"\)\]\.slice\(0, 12\);/.test(programm) && /jzbWwRauchNameMalen\(c, t, O, k, T\);/.test(programm), "Vorname (sonst Köcheclub) aus Rauch");
+  assert.ok(/JZB_WW_NAME_WEHT = 26/.test(programm) && /if \(t < JZB_WW_PFEIFE\[0\] \|\| t >= JZB_WW_DUELL\) return;/.test(programm), "Name verweht vor dem Duell");
+  assert.ok(/raucht die <b>Friedenspfeife<\/b>/.test(html), "Hilfe nennt die Friedenspfeife");
+}
+// 2.534.0 KC-CLUB-EINST-WEGWEISER (Wunsch Hansi „alle Möglichkeiten auflisten und kurz erklären – als eigene Kachel unter Technik, wie der Explorer bei Windows“)
+{
+  assert.ok(/\{ id: "einstwegweiser", sym: "🧭", t: "Einstellungen erklärt", [^\n]*aktion: "ewStart\(\)" \}/.test(html), "Kachel unter Technik");
+  const ew = html.slice(html.indexOf("// ---------- 2.534.0 KC-CLUB-EINST-WEGWEISER"), html.indexOf("// 2.467.0 KC-CLUB-EINST-ABHAENGIG (Wunsch Hansi"));
+  assert.ok(ew.length > 5000 && /function ewSammeln\(\)/.test(ew) && /querySelectorAll\(":scope > details\[data-klappe\]"\)/.test(ew), "Baum kommt aus der Seite ⚙️ (neue Einstellungen von selbst)");
+  assert.ok(/if \(ein && !x\.hasAttribute\("data-einfach"\)/.test(ew) && /x\.classList\.contains\("versteckt"\)/.test(ew), "gleiche Sicht wie ⚙️ (einfach/erweitert, Admin)");
+  assert.ok(!/\.checked = |\.click\(\)|dispatchEvent|einstellung\(|api\(/.test(ew), "Wegweiser stellt nichts um und fragt keine Datenbank");
+  assert.ok(/👉 Hinbringen/.test(ew) && /📖 Ganze Hilfe/.test(ew) && /🎬 Video/.test(ew) && /einstwegweiser: \{ bauen: \(\) => ewDruck\(\) \}/.test(html), "Erklärung mit Hinbringen, Hilfe, Video; Schriftstück");
+  assert.ok(/if \(v === "einstellungen"\) einstFuellen\(\);/.test(html), "Werte füllen wie beim Öffnen von ⚙️");
+  assert.ok(/const EW_OHNE_BEREICH = \["admin", "leitung_start"\], EW_OHNE = \/\\\(Admin\\\)\|nur Admin\|Inkognito\|🕶️\/i, EW_OHNE_TEXT = \/admin\/i;/.test(ew), "nichts über den Admin (Wunsch Hansi)");
+  assert.ok(/\{ id: "einst_wegweiser", thema: "start"/.test(html) && /\{ id: "einstellungen-erklaert", sym: "🧭"/.test(html) && /if \(b\.art === "wegweiser"\) return ewStart\(\);/.test(html), "Hilfe, Twinkey, Sprachsteuerung");
+}
+// KICC-F-107 Quelle: Backup-Arbeiter liegt als Quelle im Repo (Stand Deploy Version 20, übernommen 20.10.2026; kein automatisches Hochladen)
+{
+  const bw = lies("supabase/functions/kc-db-backup-worker/index.ts");
+  assert.ok(/"X-KC-Function-Version":"20"/.test(bw), "Backup-Arbeiter: Stand Version 20");
+  assert.ok(/!await sicherGleich\(token,String\(expected\)\)/.test(bw) && /token\.length<32/.test(bw), "Backup-Arbeiter: Token zeitkonstant geprüft");
+  assert.ok(/encryptPayload\(payload,String\(backupKey\)\)/.test(bw) && /rejectUnauthorized:true/.test(bw), "Backup-Arbeiter: verschlüsselt, TLS geprüft");
+  assert.ok(!/postgres(ql)?:\/\/|eyJ[A-Za-z0-9_-]{20,}|sk_[A-Za-z0-9]{16,}/.test(bw), "Backup-Arbeiter: keine Verbindungsdaten oder Schlüssel im Quelltext");
+}
+// 2.551.0 KC-CLUB-GEPLANT-VORAB (Wunsch Hansi „beim Anlegen fragen: eher Abruf erlauben – dann Empfänger informieren, sonst zur geplanten Zeit senden“)
+{
+  const mig = lies("supabase/migrations/20261020_kc_club_geplant_vorab.sql");
+  assert.ok(/add column if not exists vorab boolean not null default false/.test(mig), "Spalte vorab, Standard aus");
+  assert.ok(/const vorab = p\.vorab === true && wiederholung === "einmal";/.test(server) && /if \(vorab\) await geplantVorabMelden\(ich,/.test(server), "Anlegen: nur einmalige, Empfänger wird informiert");
+  assert.ok(/if \(vorab && !alt\.vorab\) await geplantVorabMelden\(ich,/.test(server), "Ändern: beim Einschalten informieren (nicht doppelt)");
+  const fm = server.slice(server.indexOf("async function geplantVorabFuerMich"), server.indexOf("async function geplantVorabMelden"));
+  assert.ok(/\.neq\("person_id", ich\.person_id\)/.test(fm) && /\.eq\("vorab", true\)/.test(fm) && !/text/.test(fm.replace(/threadId/g, "")), "Empfänger sieht nur Absender + Zeit, nie den Text");
+  const ab = server.slice(server.indexOf('case "geplant_abrufen":'), server.indexOf('case "nachricht_senden":'));
+  assert.ok(/await binTeilnehmer\(g\.thread_id, ich\.person_id\)/.test(ab) && /g\.person_id === ich\.person_id/.test(ab), "Abrufen nur als anderer Teilnehmer");
+  assert.ok(/sperreFuer\(absender\.person_id\)/.test(ab) && /\.eq\("status", "offen"\)\.select\("id"\)/.test(ab) && /geplantSenden\(g, absender\)/.test(ab), "Absender-Sperre, erst belegen, dann im Namen des Absenders senden");
+  assert.ok(/"geplant_abrufen"/.test(programm) && /"geplant_jetzt", "geplant_abrufen",/.test(server), "Zugangsliste App = Server");
+  assert.ok(/const vorab = GP\.wdh === "einmal" && \(await gpVorabFrage\(\)\);/.test(programm) && /function gpVorabZeigen\(z\)/.test(programm) && /gpVorab\('\$\{esc\(g\.id\)\}', \$\{!g\.vorab\}\)/.test(programm), "App: Frage, Abruf-Kasten, Schalter unter ⏰");
 }

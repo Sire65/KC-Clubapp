@@ -1,5 +1,225 @@
 # Änderungen
 
+## 2.551.0 – 2026-10-20 – Geplante Nachricht vorher abrufen (KC-CLUB-GEPLANT-VORAB)
+- Beim Planen einer einmaligen Nachricht fragt die App: Darf der Empfänger sie schon vorher abrufen? Bei Ja bekommt er sofort einen Hinweis (ohne Text) und im Chat einen Knopf „📩 Jetzt abrufen“; sonst kommt sie zur geplanten Zeit.
+- Unter ⏰ bei der geplanten Nachricht: „📩 Vorher abrufen erlauben / 🔒 ausschalten“ (auch für schon geplante). Der Absender bekommt einen Push, wenn abgerufen wurde.
+- Server 2.551.0: Aktion geplant_abrufen (nur andere Teilnehmer, Sperre des Absenders geprüft, nie doppelt); Spalte kc_club_geplant.vorab.
+
+## 2.550.0 – 2026-10-20 – 🔑 Push an dich bei wiederholten Versuchen ohne gültigen Link (KC-CLUB-FEHLVERSUCHE)
+Wunsch Hansi („herausfinden, wer ohne gültigen Zugang in unsere private App will“ → Vorschlag 1 „Ja“).
+- Server: Öffnet dasselbe Gerät (anonyme Geräte-Kennung der App) die Club-App in 2 Stunden 3-mal ohne persönlichen Link oder mit ungültigem Link, bekommen die Admins einen Push: „🔑 3× versucht, die Club-App ohne persönlichen Link zu öffnen“ mit Gerätetyp (System, Browser wie von der App gemeldet), Uhrzeit und Geräte-Kennung. Je Gerät höchstens 1× am Tag, insgesamt höchstens 5 am Tag. Keine IP-Adresse.
+- Der Google-Vorlesedienst gilt jetzt als Roboter und wird nicht mehr als Fehlversuch mitgeschrieben (Fund 20.10., 3:37 Uhr).
+- Vertragstest-Block 2.550.0. Rückweg: Server 2.549.0.
+
+## 2.549.0 – 2026-10-20 – ⏰ Wecker neben geplanten Nachrichten: Infos und „Ändern“ (KC-CLUB-GEPLANT-WECKER)
+Wunsch Hansi („Zeige neben einer zeitgeplanten Nachricht rechts daneben einen Wecker. Wenn man drauf tippt, dann Infos anzeigen wie geplante Zeit usw. und einen Button Ändern“).
+- Im Chat steht rechts neben jeder geplanten Nachricht ein ⏰ (klingelt beim Öffnen einmal kurz, ruhig bei „Bewegung reduzieren“).
+- Antippen zeigt die Infos: wird gesendet (Zeit), wie oft, Benachrichtigung (🔔 Push / ✉️ E-Mail), ❗ wichtig, geplant am, zuletzt geändert, Fehler beim letzten Mal – dazu „✏️ Ändern“, „📤 Jetzt senden“, „🗑️ Löschen“.
+- „✏️ Ändern“: 🕐 Zeit oder Wiederholung (bisherige Auswahl) oder 📝 Text der Nachricht (neu).
+- Server 2.549.0: geplante Nachrichten liefern zusätzlich Wege, angelegt/geändert; beim Ändern darf auch der Text mitkommen (nur eigene, offene; gleiche Regeln wie beim Anlegen).
+- Browser-Test (Wecker rechts, Infos, Ändern-Auswahl). Vertragstest-Block 2.549.0. Rückweg: App 2.548.0 / Server 2.541.0.
+
+## 2.548.0 – 2026-10-20 – 🐪 Neues Thema Wüste: Pyramiden, Karawane, Oase, Pharao auf der Sänfte, Flaschengeist – Name aus Goldstaub, Sonnenuntergang · 🪶 Friedenspfeife langsamer (KC-CLUB-WUESTE, KC-CLUB-FRIEDENSPFEIFE-2)
+Wunsch Hansi („Szene Wüste: im Hintergrund Pyramiden, vorne zieht eine Karawane vorbei, links eine Oase, dann kommt der Pharao – er wird auf einer Sänfte getragen –, rechts kommt ein Flaschengeist aus der Lampe“; Ende: „1 + 3, eigenes Thema, einspielen“).
+- **🐪 Thema Wüste** (⚙️ → Themen; Vorschau unter ✨ Effekte): hinten drei Pyramiden mit Licht- und Schattenseite, Sonne darüber; links eine Oase mit Wasser, Palmen und Datteln; vorne zieht eine Karawane mit vier Kamelen (Reiter mit Turban, Decken, Gepäck) von rechts nach links.
+- Ab 26 s wird der **Pharao auf seiner Sänfte** (Baldachin, vier Träger, Nemes-Kopftuch, Krummstab) bis zur Mitte getragen. Rechts steht eine goldene Lampe: sie wackelt, der **blaue Flaschengeist** steigt mit Rauchschweif heraus, schwebt zum Pharao und verbeugt sich.
+- **Ende 1:** Er schnippt – aus der Lampe steigt **Goldstaub** und schreibt langsam (2,6 s je Buchstabe) den **Vornamen** in Goldschrift in den Himmel (ohne Namen „Köcheclub“). Danach wirbelt der Geist zurück in die Lampe, die Lampe wackelt, der Name verblasst, der Pharao wird davongetragen.
+- **Ende 3:** **Sonnenuntergang** – die Sonne sinkt glutrot hinter die Pyramiden, Sterne und Halbmond gehen auf, die Karawane rastet mit kleinem Lagerfeuer an der Oase; dann wird es wieder Tag und alles beginnt von vorn (Lauf ≈ 95 s, richtet sich nach der Namenslänge).
+- Design Sonnenuntergang, Laternen-Girlande, Kopf-Effekt Theater, Hilfe/Twinkey/Lupe ergänzt.
+- **🪶 Friedenspfeife (Wilder Westen) langsamer** (Hansi: „der Name kommt zu schnell – das muss sich etwas hinziehen“): je Buchstabe bis 2,8 s statt 1,4 s, die Rauchwolke schwebt 2,4 s statt 1,6 s, der Buchstabe erscheint langsam; bei langen Namen so, dass er vor dem Verwehen fertig ist.
+- Test: tools/wueste/wu-browser.mjs (zwei Läufe à 30 Bilder/s, alle Abschnitte), tools/wildwest/ww-browser.mjs angepasst, Vertragstest-Block 2.548.0. Rückweg: App 2.547.0.
+
+## 2.547.0 – 2026-10-20 – Kochmütze mit „since 1991“ auf Holzklappe und Servierglocke (KC-CLUB-KOPF-EMBLEM)
+Wunsch Hansi („Baue noch auf die Holzklappe und die Glocke die Kochmütze mit since 1991“).
+- Kopf-Effekt 🎪 Holzklappe: neben dem Schild „Geschlossen“ die Kochmütze mit „since 1991“, hell wie eingebrannt.
+- Kopf-Effekt 🛎️ Servierglocke: in der Mitte der Glocke dieselbe Marke, dunkel wie eingraviert (glänzt beim Öffnen mit).
+- Gleiche CD-Kochmütze wie oben im Kopf, nur Bild, nicht antippbar. Browser-Test beider Effekte. Rückweg: App 2.546.0.
+
+## 2.546.0 – 2026-10-20 – „since 1991“ jetzt im Knopf der Kochmütze (KC-CLUB-KOPF-SEIT-2)
+Wunsch Hansi („Besser sähe es aus, wenn es mit im Button der Mütze ist – pack es darein“).
+- Der Schriftzug steht jetzt im Kochmützen-Feld unter der (etwas kleineren) Mütze; das Feld bleibt 54 × 54 px, die Versionsnummer steht darunter wie vorher.
+- Browser-Test bei 320 und 390 px: Schriftzug ganz im Knopf. Vertragstest angepasst + Block 2.546.0. Rückweg: App 2.545.0.
+
+## 2.545.0 – 2026-10-20 – „since 1991“ unter der Kochmütze im Kopf (KC-CLUB-KOPF-SEIT)
+Wunsch Hansi („Oben auf der Kopfseite ganz links ist die Kochmütze. Schreibe dort noch klein darunter „since 1991““).
+- Klein, kursiv, in Beige aus dem Corporate Design direkt unter der Kochmütze, darunter wie bisher die Versionsnummer. Nicht antippbar (der Kochmützen-Knopf und die Version bleiben wie sie sind).
+- Browser-Test bei 320 und 390 px: sichtbar, nichts läuft über. Vertragstest-Block 2.545.0. Rückweg: App 2.544.0.
+
+## 2.544.0 – 2026-10-20 – 🔔 Eingerollter Kopf: der Pfeil blinkt bei Neuem (KC-CLUB-KOPF-PFEIL-NEU)
+Wunsch Hansi („Wenn ich den Kopfbereich mit einem oder zwei Pfeilen hochfahre, sehe ich nicht, in welchem der 3 Felder neue Sachen ankommen – der Pfeil, mit dem hochgefahren wurde, soll blinken, wenn eine neue Nachricht da ist oder neue Mitglieder angemeldet sind“).
+- Ist der Kopf mit ⌃ (halb) oder ⌃⌃ (ganz) eingerollt, blinkt der Pfeil dieser Stellung gelb-orange, sobald mehr ungelesene Nachrichten da sind, ein Mitglied neu online kommt oder die Mitgliederzahl steigt. Startet die App schon eingerollt, blinkt er auch bei vorhandenen ungelesenen Nachrichten.
+- Ausrollen beendet das Blinken (dann sind die drei Felder wieder zu sehen). Ohne Bewegung (Effekte aus, Sparmodus) leuchtet der Pfeil fest statt zu blinken.
+- Keine zusätzlichen Datenbank-Abfragen: es werden nur die vorhandenen Zahlen aus Abgleich und Online-Takt verglichen.
+- Test: Vertragstest-Block 2.544.0, Browser-Probe (eingerollt + neue Nachricht → Pfeil blinkt, ausrollen → aus). Rückweg: App 2.543.0.
+
+## 2.543.0 – 2026-10-20 – 🎬 Video „Geheim schreiben“: so kommt die verschlüsselte Nachricht beim Empfänger an (KC-CLUB-VIDEO-GEHEIM-2)
+Wunsch Hansi („Wie sieht z. B. Klaus die verschlüsselte, wenn sie ankommt – einmal mit Schlüsselbund oder temporärem Schlüssel“ → „Ja, Video ergänzen und einspielen“).
+- Fünf neue Stationen aus Sicht des Empfängers: 📲 die Mitteilung aufs Handy (kein Wort vom Inhalt), 🕵️ der Agent liefert ab (echter Ankunfts-Effekt im Beispiel-Chat), 🔑 Einmal-Schlüssel eintippen, ❌ Falscher Schlüssel, 🔑 mit Schlüsselbund öffnet sie sich von selbst.
+- Nur Beispielbilder im Beispiel-Chat mit Anne – es wird nichts verschlüsselt, gesendet oder gespeichert. Video-Stand 2 (ca. 5 Min.).
+- Test: tools/hilfe/hilfe-nachtrag4-browser.mjs (17 Schritte, jedes Pflicht-Ziel sichtbar, nichts an den Server), Vertragstest-Block 2.543.0. Rückweg: App 2.542.0.
+
+## 2.542.0 – 2026-10-20 – 💬 Chats mit neuen Nachrichten sind in der Übersicht markiert (KC-CLUB-CHAT-NEU-MARKIERT)
+Wunsch Hansi („Wenn man in die Nachrichten-Übersicht reingeht, sollen die Zeilen markiert sein, wo neue Nachrichten drin sind – Ameisenlauf, Blinken oder die Anzahl blinkt“).
+- Alle drei Ideen kombiniert, aber ruhig: Beim Öffnen läuft 5 s ein Ameisenrahmen um jeden Chat mit Neuem (vorhandener Rahmen der hervorgehobenen Gruppe, höchstens 1× je Minute), die rote Zahl pulsiert 3×. Danach bleibt die Zeile leicht golden getönt mit roter Leiste links und fettem Namen – bis gelesen.
+- Gilt in der Liste und in der Chat-Kartei; stummgeschaltete Chats werden nicht hervorgehoben. Bei „Bewegung reduzieren“ im Handy pulsiert nichts.
+- Test: Vertragstest-Block 2.542.0, Browser-Test (2 neue Chats markiert, gelesener normal). Rückweg: App 2.541.0.
+
+## 2.541.0 – 2026-10-20 – 👀 Push an dich, wenn ein Gesperrter die Club-App öffnen will (KC-CLUB-SPERRE-MELDUNG)
+Wunsch Hansi („Informiere mich, wenn Thomas sich anmelden will“).
+- Server: Öffnet eine gesperrte Person die App, bekommen die Admins einen Push „👀 <Name> wollte die Club-App öffnen – Gesperrt (Wartung) – sah nur den Hinweis“. Gleiche Drossel wie der Protokolleintrag aus 2.539.0: höchstens einmal je 10 Minuten und Person. Läuft im Hintergrund; die gesperrte Person merkt davon nichts.
+- Test: Vertragstest-Block 2.541.0. Rückweg: Server 2.540.0.
+
+## 2.540.0 – 2026-10-20 – 🔒 Gesperrte: kein Notfall-Paket und kein gespeicherter Offline-Stand mehr (KC-CLUB-SPERRE-NOTPAKET, KC-CLUB-SPERRE-OFFLINE)
+Prüfung nach Hansis Auftrag (20.10.: „Prüfe jetzt nochmal alles, dass er nicht ins Programm kommt, die Wartung sieht, keine Push und E-Mail bekommt – also keinerlei Kommunikation“).
+- Lücke 1: Das Notfall-Paket (Notbetrieb bei Ausfall von Supabase) enthielt auch für Gesperrte Termine und Chats. Jetzt baut es nur noch für nicht Gesperrte; sind die Sperren nicht lesbar, wird nicht gebaut (altes Paket bleibt).
+- Lücke 2: Die App merkt sich einen Stand für den Offline-Start. Bekommt sie vom Server „gesperrt“ (423), löscht sie diesen Stand.
+- Geprüft und schon dicht: App (Wartungs-Bildschirm bei jedem Aufruf), Kalender-Abo (403 bei Sperre), direkte Leitung (2.426.0), Push/E-Mail (stumme Sperre + Liste „Ohne Benachrichtigungen“), Termine-Mails (kc-termine), Nachtrag aus dem Notbetrieb.
+- Test: Vertragstest-Block 2.540.0. Rückweg: App/Server 2.539.0.
+
+## 2.539.0 – 2026-10-20 – 👀 Gesperrte: Öffnungsversuche werden aufgezeichnet und in der Sperrliste angezeigt (KC-CLUB-SPERRE-VERSUCHE)
+Hansi (20.10.: „Ich möchte ihn sperren. Er bekommt ja dann Wartung angezeigt. Du zeichnest es ja auf, wenn er sich anmelden will.“) – bisher wurde das NICHT aufgezeichnet.
+- Server: Öffnet eine gesperrte Person die App, kommt vor dem Wartungs-/Störungs-Bildschirm ein Protokolleintrag `gesperrt_versuch` (Art der Sperre, Name der Aktion – keine Inhalte), höchstens einmal je 10 Minuten und Person.
+- Admin → 🛠️ Wartung → „Zurzeit gesperrt“: je Person „👀 n× versucht, die App zu öffnen · zuletzt …“ bzw. „seit der Sperre nicht versucht“ (Lesefehler → „unbekannt“, nie 0).
+- Gesperrt mit 📵 (keine Push/E-Mail) gilt jetzt auch für das Ausgrauen in den Empfänger-Listen (2.538.0).
+- Test: Vertragstest-Block 2.539.0, Browser-Test der Sperrliste. Rückweg: App/Server 2.538.0.
+
+## 2.538.0 – 2026-10-20 – 📵 Wer keine Benachrichtigungen bekommt, ist in allen Empfänger-Listen ausgegraut (KC-CLUB-KOMMUNIKATION-AUS-GRAU)
+Wunsch Hansi („Dass wenn jemand Nachricht an alle auswählt oder Terminanfrage usw. Thomas ausgegraut ist und nicht gewählt werden kann“).
+- Die Mitgliederliste vom Server meldet je Person `ohne_komm` (aus der Registry `kc_club_kommunikation_aus`).
+- Ausgegraut, nicht ankreuzbar, mit Hinweis „📵 keine Benachrichtigungen“ in: Neue Nachricht/Rundnachricht, Zentrale, Terminanfrage, Frage an Mitglieder, Pinnwand-Zettel für Personen, Abstimmung (Auswahl), Gruppe anlegen/bearbeiten, To-do „Wer?“. Wer schon gewählt war (z. B. alte Gruppe), bleibt abwählbar.
+- „👥 Alle“, Ämter und „🟢 Online“ wählen sie nicht mit. Der Server sendet ihnen ohnehin nichts (2.536.0).
+- Test: Vertragstest-Block 2.538.0, Browser-Test (Liste, Alle, Terminanfrage, Zentrale, To-do). Rückweg: App/Server 2.537.0.
+
+## 2.537.0 – 2026-10-20 – 📵 Admin-Schalter „Ohne Benachrichtigungen“ (KC-CLUB-KOMMUNIKATION-AUS-SCHALTER)
+Wunsch Hansi („Ja, Schalter im Admin-Bereich einbauen, dann kann ich ihn komplett aus der Kommunikation rausnehmen“).
+- Neue Admin-Kachel **📵 Ohne Benachrichtigungen**: zeigt, wer zurzeit keine Push/E-Mail bekommt, mit Knopf „🔔 Wieder benachrichtigen“. „＋ Mitglied herausnehmen“ öffnet die Mitgliederliste mit Suche – antippen, Rückfrage bestätigen, fertig.
+- Server: Aktionen `komm_aus_liste` / `komm_aus_setzen` (nur Admin, nicht sich selbst) pflegen die Registry `kc_club_kommunikation_aus` aus 2.536.0; wirkt sofort, auf anderen Server-Instanzen nach höchstens 60 s. Jede Änderung im Protokoll.
+- Test: Vertragstest-Block 2.537.0, Browser-Test der Kachel. Rückweg: App/Server 2.536.0 (Liste bleibt erhalten).
+
+## 2.536.0 – 2026-10-20 – Keine Benachrichtigungen: Mitglieder ganz aus der Club-Kommunikation herausnehmen (KC-CLUB-KOMMUNIKATION-AUS)
+Wunsch Hansi (20.10.: „Thomas Hess möchte aus der Kommunikation der Club-App herausgenommen werden … auch wenn ich eine Nachricht an alle schreibe, bekommt er nix. Stelle das sicher.“).
+- Befund: Die Haken in den Einstellungen gelten nur, solange der Absender „wie eingestellt“ sendet. Wählt er 🔔/✉️ ausdrücklich, bei Express, Notfall oder als Kopie ging die Nachricht trotzdem raus.
+- Neu: Registry `kc_club_kommunikation_aus` (nur Server). Wer dort steht, bekommt über keinen Weg der Club-App (kc-club) und der Termine (kc-termine) Push oder Mail – geprüft an der einen Stelle, durch die jeder Versand läuft (wie die stumme Sperre). Chats und Inhalte bleiben in der App sichtbar.
+- Ist die Liste nicht lesbar, gilt der letzte bekannte Stand; gibt es noch keinen, wird nicht gesendet (Regel 11).
+- Nicht betroffen: andere Programme (KICC-Handmail, Weihnachtsmarkt-Umfrage).
+- Test: Vertragstest-Block 2.536.0. Rückweg: App/Server 2.535.0, Tabelle bleibt unschädlich.
+
+## 2.535.0 – 2026-10-20 – Notfall-Paket: Pause nach Fehlschlag · Teilen: ehrliche Meldung, wenn das Handy nichts mitschickt
+Anlass: Lastwarnung 20.10.2026 16:03 („10417 SQL-Aufrufe / 15 Min., Ursache unbekannt“) und Hansis Rechnung-PDF (1,2 MB), die beim Teilen leer ankam.
+- **Server – KC-CLUB-NOTPAKET-FEHLERPAUSE:** Das Notfall-Paket (~3.000 Abfragen je Bau) scheiterte um 15:45 (Zeitlimit 546) und 16:00 (Datenbank-Zeitgrenze, 503). Weil der 3-Stunden-Abstand seit dem letzten guten Paket schon um war, baute jeder 15-Min.-Lauf sofort neu. Jetzt nach einem Fehlschlag immer frühestens nach 30 Min. (nicht bei „erzwingen“). Fehlschläge kommen als `notpaket_fehler` ins Protokoll (Grundlage, damit die Lastwarnung die Ursache nennen kann).
+- **App – KC-CLUB-TEILEN-LEER korrigiert:** Die Meldung nannte als Grund „Dateityp unbekannt“ und empfahl Neu-Installieren. Am 20.10. kamen PDFs (106 KB, 158 KB) aus demselben Dateimanager aber an – nur die größere nicht. Neue Meldung: das Handy hat keine Datei mitgeschickt, bitte über 📎 anhängen (bis 8 MB).
+- **KC-CLUB-TEILEN-GROESSE:** Der Service Worker hält bei jedem Teilen fest, wie groß die Sendung vom Handy war (nur Zahl, keine Inhalte) – so sieht man, ob eine große Datei leer ankam.
+- Test: Vertragstest-Block 2.535.0. Rückweg: App 2.534.0 / Server 2.529.0 erneut einspielen.
+
+## 2.534.0 – 2026-10-20 – 🧭 „Einstellungen erklärt“: alle Einstellungen wie im Explorer (KC-CLUB-EINST-WEGWEISER)
+Wunsch Hansi („spezielle Anleitung – Voreinstellungen leicht gemacht: die gesamten Möglichkeiten auflisten und kurz erklären … als eigene Kachel unter Technik, wie der Explorer bei Windows; Überschrift z. B. ‚Farben einstellen‘, antippen, dann kommt die Erklärung“).
+- **Neue Kachel „🧭 Einstellungen erklärt“** unter Technik: alle Einstellungen als Ordner-Baum (Bereiche wie in ⚙️, ▸ klappt auf, daneben die Anzahl). Jede Einstellung mit ihrem aktuellen Stand (✅ an / ⬜ aus / gewählter Wert). **Antippen** klappt die Erklärung auf: „Was bewirkt das?“, „Jetzt: …“, wo sie in ⚙️ steht – dazu **👉 Hinbringen** (öffnet ⚙️, klappt den Bereich auf, der Schalter leuchtet), **📖 Ganze Hilfe** (wenn es einen Hilfe-Text dazu gibt) und **🎬 Video** zum Bereich.
+- **Suche** oben (auch per 🎤, verzeiht Tippfehler), **▾ Alle auf**, **🖨️ Als Schriftstück** (Druck/PDF mit Inhaltsverzeichnis, je Bereich alle Einstellungen mit Erklärung und aktuellem Stand).
+- **Immer aktuell:** Der Wegweiser liest die Einstellungen direkt aus der Seite ⚙️ – neue Einstellungen erscheinen von selbst. Es gilt dieselbe Sicht: einfache Ansicht nur ihre Einstellungen. **Nichts über den Admin** (Wunsch Hansi „aber nix über Admin, Inkognito, was der Admin sehen kann usw.“): Admin- und Leitungs-Bereich, Inkognito, Brille und Admin-Schalter fehlen – auch beim Admin –, Sätze und Hilfe-Texte, die vom Admin reden, werden weggelassen; „Runde Geburtstage“ erklärt nur noch „die Clubleitung“. Dazu in den Hilfen von 2.533.0 (Verschlüsseln, Ablagekorb, Video „Geheim schreiben“, Twinkey) die Erwähnungen des Admins herausgenommen. Wo ⚙️ keinen grauen Hinweis hat (rund 30 Einstellungen, z. B. Push-Knopf, Ruhezeit von/bis, Kontaktdaten sichtbar, Notfallkontakt, Stimmen, Spiele, Handy-Kalender, Tag/Nacht), steht jetzt eine Erklärung im Wegweiser (Liste `EW_ERKL`).
+- Nur lesen: Der Wegweiser stellt nichts um; keine eigene Datenbank-Abfrage (füllt die Werte wie beim Öffnen von ⚙️ – dafür ist der Füll-Teil jetzt die Funktion `einstFuellen()`).
+- Hilfe-Eintrag „Alle Einstellungen erklärt – wie im Explorer“, Lupe-Treffer, Twinkey-Frage „Was bewirken die ganzen Einstellungen?“, Sprachbefehl „Einstellungen erklärt“.
+- Test: `tools/einst-wegweiser/ew-browser.mjs` (109 Einstellungen in 10 Bereichen, alle mit Erklärung; Erklärung, Suche, Hinbringen, Schriftstück, einfache Ansicht, Admin, nichts umgestellt, keine Abfrage) · Vertragstest-Block 2.534.0.
+- Rückweg: App 2.533.0 erneut einspielen.
+
+## 2.533.0 – 2026-10-20 – 🕵️ Hilfe neu aufgebaut: Video „Geheim schreiben“, Twinkey, Lupe und Sprachsuche zu allen Neuheiten · 🪶 Friedenspfeife im Wilden Westen (KC-CLUB-HILFE-NACHTRAG-4, KC-CLUB-VIDEO-GEHEIM, KC-CLUB-FRIEDENSPFEIFE)
+Wunsch Hansi („Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion, Sprachsuche, Video auch mit Verschlüsselung usw.“). Geprüft wurden alle Neuheiten seit dem letzten Nachtrag (2.508.0–2.532.0) gegen Hilfe-Zentrum, Twinkey, Lupe, Sprachsteuerung und Erklär-Videos – nur Mitglieder-Funktionen.
+- **Neues Erklär-Video „🕵️ Geheim schreiben: verschlüsseln & Schlüsselbund“** (Thema „Schreiben & Kontakt“, ca. 3 Min.): an einem Beispiel-Zweierchat mit Anne – die kleine Zeile (▾ ⌨️ 🔊 🔒), Schloss an, Rückfrage „Ja, mit Schlüssel / Normal senden“, Schlüssel festlegen und auf anderem Weg weitersagen, 🔑 und Geheimagent beim Senden, verschlossene und geöffnete Nachricht, ⋮ → Schlüsselbund, fünf Schlüssel als Datei, Grenzen. Es wird nichts verschlüsselt, gesendet oder gespeichert (Platzhalter-Blasen, Beispielbilder, Weiche vor api nur für den Beispiel-Chat); am Ende ist alles wie vorher.
+- **Video „Hilfe, Suche & Twinkey“ Fassung 2:** die Lupe in Aktion (Beispielwort „verschlüsselt“, nur Treffer unter den App-Funktionen – ohne Server-Anfrage und ohne eigenen Verlaufseintrag) und die 🎤 Sprachsuche. **„Chat für Fortgeschrittene“ Fassung 2:** „✍️ Anne schreibt dir gerade“ außerhalb des Chats; Haken-Erklärung nach KC-CLUB-RT-PUSH-ANGEZEIGT.
+- **Hilfe-Zentrum:** neu „🔑 Schlüsselbund“, „📝 Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld“, „✍️ … schreibt dir gerade“, „📄 Aus jeder Druckvorschau ein PDF“, „💬 Die Meldung oben blinkt zweimal“. Auf den neuen Stand gebracht: „Nachricht verschlüsselt senden“ (Rückfrage, Schloss geht beim Chatwechsel aus, Geheimagent, „Zeig mir“ startet das Video), „Wer bringt deine Nachricht?“ (Geheimagent bei jeder verschlüsselten Nachricht), Haken und „Wer hat gelesen?“ (zwei graue Haken, sobald die Mitteilung angezeigt wird), „Fotos aus der Galerie“ und „Teilen → Köcheclub“ (Ablagekorb, jeder Dateityp, Dubletten-Hinweis, Abhilfe), „Kurz erklärt“ bei Nachrichten (Versand-Leiste, 🔒) und Fotoalbum (▶️ Diashow).
+- **Twinkey:** 13 neue Fragen (verschlüsselt senden, „will gar nicht verschlüsseln“, verschlüsselte Nachricht öffnen / Schlüssel vergessen, Schlüsselbund, Geheimagent, wo Wichtig und Express sind, Teilen → Ablagekorb, „schreibt dir gerade“, Tippgeräusch schnell aus, nur ein Haken, Erstattung als PDF, Vorschlag für eine Sitzung ohne Datum, Wilder Westen); Antwort „Diashow“ nennt den neuen Knopf im Fotoalbum; Wörter wie geheim, Schloss, Kennwort, Schlüsselbund, Ablagekorb, PDF, Cowboy führen zur richtigen Antwort; Twinkey bietet Hilfetext und Video an. Korrektur: Tipp „Nachts Ruhe“ bot sein Video nie an (Schlüssel `h:ruhe` statt `t:ruhe`).
+- **Lupe:** 10 neue Treffer (verschlüsselt senden, Schlüsselbund, Video Geheim schreiben, Schloss aus, Versand-Leiste, Tippgeräusch aus, „schreibt dir gerade“, Teilen/Ablagekorb, Diashow aus dem Fotoalbum, PDF aus der Druckvorschau) – auch mit Tippfehlern.
+- **Sprachsuche:** „verschlüsselt schreiben“, „geheime Nachricht“, „Schlüsselbund“, „Diashow (starten)“, „Ablagekorb“, „Versand-Leiste“ öffnen die Lupe mit dem passenden Treffer („Nachricht an Klaus …“ bleibt eine Nachricht).
+- Nur App, keine Datenbank-Abfrage mehr. Test: `tools/hilfe/hilfe-nachtrag4-browser.mjs` (alle drei Videos Schritt für Schritt: Ziele sichtbar, nichts an den Server, kein Schlüssel gespeichert, am Ende alles zurück; Twinkey, Lupe, Sprachsuche) · Vertragstest-Block 2.533.0.
+- **🪶 Friedenspfeife (KC-CLUB-FRIEDENSPFEIFE, Wunsch Hansi „Der Häuptling soll eine Friedenspfeife rauchen und daraus entsteht wieder Buchstabe für Buchstabe der Username“):** Im Thema „🤠 Wilder Westen“ hält der Häuptling ab 3 s die Friedenspfeife (Holzstiel, roter Steinkopf, zwei Federn), ein feiner Rauchfaden steigt auf. Je Buchstabe ein Zug – die Glut leuchtet auf –, eine Rauchwolke steigt hoch, schwebt an ihren Platz über den Tafelbergen und wird zum Buchstaben des Vornamens (weiße, leicht schwebende Rauchschrift; ohne Vornamen „Köcheclub“, höchstens 12 Buchstaben). Ab 26 s verweht der Wind den Namen – rechtzeitig vor dem Duell (29 s). Alles aus der Zeit im Lauf berechnet, nur Bild. Hilfe-Eintrag und Twinkey-Antwort „Wilder Westen“ ergänzt. Test: `tools/wildwest/ww-browser.mjs` (Pfeife, Glut, Namenszeiten und Lage).
+- Rückweg: App 2.532.0 erneut einspielen.
+
+## 2.532.0 – 2026-10-20 – 🤠 Wilder Westen: Indianer und Häuptling, Saguaro-Kakteen, Steppenläufer, Duell mit Abtransport (KC-CLUB-WILDWEST-2)
+Wunsch Hansi („es fehlen noch 2 Indianer und ein Häuptling, rechts ein paar Kakteen so groß wie im Westen, ab und an ein Windstoß, der einen Ballen weht, und 2 Cowboys, die sich duellieren – dann kommt eine flache Kutsche und der Verwundete wird abtransportiert“):
+- Am Lagerfeuer sitzen zwei Indianer (einer hebt ab und zu die Hand), daneben steht der Häuptling mit Federhaube und verschränkten Armen. Wenn der Boden bebt, laufen alle drei vor der Herde davon – im nächsten Lauf sind sie wieder da.
+- Rechts zwei große Saguaro-Kakteen und ein kleiner Kugelkaktus mit Blüte.
+- Ab und zu ein Windstoß (Windstriche), der einen Steppenläufer-Ballen hüpfend durchs Bild rollt.
+- Duell: zwei Cowboys kommen, stehen sich gegenüber, ziehen – Mündungsfeuer, „PENG!“, einer fällt um (der Hut fliegt), der Sieger geht davon. Ein flacher Wagen kommt, der Verwundete wird mit Kopfverband aufgeladen und abtransportiert.
+- Zeitplan so verschoben, dass sich nichts überschneidet (Reiter 8 s/56 s, Kutsche 13 s/64 s, Duell 29–56 s, Herde 77 s). Alles nur Bild, keine Datenbank.
+- Test: `tools/wildwest/ww-browser.mjs` erweitert (Steppenläufer, Duell und Abtransport über 800 Bilder ohne Fehler) · Vertragstest-Block 2.532.0.
+- Rückweg: App 2.531.0 erneut einspielen.
+
+## 2.531.0 – 2026-10-20 – Korrektur: geplante, selbstlöschende und vorgemerkte Nachrichten im Chat wieder sichtbar
+Fehler aus 2.529.0 (KC-CLUB-VN-RUECKFRAGE): Ein Kommentar stand mitten in einer Zeile und schaltete dahinter drei Aufrufe ab – im offenen Chat fehlten seitdem die eigenen geplanten Nachrichten („später senden“), die Selbstlösch-Anzeige und die ohne Netz vorgemerkten Nachrichten. Jetzt wieder auf eigener Zeile. Neuer Vertragstest prüft genau diese Zeile; alle Änderungen seit 2.494.0 auf dasselbe Muster durchsucht – keine weitere Stelle.
+- Rückweg: nicht sinnvoll (2.529.0/2.530.0 enthalten den Fehler).
+
+## 2.530.0 – 2026-10-20 – 🕵️ Geheimagent bringt verschlüsselte Nachrichten · 🔑 Schlüssel beim Senden (KC-CLUB-GEHEIMAGENT)
+Wunsch Hansi („Beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen … welche besondere Figur könnte die verschlüsselte wegbringen?“ → „🕵️ Geheimagent“).
+- Beim Senden einer verschlüsselten Nachricht (🔒 Kennwort oder Schlüsselbund) blitzt am Senden-Knopf kurz ein goldener 🔑 Schlüssel auf und dreht sich wie im Schloss. Danach läuft ein Geheimagent (Hut, Sonnenbrille, Trenchcoat, Aktenkoffer) mit der Nachricht davon – statt des gewählten Boten.
+- Beim Empfänger kommt der Geheimagent ebenfalls an, bleibt kurz stehen, der Schlüssel dreht sich, das Kofferschloss springt auf.
+- Express behält Vorrang (Rennwagen). „Effekte aus“ gilt weiter. Hilfe-Eintrag „Wer bringt deine Nachricht?“ ergänzt. Nur App.
+
+## 2.529.0 – 2026-10-20 – 🤠 Thema „Wilder Westen“ · 🔒 Schloss fragt erst · ✍️ „… schreibt dir gerade“ auch außerhalb des Chats (KC-CLUB-WILDWEST, KC-CLUB-VN-RUECKFRAGE, KC-CLUB-SCHREIBT-HINWEIS) · Server 2.529.0
+Wunsch Hansi („neue Szene Wild West: links ein Indianerzelt, davor ein Lagerfeuer, am Horizont laufen Büffel, ab und an reiten 2 Cowboys vorbei, zwischendurch eine Kutsche – dann eine riesige Büffelherde, trampelt alles nieder, Staubwolke, Szene fängt wieder von vorne an“):
+- Unten im Kopf der Startseite die Prärie: links ein Tipi, davor knistert ein Lagerfeuer (Funken, leichter Rauch). Am Horizont ziehen kleine Büffel vor Tafelbergen und Kakteen.
+- Zweimal je Lauf reiten zwei Cowboys vorbei (einer schwingt das Lasso), zweimal rumpelt die Postkutsche „KÖCHECLUB“ durch.
+- Zum Schluss bebt der Boden: eine riesige Büffelherde donnert von rechts heran, trampelt Zelt und Feuer nieder, eine Staubwolke deckt alles zu – aus dem Staub heraus beginnt die Szene von vorn (nahtlos, ein Lauf ≈ 96 s).
+- Thema „🤠 Wilder Westen“ (Design Ocker, Western-Schrift, Wimpel in Westernfarben), Vorschau unter ⚙️ → ✨ Effekte, Hilfe-Eintrag, Suchwörter. Alles nur Bild, nichts wird gespeichert oder gesendet; keine Datenbank-Abfrage.
+- Tests: `tools/wildwest/ww-browser.mjs` (echtes app.js, zwei Läufe à 30 Bilder/s: Ablauf, Niedertrampeln, Staubwolke, nahtloser Neustart) · Vertragstest-Block 2.529.0.
+- **🔒 Schloss fragt erst (KC-CLUB-VN-RUECKFRAGE, Fund Hansi „ich wollte Klaus antworten, soll aber eine Verschlüsselungsnummer eingeben – ich will gar nicht verschlüsseln“):** Das Schloss am Schreibfeld (neben ▾ ⌨️ 🔊) war aus Versehen an; Abbrechen der Schlüssel-Frage hieß „nicht senden“. Jetzt fragt die App zuerst „🔒 Ja, mit Schlüssel“ oder „✉️ Normal senden“ – „Normal senden“ schaltet das Schloss aus und schickt die Nachricht wie immer. Beim Wechsel in einen anderen Chat geht das Schloss von selbst aus. (Mit Schlüsselbund bleibt alles wie bisher.)
+- **✍️ „Hansi schreibt dir gerade …“ auch außerhalb des Chats (KC-CLUB-SCHREIBT-HINWEIS, Wunsch Hansi):** Ist jemand in der App, hat den Einzelchat aber nicht offen, erscheint oben kurz „✍️ Hansi schreibt dir gerade …“, „🗣️ Hansi diktiert dir gerade eine Nachricht …“ oder „🎤 Hansi nimmt gerade eine Sprachnachricht für dich auf …“ – Antippen öffnet den Chat, die ankommende Nachricht nimmt den Hinweis weg. Nur Einzelchats, nicht bei stumm geschalteten Chats; wer die Online-Anzeige aus hat, meldet wie bisher nichts. Im Chat steht jetzt auch „🗣️ … diktiert …“. Kostet nichts extra: es nutzt die Signale der direkten Leitung. DB: `supabase/migrations/20261020_kc_club_rt_spricht.sql` (Trigger: Signal „spricht“/„diktiert“; keine neue Spalte).
+- Tests dazu: `tools/chat-sparsam/schreibt-hinweis-browser.mjs` (Schloss-Rückfrage, Chatwechsel, Hinweis außerhalb des Chats, Diktat) · `tools/chat-sparsam/rt-spricht-test.mjs` (Trigger in Postgres 16 im Speicher).
+- Rückweg: App/Server 2.528.0/2.527.0 erneut einspielen; `drop trigger kc_club_rt_spricht on public.kc_club_tippen;`
+
+## DB – 2026-10-20 (ohne App-Build) – Graue Haken sofort, wenn der Push auf dem Handy angezeigt wird (KC-CLUB-RT-PUSH-ANGEZEIGT)
+Wunsch Hansi („Warum bekommt man bei WhatsApp graue Haken, sobald es auf dem Handy angekommen ist? Bei uns sieht man lange nur einen Haken“ → „Ja, bauen und sofort einspielen“).
+- Ursache: Meldete das Handy „Push angezeigt“, erfuhr das die App des Absenders nur beim nächsten Nachsehen. Seit 2.510.0 fragt sie bei stehender Leitung nicht mehr alle 4 s nach, sondern verlässt sich auf Signale – für „Push angezeigt“ gab es aber keins. Folge: graue Haken erst nach 30–60 s oder später.
+- Jetzt: Wechselt der Versandauftrag eines Chat-Pushes auf „angezeigt“ oder „geöffnet“, bekommt der Absender sofort das Signal (wie bei „angekommen/gelesen“) – die zwei grauen Haken kommen im Mittel ~5 s nach dem Zustellen. Nur Chat-Pushes der Club-App, nur beim Wechsel, nur Signal; ein gestörtes Signal kann die Zustellung nie stören.
+- Grenze (wie bei jeder Web-App): Zeigt ein Handy den Push nicht an oder meldet nichts zurück (Stromsparen, Mitteilungen aus, manche iPhones – 7 Tage: 27 von 59 Pushes mit Rückmeldung), kommen die grauen Haken erst, wenn der Empfänger die App öffnet.
+- DB: `supabase/migrations/20261020_kc_club_rt_push_angezeigt.sql` (bereits eingespielt; live geprüft: Absender bei 57 von 59 Chat-Pushes gefunden, die übrigen 2 Nachrichten sind gelöscht). Test: `tools/chat-sparsam/rt-push-angezeigt-test.mjs`.
+- Rückweg: `drop trigger kc_club_rt_push_angezeigt on public.kc_communication_requests;`
+
+## 2.528.0 – 2026-10-20 – 📝❗🏎️ Versand-Leiste erst beim Schreiben (KC-CLUB-VERSAND-BEIM-SCHREIBEN)
+Wunsch Hansi („Die Leiste mit Express usw. erst einblenden, wenn Text eingetragen wird“). Die Leiste konnte das schon – für den Admin stand die Einstellung „Versand-Leiste immer zeigen“ aber von Haus aus auf an. Jetzt ist für alle (auch den Admin) „erst beim Schreiben“ der Standard; die alte Voreinstellung greift nicht mehr (neuer Speicherplatz). Wer sie immer sehen möchte: ⚙️ → „Versand-Leiste immer zeigen“. Mit Anhang oder gewähltem ❗/🏎️ bleibt sie sichtbar. Abmelden löscht auch die neue Einstellung. Nur App. Tests grün; Browserprobe als Admin mit alter „immer“-Einstellung: leeres Feld → Leiste versteckt, „Hallo“ getippt → sichtbar.
+
+## DB – 2026-10-20 (ohne App-Build) – Chat-Nachfrage schneller (KC-CLUB-CHAT-STAND-TEMPO)
+Wunsch Hansi („Ja dann optimiere die Chat Nachfrage“). Die kurze Chat-Nachfrage (Fingerabdruck, 2.510.0) brauchte im Schnitt 80 ms – fast alles Planung der großen Abfrage bei jedem Aufruf.
+- `kc_club_chat_stand` ist jetzt plpgsql statt SQL: dieselbe Abfrage Zeichen für Zeichen, Postgres merkt sich den Plan je Datenbank-Verbindung. Gleiche Signatur, gleiche Rechte (nur der Server), gleicher Fingerabdruck – App und Server unverändert.
+- Live vor dem Einspielen geprüft (nur lesend, Prüf-Funktion nur vorübergehend): 149 Fingerabdrücke alt = neu, je Aufruf Ø 7,3 → 1,5 ms.
+- DB: `supabase/migrations/20261020_kc_club_chat_stand_plpgsql.sql` (bereits eingespielt). Test: `tools/chat-sparsam/chat-stand-test.mjs` rechnet in jeder Testwelt beide Fassungen und verlangt Gleichheit (56 von 56).
+- Rückweg: `supabase/migrations/20261020_kc_club_chat_stand.sql` erneut ausführen.
+
+## 2.527.0 – 2026-10-20 – 📅 Vorschläge: übernächste Sitzung schon vorwählen (KC-CLUB-VORSCHLAG-SPAETER) · Server 2.527.0 · Datenbank
+Wunsch Hansi („bei Vorschläge: jetziges Datum oder nächste oder übernächste Sitzung (Datum noch nicht bekannt) – aber schon mal vorwählen“).
+- Unter „Für welchen Termin?“ stehen wie bisher die geplanten Termine mit Datum; fehlen Sitzungen bis zur übernächsten, kommen **„📅 Nächste/Übernächste Sitzung – Datum noch offen“** dazu (auch beim Bearbeiten).
+- Der Vorschlag zeigt dann „für die übernächste Sitzung (Datum folgt)“. Sobald die Sitzung angelegt ist (Termin der Art „Treffen“), ordnet der Server ihn automatisch zu – beim Speichern des Termins und beim Laden der Vorschläge.
+- Datenbank: `kc_club_vorschlaege.sitzung_nr` (1–3) und `sitzung_ab` (Migration `20261020_kc_club_v2527_vorschlag_sitzung_spaeter.sql`).
+- Hilfe-Eintrag „Vorschlag für eine spätere Sitzung“.
+- Tests: Vertragstests grün; Browserprobe (Auswahl mit „Übernächste Sitzung – Datum noch offen“, gesendet als sitzung_nr 2), keine Fehler.
+
+## 2.526.0 – 2026-10-20 – 📄 Erstattungsantrag auf dem Club-Briefbogen als PDF · ▶️ Diashow im Fotoalbum · Teilen: klare Abhilfe (KC-CLUB-ERSTATTUNG-BRIEFBOGEN, KC-CLUB-DRUCK-PDF, KC-CLUB-FOTO-DIASHOW, KC-CLUB-TEILEN-LEER)
+Drei Wünsche/Funde von Hansi, eine Version:
+- **Erstattung auf dem Kopfbogen** („wenn ein Mitglied eine km- oder sonstige Erstattung einreicht, auf den Kopfbogen des Köcheclubs als PDF für einen vernünftigen Ausdruck – und den Ausdruck an den Stellen anbieten, z. B. fürs Mitglied oder Leitungsteam“): Blatt im Briefbogen-Stil (Kochmütze, „Köcheclub Werne“, Fußzeile mit Clubsprecher) mit Antragsteller, Positionen, Summe, Vorschuss/Kaution, Bemerkung und drei Unterschriftsfeldern (Antragsteller · Kassenwart · Leitungsteam). Angeboten **nach dem Einreichen** (danach wie bisher die Ablage-Frage) und im **Eingang beim Antrag** („📄 Antrag als PDF / Drucken“ für Kassenwart/Leitungsteam); auch der bisherige Druck „Erstattungsantrag“ nutzt das Blatt.
+- **📄 PDF in jeder Druckvorschau**: echtes A4-PDF (mehrseitig), das die App selbst baut (Druckseite als Bild, Logo eingebettet) – teilen (z. B. WhatsApp/Mail) oder speichern; nichts geht an fremde Dienste.
+- **▶️ Diashow im Fotoalbum** („in den grünen Kopf bei Fotos ansehen: Diashow mit Musik und vorher Album wählen“): Knopf oben im Fotoalbum → 🎵 Musik an/aus, Album (oder alle) antippen → die Diashow läuft sofort mit Club-Song.
+- **Teilen**: kommt das Paket leer an (Fund 20.10.: PDF aus dem Dateimanager, die installierte App kannte den Dateityp noch nicht), sagt die App jetzt, was hilft (App neu installieren, bis dahin 📎).
+- Hilfe-Einträge „Erstattungsantrag als PDF“ und „Diashow aus dem Fotoalbum“. Nur App.
+- Tests: Vertragstests grün; Browserprobe (Antrag-Vorschau, PDF 1 Seite A4 mit Kopf/Positionen/Unterschriften geprüft, Diashow aus dem Fotoalbum mit Album + Musik), keine Fehler.
+
+## 2.525.0 – 2026-10-20 – Teilen-Diagnose genauer (KC-CLUB-TEILEN-DIAGNOSE-2)
+Nachtrag zu 2.522.0: Hansis neuer Versuch (10:44 Uhr, v2.524.0) kam wieder mit „Es ist nichts angekommen“ an – die Diagnose konnte aber nicht unterscheiden, ob im Zwischenspeicher gar nichts stand (Teilen hat den Hintergrund-Dienst nicht erreicht oder der Speicher ist voll) oder ob das Handy ein leeres Paket geschickt hat (Dateityp für die installierte App noch nicht freigeschaltet). Jetzt meldet die Diagnose zusätzlich, welche Angaben im Zwischenspeicher standen, wie viele Felder das Handy schickte und welche Version des Hintergrund-Dienstes das Teilen angenommen hat. Nur App, keine Inhalte.
+
+## Datenbank 20.10.2026 – web.de-Bremse enger: 3 je Minute, 20 je Stunde (KC-COMM-WARTEN, Nachschärfung)
+Erster Echtbetrieb der Mail-Warteschlange (10:01–10:12 Uhr, 3 Rundnachrichten, 41 Mails): die Warteschlange arbeitete (höchstens 5 je Minute über web.de, alle Mails kamen an), aber web.de lehnte nach 26 Mails in 9 Minuten ab – Brevo übernahm die übrigen 14. Freigabe Hansi „Ja“: Bremse auf 3 je Minute und 20 je Stunde (Migration `20261020_kc_comm_webde_bremse_enger.sql`, nur Einstellung in `kc_communication_providers`, kein Programmcode). Keine neue App-Version.
+
+## 2.524.0 – 2026-10-20 – Versand-Leiste über dem Schreibfeld: 📝 Normal · ❗ Wichtig · 🏎️ Express (KC-CLUB-VERSANDART)
+Wunsch Hansi („Unter dem Schreibfeld sind viele Knöpfe. Wichtig und Express raus und vor dem Senden als Option: Normal ist schon markiert, dann Wichtig, dann Express. Wenn Express, Haken bei Normal raus. Wichtig und Express muss zusammen möglich sein“; Wahl Hansi: Leiste fest, WhatsApp bleibt am Platz).
+- ❗ und 🏎️ sind aus der Knopfreihe unter dem Schreibfeld heraus (jetzt 9 statt 11 runde Knöpfe – passen in eine Reihe).
+- Neu direkt über dem Schreibfeld: **☐/✔ 📝 Normal · ❗ Wichtig · 🏎️ Express**. Normal ist vorgewählt – eine normale Nachricht braucht weiter nur ➤. Wichtig oder Express anhaken nimmt den Haken bei Normal raus; beides zusammen geht (Server konnte das schon: Push + E-Mail, Wichtigkeit hoch, eilig). Normal antippen nimmt beides weg; ist beides abgewählt, ist Normal wieder markiert – es ist nie „nichts“ gewählt.
+- Die Leiste erscheint, sobald etwas im Feld steht oder ein Anhang dran ist; Antippen lässt die Tastatur offen. Der Express-Zähler „2/5“ steht neben Express; Farben wie bisher (Wichtig orange, Express rot). Nach dem Senden und beim Chatwechsel wieder Normal – jetzt auch nach „gleiche Nachricht an mehrere Chats“ (dort blieb Express bisher an).
+- Die kleine Zeile (▾ Einklappen, ⌨️ Tastatur, 🔊 Tippgeräusche, 🔒 Verschlüsselt) bleibt unverändert ganz oben; WA bleibt am bisherigen Platz.
+- Die Frage „Wie wichtig ist diese Nachricht?“ vor dem Senden (KC-CLUB-WICHTIGKEIT-FRAGE, 2.287.0) entfällt – die Leiste zeigt die Wahl schon vorher. Ihr Schalter in ⚙️ → 🔔 heißt jetzt „📝❗🏎️ Versand-Leiste immer zeigen“ (auch ohne Text; bisherige Einstellung bleibt erhalten, Standard: an für den Admin).
+- Hilfe, Rundgang und Suche sagen „über dem Schreibfeld anhaken“ statt „auf 🏎️ tippen“.
+- Nur App. Tests: Vertragstests grün (neu: Verhalten der Haken – Start Normal, Express ohne Normal, Wichtig + Express, zurück auf Normal, Leiste mit/ohne Text, WA am Platz); Browserprobe 390 px: Leiste einzeilig, keine Fehler.
+
+## 2.523.0 – 2026-10-20 – Meldung oben auffällig · ✕ im Schlüsselbund-Fenster (KC-CLUB-MELDUNG-AUFFAELLIG)
+- KC-CLUB-MELDUNG-AUFFAELLIG (Wunsch Hansi „kontrastreich und 2× aufblinken, damit es auffällt“): Meldungen oben jetzt weiß und fett auf fast Schwarz mit goldenem Rand (Fehler: weiß auf Rot mit weißem Rand); beim Erscheinen blinken sie zweimal kurz auf (nur Farbe/Leuchten, kein Wackeln).
+- KC-CLUB-DLG-SCHLIESSEN (Wunsch Hansi): Das Fenster „🔑 Schlüsselbund“ hat oben rechts ein Schließkreuz ✕ (wie „Schließen“).
+
 ## 2.522.0 – 2026-10-20 – Teilen: Fehler sichtbar statt „Es ist nichts angekommen“ (KC-CLUB-TEILEN-FEHLER)
 Fund Hansi (Screenshot v2.521.0: „Es ist nichts angekommen …“ – „scheinbar wieder ein Format, das er nicht kennt“). Die Diagnose zeigte: keine Dateien, kein Text, keine Felder – das Annehmen im Hintergrund (Service Worker) war abgebrochen, und der Fehlerweg öffnete die App ohne jede Spur. Außerdem kamen Listen in der Teilen-Diagnose seit 2.515.0 leer an (der Server speichert nur Text/Zahlen).
 - Das Handy vermerkt jetzt, warum es nicht geklappt hat (nur Art und Größe, keine Inhalte); eine Datei, die nicht in den Zwischenspeicher passt, wird übersprungen statt alles abzubrechen.

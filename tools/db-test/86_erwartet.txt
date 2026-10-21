@@ -1,0 +1,4 @@
+pro_minute_3=t
+pro_stunde_20=t
+rest_bleibt=t
+brevo_unveraendert=t

@@ -191,7 +191,18 @@
   /* 2.362.0 KC-CLUB-SPAETER-SENDEN */
   .gp-warte { display: grid; justify-items: end; gap: 6px; margin: 8px 0; }
   .gp-blase { max-width: 80%; text-align: left; font: inherit; color: inherit; background: var(--karte2); border: 1px dashed var(--grau); border-radius: 14px; padding: 8px 12px; white-space: pre-wrap; opacity: .8; cursor: pointer; }
+  /* 2.549.0 KC-CLUB-GEPLANT-WECKER: ⏰ rechts neben der geplanten Nachricht (wackelt einmal), Infos als kleine Tabelle */
+  .gp-zeile { display: flex; align-items: center; justify-content: flex-end; gap: 6px; width: 100%; }
+  .gp-zeile .gp-blase { max-width: calc(80% - 44px); }
+  .gp-wecker { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gold, #c9a46a); background: var(--karte); font-size: 1.25rem; line-height: 1; cursor: pointer; animation: gpKlingeln .9s ease-in-out 1 .3s; }
+  @keyframes gpKlingeln { 0%, 100% { transform: rotate(0); } 15%, 45%, 75% { transform: rotate(-16deg); } 30%, 60%, 90% { transform: rotate(16deg); } }
+  @media (prefers-reduced-motion: reduce) { .gp-wecker { animation: none; } }
+  .gp-infos { width: 100%; border-collapse: collapse; margin: 0 0 10px; font-size: .92rem; } .gp-infos td { padding: 4px 6px; border-bottom: 1px solid var(--linie); vertical-align: top; } .gp-infos td:first-child { color: var(--grau); white-space: nowrap; }
   .gp-blase small { display: block; color: var(--grau); font-size: .78rem; margin-top: 4px; white-space: normal; }
+  /* 2.551.0 KC-CLUB-GEPLANT-VORAB: beim Empfänger – Nachricht liegt bereit (ohne Text) */
+  .gp-vorab-liste { justify-items: start; }
+  .gp-vorab { max-width: 85%; background: var(--karte2); border: 2px dashed var(--gold, #c9a46a); border-radius: 14px; padding: 8px 12px; display: grid; gap: 6px; }
+  .gp-vorab small { color: var(--grau); font-size: .82rem; } .gp-vorab .knopf { justify-self: start; }
   .gp-vorschau { background: var(--karte2); border-radius: 10px; padding: 8px 10px; margin: 6px 0 10px; white-space: pre-wrap; font-size: .95rem; max-height: 7em; overflow: hidden; }
   .gp-titel { font-weight: 700; margin: 10px 0 6px; }
   .gp-wahl { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
@@ -1088,6 +1099,10 @@
   .kopf-pfeil::after { content: ""; position: absolute; left: -6px; right: -6px; top: 0; height: 36px; }
   .kp-doppel { display: grid !important; place-items: center; }
   .kp-doppel b { display: block; font-weight: inherit; margin-top: -11px; }
+  /* 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: der Pfeil der eingerollten Stellung blinkt bei Neuem (nur Farbe/Schein – transform bleibt für die Lage) */
+  .kopf-pfeil.kp-neu { background: #f5b700; color: #3a1d00; animation: kpNeu 1.1s ease-in-out infinite; }
+  .kopf-pfeil.kp-neu.still { animation: none; box-shadow: 0 0 0 2px #fff, 0 0 10px 3px rgba(245,183,0,.9); }
+  @keyframes kpNeu { 0%, 100% { background: #f5b700; box-shadow: 0 0 0 0 rgba(245,183,0,0); } 50% { background: #ff6a00; box-shadow: 0 0 12px 5px rgba(255,150,0,.95); } }
   #v-start .hero.halb-eingerollt > #heroInfo, #v-start .hero.halb-eingerollt > #infoPunkte { display: none; }
   .rollo-lamellen { position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 1px; padding-top: 1px; background: rgba(60,10,20,.35); }
   .rl-lamelle { flex: none; height: 15px; transform-origin: center; background: linear-gradient(to bottom, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
@@ -1122,6 +1137,16 @@
   .ke-bude { perspective: 500px; }
   .ke-bude-dach { position: absolute; left: 0; right: 0; top: 0; height: 12px; z-index: 1; background: repeating-linear-gradient(to right, #741521 0 18px, #f3e9dc 18px 36px); box-shadow: 0 2px 3px rgba(0,0,0,.3); }
   .ke-bude-klappe { position: absolute; left: 0; right: 0; top: 6px; bottom: 0; transform-origin: top center; background: repeating-linear-gradient(to bottom, #8b5a2b 0 13px, #6f4520 13px 15px); box-shadow: inset 0 -4px 0 #5a3718; display: flex; align-items: center; justify-content: center; }
+  /* 2.547.0 KC-CLUB-KOPF-EMBLEM: Kochmütze + „since 1991“ – auf der Holzklappe hell eingebrannt, auf der Glocke dunkel eingraviert */
+  .ke-marke { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; pointer-events: none; }
+  .ke-marke img { width: 40px; height: auto; }
+  .ke-marke small { font: italic 600 .68rem/1 Georgia, "Times New Roman", serif; letter-spacing: .03em; white-space: nowrap; }
+  .ke-bude-klappe { gap: 14px; }
+  .ke-bude-klappe .ke-marke { opacity: .9; } .ke-bude-klappe .ke-marke small { color: #f3e9dc; }
+  .ke-bude-klappe .ke-marke img { filter: sepia(.6) brightness(.95) drop-shadow(0 1px 0 #5a3718); }
+  .ke-glocke .ke-marke { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); }
+  .ke-glocke .ke-marke img { width: 46px; filter: brightness(0) opacity(.45) drop-shadow(0 1px 0 rgba(255,255,255,.7)); }
+  .ke-glocke .ke-marke small { color: rgba(60,66,74,.75); text-shadow: 0 1px 0 rgba(255,255,255,.6); }
   .ke-bude-schild { background: #f3e9dc; color: #741521; border: 2px solid #5a3718; border-radius: 6px; padding: 2px 10px; font: 700 .9rem/1.2 Georgia, serif; box-shadow: 0 2px 3px rgba(0,0,0,.3); }
   .ke-climber .ke-schiene { position: absolute; left: 0; right: 0; top: 0; height: 6px; border-radius: 2px; background: linear-gradient(#8f8476, #5e554b); box-shadow: 0 2px 3px rgba(0,0,0,.4); }
   .ke-wahl { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
@@ -2073,6 +2098,13 @@
   /* KC-CLUB-GRUPPE-AMEISEN (2.22.6, Wunsch Hansi): hervorgehobene Gruppe (z. B. „Innovation“) – kurzer Ameisenrahmen beim Öffnen von Nachrichten */
   .unterh.uh-ameisen { position: relative; } .unterh .uh-rahmen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
   .unterh .uh-rahmen rect { fill: none; stroke: var(--rot); stroke-width: 3; stroke-dasharray: 9 6; animation: ameisenLauf .6s linear infinite; }
+  /* 2.542.0 KC-CLUB-CHAT-NEU-MARKIERT: Chat mit neuen Nachrichten – getönt mit Leiste links (bleibt, bis gelesen), Zahl pulsiert 3× beim Öffnen */
+  .unterh.uh-neu { background: color-mix(in srgb, var(--gold, #c9a46a) 18%, transparent); box-shadow: inset 4px 0 0 var(--rot); border-radius: 12px; }
+  .unterh.uh-neu .mitte b { font-weight: 800; }
+  .unterh.uh-neu .punkt, .uhk.uh-neu > summary .punkt { animation: chatNeuPuls .7s ease-in-out 3; }
+  .uhk.uh-neu > summary { box-shadow: inset 4px 0 0 var(--rot); }
+  @keyframes chatNeuPuls { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.35); box-shadow: 0 0 0 6px color-mix(in srgb, var(--rot) 30%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .unterh.uh-neu .punkt, .uhk.uh-neu > summary .punkt { animation: none; } }
   .avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
   /* KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19): feste Gruppe mit 🔗-Abzeichen, Runde gestrichelt grau mit Anfangsbuchstaben */
   .avatar.uh-gruppe { position: relative; overflow: visible; }
@@ -2120,6 +2152,10 @@
   /* KC-CLUB-PERSON-SPERRE Stufe 2 (2.23.79): Schritte ①②③, Zeile mit Name + 🔔/📵 */
   .ps-schritt { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 14px; background: var(--karte); }
   .ps-liste { display: grid; gap: 4px; max-height: 40vh; overflow: auto; }
+  /* 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU: wer keine Benachrichtigungen bekommt, ist in Empfänger-Listen ausgegraut */
+  label.ok-grau { opacity: .5; filter: grayscale(1); cursor: not-allowed; }
+  label.ok-grau input { cursor: not-allowed; }
+  .ok-hinweis { font-size: .78rem; opacity: .85; white-space: nowrap; }
   .ps-zeile { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); }
   .ps-zeile.an { border-color: var(--rot); }
   .ps-gesperrt { flex-wrap: wrap; justify-content: flex-end; } .ps-gesperrt .knopf { margin: 0; }
@@ -2276,8 +2312,16 @@
   .eingabe .innen > #mikroKnopf.rund:not(#sendenKnopf) { background: #fff !important; border: 3px solid var(--rot3, var(--rot)) !important; font-size: 1.35rem !important; box-shadow: 0 0 0 2px var(--rot) inset, 0 1px 4px rgba(0,0,0,.25); }
   .eingabe .innen > .zustell-knopf.an { background: var(--rot) !important; border-color: var(--rot); color: #fff; }
   /* KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ an = Schreibfeld und Knopf orange; wichtige Nachrichten orange umrandet mit Marke */
-  .eingabe .innen > #expressKnopf.rund.an { background: #c0392b !important; border-color: #7b1e2b !important; color: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,.35); } /* 2.362.0 KC-CLUB-EXPRESS */
-  #expressKnopf { position: relative; } #expressKnopf[data-zahl]::after { content: attr(data-zahl); position: absolute; top: -7px; right: -9px; background: #fff; color: #7b1e2b; border: 1.5px solid #7b1e2b; border-radius: 9px; font-size: .62rem; font-weight: 700; line-height: 1; padding: 2px 4px; pointer-events: none; } /* 2.391.0 KC-CLUB-EXPRESS-ZAEHLER */
+  /* 2.524.0 KC-CLUB-VERSANDART: Versand-Leiste über dem Schreibfeld – Haken ☐/✔, Wichtig orange, Express rot (Farben wie vorher an den runden Knöpfen) */
+  .versand { max-width: 1100px; margin: 0 auto 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--grau); font-weight: 700; }
+  .versand.versteckt { display: none; }
+  .versand .vs-wahl { min-height: 40px; display: inline-flex; align-items: center; gap: 5px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 20px; padding: 4px 12px; font: inherit; font-size: .9rem; font-weight: 800; cursor: pointer; }
+  .versand .vs-wahl::before { content: "☐"; font-weight: 900; } .versand .vs-wahl.an::before { content: "✔"; }
+  @media (max-width: 440px) { .versand { gap: 5px; } .versand .vs-titel { display: none; } .versand .vs-wahl { padding: 4px 8px; gap: 3px; font-size: .84rem; } } /* Handy: eine Zeile */
+  .versand #normalKnopf.an { border-color: var(--text); }
+  .versand #wichtigKnopf.an { background: #ff9800; border-color: #e65100; color: #fff; box-shadow: 0 0 0 3px rgba(255,152,0,.35); }
+  .versand #expressKnopf.an { background: #c0392b; border-color: #7b1e2b; color: #fff; box-shadow: 0 0 0 3px rgba(192,57,43,.35); } /* 2.362.0 KC-CLUB-EXPRESS */
+  #expressKnopf[data-zahl]::after { content: attr(data-zahl); background: #fff; color: #7b1e2b; border: 1.5px solid #7b1e2b; border-radius: 9px; font-size: .7rem; font-weight: 700; line-height: 1; padding: 2px 5px; pointer-events: none; } /* 2.391.0 KC-CLUB-EXPRESS-ZAEHLER – 2.524.0 in der Leiste neben dem Wort */
   textarea.express { border-color: #c0392b !important; box-shadow: 0 0 0 2px rgba(192,57,43,.3); }
   .express-marke { display: inline-block; margin: 0 0 4px; padding: 1px 8px; border-radius: 999px; background: #c0392b; color: #fff; font-weight: 800; font-size: .78rem; letter-spacing: .03em; font-style: italic; }
   .blase.eigen .express-marke { background: #fff; color: #c0392b; }
@@ -2323,7 +2367,6 @@
   .express-best { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2px 10px; padding: 10px 12px; margin: 0 0 10px; border-radius: 12px; background: var(--karte2); cursor: pointer; font-size: 1.05rem; }
   .express-best input { width: 26px; height: 26px; grid-row: span 2; accent-color: #c0392b; }
   .express-best small { grid-column: 2; color: var(--grau); font-size: .82rem; }
-  .eingabe .innen > #wichtigKnopf.rund.an { background: #ff9800 !important; border-color: #e65100 !important; color: #fff; box-shadow: 0 0 0 3px rgba(255,152,0,.35); }
   .eingabe .innen > #text.wichtig { border: 3px solid #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,.25); }
   /* KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ an = violett; neun gleich große Knöpfe passen auch auf schmale Handys (alle gleich breit) */
   .eingabe .innen > .rund:not(#sendenKnopf) { width: min(40px, calc((100vw - 140px) / 8)) !important; height: min(40px, calc((100vw - 140px) / 8)) !important; }
@@ -2852,8 +2895,36 @@
   .chat-kopf { position: sticky; top: 0; z-index: 30; background: var(--bg); padding: 2px 0 4px; margin: 0 -4px; padding-left: 4px; padding-right: 4px; box-shadow: 0 6px 8px -8px rgba(0,0,0,.35); }
   #chat > * { scroll-margin-top: var(--chatKopfHoehe, 120px); }
   .zurueck { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--karte); box-shadow: var(--schatten); font-size: 1.2rem; cursor: pointer; }
+  /* 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: „Klaus schreibt dir gerade …“ außerhalb des Chats */
+  /* 2.534.0 KC-CLUB-EINST-WEGWEISER: „🧭 Einstellungen erklärt“ – Ordner-Baum wie im Explorer, Antippen klappt die Erklärung auf */
+  .ew-baum { display: grid; gap: 6px; }
+  .ew-ordner { border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); }
+  .ew-ordner.innen { margin: 4px 0 4px 10px; border-style: dashed; }
+  .ew-ordner > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 10px; cursor: pointer; font-weight: 700; }
+  .ew-zahl { margin-left: auto; font-size: .8rem; font-weight: 700; color: var(--grau); background: var(--karte2); border-radius: 999px; padding: 1px 8px; }
+  .ew-inhalt { padding: 0 8px 8px; display: grid; gap: 4px; }
+  .ew-eintrag { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; text-align: left; padding: 6px 10px; border: 0; border-radius: 10px; background: var(--karte2); color: var(--text); font: inherit; cursor: pointer; }
+  .ew-eintrag[aria-expanded="true"] { outline: 2px solid var(--gruen); }
+  .ew-name { flex: 1; }
+  .ew-wert { font-size: .82rem; color: var(--grau); white-space: nowrap; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+  .ew-erkl { margin: 0 4px 6px; padding: 8px 10px; border-left: 3px solid var(--gruen); background: var(--gruenbg); border-radius: 0 10px 10px 0; color: var(--text); }
+  .ew-erkl p { margin: 0 0 6px; }
+  .ew-mehr { font-size: .92rem; margin: 0 0 6px; }
+  .ew-wo, .ew-pfad { font-size: .8rem; color: var(--grau); }
+  .ew-pfad { margin: 6px 2px 2px; }
+  .schreibt-hinweis { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); z-index: 2290; max-width: 92%; display: flex; align-items: center; gap: 6px;
+    background: #fff; color: #2b1a1c; border: 2px solid #c9a46a; border-radius: 14px; padding: 9px 14px; font: inherit; font-size: .95rem; box-shadow: 0 6px 18px rgba(0,0,0,.25); cursor: pointer; }
   .meldung { position: fixed; left: 50%; transform: translateX(-50%); top: calc(14px + var(--notH, 0px)); background: #2b1a1c; color: #fff; padding: 12px 18px; border-radius: 14px; z-index: 2300; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,.25); } /* 2.23.29 (Fund Hansi): auch über Vollbild-Fenstern wie Twinkey (2000) sichtbar */
   .meldung.fehler { background: #a51d1d; }
+  /* 2.523.0 KC-CLUB-MELDUNG-AUFFAELLIG (Wunsch Hansi „kontrastreich und 2× aufblinken, damit es auffällt“): heller Text auf fast Schwarz,
+     goldener Rand (CD), fett; blinkt beim Erscheinen zweimal (nur Farbe/Leuchten – kein Wackeln, darum auch bei „Bewegung reduzieren“) */
+  .meldung { background: #140a0b; color: #fff; font-weight: 700; border: 3px solid #c9a46a; box-shadow: 0 8px 24px rgba(0,0,0,.45); animation: meldung-blink .42s ease-in-out 2; }
+  .meldung.fehler { background: #a51d1d; border-color: #fff; animation-name: meldung-blink-fehler; }
+  @keyframes meldung-blink { 50% { background: #c9a46a; color: #140a0b; box-shadow: 0 0 0 6px rgba(201,164,106,.55), 0 8px 24px rgba(0,0,0,.45); } }
+  @keyframes meldung-blink-fehler { 50% { background: #fff; color: #a51d1d; box-shadow: 0 0 0 6px rgba(255,255,255,.6), 0 8px 24px rgba(0,0,0,.45); } }
+  /* 2.523.0 KC-CLUB-DLG-SCHLIESSEN: Schließkreuz oben rechts in Fenstern (zuerst Schlüsselbund) */
+  .dlg-innen:has(> .dlg-x) { position: relative; } .dlg-innen > .dlg-x + .dlg-kopf { padding-right: 46px; }
+  .dlg-x { position: absolute; top: 8px; right: 8px; min-width: 44px; min-height: 44px; border: 2px solid var(--linie); border-radius: 50%; background: var(--karte); color: var(--text); font-size: 1.15rem; font-weight: 700; line-height: 1; cursor: pointer; }
   .updatebalken { background: var(--gelbbg); color: var(--gelb); border-radius: 14px; padding: 12px; margin-top: 10px; display: flex; gap: 10px; align-items: center; font-weight: 700; }
   .schalter { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--linie); }
   .schalter:last-child { border-bottom: none; }
@@ -4151,6 +4222,10 @@
      darunter eine Statusleiste – links der Status (Pfeil auf der Unterkante bleibt), rechts LEDs waagerecht, Herz und Brille */
   .kopfzeile { align-items: center; }
   .kopflogo { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  /* 2.545.0 KC-CLUB-KOPF-SEIT (Wunsch Hansi): „since 1991“ unter der Kochmütze – Beige aus dem CD, kursiv · 2.546.0: mit im Knopf der Mütze */
+  .kopflogo .logo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+  .kopflogo .logo img { width: 34px; }
+  .kopf-seit { color: #f3e9dc; font: italic 600 .5rem/1 Georgia, "Times New Roman", serif; letter-spacing: .03em; white-space: nowrap; pointer-events: none; }
   .kopf-version { border: none; background: none; padding: 0 2px; color: rgba(255,255,255,.85); font: 700 .7rem/1.1 system-ui, sans-serif; letter-spacing: .02em; white-space: nowrap; cursor: pointer; }
   .kopf-version.neu { color: #ffe066; }
   .kopftext .gruss, body.einfach .kopftext .gruss { position: static; display: block; max-width: none; text-align: left; font-size: 1.2rem; line-height: 1.2; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -4614,7 +4689,7 @@
       <div class="kopf-glanz" id="kopfGlanz" aria-hidden="true"><b></b><u></u></div>
       <!-- KC-CLUB-KOPF-ORDNUNG (2.24.17, Wunsch Hansi): oben Marke + Knöpfe, darunter eine Statusleiste (Status, LEDs, Herz, Brille) -->
       <div class="kopfzeile">
-        <div class="kopflogo"><button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"></button><button class="kopf-version" id="kopfVersion" title="Update prüfen" aria-label="Version – Update prüfen" onclick="updateKachel()">v–</button></div>
+        <div class="kopflogo"><button class="logo" title="Zur Internetseite des Köcheclubs" onclick="webseite()"><img src="kc-kochmuetze-weiss.webp" alt="Kochmütze"><span class="kopf-seit">since 1991</span></button><button class="kopf-version" id="kopfVersion" title="Update prüfen" aria-label="Version – Update prüfen" onclick="updateKachel()">v–</button></div>
         <div class="kopftext"><div class="marke-klein">KÖCHECLUB WERNE</div><div class="gruss"><span id="begruessung">Hallo!</span><span id="gedenkKerze" class="versteckt"></span></div></div>
         <div class="kopfrechts">
           <div class="knopfreihe">
@@ -4723,7 +4798,7 @@
 
   <!-- FOTOALBUM (KC-CLUB-FOTOALBUM) -->
   <section id="v-fotos" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf klein" onclick="faDiashow()" title="Diashow mit Musik – Album wählen" aria-label="Diashow starten">▶️ Diashow</button><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
     <div id="fotoForm" class="karte versteckt"></div>
     <div id="fotoSpeicher"></div>
     <div id="fotoAlben"></div><!-- KC-CLUB-FOTO-ALBEN (1.63.0) -->
@@ -5018,7 +5093,7 @@
         <div class="schalter"><div><b>📣 @Erwähnungen trotzdem melden</b><div class="hinweis">Wenn dich jemand mit @ direkt anspricht</div></div><input type="checkbox" id="ruheErw" checked onchange="ruheSpeichern()"></div>
       </details>
       <!-- KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) -->
-      <div class="schalter"><div><b>❗ Vor dem Senden nach der Wichtigkeit fragen</b><div class="hinweis">📝 Normal oder ❗ Hoch – je Chat höchstens alle 30 Minuten. Hoch: farbig markiert, Push und E-Mail, nach 24 Std. ungelesen bekommst du Bescheid.</div></div><input type="checkbox" id="setWichtigFrage" onchange="wichtigFrageSetzen(this.checked)"></div>
+      <div class="schalter"><div><b>📝❗🏎️ Versand-Leiste immer zeigen</b><div class="hinweis">Normal / Wichtig / Express über dem Schreibfeld – auch wenn noch nichts im Feld steht (Standard: aus – sie erscheint, sobald du schreibst). Wichtig: farbig markiert, Push und E-Mail, nach 24 Std. ungelesen bekommst du Bescheid.</div></div><input type="checkbox" id="setWichtigFrage" onchange="versandImmerSetzen(this.checked)"></div>
     </details>
     <!-- KC-CLUB-ONLINE-ANSAGE (1.57.1, 1.58.1 + Tipp des Tages): eigener Kasten – in der einfachen UND der erweiterten Ansicht sichtbar -->
     <details class="karte" data-klappe="ansagen" data-einfach open>
@@ -5149,7 +5224,7 @@
       <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub bleibt unten liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal wird ein lachender Schneemann daraus. Im Frühling wachsen Gras und Blumen, im Sommer eine Sonnenblume. Feuerwerk zu Silvester.</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div>
       <details class="abh-klappe" data-abh="setJahreszeit"><summary>🍂 Szenen: Jahreszeit wählen &amp; Vorschau</summary> <!-- 2.478.0 KC-CLUB-EINST-KLAPPEN: klappt mit dem Häkchen darüber auf -->
         <div class="schalter" style="display:block"><div><b>📅 Welche Jahreszeit?</b><div class="hinweis" id="jzWahlInfo"></div></div><div class="reg-effekt-wahl" id="jzWahl"></div></div> <!-- 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK --> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
-        <div class="schalter" style="display:block"><div class="hinweis">Vorschau im Kopf der Startseite:</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('herbst')">🍂 Herbst</button><button type="button" class="chip" onclick="jahreszeitVorschau('winter')">⛄ Winter</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling')">🌱 Frühling</button><button type="button" class="chip" onclick="jahreszeitVorschau('sommer')">🌻 Sommer</button><button type="button" class="chip" onclick="jahreszeitVorschau('kirmes')">🎡 Sim-Jü</button><button type="button" class="chip" onclick="jahreszeitVorschau('wiesn')">🥨 Oktoberfest</button><button type="button" class="chip" onclick="jahreszeitVorschau('karibik')">🌴 Karibik</button><button type="button" class="chip" onclick="jahreszeitVorschau('karneval')">🎭 Karneval</button><button type="button" class="chip" onclick="jahreszeitVorschau('halloween')">🎃 Halloween</button><button type="button" class="chip" onclick="jahreszeitVorschau('unterwasser')">🐠 Unterwasserwelt</button><button type="button" class="chip" onclick="jahreszeitVorschau('weltraum')">🚀 Weltraum</button><button type="button" class="chip" onclick="jahreszeitVorschau('bauernhof')">🐄 Bauernhof</button><button type="button" class="chip" onclick="jahreszeitVorschau('kegeln')">🎳 Kegelabend</button><button type="button" class="chip" onclick="jahreszeitVorschau('heute')">📅 Heute (Vorschau beenden)</button></div>
+        <div class="schalter" style="display:block"><div class="hinweis">Vorschau im Kopf der Startseite:</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('herbst')">🍂 Herbst</button><button type="button" class="chip" onclick="jahreszeitVorschau('winter')">⛄ Winter</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling')">🌱 Frühling</button><button type="button" class="chip" onclick="jahreszeitVorschau('sommer')">🌻 Sommer</button><button type="button" class="chip" onclick="jahreszeitVorschau('kirmes')">🎡 Sim-Jü</button><button type="button" class="chip" onclick="jahreszeitVorschau('wiesn')">🥨 Oktoberfest</button><button type="button" class="chip" onclick="jahreszeitVorschau('karibik')">🌴 Karibik</button><button type="button" class="chip" onclick="jahreszeitVorschau('karneval')">🎭 Karneval</button><button type="button" class="chip" onclick="jahreszeitVorschau('halloween')">🎃 Halloween</button><button type="button" class="chip" onclick="jahreszeitVorschau('unterwasser')">🐠 Unterwasserwelt</button><button type="button" class="chip" onclick="jahreszeitVorschau('weltraum')">🚀 Weltraum</button><button type="button" class="chip" onclick="jahreszeitVorschau('bauernhof')">🐄 Bauernhof</button><button type="button" class="chip" onclick="jahreszeitVorschau('kegeln')">🎳 Kegelabend</button><button type="button" class="chip" onclick="jahreszeitVorschau('wildwest')">🤠 Wilder Westen</button><button type="button" class="chip" onclick="jahreszeitVorschau('wueste')">🐪 Wüste</button><button type="button" class="chip" onclick="jahreszeitVorschau('heute')">📅 Heute (Vorschau beenden)</button></div>
           <div class="hinweis" style="margin-top:6px">Extras: Nikolaus-Stiefel am 6.12., Regen mit Pfützen (nur wenn es wirklich regnet), Kochtopf am Treffen-Tag, Ostereier zum Suchen, Igel im Herbst, abends der Kürbis mit Kerze (bringt der Hund)</div><div class="reg-effekt-wahl"><button type="button" class="chip" onclick="jahreszeitVorschau('advent', 'nikolaus')">🥾 Nikolaus</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'regen')">☔ Regen</button><button type="button" class="chip" onclick="jahreszeitVorschau('', 'topf')">🍲 Treffen</button><button type="button" class="chip" onclick="jahreszeitVorschau('fruehling', 'ostern')">🥚 Ostern</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'igel')">🦔 Igel</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'kuerbis')">🎃 Kürbis-Hund</button><button type="button" class="chip" onclick="jahreszeitVorschau('herbst', 'twinkey')">🧹 Twinkey fegt</button></div></div>
       </details>
       <div class="schalter" style="display:block"><div><b>🎏 Deko an der Leiste</b><div class="hinweis" id="jzDekoInfo">Wimpel, Lichterkette oder Laternen hängen oben an der Leiste mit den Lämpchen – dort, wo im Winter die Eiszapfen hängen.</div></div><div class="reg-effekt-wahl" id="jzDekoWahl"></div></div> <!-- 2.335.0 KC-CLUB-DEKO -->
@@ -5332,15 +5407,15 @@
   <div class="eingabe-entwurf versteckt" id="entwurfMarke">✏️ Entwurf – noch nicht gesendet</div>
   <div class="eingabe-entwurf sl-leiste versteckt" id="slMarke" role="button" tabindex="0" title="Antippen: Was bedeutet das?" onclick="slErklaeren()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();slErklaeren()}"></div> <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0); 2.163.0: antippbar mit Erklärung -->
   <div class="eingabe-entwurf versteckt" id="sprungHinweis"></div> <!-- 2.23.99 (Wunsch Hansi): App-Link im Entwurf → „wird als Knopf angezeigt“ -->
+  <!-- KC-CLUB-VERSANDART (2.524.0, Wunsch Hansi): Versand als Haken direkt über dem Schreibfeld – 📝 Normal ist vorgewählt; ❗ Wichtig oder 🏎️ Express nimmt den Haken
+       bei Normal raus; Wichtig und Express gehen zusammen. Erscheint, sobald etwas im Feld steht (⚙️ → 🔔: „immer zeigen“). Antippen lässt die Tastatur offen. -->
+  <div class="versand versteckt" id="versandLeiste" role="group" aria-label="Versandart"><span class="vs-titel">Versand:</span><button type="button" class="vs-wahl an" id="normalKnopf" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="versandNormal()" title="Normal – wie immer" aria-label="Normal senden" aria-pressed="true">📝 Normal</button><button type="button" class="vs-wahl" id="wichtigKnopf" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="wichtigUmschalten()" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false">❗ Wichtig</button><button type="button" class="vs-wahl" id="expressKnopf" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="expressUmschalten()" title="Express-Sendung – kommt sofort an, auch nachts" aria-label="Als Express-Sendung senden" aria-pressed="false">🏎️ Express</button></div>
   <div class="innen">
     <button class="rund" title="Anlage" onclick="anlageMenue()">📎</button>
     <button class="rund" title="Mikrofon: Sprachnachricht oder Diktieren" id="mikroKnopf" onclick="mikroWahl()">🎤</button>
     <button class="rund emo-knopf" title="Emoji einfügen" id="emoKnopf" aria-expanded="false" onclick="emoUmschalten(undefined, 'text')">😊</button>
     <button class="rund zustell-knopf" title="Wie benachrichtigen? (Push, E-Mail, WhatsApp)" id="zustellKnopf" aria-expanded="false" onclick="zustellUmschalten()">🔔</button>
-    <!-- KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): Nachricht mit „Wichtigkeit hoch“ – wird beim Empfänger farbig umrandet -->
-    <button class="rund wichtig-knopf" title="Wichtig – Wichtigkeit hoch" aria-label="Als wichtig senden" aria-pressed="false" id="wichtigKnopf" onclick="wichtigUmschalten()">❗</button>
-    <!-- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi): Express-Sendung per Rennwagen – kommt sofort an, beim Empfänger geht ein Fenster auf -->
-    <button class="rund express-knopf" title="Express-Sendung – kommt sofort an, auch nachts" aria-label="Als Express-Sendung senden" aria-pressed="false" id="expressKnopf" onclick="expressUmschalten()">🏎️</button>
+    <!-- ❗ Wichtig (KC-CLUB-WICHTIG 1.53.0) und 🏎️ Express (KC-CLUB-EXPRESS 2.362.0) stehen seit 2.524.0 in der Versand-Leiste über dem Schreibfeld (KC-CLUB-VERSANDART) -->
     <!-- KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): ⏳ diese Nachricht löscht sich nach 1 Std / 24 Std / 7 Tagen selbst -->
     <button class="rund ablauf-knopf" title="Nachricht löscht sich selbst …" aria-label="Selbstlöschen für diese Nachricht" aria-pressed="false" id="ablaufKnopf" onclick="slWahl('nachricht')">⏳</button>
     <!-- KC-CLUB-SPAETER-SENDEN (2.362.0, Wunsch Hansi): Nachricht zu einer späteren Zeit senden – auch jeden Montag um 8 Uhr usw. -->
@@ -5423,7 +5498,7 @@
   <div style="background:var(--karte);box-shadow:var(--schatten);padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top))">
     <div style="display:flex;align-items:center;gap:8px"><button class="knopf klein" style="min-height:44px" onclick="druckVorschauZu()">✕ Schließen</button>
       <b id="druckVorschauTitel" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Vorschau</b><span class="marke">Vorschau</span></div>
-    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" style="min-height:48px" onclick="druckJetzt()">🖨️ Drucken / als PDF</button>
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" style="min-height:48px" onclick="druckJetzt()">🖨️ Drucken</button><button class="knopf" style="min-height:48px" id="druckVorschauPdf" onclick="druckPdf()">📄 PDF speichern / teilen</button>
       <button class="knopf versteckt" id="druckVorschauTeilen" onclick="druckTeilen()">📤 Teilen</button>
       <button class="knopf versteckt" id="druckVorschauAendern" onclick="druckVorschauAendern()">✏️ Auswahl ändern</button></div>
     <p class="hinweis" id="druckVorschauHinweis" style="margin:6px 0 0;font-size:.85rem"></p></div>
@@ -5567,7 +5642,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.522.0" data-v="2.522.0"></script>
+<script src="app.js?v=2.551.0" data-v="2.551.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

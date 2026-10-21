@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.521.0";
+const SERVER_VERSION = "2.551.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -439,9 +439,20 @@ async function routerSenden(eventKey: string, personIds: string[], vars: Record<
   try { return await routerSendenRoh(eventKey, personIds, vars, korrelation, kopie); }
   catch (e) { console.error("routerSenden", eventKey, String(e)); return { gesendet: 0, fehler: personIds.length }; }
 }
+// 2.536.0 KC-CLUB-KOMMUNIKATION-AUS (Wunsch Hansi „aus der Kommunikation der Club-App herausnehmen“): Registry kc_club_kommunikation_aus.
+// Wer dort steht, bekommt über KEINEN Club-Weg Push oder Mail – auch nicht bei ausdrücklich gewähltem Weg, Express, Notfall oder Kopie.
+// Liste 60 s im Speicher. Lädt sie nicht, gilt der letzte bekannte Stand; gab es noch keinen, wird nicht gesendet (Regel 11: unbekannt ≠ leer).
+let KA_STAND: { t: number; ids: Set<string> } | null = null;
+async function kommunikationAus(): Promise<Set<string>> {
+  if (KA_STAND && Date.now() - KA_STAND.t < 60000) return KA_STAND.ids;
+  const { data, error } = await db.from("kc_club_kommunikation_aus").select("person_id");
+  if (error) { if (KA_STAND) return KA_STAND.ids; throw new Error("Liste „keine Benachrichtigungen“ nicht lesbar – nichts gesendet"); }
+  KA_STAND = { t: Date.now(), ids: new Set((data ?? []).map((x: any) => String(x.person_id))) };
+  return KA_STAND.ids;
+}
 async function routerSendenRoh(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
   // KC-CLUB-PERSON-SPERRE (2.23.77): Gesperrte mit „Benachrichtigungen aus“ bekommen nichts (alle Club-Wege laufen hier durch)
-  const stumm = (await sperrenAktuell()).stumm;
+  const stumm = new Set([...(await sperrenAktuell()).stumm, ...await kommunikationAus()]); // 2.536.0 KC-CLUB-KOMMUNIKATION-AUS
   if (stumm.size) {
     personIds = personIds.filter((id) => !stumm.has(id));
     if (kopie) kopie = { cc: kopie.cc?.filter((id) => !stumm.has(id)), bcc: kopie.bcc?.filter((id) => !stumm.has(id)) };
@@ -811,7 +822,7 @@ async function fpNurNeue(liste: any[], eingrenzen: (q: any) => any) {
   const neu = new Set<string>();
   return liste.filter((e: any) => { const k = fpArt(e?.art) + "|" + String(e?.z ?? ""); if (da.has(k) || neu.has(k)) return false; neu.add(k); return true; });
 }
-const FP_ROBOTER = /bot\b|bot\/|crawler|spider|crawl|slurp|headlesschrome|lighthouse|facebookexternalhit/i; // Suchmaschinen & Vorschau-Dienste sind keine Mitglieder
+const FP_ROBOTER = /bot\b|bot\/|crawler|spider|crawl|slurp|headlesschrome|lighthouse|facebookexternalhit|google-read-aloud/i; // 2.550.0: + Google-Vorlesedienst (20.10. nachts) // Suchmaschinen & Vorschau-Dienste sind keine Mitglieder
 async function fpUeberwachen() {
   const { data: letzte } = await db.from("kc_club_protokoll").select("zeit").eq("aktion", "fp_schwer_gemeldet").order("zeit", { ascending: false }).limit(1);
   const seit = letzte?.[0]?.zeit ?? new Date(Date.now() - 3600000).toISOString();
@@ -2981,7 +2992,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -3807,6 +3818,25 @@ const SPERRE_TEXT: Record<string, string> = {
 // 2.23.79: „bis“ (Uhrzeit) – abgelaufene Sperren gelten sofort nicht mehr (Prüfung bei jedem Zugriff, auch aus dem Speicher)
 const SPERREN = { bis: 0, zeilen: [] as { person_id: string; art: string; stumm: boolean; bis: string | null }[] };
 const sperreGilt = (x: { bis: string | null }) => !x.bis || Date.parse(x.bis) > Date.now();
+// 2.539.0 KC-CLUB-SPERRE-VERSUCHE (Hansi: „Du zeichnest es ja auf, wenn er sich anmelden will“): Versuch eines Gesperrten, die App zu
+// öffnen, ins Protokoll – höchstens einmal je 10 Min. und Person (ein App-Start schickt mehrere Anfragen). Die Admin-Sperrliste zeigt
+// daraus „zuletzt versucht … (n×)“. Nur Zeit, Art und Aktionsname, keine Inhalte.
+const SPV_ZULETZT = new Map<string, number>();
+async function sperreVersuchMerken(pid: string, art: string, aktion: string) {
+  if (Date.now() - (SPV_ZULETZT.get(pid) ?? 0) < 10 * 60000) return;
+  SPV_ZULETZT.set(pid, Date.now());
+  const { count, error } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", pid).eq("aktion", "gesperrt_versuch")
+    .gte("zeit", new Date(Date.now() - 10 * 60000).toISOString());
+  if (!error && count) return;
+  await protokoll(pid, "gesperrt_versuch", { art, aktion: txt(aktion, 40) });
+  // 2.541.0 KC-CLUB-SPERRE-MELDUNG (Wunsch Hansi „Informiere mich, wenn Thomas sich anmelden will“): Push an die Admins – gleiche Drossel
+  // (höchstens 1× je 10 Min. und Person). Läuft im Hintergrund, die gesperrte Person wartet nicht darauf.
+  const adm = await adminIds(), name = (await personen([pid])).get(pid)?.display_name || pid;
+  if (adm.length) nebenbei(routerSenden("club_nachricht_push", adm, { titel: `👀 ${name} wollte die Club-App öffnen`,
+    kurz: `Gesperrt (${art === "stoerung" ? "Server nicht erreichbar" : "Wartung"}) – sah nur den Hinweis.`, betreff: `Köcheclub Werne – ${name} wollte die Club-App öffnen`,
+    text: `${name} hat versucht, die Club-App zu öffnen, und sah nur den Hinweis „${art === "stoerung" ? "Server nicht erreichbar" : "Wartungsarbeiten"}“. Übersicht: Admin → 🛠️ Wartung → Zurzeit gesperrt.`,
+    url: APP_URL }, `club-sperre-versuch:${pid}:${Math.floor(Date.now() / 600000)}`).catch(() => null));
+}
 async function sperrenAktuell() {
   if (Date.now() > SPERREN.bis) {
     const { data, error } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,bis").eq("aktiv", true);
@@ -4038,6 +4068,24 @@ function suchTag(v: unknown, plus = 0) {
 
 // ---------- Vorschläge & Abstimmungen (KC-CLUB-VORSCHLAG) ----------
 const STANDARD_OPTIONEN = ["Ja", "Nein", "Enthaltung"];
+// 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi „bei Vorschlägen: jetziges Datum oder nächste oder übernächste Sitzung – Datum noch nicht bekannt –,
+// aber schon mal vorwählen“): ein Vorschlag kann sich „die K-te Sitzung ab Wahl“ merken (sitzung_nr 1–3, sitzung_ab = Zeitpunkt der Wahl). Sobald es so
+// viele Sitzungen (Termine der Art „Treffen“, nicht abgesagt) nach sitzung_ab gibt, bekommt er die passende Sitzung fest zugeordnet. Läuft beim Laden
+// der Vorschläge und nach dem Speichern eines Termins – nur eine kleine Abfrage, solange nichts wartet.
+async function vorschlaegeSitzungZuordnen() {
+  const { data: off, error } = await db.from("kc_club_vorschlaege").select("id,sitzung_nr,sitzung_ab,erstellt_am").eq("status", "offen").is("treffen_id", null).not("sitzung_nr", "is", null).limit(100);
+  if (error || !off?.length) return 0;
+  const ab = (v: any) => v.sitzung_ab || v.erstellt_am, frueh = off.map(ab).sort()[0];
+  const { data: tr } = await db.from("kc_club_treffen").select("id,beginn,status").eq("art", "treffen").neq("status", "abgesagt").gt("beginn", frueh).order("beginn").limit(60);
+  let n = 0;
+  for (const v of off) {
+    const t = (tr ?? []).filter((x: any) => x.beginn > ab(v))[Number(v.sitzung_nr) - 1]; if (!t) continue;
+    const { error: ue } = await db.from("kc_club_vorschlaege").update({ treffen_id: t.id, sitzung_nr: null }).eq("id", v.id).is("treffen_id", null);
+    if (!ue) n++;
+  }
+  return n;
+}
+const sitzungNrPruefen = (x: unknown) => ([1, 2, 3].includes(Number(x)) ? Number(x) : null);
 async function vorschlaegeListe(ich: Ich) {
   const [{ data: offen }, { data: fertig }] = await Promise.all([
     db.from("kc_club_vorschlaege").select("*").eq("status", "offen").order("erstellt_am", { ascending: false }).limit(100),
@@ -4073,7 +4121,7 @@ async function vorschlaegeListe(ich: Ich) {
       ...(v.art === "spende" ? { spenden: v.spenden ?? [], summe: spendenSumme(v.spenden) } : {}),
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
-      treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null,
+      treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null, sitzungSpaeter: t ? null : v.sitzung_nr ?? null, // 2.527.0
       abgestimmt: !!mein, meine: v.geheim ? null : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
       ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
@@ -5812,6 +5860,28 @@ function fpSauber(d: any): Record<string, unknown> {
   return out;
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
+// ---------- 2.550.0 KC-CLUB-FEHLVERSUCHE (Wunsch Hansi „herausfinden, wer ohne gültigen Link in unsere App will“) ----------
+// Öffnet dasselbe Gerät (anonyme Geräte-Kennung der App) die App FV_SCHWELLE-mal in FV_STUNDEN Stunden ohne gültigen Link, bekommen die
+// Admins einen Push mit Anzahl, Uhrzeit und grobem Gerätetyp (System/Browser, wie die App sie meldet). Je Gerät höchstens 1× am Tag,
+// insgesamt höchstens FV_MAX_TAG Meldungen am Tag. Keine IP-Adresse; Roboter/Vorschau-Dienste kommen gar nicht bis hierher (FP_ROBOTER).
+const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;
+async function fehlversucheMelden(geraet: string, e: any) {
+  const seit = new Date(Date.now() - FV_STUNDEN * 3600000).toISOString(), tag = new Date(Date.now() - 86400000).toISOString();
+  const [{ count: n }, { count: schon }, { count: heute }] = await Promise.all([
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).in("aktion", ["fehler_anonym_ohne_link", "fehler_anonym_link_ungueltig"]).eq("details->>geraet", geraet).gte("zeit", seit),
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehlversuche_gemeldet").eq("details->>geraet", geraet).gte("zeit", tag),
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehlversuche_gemeldet").gte("zeit", tag),
+  ]);
+  if ((n ?? 0) < FV_SCHWELLE || (schon ?? 0) > 0 || (heute ?? 0) >= FV_MAX_TAG) return;
+  const geraetText = [txt(e?.system, 40), txt(e?.browser, 40)].filter(Boolean).join(", ") || "unbekanntes Gerät";
+  const art = fpArt(e?.art) === "link_ungueltig" ? "mit einem ungültigen Link" : "ohne persönlichen Link";
+  await protokoll(null, "fehlversuche_gemeldet", { geraet, anzahl: n, art: fpArt(e?.art), system: txt(e?.system, 40), browser: txt(e?.browser, 40) });
+  const adm = await adminIds(); if (!adm.length) return;
+  await routerSenden("club_nachricht_push", adm, { titel: `🔑 ${n}× versucht, die Club-App ${art} zu öffnen`,
+    kurz: `${geraetText} · zuletzt ${NOT_UHR.format(new Date())} Uhr · Gerät ${geraet}`, betreff: "Köcheclub-App: wiederholte Versuche ohne gültigen Link",
+    text: `Dasselbe Gerät hat in den letzten ${FV_STUNDEN} Stunden ${n}-mal versucht, die Club-App ${art} zu öffnen.\nGerät: ${geraetText}\nGeräte-Kennung: ${geraet}\nGesehen hat es nur den Anmelde-Hinweis – keine Club-Daten.\nEinzelheiten: Admin → 🩺 Fehler.`,
+    url: APP_URL }, `club-fehlversuche:${geraet}:${berlinTag(new Date())}`);
+}
 // KC-CLUB-FEHLER-ALARM (2.48.0, Wunsch Hansi: „bekomme ich als Admin Push und E-Mail über solche Fälle?“): ernste Fälle eines
 // angemeldeten Mitglieds → Admins sofort per Push + E-Mail (wie „Problem melden“, Weg club_nachricht). Nicht an den Verursacher selbst,
 // keine Testpersonen. Grenzen: je Mitglied höchstens 1 Alarm in 6 Stunden, insgesamt höchstens 3 je Stunde. Jeder Alarm steht im
@@ -5944,15 +6014,34 @@ async function expressOffen(ich: Ich, zahlen: any[]): Promise<any[]> {
     return { id: x.message_id, thread: x.thread_id, von: vonL.get(x.absender)?.display_name || "?", zeit: x.erstellt_am, chat: g ? `${g.symbol} ${g.name}` : t?.subject || "" }; });
 }
 const GEPLANT_WDH = ["einmal", "taeglich", "werktags", "woechentlich", "monatlich"], GEPLANT_MAX = 25, GEPLANT_TAGE = 31;
-const GEPLANT_FELDER = "id,thread_id,text,wichtig,wege,senden_um,erste_um,wiederholung,anzahl,letzter_fehler";
+const GEPLANT_FELDER = "id,thread_id,text,wichtig,wege,senden_um,erste_um,wiederholung,anzahl,letzter_fehler,erstellt_am,geaendert_am,vorab"; // 2.549.0: + angelegt/geändert für die ⏰-Infos · 2.551.0: + vorab
 function geplantNaechstes(ersteUm: string, regel: string, nach: Date): string | null {
   if (regel === "einmal") return null;
   return wiederholungen(ersteUm, regel, new Date(nach.getTime() + 1000), new Date(nach.getTime() + 400 * 86400000), null, [], 1)[0] ?? null;
 }
-const geplantAus = (g: any) => ({ id: g.id, text: g.text, um: g.senden_um, wiederholung: g.wiederholung, wichtig: !!g.wichtig, anzahl: g.anzahl || 0, fehler: g.letzter_fehler || null });
+const geplantAus = (g: any) => ({ id: g.id, text: g.text, um: g.senden_um, wiederholung: g.wiederholung, wichtig: !!g.wichtig, anzahl: g.anzahl || 0, fehler: g.letzter_fehler || null,
+  wege: Array.isArray(g.wege) ? g.wege : [], angelegt: g.erstellt_am || null, geaendert: g.geaendert_am || null, vorab: !!g.vorab }); // 2.549.0 KC-CLUB-GEPLANT-WECKER · 2.551.0 KC-CLUB-GEPLANT-VORAB
 async function geplantMeine(ich: Ich, threadId: string) {
   const { data } = await db.from("kc_club_geplant").select(GEPLANT_FELDER).eq("person_id", ich.person_id).eq("thread_id", threadId).eq("status", "offen").order("senden_um").limit(GEPLANT_MAX);
   return (data ?? []).map(geplantAus);
+}
+// 2.551.0 KC-CLUB-GEPLANT-VORAB (Wunsch Hansi „früher abrufen erlauben – Empfänger informieren, sonst zur geplanten Zeit senden“):
+// Empfänger sehen nur, DASS eine Nachricht von X für eine Zeit bereitliegt – nie den Text, bevor sie sie abrufen.
+async function geplantVorabFuerMich(ich: Ich, threadId: string) {
+  const { data } = await db.from("kc_club_geplant").select("id,person_id,senden_um").eq("thread_id", threadId).eq("status", "offen").eq("vorab", true)
+    .eq("wiederholung", "einmal").neq("person_id", ich.person_id).order("senden_um").limit(GEPLANT_MAX);
+  if (!data?.length) return [];
+  const leute = await personen(data.map((x: any) => x.person_id));
+  return data.map((x: any) => ({ id: x.id, von: vorname(leute.get(x.person_id)) || "?", um: x.senden_um }));
+}
+async function geplantVorabMelden(ich: Ich, g: { id: string; thread_id: string; senden_um: string }) {
+  const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", g.thread_id);
+  const an = (tn ?? []).map((x: any) => x.person_id).filter((x: string) => x !== ich.person_id);
+  if (!an.length) return;
+  const wann = `${fTag.format(new Date(g.senden_um))}, ${fZeit.format(new Date(g.senden_um))} Uhr`;
+  await sendenGewaehlt("club_nachricht", an, ["push"], { titel: `⏰ Nachricht von ${ich.vorname} wartet`, kurz: `${ich.vorname} hat dir eine Nachricht für ${wann} geplant – du darfst sie schon jetzt abrufen`,
+    betreff: "Köcheclub Werne – zeitgesteuerte Nachricht", text: `${ich.name} hat dir eine zeitgesteuerte Nachricht für ${wann} geplant. Du darfst sie schon vorher in der Club-App abrufen – sonst kommt sie zur geplanten Zeit.`,
+    url: `${APP_URL}#nachricht=${g.thread_id}` }, `club-geplant-vorab:${g.id}`).catch(() => null);
 }
 // 2.520.0 KC-COMM-WARTEN (Wunsch Hansi „mehr als 5 Mails → Zeitverzögerung, damit web.de nicht zumacht“): Mails über der web.de-Grenze
 // (5/Min., 40/Std.) bekommen im Communicator einen Warteplatz (status „queued“ + scheduled_for). Der Minuten-Zeitplan ruft diese Aktion auch,
@@ -6653,6 +6742,9 @@ Köcheclub Werne`,
         schonGemeldet = (c ?? 0) > 0 || (cAlle ?? 0) >= 3;
       }
       await db.from("kc_club_protokoll").insert(neu.map((e: any) => ({ person_id: null, aktion: "fehler_anonym_" + fpArt(e?.art), details: { ...fpSauber(e), geraet, ua, version } })));
+      // 2.550.0 KC-CLUB-FEHLVERSUCHE (Wunsch Hansi): mehrere Versuche ohne gültigen Link vom selben Gerät → Push an die Admins
+      const zf = neu.filter((e: any) => ["ohne_link", "link_ungueltig"].includes(fpArt(e?.art)));
+      if (zf.length) nebenbei(fehlversucheMelden(geraet, zf[zf.length - 1]).catch((x) => console.error("fehlversuche", String(x))));
       if (alarm && !schonGemeldet) {
         await db.from("kc_club_protokoll").insert({ person_id: null, aktion: "fehler_anonym_admin_benachrichtigt", details: { geraet } });
         const { data: admins } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
@@ -6670,7 +6762,10 @@ Köcheclub Werne`,
     const tAnm = Date.now();
     const ich = await anmelden(req);
     const gesperrt = ich.admin ? null : await sperreFuer(ich.person_id); // KC-CLUB-PERSON-SPERRE (2.23.77)
-    if (gesperrt) return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
+    if (gesperrt) {
+      await sperreVersuchMerken(ich.person_id, gesperrt.art, a).catch(() => {}); // 2.539.0 KC-CLUB-SPERRE-VERSUCHE
+      return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
+    }
     const anmeldungMs = Date.now() - tAnm;
     const antwort = await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
     // KC-CLUB-TEMPO (2.113.0, Wunsch Hansi „Tempo-Check“): langsame Vorgänge mit Namen und Dauer ins Server-Log (keine Inhalte,
@@ -7039,10 +7134,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             fehler.set(id, x.channel === "push" ? "Push kam nicht an (letzte 7 Tage)" : "E-Mail kam nicht an (letzte 7 Tage)");
           }
         }
+        // 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU: wer keine Benachrichtigungen bekommt, ist in den Empfänger-Listen ausgegraut
+        // (Liste nicht lesbar → niemand ausgegraut; gesendet wird trotzdem nicht, das prüft routerSendenRoh)
+        const ohneKomm = new Set([...await kommunikationAus().catch(() => new Set<string>()), ...(await sperrenAktuell()).stumm]); // 2.539.0: + gesperrt mit 📵
         return json({
           aemter, onlineSichtbar: ichZeige,
           mitglieder: leute.map((m) => ({
             person_id: m.person_id, name: m.display_name, vorname: vorname(m), avatar: avatar.get(m.person_id) ?? null,
+            ...(ohneKomm.has(m.person_id) ? { ohne_komm: true } : {}),
             ...(ordentlich.has(m.person_id) ? {} : { nichtMitglied: true }), // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
@@ -7126,6 +7225,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           versand = await senden("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, treffenText(t, vorname(g), anlass), `club-treffen:${t.id}:${Date.now()}`);
           elternHinweis(ziel, "termin", `${anlass === "neu" ? "📅 Neuer" : "✏️ Geänderter"} Köcheclub-Termin – {kind}`, `${t.titel}: ${wann(t.beginn)}${t.ort ? " – " + t.ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
         }
+        await vorschlaegeSitzungZuordnen().catch(() => {}); // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER: neue Sitzung → wartende Vorschläge zuordnen
         await protokoll(ich.person_id, anlass === "neu" ? "treffen_angelegt" : "treffen_geaendert", { treffen: t.id, titel, beginn: t.beginn, versand });
         return json({ ok: true, id: t.id, versand });
       }
@@ -7543,7 +7643,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- Vorschläge & Abstimmungen -----
       case "vorschlaege_liste": {
-        const { data: kommend } = await db.from("kc_club_treffen").select("id,titel,beginn").eq("status", "geplant").gte("beginn", jetzt()).order("beginn").limit(10);
+        await vorschlaegeSitzungZuordnen().catch((e) => console.error("vorschlag sitzung", String(e))); // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
+        const { data: kommend } = await db.from("kc_club_treffen").select("id,titel,beginn,art").eq("status", "geplant").gte("beginn", jetzt()).order("beginn").limit(10);
         return json({ vorschlaege: await vorschlaegeListe(ich), treffen: kommend ?? [], spenden: { empfaenger: await spendenEmpfaenger(), betraege: SPENDEN_BETRAEGE, max: SPENDE_MAX } });
       }
 
@@ -7572,6 +7673,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: v, error } = await db.from("kc_club_vorschlaege").insert({ ziel_ids: zielIds, ziel_text: zielText,
           art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim, spenden,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
+          ...(!p.treffen_id && sitzungNrPruefen(p.sitzung_nr) ? { sitzung_nr: sitzungNrPruefen(p.sitzung_nr), sitzung_ab: jetzt() } : {}), // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
         }).select().single();
         if (error || !v) throw new Fehler("Speichern fehlgeschlagen.", 500);
         await objAnlagenSetzen(ich, "vorschlag", v.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (z. B. Skizze, Flyer des Spendenempfängers)
@@ -7660,6 +7762,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const neu: Record<string, unknown> = { titel, beschreibung: txt(p.beschreibung, 2000) || null };
         if ("treffen_id" in p) neu.treffen_id = p.treffen_id ? String(p.treffen_id) : null;
+        if ("treffen_id" in p && "sitzung_nr" in v) { const nr = p.treffen_id ? null : sitzungNrPruefen(p.sitzung_nr); // 2.527.0: „Datum folgt“ ändern
+          neu.sitzung_nr = nr; if (nr && nr !== v.sitzung_nr) neu.sitzung_ab = jetzt(); }
         const { error } = await db.from("kc_club_vorschlaege").update(neu).eq("id", v.id).eq("status", "offen");
         if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
         const anlagen = Array.isArray(p.anlagen) ? await objAnlagenErsetzen(ich, "vorschlag", v.id, p.anlagen) : null;
@@ -9629,9 +9733,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_tippen").select("person_id,text,art").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt()),
         ]);
         const tippt = (tippen ?? []).filter((x: any) => x.art !== "sprache").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id);
-        const spricht = (tippen ?? []).filter((x: any) => x.art === "sprache").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id); // KC-CLUB-SPRICHT
+        const spricht = (tippen ?? []).filter((x: any) => x.art === "sprache" && x.text !== "diktat").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id); // KC-CLUB-SPRICHT
+        const diktiert = (tippen ?? []).filter((x: any) => x.art === "sprache" && x.text === "diktat").map((x: any) => vorname(leute.get(x.person_id)) || x.person_id); // 2.529.0
         // KC-CLUB-LIVETIPPEN: Entwurf nur von denen, die es freiwillig eingeschaltet haben (Server speichert sonst keinen Text)
-        const entwurf = (tippen ?? []).filter((x: any) => x.text).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
+        const entwurf = (tippen ?? []).filter((x: any) => x.text && x.art !== "sprache").map((x: any) => ({ name: vorname(leute.get(x.person_id)) || x.person_id, text: x.text }));
         const angeheftet = pinIds.map((pid: string) => { const m: any = nachMid.get(pid); return { id: pid, von: m.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m.sender_person_id)) || "?", text: txt(m.body, 90) }; });
         // KC-CLUB-NEU-LINIE (1.12.0): bis wann hatte ich gelesen (vor diesem Öffnen) – für die Linie „Neue Nachrichten“
         const gelesenBis = (tn ?? []).find((x: any) => x.person_id === ich.person_id)?.last_read_at ?? null;
@@ -9657,8 +9762,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           runde = { ersteller: t?.created_by_person_id === ich.person_id || ich.admin, gleiche };
         }
         const geplant = await geplantMeine(ich, id).catch(() => []); // KC-CLUB-SPAETER-SENDEN (2.362.0): nur meine, nur in diesem Chat
+        const geplantVorab = await geplantVorabFuerMich(ich, id).catch(() => []); // 2.551.0 KC-CLUB-GEPLANT-VORAB: für mich bereit (ohne Text)
         const stand = (await pStand) ?? null; // KC-CLUB-CHAT-STAND
-        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant,
+        return json({ id, betreff: t?.subject ?? "", stand, tippt, entwurf, spricht, diktiert, angeheftet, gelesenBis, partnerDa, runde, selbstloeschen: slStd(slChat?.stunden), sendeEffekte, geplant, geplantVorab,
           gruppe: gr ? { name: gr.name, symbol: gr.symbol, erstellt_von: gr.erstellt_von, admins: gr.admins ?? [], darfVerwalten: gruppenAdmin(gr, ich.person_id) || ich.vorstand } : null, teilnehmer: (tn ?? []).map((x: any) => ({ person_id: x.person_id, name: leute.get(x.person_id)?.display_name || x.person_id })), nachrichten });
       }
 
@@ -9681,8 +9787,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (e?.wert?.an === true) text = [...p.text].slice(-LIVE_TIPPEN_ZEICHEN).join("");
         }
         // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ statt „schreibt …“ (ohne Text)
-        const art = p.sprache ? "sprache" : "text";
-        await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString(), text: art === "sprache" ? null : text, art });
+        // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: Diktat = Art „sprache“ mit Kennzeichen „diktat“ (keine neue Spalte/Art nötig) → „diktiert …“
+        const art = p.sprache || p.diktat ? "sprache" : "text";
+        await db.from("kc_club_tippen").upsert({ thread_id: id, person_id: ich.person_id, bis: new Date(Date.now() + TIPPT_SEK * 1000).toISOString(), text: p.diktat ? "diktat" : art === "sprache" ? null : text, art });
         return json({ ok: true });
       }
 
@@ -9738,11 +9845,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const wiederholung = GEPLANT_WDH.includes(String(p.wiederholung)) ? String(p.wiederholung) : "einmal";
         if (wiederholung === "werktags" && [0, 6].includes(new Date(berlinTag(um) + "T12:00:00Z").getUTCDay())) throw new Fehler("„Werktags“ geht nur mit einem Tag von Montag bis Freitag als erstem Termin.");
         if (p.geplant_id) {
-          const { data: alt } = await db.from("kc_club_geplant").select("id").eq("id", String(p.geplant_id)).eq("person_id", ich.person_id).eq("status", "offen").maybeSingle();
+          const { data: alt } = await db.from("kc_club_geplant").select("id,thread_id,vorab").eq("id", String(p.geplant_id)).eq("person_id", ich.person_id).eq("status", "offen").maybeSingle();
           if (!alt) throw new Fehler("Diese geplante Nachricht gibt es nicht mehr.", 404);
-          const { error } = await db.from("kc_club_geplant").update({ senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, letzter_fehler: null, geaendert_am: jetzt() }).eq("id", alt.id);
+          // 2.549.0 KC-CLUB-GEPLANT-WECKER: auf Wunsch auch der Text (gleiche Regeln wie beim Anlegen)
+          let neuText: string | null = null;
+          if (typeof p.text === "string") { neuText = txt(p.text, 4000); if (!neuText) throw new Fehler("Bitte die Nachricht schreiben."); if (NOTFALL_RE.test(neuText)) throw new Fehler("Notfall-Meldungen gehen immer sofort raus – nicht planen."); }
+          // 2.551.0 KC-CLUB-GEPLANT-VORAB: „vorher abrufen“ an/aus (nur bei einmaligen); beim Einschalten den Empfänger informieren
+          const vorab = (typeof p.vorab === "boolean" ? p.vorab : !!alt.vorab) && wiederholung === "einmal";
+          const { error } = await db.from("kc_club_geplant").update({ senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, letzter_fehler: null, geaendert_am: jetzt(), vorab, ...(neuText ? { text: neuText } : {}) }).eq("id", alt.id);
           if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
-          await protokoll(ich.person_id, "geplant_geaendert", { id: alt.id, um: um.toISOString(), wiederholung });
+          if (vorab && !alt.vorab) await geplantVorabMelden(ich, { id: alt.id, thread_id: alt.thread_id, senden_um: um.toISOString() });
+          await protokoll(ich.person_id, "geplant_geaendert", { id: alt.id, um: um.toISOString(), wiederholung, text: !!neuText, vorab });
           return json({ ok: true, id: alt.id });
         }
         const threadId = String(p.id || ""), text = txt(p.text, 4000);
@@ -9753,10 +9866,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { count } = await db.from("kc_club_geplant").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("status", "offen");
         if ((count ?? 0) >= GEPLANT_MAX) throw new Fehler(`Du hast schon ${GEPLANT_MAX} geplante Nachrichten – bitte erst eine löschen.`);
         const wege = zustellwege(p.wege);
+        const vorab = p.vorab === true && wiederholung === "einmal"; // 2.551.0 KC-CLUB-GEPLANT-VORAB
         const { data: g, error } = await db.from("kc_club_geplant").insert({ person_id: ich.person_id, thread_id: threadId, text, wichtig: !!p.wichtig, wege,
-          senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung }).select("id").single();
+          senden_um: um.toISOString(), erste_um: um.toISOString(), wiederholung, vorab }).select("id").single();
         if (error || !g) throw new Fehler("Konnte nicht geplant werden.", 500);
-        await protokoll(ich.person_id, "geplant_angelegt", { id: g.id, thread: threadId, um: um.toISOString(), wiederholung });
+        if (vorab) await geplantVorabMelden(ich, { id: g.id, thread_id: threadId, senden_um: um.toISOString() });
+        await protokoll(ich.person_id, "geplant_angelegt", { id: g.id, thread: threadId, um: um.toISOString(), wiederholung, vorab });
         return json({ ok: true, id: g.id });
       }
       case "geplant_loeschen": {
@@ -9775,6 +9890,24 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           try { await geplantSenden(g, ich); } catch (e) { await db.from("kc_club_geplant").update({ status: "offen" }).eq("id", g.id); throw e; }
         } else await geplantSenden(g, ich);
         await db.from("kc_club_geplant").update({ anzahl: (g.anzahl || 0) + 1, gesendet_am: jetzt() }).eq("id", g.id);
+        return json({ ok: true });
+      }
+      // 2.551.0 KC-CLUB-GEPLANT-VORAB: Empfänger holt eine freigegebene geplante Nachricht vorzeitig ab – gesendet wird wie zur geplanten Zeit
+      // (im Namen des Absenders, mit dessen Sperr-Prüfung); erst belegen (status „fertig“), dann senden – nie doppelt.
+      case "geplant_abrufen": {
+        const { data: g } = await db.from("kc_club_geplant").select(GEPLANT_FELDER + ",person_id,status").eq("id", String(p.id || "")).eq("status", "offen").eq("vorab", true).eq("wiederholung", "einmal").maybeSingle();
+        if (!g || g.person_id === ich.person_id) throw new Fehler("Diese Nachricht gibt es nicht mehr – vielleicht ist sie schon da.", 404);
+        await binTeilnehmer(g.thread_id, ich.person_id);
+        const absender = await geplantIch(g.person_id);
+        if (!absender) throw new Fehler("Der Absender ist nicht mehr aktiv.", 409);
+        if (!absender.admin && await sperreFuer(absender.person_id)) throw new Fehler("Gerade nicht abrufbar.", 409);
+        const { data: belegt } = await db.from("kc_club_geplant").update({ status: "fertig", geaendert_am: jetzt() }).eq("id", g.id).eq("status", "offen").select("id");
+        if (!belegt?.length) throw new Fehler("Diese Nachricht wurde gerade schon gesendet.", 409);
+        try { await geplantSenden(g, absender); } catch (e) { await db.from("kc_club_geplant").update({ status: "offen" }).eq("id", g.id); throw e; }
+        await db.from("kc_club_geplant").update({ anzahl: (g.anzahl || 0) + 1, gesendet_am: jetzt(), letzter_fehler: null }).eq("id", g.id);
+        await protokoll(ich.person_id, "geplant_vorab_abgerufen", { id: g.id, von: g.person_id, geplant_fuer: g.senden_um });
+        await sendenGewaehlt("club_nachricht", [absender.person_id], ["push"], { titel: `📩 ${ich.vorname} hat abgerufen`, kurz: `${ich.vorname} hat deine geplante Nachricht schon vorher abgerufen`,
+          betreff: "Köcheclub Werne – geplante Nachricht abgerufen", text: `${ich.name} hat deine zeitgesteuerte Nachricht schon vor der geplanten Zeit abgerufen.`, url: `${APP_URL}#nachricht=${g.thread_id}` }, `club-geplant-abgerufen:${g.id}`).catch(() => null);
         return json({ ok: true });
       }
       case "nachricht_senden": {
@@ -14199,7 +14332,16 @@ Köcheclub-App`,
       case "sperre_liste": {
         nurAdmin(ich);
         const { data } = await db.from("kc_club_person_sperre").select("person_id,art,stumm,seit,bis").eq("aktiv", true).order("seit", { ascending: false });
-        return json({ sperren: (data ?? []).filter(sperreGilt) });
+        const sperren = (data ?? []).filter(sperreGilt);
+        // 2.539.0 KC-CLUB-SPERRE-VERSUCHE: wie oft und wann zuletzt hat die Person seit der Sperre versucht, die App zu öffnen
+        const ids = sperren.map((x: any) => x.person_id), aeltest = sperren.reduce((m: string, x: any) => (x.seit < m ? x.seit : m), jetzt());
+        const { data: vs, error: vf } = ids.length ? await db.from("kc_club_protokoll").select("person_id,zeit").eq("aktion", "gesperrt_versuch").in("person_id", ids)
+          .gte("zeit", aeltest).order("zeit", { ascending: false }).limit(1000) : { data: [], error: null };
+        return json({ sperren: sperren.map((x: any) => {
+          if (vf) return { ...x, versuche: null }; // unbekannt ≠ 0 (Regel 11)
+          const v = (vs ?? []).filter((y: any) => y.person_id === x.person_id && y.zeit >= x.seit);
+          return { ...x, versuche: v.length, versuch_zuletzt: v[0]?.zeit ?? null };
+        }) });
       }
       case "sperre_setzen": {
         nurAdmin(ich);
@@ -14237,6 +14379,29 @@ Köcheclub-App`,
         SPERREN.bis = 0;
         await protokoll(ich.person_id, "person_sperre_stumm", { id, stumm });
         return json({ ok: true, stumm });
+      }
+      // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER (Wunsch Hansi „Schalter im Admin-Bereich“): Mitglied ganz aus der Club-Kommunikation
+      // nehmen bzw. wieder aufnehmen – pflegt die Registry kc_club_kommunikation_aus (wirkt sofort auf diesem Server, sonst nach ≤ 60 s)
+      case "komm_aus_liste": {
+        nurAdmin(ich);
+        const { data, error } = await db.from("kc_club_kommunikation_aus").select("person_id,grund,seit,eingetragen_von").order("seit", { ascending: false });
+        if (error) throw new Fehler("Liste konnte nicht geladen werden.", 503);
+        return json({ liste: data ?? [] });
+      }
+      case "komm_aus_setzen": {
+        nurAdmin(ich);
+        const id = txt(p.id, 40), aus = p.aus === true;
+        if (!id) throw new Fehler("Keine Person angegeben.", 400);
+        if (id === ich.person_id) throw new Fehler("Dich selbst kannst du hier nicht herausnehmen.", 400);
+        const { data: pe } = await db.from("kc_core_people").select("person_id").eq("person_id", id).maybeSingle();
+        if (!pe) throw new Fehler("Diese Person gibt es nicht.", 404);
+        const { error } = aus
+          ? await db.from("kc_club_kommunikation_aus").upsert({ person_id: id, grund: txt(p.grund, 300) || "Admin-Schalter", seit: jetzt(), eingetragen_von: ich.person_id }, { onConflict: "person_id" })
+          : await db.from("kc_club_kommunikation_aus").delete().eq("person_id", id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        KA_STAND = null;
+        await protokoll(ich.person_id, aus ? "kommunikation_aus" : "kommunikation_an", { id });
+        return json({ ok: true, aus });
       }
       case "sperre_aufheben": {
         nurAdmin(ich);
@@ -14944,7 +15109,13 @@ function notVorratLaden(pf: DbPuffer, vorrat: unknown): number {
 }
 // nur: bloß diese Mitglieder bauen (2.491.0 KC-CLUB-NOTPAKET-NUR-GEAENDERTE) – sonst alle
 async function notpaketBauen(geheim: string, nur: Set<string> | null = null) {
-  const { data: zug } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
+  const { data: zug0 } = await db.from("kc_club_zugang").select("person_id,token_hash").eq("aktiv", true).not("token_hash", "is", null).not("person_id", "like", "KC-P-TEST%");
+  // 2.540.0 KC-CLUB-SPERRE-NOTPAKET: Gesperrte bekommen kein Notfall-Paket – sonst sähen sie im Notbetrieb, was die Sperre in der App verbirgt.
+  // Lesefehler bei den Sperren → Bau abbrechen (altes Paket bleibt), nie ohne Prüfung bauen.
+  const { data: spz, error: spf } = await db.from("kc_club_person_sperre").select("person_id,bis").eq("aktiv", true);
+  if (spf) throw new Error("Sperren nicht lesbar – Notfall-Paket bleibt auf dem letzten Stand");
+  const gesperrt = new Set((spz ?? []).filter(sperreGilt).map((x: any) => x.person_id));
+  const zug = (zug0 ?? []).filter((z: any) => !gesperrt.has(z.person_id));
   const mitglieder: Record<string, unknown> = {}, dbz = { netz: 0, puffer: 0, vorrat: 0 };
   let vorrat: unknown[] | null = null;
   const teil = async (gruppe: any[], geben = false) => {
@@ -15154,6 +15325,11 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
       if (!neuerTag && !nachFehler && (nacht || Date.now() - zuletzt < NOT_ABSTAND_MIN * 60000))
         return { ok: true, gedrosselt: true, nacht, naechsterBau: nacht ? null : new Date(zuletzt + NOT_ABSTAND_MIN * 60000).toISOString() };
     }
+    // 2.535.0 KC-CLUB-NOTPAKET-FEHLERPAUSE (Lastwarnung 20.10.2026 16:03): nach einem Fehlschlag frühestens nach 30 Min. neu bauen – auch wenn
+    // der Abstand seit dem letzten guten Paket schon um ist. Sonst baute jeder 15-Min.-Lauf erneut (~3.000 Abfragen je Versuch). Nicht bei „erzwingen“.
+    const fehlerAm = zeitVon(st.fehler_am);
+    if (!erzwingen && fehlerAm > (zeitVon(st.hochgeladen_am) || 0) && Date.now() - fehlerAm < 30 * 60000)
+      return { ok: true, gedrosselt: true, nachFehler: true, naechsterBau: new Date(fehlerAm + 30 * 60000).toISOString() };
     if (!erzwingen && fp && st.fingerabdruck === fp) {
       // nichts geändert: nur „Stand ist aktuell bis jetzt“ melden (klein, signiert)
       await senden("/stand", new TextEncoder().encode(JSON.stringify({ stand: erstellt, fingerabdruck: fp })), "application/json");
@@ -15193,6 +15369,8 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
   } catch (e) {
     const fehler = txt(e instanceof Error ? e.message : String(e), 300);
     await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: jetzt() }).eq("id", 1);
+    // KC-CLUB-NOTPAKET-FEHLERPAUSE: auch der Fehlschlag kommt ins Protokoll – die Lastwarnung kennt so die Ursache (vorher „unbekannt“)
+    await protokoll(null, "notpaket_fehler", { erzwungen: erzwingen, fehler }).catch(() => {});
     return { ok: false, fehler };
   }
 }

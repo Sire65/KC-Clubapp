@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.522.0";
+const VERSION = "2.551.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -34,7 +34,7 @@ const GETEILT = "kcclub-geteilt";
 // 2.522.0 KC-CLUB-TEILEN-FEHLER (Fund Hansi 20.10.: „Es ist nichts angekommen“, Diagnose leer – das Annehmen war abgebrochen, der Fehlerweg
 // öffnete die App ohne jede Spur): Fehler werden jetzt in „geteilt/info“ vermerkt (nur Art und Größe, keine Inhalte), eine Datei, die nicht in den
 // Speicher passt, wird übersprungen statt alles abzubrechen.
-const geteiltInfo = (c, info) => c.put("geteilt/info", new Response(JSON.stringify({ ...info, zeit: Date.now() }))).catch(() => {});
+const geteiltInfo = (c, info) => c.put("geteilt/info", new Response(JSON.stringify({ ...info, sw: VERSION, zeit: Date.now() }))).catch(() => {});
 async function geteiltAnnehmen(req) {
   const c = await caches.open(GETEILT);
   for (const k of await c.keys()) await c.delete(k);
@@ -49,7 +49,8 @@ async function geteiltAnnehmen(req) {
   // 1.22.0 (KC-CLUB-TEILEN-ALLES): auch Text aus WhatsApp & Co. (bis 4000 Zeichen), Titel und Link; Dateien jeder Art
   // 2.515.0 Diagnose: welche Felder/Dateitypen das Handy wirklich geschickt hat (nur Name des Feldes, Typ und Größe – keine Inhalte)
   const felder = [...f.entries()].slice(0, 20).map(([k, v]) => typeof v === "object" ? `${k}:${v.type || "?"}:${v.size}` : `${k}:text:${String(v).length}`);
-  await c.put("geteilt/info", new Response(JSON.stringify({ felder, anzahl: dateien.length, ...(fehler.length ? { fehler: fehler.join(" | ") } : {}), text: String(f.get("text") || "").slice(0, 4000), titel: String(f.get("titel") || "").slice(0, 200), url: String(f.get("url") || "").slice(0, 500), zeit: Date.now() })));
+  // 2.535.0 KC-CLUB-TEILEN-GROESSE: immer festhalten, wie groß die Sendung vom Handy war (leer angekommen trotz großer Datei?)
+  await c.put("geteilt/info", new Response(JSON.stringify({ sw: VERSION, felder, anzahl: dateien.length, groesse: Number(req.headers.get("content-length")) || null, ...(fehler.length ? { fehler: fehler.join(" | ") } : {}), text: String(f.get("text") || "").slice(0, 4000), titel: String(f.get("titel") || "").slice(0, 200), url: String(f.get("url") || "").slice(0, 500), zeit: Date.now() })));
   return Response.redirect("./#geteilt", 303);
 }
 self.addEventListener("fetch", (e) => {

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.522.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.551.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -930,6 +930,8 @@ const THEMEN = [
   { id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum", effekt: "flieger" }, // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2)
   { id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof", effekt: "taube", schrift: "kirmes" }, // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3)
   { id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4)
+  { id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest", effekt: "flieger", schrift: "kirmes", kopf: "bude" }, // 2.529.0 KC-CLUB-WILDWEST
+  { id: "wueste", sym: "🐪", name: "Wüste", design: "sonnenuntergang", jz: "wueste", effekt: "flieger", schrift: "kirmes", kopf: "theater" }, // 2.548.0 KC-CLUB-WUESTE
   { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur", kopf: "bude" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
@@ -1401,7 +1403,7 @@ async function pwFuer(f) {
 function pwListe() {
   const q = $("pwSuche").value.toLowerCase();
   $("pwListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) =>
-    `<label><input type="checkbox" ${PW.form.personen.includes(m.person_id) ? "checked" : ""} onchange="pwWahl('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+    `<label${okKl(m, PW.form.personen.includes(m.person_id))}><input type="checkbox"${okAttr(m, PW.form.personen.includes(m.person_id))} ${PW.form.personen.includes(m.person_id) ? "checked" : ""} onchange="pwWahl('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const namen = PW.form.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
   $("pwGewaehlt").textContent = namen.length ? "Für: " + namen.join(", ") : "Noch niemand ausgewählt";
 }
@@ -1663,11 +1665,11 @@ function einstiegHinweis() {
 // „Alle nochmal zeigen“ setzt zurück). Gespeichert wie die Tipps in der Server-Einstellung „einweisung“ (geräteübergreifend).
 const EINWEISUNG = [
   { id: "start", sym: "🏠", t: "Die Startseite", x: () => (einfach() ? "Oben im farbigen Feld siehst du das Wichtigste – z. B. das nächste Treffen." : "Oben im farbigen Feld läuft das <b>📣 Info-Laufband</b> mit allem, was ansteht – zuerst das nächste Treffen; mit den Pfeilen <b>‹ ›</b> kommst du zu weiteren Info-Karten wie Wetter und Neues für dich.") + " Darunter die <b>Kacheln</b>: antippen öffnet den Bereich. Die <b>Leiste unten</b> bringt dich immer schnell zurück. Oben unter „KÖCHECLUB WERNE“ stellst du deinen <b>Status</b> ein (z. B. im Urlaub)." },
-  { id: "nachrichten", sym: "💬", t: "Nachrichten", x: "Hier schreibst du anderen Clubmitgliedern – einzeln oder in einer Gruppe. Mit <b>„＋ Neu“</b> beginnst du eine Unterhaltung, mit <b>„👥 Gruppe“</b> legst du eine Gruppe an. Vieles kennst du von WhatsApp: Haken zeigen, ob die Nachricht angekommen ist, nach rechts wischen = antworten. Mit dem Mikrofon <b>🎤</b> kannst du diktieren statt tippen." },
+  { id: "nachrichten", sym: "💬", t: "Nachrichten", x: "Hier schreibst du anderen Clubmitgliedern – einzeln oder in einer Gruppe. Mit <b>„＋ Neu“</b> beginnst du eine Unterhaltung, mit <b>„👥 Gruppe“</b> legst du eine Gruppe an. Vieles kennst du von WhatsApp: Haken zeigen, ob die Nachricht angekommen ist, nach rechts wischen = antworten. Mit dem Mikrofon <b>🎤</b> kannst du diktieren statt tippen. Beim Schreiben wählst du über dem Feld <b>📝 Normal, ❗ Wichtig oder 🏎️ Express</b>; mit dem Schloss <b>🔒</b> in der kleinen Zeile schreibst du verschlüsselt." },
   { id: "pinnwand", sym: "📌", t: "Pinnwand", x: "Wie das schwarze Brett im Clubheim: Mit <b>„＋ Zettel“</b> hängst du etwas für alle auf – Glückwünsche, Hinweise oder eine Bitte um Hilfe. Auf Zettel kannst du mit <b>Emojis</b> antworten. Wichtige Zettel (❗) sieht jeder beim Öffnen der App." },
   { id: "termine", sym: "📅", t: "Termine", x: "Alle Club-Termine. Mit <b>✅ Ich komme</b>, <b>❓ Vielleicht</b> oder <b>❌ Kann nicht</b> antwortest du – nochmal antippen nimmt die Antwort zurück. Nach der Zusage kannst du eine <b>Mitfahrt</b> suchen oder anbieten. Mit <b>„＋ Neu“</b> legst du auch private Termine an, die nur du siehst. Oben wechselst du zwischen Liste, Kalender und To-do. Tipp: Mit dem Knopf <b>📲</b> oben in den Terminen (oder unter ⚙️ → „📆 Termine im Handy-Kalender“) verbindest du deinen Kalender – iPhone, Google oder Outlook – und alle Club-Termine kommen automatisch in den Kalender deines Handys (leider nicht umgekehrt – Termine aus dem Handy-Kalender kommen nicht in die App)." },
   { id: "mitglieder", sym: "👥", t: "Mitglieder", x: "Alle aktiven Clubmitglieder. Ein <b>grüner Punkt</b> heißt: gerade in der App. Mit der Sprechblase <b>💬</b> schreibst du direkt, mit der Hand <b>👋</b> klopfst du bei jemandem an, der gerade online ist. Mit den Knöpfen 🔲 / ☰ / 📋 oben wechselst du zwischen Kacheln, Liste und Anwesenheitstafel (nur Name und Lämpchen)." },
-  { id: "fotos", sym: "📷", t: "Fotoalbum", x: "Fotos vom Clubleben. Mit <b>„＋ Neu“</b> lädst du eigene Bilder hoch. Mit <b>„☑️ Auswählen“</b> hakst du Bilder an und legst sie in ein eigenes Album – z. B. „Weihnachtsmarkt“." },
+  { id: "fotos", sym: "📷", t: "Fotoalbum", x: "Fotos vom Clubleben. Mit <b>„＋ Neu“</b> lädst du eigene Bilder hoch. Mit <b>„☑️ Auswählen“</b> hakst du Bilder an und legst sie in ein eigenes Album – z. B. „Weihnachtsmarkt“. Mit <b>„▶️ Diashow“</b> oben läuft ein Album als Diashow, auf Wunsch mit dem Club-Song." },
   { id: "helfen", sym: "🤝", t: "Helfen & Leihen", x: "Oben drei Bereiche: <b>🙋 Wer kann helfen?</b> – Helfer suchen oder Hilfe anbieten. <b>📦 Ausleihen</b> – Club-Sachen wie den Pavillon reservieren. <b>🛍️ Börse</b> – privat etwas anbieten oder suchen. Mit <b>„＋ Neu“</b> legst du etwas an." },
   { id: "archiv", sym: "🗄️", t: "Archiv", x: "Das Regal des Clubs: Ordner nach Jahren mit Terminen, Protokollen, Fotos und mehr – vieles wird automatisch abgelegt. Dort steht auch die <b>Clubchronik</b> zum Blättern. Und du hast einen <b>eigenen Ordner</b>, den nur du siehst." },
   { id: "dokumente", sym: "📚", t: "Meine Dokumente", x: "Anleitungen und wichtige Unterlagen zum Lesen – z. B. die <b>Bedienungsanleitung</b> der App. Antippen öffnet das Dokument – dort kannst du es auch drucken oder teilen. Mit dem Pfeil <b>‹</b> oben links geht es wieder hierher." },
@@ -1873,9 +1875,9 @@ const RG_NACHRICHT = [
     sel: ["#empfWahlBereich"], puls: ["#schnellEmpf", "#empfSuche", "#neuGruppen .knopf"], t: "👤 An wen?", x: "Jetzt wählst du, an wen die Nachricht geht. Oben die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt wie den Clubsprecher. Darunter suchst du einen Namen – zum Beispiel Anne – und hakst ihn an; auch mehrere gehen. Deine Gruppen stehen ganz oben – antippen, und du schreibst direkt hinein." },
   { v: "neu", sel: [rgFeld("neuBetreff")], puls: ["#neuBetreff", rgOn("neuWeiter()")], t: "✏️ Betreff", x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Schreibst du nur einer Person und ohne Betreff, geht es gleich in euren bisherigen Chat. Mit Betreff beginnt ein eigener Chat zu diesem Thema. Dann tippst du auf Weiter zum Schreiben." },
   { v: "neu", tippVor: rgOn("neuWeiter()"), vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
-    sel: ["#eingabe"], puls: ["#eingabe textarea", '#eingabe [title="Senden"]', '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]', '#eingabe [title^="Wie benachrichtigen"]', '#eingabe [title^="Wichtig"]', '#eingabe [title^="Nachricht löscht"]', '#eingabe [title="Mit WhatsApp senden"]', "#expressKnopf", "#spaeterKnopf"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Darunter: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail –, das Ausrufezeichen für eine wichtige Nachricht und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
+    sel: ["#eingabe"], puls: ["#eingabe textarea", '#eingabe [title="Senden"]', '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]', '#eingabe [title^="Wie benachrichtigen"]', "#versandLeiste", '#eingabe [title^="Nachricht löscht"]', '#eingabe [title="Mit WhatsApp senden"]', "#spaeterKnopf"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Sobald du schreibst, steht darüber der Versand: Normal ist schon angehakt – du kannst stattdessen Wichtig oder Express anhaken, auch beides. Unter dem Feld: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail – und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express mit Zähler, Später senden, Zurückholen, Favoriten
-  { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann tippst du auf den Rennwagen: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Am Knopf steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
+  { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann hakst du über dem Schreibfeld Express an: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Neben Express steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
   { v: "neu", sel: ["#spaeterKnopf"], t: "⏰ Später senden", x: "Mit dem Wecker schickst du die Nachricht später – zum Beispiel morgen früh um acht, oder jeden Montag. Und hast du dich vertippt: Solange noch niemand die Nachricht gelesen hat, tippst du sie an und holst sie mit Zurückholen und ändern wieder in dein Schreibfeld." },
   { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: In Mitglieder beim Mitglied auf den Stern tippen – oder hier rechts am Chat auf die drei Punkte tippen und Als Favorit wählen. Es ist derselbe Stern. Dazu kommen automatisch die fünf Chats, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
   { v: "nachrichten", t: "✅ Fertig", x: "Das war's: Plus Neu, Empfänger wählen, schreiben, senden. Probier es aus – zum Beispiel mit einer Nachricht an dich selbst über Test." },
@@ -1980,12 +1982,23 @@ const RG_ERSTATTUNG = [
   { v: "erstattung", t: "✅ Fertig", x: "So einfach bekommst du dein Geld zurück." },
 ];
 const RG_HILFE = [
-  { v: "hilfezentrum", sel: ["#v-hilfezentrum .tw-chef-knopf"], t: "🧑‍🍳 Frag Twinkey", x: "In Hilfe und Tipps fragst du Twinkey: Tippe deine Frage in eigenen Worten oder sprich sie – zum Beispiel: Wie ändere ich die Farben? Twinkey zeigt die Antwort und auf Wunsch genau die Stelle." },
+  { v: "hilfezentrum", sel: ["#v-hilfezentrum .tw-chef-knopf"], t: "🧑‍🍳 Frag Twinkey", x: "In Hilfe und Tipps fragst du Twinkey: Tippe deine Frage in eigenen Worten oder sprich sie – zum Beispiel: Wie schicke ich eine Nachricht verschlüsselt? Twinkey zeigt die Antwort, auf Wunsch genau die Stelle – und bietet passende Erklär-Videos an." },
   { v: "hilfezentrum", sel: ["#v-hilfezentrum .hz-suchfeld"], puls: ["#hzSuche", "#v-hilfezentrum .hz-suchfeld .diktat-feld", "#v-hilfezentrum .such-knopf"], t: "🔍 Suchen", x: "Oder du suchst nach einem Wort, zum Beispiel Farbe oder Ton – tippen oder mit dem Mikrofon sagen, dann Suchen." },
   { v: "hilfezentrum", sel: ["#hzRegister"], puls: ["#hzRegister button"], t: "📖 Alle Themen", x: "Darunter alle Themen von Erste Schritte bis Notfall. Antippen springt hin. Bei vielen Tipps steht Zeig mir wo – dann führt dich die App direkt an die Stelle." },
-  { v: "start", sel: ["#hzFrage", "#suLupe"], puls: ["#hzFrage", "#suLupe"], t: "❓ Immer zur Hand", x: "Und überall unten rechts: Das Fragezeichen öffnet die Hilfe zu genau dem Bereich, in dem du bist. Die Lupe findet jede Funktion und jede Einstellung." },
-  { v: "start", t: "✅ Fertig", x: "Du musst dir nichts merken – Hilfe ist immer nur einen Tipp entfernt." },
+  { v: "start", vor: () => sucheZu(true), sel: ["#hzFrage", "#suLupe"], puls: ["#hzFrage", "#suLupe"], t: "❓ Immer zur Hand", x: "Und überall unten rechts: Das Fragezeichen öffnet die Hilfe zu genau dem Bereich, in dem du bist. Die Lupe findet jede Funktion und jede Einstellung." },
+  // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: die Lupe in Aktion (nur lokale Treffer – ohne „Suchen“ fragt sie den Server nicht) und die Sprachsuche
+  { v: "start", vor: rgHilfeLupe, sel: ["#suFenster .su-innen"], mussSel: true, puls: ["#suEingabe"], t: "🔍 Die Lupe findet alles",
+    x: "Die Lupe sucht in Nachrichten, Terminen, Archiv und Pinnwand – und in allen Funktionen der App. Hier steht zum Beispiel verschlüsselt im Feld: Ganz oben erscheinen gleich die passenden Funktionen, ein Tipp führt direkt hin. Schon ab zwei Buchstaben, und kleine Tippfehler verzeiht sie." },
+  { v: "start", nur: () => DIKTAT_GEHT, vor: rgHilfeLupe, sel: ["#suFenster .su-kopf"], mussSel: true, puls: ["#suFenster .diktat-feld"], t: "🎤 Suchen mit der Stimme",
+    x: "Lieber sprechen als tippen? Rechts im Suchfeld sitzt ein Mikrofon. Antippen, zum Beispiel Schlüsselbund sagen – nach dem ersten Satz sucht die Lupe von selbst. Ist die Sprachsteuerung an, geht es auch ohne Lupe: Sag einfach Suche Glühwein oder Diashow." },
+  { v: "start", vor: () => sucheZu(true), t: "✅ Fertig", x: "Du musst dir nichts merken – Hilfe ist immer nur einen Tipp entfernt: das Fragezeichen, die Lupe mit Mikrofon, Twinkey und Erklär-Videos wie dieses." },
 ];
+function rgHilfeLupe() { // 2.533.0: Lupe mit Beispielwort öffnen – Tastatur bleibt zu, damit man die Treffer sieht
+  // SU.offen vorher setzen: kein eigener Verlaufseintrag (sonst beendet „zurück“ beim Schließen das Video) und keine Nutzungs-Zählung
+  if (!$("suFenster") || $("suFenster").classList.contains("versteckt")) { SU.offen = true; sucheAuf(""); SU.q = $("suEingabe").value = "verschlüsselt"; SU.ergebnis = []; suZeigen(); } // nur Treffer unter den App-Funktionen – der Server wird nicht gefragt
+  setTimeout(() => $("suEingabe")?.blur(), 120);
+  if (!RG.hilfeLupeZu) { RG.hilfeLupeZu = true; RG.zurueck.push(() => { RG.hilfeLupeZu = false; sucheZu(true); }); }
+}
 const RG_SOS = [
   { v: "sos", vor: () => { if (!$("sosInhalt")?.innerHTML.trim()) { SOS.suche = ""; SOS.offen = null; sosZeigen(); sosLaden(); } }, sel: ["#sosInhalt .sos-nummern"], puls: ["#sosInhalt .sos-nr"], t: "🆘 Notrufnummern", x: "Im Notfall-Bereich stehen oben die wichtigen Nummern: 112 für Rettung und Feuerwehr, 110 für die Polizei, der ärztliche Bereitschaftsdienst, Giftnotruf und mehr. Antippen ruft direkt an." },
   { v: "sos", sel: [rgOn("sosWoBinIch", ".karte")], t: "📍 Wo bin ich?", x: "Mit Wo bin ich zeigt dir die App deinen Standort und die Adresse – zum Durchsagen am Telefon." },
@@ -3019,7 +3032,7 @@ const RUNDGAENGE = [
   { id: "zusagen", stand: "1", sym: "✅", t: "Zu- und absagen", u: "Antworten, Mitfahrt, Kalender (ca. 1 Min.)", st: () => RG_ZUSAGEN },
   { id: "fotos", stand: "1", sym: "📷", t: "Fotoalbum", u: "Fotos hochladen, suchen, Alben (ca. 1 Min.)", st: () => RG_FOTOS },
   { id: "erstattung", stand: "1", sym: "💶", t: "Erstattung beantragen", u: "Auslagen zurückbekommen (ca. 1 Min.)", st: () => RG_ERSTATTUNG },
-  { id: "hilfe", stand: "1", sym: "❓", t: "Hilfe, Suche & Twinkey", u: "So findest du jede Antwort (ca. 1 Min.)", st: () => RG_HILFE },
+  { id: "hilfe", stand: "2", sym: "❓", t: "Hilfe, Suche & Twinkey", u: "Twinkey, Hilfe-Suche, Lupe und Sprachsuche – so findest du jede Antwort (ca. 2 Min.)", st: () => RG_HILFE }, // 2.533.0 Fassung 2
   { id: "sos", stand: "1", sym: "🆘", t: "SOS – Notfall", u: "Notrufe, Standort, Notfallpass (ca. 1 Min.)", st: () => RG_SOS },
   { id: "helfen", stand: "1", sym: "🤝", t: "Helfen & Leihen", u: "Hilfe, Ausleihen, Börse (ca. 1 Min.)", st: () => RG_HELFEN },
   { id: "spiele", stand: "1", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
@@ -3050,7 +3063,8 @@ const RUNDGAENGE = [
   { id: "push", stand: "1", sym: "🔔", t: "Benachrichtigungen richtig einrichten", u: "Push einschalten, je Bereich wählen, Test an mich, Meine Geräte, Anklopfton – und was tun, wenn nichts ankommt (ca. 4 Min.)", st: () => RG_PUSH }, // 2.348.0
   { id: "privat", stand: "1", sym: "🔒", t: "Privatsphäre & Handy weitergeben", u: "Wer sieht was: online, zuletzt da, Tippen, Geburtstag, Kontakt – Abmelden, persönlicher Link, Link verloren, Meine Daten (ca. 4 Min.)", st: () => RG_PRIVAT }, // 2.348.0
   { id: "probleme", stand: "1", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
-  { id: "chatprofi", stand: "1", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0
+  { id: "chatprofi", stand: "2", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat, „… schreibt dir gerade“ (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0 · 2.533.0 Fassung 2
+  { id: "geheim", stand: "2", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent – und so kommt es beim Empfänger an: Mitteilung, Schlüssel eingeben, Schlüsselbund – nichts wird gesendet (ca. 5 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
   { id: "gruppen", stand: "1", sym: "👥", t: "Gruppen anlegen & verwalten", u: "Neue Gruppe, Name & Symbol, Mitglieder, Bereiche klappen, Gruppen-Admin, auflösen – und in Nachricht oder Terminanfrage nutzen (ca. 3 Min.)", st: () => RG_GRUPPEN }, // 2.348.0
   { id: "terminfinden", stand: "1", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
   { id: "todo", stand: "1", sym: "✅", t: "Die gemeinsame To-do-Liste", u: "Umschalter To-do, Aufgabe eintragen, verteilen, abhaken, Frist-Erinnerung, Aufgaben aus Protokollen (ca. 3 Min.)", st: () => RG_TODO }, // 2.348.0
@@ -3077,7 +3091,7 @@ function rgRollenAnsicht(ziel) {
 const RG_THEMEN = [
   { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "einfach", "spezial", "hilfe", "probleme", "schulung", "feedback"] },
   { id: "installieren", sym: "📲", t: "App installieren", videos: ["installieren", "inst_chrome", "inst_edge", "inst_samsung", "inst_safari", "inst_firefox", "inst_geraet", "inst_codes"] }, // 2.276.0 KC-CLUB-VIDEO-INSTALL
-  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["zentrale", "sprache", "nachricht", "chatprofi", "gruppen", "mitglieder", "pinnwand"] },
+  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["zentrale", "sprache", "nachricht", "chatprofi", "geheim", "gruppen", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "terminfinden", "zusagen", "todo", "dienst"] },
   { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "aktionen", "archiv", "vorschlag", "helfen", "erstattung"] },
   { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "push", "privat", "einstellungen", "oberflaeche", "effekte", "rueckseite", "anpassen", "figur", "figurbau", "technik", "studio"] },
@@ -3340,8 +3354,8 @@ const RG_CHATPROFI = [
   { v: "chat", vor: () => rgChatprofiMenue("rg-cp-7", true), nach: () => $("naMenue")?.remove(), tippVor: "#msg-rg-cp-7 .na-pfeil", sel: ["#naMenue .na-menue"],
     puls: [rgChatprofiKnopf("#naMenue", "↪️ Weiterleiten"), rgChatprofiKnopf("#naMenue", "📋 Kopieren"), rgChatprofiKnopf("#naMenue", "✂️ Ausschneiden"), rgChatprofiKnopf("#naMenue", "🗄️ Archivieren"), rgChatprofiKnopf("#naMenue", "❗ Wichtig"), rgChatprofiKnopf("#naMenue", "🗑️ Löschen")],
     t: "➡️ Der kleine Pfeil", x: "Am kleinen Pfeil neben einer Nachricht gibt es noch mehr: Weiterleiten an eine andere Person oder Unterhaltung, Kopieren, Ausschneiden, Archivieren in deinen eigenen Archiv-Ordner und Löschen. Bei deinen eigenen Nachrichten kommt Wichtig dazu." },
-  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .wichtig-marke", "#msg-rg-cp-9 .na-pfeil"], t: "❗ Nachträglich wichtig", x: "Vergessen, beim Senden das Ausrufezeichen anzutippen? Dann wählst du am Pfeil deiner Nachricht Wichtig. Sie bekommt den orangefarbenen Rahmen für alle im Chat – eine neue Benachrichtigung geht dabei nicht raus." },
-  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .haken", "#msg-rg-cp-8 .haken", "#msg-rg-cp-7 .haken", "#msg-rg-cp-9 .na-info"], t: "✔️ Was die Haken bedeuten", x: "Die Haken an deinen Nachrichten: ein grauer Haken heißt gesendet, zwei graue Haken heißen auf dem Handy angekommen, zwei blaue Haken heißen gelesen. Tippst du die Haken an, siehst du genau, wer gelesen hat, bei wem sie angekommen ist und bei wem noch nicht – mit Uhrzeit. Weitere Einzelheiten stehen unter dem kleinen i neben der Nachricht." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .wichtig-marke", "#msg-rg-cp-9 .na-pfeil"], t: "❗ Nachträglich wichtig", x: "Vergessen, beim Senden Wichtig anzuhaken? Dann wählst du am Pfeil deiner Nachricht Wichtig. Sie bekommt den orangefarbenen Rahmen für alle im Chat – eine neue Benachrichtigung geht dabei nicht raus." },
+  { v: "chat", vor: rgChatprofiAuf, sel: [rgChatprofiBlase(9)], puls: ["#msg-rg-cp-9 .haken", "#msg-rg-cp-8 .haken", "#msg-rg-cp-7 .haken", "#msg-rg-cp-9 .na-info"], t: "✔️ Was die Haken bedeuten", x: "Die Haken an deinen Nachrichten: ein grauer Haken heißt gesendet, zwei graue Haken heißen auf dem Handy angekommen – sie kommen, sobald die Mitteilung auf dem anderen Handy erscheint oder seine App die Nachricht geladen hat –, zwei blaue Haken heißen gelesen. Tippst du die Haken an, siehst du genau, wer gelesen hat, bei wem sie angekommen ist und bei wem noch nicht – mit Uhrzeit. Weitere Einzelheiten stehen unter dem kleinen i neben der Nachricht." },
   { v: "chat", vor: () => { rgChatprofiAuf(); setTimeout(rgChatprofiTempo, 60); }, sel: [rgChatprofiBlase(3)], puls: ["#msg-rg-cp-3 .sprache"],
     live: async (L) => { await L.warte(2500); await L.tipp("#msg-rg-cp-3 .tempo"); rgChatprofiTempoWeiter(); await L.warte(1500); await L.tipp("#msg-rg-cp-3 .tempo"); rgChatprofiTempoWeiter(); },
     t: "⏩ Sprachnachricht schneller hören", x: "Lange Sprachnachrichten kannst du schneller hören: Der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Einmal tippen für 1,5-fach, nochmal für doppelt so schnell. Deine Wahl merkt sich das Handy." },
@@ -3368,9 +3382,113 @@ const RG_CHATPROFI = [
     x: "Chat archivieren räumt ihn aus deiner Liste. Er bleibt dort, auch wenn jemand schreibt, und du kannst ihn jederzeit wieder aktivieren. Bei mir komplett löschen entfernt den Chat nur bei dir – die anderen behalten ihn." },
   { v: "nachrichten", sel: [rgChatprofiKnopf("#v-nachrichten .kom-leiste", "⭐ Gemerkt")], t: "⭐ Alles Gemerkte", x: "Zurück in der Übersicht der Nachrichten: Unter Gemerkt findest du alle Nachrichten, die du dir gemerkt hast. Diese Liste siehst nur du." },
   { v: "nachrichten", mussSel: true, sel: [".uh-archiv-zeile", ".uh-archiv-kopf"], t: "📦 Archivierte Chats", x: "Archivierte Chats stehen oben unter Archiviert. Dort tippst du einen Chat an und holst ihn mit Wieder aktivieren zurück." },
-  { v: "nachrichten", t: "✅ Fertig", x: "Das war der Chat für Fortgeschrittene: antippen für Antworten, Anheften und Merken, der Pfeil für Weiterleiten und Wichtig, die Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf und die drei Punkte für den ganzen Chat. Probier es in Ruhe aus!" },
+  // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: „… schreibt dir gerade“ außerhalb des Chats – nur ein Bild des Hinweises (Antippen öffnet nichts)
+  { v: "nachrichten", vor: () => { if ($("schreibtHinweis")) return; const el = document.createElement("div"); el.id = "schreibtHinweis"; el.className = "schreibt-hinweis"; el.innerHTML = '<span class="punkte3"><i></i><i></i><i></i></span> ✍️ <b>Anne</b> schreibt dir gerade …'; document.body.appendChild(el); },
+    nach: () => $("schreibtHinweis")?.remove(), sel: ["#schreibtHinweis"], mussSel: true, puls: ["#schreibtHinweis"], t: "✍️ Anne schreibt dir gerade",
+    x: "Schreibt dir jemand im Zweier-Chat, während du woanders in der App bist, steht oben kurz: Anne schreibt dir gerade. Oder: diktiert dir gerade eine Nachricht, oder: nimmt gerade eine Sprachnachricht für dich auf. So weißt du, dass gleich etwas kommt. Antippen öffnet den Chat, mit der Nachricht verschwindet der Hinweis. Bei stumm geschalteten Chats bleibt es still." },
+  { v: "nachrichten", t: "✅ Fertig", x: "Das war der Chat für Fortgeschrittene: antippen für Antworten, Anheften und Merken, der Pfeil für Weiterleiten und Wichtig, die Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, die drei Punkte für den ganzen Chat und der Hinweis, wenn dir jemand gerade schreibt. Wie du geheim schreibst, zeigt dir das Video Geheim schreiben. Probier es in Ruhe aus!" },
 ];
 
+
+// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM (Wunsch Hansi „Hilfen neu aufbauen … Video auch mit Verschlüsselung“) ----------
+// Zeigt an einem Beispiel-Zweierchat mit „Anne Beispiel“, wie 🔒 verschlüsselt schreiben, Rückfrage, Schlüssel, Geheimagent und 🔑 Schlüsselbund
+// aussehen – nur auf dem Bildschirm. Es wird nichts verschlüsselt, gesendet oder gespeichert: Die Weiche vor api() beantwortet nur Aufrufe für den
+// Beispiel-Chat, die „verschlüsselten“ Blasen sind Platzhalter (kein echter Schlüssel), Fenster sind Beispielbilder, der Schlüsselbund-Knopf wird
+// nie angetippt. Am Ende (RG.zurueck) kommen api, Chat, Schloss und Schreibfeld in den alten Stand.
+const RG_GH_ID = "rg-geheim-beispiel";
+const rgGeheimZu = () => VN_PRE + "UmVpbiBCZWlzcGllbCBmdWVyIGRhcyBFcmtsYWVyLVZpZGVvIC0ga2VpbiBlY2h0ZXIgR2VoZWltdGV4dC4="; // Platzhalter, lässt sich nicht öffnen
+const rgGeheimAuf2 = () => VN_PRE + "QXVjaCBkYXMgaXN0IG51ciBlaW4gQmVpc3BpZWwgZnVlciBkYXMgVmlkZW8u";
+function rgGeheimDaten() {
+  const vor = (min) => new Date(Date.now() - min * 60000).toISOString(), ich = ICH?.person_id || "ich", ichName = ICH?.name || "Du";
+  const a = { von: "Anne Beispiel", vonId: "rg-gh-anne" }, du = { von: ichName, vonId: ich, eigen: true };
+  const m = (n, wer, min, x = {}) => ({ id: "rg-gh-" + n, ...wer, eigen: !!wer.eigen, zeit: vor(min), text: "", anlagen: [], reaktionen: [], gelesenVon: [], ...x });
+  const nachrichten = [
+    m(1, a, 30, { text: "Ich schicke dir gleich den Code fürs Gartentor – verschlüsselt." }),
+    m(2, a, 28, { text: rgGeheimZu() }),
+    m(3, du, 20, { text: rgGeheimAuf2(), haken: "gelesen" }),
+  ];
+  return { id: RG_GH_ID, betreff: "", gruppe: false, teilnehmer: [{ person_id: ich, name: ichName }, { person_id: a.vonId, name: a.von }],
+    nachrichten, angeheftet: [], selbstloeschen: 0, gelesenBis: nachrichten[2].zeit, tippt: [], entwurf: [], spricht: [] };
+}
+function rgGeheimAuf() {
+  if (RG.ghAn) { if (chatId !== RG_GH_ID || !$("msg-rg-gh-1")) { chatId = RG_GH_ID; chatStand = ""; NA.trennerChat = null; chatLaden(true).then(() => { if (RG.an && RG.ghAn) rgNeuZielen(); }); } return; }
+  RG.ghAn = true;
+  const alt = { api, CHAT, chatId, na: NA.nachrichten, text: $("text").value, empf: { ...EMPF }, stand: chatStand, trenner: NA.trennerChat, vn: VN.an, vnChat: VN.chat };
+  VN.klar.set(rgGeheimAuf2(), "Danke! Ist angekommen – ich habe ihn mir aufgeschrieben."); // nur diese eine Beispiel-Blase zeigt „geöffnet“
+  api = async (a, d = {}, o) => (d && (d.id === RG_GH_ID || d.chat === RG_GH_ID || d.thread === RG_GH_ID || String(d.id || "").startsWith("rg-gh-")) ? (a === "unterhaltung" ? rgGeheimDaten() : {}) : alt.api(a, d, o));
+  RG.zurueck.push(() => {
+    RG.ghAn = false; api = alt.api; $("chatBlatt").classList.add("versteckt"); VN.klar.delete(rgGeheimAuf2());
+    if (chatId === RG_GH_ID) chatId = alt.chatId; CHAT = alt.CHAT; NA.nachrichten = alt.na; chatStand = alt.stand; NA.trennerChat = alt.trenner; NA.trennerVor = null;
+    EMPF.chat = alt.empf.chat; EMPF.letzte = alt.empf.letzte; VN.an = alt.vn; VN.chat = alt.vnChat;
+    const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
+    $("chat").innerHTML = ""; $("text").value = alt.text; $("text").placeholder = VN.an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …"; entwurfMarkeZeigen();
+  });
+  EMPF.chat = RG_GH_ID; EMPF.letzte = "rg-gh-3"; // kein Ankunfts-Effekt beim Zeichnen
+  chatId = RG_GH_ID; chatStand = ""; NA.trennerChat = null; chatLaden(true).then(() => { if (RG.an && RG.ghAn) rgNeuZielen(); });
+}
+function rgGeheimSchloss(an) { // nur das Aussehen des Schlosses (vnUmschalten würde beim Zweierchat das Schlüsselbund-Fenster öffnen)
+  const k = $("vnKnopf"); k?.classList.toggle("an", an); k?.setAttribute("aria-pressed", String(an));
+  const t = $("text"); if (t) t.placeholder = an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …";
+}
+function rgGeheimMenue() { rgGeheimAuf(); chatMenue(); rgFest("chatBlatt", true); }
+const rgGeheimFrageBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🔒 Verschlüsselt senden ist eingeschaltet</h3>
+  <p style="margin:0 0 8px">Das Schloss am Schreibfeld ist an. Soll diese Nachricht wirklich verschlüsselt werden? Dann braucht der Empfänger einen Schlüssel, den du ihm persönlich sagst.</p>
+  <div class="knoepfe"><span class="knopf haupt" data-s="ja">🔒 Ja, mit Schlüssel</span><span class="knopf" data-s="normal">✉️ Normal senden</span></div></div></div>`;
+const rgGeheimSchluesselBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🔒 Schlüssel für diese Nachricht</h3>
+  <p style="margin:0 0 8px">Mindestens ${VN_MIN} Zeichen, z. B. „Kochmütze7“. Der Empfänger braucht denselben Schlüssel – sag ihn ihm persönlich, am Telefon oder per SMS, nicht über die Club-App.</p>
+  <div data-s="feld" style="border:2px solid var(--gruen,#2e6b3a);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:1.1em">Kochmütze7</div>
+  <div class="knoepfe"><span class="knopf haupt" data-s="ok">OK</span><span class="knopf">Abbrechen</span></div></div></div>`;
+const rgGeheimBundBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🔑 Schlüsselbund mit Anne</h3>
+  <p style="margin:0 0 8px">Mit einem Schlüsselbund müsst ihr keinen Schlüssel mehr eintippen: ${VB_ANZAHL} zufällige Schlüssel liegen auf beiden Handys. Beim Senden nimmt die App einen davon, beim Empfang probiert sie alle durch – passt keiner, kommt eine Fehlermeldung. Die Schlüssel gehen per Datei direkt an Anne, nie über den Club-Server.</p>
+  <div style="display:grid;gap:8px"><span class="knopf haupt" data-s="neu">🔑 Anlegen und Anne schicken</span><span class="knopf" data-s="einlesen">📥 Datei von Anne einlesen</span><span class="knopf">Schließen</span></div></div></div>`;
+// 2.543.0 KC-CLUB-VIDEO-GEHEIM-2 (Wunsch Hansi „Wie sieht z. B. Klaus die verschlüsselte, wenn sie ankommt – mit Schlüsselbund oder Einmal-Schlüssel?“):
+// Empfänger-Seite – Mitteilung aufs Handy, Ankunft des Agenten, Schlüssel eingeben (auch falsch), mit Schlüsselbund von selbst offen. Nur Beispielbilder.
+const rgGeheimPushBild = () => `<div class="sim-dialog-hg" style="align-items:flex-start;padding-top:70px"><div class="sim-dialog karte" data-s="push" style="border-radius:18px">
+  <div style="display:flex;gap:10px;align-items:center"><span style="font-size:1.6em">👨‍🍳</span><div><b>Köcheclub Werne · Anne Beispiel</b><div class="hinweis" style="font-size:.85em">jetzt</div></div></div>
+  <p style="margin:8px 0 0">🔒 Verschlüsselte Nachricht – in der Club-App mit dem Schlüssel öffnen</p></div></div>`;
+const rgGeheimEingebenBild = (falsch) => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin-top:0">🔒 Schlüssel eingeben</h3>
+  <p style="margin:0 0 8px">Den Schlüssel hat dir der Absender persönlich, am Telefon oder per SMS gesagt. Nutzt ihr einen Schlüsselbund, fehlt er auf diesem Handy: oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“.</p>
+  <div data-s="feld" style="border:2px solid ${falsch ? "var(--rot,#741521)" : "var(--gruen,#2e6b3a)"};border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:1.1em">${falsch ? "Kochmuetze" : "Kochmütze7"}</div>
+  ${falsch ? '<p data-s="falsch" style="margin:0 0 10px;color:var(--rot,#741521);font-weight:800">❌ Falscher Schlüssel – bitte nochmal versuchen.</p>' : ""}
+  <div class="knoepfe"><span class="knopf haupt" data-s="ok">OK</span><span class="knopf">Abbrechen</span></div></div></div>`;
+const RG_GEHEIM = [
+  { v: "chat", vor: rgGeheimAuf, sel: ["#chatKopf"], t: "🕵️ Geheim schreiben",
+    x: "Manches soll nur der Empfänger lesen – zum Beispiel ein Code fürs Gartentor. Dafür kannst du Nachrichten verschlüsseln. Ich zeige es dir an einem Beispiel-Chat mit Anne. Keine Sorge: Ich verschlüssele, sende und speichere nichts." },
+  { v: "chat", vor: rgGeheimAuf, sel: [".eg-griffe"], puls: ["#egKlapp", "#egTast", "#egTon", "#vnKnopf"], t: "🔒 Die kleine Zeile über dem Schreibfeld",
+    x: "Über dem Schreibfeld steht eine kleine Zeile: der Pfeil klappt den Schreibbereich ein, die Tastatur blendet die Handy-Tastatur ein und aus, der Lautsprecher schaltet die Tippgeräusche an und aus – und ganz rechts das Schloss: verschlüsselt senden." },
+  { v: "chat", vor: () => { rgGeheimAuf(); $("text").value = "Bis Samstag!"; rgGeheimSchloss(true); }, nach: () => { rgGeheimSchloss(false); $("text").value = ""; }, sel: ["#vnKnopf", "#text"], puls: ["#vnKnopf"], t: "🔒 Schloss an",
+    x: "Tippst du auf das Schloss, wird es grün, und im Schreibfeld steht Verschlüsselte Nachricht schreiben. Jetzt schreibst du ganz normal und tippst auf Senden. Beim Wechsel in einen anderen Chat geht das Schloss von selbst wieder aus.",
+    live: async (L) => { await L.tipp("#vnKnopf"); await L.warte(2500); } },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimFrageBild(), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="ja"]', '#rgSim [data-s="normal"]'], t: "❓ Erst die Rückfrage",
+    x: "Weil man das Schloss schnell aus Versehen antippt, fragt die App vor dem Senden nach: Ja, mit Schlüssel – oder Normal senden. Normal senden schaltet das Schloss aus und schickt die Nachricht wie immer. So landet niemand versehentlich bei einer Schlüssel-Frage." },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimSchluesselBild(), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="feld"]'], t: "🔑 Den Schlüssel festlegen",
+    x: "Mit Ja legst du einen Schlüssel fest – mindestens sechs Zeichen, zum Beispiel Kochmütze7. Eins, zwei, drei, vier wäre in Sekunden geknackt. Ganz wichtig: Den Schlüssel sagst du dem Empfänger auf einem anderen Weg – persönlich, am Telefon oder per SMS. Nicht über die Club-App." },
+  { v: "chat", vor: rgGeheimAuf, sel: ['#eingabe [title="Senden"]'], puls: ['#eingabe [title="Senden"]'], t: "🕵️ Der Geheimagent",
+    x: "Beim Senden dreht sich am Senden-Knopf kurz ein goldener Schlüssel wie im Schloss. Dann bringt ein Geheimagent mit Hut, Sonnenbrille und Aktenkoffer die Nachricht weg – egal, welchen Boten du sonst gewählt hast. Nur Express geht vor: Da kommt der Rennwagen.",
+    live: async (L) => { const k = document.querySelector('#eingabe [title="Senden"]'); if (!k) return; vnSchluesselZeigen(k); await L.warte(1300); if (fxAn()) sendeFahrzeug(k.getBoundingClientRect(), "agent"); await L.warte(3200); } },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimPushBild(), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="push"]'], mussSel: true, t: "📲 Beim Empfänger: die Mitteilung",
+    x: "Jetzt die andere Seite – zum Beispiel bei Klaus. Auf seinem Handy erscheint die Mitteilung: Verschlüsselte Nachricht, in der Club-App mit dem Schlüssel öffnen. Vom Inhalt steht da kein Wort – auch nicht in der E-Mail." },
+  { v: "chat", vor: rgGeheimAuf, sel: [() => $("msg-rg-gh-2")], mussSel: true, t: "🕵️ Der Agent liefert ab",
+    x: "Öffnet er den Chat, kommt der Geheimagent von rechts, bleibt bei der Nachricht stehen, der Koffer klickt auf und ein Schlüssel dreht sich. Dann schleicht er weiter.",
+    live: async (L) => { const el = $("msg-rg-gh-2"); if (el && fxAn()) ankunftEffekt(el, "agent").catch(() => {}); await L.warte(4200); } },
+  { v: "chat", vor: rgGeheimAuf, sel: [() => document.querySelector("#msg-rg-gh-2 .vn-zu")], mussSel: true, puls: [() => document.querySelector("#msg-rg-gh-2 .vn-zu")], t: "📩 So kommt sie an",
+    x: "Beim Empfänger steht nur: Verschlüsselte Nachricht – antippen und Schlüssel eingeben. Auch in der Chat-Liste, in der Mitteilung aufs Handy und in der E-Mail steht kein Wort vom Inhalt. Wer den falschen Schlüssel eintippt, bekommt Falscher Schlüssel." },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimEingebenBild(false), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="feld"]'], t: "🔑 Einmal-Schlüssel: eintippen",
+    x: "Hast du einen Schlüssel eingetippt, tippt Klaus auf die Nachricht. Es kommt das Fenster Schlüssel eingeben. Er gibt den Schlüssel ein, den du ihm persönlich, am Telefon oder per SMS gesagt hast – zum Beispiel Kochmütze7 – und tippt auf OK." },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimEingebenBild(true), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="falsch"]'], t: "❌ Falscher Schlüssel",
+    x: "Vertippt er sich – hier fehlt die Sieben und das ü ist falsch –, steht da: Falscher Schlüssel, bitte nochmal versuchen. Er kann es so oft probieren, wie er will. Ohne den richtigen Schlüssel kann niemand die Nachricht lesen – auch der Server nicht." },
+  { v: "chat", vor: rgGeheimAuf, sel: [() => $("msg-rg-gh-3")], mussSel: true, puls: [() => document.querySelector("#msg-rg-gh-3 .vn-auf")], t: "🔓 Geöffnet",
+    x: "Mit dem richtigen Schlüssel erscheint der Text, mit einem offenen Schloss davor. Das Handy merkt sich den Schlüssel für diesen Chat und öffnet weitere Nachrichten damit gleich mit. Verschlüsselt wird auf deinem Handy – niemand dazwischen kann mitlesen, auch nicht der Server." },
+  { v: "chat", vor: rgGeheimMenue, nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: ["#chatVbKnopf"], mussSel: true, puls: ["#chatVbKnopf"], t: "🔑 Bequemer: der Schlüsselbund",
+    x: "Schreibt ihr öfter geheim, geht es bequemer – im Zweier-Chat oben über die drei Punkte: Schlüsselbund mit Anne." },
+  { v: "chat", vor: () => { rgGeheimAuf(); rgSim(rgGeheimBundBild(), "ueber"); }, nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="neu"]', '#rgSim [data-s="einlesen"]'], t: "🔑 Fünf Schlüssel als Datei",
+    x: "Die App legt fünf zufällige Schlüssel an und gibt sie als Datei weiter – am besten per WhatsApp oder Signal, nicht per E-Mail. Anne tippt die Datei an, wählt Teilen und dann die Club-App, oder hier Datei einlesen. Danach geht alles ohne Eintippen: Schloss an, senden – und bei Anne öffnet sich die Nachricht von selbst. Passt kein Schlüssel, kommt eine Fehlermeldung." },
+  { v: "chat", vor: rgGeheimAuf, sel: [() => $("msg-rg-gh-3")], mussSel: true, puls: [() => document.querySelector("#msg-rg-gh-3 .vn-auf")], t: "🔑 Mit Schlüsselbund: öffnet sich von selbst",
+    x: "Habt ihr einen Schlüsselbund, muss Klaus gar nichts tun: Der Agent bringt die Nachricht, die App probiert die Schlüssel durch und zeigt den Text gleich mit dem offenen Schloss. Passt ausnahmsweise keiner – etwa bei einem älteren Schlüsselbund –, sagt die App das, und er kann den Schlüssel eintippen." },
+  { v: "chat", vor: rgGeheimAuf, sel: [".eg-griffe", "#vnKnopf"], t: "⚠️ Gut zu wissen",
+    x: "Nur der Text wird verschlüsselt – Fotos und Dateien nicht, darauf weist die App hin. Ein verschlüsselter Text darf etwa zweitausendachthundert Zeichen lang sein. Und: Wer den Schlüssel vergisst, kann die Nachricht nicht mehr lesen – dann kann niemand mehr helfen." },
+  { v: "chat", vor: rgGeheimAuf, t: "✅ Fertig", x: "Das war's: Schloss antippen, Rückfrage mit Ja beantworten, Schlüssel festlegen und auf anderem Weg weitersagen – oder einmal einen Schlüsselbund anlegen. Der Geheimagent bringt die Nachricht, und nur ihr beide könnt sie lesen." },
+];
 // ---------- 2.348.0 KC-CLUB-VIDEO-GRUPPEN (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
 // 2.348.0 KC-CLUB-VIDEO-GRUPPEN: zeigt das Formular „Neue Gruppe“ mit einem Beispiel (Küchenteam) und einen Beispiel-Gruppenchat – nur auf dem
 // Bildschirm. „Gruppe anlegen“, „Gruppe löschen“ usw. werden NIE angetippt; die Weiche vor api() beantwortet nur Aufrufe für den Beispiel-Chat
@@ -5136,13 +5254,13 @@ const HILFE = [
   { id: "themen_laufband", thema: "club", sym: "🗳️", t: "Themen für die nächste Sitzung im Info-Feld", x: "In den 3 Wochen vor einer Sitzung erinnert dich das Info-Feld oben auf der Startseite an die Themen: <b>„3 Themen für die Sitzung am …“</b>. Mit <b>„👍 Abstimmen“</b> unterstützt du die Themen, die dir wichtig sind, mit <b>„＋ Thema“</b> reichst du selbst eins ein – die Sitzung ist dabei schon ausgewählt. Hast du alle unterstützt, wird die Meldung ruhiger (weiß statt gelb).", zeig: () => zeige("vorschlaege"), seit: "2.463.0" },
   { id: "termin_link_prospekt", thema: "termine", sym: "🎪", t: "Termin mit Webseite, Prospekt und Laufband", x: "Beim Anlegen oder Ändern eines Clubtermins (z. B. <b>Adventsmarkt der Freilichtbühne</b>) gibt es jetzt: <b>🌐 Link zur Webseite</b> des Veranstalters, <b>📎 Anlage</b> für den Prospekt (Foto oder PDF) und <b>„📣 Im Info-Laufband ankündigen“</b> – dann erscheint der Termin oben auf der Startseite im Info-Feld, ab 3 Wochen vorher, mit Knopf <b>„🌐 Webseite“</b>. Antippen öffnet den Termin mit Webseite und Prospekt.", seit: "2.461.0" },
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
-  { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – am 🏎️-Knopf steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
+  { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Über dem Schreibfeld <b>🏎️ Express</b> anhaken, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – neben Express steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Express und <b>❗ Wichtig</b> kannst du auch zusammen anhaken. Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
-  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen.", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
+  { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen. Verschlüsselte Nachrichten (🔒, mit Schlüssel oder Schlüsselbund) bringt immer der <b>🕵️ Geheimagent</b> mit Aktenkoffer – vorher dreht sich am Senden-Knopf kurz ein 🔑 Schlüssel. Nur 🏎️ Express geht vor (Rennwagen).", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie; antippen zum Ändern oder Löschen. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN (Wunsch Hansi „Videos, Hilfetexte, Suche und Twinkey auf die neuen Funktionen umstellen und gut erklären“)
-  { id: "express_zaehler", thema: "nachrichten", sym: "🏎️", t: "Express: höchstens 5 am Tag – am Knopf steht „2/5“", x: "Express ist für wirklich Eiliges. Jedes Mitglied kann <b>5 Express-Sendungen pro Tag</b> verschicken (gezählt werden die letzten 24 Stunden). Tippst du auf <b>🏎️</b>, steht am Knopf, wie viele du heute schon hattest – z. B. <b>2/5</b>. Nach dem Senden steht in der Meldung „heute 3/5“. Sind alle 5 verbraucht, geht Express nicht an – die App sagt dir, <b>ab wann</b> es wieder geht. Dann einfach normal senden.", seit: "2.391.0" },
+  { id: "express_zaehler", thema: "nachrichten", sym: "🏎️", t: "Express: höchstens 5 am Tag – daneben steht „2/5“", x: "Express ist für wirklich Eiliges. Jedes Mitglied kann <b>5 Express-Sendungen pro Tag</b> verschicken (gezählt werden die letzten 24 Stunden). Hakst du <b>🏎️ Express</b> an, steht daneben, wie viele du heute schon hattest – z. B. <b>2/5</b>. Nach dem Senden steht in der Meldung „heute 3/5“. Sind alle 5 verbraucht, geht Express nicht an – die App sagt dir, <b>ab wann</b> es wieder geht. Dann einfach normal senden.", seit: "2.391.0" },
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
   { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
@@ -5153,8 +5271,8 @@ const HILFE = [
   { id: "neue_linie", thema: "nachrichten", sym: "⬇️", t: "Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt eine Linie <b>„Neue Nachrichten“</b>, ab wo es für dich Neues gibt. Hast du weit nach oben geblättert, bringt dich der Knopf <b>⬇️</b> mit einem Tipp wieder ans Ende.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "entwurf", thema: "nachrichten", sym: "✏️", t: "Angefangener Text geht nicht verloren", x: "Mitten im Schreiben klingelt es an der Tür? Kein Problem – dein halb geschriebener Text bleibt in diesem Chat auf deinem Handy liegen. Der Hinweis <b>„✏️ Entwurf – noch nicht gesendet“</b> erinnert dich später daran.", seit: "2.23.1" },
   { id: "ohne_netz", thema: "nachrichten", sym: "📵", t: "Schreiben, auch wenn das Netz weg ist", x: "Im Keller oder unterwegs kein Empfang? Schreib ruhig trotzdem. Die Nachricht zeigt <b>„⏳ wartet auf Netz“</b> und geht von ganz allein raus, sobald wieder Verbindung da ist.", seit: "2.23.1" },
-  { id: "haken", thema: "nachrichten", sym: "✔️", t: "Was die Haken an deinen Nachrichten bedeuten", x: "Wie bei WhatsApp: <b>graue Haken</b> heißen gesendet bzw. angekommen, <b>blaue Haken</b> heißen gelesen. Willst du es genau wissen, tipp die <b>Haken</b> an deiner Nachricht an: Dann siehst du „Gelesen von“, „Zugestellt an“ und „Noch nicht zugestellt“ – mit Uhrzeit.", seit: "2.23.1" },
-  { id: "gelesen_von", thema: "nachrichten", sym: "☑️", t: "Wer hat meine Nachricht bekommen und gelesen?", x: "Tippe an deiner eigenen Nachricht auf die <b>Haken</b> (oder Nachricht antippen → <b>ℹ️ Details</b>). Wie bei WhatsApp siehst du: <b>blaue ✓✓ Gelesen von</b> – wer sie gelesen hat und um wie viel Uhr, <b>graue ✓✓ Zugestellt an</b> – bei wem sie schon in der App angekommen ist, und <b>✓ Noch nicht zugestellt</b>. Bei älteren Nachrichten steht „Uhrzeit unbekannt“. Ampel, Push und E-Mail findest du darunter unter „Mehr Einzelheiten“.", seit: "2.447.0" },
+  { id: "haken", thema: "nachrichten", sym: "✔️", t: "Was die Haken an deinen Nachrichten bedeuten", x: "Wie bei WhatsApp: <b>ein grauer Haken</b> heißt gesendet, <b>zwei graue Haken</b> heißen auf dem Handy angekommen – sie erscheinen, sobald die Mitteilung auf dem anderen Handy angezeigt wird oder seine App die Nachricht geladen hat –, <b>blaue Haken</b> heißen gelesen. Willst du es genau wissen, tipp die <b>Haken</b> an deiner Nachricht an: Dann siehst du „Gelesen von“, „Zugestellt an“ und „Noch nicht zugestellt“ – mit Uhrzeit.", seit: "2.23.1" },
+  { id: "gelesen_von", thema: "nachrichten", sym: "☑️", t: "Wer hat meine Nachricht bekommen und gelesen?", x: "Tippe an deiner eigenen Nachricht auf die <b>Haken</b> (oder Nachricht antippen → <b>ℹ️ Details</b>). Wie bei WhatsApp siehst du: <b>blaue ✓✓ Gelesen von</b> – wer sie gelesen hat und um wie viel Uhr, <b>graue ✓✓ Zugestellt an</b> – bei wem sie schon auf dem Handy angekommen ist (Mitteilung angezeigt oder in der App geladen), und <b>✓ Noch nicht zugestellt</b>. Bei älteren Nachrichten steht „Uhrzeit unbekannt“. Ampel, Push und E-Mail findest du darunter unter „Mehr Einzelheiten“.", seit: "2.447.0" },
   { id: "anlage_mitschicken", thema: "nachrichten", sym: "📎", t: "Anlage bei Vorschlag, Spende, Terminfindung und Terminanfrage", x: "Beim Anlegen gibt es jetzt das Feld <b>📎 Anlage</b>: <b>🖼️ Foto</b> aus der Galerie, <b>📷 Kamera</b> oder <b>📄 PDF / Datei</b> aus dem Dateimanager – z. B. eine Skizze zum Vorschlag oder den Flyer des Spendenempfängers. Höchstens 5 Anlagen; mit ✕ wieder entfernen. Die anderen sehen sie im Eintrag und öffnen sie mit einem Tipp. Sehen kann sie nur, wer den Eintrag auch sehen darf.", seit: "2.448.0" },
   { id: "bild_zuletzt", thema: "privat", sym: "🕘", t: "Früheres Bild zurückholen", x: "Unter <b>Mein Bild</b> stehen oben bei <b>🕘 Zuletzt benutzt</b> deine letzten 3 Bilder – Foto, Selfie oder Koch-Figur. Antippen und oben <b>✅ Übernehmen</b> – schon ist das alte Bild wieder da. Die App merkt sich das automatisch bei jedem Wechsel.", seit: "2.449.0" },
   { id: "foto_muetze", thema: "privat", sym: "🎅", t: "Nikolausmütze oder Hut aufs eigene Foto", x: "Bei <b>Mein Bild → 🤳 Selfie, 🖼️ Galerie oder 📁 Datei</b> kannst du vor dem Übernehmen eine <b>Mütze aufsetzen</b> – z. B. Nikolausmütze, Kochmütze, Jägerhut, Cowboyhut, Zylinder, Krone – und mit dem Finger an die richtige Stelle schieben, größer/kleiner machen und drehen. Dazu ein <b>Rahmen</b> (Weinrot, Gold, Weihnacht, Bunt). Ohne Mütze bleibt das Foto, wie es ist. Dein voriges Bild findest du jederzeit unter 🕘 Zuletzt benutzt.", seit: "2.451.0" },
@@ -5195,14 +5313,23 @@ const HILFE = [
   { id: "pinnwand_wichtig", thema: "club", sym: "❗", t: "Einen eigenen Zettel hervorheben", x: "Ist dir ein Zettel besonders wichtig, kannst du ihn nachträglich mit <b>„❗ wichtig machen“</b> markieren – dann sieht ihn jeder beim Öffnen der App. Genauso leicht nimmst du die Markierung wieder weg.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
-  { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Kein Umweg über das Fotoalbum nötig.", seit: "2.23.1" },
-  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen, Nachricht schreiben, senden – dann legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“). Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server oder der Admin. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt.", seit: "2.517.0" },
-  { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b>; der Admin bekommt Bescheid und entscheidet, wohin damit – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart.", seit: "2.511.0" },
+  { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
+  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen (es wird grün), Nachricht schreiben, senden. Die App fragt erst: <b>„🔒 Ja, mit Schlüssel“</b> oder <b>„✉️ Normal senden“</b> – „Normal senden“ schaltet das Schloss aus und schickt die Nachricht wie immer. Mit „Ja“ legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“); ein 🔑 dreht sich, und der <b>🕵️ Geheimagent</b> bringt die Nachricht. Beim Wechsel in einen anderen Chat geht das Schloss von selbst aus. Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt. Alles im Video <b>„🕵️ Geheim schreiben“</b>.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.517.0" },
+  { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b> – bis 10 Dateien, jeder Dateityp (Fotos, PDF, Word, Excel, Videos …). Du siehst „Im Ablagekorb abgelegt“; Hansi kümmert sich darum und legt es ab – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart. Gibt es die Datei schon in der Club-App, sagt dir die App: <b>„… gibt es schon in der Club-App“</b>. Kommt nichts an, nennt die App den Grund und was hilft (z. B. App neu installieren, bis dahin im Chat über 📎).", seit: "2.511.0" },
   { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt. Seit 2.512.0: bei mehreren Dateien je Datei ein <b>Häkchen</b> – nur die ausgewählten <b>ins Fotoalbum</b> oder <b>löschen</b>; <b>⚠️ gibt es schon</b> zeigt Dubletten (gleiche Datei in Fotoalbum, Archiv, Chat oder Ablagekorb, im Album auch gleiche Aufnahme), „⚠️ Dubletten“ wählt sie mit einem Tipp aus.", nur: () => !!ICH?.admin, seit: "2.511.0" },
+  // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4 (Wunsch Hansi „Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion, Sprachsuche, Video auch mit Verschlüsselung“)
+  { id: "schluesselbund", thema: "nachrichten", sym: "🔑", t: "Schlüsselbund: verschlüsselt schreiben ohne Eintippen", x: "Schreibst du jemandem öfter geheim, geht es bequemer mit einem <b>Schlüsselbund</b>: im Zweier-Chat oben <b>⋮ → „🔑 Schlüsselbund mit …“</b> → <b>„🔑 Anlegen und … schicken“</b>. Die App legt 5 zufällige Schlüssel an und gibt sie als <b>Datei</b> weiter – am besten per WhatsApp oder Signal, nicht per E-Mail. Der Partner tippt die Datei an → <b>Teilen → Club-App</b> (oder im Fenster „📥 Datei einlesen“); sie landet nicht im Ablagekorb und geht nie über den Club-Server. Danach: 🔒 an und senden – kein Eintippen, beim Partner öffnet sich die Nachricht von selbst. Passt kein Schlüssel, kommt eine Fehlermeldung. Neues Handy? Im Fenster <b>„💾 Sicherung speichern“</b>. Das Fenster schließt du mit ✕.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.518.0" },
+  { id: "versand_leiste", thema: "nachrichten", sym: "📝", t: "Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld", x: "Sobald du etwas ins Schreibfeld tippst (oder etwas anhängst), erscheint darüber die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. <b>Normal</b> ist schon angehakt – eine normale Nachricht braucht nur ➤. Hakst du <b>❗ Wichtig</b> oder <b>🏎️ Express</b> an, geht der Haken bei Normal weg; beides zusammen geht auch. Neben Express steht, wie viele du heute schon hattest (z. B. 2/5). Nach dem Senden und beim Chatwechsel steht wieder Normal. Soll die Leiste immer zu sehen sein: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", zeig: () => einstiegHin("benachrichtigung", "setWichtigFrage"), seit: "2.524.0" },
+  { id: "schreibt_hinweis", thema: "nachrichten", sym: "✍️", t: "„… schreibt dir gerade“ – auch wenn der Chat zu ist", x: "Schreibt dir jemand im <b>Zweier-Chat</b>, während du woanders in der App bist, steht oben kurz <b>„✍️ Anne schreibt dir gerade …“</b> – oder <b>„🗣️ … diktiert dir gerade eine Nachricht …“</b> bzw. <b>„🎤 … nimmt gerade eine Sprachnachricht für dich auf …“</b>. So weißt du: Gleich kommt etwas. Antippen öffnet den Chat; ist die Nachricht da, verschwindet der Hinweis. Im offenen Chat steht es wie gewohnt über dem Schreibfeld – der ✏️ Stift schreibt dabei mit. Nicht in Gruppen und nicht bei stumm geschalteten Chats; wer seine Online-Anzeige ausgeschaltet hat, meldet kein Schreiben.", seit: "2.529.0" },
+  { id: "druck_pdf", thema: "club", sym: "📄", t: "Aus jeder Druckvorschau ein PDF", x: "Überall, wo die App etwas zum Drucken zeigt (Termine, Protokoll, Erstattung, Wunschbogen …), gibt es neben <b>🖨️ Drucken</b> den Knopf <b>📄 PDF speichern / teilen</b>. Die App baut das PDF selbst auf dem Handy – du kannst es z. B. per WhatsApp oder Mail weiterschicken oder speichern. Nichts geht dafür an fremde Dienste.", seit: "2.526.0" },
+  // 2.534.0 KC-CLUB-EINST-WEGWEISER
+  { id: "einst_wegweiser", thema: "start", sym: "🧭", t: "Alle Einstellungen erklärt – wie im Explorer", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> stehen alle Einstellungen deiner App wie Ordner im Windows-Explorer: <b>▸</b> klappt einen Bereich auf (z. B. 🔔 Benachrichtigungen), rechts steht, wie es gerade eingestellt ist. <b>Antippen</b> erklärt, was die Einstellung bewirkt – mit <b>👉 Hinbringen</b> (direkt zum Schalter), <b>📖 Ganze Hilfe</b> und <b>🎬 Video</b>. Oben suchst du nach einem Wort (auch mit 🎤), mit <b>🖨️ Als Schriftstück</b> druckst du alles oder speicherst es als PDF. Umgestellt wird dort nichts.", zeig: () => ewStart(), seit: "2.534.0" },
+  { id: "meldung_oben", thema: "technik", sym: "💬", t: "Die Meldung oben blinkt zweimal", x: "Kurze Meldungen der App (z. B. „Gespeichert“) erscheinen oben <b>weiß auf fast Schwarz mit goldenem Rand</b> und blinken beim Erscheinen zweimal kurz auf, damit du sie nicht übersiehst. <b>Fehler</b> stehen weiß auf Rot. Sie verschwinden von selbst.", seit: "2.523.0" },
   { id: "hilfe_anbieten", thema: "club", sym: "🤲", t: "Du kannst etwas besonders gut?", x: "Unter 🤝 Helfen &amp; Leihen → <b>„＋ Neu“</b> → <b>„🤲 Ich biete Hilfe an“</b> machst du ein Angebot, zum Beispiel beim Einrichten der App. Es erscheint als Kachel für alle.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "hilfe_veroeffentlichen", thema: "club", sym: "📣", t: "Hilfe-Aufruf oder Angebot veröffentlichen", x: "Beim Einstellen fragt die App: <b>„📣 Wie möchtest du es veröffentlichen?“</b> – <b>📌 Pinnwand</b> (grüner Aushang, antippbar), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> an alle Mitglieder. Mehrere gehen, die Wahl merkt sich dein Handy. Nichts angehakt: nur in Helfen &amp; Leihen sichtbar. Bei einem fremden Angebot schreibt <b>„💬 Nachricht“</b> gleich den Betreff „Dein Angebot … vom …“ für dich.", zeig: () => hlStart("helfen"), seit: "2.23.44" },
   { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
+  { id: "vorschlag_spaeter", thema: "club", sym: "📅", t: "Vorschlag für eine spätere Sitzung", x: "Steht die übernächste Sitzung noch nicht im Kalender? Beim Vorschlag unter „Für welchen Termin?“ einfach <b>„📅 Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung angelegt ist, ordnet die App den Vorschlag ihr automatisch zu – bis dahin steht „(Datum folgt)“ dabei.", seit: "2.527.0" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
   { id: "spiel_schach", thema: "club", sym: "♟️", t: "Schach: schieben, Rochade, Twinkey", x: "Figuren einfach mit dem Finger <b>schieben</b> – oder antippen und dann das Zielfeld. <b>Rochade:</b> den König auf den Turm schieben. Geht sie nicht, sagt dir Twinkey in der Sprechblase, warum (z. B. „Im Schach darfst du nicht rochieren“). Gegen den Computer spielst du gegen <b>🧑‍🍳 Twinkey</b>: Er macht Sprüche, und mit <b>💡 Tipp</b> verrät er dir einen guten Zug. Ob gesprochen wird, stellst du mit einem Knopf ein: <b>🔇 Stumm</b> → <b>🗣️ Nur Twinkey</b> (nur seine Sprüche und Tipps) → <b>🔊 Twinkey + Züge</b> (auch jeder Zug). <b>🔔 Töne</b> schaltet das leise Klacken beim Ziehen. Mit <b>♟️ Figuren</b> wechselst du zwischen Klassisch (Standard), Plastisch und der Küchenbrigade. Twinkey spricht mit der Männerstimme (⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → „👨 Männerstimme“). Während einer Partie ist oben alles ausgeblendet, damit das Brett groß ist – mit <b>⚙️ Einstellungen</b> holst du es zurück. <b>📼 Meine Partien:</b> Jede Partie wird aufgezeichnet – mit <b>▶ Nachspielen</b> siehst du sie Zug für Zug noch einmal an (⏮ ◀ ▶ ⏭ oder ▶️ Abspielen). Bei Partien gegen Mitglieder geht das auch über <b>📼 Nachspielen</b>.", zeig: () => spStart("pc", "schach"), seit: "2.118.0" },
@@ -5240,6 +5367,8 @@ const HILFE = [
   { id: "weltraum", thema: "darstellung", sym: "🚀", t: "Thema Weltraum", x: "Im Thema <b>🚀 Weltraum</b> wird der Kopf der Startseite zum Nachthimmel: Sterne funkeln, ein <b>Ringplanet</b> schwebt herein, oben steht der <b>Mond</b>, ab und zu fällt eine <b>Sternschnuppe</b>. Ein <b>Astronaut</b> schwebt herein und winkt, eine <b>Rakete</b> startet mit Feuerschweif. Dann schreibt der Astronaut <b>deinen Vornamen in Sternenschrift</b>. Zum Schluss holt ihn ein <b>UFO</b> mit dem Lichtstrahl ab – dann beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚀 Weltraum.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.444.0" },
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
+  { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
+  { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
   { id: "buero_neue_nachricht", thema: "club", sym: "💬", t: "Neue Nachricht, während du im Büro bist", x: "Kommt eine Nachricht, während du im Büro arbeitest, erscheint oben ein grüner Hinweis <b>„💬 Neue Nachricht von …“</b>. Ein Tipp darauf öffnet die Unterhaltung genau an der richtigen Stelle; mit Zurück bist du wieder im Büro.", nur: () => !!ICH?.buero, zeig: () => buStart(), seit: "2.23.8" },
@@ -5274,6 +5403,8 @@ const HILFE = [
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
   { id: "sardinendose", thema: "start", sym: "🥫", t: "Kopf aufrollen wie eine Sardinenbüchse", x: "<b>Lange aufs Eselsohr</b> unten rechts am Kopf drücken – dann rollt sich der Kopf wie der Deckel einer Sardinenbüchse von rechts unten nach links oben auf, und darunter liegt die <b>Rückseite</b> mit Bühne, Diashow, Tafel, Uhr … – genau wie nach dem Doppeltipp. Zurück: doppelt aufs Eselsohr hinten tippen – oder <b>lange festhalten</b>, dann rollt sich der Deckel wieder zu.", seit: "2.488.0" },
   // 2.300.0 KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi „Hilfetexte anpassen“): je ein Text für jeden Reiter der Rückseite
+  { id: "foto_diashow", thema: "start", sym: "▶️", t: "Diashow aus dem Fotoalbum", x: "Im 📷 Fotoalbum oben auf <b>▶️ Diashow</b> tippen: oben <b>🎵 Mit Musik</b> an- oder ausschalten, dann das Album antippen (oder „Alle Fotos“) – die Diashow läuft sofort mit dem Club-Song. Foto antippen blendet die Leiste aus.", seit: "2.526.0" },
+  { id: "erstattung_pdf", thema: "club", sym: "📄", t: "Erstattungsantrag als PDF", x: "Nach dem Einreichen fragt die App, ob du den Antrag auf dem <b>Club-Briefbogen</b> sehen möchtest – mit Kochmütze, allen Positionen, Summe und Feldern für deine Unterschrift, den Kassenwart und das Leitungsteam. In der Vorschau: <b>📄 PDF speichern / teilen</b> oder <b>🖨️ Drucken</b>. Kassenwart und Leitungsteam finden denselben Knopf im Eingang beim Antrag. Den PDF-Knopf gibt es jetzt in jeder Druckvorschau.", seit: "2.526.0" },
   { id: "es_dia", thema: "start", sym: "🖼️", t: "Rückseite: Diashow", x: "Die <b>🖼️ Diashow</b> zeigt die Fotos aus dem 📷 Fotoalbum, sanft überblendet. Unten: Album wählen, ◀ ▶ blättern, ⏸ anhalten, <b>🎵 Club-Song dazu</b> (🔇 = ohne Musik, wird gemerkt), ⛶ Vollbild. <b>Aufs Foto tippen</b> blendet Leiste und Text aus (nochmal tippen holt sie zurück). Querformat-Fotos stehen auf einem weichen Hintergrund statt schwarzer Balken.", zeig: () => esOeffnen("dia"), seit: "2.300.0" },
   { id: "es_tafel", thema: "start", sym: "🖍️", t: "Rückseite: Tafel & Flipchart", x: "Zum Skizzieren mit dem Finger. <b>🖍️ Tafel</b>: Kreide in sieben Farben, drei Dicken, 🧽 Schwamm, 🧹 alles abwischen, ↶ letzten Strich zurück. <b>📋 Flipchart</b>: Marker, Radierer, <b>„⤴ Umblättern“</b> klappt das volle Blatt nach hinten, ⤵ holt das vorige zurück, ✂️ reißt ein Blatt ab; ein Knopf schaltet das Papier <b>blanko → kariert → liniert</b>. Mit <b>„📤 Sichern“</b> kommt die Skizze ins 🗄️ Archiv oder als Nachricht zu jemandem.", zeig: () => esOeffnen("flip"), seit: "2.300.0" },
   { id: "es_uhr", thema: "start", sym: "🕰️", t: "Rückseite: große Uhr", x: "Die <b>🕰️ große Uhr</b> gibt es in vier Stilen: <b>🟩 Digital</b> (grün), <b>🔢 Fallblatt</b> mit Datum, <b>🚉 Bahnhofsuhr</b> und <b>🔠 Groß &amp; klar</b>. Den Stil unten antippen – die App merkt ihn sich.", zeig: () => esOeffnen("uhr"), seit: "2.300.0" },
@@ -5526,6 +5657,10 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
     [/^erstattung$|^(geld|kosten) (zurück|erstatten)$|^fahrtkosten$/, "erstattung"], [/^helfen( und leihen)?$|^hilfe suchen$/, "helfen"], [/^(die )?börse$|^flohmarkt$/, "boerse"],
     [/^(die )?protokolle$/, "protokolle"], [/^(die )?vorschläge$/, "vorschlaege"], [/^einstellungen$/, "einstellungen"], [/^(mein )?dienst(e|plan)?$/, "dienste"], [/^(alle )?nachrichten$|^(meine )?chats$/, "nachrichten"]])
     if (re.test(t)) return { art: "ziel", ziel };
+  if (/^(alle )?einstellungen erkl(ärt|ären)|^erklär(e|ung)? (mir )?(die |alle )?einstellungen|^was bewirken die einstellungen/.test(t)) return { art: "wegweiser" }; // 2.534.0 (eigene Art – die Server-Liste der Ziele bleibt gleich)
+  // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: neue Möglichkeiten per Sprache → Lupe mit dem passenden Treffer
+  for (const [re, q] of [[/verschlüssel|geheime? nachricht|geheim schreiben/, "verschlüsselt"], [/schlüssel ?bund/, "schlüsselbund"], [/^(eine |die )?dia ?show( starten| zeigen| ansehen)?$/, "diashow fotoalbum"],
+    [/ablage ?korb/, "ablagekorb"], [/versand ?leiste/, "versand leiste"]]) if (re.test(t)) return { art: "suche", q };
   let q; if ((q = t.match(/^(?:such(?:e)?|finde?|wo ist)(?: nach)? (.+)$/))) return { art: "suche", q: q[1] };
   return null;
 }
@@ -6009,6 +6144,7 @@ const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.
 async function sbAusfuehren(b) {
   if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
   if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
+  if (b.art === "wegweiser") return ewStart(); // 2.534.0 KC-CLUB-EINST-WEGWEISER: nur lesen, darum ohne Rückfrage
   if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (z.nur && !z.nur()) return melde("Das ist für dich nicht freigeschaltet.", true); if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
   if (b.art === "einst") { const e = SB_EINST.find((x) => x.k === b.k); if (!e) return; melde(`⚙️ Einstellungen → ${e.t}`); return einstiegHin(e.klappe, e.id); } // 2.151.0: genau zum Schalter
@@ -7635,6 +7771,9 @@ function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz
 function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
   RT.signale++;
+  if (s.art === "tippt" || s.art === "spricht" || s.art === "diktiert") tippHinweisSignal(s); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
+  if (s.art === "spricht" || s.art === "diktiert") return; // im offenen Chat lädt schon das Signal „tippt“
+  if (s.art === "chat" && TH.thread === s.thread) tippHinweisWeg(); // die Nachricht ist da
   // KC-CLUB-RT-SPARBREMSE + weitere Bereiche (2.230.0): Alarm sofort (ohne Pause), Gelesen-Haken, Online, Pinnwand, Termine, Abstimmungen
   if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } return; }
@@ -8011,6 +8150,32 @@ async function chatNachsehen() {
   }
   return chatLaden(false);
 }
+// ---------- 2.529.0 KC-CLUB-SCHREIBT-HINWEIS (Wunsch Hansi „wenn Klaus oder andere in der App sind, aber nicht das Nachrichten-Fenster auf haben,
+// und ich schreibe denen gerade: ‚Hansi schreibt gerade an dich‘ oder ‚Hansi diktiert gerade eine Nachricht‘ – damit der andere weiß, dass noch
+// eine Nachricht kommt“): Das Signal „tippt“/„diktiert“/„spricht“ der direkten Leitung kommt ohnehin an. Ist der Einzelchat gerade NICHT offen,
+// erscheint oben kurz ein Hinweis (Antippen öffnet den Chat); er verschwindet, sobald die Nachricht da ist, oder nach TH_DAUER_MS ohne neues Signal.
+// Nur Einzelchats (in Gruppen wäre es zu unruhig), nicht bei stumm geschalteten Chats. Wer die Online-Anzeige aus hat, meldet ohnehin kein Tippen.
+const TH_DAUER_MS = 8000, TH = { thread: null, uhr: 0, warte: 0, art: new Map(), listeGeholt: 0 };
+const TH_TEXT = { tippt: ["✍️", "schreibt dir gerade …"], diktiert: ["🗣️", "diktiert dir gerade eine Nachricht …"], spricht: ["🎤", "nimmt gerade eine Sprachnachricht für dich auf …"] };
+function tippHinweisSignal(s) {
+  if (!s.thread || document.hidden || (s.thread === chatId && aktuelleAnsicht === "chat")) return; // im offenen Chat zeigt es die Zeile über dem Schreibfeld
+  if (typeof stummAn === "function" && stummAn(s.thread)) return;
+  const jetzt = Date.now(), alt = TH.art.get(s.thread);
+  if (!(s.art === "tippt" && alt && alt.art !== "tippt" && jetzt - alt.t < 4000)) TH.art.set(s.thread, { art: s.art, t: jetzt }); else alt.t = jetzt; // „diktiert“/„spricht“ kommt mit „tippt“
+  clearTimeout(TH.warte); TH.warte = setTimeout(() => tippHinweisZeigen(s.thread).catch(() => {}), s.art === "tippt" ? 400 : 0);
+}
+async function tippHinweisZeigen(thread) {
+  let u = UH.liste.find((x) => x.id === thread);
+  if (!u && Date.now() - TH.listeGeholt > 300000) { TH.listeGeholt = Date.now(); try { UH.liste = (await api("unterhaltungen", {})).unterhaltungen || UH.liste; } catch {} u = UH.liste.find((x) => x.id === thread); }
+  if (!u || u.gruppe || (u.teilnehmer || []).length !== 1 || (thread === chatId && aktuelleAnsicht === "chat") || document.hidden) return;
+  const [sym, was] = TH_TEXT[TH.art.get(thread)?.art] || TH_TEXT.tippt, name = String(u.teilnehmer[0]).split(" ")[0];
+  let el = $("schreibtHinweis");
+  if (!el) { el = document.createElement("button"); el.type = "button"; el.id = "schreibtHinweis"; el.className = "schreibt-hinweis"; document.body.appendChild(el); }
+  el.innerHTML = `<span class="punkte3"><i></i><i></i><i></i></span> ${sym} <b>${esc(name)}</b> ${esc(was)}`;
+  el.onclick = () => { tippHinweisWeg(); chatOeffnen(thread); };
+  TH.thread = thread; clearTimeout(TH.uhr); TH.uhr = setTimeout(tippHinweisWeg, TH_DAUER_MS);
+}
+function tippHinweisWeg() { clearTimeout(TH.uhr); clearTimeout(TH.warte); TH.thread = null; $("schreibtHinweis")?.remove(); }
 // KC-CLUB-TIPPT (0.54.0): beim Tippen höchstens alle 3 s „ich schreibe“ melden, Feld leer → sofort aus.
 // Wer die Online-Anzeige ausgeschaltet hat (Privatsphäre), meldet auch kein „schreibt …“.
 // KC-CLUB-LIVETIPPEN (0.56.0): wer es selbst einschaltet, schickt den Entwurf mit (höchstens 1× je Sekunde, letzter Stand kommt nach)
@@ -8020,8 +8185,9 @@ let TIPP = { zuletzt: 0, id: null, nach: null };
 function tippenMelden() {
   if (!chatId || !ONL.zeigen) return;
   const text = $("text").value;
-  if (!text.trim()) return tippenAus();
-  const live = liveTippen(), abstand = live ? 1000 : 3000;
+  const diktiert = typeof DT !== "undefined" && DT.aktiv && DT.ziel === "text"; // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: beim Diktieren „diktiert …“ statt „schreibt …“
+  if (!text.trim() && !diktiert) return tippenAus();
+  const live = liveTippen() && !diktiert, abstand = live ? 1000 : 3000;
   clearTimeout(TIPP.nach);
   if (TIPP.id === chatId && Date.now() - TIPP.zuletzt < abstand) { if (live) TIPP.nach = setTimeout(tippenMelden, abstand); return; }
   // KC-CLUB-TEMPO (2.115.0, Tempo-Log 08.10.: bei langsamem Netz 6 „tippen“ gleichzeitig, je 2–8 s – danach waren Chat und Senden
@@ -8029,7 +8195,7 @@ function tippenMelden() {
   if (TIPP_UNTERWEGS) { TIPP_NOCHMAL = true; return; }
   TIPP = { zuletzt: Date.now(), id: chatId, nach: null }; CHAT_AKTIV = Date.now(); // KC-CLUB-SPARTAKT
   TIPP_UNTERWEGS = true;
-  api("tippen", { id: chatId, ...(live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {})
+  api("tippen", { id: chatId, ...(diktiert ? { diktat: true } : live ? { text: [...text].slice(-LIVE_TIPPEN_ZEICHEN).join("") } : {}) }).catch(() => {})
     .finally(() => { TIPP_UNTERWEGS = false; if (TIPP_NOCHMAL) { TIPP_NOCHMAL = false; if (live) tippenMelden(); } });
 }
 let TIPP_UNTERWEGS = false, TIPP_NOCHMAL = false;
@@ -8077,7 +8243,7 @@ function gruppenFarbe(name) {
   const [hell, dunkel] = GRUPPEN_FARBEN[i % GRUPPEN_FARBEN.length]; return `--pf:${hell};--pfd:${dunkel}`;
 }
 // KC-CLUB-ENTWURF-ANZEIGE (1.21.0, Wunsch Hansi): steht Text im Feld, der noch nicht gesendet ist → „✏️ Entwurf“
-function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); $("textLeerenKnopf")?.classList.toggle("versteckt", !t?.value); sprungHinweisZeigen(); }
+function entwurfMarkeZeigen() { const t = $("text"), m = $("entwurfMarke"); if (t && m) m.classList.toggle("versteckt", !t.value.trim()); $("textLeerenKnopf")?.classList.toggle("versteckt", !t?.value); sprungHinweisZeigen(); versandZeigen(); } // 2.524.0 KC-CLUB-VERSANDART
 // KC-CLUB-EINGABE-LEEREN (2.148.0, Wunsch Hansi): rotes ✕ im Schreibfeld – löscht nur den noch nicht gesendeten Text (und dessen Entwurf), nichts im Chat
 function textLeeren() {
   const t = $("text"); if (!t) return;
@@ -8179,12 +8345,13 @@ function tippGeraeusche(entwurf) {
   for (let i = 0; i < n; i++) tippAnschlag(w, i * abstand + Math.random() * abstand * .4);
   if (w === "schreibmaschine" && (TT.zeile += n) >= 40) { TT.zeile = 0; tippGlocke(n * abstand + .1); }
 }
-function tipptZeigen(namen, entwurf = [], sprechen = []) {
+function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   const e = $("tipptAnzeige"); if (!e) return;
   tippGeraeusche(entwurf);
-  if (!namen.length && !sprechen.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
-  // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle
-  const sp = sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "";
+  if (!namen.length && !sprechen.length && !diktiert.length) { e.classList.add("versteckt"); e.innerHTML = ""; e.dataset.stand = ""; return; }
+  // KC-CLUB-SPRICHT (1.11.0): „nimmt eine Sprachnachricht auf“ mit Oszilloskop-Welle · 2.529.0: „diktiert …“
+  const sp = (sprechen.length ? `<div class="zeile">${OSZI_SVG}<span>🎤 ${esc(werText(sprechen))} ${sprechen.length > 1 ? "nehmen" : "nimmt"} eine Sprachnachricht auf</span></div>` : "")
+    + (diktiert.length ? `<div class="zeile"><span class="punkte3"><i></i><i></i><i></i></span><span>🗣️ ${esc(werText(diktiert))} ${diktiert.length > 1 ? "diktieren" : "diktiert"} …</span></div>` : "");
   if (!namen.length) { if (e.dataset.stand !== sp) { e.innerHTML = sp; e.dataset.stand = sp; } e.classList.remove("versteckt"); return; }
   const kurz = (t) => { const z = [...t]; return z.length > LIVE_ANZEIGE_ZEICHEN ? "…" + z.slice(-LIVE_ANZEIGE_ZEICHEN).join("") : t; };
   const entwuerfe = entwurf.map((x) => `<div class="entwurf">✍️ <b>${esc(x.name)}:</b> ${esc(kurz(x.text))}</div>`).join("");
@@ -8719,8 +8886,8 @@ async function personenWaehlen(opt) {
 }
 function personenListe() {
   const alle = [MITGLIEDER.find((m) => m.person_id === ICH.person_id) || { person_id: ICH.person_id, name: ICH.name }, ...MITGLIEDER.filter((m) => m.person_id !== ICH.person_id)];
-  $("personenListe").innerHTML = alle.map((m) => `<label><input type="checkbox" ${PW_AUSWAHL.ids.includes(m.person_id) ? "checked" : ""} onchange="personenHaken('${m.person_id}', this.checked)">
-    <span style="flex:1">${m.person_id === ICH.person_id ? "ich selbst" : esc(m.name)}</span></label>`).join("");
+  $("personenListe").innerHTML = alle.map((m) => `<label${okKl(m, PW_AUSWAHL.ids.includes(m.person_id))}><input type="checkbox"${okAttr(m, PW_AUSWAHL.ids.includes(m.person_id))} ${PW_AUSWAHL.ids.includes(m.person_id) ? "checked" : ""} onchange="personenHaken('${m.person_id}', this.checked)">
+    <span style="flex:1">${m.person_id === ICH.person_id ? "ich selbst" : esc(m.name) + okZusatz(m)}</span></label>`).join("");
   $("personenZahl").textContent = PW_AUSWAHL.ids.length ? `${PW_AUSWAHL.ids.length} ausgewählt: ${todoNamen(PW_AUSWAHL.ids)}` : PW_AUSWAHL.leerText;
 }
 function personenHaken(pid, an) {
@@ -9001,6 +9168,7 @@ async function diktatStart(ziel, nachSenden, opt = {}) { // 2.22.0: auch für an
     <p class="hinweis" style="font-size:.8rem;margin:6px 0 0">🔒 Das Handy hört nur zu, solange dieses Fenster offen ist.</p></div>`);
   f.onclick = null; // nicht aus Versehen durch Tippen daneben schließen
   f.querySelectorAll("[data-d]").forEach((b) => (b.onclick = () => diktatEnde(b.dataset.d)));
+  if (DT.ziel === "text" && chatId) tippenMelden(); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS: gleich „diktiert …“ melden, nicht erst beim ersten Wort
   diktatHoeren();
 }
 function diktatHoeren() {
@@ -9070,9 +9238,29 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   ["buehne", "bewegung", "turnen", "gymnastik", "sport", "fitness", "trainieren", "bewegen"], ["lautstaerke", "lauter", "leiser", "regler", "musik"],
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN
   ["express", "eilig", "eilt", "dringend", "sofort", "rennwagen", "schnellste"], ["zurueckholen", "vertippt", "zuruecknehmen", "zurueckziehen", "korrigieren", "falsch"],
-  ["favorit", "favoriten", "stern", "sternchen", "lieblings", "lieblingschat", "wichtigste"], ["spaeter", "zeitversetzt", "planen", "geplant", "morgen", "wecker"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
+  ["favorit", "favoriten", "stern", "sternchen", "lieblings", "lieblingschat", "wichtigste"], ["spaeter", "zeitversetzt", "planen", "geplant", "morgen", "wecker"],
+  // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4
+  ["verschluesseln", "verschluesselt", "verschluesselung", "geheim", "schluessel", "schloss", "kennwort", "codiert", "schluesselbund", "geheimagent", "agent"],
+  ["ablagekorb", "dateimanager", "hochschicken"], ["versandleiste", "normal", "wichtig", "leiste"], ["schreibt", "tippt", "diktiert"],
+  ["pdf", "drucken", "ausdrucken", "briefbogen", "papier"], ["cowboy", "indianer", "westen", "wildwest", "bueffel", "kutsche"], ["wueste", "pyramide", "pharao", "kamel", "karawane", "flaschengeist", "geist", "oase"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
+  { id: "einstellungen-erklaert", sym: "🧭", t: "Was bewirken die ganzen Einstellungen?", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> siehst du alle Einstellungen wie Ordner im Explorer – antippen erklärt, was sie bewirken, und <b>👉 Hinbringen</b> führt dich zum Schalter. Mit 🖨️ auch zum Ausdrucken.", los: () => ewStart() }, // 2.534.0
+  // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: Fragen zu Verschlüsseln, Schlüsselbund, Versand-Leiste, Teilen und den übrigen Neuheiten (nur Mitglieder-Funktionen)
+  { id: "verschluesseln", sym: "🔒", t: "Wie schicke ich eine Nachricht verschlüsselt?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld auf das Schloss <b>🔒</b> tippen (grün = an), schreiben, senden. Die App fragt nach – <b>„🔒 Ja, mit Schlüssel“</b> – dann einen Schlüssel festlegen (mindestens 6 Zeichen) und ihn dem Empfänger <b>persönlich, am Telefon oder per SMS</b> sagen. Ein Geheimagent bringt die Nachricht; lesen kann sie nur, wer den Schlüssel hat.", los: () => zeige("nachrichten") },
+  { id: "schluessel-frage", sym: "✉️", t: "Ich soll einen Schlüssel eingeben – ich will aber gar nicht verschlüsseln!", x: "Dann ist das Schloss 🔒 über dem Schreibfeld aus Versehen an. Tippe in der Rückfrage auf <b>„✉️ Normal senden“</b> – das Schloss geht aus und die Nachricht geht ganz normal raus. Beim Wechsel in einen anderen Chat geht das Schloss ohnehin von selbst aus.", los: () => zeige("nachrichten") },
+  { id: "schluessel-oeffnen", sym: "🔓", t: "Wie lese ich eine verschlüsselte Nachricht?", x: "Auf <b>„🔒 Verschlüsselte Nachricht – antippen und Schlüssel eingeben“</b> tippen und den Schlüssel eingeben, den dir der Absender gesagt hat. Das Handy merkt ihn sich für diesen Chat. Habt ihr einen Schlüsselbund, öffnet sie sich von selbst. <b>Schlüssel vergessen?</b> Dann frag den Absender – ohne Schlüssel kann sie niemand lesen.", los: () => zeige("nachrichten") },
+  { id: "schluesselbund", sym: "🔑", t: "Was ist der Schlüsselbund?", x: "Damit schreibt ihr zu zweit verschlüsselt, <b>ohne Schlüssel einzutippen</b>: im Zweier-Chat oben <b>⋮ → „🔑 Schlüsselbund mit …“</b> → anlegen und die Datei per WhatsApp oder Signal schicken. Der Partner liest sie ein (Teilen → Club-App). Danach 🔒 an und senden – fertig.", los: () => zeige("nachrichten") },
+  { id: "geheimagent", sym: "🕵️", t: "Warum läuft ein Mann mit Hut und Koffer über den Bildschirm?", x: "Das ist der <b>🕵️ Geheimagent</b> – er bringt verschlüsselte Nachrichten (🔒), egal welchen Boten du sonst gewählt hast. Vorher dreht sich kurz ein 🔑 Schlüssel. Nur bei 🏎️ Express kommt der Rennwagen. Ohne Bewegung: ⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“ → Aus.", los: () => einstiegHin("effekte", "sendeEffektWahl") },
+  { id: "versand-leiste", sym: "📝", t: "Wo sind Wichtig und Express geblieben?", x: "Über dem Schreibfeld: Sobald du etwas tippst, erscheint die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. Normal ist angehakt; Wichtig oder Express anhaken – auch beides. Immer zeigen: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", los: () => einstiegHin("benachrichtigung", "setWichtigFrage") },
+  { id: "teilen-ablagekorb", sym: "📥", t: "Wie schicke ich Fotos oder Dateien aus anderen Apps an den Club?", x: "In der Galerie, in WhatsApp, Mail oder im Dateimanager auf <b>Teilen → Köcheclub</b> tippen (die App muss installiert sein). Alles landet im <b>📥 Ablagekorb</b> – bis 10 Dateien, jeder Dateityp. Hansi bekommt Bescheid und legt es ins Fotoalbum, ins Archiv oder gibt es weiter. Gibt es die Datei schon, sagt dir die App das." },
+  { id: "schreibt-dir", sym: "✍️", t: "Was heißt oben „… schreibt dir gerade“?", x: "Jemand schreibt dir im Zweier-Chat gerade eine Nachricht (oder <b>diktiert</b> sie, oder nimmt eine <b>Sprachnachricht</b> auf), während du woanders in der App bist. Gleich kommt also etwas. Antippen öffnet den Chat." },
+  { id: "tippton-aus", sym: "🔇", t: "Wie schalte ich das Tippgeräusch schnell aus?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld auf den Lautsprecher <b>🔊</b> tippen – dann steht dort 🔇. Nochmal tippen schaltet die zuletzt gewählte Art wieder ein (Tastatur oder Schreibmaschine).", los: () => zeige("nachrichten") },
+  { id: "graue-haken", sym: "✔️", t: "Warum hat meine Nachricht erst nur einen Haken?", x: "<b>Ein grauer Haken</b> = gesendet. <b>Zwei graue</b> kommen, sobald die Mitteilung auf dem anderen Handy erscheint oder seine App die Nachricht lädt. Bleibt es lange bei einem, ist das Handy aus, ohne Netz oder hat die Benachrichtigungen abgeschaltet. <b>Blau</b> = gelesen.", los: () => zeige("nachrichten") },
+  { id: "erstattung-pdf", sym: "📄", t: "Kann ich meinen Erstattungsantrag ausdrucken?", x: "Ja – nach dem Einreichen bietet die App den Antrag auf dem <b>Club-Briefbogen</b> an: <b>📄 PDF speichern / teilen</b> oder <b>🖨️ Drucken</b>, mit Feldern für die Unterschriften. Ein PDF gibt es in jeder Druckvorschau der App.", los: () => zeige("erstattung") },
+  { id: "vorschlag-sitzung-offen", sym: "📅", t: "Die nächste Sitzung hat noch kein Datum – kann ich trotzdem etwas vorschlagen?", x: "Ja. Beim Vorschlag unter „Für welchen Termin?“ <b>„📅 Nächste/Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung im Kalender steht, ordnet die App den Vorschlag selbst zu.", los: () => zeige("vorschlaege") },
+  { id: "wildwest", sym: "🤠", t: "Gibt es ein Thema mit Cowboys und Indianern?", x: "Ja – das Thema <b>🤠 Wilder Westen</b>: Tipi mit Lagerfeuer, Indianer und Häuptling (aus seiner Friedenspfeife steigt dein Vorname in Rauchschrift auf), Kakteen, Steppenläufer, Cowboys, Postkutsche, ein Duell und zum Schluss die große Büffelherde. Unter ⚙️ → „✨ Effekte“ → 🤠 Wilder Westen gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
+  { id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao?", x: "Ja – das Thema <b>🐪 Wüste</b>: Pyramiden, Oase, Karawane, der Pharao auf seiner Sänfte und ein Flaschengeist aus der Lampe, der deinen Vornamen aus Goldstaub in den Himmel schreibt – zum Schluss ein Sonnenuntergang mit Sternen. Unter ⚙️ → „✨ Effekte“ → 🐪 Wüste gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Fragen zu den neuen Möglichkeiten (nur Mitglieder-Funktionen)
   { id: "dienst-uebersicht", sym: "📊", t: "Wo sehe ich, wer wann beim Weihnachtsmarkt kann?", x: "Tippe in <b>🗓️ Dienstpläne</b>, in <b>„Mein Dienst“</b> oder in den Dienstwünschen auf <b>📊</b>. Die Übersicht zeigt deine Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben.", los: () => zeige("dienste") },
   { id: "tippgeraeusche", sym: "⌨️", t: "Kann ich hören, wenn jemand tippt?", x: "Ja – wenn die andere Person <b>„Andere sehen live, was ich tippe“</b> eingeschaltet hat. Unter ⚙️ → „🔔 Benachrichtigungen“ → <b>„⌨️ Tippgeräusche“</b> wählst du Tastatur oder Schreibmaschine.", los: () => einstiegHin("benachrichtigung", "setTippTon") },
@@ -9099,7 +9287,7 @@ const TW_FAQ = [
   { id: "anrufen", sym: "📞", t: "Wie rufe ich ein Mitglied an?", x: "Bei <b>👥 Mitglieder</b> die Person antippen. Hat sie ihre Nummer freigegeben, kannst du direkt anrufen. Sonst schreib ihr eine Nachricht mit <b>💬</b>.", los: () => zeige("mitglieder") },
   { id: "online", sym: "🟢", t: "Wer ist gerade in der App?", x: "Bei <b>👥 Mitglieder</b> zeigt ein <b>grüner Punkt</b>, wer gerade online ist. Mit der Hand <b>👋</b> kannst du dort anklopfen. Auf Wunsch sagt die App sogar an, wer gerade reinkommt (⚙️ → 🔔 Töne).", los: () => zeige("mitglieder") },
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express, Zurückholen, Favoriten, Später senden
-  { id: "express", sym: "🏎️", t: "Wie schicke ich eine Express-Nachricht – und wie viele darf ich?", x: "Im Chat unter dem Schreibfeld auf <b>🏎️</b> tippen, dann senden. Sie kommt <b>sofort</b> an – auch nachts und bei stummem Chat – und beim Empfänger geht ein Fenster auf. Unter deiner Nachricht siehst du <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Pro Tag gehen <b>5 Express-Sendungen</b>; am Knopf steht, wie viele du schon hattest (z. B. <b>2/5</b>).", los: () => zeige("nachrichten") },
+  { id: "express", sym: "🏎️", t: "Wie schicke ich eine Express-Nachricht – und wie viele darf ich?", x: "Im Chat über dem Schreibfeld <b>🏎️ Express</b> anhaken, dann senden. Sie kommt <b>sofort</b> an – auch nachts und bei stummem Chat – und beim Empfänger geht ein Fenster auf. Unter deiner Nachricht siehst du <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Pro Tag gehen <b>5 Express-Sendungen</b>; neben Express steht, wie viele du schon hattest (z. B. <b>2/5</b>).", los: () => zeige("nachrichten") },
   { id: "zurueckholen", sym: "↩️", t: "Ich habe mich vertippt – kann ich die Nachricht zurückholen?", x: "Ja, solange sie noch <b>niemand gelesen</b> hat: Nachricht antippen (am PC: rechte Maustaste) → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet bei allen und steht wieder in deinem Schreibfeld – verbessern und neu senden. Ist sie schon gelesen, kannst du sie noch <b>✏️ bearbeiten</b>.", los: () => zeige("nachrichten") },
   { id: "favoriten", sym: "⭐", t: "Wie lege ich Favoriten an?", x: "Am einfachsten in <b>👥 Mitglieder</b>: beim Mitglied auf den Stern <b>☆</b> tippen – er wird gelb ⭐. Oder in <b>💬 Nachrichten</b> rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Es ist <b>derselbe Stern</b>: Er erscheint in der Mitgliederliste und bei den Chats unter <b>⭐ Favoriten</b>. Nochmal tippen nimmt ihn weg.", los: () => { zeige("nachrichten"); uhFavAnsicht(true); } },
   { id: "ausweis", sym: "🪪", t: "Wo ist mein Ausweis-QR für Kasse und Stechuhr?", x: "Auf der Startseite neben <b>Schnellzugriff</b> auf <b>QR</b> tippen – oder <b>Meins → 🪪 Mein Ausweis-QR</b>. Darin steht deine <b>Mitgliedsnummer</b>, wie auf dem Plastik-Ausweis. Vor den Scanner an der Kasse oder Stechuhr halten, Bildschirm hell stellen.", los: () => ausweisZeigen() },
@@ -9150,7 +9338,7 @@ const TW_FAQ = [
   { id: "buehne", sym: "🎭", t: "Wie mache ich mit Twinkey Bewegung zu Musik?", x: "Kopf umdrehen (doppelt aufs Eselsohr) → <b>🎭 Bühne</b>: im Sitzen, im Stehen oder mit Küchenhelfern wählen, Dauer einstellen, <b>„▶️ Vorhang auf!“</b>. Twinkey turnt vor und feuert dich an.", los: () => esOeffnen("buehne") },
   { id: "buehne-laut", sym: "🎚️", t: "Die Musik oder Twinkeys Stimme ist zu laut oder zu leise", x: "Auf der Bühne: <b>rechts</b> der Regler für die Musik, <b>links</b> für die Stimme – hochziehen = lauter, runter = leiser. Unten aufs Symbol tippen = stumm, nochmal = wieder an.", los: () => esOeffnen("buehne") },
   { id: "grosse-uhr", sym: "🕰️", t: "Gibt es eine große Uhr?", x: "Ja – auf der Rückseite des Kopfes unter <b>🕰️ Uhr</b>: digital grün, Fallblatt mit Datum, Bahnhofsuhr oder groß &amp; klar.", los: () => esOeffnen("uhr") },
-  { id: "diashow", sym: "🖼️", t: "Kann ich die Fotos als Diashow ansehen?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🖼️ Diashow</b>. Album wählen, aufs Foto tippen blendet alles andere aus. Mit <b>🔇/🎵</b> in der Leiste läuft unser Club-Song dazu.", los: () => esOeffnen("dia") },
+  { id: "diashow", sym: "🖼️", t: "Kann ich die Fotos als Diashow ansehen?", x: "Ja – am einfachsten im <b>📷 Fotoalbum</b> oben auf <b>„▶️ Diashow“</b>: 🎵 Musik an oder aus, Album antippen, los geht's. Oder Kopf umdrehen (doppelt aufs Eselsohr) → <b>🖼️ Diashow</b>. Aufs Foto tippen blendet alles andere aus; mit <b>🔇/🎵</b> läuft unser Club-Song dazu.", los: () => esOeffnen("dia") },
   { id: "spiegel", sym: "🪞", t: "Gibt es einen Spiegel mit Kamera?", x: "Ja – Kopf umdrehen (doppelt aufs Eselsohr) → <b>🪞 Spiegel</b> → <b>„📷 Kamera an“</b>. Mit „🐹 Pausbäckchen“ wird’s lustig. Nichts wird gespeichert oder verschickt.", los: () => esOeffnen("spiegel") }, // 2.314.0
   { id: "kachel_vorschlag_aus", sym: "💡", t: "Wie schalte ich die Vorschläge zur Startseite ab?", x: "Im Vorschlags-Fenster <b>„🔕 Keine Vorschläge mehr“</b> tippen – oder unter ⚙️ → „🧩 Startseite &amp; Ansicht“ den Schalter <b>„💡 Vorschläge zur Startseite“</b> ausschalten. Dort löscht <b>„🧹 Gemerktes löschen“</b> auch alles, was die App sich gemerkt hat.", los: () => suEinstellung("setKachelVorschlag") },
   { id: "einladung", sym: "🎭", t: "Wie schalte ich die Frage nach der Bewegungseinheit ab?", x: "Im Fenster <b>„🔕 Nicht mehr fragen“</b> tippen – oder unter ⚙️ → „🧩 Startseite &amp; Ansicht“ den Schalter <b>„🎭 Twinkey lädt zur Bewegung ein“</b> ausschalten.", los: () => suEinstellung("setBwEinladung") },
@@ -9235,7 +9423,7 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "h:kopf_effekte": ["effekte", "anpassen"], "h:geburtstag_vogel": ["effekte"], "h:dienst_uebersicht": ["dienst"], "f:dienst-uebersicht": ["dienst"], "f:kopf-effekt": ["effekte"], "f:geburtstag-vogel": ["effekte"], "h:anpassen": ["anpassen"], "h:themen": ["anpassen"], "h:farbe": ["anpassen"], "h:deko_leiste": ["anpassen"], "h:jahreszeit_kopf": ["anpassen", "effekte"], "h:kopf_besucher": ["anpassen"], "h:sparmodus": ["anpassen"], "h:raetsel": ["raetsel", "rueckseite"], "f:aussehen": ["anpassen"], "f:kopf-ruhig": ["anpassen"], "f:raetsel": ["rueckseite"], "h:wetter": ["effekte"], "f:diktieren": ["sprache"], "h:infofeld": ["spezial"], "h:modus_knopf": ["spezial"], "h:frage_knopf": ["einfach", "spezial"], "h:schnecke": ["probleme", "spezial"], "f:update": ["probleme", "technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
+const TW_VIDEOS = { "h:verschluesselt": ["geheim"], "h:schluesselbund": ["geheim"], "f:verschluesseln": ["geheim"], "f:schluessel-frage": ["geheim"], "f:schluessel-oeffnen": ["geheim"], "f:schluesselbund": ["geheim"], "f:geheimagent": ["geheim"], "h:schreibt_hinweis": ["chatprofi"], "f:schreibt-dir": ["chatprofi"], "h:versand_leiste": ["nachricht"], "f:versand-leiste": ["nachricht"], "f:graue-haken": ["chatprofi"], "f:tippton-aus": ["geheim"], "f:wildwest": ["anpassen"], "h:kopf_effekte": ["effekte", "anpassen"], "h:geburtstag_vogel": ["effekte"], "h:dienst_uebersicht": ["dienst"], "f:dienst-uebersicht": ["dienst"], "f:kopf-effekt": ["effekte"], "f:geburtstag-vogel": ["effekte"], "h:anpassen": ["anpassen"], "h:themen": ["anpassen"], "h:farbe": ["anpassen"], "h:deko_leiste": ["anpassen"], "h:jahreszeit_kopf": ["anpassen", "effekte"], "h:kopf_besucher": ["anpassen"], "h:sparmodus": ["anpassen"], "h:raetsel": ["raetsel", "rueckseite"], "f:aussehen": ["anpassen"], "f:kopf-ruhig": ["anpassen"], "f:raetsel": ["rueckseite"], "h:wetter": ["effekte"], "f:diktieren": ["sprache"], "h:infofeld": ["spezial"], "h:modus_knopf": ["spezial"], "h:frage_knopf": ["einfach", "spezial"], "h:schnecke": ["probleme", "spezial"], "f:update": ["probleme", "technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht", "zentrale", "sprache"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
   "f:spielen": ["spiele"], "f:archiv": ["archiv"],
@@ -9246,10 +9434,10 @@ const TW_VIDEOS = { "h:kopf_effekte": ["effekte", "anpassen"], "h:geburtstag_vog
   "h:info_laufband": ["oberflaeche"], "h:kachel_auswahl": ["oberflaeche"], "h:kachel_vorschlag": ["oberflaeche"], "h:gelesen_von": ["chatprofi"], "h:tastatur_knopf": ["chatprofi"],
   "h:schreiben_klappen": ["chatprofi"], "h:tage_einklappen": ["chatprofi"], "h:anlage_mitschicken": ["vorschlag"], "h:termin_link_prospekt": ["termin"], "h:sonderstunden": ["dienst", "erstattung"],
   "h:avatar_bearbeiten": ["figur", "figurbau"], "h:schuerze": ["figurbau"], "h:foto_muetze": ["figur"], "h:bild_zuletzt": ["figur"], "h:stundenuhren": ["effekte"], "h:kuckuck_ton": ["effekte"],
-  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
-  "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "h:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
+  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:wueste": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
+  "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "t:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
 }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
-const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild" };
+const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild", "f:verschluesseln": "h:verschluesselt", "f:schluessel-frage": "h:verschluesselt", "f:schluessel-oeffnen": "h:verschluesselt", "f:schluesselbund": "h:schluesselbund", "f:geheimagent": "h:boten", "f:versand-leiste": "h:versand_leiste", "f:schreibt-dir": "h:schreibt_hinweis", "f:graue-haken": "h:haken" }; // 2.533.0: + Verschlüsseln & Co.
 function twVideosHtml(e) {
   const v = (TW_VIDEOS[e.id] || []).map((id) => RUNDGAENGE.find((r) => r.id === id && (!r.nur || r.nur()))).filter(Boolean);
   const h = TW_HILFETEXT[e.id] && hzEintraege().some((x) => x.id === TW_HILFETEXT[e.id]) ? TW_HILFETEXT[e.id] : null;
@@ -9333,17 +9521,17 @@ async function mfFormular(vorgabe = "") {
   mfListe(); setTimeout(() => (vorgabe ? $("mfSuche") : $("mfFrage"))?.focus(), 150);
 }
 function mfListe() {
-  const q = ($("mfSuche")?.value || "").toLowerCase(), andere = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  const q = ($("mfSuche")?.value || "").toLowerCase(), andere = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id), frei = andere.filter(okFrei);
   $("mfSchnell").innerHTML = `<button type="button" class="chip${MF.alle ? " an" : ""}" onclick="MF.alle=!MF.alle;MF.personen=[];mfListe()">${MF.alle ? "☑️" : "⬜"} 👥 Alle Mitglieder</button>`
     + `<button type="button" class="chip" onclick="MF.alle=false;MF.personen=[];mfListe()">✖ Keiner</button>`;
-  $("mfListe").innerHTML = andere.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label>
-    <input type="checkbox" ${MF.alle || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
-  const n = MF.alle ? andere.length : MF.personen.length;
+  $("mfListe").innerHTML = andere.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label${okKl(m, MF.personen.includes(m.person_id))}>
+    <input type="checkbox"${okAttr(m, MF.personen.includes(m.person_id))} ${(MF.alle && okFrei(m)) || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+  const n = MF.alle ? frei.length : MF.personen.length;
   $("mfWer").innerHTML = `An: <b>${MF.alle ? "alle Mitglieder" : !n ? "noch niemand gewählt" : n <= 3 ? esc(MF.personen.map(zeName).join(", ")) : n + " Mitglieder"}</b>`;
   $("mfWege").innerHTML = TW_WEGE.map(([k, t]) => `<button type="button" class="chip${MF.wege.includes(k) ? " an" : ""}" aria-pressed="${MF.wege.includes(k)}" onclick="MF.wege=MF.wege.includes('${k}')?MF.wege.filter((x)=>x!=='${k}'):[...MF.wege,'${k}'];mfListe()">${MF.wege.includes(k) ? "☑️" : "⬜"} ${t}</button>`).join("");
 }
 function mfPerson(pid, an) {
-  if (MF.alle) { MF.alle = false; MF.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id); }
+  if (MF.alle) { MF.alle = false; MF.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id); }
   MF.personen = an ? [...new Set([...MF.personen, pid])] : MF.personen.filter((x) => x !== pid); mfListe();
 }
 async function mfSenden() {
@@ -12964,13 +13152,17 @@ async function erstattungSenden() {
   const summe = ERS.pos.filter(ersZaehlt).reduce((a, x) => a + x.betrag, 0);
   if (!(await frage(`Erstattung über ${eur(summe)} beantragen?\n\nDer Antrag geht per Mail an Kassenwart und Clubsprecher. Du bekommst eine Kopie.`))) return;
   try {
-    const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim() };
+    const kopie = { pos: ERS.pos.slice(), auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung").value.trim(), vorschuss: zahlDe($("ersVorschuss")?.value) || 0 };
     const r = await api("erstattung_senden", { positionen: ERS.pos.map(({ belegNamen, belegDateien, satz, sonder_titel, ...x }) => x), auszahlung: ERS.auszahlung, bemerkung: kopie.bemerkung,
-      vorschuss: zahlDe($("ersVorschuss")?.value) || 0 });
+      vorschuss: kopie.vorschuss });
     ERS.pos = []; ERS.gewaehlt = false; Object.assign(ERS, { vorSonder: null, vorDatum: null, vorGrund: null, vorZiel: null }); $("ersBemerkung").value = ""; if ($("ersVorschuss")) $("ersVorschuss").value = ""; erstattungZeigen();
     melde(`📨 Antrag über ${eur(r.summe)} verschickt an ${[...r.an, ...r.cc].join(" und ")} – du bekommst eine Kopie per Mail.`);
     erstattungLaden();
-    erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
+    // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Antrag auf dem Club-Briefbogen anbieten (PDF/Drucken), danach wie bisher die Ablage-Frage
+    const blatt = erstDaten({ positionen: kopie.pos, auszahlung: kopie.auszahlung, bemerkung: kopie.bemerkung, vorschuss: kopie.vorschuss, summe: r.summe, name: ICH?.name || "", zeit: new Date().toISOString(), status: "eingereicht" });
+    if (await frage("📄 Antrag auf dem Club-Briefbogen\nMöchtest du deinen Antrag als PDF speichern oder ausdrucken – z. B. zum Unterschreiben oder für den Kassenwart?", { ja: "📄 Ansehen", nein: "Nein, danke" }))
+      erstAnsehen(blatt, () => erstattungAblageFragen(kopie, r));
+    else erstattungAblageFragen(kopie, r); // KC-CLUB-ARCHIV-ABLAGE (1.18.0): erst nach erfolgreichem Versand
   } catch (e) { meldeFehler(e); }
 }
 
@@ -13673,7 +13865,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
-  if (r.status === 423 && j?.gesperrt) { sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
+  if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt });
   return j;
@@ -14519,6 +14711,7 @@ const KACHELN = {
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
+    { id: "einstwegweiser", sym: "🧭", t: "Einstellungen erklärt", u: "Alle Einstellungen – was sie bewirken", aktion: "ewStart()" }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
     { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
     { id: "erklaer", sym: "🎬", t: "Erklär-Videos", u: "Rundgänge mit Ton – Schritt für Schritt", aktion: "erklaerVideos()" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
   ],
@@ -14543,7 +14736,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -14947,11 +15140,11 @@ function sendeFlug(r, art) {
   f.querySelectorAll(".rk-flamme").forEach((x) => { x.style.transformBox = "fill-box"; x.style.transformOrigin = "top"; x.animate([{ transform: "scaleY(.7)" }, { transform: "scaleY(1.25)" }], { duration: 90, iterations: Infinity, direction: "alternate" }); });
   setTimeout(() => f.remove(), dauer + 400);
 }
-function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null, express = typeof EXPRESS !== "undefined" && !!EXPRESS) {
+function papierflieger(von, wichtig = typeof WICHTIG !== "undefined" && !!WICHTIG, mid = null, express = typeof EXPRESS !== "undefined" && !!EXPRESS, geheim = false) {
   if (!fxAn() || !von) return;
   const r = von.getBoundingClientRect(); if (!r.width) return;
   const wahl = sendeEffektWahl(); if (wahl === "aus") return;
-  const art = fxArt(wahl, wichtig, mid, express); if (!art) return; // ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
+  const art = fxArt(wahl, wichtig, mid, express, geheim); if (!art) return; // 🔒 verschlüsselt → Geheimagent (2.530.0); ❗ wichtig → immer Blaulicht; 🏎️ Express → Rennwagen; „Abwechselnd“ nach Nachrichten-Kennung (2.177.0)
   if (FZ_SVG[art]) return sendeFahrzeug(r, art);
   if (art === "rakete" || art === "ballon" || art === "flasche" || art === "muenchhausen") return sendeFlug(r, art);
   const g = Math.round(Math.min(130, innerWidth * 0.3));
@@ -14997,16 +15190,52 @@ const BLAULICHT_SVG = (b) => `<svg viewBox="0 0 200 110" width="${b}" height="${
     <rect x="12" y="64" width="176" height="10" fill="#7b1e2b"/><text x="100" y="86" text-anchor="middle" font-size="11" font-weight="800" fill="#7b1e2b" font-family="sans-serif">❗ WICHTIG</text>
     <rect x="70" y="18" width="46" height="9" rx="3" fill="#333"/><rect class="bl-a" x="72" y="16" width="20" height="9" rx="3" fill="#2f7bff"/><rect class="bl-b" x="94" y="16" width="20" height="9" rx="3" fill="#2f7bff"/>
     <rect x="10" y="64" width="7" height="7" rx="2" fill="#ffe680" stroke="#333" stroke-width="1.5"/>${RAD(46)}${RAD(156)}</svg>`;
-const FZ_SVG = { postauto: (b) => POSTAUTO_SVG(b), blaulicht: (b) => BLAULICHT_SVG(b), fahrrad: (b) => FAHRRAD_SVG(b), express: (b) => RENNWAGEN_SVG(b) }; // 2.362.0
+// ---------- 2.530.0 KC-CLUB-GEHEIMAGENT (Wunsch Hansi „beim Versenden mit Schlüsselbund kurz einen Schlüssel zeigen – und welche besondere Figur könnte
+// die verschlüsselte wegbringen?“; Wahl Hansi: Geheimagent): verschlüsselte Nachrichten (🔒KCV1) bringt immer ein Geheimagent mit Hut, Sonnenbrille,
+// Trenchcoat und weinrotem Aktenkoffer mit Zahlenschloss – er schleicht nach links davon (Beine schwingen). Vorher dreht sich am Senden-Knopf ein 🔑.
+// Beim Empfänger kommt er von rechts, bleibt stehen, der Koffer klickt (🔑 dreht sich über der Blase), dann schleicht er weiter. Gilt unabhängig vom
+// gewählten Boten (wie Blaulicht und Rennwagen); 🏎️ Express geht vor.
+const AGENT_SVG = (b) => `<svg viewBox="0 0 120 150" width="${Math.round(b * 0.62)}" height="${Math.round(b * 0.78)}" overflow="visible">
+    <g class="ag-bein ag-h"><path d="M64 104 70 138" stroke="#2b2b2b" stroke-width="9" stroke-linecap="round"/><path d="M70 138H58" stroke="#111" stroke-width="7" stroke-linecap="round"/></g>
+    <g class="ag-bein ag-v"><path d="M54 104 48 138" stroke="#3a3a3a" stroke-width="9" stroke-linecap="round"/><path d="M48 138H36" stroke="#111" stroke-width="7" stroke-linecap="round"/></g>
+    <path d="M40 54q20-10 40 0l8 54H32Z" fill="#c8b48a" stroke="#6b5a36" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M60 52v56" stroke="#6b5a36" stroke-width="1.5"/><path d="M50 52l10 14 10-14" fill="#e9e2d0" stroke="#6b5a36" stroke-width="1.5" stroke-linejoin="round"/><path d="M33 80h54" stroke="#6b5a36" stroke-width="4"/>
+    <circle cx="60" cy="36" r="14" fill="#f2c9a0" stroke="#8a5a3a" stroke-width="1.5"/>
+    <rect x="45" y="32" width="12" height="6" rx="2" fill="#111"/><rect x="59" y="32" width="11" height="6" rx="2" fill="#111"/><path d="M57 35h2" stroke="#111" stroke-width="2"/>
+    <path d="M36 27q24-7 48 0l-4 4H40Z" fill="#2b2b2b"/><path d="M46 27q2-15 14-15t14 15Z" fill="#3a3a3a" stroke="#1a1a1a" stroke-width="1.5"/><path d="M46 23h28" stroke="#7b1e2b" stroke-width="3"/>
+    <path d="M44 62 34 92" stroke="#b9a479" stroke-width="9" stroke-linecap="round"/>
+    <g class="ag-koffer"><rect x="14" y="88" width="36" height="26" rx="3" fill="#7b1e2b" stroke="#3b0d14" stroke-width="2"/><path d="M26 88v-5h12v5" fill="none" stroke="#3b0d14" stroke-width="3"/>
+      <rect x="27" y="97" width="10" height="8" rx="1.5" fill="#f5c400" stroke="#8a6a00" stroke-width="1"/><path class="ag-buegel" d="M29 97v-3a3 3 0 0 1 6 0v3" fill="none" stroke="#8a6a00" stroke-width="1.5"/></g></svg>`;
+function agentLaufen(f) { // Beine im Wechsel schwingen, Koffer wippt – gibt die Animationen zurück (zum Anhalten)
+  const a = [];
+  f.querySelectorAll(".ag-bein").forEach((bein, i) => { bein.style.transformBox = "view-box"; bein.style.transformOrigin = "59px 104px";
+    a.push(bein.animate([{ transform: `rotate(${i ? -18 : 18}deg)` }, { transform: `rotate(${i ? 18 : -18}deg)` }], { duration: 340, iterations: Infinity, direction: "alternate", easing: "ease-in-out" })); });
+  f.querySelectorAll(".ag-koffer").forEach((k) => a.push(k.animate([{ transform: "translateY(0)" }, { transform: "translateY(-3px)" }], { duration: 340, iterations: Infinity, direction: "alternate" })));
+  return a;
+}
+// 🔑 dreht sich kurz wie im Schloss (Senden-Knopf beim Absender, über der Blase beim Empfänger)
+function vnSchluesselZeigen(von) {
+  if (!fxAn() || !von) return; const r = von.getBoundingClientRect(); if (!r.width) return;
+  const g = 56, f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
+  f.innerHTML = `<svg viewBox="0 0 64 64" width="${g}" height="${g}"><circle cx="20" cy="32" r="12" fill="#f5c400" stroke="#8a6a00" stroke-width="3"/><circle cx="20" cy="32" r="4.5" fill="#fff8d6" stroke="#8a6a00" stroke-width="2"/>
+    <path d="M32 32h26M50 32v9M44 32v7" stroke="#8a6a00" stroke-width="6" stroke-linecap="round"/><path d="M32 32h26M50 32v9M44 32v7" stroke="#f5c400" stroke-width="3" stroke-linecap="round"/></svg>`;
+  f.style.left = Math.max(4, Math.min(innerWidth - g - 4, r.left + r.width / 2 - g / 2)) + "px"; f.style.top = Math.max(4, r.top - g - 6) + "px"; document.body.appendChild(f);
+  f.animate([{ opacity: 0, transform: "translateY(14px) scale(.4) rotate(-40deg)" }, { opacity: 1, transform: "translateY(0) scale(1.15) rotate(0deg)", offset: 0.3 },
+    { opacity: 1, transform: "scale(1) rotate(90deg)", offset: 0.6 }, { opacity: 1, transform: "scale(1.05) rotate(90deg)", offset: 0.8 }, { opacity: 0, transform: "translateY(-16px) scale(.7) rotate(90deg)" }],
+    { duration: 1300, easing: "ease-out", fill: "forwards" }).onfinish = () => f.remove();
+  try { navigator.vibrate?.(25); } catch {} // „klick“
+  setTimeout(() => f.remove(), 1800);
+}
+const FZ_SVG = { postauto: (b) => POSTAUTO_SVG(b), blaulicht: (b) => BLAULICHT_SVG(b), fahrrad: (b) => FAHRRAD_SVG(b), express: (b) => RENNWAGEN_SVG(b), agent: (b) => AGENT_SVG(b) }; // 2.362.0 · 2.530.0 Geheimagent
 function sendeFahrzeug(r, art) {
-  const b = Math.round(Math.min(190, innerWidth * 0.42)), h = Math.round(b * (art === "fahrrad" ? 0.58 : 0.55));
+  const b0 = Math.round(Math.min(190, innerWidth * 0.42)), b = art === "agent" ? Math.round(b0 * 0.62) : b0, h = Math.round(b0 * (art === "fahrrad" ? 0.58 : art === "agent" ? 0.78 : 0.55));
   const f = document.createElement("div"); f.className = "papierflieger"; f.setAttribute("aria-hidden", "true");
-  f.innerHTML = FZ_SVG[art](b);
+  f.innerHTML = FZ_SVG[art](b0); if (art === "agent") agentLaufen(f);
   const links = Math.max(0, Math.min(r.right, innerWidth) - b - 6); // ganz im Bild starten, Heck am Senden-Knopf
   f.style.left = links + "px"; f.style.top = r.top - h - 4 + "px"; document.body.appendChild(f);
   const dx = -(links + b + 20), N = 18, bild = [{ transform: "translate(30px,0) scale(.4)", opacity: 0 }, { transform: "translate(0,0) rotate(3deg) scale(1)", opacity: 1, offset: 0.1 }];
   for (let i = 1; i <= N; i++) { const t = i / N, x = dx * (0.2 * t + 0.8 * t * t), y = -Math.abs(Math.sin(t * Math.PI * 7)) * 4; bild.push({ transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(i < 4 ? 3 - i : 0)}deg)`, opacity: 1, offset: 0.1 + t * 0.9 }); }
-  const dauer = art === "express" ? 1200 : art === "blaulicht" ? 1900 : art === "fahrrad" ? 2900 : 2300;
+  const dauer = art === "express" ? 1200 : art === "blaulicht" ? 1900 : art === "fahrrad" ? 2900 : art === "agent" ? 3000 : 2300;
   f.animate(bild, { duration: dauer, easing: "ease-in", fill: "forwards" }).onfinish = () => f.remove();
   if (art === "fahrrad") try { navigator.vibrate?.([30, 60, 30]); } catch {} // „kling-kling“
   f.querySelectorAll(".fz-tempo path").forEach((x, i) => x.animate([{ opacity: 0, transform: "translateX(0)" }, { opacity: 1 }, { opacity: 0, transform: "translateX(24px)" }], { duration: 300, iterations: Infinity, delay: i * 90 }));
@@ -15024,7 +15253,7 @@ function sendeFahrzeug(r, art) {
 // Nachrichten-Kennung → Absender und Empfänger sehen dasselbe. ❗ wichtig → Blaulicht. Der Empfänger sieht es nur bei offener
 // Unterhaltung, frischer Nachricht, eigenen Effekten an (✨ Animierte Knöpfe, kein Sparmodus) und eigenem Sende-Effekt nicht „Aus“.
 const fxReihe = (mid) => { let h = 0; for (const c of String(mid)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDE_REIHE[h % SENDE_REIHE.length]; };
-const fxArt = (wahl, wichtig, mid, express) => wahl === "aus" ? null : express ? "express" : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
+const fxArt = (wahl, wichtig, mid, express, geheim) => wahl === "aus" ? null : express ? "express" : geheim ? "agent" : wichtig ? "blaulicht" : wahl === "wechsel" ? (mid ? fxReihe(mid) : SENDE_REIHE[SENDE_FX_N++ % SENDE_REIHE.length]) : SENDE_REIHE.includes(wahl) ? wahl : null;
 function sendeEffektMelden() {
   const w = sendeEffektWahl(); if (!INIT?.einstellungen || INIT.einstellungen.sende_effekt?.art === w) return;
   api("einstellung_setzen", { schluessel: "sende_effekt", wert: { art: w } }).then(() => { INIT.einstellungen.sende_effekt = { art: w }; }).catch(einstNurLokal); // KC-CLUB-RC-PRUEFUNG (20.10.2026)
@@ -15039,7 +15268,7 @@ function empfangsEffekt(u) {
   // ungelesene Nachricht anderer ihren Effekt – genau die, zu der die App springt („⬇ Neue Nachrichten“). Höchstens 7 Tage alt.
   const ziel = neu ? letzte : erst && u.gelesenBis ? u.nachrichten.find((m) => !m.eigen && m.zeit > u.gelesenBis) : null;
   if (!ziel || document.hidden || !fxAn() || sendeEffektWahl() === "aus" || Date.now() - Date.parse(ziel.zeit) > (neu ? 120000 : 7 * 86400000)) return;
-  const art = fxArt(u.sendeEffekte?.[ziel.vonId], ziel.wichtig, ziel.id, !!ziel.express); if (!art) return;
+  const art = fxArt(u.sendeEffekte?.[ziel.vonId], ziel.wichtig, ziel.id, !!ziel.express, vnIst(ziel.text)); if (!art) return;
   setTimeout(() => { const el = document.getElementById("msg-" + ziel.id); if (el) ankunftEffekt(el, art).catch(() => {}); }, neu ? 450 : 750);
 }
 const fxWarte = (a) => new Promise((ok) => { a.onfinish = a.oncancel = () => ok(); });
@@ -15143,9 +15372,10 @@ async function ankunftEffekt(el, art) {
       await fxWarte(f.animate([{ transform: "translate(0,0)" }, { transform: hoch ? `translate(${art === "ballon" ? -30 : 0}px, ${-(zy + h + 20)}px)` : `translate(${-(zx + b + 20)}px, 4px) rotate(-8deg)` }], { duration: art === "rakete" ? 900 : 1500, easing: "ease-in", fill: "forwards" }));
     } else {
       // 🚐/🚨/🚴/🏎️ fährt von rechts heran, bremst neben der Blase, liefert ab (Kuvert hüpft hinein / Blaulicht blinkt) und fährt links davon
-      const b = Math.round(Math.min(170, innerWidth * 0.38)), h = Math.round(b * (art === "fahrrad" ? 0.58 : 0.55));
+      const b0 = Math.round(Math.min(170, innerWidth * 0.38)), b = art === "agent" ? Math.round(b0 * 0.62) : b0, h = Math.round(b0 * (art === "fahrrad" ? 0.58 : art === "agent" ? 0.78 : 0.55));
       const zx = Math.min(innerWidth - b - 6, Math.max(r.right - b * 0.35, 6)), zy = Math.min(innerHeight - h - 4, r.bottom - h * 0.75);
-      const f = fxEl((FZ_SVG[art] || FZ_SVG.postauto)(b), zx, zy); weg.push(f);
+      const f = fxEl((FZ_SVG[art] || FZ_SVG.postauto)(b0), zx, zy); weg.push(f);
+      const beine = art === "agent" ? agentLaufen(f) : []; // 2.530.0 KC-CLUB-GEHEIMAGENT
       const raeder = [...f.querySelectorAll(".fz-rad")].map((rad) => { rad.style.transformBox = "fill-box"; rad.style.transformOrigin = "center"; return rad.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-360deg)" }], { duration: 380, iterations: Infinity }); });
       if (art === "blaulicht") {
         f.querySelectorAll(".bl-a").forEach((x) => x.animate([{ opacity: 1 }, { opacity: 0.15 }], { duration: 160, iterations: Infinity, direction: "alternate" }));
@@ -15159,6 +15389,11 @@ async function ankunftEffekt(el, art) {
         const dx = r.left + r.width / 2 - (zx + b * 0.55), dy = r.top + Math.min(20, r.height / 2) - (zy + h * 0.3);
         await fxWarte(k.animate([{ transform: "translate(0,0) scale(.5)" }, { transform: `translate(${dx * 0.5}px, ${dy - 50}px) scale(1.2) rotate(-12deg)`, offset: 0.5 }, { transform: `translate(${dx}px, ${dy}px) scale(1) rotate(0deg)` }], { duration: 750, easing: "ease-in-out", fill: "forwards" }));
         fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1200); k.remove();
+      } else if (art === "agent") { // stehen bleiben, Koffer klickt auf: 🔑 dreht sich über der Blase
+        beine.forEach((a) => a.pause()); vnSchluesselZeigen(el);
+        f.querySelectorAll(".ag-buegel").forEach((x) => x.animate([{ transform: "translateY(0)" }, { transform: "translateY(-2px)" }], { duration: 200, fill: "forwards", delay: 500 }));
+        fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1400);
+        await new Promise((ok) => setTimeout(ok, 1100)); beine.forEach((a) => a.play());
       } else {
         fxHuepfen(el); el.classList.add("aufblitzen"); setTimeout(() => el.classList.remove("aufblitzen"), 1600);
         try { navigator.vibrate?.([60, 60, 60]); } catch {}
@@ -15527,9 +15762,9 @@ const JZ_DEKO_WAHL = [["auto", "🔄 Automatisch"], ["wimpel", "🎏 Wimpel"], [
 const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff6b9a", "#8ac926"], pastell: ["#f7a8c4", "#9fd3ff", "#fff3a0", "#b6f0b0", "#d9b8f7"],
   bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
   warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"],
-  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"] }; // 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
+  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"], western: ["#9b2226", "#e9c46a", "#264653", "#bc6c25"], wueste: ["#1d4e89", "#ffd166", "#9b2226", "#2a9d8f"] }; // 2.548.0: wueste // 2.529.0: western · 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
 const JZ_DEKO_AUTO = { herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
-  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"] };
+  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"], wildwest: ["wimpel", "western"], wueste: ["laternen", "wueste"] }; // 2.548.0: + Wüste // 2.529.0: + Wilder Westen
 const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
 const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
 function jzDekoArt(art) { // → [Art, Farben] oder null
@@ -15652,7 +15887,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
     jzTropfTakt();
   }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
-const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"] };
+const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"], wildwest: ["🤠", "🐃", "🌵", "🔥"], wueste: ["🐪", "🌴", "🪔", "✨"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
@@ -17486,7 +17721,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln"]; // 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste"]; // 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -18090,7 +18325,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln"]; // 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste"]; // 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
 function jzbFestStart() {
@@ -18102,6 +18337,8 @@ function jzbFest(dt) {
   const J = JZB, k = J.k;
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
+  if (J.saison === "wueste") return jzbWuSchritt(F, dt); // 2.548.0: Pyramiden, Karawane, Oase, Pharao, Flaschengeist – Name aus Goldstaub, Sonnenuntergang
+  if (J.saison === "wildwest") return jzbWwSchritt(F, dt); // 2.529.0: Tipi, Lagerfeuer, Cowboys, Kutsche – zum Schluss die Büffelherde
   if (J.saison === "kegeln") return jzbKgSchritt(F, dt); // 2.446.0: 6 Würfe, zuletzt „Alle Neune“, Tafel wischen
   if (J.saison === "bauernhof") return jzbBhSchritt(F, dt); // 2.445.0: ein Tag auf dem Hof – Morgen bis Nacht, dann wieder Morgen
   if (J.saison === "weltraum") return jzbWrSchritt(F, dt); // 2.444.0: eigener Ablauf (Rakete, Astronaut, UFO)
@@ -18190,7 +18427,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---- 🎡 Sim-Jü ----
@@ -19089,6 +19326,531 @@ function jzbKegelnMalen(c, F) {
   if (K.holz) { const H = K.holz, a = Math.min(1, H.t * 4, (2.6 - H.t) * 2), neun = H.n === 9, txt = neun ? "Alle Neune!" : H.n + " Holz!";
     c.save(); c.globalAlpha *= a; c.font = `800 ${(neun ? 13 : 11) * k}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
     const tx = Math.min(J.w - JZB_RAND - 40 * k, P.kegel - 10 * k), ty = P.boden - 17 * k - H.t * 2 * k; c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,.95)"; c.strokeText(txt, tx, ty); c.fillStyle = neun ? "#c1121f" : "#3b2412"; c.fillText(txt, tx, ty); c.restore(); }
+}
+// ---- 2.529.0 KC-CLUB-WILDWEST (Wunsch Hansi „neue Szene Wild West: links ein Indianerzelt, davor ein Lagerfeuer, am Horizont laufen Büffel,
+// ab und an reiten 2 Cowboys vorbei, zwischendurch eine Kutsche – dann kommt eine riesige Büffelherde, trampelt alles nieder, Staubwolke,
+// Szene fängt wieder von vorne an“) ----
+// Unten im Kopf der Wilde Westen: links ein Tipi, davor knistert ein Lagerfeuer (Funken, Rauch). Am Horizont ziehen kleine Büffel vor Tafelbergen
+// und Kakteen. Zweimal reiten zwei Cowboys vorbei (einer schwingt das Lasso), zweimal rumpelt die Postkutsche „Köcheclub-Express“ durch.
+// Zum Schluss bebt der Boden: eine riesige Büffelherde donnert von rechts heran, trampelt Zelt und Feuer nieder, eine Staubwolke deckt alles zu –
+// aus dem Staub heraus beginnt die Szene von vorn (nahtlos). Alles nur Bild, nichts wird gespeichert oder gesendet.
+// ---------- 2.548.0 KC-CLUB-WUESTE (Wunsch Hansi „Szene Wüste: im Hintergrund Pyramiden, vorne zieht eine Karawane vorbei, links eine Oase, dann kommt
+// der Pharao – auf einer Sänfte getragen –, rechts kommt ein Flaschengeist aus der Lampe“; Ende nach Wahl Hansi „1 + 3“): der Geist verbeugt sich vor dem
+// Pharao und schnippt – aus der Lampe steigt Goldstaub und schreibt langsam Buchstabe für Buchstabe den Vornamen in den Himmel (ohne Namen „Köcheclub“);
+// dann wirbelt der Geist zurück in die Lampe, die Lampe wackelt, der Pharao wird davongetragen. Zum Schluss Sonnenuntergang hinter den Pyramiden,
+// Sterne und Halbmond, die Karawane rastet an der Oase – dann wird es wieder Tag. Alles aus der Zeit im Lauf berechnet, nur Bild, nichts gespeichert/gesendet.
+const JZB_WU_KARAWANE = 5, JZB_WU_PHARAO = 26, JZB_WU_ANKUNFT = 36, JZB_WU_GEIST = 37, JZB_WU_NAME_AB = 47, JZB_WU_TAKT = 2.6, JZB_WU_KAMELE = 4;
+const jzbWuName = () => [...(jzbEisNameText() || "Köcheclub")].slice(0, 12);
+function jzbWuZeiten() { // der Ablauf richtet sich nach der Länge des Namens
+  const n = jzbWuName().length, fertig = JZB_WU_NAME_AB + n * JZB_WU_TAKT + 2.2, zurueck = fertig + 6, abend = zurueck + 5;
+  return { n, fertig, zurueck, abend, ende: abend + 22 };
+}
+function jzbWuOrt() { const J = JZB, k = J.k, boden = J.h - 5 * k; return { boden, horizont: boden - 22 * k, oase: JZB_RAND + 30 * k, lampe: J.w - JZB_RAND - 24 * k, mitte: J.w * .46 }; }
+function jzbWuNeu() { return { glitzer: [], gUhr: 0, sterne: Array.from({ length: 28 }, () => ({ x: Math.random(), y: Math.random(), ph: jzbZ(0, 6) })) }; }
+function jzbWuNameLage(O, k) {
+  const J = JZB, z = jzbWuName(), fs = Math.round(Math.max(10, Math.min(24 * k, (O.horizont - 8 * k) * .75))), f = `700 ${fs}px Georgia, "Times New Roman", serif`;
+  const c = J.ctx; c.save(); c.font = f; const b = z.map((ch) => c.measureText(ch).width + 1.5 * k); c.restore();
+  const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, Math.min(J.w - JZB_RAND - ges, J.w * .5 - ges / 2));
+  return { z, fs, f, y: Math.max(fs * .85 + 2, O.horizont - 26 * k), pos: b.map((w) => { const m = x + w / 2; x += w; return m; }) };
+}
+function jzbWuGeistLage(t, Z, O, k) { // null = in der Lampe
+  const sx = O.lampe + 7 * k, sy = O.boden - 9 * k, gx = O.mitte + 44 * k, gy = O.boden - 26 * k;
+  if (t < JZB_WU_GEIST || t >= Z.zurueck + 2.6) return null;
+  if (t < JZB_WU_GEIST + 3) { const p = jzbEase((t - JZB_WU_GEIST) / 3); return { x: sx, y: sy - p * 16 * k, sc: .15 + p * .65, verbeugt: 0, schnipp: 0, sx, sy }; }
+  if (t < JZB_WU_GEIST + 6) { const p = jzbEase((t - JZB_WU_GEIST - 3) / 3); return { x: sx + (gx - sx) * p, y: sy - 16 * k + (gy - sy + 16 * k) * p, sc: .8 + p * .2, verbeugt: 0, schnipp: 0, sx, sy }; }
+  if (t < Z.zurueck) {
+    const vb = t - JZB_WU_GEIST - 6, verbeugt = vb < 3 ? Math.sin(Math.PI * Math.min(1, vb / 3)) : 0, sn = t - (JZB_WU_NAME_AB - 1.2);
+    return { x: gx, y: gy + Math.sin(t * 1.6) * 1.5 * k, sc: 1, verbeugt, schnipp: sn >= 0 && sn < .8 ? 1 - sn / .8 : 0, sx, sy };
+  }
+  const p = jzbEase((t - Z.zurueck) / 2.6), w = p * Math.PI * 4; // Wirbel zurück in die Lampe
+  return { x: gx + (sx - gx) * p + Math.cos(w) * (1 - p) * 10 * k, y: gy + (sy - gy) * p + Math.sin(w) * (1 - p) * 6 * k, sc: 1 - p * .9, verbeugt: 0, schnipp: 0, dreh: w, sx, sy };
+}
+function jzbWuSchritt(F, dt) {
+  const J = JZB, k = J.k, t = F.t, Z = jzbWuZeiten(), O = jzbWuOrt(), W = F.wu || (F.wu = jzbWuNeu());
+  if (t >= Z.ende) { J.fest = null; return jzbLaufEnde(); }
+  F.a = Math.min(1, t / 2) * Math.min(1, Math.max(0, (Z.ende - t) / 1.5));
+  // ✨ Goldstaub: nach dem Schnipsen steigt er aus der Lampe zu jedem neuen Buchstaben
+  if (t >= JZB_WU_NAME_AB - .6 && t < Z.fertig && (W.gUhr -= dt) <= 0) {
+    W.gUhr = .045; const L = jzbWuNameLage(O, k), i = Math.min(L.z.length - 1, Math.max(0, Math.floor((t - JZB_WU_NAME_AB + .6) / JZB_WU_TAKT)));
+    W.glitzer.push({ x: O.lampe + 9 * k, y: O.boden - 9 * k, zx: L.pos[i] + jzbZ(-4, 4) * k, zy: L.y - L.fs * .35 + jzbZ(-5, 5) * k, p: 0, v: jzbZ(.45, .7), r: jzbZ(.7, 1.5) * k, ph: jzbZ(0, 6) });
+  }
+  for (const g of W.glitzer) g.p += dt * g.v;
+  W.glitzer = W.glitzer.filter((g) => g.p < 1.35);
+}
+function jzbWuKamelMalen(c, x, y, sc, ph, o = {}) { // Dromedar nach links (Karawane zieht nach links), Füße bei y · o.liegt: rastet · o.decke/o.last/o.reiter
+  c.save(); c.translate(x, y); c.scale(sc, sc);
+  const fell = "#c19a6b", dunkel = "#9c7a50";
+  if (o.liegt) {
+    c.fillStyle = fell; c.beginPath(); c.ellipse(0, -5, 11, 4.5, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(1, -9, 5, 4, 0, 0, 7); c.fill(); // Körper + Höcker
+    c.strokeStyle = fell; c.lineWidth = 2.6; c.lineCap = "round"; c.beginPath(); c.moveTo(-9, -6); c.quadraticCurveTo(-14, -9, -13, -15); c.stroke(); // Hals
+    c.fillStyle = fell; c.beginPath(); c.ellipse(-15, -15.5, 3.2, 1.8, -.2, 0, 7); c.fill();
+    c.fillStyle = "#2b1a0e"; c.beginPath(); c.arc(-15.5, -16.2, .45, 0, 7); c.fill(); c.restore(); return;
+  }
+  const bein = (bx, w) => { c.strokeStyle = dunkel; c.lineWidth = 1.8; c.lineCap = "round"; c.beginPath(); c.moveTo(bx, -10); c.lineTo(bx + Math.sin(w) * 3, -4.5); c.lineTo(bx + Math.sin(w) * 3.6, 0); c.stroke(); };
+  bein(6, ph + Math.PI); bein(-6, ph); // hintere Beine
+  c.fillStyle = fell; c.beginPath(); c.ellipse(0, -13, 10, 4.6, 0, 0, 7); c.fill(); // Rumpf
+  c.beginPath(); c.ellipse(1, -17, 5.5, 4.8, 0, 0, 7); c.fill(); // Höcker
+  c.strokeStyle = fell; c.lineWidth = 3; c.lineCap = "round"; c.beginPath(); c.moveTo(-8, -14); c.quadraticCurveTo(-15, -16 + Math.sin(ph) * .6, -14, -24); c.stroke(); // Hals
+  c.fillStyle = fell; c.beginPath(); c.ellipse(-16, -24.5, 3.6, 2, -.15, 0, 7); c.fill(); c.beginPath(); c.arc(-13.6, -26, 1, 0, 7); c.fill(); // Kopf, Ohr
+  c.fillStyle = "#2b1a0e"; c.beginPath(); c.arc(-16.4, -25.3, .5, 0, 7); c.fill();
+  c.strokeStyle = fell; c.lineWidth = 1.2; c.beginPath(); c.moveTo(10, -14); c.quadraticCurveTo(13, -12, 12, -8); c.stroke(); // Schwanz
+  bein(5, ph); bein(-7, ph + Math.PI); // vordere Beine
+  if (o.decke) { c.fillStyle = o.decke; c.beginPath(); c.moveTo(-5, -20); c.quadraticCurveTo(1, -24, 7, -20); c.lineTo(8, -12); c.lineTo(-6, -12); c.closePath(); c.fill();
+    c.fillStyle = "#ffd166"; for (let i = -5; i <= 7; i += 2.4) { c.beginPath(); c.arc(i, -11.6, .6, 0, 7); c.fill(); } }
+  if (o.last) { c.fillStyle = "#8d6e63"; c.fillRect(-7, -21, 5, 6); c.fillRect(4, -21, 5, 6); c.strokeStyle = "#5d4037"; c.lineWidth = .7; c.strokeRect(-7, -21, 5, 6); c.strokeRect(4, -21, 5, 6); }
+  if (o.reiter) { c.fillStyle = "#f1faee"; c.beginPath(); c.ellipse(1, -26, 3.2, 4.6, 0, 0, 7); c.fill(); // Gewand
+    c.fillStyle = "#c68b59"; c.beginPath(); c.arc(0.5, -32.5, 2.3, 0, 7); c.fill(); c.fillStyle = o.reiter; c.beginPath(); c.ellipse(.8, -34.2, 2.9, 1.7, 0, 0, 7); c.fill(); } // Kopf + Turban
+  c.restore();
+}
+function jzbWuTraegerMalen(c, x, y, ph) { // Träger (Lendenschurz, Stab auf der Schulter), Blick nach rechts
+  const bein = (w) => { c.beginPath(); c.moveTo(0, -9); c.lineTo(Math.sin(w) * 3, 0); c.stroke(); };
+  c.save(); c.translate(x, y); c.strokeStyle = "#a0673a"; c.lineWidth = 1.7; c.lineCap = "round"; bein(ph); bein(ph + Math.PI);
+  c.fillStyle = "#f1faee"; c.fillRect(-2.2, -11, 4.4, 3); c.fillStyle = "#a0673a"; c.fillRect(-1.6, -17, 3.2, 6.5); // Schurz, Oberkörper
+  c.beginPath(); c.arc(0, -19.2, 2.1, 0, 7); c.fill(); c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(-.3, -20, 2.1, Math.PI, 0); c.fill(); c.restore(); // Kopf, Haar
+}
+function jzbWuSaenfteMalen(c, x, y, k, ph, geht) { // Sänfte mit Pharao, vier Träger (vorn/hinten je zwei, versetzt)
+  const s = k * 1.05, schw = geht ? Math.sin(ph * 2) * .8 * k : 0;
+  c.save();
+  for (const [dx, p] of [[-24, 0], [24, Math.PI]]) jzbWuTraegerMalen(c, x + dx * s - 2 * s, y, geht ? ph + p + 1 : 0); // hintere Reihe (versetzt)
+  c.translate(0, schw);
+  c.strokeStyle = "#7f5539"; c.lineWidth = 1.6 * s; c.lineCap = "round"; c.beginPath(); c.moveTo(x - 30 * s, y - 17 * s); c.lineTo(x + 30 * s, y - 17 * s); c.stroke(); // Tragestangen
+  c.fillStyle = "#b5892f"; c.fillRect(x - 13 * s, y - 21 * s, 26 * s, 5 * s); // Sitzkasten
+  c.fillStyle = "#1d3557"; for (let i = 0; i < 5; i++) c.fillRect(x - 12 * s + i * 5.2 * s, y - 20 * s, 2.4 * s, 3 * s);
+  // Pharao: weißes Gewand, Nemes-Kopftuch blau-gold gestreift, Bart, Krummstab
+  c.fillStyle = "#f8f9fa"; c.beginPath(); c.ellipse(x, y - 25 * s, 4.6 * s, 5.5 * s, 0, 0, 7); c.fill();
+  c.fillStyle = "#ffd166"; c.fillRect(x - 4.2 * s, y - 28 * s, 8.4 * s, 1.6 * s); // Kragen
+  c.fillStyle = "#c68b59"; c.beginPath(); c.arc(x + .6 * s, y - 33 * s, 3 * s, 0, 7); c.fill();
+  for (let i = 0; i < 5; i++) { c.fillStyle = i % 2 ? "#ffd166" : "#1d4e89"; c.beginPath(); c.moveTo(x - 3.6 * s, y - 34 * s + i * 1.4 * s); c.lineTo(x - 5.6 * s, y - 28.5 * s + i * .4 * s); c.lineTo(x - 4.6 * s, y - 28.5 * s + i * .4 * s); c.lineTo(x - 2.8 * s, y - 34 * s + i * 1.4 * s); c.fill(); }
+  c.fillStyle = "#1d4e89"; c.beginPath(); c.moveTo(x - 3.8 * s, y - 34 * s); c.quadraticCurveTo(x + .6 * s, y - 39 * s, x + 4 * s, y - 34 * s); c.lineTo(x + 3 * s, y - 33.5 * s); c.lineTo(x - 3 * s, y - 33.5 * s); c.fill();
+  c.strokeStyle = "#ffd166"; c.lineWidth = .7 * s; c.beginPath(); c.moveTo(x - 3.4 * s, y - 35 * s); c.quadraticCurveTo(x + .6 * s, y - 38.6 * s, x + 3.6 * s, y - 35 * s); c.stroke();
+  c.fillStyle = "#1d4e89"; c.fillRect(x + 2.6 * s, y - 31 * s, 1 * s, 2.6 * s); // Bart
+  c.strokeStyle = "#ffd166"; c.lineWidth = 1 * s; c.beginPath(); c.moveTo(x + 5 * s, y - 22 * s); c.lineTo(x + 5 * s, y - 33 * s); c.arc(x + 6.6 * s, y - 33 * s, 1.6 * s, Math.PI, 0); c.stroke(); // Krummstab
+  // Baldachin
+  c.strokeStyle = "#b5892f"; c.lineWidth = 1 * s; c.beginPath(); c.moveTo(x - 12 * s, y - 21 * s); c.lineTo(x - 12 * s, y - 42 * s); c.moveTo(x + 12 * s, y - 21 * s); c.lineTo(x + 12 * s, y - 42 * s); c.stroke();
+  c.fillStyle = "#9b2226"; c.beginPath(); c.moveTo(x - 15 * s, y - 42 * s); c.quadraticCurveTo(x, y - 49 * s, x + 15 * s, y - 42 * s); c.closePath(); c.fill();
+  c.fillStyle = "#ffd166"; for (let i = -14; i <= 14; i += 3.5) { c.beginPath(); c.arc(x + i * s, y - 41.6 * s, .8 * s, 0, 7); c.fill(); }
+  c.restore();
+  for (const [dx, p] of [[-26, Math.PI], [22, 0]]) jzbWuTraegerMalen(c, x + dx * s, y, geht ? ph + p : 0); // vordere Reihe
+}
+function jzbWuLampeMalen(c, x, y, k, wackel) { // goldene Öllampe, Tülle nach links
+  c.save(); c.translate(x, y); c.rotate(wackel); c.scale(k, k);
+  const g = c.createLinearGradient(0, -8, 0, 0); g.addColorStop(0, "#ffe08a"); g.addColorStop(1, "#b8860b");
+  c.fillStyle = g; c.beginPath(); c.ellipse(0, -3.5, 7, 3.4, 0, 0, 7); c.fill(); // Bauch
+  c.beginPath(); c.moveTo(-5, -4.5); c.quadraticCurveTo(-10, -5.5, -13, -8.5); c.lineTo(-12, -6.6); c.quadraticCurveTo(-9, -3, -5, -2); c.fill(); // Tülle
+  c.strokeStyle = "#b8860b"; c.lineWidth = 1.2; c.beginPath(); c.arc(8, -4, 2.6, -Math.PI / 2, Math.PI / 2); c.stroke(); // Henkel
+  c.fillStyle = "#e9b949"; c.beginPath(); c.ellipse(0, -6.8, 3, 1.2, 0, 0, 7); c.fill(); c.beginPath(); c.arc(0, -8.2, 1, 0, 7); c.fill(); // Deckel + Knopf
+  c.fillStyle = "#8a6d1d"; c.fillRect(-2.5, -.5, 5, 1); c.restore();
+}
+function jzbWuGeistMalen(c, G, k, T) { // blauer Flaschengeist mit Rauchschweif zur Lampe
+  const s = k * G.sc; if (s <= 0) return;
+  c.save();
+  // Rauchschweif: von der Lampen-Tülle geschwungen bis unter den Oberkörper
+  const n = 14; for (let i = 0; i < n; i++) { const p = i / (n - 1), bx = G.sx - 6 * k, by = G.sy - 1 * k;
+    const x = bx + (G.x - bx) * p + Math.sin(p * 6 + T * 3) * 3 * k * (1 - p), y = by + (G.y + 6 * s - by) * p;
+    c.fillStyle = `rgba(76,201,240,${.18 + p * .5})`; c.beginPath(); c.arc(x, y, (1 + p * 3.2) * s, 0, 7); c.fill(); }
+  c.translate(G.x, G.y); if (G.dreh) c.rotate(G.dreh * .25); c.rotate(G.verbeugt * .45); c.scale(s, s);
+  c.fillStyle = "#4cc9f0"; c.beginPath(); c.moveTo(-5, 4); c.quadraticCurveTo(-6, -6, 0, -8); c.quadraticCurveTo(6, -6, 5, 4); c.quadraticCurveTo(0, 8, -5, 4); c.fill(); // Oberkörper
+  c.fillStyle = "#7b2cbf"; c.beginPath(); c.moveTo(-5, -5); c.lineTo(-2, 3); c.lineTo(-5, 4); c.closePath(); c.fill(); c.beginPath(); c.moveTo(5, -5); c.lineTo(2, 3); c.lineTo(5, 4); c.closePath(); c.fill(); // Weste
+  // Arme: beim Schnipsen ein Arm hoch, sonst verschränkt
+  c.strokeStyle = "#4cc9f0"; c.lineWidth = 2.2; c.lineCap = "round";
+  if (G.schnipp > 0) { c.beginPath(); c.moveTo(4, -4); c.lineTo(9, -10); c.stroke(); c.fillStyle = `rgba(255,214,102,${G.schnipp})`;
+    for (let i = 0; i < 6; i++) { const w = i * Math.PI / 3; c.beginPath(); c.arc(9 + Math.cos(w) * 3.5 * (1.4 - G.schnipp), -11 + Math.sin(w) * 3.5 * (1.4 - G.schnipp), .8, 0, 7); c.fill(); } }
+  else { c.beginPath(); c.moveTo(-5, -3); c.quadraticCurveTo(0, 1, 5, -3); c.stroke(); }
+  c.fillStyle = "#ffd166"; c.fillRect(-6, -2, 2, 1.2); c.fillRect(4, -2, 2, 1.2); // Armreifen
+  c.fillStyle = "#4cc9f0"; c.beginPath(); c.arc(0, -11.5, 4, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(-1.4, -12, .55, 0, 7); c.arc(1.4, -12, .55, 0, 7); c.fill();
+  c.strokeStyle = "#1b1b1b"; c.lineWidth = .6; c.beginPath(); c.arc(0, -10.6, 1.5, .2, Math.PI - .2); c.stroke(); // Lächeln
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.moveTo(0, -15.3); c.quadraticCurveTo(2.5, -19, .5, -21); c.quadraticCurveTo(1.2, -18, -1, -15.4); c.fill(); // Haarzopf
+  c.fillStyle = "#ffd166"; c.beginPath(); c.arc(3.9, -11, .7, 0, 7); c.fill(); // Ohrring
+  c.restore();
+}
+function jzbWuPalmeMalen(c, x, y, h, k, T, neig) {
+  c.strokeStyle = "#7f5539"; c.lineWidth = 2.2 * k; c.lineCap = "round"; const tx = x + neig * k, ty = y - h * k;
+  c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + neig * .2 * k, y - h * .6 * k, tx, ty); c.stroke();
+  c.strokeStyle = "#2d6a4f"; c.lineWidth = 1.8 * k;
+  for (let i = 0; i < 6; i++) { const w = -Math.PI + i * Math.PI / 5 + Math.sin(T * 1.2 + i) * .06, l = 11 * k;
+    c.beginPath(); c.moveTo(tx, ty); c.quadraticCurveTo(tx + Math.cos(w) * l * .6, ty + Math.sin(w) * l * .6 - 3 * k, tx + Math.cos(w) * l, ty + Math.sin(w) * l + 4 * k); c.stroke(); }
+  c.fillStyle = "#6f4e37"; c.beginPath(); c.arc(tx - 1 * k, ty + 1.5 * k, 1.2 * k, 0, 7); c.arc(tx + 1.4 * k, ty + 1.8 * k, 1.2 * k, 0, 7); c.fill(); // Datteln
+}
+function jzbWuesteMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, W = F.wu, t = F.t; if (!W) return;
+  const O = jzbWuOrt(), Z = jzbWuZeiten(), ab = t - Z.abend;
+  // Tageszeit: 0 = Tag … 1 = Nacht (Sonnenuntergang 0–7 s, Nacht bis 15 s, Morgen bis 21 s)
+  const nacht = ab < 0 ? 0 : ab < 7 ? jzbEase(ab / 7) : ab < 15 ? 1 : Math.max(0, 1 - (ab - 15) / 5), glut = ab < 0 ? 0 : ab < 7 ? Math.sin(Math.PI * ab / 7) : 0;
+  // ☀️ Sonne: tagsüber hoch rechts über den Pyramiden – beim Sonnenuntergang sinkt sie glutrot hinter sie
+  const sx = J.w * .68, sy0 = Math.max(10 * k, O.horizont - 44 * k), sy = ab < 0 ? sy0 : ab < 7 ? sy0 + (O.horizont + 6 * k - sy0) * jzbEase(ab / 7) : O.horizont + 30 * k;
+  if (glut > 0) { const hg = c.createLinearGradient(0, 0, 0, O.horizont); hg.addColorStop(0, `rgba(255,120,60,${glut * .25})`); hg.addColorStop(1, `rgba(255,170,80,${glut * .55})`); c.fillStyle = hg; c.fillRect(0, 0, J.w, O.horizont); }
+  if (sy < O.horizont + 8 * k) { const r = 9 * k, sg = c.createRadialGradient(sx, sy, 0, sx, sy, r * 2.4); sg.addColorStop(0, `rgba(255,${Math.round(220 - glut * 110)},90,.95)`); sg.addColorStop(.45, `rgba(255,${Math.round(190 - glut * 100)},70,.45)`); sg.addColorStop(1, "rgba(255,160,60,0)");
+    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, r * 2.4, 0, 7); c.fill(); }
+  // 🔺 Pyramiden am Horizont (Lichtseite / Schattenseite)
+  for (const [px, ph, pb] of [[J.w * .56, 34, 62], [J.w * .73, 26, 48], [J.w * .86, 18, 34]]) {
+    const top = O.horizont - ph * k; c.fillStyle = "#e9c46a"; c.beginPath(); c.moveTo(px - pb / 2 * k, O.horizont); c.lineTo(px, top); c.lineTo(px + pb * .08 * k, O.horizont); c.closePath(); c.fill();
+    c.fillStyle = "#c8963e"; c.beginPath(); c.moveTo(px + pb * .08 * k, O.horizont); c.lineTo(px, top); c.lineTo(px + pb / 2 * k, O.horizont); c.closePath(); c.fill();
+    c.strokeStyle = "rgba(140,100,40,.35)"; c.lineWidth = .6 * k; for (let i = 1; i < 5; i++) { const yy = O.horizont - ph * k * i / 5, ww = pb / 2 * k * (1 - i / 5); c.beginPath(); c.moveTo(px - ww, yy); c.lineTo(px + ww, yy); c.stroke(); } }
+  // 🏜️ Sand mit Dünen
+  const g = c.createLinearGradient(0, O.horizont, 0, J.h); g.addColorStop(0, "rgba(240,200,120,.92)"); g.addColorStop(1, "rgba(214,164,92,.97)");
+  c.fillStyle = g; c.beginPath(); c.moveTo(-4 * k, O.horizont + 2 * k);
+  for (let x = 0; x <= J.w + 8 * k; x += 8 * k) c.lineTo(x, O.horizont + Math.sin(x / (34 * k)) * 1.6 * k); c.lineTo(J.w + 8 * k, J.h + 4 * k); c.lineTo(-4 * k, J.h + 4 * k); c.closePath(); c.fill();
+  c.strokeStyle = "rgba(190,140,70,.45)"; c.lineWidth = 1 * k; for (const [x0, y0, b] of [[J.w * .3, 8, 50], [J.w * .62, 13, 60], [J.w * .15, 16, 40]]) { c.beginPath(); c.moveTo(x0 - b * k / 2, O.horizont + y0 * k); c.quadraticCurveTo(x0, O.horizont + (y0 - 4) * k, x0 + b * k / 2, O.horizont + y0 * k); c.stroke(); }
+  // 🌴 Oase links: Wasser mit Glitzern, zwei Palmen, Gras
+  c.fillStyle = "#3a86c8"; c.beginPath(); c.ellipse(O.oase, O.boden - 4 * k, 19 * k, 3.6 * k, 0, 0, 7); c.fill();
+  c.fillStyle = "rgba(255,255,255,.55)"; for (let i = 0; i < 3; i++) { const gx = O.oase - 10 * k + i * 9 * k + Math.sin(T * 1.5 + i) * 1.5 * k; c.fillRect(gx, O.boden - 4.6 * k, 3.4 * k, .7 * k); }
+  c.strokeStyle = "#52b788"; c.lineWidth = 1 * k; for (let i = -4; i <= 4; i++) { const gx = O.oase + i * 4.6 * k; c.beginPath(); c.moveTo(gx, O.boden - 1 * k); c.lineTo(gx - 1 * k, O.boden - 4.5 * k); c.moveTo(gx, O.boden - 1 * k); c.lineTo(gx + 1.2 * k, O.boden - 4 * k); c.stroke(); }
+  jzbWuPalmeMalen(c, O.oase - 14 * k, O.boden - 3 * k, 30, k, T, -4); jzbWuPalmeMalen(c, O.oase + 13 * k, O.boden - 2 * k, 24, k, T + 1, 5);
+  // 🐫 Karawane zieht vorne von rechts nach links
+  const kt = t - JZB_WU_KARAWANE, kv = 24 * k;
+  if (kt >= 0) for (let i = 0; i < JZB_WU_KAMELE; i++) { const x = J.w + 24 * k + i * 38 * k - kt * kv; if (x < -40 * k || x > J.w + 40 * k) continue;
+    jzbWuKamelMalen(c, x, O.boden, k * 1.05, T * 5 + i * 1.3, { reiter: i === 0 ? "#e63946" : i === 2 ? "#f1faee" : null, decke: i % 2 ? "#1d3557" : "#9b2226", last: i === 3 }); }
+  // 👑 der Pharao auf der Sänfte: von links bis zur Mitte, wartet auf den Geist, wird danach nach rechts davongetragen
+  const pt = t - JZB_WU_PHARAO, xm = O.mitte - 8 * k, x0 = -60 * k;
+  if (pt >= 0 && t < Z.abend + 1) { const geht = t < JZB_WU_ANKUNFT || t > Z.zurueck + 1.5;
+    const px = t < JZB_WU_ANKUNFT ? x0 + (xm - x0) * Math.min(1, pt / (JZB_WU_ANKUNFT - JZB_WU_PHARAO)) : t <= Z.zurueck + 1.5 ? xm : xm + (t - Z.zurueck - 1.5) * 26 * k;
+    if (px < J.w + 60 * k) jzbWuSaenfteMalen(c, px, O.boden, k, T * 5, geht); }
+  // 🪔 Lampe rechts – wackelt, wenn der Geist herauskommt und wenn er zurückwirbelt
+  const wa = t >= JZB_WU_GEIST - 1 && t < JZB_WU_GEIST + .8 ? Math.sin(t * 30) * .12 : t >= Z.zurueck + 2.4 && t < Z.zurueck + 4.2 ? Math.sin(t * 26) * .16 * (Z.zurueck + 4.2 - t) / 1.8 : 0;
+  jzbWuLampeMalen(c, O.lampe, O.boden, k * 1.15, wa);
+  const G = jzbWuGeistLage(t, Z, O, k); if (G) jzbWuGeistMalen(c, G, k, T);
+  // ✨ Goldstaub und der Name in Goldschrift
+  for (const s of W.glitzer) { const p = Math.min(1, s.p), e = jzbEase(p), x = s.x + (s.zx - s.x) * e + Math.sin(p * 9 + s.ph) * 4 * k * (1 - p), y = s.y + (s.zy - s.y) * e - Math.sin(p * Math.PI) * 14 * k;
+    c.fillStyle = `rgba(255,${200 + Math.round(Math.sin(T * 8 + s.ph) * 40)},90,${Math.max(0, 1 - Math.max(0, s.p - 1) / .35)})`; c.beginPath(); c.arc(x, y, s.r, 0, 7); c.fill(); }
+  if (t >= JZB_WU_NAME_AB) { const L = jzbWuNameLage(O, k), weg = Math.max(0, Math.min(1, (t - Z.zurueck - 1) / 2.5));
+    c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.shadowColor = "rgba(255,200,60,.95)"; c.shadowBlur = 8 * k;
+    L.z.forEach((ch, i) => { const d = t - JZB_WU_NAME_AB - i * JZB_WU_TAKT - 1.4; if (d < 0) return; const a = Math.min(1, d / 1) * (1 - weg); if (a <= 0) return;
+      const fl = 1 + Math.max(0, 1 - d / .6) * .35; c.save(); c.translate(L.pos[i], L.y + Math.sin(T * 1.4 + i) * .8 * k - weg * 8 * k); c.scale(fl, fl);
+      const gg = c.createLinearGradient(0, -L.fs, 0, 0); gg.addColorStop(0, `rgba(255,236,150,${a})`); gg.addColorStop(1, `rgba(214,160,40,${a})`); c.fillStyle = gg; c.fillText(ch, 0, 0); c.restore(); });
+    c.restore(); }
+  // 🌙 Nacht: dunkler Himmel, Sterne, Halbmond – die Karawane rastet an der Oase
+  if (nacht > 0) {
+    c.fillStyle = `rgba(12,20,58,${nacht * .62})`; c.fillRect(0, 0, J.w, J.h);
+    for (const s of W.sterne) { const a = nacht * (.5 + .5 * Math.sin(T * 2 + s.ph)); c.fillStyle = `rgba(255,255,230,${a})`; c.fillRect(s.x * J.w, s.y * (O.horizont - 6 * k), 1.4 * k, 1.4 * k); }
+    const mx = J.w * .22, my = Math.max(10 * k, O.horizont - 40 * k); c.fillStyle = `rgba(255,244,200,${nacht})`; c.beginPath(); c.arc(mx, my, 7 * k, 0, 7); c.fill();
+    c.fillStyle = `rgba(12,20,58,${nacht})`; c.beginPath(); c.arc(mx + 3.2 * k, my - 1.6 * k, 6.4 * k, 0, 7); c.fill();
+    c.save(); c.globalAlpha *= Math.min(1, nacht * 1.4); for (let i = 0; i < 3; i++) jzbWuKamelMalen(c, O.oase + 30 * k + i * 22 * k, O.boden, k * (1 - i * .06), 0, { liegt: true });
+    c.fillStyle = "rgba(255,170,60,.9)"; c.beginPath(); c.arc(O.oase + 52 * k, O.boden - 2 * k, 2 * k + Math.sin(T * 12) * .5 * k, 0, 7); c.fill(); c.restore(); // kleines Lagerfeuer
+  }
+}
+const JZB_WW_DAUER = 96, JZB_WW_REITER = [8, 56], JZB_WW_KUTSCHE = [13, 64], JZB_WW_DUELL = 29, JZB_WW_HERDE = 77, JZB_WW_STAUB = 84, JZB_WW_HERDE_N = 36; // Sekunden · Tiere (2.532.0: + Duell, Zeiten so, dass sich nichts überschneidet)
+const JZB_WW_COWBOYS = [{ hemd: "#c1121f", hut: "#5c3a1a", pferd: "#8b4513" }, { hemd: "#1d3557", hut: "#2b2b2b", pferd: "#6b4226", lasso: true }];
+function jzbWwOrt() { const J = JZB, k = J.k, boden = J.h - 5 * k; return { boden, horizont: boden - 22 * k, zelt: JZB_RAND + 22 * k, feuer: JZB_RAND + 56 * k }; }
+function jzbWwNeu() {
+  const J = JZB, ausStaub = !!J.wwStaub; J.wwStaub = false;
+  return { ausStaub, horizont: [], hUhr: 0, reiter: null, kutsche: null, herde: [], staub: [], funken: [], rauch: [], fUhr: 0, rUhr: 0,
+    zeltFall: 0, feuerAus: 0, beben: 0, schleier: ausStaub ? 1 : 0, gestartet: {}, ballen: [], windUhr: jzbZ(5, 9), wind: null }; // 2.532.0: Steppenläufer + Windstoß
+}
+function jzbWwSchritt(F, dt) {
+  const J = JZB, k = J.k, t = F.t, O = jzbWwOrt(), W = F.ww || (F.ww = jzbWwNeu());
+  if (t >= JZB_WW_DAUER) { J.fest = null; J.wwStaub = true; return jzbLaufEnde(); } // nächster Lauf beginnt in der Staubwolke
+  F.a = W.ausStaub ? 1 : Math.min(1, t / 2.5);
+  // Staubschleier: am Anfang lichtet er sich (nach der Herde), am Ende deckt er alles zu
+  W.schleier = Math.max(W.ausStaub ? Math.max(0, 1 - t / 4) : 0, Math.max(0, Math.min(1, (t - JZB_WW_STAUB) / 6)));
+  // 🐃 kleine Büffel am Horizont (bis die Herde kommt)
+  if (t < JZB_WW_HERDE && (W.hUhr -= dt) <= 0) { W.hUhr = jzbZ(2.5, 6); W.horizont.push({ x: -12 * k, v: jzbZ(5, 9) * k, ph: jzbZ(0, 6), sc: jzbZ(.38, .5) }); }
+  for (const b of W.horizont) { b.x += b.v * dt * (t > JZB_WW_HERDE - 3 ? 4 : 1); b.ph += dt * (t > JZB_WW_HERDE - 3 ? 9 : 3); }
+  W.horizont = W.horizont.filter((b) => b.x < J.w + 14 * k);
+  // 🤠 zwei Cowboys von rechts nach links · 🚌 Postkutsche von links nach rechts
+  for (const s of JZB_WW_REITER) if (t >= s && !W.gestartet["r" + s]) { W.gestartet["r" + s] = 1; W.reiter = { x: J.w + 24 * k, v: 52 * k, ph: 0 }; }
+  for (const s of JZB_WW_KUTSCHE) if (t >= s && !W.gestartet["k" + s]) { W.gestartet["k" + s] = 1; W.kutsche = { x: -100 * k, v: 44 * k, ph: 0 }; }
+  if (W.reiter) { W.reiter.x -= W.reiter.v * dt; W.reiter.ph += dt * 11; if (W.reiter.x < -90 * k) W.reiter = null; }
+  if (W.kutsche) { W.kutsche.x += W.kutsche.v * dt; W.kutsche.ph += dt * 9; if (W.kutsche.x > J.w + 110 * k) W.kutsche = null; }
+  // 🌬️ 2.532.0: ab und zu ein Windstoß, der einen Steppenläufer-Ballen durchs Bild rollt (nicht mehr, wenn die Herde kommt)
+  if (t < JZB_WW_HERDE - 4 && (W.windUhr -= dt) <= 0) { W.windUhr = jzbZ(14, 24); const dir = Math.random() < .5 ? 1 : -1;
+    W.ballen.push({ x: dir > 0 ? -16 * k : J.w + 16 * k, dir, v: jzbZ(85, 120) * k, dreh: 0, ph: 0, sc: jzbZ(.9, 1.25) }); W.wind = { dir, t: 0 }; }
+  for (const b of W.ballen) { b.x += b.dir * b.v * dt; b.dreh += b.dir * dt * 7; b.ph += dt * 5; }
+  W.ballen = W.ballen.filter((b) => b.x > -30 * k && b.x < J.w + 30 * k);
+  if (W.wind && (W.wind.t += dt) > 2.4) W.wind = null;
+  // 🔥 Lagerfeuer: Funken und Rauch, solange es brennt
+  if (W.feuerAus < 1) {
+    if ((W.fUhr -= dt) <= 0) { W.fUhr = jzbZ(.08, .25); W.funken.push({ x: O.feuer + jzbZ(-3, 3) * k, y: O.boden - 7 * k, vx: jzbZ(-6, 6) * k, vy: -jzbZ(16, 32) * k, a: 1 }); }
+    if ((W.rUhr -= dt) <= 0) { W.rUhr = jzbZ(.5, .9); W.rauch.push({ x: O.feuer, y: O.boden - 16 * k, r: 2.2 * k, a: .16 }); }
+  }
+  for (const f of W.funken) { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 6 * k * dt; f.a -= dt * .9; }
+  W.funken = W.funken.filter((f) => f.a > 0);
+  for (const r of W.rauch) { r.y -= 9 * k * dt; r.x += 4 * k * dt; r.r += 2.6 * k * dt; r.a -= dt * .045; }
+  W.rauch = W.rauch.filter((r) => r.a > 0);
+  // 🐃🐃🐃 die große Herde: erst bebt der Boden, dann donnert sie von rechts heran
+  W.beben = t > JZB_WW_HERDE - 3 && t < JZB_WW_STAUB + 5 ? Math.min(1, (t - JZB_WW_HERDE + 3) / 3) * Math.min(1, (JZB_WW_STAUB + 5 - t) / 2) : 0;
+  if (t >= JZB_WW_HERDE && !W.gestartet.herde) { W.gestartet.herde = 1;
+    for (let i = 0; i < JZB_WW_HERDE_N; i++) W.herde.push({ x: J.w + jzbZ(8, 560) * k, tiefe: jzbZ(0, 1), v: jzbZ(125, 170) * k, ph: jzbZ(0, 6), sc: jzbZ(1.05, 1.5), staubUhr: jzbZ(0, .2) });
+    W.herde.sort((a, b) => b.tiefe - a.tiefe); } // hinten zuerst malen
+  for (const b of W.herde) {
+    b.x -= b.v * dt; b.ph += dt * 15;
+    if ((b.staubUhr -= dt) <= 0 && b.x < J.w + 10 * k && b.x > -40 * k) { b.staubUhr = jzbZ(.08, .16);
+      W.staub.push({ x: b.x + jzbZ(4, 14) * k, y: O.boden - b.tiefe * 10 * k - jzbZ(0, 4) * k, r: jzbZ(3, 6) * k, vx: jzbZ(-10, 20) * k, a: jzbZ(.35, .55) }); }
+    if (b.x < O.zelt + 22 * k) W.zeltFall = Math.min(1, W.zeltFall + dt * 1.6); // Zelt wird niedergetrampelt
+    if (b.x < O.feuer + 12 * k) W.feuerAus = Math.min(1, W.feuerAus + dt * 3); // Feuer aus
+  }
+  W.herde = W.herde.filter((b) => b.x > -60 * k);
+  for (const s of W.staub) { s.x += s.vx * dt; s.y -= 5 * k * dt; s.r += 10 * k * dt; s.a -= dt * .085; }
+  W.staub = W.staub.filter((s) => s.a > 0).slice(-240);
+}
+function jzbWwBueffelMalen(c, x, y, sc, dir, ph, laeuft) { // Büffel von der Seite, Kopf in Laufrichtung (dir 1 = rechts, -1 = links)
+  c.save(); c.translate(x, y); c.scale(sc * dir, sc); c.lineCap = "round";
+  const b = laeuft ? Math.sin(ph) : 0;
+  c.strokeStyle = "#3b2414"; c.lineWidth = 2; c.beginPath(); // Beine
+  c.moveTo(-6, -5); c.lineTo(-6 + b * 2.2, 0); c.moveTo(-3, -5); c.lineTo(-3 - b * 2.2, 0); c.moveTo(5, -5); c.lineTo(5 - b * 2.2, 0); c.moveTo(8, -5); c.lineTo(8 + b * 2.2, 0); c.stroke();
+  c.fillStyle = "#5a3a22"; c.beginPath(); c.ellipse(-1, -8.5, 9, 4.8, 0, 0, 7); c.fill(); // Körper
+  c.fillStyle = "#3d2616"; c.beginPath(); c.ellipse(5, -10.5, 6.2, 5.6, -.35, 0, 7); c.fill(); // zotteliger Buckel
+  c.beginPath(); c.ellipse(11, -7.2, 3.2, 3.7, .35, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#2b1a0e"; c.beginPath(); c.moveTo(9.6, -4.6); c.lineTo(11.4, -1.4); c.lineTo(12.8, -4.4); c.closePath(); c.fill(); // Bart
+  c.strokeStyle = "#ece4d0"; c.lineWidth = 1; c.beginPath(); c.moveTo(11.4, -10.2); c.quadraticCurveTo(13.4, -11.6, 12.8, -13.4); c.stroke(); // Horn
+  c.fillStyle = "#111"; c.beginPath(); c.arc(12.2, -8, .55, 0, 7); c.fill(); // Auge
+  c.strokeStyle = "#3b2414"; c.lineWidth = 1; c.beginPath(); c.moveTo(-9.6, -9.5); c.quadraticCurveTo(-11.6, -7.5 + b, -12, -5.2); c.stroke(); // Schwanz
+  c.restore();
+}
+function jzbWwPferdMalen(c, ph, farbe) { // Pferd im Galopp (Blick nach +x), Füße bei y = 0 – im schon verschobenen Bild
+  const g = Math.sin(ph), g2 = Math.cos(ph);
+  c.strokeStyle = farbe; c.lineWidth = 1.8; c.lineCap = "round"; c.beginPath(); // Beine
+  c.moveTo(-6, -8); c.lineTo(-7 + g * 3, 0); c.moveTo(-4, -8); c.lineTo(-3 - g * 3, 0); c.moveTo(6, -8); c.lineTo(5 + g2 * 3, 0); c.moveTo(8, -8); c.lineTo(9 - g2 * 3, 0); c.stroke();
+  c.fillStyle = farbe; c.beginPath(); c.ellipse(1, -11 + g * .5, 9, 4.2, 0, 0, 7); c.fill(); // Rumpf
+  c.beginPath(); c.moveTo(6.5, -13.5); c.lineTo(10.5, -20); c.lineTo(13.4, -19); c.lineTo(10.2, -10.5); c.closePath(); c.fill(); // Hals
+  c.beginPath(); c.ellipse(14.4, -18.4, 3.4, 1.8, .5, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#111"; c.beginPath(); c.arc(14, -19.2, .45, 0, 7); c.fill();
+  c.strokeStyle = "#2b1a0e"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(7.6, -14.5); c.lineTo(10.8, -20.4); c.stroke(); // Mähne
+  c.beginPath(); c.moveTo(-8, -12); c.quadraticCurveTo(-12, -11 + g, -13, -6); c.stroke(); // Schweif
+}
+function jzbWwReiterMalen(c, x, y, sc, dir, ph, C, T) {
+  c.save(); c.translate(x, y + Math.abs(Math.sin(ph)) * -1.2 * sc); c.scale(sc * dir, sc);
+  jzbWwPferdMalen(c, ph, C.pferd);
+  c.strokeStyle = "#264653"; c.lineWidth = 2; c.beginPath(); c.moveTo(.4, -14); c.lineTo(2.4, -8.6); c.stroke(); // Bein (Jeans)
+  c.fillStyle = C.hemd; c.fillRect(-1.8, -22, 4.4, 8); // Hemd
+  c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(.6, -24.6, 2.4, 0, 7); c.fill(); // Gesicht
+  c.fillStyle = C.hut; c.beginPath(); c.ellipse(.6, -26.4, 5, 1.1, 0, 0, 7); c.fill(); c.fillRect(-1.6, -29.4, 4.6, 3.2); // Cowboyhut
+  c.strokeStyle = C.hemd; c.lineWidth = 1.4; c.beginPath(); c.moveTo(1.4, -20); // Arm
+  if (C.lasso) { c.lineTo(2, -28); c.stroke(); c.strokeStyle = "#d4a373"; c.lineWidth = .8; c.beginPath(); c.ellipse(2, -31, 5, 1.6 + Math.abs(Math.sin(T * 6)) * .8, Math.sin(T * 6) * .2, 0, 7); c.stroke(); }
+  else { c.lineTo(6, -17); c.stroke(); c.strokeStyle = "#2b1a0e"; c.lineWidth = .5; c.beginPath(); c.moveTo(6, -17); c.lineTo(12.4, -17.6); c.stroke(); } // Zügel
+  c.restore();
+}
+function jzbWwKutscheMalen(c, x, y, sc, ph) { // Postkutsche nach rechts, zwei Pferde vorn, Kutscher auf dem Bock
+  c.save(); c.translate(x, y); c.scale(sc, sc);
+  for (const [dx, f] of [[40, "#8b4513"], [30, "#a0522d"]]) { c.save(); c.translate(dx, 0); jzbWwPferdMalen(c, ph + dx, f); c.restore(); }
+  c.strokeStyle = "#2b1a0e"; c.lineWidth = .6; c.beginPath(); c.moveTo(14, -16); c.lineTo(42, -18); c.stroke(); // Leinen
+  const hb = Math.abs(Math.sin(ph * 1.3)) * 1.2; // die Kutsche schaukelt
+  c.fillStyle = "#7f1d1d"; c.beginPath(); c.roundRect ? c.roundRect(-16, -27 - hb, 28, 16, 2) : c.rect(-16, -27 - hb, 28, 16); c.fill(); // Kasten
+  c.fillStyle = "#ffd166"; c.fillRect(-16, -14 - hb, 28, 1.4); c.fillRect(-16, -27 - hb, 28, 1.2); // Zierleisten
+  c.fillStyle = "#3b2412"; c.fillRect(-12, -24 - hb, 7, 6); c.fillRect(1, -24 - hb, 7, 6); // Fenster
+  c.fillStyle = "#c9a227"; c.fillRect(-14, -31 - hb, 22, 4); // Gepäck auf dem Dach
+  c.fillStyle = "#ffd166"; c.font = "700 3.1px sans-serif"; c.textAlign = "center"; c.fillText("KÖCHECLUB", -2, -15.6 - hb);
+  c.fillStyle = "#5c3a1a"; c.fillRect(11, -22 - hb, 7, 2); // Kutschbock
+  c.fillStyle = "#e9c46a"; c.fillRect(13, -28 - hb, 3.6, 6); c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(14.8, -30 - hb, 2, 0, 7); c.fill(); // Kutscher
+  c.fillStyle = "#2b2b2b"; c.beginPath(); c.ellipse(14.8, -31.6 - hb, 3.6, .9, 0, 0, 7); c.fill(); c.fillRect(13.2, -34 - hb, 3.2, 2.4);
+  for (const wx of [-10, 7]) { // Räder mit drehenden Speichen
+    c.strokeStyle = "#3b2412"; c.lineWidth = 1.3; c.beginPath(); c.arc(wx, -6, 6, 0, 7); c.stroke(); c.lineWidth = .6;
+    for (let s = 0; s < 6; s++) { const a = ph * .9 + s * Math.PI / 3; c.beginPath(); c.moveTo(wx, -6); c.lineTo(wx + Math.cos(a) * 6, -6 + Math.sin(a) * 6); c.stroke(); } }
+  c.restore();
+}
+function jzbWwZeltMalen(c, x, y, k, fall) { // Tipi mit Stangen, Streifen und Eingang – „fall“ 0…1: niedergetrampelt
+  const f = jzbEase(fall);
+  c.save(); c.translate(x, y); c.rotate(-f * .1); c.scale(k * (1 + f * .45), k * (1 - f * .8));
+  c.strokeStyle = "#5c3a1a"; c.lineWidth = 1.3; c.beginPath(); for (const s of [-5, -1.5, 2, 5.5]) { c.moveTo(s * .5, -33); c.lineTo(-s * .9, -40); } c.stroke(); // Stangen oben
+  c.fillStyle = "#f1e3c6"; c.beginPath(); c.moveTo(-17, 0); c.lineTo(0, -33); c.lineTo(17, 0); c.closePath(); c.fill(); // Plane
+  c.save(); c.clip();
+  c.fillStyle = "#9b2226"; c.fillRect(-20, -9, 40, 3); c.fillStyle = "#264653"; c.fillRect(-20, -22, 40, 2.4);
+  c.fillStyle = "#e9c46a"; c.beginPath(); for (let i = -18; i < 18; i += 4) { c.moveTo(i, -15); c.lineTo(i + 2, -18); c.lineTo(i + 4, -15); } c.fill(); // Zickzack-Muster
+  c.restore();
+  c.strokeStyle = "rgba(92,58,26,.45)"; c.lineWidth = .8; c.beginPath(); c.moveTo(-17, 0); c.lineTo(0, -33); c.lineTo(17, 0); c.stroke();
+  c.fillStyle = "#3b2412"; c.beginPath(); c.moveTo(-5, 0); c.lineTo(0, -13); c.lineTo(5, 0); c.closePath(); c.fill(); // Eingang
+  c.fillStyle = "#e3d2ad"; c.beginPath(); c.moveTo(0, -13); c.lineTo(5, 0); c.lineTo(8, 0); c.closePath(); c.fill(); // zurückgeschlagene Plane
+  c.restore();
+}
+function jzbWwFeuerMalen(c, x, y, k, T, aus) {
+  c.fillStyle = "#6c757d"; for (let i = -2; i <= 2; i++) { c.beginPath(); c.arc(x + i * 3.4 * k, y - 1 * k, 1.6 * k, 0, 7); c.fill(); } // Steinkreis
+  c.strokeStyle = aus >= 1 ? "#2b1a0e" : "#5c3a1a"; c.lineWidth = 2.2 * k; c.lineCap = "round";
+  c.beginPath(); c.moveTo(x - 6 * k, y - 1.5 * k); c.lineTo(x + 5 * k, y - 4.5 * k); c.moveTo(x + 6 * k, y - 1.5 * k); c.lineTo(x - 5 * k, y - 4.5 * k); c.stroke(); // Holzscheite
+  const s = 1 - aus; if (s <= 0) return;
+  const gl = c.createRadialGradient(x, y - 6 * k, 0, x, y - 6 * k, 14 * k); gl.addColorStop(0, `rgba(255,170,60,${.28 * s})`); gl.addColorStop(1, "rgba(255,120,0,0)");
+  c.fillStyle = gl; c.beginPath(); c.arc(x, y - 6 * k, 14 * k, 0, 7); c.fill(); // Glut-Schein
+  for (const [farbe, hoehe, breite, ph] of [["#e85d04", 14, 6, 0], ["#f48c06", 10.5, 4.6, 1.7], ["#ffd166", 6.5, 2.8, 3.1]]) {
+    const h = hoehe * k * s * (1 + .16 * Math.sin(T * 13 + ph)), b = breite * k * s, wob = Math.sin(T * 9 + ph) * 1.4 * k;
+    c.fillStyle = farbe; c.beginPath(); c.moveTo(x - b, y - 3 * k); c.bezierCurveTo(x - b, y - 3 * k - h * .5, x + wob - b * .3, y - 3 * k - h * .8, x + wob, y - 3 * k - h);
+    c.bezierCurveTo(x + wob + b * .3, y - 3 * k - h * .8, x + b, y - 3 * k - h * .5, x + b, y - 3 * k); c.closePath(); c.fill(); }
+}
+function jzbWildwestMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, W = F.ww, t = F.t; if (!W) return;
+  const O = jzbWwOrt();
+  c.save(); if (W.beben > 0) c.translate(Math.sin(T * 47) * W.beben * 1.6 * k, Math.cos(T * 39) * W.beben * 1.1 * k); // der Boden bebt
+  const g = c.createLinearGradient(0, O.horizont, 0, J.h); g.addColorStop(0, "rgba(233,196,106,.85)"); g.addColorStop(1, "rgba(204,149,92,.95)");
+  c.fillStyle = g; c.fillRect(-4 * k, O.horizont, J.w + 8 * k, J.h - O.horizont + 4 * k); // Prärie
+  c.fillStyle = "rgba(174,92,40,.8)"; // Tafelberge
+  for (const [mx, mb, mh] of [[J.w * .42, 46, 15], [J.w * .76, 60, 20]]) { c.beginPath(); c.moveTo(mx - mb / 2 * k, O.horizont); c.lineTo(mx - mb / 2 * k + 7 * k, O.horizont - mh * k);
+    c.lineTo(mx + mb / 2 * k - 7 * k, O.horizont - mh * k); c.lineTo(mx + mb / 2 * k, O.horizont); c.closePath(); c.fill(); }
+  c.strokeStyle = "#2d6a4f"; c.lineCap = "round"; // Kakteen
+  for (const [kx, kh] of [[J.w * .6, 14], [J.w * .9, 11]]) { c.lineWidth = 2.4 * k; c.beginPath(); c.moveTo(kx, O.horizont + 4 * k); c.lineTo(kx, O.horizont + 4 * k - kh * k); c.stroke();
+    c.lineWidth = 1.6 * k; c.beginPath(); c.moveTo(kx, O.horizont - kh * .3 * k); c.lineTo(kx - 3.5 * k, O.horizont - kh * .3 * k); c.lineTo(kx - 3.5 * k, O.horizont - kh * .65 * k);
+    c.moveTo(kx, O.horizont - kh * .45 * k); c.lineTo(kx + 3 * k, O.horizont - kh * .45 * k); c.lineTo(kx + 3 * k, O.horizont - kh * .8 * k); c.stroke(); }
+  for (const b of W.horizont) jzbWwBueffelMalen(c, b.x, O.horizont + 2 * k, k * b.sc, 1, b.ph, true);
+  if (W.wind) { const a = Math.sin(Math.PI * Math.min(1, W.wind.t / 2.4)) * .55; c.strokeStyle = `rgba(255,255,255,${a})`; c.lineWidth = 1.1 * k; c.lineCap = "round"; // 🌬️ Windstriche
+    for (let i = 0; i < 6; i++) { const yy = O.horizont - 14 * k + i * 6 * k, lx = ((W.wind.t * 260 * k + i * 73 * k) % (J.w + 120 * k)) - 60 * k, x0 = W.wind.dir > 0 ? lx : J.w - lx;
+      c.beginPath(); c.moveTo(x0, yy); c.lineTo(x0 - W.wind.dir * (26 + i % 3 * 10) * k, yy); c.stroke(); } }
+  if (W.kutsche) jzbWwKutscheMalen(c, W.kutsche.x, O.boden - 7 * k, k * 1.05, W.kutsche.ph);
+  if (W.reiter) JZB_WW_COWBOYS.forEach((C, i) => jzbWwReiterMalen(c, W.reiter.x + i * 26 * k, O.boden - 6 * k - i * 2 * k, k * 1.1, -1, W.reiter.ph + i * 1.3, C, T));
+  for (const r of W.rauch) { c.fillStyle = `rgba(120,120,120,${r.a})`; c.beginPath(); c.arc(r.x, r.y, r.r, 0, 7); c.fill(); }
+  jzbWwZeltMalen(c, O.zelt, O.boden, k * 1.15, W.zeltFall);
+  jzbWwFeuerMalen(c, O.feuer, O.boden, k, T, W.feuerAus);
+  // 2.532.0: zwei Indianer sitzen am Feuer, der Häuptling steht daneben – wenn der Boden bebt, laufen sie davon (nächster Lauf: wieder da)
+  const flucht = t > JZB_WW_HERDE - 3 ? (t - JZB_WW_HERDE + 3) * 62 * k : 0, lauf = flucht ? T * 11 : 0;
+  if (O.feuer + 40 * k - flucht > -30 * k) {
+    jzbWwIndianerMalen(c, O.feuer - 15 * k - flucht, O.boden, k * 1.05, { hemd: "#a1683a", sitzt: !flucht, lauf, dir: flucht ? -1 : 1 }, T);
+    jzbWwIndianerMalen(c, O.feuer + 16 * k - flucht, O.boden, k * 1.12, { hemd: "#7f4f24", haube: true, lauf, dir: -1, pfeife: flucht ? 0 : jzbWwPfeifeGlut(t) }, T);
+    jzbWwIndianerMalen(c, O.feuer + 32 * k - flucht, O.boden, k * 1.05, { hemd: "#9c6644", sitzt: !flucht, winkt: true, lauf, dir: -1 }, T); }
+  // 🌵 2.532.0: rechts große Saguaro-Kakteen wie im Westen und ein kleiner Kugelkaktus
+  jzbWwKaktusMalen(c, J.w - JZB_RAND - 12 * k, O.boden, 46, k, false); jzbWwKaktusMalen(c, J.w - JZB_RAND - 44 * k, O.boden + 1 * k, 32, k, true);
+  c.fillStyle = "#2d6a4f"; c.beginPath(); c.ellipse(J.w - JZB_RAND - 28 * k, O.boden - 3 * k, 4.4 * k, 3.4 * k, 0, 0, 7); c.fill(); c.fillStyle = "#ff6b9a"; c.beginPath(); c.arc(J.w - JZB_RAND - 28 * k, O.boden - 6.4 * k, 1.2 * k, 0, 7); c.fill();
+  jzbWwRauchNameMalen(c, t, O, k, T); // 2.533.0: aus der Friedenspfeife steigt Buchstabe für Buchstabe der Vorname auf
+  const dd = t - JZB_WW_DUELL; if (dd >= 0 && dd < 27) jzbWwDuellMalen(c, dd, O, k, T); // 🤠🤠 Duell, dann holt der flache Wagen den Verwundeten
+  for (const b of W.ballen) jzbWwBallenMalen(c, b, O.boden, k);
+  for (const f of W.funken) { c.fillStyle = `rgba(255,200,80,${Math.max(0, f.a)})`; c.fillRect(f.x, f.y, 1.3 * k, 1.3 * k); }
+  for (const s of W.staub) { c.fillStyle = `rgba(196,160,110,${s.a})`; c.beginPath(); c.arc(s.x, s.y, s.r, 0, 7); c.fill(); } // Staub hinter der Herde
+  for (const b of W.herde) jzbWwBueffelMalen(c, b.x, O.boden - b.tiefe * 9 * k, k * b.sc, -1, b.ph, true);
+  c.restore();
+  if (W.schleier > 0) { const v = c.createLinearGradient(0, 0, 0, J.h); v.addColorStop(0, `rgba(214,180,130,${W.schleier * .55})`); v.addColorStop(1, `rgba(196,160,110,${W.schleier * .97})`);
+    c.fillStyle = v; c.fillRect(0, 0, J.w, J.h); } // die Staubwolke deckt alles zu – und lichtet sich zu Beginn des nächsten Laufs
+}
+// ---- 2.532.0 KC-CLUB-WILDWEST-2 (Wunsch Hansi „es fehlen noch 2 Indianer und ein Häuptling, rechts ein paar Kakteen so groß wie im Westen,
+// ab und an ein Windstoß, der einen Ballen weht, und 2 Cowboys, die sich duellieren – dann kommt eine flache Kutsche und der Verwundete wird
+// abtransportiert“): Figuren und Abläufe dazu. Duell ab JZB_WW_DUELL: beide kommen, stehen sich gegenüber, ziehen – „PENG!“, einer fällt um
+// (der Hut fliegt), der Sieger geht davon; ein flacher Wagen holt den Verwundeten (Kopfverband) ab. Alles aus der Zeit im Lauf berechnet.
+// ---- 2.533.0 KC-CLUB-FRIEDENSPFEIFE (Wunsch Hansi „Der Häuptling soll eine Friedenspfeife rauchen und daraus entsteht wieder Buchstabe für
+// Buchstabe der Username“): ab 3 s raucht der Häuptling; je Buchstabe ein Zug (Glut leuchtet), eine Rauchwolke steigt auf, schwebt an ihren Platz
+// am Himmel und wird zum Buchstaben des Vornamens (ohne Namen: „Köcheclub“). Fertig steht der Name in Rauchschrift, ab 26 s verweht ihn der Wind –
+// rechtzeitig vor dem Duell (29 s). Alles aus der Zeit im Lauf berechnet, nur Bild, nichts wird gespeichert oder gesendet.
+// 2.548.0 KC-CLUB-FRIEDENSPFEIFE-2 (Hansi: „der Name kommt zu schnell – das muss sich etwas hinziehen“): je Buchstabe bis 2,8 s statt 1,4 s (bei langen
+// Namen so viel, dass er vor dem Verwehen fertig ist), die Rauchwolke schwebt 2,4 s statt 1,6 s an ihren Platz.
+const JZB_WW_PFEIFE = [3, 26], JZB_WW_NAME_AB = 5, JZB_WW_NAME_WEHT = 26, JZB_WW_WOLKE = 2.4;
+const jzbWwNameTakt = () => Math.min(2.8, 16 / Math.max(1, jzbWwNameText().length));
+const jzbWwNameText = () => [...(jzbEisNameText() || "Köcheclub")].slice(0, 12);
+const jzbWwNameStart = (i) => JZB_WW_NAME_AB + i * jzbWwNameTakt();
+function jzbWwPfeifeGlut(t) { // 0 = Pfeife nicht in der Hand · sonst 0,15 (glimmt) bis 1 (kurz vor jeder Wolke wird gezogen)
+  if (t < JZB_WW_PFEIFE[0] || t >= JZB_WW_PFEIFE[1]) return 0;
+  const n = jzbWwNameText().length; let g = .15;
+  for (let i = 0; i < n; i++) { const d = jzbWwNameStart(i) - t; if (d >= 0 && d < .6) g = Math.max(g, 1 - d / .6); }
+  return g;
+}
+function jzbWwRauchNameLage(O, k) {
+  const J = JZB, z = jzbWwNameText(), fs = Math.round(Math.max(10, Math.min(26 * k, (O.horizont - 8 * k) * .8))), f = `700 ${fs}px Georgia, "Times New Roman", serif`;
+  const c = J.ctx; c.save(); c.font = f; const b = z.map((ch) => c.measureText(ch).width + 1.5 * k); c.restore();
+  const ges = b.reduce((a, v) => a + v, 0); let x = Math.max(JZB_RAND, Math.min(J.w - JZB_RAND - ges, J.w * .56 - ges / 2));
+  return { z, fs, f, y: Math.max(fs * .85 + 2, O.horizont - 24 * k), pos: b.map((w) => { const m = x + w / 2; x += w; return m; }) };
+}
+function jzbWwRauchNameMalen(c, t, O, k, T) {
+  if (t < JZB_WW_PFEIFE[0] || t >= JZB_WW_DUELL) return;
+  const sc = k * 1.12, bx = O.feuer + 16 * k - 10.5 * sc, by = O.boden - 21.4 * sc; // Pfeifenkopf (Häuptling schaut nach links)
+  if (t < JZB_WW_PFEIFE[1]) for (let j = 0; j < 3; j++) { const p = (T * .5 + j / 3) % 1; // feiner Rauchfaden aus dem Pfeifenkopf
+    c.fillStyle = `rgba(235,235,235,${.28 * (1 - p)})`; c.beginPath(); c.arc(bx + Math.sin(p * 6 + j) * 1.6 * k, by - p * 12 * k, (1 + p * 2.4) * k, 0, 7); c.fill(); }
+  const L = jzbWwRauchNameLage(O, k), weht = Math.max(0, t - JZB_WW_NAME_WEHT), aus = Math.max(0, 1 - weht / 3);
+  c.save(); c.font = L.f; c.textAlign = "center"; c.textBaseline = "alphabetic"; c.shadowColor = "rgba(255,255,255,.9)"; c.shadowBlur = 6 * k;
+  L.z.forEach((ch, i) => {
+    const s = jzbWwNameStart(i), d = t - s; if (d < 0) return;
+    const zx = L.pos[i], zy = L.y - L.fs * .35;
+    if (d < JZB_WW_WOLKE + .1) { // die Rauchwolke steigt auf und schwebt langsam an ihren Platz
+      const p = jzbEase(Math.min(1, d / JZB_WW_WOLKE)), x = bx + (zx - bx) * p, y = by + (zy - by) * p - Math.sin(p * Math.PI) * 12 * k, r = 2 * k + p * L.fs * .14, a = (.55 - p * .25) * (d > JZB_WW_WOLKE - .3 ? (JZB_WW_WOLKE + .1 - d) / .4 : 1);
+      c.shadowBlur = 0; for (const [ox, oy, rr] of [[0, 0, 1], [-.7, .3, .75], [.7, .35, .7], [0, -.6, .65]]) { c.fillStyle = `rgba(240,240,240,${a})`; c.beginPath(); c.arc(x + ox * r, y + oy * r, rr * r, 0, 7); c.fill(); }
+      c.shadowBlur = 6 * k;
+    }
+    const sichtbar = Math.min(1, Math.max(0, (d - (JZB_WW_WOLKE - .3)) / 1)) * aus; if (sichtbar <= 0) return; // Buchstabe erscheint langsam aus der Wolke
+    const wob = Math.sin(T * 1.3 + i * 1.7) * .8 * k; // Rauch steht nie ganz still
+    c.fillStyle = `rgba(248,248,248,${.88 * sichtbar})`; c.fillText(ch, zx + wob + weht * (14 + i * 2) * k, L.y + Math.cos(T * 1.1 + i) * .6 * k - weht * (5 + i % 3 * 2) * k);
+  });
+  c.restore();
+}
+function jzbWwIndianerMalen(c, x, y, sc, o, T) { // o: { hemd, sitzt, haube (Häuptling), winkt, lauf (Schrittphase beim Weglaufen), dir, pfeife (2.533.0: Glut 0…1) }
+  c.save(); c.translate(x, y); c.scale(sc * (o.dir || 1), sc); c.lineCap = "round";
+  const haut = "#b5764b"; let kopfY;
+  if (o.sitzt) {
+    c.fillStyle = "#7f5539"; c.beginPath(); c.ellipse(0, -2.2, 6, 2.4, 0, 0, 7); c.fill(); // gekreuzte Beine
+    c.fillStyle = o.hemd; c.beginPath(); c.roundRect ? c.roundRect(-3, -12, 6, 9.5, 2) : c.rect(-3, -12, 6, 9.5); c.fill();
+    const heb = o.winkt ? Math.max(0, Math.sin(T * 1.2)) : 0;
+    c.strokeStyle = haut; c.lineWidth = 1.6; c.beginPath(); c.moveTo(2, -10); c.lineTo(5.6, -6.6 - heb * 6.5); c.moveTo(-2, -10); c.lineTo(-4.2, -6); c.stroke();
+    kopfY = -14.6;
+  } else {
+    const s = o.lauf ? Math.sin(o.lauf) * 2.4 : 0;
+    c.strokeStyle = "#7f5539"; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-1.2, -9); c.lineTo(-1.6 + s, 0); c.moveTo(1.2, -9); c.lineTo(1.6 - s, 0); c.stroke();
+    c.fillStyle = o.hemd; c.beginPath(); c.roundRect ? c.roundRect(-3.4, -19, 6.8, 11, 2) : c.rect(-3.4, -19, 6.8, 11); c.fill();
+    c.fillStyle = "#e9c46a"; c.fillRect(-3.4, -12.2, 6.8, 1); // Gürtel
+    c.strokeStyle = haut; c.lineWidth = 1.6; c.beginPath();
+    if (o.lauf) { c.moveTo(-2, -17); c.lineTo(-4 - s, -11); c.moveTo(2, -17); c.lineTo(4 + s, -11); } else if (!o.pfeife) { c.moveTo(-3, -15.6); c.lineTo(3, -14.4); c.moveTo(3, -15.8); c.lineTo(-3, -14.2); } // verschränkte Arme
+    c.stroke(); kopfY = -21.6;
+  }
+  if (o.pfeife) { // 2.533.0: Friedenspfeife – langer Holzstiel vom Mund nach vorn, roter Steinkopf, zwei Federn; die Glut leuchtet beim Ziehen
+    c.strokeStyle = "#b5764b"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(2, -17); c.lineTo(5.6, kopfY + 2.6); c.moveTo(-2, -17); c.lineTo(3.4, kopfY + 2.2); c.stroke(); // Hände an der Pfeife
+    c.strokeStyle = "#8b5a2b"; c.lineWidth = .9; c.beginPath(); c.moveTo(1.8, kopfY + 1.1); c.lineTo(10.2, kopfY + 2.8); c.stroke(); // Stiel
+    c.fillStyle = "#9b2226"; c.fillRect(9.4, kopfY + .2, 2.2, 2.8); // Pfeifenkopf (roter Stein)
+    c.fillStyle = `rgba(255,${120 + o.pfeife * 80 | 0},40,${.45 + o.pfeife * .55})`; c.beginPath(); c.arc(10.5, kopfY + .2, .9 + o.pfeife * .5, 0, 7); c.fill(); // Glut
+    c.strokeStyle = "#fffaf0"; c.lineWidth = .7; c.beginPath(); c.moveTo(6, kopfY + 2.1); c.lineTo(6.4, kopfY + 6.4); c.moveTo(7.2, kopfY + 2.4); c.lineTo(7.8, kopfY + 6.2); c.stroke(); // Federn am Stiel
+  }
+  c.fillStyle = haut; c.beginPath(); c.arc(0, kopfY, 2.5, 0, 7); c.fill(); // Gesicht
+  c.fillStyle = "#1b1b1b"; c.beginPath(); c.arc(0, kopfY - .5, 2.6, Math.PI, 0); c.fill(); c.fillRect(-2.6, kopfY - .5, 1.1, 4.4); c.fillRect(1.5, kopfY - .5, 1.1, 4.4); // Haare, Zöpfe
+  c.fillStyle = "#c1121f"; c.fillRect(-2.7, kopfY - 1.7, 5.4, .9); // Stirnband
+  if (o.haube) { // Federhaube des Häuptlings, Federband den Rücken hinab
+    for (let i = -4; i <= 4; i++) { const a = i * .3 - Math.PI / 2, fx = Math.cos(a) * 6.4, fy = kopfY - 1.4 + Math.sin(a) * 6.4;
+      c.strokeStyle = "#fffaf0"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(Math.cos(a) * 2.4, kopfY - 1.4 + Math.sin(a) * 2.4); c.lineTo(fx, fy); c.stroke();
+      c.fillStyle = "#3b2414"; c.beginPath(); c.arc(fx, fy, .7, 0, 7); c.fill(); }
+    c.strokeStyle = "#fffaf0"; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-2.4, kopfY); c.quadraticCurveTo(-4.6, kopfY + 6, -3.6, kopfY + 13); c.stroke();
+  } else { c.strokeStyle = "#fffaf0"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-1.4, kopfY - 1.7); c.lineTo(-2.4, kopfY - 7.4); c.stroke(); c.fillStyle = "#3b2414"; c.beginPath(); c.arc(-2.4, kopfY - 7.4, .6, 0, 7); c.fill(); } // eine Feder
+  c.restore();
+}
+function jzbWwCowboyMalen(c, x, y, sc, dir, C, o) { // zu Fuß, Blick nach +x: o.geh (Schrittphase), o.zieht 0…1 (Revolver hoch), o.liegt 0…1, o.hut, o.verband
+  c.save(); c.translate(x, y); c.scale(sc * dir, sc); c.rotate(-(o.liegt || 0) * 1.5); c.lineCap = "round";
+  const s = o.geh ? Math.sin(o.geh) * 2.4 : 0;
+  c.strokeStyle = "#264653"; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-1.2, -9); c.lineTo(-1.8 + s, 0); c.moveTo(1.2, -9); c.lineTo(1.8 - s, 0); c.stroke(); // Jeans
+  c.fillStyle = "#3b2412"; c.fillRect(-3.2 + s, -1.3, 3, 1.5); c.fillRect(.6 - s, -1.3, 3, 1.5); // Stiefel
+  c.fillStyle = C.hemd; c.beginPath(); c.roundRect ? c.roundRect(-3.2, -19.5, 6.4, 11, 2) : c.rect(-3.2, -19.5, 6.4, 11); c.fill(); // Hemd
+  c.fillStyle = "#5c3a1a"; c.fillRect(-3.2, -10.2, 6.4, 1.3); c.fillRect(2.6, -10, 1.4, 3); // Gürtel mit Holster
+  c.strokeStyle = C.hemd; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-1.6, -17.5); c.lineTo(-3 - s * .5, -11.5); c.stroke();
+  const z = o.zieht || 0; c.beginPath(); c.moveTo(1.6, -17.5); c.lineTo(3.4 + z * 3.4, -11.5 - z * 5.2); c.stroke(); // Schussarm
+  if (z > 0) { c.fillStyle = "#343a40"; c.fillRect(5.6 + z * 1.2, -17.6 - z * .2, 3.4, 1.2); } // Revolver
+  c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(.3, -22.2, 2.4, 0, 7); c.fill(); // Gesicht
+  if (o.verband) { c.fillStyle = "#ffffff"; c.fillRect(-2.2, -23.6, 4.8, 1.3); }
+  if (o.hut) { c.fillStyle = C.hut; c.beginPath(); c.ellipse(.3, -24, 5, 1.1, 0, 0, 7); c.fill(); c.fillRect(-1.9, -27, 4.4, 3.2); }
+  c.restore();
+}
+function jzbWwHutMalen(c, x, y, sc, w, farbe) { c.save(); c.translate(x, y); c.rotate(w); c.scale(sc, sc); c.fillStyle = farbe; c.beginPath(); c.ellipse(0, 0, 5, 1.1, 0, 0, 7); c.fill(); c.fillRect(-2.2, -3, 4.4, 3.2); c.restore(); }
+function jzbWwWagenMalen(c, x, y, sc, ph, k) { // flacher Wagen nach rechts: ein Pferd, niedrige Ladefläche, Fahrer vorn
+  c.save(); c.translate(x, y); c.scale(sc, sc);
+  c.save(); c.translate(31, 0); jzbWwPferdMalen(c, ph, "#a0522d"); c.restore();
+  c.strokeStyle = "#2b1a0e"; c.lineWidth = .9; c.beginPath(); c.moveTo(14, -10.5); c.lineTo(25, -11); c.stroke(); // Deichsel
+  c.fillStyle = "#8d5a3b"; c.fillRect(-19, -11.5, 34, 3); c.fillStyle = "#6b4226"; c.fillRect(-19, -13, 34, 1.5); // Ladefläche, niedrige Bordwand
+  for (const wx of [-12, 8]) { c.strokeStyle = "#3b2412"; c.lineWidth = 1.2; c.beginPath(); c.arc(wx, -5, 5, 0, 7); c.stroke(); c.lineWidth = .55;
+    for (let s = 0; s < 6; s++) { const a = ph * .9 + s * Math.PI / 3; c.beginPath(); c.moveTo(wx, -5); c.lineTo(wx + Math.cos(a) * 5, -5 + Math.sin(a) * 5); c.stroke(); } }
+  c.fillStyle = "#e9c46a"; c.fillRect(9.4, -21, 3.6, 7.6); c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(11.2, -23, 2, 0, 7); c.fill(); // Fahrer
+  c.fillStyle = "#6c757d"; c.beginPath(); c.ellipse(11.2, -24.6, 3.6, .9, 0, 0, 7); c.fill(); c.fillRect(9.6, -27, 3.2, 2.4);
+  c.restore();
+}
+function jzbWwKaktusMalen(c, x, y, h, k, spiegel) { // großer Saguaro mit zwei Armen
+  c.save(); c.translate(x, y); c.scale(spiegel ? -k : k, k); c.lineCap = "round";
+  for (const [farbe, b] of [["#1b4332", 6.4], ["#2d6a4f", 5]]) { c.strokeStyle = farbe; c.lineWidth = b; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -h);
+    c.moveTo(0, -h * .45); c.lineTo(-7, -h * .45); c.lineTo(-7, -h * .72); c.moveTo(0, -h * .6); c.lineTo(6, -h * .6); c.lineTo(6, -h * .85); c.stroke(); }
+  c.strokeStyle = "rgba(255,255,255,.18)"; c.lineWidth = .6; c.beginPath(); c.moveTo(-1, -2); c.lineTo(-1, -h + 2); c.stroke(); // Rippe
+  c.restore();
+}
+function jzbWwBallenMalen(c, b, boden, k) { // Steppenläufer: rollt und hüpft
+  c.save(); c.translate(b.x, boden - 5 * k * b.sc - Math.abs(Math.sin(b.ph)) * 9 * k); c.rotate(b.dreh);
+  c.strokeStyle = "rgba(150,110,60,.95)"; c.lineWidth = .9 * k; const r = 5.5 * k * b.sc;
+  for (let i = 0; i < 7; i++) { c.beginPath(); c.ellipse(0, 0, r, r * .55, i * .9, 0, 7); c.stroke(); }
+  c.restore();
+}
+function jzbWwDuellMalen(c, d, O, k, T) { // d = Sekunden seit Duell-Beginn
+  const J = JZB, y = O.boden - 2 * k, xA0 = J.w * .38, xB0 = J.w * .64, A = JZB_WW_COWBOYS[0], B = JZB_WW_COWBOYS[1], sc = k * 1.15;
+  const rein = jzbEase(Math.min(1, d / 4)), zieht = d < 6.6 ? 0 : Math.min(1, (d - 6.6) / .5), liegt = d < 7.35 ? 0 : jzbEase(Math.min(1, (d - 7.35) / .6));
+  // Sieger A: kommt (0–4 s), steht, zieht, schießt (7,2 s), dreht sich um und geht davon (9–13 s)
+  const xA = d < 9 ? xA0 - (1 - rein) * 46 * k : xA0 - jzbEase((d - 9) / 4) * (xA0 + 30 * k);
+  if (xA > -20 * k) jzbWwCowboyMalen(c, xA, y, sc, d < 9 ? 1 : -1, A, { geh: d < 4 || d >= 9 ? T * 8 : 0, zieht: d < 9 ? zieht : 0, hut: true });
+  // flacher Wagen: kommt (10–16 s), hält (16–18 s, Verwundeter wird aufgeladen), fährt davon
+  const halt = xB0 - 62 * k, wx = d < 10 ? null : d < 16 ? -70 * k + jzbEase((d - 10) / 6) * (halt + 70 * k) : d < 18 ? halt : halt + (d - 18) * 52 * k;
+  const fahrt = wx !== null && (d < 16 || d >= 18), bett = O.boden - 1 * k - 13 * k * 1.05;
+  if (wx !== null && wx < J.w + 80 * k) jzbWwWagenMalen(c, wx, O.boden - 1 * k, k * 1.05, fahrt ? T * 9 : 0, k);
+  // Verwundeter B: steht, zieht zu spät, fällt rückwärts; ab 16 s auf den Wagen gehoben, dann mit Kopfverband abtransportiert
+  const auf = d < 16 ? 0 : Math.min(1, (d - 16) / 1.4);
+  if (auf < 1) { c.save(); c.globalAlpha *= 1 - auf; jzbWwCowboyMalen(c, d < 4 ? xB0 + (1 - rein) * 46 * k : xB0, y - auf * 10 * k, sc, -1, B, { geh: d < 4 ? T * 8 : 0, zieht: d < 7.35 ? zieht * .7 : 0, liegt, hut: d < 7.3, verband: d > 12 }); c.restore(); }
+  if (auf > 0 && wx !== null && wx < J.w + 60 * k) { c.save(); c.globalAlpha *= auf; jzbWwCowboyMalen(c, wx + 9 * k, bett, sc * .95, 1, B, { liegt: 1, verband: true }); c.restore(); }
+  // Hut fliegt davon und bleibt liegen (bis zum Aufladen)
+  if (d >= 7.3 && d < 17.5) { const h = Math.min(1, (d - 7.3) / 1), hx = xB0 + h * 26 * k, hy = y - 26 * k - Math.sin(h * Math.PI) * 18 * k + h * 24 * k;
+    c.save(); c.globalAlpha *= d > 16 ? Math.max(0, 1 - (d - 16) / 1.4) : 1; jzbWwHutMalen(c, hx, hy, k, h * 6, B.hut); c.restore(); }
+  // Mündungsfeuer, Rauch und „PENG!“
+  if (d >= 7.2 && d < 7.5) { const gx = xA + 10 * sc, gy = y - 17.6 * sc; c.fillStyle = "#ffd166"; c.beginPath();
+    for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5, r = (i % 2 ? 2 : 5) * k; c.lineTo(gx + Math.cos(a) * r, gy + Math.sin(a) * r); } c.fill(); }
+  if (d >= 7.2 && d < 9) { const p = (d - 7.2) / 1.8; c.fillStyle = `rgba(200,200,200,${.5 * (1 - p)})`; c.beginPath(); c.arc(xA + 12 * sc + p * 6 * k, y - 18 * sc - p * 8 * k, (2 + p * 6) * k, 0, 7); c.fill(); }
+  if (d >= 7.2 && d < 8.8) { const a = Math.min(1, (d - 7.2) * 5, (8.8 - d) * 2.5); c.save(); c.globalAlpha *= a; c.font = `800 ${13 * k}px "Comic Sans MS","Trebuchet MS",sans-serif`; c.textAlign = "center";
+    c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,.95)"; c.strokeText("PENG!", (xA + xB0) / 2, y - 34 * k); c.fillStyle = "#c1121f"; c.fillText("PENG!", (xA + xB0) / 2, y - 34 * k); c.restore(); }
 }
 // ---- 2.435.0 KC-CLUB-HALLOWEEN-GEWITTER (Wunsch Hansi „bei Halloween noch die Hexe auf ihrem Besen durchfliegen lassen, mehr Geister, Blitz und
 // Donner wie bei Gewitter, auf seinem Sarg kommt ein Vampir mit Umhang – der setzt sich erst hin, dann steht er auf und geht weg – und die Hexe
@@ -20456,7 +21218,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
 const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", kuerbis: "Kürbis-Hund", twinkey: "Twinkey fegt",
-  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", advent: "Advent" };
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", wueste: "Wüste", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
   let b = $("jzVorschauAus");
@@ -20708,10 +21470,35 @@ function kopfRolloSetzen(stand) {
   kopfRolloKlassen(h, stand);
   kopfPfeileZeigen(stand);
 }
+// 2.544.0 KC-CLUB-KOPF-PFEIL-NEU (Wunsch Hansi „ist der Kopf hochgefahren, sehe ich nicht, ob in den 3 Feldern neue Sachen ankommen –
+// der Pfeil, mit dem hochgefahren wurde, soll blinken, wenn eine neue Nachricht da ist oder neue Mitglieder angemeldet sind“):
+// Bei eingerolltem Kopf (⌃ halb oder ⌃⌃ ganz – in beiden Stellungen sind die drei Felder weg) blinkt der Pfeil der aktuellen Stellung,
+// sobald mehr ungelesene Nachrichten da sind, jemand neu online kommt oder die Mitgliederzahl steigt. Ausrollen beendet das Blinken.
+// Ohne Bewegung (Effekte aus, Sparmodus) leuchtet der Pfeil fest statt zu blinken. Keine zusätzlichen Abfragen – nur vorhandene Zahlen.
+const KPN = { n: null, mg: null, ids: null, an: false };
+function kopfNeuPruefen() {
+  const stand = kopfRolloStand(), n = INIT?.ungelesen || 0, mg = Number(INIT?.mitgliederAnzahl) || 0;
+  const ids = ONL.zeigen && mpOnline() > 0 ? new Set(ONL.ids) : ONL.zeigen && ONL.stand && Date.now() - ONL.stand < 180000 ? new Set() : null; // null = Online-Stand unbekannt
+  if (stand === "offen") { KPN.an = false; }
+  else if (!KPN.an) {
+    const ersterBlick = KPN.n === null; // App startet mit eingerolltem Kopf: ungelesene Nachrichten sind dann auch „neu“ für den Blick
+    if ((ersterBlick ? n > 0 : n > KPN.n) || (KPN.mg !== null && mg > KPN.mg) || (KPN.ids && ids && [...ids].some((id) => !KPN.ids.has(id)))) KPN.an = true;
+  }
+  KPN.n = n; KPN.mg = mg; KPN.ids = ids;
+  kopfPfeilNeuZeigen(stand);
+}
+function kopfPfeilNeuZeigen(stand = kopfRolloStand()) {
+  const ruhig = !fxAn();
+  [["kopfPfeil", "ganz"], ["kopfPfeilHalb", "halb"]].forEach(([id, s]) => { const p = $(id); if (!p) return;
+    const an = KPN.an && stand === s; p.classList.toggle("kp-neu", an); p.classList.toggle("still", an && ruhig);
+    if (an) p.title = "Neues im Kopf (Nachrichten oder Mitglieder) – antippen zum Ausrollen"; });
+}
 function kopfPfeileZeigen(stand) {
+  if (stand === "offen") KPN.an = false; // ausgerollt: die drei Felder sind wieder zu sehen
   const g = $("kopfPfeil"), hb = $("kopfPfeilHalb");
   if (g) { const zu = stand === "ganz"; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", zu ? "false" : "true"); g.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf ganz einrollen – nur die Kopfzeile bleibt"; g.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf ganz einrollen"); }
   if (hb) { const zu = stand !== "offen"; hb.classList.toggle("dreh", zu); hb.setAttribute("aria-expanded", zu ? "false" : "true"); hb.title = stand === "halb" ? "Kopf ausrollen – alles zeigen" : stand === "ganz" ? "Kopf halb ausrollen – Statusleiste mit LEDs zeigen" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt"; hb.setAttribute("aria-label", hb.title.split(" – ")[0]); }
+  kopfPfeilNeuZeigen(stand);
 }
 async function kopfRolloFahren(ziel, vorgabe) { // vorgabe: nur Erklär-Video – zeigt einen Effekt, ohne die Einstellung zu ändern
   const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile"), sl = h?.querySelector(".statusleiste");
@@ -20785,6 +21572,8 @@ async function kopfEffektProbe() { // einmal ein- und wieder ausrollen, damit ma
   const von = kopfRolloStand(), ziel = von === "offen" ? "ganz" : "offen";
   await kopfRolloFahren(ziel); await new Promise((r) => setTimeout(r, 500)); await kopfRolloFahren(von);
 }
+// 2.547.0 KC-CLUB-KOPF-EMBLEM (Wunsch Hansi „auf die Holzklappe und die Glocke die Kochmütze mit since 1991“): CD-Kochmütze + Schriftzug
+const KE_MARKE = '<span class="ke-marke" aria-hidden="true"><img src="kc-kochmuetze-weiss.webp" alt=""><small>since 1991</small></span>';
 async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   const warten = (a) => a.finished.catch(() => {}), bereich = Math.max(0, gross - oben), MS = 1500;
   const fahren = (von, bis, ms) => { h.style.overflow = "hidden"; return warten(h.animate([{ height: von + "px" }, { height: bis + "px" }], { duration: ms, easing: "cubic-bezier(.45,.05,.4,1)", fill: "forwards" })); };
@@ -20812,7 +21601,7 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   }
   if (effekt === "glocke") {
     // silberne Servierglocke senkt sich über den Kopf; beim Öffnen glänzt sie kurz, hebt sich – „Voilà!“
-    box.innerHTML = '<i class="ke-glocke"><b class="ke-glanz"></b><u class="ke-knauf"></u></i><span class="ke-voila">Voilà!</span>';
+    box.innerHTML = `<i class="ke-glocke"><b class="ke-glanz"></b><u class="ke-knauf"></u>${KE_MARKE}</i><span class="ke-voila">Voilà!</span>`; // 2.547.0: eingraviertes Emblem
     const g = box.firstElementChild, voila = box.lastElementChild, oben0 = { transform: "translateY(-115%)" }, unten = { transform: "translateY(0)" };
     h.append(box);
     if (zu) { g.style.transform = oben0.transform; await warten(g.animate([oben0, unten], { duration: 750, easing: "cubic-bezier(.5,0,.3,1.25)", fill: "forwards" })); await fahren(gross, klein, MS * 0.6); }
@@ -20826,7 +21615,7 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   }
   if (effekt === "bude") {
     // Holzklappe einer Weihnachtsmarkt-Bude, oben am Vordach angeschlagen: klappt herunter (Ladenschluss) bzw. hoch (wird zum Vordach)
-    box.innerHTML = '<i class="ke-bude-dach"></i><i class="ke-bude-klappe"><b class="ke-bude-schild">Geschlossen</b></i>';
+    box.innerHTML = `<i class="ke-bude-dach"></i><i class="ke-bude-klappe">${KE_MARKE}<b class="ke-bude-schild">Geschlossen</b></i>`; // 2.547.0: eingebranntes Emblem
     const k = box.lastElementChild, hoch = { transform: "rotateX(-100deg)", opacity: .25 }, runter = { transform: "rotateX(0deg)", opacity: 1 };
     h.append(box);
     if (zu) { k.style.transform = hoch.transform; await warten(k.animate([hoch, runter], { duration: 800, easing: "cubic-bezier(.6,0,.45,1.3)", fill: "forwards" })); await fahren(gross, klein, MS * 0.6); }
@@ -21303,6 +22092,173 @@ function einstSuchen(q, leeren) {
   $("einstSucheNichts")?.classList.toggle("versteckt", irgendwas);
   if (RK.einst?.an) rkAufbauen(RK.einst);
 }
+// ---------- 2.534.0 KC-CLUB-EINST-WEGWEISER (Wunsch Hansi „spezielle Anleitung: Voreinstellungen leicht gemacht – alle Möglichkeiten auflisten und kurz
+// erklären … als eigene Kachel unter Technik, wie der Explorer bei Windows: Überschrift z. B. ‚Farben einstellen‘, antippen, dann kommt die Erklärung“) ----------
+// Liest die Einstellungen direkt aus der Seite ⚙️ (Bereiche = Ordner, Schalter/Auswahlen = Einträge, ihr grauer Hinweis = Kurz-Erklärung) – neue Einstellungen
+// stehen also von selbst drin, und es gilt dieselbe Sicht (einfach/erweitert); Admin-Sachen bleiben draußen. Antippen zeigt: was es bewirkt, wie es gerade steht,
+// den passenden Hilfe-Text (gefunden über die ID im „Zeig mir“ der Hilfe), 👉 Hinbringen und ein Erklär-Video zum Bereich. 🖨️ druckt alles als Schriftstück.
+// Nur lesen: der Wegweiser schaltet nichts um; keine eigene Datenbank-Abfrage (füllt die Einstellungen wie beim Öffnen von ⚙️).
+const EW = { baum: null, liste: [], offen: null, gefuellt: false };
+// Ergänzungen, wo die Seite ⚙️ keinen grauen Hinweis hat (Schlüssel: ID des Bedienelements oder Anfang des Namens) – neue Einstellung ohne Hinweis → hier eintragen
+const EW_NAME = { nfName: "🆘 Notfallkontakt: Name", nfTel: "🆘 Notfallkontakt: Telefon", nfBez: "🆘 Notfallkontakt: Beziehung", ruheVon: "🌙 Ruhezeit von", ruheBis: "🌙 Ruhezeit bis" };
+const EW_ERKL = [
+  ["pushKnopf", "Schaltet die Mitteilungen (Push) auf diesem Handy ein oder aus. Nur mit Push erfährst du von neuen Nachrichten, Terminen und Anklopfen, wenn die App zu ist."],
+  ["Ton testen", "Spielt den Warnton einmal ab – so hörst du, ob dein Handy laut genug ist."],
+  ["Test-Push senden", "Schickt dir selbst eine Probe-Mitteilung. Kommt sie an, ist Push richtig eingerichtet."],
+  ["📱 Meine Geräte", "Zeigt, auf welchen Handys, Tablets und PCs du angemeldet bist und wo Push an ist – einzelne Geräte kannst du dort abmelden."],
+  ["ruheVon", "Beginn der Ruhezeit („Nicht stören“) – ab dann kommt kein Push mehr."], ["ruheBis", "Ende der Ruhezeit – ab dann kommen Mitteilungen wieder wie gewohnt."],
+  ["📋 Alle Sprachbefehle", "Liste aller Sätze, die die Sprachsteuerung versteht – antippen führt den Befehl gleich aus."],
+  ["🎓 Alle Einweisungen", "Die kurzen Erklärungen beim ersten Öffnen eines Bereichs kommen noch einmal."],
+  ["setStimme", "Welche Stimme deines Geräts Ansagen spricht und Nachrichten vorliest."],
+  ["setStimmeM", "Mit welcher Stimme Nachrichten von Männern im Chat vorgelesen werden."], ["setStimmeW", "Mit welcher Stimme Nachrichten von Frauen im Chat vorgelesen werden."],
+  [(e) => e.pfad.some((p) => /Welche Spiele/.test(p)) && /^✅/.test(e.name), "Haken = zu diesem Spiel dürfen dich andere herausfordern. Ohne Haken wirst du dafür nicht eingeladen."],
+  ["setKlopfTon", "Welcher Ton erklingt, wenn jemand bei dir anklopft."],
+  ["setKontakt_handy", "Ob andere Mitglieder deine Handynummer bei dir in der Mitgliederliste sehen. Haken = sichtbar."],
+  ["setKontakt_festnetz", "Ob andere Mitglieder deine Festnetznummer sehen. Haken = sichtbar."],
+  ["setKontakt_mail", "Ob andere Mitglieder deine E-Mail-Adresse sehen. Haken = sichtbar."], ["setKontakt_adresse", "Ob andere Mitglieder deine Adresse sehen. Haken = sichtbar."],
+  ["👁️ So sehen mich die anderen", "Zeigt deine Mitglieder-Seite so, wie die anderen sie sehen – zum Prüfen, was du freigegeben hast."],
+  ["nfName", "Dein Notfallkontakt – wer im Notfall (SOS) benachrichtigt wird. Bitte nicht dich selbst eintragen, sondern z. B. Ehefrau, Sohn, Tochter oder Nachbar."],
+  ["nfTel", "Telefonnummer deines Notfallkontakts – unter dieser Nummer wird er im Notfall erreicht."], ["nfBez", "Wer ist das für dich – z. B. Ehefrau, Sohn oder Nachbar."],
+  ["💾 Notfallkontakt speichern", "Speichert Name, Telefon und Beziehung deines Notfallkontakts."],
+  ["kalAboKnopf", "Verbindet die Club-Termine mit dem Kalender deines Handys (iPhone, Google, Outlook) – neue Termine erscheinen dort von selbst."],
+  ["🌗 Tag- und Nachtmodus", "Hell, dunkel oder automatisch – dunkel schont abends die Augen und den Akku."],
+  ["↺ Standard wiederherstellen", "Setzt Farben und Darstellung auf die Grundeinstellung zurück."], ["↺ Grundeinstellung", "Setzt die Schnellstart-Symbole auf die Vorgabe zurück."],
+  ["👥 Mitglieder anzeigen als", "Wie die Mitgliederliste aussieht – z. B. als Liste oder als Kacheln mit Bild."],
+  ["🔲 Kacheln auf der Startseite", "Wie groß die Kacheln auf der Startseite sind und wie viele nebeneinander passen."],
+  ["installHinweis", "Schritt für Schritt, wie du die App auf den Startbildschirm legst – erst dann kommen auch Mitteilungen zuverlässig."],
+  ["Nach Update suchen", "Prüft, ob es eine neue Version der App gibt, und lädt sie."], ["📋 Infos kopieren", "Kopiert Version und Geräte-Angaben – praktisch, wenn du Hansi ein Problem schilderst."],
+  ["🆘 Problem melden", "Meldet ein Problem direkt an Hansi – die App schickt die nötigen Angaben mit."],
+];
+// 2.534.0 (Wunsch Hansi „aber nix über Admin, Inkognito, was der Admin sehen kann usw.“): der Wegweiser ist für Mitglieder – Admin- und
+// Leitungs-Bereiche, Admin-Schalter (Inkognito, Brille, Anmelde-Ton) und Texte, die vom Admin reden, kommen nicht hinein (auch nicht beim Admin)
+const EW_OHNE_BEREICH = ["admin", "leitung_start"], EW_OHNE = /\(Admin\)|nur Admin|Inkognito|🕶️/i, EW_OHNE_TEXT = /admin/i;
+const EW_ERSATZ = { setRundGeburtstag: "Nur die Clubleitung sieht dein Alter – und nur bei runden Geburtstagen (z. B. 50., 60., 70.), damit der Club gratulieren kann. Andere Mitglieder sehen weiterhin kein Jahr." };
+const ewErkl = (e) => { const t = EW_ERKL.find(([m]) => (typeof m === "function" ? m(e) : m === e.id || e.name.startsWith(m))); return t ? t[1] : ""; };
+const EW_VIDEO = { einfach: "einstellungen", benachrichtigung: "push", ansagen: "einstellungen", privat: "privat", darstellung: "anpassen", effekte: "effekte", startseite: "oberflaeche", schnellstart: "oberflaeche", install: "installieren", handykalender: "termin" };
+function ewText(el) { // sichtbarer Text ohne Kommentare, Hinweise und Auswahl-Listen
+  if (!el) return ""; const k = el.cloneNode(true);
+  k.querySelectorAll(".hinweis, small, select, option, input, textarea, details, .abh-schloss, script").forEach((x) => x.remove());
+  return (k.textContent || "").replace(/\s+/g, " ").trim();
+}
+function ewSichtbar(el, w) {
+  const ein = einfach();
+  for (let x = el; x && x !== w; x = x.parentElement) {
+    if (x.classList.contains("versteckt") || x.style?.display === "none" || x.hidden) return false;
+    if (ein && x.classList.contains("nur-erweitert")) return false;
+    if (x.parentElement === w && x.matches("details[data-klappe]")) {
+      if (ein && !x.hasAttribute("data-einfach") && !x.classList.contains("einfach-sichtbar")) return false;
+      if (!ein && x.dataset.klappe === "einfach") return false;
+    }
+  }
+  return true;
+}
+function ewWert(st) { // aktueller Stand eines Bedienelements, kurz
+  if (!st) return "";
+  if (st.matches("input[type=checkbox]")) return st.checked ? "✅ an" : "⬜ aus";
+  if (st.matches("select")) return (st.selectedOptions?.[0]?.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40);
+  if (st.matches("input[type=range], input[type=number], input[type=time]")) return st.value || "–";
+  if (st.matches("input, textarea")) return st.value ? "✏️ " + st.value.slice(0, 30) : "–";
+  const t = (st.textContent || "").replace(/\s+/g, " ").trim(); return t && t.length <= 18 ? t : "›"; // Knopf in einer Zeile, z. B. „Einschalten“
+}
+function ewSammeln() {
+  const w = $("v-einstellungen"); if (!w) return { ordner: [], n: 0 };
+  const liste = [], baum = { ordner: [], eintraege: [] };
+  const eintrag = (ziel, el, name, hinweis, st) => {
+    name = EW_NAME[st?.id || el.id] || String(name || "").replace(/\s+/g, " ").replace(/:$/, "").trim();
+    if (!name || name.length < 2 || /^[▶✅] (Probe|Testton|Alle anzeigen)|^\d+\.\d+\.\d+$|^Vorschau im Kopf/.test(name)) return; // nur Probe-/Sammelknöpfe und die Versionsnummer
+    if (EW_OHNE.test(name) || ["setInkognito", "setInkoKnopf"].includes(st?.id)) return; // nichts für den Admin
+    if (ziel.eintraege.some((e) => e.name === name)) return; // doppelt (z. B. Knopf und Zeile)
+    const e = { i: liste.length, name, hinweis: String(hinweis || "").replace(/\s+/g, " ").replace(/^…$/, "").trim(), el, st: st || null, id: st?.id || el.id || "", pfad: ziel.pfad };
+    const plus = ewErkl(e); if (plus && !e.hinweis.includes(plus)) e.hinweis = e.hinweis && e.hinweis.length > 30 ? e.hinweis : [plus, e.hinweis].filter(Boolean).join(" ");
+    if (EW_ERSATZ[e.id]) e.hinweis = EW_ERSATZ[e.id];
+    if (EW_OHNE_TEXT.test(e.hinweis)) e.hinweis = e.hinweis.split(/(?<=[.!?])\s+/).filter((x) => !EW_OHNE_TEXT.test(x)).join(" "); // Sätze über den Admin weglassen
+    liste.push(e); ziel.eintraege.push(e);
+  };
+  const hinweisVon = (el) => { const h = el.querySelector(".hinweis, small"); if (h) return h.textContent; const n = el.nextElementSibling; return n?.matches("p.hinweis, div.hinweis") ? n.textContent : ""; };
+  const lauf = (d, ziel) => {
+    for (const k of d.children) {
+      if (k.tagName === "SUMMARY" || !ewSichtbar(k, w)) continue;
+      if (k.tagName === "DETAILS" && EW_OHNE_BEREICH.includes(k.dataset.klappe)) continue;
+      if (k.tagName === "DETAILS") { const s = k.querySelector(":scope > summary"), o = { name: ewText(s), klappe: k.dataset.klappe || "", el: k, ordner: [], eintraege: [], pfad: [...ziel.pfad, ewText(s)] }; lauf(k, o); if (o.ordner.length || o.eintraege.length) ziel.ordner.push(o); continue; }
+      if (k.matches(".schalter")) { eintrag(ziel, k, ewText(k.querySelector("b") || k.firstElementChild), hinweisVon(k), k.querySelector("input, select, textarea") || k.querySelector("button")); continue; }
+      if (k.matches("label.feld")) { eintrag(ziel, k, ewText(k), hinweisVon(k), k.querySelector("select, input, textarea")); continue; }
+      if (k.matches(".knoepfe")) { k.querySelectorAll(":scope > button").forEach((b) => ewSichtbar(b, w) && eintrag(ziel, b, ewText(b), b.title || "", b)); continue; }
+      if (k.matches("button.knopf")) { eintrag(ziel, k, ewText(k), k.title || "", k); continue; }
+      const b = k.querySelector(":scope > b, :scope > div:first-child > b");
+      if (b && !k.matches("p") && (k.textContent || "").trim().startsWith((b.textContent || "").trim())) eintrag(ziel, k, ewText(b), hinweisVon(k), k.querySelector("input, select"));
+      if (k.querySelector("details, .schalter, label.feld")) lauf(k, ziel); // Hüllen (z. B. Farbwahl) – ihre Unterbereiche und Schalter mitnehmen
+    }
+  };
+  const wurzel = { ordner: [], eintraege: [], pfad: [] };
+  for (const d of w.querySelectorAll(":scope > details[data-klappe]")) if (ewSichtbar(d, w) && !EW_OHNE_BEREICH.includes(d.dataset.klappe)) {
+    const s = d.querySelector(":scope > summary"), o = { name: ewText(s), klappe: d.dataset.klappe, el: d, ordner: [], eintraege: [], pfad: [ewText(s)] };
+    lauf(d, o); if (o.ordner.length || o.eintraege.length) wurzel.ordner.push(o);
+  }
+  baum.ordner = wurzel.ordner; EW.liste = liste; return baum;
+}
+const ewZahl = (o) => o.eintraege.length + o.ordner.reduce((a, x) => a + ewZahl(x), 0);
+function ewHilfe(e) { // passender Hilfe-Text: ein Eintrag, dessen „Zeig mir“ genau zu diesem Schalter führt
+  if (!e.id) return null;
+  try { return hzEintraege().find((h) => h.los && String(h.los).includes(`"${e.id}"`) && !EW_OHNE_TEXT.test(h.x + h.t)) || null; } catch { return null; } // Hilfe-Texte über den Admin nicht
+}
+function ewVideo(e) { const top = EW.baum?.ordner.find((o) => o.name === e.pfad[0]), id = EW_VIDEO[top?.klappe]; return id ? RUNDGAENGE.find((r) => r.id === id && (!r.nur || r.nur())) : null; }
+function ewEintragHtml(e) { return `<button type="button" class="ew-eintrag" data-i="${e.i}" aria-expanded="false" onclick="ewErklaeren(${e.i})"><span class="ew-name">${esc(e.name)}</span><span class="ew-wert">${esc(e.st === e.el ? "›" : ewWert(e.st))}</span></button><div class="ew-erkl versteckt" id="ewErkl${e.i}"></div>`; }
+function ewOrdnerHtml(o, tiefe = 0) {
+  return `<details class="ew-ordner${tiefe ? " innen" : ""}"${EW.offen?.has(o.pfad.join("›")) ? " open" : ""} data-pfad="${esc(o.pfad.join("›"))}"><summary><span class="ew-name">${esc(o.name)}</span><span class="ew-zahl">${ewZahl(o)}</span></summary>
+    <div class="ew-inhalt">${o.eintraege.map(ewEintragHtml).join("")}${o.ordner.map((x) => ewOrdnerHtml(x, tiefe + 1)).join("")}</div></details>`;
+}
+function ewStart() {
+  if (!EW.gefuellt) { EW.gefuellt = true; try { einstFuellen(); } catch {} } // gleiche Werte wie beim Öffnen von ⚙️
+  EW.offen = new Set(); EW.baum = ewSammeln();
+  const f = blattAuf("ewBlatt", `<button type="button" class="dlg-x" onclick="fensterZu($('ewBlatt'))" aria-label="Schließen" title="Schließen">✕</button>
+    <h3 style="margin:0 0 4px">🧭 Einstellungen erklärt</h3>
+    <p class="hinweis" style="margin:0 0 8px">Alle <b>${EW.liste.length}</b> Einstellungen deiner App – sortiert wie in ⚙️. <b>▸</b> klappt einen Bereich auf, <b>Antippen</b> erklärt, was die Einstellung bewirkt. Hier wird nichts umgestellt – mit <b>👉 Hinbringen</b> kommst du direkt zum Schalter.</p>
+    <input type="search" id="ewSuche" data-diktat="einmal" placeholder="🔍 Suchen – z. B. Farbe, Ton, Schrift" aria-label="Einstellung suchen" autocomplete="off" oninput="ewSuchen(this.value)" style="width:100%">
+    <div class="knoepfe" style="margin:8px 0"><button type="button" class="knopf klein" onclick="ewAlle(this)">▾ Alle auf</button><button type="button" class="knopf klein" onclick="druckStarten('einstwegweiser')">🖨️ Als Schriftstück</button></div>
+    <div id="ewBaum" class="ew-baum">${EW.baum.ordner.map((o) => ewOrdnerHtml(o)).join("")}</div>`);
+  f.classList.add("ew-blatt"); return f;
+}
+function ewErklaeren(i) {
+  const e = EW.liste[i], z = $("ewErkl" + i); if (!e || !z) return;
+  const auf = z.classList.contains("versteckt");
+  document.querySelectorAll("#ewBlatt .ew-erkl:not(.versteckt)").forEach((x) => x.classList.add("versteckt"));
+  document.querySelectorAll('#ewBlatt .ew-eintrag[aria-expanded="true"]').forEach((x) => x.setAttribute("aria-expanded", "false"));
+  if (!auf) return;
+  const h = ewHilfe(e), v = ewVideo(e), w = e.st?.matches?.("input, select, textarea") ? ewWert(e.st) : "";
+  z.innerHTML = `<p class="ew-was"><b>Was bewirkt das?</b> ${e.hinweis ? esc(e.hinweis) : `Hier stellst du „${esc(e.name)}“ ein.`}</p>
+    ${h ? `<div class="ew-mehr">${h.x}</div>` : ""}
+    ${w && w !== "›" ? `<p class="ew-jetzt">Jetzt: <b>${esc(w)}</b></p>` : ""}
+    <p class="ew-wo">📍 ⚙️ Einstellungen › ${e.pfad.map(esc).join(" › ")}</p>
+    <div class="knoepfe"><button type="button" class="knopf haupt klein" onclick="ewHin(${i})">👉 Hinbringen</button>${h ? `<button type="button" class="knopf klein" onclick="fensterZu($('ewBlatt'));hzZuEintrag('${esc(h.id)}')">📖 Ganze Hilfe</button>` : ""}${v ? `<button type="button" class="knopf klein" onclick="fensterZu($('ewBlatt'));rgListeAbspielen(['${v.id}'])">🎬 Video</button>` : ""}</div>`;
+  z.classList.remove("versteckt"); document.querySelector(`#ewBlatt .ew-eintrag[data-i="${i}"]`)?.setAttribute("aria-expanded", "true");
+  for (let d = z.closest("details"); d; d = d.parentElement?.closest("details")) d.open = true;
+  z.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function ewHin(i) { // wie suEinstellung – auch für Zeilen ohne eigene ID
+  const e = EW.liste[i]; if (!e) return; fensterZu($("ewBlatt")); zeige("einstellungen");
+  setTimeout(() => { const z = e.el; if (!z?.isConnected) return;
+    for (let d = z.closest("details"); d; d = d.parentElement?.closest("details")) d.open = true;
+    z.scrollIntoView({ behavior: "smooth", block: "center" }); z.classList.add("hervor"); setTimeout(() => z.classList.remove("hervor"), 2600); }, 300);
+}
+function ewAlle(k) {
+  const alle = [...document.querySelectorAll("#ewBaum details")], auf = alle.some((d) => !d.open);
+  alle.forEach((d) => (d.open = auf)); k.textContent = auf ? "▴ Alle zu" : "▾ Alle auf";
+}
+function ewSuchen(q) {
+  const b = $("ewBaum"); if (!b) return; q = String(q || "").trim();
+  if (suNorm(q).replace(/\s/g, "").length < 2) { b.innerHTML = EW.baum.ordner.map((o) => ewOrdnerHtml(o)).join(""); return; }
+  const t = EW.liste.filter((e) => suUnscharf(q, `${e.name} ${e.hinweis} ${e.pfad.join(" ")}`));
+  b.innerHTML = t.length ? `<p class="hinweis" style="margin:4px 0">${t.length} Treffer</p>` + t.map((e) => `<div class="ew-pfad">${e.pfad.map(esc).join(" › ")}</div>${ewEintragHtml(e)}`).join("")
+    : `<p class="hinweis">Nichts gefunden für „${esc(q)}“ – anderes Wort versuchen, z. B. „Ton“, „Farbe“ oder „Push“.</p>`;
+}
+function ewDruck() { // als Schriftstück: Inhaltsverzeichnis + je Bereich alle Einstellungen mit Erklärung und aktuellem Stand
+  if (!EW.baum) { if (!EW.gefuellt) { EW.gefuellt = true; try { einstFuellen(); } catch {} } EW.baum = ewSammeln(); }
+  const zeile = (e) => { const w = ewWert(e.st); return `<tr><td><b>${esc(e.name)}</b>${e.hinweis ? `<br><span style="color:#555">${esc(e.hinweis)}</span>` : ""}</td><td style="white-space:nowrap;text-align:right">${w && w !== "›" ? esc(w) : ""}</td></tr>`; };
+  const ordner = (o, t = 2) => `<h${t} style="margin:${t === 2 ? "14px" : "8px"} 0 4px">${esc(o.name)}</h${t}>${o.eintraege.length ? `<table style="width:100%;border-collapse:collapse;font-size:10pt">${o.eintraege.map(zeile).join("")}</table>` : ""}${o.ordner.map((x) => ordner(x, Math.min(4, t + 1))).join("")}`;
+  const iv = `<p><b>Inhalt:</b> ${EW.baum.ordner.map((o) => `${esc(o.name)} (${ewZahl(o)})`).join(" · ")}</p>`;
+  return { titel: "Einstellungen erklärt", unter: `Alle ${EW.liste.length} Einstellungen deiner App · Stand: Version ${APP_VERSION} · ${einfach() ? "einfache" : "erweiterte"} Ansicht`,
+    html: `<p>So findest du jede Einstellung: in der App unten <b>⚙️</b> bzw. Kachel <b>„Meine Einstellungen“</b>, dann den Bereich antippen. Rechts steht, wie es bei dir gerade eingestellt ist.</p>${iv}${EW.baum.ordner.map((o) => ordner(o)).join("")}` };
+}
 // 2.467.0 KC-CLUB-EINST-ABHAENGIG (Wunsch Hansi „Erst wenn man ein Klickkästchen aktiviert, sollen sich die weiteren Auswahlen öffnen lassen“): ein Klappbereich mit
 // data-abh="<id des Häkchens>" ist gesperrt (grau, 🔒), solange das Häkchen aus ist. Weitere Stellen = nur data-abh ergänzen (Registry statt Sonderfälle).
 function abhKlappen() {
@@ -21426,6 +22382,7 @@ addEventListener("pointerdown", () => { try { if (audio && audio.state === "susp
 setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
 try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
 function heroZeigen(richtung) {
+  kopfNeuPruefen(); // 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: heroZeigen läuft nach jedem Abgleich und jedem Online-Takt
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
   // gleicher Inhalt → nicht neu zeichnen (sonst springen Wetter-Animationen bei jedem Online-Takt neu an)
   const erzwingen = richtung !== undefined; // heroZeigen(0) = sofort neu zeichnen (ohne Wisch-Animation)
@@ -21564,8 +22521,8 @@ async function zeMitglieder() { if (!MITGLIEDER) await mitgliederHolen(); return
 async function zeWahl(art) {
   try { await zeMitglieder(); } catch (e) { return meldeFehler(e); }
   ZE.gruppe = null;
-  if (art === "alle") ZE.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id);
-  else if (art === "online") { ZE.personen = ONL.liste.map((m) => m.person_id).filter((p) => p !== ICH.person_id); if (!ZE.personen.length) melde(ONL.zeigen ? "Gerade ist niemand sonst online." : "Die Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)."); }
+  if (art === "alle") ZE.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id);
+  else if (art === "online") { ZE.personen = ONL.liste.map((m) => m.person_id).filter((p) => p !== ICH.person_id && okFrei(MITGLIEDER.find((m) => m.person_id === p))); if (!ZE.personen.length) melde(ONL.zeigen ? "Gerade ist niemand sonst online." : "Die Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)."); }
   else ZE.personen = [];
   heroZeigen(0); if ($("zeBlatt") && !$("zeBlatt").classList.contains("versteckt")) zeListe();
 }
@@ -21580,10 +22537,10 @@ function zeListe() {
   $("zeSchnell").innerHTML = `<button class="knopf klein" onclick="zeWahl('alle')">👥 Alle</button><button class="knopf klein" onclick="zeWahl('online')">🟢 Online</button><button class="knopf klein" onclick="zeWahl('keiner')">✖ Keiner</button>`
     + AEMTER.map(amt).join("") + gruppen.map((g) => `<button class="knopf klein ${ZE.gruppe?.id === g.id ? "haupt" : ""}" onclick="zeGruppe('${g.id}')">${esc(g.gruppe.symbol)} ${esc(g.gruppe.name)} <small>(${g.anzahl})</small></button>`).join("");
   $("zeListe").innerHTML = (ZE.gruppe ? `<p class="hinweis" style="margin:0">Gewählt ist die Gruppe <b>${esc(ZE.gruppe.name)}</b> – ein Häkchen bei einer Person wählt stattdessen einzelne Mitglieder.</p>` : "")
-    + MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
-      <input type="checkbox" ${!ZE.gruppe && ZE.personen.includes(m.person_id) ? "checked" : ""} onchange="zePerson('${m.person_id}', this.checked)">
+    + MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label${okKl(m, ZE.personen.includes(m.person_id))}>
+      <input type="checkbox"${okAttr(m, ZE.personen.includes(m.person_id))} ${!ZE.gruppe && ZE.personen.includes(m.person_id) ? "checked" : ""} onchange="zePerson('${m.person_id}', this.checked)">
       <span class="zpunkt ${ONL.ids?.has(m.person_id) ? "on" : ""}" title="${ONL.ids?.has(m.person_id) ? "online" : "nicht online"}"></span>
-      <span style="flex:1">${esc(m.name)} <span class="stmarke st-${statusArt(m.status)}">${esc(statusKurz(m.status))}</span></span>${wegIcons(m)}</label>`).join("");
+      <span style="flex:1">${esc(m.name)}${okZusatz(m)} <span class="stmarke st-${statusArt(m.status)}">${esc(statusKurz(m.status))}</span></span>${wegIcons(m)}</label>`).join("");
   $("zeZahl").textContent = zeWerText();
 }
 function zePerson(p, an) { if (ZE.gruppe) { ZE.gruppe = null; ZE.personen = []; } ZE.personen = an ? [...new Set([...ZE.personen, p])] : ZE.personen.filter((x) => x !== p); zeListe(); }
@@ -21895,6 +22852,7 @@ function adZustand(id) {
       return gemessen([f, `${fs.filter((x) => x === "gruen").length} von ${fs.length} melden sich`]); }
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
+    case "stumm": return ["keine", "Mitglieder ganz ohne Push/E-Mail"]; // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
     case "wartung": return gemessen(!r ? null : r.wartung?.an ? ["gelb", "AN – Mitglieder sehen Blau"] : ["gruen", "aus"]);
     case "freigaben": { const f = INIT?.freigaben || {}, n = Object.values(f).filter((x) => x !== "alle").length; return ["keine", n ? `${n} nur für dich (Test)` : "alles freigegeben"]; } // KC-CLUB-FREIGABE (2.23.86)
     case "inkognito": return ["keine", inkognitoAn() ? "🕶️ AN" : "aus"];
@@ -21915,7 +22873,7 @@ const AD_KACHELN = [
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
-  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
@@ -22251,6 +23209,13 @@ function adBlatt(id) {
         <b style="font-size:.95rem">Zurzeit gesperrt</b><div id="adSperren"><p class="hinweis" style="margin:0">Wird geladen …</p></div></div>`;
       setTimeout(sperrenLaden, 0);
       break;
+    case "stumm": // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
+      html = `${kopf("📵", "Ohne Benachrichtigungen")}
+        <p class="hinweis" style="margin:0">Wer hier steht, bekommt von der Club-App und den Terminen <b>keine Push und keine E-Mail</b> – auch nicht bei „an alle“, ❗ Wichtig, Express, Notfall oder als Kopie. Chats und Termine kann er weiter selbst in der App ansehen.</p>
+        <div class="knoepfe">${adKnopf("＋ Mitglied herausnehmen", "kommAusAuswahl()", true)}</div>
+        <b style="font-size:.95rem">Zurzeit ohne Benachrichtigungen</b><div id="adOhneKomm"><p class="hinweis" style="margin:0">Wird geladen …</p></div>`;
+      setTimeout(kommAusLaden, 0);
+      break;
     case "freigaben":
       html = `${kopf("🚦", "Freigaben")}<p class="hinweis" style="margin:0">Neue Funktionen erst <b>🔒 nur für dich</b> testen – wenn alles passt, mit einem Tipp <b>✅ für alle</b> freigeben. Mitglieder sehen nicht Freigegebenes gar nicht.</p>
         <div id="adFreigaben"><p class="hinweis" style="margin:0">Wird geladen …</p></div>`;
@@ -22283,13 +23248,17 @@ function sperreZeigen(art, text, bis) {
 // 2.23.79 (Hansi: „neben jeder Person ein Icon“): 🔔 = Push/E-Mail laufen weiter · 📵 = keine Push, keine E-Mail
 const sperreSymbol = (stumm) => (stumm ? "📵" : "🔔");
 const sperreSymbolTitel = (stumm) => (stumm ? "Keine Push, keine E-Mail – antippen zum Einschalten" : "Push/E-Mail laufen weiter – antippen zum Abschalten");
+// 2.539.0 KC-CLUB-SPERRE-VERSUCHE: hat die gesperrte Person seitdem versucht, die App zu öffnen?
+const sperreVersuchText = (x) => x.versuche == null ? "👀 Öffnungsversuche: unbekannt" : !x.versuche ? "👀 seit der Sperre nicht versucht, die App zu öffnen"
+  : `👀 ${x.versuche}× versucht, die App zu öffnen · zuletzt ${esc(wann(x.versuch_zuletzt))}`;
 async function sperrenLaden() {
   const z = $("adSperren"); if (!z) return;
   try {
     const [{ sperren }] = await Promise.all([api("sperre_liste"), MITGLIEDER ? null : mitgliederHolen().catch(() => null)]);
     if (!$("adSperren")) return;
     $("adSperren").innerHTML = sperren.length ? `<div style="display:grid;gap:6px">${sperren.map((x) => `<div class="ps-zeile ps-gesperrt">
-        <span style="flex:1 1 100%;min-width:0"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)} · ${x.bis ? "bis " + esc(wann(x.bis)) : "bis du freigibst"}</small></span>
+        <span style="flex:1 1 100%;min-width:0"><b>${esc(vfName(x.person_id))}</b><br><small class="hinweis">${SPERRE_ART[x.art]?.kurz || esc(x.art)} · ${x.bis ? "bis " + esc(wann(x.bis)) : "bis du freigibst"}</small>
+        <br><small class="hinweis">${sperreVersuchText(x)}</small></span>
         <button type="button" class="ps-symbol${x.stumm ? " aus" : ""}" title="${sperreSymbolTitel(x.stumm)}" aria-label="${sperreSymbolTitel(x.stumm)}" onclick="sperreStumm('${esc(x.person_id)}', ${!x.stumm}, this)">${sperreSymbol(x.stumm)}</button>
         <button class="knopf klein" onclick="sperreAufheben('${esc(x.person_id)}', this)">🔓 Freigeben</button></div>`).join("")}</div>
         <p class="hinweis" style="margin:4px 0 0;font-size:.85rem">🔔 Push/E-Mail laufen weiter · 📵 keine Push, keine E-Mail – Symbol antippen zum Umschalten.</p>`
@@ -22360,6 +23329,41 @@ async function sperreAuswahl() {
     });
   };
   artZeigen(); endeZeigen(); zeichnen();
+}
+// ---------- 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER: Mitglieder ganz aus der Club-Kommunikation nehmen (Admin → 📵) ----------
+async function kommAusLaden() {
+  if (!$("adOhneKomm")) return;
+  try {
+    const [{ liste }] = await Promise.all([api("komm_aus_liste"), MITGLIEDER ? null : mitgliederHolen().catch(() => null)]);
+    if (!$("adOhneKomm")) return;
+    $("adOhneKomm").innerHTML = liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => `<div class="ps-zeile ps-gesperrt">
+        <span style="flex:1 1 100%;min-width:0"><b>📵 ${esc(vfName(x.person_id))}</b><br><small class="hinweis">seit ${esc(wann(x.seit))}</small></span>
+        <button class="knopf klein" onclick="kommAusSetzen('${esc(x.person_id)}', false, this)">🔔 Wieder benachrichtigen</button></div>`).join("")}</div>`
+      : '<p class="hinweis" style="margin:0">Zurzeit bekommen alle Mitglieder Benachrichtigungen (wie jeder es selbst eingestellt hat).</p>';
+  } catch (e) { if ($("adOhneKomm")) $("adOhneKomm").innerHTML = `<p class="hinweis" style="margin:0">⚠️ Liste nicht geladen: ${esc(fehlerText(e))}</p>`; }
+}
+async function kommAusSetzen(pid, aus, knopf) {
+  const name = vfName(pid);
+  if (!(await frage(aus ? `${name} ganz aus der Kommunikation nehmen?\n\n${name} bekommt dann keine Push und keine E-Mail mehr von der Club-App – auch nicht bei Nachrichten an alle, Wichtig, Express oder Notfall.`
+    : `${name} wieder benachrichtigen?\n\nDann gelten wieder die eigenen Einstellungen von ${name} für Push und E-Mail.`, { ja: aus ? "📵 Herausnehmen" : "🔔 Wieder benachrichtigen" }))) return;
+  await einmal(knopf, async () => {
+    try { await api("komm_aus_setzen", { id: pid, aus }, { warten: true }); melde(aus ? `📵 ${name}: keine Push, keine E-Mail mehr` : `🔔 ${name} wird wieder benachrichtigt`); $("kaBlatt")?.remove(); kommAusLaden(); }
+    catch (e) { meldeFehler(e); }
+  });
+}
+async function kommAusAuswahl() {
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  const f = blattAuf("kaBlatt", `<h3 style="margin:0">📵 Wen herausnehmen?</h3>
+    <input id="kaSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
+    <div id="kaListe" class="ps-liste"></div>
+    <div class="knoepfe bs-fuss"><button class="knopf" onclick="$('kaBlatt').remove()">Abbrechen</button></div>`);
+  f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
+  const zeichnen = () => { const q = $("kaSuche").value.toLowerCase();
+    $("kaListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<div class="ps-zeile"><span style="flex:1;min-width:0">${esc(m.name)}</span>
+      <button type="button" class="knopf klein" data-p="${esc(m.person_id)}">📵 Herausnehmen</button></div>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+    $("kaListe").querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => kommAusSetzen(b.dataset.p, true, b))); };
+  $("kaSuche").oninput = zeichnen; zeichnen();
 }
 async function sperreAufheben(pid, knopf) {
   await einmal(knopf, async () => {
@@ -24854,7 +25858,7 @@ async function neuLadenRoh(vonHand) {
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
-    if ($("setWichtigFrage")) $("setWichtigFrage").checked = wichtigFrageAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
+    if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
     ansichtUebernehmen(INIT.einstellungen?.ansicht);
     ansageVorgabeUebernehmen(INIT.einstellungen?.ansage_vorgabe); // 2.173.0 KC-CLUB-ANSAGE-VORGABE
     sendeEffektMelden(); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT
@@ -25033,7 +26037,8 @@ async function gpPlanen() {
   try {
     if (GP.aendern) await api("geplant_speichern", { geplant_id: GP.aendern, um: GP.um.toISOString(), wiederholung: GP.wdh }, { warten: true });
     else {
-      await api("geplant_speichern", { id: chatId, text: GP.text, um: GP.um.toISOString(), wiederholung: GP.wdh, wege: ["push", "email"].filter((w) => ZW[w]), ...(WICHTIG ? { wichtig: true } : {}) }, { warten: true });
+      const vorab = GP.wdh === "einmal" && (await gpVorabFrage()); // 2.551.0 KC-CLUB-GEPLANT-VORAB: beim Anlegen fragen
+      await api("geplant_speichern", { id: chatId, text: GP.text, um: GP.um.toISOString(), wiederholung: GP.wdh, wege: ["push", "email"].filter((w) => ZW[w]), ...(WICHTIG ? { wichtig: true } : {}), ...(vorab ? { vorab: true } : {}) }, { warten: true });
       if ($("text").value.trim() === GP.text) { entwurfWeg(chatId); clearTimeout(entwurfTimer); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); wichtigUmschalten(false); }
       spur("geplant", chatId);
     }
@@ -25042,23 +26047,77 @@ async function gpPlanen() {
     chatStand = ""; await chatLaden(true);
   } catch (e) { if (knopf) knopf.disabled = false; meldeFehler(e); }
 }
+// 2.551.0 KC-CLUB-GEPLANT-VORAB (Wunsch Hansi): darf der Empfänger die Nachricht schon vor der Zeit abrufen? Er bekommt dann gleich einen Hinweis.
+function gpEmpfaenger() {
+  const n = (CHAT?.teilnehmer || []).filter((t) => t.person_id !== ICH.person_id).map((t) => String(t.name || "").split(" ")[0]).filter(Boolean);
+  return n.length === 1 ? n[0] : n.length ? "die anderen im Chat" : "der Empfänger";
+}
+function gpVorabFrage() {
+  const wer = gpEmpfaenger();
+  return frage(`📩 Darf ${wer} die Nachricht schon vorher abrufen?\n${wer === "die anderen im Chat" ? "Sie bekommen" : wer + " bekommt"} dann gleich einen Hinweis: „Zeitgesteuerte Nachricht von ${ICH?.vorname || "dir"} liegt bereit“ – ohne den Text. Wird sie nicht abgerufen, kommt sie zur geplanten Zeit.`,
+    { ja: "📩 Ja, vorher abrufen erlauben", nein: "Nein, erst zur geplanten Zeit" });
+}
+async function gpVorab(id, an) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
+  $("gpMenue")?.remove();
+  if (Date.parse(g.um) - Date.now() < 60000) return melde("⏰ Die Nachricht wird gleich gesendet – jetzt nicht mehr änderbar.", true);
+  try { await api("geplant_speichern", { geplant_id: g.id, um: g.um, wiederholung: g.wiederholung, vorab: an }, { warten: true });
+    melde(an ? `📩 Erlaubt – ${gpEmpfaenger()} wurde informiert` : "🔒 Vorher abrufen ausgeschaltet"); chatStand = ""; await chatLaden(true); }
+  catch (e) { meldeFehler(e); }
+}
+async function gpAbrufen(id, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { await api("geplant_abrufen", { id }, { warten: true }); melde("📩 Abgerufen"); chatStand = ""; await chatLaden(true); }
+  catch (e) { if (knopf) knopf.disabled = false; meldeFehler(e); chatStand = ""; await chatLaden(true).catch(() => {}); }
+}
+function gpVorabZeigen(z) {
+  const l = (CHAT?.id === chatId && CHAT.geplantVorab) || []; if (!l.length) return;
+  z.insertAdjacentHTML("beforeend", `<div class="gp-warte gp-vorab-liste">${l.map((g) => `<div class="gp-vorab"><b>⏰ Zeitgesteuerte Nachricht von ${esc(g.von)}</b>
+    <small>Kommt ${esc(gpWann(g.um))} – du darfst sie schon jetzt abrufen.</small><button type="button" class="knopf haupt klein" onclick="gpAbrufen('${esc(g.id)}', this)">📩 Jetzt abrufen</button></div>`).join("")}</div>`);
+}
 function gpZeigen() {
   const z = $("chat"); if (!z || !chatId) return;
-  z.querySelector(".gp-warte")?.remove();
+  z.querySelectorAll(".gp-warte:not(#rgCpGeplant)").forEach((x) => x.remove());
+  gpVorabZeigen(z);
   const l = (CHAT?.id === chatId && CHAT.geplant) || []; if (!l.length) return;
-  z.insertAdjacentHTML("beforeend", `<div class="gp-warte">${l.map((g) => `<button type="button" class="gp-blase" onclick="gpMenue('${esc(g.id)}')">${esc(g.text)}
-    <small>⏰ wird gesendet ${esc(gpWann(g.um))}${g.wiederholung !== "einmal" ? ` · 🔁 ${esc(gpWdhText(g.wiederholung, g.um))}` : ""}${g.fehler ? `<br>⚠️ Letztes Mal nicht gesendet: ${esc(g.fehler)}` : ""}<br><i>Nur du siehst das – antippen zum Ändern</i></small></button>`).join("")}</div>`);
+  // 2.549.0 KC-CLUB-GEPLANT-WECKER (Wunsch Hansi): rechts neben jeder geplanten Nachricht ein ⏰ – antippen zeigt die Infos und „✏️ Ändern“
+  z.insertAdjacentHTML("beforeend", `<div class="gp-warte">${l.map((g) => `<div class="gp-zeile"><button type="button" class="gp-blase" onclick="gpMenue('${esc(g.id)}')">${esc(g.text)}
+    <small>⏰ wird gesendet ${esc(gpWann(g.um))}${g.wiederholung !== "einmal" ? ` · 🔁 ${esc(gpWdhText(g.wiederholung, g.um))}` : ""}${g.fehler ? `<br>⚠️ Letztes Mal nicht gesendet: ${esc(g.fehler)}` : ""}${g.vorab ? "<br>📩 Vorher abrufen erlaubt" : ""}<br><i>Nur du siehst das – antippen zum Ändern</i></small></button><button type="button" class="gp-wecker" onclick="gpMenue('${esc(g.id)}')" aria-label="Geplante Nachricht: Infos und ändern" title="Geplant – Infos und ändern">⏰</button></div>`).join("")}</div>`);
 }
 function gpMenue(id) {
   const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
-  const wdh = g.wiederholung !== "einmal";
+  const wdh = g.wiederholung !== "einmal", wege = (g.wege || []).map((w) => (w === "push" ? "🔔 Push" : w === "email" ? "✉️ E-Mail" : w)).join(" + ") || "nur in der App";
+  const zeile = (t, w) => `<tr><td>${t}</td><td><b>${w}</b></td></tr>`; // 2.549.0 KC-CLUB-GEPLANT-WECKER: alle Infos auf einen Blick
   blattAuf("gpMenue", `<h3 style="margin:0 0 4px">⏰ Geplante Nachricht</h3>
     <div class="gp-vorschau">${esc(g.text.length > 200 ? g.text.slice(0, 200) + " …" : g.text)}</div>
-    <p class="hinweis" style="margin:0 0 10px">Wird gesendet: <b>${esc(gpWann(g.um))}</b>${wdh ? `<br>🔁 ${esc(gpWdhText(g.wiederholung, g.um))}${g.anzahl ? ` · schon ${g.anzahl}× gesendet` : ""}` : ""}</p>
-    <button class="knopf haupt" onclick="gpJetzt('${esc(g.id)}')">📤 Jetzt senden${wdh ? " (einmal extra)" : ""}</button>
-    <button class="knopf" onclick="$('gpMenue').remove();spaeterWahl((CHAT?.geplant||[]).find((x)=>x.id==='${esc(g.id)}'))">🕐 Zeit ändern</button>
+    <table class="gp-infos">${zeile("📤 Wird gesendet", esc(gpWann(g.um)))}${zeile("🔁 Wie oft", wdh ? esc(gpWdhText(g.wiederholung, g.um)) + (g.anzahl ? ` · schon ${g.anzahl}× gesendet` : "") : "einmal")}
+      ${zeile("📣 Benachrichtigung", esc(wege))}${g.wichtig ? zeile("❗ Wichtig", "ja") : ""}${g.angelegt ? zeile("🗓️ Geplant am", esc(wann(g.angelegt))) : ""}
+      ${g.geaendert && g.angelegt && Date.parse(g.geaendert) - Date.parse(g.angelegt) > 60000 ? zeile("✏️ Zuletzt geändert", esc(wann(g.geaendert))) : ""}
+      ${g.fehler ? zeile("⚠️ Letztes Mal", esc(g.fehler)) : ""}${wdh ? "" : zeile("📩 Vorher abrufen", g.vorab ? `erlaubt (${esc(gpEmpfaenger())} weiß Bescheid)` : "nein – erst zur Zeit")}</table>
+    <button class="knopf haupt" onclick="gpAendernWahl('${esc(g.id)}')">✏️ Ändern</button>
+    <button class="knopf" onclick="gpJetzt('${esc(g.id)}')">📤 Jetzt senden${wdh ? " (einmal extra)" : ""}</button>
     <button class="knopf gefahr" onclick="gpLoeschen('${esc(g.id)}')">🗑️ ${wdh ? "Löschen (Wiederholung beenden)" : "Löschen"}</button>
     <button class="knopf" onclick="$('gpMenue').remove()">Schließen</button>`);
+}
+// 2.549.0 KC-CLUB-GEPLANT-WECKER: „✏️ Ändern“ – Zeit/Wiederholung (vorhandene Auswahl) oder den Text
+function gpAendernWahl(id) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
+  $("gpMenue")?.remove();
+  blattAuf("gpMenue", `<h3 style="margin:0 0 8px">✏️ Was möchtest du ändern?</h3>
+    <button class="knopf haupt" onclick="$('gpMenue').remove();spaeterWahl((CHAT?.geplant||[]).find((x)=>x.id==='${esc(g.id)}'))">🕐 Zeit oder Wiederholung</button>
+    <button class="knopf" onclick="gpTextAendern('${esc(g.id)}')">📝 Text der Nachricht</button>
+    ${g.wiederholung === "einmal" ? `<button class="knopf" onclick="gpVorab('${esc(g.id)}', ${!g.vorab})">${g.vorab ? "🔒 Vorher abrufen ausschalten" : "📩 Vorher abrufen erlauben"}</button>` : ""}
+    <button class="knopf" onclick="gpMenue('${esc(g.id)}')">← Zurück</button>`);
+}
+async function gpTextAendern(id) {
+  const g = (CHAT?.geplant || []).find((x) => x.id === id); if (!g) return;
+  $("gpMenue")?.remove();
+  const t = await eingabe("📝 Text ändern\nSo wird die Nachricht gesendet:", g.text, { mehrzeilig: true });
+  if (t === null || t === undefined) return gpMenue(id);
+  const neu = String(t).trim(); if (!neu) return melde("Bitte einen Text schreiben.", true); if (neu === g.text) return gpMenue(id);
+  if (Date.parse(g.um) - Date.now() < 60000) return melde("⏰ Die Nachricht wird gleich gesendet – Text jetzt nicht mehr änderbar.", true);
+  try { await api("geplant_speichern", { geplant_id: g.id, um: g.um, wiederholung: g.wiederholung, text: neu }, { warten: true }); melde("✏️ Text geändert"); chatStand = ""; await chatLaden(true); }
+  catch (e) { meldeFehler(e); }
 }
 async function gpJetzt(id) {
   $("gpMenue")?.remove();
@@ -25171,7 +26230,7 @@ function zeige(v, ausHistorie) {
   if (v === "nachrichten") unterhLaden();
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
   if (v === "einstellungen") akSichtbarSetzen(); // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG
-  if (v === "einstellungen") { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+  if (v === "einstellungen") einstFuellen(); // 2.534.0: eigene Funktion – der Einstellungs-Wegweiser füllt die Werte genauso
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
@@ -25187,6 +26246,7 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 // 2.24.6 (Fehlerprotokoll Hansi: avSetzen → fensterZu(null), wenn „Mein Bild“ schon zu war): ein nicht (mehr) offenes Fenster ist schon zu
+function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
 function fensterZu(b) { if (!b) return; if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
 // 2.425.0 KC-CLUB-GENERALCHECK (Eingaben schützen): wer in einem Fenster etwas getippt hat und es aus Versehen schließt (daneben tippen,
 // ✕, Escape, Handy-„Zurück“), wird gefragt – vorher war der Text (z. B. SOS-Text, Termin-Vorschlag, Schild) ohne Rückfrage weg.
@@ -25769,6 +26829,18 @@ async function treffenAbsagen(id, va) {
 
 // ---------- Vorschläge & Abstimmungen ----------
 let VORSCHLAG_TREFFEN = [], VORSCHLAG_SPENDEN = { empfaenger: [], betraege: [50, 100, 250, 500, 1000], max: 100000 };
+// 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi „jetziges Datum oder nächste oder übernächste Sitzung – Datum noch nicht bekannt –, aber schon mal
+// vorwählen“): fehlen bekannte Sitzungen bis zur übernächsten, stehen „📅 … Sitzung – Datum noch offen“ in der Auswahl (Wert „s:K“ = K-te Sitzung ab jetzt).
+// Der Server ordnet den Vorschlag zu, sobald die Sitzung angelegt ist.
+const VS_SITZ = ["Nächste", "Übernächste", "Überübernächste"];
+function vsTerminOptionen(termine, gewaehlt, spaeter) {
+  const sitzungen = termine.filter((t) => !t.art || t.art === "treffen").length;
+  const offen = []; for (let k = sitzungen + 1; k <= 2; k++) offen.push(k);
+  if (spaeter && !offen.includes(spaeter)) offen.push(spaeter);
+  return termine.map((t) => `<option value="${t.id}" ${t.id === gewaehlt ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")
+    + offen.map((k) => `<option value="s:${k}" ${spaeter === k ? "selected" : ""}>📅 ${VS_SITZ[k - 1]} Sitzung – Datum noch offen</option>`).join("");
+}
+const vsTerminWert = (w) => (/^s:\d$/.test(w || "") ? { treffen_id: null, sitzung_nr: Number(w.slice(2)) } : { treffen_id: w || null });
 async function vorschlaegeLaden() {
   try {
     const { vorschlaege, treffen, spenden: spCfg } = await api("vorschlaege_liste");
@@ -25798,7 +26870,7 @@ function vorschlagKarte(v) {
   const kopf = `${v.art === "abstimmung" ? `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
     ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
     ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
-  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}</div>`;
+  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
   let mitte = "";
   if (v.art !== "abstimmung") { // Thema und Spendenprojekt: unterstützen 👍
     const e = v.ergebnis?.[0] || { anzahl: 0, namen: [] };
@@ -25841,14 +26913,14 @@ function vorschlagBearbeiten(id) {
     <label class="feld">${v.art === "abstimmung" ? "Frage" : v.art === "spende" ? "Überschrift" : "Thema"}<input id="vbTitel" maxlength="150" value="${esc(v.titel)}"></label>
     ${v.art === "abstimmung" && v.stimmen ? '<p class="hinweis" style="margin:-4px 0 6px">Es wurde schon abgestimmt – die Frage bleibt deshalb, wie sie ist.</p>' : ""}
     <label class="feld">Beschreibung (freiwillig)<textarea id="vbBeschr" rows="4">${esc(v.beschreibung || "")}</textarea></label>
-    <label class="feld">Für welchen Termin?<select id="vbTreffen"><option value="">– allgemein –</option>${termine.map((t) => `<option value="${t.id}" ${v.treffen?.id === t.id ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    <label class="feld">Für welchen Termin?<select id="vbTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(termine, v.treffen?.id, v.sitzungSpaeter || null)}</select></label>
     ${oaFeld("vb")}
     <p class="hinweis" style="margin:6px 0 0">Beim Speichern wird niemand benachrichtigt.</p>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="vbOk">💾 Speichern</button><button class="knopf" onclick="$('vorschlagBearb').remove()">Abbrechen</button></div>`);
   if (v.art === "abstimmung" && v.stimmen) $("vbTitel").disabled = true;
   $("vbOk").onclick = () => einmal($("vbOk"), async () => {
     try {
-      const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, treffen_id: $("vbTreffen").value || null, anlagen: oaIds("vb") });
+      const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, ...vsTerminWert($("vbTreffen").value), anlagen: oaIds("vb") });
       oaLeeren("vb"); f.remove();
       melde(r.anlagen?.neu ? `💾 Gespeichert – ${r.anlagen.neu} Anlage${r.anlagen.neu > 1 ? "n" : ""} dazu` : "💾 Gespeichert");
       await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id);
@@ -25878,8 +26950,9 @@ function vorschlagKachel(v) {
   const lage = !offen ? (v.status === "abgeschlossen" ? '<span class="marke gruen">✔ erledigt</span>' : '<span class="marke rot">zurückgezogen</span>')
     : v.art === "abstimmung" ? (v.meine || v.abgestimmt ? '<span class="marke gruen">✔ Du hast abgestimmt</span>' : '<span class="marke gelb">👉 Stimme fehlt</span>') : "";
   const zahl = (v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`) + (v.ziel ? ` · 🔐 ${v.ziel}` : ""); // KC-CLUB-ABSTIMMUNG-ZIEL
+  const spaeter = offen && !v.treffen && v.sitzungSpaeter ? `<span class="marke">📅 ${VS_SITZ[v.sitzungSpaeter - 1]} Sitzung</span>` : ""; // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
   return `<button class="mini-kachel${offen && v.art === "abstimmung" && !(v.meine || v.abgestimmt) ? " mk-offen" : ""}" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">${sym}</span>
-    <span class="mk-titel">${esc(v.titel)}</span>${lage}<span class="mk-unter">${zahl}</span>
+    <span class="mk-titel">${esc(v.titel)}</span>${lage}${spaeter}<span class="mk-unter">${zahl}</span>
     ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl(v)}</button>`;
 }
 function vorschlagInfo(id) {
@@ -25978,7 +27051,7 @@ function vorschlagForm(art) {
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
     <label class="feld">${vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
-    <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${VORSCHLAG_TREFFEN.map((t) => `<option value="${t.id}" ${t.id === t0 ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")}</select></label>
+    <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
     ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>
@@ -26022,17 +27095,17 @@ async function vfAuswahl() {
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="vfaOk">Übernehmen</button><button class="knopf" onclick="$('vfAuswahlBlatt').remove()">Abbrechen</button></div>`);
   f.style.zIndex = "2100"; f.classList.add("sc-blatt"); f.onclick = null;
   const zeichnen = () => { const q = $("vfaSuche").value.toLowerCase();
-    $("vfaListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label><input type="checkbox" data-p="${esc(m.person_id)}" ${gew.has(m.person_id) ? "checked" : ""}> <span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+    $("vfaListe").innerHTML = alle.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label${okKl(m, gew.has(m.person_id))}><input type="checkbox"${okAttr(m, gew.has(m.person_id))} data-p="${esc(m.person_id)}" ${gew.has(m.person_id) ? "checked" : ""}> <span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
     $("vfaListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.add(c.dataset.p) : gew.delete(c.dataset.p); $("vfaOk").textContent = `Übernehmen (${gew.size})`; }));
     $("vfaOk").textContent = `Übernehmen (${gew.size})`; };
   $("vfaSuche").oninput = zeichnen;
-  $("vfaAlle").onclick = () => { alle.forEach((m) => gew.add(m.person_id)); zeichnen(); };
+  $("vfaAlle").onclick = () => { alle.filter(okFrei).forEach((m) => gew.add(m.person_id)); zeichnen(); }; // 2.538.0: ohne „keine Benachrichtigungen“
   $("vfaKeiner").onclick = () => { gew.clear(); zeichnen(); };
   $("vfaOk").onclick = () => { VF_ZIEL.ids = [...gew]; f.remove(); vfZielZeigen(); };
   zeichnen();
 }
 async function vorschlagSpeichern(knopf) {
-  const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, treffen_id: $("vfTreffen").value || null, benachrichtigen: $("vfInfo").checked };
+  const daten = { art: vfArt, titel: $("vfTitel").value, beschreibung: $("vfBeschr").value, ...vsTerminWert($("vfTreffen").value), benachrichtigen: $("vfInfo").checked };
   if (vfArt === "spende") {
     daten.spenden = VF_SP.map((x) => ({ empfaenger: String(x.empfaenger || "").trim(), betrag: Number(x.betrag) || 0 }));
     const fehlt = daten.spenden.find((x) => !x.empfaenger || !(x.betrag > 0));
@@ -27040,10 +28113,12 @@ function ekErstInfo(id) {
     ${x.bemerkung ? `<p>💬 ${esc(x.bemerkung)}</p>` : ""}${x.kenntnis.length ? `<p class="hinweis">👁️ Gesehen: ${esc(x.kenntnis.join(", "))}</p>` : ""}
     <p class="hinweis">Belege und Aufstellung kamen zusätzlich per Mail.</p>
     <div style="display:grid;gap:8px">${x.kenntnisIch ? "" : `<button class="knopf" data-fn="ekKenntnis('erstattung','${x.id}')">👁️ Zur Kenntnis genommen</button>`}
+      <button class="knopf" data-fn="ekErstBlatt('${x.id}')">📄 Antrag als PDF / Drucken</button>
       <button class="knopf haupt" data-fn="ekErstattet('${x.id}')">✅ Erstattet</button><button class="knopf" data-fn="ekErstAblehnen('${x.id}')">✖ Ablehnen</button>
       <button class="knopf" data-fn="ekAblage('erstattung','${x.id}')">🗄️ Ablegen …</button><button class="knopf" data-fn="">Schließen</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.fn) new Function(b.dataset.fn)(); }));
 }
+function ekErstBlatt(id) { const x = ekErst(id); if (x) erstAnsehen(erstDaten({ ...x, status: "eingereicht – in Bearbeitung" })); } // 2.526.0
 function ekErstattet(id) {
   const x = ekErst(id); if (!x) return;
   const bar = x.auszahlung === "bar", vor = esc(x.name.split(" ")[0]);
@@ -28449,7 +29524,7 @@ async function unterhLaden() {
     // KC-CLUB-CHAT-KARTEI (2.191.0, Wunsch Hansi): Chats als Rollkartei – die vordere Karte ist schon „offen“ (letzte Nachrichten)
     uhKarteiKnopf(); $("unterhListe").classList.toggle("karte", !(rkAn("chats") && !UH.archivAnsicht && zeigen.length));
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
-    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
+    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
@@ -28472,7 +29547,7 @@ function uhKarteiHtml(liste) {
   const uhOn = (u) => !u.gruppe && u.anzahl <= 2 && mgOn(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0])); // Einzelchat mit jemandem, der online ist
   return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
-    return `<details class="karte uhk" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
+    return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
       <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
@@ -28566,11 +29641,15 @@ function rundeZuGruppe() {
 }
 // KC-CLUB-GRUPPE-AMEISEN (2.22.6): Gruppen aus UH_HERVOR bekommen beim Öffnen von „Nachrichten“ ~5 s einen laufenden Rahmen (höchstens 1× je Minute)
 const UH_HERVOR = ["Innovation"];
+// 2.542.0 KC-CLUB-CHAT-NEU-MARKIERT (Wunsch Hansi „Zeilen markieren, wo neue Nachrichten drin sind“): Chat mit Ungelesenem, nicht stumm –
+// markiert in Liste/Kartei und bekommt auch den Ameisenrahmen aus uhAmeisen()
+const uhUngelesen = (u) => (u?.ungelesen || 0) > 0 && !stummAn(u.id);
+const uhHervor = (u) => !!u.gruppe && UH_HERVOR.some((n) => n.toLowerCase() === String(u.gruppe.name || "").toLowerCase());
 function uhAmeisen() {
   const jetzt = Date.now();
   if (!UH.ameisenBis || jetzt - UH.ameisenBis > 60000) UH.ameisenBis = jetzt + 5000; // neues 5-s-Fenster höchstens 1× je Minute
   if (jetzt >= UH.ameisenBis) return;
-  const ziele = UH.liste.filter((u) => u.gruppe && UH_HERVOR.some((n) => n.toLowerCase() === String(u.gruppe.name || "").toLowerCase()));
+  const ziele = UH.liste.filter((u) => uhUngelesen(u) || uhHervor(u));
   for (const u of ziele) {
     const el = document.querySelector(`#unterhListe .unterh[data-id="${u.id}"]`); if (!el || el.querySelector(".uh-rahmen")) continue;
     el.classList.add("uh-ameisen");
@@ -28720,11 +29799,12 @@ async function unterhEntfernen(id, fuerAlle) {
   } catch (e) { meldeFehler(e); }
 }
 async function chatOeffnen(id, ausHistorie) {
+  if (TH.thread === id) tippHinweisWeg(); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
   vorlesenZeigen(); // KC-CLUB-VORLESEN: Lautsprecher oben zeigt den gespeicherten Zustand
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
-  if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG
+  if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); versandZurueck(); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG / -VERSANDART
   NA.trennerChat = null; // KC-CLUB-NEU-LINIE: beim Öffnen neu bestimmen
   if (id !== chatId || aktuelleAnsicht !== "chat") spur("chat", id); // KC-CLUB-SPUR: welche Unterhaltung (ohne Inhalt)
   chatId = id; zeige("chat", ausHistorie); chatId = id;
@@ -28739,6 +29819,7 @@ async function chatLaden(scrollen) {
   try {
     const fuer = chatId, u = await api("unterhaltung", { id: fuer });
     if (fuer !== chatId) return; // 1.97.0: inzwischen eine andere Unterhaltung geöffnet → alte Antwort verwerfen
+    if (VN.an && VN.chat !== fuer) vnUmschalten(false); // 2.529.0 KC-CLUB-VN-RUECKFRAGE: Schloss gilt nur im Chat, in dem es eingeschaltet wurde
     CHAT = u; CHAT_VOLL_AM = Date.now(); setTimeout(owZeigen, 0); setTimeout(gpZeigen, 0); slAnzeigen(); // 2.362.0 KC-CLUB-SPAETER-SENDEN: eigene geplante Nachrichten unten // KC-CLUB-SELBSTLOESCHEN // KC-CLUB-OFFLINE: vorgemerkte Nachrichten unten zeigen
     const andere = u.teilnehmer.filter((x) => x.person_id !== ICH.person_id);
     // KC-CLUB-CHAT-KOPF-BILD (2.24.19): Bild vorn (Person: Avatar/Kreis; Gruppe: Symbol mit 🔗; Runde: gestrichelt), Titel ohne doppeltes Symbol
@@ -28752,8 +29833,9 @@ async function chatLaden(scrollen) {
     $("chatTeilnehmer").textContent = !andere.length ? "Nur du (Test-Unterhaltung)" : u.gruppe ? `🔗 Feste Gruppe · ${andere.length + 1} Mitglieder: Du, ${andere.map((x) => x.name.split(" ")[0]).join(", ")} ›` : andere.length > 1 ? "Runde (keine feste Gruppe) · Mit: " + andere.map((x) => x.name).join(", ") : u.betreff ? "Mit: " + andere.map((x) => x.name).join(", ") : [zuletztText(u.partnerDa), st].filter(Boolean).join(" · "); // 1.20.0: zuletzt da
     rundeAngebotZeigen(u); // KC-CLUB-GRUPPE-AUS-RUNDE
     $("chatAngeheftet").innerHTML = (u.angeheftet || []).map((a) => `<button class="pin-zeile" onclick="zuNachricht('${a.id}')">📌 <b>${esc(a.von)}:</b> ${esc(a.text)}</button>`).join(""); // KC-CLUB-ANHEFTEN
-    tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || []); chatAbstand();
+    tipptZeigen(u.tippt || [], u.entwurf || [], u.spricht || [], u.diktiert || []); chatAbstand();
     if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
+    else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
     const stand = JSON.stringify(u.nachrichten.map((m) => [m.id, m.gelesenVon?.length, m.haken, m.express?.quittungen?.length, JSON.stringify(m.express?.empfaenger || null), (m.reaktionen || []).map((x) => x.emoji + x.anzahl).join(""),
       m.text, m.bearbeitet, m.gemerkt, m.angeheftet, m.umfrage?.optionen.map((o) => o.stimmen + (o.meine ? "*" : "")).join(","), m.loeschtAm ? slRest(m.loeschtAm) : ""])); // 1.12.0: auch Stimmen/Bearbeitungen anderer
     const idStand = u.nachrichten.map((m) => m.id).join(",");
@@ -28826,7 +29908,7 @@ async function vnEnt(t, pw, bund) {
   } catch { return null; }
 }
 function vnUmschalten(an) {
-  VN.an = an ?? !VN.an; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
+  VN.an = an ?? !VN.an; VN.chat = VN.an ? chatId : null; const k = $("vnKnopf"); k?.classList.toggle("an", VN.an); k?.setAttribute("aria-pressed", String(VN.an));
   const t = $("text"); if (t) t.placeholder = VN.an ? "🔒 Verschlüsselte Nachricht schreiben …" : "Nachricht schreiben …";
   if (!VN.an) return;
   const p = vbPartner();
@@ -28839,6 +29921,10 @@ async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den versch
   if (anlagen.length) melde("🔒 Hinweis: Nur der Text wird verschlüsselt – Fotos und Dateien nicht.");
   const vp = vbPartner(), bund = vp && vbHolen(vp.person_id);
   if (bund) { const v = await vnVer(text, "", bund.schluessel[crypto.getRandomValues(new Uint32Array(1))[0] % bund.schluessel.length]); VN.klar.set(v, text); return v; } // 2.518.0: einer der 5 Schlüssel, zufällig
+  // 2.529.0 KC-CLUB-VN-RUECKFRAGE (Fund Hansi „ich wollte Klaus antworten, soll aber eine Verschlüsselungsnummer eingeben – ich will gar nicht
+  // verschlüsseln“): das Schloss neben ▾ ⌨️ 🔊 ist schnell aus Versehen angetippt – erst fragen; „Normal senden“ schaltet es aus und sendet wie immer
+  if (!(await frage("🔒 Verschlüsselt senden ist eingeschaltet\nDas Schloss am Schreibfeld ist an. Soll diese Nachricht wirklich verschlüsselt werden? Dann braucht der Empfänger einen Schlüssel, den du ihm persönlich sagst.",
+    { ja: "🔒 Ja, mit Schlüssel", nein: "✉️ Normal senden" }))) { vnUmschalten(false); return text; }
   let pw = vnGemerkt(chatId);
   for (;;) {
     pw = await eingabe(`🔒 Schlüssel für diese Nachricht\nMindestens ${VN_MIN} Zeichen, z. B. „Kochmütze7“. Der Empfänger braucht denselben Schlüssel – sag ihn ihm persönlich, am Telefon oder per SMS, nicht über die Club-App.${vnGemerkt(chatId) ? "\nVorgeschlagen ist der für diese Unterhaltung gemerkte Schlüssel." : ""}`, pw || "");
@@ -28914,7 +30000,7 @@ function vbNeuProbieren() { VBR.fehl.clear(); document.querySelectorAll(".vn-zu"
 function vbMenue(beimEinschalten) {
   const p = vbPartner(); if (!p) return melde("🔑 Einen Schlüsselbund gibt es nur für Zweier-Chats.", true);
   const vn = esc(vbVorname(p)), b = vbHolen(p.person_id);
-  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔑 Schlüsselbund mit ${vn}</h3>
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">🔑 Schlüsselbund mit ${vn}</h3>
     <p class="dlg-text">${b ? `Vorhanden seit ${esc(new Date(b.erstellt || Date.now()).toLocaleDateString("de-DE"))}: ${b.schluessel.length} Schlüssel auf diesem Handy. Verschlüsselte Nachrichten (🔒) gehen damit ohne Eintippen und öffnen sich von selbst.`
       : `Mit einem Schlüsselbund müsst ihr keinen Schlüssel mehr eintippen: ${VB_ANZAHL} zufällige Schlüssel liegen auf beiden Handys. Beim Senden nimmt die App einen davon, beim Empfang probiert sie alle durch – passt keiner, kommt eine Fehlermeldung. Die Schlüssel gehen per Datei direkt an ${vn}, nie über den Club-Server.`}</p>
     <div class="dlg-knoepfe" style="flex-direction:column;align-items:stretch">
@@ -29087,7 +30173,7 @@ function frageVerb(text) {
 async function geraetAbmelden() {
   if (!(await frage("Von diesem Gerät abmelden?\n\nDein Zugang und alle Club-Daten auf diesem Gerät werden gelöscht – auch Notfallpass, Entwürfe und Einstellungen. Auf deinen anderen Geräten und im Club bleibt alles. Wieder anmelden geht nur mit deinem Zugangslink.", { ja: "🚪 Abmelden", nein: "Abbrechen", gefahr: true }))) return;
   try { const r = await navigator.serviceWorker?.getRegistration?.(); const a = await r?.pushManager?.getSubscription(); await a?.unsubscribe(); } catch {}
-  try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k) || /^(kc_wichtig_frage|kc-einw-zu)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {} // KC-CLUB-RC-PRUEFUNG (20.10.2026): auch „Wichtig“-Frage und Einweisung-zu
+  try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k) || /^(kc_wichtig_frage|kc_versand_immer|kc-einw-zu)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {} // KC-CLUB-RC-PRUEFUNG (20.10.2026): auch „Wichtig“-Frage und Einweisung-zu
   try { sessionStorage.clear(); } catch {}
   try { await caches.delete("kcclub-geteilt"); } catch {}
   location.replace(location.pathname);
@@ -30427,7 +31513,14 @@ async function neuGruppenZeigen(ziel = "neuGruppen", frisch = false) {
 }
 // Schnellwahl (Alle / Ämter) setzt die Häkchen der zugehörigen Personen – so sieht man sofort, wer dazugehört
 // KC-CLUB-ONLINE-RUNDE (1.21.2, Wunsch Hansi): „🟢 Alle gerade online“ – spontane Runde mit allen, die jetzt in der App sind
-const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
+// 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU (Wunsch Hansi): wer keine Benachrichtigungen bekommt (Admin → 📵), ist in allen Empfänger-Listen
+// ausgegraut und nicht wählbar und fällt bei „Alle“/Ämtern/Online heraus. Schon Gewählte bleiben abwählbar.
+const okAus = (m) => !!m?.ohne_komm;
+const okFrei = (m) => !okAus(m);
+const okAttr = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' disabled title="Möchte keine Benachrichtigungen"' : "");
+const okKl = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' class="ok-grau"' : "");
+const okZusatz = (m) => (okAus(m) ? ' <small class="ok-hinweis">📵 keine Benachrichtigungen</small>' : "");
+const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m) && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
 const empfTest = () => empfWahl.personen.length === 1 && empfWahl.personen[0] === ICH.person_id;
 function empfListe() {
   const q = $("empfSuche").value.toLowerCase();
@@ -30441,9 +31534,9 @@ function empfListe() {
     ...AEMTER.map((a) => chip(a, "🎖️ " + esc(a))),
     `<button class="knopf klein ${empfTest() ? "haupt" : ""}" onclick="testAnMich()">🧪 Test an mich</button>`,
   ].join("");
-  $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
-    <input type="checkbox" ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
-    <span style="flex:1">${esc(m.name)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+  $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label${okKl(m, empfWahl.personen.includes(m.person_id))}>
+    <input type="checkbox"${okAttr(m, empfWahl.personen.includes(m.person_id))} ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
+    <span style="flex:1">${esc(m.name)}${okZusatz(m)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   $("empfGewaehlt").textContent = empfTest() ? "nur du selbst (Test)" : (empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name).filter(Boolean).join(", ") || "niemand");
 }
 function gruppeWahl(a) {
@@ -30557,8 +31650,8 @@ function grListe() {
   const q = $("grSuche").value.toLowerCase();
   $("grListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => {
     const fest = m.person_id === GR.ersteller && GR.id;
-    return `<label><input type="checkbox" ${GR.personen.includes(m.person_id) ? "checked" : ""} ${fest ? "disabled" : ""} onchange="grWahl('${m.person_id}', this.checked)">
-      <span style="flex:1">${esc(m.name)}${fest ? ' <span class="marke">👑 angelegt</span>' : ""}</span>${wegIcons(m)}${!fest && GR.personen.includes(m.person_id) ? `<button type="button" class="gr-krone${GR.admins.includes(m.person_id) ? " an" : ""}" title="Gruppen-Admin" aria-label="Gruppen-Admin" aria-pressed="${GR.admins.includes(m.person_id)}" onclick="event.preventDefault();grAdmin('${m.person_id}')">👑</button>` : ""}</label>`; }).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+    return `<label${okKl(m, GR.personen.includes(m.person_id))}><input type="checkbox"${okAttr(m, GR.personen.includes(m.person_id))} ${GR.personen.includes(m.person_id) ? "checked" : ""} ${fest ? "disabled" : ""} onchange="grWahl('${m.person_id}', this.checked)">
+      <span style="flex:1">${esc(m.name)}${okZusatz(m)}${fest ? ' <span class="marke">👑 angelegt</span>' : ""}</span>${wegIcons(m)}${!fest && GR.personen.includes(m.person_id) ? `<button type="button" class="gr-krone${GR.admins.includes(m.person_id) ? " an" : ""}" title="Gruppen-Admin" aria-label="Gruppen-Admin" aria-pressed="${GR.admins.includes(m.person_id)}" onclick="event.preventDefault();grAdmin('${m.person_id}')">👑</button>` : ""}</label>`; }).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const namen = GR.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name.split(" ")[0]).filter(Boolean);
   $("grGewaehlt").textContent = "Du" + (namen.length ? ", " + namen.join(", ") : "") + ` (${namen.length + 1})`;
 }
@@ -30670,19 +31763,30 @@ async function slGewaehlt(art, std) {
 }
 // KC-CLUB-WICHTIG (1.53.0, Wunsch Hansi): ❗ = „Wichtigkeit hoch“ für die nächste Nachricht (gilt nur für diesen Chat)
 let WICHTIG = false;
-// KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0, Wunsch Hansi „immer fragen, ob Wichtigkeit normal oder hoch“): vor dem Senden 📝 Normal / ❗ Hoch.
-// Je Chat höchstens alle 30 Min. einmal (sonst nervt es beim Hin- und Herschreiben). Schalter: ⚙️ → 🔔 Benachrichtigungen; Standard: an für den Admin.
-const WF_KEY = "kc_wichtig_frage", WF_ZULETZT = {};
-function wichtigFrageAn() { try { const v = localStorage.getItem(WF_KEY); return v === null ? !!ICH?.admin : v === "1"; } catch (e) { return !!ICH?.admin; } }
-function wichtigFrageSetzen(an) { try { localStorage.setItem(WF_KEY, an ? "1" : "0"); } catch (e) { /* ohne Speicher gilt der Standard */ } melde(an ? "❗ Vor dem Senden wird nach der Wichtigkeit gefragt" : "Keine Frage mehr nach der Wichtigkeit – ❗ geht weiter von Hand"); }
-async function wichtigkeitFragen() {
-  if (WICHTIG || !wichtigFrageAn()) return;
-  const k = chatId || "neu";
-  if (chatId && Date.now() - (WF_ZULETZT[k] || 0) < 30 * 60000) return;
-  const hoch = await frage("Wie wichtig ist diese Nachricht?\n\n📝 Normal – wie immer.\n❗ Hoch – bei allen farbig markiert, geht per Push UND E-Mail raus. Liest sie nach 24 Std. noch jemand nicht, bekommst du Bescheid.", { ja: "❗ Hoch", nein: "📝 Normal" });
-  WF_ZULETZT[k] = Date.now();
-  if (hoch) wichtigUmschalten(true);
+// KC-CLUB-VERSANDART (2.524.0, Wunsch Hansi „Wichtig und Express raus aus den Knöpfen, vor dem Senden als Option: Normal ist schon markiert, dann Wichtig,
+// dann Express; Wichtig und Express zusammen möglich“): Versand-Leiste direkt über dem Schreibfeld. Normal ist genau dann markiert, wenn weder Wichtig
+// noch Express an ist – es ist nie „nichts“ gewählt. Ersetzt die Frage vor dem Senden (KC-CLUB-WICHTIGKEIT-FRAGE 2.287.0): man sieht die Wahl vorher,
+// eine normale Nachricht braucht weiter nur ➤. Die Leiste erscheint, sobald etwas im Feld steht; der alte Schalter (gleicher Speicherplatz, Standard:
+// an für den Admin) heißt jetzt „Versand-Leiste immer zeigen“.
+// 2.529.0 KC-CLUB-VERSAND-BEIM-SCHREIBEN (Wunsch Hansi „die Leiste mit Express usw. erst einblenden, wenn Text eingetragen wird“): Standard für alle
+// (auch den Admin) ist jetzt „erst beim Schreiben“; neuer Speicherplatz, damit die alte Voreinstellung „immer“ nicht mehr greift. Wer sie immer sehen
+// will, schaltet sie unter ⚙️ wieder ein. Mit Anhang oder gewähltem ❗/🏎️ bleibt sie sichtbar.
+const WF_KEY = "kc_versand_immer";
+function versandImmerAn() { try { return localStorage.getItem(WF_KEY) === "1"; } catch (e) { return false; } }
+function versandImmerSetzen(an) { try { localStorage.setItem(WF_KEY, an ? "1" : "0"); } catch (e) { /* ohne Speicher gilt der Standard */ } versandZeigen(); melde(an ? "📝❗🏎️ Die Versand-Leiste steht immer über dem Schreibfeld" : "📝❗🏎️ Die Versand-Leiste erscheint, sobald du schreibst"); }
+function versandZeigen() {
+  const l = $("versandLeiste"), t = $("text"), n = $("normalKnopf"), normal = !WICHTIG && !EXPRESS;
+  n?.classList.toggle("an", normal); n?.setAttribute("aria-pressed", String(normal));
+  if (t) t.placeholder = EXPRESS && WICHTIG ? "🏎️❗ Wichtige Express-Sendung schreiben …" : EXPRESS ? "🏎️ Express-Sendung schreiben …" : WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
+  l?.classList.toggle("versteckt", !(t?.value.trim() || anlagen.length || !normal || versandImmerAn()));
 }
+function versandNormal() {
+  if (!WICHTIG && !EXPRESS) return versandZeigen();
+  wichtigUmschalten(false); expressUmschalten(false);
+  melde("📝 Normal – wie immer");
+}
+// Nach dem Senden und beim Chatwechsel: wieder 📝 Normal
+function versandZurueck() { wichtigUmschalten(false); expressUmschalten(false); }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { try { expressPruefen(); } catch {} }, 1200); }); // 2.362.0 KC-CLUB-EXPRESS
 document.addEventListener("visibilitychange", () => { if (!document.hidden && SS?.id) ssHolen(true); }); // 2.364.0 KC-CLUB-AKKU-7: Mitschauen nach dem Zurückkommen sofort frisch
 // ---------- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, wird sofort zugestellt; beim Empfänger ploppt ein Fenster auf:
@@ -30705,11 +31809,11 @@ function expressUmschalten(an) {
   const vorher = EXPRESS; EXPRESS = an ?? !EXPRESS;
   const k = $("expressKnopf"), t = $("text");
   k?.classList.toggle("an", EXPRESS); k?.setAttribute("aria-pressed", String(EXPRESS));
-  t?.classList.toggle("express", EXPRESS); if (t) t.placeholder = EXPRESS ? "🏎️ Express-Sendung schreiben …" : WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
+  t?.classList.toggle("express", EXPRESS); versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: Normal-Haken und Platzhalter
   expressZahlZeigen();
   if (EXPRESS && !vorher && an === undefined) expressStandHolen(true);
 }
-// 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“): am 🏎️-Knopf „2/5“ = heute (letzte
+// 2.391.0 KC-CLUB-EXPRESS-ZAEHLER (Wunsch Hansi „bei 5 lassen und in der Express 1/5 anzeigen“): am 🏎️-Haken „2/5“ = heute (letzte
 // 24 Std.) schon verschickt. Sind alle 5 verbraucht, geht Express gar nicht erst an – mit Hinweis, ab wann es wieder geht. Admin: unbegrenzt.
 const EXS = { stand: null };
 function expressZahlZeigen() {
@@ -30871,8 +31975,8 @@ function wichtigUmschalten(an) {
   WICHTIG = an ?? !WICHTIG;
   const k = $("wichtigKnopf"), t = $("text");
   k?.classList.toggle("an", WICHTIG); k?.setAttribute("aria-pressed", String(WICHTIG));
-  t?.classList.toggle("wichtig", WICHTIG); if (t) t.placeholder = WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
-  if (an === undefined) melde(WICHTIG ? "❗ Wird als WICHTIG gesendet – bei allen farbig markiert" : "Normale Wichtigkeit");
+  t?.classList.toggle("wichtig", WICHTIG); versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: Normal-Haken und Platzhalter
+  if (an === undefined) melde(WICHTIG ? "❗ Wird als WICHTIG gesendet – bei allen farbig markiert" + (EXPRESS ? " und per 🏎️ Express" : "") : EXPRESS ? "❗ Wichtig aus – geht weiter per 🏎️ Express" : "📝 Normal – wie immer");
 }
 // ---------- KC-CLUB-SENSIBEL-GAESTE (2.78.0, Wunsch Hansi): vertrauliche Inhalte (z. B. Verträge) an Nicht-Mitglieder? ----------
 // Vor dem Senden: Ist der Inhalt vertraulich (Wort im Text oder Dateinamen, oder ein Dokument wie PDF/Word/Excel) UND bekommt ihn
@@ -30928,7 +32032,6 @@ async function senden() {
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
-  await wichtigkeitFragen(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0)
   if (VN.an && text) { const v = await vnVerschluesseln(text); if (!v) return; text = v; } // 2.517.0 KC-CLUB-VERSCHLUESSELT: erst jetzt (Prüfungen oben sahen den Klartext)
   // 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte – Senden getippt, während die Anlage noch hochlud; sie wurde still weggelassen):
   // lädt noch eine Anlage, wird gewartet, bis sie fertig ist – dann geht alles zusammen raus. Klappt das Hochladen nicht, bleibt der Text stehen.
@@ -30958,12 +32061,13 @@ async function senden() {
       ...(lvSendeUrl(text) ? { vorschau_url: lvSendeUrl(text) } : {}) }; // KC-CLUB-LINK-VORSCHAU
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
-    papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
+    if (vnIst(text)) { vnSchluesselZeigen($("sendenKnopf")); setTimeout(() => papierflieger($("sendenKnopf"), undefined, r?.mid, undefined, true), 650); } // 2.530.0 KC-CLUB-GEHEIMAGENT: 🔑 dreht sich, dann der Agent
+    else papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
     if (daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Per Express versandt" + expressWegeText(r?.versand) + ". Unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde" + (st && !st.unbegrenzt ? ` (heute ${st.genutzt}/${st.max})` : ""), r?.versand?.fehler > 0); } // 2.403.0 KC-CLUB-EXPRESS-WEGE // 2.385.0 KC-CLUB-EXPRESS-ZUSTELLUNG, 2.391.0 Zähler
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     lvZurueck(); // KC-CLUB-LINK-VORSCHAU
-    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); expressUmschalten(false); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN
+    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN / -VERSANDART
     if (VN.an) vnUmschalten(false); // 2.517.0 KC-CLUB-VERSCHLUESSELT: 🔒 gilt nur für diese Nachricht
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
@@ -30983,7 +32087,7 @@ async function uhMehrfachSenden(daten, text) {
     for (const id of ids) { try { await api("nachricht_senden", { id, ...daten }); } catch (e) { fehl.push(id); if (fehl.length === ids.length) throw e; } }
     spur("gesendet_mehrfach", null); // nur die Aktion, nie Text oder Empfänger
     UH.mark = new Set(fehl);
-    if (!fehl.length) { clearTimeout(entwurfTimer); zustellUmschalten(false); wichtigUmschalten(false); slZurueck(); $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null;
+    if (!fehl.length) { clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); // 2.524.0: auch Express zurück auf Normal $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; chipsZeigen(); neuEntwurf = null;
       if (ZW.whatsapp && text) melde("🟢 WhatsApp geht bei mehreren Chats nur einzeln – im jeweiligen Chat auf WA tippen."); }
     else neuEntwurf = { mehrfach: fehl };
     melde(fehl.length ? `📨 ${ids.length - fehl.length} von ${ids.length} Chats bekommen – ${fehl.length} ging nicht (bleibt markiert, einfach nochmal ➤)` : `📨 An ${ids.length === 1 ? "den Chat" : `alle ${ids.length} Chats`} gesendet`, !!fehl.length);
@@ -31006,11 +32110,13 @@ async function geteiltEmpfangen() {
     await caches.delete("kcclub-geteilt");
   } catch {}
   for (const d of dateien) if (await vbEinlesen(d)) return; // 2.518.0 KC-CLUB-SCHLUESSELBUND: Schlüssel bleiben auf dem Handy, nie in den Ablagekorb
-  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20).join(" | ") : null, typen: dateien.map((d) => d.type || "?").slice(0, 10).join(" | "), fehler: info.fehler ? String(info.fehler).slice(0, 300) : null, groesse: info.groesse ?? null } }).catch(() => {}); // 2.515.0: Felder/Typen zur Fehlersuche · 2.522.0: Fehler
+  api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20).join(" | ") : null, typen: dateien.map((d) => d.type || "?").slice(0, 10).join(" | "), fehler: info.fehler ? String(info.fehler).slice(0, 300) : null, groesse: info.groesse ?? null,
+    info: Object.keys(info).join(",") || "leer", felderAnzahl: Array.isArray(info.felder) ? info.felder.length : -1, sw: info.sw || "-" } }).catch(() => {}); // 2.525.0: leerer Speicher (info „leer“) ≠ leeres Paket (felderAnzahl 0) // 2.515.0: Felder/Typen zur Fehlersuche · 2.522.0: Fehler
   const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
   if (!dateien.length && !text && info.fehler) return melde(/Quota/i.test(info.fehler) ? "Die Datei ist zu groß für den Zwischenspeicher dieses Handys – bitte kleiner teilen (z. B. Video kürzen) oder in der Club-App über 📎 anhängen." : "Die Datei konnte beim Teilen nicht übernommen werden – bitte in der Club-App über 📎 anhängen. (Fehler ist für Hansi vermerkt.)", true); // 2.522.0 KC-CLUB-TEILEN-FEHLER
   const leer = Array.isArray(info.felder) && info.felder.some((x) => /:0$/.test(String(x))); // Datei mit 0 Byte: das Handy hat sie nicht hergegeben
   if (!dateien.length && !text && leer) return melde("Das Handy hat die Datei leer übergeben (kommt bei manchen Dateimanagern vor) – bitte aus der Galerie, Google Drive oder „Dateien“ teilen oder in der Club-App über 📎 anhängen.", true); // 2.522.0
+  if (!dateien.length && !text && Array.isArray(info.felder) && !info.felder.length) return melde("📭 Das Handy hat beim Teilen keine Datei mitgeschickt (kommt z. B. bei größeren Dateien vor). Bitte die Datei in der Club-App im Chat über 📎 anhängen – das geht bis 8 MB.", true); // 2.526.0 KC-CLUB-TEILEN-LEER · 2.535.0: kein falscher Grund mehr (PDFs kamen am 20.10. an, nur eine größere nicht)
   if (dateien.length && info.fehler) melde("⚠️ Nicht alle Dateien passten in den Zwischenspeicher – die übrigen kommen an.", true);
   if (!dateien.length && !text) return melde("Es ist nichts angekommen. Fotos, PDFs und Office-Dateien gehen sofort; andere Dateitypen nimmt die Club-App an, sobald das Handy sie aktualisiert hat (meist nach dem nächsten Start, spätestens nach einem Tag).", true); // 2.514.0
   if (await ablkAblegen(text, dateien, info.titel)) return; // 2.511.0 KC-CLUB-ABLAGEKORB: zuerst in den Korb
@@ -31753,6 +32859,7 @@ async function einmalOeffnen(id) {
 }
 function einmalSchliessen() { const f = $("einmalSchirm"); if (!f) return; f._weg?.(); f.remove(); melde("👁️ Das Foto ist jetzt weg."); chatLaden(true).catch(() => {}); }
 function chipsZeigen() {
+  versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: mit Anhang auch ohne Text
   if (!(anlagen.length === 1 && anlagen[0].bild)) EINMAL = false; // KC-CLUB-EINMAL-FOTO: nur bei genau einem Foto
   $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
   if (anlagen.length === 1 && anlagen[0].bild) $("anlagenChips").insertAdjacentHTML("beforeend", `<button type="button" class="chip einmal-chip${EINMAL ? " an" : ""}" onclick="einmalUmschalten()" aria-pressed="${EINMAL}" title="Der Empfänger kann das Foto nur ein einziges Mal öffnen">👁️ Einmal ansehen: ${EINMAL ? "An" : "Aus"}</button>`);
@@ -33748,13 +34855,13 @@ function taEmpfListe() {
   const q = ($("taSuche")?.value || "").toLowerCase();
   $("taGruppen").innerHTML = TA.gruppen.map((g) => `<button type="button" class="knopf klein ${TA.wahl.gruppe?.id === g.id ? "haupt" : ""}" onclick="taGruppe('${g.id}')">${esc(g.symbol)} ${esc(g.name)} <small>(${g.anzahl})</small></button>`).join("")
     + `<button type="button" class="knopf klein" onclick="taAlle()">👥 Alle</button><button type="button" class="knopf klein" onclick="TA.wahl={personen:[],gruppe:null};taEmpfListe()">✖ Keiner</button>`;
-  $("taListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label>
-    <input type="checkbox" ${!TA.wahl.gruppe && TA.wahl.personen.includes(m.person_id) ? "checked" : ""} onchange="taPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+  $("taListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label${okKl(m, TA.wahl.personen.includes(m.person_id))}>
+    <input type="checkbox"${okAttr(m, TA.wahl.personen.includes(m.person_id))} ${!TA.wahl.gruppe && TA.wahl.personen.includes(m.person_id) ? "checked" : ""} onchange="taPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   $("taWer").innerHTML = `An: <b>${esc(taWerText())}</b>`;
 }
 function taPerson(pid, an) { if (TA.wahl.gruppe) TA.wahl = { personen: [], gruppe: null }; TA.wahl.personen = an ? [...new Set([...TA.wahl.personen, pid])] : TA.wahl.personen.filter((x) => x !== pid); taEmpfListe(); }
 function taGruppe(id) { const g = TA.gruppen.find((x) => x.id === id); TA.wahl = { personen: [], gruppe: TA.wahl.gruppe?.id === id ? null : g }; taEmpfListe(); }
-function taAlle() { TA.wahl = { personen: MITGLIEDER.filter((m) => m.person_id !== ICH.person_id).map((m) => m.person_id), gruppe: null }; taEmpfListe(); }
+function taAlle() { TA.wahl = { personen: MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id), gruppe: null }; taEmpfListe(); }
 function taZeitpunkt(datum, zeit) { // deutsche Ortszeit → ISO (Sommer-/Winterzeit richtig)
   if (!/^\d{4}-\d\d-\d\d$/.test(datum || "") || !/^\d\d:\d\d$/.test(zeit || "")) return ""; // 2.425.0: ungültig/leer → new Date("") = „Invalid Date“ (wie vorher), nie ein falsches Datum
   const probe = new Date(`${datum}T${zeit}:00Z`);
@@ -34544,6 +35651,23 @@ function faAlbenZeigen() {
   el.innerHTML = `<div class="abschnitt" style="margin-top:6px"><h3 style="font-size:1.05rem">📸 Alben</h3>${FA.albenKorb ? `<button class="knopf klein" onclick="faAlbenKorb()">🗑️ Gelöschte (${FA.albenKorb})</button>` : ""}</div>
     <div class="fa-alben"><button class="fa-album neu" onclick="faAlbumForm()"><div class="deckel">＋</div><b>Neues Album</b><small>Fotos auswählen</small></button>
     ${alben.map((x) => `<button class="fa-album" onclick="albumOeffnen('${x.id}')"><div class="deckel">${x.deckel ? `<img src="${esc(x.deckel)}" alt="" loading="lazy">` : "📸"}<span class="wer">${x.sichtbar === "alle" ? "👥" : "🔒"}</span></div><b>${esc(x.name)}</b><small>${x.jahr} · ${x.anzahl} Foto${x.anzahl === 1 ? "" : "s"}</small></button>`).join("")}</div>`;
+}
+// 2.526.0 KC-CLUB-FOTO-DIASHOW (Wunsch Hansi „in den grünen Kopf bei Fotos ansehen: Diashow mit Musik, vorher Album wählen“): ▶️ Diashow oben im
+// Fotoalbum – Album wählen (oder alle), 🎵 Club-Song an/aus, dann läuft die vorhandene Diashow der Kopf-Rückseite mit diesem Album (Foto antippen = Vollbild-Ansicht).
+function faDiashow() {
+  const alben = (FA?.alben || []).filter((x) => x.anzahl > 0), musik = esDiaMusikGewuenscht();
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">▶️ Diashow</h3>
+    <label class="schalter" style="margin:4px 0 8px"><span>🎵 Mit Musik (Club-Song)</span><input type="checkbox" id="faDiaMusik"${musik ? " checked" : ""}></label>
+    <p class="dlg-text">Welche Fotos sollen laufen? Antippen startet die Diashow.</p>
+    <div class="dlg-knoepfe" style="flex-direction:column;align-items:stretch;max-height:46vh;overflow-y:auto">
+      <button class="knopf" data-album="">📷 Alle Fotos</button>${alben.map((a) => `<button class="knopf" data-album="${esc(a.id)}">📸 ${esc(a.name)} <small class="hinweis">(${a.anzahl})</small></button>`).join("")}</div>
+    <div class="dlg-knoepfe"><button class="knopf" data-album="-">Abbrechen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-album]").forEach((b) => (b.onclick = () => {
+    const id = b.dataset.album, mitMusik = f.querySelector("#faDiaMusik").checked; f.remove(); if (id === "-") return;
+    esSchreib("album", id); esSchreib("diaMusik", mitMusik ? "1" : ""); ES.dia.fotos = null; ES.dia.i = 0; ES.dia.laeuft = true;
+    if (!esAn()) esSchreib("an", "1"); // Diashow wohnt auf der Kopf-Rückseite – das Eselsohr dafür einschalten
+    esOeffnen("dia");
+  }));
 }
 function faWaehlen(an, ziel = null) {
   FAW.an = !!an; FAW.ids.clear(); FAW.ziel = an ? ziel : null;
@@ -35424,7 +36548,9 @@ const DRUCKARTEN = {
   feste: { bauen: () => druckFeste() }, // KC-CLUB-BUERO-FESTE (1.29.0)
   mitgliederliste: { bauen: () => druckMitgliederliste() }, // KC-CLUB-BUERO-MITGLIEDERLISTE (1.31.0) // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
+  erstattungBlatt: { titel: "📄 Erstattungsantrag", bauen: (o, d) => ({ titel: `Erstattungsantrag ${d.name}`.trim(), ohneRahmen: true, html: erstBlatt(d) }) }, // 2.526.0
   anleitung: { bauen: () => druckAnleitung() },
+  einstwegweiser: { bauen: () => ewDruck() }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
   ueberblick: { bauen: () => druckUeberblick() },
   hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
@@ -35516,7 +36642,67 @@ async function druckVorschau() {
   const blattPx = (DRUCK.quer ? 297 : 210) * 3.78 + 20, zoom = Math.min(1, (rahmen.clientWidth || innerWidth) / blattPx);
   rahmen.srcdoc = druckHtml(true).replace("</style>", `html{zoom:${zoom.toFixed(3)}}</style>`);
 }
-function druckVorschauZu() { $("druckVorschau").classList.add("versteckt"); $("druckVorschauRahmen").srcdoc = ""; document.body.style.overflow = ""; }
+function druckVorschauZu() { $("druckVorschau").classList.add("versteckt"); $("druckVorschauRahmen").srcdoc = ""; document.body.style.overflow = "";
+  const danach = DRUCK?.danach; if (danach) { DRUCK.danach = null; setTimeout(danach, 250); } } // 2.526.0: z. B. Ablage-Frage nach dem Erstattungsantrag
+// ---------- 2.526.0 KC-CLUB-DRUCK-PDF: „📄 PDF“ in jeder Druckvorschau – echtes A4-PDF (mehrseitig) aus der Druckseite. html2canvas liegt in lib/,
+// das PDF baut die App selbst (wie bei den Schildern) – nichts geht an fremde Dienste. Teilen, wo das Handy es kann, sonst herunterladen.
+function pdfAusCanvas(c, quer) {
+  const pw = quer ? 841.89 : 595.28, ph = quer ? 595.28 : 841.89, seiteH = Math.round(c.width * ph / pw);
+  const n = Math.max(1, Math.ceil((c.height - seiteH * 0.03) / seiteH)), bilder = [];
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement("canvas"); s.width = c.width; s.height = seiteH; const g = s.getContext("2d");
+    g.fillStyle = "#fff"; g.fillRect(0, 0, s.width, s.height); g.drawImage(c, 0, -i * seiteH);
+    bilder.push(Uint8Array.from(atob(s.toDataURL("image/jpeg", 0.88).split(",")[1]), (z) => z.charCodeAt(0)));
+  }
+  const enc = new TextEncoder(), teile = [], off = []; let len = 0;
+  const add = (x) => { const b = typeof x === "string" ? enc.encode(x) : x; teile.push(b); len += b.length; };
+  const obj = (nr, kopf, strom) => { off[nr] = len; add(`${nr} 0 obj\n${kopf}\n`); if (strom) { add("stream\n"); add(strom); add("\nendstream\n"); } add("endobj\n"); };
+  const inhalt = enc.encode(`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`);
+  add("%PDF-1.4\n");
+  obj(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2, `<< /Type /Pages /Kids [${bilder.map((_, i) => `${3 + i * 3} 0 R`).join(" ")}] /Count ${n} >>`);
+  bilder.forEach((jpg, i) => { const p = 3 + i * 3;
+    obj(p, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R >>`);
+    obj(p + 1, `<< /Length ${inhalt.length} >>`, inhalt);
+    obj(p + 2, `<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${seiteH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>`, jpg); });
+  const anzahl = 3 + n * 3, xref = len;
+  add(`xref\n0 ${anzahl}\n0000000000 65535 f \n${Array.from({ length: anzahl - 1 }, (_, k) => String(off[k + 1]).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size ${anzahl} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(teile, { type: "application/pdf" });
+}
+async function druckPdfBlob() { // Druckseite im unsichtbaren A4-Blatt messen, dann als SVG-Bild (foreignObject) zeichnen – Logo als data:-Adresse, nichts Fremdes
+  const ifr = document.createElement("iframe"); ifr.setAttribute("aria-hidden", "true");
+  const breite = DRUCK.quer ? 1123 : 794;
+  ifr.style.cssText = `position:fixed;left:-12000px;top:0;width:${breite + 20}px;height:1200px;border:0;pointer-events:none`;
+  document.body.appendChild(ifr);
+  try {
+    const css = "html,body{background:#fff!important;padding:0!important;margin:0!important} #druck{box-shadow:none!important;margin:0!important}";
+    await new Promise((ok) => { ifr.onload = ok; ifr.srcdoc = druckHtml(true).replace("</style>", css + "</style>"); });
+    const doc = ifr.contentDocument, el = doc.getElementById("druck");
+    for (const i of [...el.querySelectorAll("img")]) { // Bilder einbetten (im SVG-Bild lädt der Browser nichts nach)
+      try { const b = await (await fetch(i.src, { signal: zeitSignal(15000) })).blob(); i.src = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); }); } catch { i.remove(); }
+    }
+    await Promise.all([...doc.images].map((i) => (i.complete ? 0 : new Promise((ok) => { i.onload = i.onerror = ok; }))));
+    const hoehe = Math.max(el.scrollHeight, Math.round(breite * (DRUCK.quer ? 210 / 297 : 297 / 210)));
+    const stil = [...doc.querySelectorAll("style")].map((x) => x.textContent).join("\n");
+    const xml = new XMLSerializer().serializeToString(el);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${breite}" height="${hoehe}"><foreignObject x="0" y="0" width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${breite}px;background:#fff"><style>${stil.replace(/</g, "\\3c ")}</style>${xml}</div></foreignObject></svg>`;
+    const bild = await new Promise((ok, fehler) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => fehler(new Error("PDF konnte nicht gezeichnet werden.")); im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
+    const c = document.createElement("canvas"); c.width = breite * 2; c.height = hoehe * 2;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.scale(2, 2); g.drawImage(bild, 0, 0);
+    return pdfAusCanvas(c, DRUCK.quer);
+  } finally { ifr.remove(); }
+}
+async function druckPdf() {
+  const k = $("druckVorschauPdf"); if (k) { k.disabled = true; k.textContent = "⏳ PDF wird erstellt …"; }
+  try {
+    const name = (DRUCK.titel || "Koecheclub").replace(/[^\wäöüÄÖÜß.-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) + ".pdf";
+    const datei = new File([await druckPdfBlob()], name, { type: "application/pdf" });
+    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000); melde("📄 PDF gespeichert (Downloads)");
+  } catch (e) { meldeFehler(e); }
+  finally { if (k) { k.disabled = false; k.textContent = "📄 PDF speichern / teilen"; } }
+}
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
 function druckJetzt() { setTimeout(() => window.print(), 60); }
@@ -35672,20 +36858,38 @@ function druckErstattung(o) {
   const a = o.antrag === "entwurf" ? { positionen: ERS.pos, auszahlung: ERS.auszahlung, bemerkung: $("ersBemerkung")?.value || "", zeit: null, status: "Entwurf – noch nicht gesendet" }
     : (ERS.antraege || []).find((x) => x.id === o.antrag);
   if (!a) throw new Error("Antrag nicht gefunden.");
-  const pos = a.positionen || [], summe = pos.reduce((s, x) => s + Number(x.betrag || 0), 0);
-  const art = (x) => (x.art === "fahrt" ? "🚗 Fahrtkosten" : x.art === "einkauf" ? "🛒 Einkauf vorgestreckt" : "📦 Sonstige Auslage");
-  const was = (x) => (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} – ${x.grund || ""}${x.ziel ? " (" + x.ziel + ")" : ""}` : `${x.was || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`);
-  const belege = pos.reduce((n, x) => n + ((x.belege || []).length), 0);
-  return { titel: "Antrag auf Erstattung", unter: `${ICH.name} · ${a.zeit ? "eingereicht " + wann(a.zeit) : "Entwurf"}`,
-    html: `<table class="dinfo"><tbody><tr><th style="width:40mm">Antragsteller</th><td>${esc(ICH.name)}</td></tr><tr><th>Datum</th><td>${esc(a.zeit ? fKurzJahr.format(new Date(a.zeit)) : fKurzJahr.format(new Date()))}</td></tr>
-        <tr><th>Status</th><td>${esc(a.status || "")}</td></tr><tr><th>Auszahlung</th><td>${a.auszahlung === "bar" ? "bar" : "per Überweisung"}</td></tr></tbody></table>
-      <h2>Positionen</h2><table><thead><tr><th style="width:8mm">#</th><th style="width:22mm">Datum</th><th style="width:38mm">Art</th><th>Beschreibung</th><th style="width:14mm">Beleg</th><th style="width:24mm;text-align:right">Betrag</th></tr></thead><tbody>
-      ${pos.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(dz(x.datum))}</td><td>${art(x)}</td><td>${esc(was(x))}</td><td>${(x.belege || []).length ? "ja (" + x.belege.length + ")" : "–"}</td><td style="text-align:right">${esc(eur(Number(x.betrag)))}</td></tr>`).join("")}
-      <tr><td colspan="5" style="text-align:right"><b>Summe</b></td><td style="text-align:right"><b>${esc(eur(summe))}</b></td></tr></tbody></table>
-      ${a.bemerkung ? `<p><b>Bemerkung:</b> ${esc(a.bemerkung)}</p>` : ""}
-      <p class="dklein">${belege ? `Belege: ${belege} (liegen der Antrags-Mail bei bzw. im Original beifügen).` : "Keine Belege angehängt."} Fahrtkosten mit dem km-Satz, der am Tag der Fahrt galt.</p>
-      <div class="unterschrift"><div>Datum, Unterschrift Antragsteller</div><div>Geprüft / ausgezahlt am – Kassenwart</div></div>` };
+  const d = erstDaten({ ...a, name: ICH?.name || "" });
+  return { titel: "Antrag auf Erstattung", ohneRahmen: true, html: erstBlatt(d) }; // 2.526.0: Club-Briefbogen
 }
+// ---------- 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN (Wunsch Hansi „km- oder sonstige Erstattung auf den Kopfbogen des Köcheclubs als PDF für einen
+// vernünftigen Ausdruck – und den Ausdruck an den Stellen anbieten, z. B. fürs Mitglied oder Leitungsteam“): ein Blatt im Briefbogen-Stil (Kochmütze,
+// „Köcheclub Werne“, Fußzeile mit Clubsprecher) mit Antragsteller, Positionen, Summe, Vorschuss/Kaution und drei Unterschriftsfeldern
+// (Antragsteller · Kassenwart · Leitungsteam). Angeboten nach dem Einreichen (Mitglied) und im Eingang beim Antrag (Kassenwart/Leitungsteam);
+// in der Vorschau „📄 PDF speichern / teilen“ (echtes A4-PDF, baut die App selbst) oder „🖨️ Drucken“.
+const ERST_ART = { fahrt: "🚗 Fahrtkosten", einkauf: "🛒 Einkauf vorgestreckt", kaution: "🔐 Kaution", parken: "🅿️ Parken", kraftstoff: "⛽ Kraftstoff" };
+function erstDaten(a) { // eigene Anträge (ERS) und Anträge aus dem Eingang auf eine Form bringen
+  const pos = (a.positionen || []).map((x) => ({ datum: x.datum, betrag: Number(x.betrag || 0), kaution: !!x.kaution || x.art === "kaution",
+    art: x.text ? "" : ERST_ART[x.art] || "📦 Sonstige Auslage", beleg: x.beleg || ((x.belege || []).length ? "anbei" : ""),
+    text: x.text || (x.art === "fahrt" ? `${String(x.km).replace(".", ",")} km × ${eur(x.satz)} – ${x.grund || ""}${x.ziel ? " (" + x.ziel + ")" : ""}` : `${x.was || x.sonder_titel || ""}${x.geschaeft ? " · " + x.geschaeft : ""}`) }));
+  const summe = a.summe ?? pos.filter((x) => !x.kaution).reduce((s, x) => s + x.betrag, 0);
+  return { name: a.name || "", zeit: a.zeit || a.erstellt_am || null, status: a.status || "", auszahlung: a.auszahlung, bemerkung: a.bemerkung || "", vorschuss: Number(a.vorschuss || 0), positionen: pos, summe };
+}
+function erstBlatt(d) {
+  const datum = fKurzJahr.format(d.zeit ? new Date(d.zeit) : new Date()), kaution = d.positionen.some((x) => x.kaution);
+  const rest = d.summe - d.vorschuss;
+  return `<div class="cd-blatt cd-brief">${cdKopf("Antrag auf Erstattung", d.name, esc(datum))}
+    <table class="dinfo"><tbody><tr><th style="width:40mm">Antragsteller</th><td>${esc(d.name)}</td></tr><tr><th>Eingereicht am</th><td>${esc(d.zeit ? datum : "noch nicht eingereicht")}</td></tr>
+      <tr><th>Auszahlung</th><td>${d.auszahlung === "bar" ? "bar" : "per Überweisung"}</td></tr>${d.status ? `<tr><th>Stand</th><td>${esc(d.status)}</td></tr>` : ""}</tbody></table>
+    <h2>Positionen</h2><table><thead><tr><th style="width:8mm">#</th><th style="width:22mm">Datum</th><th>Beschreibung</th><th style="width:16mm">Beleg</th><th style="width:26mm;text-align:right">Betrag</th></tr></thead><tbody>
+    ${d.positionen.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(dz(x.datum))}</td><td>${x.art ? esc(x.art) + " – " : ""}${esc(x.text)}${x.kaution ? " <i>(Kaution – zählt nicht zur Summe)</i>" : ""}</td><td>${esc(x.beleg === "papier" ? "Papier" : x.beleg ? "ja" : "–")}</td><td style="text-align:right">${esc(eur(x.betrag))}</td></tr>`).join("")}
+    <tr><td colspan="4" style="text-align:right"><b>Summe</b></td><td style="text-align:right"><b>${esc(eur(d.summe))}</b></td></tr>
+    ${d.vorschuss ? `<tr><td colspan="4" style="text-align:right">abzüglich Vorschuss ${esc(eur(d.vorschuss))} → ${rest >= 0 ? "Auszahlung" : "Rückzahlung an den Club"}</td><td style="text-align:right"><b>${esc(eur(Math.abs(rest)))}</b></td></tr>` : ""}</tbody></table>
+    ${d.bemerkung ? `<p><b>Bemerkung:</b> ${esc(d.bemerkung)}</p>` : ""}
+    <p class="dklein">${kaution ? "Kautionen werden gesondert zurückgegeben. " : ""}Belege liegen der Antrags-Mail bei bzw. werden im Original abgegeben. Fahrtkosten mit dem km-Satz, der am Tag der Fahrt galt.</p>
+    <div class="unterschrift"><div>Datum, Unterschrift Antragsteller</div><div>Sachlich geprüft / ausgezahlt am – Kassenwart</div><div>Freigabe – Leitungsteam</div></div>
+    <div style="flex:1"></div>${cdFuss(`Erstellt mit der Köcheclub-App am ${esc(fKurzJahr.format(new Date()))}`, true)}</div>`;
+}
+function erstAnsehen(d, danach) { druckStarten("erstattungBlatt", d); if (danach) DRUCK.danach = danach; }
 
 // ---------- KC-CLUB-KM-ABRECHNUNG (2.25.3, Wunsch Hansi): Fahrten-/km-Abrechnung der Besuche zum Ausdrucken ----------
 // Kopf (Kochmütze + Köcheclub Werne) kommt aus dem Druck-Kern. Je Einsatz: Nr., ID, Datum, Zeit von–bis, besuchte Personen (Anzahl), Grund, km
@@ -37857,10 +39061,22 @@ function suAppListe() {
     ["🎪", "Kopf-Effekt wählen (Jalousie, Vorhang, Glocke …)", "kopf effekt jalousie vorhang theater servierglocke marktbude climber einrollen", () => einstiegHin("effekte", "setKopfEffekt")],
     ["⌨️", "Tippgeräusche (Tastatur, Schreibmaschine)", "tippgeräusche tastatur schreibmaschine tippen hören live", () => einstiegHin("benachrichtigung", "setTippTon")],
     ["🎁", "Geburtstags-Vogel ansehen", "geburtstag vogel geschenk happy birthday blumenstrauß", () => gbvVorschau()],
+    ["🧭", "Einstellungen erklärt (alle Einstellungen wie im Explorer)", "einstellungen erklärt erklärung übersicht alle einstellungen explorer wegweiser anleitung voreinstellungen was bewirkt bedeutet schritt für schritt", () => ewStart()], // 2.534.0
+    // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: Verschlüsseln, Schlüsselbund, Versand-Leiste, Teilen, Diashow, PDF – auch per 🎤 Sprachsuche
+    ["🔒", "Nachricht verschlüsselt senden (Schloss, Schlüssel)", "verschlüsseln verschlüsselt verschlüsselung geheim schloss schlüssel kennwort passwort code geheimnachricht sicher senden", () => hzZuEintrag("h:verschluesselt")],
+    ["🔑", "Schlüsselbund (verschlüsselt ohne Eintippen)", "schlüsselbund schlüssel bund datei einlesen partner zweier chat verschlüsselt automatisch", () => hzZuEintrag("h:schluesselbund")],
+    ["🕵️", "Erklär-Video: Geheim schreiben (verschlüsseln)", "video geheim verschlüsseln verschlüsselt schlüssel schlüsselbund geheimagent agent erklär", () => rgListeAbspielen(["geheim"])],
+    ["✉️", "Ich will gar nicht verschlüsseln (Schloss aus)", "schloss aus versehen schlüssel eingeben nicht verschlüsseln normal senden ausschalten", () => hzZuEintrag("h:verschluesselt")],
+    ["📝", "Normal, Wichtig, Express (Leiste über dem Schreibfeld)", "versand leiste versandleiste normal wichtig express immer zeigen ausrufezeichen dringend", () => einstiegHin("benachrichtigung", "setWichtigFrage")],
+    ["🔇", "Tippgeräusch im Chat schnell aus (Lautsprecher)", "lautsprecher tippgeräusch tippton aus stumm klein zeile chat", () => hzZuEintrag("h:tippgeraeusche")],
+    ["✍️", "„… schreibt dir gerade“ (Hinweis oben)", "schreibt dir gerade diktiert sprachnachricht hinweis oben tippt stift", () => hzZuEintrag("h:schreibt_hinweis")],
+    ["📥", "Teilen → Köcheclub (Ablagekorb)", "teilen ablagekorb galerie whatsapp mail dateimanager datei foto schicken hochladen dublette", () => hzZuEintrag("h:ablagekorb")],
+    ["▶️", "Diashow aus dem Fotoalbum (mit Musik)", "diashow fotoalbum album fotos musik club-song abspielen", () => { melde("▶️ Im Fotoalbum oben auf „▶️ Diashow“ tippen – Musik wählen, Album antippen"); zeige("fotos"); }],
+    ["📄", "PDF aus der Druckvorschau (z. B. Erstattung)", "pdf drucken ausdrucken druckvorschau briefbogen erstattung antrag speichern teilen", () => hzZuEintrag("h:druck_pdf")],
     ["⭐", "Gemerkte Nachrichten", "gemerkt merken stern favorit", () => { zeige("nachrichten"); gemerktZeigen(); }],
     // 2.396.0 KC-CLUB-HILFE-NEUHEITEN
     ["⭐", "Favoriten (Lieblings-Chats)", "favoriten favorit stern sternchen lieblings chat wichtig oft", () => { zeige("nachrichten"); uhFavAnsicht(true); }],
-    ["🏎️", "Express-Nachricht (5 am Tag)", "express eilig dringend sofort rennwagen schnell 5 tag zähler", () => { melde("🏎️ Im Chat unter dem Schreibfeld auf 🏎️ tippen – am Knopf steht, wie viele du heute schon hattest (z. B. 2/5)"); zeige("nachrichten"); }],
+    ["🏎️", "Express-Nachricht (5 am Tag)", "express eilig dringend sofort rennwagen schnell 5 tag zähler", () => { melde("🏎️ Im Chat über dem Schreibfeld „🏎️ Express“ anhaken – daneben steht, wie viele du heute schon hattest (z. B. 2/5)"); zeige("nachrichten"); }],
     ["↩️", "Nachricht zurückholen", "zurückholen zurueckholen vertippt zurücknehmen ändern korrigieren falsch", () => { melde("↩️ Nachricht antippen (PC: rechte Maustaste) → „Zurückholen und ändern“ – geht, solange sie noch niemand gelesen hat"); zeige("nachrichten"); }],
     ["⏰", "Nachricht später senden", "später senden planen zeit morgen montag wiederholen", () => { melde("⏰ Nachricht schreiben, unten auf ⏰ tippen und Zeit wählen"); zeige("nachrichten"); }],
     ["📨", "Offene Terminanfragen", "terminanfrage anfrage termin offen antworten einladung", () => zeige("termine")],
@@ -37907,7 +39123,7 @@ function suAppListe() {
     ["💡", "Vorschläge zur Startseite (Kacheln ausblenden, Funktionen freischalten)", "vorschlag vorschläge kacheln ausblenden verbergen freischalten nutzung gemerkt adaptiv startseite löschen", () => suEinstellung("setKachelVorschlag")], // 2.418.0
     ["🎚️", "Bühne: Musik / Stimme lauter oder leiser", "lautstärke lauter leiser regler musik stimme stumm bühne", () => esOeffnen("buehne")],
     // 2.344.0 KC-CLUB-HILFE-NACHTRAG: alle Möglichkeiten, die App anzupassen, auch über die Lupe
-    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik unterwasser weltraum sterne planet rakete astronaut ufo bauernhof kuh schwein hahn traktor stall kegeln kegelabend kegel bowling alle neune meer fische taucher silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
+    ["🎭", "Thema wählen (Weihnachten, Herbst, Oktoberfest …)", "thema themen weihnachten herbst indian summer oktoberfest sim-jü simjue karneval halloween ostern karibik unterwasser weltraum sterne planet rakete astronaut ufo bauernhof kuh schwein hahn traktor stall kegeln kegelabend kegel bowling alle neune wild west wilder westen cowboy büffel tipi lagerfeuer kutsche meer fische taucher silvester winter sommer frühling paket kalender club-thema", ein("themaWahl")],
     ["✍️", "Schrift des Themas (Begrüßung)", "schrift schriftart fraktur thema begrüßung", ein("themaSchriftAn")],
     ["🍂", "Jahreszeiten-Bild im Kopf (fest oder automatisch)", "jahreszeit jahreszeiten kopf bild herbst winter frühling sommer advent silvester laub schnee schneemann eichhörnchen iglu vorschau", ein("jzWahl")],
     ["🎏", "Deko an der Leiste (Wimpel, Lichterkette, Laternen)", "deko dekoration wimpel wimpelkette lichterkette lichter laternen lampions girlande leiste", ein("jzDekoWahl")],
