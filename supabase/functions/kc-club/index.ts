@@ -121,7 +121,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.563.0";
+const SERVER_VERSION = "2.564.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -963,7 +963,8 @@ const turnSchluessel = () => (Deno.env.get("METERED_TURN_SECRET_KEY") || "").tri
 async function turnAbruf(pfad: string, init?: RequestInit) {
   const r = await fetch(`https://${TURN_APP}.metered.live${pfad}${pfad.includes("?") ? "&" : "?"}secretKey=${encodeURIComponent(turnSchluessel())}`,
     { ...init, signal: AbortSignal.timeout(6000) });
-  if (!r.ok) throw new Error(`Metered ${r.status}`);
+  // Server 2.564.0: Antworttext von Metered mitprotokollieren (Grund für 400 u. ä.), Schlüssel/Passwort nie
+  if (!r.ok) throw new Error(`Metered ${r.status}: ${(await r.text().catch(() => "")).replace(/secretKey=[^&\s"]*/g, "secretKey=…").replace(/"(password|credential|secretKey)"\s*:\s*"[^"]*"/g, '"$1":"…"').slice(0, 200)}`);
   return await r.json();
 }
 async function turnNeu() {
@@ -983,7 +984,7 @@ async function turnZugang(): Promise<{ ice: unknown[]; gueltig_bis: string; bis:
     const plan = turnPlan(data ?? [], t, TURN_FEHLER_BIS);
     if (plan.neu) {
       // Metered-Fehler: 10 Min. Pause (keine Abfrage-Flut); Schlüssel/Passwort nie ins Protokoll
-      try { await turnNeu(); } catch (e) { TURN_FEHLER_BIS = t + TURN.fehlerPauseMs; console.warn(JSON.stringify({ turn: "neu_fehler", fehler: String((e as Error)?.message || e).replace(/secretKey=[^&\s]*/g, "secretKey=…").slice(0, 120) })); }
+      try { await turnNeu(); } catch (e) { TURN_FEHLER_BIS = t + TURN.fehlerPauseMs; console.warn(JSON.stringify({ turn: "neu_fehler", fehler: String((e as Error)?.message || e).replace(/secretKey=[^&\s]*/g, "secretKey=…").slice(0, 240) })); }
       db.from("kc_club_turn_vorrat").delete().lt("gueltig_bis", new Date(t).toISOString()).then(() => {}, () => {}); // Abgelaufenes aufräumen
     }
     const z = plan.nutzbar; if (!z) return null;
