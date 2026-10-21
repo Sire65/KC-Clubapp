@@ -11314,6 +11314,27 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      // KC-CLUB-ANRUF-BESSER (21.10.2026, Wunsch Hansi „bau 2 bis 4 jetzt“): Verbindung im laufenden Gespräch neu aufbauen (ICE-Neustart
+      // nach Netzwechsel). Nur die beiden Beteiligten, nur angenommene Einzelgespräche (keine Konferenz), SDP-Grenze wie beim Anrufen.
+      // Neues Angebot (nur Anrufer) ersetzt das alte und leert die Antwort – das löst über den bestehenden Trigger das Signal „anruf“
+      // an beide aus; die Antwort (nur Angerufener) muss zum aktuellen Angebot gehören (ice-ufrag), sonst ist sie veraltet.
+      case "anruf_neu_angebot": {
+        const a = await anrufHolen(ich, p.id);
+        if (a.von !== ich.person_id) throw new Fehler("Nur der Anrufer kann neu verbinden.", 403);
+        if (a.status !== "angenommen" || a.konferenz_id) throw new Fehler("Das Gespräch läuft nicht mehr.", 409);
+        await db.from("kc_club_anruf").update({ angebot: sdpText(p.angebot), antwort: null }).eq("id", a.id).eq("status", "angenommen");
+        return json({ ok: true });
+      }
+      case "anruf_neu_antwort": {
+        const a = await anrufHolen(ich, p.id);
+        if (a.an !== ich.person_id) throw new Fehler("Nur der Angerufene kann antworten.", 403);
+        if (a.status !== "angenommen" || a.konferenz_id) throw new Fehler("Das Gespräch läuft nicht mehr.", 409);
+        const ufrag = /a=ice-ufrag:(\S+)/.exec(String(a.angebot || ""))?.[1] || "";
+        if (a.antwort || !ufrag || String(p.fuer || "") !== ufrag) throw new Fehler("Veraltete Verbindungsdaten.", 409);
+        await db.from("kc_club_anruf").update({ antwort: sdpText(p.antwort) }).eq("id", a.id).eq("status", "angenommen").is("antwort", null);
+        return json({ ok: true });
+      }
+
       // KC-CLUB-ANRUF-KURZANTWORT (0.81.0): Anruf ablehnen (oder verpassten beantworten) und dem Anrufer kurz schreiben.
       // Die Antwort steht sofort in seinem Anrufbildschirm und zusätzlich als Nachricht in eurer Unterhaltung.
       case "anruf_antwort": {
