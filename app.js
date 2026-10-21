@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.567.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.568.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2654,7 +2654,7 @@ const RG_EFFEKTE = [
   { v: "start", vor: () => rgKopf("offen"), t: "✨ Effekte & Wetter",
     x: "Die App kann ein bisschen zaubern: Kacheln schweben herein, oben im Kopf zeigt sich die Jahreszeit, und das Wetter verrät dir mehr, als man denkt. Das sind alles nur Möglichkeiten – gefällt dir etwas nicht, schaltest du es jederzeit wieder ab. Ich zeige dir auch, wo." },
   { v: "start", nur: () => !einfach() && fxAn(), vor: () => rgKopf("ganz"), sel: ["#register", "#raster"], t: "🪟 Kacheln schweben herein",
-    x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel, sie drehen sich um, wirbeln herein, rollen wie ein Spielautomat, steigen als Seifenblasen auf, fliegen wie vom Magnet auseinander oder werden wie Pfannkuchen gewendet. Ich zeige dir einige.",
+    x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel, sie drehen sich um, wirbeln herein, rollen wie ein Spielautomat, steigen als Seifenblasen auf, fliegen wie vom Magnet auseinander werden wie Pfannkuchen gewendet, fliegen aus allen Richtungen ein, drehen sich waagerecht oder senkrecht herein oder klappen wie eine Fallblatt-Uhr am Bahnhof. Ich zeige dir einige.",
     live: async (L) => { for (const art of ["jalousie", "wirbel", "walze", "blasen", "magnet", "pfanne"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Kopf-Effekte und Geburtstags-Vogel – nur vorgeführt (kopfRolloFahren mit festem Effekt), die Einstellung bleibt
   { v: "start", nur: () => fxAn(), vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "🎪 Der Kopf geht auf und zu",
@@ -2680,7 +2680,7 @@ const RG_EFFEKTE = [
     x: "Hier schaltest du die Jahreszeiten im Kopf ein oder aus. Haken raus – und der Kopf ist wieder ruhig. Darunter kannst du dir jede Jahreszeit und die Extras als Vorschau ansehen.",
     live: async (L) => { await L.tipp("#setJahreszeit"); await L.warte(900); await L.tipp(() => [...document.querySelectorAll(`${rgKlappe("effekte")} .chip`)].find((c) => /Herbst/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Hereindrehen, Spielautomat, Seifenblasen, Magnet, Pfanne, Abwechselnd (jedes Mal ein anderer), Zufall – oder Aus. Darunter: Kacheln beim Öffnen, Welle beim Antippen, Neues wackelt und Abschied beim Abmelden. Darunter der Effekt beim Senden: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto.",
+    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Hereindrehen, Spielautomat, Seifenblasen, Magnet, Pfanne, Einfliegen, Horizontal drehen, Vertikal drehen, Fallblatt-Uhr, Abwechselnd (jedes Mal ein anderer), Zufall – oder Aus. Darunter: Kacheln beim Öffnen, Welle beim Antippen, Neues wackelt und Abschied beim Abmelden. Darunter der Effekt beim Senden: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto.",
     live: async (L) => { await L.tipp(() => [...document.querySelectorAll("#regEffektWahl .chip")].find((c) => /Aus/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Der Hauptschalter",
     x: "Ganz oben der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – auch die Jahreszeiten und alle Effekte. Nichts davon ist Pflicht, und du kannst alles jederzeit wieder einschalten." },
@@ -2721,7 +2721,7 @@ const RG_ANPASSEN = [
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("jzDekoWahl"), "#jzDekoWahl"], mussSel: true, t: "🎏 Deko an der Leiste",
     x: "An der Leiste mit den Lämpchen kann eine Deko hängen: Wimpel, Lichterkette oder Laternen. Automatisch passt sie zur Jahreszeit – im Herbst Laternen, im Advent warmweiße Lichter. Oder du wählst selbst, oder schaltest sie aus." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl", "#sendeEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel, sie drehen sich um, wirbeln herein, rollen wie ein Spielautomat, steigen als Seifenblasen auf, kommen wie vom Magnet oder aus der Pfanne – oder abwechselnd jedes Mal anders. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto. Auch wie der Kopf auf- und zugeht, stellst du hier ein – vom Theatervorhang bis zur Servierglocke." },
+    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel, sie drehen sich um, wirbeln herein, rollen wie ein Spielautomat, steigen als Seifenblasen auf, kommen wie vom Magnet oder aus der Pfanne, fliegen aus allen Richtungen ein, drehen sich horizontal oder vertikal herein, klappen wie eine Fallblatt-Uhr – oder abwechselnd jedes Mal anders. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto. Auch wie der Kopf auf- und zugeht, stellst du hier ein – vom Theatervorhang bis zur Servierglocke." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Ruhig oder lebendig",
     x: "Der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – keine Bewegungen, kein Jahreszeiten-Bild, keine Effekte. Ideal, wenn dich das ablenkt." },
   { v: "einstellungen", vor: () => rgAuf("darstellung"), sel: [rgSchalter("sparWahl"), "#sparWahl"], mussSel: true, t: "🐢 Sparmodus und Akku",
@@ -15186,7 +15186,8 @@ function register(r, richtung) {
 // (passt zum Kopf). Kurz (≈ 0,5 s), nur transform/opacity (Grafikkarte, auch auf älteren Handys flüssig). Aus bei „✨ Animierte Knöpfe“
 // aus oder im Sparmodus. Läuft nur beim Antippen/Wischen – nie von selbst.
 const REG_EFFEKTE = [["jalousie", "🪟 Jalousie"], ["karten", "🃏 Kartenstapel"], ["drehen", "🔄 Umdrehen"], ["wirbel", "🌀 Hereindrehen"], ["walze", "🎰 Spielautomat"], ["blasen", "🫧 Seifenblasen"],
-  ["magnet", "🧲 Magnet"], ["pfanne", "🍳 Pfanne"], ["wechsel", "🔁 Abwechselnd"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]]; // 2.566.0: + Hereindrehen, Spielautomat, Seifenblasen, Magnet, Pfanne, Abwechselnd
+  ["magnet", "🧲 Magnet"], ["pfanne", "🍳 Pfanne"], ["einflug", "🧭 Einfliegen"], ["drehH", "↔️ Horizontal drehen"], ["drehV", "↕️ Vertikal drehen"], ["fallblatt", "🕰️ Fallblatt-Uhr"],
+  ["wechsel", "🔁 Abwechselnd"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]]; // 2.566.0: + Hereindrehen, Spielautomat, Seifenblasen, Magnet, Pfanne, Abwechselnd · 2.568.0: + Einfliegen, Horizontal/Vertikal drehen, Fallblatt-Uhr
 const REG_ARTEN = REG_EFFEKTE.map(([k]) => k).filter((k) => !["wechsel", "zufall", "aus"].includes(k)); // die echten Effekte (für Zufall/Abwechselnd)
 // 2.566.0 KC-CLUB-KACHEL-WECHSEL (Wunsch Hansi „dass die auch Abwechslung gehen“): jedes Mal der nächste Effekt der Reihe (gemerkt je Gerät)
 function regEffektNaechster() { let n = 0; try { n = (Number(localStorage.getItem("kc_club_regEffektNr")) || 0) % REG_ARTEN.length; localStorage.setItem("kc_club_regEffektNr", String(n + 1)); } catch {} return REG_ARTEN[n]; }
@@ -15237,6 +15238,24 @@ function regEffekt(richtung, art) {
       f = [{ transform: P + "translateY(35%) rotateX(0deg) scale(.7)", opacity: 0 }, { transform: P + "translateY(-85%) rotateX(-200deg) scale(1)", opacity: 1, offset: 0.46 },
         { transform: P + "translateY(5%) rotateX(-360deg) scale(1.03, .9)", opacity: 1, offset: 0.8 }, { transform: P + "translateY(0) rotateX(-360deg) scale(1)", opacity: 1 }];
       o = { duration: 820, delay: i * 60, easing: "cubic-bezier(.33,.6,.4,1)" };
+    } else if (w === "einflug") { // 2.568.0 KC-CLUB-KACHEL-EINFLUG (Wunsch Hansi „einfliegen aus verschiedenen Richtungen“): jede Kachel aus einer
+      // anderen der 8 Himmelsrichtungen (reihum, gegeneinander versetzt), leicht schräg, landet mit kleinem Überschwingen
+      const [rx, ry] = [[-1, 0], [1, -1], [0, 1], [-1, -1], [1, 0], [-1, 1], [0, -1], [1, 1]][(i * 3 + r) % 8];
+      f = [{ transform: `translate(${rx * 140}%, ${ry * 180}%) rotate(${(rx || ry) * 12}deg) scale(.7)`, opacity: 0 }, { transform: `translate(${rx * -4}%, ${ry * -5}%) rotate(${(rx || ry) * -2}deg) scale(1.02)`, opacity: 1, offset: 0.76 },
+        { transform: "none", opacity: 1 }];
+      o = { duration: 640, delay: i * 45, easing: "cubic-bezier(.2,.8,.3,1)" };
+    } else if (w === "drehH") { // 2.568.0 Horizontal drehen: wie eine Drehtür um die senkrechte Kante herein (linke Spalte links, rechte rechts angeschlagen)
+      const s2 = spalte % 2 ? 1 : -1; x.style.transformOrigin = s2 < 0 ? "0 50%" : "100% 50%";
+      f = [{ transform: P + `rotateY(${s2 * -105}deg)`, opacity: 0 }, { transform: P + `rotateY(${s2 * 12}deg)`, opacity: 1, offset: 0.66 }, { transform: P + `rotateY(${s2 * -4}deg)`, offset: 0.84 }, { transform: P + "rotateY(0)", opacity: 1 }];
+      o = { duration: 620, delay: r * 90 + spalte * 45, easing: "cubic-bezier(.25,.7,.35,1)" };
+    } else if (w === "drehV") { // 2.568.0 Vertikal drehen: eine halbe Drehung um die waagerechte Mitte, kommt von hinten nach vorn (Reihe für Reihe)
+      f = [{ transform: P + "rotateX(180deg) scale(.75)", opacity: 0 }, { transform: P + "rotateX(-14deg) scale(1.03)", opacity: 1, offset: 0.7 }, { transform: P + "rotateX(5deg)", offset: 0.86 }, { transform: P + "rotateX(0) scale(1)", opacity: 1 }];
+      o = { duration: 680, delay: r * 95 + spalte * 35, easing: "cubic-bezier(.25,.7,.35,1)" };
+    } else if (w === "fallblatt") { // 2.568.0 Fallblatt-Uhr (wie die alten Bahnhofstafeln): jede Kachel klappt dreimal rasch um die Mitte und bleibt stehen
+      f = [{ transform: P + "rotateX(-90deg)", opacity: 0 }, { transform: P + "rotateX(0)", opacity: 1, offset: 0.2 }, { transform: P + "rotateX(-90deg)", opacity: 1, offset: 0.2001 },
+        { transform: P + "rotateX(0)", offset: 0.42 }, { transform: P + "rotateX(-90deg)", offset: 0.4201 }, { transform: P + "rotateX(0)", offset: 0.66 },
+        { transform: P + "rotateX(9deg)", offset: 0.8 }, { transform: P + "rotateX(-3deg)", offset: 0.9 }, { transform: P + "rotateX(0)", opacity: 1 }];
+      o = { duration: 900, delay: i * 70, easing: "cubic-bezier(.55,0,.75,.45)" };
     } else { // Umdrehen: eine schnelle Drehung um die eigene Achse, kommt wie eine Karte nach vorn
       f = [{ transform: P + "rotateY(-300deg) scale(.6)", opacity: 0 }, { transform: P + "rotateY(18deg) scale(1.05)", opacity: 1, offset: 0.7 }, { transform: P + "rotateY(0) scale(1)", opacity: 1 }];
       o = { duration: 640, delay: i * 42, easing: "cubic-bezier(.2,.7,.3,1)" };

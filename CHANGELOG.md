@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.568.0 – 2026-10-21 – 🧭 Kacheln: Einfliegen, Horizontal/Vertikal drehen, Fallblatt-Uhr (KC-CLUB-KACHEL-EINFLUG)
+Wunsch Hansi („einfliegen, dass sie aus verschiedenen Richtungen kommen, horizontal reindrehen und vertikal reindrehen und vielleicht noch wie eine Falluhr“).
+- ⚙️ → ✨ Effekte → „🎬 Effekt beim Register-Wechsel“ – neu: **🧭 Einfliegen** (jede Kachel aus einer anderen der 8 Richtungen, gegeneinander versetzt), **↔️ Horizontal drehen** (wie eine Drehtür um die senkrechte Kante, linke Spalte links, rechte rechts angeschlagen), **↕️ Vertikal drehen** (halbe Drehung um die waagerechte Mitte, Reihe für Reihe), **🕰️ Fallblatt-Uhr** (klappt dreimal rasch um wie die alten Bahnhofstafeln und bleibt stehen).
+- Alle vier sind auch bei 🔁 Abwechselnd und 🎲 Zufall dabei. Wie bisher nur Bewegung (transform/opacity), keine Datenbank-Abfragen; aus bei „✨ Animierte Knöpfe“ aus, im Sparmodus und in der einfachen Ansicht.
+- Erklär-Video, Hilfe-Texte ergänzt. Test: Vertragstest-Block 2.568.0, Browser-Bilder der Abläufe. Server unverändert (2.567.0). Rückweg: App 2.567.0.
+
 ## 2.567.0 – 2026-10-21 – 👋 Verpasstes Anklopfen + „ist angekommen“ für den Anklopfenden (KC-CLUB-ANKLOPFEN-VERPASST)
 Wunsch Hansi nach Fall Dieter („Hat er es nicht bekommen?“ – die Mitteilung war 2 s nach dem Anklopfen angezeigt, aber nicht geöffnet worden; „baue beides und spiel sofort ein“).
 - Wer ein Anklopfen verpasst hat, sieht beim nächsten Besuch einmal: „👋 Hansi hat bei dir angeklopft – du hast den Gesprächswunsch nicht angenommen. Möchtest du Hansi jetzt erreichen oder eine Nachricht schreiben?“ mit **👋 Zurück anklopfen**, **💬 Nachricht schreiben**, **Später**. Nur die letzten 24 h, je Person das neueste, höchstens 3 in einem Fenster; nicht, wenn ihr danach telefoniert oder im Zweiergespräch geschrieben habt. „Gesehen“ steht auf dem Server (gilt für alle Geräte, ohne neue Tabelle: kc_club_person_einstellung „klopf_verpasst“).

@@ -11873,3 +11873,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/try \{ await kachelAbschied\(\); \} catch \{\}[^\n]*\n  try \{ Object\.keys\(localStorage\)/.test(programm) && /\["zu", "weg", "fall"\]\[n % 3\]/.test(programm), "Abschied vor dem Löschen, abwechselnd");
   assert.ok(/\.kachel-welle \{ position: absolute;[^}]*pointer-events: none/.test(html), "Welle stört kein Antippen");
 }
+
+// 2.568.0 KC-CLUB-KACHEL-EINFLUG (Wunsch Hansi „einfliegen aus verschiedenen Richtungen, horizontal/vertikal reindrehen, Falluhr“)
+{
+  for (const [k, t] of [["einflug", "🧭 Einfliegen"], ["drehH", "↔️ Horizontal drehen"], ["drehV", "↕️ Vertikal drehen"], ["fallblatt", "🕰️ Fallblatt-Uhr"]]) {
+    assert.ok(programm.includes(`["${k}", "${t}"]`), "Effekt wählbar: " + t);
+    assert.ok(programm.includes(`} else if (w === "${k}") {`), "Effekt gebaut: " + k);
+  }
+  const e = programm.slice(programm.indexOf('} else if (w === "einflug") {'), programm.indexOf("} else { // Umdrehen"));
+  assert.ok(/\[\[-1, 0\], \[1, -1\], \[0, 1\], \[-1, -1\], \[1, 0\], \[-1, 1\], \[0, -1\], \[1, 1\]\]\[\(i \* 3 \+ r\) % 8\]/.test(e), "Einfliegen: 8 Richtungen reihum");
+  assert.ok(/transformOrigin = s2 < 0 \? "0 50%" : "100% 50%"/.test(e) && /rotateY\(\$\{s2 \* -105\}deg\)/.test(e), "Horizontal: Drehtür an der Außenkante");
+  assert.ok(/rotateX\(180deg\) scale\(\.75\)/.test(e) && (e.match(/rotateX\(-90deg\)/g) || []).length >= 3, "Vertikal halbe Drehung, Fallblatt klappt dreimal");
+  assert.ok(!/left|top|width|margin|api\(/.test(e) && (e.match(/\{ transform: P \+ "rotate[XY]\(0\)( scale\(1\))?", opacity: 1 \}\]|\{ transform: "none", opacity: 1 \}\]/g) || []).length === 4, "nur transform/opacity, alle enden gerade");
+}
+
