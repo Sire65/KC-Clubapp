@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.553.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.554.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1286,7 +1286,9 @@ function pwZeigen() {
     if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}',${jsArg(z.von.vorname)})">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erledigt ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ Erledigt</button>`);
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
-    if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ abnehmen</button>`);
+    if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ ${z.teilAb ? "ganz abnehmen" : "abnehmen"}</button>`);
+    // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: für Verfasser/Clubleitung sichtbar, bei wem er noch hängt
+    const teil = z.teilAb && z.leser ? `<div class="zteil">🧹 Bei Lesern abgenommen${z.offen?.length ? ` – hängt noch bei ${esc(z.offen.map((n) => n.split(" ")[0]).join(", "))}` : ""}</div>` : "";
     const leser = z.leser && z.fuer !== "ich" ? `<details><summary>👁️ gelesen ${z.leser.length}/${z.anzahl} · ✓ erl. ${z.leser.filter((l) => l.erledigt).length}</summary>`
       + z.leser.map((l) => `<div>${esc(l.name.split(" ")[0])}: gesehen ${zeitKurz(l.gesehen)}${l.erledigt ? ` · ✓ ${zeitKurz(l.erledigt)}` : ""}</div>`).join("")
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
@@ -1294,7 +1296,7 @@ function pwZeigen() {
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
-      + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
+      + teil + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
 }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
 function pwAushangHtml() {
@@ -1440,8 +1442,28 @@ async function hilfeWichtig(id, an) {
     melde(an ? (r.versand?.gesendet ? `❗ Wichtig – ${r.versand.gesendet} ${r.versand.gesendet === 1 ? "Person hat" : "Personen haben"} Bescheid bekommen` : "❗ Hilfe-Aufruf ist jetzt als wichtig markiert") : "Nicht mehr als wichtig markiert"); await pwLaden(); }
   catch (e) { meldeFehler(e); }
 }
+// 2.554.0 KC-CLUB-PINNWAND-TEIL-AB (Wunsch Hansi): haben ihn manche schon gelesen und andere noch nicht, fragt „Abnehmen“, ob er nur bei den Lesern
+// abgenommen werden soll – bei den anderen hängt er weiter, bis sie ihn gesehen haben (danach fällt er auch dort ab; haben ihn alle gesehen, ist er ganz weg)
+function pwTeilWahl(z) {
+  return new Promise((fertig) => {
+    const f = blattAuf("pwTeilBlatt", `<h3 style="margin:0 0 6px">📌 Zettel abnehmen</h3>
+      <p style="margin:0 0 4px">👁️ Gelesen: <b>${z.leser.length}</b> · noch nicht gesehen: <b>${z.offen.length}</b> (${esc(z.offen.map((n) => n.split(" ")[0]).join(", "))})</p>
+      <button class="knopf haupt" data-w="teil">🧹 Nur bei denen abnehmen, die ihn gelesen haben</button>
+      <p class="hinweis" style="margin:2px 0 10px">Bei ${esc(z.offen.length === 1 ? z.offen[0].split(" ")[0] : z.offen.length + " anderen")} hängt er weiter – bis ${z.offen.length === 1 ? "er/sie" : "sie"} ihn gesehen ${z.offen.length === 1 ? "hat" : "haben"}. Danach ist er ganz weg.</p>
+      <button class="knopf gefahr" data-w="ganz">🗑️ Für alle abnehmen</button>
+      <button class="knopf" data-w="">Abbrechen</button>`);
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); fertig(b.dataset.w); }));
+  });
+}
 async function pwAbnehmen(id, ausFormular) {
-  if (!(await frage("Zettel von der Pinnwand abnehmen?"))) return;
+  const z = PW.zettel.find((x) => x.id === id);
+  if (z && z.fuer !== "ich" && !z.teilAb && z.leser?.length && z.offen?.length) {
+    const w = await pwTeilWahl(z); if (!w) return;
+    if (w === "teil") {
+      try { const r = await api("pinnwand_teil_abnehmen", { id }); melde(r.ganz ? "🗑️ Alle hatten ihn schon gelesen – ganz abgenommen" : `🧹 Bei den Lesern abgenommen – hängt noch bei ${r.offen.join(", ")}`); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { meldeFehler(e); }
+      return;
+    }
+  } else if (!(await frage(z?.teilAb ? "Zettel ganz abnehmen?\nAuch bei denen, die ihn noch nicht gesehen haben." : "Zettel von der Pinnwand abnehmen?"))) return;
   try { await api("pinnwand_abnehmen", { id }); await reisswolf(document.querySelector(`.zettel[data-zid="${CSS.escape(id)}"]`)); melde("🗑️ Abgenommen"); await pwLaden(); if (ausFormular) pwVoll(); } catch (e) { meldeFehler(e); }
 }
 

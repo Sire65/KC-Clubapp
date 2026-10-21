@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.554.0 – 2026-10-21 – Pinnwand: Zettel nur bei Lesern abnehmen (KC-CLUB-PINNWAND-TEIL-AB)
+- „🗑️ abnehmen“ fragt, wenn manche den Zettel schon gesehen haben und andere nicht: „🧹 Nur bei denen abnehmen, die ihn gelesen haben“ oder „Für alle abnehmen“.
+- Wer ihn noch nicht gesehen hat, behält ihn; nach dem Lesen (30 Min. Zeit für Antworten/✓) fällt er auch dort ab. Haben ihn alle gesehen, ist er ganz weg.
+- Verfasser/Clubleitung sehen „🧹 Bei Lesern abgenommen – hängt noch bei …“. Server 2.554.0, Spalte kc_club_pinnwand.teil_ab.
+
 ## 2.553.0 – 2026-10-21 – Geburtstags-Vogel größer, langsamer, mit Runde und Lied
 - Vogel und Paket gut anderthalbmal so groß, Flug etwa doppelt so lang, eine Runde im Kreis vor dem Abwurf.
 - Dazu leise das Ständchen „Happy Birthday“ (vorhandene Melodie), nur wenn Töne an sind.

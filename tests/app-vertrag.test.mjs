@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11784,4 +11784,15 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const GBV_F = 1\.55;/.test(g) && /width="\$\{90 \* GBV_F\}"/.test(g), "Vogel gut anderthalbmal so groß");
   assert.ok(/const T_REIN = 3000, T_KREIS = 3600, T_RAUS = 3000/.test(g) && /Math\.PI \* 2/.test(g), "langsamer, eine Runde im Kreis");
   assert.ok(/if \(einst\("ton", true\)\) hbSpielen\(0\.12, 0\.45\);/.test(g) && /function hbSpielen\(laut = 0\.22, schlag = 0\.42\)/.test(html), "Ständchen (vorhandene Melodie) leiser als Begleitlied – nur wenn Töne an");
+}
+// 2.554.0 KC-CLUB-PINNWAND-TEIL-AB (Wunsch Hansi „Zettel abnehmen – aber nur für die, die schon gelesen haben; für die anderen hängen lassen“)
+{
+  const mig = lies("supabase/migrations/20261021_kc_club_pinnwand_teil_ab.sql");
+  assert.ok(/add column if not exists teil_ab timestamptz/.test(mig), "Spalte teil_ab");
+  const ps = server.slice(server.indexOf("async function pinnwandSichtbar"), server.indexOf("const MAX_TESTDATEN"));
+  assert.ok(/z\.teil_ab && z\.person_id !== ich\.person_id/.test(ps) && /return t <= pwZeit\(z\?\.teil_ab\) \|\| t < frist;/.test(ps), "fällt nur bei Lesern ab (vorher gelesen, oder seit dem Lesen > 30 Min.); Verfasser sieht ihn immer");
+  const ta = server.slice(server.indexOf('case "pinnwand_teil_abnehmen":'), server.indexOf('case "pinnwand_abnehmen":'));
+  assert.ok(/z\.person_id !== ich\.person_id && !ich\.vorstand/.test(ta) && /if \(!offen\.length\) \{/.test(ta), "nur Verfasser/Clubleitung; haben alle gelesen → ganz ab");
+  assert.ok(/empf\.every\(\(id: string\) => \(gl \?\? \[\]\)\.some/.test(server), "letzter Leser → Zettel ist ganz weg");
+  assert.ok(/if \(z && z\.fuer !== "ich" && !z\.teilAb && z\.leser\?\.length && z\.offen\?\.length\)/.test(html) && /api\("pinnwand_teil_abnehmen", \{ id \}\)/.test(html) && /🧹 Bei Lesern abgenommen/.test(html), "App: Auswahl beim Abnehmen + Anzeige, bei wem er noch hängt");
 }

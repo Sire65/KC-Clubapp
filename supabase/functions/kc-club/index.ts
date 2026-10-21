@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.551.0";
+const SERVER_VERSION = "2.554.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2404,11 +2404,20 @@ function nachrichtKurz(von: string, o: { grp?: { name: string } | null; andere: 
   return txt(o.betreff ? `${satz} – „${o.betreff}“` : satz, 140);
 }
 const pinnwandHinweis = (von: string, privat: boolean, wichtig: boolean) => `Du hast ein neues ${wichtig ? "wichtiges " : ""}${privat ? "privates " : ""}Post-it von ${von} bekommen`;
+// 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: ein „bei Lesern abgenommener“ Zettel hängt nur noch bei denen, die ihn noch nicht gesehen haben.
+// Wer ihn danach zum ersten Mal sieht, hat ihn noch PINNWAND_TEIL_MIN Minuten (Lesen, Antworten, ✓) – dann fällt er auch bei ihm ab.
+const PINNWAND_TEIL_MIN = 30, pwZeit = (x: unknown) => (x ? Date.parse(String(x)) || 0 : 0);
 async function pinnwandSichtbar(ich: Ich) {
-  const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am,farbe").is("entfernt_am", null)
+  const { data } = await db.from("kc_club_pinnwand").select("id,person_id,text,wichtig,fuer,personen,erstellt_am,farbe,teil_ab").is("entfernt_am", null)
     .or(`person_id.eq.${ich.person_id},fuer.eq.alle,personen.cs.{${ich.person_id}}`)
     .order("wichtig", { ascending: false }).order("erstellt_am", { ascending: false }).limit(100);
-  return data ?? [];
+  const l = data ?? [], teil = l.filter((z: any) => z.teil_ab && z.person_id !== ich.person_id);
+  if (!teil.length) return l;
+  const { data: gl } = await db.from("kc_club_pinnwand_gelesen").select("zettel_id,gesehen_am").eq("person_id", ich.person_id).in("zettel_id", teil.map((z: any) => z.id));
+  const frist = Date.now() - PINNWAND_TEIL_MIN * 60000, weg = new Set((gl ?? []).filter((g: any) => {
+    const z: any = teil.find((x: any) => x.id === g.zettel_id), t = pwZeit(g.gesehen_am);
+    return t <= pwZeit(z?.teil_ab) || t < frist; }).map((g: any) => g.zettel_id));
+  return l.filter((z: any) => !weg.has(z.id));
 }
 const MAX_TESTDATEN = 2 * 1024 * 1024; // Verbindungstest: höchstens 2 MB je Richtung
 // KC-CLUB-START-SPARSAM-2: MERK_MS lang gemerkt (nur fehlerfreie Antworten); Ein-/Ausschalten hier leert den Merker sofort
@@ -12481,11 +12490,19 @@ Köcheclub Werne`,
         const leute = await personen([...zettel.map((z: any) => z.person_id), ...zettel.flatMap((z: any) => z.personen || []), ...(gl ?? []).map((g: any) => g.person_id)]);
         const nm = (id: string) => leute.get(id)?.display_name || aktiv.find((m) => m.person_id === id)?.display_name || id;
         const wk = await willkommenFuer(zettel.filter((z: any) => z.fuer === "alle").map((z: any) => z.id)).catch(() => new Map());
+        // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: haben jetzt alle Empfänger einen „bei Lesern abgenommenen“ Zettel gesehen → ganz abnehmen
+        for (const z of zettel.filter((x: any) => x.teil_ab && x.fuer !== "ich")) {
+          const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : (z.personen || []);
+          if (empf.every((id: string) => (gl ?? []).some((g: any) => g.zettel_id === z.id && g.person_id === id))) { // „gesehen“ ist oben schon eingetragen
+            const { data: w } = await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: null }).eq("id", z.id).is("entfernt_am", null).select("id");
+            if (w?.length) await protokoll(null, "pinnwand_teil_ab_fertig", { zettel: z.id, empfaenger: empf.length });
+          }
+        }
         return json({ max: PINNWAND_MAX, zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
           const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
           const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
-          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, antworten: z.antworten !== false, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1, willkommen: wk.get(z.id) ?? null,
+          return { id: z.id, text: z.text, wichtig: z.wichtig, fuer: z.fuer, antworten: z.antworten !== false, erstellt_am: z.erstellt_am, vonMir, farbe: z.farbe ?? 1, willkommen: wk.get(z.id) ?? null, teilAb: z.teil_ab ?? null,
             von: { person_id: z.person_id, vorname: vorname(leute.get(z.person_id) ?? null) || nm(z.person_id) },
             empfaenger: z.fuer === "personen" ? empf.map(nm) : [],
             erledigt: z.fuer === "ich" ? null : meine?.erledigt_am ?? null,
@@ -12596,6 +12613,27 @@ Köcheclub Werne`,
         return json({ stimmen: Object.fromEntries((data ?? []).filter((x: any) => x.wert?.art === "m" || x.wert?.art === "w").map((x: any) => [x.person_id, x.wert.art])) });
       }
 
+      // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB (Wunsch Hansi „Zettel abnehmen – aber nur für die, die schon gelesen haben; für die anderen hängen lassen“):
+      // „gelesen“ = hat ihn an der Pinnwand oder im Post-it-Fenster gesehen (wie 👁️). Wer ihn noch nicht gesehen hat, behält ihn, bis er ihn gesehen hat.
+      case "pinnwand_teil_abnehmen": {
+        const { data: z } = await db.from("kc_club_pinnwand").select("id,person_id,fuer,personen,teil_ab").eq("id", String(p.id)).is("entfernt_am", null).maybeSingle();
+        if (!z) throw new Fehler("Zettel nicht gefunden (vielleicht schon abgenommen).", 404);
+        if (z.person_id !== ich.person_id && !ich.vorstand) throw new Fehler("Abnehmen darf nur, wer den Zettel angeheftet hat.", 403);
+        if (z.fuer === "ich") throw new Fehler("Diesen Zettel siehst nur du – bitte ganz abnehmen.");
+        if (p.zurueck) { await db.from("kc_club_pinnwand").update({ teil_ab: null, teil_von: null }).eq("id", z.id); await protokoll(ich.person_id, "pinnwand_teil_ab_zurueck", { zettel: z.id }); return json({ ok: true, zurueck: true }); }
+        const empf = z.fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== z.person_id) : (z.personen ?? []);
+        const { data: gl } = empf.length ? await db.from("kc_club_pinnwand_gelesen").select("person_id").eq("zettel_id", z.id).in("person_id", empf) : { data: [] as any[] };
+        const gelesen = new Set((gl ?? []).map((g: any) => g.person_id)), offen = empf.filter((id: string) => !gelesen.has(id));
+        if (!offen.length) { // alle haben ihn schon gesehen → ganz abnehmen
+          await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: ich.person_id }).eq("id", z.id);
+          await protokoll(ich.person_id, "pinnwand_abgenommen", { zettel: z.id, fremd: z.person_id !== ich.person_id, teil: true, alleGelesen: true });
+          return json({ ok: true, ganz: true, offen: [] });
+        }
+        await db.from("kc_club_pinnwand").update({ teil_ab: jetzt(), teil_von: ich.person_id }).eq("id", z.id);
+        const leute = await personen(offen);
+        await protokoll(ich.person_id, "pinnwand_teil_ab", { zettel: z.id, gelesen: gelesen.size, offen: offen.length });
+        return json({ ok: true, ganz: false, gelesen: gelesen.size, offen: offen.map((id: string) => vorname(leute.get(id)) || leute.get(id)?.display_name || id).sort() });
+      }
       case "pinnwand_abnehmen": {
         const { data: z } = await db.from("kc_club_pinnwand").select("id,person_id").eq("id", String(p.id)).is("entfernt_am", null).maybeSingle();
         if (!z) throw new Fehler("Zettel nicht gefunden (vielleicht schon abgenommen).", 404);
