@@ -2,7 +2,7 @@
 
 ## 2.577.0 – 2026-10-21 – 🧑‍🍳 Kochmütze in der Handy-Statusleiste größer (KC-CLUB-PUSH-MUETZE-GROSS)
 Wunsch Hansi („Die kleine Kochmütze oben in der Statusleiste vom Handy ist zu klein. Kannst du größer machen“).
-- badge-muetze.png (Zeichen oben in der Statusleiste bei Mitteilungen, Android zeigt nur die Form): statt der dünnen Umrisslinie aus dem Logo (nutzte nur ⅔ der Fläche) eine gefüllte Kochmütze – drei Wölbungen, zwei Falten, Band –, die die ganze Fläche ausfüllt. Bei 24 px gut als Mütze zu erkennen.
+- badge-muetze.png (Zeichen oben in der Statusleiste bei Mitteilungen, Android zeigt nur die Form): weiter die Club-Logo-Kochmütze (aus kc-kochmuetze-weiss.webp), jetzt randlos auf volle Breite (94 statt 86 px von 96) und mit kräftigeren Linien – in der kleinen Statusleiste besser zu erkennen. (Ein erster Entwurf mit gezeichneter Mütze wurde verworfen: „Es soll die Logo-Kochmütze des Clubs sein“.)
 - Wirkt bei der nächsten Mitteilung, sobald die neue Version auf dem Handy ist (Service Worker lädt das Bild neu). Server unverändert.
 - Test: Vertragstest-Block 2.577.0 (Größe 96×96, im Push verwendet). Rückweg: App 2.576.0.
 
