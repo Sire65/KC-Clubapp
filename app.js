@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.569.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.570.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28832,7 +28832,7 @@ function dvGanttHtml() {
   const tage = dvTage(P), WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], x = (h) => ((Math.max(8, Math.min(24, h)) - 8) / 16) * 100;
   if (!tage.length) return '<p class="hinweis">Noch keine Dienstzeiten eingegangen.</p>';
   const we = (t) => [0, 6].includes(new Date(t + "T12:00:00Z").getUTCDay());
-  let h = `<div class="dv-gantt" style="grid-template-columns:minmax(120px,170px) repeat(${tage.length},minmax(46px,1fr)) 70px"><div class="dv-h dv-name">Name</div>`;
+  let h = `<div class="dv-gantt" style="grid-template-columns:minmax(120px,170px) repeat(${tage.length},minmax(calc(46px * var(--dvz, 1)),1fr)) 70px"><div class="dv-h dv-name">Name</div>`; // 2.570.0 --dvz = Zoom (nur am Bildschirm)
   h += tage.map((t) => `<div class="dv-h${we(t) ? " dv-we" : ""}">${t.slice(8)}.${t.slice(5, 7)}.<small>${WT[new Date(t + "T12:00:00Z").getUTCDay()]}</small></div>`).join("") + `<div class="dv-h">Gesamt</div>`;
   for (const p of P) {
     h += `<div class="dv-name">${esc(p.name)}</div>`;
@@ -28872,8 +28872,40 @@ function dvZeichnen() {
     ${dvLegende()}
     <div class="dv-leiste"><button class="knopf klein${DV.sort === "name" ? " haupt" : ""}" onclick="DV.sort='name';dvZeichnen()">🔤 Name</button><button class="knopf klein${DV.sort === "stunden" ? " haupt" : ""}" onclick="DV.sort='stunden';dvZeichnen()">⏱️ Stunden</button>
       <button class="knopf klein" onclick="dvDrucken()">🖨️ Drucken (A4 quer)</button>${DV.daten?.nurFreigegeben ? "" : '<button class="knopf klein" onclick="dvAblegen()">🗄️ In Ordner ablegen</button>'}</div>
-    <div class="dv-rahmen">${dvGanttHtml()}</div>
-    <p class="hinweis" style="margin:0">Feld antippen = genaue Uhrzeiten. Auf dem Handy am besten quer halten – sonst seitlich wischen.</p>`;
+    <div class="dv-leiste dv-zoomleiste"><button class="knopf klein" onclick="dvZoom(dvZoomJetzt() / 1.25, true)" aria-label="Kleiner">🔍−</button><button class="knopf klein" id="dvZoomWert" onclick="dvZoom(1, true)" title="Zurück auf 100 %">100 %</button><button class="knopf klein" onclick="dvZoom(dvZoomJetzt() * 1.25, true)" aria-label="Größer">🔍+</button></div>
+    <div class="dv-rahmen" data-pinch>${dvGanttHtml()}</div>
+    <p class="hinweis" style="margin:0">Feld antippen = genaue Uhrzeiten. Größer/kleiner: mit zwei Fingern ziehen oder 🔍+ / 🔍−. Auf dem Handy am besten quer halten – sonst seitlich wischen.</p>`;
+  dvZoomEinrichten();
+}
+// 2.570.0 KC-CLUB-DV-ZOOM (Wunsch Hansi „Zoom in der Grafik Dienstzeiten – alles recht klein, evtl. mit 2 Fingern größer ziehen“): nur die Grafik
+// wird größer (Tage breiter, Zeilen höher, Schrift größer über --dvz – kein CSS-zoom, sonst klebt die Namen-Spalte nicht mehr links), die Stelle
+// zwischen den Fingern bleibt unter den Fingern; die Größe merkt sich das Gerät.
+// data-pinch nimmt die Grafik aus dem Schrift-Zoom der ganzen App heraus (szEigeneGeste).
+const DV_ZOOM = { min: 0.6, max: 3, key: "kc_club_dv_zoom", t: null };
+const dvZoomJetzt = () => parseFloat(document.querySelector("#dvInhalt .dv-gantt")?.style.getPropertyValue("--dvz")) || 1;
+function dvZoom(w, merken, fx, fy) {
+  const r = document.querySelector("#dvInhalt .dv-rahmen"), g = r?.querySelector(".dv-gantt"); if (!g) return;
+  const alt = dvZoomJetzt(), neu = Math.round(Math.min(DV_ZOOM.max, Math.max(DV_ZOOM.min, w)) * 100) / 100, hoch = r.closest(".blatt-innen");
+  const rb = r.getBoundingClientRect(), px = (fx ?? rb.left + rb.width / 2) - rb.left, py = (fy ?? rb.top + Math.min(rb.height, innerHeight) / 2) - rb.top;
+  const bx = (r.scrollLeft + px) / r.scrollWidth, hAlt = g.offsetHeight; // Stelle in der Grafik, die stehen bleiben soll
+  g.style.setProperty("--dvz", String(neu));
+  r.scrollLeft = bx * r.scrollWidth - px; if (hoch && hAlt) hoch.scrollTop += py * (g.offsetHeight / hAlt - 1);
+  const z = $("dvZoomWert"); if (z) z.textContent = `${Math.round(neu * 100)} %`;
+  if (merken) try { localStorage.setItem(DV_ZOOM.key, String(neu)); } catch {}
+}
+function dvZoomEinrichten() {
+  const r = document.querySelector("#dvInhalt .dv-rahmen"); if (!r) return;
+  let w = 1; try { const v = parseFloat(localStorage.getItem(DV_ZOOM.key)); if (v >= DV_ZOOM.min && v <= DV_ZOOM.max) w = v; } catch {}
+  dvZoom(w, false);
+  const abst = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY), mitte = (t) => [(t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2];
+  r.addEventListener("touchstart", (e) => { DV_ZOOM.t = e.touches.length === 2 ? { a: abst(e.touches), w: dvZoomJetzt() } : null; }, { passive: true });
+  r.addEventListener("touchmove", (e) => {
+    if (!DV_ZOOM.t || e.touches.length !== 2) return;
+    if (e.cancelable) e.preventDefault();
+    const [mx, my] = mitte(e.touches); dvZoom(DV_ZOOM.t.w * abst(e.touches) / DV_ZOOM.t.a, false, mx, my);
+  }, { passive: false });
+  r.addEventListener("touchend", (e) => { if (DV_ZOOM.t && e.touches.length < 2) { DV_ZOOM.t = null; dvZoom(dvZoomJetzt(), true); } }, { passive: true });
+  ["gesturestart", "gesturechange"].forEach((t) => r.addEventListener(t, (e) => e.preventDefault(), { passive: false })); // iPhone/iPad: kein Seiten-Zoom
 }
 // KC-CLUB-DV-UEBERALL (2.500.0, Wunschliste Nr. 27): derselbe 📊-Knopf wie im Büro-Eingang überall, wo der Dienstplan aufgeht
 // (Dienstpläne, Mein Dienst, Dienstwünsche). KC-CLUB-DV-MITGLIEDER (2.501.0): auch für Mitglieder – der Server liefert ihnen nur sich selbst

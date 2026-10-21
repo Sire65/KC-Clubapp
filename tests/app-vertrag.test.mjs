@@ -11900,3 +11900,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.\.\.\(ich\.vorstand \? \{ mitglieder:/.test(server), "Mitgliederliste zum Abhaken nur für die Clubleitung");
   assert.ok(/\{ id: "clubabend", sym: "🍽️", t: "Clubabend",[^\n]*nur: \(\) => caHeute\(\)/.test(html) && /function caHeute\(\)/.test(html) && /\$\{L \? `<button type="button" class="ca-haken"/.test(html), "Kachel nur am Abend; Haken-Knöpfe nur für die Clubleitung");
 }
+// 2.570.0 KC-CLUB-DV-ZOOM (Wunsch Hansi „Zoom in der Grafik Dienstzeiten – alles recht klein, mit 2 Fingern größer ziehen“)
+{
+  const ix = lies("index.html");
+  assert.ok(/<div class="dv-rahmen" data-pinch>/.test(html) && /function dvZoomEinrichten\(\)/.test(html) && /dvZoom\(dvZoomJetzt\(\) \* 1\.25, true\)/.test(html), "zwei Finger + 🔍+/🔍− (nicht der Schrift-Zoom der App)");
+  assert.ok(/const DV_ZOOM = \{ min: 0\.6, max: 3, key: "kc_club_dv_zoom"/.test(html) && /g\.style\.setProperty\("--dvz", String\(neu\)\)/.test(html), "Zoom über --dvz, je Gerät gemerkt");
+  assert.ok(/\.dv-rahmen \.dv-gantt \{ min-width: calc\(760px \* var\(--dvz, 1\)\); overflow: clip; \}/.test(ix), "Namen-Spalte klebt beim Wischen (clip statt hidden)");
+  assert.ok(!/style\.zoom/.test(html.slice(html.indexOf("const DV_ZOOM"), html.indexOf("function dvZoomEinrichten"))), "kein CSS-zoom (bricht sticky)");
+}

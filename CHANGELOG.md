@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.570.0 – 2026-10-21 – Dienstzeiten-Übersicht: Zoom (KC-CLUB-DV-ZOOM)
+- In der 📊 Dienstzeiten-Übersicht mit zwei Fingern größer/kleiner ziehen oder 🔍+ / 🔍− (100 % = zurück). Tage werden breiter, Zeilen höher, Schrift größer; das Gerät merkt sich die Größe.
+- Behoben: Die Namen-Spalte blieb beim seitlichen Wischen nicht links stehen.
+
 ## 2.569.0 – 2026-10-21 – Kachel „Clubabend“ (KC-CLUB-CLUBABEND, Wunschliste #27)
 - Am Clubabend (2 Std. vorher bis Ende) erscheint die Kachel 🍽️ Clubabend (+ Hinweis im Info-Feld): Tagesordnung (aus der Büro-Vorbereitung, Themen mit 👍), Anwesende, Fotos vom Abend, Geburtstage seit dem letzten Treffen, offene Aufgaben aus dem letzten Protokoll.
 - Nur die Clubleitung: Tagesordnung abhaken, Anwesenheit vor Ort eintragen (geht ins Protokoll), Protokoll anlegen/öffnen, nächsten Termin live abstimmen, Album anlegen. Mitglieder sehen nur (alle 20 s aktuell).
