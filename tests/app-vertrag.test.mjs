@@ -11898,7 +11898,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const CA_VORHER_MIN = 120, CA_DAUER_STD = 6;/.test(server) && /p\.vorschau === true && ich\.vorstand/.test(server), "nur am Abend (2 Std. vorher bis Ende); Vorschau nur Clubleitung");
   assert.ok(/b\.vorbereitung\?\.tagesordnung\?\.length \? b\.vorbereitung\.tagesordnung : b\.standard\.tagesordnung/.test(server), "Tagesordnung aus der Büro-Vorbereitung (sonst Standard)");
   assert.ok(/\.\.\.\(ich\.vorstand \? \{ mitglieder:/.test(server), "Mitgliederliste zum Abhaken nur für die Clubleitung");
-  assert.ok(/\{ id: "clubabend", sym: "🍽️", t: "Clubabend",[^\n]*nur: \(\) => caHeute\(\)/.test(html) && /function caHeute\(\)/.test(html) && /\$\{L \? `<button type="button" class="ca-haken"/.test(html), "Kachel nur am Abend; Haken-Knöpfe nur für die Clubleitung");
+  assert.ok(/\{ id: "clubabend", sym: "🍽️", t: "Clubabend Live",[^\n]*nur: \(\) => caHeute\(\) \|\| !!ICH\?\.admin/.test(html) && /function caHeute\(\)/.test(html) && /\$\{L \? `<button type="button" class="ca-haken"/.test(html), "Kachel am Abend (2.571.0: Admin immer, sonst Vorschau); Haken-Knöpfe nur für die Clubleitung");
+  assert.ok(/\[50, 400\]\.forEach\(\(ms\) => setTimeout\(\(\) => window\.scrollTo\(0, document\.body\.scrollHeight\), ms\)\)/.test(html), "2.571.0: Chat öffnet immer bei der neuesten Nachricht");
 }
 // 2.570.0 KC-CLUB-DV-ZOOM (Wunsch Hansi „Zoom in der Grafik Dienstzeiten – alles recht klein, mit 2 Fingern größer ziehen“)
 {

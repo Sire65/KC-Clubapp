@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.570.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.571.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3367,7 +3367,7 @@ function rgChatprofiTempo() { // so sieht die Sprachnachricht nach „anhören�
 function rgChatprofiTempoWeiter() { const t = document.querySelector("#msg-rg-cp-3 .tempo"); if (!t) return; const i = SPRACH_TEMPI.findIndex((x) => String(x).replace(".", ",") + "×" === t.textContent); t.textContent = String(SPRACH_TEMPI[(i + 1) % SPRACH_TEMPI.length]).replace(".", ",") + "×"; }
 const RG_CHATPROFI = [
   { v: "chat", vor: rgChatprofiAuf, sel: ["#chatKopf"], t: "👋 Mehr aus dem Chat holen", x: "In diesem Video zeige ich dir an einem Beispiel-Chat, was du im Chat noch alles machen kannst: Nachrichten anheften, merken und weiterleiten, die Haken verstehen, abstimmen, vorlesen lassen und vieles mehr. Keine Sorge – der Chat ist nur ein Beispiel, ich sende und speichere nichts." },
-  { v: "chat", vor: rgChatprofiAuf, sel: ["#neuTrenner"], t: "⬇️ Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt die Linie Neue Nachrichten, ab wo es für dich Neues gibt. Die App springt gleich dorthin." },
+  { v: "chat", vor: rgChatprofiAuf, sel: ["#neuTrenner"], t: "⬇️ Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt die App sofort die neueste Nachricht. Die Linie Neue Nachrichten markiert, ab wo es für dich Neues gibt." },
   { v: "chat", vor: () => rgChatprofiMenue("rg-cp-2"), nach: () => $("naMenue")?.remove(), tippVor: "#msg-rg-cp-2 .txt", sel: ["#naMenue .na-menue"],
     puls: ["#naMenue .na-schnell", rgChatprofiKnopf("#naMenue", "↩️ Antworten"), rgChatprofiKnopf("#naMenue", "📌 Oben anheften"), rgChatprofiKnopf("#naMenue", "⭐ Merken"), rgChatprofiKnopf("#naMenue", "📋 Kopieren")],
     t: "👆 Nachricht antippen", x: "Tippst du eine Nachricht an, öffnet sich dieses Menü. Oben reagierst du schnell mit einem Bild, zum Beispiel Daumen hoch. Darunter: Antworten, Oben anheften, Merken und Kopieren – der Text liegt dann in der Zwischenablage, zum Beispiel für eine E-Mail." },
@@ -5291,7 +5291,7 @@ const HILFE = [
   { id: "terminanfrage_oben", thema: "termine", sym: "📨", t: "Offene Terminanfragen stehen ganz oben", x: "Hat dich jemand per <b>Terminanfrage</b> gefragt und du hast noch nicht geantwortet, steht sie jetzt <b>ganz oben unter „Heute wichtig“</b> – rot umrandet. Die Kachel <b>📅 Termine</b> zeigt die Zahl. Antippen und mit <b>Ja</b>, <b>Vielleicht</b> oder <b>Nein</b> antworten.", seit: "2.389.0" },
   { id: "wer_kommt_wann", thema: "start", sym: "📅", t: "Admin: Wer kommt wann in die App?", nur: () => !!ICH?.admin, x: "Unter <b>Admin → Nutzung → „📅 Wer kommt wann?“</b> siehst du ein Raster aus Wochentagen und Uhrzeiten: Je dunkler, desto öfter wird die App geöffnet. Dazu Balken je Wochentag und je Uhrzeit. Oben kannst du ein einzelnes Mitglied wählen – dann siehst du nur seine Zeiten.", zeig: () => wannStatistik(), seit: "2.390.0" },
   { id: "weiterleiten", thema: "nachrichten", sym: "↪️", t: "Weitersagen leicht gemacht", x: "Soll jemand anderes eine Nachricht auch lesen? Antippen → <b>„↪️ Weiterleiten“</b> und die Person oder Unterhaltung aussuchen. Fertig.", seit: "2.23.1" },
-  { id: "neue_linie", thema: "nachrichten", sym: "⬇️", t: "Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, zeigt eine Linie <b>„Neue Nachrichten“</b>, ab wo es für dich Neues gibt. Hast du weit nach oben geblättert, bringt dich der Knopf <b>⬇️</b> mit einem Tipp wieder ans Ende.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
+  { id: "neue_linie", thema: "nachrichten", sym: "⬇️", t: "Wo hatte ich aufgehört?", x: "Öffnest du einen Chat, siehst du sofort die neueste Nachricht; eine Linie <b>„Neue Nachrichten“</b> markiert, ab wo es für dich Neues gibt. Hast du weit nach oben geblättert, bringt dich der Knopf <b>⬇️</b> mit einem Tipp wieder ans Ende.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "entwurf", thema: "nachrichten", sym: "✏️", t: "Angefangener Text geht nicht verloren", x: "Mitten im Schreiben klingelt es an der Tür? Kein Problem – dein halb geschriebener Text bleibt in diesem Chat auf deinem Handy liegen. Der Hinweis <b>„✏️ Entwurf – noch nicht gesendet“</b> erinnert dich später daran.", seit: "2.23.1" },
   { id: "ohne_netz", thema: "nachrichten", sym: "📵", t: "Schreiben, auch wenn das Netz weg ist", x: "Im Keller oder unterwegs kein Empfang? Schreib ruhig trotzdem. Die Nachricht zeigt <b>„⏳ wartet auf Netz“</b> und geht von ganz allein raus, sobald wieder Verbindung da ist.", seit: "2.23.1" },
   { id: "haken", thema: "nachrichten", sym: "✔️", t: "Was die Haken an deinen Nachrichten bedeuten", x: "Wie bei WhatsApp: <b>ein grauer Haken</b> heißt gesendet, <b>zwei graue Haken</b> heißen auf dem Handy angekommen – sie erscheinen, sobald die Mitteilung auf dem anderen Handy angezeigt wird oder seine App die Nachricht geladen hat –, <b>blaue Haken</b> heißen gelesen. Willst du es genau wissen, tipp die <b>Haken</b> an deiner Nachricht an: Dann siehst du „Gelesen von“, „Zugestellt an“ und „Noch nicht zugestellt“ – mit Uhrzeit.", seit: "2.23.1" },
@@ -15017,7 +15017,8 @@ const kzZahl = (k, plus = 0) => (einfach() || INIT?.kz?.[k] == null ? 0 : INIT.k
 const KACHELN = {
   verein: [
     // 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27): nur am Clubabend (2 Std. vorher bis Ende) – Tagesordnung, Anwesende, Protokoll, Abstimmung, Fotos
-    { id: "clubabend", sym: "🍽️", t: "Clubabend", u: () => (ICH?.vorstand ? "Heute · Tagesordnung abhaken" : "Heute · Tagesordnung & mehr"), aktion: "caOeffnen()", nur: () => caHeute(), klasse: "ca-kachel" },
+    // 2.571.0 (Wunsch Hansi): heißt „Clubabend Live“; beim Admin immer da – außerhalb des Abends als Vorschau auf den nächsten Clubabend
+    { id: "clubabend", sym: "🍽️", t: "Clubabend Live", u: () => (!caHeute() ? "Vorschau nächster Clubabend" : ICH?.vorstand ? "Heute · Tagesordnung abhaken" : "Heute · Tagesordnung & mehr"), aktion: "caOeffnen(!caHeute() && !!ICH?.admin)", nur: () => caHeute() || !!ICH?.admin, klasse: "ca-kachel" },
     { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
@@ -30747,7 +30748,9 @@ async function chatLaden(scrollen) {
     if (CS.offen) chatSucheJetzt(false); // KC-CLUB-CHATSUCHE: Markierung nach dem Neuzeichnen behalten
     if (neuVonAnderen && einst("ton", true) && !stummAn(chatId)) ton();
     // KC-CLUB-NACH-UNTEN (1.12.0): beim Lesen älterer Nachrichten nicht nach unten reißen – stattdessen ⬇️ mit Punkt
-    if (NA.trennerSprung) { NA.trennerSprung = false; setTimeout(() => $("neuTrenner")?.scrollIntoView({ block: "start" }), 50); }
+    // 2.571.0 (Wunsch Hansi „wenn es in einen Chat geht, immer sofort die neueste anzeigen“): beim Öffnen ganz nach unten – die Linie „Neue Nachrichten“
+    // bleibt als Markierung; ein zweites Mal nach dem Laden der Bilder, damit die neueste wirklich ganz zu sehen ist
+    if (NA.trennerSprung) { NA.trennerSprung = false; [50, 400].forEach((ms) => setTimeout(() => window.scrollTo(0, document.body.scrollHeight), ms)); }
     else if (scrollen || (neuVonAnderen && !weitOben())) setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
     else if (neuVonAnderen) NA.neuUnten = true;
     empfangsEffekt(u); // 2.177.0 KC-CLUB-EMPFANGS-EFFEKT

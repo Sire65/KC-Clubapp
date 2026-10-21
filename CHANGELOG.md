@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.571.0 – 2026-10-21 – Clubabend Live + Chat öffnet bei der neuesten Nachricht
+- Kachel heißt jetzt „🍽️ Clubabend Live“; beim Admin immer sichtbar (außerhalb des Abends als Vorschau auf den nächsten Clubabend), für alle anderen weiter nur am Abend.
+- Chat öffnen springt immer sofort zur neuesten Nachricht (Wunsch Hansi); die Linie „Neue Nachrichten“ bleibt als Markierung. Hilfe-Texte angepasst.
+
 ## 2.570.0 – 2026-10-21 – Dienstzeiten-Übersicht: Zoom (KC-CLUB-DV-ZOOM)
 - In der 📊 Dienstzeiten-Übersicht mit zwei Fingern größer/kleiner ziehen oder 🔍+ / 🔍− (100 % = zurück). Tage werden breiter, Zeilen höher, Schrift größer; das Gerät merkt sich die Größe.
 - Behoben: Die Namen-Spalte blieb beim seitlichen Wischen nicht links stehen.
