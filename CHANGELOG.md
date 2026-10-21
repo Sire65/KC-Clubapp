@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.553.0 – 2026-10-21 – Geburtstags-Vogel größer, langsamer, mit Runde und Lied
+- Vogel und Paket gut anderthalbmal so groß, Flug etwa doppelt so lang, eine Runde im Kreis vor dem Abwurf.
+- Dazu leise das Ständchen „Happy Birthday“ (vorhandene Melodie), nur wenn Töne an sind.
+
 ## 2.552.0 – 2026-10-21 – Einstellungen als Übersicht (KC-CLUB-EINST-UEBERSICHT)
 - Einstellungen beginnen mit einer Übersicht wie beim Handy: Gruppen „Für mich“, „Aussehen“, „Technik“, „Nur Admin“; jede Zeile mit Symbol, Inhalt und „x von y an“. Antippen öffnet den Bereich als eigene Seite (‹ Alle Einstellungen / Zurück-Taste).
 - Klappfelder gut sichtbar (Goldrand, runder weinroter Knopf), Häkchen als Schalter (grün = an).

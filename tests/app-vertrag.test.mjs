@@ -11778,3 +11778,10 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(v === "einstellungen"\) euUebersicht\(\);/.test(html) && /history\.pushState\(\{ \.\.\.\(history\.state \|\| \{\}\), eu: id,/.test(html), "beginnt mit Übersicht; Zurück-Taste führt aus dem Bereich zurück");
   assert.ok(/#v-einstellungen \.schalter > input\[type="checkbox"\] \{ appearance: none;/.test(ix) && /#v-einstellungen details:not\(\.karte\):not\(\.iv-ordner\) > summary::after \{ content: "⌄";/.test(ix), "Schalter wie beim Handy + gut sichtbare Klappen");
 }
+// 2.553.0 KC-CLUB-GEBURTSTAG-VOGEL-2 (Wunsch Hansi „zu klein, zu schnell – langsamer, kleinen Kreis fliegen, Begleitlied Happy Birthday“)
+{
+  const g = html.slice(html.indexOf("const GBV_F = "), html.indexOf("function gbvVorschau()"));
+  assert.ok(/const GBV_F = 1\.55;/.test(g) && /width="\$\{90 \* GBV_F\}"/.test(g), "Vogel gut anderthalbmal so groß");
+  assert.ok(/const T_REIN = 3000, T_KREIS = 3600, T_RAUS = 3000/.test(g) && /Math\.PI \* 2/.test(g), "langsamer, eine Runde im Kreis");
+  assert.ok(/if \(einst\("ton", true\)\) hbSpielen\(0\.12, 0\.45\);/.test(g) && /function hbSpielen\(laut = 0\.22, schlag = 0\.42\)/.test(html), "Ständchen (vorhandene Melodie) leiser als Begleitlied – nur wenn Töne an");
+}

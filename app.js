@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.552.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.553.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1339,14 +1339,14 @@ const pwWillkText = (z) => (z?.willkommen?.art === "geburtstag" ? "🎂 Ich möc
 // Ton aus (Einstellung) oder Handy blockiert den Ton → die Karte kommt trotzdem, das Ständchen dann per Antippen.
 const HB_MELODIE = [[392, .75], [392, .25], [440, 1], [392, 1], [523.25, 1], [493.88, 2], [392, .75], [392, .25], [440, 1], [392, 1], [587.33, 1], [523.25, 2],
   [392, .75], [392, .25], [783.99, 1], [659.25, 1], [523.25, 1], [493.88, 1], [440, 2], [698.46, .75], [698.46, .25], [659.25, 1], [523.25, 1], [587.33, 1], [523.25, 3]];
-function hbSpielen() {
+function hbSpielen(laut = 0.22, schlag = 0.42) { // 2.553.0: Lautstärke/Tempo wählbar (Geburtstags-Vogel: leiser, gemütlicher)
   try {
     audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
-    const schlag = 0.42; let t = audio.currentTime + 0.1;
+    let t = audio.currentTime + 0.1;
     for (const [f, d] of HB_MELODIE) {
       const o = audio.createOscillator(), g = audio.createGain(), dauer = d * schlag;
       o.type = "triangle"; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer * 0.95);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer * 0.95);
       o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dauer); t += dauer;
     }
     return true;
@@ -25854,11 +25854,12 @@ function gbvPruefen() {
   try { localStorage.setItem(k, String(Date.now())); } catch {}
   setTimeout(() => gbvFlug(g.map((x) => x.person_id === ICH?.person_id ? "dir" : x.vorname || String(x.name || "").split(" ")[0])), 1500);
 }
-const GBV_VOGEL = `<svg viewBox="0 0 90 70" width="90" height="70"><path class="gbv-schnur" d="M45 40 L45 52" stroke="#5a3718" stroke-width="1.5"/>
+const GBV_F = 1.55; // 2.553.0 (Wunsch Hansi „zu klein“): Vogel und Paket gut anderthalbmal so groß
+const GBV_VOGEL = `<svg viewBox="0 0 90 70" width="${90 * GBV_F}" height="${70 * GBV_F}"><path class="gbv-schnur" d="M45 40 L45 52" stroke="#5a3718" stroke-width="1.5"/>
   <g class="gbv-paket-am"><rect x="33" y="50" width="24" height="18" rx="2" fill="#741521"/><rect x="43" y="50" width="4" height="18" fill="#c9a46a"/><rect x="33" y="57" width="24" height="4" fill="#c9a46a"/></g>
   <ellipse cx="45" cy="32" rx="20" ry="11" fill="#3d6fb6"/><circle cx="64" cy="25" r="8" fill="#3d6fb6"/><circle cx="67" cy="23" r="1.8" fill="#fff"/><circle cx="67.5" cy="23" r=".9" fill="#111"/>
   <path d="M71 25 L80 27 L71 29 Z" fill="#f2a900"/><path d="M25 30 L10 24 L14 34 Z" fill="#2c5592"/><path class="gbv-fluegel" d="M40 28 Q32 6 52 10 Q50 22 48 28 Z" fill="#5b8fd8"/></svg>`;
-const GBV_PAKET = `<svg viewBox="0 0 28 26" width="28" height="26"><rect x="2" y="6" width="24" height="18" rx="2" fill="#741521"/><rect x="12" y="6" width="4" height="18" fill="#c9a46a"/><rect x="2" y="13" width="24" height="4" fill="#c9a46a"/><path d="M14 6 Q8 0 6 4 Q8 7 14 6 Q20 7 22 4 Q20 0 14 6" fill="#c9a46a"/></svg>`;
+const GBV_PAKET = `<svg viewBox="0 0 28 26" width="${28 * GBV_F}" height="${26 * GBV_F}"><rect x="2" y="6" width="24" height="18" rx="2" fill="#741521"/><rect x="12" y="6" width="4" height="18" fill="#c9a46a"/><rect x="2" y="13" width="24" height="4" fill="#c9a46a"/><path d="M14 6 Q8 0 6 4 Q8 7 14 6 Q20 7 22 4 Q20 0 14 6" fill="#c9a46a"/></svg>`;
 async function gbvFlug(namen = ["dir"]) {
   const h = document.querySelector("#v-start .hero"); if (!h || !h.getClientRects().length || typeof h.animate !== "function" || h.querySelector(".gbv")) return;
   const W = h.offsetWidth, H = h.offsetHeight, warten = (a) => a.finished.catch(() => {});
@@ -25868,22 +25869,32 @@ async function gbvFlug(namen = ["dir"]) {
   h.append(b);
   try {
     const v = b.querySelector(".gbv-vogel"), pk = b.querySelector(".gbv-paket"), am = v.querySelector(".gbv-paket-am"), schnur = v.querySelector(".gbv-schnur");
-    const y0 = Math.max(10, H * 0.12), abwurfX = W * 0.5 - 45, boden = H - 34, FLUG = 4200, ANTEIL = (abwurfX + 100) / (W + 200);
-    const flug = v.animate([{ transform: `translate(-100px, ${y0 + 20}px)` }, { transform: `translate(${abwurfX}px, ${y0}px)`, offset: ANTEIL }, { transform: `translate(${W + 100}px, ${y0 - 30}px)` }], { duration: FLUG, easing: "linear", fill: "forwards" });
-    await new Promise((r) => setTimeout(r, FLUG * ANTEIL)); // über der Mitte: Paket los
+    // 2.553.0 (Wunsch Hansi „zu klein, zu schnell – langsamer, einen kleinen Kreis fliegen, mit Happy Birthday als Begleitlied“):
+    // gemütlich herein, eine Runde im Kreis (beim Wenden dreht er sich), über der Mitte Paket los, dann hinaus – dazu das Ständchen (wenn Töne an)
+    const VB = 90 * GBV_F, VH = 70 * GBV_F, boden = H - 26 * GBV_F - 8, abwurfX = W * 0.5 - VB / 2;
+    const R = Math.max(22, Math.min(55, W * 0.15, (boden - VH - 40) / 2)), yU = Math.max(6, Math.min(H * 0.12, boden - VH - 30)) + 2 * R, cy = yU - R; // unterster Punkt des Kreises = Abwurfhöhe
+    const T_REIN = 3000, T_KREIS = 3600, T_RAUS = 3000, FLUG = T_REIN + T_KREIS + T_RAUS, k = [];
+    const kf = (x, y, s, t) => k.push({ transform: `translate(${x}px, ${y}px) scaleX(${s})`, offset: t / FLUG });
+    kf(-VB - 20, yU + 24, 1, 0);
+    for (let i = 0; i <= 24; i++) { const w = (i / 24) * Math.PI * 2, c = Math.cos(w); kf(abwurfX + R * Math.sin(w), cy + R * c, Math.sign(c || 1) * Math.max(0.55, Math.abs(c)), T_REIN + (i / 24) * T_KREIS); }
+    kf(W + 30, yU - 40, 1, FLUG);
+    v.style.transformOrigin = `${VB / 2}px ${VH / 2}px`;
+    if (einst("ton", true)) hbSpielen(0.12, 0.45);
+    const flug = v.animate(k, { duration: FLUG, easing: "linear", fill: "forwards" });
+    await new Promise((r) => setTimeout(r, T_REIN + T_KREIS)); // nach der Runde, über der Mitte: Paket los
     am.style.visibility = "hidden"; schnur.style.visibility = "hidden";
-    const px = abwurfX + 31, py = y0 + 46;
+    const px = abwurfX + 33 * GBV_F, py = yU + 50 * GBV_F;
     pk.style.opacity = "1";
-    await warten(pk.animate([{ transform: `translate(${px}px, ${py}px) rotate(0deg)` }, { transform: `translate(${px}px, ${boden}px) rotate(18deg)` }], { duration: 900, easing: "cubic-bezier(.45,0,1,1)", fill: "forwards" }));
+    await warten(pk.animate([{ transform: `translate(${px}px, ${py}px) rotate(0deg)` }, { transform: `translate(${px}px, ${boden}px) rotate(18deg)` }], { duration: 1200, easing: "cubic-bezier(.45,0,1,1)", fill: "forwards" }));
     // Aufprall: kurz stauchen, dann platzt es – Konfetti-Fetzen, der Strauß springt heraus
     await warten(pk.animate([{ transform: `translate(${px}px, ${boden}px) scale(1.25, .7)` }, { transform: `translate(${px}px, ${boden - 6}px) scale(1.5)`, opacity: 0 }], { duration: 260, fill: "forwards" }));
     for (let i = 0; i < 14; i++) { const f = document.createElement("u"); f.className = "gbv-fetzen"; f.style.background = ["#741521", "#c9a46a", "#e94b3c", "#3d6fb6", "#2fa36b", "#f2a900"][i % 6]; b.append(f);
       const wink = (i / 14) * Math.PI * 2, wx = Math.cos(wink) * (40 + (i % 3) * 18), wy = Math.sin(wink) * 30 - 40;
-      f.animate([{ transform: `translate(${px + 12}px, ${boden + 8}px)`, opacity: 1 }, { transform: `translate(${px + 12 + wx}px, ${boden + 8 + wy}px) rotate(${i * 50}deg)`, opacity: 0 }], { duration: 900, easing: "cubic-bezier(.2,.7,.4,1)", fill: "forwards" }); }
-    const st = b.querySelector(".gbv-strauss"), sx = W / 2 - 30, sy = boden - 44;
+      f.animate([{ transform: `translate(${px + 20}px, ${boden + 14}px)`, opacity: 1 }, { transform: `translate(${px + 20 + wx}px, ${boden + 14 + wy}px) rotate(${i * 50}deg)`, opacity: 0 }], { duration: 900, easing: "cubic-bezier(.2,.7,.4,1)", fill: "forwards" }); }
+    const st = b.querySelector(".gbv-strauss"), sx = W / 2 - 37, sy = boden - 56;
     st.animate([{ transform: `translate(${sx}px, ${sy + 30}px) scale(.1)`, opacity: 0 }, { transform: `translate(${sx}px, ${sy - 8}px) scale(1.15)`, opacity: 1, offset: .6 }, { transform: `translate(${sx}px, ${sy}px) scale(1)`, opacity: 1 }], { duration: 700, easing: "ease-out", fill: "forwards" });
-    const tx = b.querySelector(".gbv-text"), nm = b.querySelector(".gbv-name"), ty = Math.max(y0 + 50, sy - 70);
-    tx.style.top = ty + "px"; nm.style.top = ty + 44 + "px"; b.classList.add("gbv-feier");
+    const tx = b.querySelector(".gbv-text"), nm = b.querySelector(".gbv-name"), ty = Math.max(cy - R + 20, sy - 84);
+    tx.style.top = ty + "px"; nm.style.top = ty + 50 + "px"; b.classList.add("gbv-feier");
     await warten(nm.animate([{ opacity: 0 }, { opacity: 0, offset: .4 }, { opacity: 1 }], { duration: 1200, fill: "forwards" }));
     await new Promise((r) => setTimeout(r, 5000));
     await warten(b.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 800, fill: "forwards" }));
