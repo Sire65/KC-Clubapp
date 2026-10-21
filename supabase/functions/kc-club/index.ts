@@ -20,6 +20,7 @@ import postgres from "npm:postgres@3.4.5"; // KC-CLUB-NOTFALL-NEUSTART (2.235.0)
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.9.6"; // KC-CLUB-NOTFALL-NEUSTART: GitHub-Wächter weist sich mit signiertem Token aus
 // @ts-ignore: reine JS-Datei ohne Typen
 import { fraTeileStabil } from "./fra-teile.js"; // KICC-F-107 (18.10.2026): stabile Teilgrenzen der Frankfurt-Sicherung
+import { TURN, turnPlan, turnZeile, turnIce, turnAppBis } from "./turn-vorrat.js"; // KC-CLUB-ANRUF-TURN (2.563.0): Vorrat Umleitungs-Server
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -120,7 +121,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.556.0";
+const SERVER_VERSION = "2.563.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -948,6 +949,47 @@ async function anrufHolen(ich: Ich, id: unknown) {
     a.status = "verpasst";
   }
   return a;
+}
+
+// KC-CLUB-ANRUF-TURN (2.563.0, 21.10.2026, Wunsch Hansi „als Sicherheit beim Anrufen und Video“): Umleitungs-Server (TURN) von
+// Metered (Free-Plan, ohne Karte; Cloudflare verlangte eine Karte). Finden zwei Handys keinen direkten Weg (manche Mobilfunknetze,
+// Firmen-WLAN), läuft das Gespräch verschlüsselt über den Umleitungs-Server – Metered leitet nur weiter, speichert keine Inhalte (IP-Adressen 30 Tage; das Handy meldet sich bei jedem Anruf kurz an).
+// Neue Zugangsdaten gelten bei Metered erst nach bis zu 2 Min. → Vorrat in kc_club_turn_vorrat (nur Server): 7 Tage gültig, ab 2 Tagen
+// Restlaufzeit wird ein neuer angelegt (nutzbar ab +3 Min.), der alte gilt bis dahin weiter. Kein Schlüssel, Metered gestört oder Vorrat
+// noch nicht nutzbar → leere Liste: die App ruft wie bisher nur mit STUN an (nie schlechter als vorher).
+const TURN_APP = "koecheclub-anrufe", TURN_HOST = "global.relay.metered.ca";
+let TURN_CACHE: { ice: unknown[]; gueltig_bis: string; bis: number } | null = null, TURN_FEHLER_BIS = 0;
+const turnSchluessel = () => (Deno.env.get("METERED_TURN_SECRET_KEY") || "").trim();
+async function turnAbruf(pfad: string, init?: RequestInit) {
+  const r = await fetch(`https://${TURN_APP}.metered.live${pfad}${pfad.includes("?") ? "&" : "?"}secretKey=${encodeURIComponent(turnSchluessel())}`,
+    { ...init, signal: AbortSignal.timeout(6000) });
+  if (!r.ok) throw new Error(`Metered ${r.status}`);
+  return await r.json();
+}
+async function turnNeu() {
+  const t = Date.now(), zeile = turnZeile(await turnAbruf("/api/v1/turn/credential", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ expiryInSeconds: TURN.gueltigSek, label: "kc-club-vorrat" }) }), t);
+  if (!zeile) throw new Error("Metered: keine Zugangsdaten");
+  schreibOk(await db.from("kc_club_turn_vorrat").insert(zeile), "TURN-Vorrat");
+}
+// Liefert die nutzbaren ICE-Server (mit Zugangsdaten) oder null – wirft nie (ein Anruf darf daran nicht scheitern)
+async function turnZugang(): Promise<{ ice: unknown[]; gueltig_bis: string; bis: number } | null> {
+  const t = Date.now();
+  if (TURN_CACHE && TURN_CACHE.bis > t) return TURN_CACHE;
+  if (!turnSchluessel()) return null;
+  try {
+    const { data } = await db.from("kc_club_turn_vorrat").select("username,password,gueltig_bis,nutzbar_ab,erstellt_am")
+      .gt("gueltig_bis", new Date(t + TURN.restMs).toISOString()).order("erstellt_am", { ascending: false }).limit(5);
+    const plan = turnPlan(data ?? [], t, TURN_FEHLER_BIS);
+    if (plan.neu) {
+      // Metered-Fehler: 10 Min. Pause (keine Abfrage-Flut); Schlüssel/Passwort nie ins Protokoll
+      try { await turnNeu(); } catch (e) { TURN_FEHLER_BIS = t + TURN.fehlerPauseMs; console.warn(JSON.stringify({ turn: "neu_fehler", fehler: String((e as Error)?.message || e).replace(/secretKey=[^&\s]*/g, "secretKey=…").slice(0, 120) })); }
+      db.from("kc_club_turn_vorrat").delete().lt("gueltig_bis", new Date(t).toISOString()).then(() => {}, () => {}); // Abgelaufenes aufräumen
+    }
+    const z = plan.nutzbar; if (!z) return null;
+    TURN_CACHE = { ice: turnIce(TURN_HOST, z.username, z.password), gueltig_bis: z.gueltig_bis, bis: Math.min(t + TURN.cacheMs, Date.parse(z.gueltig_bis) - TURN.restMs) };
+    return TURN_CACHE;
+  } catch { return null; }
 }
 
 // KC-CLUB-KONFERENZ (0.82.0): Konferenz = alle Beine (kc_club_anruf) mit derselben konferenz_id. Teilnehmer = wer in einem
@@ -11449,6 +11491,23 @@ Köcheclub-App`,
           gegenueber: { person_id: gegen, name: leute.get(gegen)?.display_name || gegen, vorname: vorname(leute.get(gegen) ?? null) || gegen },
           // SDP nur an die jeweils andere Seite
           ...(ichRufe ? { antwort: a.antwort, kurzantwort: a.kurzantwort ?? null } : { angebot: a.angebot }) });
+      }
+
+      // KC-CLUB-ANRUF-TURN: Wege für den Anruf (STUN + Umleitungs-Server mit Zugangsdaten). Nur angemeldete Mitglieder (wie anruf_start);
+      // die Zugangsdaten gelten höchstens 7 Tage und erlauben nur das Weiterleiten über Metered – nie den Schlüssel selbst.
+      case "anruf_wege": {
+        const z = await turnZugang();
+        return json({ ice: z?.ice ?? [], bis: z ? turnAppBis(z.gueltig_bis, Date.now()) : null });
+      }
+      // Admin → 🧯 Notfall: Lämpchen „Umleitung für Anrufe“ – eingerichtet? nutzbar? Verbrauch im Monat. Zeigt nie Schlüssel oder Passwort.
+      case "turn_status": {
+        nurAdmin(ich);
+        if (!turnSchluessel()) return json({ eingerichtet: false });
+        TURN_CACHE = null; const z = await turnZugang();
+        const { count } = await db.from("kc_club_turn_vorrat").select("username", { count: "exact", head: true }).gt("gueltig_bis", jetzt());
+        let verbrauch: { kontingentGB: number | null; verbrauchtGB: number | null } | null = null;
+        try { const u = await turnAbruf("/api/v1/turn/current_usage"); verbrauch = { kontingentGB: Number(u?.quotaInGB ?? NaN) >= 0 ? Number(u.quotaInGB) : null, verbrauchtGB: Number(u?.usageInGB ?? NaN) >= 0 ? Number(u.usageInGB) : null }; } catch { verbrauch = null; }
+        return json({ eingerichtet: true, nutzbar: !!z, gueltig_bis: z?.gueltig_bis ?? null, vorrat: count ?? 0, wartet: !z && (count ?? 0) > 0, fehlerPause: Date.now() < TURN_FEHLER_BIS, verbrauch });
       }
 
       case "anruf_annehmen": {

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.563.0 – 2026-10-21 – 🛰️ Anrufe und Videoanrufe auch ohne direkten Weg: Umleitungs-Server (KC-CLUB-ANRUF-TURN)
+Wunsch Hansi („als Sicherheit beim Anrufen und Video“; Punkt 1 aus der Anruf-Verbesserung – Cloudflare verlangte eine Karte, darum Metered Free-Plan ohne Karte, 50 GB/Monat).
+- Finden zwei Handys keinen direkten Weg (manche Mobilfunknetze, Firmen-WLAN), läuft das Gespräch jetzt automatisch über einen **Umleitungs-Server (TURN)** statt abzubrechen – für Ton, Video und Konferenz. Der Browser nimmt ihn nur, wenn es direkt nicht klappt; die Verbindung bleibt Ende-zu-Ende verschlüsselt (Metered leitet nur weiter).
+- Server 2.563.0: Aktion `anruf_wege` liefert die Umleitung mit Zugangsdaten (STUN hat die App wie bisher selbst) (7 Tage gültig, Vorrat in `kc_club_turn_vorrat`, weil neue Zugangsdaten bei Metered bis zu 2 Min. brauchen; ab 2 Tagen Restlaufzeit kommt automatisch ein neuer). Schlüssel nur als Supabase-Geheimnis `METERED_TURN_SECRET_KEY`. Kein Schlüssel, Metered gestört oder zu langsam (> 2,5 s) → wie bisher nur STUN; ein Anruf scheitert nie an der Umleitung.
+- Über die Umleitung ist das Bild auf höchstens 300 kbit/s begrenzt (schont das Kontingent), der Ton bleibt unverändert; „Verbindung schwach“-Stufen wie in 2.556.0.
+- Admin → 🧯 Notfall: Lämpchen „🛰️ Umleitung für Anrufe (Metered)“ mit Gültigkeit und Monatsverbrauch (unbekannt bleibt grau). Messung beim Auflegen: wie oft die Umleitung gebraucht wurde.
+- Hilfe/Datenschutz: „Anrufe bei schlechtem Netz: die Umleitung“ (Anbieter Metered/Kanada, verschlüsselt; das Handy meldet sich bei jedem Anruf kurz an, Metered speichert die IP-Adresse 30 Tage zur Missbrauchsabwehr). Kein zusätzlicher STUN-Server von Metered.
+- Datenbank: Migration `20261021_kc_club_v2563_anruf_turn.sql` (Tabelle nur für den Club-Server, geheim, nicht gespiegelt/gesichert) – vor dem Server einspielen.
+- Tests: tests/anruf-turn.test.mjs (Vorrat, Server, App), tools/anruf/anruf-turn-browser.mjs (zwei echte WebRTC-Seiten ohne direkten Weg über lokalen TURN-Server: Video + Ton verbunden, 300 kbit/s, Messung; ohne Umleitung scheitert es wie bisher), tools/anruf/anruf-browser.mjs unverändert grün, Vertragstest-Block 2.563.0. Rückweg: App 2.562.0, Server 2.556.0 (Tabelle kann bleiben).
 ## 2.562.0 – 2026-10-21 – Vorlage: Kommen/Gehen mit Ausweis UND Handy-QR (KC-CLUB-ABSTIMMUNG-VORLAGE)
 Wunsch Hansi („bei der Stundenberechnung nicht entweder oder, sondern beides – Mitgliedsausweis / QR-Code am Handy“).
 - Frage 9: Antworten jetzt Ja / Nein / Enthaltung; Erklärung „Beides geht: mit dem Mitgliedsausweis oder mit dem QR-Code in der Club-App am Handy.“
