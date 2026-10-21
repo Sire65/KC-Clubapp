@@ -1574,7 +1574,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ids\.length >= 8\) return melde/.test(html) && /schnellstart: \(w\) =>[\s\S]{0,250}\.slice\(0, 8\)/.test(server), "Schnellstart: höchstens 8 (App + Server)");
   assert.ok(/!x\.kachel \|\| kachelDa\(x\.kachel\)/.test(html), "Schnellstart: nur Symbole, für die das Mitglied Rechte hat");
   const ak = server.slice(server.indexOf('case "anklopfen":'), server.indexOf('case "anklopfen_antwort"'));
-  assert.ok(/anklopfenErlaubtMap\(\[an\]\)\)\.get\(an\) === false/.test(ak) && ak.indexOf("anklopfenErlaubtMap") < ak.indexOf('.insert('), "Anklopfen aus: Server lehnt vor dem Anlegen ab");
+  // 2.568.0: Einstellung „Anrufbeantworter sofort“ legt vorher ein Anklopfen MIT Status „anrufbeantworter“ an (ohne Mitteilung); das normale Anklopfen bleibt hinter der Prüfung
+  assert.ok(/if \(\(kE\?\.wert as any\)\?\.erlaubt === false\) \{/.test(ak) && ak.indexOf("?.erlaubt === false") < ak.indexOf('.insert({ von: ich.person_id, an })') && /insert\(\{ von: ich\.person_id, an, status: "anrufbeantworter"/.test(ak), "Anklopfen aus: Server lehnt vor dem Anlegen ab");
   assert.ok(/anklopfen: \(w\) => \(\{ erlaubt: w\?\.erlaubt !== false/.test(server) && /id="setAnklopfen" checked/.test(html), "Anklopfen erlauben (Standard an)");
   const aa = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anruf_start"'));
   assert.ok(/KLOPF_ANTWORTEN\[p\.antwort\]/.test(aa) && /status: "spaeter"/.test(aa), "Kurzantwort nur aus der Registry, beendet das Anklopfen");
@@ -5907,7 +5908,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6066,8 +6067,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(sub && r\.diesesBekannt\) \{ try \{ await sub\.unsubscribe\(\); \} catch \{\} sub = null; \}/.test(html) && /await api\("push_anmelden", \{ subscription: sub\.toJSON\(\), userAgent: navigator\.userAgent, wieder: true \}\);/.test(html), "Selbstheilung bei Erlaubnis, aber totem Zugang");
   assert.ok(/if \(!r\.frueher \|\| \(r\.aktiv \|\| 0\) - altHier > 0\) return;/.test(html) && /lsSetzen\("kc_club_push_wieder_gefragt", heute\)/.test(html) && /🔔 Jetzt wieder einschalten/.test(html), "nur wenn früher Push lief und kein anderes Gerät mehr (2.481.0: alte Abos dieses Geräts zählen nicht) – höchstens einmal am Tag");
   assert.ok(/if \(!PUSH_PRUEF\.lief\) \{ PUSH_PRUEF\.lief = true; setTimeout\(\(\) => pushPruefen\(\)\.catch\(\(\) => \{\}\), 6000\); \}/.test(html), "einmal je Start, nicht im Startweg");
-  assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
-  assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
+  assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush(, \.\.\.\(abModus === "spaeter" \? \{ abSpaeter: true \} : \{\}\))? \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
+  assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush(, r\.abSpaeter)?\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
 }
 // 2.322.0 KC-CLUB-EIS-TAKT (Fund Hansi „noch keinen fallenden Eiszapfen gesehen“): Tropfen-/Eis-Takt auch bei „Bewegung reduzieren“, erstes Stück sofort
 {
@@ -9036,7 +9037,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 26000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 27000); // 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
@@ -11873,3 +11874,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/try \{ await kachelAbschied\(\); \} catch \{\}[^\n]*\n  try \{ Object\.keys\(localStorage\)/.test(programm) && /\["zu", "weg", "fall"\]\[n % 3\]/.test(programm), "Abschied vor dem Löschen, abwechselnd");
   assert.ok(/\.kachel-welle \{ position: absolute;[^}]*pointer-events: none/.test(html), "Welle stört kein Antippen");
 }
+
+// 2.568.0 KC-CLUB-KACHEL-EINFLUG (Wunsch Hansi „einfliegen aus verschiedenen Richtungen, horizontal/vertikal reindrehen, Falluhr“)
+{
+  for (const [k, t] of [["einflug", "🧭 Einfliegen"], ["drehH", "↔️ Horizontal drehen"], ["drehV", "↕️ Vertikal drehen"], ["fallblatt", "🕰️ Fallblatt-Uhr"]]) {
+    assert.ok(programm.includes(`["${k}", "${t}"]`), "Effekt wählbar: " + t);
+    assert.ok(programm.includes(`} else if (w === "${k}") {`), "Effekt gebaut: " + k);
+  }
+  const e = programm.slice(programm.indexOf('} else if (w === "einflug") {'), programm.indexOf("} else { // Umdrehen"));
+  assert.ok(/\[\[-1, 0\], \[1, -1\], \[0, 1\], \[-1, -1\], \[1, 0\], \[-1, 1\], \[0, -1\], \[1, 1\]\]\[\(i \* 3 \+ r\) % 8\]/.test(e), "Einfliegen: 8 Richtungen reihum");
+  assert.ok(/transformOrigin = s2 < 0 \? "0 50%" : "100% 50%"/.test(e) && /rotateY\(\$\{s2 \* -105\}deg\)/.test(e), "Horizontal: Drehtür an der Außenkante");
+  assert.ok(/rotateX\(180deg\) scale\(\.75\)/.test(e) && (e.match(/rotateX\(-90deg\)/g) || []).length >= 3, "Vertikal halbe Drehung, Fallblatt klappt dreimal");
+  assert.ok(!/left|top|width|margin|api\(/.test(e) && (e.match(/\{ transform: P \+ "rotate[XY]\(0\)( scale\(1\))?", opacity: 1 \}\]|\{ transform: "none", opacity: 1 \}\]/g) || []).length === 4, "nur transform/opacity, alle enden gerade");
+}
+

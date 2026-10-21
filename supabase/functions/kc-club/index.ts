@@ -23,6 +23,8 @@ import { fraTeileStabil } from "./fra-teile.js"; // KICC-F-107 (18.10.2026): sta
 import { TURN, turnPlan, turnZeile, turnIce, turnAppBis, turnGrund } from "./turn-vorrat.js"; // KC-CLUB-ANRUF-TURN (2.563.0): Vorrat Umleitungs-Server
 // @ts-ignore: reine JS-Datei ohne Typen
 import { klopfVerpasst, klopfVerpasstOhneKontakt, klopfPushStand } from "./anklopfen-verpasst.js"; // KC-CLUB-ANKLOPFEN-VERPASST (2.567.0)
+// @ts-ignore: reine JS-Datei ohne Typen
+import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-CLUB-ANRUFBEANTWORTER (2.568.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -123,7 +125,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.567.0";
+const SERVER_VERSION = "2.568.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -717,7 +719,21 @@ async function anklopfenErlaubtMap(ids: string[]) {
 const KLOPF_ANTWORTEN: Record<string, string> = {
   beschaeftigt: "⏳ Bin gerade beschäftigt", spaeter: "🔁 Melde mich später", anrufen: "📞 Ruf mich kurz an",
   schreiben: "💬 Schreib mir lieber", unterwegs: "🚗 Bin unterwegs", kochen: "🍳 Stehe gerade am Herd",
+  // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Wunsch Hansi „mehrere Antworten parat“)
+  gleich: "⏱️ Gleich – in 5 Minuten", termin: "📅 Bin gerade in einem Termin", arzt: "🩺 Bin beim Arzt",
+  familie: "👨‍👩‍👧 Bin bei der Familie", einkaufen: "🛒 Bin einkaufen", ruhe: "😴 Ruhe mich gerade aus",
 };
+// Stand des Anrufbeantworters für die App: ungehörte an mich + abgehörte von mir (Quittung noch nicht gezeigt), EINE Abfrage.
+// Fehlt die Tabelle noch (vor dem Einspielen der Migration), kommt einfach nichts.
+async function abStandHolen(pid: string) {
+  const { data, error } = await db.from("kc_club_anrufbeantworter").select("id,von,an,erstellt_am,gehoert_am,quittung_am,geloescht_am")
+    .or(`and(an.eq.${pid},gehoert_am.is.null,geloescht_am.is.null),and(von.eq.${pid},gehoert_am.not.is.null,quittung_am.is.null)`).limit(60);
+  if (error) return null;
+  const st = abStand(data ?? [], pid);
+  if (!st.quittungen.length) return st;
+  const leute = await personen(st.quittungen.map((q: any) => q.an));
+  return { ...st, quittungen: st.quittungen.map((q: any) => ({ ...q, name: vorname(leute.get(q.an) ?? null) || leute.get(q.an)?.display_name || q.an })) };
+}
 // KC-CLUB-ZULETZT-DA (1.20.0, Wunsch Hansi): „zuletzt da“ wie WhatsApp „zuletzt online“. Gegenseitig: wer Online- oder
 // Zuletzt-Anzeige verbirgt, sieht sie auch bei anderen nicht. Grob: Uhrzeit nur für heute, sonst nur der Tag; älter als
 // ZULETZT_TAGE nur „länger nicht da“. Quelle ist zuletzt_gesehen (setzt sich nur, solange die App wirklich offen ist).
@@ -1587,7 +1603,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .filter(([id, b]) => /^[0-9a-f-]{36}$/.test(id) && (b === "immer" || (typeof b === "string" && !isNaN(Date.parse(b)) && Date.parse(b) > Date.now())))
     .slice(0, 200).map(([id, b]) => [id, b === "immer" ? "immer" : new Date(String(b)).toISOString()])) }),
   // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): darf man bei mir anklopfen (Standard: ja) + welcher Anklopfton (Registry in der App)
-  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf" }),
+  // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG: ab = knopf (nur auf Knopfdruck, Standard) · spaeter (nach 1 Min. ohne Antwort) · sofort (gleich, ohne zu stören)
+  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf", ab: ["spaeter", "sofort"].includes(w?.ab) ? w.ab : "knopf" }),
   // KC-CLUB-SCHNELLSTART (1.8.0): große Kachel mit Symbolen (nur erweiterte Ansicht) – an/aus und eigene Auswahl (höchstens 8,
   // Reihenfolge = Auswahl; null = Grundeinstellung der App)
   schnellstart: (w) => ({ an: w?.an !== false,
@@ -7038,6 +7055,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         })();
         const pAnfragen = offeneTerminanfragen(ich).catch((e) => { console.error("anfragen offen", String(e)); return []; }); // 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR
         // 2.432.0 KC-CLUB-EINGANGSKORB: Dokumente, die andere in meinen Ordner gelegt haben und die noch auf mich warten
+        const pAb = abStandHolen(ich.person_id).catch(() => null); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
         const pEingang = (async () => {
           if (ich.zugang !== "mitglied") return 0;
           const { data: oo } = await db.from("kc_club_archiv_ordner").select("id").eq("besitzer", ich.person_id).is("geloescht_am", null);
@@ -7178,7 +7196,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -11209,7 +11227,7 @@ Köcheclub-App`,
           for (const r of req ?? []) pushStand.set(String(r.idempotency_key).slice(15), klopfPushStand(r));
         }
         on.delete(ich.person_id);
-        const klopfbar = new Map([...on].map((id) => [id, einst.get("anklopfen")?.get(id)?.erlaubt !== false])); // wie anklopfenErlaubtMap
+        const klopfbar = new Map([...on].map((id) => [id, einst.get("anklopfen")?.get(id)?.erlaubt !== false || einst.get("anklopfen")?.get(id)?.ab === "sofort"])); // wie anklopfenErlaubtMap; 2.568.0: Anrufbeantworter „sofort“ nimmt auch dann auf
         // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“): seit wann jemand ohne Pause online ist (Sekunden,
         // vom Server gerechnet – keine Uhrenabweichung) – die App sagt beim Zurückkommen an, wer in den letzten 3 Min. dazugekommen ist
         const seitMap = new Map<string, number>();
@@ -11419,7 +11437,16 @@ Köcheclub-App`,
         const an = String(p.an || "");
         if (an === ich.person_id) throw new Fehler("Bei dir selbst kannst du nicht anklopfen 🙂");
         if (!(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
-        if ((await anklopfenErlaubtMap([an])).get(an) === false) {
+        // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG: „sofort“ → gleich auf den Anrufbeantworter, ohne Mitteilung (auch wenn Anklopfen aus ist)
+        const { data: kE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", an).eq("schluessel", "anklopfen").maybeSingle();
+        const abModus = ["spaeter", "sofort"].includes((kE?.wert as any)?.ab) ? (kE?.wert as any).ab : "knopf";
+        if (abModus === "sofort") {
+          const { data: k0, error: e0 } = await db.from("kc_club_anklopfen").insert({ von: ich.person_id, an, status: "anrufbeantworter", beantwortet_am: jetzt(), antwort: "📼 Anrufbeantworter ist an" }).select("id").single();
+          if (e0 || !k0) throw new Fehler("Anklopfen hat nicht geklappt.", 500);
+          await protokoll(ich.person_id, "angeklopft", { an, ab: "sofort" });
+          return json({ ok: true, id: k0.id, ab: true });
+        }
+        if ((kE?.wert as any)?.erlaubt === false) {
           const pa = (await personen([an])).get(an) ?? null;
           throw new Fehler(`${vorname(pa) || "Das Mitglied"} hat Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`, 409);
         }
@@ -11443,7 +11470,7 @@ Köcheclub-App`,
           eilig: true,
         }, `club-anklopfen:${k.id}`);
         await protokoll(ich.person_id, "angeklopft", { an, versand, ohnePush });
-        return json({ ok: true, id: k.id, push: versand.gesendet > 0, ohnePush });
+        return json({ ok: true, id: k.id, push: versand.gesendet > 0, ohnePush, ...(abModus === "spaeter" ? { abSpaeter: true } : {}) });
       }
 
       // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0): wer anklopft, legt auf → beim Gegenüber verschwindet die Frage
@@ -11465,10 +11492,79 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      // ----- 2.568.0 KC-CLUB-ANRUFBEANTWORTER -----
+      // Einstellung „spaeter“: nach 1 Min. ohne Antwort schaltet sich der Anrufbeantworter von selbst ein (die App des Anklopfenden fragt)
+      case "anklopfen_ab": {
+        const { data: k } = await db.from("kc_club_anklopfen").select("id,an,status,erstellt_am").eq("id", String(p.id || "")).eq("von", ich.person_id).maybeSingle();
+        if (!k) throw new Fehler("Anklopfen nicht gefunden.", 404);
+        if (k.status === "anrufbeantworter") return json({ ok: true, ab: true });
+        const { data: kE } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", k.an).eq("schluessel", "anklopfen").maybeSingle();
+        if (k.status !== "offen" || (kE?.wert as any)?.ab !== "spaeter" || Date.now() - Date.parse(k.erstellt_am) < 50000) return json({ ok: true, ab: false });
+        const { data: upd } = await db.from("kc_club_anklopfen").update({ status: "anrufbeantworter", beantwortet_am: jetzt(), antwort: "📼 Anrufbeantworter ist an" }).eq("id", k.id).eq("status", "offen").select("id");
+        return json({ ok: true, ab: !!upd?.length });
+      }
+      case "ab_aufsprechen": {
+        const an = String(p.an || ""), sek = Math.round(Number(p.sek)), aid = String(p.anlage || "");
+        if (an === ich.person_id || !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        if (!abSekOk(sek, ich.admin)) throw new Fehler(`Höchstens ${AB.maxSek / 60} Minuten.`, 400);
+        const { data: att } = await db.from("kc_communication_attachments").select("id,object_path,mime_type").eq("id", aid).maybeSingle();
+        if (!abAnlageOk(att, ich.person_id)) throw new Fehler("Aufnahme nicht gefunden.", 404);
+        const { count } = await db.from("kc_club_anrufbeantworter").select("id", { count: "exact", head: true }).eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 3600000).toISOString());
+        if (!ich.admin && (count ?? 0) >= AB.jeStunde) throw new Fehler("Für die nächste Stunde sind genug Nachrichten aufgesprochen.", 429);
+        const klopf = /^[0-9a-f-]{36}$/.test(String(p.klopf || "")) ? String(p.klopf) : null;
+        // nur, wenn der Angeklopfte den Anrufbeantworter für MEIN Anklopfen eingeschaltet hat (in den letzten 15 Min.)
+        const { data: kl } = klopf ? await db.from("kc_club_anklopfen").select("id").eq("id", klopf).eq("von", ich.person_id).eq("an", an).eq("status", "anrufbeantworter")
+          .gte("beantwortet_am", new Date(Date.now() - 15 * 60000).toISOString()).maybeSingle() : { data: null };
+        if (!kl) throw new Fehler("Der Anrufbeantworter ist dafür nicht eingeschaltet.", 403);
+        const { data: z, error } = await db.from("kc_club_anrufbeantworter").insert({ von: ich.person_id, an, anlage_id: aid, sekunden: sek, klopf_id: klopf }).select("id").single();
+        if (error || !z) throw new Fehler("Die Nachricht konnte nicht gespeichert werden.", 500);
+        const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
+        const versand = zug?.length ? await routerSenden("club_nachricht_push", [an], {
+          titel: `📼 ${ich.vorname} hat dir aufs Band gesprochen`, kurz: "Neue Nachricht auf deinem Anrufbeantworter – zum Anhören hier antippen.",
+          betreff: `${ich.vorname} hat dir aufs Band gesprochen`, text: `${ich.name} hat dir eine Nachricht auf den Anrufbeantworter gesprochen.`, url: `${APP_URL}#anrufbeantworter`,
+        }, `club-ab:${z.id}`) : { gesendet: 0, fehler: 0 };
+        await protokoll(ich.person_id, "ab_aufgesprochen", { an, sek, versand });
+        return json({ ok: true, id: z.id });
+      }
+      case "ab_liste": {
+        const { data, error } = await db.from("kc_club_anrufbeantworter").select("id,von,sekunden,erstellt_am,gehoert_am").eq("an", ich.person_id).is("geloescht_am", null)
+          .order("erstellt_am", { ascending: false }).limit(AB.liste);
+        if (error) throw new Fehler("Der Anrufbeantworter ist gerade nicht erreichbar.", 503);
+        const leute = await personen([...new Set((data ?? []).map((x: any) => x.von as string))]);
+        return json({ liste: (data ?? []).map((x: any) => ({ id: x.id, von: { person_id: x.von, name: leute.get(x.von)?.display_name || x.von, vorname: vorname(leute.get(x.von) ?? null) || x.von },
+          sek: x.sekunden, zeit: x.erstellt_am, gehoert: x.gehoert_am })) });
+      }
+      case "ab_anhoeren": {
+        const { data: z } = await db.from("kc_club_anrufbeantworter").select("id,anlage_id,gehoert_am").eq("id", String(p.id || "")).eq("an", ich.person_id).is("geloescht_am", null).maybeSingle();
+        if (!z) throw new Fehler("Nachricht nicht gefunden.", 404);
+        const { data: att } = await db.from("kc_communication_attachments").select("bucket,object_path").eq("id", z.anlage_id).maybeSingle();
+        const { data: s } = att ? await db.storage.from(att.bucket).createSignedUrl(att.object_path, 600) : { data: null };
+        if (!s?.signedUrl) throw new Fehler("Die Aufnahme ist nicht mehr da.", 410);
+        if (!z.gehoert_am) await db.from("kc_club_anrufbeantworter").update({ gehoert_am: jetzt() }).eq("id", z.id).is("gehoert_am", null); // Signal an den Absender
+        return json({ url: s.signedUrl });
+      }
+      case "ab_loeschen": {
+        const { data: z } = await db.from("kc_club_anrufbeantworter").select("id,anlage_id").eq("id", String(p.id || "")).eq("an", ich.person_id).is("geloescht_am", null).maybeSingle();
+        if (!z) return json({ ok: true });
+        await db.from("kc_club_anrufbeantworter").update({ geloescht_am: jetzt() }).eq("id", z.id);
+        await dateienEntfernen([z.anlage_id]);
+        return json({ ok: true });
+      }
+      case "ab_stand": return json({ ab: await abStandHolen(ich.person_id) });
+      case "ab_quittung_gesehen": {
+        const ids = (Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => /^[0-9a-f-]{36}$/.test(x)).slice(0, 20);
+        if (ids.length) await db.from("kc_club_anrufbeantworter").update({ quittung_am: jetzt() }).eq("von", ich.person_id).in("id", ids).is("quittung_am", null);
+        return json({ ok: true });
+      }
+
       case "anklopfen_antwort": {
         const { data: k } = await db.from("kc_club_anklopfen").select("*").eq("id", String(p.id || "")).eq("an", ich.person_id).maybeSingle();
         if (!k) throw new Fehler("Anklopfen nicht gefunden.", 404);
         if (k.status !== "offen") return json({ ok: true, status: k.status, thread: k.thread_id });
+        if (!p.annehmen && p.antwort === "ab") { // 2.568.0 KC-CLUB-ANRUFBEANTWORTER: der Anklopfende darf gleich eine Nachricht aufsprechen
+          await db.from("kc_club_anklopfen").update({ status: "anrufbeantworter", beantwortet_am: jetzt(), antwort: "📼 Anrufbeantworter ist an" }).eq("id", k.id).eq("status", "offen");
+          return json({ ok: true, status: "anrufbeantworter" });
+        }
         if (!p.annehmen) {
           const antwort = typeof p.antwort === "string" && KLOPF_ANTWORTEN[p.antwort] ? KLOPF_ANTWORTEN[p.antwort] : null;
           await db.from("kc_club_anklopfen").update({ status: "spaeter", beantwortet_am: jetzt(), ...(antwort ? { antwort } : {}) }).eq("id", k.id);
