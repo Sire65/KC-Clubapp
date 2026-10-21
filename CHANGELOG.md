@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.565.0 – 2026-10-21 – 🛰️ Umleitung: Lämpchen nennt den Grund und was zu tun ist (KC-CLUB-ANRUF-TURN-GRUND)
+Wunsch Hansi („Kannst du nicht die Fehlermeldung erkennen“, „bau es und spiel ein“). Anlass: Metered meldete „please subscribe to a TURN Server plan before using this API“.
+- Server 2.565.0: erkennt die Absagen von Metered und übersetzt sie – kein Plan gewählt, Schlüssel falsch, App nicht gefunden, Kontingent erschöpft, nicht erreichbar, sonst die Meldung selbst (gekürzt). Schlüssel und Passwörter werden geschwärzt. Fragt der Admin ausdrücklich nach, versucht der Server es sofort neu (ohne 10-Min.-Pause).
+- Admin → 🧯 Notfall → „🛰️ Umleitung für Anrufe“: zeigt den Grund mit Handlungsanweisung, z. B. „kein Plan gewählt – im Metered-Dashboard unter Plans & pricing den Free-Plan ($0) wählen, bei Abfrage nach Karte/PayPal abbrechen“.
+- Test: tests/anruf-turn.test.mjs (Block „Grund“, mit der echten Meldung vom 21.10.), Vertragstests grün. Rückweg: App 2.563.0, Server 2.564.0.
+
 ## Server 2.564.0 – 2026-10-21 (ohne App-Build) – Umleitung: Grund der Metered-Absage mitprotokollieren (KC-CLUB-ANRUF-TURN)
 Nach dem Einspielen von 2.563.0 meldete das Lämpchen „gestört“: Metered antwortete auf das Anlegen der Zugangsdaten mit 400 (ungültige Anfrage), der Grund stand nicht im Protokoll.
 - Server: Bei einer Absage schreibt er jetzt den Antworttext von Metered ins Protokoll (gekürzt, Schlüssel und Passwörter geschwärzt). Sonst unverändert; Anrufe laufen bis zur Klärung wie bisher direkt.
