@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.566.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.567.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7605,12 +7605,14 @@ async function onlinePing() {
     else if (ruf && RUF && !ZWEIT && ruf.id !== RUF.id && !(RUF.rolle === "rufer" && !RUF.verbunden && RUF.gegen?.person_id === ruf.von?.person_id)) zweitZeigen(ruf);
     if (ZWEIT && !(r.anrufe || []).some((x) => x.id === ZWEIT.id)) zweitWeg(); // hat aufgegeben
     if (!RUF) verpasstZeigen((r.verpasst || []).filter((v) => !ONL.erledigt.has("v" + v.id)));
+    if (!RUF && !KLOPF) klopfVerpasstZeigen((r.klopfVerpasst || []).filter((v) => !ONL.erledigt.has("kv" + v.id))); // KC-CLUB-ANKLOPFEN-VERPASST (2.567.0)
     if (KLOPF && !$("klopfBlatt").classList.contains("versteckt") && !(r.klopfen || []).some((x) => x.id === KLOPF.id)) {
       $("klopfBlatt").classList.add("versteckt"); melde(`👋 ${KLOPF.von.vorname} hat aufgelegt`); KLOPF = null; } // KC-CLUB-ANKLOPFEN-WARTEN
     const k = (r.klopfen || []).find((x) => !ONL.erledigt.has(x.id));
     if (k && $("klopfBlatt").classList.contains("versteckt")) klopfZeigen(k, r.klopfAntworten);
     // Antwort auf mein Anklopfen
     for (const a of r.antworten || []) {
+      if (KW && KW.id === a.id && a.push && KW.push?.stand !== a.push.stand) { KW.push = a.push; klopfWartenZeichnen(); } // 2.567.0: angekommen/geöffnet
       if (ONL.erledigt.has("a" + a.id) || a.status === "offen") continue;
       ONL.erledigt.add("a" + a.id);
       if (ONL.wartet === a.id) { ONL.wartet = null; onlineTakt(); }
@@ -7915,6 +7917,7 @@ function klopfWartenZeichnen() {
   if (el) el.innerHTML = `<div class="kw-knopf">👋 Klopfe gerade an bei ${esc(KW.name)} …</div>
     <div class="kw-uhr" aria-live="polite">${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")}</div>
     <p class="hinweis" style="text-align:center;margin:0 0 10px">Warte auf Antwort – sobald ${esc(KW.name)} annimmt, geht der Chat auf.</p>
+    ${KW.push && klopfPushText(KW.push, KW.name, false) ? `<p class="hinweis kw-push" style="text-align:center;margin:0 0 10px">${esc(klopfPushText(KW.push, KW.name, false))}</p>` : ""}
     ${KW.ohnePush ? `<p class="hinweis" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:#fff3d6;color:#5a4410">⚠️ <b>${esc(KW.name)}</b> hat auf dem Handy gerade keine Benachrichtigungen an – das Anklopfen sieht ${esc(KW.name)} erst, wenn die App offen ist. Schick lieber eine Nachricht.</p>` : ""}
     <button class="knopf" style="width:100%;text-align:center" onclick="klopfAuflegen()">📵 Auflegen</button>`;
   if (sek <= 0) { clearInterval(KW.timer); KW.timer = null; klopfWartenFrage(); }
@@ -7936,10 +7939,39 @@ async function klopfWeiter() {
 }
 async function klopfAuflegen(still) {
   if (!KW) return;
-  const id = KW.id; klopfWartenEnde(); if (ONL.wartet === id) { ONL.wartet = null; onlineTakt(); }
+  const id = KW.id, name = KW.name; klopfWartenEnde(); if (ONL.wartet === id) { ONL.wartet = null; onlineTakt(); }
   ONL.erledigt.add("a" + id);
-  try { await api("anklopfen_abbrechen", { id }); } catch {}
-  if (!still) melde("📵 Aufgelegt");
+  let r = null; try { r = await api("anklopfen_abbrechen", { id }); } catch {}
+  if (!still) { const z = klopfPushText(r?.push, name, true); melde(z ? `📵 Aufgelegt – ${z}` : "📵 Aufgelegt"); }
+}
+// 2.567.0 KC-CLUB-ANKLOPFEN-VERPASST (Wunsch Hansi „hat er es nicht bekommen?“): ob die Mitteilung auf dem Handy angekommen ist.
+// Ob das Handy stumm ist, verrät kein Browser – sicher sind nur „angezeigt“ und „geöffnet“ (Quittung des Service Workers).
+function klopfPushText(p, name, fertig) {
+  const n = name || "das Mitglied", um = p?.zeit ? ` um ${fZeit.format(new Date(p.zeit))} Uhr` : "";
+  if (p?.stand === "geoeffnet") return `${n} hat die Mitteilung geöffnet.`;
+  if (p?.stand === "angezeigt") return fertig ? `${n} hat die Mitteilung${um} auf dem Handy bekommen, aber nicht geöffnet (vielleicht lautlos oder weggelegt).` : `📲 Ist${um} auf dem Handy von ${n} angekommen.`;
+  if (p?.stand === "gesendet") return fertig ? `die Mitteilung wurde verschickt, das Handy von ${n} hat den Empfang aber nicht bestätigt (aus, kein Netz oder Stromsparen).` : "";
+  if (p?.stand === "fehler") return `die Mitteilung kam bei ${n} nicht an.`;
+  return "";
+}
+// Verpasstes Anklopfen beim nächsten Besuch: einmal zeigen (je Person das neueste, 24 h), dann zurück anklopfen oder schreiben
+let KVD = null;
+function klopfVerpasstZeigen(liste) {
+  if (!liste.length || KVD || KW) return;
+  liste.forEach((v) => ONL.erledigt.add("kv" + v.id));
+  const bis = liste.map((v) => v.zeit).sort().pop(), eins = liste.length === 1, v0 = liste[0];
+  const zeile = (v) => `<div class="verpasst-zeile"><div><b>${esc(v.von.name || v.von.vorname)}</b><small>👋 angeklopft · ${esc(wann(v.zeit))}</small></div>
+    <div style="display:flex;gap:6px"><button class="knopf klein haupt" data-w="klopf" data-p="${esc(v.von.person_id)}">👋 Zurück anklopfen</button><button class="knopf klein" data-w="chat" data-p="${esc(v.von.person_id)}">💬 Schreiben</button></div></div>`;
+  const zu = () => { if (!KVD) return; KVD.remove(); KVD = null; api("anklopfen_verpasst_gesehen", { bis }).catch(() => {}); };
+  KVD = dlgOeffnen(eins
+    ? `<h3 class="dlg-kopf">👋 ${esc(v0.von.vorname)} hat bei dir angeklopft</h3>
+      <p class="dlg-text">${esc(v0.von.vorname)} hat am ${esc(wann(v0.zeit))} angeklopft – du hast den Gesprächswunsch nicht angenommen. Möchtest du ${esc(v0.von.vorname)} jetzt erreichen oder eine Nachricht schreiben?</p>
+      <div class="dlg-knoepfe"><button class="knopf haupt" data-w="klopf" data-p="${esc(v0.von.person_id)}">👋 Zurück anklopfen</button><button class="knopf" data-w="chat" data-p="${esc(v0.von.person_id)}">💬 Nachricht schreiben</button><button class="knopf" data-w="zu">Später</button></div>`
+    : `<h3 class="dlg-kopf">👋 Bei dir wurde angeklopft</h3><p class="dlg-text">Du hast diese Gesprächswünsche nicht angenommen. Möchtest du jemanden jetzt erreichen?</p>${liste.map(zeile).join("")}
+      <div class="dlg-knoepfe"><button class="knopf" data-w="zu">Später</button></div>`, zu);
+  KVD.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const w = b.dataset.w, pid = b.dataset.p; zu();
+    if (w === "klopf") anklopfen(pid); else if (w === "chat") direkt(pid); }));
+  spur("klopf_verpasst", String(liste.length)); // KC-CLUB-SPUR
 }
 async function klopfMeldeDich() {
   if (!KW) return;
