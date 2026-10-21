@@ -1,5 +1,10 @@
 # Änderungen
 
+## Server 2.564.0 – 2026-10-21 (ohne App-Build) – Umleitung: Grund der Metered-Absage mitprotokollieren (KC-CLUB-ANRUF-TURN)
+Nach dem Einspielen von 2.563.0 meldete das Lämpchen „gestört“: Metered antwortete auf das Anlegen der Zugangsdaten mit 400 (ungültige Anfrage), der Grund stand nicht im Protokoll.
+- Server: Bei einer Absage schreibt er jetzt den Antworttext von Metered ins Protokoll (gekürzt, Schlüssel und Passwörter geschwärzt). Sonst unverändert; Anrufe laufen bis zur Klärung wie bisher direkt.
+- Test: Vertragstests grün. Rückweg: Server 2.563.0.
+
 ## 2.563.0 – 2026-10-21 – 🛰️ Anrufe und Videoanrufe auch ohne direkten Weg: Umleitungs-Server (KC-CLUB-ANRUF-TURN)
 Wunsch Hansi („als Sicherheit beim Anrufen und Video“; Punkt 1 aus der Anruf-Verbesserung – Cloudflare verlangte eine Karte, darum Metered Free-Plan ohne Karte, 50 GB/Monat).
 - Finden zwei Handys keinen direkten Weg (manche Mobilfunknetze, Firmen-WLAN), läuft das Gespräch jetzt automatisch über einen **Umleitungs-Server (TURN)** statt abzubrechen – für Ton, Video und Konferenz. Der Browser nimmt ihn nur, wenn es direkt nicht klappt; die Verbindung bleibt Ende-zu-Ende verschlüsselt (Metered leitet nur weiter).
