@@ -1045,7 +1045,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setFee")) $("setFee").checked = einst("fee", true); if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -2654,8 +2654,8 @@ const RG_EFFEKTE = [
   { v: "start", vor: () => rgKopf("offen"), t: "✨ Effekte & Wetter",
     x: "Die App kann ein bisschen zaubern: Kacheln schweben herein, oben im Kopf zeigt sich die Jahreszeit, und das Wetter verrät dir mehr, als man denkt. Das sind alles nur Möglichkeiten – gefällt dir etwas nicht, schaltest du es jederzeit wieder ab. Ich zeige dir auch, wo." },
   { v: "start", nur: () => !einfach() && fxAn(), vor: () => rgKopf("ganz"), sel: ["#register", "#raster"], t: "🪟 Kacheln schweben herein",
-    x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel, sie drehen sich um – oder sie wirbeln hereingedreht. Ich zeige dir alle vier.",
-    live: async (L) => { for (const art of ["jalousie", "karten", "drehen", "wirbel"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
+    x: "Wechselst du oben zwischen Club, Meins und Technik, schweben die Kacheln herein. Als Jalousie, als Kartenstapel, sie drehen sich um, wirbeln herein, rollen wie ein Spielautomat, steigen als Seifenblasen auf, fliegen wie vom Magnet auseinander oder werden wie Pfannkuchen gewendet. Ich zeige dir einige.",
+    live: async (L) => { for (const art of ["jalousie", "wirbel", "walze", "blasen", "magnet", "pfanne"]) { await L.tipp(`#register button[data-r="${reg}"]`); regEffekt(1, art); await L.warte(1500); } } },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Kopf-Effekte und Geburtstags-Vogel – nur vorgeführt (kopfRolloFahren mit festem Effekt), die Einstellung bleibt
   { v: "start", nur: () => fxAn(), vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "🎪 Der Kopf geht auf und zu",
     x: "Oben am Kopf rollst du ihn mit den Pfeilen ein – normal wie eine Jalousie. Du kannst aber auch etwas anderes wählen: einen weinroten Theatervorhang, eine silberne Servierglocke oder die Holzklappe einer Marktbude. Schau mal.",
@@ -2680,7 +2680,7 @@ const RG_EFFEKTE = [
     x: "Hier schaltest du die Jahreszeiten im Kopf ein oder aus. Haken raus – und der Kopf ist wieder ruhig. Darunter kannst du dir jede Jahreszeit und die Extras als Vorschau ansehen.",
     live: async (L) => { await L.tipp("#setJahreszeit"); await L.warte(900); await L.tipp(() => [...document.querySelectorAll(`${rgKlappe("effekte")} .chip`)].find((c) => /Herbst/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Hereindrehen, Zufall – oder Aus. Darunter der Effekt beim Senden: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto.",
+    x: "Hier wählst du, wie die Kacheln hereinschweben – Jalousie, Kartenstapel, Umdrehen, Hereindrehen, Spielautomat, Seifenblasen, Magnet, Pfanne, Abwechselnd (jedes Mal ein anderer), Zufall – oder Aus. Darunter: Kacheln beim Öffnen, Welle beim Antippen, Neues wackelt und Abschied beim Abmelden. Darunter der Effekt beim Senden: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto.",
     live: async (L) => { await L.tipp(() => [...document.querySelectorAll("#regEffektWahl .chip")].find((c) => /Aus/.test(c.textContent))); } },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Der Hauptschalter",
     x: "Ganz oben der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – auch die Jahreszeiten und alle Effekte. Nichts davon ist Pflicht, und du kannst alles jederzeit wieder einschalten." },
@@ -2721,7 +2721,7 @@ const RG_ANPASSEN = [
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("jzDekoWahl"), "#jzDekoWahl"], mussSel: true, t: "🎏 Deko an der Leiste",
     x: "An der Leiste mit den Lämpchen kann eine Deko hängen: Wimpel, Lichterkette oder Laternen. Automatisch passt sie zur Jahreszeit – im Herbst Laternen, im Advent warmweiße Lichter. Oder du wählst selbst, oder schaltest sie aus." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("regEffektWahl"), "#regEffektWahl", "#sendeEffektWahl"], mussSel: true, t: "🪟 Kacheln und Senden",
-    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel, sie drehen sich um oder wirbeln hereingedreht. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto. Auch wie der Kopf auf- und zugeht, stellst du hier ein – vom Theatervorhang bis zur Servierglocke." },
+    x: "Hier wählst du, wie die Kacheln hereinschweben – als Jalousie, Kartenstapel, sie drehen sich um, wirbeln herein, rollen wie ein Spielautomat, steigen als Seifenblasen auf, kommen wie vom Magnet oder aus der Pfanne – oder abwechselnd jedes Mal anders. Und was beim Senden einer Nachricht losfliegt: Papierflieger, Brieftaube, Uhu mit Posttasche oder Postauto. Auch wie der Kopf auf- und zugeht, stellst du hier ein – vom Theatervorhang bis zur Servierglocke." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setAnimiert")], puls: ["#setAnimiert"], mussSel: true, t: "✨ Ruhig oder lebendig",
     x: "Der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – keine Bewegungen, kein Jahreszeiten-Bild, keine Effekte. Ideal, wenn dich das ablenkt." },
   { v: "einstellungen", vor: () => rgAuf("darstellung"), sel: [rgSchalter("sparWahl"), "#sparWahl"], mussSel: true, t: "🐢 Sparmodus und Akku",
@@ -15145,6 +15145,7 @@ addEventListener("resize", regRahmenMessen);
 function register(r, richtung) {
   const neu = r !== reg; reg = r; registerZeigen(); kachelnZeigen(); if (reg === "admin") adLaden(); /* KC-CLUB-ADMIN-REGISTER: Lage holen (höchstens alle 2 Min.) */
   if (neu) { const b = document.querySelector(`#register button[data-r="${r}"]`); if (b) { b.classList.add("reg-lauf"); setTimeout(() => b.classList.remove("reg-lauf"), 1600); } } // KC-CLUB-REGISTER-AMEISEN
+  if (neu) kachelNeuWackeln(1000); // 2.566.0 KC-CLUB-KACHEL-EXTRAS: Neues wackelt nach dem Hereinkommen
   if (neu && regEffekt(richtung)) return; // KC-CLUB-REGISTER-EFFEKTE (2.169.0): Jalousie / Kartenstapel / Umdrehen
   if (richtung) { const ra = $("raster"); ra.classList.remove("rein-links", "rein-rechts"); void ra.offsetWidth; ra.classList.add(richtung > 0 ? "rein-links" : "rein-rechts"); }
 }
@@ -15152,18 +15153,24 @@ function register(r, richtung) {
 // Beim Wechsel Club / Meins / Technik erscheinen die Kacheln mit Effekt. Je Gerät wählbar (⚙️ → 🎨 Darstellung), Standard Jalousie
 // (passt zum Kopf). Kurz (≈ 0,5 s), nur transform/opacity (Grafikkarte, auch auf älteren Handys flüssig). Aus bei „✨ Animierte Knöpfe“
 // aus oder im Sparmodus. Läuft nur beim Antippen/Wischen – nie von selbst.
-const REG_EFFEKTE = [["jalousie", "🪟 Jalousie"], ["karten", "🃏 Kartenstapel"], ["drehen", "🔄 Umdrehen"], ["wirbel", "🌀 Hereindrehen"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]]; // 2.566.0: + Hereindrehen
+const REG_EFFEKTE = [["jalousie", "🪟 Jalousie"], ["karten", "🃏 Kartenstapel"], ["drehen", "🔄 Umdrehen"], ["wirbel", "🌀 Hereindrehen"], ["walze", "🎰 Spielautomat"], ["blasen", "🫧 Seifenblasen"],
+  ["magnet", "🧲 Magnet"], ["pfanne", "🍳 Pfanne"], ["wechsel", "🔁 Abwechselnd"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]]; // 2.566.0: + Hereindrehen, Spielautomat, Seifenblasen, Magnet, Pfanne, Abwechselnd
+const REG_ARTEN = REG_EFFEKTE.map(([k]) => k).filter((k) => !["wechsel", "zufall", "aus"].includes(k)); // die echten Effekte (für Zufall/Abwechselnd)
+// 2.566.0 KC-CLUB-KACHEL-WECHSEL (Wunsch Hansi „dass die auch Abwechslung gehen“): jedes Mal der nächste Effekt der Reihe (gemerkt je Gerät)
+function regEffektNaechster() { let n = 0; try { n = (Number(localStorage.getItem("kc_club_regEffektNr")) || 0) % REG_ARTEN.length; localStorage.setItem("kc_club_regEffektNr", String(n + 1)); } catch {} return REG_ARTEN[n]; }
 const regEffektWahl = () => { try { const w = localStorage.getItem("kc_club_regEffekt"); return REG_EFFEKTE.some(([k]) => k === w) ? w : "jalousie"; } catch { return "jalousie"; } };
 function regEffekt(richtung, art) {
   let w = art || regEffektWahl();
   if (w === "aus" || !einst("animiert", true) || SPAR?.an || kaBearb || einfach()) return false;
-  if (w === "zufall") w = ["jalousie", "karten", "drehen", "wirbel"][Math.floor(Math.random() * 4)];
+  if (w === "zufall") w = REG_ARTEN[Math.floor(Math.random() * REG_ARTEN.length)];
+  else if (w === "wechsel") w = regEffektNaechster();
   const ra = $("raster"); if (!ra?.animate) return false;
   const k = [...ra.querySelectorAll(":scope > .kachel, :scope > .mini-kachel, :scope > *")].filter((x) => x.offsetParent !== null).slice(0, 40);
   if (!k.length) return false;
   ra.getAnimations?.({ subtree: true }).forEach((a) => a.cancel());
   const oben = Math.min(...k.map((x) => x.offsetTop)), reihe = (x) => Math.round((x.offsetTop - oben) / Math.max(40, k[0].offsetHeight * 0.6));
   const seite = richtung < 0 ? -1 : 1, P = "perspective(800px) ";
+  const rb = ra.getBoundingClientRect(), mx = rb.left + rb.width / 2, my = rb.top + Math.min(rb.height, innerHeight) / 2; // Magnet: Mitte des Rasters
   k.forEach((x, i) => {
     const r = reihe(x), spalte = k.filter((y, j) => j < i && reihe(y) === r).length;
     let f, o;
@@ -15180,6 +15187,24 @@ function regEffekt(richtung, art) {
       f = [{ transform: `translate(${rein * 120}%, 60%) rotate(${rein * -540}deg) scale(.15)`, opacity: 0 }, { transform: `translate(${rein * -3}%, -2%) rotate(${rein * 10}deg) scale(1.06)`, opacity: 1, offset: 0.74 },
         { transform: `rotate(${rein * -3}deg) scale(.98)`, opacity: 1, offset: 0.88 }, { transform: "none", opacity: 1 }];
       o = { duration: 760, delay: i * 55, easing: "cubic-bezier(.22,.8,.3,1)" };
+    } else if (w === "walze") { // 2.566.0 Spielautomat: Spalten rollen wie Walzen von oben herein und rasten nacheinander ein (Spalte für Spalte)
+      x.style.transformOrigin = "50% 100%";
+      f = [{ transform: P + "translateY(-150%) rotateX(75deg)", opacity: 0 }, { transform: P + "translateY(10%) rotateX(-14deg)", opacity: 1, offset: 0.68 },
+        { transform: P + "translateY(-3%) rotateX(5deg)", offset: 0.86 }, { transform: "none", opacity: 1 }];
+      o = { duration: 640, delay: spalte * 140 + r * 55, easing: "cubic-bezier(.3,.75,.35,1)" };
+    } else if (w === "blasen") { // 2.566.0 Seifenblasen: steigen von unten auf, leicht schwankend, und ploppen auf ihre Größe
+      const sw = (i % 3 - 1) * 14;
+      f = [{ transform: `translate(${sw}px, 160%) scale(.3)`, opacity: 0 }, { transform: `translate(${-sw}px, 20%) scale(.6)`, opacity: .8, offset: 0.45 },
+        { transform: "translate(0, -5%) scale(1.09)", opacity: 1, offset: 0.78 }, { transform: "scale(.97)", offset: 0.9 }, { transform: "none", opacity: 1 }];
+      o = { duration: 720, delay: i * 50 + (i % 2) * 40, easing: "cubic-bezier(.3,.7,.4,1)" };
+    } else if (w === "magnet") { // 2.566.0 Magnet: alle Kacheln starten in der Mitte und fliegen auseinander auf ihren Platz
+      const b = x.getBoundingClientRect(), dx = mx - (b.left + b.width / 2), dy = my - (b.top + b.height / 2);
+      f = [{ transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0 }, { transform: `translate(${dx * -0.06}px, ${dy * -0.06}px) scale(1.05)`, opacity: 1, offset: 0.74 }, { transform: "none", opacity: 1 }];
+      o = { duration: 580, delay: i * 26, easing: "cubic-bezier(.2,.8,.3,1)" };
+    } else if (w === "pfanne") { // 2.566.0 Pfanne: hochgeworfen, wendet sich in der Luft wie ein Pfannkuchen, landet mit kleinem Federn
+      f = [{ transform: P + "translateY(35%) rotateX(0deg) scale(.7)", opacity: 0 }, { transform: P + "translateY(-85%) rotateX(-200deg) scale(1)", opacity: 1, offset: 0.46 },
+        { transform: P + "translateY(5%) rotateX(-360deg) scale(1.03, .9)", opacity: 1, offset: 0.8 }, { transform: P + "translateY(0) rotateX(-360deg) scale(1)", opacity: 1 }];
+      o = { duration: 820, delay: i * 60, easing: "cubic-bezier(.33,.6,.4,1)" };
     } else { // Umdrehen: eine schnelle Drehung um die eigene Achse, kommt wie eine Karte nach vorn
       f = [{ transform: P + "rotateY(-300deg) scale(.6)", opacity: 0 }, { transform: P + "rotateY(18deg) scale(1.05)", opacity: 1, offset: 0.7 }, { transform: P + "rotateY(0) scale(1)", opacity: 1 }];
       o = { duration: 640, delay: i * 42, easing: "cubic-bezier(.2,.7,.3,1)" };
@@ -15195,6 +15220,52 @@ function regEffektZeigen() {
   z.innerHTML = REG_EFFEKTE.map(([k, t]) => `<button type="button" class="chip${k === w ? " an" : ""}" aria-pressed="${k === w}" onclick="regEffektSetzen('${k}')">${t}</button>`).join("");
 }
 function regEffektVorschau() { zeige("start"); setTimeout(() => { if (!regEffekt(1, regEffektWahl() === "aus" ? "jalousie" : undefined)) { if (!fxAn()) fxAusHinweis(regEffektVorschau); else melde("Gerade geht das nicht – nicht in der einfachen Ansicht und nicht beim Kacheln-Bearbeiten.", true); } }, 350); }
+// ---------- 2.566.0 KC-CLUB-KACHEL-EXTRAS (Wunsch Hansi „baue alle, im Zahnrad, mit Abwechslung“): Start, Welle, Wackeln, Abschied ----------
+// Alle je Gerät unter ⚙️ → ✨ Effekte abschaltbar; nur transform/opacity; aus bei „✨ Animierte Knöpfe“ aus, im Sparmodus und in der einfachen Ansicht.
+const kxAn = (k) => einst(k, true) && fxAn() && !einfach() && !kaBearb;
+let KX_START = false;
+// 1) beim Öffnen der App: Kacheln einmal mit dem gewählten Effekt (auch Abwechselnd/Zufall), höchstens einmal pro Stunde
+function kachelStartEffekt() {
+  if (KX_START || !kxAn("kachelStart") || aktuelleAnsicht !== "start") return; KX_START = true;
+  let alt = 0; try { alt = Number(localStorage.getItem("kc_club_kachelStartAm")) || 0; } catch {}
+  if (Date.now() - alt < 3600000) return;
+  try { localStorage.setItem("kc_club_kachelStartAm", String(Date.now())); } catch {}
+  setTimeout(() => { if (aktuelleAnsicht === "start") regEffekt(1, regEffektWahl() === "aus" ? "jalousie" : undefined); }, 250);
+}
+// 6) Welle beim Antippen einer Kachel (von der Fingerstelle aus)
+document.addEventListener("pointerdown", (e) => {
+  const k = e.target?.closest?.("#raster > .kachel, #raster > .mini-kachel"); if (!k || !kxAn("kachelWelle")) return;
+  const b = k.getBoundingClientRect(), d = Math.hypot(b.width, b.height) * 2, w = document.createElement("span");
+  w.className = "kachel-welle"; Object.assign(w.style, { width: d + "px", height: d + "px", left: e.clientX - b.left - d / 2 + "px", top: e.clientY - b.top - d / 2 + "px" });
+  k.appendChild(w); const a = w.animate([{ transform: "scale(0)", opacity: .38 }, { transform: "scale(1)", opacity: 0 }], { duration: 650, easing: "cubic-bezier(.2,.7,.4,1)" });
+  a.onfinish = a.oncancel = () => w.remove();
+}, { passive: true });
+// 7) Kacheln mit Neuem (Zahl) wackeln beim Öffnen der Startseite einmal kurz – höchstens alle 30 s
+let KX_WACKEL = 0;
+function kachelNeuWackeln(verzug = 0) {
+  if (!kxAn("kachelWackeln") || Date.now() - KX_WACKEL < 30000) return;
+  setTimeout(() => {
+    if (aktuelleAnsicht !== "start") return;
+    const k = [...document.querySelectorAll("#raster > .kachel")].filter((x) => x.offsetParent && /^\d+\+?$/.test(x.querySelector(".zahl")?.textContent?.trim() || ""));
+    if (!k.length) return; KX_WACKEL = Date.now();
+    k.slice(0, 12).forEach((x, i) => x.animate([{ transform: "none" }, { transform: "rotate(-4deg) scale(1.03)" }, { transform: "rotate(4deg) scale(1.03)" }, { transform: "rotate(-3deg)" }, { transform: "rotate(2deg)" }, { transform: "none" }],
+      { duration: 700, delay: i * 90, easing: "ease-in-out" }));
+  }, verzug);
+}
+// 8) Abschied beim Abmelden: Kacheln verschwinden – abwechselnd Jalousie zu, weggewirbelt oder nach unten fallend (~0,7 s)
+async function kachelAbschied() {
+  if (!kxAn("kachelAbschied")) return;
+  const ra = $("raster"), k = ra ? [...ra.children].filter((x) => x.offsetParent).slice(0, 40) : []; if (!k.length) return;
+  zeige("start"); let n = 0; try { n = Number(localStorage.getItem("kc_club_abschiedNr")) || 0; localStorage.setItem("kc_club_abschiedNr", String(n + 1)); } catch {}
+  const art = ["zu", "weg", "fall"][n % 3], P = "perspective(800px) ";
+  const an = k.map((x, i) => { const s = i % 2 ? 1 : -1;
+    const f = art === "zu" ? [{ transform: "none", opacity: 1 }, { transform: P + "rotateX(92deg)", opacity: 0 }]
+      : art === "weg" ? [{ transform: "none", opacity: 1 }, { transform: `translate(${s * 130}%, 40%) rotate(${s * 480}deg) scale(.15)`, opacity: 0 }]
+      : [{ transform: "none", opacity: 1 }, { transform: `translateY(-6%) rotate(${s * 4}deg)`, offset: 0.2 }, { transform: `translateY(160%) rotate(${s * 18}deg)`, opacity: 0 }];
+    if (art === "zu") x.style.transformOrigin = "50% 0";
+    return x.animate(f, { duration: 520, delay: i * 35, easing: art === "fall" ? "cubic-bezier(.5,0,.9,.5)" : "cubic-bezier(.4,0,.6,1)", fill: "forwards" }).finished.catch(() => {}); });
+  await Promise.race([Promise.all(an), new Promise((ok) => setTimeout(ok, 1600))]);
+}
 // ---------- KC-CLUB-EFFEKTE-2 (2.172.0, Wunsch Hansi: 1 Papierflieger, 3 Zettel anpinnen, 4 Zahlen zählen hoch, 6 Jahreszeiten, 8 Geburtstagskerze) ----------
 // Alle: kurz, nur transform/opacity, aus bei „✨ Animierte Knöpfe“ aus oder Sparmodus. Laufen nur, wenn etwas passiert (außer Jahreszeiten – sanft im Kopf).
 const fxAn = () => einst("animiert", true) && !SPAR?.an && typeof document !== "undefined" && !!document.body?.animate;
@@ -26184,7 +26255,7 @@ async function neuLadenRoh(vonHand) {
     meinStatusZeigen();
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
-    heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
+    heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen(); kachelStartEffekt(); kachelNeuWackeln(1300); // 2.566.0 KC-CLUB-KACHEL-EXTRAS (einmal je Start)
     try { const alt = localStorage.getItem("kc_club_clubThema"), neu = JSON.stringify(INIT.clubThema || null); if (alt !== neu) { localStorage.setItem("kc_club_clubThema", neu); themaAnwenden(); } } catch {} // 2.323.0 KC-CLUB-THEMEN
     rtVerbinden(); // KC-CLUB-REALTIME (2.226.0): Leitung aufbauen bzw. halten
     if (!PUSH_PRUEF.lief) { PUSH_PRUEF.lief = true; setTimeout(() => pushPruefen().catch(() => {}), 6000); } // 2.321.0 KC-CLUB-PUSH-WIEDER (einmal je Start, nicht im Startweg)
@@ -26224,7 +26295,7 @@ function standZeigen(g, vorab) {
     INIT = { ...g.init, _offline: g.zeit, _vorab: vorab }; ICH = INIT.ich; adminNamenSetzen();
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln); ansichtUebernehmen(INIT.einstellungen?.ansicht); designUebernehmen(INIT.einstellungen?.design);
     $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; meinStatusZeigen(); gedenkenZeigen();
-    heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen();
+    heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen(); kachelStartEffekt(); kachelNeuWackeln(1300); // 2.566.0 KC-CLUB-KACHEL-EXTRAS (einmal je Start)
   } catch {}
   offlineStandZeigen(true); if (ICH) startBereitLoesen(); return true;
 }
@@ -26485,6 +26556,7 @@ function zeige(v, ausHistorie) {
   }
   if (kaBearb && v !== "start") kaBearbeiten(false); // Anordnen beim Verlassen der Startseite abschließen
   const vorher = aktuelleAnsicht;
+  if (v === "start" && vorher !== "start") kachelNeuWackeln(650); // 2.566.0 KC-CLUB-KACHEL-EXTRAS
   if (v !== vorher && v !== "chat" && v !== "mitglied") spur(v); // KC-CLUB-SPUR (2.23.88): Chat/Mitglied mit „mit wem“ eigens
   if (v !== vorher) setTimeout(() => neuPulsieren(v), 350); // KC-CLUB-NEU-PULS (2.23.91)
   if (v === "dokansicht" && !DOKA.id) v = "dokumente"; // KC-CLUB-DOK-ANZEIGE: ohne Dokument zur Liste
@@ -30759,6 +30831,7 @@ function frageVerb(text) {
 async function geraetAbmelden() {
   if (!(await frage("Von diesem Gerät abmelden?\n\nDein Zugang und alle Club-Daten auf diesem Gerät werden gelöscht – auch Notfallpass, Entwürfe und Einstellungen. Auf deinen anderen Geräten und im Club bleibt alles. Wieder anmelden geht nur mit deinem Zugangslink.", { ja: "🚪 Abmelden", nein: "Abbrechen", gefahr: true }))) return;
   try { const r = await navigator.serviceWorker?.getRegistration?.(); const a = await r?.pushManager?.getSubscription(); await a?.unsubscribe(); } catch {}
+  try { await kachelAbschied(); } catch {} // 2.566.0 KC-CLUB-KACHEL-EXTRAS: Abschied (vor dem Löschen der Einstellungen)
   try { Object.keys(localStorage).filter((k) => /^(kc_club_|kc_buero_|kc-clubapp\.|kcclub)/.test(k) || /^(kc_wichtig_frage|kc_versand_immer|kc-einw-zu)/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {} // KC-CLUB-RC-PRUEFUNG (20.10.2026): auch „Wichtig“-Frage und Einweisung-zu
   try { sessionStorage.clear(); } catch {}
   try { await caches.delete("kcclub-geteilt"); } catch {}
@@ -39731,7 +39804,7 @@ function suAppListe() {
     ["🍂", "Jahreszeiten-Bild im Kopf (fest oder automatisch)", "jahreszeit jahreszeiten kopf bild herbst winter frühling sommer advent silvester laub schnee schneemann eichhörnchen iglu vorschau", ein("jzWahl")],
     ["🎏", "Deko an der Leiste (Wimpel, Lichterkette, Laternen)", "deko dekoration wimpel wimpelkette lichterkette lichter laternen lampions girlande leiste", ein("jzDekoWahl")],
     ["✨", "Ruhige oder lebendige Knöpfe (Animationen)", "animation animiert ruhig bewegung effekte knöpfe", ein("setAnimiert")],
-    ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen hereindrehen wirbel drehen senden papierflieger brieftaube uhu eule postauto", ein("regEffektWahl")],
+    ["🪟", "Kachel- und Sende-Effekt (Jalousie, Papierflieger …)", "kachel effekt jalousie kartenstapel umdrehen hereindrehen wirbel drehen spielautomat walze seifenblasen magnet pfanne abwechselnd welle wackeln abschied senden papierflieger brieftaube uhu eule postauto", ein("regEffektWahl")],
     ["🐢", "Sparmodus / Akku sparen", "sparmodus sparen akku batterie strom langsam netz datensparen", ein("sparWahl")],
     ["🎨", "Erklär-Video: Meine App nach meinem Geschmack", "anpassen einstellen aussehen geschmack video themen farben jahreszeiten deko schrift", () => rgListeAbspielen(["anpassen"])],
     ["🗣️", "Videos: Stimme und Tempo wählen", "stimme video tempo langsam schneller vorlesen klingt komisch roboter sprecher erklär videos herunterladen thorsten dii", () => stimmenWahl()], // 2.348.0
