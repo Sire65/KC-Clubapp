@@ -1,8 +1,8 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.571.0";
+const VERSION = "2.572.0";
 const CACHE = "kc-club-" + VERSION;
-const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
+const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
 // dieser Version liefern (schnell, vom Handy fertig übersetzt); fehlt es dort, aus dem Netz holen und merken.
 const istProgramm = (url) => url.pathname.endsWith("/app.js") && url.searchParams.get("v") === VERSION;
@@ -123,7 +123,7 @@ self.addEventListener("push", (e) => {
     fenster.forEach((c) => c.postMessage({ typ: "push", titel, text: d.body || d.text || "", url: d.data?.url || "" }));
     if (self.navigator.setAppBadge) try { await self.navigator.setAppBadge(); } catch {}
     await self.registration.showNotification(titel, {
-      body: d.body || d.text || "", icon: "icon-192.png", badge: "icon-192.png", tag: d.data?.url || "kc-club",
+      body: d.body || d.text || "", icon: "icon-192.png", badge: "badge-muetze.png", /* 2.572.0 KC-CLUB-PUSH-MUETZE: Kochmütze statt Viereck oben in der Leiste (Android zeigt nur die Form) */ tag: d.data?.url || "kc-club",
       // KC-CLUB-ERINNERUNG-WAHL (2.23.22): Erinnerungen (⏰) bleiben stehen, bis man sie antippt, und vibrieren kräftiger
       renotify: true, silent: false, requireInteraction: /^⏰/.test(titel), vibrate: /^⏰/.test(titel) ? [400, 200, 400, 200, 400] : [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
     });

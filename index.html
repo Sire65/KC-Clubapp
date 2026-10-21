@@ -977,6 +977,11 @@
   .zettel .zknoepfe button { border: 1px solid rgba(0,0,0,.25); background: rgba(255,255,255,.55); color: #2b2410; border-radius: 10px; padding: 5px 9px; font-weight: 800; font-size: .8rem; cursor: pointer; }
   .zettel .zknoepfe button.erl { background: #2e7d4f; color: #fff; border-color: #2e7d4f; }
   .zettel.erledigt { opacity: .7; }
+  /* 2.572.0 KC-CLUB-ADVENTSGESTECK */
+  .ag-gesteck { position: absolute; top: 52px; right: 10px; z-index: 3; pointer-events: none; display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+  .ag-gesteck small { font: 700 .66rem/1 system-ui, sans-serif; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); margin-top: -2px; }
+  .ag-flamme { animation: agFlackern 1.6s ease-in-out infinite alternate; } @keyframes agFlackern { 0% { transform: scale(1, 1) rotate(-2deg); } 50% { transform: scale(.92, 1.08) rotate(2deg); } 100% { transform: scale(1.04, .95) rotate(-1deg); } }
+  @media (prefers-reduced-motion: reduce) { .ag-flamme { animation: none; } }
   /* 2.569.0 KC-CLUB-CLUBABEND */
   #caBlatt details { border: 2px solid var(--gold, #c9a46a); border-radius: 12px; padding: 0 10px; margin: 8px 0; } #caBlatt details > summary { padding: 10px 0; font-weight: 800; }
   .ca-top { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--linie); } .ca-top:last-child { border-bottom: 0; }
@@ -5287,6 +5292,7 @@
       <div class="schalter"><div><b>🧚 Die kleine Fee</b><div class="hinweis">Bei jedem 20. Start kommt die Fee – und beim Antippen gibt sie dir einen Spruch. Aus: sie kommt nicht mehr. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" id="feeKnopf" style="margin-top:6px" onclick="feeKommt(true)">🧚 Fee ansehen</button></div><input type="checkbox" id="setFee" aria-label="Die kleine Fee an oder aus" onchange="einstellung('fee', this.checked)"></div> <!-- 2.373.0 KC-CLUB-FEE: eigene Zeile; 2.379.0: abschaltbar -->
       <!-- 2.508.0 KC-CLUB-GEBURTSTAG-VOGEL -->
       <div class="schalter"><div><b>🎁 Geburtstags-Vogel</b><div class="hinweis">Hat heute jemand Geburtstag, fliegt ein Vogel eine Runde im Kopf (mit „Happy Birthday“-Lied, wenn Töne an sind) und bringt ein Geschenk – es platzt unten, ein Blumenstrauß und „Happy Birthday“ erscheinen. Höchstens einmal pro Stunde. <button type="button" class="knopf klein" onclick="gbvVorschau()">▶ Vorschau</button></div></div><input type="checkbox" id="setGbVogel" onchange="einstellung('gbvogel', this.checked)"></div>
+      <div class="schalter"><div><b>🕯️ Adventsgesteck</b><div class="hinweis">Vom 1. Advent bis Heiligabend oben rechts im Kopf: kleines Gesteck mit Tannengrün, zwei roten Kugeln und einem Tannenzapfen – je Adventssonntag brennt eine Kerze mehr. <button type="button" class="knopf klein" onclick="agVorschau()">▶ Vorschau</button></div></div><input type="checkbox" id="setAdventGesteck" onchange="einstellung('adventgesteck', this.checked); setTimeout(() => agZeigen(), 50)"></div> <!-- 2.572.0 KC-CLUB-ADVENTSGESTECK -->
       <div class="schalter"><div><b>🍂 Jahreszeiten im Kopf</b><div class="hinweis">Herbstlaub bleibt unten liegen, bis ein Windstoß es wegweht – Schnee ebenso, jedes 3. Mal wird ein lachender Schneemann daraus. Im Frühling wachsen Gras und Blumen, im Sommer eine Sonnenblume. Feuerwerk zu Silvester.</div></div><input type="checkbox" id="setJahreszeit" onchange="jahreszeitUmschalten(this.checked)"></div>
       <details class="abh-klappe" data-abh="setJahreszeit"><summary>🍂 Szenen: Jahreszeit wählen &amp; Vorschau</summary> <!-- 2.478.0 KC-CLUB-EINST-KLAPPEN: klappt mit dem Häkchen darüber auf -->
         <div class="schalter" style="display:block"><div><b>📅 Welche Jahreszeit?</b><div class="hinweis" id="jzWahlInfo"></div></div><div class="reg-effekt-wahl" id="jzWahl"></div></div> <!-- 2.273.0 KC-CLUB-JAHRESZEIT-AUTOMATIK --> <!-- 2.172.0 KC-CLUB-EFFEKTE-2, 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE -->
@@ -5714,7 +5720,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.571.0" data-v="2.571.0"></script>
+<script src="app.js?v=2.572.0" data-v="2.572.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.572.0 – 2026-10-21 – Adventsgesteck + Kochmütze als Push-Zeichen
+- 🕯️ Adventsgesteck oben rechts im Kopf vom 1. Advent bis Heiligabend: Tannengrün, 2 rote glänzende Kugeln, 1 Tannenzapfen, je Adventssonntag eine brennende Kerze mehr. ⚙️ → Effekte: ein/aus + Vorschau.
+- Push-Mitteilungen zeigen oben in der Leiste die Kochmütze statt eines Vierecks (eigenes Statusleisten-Zeichen badge-muetze.png).
+
 ## 2.571.0 – 2026-10-21 – Clubabend Live + Chat öffnet bei der neuesten Nachricht
 - Kachel heißt jetzt „🍽️ Clubabend Live“; beim Admin immer sichtbar (außerhalb des Abends als Vorschau auf den nächsten Clubabend), für alle anderen weiter nur am Abend.
 - Chat öffnen springt immer sofort zur neuesten Nachricht (Wunsch Hansi); die Linie „Neue Nachrichten“ bleibt als Markierung. Hilfe-Texte angepasst.

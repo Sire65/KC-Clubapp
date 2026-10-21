@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.571.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.572.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1045,7 +1045,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -26382,8 +26382,38 @@ async function gbvFlug(namen = ["dir"]) {
   } finally { b.remove(); }
 }
 function gbvVorschau() { zeige("start"); setTimeout(() => { if (kopfRolloStand() !== "offen") kopfRolloSetzen("offen"); gbvFlug([ICH?.vorname || "Hansi"]); }, 500); }
+// ---------- 2.572.0 KC-CLUB-ADVENTSGESTECK (Wunsch Hansi „an den 4 Adventssonntagen die Anzahl brennender Kerzen als kleines Gesteck mit Tannengrün,
+// 2 roten glänzenden Kugeln, 1 Tannenzapfen; unter ⚙️ ein/aus“): oben rechts im Kopf der Startseite. Ab dem 1. Advent brennt 1 Kerze, ab dem 2. Advent 2 …
+// bis Heiligabend (danach weg). 4. Advent = letzter Sonntag vor dem 25.12. Nur Grafik, keine Daten.
+const agAn = () => einst("adventgesteck", true);
+function agAdvent(d = new Date()) {
+  const y = d.getFullYear(), hl = new Date(y, 11, 24), a4 = new Date(y, 11, 24 - hl.getDay()), a1 = new Date(a4.getFullYear(), 11, a4.getDate() - 21);
+  const tag = new Date(y, d.getMonth(), d.getDate());
+  if (tag < a1 || tag > hl) return 0;
+  return Math.min(4, 1 + Math.floor((tag - a1) / (7 * 86400000)));
+}
+function agSvg(n) {
+  const kerzen = [24, 44, 64, 84].map((x, i) => { const h = [30, 34, 32, 29][i], top = 42 - h + 12, an = i < n;
+    return `<rect x="${x - 5}" y="${top}" width="10" height="${h}" rx="2" fill="url(#agK)"/><line x1="${x}" y1="${top}" x2="${x}" y2="${top - 4}" stroke="#3a2a1a" stroke-width="1.2"/>`
+      + (an ? `<g class="ag-flamme" style="transform-origin:${x}px ${top - 3}px;animation-delay:-${i * 0.37}s"><ellipse cx="${x}" cy="${top - 9}" rx="6" ry="9" fill="#ffd54a" opacity=".35"/><path d="M${x} ${top - 16} Q${x + 4.5} ${top - 8} ${x} ${top - 3} Q${x - 4.5} ${top - 8} ${x} ${top - 16} Z" fill="#ffb300"/><path d="M${x} ${top - 11} Q${x + 2} ${top - 7} ${x} ${top - 4} Q${x - 2} ${top - 7} ${x} ${top - 11} Z" fill="#fff6c2"/></g>` : ""); }).join("");
+  const zweig = (x, y, w, d) => `<g transform="translate(${x} ${y}) rotate(${d})"><path d="M0 0 L${w} 0" stroke="#2e5d34" stroke-width="2.4" stroke-linecap="round"/>${Array.from({ length: Math.round(w / 3) }, (_, i) => `<path d="M${i * 3 + 1} 0 l2 -4 M${i * 3 + 1} 0 l2 4" stroke="${i % 2 ? "#3f7d46" : "#2a6b33"}" stroke-width="1.4" stroke-linecap="round"/>`).join("")}</g>`;
+  const gruen = [[2, 58, 40, -12], [16, 62, 36, 6], [36, 56, 44, -4], [56, 61, 40, 8], [70, 57, 44, -10], [84, 62, 30, 4], [10, 66, 40, -3], [50, 66, 46, 2]].map((a) => zweig(...a)).join("");
+  const kugel = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#agR)"/><ellipse cx="${x - r * .35}" cy="${y - r * .4}" rx="${r * .32}" ry="${r * .2}" fill="#fff" opacity=".85"/><rect x="${x - 2}" y="${y - r - 2.5}" width="4" height="3" rx="1" fill="#c9a46a"/>`;
+  const zapfen = `<g transform="translate(58 66) rotate(-18)"><ellipse cx="0" cy="0" rx="7" ry="10" fill="#6b4226"/>${[[-7, -4], [-4, 0], [-7, 4], [-3, 7], [0, -7], [0, 3]].map(([dx, dy]) => `<path d="M${dx} ${dy} q3.5 3 7 0" stroke="#a0703f" stroke-width="1.3" fill="none"/>`).join("")}</g>`;
+  return `<svg viewBox="0 0 110 80" width="110" height="80" aria-hidden="true"><defs><linearGradient id="agK" x1="0" x2="1"><stop offset="0" stop-color="#e9dcc6"/><stop offset=".45" stop-color="#fffaf0"/><stop offset="1" stop-color="#d9c8ab"/></linearGradient>
+    <radialGradient id="agR" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ff6b6b"/><stop offset=".55" stop-color="#c0152a"/><stop offset="1" stop-color="#6d0614"/></radialGradient></defs>
+    ${gruen}${kerzen}${kugel(14, 66, 7)}${kugel(94, 67, 6.5)}${zapfen}</svg>`;
+}
+function agZeigen(vorschau) {
+  const h = document.querySelector("#v-start .hero"); if (!h) return;
+  h.querySelector(".ag-gesteck")?.remove();
+  const n = vorschau || (agAn() ? agAdvent() : 0); if (!n) return;
+  h.insertAdjacentHTML("beforeend", `<div class="ag-gesteck" title="${n}. Advent" aria-label="${n}. Advent – ${n === 1 ? "eine Kerze brennt" : n + " Kerzen brennen"}" role="img">${agSvg(n)}<small>${n}. Advent</small></div>`);
+}
+function agVorschau() { zeige("start"); setTimeout(() => { agZeigen(agAdvent() || 4); melde(`🕯️ So sieht es am ${agAdvent() || 4}. Advent aus`); setTimeout(() => agZeigen(), 10000); }, 400); }
 function wichtigZeigen() {
   gbvPruefen(); // KC-CLUB-GEBURTSTAG-VOGEL
+  agZeigen(); // 2.572.0 KC-CLUB-ADVENTSGESTECK
   $("tiKnopfStart")?.classList.toggle("versteckt", !ICH?.vorstand); // KC-CLUB-TAGESINFO-MANUELL (1.38.0)
   const h = [];
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) h.push(`<div class="zeile" style="cursor:pointer" onclick="installHilfe()">📲 <b>${START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren"}</b> – dann klappen WhatsApp & Galerie<span style="margin-left:auto">›</span></div>`);

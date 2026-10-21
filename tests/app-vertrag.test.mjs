@@ -11909,3 +11909,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.dv-rahmen \.dv-gantt \{ min-width: calc\(760px \* var\(--dvz, 1\)\); overflow: clip; \}/.test(ix), "Namen-Spalte klebt beim Wischen (clip statt hidden)");
   assert.ok(!/style\.zoom/.test(html.slice(html.indexOf("const DV_ZOOM"), html.indexOf("function dvZoomEinrichten"))), "kein CSS-zoom (bricht sticky)");
 }
+// 2.572.0 KC-CLUB-ADVENTSGESTECK + KC-CLUB-PUSH-MUETZE (Wunsch Hansi)
+{
+  const sw = lies("sw.js"), ix = lies("index.html");
+  assert.ok(/badge: "badge-muetze\.png"/.test(sw) && /"badge-muetze\.png"/.test(sw.slice(0, sw.indexOf("];"))) && fs.existsSync(new URL("../badge-muetze.png", import.meta.url)), "Push-Zeichen oben: Kochmütze (Form auf durchsichtig) statt Viereck");
+  assert.ok(/a4 = new Date\(y, 11, 24 - hl\.getDay\(\)\)/.test(html) && /if \(tag < a1 \|\| tag > hl\) return 0;/.test(html), "4. Advent = Sonntag vor dem 25.12., 1.–4. Advent bis Heiligabend");
+  assert.ok(/const agAn = \(\) => einst\("adventgesteck", true\);/.test(html) && /id="setAdventGesteck" onchange="einstellung\('adventgesteck', this\.checked\)/.test(ix), "unter ⚙️ ein/aus");
+  assert.ok(/\.ag-gesteck \{ position: absolute;[^}]*pointer-events: none;/.test(ix) && /prefers-reduced-motion: reduce\) \{ \.ag-flamme \{ animation: none; \} \}/.test(ix), "blockiert nichts; ruhige Flammen bei „weniger Bewegung“");
+}
