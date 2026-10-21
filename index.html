@@ -3104,6 +3104,41 @@
   #v-einstellungen .such-weg { display: none !important; } #v-einstellungen .such-treffer > summary, #v-einstellungen .schalter.such-treffer { outline: 2px solid #f1c40f; outline-offset: 2px; border-radius: 8px; }
   .abh-aus:not(details) { opacity: .45; } .abh-aus:not(details) * { pointer-events: none; }
   body.einfach #v-einstellungen > details[data-klappe]:not([data-einfach]) { display: none; }
+  /* 2.552.0 KC-CLUB-EINST-UEBERSICHT (Wunsch Hansi „übersichtlich, bedienerfreundlich, logisch – Klappfelder sieht man kaum“): Übersicht in Gruppen,
+     jeder Bereich als eigene Seite; gut sichtbare Klappen (Goldrand, runder Knopf) und Schalter wie beim Handy. Kartei (🗂️) und Suche wie bisher. */
+  .eu-liste, .eu-bereichkopf { display: none; }
+  #v-einstellungen.eu-an:not(.sucht):not(.eu-offen) > .eu-liste { display: block; }
+  #v-einstellungen.eu-an.eu-offen:not(.sucht) > .eu-bereichkopf { display: block; margin: 0 0 10px; }
+  #v-einstellungen.eu-an:not(.sucht) > .klappen-alle-zeile { display: none; }
+  #v-einstellungen.eu-an:not(.sucht) > details[data-klappe]:not(.eu-aktiv) { display: none; }
+  #v-einstellungen.eu-an.eu-offen:not(.sucht) > details[data-klappe].eu-aktiv:not(.versteckt) { display: block; }
+  #v-einstellungen.eu-an.eu-offen:not(.sucht) > details.eu-aktiv > summary { pointer-events: none; background: var(--rot); color: #fff; margin: -16px -16px 12px; padding: 12px 16px; border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0; justify-content: center; }
+  #v-einstellungen.eu-an.eu-offen:not(.sucht) > details.eu-aktiv > summary .schloss, #v-einstellungen.eu-an.eu-offen:not(.sucht) > details.eu-aktiv > summary .pfeil { display: none; }
+  .eu-zurueck { width: auto; padding: 8px 16px; font-weight: 800; }
+  .eu-gruppe { font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--textRot, var(--rot)); margin: 16px 6px 6px; }
+  .eu-gruppe:first-child { margin-top: 4px; }
+  .eu-block { background: var(--karte); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0, 0, 0, .06); }
+  .eu-zeile { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--linie); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; min-height: 64px; }
+  .eu-zeile:last-child { border-bottom: 0; } .eu-zeile:active { background: var(--karte2); }
+  .eu-sym { width: 40px; height: 40px; border-radius: 11px; background: var(--karte2); display: grid; place-items: center; font-size: 1.3rem; flex: none; }
+  .eu-tx { flex: 1; min-width: 0; } .eu-tx b { display: block; font-size: 1.05rem; } .eu-tx small { display: block; color: var(--grau); font-size: .84rem; margin-top: 2px; }
+  .eu-stand { display: inline-block; margin-top: 3px; font-size: .76rem; font-weight: 700; color: var(--textGruen, #2e7d32); }
+  .eu-pfeil { color: var(--textRot, var(--rot)); font-size: 1.7rem; font-weight: 900; flex: none; line-height: 1; }
+  /* gut sichtbare Klappen in den Einstellungen: Goldrand, rechts runder weinroter Knopf ⌄ (zu) / gedreht (auf) */
+  #v-einstellungen details:not(.karte):not(.iv-ordner), #v-einstellungen details.karte.innen { border: 2px solid var(--gold, #c9a46a); border-radius: 14px; padding: 0 12px; margin: 10px 0; background: var(--karte); box-shadow: none; }
+  #v-einstellungen details:not(.karte):not(.iv-ordner) > summary, #v-einstellungen details.karte.innen > summary { display: flex; align-items: center; gap: 8px; padding: 12px 0; font-weight: 800; min-height: 30px; }
+  #v-einstellungen details:not(.karte):not(.iv-ordner) > summary::before { display: none; }
+  #v-einstellungen details:not(.karte):not(.iv-ordner) > summary::after { content: "⌄"; margin-left: auto; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--rot); color: #fff; display: grid; place-items: center; font-size: 1.05rem; line-height: 1; padding-bottom: 6px; box-sizing: border-box; transition: transform .2s; }
+  #v-einstellungen details[open]:not(.karte):not(.iv-ordner) > summary::after { transform: rotate(180deg); padding: 0 0 6px; }
+  #v-einstellungen details[open]:not(.karte):not(.iv-ordner) > summary { border-bottom: 1px solid var(--linie); margin-bottom: 6px; }
+  #v-einstellungen details.abh-aus > summary::after { background: var(--grau); }
+  /* Schalter wie beim Handy (grün = an, grau = aus) statt kleiner Häkchen */
+  #v-einstellungen .schalter > input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 52px; height: 30px; border-radius: 15px; background: #b9aea4; position: relative; cursor: pointer; transition: background .2s; margin: 0; flex: none; }
+  #v-einstellungen .schalter > input[type="checkbox"]::before { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: left .2s; }
+  #v-einstellungen .schalter > input[type="checkbox"]:checked { background: #2e7d32; } #v-einstellungen .schalter > input[type="checkbox"]:checked::before { left: 25px; }
+  #v-einstellungen .schalter > input[type="checkbox"]:focus-visible { outline: 3px solid var(--gold, #c9a46a); outline-offset: 2px; }
+  #v-einstellungen .schalter > input[type="checkbox"]:disabled { opacity: .45; cursor: default; }
+  @media (prefers-reduced-motion: reduce) { #v-einstellungen .schalter > input[type="checkbox"], #v-einstellungen .schalter > input[type="checkbox"]::before, #v-einstellungen details > summary::after { transition: none; } }
   /* 2.24.15: Sprung aus Hilfe/Tipp in einen sonst nur erweiterten Bereich – in der einfachen Ansicht dann trotzdem zeigen */
   body.einfach #v-einstellungen > details[data-klappe].einfach-sichtbar { display: block; }
   details.karte.innen { box-shadow: none; border: 1px solid var(--linie); margin: 8px 0 0; }
@@ -5039,10 +5074,13 @@
 
   <!-- EINSTELLUNGEN -->
   <section id="v-einstellungen" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>⚙️ Einstellungen</h2></div>
+    <div class="kopf2"><button class="zurueck" onclick="einstZurueck()" aria-label="Zurück">‹</button><h2>⚙️ Einstellungen</h2></div>
     <div class="einst-suche"><input type="search" id="einstSuche" placeholder="🔍 Einstellung suchen – z. B. Uhr, Schrift, Push" aria-label="Einstellung suchen" oninput="einstSuchen(this.value)" autocomplete="off"><button type="button" class="knopf klein versteckt" id="einstSucheWeg" onclick="einstSuchen('', true)" aria-label="Suche löschen">✕</button></div> <!-- 2.469.0 KC-CLUB-EINST-SUCHE -->
     <p class="hinweis versteckt" id="einstSucheNichts" style="margin:4px 0 8px">Nichts gefunden – anderes Wort versuchen, z. B. „Ton“, „Farbe“ oder „Geburtstag“.</p>
     <div class="klappen-alle-zeile"><button type="button" class="knopf klein klappen-alle" data-wurzel="v-einstellungen" onclick="klappenAlle(this)" aria-label="Alle Bereiche aufklappen">▾ Alle auf</button></div>
+    <!-- 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht wie beim Handy (Gruppen → Bereich als eigene Seite); gefüllt aus EU_GRUPPEN in app.js -->
+    <nav id="euListe" class="eu-liste" aria-label="Bereiche der Einstellungen"></nav>
+    <div class="eu-bereichkopf"><button type="button" class="knopf eu-zurueck" onclick="einstZurueck()">‹ Alle Einstellungen</button></div>
     <!-- KC-CLUB-ANSICHT (0.62.0): Einstellungen der einfachen Ansicht – nur drei Dinge -->
     <details class="karte" data-klappe="einfach" data-einfach open>
       <summary>⚙️ Das Wichtigste</summary>
@@ -5642,7 +5680,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.551.0" data-v="2.551.0"></script>
+<script src="app.js?v=2.552.0" data-v="2.552.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

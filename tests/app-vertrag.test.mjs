@@ -6941,7 +6941,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.482.0 KC-CLUB-EINST-LISTE-EINFACH + KC-CLUB-KLAPPE-EINHEIT (TÜV, Hansi „2, 3“)
 {
   const ix = lies("index.html");
-  assert.ok(/k === "einst" && einfach\(\) && !w \? false/.test(html), "einfache Ansicht: Einstellungen als Liste (eigene Wahl bleibt)");
+  assert.ok(/k === "einst" && !w \? false/.test(html), "Einstellungen ohne eigene Wahl: Übersicht/Liste statt Kartei (2.552.0: in beiden Ansichten; eigene Wahl bleibt)");
   assert.ok(/RK\.einst && \(RK\.einst\.an \|\| rkAn\("einst"\)\)\) rkAufbauen\(RK\.einst\)/.test(html), "Ansichtswechsel wechselt Liste/Kartei mit");
   assert.ok(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/.test(ix) && /details\[open\]:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ transform: rotate\(90deg\); \}/.test(ix), "alle kleinen Klappbereiche: gleicher Pfeil");
   assert.ok(!/summary::before \{ content/.test(ix.replace(/details:not\(\.karte\):not\(\.iv-ordner\) > summary::before \{ content: "▸";/, "").replace(/\.iv-ordner > summary::before \{ content: "▸";/, "")), "kein zweites eigenes Klapp-Zeichen");
@@ -9226,7 +9226,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/function rkEinrichten\(wurzelId, schluessel\)/.test(html) && /rkEinrichten\("v-einstellungen", "einst"\)/.test(html), "wiederverwendbarer Kern, Einstellungen eingebunden");
-  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /z\.knopf\.textContent = an \? "☰ Liste" : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
+  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /z\.knopf\.textContent = an \? \(z\.schluessel === "einst" \? "☰ Übersicht" : "☰ Liste"\) : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
   assert.ok(/if \(z\.an && e\.target\.parentElement === w && e\.target\.classList\.contains\("rk-karte"\)\) e\.stopPropagation\(\);/.test(html) && /d\.open = d\.dataset\.rkVorher === "1"/.test(html), "gemerkte Auf/Zu-Stände der Liste bleiben unverändert");
   assert.ok(/m\.target\.classList\?\.contains\("hervor"\)\) \{ rkZu\(z, m\.target\)/.test(html), "Suche/Tipps/„zeig mir wo“ blättern zur richtigen Karte");
   assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");
@@ -9306,7 +9306,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(!ich\.nurLesen && p\.vorschau !== true\) await db\.from\("kc_communication_thread_participants"\)\.update\(\{ last_read_at: jetzt\(\) \}\)/.test(server), "Vorschau in der Kartei zählt nicht als gelesen");
   assert.ok(/api\("unterhaltung", \{ id, vorschau: true \}\)/.test(html) && /\.slice\(-6\)/.test(html) && /\[0, 1\]\.forEach\(\(k\) => uhkLaden/.test(html), "vorne die letzten 6 Nachrichten, nur vordere + nächste Karte geladen");
   assert.ok(/onclick="chatOeffnen\('\$\{esc\(u\.id\)\}'\)">💬 Öffnen &amp; antworten/.test(html), "gelesen erst mit „Öffnen & antworten“");
-  assert.ok(/return k === "chats" \? w === "an" : (k === "einst" && einfach\(\) && !w \? false : )?w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
+  assert.ok(/return k === "chats" \? w === "an" : (k === "einst"( && einfach\(\))? && !w \? false : )?w !== "aus";/.test(html) && /id="setRkChats"/.test(idx) && /id="uhKarteiKnopf"/.test(html), "Chats ab Werk aus; ein Umschalter oben + Haken in den Einstellungen");
   assert.ok(/esc\(String\(m\.text \|\| \(m\.anlagen\?\.length \? "📎 Anhang" : ""\)\)\.slice\(0, 220\)\)/.test(html), "Nachrichtentext immer maskiert");
 }
 
@@ -11762,4 +11762,19 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/sperreFuer\(absender\.person_id\)/.test(ab) && /\.eq\("status", "offen"\)\.select\("id"\)/.test(ab) && /geplantSenden\(g, absender\)/.test(ab), "Absender-Sperre, erst belegen, dann im Namen des Absenders senden");
   assert.ok(/"geplant_abrufen"/.test(programm) && /"geplant_jetzt", "geplant_abrufen",/.test(server), "Zugangsliste App = Server");
   assert.ok(/const vorab = GP\.wdh === "einmal" && \(await gpVorabFrage\(\)\);/.test(programm) && /function gpVorabZeigen\(z\)/.test(programm) && /gpVorab\('\$\{esc\(g\.id\)\}', \$\{!g\.vorab\}\)/.test(programm), "App: Frage, Abruf-Kasten, Schalter unter ⏰");
+}
+// 2.552.0 KC-CLUB-EINST-UEBERSICHT (Wunsch Hansi „Einstellungen unübersichtlich, Klappfelder sieht man kaum – Deluxe, gut zusammengefasst, nichts überladen“)
+{
+  const ix = lies("index.html");
+  assert.ok(/<nav id="euListe" class="eu-liste"/.test(ix) && /onclick="einstZurueck\(\)">‹ Alle Einstellungen<\/button>/.test(ix) && /<button class="zurueck" onclick="einstZurueck\(\)"/.test(ix), "Übersicht + „‹ Alle Einstellungen“ + Zurück-Knopf");
+  assert.ok(/const EU_GRUPPEN = \[/.test(html) && /\["Für mich", \[/.test(html) && /\["Aussehen", \[/.test(html) && /\["Technik", \[/.test(html) && /\["Nur Admin", \[/.test(html), "vier Gruppen aus einer Liste (Registry)");
+  const karten = [...ix.slice(ix.indexOf('<section id="v-einstellungen"'), ix.indexOf("</section>", ix.indexOf('<section id="v-einstellungen"'))).matchAll(/<details class="karte(?! innen)[^"]*" data-klappe="(\w+)"/g)].map((m) => m[1]);
+  const eu = html.slice(html.indexOf("const EU_GRUPPEN = ["), html.indexOf("const EU = { bereich: null };"));
+  assert.ok(karten.length >= 12 && karten.every((k) => eu.includes(`"${k}"`)), "jede Einstellungs-Karte steht in einer Zeile: " + karten.filter((k) => !eu.includes(`"${k}"`)).join(","));
+  assert.ok(/\["Weitere", rest\]/.test(html), "neue Karte ohne Eintrag geht nie verloren (Weitere)");
+  assert.ok(/const euAn = \(\) => !RK\.einst\?\.an;/.test(html) && /k === "einst" && !w \? false/.test(html), "Kartei bleibt wählbar; ab Werk Übersicht");
+  assert.ok(/if \(!euAn\(\) \|\| w\.classList\.contains\("versteckt"\) \|\| w\.classList\.contains\("sucht"\)/.test(html), "Sprünge (Hilfe, Wegweiser) öffnen den Bereich – nicht während der Suche");
+  assert.ok(/function euModus\(\) \{\n  const w = euWurzel\(\); if \(!w \|\| w\.classList\.contains\("eu-an"\) === euAn\(\)\) return;/.test(html), "Klassen nur bei Änderung (keine Endlosschleife mit der Kartei)");
+  assert.ok(/if \(v === "einstellungen"\) euUebersicht\(\);/.test(html) && /history\.pushState\(\{ \.\.\.\(history\.state \|\| \{\}\), eu: id,/.test(html), "beginnt mit Übersicht; Zurück-Taste führt aus dem Bereich zurück");
+  assert.ok(/#v-einstellungen \.schalter > input\[type="checkbox"\] \{ appearance: none;/.test(ix) && /#v-einstellungen details:not\(\.karte\):not\(\.iv-ordner\) > summary::after \{ content: "⌄";/.test(ix), "Schalter wie beim Handy + gut sichtbare Klappen");
 }

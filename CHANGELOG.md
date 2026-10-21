@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.552.0 – 2026-10-21 – Einstellungen als Übersicht (KC-CLUB-EINST-UEBERSICHT)
+- Einstellungen beginnen mit einer Übersicht wie beim Handy: Gruppen „Für mich“, „Aussehen“, „Technik“, „Nur Admin“; jede Zeile mit Symbol, Inhalt und „x von y an“. Antippen öffnet den Bereich als eigene Seite (‹ Alle Einstellungen / Zurück-Taste).
+- Klappfelder gut sichtbar (Goldrand, runder weinroter Knopf), Häkchen als Schalter (grün = an).
+- Suche, Hilfe-Sprünge, Wegweiser unverändert; 🗂️ Kartei weiter wählbar (einmalig auf Übersicht zurückgestellt).
+
 ## 2.551.0 – 2026-10-20 – Geplante Nachricht vorher abrufen (KC-CLUB-GEPLANT-VORAB)
 - Beim Planen einer einmaligen Nachricht fragt die App: Darf der Empfänger sie schon vorher abrufen? Bei Ja bekommt er sofort einen Hinweis (ohne Text) und im Chat einen Knopf „📩 Jetzt abrufen“; sonst kommt sie zur geplanten Zeit.
 - Unter ⏰ bei der geplanten Nachricht: „📩 Vorher abrufen erlauben / 🔒 ausschalten“ (auch für schon geplante). Der Absender bekommt einen Push, wenn abgerufen wurde.

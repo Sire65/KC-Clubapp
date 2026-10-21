@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.551.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.552.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1501,6 +1501,7 @@ function ansichtAnwenden() {
   if (einfach() && kaBearb) kaBearbeiten(false);
   ansichtInfo();
   if (INIT) { registerZeigen(); kachelnZeigen(); infoFelderAktualisieren(); heroZeigen(0); }
+  try { euZeichnen(); } catch {} // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Zeilen der jeweiligen Ansicht
 }
 // einfache Ansicht: oben immer „Nächstes Treffen“ (kein Blättern)
 function ansichtInfo() { if (!einfach()) return; const i = INFO_FELDER.findIndex((f) => f.id === "treffen"); if (i >= 0) INFO_I = i; }
@@ -22071,8 +22072,12 @@ function einstSuchen(q, leeren) {
   w.querySelectorAll(".such-weg, .such-treffer").forEach((x) => x.classList.remove("such-weg", "such-treffer"));
   const alle = [...w.querySelectorAll("details")];
   if (q.length < 2) {
+    const warSuche = !!EINST_SUCHE.offen;
     if (EINST_SUCHE.offen) { alle.forEach((d) => (d.open = EINST_SUCHE.offen.has(d))); EINST_SUCHE.offen = null; }
-    $("einstSucheNichts")?.classList.add("versteckt"); w.classList.remove("sucht"); if (RK.einst?.an) rkAufbauen(RK.einst); return;
+    $("einstSucheNichts")?.classList.add("versteckt"); w.classList.remove("sucht");
+    if (RK.einst?.an) rkAufbauen(RK.einst);
+    if (warSuche && euAn()) { if (EU.bereich) euOeffnen(EU.bereich, true); else euUebersicht(); } // 2.552.0 KC-CLUB-EINST-UEBERSICHT: zurück zur Seite, auf der man war
+    return;
   }
   if (!EINST_SUCHE.offen) EINST_SUCHE.offen = new Set(alle.filter((d) => d.open));
   w.classList.add("sucht");
@@ -22092,6 +22097,81 @@ function einstSuchen(q, leeren) {
   $("einstSucheNichts")?.classList.toggle("versteckt", irgendwas);
   if (RK.einst?.an) rkAufbauen(RK.einst);
 }
+// ---------- 2.552.0 KC-CLUB-EINST-UEBERSICHT (Wunsch Hansi „Einstellungen übersichtlich, bedienerfreundlich, logisch – Deluxe, nichts überladen“):
+// Übersicht wie beim Handy: Gruppen mit je einer Zeile pro Bereich (Symbol, Name, was drin ist, wie viele Schalter an sind) → antippen zeigt den
+// Bereich als eigene Seite („‹ Alle Einstellungen“ bzw. Zurück-Taste führt zurück). Die Bereiche selbst bleiben die bisherigen Karten (alle Schalter,
+// IDs, Suche, Hilfe-Sprünge, Wegweiser unverändert); hier steht nur, welche Karte in welche Zeile gehört. Neue Karte → hier eintragen (sonst „Weitere“).
+// Mit „🗂️ Kartei“ oben gibt es weiter die Rollkartei; die Suche zeigt wie bisher alle Treffer untereinander.
+const EU_GRUPPEN = [
+  ["Für mich", [
+    { id: "einfach", sym: "⚙️", t: "Das Wichtigste", info: "Neuigkeiten, Nicht stören, Farbe, Schrift, Hilfe", karten: ["einfach"] },
+    { id: "benachrichtigung", sym: "🔔", t: "Benachrichtigungen", info: "Push, Warnton, Nicht stören, @Erwähnungen", karten: ["benachrichtigung"] },
+    { id: "ansagen", sym: "🗣️", t: "Ansagen, Töne & Tipps", info: "Tipp des Tages, Vorlesen, Sprachsteuerung, Einweisungen", karten: ["ansagen"] },
+    { id: "privat", sym: "🔒", t: "Privatsphäre", info: "Online-Anzeige, Anklopfen, Spiele, was andere von mir sehen", karten: ["privat"] }]],
+  ["Aussehen", [
+    { id: "darstellung", sym: "🎨", t: "Darstellung", info: "Farben, Themen, Schriftgröße, Tag/Nacht, Sparmodus", karten: ["darstellung"] },
+    { id: "effekte", sym: "✨", t: "Effekte", info: "Uhr, Jahreszeiten, Fee, Senden, Reißwolf …", karten: ["effekte"] },
+    { id: "startseite", sym: "🧩", t: "Startseite & Ansicht", info: "Kacheln, Schnellstart, Info-Feld, einfache Ansicht", karten: ["startseite", "schnellstart", "leitung_start"] }]],
+  ["Technik", [
+    { id: "handykalender", sym: "📆", t: "Termine im Handy-Kalender", info: "Club-Termine im eigenen Kalender", karten: ["handykalender"] },
+    { id: "app", sym: "📲", t: "App & Geräte", info: "Installation, PC/Tablet, Version", karten: ["install", "app"], stand: () => "Version " + APP_VERSION }]],
+  ["Nur Admin", [
+    { id: "admin", sym: "🛠️", t: "Admin-Einstellungen", info: "Pinnwand, Anrufe, Einstieg, Erstattung, Wetter", karten: ["admin"] }]],
+];
+const EU = { bereich: null };
+const euWurzel = () => $("v-einstellungen");
+const euAn = () => !RK.einst?.an; // in der Rollkartei (🗂️) bleibt alles wie bisher
+const euKarten = () => [...(euWurzel()?.children || [])].filter((d) => d.matches("details.karte[data-klappe]"));
+// gleiche Sicht wie die Seite: ausgeblendet (Rolle) nie, einfache Ansicht nur ihre Karten, „Das Wichtigste“ nur in der einfachen
+const euSichtbar = (d) => !d.classList.contains("versteckt") && (einfach() ? d.hasAttribute("data-einfach") || d.classList.contains("einfach-sichtbar") : d.dataset.klappe !== "einfach");
+function euZeilen() { // alle Zeilen; Karten, die (noch) in keiner Zeile stehen, kommen unter „Weitere“ – so geht nie eine Einstellung verloren
+  const bekannt = new Set(EU_GRUPPEN.flatMap(([, l]) => l.flatMap((z) => z.karten)));
+  const rest = euKarten().filter((d) => !bekannt.has(d.dataset.klappe)).map((d) => ({ id: "k_" + d.dataset.klappe, sym: "📁", t: (d.querySelector(":scope > summary")?.firstChild?.textContent || d.dataset.klappe).trim(), info: "", karten: [d.dataset.klappe] }));
+  return rest.length ? [...EU_GRUPPEN, ["Weitere", rest]] : EU_GRUPPEN;
+}
+const euKarteZu = (z) => z.karten.map((k) => euWurzel()?.querySelector(`:scope > details[data-klappe="${k}"]`)).filter(Boolean);
+function euStand(z) { // wie viele Schalter in diesem Bereich an sind (nur, was man in dieser Ansicht auch sieht)
+  const l = euKarteZu(z).filter(euSichtbar).flatMap((d) => [...d.querySelectorAll(".schalter > input[type=checkbox]")])
+    .filter((x) => !x.closest(".versteckt") && !(einfach() && x.closest(".nur-erweitert")));
+  const an = l.filter((x) => x.checked).length;
+  return [z.stand?.(), l.length ? `${an} von ${l.length} an` : ""].filter(Boolean).join(" · ");
+}
+function euZeichnen() {
+  const box = $("euListe"), w = euWurzel(); if (!box || !w) return;
+  if (w.classList.contains("eu-an") !== euAn()) w.classList.toggle("eu-an");
+  if (!euAn()) return;
+  box.innerHTML = euZeilen().map(([g, l]) => { const z = l.filter((x) => euKarteZu(x).some(euSichtbar)); if (!z.length) return "";
+    return `<div class="eu-gruppe">${esc(g)}</div><div class="eu-block">${z.map((x) => { const st = euStand(x);
+      return `<button type="button" class="eu-zeile" data-eu="${esc(x.id)}" onclick="euOeffnen('${esc(x.id)}')"><span class="eu-sym" aria-hidden="true">${x.sym}</span><span class="eu-tx"><b>${esc(x.t)}</b>${x.info ? `<small>${esc(x.info)}</small>` : ""}${st ? `<span class="eu-stand">${esc(st)}</span>` : ""}</span><span class="eu-pfeil" aria-hidden="true">›</span></button>`; }).join("")}</div>`; }).join("")
+    + `<div class="eu-gruppe">Hilfe</div><div class="eu-block"><button type="button" class="eu-zeile" onclick="ewStart()"><span class="eu-sym" aria-hidden="true">🧭</span><span class="eu-tx"><b>Einstellungen erklärt</b><small>Was jede Einstellung bewirkt – zum Nachlesen</small></span><span class="eu-pfeil" aria-hidden="true">›</span></button></div>`;
+}
+function euOeffnen(id, ohneVerlauf) {
+  const w = euWurzel(), z = euZeilen().flatMap(([, l]) => l).find((x) => x.id === id); if (!w || !z || !euAn()) return;
+  const karten = euKarteZu(z), neu = EU.bereich !== id;
+  EU.bereich = id; if (!w.classList.contains("eu-offen")) w.classList.add("eu-offen");
+  euKarten().forEach((d) => { if (d.classList.contains("eu-aktiv") !== karten.includes(d)) d.classList.toggle("eu-aktiv"); });
+  karten.forEach((d) => { if (!d.open) d.open = true; });
+  if (neu && !ohneVerlauf) { history.pushState({ ...(history.state || {}), eu: id, tiefe: (history.state?.tiefe || 1) + 1 }, "", location.href); window.scrollTo(0, 0); }
+}
+// Übersicht ↔ Kartei: Klassen nur ändern, wenn sich etwas ändert – die Kartei beobachtet die Klassen der Seite (sonst Endlosschleife)
+function euModus() {
+  const w = euWurzel(); if (!w || w.classList.contains("eu-an") === euAn()) return;
+  if (euAn()) return euUebersicht();
+  EU.bereich = null; w.classList.remove("eu-an", "eu-offen"); euKarten().forEach((d) => d.classList.contains("eu-aktiv") && d.classList.remove("eu-aktiv"));
+}
+function euUebersicht() {
+  const w = euWurzel(); if (!w) return;
+  EU.bereich = null; if (w.classList.contains("eu-offen")) w.classList.remove("eu-offen");
+  euKarten().forEach((d) => { if (d.classList.contains("eu-aktiv")) d.classList.remove("eu-aktiv"); if (euAn() && !w.classList.contains("sucht")) d.open = false; }); // zu, damit ein Sprung (open = true) den Bereich wieder öffnet
+  euZeichnen();
+}
+function einstZurueck() { if (EU.bereich && euAn() && history.state?.eu) history.back(); else if (EU.bereich && euAn()) euUebersicht(); else zurueck("start"); }
+// Sprünge aus Hilfe, Tipps, Wegweiser, Rundgang („Bereich aufklappen“) öffnen den passenden Bereich als Seite
+if (typeof document !== "undefined") document.addEventListener("toggle", (e) => {
+  const d = e.target, w = euWurzel(); if (!d.open || !w || d.parentElement !== w || !d.matches("details.karte[data-klappe]")) return;
+  if (!euAn() || w.classList.contains("versteckt") || w.classList.contains("sucht") || d.classList.contains("eu-aktiv")) return;
+  const z = euZeilen().flatMap(([, l]) => l).find((x) => x.karten.includes(d.dataset.klappe)); if (z) euOeffnen(z.id);
+}, true);
 // ---------- 2.534.0 KC-CLUB-EINST-WEGWEISER (Wunsch Hansi „spezielle Anleitung: Voreinstellungen leicht gemacht – alle Möglichkeiten auflisten und kurz
 // erklären … als eigene Kachel unter Technik, wie der Explorer bei Windows: Überschrift z. B. ‚Farben einstellen‘, antippen, dann kommt die Erklärung“) ----------
 // Liest die Einstellungen direkt aus der Seite ⚙️ (Bereiche = Ordner, Schalter/Auswahlen = Einträge, ihr grauer Hinweis = Kurz-Erklärung) – neue Einstellungen
@@ -25584,7 +25664,7 @@ function klappenMerken(wurzel = document) {
 const RK = {};
 // 2.482.0 KC-CLUB-EINST-LISTE-EINFACH (TÜV 18.10., Hansi „2“): in der einfachen Ansicht starten die Einstellungen als ruhige Liste mit Klappbereichen
 // (eine Ebene statt Reiter + Kartenstapel + ▲▼). Wer die Kartei einmal selbst gewählt hat, behält sie – „🗂️ Kartei“ bleibt oben erreichbar.
-const rkAn = (k) => { try { const w = localStorage.getItem("kc_club_rk_" + k); return k === "chats" ? w === "an" : k === "einst" && einfach() && !w ? false : w !== "aus"; } catch { return k !== "chats" && !(k === "einst" && einfach()); } }; // Chats ab Werk aus (2.191.0)
+const rkAn = (k) => { try { const w = localStorage.getItem("kc_club_rk_" + k); return k === "chats" ? w === "an" : k === "einst" && !w ? false : w !== "aus"; } catch { return k !== "chats" && k !== "einst"; } }; // Chats ab Werk aus (2.191.0); 2.552.0 Einstellungen ab Werk Übersicht
 function rkKarten(w) { return [...w.children].filter((d) => d.matches("details.karte[data-klappe]") && getComputedStyle(d).display !== "none" && !d.classList.contains("versteckt")); }
 function rkEinrichten(wurzelId, schluessel) {
   const w = $(wurzelId); if (!w || typeof MutationObserver === "undefined") return;
@@ -25623,7 +25703,8 @@ function rkSchalten(k, an) {
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  if (z.knopf) { z.knopf.textContent = an ? "☰ Liste" : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
+  if (z.knopf) { z.knopf.textContent = an ? (z.schluessel === "einst" ? "☰ Übersicht" : "☰ Liste") : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
+  if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
   if (!z.an) {
     z.an = true; w.classList.add("rk");
@@ -25709,6 +25790,8 @@ function rkZu(z, el) {
   scrollTo({ top: 0 });
   setTimeout(() => { d.scrollTop = Math.max(0, el.getBoundingClientRect().top - d.getBoundingClientRect().top + d.scrollTop - d.clientHeight / 3); }, Math.abs(i - z.i) * 90 + 120);
 }
+// 2.552.0 KC-CLUB-EINST-UEBERSICHT: einmalig – wer früher die Kartei gewählt hatte, sieht zuerst die neue Übersicht (🗂️ Kartei oben geht weiter)
+try { if (typeof localStorage !== "undefined" && !localStorage.getItem("kc_club_eu_neu")) { if (localStorage.getItem("kc_club_rk_einst") === "an") localStorage.removeItem("kc_club_rk_einst"); localStorage.setItem("kc_club_eu_neu", "1"); } } catch {}
 if (typeof document !== "undefined") { const rkStart = () => rkEinrichten("v-einstellungen", "einst"); if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", rkStart); else rkStart(); }
 if (typeof document !== "undefined") { const zkLos = () => { try { zkStart(); } catch {} }; if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zkLos); else zkLos(); } // KC-CLUB-ZYKLUS (2.206.0)
 // 2.187.0 KC-CLUB-ROLLKARTEI-JALOUSIE (Wunsch Hansi): kommt eine Karte nach vorn, fährt eine Jalousie sehr schnell hoch (≈ 0,35 s) und gibt
@@ -26231,6 +26314,7 @@ function zeige(v, ausHistorie) {
   if (v === "mitglieder") { MG_AMEISEN.bis = 0; MG_AMEISEN.neu = true; mgAnsichtWahlZeigen(); mitgliederLaden(); } // KC-CLUB-GRUPPEN-AMEISEN
   if (v === "einstellungen") akSichtbarSetzen(); // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG
   if (v === "einstellungen") einstFuellen(); // 2.534.0: eigene Funktion – der Einstellungs-Wegweiser füllt die Werte genauso
+  if (v === "einstellungen") euUebersicht(); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: immer mit der Übersicht beginnen (auch „Zurück“ aus einem Bereich)
   if (v === "start") neuLaden();
   // KC-CLUB-ZURUECK: jede Ansicht bekommt einen Verlaufseintrag, damit „Zurück“ eine Ansicht zurückgeht statt die App zu schließen
   const hash = v === "start" || v === "chat" ? "" : v === "protokoll" ? "#protokoll=" + prId : v === "aktion" ? "#aktion=" + aktionId : v === "mitglied" ? "#mitglied=" + mitgliedId : v === "dokansicht" ? "#dokument=" + encodeURIComponent(DOKA.id) : "#" + v;
