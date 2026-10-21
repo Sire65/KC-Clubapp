@@ -5315,6 +5315,7 @@ const HILFE = [
   { id: "link_vorschau", thema: "nachrichten", sym: "🔗", t: "Vorschau zu Links in Nachrichten", x: "Schreibst du einen Link in eine Nachricht (z. B. ein Rezept, einen Zeitungsartikel oder ein YouTube-Video), erscheint über dem Schreibfeld eine kleine <b>Vorschau-Karte</b> mit Bild, Titel und kurzem Text. Sie wird mitgeschickt – alle sehen sofort, worum es geht. Antippen öffnet die Seite. Ohne Vorschau senden: auf <b>✖</b> an der Karte tippen. Manche Seiten erlauben keine Vorschau – dann geht der Link ganz normal ohne Karte raus.", seit: "2.486.0" },
   { id: "schuerze", thema: "privat", sym: "🧑‍🍳", t: "Schürze an der Koch-Figur", x: "Deine Koch-Figur kann jetzt eine Schürze tragen: <b>Mein Bild → Selbst zusammenstellen → 🧑‍🍳 Schürze</b>. Sie hat Träger um den Hals und deine <b>Initialen rechts oben</b>. 10 Farben (z. B. weinrot, schwarz, Jeansblau, Leder braun) und Muster wie <b>Nadelstreifen</b>, Längsstreifen, Karo, Punkte oder Jeans. „ohne“ nimmt sie wieder ab.", seit: "2.452.0" },
   { id: "sprachtempo", thema: "nachrichten", sym: "⏩", t: "Lange Sprachnachrichten schneller hören", x: "Sprachnachrichten kannst du auch in <b>1,5×</b> oder <b>2×</b> abspielen – der kleine Tempo-Knopf sitzt direkt an der Sprachnachricht. Deine Wahl merkt sich das Handy.", seit: "2.23.1" },
+  { id: "anrufbeantworter", thema: "nachrichten", sym: "📼", t: "Anrufbeantworter", x: "Klopft jemand an und du kannst gerade nicht, tippe auf <b>📼 Anrufbeantworter einschalten</b> – dann kann er dir gleich etwas aufsprechen (bis zu 2 Minuten). Neue Nachrichten meldet die App sofort oder beim nächsten Öffnen. Anhören, blättern, löschen, zurückrufen: <b>💬 Nachrichten → 📼 Mein Anrufbeantworter</b>. Wer dir etwas aufgesprochen hat, erfährt, wann du es abgehört hast.", zeig: () => abOeffnen(), seit: "2.568.0" },
   { id: "chat_vorlesen", thema: "nachrichten", sym: "🔊", t: "Hände voll? Chat vorlesen lassen", x: "Gerade beim Kochen praktisch: im Chat oben <b>⋮</b> → <b>„🔊 Vorlesen ab den neuen Nachrichten“</b> oder <b>„🔊 Ganzen Chat vorlesen“</b>. Das Handy liest vor, du hörst einfach zu.", zeig: () => zeige("nachrichten"), seit: "2.23.1" },
   { id: "whatsapp", thema: "nachrichten", sym: "🟢", t: "Text zusätzlich per WhatsApp schicken", x: "Ist jemand in der App noch nicht so oft unterwegs? Der grüne Knopf <b>„WA“</b> unter dem Schreibfeld übernimmt deinen Text nach WhatsApp – du musst ihn nicht nochmal tippen.", seit: "2.23.1" },
   { id: "gruppe_loeschen", thema: "nachrichten", sym: "👥", t: "Eine Gruppe wieder auflösen", x: "Eine Gruppe wird nicht mehr gebraucht? Wer sie verwaltet, findet im Gruppenchat oben unter <b>⋮</b> den Punkt <b>„🗑️ Gruppe löschen (für alle)“</b>. Vorher fragt die App lieber noch einmal nach.", seit: "2.23.1" },
@@ -7618,6 +7619,7 @@ async function onlinePing() {
       if (ONL.wartet === a.id) { ONL.wartet = null; onlineTakt(); }
       if (KW?.id === a.id) klopfWartenEnde();
       if (a.status === "angenommen" && a.thread) { melde(`✅ ${a.an.vorname} hat angenommen – schreibt los!`); try { navigator.vibrate?.(60); } catch {} chatOeffnen(a.thread); }
+      else if (a.status === "anrufbeantworter") abAngebot(a.an, a.id); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
       else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
       else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
     }
@@ -7812,6 +7814,7 @@ function rtSignal(s) {
     return;
   }
   if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
+  if (s.art === "ab") { abStandHolen(); return; } // 2.568.0 KC-CLUB-ANRUFBEANTWORTER: neue Nachricht bzw. abgehört
   // KC-CLUB-REALTIME-SPIELE (2.228.0): Zug/Herausforderung/Aufgabe – offenes Spiel sofort holen, sonst Einladungen/„du bist dran“ auffrischen
   // KC-CLUB-REALTIME-VORFUEHREN (2.229.0): neues Live-Bild / Status → Zuschauer holt sofort; Zeigender prüft gleich den Stand
   if (s.art === "vorfuehren") { if (VF.rolle === "schaut") vfHolen(true); else if (VF.rolle === "zeigt") { if (VF.status !== "laeuft") { SPG.ping = 0; spgSenderTakt(); } } /* eigene Bilder lösen kein Extra-Senden aus */ else onlinePing(); return; }
@@ -7986,7 +7989,8 @@ function klopfZeigen(k, antworten) {
   KLOPF = k; ONL.erledigt.add(k.id);
   $("klopfText").innerHTML = `<h3>👋 ${esc(k.von.vorname)} klopft an</h3><p style="margin:0">${esc(k.von.name)} möchte gerade mit dir schreiben. Möchtest du das Gespräch annehmen?</p>`;
   // KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0): Kurzantworten aus der Server-Registry – antippen beendet das Anklopfen sofort
-  $("klopfKacheln").innerHTML = (antworten || []).map((a) => `<button onclick="klopfKurz('${esc(a.id)}', this.textContent)">${esc(a.text)}</button>`).join("");
+  $("klopfKacheln").innerHTML = `<button class="klopf-ab" onclick="klopfKurz('ab', this.textContent)">📼 Anrufbeantworter einschalten</button>` // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
+    + (antworten || []).map((a) => `<button onclick="klopfKurz('${esc(a.id)}', this.textContent)">${esc(a.text)}</button>`).join("");
   $("klopfBlatt").classList.remove("versteckt");
   klopfTonSpielen(klopfStand().ton);
   ansageMelden({ art: "anklopfen", text: `${k.von.vorname} klopft gerade bei dir an` }); // KC-CLUB-SPRACHANSAGEN
@@ -7995,8 +7999,128 @@ async function klopfKurz(antwort, text) {
   $("klopfBlatt").classList.add("versteckt");
   if (!KLOPF) return;
   const k = KLOPF; KLOPF = null;
-  try { await api("anklopfen_antwort", { id: k.id, annehmen: false, antwort }); melde(`✔ ${k.von.vorname} sieht: „${text}“`); }
+  try { await api("anklopfen_antwort", { id: k.id, annehmen: false, antwort }); melde(antwort === "ab" ? `📼 Anrufbeantworter ist an – ${k.von.vorname} kann dir jetzt etwas aufsprechen.` : `✔ ${k.von.vorname} sieht: „${text}“`); }
   catch (e) { meldeFehler(e); }
+}
+// ---------- 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Wunsch Hansi): aufsprechen (2 Min., Admin 15 Min.), anhören, blättern, löschen, Quittung ----------
+const AB_MAX_SEK = () => (ICH?.admin ? 900 : 120);
+let ABAUF = null; // laufende Aufnahme { rec, strom, teile, start, uhr, pid, name, klopf, f }
+function abAngebot(an, klopf) { // der Angeklopfte hat den Anrufbeantworter eingeschaltet
+  const n = esc(an?.vorname || an?.name || "");
+  try { navigator.vibrate?.(60); } catch {}
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">📼 Anrufbeantworter eingeschaltet</h3>
+    <p class="dlg-text">${n} kann gerade nicht. Möchtest du jetzt eine Nachricht für ${n} hinterlassen? Du hast ${ICH?.admin ? "bis zu 15 Minuten" : "bis zu 2 Minuten"}.</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">🎤 Ja, jetzt aufsprechen</button><button class="knopf" data-w="chat">💬 Lieber schreiben</button><button class="knopf" data-w="zu">Nein</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "ja") abAufnahme(an.person_id, an.vorname || an.name, klopf); else if (b.dataset.w === "chat") direkt(an.person_id); }));
+}
+async function abAufnahme(pid, name, klopf) {
+  if (ABAUF || SPR) return;
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return melde("Dieses Handy/dieser Browser kann nichts aufnehmen – schreib lieber eine Nachricht.", true);
+  let strom;
+  try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch { return melde("Bitte das Mikrofon erlauben – sonst geht die Aufnahme nicht. Hilfe: ⚙️ → 🧭 Mikrofon-Assistent.", true); }
+  const typ = spracheFormat(), rec = new MediaRecorder(strom, typ ? { mimeType: typ, audioBitsPerSecond: 32000 } : undefined);
+  const f = blattAuf("abAufnahmeBlatt", `<div id="abAufInhalt"></div>`); f.onclick = null; // nicht aus Versehen wegtippen
+  ABAUF = { rec, strom, teile: [], start: Date.now(), typ: rec.mimeType || typ || "audio/webm", pid, name, klopf, uhr: null };
+  rec.ondataavailable = (e) => { if (e.data?.size) ABAUF?.teile.push(e.data); };
+  rec.start(1000); try { navigator.vibrate?.(30); } catch {}
+  const zeichnen = () => {
+    if (!ABAUF) return;
+    const s = Math.floor((Date.now() - ABAUF.start) / 1000), rest = Math.max(0, AB_MAX_SEK() - s), mm = (x) => `${Math.floor(x / 60)}:${String(x % 60).padStart(2, "0")}`;
+    $("abAufInhalt").innerHTML = `<h3 style="margin-top:0">🔴 Aufnahme für ${esc(name)}</h3>
+      <div class="kw-uhr ab-uhr" aria-live="polite">${mm(rest)}</div>
+      <p class="hinweis" style="text-align:center;margin:0 0 12px">Sprich jetzt – ${esc(name)} hört es auf dem Anrufbeantworter. Gesprochen: ${mm(s)}</p>
+      <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="abAufnahmeFertig()">✅ Fertig – an ${esc(name)} senden</button>
+      <button class="knopf" style="text-align:center" onclick="abAufnahmeVerwerfen()">🗑️ Verwerfen</button></div>`;
+    if (rest <= 0) { melde(`⏱️ Die ${ICH?.admin ? "15" : "2"} Minuten sind um – die Nachricht wird gesendet.`); abAufnahmeFertig(); }
+  };
+  zeichnen(); ABAUF.uhr = setInterval(zeichnen, 1000);
+}
+function abAufnahmeStopp() {
+  return new Promise((ok) => {
+    if (!ABAUF) return ok(null);
+    const s = ABAUF; clearInterval(s.uhr); ABAUF = null; document.getElementById("abAufnahmeBlatt")?.remove();
+    s.rec.onstop = () => { s.strom.getTracks().forEach((t) => t.stop()); ok(s); };
+    try { s.rec.stop(); } catch { s.strom.getTracks().forEach((t) => t.stop()); ok(s); }
+  });
+}
+async function abAufnahmeVerwerfen() { await abAufnahmeStopp(); melde("🗑️ Aufnahme verworfen"); }
+async function abAufnahmeFertig() {
+  const s = await abAufnahmeStopp(); if (!s) return;
+  const sek = Math.max(1, Math.min(AB_MAX_SEK(), Math.round((Date.now() - s.start) / 1000)));
+  if (!s.teile.length) return melde("Die Aufnahme ist leer – bitte nochmal versuchen.", true);
+  const typ = s.typ.split(";")[0], endung = typ.includes("mp4") ? "m4a" : typ.includes("ogg") ? "ogg" : "webm";
+  try {
+    const r = await anlageHochladen(new File(s.teile, `Anrufbeantworter-${new Date().toISOString().slice(11, 19).replace(/:/g, "")}.${endung}`, { type: typ }));
+    await api("ab_aufsprechen", { an: s.pid, anlage: r.id, sek, klopf: s.klopf });
+    melde(`📼 Deine Nachricht für ${s.name} liegt auf dem Anrufbeantworter – du erfährst, wann sie abgehört wurde.`);
+  } catch (e) { meldeFehler(e); }
+}
+// Stand (beim Start und auf Signal „ab“): neue Nachrichten an mich + „abgehört“-Quittungen meiner Nachrichten
+const AB_GEZEIGT = new Set();
+async function abStandHolen() { try { abStandZeigen((await api("ab_stand", {})).ab); } catch {} }
+function abStandZeigen(st) {
+  if (!st) return;
+  const q = (st.quittungen || []).filter((x) => !AB_GEZEIGT.has("q" + x.id));
+  if (q.length) {
+    q.forEach((x) => AB_GEZEIGT.add("q" + x.id));
+    const zeile = (x) => `Deine Nachricht an <b>${esc(x.name)}</b> vom ${esc(wann(x.gesprochen))} wurde am ${esc(fTag.format(new Date(x.gehoert)))} um ${esc(fZeit.format(new Date(x.gehoert)))} Uhr abgehört.`;
+    const f = dlgOeffnen(`<h3 class="dlg-kopf">✅ Abgehört</h3><p class="dlg-text">${q.map(zeile).join("<br><br>")}</p><div class="dlg-knoepfe"><button class="knopf haupt" data-w="ok">OK</button></div>`, () => zu());
+    const zu = () => { f.remove(); api("ab_quittung_gesehen", { ids: q.map((x) => x.id) }).catch(() => {}); };
+    f.querySelector("[data-w]").onclick = zu;
+    try { navigator.vibrate?.(40); } catch {}
+  }
+  const neu = (st.neuIds || []).filter((id) => !AB_GEZEIGT.has("n" + id));
+  abMerkerZeigen(st.neu || 0);
+  if (!neu.length || $("abBlatt") || RUF || KLOPF) return;
+  neu.forEach((id) => AB_GEZEIGT.add("n" + id));
+  const n = st.neu || neu.length;
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">📼 Anrufbeantworter</h3><p class="dlg-text">Du hast ${n === 1 ? "eine neue Nachricht" : `${n} neue Nachrichten`} auf deinem Anrufbeantworter. Möchtest du sie jetzt anhören?</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">▶️ Jetzt anhören</button><button class="knopf" data-w="zu">Später</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "ja") abOeffnen(); }));
+  ansageMelden({ art: "anklopfen", text: `Du hast ${n === 1 ? "eine neue Nachricht" : n + " neue Nachrichten"} auf dem Anrufbeantworter` });
+}
+function abMerkerZeigen(n) { const m = $("abMerker"); if (m) { m.textContent = n ? `📼 Anrufbeantworter · ${n} neu` : "📼 Mein Anrufbeantworter"; m.classList.toggle("neu", !!n); } }
+// Abhören: neueste zuerst, blättern, löschen, zurückrufen/anklopfen/schreiben
+let ABBOX = { liste: [], i: 0 };
+async function abOeffnen() {
+  let r; try { r = await api("ab_liste", {}); } catch (e) { return meldeFehler(e); }
+  ABBOX = { liste: r.liste || [], i: 0 }; abZeichnen();
+}
+function abZeichnen() {
+  const l = ABBOX.liste, x = l[ABBOX.i], mm = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const neu = l.filter((y) => !y.gehoert).length; abMerkerZeigen(neu);
+  const f = blattAuf("abBlatt", !x ? `<h3 style="margin-top:0">📼 Mein Anrufbeantworter</h3><p class="hinweis">Keine Nachrichten. Klopft jemand an und du kannst gerade nicht, tippe auf <b>📼 Anrufbeantworter einschalten</b> – dann kann man dir etwas aufsprechen.</p>
+      <button class="knopf" style="width:100%;text-align:center" onclick="fensterZu($('abBlatt'))">Schließen</button>`
+    : `<h3 style="margin-top:0">📼 Mein Anrufbeantworter <small class="hinweis">${ABBOX.i + 1} von ${l.length}${neu ? ` · ${neu} neu` : ""}</small></h3>
+      <div class="ab-karte${x.gehoert ? "" : " neu"}"><b>${esc(x.von.name || x.von.vorname)}</b>${x.gehoert ? "" : ' <span class="ab-neu">NEU</span>'}
+        <small>${esc(wann(x.zeit))} · ${mm(x.sek)}</small><div id="abSpieler"><button class="knopf haupt" style="width:100%;text-align:center;margin-top:8px" onclick="abAbspielen()">▶️ Anhören</button></div></div>
+      <div class="ab-blaettern"><button class="knopf" ${ABBOX.i ? "" : "disabled"} onclick="abBlaettern(-1)">◀ Neuere</button><button class="knopf" ${ABBOX.i < l.length - 1 ? "" : "disabled"} onclick="abBlaettern(1)">Ältere ▶</button></div>
+      <div class="ab-wege"><button class="knopf" onclick="abWeg('anruf')">📞 Zurückrufen</button><button class="knopf" onclick="abWeg('klopf')">👋 Anklopfen</button><button class="knopf" onclick="abWeg('chat')">💬 Schreiben</button></div>
+      <div class="ab-wege"><button class="knopf" onclick="abLoeschen()">🗑️ Löschen</button><button class="knopf" onclick="fensterZu($('abBlatt'))">Schließen</button></div>`);
+  f.classList.add("ab-blatt");
+}
+function abBlaettern(d) { ABBOX.i = Math.max(0, Math.min(ABBOX.liste.length - 1, ABBOX.i + d)); abZeichnen(); }
+async function abAbspielen() {
+  const x = ABBOX.liste[ABBOX.i], ort = $("abSpieler"); if (!x || !ort) return;
+  ort.innerHTML = '<p class="hinweis" style="text-align:center">⏳ lädt …</p>';
+  let url; try { url = (await api("ab_anhoeren", { id: x.id })).url; } catch (e) { ort.innerHTML = ""; return meldeFehler(e); }
+  if (!x.gehoert) { x.gehoert = new Date().toISOString(); abMerkerZeigen(ABBOX.liste.filter((y) => !y.gehoert).length); }
+  const a = document.createElement("audio"); a.controls = true; a.src = url; a.preload = "auto"; a.style.width = "100%";
+  const tempo = document.createElement("button"); tempo.type = "button"; tempo.className = "tempo"; tempo.title = "Abspiel-Tempo";
+  const setzen = (t) => { a.playbackRate = t; a.defaultPlaybackRate = t; tempo.textContent = String(t).replace(".", ",") + "×"; };
+  tempo.onclick = () => { const n = SPRACH_TEMPI[(SPRACH_TEMPI.indexOf(a.playbackRate) + 1) % SPRACH_TEMPI.length]; setzen(n); try { localStorage.setItem("kc_club_sprachtempo", String(n)); } catch {} };
+  setzen(sprachTempo()); ort.innerHTML = ""; ort.append(a, tempo); a.play().catch(() => {});
+}
+function abWeg(w) {
+  const x = ABBOX.liste[ABBOX.i]; if (!x) return; fensterZu($("abBlatt"));
+  if (w === "anruf") anrufen(x.von.person_id); else if (w === "klopf") anklopfen(x.von.person_id); else direkt(x.von.person_id);
+}
+async function abLoeschen() {
+  const x = ABBOX.liste[ABBOX.i]; if (!x) return;
+  if (!(await frage(`Nachricht von ${x.von.vorname || x.von.name} löschen?\n\nDie Aufnahme ist danach weg.`, { ja: "🗑️ Löschen", nein: "Abbrechen", gefahr: true }))) return;
+  try { await api("ab_loeschen", { id: x.id }); } catch (e) { return meldeFehler(e); }
+  ABBOX.liste.splice(ABBOX.i, 1); ABBOX.i = Math.min(ABBOX.i, Math.max(0, ABBOX.liste.length - 1)); melde("🗑️ Gelöscht"); abZeichnen();
 }
 // ---------- KC-CLUB-ANKLOPFEN-ERLAUBEN + Anklopfton (1.8.0, Wunsch Hansi) ----------
 // Töne werden im Gerät erzeugt (Web Audio) – keine Tondateien, nichts zu laden. Neue Töne = neuer Eintrag hier.
@@ -25621,6 +25745,7 @@ function hashSprung(h) {
     else if (h.startsWith("#besuch=")) bsDirekt(decodeURIComponent(h.slice(8))); // KC-CLUB-BESUCHE (2.23.65): „Protokoll öffnen“ aus Mails wie im alten Programm
     else if (h === "#schulungen") scStart();
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
+    else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
     else if (h.startsWith("#vorfuehren=")) setTimeout(onlinePing, 300); // KC-CLUB-VORFUEHREN: aus dem Push – die Einladung kommt mit dem nächsten Online-Abgleich
@@ -26287,7 +26412,7 @@ async function neuLadenRoh(vonHand) {
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
     INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen

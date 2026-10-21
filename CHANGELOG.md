@@ -1,10 +1,19 @@
 # Änderungen
 
-## 2.568.0 – 2026-10-21 – 🧭 Kacheln: Einfliegen, Horizontal/Vertikal drehen, Fallblatt-Uhr (KC-CLUB-KACHEL-EINFLUG)
+## 2.568.0 – 2026-10-21 – 📼 Anrufbeantworter beim Anklopfen + 🧭 Kacheln: Einfliegen, Horizontal/Vertikal drehen, Fallblatt-Uhr (KC-CLUB-ANRUFBEANTWORTER, KC-CLUB-KACHEL-EINFLUG)
+Bündel 20 Uhr. Wunsch Hansi zum Anrufbeantworter: „Wenn ich anklopfe und derjenige möchte das Gespräch nicht annehmen … mehrere Antworten parat und einen Sofort-Button ‚Anrufbeantworter einschalten‘ … Nachricht hinterlassen, Sekunden laufen runter, höchstens 2 Min., Admin beliebig … Dieter: ‚Du hast x neue Nachrichten auf deinem Anrufbeantworter‘ … anhören, blättern, löschen … und mir Rückmeldung: ‚abgehört am … um …‘“.
+- Anklopf-Fenster: neuer roter Knopf **📼 Anrufbeantworter einschalten** und sechs weitere Kurzantworten (⏱️ Gleich – in 5 Minuten, 📅 Termin, 🩺 Arzt, 👨‍👩‍👧 Familie, 🛒 einkaufen, 😴 Ruhe).
+- Wer anklopft, bekommt sofort „📼 Anrufbeantworter eingeschaltet – Möchtest du jetzt eine Nachricht für Dieter hinterlassen?“ → **🎤 Ja, jetzt aufsprechen**: Mikrofon an, Uhr läuft von 2:00 rückwärts (Admin bis 15 Min.), bei 0 wird automatisch gesendet; ✅ Fertig oder 🗑️ Verwerfen. Aufsprechen geht nur, wenn der Angeklopfte den Anrufbeantworter für dieses Anklopfen eingeschaltet hat (15 Min.), höchstens 10 Nachrichten je Stunde.
+- Der Empfänger bekommt sofort eine Mitteilung bzw. beim nächsten Start „📼 Du hast 2 neue Nachrichten auf deinem Anrufbeantworter. Jetzt anhören?“. **💬 Nachrichten → 📼 Mein Anrufbeantworter**: neueste zuerst, ◀ Neuere / Ältere ▶, ▶️ Anhören (mit 1,5×/2×), 📞 Zurückrufen, 👋 Anklopfen, 💬 Schreiben, 🗑️ Löschen (Aufnahme wird entfernt).
+- Der Absender sieht, sobald abgehört wurde: „✅ Deine Nachricht an Dieter vom … wurde am … um … Uhr abgehört.“ (sofort per Signal oder beim nächsten Start).
+- Server 2.568.0: Aktionen ab_aufsprechen, ab_liste, ab_anhoeren, ab_loeschen, ab_stand, ab_quittung_gesehen; Anklopfen-Antwort „ab“; init liefert den Stand (eine Abfrage). Datenbank: Migration 20261021_kc_club_v2568_anrufbeantworter.sql (neue Tabelle kc_club_anrufbeantworter mit Rechten nur für den Club-Server, Status 'anrufbeantworter', Signal „ab“). Bis zum Einspielen der Migration ist der Anrufbeantworter einfach still.
+- Test: tests/anrufbeantworter.test.mjs, Browser-Durchlauf mit Test-Mikrofon (Anklopf-Fenster, Angebot, Aufnahme mit Rückwärts-Uhr, Senden, Abhören, Quittung, Hinweis „neue Nachrichten“). Rückweg: App/Server 2.567.0; Tabelle bleibt (stört nicht).
+
+### Kacheln (KC-CLUB-KACHEL-EINFLUG)
 Wunsch Hansi („einfliegen, dass sie aus verschiedenen Richtungen kommen, horizontal reindrehen und vertikal reindrehen und vielleicht noch wie eine Falluhr“).
 - ⚙️ → ✨ Effekte → „🎬 Effekt beim Register-Wechsel“ – neu: **🧭 Einfliegen** (jede Kachel aus einer anderen der 8 Richtungen, gegeneinander versetzt), **↔️ Horizontal drehen** (wie eine Drehtür um die senkrechte Kante, linke Spalte links, rechte rechts angeschlagen), **↕️ Vertikal drehen** (halbe Drehung um die waagerechte Mitte, Reihe für Reihe), **🕰️ Fallblatt-Uhr** (klappt dreimal rasch um wie die alten Bahnhofstafeln und bleibt stehen).
 - Alle vier sind auch bei 🔁 Abwechselnd und 🎲 Zufall dabei. Wie bisher nur Bewegung (transform/opacity), keine Datenbank-Abfragen; aus bei „✨ Animierte Knöpfe“ aus, im Sparmodus und in der einfachen Ansicht.
-- Erklär-Video, Hilfe-Texte ergänzt. Test: Vertragstest-Block 2.568.0, Browser-Bilder der Abläufe. Server unverändert (2.567.0). Rückweg: App 2.567.0.
+- Erklär-Video, Hilfe-Texte ergänzt. Test: Vertragstest-Block 2.568.0, Browser-Bilder der Abläufe. Rückweg: App 2.567.0.
 
 ## 2.567.0 – 2026-10-21 – 👋 Verpasstes Anklopfen + „ist angekommen“ für den Anklopfenden (KC-CLUB-ANKLOPFEN-VERPASST)
 Wunsch Hansi nach Fall Dieter („Hat er es nicht bekommen?“ – die Mitteilung war 2 s nach dem Anklopfen angezeigt, aber nicht geöffnet worden; „baue beides und spiel sofort ein“).

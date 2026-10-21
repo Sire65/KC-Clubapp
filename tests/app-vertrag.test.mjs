@@ -5907,7 +5907,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9036,7 +9036,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 26000); // 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 27000); // 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");

@@ -4107,6 +4107,11 @@
   .klopfen h3 { font-size: 1.25rem; } .blatt-innen.klopfen .knopf { text-align: center; }
   /* KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0) */
   .klopf-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  .klopf-kacheln .klopf-ab { grid-column: 1 / -1; background: var(--rot); color: #fff; border-color: var(--rot); } /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */
+  .ab-merker { margin: 4px 0 8px; } .ab-merker.neu { background: var(--rot); color: #fff; border-color: var(--rot); }
+  .ab-karte { border: 1px solid var(--linie); border-radius: var(--radius); padding: 12px; margin: 6px 0 10px; } .ab-karte.neu { border-color: var(--rot); }
+  .ab-karte small { display: block; color: var(--grau, #777); margin-top: 2px; } .ab-neu { background: var(--rot); color: #fff; border-radius: 6px; padding: 1px 6px; font-size: .75rem; }
+  .ab-blaettern, .ab-wege { display: flex; gap: 8px; margin: 6px 0; } .ab-blaettern .knopf, .ab-wege .knopf { flex: 1; text-align: center; }
   .klopf-kacheln button { border: 1px solid var(--linie); border-radius: var(--radius); background: var(--karte); color: inherit; padding: 12px 8px; font-size: .95rem; font-weight: 600; cursor: pointer; }
   /* KC-CLUB-SCHNELLSTART (1.8.0) */
   /* 1.8.1: als eigene Karte im farbigen Info-Feld oben (wie Treffen, Wetter …) */
@@ -4907,6 +4912,7 @@
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
     <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst">⭐ Favoriten</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
     <div id="onlineLeiste"></div>
+    <button type="button" class="knopf klein ab-merker" id="abMerker" onclick="abOeffnen()">📼 Mein Anrufbeantworter</button><!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER -->
     <div id="uhMarkLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
   </section>

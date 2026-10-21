@@ -25,3 +25,5 @@ jobs:
       - run: node tests/anruf-turn.test.mjs
       # KC-CLUB-ANKLOPFEN-VERPASST (2.567.0): verpasstes Anklopfen + Stand der Mitteilung
       - run: node tests/anklopfen-verpasst.test.mjs
+      # KC-CLUB-ANRUFBEANTWORTER (2.568.0)
+      - run: node tests/anrufbeantworter.test.mjs
