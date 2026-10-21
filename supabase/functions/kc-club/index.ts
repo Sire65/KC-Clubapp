@@ -120,7 +120,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.554.0";
+const SERVER_VERSION = "2.555.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4077,6 +4077,35 @@ function suchTag(v: unknown, plus = 0) {
 
 // ---------- Vorschläge & Abstimmungen (KC-CLUB-VORSCHLAG) ----------
 const STANDARD_OPTIONEN = ["Ja", "Nein", "Enthaltung"];
+function abstimmungFrist(roh: unknown) {
+  const frist = roh ? new Date(String(roh)) : null;
+  if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Frist liegt in der Vergangenheit.");
+  return frist;
+}
+// KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an alle, eine Gruppe oder eine Auswahl – nur aktive Mitglieder, ich immer dabei
+async function abstimmungZiel(p: any, ich: Ich) {
+  if (!p.ziel || typeof p.ziel !== "object" || (p.ziel.art !== "gruppe" && p.ziel.art !== "auswahl")) return { zielIds: null as string[] | null, zielText: null as string | null };
+  const aktiv = new Set((await aktiveMitglieder()).map((x) => x.person_id));
+  const zielIds = [...new Set<string>([...(Array.isArray(p.ziel.ids) ? p.ziel.ids : []).map(String).filter((id: string) => aktiv.has(id)), ich.person_id])].slice(0, 300);
+  if (zielIds.length < 2) throw new Fehler("Bitte mindestens eine weitere Person auswählen.");
+  return { zielIds, zielText: p.ziel.art === "gruppe" ? `Gruppe ${txt(p.ziel.name, 60) || ""}`.trim() : `${zielIds.length} ausgewählte Mitglieder` };
+}
+// 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: Abstimmung mit Überschrift, Bereichen und mehreren Fragen (Zeilen mit gleicher paket.id)
+const PAKET_MAX_FRAGEN = 30;
+const paketNr = (v: any) => Number(v?.paket?.nr ?? 0);
+async function paketZeilen(paketId: string) {
+  const { data } = await db.from("kc_club_vorschlaege").select("*").eq("paket->>id", paketId);
+  return (data ?? []).sort((a: any, b: any) => paketNr(a) - paketNr(b));
+}
+// Fragen als Text, nach Bereichen gegliedert (für E-Mail): „Technik“, darunter „• Frage – Antworten / Ergebnis“
+function paketFragenText(fragen: { abschnitt?: string | null; frage?: string; titel?: string; zeile?: string }[]) {
+  let bereich: string | null | undefined, out = "";
+  for (const f of fragen) {
+    if ((f.abschnitt || null) !== bereich) { bereich = f.abschnitt || null; if (bereich) out += (out ? "\n" : "") + `▸ ${bereich}\n`; }
+    out += `• ${f.frage ?? f.titel}${f.zeile ? `\n   ${f.zeile}` : ""}\n`;
+  }
+  return out.trimEnd();
+}
 // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER (Wunsch Hansi „bei Vorschlägen: jetziges Datum oder nächste oder übernächste Sitzung – Datum noch nicht bekannt –,
 // aber schon mal vorwählen“): ein Vorschlag kann sich „die K-te Sitzung ab Wahl“ merken (sitzung_nr 1–3, sitzung_ab = Zeitpunkt der Wahl). Sobald es so
 // viele Sitzungen (Termine der Art „Treffen“, nicht abgesagt) nach sitzung_ab gibt, bekommt er die passende Sitzung fest zugeordnet. Läuft beim Laden
@@ -4127,6 +4156,7 @@ async function vorschlaegeListe(ich: Ich) {
     const t: any = v.treffen_id ? treffen.get(v.treffen_id) : null;
     return {
       id: v.id, art: v.art, titel: v.titel, beschreibung: v.beschreibung, optionen: unterstuetzbar(v.art) ? [] : v.optionen, geheim: v.geheim, anlagen: anl.get(v.id) ?? [],
+      paket: v.paket ?? null, // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
       ...(v.art === "spende" ? { spenden: v.spenden ?? [], summe: spendenSumme(v.spenden) } : {}),
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von },
@@ -4146,6 +4176,7 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
     .eq("id", v.id).eq("status", "offen").select("id");
   if (!ok?.length) return null;
   if (v.art !== "abstimmung") return { gesendet: 0 };
+  if (v.paket?.id) return await paketErgebnisSenden(v);
   const erg = await abstimmungsErgebnis(v);
   const ziel = v.ziel_ids ?? (await aktiveMitglieder()).map((x) => x.person_id); // KC-CLUB-ABSTIMMUNG-ZIEL: Ergebnis an die Zielgruppe
   return await senden("club_vorschlag", ziel, {
@@ -4161,6 +4192,22 @@ async function abstimmungsErgebnis(v: any) {
   const zaehl = new Map<string, number>();
   (s ?? []).forEach((x: any) => x.wahl && zaehl.set(x.wahl, (zaehl.get(x.wahl) ?? 0) + 1));
   return v.optionen.map((o: string) => `${o}: ${zaehl.get(o) ?? 0}`).join(" · ");
+}
+// 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: das Ergebnis geht erst raus, wenn die letzte Frage des Pakets beendet ist – einmal, mit allen Fragen
+async function paketErgebnisSenden(v: any) {
+  const zeilen = await paketZeilen(v.paket.id);
+  if (zeilen.some((z: any) => z.status === "offen")) return { gesendet: 0 };
+  const beendet = zeilen.filter((z: any) => z.status === "abgeschlossen");
+  if (!beendet.length) return { gesendet: 0 };
+  const fragen = await Promise.all(beendet.map(async (z: any) => ({ abschnitt: z.paket?.abschnitt, titel: z.titel, zeile: await abstimmungsErgebnis(z) })));
+  const titel = v.paket.titel || v.titel;
+  const ziel = v.ziel_ids ?? (await aktiveMitglieder()).map((x) => x.person_id);
+  return await senden("club_vorschlag", ziel, {
+    titel: "🗳️ Ergebnis: " + titel, kurz: `${fragen.length} ${fragen.length === 1 ? "Frage" : "Fragen"} – Ergebnis in der App`,
+    betreff: `Köcheclub Werne – Ergebnis der Abstimmung: ${titel}`,
+    text: `Hallo,\n\ndie Abstimmung „${titel}“ ist beendet.\n\n${paketFragenText(fragen)}\n\nDetails in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
+    url: APP_URL + "#vorschlaege",
+  }, `club-ergebnis:${v.paket.id}`);
 }
 
 // ---------- KC-CLUB-SPENDE (1.23.0): Spendenprojekte als Vorschlag (Empfänger + Betrag, ein oder mehrere) ----------
@@ -7669,16 +7716,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           optionen = [...new Set((Array.isArray(p.optionen) ? p.optionen : STANDARD_OPTIONEN).map((o: unknown) => txt(o, 60)).filter(Boolean))] as string[];
           if (optionen.length < 2 || optionen.length > 8) throw new Fehler("Bitte 2 bis 8 Antworten angeben.");
         }
-        const frist = p.frist ? new Date(String(p.frist)) : null;
-        if (frist && (isNaN(frist.getTime()) || frist.getTime() < Date.now())) throw new Fehler("Die Frist liegt in der Vergangenheit.");
-        // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an alle, eine Gruppe oder eine Auswahl – nur aktive Mitglieder, ich immer dabei
-        let zielIds: string[] | null = null, zielText: string | null = null;
-        if (art === "abstimmung" && p.ziel && typeof p.ziel === "object" && (p.ziel.art === "gruppe" || p.ziel.art === "auswahl")) {
-          const aktiv = new Set((await aktiveMitglieder()).map((x) => x.person_id));
-          zielIds = [...new Set<string>([...(Array.isArray(p.ziel.ids) ? p.ziel.ids : []).map(String).filter((id: string) => aktiv.has(id)), ich.person_id])].slice(0, 300);
-          if (zielIds.length < 2) throw new Fehler("Bitte mindestens eine weitere Person auswählen.");
-          zielText = p.ziel.art === "gruppe" ? `Gruppe ${txt(p.ziel.name, 60) || ""}`.trim() : `${zielIds.length} ausgewählte Mitglieder`;
-        }
+        const frist = abstimmungFrist(p.frist);
+        const { zielIds, zielText } = art === "abstimmung" ? await abstimmungZiel(p, ich) : { zielIds: null, zielText: null };
         const { data: v, error } = await db.from("kc_club_vorschlaege").insert({ ziel_ids: zielIds, ziel_text: zielText,
           art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim, spenden,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
@@ -7707,6 +7746,51 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         await protokoll(ich.person_id, "vorschlag_angelegt", { vorschlag: v.id, art, geheim: v.geheim, versand, ...(spenden ? { spenden: spenden.length, summe: spendenSumme(spenden) } : {}) });
         return json({ ok: true, id: v.id, versand });
+      }
+
+      // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“):
+      // eine Abstimmung mit Überschrift, Bereichen und mehreren Fragen. Jede Frage ist eine normale Abstimmung (eigene Antworten, Stimmen,
+      // Ergebnis); zusammengehalten über die Spalte paket = { id, titel, beschreibung, abschnitt, nr }. Geheim, Frist, Zielgruppe und Termin
+      // gelten für alle Fragen. Eine Benachrichtigung für das ganze Paket, ein Ergebnis am Ende (vorschlagAbschliessen).
+      case "abstimmungspaket_speichern": {
+        nurVorstand(ich);
+        const titel = txt(p.titel, 150);
+        if (!titel) throw new Fehler("Bitte eine Überschrift eingeben.");
+        const fragen = (Array.isArray(p.fragen) ? p.fragen : []).map((f: any) => ({
+          abschnitt: txt(f?.abschnitt, 80) || null, frage: txt(f?.frage, 150), beschreibung: txt(f?.beschreibung, 1000) || null,
+          optionen: [...new Set((Array.isArray(f?.optionen) ? f.optionen : STANDARD_OPTIONEN).map((o: unknown) => txt(o, 60)).filter(Boolean))] as string[],
+        })).filter((f: any) => f.frage);
+        if (!fragen.length) throw new Fehler("Bitte mindestens eine Frage eingeben.");
+        if (fragen.length > PAKET_MAX_FRAGEN) throw new Fehler(`Höchstens ${PAKET_MAX_FRAGEN} Fragen in einer Abstimmung.`);
+        const zuWenig = fragen.find((f: any) => f.optionen.length < 2 || f.optionen.length > 8);
+        if (zuWenig) throw new Fehler(`Bitte bei „${zuWenig.frage}“ 2 bis 8 Antworten angeben.`);
+        const frist = abstimmungFrist(p.frist);
+        const { zielIds, zielText } = await abstimmungZiel(p, ich);
+        const paketId = crypto.randomUUID(), beschreibung = txt(p.beschreibung, 2000) || null, geheim = !!p.geheim;
+        const sitzung = !p.treffen_id && sitzungNrPruefen(p.sitzung_nr) ? { sitzung_nr: sitzungNrPruefen(p.sitzung_nr), sitzung_ab: jetzt() } : {};
+        // erstellt_am je Frage um 1 ms versetzt: die Reihenfolge bleibt auch dort erhalten, wo nach erstellt_am sortiert wird
+        const t0 = Date.now();
+        const { data: zeilen, error } = await db.from("kc_club_vorschlaege").insert(fragen.map((f: any, nr: number) => ({
+          ziel_ids: zielIds, ziel_text: zielText, art: "abstimmung", titel: f.frage, beschreibung: f.beschreibung, optionen: f.optionen, geheim,
+          treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
+          erstellt_am: new Date(t0 + nr).toISOString(), paket: { id: paketId, titel, beschreibung, abschnitt: f.abschnitt, nr }, ...sitzung,
+        }))).select("id,paket");
+        if (error || !zeilen?.length) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        const erste = zeilen.find((z: any) => z.paket?.nr === 0) ?? zeilen[0];
+        await objAnlagenSetzen(ich, "vorschlag", erste.id, p.anlagen); // Anlagen (z. B. Muster) hängen an der ersten Frage und gelten fürs Paket
+        let versand = null;
+        if (p.benachrichtigen !== false) {
+          const ziel = zielIds ?? (await aktiveMitglieder()).map((x) => x.person_id);
+          const fristText = frist ? ` Abstimmen bis ${wann(frist.toISOString())}.` : "";
+          versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), {
+            titel: "🗳️ Abstimmung: " + titel, kurz: `${fragen.length} ${fragen.length === 1 ? "Frage" : "Fragen"} – bitte in der App abstimmen.${fristText}`,
+            betreff: `Köcheclub Werne – Abstimmung: ${titel}`,
+            text: `Hallo,\n\nes gibt eine neue Abstimmung${geheim ? " (geheim)" : ""}${zielText ? ` (nur für: ${zielText})` : ""}:\n\n🗳️ ${titel}${beschreibung ? "\n\n" + beschreibung : ""}\n\n${paketFragenText(fragen)}${fristText ? "\n\n" + fristText.trim() : ""}\n\nAbstimmen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#vorschlaege",
+          }, `club-vorschlag:${paketId}`);
+        }
+        await protokoll(ich.person_id, "abstimmungspaket_angelegt", { paket: paketId, fragen: zeilen.length, geheim, versand });
+        return json({ ok: true, paket: paketId, ids: zeilen.map((z: any) => z.id), versand });
       }
 
       case "vorschlag_stimme": {
@@ -7741,6 +7825,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!v || v.status !== "offen") throw new Fehler("Vorschlag nicht gefunden oder schon erledigt.", 404);
         const eigener = v.erstellt_von === ich.person_id;
         let versand = null;
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: „paket: true“ beendet bzw. zieht alle noch offenen Fragen der Abstimmung auf einmal zurück
+        if (p.paket && v.paket?.id) {
+          if (!ich.vorstand) throw new Fehler("Abstimmungen beenden Clubsprecher, Kassenwart oder Admin.", 403);
+          if (p.status !== "abgeschlossen" && p.status !== "zurueckgezogen") throw new Fehler("Unbekannter Status.");
+          const offen = (await paketZeilen(v.paket.id)).filter((z: any) => z.status === "offen");
+          for (const z of offen) {
+            if (p.status === "abgeschlossen") versand = (await vorschlagAbschliessen(z, ich.person_id)) ?? versand;
+            else await db.from("kc_club_vorschlaege").update({ status: "zurueckgezogen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id }).eq("id", z.id).eq("status", "offen");
+          }
+          await protokoll(ich.person_id, "abstimmungspaket_" + p.status, { paket: v.paket.id, fragen: offen.length, versand });
+          return json({ ok: true, versand });
+        }
         if (p.status === "zurueckgezogen") {
           if (!ich.vorstand && !eigener) throw new Fehler("Das darf nur, wer den Vorschlag gemacht hat, oder Clubsprecher/Kassenwart.", 403);
           await db.from("kc_club_vorschlaege").update({ status: "zurueckgezogen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id }).eq("id", v.id);
@@ -7783,6 +7879,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "vorschlag_loeschen": {
         const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
         if (!v) throw new Fehler("Vorschlag nicht gefunden.", 404);
+        // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: „paket: true“ löscht die ganze Abstimmung (nur Clubleitung), jede Frage mit Sicherung wie bisher
+        if (p.paket && v.paket?.id) {
+          if (!ich.vorstand) throw new Fehler("Ganze Abstimmungen löschen Clubsprecher, Kassenwart oder Admin.", 403);
+          const zeilen = await paketZeilen(v.paket.id);
+          for (const z of zeilen) {
+            const [{ data: zs }, { data: zg }] = await Promise.all([
+              db.from("kc_club_stimmen").select("*").eq("vorschlag_id", z.id),
+              db.from("kc_club_geheime_stimmen").select("wahl").eq("vorschlag_id", z.id),
+            ]);
+            await geloescht(ich, "vorschlag", { vorschlag: z, stimmen: z.geheim ? [] : zs ?? [], geheim: (zg ?? []).map((g: any) => g.wahl) });
+            await db.from("kc_club_vorschlaege").delete().eq("id", z.id);
+          }
+          return json({ ok: true, geloescht: zeilen.length });
+        }
         const [{ data: st }, { data: geh }] = await Promise.all([
           db.from("kc_club_stimmen").select("*").eq("vorschlag_id", v.id),
           db.from("kc_club_geheime_stimmen").select("wahl").eq("vorschlag_id", v.id),

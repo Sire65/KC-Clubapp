@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.554.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.555.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26963,9 +26963,14 @@ async function vorschlaegeLaden() {
     const { vorschlaege, treffen, spenden: spCfg } = await api("vorschlaege_liste");
     VORSCHLAG_TREFFEN = treffen; if (spCfg) VORSCHLAG_SPENDEN = spCfg;
     VORSCHLAG_MAP = new Map(vorschlaege.map((v) => [v.id, v]));
-    if (document.getElementById("vorschlagInfo")) vorschlagInfo(document.getElementById("vorschlagInfo").dataset.id); // offenes Info-Fenster auffrischen
+    VS_PAKETE = vsPakete(vorschlaege); // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
+    const offenesInfo = document.getElementById("vorschlagInfo");
+    if (offenesInfo) offenesInfo.dataset.paket ? vorschlagPaketInfo(offenesInfo.dataset.paket) : vorschlagInfo(offenesInfo.dataset.id); // offenes Info-Fenster auffrischen
     buEingangAuffrischen(); // KC-CLUB-BUERO-EINGANG
-    const offen = vorschlaege.filter((v) => v.status === "offen"), fertig = vorschlaege.filter((v) => v.status !== "offen");
+    // Abstimmungen mit mehreren Fragen erscheinen als eine Kachel (bei der ersten Frage); offen, solange noch eine Frage offen ist
+    const paketOffen = (v) => VS_PAKETE.get(v.paket.id).some((x) => x.status === "offen");
+    const sichtbar = vorschlaege.filter((v) => !v.paket || v === VS_PAKETE.get(v.paket.id)[0]);
+    const offen = sichtbar.filter((v) => (v.paket ? paketOffen(v) : v.status === "offen")), fertig = sichtbar.filter((v) => !offen.includes(v));
     const abst = offen.filter((v) => v.art === "abstimmung"), themen = offen.filter((v) => v.art === "thema"), spenden = offen.filter((v) => v.art === "spende");
     $("vorschlagListe").innerHTML =
       (abst.length ? `<div class="abschnitt"><h3>🗳️ Abstimmungen</h3></div><div class="mini-kacheln">${abst.map(vorschlagKachel).join("")}</div>` : "")
@@ -26984,7 +26989,7 @@ function balken(v) {
 }
 function vorschlagKarte(v) {
   const offen = v.status === "offen";
-  const kopf = `${v.art === "abstimmung" ? `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
+  const kopf = `${v.art === "abstimmung" ?`<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
     ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
     ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
   const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
@@ -27040,7 +27045,7 @@ function vorschlagBearbeiten(id) {
       const r = await api("vorschlag_aendern", { id, titel: $("vbTitel").value, beschreibung: $("vbBeschr").value, ...vsTerminWert($("vbTreffen").value), anlagen: oaIds("vb") });
       oaLeeren("vb"); f.remove();
       melde(r.anlagen?.neu ? `💾 Gespeichert – ${r.anlagen.neu} Anlage${r.anlagen.neu > 1 ? "n" : ""} dazu` : "💾 Gespeichert");
-      await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id);
+      await vorschlaegeLaden(); if (VORSCHLAG_MAP.get(id)) vorschlagInfo(id); // 2.555.0: Frage im Paket → öffnet die ganze Abstimmung
     } catch (e) { meldeFehler(e); }
   });
 }
@@ -27061,6 +27066,7 @@ function spendeKachel(v) {
 const vsAnlagenZahl = (v) => { const n = v.anlagen?.length || 0; return n ? `<span class="mk-unter mk-anlagen">📎 ${n} ${n === 1 ? "Anlage" : "Anlagen"}</span>` : ""; };
 // KC-CLUB-VORSCHLAG-KACHELN (1.46.1): Themen, Abstimmungen und Erledigtes als kleine Kacheln – Antippen öffnet alles groß
 function vorschlagKachel(v) {
+  if (v.paket?.id && VS_PAKETE.has(v.paket.id)) return paketKachel(v.paket.id); // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: eine Kachel je Abstimmung
   if (v.art === "spende" && v.status === "offen") return spendeKachel(v);
   const offen = v.status === "offen", e = v.ergebnis?.[0]?.anzahl || 0;
   const sym = v.art === "abstimmung" ? "🗳️" : v.art === "spende" ? "💝" : "💡";
@@ -27075,8 +27081,73 @@ function vorschlagKachel(v) {
 function vorschlagInfo(id) {
   const v = VORSCHLAG_MAP.get(id);
   if (!v) { document.getElementById("vorschlagInfo")?.remove(); return; }
+  if (v.paket?.id && VS_PAKETE.has(v.paket.id)) return vorschlagPaketInfo(v.paket.id); // 2.555.0: Frage einer Abstimmung mit mehreren Fragen → ganze Abstimmung
   const f = blattAuf("vorschlagInfo", `<div class="info-gross">${vorschlagKarte(v)}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
   f.dataset.id = id;
+}
+// ---------- 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“) ----------
+// Eine Abstimmung mit Überschrift, Bereichen (z. B. Technik) und mehreren Fragen. Jede Frage ist eine normale Abstimmung mit eigenen Antworten;
+// zusammengehalten über v.paket = { id, titel, beschreibung, abschnitt, nr }. In der Liste eine Kachel, im Fenster alle Fragen nach Bereichen.
+let VS_PAKETE = new Map();
+function vsPakete(liste) {
+  const m = new Map();
+  for (const v of liste) if (v.paket?.id) (m.get(v.paket.id) || m.set(v.paket.id, []).get(v.paket.id)).push(v);
+  for (const l of m.values()) l.sort((a, b) => (a.paket.nr ?? 0) - (b.paket.nr ?? 0));
+  return m;
+}
+const pkBeantwortet = (l) => l.filter((x) => x.meine || x.abgestimmt).length;
+function paketKachel(pid) {
+  const l = VS_PAKETE.get(pid) || [], v = l[0]; if (!v) return "";
+  const offen = l.some((x) => x.status === "offen"), mir = l.filter((x) => x.fuerMich !== false), fehlt = offen && pkBeantwortet(mir) < mir.length;
+  const lage = !offen ? (l.some((x) => x.status === "abgeschlossen") ? '<span class="marke gruen">✔ beendet</span>' : '<span class="marke rot">zurückgezogen</span>')
+    : fehlt ? `<span class="marke gelb">👉 ${pkBeantwortet(mir) ? `noch ${mir.length - pkBeantwortet(mir)} offen` : "Stimme fehlt"}</span>` : '<span class="marke gruen">✔ Du hast abgestimmt</span>';
+  return `<button class="mini-kachel${fehlt ? " mk-offen" : ""}" onclick="vorschlagPaketInfo('${esc(pid)}')"><span class="mk-sym">🗳️</span>
+    <span class="mk-titel">${esc(v.paket.titel || v.titel)}</span>${lage}<span class="mk-unter">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</span>
+    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl({ anlagen: l.flatMap((x) => x.anlagen || []) })}</button>`;
+}
+// Eine Frage im Paket: Frage, freiwillige Erklärung, Antwortknöpfe, Ergebnis – ohne Kopfzeilen (die stehen einmal oben)
+function paketFrageKarte(v) {
+  const offen = v.status === "offen", kannWaehlen = offen && v.fuerMich !== false && !(v.geheim && v.abgestimmt);
+  const knoepfe = v.darfBearbeiten ? `<div class="knoepfe"><button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button></div>` : "";
+  return `<div class="karte pk-frage"><div class="pk-frage-titel">${esc(v.titel)}${!offen ? ` <span class="marke ${v.status === "abgeschlossen" ? "gruen" : "rot"}">${v.status === "abgeschlossen" ? "✔ beendet" : "zurückgezogen"}</span>` : ""}</div>
+    ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:4px 0 0">${esc(v.beschreibung)}</p>` : ""}${v.paket?.nr ? oaAnzeige(v.anlagen) : ""}
+    ${kannWaehlen ? `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${hlJs(o)})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>` : ""}
+    ${offen && v.geheim && v.abgestimmt ? '<p><span class="marke gruen">✔ Du hast abgestimmt</span></p>' : ""}${balken(v)}${knoepfe}</div>`;
+}
+function vorschlagPaketInfo(pid) {
+  const l = VS_PAKETE.get(pid), alt = document.querySelector("#vorschlagInfo .blatt-innen")?.scrollTop || 0;
+  if (!l?.length) { document.getElementById("vorschlagInfo")?.remove(); return; }
+  const v = l[0], offen = l.some((x) => x.status === "offen"), mir = l.filter((x) => x.fuerMich !== false);
+  const kopf = `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span> <span class="marke">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}</span>
+    ${!offen ? ' <span class="marke gruen">✔ beendet</span>' : v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
+  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</div>`;
+  const stand = offen && mir.length ? `<p class="hinweis" style="margin:8px 0 0">Du hast <b>${pkBeantwortet(mir)} von ${mir.length}</b> Fragen beantwortet.${v.geheim ? " 🔒 Geheim: Niemand sieht, wie du stimmst; jede Stimme gilt sofort und lässt sich nicht mehr ändern." : " Bis zum Ende kannst du deine Antworten noch ändern."}</p>` : "";
+  let bereich, fragen = "";
+  for (const x of l) {
+    const b = x.paket.abschnitt || "";
+    if (b !== bereich) { bereich = b; if (b) fragen += `<h4 class="pk-bereich">📂 ${esc(b)}</h4>`; }
+    fragen += paketFrageKarte(x);
+  }
+  const knoepfe = [
+    offen && v.darfAbschliessen ? `<button class="knopf klein" onclick="paketStatus('${esc(pid)}','abgeschlossen')">🏁 Abstimmung beenden</button>` : "",
+    offen && ICH?.vorstand ? `<button class="knopf klein" onclick="paketStatus('${esc(pid)}','zurueckgezogen')">Zurückziehen</button>` : "",
+    ICH?.vorstand ? `<button class="knopf klein" onclick="paketLoeschen('${esc(pid)}')">🗑️ Löschen</button>` : "",
+  ].join("");
+  const f = blattAuf("vorschlagInfo", `<div class="info-gross"><div class="karte">${kopf}<div class="wann" style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(v.paket.titel || v.titel)}</div>${unter}
+    ${v.paket.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.paket.beschreibung)}</p>` : ""}${oaAnzeige(v.anlagen)}${stand}</div>
+    ${fragen}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
+  f.dataset.paket = pid;
+  const innen = f.querySelector(".blatt-innen"); if (innen && alt) innen.scrollTop = alt; // nach dem Abstimmen an derselben Stelle bleiben
+}
+async function paketStatus(pid, status) {
+  const v = VS_PAKETE.get(pid)?.[0]; if (!v) return;
+  if (!(await frage(status === "abgeschlossen" ? "Abstimmung mit allen Fragen jetzt beenden? Alle bekommen das Ergebnis." : "Abstimmung mit allen Fragen wirklich zurückziehen?"))) return;
+  try { await api("vorschlag_status", { id: v.id, status, paket: true }); melde("💾 Gespeichert"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
+}
+async function paketLoeschen(pid) {
+  const v = VS_PAKETE.get(pid)?.[0]; if (!v) return;
+  if (!(await frage("Diese Abstimmung mit allen Fragen endgültig löschen?\n\nAlle Stimmen gehen mit verloren. Es wird niemand benachrichtigt.\nEine Sicherung bleibt im Änderungsprotokoll."))) return;
+  try { await api("vorschlag_loeschen", { id: v.id, paket: true }); $("vorschlagInfo")?.remove(); melde("🗑️ Gelöscht"); vorschlaegeLaden(); neuLaden(); } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-SPENDE (1.23.0): Spendenprojekte – Empfänger und Betrag per Kachel, Tippen nur für Neues
 // KC-CLUB-ALT-ANDROID (2.52.1): bei Euro ist „mindestens 2 Stellen“ voreingestellt – ältere Browser (z. B. Chrome 81) brechen bei max 0 mit
@@ -27158,18 +27229,40 @@ function oaBilderBeobachten() {
     requestAnimationFrame(() => { geplant = false; document.querySelectorAll("img.oa-bild[data-anlage]:not([data-oa])").forEach((img) => { img.dataset.oa = "1"; bildLaden(img); }); }); });
   oaBeobachter.observe(document.body, { childList: true, subtree: true });
 }
-function vorschlagForm(art) {
+// 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: bei 🗳️ Abstimmung „❓ Eine Frage“ (wie bisher) oder „📋 Mehrere Fragen mit Überschrift“ (Bereiche + Fragen)
+let vfPaket = false, VF_PK = [];
+const vfPkFrage = () => ({ frage: "", optionen: "Ja\nNein\nEnthaltung" });
+const vfPkAnzahl = () => VF_PK.reduce((s, b) => s + b.fragen.length, 0);
+function vfPkZeigen() {
+  const z = $("vfPaket"); if (!z) return;
+  const voll = vfPkAnzahl() >= 30, eine = vfPkAnzahl() <= 1;
+  z.innerHTML = VF_PK.map((b, i) => `<div class="sp-projekt"><div class="hl-frage" style="margin-top:0">📂 Bereich ${i + 1}${VF_PK.length > 1 ? ` <button aria-label="Bereich löschen" class="knopf klein" style="float:right" onclick="VF_PK.splice(${i},1);vfPkZeigen()">🗑️</button>` : ""}</div>
+      <label class="feld">Name des Bereichs (freiwillig)<input maxlength="80" placeholder="z. B. Technik" value="${esc(b.name)}" oninput="VF_PK[${i}].name=this.value"></label>
+      ${b.fragen.map((f, j) => `<div class="pk-frage"><div class="hinweis" style="margin:4px 0">❓ Frage ${j + 1}${!eine ? ` <button aria-label="Frage löschen" class="knopf klein" style="float:right" onclick="vfPkWeg(${i},${j})">🗑️</button>` : ""}</div>
+        <label class="feld">Frage<input maxlength="150" placeholder="z. B. Sollen Tablets und Halterungen beschafft werden?" value="${esc(f.frage)}" oninput="VF_PK[${i}].fragen[${j}].frage=this.value"></label>
+        <label class="feld">Antworten (eine pro Zeile)<textarea rows="3" oninput="VF_PK[${i}].fragen[${j}].optionen=this.value">${esc(f.optionen)}</textarea></label></div>`).join("")}
+      <button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK[${i}].fragen.push(vfPkFrage());vfPkZeigen()">＋ Frage in diesem Bereich</button></div>`).join("")
+    + `<button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK.push({ name: '', fragen: [vfPkFrage()] });vfPkZeigen()">＋ weiterer Bereich</button>${voll ? '<p class="hinweis">Höchstens 30 Fragen.</p>' : ""}`;
+}
+function vfPkWeg(i, j) { VF_PK[i].fragen.splice(j, 1); if (!VF_PK[i].fragen.length) VF_PK.splice(i, 1); vfPkZeigen(); }
+function vorschlagForm(art, paket) {
   vfArt = art || "thema";
+  if (vfArt === "abstimmung" && paket !== undefined) vfPaket = !!paket;
+  if (vfArt === "abstimmung" && vfPaket && !VF_PK.length) VF_PK = [{ name: "", fragen: [vfPkFrage()] }];
+  const pk = vfArt === "abstimmung" && vfPaket;
+  const behalten = paket !== undefined ? { t: $("vfTitel")?.value || "", b: $("vfBeschr")?.value || "" } : null; // Umschalten Eine/Mehrere: Eingaben bleiben
   if (vfArt === "spende") VF_SP = [{ empfaenger: VORSCHLAG_SPENDEN.empfaenger[0] || "", betrag: 0 }];
   const t0 = (VS_ZIEL && VORSCHLAG_TREFFEN.some((t) => t.id === VS_ZIEL) ? VS_ZIEL : VORSCHLAG_TREFFEN[0]?.id) || ""; // 1.24.1: nach Zusage die zugesagte Sitzung vorwählen
   $("vorschlagNeuKnopf")?.classList.remove("vs-puls");
   $("vorschlagForm").innerHTML = `<h3>Neuer Vorschlag</h3>
     <div class="artwahl drei"><button class="knopf ${vfArt === "thema" ? "haupt" : ""}" onclick="vorschlagForm('thema')">💡 Thema</button><button class="knopf ${vfArt === "spende" ? "haupt" : ""}" onclick="vorschlagForm('spende')">💝 Spende</button>${ICH.vorstand ? `<button class="knopf ${vfArt === "abstimmung" ? "haupt" : ""}" onclick="vorschlagForm('abstimmung')">🗳️ Abstimmung</button>` : ""}</div>
     ${vfArt === "spende" ? `<p class="hinweis" style="margin:8px 0 0">Ein oder mehrere Spendenprojekte für die nächste Sitzung – einfach antippen.</p><div id="vfSpenden"></div>` : ""}
-    <label class="feld">${vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
+    ${vfArt === "abstimmung" ? `<div class="hl-chips" id="vfPaketWahl" style="margin-top:8px"><button type="button" class="chip${pk ? "" : " an"}" onclick="vorschlagForm('abstimmung', false)">❓ Eine Frage</button><button type="button" class="chip${pk ? " an" : ""}" onclick="vorschlagForm('abstimmung', true)">📋 Mehrere Fragen mit Überschrift</button></div>` : ""}
+    <label class="feld">${pk ? "Überschrift" : vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${pk ? "z. B. Technik, Bilderrechner, Abrechnung" : vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
     <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
-    ${vfArt === "abstimmung" ? `<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>
+    ${pk ? '<div class="feld"><b>Bereiche und Fragen</b><div id="vfPaket"></div></div>' : vfArt === "abstimmung" ? '<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>' : ""}
+    ${vfArt === "abstimmung" ? `
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
       <div class="zwei"><label class="feld">Abstimmen bis (freiwillig)<input id="vfFristDatum" type="date"></label><label class="feld">Uhrzeit<input id="vfFristZeit" type="time" value="20:00"></label></div>
       <div class="feld"><b>An wen?</b><div id="vfZiel"></div></div>` : ""}
@@ -27178,6 +27271,8 @@ function vorschlagForm(art) {
     <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
   if (vfArt === "spende") vfSpZeigen();
+  if (behalten) { $("vfTitel").value = behalten.t; $("vfBeschr").value = behalten.b; }
+  if (pk) vfPkZeigen();
   if (vfArt === "abstimmung") { VF_ZIEL = { art: "alle", gruppe: null, ids: [] }; vfZielZeigen(); vfGruppenLaden(); }
 }
 // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73, Wunsch Hansi): Abstimmung an 👥 alle, 🧑‍🤝‍🧑 eine Gruppe (alle Gruppen zur Auswahl) oder ☑️ eine Auswahl
@@ -27228,8 +27323,17 @@ async function vorschlagSpeichern(knopf) {
     const fehlt = daten.spenden.find((x) => !x.empfaenger || !(x.betrag > 0));
     if (fehlt) return melde(!fehlt.empfaenger ? "Bitte bei jedem Projekt antippen, an wen gespendet wird." : `Bitte für „${fehlt.empfaenger}“ einen Betrag antippen.`, true);
   }
+  const pk = vfArt === "abstimmung" && vfPaket;
+  if (pk) { // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
+    if (!daten.titel.trim()) return melde("Bitte eine Überschrift eingeben.", true);
+    daten.fragen = VF_PK.flatMap((b) => b.fragen.map((f) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), optionen: f.optionen.split("\n").map((x) => x.trim()).filter(Boolean) })));
+    const leer = daten.fragen.findIndex((f) => !f.frage);
+    if (leer >= 0) return melde(`Bitte Frage ${leer + 1} ausfüllen oder mit 🗑️ löschen.`, true);
+    const kurz = daten.fragen.find((f) => f.optionen.length < 2 || f.optionen.length > 8);
+    if (kurz) return melde(`Bitte bei „${kurz.frage}“ 2 bis 8 Antworten angeben (eine pro Zeile).`, true);
+  }
   if (vfArt === "abstimmung") {
-    daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
+    if (!pk) daten.optionen = $("vfOptionen").value.split("\n").map((x) => x.trim()).filter(Boolean);
     daten.geheim = $("vfGeheim").checked;
     if ($("vfFristDatum").value) daten.frist = new Date(taZeitpunkt($("vfFristDatum").value, $("vfFristZeit").value || "20:00")).toISOString();
     // KC-CLUB-ABSTIMMUNG-ZIEL (2.23.73)
@@ -27239,8 +27343,9 @@ async function vorschlagSpeichern(knopf) {
   await einmal(knopf, async () => {
     try {
       daten.anlagen = oaIds("vf"); // 2.448.0
-      const r = await api("vorschlag_speichern", daten);
+      const r = await api(pk ? "abstimmungspaket_speichern" : "vorschlag_speichern", daten);
       oaLeeren("vf"); $("vorschlagForm").classList.add("versteckt");
+      if (pk) VF_PK = [];
       melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
     } catch (e) { meldeFehler(e); }
   });

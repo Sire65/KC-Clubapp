@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.555.0 – 2026-10-21 – Abstimmung mit Überschrift und mehreren Fragen (KC-CLUB-ABSTIMMUNG-PAKET)
+Wunsch Hansi („Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen, z. B. Tablets jetzt beschaffen oder Leihgeräte, Stand vernetzen, Kommen/Gehen per QR-Code, Barcode mit Metallschildern“).
+- Vorschläge → ＋ Neu → 🗳️ Abstimmung: neu die Wahl „❓ Eine Frage“ (wie bisher) oder „📋 Mehrere Fragen mit Überschrift“. Dann: Überschrift, Beschreibung, Bereiche (z. B. Technik, Abrechnung) mit beliebig vielen Fragen (höchstens 30), jede Frage mit eigenen Antworten (eine pro Zeile, vorbelegt Ja/Nein/Enthaltung). Geheim, Frist, „An wen?“, Termin und Anlage (z. B. Muster) gelten für die ganze Abstimmung.
+- In der Liste eine Kachel je Abstimmung („📋 4 Fragen“, „👉 noch 3 offen“). Antippen zeigt alle Fragen nach Bereichen, jede mit Antwortknöpfen und Ergebnis; das Fenster bleibt beim Abstimmen offen und an derselben Stelle. Oben „Du hast 1 von 4 Fragen beantwortet“.
+- Eine Benachrichtigung für die ganze Abstimmung (Push/Mail mit allen Fragen nach Bereichen); am Ende ein Ergebnis mit allen Fragen. „🏁 Abstimmung beenden“, „Zurückziehen“ und „🗑️ Löschen“ wirken auf alle Fragen (nur Clubleitung). Einzelne Fragen lassen sich mit ✏️ bearbeiten wie bisher.
+- Jede Frage bleibt eine normale Abstimmung (gleiche Stimmen-, Geheim- und Fristregeln); einzelne Abstimmungen unverändert.
+- Server 2.555.0: Aktion abstimmungspaket_speichern; vorschlag_status/vorschlag_loeschen mit „paket: true“. Datenbank: Spalte kc_club_vorschlaege.paket (Migration 20261021_kc_club_v2555_abstimmung_paket.sql – vor dem Server einspielen).
+- Test: tools/abstimmung-paket/ap-browser.mjs (anlegen, Kachel, Fenster nach Bereichen, abstimmen, beenden, Einzelfrage wie bisher), Vertragstest-Block 2.555.0. Rückweg: App/Server 2.554.0; Spalte kann bleiben.
+
 ## 2.554.0 – 2026-10-21 – Pinnwand: Zettel nur bei Lesern abnehmen (KC-CLUB-PINNWAND-TEIL-AB)
 - „🗑️ abnehmen“ fragt, wenn manche den Zettel schon gesehen haben und andere nicht: „🧹 Nur bei denen abnehmen, die ihn gelesen haben“ oder „Für alle abnehmen“.
 - Wer ihn noch nicht gesehen hat, behält ihn; nach dem Lesen (30 Min. Zeit für Antworten/✓) fällt er auch dort ab. Haben ihn alle gesehen, ist er ganz weg.
