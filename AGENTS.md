@@ -28,3 +28,14 @@ Fehlersuchen von KI-Sitzungen und Dashboard-Seiten. Darum:
    `kc_traffic_guard_samples`, `cron.job_run_details`, `net._http_response`, `pg_stat_statements`.
 2. Protokolle nur, wenn es anders nicht geht – dann mit engem Zeitfenster (Minuten, nicht 24 Stunden) und Filter auf eine Quelle.
 3. Keine Schleifen oder Zeitpläne, die Protokolle abfragen.
+
+## Neue Tabellen brauchen ausdrückliche Rechte (KC-SUPABASE-GRANTS, 21.10.2026, Hinweis Supabase an Hansi)
+
+Ab 30.10.2026 vergibt Supabase für **neue** Tabellen im Schema `public` keine Rechte mehr von selbst. Ohne `grant` antwortet die
+Schnittstelle (supabase-js, PostgREST) mit „permission denied“ – auch dem Club-Server (service_role). Bestehende Tabellen sind nicht betroffen.
+
+1. Jede Migration, die eine Tabelle in `public` anlegt, enthält für diese Tabelle
+   `grant select, insert, update, delete on public.<tabelle> to service_role;`
+   und – wie bisher – `enable row level security` sowie `revoke all … from public, anon, authenticated;`.
+2. Nur wenn die App die Tabelle wirklich direkt ohne Club-Server liest/schreibt: zusätzlich gezielte Rechte für `authenticated`/`anon` mit passender Policy.
+3. Der Test `tests/migration-rechte.test.mjs` prüft das für alle Migrationen ab 21.10.2026; ein roter Test verhindert das Einspielen.
