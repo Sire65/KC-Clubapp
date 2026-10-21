@@ -19,3 +19,5 @@ jobs:
       # KC-CLUB-RC-PRUEFUNG (20.10.2026): Prüfungen der RC-Vorbereitung
       - run: node tests/rc-server.test.mjs
       - run: node tests/rc-app.test.mjs
+      # KC-SUPABASE-GRANTS (21.10.2026): neue Tabellen mit ausdrücklichen Rechten
+      - run: node tests/migration-rechte.test.mjs
