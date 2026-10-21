@@ -125,7 +125,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.568.0";
+const SERVER_VERSION = "2.569.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4658,6 +4658,41 @@ async function bueroNaechste() {
   const { data } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art,status").eq("status", "geplant").neq("art", "veranstaltung")
     .gte("beginn", new Date(Date.now() - 6 * 3600000).toISOString()).order("beginn").limit(6);
   return data ?? [];
+}
+// ----- 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27, Hansi: „Kachel Clubabend – nur am Clubabend; Tagesordnung, abhaken nur Clubleitung;
+// Sorge, dass alle zu Hause anklicken – ich bin vor Ort“): alle Mitglieder SEHEN den Abend (Tagesordnung, wer da ist, Fotos, Geburtstage,
+// offene Aufgaben); abhaken, Anwesenheit eintragen, Protokoll/Abstimmung/Album starten nur die Clubleitung. Tagesordnung = Büro-Vorbereitung
+// (sonst die Standard-Tagesordnung mit den Themen), Anwesenheit geht ins Protokoll.
+const CA_VORHER_MIN = 120, CA_DAUER_STD = 6;
+async function clubabendTreffen(vorschau: boolean) {
+  const jetztMs = Date.now();
+  const { data } = await db.from("kc_club_treffen").select("id,titel,beginn,ende,ort").eq("art", "treffen").eq("status", "geplant")
+    .gte("beginn", new Date(jetztMs - CA_DAUER_STD * 3600000).toISOString()).lte("beginn", new Date(jetztMs + (vorschau ? 60 * 86400000 : CA_VORHER_MIN * 60000)).toISOString()).order("beginn").limit(1);
+  const t = data?.[0]; if (!t) return null;
+  if (!vorschau && t.ende && jetztMs > Date.parse(t.ende) + 3600000) return null; // eine Stunde nach dem Ende ist der Abend vorbei
+  return t;
+}
+const caSchluessel = (x: any) => (x.id ? String(x.id) : "t:" + String(x.t || "").slice(0, 80));
+async function clubabendStand(ich: Ich, t: any) {
+  const b = await bueroSitzung(ich, t.id);
+  const { data: ca } = await db.from("kc_club_clubabend").select("*").eq("treffen_id", t.id).maybeSingle();
+  const erledigt = new Set<string>(ca?.erledigt ?? []), anwesend: string[] = ca?.anwesend ?? [];
+  const stimmen = new Map(b.vorschlaege.map((v: any) => [v.id, v.unterstuetzt]));
+  const top = ((b.vorbereitung?.tagesordnung?.length ? b.vorbereitung.tagesordnung : b.standard.tagesordnung) as any[])
+    .map((x: any) => ({ k: caSchluessel(x), t: String(x.t || ""), vorschlag: !!x.id, stimmen: x.id ? stimmen.get(x.id) ?? 0 : null, erledigt: erledigt.has(caSchluessel(x)) }));
+  // Geburtstage seit dem letzten Treffen (nur freigegebene, ohne Jahr)
+  const heute = berlinTag(new Date()), { data: vor } = await db.from("kc_club_treffen").select("beginn").eq("art", "treffen").eq("status", "geplant").lt("beginn", t.beginn).order("beginn", { ascending: false }).limit(1);
+  let von = vor?.[0] ? berlinTag(new Date(vor[0].beginn)) : tagDazu(heute, -30); if (von < tagDazu(heute, -120)) von = tagDazu(heute, -120);
+  const tage: string[] = []; for (let d = tagDazu(von, 1); d <= heute; d = tagDazu(d, 1)) tage.push(d);
+  const gb = (await geburtstageSichtbar(ich)).map((g: any) => ({ ...g, tag: tage.find((d) => d.slice(5) === g.md) })).filter((g: any) => g.tag).sort((a: any, b: any) => a.tag.localeCompare(b.tag))
+    .map((g: any) => ({ person_id: g.person_id, name: g.vorname || g.name, tag: g.tag, heute: g.tag === heute }));
+  let album = null;
+  if (ca?.album_id) { const { data: a } = await db.from("kc_club_foto_alben").select("id,name").eq("id", ca.album_id).is("geloescht_am", null).maybeSingle(); album = a ?? null; }
+  const namen = new Map(b.mitglieder.map((m: any) => [m.person_id, m.name]));
+  return { aktiv: true, leitung: ich.vorstand, treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende ?? null, ort: t.ort ?? null },
+    tagesordnung: top, anwesend: anwesend.map((id) => ({ person_id: id, name: namen.get(id) || id })),
+    ...(ich.vorstand ? { mitglieder: b.mitglieder.map((m: any) => ({ person_id: m.person_id, name: m.name, zusage: m.antwort })), protokoll: b.protokoll } : {}),
+    geburtstage: gb, aufgaben: b.aufgaben.filter((a: any) => !a.erledigt), letztesProtokoll: b.letztes, album, seit: von };
 }
 async function bueroSitzung(ich: Ich, tid: string) {
   const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
@@ -13308,6 +13343,32 @@ Köcheclub Werne`,
         });
       }
 
+      // ----- 2.569.0 KC-CLUB-CLUBABEND: sehen alle Mitglieder, ändern nur die Clubleitung -----
+      case "clubabend": {
+        const t = await clubabendTreffen(p.vorschau === true && ich.vorstand);
+        if (!t) return json({ aktiv: false });
+        return json(await clubabendStand(ich, t));
+      }
+      case "clubabend_setzen": {
+        nurVorstand(ich);
+        const tid = String(p.treffen_id || "");
+        const { data: t } = await db.from("kc_club_treffen").select("id,titel,beginn,ende,ort").eq("id", tid).eq("art", "treffen").maybeSingle();
+        if (!t) throw new Fehler("Clubabend nicht gefunden.", 404);
+        const { data: alt } = await db.from("kc_club_clubabend").select("*").eq("treffen_id", tid).maybeSingle();
+        const erledigt = new Set<string>(alt?.erledigt ?? []), anwesend = new Set<string>(alt?.anwesend ?? []);
+        if (typeof p.erledigt === "string") { const k = txt(p.erledigt, 100); if (k) p.an === false ? erledigt.delete(k) : erledigt.add(k); }
+        if (typeof p.anwesend === "string") {
+          const id = String(p.anwesend); if (!(await aktiveMitglieder()).some((m) => m.person_id === id)) throw new Fehler("Mitglied nicht gefunden.", 404);
+          p.an === false ? anwesend.delete(id) : anwesend.add(id);
+        }
+        const album_id = p.album_id ? String(p.album_id) : alt?.album_id ?? null;
+        const { error } = await db.from("kc_club_clubabend").upsert({ treffen_id: tid, erledigt: [...erledigt].slice(0, 60), anwesend: [...anwesend].slice(0, 200), album_id, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        // Anwesenheit gleich ins Protokoll (nur solange es ein Entwurf ist)
+        if (typeof p.anwesend === "string") await db.from("kc_club_sitzungsprotokolle").update({ anwesend: [...anwesend] }).eq("treffen_id", tid).eq("status", "entwurf");
+        await protokoll(ich.person_id, "clubabend_gesetzt", { treffen: tid, ...(typeof p.erledigt === "string" ? { top: true } : {}), ...(typeof p.anwesend === "string" ? { anwesend: anwesend.size } : {}), ...(p.album_id ? { album: true } : {}) });
+        return json(await clubabendStand(ich, t));
+      }
       case "protokoll_vorlage": {
         // Vorlage automatisch befüllen – getippt wird auf dem Handy fast nichts
         nurProtokolle(ich);
@@ -13323,6 +13384,7 @@ Köcheclub Werne`,
             db.from("kc_club_vorschlaege").select("*").eq("treffen_id", tid).neq("status", "zurueckgezogen").order("erstellt_am"),
           ]);
           const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
+          const { data: ca } = await db.from("kc_club_clubabend").select("anwesend").eq("treffen_id", tid).maybeSingle(); // 2.569.0 KC-CLUB-CLUBABEND: vor Ort eingetragen
           const beschluesse: string[] = [];
           for (const v of (vs ?? []).filter((x: any) => x.art === "abstimmung")) {
             // geheime Abstimmungen erst nach Abschluss, nie mit Namen
@@ -13330,8 +13392,8 @@ Köcheclub Werne`,
           }
           Object.assign(zeile, {
             treffen_id: tid, titel: t.titel, datum: berlinTag(new Date(t.beginn)), ort: t.ort || (g ? `bei ${g.display_name}` : null),
-            anwesend: (teil ?? []).filter((x: any) => x.antwort === "ja").map((x: any) => x.person_id),
-            entschuldigt: (teil ?? []).filter((x: any) => x.antwort === "nein").map((x: any) => x.person_id),
+            anwesend: ca?.anwesend?.length ? ca.anwesend : (teil ?? []).filter((x: any) => x.antwort === "ja").map((x: any) => x.person_id),
+            entschuldigt: (teil ?? []).filter((x: any) => x.antwort === "nein" && !(ca?.anwesend ?? []).includes(x.person_id)).map((x: any) => x.person_id),
             tagesordnung: (vs ?? []).filter((x: any) => unterstuetzbar(x.art)).map((x: any) => x.titel), beschluesse,
           });
         }

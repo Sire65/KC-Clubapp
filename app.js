@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.568.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.569.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1503,7 +1503,7 @@ function begruessungFertig(weiter) {
 // (Server-Einstellung „ansicht“), umschaltbar unten auf der Startseite und in den Einstellungen. Einfach = 5 große Kacheln,
 // oben nur „Nächstes Treffen“, Einstellungen mit drei Dingen. Es wird nichts gelöscht – die erweiterte Ansicht zeigt alles.
 // 2.481.0 KC-CLUB-EINFACH-MEHR (TÜV 18.10., Hansi: „einfache Ansicht bekommt Fotos/Erstattung/Abstimmungen“): Fotos waren nur über die Suche zu finden
-const EINFACH_KACHELN = ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "fotos", "vorschlaege", "erstattung", "dokumente", "spiele", "sos"]; // 2.7.0: + Spiele
+const EINFACH_KACHELN = ["clubabend", "termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "fotos", "vorschlaege", "erstattung", "dokumente", "spiele", "sos"]; // 2.7.0: + Spiele
 // Dienstwünsche kommen in die einfache Ansicht erst, wenn DP2 die Wünsche abholt (Codex-Umbau) – dann nur in der Wunschphase
 const DIENSTWUNSCH_EINFACH = false;
 let ANSICHT = (() => { try { return localStorage.getItem("kc_club_ansicht") === "erweitert" ? "erweitert" : "einfach"; } catch { return "einfach"; } })();
@@ -15016,6 +15016,8 @@ function kzGesehen(v) {
 const kzZahl = (k, plus = 0) => (einfach() || INIT?.kz?.[k] == null ? 0 : INIT.kz[k] + plus);
 const KACHELN = {
   verein: [
+    // 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27): nur am Clubabend (2 Std. vorher bis Ende) – Tagesordnung, Anwesende, Protokoll, Abstimmung, Fotos
+    { id: "clubabend", sym: "🍽️", t: "Clubabend", u: () => (ICH?.vorstand ? "Heute · Tagesordnung abhaken" : "Heute · Tagesordnung & mehr"), aktion: "caOeffnen()", nur: () => caHeute(), klasse: "ca-kachel" },
     { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
@@ -25636,6 +25638,7 @@ function ilMeldungen() {
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) add({ id: "installieren", stufe: "gold", sym: "📲", t: START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren", u: "Dann klappen WhatsApp, Galerie und Benachrichtigungen", auf: "installHilfe()" });
   const nd = INIT?.naechsterDienst;
   if (nd && (nd.datum === heuteIso() || nd.datum === tagPlus(heuteIso(), 1))) add({ id: "dienst:" + nd.datum, stufe: "gold", sym: "🗓️", t: `${nd.datum === heuteIso() ? "Heute" : "Morgen"} hast du Dienst: ${nd.start}–${nd.ende} Uhr`, u: nd.bereich || "Mein Dienst", auf: "dpNurIch()" });
+  if (caHeute()) add({ id: "clubabend:" + t.id, stufe: "gold", sym: "🍽️", t: `Heute Clubabend${t.beginn ? " um " + fZeit.format(new Date(t.beginn)) + " Uhr" : ""}`, u: "Tagesordnung, wer da ist, Fotos des Abends", auf: "caOeffnen()" }); // 2.569.0 KC-CLUB-CLUBABEND
   // 2.463.0 KC-CLUB-THEMEN-LAUFBAND (Wunschliste #22): vor der nächsten Sitzung zum Abstimmen über die Themen bzw. Einreichen auffordern
   const th = INIT?.themenNaechste;
   if (th && t?.id === th.treffen && Date.parse(t.beginn) > Date.now()) add({ id: "themen:" + th.treffen, stufe: th.offen > 0 ? "gold" : "weiss", sym: "🗳️",
@@ -33907,6 +33910,60 @@ function protokollZeile(p) {
     <span class="prl-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}${info ? " · " + info : ""}</span></span>
     <span class="prl-rechts">${prStatusMarke(p)}${!p.gelesen ? '<span class="marke rot">🆕 neu</span>' : ""}</span></button>`;
 }
+// ---------- 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27, Hansi: „am Clubabend Kachel einblenden, dort die Tagesordnung aufrufen und anklicken – abhaken
+// nur Clubleitung; Sorge, dass alle zu Hause anklicken – ich bin vor Ort“): alle sehen den Abend, nur die Clubleitung ändert (Server prüft das).
+// Anwesenheit trägt die Clubleitung vor Ort ein (kein „Ich bin da“ von zu Hause). Solange das Fenster offen ist, alle 20 s neu (alle sehen den Stand).
+const CA_VORHER_MIN = 120, CA_DAUER_STD = 6, CA_TAKT_MS = 20000;
+const CA = { stand: null, takt: null, offen: new Set(["top"]) };
+function caHeute() {
+  const t = INIT?.naechstesTreffen; if (!t?.beginn || (t.art && t.art !== "treffen")) return false;
+  const b = Date.parse(t.beginn), ende = t.ende ? Date.parse(t.ende) + 3600000 : b + CA_DAUER_STD * 3600000, j = Date.now();
+  return j >= b - CA_VORHER_MIN * 60000 && j <= ende;
+}
+async function caOeffnen(vorschau) {
+  try { const r = await api("clubabend", vorschau ? { vorschau: true } : {}); if (!r.aktiv) return melde("🍽️ Heute ist kein Clubabend – die Kachel erscheint am Abend selbst (2 Std. vorher).");
+    CA.stand = r; caZeichnen(); clearInterval(CA.takt);
+    CA.takt = setInterval(async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; try { const n = await api("clubabend", vorschau ? { vorschau: true } : {}); if (n.aktiv && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {} }, CA_TAKT_MS);
+  } catch (e) { meldeFehler(e); }
+}
+function caZeichnen() {
+  const r = CA.stand; if (!r) return;
+  const alt = $("caBlatt")?.querySelector(".blatt-innen")?.scrollTop || 0, L = r.leitung, tr = r.treffen;
+  const fertig = r.tagesordnung.filter((x) => x.erledigt).length, klappe = (k, kopf, inhalt) => `<details data-ca="${k}"${CA.offen.has(k) ? " open" : ""}><summary>${kopf}</summary>${inhalt}</details>`;
+  const top = r.tagesordnung.map((x, i) => `<div class="ca-top${x.erledigt ? " fertig" : ""}">${L ? `<button type="button" class="ca-haken" data-top="${i}" aria-label="${x.erledigt ? "Wieder offen" : "Abhaken"}">${x.erledigt ? "☑️" : "⬜"}</button>` : `<span class="ca-haken">${x.erledigt ? "✅" : "▫️"}</span>`}
+    <span class="ca-tx">${i + 1}. ${esc(x.t)}${x.vorschlag ? ` <small class="hinweis">👍 ${x.stimmen}</small>` : ""}</span></div>`).join("");
+  const da = new Set(r.anwesend.map((a) => a.person_id));
+  const anw = L ? `<p class="hinweis" style="margin:4px 0">Antippen, wer da ist – geht so ins Protokoll.</p><div class="ca-leute">${(r.mitglieder || []).map((m) => `<button type="button" class="knopf klein${da.has(m.person_id) ? " haupt" : ""}" data-da="${esc(m.person_id)}">${da.has(m.person_id) ? "✅ " : ""}${esc(m.name)}${m.zusage === "ja" && !da.has(m.person_id) ? " ·zugesagt" : ""}</button>`).join("")}</div>`
+    : r.anwesend.length ? `<div class="ca-leute">${r.anwesend.map((a) => `<span class="ca-chip">✅ ${esc(a.name)}</span>`).join("")}</div>` : `<p class="hinweis">Die Clubleitung trägt vor Ort ein, wer da ist.</p>`;
+  const fotos = r.album ? `<button type="button" class="knopf" onclick="$('caBlatt').remove();albumOeffnen('${esc(r.album.id)}')">📸 ${esc(r.album.name)} öffnen</button>` : L ? `<button type="button" class="knopf" data-k="album">📸 Album für heute anlegen</button>` : `<p class="hinweis">Noch kein Album für heute.</p>`;
+  const gb = r.geburtstage.length ? r.geburtstage.map((g) => `<div>🎂 <b>${esc(g.name)}</b> – ${g.heute ? "heute!" : esc(fTag.format(new Date(g.tag + "T12:00:00")))}</div>`).join("") : `<p class="hinweis">Keine Geburtstage seit dem letzten Treffen.</p>`;
+  const auf = r.aufgaben.length ? r.aufgaben.map((a) => `<div>📌 <b>${esc(String(a.wer).split(" ")[0])}</b>: ${esc(a.text)}${a.faellig ? ` <small class="hinweis">(bis ${esc(fTag.format(new Date(a.faellig + "T12:00:00")))})</small>` : ""}</div>`).join("") : `<p class="hinweis">Keine offenen Aufgaben${r.letztesProtokoll ? " aus dem letzten Protokoll" : ""}.</p>`;
+  const f = blattAuf("caBlatt", `<h3 style="margin:0">🍽️ ${/clubabend/i.test(tr.titel || "") ? esc(tr.titel) : `Clubabend – ${esc(tr.titel || "Köcheclub")}`}</h3>
+    <p class="hinweis" style="margin:2px 0 8px">${esc(wann(tr.beginn))}${tr.ort ? " · " + esc(tr.ort) : ""}${L ? "" : " · nur ansehen – abhaken macht die Clubleitung"}</p>
+    ${klappe("top", `📋 Tagesordnung <small>(${fertig} von ${r.tagesordnung.length} erledigt)</small>`, `<div class="ca-liste">${top || '<p class="hinweis">Noch keine Tagesordnung.</p>'}</div>`)}
+    ${klappe("da", `✅ Anwesend <small>(${r.anwesend.length})</small>`, anw)}
+    ${L ? `<div class="knoepfe ca-leitung"><button type="button" class="knopf" data-k="protokoll">📝 Protokoll ${r.protokoll ? "öffnen" : "anlegen"}</button><button type="button" class="knopf" data-k="termin">🗓️ Nächsten Termin abstimmen</button></div>` : ""}
+    ${klappe("fotos", "📸 Fotos vom Abend", fotos)}
+    ${klappe("gb", `🎂 Geburtstage seit dem letzten Treffen <small>(${r.geburtstage.length})</small>`, gb)}
+    ${klappe("auf", `📌 Offene Aufgaben <small>(${r.aufgaben.length})</small>`, auf)}
+    <button type="button" class="knopf" onclick="$('caBlatt').remove()">Schließen</button>`);
+  f.querySelector(".blatt-innen").scrollTop = alt;
+  f.querySelectorAll("details[data-ca]").forEach((d) => d.addEventListener("toggle", () => (d.open ? CA.offen.add(d.dataset.ca) : CA.offen.delete(d.dataset.ca))));
+  f.querySelectorAll("[data-top]").forEach((b) => (b.onclick = () => { const x = r.tagesordnung[Number(b.dataset.top)]; caSetzen({ erledigt: x.k, an: !x.erledigt }, b); }));
+  f.querySelectorAll("[data-da]").forEach((b) => (b.onclick = () => caSetzen({ anwesend: b.dataset.da, an: !da.has(b.dataset.da) }, b)));
+  f.querySelector('[data-k="protokoll"]')?.addEventListener("click", () => { f.remove(); r.protokoll ? protokollOeffnen(r.protokoll.id) : protokollAnlegen(tr.id); });
+  f.querySelector('[data-k="termin"]')?.addEventListener("click", () => { f.remove(); ltStartForm(); });
+  f.querySelector('[data-k="album"]')?.addEventListener("click", caAlbum);
+}
+async function caSetzen(was, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { CA.stand = await api("clubabend_setzen", { treffen_id: CA.stand.treffen.id, ...was }); caZeichnen(); } catch (e) { if (knopf) knopf.disabled = false; meldeFehler(e); }
+}
+async function caAlbum() {
+  const tr = CA.stand?.treffen; if (!tr) return;
+  try { const d = new Date(tr.beginn), r = await api("foto_album_speichern", { name: `Clubabend ${fKurz.format(d)}`.slice(0, 60), jahr: d.getFullYear(), sichtbar: "alle" });
+    await caSetzen({ album_id: r.id }); melde("📸 Album angelegt – Fotos über 📷 Fotos hochladen und hineinlegen"); } catch (e) { meldeFehler(e); }
+}
 async function protokollAnlegen(treffenId) {
   try { const r = await api("protokoll_vorlage", treffenId ? { treffen_id: treffenId } : { titel: (await eingabe("Wofür ist das Protokoll? (z. B. Jahreshauptversammlung)", "Sitzung des Köcheclubs")) || "" }); protokollOeffnen(r.id); }
   catch (e) { meldeFehler(e); }
@@ -39926,6 +39983,7 @@ function suAppListe() {
     ["🎪", "Kopf-Effekt wählen (Jalousie, Vorhang, Glocke …)", "kopf effekt jalousie vorhang theater servierglocke marktbude climber einrollen", () => einstiegHin("effekte", "setKopfEffekt")],
     ["⌨️", "Tippgeräusche (Tastatur, Schreibmaschine)", "tippgeräusche tastatur schreibmaschine tippen hören live", () => einstiegHin("benachrichtigung", "setTippTon")],
     ["🎁", "Geburtstags-Vogel ansehen", "geburtstag vogel geschenk happy birthday blumenstrauß", () => gbvVorschau()],
+    ["🍽️", "Clubabend (Tagesordnung, Anwesende)", "clubabend sitzung tagesordnung anwesend abhaken", () => caOeffnen(!!ICH?.vorstand)], // 2.569.0 KC-CLUB-CLUBABEND: Clubleitung auch vorher als Vorschau
     ["🧭", "Einstellungen erklärt (alle Einstellungen wie im Explorer)", "einstellungen erklärt erklärung übersicht alle einstellungen explorer wegweiser anleitung voreinstellungen was bewirkt bedeutet schritt für schritt", () => ewStart()], // 2.534.0
     // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: Verschlüsseln, Schlüsselbund, Versand-Leiste, Teilen, Diashow, PDF – auch per 🎤 Sprachsuche
     ["🔒", "Nachricht verschlüsselt senden (Schloss, Schlüssel)", "verschlüsseln verschlüsselt verschlüsselung geheim schloss schlüssel kennwort passwort code geheimnachricht sicher senden", () => hzZuEintrag("h:verschluesselt")],

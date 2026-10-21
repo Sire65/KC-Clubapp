@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.569.0 – 2026-10-21 – Kachel „Clubabend“ (KC-CLUB-CLUBABEND, Wunschliste #27)
+- Am Clubabend (2 Std. vorher bis Ende) erscheint die Kachel 🍽️ Clubabend (+ Hinweis im Info-Feld): Tagesordnung (aus der Büro-Vorbereitung, Themen mit 👍), Anwesende, Fotos vom Abend, Geburtstage seit dem letzten Treffen, offene Aufgaben aus dem letzten Protokoll.
+- Nur die Clubleitung: Tagesordnung abhaken, Anwesenheit vor Ort eintragen (geht ins Protokoll), Protokoll anlegen/öffnen, nächsten Termin live abstimmen, Album anlegen. Mitglieder sehen nur (alle 20 s aktuell).
+- Server 2.569.0 (clubabend, clubabend_setzen), Tabelle kc_club_clubabend; Clubleitung kann über die Lupe „Clubabend“ vorab eine Vorschau öffnen.
+
 ## 2.568.0 – 2026-10-21 – 📼 Anrufbeantworter beim Anklopfen + 🧭 Kacheln: Einfliegen, Horizontal/Vertikal drehen, Fallblatt-Uhr (KC-CLUB-ANRUFBEANTWORTER, KC-CLUB-KACHEL-EINFLUG)
 Bündel 20 Uhr. Wunsch Hansi zum Anrufbeantworter: „Wenn ich anklopfe und derjenige möchte das Gespräch nicht annehmen … mehrere Antworten parat und einen Sofort-Button ‚Anrufbeantworter einschalten‘ … Nachricht hinterlassen, Sekunden laufen runter, höchstens 2 Min., Admin beliebig … Dieter: ‚Du hast x neue Nachrichten auf deinem Anrufbeantworter‘ … anhören, blättern, löschen … und mir Rückmeldung: ‚abgehört am … um …‘“.
 - Anklopf-Fenster: neuer roter Knopf **📼 Anrufbeantworter einschalten** und sechs weitere Kurzantworten (⏱️ Gleich – in 5 Minuten, 📅 Termin, 🩺 Arzt, 👨‍👩‍👧 Familie, 🛒 einkaufen, 😴 Ruhe).

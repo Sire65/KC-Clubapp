@@ -977,6 +977,12 @@
   .zettel .zknoepfe button { border: 1px solid rgba(0,0,0,.25); background: rgba(255,255,255,.55); color: #2b2410; border-radius: 10px; padding: 5px 9px; font-weight: 800; font-size: .8rem; cursor: pointer; }
   .zettel .zknoepfe button.erl { background: #2e7d4f; color: #fff; border-color: #2e7d4f; }
   .zettel.erledigt { opacity: .7; }
+  /* 2.569.0 KC-CLUB-CLUBABEND */
+  #caBlatt details { border: 2px solid var(--gold, #c9a46a); border-radius: 12px; padding: 0 10px; margin: 8px 0; } #caBlatt details > summary { padding: 10px 0; font-weight: 800; }
+  .ca-top { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--linie); } .ca-top:last-child { border-bottom: 0; }
+  .ca-top.fertig .ca-tx { text-decoration: line-through; color: var(--grau); } .ca-haken { flex: none; border: 0; background: none; font-size: 1.35rem; line-height: 1; padding: 0; cursor: pointer; }
+  .ca-leute { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; } .ca-leute .knopf { width: auto; } .ca-chip { background: var(--karte2); border-radius: 12px; padding: 4px 10px; font-size: .9rem; }
+  .ca-leitung { margin: 8px 0; } .ca-kachel { border: 2px solid var(--gold, #c9a46a); }
   .zteil { margin-top: 6px; font-size: .8rem; font-weight: 700; background: rgba(255,255,255,.55); border-radius: 6px; padding: 3px 6px; } /* 2.554.0 KC-CLUB-PINNWAND-TEIL-AB */
   .zettel details { margin-top: 6px; font-size: .78rem; } .zettel summary { cursor: pointer; font-weight: 800; }
   .pw-kopfzeile { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .pw-kopfzeile .zaehler200 { margin: 0; } /* 2.66.0: Zeichen gleich hinter „Kurze Nachricht“ */
@@ -5704,7 +5710,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.568.0" data-v="2.568.0"></script>
+<script src="app.js?v=2.569.0" data-v="2.569.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
