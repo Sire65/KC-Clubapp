@@ -124,5 +124,16 @@ await bild("4-helfer");
 console.log(JSON.stringify(an));
 ok(an.vorher === 11 && !an.helferVorher && an.stand && an.helferNach && an.stand2, "Folgefrage „Wer zählt zu den Helfern?“ erscheint erst nach „Ja“ (11 → 12 Fragen)");
 ok(an.gesendet?.join("/") === "Bauhof/Feuerwehr" && an.angekreuzt.some((t) => /Feuerwehr/.test(t)) && an.angekreuzt.some((t) => /Bauhof/.test(t)), "mehrere ankreuzen: Liste in Reihenfolge der Antworten");
+// 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK: Ankreuzbogen und Ergebnis auf dem Kopfbogen
+const dr = await seite.evaluate(async () => { const e = {};
+  e.knoepfe = [...$("vorschlagInfo").querySelectorAll("button")].map((b) => b.textContent).filter((t) => /Ankreuzbogen|Ergebnis drucken/.test(t)).length;
+  DRUCK = { art: "abstimmung", param: { pid: "PK2", art: "bogen" } }; await druckSeiteBauen(); const d = $("druck");
+  e.kopf = !!d.querySelector(".cd-kopf") && /Köcheclub/.test(d.textContent); e.fragen = (d.innerHTML.match(/font-size:3\.9mm;font-weight:800/g) || []).length;
+  e.bereiche = [...d.querySelectorAll("h2")].map((h) => h.textContent.trim()); e.folge = /nur ausfüllen, wenn bei Frage 5 „Ja“/.test(d.textContent); e.name = /Name:/.test(d.textContent) && /Unterschrift/.test(d.textContent);
+  DRUCK = { art: "abstimmung", param: { pid: "PK2", art: "ergebnis" } }; await druckSeiteBauen();
+  e.ergebnis = /Zwischenstand/.test($("druck").textContent) && /haben abgestimmt/.test($("druck").textContent) && /Bauhof/.test($("druck").textContent); return e; });
+console.log(JSON.stringify(dr));
+ok(dr.knoepfe === 2 && dr.kopf && dr.fragen === 12 && dr.bereiche.join("|") === "📂 Technik|📂 Bilderrechner|📂 Abrechnung" && dr.folge && dr.name, "🖨️ Ankreuzbogen: Kopfbogen, 12 Fragen nach Bereichen, Folgefrage-Hinweis, Name/Unterschrift");
+ok(dr.ergebnis, "📊 Ergebnis drucken: Zwischenstand mit Stimmen je Frage");
 ok(!fehler.length, "keine Skriptfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();

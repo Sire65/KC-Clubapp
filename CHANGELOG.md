@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.557.0 – 2026-10-21 – 🖨️ Abstimmung als Ankreuzbogen und Ergebnis auf dem Köcheclub-Kopfbogen (KC-CLUB-ABSTIMMUNG-DRUCK)
+Wunsch Hansi („sauberes, ordentliches Ankreuzformular mit Köcheclub-Kopfbogen“ + Ergebnis als Schriftstück; „beides bauen und sofort einspielen“).
+- Im Fenster einer Abstimmung mit mehreren Fragen: **🖨️ Ankreuzbogen** – A4 auf dem CD-Kopfbogen (Kochmütze, Köcheclub Werne, Fußzeile), Überschrift, Beschreibung, Name/Datum, alle Fragen nummeriert nach Bereichen mit ☐-Kästchen, Erklärungen, „☑️ mehrere möglich“, Folgefragen mit „↪️ nur ausfüllen, wenn bei Frage 5 „Ja“ angekreuzt ist“, Abgabefrist, Ort/Datum/Unterschrift. Geheim: ohne Namen und Unterschrift.
+- **📊 Ergebnis drucken** – je Frage Balken (stärkste Antwort weinrot), Anzahl und Prozent, „9 von 12 haben abgestimmt“, Namen bei offenen Abstimmungen; „Zwischenstand“ solange sie läuft, sonst „Endergebnis (beendet am …)“. Geheime Fragen erst nach dem Ende.
+- Beides über die vorhandene Druckvorschau (🖨️ Drucken, 📄 PDF, Teilen). Auf Papier Angekreuztes trägt die App nicht selbst ein.
+- Vorlage „Technik, Bilderrechner, Abrechnung“: doppelter Hinweis bei „Wer zählt zu den Helfern?“ entfernt.
+- Test: tools/abstimmung-paket/ap-browser.mjs (Bogen + Ergebnis), Vertragstest-Block 2.557.0. Server unverändert (2.556.0). Rückweg: App 2.556.0.
+
 ## 2.556.0 – 2026-10-21 – 📞 Anrufe stabiler (Neuaufbau bei Netzwechsel, schneller, schwaches Netz) · 🔐 neue Tabellen mit ausdrücklichen Rechten (KC-CLUB-ANRUF-BESSER, KC-SUPABASE-GRANTS, KC-CLUB-RC-NACHTRAG)
 - KC-CLUB-ANRUF-BESSER (Wunsch Hansi „bau 2 bis 4 jetzt“): Bricht die Verbindung im Gespräch ab oder wechselt das Netz (WLAN ↔ Mobilfunk), baut die App sie bis zu 3-mal neu auf („🔄 Verbindung wird neu aufgebaut …“), erst danach endet das Gespräch. Aufbau schneller (Annehmen → verbunden 0,8 s statt 1,5 s; mit direkter Leitung 0,2 s), mit direkter Leitung im Gespräch halb so viele Nachfragen. Ton mit Fehlerkorrektur und Lautstärke-Ausgleich; bei schwachem Netz „📶 Verbindung schwach“, Bild erst kleiner, dann pausiert, Ton läuft weiter. Server: anruf_neu_angebot / anruf_neu_antwort (nur Beteiligte, nur angenommene Einzelgespräche). Konferenzen nur mit schnellerem Aufbau.
 - KC-SUPABASE-GRANTS: Ab 30.10.2026 vergibt Supabase für neue Tabellen keine Rechte mehr von selbst – Regel in AGENTS.md und Test tests/migration-rechte.test.mjs.

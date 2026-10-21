@@ -18,7 +18,7 @@
             { "frage": "Sollen alle Verkäufe im Bilderrechner erfasst werden – auch einzelne, z. B. nur ein Eierpunsch?", "beschreibung": "Vorteil: nach dem Weihnachtsmarkt genaue Auswertung, Übersicht und Kalkulation." },
             { "frage": "Sollen alle von Mitarbeitern verzehrten Speisen und Getränke – auch zum Mitnehmen – auf „Personal“ gebucht werden (ohne Namen)?" },
             { "frage": "Sollen Speisen und Getränke für Helfer kostenlos abgegeben werden?" },
-            { "frage": "Wer zählt zu den Helfern?", "beschreibung": "Mehrere Antworten möglich.", "mehrfach": true, "wenn": { "nr": 4, "antwort": "Ja" },
+            { "frage": "Wer zählt zu den Helfern?", "mehrfach": true, "wenn": { "nr": 4, "antwort": "Ja" },
               "optionen": ["Bauhof", "Bühne", "Artisten und Künstler", "Feuerwehr", "Stromlieferant", "Stadtmarketing", "Küchenmitarbeiter Küche Dortmund", "Freunde", "Bekannte", "Gönner", "Weitere (bitte in der Sitzung nennen)"] },
             { "frage": "Sollen andere Standbeschicker Speisen und Getränke vergünstigt bekommen – und wenn ja, um wie viel?", "optionen": ["Nein", "Ja, 10 % günstiger", "Ja, 20 % günstiger", "Ja, 50 % günstiger", "Ja, 100 % (gratis)", "Enthaltung"] },
             { "frage": "Sollen Entnahmen aus der Kasse für Personalverpflegung (Speisen/Getränke) möglichst eingegeben und im Bilderrechner verbucht werden?" }

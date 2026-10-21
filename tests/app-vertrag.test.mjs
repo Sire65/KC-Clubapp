@@ -11826,3 +11826,11 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
       if (f.wenn) assert.ok(f.wenn.nr < i && (alle[f.wenn.nr].optionen || ["Ja", "Nein", "Enthaltung"]).includes(f.wenn.antwort), "Vorlage-Bedingung gültig: " + f.frage); });
   }
 }
+// 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK (Wunsch Hansi „sauberes, ordentliches Ankreuzformular mit Köcheclub-Kopfbogen“ + Ergebnis)
+{
+  assert.ok(/abstimmung: \{ bauen: \(o, p\) => druckAbstimmung\(p\) \}/.test(html) && /function druckAbstimmung\(\{ pid, art \}\)/.test(html), "Druckart über die vorhandene Druckvorschau (CD-Kopfbogen, PDF)");
+  assert.ok(/druckStarten\('abstimmung', \{ pid: '\$\{esc\(pid\)\}', art: 'bogen' \}\)">🖨️ Ankreuzbogen/.test(html) && /art: 'ergebnis' \}\)">📊 Ergebnis drucken/.test(html), "Knöpfe im Abstimmungsfenster");
+  const d = html.slice(html.indexOf("function druckAbstimmung("), html.indexOf("async function paketStatus("));
+  assert.ok(/v\.geheim\s*\? `<p[^`]*ohne Namen/.test(d) && /if \(!ergebnis && !v\.geheim\)/.test(d), "geheim: Bogen ohne Namen und Unterschrift");
+  assert.ok(/nur ausfüllen, wenn bei Frage \$\{nrVon\(vor\)\}/.test(d) && /☑️ mehrere möglich/.test(d) && /else if \(!x\.ergebnis\) teil =/.test(d), "Folgefrage, Mehrfach, geheimes Ergebnis erst nach dem Ende");
+}
