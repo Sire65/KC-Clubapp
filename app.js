@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.557.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.558.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27294,8 +27294,8 @@ function vorschlagPaketInfo(pid) {
     fragen += paketFrageKarte(x, l);
   }
   const knoepfe = [
-    `<button class="knopf klein" onclick="druckStarten('abstimmung', { pid: '${esc(pid)}', art: 'bogen' })">🖨️ Ankreuzbogen</button>`, // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK
-    l.some((x) => x.ergebnis) ? `<button class="knopf klein" onclick="druckStarten('abstimmung', { pid: '${esc(pid)}', art: 'ergebnis' })">📊 Ergebnis drucken</button>` : "",
+    `<button class="knopf klein" onclick="abBogenDrucken('${esc(pid)}')">🖨️ Ankreuzbogen</button>`, // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK
+    l.some((x) => x.ergebnis) ? `<button class="knopf klein" onclick="druckStarten('abstimmungErgebnis', { pid: '${esc(pid)}' })">📊 Ergebnis drucken</button>` : "",
     offen && v.darfAbschliessen ? `<button class="knopf klein" onclick="paketStatus('${esc(pid)}','abgeschlossen')">🏁 Abstimmung beenden</button>` : "",
     offen && ICH?.vorstand ? `<button class="knopf klein" onclick="paketStatus('${esc(pid)}','zurueckgezogen')">Zurückziehen</button>` : "",
     ICH?.vorstand ? `<button class="knopf klein" onclick="paketLoeschen('${esc(pid)}')">🗑️ Löschen</button>` : "",
@@ -27322,31 +27322,82 @@ async function pkAbgeben(id) {
 // ---------- 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK (Wunsch Hansi „sauberes, ordentliches Ankreuzformular mit Köcheclub-Kopfbogen“ + Ergebnis als Schriftstück) ----------
 // Über die vorhandene Druckvorschau (CD-Kopf, Fußzeile, 📄 PDF). Bogen: alle Fragen nach Bereichen mit ☐, Folgefragen mit Hinweis, Name/Unterschrift
 // (geheim: ohne Namen). Ergebnis: je Frage Balken, Anzahl, Prozent; Namen nur bei offenen Abstimmungen. Papier-Stimmen trägt die App nicht selbst ein.
+// 2.558.0 KC-CLUB-ABSTIMMUNG-BOGEN-2 (Wunsch Hansi „saubere Tabelle zum Abstimmen, oben Kopf, Name aus Combobox suchen oder automatisch über die App,
+// rechts oben wieder der altbekannte QR-Code zur Identifizierung“): Bogen als Tabelle (Nr. · Frage · Antworten), vor dem Druck „Für wen?“ –
+// 👤 ich (Name automatisch) · 🔍 Mitglied suchen · 👥 alle Mitglieder (je eine Seite) · ✏️ leer (Name von Hand). Oben rechts der Profil-QR
+// wie auf Wunschbogen/Bestätigung (KCDP-FORM-PROFILE-1, Mitglieds-ID, Art club-abstimmung-v1, ref = Abstimmung). Geheim: ohne Namen und QR.
+async function abBogenDrucken(pid) {
+  try { await Promise.all([MITGLIEDER ? null : mitgliederHolen(), qrLaden().catch(() => {})]); } catch (e) { return meldeFehler(e); }
+  druckStarten("abstimmung", { pid });
+}
+const abDruckListe = (pid) => VS_PAKETE.get(pid) || (VORSCHLAG_MAP.get(pid) ? [VORSCHLAG_MAP.get(pid)] : []);
+function abDruckOptionen() {
+  const v = abDruckListe(DRUCK?.param?.pid)[0];
+  if (v?.geheim) return '<p class="hinweis">🔒 Geheime Abstimmung – der Bogen wird <b>ohne Namen und ohne QR-Code</b> gedruckt.</p><input type="hidden" id="abFuer" value="leer">';
+  const mg = (MITGLIEDER || []).filter((m) => m.name).sort((a, b) => a.name.localeCompare(b.name));
+  const wahl = (w, t, an) => `<label><input type="radio" name="abFuer" value="${w}" ${an ? "checked" : ""} onchange="$('abSucheFeld').classList.toggle('versteckt', this.value !== 'mitglied')"> ${t}</label>`;
+  return `<b>Für wen?</b><div class="dwahl senkrecht">${wahl("ich", `👤 Für mich – ${esc(ICH?.name || "")} (Name und QR automatisch)`, true)}${wahl("mitglied", "🔍 Für ein Mitglied – Namen suchen")}
+    ${wahl("alle", `👥 Für alle Mitglieder – je eine Seite (${mg.length})`)}${wahl("leer", "✏️ Leer – Name wird von Hand eingetragen")}</div>
+    <label class="feld versteckt" id="abSucheFeld">Mitglied<input id="abMitglied" list="abMgListe" placeholder="🔍 Name suchen …" autocomplete="off"><datalist id="abMgListe">${mg.map((m) => `<option value="${esc(m.name)}"></option>`).join("")}</datalist></label>`;
+}
+function abFuerLesen() {
+  const art = document.querySelector('input[name="abFuer"]:checked')?.value || $("abFuer")?.value || "ich", mg = MITGLIEDER || [];
+  if (art === "leer") return [null];
+  if (art === "alle") return mg.filter((m) => m.name).sort((a, b) => a.name.localeCompare(b.name)).map((m) => ({ id: m.person_id, name: m.name }));
+  if (art === "mitglied") { const t = ($("abMitglied")?.value || "").trim().toLowerCase(), m = mg.find((x) => x.name.toLowerCase() === t) || (t && mg.filter((x) => x.name.toLowerCase().includes(t)).length === 1 ? mg.find((x) => x.name.toLowerCase().includes(t)) : null);
+    if (!m) throw new Error("Bitte ein Mitglied aus der Liste wählen (Namen eintippen, dann antippen)."); return [{ id: m.person_id, name: m.name }]; }
+  return [{ id: ICH?.person_id || "", name: ICH?.name || "" }];
+}
+function abQr(pid, person) {
+  if (!person?.id || !window.qrcode) return "";
+  try { const q = qrcode(0, "M"); q.addData(JSON.stringify({ schema: "KCDP-FORM-PROFILE-1", profileId: person.id, periodId: "", kind: "club-abstimmung-v1", ref: pid })); q.make(); return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); } catch { return ""; }
+}
 function druckAbstimmung({ pid, art }) {
-  const l = VS_PAKETE.get(pid) || (VORSCHLAG_MAP.get(pid) ? [VORSCHLAG_MAP.get(pid)] : []), v = l[0];
+  const l = abDruckListe(pid), v = l[0];
   if (!v) throw new Error("Abstimmung nicht gefunden – bitte die Liste neu laden.");
-  const titel = v.paket?.titel || v.titel, beschr = v.paket ? v.paket.beschreibung : v.beschreibung, ergebnis = art === "ergebnis", fsz = "3.6mm";
-  const box = '<span style="display:inline-block;flex:none;width:4.2mm;height:4.2mm;border:1.4px solid #222;border-radius:.6mm;margin-right:2mm;vertical-align:-0.8mm"></span>';
+  const titel = v.paket?.titel || v.titel, beschr = v.paket ? v.paket.beschreibung : v.beschreibung, ergebnis = art === "ergebnis", fsz = "3.5mm";
+  const box = '<span style="display:inline-block;flex:none;width:4.2mm;height:4.2mm;border:1.4px solid #222;border-radius:.6mm;margin-right:2mm;vertical-align:-0.8mm;background:#fff"></span>';
   const strich = (mm) => `<span style="display:inline-block;width:${mm}mm;border-bottom:1px solid #555;height:4mm;vertical-align:-1mm"></span>`;
-  const bereich = (t) => `<h2 style="font:700 4.6mm/1.2 Georgia,'Times New Roman',serif;color:#741521;background:#f3e9dc;border-bottom:.5mm solid #741521;padding:1.2mm 2.5mm;margin:5mm 0 2mm;break-after:avoid">📂 ${esc(t)}</h2>`;
   const nrVon = (x) => l.indexOf(x) + 1;
+  const zusatzVon = (x) => { const w = x.paket?.wenn, vor = w && l.find((y) => y.paket?.nr === w.nr);
+    return [x.paket?.mehrfach ? "☑️ mehrere möglich" : "", vor ? `↪️ nur ausfüllen, wenn bei Frage ${nrVon(vor)} „${esc(w.antwort)}“ angekreuzt ist` : ""].filter(Boolean).join(" · "); };
+  const frageText = (x) => `<b>${esc(x.titel)}</b>${x.beschreibung ? `<div style="font-size:3mm;font-style:italic;color:#5b544d;margin-top:.5mm">${esc(x.beschreibung)}</div>` : ""}${zusatzVon(x) ? `<div style="font-size:2.9mm;color:#741521;margin-top:.5mm">${zusatzVon(x)}</div>` : ""}`;
+  if (!ergebnis) {
+    // Tabelle je Bereich: Nr. · Frage · Antworten zum Ankreuzen
+    const td = "border:.3mm solid #c9b8a4;padding:1.6mm 2mm;vertical-align:top";
+    let tab = "", b0, offen = false;
+    const zu = () => (offen ? "</tbody></table>" : "");
+    for (const x of l) {
+      const b = x.paket?.abschnitt || "";
+      if (b !== b0 || !offen) { tab += zu(); b0 = b; offen = true;
+        tab += `<table style="width:100%;border-collapse:collapse;margin:3.5mm 0 0;font-size:${fsz}"><thead><tr><th colspan="3" style="${td};background:#f3e9dc;color:#741521;text-align:left;font:700 4.2mm/1.2 Georgia,'Times New Roman',serif;border-bottom:.6mm solid #741521">${b ? "📂 " + esc(b) : "Fragen"}</th></tr>
+          <tr><th style="${td};width:7mm;background:#faf5ef;font-size:2.9mm">Nr.</th><th style="${td};background:#faf5ef;font-size:2.9mm;text-align:left">Frage</th><th style="${td};width:62mm;background:#faf5ef;font-size:2.9mm;text-align:left">Antwort ankreuzen</th></tr></thead><tbody>`; }
+      tab += `<tr style="break-inside:avoid"><td style="${td};text-align:center;font-weight:800;color:#741521">${nrVon(x)}</td><td style="${td}">${frageText(x)}</td>
+        <td style="${td}">${x.optionen.map((o) => `<div style="display:flex;align-items:flex-start;margin:0 0 1.3mm">${box}<span>${esc(o)}</span></div>`).join("")}</td></tr>`;
+    }
+    tab += zu();
+    const hinweis = `<p style="margin:0;font-size:3.1mm;color:#5b544d">Bitte je Frage <b>ein</b> Kästchen ankreuzen ☒ – wo „mehrere möglich“ steht, auch mehrere.${v.frist && v.status === "offen" ? ` Abgabe bis <b>${esc(wann(v.frist))}</b>.` : ""}</p>`;
+    const seite = (person) => {
+      const qr = v.geheim ? "" : abQr(pid, person);
+      const qrKasten = v.geheim ? "" : `<div style="float:right;width:27mm;margin:0 0 2mm 4mm;text-align:center;font-size:2.4mm;color:#5b544d">${qr ? `<div style="border:.3mm solid #999;padding:1mm;background:#fff">${qr}</div>${esc(person.id)}` : `<div style="border:.3mm dashed #999;height:25mm;display:flex;align-items:center;justify-content:center;padding:2mm">kein QR –<br>Name von Hand</div>`}</div>`;
+      const name = v.geheim ? `<p style="margin:0 0 2mm;font-size:${fsz}"><b>🔒 Geheime Abstimmung</b> – bitte <b>ohne Namen</b> ankreuzen und gefaltet abgeben.</p>`
+        : `<div style="font-size:3.8mm;margin:0 0 2.5mm"><b>Name:</b> ${person ? `<span style="font-size:4.4mm;font-weight:800;border-bottom:1px solid #555;padding:0 2mm">${esc(person.name)}</span>` : strich(80)}</div><div style="font-size:${fsz};margin:0 0 2.5mm"><b>Datum:</b> ${strich(35)}</div>`;
+      return `<div style="break-after:page">${cdKopf(titel, "🗳️ Abstimmung – bitte ankreuzen", esc(fKurzJahr.format(new Date())))}
+        <div style="overflow:hidden">${qrKasten}${beschr ? `<p style="margin:0 0 2.5mm;font-size:${fsz};white-space:pre-wrap">${esc(beschr)}</p>` : ""}${name}${hinweis}</div>
+        ${tab}${v.geheim ? "" : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12mm;margin-top:9mm;font-size:3.2mm;break-inside:avoid"><div style="border-top:1px solid #222;padding-top:1mm">Ort, Datum</div><div style="border-top:1px solid #222;padding-top:1mm">Unterschrift</div></div>`}
+        ${cdFuss(`Gedruckt am ${esc(wann(new Date().toISOString()))} von ${esc(ICH?.name || "")} · Köcheclub-App v${APP_VERSION} · Ankreuzbogen${person ? " · " + esc(person.name) : ""}`)}</div>`;
+    };
+    const fuer = v.geheim ? [null] : abFuerLesen();
+    return { titel: fuer.length > 1 ? `${titel} – ${fuer.length} Bögen` : titel, ohneRahmen: true, html: fuer.map(seite).join("").replace(/break-after:page">(?![\s\S]*break-after:page)/, '">') };
+  }
   let html = beschr ? `<p style="margin:0 0 3mm;font-size:${fsz};white-space:pre-wrap">${esc(beschr)}</p>` : "";
-  if (!ergebnis) html += v.geheim
-    ? `<p style="margin:0 0 3mm;font-size:${fsz}"><b>🔒 Geheime Abstimmung</b> – bitte <b>ohne Namen</b> ankreuzen und gefaltet abgeben.</p>`
-    : `<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:0 8mm;font-size:${fsz};margin:0 0 2mm"><div><b>Name:</b> ${strich(70)}</div><div><b>Datum:</b> ${strich(35)}</div></div>`;
-  if (!ergebnis) html += `<p style="margin:0 0 1mm;font-size:3.3mm;color:#5b544d">Bitte je Frage <b>ein</b> Kästchen ankreuzen ☒ – wo „mehrere möglich“ steht, auch mehrere.${v.frist && v.status === "offen" ? ` Abgabe bis <b>${esc(wann(v.frist))}</b>.` : ""}</p>`;
-  else { const offen = l.some((x) => x.status === "offen");
-    html += `<p style="margin:0 0 1mm;font-size:${fsz}"><b>${offen ? "⏳ Zwischenstand – die Abstimmung läuft noch" : "✔ Endergebnis"}</b>${!offen && v.abgeschlossen_am ? ` (beendet am ${esc(wann(v.abgeschlossen_am))})` : ""} · ${v.geheim ? "🔒 geheim" : "👁️ offen"} · ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}${v.ziel ? ` · nur für: ${esc(v.ziel)}` : ""}</p>`; }
+  const offen = l.some((x) => x.status === "offen");
+  html += `<p style="margin:0 0 1mm;font-size:${fsz}"><b>${offen ? "⏳ Zwischenstand – die Abstimmung läuft noch" : "✔ Endergebnis"}</b>${!offen && v.abgeschlossen_am ? ` (beendet am ${esc(wann(v.abgeschlossen_am))})` : ""} · ${v.geheim ? "🔒 geheim" : "👁️ offen"} · ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}${v.ziel ? ` · nur für: ${esc(v.ziel)}` : ""}</p>`;
   let b0;
   for (const x of l) {
-    const b = x.paket?.abschnitt || ""; if (b !== b0) { b0 = b; if (b) html += bereich(b); }
-    const w = x.paket?.wenn, vor = w && l.find((y) => y.paket?.nr === w.nr);
-    const zusatz = [x.paket?.mehrfach ? "☑️ mehrere möglich" : "", vor ? `↪️ nur ausfüllen, wenn bei Frage ${nrVon(vor)} „${esc(w.antwort)}“ angekreuzt ist` : ""].filter(Boolean).join(" · ");
+    const b = x.paket?.abschnitt || ""; if (b !== b0) { b0 = b; if (b) html += `<h2 style="font:700 4.6mm/1.2 Georgia,'Times New Roman',serif;color:#741521;background:#f3e9dc;border-bottom:.5mm solid #741521;padding:1.2mm 2.5mm;margin:5mm 0 2mm;break-after:avoid">📂 ${esc(b)}</h2>`; }
     let teil;
-    if (!ergebnis) {
-      const lang = x.optionen.some((o) => o.length > 28), spalten = lang ? 2 : x.optionen.length > 4 ? 3 : Math.min(x.optionen.length, 4);
-      teil = `<div style="display:grid;grid-template-columns:repeat(${spalten},1fr);gap:1.8mm 5mm;font-size:${fsz};margin:1.5mm 0 0 7mm">${x.optionen.map((o) => `<div style="display:flex;align-items:flex-start">${box}<span>${esc(o)}</span></div>`).join("")}</div>`;
-    } else if (!x.ergebnis) teil = `<p style="margin:1mm 0 0 7mm;font-size:3.3mm;color:#5b544d">🔒 Ergebnis erst nach dem Ende der Abstimmung (${x.stimmen} von ${x.berechtigt} haben abgestimmt).</p>`;
+    if (!x.ergebnis) teil = `<p style="margin:1mm 0 0 7mm;font-size:3.3mm;color:#5b544d">🔒 Ergebnis erst nach dem Ende der Abstimmung (${x.stimmen} von ${x.berechtigt} haben abgestimmt).</p>`;
     else {
       const max = Math.max(1, ...x.ergebnis.map((e) => e.anzahl)), basis = x.stimmen || 1;
       teil = `<table style="width:calc(100% - 7mm);margin:1.5mm 0 0 7mm;border-collapse:collapse;font-size:3.3mm">${x.ergebnis.map((e) => `<tr style="break-inside:avoid">
@@ -27356,11 +27407,9 @@ function druckAbstimmung({ pid, art }) {
         <p style="margin:.6mm 0 0 7mm;font-size:2.9mm;color:#5b544d">${x.stimmen} von ${x.berechtigt} haben abgestimmt${x.paket?.mehrfach ? " · mehrere Antworten möglich (Prozent je Person)" : ""}</p>`;
     }
     html += `<div style="break-inside:avoid;margin:0 0 3.2mm"><div style="font-size:3.9mm;font-weight:800;display:flex;gap:2mm"><span style="color:#741521;flex:none">${nrVon(x)}.</span><span>${esc(x.titel)}</span></div>
-      ${x.beschreibung ? `<div style="font-size:3.2mm;font-style:italic;color:#5b544d;margin:.5mm 0 0 7mm">${esc(x.beschreibung)}</div>` : ""}${zusatz ? `<div style="font-size:3mm;color:#741521;margin:.5mm 0 0 7mm">${zusatz}</div>` : ""}${teil}</div>`;
+      ${x.beschreibung ? `<div style="font-size:3.2mm;font-style:italic;color:#5b544d;margin:.5mm 0 0 7mm">${esc(x.beschreibung)}</div>` : ""}${zusatzVon(x) ? `<div style="font-size:3mm;color:#741521;margin:.5mm 0 0 7mm">${zusatzVon(x)}</div>` : ""}${teil}</div>`;
   }
-  if (!ergebnis && !v.geheim) html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12mm;margin-top:10mm;font-size:3.3mm;break-inside:avoid"><div style="border-top:1px solid #222;padding-top:1mm">Ort, Datum</div><div style="border-top:1px solid #222;padding-top:1mm">Unterschrift</div></div>`;
-  return { titel: ergebnis ? `Ergebnis: ${titel}` : titel, unter: ergebnis ? "Ergebnis der Abstimmung" : "🗳️ Abstimmung – bitte ankreuzen", html,
-    fuss: ergebnis ? "Ergebnis der Abstimmung" : "Ankreuzbogen" };
+  return { titel: `Ergebnis: ${titel}`, unter: "Ergebnis der Abstimmung", html, fuss: "Ergebnis der Abstimmung" };
 }
 async function paketStatus(pid, status) {
   const v = VS_PAKETE.get(pid)?.[0]; if (!v) return;
@@ -37023,7 +37072,8 @@ const DRUCKARTEN = {
   feste: { bauen: () => druckFeste() }, // KC-CLUB-BUERO-FESTE (1.29.0)
   mitgliederliste: { bauen: () => druckMitgliederliste() }, // KC-CLUB-BUERO-MITGLIEDERLISTE (1.31.0) // KC-CLUB-BRIEFBOGEN (1.26.0): eigener Briefkopf, ohne App-Kopf/-Fuß
   erstattung: { titel: "🖨️ Erstattungsantrag drucken", optionen: () => druckErstattungOptionen(), bauen: (o) => druckErstattung(o) },
-  abstimmung: { bauen: (o, p) => druckAbstimmung(p) }, // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK: Ankreuzbogen bzw. Ergebnis auf dem Kopfbogen
+  abstimmung: { titel: "🖨️ Ankreuzbogen drucken", optionen: () => abDruckOptionen(), bauen: (o, p) => druckAbstimmung({ ...p, art: "bogen" }) }, // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK · 2.558.0 „Für wen?“
+  abstimmungErgebnis: { bauen: (o, p) => druckAbstimmung({ ...p, art: "ergebnis" }) },
   erstattungBlatt: { titel: "📄 Erstattungsantrag", bauen: (o, d) => ({ titel: `Erstattungsantrag ${d.name}`.trim(), ohneRahmen: true, html: erstBlatt(d) }) }, // 2.526.0
   anleitung: { bauen: () => druckAnleitung() },
   einstwegweiser: { bauen: () => ewDruck() }, // 2.534.0 KC-CLUB-EINST-WEGWEISER

@@ -11827,10 +11827,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   }
 }
 // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK (Wunsch Hansi „sauberes, ordentliches Ankreuzformular mit Köcheclub-Kopfbogen“ + Ergebnis)
+// 2.558.0 KC-CLUB-ABSTIMMUNG-BOGEN-2 („saubere Tabelle, Name aus Combobox oder automatisch, rechts oben der altbekannte QR-Code“)
 {
-  assert.ok(/abstimmung: \{ bauen: \(o, p\) => druckAbstimmung\(p\) \}/.test(html) && /function druckAbstimmung\(\{ pid, art \}\)/.test(html), "Druckart über die vorhandene Druckvorschau (CD-Kopfbogen, PDF)");
-  assert.ok(/druckStarten\('abstimmung', \{ pid: '\$\{esc\(pid\)\}', art: 'bogen' \}\)">🖨️ Ankreuzbogen/.test(html) && /art: 'ergebnis' \}\)">📊 Ergebnis drucken/.test(html), "Knöpfe im Abstimmungsfenster");
-  const d = html.slice(html.indexOf("function druckAbstimmung("), html.indexOf("async function paketStatus("));
-  assert.ok(/v\.geheim\s*\? `<p[^`]*ohne Namen/.test(d) && /if \(!ergebnis && !v\.geheim\)/.test(d), "geheim: Bogen ohne Namen und Unterschrift");
-  assert.ok(/nur ausfüllen, wenn bei Frage \$\{nrVon\(vor\)\}/.test(d) && /☑️ mehrere möglich/.test(d) && /else if \(!x\.ergebnis\) teil =/.test(d), "Folgefrage, Mehrfach, geheimes Ergebnis erst nach dem Ende");
+  assert.ok(/abstimmung: \{ titel: "🖨️ Ankreuzbogen drucken", optionen: \(\) => abDruckOptionen\(\)/.test(html) && /abstimmungErgebnis: \{ bauen: \(o, p\) => druckAbstimmung\(\{ \.\.\.p, art: "ergebnis" \}\) \}/.test(html), "Druckarten über die vorhandene Druckvorschau (CD-Kopfbogen, PDF)");
+  assert.ok(/onclick="abBogenDrucken\('\$\{esc\(pid\)\}'\)">🖨️ Ankreuzbogen/.test(html) && /druckStarten\('abstimmungErgebnis', \{ pid: '\$\{esc\(pid\)\}' \}\)">📊 Ergebnis drucken/.test(html), "Knöpfe im Abstimmungsfenster");
+  const d = html.slice(html.indexOf("async function abBogenDrucken("), html.indexOf("async function paketStatus("));
+  assert.ok(/value="ich"/.test(d.replace(/wahl\("ich"/, 'value="ich"')) && /wahl\("mitglied"/.test(d) && /wahl\("alle"/.test(d) && /wahl\("leer"/.test(d) && /<input id="abMitglied" list="abMgListe"/.test(d), "Für wen: ich (automatisch) · Mitglied suchen (Combobox) · alle · leer");
+  assert.ok(/schema: "KCDP-FORM-PROFILE-1", profileId: person\.id, periodId: "", kind: "club-abstimmung-v1", ref: pid/.test(d) && /float:right;width:27mm/.test(d), "oben rechts der Profil-QR wie auf Wunschbogen/Bestätigung");
+  assert.ok(/const qr = v\.geheim \? "" : abQr\(pid, person\)/.test(d) && /const fuer = v\.geheim \? \[null\] : abFuerLesen\(\);/.test(d), "geheim: ohne Namen und QR");
+  assert.ok(/<th style="\$\{td\};width:7mm;background:#faf5ef;font-size:2\.9mm">Nr\.<\/th>/.test(d) && /nur ausfüllen, wenn bei Frage \$\{nrVon\(vor\)\}/.test(d) && /else if|if \(!x\.ergebnis\) teil =/.test(d), "Tabelle Nr./Frage/Antwort, Folgefrage, geheimes Ergebnis erst nach dem Ende");
 }

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.558.0 – 2026-10-21 – 🗳️ Ankreuzbogen als Tabelle, „Für wen?“ mit Namenssuche, Profil-QR oben rechts (KC-CLUB-ABSTIMMUNG-BOGEN-2)
+Wunsch Hansi („saubere Tabelle zum Abstimmen, oben Kopf, Name entweder manuell aus Combobox suchen oder schon automatisch einsetzen, wenn über App, und rechts oben wieder den altbekannten QR-Code zur Identifizierung“).
+- Ankreuzbogen als Tabelle je Bereich: Nr. · Frage (mit Erklärung, „mehrere möglich“, Folgefrage-Hinweis) · Antwort ankreuzen (☐ je Antwort untereinander). Kopfbogen oben, Fußzeile mit Name.
+- Vor dem Druck „Für wen?“: 👤 für mich (Name und QR automatisch) · 🔍 für ein Mitglied (Namen eintippen, aus der Liste wählen) · 👥 für alle Mitglieder (je eine Seite) · ✏️ leer (Name von Hand).
+- Oben rechts der bekannte Profil-QR wie auf Wunschbogen und Bestätigung (KCDP-FORM-PROFILE-1, Mitglieds-ID, Art club-abstimmung-v1, ref = Abstimmung). Geheim: ohne Namen und QR.
+- Geht am Handy wie am PC (Druckvorschau, 📄 PDF, Teilen). Test: ap-browser.mjs (Tabelle, ich/Mitglied/alle), Vertragstest-Block angepasst. Server unverändert. Rückweg: App 2.557.0.
+
 ## 2.557.0 – 2026-10-21 – 🖨️ Abstimmung als Ankreuzbogen und Ergebnis auf dem Köcheclub-Kopfbogen (KC-CLUB-ABSTIMMUNG-DRUCK)
 Wunsch Hansi („sauberes, ordentliches Ankreuzformular mit Köcheclub-Kopfbogen“ + Ergebnis als Schriftstück; „beides bauen und sofort einspielen“).
 - Im Fenster einer Abstimmung mit mehreren Fragen: **🖨️ Ankreuzbogen** – A4 auf dem CD-Kopfbogen (Kochmütze, Köcheclub Werne, Fußzeile), Überschrift, Beschreibung, Name/Datum, alle Fragen nummeriert nach Bereichen mit ☐-Kästchen, Erklärungen, „☑️ mehrere möglich“, Folgefragen mit „↪️ nur ausfüllen, wenn bei Frage 5 „Ja“ angekreuzt ist“, Abgabefrist, Ort/Datum/Unterschrift. Geheim: ohne Namen und Unterschrift.

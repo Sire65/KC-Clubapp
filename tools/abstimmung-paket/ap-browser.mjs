@@ -127,13 +127,19 @@ ok(an.gesendet?.join("/") === "Bauhof/Feuerwehr" && an.angekreuzt.some((t) => /F
 // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK: Ankreuzbogen und Ergebnis auf dem Kopfbogen
 const dr = await seite.evaluate(async () => { const e = {};
   e.knoepfe = [...$("vorschlagInfo").querySelectorAll("button")].map((b) => b.textContent).filter((t) => /Ankreuzbogen|Ergebnis drucken/.test(t)).length;
-  DRUCK = { art: "abstimmung", param: { pid: "PK2", art: "bogen" } }; await druckSeiteBauen(); const d = $("druck");
-  e.kopf = !!d.querySelector(".cd-kopf") && /Köcheclub/.test(d.textContent); e.fragen = (d.innerHTML.match(/font-size:3\.9mm;font-weight:800/g) || []).length;
-  e.bereiche = [...d.querySelectorAll("h2")].map((h) => h.textContent.trim()); e.folge = /nur ausfüllen, wenn bei Frage 5 „Ja“/.test(d.textContent); e.name = /Name:/.test(d.textContent) && /Unterschrift/.test(d.textContent);
-  DRUCK = { art: "abstimmung", param: { pid: "PK2", art: "ergebnis" } }; await druckSeiteBauen();
+  MITGLIEDER = [{ person_id: "P1", name: "Hansi Test" }, { person_id: "P2", name: "Klaus Muster" }, { person_id: "P3", name: "Ruth Beispiel" }]; await qrLaden();
+  DRUCK = { art: "abstimmung", param: { pid: "PK2" } }; $("druckOptionen").innerHTML = abDruckOptionen(); await druckSeiteBauen(); const d = $("druck");
+  e.kopf = !!d.querySelector(".cd-kopf") && /Köcheclub/.test(d.textContent); e.fragen = (d.innerHTML.match(/<tr style="break-inside:avoid"><td/g) || []).length;
+  e.bereiche = [...d.querySelectorAll("thead tr:first-child th")].map((h) => h.textContent.trim()); e.folge = /nur ausfüllen, wenn bei Frage 5 „Ja“/.test(d.textContent);
+  e.name = /Hansi Test/.test(d.textContent) && /Unterschrift/.test(d.textContent) && !!d.querySelector("svg");
+  document.querySelector('input[name="abFuer"][value="mitglied"]').checked = true; $("abMitglied").value = "klaus"; await druckSeiteBauen();
+  e.mitglied = /Klaus Muster/.test($("druck").textContent) && !/Name:\s*Hansi Test/.test($("druck").textContent);
+  document.querySelector('input[name="abFuer"][value="alle"]').checked = true; await druckSeiteBauen(); e.alle = $("druck").querySelectorAll(".cd-kopf").length;
+  DRUCK = { art: "abstimmungErgebnis", param: { pid: "PK2" } }; await druckSeiteBauen();
   e.ergebnis = /Zwischenstand/.test($("druck").textContent) && /haben abgestimmt/.test($("druck").textContent) && /Bauhof/.test($("druck").textContent); return e; });
 console.log(JSON.stringify(dr));
-ok(dr.knoepfe === 2 && dr.kopf && dr.fragen === 12 && dr.bereiche.join("|") === "📂 Technik|📂 Bilderrechner|📂 Abrechnung" && dr.folge && dr.name, "🖨️ Ankreuzbogen: Kopfbogen, 12 Fragen nach Bereichen, Folgefrage-Hinweis, Name/Unterschrift");
+ok(dr.knoepfe === 2 && dr.kopf && dr.fragen === 12 && dr.bereiche.join("|") === "📂 Technik|📂 Bilderrechner|📂 Abrechnung" && dr.folge && dr.name, "🖨️ Ankreuzbogen: Kopfbogen, Tabelle mit 12 Fragen nach Bereichen, Folgefrage-Hinweis, eigener Name + QR automatisch");
+ok(dr.mitglied && dr.alle === 3, "Für wen: Mitglied über die Suche, „alle“ = je Mitglied ein Bogen");
 ok(dr.ergebnis, "📊 Ergebnis drucken: Zwischenstand mit Stimmen je Frage");
 ok(!fehler.length, "keine Skriptfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();
