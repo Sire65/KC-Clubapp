@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.559.0 – 2026-10-21 – 💬 Ausdrucke als PDF-Anlage in der Club-App senden (KC-CLUB-DRUCK-SENDEN)
+Wunsch Hansi („als Anlage in der Club-App senden – immer weniger mit WhatsApp, darum habe ich ja die Club-App gebaut“).
+- In jeder Druckvorschau neu: **💬 In der Club-App senden** – macht dasselbe A4-PDF wie „📄 PDF“, lädt es wie einen Chat-Anhang hoch und öffnet „Neue Nachricht“ mit dem PDF als Anlage. Empfänger wählen (z. B. Klaus und Dieter), „Weiter zum Schreiben“, Text dazu, ➤.
+- Gilt für alle Ausdrucke (Ankreuzbogen, Ergebnis, Brief, Protokoll-Vorlage …). Nichts geht an fremde Dienste.
+- Test: ap-browser.mjs (PDF hochgeladen, Neue Nachricht mit Anlage), Vertragstest-Block 2.559.0. Server unverändert. Rückweg: App 2.558.0.
+
 ## 2.558.0 – 2026-10-21 – 🗳️ Ankreuzbogen als Tabelle, „Für wen?“ mit Namenssuche, Profil-QR oben rechts (KC-CLUB-ABSTIMMUNG-BOGEN-2)
 Wunsch Hansi („saubere Tabelle zum Abstimmen, oben Kopf, Name entweder manuell aus Combobox suchen oder schon automatisch einsetzen, wenn über App, und rechts oben wieder den altbekannten QR-Code zur Identifizierung“).
 - Ankreuzbogen als Tabelle je Bereich: Nr. · Frage (mit Erklärung, „mehrere möglich“, Folgefrage-Hinweis) · Antwort ankreuzen (☐ je Antwort untereinander). Kopfbogen oben, Fußzeile mit Name.

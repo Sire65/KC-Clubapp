@@ -11837,3 +11837,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const qr = v\.geheim \? "" : abQr\(pid, person\)/.test(d) && /const fuer = v\.geheim \? \[null\] : abFuerLesen\(\);/.test(d), "geheim: ohne Namen und QR");
   assert.ok(/<th style="\$\{td\};width:7mm;background:#faf5ef;font-size:2\.9mm">Nr\.<\/th>/.test(d) && /nur ausfüllen, wenn bei Frage \$\{nrVon\(vor\)\}/.test(d) && /else if|if \(!x\.ergebnis\) teil =/.test(d), "Tabelle Nr./Frage/Antwort, Folgefrage, geheimes Ergebnis erst nach dem Ende");
 }
+// 2.559.0 KC-CLUB-DRUCK-SENDEN (Wunsch Hansi „als Anlage in der Club-App senden – immer weniger WhatsApp“)
+{
+  assert.ok(/id="druckVorschauSenden" onclick="druckInAppSenden\(\)">💬 In der Club-App senden<\/button>/.test(seite), "Knopf in jeder Druckvorschau");
+  const f = programm.slice(programm.indexOf("async function druckInAppSenden()"), programm.indexOf("function druckVorschauAendern()"));
+  assert.ok(/anlageHochladen\(new File\(\[await druckPdfBlob\(\)\], name, \{ type: "application\/pdf" \}\)\)/.test(f) && /await neueNachricht\(\); chipsZeigen\(\);/.test(f), "dasselbe PDF als Chat-Anlage, dann Neue Nachricht mit Empfängerwahl");
+}

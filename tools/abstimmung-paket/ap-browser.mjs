@@ -141,5 +141,16 @@ console.log(JSON.stringify(dr));
 ok(dr.knoepfe === 2 && dr.kopf && dr.fragen === 12 && dr.bereiche.join("|") === "📂 Technik|📂 Bilderrechner|📂 Abrechnung" && dr.folge && dr.name, "🖨️ Ankreuzbogen: Kopfbogen, Tabelle mit 12 Fragen nach Bereichen, Folgefrage-Hinweis, eigener Name + QR automatisch");
 ok(dr.mitglied && dr.alle === 3, "Für wen: Mitglied über die Suche, „alle“ = je Mitglied ein Bogen");
 ok(dr.ergebnis, "📊 Ergebnis drucken: Zwischenstand mit Stimmen je Frage");
+// 2.559.0 KC-CLUB-DRUCK-SENDEN: aus der Druckvorschau als PDF-Anlage in eine neue Club-App-Nachricht
+const se = await seite.evaluate(async () => { const e = {}, alt = api;
+  api = async (a, p) => { if (a === "anlage_hochladen") { e.hoch = { name: p.name, mime: p.mime, groesse: p.daten.length }; return { id: "A1", name: p.name }; } if (a === "unterhaltungen") return { unterhaltungen: [] }; return alt(a, p); };
+  inkoChatFrage = async () => {};
+  DRUCK = { art: "abstimmungErgebnis", param: { pid: "PK2" } }; await druckVorschau(); await new Promise((x) => setTimeout(x, 300));
+  e.knopf = !!$("druckVorschauSenden") && !$("druckVorschau").classList.contains("versteckt");
+  await druckInAppSenden(); await new Promise((x) => setTimeout(x, 300));
+  e.anlagen = anlagen.map((a) => a.id + ":" + a.name); e.ansicht = aktuelleAnsicht; e.vorschauZu = $("druckVorschau").classList.contains("versteckt");
+  api = alt; return e; });
+console.log(JSON.stringify(se));
+ok(se.knopf && se.hoch?.mime === "application/pdf" && /\.pdf$/.test(se.hoch.name) && se.hoch.groesse > 1000 && se.anlagen.join() === "A1:" + se.hoch.name && se.ansicht === "neu" && se.vorschauZu, "💬 In der Club-App senden: PDF hochgeladen, „Neue Nachricht“ mit PDF-Anlage offen");
 ok(!fehler.length, "keine Skriptfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.558.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.559.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -37218,16 +37218,31 @@ async function druckPdfBlob() { // Druckseite im unsichtbaren A4-Blatt messen, d
     return pdfAusCanvas(c, DRUCK.quer);
   } finally { ifr.remove(); }
 }
+const druckDateiName = () => (DRUCK.titel || "Koecheclub").replace(/[^\wäöüÄÖÜß.-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) + ".pdf";
 async function druckPdf() {
   const k = $("druckVorschauPdf"); if (k) { k.disabled = true; k.textContent = "⏳ PDF wird erstellt …"; }
   try {
-    const name = (DRUCK.titel || "Koecheclub").replace(/[^\wäöüÄÖÜß.-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) + ".pdf";
+    const name = druckDateiName();
     const datei = new File([await druckPdfBlob()], name, { type: "application/pdf" });
     try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
     const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60000); melde("📄 PDF gespeichert (Downloads)");
   } catch (e) { meldeFehler(e); }
   finally { if (k) { k.disabled = false; k.textContent = "📄 PDF speichern / teilen"; } }
+}
+// 2.559.0 KC-CLUB-DRUCK-SENDEN (Wunsch Hansi „als Anlage in der Club-App senden – immer weniger WhatsApp, darum habe ich die Club-App gebaut“):
+// „💬 In der Club-App senden“ in jeder Druckvorschau – dasselbe A4-PDF wie „📄 PDF“, hochgeladen wie ein Chat-Anhang; dann „Neue Nachricht“
+// mit dem PDF als Anlage: Empfänger wählen (z. B. Klaus und Dieter), Text dazu, ➤. Nichts geht an fremde Dienste.
+async function druckInAppSenden() {
+  const k = $("druckVorschauSenden"); if (k) { k.disabled = true; k.textContent = "⏳ PDF wird erstellt …"; }
+  try {
+    const name = druckDateiName(), r = await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" }));
+    druckVorschauZu();
+    anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false;
+    await neueNachricht(); chipsZeigen();
+    melde("📎 PDF liegt als Anlage bereit – jetzt Empfänger wählen, „Weiter zum Schreiben“, dann ➤");
+  } catch (e) { meldeFehler(e); }
+  finally { if (k) { k.disabled = false; k.textContent = "💬 In der Club-App senden"; } }
 }
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
