@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.559.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.560.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27330,7 +27330,7 @@ async function abBogenDrucken(pid) {
   try { await Promise.all([MITGLIEDER ? null : mitgliederHolen(), qrLaden().catch(() => {})]); } catch (e) { return meldeFehler(e); }
   druckStarten("abstimmung", { pid });
 }
-const abDruckListe = (pid) => VS_PAKETE.get(pid) || (VORSCHLAG_MAP.get(pid) ? [VORSCHLAG_MAP.get(pid)] : []);
+const abDruckListe = (pid) => (pid === "ENTWURF" ? VF_ENTWURF : null) || VS_PAKETE.get(pid) || (VORSCHLAG_MAP.get(pid) ? [VORSCHLAG_MAP.get(pid)] : []);
 function abDruckOptionen() {
   const v = abDruckListe(DRUCK?.param?.pid)[0];
   if (v?.geheim) return '<p class="hinweis">🔒 Geheime Abstimmung – der Bogen wird <b>ohne Namen und ohne QR-Code</b> gedruckt.</p><input type="hidden" id="abFuer" value="leer">';
@@ -27525,6 +27525,24 @@ function vfPkZeigen() {
       <button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK[${i}].fragen.push(vfPkFrage());vfPkZeigen()">＋ Frage in diesem Bereich</button></div>`).join("")
     + `<button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK.push({ name: '', fragen: [vfPkFrage()] });vfPkZeigen()">＋ weiterer Bereich</button>${voll ? '<p class="hinweis">Höchstens 30 Fragen.</p>' : ""}`;
 }
+// Fragen des Formulars in der Form, die der Server bekommt (wenn.nr = laufende Nummer)
+function vfPkFragen() {
+  const alle = VF_PK.flatMap((b) => b.fragen.map((f) => ({ b, f }))), nrVon = (key) => alle.findIndex((x) => x.f.key === key);
+  return alle.map(({ b, f }) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), beschreibung: (f.beschreibung || "").trim(), optionen: vfPkOpt(f), mehrfach: !!f.mehrfach,
+    wenn: f.wenn && nrVon(f.wenn.key) >= 0 ? { nr: nrVon(f.wenn.key), antwort: f.wenn.antwort } : null }));
+}
+// 2.560.0 KC-CLUB-ABSTIMMUNG-BOGEN-ENTWURF (Hansi: „ich sehe den Button nicht, um den leeren Bogen wegzuschicken“): Ankreuzbogen schon aus dem
+// Formular – vor dem Start, z. B. zum Begutachten an Klaus und Dieter. Gleiche Druckvorschau (🖨️, 📄 PDF, 💬 In der Club-App senden); nichts wird gespeichert.
+let VF_ENTWURF = null;
+function vfBogenVorschau() {
+  const titel = $("vfTitel").value.trim(), fr = vfPkFragen().filter((f) => f.frage);
+  if (!titel) return melde("Bitte eine Überschrift eingeben.", true);
+  if (!fr.length) return melde("Bitte mindestens eine Frage eingeben.", true);
+  const frist = $("vfFristDatum")?.value ? new Date(taZeitpunkt($("vfFristDatum").value, $("vfFristZeit").value || "20:00")).toISOString() : null, geheim = !!$("vfGeheim")?.checked;
+  VF_ENTWURF = fr.map((f, nr) => ({ id: "ENTWURF-" + nr, art: "abstimmung", titel: f.frage, beschreibung: f.beschreibung || null, optionen: f.optionen.length ? f.optionen : ["Ja", "Nein", "Enthaltung"], geheim, status: "offen", frist,
+    paket: { id: "ENTWURF", titel, beschreibung: $("vfBeschr").value.trim() || null, abschnitt: f.abschnitt || null, nr, ...(f.mehrfach ? { mehrfach: true } : {}), ...(f.wenn ? { wenn: f.wenn } : {}) } }));
+  abBogenDrucken("ENTWURF");
+}
 function vfPkWenn(i, j, wert) { const t = wert.indexOf("|"); VF_PK[i].fragen[j].wenn = t > 0 ? { key: wert.slice(0, t), antwort: wert.slice(t + 1) } : null; }
 // 2.555.0 KC-CLUB-ABSTIMMUNG-VORLAGE: fertige Abstimmungen aus vorlagen/abstimmungen.json übernehmen – danach frei änderbar, nichts wird ohne „Abstimmung starten“ gesendet
 async function vfVorlagen() {
@@ -27566,7 +27584,7 @@ function vorschlagForm(art, paket) {
       <div class="feld"><b>An wen?</b><div id="vfZiel"></div></div>` : ""}
     ${oaFeld("vf")}
     <label class="schalter"><span>${vfArt === "abstimmung" ? "Teilnehmer benachrichtigen (Push/Mail)" : "Clubsprecher & Kassenwart benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
-    <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button><button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
+    <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button>${pk ? '<button class="knopf" id="vfBogenKnopf" onclick="vfBogenVorschau()">🖨️ Bogen ansehen / senden</button>' : ""}<button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
   if (vfArt === "spende") vfSpZeigen();
   if (behalten) { $("vfTitel").value = behalten.t; $("vfBeschr").value = behalten.b; }
@@ -27624,9 +27642,7 @@ async function vorschlagSpeichern(knopf) {
   const pk = vfArt === "abstimmung" && vfPaket;
   if (pk) { // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET
     if (!daten.titel.trim()) return melde("Bitte eine Überschrift eingeben.", true);
-    const alle = VF_PK.flatMap((b) => b.fragen.map((f) => ({ b, f }))), nrVon = (key) => alle.findIndex((x) => x.f.key === key);
-    daten.fragen = alle.map(({ b, f }) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), beschreibung: (f.beschreibung || "").trim(), optionen: vfPkOpt(f), mehrfach: !!f.mehrfach,
-      wenn: f.wenn && nrVon(f.wenn.key) >= 0 ? { nr: nrVon(f.wenn.key), antwort: f.wenn.antwort } : null }));
+    daten.fragen = vfPkFragen();
     const leer = daten.fragen.findIndex((f) => !f.frage);
     if (leer >= 0) return melde(`Bitte Frage ${leer + 1} ausfüllen oder mit 🗑️ löschen.`, true);
     const kurz = daten.fragen.find((f) => f.optionen.length < 2 || f.optionen.length > 12);

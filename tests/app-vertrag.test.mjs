@@ -11843,3 +11843,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const f = programm.slice(programm.indexOf("async function druckInAppSenden()"), programm.indexOf("function druckVorschauAendern()"));
   assert.ok(/anlageHochladen\(new File\(\[await druckPdfBlob\(\)\], name, \{ type: "application\/pdf" \}\)\)/.test(f) && /await neueNachricht\(\); chipsZeigen\(\);/.test(f), "dasselbe PDF als Chat-Anlage, dann Neue Nachricht mit Empfängerwahl");
 }
+// 2.560.0 KC-CLUB-ABSTIMMUNG-BOGEN-ENTWURF (Hansi: „ich sehe den Button nicht, um den leeren Bogen wegzuschicken“)
+{
+  assert.ok(/id="vfBogenKnopf" onclick="vfBogenVorschau\(\)">🖨️ Bogen ansehen \/ senden/.test(programm) && /function vfBogenVorschau\(\)/.test(programm) && /abBogenDrucken\("ENTWURF"\)/.test(programm), "Bogen schon aus dem Formular (vor dem Start)");
+  assert.ok(/const abDruckListe = \(pid\) => \(pid === "ENTWURF" \? VF_ENTWURF : null\)/.test(programm) && /daten\.fragen = vfPkFragen\(\);/.test(programm), "gleiche Fragen wie beim Starten, nichts wird gespeichert");
+}

@@ -152,5 +152,16 @@ const se = await seite.evaluate(async () => { const e = {}, alt = api;
   api = alt; return e; });
 console.log(JSON.stringify(se));
 ok(se.knopf && se.hoch?.mime === "application/pdf" && /\.pdf$/.test(se.hoch.name) && se.hoch.groesse > 1000 && se.anlagen.join() === "A1:" + se.hoch.name && se.ansicht === "neu" && se.vorschauZu, "💬 In der Club-App senden: PDF hochgeladen, „Neue Nachricht“ mit PDF-Anlage offen");
+// 2.560.0 KC-CLUB-ABSTIMMUNG-BOGEN-ENTWURF: Bogen schon aus dem Formular (vor dem Start)
+const en = await seite.evaluate(async () => { const w = (t) => new Promise((x) => setTimeout(x, t)), e = {};
+  druckVorschauZu(); zeige("vorschlaege"); await w(200); vorschlagForm("abstimmung", false); await vfVorlagen(); await w(300); $("vfVorlageBlatt").querySelector("[data-i='0']").click(); await w(200);
+  e.knopf = !!$("vfBogenKnopf"); const vorher = __api.length; $("vfBogenKnopf").click(); await w(600);
+  if (!$("druckBlatt").classList.contains("versteckt")) { document.querySelector('input[name="abFuer"][value="leer"]').checked = true; await druckVorschau(); await w(300); }
+  e.vorschau = !$("druckVorschau").classList.contains("versteckt") && !!$("druckVorschauSenden");
+  e.fragen = ($("druck").innerHTML.match(/<tr style="break-inside:avoid"><td/g) || []).length; e.leer = /kein QR/.test($("druck").textContent);
+  e.nichtsGespeichert = !__api.slice(vorher).some((x) => /speichern/.test(x[0])); e.formOffen = !$("vorschlagForm").classList.contains("versteckt");
+  druckVorschauZu(); return e; });
+console.log(JSON.stringify(en));
+ok(en.knopf && en.vorschau && en.fragen === 12 && en.leer && en.nichtsGespeichert && en.formOffen, "🖨️ Bogen ansehen / senden schon im Formular: leerer Bogen mit 12 Fragen, nichts gespeichert, Formular bleibt");
 ok(!fehler.length, "keine Skriptfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();

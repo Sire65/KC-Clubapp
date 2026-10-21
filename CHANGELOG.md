@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.560.0 – 2026-10-21 – 🖨️ Ankreuzbogen schon vor dem Start ansehen und senden (KC-CLUB-ABSTIMMUNG-BOGEN-ENTWURF)
+Hansi: „ich sehe den Button nicht, um den leeren Bogen wegzuschicken“ – der Bogen ging bisher nur aus einer gestarteten Abstimmung.
+- Im Formular „📋 Mehrere Fragen mit Überschrift“ neu: **🖨️ Bogen ansehen / senden** – baut den Ankreuzbogen aus dem Entwurf (Überschrift, Fragen, Frist, geheim), mit „Für wen?“ und derselben Druckvorschau (🖨️ Drucken, 📄 PDF, 💬 In der Club-App senden). Nichts wird gespeichert, das Formular bleibt offen.
+- Test: ap-browser.mjs, Vertragstest-Block 2.560.0. Server unverändert. Rückweg: App 2.559.0.
+
 ## 2.559.0 – 2026-10-21 – 💬 Ausdrucke als PDF-Anlage in der Club-App senden (KC-CLUB-DRUCK-SENDEN)
 Wunsch Hansi („als Anlage in der Club-App senden – immer weniger mit WhatsApp, darum habe ich ja die Club-App gebaut“).
 - In jeder Druckvorschau neu: **💬 In der Club-App senden** – macht dasselbe A4-PDF wie „📄 PDF“, lädt es wie einen Chat-Anhang hoch und öffnet „Neue Nachricht“ mit dem PDF als Anlage. Empfänger wählen (z. B. Klaus und Dieter), „Weiter zum Schreiben“, Text dazu, ➤.
