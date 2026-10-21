@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.576.0 – 2026-10-21 – Schnellerer Start (KC-CLUB-START-PAKET)
+Die vielen kleinen Start-Abfragen kommen jetzt in einem einzigen Datenbank-Aufruf. Der bisherige Weg bleibt als Rückfall, ein Not-Aus ist eingebaut.
+
 ## 2.575.0 – 2026-10-21 – Push-Zeichen aus dem Club-Logo
 - Fund Hansi „falsche Kochmütze – nimm das richtige Logo“: das Push-Zeichen oben in der Leiste ist jetzt aus dem Club-Logo (dieselbe Kochmütze wie oben links in der App), Linien für die kleine Leiste leicht verstärkt – statt der selbst gezeichneten Mütze.
 
