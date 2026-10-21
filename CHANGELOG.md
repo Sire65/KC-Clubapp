@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.556.0 – 2026-10-21 – 📞 Anrufe stabiler (Neuaufbau bei Netzwechsel, schneller, schwaches Netz) · 🔐 neue Tabellen mit ausdrücklichen Rechten (KC-CLUB-ANRUF-BESSER, KC-SUPABASE-GRANTS, KC-CLUB-RC-NACHTRAG)
+- KC-CLUB-ANRUF-BESSER (Wunsch Hansi „bau 2 bis 4 jetzt“): Bricht die Verbindung im Gespräch ab oder wechselt das Netz (WLAN ↔ Mobilfunk), baut die App sie bis zu 3-mal neu auf („🔄 Verbindung wird neu aufgebaut …“), erst danach endet das Gespräch. Aufbau schneller (Annehmen → verbunden 0,8 s statt 1,5 s; mit direkter Leitung 0,2 s), mit direkter Leitung im Gespräch halb so viele Nachfragen. Ton mit Fehlerkorrektur und Lautstärke-Ausgleich; bei schwachem Netz „📶 Verbindung schwach“, Bild erst kleiner, dann pausiert, Ton läuft weiter. Server: anruf_neu_angebot / anruf_neu_antwort (nur Beteiligte, nur angenommene Einzelgespräche). Konferenzen nur mit schnellerem Aufbau.
+- KC-SUPABASE-GRANTS: Ab 30.10.2026 vergibt Supabase für neue Tabellen keine Rechte mehr von selbst – Regel in AGENTS.md und Test tests/migration-rechte.test.mjs.
+- KC-CLUB-RC-NACHTRAG: Migration 20261020_kc_club_rc_nachtrag.sql (Eltern-Tabelle in der Spiegel-Liste, schreibende Verwaltungs-Funktionen nicht über PUBLIC).
+- Tests: tests/anruf-besser.test.mjs, tools/anruf/anruf-browser.mjs (zwei echte WebRTC-Seiten). Server 2.556.0.
+
 ## 2.555.0 – 2026-10-21 – Abstimmung mit Überschrift und mehreren Fragen (KC-CLUB-ABSTIMMUNG-PAKET)
 Wunsch Hansi („Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen, z. B. Tablets jetzt beschaffen oder Leihgeräte, Stand vernetzen, Kommen/Gehen per QR-Code, Barcode mit Metallschildern“).
 - Vorschläge → ＋ Neu → 🗳️ Abstimmung: neu die Wahl „❓ Eine Frage“ (wie bisher) oder „📋 Mehrere Fragen mit Überschrift“. Dann: Überschrift, Beschreibung, Bereiche (z. B. Technik, Abrechnung) mit beliebig vielen Fragen (höchstens 30), jede Frage mit eigenen Antworten (eine pro Zeile, vorbelegt Ja/Nein/Enthaltung). Geheim, Frist, „An wen?“, Termin und Anlage (z. B. Muster) gelten für die ganze Abstimmung.
