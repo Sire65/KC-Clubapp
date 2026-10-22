@@ -13947,6 +13947,7 @@ async function api(action, daten = {}, opt = {}) {
     if (lauf?.wunsch === "abbrechen") throw Object.assign(new Error("Abgebrochen – du kannst es jederzeit nochmal versuchen."), { abgebrochen: true });
     // KC-CLUB-NOTBETRIEB: Server mehrmals nicht erreichbar (oder schon der Start scheitert) → Ersatz-Server versuchen
     // 2.3.3: vorher Gegenprobe – nur umschalten, wenn der Club-Server auch nach kurzer Pause wirklich nicht antwortet
+    if (!NOT.an && e?.leitung) { NOT.letzteAktion = String(action).slice(0, 40); NOT.letzterFehler = String(e?.message || "").slice(0, 120); } // 2.598.0 KC-CLUB-NOTBETRIEB-BERICHT
     if (!NOT.an && e?.leitung && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notGegenprobe()) && (await notEinschaltenEinmal("auto"))) {
       if (action !== "init") setTimeout(() => neuLaden(), 0);
       // 2.0.0 (Gesamtprüfung): Schreib-Aktionen nicht still nachschieben – sie könnten den Server schon erreicht haben (doppelt)
@@ -14032,7 +14033,7 @@ async function notKonfig(frisch) {
 // scheitern mehrere Anfragen gleichzeitig). Darum vor dem Umschalten NOT_GEGEN_PAUSE_MS warten und den Club-Server einmal
 // direkt fragen (ohne Region). Antwortet er überhaupt (auch 401/400), läuft er → kein Notbetrieb. Handy offline → kein
 // Notbetrieb (das ist kein Serverausfall; dafür gibt es die Offline-Warteschlange). Mehrere Fehler teilen sich eine Probe.
-const NOT_GEGEN_PAUSE_MS = 3000;
+const NOT_GEGEN_PAUSE_MS = 3000, NOT_ZWEIT_PAUSE_MS = 4000; // 2.598.0: zweite Probe
 let notEinLauf = null;
 const notEinschaltenEinmal = (grund) => (notEinLauf || (notEinLauf = notEinschalten(grund).then((ok) => { if (!ok) NOT.fehler = 0; return ok; }).finally(() => setTimeout(() => { notEinLauf = null; }, 0))));
 let notGegenLauf = null;
@@ -14043,14 +14044,21 @@ function notGegenprobe() {
     try {
       const k = await notKonfig(false); // Notbetrieb abgeschaltet/nicht eingerichtet → Probe sinnlos, nicht warten
       if (!k?.url || k.modus === "aus") { NOT.fehler = 0; return false; }
-      await new Promise((ok) => setTimeout(ok, NOT_GEGEN_PAUSE_MS));
-      if (!navigator.onLine) return false;
-      try {
-        const r = await fetch(API, { method: "POST", cache: "no-store", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "ping" }), signal: zeitSignal(10000) });
-        const weg = (r.status >= 502 && r.status <= 504) || r.status >= 500 && !(await r.clone().json().catch(() => null));
-        if (!weg) NOT.fehler = 0;
-        return weg;
-      } catch { return navigator.onLine; }
+      // 2.598.0 KC-CLUB-NOTBETRIEB-ZWEITPROBE (Fund Hansi 22.10. „scheinbar gab es Notbetrieb“, Server lief durchgehend): ein einzelner
+      // Netz-Aussetzer am Handy reichte für den Notbetrieb. Jetzt wird der Club-Server ZWEIMAL gefragt (3 s und nochmal 4 s später) –
+      // nur wenn er beide Male nicht antwortet, wird umgeschaltet. Ein echter Ausfall wird weiter erkannt, nur ein paar Sekunden später.
+      const probe = async () => {
+        try {
+          const r = await fetch(API, { method: "POST", cache: "no-store", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "ping" }), signal: zeitSignal(10000) });
+          return (r.status >= 502 && r.status <= 504) || r.status >= 500 && !(await r.clone().json().catch(() => null));
+        } catch { return navigator.onLine; }
+      };
+      for (const pause of [NOT_GEGEN_PAUSE_MS, NOT_ZWEIT_PAUSE_MS]) {
+        await new Promise((ok) => setTimeout(ok, pause));
+        if (!navigator.onLine) return false;
+        if (!(await probe())) { NOT.fehler = 0; return false; }
+      }
+      return true;
     } finally { setTimeout(() => { notGegenLauf = null; }, 0); }
   })());
 }
@@ -14059,6 +14067,7 @@ async function notEinschalten(grund) {
   if (!url || (k.modus === "aus" && grund !== "probe")) return false;
   try { const r = await fetch(url + "/status", { cache: "no-store", signal: zeitSignal(8000) }); const j = await r.json(); if (!j?.ok) return false; NOT.stand = j.stand; } catch { return false; }
   NOT.an = true; NOT.grund = grund; NOT.url = url; NOT.ok = 0; notBandZeigen();
+  notBerichtMerken({ seit: new Date().toISOString(), grund, aktion: NOT.letzteAktion || "", text: NOT.letzterFehler || "", online: navigator.onLine, version: APP_VERSION }); // 2.598.0
   clearInterval(NOT.timer); NOT.timer = setInterval(notZurueckPruefen, NOT_PRUEF_MS);
   return true;
 }
@@ -14130,7 +14139,20 @@ async function serverDiagnose() {
   return f;
 }
 async function diagKopieren() { try { await navigator.clipboard.writeText(DIAG_TEXT); melde("📋 Ergebnis kopiert – einfach an Claude schicken"); } catch { melde("Kopieren ging nicht – bitte Bildschirmfoto machen", true); } }
+// 2.598.0 KC-CLUB-NOTBETRIEB-BERICHT (Fund Hansi „scheinbar gab es Notbetrieb“ – bisher wusste niemand, wann und warum): beim Umschalten merkt
+// sich das Gerät wann, wodurch (Aktion + Fehlertext, kein Inhalt) und ob das Handy Netz meldete; ist der Server wieder da (auch nach einem
+// Neustart der App), geht EIN kurzer Bericht an den Server (diagnose_notbetrieb, mit Dauer). Die Probe des Admins wird nicht gemeldet.
+const NOT_BERICHT = "kc_club_not_bericht";
+function notBerichtMerken(b) { if (b.grund === "probe") return; try { localStorage.setItem(NOT_BERICHT, JSON.stringify(b)); } catch {} }
+function notBerichtSenden() {
+  let b = null; try { b = JSON.parse(localStorage.getItem(NOT_BERICHT) || "null"); } catch {}
+  if (!b?.seit || NOT.an || !KEY) return;
+  api("diagnose", { art: "notbetrieb", daten: { ...b, dauerSek: Math.max(0, Math.round((Date.now() - Date.parse(b.seit)) / 1000)), jetztVersion: APP_VERSION } }, { still: true })
+    .then(() => { try { localStorage.removeItem(NOT_BERICHT); } catch {} }).catch(() => {}); // erst nach Erfolg vergessen
+}
+setTimeout(notBerichtSenden, 30000); // nach einem Neustart der App: offener Bericht vom letzten Mal
 function notAus(meldung) {
+  setTimeout(notBerichtSenden, 3000); // 2.598.0 KC-CLUB-NOTBETRIEB-BERICHT
   NOT.an = false; NOT.grund = ""; NOT.fehler = 0; NOT.seit = 0; clearInterval(NOT.timer); NOT.timer = null; $("notInfoBlatt")?.remove();
   document.getElementById("notBand")?.remove(); document.body.classList.remove("im-notbetrieb"); document.documentElement.style.removeProperty("--notH");
   if (meldung) melde(meldung);

@@ -1,11 +1,13 @@
 # Änderungen
 
-## 2.598.0 – 2026-10-22 – ⚡ Stufe 3: Nachrichten-Übersicht in einem Datenbank-Aufruf (KC-CLUB-UNTERHALTUNGEN-PAKET)
+## 2.598.0 – 2026-10-22 – ⚡ Stufe 3: Nachrichten-Übersicht in einem Datenbank-Aufruf + 🛟 Notbetrieb erst nach zweiter Probe, mit Bericht (KC-CLUB-UNTERHALTUNGEN-PAKET, KC-CLUB-NOTBETRIEB-ZWEITPROBE, KC-CLUB-NOTBETRIEB-BERICHT)
 Wunsch Hansi („Ja baue Pak 3“). Gleiche Liste, gleiche Zahlen, gleiche Regeln.
 - Die Nachrichten-Übersicht (auch Kommunikationszentrale im Kopf jede Minute, Büro, Notfall-Paket) holte bisher in 3–4 Schritten Chats, Teilnehmer, Gruppen, „wichtig“ und bis zu 1000 GANZE Nachrichten – nur um je Chat die letzte Zeile und die Zahlen zu zeigen. Jetzt EIN Aufruf (kc_club_unterhaltungen_paket): die Datenbank rechnet je Chat aus denselben 1000 neuesten Nachrichten Anzahl, ungelesen, ❗ neu (unter den ersten 300 ungelesenen) und die letzte Nachricht (Text höchstens 120 Zeichen). Namen und Archiv laufen gleichzeitig dazu.
 - Sicherheitsnetz wie bei den anderen Paketen: nur lesend, nur der Server darf aufrufen; Fehler oder Not-Aus (kc_club_konfig 'unterhaltungen_paket' = {"aus": true}) → bisheriger Weg (unverändert als unterhaltungenAlt); jeder 10. Aufruf vergleicht nebenbei alt ↔ neu (Protokoll „unterhaltungen_paket_abweichung“).
 - Vorab nur lesend gegen die echten Daten geprüft: bei allen 18 Mitgliedern dieselbe Nachrichtenmenge. Datenbank: supabase/migrations/20261022_kc_club_unterhaltungen_paket.sql (Probelauf tools/db-test/89_unterhaltungen_paket_test.sql).
 - Mitglieder-Liste: bewusst KEIN eigenes Paket – nach Stufe 1 sind es noch 3 Schritte; ein Paket müsste sechs Prüf-Funktionen (online, inkognito, zuletzt da, Status, Sperren, Probephase) nachbauen – zu viel Risiko für wenig Gewinn.
+- 🛟 Notbetrieb (Fund Hansi „scheinbar gab es Notbetrieb“ – der Server lief laut Protokoll durchgehend): Vor dem Umschalten fragt die App den Club-Server jetzt ZWEIMAL (nach 3 s und nochmal 4 s später) – ein einzelner Netz-Aussetzer am Handy löst keinen Notbetrieb mehr aus; ein echter Ausfall wird weiter erkannt, nur ein paar Sekunden später (KC-CLUB-NOTBETRIEB-ZWEITPROBE).
+- 🛟 Bericht: Schaltet ein Gerät in den Notbetrieb, merkt es sich wann, wodurch (Aktion + Fehlertext, kein Inhalt) und ob das Handy Netz meldete; ist der Server wieder da (auch nach einem Neustart der App), geht EIN kurzer Bericht mit Dauer an den Server (diagnose_notbetrieb). Die Admin-Probe wird nicht gemeldet (KC-CLUB-NOTBETRIEB-BERICHT).
 - Test: Vertragstest-Block 2.598.0, Typprüfung ohne neue Meldungen. Rückweg: App/Server 2.597.0 (die Funktion kann bleiben).
 
 ## 2.597.0 – 2026-10-22 – ⚡ Stufe 2: Online-Takt und Nachrichten-Mahnung gebündelt (KC-CLUB-ONLINE-PAKET, KC-CLUB-MAHNUNG-PAKET)

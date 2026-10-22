@@ -3220,7 +3220,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\(await notGegenprobe\(\)\) && \(await notEinschalten(Einmal)?\("auto"\)\)/.test(html), "Gegenprobe vor dem Umschalten");
   const g = html.slice(html.indexOf("function notGegenprobe()"), html.indexOf("async function notEinschalten("));
   assert.ok(/if \(notErnstfall\(\)\) return Promise\.resolve\(true\)/.test(g) && /if \(!navigator\.onLine\) return Promise\.resolve\(false\)/.test(g), "Simulation schaltet, offline nicht");
-  assert.ok(/fetch\(API, \{/.test(g) && /action: "ping"/.test(g) && /if \(!weg\) NOT\.fehler = 0;/.test(g) && /notGegenLauf \|\| \(notGegenLauf =/.test(g), "direkte Probe, gemeinsam, Zähler zurück");
+  assert.ok(/fetch\(API, \{/.test(g) && /action: "ping"/.test(g) && /if \(!weg\) NOT\.fehler = 0;|if \(!\(await probe\(\)\)\) \{ NOT\.fehler = 0; return false; \}/.test(g) && /notGegenLauf \|\| \(notGegenLauf =/.test(g), "direkte Probe, gemeinsam, Zähler zurück");
 }
 // 290. 2.4.0: Einweisung beim ersten Öffnen (KC-CLUB-EINWEISUNG)
 {
@@ -7321,6 +7321,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!pk\) return json\(\{ unterhaltungen: await unterhaltungenAlt\(ich, true\) \}\);/.test(uh) && /"unterhaltungen_paket_abweichung"/.test(uh), "Rückfall und Vergleich");
   assert.ok(/konfigZeile\("unterhaltungen_paket"\)/.test(server) && /if \(mitQuittung\) quittungMerken/.test(server), "Not-Aus; Vergleich merkt nichts doppelt");
   assert.ok(lies("tools/db-test/89_erwartet.txt").includes("anzahl_gleich=t"), "Probelauf erwartet Gleichheit");
+}
+// 2.598.0 KC-CLUB-NOTBETRIEB-ZWEITPROBE / -BERICHT
+{
+  assert.ok(/for \(const pause of \[NOT_GEGEN_PAUSE_MS, NOT_ZWEIT_PAUSE_MS\]\)/.test(programm) && /if \(!\(await probe\(\)\)\) \{ NOT\.fehler = 0; return false; \}/.test(programm), "zweimal fragen, eine Antwort reicht");
+  assert.ok(/notBerichtMerken\(\{ seit: new Date\(\)\.toISOString\(\), grund, aktion: NOT\.letzteAktion/.test(programm) && /if \(b\.grund === "probe"\) return;/.test(programm), "Bericht gemerkt, Probe nicht");
+  assert.ok(/api\("diagnose", \{ art: "notbetrieb"/.test(programm) && /\.then\(\(\) => \{ try \{ localStorage\.removeItem\(NOT_BERICHT\); \} catch \{\} \}\)/.test(programm), "Bericht gesendet, erst nach Erfolg vergessen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
