@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11477,8 +11477,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.482.0 KC-CLUB-STARTNACHRICHT: Knopf „🔔 Benachrichtigungen jetzt einschalten“ in der Startnachricht (Fall Dieter)
 {
-  assert.ok(/const knopf = p\.knopf === "push" \? "push" : null;/.test(server), "Server nimmt nur den bekannten Knopf");
-  assert.ok(/\$\{x\.knopf === "push" \? snPushKnopf\(\) : ""\}/.test(html) && /id="snPushAn">🔔 Benachrichtigungen jetzt einschalten/.test(html) && /await pushEinschalten\(\);/.test(html) && /knopf: \$\("snKnopfPush"\)\?\.checked \? "push" : null/.test(html), "Knopf im Fenster und beim Verfassen");
+  assert.ok(/const knopf = p\.knopf === "push" \? "push" : \/\^zu:\[a-z\]\{2,20\}\$\/\.test\(String\(p\.knopf \?\? ""\)\) \? String\(p\.knopf\) : null;/.test(server), "Server nimmt nur bekannte Knöpfe (2.599.0: auch zu:<ziel>)");
+  assert.ok(/\$\{x\.knopf === "push" \? snPushKnopf\(\) : snSprungKnopf\(x\.knopf\)\}/.test(html) && /id="snPushAn">🔔 Benachrichtigungen jetzt einschalten/.test(html) && /await pushEinschalten\(\);/.test(html) && /knopf: \$\("snKnopfPush"\)\?\.checked \? "push" : \$\("snSprungZiel"\)\?\.value \? "zu:" \+ \$\("snSprungZiel"\)\.value : null/.test(html), "Knopf im Fenster und beim Verfassen");
 }
 // 2.484.0 KC-CLUB-FERIEN: Schulferien im Kalender wie Feiertage, Schalter + einklappbare Bundesländer-Liste
 {
@@ -12183,4 +12183,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/api\("diagnose", \{ art: "tiefentest"/.test(tt) && !/cf-meta-ip|cf-meta-city|cf-meta-latitude/.test(tt), "Protokoll ohne IP/Ort");
   assert.ok(/else NTT\.stopp = true; \/\/ Fenster zu → Test endet/.test(tt), "Fenster zu beendet den Test");
   assert.ok((html.match(/ttOeffnen\(\)/g) || []).length >= 4 && /\.tt-band \{/.test(lies("index.html")), "Einstiege + Verlaufsband");
+}
+// 2.599.0 KC-CLUB-STARTNACHRICHT-SPRUNG: Knopf in der Startnachricht führt an eine Stelle der App (nur Ziele aus SPRUENGE), Antippen = gelesen
+{
+  const f = html.slice(html.indexOf("function snSprungKnopf("), html.indexOf("function snPushKnopf("));
+  assert.ok(/\/\^zu:\[a-z\]\{2,20\}\$\/\.test/.test(f) && /sprungDef\(id\)/.test(f) && /s\.frei && !frei\(s\.frei\)/.test(f) && /esc\(s\.t\)/.test(f), "nur bekannte, freigegebene Ziele, Text escaped");
+  assert.ok(/\$\("snSprung"\)\?\.addEventListener\("click", \(\) => snBestaetigen\(x, "", \(\) => sprung\(String\(x\.knopf\)\.slice\(3\)\)\)\)/.test(html), "Antippen bestätigt gelesen und springt");
+  assert.ok(/if \(danach\) \{ try \{ danach\(\); \}/.test(html), "Sprung erst nach erfolgreicher Bestätigung");
+  assert.ok(/<select id="snSprungZiel">/.test(html) && /Object\.keys\(SPRUENGE\)\.filter\(sprungFuerAlle\)/.test(html), "Auswahl beim Verfassen nur mit Zielen für alle");
 }

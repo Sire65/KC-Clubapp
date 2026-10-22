@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.598.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.599.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -33459,7 +33459,7 @@ function snPruefen() {
   const f = blattAuf("snBlatt", `<div class="sn-kopf">📣 Nachricht von <b>${esc(x.vonName || "der Clubleitung")}</b>${x.wichtig ? ' <span class="sn-wichtig">❗ WICHTIG</span>' : ""}</div>
     <p class="hinweis" style="margin:2px 0 10px">${esc(tag)}${l.length > 1 ? ` · noch ${l.length - 1} weitere` : ""}</p>
     <div class="sn-text">${esc(x.text).replace(/\n/g, "<br>")}</div>
-    ${x.knopf === "push" ? snPushKnopf() : ""}
+    ${x.knopf === "push" ? snPushKnopf() : snSprungKnopf(x.knopf)}
     <label class="sn-pflicht"><input type="checkbox" id="snGelesen"><span><b>Ich habe die Nachricht gelesen</b><small>Pflicht – ${esc(vn)} sieht deine Bestätigung</small></span></label>
     <button class="knopf haupt" id="snOk" disabled>✅ Gelesen – bestätigen</button>
     <button class="knopf" id="snFrageAuf">↩️ Rückfrage an ${esc(vn)}</button>
@@ -33471,8 +33471,16 @@ function snPruefen() {
   $("snGelesen").onchange = (e) => { ok.disabled = !e.target.checked; };
   ok.onclick = () => snBestaetigen(x, "");
   $("snPushAn")?.addEventListener("click", async () => { await pushEinschalten(); const k = $("snPushBox"); if (k) k.outerHTML = snPushKnopf(); });
+  $("snSprung")?.addEventListener("click", () => snBestaetigen(x, "", () => sprung(String(x.knopf).slice(3)))); // 2.599.0: Knopf = gelesen + direkt hin
   $("snFrageAuf").onclick = () => { $("snFrage").hidden = false; $("snFrageAuf").hidden = true; $("snFrageText").focus(); };
   $("snFrageSenden").onclick = () => { const t = $("snFrageText").value.trim(); if (!t) return melde("Bitte die Rückfrage eintippen.", true); snBestaetigen(x, t); };
+}
+// 2.599.0 KC-CLUB-STARTNACHRICHT-SPRUNG (Wunsch Hansi für Dieter „Avatar aussuchen – mit Taste, damit er direkt dort hinkommt“):
+// Knopf „zu:<Ziel>“ führt an eine Stelle der App (Ziele nur aus SPRUENGE); Antippen bestätigt zugleich „gelesen“.
+function snSprungKnopf(k) {
+  const id = /^zu:[a-z]{2,20}$/.test(String(k || "")) ? String(k).slice(3) : "", s = sprungDef(id);
+  if (!s || (s.frei && !frei(s.frei))) return "";
+  return `<button class="knopf haupt" id="snSprung">${s.sym} ${esc(s.t)} ›</button>`;
 }
 // Startnachricht mit Knopf „🔔 Benachrichtigungen einschalten“ (2.482.0, Wunsch Hansi für Dieter): je nach Lage am Handy
 function snPushKnopf() {
@@ -33481,7 +33489,7 @@ function snPushKnopf() {
   if (Notification.permission === "denied") return '<div class="sn-push" id="snPushBox">🔕 Benachrichtigungen sind im Handy gesperrt. So erlaubst du sie wieder: <b>Handy-Einstellungen → Apps → Chrome (bzw. Club-App) → Benachrichtigungen → an</b>, danach die App neu öffnen.</div>';
   return '<div class="sn-push" id="snPushBox"><button class="knopf haupt" id="snPushAn">🔔 Benachrichtigungen jetzt einschalten</button></div>';
 }
-async function snBestaetigen(x, frage) {
+async function snBestaetigen(x, frage, danach) {
   const knoepfe = document.querySelectorAll("#snBlatt button"); knoepfe.forEach((b) => (b.disabled = true));
   try {
     await api("startnachricht_bestaetigen", { id: x.id, rueckfrage: frage });
@@ -33492,6 +33500,7 @@ async function snBestaetigen(x, frage) {
     }
     x.gelesen_am = new Date().toISOString(); SN.weg.add(x.id); $("snBlatt")?.remove();
     melde(frage ? "↩️ Rückfrage gesendet – danke!" : "✅ Bestätigt – danke!");
+    if (danach) { try { danach(); } catch (e) { meldeFehler(e); } return; } // 2.599.0: Sprung-Knopf – weitere Startnachrichten beim nächsten Öffnen
     setTimeout(snPruefen, 600);
   } catch (e) { knoepfe.forEach((b) => (b.disabled = false)); if ($("snOk") && !$("snGelesen")?.checked) $("snOk").disabled = true; meldeFehler(e); }
 }
@@ -33519,6 +33528,8 @@ function snZeigen() {
     <p class="hinweis">Die Empfänger sehen sie beim nächsten Öffnen der App als Fenster und müssen „gelesen“ bestätigen. Rückfragen kommen bei dir im Chat an.</p>
     <textarea id="snText" rows="4" maxlength="2000" placeholder="Deine Nachricht …" data-diktat>${esc(text)}</textarea>
     <label class="sn-pflicht"><input type="checkbox" id="snKnopfPush"${$("snKnopfPush")?.checked ? " checked" : ""}><span><b>🔔 Knopf „Benachrichtigungen einschalten“ mitgeben</b><small>für alle, deren Benachrichtigungen aus sind</small></span></label>
+    <label style="display:block;margin:8px 0">🔘 <b>Knopf zu einer Stelle der App</b> <small class="hinweis">(Antippen = gelesen und direkt dorthin)</small>
+      <select id="snSprungZiel"><option value="">– kein Knopf –</option>${Object.keys(SPRUENGE).filter(sprungFuerAlle).map((id) => `<option value="${id}"${$("snSprungZiel")?.value === id ? " selected" : ""}>${SPRUENGE[id].sym} ${esc(SPRUENGE[id].t)}</option>`).join("")}</select></label>
     <label class="sn-pflicht"><input type="checkbox" id="snWichtig"${wichtig ? " checked" : ""}><span><b>❗ Als wichtig markieren</b><small>rot hervorgehoben, dazu ein Push „Bitte die App öffnen“</small></span></label>
     <p style="margin:10px 0 6px"><b>An wen?</b></p><div class="sn-wahl">${art("alle", "👥 Alle")}${art("aemter", "🎖️ Ämter")}${art("gruppe", "💬 Gruppe")}${art("personen", "🙋 Personen")}</div>${wahl}
     <div class="knoepfe" style="margin-top:10px"><button class="knopf haupt" onclick="snSenden()">📣 Senden</button><button class="knopf" onclick="$('snAdmin').remove()">Schließen</button></div>
@@ -33531,7 +33542,7 @@ async function snSenden() {
   const an = A.art === "alle" ? { alle: true } : A.art === "aemter" ? { aemter: [...A.aemter] } : A.art === "gruppe" ? { gruppe: A.gruppe } : { personen: [...A.personen] };
   const wer = A.art === "alle" ? "alle Mitglieder" : A.art === "aemter" ? `die Ämter ${[...A.aemter].join(", ") || "–"}` : A.art === "gruppe" ? "die gewählte Gruppe" : `${A.personen.size} Person${A.personen.size === 1 ? "" : "en"}`;
   if (!(await frage(`Startnachricht an ${wer} senden?\n\nSie erscheint beim nächsten Öffnen der App.`))) return;
-  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, knopf: $("snKnopfPush")?.checked ? "push" : null, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
+  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, knopf: $("snKnopfPush")?.checked ? "push" : $("snSprungZiel")?.value ? "zu:" + $("snSprungZiel").value : null, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
     $("snText").value = ""; SN.daten = await api("startnachricht_liste"); snZeigen(); } catch (e) { meldeFehler(e); }
 }
 async function snZurueck(id) {
