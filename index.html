@@ -812,7 +812,7 @@
   #chatBlatt > .blatt-innen { max-height: 88vh; overflow-y: auto; }
   .rgs-liste { display: grid; gap: 6px; margin-bottom: 8px; }
   .rgs-zeile { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; padding: 6px 8px; border: 1px solid var(--linie, #ddd); border-radius: 12px; }
-  .rgs-zeile.an { border-color: var(--gruen, #2e7d32); background: var(--gruenbg, #e8f5e9); }
+  .rgs-zeile.an { border-color: var(--gruen); background: var(--gruenbg, #e8f5e9); }
   .rgs-wahl { display: flex; gap: 8px; align-items: center; text-align: left; background: none; border: 0; padding: 4px; font: inherit; color: inherit; cursor: pointer; min-height: 44px; }
   .rgs-wahl small { display: block; color: var(--grau, #666); }
   /* 2.355.0 KC-CLUB-KACHEL-ZULETZT: zuletzt gewählte Kachel – leichter Rand, minimal größer (bis eine andere gewählt wird) */
@@ -986,6 +986,18 @@
   #caBlatt details { border: 2px solid var(--gold, #c9a46a); border-radius: 12px; padding: 0 10px; margin: 8px 0; } #caBlatt details > summary { padding: 10px 0; font-weight: 800; }
   .ca-top { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--linie); } .ca-top:last-child { border-bottom: 0; }
   .ca-top.fertig .ca-tx { text-decoration: line-through; color: var(--grau); } .ca-haken { flex: none; border: 0; background: none; font-size: 1.35rem; line-height: 1; padding: 0; cursor: pointer; }
+  /* 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: Sammelaktion „Mein Clubmoment“ (CD-Farben über die Variablen) */
+  .cj-karte { background: var(--karte2); border-radius: 12px; padding: 10px; margin: 8px 0; } .cj-oben { display: flex; gap: 10px; align-items: flex-start; }
+  .cj-karte .cj-inhalt { flex: 1; min-width: 0; } .cj-text { margin: 2px 0 4px; overflow-wrap: anywhere; }
+  .cj-foto { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; flex: none; background: var(--karte); }
+  .cj-foto.leer { display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px dashed var(--linie); }
+  .cj-fotowahl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 6px 0 10px; } .cj-fotowahl .knopf { width: auto; }
+  .cj-status { font-weight: 600; margin: 4px 0; } .cj-status.cj-freigegeben { color: var(--gruen); } .cj-status.cj-rueckfrage { color: var(--rot); }
+  .cj-rueck { background: var(--karte); border-left: 4px solid var(--gold); padding: 6px 8px; border-radius: 6px; margin: 4px 0; }
+  .cj-karte .knoepfe { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .cj-karte .knoepfe .knopf { width: auto; min-height: 44px; }
+  .cj-karte .knoepfe .knopf:not(.haupt) { background: var(--karte); border: 1px solid var(--linie); }
+  .cj-form textarea, .cj-form select, .cj-leitung select, .cj-leitung input[type=date] { width: 100%; box-sizing: border-box; font-size: 1rem; min-height: 44px; }
+  .cj-leitung { margin-top: 14px; } .cj-leitung > summary { font-weight: 700; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
   .ca-leute { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; } .ca-leute .knopf { width: auto; } .ca-chip { background: var(--karte2); border-radius: 12px; padding: 4px 10px; font-size: .9rem; }
   .ca-leitung { margin: 8px 0; } .ca-kachel { border: 2px solid var(--gold, #c9a46a); }
   .zteil { margin-top: 6px; font-size: .8rem; font-weight: 700; background: rgba(255,255,255,.55); border-radius: 6px; padding: 3px 6px; } /* 2.554.0 KC-CLUB-PINNWAND-TEIL-AB */
@@ -5726,7 +5738,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.579.0" data-v="2.579.0"></script>
+<script src="app.js?v=2.581.0" data-v="2.581.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

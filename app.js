@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.579.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.581.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1503,7 +1503,7 @@ function begruessungFertig(weiter) {
 // (Server-Einstellung „ansicht“), umschaltbar unten auf der Startseite und in den Einstellungen. Einfach = 5 große Kacheln,
 // oben nur „Nächstes Treffen“, Einstellungen mit drei Dingen. Es wird nichts gelöscht – die erweiterte Ansicht zeigt alles.
 // 2.481.0 KC-CLUB-EINFACH-MEHR (TÜV 18.10., Hansi: „einfache Ansicht bekommt Fotos/Erstattung/Abstimmungen“): Fotos waren nur über die Suche zu finden
-const EINFACH_KACHELN = ["clubabend", "termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "fotos", "vorschlaege", "erstattung", "dokumente", "spiele", "sos"]; // 2.7.0: + Spiele
+const EINFACH_KACHELN = ["clubabend", "clubjahr", "termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "fotos", "vorschlaege", "erstattung", "dokumente", "spiele", "sos"]; // 2.7.0: + Spiele
 // Dienstwünsche kommen in die einfache Ansicht erst, wenn DP2 die Wünsche abholt (Codex-Umbau) – dann nur in der Wunschphase
 const DIENSTWUNSCH_EINFACH = false;
 let ANSICHT = (() => { try { return localStorage.getItem("kc_club_ansicht") === "erweitert" ? "erweitert" : "einfach"; } catch { return "einfach"; } })();
@@ -15035,6 +15035,8 @@ const KACHELN = {
     // 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27): nur am Clubabend (2 Std. vorher bis Ende) – Tagesordnung, Anwesende, Protokoll, Abstimmung, Fotos
     // 2.571.0 (Wunsch Hansi): heißt „Clubabend Live“; beim Admin immer da – außerhalb des Abends als Vorschau auf den nächsten Clubabend
     { id: "clubabend", sym: "🍽️", t: "Clubabend Live", u: () => (!caHeute() ? "Vorschau nächster Clubabend" : ICH?.vorstand ? "Heute · Tagesordnung abhaken" : "Heute · Tagesordnung & mehr"), aktion: "caOeffnen(!caHeute() && !!ICH?.admin)", nur: () => caHeute() || !!ICH?.admin, klasse: "ca-kachel" },
+    // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: nur solange die Sammelaktion läuft (Clubleitung immer, solange eingerichtet)
+    { id: "clubjahr", sym: "📖", t: "Unser Clubjahr", u: () => cjUnter(), aktion: "cjOeffnen()", nur: () => !!INIT?.clubjahr },
     { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
@@ -25668,6 +25670,10 @@ function ilMeldungen() {
   if (START_ART === "verknuepfung" || (START_ART === "browser" && !schonInstalliert)) add({ id: "installieren", stufe: "gold", sym: "📲", t: START_ART === "browser" ? "Köcheclub als App installieren" : "App richtig installieren", u: "Dann klappen WhatsApp, Galerie und Benachrichtigungen", auf: "installHilfe()" });
   const nd = INIT?.naechsterDienst;
   if (nd && (nd.datum === heuteIso() || nd.datum === tagPlus(heuteIso(), 1))) add({ id: "dienst:" + nd.datum, stufe: "gold", sym: "🗓️", t: `${nd.datum === heuteIso() ? "Heute" : "Morgen"} hast du Dienst: ${nd.start}–${nd.ende} Uhr`, u: nd.bereich || "Mein Dienst", auf: "dpNurIch()" });
+  { const c = INIT?.clubjahr; // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE
+    if (c?.offen && c.meins === "rueckfrage") add({ id: "clubjahr_rueck:" + c.jahr, stufe: "rot", sym: "📸", t: "Rückfrage zu deinem Clubmoment", u: "Die Clubleitung hat eine Frage – bitte ansehen", auf: "cjOeffnen()" });
+    else if (c?.offen && !c.meins) add({ id: "clubjahr:" + c.jahr, stufe: "gold", sym: "📸", t: `Unser Clubjahr ${c.jahr}: dein schönster Clubmoment`, u: `Ein Foto und ein, zwei Sätze – bis ${fTagDe(c.ende)}`, auf: "cjOeffnen()" });
+    if (c && ICH?.vorstand && c.pruefen > 0) add({ id: "clubjahr_pruefen:" + c.jahr, stufe: "orange", sym: "📖", t: c.pruefen === 1 ? "Clubjahr: 1 Clubmoment wartet auf Freigabe" : `Clubjahr: ${c.pruefen} Clubmomente warten auf Freigabe`, u: "Ansehen und freigeben", auf: "cjOeffnen()" }); }
   if (caHeute()) add({ id: "clubabend:" + t.id, stufe: "gold", sym: "🍽️", t: `Heute Clubabend${t.beginn ? " um " + fZeit.format(new Date(t.beginn)) + " Uhr" : ""}`, u: "Tagesordnung, wer da ist, Fotos des Abends", auf: "caOeffnen()" }); // 2.569.0 KC-CLUB-CLUBABEND
   // 2.463.0 KC-CLUB-THEMEN-LAUFBAND (Wunschliste #22): vor der nächsten Sitzung zum Abstimmen über die Themen bzw. Einreichen auffordern
   const th = INIT?.themenNaechste;
@@ -25782,6 +25788,7 @@ function hashSprung(h) {
     else if (h === "#ablagekorb") ablkZeigen(); // 2.511.0 KC-CLUB-ABLAGEKORB: aus der Push an den Admin
     else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
     else if (h === "#pinnwand") zeige("pinnwand");
+    else if (h === "#clubjahr") cjOeffnen(); // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: aus der Push
     else if (h === "#standort") zeige("standort");
     else if (h === "#dienstwunsch") dwOeffnen();
     else if (h === "#erstattung") KR_ZEIGE("erstattung"); // KICC-F-100 (2.419.0): Link aus „Kaution wird erstattet“
@@ -34071,6 +34078,115 @@ function protokollZeile(p) {
     <span class="mk-sym">📄</span><span class="prl-text"><span class="prl-titel">${esc(prZeilenTitel(p))}</span>${ort ? `<span class="prl-unter">📍 ${esc(ort.charAt(0).toUpperCase() + ort.slice(1))}</span>` : ""}
     <span class="prl-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}${info ? " · " + info : ""}</span></span>
     <span class="prl-rechts">${prStatusMarke(p)}${!p.gelesen ? '<span class="marke rot">🆕 neu</span>' : ""}</span></button>`;
+}
+// ---------- 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE (Wunsch Hansi „Unser Clubjahr“ – Teil 1: Sammelaktion; Wahl Hansi: Start November, Freigabe durch die
+// Clubleitung, Übergabe des Hefts beim Weihnachtsessen im Januar). Jedes Mitglied reicht EINEN Clubmoment ein: Foto (optional, gern auch ein altes)
+// + ein, zwei Sätze. Die Clubleitung gibt frei oder fragt zurück, reicht für Mitglieder ohne App ein und kann den Einsendeschluss ändern.
+// Sichtbar als Kachel und in der Info, solange die Aktion läuft (Clubleitung immer). Der Server prüft alle Rechte.
+const CJ = { stand: null, form: null };
+const CJ_MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const CJ_STATUS = { eingereicht: ["⏳", "wartet auf Freigabe"], freigegeben: ["✅", "freigegeben – kommt ins Heft"], rueckfrage: ["↩️", "Rückfrage der Clubleitung"] };
+function cjUnter() {
+  const c = INIT?.clubjahr; if (!c) return "";
+  if (ICH?.vorstand && c.pruefen) return `${c.pruefen} warten auf Freigabe`;
+  if (!c.offen) return "Vorschau – startet am " + fTagDe(c.start);
+  return c.meins ? CJ_STATUS[c.meins]?.[1] || "eingereicht" : `Dein Clubmoment – bis ${fTagDe(c.ende)}`;
+}
+async function cjOeffnen() {
+  try { CJ.stand = await api("clubjahr"); if (!CJ.stand.aktiv) return melde(CJ.stand.vorher ? `📸 Die Sammelaktion „Unser Clubjahr“ startet am ${fTagDe(CJ.stand.start)}.` : "📸 Die Sammelaktion „Unser Clubjahr“ läuft gerade nicht.");
+    CJ.form = null; cjZeichnen(); } catch (e) { meldeFehler(e); }
+}
+function cjStandSetzen(r) { // Antwort des Servers übernehmen + Kachel/Info nachziehen
+  CJ.stand = r;
+  if (INIT?.clubjahr && r.aktiv) { INIT.clubjahr.meins = r.meins?.status ?? null; if (r.leitung) INIT.clubjahr.pruefen = (r.alle || []).filter((x) => x.status === "eingereicht").length; INIT.clubjahr.ende = r.ende; }
+  try { kachelnZeigen(); } catch {}
+}
+function cjKarte(m, leitung) {
+  const [sym, was] = CJ_STATUS[m.status] || ["", m.status];
+  return `<div class="cj-karte" data-id="${esc(m.id)}"><div class="cj-oben">
+    ${m.fotoUrl ? `<img class="cj-foto" src="${esc(m.fotoUrl)}" alt="Foto zum Clubmoment von ${esc(m.name)}" loading="lazy">` : ""}
+    <div class="cj-inhalt">${leitung ? `<b>${esc(m.name)}</b>${m.vonLeitung ? ` <small class="hinweis">(eingetragen von ${esc(m.vonLeitung)})</small>` : ""}<br>` : ""}
+      <div class="cj-text">„${esc(m.text)}“</div>${m.monat ? `<small class="hinweis">📅 ${esc(CJ_MONATE[m.monat - 1])}</small>` : ""}
+      <div class="cj-status cj-${esc(m.status)}">${sym} ${esc(was)}${m.status === "freigegeben" && m.geprueftVon && leitung ? ` (${esc(m.geprueftVon)})` : ""}</div>
+      ${m.status === "rueckfrage" && m.rueckmeldung ? `<div class="cj-rueck">💬 „${esc(m.rueckmeldung)}“</div>` : ""}</div></div>
+      <div class="knoepfe">${leitung && m.status !== "freigegeben" ? `<button type="button" class="knopf klein haupt" data-k="frei">✅ Freigeben</button>` : ""}${leitung && m.status !== "rueckfrage" ? `<button type="button" class="knopf klein" data-k="rueck">↩️ Rückfrage</button>` : ""}<button type="button" class="knopf klein" data-k="aendern">✏️ Ändern</button><button type="button" class="knopf klein" data-k="weg" aria-label="Clubmoment löschen">🗑️</button></div></div>`;
+}
+function cjFormHtml(F) {
+  const r = CJ.stand, mg = F.fuer && F.fuer !== ICH?.person_id ? (r.ohne || []).concat(r.alle || []).find((x) => x.person_id === F.fuer) : null;
+  return `<div class="cj-form"><h4 style="margin:6px 0">${mg ? `Clubmoment für ${esc(mg.name)}` : F.id ? "Clubmoment ändern" : "Mein Clubmoment " + esc(r.jahr)}</h4>
+    <div class="cj-fotowahl">${F.vorschau ? `<img class="cj-foto" src="${esc(F.vorschau)}" alt="Gewähltes Foto">` : '<div class="cj-foto leer">📷</div>'}
+      <label class="knopf klein">${F.laedt ? "⏳ Foto wird geladen …" : F.foto ? "📷 Anderes Foto" : "📷 Foto wählen (freiwillig)"}<input type="file" accept="image/*" hidden onchange="cjFoto(this)"${F.laedt ? " disabled" : ""}></label>
+      ${F.foto ? `<button type="button" class="knopf klein" data-k="ohnefoto">Ohne Foto</button>` : ""}</div>
+    <label class="feld-titel" for="cjText">Was war dein schönster Moment im Club? <small class="hinweis">(ein, zwei Sätze)</small></label>
+    <textarea id="cjText" maxlength="400" rows="4" placeholder="z. B. Unser Grillabend im Juni – Paul hat zum ersten Mal Spanferkel gemacht …">${esc(F.text || "")}</textarea>
+    <div class="hinweis" style="text-align:right"><span id="cjZaehler">${[...(F.text || "")].length}</span>/400</div>
+    <label class="feld-titel" for="cjMonat">Wann war das? <small class="hinweis">(freiwillig)</small></label>
+    <select id="cjMonat"><option value="">– egal –</option>${CJ_MONATE.map((m, i) => `<option value="${i + 1}"${Number(F.monat) === i + 1 ? " selected" : ""}>${m}</option>`).join("")}</select>
+    <div class="knoepfe" style="margin-top:10px"><button type="button" class="knopf haupt" data-k="senden"${F.laedt ? " disabled" : ""}>📸 ${F.id ? "Speichern" : "Einreichen"}</button><button type="button" class="knopf" data-k="abbrechen">Abbrechen</button></div>
+    ${!mg && F.id && F.status === "freigegeben" ? '<p class="hinweis">Hinweis: Nach einer Änderung schaut die Clubleitung noch einmal drauf.</p>' : ""}</div>`;
+}
+function cjZeichnen() {
+  const r = CJ.stand; if (!r?.aktiv) return;
+  const alt = $("cjBlatt")?.querySelector(".blatt-innen")?.scrollTop || 0, L = !!r.leitung, F = CJ.form;
+  const kopf = `<h3 style="margin:0">📖 Unser Clubjahr ${esc(r.jahr)}</h3>
+    <p class="hinweis" style="margin:4px 0 10px">${r.offen ? `Zeig uns deinen <b>schönsten Clubmoment ${esc(r.jahr)}</b>: ein Foto und ein, zwei Sätze – gern auch ein altes Foto. Einsendeschluss: <b>${esc(fTagDe(r.ende))}</b>.` : r.vorher ? `Vorschau für die Clubleitung – die Sammelaktion startet am <b>${esc(fTagDe(r.start))}</b>.` : `Einsendeschluss war der ${esc(fTagDe(r.ende))}.`}
+    Daraus wird unser <b>Clubjahr-Heft</b> fürs Weihnachtsessen. Die Clubleitung schaut alles vorher an.</p>`;
+  const meins = F && !F.fuer ? cjFormHtml(F) : r.meins ? `<h4 style="margin:6px 0">Mein Clubmoment</h4>${cjKarte(r.meins, false)}`
+    : r.offen || L ? `<button type="button" class="knopf haupt" data-k="neu">📸 Meinen Clubmoment einreichen</button>` : "";
+  const leitung = !L ? "" : `<details class="cj-leitung" open><summary>🔍 Für die Clubleitung <small>(${(r.alle || []).filter((x) => x.status === "eingereicht").length} warten auf Freigabe)</small></summary>
+    ${F?.fuer ? cjFormHtml(F) : ""}
+    ${(r.alle || []).filter((m) => !m.eigen).map((m) => cjKarte(m, true)).join("") || '<p class="hinweis">Noch keine Clubmomente von anderen.</p>'}
+    ${(r.ohne || []).length ? `<p style="margin:10px 0 4px"><b>Noch ohne Clubmoment (${r.ohne.length}):</b> <small class="hinweis">${r.ohne.map((x) => esc(x.name)).join(", ")}</small></p>
+      <label class="feld-titel" for="cjFuer">Für ein Mitglied ohne App einreichen:</label><select id="cjFuer"><option value="">– Mitglied wählen –</option>${r.ohne.filter((x) => x.person_id !== ICH?.person_id).map((x) => `<option value="${esc(x.person_id)}">${esc(x.name)}</option>`).join("")}</select>` : ""}
+    <p style="margin:12px 0 4px">⏰ Einsendeschluss: <b>${esc(fTagDe(r.ende))}</b></p><label class="feld-titel" for="cjEnde">Ändern:</label>
+    <input type="date" id="cjEnde" value="${esc(r.ende)}" min="${esc(r.start)}" max="${esc(r.jahr + 1)}-01-31"></details>`;
+  const f = blattAuf("cjBlatt", `${kopf}${meins}${leitung}<button type="button" class="knopf" style="margin-top:12px" onclick="$('cjBlatt').remove()">Schließen</button>`);
+  f.querySelector(".blatt-innen").scrollTop = alt;
+  f.querySelector('[data-k="neu"]')?.addEventListener("click", () => { CJ.form = { text: "", monat: "", foto: null }; cjZeichnen(); });
+  f.querySelector("#cjText")?.addEventListener("input", (e) => { if (CJ.form) CJ.form.text = e.target.value; const z = $("cjZaehler"); if (z) z.textContent = [...e.target.value].length; });
+  f.querySelector("#cjMonat")?.addEventListener("change", (e) => { if (CJ.form) CJ.form.monat = e.target.value; });
+  f.querySelector('[data-k="ohnefoto"]')?.addEventListener("click", () => { CJ.form.foto = null; CJ.form.vorschau = null; cjZeichnen(); });
+  f.querySelector('[data-k="abbrechen"]')?.addEventListener("click", () => { CJ.form = null; cjZeichnen(); });
+  f.querySelector('[data-k="senden"]')?.addEventListener("click", cjSenden);
+  f.querySelector("#cjFuer")?.addEventListener("change", (e) => { if (e.target.value) { CJ.form = { fuer: e.target.value, text: "", monat: "", foto: null }; cjZeichnen(); } });
+  f.querySelector("#cjEnde")?.addEventListener("change", (e) => cjEnde(e.target.value));
+  f.querySelectorAll(".cj-karte").forEach((k) => {
+    const m = [r.meins, ...(r.alle || [])].find((x) => x?.id === k.dataset.id); if (!m) return;
+    k.querySelector('[data-k="frei"]')?.addEventListener("click", () => cjPruefen(m, true));
+    k.querySelector('[data-k="rueck"]')?.addEventListener("click", () => cjPruefen(m, false));
+    k.querySelector('[data-k="aendern"]')?.addEventListener("click", () => { CJ.form = { id: m.id, fuer: m.eigen ? null : m.person_id, text: m.text, monat: m.monat || "", foto: m.foto, vorschau: m.fotoUrl, status: m.status }; cjZeichnen(); });
+    k.querySelector('[data-k="weg"]')?.addEventListener("click", () => cjLoeschen(m));
+  });
+}
+async function cjFoto(input) {
+  const F = CJ.form, roh = input.files?.[0]; if (!F || !roh) return;
+  F.text = $("cjText")?.value ?? F.text; F.laedt = 1; F.vorschau = URL.createObjectURL(roh); cjZeichnen();
+  try { const r = await anlageHochladen(roh); if (r?.id) F.foto = r.id; } catch (e) { F.vorschau = null; meldeFehler(e); }
+  F.laedt = 0; if (CJ.form === F) cjZeichnen();
+}
+async function cjSenden() {
+  const F = CJ.form; if (!F) return; F.text = $("cjText")?.value ?? F.text; F.monat = $("cjMonat")?.value ?? F.monat;
+  if ([...F.text.trim()].length < 3) return melde("Bitte ein, zwei Sätze zu deinem Clubmoment schreiben.", true);
+  const k = $("cjBlatt")?.querySelector('[data-k="senden"]'); if (k) k.disabled = true;
+  try { const r = await api("clubjahr_speichern", { text: F.text.trim(), monat: F.monat || null, foto: F.foto || null, ...(F.fuer ? { fuer: F.fuer } : {}) }, { warten: true });
+    CJ.form = null; cjStandSetzen(r); cjZeichnen();
+    melde(F.fuer ? "📸 Clubmoment eingetragen und freigegeben" : "📸 Danke! Dein Clubmoment ist eingereicht – die Clubleitung schaut ihn sich an.");
+  } catch (e) { if (k) k.disabled = false; meldeFehler(e); }
+}
+async function cjPruefen(m, frei) {
+  let rueckmeldung = "";
+  if (!frei) { rueckmeldung = (await eingabe(`Rückfrage an ${m.name.split(" ")[0]} – was fehlt oder soll geändert werden?`, "")) || ""; if (rueckmeldung.trim().length < 3) return; }
+  try { cjStandSetzen(await api("clubjahr_pruefen", { id: m.id, freigeben: frei, rueckmeldung }, { warten: true })); cjZeichnen(); melde(frei ? `✅ Clubmoment von ${m.name.split(" ")[0]} freigegeben` : "↩️ Rückfrage geschickt"); }
+  catch (e) { meldeFehler(e); }
+}
+async function cjLoeschen(m) {
+  if (!(await frage(m.eigen ? "Deinen Clubmoment wirklich zurückziehen?" : `Clubmoment von ${m.name} löschen?`))) return;
+  try { cjStandSetzen(await api("clubjahr_loeschen", { id: m.id }, { warten: true })); CJ.form = null; cjZeichnen(); melde("🗑️ Clubmoment gelöscht"); } catch (e) { meldeFehler(e); }
+}
+async function cjEnde(ende) {
+  if (!ende || ende === CJ.stand?.ende) return;
+  if (!(await frage(`Einsendeschluss auf ${fTagDe(ende)} ändern?`))) return cjZeichnen();
+  try { cjStandSetzen(await api("clubjahr_einstellen", { ende }, { warten: true })); cjZeichnen(); melde("⏰ Einsendeschluss geändert"); } catch (e) { meldeFehler(e); cjZeichnen(); }
 }
 // ---------- 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27, Hansi: „am Clubabend Kachel einblenden, dort die Tagesordnung aufrufen und anklicken – abhaken
 // nur Clubleitung; Sorge, dass alle zu Hause anklicken – ich bin vor Ort“): alle sehen den Abend, nur die Clubleitung ändert (Server prüft das).

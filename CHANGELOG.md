@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.581.0 – 2026-10-22 – Unser Clubjahr: Sammelaktion „Mein Clubmoment“ (KC-CLUB-CLUBJAHR-MOMENTE)
+Ab 1. November kann jedes Mitglied seinen schönsten Clubmoment 2026 einreichen (Foto + ein, zwei Sätze, bis 15.12.). Die Clubleitung gibt frei, fragt zurück, trägt für Mitglieder ohne App ein und kann den Einsendeschluss ändern. Daraus entsteht das Clubjahr-Heft fürs Weihnachtsessen im Januar.
+
 ## Datenbank 2.580.0 – 2026-10-22 (ohne App-/Server-Build) – ⏰ Wartungsaufgaben versetzt statt alle zur vollen Stunde (KC-CLUB-ZEITPLAN-VERSETZT)
 Wunsch Hansi („ja“ zum Vorschlag): Hansis App-Start um 06:00 Uhr brauchte am Server 8,4 s statt 0,6 s – zur vollen Stunde liefen ~17 Zeitplaner-Aufgaben gleichzeitig an (alle Start-Teile 4–13× langsamer).
 - Die schweren Aufgaben der Club-App laufen jetzt versetzt, gleich oft wie bisher: Wartung :04/:19/:34/:49 (stündliche Teile weiter einmal je Stunde, Minute < 15), Zugangslinks schwärzen :06/:21/:36/:51, Notfall-Paket :09/:24/:39/:54, Termine-Wartung :01/:11/:21/:31/:41/:51. Erinnerungen hängen nicht an der Minute (±7-Min.-Fenster).

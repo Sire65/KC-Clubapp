@@ -127,7 +127,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.579.0";
+const SERVER_VERSION = "2.581.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4715,6 +4715,85 @@ async function bueroNaechste() {
     .gte("beginn", new Date(Date.now() - 6 * 3600000).toISOString()).order("beginn").limit(6);
   return data ?? [];
 }
+// ----- 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE (Wunsch Hansi „Unser Clubjahr“ – Teil 1: Sammelaktion; Wahl Hansi: Start im November, Freigabe durch die
+// Clubleitung, Übergabe des Hefts beim Weihnachtsessen im Januar). Jedes Mitglied reicht EINEN Clubmoment des Jahres ein (Foto optional + ein, zwei
+// Sätze, gern auch ein altes Foto von vor der App). Die Clubleitung gibt frei oder fragt zurück, kann für Mitglieder ohne App einreichen und den
+// Einsendeschluss ändern. Zeitraum/Jahr: kc_club_konfig 'clubjahr' { jahr, start, ende } (Registry statt fester Werte). Ins Heft (Teil 2) kommt nur
+// Freigegebenes. Mitglieder sehen nur ihren eigenen Moment, die Clubleitung alle. Push: einmal zum Start, einmal 5 Tage vor Schluss an alle ohne Moment.
+const CJ_TEXT_MAX = 400, CJ_RUECK_MAX = 300, CJ_ENDSPURT_TAGE = 5, CJ_FOTO_URL_SEK = 3600;
+async function cjKonfig() {
+  const { data } = await konfigZeile("clubjahr").catch(() => ({ data: null as any }));
+  const w = data?.wert, jahr = Number(w?.jahr), start = isoTag(w?.start), ende = isoTag(w?.ende);
+  if (!Number.isInteger(jahr) || !start || !ende || ende < start) return null;
+  const heute = berlinTag(new Date());
+  return { jahr, start, ende, offen: heute >= start && heute <= ende, vorher: heute < start };
+}
+// fürs Start-Paket (init): klein – nur ob die Aktion läuft, mein Stand und (Clubleitung) wie viele auf Freigabe warten
+async function cjKurz(ich: Ich) {
+  if (ich.zugang !== "mitglied") return null;
+  const k = await cjKonfig(); if (!k || (!k.offen && !ich.vorstand)) return null;
+  const [{ data: m }, pr] = await Promise.all([
+    db.from("kc_club_clubjahr_momente").select("status").eq("jahr", k.jahr).eq("person_id", ich.person_id).maybeSingle(),
+    ich.vorstand ? Promise.resolve(db.from("kc_club_clubjahr_momente").select("id", { count: "exact", head: true }).eq("jahr", k.jahr).eq("status", "eingereicht")) : Promise.resolve({ count: 0 }),
+  ]);
+  return { jahr: k.jahr, start: k.start, ende: k.ende, offen: k.offen, meins: m?.status ?? null, pruefen: (pr as any)?.count ?? 0 };
+}
+async function cjFotoUrls(ids: string[]) {
+  const u = [...new Set(ids.filter(Boolean))]; if (!u.length) return new Map<string, string>();
+  const { data: att } = await db.from("kc_communication_attachments").select("id,bucket,object_path").in("id", u);
+  const aus = new Map<string, string>();
+  for (const a of (att ?? []) as any[]) {
+    const { data: su } = await db.storage.from(a.bucket).createSignedUrl(a.object_path, CJ_FOTO_URL_SEK);
+    if (su?.signedUrl) aus.set(a.id, su.signedUrl);
+  }
+  return aus;
+}
+async function cjStand(ich: Ich) {
+  const k = await cjKonfig(); if (!k) return { aktiv: false };
+  if (!k.offen && !ich.vorstand) return { aktiv: false, jahr: k.jahr, start: k.start, ende: k.ende, vorher: k.vorher };
+  let q = db.from("kc_club_clubjahr_momente").select("*").eq("jahr", k.jahr);
+  if (!ich.vorstand) q = q.eq("person_id", ich.person_id);
+  const { data: rows } = await q.order("erstellt_am");
+  const liste = (rows ?? []) as any[];
+  const [leute, urls, mg] = await Promise.all([personen(liste.flatMap((r) => [r.person_id, r.eingereicht_von, r.geprueft_von].filter(Boolean))), cjFotoUrls(liste.map((r) => r.foto)),
+    ich.vorstand ? aktiveMitglieder() : Promise.resolve([] as any[])]);
+  const aus = (r: any) => ({ id: r.id, person_id: r.person_id, name: leute.get(r.person_id)?.display_name || r.person_id, eigen: r.person_id === ich.person_id,
+    vonLeitung: r.eingereicht_von !== r.person_id ? vorname(leute.get(r.eingereicht_von)) || "Clubleitung" : null, text: r.text, monat: r.monat, foto: r.foto, fotoUrl: r.foto ? urls.get(r.foto) ?? null : null,
+    status: r.status, rueckmeldung: r.status === "rueckfrage" ? r.rueckmeldung : null, geprueftVon: r.geprueft_von ? vorname(leute.get(r.geprueft_von)) : null, geaendert: r.geaendert_am });
+  const meins = liste.find((r) => r.person_id === ich.person_id);
+  const mit = new Set(liste.map((r) => r.person_id));
+  return { aktiv: true, ...k, leitung: ich.vorstand, meins: meins ? aus(meins) : null,
+    ...(ich.vorstand ? { alle: liste.map(aus), ohne: mg.filter((m: any) => !mit.has(m.person_id)).map((m: any) => ({ person_id: m.person_id, name: m.display_name })) } : {}) };
+}
+async function cjPush(an: string[], titel: string, kurz: string, korrelation: string) { // wirft nie (läuft auch nebenbei)
+  if (!an.length) return { gesendet: 0 };
+  try { return await cjPushJetzt(an, titel, kurz, korrelation); } catch (e) { console.error("clubjahr push", String(e)); return { gesendet: 0 }; }
+}
+async function cjPushJetzt(an: string[], titel: string, kurz: string, korrelation: string) {
+  const { data: mitApp } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", an);
+  const ids = (mitApp ?? []).map((x: any) => x.person_id); if (!ids.length) return { gesendet: 0 };
+  return await senden("club_pinnwand", ids, { titel, kurz, betreff: `Köcheclub Werne – ${titel.replace(/^\S+\s/, "")}`,
+    text: `Hallo,\n\n${kurz}\n\nIn der Köcheclub-App: ${APP_URL}#clubjahr\n\nViele Grüße\nKöcheclub Werne`, url: `${APP_URL}#clubjahr` }, korrelation)
+    .catch((e) => { console.error("clubjahr push", String(e)); return { gesendet: 0, fehler: ids.length }; });
+}
+// Wartung (stündlich, 10–19 Uhr): Start-Push an alle, Endspurt-Push 5 Tage vor Schluss an alle ohne Moment – je Jahr genau einmal (Merker im Protokoll)
+async function cjWartung() {
+  const k = await cjKonfig(); if (!k?.offen) return;
+  const std = Number(new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date()));
+  if (std < 10 || std > 19) return;
+  const heute = berlinTag(new Date()), endspurt = heute >= tagDazu(k.ende, -CJ_ENDSPURT_TAGE);
+  for (const art of endspurt ? ["start", "endspurt"] : ["start"]) {
+    const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "clubjahr_push").contains("details", { jahr: k.jahr, art }).limit(1);
+    if (schon?.length) continue;
+    const alle = (await aktiveMitglieder()).map((m) => m.person_id);
+    const { data: mit } = await db.from("kc_club_clubjahr_momente").select("person_id").eq("jahr", k.jahr);
+    const hat = new Set((mit ?? []).map((x: any) => x.person_id)), ziel = art === "start" ? alle : alle.filter((id) => !hat.has(id));
+    await protokoll(null, "clubjahr_push", { jahr: k.jahr, art, an: ziel.length }); // erst merken, dann senden (nie doppelt)
+    if (art === "start") await cjPush(ziel, `📸 Unser Clubjahr ${k.jahr}`, `Zeig uns deinen schönsten Clubmoment ${k.jahr}: ein Foto und ein, zwei Sätze – gern auch ein altes Foto. Einsendeschluss: ${tagText(k.ende)}. Daraus wird unser Clubjahr-Heft fürs Weihnachtsessen.`, `club-clubjahr:${k.jahr}:start`);
+    else await cjPush(ziel, `📸 Noch ${CJ_ENDSPURT_TAGE} Tage: dein Clubmoment ${k.jahr}`, `Bis ${tagText(k.ende)} kannst du noch deinen schönsten Clubmoment einreichen – ein Foto und ein, zwei Sätze reichen.`, `club-clubjahr:${k.jahr}:endspurt`);
+    return; // höchstens eine Push je Lauf
+  }
+}
 // ----- 2.576.0 KC-CLUB-START-PAKET (Wunsch Hansi „App ist langsam – Vorsicht, nix kaputt machen, genau planen“): die kleinen persönlichen
 // Start-Abfragen kommen in EINEM Datenbank-Aufruf (kc_club_start_paket) statt ~18 einzelnen Wegen. Jeder Teil ist genau die bisherige Abfrage;
 // klappt der Aufruf nicht oder ist der Not-Aus gesetzt (kc_club_konfig 'start_paket' = {"aus": true}), nimmt jede Stelle von selbst den
@@ -6629,6 +6708,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
       if (stuendlich) await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       if (stuendlich) await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
+      if (stuendlich) await cjWartung().catch((e) => console.error("clubjahr", String(e))); // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
       await aeFreigabeMelden().catch((e) => console.error("aenderung freigabe", String(e))); // KC-CLUB-AE-FREIGABE-PUSH (2.88.0)
       if (stuendlich) await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
@@ -7251,6 +7331,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { count } = await db.from("kc_club_archiv_dokumente").select("id", { count: "exact", head: true }).in("ordner_id", ids).eq("status", "pruefung").neq("hochgeladen_von", ich.person_id);
           return count ?? 0;
         })().catch(() => 0);
+        const pCj = cjKurz(ich).catch((e) => { console.error("clubjahr kurz", String(e)); return null; }); // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE
         const pAblk = ich.admin ? Promise.resolve(db.from("kc_club_ablagekorb").select("id", { count: "exact", head: true }).eq("status", "offen"))
           .then((r: any) => (r.error ? null : r.count ?? 0), () => null) : Promise.resolve(undefined); // 2.511.0 KC-CLUB-ABLAGEKORB
         const pRest = Promise.all([
@@ -7384,7 +7465,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -13512,6 +13593,76 @@ Köcheclub Werne`,
         });
       }
 
+      // ----- 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: Sammelaktion „Mein Clubmoment“ -----
+      case "clubjahr": {
+        if (ich.zugang !== "mitglied") throw new Fehler("Das Clubjahr ist nur für Mitglieder.", 403);
+        return json(await cjStand(ich));
+      }
+      case "clubjahr_speichern": {
+        if (ich.zugang !== "mitglied") throw new Fehler("Das Clubjahr ist nur für Mitglieder.", 403);
+        const k = await cjKonfig(); if (!k) throw new Fehler("Die Sammelaktion ist gerade nicht aktiv.", 409);
+        if (!k.offen && !ich.vorstand) throw new Fehler(k.vorher ? `Die Sammelaktion startet am ${tagText(k.start)}.` : `Einsendeschluss war der ${tagText(k.ende)} – bitte bei der Clubleitung melden.`, 409);
+        const fuer = p.fuer ? String(p.fuer) : ich.person_id;
+        if (fuer !== ich.person_id) { nurVorstand(ich); if (!(await aktiveMitglieder()).some((m) => m.person_id === fuer)) throw new Fehler("Mitglied nicht gefunden.", 404); }
+        const text = txt(p.text, CJ_TEXT_MAX);
+        if ([...text].length < 3) throw new Fehler("Bitte ein, zwei Sätze zu deinem Clubmoment schreiben.");
+        const mz = Number(p.monat), monat = Number.isInteger(mz) && mz >= 1 && mz <= 12 ? mz : null;
+        const { data: alt } = await db.from("kc_club_clubjahr_momente").select("*").eq("jahr", k.jahr).eq("person_id", fuer).maybeSingle();
+        let foto: string | null = null;
+        if (p.foto) {
+          const fid = String(p.foto);
+          if (alt?.foto && fid === alt.foto) foto = alt.foto; // bleibt wie es war
+          else {
+            const { data: a } = /^[0-9a-f-]{36}$/i.test(fid) ? await db.from("kc_communication_attachments").select("id,object_path,mime_type").eq("id", fid).maybeSingle() : { data: null };
+            if (!a || !String(a.object_path).startsWith(`club/${ich.person_id}/`) || !/^image\//.test(String(a.mime_type || ""))) throw new Fehler("Das Foto konnte nicht übernommen werden – bitte noch einmal wählen.");
+            foto = a.id;
+          }
+        }
+        const durchLeitung = fuer !== ich.person_id; // Clubleitung reicht für ein Mitglied ein → gleich freigegeben
+        const zeile = { jahr: k.jahr, person_id: fuer, eingereicht_von: alt?.eingereicht_von ?? ich.person_id, text, foto, monat, rueckmeldung: null,
+          status: durchLeitung ? "freigegeben" : "eingereicht", geprueft_von: durchLeitung ? ich.person_id : null, geprueft_am: durchLeitung ? jetzt() : null, geaendert_am: jetzt() };
+        const { error } = await db.from("kc_club_clubjahr_momente").upsert(zeile, { onConflict: "jahr,person_id" });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden – bitte noch einmal versuchen.", 500);
+        await protokoll(ich.person_id, "clubjahr_moment", { jahr: k.jahr, fuer: durchLeitung ? fuer : undefined, neu: !alt, foto: !!foto, zeichen: [...text].length });
+        // Clubleitung kurz Bescheid geben – nur bei neuen Einsendungen und nach einer Rückfrage (nicht bei jeder kleinen Änderung)
+        if (!durchLeitung && (!alt || alt.status === "rueckfrage")) {
+          const an = (await leitungIds()).filter((id) => id !== ich.person_id);
+          nebenbei(cjPush(an, "📸 Neuer Clubmoment", `${ich.vorname} hat einen Clubmoment ${k.jahr} eingereicht – bitte ansehen und freigeben.`, `club-clubjahr:${k.jahr}:neu:${fuer}:${Date.now()}`));
+        }
+        return json({ ok: true, ...(await cjStand(ich)) });
+      }
+      case "clubjahr_pruefen": {
+        nurVorstand(ich);
+        const { data: m } = await db.from("kc_club_clubjahr_momente").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Clubmoment nicht gefunden.", 404);
+        const frei = p.freigeben === true, rueck = txt(p.rueckmeldung, CJ_RUECK_MAX);
+        if (!frei && [...rueck].length < 3) throw new Fehler("Bitte kurz schreiben, was noch fehlt oder geändert werden soll.");
+        const { error } = await db.from("kc_club_clubjahr_momente").update({ status: frei ? "freigegeben" : "rueckfrage", rueckmeldung: frei ? null : rueck, geprueft_von: ich.person_id, geprueft_am: jetzt() }).eq("id", m.id);
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "clubjahr_geprueft", { jahr: m.jahr, fuer: m.person_id, frei });
+        if (m.person_id !== ich.person_id) nebenbei(cjPush([m.person_id], frei ? "📸 Dein Clubmoment ist dabei 🎉" : "📸 Rückfrage zu deinem Clubmoment",
+          frei ? `Die Clubleitung hat deinen Clubmoment ${m.jahr} freigegeben – er kommt ins Clubjahr-Heft.` : `${ich.vorname}: „${rueck}“ – bitte in der App ansehen und anpassen.`, `club-clubjahr:${m.jahr}:geprueft:${m.id}:${Date.now()}`));
+        return json({ ok: true, ...(await cjStand(ich)) });
+      }
+      case "clubjahr_loeschen": {
+        const { data: m } = await db.from("kc_club_clubjahr_momente").select("id,jahr,person_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!m) throw new Fehler("Clubmoment nicht gefunden.", 404);
+        if (m.person_id !== ich.person_id) nurVorstand(ich);
+        const { error } = await db.from("kc_club_clubjahr_momente").delete().eq("id", m.id);
+        if (error) throw new Fehler("Konnte nicht gelöscht werden.", 500);
+        await protokoll(ich.person_id, "clubjahr_geloescht", { jahr: m.jahr, fuer: m.person_id !== ich.person_id ? m.person_id : undefined });
+        return json({ ok: true, ...(await cjStand(ich)) });
+      }
+      case "clubjahr_einstellen": {
+        nurVorstand(ich);
+        const k = await cjKonfig(); if (!k) throw new Fehler("Die Sammelaktion ist nicht eingerichtet.", 409);
+        const ende = isoTag(p.ende);
+        if (!ende || ende < k.start || ende > `${k.jahr + 1}-01-31`) throw new Fehler(`Bitte ein Datum zwischen ${tagText(k.start)} und ${tagText(`${k.jahr + 1}-01-31`)} wählen.`);
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "clubjahr", wert: { jahr: k.jahr, start: k.start, ende }, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "clubjahr_einstellung", { jahr: k.jahr, ende });
+        return json({ ok: true, ...(await cjStand(ich)) });
+      }
       // ----- 2.569.0 KC-CLUB-CLUBABEND: sehen alle Mitglieder, ändern nur die Clubleitung -----
       case "clubabend": {
         const t = await clubabendTreffen(p.vorschau === true && ich.vorstand);
@@ -13966,6 +14117,10 @@ Köcheclub Werne`,
         if (!erlaubt) { // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN: Anlage an Vorschlag/Spende, Terminfindung, Terminanfrage – wer den Eintrag sieht
           const { data: oa } = await db.from("kc_club_objekt_anlagen").select("art,objekt_id").eq("attachment_id", att.id).limit(5);
           for (const x of oa ?? []) if (await objAnlageSichtbar(ich, x.art, x.objekt_id)) { erlaubt = true; break; }
+        }
+        if (!erlaubt) { // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: Foto eines Clubmoments – das Mitglied selbst, wer es eingereicht hat, und die Clubleitung
+          const { data: cm } = await db.from("kc_club_clubjahr_momente").select("person_id,eingereicht_von").eq("foto", att.id).limit(5);
+          if ((cm ?? []).some((x: any) => x.person_id === ich.person_id || x.eingereicht_von === ich.person_id || ich.vorstand)) erlaubt = true;
         }
         if (!erlaubt) throw new Fehler("Anlage nicht gefunden.", 404);
         const { data: s } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 600, p.herunterladen ? { download: att.file_name } : undefined);

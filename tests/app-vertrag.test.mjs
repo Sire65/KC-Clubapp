@@ -1186,7 +1186,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/ansicht: ansicht\.get\(m\.person_id\) \?\? null \} : \{\}\)/.test(server), "Ansicht je Mitglied nur für den Admin");
   assert.ok(/const begruesst = (?:geburtstagPruefen\(\) \|\| )?ansichtPruefen\(\) \|\| begruessungPruefen\(\);/.test(html) && /INIT\?\.einstellungen\?\.ansicht\?\.gewaehlt\) return false/.test(html), "Frage beim Start fehlt / käme mehrfach");
   assert.ok(/id="ansichtBlatt" onclick="if\(event\.target===this\)ansichtSetzen\('einfach', true\)"/.test(html) && /Du kannst jederzeit umschalten/.test(html), "Überspringen = einfach / Umschalt-Hinweis fehlt");
-  assert.ok(/const EINFACH_KACHELN = \[(?:"clubabend", )?"termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "fotos", "vorschlaege", "erstattung")?(, "dokumente")?(, "spiele")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
+  assert.ok(/const EINFACH_KACHELN = \[(?:"clubabend", )?(?:"clubjahr", )?"termine", "kommunikation", "pinnwand", "meindienst", "mitglieder"(, "fotos", "vorschlaege", "erstattung")?(, "dokumente")?(, "spiele")?(, "sos")?\];/.test(html) && /const kacheln = \(r\) => einfach\(\) \? einfachKacheln\(\) : kaSortiert/.test(html), "Einfache Startseite fehlt");
   const alle = [...html.matchAll(/\{ id: "([a-z]+)", sym:/g)].map((m) => m[1]);
   for (const id of ["termine", "kommunikation", "pinnwand", "meindienst", "mitglieder", "dokumente"]) assert.ok(alle.includes(id), `Kachel ${id} fehlt in der Registry`);
   assert.ok(/id="ansichtKnopf"[^>]*onclick="ansichtWechseln\(\)"/.test(html) && /onclick="ansichtSetzen\('einfach'\)"/.test(html) && /onclick="ansichtSetzen\('erweitert'\)"/.test(html), "Umschalter fehlt");
@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12008,3 +12008,27 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(!/drop |delete |truncate|unschedule/i.test(z.replace(/--[^\n]*/g, "")), "nur Zeiten geändert");
 }
 
+// 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE (Wunsch Hansi „Unser Clubjahr“ – Teil 1: Sammelaktion; Start November, Freigabe Clubleitung, Übergabe im Januar)
+{
+  const mig = lies("supabase/migrations/20261022_kc_club_clubjahr_momente.sql");
+  assert.ok(/unique \(jahr, person_id\)/.test(mig) && /check \(length\(text\) between 3 and 400\)/.test(mig) && /status in \('eingereicht', 'freigegeben', 'rueckfrage'\)/.test(mig), "ein Moment je Mitglied und Jahr, Textlänge, Status");
+  assert.ok(/enable row level security/.test(mig) && /revoke all on public\.kc_club_clubjahr_momente from anon, authenticated;/.test(mig) && /\('clubjahr', '\{"jahr": 2026, "start": "2026-11-01", "ende": "2026-12-15"\}'/.test(mig), "nur Server; Zeitraum in der Konfig (Registry)");
+  // Server: Rechte
+  assert.ok(/const k = await cjKonfig\(\); if \(!k \|\| \(!k\.offen && !ich\.vorstand\)\) return null;/.test(server) && /if \(!ich\.vorstand\) q = q\.eq\("person_id", ich\.person_id\);/.test(server), "Mitglieder sehen nur ihren Moment, nur während der Aktion");
+  assert.ok(/if \(fuer !== ich\.person_id\) \{ nurVorstand\(ich\);/.test(server) && /case "clubjahr_pruefen": \{\n\s*nurVorstand\(ich\);/.test(server) && /case "clubjahr_einstellen": \{\n\s*nurVorstand\(ich\);/.test(server), "für andere einreichen, prüfen, Schluss ändern: nur Clubleitung");
+  assert.ok(/if \(m\.person_id !== ich\.person_id\) nurVorstand\(ich\);/.test(server), "löschen: eigener Moment oder Clubleitung");
+  assert.ok(/!String\(a\.object_path\)\.startsWith\(`club\/\$\{ich\.person_id\}\/`\) \|\| !\/\^image\\\/\/\.test\(String\(a\.mime_type/.test(server), "nur selbst hochgeladene Bilder");
+  assert.ok(/if \(!k\.offen && !ich\.vorstand\) throw new Fehler\(k\.vorher \? `Die Sammelaktion startet am/.test(server), "außerhalb des Zeitraums nur die Clubleitung");
+  assert.ok(/status: durchLeitung \? "freigegeben" : "eingereicht"/.test(server) && /if \(!frei && \[\.\.\.rueck\]\.length < 3\) throw/.test(server), "eigene Einsendung → Prüfung; Rückfrage braucht Text");
+  assert.ok(/const \{ data: cm \} = await db\.from\("kc_club_clubjahr_momente"\)\.select\("person_id,eingereicht_von"\)\.eq\("foto", att\.id\)/.test(server) && /x\.person_id === ich\.person_id \|\| x\.eingereicht_von === ich\.person_id \|\| ich\.vorstand/.test(server), "Fotos nur für Mitglied, Einreicher, Clubleitung");
+  assert.ok(/if \(stuendlich\) await cjWartung\(\)/.test(server) && /await protokoll\(null, "clubjahr_push", \{ jahr: k\.jahr, art, an: ziel\.length \}\); \/\/ erst merken, dann senden/.test(server) && /if \(std < 10 \|\| std > 19\) return;/.test(server), "Start-/Endspurt-Push je einmal, nur tagsüber");
+  assert.ok(/clubjahr: await pCj,/.test(server) && /const pCj = cjKurz\(ich\)\.catch/.test(server), "Start-Paket: kleiner Stand, Fehler stören den Start nicht");
+  assert.ok(/try \{ return await cjPushJetzt\(an, titel, kurz, korrelation\); \} catch/.test(server), "Push wirft nie (läuft nebenbei)");
+  // App
+  assert.ok(/\{ id: "clubjahr", sym: "📖", t: "Unser Clubjahr", u: \(\) => cjUnter\(\), aktion: "cjOeffnen\(\)", nur: \(\) => !!INIT\?\.clubjahr \}/.test(html) && /"clubabend", "clubjahr", "termine"/.test(html), "Kachel nur während der Aktion – auch in der einfachen Ansicht");
+  assert.ok(/stufe: "gold", sym: "📸", t: `Unser Clubjahr \$\{c\.jahr\}: dein schönster Clubmoment`/.test(html) && /stufe: "rot", sym: "📸", t: "Rückfrage zu deinem Clubmoment"/.test(html) && /c && ICH\?\.vorstand && c\.pruefen > 0/.test(html), "Info: Aufruf, Rückfrage, Freigabe-Hinweis für die Clubleitung");
+  assert.ok(/else if \(h === "#clubjahr"\) cjOeffnen\(\);/.test(html), "Link aus der Push öffnet die Sammelaktion");
+  assert.ok(/<textarea id="cjText" maxlength="400"/.test(html) && /<select id="cjMonat">/.test(html) && /<select id="cjFuer">/.test(html) && /<input type="date" id="cjEnde"/.test(html), "Auswahl statt Freitext, wo möglich (Monat, Mitglied, Datum)");
+  assert.ok(!/confirm\(|prompt\(/.test(html.slice(html.indexOf("const CJ = { stand: null"), html.indexOf("// ---------- 2.569.0 KC-CLUB-CLUBABEND"))), "nur frage()/eingabe()");
+  assert.ok(/\.cj-karte \.knoepfe \.knopf \{ width: auto; min-height: 44px; \}/.test(lies("index.html")), "große Tippflächen");
+}
