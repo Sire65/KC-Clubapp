@@ -12094,3 +12094,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/#chat\.nur-hg > \* \{ opacity: 0; pointer-events: none;/.test(ix) && /:root\.chat-nur-hg \.chat-hg \{ opacity: 1;/.test(ix), "Nachrichten unsichtbar, Hintergrund voll");
   assert.ok(/\{ id: "chat_filter", thema: "nachrichten"/.test(html) && /\{ id: "chat-nur-hg", sym: "🖼️"/.test(html), "Hilfe und Twinkey");
 }
+// 2.592.0 KC-CLUB-NETZ-TIEFENTEST: gründlicher Test + Dauertest, Urteil nie „OK“ ohne Messwerte, Kurzfassung ohne IP/Ort, Einstiege
+{
+  const tt = html.slice(html.indexOf("// ---------- 2.592.0 KC-CLUB-NETZ-TIEFENTEST"), html.indexOf("async function ttTeilen()"));
+  assert.ok(tt.length > 5000 && /const TT_CF = "https:\/\/speed\.cloudflare\.com"/.test(tt), "kostenloser Messpunkt");
+  assert.ok(/async function ttKurz\(\)/.test(tt) && /async function ttDauer\(min\)/.test(tt) && /onclick="ttDauer\(5\)"[\s\S]{0,200}ttDauer\(15\)[\s\S]{0,200}ttDauer\(30\)/.test(tt), "gründlicher Test + Dauertest 5/15/30");
+  assert.ok(/if \(!gemessen\) return \{ farbe: "#9a9a9a", satz: "⚪ Noch kein verwertbares Ergebnis/.test(tt), "UNKNOWN nie als OK");
+  assert.ok(/document\.hidden\) \{ d\.mess\.push\(\{ t, ms: null, pause: true \}\)/.test(tt), "Hintergrund zählt nicht als Aussetzer");
+  assert.ok(/api\("diagnose", \{ art: "tiefentest"/.test(tt) && !/cf-meta-ip|cf-meta-city|cf-meta-latitude/.test(tt), "Protokoll ohne IP/Ort");
+  assert.ok(/else NTT\.stopp = true; \/\/ Fenster zu → Test endet/.test(tt), "Fenster zu beendet den Test");
+  assert.ok((html.match(/ttOeffnen\(\)/g) || []).length >= 4 && /\.tt-band \{/.test(lies("index.html")), "Einstiege + Verlaufsband");
+}

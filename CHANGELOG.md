@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.592.0 – 2026-10-22 – Internet-Tiefentest
+Neuer Internet-Tiefentest (Netz-Symbol oben → 🔬 Tiefentest): misst Aussetzer, Schwankungen, Download/Upload, Router-Stau unter Last und verlorene Datenpakete; Dauertest 5/15/30 Min. findet kurze Aussetzer. Ergebnis in einfachen Sätzen mit Tipps und zum Teilen (KC-CLUB-NETZ-TIEFENTEST).
+
 ## 2.591.0 – 2026-10-22 – 🖼️ Chat: nur den Hintergrund zeigen (KC-CLUB-CHAT-NUR-HG)
 Wunsch Hansi („In Nachrichten unten die Zeile mit Tastatur, Pfeil und Umschalten der Nachrichten – einen weiteren Klick, und alle Nachrichten werden komplett ausgeblendet, damit man den Hintergrund sehen kann“).
 - Der Knopf 👥 in der kleinen Zeile über dem Schreibfeld hat einen vierten Stand: 1× 👤 nur die anderen, 2× 🙋 nur meine, **3× 🖼️ nur der Hintergrund** – alle Nachrichten blenden sanft aus (der Platz bleibt, nichts springt), Angeheftetes und Runde ebenso, das Hintergrundbild erscheint in voller Stärke (auch im Nachtmodus ungedimmt). 4× wieder alle.

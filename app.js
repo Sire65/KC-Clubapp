@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.591.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.592.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5456,6 +5456,7 @@ const HILFE = [
   { id: "avatar_hochwertig", thema: "darstellung", sym: "👑", t: "Hochwertige Figuren", nur: () => frei("avatar") && frei("avatar_premium"), x: "In <b>„🧑‍🍳 Mein Bild“</b> → <b>„👑 Hochwertige Figuren“</b> gibt es 36 neue Köchinnen und Köche – gezeichnet mit Licht und Schatten, jung und älter, mit Schmuck, Brillen, Mützen und vielen Kochjacken. Antippen, oben groß ansehen, <b>„✅ Übernehmen“</b>. Mit <b>„✏️ Bearbeiten“</b> passt du jede im Baukasten an. Deine bisherige Figur bleibt, bis du eine andere wählst.", zeig: () => avWahl(), seit: "2.414.0" },
   { id: "avatar_anpassen", thema: "darstellung", sym: "🧩", t: "Figur individuell anpassen (Schmuck, Kochjacke, Stil)", nur: () => frei("avatar") && frei("avatar_baukasten"), x: "In <b>„🧑‍🍳 Mein Bild“</b> → <b>„🧩 Individuell anpassen“</b> tippst du eine Kachel an – etwa Frisur, Mütze, Brille, Bart, Ohrringe, Halskette, Piercing, Kochjacke oder <b>Schürze</b> – und landest direkt an der richtigen Stelle im Baukasten. Bei Frisur, Mütze, Bart, Brille und Schmuck siehst du jede Auswahl als kleines Bild – neu bei den Kopfbedeckungen u. a. Nikolausmütze, Jägerhut, Cowboyhut, Zylinder, Strohhut, Wikingerhelm, Krone, Partyhütchen und Bommelmütze. Beim <b>Stil</b> wählst du – sobald freigeschaltet – klassisch oder hochwertig. Zum Schluss <b>„💾 Speichern“</b>. <b>Eigene Brille:</b> Ist deine nicht dabei, schick Hansi ein Foto – sie wird nachgezeichnet (so entstand „randlos“).", zeig: () => avBauen(), seit: "2.414.0" },
   // 2.110.0 (Wunsch Hansi „Hilfetexte und Handbuch anpassen“): Hilfen zu den Neuerungen seit Anleitung V8 (2.96.0)
+  { id: "tiefentest", thema: "technik", sym: "🔬", t: "Internet hakt? Der Tiefentest", x: "Hängt das Internet immer wieder (Schnecken in der App, Sanduhr am Fernseher)? Tippe oben auf das <b>Netz-Symbol</b> und dann auf <b>„🔬 Tiefentest“</b>. Der <b>gründliche Test</b> (ca. 1 Minute) misst Aussetzer, Schwankungen, Download/Upload, ob der Router unter Last staut und ob Datenpakete verloren gehen. Der <b>Dauertest</b> (5, 15 oder 30 Minuten) findet kurze Aussetzer, die ein kurzer Test verpasst. Am Ende steht in einfachen Sätzen, was los ist und was du tun kannst – und mit <b>📤 Teilen</b> hast du einen Nachweis für deinen Internet-Anbieter. Tipp: einmal im WLAN und einmal mit Mobilfunk testen.", seit: "2.592.0" },
   { id: "schnecke", thema: "technik", sym: "🐌", t: "Was bedeutet die Schnecke oben?", x: "Erscheint oben in der Mitte eine kleine <b>🐌</b>, ist das Netz gerade langsam – die App misst das selbst an den Antwortzeiten. Alles funktioniert weiter, dauert aber länger: bitte etwas Geduld und <b>nicht mehrfach tippen</b>. Antippen erklärt es kurz. Ist das Netz wieder schnell, verschwindet die Schnecke von selbst.", seit: "2.106.0" },
   { id: "zwei_fenster", thema: "technik", sym: "🪟", t: "Die App ist zweimal offen", x: "Läuft die Club-App auf demselben Gerät <b>zweimal</b> (zweites Fenster oder ein anderer Browser), meldet sie das. <b>„Hier weitermachen“</b> legt das andere Fenster schlafen, <b>„Dieses Fenster schließen“</b> schließt dieses. Ist es in Wahrheit ein anderes Gerät im selben WLAN (z. B. das Tablet), tippst du <b>„Das ist ein anderes Gerät“</b> – dann fragt die App dafür nie wieder.", seit: "2.315.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "laden_dauert", thema: "technik", sym: "🔄", t: "„Laden dauert zu lange“ – was tun?", x: "Lädt etwas wegen langsamem Netz länger als 12 Sekunden oder klappt gar nicht, erscheint unten eine Leiste mit <b>„🔄 Nochmal versuchen“</b> und <b>„Abbrechen“</b>. Nochmal versuchen lädt neu; Abbrechen beendet das Warten – du kannst es später nochmal öffnen. Beim <b>Senden</b> (Nachricht, Zusage …) wird nie abgebrochen oder doppelt geschickt: Dort steht nur „bitte warten“.", seit: "2.107.0" },
@@ -14454,7 +14455,7 @@ function netzBlattZeigen() {
       ${zeile("Anfragen / Fehler (seit App-Start)", `${VB.anfragen} / ${VB.fehler}`)}
       ${SCHNECKE.an ? zeile("🐌 Langsam", esc(SCHNECKE.grund)) : ""}
     </table>
-    <div class="knoepfe" style="justify-content:center"><button class="knopf" onclick="netzMessen()" ${m?.laeuft ? "disabled" : ""}>📏 Jetzt messen</button>${ICH?.admin ? `<button class="knopf" onclick="verbindungBlatt()">📊 Ausführlich (Download/Upload)</button>` : ""}</div>
+    <div class="knoepfe" style="justify-content:center"><button class="knopf" onclick="netzMessen()" ${m?.laeuft ? "disabled" : ""}>📏 Jetzt messen</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Tiefentest</button>${ICH?.admin ? `<button class="knopf" onclick="verbindungBlatt()">📊 Ausführlich (Download/Upload)</button>` : ""}</div>
     <p class="hinweis" style="font-size:.8rem;margin:0">Wellen: 4 = sehr gut (bis 0,4 s) · 3 = gut (bis 1 s) · 2 = mäßig (bis 2,5 s) · 1 = schwach · grau = noch unbekannt · ✕ = keine Verbindung. Symbol und Blinken: ⚙️ → „✨ Effekte“.</p>`;
 }
 async function netzMessen() {
@@ -14470,6 +14471,197 @@ async function netzMessen() {
 try { navigator.connection?.addEventListener?.("change", netzSymbolZeigen); } catch {}
 addEventListener("online", netzSymbolZeigen); addEventListener("offline", netzSymbolZeigen);
 setInterval(netzSymbolZeigen, 30000); setTimeout(netzSymbolZeigen, 0);
+// ---------- 2.592.0 KC-CLUB-NETZ-TIEFENTEST (Wunsch Hansi: „massive Probleme mit dem Internet – Kabel-Fernseher zeigt Sanduhr, in der App
+// laufen die Schnecken – es muss einen tiefen Test geben“) ----------
+// Mehr als „Jetzt messen“: Antwortzeiten zu drei Zielen (Club-Webseite, neutraler Messpunkt, Club-Server) mit Schwankung und Aussetzern,
+// Download/Upload, Antwortzeit UNTER LAST (überlasteter Router) und verlorene Datenpakete (TCP-Wiederholungen laut Messpunkt).
+// Der Dauertest (5/15/30 Min.) fängt kurze Aussetzer ein – genau die „Sanduhr“-Momente, die ein kurzer Test verpasst.
+// Messpunkt: speed.cloudflare.com (kostenlos, ohne Konto, CORS offen – derselbe wie beim Cloudflare-Speedtest). Kein Club-Datenvolumen.
+// Ergebnis in einfachen Sätzen; Verlauf nur auf dem Gerät; Kurzfassung OHNE IP/Ort ins Server-Protokoll (diagnose_tiefentest).
+const TT_CF = "https://speed.cloudflare.com", TT_VERLAUF_KEY = "kc_club_tiefentest", TT_VERLAUF_MAX = 10;
+const NTT = { laeuft: false, stopp: false, schritt: "", erg: null, dauer: null, sperre: null };
+const ttMedian = (a) => { const s = a.filter((x) => x != null).sort((x, y) => x - y); return s.length ? s[Math.floor((s.length - 1) / 2)] : null; };
+const ttP90 = (a) => { const s = a.filter((x) => x != null).sort((x, y) => x - y); return s.length ? s[Math.min(s.length - 1, Math.floor(s.length * 0.9))] : null; };
+function ttSchwankung(a) { const s = a.filter((x) => x != null); if (s.length < 2) return null; let d = 0; for (let i = 1; i < s.length; i++) d += Math.abs(s[i] - s[i - 1]); return Math.round(d / (s.length - 1)); }
+const ttWarte = (ms) => new Promise((r) => setTimeout(r, ms));
+async function ttMessen(url, opt = {}, ms = 4000) { // Antwortzeit in ms oder null (= keine Antwort / Fehler)
+  const t0 = performance.now();
+  try { const r = await fetch(url, { cache: "no-store", ...opt, signal: zeitSignal(ms) }); await r.arrayBuffer(); return r.status < 500 ? Math.round(performance.now() - t0) : null; }
+  catch { return null; }
+}
+const TT_ZIELE = {
+  cf: { t: "🌐 Internet (neutraler Messpunkt)", m: () => ttMessen(`${TT_CF}/__down?bytes=0&r=${Math.random()}`) },
+  seite: { t: "🏠 Club-Webseite", m: () => ttMessen(`version.json?tt=${Date.now()}`) },
+  server: { t: "🖥️ Club-Server", m: () => ttMessen(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "ping" }) }, 6000) },
+};
+function ttL4(r) { // TCP-Werte des Messpunkts aus „server-timing: cfL4;desc=…“ (gesendete Pakete, Wiederholungen, Verbindungs-ID)
+  try { const h = r.headers.get("server-timing") || "", d = decodeURIComponent((h.match(/cfL4;desc="([^"]*)"/) || [])[1] || ""), w = (k) => { const m = d.match(new RegExp("[?&]" + k + "=(\\d+)")); return m ? +m[1] : null; };
+    return d ? { sent: w("sent"), retrans: w("retrans"), lost: w("lost"), rtt: w("rtt"), cid: (d.match(/cid=([0-9a-f]+)/) || [])[1] || "" } : null; } catch { return null; }
+}
+async function ttDownload(bytes, maxMs) { // liest als Strom: auch ein abgebrochener Download ergibt ein Tempo
+  const c = new AbortController(), t0 = performance.now(), uhr = setTimeout(() => c.abort(), maxMs); let n = 0;
+  try { const r = await fetch(`${TT_CF}/__down?bytes=${bytes}&r=${Math.random()}`, { cache: "no-store", signal: c.signal }); const rd = r.body.getReader();
+    for (;;) { const { done, value } = await rd.read(); if (done) break; n += value.length; if (NTT.stopp) { c.abort(); break; } } }
+  catch {} finally { clearTimeout(uhr); }
+  const s = (performance.now() - t0) / 1000; return { n, s, mbit: n > 100000 ? Math.round((n * 8 / 1e6) / s * 10) / 10 : null };
+}
+async function ttUpload(bytes) {
+  const daten = new Uint8Array(bytes); for (let i = 0; i < bytes; i += 65536) crypto.getRandomValues(daten.subarray(i, Math.min(bytes, i + 65536)));
+  const t0 = performance.now();
+  try { const r = await fetch(`${TT_CF}/__up?r=${Math.random()}`, { method: "POST", body: daten, cache: "no-store", signal: zeitSignal(30000) }); await r.arrayBuffer(); if (!r.ok) return null; }
+  catch { return null; }
+  return Math.round((bytes * 8 / 1e6) / ((performance.now() - t0) / 1000) * 10) / 10;
+}
+function ttVerlauf() { try { return JSON.parse(localStorage.getItem(TT_VERLAUF_KEY) || "[]").slice(0, TT_VERLAUF_MAX); } catch { return []; } }
+function ttVerlaufMerken(e) { try { localStorage.setItem(TT_VERLAUF_KEY, JSON.stringify([e, ...ttVerlauf()].slice(0, TT_VERLAUF_MAX))); } catch {} }
+async function ttWach(an) { // Bildschirm während des Tests anlassen (sonst schläft das Handy und die Messung stockt)
+  try { if (an && navigator.wakeLock && !NTT.sperre) NTT.sperre = await navigator.wakeLock.request("screen"); else if (!an && NTT.sperre) { await NTT.sperre.release(); NTT.sperre = null; } } catch { NTT.sperre = null; }
+}
+function ttOeffnen() { if (!NTT.laeuft) NTT.netz = vbNetz(); ttZeichnen(); }
+function ttZeichnen() {
+  const e = NTT.erg, d = NTT.dauer, an = NTT.laeuft;
+  const zeile = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`, z = (x, eh) => (x == null ? "–" : x.toLocaleString("de-DE") + eh);
+  const urteil = e?.fertig || d?.fertig ? ttUrteil() : null;
+  const html = `<h3 style="margin:0">🔬 Internet-Tiefentest</h3>
+    <p class="hinweis" style="margin:4px 0 8px">Prüft deine Internetleitung gründlich: Aussetzer, Schwankungen, Tempo, Router unter Last und verlorene Datenpakete. Am besten <b>einmal im WLAN</b> und <b>einmal mit Mobilfunk (WLAN aus)</b> testen – dann sieht man, ob es am Anschluss zu Hause liegt.</p>
+    <b style="font-size:.9rem">Womit bist du gerade im Netz?${netzErkannt() ? ' <span class="hinweis" style="font-weight:normal">(vom Handy erkannt)</span>' : ""}</b>
+    <div class="dwahl" style="margin:4px 0 8px">${Object.entries(NETZARTEN).map(([k, t]) => `<label><input type="radio" name="ttNetz" value="${k}" ${NTT.netz === k ? "checked" : ""} ${an ? "disabled" : ""} onchange="NTT.netz='${k}';ttZeichnen()"> ${t}</label>`).join("")}</div>
+    ${an ? `<div class="karte" style="margin:0 0 8px"><b>⏳ ${esc(NTT.schritt || "Misst …")}</b>${d && !d.fertig ? `<div class="hinweis">Bitte die App offen und das Handy liegen lassen – der Bildschirm bleibt an.</div>` : ""}</div>
+      <button type="button" class="knopf" style="width:100%" onclick="NTT.stopp=true">⏹️ Test beenden</button>`
+    : `<div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button type="button" class="knopf haupt" onclick="ttKurz()">▶️ Gründlicher Test (ca. 1 Minute)</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="hinweis" style="flex-basis:100%;margin:4px 0 0">⏱️ Dauertest – findet kurze Aussetzer („Sanduhr“):</span>
+        <button type="button" class="knopf" style="flex:1" onclick="ttDauer(5)">5 Min.</button><button type="button" class="knopf" style="flex:1" onclick="ttDauer(15)">15 Min.</button><button type="button" class="knopf" style="flex:1" onclick="ttDauer(30)">30 Min.</button></div></div>`}
+    ${urteil ? `<div class="karte" style="margin:10px 0;border-left:6px solid ${urteil.farbe}"><b style="font-size:1.05rem">${esc(urteil.satz)}</b>${urteil.punkte.length ? `<ul style="margin:6px 0 0;padding-left:1.2em">${urteil.punkte.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
+      ${urteil.tipps.length ? `<div style="margin-top:8px"><b>Was du tun kannst:</b><ol style="margin:4px 0 0;padding-left:1.3em">${urteil.tipps.map((p) => `<li>${esc(p)}</li>`).join("")}</ol></div>` : ""}</div>` : ""}
+    ${e ? `<table class="vb-tabelle">
+      ${Object.entries(TT_ZIELE).map(([k, ziel]) => { const w = e.ping?.[k]; return w ? zeile(ziel.t, `${z(w.med, " ms")} · Schwankung ${z(w.schw, " ms")}${w.weg ? ` · <b>${w.weg} von ${w.n} ohne Antwort</b>` : " · keine Aussetzer"}`) : ""; }).join("")}
+      ${zeile("⬇️ Download", e.down != null ? z(e.down, " Mbit/s") : e.fertig ? "nicht messbar" : "…")}
+      ${zeile("⬆️ Upload", e.up != null ? z(e.up, " Mbit/s") : e.fertig ? "nicht messbar" : "…")}
+      ${zeile("🚦 Antwortzeit unter Last", e.last != null ? `${z(e.last, " ms")} (ohne Last ${z(e.ping?.cf?.med ?? null, " ms")})` : e.fertig ? (e.down > 50 ? "kein Stau – der Download war sofort fertig" : "nicht messbar") : "…")}
+      ${zeile("📦 Verlorene Datenpakete", e.verlust != null ? `${e.verlust.toLocaleString("de-DE", { maximumFractionDigits: 2 })} % neu geschickt` : e.fertig ? "nicht messbar" : "…")}
+      ${zeile("📱 Handy meldet", `${navigator.onLine ? "online" : "offline"}${navigator.connection?.effectiveType ? " · Tempo-Klasse " + esc(String(navigator.connection.effectiveType).toUpperCase()) : ""}`)}
+    </table>` : ""}
+    ${d ? `<b style="font-size:.9rem;display:block;margin-top:8px">⏱️ Dauertest ${d.min} Min.${d.fertig ? "" : ` – noch ${Math.max(0, Math.ceil((d.ende - Date.now()) / 60000))} Min.`}</b>
+      <div class="tt-band" aria-label="Verlauf: grün schnell, gelb langsam, rot keine Antwort">${d.mess.map((m) => `<i class="${m.ms == null ? (m.pause ? "p" : "r") : m.ms > 1000 ? "g" : "o"}"></i>`).join("")}</div>
+      <p class="hinweis" style="margin:2px 0 6px;font-size:.8rem">🟩 schnell · 🟨 langsam (über 1 s) · 🟥 keine Antwort · ⬜ App war im Hintergrund (zählt nicht)</p>
+      <table class="vb-tabelle">${zeile("Messungen", `${d.mess.filter((m) => !m.pause).length}`)}${zeile("🟥 Aussetzer", d.aussetzer ? `<b>${d.aussetzer}×</b> · längster ca. ${Math.round(d.laengster / 1000)} s` : "keine")}${zeile("🟨 Langsam", `${d.mess.filter((m) => m.ms > 1000).length}×`)}${zeile("Typische Antwortzeit", z(ttMedian(d.mess.map((m) => m.ms)), " ms"))}</table>` : ""}
+    ${!an && (e?.fertig || d?.fertig) ? `<div class="knoepfe"><button type="button" class="knopf" onclick="ttTeilen()">📤 Ergebnis teilen</button></div>` : ""}
+    ${(() => { const v = ttVerlauf(); if (!v.length) return ""; return `<b style="font-size:.9rem;display:block;margin-top:10px">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle">
+      ${v.map((t) => `<tr><td>${esc(zeitKurz(new Date(t.zeit).toISOString()))}<br><small class="hinweis">${NETZARTEN[t.netz] || "–"}</small></td><td>${esc(t.kurz || "")}</td></tr>`).join("")}</table>`; })()}
+    <p class="hinweis" style="font-size:.78rem;margin:8px 0 0">Gemessen wird über den kostenlosen Messpunkt von Cloudflare (wie beim bekannten Speedtest). Der gründliche Test lädt im WLAN ca. 30 MB, mit Mobilfunk ca. 8 MB. Es wird nichts über dich gespeichert außer dem Ergebnis.</p>
+    <button type="button" class="knopf" style="width:100%;margin-top:8px" onclick="ttSchliessen()">Schließen</button>`;
+  const f = $("ttBlatt"); if (f) f.querySelector(".blatt-innen").innerHTML = html; else blattAuf("ttBlatt", html);
+}
+function ttSchliessen() { NTT.stopp = true; ttWach(false); $("ttBlatt")?.remove(); }
+async function ttKurz() {
+  if (NTT.laeuft) return;
+  const mobil = NTT.netz === "mobil";
+  NTT.laeuft = true; NTT.stopp = false; NTT.dauer = null; NTT.erg = { ping: {} }; ttWach(true);
+  const schritt = (t) => { NTT.schritt = t; if ($("ttBlatt")) ttZeichnen(); else NTT.stopp = true; }; // Fenster zu → Test endet
+  try {
+    // 1) Antwortzeiten: 12 Runden zu allen drei Zielen (Aussetzer = keine Antwort in 4 s)
+    const roh = { cf: [], seite: [], server: [] };
+    for (let i = 0; i < 12 && !NTT.stopp; i++) { schritt(`Antwortzeiten messen … ${i + 1}/12`);
+      const [a, b, c] = await Promise.all([TT_ZIELE.cf.m(), TT_ZIELE.seite.m(), TT_ZIELE.server.m()]); roh.cf.push(a); roh.seite.push(b); roh.server.push(c);
+      for (const k of Object.keys(roh)) NTT.erg.ping[k] = { med: ttMedian(roh[k].slice(1)), p90: ttP90(roh[k].slice(1)), schw: ttSchwankung(roh[k].slice(1)), weg: roh[k].filter((x) => x == null).length, n: roh[k].length };
+      await ttWarte(250); }
+    // 2) Download (dabei die Antwortzeit unter Last messen) – erst klein zum Anwärmen, dann groß
+    if (!NTT.stopp) { schritt("Download messen …"); await ttDownload(1e6, 8000);
+      const unterLast = [], gross = ttDownload(mobil ? 6e6 : 25e6, 15000); let fertig = false; gross.finally(() => (fertig = true));
+      while (!fertig && !NTT.stopp) { unterLast.push(await ttMessen(`${TT_CF}/__down?bytes=0&r=${Math.random()}`, {}, 3000)); await ttWarte(300); }
+      const g = await gross; NTT.erg.down = g.mbit; NTT.erg.last = ttMedian(unterLast.slice(1)); }
+    // 3) Verlorene Pakete: direkt nach dem großen Download auf derselben Verbindung nachfragen – der Messpunkt meldet gesendet/neu geschickt
+    if (!NTT.stopp) { const proben = [];
+      for (let i = 0; i < 3; i++) { try { const r = await fetch(`${TT_CF}/__down?bytes=0&r=${Math.random()}`, { cache: "no-store", signal: zeitSignal(4000) }); await r.arrayBuffer(); const l = ttL4(r); if (l) proben.push(l); } catch {} }
+      const best = proben.filter((l) => l.sent > 300).sort((a, b) => b.sent - a.sent)[0];
+      NTT.erg.verlust = best ? Math.round((best.retrans || 0) / best.sent * 10000) / 100 : null; }
+    // 4) Upload
+    if (!NTT.stopp) { schritt("Upload messen …"); NTT.erg.up = await ttUpload(mobil ? 1e6 : 4e6); }
+    NTT.erg.fertig = true; NTT.erg.zeit = Date.now(); NTT.erg.netz = NTT.netz;
+    if (!NTT.stopp) ttAbschluss("kurz");
+  } catch (e) { NTT.erg.fertig = true; melde("Tiefentest abgebrochen: " + (e?.message || e), true); }
+  NTT.laeuft = false; NTT.schritt = ""; ttWach(false); if ($("ttBlatt")) ttZeichnen();
+}
+async function ttDauer(min) {
+  if (NTT.laeuft) return;
+  NTT.laeuft = true; NTT.stopp = false; NTT.erg = null; NTT.dauer = { min, start: Date.now(), ende: Date.now() + min * 60000, mess: [], aussetzer: 0, laengster: 0 }; ttWach(true);
+  const d = NTT.dauer; let lochSeit = 0;
+  try {
+    while (!NTT.stopp && Date.now() < d.ende) {
+      const t = Date.now(); NTT.schritt = `Dauertest läuft – ${d.mess.length} Messungen`;
+      if (document.hidden) { d.mess.push({ t, ms: null, pause: true }); lochSeit = 0; }
+      else { const ms = await TT_ZIELE.cf.m(); d.mess.push({ t, ms });
+        if (ms == null) { if (!lochSeit) { lochSeit = t; d.aussetzer++; } d.laengster = Math.max(d.laengster, Date.now() - lochSeit); } else lochSeit = 0; }
+      if (d.mess.length > 1200) d.mess.splice(0, d.mess.length - 1200);
+      if ($("ttBlatt")) ttZeichnen(); else NTT.stopp = true; // Fenster zu → Test endet
+      await ttWarte(Math.max(200, 2000 - (Date.now() - t)));
+    }
+    d.fertig = true; d.zeit = Date.now(); d.netz = NTT.netz; d.min = Math.max(1, Math.min(d.min, Math.round((d.zeit - d.start) / 60000))); ttAbschluss("dauer"); // vorzeitig beendet → echte Dauer
+  } catch (e) { d.fertig = true; melde("Dauertest abgebrochen: " + (e?.message || e), true); }
+  NTT.laeuft = false; NTT.schritt = ""; ttWach(false); if ($("ttBlatt")) ttZeichnen();
+}
+// Urteil in einfachen Sätzen – UNKNOWN nie als OK: ohne Messwerte kein „alles gut“
+function ttUrteil() {
+  const e = NTT.erg?.fertig ? NTT.erg : null, d = NTT.dauer?.fertig ? NTT.dauer : null, punkte = [], tipps = []; let stufe = 0; // 0 gut · 1 gelb · 2 rot
+  const hoch = (s) => (stufe = Math.max(stufe, s));
+  if (e) {
+    const cf = e.ping?.cf, sv = e.ping?.server, alleWeg = cf && cf.weg === cf.n;
+    if (alleWeg) { hoch(2); punkte.push("Der Messpunkt im Internet hat gar nicht geantwortet – keine oder eine sehr schlechte Verbindung."); }
+    else if (cf) {
+      if (cf.weg >= 1) { hoch(2); punkte.push(`${cf.weg} von ${cf.n} Anfragen ins Internet kamen gar nicht zurück – die Leitung setzt kurz aus.`); }
+      if ((cf.p90 ?? 0) > 400 || (cf.schw ?? 0) > 120) { hoch(1); punkte.push("Die Antwortzeiten schwanken stark – mal schnell, mal sehr langsam."); }
+      if (cf.med != null && cf.med > 150) { hoch(1); punkte.push(`Schon ohne Last dauert jede Antwort ca. ${cf.med} ms (gut wäre unter 60 ms).`); }
+    }
+    if (!alleWeg && sv && cf && sv.weg > cf.weg) { hoch(1); punkte.push("Der Club-Server hat öfter nicht geantwortet als der Rest des Internets – das kann am Server liegen, nicht an dir."); }
+    if (e.last != null && cf?.med != null && e.last - cf.med > 250) { hoch(1); punkte.push(`Während des Downloads wird jede Antwort ca. ${Math.round(e.last - cf.med)} ms langsamer – der Router staut die Daten (z. B. wenn der Fernseher gleichzeitig streamt).`); tipps.push("Router neu starten und testen, ob es besser ist, wenn Fernseher/Streaming gerade aus sind."); }
+    if (e.verlust != null && e.verlust >= 1) { hoch(e.verlust >= 3 ? 2 : 1); punkte.push(`${e.verlust.toLocaleString("de-DE", { maximumFractionDigits: 1 })} % der Datenpakete gingen unterwegs verloren und mussten neu geschickt werden (normal: unter 0,5 %).`); }
+    if (e.down != null && e.down < (NTT.erg.netz === "mobil" ? 3 : 10)) { hoch(e.down < 2 ? 2 : 1); punkte.push(`Download nur ${e.down.toLocaleString("de-DE")} Mbit/s – das ist wenig${NTT.erg.netz === "wlan" ? " für einen Anschluss zu Hause" : ""}.`); }
+    if (e.down == null && !alleWeg) { hoch(1); punkte.push("Der Download ließ sich nicht messen."); }
+  }
+  if (d) {
+    const n = d.mess.filter((m) => !m.pause).length, langsam = d.mess.filter((m) => m.ms > 1000).length;
+    if (!n) punkte.push("Der Dauertest hat nichts gemessen (die App war im Hintergrund).");
+    else if (d.aussetzer) { hoch(2); punkte.push(`Im Dauertest ist die Verbindung ${d.aussetzer}× komplett weggebrochen (längster Aussetzer ca. ${Math.round(d.laengster / 1000)} s) – das sind die „Sanduhr“-Momente.`); }
+    else if (langsam > n * 0.05) { hoch(1); punkte.push(`Im Dauertest waren ${langsam} von ${n} Antworten sehr langsam (über 1 s).`); }
+    else punkte.push(`Im Dauertest (${d.min} Min.) gab es keine Aussetzer.`);
+    if (n && n < 60) punkte.push("Der Dauertest war sehr kurz – für seltene Aussetzer besser 15 oder 30 Minuten laufen lassen.");
+  }
+  const gemessen = !!(e && e.ping?.cf) || !!(d && d.mess.some((m) => !m.pause));
+  if (!gemessen) return { farbe: "#9a9a9a", satz: "⚪ Noch kein verwertbares Ergebnis – bitte den Test wiederholen.", punkte, tipps };
+  if (stufe >= 1) {
+    const netz = (e || d).netz;
+    if (netz === "wlan") { tipps.push("Den Test noch einmal mit Mobilfunk machen (WLAN am Handy aus). Ist es dann gut, liegt das Problem am Anschluss zu Hause oder am WLAN.");
+      tipps.push("Den Test direkt neben dem Router wiederholen. Ist es dort gut und weiter weg schlecht, ist das WLAN zu schwach (Repeater/Mesh hilft)."); }
+    if (netz === "mobil") tipps.push("Mobilfunk schwankt je nach Ort – den Test im WLAN zu Hause zum Vergleich machen.");
+    if (stufe >= 2 || (d && d.aussetzer)) { tipps.push("Router 30 Sekunden vom Strom nehmen, wieder einstecken, 5 Minuten warten und den Dauertest wiederholen.");
+      tipps.push("Hängt auch der Kabel-Fernseher (Sanduhr), ist der ganze Anschluss betroffen: beim Anbieter eine Störung melden. Dieses Ergebnis (📤 Teilen) ist dafür ein guter Nachweis.");
+      tipps.push("Kabel prüfen: sitzt das Antennenkabel fest in der Dose und am Router? Keine Knicke, keine losen Verteiler?"); }
+  }
+  return stufe >= 2 ? { farbe: "#c0485a", satz: "🔴 Deine Internetleitung hat ein echtes Problem.", punkte, tipps }
+    : stufe === 1 ? { farbe: "#d19a22", satz: "🟡 Deine Internetleitung läuft, aber nicht sauber.", punkte, tipps }
+    : { farbe: "#2e7d4f", satz: "✅ Deine Internetleitung ist in Ordnung.", punkte, tipps };
+}
+function ttText() {
+  const u = ttUrteil(), e = NTT.erg?.fertig ? NTT.erg : null, d = NTT.dauer?.fertig ? NTT.dauer : null, z = (x, eh) => (x == null ? "–" : x.toLocaleString("de-DE") + eh);
+  const l = [`Internet-Tiefentest ${new Date().toLocaleString("de-DE")} · ${NETZARTEN[(e || d)?.netz] || ""} · Köcheclub-App ${APP_VERSION}`, u.satz, ...u.punkte.map((p) => "• " + p)];
+  if (e) { for (const [k, ziel] of Object.entries(TT_ZIELE)) { const w = e.ping?.[k]; if (w) l.push(`${ziel.t}: ${z(w.med, " ms")}, Schwankung ${z(w.schw, " ms")}, ${w.weg}/${w.n} ohne Antwort`); }
+    l.push(`Download ${z(e.down, " Mbit/s")} · Upload ${z(e.up, " Mbit/s")} · unter Last ${z(e.last, " ms")} · Pakete neu geschickt ${z(e.verlust, " %")}`); }
+  if (d) l.push(`Dauertest ${d.min} Min.: ${d.mess.filter((m) => !m.pause).length} Messungen, ${d.aussetzer} Aussetzer (längster ${Math.round(d.laengster / 1000)} s), ${d.mess.filter((m) => m.ms > 1000).length}× langsam`);
+  return l.join("\n");
+}
+function ttAbschluss(art) {
+  const u = ttUrteil(), e = NTT.erg, d = NTT.dauer, kurz = art === "dauer" ? `${d.min} Min.: ${d.aussetzer ? d.aussetzer + "× Aussetzer" : "keine Aussetzer"}` : `${e.ping?.cf?.med ?? "–"} ms · ↓ ${e.down ?? "–"} · ↑ ${e.up ?? "–"} Mbit/s`;
+  ttVerlaufMerken({ zeit: Date.now(), netz: NTT.netz, kurz: u.satz.slice(0, 2) + " " + kurz });
+  const daten = art === "dauer" ? { netz: NTT.netz, min: d.min, messungen: d.mess.filter((m) => !m.pause).length, aussetzer: d.aussetzer, laengsterMs: d.laengster, langsam: d.mess.filter((m) => m.ms > 1000).length, medMs: ttMedian(d.mess.map((m) => m.ms)) ?? -1 }
+    : { netz: NTT.netz, cfMs: e.ping?.cf?.med ?? -1, cfSchw: e.ping?.cf?.schw ?? -1, cfWeg: e.ping?.cf?.weg ?? -1, serverMs: e.ping?.server?.med ?? -1, serverWeg: e.ping?.server?.weg ?? -1, down: e.down ?? -1, up: e.up ?? -1, lastMs: e.last ?? -1, verlust: e.verlust ?? -1 };
+  api("diagnose", { art: "tiefentest", daten: { ...daten, art, urteil: u.satz.slice(0, 2), tempo: navigator.connection?.effectiveType || "" } }).catch(() => {}); // Kurzfassung ohne IP/Ort
+}
+async function ttTeilen() {
+  const t = ttText();
+  try { if (navigator.share) { await navigator.share({ title: "Internet-Tiefentest", text: t }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(t); melde("📋 Ergebnis kopiert – z. B. in WhatsApp oder eine E-Mail einfügen"); } catch { melde("Teilen ging nicht – bitte Bildschirmfoto machen", true); }
+}
 // KC-CLUB-KOPF-EINFACH (2.1.0, Gesamtprüfung): Mitglieder sehen EIN Lämpchen und beim Antippen nur „in Ordnung / Störung“;
 // die Technik (Server, Communicator, Datenverkehr, Messwerte) bleibt für den Admin
 function verbindungBlatt() {
@@ -14483,7 +14675,8 @@ function vbEinfachZeigen() {
     $("vbInhalt").innerHTML = `<div class="vb-status"><i class="led ${farbe}"></i><b>${gut ? "✅ Verbindung in Ordnung" : farbe === "blau" ? "🔧 " + esc(text) : farbe === "grau" ? "⏳ Verbindung wird geprüft …" : "⚠️ Gerade Störung – " + esc(text)}</b></div>
       <p class="hinweis" style="margin:8px 0">${gut ? "Nachrichten, Termine und Mitteilungen kommen an." : "Bitte kurz warten. Bleibt es so, hilft „Problem melden“."}</p>
       <div class="knoepfe"><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');testAnMichStarten()">🧪 Test an mich</button><button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');fpProblemMelden()">🆘 Problem melden</button></div>
-      <button class="knopf" onclick="verbindungMelden(this)">📨 Ergebnis an ${esc(adminName())} senden</button>`;
+      <button class="knopf" onclick="verbindungMelden(this)">📨 Ergebnis an ${esc(adminName())} senden</button>
+      <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet zu Hause gründlich prüfen</button>`;
   }
 }
 async function communicatorPruefen() {
@@ -14536,6 +14729,7 @@ function vbBlattZeigen() {
     <b style="font-size:.9rem">Womit bist du gerade im Netz?${netzErkannt() ? ' <span class="hinweis" style="font-weight:normal">(vom Handy erkannt)</span>' : ""}</b>
     <div class="dwahl" style="margin:4px 0 6px">${Object.entries(NETZARTEN).map(([k, t]) => `<label><input type="radio" name="vbNetz" value="${k}" ${vbNetz() === k ? "checked" : ""} onchange="vbNetzWahl('${k}')"> ${t}</label>`).join("")}</div>
     <button class="knopf haupt" id="vbTestKnopf" onclick="verbindungTesten()" ${VB.test?.laeuft ? "disabled" : ""}>▶️ Verbindung testen</button>
+    <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet-Tiefentest (Aussetzer, Router, Dauertest)</button>
     ${(() => { const v = vbVerlauf(); if (!v.length) return ""; const z = (x, e) => (x == null ? "–" : x.toLocaleString("de-DE") + e);
       return `<b style="font-size:.9rem">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle"><tr><td><b>Wann</b></td><td><b>Netz</b></td><td><b>Antwort</b></td><td><b>↓ / ↑ Mbit/s</b></td></tr>
         ${v.map((t) => `<tr><td>${esc(zeitKurz(new Date(t.zeit).toISOString()))}</td><td>${NETZARTEN[t.netz] || "–"}</td><td>${z(t.ping, " ms")}</td><td>${z(t.down, "")} / ${z(t.up, "")}</td></tr>`).join("")}</table>
@@ -40613,6 +40807,7 @@ function suAppListe() {
     ["★", "Sonderstunden melden und Stand sehen", "sonderstunden sondereinsatz stunden melden stundenkonto gutgeschrieben einsatz grünkohl", () => mdStart()],
     ["📥", "Eingangskorb (Dokument annehmen, Ordner wählen)", "eingangskorb eingang dokument annehmen ablehnen ordner register archiv urkunde", () => hzZuEintrag("h:eingangskorb_mitglied")],
     ["👪", "Hinweise an Eltern (was Eltern bekommen)", "eltern elternhandy eltern-handy kind kinder hinweis push eltern", () => einstiegHin("privat")],
+    ["🔬", "Internet-Tiefentest (Leitung prüfen)", "internet langsam hängt sanduhr schnecke wlan router leitung aussetzer störung speedtest test tiefentest kabel", () => ttOeffnen()],
     ["🕐", "Erinnerung an die Zeitumstellung", "zeitumstellung sommerzeit winterzeit uhr umstellen vor zurück", () => hzZuEintrag("h:zeitumstellung")],
     ["🪪", "Mein Ausweis-QR", "ausweis qr code mitgliedsnummer kasse stechuhr scanner bediener anmelden mitgliedsausweis karte", () => ausweisZeigen()], // 2.443.0
     ["📊", "Abstimmung im Chat", "abstimmung umfrage chat wer kommt", () => { melde("Im Chat auf 📎 tippen → „📊 Abstimmung“"); zeige("nachrichten"); }],
