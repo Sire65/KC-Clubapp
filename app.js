@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.586.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.587.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -21968,15 +21968,23 @@ function kopfRolloSetzen(stand) {
 // Bei eingerolltem Kopf (⌃ halb oder ⌃⌃ ganz – in beiden Stellungen sind die drei Felder weg) blinkt der Pfeil der aktuellen Stellung,
 // sobald mehr ungelesene Nachrichten da sind, jemand neu online kommt oder die Mitgliederzahl steigt. Ausrollen beendet das Blinken.
 // Ohne Bewegung (Effekte aus, Sparmodus) leuchtet der Pfeil fest statt zu blinken. Keine zusätzlichen Abfragen – nur vorhandene Zahlen.
-const KPN = { n: null, mg: null, ids: null, an: false };
+// 2.587.0 KC-CLUB-KOPF-PFEIL-GRUND (Fund Hansi „Pfeil hat geblinkt, weil Dieter online war – er ist wieder weg, also muss das Blinken aufhören;
+// bei einer neuen Nachricht muss es anbleiben“): der Grund wird gemerkt. Neue Nachricht / neues Mitglied → bleibt an bis zum Ausrollen (Nachricht:
+// oder bis alles gelesen ist). Jemand neu online → nur, solange mindestens einer dieser Neuen noch online ist (Online-Stand unbekannt → aus).
+const KPN = { n: null, mg: null, ids: null, an: false, nachricht: false, mitglied: false, neuOnline: new Set() };
 function kopfNeuPruefen() {
   const stand = kopfRolloStand(), n = INIT?.ungelesen || 0, mg = Number(INIT?.mitgliederAnzahl) || 0;
   const ids = ONL.zeigen && mpOnline() > 0 ? new Set(ONL.ids) : ONL.zeigen && ONL.stand && Date.now() - ONL.stand < 180000 ? new Set() : null; // null = Online-Stand unbekannt
-  if (stand === "offen") { KPN.an = false; }
-  else if (!KPN.an) {
+  if (stand === "offen") { KPN.nachricht = KPN.mitglied = false; KPN.neuOnline.clear(); }
+  else {
     const ersterBlick = KPN.n === null; // App startet mit eingerolltem Kopf: ungelesene Nachrichten sind dann auch „neu“ für den Blick
-    if ((ersterBlick ? n > 0 : n > KPN.n) || (KPN.mg !== null && mg > KPN.mg) || (KPN.ids && ids && [...ids].some((id) => !KPN.ids.has(id)))) KPN.an = true;
+    if (ersterBlick ? n > 0 : n > KPN.n) KPN.nachricht = true;
+    if (n === 0) KPN.nachricht = false; // alles gelesen (z. B. im Chat) → nichts Neues mehr
+    if (KPN.mg !== null && mg > KPN.mg) KPN.mitglied = true;
+    if (KPN.ids && ids) for (const id of ids) if (!KPN.ids.has(id)) KPN.neuOnline.add(id);
+    for (const id of [...KPN.neuOnline]) if (!ids || !ids.has(id)) KPN.neuOnline.delete(id); // wieder weg (oder unbekannt) → kein Grund mehr
   }
+  KPN.an = KPN.nachricht || KPN.mitglied || KPN.neuOnline.size > 0;
   KPN.n = n; KPN.mg = mg; KPN.ids = ids;
   kopfPfeilNeuZeigen(stand);
 }
@@ -21987,7 +21995,7 @@ function kopfPfeilNeuZeigen(stand = kopfRolloStand()) {
     if (an) p.title = "Neues im Kopf (Nachrichten oder Mitglieder) – antippen zum Ausrollen"; });
 }
 function kopfPfeileZeigen(stand) {
-  if (stand === "offen") KPN.an = false; // ausgerollt: die drei Felder sind wieder zu sehen
+  if (stand === "offen") { KPN.an = KPN.nachricht = KPN.mitglied = false; KPN.neuOnline.clear(); } // ausgerollt: die drei Felder sind wieder zu sehen
   const g = $("kopfPfeil"), hb = $("kopfPfeilHalb");
   if (g) { const zu = stand === "ganz"; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", zu ? "false" : "true"); g.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf ganz einrollen – nur die Kopfzeile bleibt"; g.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf ganz einrollen"); }
   if (hb) { const zu = stand !== "offen"; hb.classList.toggle("dreh", zu); hb.setAttribute("aria-expanded", zu ? "false" : "true"); hb.title = stand === "halb" ? "Kopf ausrollen – alles zeigen" : stand === "ganz" ? "Kopf halb ausrollen – Statusleiste mit LEDs zeigen" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt"; hb.setAttribute("aria-label", hb.title.split(" – ")[0]); }

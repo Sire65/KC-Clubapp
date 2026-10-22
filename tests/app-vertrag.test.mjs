@@ -7205,8 +7205,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: bei eingerolltem Kopf blinkt der Pfeil der Stellung, wenn Neues (Nachrichten, Mitglieder) ankommt
 {
   assert.ok(/function heroZeigen\(richtung\) \{\n  kopfNeuPruefen\(\);/.test(programm), "Prüfung läuft bei jedem Neuzeichnen des Kopfes (Abgleich, Online-Takt)");
-  assert.ok(/\(ersterBlick \? n > 0 : n > KPN\.n\) \|\| \(KPN\.mg !== null && mg > KPN\.mg\) \|\| \(KPN\.ids && ids && \[\.\.\.ids\]\.some\(\(id\) => !KPN\.ids\.has\(id\)\)\)/.test(programm), "neue Nachricht, neue Mitglieder, neu online");
-  assert.ok(/\[\["kopfPfeil", "ganz"\], \["kopfPfeilHalb", "halb"\]\]/.test(programm) && /if \(stand === "offen"\) KPN\.an = false;/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet");
+  // 2.587.0 KC-CLUB-KOPF-PFEIL-GRUND (Fund Hansi): gleiche drei Auslöser, aber mit Grund – „neu online“ nur, solange die Person noch online ist
+  assert.ok(/if \(ersterBlick \? n > 0 : n > KPN\.n\) KPN\.nachricht = true;/.test(programm) && /if \(KPN\.mg !== null && mg > KPN\.mg\) KPN\.mitglied = true;/.test(programm)
+    && /if \(KPN\.ids && ids\) for \(const id of ids\) if \(!KPN\.ids\.has\(id\)\) KPN\.neuOnline\.add\(id\);/.test(programm), "neue Nachricht, neue Mitglieder, neu online");
+  assert.ok(/for \(const id of \[\.\.\.KPN\.neuOnline\]\) if \(!ids \|\| !ids\.has\(id\)\) KPN\.neuOnline\.delete\(id\);/.test(programm) && /KPN\.an = KPN\.nachricht \|\| KPN\.mitglied \|\| KPN\.neuOnline\.size > 0;/.test(programm), "wieder offline → Blinken aus; Nachricht/Mitglied bleibt an");
+  assert.ok(/\[\["kopfPfeil", "ganz"\], \["kopfPfeilHalb", "halb"\]\]/.test(programm) && /if \(stand === "offen"\) (KPN\.an = false;|\{ KPN\.an = KPN\.nachricht = KPN\.mitglied = false; KPN\.neuOnline\.clear\(\); \})/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet (2.587.0: auch alle Gründe)");
   assert.ok(/\.kopf-pfeil\.kp-neu \{[^}]*animation: kpNeu/.test(seite) && /\.kopf-pfeil\.kp-neu\.still \{ animation: none;/.test(seite), "Blinken, ohne Bewegung fest leuchtend");
 }
 // 2.545.0 KC-CLUB-KOPF-SEIT: „since 1991“ klein unter der Kochmütze im Kopf

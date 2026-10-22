@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.587.0 – 2026-10-22 – Kopf-Pfeil blinkt nur noch, solange der Grund besteht (KC-CLUB-KOPF-PFEIL-GRUND)
+Fund Hansi: Der Pfeil blinkte weiter, obwohl Dieter schon wieder offline war. Jetzt: Kommt jemand online, blinkt der Pfeil nur, solange die Person online ist. Neue Nachrichten und neue Mitglieder lassen ihn weiter blinken – bis zum Ausrollen bzw. bis alles gelesen ist.
+
 ## 2.586.0 – 2026-10-22 – Kachel-Zug langsamer und deutlicher
 Wunsch Hansi „zu schnell, man sieht keinen Effekt“: Jede Kachel ist jetzt etwa 3 Sekunden unterwegs (gleichmäßig wie ein Zug), mit etwas mehr Abstand und unterwegs größer.
 
