@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.592.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.593.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7822,7 +7822,8 @@ function rtSignal(s) {
   if (s.art === "vorfuehren") { if (VF.rolle === "schaut") vfHolen(true); else if (VF.rolle === "zeigt") { if (VF.status !== "laeuft") { SPG.ping = 0; spgSenderTakt(); } } /* eigene Bilder lösen kein Extra-Senden aus */ else onlinePing(); return; }
   if (s.art === "mitschauen") { if (SS.id) ssHolen(true); else onlinePing(); return; }
   if (s.art === "spiel") { if (SP?.offen?.id && s.thread === SP.offen.id) spNachsehen(true); else { onlinePing(); if (aktuelleAnsicht === "spiele" && !SP?.offen) spLaden(true); } return; }
-  if ((s.art === "chat" || s.art === "tippt") && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) {
+  if (s.art === "tippt" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; tippenStandHolen().finally(() => { chatTakt.laeuft = false; }); }
+  else if (s.art === "chat" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) {
     chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
   }
   if (s.art === "chat") { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
@@ -8338,6 +8339,18 @@ function chatTakt() {
 // Signale der direkten Leitung und eigene Aktionen laden weiter sofort ganz (chatLaden).
 const CHAT_VOLL_MS = 5 * 60000;
 let CHAT_VOLL_AM = 0;
+// 2.593.0 KC-CLUB-TIPPT-LEICHT: Signal „tippt“ im offenen Chat → nur holen, wer gerade schreibt (1 kleiner Aufruf statt den ganzen Chat neu).
+// Beginnt oder endet das Schreiben (andere Kopfzeile „✍️ schreibt …“), oder klappt der kleine Aufruf nicht (z. B. älterer Server) → wie bisher ganz laden.
+async function tippenStandHolen() {
+  const fuer = chatId, u = CHAT;
+  if (!fuer || !u) return chatLaden(false);
+  let r; try { r = await api("tippen_stand", { id: fuer }); } catch { return chatLaden(false); }
+  if (fuer !== chatId || CHAT !== u) return;
+  const vorher = !!(u.tippt?.length || u.diktiert?.length), jetzt = !!(r?.tippt?.length || r?.diktiert?.length);
+  if (!Array.isArray(r?.tippt) || vorher !== jetzt) return chatLaden(false);
+  u.tippt = r.tippt; u.entwurf = r.entwurf || []; u.spricht = r.spricht || []; u.diktiert = r.diktiert || [];
+  tipptZeigen(u.tippt, u.entwurf, u.spricht, u.diktiert); chatAbstand();
+}
 async function chatNachsehen() {
   const fuer = chatId, s0 = CHAT?.stand;
   if (fuer && s0 && Date.now() - CHAT_VOLL_AM < CHAT_VOLL_MS) {
@@ -13856,7 +13869,7 @@ async function zugangAnfordern() {
 }
 // KC-CLUB-WARTEN (0.33.0): dauert eine Anfrage länger als 0,35 s, erscheint die drehende Kochmütze mit passendem Text.
 // Hintergrund-Abfragen (alle paar Sekunden/Minuten) zeigen sie nicht, damit nichts flackert.
-const WARTEN_STILL = new Set(["nutzung_melden", "spur_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "anruf_wege", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "pinnwand_neu", "pinnwand_gesehen"]);
+const WARTEN_STILL = new Set(["nutzung_melden", "spur_melden", "standort_update", "standort_liste", "terminanfragen_liste", "init", "online", "anruf_status", "anruf_wege", "diagnose", "unterhaltung", "unterhaltungen", "einstellung_setzen", "pinnwand", "kalender", "terminumfragen_liste", "communicator_status", "ping", "anruf_ende", "protokoll_speichern", "todo_erledigt", "todo_liste", "wetter", "fotos_neueste", "admin_lage", "tippen", "tippen_stand", "pinnwand_neu", "pinnwand_gesehen"]);
 const WARTEN_TEXT = { buero_mail_senden: "E-Mail wird gesendet …", anhaenge_laden: "Anhänge werden geladen …", standort_ort: "Standort wird bestimmt …", sos_ort: "Adresse wird gesucht …", standort_start: "Standort wird geteilt …", standort_ende: "Wird beendet …", terminanfrage_senden: "Anfrage wird gesendet …", terminanfrage_antwort: "Antwort wird gemeldet …", terminanfrage_absagen: "Wird abgesagt …", nachricht_senden: "Nachricht wird gesendet …", gruppe_anlegen: "Gruppe wird angelegt …", gruppe_aendern: "Wird gespeichert …", treffen_speichern: "Termin wird gespeichert …",
   pinnwand_anheften: "Zettel wird angeheftet …", feedback_senden: "Feedback wird gesendet …", anklopfen: "Es wird angeklopft …", anruf_start: "Anruf wird aufgebaut …", anlage_hochladen: "Wird hochgeladen …", erstattung_senden: "Antrag wird gesendet …", km_satz_setzen: "Wird gespeichert …", todo_zuweisen: "Wird zugewiesen …",
   link_erzeugen: "Link wird erzeugt …", todo_anlegen: "Wird eingetragen …", zugang_anfordern: "Mail wird gesendet …", foto_hochladen: "Foto wird hochgeladen …", test_an_mich: "Test wird gesendet …",
@@ -13926,7 +13939,7 @@ async function api(action, daten = {}, opt = {}) {
 // (bricht ab und fragt neu) und ✖ Abbrechen. Scheitert Laden am Netz: dieselbe Frage. Schreiben (Senden/Speichern) wird nie
 // abgebrochen oder wiederholt (sonst evtl. doppelt) – dort nur „bitte warten, nicht doppelt senden“.
 const LADE_LANGSAM_MS = 12000, LADE_TIPP_MS = 1500;
-const LADE_NIE = new Set(["lebenszeichen", "online", "ping", "nutzung_melden", "spur_melden", "tippen", "anruf_status", "anruf_wege", "diagnose", "communicator_status", "standort_update", "protokoll_speichern", "pinnwand_gesehen", "schnappschuss_bild", "schnappschuss_holen"]);
+const LADE_NIE = new Set(["lebenszeichen", "online", "ping", "nutzung_melden", "spur_melden", "tippen", "tippen_stand", "anruf_status", "anruf_wege", "diagnose", "communicator_status", "standort_update", "protokoll_speichern", "pinnwand_gesehen", "schnappschuss_bild", "schnappschuss_holen"]);
 const LADE = { laufe: new Set(), frage: null, zu: false };
 let ladeTippZeit = 0;
 try { addEventListener("pointerdown", () => { ladeTippZeit = Date.now(); }, true); addEventListener("keydown", () => { ladeTippZeit = Date.now(); }, true); } catch {}
@@ -15322,7 +15335,7 @@ const ZUGANG_AKTIONEN = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -41905,7 +41918,7 @@ async function nzAdmin(tage) {
 // Der Fehlerfänger (window.KCFP) steht ganz oben im <head> und läuft auch, wenn die App selbst nicht startet. Hier hängt die
 // App ihre eigenen Beobachtungen an (Serveranfragen, alte Version, Gerät/Browser) und zeigt verständliche Hilfe-Schritte.
 const fpNeu = (art, d) => { try { window.KCFP?.neu(art, d); } catch {} };
-const FP_LEISE = new Set(["nutzung_melden", "spur_melden", "lebenszeichen", "tippen", "anruf_status", "anruf_wege", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
+const FP_LEISE = new Set(["nutzung_melden", "spur_melden", "lebenszeichen", "tippen", "tippen_stand", "anruf_status", "anruf_wege", "ping", "online", "standort_update", "fehler_melden", "diagnose"]);
 function fpApiFehler(action, e) {
   if (FP_LEISE.has(action) || notErnstfall() || NOT.an) return; // KC-CLUB-NOTBETRIEB(-ERNSTFALL): Notbetrieb/Simulation nicht ins Fehlerprotokoll
   fpNeu(navigator.onLine ? "api" : "offline", { aktion: action, text: String(e?.message || e) });

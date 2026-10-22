@@ -298,7 +298,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/const darf = \(f: string\) => selbst \|\| ich\.admin \|\| \(ich\.kontakte && frei\("kontakt_" \+ f\)\);/.test(server), "Sichtbarkeitsregel Kontaktdaten falsch");
   assert.ok(/kontakte: r \? r\.kontakte_sehen !== false : true/.test(server), "Recht „Kontakte sehen“ nicht aus der Rollen-Registry");
   assert.ok(/for \(const f of KONTAKT_FELDER\) if \(darf\(f\) && werte\[f\]\) kontakt\[f\] = werte\[f\];/.test(server), "nicht freigegebene Angaben würden ausgeliefert");
-  assert.ok(/const festnetz = darf\("festnetz"\) \? await festnetzAusManager/.test(server), "Festnetz wird ohne Freigabe gelesen");
+  assert.ok(/const festnetz = darf\("festnetz"\) \? await festnetzAusManager|\n          darf\("festnetz"\) \? festnetzAusManager\(pe\) : Promise\.resolve\(null\),/.test(server), "Festnetz wird ohne Freigabe gelesen"); // 2.593.0: im gemeinsamen Block
   assert.ok(!/from\(AKTIONEN_QUELLE\.tabelle\)\.(update|insert|upsert|delete)/.test(server), "KC-Manager-Daten dürfen nicht geändert werden");
   // Geburtsjahr nie an die App
   assert.ok(/geburtstag: pe\.birth_date && \(selbst \|\| frei\("geburtstag"\)\) \? String\(pe\.birth_date\)\.slice\(5, 10\)/.test(server), "Geburtsjahr/ungefreigebener Geburtstag ausgeliefert");
@@ -329,7 +329,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Mitfahren: Platzgrenze, Fahrer bekommt Bescheid, Löschen mit Sicherung
   assert.ok(/if \(\(count \?\? 0\) >= m\.plaetze\) throw new Fehler\("Leider sind schon alle Plätze vergeben\."/.test(server), "Plätze werden nicht begrenzt");
   // Notfall: nur selbst oder Organisation
-  assert.ok(/selbst \|\| ich\.vorstand \? await db\.from\("kc_club_notfall"\)/.test(server), "Notfallkontakt zu breit sichtbar");
+  assert.ok(/selbst \|\| ich\.vorstand \? (await )?db\.from\("kc_club_notfall"\)\.select\("name,telefon,beziehung"\)\.eq\("person_id", pid\)\.maybeSingle\(\) : (\{ data: null \}|Promise\.resolve\(\{ data: null as any \}\))/.test(server), "Notfallkontakt zu breit sichtbar"); // 2.593.0: im gemeinsamen Block
   // Kalender-Abo: nur Hash gespeichert, GET liefert iCalendar
   assert.ok(/token_hash: await sha256\(token\)/.test(server.slice(server.indexOf('case "kalender_abo"'))), "Kalender-Link nicht gehasht");
   assert.ok(/"Content-Type": "text\/calendar; charset=utf-8"/.test(server) && /if \(req\.method === "GET"\)/.test(server), "Kalender-Abo (GET/ICS) fehlt");
@@ -1166,7 +1166,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/function pwVoll\(\)/.test(html) && /pwAbnehmen\('\$\{z\.id\}', true\)/.test(html), "Volle Plätze: Abnehmen im Formular fehlt");
   // Kreise: Registry, Rot nur Admin (Server liefert fehler nur im Admin-Zweig), Unbekannt nie OK
   assert.ok(/const KREIS_ARTEN = \[/.test(html) && /art: "fehler"[^\n]*nurAdmin: true, gilt: \(m\) => ICH\?\.admin && !!m\.fehler/.test(html), "Rot nicht auf Admin beschränkt");
-  assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null[,}]/.test(server) && /if \(ich\.admin\) \{[\s\S]{0,1400}\{ data: fx \}/.test(server), "Server gibt Fehler an Nicht-Admins");
+  assert.ok(/\.\.\.\(ich\.admin \? \{[^\n]*fehler: fehler\.get\(m\.person_id\) \?\? null[,}]/.test(server) && /if \(ich\.admin( && adminLesen)?\) \{[\s\S]{0,1400}\{ data: fx \}/.test(server) && /ich\.admin \? Promise\.all\(\[\n\s*db\.from\("kc_club_person_einstellung"\)\.select\("person_id,wert"\)\.eq\("schluessel", "ansicht"\),\n\s*db\.from\("kc_communication_requests"\)/.test(server), "Server gibt Fehler an Nicht-Admins"); // 2.593.0: Zustellfehler nur für den Admin gelesen
   assert.ok(/verborgen: m\.person_id !== ich\.person_id && \(!ichZeige \|\| zeigen\.get\(m\.person_id\) === false\)/.test(server) && /heute: ichZeige && /.test(server), "Online-Privatsphäre bei heute/verborgen nicht beachtet");
   assert.ok(/\.avatar\.k-unbekannt \{ background: transparent;[^}]*dashed/.test(html) && /return k \|\| \{ art: "unbekannt"/.test(html), "Unbekannt wird nicht als unbekannt gezeigt");
   assert.ok((html.match(/[{:] ?kreis\((m|\{|MITGLIEDER)/g) || []).length >= 4 && /kreisLegende\(\) \+ (MITGLIEDER|liste)\.map/.test(html), "Kreise nicht in allen Listen / Legende fehlt");
@@ -1820,7 +1820,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // 2.3.0: + „inkognito“ (verbirgt nur den Admin selbst, nicht gegenseitig)
   assert.ok(/\.in\("schluessel", \["online", "zuletzt"(, "inkognito")?(, "online_seit")?\]\)/.test(f) && /if \(verborgen\(ich\.person_id(, true)?\)\) return aus;/.test(f), "gegenseitig (online oder zuletzt verborgen)");
   assert.ok(/zeit: tag === heute \?/.test(f) && /lange: true/.test(f) && /pid\.startsWith\("KC-P-TEST"\)/.test(f), "grob: Uhrzeit nur heute, alt = länger nicht da, Testpersonen nie");
-  assert.ok(/zuletztDa: zd\.get\(m\.person_id\) \?\? null/.test(server) && /zuletztDa: selbst \? null : \(await zuletztDaMap\(ich, \[pid\]\)\)/.test(server) && /partnerDa = andere\.length === 1/.test(server), "Server: alle drei Stellen");
+  assert.ok(/zuletztDa: zd\.get\(m\.person_id\) \?\? null/.test(server) && (/zuletztDa: selbst \? null : \(await zuletztDaMap\(ich, \[pid\]\)\)/.test(server) || (/selbst \? Promise\.resolve\(null\) : zuletztDaMap\(ich, \[pid\]\)\.then\(\(m\) => m\.get\(pid\) \?\? null\)/.test(server) && /zuletztDa: zdPid,/.test(server))) && /partnerDa = andere\.length === 1/.test(server), "Server: alle drei Stellen");
   assert.ok(/id="setZuletzt" onchange="zuletztZeigen\(this\.checked\)"/.test(html) && /function zuletztText\(z\)/.test(html), "App: Schalter + Text");
   assert.ok(/m\.zuletztDa \? ` · 🕒 \$\{esc\(zuletztText\(m\.zuletztDa\)\)\}`/.test(html) && /Zuletzt in der App:/.test(html) && /\[zuletztText\(u\.partnerDa\), st\]/.test(html), "App: Liste, Seite, Chat-Kopf");
 }
@@ -3038,7 +3038,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/const datum = absprache \? tagDazu\(heute, HILFE_ABSPRACHE_TAGE\)/.test(auf) && /nach_absprache: absprache/.test(auf) && /txt\(p\.notiz, HILFE_NOTIZ_ZEICHEN\)/.test(auf) && /wann2 = hilfeWann\(h\)/.test(auf), "Server: Absprache + 1000 Zeichen");
   assert.ok(/const hilfeWann = \(h: any\) => h\.nach_absprache \? "nach Absprache"/.test(server) && !/leihTag\(h\.datum, h\.slot\)/.test(server.slice(server.indexOf('case "hilfe_antwort": {'), server.indexOf('case "hilfe_schliessen": {'))), "Zusage-Meldung mit hilfeWann");
   const pw = server.slice(server.indexOf('case "pinnwand": {'), server.indexOf('case "pinnwand_anheften": {'));
-  assert.ok(/hilfe: await hilfeListe\(ich\)/.test(pw) && /\.catch\(\(\) => null\)/.test(pw), "Pinnwand liefert Aufrufe aus dem vorhandenen Kern, Fehler bricht die Pinnwand nicht");
+  assert.ok((/hilfe: await hilfeListe\(ich\)/.test(pw) || (/const pHilfe = hilfeListe\(ich\)\.then\(/.test(pw) && /hilfe: await pHilfe/.test(pw))) && /\.catch\(\(\) => null\)/.test(pw), "Pinnwand liefert Aufrufe aus dem vorhandenen Kern, Fehler bricht die Pinnwand nicht");
   assert.ok(/function pwAushangHtml\(\)/.test(html) && /onclick="hilfeVonPinnwand\('\$\{a\.id\}'\)"/.test(html) && /function hilfeVonPinnwand\(id\) \{[^\n]*(HL\.oeffnen = id; (return )?hlStart\("helfen"\)|hilfeDirekt\(id\))/.test(html), "Aushang führt zum Aufruf"); // 1.93.0: Kurzansicht bzw. Formular (Test 274)
   assert.ok(/if \(HL\.tab === "helfen" && HL\.oeffnen\)/.test(html), "Aufruf nach Laden öffnen");
   assert.ok(/PW\.offen = PW\.zettel\.filter\(\(z\) => !z\.vonMir && !z\.erledigt\)\.length \+ pwHilfeNeu\(\)\.length/.test(html) && /PW_GEMELDET\.has\("hilfe:" \+ a\.id\)/.test(html), "Zählen + Start-Hinweis einmal je Aufruf");
@@ -4993,7 +4993,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/body|subject|title|variables/.test(st.replace(/\/\/[^\n]*/g, "")), "keine Inhalte (kein Text, kein Betreff)");
   assert.ok(/contains\("recipient_refs", \[\{ personId: pid \}\]\)/.test(st) && /contains\("recipient_refs", \[\{ email: mail \}\]\)/.test(st), "E-Mails über Person und Adresse");
   assert.ok(/kc_member_push_messages"\)\.select\("created_at,status,anlass,displayed_at,opened_at"\)/.test(st), "Push mit angezeigt/geöffnet");
-  assert.ok(/chatAnzahl: await chatAnzahlMit\(ich, pid\)/.test(server) && /!grs\.has\(t\) && l\.length === 2 && l\.includes\(pid\)/.test(server), "Zahl = nur der Einzelchat zwischen mir und dem Mitglied");
+  assert.ok((/chatAnzahl: await chatAnzahlMit\(ich, pid\)/.test(server) || (/\n          chatAnzahlMit\(ich, pid\)\.catch\(\(\) => null\), \/\/ KC-CLUB-NACHRICHTEN-ZAHL/.test(server) && /\n          chatAnzahl, \/\/ KC-CLUB-NACHRICHTEN-ZAHL/.test(server))) && /!grs\.has\(t\) && l\.length === 2 && l\.includes\(pid\)/.test(server), "Zahl = nur der Einzelchat zwischen mir und dem Mitglied");
   assert.ok(/nachrichten: m\.length, \/\/ KC-CLUB-NACHRICHTEN-ZAHL/.test(server) && /💬 \$\{u\.nachrichten >= 1000 \? "999\+" : u\.nachrichten\}/.test(html), "Zahl in der Chatliste");
   assert.ok(/<small class="md-zahl">\$\{m\.chatAnzahl\}/.test(html) && /ICH\?\.admin \? `<button class="knopf" onclick="nachrichtenStatistik\('\$\{m\.person_id\}'\)">/.test(html), "Mitgliederseite: Zahl + Statistik (nur Admin)");
   assert.ok(/onclick="nachrichtenStatistik\(\)">📨 Nachrichten<\/button>/.test(html) && /Je Tag/.test(html) && /Uhrzeit/.test(html) && /Die letzten 20/.test(html), "Statistik unter Nutzung mit Tagen, Uhrzeit, letzten 20");
@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7174,7 +7174,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(gesperrt\) \{\n\s*await sperreVersuchMerken\(ich\.person_id, gesperrt\.art, a\)\.catch\(\(\) => \{\}\);/.test(server), "Versuch wird gemerkt, bevor 423 kommt");
   assert.ok(/if \(Date\.now\(\) - \(SPV_ZULETZT\.get\(pid\) \?\? 0\) < 10 \* 60000\) return;/.test(server) && /await protokoll\(pid, "gesperrt_versuch", \{ art, aktion: txt\(aktion, 40\) \}\);/.test(server), "höchstens 1× je 10 Min., keine Inhalte");
   assert.ok(/if \(vf\) return \{ \.\.\.x, versuche: null \};/.test(server) && /x\.versuche == null \? "👀 Öffnungsversuche: unbekannt"/.test(programm), "unbekannt ≠ 0");
-  assert.ok(/\.\.\.\(await sperrenAktuell\(\)\)\.stumm\]\); \/\/ 2\.539\.0/.test(server), "gesperrt mit 📵 ist auch ausgegraut");
+  assert.ok(/\.\.\.\(await sperrenAktuell\(\)\)\.stumm\]\); \/\/ 2\.539\.0/.test(server) || (/Promise\.all\(\[kommunikationAus\(\)\.catch\(\(\) => new Set<string>\(\)\), sperrenAktuell\(\)\]\)/.test(server) && /\.\.\.ohneKommListen\[1\]\.stumm\]\); \/\/ 2\.539\.0/.test(server)), "gesperrt mit 📵 ist auch ausgegraut");
 }
 // 2.540.0 KC-CLUB-SPERRE-NOTPAKET + KC-CLUB-SPERRE-OFFLINE: Gesperrte ohne Notfall-Paket und ohne gespeicherten Offline-Stand
 {
@@ -7248,6 +7248,32 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;/.test(server) && /if \(\(n \?\? 0\) < FV_SCHWELLE \|\| \(schon \?\? 0\) > 0 \|\| \(heute \?\? 0\) >= FV_MAX_TAG\) return;/.test(f), "Schwelle und Drossel");
   assert.ok(/const adm = await adminIds\(\);/.test(f) && /routerSenden\("club_nachricht_push", adm,/.test(f) && !/x-forwarded-for|cf-connecting-ip/i.test(f), "Push nur an Admins, keine IP");
   assert.ok(/\["ohne_link", "link_ungueltig"\]\.includes\(fpArt\(e\?\.art\)\)/.test(server) && /google-read-aloud\/i;/.test(server), "Auslöser: ohne/ungültiger Link · Vorlesedienst ist Roboter");
+}
+// 2.593.0 KC-CLUB-GLEICHZEITIG / KC-CLUB-TIPPT-LEICHT: unabhängige Abfragen gleichzeitig; „tippt“ lädt nicht mehr den ganzen Chat
+{
+  const fall = (k) => { const i = server.indexOf(`case "${k}": {`); assert.ok(i > 0, "Fall " + k); return server.slice(i, server.indexOf("\n      case ", i + 10)); };
+  const uh = fall("unterhaltungen");
+  assert.ok(/\{ data: gr \}, archiv\] = await Promise\.all\(\[/.test(uh) && /chatArchivHolen\(ich\.person_id\), \/\/ KC-CLUB-CHAT-ARCHIV/.test(uh), "Übersicht: Gruppen + Archiv mit den Chats");
+  assert.ok(/const \[leute, \{ data: wi \}\] = await Promise\.all/.test(uh), "Übersicht: Namen + wichtig zusammen");
+  const ns = fall("nachricht_senden");
+  assert.ok(/const \[\{ data: tn \}, \{ data: th \}, \{ data: grp \}, \{ data: alleTn \}\] = await Promise\.all/.test(ns), "Senden: Empfänger, Betreff, Gruppe, Teilnehmer zusammen");
+  assert.ok(ns.indexOf('update({ hidden_at: null })') < ns.indexOf("const [{ data: tn }"), "Senden: Empfänger erst nach dem Wieder-Einblenden");
+  const mg = fall("mitglieder");
+  assert.ok(/const \[\{ data: mitgl \}, \{ data: avs \}, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen\] = await Promise\.all/.test(mg), "Mitglieder: ein Block");
+  assert.ok(/ich\.admin \? probeListe\(\)/.test(mg) && /ich\.admin \? Promise\.all\(\[/.test(mg) && /kommunikationAus\(\)\.catch/.test(mg), "Mitglieder: Admin-Teile nur für den Admin, Fehler wie bisher");
+  const pw = fall("pinnwand");
+  assert.ok(pw.indexOf("const pHilfe = hilfeListe(ich)") < pw.indexOf("pinnwandSichtbar(ich)") && /hilfe: await pHilfe/.test(pw), "Pinnwand: Hilfe von Anfang an");
+  assert.ok(pw.indexOf("kc_club_pinnwand_gelesen\").upsert") < pw.indexOf("const [{ data: gl }, aktiv, wk]"), "Pinnwand: erst eintragen, dann lesen");
+  const ka = fall("kalender");
+  assert.ok(/schulungenListe\(ich, zeitraum\.von, zeitraum\.bis\)\.catch\(\(\) => \[\]\), \/\/ KC-CLUB-SCHULUNGSTERMINE/.test(ka) && /const \[\[treffen, themen\],/.test(ka), "Kalender: Schulungen mit, Themen an den Treffen");
+  const vl = fall("vorschlaege_liste");
+  assert.ok(/vorschlaegeSitzungZuordnen\(\)\.catch\([^\n]*\)\.then\(\(\) => vorschlaegeListe\(ich\)\)/.test(vl), "Vorschläge: Liste weiter erst nach dem Zuordnen");
+  const md = fall("mitglied_details");
+  assert.ok(/const \[festnetz, \{ data: nf \}, zdPid, chatAnzahl, probeEintrag\] = await Promise\.all/.test(md) && /selbst \|\| ich\.vorstand \? db\.from\("kc_club_notfall"\)/.test(md), "Details: zusammen, Notfall-Regel unverändert");
+  const ts = fall("tippen_stand");
+  assert.ok(/await binTeilnehmer\(id, ich\.person_id\);/.test(ts) && /\.neq\("person_id", ich\.person_id\)\.gt\("bis", jetzt\(\)\)/.test(ts), "tippen_stand: nur Teilnehmer, gleiche Regeln");
+  assert.ok(/if \(s\.art === "tippt" && s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt\.laeuft\) \{ chatTakt\.laeuft = true; tippenStandHolen\(\)/.test(programm), "App: tippt → nur tippen_stand");
+  assert.ok(/try \{ r = await api\("tippen_stand", \{ id: fuer \}\); \} catch \{ return chatLaden\(false\); \}/.test(programm) && /if \(!Array\.isArray\(r\?\.tippt\) \|\| vorher !== jetzt\) return chatLaden\(false\);/.test(programm), "App: Rückfall ganz laden");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
