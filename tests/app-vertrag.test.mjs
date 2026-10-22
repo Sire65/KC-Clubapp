@@ -11996,3 +11996,15 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/"kc_club_chat_merk"/.test(html) && /\^\(kc_club_\|kc_buero_\|kc-clubapp\\\.\|kcclub\)/.test(html), "beim Verlassen der App mit allen kc_club_-Daten gelöscht");
   assert.ok(/if \(andere\.length === 1 && !MITGLIEDER\) chatMgHolen\(\)\.then\(\(\) => \{ if \(chatId === fuer && CHAT === u\) kopf\(\); \}, \(\) => \{\}\);/.test(html) && !/await mitgliederHolen\(\)\.catch\(\(\) => \{\}\);\n\s*\$\("chatKopfBild"\)/.test(html), "nicht mehr auf die Mitgliederliste warten");
 }
+
+// Datenbank 2.580.0 KC-CLUB-ZEITPLAN-VERSETZT (Wunsch Hansi): schwere Aufgaben nicht mehr alle zur vollen Stunde
+{
+  const z = lies("supabase/migrations/20261022_kc_club_v2580_zeitplan_versetzt.sql");
+  for (const [job, plan] of [["kc-club-wartung-15min", "4,19,34,49"], ["kc-club-zugangslinks-schwaerzen", "6,21,36,51"], ["kc-club-notpaket-15min", "9,24,39,54"], ["kc-termine-wartung-10min", "1,11,21,31,41,51"]])
+    assert.ok(z.includes(`jobname = '${job}'), schedule := '${plan} * * * *')`), "versetzt: " + job);
+  const minuten = [4, 19, 34, 49];
+  assert.ok(minuten.filter((m) => m < 15).length === 1, "Wartung: genau ein Lauf je Stunde mit Minute < 15 (stündliche Teile)");
+  assert.ok(/const stuendlich = new Date\(\)\.getUTCMinutes\(\) < 15/.test(server), "Wartung erkennt die Stunde an Minute < 15");
+  assert.ok(!/drop |delete |truncate|unschedule/i.test(z.replace(/--[^\n]*/g, "")), "nur Zeiten geändert");
+}
+
