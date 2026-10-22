@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12041,4 +12041,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/const CF_STAERKE = \[\{ id: "blass", t: "Blass", op: 0\.3 \}, \{ id: "mittel", t: "Mittel", op: 0\.5 \}, \{ id: "kraeftig", t: "Kräftig", op: 0\.8 \}\];/.test(html) && /🗑️ Foto als Hintergrund entfernen/.test(html), "Stärke wählbar, entfernen möglich");
   assert.ok(/foto: typeof w\?\.foto === "string" && \/\^\[0-9a-f-\]\{36\}\$\/i\.test\(w\.foto\) \? w\.foto : null, staerke: \["blass", "mittel", "kraeftig"\]\.includes\(w\?\.staerke\) \? w\.staerke : "mittel"/.test(server), "Server merkt nur Kennung + Stärke (geprüft)");
   assert.ok(/\.cf-foto-wahl \.knopf \{ width: auto; flex: 1 1 30%; min-height: 44px;/.test(ix), "große Tippflächen");
+}
+// 2.583.0 KC-CLUB-ERSTATTUNG-CSV (Wunsch Hansi „Erstattungen als CSV für die Excel-Tabelle des Kassierers“)
+{
+  const mig = lies("supabase/migrations/20261022_kc_club_erstattung_export.sql");
+  assert.ok(/add column if not exists exportiert_am timestamptz/.test(mig) && /add column if not exists exportiert_von text/.test(mig), "Merker „übernommen“");
+  assert.ok(/case "erstattung_export": \{\n\s*nurLeitung\(ich\);/.test(server) && /case "erstattung_export_markieren": \{\n\s*nurLeitung\(ich\);/.test(server), "nur Clubleitung");
+  assert.ok(/\.neq\("status", "abgelehnt"\)/.test(server.slice(server.indexOf('case "erstattung_export": {'))) && /if \(p\.nurNeu === true\) q = q\.is\("exportiert_am", null\);/.test(server), "ohne Abgelehnte; „Nur neue“");
+  assert.ok(/return "\\uFEFF" \+ zeilen\.join\("\\r\\n"\) \+ "\\r\\n";/.test(server) && /const ersCsvZeile = \(felder: string\[\]\) => felder\.join\(";"\);/.test(server), "Excel: BOM, Semikolon, CRLF");
+  assert.ok(/if \(\/\^\[=\+\\-@\\t\]\/\.test\(t\)\) t = "'" \+ t;/.test(server), "keine Formeln einschleusen");
+  assert.ok(/toFixed\(st\)\.replace\("\.", ","\)/.test(server) && /i === 0 \? ersCsvZahl\(a\.summe\) : ""/.test(server), "Dezimalkomma; Antragssumme nur einmal je Antrag");
+  assert.ok(/\.update\(\{ exportiert_am: jetzt\(\), exportiert_von: ich\.person_id \}\)\.in\("id", ids\)\.is\("exportiert_am", null\)/.test(server), "markiert nur einmal, nichts überschrieben");
+  assert.ok(/onclick="ersCsvOeffnen\(\)">📊 Erstattungen für Excel \(CSV\)<\/button>/.test(html) && /\["neu", "🆕 Nur neue \(noch nicht übernommen\)"\]/.test(html) && /\["position", "Je Position \(ausführlich\)"\], \["antrag", "Je Antrag \(eine Zeile\)"\]/.test(html), "Auswahl statt Freitext");
+  assert.ok(/navigator\.share\(\{ files: \[datei\], title: "Erstattungen \(CSV\)" \}\)/.test(html) && /a\.download = datei\.name/.test(html), "teilen oder speichern");
 }

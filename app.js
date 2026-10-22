@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.582.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.583.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28858,7 +28858,56 @@ function buEingangHtml() {
     <div class="karte bu-gruss"><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner. Es bleibt hier, bis es erledigt ist; mit 🗄️ Ablegen in einen oder mehrere Ordner legen (auch in den Ordner des Mitglieds).</span></div>
     ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : !zeig.length && P.length ? '<div class="karte hinweis">Zu diesem Filter liegt nichts im Eingang – <button class="knopf klein" onclick="ekfLeeren()">↺ Alle zeigen</button></div>' : P.length ? `<div class="karte" style="padding:4px 12px">${zeig.map(([x, i]) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
       <span class="txt"><small>${esc(x.gruppe)}</small><b>${esc(x.titel)}</b><small>${esc(x.unter)}</small></span><span class="pfeil">›</span></button>`).join("")}</div>` : '<div class="karte hinweis">📭 Alles erledigt – im Eingang liegt nichts 👍</div>'}
-    <div class="knoepfe"><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+    <div class="knoepfe"><button class="knopf" onclick="ersCsvOeffnen()">📊 Erstattungen für Excel (CSV)</button><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+}
+// ---------- 2.583.0 KC-CLUB-ERSTATTUNG-CSV (Wunsch Hansi „Erstattungen als CSV, damit der Kassierer sie in seine Excel-Tabelle übernehmen kann“) ----------
+// Alles per Auswahl (kein Freitext): was (nur neue / alle im Zeitraum), Zeitraum, Status, Form (je Position / je Antrag). Die Datei rechnet der Server
+// (deutsches Excel: Semikolon, Dezimalkomma, Umlaute). Danach: teilen (z. B. per Mail an sich selbst) oder speichern – und auf Wunsch als
+// „übernommen“ markieren, damit „Nur neue“ beim nächsten Mal nichts doppelt liefert.
+const ERS_CSV = { was: "neu", zeit: "alles", status: "alle", form: "position", erg: null };
+function ersCsvZeitraum(z) {
+  const h = heuteIso(), j = +h.slice(0, 4), m = +h.slice(5, 7), mm = (n) => String(n).padStart(2, "0"), ende = (jj, mo) => `${jj}-${mm(mo)}-${mm(new Date(Date.UTC(jj, mo, 0)).getUTCDate())}`;
+  if (z === "monat") return { von: `${j}-${mm(m)}-01`, bis: ende(j, m) };
+  if (z === "vormonat") { const jj = m === 1 ? j - 1 : j, mo = m === 1 ? 12 : m - 1; return { von: `${jj}-${mm(mo)}-01`, bis: ende(jj, mo) }; }
+  if (z === "jahr") return { von: `${j}-01-01`, bis: `${j}-12-31` };
+  if (z === "vorjahr") return { von: `${j - 1}-01-01`, bis: `${j - 1}-12-31` };
+  return { von: "", bis: "" };
+}
+function ersCsvOeffnen() { ERS_CSV.erg = null; ersCsvZeichnen(); }
+function ersCsvZeichnen() {
+  const w = (feld, liste) => `<div class="ecsv-wahl">${liste.map(([id, t]) => `<button type="button" class="knopf klein${ERS_CSV[feld] === id ? " haupt" : ""}" data-f="${feld}" data-w="${id}">${t}</button>`).join("")}</div>`;
+  const e = ERS_CSV.erg;
+  blattAuf("ersCsvBlatt", `<h3 style="margin:0">📊 Erstattungen für Excel</h3>
+    <p class="hinweis" style="margin:4px 0 10px">Erstellt eine CSV-Datei, die Excel direkt öffnet (Spalten, Beträge und Umlaute passen). Abgelehnte Anträge kommen nicht mit.</p>
+    <h4 class="cf-h">Welche Anträge?</h4>${w("was", [["neu", "🆕 Nur neue (noch nicht übernommen)"], ["alle", "📋 Alle im Zeitraum"]])}
+    <h4 class="cf-h">Zeitraum (eingereicht)</h4>${w("zeit", [["alles", "Alle"], ["monat", "Dieser Monat"], ["vormonat", "Letzter Monat"], ["jahr", "Dieses Jahr"], ["vorjahr", "Letztes Jahr"]])}
+    <h4 class="cf-h">Status</h4>${w("status", [["alle", "Offen + erstattet"], ["erstattet", "Nur erstattet"], ["eingereicht", "Nur offen"]])}
+    <h4 class="cf-h">Aufbau</h4>${w("form", [["position", "Je Position (ausführlich)"], ["antrag", "Je Antrag (eine Zeile)"]])}
+    ${e ? `<div class="karte" style="margin-top:12px">${e.anzahl ? `<b>${e.anzahl} ${e.anzahl === 1 ? "Antrag" : "Anträge"}</b> · ${e.positionen} Positionen · Summe ${esc(e.summe.toFixed(2).replace(".", ","))} €${e.schonUebernommen ? `<br><small class="hinweis">Davon ${e.schonUebernommen} schon früher übernommen.</small>` : ""}
+      <div class="knoepfe" style="margin-top:8px"><button type="button" class="knopf haupt" data-k="teilen">📤 Teilen (z. B. per Mail)</button><button type="button" class="knopf" data-k="speichern">⬇️ Speichern</button></div>`
+      : "📭 Keine Anträge zu dieser Auswahl."}</div>` : ""}
+    <div class="knoepfe" style="margin-top:12px"><button type="button" class="knopf${e ? "" : " haupt"}" data-k="erstellen">📊 CSV erstellen</button><button type="button" class="knopf" onclick="$('ersCsvBlatt').remove()">Schließen</button></div>`);
+  const f = $("ersCsvBlatt");
+  f.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => { ERS_CSV[b.dataset.f] = b.dataset.w; ERS_CSV.erg = null; ersCsvZeichnen(); }));
+  f.querySelector('[data-k="erstellen"]').onclick = ersCsvErstellen;
+  f.querySelector('[data-k="teilen"]')?.addEventListener("click", () => ersCsvAusgeben(true));
+  f.querySelector('[data-k="speichern"]')?.addEventListener("click", () => ersCsvAusgeben(false));
+}
+async function ersCsvErstellen() {
+  const { von, bis } = ersCsvZeitraum(ERS_CSV.zeit);
+  try { ERS_CSV.erg = await api("erstattung_export", { nurNeu: ERS_CSV.was === "neu", von, bis, status: ERS_CSV.status, form: ERS_CSV.form }, { warten: true }); ersCsvZeichnen(); }
+  catch (e) { meldeFehler(e); }
+}
+async function ersCsvAusgeben(teilen) {
+  const e = ERS_CSV.erg; if (!e?.csv) return;
+  const datei = new File([e.csv], `Erstattungen_${heuteIso()}.csv`, { type: "text/csv" });
+  let ok = false;
+  if (teilen) { try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Erstattungen (CSV)" }); ok = true; } } catch (x) { if (x?.name === "AbortError") return; } }
+  if (!ok) { const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 CSV gespeichert – in Excel öffnen"); }
+  const neu = e.anzahl - (e.schonUebernommen || 0);
+  if (neu > 0 && (await frage(`${neu} ${neu === 1 ? "Antrag" : "Anträge"} als „in Excel übernommen“ markieren?\n\nDann kommen sie bei „Nur neue“ nicht noch einmal.`))) {
+    try { const r = await api("erstattung_export_markieren", { ids: e.ids }, { warten: true }); melde(`✅ ${r.markiert} als übernommen markiert`); ERS_CSV.erg = null; ersCsvZeichnen(); } catch (x) { meldeFehler(x); }
+  }
 }
 // ---------- KC-CLUB-EINGANG-FILTER (2.23.39, Wunsch Hansi): Eingang filtern nach Jahr, Monat, Art, Name – wie bei den Protokollen ----------
 // Auswahl nur aus dem, was gerade im Eingang liegt (keine Tipparbeit). ✕ schließt das Feld, die Auswahl bleibt (Zahl am 🔽).

@@ -127,7 +127,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.582.0";
+const SERVER_VERSION = "2.583.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2028,6 +2028,41 @@ function ersPosText(x: any, kurz = false) {
 }
 // Kaution zählt nicht zur Summe (geht an Mitglied bzw. Club zurück); erst eine verfallene Kaution aus eigenem Geld wird erstattet.
 const ersZaehlt = (x: any) => x.art !== "kaution" || (x.kaution_status === "verfallen" && x.bezahlt_aus !== "vorschuss");
+// ---------- 2.583.0 KC-CLUB-ERSTATTUNG-CSV (Wunsch Hansi „Erstattungen als CSV für die Excel-Tabelle des Kassierers“) ----------
+// Für deutsches Excel: Semikolon, Dezimalkomma, Datum TT.MM.JJJJ, UTF-8 mit BOM (Umlaute), Zeilenende CRLF. Texte, die mit = + - @ beginnen,
+// bekommen ein ' davor (sonst hält Excel sie für Formeln). Beträge ohne „€“, damit Excel mit ihnen rechnen kann.
+const ersCsvText = (v: unknown) => { let t = String(v ?? "").replace(/\r?\n/g, " ").trim(); if (/^[=+\-@\t]/.test(t)) t = "'" + t; return /[;"]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+const ersCsvZahl = (n: unknown, st = 2) => (Number.isFinite(Number(n)) && n !== null && n !== "" ? Number(n).toFixed(st).replace(".", ",") : "");
+const ersCsvTag = (iso: unknown) => { const t = String(iso || ""); if (!t) return ""; const d = /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : berlinTag(new Date(t)); return d.split("-").reverse().join("."); };
+const ERS_CSV_STATUS: Record<string, string> = { eingereicht: "offen", erstattet: "erstattet" };
+const ersCsvZeile = (felder: string[]) => felder.join(";");
+function ersCsv(antraege: any[], name: (id: string) => string, form: "position" | "antrag") {
+  const zeilen: string[] = [];
+  const auszahl = (a: any) => { const w = a.status === "erstattet" ? a.ausgezahlt || a.auszahlung : a.auszahlung; return w === "bar" ? "bar" : "Überweisung"; };
+  const nr = (a: any) => "E-" + String(a.id).slice(0, 8).toUpperCase();
+  const rest = (a: any) => Math.round((Number(a.summe || 0) - Number(a.vorschuss || 0)) * 100) / 100;
+  if (form === "antrag") {
+    zeilen.push(ersCsvZeile(["Antrag", "Eingereicht am", "Mitglied", "Status", "Auszahlung", "Erledigt am", "Positionen", "Arten", "Summe", "Vorschuss", "Auszahlbetrag (minus = Rückzahlung an den Club)", "Bemerkung"]));
+    for (const a of antraege) {
+      const pos = (a.positionen ?? []) as any[];
+      zeilen.push(ersCsvZeile([ersCsvText(nr(a)), ersCsvTag(a.erstellt_am), ersCsvText(name(a.person_id)), ersCsvText(ERS_CSV_STATUS[a.status] || a.status), ersCsvText(auszahl(a)), ersCsvTag(a.erledigt_am),
+        String(pos.length), ersCsvText([...new Set(pos.map((x) => ERS_NAME[x.art] || "Auslage"))].join(", ")), ersCsvZahl(a.summe), ersCsvZahl(a.vorschuss || 0), ersCsvZahl(rest(a)), ersCsvText(a.bemerkung)]));
+    }
+  } else {
+    zeilen.push(ersCsvZeile(["Antrag", "Eingereicht am", "Mitglied", "Status", "Auszahlung", "Erledigt am", "Pos.", "Datum", "Art", "Beschreibung", "Geschäft / Ziel", "km", "km-Satz",
+      "Betrag", "Zählt zur Summe", "Beleg", "Einsatz", "Antragssumme", "Vorschuss", "Auszahlbetrag (minus = Rückzahlung an den Club)", "Bemerkung"]));
+    for (const a of antraege) {
+      const pos = (a.positionen ?? []) as any[];
+      pos.forEach((x, i) => zeilen.push(ersCsvZeile([ersCsvText(nr(a)), ersCsvTag(a.erstellt_am), ersCsvText(name(a.person_id)), ersCsvText(ERS_CSV_STATUS[a.status] || a.status), ersCsvText(auszahl(a)), ersCsvTag(a.erledigt_am),
+        String(i + 1), ersCsvTag(x.datum), ersCsvText(ERS_NAME[x.art] || "Auslage"), ersCsvText(x.art === "fahrt" ? x.grund : x.was), ersCsvText(x.art === "fahrt" ? x.ziel : x.geschaeft),
+        x.art === "fahrt" ? ersCsvZahl(x.km, 1) : "", x.art === "fahrt" ? ersCsvZahl(x.satz) : "", ersCsvZahl(x.betrag),
+        ersZaehlt(x) ? "ja" : "nein (Kaution " + (ERS_KAUTION[x.kaution_status] || "offen") + ")", ersCsvText(x.beleg_status ? ERS_BELEG[x.beleg_status] : x.belege?.length ? "Beleg anbei" : ""), ersCsvText(x.sonder_titel),
+        // Summen nur in der ersten Zeile eines Antrags – sonst zählt Excel sie beim Zusammenrechnen mehrfach
+        i === 0 ? ersCsvZahl(a.summe) : "", i === 0 ? ersCsvZahl(a.vorschuss || 0) : "", i === 0 ? ersCsvZahl(rest(a)) : "", i === 0 ? ersCsvText(a.bemerkung) : ""])));
+    }
+  }
+  return "\uFEFF" + zeilen.join("\r\n") + "\r\n";
+}
 const ersSumme = (pos: any[]) => Math.round(pos.filter(ersZaehlt).reduce((a, x) => a + Number(x.betrag || 0), 0) * 100) / 100;
 // KC-CLUB-KMSATZ (0.39.0): Sätze mit „gilt ab“ – für eine Fahrt gilt der letzte Satz, dessen Datum nicht nach der Fahrt liegt
 type KmSatz = { id: string; satz: number; ab: string };
@@ -13006,6 +13041,33 @@ Köcheclub Werne`,
         if (p.kaution === "verfallen") await sendenGewaehlt("club_nachricht", [a.person_id], ["push"], { titel: "🔐 Kaution wird erstattet", kurz: `${euro(Number(x.betrag))} · ${x.was || ""}`,
           betreff: "Köcheclub Werne – Kaution wird erstattet", text: `Die Kaution (${x.was || ""}, ${euro(Number(x.betrag))}) kam nicht zurück und wird dir erstattet.`, url: APP_URL + "#erstattung" }, `club-kaution:${a.id}:${i}`).catch(() => null);
         return json({ ok: true, summe, position: x });
+      }
+
+      // ----- 2.583.0 KC-CLUB-ERSTATTUNG-CSV: Erstattungen als CSV für Excel (nur Clubleitung, nur lesen + Merker „übernommen“) -----
+      case "erstattung_export": {
+        nurLeitung(ich);
+        const von = isoTag(p.von), bis = isoTag(p.bis), form = p.form === "antrag" ? "antrag" : "position";
+        const status = p.status === "eingereicht" || p.status === "erstattet" ? p.status : "alle";
+        let q = db.from("kc_club_erstattung").select("id,person_id,positionen,summe,auszahlung,ausgezahlt,bemerkung,status,erstellt_am,erledigt_am,vorschuss,exportiert_am").neq("status", "abgelehnt");
+        if (status !== "alle") q = q.eq("status", status);
+        if (p.nurNeu === true) q = q.is("exportiert_am", null);
+        const { data, error } = await q.order("erstellt_am").limit(2000);
+        if (error) throw new Fehler("Erstattungen konnten nicht geladen werden – bitte noch einmal versuchen.", 500);
+        const liste = (data ?? []).filter((a: any) => { const t = berlinTag(new Date(a.erstellt_am)); return (!von || t >= von) && (!bis || t <= bis); });
+        const leute = await personen(liste.map((a: any) => a.person_id));
+        const csv = ersCsv(liste, (id) => leute.get(id)?.display_name || id, form);
+        await protokoll(ich.person_id, "erstattung_csv", { antraege: liste.length, form, status, nurNeu: p.nurNeu === true, von: von || null, bis: bis || null });
+        return json({ csv, anzahl: liste.length, positionen: liste.reduce((n: number, a: any) => n + (a.positionen ?? []).length, 0), summe: Math.round(liste.reduce((n: number, a: any) => n + Number(a.summe || 0), 0) * 100) / 100,
+          ids: liste.map((a: any) => a.id), schonUebernommen: liste.filter((a: any) => a.exportiert_am).length });
+      }
+      case "erstattung_export_markieren": {
+        nurLeitung(ich);
+        const ids = (Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 2000);
+        if (!ids.length) return json({ ok: true, markiert: 0 });
+        const { data, error } = await db.from("kc_club_erstattung").update({ exportiert_am: jetzt(), exportiert_von: ich.person_id }).in("id", ids).is("exportiert_am", null).select("id");
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        await protokoll(ich.person_id, "erstattung_csv_uebernommen", { antraege: (data ?? []).length });
+        return json({ ok: true, markiert: (data ?? []).length });
       }
 
       case "erstattung_erledigen": {

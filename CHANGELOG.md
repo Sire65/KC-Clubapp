@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.583.0 – 2026-10-22 – Erstattungen als CSV für Excel (KC-CLUB-ERSTATTUNG-CSV)
+Im Büro-Eingang gibt es für die Clubleitung „📊 Erstattungen für Excel (CSV)“: Auswahl nach Zeitraum, Status und Aufbau (je Position oder je Antrag), teilen oder speichern. Übernommene Anträge können markiert werden, damit „Nur neue“ nichts doppelt liefert.
+
 ## 2.582.0 – 2026-10-22 – Eigenes Foto als Chat-Hintergrund (KC-CLUB-CHAT-HG-FOTO)
 Unter 🎨 Chat-Farben kann jetzt auch ein eigenes Foto als Hintergrund gewählt werden – aus der Galerie, direkt mit der Kamera oder als Datei. Stärke wählbar (blass, mittel, kräftig), damit die Nachrichten gut lesbar bleiben.
 
