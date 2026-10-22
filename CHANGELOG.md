@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.600.0 – 2026-10-22 – 💬 Startnachricht mit Antworten „Ja · Später · Nein“ (KC-CLUB-STARTNACHRICHT-ANTWORT)
+Wunsch Hansi („auch bei Marianne und Reinhilde – mit ja, nein, später usw“).
+- 📣 Startnachricht verfassen: neuer Haken „💬 Antworten ✅ Ja · ⏰ Später · ✖ Nein anbieten“ – statt nur „gelesen“.
+- Empfänger: ✅ Ja (mit Knopf-Ziel gleich dorthin, z. B. „Mein Bild wählen“), ⏰ Später (Fenster kommt nach 24 Std. wieder), ✖ Nein, danke. ↩️ Rückfrage bleibt.
+- Absender sieht unter „Gesendet“ je Person ✅ Ja / ✖ Nein bzw. „⏰ später – kommt wieder …“.
+- Ältere Apps zeigen wie bisher „gelesen bestätigen“.
+- Test: Vertragstest-Block 2.600.0. Rückweg: App/Server 2.599.0.
+
 ## 2.599.0 – 2026-10-22 – 📣 Startnachricht mit Knopf zu einer Stelle der App (KC-CLUB-STARTNACHRICHT-SPRUNG)
 Wunsch Hansi für Dieter („möchtest du dir einen Avatar zulegen … Taste, damit er direkt dort hinkommt“).
 - 📣 Startnachricht verfassen: neue Auswahl „🔘 Knopf zu einer Stelle der App“ – Ziele aus der bekannten Sprung-Liste (z. B. 🧑‍🍳 Mein Bild wählen, 🗓️ Mein Dienst, 📝 Dienstwünsche), nur Ziele, die alle schon haben.

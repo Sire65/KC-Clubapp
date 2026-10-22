@@ -129,7 +129,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.599.0";
+const SERVER_VERSION = "2.600.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12656,7 +12656,7 @@ Köcheclub-App`,
         const { data: vorher } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", SN_SCHLUESSEL).in("person_id", ziel);
         const vm = new Map((vorher ?? []).map((x: any) => [x.person_id, snListe(x.wert)]));
         const knopf = p.knopf === "push" ? "push" : /^zu:[a-z]{2,20}$/.test(String(p.knopf ?? "")) ? String(p.knopf) : null; // Knopf im Fenster: „🔔 Benachrichtigungen jetzt einschalten“ (Fall Dieter); 2.599.0 KC-CLUB-STARTNACHRICHT-SPRUNG: „zu:<Ziel>“ = Sprung-Knopf (Ziele prüft die App)
-        const eintrag = { id, von: ich.person_id, vonName: ich.name, text, wichtig, am, ...(knopf ? { knopf } : {}) };
+        const eintrag = { id, von: ich.person_id, vonName: ich.name, text, wichtig, am, ...(knopf ? { knopf } : {}), ...(p.wahl ? { wahl: true } : {}) }; // 2.600.0: wahl = Ja/Später/Nein
         const zeilen = ziel.map((pid) => ({ person_id: pid, schluessel: SN_SCHLUESSEL, geaendert_am: am,
           wert: { liste: [eintrag, ...(vm.get(pid) ?? []).filter((x: any) => !x.gelesen_am || Date.parse(x.gelesen_am) > alt)].slice(0, SN_MAX_JE_PERSON) } }));
         const { error } = await db.from("kc_club_person_einstellung").upsert(zeilen, { onConflict: "person_id,schluessel" });
@@ -12673,10 +12673,19 @@ Köcheclub-App`,
         const { data: z } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", SN_SCHLUESSEL).maybeSingle();
         const liste = snListe(z?.wert), e = liste.find((x: any) => x.id === id);
         if (!e) throw new Fehler("Nachricht nicht gefunden.", 404);
+        // 2.600.0 KC-CLUB-STARTNACHRICHT-ANTWORT: „spaeter“ = noch nicht gelesen, kommt nach 24 Std. wieder; „ja“/„nein“ = gelesen + Antwort
+        const antwort = ["ja", "nein", "spaeter"].includes(p.antwort) ? String(p.antwort) : null;
+        if (antwort === "spaeter" && !e.gelesen_am) {
+          e.spaeter_bis = new Date(Date.now() + 24 * 3600000).toISOString(); e.spaeter_anzahl = (Number(e.spaeter_anzahl) || 0) + 1;
+          await db.from("kc_club_person_einstellung").update({ wert: { liste }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", SN_SCHLUESSEL);
+          await protokoll(ich.person_id, "startnachricht_spaeter", { id, von: e.von, anzahl: e.spaeter_anzahl });
+          return json({ ok: true, von: e.von, spaeter_bis: e.spaeter_bis });
+        }
+        if (antwort === "ja" || antwort === "nein") { e.antwort = antwort; e.antwort_am = jetzt(); }
         if (!e.gelesen_am) e.gelesen_am = jetzt();
         if (rueckfrage) { e.rueckfrage = rueckfrage; e.rueckfrage_am = jetzt(); }
         await db.from("kc_club_person_einstellung").update({ wert: { liste }, geaendert_am: jetzt() }).eq("person_id", ich.person_id).eq("schluessel", SN_SCHLUESSEL);
-        await protokoll(ich.person_id, "startnachricht_gelesen", { id, von: e.von, rueckfrage: !!rueckfrage });
+        await protokoll(ich.person_id, "startnachricht_gelesen", { id, von: e.von, rueckfrage: !!rueckfrage, antwort });
         return json({ ok: true, von: e.von });
       }
 
@@ -12691,7 +12700,7 @@ Köcheclub-App`,
           if (!ich.admin && e.von !== ich.person_id) continue; // Admin sieht alle, die Ämter nur ihre eigenen
           const s = je.get(e.id) ?? { id: e.id, von: e.vonName || e.von, text: e.text, wichtig: !!e.wichtig, am: e.am, empfaenger: [] as any[] };
           const x = pm.get(z.person_id);
-          s.empfaenger.push({ person_id: z.person_id, name: x ? x.display_name || vorname(x) : z.person_id, gelesen_am: e.gelesen_am || null, rueckfrage: e.rueckfrage || null });
+          s.empfaenger.push({ person_id: z.person_id, name: x ? x.display_name || vorname(x) : z.person_id, gelesen_am: e.gelesen_am || null, rueckfrage: e.rueckfrage || null, antwort: e.antwort || null, spaeter_bis: e.gelesen_am ? null : e.spaeter_bis || null });
           je.set(e.id, s);
         }
         const liste = [...je.values()].sort((x, y) => String(y.am).localeCompare(String(x.am))).slice(0, 30);
