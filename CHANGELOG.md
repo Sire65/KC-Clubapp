@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.589.0 – 2026-10-22 – Info-Feld: ganze Nachricht beim Antippen
+Meldungen im Info-Feld ohne eigenes Ziel (z. B. „Uhr zurückstellen“) öffnen beim Antippen jetzt die ganze Nachricht zum Lesen (KC-CLUB-INFO-LESEN).
+
 ## 2.588.0 – 2026-10-22 – CSV-Knopf auch unter Erstattung
 Die Clubleitung findet den Knopf „📊 CSV für Excel erstellen“ jetzt auch oben auf der Seite „Erstattung“ (zusätzlich zu Büro → Eingang).
 

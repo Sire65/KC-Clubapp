@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.588.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.589.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25610,9 +25610,10 @@ function ilZeitumstellung() {
     const d = Math.round((Date.parse(so) - Date.parse(h)) / 86400000);
     if (d < 0 || d > 3) continue;
     const um = winter ? "zurückstellen" : "vorstellen", wie = winter ? "um 3 Uhr wird es wieder 2 Uhr" : "um 2 Uhr wird es gleich 3 Uhr";
-    if (d >= 2) return { id: "zeit:" + so + ":vor", stufe: "weiss", sym: "🕑", t: `In der Nacht zum Sonntag: Uhr ${um}`, u: `${winter ? "Winterzeit" : "Sommerzeit"} – ${wie}` };
-    if (d === 1) return { id: "zeit:" + so + ":heute", stufe: "gold", sym: "🕑", t: `Heute Nacht: Uhr ${um}`, u: winter ? "Eine Stunde länger schlafen 😴 – das Handy stellt sich selbst um" : "Eine Stunde weniger Schlaf ⏰ – das Handy stellt sich selbst um" };
-    return { id: "zeit:" + so + ":seit", stufe: "weiss", sym: "🕑", t: `Seit heute Nacht ${winter ? "Winterzeit" : "Sommerzeit"}`, u: "Backofen-, Auto- und Wanduhren schon umgestellt?" };
+    const lang = `In der Nacht zum Sonntag, ${so.slice(8)}.${so.slice(5, 7)}., wird die Uhr eine Stunde ${winter ? "zurückgestellt" : "vorgestellt"}: ${wie}. Handy und Computer stellen sich von selbst um – Backofen-, Mikrowellen-, Auto- und Wanduhren musst du selbst umstellen.`; // 2.589.0 KC-CLUB-INFO-LESEN
+    if (d >= 2) return { id: "zeit:" + so + ":vor", stufe: "weiss", sym: "🕑", t: `In der Nacht zum Sonntag: Uhr ${um}`, u: `${winter ? "Winterzeit" : "Sommerzeit"} – ${wie}`, lang };
+    if (d === 1) return { id: "zeit:" + so + ":heute", stufe: "gold", sym: "🕑", t: `Heute Nacht: Uhr ${um}`, u: winter ? "Eine Stunde länger schlafen 😴 – das Handy stellt sich selbst um" : "Eine Stunde weniger Schlaf ⏰ – das Handy stellt sich selbst um", lang };
+    return { id: "zeit:" + so + ":seit", stufe: "weiss", sym: "🕑", t: `Seit heute Nacht ${winter ? "Winterzeit" : "Sommerzeit"}`, u: "Backofen-, Auto- und Wanduhren schon umgestellt?", lang };
   }
   return null;
 }
@@ -25752,7 +25753,7 @@ function ilTerminLink(id) { const l = (INIT?.laufbandTermine || []).find((x) => 
 function ilHtml(m) {
   const k = (m.knoepfe || []).map(([t, f, kl]) => `<button type="button" class="il-knopf${kl || ""}" onclick="event.stopPropagation();${f}">${esc(t)}</button>`).join("");
   // m.stand = fertiges HTML (nur aus eigenen, mit esc gebauten Teilen): steht neben den Knöpfen bzw. als dritte Zeile
-  return `<span class="il-sym" aria-hidden="true">${m.sym}</span><span class="il-text"><b>${esc(m.t)}</b>${m.u ? `<small>${esc(m.u)}</small>` : ""}${m.stand && !k ? `<small class="il-stand">${m.stand}</small>` : ""}</span>${k ? `<span class="il-knoepfe">${k}${m.stand ? `<span class="il-stand">${m.stand}</span>` : ""}</span>` : m.auf ? '<span class="il-pfeil" aria-hidden="true">›</span>' : ""}`
+  return `<span class="il-sym" aria-hidden="true">${m.sym}</span><span class="il-text"><b>${esc(m.t)}</b>${m.u ? `<small>${esc(m.u)}</small>` : ""}${m.stand && !k ? `<small class="il-stand">${m.stand}</small>` : ""}</span>${k ? `<span class="il-knoepfe">${k}${m.stand ? `<span class="il-stand">${m.stand}</span>` : ""}</span>` : '<span class="il-pfeil" aria-hidden="true">›</span>'}` // 2.589.0: jede Meldung lässt sich antippen
     + (m.ohneAus ? "" : `<button type="button" class="il-zu" title="Für heute ausblenden" aria-label="Für heute ausblenden" onclick="event.stopPropagation();ilAusblenden('${esc(m.id)}')">✕</button>`);
 }
 function ilZeigen() {
@@ -25762,17 +25763,25 @@ function ilZeigen() {
   const s = IL.liste.map((m) => m.id + m.t).join("|"); if (s !== IL.schluessel) { IL.schluessel = s; const j = IL.liste.findIndex((m) => m.id === alt); IL.i = j >= 0 ? j : 0; }
   if (IL.i >= IL.liste.length) IL.i = 0;
   const m = IL.liste[IL.i]; if (!m) return;
-  const kl = `il il-${m.stufe}${m.auf ? " il-klick" : ""}`, html = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}${m.voll ? " il-voll" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
+  const kl = `il il-${m.stufe} il-klick`, html = `<div class="il-inhalt${m.knoepfe ? " mit-knopf" : ""}${m.voll ? " il-voll" : ""}" role="button" tabindex="0">${ilHtml(m)}</div>`
     + (IL.liste.length > 1 ? `<div class="il-punkte" aria-hidden="true">${IL.liste.map((_, i) => `<i${i === IL.i ? ' class="an"' : ""}></i>`).join("")}</div>` : "");
   if (b.firstElementChild && IL.html === kl + html) return; // unverändert → nicht neu zeichnen (sonst stockt die Wisch-Animation)
   IL.html = kl + html; b.className = kl; b.innerHTML = html;
   const inh = b.firstElementChild;
-  inh.onclick = () => { if (Date.now() - IL.gewischt < 400) return; if (m.auf) { try { new Function(m.auf)(); } catch {} } };
-  inh.onkeydown = (e) => { if ((e.key === "Enter" || e.key === " ") && m.auf) { e.preventDefault(); inh.onclick(); } };
+  // 2.589.0 KC-CLUB-INFO-LESEN (Fund Hansi: „Uhrenumstellung mit … – beim Antippen öffnet sich nix“): Meldungen ohne eigenes Ziel öffnen beim Antippen die ganze Nachricht
+  inh.onclick = () => { if (Date.now() - IL.gewischt < 400) return; if (m.auf) { try { new Function(m.auf)(); } catch {} } else ilLesen(m); };
+  inh.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inh.onclick(); } };
   if (!b.dataset.il) { b.dataset.il = "1"; // wischen blättert, berühren hält an
     b.addEventListener("pointerdown", (e) => { IL.halt = Date.now() + 9000; IL.x0 = e.clientX; }, { passive: true });
     b.addEventListener("pointerup", (e) => { if (IL.x0 == null) return; const dx = e.clientX - IL.x0; IL.x0 = null; if (Math.abs(dx) > 40) { IL.gewischt = Date.now(); IL.uhr = 0; ilBlaettern(dx < 0 ? 1 : -1); } }, { passive: true });
   }
+}
+function ilLesen(m) { // 2.589.0 KC-CLUB-INFO-LESEN: ganzer Text einer Info-Meldung (nichts abgeschnitten)
+  IL.halt = Date.now() + 9000;
+  const f = blattAuf("ilLesenBlatt", `<div style="display:flex;gap:12px;align-items:flex-start"><span style="font-size:2rem;line-height:1" aria-hidden="true">${m.sym}</span>
+    <div style="flex:1;min-width:0"><h3 style="margin:0 0 6px">${esc(m.t)}</h3>${m.u ? `<p style="margin:0 0 6px">${esc(m.u)}</p>` : ""}${m.lang ? `<p style="margin:0 0 6px">${esc(m.lang)}</p>` : ""}</div></div>
+    <div class="knoepfe" style="margin-top:10px"><button type="button" class="knopf haupt" data-il="ok">Alles klar</button></div>`);
+  f.querySelector("[data-il=ok]").onclick = () => fensterZu(f);
 }
 function ilBlaettern(r) {
   if (!IL.liste.length) return; IL.i = (IL.i + r + IL.liste.length) % IL.liste.length;

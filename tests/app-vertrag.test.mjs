@@ -12080,3 +12080,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   assert.ok(/<div id="ersLeitung"><\/div>/.test(lies("index.html")) && /\$\("ersLeitung"\)\.innerHTML = ICH\?\.vorstand \|\| ICH\?\.admin \? [^\n]*onclick="ersCsvOeffnen\(\)">📊 CSV für Excel erstellen<\/button>/.test(html), "Knopf unter Erstattung, nur Clubleitung");
 }
+// 2.589.0 KC-CLUB-INFO-LESEN: Info-Meldungen ohne eigenes Ziel (z. B. Zeitumstellung) öffnen beim Antippen den ganzen Text
+{
+  assert.ok(/if \(m\.auf\) \{ try \{ new Function\(m\.auf\)\(\); \} catch \{\} \} else ilLesen\(m\);/.test(html), "Antippen ohne Ziel → ganze Nachricht");
+  assert.ok(/function ilLesen\(m\) \{[\s\S]{0,400}esc\(m\.t\)[\s\S]{0,120}esc\(m\.u\)[\s\S]{0,120}esc\(m\.lang\)/.test(html), "Blatt zeigt Titel, Unterzeile und Langtext escaped");
+  assert.ok(/const lang = `In der Nacht zum Sonntag/.test(html) && (html.match(/, lang \};/g) || []).length === 3, "Zeitumstellung mit ausführlichem Text");
+}
