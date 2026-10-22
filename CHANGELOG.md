@@ -1,5 +1,11 @@
 # Änderungen
 
+## Datenbank 2.580.0 – 2026-10-22 (ohne App-/Server-Build) – ⏰ Wartungsaufgaben versetzt statt alle zur vollen Stunde (KC-CLUB-ZEITPLAN-VERSETZT)
+Wunsch Hansi („ja“ zum Vorschlag): Hansis App-Start um 06:00 Uhr brauchte am Server 8,4 s statt 0,6 s – zur vollen Stunde liefen ~17 Zeitplaner-Aufgaben gleichzeitig an (alle Start-Teile 4–13× langsamer).
+- Die schweren Aufgaben der Club-App laufen jetzt versetzt, gleich oft wie bisher: Wartung :04/:19/:34/:49 (stündliche Teile weiter einmal je Stunde, Minute < 15), Zugangslinks schwärzen :06/:21/:36/:51, Notfall-Paket :09/:24/:39/:54, Termine-Wartung :01/:11/:21/:31/:41/:51. Erinnerungen hängen nicht an der Minute (±7-Min.-Fenster).
+- Aufgaben anderer Programme (System-Check, Communicator) unverändert. Kein Neustart der Apps nötig.
+- Migration 20261022_kc_club_v2580_zeitplan_versetzt.sql (nur cron.alter_job). Test: Vertragstest-Block. Rückweg: alte Zeiten (*/15 bzw. */10) einspielen.
+
 ## 2.579.0 – 2026-10-22 – 🕵️ Fremde Anmeldeversuche: wann, welcher Schlüssel, Vermutung wer (KC-CLUB-FREMDZUGRIFF)
 Wunsch Hansi („Fremde Anmeldeversuche wann, mit welchem Schlüssel, Vermutung wer“) nach dem Gesamt-Check vom 22.10. (abgelehnte Schlüssel wurden bisher nicht vermerkt).
 - Server 2.579.0: jede abgelehnte Anmeldung wird im Hintergrund vermerkt (neue Tabelle kc_club_fremdzugriff): Zeit, Grund (Schlüssel unbekannt / alter Link / Zugang gesperrt / Schlüssel beschädigt), **Kurzkennung des Schlüssels** (erste 12 Zeichen seines SHA-256 – der Schlüssel selbst wird nie gespeichert), Netz-Kennung (Hash der Internetverbindung), Gerät/Browser in Worten, App-Version.
