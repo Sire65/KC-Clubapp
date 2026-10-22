@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.599.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.600.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -33451,7 +33451,7 @@ const EXP = { weg: new Set(), akt: null };
 // die die Ausgewählten beim nächsten App-Start als Fenster bekommen – Pflicht: „gelesen“ bestätigen; dazu „↩️ Rückfrage“ (kommt als Chat beim Absender an).
 // Die Nachrichten stehen in INIT.einstellungen.startnachricht (kein zusätzlicher Abruf beim Start).
 const SN = { weg: new Set(), daten: null, an: { art: "alle", aemter: new Set(), personen: new Set(), gruppe: "" } };
-const snOffen = () => (INIT?.einstellungen?.startnachricht?.liste || []).filter((x) => x && !x.gelesen_am && !SN.weg.has(x.id));
+const snOffen = () => (INIT?.einstellungen?.startnachricht?.liste || []).filter((x) => x && !x.gelesen_am && !SN.weg.has(x.id) && !(Date.parse(x.spaeter_bis || "") > Date.now())); // 2.600.0: „später“ = bis dahin nicht zeigen
 function snPruefen() {
   const l = snOffen();
   if (!l.length || document.hidden || $("snBlatt") || $("expressBlatt") || $("alarmBlatt") || RUF) return;
@@ -33459,17 +33459,20 @@ function snPruefen() {
   const f = blattAuf("snBlatt", `<div class="sn-kopf">📣 Nachricht von <b>${esc(x.vonName || "der Clubleitung")}</b>${x.wichtig ? ' <span class="sn-wichtig">❗ WICHTIG</span>' : ""}</div>
     <p class="hinweis" style="margin:2px 0 10px">${esc(tag)}${l.length > 1 ? ` · noch ${l.length - 1} weitere` : ""}</p>
     <div class="sn-text">${esc(x.text).replace(/\n/g, "<br>")}</div>
-    ${x.knopf === "push" ? snPushKnopf() : snSprungKnopf(x.knopf)}
-    <label class="sn-pflicht"><input type="checkbox" id="snGelesen"><span><b>Ich habe die Nachricht gelesen</b><small>Pflicht – ${esc(vn)} sieht deine Bestätigung</small></span></label>
-    <button class="knopf haupt" id="snOk" disabled>✅ Gelesen – bestätigen</button>
+    ${x.knopf === "push" ? snPushKnopf() : x.wahl ? "" : snSprungKnopf(x.knopf)}
+    ${x.wahl ? snWahlKnoepfe(x) : `<label class="sn-pflicht"><input type="checkbox" id="snGelesen"><span><b>Ich habe die Nachricht gelesen</b><small>Pflicht – ${esc(vn)} sieht deine Bestätigung</small></span></label>
+    <button class="knopf haupt" id="snOk" disabled>✅ Gelesen – bestätigen</button>`}
     <button class="knopf" id="snFrageAuf">↩️ Rückfrage an ${esc(vn)}</button>
     <div id="snFrage" hidden><textarea id="snFrageText" rows="3" maxlength="1000" placeholder="Deine Rückfrage an ${esc(vn)} …" data-diktat></textarea>
       <button class="knopf haupt" id="snFrageSenden">↩️ Rückfrage senden (gilt auch als gelesen)</button></div>`);
   f.classList.add("sn-blatt"); f.onclick = null; f.dataset.ohneX = "1"; // Pflicht: nicht wegtippen, kein ✕ (blattXPruefen) – nur „gelesen“ schließt
   if (x.wichtig) try { navigator.vibrate?.([120, 60, 120]); } catch {}
   const ok = $("snOk");
-  $("snGelesen").onchange = (e) => { ok.disabled = !e.target.checked; };
-  ok.onclick = () => snBestaetigen(x, "");
+  if (ok) { $("snGelesen").onchange = (e) => { ok.disabled = !e.target.checked; }; ok.onclick = () => snBestaetigen(x, ""); }
+  const ziel = snSprungZiel(x.knopf); // 2.600.0 KC-CLUB-STARTNACHRICHT-ANTWORT: Ja (+ direkt hin) / Später / Nein
+  $("snJa")?.addEventListener("click", () => snBestaetigen(x, "", ziel ? () => sprung(ziel) : null, "ja"));
+  $("snNein")?.addEventListener("click", () => snBestaetigen(x, "", null, "nein"));
+  $("snSpaeter")?.addEventListener("click", () => snSpaeter(x));
   $("snPushAn")?.addEventListener("click", async () => { await pushEinschalten(); const k = $("snPushBox"); if (k) k.outerHTML = snPushKnopf(); });
   $("snSprung")?.addEventListener("click", () => snBestaetigen(x, "", () => sprung(String(x.knopf).slice(3)))); // 2.599.0: Knopf = gelesen + direkt hin
   $("snFrageAuf").onclick = () => { $("snFrage").hidden = false; $("snFrageAuf").hidden = true; $("snFrageText").focus(); };
@@ -33477,10 +33480,32 @@ function snPruefen() {
 }
 // 2.599.0 KC-CLUB-STARTNACHRICHT-SPRUNG (Wunsch Hansi für Dieter „Avatar aussuchen – mit Taste, damit er direkt dort hinkommt“):
 // Knopf „zu:<Ziel>“ führt an eine Stelle der App (Ziele nur aus SPRUENGE); Antippen bestätigt zugleich „gelesen“.
-function snSprungKnopf(k) {
+function snSprungZiel(k) {
   const id = /^zu:[a-z]{2,20}$/.test(String(k || "")) ? String(k).slice(3) : "", s = sprungDef(id);
-  if (!s || (s.frei && !frei(s.frei))) return "";
+  return s && !(s.frei && !frei(s.frei)) ? id : "";
+}
+function snSprungKnopf(k) {
+  const id = snSprungZiel(k); if (!id) return "";
+  const s = SPRUENGE[id];
   return `<button class="knopf haupt" id="snSprung">${s.sym} ${esc(s.t)} ›</button>`;
+}
+// 2.600.0 KC-CLUB-STARTNACHRICHT-ANTWORT (Wunsch Hansi „mit ja, nein, später usw“): statt „gelesen“ antwortet der Empfänger
+// ✅ Ja (mit Sprung-Ziel: gleich dorthin) · ⏰ Später (kommt nach SN_SPAETER_STD wieder) · ✖ Nein, danke – der Absender sieht die Antwort.
+const SN_SPAETER_STD = 24;
+function snWahlKnoepfe(x) {
+  const id = snSprungZiel(x.knopf), s = id ? SPRUENGE[id] : null;
+  return `<div class="sn-antworten"><button class="knopf haupt" id="snJa">✅ Ja${s ? ` – ${s.sym} ${esc(s.t)} ›` : ""}</button>
+    <button class="knopf" id="snSpaeter">⏰ Später – morgen nochmal erinnern</button>
+    <button class="knopf" id="snNein">✖ Nein, danke</button></div>`;
+}
+async function snSpaeter(x) {
+  const knoepfe = document.querySelectorAll("#snBlatt button"); knoepfe.forEach((b) => (b.disabled = true));
+  try {
+    const r = await api("startnachricht_bestaetigen", { id: x.id, antwort: "spaeter" });
+    x.spaeter_bis = r?.spaeter_bis || new Date(Date.now() + SN_SPAETER_STD * 3600000).toISOString(); $("snBlatt")?.remove();
+    melde("⏰ Alles klar – ich erinnere dich morgen wieder.");
+    setTimeout(snPruefen, 600);
+  } catch (e) { knoepfe.forEach((b) => (b.disabled = false)); meldeFehler(e); }
 }
 // Startnachricht mit Knopf „🔔 Benachrichtigungen einschalten“ (2.482.0, Wunsch Hansi für Dieter): je nach Lage am Handy
 function snPushKnopf() {
@@ -33489,17 +33514,17 @@ function snPushKnopf() {
   if (Notification.permission === "denied") return '<div class="sn-push" id="snPushBox">🔕 Benachrichtigungen sind im Handy gesperrt. So erlaubst du sie wieder: <b>Handy-Einstellungen → Apps → Chrome (bzw. Club-App) → Benachrichtigungen → an</b>, danach die App neu öffnen.</div>';
   return '<div class="sn-push" id="snPushBox"><button class="knopf haupt" id="snPushAn">🔔 Benachrichtigungen jetzt einschalten</button></div>';
 }
-async function snBestaetigen(x, frage, danach) {
+async function snBestaetigen(x, frage, danach, antwort) {
   const knoepfe = document.querySelectorAll("#snBlatt button"); knoepfe.forEach((b) => (b.disabled = true));
   try {
-    await api("startnachricht_bestaetigen", { id: x.id, rueckfrage: frage });
+    await api("startnachricht_bestaetigen", { id: x.id, rueckfrage: frage, ...(antwort ? { antwort } : {}) });
     if (frage) { // die Rückfrage kommt beim Absender als normale Chat-Nachricht an (Push wie jede Nachricht)
       const kurz = [...String(x.text)].slice(0, 60).join("") + ([...String(x.text)].length > 60 ? "…" : "");
       await api("nachricht_senden", { text: `↩️ Rückfrage zu deiner Startnachricht „${kurz}“:\n${frage}`, wege: ["push"], empfaenger: { personen: [x.von], aemter: [], alle: false, vorstand: false }, betreff: "" })
         .catch((e) => meldeFehler(e));
     }
     x.gelesen_am = new Date().toISOString(); SN.weg.add(x.id); $("snBlatt")?.remove();
-    melde(frage ? "↩️ Rückfrage gesendet – danke!" : "✅ Bestätigt – danke!");
+    melde(frage ? "↩️ Rückfrage gesendet – danke!" : antwort === "nein" ? "👍 Alles klar – danke!" : "✅ Bestätigt – danke!");
     if (danach) { try { danach(); } catch (e) { meldeFehler(e); } return; } // 2.599.0: Sprung-Knopf – weitere Startnachrichten beim nächsten Öffnen
     setTimeout(snPruefen, 600);
   } catch (e) { knoepfe.forEach((b) => (b.disabled = false)); if ($("snOk") && !$("snGelesen")?.checked) $("snOk").disabled = true; meldeFehler(e); }
@@ -33522,7 +33547,7 @@ function snZeigen() {
     return `<details class="karte sn-gesendet"><summary><span>${s.wichtig ? "❗ " : ""}${esc([...s.text].slice(0, 50).join(""))}${[...s.text].length > 50 ? "…" : ""}</span>
       <span class="sn-stand${g === s.empfaenger.length ? " fertig" : ""}">✅ ${g}/${s.empfaenger.length}${rf.length ? ` · ↩️ ${rf.length}` : ""}</span></summary>
       <p class="hinweis">${esc(wann(s.am))}${ICH?.admin && s.von ? ` · von ${esc(s.von)}` : ""}</p><div class="sn-text">${esc(s.text).replace(/\n/g, "<br>")}</div>
-      <ul class="sn-empf">${s.empfaenger.map((e) => `<li>${e.gelesen_am ? "✅" : "⏳"} <b>${esc(e.name)}</b>${e.gelesen_am ? ` <small>${esc(wann(e.gelesen_am))}</small>` : " <small>noch nicht gelesen</small>"}${e.rueckfrage ? `<div class="sn-rf">↩️ ${esc(e.rueckfrage)}</div>` : ""}</li>`).join("")}</ul>
+      <ul class="sn-empf">${s.empfaenger.map((e) => `<li>${e.gelesen_am ? "✅" : "⏳"} <b>${esc(e.name)}</b>${e.antwort ? ` ${SN_ANTWORT[e.antwort] || ""}` : ""}${e.gelesen_am ? ` <small>${esc(wann(e.gelesen_am))}</small>` : e.spaeter_bis ? ` <small>⏰ „später“ – kommt wieder ${esc(wann(e.spaeter_bis))}</small>` : " <small>noch nicht gelesen</small>"}${e.rueckfrage ? `<div class="sn-rf">↩️ ${esc(e.rueckfrage)}</div>` : ""}</li>`).join("")}</ul>
       <button class="knopf klein" onclick="snZurueck(${jsArg(s.id)})">🗑️ Zurückziehen (bei allen, die sie noch nicht gelesen haben, verschwindet sie)</button></details>`; }).join("");
   el.innerHTML = `<h3 style="margin-top:0">📣 Startnachricht</h3>
     <p class="hinweis">Die Empfänger sehen sie beim nächsten Öffnen der App als Fenster und müssen „gelesen“ bestätigen. Rückfragen kommen bei dir im Chat an.</p>
@@ -33530,19 +33555,21 @@ function snZeigen() {
     <label class="sn-pflicht"><input type="checkbox" id="snKnopfPush"${$("snKnopfPush")?.checked ? " checked" : ""}><span><b>🔔 Knopf „Benachrichtigungen einschalten“ mitgeben</b><small>für alle, deren Benachrichtigungen aus sind</small></span></label>
     <label style="display:block;margin:8px 0">🔘 <b>Knopf zu einer Stelle der App</b> <small class="hinweis">(Antippen = gelesen und direkt dorthin)</small>
       <select id="snSprungZiel"><option value="">– kein Knopf –</option>${Object.keys(SPRUENGE).filter(sprungFuerAlle).map((id) => `<option value="${id}"${$("snSprungZiel")?.value === id ? " selected" : ""}>${SPRUENGE[id].sym} ${esc(SPRUENGE[id].t)}</option>`).join("")}</select></label>
+    <label class="sn-pflicht"><input type="checkbox" id="snWahl"${$("snWahl")?.checked ? " checked" : ""}><span><b>💬 Antworten „✅ Ja · ⏰ Später · ✖ Nein“ anbieten</b><small>statt nur „gelesen“ – mit Knopf führt „Ja“ gleich dorthin; „Später“ erinnert am nächsten Tag</small></span></label>
     <label class="sn-pflicht"><input type="checkbox" id="snWichtig"${wichtig ? " checked" : ""}><span><b>❗ Als wichtig markieren</b><small>rot hervorgehoben, dazu ein Push „Bitte die App öffnen“</small></span></label>
     <p style="margin:10px 0 6px"><b>An wen?</b></p><div class="sn-wahl">${art("alle", "👥 Alle")}${art("aemter", "🎖️ Ämter")}${art("gruppe", "💬 Gruppe")}${art("personen", "🙋 Personen")}</div>${wahl}
     <div class="knoepfe" style="margin-top:10px"><button class="knopf haupt" onclick="snSenden()">📣 Senden</button><button class="knopf" onclick="$('snAdmin').remove()">Schließen</button></div>
     ${ICH?.admin ? `<label class="sn-pflicht" style="margin-top:12px"><input type="checkbox"${d.aemterFrei ? " checked" : ""} onchange="snFreigabe(this.checked)"><span><b>Clubsprecher und Kassenwart dürfen auch Startnachrichten schicken</b><small>${d.aemterFrei ? "freigeschaltet" : "noch nicht freigeschaltet"}</small></span></label>` : ""}
     <h4 style="margin:16px 0 6px">Gesendet</h4>${liste || '<p class="hinweis">Noch keine Startnachricht gesendet.</p>'}`;
 }
+const SN_ANTWORT = { ja: "<b>· ✅ Ja</b>", nein: "<b>· ✖ Nein</b>" }; // 2.600.0
 function snUmschalten(was, v) { const s = SN.an[was]; s.has(v) ? s.delete(v) : s.add(v); snZeigen(); }
 async function snSenden() {
   const text = $("snText").value.trim(), A = SN.an; if (!text) return melde("Bitte einen Text schreiben.", true);
   const an = A.art === "alle" ? { alle: true } : A.art === "aemter" ? { aemter: [...A.aemter] } : A.art === "gruppe" ? { gruppe: A.gruppe } : { personen: [...A.personen] };
   const wer = A.art === "alle" ? "alle Mitglieder" : A.art === "aemter" ? `die Ämter ${[...A.aemter].join(", ") || "–"}` : A.art === "gruppe" ? "die gewählte Gruppe" : `${A.personen.size} Person${A.personen.size === 1 ? "" : "en"}`;
   if (!(await frage(`Startnachricht an ${wer} senden?\n\nSie erscheint beim nächsten Öffnen der App.`))) return;
-  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, knopf: $("snKnopfPush")?.checked ? "push" : $("snSprungZiel")?.value ? "zu:" + $("snSprungZiel").value : null, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
+  try { const r = await api("startnachricht_senden", { text, wichtig: !!$("snWichtig")?.checked, knopf: $("snKnopfPush")?.checked ? "push" : $("snSprungZiel")?.value ? "zu:" + $("snSprungZiel").value : null, wahl: !!$("snWahl")?.checked, an }); melde(`📣 Gesendet an ${r.empfaenger} Person${r.empfaenger === 1 ? "" : "en"}`);
     $("snText").value = ""; SN.daten = await api("startnachricht_liste"); snZeigen(); } catch (e) { meldeFehler(e); }
 }
 async function snZurueck(id) {
