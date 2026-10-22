@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.579.0 – 2026-10-22 – 🕵️ Fremde Anmeldeversuche: wann, welcher Schlüssel, Vermutung wer (KC-CLUB-FREMDZUGRIFF)
+Wunsch Hansi („Fremde Anmeldeversuche wann, mit welchem Schlüssel, Vermutung wer“) nach dem Gesamt-Check vom 22.10. (abgelehnte Schlüssel wurden bisher nicht vermerkt).
+- Server 2.579.0: jede abgelehnte Anmeldung wird im Hintergrund vermerkt (neue Tabelle kc_club_fremdzugriff): Zeit, Grund (Schlüssel unbekannt / alter Link / Zugang gesperrt / Schlüssel beschädigt), **Kurzkennung des Schlüssels** (erste 12 Zeichen seines SHA-256 – der Schlüssel selbst wird nie gespeichert), Netz-Kennung (Hash der Internetverbindung), Gerät/Browser in Worten, App-Version.
+- **Vermutung, wer:** ① gesperrte Person mit richtigem Schlüssel, ② **alter Link eines Mitglieds** (neue Tabelle kc_club_zugang_alt: ein Trigger merkt sich jeden ersetzten oder abgeschalteten Link; öffnet nichts, dient nur der Zuordnung), ③ **gleiche Internetverbindung** wie ein Mitglied in der letzten Stunde, ④ genau dieser Browser schon bei einem Mitglied gesehen, sonst „unbekannt“.
+- **Bescheid an Hansi** (Push, eilig): ab 5 abgelehnten Versuchen in 15 Min. oder sofort, wenn ein Programm/Bot (curl, python …) es versucht – höchstens einmal je Stunde. Bremse gegen Fluten: gleicher Schlüssel aus gleichem Netz höchstens alle 10 Min., höchstens 60 Einträge je Stunde und Server-Instanz. Einträge werden nach 90 Tagen gelöscht.
+- App (nur Admin): Sicherheits-Check → neue Karte **🕵️ Fremde Anmeldeversuche (30 Tage)** mit Zeit, Grund, Gerät, Schlüssel-Kennung, Netz und Vermutung; der Push öffnet sie direkt.
+- Datenbank: Migration 20261022_kc_club_v2579_fremdzugriff.sql (zwei Tabellen, Rechte nur für den Club-Server, RLS, Trigger). Bis zum Einspielen bleibt alles wie bisher (Karte zeigt „noch nicht eingerichtet“).
+- Test: tests/fremdzugriff.test.mjs (Gerät, Vermutung, Alarm, Kurzkennung, Einbau). Rückweg: App/Server 2.578.0; Tabellen stören nicht.
+
 ## 2.578.0 – 2026-10-21 – Chats öffnen sofort (KC-CLUB-CHAT-SOFORT / KC-CLUB-CHAT-PAKET)
 Ein Chat zeigt beim Öffnen sofort den zuletzt geladenen Stand (markiert „wird aktualisiert“); der Server holt die Chat-Daten in einem einzigen Datenbank-Aufruf statt rund 28 nacheinander. Bisheriger Weg bleibt als Rückfall, Not-Aus eingebaut.
 

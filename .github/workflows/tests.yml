@@ -27,3 +27,5 @@ jobs:
       - run: node tests/anklopfen-verpasst.test.mjs
       # KC-CLUB-ANRUFBEANTWORTER (2.568.0)
       - run: node tests/anrufbeantworter.test.mjs
+      # KC-CLUB-FREMDZUGRIFF (2.579.0)
+      - run: node tests/fremdzugriff.test.mjs
