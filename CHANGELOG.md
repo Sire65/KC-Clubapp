@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.599.0 – 2026-10-22 – 📣 Startnachricht mit Knopf zu einer Stelle der App (KC-CLUB-STARTNACHRICHT-SPRUNG)
+Wunsch Hansi für Dieter („möchtest du dir einen Avatar zulegen … Taste, damit er direkt dort hinkommt“).
+- 📣 Startnachricht verfassen: neue Auswahl „🔘 Knopf zu einer Stelle der App“ – Ziele aus der bekannten Sprung-Liste (z. B. 🧑‍🍳 Mein Bild wählen, 🗓️ Mein Dienst, 📝 Dienstwünsche), nur Ziele, die alle schon haben.
+- Beim Empfänger steht der Knopf im Fenster der Startnachricht; Antippen bestätigt „gelesen“ und öffnet direkt die Stelle. Der Knopf „🔔 Benachrichtigungen einschalten“ bleibt wie bisher (hat Vorrang, wenn beides gewählt).
+- Server nimmt nur „push“ oder „zu:<ziel>“ (2–20 Kleinbuchstaben); unbekannte Ziele zeigt die App nicht. Ältere Apps zeigen nur den Text.
+- Test: Vertragstest-Block 2.599.0. Rückweg: App/Server 2.598.0.
+
 ## 2.598.0 – 2026-10-22 – ⚡ Stufe 3: Nachrichten-Übersicht in einem Datenbank-Aufruf + 🛟 Notbetrieb erst nach zweiter Probe, mit Bericht (KC-CLUB-UNTERHALTUNGEN-PAKET, KC-CLUB-NOTBETRIEB-ZWEITPROBE, KC-CLUB-NOTBETRIEB-BERICHT)
 Wunsch Hansi („Ja baue Pak 3“). Gleiche Liste, gleiche Zahlen, gleiche Regeln.
 - Die Nachrichten-Übersicht (auch Kommunikationszentrale im Kopf jede Minute, Büro, Notfall-Paket) holte bisher in 3–4 Schritten Chats, Teilnehmer, Gruppen, „wichtig“ und bis zu 1000 GANZE Nachrichten – nur um je Chat die letzte Zeile und die Zahlen zu zeigen. Jetzt EIN Aufruf (kc_club_unterhaltungen_paket): die Datenbank rechnet je Chat aus denselben 1000 neuesten Nachrichten Anzahl, ungelesen, ❗ neu (unter den ersten 300 ungelesenen) und die letzte Nachricht (Text höchstens 120 Zeichen). Namen und Archiv laufen gleichzeitig dazu.
