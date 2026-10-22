@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.589.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.590.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15136,7 +15136,7 @@ const ZUGANG_AKTIONEN = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis"],
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren"], // 2.590.0 KC-CLUB-DIENST-STEMPEL
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
   aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis"] };
@@ -25830,6 +25830,7 @@ function hashSprung(h) {
     else if (h === "#schulungen") scStart();
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
+    else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
     else if (h === "#fremdzugriffe") { zeige("sicherheit"); if (ICH?.admin) setTimeout(fremdZeigen, 300); } // 2.579.0 KC-CLUB-FREMDZUGRIFF (Link aus dem Push)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
@@ -26527,7 +26528,7 @@ async function neuLadenRoh(vonHand) {
   try {
     const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
     INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
@@ -30441,8 +30442,177 @@ async function mdStart() {
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("3", ist.anzahl > 0)} ⏱️ Istplan <small class="hinweis">gearbeitet (Stempeluhr), letzte 60 Tage</small></h4>
       ${ist.anzahl ? `<div>${ist.anzahl} Einsätze · <b>${mdHm(ist.istMin)} Std.</b> gearbeitet${ist.sollMin ? ` · geplant waren ${mdHm(ist.sollMin)} Std. (${ist.istMin - ist.sollMin >= 0 ? "+" : "–"}${mdHm(Math.abs(ist.istMin - ist.sollMin))})` : ""}</div>
         ${ist.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr</div>`).join("")}`
-        : `<div class="ta-st-gv">Noch keine Ist-Zeiten vorhanden – sie erscheinen hier, sobald die Stempeluhr sie liefert.</div>`}</div>${mdSonder(MD_D?.sonder)}`;
+        : `<div class="ta-st-gv">Noch keine Ist-Zeiten vorhanden – sie erscheinen hier, sobald die Stempeluhr sie liefert.</div>`}
+      ${frei("dienst_stempel") ? `<div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dsOeffnen()">🟢 Kommen / Gehen buchen${nurTest("dienst_stempel") ? " 🔒" : ""}</button></div>` : ""}</div>${mdSonder(MD_D?.sonder)}`; // 2.590.0 KC-CLUB-DIENST-STEMPEL
 }
+// ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Wunsch Hansi, Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
+// Kommen/Gehen in der App: Karte auf der Startseite (ab 30 Min. vor Dienstbeginn bzw. solange angemeldet), Blatt mit Vorschlag aus dem
+// Dienstplan (nahe am Plan = geplante Zeit, sonst jetzt, 5-Min.-Schritte), Grund ab 15 Min. Abweichung, Pause beim Gehen, Standort nur als
+// „vor Ort ja/nein“ (wird nicht gespeichert). Die Regeln prüft der Server (dienst-stempel.js); hier nur Anzeige und Vorschlag.
+// Bis zur Freigabe (Admin → Freigaben → „Dienst anmelden/abmelden“) sieht es nur der Admin (🔒 Test).
+let DSL = null; // Lage vom Server { aktiv, karte, stand, dienst, spaeter, buchungen, orte, gruende, regeln }
+const DS_MIN = 60000, DS_SCHRITT = 5 * DS_MIN;
+const dsUhr = (ms) => fZeit.format(new Date(ms));
+const dsRundC = (ms) => Math.round(ms / DS_SCHRITT) * DS_SCHRITT;
+function dsVorschlagC(art, d, t) { const plan = d ? Date.parse(art === "in" ? d.start : d.ende) : null; return plan != null && Math.abs(t - plan) <= 30 * DS_MIN ? plan : dsRundC(t); }
+function dsGrundNoetigC(art, zeit, d, spontan) { if (spontan || !d) return true; return Math.abs(zeit - Date.parse(art === "in" ? d.start : d.ende)) > (DSL?.regeln?.grundMin || 15) * DS_MIN; }
+function dsPauseC(kommen, gehen, plan) { if (plan > 0) return plan; const std = (gehen - kommen) / 3600000; return std > 9 ? 45 : std > 6 ? 30 : 0; }
+const DS_QUELLE = { app: "App", kasse: "Kasse", planer: "Admin" };
+function dsLageSetzen(l) { DSL = l && l.aktiv ? l : null; dsKarteZeichnen(); }
+// Karte auf der Startseite
+function dsKarteZeichnen() {
+  const el = $("dsKarte"); if (!el) return;
+  const l = DSL, t = Date.now();
+  if (l && !l.dienst && !l.stand?.angemeldet && (l.spaeter || []).some((s) => t >= Date.parse(s.start) - 31 * DS_MIN && !DS_NACHLADEN.lief)) { DS_NACHLADEN.lief = true; api("dienst_stand", {}).then(dsLageSetzen).catch(() => {}).finally(() => setTimeout(() => (DS_NACHLADEN.lief = false), 5 * DS_MIN)); }
+  const d = l?.dienst, an = !!l?.stand?.angemeldet;
+  const zeigen = !!l && (an || (!!d && t >= Date.parse(d.start) - 30 * DS_MIN && t <= Date.parse(d.start) + (l.regeln?.nachMin || 120) * DS_MIN));
+  const warte = dsWarte().length;
+  if (!zeigen && !warte) { el.innerHTML = ""; return; }
+  const test = nurTest("dienst_stempel") ? ' <span class="ds-test" title="Nur für dich sichtbar – noch nicht freigegeben">🔒 Test</span>' : "";
+  el.innerHTML = `<button type="button" class="ds-karte ${an ? "ds-an" : "ds-aus"}" onclick="dsOeffnen()">
+    <span class="ds-sym">${an ? "🔴" : "🟢"}</span><span class="ds-text"><b>${an ? "Dienst beenden" : "Dienst beginnen"}${test}</b>
+    <small>${an ? `läuft seit ${esc(dsUhr(Date.parse(l.stand.seit)))} (${esc(DS_QUELLE[l.stand.quelle] || "App")})${d ? ` · geplant bis ${esc(dsUhr(Date.parse(d.ende)))}` : ""}` : d ? `heute ${esc(dsUhr(Date.parse(d.start)))}–${esc(dsUhr(Date.parse(d.ende)))} Uhr${d.bereich ? " · " + esc(d.bereich) : ""}` : ""}${warte ? ` · ⏳ ${warte} Buchung wird übertragen` : ""}</small></span><span class="ds-pfeil">›</span></button>`;
+}
+const DS_NACHLADEN = { lief: false };
+setInterval(() => { try { dsKarteZeichnen(); dsWarteSenden(); } catch {} }, 60000);
+// ohne Netz: Buchung merken und nachschicken (mit der gewählten Zeit)
+const DS_WARTE = "kc_club_ds_warte";
+function dsWarte() { try { return JSON.parse(localStorage.getItem(DS_WARTE) || "[]"); } catch { return []; } }
+function dsWarteSetzen(l) { try { l.length ? localStorage.setItem(DS_WARTE, JSON.stringify(l.slice(-4))) : localStorage.removeItem(DS_WARTE); } catch {} }
+async function dsWarteSenden() {
+  const l = dsWarte(); if (!l.length || !navigator.onLine) return;
+  const rest = [];
+  for (const w of l) { try { const r = await api("dienst_buchen", w); dsLageSetzen(r.lage); melde(`✅ Nachgeschickt: ${r.art === "in" ? "Kommen" : "Gehen"} ${dsUhr(Date.parse(w.zeit))}`); } catch (e) { if (/Netz|Verbindung|offline|fetch/i.test(String(e?.message))) rest.push(w); else melde(`⚠️ Buchung ${dsUhr(Date.parse(w.zeit))} nicht übernommen: ${e.message}`, true); } }
+  dsWarteSetzen(rest); dsKarteZeichnen();
+}
+// Blatt: Kommen oder Gehen buchen
+const DSB = { zeit: 0, pause: 0, grund: "", spontan: false, nachtrag: false, kommen: 0 };
+async function dsOeffnen() {
+  if (!frei("dienst_stempel")) return melde("Diese Funktion ist noch nicht freigegeben.");
+  const f = blattAuf("dsBlatt", `<div id="dsInhalt"><p class="hinweis">Wird geladen …</p></div>`); f.classList.add("ds-blatt");
+  try { dsLageSetzen(await api("dienst_stand", {}, { warten: true })); } catch (e) { if (!DSL) { $("dsInhalt").innerHTML = `<p>⚠️ ${esc(fehlerText(e, ""))}</p><button class="knopf" onclick="fensterZu($('dsBlatt'))">Schließen</button>`; return; } }
+  const t = Date.now(), an = !!DSL?.stand?.angemeldet, d = DSL?.dienst;
+  Object.assign(DSB, { spontan: false, nachtrag: false, grund: "", zeit: dsVorschlagC(an ? "out" : "in", d, t) });
+  if (an) { DSB.kommen = Date.parse(DSL.stand.seit); DSB.pause = dsPauseC(DSB.kommen, DSB.zeit, d?.pause || 0); }
+  dsZeichnen();
+}
+function dsZeichnen() {
+  const el = $("dsInhalt"); if (!el || !DSL) return;
+  const t = Date.now(), an = !!DSL.stand?.angemeldet, d = DSL.dienst, art = an ? "out" : "in";
+  const kopf = `<h3 style="margin-top:0">${an ? "🔴 Dienst beenden" : "🟢 Dienst beginnen"}${nurTest("dienst_stempel") ? ' <small class="ds-test">🔒 Test – nur für dich</small>' : ""}</h3>
+    <p class="hinweis" style="margin:0 0 8px">${d ? `Geplant: <b>${esc(dsUhr(Date.parse(d.start)))}–${esc(dsUhr(Date.parse(d.ende)))} Uhr</b>${d.bereich ? " · " + esc(d.bereich) : ""}${d.pause ? ` · Pause ${d.pause} Min.` : ""}` : "Für jetzt ist kein Dienst geplant."}
+    ${an ? `<br>Angemeldet seit <b>${esc(dsUhr(Date.parse(DSL.stand.seit)))}</b> (${esc(DS_QUELLE[DSL.stand.quelle] || "App")})` : ""}</p>`;
+  if (!an && !d && !DSB.spontan && !DSB.nachtrag) {
+    el.innerHTML = kopf + `${(DSL.spaeter || []).length ? `<p>Dein nächster Dienst heute: <b>${esc(dsUhr(Date.parse(DSL.spaeter[0].start)))} Uhr</b> – Anmelden geht ab 2 Std. vorher.</p>` : ""}
+      <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" onclick="DSB.spontan=true;DSB.zeit=Date.now()-Date.now()%${DS_SCHRITT};dsZeichnen()">🙋 Ich helfe spontan mit</button>
+      <button class="knopf" onclick="DSB.nachtrag=true;dsNachtragStart()">⏰ Ich war schon da – Kommen und Gehen nachtragen</button>${dsAdminKnoepfe()}<button class="knopf" onclick="fensterZu($('dsBlatt'))">Schließen</button></div>${dsHeuteHtml()}`;
+    return;
+  }
+  const nachtrag = DSB.nachtrag && !an;
+  const grundNoetig = nachtrag || dsGrundNoetigC(nachtrag ? "out" : art, DSB.zeit, d, DSB.spontan);
+  const planZeit = d ? Date.parse(art === "in" && !nachtrag ? d.start : d.ende) : null;
+  const uhr = (welche, ms, titel) => `<div class="ds-uhr-feld"><div class="ds-uhr-titel">${titel}</div><div class="ds-uhr" aria-live="polite">${esc(dsUhr(ms))}</div>
+    <div class="ds-schritte"><button class="knopf" onclick="dsSchieben('${welche}',-60)">−1 Std.</button><button class="knopf" onclick="dsSchieben('${welche}',-5)">−5</button><button class="knopf" onclick="dsSchieben('${welche}',5)">+5</button><button class="knopf" onclick="dsSchieben('${welche}',60)">+1 Std.</button></div></div>`;
+  el.innerHTML = kopf + (nachtrag ? uhr("kommen", DSB.kommen, "Gekommen um") : "") + uhr("zeit", DSB.zeit, nachtrag || an ? "Gegangen um" : "Gekommen um")
+    + `<p class="hinweis" style="text-align:center;margin:4px 0 10px">jetzt ${esc(dsUhr(t))}${planZeit ? ` · geplant ${esc(dsUhr(planZeit))}` : ""}
+      <button class="knopf klein" onclick="DSB.zeit=${dsRundC(t)};dsZeichnen()">Jetzt</button>${planZeit ? ` <button class="knopf klein" onclick="DSB.zeit=${planZeit};dsZeichnen()">Wie geplant</button>` : ""}</p>`
+    + (an || nachtrag ? `<label class="feld">☕ Pause<select onchange="DSB.pause=Number(this.value)">${[0, 15, 30, 45, 60, 90].map((m) => `<option value="${m}"${m === DSB.pause ? " selected" : ""}>${m ? m + " Min." : "keine"}</option>`).join("")}</select></label>
+      <p class="hinweis" style="margin:2px 0 8px">Pausenregel: über 6 Std. 30 Min., über 9 Std. 45 Min.</p>` : "")
+    + (grundNoetig ? `<div class="ds-grund"><b>Grund</b> <small class="hinweis">${DSB.spontan ? "spontan mitgeholfen" : nachtrag ? "nachgetragen" : "mehr als 15 Min. vom Plan entfernt"}</small>
+      <div class="ds-gruende">${(DSL.gruende || []).map((g) => `<button type="button" class="chip${DSB.grund === g ? " an" : ""}" onclick="DSB.grund=${jsArg(g)};dsZeichnen()">${esc(g)}</button>`).join("")}</div></div>` : "")
+    + `<button class="knopf haupt ds-buchen" onclick="dsBuchen()">✅ ${nachtrag ? `${esc(dsUhr(DSB.kommen))}–${esc(dsUhr(DSB.zeit))} nachtragen` : `${an ? "GEHEN" : "KOMMEN"} um ${esc(dsUhr(DSB.zeit))} buchen`}</button>
+      ${!an && !nachtrag ? `<button class="knopf" onclick="DSB.nachtrag=true;dsNachtragStart()">⏰ Kommen vergessen – ich gehe schon</button>` : ""}
+      <p class="hinweis" style="margin:8px 0 0">${DSL.orte ? "📍 Beim Buchen prüft die App einmal, ob du vor Ort bist (der Standort wird nicht gespeichert)." : ""}</p>
+      ${dsHeuteHtml()}<div class="knoepfe">${dsAdminKnoepfe()}<button class="knopf" onclick="fensterZu($('dsBlatt'))">Schließen</button></div>`;
+}
+function dsNachtragStart() { const d = DSL?.dienst; DSB.kommen = d ? Date.parse(d.start) : dsRundC(Date.now() - 4 * 3600000); DSB.zeit = d && Date.now() > Date.parse(d.ende) ? Date.parse(d.ende) : dsRundC(Date.now()); DSB.pause = dsPauseC(DSB.kommen, DSB.zeit, d?.pause || 0); dsZeichnen(); }
+function dsSchieben(welche, min) { DSB[welche] = Math.min(dsRundC(Date.now()) + DS_SCHRITT, DSB[welche] + min * DS_MIN); dsZeichnen(); }
+function dsHeuteHtml() {
+  const l = (DSL?.buchungen || []).filter((b) => !b.storniert);
+  if (!l.length) return "";
+  return `<div class="ds-heute"><b>Deine Buchungen (36 Std.)</b>${l.map((b) => `<div class="ds-zeile">${b.art === "in" ? "🟢 Kommen" : "🔴 Gehen"} <b>${esc(zeitKurz(b.zeit))}</b> <small class="hinweis">${esc(DS_QUELLE[b.quelle] || b.quelle)}${b.vorOrt === true ? " · 📍 vor Ort" : b.vorOrt === false ? " · 📍 nicht vor Ort bestätigt" : ""}${b.grund ? " · " + esc(b.grund) : ""}${b.pause ? ` · Pause ${b.pause} Min.` : ""}</small>${b.korrigierbar ? ` <button class="knopf klein" onclick="dsKorrigieren('${esc(b.id)}')">ändern</button>` : ""}</div>`).join("")}</div>`;
+}
+// Standort einmal abfragen (nur wenn Dienst-Orte eingerichtet sind); kein Standort = trotzdem buchen
+function dsStandort() {
+  return new Promise((ok) => { if (!DSL?.orte || !navigator.geolocation) return ok(null);
+    const zu = setTimeout(() => ok(null), 8000);
+    navigator.geolocation.getCurrentPosition((p) => { clearTimeout(zu); ok({ lat: p.coords.latitude, lon: p.coords.longitude, genau: Math.round(p.coords.accuracy || 0) }); }, () => { clearTimeout(zu); ok(null); }, { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 }); });
+}
+async function dsBuchen() {
+  const an = !!DSL?.stand?.angemeldet, nachtrag = DSB.nachtrag && !an, d = DSL?.dienst;
+  if ((nachtrag || dsGrundNoetigC(an ? "out" : "in", DSB.zeit, d, DSB.spontan)) && !DSB.grund && !DSB.spontan && !nachtrag) return melde("Bitte einen Grund antippen.", true);
+  const knopf = document.querySelector(".ds-buchen"); if (knopf) { knopf.disabled = true; knopf.textContent = "⏳ wird gebucht …"; }
+  const pos = await dsStandort();
+  const daten = { zeit: new Date(DSB.zeit).toISOString(), grund: DSB.grund || "", spontan: DSB.spontan, pause: DSB.pause, erwartet: an ? "out" : "in",
+    ...(nachtrag ? { nachtragKommen: new Date(DSB.kommen).toISOString() } : {}), ...(pos || {}) };
+  try {
+    const r = await api("dienst_buchen", daten, { warten: true });
+    fensterZu($("dsBlatt")); dsLageSetzen(r.lage);
+    const ort = r.vorOrt === true ? " · 📍 vor Ort" : r.vorOrt === false ? " · 📍 nicht vor Ort bestätigt (der Planer sieht es)" : "";
+    melde(r.art === "in" ? `🟢 Angemeldet ${dsUhr(DSB.zeit)} Uhr – schönen Dienst!${ort}` : `🔴 Abgemeldet ${dsUhr(DSB.zeit)} Uhr${r.summe != null ? ` · ${Math.floor(r.summe / 60)} Std. ${r.summe % 60} Min. gearbeitet` : ""} – danke!${ort}`);
+    try { navigator.vibrate?.(60); } catch {}
+  } catch (e) {
+    if (/Netz|Verbindung|offline|fetch|Failed/i.test(String(e?.message)) && !navigator.onLine) { dsWarteSetzen([...dsWarte(), daten]); fensterZu($("dsBlatt")); dsKarteZeichnen(); return melde("📶 Kein Netz – die Buchung ist gemerkt und wird übertragen, sobald du wieder Netz hast."); }
+    if (knopf) { knopf.disabled = false; knopf.textContent = "✅ Nochmal versuchen"; }
+    meldeFehler(e);
+  }
+}
+async function dsKorrigieren(id) {
+  const b = (DSL?.buchungen || []).find((x) => x.id === id); if (!b) return;
+  let ms = Date.parse(b.zeit);
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">✏️ ${b.art === "in" ? "Kommen" : "Gehen"} ändern</h3><p class="dlg-text">Gebucht: ${esc(zeitKurz(b.zeit))}. Die alte Zeit bleibt für den Planer sichtbar.</p>
+    <div class="ds-uhr" id="dsKorrUhr">${esc(dsUhr(ms))}</div><div class="ds-schritte"><button class="knopf" data-m="-60">−1 Std.</button><button class="knopf" data-m="-5">−5</button><button class="knopf" data-m="5">+5</button><button class="knopf" data-m="60">+1 Std.</button></div>
+    <label class="feld">Grund<input id="dsKorrGrund" maxlength="120" placeholder="z. B. falsch getippt"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ok">💾 Ändern</button><button class="knopf" data-w="zu">Abbrechen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-m]").forEach((k) => (k.onclick = () => { ms += Number(k.dataset.m) * DS_MIN; $("dsKorrUhr").textContent = dsUhr(ms); }));
+  f.querySelector('[data-w="zu"]').onclick = () => f.remove();
+  f.querySelector('[data-w="ok"]').onclick = async () => {
+    try { const r = await api("dienst_korrigieren", { id, zeit: new Date(ms).toISOString(), grund: $("dsKorrGrund").value.trim() }, { warten: true }); f.remove(); dsLageSetzen(r.lage); dsZeichnen(); melde("💾 Geändert"); }
+    catch (e) { meldeFehler(e); }
+  };
+}
+// Admin: wer ist im Dienst, nachtragen, Dienst-Orte
+function dsAdminKnoepfe() { return ICH?.admin ? `<button class="knopf" onclick="dsWerHeute()">👥 Wer ist im Dienst</button><button class="knopf" onclick="dsOrteZeigen()">📍 Dienst-Orte</button>` : ""; }
+const DS_AMPEL = { rot: "🔴 fehlt", gelb: "🟡 noch angemeldet", gruen: "🟢 da", grau: "⚪ noch nicht da" };
+async function dsWerHeute() {
+  let r; try { r = await api("dienst_heute", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const z = (x) => `<div class="ds-wer"><div><b>${esc(x.name)}</b> <small>${DS_AMPEL[x.ampel] || ""}</small></div>
+    <small class="hinweis">${x.dienst ? `Plan ${esc(dsUhr(Date.parse(x.dienst.start)))}–${esc(dsUhr(Date.parse(x.dienst.ende)))}${x.dienst.bereich ? " · " + esc(x.dienst.bereich) : ""}` : "ohne Plan"}${x.paare.map((p) => ` · ${p.kommen ? esc(dsUhr(Date.parse(p.kommen))) : "?"}–${p.gehen ? esc(dsUhr(Date.parse(p.gehen))) : "…"} (${esc(DS_QUELLE[p.quelle] || "")}${p.vorOrt === false ? ", nicht vor Ort" : ""})`).join("")}</small>
+    <div><button class="knopf klein" onclick="dsNachtragen(${jsArg(x.person_id)}, ${jsArg(x.name)}, '${x.stand.angemeldet ? "out" : "in"}')">✏️ ${x.stand.angemeldet ? "Gehen" : "Kommen"} nachtragen</button></div></div>`;
+  blattAuf("dsWerBlatt", `<h3 style="margin-top:0">👥 Wer ist heute im Dienst</h3>${r.orte ? "" : '<p class="hinweis">📍 Noch keine Dienst-Orte eingerichtet – „vor Ort“ wird erst danach geprüft.</p>'}
+    ${(r.zeilen || []).length ? r.zeilen.map(z).join("") : "<p>Heute ist niemand eingeplant und niemand angemeldet.</p>"}<button class="knopf" onclick="fensterZu($('dsWerBlatt'))">Schließen</button>`);
+}
+async function dsNachtragen(pid, name, art) {
+  let ms = dsRundC(Date.now());
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">✏️ ${art === "in" ? "Kommen" : "Gehen"} für ${esc(name)} nachtragen</h3>
+    <div class="ds-uhr" id="dsNtUhr">${esc(dsUhr(ms))}</div><div class="ds-schritte"><button class="knopf" data-m="-60">−1 Std.</button><button class="knopf" data-m="-5">−5</button><button class="knopf" data-m="5">+5</button><button class="knopf" data-m="60">+1 Std.</button></div>
+    ${art === "out" ? '<label class="feld">☕ Pause (Min.)<input id="dsNtPause" type="number" inputmode="numeric" min="0" max="240" value="0"></label>' : ""}
+    <label class="feld">Grund<input id="dsNtGrund" maxlength="120" placeholder="z. B. laut Telefonat"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ok">💾 Nachtragen</button><button class="knopf" data-w="zu">Abbrechen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-m]").forEach((k) => (k.onclick = () => { ms += Number(k.dataset.m) * DS_MIN; $("dsNtUhr").textContent = dsUhr(ms); }));
+  f.querySelector('[data-w="zu"]').onclick = () => f.remove();
+  f.querySelector('[data-w="ok"]').onclick = async () => {
+    try { await api("dienst_nachtragen", { person_id: pid, art, zeit: new Date(ms).toISOString(), grund: $("dsNtGrund").value.trim(), pause: Number($("dsNtPause")?.value || 0) }, { warten: true }); f.remove(); melde("💾 Nachgetragen"); dsWerHeute(); }
+    catch (e) { meldeFehler(e); }
+  };
+}
+async function dsOrteZeigen() {
+  let r; try { r = await api("dienst_orte", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  blattAuf("dsOrteBlatt", `<h3 style="margin-top:0">📍 Dienst-Orte</h3><p class="hinweis">Wer im Umkreis bucht, gilt als „vor Ort“. Sonst wird nur markiert – gebucht wird trotzdem. Am einfachsten: am Ort selbst „Hier ist ein Dienst-Ort“ tippen.</p>
+    ${(r.orte || []).map((o) => `<div class="ds-zeile">📍 <b>${esc(o.name)}</b> <small class="hinweis">Umkreis ${o.radius} m</small> <button class="knopf klein" onclick="dsOrtWeg(${jsArg(o.name)})">entfernen</button></div>`).join("") || "<p>Noch keine Orte.</p>"}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" onclick="dsOrtHier()">📍 Hier ist ein Dienst-Ort</button><button class="knopf" onclick="fensterZu($('dsOrteBlatt'))">Schließen</button></div>`);
+}
+async function dsOrtHier() {
+  if (!navigator.geolocation) return melde("Dieses Gerät kann den Standort nicht ermitteln.", true);
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">📍 Dienst-Ort speichern</h3><label class="feld">Name<input id="dsOrtName" maxlength="40" placeholder="z. B. Vereinsheim oder Markt-Stand"></label>
+    <label class="feld">Umkreis<select id="dsOrtRadius"><option value="150">150 m</option><option value="300" selected>300 m</option><option value="500">500 m</option></select></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ok">📍 Standort jetzt speichern</button><button class="knopf" data-w="zu">Abbrechen</button></div>`, () => f.remove());
+  f.querySelector('[data-w="zu"]').onclick = () => f.remove();
+  f.querySelector('[data-w="ok"]').onclick = () => navigator.geolocation.getCurrentPosition(async (p) => {
+    try { await api("dienst_orte", { neu: { name: $("dsOrtName").value.trim(), lat: p.coords.latitude, lon: p.coords.longitude, radius: Number($("dsOrtRadius").value) } }, { warten: true }); f.remove(); melde(`📍 Gespeichert (Genauigkeit ±${Math.round(p.coords.accuracy)} m)`); dsOrteZeigen(); }
+    catch (e) { meldeFehler(e); } }, () => melde("Standort nicht freigegeben – bitte im Handy erlauben.", true), { enableHighAccuracy: true, timeout: 15000 });
+}
+async function dsOrtWeg(name) { if (!(await frage(`Dienst-Ort „${name}“ entfernen?`))) return; try { await api("dienst_orte", { weg: name }, { warten: true }); dsOrteZeigen(); } catch (e) { meldeFehler(e); } }
 // KC-CLUB-SONDERSTUNDEN-KONTO (2.423.0, KICC-F-100): Sonderstunden (Grünkohl kochen, Fahrten …) mit Stand – gutgeschrieben erst nach Bestätigung durch den Planer
 const MD_SONDER = { gemeldet: "⏳ gemeldet – wartet auf den Planer", bestaetigt: "✅ gutgeschrieben", abgelehnt: "✖ nicht gutgeschrieben" };
 function mdSonder(so) {

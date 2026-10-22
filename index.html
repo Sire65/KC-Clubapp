@@ -4139,6 +4139,14 @@
   .klopfen h3 { font-size: 1.25rem; } .blatt-innen.klopfen .knopf { text-align: center; }
   /* KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0) */
   .klopf-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  .ds-karte { display: flex; align-items: center; gap: 12px; width: 100%; margin: 8px 0; padding: 14px 16px; border-radius: var(--radius); border: 2px solid; background: var(--karte); color: var(--text); text-align: left; cursor: pointer; font: inherit; } /* 2.590.0 KC-CLUB-DIENST-STEMPEL */
+  .ds-karte.ds-aus { border-color: #1e8449; } .ds-karte.ds-an { border-color: var(--rot); } .ds-sym { font-size: 1.8rem; } .ds-text { flex: 1; display: flex; flex-direction: column; gap: 2px; } .ds-text b { font-size: 1.15rem; } .ds-text small { color: var(--grau); } .ds-pfeil { font-size: 1.6rem; color: var(--grau); }
+  .ds-test { font-size: .75rem; font-weight: 600; color: var(--grau); }
+  .ds-uhr-feld { text-align: center; margin: 6px 0; } .ds-uhr-titel { color: var(--grau); font-weight: 600; } .ds-uhr { font-size: 2.6rem; font-weight: 800; text-align: center; letter-spacing: .02em; margin: 2px 0 6px; }
+  .ds-schritte { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } .ds-schritte .knopf { text-align: center; padding: 10px 2px; white-space: nowrap; font-size: .95rem; }
+  .ds-grund { margin: 6px 0 10px; } .ds-gruende { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .ds-buchen { width: 100%; text-align: center; font-size: 1.1rem; padding: 14px; margin: 6px 0; }
+  .ds-heute { margin-top: 12px; border-top: 1px solid var(--linie); padding-top: 8px; } .ds-zeile { padding: 4px 0; } .ds-wer { padding: 8px 0; border-top: 1px solid var(--linie); }
   .fz-liste { list-style: none; margin: 0; padding: 0; } .fz-zeile { padding: 8px 0; border-top: 1px solid var(--linie); } .fz-zeile small { display: block; color: var(--grau); margin-top: 2px; } /* 2.579.0 KC-CLUB-FREMDZUGRIFF */
   .fz-zeile .fz-wer { color: var(--text); font-weight: 600; } .fz-zeile code { font-size: .85em; background: var(--karte2); padding: 0 4px; border-radius: 4px; }
   .klopf-kacheln .klopf-ab { grid-column: 1 / -1; background: var(--rot); color: #fff; border-color: var(--rot); } /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */
@@ -4790,6 +4798,7 @@
       <div class="ipunkte" id="infoPunkte"></div>
     </div>
     <div id="updateHinweis"></div>
+    <div id="dsKarte"></div><!-- 2.590.0 KC-CLUB-DIENST-STEMPEL: Dienst beginnen/beenden -->
     <div id="rgHinweis"></div><!-- KC-CLUB-RUNDGANG-HINWEIS (2.243.0) -->
     <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Mein Ausweis-QR" onclick="versionMarkeTipp()">v–</button></div>
     <div class="register" id="register"></div>
@@ -5741,7 +5750,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.589.0" data-v="2.589.0"></script>
+<script src="app.js?v=2.590.0" data-v="2.590.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>

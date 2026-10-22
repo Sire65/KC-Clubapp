@@ -27,6 +27,8 @@ import { klopfVerpasst, klopfVerpasstOhneKontakt, klopfPushStand } from "./anklo
 import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-CLUB-ANRUFBEANTWORTER (2.568.0)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "./fremdzugriff.js"; // KC-CLUB-FREMDZUGRIFF (2.579.0)
+// @ts-ignore: reine JS-Datei ohne Typen
+import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -127,7 +129,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.584.0";
+const SERVER_VERSION = "2.590.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3170,7 +3172,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis"],
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.)
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]) };
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
@@ -3961,6 +3963,7 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   avatar_baukasten: { t: "🧩 Figur selbst zusammenstellen", u: "Haut, Frisur, Bart, Brille, Mütze, Farben", standard: "admin" },
   avatar_foto: { t: "📷 Eigenes Foto als Bild", u: "Selfie, Galerie oder Datei – Admin kann Fotos entfernen", standard: "admin" }, // 2.23.89
   avatar_premium: { t: "👑 Hochwertige Avatare", u: "36 neue Koch-Figuren mit Licht und Schatten, Schmuck, Piercings – im Baukasten anpassbar", standard: "admin" }, // 2.414.0 KC-CLUB-AVATAR-PREMIUM
+  dienst_stempel: { t: "🟢 Dienst anmelden/abmelden", u: "Kommen und Gehen in der App, mit Vorschlag aus dem Dienstplan", standard: "admin" }, // 2.590.0 KC-CLUB-DIENST-STEMPEL (erst Hansi testet)
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
 async function freigaben(): Promise<Record<string, "alle" | "admin">> {
@@ -3969,6 +3972,64 @@ async function freigaben(): Promise<Record<string, "alle" | "admin">> {
     if (!error) { FREIGABE.werte = new Map((data ?? []).map((x: any) => [x.funktion, x.fuer])); FREIGABE.bis = Date.now() + MERK_MS; } // KC-CLUB-START-SPARSAM-2: 15 s → MERK_MS, Speichern leert
   }
   return Object.fromEntries(Object.entries(FUNKTIONEN).map(([id, f]) => [id, (FREIGABE.werte.get(id) === "alle" || FREIGABE.werte.get(id) === "admin" ? FREIGABE.werte.get(id) : f.standard) as "alle" | "admin"]));
+}
+// ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
+// Lage für die App: geplante Dienste heute (und gestern, über Mitternacht), Stand (angemeldet seit …), Buchungen der letzten 36 Std.
+// Zwei Abfragen, nur wenn die Funktion für diese Person freigegeben ist (bis zur Freigabe nur der Admin).
+const dsMs = (tag: string, uhr: unknown) => { const [h, mi] = String(uhr || "0:0").split(":").map(Number); return berlinZuUtc(Number(tag.slice(0, 4)), Number(tag.slice(5, 7)), Number(tag.slice(8, 10)), h || 0, mi || 0).getTime(); };
+function dsDienstAus(r: any) {
+  const startMs = dsMs(r.work_date, r.start_time); let endeMs = dsMs(r.work_date, r.end_time); if (endeMs <= startMs) endeMs += 86400000; // über Mitternacht
+  return { ref: r.source_shift_id || `${r.work_date}|${String(r.start_time).slice(0, 5)}`, startMs, endeMs, pause: Number(r.break_minutes) || 0, bereich: r.area || null, zone: r.zone || null, event: r.event_id || null };
+}
+async function dsLage(ich: Ich) {
+  const t = Date.now(), heute = berlinTag(new Date(t)), gestern = berlinTag(new Date(t - 86400000));
+  const [{ data: plan }, { data: b }, orte] = await Promise.all([
+    db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").in("work_date", [gestern, heute]).limit(10),
+    db.from("kc_dp_stempel").select("id,art,zeit,erfasst_am,quelle,grund,pause_min,dienst_ref,vor_ort,spontan,nachgetragen,storniert_am,korrektur_von").eq("person_id", ich.person_id).gte("zeit", new Date(t - 36 * 3600000).toISOString()).order("zeit").limit(40),
+    dsOrte()]);
+  const dienste = (plan ?? []).map(dsDienstAus), stand = dsStand(b ?? []), dienst = dsDienstJetzt(dienste, t, stand);
+  const iso = (ms: number) => new Date(ms).toISOString();
+  return { aktiv: true, jetzt: iso(t), karte: dsKarteZeigen(dienst, t, stand), stand, orte: orte.length, gruende: DS_GRUENDE, regeln: { grundMin: DS.grundMin, vorMin: DS.vorMin, nachMin: DS.nachMin, korrekturStd: DS.korrekturStd },
+    dienst: dienst ? { ref: dienst.ref, start: iso(dienst.startMs), ende: iso(dienst.endeMs), pause: dienst.pause, bereich: dienst.bereich, zone: dienst.zone } : null,
+    spaeter: dienste.filter((d) => d.startMs > t && d !== dienst).map((d) => ({ start: iso(d.startMs), ende: iso(d.endeMs), bereich: d.bereich })).slice(0, 3),
+    buchungen: (b ?? []).map((x: any) => ({ id: x.id, art: x.art, zeit: x.zeit, quelle: x.quelle, grund: x.grund, pause: x.pause_min, vorOrt: x.vor_ort, spontan: x.spontan, nachgetragen: x.nachgetragen,
+      storniert: !!x.storniert_am, korrigierbar: x.quelle === "app" && dsKorrekturErlaubt(x, t) })) };
+}
+async function dsOrte(): Promise<{ name: string; lat: number; lon: number; radius: number }[]> {
+  const { data } = await konfigZeile("dienst_orte");
+  return (Array.isArray((data?.wert as any)?.orte) ? (data!.wert as any).orte : []).filter((o: any) => Number.isFinite(o?.lat) && Number.isFinite(o?.lon));
+}
+const dsDarf = async (ich: Ich) => ich.admin || (await freigaben()).dienst_stempel === "alle";
+async function dienstStempelErinnern() {
+  const t = Date.now(), heute = berlinTag(new Date(t)), alle = (await freigaben()).dienst_stempel === "alle";
+  const ziel = alle ? null : await adminIds(); // vor der Freigabe nur Admins (zum Testen)
+  let q = db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone,event_id").eq("org_id", ORG).eq("status", "published").in("work_date", [berlinTag(new Date(t - 86400000)), heute]);
+  if (ziel) { if (!ziel.length) return 0; q = q.in("person_id", ziel); }
+  const { data: plan } = await q.limit(300);
+  const dienste = (plan ?? []).map((r: any) => ({ ...dsDienstAus(r), person: r.person_id }));
+  const faellig = dienste.flatMap((d: any) => [
+    t >= d.startMs - (DS.erinnerVorMin + 20) * 60000 && t < d.startMs + 5 * 60000 ? { d, art: "vorher" } : null,
+    t >= d.endeMs && t < d.endeMs + 20 * 60000 ? { d, art: "ende" } : null,
+    t >= d.endeMs + DS.vergessenMin * 60000 && t < d.endeMs + (DS.vergessenMin + 20) * 60000 ? { d, art: "vergessen" } : null].filter(Boolean)) as any[];
+  if (!faellig.length) return 0;
+  const pids = [...new Set(faellig.map((f) => f.d.person))];
+  const { data: b } = await db.from("kc_dp_stempel").select("person_id,art,zeit,erfasst_am,dienst_ref,storniert_am").in("person_id", pids).gte("zeit", new Date(t - 36 * 3600000).toISOString()).limit(500);
+  let n = 0;
+  for (const f of faellig) {
+    const stand = dsStand((b ?? []).filter((x: any) => x.person_id === f.d.person));
+    if ((f.art === "vorher") === stand.angemeldet) continue; // vorher nur, wenn noch nicht da; Ende/vergessen nur, wenn noch angemeldet
+    const schl = `dienst-${f.art}:${f.d.person}:${f.d.ref}`;
+    const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "dienst_erinnert").eq("details->>schl", schl);
+    if (count) continue;
+    await protokoll(f.d.person, "dienst_erinnert", { schl, art: f.art });
+    const uhr = (ms: number) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(ms));
+    const v = f.art === "vorher" ? { titel: "🟢 Gleich beginnt dein Dienst", kurz: `${uhr(f.d.startMs)}–${uhr(f.d.endeMs)} Uhr${f.d.bereich ? " · " + f.d.bereich : ""} – hier antippen zum Anmelden` }
+      : f.art === "ende" ? { titel: "🔴 Dein Dienst endet jetzt", kurz: `Geplant bis ${uhr(f.d.endeMs)} Uhr – hier antippen zum Abmelden` }
+      : { titel: "⏰ Abmelden vergessen?", kurz: `Dein Dienst war bis ${uhr(f.d.endeMs)} Uhr geplant – hier antippen und Ende bestätigen` };
+    await senden("club_dienst", [f.d.person], { ...v, betreff: v.titel.replace(/^\S+ /, ""), text: `${v.kurz}\n\n${APP_URL}#dienststempel`, url: `${APP_URL}#dienststempel` }, `club-${schl}`);
+    n++;
+  }
+  return n;
 }
 async function nurWennFrei(id: string, ich: Ich, was: string) {
   if (!ich.admin && (await freigaben())[id] !== "alle") throw new Fehler(`${was} ist noch nicht freigegeben.`, 403);
@@ -6803,7 +6864,10 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
           dienst++;
         }
       }
-      if (stunde < 9) return json({ ok: true, erinnerungen: 0, beendet, dienst });
+      // 2.590.0 KC-CLUB-DIENST-STEMPEL: Erinnerungen rund um den Dienst (nur wer die Funktion hat – bis zur Freigabe nur Admins):
+      // kurz vor Beginn (noch nicht angemeldet), zum geplanten Ende (noch angemeldet), 1 Std. danach (Gehen vergessen). Je Dienst und Art einmal.
+      const dsErin = await dienstStempelErinnern().catch((e) => { console.error("dienst stempel erinnern", String(e)); return 0; });
+      if (stunde < 9) return json({ ok: true, erinnerungen: 0, beendet, dienst, dsErin });
       // KC-CLUB-GEBURTSTAG-PUSH: 2 Tage vorher und am Tag – nur freigegebene Geburtstage, nur an Mitglieder mit geöffneter App
       let geb = 0;
       if (stuendlich) { // KC-CLUB-WARTUNG-STUNDE: ab 9 Uhr, je Tag einmal
@@ -7362,6 +7426,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const pAnfragen = offeneTerminanfragen(ich).catch((e) => { console.error("anfragen offen", String(e)); return []; }); // 2.389.0 KC-CLUB-TERMINANFRAGE-SICHTBAR
         // 2.432.0 KC-CLUB-EINGANGSKORB: Dokumente, die andere in meinen Ordner gelegt haben und die noch auf mich warten
         const pAb = abStandHolen(ich.person_id).catch(() => null); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
+        const pDs = dsDarf(ich).then((ok) => (ok ? dsLage(ich) : null)).catch(() => null); // 2.590.0 KC-CLUB-DIENST-STEMPEL (nur wenn freigegeben)
         const pEingang = (async () => {
           if (ich.zugang !== "mitglied") return 0;
           const pk = await pPaket; if (pk) return pk.eingang ?? 0; // 2.576.0 KC-CLUB-START-PAKET
@@ -7504,7 +7569,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -9729,6 +9794,105 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): eine Übersicht Wunsch → Soll → Ist – nur lesend (den Dienstplan pflegt DP2)
+      // ----- 2.590.0 KC-CLUB-DIENST-STEMPEL: Kommen/Gehen in der App (bis zur Freigabe nur Admin) -----
+      case "dienst_stand": {
+        if (!(await dsDarf(ich))) return json({ aktiv: false });
+        return json(await dsLage(ich));
+      }
+      case "dienst_buchen": {
+        await nurWennFrei("dienst_stempel", ich, "Dienst anmelden");
+        const t = Date.now(), zeitMs = Date.parse(String(p.zeit || ""));
+        const { data: plan } = await db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published")
+          .in("work_date", [berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))]).limit(10);
+        const { data: alle } = await db.from("kc_dp_stempel").select("id,art,zeit,erfasst_am,quelle,dienst_ref,storniert_am").eq("person_id", ich.person_id).gte("zeit", new Date(t - 36 * 3600000).toISOString()).limit(40);
+        const stand = dsStand(alle ?? []), dienste = (plan ?? []).map(dsDienstAus), dienst = dsDienstJetzt(dienste, t, stand);
+        const art = stand.angemeldet ? "out" : "in", spontan = art === "in" && p.spontan === true && !dienst;
+        let grund = txt(p.grund, 120) || (spontan ? "Spontan mitgeholfen" : "");
+        // Kommen vergessen: beim Gehen ohne Anmeldung zuerst das Kommen nachtragen (ein Tipp in der App, als nachgetragen markiert)
+        const nachtragMs = Date.parse(String(p.nachtragKommen || ""));
+        if (art === "in" && p.erwartet === "out" && !Number.isFinite(nachtragMs)) throw new Fehler("Du bist nicht angemeldet – wann bist du gekommen?", 409);
+        const fehler = dsPruefen({ art, zeitMs, t, dienst, stand, spontan, grund });
+        if (fehler && !(art === "in" && Number.isFinite(nachtragMs))) throw new Fehler(fehler, 409);
+        const vorOrt = dsVorOrt({ lat: Number(p.lat), lon: Number(p.lon), genau: Number(p.genau) }, await dsOrte());
+        const { data: pe } = await db.from("kc_core_personen").select("mitgliedsnummer").eq("person_id", ich.person_id).maybeSingle();
+        const basis = { person_id: ich.person_id, member_no: /^KC-\d{3,5}$/.test(String(pe?.mitgliedsnummer || "")) ? pe!.mitgliedsnummer : null, quelle: "app", geraet: txt(geraetAusUA(req.headers.get("user-agent") || "") || "", 40) || null,
+          dienst_ref: dienst?.ref || null, dienst_start: dienst ? new Date(dienst.startMs).toISOString() : null, dienst_ende: dienst ? new Date(dienst.endeMs).toISOString() : null,
+          event_id: dienst?.event || null, vor_ort: vorOrt, erstellt_von: ich.person_id, spontan };
+        const zeilen: any[] = [];
+        if (art === "in" && Number.isFinite(nachtragMs)) { // nachgetragenes Kommen + Gehen in einem Zug
+          const fK = dsPruefen({ art: "in", zeitMs: nachtragMs, t, dienst, stand, spontan: !dienst, grund: grund || "Kommen nachgetragen" });
+          if (fK) throw new Fehler(fK, 409);
+          const fG = dsPruefen({ art: "out", zeitMs, t, dienst, stand: { angemeldet: true, seit: new Date(nachtragMs).toISOString() }, grund: grund || "Kommen nachgetragen" });
+          if (fG) throw new Fehler(fG, 409);
+          zeilen.push({ ...basis, art: "in", zeit: new Date(nachtragMs).toISOString(), nachgetragen: true, grund: "Kommen nachgetragen", spontan: !dienst },
+            { ...basis, art: "out", zeit: new Date(zeitMs).toISOString(), grund: grund || null, pause_min: Math.max(0, Math.min(240, Math.round(Number(p.pause) || 0))) });
+        } else zeilen.push({ ...basis, art, zeit: new Date(zeitMs).toISOString(), grund: grund || null, ...(art === "out" ? { pause_min: Math.max(0, Math.min(240, Math.round(Number(p.pause) || 0))) } : {}) });
+        const { error } = await db.from("kc_dp_stempel").insert(zeilen);
+        if (error) throw new Fehler("Die Buchung konnte nicht gespeichert werden – bitte gleich noch einmal.", 503);
+        await protokoll(ich.person_id, "dienst_gebucht", { art: zeilen.at(-1).art, nachgetragen: zeilen.length > 1, vorOrt, spontan, abweichung: dienst ? dsGrundNoetig(zeilen.at(-1).art, zeitMs, dienst) : null });
+        const neu = await dsLage(ich);
+        let summe: number | null = null;
+        if (zeilen.at(-1).art === "out") { const paar = dsPaare(((await db.from("kc_dp_stempel").select("id,art,zeit,erfasst_am,storniert_am").eq("person_id", ich.person_id).gte("zeit", new Date(t - 36 * 3600000).toISOString()).limit(40)).data) ?? []).at(-1);
+          if (paar?.kommen && paar?.gehen) summe = dsMinuten(Date.parse(paar.kommen.zeit), Date.parse(paar.gehen.zeit), zeilen.at(-1).pause_min); }
+        return json({ ok: true, art: zeilen.at(-1).art, vorOrt, summe, lage: neu });
+      }
+      case "dienst_korrigieren": {
+        await nurWennFrei("dienst_stempel", ich, "Dienst anmelden");
+        const t = Date.now(), zeitMs = Date.parse(String(p.zeit || "")), grund = txt(p.grund, 120);
+        const { data: alt } = await db.from("kc_dp_stempel").select("*").eq("id", String(p.id || "")).eq("person_id", ich.person_id).maybeSingle();
+        if (!alt || alt.quelle !== "app") throw new Fehler("Buchung nicht gefunden.", 404);
+        if (!dsKorrekturErlaubt(alt, t)) throw new Fehler(`Ändern geht nur ${DS.korrekturStd} Std. lang – bitte beim Admin melden.`, 409);
+        if (!grund) throw new Fehler("Bitte einen Grund angeben.", 400);
+        if (!Number.isFinite(zeitMs) || zeitMs > t + DS.zukunftMin * 60000 || Math.abs(zeitMs - Date.parse(alt.zeit)) > DS.gehenMaxStd * 3600000) throw new Fehler("Diese Zeit passt nicht.", 400);
+        const { id: _i, erfasst_am: _e, storniert_am: _s, storniert_von: _v, kasse_event_id: _k, ...rest } = alt;
+        const { data: neu, error } = await db.from("kc_dp_stempel").insert({ ...rest, zeit: new Date(zeitMs).toISOString(), grund, korrektur_von: alt.id, erstellt_von: ich.person_id }).select("id").single();
+        if (error || !neu) throw new Fehler("Die Änderung konnte nicht gespeichert werden.", 503);
+        await db.from("kc_dp_stempel").update({ storniert_am: jetzt(), storniert_von: ich.person_id }).eq("id", alt.id).is("storniert_am", null);
+        await protokoll(ich.person_id, "dienst_korrigiert", { art: alt.art, von: alt.zeit, nach: new Date(zeitMs).toISOString() });
+        return json({ ok: true, lage: await dsLage(ich) });
+      }
+      // Admin: wer ist heute im Dienst (Plan + Buchungen), nachtragen für andere, Dienst-Orte
+      case "dienst_heute": {
+        nurAdmin(ich);
+        const t = Date.now(), heute = berlinTag(new Date(t));
+        const [{ data: plan }, { data: b }] = await Promise.all([
+          db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("status", "published").eq("work_date", heute).limit(200),
+          db.from("kc_dp_stempel").select("id,person_id,art,zeit,erfasst_am,quelle,grund,pause_min,vor_ort,spontan,nachgetragen,storniert_am").gte("zeit", new Date(t - 30 * 3600000).toISOString()).is("storniert_am", null).limit(1000)]);
+        const ids = [...new Set([...(plan ?? []).map((x: any) => x.person_id), ...(b ?? []).map((x: any) => x.person_id)])];
+        const leute = await personen(ids);
+        const zeilen = ids.map((pid) => {
+          const meine = (b ?? []).filter((x: any) => x.person_id === pid), stand = dsStand(meine), dienste = (plan ?? []).filter((x: any) => x.person_id === pid).map(dsDienstAus);
+          const d = dienste.sort((a: any, c: any) => a.startMs - c.startMs).find((x: any) => x.endeMs > t - 3600000) || dienste.at(-1) || null;
+          const ampel = stand.angemeldet ? (d && t > d.endeMs + 3600000 ? "gelb" : "gruen") : d && t > d.startMs + 15 * 60000 && t < d.endeMs ? "rot" : "grau";
+          return { person_id: pid, name: leute.get(pid)?.display_name || pid, ampel, stand, dienst: d ? { start: new Date(d.startMs).toISOString(), ende: new Date(d.endeMs).toISOString(), bereich: d.bereich } : null,
+            paare: dsPaare(meine).map((x: any) => ({ kommen: x.kommen?.zeit || null, gehen: x.gehen?.zeit || null, quelle: x.kommen?.quelle || x.gehen?.quelle, vorOrt: x.kommen?.vor_ort ?? null, grund: x.gehen?.grund || x.kommen?.grund || null })) };
+        }).sort((a: any, c: any) => ["rot", "gelb", "gruen", "grau"].indexOf(a.ampel) - ["rot", "gelb", "gruen", "grau"].indexOf(c.ampel) || String(a.name).localeCompare(String(c.name)));
+        return json({ zeilen, orte: (await dsOrte()).length });
+      }
+      case "dienst_nachtragen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), art = p.art === "out" ? "out" : "in", zeitMs = Date.parse(String(p.zeit || "")), grund = txt(p.grund, 120);
+        if (!(await aktiveMitglieder()).some((m) => m.person_id === pid)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        if (!grund) throw new Fehler("Bitte einen Grund angeben (z. B. „laut Telefonat“).", 400);
+        if (!Number.isFinite(zeitMs) || zeitMs > Date.now() + DS.zukunftMin * 60000) throw new Fehler("Diese Zeit passt nicht.", 400);
+        const { error } = await db.from("kc_dp_stempel").insert({ person_id: pid, art, zeit: new Date(zeitMs).toISOString(), quelle: "planer", grund, nachgetragen: true, erstellt_von: ich.person_id,
+          pause_min: art === "out" ? Math.max(0, Math.min(240, Math.round(Number(p.pause) || 0))) : null });
+        if (error) throw new Fehler("Nachtragen hat nicht geklappt.", 503);
+        await protokoll(ich.person_id, "dienst_nachgetragen", { fuer: pid, art });
+        return json({ ok: true });
+      }
+      case "dienst_orte": {
+        nurAdmin(ich);
+        let orte = await dsOrte();
+        if (p.neu && Number.isFinite(Number(p.neu.lat)) && Number.isFinite(Number(p.neu.lon))) {
+          const name = txt(p.neu.name, 40) || "Dienst-Ort";
+          orte = [...orte.filter((o) => o.name !== name), { name, lat: Math.round(Number(p.neu.lat) * 1e5) / 1e5, lon: Math.round(Number(p.neu.lon) * 1e5) / 1e5, radius: Math.max(100, Math.min(1000, Math.round(Number(p.neu.radius) || DS.radiusM))) }].slice(0, 10);
+        }
+        if (p.weg) orte = orte.filter((o) => o.name !== String(p.weg));
+        if (p.neu || p.weg) { const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "dienst_orte", wert: { orte }, geaendert_von: ich.person_id, geaendert_am: jetzt() }); if (error) throw new Fehler("Speichern hat nicht geklappt.", 503); }
+        return json({ orte });
+      }
+
       case "mein_dienst": {
         const heute = berlinTag(new Date()), vor60 = berlinTag(new Date(Date.now() - 60 * 86400000)), monat = heute.slice(0, 7);
         const [{ data: w }, { data: ph }, { data: soll }, { data: sollAlt }, { data: ist }] = await Promise.all([
