@@ -129,7 +129,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.600.0";
+const SERVER_VERSION = "2.601.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2586,17 +2586,41 @@ const commSystemFehler = (x: any) => COMM_FEHLER.includes(x.status) && !COMM_EMP
 // KC-CLUB-START-SPARSAM-2: die fünf Lesungen sind für alle gleich (nur „wege“ gibt es zusätzlich für Admins – das wird unten je Aufruf
 // gebaut) → MERK_MS lang gemerkt, nur wenn alle fehlerfrei waren. Die Admin-Ansicht (erreichbarkeit) liest immer frisch und erneuert den Merker.
 let COMM_MERK: { t: number; v: Promise<any[]> } | null = null;
-function commLesen(frisch: boolean): Promise<any[]> {
-  if (!frisch && COMM_MERK && Date.now() - COMM_MERK.t <= MERK_MS) return COMM_MERK.v;
-  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString(), seit24 = new Date(Date.now() - 86400000).toISOString();
-  const m: { t: number; v: Promise<any[]> } = { t: Date.now(), v: Promise.all([
+// 2.601.0 KC-CLUB-START-BUENDEL (Messung 22.10.: ~35 gleichzeitige Datenbank-Anfragen beim Start, jede im Gedränge 100–350 ms statt 20–40 ms):
+// die fünf Lesungen in EINEM Datenbank-Aufruf (kc_club_comm_paket, gleiche Abfragen). Fehler oder Not-Aus (kc_club_konfig 'start_buendel'
+// = {"aus": true}) → bisheriger Weg (commLesenEinzeln); jeder START_BUENDEL_VERGLEICH-te Aufruf vergleicht nebenbei alt ↔ neu (Protokoll).
+const START_BUENDEL_VERGLEICH = 20;
+const buendelAus = async () => { try { const k: any = await konfigZeile("start_buendel"); return !!k?.data?.wert?.aus; } catch { return false; } };
+async function commLesenPaket(seit7: string, seit24: string): Promise<any[] | null> {
+  if (await buendelAus()) return null;
+  try {
+    const r: any = await db.rpc("kc_club_comm_paket", { p_seit7: seit7, p_seit24: seit24, p_fehler: COMM_FEHLER });
+    const d = r?.data;
+    if (r?.error || !d || typeof d !== "object" || !Array.isArray(d.wege) || !Array.isArray(d.auftr) || !Array.isArray(d.alle24)) return null;
+    return [{ data: d.st ?? null, error: null }, { data: d.wege, error: null }, { data: d.bericht ?? null, error: null }, { data: d.auftr, error: null }, { data: d.alle24, error: null }];
+  } catch { return null; }
+}
+function commLesenEinzeln(seit7: string, seit24: string): Promise<any[]> {
+  return Promise.all([
     db.from("kc_communication_settings").select("enabled,dispatch_enabled").eq("id", "global").maybeSingle(),
     db.from("kc_communication_provider_routes").select("channel,provider_id,role,enabled,health_status,last_success_at,last_failure_at,consecutive_failures").eq("enabled", true).in("channel", ["push", "email"]),
     db.from("kc_communication_health_snapshots").select("created_at,success_rate,avg_push_ms,avg_email_ms,queued,retrying,failed,active_devices").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     db.from("kc_communication_requests").select("status,channel,sent_at,created_at,error_code").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
     // fehlgeschlagene Aufträge aller Programme (24 h) – ersetzt den Zähler „failed“ des Zustandsberichts, der Empfängerfehler mitzählt
     db.from("kc_communication_requests").select("status,error_code").in("status", COMM_FEHLER).gte("created_at", seit24).limit(500),
-  ]).then((r) => { if (r.some((x: any) => x.error) && COMM_MERK === m) COMM_MERK = null; return r; }, (e) => { if (COMM_MERK === m) COMM_MERK = null; throw e; }) };
+  ]);
+}
+function commLesen(frisch: boolean): Promise<any[]> {
+  if (!frisch && COMM_MERK && Date.now() - COMM_MERK.t <= MERK_MS) return COMM_MERK.v;
+  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString(), seit24 = new Date(Date.now() - 86400000).toISOString();
+  const m: { t: number; v: Promise<any[]> } = { t: Date.now(), v: commLesenPaket(seit7, seit24).then((pk) => {
+    if (!pk) return commLesenEinzeln(seit7, seit24);
+    if (Math.random() < 1 / START_BUENDEL_VERGLEICH) nebenbei(commLesenEinzeln(seit7, seit24).then(async (alt) => {
+      const teile = ["st", "wege", "bericht", "auftr", "alle24"].filter((_, i) => !alt[i]?.error && !spGleich(alt[i]?.data ?? null, pk[i].data));
+      if (teile.length) await protokoll(null, "start_buendel_abweichung", { teil: "comm", teile });
+    }).catch((e) => console.error("comm paket vergleich", String(e))));
+    return pk;
+  }).then((r) => { if (r.some((x: any) => x.error) && COMM_MERK === m) COMM_MERK = null; return r; }, (e) => { if (COMM_MERK === m) COMM_MERK = null; throw e; }) };
   COMM_MERK = m;
   return m.v;
 }
@@ -5148,7 +5172,35 @@ async function bueroSitzung(ich: Ich, tid: string) {
     zeilenWahl: BUERO_ZEILEN,
   };
 }
+// 2.601.0 KC-CLUB-START-BUENDEL: die Büro-Eingangszahlen der Clubleitung (bisher ~10 Anfragen, beim Start der Clubleitung mitten im Gedränge)
+// in EINEM Datenbank-Aufruf (kc_club_buero_paket, gleiche Abfragen); gerechnet wird wie bisher (aeWartetAufMich, ekKenntnisVon).
+// Fehler/Not-Aus ('start_buendel') → bisheriger Weg (bueroEingangEinzeln); Stichproben-Vergleich alt ↔ neu wie bei commLesen.
+async function bueroPaket(ich: Ich): Promise<any | null> {
+  if (await buendelAus()) return null;
+  try {
+    const r: any = await db.rpc("kc_club_buero_paket", { p_person: ich.person_id, p_admin: !!ich.admin, p_heute: berlinTag(new Date()), p_org: ORG, p_event: DW.veranstaltung });
+    const d = r?.data;
+    return !r?.error && d && typeof d === "object" && Array.isArray(d.ae) && Array.isArray(d.dw) && Array.isArray(d.ekst) ? d : null;
+  } catch { return null; }
+}
+function bueroAusPaket(ich: Ich, d: any) {
+  const n = (x: unknown) => Number(x) || 0, leitung = !!(ich.vorstand || ich.admin);
+  const st = new Map<string, any>((d.ekst ?? []).map((x: any) => [x.ref_id, x]));
+  return { ausleihen: n(d.ausleihen), vorschlaege: n(d.vorschlaege), hilfe: n(d.hilfe), archiv: n(d.archiv), aufgaben: n(d.aufgaben), entwuerfe: n(d.entwuerfe),
+    aenderungen: leitung ? (d.ae ?? []).filter((x: any) => aeWartetAufMich(ich, x)).length : 0,
+    erstattungen: leitung ? n(d.erst) : 0, dienstzeiten: leitung ? (d.dw ?? []).filter((x: any) => !ekKenntnisVon(st.get(x.id), ich.person_id, x.revision)).length : 0 };
+}
 async function bueroEingang(ich?: Ich) {
+  const pk = ich ? await bueroPaket(ich) : null;
+  if (!pk || !ich) return bueroEingangEinzeln(ich);
+  const neu = bueroAusPaket(ich, pk);
+  if (Math.random() < 1 / START_BUENDEL_VERGLEICH) nebenbei(bueroEingangEinzeln(ich).then(async (alt: any) => {
+    const teile = Object.keys(neu).filter((k) => alt[k] !== (neu as any)[k]);
+    if (teile.length) await protokoll(ich.person_id, "start_buendel_abweichung", { teil: "buero", teile });
+  }).catch((e) => console.error("buero paket vergleich", String(e))));
+  return neu;
+}
+async function bueroEingangEinzeln(ich?: Ich) {
   const leer = { count: 0 };
   const zahl = async (q: any) => { try { const r = await q; return r.count ?? 0; } catch { return 0; } };
   // KC-CLUB-AENDERUNG (2.22.8, Wunsch Hansi): offene Änderungsmeldungen gehören in den Posteingang

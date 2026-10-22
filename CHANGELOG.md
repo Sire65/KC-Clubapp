@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.601.0 – 2026-10-22 – Start schneller: weniger gleichzeitige Datenbank-Anfragen
+Beim Start fragte der Server ~35-mal gleichzeitig die Datenbank – im Gedränge dauerte jede Anfrage 5–10-mal so lange. Die Communicator-Ampel (5 Anfragen) und die Büro-Zahlen der Clubleitung (~10 Anfragen) kommen jetzt in je EINEM Aufruf (KC-CLUB-START-BUENDEL). Gleiche Daten, gleiche Rechnung; Rückfall, Not-Aus und Stichproben-Vergleich wie bei den anderen Paketen.
+
 ## 2.600.0 – 2026-10-22 – 💬 Startnachricht mit Antworten „Ja · Später · Nein“ (KC-CLUB-STARTNACHRICHT-ANTWORT)
 Wunsch Hansi („auch bei Marianne und Reinhilde – mit ja, nein, später usw“).
 - 📣 Startnachricht verfassen: neuer Haken „💬 Antworten ✅ Ja · ⏰ Später · ✖ Nein anbieten“ – statt nur „gelesen“.

@@ -432,7 +432,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(aktionen.has("communicator_status"), "Server-Aktion communicator_status fehlt");
   // 2.494.0 KC-CLUB-START-SPARSAM-2: die Lesungen stehen in commLesen (gemerkt) direkt davor
-  const cs = server.slice(server.indexOf(server.includes("function commLesen(") ? "function commLesen(" : "async function communicatorStatus"), server.indexOf("// ---------- Anmeldung"));
+  // 2.601.0 KC-CLUB-START-BUENDEL: davor stehen jetzt Paket und Einzel-Lesungen (commLesenPaket / commLesenEinzeln) – geprüft wird ab dem ersten
+  const cs = server.slice(server.indexOf(server.includes("async function commLesenPaket(") ? "async function commLesenPaket(" : server.includes("function commLesen(") ? "function commLesen(" : "async function communicatorStatus"), server.indexOf("// ---------- Anmeldung"));
   assert.ok(!/\.(insert|update|upsert|delete)\(/.test(cs), "Communicator-Status darf nichts verändern");
   assert.ok(/kc_communication_health_snapshots/.test(cs) && /kc_communication_provider_routes/.test(cs) && /eq\("source_program", "kc-club"\)/.test(cs), "Quellen des Communicator-Status fehlen");
   assert.ok(/method: "OPTIONS"/.test(cs), "Erreichbarkeit wird nicht ohne Versand geprüft");
@@ -5912,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12200,4 +12201,15 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/x\.wahl \? snWahlKnoepfe\(x\) :/.test(html) && /if \(ok\) \{ \$\("snGelesen"\)\.onchange/.test(html), "Ja/Später/Nein statt Haken, alter Weg bleibt");
   assert.ok(/snBestaetigen\(x, "", ziel \? \(\) => sprung\(ziel\) : null, "ja"\)/.test(html) && /snBestaetigen\(x, "", null, "nein"\)/.test(html) && /api\("startnachricht_bestaetigen", \{ id: x\.id, antwort: "spaeter" \}\)/.test(html), "Antworten an den Server");
   assert.ok(/wahl: !!\$\("snWahl"\)\?\.checked/.test(html) && /\.sn-antworten \{/.test(lies("index.html")), "Haken beim Verfassen + Stil");
+}
+// 2.601.0 KC-CLUB-START-BUENDEL: Communicator-Ampel und Büro-Zahlen beim Start in je EINEM Datenbank-Aufruf – mit Rückfall, Not-Aus und Stichprobe
+{
+  const mig = lies("supabase/migrations/20261022_kc_club_comm_buero_paket.sql");
+  assert.ok(/create or replace function public\.kc_club_comm_paket\(/.test(mig) && /create or replace function public\.kc_club_buero_paket\(/.test(mig), "beide Pakete");
+  assert.ok((mig.match(/to service_role;/g) || []).length === 2 && /from public, anon, authenticated;[\s\S]*from public, anon, authenticated;/.test(mig), "nur der Server darf aufrufen");
+  assert.ok(/language sql stable/.test(mig) && !/\b(insert|update|delete)\b/i.test(mig.replace(/--[^\n]*/g, "")), "nur lesend");
+  assert.ok(/if \(!pk\) return commLesenEinzeln\(seit7, seit24\);/.test(server) && /if \(!pk \|\| !ich\) return bueroEingangEinzeln\(ich\);/.test(server), "Rückfall auf den bisherigen Weg");
+  assert.ok(/konfigZeile\("start_buendel"\)/.test(server) && (server.match(/if \(await buendelAus\(\)\) return null;/g) || []).length === 2, "Not-Aus");
+  assert.ok(/"start_buendel_abweichung", \{ teil: "comm"/.test(server) && /"start_buendel_abweichung", \{ teil: "buero"/.test(server), "Stichproben-Vergleich alt ↔ neu");
+  assert.ok(/aenderungen: leitung \? \(d\.ae \?\? \[\]\)\.filter\(\(x: any\) => aeWartetAufMich\(ich, x\)\)/.test(server) && /ekKenntnisVon\(st\.get\(x\.id\), ich\.person_id, x\.revision\)/.test(server), "gleiche Rechnung wie bisher");
 }
