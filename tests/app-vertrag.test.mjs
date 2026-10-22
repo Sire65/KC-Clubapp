@@ -669,7 +669,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   for (const a of ["online", "anklopfen", "anklopfen_antwort"]) assert.ok(aktionen.has(a) && aufrufe.has(a), `Online-Aktion ${a} fehlt`);
   assert.ok(/online: \(w\) => \(\{ zeigen: w\?\.zeigen !== false \}\)/.test(server), "Einstellung „online“ fehlt oder Standard nicht an");
   const on = server.slice(server.indexOf('case "online": {'), server.indexOf('case "anklopfen": {'));
-  assert.ok(/zeigen \? (onlineJetzt\(\) : Promise\.resolve\(new Set|await onlineJetztMit\(.*\) : \{ on: new Set)/.test(on), "Wer sich verbirgt, sieht trotzdem andere"); // 2.485.0 KC-CLUB-ONLINE-SPARSAM
+  assert.ok(/zeigen \? (onlineJetzt\(\) : Promise\.resolve\(new Set|await onlineJetztMit\(.*\) : \{ on: new Set|onlineJetztMit\(.*\) : Promise\.resolve\(\{ on: new Set)/.test(on), "Wer sich verbirgt, sieht trotzdem andere"); // 2.485.0 KC-CLUB-ONLINE-SPARSAM
   // 2.3.0: zusätzlich ohne Inkognito-Admin (KC-CLUB-INKOGNITO)
   assert.ok(/filter\(\(id: string\) => zeigen\.get\(id\) !== false(\)| && !inko\.has\(id\)\)| && \(mitInkognito \|\| !inko\.has\(id\)\)\)\))/.test(server), "Verborgene erscheinen als online");
   const aw = server.slice(server.indexOf('case "anklopfen_antwort"'), server.indexOf('case "anklopfen_antwort"') + 400);
@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7296,6 +7296,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"\) chatSignalLaden\(true\); return; \}/.test(programm), "gelesen gebündelt");
   assert.ok(/if \(gebuendelt\) \{ if \(CHAT_SIGNAL_UHR\) return; CHAT_SIGNAL_UHR = setTimeout\(/.test(programm), "Bündeln ohne Verlängern");
 }
+// 2.597.0 KC-CLUB-ONLINE-PAKET / KC-CLUB-MAHNUNG-PAKET: ein Aufruf statt mehrerer, bisheriger Weg als Rückfall, Not-Aus, Vergleich
+{
+  const mig = lies("supabase/migrations/20261022_kc_club_online_mahnung_paket.sql");
+  for (const f of ["kc_club_online_jetzt(timestamptz, text[])", "kc_club_nachricht_mahnung(text, jsonb, timestamptz)"]) {
+    assert.ok(mig.includes(`revoke all on function public.${f} from public, anon, authenticated;`) && mig.includes(`grant execute on function public.${f} to service_role;`), "nur der Server: " + f);
+  }
+  assert.ok(/returns jsonb language sql stable/.test(mig) && !/\b(insert|update|delete)\b/i.test(mig.replace(/--[^\n]*/g, "")), "nur lesend");
+  assert.ok(/order by msg\.created_at limit 100/.test(mig) && /order by nr, rn limit 300/.test(mig) && /where o <= 40/.test(mig), "Mahnung: gleiche Grenzen und Reihenfolge");
+  assert.ok(/konfigZeile\("online_paket"\)/.test(server) && /konfigZeile\("mahnung_paket"\)/.test(server), "Not-Aus");
+  assert.ok(/return onlineJetztMitAlt\(weitere, seit\);/.test(server) && /return \{ \.\.\.\(await mahnungAlt\(ich, offen, grenze\)\), tage: MAHNUNG_TAGE \};/.test(server), "Rückfall auf den bisherigen Weg");
+  assert.ok(/"online_paket_abweichung"/.test(server) && /"mahnung_paket_abweichung"/.test(server), "Vergleich alt ↔ neu");
+  const on = server.slice(server.indexOf('case "online": {'), server.indexOf('const { anMich, vonMir } = onlineAnklopfenTeilen'));
+  assert.ok(/const \[, fensterAnders, \{ on, einst \}, liveT\] = await Promise\.all\(\[/.test(on) && /ich\.nurLesen \? Promise\.resolve\(null\) : onlineSeitMerken/.test(on), "Online-Takt gleichzeitig, Nur-Lesen schreibt nicht");
+  assert.ok(lies("tools/db-test/88_erwartet.txt").includes("mahnung_gleich=t"), "Probelauf erwartet Gleichheit");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -7842,7 +7857,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/const da = m\.person_id === ICH\.person_id \? "" : mgDaText\(m\);/.test(html) && /<small class="mg-da/.test(html), "Tafel zeigt die Zeile");
   const ms = server.slice(server.indexOf("async function onlineSeitMerken("), server.indexOf("async function onlineJetzt("));
   assert.ok(/jetztMs - z > ONLINE_SEK \* 1000/.test(ms) && /schluessel: "online_seit"/.test(ms) && /if \(!neu && jetztMs - z < 30000\) return;/.test(ms), "Sitzungsbeginn: neue Sitzung nach ONLINE_SEK Pause, höchstens alle 30 s schreiben");
-  assert.ok(/if \(!ich\.nurLesen\) await onlineSeitMerken\(ich\.person_id(, mein\.get\("online_seit"\) \?\? null)?\)/.test(server) && /"inkognito", "online_seit"\]/.test(server), "beim Online-Takt gemerkt, über zuletztDaMap (mit Privatsphäre) geliefert");
+  assert.ok((/if \(!ich\.nurLesen\) await onlineSeitMerken\(ich\.person_id(, mein\.get\("online_seit"\) \?\? null)?\)/.test(server) || /ich\.nurLesen \? Promise\.resolve\(null\) : onlineSeitMerken\(ich\.person_id, mein\.get\("online_seit"\) \?\? null\)/.test(server)) && /"inkognito", "online_seit"\]/.test(server), "beim Online-Takt gemerkt, über zuletztDaMap (mit Privatsphäre) geliefert");
 }
 
 // 4xx. 2.25.6: ↻ Aktualisieren oben rechts auf der Mitglieder-Seite (KC-CLUB-MG-AKTUALISIEREN, Wunsch Hansi „wie auf der Startseite“)

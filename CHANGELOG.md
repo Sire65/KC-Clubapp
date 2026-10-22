@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.597.0 – 2026-10-22 – ⚡ Stufe 2: Online-Takt und Nachrichten-Mahnung gebündelt (KC-CLUB-ONLINE-PAKET, KC-CLUB-MAHNUNG-PAKET)
+Wunsch Hansi („bündeln statt einzeln nacheinander“ → Stufe 1 eingespielt → „Ja weiter“). Gleiche Abfragen, gleiche Regeln, gleiches Ergebnis.
+- Online-Takt (jedes offene Handy jede Minute): „online seit“/Fenster merken, wer sonst online ist und die Live-Umfrage laufen gleichzeitig statt nacheinander; „wer ist online“ (Zugang → Einstellungen → Inkognito-Admins, bisher 2–3 Wege nacheinander) kommt in EINEM Datenbank-Aufruf (kc_club_online_jetzt).
+- Start/Abgleich: die Mahnung „Nachrichten älter als 5 Tage / ❗ wichtig ungelesen“ las bisher EINE Abfrage je ungelesenem Chat (bis zu 40) + eine für „wichtig“ – jetzt EIN Aufruf (kc_club_nachricht_mahnung), gleiche Grenzen (100 je Chat, 300 für „wichtig“) und Chat-Reihenfolge.
+- Sicherheitsnetz wie bei den bisherigen Paketen: nur lesend, nur der Server darf aufrufen; Fehler oder noch nicht eingespielte Datenbank → bisheriger Weg; Not-Aus ohne neue Version (kc_club_konfig 'online_paket' bzw. 'mahnung_paket' = {"aus": true}); nebenbei Vergleich alt ↔ neu (Online jeder 50., Mahnung jeder 10. Aufruf) mit Protokolleintrag bei Abweichung.
+- Datenbank: supabase/migrations/20261022_kc_club_online_mahnung_paket.sql (Probelauf tools/db-test/88_online_mahnung_paket_test.sql). Vorab nur lesend gegen die echten Daten geprüft: gleiche Online-Personen/Einstellungen/Inkognito, Mahnung bei 12 Mitgliedern identisch.
+- Test: Vertragstest-Block 2.597.0, Typprüfung (deno check) ohne neue Meldungen. Rückweg: App 2.596.0, Server 2.593.0 (die Funktionen können bleiben).
 ## 2.596.0 – 2026-10-22 – 📼 Anrufbeantworter-Aufnahme wie im Chat + Chat-Signale gebündelt (KC-CLUB-AB-WIE-CHAT, KC-CLUB-CHAT-BUENDELN)
 Wunsch Hansi („Spracheingabe beim Anrufbeantworter genau so wie bei der Spracheingabe im Chat. Und nochmal prüfen, wenn viele Nachrichten abwechselnd geschickt werden, damit der Server nicht durcheinanderkommt“).
 - Anrufbeantworter: dieselbe Aufnahme-Leiste wie bei der Sprachnachricht im Chat – blinkender roter Punkt, Laufzeit, echte Mikrofon-Welle (gleiches Oszilloskop), „✖ Verwerfen“ und „➤ Senden“; darüber für wen und wie viel Zeit noch bleibt (2 Min., Admin 15 Min.). Senden/Verwerfen/Zeitgrenze wie bisher (gleiche Aufnahme, gleiches Hochladen).

@@ -129,7 +129,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.593.0";
+const SERVER_VERSION = "2.597.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -927,8 +927,37 @@ async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   return new Set(ids.filter((id: string) => zeigen.get(id) !== false && (mitInkognito || !inko.has(id))));
 }
 // KC-CLUB-ONLINE-SPARSAM (2.485.0): wie onlineJetzt(), holt aber „online“, „inkognito“ und weitere Einstellungen der Online-Leute in EINER Abfrage
+// 2.597.0 KC-CLUB-ONLINE-PAKET (Prüfung „bündeln statt einzeln nacheinander“, Wunsch Hansi „sorgfältig und vorsichtig“): Zugang, Einstellungen
+// und Inkognito-Admins in EINEM Datenbank-Aufruf (kc_club_online_jetzt) statt 2–3 nacheinander – bei jedem Online-Takt jedes Handys.
+// Gleiche Abfragen, gerechnet wird wie bisher. Fehler, alter Datenbank-Stand oder Not-Aus (kc_club_konfig 'online_paket' = {"aus": true})
+// → bisheriger Weg. Jeder ONLINE_PAKET_VERGLEICH-te Aufruf vergleicht nebenbei alt ↔ neu und schreibt Abweichungen ins Protokoll.
+const ONLINE_PAKET_VERGLEICH = 50;
+async function onlinePaketHolen(seit: string, weitere: string[]): Promise<{ ids: string[]; einst: any[]; inko: string[] } | null> {
+  try {
+    const [k, r] = await Promise.all([konfigZeile("online_paket").catch(() => ({ data: null })), Promise.resolve(db.rpc("kc_club_online_jetzt", { p_seit: seit, p_schluessel: weitere }))]);
+    if ((k as any)?.data?.wert?.aus) return null;
+    const d = (r as any).data;
+    return !(r as any).error && d && Array.isArray(d.ids) && Array.isArray(d.einst) && Array.isArray(d.inko) ? d : null;
+  } catch { return null; }
+}
 async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>> }> {
-  const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString(), einst = new Map<string, Map<string, any>>();
+  const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
+  const pk = await onlinePaketHolen(seit, weitere);
+  if (pk) {
+    const einst = new Map<string, Map<string, any>>();
+    for (const x of pk.einst) { const m = einst.get(x.schluessel) ?? new Map(); m.set(x.person_id, x.wert); einst.set(x.schluessel, m); }
+    const inko = new Set(pk.inko.map(String)), ids = [...new Set(pk.ids.map(String))];
+    const erg = { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id))), einst };
+    if (Math.random() < 1 / ONLINE_PAKET_VERGLEICH) nebenbei(onlineJetztMitAlt(weitere, seit).then(async (alt) => {
+      const a = [...alt.on].sort().join(), b = [...erg.on].sort().join();
+      if (a !== b) await protokoll(null, "online_paket_abweichung", { alt: alt.on.size, neu: erg.on.size });
+    }).catch((e) => console.error("online paket vergleich", String(e))));
+    return erg;
+  }
+  return onlineJetztMitAlt(weitere, seit);
+}
+async function onlineJetztMitAlt(weitere: string[], seit: string): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>> }> {
+  const einst = new Map<string, Map<string, any>>();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
   const ids = [...new Set((data ?? []).map((x: any) => x.person_id as string))];
   if (!ids.length) return { on: new Set(), einst };
@@ -4892,6 +4921,28 @@ async function cjWartung() {
     return; // höchstens eine Push je Lauf
   }
 }
+// ----- 2.597.0 KC-CLUB-MAHNUNG-PAKET: Nachrichten-Mahnung (alt/wichtig) in einem Aufruf – mahnungAlt ist der bisherige Weg (unverändert) ----------
+const MAHNUNG_PAKET_VERGLEICH = 10;
+async function mahnungPaket(pid: string, threads: { t: string; lr: string | null }[], grenze: string): Promise<{ alt: number; wichtig: number } | null> {
+  if (!threads.length) return { alt: 0, wichtig: 0 };
+  try {
+    const [k, r] = await Promise.all([konfigZeile("mahnung_paket").catch(() => ({ data: null })), Promise.resolve(db.rpc("kc_club_nachricht_mahnung", { p_person: pid, p_threads: threads, p_grenze: grenze }))]);
+    if ((k as any)?.data?.wert?.aus) return null;
+    const d = (r as any).data;
+    return !(r as any).error && d && Number.isFinite(Number(d.alt)) && Number.isFinite(Number(d.wichtig)) ? { alt: Number(d.alt), wichtig: Number(d.wichtig) } : null;
+  } catch { return null; }
+}
+async function mahnungAlt(ich: Ich, offen: { t: any }[], grenze: string): Promise<{ alt: number; wichtig: number }> {
+  const listen = await Promise.all(offen.map(async ({ t }) => {
+    let q = db.from("kc_communication_messages").select("id,created_at").eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id).order("created_at").limit(100);
+    if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
+    const { data, error } = await q; if (error) throw error; return data ?? [];
+  }));
+  const alle = listen.flat(), ids = alle.map((m: any) => m.id).slice(0, 300);
+  const { data: wi, error } = ids.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ids) : { data: [] as any[], error: null };
+  if (error) throw error;
+  return { alt: alle.filter((m: any) => m.created_at < grenze).length, wichtig: (wi ?? []).length };
+}
 // ----- 2.576.0 KC-CLUB-START-PAKET (Wunsch Hansi „App ist langsam – Vorsicht, nix kaputt machen, genau planen“): die kleinen persönlichen
 // Start-Abfragen kommen in EINEM Datenbank-Aufruf (kc_club_start_paket) statt ~18 einzelnen Wegen. Jeder Teil ist genau die bisherige Abfrage;
 // klappt der Aufruf nicht oder ist der Not-Aus gesetzt (kc_club_konfig 'start_paket' = {"aus": true}), nimmt jede Stelle von selbst den
@@ -7504,15 +7555,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .then((r: any) => (r.error ? null : { anzahl: Number(r.data?.anzahl || 0), grenze: RT_GRENZE, stand: r.data?.geaendert_am ?? null })).catch(() => null) : Promise.resolve(undefined);
         const pMahnung = (async () => {
           const grenze = new Date(Date.now() - MAHNUNG_TAGE * 86400000).toISOString();
-          const listen = await Promise.all(zahlen.filter((z) => z.n > 0).slice(0, 40).map(async ({ t }) => {
-            let q = db.from("kc_communication_messages").select("id,created_at").eq("thread_id", t.thread_id).neq("sender_person_id", ich.person_id).order("created_at").limit(100);
-            if (t.last_read_at) q = q.gt("created_at", t.last_read_at);
-            const { data, error } = await q; if (error) throw error; return data ?? [];
-          }));
-          const alle = listen.flat(), ids = alle.map((m: any) => m.id).slice(0, 300);
-          const { data: wi, error } = ids.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ids) : { data: [] as any[], error: null };
-          if (error) throw error;
-          return { alt: alle.filter((m: any) => m.created_at < grenze).length, wichtig: (wi ?? []).length, tage: MAHNUNG_TAGE };
+          // 2.597.0 KC-CLUB-MAHNUNG-PAKET: bisher EINE Abfrage je ungelesenem Chat (bis zu 40) + eine für „wichtig“ → jetzt EIN Aufruf
+          // (kc_club_nachricht_mahnung, gleiche Abfragen, gleiche Grenzen, gleiche Chat-Reihenfolge). Fehler/Not-Aus ('mahnung_paket') → bisheriger Weg.
+          const offen = zahlen.filter((z) => z.n > 0).slice(0, 40);
+          const pk = await mahnungPaket(ich.person_id, offen.map(({ t }) => ({ t: t.thread_id, lr: t.last_read_at ?? null })), grenze);
+          if (pk) {
+            if (Math.random() < 1 / MAHNUNG_PAKET_VERGLEICH) nebenbei(mahnungAlt(ich, offen, grenze).then(async (alt) => {
+              if (alt.alt !== pk.alt || alt.wichtig !== pk.wichtig) await protokoll(ich.person_id, "mahnung_paket_abweichung", { alt, neu: pk });
+            }).catch((e) => console.error("mahnung paket vergleich", String(e))));
+            return { alt: pk.alt, wichtig: pk.wichtig, tage: MAHNUNG_TAGE };
+          }
+          return { ...(await mahnungAlt(ich, offen, grenze)), tage: MAHNUNG_TAGE };
         })();
         pMahnung.catch(() => {});
         // 2.155.0: Gruppen-Zahl und Notfall-Prüfung hängen beide nur vom Zählen ab → gleichzeitig
@@ -11740,16 +11793,21 @@ Köcheclub-App`,
             .gte("erstellt_am", new Date(t - 86400000).toISOString()).order("erstellt_am", { ascending: false }).limit(60),
         ]);
         const mein = new Map((meine ?? []).map((x: any) => [x.schluessel as string, x]));
-        if (!ich.nurLesen) await onlineSeitMerken(ich.person_id, mein.get("online_seit") ?? null).catch(() => null); // KC-CLUB-ONLINE-SEIT (2.25.5)
-        const fensterAnders = await fensterAbgleich(ich, p.fenster, req, mein.get("fenster") ?? null).catch(() => null); // KC-CLUB-ZWEI-BROWSER
         const zeigen = (mein.get("online") as any)?.wert?.zeigen !== false;
+        // 2.597.0 KC-CLUB-GLEICHZEITIG: „online seit“ und Fenster merken (nur meine Zeilen), wer sonst online ist und die Live-Umfrage hängen nicht
+        // voneinander ab – sie laufen jetzt gleichzeitig statt nacheinander. Gleiche Abfragen, gleiches Ergebnis.
+        const [, fensterAnders, { on, einst }, liveT] = await Promise.all([
+          ich.nurLesen ? Promise.resolve(null) : onlineSeitMerken(ich.person_id, mein.get("online_seit") ?? null).catch(() => null), // KC-CLUB-ONLINE-SEIT (2.25.5)
+          fensterAbgleich(ich, p.fenster, req, mein.get("fenster") ?? null).catch(() => null), // KC-CLUB-ZWEI-BROWSER
+          zeigen ? onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : Promise.resolve({ on: new Set<string>(), einst: new Map<string, Map<string, any>>() }),
+          liveTerminKurz().catch(() => null), // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
+        ]);
         const { anMich, vonMir } = onlineAnklopfenTeilen(klopf ?? [], ich.person_id, seit, seit10);
         const vfW: any = (mein.get("vorfuehren") as any)?.wert, vf = vfW?.status === "angefragt" && Date.now() - new Date(vfW.seit).getTime() < 3 * 60000 ? vfW : null; // KC-CLUB-VORFUEHREN
         // KC-CLUB-SCHNAPPSCHUSS (2.102.0): offene Bitte des Admins um EIN Bild der Club-App – das Mitglied entscheidet selbst
         const ssW: any = (mein.get("schnappschuss") as any)?.wert, ss = ssW?.status === "angefragt" && Date.now() - new Date(ssW.seit).getTime() < SS_FRIST_MS ? ssW : null;
         // Nicht melden, wenn wir danach doch miteinander telefoniert haben (z. B. nach gleichzeitigem Anrufen).
         const { rufe, verp: verp0 } = onlineAnrufeTeilen(anrufe24 ?? [], klingelEnde);
-        const { on, einst } = zeigen ? await onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : { on: new Set<string>(), einst: new Map<string, Map<string, any>>() };
         let verp: any[] = verp0;
         if (verp.length) {
           const { data: spaeter } = await db.from("kc_club_anruf").select("von,an,angenommen_am").not("angenommen_am", "is", null).gte("angenommen_am", verp[verp.length - 1].erstellt_am)
@@ -11791,7 +11849,6 @@ Köcheclub-App`,
         const geraetMap = new Map<string, string>();
         if (ich.admin) for (const id of on) { const l = (einst.get("fenster")?.get(id)?.liste || []).filter((y: any) => y && GERAETE.has(y.g) && Date.now() - Number(y.t) < FENSTER_SEK * 1000).sort((a: any, b: any) => b.t - a.t);
           if (l[0]) geraetMap.set(id, l[0].g); }
-        const liveT = await liveTerminKurz().catch(() => null); // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
         return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}), ...(geraetMap.has(id) ? { geraet: geraetMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null, ...(pushStand.has(x.id) ? { push: pushStand.get(x.id) } : {}) })),
