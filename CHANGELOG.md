@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.590.0 – 2026-10-22 – 🟢 Dienst anmelden/abmelden in der App – Stufe 1, nur Admin zum Testen (KC-CLUB-DIENST-STEMPEL)
+Wunsch Hansi (Konzept „Dienst-Anmeldung in der Club-App“; Entscheidungen 22.10.: Ort nur markieren 300 m, Zeitfenster ±2 Std., Grund ab 15 Min., selbst korrigieren 24 Std., spontan mithelfen ja, Aushilfen ja; „Bau ein, aber noch nicht freigegeben – erst ich teste. Ohne Probleme mit den anderen Programmen“).
+- **Noch nicht freigegeben:** neue Freigabe „🟢 Dienst anmelden/abmelden“ (Standard: nur Admin, mit 🔒 Test). Für Mitglieder ändert sich nichts, bis Hansi unter Admin → Freigaben „für alle“ wählt.
+- Startseite: Karte „🟢 Dienst beginnen · heute 14:00–22:00“ ab 30 Min. vor Dienstbeginn bzw. „🔴 Dienst beenden · läuft seit …“, solange angemeldet. Blatt mit großer Uhr: Vorschlag = geplante Zeit (wenn innerhalb 30 Min.), sonst jetzt; −1 Std./−5/+5/+1 Std., „Jetzt“, „Wie geplant“; Pause beim Gehen (aus dem Plan bzw. Pausenregel); Grund-Knöpfe ab 15 Min. Abweichung (wie an der Kasse + „Später/Früher gekommen“, „Spontan mitgeholfen“); „Ich helfe spontan mit“; „Kommen vergessen“ trägt Kommen + Gehen in einem Zug nach; eigene Buchungen 24 Std. änderbar (alte Zeit bleibt sichtbar). Ohne Netz wird die Buchung gemerkt und nachgeschickt.
+- Standort nur beim Buchen und nur, wenn Dienst-Orte eingerichtet sind: Ergebnis „vor Ort ja/nein“ wird gespeichert, der Standort nicht. Nicht vor Ort = nur markiert, gebucht wird trotzdem.
+- Admin: „👥 Wer ist im Dienst“ (Ampel: fehlt / noch angemeldet / da / noch nicht da, mit Nachtragen), „📍 Dienst-Orte“ (am Ort „Hier ist ein Dienst-Ort“ tippen, Umkreis 150/300/500 m).
+- Erinnerungen (Push, im 15-Min.-Takt der Wartung): kurz vor Beginn, zum geplanten Ende, 1 Std. danach „Abmelden vergessen?“ – vor der Freigabe nur an Admins.
+- Server 2.590.0: Aktionen dienst_stand, dienst_buchen, dienst_korrigieren (Mitglieder/Aushilfen) und dienst_heute, dienst_nachtragen, dienst_orte (Admin); init liefert die Lage nur, wenn freigegeben (sonst keine Abfrage). Regeln in dienst-stempel.js.
+- Datenbank: Migration 20261022_kc_club_v2590_dienst_stempel.sql – gemeinsames Buchungsbuch kc_dp_stempel (Format der Kassen-Stechuhr KC_TIME_CLOCK_V1, vorbereitet für die Kasse: kasse_event_id) + Ansicht kc_dp_stempel_paare (Kommen+Gehen als Ist-Zeile) zum Lesen für den Dienstplan. **Kasse und Dienstplan unverändert**; es wird nichts in die Ist-Tabelle des Dienstplans geschrieben (Stufe 2, Codex).
+- Test: tests/dienst-stempel.test.mjs (Regeln + Einbau), Browser-Durchlauf. Rückweg: App/Server 2.589.0/2.584.0; Tabelle stört nicht.
+
 ## 2.589.0 – 2026-10-22 – Info-Feld: ganze Nachricht beim Antippen
 Meldungen im Info-Feld ohne eigenes Ziel (z. B. „Uhr zurückstellen“) öffnen beim Antippen jetzt die ganze Nachricht zum Lesen (KC-CLUB-INFO-LESEN).
 

@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6548,7 +6548,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const c = server.slice(server.indexOf('case "mein_ausweis": {'), server.indexOf('case "wl_liste": {'));
   assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(c) && /\/\^KC-\\d\{3,5\}\$\/\.test\(nr\) \? nr : null/.test(c), "nur die eigene Nummer, ungültig → null");
-  assert.ok(/"stunden_melden", "mein_ausweis"\]/.test(server) && /"stunden_melden", "mein_ausweis"\]/.test(html), "auch für Aushilfen (Stechuhr)");
+  assert.ok(/"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren")?\]/.test(server) && /"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren")?\]/.test(html), "auch für Aushilfen (Stechuhr)");
   assert.ok(/function ausweisSvg\(nummer\) \{ const q = qrcode\(0, "M"\); q\.addData\(nummer\);/.test(html), "QR enthält nur die Nummer");
   assert.ok(/function versionMarkeTipp\(\) \{ if \(NEUE_VERSION\) updateKachel\(\); else ausweisZeigen\(\); \}/.test(html) && /onclick="versionMarkeTipp\(\)"/.test(html), "QR-Knopf, Update-Hinweis bleibt");
   assert.ok(/id="kopfVersion"[^>]*onclick="updateKachel\(\)"/.test(html), "Versionsnummer unter der Kochmütze bleibt anklickbar");
