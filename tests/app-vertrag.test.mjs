@@ -7287,6 +7287,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const s of ["angebot", "wahl", "belegt", "kein_geraet", "mikrofon_fehler", "rekorder_fehler", "aufnahme_start", "fertig", "senden_fehler"]) assert.ok(programm.includes(`abDiag("${s}"`), "Messpunkt " + s);
   assert.ok(!/if \(ABAUF \|\| SPR\) return;/.test(programm), "kein stiller Abbruch mehr");
 }
+// 2.596.0 KC-CLUB-AB-WIE-CHAT / KC-CLUB-CHAT-BUENDELN
+{
+  const ab = programm.slice(programm.indexOf("async function abAufnahme(pid, name, klopf) {"), programm.indexOf("function abAufnahmeStopp()"));
+  assert.ok(/<div class="aufnahme"><span class="rec">●<\/span><b id="abAufZeit">0:00<\/b><canvas id="abAufOszi"/.test(ab) && /osziStart\(strom, "abAufOszi"\)/.test(ab), "gleiche Aufnahme-Leiste wie im Chat");
+  assert.ok(/onclick="abAufnahmeVerwerfen\(\)">✖ Verwerfen<\/button><button class="knopf haupt klein" onclick="abAufnahmeFertig\(\)">➤ Senden<\/button>/.test(ab), "Verwerfen / Senden wie im Chat");
+  assert.ok(/function osziStart\(strom, canvasId = "aufnahmeOszi"\)/.test(programm) && /ABAUF = null; osziStopp\(\);/.test(programm), "Welle startet und stoppt");
+  assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"\) chatSignalLaden\(true\); return; \}/.test(programm), "gelesen gebündelt");
+  assert.ok(/if \(gebuendelt\) \{ if \(CHAT_SIGNAL_UHR\) return; CHAT_SIGNAL_UHR = setTimeout\(/.test(programm), "Bündeln ohne Verlängern");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -11541,7 +11550,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const mig = lies("supabase/migrations/20261020_kc_club_rt_angekommen.sql");
   assert.ok(/create trigger kc_club_rt_angekommen after insert on public\.kc_club_chat_quittung\s+for each row when \(new\.art = 'angekommen'\)/.test(mig) && /'gelesen', new\.thread_id\);/.test(mig), "Quittung „angekommen“ → Signal wie „gelesen“ an die anderen");
   assert.ok(/t\.person_id <> new\.person_id and t\.hidden_at is null/.test(mig) && /exception when others then null;/.test(mig) && /security definer set search_path = ''/.test(mig) && !/\b(delete from|truncate|update public)\b/i.test(mig), "nicht an sich selbst, Signal stört nie, nur Signal");
-  assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt\.laeuft\)/.test(html), "App lädt bei diesem Signal den offenen Chat");
+  assert.ok(/if \(s\.art === "gelesen"\) \{ if \(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"( && !chatTakt\.laeuft\)|\) chatSignalLaden\(true\))/.test(html), "App lädt bei diesem Signal den offenen Chat"); // 2.596.0: gebündelt
   assert.ok(/hakenWarten && !rt && ONL\.takt % 2 === 0/.test(html) && /tipptTakt = rt \? 3 : 1/.test(html), "mit Leitung: Haken per Signal, Tippen alle 6 s; ohne Leitung wie bisher");
 }
 // 2.510.0 KC-CLUB-CHAT-STAND (Schritt 3) (Wunsch Hansi „Ja Bau das jetzt“, Chat sparsamer Schritt 3): im Takt erst nur der Fingerabdruck, ganz laden nur bei Änderung

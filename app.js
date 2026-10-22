@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.595.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.596.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7806,7 +7806,7 @@ function rtSignal(s) {
   if (s.art === "chat" && TH.thread === s.thread) tippHinweisWeg(); // die Nachricht ist da
   // KC-CLUB-RT-SPARBREMSE + weitere Bereiche (2.230.0): Alarm sofort (ohne Pause), Gelesen-Haken, Online, Pinnwand, Termine, Abstimmungen
   if (s.art === "alarm") { neuLaden(); return; } // Notfall-Meldung → init → alarmPruefen() zeigt sie groß in Rot
-  if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } return; }
+  if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); return; } // 2.596.0: gebündelt
   if (s.art === "online") { onlinePing(); return; }
   if (s.art === "livetermin") { ltHolen(); return; } // KC-CLUB-LIVE-TERMIN (2.231.0)
   if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
@@ -7823,7 +7823,7 @@ function rtSignal(s) {
   if (s.art === "mitschauen") { if (SS.id) ssHolen(true); else onlinePing(); return; }
   if (s.art === "spiel") { if (SP?.offen?.id && s.thread === SP.offen.id) spNachsehen(true); else { onlinePing(); if (aktuelleAnsicht === "spiele" && !SP?.offen) spLaden(true); } return; }
   if (s.art === "tippt" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; tippenStandHolen().finally(() => { chatTakt.laeuft = false; }); }
-  else if (s.art === "chat" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden();
+  else if (s.art === "chat" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden(true);
   // 2.594.0 KC-CLUB-CHAT-RUHE (Fund Hansi 22.10.: „Steven und ich schreiben schnell – das verträgt die App nicht“; Server-Messung: Aufrufe bis 24 s):
   // jede neue Nachricht lud bei JEDEM, der den Chat offen hat, zusätzlich nach 1,5 s die ganze Startseite (init, 37–72 Abfragen). Ist die
   // Nachricht aus dem gerade offenen Chat, ist das unnötig – der Chat lädt ohnehin; die Startseite wird beim nächsten Takt nach dem Chat frisch.
@@ -8048,14 +8048,19 @@ async function abAufnahme(pid, name, klopf) {
   ABAUF = { rec, strom, teile: [], start: Date.now(), typ: rec.mimeType || typ || "audio/webm", pid, name, klopf, uhr: null };
   rec.ondataavailable = (e) => { if (e.data?.size) ABAUF?.teile.push(e.data); };
   rec.start(1000); try { navigator.vibrate?.(30); } catch {}
+  // 2.596.0 KC-CLUB-AB-WIE-CHAT (Wunsch Hansi „Spracheingabe beim Anrufbeantworter genau so wie bei der Spracheingabe im Chat“): dieselbe
+  // Aufnahme-Leiste wie im Chat – blinkender roter Punkt, Laufzeit, echte Mikrofon-Welle (gleiches Oszilloskop), „✖ Verwerfen“ und „➤ Senden“.
+  // Darüber nur, für wen es ist und wie viel Zeit noch bleibt (2 Min., Admin 15 Min.). Das Blatt wird einmal gebaut, danach nur die Zeit erneuert.
+  const mm = (x) => `${Math.floor(x / 60)}:${String(x % 60).padStart(2, "0")}`;
+  $("abAufInhalt").innerHTML = `<h3 style="margin-top:0">📼 Nachricht für ${esc(name)}</h3>
+    <p class="hinweis" style="margin:0 0 10px">Sprich jetzt – ${esc(name)} hört es auf dem Anrufbeantworter. Noch <b id="abAufRest">${mm(AB_MAX_SEK())}</b></p>
+    <div class="aufnahme"><span class="rec">●</span><b id="abAufZeit">0:00</b><canvas id="abAufOszi" aria-label="Aufnahme läuft"></canvas>
+      <button class="knopf klein" onclick="abAufnahmeVerwerfen()">✖ Verwerfen</button><button class="knopf haupt klein" onclick="abAufnahmeFertig()">➤ Senden</button></div>`;
+  osziStart(strom, "abAufOszi");
   const zeichnen = () => {
     if (!ABAUF) return;
-    const s = Math.floor((Date.now() - ABAUF.start) / 1000), rest = Math.max(0, AB_MAX_SEK() - s), mm = (x) => `${Math.floor(x / 60)}:${String(x % 60).padStart(2, "0")}`;
-    $("abAufInhalt").innerHTML = `<h3 style="margin-top:0">🔴 Aufnahme für ${esc(name)}</h3>
-      <div class="kw-uhr ab-uhr" aria-live="polite">${mm(rest)}</div>
-      <p class="hinweis" style="text-align:center;margin:0 0 12px">Sprich jetzt – ${esc(name)} hört es auf dem Anrufbeantworter. Gesprochen: ${mm(s)}</p>
-      <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" onclick="abAufnahmeFertig()">✅ Fertig – an ${esc(name)} senden</button>
-      <button class="knopf" style="text-align:center" onclick="abAufnahmeVerwerfen()">🗑️ Verwerfen</button></div>`;
+    const s = Math.floor((Date.now() - ABAUF.start) / 1000), rest = Math.max(0, AB_MAX_SEK() - s);
+    const z = $("abAufZeit"), r = $("abAufRest"); if (z) z.textContent = mm(s); if (r) r.textContent = mm(rest);
     if (rest <= 0) { melde(`⏱️ Die ${ICH?.admin ? "15" : "2"} Minuten sind um – die Nachricht wird gesendet.`); abAufnahmeFertig(); }
   };
   zeichnen(); ABAUF.uhr = setInterval(zeichnen, 1000);
@@ -8063,7 +8068,7 @@ async function abAufnahme(pid, name, klopf) {
 function abAufnahmeStopp() {
   return new Promise((ok) => {
     if (!ABAUF) return ok(null);
-    const s = ABAUF; clearInterval(s.uhr); ABAUF = null; document.getElementById("abAufnahmeBlatt")?.remove();
+    const s = ABAUF; clearInterval(s.uhr); ABAUF = null; osziStopp(); document.getElementById("abAufnahmeBlatt")?.remove();
     s.rec.onstop = () => { s.strom.getTracks().forEach((t) => t.stop()); ok(s); };
     try { s.rec.stop(); } catch { s.strom.getTracks().forEach((t) => t.stop()); ok(s); }
   });
@@ -8364,8 +8369,14 @@ async function tippenStandHolen() {
 }
 // 2.594.0 KC-CLUB-CHAT-RUHE: kommt eine Nachricht, während der Chat noch lädt, ging das Signal bisher verloren (die Nachricht erschien erst beim
 // nächsten Takt, mit direkter Leitung bis zu 30 s später). Jetzt wird genau EINMAL nachgeladen, wenn das Laden fertig ist – nie mehrere parallel.
-let CHAT_NOCHMAL = false;
-function chatSignalLaden() {
+let CHAT_NOCHMAL = false, CHAT_SIGNAL_UHR = null;
+// 2.596.0 KC-CLUB-CHAT-BUENDELN (Wunsch Hansi „nochmal prüfen, damit der Server bei vielen abwechselnden Nachrichten nicht durcheinanderkommt“):
+// pro Nachricht kamen beim Absender bis zu drei Signale fast gleichzeitig (Nachricht, „angekommen“, „gelesen“) – jedes lud den Chat ganz.
+// Signale innerhalb von CHAT_SIGNAL_MS werden jetzt zu EINEM Nachladen zusammengefasst (Haken/Nachricht erscheinen ≤ 0,5 s später; die Uhr
+// wird nicht verlängert – auch bei Dauerfeuer lädt es spätestens nach 0,5 s).
+const CHAT_SIGNAL_MS = 500;
+function chatSignalLaden(gebuendelt) {
+  if (gebuendelt) { if (CHAT_SIGNAL_UHR) return; CHAT_SIGNAL_UHR = setTimeout(() => { CHAT_SIGNAL_UHR = null; if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(); }, CHAT_SIGNAL_MS); return; }
   if (chatTakt.laeuft) { CHAT_NOCHMAL = true; return; }
   chatTakt.laeuft = true; CHAT_NOCHMAL = false;
   chatLaden(false).finally(() => { chatTakt.laeuft = false; if (CHAT_NOCHMAL && chatId && aktuelleAnsicht === "chat") { CHAT_NOCHMAL = false; chatSignalLaden(); } else CHAT_NOCHMAL = false; });
@@ -10141,9 +10152,9 @@ function sprichtMelden() {
   api("tippen", { id: chatId, sprache: true }).catch(() => {});
 }
 let OSZI = null;
-function osziStart(strom) {
+function osziStart(strom, canvasId = "aufnahmeOszi") { // 2.596.0: auch für die Anrufbeantworter-Aufnahme (eigene Fläche)
   osziStopp();
-  const c = $("aufnahmeOszi"); if (!c) return;
+  const c = $(canvasId); if (!c) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)(), an = ctx.createAnalyser(); an.fftSize = 1024;
     ctx.createMediaStreamSource(strom).connect(an);

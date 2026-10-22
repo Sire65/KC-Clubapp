@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.596.0 – 2026-10-22 – 📼 Anrufbeantworter-Aufnahme wie im Chat + Chat-Signale gebündelt (KC-CLUB-AB-WIE-CHAT, KC-CLUB-CHAT-BUENDELN)
+Wunsch Hansi („Spracheingabe beim Anrufbeantworter genau so wie bei der Spracheingabe im Chat. Und nochmal prüfen, wenn viele Nachrichten abwechselnd geschickt werden, damit der Server nicht durcheinanderkommt“).
+- Anrufbeantworter: dieselbe Aufnahme-Leiste wie bei der Sprachnachricht im Chat – blinkender roter Punkt, Laufzeit, echte Mikrofon-Welle (gleiches Oszilloskop), „✖ Verwerfen“ und „➤ Senden“; darüber für wen und wie viel Zeit noch bleibt (2 Min., Admin 15 Min.). Senden/Verwerfen/Zeitgrenze wie bisher (gleiche Aufnahme, gleiches Hochladen).
+- Chat: pro Nachricht kamen beim Absender bis zu drei Signale fast gleichzeitig (Nachricht, „angekommen“, „gelesen“) – jedes lud den Chat ganz. Signale innerhalb von 0,5 s werden jetzt zu EINEM Nachladen zusammengefasst; läuft schon eins, kommt genau eins danach (2.594.0). Zusammen mit 2.594.0 (keine Startseite bei offenem Chat): statt bis zu 4 Ladevorgängen (~150 Abfragen) je Nachricht beim Absender höchstens 2.
+- Test: Vertragstest-Block 2.596.0, Browser-Probe (Aufnahme mit Test-Mikrofon, Signal-Bündelung). Rückweg: App 2.595.0.
+
 ## 2.595.0 – 2026-10-22 – 📼 Anrufbeantworter: Messpunkte beim Aufsprechen + Meldung statt Stille (KC-CLUB-AB-DIAGNOSE)
 Fund Hansi („Steven hat den Anrufbeantworter eingeschaltet, ich bekomme die Nachricht, konnte aber nicht aufsprechen“). Server: Anklopfen 17:19 → Steven schaltete 7 s später den Anrufbeantworter ein (Status richtig), danach kam bei Hansi KEIN Aufsprech-Versuch und kein Fehler an. Im Browser mit Test-Mikrofon läuft der ganze Ablauf (Angebot → Aufnahme → Hochladen → Senden).
 - Jeder Schritt meldet sich jetzt (diagnose_ab: Angebot, Wahl, Aufnahme-Start mit Format, Fertig mit Länge/Größe, Fehler mit Name) – nur technische Werte, kein Ton, kein Inhalt.
