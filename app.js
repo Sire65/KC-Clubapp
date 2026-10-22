@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.590.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.591.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5346,6 +5346,7 @@ const HILFE = [
   { id: "versand_leiste", thema: "nachrichten", sym: "📝", t: "Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld", x: "Sobald du etwas ins Schreibfeld tippst (oder etwas anhängst), erscheint darüber die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. <b>Normal</b> ist schon angehakt – eine normale Nachricht braucht nur ➤. Hakst du <b>❗ Wichtig</b> oder <b>🏎️ Express</b> an, geht der Haken bei Normal weg; beides zusammen geht auch. Neben Express steht, wie viele du heute schon hattest (z. B. 2/5). Nach dem Senden und beim Chatwechsel steht wieder Normal. Soll die Leiste immer zu sehen sein: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", zeig: () => einstiegHin("benachrichtigung", "setWichtigFrage"), seit: "2.524.0" },
   { id: "schreibt_hinweis", thema: "nachrichten", sym: "✍️", t: "„… schreibt dir gerade“ – auch wenn der Chat zu ist", x: "Schreibt dir jemand im <b>Zweier-Chat</b>, während du woanders in der App bist, steht oben kurz <b>„✍️ Anne schreibt dir gerade …“</b> – oder <b>„🗣️ … diktiert dir gerade eine Nachricht …“</b> bzw. <b>„🎤 … nimmt gerade eine Sprachnachricht für dich auf …“</b>. So weißt du: Gleich kommt etwas. Antippen öffnet den Chat; ist die Nachricht da, verschwindet der Hinweis. Im offenen Chat steht es wie gewohnt über dem Schreibfeld – der ✏️ Stift schreibt dabei mit. Nicht in Gruppen und nicht bei stumm geschalteten Chats; wer seine Online-Anzeige ausgeschaltet hat, meldet kein Schreiben.", seit: "2.529.0" },
   { id: "druck_pdf", thema: "club", sym: "📄", t: "Aus jeder Druckvorschau ein PDF", x: "Überall, wo die App etwas zum Drucken zeigt (Termine, Protokoll, Erstattung, Wunschbogen …), gibt es neben <b>🖨️ Drucken</b> den Knopf <b>📄 PDF speichern / teilen</b>. Die App baut das PDF selbst auf dem Handy – du kannst es z. B. per WhatsApp oder Mail weiterschicken oder speichern. Nichts geht dafür an fremde Dienste.", seit: "2.526.0" },
+  { id: "chat_filter", thema: "nachrichten", sym: "👥", t: "Nur die anderen, nur meine – oder nur den Hintergrund", x: "Im Chat in der kleinen Zeile über dem Schreibfeld sitzt der Knopf <b>👥</b>. Einmal antippen: <b>👤 nur die Nachrichten der anderen</b>. Zweimal: <b>🙋 nur deine</b>. Dreimal: <b>🖼️ nur der Hintergrund</b> – alle Nachrichten verschwinden, und du siehst dein Hintergrundbild in voller Stärke (eins wählen: oben ⋮ → Chat-Farben). Viermal: wieder alle. Oben steht dabei ein gelber Hinweis – antippen zeigt sofort wieder alles. Es wird nur ausgeblendet, nichts gelöscht; beim nächsten Öffnen des Chats siehst du wieder alle Nachrichten.", seit: "2.591.0" },
   // 2.534.0 KC-CLUB-EINST-WEGWEISER
   { id: "einst_wegweiser", thema: "start", sym: "🧭", t: "Alle Einstellungen erklärt – wie im Explorer", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> stehen alle Einstellungen deiner App wie Ordner im Windows-Explorer: <b>▸</b> klappt einen Bereich auf (z. B. 🔔 Benachrichtigungen), rechts steht, wie es gerade eingestellt ist. <b>Antippen</b> erklärt, was die Einstellung bewirkt – mit <b>👉 Hinbringen</b> (direkt zum Schalter), <b>📖 Ganze Hilfe</b> und <b>🎬 Video</b>. Oben suchst du nach einem Wort (auch mit 🎤), mit <b>🖨️ Als Schriftstück</b> druckst du alles oder speicherst es als PDF. Umgestellt wird dort nichts.", zeig: () => ewStart(), seit: "2.534.0" },
   { id: "meldung_oben", thema: "technik", sym: "💬", t: "Die Meldung oben blinkt zweimal", x: "Kurze Meldungen der App (z. B. „Gespeichert“) erscheinen oben <b>weiß auf fast Schwarz mit goldenem Rand</b> und blinken beim Erscheinen zweimal kurz auf, damit du sie nicht übersiehst. <b>Fehler</b> stehen weiß auf Rot. Sie verschwinden von selbst.", seit: "2.523.0" },
@@ -8488,18 +8489,22 @@ function tippTonSetzen(w) { try { localStorage.setItem("kc_club_tippton", TIPP_T
 // Dieselbe Einstellung wie ⚙️ → Benachrichtigungen → „⌨️ Tippgeräusche“; gilt für dieses Gerät.
 // ---------- 2.577.0 KC-CLUB-CHAT-FILTER (Wunsch Hansi „nur seine, nur die des Partners oder wieder alle“) ----------
 // Knopf 👥 in der kleinen Zeile über dem Schreibfeld: 1× = nur die der anderen, 2× = nur meine, 3× = wieder alle. Nur Anzeige (CSS), lädt nichts.
-const CHAT_FILTER = ["alle", "andere", "meine"];
+// 2.591.0 KC-CLUB-CHAT-NUR-HG (Wunsch Hansi „einen weiteren Klick, und alle Nachrichten werden komplett ausgeblendet, damit man den Hintergrund sehen
+// kann“): 3× = 🖼️ nur der Hintergrund (Nachrichten, Angeheftetes und Runde blenden aus, das Hintergrundbild in voller Stärke), 4× = wieder alle.
+const CHAT_FILTER = ["alle", "andere", "meine", "keine"];
 let CHAT_FILTER_STAND = "alle";
 function chatFilterWeiter() { chatFilterSetzen(CHAT_FILTER[(CHAT_FILTER.indexOf(CHAT_FILTER_STAND) + 1) % CHAT_FILTER.length]); }
 function chatFilterSetzen(w, still) {
   CHAT_FILTER_STAND = CHAT_FILTER.includes(w) ? w : "alle";
   const c = $("chat"), k = $("chatFilterKnopf"), h = $("chatFilterHinweis"); if (!c) return;
   c.classList.toggle("nur-andere", CHAT_FILTER_STAND === "andere"); c.classList.toggle("nur-meine", CHAT_FILTER_STAND === "meine");
+  c.classList.toggle("nur-hg", CHAT_FILTER_STAND === "keine"); document.documentElement.classList.toggle("chat-nur-hg", CHAT_FILTER_STAND === "keine"); // 2.591.0
   const zweier = !CHAT?.gruppe && (CHAT?.teilnehmer || []).length <= 2, wer = zweier ? ($("chatTitel")?.textContent || "").trim() || "der anderen" : "der anderen";
-  const text = { alle: "Alle Nachrichten", andere: `Nur Nachrichten von ${wer}`, meine: "Nur meine Nachrichten" }[CHAT_FILTER_STAND];
-  const naechst = { alle: "antippen: nur die der anderen", andere: "antippen: nur meine", meine: "antippen: wieder alle" }[CHAT_FILTER_STAND];
-  if (k) { k.textContent = { alle: "👥", andere: "👤", meine: "🙋" }[CHAT_FILTER_STAND]; k.setAttribute("aria-pressed", String(CHAT_FILTER_STAND !== "alle")); k.title = `${text} – ${naechst}`; k.setAttribute("aria-label", text); }
-  if (h) { h.classList.toggle("versteckt", CHAT_FILTER_STAND === "alle"); h.textContent = CHAT_FILTER_STAND === "alle" ? "" : `${CHAT_FILTER_STAND === "andere" ? "👤" : "🙋"} ${text} · ✕ alle zeigen`; }
+  const hg = document.documentElement.classList.contains("cf-hg");
+  const text = { alle: "Alle Nachrichten", andere: `Nur Nachrichten von ${wer}`, meine: "Nur meine Nachrichten", keine: hg ? "Nur der Hintergrund – Nachrichten ausgeblendet" : "Nachrichten ausgeblendet (noch kein Hintergrundbild – ⋮ → Chat-Farben)" }[CHAT_FILTER_STAND];
+  const naechst = { alle: "antippen: nur die der anderen", andere: "antippen: nur meine", meine: "antippen: alles ausblenden – nur der Hintergrund", keine: "antippen: wieder alle" }[CHAT_FILTER_STAND];
+  if (k) { k.textContent = { alle: "👥", andere: "👤", meine: "🙋", keine: "🖼️" }[CHAT_FILTER_STAND]; k.setAttribute("aria-pressed", String(CHAT_FILTER_STAND !== "alle")); k.title = `${text} – ${naechst}`; k.setAttribute("aria-label", text); }
+  if (h) { h.classList.toggle("versteckt", CHAT_FILTER_STAND === "alle"); h.textContent = CHAT_FILTER_STAND === "alle" ? "" : `${{ andere: "👤", meine: "🙋", keine: "🖼️" }[CHAT_FILTER_STAND]} ${text} · ✕ alle zeigen`; }
   if (!still) melde(`${k?.textContent || ""} ${text}`);
 }
 function tippTonKnopf() {
@@ -9625,6 +9630,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   ["pdf", "drucken", "ausdrucken", "briefbogen", "papier"], ["cowboy", "indianer", "westen", "wildwest", "bueffel", "kutsche"], ["wueste", "pyramide", "pharao", "kamel", "karawane", "flaschengeist", "geist", "oase"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
+  { id: "chat-nur-hg", sym: "🖼️", t: "Wie sehe ich meinen Chat-Hintergrund ohne die Nachrichten?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld dreimal auf <b>👥</b> tippen – dann steht dort <b>🖼️</b>, alle Nachrichten sind ausgeblendet und du siehst nur den Hintergrund. Noch einmal tippen (oder den gelben Hinweis oben) zeigt wieder alles.", los: () => hzZuEintrag("h:chat_filter") }, // 2.591.0
   { id: "einstellungen-erklaert", sym: "🧭", t: "Was bewirken die ganzen Einstellungen?", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> siehst du alle Einstellungen wie Ordner im Explorer – antippen erklärt, was sie bewirken, und <b>👉 Hinbringen</b> führt dich zum Schalter. Mit 🖨️ auch zum Ausdrucken.", los: () => ewStart() }, // 2.534.0
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: Fragen zu Verschlüsseln, Schlüsselbund, Versand-Leiste, Teilen und den übrigen Neuheiten (nur Mitglieder-Funktionen)
   { id: "verschluesseln", sym: "🔒", t: "Wie schicke ich eine Nachricht verschlüsselt?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld auf das Schloss <b>🔒</b> tippen (grün = an), schreiben, senden. Die App fragt nach – <b>„🔒 Ja, mit Schlüssel“</b> – dann einen Schlüssel festlegen (mindestens 6 Zeichen) und ihn dem Empfänger <b>persönlich, am Telefon oder per SMS</b> sagen. Ein Geheimagent bringt die Nachricht; lesen kann sie nur, wer den Schlüssel hat.", los: () => zeige("nachrichten") },
@@ -26838,6 +26844,7 @@ let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
   setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
+  if (v !== "chat" && CHAT_FILTER_STAND === "keine") chatFilterSetzen("alle", true); /* 2.591.0 KC-CLUB-CHAT-NUR-HG: außerhalb des Chats nichts ausgeblendet */
   document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */
   if (v !== "spiele") { $("spPause")?.classList.add("versteckt"); document.body.classList.remove("sch-fokus"); } /* 2.18.0, KC-CLUB-SCHACH-FOKUS: Fußleiste außerhalb der Spiele immer da */
   if (!ICH && !ZEIGE_OHNE_ICH.has(v)) {
@@ -40571,6 +40578,7 @@ function suAppListe() {
     ["⌨️", "Tippgeräusche (Tastatur, Schreibmaschine)", "tippgeräusche tastatur schreibmaschine tippen hören live", () => einstiegHin("benachrichtigung", "setTippTon")],
     ["🎁", "Geburtstags-Vogel ansehen", "geburtstag vogel geschenk happy birthday blumenstrauß", () => gbvVorschau()],
     ["🍽️", "Clubabend (Tagesordnung, Anwesende)", "clubabend sitzung tagesordnung anwesend abhaken", () => caOeffnen(!!ICH?.vorstand)], // 2.569.0 KC-CLUB-CLUBABEND: Clubleitung auch vorher als Vorschau
+    ["🖼️", "Chat: nur den Hintergrund zeigen (Nachrichten ausblenden)", "hintergrund chat nachrichten ausblenden verstecken nur meine nur andere filter bild ansehen", () => hzZuEintrag("h:chat_filter")], // 2.591.0
     ["🧭", "Einstellungen erklärt (alle Einstellungen wie im Explorer)", "einstellungen erklärt erklärung übersicht alle einstellungen explorer wegweiser anleitung voreinstellungen was bewirkt bedeutet schritt für schritt", () => ewStart()], // 2.534.0
     // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: Verschlüsseln, Schlüsselbund, Versand-Leiste, Teilen, Diashow, PDF – auch per 🎤 Sprachsuche
     ["🔒", "Nachricht verschlüsselt senden (Schloss, Schlüssel)", "verschlüsseln verschlüsselt verschlüsselung geheim schloss schlüssel kennwort passwort code geheimnachricht sicher senden", () => hzZuEintrag("h:verschluesselt")],

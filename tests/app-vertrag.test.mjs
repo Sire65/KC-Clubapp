@@ -11966,7 +11966,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.577.0 KC-CLUB-CHAT-FILTER (Wunsch Hansi „nur seine, nur die des Partners oder wieder alle – Knopf in der kleinen Zeile“)
 {
   assert.ok(/id="chatFilterKnopf"[^>]*onclick="chatFilterWeiter\(\)"/.test(seite) && /#chat\.nur-andere \.blase\.eigen, #chat\.nur-meine \.blase:not\(\.eigen\) \{ display: none; \}/.test(seite), "Knopf in der kleinen Zeile, Filter nur per Anzeige");
-  assert.ok(/const CHAT_FILTER = \["alle", "andere", "meine"\];/.test(programm) && /chatFilterSetzen\("alle", true\); \/\/ 2\.577\.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle/.test(programm), "Reihenfolge alle → andere → meine; beim Öffnen alle");
+  assert.ok(/const CHAT_FILTER = \["alle", "andere", "meine"(, "keine")?\];/.test(programm) /* 2.591.0: + nur Hintergrund */ && /chatFilterSetzen\("alle", true\); \/\/ 2\.577\.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle/.test(programm), "Reihenfolge alle → andere → meine; beim Öffnen alle");
 }
 
 // 2.578.0 KC-CLUB-CHAT-PAKET + KC-CLUB-CHAT-SOFORT (Fund Hansi „das Laden der Daten in einem Chat dauert, bis die Nachrichten erscheinen“, „schön vorsichtig“)
@@ -12085,4 +12085,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(m\.auf\) \{ try \{ new Function\(m\.auf\)\(\); \} catch \{\} \} else ilLesen\(m\);/.test(html), "Antippen ohne Ziel → ganze Nachricht");
   assert.ok(/function ilLesen\(m\) \{[\s\S]{0,400}esc\(m\.t\)[\s\S]{0,120}esc\(m\.u\)[\s\S]{0,120}esc\(m\.lang\)/.test(html), "Blatt zeigt Titel, Unterzeile und Langtext escaped");
   assert.ok(/const lang = `In der Nacht zum Sonntag/.test(html) && (html.match(/, lang \};/g) || []).length === 3, "Zeitumstellung mit ausführlichem Text");
+}
+// 2.591.0 KC-CLUB-CHAT-NUR-HG (Wunsch Hansi „einen weiteren Klick, und alle Nachrichten werden komplett ausgeblendet, damit man den Hintergrund sehen kann“)
+{
+  assert.ok(/const CHAT_FILTER = \["alle", "andere", "meine", "keine"\];/.test(html) && /c\.classList\.toggle\("nur-hg", CHAT_FILTER_STAND === "keine"\)/.test(html), "vierter Stand: nur der Hintergrund");
+  assert.ok(/keine: "🖼️"/.test(html) && /if \(v !== "chat" && CHAT_FILTER_STAND === "keine"\) chatFilterSetzen\("alle", true\);/.test(html), "Knopf 🖼️; außerhalb des Chats nichts ausgeblendet");
+  const ix = lies("index.html");
+  assert.ok(/#chat\.nur-hg > \* \{ opacity: 0; pointer-events: none;/.test(ix) && /:root\.chat-nur-hg \.chat-hg \{ opacity: 1;/.test(ix), "Nachrichten unsichtbar, Hintergrund voll");
+  assert.ok(/\{ id: "chat_filter", thema: "nachrichten"/.test(html) && /\{ id: "chat-nur-hg", sym: "🖼️"/.test(html), "Hilfe und Twinkey");
 }

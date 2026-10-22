@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.591.0 – 2026-10-22 – 🖼️ Chat: nur den Hintergrund zeigen (KC-CLUB-CHAT-NUR-HG)
+Wunsch Hansi („In Nachrichten unten die Zeile mit Tastatur, Pfeil und Umschalten der Nachrichten – einen weiteren Klick, und alle Nachrichten werden komplett ausgeblendet, damit man den Hintergrund sehen kann“).
+- Der Knopf 👥 in der kleinen Zeile über dem Schreibfeld hat einen vierten Stand: 1× 👤 nur die anderen, 2× 🙋 nur meine, **3× 🖼️ nur der Hintergrund** – alle Nachrichten blenden sanft aus (der Platz bleibt, nichts springt), Angeheftetes und Runde ebenso, das Hintergrundbild erscheint in voller Stärke (auch im Nachtmodus ungedimmt). 4× wieder alle.
+- Oben steht der gelbe Hinweis „🖼️ Nur der Hintergrund – Nachrichten ausgeblendet · ✕ alle zeigen“ (ohne eigenes Bild: „noch kein Hintergrundbild – ⋮ → Chat-Farben“); Antippen zeigt sofort wieder alles. Beim Verlassen und neuen Öffnen des Chats ist alles wieder sichtbar.
+- Nur Anzeige, nichts wird gelöscht oder geladen. Hilfe-Eintrag „Nur die anderen, nur meine – oder nur den Hintergrund“, Lupe-Treffer, Twinkey-Frage.
+- Test: `tools/chat-nur-hg/nur-hg-browser.mjs` · Vertragstest-Block 2.591.0.
+- Rückweg: App 2.590.0 erneut einspielen.
+
 ## 2.590.0 – 2026-10-22 – 🟢 Dienst anmelden/abmelden in der App – Stufe 1, nur Admin zum Testen (KC-CLUB-DIENST-STEMPEL)
 Wunsch Hansi (Konzept „Dienst-Anmeldung in der Club-App“; Entscheidungen 22.10.: Ort nur markieren 300 m, Zeitfenster ±2 Std., Grund ab 15 Min., selbst korrigieren 24 Std., spontan mithelfen ja, Aushilfen ja; „Bau ein, aber noch nicht freigegeben – erst ich teste. Ohne Probleme mit den anderen Programmen“).
 - **Noch nicht freigegeben:** neue Freigabe „🟢 Dienst anmelden/abmelden“ (Standard: nur Admin, mit 🔒 Test). Für Mitglieder ändert sich nichts, bis Hansi unter Admin → Freigaben „für alle“ wählt.
