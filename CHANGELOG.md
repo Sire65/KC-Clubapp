@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.598.0 – 2026-10-22 – ⚡ Stufe 3: Nachrichten-Übersicht in einem Datenbank-Aufruf (KC-CLUB-UNTERHALTUNGEN-PAKET)
+Wunsch Hansi („Ja baue Pak 3“). Gleiche Liste, gleiche Zahlen, gleiche Regeln.
+- Die Nachrichten-Übersicht (auch Kommunikationszentrale im Kopf jede Minute, Büro, Notfall-Paket) holte bisher in 3–4 Schritten Chats, Teilnehmer, Gruppen, „wichtig“ und bis zu 1000 GANZE Nachrichten – nur um je Chat die letzte Zeile und die Zahlen zu zeigen. Jetzt EIN Aufruf (kc_club_unterhaltungen_paket): die Datenbank rechnet je Chat aus denselben 1000 neuesten Nachrichten Anzahl, ungelesen, ❗ neu (unter den ersten 300 ungelesenen) und die letzte Nachricht (Text höchstens 120 Zeichen). Namen und Archiv laufen gleichzeitig dazu.
+- Sicherheitsnetz wie bei den anderen Paketen: nur lesend, nur der Server darf aufrufen; Fehler oder Not-Aus (kc_club_konfig 'unterhaltungen_paket' = {"aus": true}) → bisheriger Weg (unverändert als unterhaltungenAlt); jeder 10. Aufruf vergleicht nebenbei alt ↔ neu (Protokoll „unterhaltungen_paket_abweichung“).
+- Vorab nur lesend gegen die echten Daten geprüft: bei allen 18 Mitgliedern dieselbe Nachrichtenmenge. Datenbank: supabase/migrations/20261022_kc_club_unterhaltungen_paket.sql (Probelauf tools/db-test/89_unterhaltungen_paket_test.sql).
+- Mitglieder-Liste: bewusst KEIN eigenes Paket – nach Stufe 1 sind es noch 3 Schritte; ein Paket müsste sechs Prüf-Funktionen (online, inkognito, zuletzt da, Status, Sperren, Probephase) nachbauen – zu viel Risiko für wenig Gewinn.
+- Test: Vertragstest-Block 2.598.0, Typprüfung ohne neue Meldungen. Rückweg: App/Server 2.597.0 (die Funktion kann bleiben).
+
 ## 2.597.0 – 2026-10-22 – ⚡ Stufe 2: Online-Takt und Nachrichten-Mahnung gebündelt (KC-CLUB-ONLINE-PAKET, KC-CLUB-MAHNUNG-PAKET)
 Wunsch Hansi („bündeln statt einzeln nacheinander“ → Stufe 1 eingespielt → „Ja weiter“). Gleiche Abfragen, gleiche Regeln, gleiches Ergebnis.
 - Online-Takt (jedes offene Handy jede Minute): „online seit“/Fenster merken, wer sonst online ist und die Live-Umfrage laufen gleichzeitig statt nacheinander; „wer ist online“ (Zugang → Einstellungen → Inkognito-Admins, bisher 2–3 Wege nacheinander) kommt in EINEM Datenbank-Aufruf (kc_club_online_jetzt).

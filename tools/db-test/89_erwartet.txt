@@ -1,0 +1,6 @@
+personen_geprueft=t
+anzahl_gleich=t
+chats_gleich=t
+wichtig_nie_mehr_als_ungelesen=t
+leer=t
+rechte=t

@@ -129,7 +129,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.597.0";
+const SERVER_VERSION = "2.598.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4942,6 +4942,90 @@ async function mahnungAlt(ich: Ich, offen: { t: any }[], grenze: string): Promis
   const { data: wi, error } = ids.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ids) : { data: [] as any[], error: null };
   if (error) throw error;
   return { alt: alle.filter((m: any) => m.created_at < grenze).length, wichtig: (wi ?? []).length };
+}
+// ----- 2.598.0 KC-CLUB-UNTERHALTUNGEN-PAKET (Stufe 3, Wunsch Hansi „Ja baue Pak 3“): Nachrichten-Übersicht in EINEM Datenbank-Aufruf
+// (kc_club_unterhaltungen_paket). Die Datenbank rechnet je Chat aus denselben 1000 neuesten Nachrichten, was der Server bisher rechnete
+// (Anzahl, ungelesen, ❗ neu unter den ersten 300 ungelesenen, letzte Nachricht); hier entsteht daraus dieselbe Liste wie in unterhaltungenAlt.
+// Fehler oder Not-Aus (kc_club_konfig 'unterhaltungen_paket' = {"aus": true}) → bisheriger Weg; jeder 10. Aufruf vergleicht nebenbei alt ↔ neu.
+const UNTERHALTUNGEN_PAKET_VERGLEICH = 10;
+async function unterhaltungenPaket(pid: string): Promise<any | null> {
+  try {
+    const [k, r] = await Promise.all([konfigZeile("unterhaltungen_paket").catch(() => ({ data: null })), Promise.resolve(db.rpc("kc_club_unterhaltungen_paket", { p_person: pid }))]);
+    if ((k as any)?.data?.wert?.aus) return null;
+    const d = (r as any).data;
+    return !(r as any).error && d && ["meine", "th", "tn", "gr", "agg"].every((x) => Array.isArray(d[x])) ? d : null;
+  } catch { return null; }
+}
+async function unterhaltungenAusPaket(ich: Ich, pk: any) {
+  if (!pk.meine.length) return [];
+  const agg = new Map<string, any>(pk.agg.map((a: any) => [a.thread_id, a]));
+  const [leute, archiv] = await Promise.all([
+    personen([...pk.tn.map((x: any) => x.person_id), ...pk.agg.map((a: any) => a.letzte?.sender_person_id).filter(Boolean)]),
+    chatArchivHolen(ich.person_id), // KC-CLUB-CHAT-ARCHIV (2.23.28)
+  ]);
+  const gruppe = new Map(pk.gr.map((g: any) => [g.thread_id, g]));
+  quittungMerken(ich, pk.agg.filter((a: any) => a.quittung).map((a: any) => a.thread_id as string), "angekommen"); // 2.447.0
+  return pk.th.map((t: any) => {
+    const a = agg.get(t.id), l = a?.letzte;
+    const andere = pk.tn.filter((x: any) => x.thread_id === t.id && x.person_id !== ich.person_id).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id);
+    return {
+      id: t.id, betreff: t.subject, teilnehmer: andere, anzahl: andere.length + 1,
+      ...(!gruppe.has(t.id) && andere.length === 1 ? { partner: pk.tn.find((x: any) => x.thread_id === t.id && x.person_id !== ich.person_id)?.person_id } : {}), // 2.397.0 KC-CLUB-FAV-PERSONEN
+      gruppe: gruppe.has(t.id) ? { name: (gruppe.get(t.id) as any).name, symbol: (gruppe.get(t.id) as any).symbol } : null,
+      ...(gruppe.has(t.id) ? { personen: pk.tn.filter((x: any) => x.thread_id === t.id).map((x: any) => x.person_id) } : {}), // KC-CLUB-MG-GRUPPEN (1.34.0)
+      letzte: l ? { von: l.sender_person_id === ich.person_id ? "Du" : vorname(leute.get(l.sender_person_id)), text: String(l.body).slice(0, 120), zeit: l.created_at } : null,
+      ungelesen: Number(a?.ungelesen ?? 0),
+      nachrichten: Number(a?.n ?? 0), // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
+      wichtigNeu: Number(a?.wichtig_neu ?? 0),
+      aktualisiert: l?.created_at || t.updated_at,
+      ...(archiv[t.id] ? { archiviert: archiv[t.id] } : {}),
+    };
+  }).sort((x: any, y: any) => String(y.aktualisiert).localeCompare(String(x.aktualisiert)));
+}
+// bisheriger Weg (unverändert; mitQuittung = false beim Vergleich, damit nichts doppelt gemerkt wird)
+async function unterhaltungenAlt(ich: Ich, mitQuittung: boolean): Promise<any[]> {
+  const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null);
+  const ids = (meine ?? []).map((x: any) => x.thread_id);
+  if (!ids.length) return [];
+  // 2.593.0 KC-CLUB-GLEICHZEITIG (Wunsch Hansi „Abfragen bündeln statt einzeln nacheinander – sorgfältig und vorsichtig“): Gruppen und
+  // Chat-Archiv hängen nur an den Chat-Kennungen bzw. an mir – sie laufen jetzt mit den drei Lesungen gleichzeitig statt danach.
+  // Ebenso Namen und „wichtig“ (beide brauchen nur die Nachrichten). Gleiche Abfragen, gleiches Ergebnis, weniger Wartezeit.
+  const [{ data: th }, { data: tn }, { data: msgs }, { data: gr }, archiv] = await Promise.all([
+    db.from("kc_communication_threads").select("id,subject,created_by_person_id,updated_at").in("id", ids),
+    db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", ids),
+    db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body,created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(1000),
+    db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids),
+    chatArchivHolen(ich.person_id), // KC-CLUB-CHAT-ARCHIV (2.23.28)
+  ]);
+  const gelesen = new Map((meine ?? []).map((x: any) => [x.thread_id, x.last_read_at]));
+  const gruppe = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
+  // KC-CLUB-WICHTIG (1.53.0): ungelesene wichtige Nachrichten je Chat
+  const ungelesenIds = (msgs ?? []).filter((x: any) => x.sender_person_id !== ich.person_id && (!gelesen.get(x.thread_id) || x.created_at > gelesen.get(x.thread_id))).map((x: any) => x.id).slice(0, 300);
+  if (mitQuittung) quittungMerken(ich, [...new Set((msgs ?? []).filter((x: any) => ungelesenIds.includes(x.id)).map((x: any) => x.thread_id as string))], "angekommen"); // 2.447.0
+  const [leute, { data: wi }] = await Promise.all([
+    personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]),
+    ungelesenIds.length ? db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ungelesenIds) : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const wichtigSet = new Set((wi ?? []).map((x: any) => x.message_id));
+  const liste = (th ?? []).map((t: any) => {
+    const m = (msgs ?? []).filter((x: any) => x.thread_id === t.id);
+    const lr = gelesen.get(t.id);
+    const andere = (tn ?? []).filter((x: any) => x.thread_id === t.id && x.person_id !== ich.person_id).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id);
+    return {
+      id: t.id, betreff: t.subject, teilnehmer: andere, anzahl: andere.length + 1,
+      ...(!gruppe.has(t.id) && andere.length === 1 ? { partner: (tn ?? []).find((x: any) => x.thread_id === t.id && x.person_id !== ich.person_id)?.person_id } : {}), // 2.397.0 KC-CLUB-FAV-PERSONEN
+      gruppe: gruppe.has(t.id) ? { name: (gruppe.get(t.id) as any).name, symbol: (gruppe.get(t.id) as any).symbol } : null,
+      // KC-CLUB-MG-GRUPPEN (1.34.0): bei Gruppen die person_ids (inkl. mir) – für den Gruppen-Filter in „Aktive Mitglieder“
+      ...(gruppe.has(t.id) ? { personen: (tn ?? []).filter((x: any) => x.thread_id === t.id).map((x: any) => x.person_id) } : {}),
+      letzte: m[0] ? { von: m[0].sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m[0].sender_person_id)), text: String(m[0].body).slice(0, 120), zeit: m[0].created_at } : null,
+      ungelesen: m.filter((x: any) => x.sender_person_id !== ich.person_id && (!lr || x.created_at > lr)).length,
+      nachrichten: m.length, // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
+      wichtigNeu: m.filter((x: any) => wichtigSet.has(x.id)).length,
+      aktualisiert: m[0]?.created_at || t.updated_at,
+      ...(archiv[t.id] ? { archiviert: archiv[t.id] } : {}),
+    };
+  }).sort((x: any, y: any) => String(y.aktualisiert).localeCompare(String(x.aktualisiert)));
+  return liste;
 }
 // ----- 2.576.0 KC-CLUB-START-PAKET (Wunsch Hansi „App ist langsam – Vorsicht, nix kaputt machen, genau planen“): die kleinen persönlichen
 // Start-Abfragen kommen in EINEM Datenbank-Aufruf (kc_club_start_paket) statt ~18 einzelnen Wegen. Jeder Teil ist genau die bisherige Abfrage;
@@ -10298,47 +10382,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- Nachrichten -----
       case "unterhaltungen": {
-        const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null);
-        const ids = (meine ?? []).map((x: any) => x.thread_id);
-        if (!ids.length) return json({ unterhaltungen: [] });
-        // 2.593.0 KC-CLUB-GLEICHZEITIG (Wunsch Hansi „Abfragen bündeln statt einzeln nacheinander – sorgfältig und vorsichtig“): Gruppen und
-        // Chat-Archiv hängen nur an den Chat-Kennungen bzw. an mir – sie laufen jetzt mit den drei Lesungen gleichzeitig statt danach.
-        // Ebenso Namen und „wichtig“ (beide brauchen nur die Nachrichten). Gleiche Abfragen, gleiches Ergebnis, weniger Wartezeit.
-        const [{ data: th }, { data: tn }, { data: msgs }, { data: gr }, archiv] = await Promise.all([
-          db.from("kc_communication_threads").select("id,subject,created_by_person_id,updated_at").in("id", ids),
-          db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", ids),
-          db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body,created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(1000),
-          db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids),
-          chatArchivHolen(ich.person_id), // KC-CLUB-CHAT-ARCHIV (2.23.28)
-        ]);
-        const gelesen = new Map((meine ?? []).map((x: any) => [x.thread_id, x.last_read_at]));
-        const gruppe = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
-        // KC-CLUB-WICHTIG (1.53.0): ungelesene wichtige Nachrichten je Chat
-        const ungelesenIds = (msgs ?? []).filter((x: any) => x.sender_person_id !== ich.person_id && (!gelesen.get(x.thread_id) || x.created_at > gelesen.get(x.thread_id))).map((x: any) => x.id).slice(0, 300);
-        quittungMerken(ich, [...new Set((msgs ?? []).filter((x: any) => ungelesenIds.includes(x.id)).map((x: any) => x.thread_id as string))], "angekommen"); // 2.447.0
-        const [leute, { data: wi }] = await Promise.all([
-          personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]),
-          ungelesenIds.length ? db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ungelesenIds) : Promise.resolve({ data: [] as any[] }),
-        ]);
-        const wichtigSet = new Set((wi ?? []).map((x: any) => x.message_id));
-        const liste = (th ?? []).map((t: any) => {
-          const m = (msgs ?? []).filter((x: any) => x.thread_id === t.id);
-          const lr = gelesen.get(t.id);
-          const andere = (tn ?? []).filter((x: any) => x.thread_id === t.id && x.person_id !== ich.person_id).map((x: any) => leute.get(x.person_id)?.display_name || x.person_id);
-          return {
-            id: t.id, betreff: t.subject, teilnehmer: andere, anzahl: andere.length + 1,
-            ...(!gruppe.has(t.id) && andere.length === 1 ? { partner: (tn ?? []).find((x: any) => x.thread_id === t.id && x.person_id !== ich.person_id)?.person_id } : {}), // 2.397.0 KC-CLUB-FAV-PERSONEN
-            gruppe: gruppe.has(t.id) ? { name: (gruppe.get(t.id) as any).name, symbol: (gruppe.get(t.id) as any).symbol } : null,
-            // KC-CLUB-MG-GRUPPEN (1.34.0): bei Gruppen die person_ids (inkl. mir) – für den Gruppen-Filter in „Aktive Mitglieder“
-            ...(gruppe.has(t.id) ? { personen: (tn ?? []).filter((x: any) => x.thread_id === t.id).map((x: any) => x.person_id) } : {}),
-            letzte: m[0] ? { von: m[0].sender_person_id === ich.person_id ? "Du" : vorname(leute.get(m[0].sender_person_id)), text: String(m[0].body).slice(0, 120), zeit: m[0].created_at } : null,
-            ungelesen: m.filter((x: any) => x.sender_person_id !== ich.person_id && (!lr || x.created_at > lr)).length,
-            nachrichten: m.length, // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
-            wichtigNeu: m.filter((x: any) => wichtigSet.has(x.id)).length,
-            aktualisiert: m[0]?.created_at || t.updated_at,
-            ...(archiv[t.id] ? { archiviert: archiv[t.id] } : {}),
-          };
-        }).sort((x: any, y: any) => String(y.aktualisiert).localeCompare(String(x.aktualisiert)));
+        // 2.598.0 KC-CLUB-UNTERHALTUNGEN-PAKET: ein Datenbank-Aufruf statt 3–4 Schritten (und ohne 1000 Nachrichtentexte); Fehler/Not-Aus → bisheriger Weg
+        const pk = await unterhaltungenPaket(ich.person_id);
+        if (!pk) return json({ unterhaltungen: await unterhaltungenAlt(ich, true) });
+        const liste = await unterhaltungenAusPaket(ich, pk);
+        if (Math.random() < 1 / UNTERHALTUNGEN_PAKET_VERGLEICH) nebenbei(unterhaltungenAlt(ich, false).then(async (alt) => {
+          if (!spGleich(alt, liste)) await protokoll(ich.person_id, "unterhaltungen_paket_abweichung", { alt: alt.length, neu: liste.length });
+        }).catch((e) => console.error("unterhaltungen paket vergleich", String(e))));
         return json({ unterhaltungen: liste });
       }
 

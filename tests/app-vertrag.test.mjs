@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7252,7 +7252,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.593.0 KC-CLUB-GLEICHZEITIG / KC-CLUB-TIPPT-LEICHT: unabhängige Abfragen gleichzeitig; „tippt“ lädt nicht mehr den ganzen Chat
 {
   const fall = (k) => { const i = server.indexOf(`case "${k}": {`); assert.ok(i > 0, "Fall " + k); return server.slice(i, server.indexOf("\n      case ", i + 10)); };
-  const uh = fall("unterhaltungen");
+  const uh = server.slice(server.indexOf("async function unterhaltungenAlt("), server.indexOf("// ----- 2.576.0 KC-CLUB-START-PAKET")); // 2.598.0: bisheriger Weg als Funktion
   assert.ok(/\{ data: gr \}, archiv\] = await Promise\.all\(\[/.test(uh) && /chatArchivHolen\(ich\.person_id\), \/\/ KC-CLUB-CHAT-ARCHIV/.test(uh), "Übersicht: Gruppen + Archiv mit den Chats");
   assert.ok(/const \[leute, \{ data: wi \}\] = await Promise\.all/.test(uh), "Übersicht: Namen + wichtig zusammen");
   const ns = fall("nachricht_senden");
@@ -7310,6 +7310,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const on = server.slice(server.indexOf('case "online": {'), server.indexOf('const { anMich, vonMir } = onlineAnklopfenTeilen'));
   assert.ok(/const \[, fensterAnders, \{ on, einst \}, liveT\] = await Promise\.all\(\[/.test(on) && /ich\.nurLesen \? Promise\.resolve\(null\) : onlineSeitMerken/.test(on), "Online-Takt gleichzeitig, Nur-Lesen schreibt nicht");
   assert.ok(lies("tools/db-test/88_erwartet.txt").includes("mahnung_gleich=t"), "Probelauf erwartet Gleichheit");
+}
+// 2.598.0 KC-CLUB-UNTERHALTUNGEN-PAKET: ein Aufruf statt 3–4 Schritten, bisheriger Weg als Rückfall, Not-Aus, Vergleich
+{
+  const mig = lies("supabase/migrations/20261022_kc_club_unterhaltungen_paket.sql");
+  assert.ok(mig.includes("revoke all on function public.kc_club_unterhaltungen_paket(text) from public, anon, authenticated;") && mig.includes("grant execute on function public.kc_club_unterhaltungen_paket(text) to service_role;"), "nur der Server");
+  assert.ok(/returns jsonb language sql stable/.test(mig) && !/\b(insert|update|delete)\b/i.test(mig.replace(/--[^\n]*/g, "")), "nur lesend");
+  assert.ok(/order by created_at desc limit 1000/.test(mig) && /where rn <= 300/.test(mig) && /left\(body, 120\)/.test(mig), "gleiche Grenzen wie bisher");
+  const uh = server.slice(server.indexOf('case "unterhaltungen": {'), server.indexOf('case "unterhaltung": {'));
+  assert.ok(/if \(!pk\) return json\(\{ unterhaltungen: await unterhaltungenAlt\(ich, true\) \}\);/.test(uh) && /"unterhaltungen_paket_abweichung"/.test(uh), "Rückfall und Vergleich");
+  assert.ok(/konfigZeile\("unterhaltungen_paket"\)/.test(server) && /if \(mitQuittung\) quittungMerken/.test(server), "Not-Aus; Vergleich merkt nichts doppelt");
+  assert.ok(lies("tools/db-test/89_erwartet.txt").includes("anzahl_gleich=t"), "Probelauf erwartet Gleichheit");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
