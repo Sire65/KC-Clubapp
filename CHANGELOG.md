@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.586.0 – 2026-10-22 – Kachel-Zug langsamer und deutlicher
+Wunsch Hansi „zu schnell, man sieht keinen Effekt“: Jede Kachel ist jetzt etwa 3 Sekunden unterwegs (gleichmäßig wie ein Zug), mit etwas mehr Abstand und unterwegs größer.
+
 ## 2.585.0 – 2026-10-22 – Neuer Kachel-Effekt „🚂 Kachel-Zug“ (KC-CLUB-KACHEL-ZUG)
 Die Kacheln kommen eine nach der anderen oben links herein, fahren wie ein Zug am linken Rand hinunter, machen unten eine Kurve nach rechts und reihen sich auf ihrem Platz ein. Wählbar unter ⚙️ → 🎬 Effekt beim Register-Wechsel (auch bei Zufall/Abwechselnd dabei).
 
