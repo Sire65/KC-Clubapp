@@ -25,6 +25,8 @@ import { TURN, turnPlan, turnZeile, turnIce, turnAppBis, turnGrund } from "./tur
 import { klopfVerpasst, klopfVerpasstOhneKontakt, klopfPushStand } from "./anklopfen-verpasst.js"; // KC-CLUB-ANKLOPFEN-VERPASST (2.567.0)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-CLUB-ANRUFBEANTWORTER (2.568.0)
+// @ts-ignore: reine JS-Datei ohne Typen
+import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "./fremdzugriff.js"; // KC-CLUB-FREMDZUGRIFF (2.579.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -125,7 +127,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.578.0";
+const SERVER_VERSION = "2.579.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3009,9 +3011,62 @@ const INSTANZ = crypto.randomUUID().slice(0, 8); let ANMELDUNG_TREFFER = false; 
 // KC-CLUB-MINDESTVERSION (RC 20.10.2026): ältere App-Versionen werden beim Start um ein Update gebeten (gleich halten mit "mindest" in version.json)
 const MINDEST_APP_VERSION = "2.500.0";
 const versionAelter = (a: string, b: string) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); return false; };
+// ---------- 2.579.0 KC-CLUB-FREMDZUGRIFF (Wunsch Hansi „Fremde Anmeldeversuche: wann, mit welchem Schlüssel, Vermutung wer“) ----------
+// Jede abgelehnte Anmeldung wird im Hintergrund vermerkt (kc_club_fremdzugriff): Zeit, Kurzkennung des Schlüssels (nie der Schlüssel),
+// Netz-Kennung (Hash der IP), Gerät und eine Vermutung. Gleicher Schlüssel aus gleichem Netz höchstens alle FZ.gleichMin Minuten,
+// je Server-Instanz höchstens FZ.proStunde Einträge je Stunde (gegen Fluten). Häufen sich Versuche oder kommt ein Programm/Bot → Push an die Admins.
+const FZ_ZULETZT = new Map<string, number>(); let FZ_STUNDE = { ab: 0, n: 0 }, FZ_ALARM_MS = 0;
+const NETZ_ANGEMELDET = new Map<string, { person: string; t: number }>(); // gleiche Internetverbindung: wer war hier zuletzt erfolgreich (nur im Speicher)
+const netzKennung = async (req: Request) => (await sha256("kc-netz:" + (req.headers.get("x-forwarded-for") || "").split(",")[0].trim())).slice(0, 16);
+function fremdMerken(req: Request, grund: string, hash: string | null, person: string | null = null) {
+  return nebenbei((async () => {
+    const t = Date.now(), netz = await netzKennung(req), ua = txt(req.headers.get("user-agent"), 200), kennung = fzKennung(hash);
+    const schl = `${kennung || "-"}|${netz}`;
+    if (t - (FZ_ZULETZT.get(schl) || 0) < FZ.gleichMin * 60000) return;
+    if (t - FZ_STUNDE.ab > 3600000) FZ_STUNDE = { ab: t, n: 0 };
+    if (++FZ_STUNDE.n > FZ.proStunde) return;
+    FZ_ZULETZT.set(schl, t); if (FZ_ZULETZT.size > 500) for (const [k, v] of FZ_ZULETZT) if (t - v > FZ.gleichMin * 60000) FZ_ZULETZT.delete(k);
+    const h: any = {};
+    if (grund === "gesperrt" && person) h.gesperrt = { person };
+    if (hash && !h.gesperrt) {
+      const { data: alt } = await db.from("kc_club_zugang_alt").select("person_id,ersetzt_am,grund").eq("token_hash", hash).maybeSingle();
+      if (alt) { grund = "alt"; h.alt = { person: alt.person_id, grund: alt.grund, am: new Date(alt.ersetzt_am).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" }) }; }
+    }
+    const n0 = NETZ_ANGEMELDET.get(netz);
+    if (n0 && t - n0.t < FZ.netzMin * 60000) h.netz = { person: n0.person, minVorher: Math.round((t - n0.t) / 60000) };
+    if (!h.netz) { // auch aus den „Fenster“-Meldungen der letzten Stunde (alle Server-Instanzen)
+      const { data: fe } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "fenster").contains("wert", { liste: [{ n: netz }] }).limit(5);
+      const best = (fe ?? []).map((x: any) => ({ person: x.person_id, t: Math.max(...((x.wert?.liste || []).filter((y: any) => y?.n === netz).map((y: any) => Number(y.t) || 0))) }))
+        .filter((x: any) => t - x.t < FZ.netzMin * 60000).sort((a: any, b: any) => b.t - a.t)[0];
+      if (best) h.netz = { person: best.person, minVorher: Math.max(0, Math.round((t - best.t) / 60000)) };
+    }
+    if (!h.gesperrt && !h.alt && !h.netz && ua.length > 30) { // genau dieser Browser schon bei einem Mitglied gesehen (Fehlerprotokoll der App, 30 Tage)
+      const { data: pr } = await db.from("kc_club_protokoll").select("person_id").like("aktion", "fehler_%").eq("details->>ua", ua).not("person_id", "is", null)
+        .gte("zeit", new Date(t - 30 * 86400000).toISOString()).limit(1);
+      if (pr?.[0]) h.geraet = { person: pr[0].person_id };
+    }
+    const kand = [h.gesperrt?.person, h.alt?.person, h.netz?.person, h.geraet?.person].filter(Boolean) as string[];
+    const leute = kand.length ? await personen(kand) : new Map();
+    const v = fzVermutung(h, new Map([...leute].map(([id, pe]) => [id, pe?.display_name || id])));
+    const geraet = fzGeraet(ua);
+    await db.from("kc_club_fremdzugriff").insert({ grund, schluessel: kennung, person_vermutung: v.person, vermutung: v.text.slice(0, 300), netz, geraet, ua,
+      version: txt(req.headers.get("x-club-version"), 20) || null, land: txt(req.headers.get("cf-ipcountry") || req.headers.get("x-country"), 8) || null });
+    const { count } = await db.from("kc_club_fremdzugriff").select("id", { count: "exact", head: true }).gte("zeit", new Date(t - FZ.alarmFensterMin * 60000).toISOString());
+    if (!fzAlarm(count ?? 0, FZ_ALARM_MS, t, /^Programm/.test(geraet))) return;
+    const { count: schon } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fremd_alarm").gte("zeit", new Date(t - FZ.alarmPauseMin * 60000).toISOString());
+    FZ_ALARM_MS = t; if (schon) return;
+    await protokoll(null, "fremd_alarm", { anzahl: count ?? 0, geraet, vermutung: v.text.slice(0, 120) });
+    const ziel = await adminIds();
+    if (ziel.length) await routerSenden("club_nachricht_push", ziel, {
+      titel: `🕵️ ${count ?? 1} fremde${(count ?? 1) === 1 ? "r" : ""} Anmeldeversuch${(count ?? 1) === 1 ? "" : "e"}`, kurz: `${geraet} · ${v.text.slice(0, 90)}`,
+      betreff: "Köcheclub-App: fremde Anmeldeversuche", text: `In den letzten ${FZ.alarmFensterMin} Minuten wurden ${count ?? 1} Anmeldungen abgelehnt.\nLetzter Versuch: ${geraet}\nVermutung: ${v.text}\n\nEinzelheiten: Club-App → Sicherheits-Check.`,
+      url: `${APP_URL}#fremdzugriffe`, eilig: true,
+    }, `club-fremd:${t}`);
+  })().catch((e) => console.error("fremdzugriff", String(e))));
+}
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
-  if (!/^[0-9a-f]{32,96}$/.test(token)) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
+  if (!/^[0-9a-f]{32,96}$/.test(token)) { if (token) fremdMerken(req, "kaputt", null); throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401); }
   const hash = await sha256(token), jetztMs = Date.now(), version = txt(req.headers.get("x-club-version"), 20) || null;
   const c = ANMELDUNGEN.get(hash);
   if (c && c.bis > jetztMs) {
@@ -3023,12 +3078,13 @@ async function anmelden(req: Request): Promise<Ich> {
     return { ...c.ich, aemter: [...c.ich.aemter] };
   }
   ANMELDUNG_TREFFER = false;
-  const ich = await anmeldenDb(hash, version, req.headers.get("user-agent") || "");
+  const ich = await anmeldenDb(hash, version, req.headers.get("user-agent") || "", req);
+  netzKennung(req).then((n) => { NETZ_ANGEMELDET.set(n, { person: ich.person_id, t: Date.now() }); if (NETZ_ANGEMELDET.size > 400) NETZ_ANGEMELDET.delete(NETZ_ANGEMELDET.keys().next().value!); }).catch(() => {}); // 2.579.0
   if (ANMELDUNGEN.size >= ANMELDUNG_CACHE_MAX) for (const [k, v] of ANMELDUNGEN) if (v.bis <= jetztMs) ANMELDUNGEN.delete(k);
   if (ANMELDUNGEN.size < ANMELDUNG_CACHE_MAX) ANMELDUNGEN.set(hash, { ich: { ...ich, aemter: [...ich.aemter] }, bis: jetztMs + ANMELDUNG_CACHE_MS, gesehen: jetztMs, version });
   return ich;
 }
-async function anmeldenDb(hash: string, version: string | null, ua = ""): Promise<Ich> {
+async function anmeldenDb(hash: string, version: string | null, ua = "", req?: Request): Promise<Ich> {
   // 0.56.1: eine Datenbank-Runde (kc_club_anmeldung: Token-Hash prüfen, „zuletzt gesehen“ setzen, Person + Rollen liefern)
   let { data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version });
   if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503);
@@ -3041,9 +3097,9 @@ async function anmeldenDb(hash: string, version: string | null, ua = ""): Promis
     ({ data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version }));
     if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503);
   }
-  if (!a) throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401);
+  if (!a) { if (req) fremdMerken(req, "unbekannt", hash); throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401); }
   const p = a.person, r = a.rollen;
-  if (!p?.active) throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401);
+  if (!p?.active) { if (req) fremdMerken(req, "gesperrt", hash, p?.person_id || null); throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401); }
   // KC-CLUB-ONLINE-PUSH (1.57.0): nach ≥ 10 Min. Pause (oder zum ersten Mal) wieder da → Admins benachrichtigen (im Hintergrund)
   if (!a.vorher || Date.now() - Date.parse(a.vorher) >= ONLINE_PUSH_PAUSE_MS) {
     const lauf = onlinePushMelden(ichAus(p, r), ua).catch((e) => console.error("online push", String(e)));
@@ -6592,6 +6648,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
       if (stuendlich) await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
       if (stuendlich) await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
+      if (stuendlich) await db.from("kc_club_fremdzugriff").delete().lt("zeit", new Date(Date.now() - FZ.aufbewahrenTage * 86400000).toISOString()).then(() => {}, () => {}); // 2.579.0 KC-CLUB-FREMDZUGRIFF: 90 Tage
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
       // KC-CLUB-SPUR (2.23.88): Wege der Mitglieder nur 30 Tage aufbewahren
       if (stuendlich) { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "spur").lt("zeit", new Date(Date.now() - SPUR_TAGE * 86400000).toISOString()); if (error) console.error("spur loeschen", error.message); }
@@ -10984,6 +11041,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- KC-CLUB-SICHERHEIT (1.14.0): Sicherheits-Check für alle Mitglieder – nur Ja/Nein + Zeitabstände, keine Namen -----
       // Regel 11: fehlt ein Wert, kommt null (App: „nicht geprüft“) – nie ein erfundenes OK.
+      // 2.579.0 KC-CLUB-FREMDZUGRIFF: abgelehnte Anmeldungen der letzten Tage (nur Admin)
+      case "fremdzugriffe": {
+        nurAdmin(ich);
+        const tage = Math.min(90, Math.max(1, Math.round(Number(p.tage) || 30)));
+        const { data, error } = await db.from("kc_club_fremdzugriff").select("zeit,grund,schluessel,person_vermutung,vermutung,netz,geraet,version,land")
+          .gte("zeit", new Date(Date.now() - tage * 86400000).toISOString()).order("zeit", { ascending: false }).limit(200);
+        if (error) return json({ tage, eintraege: [], fehlt: true });
+        return json({ tage, eintraege: data ?? [] });
+      }
       case "sicherheit_pruefen": {
         const t0 = performance.now();
         const { data: s0, error } = await db.rpc("kc_club_sicherheit_status");

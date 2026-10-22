@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.578.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.579.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25792,6 +25792,7 @@ function hashSprung(h) {
     else if (h === "#schulungen") scStart();
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
+    else if (h === "#fremdzugriffe") { zeige("sicherheit"); if (ICH?.admin) setTimeout(fremdZeigen, 300); } // 2.579.0 KC-CLUB-FREMDZUGRIFF (Link aus dem Push)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
     else if (h.startsWith("#vorfuehren=")) setTimeout(onlinePing, 300); // KC-CLUB-VORFUEHREN: aus dem Push – die Einladung kommt mit dem nächsten Online-Abgleich
@@ -31372,7 +31373,24 @@ const SI_UHREN = [
   { id: "datenbank", t: "Daten-Speicher", max: 1000, gut: 300, mittel: 700, wert: (r) => r.s?.dbMs ?? null },
 ];
 let SI = { laeuft: false, r: null, zeit: null };
-function sicherheitStart() { zeige("sicherheit"); } // 2.480.0: Prüfen startet zeige("sicherheit") selbst
+function sicherheitStart() { zeige("sicherheit"); }
+// ---------- 2.579.0 KC-CLUB-FREMDZUGRIFF (Wunsch Hansi „Fremde Anmeldeversuche: wann, mit welchem Schlüssel, Vermutung wer“) – nur Admin ----------
+const FZ_GRUND = { unbekannt: "❓ Schlüssel unbekannt", alt: "🗝️ alter Link", gesperrt: "⛔ Zugang gesperrt", kaputt: "🧩 Schlüssel beschädigt" };
+async function fremdZeigen() {
+  if (!ICH?.admin || !$("siInhalt")) return;
+  let z = $("siFremd"); if (!z) { z = document.createElement("div"); z.id = "siFremd"; $("siInhalt").appendChild(z); }
+  z.innerHTML = '<div class="karte" style="margin-top:12px"><b>🕵️ Fremde Anmeldeversuche</b><p class="hinweis" style="margin:4px 0 0">wird geladen …</p></div>';
+  let r; try { r = await api("fremdzugriffe", { tage: 30 }); } catch (e) { z.innerHTML = `<div class="karte" style="margin-top:12px"><b>🕵️ Fremde Anmeldeversuche</b><p class="hinweis">Gerade nicht abrufbar – bitte später nochmal prüfen.</p></div>`; return; }
+  const l = r.eintraege || [], netze = new Set(l.map((x) => x.netz)).size, schl = new Set(l.map((x) => x.schluessel).filter(Boolean)).size;
+  const zeile = (x) => `<li class="fz-zeile"><div><b>${esc(wann(x.zeit))}</b> · ${esc(FZ_GRUND[x.grund] || x.grund)}${x.land ? ` · ${esc(x.land)}` : ""}</div>
+    <small>📱 ${esc(x.geraet || "unbekannt")}${x.version ? ` · App ${esc(x.version)}` : ""}</small>
+    <small>🔑 Schlüssel ${x.schluessel ? `<code>${esc(x.schluessel)}</code>` : "–"} · 🌐 Netz <code>${esc(String(x.netz || "").slice(0, 6))}</code></small>
+    <small class="fz-wer">🔎 ${esc(x.vermutung || "unbekannt")}</small></li>`;
+  z.innerHTML = `<div class="karte" style="margin-top:12px"><b>🕵️ Fremde Anmeldeversuche (${r.tage} Tage)</b>
+    <p class="hinweis" style="margin:4px 0 8px">${r.fehlt ? "Noch nicht eingerichtet (Datenbank)." : l.length ? `${l.length} abgelehnt · ${schl} verschiedene Schlüssel · ${netze} verschiedene Internetverbindungen. Gleiche Kurzkennung = gleicher Schlüssel, gleiches „Netz“ = gleiche Verbindung. Der Schlüssel selbst wird nie gespeichert.` : "✅ Keine – niemand hat es mit einem falschen oder alten Link versucht."}</p>
+    ${l.length ? `<ul class="fz-liste">${l.slice(0, 60).map(zeile).join("")}</ul>` : ""}</div>`;
+  if (location.hash === "#fremdzugriffe") z.scrollIntoView({ behavior: "smooth", block: "start" });
+} // 2.480.0: Prüfen startet zeige("sicherheit") selbst
 function siKlasse(ok) { return ok === true ? "si-gut" : ok === false ? "si-schlecht" : "si-offen"; }
 function siUhr(u, r) {
   const v = r ? u.wert(r) : null, anteil = v == null ? 0 : Math.min(1, v / u.max), laenge = Math.PI * 50;
@@ -31425,6 +31443,7 @@ async function sicherheitPruefen() {
   SI.r = r; SI.zeit = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
   for (let i = 1; i <= SICHERHEIT_PRUEFUNGEN.length; i++) { if (aktuelleAnsicht !== "sicherheit") break; sicherheitZeigen(i); await new Promise((ok) => setTimeout(ok, 180)); }
   SI.laeuft = false; sicherheitZeigen(SICHERHEIT_PRUEFUNGEN.length);
+  if (ICH?.admin) fremdZeigen(); // 2.579.0 KC-CLUB-FREMDZUGRIFF
   const alleOk = SICHERHEIT_PRUEFUNGEN.every((p) => p.wert(r) === true);
   try { navigator.vibrate?.(alleOk ? 40 : [60, 60, 60]); } catch {}
 }
