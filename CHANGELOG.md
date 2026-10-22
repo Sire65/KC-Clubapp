@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.582.0 – 2026-10-22 – Eigenes Foto als Chat-Hintergrund (KC-CLUB-CHAT-HG-FOTO)
+Unter 🎨 Chat-Farben kann jetzt auch ein eigenes Foto als Hintergrund gewählt werden – aus der Galerie, direkt mit der Kamera oder als Datei. Stärke wählbar (blass, mittel, kräftig), damit die Nachrichten gut lesbar bleiben.
+
 ## 2.581.0 – 2026-10-22 – Unser Clubjahr: Sammelaktion „Mein Clubmoment“ (KC-CLUB-CLUBJAHR-MOMENTE)
 Ab 1. November kann jedes Mitglied seinen schönsten Clubmoment 2026 einreichen (Foto + ein, zwei Sätze, bis 15.12.). Die Clubleitung gibt frei, fragt zurück, trägt für Mitglieder ohne App ein und kann den Einsendeschluss ändern. Daraus entsteht das Clubjahr-Heft fürs Weihnachtsessen im Januar.
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.581.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.582.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32367,16 +32367,51 @@ const CF_HG = [
   { id: "kueche", t: "Kochmützen", sym: "🧑‍🍳", css: `${cfSvg("<g fill='#741521' opacity='.07'>" + [[60, 90], [240, 60], [150, 250], [330, 230], [60, 420], [250, 430], [150, 600], [340, 600]].map(([x, y]) => `<path transform='translate(${x} ${y})' d='M-18 8 a12 12 0 0 1 4 -20 a14 14 0 0 1 28 0 a12 12 0 0 1 4 20Z M-14 10 h28 v10 h-28Z'/>`).join("") + "</g>")}, linear-gradient(#f8f2e8, #f3ead9)` },
 ];
 const CF_KEY = "kc_club_chat_farben";
+// ---------- 2.582.0 KC-CLUB-CHAT-HG-FOTO (Wunsch Hansi „beim Festlegen der Farben und Hintergründe im Chat auch Fotos aus Galerie, per Kamera oder per Datei“):
+// eigenes Foto als Chat-Hintergrund. Wird verkleinert, als eigene Anlage hochgeladen (nur ich darf sie öffnen – wie jede eigene Anlage) und als
+// kleine Kopie auf dem Gerät gemerkt (sofort da, auch offline). Andere Geräte holen sich die Kopie einmal über die Anlage. Stärke wählbar
+// (blass/mittel/kräftig), damit die Nachrichten lesbar bleiben; nachts wie die anderen Hintergründe abgedunkelt.
+const CF_FOTO_KEY = "kc_club_chat_hg_foto", CF_FOTO_PX = 1280, CF_FOTO_Q = 0.72, CF_FOTO_DATEI = ".jpg,.jpeg,.png,.webp,.gif,.heic,.heif";
+const CF_STAERKE = [{ id: "blass", t: "Blass", op: 0.3 }, { id: "mittel", t: "Mittel", op: 0.5 }, { id: "kraeftig", t: "Kräftig", op: 0.8 }];
+let CF_FOTO = (() => { try { const g = JSON.parse(localStorage.getItem(CF_FOTO_KEY) || "null"); return g?.daten ? g : null; } catch { return null; } })(); // { id, daten }
+const cfFotoDa = () => CF.hintergrund === "foto" && !!CF_FOTO?.daten && (!CF.foto || CF_FOTO.id === CF.foto);
+const cfFotoCss = () => `url("${CF_FOTO.daten}")`;
+function cfFotoMerken(f) { CF_FOTO = f; try { f ? localStorage.setItem(CF_FOTO_KEY, JSON.stringify(f)) : localStorage.removeItem(CF_FOTO_KEY); } catch { /* zu groß/voll: dann nur bis zum Neustart */ } }
+const cfDatenUrl = (blob) => new Promise((ok, nein) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => nein(r.error); r.readAsDataURL(blob); });
+const cfBildOk = (url) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i.naturalWidth > 0); i.onerror = () => ok(false); i.src = url; });
+async function cfFotoHolen(id) { // anderes Gerät: Foto einmal über die eigene Anlage holen und klein merken
+  if (cfFotoHolen.laeuft === id) return; cfFotoHolen.laeuft = id;
+  try { const r = await api("anlage_url", { id }, { still: true }); const b = await (await fetch(r.url, { signal: zeitSignal(30000) })).blob();
+    const klein = await verkleinern(new File([b], "hg.jpg", { type: b.type || "image/jpeg" }), CF_FOTO_PX, CF_FOTO_Q), daten = await cfDatenUrl(klein);
+    if (CF.foto === id && await cfBildOk(daten)) { cfFotoMerken({ id, daten }); cfAnwenden(); cfBlattZeichnen(); }
+  } catch {} finally { cfFotoHolen.laeuft = null; }
+}
+async function cfFotoGewaehlt(input) {
+  const roh = input.files?.[0]; input.value = ""; if (!roh) return;
+  if (roh.type && !/^image\//.test(roh.type)) return melde("Bitte ein Foto wählen (JPG, PNG …).", true);
+  melde("🖼️ Foto wird vorbereitet …");
+  try {
+    const klein = await verkleinern(roh, CF_FOTO_PX, CF_FOTO_Q), daten = await cfDatenUrl(klein);
+    if (!(await cfBildOk(daten))) return melde("Dieses Bildformat kann dein Handy hier nicht anzeigen – bitte ein JPG oder PNG wählen.", true);
+    let id = null; try { id = (await anlageHochladen(klein))?.id || null; } catch { melde("🖼️ Nur auf diesem Handy – zum Hochladen fehlt gerade das Netz.", true); }
+    cfFotoMerken({ id, daten }); CF = { ...CF, foto: id, staerke: CF.staerke || "mittel" }; cfSetzen("hintergrund", "foto");
+    if (id) melde("🖼️ Dein Foto ist jetzt der Chat-Hintergrund");
+  } catch (e) { meldeFehler(e); }
+}
+function cfFotoWeg() { cfFotoMerken(null); CF = { ...CF, foto: null }; cfSetzen("hintergrund", "standard"); }
 let CF = (() => { try { return JSON.parse(localStorage.getItem(CF_KEY) || "null") || {}; } catch { return {}; } })();
 const cfLesbar = (hex) => { const n = parseInt(String(hex).slice(1), 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? "#1f1416" : "#ffffff"; };
 function cfAnwenden() {
-  const root = document.documentElement, e = CF_EIGEN.find((x) => x.id === CF.eigen && x.c), a = CF_ANDERE.find((x) => x.id === CF.andere && x.c), h = CF_HG.find((x) => x.id === CF.hintergrund && x.css);
+  const root = document.documentElement, e = CF_EIGEN.find((x) => x.id === CF.eigen && x.c), a = CF_ANDERE.find((x) => x.id === CF.andere && x.c);
+  if (CF.hintergrund === "foto" && CF.foto && CF_FOTO?.id !== CF.foto) cfFotoHolen(CF.foto); // 2.582.0: auf diesem Gerät noch nicht da
+  const h = cfFotoDa() ? { id: "foto", css: cfFotoCss(), foto: true } : CF_HG.find((x) => x.id === CF.hintergrund && x.css);
   root.classList.toggle("cf-eigen", !!e); root.classList.toggle("cf-andere", !!a); root.classList.toggle("cf-hg", !!h); root.classList.toggle("cf-hg-dunkel", !!h?.dunkel);
   if (e) { root.style.setProperty("--cfEigen", e.c); root.style.setProperty("--cfEigenText", cfLesbar(e.c)); }
   if (a) { root.style.setProperty("--cfAndere", a.c); root.style.setProperty("--cfAndereD", a.cd); }
   let hg = $("chatHg"); if (!hg && $("v-chat")) { $("v-chat").insertAdjacentHTML("afterbegin", '<div id="chatHg" class="chat-hg" aria-hidden="true"></div>'); hg = $("chatHg"); }
   if (hg) hg.style.background = h ? h.css : "";
-  if (h && hg) { hg.style.backgroundSize = "cover"; hg.style.backgroundPosition = "center bottom"; }
+  if (h && hg) { hg.style.backgroundSize = "cover"; hg.style.backgroundPosition = h.foto ? "center" : "center bottom"; }
+  if (hg) hg.style.opacity = h?.foto && !root.classList.contains("dunkel") ? String((CF_STAERKE.find((x) => x.id === CF.staerke) || CF_STAERKE[1]).op) : ""; // 2.582.0: Stärke des Fotos
 }
 async function cfSetzen(feld, id) {
   CF = { ...CF, [feld]: id }; try { localStorage.setItem(CF_KEY, JSON.stringify(CF)); } catch {}
@@ -32386,7 +32421,7 @@ async function cfSetzen(feld, id) {
     catch { melde("🎨 Nur auf diesem Handy gemerkt – Server gerade nicht erreichbar", true); }
   }, 600);
 }
-function cfUebernehmen(w) { if (!w || typeof w !== "object") return; CF = { eigen: w.eigen, andere: w.andere, hintergrund: w.hintergrund }; try { localStorage.setItem(CF_KEY, JSON.stringify(CF)); } catch {} cfAnwenden(); }
+function cfUebernehmen(w) { if (!w || typeof w !== "object") return; CF = { eigen: w.eigen, andere: w.andere, hintergrund: w.hintergrund, foto: w.foto || null, staerke: w.staerke || "mittel" }; try { localStorage.setItem(CF_KEY, JSON.stringify(CF)); } catch {} cfAnwenden(); }
 function cfStandard() { CF = { eigen: "standard", andere: "standard", hintergrund: "standard" }; cfSetzen("eigen", "standard"); }
 function cfOeffnen() {
   fensterZu($("chatBlatt"));
@@ -32395,15 +32430,21 @@ function cfOeffnen() {
 }
 function cfBlattZeichnen() {
   const box = $("cfInhalt"); if (!box) return;
-  const e = CF_EIGEN.find((x) => x.id === CF.eigen && x.c), a = CF_ANDERE.find((x) => x.id === CF.andere && x.c), h = CF_HG.find((x) => x.id === CF.hintergrund && x.css);
+  const e = CF_EIGEN.find((x) => x.id === CF.eigen && x.c), a = CF_ANDERE.find((x) => x.id === CF.andere && x.c);
+  const h = cfFotoDa() ? { css: cfFotoCss(), foto: true } : CF_HG.find((x) => x.id === CF.hintergrund && x.css); // 2.582.0 KC-CLUB-CHAT-HG-FOTO
   const dunkel = document.documentElement.classList.contains("dunkel");
   const farbe = (liste, feld) => `<div class="cf-farben">${liste.map((x) => `<button type="button" class="cf-farbe${(CF[feld] || "standard") === x.id ? " an" : ""}" aria-label="${esc(x.t || x.id)}" title="${esc(x.t || x.id)}" onclick="cfSetzen('${feld}','${x.id}')" style="${x.c ? `background:${dunkel && x.cd ? x.cd : x.c}` : ""}">${x.c ? "" : "↺"}</button>`).join("")}</div>`;
-  box.innerHTML = `<div class="cf-vorschau" style="${h ? esc(`background:${h.css};background-size:cover;background-position:center bottom`) : ""}">
+  const vs = h?.foto ? `background:linear-gradient(rgba(255,255,255,${(1 - (CF_STAERKE.find((x) => x.id === CF.staerke) || CF_STAERKE[1]).op).toFixed(2)}),rgba(255,255,255,${(1 - (CF_STAERKE.find((x) => x.id === CF.staerke) || CF_STAERKE[1]).op).toFixed(2)})),${h.css};background-size:cover;background-position:center` : h ? `background:${h.css};background-size:cover;background-position:center bottom` : "";
+  box.innerHTML = `<div class="cf-vorschau" style="${esc(vs)}">
       <div class="blase cf-v" style="${a ? `background:${dunkel ? a.cd : a.c}` : ""}"><div class="von">Klaus</div>Hallo zusammen – wer bringt den Glühwein mit? 🍷</div>
       <div class="blase eigen cf-v" style="${e ? `background:${e.c};color:${cfLesbar(e.c)}` : ""}">Mache ich, bis heute Abend! 👍</div></div>
     <h4 class="cf-h">💬 Meine Sprechblasen</h4>${farbe(CF_EIGEN, "eigen")}
     <h4 class="cf-h">👥 Sprechblasen der anderen</h4>${farbe(CF_ANDERE, "andere")}
-    <h4 class="cf-h">🖼️ Hintergrund</h4><div class="cf-hgs">${CF_HG.map((x) => `<button type="button" class="cf-hgw${(CF.hintergrund || "standard") === x.id ? " an" : ""}" onclick="cfSetzen('hintergrund','${x.id}')"><span class="cf-hgbild" style="${x.css ? esc(`background:${x.css};background-size:cover;background-position:center bottom`) : ""}">${x.css ? "" : x.sym}</span><span class="cf-hgt">${esc(x.t)}</span></button>`).join("")}</div>
+    <h4 class="cf-h">🖼️ Hintergrund</h4><div class="cf-hgs">${CF_HG.map((x) => `<button type="button" class="cf-hgw${(CF.hintergrund || "standard") === x.id ? " an" : ""}" onclick="cfSetzen('hintergrund','${x.id}')"><span class="cf-hgbild" style="${x.css ? esc(`background:${x.css};background-size:cover;background-position:center bottom`) : ""}">${x.css ? "" : x.sym}</span><span class="cf-hgt">${esc(x.t)}</span></button>`).join("")}${CF_FOTO?.daten ? `<button type="button" class="cf-hgw${CF.hintergrund === "foto" ? " an" : ""}" onclick="cfSetzen('hintergrund','foto')"><span class="cf-hgbild" style="${esc(`background:url(\"${CF_FOTO.daten}\");background-size:cover;background-position:center`)}"></span><span class="cf-hgt">Mein Foto</span></button>` : ""}</div>
+    <h4 class="cf-h">📷 Eigenes Foto als Hintergrund</h4>
+    <div class="cf-foto-wahl"><label class="knopf">🖼️ Galerie<input type="file" accept="image/*" hidden onchange="cfFotoGewaehlt(this)"></label><label class="knopf">📷 Kamera<input type="file" accept="image/*" capture="environment" hidden onchange="cfFotoGewaehlt(this)"></label><label class="knopf">📁 Datei<input type="file" accept="${CF_FOTO_DATEI}" hidden onchange="cfFotoGewaehlt(this)"></label></div>
+    ${CF.hintergrund === "foto" && CF_FOTO?.daten ? `<p class="cf-h" style="margin:8px 0 4px">Wie deutlich soll das Foto sein?</p><div class="cf-foto-wahl">${CF_STAERKE.map((x) => `<button type="button" class="knopf${(CF.staerke || "mittel") === x.id ? " haupt" : ""}" onclick="cfSetzen('staerke','${x.id}')">${esc(x.t)}</button>`).join("")}</div>
+      <button type="button" class="knopf" style="margin-top:6px" onclick="cfFotoWeg()">🗑️ Foto als Hintergrund entfernen</button>` : ""}
     <p class="hinweis" style="margin:8px 0">Gilt für alle deine Chats – nur bei dir. Die anderen sehen ihre eigenen Farben.</p>
     <div class="iv-fuss"><button type="button" class="knopf" onclick="cfStandard()">↺ Wie vorher</button><button type="button" class="knopf haupt" onclick="fensterZu($('cfBlatt'))">✅ Fertig</button></div>`;
 }

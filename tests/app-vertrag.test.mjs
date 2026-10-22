@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12031,4 +12031,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/<textarea id="cjText" maxlength="400"/.test(html) && /<select id="cjMonat">/.test(html) && /<select id="cjFuer">/.test(html) && /<input type="date" id="cjEnde"/.test(html), "Auswahl statt Freitext, wo möglich (Monat, Mitglied, Datum)");
   assert.ok(!/confirm\(|prompt\(/.test(html.slice(html.indexOf("const CJ = { stand: null"), html.indexOf("// ---------- 2.569.0 KC-CLUB-CLUBABEND"))), "nur frage()/eingabe()");
   assert.ok(/\.cj-karte \.knoepfe \.knopf \{ width: auto; min-height: 44px; \}/.test(lies("index.html")), "große Tippflächen");
+}
+// 2.582.0 KC-CLUB-CHAT-HG-FOTO (Wunsch Hansi „Hintergründe im Chat auch Fotos aus Galerie, per Kamera oder per Datei“)
+{
+  const ix = lies("index.html");
+  assert.ok(/🖼️ Galerie<input type="file" accept="image\/\*" hidden onchange="cfFotoGewaehlt\(this\)">/.test(html) && /📷 Kamera<input type="file" accept="image\/\*" capture="environment" hidden/.test(html) && /📁 Datei<input type="file" accept="\$\{CF_FOTO_DATEI\}" hidden/.test(html), "drei Wege: Galerie, Kamera, Datei");
+  assert.ok(/const klein = await verkleinern\(roh, CF_FOTO_PX, CF_FOTO_Q\)/.test(html) && /if \(!\(await cfBildOk\(daten\)\)\) return melde\(/.test(html), "verkleinert; nicht anzeigbare Formate klar gemeldet");
+  assert.ok(/id = \(await anlageHochladen\(klein\)\)\?\.id/.test(html) && /cfFotoMerken\(\{ id, daten \}\)/.test(html) && /if \(CF\.hintergrund === "foto" && CF\.foto && CF_FOTO\?\.id !== CF\.foto\) cfFotoHolen\(CF\.foto\);/.test(html), "eigene Anlage + Kopie auf dem Gerät; andere Geräte holen einmal nach");
+  assert.ok(/const CF_STAERKE = \[\{ id: "blass", t: "Blass", op: 0\.3 \}, \{ id: "mittel", t: "Mittel", op: 0\.5 \}, \{ id: "kraeftig", t: "Kräftig", op: 0\.8 \}\];/.test(html) && /🗑️ Foto als Hintergrund entfernen/.test(html), "Stärke wählbar, entfernen möglich");
+  assert.ok(/foto: typeof w\?\.foto === "string" && \/\^\[0-9a-f-\]\{36\}\$\/i\.test\(w\.foto\) \? w\.foto : null, staerke: \["blass", "mittel", "kraeftig"\]\.includes\(w\?\.staerke\) \? w\.staerke : "mittel"/.test(server), "Server merkt nur Kennung + Stärke (geprüft)");
+  assert.ok(/\.cf-foto-wahl \.knopf \{ width: auto; flex: 1 1 30%; min-height: 44px;/.test(ix), "große Tippflächen");
 }
