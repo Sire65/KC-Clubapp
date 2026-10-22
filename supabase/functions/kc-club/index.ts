@@ -129,7 +129,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.590.0";
+const SERVER_VERSION = "2.592.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3158,7 +3158,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
-    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
+    "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
     "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
@@ -7583,12 +7583,27 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_core_people").select("person_id").eq("active", true).eq("org_id", ORG).not("phone", "is", null).neq("phone", ""),
           db.from("kc_club_freigaben").select("person_id").eq("bereich", "kontakt_handy").eq("erlaubt", true),
         ]);
+        // 2.592.0 KC-CLUB-GLEICHZEITIG (Wunsch Hansi „bündeln statt einzeln nacheinander – sorgfältig und vorsichtig“): die folgenden Lesungen
+        // hängen nicht voneinander ab (nur an „leute“ aus dem ersten Block) – sie laufen jetzt gleichzeitig statt in ~6 Schritten nacheinander.
+        // Gleiche Abfragen, gleiche Regeln, gleiches Ergebnis; nur „online jetzt“ wartet weiter auf meine eigene Sichtbarkeit.
+        const [{ data: mitgl }, { data: avs }, ichZeigeMap, zd, zeigen, inko, probe, ohneKommListen, adminLesen] = await Promise.all([
+          db.from("kc_core_club_memberships").select("person_id,membership_type,membership_status").eq("org_id", ORG),
+          db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar"),
+          onlineZeigenMap([ich.person_id]),
+          zuletztDaMap(ich, leute.map((m) => m.person_id)), // KC-CLUB-ZULETZT-DA (1.20.0)
+          onlineZeigenMap(), inkognitoSet(),
+          ich.admin ? probeListe() : Promise.resolve(new Map<string, any>()), // KC-CLUB-PROBEPHASE: 🧪 nur für den Admin
+          Promise.all([kommunikationAus().catch(() => new Set<string>()), sperrenAktuell()]),
+          ich.admin ? Promise.all([
+            db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ansicht"),
+            db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club").in("status", COMM_FEHLER).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(500),
+            db.from("kc_communication_requests").select("recipient_refs,channel,created_at").eq("source_program", "kc-club").in("status", COMM_OK).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("created_at", { ascending: false }).limit(2000),
+          ]) : Promise.resolve(null),
+        ]);
         // KC-CLUB-SENSIBEL-GAESTE (2.78.0, Wunsch Hansi): wer ist KEIN ordentliches Mitglied (Gast, ausgetreten, ohne Eintrag)?
         // Ohne lesbaren Eintrag gilt jemand als Nicht-Mitglied – unbekannt wird nie als „Mitglied“ (OK) gezeigt.
-        const { data: mitgl } = await db.from("kc_core_club_memberships").select("person_id,membership_type,membership_status").eq("org_id", ORG);
         const ordentlich = new Set((mitgl ?? []).filter((x: any) => x.membership_type === "regular" && x.membership_status === "active").map((x: any) => x.person_id));
         // KC-CLUB-AVATAR (2.23.85): gewählte Koch-Figur je Mitglied (nur der Code, z. B. „w03“)
-        const { data: avs } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "avatar");
         const avatar = new Map((avs ?? []).map((x: any) => [x.person_id, typeof x.wert?.figur === "string" ? x.wert.figur : null]));
         // KC-CLUB-ZUSTELLWAHL: wie ist jemand erreichbar? (nur ja/nein – keine Nummern/Adressen)
         const hatTel = new Set((tel ?? []).map((x: any) => x.person_id)), handyFrei = new Set((hfr ?? []).map((x: any) => x.person_id));
@@ -7596,24 +7611,17 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const z = new Map((zug ?? []).map((x: any) => [x.person_id, x]));
         const ps = new Set((push ?? []).map((x: any) => x.person_id));
         const aemter = [...new Set((rollen ?? []).flatMap((x: any) => x.aemter || []))].sort();
-        const ichZeige = (await onlineZeigenMap([ich.person_id])).get(ich.person_id) !== false, on = ichZeige ? await onlineJetzt() : new Set<string>();
+        const ichZeige = ichZeigeMap.get(ich.person_id) !== false, on = ichZeige ? await onlineJetzt() : new Set<string>();
         // KC-CLUB-KREISE (0.60.0): Farbe der Namenskreise. „heute da“ und „verborgen“ folgen derselben Regel wie online
         // (wer sich verbirgt, sieht auch andere nicht). Zustellfehler (rot) nur für den Admin.
-        const zd = await zuletztDaMap(ich, leute.map((m) => m.person_id)); // KC-CLUB-ZULETZT-DA (1.20.0)
-        const [zeigen, inko] = await Promise.all([onlineZeigenMap(), inkognitoSet()]), tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
+        const tag = (d: string | Date) => new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }), heute = tag(new Date());
         const fehler = new Map<string, string>(), ansicht = new Map<string, string>();
-        const probe = ich.admin ? await probeListe() : new Map<string, any>(); // KC-CLUB-PROBEPHASE: 🧪 nur für den Admin
-        if (ich.admin) {
+        if (ich.admin && adminLesen) {
           // KC-CLUB-ANSICHT: wer nutzt welche Ansicht (nur für den Admin – zeigt, ob die einfache Ansicht angenommen wird)
-          const { data: an } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "ansicht");
-          for (const x of an ?? []) if ((x as any).wert?.gewaehlt) ansicht.set((x as any).person_id, (x as any).wert.art === "erweitert" ? "erweitert" : "einfach");
           // KC-CLUB-ZUSTELLFEHLER (1.49.2): rot nur, wenn nach dem Fehler auf demselben Weg nichts mehr angekommen ist
-          // (vorher blieb z. B. ein einzelner alter Push-Fehler 7 Tage rot, obwohl danach alles ankam)
-          const seit = new Date(Date.now() - 7 * 86400000).toISOString();
-          const [{ data: fx }, { data: ok }] = await Promise.all([
-            db.from("kc_communication_requests").select("recipient_refs,channel,status,created_at").eq("source_program", "kc-club").in("status", COMM_FEHLER).gte("created_at", seit).limit(500),
-            db.from("kc_communication_requests").select("recipient_refs,channel,created_at").eq("source_program", "kc-club").in("status", COMM_OK).gte("created_at", seit).order("created_at", { ascending: false }).limit(2000),
-          ]);
+          // (vorher blieb z. B. ein einzelner alter Push-Fehler 7 Tage rot, obwohl danach alles ankam) – gelesen oben gleichzeitig (2.592.0)
+          const [{ data: an }, { data: fx }, { data: ok }] = adminLesen;
+          for (const x of an ?? []) if ((x as any).wert?.gewaehlt) ansicht.set((x as any).person_id, (x as any).wert.art === "erweitert" ? "erweitert" : "einfach");
           const perMail = new Map(leute.filter((m) => m.email).map((m) => [String(m.email).toLowerCase(), m.person_id]));
           const wer = (r: any) => r?.personId ?? perMail.get(String(r?.email ?? "").toLowerCase());
           const zuletztOk = new Map<string, string>(); // person|kanal → letzte Zustellung
@@ -7632,7 +7640,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // 2.538.0 KC-CLUB-KOMMUNIKATION-AUS-GRAU: wer keine Benachrichtigungen bekommt, ist in den Empfänger-Listen ausgegraut
         // (Liste nicht lesbar → niemand ausgegraut; gesendet wird trotzdem nicht, das prüft routerSendenRoh)
-        const ohneKomm = new Set([...await kommunikationAus().catch(() => new Set<string>()), ...(await sperrenAktuell()).stumm]); // 2.539.0: + gesperrt mit 📵
+        const ohneKomm = new Set([...ohneKommListen[0], ...ohneKommListen[1].stumm]); // 2.539.0: + gesperrt mit 📵 (2.592.0: oben gleichzeitig gelesen)
         return json({
           aemter, onlineSichtbar: ichZeige,
           mitglieder: leute.map((m) => ({
@@ -8139,9 +8147,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- Vorschläge & Abstimmungen -----
       case "vorschlaege_liste": {
-        await vorschlaegeSitzungZuordnen().catch((e) => console.error("vorschlag sitzung", String(e))); // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
-        const { data: kommend } = await db.from("kc_club_treffen").select("id,titel,beginn,art").eq("status", "geplant").gte("beginn", jetzt()).order("beginn").limit(10);
-        return json({ vorschlaege: await vorschlaegeListe(ich), treffen: kommend ?? [], spenden: { empfaenger: await spendenEmpfaenger(), betraege: SPENDEN_BETRAEGE, max: SPENDE_MAX } });
+        // 2.592.0 KC-CLUB-GLEICHZEITIG: kommende Treffen und Spenden-Empfänger laden gleichzeitig mit der Liste. Die Liste selbst wartet wie
+        // bisher auf das Zuordnen zur Sitzung (das ändert Vorschläge) – Reihenfolge dort unverändert.
+        const [vorschlaege, { data: kommend }, empfaenger] = await Promise.all([
+          vorschlaegeSitzungZuordnen().catch((e) => console.error("vorschlag sitzung", String(e))).then(() => vorschlaegeListe(ich)), // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
+          db.from("kc_club_treffen").select("id,titel,beginn,art").eq("status", "geplant").gte("beginn", jetzt()).order("beginn").limit(10),
+          spendenEmpfaenger(),
+        ]);
+        return json({ vorschlaege, treffen: kommend ?? [], spenden: { empfaenger, betraege: SPENDEN_BETRAEGE, max: SPENDE_MAX } });
       }
 
       case "vorschlag_speichern": {
@@ -10063,8 +10076,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!von || !bis || bis < von || (new Date(bis).getTime() - new Date(von).getTime()) > 62 * 86400000) throw new Fehler("Ungültiger Zeitraum.");
         // Tagesgrenzen in deutscher Zeit (großzügig ±1 Tag, genaue Zuordnung macht die App)
         const zeitraum = { von: new Date(new Date(von).getTime() - 86400000).toISOString(), bis: new Date(new Date(bis).getTime() + 2 * 86400000).toISOString() };
-        const [treffen, { data: dienste }, { data: fristen }, geburtstage, akt, anfragen, privat] = await Promise.all([
-          treffenListe(ich, false, zeitraum),
+        // 2.592.0 KC-CLUB-GLEICHZEITIG: Schulungen laufen jetzt mit (vorher erst danach, 3–4 Schritte), die Themen hängen direkt an den
+        // Treffen (warten nicht mehr auf alles andere). Gleiche Abfragen, gleiches Ergebnis; Fehler bei den Schulungen wie bisher still ([]).
+        const pTreffenThemen = treffenListe(ich, false, zeitraum).then(async (treffen: any[]) => {
+          const tids = treffen.map((t: any) => t.id);
+          const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").in("art", ["thema", "spende"]).neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
+          return [treffen, themen] as [any[], any[] | null];
+        });
+        const [[treffen, themen], { data: dienste }, { data: fristen }, geburtstage, akt, anfragen, privat, schulungen] = await Promise.all([
+          pTreffenThemen,
           db.from("kc_dp_plan_published").select("work_date,start_time,end_time,area").eq("org_id", ORG).eq("status", "published")
             .eq("person_id", ich.person_id).gte("work_date", von).lte("work_date", bis).order("work_date").order("start_time"),
           db.from("kc_club_vorschlaege").select("id,titel,frist,status").eq("art", "abstimmung").neq("status", "zurueckgezogen").gte("frist", zeitraum.von).lt("frist", zeitraum.bis),
@@ -10072,10 +10092,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           aktionenRoh(),
           terminanfragenListe(ich, zeitraum), // KC-CLUB-TERMINANFRAGE (0.92.0)
           privatListe(ich, zeitraum.von, zeitraum.bis), // KC-CLUB-PRIVATTERMIN (1.0.0) – nur meine
+          schulungenListe(ich, zeitraum.von, zeitraum.bis).catch(() => []), // KC-CLUB-SCHULUNGSTERMINE (2.23.59)
         ]);
-        const schulungen = await schulungenListe(ich, zeitraum.von, zeitraum.bis).catch(() => []); // KC-CLUB-SCHULUNGSTERMINE (2.23.59)
-        const tids = treffen.map((t: any) => t.id);
-        const { data: themen } = tids.length ? await db.from("kc_club_vorschlaege").select("treffen_id,titel").in("art", ["thema", "spende"]).neq("status", "zurueckgezogen").in("treffen_id", tids) : { data: [] as any[] };
         return json({
           treffen: treffen.map((t: any) => ({ ...t, themen: (themen ?? []).filter((x: any) => x.treffen_id === t.id).map((x: any) => x.titel) })),
           dienste: (dienste ?? []).map((s: any) => ({ datum: s.work_date, start: String(s.start_time).slice(0, 5), ende: String(s.end_time).slice(0, 5), bereich: s.area })),
@@ -10122,15 +10140,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         ]);
         const frei = (b: string) => !!(fr ?? []).find((x: any) => x.bereich === b)?.erlaubt;
         const darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei("kontakt_" + f));
-        const festnetz = darf("festnetz") ? await festnetzAusManager(pe) : null;
+        // 2.592.0 KC-CLUB-GLEICHZEITIG: Festnetz, Notfallkontakt, „zuletzt da“, Chat-Anzahl und Probephase gleichzeitig statt nacheinander –
+        // gleiche Regeln (wer was sehen darf), gleiche Abfragen, gleiches Ergebnis.
+        const [festnetz, { data: nf }, zdPid, chatAnzahl, probeEintrag] = await Promise.all([
+          darf("festnetz") ? festnetzAusManager(pe) : Promise.resolve(null),
+          // KC-CLUB-NOTFALL: nur man selbst und die Organisation (Clubsprecher, Kassenwart, Admin)
+          selbst || ich.vorstand ? db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", pid).maybeSingle() : Promise.resolve({ data: null as any }),
+          selbst ? Promise.resolve(null) : zuletztDaMap(ich, [pid]).then((m) => m.get(pid) ?? null), // KC-CLUB-ZULETZT-DA (1.20.0)
+          chatAnzahlMit(ich, pid).catch(() => null), // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
+          ich.admin && !selbst ? probeListe(true).then((m) => m.get(pid) ?? null) : Promise.resolve(null), // KC-CLUB-PROBEPHASE
+        ]);
         const werte: Record<string, unknown> = {
           handy: txt(pe.phone, 40) || null, festnetz, mail: txt(pe.email, 120) || null,
           adresse: pe.street || pe.city ? { strasse: txt(pe.street, 120), plz: txt(pe.postal_code, 10), ort: txt(pe.city, 80) } : null,
         };
         const kontakt: Record<string, unknown> = {};
         for (const f of KONTAKT_FELDER) if (darf(f) && werte[f]) kontakt[f] = werte[f];
-        // KC-CLUB-NOTFALL: nur man selbst und die Organisation (Clubsprecher, Kassenwart, Admin)
-        const { data: nf } = selbst || ich.vorstand ? await db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", pid).maybeSingle() : { data: null };
         await protokoll(ich.person_id, "mitglied_details", { fuer: pid, felder: Object.keys(kontakt), notfall: !!nf });
         return json({
           person_id: pid, name: pe.display_name, vorname: vorname(pe), aemter: rolle?.aemter ?? [], status: st.get(pid) ?? null, selbst,
@@ -10141,9 +10166,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           ...(selbst || ich.admin ? { freigegeben: Object.fromEntries(KONTAKT_FELDER.map((f) => [f, frei("kontakt_" + f)])) } : {}),
           darfKontakte: ich.kontakte || ich.admin,
           notfall: nf ?? null,
-          zuletztDa: selbst ? null : (await zuletztDaMap(ich, [pid])).get(pid) ?? null, // KC-CLUB-ZULETZT-DA (1.20.0)
-          chatAnzahl: await chatAnzahlMit(ich, pid).catch(() => null), // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
-          ...(ich.admin && !selbst ? { probe: (await probeListe(true)).get(pid) ?? null, probeMoeglich: !/^KC-P-TEST/.test(pid) } : {}), // KC-CLUB-PROBEPHASE
+          zuletztDa: zdPid, // KC-CLUB-ZULETZT-DA (1.20.0)
+          chatAnzahl, // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
+          ...(ich.admin && !selbst ? { probe: probeEintrag, probeMoeglich: !/^KC-P-TEST/.test(pid) } : {}), // KC-CLUB-PROBEPHASE
         });
       }
 
@@ -10223,20 +10248,25 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: meine } = await db.from("kc_communication_thread_participants").select("thread_id,last_read_at").eq("person_id", ich.person_id).is("hidden_at", null);
         const ids = (meine ?? []).map((x: any) => x.thread_id);
         if (!ids.length) return json({ unterhaltungen: [] });
-        const [{ data: th }, { data: tn }, { data: msgs }] = await Promise.all([
+        // 2.592.0 KC-CLUB-GLEICHZEITIG (Wunsch Hansi „Abfragen bündeln statt einzeln nacheinander – sorgfältig und vorsichtig“): Gruppen und
+        // Chat-Archiv hängen nur an den Chat-Kennungen bzw. an mir – sie laufen jetzt mit den drei Lesungen gleichzeitig statt danach.
+        // Ebenso Namen und „wichtig“ (beide brauchen nur die Nachrichten). Gleiche Abfragen, gleiches Ergebnis, weniger Wartezeit.
+        const [{ data: th }, { data: tn }, { data: msgs }, { data: gr }, archiv] = await Promise.all([
           db.from("kc_communication_threads").select("id,subject,created_by_person_id,updated_at").in("id", ids),
           db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", ids),
           db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body,created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(1000),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids),
+          chatArchivHolen(ich.person_id), // KC-CLUB-CHAT-ARCHIV (2.23.28)
         ]);
-        const leute = await personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]);
         const gelesen = new Map((meine ?? []).map((x: any) => [x.thread_id, x.last_read_at]));
-        const { data: gr } = await db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", ids);
         const gruppe = new Map((gr ?? []).map((g: any) => [g.thread_id, g]));
-        const archiv = await chatArchivHolen(ich.person_id); // KC-CLUB-CHAT-ARCHIV (2.23.28)
         // KC-CLUB-WICHTIG (1.53.0): ungelesene wichtige Nachrichten je Chat
         const ungelesenIds = (msgs ?? []).filter((x: any) => x.sender_person_id !== ich.person_id && (!gelesen.get(x.thread_id) || x.created_at > gelesen.get(x.thread_id))).map((x: any) => x.id).slice(0, 300);
         quittungMerken(ich, [...new Set((msgs ?? []).filter((x: any) => ungelesenIds.includes(x.id)).map((x: any) => x.thread_id as string))], "angekommen"); // 2.447.0
-        const { data: wi } = ungelesenIds.length ? await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ungelesenIds) : { data: [] as any[] };
+        const [leute, { data: wi }] = await Promise.all([
+          personen([...(tn ?? []).map((x: any) => x.person_id), ...(msgs ?? []).map((m: any) => m.sender_person_id)]),
+          ungelesenIds.length ? db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", ungelesenIds) : Promise.resolve({ data: [] as any[] }),
+        ]);
         const wichtigSet = new Set((wi ?? []).map((x: any) => x.message_id));
         const liste = (th ?? []).map((t: any) => {
           const m = (msgs ?? []).filter((x: any) => x.thread_id === t.id);
@@ -10475,6 +10505,23 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const s = await chatStand(String(p.id || ""), ich.person_id);
         if (s === null) throw new Fehler("Unterhaltung nicht gefunden.", 404);
         return json({ stand: s ?? null });
+      }
+
+      // 2.592.0 KC-CLUB-TIPPT-LEICHT (Prüfung „bündeln statt einzeln“, Wunsch Hansi „sorgfältig und vorsichtig“): Das Signal „tippt“ der
+      // direkten Leitung lud beim Empfänger den GANZEN Chat neu (Paket + ~6 Abfragen + Gelesen-Schreiben) – alle 1–3 s, solange der andere
+      // schreibt. Jetzt holt die App dafür nur, wer gerade schreibt/spricht/diktiert (+ Live-Entwurf), mit denselben Regeln wie „unterhaltung“.
+      case "tippen_stand": {
+        const id = String(p.id || "");
+        await binTeilnehmer(id, ich.person_id);
+        const { data: tippen } = await db.from("kc_club_tippen").select("person_id,text,art").eq("thread_id", id).neq("person_id", ich.person_id).gt("bis", jetzt());
+        const leute = await personen((tippen ?? []).map((x: any) => x.person_id));
+        const nm = (x: any) => vorname(leute.get(x.person_id)) || x.person_id;
+        return json({
+          tippt: (tippen ?? []).filter((x: any) => x.art !== "sprache").map(nm),
+          spricht: (tippen ?? []).filter((x: any) => x.art === "sprache" && x.text !== "diktat").map(nm),
+          diktiert: (tippen ?? []).filter((x: any) => x.art === "sprache" && x.text === "diktat").map(nm),
+          entwurf: (tippen ?? []).filter((x: any) => x.text && x.art !== "sprache").map((x: any) => ({ name: nm(x), text: x.text })),
+        });
       }
 
       // KC-CLUB-TIPPT (0.54.0): ich tippe gerade (aus: true = Feld geleert/verlassen). Nur Teilnehmer der Unterhaltung.
@@ -10754,8 +10801,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", threadId),
           db.from("kc_communication_thread_participants").update({ last_read_at: m.created_at }).eq("thread_id", threadId).eq("person_id", ich.person_id),
         ]);
-        const { data: tn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", threadId).neq("person_id", ich.person_id).is("hidden_at", null);
-        const { data: th } = await db.from("kc_communication_threads").select("subject").eq("id", threadId).single();
+        // 2.592.0 KC-CLUB-GLEICHZEITIG: Empfänger, Betreff, Gruppe und alle Teilnehmer gleichzeitig lesen statt nacheinander (keine hängt an
+        // einer anderen; die Empfänger erst nach dem Wieder-Einblenden oben, wie bisher). Gleiche Abfragen, gleiches Ergebnis.
+        const [{ data: tn }, { data: th }, { data: grp }, { data: alleTn }] = await Promise.all([
+          db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", threadId).neq("person_id", ich.person_id).is("hidden_at", null),
+          db.from("kc_communication_threads").select("subject").eq("id", threadId).single(),
+          db.from("kc_club_gruppen").select("name,symbol").eq("thread_id", threadId).maybeSingle(),
+          db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", threadId),
+        ]);
         const ziel = (tn ?? []).map((x: any) => x.person_id);
         if (!ziel.length) {
           const { count } = await db.from("kc_communication_thread_participants").select("person_id", { count: "exact", head: true }).eq("thread_id", threadId);
@@ -10763,10 +10816,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         // KC-CLUB-WICHTIGKEIT (2.287.0, Wunsch Hansi): ❗ Wichtigkeit hoch geht wie der Notfall immer per Push UND E-Mail raus
         const wege = notfall || wichtig || express ? ["push", "email"] : zustellwege(p.wege);
-        const { data: grp } = await db.from("kc_club_gruppen").select("name,symbol").eq("thread_id", threadId).maybeSingle();
         // KC-CLUB-ERWAEHNUNG (0.97.0): @Erwähnte (nur Teilnehmer dieser Unterhaltung) bekommen eine eigene, deutliche Meldung –
         // immer aufs Handy (bzw. Mail, wenn sie die App noch nie geöffnet haben), statt der normalen Nachrichten-Meldung.
-        const { data: alleTn } = await db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", threadId);
         const tnIds = new Set((alleTn ?? []).map((x: any) => x.person_id));
         const erwaehnt = [...new Set((Array.isArray(p.erwaehnt) ? p.erwaehnt : []).map(String))].filter((id) => id !== ich.person_id && tnIds.has(id)).slice(0, 50);
         let versandErw: any = null;
@@ -13361,16 +13412,22 @@ Köcheclub Werne`,
 
       // ----- Pinnwand (KC-CLUB-PINNWAND) -----
       case "pinnwand": {
+        // 2.592.0 KC-CLUB-GLEICHZEITIG: die Hilfe-Aufrufe hängen nicht an den Zetteln – sie laden jetzt von Anfang an mit, statt ganz am Ende
+        // (vorher ~6 Schritte zusätzlich nach allem anderen). Fehler dort wie bisher still (null).
+        const pHilfe = hilfeListe(ich).then((h) => ({ arten: h.arten, zeitfenster: h.zeitfenster, aufrufe: h.aufrufe.filter((a: any) => a.offen) })).catch(() => null);
         const zettel = await pinnwandSichtbar(ich);
         // „gesehen“ beim ersten Anzeigen erfassen (erste Zeit bleibt stehen); eigene Zettel zählen nicht
         const fremd = zettel.filter((z: any) => z.person_id !== ich.person_id);
         if (fremd.length && !ich.nurLesen) await db.from("kc_club_pinnwand_gelesen").upsert(fremd.map((z: any) => ({ zettel_id: z.id, person_id: ich.person_id })), { onConflict: "zettel_id,person_id", ignoreDuplicates: true });
         const ids = zettel.map((z: any) => z.id);
-        const { data: gl } = ids.length ? await db.from("kc_club_pinnwand_gelesen").select("zettel_id,person_id,gesehen_am,erledigt_am").in("zettel_id", ids) : { data: [] };
-        const aktiv = await aktiveMitglieder();
+        // 2.592.0 KC-CLUB-GLEICHZEITIG: „gelesen“ (nach dem Eintragen oben), aktive Mitglieder und Willkommens-Zettel gleichzeitig
+        const [{ data: gl }, aktiv, wk] = await Promise.all([
+          ids.length ? db.from("kc_club_pinnwand_gelesen").select("zettel_id,person_id,gesehen_am,erledigt_am").in("zettel_id", ids) : Promise.resolve({ data: [] as any[] }),
+          aktiveMitglieder(),
+          willkommenFuer(zettel.filter((z: any) => z.fuer === "alle").map((z: any) => z.id)).catch(() => new Map()),
+        ]);
         const leute = await personen([...zettel.map((z: any) => z.person_id), ...zettel.flatMap((z: any) => z.personen || []), ...(gl ?? []).map((g: any) => g.person_id)]);
         const nm = (id: string) => leute.get(id)?.display_name || aktiv.find((m) => m.person_id === id)?.display_name || id;
-        const wk = await willkommenFuer(zettel.filter((z: any) => z.fuer === "alle").map((z: any) => z.id)).catch(() => new Map());
         // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: haben jetzt alle Empfänger einen „bei Lesern abgenommenen“ Zettel gesehen → ganz abnehmen
         for (const z of zettel.filter((x: any) => x.teil_ab && x.fuer !== "ich")) {
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : (z.personen || []);
@@ -13392,7 +13449,7 @@ Köcheclub Werne`,
               offen: empf.filter((id: string) => !lese.some((g: any) => g.person_id === id)).map(nm).sort(), anzahl: empf.length } : {}) };
         }), meine: zettel.filter((z: any) => z.person_id === ich.person_id).length,
           // KC-CLUB-HILFE-PINNWAND (1.90.0, Wunsch Hansi): offene Hilfe-Aufrufe hängen als Aushang an der Pinnwand → Tipp führt zum Hilfebereich
-          hilfe: await hilfeListe(ich).then((h) => ({ arten: h.arten, zeitfenster: h.zeitfenster, aufrufe: h.aufrufe.filter((a: any) => a.offen) })).catch(() => null) });
+          hilfe: await pHilfe }); // 2.592.0: oben gestartet
       }
 
       case "pinnwand_anheften": {

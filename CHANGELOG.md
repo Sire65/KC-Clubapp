@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.592.0 – 2026-10-22 – ⚡ Abfragen gleichzeitig statt nacheinander, „schreibt …“ ohne ganzen Chat (KC-CLUB-GLEICHZEITIG, KC-CLUB-TIPPT-LEICHT)
+Wunsch Hansi („prüfe die ganze Club-App, wo Datenbank-Abfragen gebündelt statt einzeln nacheinander laufen können – wie neu bei Nachrichten“ → „Leg los, aber sorgfältig und vorsichtig“). Stufe 1: nur Reihenfolge, keine neuen Datenbank-Funktionen – gleiche Abfragen, gleiche Regeln, gleiches Ergebnis.
+- Server: Abfragen, die nicht voneinander abhängen, laufen jetzt gleichzeitig – Nachrichten-Übersicht (Gruppen + Archiv mit den Chats, Namen + „wichtig“ zusammen), Nachricht senden (Empfänger, Betreff, Gruppe, Teilnehmer zusammen), Mitglieder (~6 Schritte → 1), Pinnwand (Hilfe-Aufrufe von Anfang an statt am Ende; gelesen/Mitglieder/Willkommen zusammen), Kalender (Schulungen mit, Themen direkt an den Treffen), Vorschläge (Treffen + Spenden mit der Liste), Mitglied-Details (Festnetz, Notfall, zuletzt da, Chat-Anzahl, Probephase zusammen). Was voneinander abhängt (z. B. erst „gesehen“ eintragen, dann lesen; erst Sitzungen zuordnen, dann Vorschläge lesen), bleibt in der Reihenfolge.
+- „✍️ schreibt …“: Das Signal der direkten Leitung lud beim Empfänger alle 1–3 s den ganzen Chat neu (inkl. Gelesen-Schreiben). Jetzt holt die App nur, wer gerade schreibt (neue Aktion „tippen_stand“, gleiche Regeln). Beginnt/endet das Schreiben oder klappt der kleine Aufruf nicht, lädt sie wie bisher ganz.
+- Bewusst NICHT geändert: die Mitgliederliste wird im Server weiterhin nicht zwischengespeichert (wird auch aus der Verwaltung geändert).
+- Test: Vertragstest-Block 2.592.0, Typprüfung (deno check) ohne neue Meldungen, Browser-Probe „tippt“. Rückweg: App/Server 2.591.0.
+
 ## 2.591.0 – 2026-10-22 – 🖼️ Chat: nur den Hintergrund zeigen (KC-CLUB-CHAT-NUR-HG)
 Wunsch Hansi („In Nachrichten unten die Zeile mit Tastatur, Pfeil und Umschalten der Nachrichten – einen weiteren Klick, und alle Nachrichten werden komplett ausgeblendet, damit man den Hintergrund sehen kann“).
 - Der Knopf 👥 in der kleinen Zeile über dem Schreibfeld hat einen vierten Stand: 1× 👤 nur die anderen, 2× 🙋 nur meine, **3× 🖼️ nur der Hintergrund** – alle Nachrichten blenden sanft aus (der Platz bleibt, nichts springt), Angeheftetes und Runde ebenso, das Hintergrundbild erscheint in voller Stärke (auch im Nachtmodus ungedimmt). 4× wieder alle.
