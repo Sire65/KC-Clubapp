@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.588.0 – 2026-10-22 – CSV-Knopf auch unter Erstattung
+Die Clubleitung findet den Knopf „📊 CSV für Excel erstellen“ jetzt auch oben auf der Seite „Erstattung“ (zusätzlich zu Büro → Eingang).
+
 ## 2.587.0 – 2026-10-22 – Kopf-Pfeil blinkt nur noch, solange der Grund besteht (KC-CLUB-KOPF-PFEIL-GRUND)
 Fund Hansi: Der Pfeil blinkte weiter, obwohl Dieter schon wieder offline war. Jetzt: Kommt jemand online, blinkt der Pfeil nur, solange die Person online ist. Neue Nachrichten und neue Mitglieder lassen ihn weiter blinken – bis zum Ausrollen bzw. bis alles gelesen ist.
 

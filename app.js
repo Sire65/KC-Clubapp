@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.587.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.588.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13362,6 +13362,8 @@ const zahlDe = (v) => Number(String(v ?? "").trim().replace(/\s*(?:€|km|l|lite
 const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.saetze || []) if (x.ab <= datum) s = x.satz; return s; };
 async function erstattungLaden() {
   try {
+    // 2.588.0 KC-CLUB-ERSTATTUNG-CSV (Hansi suchte „CSV-Datei erstellen“ unter Erstattung): der Excel-Knopf auch hier – nur für die Clubleitung
+    if ($("ersLeitung")) $("ersLeitung").innerHTML = ICH?.vorstand || ICH?.admin ? '<div class="karte" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px"><b>Für die Clubleitung:</b> alle eingereichten Erstattungen als Datei für Excel</span><button type="button" class="knopf" style="width:auto" onclick="ersCsvOeffnen()">📊 CSV für Excel erstellen</button></div>' : "";
     const r = await api("erstattung_meine");
     Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true,
       sondereinsaetze: r.sondereinsaetze || [] }); // KC-CLUB-ERSTATTUNG-SONDER (2.419.0)

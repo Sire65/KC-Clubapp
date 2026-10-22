@@ -12076,3 +12076,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(w === "aus" \|\| !einst\("animiert", true\) \|\| SPAR\?\.an \|\| kaBearb \|\| einfach\(\)\) return false;/.test(html), "wie alle Effekte: aus bei „Bewegung aus“, Sparmodus, einfacher Ansicht");
   assert.ok(!/style\.(left|top|width|height|margin)|api\(/.test(z) && (z.match(/\{ transform: [^}]*\}/g) || []).every((k) => !/(left|top|width|height):/.test(k)), "nur transform/opacity (Lage wird nur gelesen)");
 }
+// 2.588.0 KC-CLUB-ERSTATTUNG-CSV: Excel-Knopf auch unter „Erstattung“ (Hansi suchte ihn dort) – nur Clubleitung
+{
+  assert.ok(/<div id="ersLeitung"><\/div>/.test(lies("index.html")) && /\$\("ersLeitung"\)\.innerHTML = ICH\?\.vorstand \|\| ICH\?\.admin \? [^\n]*onclick="ersCsvOeffnen\(\)">📊 CSV für Excel erstellen<\/button>/.test(html), "Knopf unter Erstattung, nur Clubleitung");
+}

@@ -4970,6 +4970,7 @@
   <section id="v-erstattung" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>💶 Erstattung beantragen</h2><button type="button" class="druckknopf" title="Erstattungsantrag drucken / als PDF" aria-label="Drucken" onclick="druckStarten('erstattung')" id="druckErstattung"></button></div>
     <div id="ersHinweis"></div>
+    <div id="ersLeitung"></div><!-- 2.588.0 KC-CLUB-ERSTATTUNG-CSV: Excel-Knopf auch hier (Clubleitung) -->
     <div class="karte todoform"><b>1. Was möchtest du erstattet haben?</b>
       <div class="umschalter modus3" id="ersArt" style="margin:0"><button data-a="fahrt" onclick="erstattungArt('fahrt', true)">🚗 Fahrt&shy;kosten</button><button data-a="einkauf" onclick="erstattungArt('einkauf', true)">🛒 Einkauf vorgestreckt</button><button data-a="sonstiges" onclick="erstattungArt('sonstiges', true)">📦 Sonstiges</button><button data-a="parken" onclick="erstattungArt('parken', true)">🅿️ Park&shy;gebühren</button><button data-a="kraftstoff" onclick="erstattungArt('kraftstoff', true)">⛽ Kraft&shy;stoff</button><button data-a="kaution" onclick="erstattungArt('kaution', true)">🔐 Kaution</button></div>
       <div id="ersForm"></div>
@@ -5740,7 +5741,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.587.0" data-v="2.587.0"></script>
+<script src="app.js?v=2.588.0" data-v="2.588.0"></script>
 <script src="kc-traffic-guard-ui.js?v=3"></script>
 </body>
 </html>
