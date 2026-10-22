@@ -11885,7 +11885,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
     assert.ok(programm.includes(`["${k}", "${t}"]`), "Effekt wählbar: " + t);
     assert.ok(programm.includes(`} else if (w === "${k}") {`), "Effekt gebaut: " + k);
   }
-  const e = programm.slice(programm.indexOf('} else if (w === "einflug") {'), programm.indexOf("} else { // Umdrehen"));
+  const e = programm.slice(programm.indexOf('} else if (w === "einflug") {'), programm.indexOf('} else if (w === "zug") {') > 0 ? programm.indexOf('} else if (w === "zug") {') : programm.indexOf("} else { // Umdrehen")); // 2.585.0: Kachel-Zug hat eigene Prüfung
   assert.ok(/\[\[-1, 0\], \[1, -1\], \[0, 1\], \[-1, -1\], \[1, 0\], \[-1, 1\], \[0, -1\], \[1, 1\]\]\[\(i \* 3 \+ r\) % 8\]/.test(e), "Einfliegen: 8 Richtungen reihum");
   assert.ok(/transformOrigin = s2 < 0 \? "0 50%" : "100% 50%"/.test(e) && /rotateY\(\$\{s2 \* -105\}deg\)/.test(e), "Horizontal: Drehtür an der Außenkante");
   assert.ok(/rotateX\(180deg\) scale\(\.75\)/.test(e) && (e.match(/rotateX\(-90deg\)/g) || []).length >= 3, "Vertikal halbe Drehung, Fallblatt klappt dreimal");
@@ -12063,4 +12063,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/catch \(e\) \{ return \[t, \{ ok: false, status: e instanceof Fehler \? e\.status : 500/.test(pk), "Fehler nur für den einen Teil");
   assert.ok(/pk = \(await api\("buero_eingang_paket", \{ teile \}\)\)\?\.teile \|\| null; \} catch \{ pk = null; \}\n\s*if \(!pk \|\| !teile\.every\(\(t\) => pk\[t\]\)\) return buEingangLadenEinzeln\(\);/.test(html), "Rückfall auf die Einzelaufrufe");
   assert.ok(/async function buEingangLadenEinzeln\(\) \{\n\s*const \[l, v, h, pr, ar\] = await Promise\.allSettled\(\[api\("leihen_liste"\)/.test(html) && /function buEingangUebernehmen\(l, v, h, pr, ar\)/.test(html), "gleiche Verarbeitung für beide Wege");
+}
+// 2.585.0 KC-CLUB-KACHEL-ZUG (Wunsch Hansi „Kacheln nacheinander von links oben eingeflogen, in einer Reihe, unten Kurve nach rechts, auf ihren Platz“)
+{
+  assert.ok(/\["fallblatt", "🕰️ Fallblatt-Uhr"\], \["zug", "🚂 Kachel-Zug"\],/.test(html) && /const REG_ARTEN = REG_EFFEKTE\.map/.test(html), "wählbar im Zahnrad, auch in Zufall/Abwechselnd");
+  const z = html.slice(html.indexOf('} else if (w === "zug") {'), html.indexOf("} else { // Umdrehen"));
+  assert.ok(/zu\(lx, un - bogen, sk, 0\), opacity: 1, offset: 0\.38/.test(z) && /zu\(lx \+ bogen, un, sk, -40\), offset: 0\.54/.test(z) && /\{ transform: "none", opacity: 1 \}\]/.test(z), "links hinunter, Kurve nach rechts, Ende genau auf dem Platz");
+  assert.ok(/un = Math\.min\(innerHeight - 120, rb\.bottom\)/.test(z) && /delay: i \* Math\.min\(85, 1800 \/ k\.length\)/.test(z), "Kurve über der Leiste; eine nach der anderen, höchstens ~3 s");
+  assert.ok(/if \(w === "aus" \|\| !einst\("animiert", true\) \|\| SPAR\?\.an \|\| kaBearb \|\| einfach\(\)\) return false;/.test(html), "wie alle Effekte: aus bei „Bewegung aus“, Sparmodus, einfacher Ansicht");
+  assert.ok(!/style\.(left|top|width|height|margin)|api\(/.test(z) && (z.match(/\{ transform: [^}]*\}/g) || []).every((k) => !/(left|top|width|height):/.test(k)), "nur transform/opacity (Lage wird nur gelesen)");
 }

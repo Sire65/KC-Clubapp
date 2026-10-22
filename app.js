@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.584.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.585.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15344,7 +15344,7 @@ function register(r, richtung) {
 // (passt zum Kopf). Kurz (≈ 0,5 s), nur transform/opacity (Grafikkarte, auch auf älteren Handys flüssig). Aus bei „✨ Animierte Knöpfe“
 // aus oder im Sparmodus. Läuft nur beim Antippen/Wischen – nie von selbst.
 const REG_EFFEKTE = [["jalousie", "🪟 Jalousie"], ["karten", "🃏 Kartenstapel"], ["drehen", "🔄 Umdrehen"], ["wirbel", "🌀 Hereindrehen"], ["walze", "🎰 Spielautomat"], ["blasen", "🫧 Seifenblasen"],
-  ["magnet", "🧲 Magnet"], ["pfanne", "🍳 Pfanne"], ["einflug", "🧭 Einfliegen"], ["drehH", "↔️ Horizontal drehen"], ["drehV", "↕️ Vertikal drehen"], ["fallblatt", "🕰️ Fallblatt-Uhr"],
+  ["magnet", "🧲 Magnet"], ["pfanne", "🍳 Pfanne"], ["einflug", "🧭 Einfliegen"], ["drehH", "↔️ Horizontal drehen"], ["drehV", "↕️ Vertikal drehen"], ["fallblatt", "🕰️ Fallblatt-Uhr"], ["zug", "🚂 Kachel-Zug"],
   ["wechsel", "🔁 Abwechselnd"], ["zufall", "🎲 Zufall"], ["aus", "🚫 Aus"]]; // 2.566.0: + Hereindrehen, Spielautomat, Seifenblasen, Magnet, Pfanne, Abwechselnd · 2.568.0: + Einfliegen, Horizontal/Vertikal drehen, Fallblatt-Uhr
 const REG_ARTEN = REG_EFFEKTE.map(([k]) => k).filter((k) => !["wechsel", "zufall", "aus"].includes(k)); // die echten Effekte (für Zufall/Abwechselnd)
 // 2.566.0 KC-CLUB-KACHEL-WECHSEL (Wunsch Hansi „dass die auch Abwechslung gehen“): jedes Mal der nächste Effekt der Reihe (gemerkt je Gerät)
@@ -15414,6 +15414,18 @@ function regEffekt(richtung, art) {
         { transform: P + "rotateX(0)", offset: 0.42 }, { transform: P + "rotateX(-90deg)", offset: 0.4201 }, { transform: P + "rotateX(0)", offset: 0.66 },
         { transform: P + "rotateX(9deg)", offset: 0.8 }, { transform: P + "rotateX(-3deg)", offset: 0.9 }, { transform: P + "rotateX(0)", opacity: 1 }];
       o = { duration: 900, delay: i * 70, easing: "cubic-bezier(.55,0,.75,.45)" };
+    } else if (w === "zug") { // 2.585.0 KC-CLUB-KACHEL-ZUG (Wunsch Hansi „alle Kacheln nacheinander von links oben eingeflogen, in einer Reihe, unten
+      // eine Kurve nach rechts und auf ihren Platz einreihen – eine nach der anderen“): alle fahren dieselbe Bahn wie ein Zug – oben links herein,
+      // am linken Rand hinunter, unten im Bogen nach rechts, dann hinauf auf den eigenen Platz. Unterwegs kleiner, am Ziel mit leichtem Einrasten.
+      const b = x.getBoundingClientRect(), sk = 0.55, lx = Math.max(8, rb.left + 6), ob = Math.max(0, rb.top) - b.height, un = Math.min(innerHeight - 120, rb.bottom) - b.height * sk - 10; // Kurve über der Leiste unten
+      const zu = (px, py, s2, rot = 0) => `translate(${Math.round(px - b.left)}px, ${Math.round(py - b.top)}px) rotate(${rot}deg) scale(${s2})`;
+      const bogen = Math.min(90, (un - ob) * 0.25), zx = Math.max(lx + bogen, Math.min(b.left, innerWidth - b.width)); // Bogen unten links, dann Richtung eigene Spalte
+      f = [{ transform: zu(lx - b.width * 0.6, ob - 40, sk, -25), opacity: 0 }, { transform: zu(lx, ob + 10, sk, -8), opacity: 1, offset: 0.08 },
+        { transform: zu(lx, un - bogen, sk, 0), opacity: 1, offset: 0.38 }, // am linken Rand hinunter
+        { transform: zu(lx + bogen * 0.3, un - bogen * 0.3, sk, -20), offset: 0.46 }, { transform: zu(lx + bogen, un, sk, -40), offset: 0.54 }, // Kurve nach rechts
+        { transform: zu(zx, un, sk, -10), offset: 0.7 }, // unten entlang
+        { transform: `translate(0, -6%) rotate(2deg) scale(1.05)`, opacity: 1, offset: 0.9 }, { transform: "none", opacity: 1 }]; // hinauf auf den Platz, einrasten
+      o = { duration: 1500, delay: i * Math.min(85, 1800 / k.length), easing: "cubic-bezier(.4,.1,.4,1)" }; // dicht hintereinander wie ein Zug
     } else { // Umdrehen: eine schnelle Drehung um die eigene Achse, kommt wie eine Karte nach vorn
       f = [{ transform: P + "rotateY(-300deg) scale(.6)", opacity: 0 }, { transform: P + "rotateY(18deg) scale(1.05)", opacity: 1, offset: 0.7 }, { transform: P + "rotateY(0) scale(1)", opacity: 1 }];
       o = { duration: 640, delay: i * 42, easing: "cubic-bezier(.2,.7,.3,1)" };

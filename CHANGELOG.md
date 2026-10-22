@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.585.0 – 2026-10-22 – Neuer Kachel-Effekt „🚂 Kachel-Zug“ (KC-CLUB-KACHEL-ZUG)
+Die Kacheln kommen eine nach der anderen oben links herein, fahren wie ein Zug am linken Rand hinunter, machen unten eine Kurve nach rechts und reihen sich auf ihrem Platz ein. Wählbar unter ⚙️ → 🎬 Effekt beim Register-Wechsel (auch bei Zufall/Abwechselnd dabei).
+
 ## 2.584.0 – 2026-10-22 – Eingangskorb lädt schneller (KC-CLUB-EINGANG-PAKET)
 Der Eingangskorb im Büro holt seine Listen jetzt in einem einzigen Aufruf statt in acht getrennten – eine Anmeldung, gleiche Abfragen nur einmal. Bisheriger Weg bleibt als Rückfall.
 
