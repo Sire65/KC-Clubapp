@@ -7275,6 +7275,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(s\.art === "tippt" && s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt\.laeuft\) \{ chatTakt\.laeuft = true; tippenStandHolen\(\)/.test(programm), "App: tippt → nur tippen_stand");
   assert.ok(/try \{ r = await api\("tippen_stand", \{ id: fuer \}\); \} catch \{ return chatLaden\(false\); \}/.test(programm) && /if \(!Array\.isArray\(r\?\.tippt\) \|\| vorher !== jetzt\) return chatLaden\(false\);/.test(programm), "App: Rückfall ganz laden");
 }
+// 2.594.0 KC-CLUB-CHAT-RUHE: Nachricht im offenen Chat lädt nicht zusätzlich die Startseite; kein verlorenes Signal, nie parallel
+{
+  assert.ok(/if \(s\.art === "chat" && !\(s\.thread && s\.thread === chatId && aktuelleAnsicht === "chat"\)\) \{ clearTimeout\(RT\.zaehlen\);/.test(programm) && /else if \(s\.art === "chat"\) NEU_NACH_CHAT = true;/.test(programm), "offener Chat: keine Startseite, aber danach frisch");
+  assert.ok(/NEU_ZULETZT = Date\.now\(\); NEU_NACH_CHAT = false;/.test(programm) && /aktuelleAnsicht !== "chat" && \(NEU_NACH_CHAT \|\| !\(RT\.ok/.test(programm), "nach dem Chat beim nächsten Takt");
+  assert.ok(/if \(chatTakt\.laeuft\) \{ CHAT_NOCHMAL = true; return; \}/.test(programm) && /if \(CHAT_NOCHMAL && chatId && aktuelleAnsicht === "chat"\) \{ CHAT_NOCHMAL = false; chatSignalLaden\(\); \}/.test(programm), "genau einmal nachladen, nie parallel");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -10516,7 +10522,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.359.0 KC-CLUB-AKKU-4: Hintergrund-Leitung schließen, Neuladen bei stehender Leitung seltener
 {
   assert.ok(/RT\.hinterUhr = setTimeout\(\(\) => \{ if \(document\.hidden && RT\.ws\) rtTrennen\(\); \}, 60000\);/.test(html), "Leitung im Hintergrund nach 60 s zu");
-  assert.ok(/!\(RT\.ok && Date\.now\(\) - NEU_ZULETZT < 180000\)\) neuLaden\(\);/.test(html) && /NEU_ZULETZT = Date\.now\(\);/.test(html), "Neuladen bei stehender Leitung höchstens alle 3 Min.");
+  assert.ok(/!\(RT\.ok && Date\.now\(\) - NEU_ZULETZT < 180000\)\)\)? neuLaden\(\);/.test(html) && /NEU_ZULETZT = Date\.now\(\);/.test(html), "Neuladen bei stehender Leitung höchstens alle 3 Min.");
 }
 
 // 2.360.0 KC-CLUB-AKKU-5: weniger Nachfragen und Malen in Ruhe

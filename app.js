@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.593.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.594.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7823,10 +7823,12 @@ function rtSignal(s) {
   if (s.art === "mitschauen") { if (SS.id) ssHolen(true); else onlinePing(); return; }
   if (s.art === "spiel") { if (SP?.offen?.id && s.thread === SP.offen.id) spNachsehen(true); else { onlinePing(); if (aktuelleAnsicht === "spiele" && !SP?.offen) spLaden(true); } return; }
   if (s.art === "tippt" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; tippenStandHolen().finally(() => { chatTakt.laeuft = false; }); }
-  else if (s.art === "chat" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) {
-    chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; });
-  }
-  if (s.art === "chat") { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
+  else if (s.art === "chat" && s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden();
+  // 2.594.0 KC-CLUB-CHAT-RUHE (Fund Hansi 22.10.: „Steven und ich schreiben schnell – das verträgt die App nicht“; Server-Messung: Aufrufe bis 24 s):
+  // jede neue Nachricht lud bei JEDEM, der den Chat offen hat, zusätzlich nach 1,5 s die ganze Startseite (init, 37–72 Abfragen). Ist die
+  // Nachricht aus dem gerade offenen Chat, ist das unnötig – der Chat lädt ohnehin; die Startseite wird beim nächsten Takt nach dem Chat frisch.
+  if (s.art === "chat" && !(s.thread && s.thread === chatId && aktuelleAnsicht === "chat")) { clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); } // Zähler/Kachel frisch (mehrere Signale = einmal)
+  else if (s.art === "chat") NEU_NACH_CHAT = true;
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } });
 // 2.359.0 KC-CLUB-AKKU-4: im Hintergrund nach 60 s die direkte Leitung schließen – ihr Herzschlag alle 25 s weckt sonst ständig das Funkmodul.
@@ -8350,6 +8352,14 @@ async function tippenStandHolen() {
   if (!Array.isArray(r?.tippt) || vorher !== jetzt) return chatLaden(false);
   u.tippt = r.tippt; u.entwurf = r.entwurf || []; u.spricht = r.spricht || []; u.diktiert = r.diktiert || [];
   tipptZeigen(u.tippt, u.entwurf, u.spricht, u.diktiert); chatAbstand();
+}
+// 2.594.0 KC-CLUB-CHAT-RUHE: kommt eine Nachricht, während der Chat noch lädt, ging das Signal bisher verloren (die Nachricht erschien erst beim
+// nächsten Takt, mit direkter Leitung bis zu 30 s später). Jetzt wird genau EINMAL nachgeladen, wenn das Laden fertig ist – nie mehrere parallel.
+let CHAT_NOCHMAL = false;
+function chatSignalLaden() {
+  if (chatTakt.laeuft) { CHAT_NOCHMAL = true; return; }
+  chatTakt.laeuft = true; CHAT_NOCHMAL = false;
+  chatLaden(false).finally(() => { chatTakt.laeuft = false; if (CHAT_NOCHMAL && chatId && aktuelleAnsicht === "chat") { CHAT_NOCHMAL = false; chatSignalLaden(); } else CHAT_NOCHMAL = false; });
 }
 async function chatNachsehen() {
   const fuer = chatId, s0 = CHAT?.stand;
@@ -26729,8 +26739,9 @@ function wichtigZeigen() {
 // Antwort eine neuere überschreiben)
 let NEU_LADEN_LAUF = null, NEU_LADEN_FOLGE = null;
 let NEU_ZULETZT = 0; // 2.359.0 KC-CLUB-AKKU-4: wann zuletzt alles neu geladen wurde
+let NEU_NACH_CHAT = false; // 2.594.0 KC-CLUB-CHAT-RUHE: im offenen Chat kam Neues – nach dem Chat beim nächsten Takt die Startseite frisch laden
 function neuLaden(vonHand) {
-  NEU_ZULETZT = Date.now();
+  NEU_ZULETZT = Date.now(); NEU_NACH_CHAT = false;
   // 2.1.1: läuft schon eins, kommt GENAU EIN frisches Laden danach (wer gerade gespeichert hat, sieht sonst den alten Stand)
   if (NEU_LADEN_LAUF && !vonHand) return NEU_LADEN_FOLGE || (NEU_LADEN_FOLGE = NEU_LADEN_LAUF.catch(() => {}).then(() => { NEU_LADEN_FOLGE = null; return neuLaden(); }));
   const lauf = neuLadenRoh(vonHand).finally(() => { if (NEU_LADEN_LAUF === lauf) NEU_LADEN_LAUF = null; });
@@ -42144,7 +42155,7 @@ const KOCH = { ok: true, bild: null };
   setInterval(() => { if (!document.hidden && aktuelleAnsicht === "start" && !chatId) updatePruefen(false).then(updateSelbst); }, UPDATE_TAKT_MS);
   setTimeout(stStart, 2500); // KC-CLUB-STANDORT
   document.addEventListener("visibilitychange", () => { updWeg(document.hidden); if (!document.hidden) { if (ST.eigen) stMelden(true); if (Date.now() - NEU_ZULETZT >= 60000) neuLaden(); /* KC-CLUB-RC-PRUEFUNG (20.10.2026): höchstens 1× je 60 s neu laden (DB sparen) */ updatePruefen(false).then(updateSelbst); if (chatId) chatLaden(false); setTimeout(pwLive, 1500); } });
-  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat" && !(RT.ok && Date.now() - NEU_ZULETZT < 180000)) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
+  setInterval(() => { if (!document.hidden && aktuelleAnsicht !== "chat" && (NEU_NACH_CHAT || !(RT.ok && Date.now() - NEU_ZULETZT < 180000))) neuLaden(); }, sparTakt(60000)); // KC-CLUB-SPARMODUS · 2.359.0: steht die direkte Leitung, nur alle 3 Min. (Neues kommt sofort über die Leitung)
   setInterval(() => pwLive(true), PW_LIVE_MS); // KC-CLUB-PINNWAND-LIVE: auch im Chat · 2.360.0: mit Leitung seltener
 })();
 // ---------- 2.355.0 KC-CLUB-KOCH-EMOJI (Fund Hansi „am PC sieht Twinkey beim Fegen anders aus: laufende Beine, ein Gesicht daneben und eine

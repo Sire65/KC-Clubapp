@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.594.0 – 2026-10-22 – 💬 Schnelles Hin-und-her-Schreiben bremst die App nicht mehr aus (KC-CLUB-CHAT-RUHE)
+Fund Hansi („Steven und ich schreiben – das verträgt die App nicht gut, wenn zu schnell geschrieben wird“). Server-Messung 17:11–17:14 Uhr: einzelne Aufrufe bis 24 s, selbst die Anmeldung 13 s; Datenbank unauffällig – der Club-Server war mit Aufrufen zugestaut.
+- Ursache: Jede neue Nachricht lud bei jedem, der den Chat offen hatte, den Chat (~27 Abfragen) UND 1,5 s später die ganze Startseite (37–72 Abfragen). Kommt die Nachricht aus dem gerade offenen Chat, entfällt jetzt das Laden der Startseite; sie wird nach dem Chat beim nächsten Takt (≤ 1 Min.) frisch geladen.
+- Kam eine Nachricht, während der Chat noch lud, ging das Signal verloren (Nachricht erst beim nächsten Takt, bis 30 s später). Jetzt wird genau einmal nachgeladen, sobald das Laden fertig ist – nie mehrere gleichzeitig.
+- Sofort eingespielt (Fehler, der Mitglieder behindert). Test: Vertragstest-Block 2.594.0, Browser-Probe Signale. Rückweg: App 2.593.0.
+
 ## 2.593.0 – 2026-10-22 – ⚡ Abfragen gleichzeitig statt nacheinander, „schreibt …“ ohne ganzen Chat (KC-CLUB-GLEICHZEITIG, KC-CLUB-TIPPT-LEICHT)
 Wunsch Hansi („prüfe die ganze Club-App, wo Datenbank-Abfragen gebündelt statt einzeln nacheinander laufen können – wie neu bei Nachrichten“ → „Leg los, aber sorgfältig und vorsichtig“). Stufe 1: nur Reihenfolge, keine neuen Datenbank-Funktionen – gleiche Abfragen, gleiche Regeln, gleiches Ergebnis.
 - Server: Abfragen, die nicht voneinander abhängen, laufen jetzt gleichzeitig – Nachrichten-Übersicht (Gruppen + Archiv mit den Chats, Namen + „wichtig“ zusammen), Nachricht senden (Empfänger, Betreff, Gruppe, Teilnehmer zusammen), Mitglieder (~6 Schritte → 1), Pinnwand (Hilfe-Aufrufe von Anfang an statt am Ende; gelesen/Mitglieder/Willkommen zusammen), Kalender (Schulungen mit, Themen direkt an den Treffen), Vorschläge (Treffen + Spenden mit der Liste), Mitglied-Details (Festnetz, Notfall, zuletzt da, Chat-Anzahl, Probephase zusammen). Was voneinander abhängt (z. B. erst „gesehen“ eintragen, dann lesen; erst Sitzungen zuordnen, dann Vorschläge lesen), bleibt in der Reihenfolge.
