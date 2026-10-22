@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.583.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.584.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28798,12 +28798,30 @@ async function buSenden(knopf, anzahl) {
 // Nutzt die vorhandenen Listen/Info-Fenster (Ausleihen, Vorschläge, Hilfe) – keine zweite Datenhaltung.
 let BU_EIN = { leihen: null, vorschlaege: null, hilfe: null, protokolle: null, archiv: null, posten: [] };
 function buEingang() { BU.sicht = "eingang"; buZeigen(); buEingangLaden(); window.scrollTo(0, 0); }
+// 2.584.0 KC-CLUB-EINGANG-PAKET (Wunsch Hansi „Aufbau des Eingangskorbs dauert lange“): alle Listen in EINEM Aufruf (eine Anmeldung,
+// gemeinsamer Lese-Puffer am Server). Die Antworten sind genau die der einzelnen Aufrufe und werden wie bisher verarbeitet. Kennt der Server das
+// Paket nicht (alt) oder klappt es nicht, lädt die App wie bisher einzeln (buEingangLadenEinzeln).
 async function buEingangLaden() {
+  const L = ICH?.vorstand || ICH?.admin;
+  const teile = ["leihen_liste", "vorschlaege_liste", "hilfe_liste", ...(ICH?.protokolle === false ? [] : ["protokolle_liste"]), "archiv_liste", ...(L ? ["aenderungen_liste", "eingang_korb"] : []), "buero_start"];
+  let pk = null;
+  try { pk = (await api("buero_eingang_paket", { teile }))?.teile || null; } catch { pk = null; }
+  if (!pk || !teile.every((t) => pk[t])) return buEingangLadenEinzeln();
+  const teil = (t) => (pk[t]?.ok ? { status: "fulfilled", value: pk[t].daten } : { status: "rejected", reason: pk[t] });
+  if (pk.aenderungen_liste?.ok) try { AE.eingang = pk.aenderungen_liste.daten; AE.offen = AE.eingang.meldungen.filter((x) => x.wartetAufMich ?? x.status === "offen").length; } catch {} // wie aeEingangLaden (dort fängt allSettled Fehler ab)
+  if (pk.eingang_korb?.ok) BU_EIN.korb = pk.eingang_korb.daten;
+  if (pk.buero_start?.ok) BU.start = pk.buero_start.daten;
+  buEingangUebernehmen(teil("leihen_liste"), teil("vorschlaege_liste"), teil("hilfe_liste"), ICH?.protokolle === false ? { status: "rejected" } : teil("protokolle_liste"), teil("archiv_liste"));
+}
+async function buEingangLadenEinzeln() {
   const [l, v, h, pr, ar] = await Promise.allSettled([api("leihen_liste"), api("vorschlaege_liste"), api("hilfe_liste"),
     ICH?.protokolle === false ? Promise.reject(0) : api("protokolle_liste"), api("archiv_liste"),
     ICH?.vorstand || ICH?.admin ? aeEingangLaden() : Promise.reject(0), // KC-CLUB-AENDERUNG (2.22.8): Meldungen im Posteingang
     ICH?.vorstand || ICH?.admin ? api("eingang_korb").then((k) => { BU_EIN.korb = k; }) : Promise.reject(0), // KC-CLUB-EINGANGSKORB (2.23.6)
     api("buero_start").then((b) => { BU.start = b; })]); // KC-CLUB-TEMPO (2.113.0): gleichzeitig statt danach – eine Wartezeit weniger
+  buEingangUebernehmen(l, v, h, pr, ar);
+}
+function buEingangUebernehmen(l, v, h, pr, ar) {
   if (pr.status === "fulfilled") BU_EIN.protokolle = pr.value;
   if (ar.status === "fulfilled") { BU_EIN.archiv = ar.value; if (!AR.daten) AR.daten = ar.value; }
   if (l.status === "fulfilled") { BU_EIN.leihen = l.value; HL.leihen = l.value; }

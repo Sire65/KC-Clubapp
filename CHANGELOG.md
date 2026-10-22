@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.584.0 – 2026-10-22 – Eingangskorb lädt schneller (KC-CLUB-EINGANG-PAKET)
+Der Eingangskorb im Büro holt seine Listen jetzt in einem einzigen Aufruf statt in acht getrennten – eine Anmeldung, gleiche Abfragen nur einmal. Bisheriger Weg bleibt als Rückfall.
+
 ## 2.583.0 – 2026-10-22 – Erstattungen als CSV für Excel (KC-CLUB-ERSTATTUNG-CSV)
 Im Büro-Eingang gibt es für die Clubleitung „📊 Erstattungen für Excel (CSV)“: Auswahl nach Zeitraum, Status und Aufbau (je Position oder je Antrag), teilen oder speichern. Übernommene Anträge können markiert werden, damit „Nur neue“ nichts doppelt liefert.
 

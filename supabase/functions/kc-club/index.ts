@@ -127,7 +127,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.583.0";
+const SERVER_VERSION = "2.584.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7207,6 +7207,8 @@ Köcheclub Werne`,
 // gepuffert, andere gleichzeitige Aufrufe sehen ihn nie). Messung: ab DB_LOG_AB Abfragen eine Zeile ins Server-Log mit Aktion und Zahlen
 // (keine Inhalte, keine Personen, keine Datenbank-Schreibung – kostet nichts). So sieht man, welche Aktion wie viele Abfragen braucht.
 const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;
+// 2.584.0 KC-CLUB-EINGANG-PAKET: welche Listen der Büro-Eingang in einem Aufruf holen darf (nur lesend, jede prüft ihre Rechte selbst)
+const BUERO_EINGANG_TEILE = ["leihen_liste", "vorschlaege_liste", "hilfe_liste", "protokolle_liste", "archiv_liste", "aenderungen_liste", "eingang_korb", "buero_start"];
 Deno.serve((req) => {
   const pf = dbPufferNeu(DB_PUFFER_MS);
   return DB_PUFFER.run(pf, async () => {
@@ -8302,6 +8304,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // ----- KC-CLUB-BUERO (1.25.0): Büro für die Clubleitung -----
+      // 2.584.0 KC-CLUB-EINGANG-PAKET (Wunsch Hansi „der Aufbau des Eingangskorbs dauert lange – optimieren“): der Eingang holte 8 Listen in
+      // 8 getrennten Aufrufen – jeder mit eigener Anmeldung und eigenen Datenbank-Wegen (gemessen bis 16 s, wenn viel los ist). Jetzt EIN Aufruf:
+      // eine Anmeldung, die Teile laufen gleichzeitig mit genau dem bisherigen Code (aktionAusfuehren) und teilen sich den Lese-Puffer des Aufrufs
+      // (gleiche Abfragen nur einmal). Nur die festen, rein lesenden Listen – jede prüft ihre Rechte selbst wie bisher; ein Fehler betrifft nur seinen Teil.
+      case "buero_eingang_paket": {
+        const erlaubt = new Set(BUERO_EINGANG_TEILE), teile = (Array.isArray(p.teile) ? p.teile : BUERO_EINGANG_TEILE).map(String).filter((t: string) => erlaubt.has(t)).slice(0, BUERO_EINGANG_TEILE.length);
+        const erg = await Promise.all([...new Set(teile)].map(async (t) => {
+          try {
+            const r = await aktionAusfuehren(t, {}, ich, req, t0Anfrage, anmeldungMs), j = await r.json().catch(() => null);
+            return [t, r.ok ? { ok: true, daten: j } : { ok: false, status: r.status, error: j?.error || "Fehler" }] as const;
+          } catch (e) { return [t, { ok: false, status: e instanceof Fehler ? e.status : 500, error: e instanceof Fehler ? e.message : "Da ist etwas schiefgelaufen." }] as const; }
+        }));
+        return json({ teile: Object.fromEntries(erg) });
+      }
       case "buero_start": {
         nurBueroLesen(ich);
         const [sitzungen, eingang] = await Promise.all([bueroNaechste(), bueroEingang(ich)]);

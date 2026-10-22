@@ -5912,7 +5912,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12054,4 +12054,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.update\(\{ exportiert_am: jetzt\(\), exportiert_von: ich\.person_id \}\)\.in\("id", ids\)\.is\("exportiert_am", null\)/.test(server), "markiert nur einmal, nichts überschrieben");
   assert.ok(/onclick="ersCsvOeffnen\(\)">📊 Erstattungen für Excel \(CSV\)<\/button>/.test(html) && /\["neu", "🆕 Nur neue \(noch nicht übernommen\)"\]/.test(html) && /\["position", "Je Position \(ausführlich\)"\], \["antrag", "Je Antrag \(eine Zeile\)"\]/.test(html), "Auswahl statt Freitext");
   assert.ok(/navigator\.share\(\{ files: \[datei\], title: "Erstattungen \(CSV\)" \}\)/.test(html) && /a\.download = datei\.name/.test(html), "teilen oder speichern");
+}
+// 2.584.0 KC-CLUB-EINGANG-PAKET (Wunsch Hansi „Aufbau des Eingangskorbs dauert lange – optimieren“)
+{
+  assert.ok(/const BUERO_EINGANG_TEILE = \["leihen_liste", "vorschlaege_liste", "hilfe_liste", "protokolle_liste", "archiv_liste", "aenderungen_liste", "eingang_korb", "buero_start"\];/.test(server), "feste Liste rein lesender Teile");
+  const pk = server.slice(server.indexOf('case "buero_eingang_paket": {'), server.indexOf('case "buero_start": {'));
+  assert.ok(/\.filter\(\(t: string\) => erlaubt\.has\(t\)\)/.test(pk) && /await aktionAusfuehren\(t, \{\}, ich, req, t0Anfrage, anmeldungMs\)/.test(pk), "nur erlaubte Teile, bisheriger Code mit eigener Rechteprüfung");
+  assert.ok(/catch \(e\) \{ return \[t, \{ ok: false, status: e instanceof Fehler \? e\.status : 500/.test(pk), "Fehler nur für den einen Teil");
+  assert.ok(/pk = \(await api\("buero_eingang_paket", \{ teile \}\)\)\?\.teile \|\| null; \} catch \{ pk = null; \}\n\s*if \(!pk \|\| !teile\.every\(\(t\) => pk\[t\]\)\) return buEingangLadenEinzeln\(\);/.test(html), "Rückfall auf die Einzelaufrufe");
+  assert.ok(/async function buEingangLadenEinzeln\(\) \{\n\s*const \[l, v, h, pr, ar\] = await Promise\.allSettled\(\[api\("leihen_liste"\)/.test(html) && /function buEingangUebernehmen\(l, v, h, pr, ar\)/.test(html), "gleiche Verarbeitung für beide Wege");
 }
