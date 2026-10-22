@@ -60,7 +60,9 @@ const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), ze
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
 // Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
-const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
+const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand",
+  // 2.602.0 KC-CLUB-START-KERN: auch die Pakete sind STABLE (Postgres verbietet darin jedes Schreiben) – sie leerten bisher bei jedem Start den Puffer
+  "kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket", "kc_club_online_jetzt", "kc_club_nachricht_mahnung", "kc_club_unterhaltungen_paket"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -129,7 +131,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.601.0";
+const SERVER_VERSION = "2.602.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4750,12 +4752,13 @@ function hilfeLeser(x: any, antworten: any[], gesehen: any[], aktiv: any[], n: (
 // fotosSeit / dienstSeit: wann ich Fotoalbum / Dienstpläne zuletzt geöffnet habe (merkt sich das Gerät).
 // KC-CLUB-KACHEL-EINS (Server 2.496.0, Stufe 2 Punkt 4): Termine, Helfen, Fotos und Dienste in EINER Datenbank-Abfrage (vorher bis zu 9).
 // Gleiche Rechnung (Migration 20261019_kc_club_kachel_zahlen.sql, Test tools/db-sparsam/kachel-test.mjs). Schlägt sie fehl → wie bisher einzeln.
-async function kachelZahlen(ich: Ich, p: any) {
+async function kachelZahlen(ich: Ich, p: any, kern?: Promise<any | null>) {
   const seit = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d.toISOString(); };
   const heute = berlinTag(new Date());
+  const einzeln = () => Promise.resolve(db.rpc("kc_club_kachel_zahlen", { p_person: ich.person_id, p_vorstand: !!ich.vorstand, p_jetzt: jetzt(), p_heute: heute,
+      p_fotos_seit: seit(p?.fotosSeit), p_dienst_seit: seit(p?.dienstSeit), p_org: ORG })).catch((e: unknown) => ({ data: null, error: e }));
   const [r, buero] = await Promise.all([
-    Promise.resolve(db.rpc("kc_club_kachel_zahlen", { p_person: ich.person_id, p_vorstand: !!ich.vorstand, p_jetzt: jetzt(), p_heute: heute,
-      p_fotos_seit: seit(p?.fotosSeit), p_dienst_seit: seit(p?.dienstSeit), p_org: ORG })).catch((e: unknown) => ({ data: null, error: e })),
+    kern ? kern.catch(() => null).then((k) => (k?.kz && typeof k.kz === "object" ? { data: k.kz, error: null } : einzeln())) : einzeln(), // 2.602.0 KC-CLUB-START-KERN
     ich.buero ? (async () => { try { return Object.values(await bueroEingang(ich)).reduce((a: number, b: any) => a + Number(b || 0), 0); } catch (e) { console.error("kachel zahl", String(e)); return null; } })() : Promise.resolve(0),
   ]);
   const z: any = r.error ? null : r.data, zahl = (k: string) => Number.isFinite(Number(z?.[k])) && z?.[k] != null ? Number(z[k]) : NaN;
@@ -5056,7 +5059,26 @@ async function unterhaltungenAlt(ich: Ich, mitQuittung: boolean): Promise<any[]>
 // klappt der Aufruf nicht oder ist der Not-Aus gesetzt (kc_club_konfig 'start_paket' = {"aus": true}), nimmt jede Stelle von selbst den
 // bisherigen Weg. Bei jedem START_PAKET_VERGLEICH-ten Start vergleicht der Server nebenbei alt ↔ neu und schreibt Abweichungen ins Protokoll.
 const START_PAKET_VERGLEICH = 10;
-async function startPaket(ich: Ich): Promise<any | null> {
+// 2.602.0 KC-CLUB-START-KERN (Schritt 2 „Start schneller“): Start-Paket, ungelesen je Chat, Kachel-Zahlen und Realtime-Kanal in EINEM Aufruf
+// (kc_club_start_kern ruft genau die vier vorhandenen Funktionen auf). Jeder Teil, der fehlt (null), wird wie bisher einzeln geholt;
+// Not-Aus ohne neue Version: kc_club_konfig 'start_kern' = {"aus": true} → alles wie bisher.
+const kzSeit = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d.toISOString(); };
+async function startKern(ich: Ich, p: any): Promise<any | null> {
+  try {
+    const [k, r] = await Promise.all([konfigZeile("start_kern").catch(() => ({ data: null })),
+      Promise.resolve(db.rpc("kc_club_start_kern", { p_person: ich.person_id, p_org: ORG, p_heute: berlinTag(new Date()), p_vorstand: !!ich.vorstand,
+        p_jetzt: jetzt(), p_fotos_seit: kzSeit(p?.fotosSeit), p_dienst_seit: kzSeit(p?.dienstSeit) }))]);
+    if ((k as any)?.data?.wert?.aus) return null;
+    const d = (r as any)?.data;
+    return !(r as any)?.error && d && typeof d === "object" ? d : null;
+  } catch { return null; }
+}
+async function startPaket(ich: Ich, kern?: Promise<any | null>): Promise<any | null> {
+  const kp = kern ? (await kern.catch(() => null))?.paket : null;
+  if (kp && typeof kp === "object") { // Not-Aus des Start-Pakets gilt auch hier
+    const s: any = await konfigZeile("start_paket").catch(() => ({ data: null }));
+    return s?.data?.wert?.aus ? null : kp;
+  }
   try {
     const [k, r] = await Promise.all([konfigZeile("start_paket").catch(() => ({ data: null })),
       Promise.resolve(db.rpc("kc_club_start_paket", { p_person: ich.person_id, p_org: ORG, p_heute: berlinTag(new Date()) }))]);
@@ -7474,7 +7496,9 @@ Deno.serve((req) => {
 // KC-CLUB-START-PARALLEL-3 (2.162.0): meine sichtbaren Chats MIT Zahl der ungelesenen Nachrichten in EINER Datenbank-Abfrage
 // (vorher eine je Chat – bei 21 Chats 21 Anfragen, die sich um 10 Verbindungen drängeln). Gezählt wird genau wie bisher:
 // Nachrichten anderer, nach meinem letzten Lesen. Fehlt die Funktion oder klemmt sie → bisheriger Weg (Zählen je Chat).
-async function ungelesenJeChat(ich: Ich): Promise<{ data: any[] | null; error: any }> {
+async function ungelesenJeChat(ich: Ich, kern?: Promise<any | null>): Promise<{ data: any[] | null; error: any }> {
+  const ku = kern ? (await kern.catch(() => null))?.uj : null; // 2.602.0 KC-CLUB-START-KERN
+  if (Array.isArray(ku)) return { data: ku, error: null };
   try {
     const r = await db.rpc("kc_club_ungelesen_je_chat", { p_person: ich.person_id });
     if (!r.error && Array.isArray(r.data)) return { data: r.data, error: null };
@@ -7512,7 +7536,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const zt: Record<string, number> = {};
         const mess = <T,>(n: string, x: PromiseLike<T>): Promise<T> => Promise.resolve(x).then((v) => { zt[n] = Date.now() - t0Anfrage; return v; });
         const pWillkommen = willkommenZettel(ich).catch((e) => console.error("willkommen", String(e))); // KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0)
-        const pPaket = startPaket(ich); // 2.576.0 KC-CLUB-START-PAKET: null = bisheriger Weg (jede Stelle unten fällt von selbst zurück)
+        const pKern = startKern(ich, p); // 2.602.0 KC-CLUB-START-KERN: vier Datenbank-Funktionen in einem Aufruf (fehlender Teil → einzeln wie bisher)
+        const pPaket = startPaket(ich, pKern); // 2.576.0 KC-CLUB-START-PAKET: null = bisheriger Weg (jede Stelle unten fällt von selbst zurück)
         pPaket.then((pk) => { if (pk && Math.random() < 1 / START_PAKET_VERGLEICH) nebenbei(startPaketVergleich(ich, pk)); });
         const pPk = vapidOeffentlich(); // KC-CLUB-START-SPARSAM (2.489.0): fester Schlüssel, 10 Min. gemerkt
         const pStatus = statusMap([ich.person_id]);
@@ -7564,7 +7589,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return error ? null : !(data ?? []).length;
         }).catch(() => null);
         const pUaZahl = ich.admin ? Promise.resolve(db.from("kc_club_unterstuetzung").select("id", { count: "exact", head: true }).eq("status", "offen")).then((r: any) => r.error ? null : r.count ?? 0, () => null) : Promise.resolve(null);
-        const pKz = kachelZahlen(ich, p).catch(() => null).then(async (kz) => {
+        const pKz = kachelZahlen(ich, p, pKern).catch(() => null).then(async (kz) => {
           if (kz && ich.admin) { const sw = await pSchulungZahl; (kz as any).schulung = sw ? sw.length : null; (kz as any).unterstuetzung = await pUaZahl;
             (kz as any).schulungFrei = sw ? sw.filter((w: any) => w.art === "gewaehlt" || w.art === "gegenvorschlag").length : null; } // 2.521.0 KC-CLUB-SCHULUNG-INFO: nur was eine Freigabe braucht
           return kz;
@@ -7643,10 +7668,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // (z. B. 503 unten), dürfen die schon laufenden Abfragen keinen „unbehandelten Fehler“ auslösen – Fehler wirken weiter beim await.
         for (const x of [pPk, pStatus, pAbst, pNd, pWahlPm, pGeb, pGfs, pKf, pSpiele, pSos, pAdmin, pStumm, pAufgaben, pTermin, pRest]) x.catch(() => {});
         // 2.157.0 KC-CLUB-START-MESSUNG: Fertig-Zeitpunkt je Teil mitschreiben (hängt sich nur an, ändert keinen Ablauf)
-        for (const [n, x] of Object.entries({ paket: pPaket, pk: pPk, st: pStatus, abst: pAbst, nd: pNd, wahl: pWahlPm, geb: pGeb, kz: pKz, comm: pComm, sos: pSos, adm: pAdmin, auf: pAufgaben, tf: pTermin, rest: pRest, will: pWillkommen } as Record<string, PromiseLike<unknown>>)) mess(n, x).catch(() => {});
+        for (const [n, x] of Object.entries({ kern: pKern, paket: pPaket, pk: pPk, st: pStatus, abst: pAbst, nd: pNd, wahl: pWahlPm, geb: pGeb, kz: pKz, comm: pComm, sos: pSos, adm: pAdmin, auf: pAufgaben, tf: pTermin, rest: pRest, will: pWillkommen } as Record<string, PromiseLike<unknown>>)) mess(n, x).catch(() => {});
         const [naechstes, { data: teil, error: teilFehler }, mitglieder] = await Promise.all([
           mess("tr", treffenListe(ich, true)),
-          mess("teil", ungelesenJeChat(ich)),
+          mess("teil", ungelesenJeChat(ich, pKern)),
           mess("mg", aktiveMitglieder()),
         ]);
         // KC-CLUB-UNBEKANNT-NICHT-OK (1.97.0, Gesamtprüfung): klemmt die Datenbank, lieber ehrlich „gerade nicht möglich“ (503 → App
@@ -7685,7 +7710,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0, Wunsch Hansi): ungelesene Nachrichten älter als 5 Tage bzw. ungelesene ❗ wichtige →
         // die Kachel „Neue Nachr.“ blinkt rot/orange. Fehler hier stören den Start nie (dann ohne Mahnung, Zahl bleibt ehrlich).
         // KC-CLUB-REALTIME (2.226.0): eigener, nicht erratbarer Signal-Kanal (HMAC in der Datenbank) – Fehler → App fragt wie früher nach
-        const pRtKanal = Promise.resolve(db.rpc("kc_club_rt_kanal", { p_person: ich.person_id })).then((r: any) => (typeof r.data === "string" ? r.data : null)).catch(() => null);
+        const pRtKanal = pKern.then((k) => (typeof k?.rt === "string" ? k.rt : Promise.resolve(db.rpc("kc_club_rt_kanal", { p_person: ich.person_id })).then((r: any) => (typeof r.data === "string" ? r.data : null)))).catch(() => null); // 2.602.0: aus dem Kern
         // KC-CLUB-RT-SPARBREMSE (2.230.0): Admin sieht, wie viel vom kostenlosen Monats-Kontingent verbraucht ist
         const pRtZaehler = ich.admin ? Promise.resolve(db.from("kc_club_rt_zaehler").select("anzahl,geaendert_am").eq("monat", berlinTag(new Date()).slice(0, 7)).maybeSingle())
           .then((r: any) => (r.error ? null : { anzahl: Number(r.data?.anzahl || 0), grenze: RT_GRENZE, stand: r.data?.geaendert_am ?? null })).catch(() => null) : Promise.resolve(undefined);
