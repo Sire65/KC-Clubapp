@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.594.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.595.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8021,21 +8021,29 @@ async function klopfKurz(antwort, text) {
 // ---------- 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Wunsch Hansi): aufsprechen (2 Min., Admin 15 Min.), anhören, blättern, löschen, Quittung ----------
 const AB_MAX_SEK = () => (ICH?.admin ? 900 : 120);
 let ABAUF = null; // laufende Aufnahme { rec, strom, teile, start, uhr, pid, name, klopf, f }
+// 2.595.0 KC-CLUB-AB-DIAGNOSE (Fund Hansi 22.10.: „Steven hat den Anrufbeantworter eingeschaltet, ich bekomme die Nachricht, konnte aber nicht
+// aufsprechen“ – beim Server kam kein Aufsprech-Versuch und kein Fehler an): jeder Schritt meldet sich (nur technische Werte, kein Ton, kein Inhalt).
+const abDiag = (schritt, x = {}) => api("diagnose", { art: "ab", daten: { schritt, ...x } }).catch(() => {});
 function abAngebot(an, klopf) { // der Angeklopfte hat den Anrufbeantworter eingeschaltet
+  abDiag("angebot", { belegt: !!(ABAUF || SPR) });
   const n = esc(an?.vorname || an?.name || "");
   try { navigator.vibrate?.(60); } catch {}
   const f = dlgOeffnen(`<h3 class="dlg-kopf">📼 Anrufbeantworter eingeschaltet</h3>
     <p class="dlg-text">${n} kann gerade nicht. Möchtest du jetzt eine Nachricht für ${n} hinterlassen? Du hast ${ICH?.admin ? "bis zu 15 Minuten" : "bis zu 2 Minuten"}.</p>
     <div class="dlg-knoepfe"><button class="knopf haupt" data-w="ja">🎤 Ja, jetzt aufsprechen</button><button class="knopf" data-w="chat">💬 Lieber schreiben</button><button class="knopf" data-w="zu">Nein</button></div>`, () => f.remove());
-  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "ja") abAufnahme(an.person_id, an.vorname || an.name, klopf); else if (b.dataset.w === "chat") direkt(an.person_id); }));
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); abDiag("wahl", { w: b.dataset.w }); if (b.dataset.w === "ja") abAufnahme(an.person_id, an.vorname || an.name, klopf); else if (b.dataset.w === "chat") direkt(an.person_id); }));
 }
 async function abAufnahme(pid, name, klopf) {
-  if (ABAUF || SPR) return;
-  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return melde("Dieses Handy/dieser Browser kann nichts aufnehmen – schreib lieber eine Nachricht.", true);
+  // 2.595.0 KC-CLUB-AB-DIAGNOSE: läuft noch eine Aufnahme (Anrufbeantworter oder Sprachnachricht), nicht mehr still abbrechen, sondern sagen
+  if (ABAUF || SPR) { abDiag("belegt", { ab: !!ABAUF, sprache: !!SPR }); return melde("🎤 Es läuft gerade schon eine Aufnahme – bitte erst beenden, dann nochmal „Aufsprechen“.", true); }
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { abDiag("kein_geraet"); return melde("Dieses Handy/dieser Browser kann nichts aufnehmen – schreib lieber eine Nachricht.", true); }
   let strom;
   try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
-  catch { return melde("Bitte das Mikrofon erlauben – sonst geht die Aufnahme nicht. Hilfe: ⚙️ → 🧭 Mikrofon-Assistent.", true); }
-  const typ = spracheFormat(), rec = new MediaRecorder(strom, typ ? { mimeType: typ, audioBitsPerSecond: 32000 } : undefined);
+  catch (e) { abDiag("mikrofon_fehler", { name: String(e?.name || ""), text: String(e?.message || "").slice(0, 120) }); return melde("Bitte das Mikrofon erlauben – sonst geht die Aufnahme nicht. Hilfe: ⚙️ → 🧭 Mikrofon-Assistent.", true); }
+  let typ, rec;
+  try { typ = spracheFormat(); rec = new MediaRecorder(strom, typ ? { mimeType: typ, audioBitsPerSecond: 32000 } : undefined); }
+  catch (e) { strom.getTracks().forEach((t) => t.stop()); abDiag("rekorder_fehler", { typ: typ || "", name: String(e?.name || ""), text: String(e?.message || "").slice(0, 120) }); return melde("Die Aufnahme ließ sich auf diesem Handy nicht starten – schreib lieber eine Nachricht.", true); }
+  abDiag("aufnahme_start", { typ: rec.mimeType || typ || "" });
   const f = blattAuf("abAufnahmeBlatt", `<div id="abAufInhalt"></div>`); f.onclick = null; // nicht aus Versehen wegtippen
   ABAUF = { rec, strom, teile: [], start: Date.now(), typ: rec.mimeType || typ || "audio/webm", pid, name, klopf, uhr: null };
   rec.ondataavailable = (e) => { if (e.data?.size) ABAUF?.teile.push(e.data); };
@@ -8064,13 +8072,14 @@ async function abAufnahmeVerwerfen() { await abAufnahmeStopp(); melde("🗑️ A
 async function abAufnahmeFertig() {
   const s = await abAufnahmeStopp(); if (!s) return;
   const sek = Math.max(1, Math.min(AB_MAX_SEK(), Math.round((Date.now() - s.start) / 1000)));
+  abDiag("fertig", { sek, teile: s.teile.length, bytes: s.teile.reduce((n, t) => n + (t.size || 0), 0), typ: s.typ });
   if (!s.teile.length) return melde("Die Aufnahme ist leer – bitte nochmal versuchen.", true);
   const typ = s.typ.split(";")[0], endung = typ.includes("mp4") ? "m4a" : typ.includes("ogg") ? "ogg" : "webm";
   try {
     const r = await anlageHochladen(new File(s.teile, `Anrufbeantworter-${new Date().toISOString().slice(11, 19).replace(/:/g, "")}.${endung}`, { type: typ }));
     await api("ab_aufsprechen", { an: s.pid, anlage: r.id, sek, klopf: s.klopf });
     melde(`📼 Deine Nachricht für ${s.name} liegt auf dem Anrufbeantworter – du erfährst, wann sie abgehört wurde.`);
-  } catch (e) { meldeFehler(e); }
+  } catch (e) { abDiag("senden_fehler", { text: String(e?.message || "").slice(0, 160) }); meldeFehler(e); }
 }
 // Stand (beim Start und auf Signal „ab“): neue Nachrichten an mich + „abgehört“-Quittungen meiner Nachrichten
 const AB_GEZEIGT = new Set();

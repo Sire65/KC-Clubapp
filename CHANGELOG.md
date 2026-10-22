@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.595.0 – 2026-10-22 – 📼 Anrufbeantworter: Messpunkte beim Aufsprechen + Meldung statt Stille (KC-CLUB-AB-DIAGNOSE)
+Fund Hansi („Steven hat den Anrufbeantworter eingeschaltet, ich bekomme die Nachricht, konnte aber nicht aufsprechen“). Server: Anklopfen 17:19 → Steven schaltete 7 s später den Anrufbeantworter ein (Status richtig), danach kam bei Hansi KEIN Aufsprech-Versuch und kein Fehler an. Im Browser mit Test-Mikrofon läuft der ganze Ablauf (Angebot → Aufnahme → Hochladen → Senden).
+- Jeder Schritt meldet sich jetzt (diagnose_ab: Angebot, Wahl, Aufnahme-Start mit Format, Fertig mit Länge/Größe, Fehler mit Name) – nur technische Werte, kein Ton, kein Inhalt.
+- Lief noch eine Aufnahme (z. B. Sprachnachricht), brach „Aufsprechen“ bisher still ab – jetzt mit Hinweis. Lässt sich der Rekorder auf dem Handy nicht starten, kommt ebenfalls ein Hinweis statt eines stillen Abbruchs.
+- Sofort eingespielt (Fehler, der Mitglieder behindert). Rückweg: App 2.594.0.
+
 ## 2.594.0 – 2026-10-22 – 💬 Schnelles Hin-und-her-Schreiben bremst die App nicht mehr aus (KC-CLUB-CHAT-RUHE)
 Fund Hansi („Steven und ich schreiben – das verträgt die App nicht gut, wenn zu schnell geschrieben wird“). Server-Messung 17:11–17:14 Uhr: einzelne Aufrufe bis 24 s, selbst die Anmeldung 13 s; Datenbank unauffällig – der Club-Server war mit Aufrufen zugestaut.
 - Ursache: Jede neue Nachricht lud bei jedem, der den Chat offen hatte, den Chat (~27 Abfragen) UND 1,5 s später die ganze Startseite (37–72 Abfragen). Kommt die Nachricht aus dem gerade offenen Chat, entfällt jetzt das Laden der Startseite; sie wird nach dem Chat beim nächsten Takt (≤ 1 Min.) frisch geladen.

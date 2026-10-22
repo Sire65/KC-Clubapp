@@ -7281,6 +7281,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/NEU_ZULETZT = Date\.now\(\); NEU_NACH_CHAT = false;/.test(programm) && /aktuelleAnsicht !== "chat" && \(NEU_NACH_CHAT \|\| !\(RT\.ok/.test(programm), "nach dem Chat beim nächsten Takt");
   assert.ok(/if \(chatTakt\.laeuft\) \{ CHAT_NOCHMAL = true; return; \}/.test(programm) && /if \(CHAT_NOCHMAL && chatId && aktuelleAnsicht === "chat"\) \{ CHAT_NOCHMAL = false; chatSignalLaden\(\); \}/.test(programm), "genau einmal nachladen, nie parallel");
 }
+// 2.595.0 KC-CLUB-AB-DIAGNOSE: Aufsprechen meldet jeden Schritt (nur technische Werte), kein stiller Abbruch
+{
+  assert.ok(/const abDiag = \(schritt, x = \{\}\) => api\("diagnose", \{ art: "ab", daten: \{ schritt, \.\.\.x \} \}\)\.catch\(\(\) => \{\}\);/.test(programm), "Messpunkte über die vorhandene Diagnose");
+  for (const s of ["angebot", "wahl", "belegt", "kein_geraet", "mikrofon_fehler", "rekorder_fehler", "aufnahme_start", "fertig", "senden_fehler"]) assert.ok(programm.includes(`abDiag("${s}"`), "Messpunkt " + s);
+  assert.ok(!/if \(ABAUF \|\| SPR\) return;/.test(programm), "kein stiller Abbruch mehr");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
