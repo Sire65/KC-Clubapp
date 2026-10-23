@@ -6400,7 +6400,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.402.0 KC-CLUB-KUCKUCKSUHR (Wunsch Hansi „wenn volle Stunde, einblenden, Kuckuck kommt raus und ruft so oft, wie es Uhr ist“)
 {
   assert.ok(/const kkRufe = \(h\) => \(h % 12\) \|\| 12;/.test(html), "12-Stunden-Zählung (0 Uhr → 12×)");
-  assert.ok(/const KK_FENSTER_MIN = 2, KK_NACHT_VON = 22, KK_NACHT_BIS = 7/.test(html) && /mitTon = einst\("ton", true\) && \(tonImmer \|\| !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)\)/.test(html), "nachts und mit Töne aus ohne Ton (2.404.0: außer Probe)");
+  assert.ok(/const KK_FENSTER_MIN = 2, KK_TAKT_MS = 1500;/.test(html) && /mitTon = einst\("ton", true\) && \(tonImmer \|\| !inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)\)/.test(html), "nachts und mit Töne aus ohne Ton (2.404.0: außer Probe)");
   assert.ok(/if \(!ICH\?\.person_id \|\| document\.hidden \|\| !einst\("kuckuck", true\)\) return;/.test(html) && /localStorage\.getItem\("kc_club_kuckuck_zuletzt"\) === stunde/.test(html), "nur offen + sichtbar, abschaltbar, einmal je Stunde");
   assert.ok(/<input type="checkbox" id="setKuckuck" onchange="einstellung\('kuckuck', this\.checked\)">/.test(html) && /\$\("setKuckuck"\)\.checked = einst\("kuckuck", true\)/.test(html), "Schalter in den Einstellungen");
   const kk = (h) => (h % 12) || 12; assert.deepEqual([0, 1, 12, 13, 23].map(kk), [12, 1, 12, 1, 11], "Rufe je Stunde");
@@ -6428,7 +6428,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function kkTon\(t0\) \{[^\n]*\n  kkGong\(t0\); kkKlack\(t0 \+ 0\.18\); kkPfeife\(440, t0 \+ 0\.24, 0\.26, 1\); kkPfeife\(349\.23, t0 \+ 0\.56, 0\.5, 0\.95\);/.test(html), "Gong, Klack, zwei Pfeifen A → F");
   // 2.405.0 KC-CLUB-KUCKUCK-KLANG-2 (nach Recherche): gedackte Pfeife fast rein (3. Teilton etwas stärker), Anblas-Oktave, Spiralgong, Takt 1,5 s
   assert.ok(/for \(const \[mal, a\] of \[\[1, 1\], \[2, 0\.03\], \[3, 0\.11\], \[5, 0\.02\]\]\)/.test(html) && /function kkGong\(t\)/.test(html) && /sp\.frequency\.value = f \* 2;/.test(html) && /KK_TAKT_MS = 1500;/.test(html), "Klang wie die echte Uhr");
-  assert.ok(/mitTon = einst\("ton", true\) && \(tonImmer \|\| !\(h >= KK_NACHT_VON \|\| h < KK_NACHT_BIS\)\)/.test(html) && /onclick="kuckuckZeigen\(kkJetzt\(\)\.h, true\)"/.test(html), "Probe-Knopf mit Ton auch nachts; sonst nachts stumm");
+  assert.ok(/mitTon = einst\("ton", true\) && \(tonImmer \|\| !inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)\)/.test(html) && /onclick="kuckuckZeigen\(kkJetzt\(\)\.h, true\)"/.test(html), "Probe-Knopf mit Ton auch nachts; sonst nachts stumm");
 }
 // 2.406.0 KC-CLUB-KUCKUCK-ECHT (Wunsch Hansi „freie Aufnahme“): echte Aufnahme (CC0), offline gespeichert, Ersatz = erzeugter Klang
 {
@@ -12383,4 +12383,17 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const zmt = new Function("fZeit", "fKurz", m[0] + "; return zeitMitTag;")(fZeit, fKurz);
   const jetzt = new Date(); const heute = new Date(jetzt); heute.setHours(1, 1, 0, 0); const gestern = new Date(heute); gestern.setDate(heute.getDate() - 1); const alt = new Date(heute); alt.setDate(heute.getDate() - 5);
   assert.equal(zmt(heute.toISOString()), "heute 01:01"); assert.equal(zmt(gestern.toISOString()), "gestern 01:01"); assert.match(zmt(alt.toISOString()), /^\d\d\.\d\d\. 01:01$/);
+}
+// 2.616.0 KC-CLUB-KUCKUCK-RUHEZEIT: Uhr zur vollen Stunde still nur in der eigenen „Nicht stören“-Ruhezeit; Hilfe sagt das
+{
+  assert.ok(!/KK_NACHT_VON|KK_NACHT_BIS/.test(programm), "keine feste Nachtzeit mehr");
+  assert.ok(/Während deiner Ruhezeit bei <b>„Nicht stören“<\/b>/.test(programm) && /Während deiner Ruhezeit bei „Nicht stören“ \(⚙️ Einstellungen\) bleibt er absichtlich still/.test(programm) && /Auch die Uhr zur vollen Stunde \(Kuckuck, Big Ben …\) bleibt dann still\./.test(programm), "Hilfe nennt die Ruhezeit");
+  const f = programm.match(/function inRuheJetzt\(r\) \{[\s\S]*?\n\}/)[0];
+  const fest = (hh, mm) => ({ DateTimeFormat: function () { return { format: () => `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}` }; } });
+  const inRuhe = (zeit, r) => new Function("Intl", "TZ", f + "; return inRuheJetzt;")(fest(...zeit), "Europe/Berlin")(r);
+  const ruhe = { an: true, von: "22:00", bis: "07:00" };
+  assert.equal(inRuhe([1, 0], ruhe), true, "01:00 in Ruhezeit 22–7 → still");
+  assert.equal(inRuhe([8, 0], ruhe), false, "08:00 → mit Ton");
+  assert.equal(inRuhe([1, 0], null), false, "ohne Ruhezeit → mit Ton, auch nachts");
+  assert.equal(inRuhe([1, 0], { ...ruhe, an: false }), false, "Ruhezeit aus → mit Ton");
 }

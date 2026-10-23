@@ -1,9 +1,13 @@
 # Änderungen
 
-## 2.616.0 – 2026-10-24 – 🕐 Testlisten: „heute 01:01“ statt „01:01“ (KC-CLUB-TESTLISTE-HEUTE)
+## 2.616.0 – 2026-10-24 – 🕐 Testlisten mit Tagesangabe · 🕰️ Stundenuhr still nach eigener Ruhezeit (KC-CLUB-TESTLISTE-HEUTE, KC-CLUB-KUCKUCK-RUHEZEIT)
 Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.
 - „Verbindung testen“ und „Internet-Tiefentest“: Zeit immer mit Tagesangabe – „heute 01:01“, „gestern 19:32“, sonst „23.10. 08:42“.
 - Die übrige Zeitanzeige der App (Chat usw.) bleibt unverändert.
+
+**🕰️ Uhr zur vollen Stunde: Stille nach der eigenen Ruhezeit (KC-CLUB-KUCKUCK-RUHEZEIT)** – Frage Hansi „Uhr erschien um 1 Uhr ohne Ton – macht der nachts keine Töne?“
+- Bisher war der Kuckuck (und Big Ben & Co.) fest von 22 bis 7 Uhr stumm. Jetzt gilt die eigene Ruhezeit unter „Nicht stören“: darin zeigt sich die Uhr ohne Ton; ohne Ruhezeit ruft sie rund um die Uhr. Probehören (▶) klingt weiter immer.
+- Hilfe („Der Kuckuck ruft, aber ich höre nichts“, „Warum höre ich den Kuckuck nicht?“, „Nachts nichts stören“) sagt das.
 
 ## 2.615.0 – 2026-10-23 – 📊 Nachrichten-Statistik öffnet sofort statt nach Minuten (KC-CLUB-STATISTIK-SCHNELL)
 - Fehler (Fund Hansi „dauert sehr lange, Meldung: hat gehangen“): Bei ~1.900 Einträgen in 30 Tagen war die App 13 s blockiert – der Server antwortete nach ~1,3 s, die Zeit ging beim Zeichnen verloren: für jeden Eintrag × jeden Tag bzw. × jede Stunde entstand ein neuer Datums-Umrechner (~160.000 Stück).
