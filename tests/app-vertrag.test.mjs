@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6549,7 +6549,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const c = server.slice(server.indexOf('case "mein_ausweis": {'), server.indexOf('case "wl_liste": {'));
   assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(c) && /\/\^KC-\\d\{3,5\}\$\/\.test\(nr\) \? nr : null/.test(c), "nur die eigene Nummer, ungültig → null");
-  assert.ok(/"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren")?\]/.test(server) && /"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren")?\]/.test(html), "auch für Aushilfen (Stechuhr)");
+  assert.ok(/"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion")?)?\]/.test(server) && /"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion")?)?\]/.test(html), "auch für Aushilfen (Stechuhr)");
   assert.ok(/function ausweisSvg\(nummer\) \{ const q = qrcode\(0, "M"\); q\.addData\(nummer\);/.test(html), "QR enthält nur die Nummer");
   assert.ok(/function versionMarkeTipp\(\) \{ if \(NEUE_VERSION\) updateKachel\(\); else ausweisZeigen\(\); \}/.test(html) && /onclick="versionMarkeTipp\(\)"/.test(html), "QR-Knopf, Update-Hinweis bleibt");
   assert.ok(/id="kopfVersion"[^>]*onclick="updateKachel\(\)"/.test(html), "Versionsnummer unter der Kochmütze bleibt anklickbar");
@@ -12245,4 +12245,20 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const fn = programm.slice(programm.indexOf("function pushNeuLaden()"), programm.indexOf("function pushNeuLaden()") + 400);
   assert.ok(/if \(chatId && aktuelleAnsicht === "chat"\) \{ NEU_NACH_CHAT = true; return; \}/.test(fn) && /clearTimeout\(RT\.zaehlen\); RT\.zaehlen = setTimeout\(\(\) => \{ if \(!document\.hidden\) neuLaden\(\); \}, 1500\);/.test(fn), "Push gebündelt, im Chat nur der Chat");
   assert.ok(/if \(e\.data\?\.typ === "push"\) \{ onlinePushGezeigt\(e\.data\.titel\); \/\* 2\.383\.0 \*\/ pushNeuLaden\(\);/.test(programm) && /if \(chatId && aktuelleAnsicht === "chat"\) chatSignalLaden\(true\); else if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\);/.test(programm), "Push-Handler nutzt die Bündelung, Ansage bleibt sofort");
+}
+// 2.606.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse – nur Server-Regeln, Freigabe, Plan unverändert, Übergaben eingerechnet
+{
+  for (const a of ["dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_probe", "dienst_tausch_aktion"]) assert.ok(server.includes(`case "${a}": {`), a);
+  assert.ok(/dienst_tausch: \{ t: "🔁 Dienst-Tausch-Börse", u: "[^"]+", standard: "admin" \}/.test(server), "erst nur Admin (Freigabe)");
+  const c = server.slice(server.indexOf('case "dienst_tausch_liste": {'), server.indexOf('case "dienst_heute": {'));
+  assert.ok(/nurWennFrei\("dienst_tausch", ich/.test(c) && /case "dienst_tausch_probe": \{[^]*?nurAdmin\(ich\);/.test(c), "Freigabe + Probe nur Admin");
+  assert.ok(/\.update\(set\)\.eq\("id", r\.id\)\.eq\("status", r\.status\)/.test(c) && /if \(!neu\?\.length\) throw new Fehler\("Jemand anderes war schneller/.test(c), "gleichzeitig übernehmen → einer gewinnt");
+  assert.ok(/if \(!r \|\| \(r\.probe && !ich\.admin\)\)/.test(c), "Probe-Angebote nur für Admins");
+  assert.ok(!/kc_dp_plan_published"\)\.(update|insert|upsert|delete)/.test(server), "der Dienstplan wird nie geändert");
+  assert.ok(/\.eq\("status", "bestaetigt"\)\.eq\("probe", false\)/.test(server), "nur bestätigte, echte Übergaben zählen");
+  assert.ok((server.match(/dtPlanZeilen\(/g) || []).length >= 6, "Übergaben in Mein Dienst, Dienst-Anmeldung, Erinnerung und Admin-Übersicht");
+  assert.ok(/if \(probe \|\| \(await freigaben\(\)\)\.dienst_tausch !== "alle"\) \{ const ad = new Set\(await adminIds\(\)\)/.test(server), "vor Freigabe/Probe: Push nur an Admins");
+  assert.ok(/function dtOeffnen\(\) \{\s*if \(!frei\("dienst_tausch"\)\)/.test(html) && /else if \(h === "#diensttausch"\) dtOeffnen\(\);/.test(html) && /tauschboerse: \{ sym: "🔁", t: "Dienst-Tausch-Börse", fn: \(\) => dtOeffnen\(\), frei: "dienst_tausch" \}/.test(html), "App: Freigabe, Push-Link, Sprung");
+  assert.ok(/<div class="dt-nachricht">„\$\{esc\(a\.nachricht\)\}“<\/div>/.test(html) && /\$\{esc\(a\.text\)\}/.test(html), "Texte escaped");
+  assert.ok(/\.dt-karte \{/.test(lies("index.html")), "Stil");
 }

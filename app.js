@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.605.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.606.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15401,7 +15401,7 @@ const ZUGANG_AKTIONEN = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren"], // 2.590.0 KC-CLUB-DIENST-STEMPEL
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
   aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis"] };
@@ -26096,6 +26096,7 @@ function hashSprung(h) {
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
+    else if (h === "#diensttausch") dtOeffnen(); // 2.606.0 KC-CLUB-DIENST-TAUSCH (Link aus dem Push)
     else if (h === "#fremdzugriffe") { zeige("sicherheit"); if (ICH?.admin) setTimeout(fremdZeigen, 300); } // 2.579.0 KC-CLUB-FREMDZUGRIFF (Link aus dem Push)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
@@ -30710,14 +30711,82 @@ async function mdStart() {
       ${w.phase ? `<div class="hinweis">Wunschphase: ${w.phase === "open" || w.phase === "offen" ? "offen" : "geschlossen"}${w.schluss ? ` · bis ${esc(zeitKurz(w.schluss))}` : ""}</div>` : ""}
       <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dwOeffnen()">📝 Wünsche ${w.status ? "ansehen/ändern" : "eintragen"}</button></div></div>
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("2", so.anzahl > 0)} 📅 Sollplan <small class="hinweis">vom Planer veröffentlicht</small></h4>
-      ${so.anzahl ? `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${so.naechste.map((d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}</div>`).join("")}`
+      ${so.anzahl ? `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${so.naechste.map((d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}${d.getauscht ? ' <span class="hinweis">🔁 übernommen</span>' : ""}</div>`).join("")}`
         : "<div>Noch keine Dienste für dich veröffentlicht.</div>"}
-      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button></div></div>
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button>${frei("dienst_tausch") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();dtOeffnen()">🔁 Tauschbörse${nurTest("dienst_tausch") ? " 🔒" : ""}</button>` : ""}</div></div>
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("3", ist.anzahl > 0)} ⏱️ Istplan <small class="hinweis">gearbeitet (Stempeluhr), letzte 60 Tage</small></h4>
       ${ist.anzahl ? `<div>${ist.anzahl} Einsätze · <b>${mdHm(ist.istMin)} Std.</b> gearbeitet${ist.sollMin ? ` · geplant waren ${mdHm(ist.sollMin)} Std. (${ist.istMin - ist.sollMin >= 0 ? "+" : "–"}${mdHm(Math.abs(ist.istMin - ist.sollMin))})` : ""}</div>
         ${ist.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr</div>`).join("")}`
         : `<div class="ta-st-gv">Noch keine Ist-Zeiten vorhanden – sie erscheinen hier, sobald die Stempeluhr sie liefert.</div>`}
       ${frei("dienst_stempel") ? `<div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dsOeffnen()">🟢 Kommen / Gehen buchen${nurTest("dienst_stempel") ? " 🔒" : ""}</button></div>` : ""}</div>${mdSonder(MD_D?.sonder)}`; // 2.590.0 KC-CLUB-DIENST-STEMPEL
+}
+// ---------- 2.606.0 KC-CLUB-DIENST-TAUSCH (Wunsch Hansi „Dienst-Tausch-Börse hört sich gut an“) ----------
+// „Ich kann nicht“ → Dienst anbieten (Push an alle) → ein anderes Mitglied tippt „🙋 Ich übernehme“ → der Planer bestätigt oder lehnt ab.
+// Erst nach der Bestätigung gilt der Dienst als übergeben (Mein Dienst, Dienst-Anmeldung). Regeln prüft der Server (dienst-tausch.js).
+// Bis zur Freigabe (Admin → Freigaben → „Dienst-Tausch-Börse“) sieht es nur der Admin (🔒 Test); Probe-Angebote sehen nur Admins.
+let DTL = null;
+const DT_STATUS = { offen: "⏳ sucht Ersatz", uebernommen: "🙋 übernommen – wartet auf den Planer", bestaetigt: "✅ bestätigt", abgelehnt: "✖ abgelehnt", zurueckgezogen: "↩️ zurückgezogen" };
+async function dtOeffnen() {
+  if (!frei("dienst_tausch")) return melde("Die Tauschbörse ist noch nicht freigegeben.");
+  const f = blattAuf("dtBlatt", `<div id="dtInhalt"><p class="hinweis">Wird geladen …</p></div>`); f.classList.add("dt-blatt");
+  try { DTL = await api("dienst_tausch_liste", {}, { warten: true }); if (DTL?.planer && !MITGLIEDER) await mitgliederHolen().catch(() => {}); dtZeichnen(); }
+  catch (e) { const el = $("dtInhalt"); if (el) el.innerHTML = `<p>⚠️ ${esc(fehlerText(e, ""))}</p><button class="knopf" onclick="fensterZu($('dtBlatt'))">Schließen</button>`; }
+}
+function dtKarte(a, knoepfe) {
+  const stand = a.status === "uebernommen" && a.anName ? `🙋 ${esc(a.anName)} übernimmt – wartet auf den Planer` : a.status === "bestaetigt" && a.anName ? `✅ bestätigt: jetzt ${esc(a.anName)}` : esc(DT_STATUS[a.status] || a.status);
+  return `<div class="karte dt-karte dt-${esc(a.status)}"><div><b>${esc(a.text)}</b>${a.probe ? ' <span class="ds-test">🧪 Probe</span>' : ""}</div>
+    <div class="hinweis">von ${esc(a.vonName || "?")} · ${stand}${a.vorbei ? " · vorbei" : ""}</div>
+    ${a.nachricht ? `<div class="dt-nachricht">„${esc(a.nachricht)}“</div>` : ""}${a.grund ? `<div class="hinweis">Grund: ${esc(a.grund)}</div>` : ""}
+    ${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
+}
+function dtZeichnen() {
+  const el = $("dtInhalt"), l = DTL; if (!el || !l) return;
+  if (!l.aktiv) { el.innerHTML = '<p>Die Tauschbörse ist noch nicht freigegeben.</p><button class="knopf" onclick="fensterZu($(\'dtBlatt\'))">Schließen</button>'; return; }
+  const ich = ICH?.person_id, A = l.angebote || [], k = (id, aktion, t, haupt) => `<button class="knopf klein${haupt ? " haupt" : ""}" onclick="dtAktion(${jsArg(id)}, '${aktion}')">${t}</button>`;
+  const gesucht = A.filter((a) => a.status === "offen" && a.von !== ich && !a.vorbei);
+  const meine = A.filter((a) => a.von === ich), uebernommen = A.filter((a) => a.an === ich && a.von !== ich);
+  const planer = l.planer ? A.filter((a) => a.status === "uebernommen" || (a.status === "offen" && !a.vorbei)) : [];
+  const mgWahl = (a) => (MITGLIEDER || []).filter((m) => m.person_id !== a.von).map((m) => `<option value="${esc(m.person_id)}">${esc(m.name)}</option>`).join("");
+  el.innerHTML = `<h3 style="margin-top:0">🔁 Dienst-Tausch-Börse${nurTest("dienst_tausch") ? ' <small class="ds-test">🔒 Test – nur für dich</small>' : ""}</h3>
+    <p class="hinweis" style="margin-top:0">Du kannst einen Dienst nicht? Biete ihn an – alle bekommen Bescheid. Wer übernimmt, tippt „🙋 Ich übernehme“; der Planer bestätigt. Erst dann ist der Dienst übergeben.</p>
+    <h4>🙋 Gesucht – kannst du übernehmen?</h4>
+    ${gesucht.map((a) => dtKarte(a, a.kannUebernehmen ? k(a.id, "uebernehmen", "🙋 Ich übernehme", true) : '<span class="hinweis">Du hast zu dieser Zeit schon Dienst.</span>')).join("") || '<p class="hinweis">Gerade sucht niemand Ersatz.</p>'}
+    ${planer.length ? `<h4>🗂️ Für den Planer</h4>${planer.map((a) => dtKarte(a, a.status === "uebernommen"
+      ? k(a.id, "bestaetigen", "✅ Bestätigen", true) + k(a.id, "ablehnen", "✖ Ablehnen")
+      : `<select id="dtFuer-${esc(a.id)}"><option value="">– jemanden eintragen –</option>${mgWahl(a)}</select>${k(a.id, "eintragen", "🙋 Eintragen")}${k(a.id, "ablehnen", "✖ Ablehnen")}`)).join("")}` : ""}
+    ${uebernommen.length ? `<h4>📥 Von dir übernommen</h4>${uebernommen.map((a) => dtKarte(a, a.status === "uebernommen" ? k(a.id, "zuruecktreten", "↩️ Doch nicht") : "")).join("")}` : ""}
+    ${meine.length ? `<h4>📤 Deine Angebote</h4>${meine.map((a) => dtKarte(a, a.status === "offen" ? k(a.id, "zurueckziehen", "↩️ Zurückziehen") : "")).join("")}` : ""}
+    <h4>📅 Deine nächsten Dienste</h4>
+    ${(l.meine || []).map((d) => `<div class="karte dt-karte"><b>${esc(d.text)}</b>${d.getauscht ? ' <span class="hinweis">🔁 übernommen</span>' : ""}
+      <div class="knoepfe">${d.angeboten ? '<span class="hinweis">⏳ angeboten</span>' : d.kannAnbieten ? `<button class="knopf klein" onclick="dtAnbieten(${jsArg(d.ref)})">🔁 Kann ich nicht – anbieten</button>` : `<span class="hinweis">Beginnt bald – bitte den Planer anrufen.</span>`}</div></div>`).join("")
+      || '<p class="hinweis">Für dich sind keine kommenden Dienste veröffentlicht.</p>'}
+    ${l.admin ? `<details class="karte"><summary>🧪 Probe-Angebot zum Testen (sehen nur Admins)</summary>
+      <p class="hinweis">Solange kein Dienstplan veröffentlicht ist: ein Angebot von dir ohne Dienstplan. Übernehmen kannst du es als Planer mit „Eintragen“ für ein Mitglied – Benachrichtigungen gehen dabei nur an Admins.</p>
+      <label class="feld">Tag <input type="date" id="dtPTag"></label><label class="feld">von <input type="time" id="dtPVon" value="16:00"></label><label class="feld">bis <input type="time" id="dtPBis" value="20:00"></label>
+      <label class="feld">Bereich <input id="dtPBer" value="Probe" maxlength="40"></label><button class="knopf haupt klein" onclick="dtProbe()">🧪 Probe-Angebot anlegen</button></details>` : ""}
+    <button class="knopf" onclick="fensterZu($('dtBlatt'))">Schließen</button>`;
+}
+async function dtAnbieten(ref) {
+  const d = (DTL?.meine || []).find((x) => x.ref === ref); if (!d) return;
+  const n = await eingabe(`🔁 Dienst anbieten\n${d.text}\n\nAlle bekommen Bescheid. Möchtest du etwas dazuschreiben? (freiwillig)`, "", { ja: "🔁 Anbieten", vorschlaege: ["Bin krank", "Termin dazwischengekommen", "Tausche gern gegen einen anderen Tag"] });
+  if (n === null) return;
+  try { const r = await api("dienst_tausch_anbieten", { ref, nachricht: n.trim() }); DTL = r.lage; dtZeichnen(); melde(r.versand ? "🔁 Angeboten – alle haben Bescheid bekommen" : "🔁 Angeboten"); } catch (e) { meldeFehler(e); }
+}
+async function dtAktion(id, aktion) {
+  const a = (DTL?.angebote || []).find((x) => x.id === id); if (!a) return;
+  const p = { id, aktion };
+  if (aktion === "eintragen") { const fuer = $(`dtFuer-${id}`)?.value; if (!fuer) return melde("Bitte erst ein Mitglied wählen.", true); p.aktion = "uebernehmen"; p.fuer = fuer; }
+  else if (aktion === "uebernehmen") { if (!(await frage(`🙋 Dienst übernehmen?\n${a.text} (von ${a.vonName})\n\nDer Planer bestätigt noch – du bekommst Bescheid.`, { ja: "🙋 Ich übernehme" }))) return; }
+  else if (aktion === "ablehnen") { const g = await eingabe(`✖ Tausch ablehnen?\n${a.text}\n\nGrund (freiwillig) – ${a.vonName} bekommt Bescheid:`, "", { ja: "✖ Ablehnen" }); if (g === null) return; p.grund = g.trim(); }
+  else if (aktion === "zurueckziehen" && !(await frage(`↩️ Angebot zurückziehen?\n${a.text}\n\nDu machst den Dienst dann selbst.`, { ja: "↩️ Zurückziehen" }))) return;
+  else if (aktion === "zuruecktreten" && !(await frage(`↩️ Doch nicht übernehmen?\n${a.text}\n\n${a.vonName} bekommt Bescheid, der Dienst ist wieder offen.`, { ja: "↩️ Doch nicht" }))) return;
+  try { const r = await api("dienst_tausch_aktion", p); DTL = r.lage; dtZeichnen(); melde({ uebernommen: "🙋 Eingetragen – der Planer bestätigt noch", bestaetigt: "✅ Tausch bestätigt", abgelehnt: "✖ Abgelehnt", zurueckgezogen: "↩️ Zurückgezogen", offen: "↩️ Der Dienst ist wieder offen" }[r.status] || "✅ Erledigt"); }
+  catch (e) { meldeFehler(e); if (/schneller|nicht mehr/.test(String(e?.message))) dtOeffnen(); }
+}
+async function dtProbe() {
+  const datum = $("dtPTag")?.value, start = $("dtPVon")?.value, ende = $("dtPBis")?.value;
+  if (!datum || !start || !ende) return melde("Bitte Tag und Uhrzeit wählen.", true);
+  try { const r = await api("dienst_tausch_probe", { datum, start, ende, bereich: $("dtPBer")?.value || "Probe" }); DTL = r.lage; dtZeichnen(); melde("🧪 Probe-Angebot angelegt"); } catch (e) { meldeFehler(e); }
 }
 // ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Wunsch Hansi, Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
 // Kommen/Gehen in der App: Karte auf der Startseite (ab 30 Min. vor Dienstbeginn bzw. solange angemeldet), Blatt mit Vorschlag aus dem
@@ -31610,6 +31679,7 @@ const SPRUENGE = {
   meinedaten: { sym: "🔐", t: "Meine Daten ansehen", fn: () => mdatStart() },
   meindienst: { sym: "🗓️", t: "Mein Dienst", fn: () => mdStart() },
   dienstwunsch: { sym: "📝", t: "Dienstwünsche eintragen", fn: () => dwOeffnen() },
+  tauschboerse: { sym: "🔁", t: "Dienst-Tausch-Börse", fn: () => dtOeffnen(), frei: "dienst_tausch" }, // 2.606.0
   wunschbogen: { sym: "🖨️", t: "Leeren Wunschbogen holen", fn: () => wbStart() },
   termine: { sym: "📅", t: "Zu den Terminen", fn: () => zeige("termine") },
   pinnwand: { sym: "📌", t: "Zur Pinnwand", fn: () => zeige("pinnwand") },

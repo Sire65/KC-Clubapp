@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.606.0 – 2026-10-23 – 🔁 Dienst-Tausch-Börse – nur Admin zum Testen (KC-CLUB-DIENST-TAUSCH)
+Wunsch Hansi („3 hört sich gut an“ – Dienst-Tausch-Börse). Noch nicht freigegeben: bis Hansi freigibt, sieht es nur der Admin (🔒 Test).
+- „Mein Dienst“ → 🔁 Tauschbörse (auch Push-Link #diensttausch, Sprung-Knopf „Dienst-Tausch-Börse“): eigene kommende Dienste mit „🔁 Kann ich nicht – anbieten“ (freiwillig mit Text), alle bekommen Bescheid.
+- Andere sehen „🙋 Gesucht – kannst du übernehmen?“ und tippen „🙋 Ich übernehme“ (nicht bei eigenen Diensten, nicht wenn man zu der Zeit selbst Dienst hat; wer zuerst kommt). „↩️ Doch nicht“ geht bis zur Bestätigung.
+- Planer (Admin bzw. Amt „Dienstplaner“): ✅ Bestätigen / ✖ Ablehnen (mit Grund), offene Angebote auch „🙋 Eintragen“ für ein Mitglied (z. B. nach Anruf). Jeder Schritt mit Push an die Beteiligten.
+- Anbieten bis 2 Std. vor Beginn; danach direkt den Planer anrufen.
+- Erst die Bestätigung zählt: Mein Dienst (🔁 übernommen), Dienst-Anmeldung, Erinnerungen und „Wer ist heute da“ rechnen die Übergabe ein. Der Dienstplan selbst (kc_dp_plan_published) bleibt unverändert – Übernahme in DP3: docs/CODEX_AUFTRAG_DIENST_TAUSCH.md.
+- 🧪 Probe-Angebot (nur Admin, ohne Dienstplan) zum Testen; Benachrichtigungen gehen bis zur Freigabe bzw. bei Proben nur an Admins.
+- Datenbank: supabase/migrations/20261023_kc_club_v2606_dienst_tausch.sql (Tabelle kc_club_dienst_tausch, RLS, nur service_role, Spiegel). Ohne Tabelle läuft alles wie bisher.
+- Test: tests/dienst-tausch.test.mjs, Vertragstest-Block 2.606.0, Typprüfung ohne neue Meldungen. Rückweg: App 2.605.0, Server 2.604.0.
+
 ## 2.605.0 – 2026-10-23 – Push-Ruhe beim schnellen Schreiben
 Kommen viele Push-Mitteilungen schnell hintereinander, lädt die offene App nur einmal neu – bei offenem Chat nur den Chat (KC-CLUB-PUSH-RUHE).
 

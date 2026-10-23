@@ -31,3 +31,4 @@ jobs:
       - run: node tests/fremdzugriff.test.mjs
       # KC-CLUB-DIENST-STEMPEL (2.590.0)
       - run: node tests/dienst-stempel.test.mjs
+      - run: node tests/dienst-tausch.test.mjs

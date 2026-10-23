@@ -29,6 +29,7 @@ import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-
 import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "./fremdzugriff.js"; // KC-CLUB-FREMDZUGRIFF (2.579.0)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
+import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -131,7 +132,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.604.0";
+const SERVER_VERSION = "2.606.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3227,7 +3228,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.)
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]) };
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
@@ -4019,6 +4020,7 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   avatar_foto: { t: "📷 Eigenes Foto als Bild", u: "Selfie, Galerie oder Datei – Admin kann Fotos entfernen", standard: "admin" }, // 2.23.89
   avatar_premium: { t: "👑 Hochwertige Avatare", u: "36 neue Koch-Figuren mit Licht und Schatten, Schmuck, Piercings – im Baukasten anpassbar", standard: "admin" }, // 2.414.0 KC-CLUB-AVATAR-PREMIUM
   dienst_stempel: { t: "🟢 Dienst anmelden/abmelden", u: "Kommen und Gehen in der App, mit Vorschlag aus dem Dienstplan", standard: "admin" }, // 2.590.0 KC-CLUB-DIENST-STEMPEL (erst Hansi testet)
+  dienst_tausch: { t: "🔁 Dienst-Tausch-Börse", u: "Dienst anbieten, ein anderes Mitglied übernimmt, der Planer bestätigt", standard: "admin" }, // 2.606.0 KC-CLUB-DIENST-TAUSCH (erst Hansi testet)
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
 async function freigaben(): Promise<Record<string, "alle" | "admin">> {
@@ -4036,13 +4038,69 @@ function dsDienstAus(r: any) {
   const startMs = dsMs(r.work_date, r.start_time); let endeMs = dsMs(r.work_date, r.end_time); if (endeMs <= startMs) endeMs += 86400000; // über Mitternacht
   return { ref: r.source_shift_id || `${r.work_date}|${String(r.start_time).slice(0, 5)}`, startMs, endeMs, pause: Number(r.break_minutes) || 0, bereich: r.area || null, zone: r.zone || null, event: r.event_id || null };
 }
+// ---------- 2.606.0 KC-CLUB-DIENST-TAUSCH: bestätigte Übergaben aus der Tauschbörse (Probe-Angebote zählen nie) ----------
+// Der Dienstplan selbst bleibt unverändert (DP3 übernimmt das später); bis dahin rechnet die Club-App die Übergaben hier ein.
+async function dtUebergaben(tage: string[] | { ab: string }, person?: string): Promise<any[]> {
+  let q = db.from("kc_club_dienst_tausch").select("dienst_ref,von_person,an_person,event_id,work_date,start_zeit,ende_zeit,pause_min,bereich,zone")
+    .eq("org_id", ORG).eq("status", "bestaetigt").eq("probe", false);
+  q = Array.isArray(tage) ? q.in("work_date", tage) : q.gte("work_date", tage.ab);
+  if (person) q = q.or(`von_person.eq.${person},an_person.eq.${person}`);
+  const { data, error } = await q.limit(300);
+  return error ? [] : data ?? []; // Tabelle fehlt/Fehler → Plan wie bisher (nie den Dienst blockieren)
+}
+const dtUhr = (iso: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+// Planzeilen (kc_dp_plan_published-Form mit person_id) + Übergaben: abgegebene Dienste weg, übernommene dazu (getauscht: true)
+function dtPlanZeilen(plan: any[], ueb: any[], person?: string) {
+  const weg = new Set(ueb.map((u) => `${u.dienst_ref}|${u.von_person}`));
+  const rest = plan.filter((r) => !weg.has(`${r.source_shift_id}|${r.person_id ?? person}`));
+  const dazu = ueb.filter((u) => u.an_person && (!person || u.an_person === person)).map((u) => ({ person_id: u.an_person, source_shift_id: u.dienst_ref, event_id: u.event_id,
+    work_date: u.work_date, start_time: dtUhr(u.start_zeit), end_time: dtUhr(u.ende_zeit), break_minutes: u.pause_min || 0, area: u.bereich, zone: u.zone, getauscht: true }));
+  return [...rest, ...dazu];
+}
+const dtPlaner = (ich: Ich) => ich.admin || ich.aemter.some((a) => /dienstplan|planer/i.test(a));
+const dtDarf = async (ich: Ich) => ich.admin || (await freigaben()).dienst_tausch === "alle";
+const dtAus = (r: any) => ({ ...r, ref: r.dienst_ref, startMs: Date.parse(r.start_zeit), endeMs: Date.parse(r.ende_zeit) });
+// eigene kommende Dienste (Plan + Übergaben) – zum Anbieten und für die Überschneidungs-Prüfung beim Übernehmen
+async function dtMeineDienste(person: string) {
+  const heute = berlinTag(new Date(Date.now() - 86400000));
+  const [{ data: plan }, ueb] = await Promise.all([
+    db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone,person_id").eq("org_id", ORG).eq("person_id", person).eq("status", "published").gte("work_date", heute).order("work_date").limit(80),
+    dtUebergaben({ ab: heute }, person)]);
+  return dtPlanZeilen(plan ?? [], ueb, person).map((r: any) => ({ ...dsDienstAus(r), datum: r.work_date, getauscht: !!r.getauscht }));
+}
+async function dtLage(ich: Ich) {
+  const t = Date.now(), planer = dtPlaner(ich), vor30 = new Date(t - 30 * 86400000).toISOString();
+  let q = db.from("kc_club_dienst_tausch").select("*").eq("org_id", ORG).gte("ende_zeit", vor30).order("start_zeit").limit(200);
+  if (!ich.admin) q = q.eq("probe", false);
+  const [{ data: zs, error }, meine] = await Promise.all([q, dtMeineDienste(ich.person_id)]);
+  if (error) throw new Fehler("Die Tauschbörse ist gerade nicht erreichbar.", 503);
+  const sichtbar = (zs ?? []).filter((r: any) => r.von_person === ich.person_id || r.an_person === ich.person_id || planer
+    || ((r.status === "offen" || r.status === "uebernommen") && Date.parse(r.start_zeit) > t));
+  const pm = await personen(sichtbar.flatMap((r: any) => [r.von_person, r.an_person]).filter(Boolean));
+  const nm = (id: string | null) => (id ? (pm.get(id)?.display_name || id) : null);
+  const angebote = sichtbar.map((r: any) => { const a = dtAus(r);
+    return { id: r.id, ref: r.dienst_ref, start: r.start_zeit, ende: r.ende_zeit, text: dtText(a, TZ), bereich: r.bereich, status: r.status, probe: r.probe, nachricht: r.nachricht, grund: r.grund,
+      von: r.von_person, vonName: nm(r.von_person), an: r.an_person, anName: nm(r.an_person), anAm: r.an_am, entschiedenAm: r.entschieden_am,
+      vorbei: a.startMs <= t, rollen: dtRollen(r, ich.person_id, planer),
+      kannUebernehmen: !dtUebernehmenPruefen(a, ich.person_id, meine.filter((d) => d.ref !== r.dienst_ref), t) }; });
+  const aktiv = new Map((zs ?? []).filter((r: any) => r.von_person === ich.person_id && (r.status === "offen" || r.status === "uebernommen")).map((r: any) => [r.dienst_ref, r.id]));
+  return { aktiv: true, planer, admin: ich.admin, angebote, regeln: { vorlaufStd: DT.vorlaufStd },
+    meine: meine.filter((d) => d.startMs > t).slice(0, 30).map((d) => ({ ref: d.ref, text: dtText(d, TZ), start: new Date(d.startMs).toISOString(), getauscht: d.getauscht, angeboten: aktiv.get(d.ref) || null,
+      kannAnbieten: !dtAnbietenPruefen(d, t, []) })) };
+}
+async function dtSenden(ids: string[], probe: boolean, vars: { titel: string; kurz: string }, schl: string) {
+  let ziel = [...new Set(ids.filter(Boolean))];
+  if (probe || (await freigaben()).dienst_tausch !== "alle") { const ad = new Set(await adminIds()); ziel = ziel.filter((x) => ad.has(x)); } // Probe/Test: nur Admins bekommen etwas
+  if (!ziel.length) return null;
+  return await senden("club_dienst", ziel, { ...vars, betreff: vars.titel.replace(/^\S+ /, ""), text: `${vars.kurz}\n\n${APP_URL}#diensttausch`, url: `${APP_URL}#diensttausch` }, `club-dienst-tausch:${schl}`).catch(() => null);
+}
 async function dsLage(ich: Ich) {
   const t = Date.now(), heute = berlinTag(new Date(t)), gestern = berlinTag(new Date(t - 86400000));
-  const [{ data: plan }, { data: b }, orte] = await Promise.all([
+  const [{ data: plan }, { data: b }, orte, ueb] = await Promise.all([
     db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").in("work_date", [gestern, heute]).limit(10),
     db.from("kc_dp_stempel").select("id,art,zeit,erfasst_am,quelle,grund,pause_min,dienst_ref,vor_ort,spontan,nachgetragen,storniert_am,korrektur_von").eq("person_id", ich.person_id).gte("zeit", new Date(t - 36 * 3600000).toISOString()).order("zeit").limit(40),
-    dsOrte()]);
-  const dienste = (plan ?? []).map(dsDienstAus), stand = dsStand(b ?? []), dienst = dsDienstJetzt(dienste, t, stand);
+    dsOrte(), dtUebergaben([gestern, heute], ich.person_id)]);
+  const dienste = dtPlanZeilen(plan ?? [], ueb, ich.person_id).map(dsDienstAus), stand = dsStand(b ?? []), dienst = dsDienstJetzt(dienste, t, stand); // 2.606.0: mit Tauschbörse
   const iso = (ms: number) => new Date(ms).toISOString();
   return { aktiv: true, jetzt: iso(t), karte: dsKarteZeigen(dienst, t, stand), stand, orte: orte.length, gruende: DS_GRUENDE, regeln: { grundMin: DS.grundMin, vorMin: DS.vorMin, nachMin: DS.nachMin, korrekturStd: DS.korrekturStd },
     dienst: dienst ? { ref: dienst.ref, start: iso(dienst.startMs), ende: iso(dienst.endeMs), pause: dienst.pause, bereich: dienst.bereich, zone: dienst.zone } : null,
@@ -4060,8 +4118,9 @@ async function dienstStempelErinnern() {
   const ziel = alle ? null : await adminIds(); // vor der Freigabe nur Admins (zum Testen)
   let q = db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone,event_id").eq("org_id", ORG).eq("status", "published").in("work_date", [berlinTag(new Date(t - 86400000)), heute]);
   if (ziel) { if (!ziel.length) return 0; q = q.in("person_id", ziel); }
+  const tage = [berlinTag(new Date(t - 86400000)), heute], ueb = await dtUebergaben(tage); // 2.606.0 KC-CLUB-DIENST-TAUSCH: Erinnerung geht an den Übernehmer
   const { data: plan } = await q.limit(300);
-  const dienste = (plan ?? []).map((r: any) => ({ ...dsDienstAus(r), person: r.person_id }));
+  const dienste = dtPlanZeilen(plan ?? [], ueb).filter((r: any) => !ziel || ziel.includes(r.person_id)).map((r: any) => ({ ...dsDienstAus(r), person: r.person_id }));
   const faellig = dienste.flatMap((d: any) => [
     t >= d.startMs - (DS.erinnerVorMin + 20) * 60000 && t < d.startMs + 5 * 60000 ? { d, art: "vorher" } : null,
     t >= d.endeMs && t < d.endeMs + 20 * 60000 ? { d, art: "ende" } : null,
@@ -10032,7 +10091,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: plan } = await db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published")
           .in("work_date", [berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))]).limit(10);
         const { data: alle } = await db.from("kc_dp_stempel").select("id,art,zeit,erfasst_am,quelle,dienst_ref,storniert_am").eq("person_id", ich.person_id).gte("zeit", new Date(t - 36 * 3600000).toISOString()).limit(40);
-        const stand = dsStand(alle ?? []), dienste = (plan ?? []).map(dsDienstAus), dienst = dsDienstJetzt(dienste, t, stand);
+        const ueb = await dtUebergaben([berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))], ich.person_id); // 2.606.0: mit Tauschbörse
+        const stand = dsStand(alle ?? []), dienste = dtPlanZeilen(plan ?? [], ueb, ich.person_id).map(dsDienstAus), dienst = dsDienstJetzt(dienste, t, stand);
         const art = stand.angemeldet ? "out" : "in", spontan = art === "in" && p.spontan === true && !dienst;
         let grund = txt(p.grund, 120) || (spontan ? "Spontan mitgeholfen" : "");
         // Kommen vergessen: beim Gehen ohne Anmeldung zuerst das Kommen nachtragen (ein Tipp in der App, als nachgetragen markiert)
@@ -10079,12 +10139,83 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, lage: await dsLage(ich) });
       }
       // Admin: wer ist heute im Dienst (Plan + Buchungen), nachtragen für andere, Dienst-Orte
+      // ----- 2.606.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse (anbieten → übernehmen → Planer bestätigt) -----
+      case "dienst_tausch_liste": {
+        if (!(await dtDarf(ich))) return json({ aktiv: false });
+        return json(await dtLage(ich));
+      }
+      case "dienst_tausch_anbieten": {
+        await nurWennFrei("dienst_tausch", ich, "Die Tauschbörse");
+        const t = Date.now(), ref = String(p.ref || ""), nachricht = txt(p.nachricht, DT.nachrichtMax) || null;
+        const [meine, { data: eigene }] = await Promise.all([dtMeineDienste(ich.person_id),
+          db.from("kc_club_dienst_tausch").select("dienst_ref,status").eq("von_person", ich.person_id).in("status", ["offen", "uebernommen"]).limit(50)]);
+        const d = meine.find((x) => x.ref === ref) || null, f = dtAnbietenPruefen(d, t, eigene ?? []);
+        if (f) throw new Fehler(f, 409);
+        const { data: neu, error } = await db.from("kc_club_dienst_tausch").insert({ org_id: ORG, event_id: d!.event, dienst_ref: d!.ref, work_date: d!.datum, start_zeit: new Date(d!.startMs).toISOString(),
+          ende_zeit: new Date(d!.endeMs).toISOString(), pause_min: d!.pause || 0, bereich: d!.bereich, zone: d!.zone, von_person: ich.person_id, nachricht }).select("id").single();
+        if (error || !neu) throw new Fehler(error?.code === "23505" ? "Diesen Dienst hast du schon angeboten." : "Das Angebot konnte nicht gespeichert werden.", error?.code === "23505" ? 409 : 503);
+        await protokoll(ich.person_id, "dienst_tausch", { id: neu.id, aktion: "anbieten", ref: d!.ref });
+        const andere = (await aktiveMitglieder()).map((m) => m.person_id).filter((x) => x !== ich.person_id);
+        const versand = await dtSenden(andere, false, { titel: `🔁 ${ich.vorname} sucht Ersatz`, kurz: `${dtText(d!, TZ)}${nachricht ? ` – „${nachricht.slice(0, 80)}“` : ""} · Kannst du übernehmen?` }, `${neu.id}:neu`);
+        return json({ ok: true, id: neu.id, versand: !!versand, lage: await dtLage(ich) });
+      }
+      case "dienst_tausch_probe": { // nur Admin: Probe-Angebot ohne Dienstplan, damit Hansi die Börse testen kann (sehen nur Admins)
+        nurAdmin(ich);
+        const tag = String(p.datum || ""), [sh, sm] = String(p.start || "").split(":").map(Number), [eh, em] = String(p.ende || "").split(":").map(Number);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(tag) || ![sh, sm, eh, em].every(Number.isFinite)) throw new Fehler("Bitte Tag und Uhrzeit angeben.", 400);
+        const startMs = dsMs(tag, `${sh}:${sm}`); let endeMs = dsMs(tag, `${eh}:${em}`); if (endeMs <= startMs) endeMs += 86400000;
+        if (startMs < Date.now() + DT.vorlaufStd * 3600000) throw new Fehler(`Der Probe-Dienst muss mindestens ${DT.vorlaufStd} Std. in der Zukunft liegen.`, 400);
+        const { data: neu, error } = await db.from("kc_club_dienst_tausch").insert({ org_id: ORG, dienst_ref: `probe:${crypto.randomUUID()}`, work_date: tag, start_zeit: new Date(startMs).toISOString(),
+          ende_zeit: new Date(endeMs).toISOString(), bereich: txt(p.bereich, 40) || "Probe", von_person: ich.person_id, nachricht: txt(p.nachricht, DT.nachrichtMax) || "🧪 Probe – nur zum Testen", probe: true }).select("id").single();
+        if (error || !neu) throw new Fehler("Probe-Angebot konnte nicht gespeichert werden.", 503);
+        await protokoll(ich.person_id, "dienst_tausch", { id: neu.id, aktion: "probe" });
+        return json({ ok: true, id: neu.id, lage: await dtLage(ich) });
+      }
+      case "dienst_tausch_aktion": {
+        await nurWennFrei("dienst_tausch", ich, "Die Tauschbörse");
+        const aktion = String(p.aktion || ""), t = Date.now(), planer = dtPlaner(ich);
+        const { data: r } = await db.from("kc_club_dienst_tausch").select("*").eq("id", String(p.id || "")).eq("org_id", ORG).maybeSingle();
+        if (!r || (r.probe && !ich.admin)) throw new Fehler("Angebot nicht gefunden.", 404);
+        const w = dtWechsel(r.status, aktion, dtRollen(r, ich.person_id, planer));
+        if (w.fehler) throw new Fehler(w.fehler, 409);
+        const a = dtAus(r), set: Record<string, unknown> = { status: w.nach, geaendert_am: jetzt() };
+        let an = r.an_person as string | null;
+        if (aktion === "uebernehmen") {
+          an = planer && p.fuer ? String(p.fuer) : ich.person_id; // Planer kann jemanden eintragen (z. B. nach Anruf)
+          if (an !== ich.person_id && !(await aktiveMitglieder()).some((m) => m.person_id === an)) throw new Fehler("Mitglied nicht gefunden.", 404);
+          const f = dtUebernehmenPruefen(a, an, (await dtMeineDienste(an)).filter((d) => d.ref !== r.dienst_ref), t);
+          if (f) throw new Fehler(an === ich.person_id ? f : f.replace("Du hast", "Diese Person hat").replace("dein eigener", "ihr eigener"), 409);
+          Object.assign(set, { an_person: an, an_am: jetzt() });
+        } else if (aktion === "zuruecktreten") Object.assign(set, { an_person: null, an_am: null });
+        else if (aktion === "bestaetigen" || aktion === "ablehnen") Object.assign(set, { entschieden_von: ich.person_id, entschieden_am: jetzt(), grund: txt(p.grund, DT.grundMax) || null });
+        if (aktion === "bestaetigen" && a.startMs <= t - 12 * 3600000) throw new Fehler("Der Dienst ist schon vorbei.", 409);
+        // nur ändern, wenn noch derselbe Stand (zwei gleichzeitig „Ich übernehme“ → einer gewinnt)
+        const { data: neu, error } = await db.from("kc_club_dienst_tausch").update(set).eq("id", r.id).eq("status", r.status).select("id");
+        if (error) throw new Fehler("Das hat nicht geklappt – bitte nochmal.", 503);
+        if (!neu?.length) throw new Fehler("Jemand anderes war schneller – die Liste wird neu geladen.", 409);
+        await protokoll(ich.person_id, "dienst_tausch", { id: r.id, aktion, von: r.status, nach: w.nach, an, probe: r.probe });
+        const pm = await personen([r.von_person, an || ""].filter(Boolean)), nm = (id: string | null) => (id ? (pm.get(id)?.display_name || id).split(" ")[0] : "");
+        const wann = dtText(a, TZ), planerIds = await adminIds();
+        if (aktion === "uebernehmen") {
+          await dtSenden([r.von_person], r.probe, { titel: `🔁 ${nm(an)} übernimmt deinen Dienst`, kurz: `${wann} · wartet noch auf die Bestätigung des Planers` }, `${r.id}:ueb:${an}`);
+          await dtSenden(planerIds.filter((x) => x !== ich.person_id), r.probe, { titel: "🔁 Dienst-Tausch bitte bestätigen", kurz: `${nm(r.von_person)} → ${nm(an)} · ${wann}` }, `${r.id}:planer:${an}`);
+          if (an !== ich.person_id) await dtSenden([an!], r.probe, { titel: "🔁 Du wurdest für einen Dienst eingetragen", kurz: `${wann} (vorher ${nm(r.von_person)}) · wartet auf Bestätigung` }, `${r.id}:fuer:${an}`);
+        } else if (aktion === "zuruecktreten") {
+          await dtSenden([r.von_person], r.probe, { titel: "🔁 Dein Dienst ist wieder offen", kurz: `${nm(r.an_person)} kann doch nicht · ${wann}` }, `${r.id}:zurueck:${r.an_person}:${t}`);
+        } else if (aktion === "bestaetigen") {
+          await dtSenden([r.von_person, an!], r.probe, { titel: "✅ Dienst-Tausch bestätigt", kurz: `${wann}: jetzt ${nm(an)} statt ${nm(r.von_person)}` }, `${r.id}:ok`);
+        } else if (aktion === "ablehnen") {
+          await dtSenden([r.von_person, an || ""], r.probe, { titel: "✖ Dienst-Tausch abgelehnt", kurz: `${wann}${set.grund ? ` · ${set.grund}` : ""} · der Dienst bleibt bei ${nm(r.von_person)}` }, `${r.id}:nein`);
+        }
+        return json({ ok: true, status: w.nach, lage: await dtLage(ich) });
+      }
       case "dienst_heute": {
         nurAdmin(ich);
         const t = Date.now(), heute = berlinTag(new Date(t));
-        const [{ data: plan }, { data: b }] = await Promise.all([
+        const [{ data: planRoh }, { data: b }] = await Promise.all([
           db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("status", "published").eq("work_date", heute).limit(200),
           db.from("kc_dp_stempel").select("id,person_id,art,zeit,erfasst_am,quelle,grund,pause_min,vor_ort,spontan,nachgetragen,storniert_am").gte("zeit", new Date(t - 30 * 3600000).toISOString()).is("storniert_am", null).limit(1000)]);
+        const plan = dtPlanZeilen(planRoh ?? [], await dtUebergaben([heute])); // 2.606.0 KC-CLUB-DIENST-TAUSCH
         const ids = [...new Set([...(plan ?? []).map((x: any) => x.person_id), ...(b ?? []).map((x: any) => x.person_id)])];
         const leute = await personen(ids);
         const zeilen = ids.map((pid) => {
@@ -10122,12 +10253,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       case "mein_dienst": {
         const heute = berlinTag(new Date()), vor60 = berlinTag(new Date(Date.now() - 60 * 86400000)), monat = heute.slice(0, 7);
-        const [{ data: w }, { data: ph }, { data: soll }, { data: sollAlt }, { data: ist }] = await Promise.all([
+        const [{ data: w }, { data: ph }, { data: sollRoh }, { data: sollAlt }, { data: ist }, tausch] = await Promise.all([
           db.from("kc_dp_wish_inbox").select("revision,status,entries,submitted_at,taken_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).eq("source", "club_app").maybeSingle(),
           db.from("kc_dp_wish_phase_settings").select("status,close_at,deadline_date").eq("org_id", ORG).eq("project_id", DW.projekt).maybeSingle(),
-          db.from("kc_dp_plan_published").select("work_date,start_time,end_time,break_minutes,area").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", heute).order("work_date").order("start_time").limit(60),
+          db.from("kc_dp_plan_published").select("source_shift_id,work_date,start_time,end_time,break_minutes,area").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", heute).order("work_date").order("start_time").limit(60),
           db.from("kc_dp_plan_published").select("work_date,start_time,end_time,break_minutes").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", vor60).lt("work_date", heute).limit(200),
-          db.from("kc_dp_timeclock_actuals").select("work_date,start_time,end_time,break_minutes,status").eq("org_id", ORG).eq("person_id", ich.person_id).gte("work_date", vor60).order("work_date", { ascending: false }).limit(60)]);
+          db.from("kc_dp_timeclock_actuals").select("work_date,start_time,end_time,break_minutes,status").eq("org_id", ORG).eq("person_id", ich.person_id).gte("work_date", vor60).order("work_date", { ascending: false }).limit(60),
+          dtDarf(ich).then((ok) => (ok ? dtUebergaben({ ab: heute }, ich.person_id) : [])).catch(() => [])]);
+        // 2.606.0 KC-CLUB-DIENST-TAUSCH: bestätigte Übergaben einrechnen (abgegeben weg, übernommen dazu), sortiert wie bisher
+        const soll = dtPlanZeilen(sollRoh ?? [], tausch, ich.person_id).sort((a: any, b: any) => String(a.work_date).localeCompare(String(b.work_date)) || String(a.start_time).localeCompare(String(b.start_time)));
         // KC-CLUB-SONDERSTUNDEN-KONTO (2.423.0, KICC-F-100): eigene Sonderstunden der Veranstaltung mit Stand – gutgeschrieben zählt erst nach Bestätigung
         const { data: sonderRoh } = await db.from("kc_dp_hour_reports").select("work_date,start_h,end_h,break_minutes,special_event_title,status,ablehngrund")
           .eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).in("status", ["gemeldet", "bestaetigt", "abgelehnt"]).order("work_date", { ascending: false }).limit(100);
@@ -10135,7 +10269,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const uhrH = (h: number) => `${String(Math.floor(h % 24)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
         const min = (a: unknown, b: unknown, pause: unknown) => { const t = (x: unknown) => { const [h, m] = String(x || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
           let d = t(b) - t(a); if (d < 0) d += 1440; return Math.max(0, d - (Number(pause) || 0)); };
-        const zeit = (x: any) => ({ datum: x.work_date, start: String(x.start_time || "").slice(0, 5), ende: String(x.end_time || "").slice(0, 5), bereich: x.area || null });
+        const zeit = (x: any) => ({ datum: x.work_date, start: String(x.start_time || "").slice(0, 5), ende: String(x.end_time || "").slice(0, 5), bereich: x.area || null, ...(x.getauscht ? { getauscht: true } : {}) });
         return json({
           wunsch: { veranstaltung: DW.name, phase: ph?.status || null, schluss: ph?.close_at || ph?.deadline_date || null,
             status: w?.status || null, tage: Array.isArray(w?.entries) ? w.entries.length : 0, abgegeben: w?.submitted_at || null, uebernommen: w?.taken_at || null },
