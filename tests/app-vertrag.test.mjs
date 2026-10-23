@@ -4288,7 +4288,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/zielIds = \[\.\.\.new Set<string>\(\[\.\.\.\(Array\.isArray\(p\.ziel\.ids\)/.test(server) && /filter\(\(id: string\) => aktiv\.has\(id\)\), ich\.person_id\]/.test(server), "Server: nur aktive Mitglieder, ich immer dabei");
   assert.ok(/v\.ziel_ids && !v\.ziel_ids\.includes\(ich\.person_id\)\) throw new Fehler\("Diese Abstimmung ist nur für eine bestimmte Gruppe\.", 403\)/.test(server), "nur Zielgruppe stimmt ab");
   assert.ok(/!v\.ziel_ids \|\| v\.ziel_ids\.includes\(ich\.person_id\) \|\| v\.erstellt_von === ich\.person_id \|\| ich\.admin/.test(server), "nur Zielgruppe sieht sie");
-  assert.ok(/const ziel = v\.ziel_ids \?\? \(await aktiveMitglieder\(\)\)/.test(server) && /zielIds \?\? \(await aktiveMitglieder\(\)\)/.test(server), "Benachrichtigung + Ergebnis nur an Zielgruppe");
+  assert.ok(/const ziel = v\.ziel_ids \?\? \(await sammelEmpfaenger\(\)\)/.test(server) && /zielIds \?\? \(await sammelEmpfaenger\(\)\)/.test(server), "Benachrichtigung + Ergebnis nur an Zielgruppe (ohne Zielgruppe: alle ohne Aushilfen, 2.614.0)");
 }
 // 424. 2.23.74: Küchenterror – die richtige Antwort darf nicht am längsten Text erkennbar sein (KC-CLUB-KUECHENTERROR-FAIR)
 {
@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7339,6 +7339,31 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   }
   const txt = JSON.stringify(KS_TEXT);
   assert.ok(txt.includes("der Ei-er-punsch, der lief.") && txt.includes("Am Sonn-tag in Rot") && txt.includes("der Kes-sel bleibt heiß!") && txt.includes("bei je-der Schlem-me-rei.") && !txt.includes("un-ser Preis") && !txt.includes("Fei-e-rei"), "neuer Text");
+}
+// 2.614.0 KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN: „an alle“ erreicht Aushilfen/Gäste nicht mehr – gezielt, Dienst und SOS schon
+{
+  const fnS = (name) => { const i = server.indexOf(`function ${name}(`); return server.slice(i, server.indexOf("\n}\n", i)); };
+  assert.ok(/\.in\("zugang", \["aushilfe", "gast"\]\)/.test(fnS("nurGezielt")) && /zugangAus\(r\) !== "mitglied"/.test(fnS("nurGezielt")), "Zugangsliste: Aushilfen/Gäste, Admin nie");
+  assert.ok(/if \(NG_STAND\) return NG_STAND\.ids; throw/.test(fnS("nurGezielt")) && /return aus \? leute\.filter\(\(m\) => !aus\.has\(m\.person_id\)\) : \[\];/.test(fnS("sammelEmpfaenger")), "unbekannt ≠ leer: kein Sammelversand ohne Liste");
+  // nachgebildet: Leon und Ruth (Aushilfe) fallen heraus, Admin mit Zugang „aushilfe“ nicht
+  const zugangAus = (r) => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
+  const rollen = [{ person_id: "L", zugang: "aushilfe" }, { person_id: "R", zugang: "aushilfe" }, { person_id: "A", zugang: "aushilfe", ist_admin: true }, { person_id: "G", zugang: "gast" }];
+  const aus = new Set(rollen.filter((r) => zugangAus(r) !== "mitglied").map((r) => r.person_id));
+  assert.deepEqual(["L", "R", "A", "G", "M"].filter((id) => !aus.has(id)), ["A", "M"], "nur Mitglieder (und Admin) im Sammelversand");
+  assert.ok(/if \(e\?\.alle\) \{[^\n]*\(await sammelEmpfaenger\(\)\)\.forEach/.test(server), "empfaengerAufloesen: „alle“ ohne Aushilfen");
+  for (const c of ["treffen_speichern", "treffen_absagen", "terminumfrage_speichern", "terminumfrage_festlegen", "hilfe_angebot_speichern", "hilfe_aufruf", "hilfe_wichtig", "pinnwand_wichtig", "mf_senden", "aenderung_senden"]) {
+    const i = server.indexOf(`case "${c}"`); assert.ok(i > 0, `case ${c} fehlt`);
+    const seg = server.slice(i, server.indexOf("\n      case \"", i + 10));
+    assert.ok(/sammelEmpfaenger\(\)|ohneNurGezielt\(/.test(seg), `${c}: Sammelversand ohne Aushilfen`);
+  }
+  assert.ok((server.match(/sammelEmpfaenger\(\)/g) || []).length >= 20, "alle Rundsendungen umgestellt");
+  assert.ok(/const alle = \[ich\.person_id, \.\.\.\(await aktiveMitglieder\(\)\)/.test(server), "SOS-Notfall-Unterhaltung weiter mit allen");
+  assert.ok(/const andere = \(await aktiveMitglieder\(\)\)\.map\(\(m\) => m\.person_id\)\.filter\(\(x\) => x !== ich\.person_id\);\n\s*const versand = await dtSenden/.test(server), "Dienst-Tausch weiter an Aushilfen");
+  assert.ok(/\.\.\.\(zugangAus\(r\.get\(m\.person_id\)\) !== "mitglied" \? \{ nurGezielt: true \} : \{\}\)/.test(server), "Mitgliederliste meldet nurGezielt");
+  assert.ok(/const sammelOk = \(m\) => !m\?\.nurGezielt;/.test(programm) && /\(\(a !== "\*" && a !== "@online"\) \|\| sammelOk\(m\)\)/.test(programm), "App: Alle/Online ohne Aushilfen, Ämter gezielt");
+  assert.ok(/if \(art === "alle"\) ZE\.personen = MITGLIEDER\.filter\(\(m\) => m\.person_id !== ICH\.person_id && sammelOk\(m\) && okFrei\(m\)\)/.test(programm), "Kommunikationszentrale „👥 Alle“ ohne Aushilfen");
+  assert.ok(/\.filter\(sammelOk\)\.map/.test(programm) && /MF\.alle && sammelOk\(m\) && okFrei\(m\)/.test(programm), "Terminanfrage und Mitfragen „Alle“ ohne Aushilfen");
+  assert.ok(!/const okAttr = [^\n]*nurGezielt/.test(programm), "einzeln bleiben Aushilfen wählbar");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.614.0 – 2026-10-23 – 🧑‍🍳 „An alle“ ohne Aushilfen (KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN)
+Wunsch Hansi („Leon und Ruth sollen keine E-Mails usw. bekommen – immer wenn man Schnellnachricht an alle anklickt, bekommen die Aushilfen auch Infos“). Beide haben den Zugang „Aushilfe“; bisher fielen bei „👥 Alle“ nur Personen mit 📵 heraus.
+- Neue Regel: Alles, was **an alle** geht, erreicht nur Personen mit Zugang „Mitglied“ (Admin immer). Aushilfen und Gäste fallen heraus – im Server (zentrale Liste `sammelEmpfaenger`, Zugang aus `kc_club_rollen`) und in der App.
+- Betroffen: Kommunikationszentrale „👥 Alle“/„🟢 Online“, Neue Nachricht „Alle“/„Online“, Terminanfrage und Mitfragen „Alle“, Abstimmung „Alle an“; Server: Nachrichten/Startnachrichten mit „alle“, neue/geänderte/abgesagte Termine und Terminreihen, Erinnerungen und Nachfragen zu Terminen, Terminumfragen, Abstimmungen und Ergebnisse, Sitzungseinladung, Hilfe-Aufrufe (auch „online“ und ❗ wichtig), Hilfe-Angebote, Pinnwand „für alle“, Geburtstags-Hinweise, Clubjahr, Freud-und-Leid-Mitteilung, Adressänderung „an alle“.
+- Unverändert: einzeln angetippt, über ihr Amt oder eine Gruppe bekommen Aushilfen die Nachricht weiter; ebenso Dienstplan, Dienst-Tausch, Dienstwunsch-Erinnerung und der 🚨 SOS-Notfall. Sehen können sie in der App alles wie bisher.
+- Zugangsliste nicht lesbar → letzter bekannter Stand; gab es noch keinen, geht der Sammelversand an niemanden (unbekannt ≠ leer).
+- Zentrale zeigt „An: alle n Mitglieder (ohne Aushilfen)“; Rollen-Fenster und Hilfe nennen die Regel.
+- Test: Vertragstest-Block 2.614.0. Rückweg: App/Server 2.613.0.
+
 ## 2.613.0 – 2026-10-23 – 🎤 Club-Song: neuer Text an vier Stellen (KC-CLUB-SONG)
 Wunsch Hansi („Der Text gefällt mir an 2–3 Stellen noch nicht … ändere den Text mit den Änderungen“). Strophe 2: „es duftete nach Grünkohl, der **Eierpunsch**, der lief“ (statt „und der Glühwein“) und „Am **Sonntag** in Rot“ (statt Freitag). Refrain: „wir rühren zusammen, **der Kessel bleibt heiß**!“ (statt „das ist unser Preis“). Bridge: „in jedem Rezept und bei jeder **Schlemmerei**“ (statt „in jeder Feierei“). Silbenzahl jeder Zeile = Töne der Melodie (geprüft), Melodie unverändert. Eingespielt zum 20-Uhr-Termin. Rückweg: App 2.612.0.
 

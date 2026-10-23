@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.609.0";
+const SERVER_VERSION = "2.614.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -296,6 +296,29 @@ async function aktiveMitglieder() {
     return (data ?? []) as (Person & { birth_date?: string })[];
   })().finally(() => { MG_LAUF = null; });
   return (await MG_LAUF).map((x) => ({ ...x }));
+}
+// 2.614.0 KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN (Wunsch Hansi „Leon und Ruth sollen keine E-Mails usw. bekommen, wenn jemand
+// Nachricht an alle anklickt“): Alles, was „an alle“ geht (Schnellnachricht/Neue Nachricht mit „Alle“, Termine, Terminumfragen,
+// Abstimmungen, Hilfe-Aufrufe und -Angebote, Pinnwand „für alle“, Geburtstage, Clubjahr, Sitzungseinladung, Mitfragen an alle,
+// Adressänderung an alle) erreicht nur Personen mit Zugang „mitglied“. Aushilfen und Gäste bekommen weiter, was sie GEZIELT erreicht
+// (einzeln gewählt, Gruppe, Dienstplan/Dienst-Tausch, Dienstwunsch-Erinnerung) und den SOS-Notfall. Sichtbar bleibt alles wie bisher.
+// Rollen 60 s im Speicher. Lädt die Liste nicht, gilt der letzte bekannte Stand; gab es noch keinen, geht der Sammelversand an
+// niemanden (Regel 11: unbekannt ≠ leer – lieber keine Rundmail als eine an die Aushilfen).
+let NG_STAND: { t: number; ids: Set<string> } | null = null;
+async function nurGezielt(): Promise<Set<string>> {
+  if (NG_STAND && Date.now() - NG_STAND.t < 60000) return NG_STAND.ids;
+  const { data, error } = await db.from("kc_club_rollen").select("person_id,zugang,ist_admin").in("zugang", ["aushilfe", "gast"]);
+  if (error) { if (NG_STAND) return NG_STAND.ids; throw new Error("Zugangsliste nicht lesbar – kein Sammelversand"); }
+  NG_STAND = { t: Date.now(), ids: new Set((data ?? []).filter((r: any) => zugangAus(r) !== "mitglied").map((r: any) => String(r.person_id))) };
+  return NG_STAND.ids;
+}
+async function sammelEmpfaenger(): Promise<(Person & { birth_date?: string })[]> {
+  const [leute, aus] = await Promise.all([aktiveMitglieder(), nurGezielt().catch((e) => { console.error("sammelEmpfaenger", String(e)); return null; })]);
+  return aus ? leute.filter((m) => !aus.has(m.person_id)) : [];
+}
+async function ohneNurGezielt(ids: string[]): Promise<string[]> {
+  const aus = await nurGezielt().catch((e) => { console.error("ohneNurGezielt", String(e)); return null; });
+  return aus ? ids.filter((id) => !aus.has(id)) : [];
 }
 async function protokoll(person: string | null, aktion: string, details: Record<string, unknown> = {}) {
   await db.from("kc_club_protokoll").insert({ person_id: person, aktion, details });
@@ -4513,7 +4536,7 @@ async function vorschlagAbschliessen(v: any, von: string | null) {
   if (v.art !== "abstimmung") return { gesendet: 0 };
   if (v.paket?.id) return await paketErgebnisSenden(v);
   const erg = await abstimmungsErgebnis(v);
-  const ziel = v.ziel_ids ?? (await aktiveMitglieder()).map((x) => x.person_id); // KC-CLUB-ABSTIMMUNG-ZIEL: Ergebnis an die Zielgruppe
+  const ziel = v.ziel_ids ?? (await sammelEmpfaenger()).map((x) => x.person_id); // KC-CLUB-ABSTIMMUNG-ZIEL: Ergebnis an die Zielgruppe
   return await senden("club_vorschlag", ziel, {
     titel: "🗳️ Ergebnis: " + v.titel, kurz: erg,
     betreff: `Köcheclub Werne – Ergebnis der Abstimmung: ${v.titel}`,
@@ -4537,7 +4560,7 @@ async function paketErgebnisSenden(v: any) {
   if (!beendet.length) return { gesendet: 0 };
   const fragen = await Promise.all(beendet.map(async (z: any) => ({ abschnitt: z.paket?.abschnitt, titel: z.titel, zeile: await abstimmungsErgebnis(z) })));
   const titel = v.paket.titel || v.titel;
-  const ziel = v.ziel_ids ?? (await aktiveMitglieder()).map((x) => x.person_id);
+  const ziel = v.ziel_ids ?? (await sammelEmpfaenger()).map((x) => x.person_id);
   return await senden("club_vorschlag", ziel, {
     titel: "🗳️ Ergebnis: " + titel, kurz: `${fragen.length} ${fragen.length === 1 ? "Frage" : "Fragen"} – Ergebnis in der App`,
     betreff: `Köcheclub Werne – Ergebnis der Abstimmung: ${titel}`,
@@ -5000,7 +5023,7 @@ async function cjWartung() {
   for (const art of endspurt ? ["start", "endspurt"] : ["start"]) {
     const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "clubjahr_push").contains("details", { jahr: k.jahr, art }).limit(1);
     if (schon?.length) continue;
-    const alle = (await aktiveMitglieder()).map((m) => m.person_id);
+    const alle = (await sammelEmpfaenger()).map((m) => m.person_id);
     const { data: mit } = await db.from("kc_club_clubjahr_momente").select("person_id").eq("jahr", k.jahr);
     const hat = new Set((mit ?? []).map((x: any) => x.person_id)), ziel = art === "start" ? alle : alle.filter((id) => !hat.has(id));
     await protokoll(null, "clubjahr_push", { jahr: k.jahr, art, an: ziel.length }); // erst merken, dann senden (nie doppelt)
@@ -6129,7 +6152,7 @@ async function antwortErinnerung2T() {
     if (schon?.length) continue;
     const { data: an } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", t.id).in("antwort", ["ja", "nein"]);
     const klar = new Set((an ?? []).map((x: any) => x.person_id));
-    const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => !klar.has(id));
+    const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => !klar.has(id));
     await protokoll(null, "treffen_erinnerung_2t", { treffen: t.id, empfaenger: ziel.length }); // erst merken, dann senden – nie doppelt
     if (!ziel.length) continue;
     await sendenGewaehlt("club_erinnerung", ziel, ["push"], {
@@ -6479,7 +6502,7 @@ async function notfallUnterhaltung(ich: Ich): Promise<string> {
 }
 async function empfaengerAufloesen(ich: Ich, e: any): Promise<string[]> {
   const ids = new Set<string>((Array.isArray(e?.personen) ? e.personen : []).map(String));
-  if (e?.alle) { if (!KOMMUNIKATION.alleDarfJeder) nurVorstand(ich); (await aktiveMitglieder()).forEach((p) => ids.add(p.person_id)); }
+  if (e?.alle) { if (!KOMMUNIKATION.alleDarfJeder) nurVorstand(ich); (await sammelEmpfaenger()).forEach((p) => ids.add(p.person_id)); }
   const aemter = (Array.isArray(e?.aemter) ? e.aemter : []).map(String);
   if (aemter.length) {
     const { data } = await db.from("kc_club_rollen").select("person_id,aemter").overlaps("aemter", aemter);
@@ -7148,6 +7171,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
           db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null),
         ]);
         const frei = new Set((fr ?? []).map((x: any) => x.person_id)), mitApp = new Set((nutzer ?? []).map((x: any) => x.person_id));
+        const sammel = new Set((await sammelEmpfaenger()).map((x) => x.person_id)); // 2.614.0 KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN
         const trifft = (bd: string, tag: string) => { const md = bd.slice(5, 10), t = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29; return md === t || (!schalt && t === "02-28" && md === "02-29"); };
         for (const m of leute as any[]) {
           if (!m.birth_date || !frei.has(m.person_id)) continue;
@@ -7155,7 +7179,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
             if (!trifft(String(m.birth_date), tag)) continue;
             const { data: neu } = await db.from("kc_club_geburtstag_hinweis").upsert({ person_id: m.person_id, datum: tag, art }, { onConflict: "person_id,datum,art", ignoreDuplicates: true }).select("person_id");
             if (!neu?.length) continue;
-            const ziel = leute.map((x) => x.person_id).filter((id) => id !== m.person_id && mitApp.has(id));
+            const ziel = leute.filter((x) => sammel.has(x.person_id)).map((x) => x.person_id).filter((id) => id !== m.person_id && mitApp.has(id));
             const wtag = fTag.format(new Date(tag + "T12:00:00Z"));
             await senden("club_geburtstag", ziel, art === "heute" ? {
               titel: `🎂 ${m.display_name} hat heute Geburtstag`, kurz: "Möchtest du gratulieren? Hier antippen.",
@@ -7184,7 +7208,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
           if (!ok?.length) continue;
           const { data: an } = await db.from("kc_club_teilnahme").select("person_id").eq("treffen_id", t.id);
           const geantwortet = new Set((an ?? []).map((x: any) => x.person_id));
-          const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => !geantwortet.has(id));
+          const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => !geantwortet.has(id));
           if (ziel.length) await senden("club_erinnerung", ziel, {
             titel: "❔ Kommst du?", kurz: `${t.titel} am ${wann(t.beginn)} – bitte kurz zu- oder absagen.`,
             betreff: `Köcheclub Werne – bitte zu- oder absagen: ${t.titel}, ${wann(t.beginn)}`,
@@ -7227,7 +7251,7 @@ Köcheclub Werne`,
         if (!ok?.length) continue;
         const { data: abs } = await db.from("kc_club_teilnahme").select("person_id").eq("treffen_id", t.id).eq("antwort", "nein");
         const nein = new Set((abs ?? []).map((x: any) => x.person_id));
-        const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => !nein.has(id));
+        const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => !nein.has(id));
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ort = t.ort || (g ? `bei ${vorname(g)}` : "");
         await senden("club_erinnerung", ziel, {
@@ -7922,6 +7946,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             person_id: m.person_id, name: m.display_name, vorname: vorname(m), avatar: avatar.get(m.person_id) ?? null,
             ...(ohneKomm.has(m.person_id) ? { ohne_komm: true } : {}),
             ...(ordentlich.has(m.person_id) ? {} : { nichtMitglied: true }), // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
+            ...(zugangAus(r.get(m.person_id)) !== "mitglied" ? { nurGezielt: true } : {}), // 2.614.0 KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN: fällt bei „Alle“ heraus
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
@@ -7977,7 +8002,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           for (const r of reihe) await objAnlagenSetzen(ich, "treffen", r.id, p.anlagen); // 2.461.0: Prospekt an jedem Termin der Reihe
           let versand = null;
           if (p.benachrichtigen !== false) {
-            const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+            const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
             const liste = reihe.slice(0, 6).map((x: any) => "📅 " + wann(x.beginn, true)).join("\n") + (reihe.length > 6 ? `\n… und ${reihe.length - 6} weitere` : "");
             versand = await senden("club_treffen", ziel, {
               titel: `📅 Neue Terminreihe: ${titel}`, kurz: `${WDH_TEXT[wdh]} – ${reihe.length} Termine ab ${wann(reihe[0].beginn)}`,
@@ -7999,7 +8024,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         let versand = null;
         if (p.benachrichtigen !== false) {
           const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
-          const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+          const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
           const gast = anlass === "geaendert" && t.art === "treffen" && await gastgeberMitteilen(t, ich.person_id, "geaendert", treffenText(t, vorname(g), anlass)); // 2.481.0
           versand = await senden("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, treffenText(t, vorname(g), anlass), `club-treffen:${t.id}:${Date.now()}`);
           elternHinweis(ziel, "termin", `${anlass === "neu" ? "📅 Neuer" : "✏️ Geänderter"} Köcheclub-Termin – {kind}`, `${t.titel}: ${wann(t.beginn)}${t.ort ? " – " + t.ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
@@ -8014,7 +8039,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: t } = await db.from("kc_club_treffen").update({ status: "abgesagt", geaendert_am: jetzt() }).eq("id", p.id).select().single();
         if (!t) throw new Fehler("Treffen nicht gefunden.", 404);
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
-        const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+        const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
         const gast = t.art === "treffen" && await gastgeberMitteilen(t, ich.person_id, "abgesagt", treffenText(t, vorname(g), "abgesagt")); // 2.481.0
         const versand = await senden("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, treffenText(t, vorname(g), "abgesagt"), `club-treffen-absage:${t.id}`);
         elternHinweis(ziel, "absage", "❌ Köcheclub-Termin fällt aus – {kind}", `${t.titel}: ${wann(t.beginn)}`); // 2.431.0 KC-CLUB-ELTERN
@@ -8456,7 +8481,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Abstimmung → alle; Themenvorschlag → Clubsprecher/Kassenwart (Recht „Organisation“)
         let versand = null;
         if (p.benachrichtigen !== false) {
-          const ziel = art === "abstimmung" ? (zielIds ?? (await aktiveMitglieder()).map((x) => x.person_id))
+          const ziel = art === "abstimmung" ? (zielIds ?? (await sammelEmpfaenger()).map((x) => x.person_id))
             : await leitungIds(); // KC-CLUB-EINGANGSKORB (2.23.6): Clubsprecher, Kassenwart UND Admin
           const fristText = v.frist ? ` Abstimmen bis ${wann(v.frist)}.` : "";
           const spText = spenden ? "\n\n" + spenden.map((x) => `💝 ${x.empfaenger}: ${euroRund(x.betrag)}`).join("\n") + (spenden.length > 1 ? `\nZusammen: ${euroRund(spendenSumme(spenden))}` : "") : "";
@@ -8513,7 +8538,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await objAnlagenSetzen(ich, "vorschlag", erste.id, p.anlagen); // Anlagen (z. B. Muster) hängen an der ersten Frage und gelten fürs Paket
         let versand = null;
         if (p.benachrichtigen !== false) {
-          const ziel = zielIds ?? (await aktiveMitglieder()).map((x) => x.person_id);
+          const ziel = zielIds ?? (await sammelEmpfaenger()).map((x) => x.person_id);
           const fristText = frist ? ` Abstimmen bis ${wann(frist.toISOString())}.` : "";
           versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), {
             titel: "🗳️ Abstimmung: " + titel, kurz: `${fragen.length} ${fragen.length === 1 ? "Frage" : "Fragen"} – bitte in der App abstimmen.${fristText}`,
@@ -8744,7 +8769,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!t || t.status !== "geplant") throw new Fehler("Sitzung nicht gefunden oder abgesagt.", 404);
         const { data: prep } = await db.from("kc_club_buero_sitzung").select("*").eq("treffen_id", tid).maybeSingle();
         const top = (prep?.tagesordnung ?? []).map((x: any, i: number) => `${i + 1}. ${x.t}`);
-        const alle = (await aktiveMitglieder()).map((m) => m.person_id);
+        const alle = (await sammelEmpfaenger()).map((m) => m.person_id);
         const { data: teil } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid);
         const geantwortet = new Set((teil ?? []).filter((x: any) => x.antwort && x.antwort !== "keine").map((x: any) => x.person_id));
         const ziel = (nurOffen ? alle.filter((id) => !geantwortet.has(id)) : alle).filter((id) => id !== ich.person_id);
@@ -9003,7 +9028,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const leid = FL_ARTEN[f.art]?.gruppe === "leid";
         if (leid && p.abgesprochen !== true) throw new Fehler("Bitte bestätigen, dass es mit der Familie abgesprochen ist.");
         const text = txt(p.text, 1000); if (!text) throw new Fehler("Bitte einen Text eingeben.");
-        const ziel = (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id && (!leid || id !== f.person_id));
+        const ziel = (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id && (!leid || id !== f.person_id));
         let aufrufId: string | null = f.aufruf_id;
         if (p.abordnung && !aufrufId) {
           if (!f.termin) throw new Fehler("Für die Abordnung bitte zuerst den Termin (z. B. Beerdigung) eintragen.");
@@ -9695,7 +9720,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if ((count ?? 0) >= MF_TAG_MAX) throw new Fehler("Heute hast du schon viele Fragen gestellt – bitte morgen weiter.", 429);
         const aktiv = (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
         const alle = p.an_alle === true;
-        const gewaehlt: string[] = alle ? aktiv : [...new Set<string>((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => aktiv.includes(id));
+        const gewaehlt: string[] = alle ? await ohneNurGezielt(aktiv) : [...new Set<string>((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => aktiv.includes(id));
         const aus = await mfAusgenommen(gewaehlt), ziel = gewaehlt.filter((id) => !aus.has(id));
         if (!ziel.length) throw new Fehler(gewaehlt.length ? "Die Gewählten möchten keine Fragen mehr bekommen." : "Bitte mindestens ein Mitglied wählen.");
         const { data: f, error } = await db.from("kc_club_mitfragen").insert({ von: ich.person_id, frage, kanaele, an_alle: alle }).select("id").single();
@@ -9772,7 +9797,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const wege = (kanaele ?? []).filter((k) => k !== "pinnwand");
         let versand: any = { gesendet: 0 }, empfaenger = 0;
         if (wege.length) {
-          const empf = (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
+          const empf = (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
           empfaenger = empf.length;
           if (empf.length) versand = await sendenGewaehlt("club_nachricht", empf, wege, {
             titel: `🤲 ${ich.vorname} bietet Hilfe an: ${titel}`, kurz: text ? text.slice(0, 120) : "Antippen und anfragen",
@@ -9806,7 +9831,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: h, error } = await db.from("kc_club_hilfe_aufrufe").insert({ von: ich.person_id, art, datum, slot, anzahl, ort: txt(p.ort, 80) || null,
           notiz: txt(p.notiz, HILFE_NOTIZ_ZEICHEN) || null, ziel, nach_absprache: absprache, kanaele }).select().single();
         if (error || !h) throw new Fehler("Aufruf konnte nicht gespeichert werden.", 500);
-        const empf = (ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== ich.person_id);
+        const empf = await ohneNurGezielt((ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== ich.person_id));
         const was = HILFE_ARTEN[art], wann2 = hilfeWann(h);
         const vars = {
           titel: `🙋 Wer kann helfen? ${was}`, kurz: `${ich.name} sucht ${anzahl ? anzahl + " " : ""}Helfer · ${wann2}${h.ort ? " · " + h.ort : ""}`,
@@ -9836,7 +9861,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (wichtig && !h.wichtig && p.bescheid && !(await schonBescheid("hilfe_wichtig_bescheid", "aufruf", h.id))) { // 2.425.0: je Aufruf nur einmal
           const { data: ant } = await db.from("kc_club_hilfe_antworten").select("person_id").eq("aufruf_id", h.id);
           const schon = new Set((ant ?? []).map((x: any) => x.person_id));
-          const empf = (h.ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== h.von && id !== ich.person_id && !schon.has(id));
+          const empf = await ohneNurGezielt((h.ziel === "online" ? [...await onlineJetzt(true)] : (await aktiveMitglieder()).map((m) => m.person_id)).filter((id) => id !== h.von && id !== ich.person_id && !schon.has(id)));
           const von = (await personen([h.von])).get(h.von)?.display_name || "Ein Mitglied", was = HILFE_ARTEN[h.art] || "Hilfe", wann2 = hilfeWann(h);
           const vars = { titel: `❗ Wichtig: Wer kann helfen? ${was}`, kurz: `${von} sucht dringend Hilfe · ${wann2}${h.ort ? " · " + h.ort : ""}`,
             betreff: `Köcheclub Werne – Wichtig: Wer kann helfen? ${was.replace(/^\S+\s/, "")}`,
@@ -13285,7 +13310,7 @@ Köcheclub-App`,
         // auf Wunsch des Mitglieds: kurze Nachricht an alle (neue Nummer/Anschrift/E-Mail) – wie jedes Mitglied es eingestellt hat
         let alle = null;
         if (anAlle) {
-          const ziel = (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
+          const ziel = (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
           const wert = art.id === "anschrift" ? `${neu.strasse}, ${neu.plz} ${neu.ort}` : neu.nummer || neu.mail;
           alle = await senden("club_nachricht", ziel, { titel: `📇 ${ich.vorname}: ${art.t}`, kurz: wert, betreff: `Köcheclub Werne – ${ich.name}: ${art.t}`,
             text: `Hallo,\n\n${ich.name} hat ${art.id === "anschrift" ? "eine neue Anschrift" : art.id === "mail" ? "eine neue E-Mail-Adresse" : art.id === "handy" ? "eine neue Handynummer" : "eine neue Festnetznummer"}${wann}:\n\n${wert}\n\nViele Grüße\nKöcheclub Werne`,
@@ -13866,7 +13891,7 @@ Köcheclub Werne`,
         if (error?.code === "23505") throw new Fehler("Gerade wurde schon ein Zettel angeheftet – bitte kurz neu laden.", 409);
         if (error || !z) throw new Fehler("Zettel konnte nicht angeheftet werden.", 500);
         // Push an alle Empfänger, die die App schon geöffnet haben (Bereich „pinnwand“, jedes Mitglied steuert es selbst)
-        const ziel = fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : empf;
+        const ziel = fuer === "alle" ? (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : empf;
         let versand: any = { gesendet: 0 };
         if (ziel.length) {
           const { data: mitApp } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", ziel);
@@ -13919,7 +13944,7 @@ Köcheclub Werne`,
         if (z.wichtig !== wichtig) await db.from("kc_club_pinnwand").update({ wichtig }).eq("id", z.id);
         let versand: any = { gesendet: 0 };
         if (wichtig && !z.wichtig && p.bescheid && z.fuer !== "ich" && !(await schonBescheid("pinnwand_wichtig_bescheid", "zettel", z.id))) { // 2.425.0: je Zettel nur einmal
-          const ziel = z.fuer === "alle" ? (await aktiveMitglieder()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : (z.personen ?? []);
+          const ziel = z.fuer === "alle" ? (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id) : (z.personen ?? []);
           const { data: erl } = ziel.length ? await db.from("kc_club_pinnwand_gelesen").select("person_id").eq("zettel_id", z.id).not("erledigt_am", "is", null) : { data: [] as any[] };
           const fertig = new Set((erl ?? []).map((x: any) => x.person_id));
           const { data: mitApp } = ziel.length ? await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", ziel) : { data: [] as any[] };
@@ -14035,7 +14060,7 @@ Köcheclub Werne`,
         await objAnlagenSetzen(ich, "terminumfrage", u.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN
         let versand = null;
         if (p.benachrichtigen !== false) {
-          const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+          const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
           versand = await senden("club_vorschlag", ziel, {
             titel: "🗓️ Welcher Termin passt dir?", kurz: `${titel} – bitte ${optionen.length} Termine ankreuzen.`,
             betreff: `Köcheclub Werne – Terminfindung: ${titel}`,
@@ -14075,7 +14100,7 @@ Köcheclub Werne`,
         await db.from("kc_club_terminumfragen").update({ status: "festgelegt", festgelegt_option: o.id, festgelegt_treffen_id: t.id, geaendert_am: jetzt() }).eq("id", u.id);
         let versand = null;
         if (p.benachrichtigen !== false) {
-          const ziel = (await aktiveMitglieder()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
+          const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => id !== ich.person_id);
           versand = await senden("club_treffen", ziel, treffenText(t, "", "neu"), `club-treffen:${t.id}:festgelegt`);
         }
         await protokoll(ich.person_id, "terminumfrage_festgelegt", { umfrage: u.id, treffen: t.id, beginn: o.beginn, versand });
