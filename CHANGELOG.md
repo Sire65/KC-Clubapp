@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.602.0 – 2026-10-23 – Start schneller, Schritt 2: Kern in einem Aufruf
+Start-Paket, ungelesene Nachrichten je Chat, Kachel-Zahlen und Live-Leitung kommen jetzt in EINEM Datenbank-Aufruf statt vier (KC-CLUB-START-KERN) – genau die vorhandenen Funktionen, gebündelt; fehlt ein Teil, wird nur er einzeln geholt; Not-Aus. Außerdem leeren die Paket-Abfragen den Zwischenspeicher des Servers nicht mehr.
+
 ## 2.601.0 – 2026-10-22 – Start schneller: weniger gleichzeitige Datenbank-Anfragen
 Beim Start fragte der Server ~35-mal gleichzeitig die Datenbank – im Gedränge dauerte jede Anfrage 5–10-mal so lange. Die Communicator-Ampel (5 Anfragen) und die Büro-Zahlen der Clubleitung (~10 Anfragen) kommen jetzt in je EINEM Aufruf (KC-CLUB-START-BUENDEL). Gleiche Daten, gleiche Rechnung; Rückfall, Not-Aus und Stichproben-Vergleich wie bei den anderen Paketen.
 
