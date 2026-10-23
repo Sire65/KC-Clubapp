@@ -50,7 +50,7 @@ assert.equal(fzKennung("a".repeat(64)), "aaaaaaaaaaaa"); assert.equal(fzKennung(
   assert.ok(/schluessel: kennung/.test(server) && !/insert\(\{[^}]*token[,:]/.test(server.slice(server.indexOf("function fremdMerken"), server.indexOf("async function anmelden("))), "nie den Schlüssel selbst speichern");
   assert.ok(/if \(\+\+FZ_STUNDE\.n > FZ\.proStunde\) return;/.test(server) && /FZ\.gleichMin \* 60000/.test(server), "Bremse gegen Fluten");
   assert.ok(/case "fremdzugriffe": \{\s*nurAdmin\(ich\);/.test(server) && /delete\(\)\.lt\("zeit", new Date\(Date\.now\(\) - FZ\.aufbewahrenTage/.test(server), "nur Admin; nach 90 Tagen gelöscht");
-  assert.ok(/if \(ICH\?\.admin\) fremdZeigen\(\);/.test(app) && /h === "#fremdzugriffe"/.test(app), "App: Karte im Sicherheits-Check (Admin), Link aus dem Push");
+  assert.ok(/if \(ICH\?\.admin\) (fremdZeigen\(\);|\{ fremdZeigen\(\);)/.test(app) && /h === "#fremdzugriffe"/.test(app), "App: Karte im Sicherheits-Check (Admin), Link aus dem Push");
   assert.ok(lies(".github/workflows/tests.yml").includes("node tests/fremdzugriff.test.mjs"), "läuft in der CI");
 }
 console.log("fremdzugriff: alle Prüfungen bestanden");

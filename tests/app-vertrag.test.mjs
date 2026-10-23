@@ -1088,7 +1088,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/db\.rpc\("kc_club_anmeldung", \{ p_hash: hash, p_version: version \}\)/.test(an) && /if \(!a\) (throw|\{ if \(req\) fremdMerken\(req, "unbekannt", hash\); throw) new Fehler\("Kein Zugang/.test(an) && /if \(!p\?\.active\) (throw|\{ if \(req\) fremdMerken\(req, "gesperrt")/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
   const rpc = lies("supabase/migrations/20260929_kc_club_v57_anmeldung_rpc.sql");
   assert.ok(/where token_hash = p_hash and aktiv/.test(rpc) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(rpc), "Anmelde-RPC prüft nicht aktiv / ist öffentlich");
-  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 7, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 1.96.0: +1 Übernahme des vorgemerkten Links; 2.51.0: +1 Probephase beenden; 2.352.0: +1 andere Geräte abmelden
+  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 8, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 2.607.0: +1 Link abschalten (Sicherheits-Check); 1.96.0: +1 Übernahme des vorgemerkten Links; 2.51.0: +1 Probephase beenden; 2.352.0: +1 andere Geräte abmelden
   assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
   // Live-Tippen
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12261,4 +12261,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/function dtOeffnen\(\) \{\s*if \(!frei\("dienst_tausch"\)\)/.test(html) && /else if \(h === "#diensttausch"\) dtOeffnen\(\);/.test(html) && /tauschboerse: \{ sym: "🔁", t: "Dienst-Tausch-Börse", fn: \(\) => dtOeffnen\(\), frei: "dienst_tausch" \}/.test(html), "App: Freigabe, Push-Link, Sprung");
   assert.ok(/<div class="dt-nachricht">„\$\{esc\(a\.nachricht\)\}“<\/div>/.test(html) && /\$\{esc\(a\.text\)\}/.test(html), "Texte escaped");
   assert.ok(/\.dt-karte \{/.test(lies("index.html")), "Stil");
+}
+// 2.607.0 KC-CLUB-ZUGANG-AUFRAEUMEN: Zugangslinks prüfen/abschalten – nur Admin, nie der eigene, sofort ungültig
+{
+  const c = server.slice(server.indexOf('case "zugaenge_pruefen": {'), server.indexOf('case "sicherheit_pruefen": {'));
+  assert.ok(/case "zugaenge_pruefen": \{\s*nurAdmin\(ich\);/.test(c) && /case "zugang_abschalten": \{\s*nurAdmin\(ich\);/.test(c), "nur Admin");
+  assert.ok(/if \(pid === ich\.person_id\) throw/.test(c) && /\.eq\("person_id", pid\)\.eq\("aktiv", true\)/.test(c), "nicht der eigene, nur aktive");
+  assert.ok(/anmeldungenVergessen\(\); await rtNeu\(pid\);/.test(c) && /protokoll\(ich\.person_id, "zugang_abgeschaltet"/.test(c), "sofort ungültig + Protokoll");
+  assert.ok(!/token_hash/.test(c.slice(c.indexOf('case "zugaenge_pruefen"'), c.indexOf('case "zugang_abschalten"'))), "Liste ohne Schlüssel-Hashes");
+  assert.ok(/if \(ICH\?\.admin\) \{ fremdZeigen\(\); zgZeigen\(\); \}/.test(html) && /<b>\$\{ZG_SYM\[x\.stufe\] \|\| ""\} \$\{esc\(x\.name\)\}<\/b>/.test(html), "App: Karte im Sicherheits-Check, Namen escaped");
+  assert.ok(/run: node tests\/geheimnis-waechter\.test\.mjs/.test(lies(".github/workflows/tests.yml")), "Geheimnis-Wächter läuft vor dem Einspielen");
 }
