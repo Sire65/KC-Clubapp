@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.613.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.614.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1750,7 +1750,7 @@ const EINWEISUNG = [
   { id: "b-mikro-wahl", blatt: true, sym: "🎤", t: "Sprachnachricht oder Diktieren", x: "<b>🎤 Sprachnachricht</b>: deine Stimme wird verschickt. <b>✍️ Diktieren</b>: die App schreibt mit, verschickt wird Text. Mit <b>Immer so</b> fragt die App nicht mehr – ändern unter ⚙️ → Ansagen, Töne &amp; Tipps." },
   { id: "b-neu-wahl", blatt: true, sym: "＋", t: "Etwas Neues anlegen", x: "Wähle, was du neu anlegen möchtest – unter jedem Punkt steht kurz, wofür er da ist. <b>Abbrechen</b> schließt das Fenster, ohne etwas anzulegen." },
   { id: "b-eltern", blatt: true, sym: "👪", t: "Eltern-Handy", x: "Für Kinder kannst du hier ein <b>Eltern-Handy</b> eintragen (Name und Handynummer). Beim Eintragen öffnet sich WhatsApp mit Link und Erklärung; später schickst du ihn mit <b>🟢 Link per WhatsApp</b> erneut, <b>📋 Link kopieren</b> macht immer einen frischen Link (der alte gilt dann nicht mehr). Die Eltern tippen dort auf „Einschalten“. Danach kommt <b>nur ein kurzer Hinweis</b>, wenn das Kind einen Termin hat (Club-Treffen, Schulung, Erinnerung, Absage) oder eine Nachricht der Clubleitung bekommt – <b>nie der Text</b>, nie Chats unter Mitgliedern. Das Kind sieht unter ⚙️ → Privatsphäre, wer benachrichtigt wird.", nur: () => !!(ICH?.admin || ICH?.vorstand) },
-  { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. Unter <b>Zugang</b> wählst du 👤 Mitglied (alles), 🧑‍🍳 Aushilfe (Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen) oder 🙋 Gast (Termine, Nachrichten, SOS, Spiele) – das sperrt auch der Server. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
+  { id: "b-rolle", blatt: true, sym: "🎖️", t: "Ämter und Rechte", x: "Hier legst du fest, welche <b>Ämter</b> das Mitglied hat und was es darf – z. B. Termine anlegen, Protokolle lesen und schreiben oder Kontaktdaten anderer sehen. Schalter aus heißt: darf das nicht. Unter <b>Zugang</b> wählst du 👤 Mitglied (alles), 🧑‍🍳 Aushilfe (Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen) oder 🙋 Gast (Termine, Nachrichten, SOS, Spiele) – das sperrt auch der Server. Aushilfen und Gäste bekommen keine Rundnachrichten „an alle“ (Termine, Abstimmungen, Hilfe-Aufrufe …) – nur, was gezielt an sie geht, und den SOS-Notfall. <b>💾 Speichern</b> übernimmt es.", nur: () => !!ICH?.admin },
   { id: "b-sp-herausfordern", blatt: true, sym: "🎲", t: "Herausfordern", x: "<b>Spiel wählen</b> (Tic-Tac-Toe, Schach, Bauernskat, Küchenterror, Mensch ärgere dich nicht), je nach Spiel Feldgröße, Zeit oder Mitspieler, dann antippen, <b>wen</b> du herausfordern möchtest. Das Mitglied bekommt die Einladung und kann annehmen oder ablehnen." },
   { id: "b-sp-termin", blatt: true, sym: "📅", t: "Termin für die Partie", x: "<b>Tag, Uhrzeit</b> und <b>Ort</b> wählen. Dein Mitspieler bekommt die Anfrage und kann zu- oder absagen; danach steht der Termin bei euch beiden im Kalender – auf Wunsch mit Erinnerung." },
   { id: "b-teilen", blatt: true, sym: "📥", t: "Mit Köcheclub geteilt", x: "Du hast etwas aus einer anderen App mit dem Köcheclub geteilt. Wähle, wohin es soll: in einen <b>💬 Club-Chat</b>, bei Fotos ins <b>📷 Fotoalbum</b> oder in <b>🗄️ dein Archiv</b>." },
@@ -9952,17 +9952,17 @@ async function mfFormular(vorgabe = "") {
   mfListe(); setTimeout(() => (vorgabe ? $("mfSuche") : $("mfFrage"))?.focus(), 150);
 }
 function mfListe() {
-  const q = ($("mfSuche")?.value || "").toLowerCase(), andere = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id), frei = andere.filter(okFrei);
+  const q = ($("mfSuche")?.value || "").toLowerCase(), andere = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id), frei = andere.filter((m) => sammelOk(m) && okFrei(m));
   $("mfSchnell").innerHTML = `<button type="button" class="chip${MF.alle ? " an" : ""}" onclick="MF.alle=!MF.alle;MF.personen=[];mfListe()">${MF.alle ? "☑️" : "⬜"} 👥 Alle Mitglieder</button>`
     + `<button type="button" class="chip" onclick="MF.alle=false;MF.personen=[];mfListe()">✖ Keiner</button>`;
   $("mfListe").innerHTML = andere.filter((m) => !q || m.name.toLowerCase().includes(q)).map((m) => `<label${okKl(m, MF.personen.includes(m.person_id))}>
-    <input type="checkbox"${okAttr(m, MF.personen.includes(m.person_id))} ${(MF.alle && okFrei(m)) || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+    <input type="checkbox"${okAttr(m, MF.personen.includes(m.person_id))} ${(MF.alle && sammelOk(m) && okFrei(m)) || MF.personen.includes(m.person_id) ? "checked" : ""} onchange="mfPerson('${m.person_id}', this.checked)"><span style="flex:1">${esc(m.name)}${okZusatz(m)}</span></label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   const n = MF.alle ? frei.length : MF.personen.length;
   $("mfWer").innerHTML = `An: <b>${MF.alle ? "alle Mitglieder" : !n ? "noch niemand gewählt" : n <= 3 ? esc(MF.personen.map(zeName).join(", ")) : n + " Mitglieder"}</b>`;
   $("mfWege").innerHTML = TW_WEGE.map(([k, t]) => `<button type="button" class="chip${MF.wege.includes(k) ? " an" : ""}" aria-pressed="${MF.wege.includes(k)}" onclick="MF.wege=MF.wege.includes('${k}')?MF.wege.filter((x)=>x!=='${k}'):[...MF.wege,'${k}'];mfListe()">${MF.wege.includes(k) ? "☑️" : "⬜"} ${t}</button>`).join("");
 }
 function mfPerson(pid, an) {
-  if (MF.alle) { MF.alle = false; MF.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id); }
+  if (MF.alle) { MF.alle = false; MF.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && sammelOk(m) && okFrei(m)).map((m) => m.person_id); }
   MF.personen = an ? [...new Set([...MF.personen, pid])] : MF.personen.filter((x) => x !== pid); mfListe();
 }
 async function mfSenden() {
@@ -23341,8 +23341,9 @@ const zeName = (pid) => (MITGLIEDER?.find((m) => m.person_id === pid) || ONL.lis
 const zeVorname = (pid) => zeName(pid).split(" ")[0];
 function zeWerText() {
   if (ZE.gruppe) return `${ZE.gruppe.symbol} ${ZE.gruppe.name}`;
-  const n = ZE.personen.length, alle = MITGLIEDER && n && n === MITGLIEDER.filter((m) => m.person_id !== ICH?.person_id).length;
-  return !n ? "niemand" : alle ? `alle ${n} Mitglieder` : n <= 3 ? ZE.personen.map(zeVorname).join(", ") : `${n} Mitglieder`;
+  const n = ZE.personen.length, andere = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id), alle = MITGLIEDER && n && n === andere.length;
+  const sammel = andere.filter((m) => sammelOk(m) && okFrei(m)), ohneAushilfen = MITGLIEDER && n && sammel.length < andere.length && n === sammel.length && sammel.every((m) => ZE.personen.includes(m.person_id)); // 2.614.0
+  return !n ? "niemand" : alle ? `alle ${n} Mitglieder` : ohneAushilfen ? `alle ${n} Mitglieder (ohne Aushilfen)` : n <= 3 ? ZE.personen.map(zeVorname).join(", ") : `${n} Mitglieder`;
 }
 function infoZentrale() {
   const d = INFO_DATEN.zentrale, unt = d?.r?.unterhaltungen || [], neu = unt.reduce((s, u) => s + (u.ungelesen || 0), 0);
@@ -23385,8 +23386,8 @@ async function zeMitglieder() { if (!MITGLIEDER) await mitgliederHolen(); return
 async function zeWahl(art) {
   try { await zeMitglieder(); } catch (e) { return meldeFehler(e); }
   ZE.gruppe = null;
-  if (art === "alle") ZE.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id);
-  else if (art === "online") { ZE.personen = ONL.liste.map((m) => m.person_id).filter((p) => p !== ICH.person_id && okFrei(MITGLIEDER.find((m) => m.person_id === p))); if (!ZE.personen.length) melde(ONL.zeigen ? "Gerade ist niemand sonst online." : "Die Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)."); }
+  if (art === "alle") ZE.personen = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && sammelOk(m) && okFrei(m)).map((m) => m.person_id);
+  else if (art === "online") { ZE.personen = ONL.liste.map((m) => m.person_id).filter((p) => p !== ICH.person_id && okFrei(MITGLIEDER.find((m) => m.person_id === p)) && sammelOk(MITGLIEDER.find((m) => m.person_id === p))); if (!ZE.personen.length) melde(ONL.zeigen ? "Gerade ist niemand sonst online." : "Die Online-Anzeige ist bei dir ausgeschaltet (⚙️ → Privatsphäre)."); }
   else ZE.personen = [];
   heroZeigen(0); if ($("zeBlatt") && !$("zeBlatt").classList.contains("versteckt")) zeListe();
 }
@@ -28329,7 +28330,7 @@ async function vfAuswahl() {
     $("vfaListe").querySelectorAll("[data-p]").forEach((c) => (c.onchange = () => { c.checked ? gew.add(c.dataset.p) : gew.delete(c.dataset.p); $("vfaOk").textContent = `Übernehmen (${gew.size})`; }));
     $("vfaOk").textContent = `Übernehmen (${gew.size})`; };
   $("vfaSuche").oninput = zeichnen;
-  $("vfaAlle").onclick = () => { alle.filter(okFrei).forEach((m) => gew.add(m.person_id)); zeichnen(); }; // 2.538.0: ohne „keine Benachrichtigungen“
+  $("vfaAlle").onclick = () => { alle.filter((m) => sammelOk(m) && okFrei(m)).forEach((m) => gew.add(m.person_id)); zeichnen(); }; // 2.538.0: ohne „keine Benachrichtigungen“ · 2.614.0: ohne Aushilfen
   $("vfaKeiner").onclick = () => { gew.clear(); zeichnen(); };
   $("vfaOk").onclick = () => { VF_ZIEL.ids = [...gew]; f.remove(); vfZielZeigen(); };
   zeichnen();
@@ -33403,10 +33404,13 @@ async function neuGruppenZeigen(ziel = "neuGruppen", frisch = false) {
 // ausgegraut und nicht wählbar und fällt bei „Alle“/Ämtern/Online heraus. Schon Gewählte bleiben abwählbar.
 const okAus = (m) => !!m?.ohne_komm;
 const okFrei = (m) => !okAus(m);
+// 2.614.0 KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN (Wunsch Hansi „Leon und Ruth sollen bei Nachricht an alle nichts bekommen“): Aushilfen und
+// Gäste (Server: nurGezielt) fallen bei „Alle“ und „Online“ heraus – einzeln angetippt oder über ihr Amt bekommen sie die Nachricht weiter.
+const sammelOk = (m) => !m?.nurGezielt;
 const okAttr = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' disabled title="Möchte keine Benachrichtigungen"' : "");
 const okKl = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' class="ok-grau"' : "");
 const okZusatz = (m) => (okAus(m) ? ' <small class="ok-hinweis">📵 keine Benachrichtigungen</small>' : "");
-const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m) && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
+const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m) && ((a !== "*" && a !== "@online") || sammelOk(m)) && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
 const empfTest = () => empfWahl.personen.length === 1 && empfWahl.personen[0] === ICH.person_id;
 function empfListe() {
   const q = $("empfSuche").value.toLowerCase();
@@ -37051,7 +37055,7 @@ function taEmpfListe() {
 }
 function taPerson(pid, an) { if (TA.wahl.gruppe) TA.wahl = { personen: [], gruppe: null }; TA.wahl.personen = an ? [...new Set([...TA.wahl.personen, pid])] : TA.wahl.personen.filter((x) => x !== pid); taEmpfListe(); }
 function taGruppe(id) { const g = TA.gruppen.find((x) => x.id === id); TA.wahl = { personen: [], gruppe: TA.wahl.gruppe?.id === id ? null : g }; taEmpfListe(); }
-function taAlle() { TA.wahl = { personen: MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).map((m) => m.person_id), gruppe: null }; taEmpfListe(); }
+function taAlle() { TA.wahl = { personen: MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m)).filter(sammelOk).map((m) => m.person_id), gruppe: null }; taEmpfListe(); }
 function taZeitpunkt(datum, zeit) { // deutsche Ortszeit → ISO (Sommer-/Winterzeit richtig)
   if (!/^\d{4}-\d\d-\d\d$/.test(datum || "") || !/^\d\d:\d\d$/.test(zeit || "")) return ""; // 2.425.0: ungültig/leer → new Date("") = „Invalid Date“ (wie vorher), nie ein falsches Datum
   const probe = new Date(`${datum}T${zeit}:00Z`);
@@ -39624,7 +39628,7 @@ function rolleBearbeiten(pid) {
     <div class="hl-frage">Ämter</div><div class="bu-haken-liste">${liste.map((a) => `<label class="bu-haken"><input type="checkbox" class="roAmt" value="${esc(a)}" ${(m.aemter || []).includes(a) ? "checked" : ""}> ${esc(a)}</label>`).join("")}</div>
     <label class="feld">Weiteres Amt (freiwillig)<input id="roNeu" maxlength="40" placeholder="z. B. Beisitzer"></label>
     <div class="hl-frage">Zugang</div>
-    <div class="ro-zugang">${[["mitglied", "👤 Mitglied", "alles wie bisher"], ["aushilfe", "🧑‍🍳 Aushilfe", "Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen"], ["gast", "🙋 Gast", "Termine, Nachrichten, SOS, Spiele"]].map(([w, t, h]) =>
+    <div class="ro-zugang">${[["mitglied", "👤 Mitglied", "alles wie bisher"], ["aushilfe", "🧑‍🍳 Aushilfe", "Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen · nichts von „an alle“"], ["gast", "🙋 Gast", "Termine, Nachrichten, SOS, Spiele · nichts von „an alle“"]].map(([w, t, h]) =>
       `<label class="bu-haken" title="${h}"><input type="radio" name="roZugang" value="${w}" ${(m.zugang || "mitglied") === w ? "checked" : ""}> ${t}<small class="hinweis" style="display:block;margin-left:24px">${h}</small></label>`).join("")}</div>
     <div class="hl-frage">Rechte</div>
     ${schalter("roLeitung", "Termine & Abstimmungen anlegen", "Termine, Veranstaltungen und Abstimmungen anlegen (Clubleitung)", !!m.vorstand)}
