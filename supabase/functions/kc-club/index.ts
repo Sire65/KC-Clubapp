@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.608.0";
+const SERVER_VERSION = "2.609.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4480,7 +4480,7 @@ async function vorschlaegeListe(ich: Ich) {
   return alle.map((v: any) => {
     const s = (st ?? []).filter((x: any) => x.vorschlag_id === v.id);
     const mein = s.find((x: any) => x.person_id === ich.person_id);
-    const optionen = unterstuetzbar(v.art) ? ["dafuer"] : v.paket?.freitext ? [...new Set(s.map((x: any) => String(x.wahl)))].sort((a, b) => a.localeCompare(b, "de")) : v.optionen; // 2.608.0: freie Antworten = verschiedene Texte
+    const optionen = unterstuetzbar(v.art) ? ["dafuer"] : v.paket?.freitext ? [...new Set(s.map((x: any) => String(x.wahl)))].sort((a, b) => a.localeCompare(b, "de")) : v.optionen; // 2.609.0: freie Antworten = verschiedene Texte
     // geheim: Ergebnis erst nach Abschluss und nie mit Namen
     const ergebnis = !v.geheim || v.status !== "offen" ? optionen.map((o: string) => ({
       option: o,
@@ -4526,7 +4526,7 @@ async function abstimmungsErgebnis(v: any) {
   const { data: s } = await db.from(v.geheim ? "kc_club_geheime_stimmen" : "kc_club_stimmen").select("wahl").eq("vorschlag_id", v.id);
   const zaehl = new Map<string, number>();
   (s ?? []).forEach((x: any) => wahlListe(x.wahl).forEach((w) => zaehl.set(w, (zaehl.get(w) ?? 0) + 1))); // 2.555.0: Mehrfachauswahl zählt jede Antwort
-  if (v.paket?.freitext) return [...zaehl.entries()].map(([o, n]) => (n > 1 ? `${o} (${n}×)` : o)).join(" · ") || "keine Antworten"; // 2.608.0
+  if (v.paket?.freitext) return [...zaehl.entries()].map(([o, n]) => (n > 1 ? `${o} (${n}×)` : o)).join(" · ") || "keine Antworten"; // 2.609.0
   return v.optionen.map((o: string) => `${o}: ${zaehl.get(o) ?? 0}`).join(" · ");
 }
 // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: das Ergebnis geht erst raus, wenn die letzte Frage des Pakets beendet ist – einmal, mit allen Fragen
@@ -8487,7 +8487,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const fragen = (Array.isArray(p.fragen) ? p.fragen : []).map((f: any) => ({
           abschnitt: txt(f?.abschnitt, 80) || null, frage: txt(f?.frage, 150), beschreibung: txt(f?.beschreibung, 1000) || null,
           optionen: f?.freitext ? [] as string[] : [...new Set((Array.isArray(f?.optionen) ? f.optionen : STANDARD_OPTIONEN).map((o: unknown) => txt(o, 60)).filter(Boolean))] as string[],
-          freitext: !!f?.freitext, // 2.608.0 KC-CLUB-ABSTIMMUNG-FREITEXT: Antwort zum Eintippen statt Ankreuzen
+          freitext: !!f?.freitext, // 2.609.0 KC-CLUB-ABSTIMMUNG-FREITEXT: Antwort zum Eintippen statt Ankreuzen
           mehrfach: !f?.freitext && !!f?.mehrfach, wenn: f?.wenn && typeof f.wenn === "object" ? { nr: Number(f.wenn.nr), antwort: txt(f.wenn.antwort, 60) } : null,
         })).filter((f: any) => f.frage);
         if (!fragen.length) throw new Fehler("Bitte mindestens eine Frage eingeben.");
@@ -8539,7 +8539,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             : await db.from("kc_club_stimmen").delete().eq("vorschlag_id", v.id).eq("person_id", ich.person_id);
           if (se) throw new Fehler("Stimme konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500); // nie mehr still verlieren
         } else if (v.paket?.freitext) {
-          // 2.608.0 KC-CLUB-ABSTIMMUNG-FREITEXT: eingetippte Antwort (höchstens 100 Zeichen); leer = Antwort zurücknehmen; nie geheim
+          // 2.609.0 KC-CLUB-ABSTIMMUNG-FREITEXT: eingetippte Antwort (höchstens 100 Zeichen); leer = Antwort zurücknehmen; nie geheim
           if (v.geheim) throw new Fehler("Bei geheimen Abstimmungen gibt es keine freien Antworten.", 409);
           const text = txt(p.wahl, 100);
           const { error: se } = text ? await db.from("kc_club_stimmen").upsert({ vorschlag_id: v.id, person_id: ich.person_id, wahl: text, geaendert_am: jetzt() })

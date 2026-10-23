@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12272,7 +12272,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(ICH\?\.admin\) \{ fremdZeigen\(\); zgZeigen\(\); \}/.test(html) && /<b>\$\{ZG_SYM\[x\.stufe\] \|\| ""\} \$\{esc\(x\.name\)\}<\/b>/.test(html), "App: Karte im Sicherheits-Check, Namen escaped");
   assert.ok(/run: node tests\/geheimnis-waechter\.test\.mjs/.test(lies(".github/workflows/tests.yml")), "Geheimnis-Wächter läuft vor dem Einspielen");
 }
-// 2.608.0 KC-CLUB-ABSTIMMUNG-FREITEXT: Frage mit freier Antwort (eintippen) – nur offen, höchstens 100 Zeichen, Ergebnis = verschiedene Texte mit Namen
+// 2.609.0 KC-CLUB-ABSTIMMUNG-FREITEXT: Frage mit freier Antwort (eintippen) – nur offen, höchstens 100 Zeichen, Ergebnis = verschiedene Texte mit Namen
 {
   const sp = server.slice(server.indexOf('case "abstimmungspaket_speichern": {'), server.indexOf('case "vorschlag_stimme": {'));
   assert.ok(/optionen: f\?\.freitext \? \[\] as string\[\]/.test(sp) && /if \(p\.geheim && fragen\.some\(\(f: any\) => f\.freitext\)\) throw/.test(sp) && /!f\.freitext && \(f\.optionen\.length < 2/.test(sp), "Speichern: Freitext ohne Antworten, nie geheim");
@@ -12281,4 +12281,39 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/v\.paket\?\.freitext \? \[\.\.\.new Set\(s\.map\(\(x: any\) => String\(x\.wahl\)\)\)\]/.test(server) && /if \(v\.paket\?\.freitext\) return \[\.\.\.zaehl\.entries\(\)\]/.test(server), "Ergebnis: verschiedene Texte");
   assert.ok(/<input id="pkText-\$\{esc\(v\.id\)\}" maxlength="100"[^>]*value="\$\{esc\(v\.meine \|\| ""\)\}">/.test(html) && /async function pkTextSpeichern\(id\)/.test(html), "App: Textfeld, escaped");
   assert.ok(/✍️ Freie Antwort – zum Eintippen statt Ankreuzen/.test(html) && /freitext: !!x\.freitext \}\);/.test(html) && /x\.paket\?\.freitext \? `<div style="margin:3mm 0 1mm">\$\{strich\(58\)\}/.test(html), "Formular, Vorlage, Ankreuzbogen");
+}
+// 2.608.0 KC-CLUB-NACHRICHT-TERMIN: Termin aus einer Nachricht erkennen (viele Schreibweisen) und über vorhandene Wege eintragen
+{
+  const a = programm.indexOf("const NT_MONATE"), e = programm.indexOf("const NT_CACHE");
+  assert.ok(a > 0 && e > a, "Erkennungs-Block vorhanden");
+  const block = programm.slice(a, e);
+  assert.ok(!/\(\?<[=!]/.test(block), "kein lookbehind – ältere iPhones kennen es nicht");
+  const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const nt = new Function("tagPlus", "heuteIso", block + "; return ntErkennen;")(tagPlus, () => "2026-10-23");
+  const B = "2026-10-23"; // Freitag
+  const fall = (t, erw) => { const r = nt(t, B); for (const [k, v] of Object.entries(erw)) assert.equal(r?.[k], v, `${t} → ${k}`); };
+  fall("Grillabend bei Klaus am Samstag um 18 Uhr", { datum: "2026-10-24", zeit: "18:00", titel: "Grillabend bei Klaus", ort: "bei Klaus", sicher: true });
+  fall("Sitzung am 14.11. um 19:30 in der Clubküche", { datum: "2026-11-14", zeit: "19:30", titel: "Sitzung in der Clubküche", ort: "Clubküche" });
+  fall("Treffen 14.11.2026 19.30 Uhr", { datum: "2026-11-14", zeit: "19:30", titel: "Treffen" });
+  fall("Am 3. Dezember Weihnachtsfeier im Kolpinghaus ab 18:00", { datum: "2026-12-03", zeit: "18:00", ort: "Kolpinghaus" });
+  fall("Morgen um halb 8 Probekochen", { datum: "2026-10-24", zeit: "19:30", titel: "Probekochen" });
+  fall("Nächsten Freitag 19 Uhr Stammtisch", { datum: "2026-10-30", zeit: "19:00" });
+  fall("nächste Woche Dienstag 18-20 Uhr Vorstand", { datum: "2026-10-27", zeit: "18:00", bis: "20:00" });
+  fall("Wir treffen uns übermorgen um 7", { datum: "2026-10-25", zeit: "19:00" });
+  fall("Fr. 6.11. Kegeln 20 Uhr", { datum: "2026-11-06", zeit: "20:00", titel: "Kegeln" });
+  fall("in 3 Tagen Einkauf bei Metro um 10", { datum: "2026-10-26", zeit: "10:00" });
+  fall("Am 5.1. Neujahrsempfang", { datum: "2027-01-05", zeit: null, sicher: true });
+  fall("Sa 15 Uhr Aufbau Weihnachtsmarkt in Werne", { datum: "2026-10-24", zeit: "15:00", ort: "Werne" });
+  fall("Mo 9:00 Zahnarzt", { datum: "2026-10-26", zeit: "09:00" });
+  for (const t of ["Guten Morgen zusammen!", "bin um 19.10. da", "Kommst du um 3 Personen?", "So geht das nicht", "Ich komme so 5 Minuten später", "Kosten 19.50 €", "Tel 0171 1234567"]) assert.equal(nt(t, B), null, "kein Termin: " + t);
+  for (const t of ["Heute war schön", "Am Freitag war es toll", "Wir sehen uns am Sonntag", "um 19 Uhr"]) assert.equal(nt(t, B)?.sicher, false, "ohne eindeutigen Tag+Zeit kein Knopf: " + t);
+  assert.equal(nt("Morgen 18 Uhr", "2026-10-20").datum, "2026-10-21", "„morgen“ zählt ab dem Tag der Nachricht");
+  // Wege und Ziele: nur vorhandene Funktionen, gespeichert erst mit „Eintragen“
+  assert.ok(/if \(!r\?\.sicher \|\| r\.datum < heuteIso\(\)\) return "";/.test(programm), "Knopf an der Nachricht nur bei eindeutigem, kommendem Tag");
+  assert.ok(programm.includes("${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}") && programm.includes("ntAusNachricht('${id}')\">📅 Als Termin übernehmen"), "Knopf an der Nachricht + Menü");
+  assert.ok(/await api\("privattermin_speichern", \{ titel, beginn, ende, ganztaegig: ganz, ort, notiz,/.test(programm), "privat über das vorhandene privattermin_speichern");
+  assert.ok(/return treffenForm\(\{ titel, beginn, ende, ganztaegig: ganz, ort,/.test(programm), "Clubtermin über das vorhandene Formular (veröffentlicht erst dort)");
+  assert.ok(/TREFFEN_IDX\.set\(k, \{ id: k, titel, beginn, ende, ganztaegig: ganz, ort, beschreibung: notiz \}\); inKalender\(k\);/.test(programm), "Handy-Kalender über das vorhandene inKalender");
+  assert.ok(/const r = q\.r, club = !!ICH\?\.vorstand/.test(programm), "Clubtermin nur für die Clubleitung");
+  assert.ok(html.includes('id="ntZeilenKnopf"') && html.includes('onclick="ntAusZeile()"'), "📅 in der kleinen Zeile");
 }
