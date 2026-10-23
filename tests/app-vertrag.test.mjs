@@ -12403,3 +12403,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/document\.documentElement\.classList\.toggle\("kc-ruhe", jzbAkkuKnapp \|\| Date\.now\(\) - jzbBedient > JZB_RUHE_MS\)/.test(programm), "Daueranimationen halten weiter nach 45 s an");
   assert.ok(programm.indexOf("let jzbAkkuKnapp") > 0, "jzbAkkuKnapp ist global");
 }
+// 2.617.0 KC-CLUB-GEHEIMAGENT-SCHLANGE: verschlüsselt über die Sende-Schlange → 🔑, dann Agent
+{
+  const sq = programm.slice(programm.indexOf("if (sqDarf()) {"), programm.indexOf("const r = chatId ? await api(\"nachricht_senden\""));
+  assert.ok(sq.length > 0 && /if \(vnIst\(text\)\) \{ vnSchluesselZeigen\(\$\("sendenKnopf"\)\); setTimeout\(\(\) => papierflieger\(\$\("sendenKnopf"\), !!daten\.wichtig, null, !!daten\.express, true\), 650\); \}/.test(sq), "Sende-Schlange: verschlüsselt → Geheimagent");
+}

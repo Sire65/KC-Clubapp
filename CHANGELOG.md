@@ -1,9 +1,13 @@
 # Änderungen
 
-## 2.617.0 – 2026-10-24 – 📣 Info-Band läuft weiter (KC-CLUB-INFOBAND-WEITER)
+## 2.617.0 – 2026-10-24 – 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
 Fund Hansi: „Info-Band läuft nicht weiter“ – es hielt (seit 2.337.0 KC-CLUB-AKKU-2) wie die Daueranimationen nach 45 s ohne Antippen an.
 - Das Info-Band blättert jetzt weiter, auch wenn niemand das Display berührt (es wechselt nur alle 6 s den Text). Angehalten wird es nur noch bei knappem Akku (unter 30 % und nicht am Laden), beim Antippen (9 s) und wenn die App im Hintergrund ist.
 - Laufende Rahmen und atmende Lämpchen halten weiterhin nach 45 s an.
+
+Fund Hansi: „Erste Nachricht an Klaus verschlüsselt geschickt – keinen Geheimagent gesehen.“ Seit 2.603.0 (KC-CLUB-SENDE-SCHLANGE) gehen Texte in einem bestehenden Chat über die Sende-Schlange; dort drehte sich nur der 🔑, der Agent fehlte.
+- Verschlüsselte Nachrichten im bestehenden Chat: erst dreht sich der 🔑, dann läuft der 🕵️ Geheimagent – wie bei einer neuen Unterhaltung. Bei 🏎️ Express bleibt es beim Rennwagen.
+- Beim Empfänger war der Agent nie betroffen.
 
 ## 2.616.0 – 2026-10-24 – 🕐 Testlisten mit Tagesangabe · 🕰️ Stundenuhr still nach eigener Ruhezeit (KC-CLUB-TESTLISTE-HEUTE, KC-CLUB-KUCKUCK-RUHEZEIT)
 Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.

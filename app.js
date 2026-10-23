@@ -34083,7 +34083,8 @@ async function senden() {
     if (sqDarf()) {
       const vorher = chatId;
       sqEinreihen({ lid: sqNeueId(), chat: chatId, daten, zeit: Date.now(), status: "wartet", versuche: 0, express: !!daten.express });
-      if (vnIst(text)) vnSchluesselZeigen($("sendenKnopf")); else papierflieger($("sendenKnopf"));
+      if (vnIst(text)) { vnSchluesselZeigen($("sendenKnopf")); setTimeout(() => papierflieger($("sendenKnopf"), !!daten.wichtig, null, !!daten.express, true), 650); } // 2.617.0 KC-CLUB-GEHEIMAGENT-SCHLANGE: auch hier 🔑, dann der Agent
+      else papierflieger($("sendenKnopf"));
       HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL
       const empfIds = (CHAT?.teilnehmer || []).map((t) => t.person_id);
       lvZurueck(); entwurfWeg(vorher); clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); if (VN.an) vnUmschalten(false);
