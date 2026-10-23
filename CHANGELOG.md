@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.601.0 – 2026-10-22 – 🔁 Dienst-Tausch-Börse – nur Admin zum Testen (KC-CLUB-DIENST-TAUSCH)
+## 2.606.0 – 2026-10-23 – 🔁 Dienst-Tausch-Börse – nur Admin zum Testen (KC-CLUB-DIENST-TAUSCH)
 Wunsch Hansi („3 hört sich gut an“ – Dienst-Tausch-Börse). Noch nicht freigegeben: bis Hansi freigibt, sieht es nur der Admin (🔒 Test).
 - „Mein Dienst“ → 🔁 Tauschbörse (auch Push-Link #diensttausch, Sprung-Knopf „Dienst-Tausch-Börse“): eigene kommende Dienste mit „🔁 Kann ich nicht – anbieten“ (freiwillig mit Text), alle bekommen Bescheid.
 - Andere sehen „🙋 Gesucht – kannst du übernehmen?“ und tippen „🙋 Ich übernehme“ (nicht bei eigenen Diensten, nicht wenn man zu der Zeit selbst Dienst hat; wer zuerst kommt). „↩️ Doch nicht“ geht bis zur Bestätigung.
@@ -8,8 +8,23 @@ Wunsch Hansi („3 hört sich gut an“ – Dienst-Tausch-Börse). Noch nicht fr
 - Anbieten bis 2 Std. vor Beginn; danach direkt den Planer anrufen.
 - Erst die Bestätigung zählt: Mein Dienst (🔁 übernommen), Dienst-Anmeldung, Erinnerungen und „Wer ist heute da“ rechnen die Übergabe ein. Der Dienstplan selbst (kc_dp_plan_published) bleibt unverändert – Übernahme in DP3: docs/CODEX_AUFTRAG_DIENST_TAUSCH.md.
 - 🧪 Probe-Angebot (nur Admin, ohne Dienstplan) zum Testen; Benachrichtigungen gehen bis zur Freigabe bzw. bei Proben nur an Admins.
-- Datenbank: supabase/migrations/20261022_kc_club_v2601_dienst_tausch.sql (Tabelle kc_club_dienst_tausch, RLS, nur service_role, Spiegel). Ohne Tabelle läuft alles wie bisher.
-- Test: tests/dienst-tausch.test.mjs, Vertragstest-Block 2.601.0, Typprüfung ohne neue Meldungen. Rückweg: App/Server 2.600.0.
+- Datenbank: supabase/migrations/20261023_kc_club_v2606_dienst_tausch.sql (Tabelle kc_club_dienst_tausch, RLS, nur service_role, Spiegel). Ohne Tabelle läuft alles wie bisher.
+- Test: tests/dienst-tausch.test.mjs, Vertragstest-Block 2.606.0, Typprüfung ohne neue Meldungen. Rückweg: App 2.605.0, Server 2.604.0.
+
+## 2.605.0 – 2026-10-23 – Push-Ruhe beim schnellen Schreiben
+Kommen viele Push-Mitteilungen schnell hintereinander, lädt die offene App nur einmal neu – bei offenem Chat nur den Chat (KC-CLUB-PUSH-RUHE).
+
+## 2.604.0 – 2026-10-23 – Sofort-Senden (Korrektur Versionsnotiz)
+Wie 2.603.0 (Sende-Warteschlange); 2.603.0 wurde wegen eines roten Tests (Versionsnotiz) nicht eingespielt – hier korrigiert.
+
+## 2.603.0 – 2026-10-23 – Nachrichten: Sofort-Senden mit Warteschlange
+➤ legt die Nachricht in eine Warteschlange: sie steht sofort im Chat (⏳), das Schreibfeld ist sofort frei – gleich weiterschreiben. Abgearbeitet wird der Reihe nach, 🏎️ Express überholt die wartenden. Bei Netz-Wacklern bis zu 3 neue Versuche; der Server speichert jede Nachricht trotzdem nur einmal (Kennung). Klappt es nicht: ⚠️ mit 🔄 Nochmal / 🗑️ Löschen. Der Server antwortet nach dem Speichern sofort, Push/Mail laufen im Hintergrund (Notfall, Express, ❗ wichtig, @Erwähnung wie bisher). (KC-CLUB-SENDE-SCHLANGE)
+
+## 2.602.0 – 2026-10-23 – Start schneller, Schritt 2: Kern in einem Aufruf
+Start-Paket, ungelesene Nachrichten je Chat, Kachel-Zahlen und Live-Leitung kommen jetzt in EINEM Datenbank-Aufruf statt vier (KC-CLUB-START-KERN) – genau die vorhandenen Funktionen, gebündelt; fehlt ein Teil, wird nur er einzeln geholt; Not-Aus. Außerdem leeren die Paket-Abfragen den Zwischenspeicher des Servers nicht mehr.
+
+## 2.601.0 – 2026-10-22 – Start schneller: weniger gleichzeitige Datenbank-Anfragen
+Beim Start fragte der Server ~35-mal gleichzeitig die Datenbank – im Gedränge dauerte jede Anfrage 5–10-mal so lange. Die Communicator-Ampel (5 Anfragen) und die Büro-Zahlen der Clubleitung (~10 Anfragen) kommen jetzt in je EINEM Aufruf (KC-CLUB-START-BUENDEL). Gleiche Daten, gleiche Rechnung; Rückfall, Not-Aus und Stichproben-Vergleich wie bei den anderen Paketen.
 
 ## 2.600.0 – 2026-10-22 – 💬 Startnachricht mit Antworten „Ja · Später · Nein“ (KC-CLUB-STARTNACHRICHT-ANTWORT)
 Wunsch Hansi („auch bei Marianne und Reinhilde – mit ja, nein, später usw“).

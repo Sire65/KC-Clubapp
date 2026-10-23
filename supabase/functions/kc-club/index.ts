@@ -29,7 +29,7 @@ import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-
 import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "./fremdzugriff.js"; // KC-CLUB-FREMDZUGRIFF (2.579.0)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
-import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.601.0)
+import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -61,7 +61,9 @@ const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), ze
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
 // Nur lesende Datenbank-Funktionen (STABLE bzw. reines SELECT, geprüft 18.10.2026): gehen ungepuffert durch, leeren den Puffer aber nicht.
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
-const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
+const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand",
+  // 2.602.0 KC-CLUB-START-KERN: auch die Pakete sind STABLE (Postgres verbietet darin jedes Schreiben) – sie leerten bisher bei jedem Start den Puffer
+  "kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket", "kc_club_online_jetzt", "kc_club_nachricht_mahnung", "kc_club_unterhaltungen_paket"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -130,7 +132,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.601.0";
+const SERVER_VERSION = "2.606.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2587,17 +2589,41 @@ const commSystemFehler = (x: any) => COMM_FEHLER.includes(x.status) && !COMM_EMP
 // KC-CLUB-START-SPARSAM-2: die fünf Lesungen sind für alle gleich (nur „wege“ gibt es zusätzlich für Admins – das wird unten je Aufruf
 // gebaut) → MERK_MS lang gemerkt, nur wenn alle fehlerfrei waren. Die Admin-Ansicht (erreichbarkeit) liest immer frisch und erneuert den Merker.
 let COMM_MERK: { t: number; v: Promise<any[]> } | null = null;
-function commLesen(frisch: boolean): Promise<any[]> {
-  if (!frisch && COMM_MERK && Date.now() - COMM_MERK.t <= MERK_MS) return COMM_MERK.v;
-  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString(), seit24 = new Date(Date.now() - 86400000).toISOString();
-  const m: { t: number; v: Promise<any[]> } = { t: Date.now(), v: Promise.all([
+// 2.601.0 KC-CLUB-START-BUENDEL (Messung 22.10.: ~35 gleichzeitige Datenbank-Anfragen beim Start, jede im Gedränge 100–350 ms statt 20–40 ms):
+// die fünf Lesungen in EINEM Datenbank-Aufruf (kc_club_comm_paket, gleiche Abfragen). Fehler oder Not-Aus (kc_club_konfig 'start_buendel'
+// = {"aus": true}) → bisheriger Weg (commLesenEinzeln); jeder START_BUENDEL_VERGLEICH-te Aufruf vergleicht nebenbei alt ↔ neu (Protokoll).
+const START_BUENDEL_VERGLEICH = 20;
+const buendelAus = async () => { try { const k: any = await konfigZeile("start_buendel"); return !!k?.data?.wert?.aus; } catch { return false; } };
+async function commLesenPaket(seit7: string, seit24: string): Promise<any[] | null> {
+  if (await buendelAus()) return null;
+  try {
+    const r: any = await db.rpc("kc_club_comm_paket", { p_seit7: seit7, p_seit24: seit24, p_fehler: COMM_FEHLER });
+    const d = r?.data;
+    if (r?.error || !d || typeof d !== "object" || !Array.isArray(d.wege) || !Array.isArray(d.auftr) || !Array.isArray(d.alle24)) return null;
+    return [{ data: d.st ?? null, error: null }, { data: d.wege, error: null }, { data: d.bericht ?? null, error: null }, { data: d.auftr, error: null }, { data: d.alle24, error: null }];
+  } catch { return null; }
+}
+function commLesenEinzeln(seit7: string, seit24: string): Promise<any[]> {
+  return Promise.all([
     db.from("kc_communication_settings").select("enabled,dispatch_enabled").eq("id", "global").maybeSingle(),
     db.from("kc_communication_provider_routes").select("channel,provider_id,role,enabled,health_status,last_success_at,last_failure_at,consecutive_failures").eq("enabled", true).in("channel", ["push", "email"]),
     db.from("kc_communication_health_snapshots").select("created_at,success_rate,avg_push_ms,avg_email_ms,queued,retrying,failed,active_devices").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     db.from("kc_communication_requests").select("status,channel,sent_at,created_at,error_code").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
     // fehlgeschlagene Aufträge aller Programme (24 h) – ersetzt den Zähler „failed“ des Zustandsberichts, der Empfängerfehler mitzählt
     db.from("kc_communication_requests").select("status,error_code").in("status", COMM_FEHLER).gte("created_at", seit24).limit(500),
-  ]).then((r) => { if (r.some((x: any) => x.error) && COMM_MERK === m) COMM_MERK = null; return r; }, (e) => { if (COMM_MERK === m) COMM_MERK = null; throw e; }) };
+  ]);
+}
+function commLesen(frisch: boolean): Promise<any[]> {
+  if (!frisch && COMM_MERK && Date.now() - COMM_MERK.t <= MERK_MS) return COMM_MERK.v;
+  const seit7 = new Date(Date.now() - 7 * 86400000).toISOString(), seit24 = new Date(Date.now() - 86400000).toISOString();
+  const m: { t: number; v: Promise<any[]> } = { t: Date.now(), v: commLesenPaket(seit7, seit24).then((pk) => {
+    if (!pk) return commLesenEinzeln(seit7, seit24);
+    if (Math.random() < 1 / START_BUENDEL_VERGLEICH) nebenbei(commLesenEinzeln(seit7, seit24).then(async (alt) => {
+      const teile = ["st", "wege", "bericht", "auftr", "alle24"].filter((_, i) => !alt[i]?.error && !spGleich(alt[i]?.data ?? null, pk[i].data));
+      if (teile.length) await protokoll(null, "start_buendel_abweichung", { teil: "comm", teile });
+    }).catch((e) => console.error("comm paket vergleich", String(e))));
+    return pk;
+  }).then((r) => { if (r.some((x: any) => x.error) && COMM_MERK === m) COMM_MERK = null; return r; }, (e) => { if (COMM_MERK === m) COMM_MERK = null; throw e; }) };
   COMM_MERK = m;
   return m.v;
 }
@@ -3202,7 +3228,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.601.0: und Dienste tauschen
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]) };
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
@@ -3994,7 +4020,7 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   avatar_foto: { t: "📷 Eigenes Foto als Bild", u: "Selfie, Galerie oder Datei – Admin kann Fotos entfernen", standard: "admin" }, // 2.23.89
   avatar_premium: { t: "👑 Hochwertige Avatare", u: "36 neue Koch-Figuren mit Licht und Schatten, Schmuck, Piercings – im Baukasten anpassbar", standard: "admin" }, // 2.414.0 KC-CLUB-AVATAR-PREMIUM
   dienst_stempel: { t: "🟢 Dienst anmelden/abmelden", u: "Kommen und Gehen in der App, mit Vorschlag aus dem Dienstplan", standard: "admin" }, // 2.590.0 KC-CLUB-DIENST-STEMPEL (erst Hansi testet)
-  dienst_tausch: { t: "🔁 Dienst-Tausch-Börse", u: "Dienst anbieten, ein anderes Mitglied übernimmt, der Planer bestätigt", standard: "admin" }, // 2.601.0 KC-CLUB-DIENST-TAUSCH (erst Hansi testet)
+  dienst_tausch: { t: "🔁 Dienst-Tausch-Börse", u: "Dienst anbieten, ein anderes Mitglied übernimmt, der Planer bestätigt", standard: "admin" }, // 2.606.0 KC-CLUB-DIENST-TAUSCH (erst Hansi testet)
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
 async function freigaben(): Promise<Record<string, "alle" | "admin">> {
@@ -4012,7 +4038,7 @@ function dsDienstAus(r: any) {
   const startMs = dsMs(r.work_date, r.start_time); let endeMs = dsMs(r.work_date, r.end_time); if (endeMs <= startMs) endeMs += 86400000; // über Mitternacht
   return { ref: r.source_shift_id || `${r.work_date}|${String(r.start_time).slice(0, 5)}`, startMs, endeMs, pause: Number(r.break_minutes) || 0, bereich: r.area || null, zone: r.zone || null, event: r.event_id || null };
 }
-// ---------- 2.601.0 KC-CLUB-DIENST-TAUSCH: bestätigte Übergaben aus der Tauschbörse (Probe-Angebote zählen nie) ----------
+// ---------- 2.606.0 KC-CLUB-DIENST-TAUSCH: bestätigte Übergaben aus der Tauschbörse (Probe-Angebote zählen nie) ----------
 // Der Dienstplan selbst bleibt unverändert (DP3 übernimmt das später); bis dahin rechnet die Club-App die Übergaben hier ein.
 async function dtUebergaben(tage: string[] | { ab: string }, person?: string): Promise<any[]> {
   let q = db.from("kc_club_dienst_tausch").select("dienst_ref,von_person,an_person,event_id,work_date,start_zeit,ende_zeit,pause_min,bereich,zone")
@@ -4074,7 +4100,7 @@ async function dsLage(ich: Ich) {
     db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").in("work_date", [gestern, heute]).limit(10),
     db.from("kc_dp_stempel").select("id,art,zeit,erfasst_am,quelle,grund,pause_min,dienst_ref,vor_ort,spontan,nachgetragen,storniert_am,korrektur_von").eq("person_id", ich.person_id).gte("zeit", new Date(t - 36 * 3600000).toISOString()).order("zeit").limit(40),
     dsOrte(), dtUebergaben([gestern, heute], ich.person_id)]);
-  const dienste = dtPlanZeilen(plan ?? [], ueb, ich.person_id).map(dsDienstAus), stand = dsStand(b ?? []), dienst = dsDienstJetzt(dienste, t, stand); // 2.601.0: mit Tauschbörse
+  const dienste = dtPlanZeilen(plan ?? [], ueb, ich.person_id).map(dsDienstAus), stand = dsStand(b ?? []), dienst = dsDienstJetzt(dienste, t, stand); // 2.606.0: mit Tauschbörse
   const iso = (ms: number) => new Date(ms).toISOString();
   return { aktiv: true, jetzt: iso(t), karte: dsKarteZeigen(dienst, t, stand), stand, orte: orte.length, gruende: DS_GRUENDE, regeln: { grundMin: DS.grundMin, vorMin: DS.vorMin, nachMin: DS.nachMin, korrekturStd: DS.korrekturStd },
     dienst: dienst ? { ref: dienst.ref, start: iso(dienst.startMs), ende: iso(dienst.endeMs), pause: dienst.pause, bereich: dienst.bereich, zone: dienst.zone } : null,
@@ -4092,7 +4118,7 @@ async function dienstStempelErinnern() {
   const ziel = alle ? null : await adminIds(); // vor der Freigabe nur Admins (zum Testen)
   let q = db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone,event_id").eq("org_id", ORG).eq("status", "published").in("work_date", [berlinTag(new Date(t - 86400000)), heute]);
   if (ziel) { if (!ziel.length) return 0; q = q.in("person_id", ziel); }
-  const tage = [berlinTag(new Date(t - 86400000)), heute], ueb = await dtUebergaben(tage); // 2.601.0 KC-CLUB-DIENST-TAUSCH: Erinnerung geht an den Übernehmer
+  const tage = [berlinTag(new Date(t - 86400000)), heute], ueb = await dtUebergaben(tage); // 2.606.0 KC-CLUB-DIENST-TAUSCH: Erinnerung geht an den Übernehmer
   const { data: plan } = await q.limit(300);
   const dienste = dtPlanZeilen(plan ?? [], ueb).filter((r: any) => !ziel || ziel.includes(r.person_id)).map((r: any) => ({ ...dsDienstAus(r), person: r.person_id }));
   const faellig = dienste.flatMap((d: any) => [
@@ -4785,12 +4811,13 @@ function hilfeLeser(x: any, antworten: any[], gesehen: any[], aktiv: any[], n: (
 // fotosSeit / dienstSeit: wann ich Fotoalbum / Dienstpläne zuletzt geöffnet habe (merkt sich das Gerät).
 // KC-CLUB-KACHEL-EINS (Server 2.496.0, Stufe 2 Punkt 4): Termine, Helfen, Fotos und Dienste in EINER Datenbank-Abfrage (vorher bis zu 9).
 // Gleiche Rechnung (Migration 20261019_kc_club_kachel_zahlen.sql, Test tools/db-sparsam/kachel-test.mjs). Schlägt sie fehl → wie bisher einzeln.
-async function kachelZahlen(ich: Ich, p: any) {
+async function kachelZahlen(ich: Ich, p: any, kern?: Promise<any | null>) {
   const seit = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d.toISOString(); };
   const heute = berlinTag(new Date());
+  const einzeln = () => Promise.resolve(db.rpc("kc_club_kachel_zahlen", { p_person: ich.person_id, p_vorstand: !!ich.vorstand, p_jetzt: jetzt(), p_heute: heute,
+      p_fotos_seit: seit(p?.fotosSeit), p_dienst_seit: seit(p?.dienstSeit), p_org: ORG })).catch((e: unknown) => ({ data: null, error: e }));
   const [r, buero] = await Promise.all([
-    Promise.resolve(db.rpc("kc_club_kachel_zahlen", { p_person: ich.person_id, p_vorstand: !!ich.vorstand, p_jetzt: jetzt(), p_heute: heute,
-      p_fotos_seit: seit(p?.fotosSeit), p_dienst_seit: seit(p?.dienstSeit), p_org: ORG })).catch((e: unknown) => ({ data: null, error: e })),
+    kern ? kern.catch(() => null).then((k) => (k?.kz && typeof k.kz === "object" ? { data: k.kz, error: null } : einzeln())) : einzeln(), // 2.602.0 KC-CLUB-START-KERN
     ich.buero ? (async () => { try { return Object.values(await bueroEingang(ich)).reduce((a: number, b: any) => a + Number(b || 0), 0); } catch (e) { console.error("kachel zahl", String(e)); return null; } })() : Promise.resolve(0),
   ]);
   const z: any = r.error ? null : r.data, zahl = (k: string) => Number.isFinite(Number(z?.[k])) && z?.[k] != null ? Number(z[k]) : NaN;
@@ -5091,7 +5118,26 @@ async function unterhaltungenAlt(ich: Ich, mitQuittung: boolean): Promise<any[]>
 // klappt der Aufruf nicht oder ist der Not-Aus gesetzt (kc_club_konfig 'start_paket' = {"aus": true}), nimmt jede Stelle von selbst den
 // bisherigen Weg. Bei jedem START_PAKET_VERGLEICH-ten Start vergleicht der Server nebenbei alt ↔ neu und schreibt Abweichungen ins Protokoll.
 const START_PAKET_VERGLEICH = 10;
-async function startPaket(ich: Ich): Promise<any | null> {
+// 2.602.0 KC-CLUB-START-KERN (Schritt 2 „Start schneller“): Start-Paket, ungelesen je Chat, Kachel-Zahlen und Realtime-Kanal in EINEM Aufruf
+// (kc_club_start_kern ruft genau die vier vorhandenen Funktionen auf). Jeder Teil, der fehlt (null), wird wie bisher einzeln geholt;
+// Not-Aus ohne neue Version: kc_club_konfig 'start_kern' = {"aus": true} → alles wie bisher.
+const kzSeit = (v: unknown) => { const d = new Date(String(v || "")); return isNaN(d.getTime()) ? null : d.toISOString(); };
+async function startKern(ich: Ich, p: any): Promise<any | null> {
+  try {
+    const [k, r] = await Promise.all([konfigZeile("start_kern").catch(() => ({ data: null })),
+      Promise.resolve(db.rpc("kc_club_start_kern", { p_person: ich.person_id, p_org: ORG, p_heute: berlinTag(new Date()), p_vorstand: !!ich.vorstand,
+        p_jetzt: jetzt(), p_fotos_seit: kzSeit(p?.fotosSeit), p_dienst_seit: kzSeit(p?.dienstSeit) }))]);
+    if ((k as any)?.data?.wert?.aus) return null;
+    const d = (r as any)?.data;
+    return !(r as any)?.error && d && typeof d === "object" ? d : null;
+  } catch { return null; }
+}
+async function startPaket(ich: Ich, kern?: Promise<any | null>): Promise<any | null> {
+  const kp = kern ? (await kern.catch(() => null))?.paket : null;
+  if (kp && typeof kp === "object") { // Not-Aus des Start-Pakets gilt auch hier
+    const s: any = await konfigZeile("start_paket").catch(() => ({ data: null }));
+    return s?.data?.wert?.aus ? null : kp;
+  }
   try {
     const [k, r] = await Promise.all([konfigZeile("start_paket").catch(() => ({ data: null })),
       Promise.resolve(db.rpc("kc_club_start_paket", { p_person: ich.person_id, p_org: ORG, p_heute: berlinTag(new Date()) }))]);
@@ -5207,7 +5253,35 @@ async function bueroSitzung(ich: Ich, tid: string) {
     zeilenWahl: BUERO_ZEILEN,
   };
 }
+// 2.601.0 KC-CLUB-START-BUENDEL: die Büro-Eingangszahlen der Clubleitung (bisher ~10 Anfragen, beim Start der Clubleitung mitten im Gedränge)
+// in EINEM Datenbank-Aufruf (kc_club_buero_paket, gleiche Abfragen); gerechnet wird wie bisher (aeWartetAufMich, ekKenntnisVon).
+// Fehler/Not-Aus ('start_buendel') → bisheriger Weg (bueroEingangEinzeln); Stichproben-Vergleich alt ↔ neu wie bei commLesen.
+async function bueroPaket(ich: Ich): Promise<any | null> {
+  if (await buendelAus()) return null;
+  try {
+    const r: any = await db.rpc("kc_club_buero_paket", { p_person: ich.person_id, p_admin: !!ich.admin, p_heute: berlinTag(new Date()), p_org: ORG, p_event: DW.veranstaltung });
+    const d = r?.data;
+    return !r?.error && d && typeof d === "object" && Array.isArray(d.ae) && Array.isArray(d.dw) && Array.isArray(d.ekst) ? d : null;
+  } catch { return null; }
+}
+function bueroAusPaket(ich: Ich, d: any) {
+  const n = (x: unknown) => Number(x) || 0, leitung = !!(ich.vorstand || ich.admin);
+  const st = new Map<string, any>((d.ekst ?? []).map((x: any) => [x.ref_id, x]));
+  return { ausleihen: n(d.ausleihen), vorschlaege: n(d.vorschlaege), hilfe: n(d.hilfe), archiv: n(d.archiv), aufgaben: n(d.aufgaben), entwuerfe: n(d.entwuerfe),
+    aenderungen: leitung ? (d.ae ?? []).filter((x: any) => aeWartetAufMich(ich, x)).length : 0,
+    erstattungen: leitung ? n(d.erst) : 0, dienstzeiten: leitung ? (d.dw ?? []).filter((x: any) => !ekKenntnisVon(st.get(x.id), ich.person_id, x.revision)).length : 0 };
+}
 async function bueroEingang(ich?: Ich) {
+  const pk = ich ? await bueroPaket(ich) : null;
+  if (!pk || !ich) return bueroEingangEinzeln(ich);
+  const neu = bueroAusPaket(ich, pk);
+  if (Math.random() < 1 / START_BUENDEL_VERGLEICH) nebenbei(bueroEingangEinzeln(ich).then(async (alt: any) => {
+    const teile = Object.keys(neu).filter((k) => alt[k] !== (neu as any)[k]);
+    if (teile.length) await protokoll(ich.person_id, "start_buendel_abweichung", { teil: "buero", teile });
+  }).catch((e) => console.error("buero paket vergleich", String(e))));
+  return neu;
+}
+async function bueroEingangEinzeln(ich?: Ich) {
   const leer = { count: 0 };
   const zahl = async (q: any) => { try { const r = await q; return r.count ?? 0; } catch { return 0; } };
   // KC-CLUB-AENDERUNG (2.22.8, Wunsch Hansi): offene Änderungsmeldungen gehören in den Posteingang
@@ -7481,7 +7555,9 @@ Deno.serve((req) => {
 // KC-CLUB-START-PARALLEL-3 (2.162.0): meine sichtbaren Chats MIT Zahl der ungelesenen Nachrichten in EINER Datenbank-Abfrage
 // (vorher eine je Chat – bei 21 Chats 21 Anfragen, die sich um 10 Verbindungen drängeln). Gezählt wird genau wie bisher:
 // Nachrichten anderer, nach meinem letzten Lesen. Fehlt die Funktion oder klemmt sie → bisheriger Weg (Zählen je Chat).
-async function ungelesenJeChat(ich: Ich): Promise<{ data: any[] | null; error: any }> {
+async function ungelesenJeChat(ich: Ich, kern?: Promise<any | null>): Promise<{ data: any[] | null; error: any }> {
+  const ku = kern ? (await kern.catch(() => null))?.uj : null; // 2.602.0 KC-CLUB-START-KERN
+  if (Array.isArray(ku)) return { data: ku, error: null };
   try {
     const r = await db.rpc("kc_club_ungelesen_je_chat", { p_person: ich.person_id });
     if (!r.error && Array.isArray(r.data)) return { data: r.data, error: null };
@@ -7519,7 +7595,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const zt: Record<string, number> = {};
         const mess = <T,>(n: string, x: PromiseLike<T>): Promise<T> => Promise.resolve(x).then((v) => { zt[n] = Date.now() - t0Anfrage; return v; });
         const pWillkommen = willkommenZettel(ich).catch((e) => console.error("willkommen", String(e))); // KC-CLUB-WILLKOMMEN-PINNWAND (2.29.0)
-        const pPaket = startPaket(ich); // 2.576.0 KC-CLUB-START-PAKET: null = bisheriger Weg (jede Stelle unten fällt von selbst zurück)
+        const pKern = startKern(ich, p); // 2.602.0 KC-CLUB-START-KERN: vier Datenbank-Funktionen in einem Aufruf (fehlender Teil → einzeln wie bisher)
+        const pPaket = startPaket(ich, pKern); // 2.576.0 KC-CLUB-START-PAKET: null = bisheriger Weg (jede Stelle unten fällt von selbst zurück)
         pPaket.then((pk) => { if (pk && Math.random() < 1 / START_PAKET_VERGLEICH) nebenbei(startPaketVergleich(ich, pk)); });
         const pPk = vapidOeffentlich(); // KC-CLUB-START-SPARSAM (2.489.0): fester Schlüssel, 10 Min. gemerkt
         const pStatus = statusMap([ich.person_id]);
@@ -7571,7 +7648,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return error ? null : !(data ?? []).length;
         }).catch(() => null);
         const pUaZahl = ich.admin ? Promise.resolve(db.from("kc_club_unterstuetzung").select("id", { count: "exact", head: true }).eq("status", "offen")).then((r: any) => r.error ? null : r.count ?? 0, () => null) : Promise.resolve(null);
-        const pKz = kachelZahlen(ich, p).catch(() => null).then(async (kz) => {
+        const pKz = kachelZahlen(ich, p, pKern).catch(() => null).then(async (kz) => {
           if (kz && ich.admin) { const sw = await pSchulungZahl; (kz as any).schulung = sw ? sw.length : null; (kz as any).unterstuetzung = await pUaZahl;
             (kz as any).schulungFrei = sw ? sw.filter((w: any) => w.art === "gewaehlt" || w.art === "gegenvorschlag").length : null; } // 2.521.0 KC-CLUB-SCHULUNG-INFO: nur was eine Freigabe braucht
           return kz;
@@ -7650,10 +7727,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // (z. B. 503 unten), dürfen die schon laufenden Abfragen keinen „unbehandelten Fehler“ auslösen – Fehler wirken weiter beim await.
         for (const x of [pPk, pStatus, pAbst, pNd, pWahlPm, pGeb, pGfs, pKf, pSpiele, pSos, pAdmin, pStumm, pAufgaben, pTermin, pRest]) x.catch(() => {});
         // 2.157.0 KC-CLUB-START-MESSUNG: Fertig-Zeitpunkt je Teil mitschreiben (hängt sich nur an, ändert keinen Ablauf)
-        for (const [n, x] of Object.entries({ paket: pPaket, pk: pPk, st: pStatus, abst: pAbst, nd: pNd, wahl: pWahlPm, geb: pGeb, kz: pKz, comm: pComm, sos: pSos, adm: pAdmin, auf: pAufgaben, tf: pTermin, rest: pRest, will: pWillkommen } as Record<string, PromiseLike<unknown>>)) mess(n, x).catch(() => {});
+        for (const [n, x] of Object.entries({ kern: pKern, paket: pPaket, pk: pPk, st: pStatus, abst: pAbst, nd: pNd, wahl: pWahlPm, geb: pGeb, kz: pKz, comm: pComm, sos: pSos, adm: pAdmin, auf: pAufgaben, tf: pTermin, rest: pRest, will: pWillkommen } as Record<string, PromiseLike<unknown>>)) mess(n, x).catch(() => {});
         const [naechstes, { data: teil, error: teilFehler }, mitglieder] = await Promise.all([
           mess("tr", treffenListe(ich, true)),
-          mess("teil", ungelesenJeChat(ich)),
+          mess("teil", ungelesenJeChat(ich, pKern)),
           mess("mg", aktiveMitglieder()),
         ]);
         // KC-CLUB-UNBEKANNT-NICHT-OK (1.97.0, Gesamtprüfung): klemmt die Datenbank, lieber ehrlich „gerade nicht möglich“ (503 → App
@@ -7692,7 +7769,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0, Wunsch Hansi): ungelesene Nachrichten älter als 5 Tage bzw. ungelesene ❗ wichtige →
         // die Kachel „Neue Nachr.“ blinkt rot/orange. Fehler hier stören den Start nie (dann ohne Mahnung, Zahl bleibt ehrlich).
         // KC-CLUB-REALTIME (2.226.0): eigener, nicht erratbarer Signal-Kanal (HMAC in der Datenbank) – Fehler → App fragt wie früher nach
-        const pRtKanal = Promise.resolve(db.rpc("kc_club_rt_kanal", { p_person: ich.person_id })).then((r: any) => (typeof r.data === "string" ? r.data : null)).catch(() => null);
+        const pRtKanal = pKern.then((k) => (typeof k?.rt === "string" ? k.rt : Promise.resolve(db.rpc("kc_club_rt_kanal", { p_person: ich.person_id })).then((r: any) => (typeof r.data === "string" ? r.data : null)))).catch(() => null); // 2.602.0: aus dem Kern
         // KC-CLUB-RT-SPARBREMSE (2.230.0): Admin sieht, wie viel vom kostenlosen Monats-Kontingent verbraucht ist
         const pRtZaehler = ich.admin ? Promise.resolve(db.from("kc_club_rt_zaehler").select("anzahl,geaendert_am").eq("monat", berlinTag(new Date()).slice(0, 7)).maybeSingle())
           .then((r: any) => (r.error ? null : { anzahl: Number(r.data?.anzahl || 0), grenze: RT_GRENZE, stand: r.data?.geaendert_am ?? null })).catch(() => null) : Promise.resolve(undefined);
@@ -10014,7 +10091,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: plan } = await db.from("kc_dp_plan_published").select("source_shift_id,event_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published")
           .in("work_date", [berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))]).limit(10);
         const { data: alle } = await db.from("kc_dp_stempel").select("id,art,zeit,erfasst_am,quelle,dienst_ref,storniert_am").eq("person_id", ich.person_id).gte("zeit", new Date(t - 36 * 3600000).toISOString()).limit(40);
-        const ueb = await dtUebergaben([berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))], ich.person_id); // 2.601.0: mit Tauschbörse
+        const ueb = await dtUebergaben([berlinTag(new Date(t - 86400000)), berlinTag(new Date(t))], ich.person_id); // 2.606.0: mit Tauschbörse
         const stand = dsStand(alle ?? []), dienste = dtPlanZeilen(plan ?? [], ueb, ich.person_id).map(dsDienstAus), dienst = dsDienstJetzt(dienste, t, stand);
         const art = stand.angemeldet ? "out" : "in", spontan = art === "in" && p.spontan === true && !dienst;
         let grund = txt(p.grund, 120) || (spontan ? "Spontan mitgeholfen" : "");
@@ -10062,7 +10139,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, lage: await dsLage(ich) });
       }
       // Admin: wer ist heute im Dienst (Plan + Buchungen), nachtragen für andere, Dienst-Orte
-      // ----- 2.601.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse (anbieten → übernehmen → Planer bestätigt) -----
+      // ----- 2.606.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse (anbieten → übernehmen → Planer bestätigt) -----
       case "dienst_tausch_liste": {
         if (!(await dtDarf(ich))) return json({ aktiv: false });
         return json(await dtLage(ich));
@@ -10138,7 +10215,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const [{ data: planRoh }, { data: b }] = await Promise.all([
           db.from("kc_dp_plan_published").select("person_id,source_shift_id,work_date,start_time,end_time,break_minutes,area,zone").eq("org_id", ORG).eq("status", "published").eq("work_date", heute).limit(200),
           db.from("kc_dp_stempel").select("id,person_id,art,zeit,erfasst_am,quelle,grund,pause_min,vor_ort,spontan,nachgetragen,storniert_am").gte("zeit", new Date(t - 30 * 3600000).toISOString()).is("storniert_am", null).limit(1000)]);
-        const plan = dtPlanZeilen(planRoh ?? [], await dtUebergaben([heute])); // 2.601.0 KC-CLUB-DIENST-TAUSCH
+        const plan = dtPlanZeilen(planRoh ?? [], await dtUebergaben([heute])); // 2.606.0 KC-CLUB-DIENST-TAUSCH
         const ids = [...new Set([...(plan ?? []).map((x: any) => x.person_id), ...(b ?? []).map((x: any) => x.person_id)])];
         const leute = await personen(ids);
         const zeilen = ids.map((pid) => {
@@ -10183,7 +10260,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_dp_plan_published").select("work_date,start_time,end_time,break_minutes").eq("org_id", ORG).eq("person_id", ich.person_id).eq("status", "published").gte("work_date", vor60).lt("work_date", heute).limit(200),
           db.from("kc_dp_timeclock_actuals").select("work_date,start_time,end_time,break_minutes,status").eq("org_id", ORG).eq("person_id", ich.person_id).gte("work_date", vor60).order("work_date", { ascending: false }).limit(60),
           dtDarf(ich).then((ok) => (ok ? dtUebergaben({ ab: heute }, ich.person_id) : [])).catch(() => [])]);
-        // 2.601.0 KC-CLUB-DIENST-TAUSCH: bestätigte Übergaben einrechnen (abgegeben weg, übernommen dazu), sortiert wie bisher
+        // 2.606.0 KC-CLUB-DIENST-TAUSCH: bestätigte Übergaben einrechnen (abgegeben weg, übernommen dazu), sortiert wie bisher
         const soll = dtPlanZeilen(sollRoh ?? [], tausch, ich.person_id).sort((a: any, b: any) => String(a.work_date).localeCompare(String(b.work_date)) || String(a.start_time).localeCompare(String(b.start_time)));
         // KC-CLUB-SONDERSTUNDEN-KONTO (2.423.0, KICC-F-100): eigene Sonderstunden der Veranstaltung mit Stand – gutgeschrieben zählt erst nach Bestätigung
         const { data: sonderRoh } = await db.from("kc_dp_hour_reports").select("work_date,start_h,end_h,break_minutes,special_event_title,status,ablehngrund")
@@ -10986,7 +11063,24 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: b } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.antwort_auf)).maybeSingle();
           if (b && b.thread_id === threadId) antwortAuf = b.id;
         }
-        const { data: m, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || (einmal ? EINMAL_TEXT : "📎"), reply_to_message_id: antwortAuf }).select("id,created_at").single();
+        // 2.603.0 KC-CLUB-SENDE-SCHLANGE: Kennung der App (cid) – dieselbe Nachricht wird nur EINMAL gespeichert (neuer Versuch nach Netz-Wackler →
+        // Antwort mit der schon gespeicherten Nachricht). Läuft der erste Versuch noch → 409 (die App versucht es gleich noch einmal).
+        const cid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(p.cid || "")) ? String(p.cid).toLowerCase() : null;
+        if (cid) {
+          const { error: ce } = await db.from("kc_club_sende_kennung").insert({ cid, person_id: ich.person_id, thread_id: threadId });
+          if (ce) {
+            const { data: alt } = await db.from("kc_club_sende_kennung").select("person_id,thread_id,message_id,erstellt_am").eq("cid", cid).maybeSingle();
+            if (!alt || alt.person_id !== ich.person_id) throw new Fehler("Nachricht konnte nicht gespeichert werden – bitte nochmal senden.", 409);
+            if (alt.message_id) return json({ ok: true, id: alt.thread_id, mid: alt.message_id, doppelt: true, versand: { doppelt: true } });
+            if (Date.now() - Date.parse(alt.erstellt_am) < 60000) throw new Fehler("Diese Nachricht wird gerade noch gesendet.", 409);
+            await db.from("kc_club_sende_kennung").update({ erstellt_am: jetzt(), thread_id: threadId }).eq("cid", cid).is("message_id", null); // verwaist → übernehmen
+          }
+          if (Math.random() < 0.02) nebenbei(Promise.resolve(db.from("kc_club_sende_kennung").delete().lt("erstellt_am", new Date(Date.now() - 2 * 86400000).toISOString())));
+        }
+        let m: any = null, slNachricht = 0;
+        try { // 2.603.0: klappt das Speichern nicht, wird die Kennung wieder frei (ein neuer Versuch darf dann speichern)
+        const { data: mm, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || (einmal ? EINMAL_TEXT : "📎"), reply_to_message_id: antwortAuf }).select("id,created_at").single();
+        m = mm;
         db.from("kc_club_tippen").delete().eq("thread_id", threadId).eq("person_id", ich.person_id).then(() => {}); // „schreibt …“ endet mit dem Senden
         if (me || !m) throw new Fehler("Nachricht konnte nicht gespeichert werden.", 500);
         if (anlagen.length) await db.from("kc_communication_message_attachments").insert(anlagen.map((attachment_id: string) => ({ message_id: m.id, attachment_id, hochgeladen_von_person_id: ich.person_id })));
@@ -11019,7 +11113,6 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (we) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Wichtige Nachricht konnte nicht gespeichert werden.", 500); }
         }
         // KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ dieser Nachricht (0 = bewusst aus) vor der Einstellung des Chats; Notfall löscht sich nie
-        let slNachricht = 0;
         if (!notfall) {
           if (p.ablauf_std !== undefined && p.ablauf_std !== null) slNachricht = slStd(p.ablauf_std);
           else { const { data: sc } = await db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", threadId).maybeSingle(); slNachricht = slStd(sc?.stunden); }
@@ -11028,16 +11121,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { error: ae } = await db.from("kc_club_nachricht_ablauf").insert({ message_id: m.id, thread_id: threadId, stunden: slNachricht, loescht_am: new Date(Date.parse(m.created_at) + slNachricht * 3600000).toISOString() });
           if (ae) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Selbstlöschen konnte nicht gespeichert werden – Nachricht nicht gesendet.", 500); }
         }
+        } catch (e) { if (cid) await db.from("kc_club_sende_kennung").delete().eq("cid", cid).is("message_id", null); throw e; }
         // Selbstlöschende Nachrichten: Text nie in Push/Mail (eine Mail bliebe sonst im Postfach stehen)
         // 2.517.0 KC-CLUB-VERSCHLUESSELT: verschlüsselte Nachricht (nur das Handy kennt den Schlüssel) → Push/Mail ohne Zeichensalat
         const slHinweis = /^🔒KCV1:/.test(text) ? "🔒 Verschlüsselte Nachricht – in der Club-App mit dem Schlüssel öffnen" : slNachricht ? `⏳ Nachricht löscht sich nach ${slText(slNachricht)} – nur in der App lesen` : "";
         const wMarke = notfall ? "🚨 NOTFALL – " : wichtig ? "❗ Wichtig – " : "";
         await Promise.all([
+          cid ? db.from("kc_club_sende_kennung").update({ message_id: m.id, thread_id: threadId }).eq("cid", cid) : Promise.resolve(null), // 2.603.0: jetzt gilt sie als gespeichert
           // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)
           db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
           db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", threadId),
           db.from("kc_communication_thread_participants").update({ last_read_at: m.created_at }).eq("thread_id", threadId).eq("person_id", ich.person_id),
         ]);
+        // 2.603.0 KC-CLUB-SENDE-SCHLANGE (B): ab hier nur noch Benachrichtigen (Push/Mail) + Protokoll. Die Nachricht ist gespeichert und der Empfänger
+        // hat sein Live-Signal schon (Datenbank-Auslöser kc_club_rt_nachricht beim Speichern). Bei normalen Nachrichten antwortet der Server deshalb
+        // sofort und benachrichtigt im Hintergrund weiter; Notfall, Express, ❗ wichtig, SOS-Probe und @Erwähnungen laufen wie bisher bis zum Ende.
+        const nachVersand = async () => {
         // 2.593.0 KC-CLUB-GLEICHZEITIG: Empfänger, Betreff, Gruppe und alle Teilnehmer gleichzeitig lesen statt nacheinander (keine hängt an
         // einer anderen; die Empfänger erst nach dem Wieder-Einblenden oben, wie bisher). Gleiche Abfragen, gleiches Ergebnis.
         const [{ data: tn }, { data: th }, { data: grp }, { data: alleTn }] = await Promise.all([
@@ -11088,7 +11187,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.431.0 KC-CLUB-ELTERN: Nachricht der Clubleitung/des Admins → Eltern bekommen nur einen Hinweis (nie den Text, nie Chats unter Mitgliedern)
         if ((ich.admin || ich.vorstand) && !probe) elternHinweis([...tnIds].filter((id) => id !== ich.person_id), notfall ? "notfall" : "nachricht",
           notfall ? "🚨 Notfall-Meldung des Köcheclubs – {kind}" : "📨 Nachricht der Clubleitung – {kind}", notfall ? "Bitte die Köcheclub-App von {kind} ansehen." : "{kind} hat eine Nachricht der Clubleitung in der Köcheclub-App.");
-        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}), ...(hinten ? { hintergrund: true } : {}) });
+        return versand;
+        };
+        const hinten = !notfall && !express && !wichtig && !probe && !(Array.isArray(p.erwaehnt) && p.erwaehnt.length);
+        if (hinten) { nebenbei(nachVersand().catch((e) => console.error("nachricht versand", String(e)))); return json({ ok: true, id: threadId, versand: { hintergrund: true }, mid: m.id }); }
+        const versand = await nachVersand();
         return json({ ok: true, id: threadId, versand, mid: m.id, ...(express ? { expressStand: await expressStand(ich) } : {}) }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }
 

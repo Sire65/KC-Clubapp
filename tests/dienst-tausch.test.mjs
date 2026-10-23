@@ -1,4 +1,4 @@
-// KC-CLUB-DIENST-TAUSCH (2.601.0, 22.10.2026, Wunsch Hansi): Regeln der Dienst-Tausch-Börse.
+// KC-CLUB-DIENST-TAUSCH (2.606.0, 22.10.2026, Wunsch Hansi): Regeln der Dienst-Tausch-Börse.
 // Aufruf: node tests/dienst-tausch.test.mjs (offline)
 import assert from "node:assert/strict";
 import { DT, dtAnbietenPruefen, dtUeberlapp, dtUebernehmenPruefen, dtWechsel, dtRollen, dtPlanMitTausch, dtText } from "../supabase/functions/kc-club/dienst-tausch.js";

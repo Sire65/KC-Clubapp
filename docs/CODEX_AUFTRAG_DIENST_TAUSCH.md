@@ -1,6 +1,6 @@
 # Codex-Auftrag: Dienst-Tausch-Börse im Dienstplan übernehmen (DP3)
 
-Stand 22.10.2026 · Wunsch Hansi („Dienst-Tausch-Börse“) · Club-App 2.601.0
+Stand 22.10.2026 · Wunsch Hansi („Dienst-Tausch-Börse“) · Club-App 2.606.0
 
 ## Ausgangslage
 

@@ -432,7 +432,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(aktionen.has("communicator_status"), "Server-Aktion communicator_status fehlt");
   // 2.494.0 KC-CLUB-START-SPARSAM-2: die Lesungen stehen in commLesen (gemerkt) direkt davor
-  const cs = server.slice(server.indexOf(server.includes("function commLesen(") ? "function commLesen(" : "async function communicatorStatus"), server.indexOf("// ---------- Anmeldung"));
+  // 2.601.0 KC-CLUB-START-BUENDEL: davor stehen jetzt Paket und Einzel-Lesungen (commLesenPaket / commLesenEinzeln) – geprüft wird ab dem ersten
+  const cs = server.slice(server.indexOf(server.includes("async function commLesenPaket(") ? "async function commLesenPaket(" : server.includes("function commLesen(") ? "function commLesen(" : "async function communicatorStatus"), server.indexOf("// ---------- Anmeldung"));
   assert.ok(!/\.(insert|update|upsert|delete)\(/.test(cs), "Communicator-Status darf nichts verändern");
   assert.ok(/kc_communication_health_snapshots/.test(cs) && /kc_communication_provider_routes/.test(cs) && /eq\("source_program", "kc-club"\)/.test(cs), "Quellen des Communicator-Status fehlen");
   assert.ok(/method: "OPTIONS"/.test(cs), "Erreichbarkeit wird nicht ohne Versand geprüft");
@@ -3653,7 +3654,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 338. 2.22.12: Zahlen auf weiteren großen Kacheln, nur erweiterte Ansicht (KC-CLUB-KACHEL-ZAHLEN)
 {
-  assert.ok(/async function kachelZahlen\(ich: Ich, p: any\)/.test(server) && /return \{ termine, helfen, buero, fotos, dienste \};/.test(server) && /const pKz = kachelZahlen\(ich, p\)\.catch\(\(\) => null\)/.test(server) && /const kz = await pKz;/.test(server), "Server rechnet die Zahlen");
+  assert.ok(/async function kachelZahlen\(ich: Ich, p: any(, kern\?: Promise<any \| null>)?\)/.test(server) && /return \{ termine, helfen, buero, fotos, dienste \};/.test(server) && /const pKz = kachelZahlen\(ich, p(, pKern)?\)\.catch\(\(\) => null\)/.test(server) && /const kz = await pKz;/.test(server), "Server rechnet die Zahlen");
   assert.ok(/catch \(e\) \{ console\.error\("kachel zahl", String\(e\)\); return null; \}/.test(server), "Fehler → null, keine falsche 0");
   assert.ok(/const kzZahl = \(k, plus = 0\) => \(einfach\(\) \|\| INIT\?\.kz\?\.\[k\] == null \? 0 :/.test(html), "nur erweiterte Ansicht, unbekannt → keine Zahl");
   assert.ok(/for \(const k of KACHELN\.verein\) if \(KZ_KACHELN\[k\.id\] && !k\.zahl\) k\.zahl = KZ_KACHELN\[k\.id\];/.test(html) && /termine: .*helfen: .*buero: [\s\S]{0,60}fotos: .*dienste:/.test(html), "fünf Kacheln");
@@ -5912,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9155,7 +9156,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/revoke all on function public\.kc_club_ungelesen_je_chat\(text\) from public, anon, authenticated;/.test(mig) && /grant execute on function public\.kc_club_ungelesen_je_chat\(text\) to service_role;/.test(mig), "nur der Server darf sie aufrufen");
   const f = server.slice(server.indexOf("async function ungelesenJeChat("), server.indexOf("async function aktionAusfuehren("));
   assert.ok(/db\.rpc\("kc_club_ungelesen_je_chat", \{ p_person: ich\.person_id \}\)/.test(f) && /return await db\.from\("kc_communication_thread_participants"\)\.select\("thread_id,last_read_at"\)\.eq\("person_id", ich\.person_id\)\.is\("hidden_at", null\);/.test(f), "Rückfall auf den bisherigen Weg");
-  assert.ok(/mess\("teil", ungelesenJeChat\(ich\)\)/.test(server) && /if \(Number\.isFinite\(t\.n\)\) return \{ t, n: Number\(t\.n\) \};/.test(server), "init nutzt die gezählten Zahlen, sonst wie bisher je Chat");
+  assert.ok(/mess\("teil", ungelesenJeChat\(ich(, pKern)?\)\)/.test(server) && /if \(Number\.isFinite\(t\.n\)\) return \{ t, n: Number\(t\.n\) \};/.test(server), "init nutzt die gezählten Zahlen, sonst wie bisher je Chat");
   assert.ok(/let MG_LAUF:/.test(server) && /\.finally\(\(\) => \{ MG_LAUF = null; \}\)/.test(server) && /return \(await MG_LAUF\)\.map\(\(x\) => \(\{ \.\.\.x \}\)\);/.test(server), "Mitgliederliste: gleichzeitige Aufrufe teilen eine Abfrage, ohne Zwischenspeicher, jeder eine Kopie");
   assert.ok(/function konfigZeile\(schluessel: string\)/.test(server) && /\.in\("schluessel", \[\.\.\.warte\.keys\(\)\]\)/.test(server), "Club-Einstellungen gebündelt gelesen");
   for (const k of ["sos", "pinnwand", "einstieg"]) assert.ok(server.includes(`await konfigZeile("${k}")`), `${k} über die gebündelte Lesung`);
@@ -11094,7 +11095,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.429.0 KC-CLUB-TAGE-EINKLAPPEN / KC-CLUB-NETZ-SYMBOL: Chat-Tage einklappen, Router/Satellit in Nachrichten
 {
-  assert.ok(/const blaseHtml = \(m\) => `\$\{m\.id === NA\.trennerVor/.test(programm) && /\$\("chat"\)\.innerHTML = naTageHtml\(u, blaseHtml\) \+ notWartendeHtml\(chatId\)/.test(programm), "Chat zeichnet über naTageHtml");
+  assert.ok(/const blaseHtml = \(m\) => `\$\{m\.id === NA\.trennerVor/.test(programm) && /\$\("chat"\)\.innerHTML = \(?naTageHtml\(u, blaseHtml\) \+ notWartendeHtml\(chatId\)/.test(programm), "Chat zeichnet über naTageHtml"); // 2.603.0: in Klammern, dahinter die Sende-Schlange
   assert.ok(/const ein = einst\("chatEinklappen", true\) && !RG\.an && !CS\.offen/.test(programm), "Rundgang und Suche: alles offen");
   assert.ok(/const mussOffen = \(t\) => (?:t === letzter \|\| )?t\.key === heute \|\| t\.ns\.some\(\(m\) => m\.id === NA\.trennerVor \|\| ungelesen\(m\)\)/.test(programm), "heute und Ungelesenes offen");
   assert.ok(/if \(!el && NA\.nachrichten\.has\(id\)\) return naTagAufFuer\(id\)/.test(programm), "Sprung klappt den Tag auf");
@@ -11292,7 +11293,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const f = server.slice(server.indexOf("const dbFetch: typeof fetch"), server.indexOf("const dbWeg"));
   assert.ok(/DB_PUFFER\.getStore\(\)/.test(f) && /if \(!\(methode === "POST" && rpc && DB_RPC_NUR_LESEN\.has\(rpc\)\)\) \{ pf\.antworten\.clear\(\); pf\.zeit\.clear\(\); \}/.test(f), "Schreiben leert den Puffer");
   // 2.496.0: kc_club_kachel_zahlen (language sql stable, nur select – Migration 20261019_kc_club_kachel_zahlen.sql) dazu
-  assert.ok(/const DB_RPC_NUR_LESEN = new Set\(\["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"(, "kc_club_kachel_zahlen"(, "kc_club_chat_stand")?)?\]\);/.test(server), "nur geprüfte Lese-Funktionen lassen den Puffer stehen");
+  assert.ok(/const DB_RPC_NUR_LESEN = new Set\(\["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret"(, "kc_club_kachel_zahlen"(, "kc_club_chat_stand"(,\s*\/\/[^\n]*\n\s*"kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket", "kc_club_online_jetzt", "kc_club_nachricht_mahnung", "kc_club_unterhaltungen_paket")?)?)?\]\);/.test(server), "nur geprüfte Lese-Funktionen lassen den Puffer stehen"); // 2.602.0: + STABLE-Pakete (Postgres verbietet darin Schreiben)
   assert.ok(/if \(!r\.ok\) pf\.antworten\.delete\(schluessel\);/.test(f) && /a\.catch\(\(\) => pf\.antworten\.delete\(schluessel\)\);/.test(f), "Fehler und Abbrüche werden nie gepuffert");
   assert.ok(/if \(!pf\) return dbFetchNetz\(input, init\);/.test(f) && /if \(zeit\.aborted\) \{ DB_AUS\.n\+\+;/.test(f), "ohne Notpaket-Teil unverändert, Zeitgrenze bleibt");
   const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500);
@@ -12023,7 +12024,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/db\.rpc\("kc_club_start_paket", \{ p_person: ich\.person_id, p_org: ORG, p_heute: berlinTag\(new Date\(\)\) \}\)/.test(server), "ein Aufruf für die kleinen Start-Abfragen");
   assert.ok(/konfigZeile\("start_paket"\)/.test(server) && /if \(\(k as any\)\?\.data\?\.wert\?\.aus\) return null;/.test(server) && /\} catch \{ return null; \}/.test(server), "Not-Aus + Fehler → bisheriger Weg");
   assert.ok(/protokoll\(ich\.person_id, "start_paket_abweichung", \{ teile: abw \}\)/.test(server) && /Math\.random\(\) < 1 \/ START_PAKET_VERGLEICH\) nebenbei\(startPaketVergleich\(ich, pk\)\)/.test(server), "Vergleich alt ↔ neu nebenbei, Abweichungen ins Protokoll");
-  const init = server.slice(server.indexOf("const pPaket = startPaket(ich);"), server.indexOf("const [naechstes, { data: teil, error: teilFehler }, mitglieder]"));
+  const init = server.slice(server.indexOf(server.includes("const pPaket = startPaket(ich, pKern);") ? "const pPaket = startPaket(ich, pKern);" : "const pPaket = startPaket(ich);"), server.indexOf("const [naechstes, { data: teil, error: teilFehler }, mitglieder]")); // 2.602.0: Paket kommt aus dem Kern
   for (const [teil, alt] of [["vor", 'db.from("kc_club_vorschlaege").select("id,art,ziel_ids,erstellt_von,treffen_id").eq("status", "offen").limit(1000)'], ["nd", 'db.from("kc_dp_plan_published")'],
     ["wahl", 'db.from("kc_club_benachrichtigung").select("bereich,push,email")'], ["frei", 'db.from("kc_club_freigaben").select("bereich,erlaubt")'], ["spiele", 'db.from("kc_club_spiele")'],
     ["einst", 'db.from("kc_club_person_einstellung").select("schluessel,wert")'], ["notfall", 'db.from("kc_club_notfall")'], ["kabo", 'db.from("kc_club_kalender_abo")'],
@@ -12201,7 +12202,51 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/snBestaetigen\(x, "", ziel \? \(\) => sprung\(ziel\) : null, "ja"\)/.test(html) && /snBestaetigen\(x, "", null, "nein"\)/.test(html) && /api\("startnachricht_bestaetigen", \{ id: x\.id, antwort: "spaeter" \}\)/.test(html), "Antworten an den Server");
   assert.ok(/wahl: !!\$\("snWahl"\)\?\.checked/.test(html) && /\.sn-antworten \{/.test(lies("index.html")), "Haken beim Verfassen + Stil");
 }
-// 2.601.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse – nur Server-Regeln, Freigabe, Plan unverändert, Übergaben eingerechnet
+// 2.601.0 KC-CLUB-START-BUENDEL: Communicator-Ampel und Büro-Zahlen beim Start in je EINEM Datenbank-Aufruf – mit Rückfall, Not-Aus und Stichprobe
+{
+  const mig = lies("supabase/migrations/20261022_kc_club_comm_buero_paket.sql");
+  assert.ok(/create or replace function public\.kc_club_comm_paket\(/.test(mig) && /create or replace function public\.kc_club_buero_paket\(/.test(mig), "beide Pakete");
+  assert.ok((mig.match(/to service_role;/g) || []).length === 2 && /from public, anon, authenticated;[\s\S]*from public, anon, authenticated;/.test(mig), "nur der Server darf aufrufen");
+  assert.ok(/language sql stable/.test(mig) && !/\b(insert|update|delete)\b/i.test(mig.replace(/--[^\n]*/g, "")), "nur lesend");
+  assert.ok(/if \(!pk\) return commLesenEinzeln\(seit7, seit24\);/.test(server) && /if \(!pk \|\| !ich\) return bueroEingangEinzeln\(ich\);/.test(server), "Rückfall auf den bisherigen Weg");
+  assert.ok(/konfigZeile\("start_buendel"\)/.test(server) && (server.match(/if \(await buendelAus\(\)\) return null;/g) || []).length === 2, "Not-Aus");
+  assert.ok(/"start_buendel_abweichung", \{ teil: "comm"/.test(server) && /"start_buendel_abweichung", \{ teil: "buero"/.test(server), "Stichproben-Vergleich alt ↔ neu");
+  assert.ok(/aenderungen: leitung \? \(d\.ae \?\? \[\]\)\.filter\(\(x: any\) => aeWartetAufMich\(ich, x\)\)/.test(server) && /ekKenntnisVon\(st\.get\(x\.id\), ich\.person_id, x\.revision\)/.test(server), "gleiche Rechnung wie bisher");
+}
+// 2.602.0 KC-CLUB-START-KERN: vier vorhandene Datenbank-Funktionen in EINEM Aufruf; fehlender Teil → einzeln wie bisher; Not-Aus; Pakete leeren den Puffer nicht mehr
+{
+  const mig = lies("supabase/migrations/20261023_kc_club_start_kern.sql");
+  assert.ok(/kc_club_start_paket\(p_person, p_org, p_heute\)/.test(mig) && /kc_club_ungelesen_je_chat\(p_person\)/.test(mig) && /kc_club_kachel_zahlen\(p_person, p_vorstand/.test(mig) && /kc_club_rt_kanal\(p_person\)/.test(mig), "ruft genau die vier Funktionen");
+  assert.ok((mig.match(/exception when others then v_\w+ := null; end;/g) || []).length === 4 && /stable/.test(mig) && /to service_role;/.test(mig) && /from public, anon, authenticated;/.test(mig), "Teil-Ausfall → null, nur lesend, nur Server");
+  assert.ok(/konfigZeile\("start_kern"\)/.test(server) && /const pKern = startKern\(ich, p\);/.test(server), "Not-Aus + Kern im Start");
+  assert.ok(/if \(Array\.isArray\(ku\)\) return \{ data: ku, error: null \};/.test(server) && /k\?\.kz && typeof k\.kz === "object" \? \{ data: k\.kz, error: null \} : einzeln\(\)/.test(server) && /typeof k\?\.rt === "string" \? k\.rt :/.test(server), "Rückfall je Teil");
+  assert.ok(/return s\?\.data\?\.wert\?\.aus \? null : kp;/.test(server), "Not-Aus des Start-Pakets gilt weiter");
+  assert.ok(/"kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket"/.test(server), "Pakete als nur lesend eingetragen");
+}
+// 2.603.0 KC-CLUB-SENDE-SCHLANGE: Sofort-Senden mit Warteschlange (der Reihe nach, Express überholt), Kennung gegen Doppelte, Versand im Hintergrund
+{
+  const sq = html.slice(html.indexOf("// ---------- 2.603.0 KC-CLUB-SENDE-SCHLANGE"), html.indexOf("async function senden() {"));
+  assert.ok(/y\.chat === x\.chat && y\.status === "wartet" && !y\.express/.test(sq), "Express vor die erste noch wartende normale Nachricht");
+  assert.ok(/if \(x\.status === "fertig" \|\| gesehen\.has\(x\.chat\)\) continue;/.test(sq) && /if \(SQ\.laeuft \|\| !ICH\) return; SQ\.laeuft = true;/.test(sq), "je Chat der Reihe nach, nie zwei gleichzeitig");
+  assert.ok(/api\("nachricht_senden", \{ id: x\.chat, \.\.\.x\.daten, cid: x\.lid \}, \{ still: true \}\)/.test(sq), "Kennung mitschicken");
+  assert.ok(/e\?\.status === 409 \|\| e\?\.leitung \|\| e\?\.zeit \|\| !navigator\.onLine/.test(sq) && /SQ_WARTEN_MS = \[2000, 5000, 10000\]/.test(sq), "nur Netz/409 automatisch neu, höchstens 3×");
+  assert.ok(/g\.schluessel === KEY\.slice\(-8\) && g\.person === ICH\.person_id/.test(sq), "gemerkte Schlange nur für dieselbe Person");
+  assert.ok(/const sqDarf = \(\) => !!chatId && !anlagen\.length && !neuEntwurf\?\.mehrfach;/.test(sq) && /if \(sqDarf\(\)\) \{/.test(html), "nur Text im bestehenden Chat – sonst wie bisher");
+  assert.ok(/\+ sqBlasenHtml\(chatId\); \/\/ 2\.603\.0/.test(html) && /\{ leitung: leitungKaputt, status: r\.status \}/.test(html), "Anzeige im Chat + Status im Fehler");
+  const mig = lies("supabase/migrations/20261023_kc_club_sende_kennung.sql");
+  assert.ok(/cid uuid primary key/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_sende_kennung from anon, authenticated;/.test(mig), "Kennungs-Tabelle gesperrt");
+  const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf("// ----- KC-CLUB-PRIVATTERMIN"));
+  assert.ok(/if \(alt\.message_id\) return json\(\{ ok: true, id: alt\.thread_id, mid: alt\.message_id, doppelt: true/.test(ns) && /throw new Fehler\("Diese Nachricht wird gerade noch gesendet\.", 409\)/.test(ns), "doppelt → gespeicherte Nachricht, laufend → 409");
+  assert.ok(/\} catch \(e\) \{ if \(cid\) await db\.from\("kc_club_sende_kennung"\)\.delete\(\)\.eq\("cid", cid\)\.is\("message_id", null\); throw e; \}/.test(ns), "Fehler beim Speichern gibt die Kennung frei");
+  assert.ok(/const hinten = !notfall && !express && !wichtig && !probe && !\(Array\.isArray\(p\.erwaehnt\) && p\.erwaehnt\.length\);/.test(ns) && /nebenbei\(nachVersand\(\)/.test(ns), "Benachrichtigen im Hintergrund – Notfall/Express/wichtig/Erwähnung wie bisher");
+}
+// 2.605.0 KC-CLUB-PUSH-RUHE: Push bei offenem Chat lädt nur den Chat (gebündelt), sonst mehrere Pushes = einmal Startseite nach 1,5 s
+{
+  const fn = programm.slice(programm.indexOf("function pushNeuLaden()"), programm.indexOf("function pushNeuLaden()") + 400);
+  assert.ok(/if \(chatId && aktuelleAnsicht === "chat"\) \{ NEU_NACH_CHAT = true; return; \}/.test(fn) && /clearTimeout\(RT\.zaehlen\); RT\.zaehlen = setTimeout\(\(\) => \{ if \(!document\.hidden\) neuLaden\(\); \}, 1500\);/.test(fn), "Push gebündelt, im Chat nur der Chat");
+  assert.ok(/if \(e\.data\?\.typ === "push"\) \{ onlinePushGezeigt\(e\.data\.titel\); \/\* 2\.383\.0 \*\/ pushNeuLaden\(\);/.test(programm) && /if \(chatId && aktuelleAnsicht === "chat"\) chatSignalLaden\(true\); else if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\);/.test(programm), "Push-Handler nutzt die Bündelung, Ansage bleibt sofort");
+}
+// 2.606.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse – nur Server-Regeln, Freigabe, Plan unverändert, Übergaben eingerechnet
 {
   for (const a of ["dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_probe", "dienst_tausch_aktion"]) assert.ok(server.includes(`case "${a}": {`), a);
   assert.ok(/dienst_tausch: \{ t: "🔁 Dienst-Tausch-Börse", u: "[^"]+", standard: "admin" \}/.test(server), "erst nur Admin (Freigabe)");

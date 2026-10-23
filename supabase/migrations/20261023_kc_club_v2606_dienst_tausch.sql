@@ -1,4 +1,4 @@
--- KC-CLUB-DIENST-TAUSCH (Server/App 2.601.0, 22.10.2026, Wunsch Hansi „Dienst-Tausch-Börse hört sich gut an“):
+-- KC-CLUB-DIENST-TAUSCH (Server/App 2.606.0, 22.10.2026, Wunsch Hansi „Dienst-Tausch-Börse hört sich gut an“):
 -- Tauschbörse für geplante Dienste. Eine Zeile je Angebot: Mitglied bietet seinen Dienst an → ein anderes übernimmt → Planer bestätigt.
 -- Der veröffentlichte Dienstplan (kc_dp_plan_published) wird NICHT geändert – bis DP3 die Übergabe übernimmt (Codex-Auftrag),
 -- rechnet die Club-App bestätigte Übergaben selbst ein. Probe-Angebote (probe = true) legt nur der Admin zum Testen an.

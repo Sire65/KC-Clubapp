@@ -1,4 +1,4 @@
-// KC-CLUB-DIENST-TAUSCH (2.601.0, 22.10.2026, Wunsch Hansi „Dienst-Tausch-Börse hört sich gut an“): Regeln für die Tauschbörse.
+// KC-CLUB-DIENST-TAUSCH (2.606.0, 22.10.2026, Wunsch Hansi „Dienst-Tausch-Börse hört sich gut an“): Regeln für die Tauschbörse.
 // Ablauf: Mitglied bietet einen geplanten Dienst an („Ich kann nicht“) → ein anderes Mitglied tippt „Ich übernehme“ → der Planer (Admin)
 // bestätigt oder lehnt ab. Der Dienstplan (kc_dp_plan_published) bleibt unverändert, bis DP3 die Übergabe übernimmt (Codex-Auftrag);
 // bis dahin rechnet die Club-App bestätigte Übernahmen selbst ein (Mein Dienst, Dienst-Anmeldung).
