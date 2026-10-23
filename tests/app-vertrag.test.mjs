@@ -7329,6 +7329,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/notBerichtMerken\(\{ seit: new Date\(\)\.toISOString\(\), grund, aktion: NOT\.letzteAktion/.test(programm) && /if \(b\.grund === "probe"\) return;/.test(programm), "Bericht gemerkt, Probe nicht");
   assert.ok(/api\("diagnose", \{ art: "notbetrieb"/.test(programm) && /\.then\(\(\) => \{ try \{ localStorage\.removeItem\(NOT_BERICHT\); \} catch \{\} \}\)/.test(programm), "Bericht gesendet, erst nach Erfolg vergessen");
 }
+// 2.613.0 KC-CLUB-SONG: neuer Text – und jede Zeile hat genau so viele Silben wie Töne
+{
+  const a = programm.indexOf("const KS_AKK = "), b = programm.indexOf('BW_STUECKE.find((x) => x.id === "clubsong").takte');
+  const { KS_TEXT } = new Function(programm.slice(a, b) + "\n return { KS_TEXT };")();
+  for (const [teil, zeilen] of Object.entries(KS_TEXT)) for (const z of zeilen) {
+    const n = z[0].replace(/ ([–…])/g, " $1").split(" ").flatMap((w) => w.split("-")).length;
+    assert.equal(n, z[1].length, `Club-Song ${teil}: Silben = Töne bei „${z[0]}“`);
+  }
+  const txt = JSON.stringify(KS_TEXT);
+  assert.ok(txt.includes("der Ei-er-punsch, der lief.") && txt.includes("Am Sonn-tag in Rot") && txt.includes("der Kes-sel bleibt heiß!") && txt.includes("bei je-der Schlem-me-rei.") && !txt.includes("un-ser Preis") && !txt.includes("Fei-e-rei"), "neuer Text");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

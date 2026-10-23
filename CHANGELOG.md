@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.613.0 – 2026-10-23 – 🎤 Club-Song: neuer Text an vier Stellen (KC-CLUB-SONG)
+Wunsch Hansi („Der Text gefällt mir an 2–3 Stellen noch nicht … ändere den Text mit den Änderungen“). Strophe 2: „es duftete nach Grünkohl, der **Eierpunsch**, der lief“ (statt „und der Glühwein“) und „Am **Sonntag** in Rot“ (statt Freitag). Refrain: „wir rühren zusammen, **der Kessel bleibt heiß**!“ (statt „das ist unser Preis“). Bridge: „in jedem Rezept und bei jeder **Schlemmerei**“ (statt „in jeder Feierei“). Silbenzahl jeder Zeile = Töne der Melodie (geprüft), Melodie unverändert. Eingespielt zum 20-Uhr-Termin. Rückweg: App 2.612.0.
+
 ## 2.612.0 – 2026-10-23 – 🕙 Termin aus Nachricht: Uhrzeit nicht mehr verdreht (KC-CLUB-TERMIN-UHRZEIT)
 Fund Hansi: „…haben wir uns auf 10 Uhr verständigt. Nachmittags wird es schon früh dunkel“ wurde als 22:00 Uhr übernommen. Ursache: Ein „abends/nachmittags/mittags“ irgendwo in der Nachricht hat jede Uhrzeit von 1 bis 11 auf den Abend geschoben.
 - Tageszeit-Wörter zählen nur noch direkt bei der Uhrzeit, nie über Komma oder Satzende hinweg („10 Uhr abends“, „abends um 7“, „morgens um 10“).

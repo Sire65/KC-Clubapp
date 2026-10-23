@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.612.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.613.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18301,19 +18301,19 @@ const KS_TEXT = {
     ["Vom Kran-ken-haus, vom Al-ten-heim, mit Herz und mit Hand,", [64, 64, 64, 67, 67, 69, 69, 67, 65, 67, 65, 64, 62]],
     ["und kei-ner von uns ahn-te, was da gra-de ent-stand.", [60, 62, 64, 64, 65, 67, 67, 65, 64, 62, 64, 62, 60]]],
   s2: [["Dann kam fünf-und-neun-zig, der Weih-nachts-markt rief,", [64, 64, 64, 62, 64, 67, 65, 64, 62, 64, 60]],
-    ["es duf-te-te nach Grün-kohl, und der Glüh-wein, der lief.", [62, 62, 64, 65, 65, 67, 65, 64, 64, 62, 60, 62, 64]],
-    ["Am Frei-tag in Rot und un-ter der Wo-che in Weiß,", [64, 64, 64, 67, 67, 69, 69, 67, 65, 67, 65, 64, 62]],
+    ["es duf-te-te nach Grün-kohl, der Ei-er-punsch, der lief.", [62, 62, 64, 65, 65, 67, 65, 64, 64, 62, 60, 62, 64]], // 2.613.0 (Wunsch Hansi): Eierpunsch statt Glühwein
+    ["Am Sonn-tag in Rot und un-ter der Wo-che in Weiß,", /* 2.613.0 (Wunsch Hansi): Sonntag statt Freitag */ [64, 64, 64, 67, 67, 69, 69, 67, 65, 67, 65, 64, 62]],
     ["und was wir ver-die-nen, das ge-ben wir wei-ter – mit Fleiß.", [60, 62, 64, 64, 64, 65, 67, 67, 65, 64, 62, 64, 62, 60]]],
   pre: [["Ein Löf-fel, ein Topf und ein Traum –", [65, 65, 64, 65, 67, 69, 67, 72]],
     ["wer hät-te das ge-dacht? Man glaubt es kaum …", [65, 65, 64, 65, 67, 69, 72, 71, 69, 71]]],
   ref: [["Seit ein-und-neun-zig – Kö-che-club Wer-ne!", KS_HOOK, true],
     ["Wir ko-chen mit Herz, und das tun wir so ger-ne!", [64, 65, 67, 69, 69, 72, 72, 69, 67, 65, 67, 65]],
     ["Ob Grün-kohl, ob Punsch, ob die Ja-cke rot o-der weiß –", [67, 67, 69, 72, 72, 71, 69, 71, 72, 74, 72, 71, 72]],
-    ["wir rüh-ren zu-sam-men, das ist un-ser Preis!", [69, 69, 69, 67, 65, 65, 67, 69, 71, 72, 74]],
+    ["wir rüh-ren zu-sam-men, der Kes-sel bleibt heiß!", [69, 69, 69, 67, 65, 65, 67, 69, 71, 72, 74]], // 2.613.0 (Wunsch Hansi „unser Preis – andere Idee?“): „der Kessel bleibt heiß“
     ["Seit ein-und-neun-zig – da glüht un-ser Herd,", KS_HOOK, true], // 2.417.0 (Wunsch Hansi): „glüht“ statt „brennt“
     ["weil Freund-schaft im-mer da-zu ge-hört!", [65, 65, 67, 69, 72, 71, 67, 64, 60]]], // 2.417.0 (Wunsch Hansi): neuer Text, Melodie auf 9 Silben gekürzt (gleicher Bogen, Schluss auf dem Grundton)
   bridge: [["Man-che sind ge-gan-gen, doch sie sind noch da-bei,", [69, 69, 67, 65, 65, 64, 64, 65, 67, 69, 67, 65]],
-    ["in je-dem Re-zept und in je-der Fei-e-rei.", [64, 64, 65, 67, 67, 64, 64, 65, 67, 69, 67, 64]],
+    ["in je-dem Re-zept und bei je-der Schlem-me-rei.", [64, 64, 65, 67, 67, 64, 64, 65, 67, 69, 67, 64]], // 2.613.0 (Wunsch Hansi): „Schlemmerei“ statt „Feierei“
     ["Und kommt mal ein Neu-er, dann rü-cken wir zu-samm' –", [69, 69, 69, 72, 72, 69, 67, 69, 71, 72, 74, 72]],
     ["ein Platz an der Ta-fel ist im-mer noch frei – na komm!", [72, 72, 71, 69, 71, 72, 74, 72, 71, 69, 71, 74, 76]]],
 };
