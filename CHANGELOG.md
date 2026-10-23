@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.608.0 – 2026-10-23 – ✍️ Abstimmung mit freier Antwort + Vorlage Weihnachtsessen (KC-CLUB-ABSTIMMUNG-FREITEXT)
+Wunsch Hansi („welche Allergie oder Unverträglichkeiten“ und „beim Restaurant-Vorschlag Platz lassen für einen Namen“).
+- Abstimmung mit mehreren Fragen: neue Frage-Art „✍️ Freie Antwort – zum Eintippen statt Ankreuzen“ (höchstens 100 Zeichen, ändern oder leeren bis zum Ende). Nur bei offenen Abstimmungen – bei geheimen würde der Text verraten, wer schreibt.
+- Ergebnis: die verschiedenen Antworten mit Namen (gleiche Texte zusammengezählt), auch in der Ergebnis-Mail. Ankreuzbogen: Schreiblinien.
+- Vorlage „🍽️ Weihnachtsessen – wohin gehen wir?“: bei „Anderer Vorschlag“ fragt die App nach dem Namen des Restaurants; bei „Allergie oder Unverträglichkeit“ folgt die Liste (Gluten, Laktose/Milch, Ei, Nüsse, Erdnüsse, Fisch, Krebstiere, Soja, Sellerie, Senf, Sesam, Etwas anderes) und bei „Etwas anderes“ ein Feld zum Eintragen. Verschickt wird erst mit „Abstimmung starten“.
+- Test: Vertragstest-Block 2.608.0. Rückweg: App/Server 2.607.0.
+
 ## 2.607.0 – 2026-10-23 – 🔐 Sicherheit: Zugangslinks aufräumen, Geheimnis-Wächter, Durchsicht der Datenbank-Funktionen (KC-CLUB-ZUGANG-AUFRAEUMEN, KC-CLUB-GEHEIMNIS-WAECHTER)
 Wunsch Hansi („baue deine 4, 5, 6“ nach der Frage zur PHP-Lücke – Club-App nutzt kein PHP, nicht betroffen).
 - 🔑 Sicherheits-Check (nur Admin): neue Karte „Zugangslinks“ – oben stehen 💤 seit über 21 Tagen nie benutzte Links, 🕰️ über 60 Tage nicht in der App, 🚪 Links von Personen, die kein aktives Mitglied mehr sind. Je Person „⛔ Link abschalten“ (sofort ungültig, auch auf angemeldeten Geräten) oder „🔗 Neuer Link“. Die App schaltet nie von selbst ab; eigener Zugang nicht abschaltbar.

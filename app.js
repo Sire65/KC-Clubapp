@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.607.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.608.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27954,7 +27954,10 @@ function paketFrageKarte(v, l = []) {
   const wennText = w && vor ? `<p class="hinweis pk-wenn">↪️ Folgefrage zu „${esc(vor.titel)}“${vor.geheim && offen ? ` – nur beantworten, wenn du dort „${esc(w.antwort)}“ gewählt hast` : ` (bei „${esc(w.antwort)}“)`}</p>` : "";
   // 2.555.0 KC-CLUB-ABSTIMMUNG-MEHRFACH: ankreuzen; offen sofort gespeichert, geheim erst ankreuzen und einmal abgeben
   const mehr = !!v.paket?.mehrfach, gew = mehr ? new Set(v.geheim ? PK_AUSWAHL[v.id] || [] : v.meine || []) : null;
-  const wahl = !kannWaehlen ? "" : mehr
+  // 2.608.0 KC-CLUB-ABSTIMMUNG-FREITEXT: Antwort eintippen (höchstens 100 Zeichen), „💾 Speichern“, leer = zurücknehmen
+  const wahl = !kannWaehlen ? "" : v.paket?.freitext
+    ? `<div class="pk-freitext"><input id="pkText-${esc(v.id)}" maxlength="100" placeholder="Hier eintippen …" value="${esc(v.meine || "")}"><button class="knopf haupt klein" onclick="pkTextSpeichern('${esc(v.id)}')">💾 ${v.meine ? "Ändern" : "Speichern"}</button></div>`
+    : mehr
     ? `<p class="hinweis" style="margin:6px 0 0">☑️ Mehrere Antworten möglich</p><div class="wahl">${v.optionen.map((o) => `<button class="${gew.has(o) ? "an" : ""}" onclick='pkKreuz("${v.id}", ${hlJs(o)})'>${gew.has(o) ? "☑️ " : "⬜ "}${esc(o)}</button>`).join("")}</div>`
       + (v.geheim ? `<div class="knoepfe"><button class="knopf haupt klein" ${gew.size ? "" : "disabled"} onclick="pkAbgeben('${v.id}')">🗳️ Stimme abgeben (${gew.size})</button></div>` : "")
     : `<div class="wahl">${v.optionen.map((o) => `<button class="${v.meine === o ? "an" : ""}" onclick='stimme("${v.id}", ${hlJs(o)})'>${v.meine === o ? "✔ " : ""}${esc(o)}</button>`).join("")}</div>`;
@@ -27990,6 +27993,11 @@ function vorschlagPaketInfo(pid) {
     ${fragen}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div><button class="knopf" style="text-align:center" onclick="$('vorschlagInfo').remove()">Schließen</button>`);
   f.dataset.paket = pid;
   const innen = f.querySelector(".blatt-innen"); if (innen && alt) innen.scrollTop = alt; // nach dem Abstimmen an derselben Stelle bleiben
+}
+async function pkTextSpeichern(id) {
+  const t = ($(`pkText-${id}`)?.value || "").trim(), v = VORSCHLAG_MAP.get(id);
+  if (!t && !v?.meine) return melde("Bitte etwas eintippen.", true);
+  await stimme(id, t || null);
 }
 function pkKreuz(id, o) {
   const v = VORSCHLAG_MAP.get(id); if (!v) return;
@@ -28045,7 +28053,7 @@ function druckAbstimmung({ pid, art }) {
   const strich = (mm) => `<span style="display:inline-block;width:${mm}mm;border-bottom:1px solid #555;height:4mm;vertical-align:-1mm"></span>`;
   const nrVon = (x) => l.indexOf(x) + 1;
   const zusatzVon = (x) => { const w = x.paket?.wenn, vor = w && l.find((y) => y.paket?.nr === w.nr);
-    return [x.paket?.mehrfach ? "☑️ mehrere möglich" : "", vor ? `↪️ nur ausfüllen, wenn bei Frage ${nrVon(vor)} „${esc(w.antwort)}“ angekreuzt ist` : ""].filter(Boolean).join(" · "); };
+    return [x.paket?.mehrfach ? "☑️ mehrere möglich" : x.paket?.freitext ? "✍️ bitte eintragen" : "", vor ? `↪️ nur ausfüllen, wenn bei Frage ${nrVon(vor)} „${esc(w.antwort)}“ angekreuzt ist` : ""].filter(Boolean).join(" · "); };
   const frageText = (x) => `<b>${esc(x.titel)}</b>${x.beschreibung ? `<div style="font-size:3mm;font-style:italic;color:#5b544d;margin-top:.5mm">${esc(x.beschreibung)}</div>` : ""}${zusatzVon(x) ? `<div style="font-size:2.9mm;color:#741521;margin-top:.5mm">${zusatzVon(x)}</div>` : ""}`;
   if (!ergebnis) {
     // Tabelle je Bereich: Nr. · Frage · Antworten zum Ankreuzen
@@ -28058,7 +28066,7 @@ function druckAbstimmung({ pid, art }) {
         tab += `<table style="width:100%;border-collapse:collapse;margin:3.5mm 0 0;font-size:${fsz}"><thead><tr><th colspan="3" style="${td};background:#f3e9dc;color:#741521;text-align:left;font:700 4.2mm/1.2 Georgia,'Times New Roman',serif;border-bottom:.6mm solid #741521">${b ? "📂 " + esc(b) : "Fragen"}</th></tr>
           <tr><th style="${td};width:7mm;background:#faf5ef;font-size:2.9mm">Nr.</th><th style="${td};background:#faf5ef;font-size:2.9mm;text-align:left">Frage</th><th style="${td};width:62mm;background:#faf5ef;font-size:2.9mm;text-align:left">Antwort ankreuzen</th></tr></thead><tbody>`; }
       tab += `<tr style="break-inside:avoid"><td style="${td};text-align:center;font-weight:800;color:#741521">${nrVon(x)}</td><td style="${td}">${frageText(x)}</td>
-        <td style="${td}">${x.optionen.map((o) => `<div style="display:flex;align-items:flex-start;margin:0 0 1.3mm">${box}<span>${esc(o)}</span></div>`).join("")}</td></tr>`;
+        <td style="${td}">${x.paket?.freitext ? `<div style="margin:3mm 0 1mm">${strich(58)}</div><div style="margin:3mm 0 1mm">${strich(58)}</div>` /* 2.608.0: freie Antwort = Schreiblinien */ : x.optionen.map((o) => `<div style="display:flex;align-items:flex-start;margin:0 0 1.3mm">${box}<span>${esc(o)}</span></div>`).join("")}</td></tr>`;
     }
     tab += zu();
     const hinweis = `<p style="margin:0;font-size:3.1mm;color:#5b544d">Bitte je Frage <b>ein</b> Kästchen ankreuzen ☒ – wo „mehrere möglich“ steht, auch mehrere.${v.frist && v.status === "offen" ? ` Abgabe bis <b>${esc(wann(v.frist))}</b>.` : ""}</p>`;
@@ -28189,7 +28197,7 @@ function oaBilderBeobachten() {
 // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET: bei 🗳️ Abstimmung „❓ Eine Frage“ (wie bisher) oder „📋 Mehrere Fragen mit Überschrift“ (Bereiche + Fragen)
 let vfPaket = false, VF_PK = [];
 let VF_PK_NR = 0;
-const vfPkFrage = (x = {}) => ({ key: "q" + ++VF_PK_NR, frage: "", beschreibung: "", optionen: "Ja\nNein\nEnthaltung", mehrfach: false, wenn: null, ...x });
+const vfPkFrage = (x = {}) => ({ key: "q" + ++VF_PK_NR, frage: "", beschreibung: "", optionen: "Ja\nNein\nEnthaltung", mehrfach: false, freitext: false, wenn: null, ...x });
 const vfPkAnzahl = () => VF_PK.reduce((s, b) => s + b.fragen.length, 0);
 const vfPkOpt = (f) => String(f.optionen || "").split("\n").map((x) => x.trim()).filter(Boolean);
 function vfPkZeigen() {
@@ -28198,14 +28206,15 @@ function vfPkZeigen() {
   // 2.555.0 KC-CLUB-ABSTIMMUNG-WENN: „Nur zeigen, wenn …“ – Auswahl aus den Antworten der Fragen davor (kein Tippen)
   const wennWahl = (f, i, j) => { const vorher = alle.slice(0, alle.indexOf(f)); if (!vorher.length) return "";
     const an = f.wenn ? f.wenn.key + "|" + f.wenn.antwort : "";
-    return `<label class="feld">Nur zeigen, wenn …<select onchange="vfPkWenn(${i},${j},this.value)"><option value="">– immer zeigen –</option>${vorher.map((g, k) => vfPkOpt(g).map((o) => `<option value="${esc(g.key + "|" + o)}" ${an === g.key + "|" + o ? "selected" : ""}>Frage ${k + 1} (${esc((g.frage || "…").slice(0, 40))}) = ${esc(o)}</option>`).join("")).join("")}</select></label>`; };
+    return `<label class="feld">Nur zeigen, wenn …<select onchange="vfPkWenn(${i},${j},this.value)"><option value="">– immer zeigen –</option>${vorher.map((g, k) => (g.freitext ? [] : vfPkOpt(g)).map((o) => `<option value="${esc(g.key + "|" + o)}" ${an === g.key + "|" + o ? "selected" : ""}>Frage ${k + 1} (${esc((g.frage || "…").slice(0, 40))}) = ${esc(o)}</option>`).join("")).join("")}</select></label>`; };
   z.innerHTML = VF_PK.map((b, i) => `<div class="sp-projekt"><div class="hl-frage" style="margin-top:0">📂 Bereich ${i + 1}${VF_PK.length > 1 ? ` <button aria-label="Bereich löschen" class="knopf klein" style="float:right" onclick="VF_PK.splice(${i},1);vfPkZeigen()">🗑️</button>` : ""}</div>
       <label class="feld">Name des Bereichs (freiwillig)<input maxlength="80" placeholder="z. B. Technik" value="${esc(b.name)}" oninput="VF_PK[${i}].name=this.value"></label>
       ${b.fragen.map((f, j) => `<div class="pk-frage"><div class="hinweis" style="margin:4px 0">❓ Frage ${alle.indexOf(f) + 1}${!eine ? ` <button aria-label="Frage löschen" class="knopf klein" style="float:right" onclick="vfPkWeg(${i},${j})">🗑️</button>` : ""}</div>
         <label class="feld">Frage<input maxlength="150" placeholder="z. B. Sollen Tablets und Halterungen beschafft werden?" value="${esc(f.frage)}" oninput="VF_PK[${i}].fragen[${j}].frage=this.value" onchange="vfPkZeigen()"></label>
         <label class="feld">Erklärung (freiwillig)<input maxlength="1000" placeholder="z. B. Vorteil: genaue Auswertung nach dem Weihnachtsmarkt" value="${esc(f.beschreibung || "")}" oninput="VF_PK[${i}].fragen[${j}].beschreibung=this.value"></label>
-        <label class="feld">Antworten (eine pro Zeile, höchstens 12)<textarea rows="3" oninput="VF_PK[${i}].fragen[${j}].optionen=this.value" onchange="vfPkZeigen()">${esc(f.optionen)}</textarea></label>
-        <label class="schalter"><span>☑️ Mehrere Antworten ankreuzen erlauben</span><input type="checkbox" ${f.mehrfach ? "checked" : ""} onchange="VF_PK[${i}].fragen[${j}].mehrfach=this.checked"></label>
+        <label class="schalter"><span>✍️ Freie Antwort – zum Eintippen statt Ankreuzen</span><input type="checkbox" ${f.freitext ? "checked" : ""} onchange="VF_PK[${i}].fragen[${j}].freitext=this.checked;vfPkZeigen()"></label>
+        ${f.freitext ? '<p class="hinweis" style="margin:0 0 6px">Jeder tippt seine Antwort ein (höchstens 100 Zeichen). Nur bei offenen, nicht bei geheimen Abstimmungen.</p>' : `<label class="feld">Antworten (eine pro Zeile, höchstens 12)<textarea rows="3" oninput="VF_PK[${i}].fragen[${j}].optionen=this.value" onchange="vfPkZeigen()">${esc(f.optionen)}</textarea></label>
+        <label class="schalter"><span>☑️ Mehrere Antworten ankreuzen erlauben</span><input type="checkbox" ${f.mehrfach ? "checked" : ""} onchange="VF_PK[${i}].fragen[${j}].mehrfach=this.checked"></label>`}
         ${wennWahl(f, i, j)}</div>`).join("")}
       <button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK[${i}].fragen.push(vfPkFrage());vfPkZeigen()">＋ Frage in diesem Bereich</button></div>`).join("")
     + `<button class="knopf klein" ${voll ? "disabled" : ""} onclick="VF_PK.push({ name: '', fragen: [vfPkFrage()] });vfPkZeigen()">＋ weiterer Bereich</button>${voll ? '<p class="hinweis">Höchstens 30 Fragen.</p>' : ""}`;
@@ -28213,7 +28222,7 @@ function vfPkZeigen() {
 // Fragen des Formulars in der Form, die der Server bekommt (wenn.nr = laufende Nummer)
 function vfPkFragen() {
   const alle = VF_PK.flatMap((b) => b.fragen.map((f) => ({ b, f }))), nrVon = (key) => alle.findIndex((x) => x.f.key === key);
-  return alle.map(({ b, f }) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), beschreibung: (f.beschreibung || "").trim(), optionen: vfPkOpt(f), mehrfach: !!f.mehrfach,
+  return alle.map(({ b, f }) => ({ abschnitt: b.name.trim(), frage: f.frage.trim(), beschreibung: (f.beschreibung || "").trim(), optionen: f.freitext ? [] : vfPkOpt(f), mehrfach: !f.freitext && !!f.mehrfach, freitext: !!f.freitext,
     wenn: f.wenn && nrVon(f.wenn.key) >= 0 ? { nr: nrVon(f.wenn.key), antwort: f.wenn.antwort } : null }));
 }
 // 2.560.0 KC-CLUB-ABSTIMMUNG-BOGEN-ENTWURF (Hansi: „ich sehe den Button nicht, um den leeren Bogen wegzuschicken“): Ankreuzbogen schon aus dem
@@ -28224,8 +28233,8 @@ function vfBogenVorschau() {
   if (!titel) return melde("Bitte eine Überschrift eingeben.", true);
   if (!fr.length) return melde("Bitte mindestens eine Frage eingeben.", true);
   const frist = $("vfFristDatum")?.value ? new Date(taZeitpunkt($("vfFristDatum").value, $("vfFristZeit").value || "20:00")).toISOString() : null, geheim = !!$("vfGeheim")?.checked;
-  VF_ENTWURF = fr.map((f, nr) => ({ id: "ENTWURF-" + nr, art: "abstimmung", titel: f.frage, beschreibung: f.beschreibung || null, optionen: f.optionen.length ? f.optionen : ["Ja", "Nein", "Enthaltung"], geheim, status: "offen", frist,
-    paket: { id: "ENTWURF", titel, beschreibung: $("vfBeschr").value.trim() || null, abschnitt: f.abschnitt || null, nr, ...(f.mehrfach ? { mehrfach: true } : {}), ...(f.wenn ? { wenn: f.wenn } : {}) } }));
+  VF_ENTWURF = fr.map((f, nr) => ({ id: "ENTWURF-" + nr, art: "abstimmung", titel: f.frage, beschreibung: f.beschreibung || null, optionen: f.freitext ? [] : f.optionen.length ? f.optionen : ["Ja", "Nein", "Enthaltung"], geheim, status: "offen", frist,
+    paket: { id: "ENTWURF", titel, beschreibung: $("vfBeschr").value.trim() || null, abschnitt: f.abschnitt || null, nr, ...(f.mehrfach ? { mehrfach: true } : {}), ...(f.freitext ? { freitext: true } : {}), ...(f.wenn ? { wenn: f.wenn } : {}) } }));
   abBogenDrucken("ENTWURF");
 }
 function vfPkWenn(i, j, wert) { const t = wert.indexOf("|"); VF_PK[i].fragen[j].wenn = t > 0 ? { key: wert.slice(0, t), antwort: wert.slice(t + 1) } : null; }
@@ -28240,7 +28249,7 @@ async function vfVorlagen() {
 }
 function vfVorlageNehmen(v) {
   const keys = []; // wenn.nr in der Vorlage = laufende Nummer der Frage (ab 0)
-  VF_PK = v.bereiche.map((b) => ({ name: b.name || "", fragen: b.fragen.map((x) => { const f = vfPkFrage({ frage: x.frage, beschreibung: x.beschreibung || "", optionen: (x.optionen || ["Ja", "Nein", "Enthaltung"]).join("\n"), mehrfach: !!x.mehrfach }); f._wenn = x.wenn; keys.push(f.key); return f; }) }));
+  VF_PK = v.bereiche.map((b) => ({ name: b.name || "", fragen: b.fragen.map((x) => { const f = vfPkFrage({ frage: x.frage, beschreibung: x.beschreibung || "", optionen: (x.optionen || ["Ja", "Nein", "Enthaltung"]).join("\n"), mehrfach: !!x.mehrfach, freitext: !!x.freitext }); f._wenn = x.wenn; keys.push(f.key); return f; }) }));
   VF_PK.forEach((b) => b.fragen.forEach((f) => { f.wenn = f._wenn && keys[f._wenn.nr] ? { key: keys[f._wenn.nr], antwort: f._wenn.antwort } : null; delete f._wenn; }));
   vorschlagForm("abstimmung", true); $("vfTitel").value = v.titel || ""; $("vfBeschr").value = v.beschreibung || "";
   melde("📄 Vorlage übernommen – bitte prüfen und dann „Abstimmung starten“");
@@ -28330,7 +28339,8 @@ async function vorschlagSpeichern(knopf) {
     daten.fragen = vfPkFragen();
     const leer = daten.fragen.findIndex((f) => !f.frage);
     if (leer >= 0) return melde(`Bitte Frage ${leer + 1} ausfüllen oder mit 🗑️ löschen.`, true);
-    const kurz = daten.fragen.find((f) => f.optionen.length < 2 || f.optionen.length > 12);
+    if ($("vfGeheim")?.checked && daten.fragen.some((f) => f.freitext)) return melde("Freie Antworten gehen nur bei offenen Abstimmungen – bitte „geheim“ ausschalten oder die freie Antwort entfernen.", true); // 2.608.0
+    const kurz = daten.fragen.find((f) => !f.freitext && (f.optionen.length < 2 || f.optionen.length > 12));
     if (kurz) return melde(`Bitte bei „${kurz.frage}“ 2 bis 12 Antworten angeben (eine pro Zeile).`, true);
     const falsch = daten.fragen.findIndex((f, i) => f.wenn && !(f.wenn.nr < i && daten.fragen[f.wenn.nr].optionen.includes(f.wenn.antwort)));
     if (falsch >= 0) return melde(`Frage ${falsch + 1}: „Nur zeigen, wenn …“ passt nicht mehr – bitte neu wählen.`, true);

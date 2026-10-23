@@ -8,13 +8,16 @@
         {
           "name": "Restaurant",
           "fragen": [
-            { "frage": "Welches Restaurant?", "beschreibung": "Mehrere Antworten möglich. Letztes Jahr waren wir in der Hornemühle.", "mehrfach": true, "optionen": ["Hornemühle (wie letztes Jahr)", "Wittenbrink's Hof", "Hotel-Restaurant Baumhove „Am Markt“", "Landgasthaus Heidekrug", "Anderer Vorschlag (bitte in die Gruppe schreiben)"] }
+            { "frage": "Welches Restaurant?", "beschreibung": "Mehrere Antworten möglich. Letztes Jahr waren wir in der Hornemühle.", "mehrfach": true, "optionen": ["Hornemühle (wie letztes Jahr)", "Wittenbrink's Hof", "Hotel-Restaurant Baumhove „Am Markt“", "Landgasthaus Heidekrug", "Anderer Vorschlag"] },
+            { "frage": "Welches Restaurant schlägst du vor?", "beschreibung": "Bitte Name und Ort eintragen.", "freitext": true, "wenn": { "nr": 0, "antwort": "Anderer Vorschlag" } }
           ]
         },
         {
           "name": "Essen",
           "fragen": [
-            { "frage": "Brauchst du etwas Besonderes beim Essen?", "beschreibung": "Für die Absprache mit dem Restaurant. Bei Allergie oder Unverträglichkeit sag bitte dem Bescheid, der das Essen bespricht.", "optionen": ["Nein", "Vegetarisch", "Allergie oder Unverträglichkeit"] }
+            { "frage": "Brauchst du etwas Besonderes beim Essen?", "beschreibung": "Für die Absprache mit dem Restaurant. Mehrere Antworten möglich.", "mehrfach": true, "optionen": ["Nein, nichts Besonderes", "Vegetarisch", "Allergie oder Unverträglichkeit"] },
+            { "frage": "Welche Allergie oder Unverträglichkeit?", "beschreibung": "Mehrere Antworten möglich.", "mehrfach": true, "wenn": { "nr": 2, "antwort": "Allergie oder Unverträglichkeit" }, "optionen": ["Gluten (Weizen u. a.)", "Laktose / Milch", "Ei", "Nüsse", "Erdnüsse", "Fisch", "Krebstiere / Meeresfrüchte", "Soja", "Sellerie", "Senf", "Sesam", "Etwas anderes"] },
+            { "frage": "Was genau verträgst du nicht?", "beschreibung": "Bitte eintragen, damit wir es dem Restaurant sagen können.", "freitext": true, "wenn": { "nr": 3, "antwort": "Etwas anderes" } }
           ]
         },
         {

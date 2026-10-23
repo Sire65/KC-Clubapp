@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11910,8 +11910,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const vl = JSON.parse(lies("vorlagen/abstimmungen.json")).vorlagen;
   for (const v of vl) { const alle = v.bereiche.flatMap((b) => b.fragen);
     assert.ok(v.titel && alle.length >= 1 && alle.length <= 30, "Vorlage " + v.titel + ": 1–30 Fragen");
-    alle.forEach((f, i) => { const o = f.optionen || ["Ja", "Nein", "Enthaltung"]; assert.ok(f.frage && f.frage.length <= 150 && o.length >= 2 && o.length <= 12 && o.every((x) => x.length <= 60), "Vorlage-Frage gültig: " + f.frage);
-      if (f.wenn) assert.ok(f.wenn.nr < i && (alle[f.wenn.nr].optionen || ["Ja", "Nein", "Enthaltung"]).includes(f.wenn.antwort), "Vorlage-Bedingung gültig: " + f.frage); });
+    alle.forEach((f, i) => { const o = f.freitext ? (assert.ok(!f.optionen && !f.mehrfach, "Freitext ohne Antworten: " + f.frage), ["✍️", "✍️"]) : f.optionen || ["Ja", "Nein", "Enthaltung"]; // 2.608.0 assert.ok(f.frage && f.frage.length <= 150 && o.length >= 2 && o.length <= 12 && o.every((x) => x.length <= 60), "Vorlage-Frage gültig: " + f.frage);
+      if (f.wenn) assert.ok(f.wenn.nr < i && !alle[f.wenn.nr].freitext && (alle[f.wenn.nr].optionen || ["Ja", "Nein", "Enthaltung"]).includes(f.wenn.antwort), "Vorlage-Bedingung gültig: " + f.frage); });
   }
 }
 // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK (Wunsch Hansi „sauberes, ordentliches Ankreuzformular mit Köcheclub-Kopfbogen“ + Ergebnis)
@@ -12271,4 +12271,14 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(!/token_hash/.test(c.slice(c.indexOf('case "zugaenge_pruefen"'), c.indexOf('case "zugang_abschalten"'))), "Liste ohne Schlüssel-Hashes");
   assert.ok(/if \(ICH\?\.admin\) \{ fremdZeigen\(\); zgZeigen\(\); \}/.test(html) && /<b>\$\{ZG_SYM\[x\.stufe\] \|\| ""\} \$\{esc\(x\.name\)\}<\/b>/.test(html), "App: Karte im Sicherheits-Check, Namen escaped");
   assert.ok(/run: node tests\/geheimnis-waechter\.test\.mjs/.test(lies(".github/workflows/tests.yml")), "Geheimnis-Wächter läuft vor dem Einspielen");
+}
+// 2.608.0 KC-CLUB-ABSTIMMUNG-FREITEXT: Frage mit freier Antwort (eintippen) – nur offen, höchstens 100 Zeichen, Ergebnis = verschiedene Texte mit Namen
+{
+  const sp = server.slice(server.indexOf('case "abstimmungspaket_speichern": {'), server.indexOf('case "vorschlag_stimme": {'));
+  assert.ok(/optionen: f\?\.freitext \? \[\] as string\[\]/.test(sp) && /if \(p\.geheim && fragen\.some\(\(f: any\) => f\.freitext\)\) throw/.test(sp) && /!f\.freitext && \(f\.optionen\.length < 2/.test(sp), "Speichern: Freitext ohne Antworten, nie geheim");
+  const st = server.slice(server.indexOf('case "vorschlag_stimme": {'), server.indexOf('case "vorschlag_status": {'));
+  assert.ok(/\} else if \(v\.paket\?\.freitext\) \{\s*\/\/[^\n]*\n\s*if \(v\.geheim\) throw/.test(st) && /const text = txt\(p\.wahl, 100\);/.test(st), "Stimme: Text höchstens 100 Zeichen, nie geheim");
+  assert.ok(/v\.paket\?\.freitext \? \[\.\.\.new Set\(s\.map\(\(x: any\) => String\(x\.wahl\)\)\)\]/.test(server) && /if \(v\.paket\?\.freitext\) return \[\.\.\.zaehl\.entries\(\)\]/.test(server), "Ergebnis: verschiedene Texte");
+  assert.ok(/<input id="pkText-\$\{esc\(v\.id\)\}" maxlength="100"[^>]*value="\$\{esc\(v\.meine \|\| ""\)\}">/.test(html) && /async function pkTextSpeichern\(id\)/.test(html), "App: Textfeld, escaped");
+  assert.ok(/✍️ Freie Antwort – zum Eintippen statt Ankreuzen/.test(html) && /freitext: !!x\.freitext \}\);/.test(html) && /x\.paket\?\.freitext \? `<div style="margin:3mm 0 1mm">\$\{strich\(58\)\}/.test(html), "Formular, Vorlage, Ankreuzbogen");
 }
