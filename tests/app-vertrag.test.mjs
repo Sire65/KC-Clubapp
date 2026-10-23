@@ -12397,3 +12397,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.equal(inRuhe([1, 0], null), false, "ohne Ruhezeit → mit Ton, auch nachts");
   assert.equal(inRuhe([1, 0], { ...ruhe, an: false }), false, "Ruhezeit aus → mit Ton");
 }
+// 2.617.0 KC-CLUB-INFOBAND-WEITER: Info-Band hält nicht mehr nach 45 s Ruhe an – nur bei knappem Akku
+{
+  assert.ok(/if \(document\.hidden \|\| aktuelleAnsicht !== "start" \|\| jzbAkkuKnapp \|\| Date\.now\(\) < IL\.halt \|\| !document\.getElementById\("infoLaufband"\)\) return;/.test(programm), "Info-Band: nur knapper Akku hält an");
+  assert.ok(/document\.documentElement\.classList\.toggle\("kc-ruhe", jzbAkkuKnapp \|\| Date\.now\(\) - jzbBedient > JZB_RUHE_MS\)/.test(programm), "Daueranimationen halten weiter nach 45 s an");
+  assert.ok(programm.indexOf("let jzbAkkuKnapp") > 0, "jzbAkkuKnapp ist global");
+}

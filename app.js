@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.616.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.617.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26064,7 +26064,7 @@ function ilBlaettern(r) {
 async function ilAntwort(id, a) { try { await antwort(id, a); } catch {} try { await neuLaden(); } catch {} ilZeigen(); }
 setInterval(() => {
   try {
-    if (document.hidden || aktuelleAnsicht !== "start" || document.documentElement.classList.contains("kc-ruhe") || Date.now() < IL.halt || !document.getElementById("infoLaufband")) return;
+    if (document.hidden || aktuelleAnsicht !== "start" || jzbAkkuKnapp || Date.now() < IL.halt || !document.getElementById("infoLaufband")) return; // 2.617.0 KC-CLUB-INFOBAND-WEITER: läuft auch nach 45 s ohne Antippen weiter (nur ein Textwechsel alle 6 s) – hält nur bei knappem Akku an
     if (++IL.takt % 15 === 0) ilZeigen(); // Antwort, Blinkstufe, Zahlen frisch halten (zeichnet nur bei Änderung)
     IL.uhr += 1000; if (IL.uhr < IL_TAKT_MS) return; IL.uhr = 0;
     if (IL.liste.length > 1) ilBlaettern(1);
