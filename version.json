@@ -1,17 +1,24 @@
 {
-  "version": "2.603.0",
+  "version": "2.604.0",
   "datum": "2026-10-22",
   "stufe": "RC",
   "mindest": "2.500.0",
   "neu": [
-    "Nachrichten gehen jetzt sofort raus – du kannst direkt weiterschreiben, auch wenn das Netz kurz hakt."
+    "Kleine Systemanpassung"
   ],
   "verlauf": [
+    {
+      "version": "2.604.0",
+      "datum": "2026-10-23",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
     {
       "version": "2.603.0",
       "datum": "2026-10-23",
       "neu": [
-        "Nachrichten gehen jetzt sofort raus – du kannst direkt weiterschreiben, auch wenn das Netz kurz hakt."
+        "Kleine Systemanpassung"
       ]
     },
     {
@@ -275,13 +282,6 @@
     },
     {
       "version": "2.563.0",
-      "datum": "2026-10-21",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.562.0",
       "datum": "2026-10-21",
       "neu": [
         "Kleine Systemanpassung"

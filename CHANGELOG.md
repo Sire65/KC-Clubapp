@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.604.0 – 2026-10-23 – Sofort-Senden (Korrektur Versionsnotiz)
+Wie 2.603.0 (Sende-Warteschlange); 2.603.0 wurde wegen eines roten Tests (Versionsnotiz) nicht eingespielt – hier korrigiert.
+
 ## 2.603.0 – 2026-10-23 – Nachrichten: Sofort-Senden mit Warteschlange
 ➤ legt die Nachricht in eine Warteschlange: sie steht sofort im Chat (⏳), das Schreibfeld ist sofort frei – gleich weiterschreiben. Abgearbeitet wird der Reihe nach, 🏎️ Express überholt die wartenden. Bei Netz-Wacklern bis zu 3 neue Versuche; der Server speichert jede Nachricht trotzdem nur einmal (Kennung). Klappt es nicht: ⚠️ mit 🔄 Nochmal / 🗑️ Löschen. Der Server antwortet nach dem Speichern sofort, Push/Mail laufen im Hintergrund (Notfall, Express, ❗ wichtig, @Erwähnung wie bisher). (KC-CLUB-SENDE-SCHLANGE)
 
