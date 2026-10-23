@@ -2,6 +2,30 @@
   "hinweis": "2.555.0 KC-CLUB-ABSTIMMUNG-VORLAGE: fertige Abstimmungen für „📄 Vorlage“ (Vorschläge → ＋ Neu → 🗳️ Abstimmung). optionen fehlt = Ja/Nein/Enthaltung; wenn.nr = laufende Nummer der Frage ab 0 (über alle Bereiche); mehrfach = mehrere Antworten ankreuzen.",
   "vorlagen": [
     {
+      "titel": "🍽️ Weihnachtsessen – wohin gehen wir?",
+      "beschreibung": "Nach dem Weihnachtsmarkt gehen wir im Januar wieder gemeinsam essen. Den Termin suchen wir mit der Terminfindung unter Termine – hier geht es um das Restaurant und die Vorbereitung.\n\nBitte bei jeder Frage abstimmen.",
+      "bereiche": [
+        {
+          "name": "Restaurant",
+          "fragen": [
+            { "frage": "Welches Restaurant?", "beschreibung": "Mehrere Antworten möglich. Letztes Jahr waren wir in der Hornemühle.", "mehrfach": true, "optionen": ["Hornemühle (wie letztes Jahr)", "Wittenbrink's Hof", "Hotel-Restaurant Baumhove „Am Markt“", "Landgasthaus Heidekrug", "Anderer Vorschlag (bitte in die Gruppe schreiben)"] }
+          ]
+        },
+        {
+          "name": "Essen",
+          "fragen": [
+            { "frage": "Brauchst du etwas Besonderes beim Essen?", "beschreibung": "Für die Absprache mit dem Restaurant. Bei Allergie oder Unverträglichkeit sag bitte dem Bescheid, der das Essen bespricht.", "optionen": ["Nein", "Vegetarisch", "Allergie oder Unverträglichkeit"] }
+          ]
+        },
+        {
+          "name": "Aufgaben",
+          "fragen": [
+            { "frage": "Wer übernimmt eine Aufgabe?", "beschreibung": "Mehrere Antworten möglich.", "mehrfach": true, "optionen": ["📞 Ich reserviere im Restaurant", "🍽️ Ich bespreche das Essen mit dem Restaurant", "🙋 Ich helfe gern mit", "Diesmal nicht"] }
+          ]
+        }
+      ]
+    },
+    {
       "titel": "Technik, Bilderrechner, Abrechnung",
       "beschreibung": "Für den kommenden Weihnachtsmarkt sollten im Vorfeld einige Entscheidungen getroffen werden. So ist sichergestellt, dass alle nach den gleichen Regeln arbeiten und keine Unsicherheiten entstehen. Alle, die bei Hansi in der Bilderrechner-Schulung waren, wurden über die verschiedenen Vorgehensweisen informiert.\n\nBitte bei jeder Frage abstimmen.",
       "bereiche": [
