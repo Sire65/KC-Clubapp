@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.615.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.616.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -197,6 +197,9 @@ const fZeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", 
 const fKurz = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit" });
 const wann = (iso) => `${fTag.format(new Date(iso))}, ${fZeit.format(new Date(iso))} Uhr`;
 const zeitKurz = (iso) => { const d = new Date(iso), h = new Date(); return d.toDateString() === h.toDateString() ? fZeit.format(d) : fKurz.format(d) + " " + fZeit.format(d); };
+// 2.616.0 KC-CLUB-TESTLISTE-HEUTE (Fund Hansi: „01:01“ sah aus wie der 1. Januar): in den Testlisten immer mit Tagesangabe – „heute 01:01“, „gestern 19:32“, sonst „23.10. 08:42“
+const zeitMitTag = (iso) => { const d = new Date(iso), h = new Date(), g = new Date(h); g.setDate(h.getDate() - 1);
+  return d.toDateString() === h.toDateString() ? "heute " + fZeit.format(d) : d.toDateString() === g.toDateString() ? "gestern " + fZeit.format(d) : fKurz.format(d) + " " + fZeit.format(d); };
 const initialen = (n) => String(n || "?").split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
 // ---------- KC-CLUB-AVATAR (2.23.85, Wunsch Hansi): 30 selbst gezeichnete Koch-Figuren (15 Frauen, 15 Männer); 2.23.96: 10 Köche mit Schnauzer dazu ----------
 // Reine SVG-Zeichnung im Code – keine fremden Bilder, keine Rechte Dritter, keine Kosten. Gespeichert wird nur der Code (z. B. „w03“).
@@ -14614,7 +14617,7 @@ function ttZeichnen() {
       <table class="vb-tabelle">${zeile("Messungen", `${d.mess.filter((m) => !m.pause).length}`)}${zeile("🟥 Aussetzer", d.aussetzer ? `<b>${d.aussetzer}×</b> · längster ca. ${Math.round(d.laengster / 1000)} s` : "keine")}${zeile("🟨 Langsam", `${d.mess.filter((m) => m.ms > 1000).length}×`)}${zeile("Typische Antwortzeit", z(ttMedian(d.mess.map((m) => m.ms)), " ms"))}</table>` : ""}
     ${!an && (e?.fertig || d?.fertig) ? `<div class="knoepfe"><button type="button" class="knopf" onclick="ttTeilen()">📤 Ergebnis teilen</button></div>` : ""}
     ${(() => { const v = ttVerlauf(); if (!v.length) return ""; return `<b style="font-size:.9rem;display:block;margin-top:10px">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle">
-      ${v.map((t) => `<tr><td>${esc(zeitKurz(new Date(t.zeit).toISOString()))}<br><small class="hinweis">${NETZARTEN[t.netz] || "–"}</small></td><td>${esc(t.kurz || "")}</td></tr>`).join("")}</table>`; })()}
+      ${v.map((t) => `<tr><td>${esc(zeitMitTag(new Date(t.zeit).toISOString()))}<br><small class="hinweis">${NETZARTEN[t.netz] || "–"}</small></td><td>${esc(t.kurz || "")}</td></tr>`).join("")}</table>`; })()}
     <p class="hinweis" style="font-size:.78rem;margin:8px 0 0">Gemessen wird über den kostenlosen Messpunkt von Cloudflare (wie beim bekannten Speedtest). Der gründliche Test lädt im WLAN ca. 30 MB, mit Mobilfunk ca. 8 MB. Es wird nichts über dich gespeichert außer dem Ergebnis.</p>
     <button type="button" class="knopf" style="width:100%;margin-top:8px" onclick="ttSchliessen()">Schließen</button>`;
   const f = $("ttBlatt"); if (f) f.querySelector(".blatt-innen").innerHTML = html; else blattAuf("ttBlatt", html);
@@ -14798,7 +14801,7 @@ function vbBlattZeigen() {
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet-Tiefentest (Aussetzer, Router, Dauertest)</button>
     ${(() => { const v = vbVerlauf(); if (!v.length) return ""; const z = (x, e) => (x == null ? "–" : x.toLocaleString("de-DE") + e);
       return `<b style="font-size:.9rem">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle"><tr><td><b>Wann</b></td><td><b>Netz</b></td><td><b>Antwort</b></td><td><b>↓ / ↑ Mbit/s</b></td></tr>
-        ${v.map((t) => `<tr><td>${esc(zeitKurz(new Date(t.zeit).toISOString()))}</td><td>${NETZARTEN[t.netz] || "–"}</td><td>${z(t.ping, " ms")}</td><td>${z(t.down, "")} / ${z(t.up, "")}</td></tr>`).join("")}</table>
+        ${v.map((t) => `<tr><td>${esc(zeitMitTag(new Date(t.zeit).toISOString()))}</td><td>${NETZARTEN[t.netz] || "–"}</td><td>${z(t.ping, " ms")}</td><td>${z(t.down, "")} / ${z(t.up, "")}</td></tr>`).join("")}</table>
         <p class="hinweis" style="font-size:.8rem;margin:0">WLAN und Mobilfunk unterscheiden sich bei Antwortzeit, Download und Upload. „Datenbank … ms“ misst der Server selbst – das ist bei beiden gleich.</p>`; })()}
     ${vbCommBlock()}
     <div class="vb-knoepfe"><button class="knopf" onclick="druckStarten('verbindung')">🖨️ Drucken</button><button class="knopf" onclick="verbindungMelden(this)">📨 An Admin senden</button></div>

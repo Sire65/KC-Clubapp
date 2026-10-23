@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.616.0 – 2026-10-24 – 🕐 Testlisten: „heute 01:01“ statt „01:01“ (KC-CLUB-TESTLISTE-HEUTE)
+Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.
+- „Verbindung testen“ und „Internet-Tiefentest“: Zeit immer mit Tagesangabe – „heute 01:01“, „gestern 19:32“, sonst „23.10. 08:42“.
+- Die übrige Zeitanzeige der App (Chat usw.) bleibt unverändert.
+
 ## 2.615.0 – 2026-10-23 – 📊 Nachrichten-Statistik öffnet sofort statt nach Minuten (KC-CLUB-STATISTIK-SCHNELL)
 - Fehler (Fund Hansi „dauert sehr lange, Meldung: hat gehangen“): Bei ~1.900 Einträgen in 30 Tagen war die App 13 s blockiert – der Server antwortete nach ~1,3 s, die Zeit ging beim Zeichnen verloren: für jeden Eintrag × jeden Tag bzw. × jede Stunde entstand ein neuer Datums-Umrechner (~160.000 Stück).
 - Jetzt Tag und Stunde je Eintrag einmal berechnen, dann nur zählen; `berlinStunde` merkt sich seinen Umrechner. Browser-Vergleich mit 1.900 Einträgen: 42 s → 0,05 s (Handy-Tempo 264 s → 0,17 s), Anzeige Zeichen für Zeichen gleich. Nur App. Auf Wunsch Hansi sofort eingespielt.

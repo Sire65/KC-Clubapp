@@ -12374,3 +12374,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/initAnfrage\.catch\(\(\) => \{\}\);/.test(nl), "kein „unbehandelter Fehler“, solange der Stand gezeichnet wird – das await behandelt ihn");
   assert.ok(/STARTMESS_TEILE = \[\["seite", "📄 Seite laden"\], \["programm", "📦 Programm laden"\], \["einrichten", "⚙️ Programm einrichten"\], \["server", "🌐 Warten auf den Server"\], \["anzeige", "🖼️ Anzeigen"\]\]/.test(programm), "die fünf Teile (Summe = Gesamtzeit) bleiben unverändert");
 }
+// 2.616.0 KC-CLUB-TESTLISTE-HEUTE: Testlisten zeigen immer den Tag („heute 01:01“), nie nur „01:01“ (sah aus wie 1. Januar)
+{
+  const m = programm.match(/const zeitMitTag = \(iso\) => \{[\s\S]*?\n[^\n]*\};/);
+  assert.ok(m, "zeitMitTag vorhanden");
+  assert.equal((programm.match(/zeitMitTag\(new Date\(t\.zeit\)\.toISOString\(\)\)/g) || []).length, 2, "beide Testlisten nutzen die Tagesangabe");
+  const fZeit = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit" }), fKurz = new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit" });
+  const zmt = new Function("fZeit", "fKurz", m[0] + "; return zeitMitTag;")(fZeit, fKurz);
+  const jetzt = new Date(); const heute = new Date(jetzt); heute.setHours(1, 1, 0, 0); const gestern = new Date(heute); gestern.setDate(heute.getDate() - 1); const alt = new Date(heute); alt.setDate(heute.getDate() - 5);
+  assert.equal(zmt(heute.toISOString()), "heute 01:01"); assert.equal(zmt(gestern.toISOString()), "gestern 01:01"); assert.match(zmt(alt.toISOString()), /^\d\d\.\d\d\. 01:01$/);
+}
