@@ -29,6 +29,7 @@ import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-
 import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "./fremdzugriff.js"; // KC-CLUB-FREMDZUGRIFF (2.579.0)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
+import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
@@ -132,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.606.0";
+const SERVER_VERSION = "2.607.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -11739,6 +11740,32 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .gte("zeit", new Date(Date.now() - tage * 86400000).toISOString()).order("zeit", { ascending: false }).limit(200);
         if (error) return json({ tage, eintraege: [], fehlt: true });
         return json({ tage, eintraege: data ?? [] });
+      }
+      // ----- 2.607.0 KC-CLUB-ZUGANG-AUFRAEUMEN (Sicherheit Punkt 6): Zugangslinks prüfen, alte abschalten – nur Admin, nie automatisch -----
+      case "zugaenge_pruefen": {
+        nurAdmin(ich);
+        const t = Date.now();
+        const { data: zs, error } = await db.from("kc_club_zugang").select("person_id,aktiv,erstellt_am,zuletzt_gesehen");
+        if (error) throw new Fehler("Die Zugänge konnten nicht gelesen werden.", 503);
+        const ids = (zs ?? []).map((z: any) => z.person_id);
+        const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name,active").in("person_id", ids) : { data: [] };
+        const pm = new Map((leute ?? []).map((x: any) => [x.person_id, x])), admins = new Set(await adminIds());
+        const liste = (zs ?? []).filter((z: any) => !String(z.person_id).startsWith("KC-P-TEST")).map((z: any) => { const m: any = pm.get(z.person_id) ?? null, b = zgBewerten(z, m, t);
+          return { person_id: z.person_id, name: m?.display_name || z.person_id, stufe: b.stufe, text: b.text, auffaellig: zgAuffaellig(b.stufe), zuletzt: z.zuletzt_gesehen, erstellt: z.erstellt_am,
+            admin: admins.has(z.person_id), ich: z.person_id === ich.person_id }; })
+          .sort((a: any, b: any) => ZG_REIHE.indexOf(a.stufe) - ZG_REIHE.indexOf(b.stufe) || String(a.name).localeCompare(String(b.name), "de"));
+        return json({ liste, regeln: { nieTage: ZG.nieTage, ruheTage: ZG.ruheTage } });
+      }
+      case "zugang_abschalten": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || "");
+        if (pid === ich.person_id) throw new Fehler("Deinen eigenen Zugang kannst du hier nicht abschalten.", 400);
+        const { data: neu, error } = await db.from("kc_club_zugang").update({ aktiv: false, neu_token_hash: null, neu_bis: null }).eq("person_id", pid).eq("aktiv", true).select("person_id");
+        if (error) throw new Fehler("Der Link konnte nicht abgeschaltet werden.", 503);
+        if (!neu?.length) throw new Fehler("Dieser Link ist schon abgeschaltet.", 409);
+        anmeldungenVergessen(); await rtNeu(pid); // sofort ungültig (Trigger merkt den alten Hash für „alter Link von …“ bei Fremdzugriffen)
+        await protokoll(ich.person_id, "zugang_abgeschaltet", { fuer: pid, grund: txt(p.grund, 80) || null });
+        return json({ ok: true });
       }
       case "sicherheit_pruefen": {
         const t0 = performance.now();

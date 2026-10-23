@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.606.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.607.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32010,6 +32010,32 @@ async function fremdZeigen() {
     ${l.length ? `<ul class="fz-liste">${l.slice(0, 60).map(zeile).join("")}</ul>` : ""}</div>`;
   if (location.hash === "#fremdzugriffe") z.scrollIntoView({ behavior: "smooth", block: "start" });
 } // 2.480.0: Prüfen startet zeige("sicherheit") selbst
+// ---------- 2.607.0 KC-CLUB-ZUGANG-AUFRAEUMEN (Wunsch Hansi, Sicherheit Punkt 6): persönliche Links prüfen – nur Admin ----------
+// Nie benutzte Links (liegen irgendwo in WhatsApp/Mail), lange ruhende (verlorenes Handy?) und Links ausgetretener Mitglieder stehen oben.
+// Die App schaltet nichts von selbst ab; wer wieder will, bekommt mit „🔗 Neuer Link“ einen frischen.
+const ZG_SYM = { ausgetreten: "🚪", nie: "💤", ruht: "🕰️", ok: "✅", aus: "⛔" };
+async function zgZeigen() {
+  if (!ICH?.admin || !$("siInhalt")) return;
+  let z = $("siZugang"); if (!z) { z = document.createElement("div"); z.id = "siZugang"; $("siInhalt").appendChild(z); }
+  z.innerHTML = '<div class="karte" style="margin-top:12px"><b>🔑 Zugangslinks</b><p class="hinweis" style="margin:4px 0 0">wird geladen …</p></div>';
+  let r; try { r = await api("zugaenge_pruefen"); } catch (e) { z.innerHTML = `<div class="karte" style="margin-top:12px"><b>🔑 Zugangslinks</b><p class="hinweis">Gerade nicht abrufbar: ${esc(fehlerText(e, ""))}</p></div>`; return; }
+  const l = r.liste || [], auff = l.filter((x) => x.auffaellig), rest = l.filter((x) => !x.auffaellig);
+  const zeile = (x) => `<li class="zg-zeile zg-${esc(x.stufe)}"><div><b>${ZG_SYM[x.stufe] || ""} ${esc(x.name)}</b>${x.admin ? ' <small class="hinweis">Admin</small>' : ""}</div><small>${esc(x.text)}</small>
+    ${x.ich ? "" : `<div class="knoepfe">${x.stufe !== "aus" ? `<button class="knopf klein" onclick="zgAbschalten(${jsArg(x.person_id)}, ${jsArg(x.name)})">⛔ Link abschalten</button>` : ""}${x.stufe !== "ausgetreten" ? `<button class="knopf klein" onclick="zgNeu(${jsArg(x.person_id)})">🔗 Neuer Link</button>` : ""}</div>`}</li>`;
+  z.innerHTML = `<div class="karte" style="margin-top:12px"><b>🔑 Zugangslinks (${l.length})</b>
+    <p class="hinweis" style="margin:4px 0 8px">${auff.length ? `<b>${auff.length}</b> ${auff.length === 1 ? "Link sollte" : "Links sollten"} geprüft werden: 💤 seit über ${r.regeln?.nieTage} Tagen nie benutzt · 🕰️ über ${r.regeln?.ruheTage} Tage nicht in der App · 🚪 kein Mitglied mehr. Abschalten ist sicher – wer wieder will, bekommt einen neuen Link.` : "✅ Alle Links sind in Gebrauch."}</p>
+    ${auff.length ? `<ul class="zg-liste">${auff.map(zeile).join("")}</ul>` : ""}
+    ${rest.length ? `<details><summary>Alle übrigen Links (${rest.length})</summary><ul class="zg-liste">${rest.map(zeile).join("")}</ul></details>` : ""}</div>`;
+}
+async function zgAbschalten(pid, name) {
+  if (!(await frage(`⛔ Link von ${name} abschalten?\n\nDer Link und alle damit angemeldeten Geräte funktionieren sofort nicht mehr. Will ${name.split(" ")[0]} die App wieder benutzen, schickst du einfach einen neuen Link.`, { ja: "⛔ Abschalten" }))) return;
+  try { await api("zugang_abschalten", { person_id: pid, grund: "Sicherheits-Check" }); melde(`⛔ Link von ${name} abgeschaltet`); zgZeigen(); } catch (e) { meldeFehler(e); }
+}
+async function zgNeu(pid) {
+  try { if (!MITGLIEDER) await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  if (!MITGLIEDER.some((m) => m.person_id === pid)) return melde("Mitglied nicht in der Liste gefunden.", true);
+  await linkTeilen(pid); setTimeout(zgZeigen, 1500);
+}
 function siKlasse(ok) { return ok === true ? "si-gut" : ok === false ? "si-schlecht" : "si-offen"; }
 function siUhr(u, r) {
   const v = r ? u.wert(r) : null, anteil = v == null ? 0 : Math.min(1, v / u.max), laenge = Math.PI * 50;
@@ -32062,7 +32088,7 @@ async function sicherheitPruefen() {
   SI.r = r; SI.zeit = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
   for (let i = 1; i <= SICHERHEIT_PRUEFUNGEN.length; i++) { if (aktuelleAnsicht !== "sicherheit") break; sicherheitZeigen(i); await new Promise((ok) => setTimeout(ok, 180)); }
   SI.laeuft = false; sicherheitZeigen(SICHERHEIT_PRUEFUNGEN.length);
-  if (ICH?.admin) fremdZeigen(); // 2.579.0 KC-CLUB-FREMDZUGRIFF
+  if (ICH?.admin) { fremdZeigen(); zgZeigen(); } // 2.579.0 KC-CLUB-FREMDZUGRIFF · 2.607.0 KC-CLUB-ZUGANG-AUFRAEUMEN
   const alleOk = SICHERHEIT_PRUEFUNGEN.every((p) => p.wert(r) === true);
   try { navigator.vibrate?.(alleOk ? 40 : [60, 60, 60]); } catch {}
 }

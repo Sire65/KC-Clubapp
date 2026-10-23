@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.607.0 – 2026-10-23 – 🔐 Sicherheit: Zugangslinks aufräumen, Geheimnis-Wächter, Durchsicht der Datenbank-Funktionen (KC-CLUB-ZUGANG-AUFRAEUMEN, KC-CLUB-GEHEIMNIS-WAECHTER)
+Wunsch Hansi („baue deine 4, 5, 6“ nach der Frage zur PHP-Lücke – Club-App nutzt kein PHP, nicht betroffen).
+- 🔑 Sicherheits-Check (nur Admin): neue Karte „Zugangslinks“ – oben stehen 💤 seit über 21 Tagen nie benutzte Links, 🕰️ über 60 Tage nicht in der App, 🚪 Links von Personen, die kein aktives Mitglied mehr sind. Je Person „⛔ Link abschalten“ (sofort ungültig, auch auf angemeldeten Geräten) oder „🔗 Neuer Link“. Die App schaltet nie von selbst ab; eigener Zugang nicht abschaltbar.
+- 🛡️ Geheimnis-Wächter: neuer Test vor jedem Einspielen durchsucht alle Dateien nach Passwörtern und geheimen Schlüsseln (Supabase-Geheimschlüssel, service_role-JWT, private Schlüssel, GitHub-/Google-/AWS-/Stripe-Token, Datenbank-Adressen mit Passwort …); erlaubt sind nur die öffentlichen anon-Schlüssel. Fund = roter Test = kein Einspielen.
+- 🧰 Durchsicht der 42 Datenbank-Funktionen mit Außenzugang: docs/SICHERHEIT_DB_FUNKTIONEN.md (Empfehlungen, noch nichts geändert).
+- Test: tests/zugang-pruefen.test.mjs, tests/geheimnis-waechter.test.mjs, Vertragstest-Block 2.607.0. Rückweg: App/Server 2.606.0.
+
 ## 2.606.0 – 2026-10-23 – 🔁 Dienst-Tausch-Börse – nur Admin zum Testen (KC-CLUB-DIENST-TAUSCH)
 Wunsch Hansi („3 hört sich gut an“ – Dienst-Tausch-Börse). Noch nicht freigegeben: bis Hansi freigibt, sieht es nur der Admin (🔒 Test).
 - „Mein Dienst“ → 🔁 Tauschbörse (auch Push-Link #diensttausch, Sprung-Knopf „Dienst-Tausch-Börse“): eigene kommende Dienste mit „🔁 Kann ich nicht – anbieten“ (freiwillig mit Text), alle bekommen Bescheid.
