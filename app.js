@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.611.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.612.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -31823,19 +31823,33 @@ function ntErkennen(text, bezug) {
   });
   if (naechsteWoche && datum) merk(naechsteWoche.index + naechsteWoche[1].length, naechsteWoche.index + naechsteWoche[0].length);
   // 4) Uhrzeit: 19 Uhr · 19h · 19:30 · 19.30 Uhr · um 19 · 18–20 Uhr · von 18 bis 20 Uhr · halb 8 · viertel nach 7 · viertel vor 8 · dreiviertel 8
-  const abends = new RegExp(`abend|nachmittag|mittags`).test(s), frueh = new RegExp(`morgens|früh|frueh|vormittag`).test(s);
-  const stunde = (h, mitUhr) => { h = +h; if (h >= 1 && h <= 11 && (abends || (!frueh && !mitUhr && h <= 7) || (!frueh && mitUhr && h <= 5))) h += 12; return h; };
-  const hm = (h, mi, mitUhr) => { h = stunde(h, mitUhr); mi = +(mi || 0); return h <= 24 && mi < 60 ? `${String(h % 24).padStart(2, "0")}:${String(mi).padStart(2, "0")}` : null; };
-  alle(/(^|[^\d.:])(?:von\s+|ab\s+)?(\d{1,2})(?:[:.](\d\d))?\s*(?:uhr\s*)?(?:-|–|bis)\s*(\d{1,2})(?:[:.](\d\d))?\s*(uhr|h)(?![a-zäöüß])/g, (m) => {
-    if (zeit) return false; const a = hm(m[2], m[3], true), b = hm(m[4], m[5], true); if (!a || !b) return false; zeit = a; bis = b < a ? null : b; });
-  alle(/(^|[^\d.:])(\d{1,2})[:.](\d\d)\s*(uhr|h)?(?![\d.a-zäöüß])/g, (m, a0) => {
+  // 2.612.0 KC-CLUB-TERMIN-UHRZEIT (Fund Hansi: „…auf 10 Uhr verständigt. Nachmittags wird es früh dunkel“ wurde 22 Uhr): Tageszeit-Wörter zählen
+  // nur im selben Satz und nah an der Uhrzeit. Eine ausdrücklich genannte Uhrzeit (10 Uhr, 10:00) bleibt, wie sie ist; bleibt es unklar, fragt das Fenster nach.
+  const NT_SPAET = /abends?|nachmittags?|mittags/, NT_FRUEH = /morgens|früh|frueh|vormittags?/;
+  // direkt davor/dahinter (je ein paar Wörter), nie über Satzende oder Komma hinweg: „abends um 7“, „10 Uhr abends“, „um 7 am Abend“
+  const umfeld = (a, b) => { let x = a, y = b; while (x > 0 && !/[.!?,;\n]/.test(s[x - 1]) && a - x < 14) x--; while (y < s.length && !/[.!?,;\n]/.test(s[y]) && y - b < 14) y++; return s.slice(x, y); };
+  const fernSpaet = NT_SPAET.test(s), fernFrueh = NT_FRUEH.test(s); let unklar = false;
+  const stunde = (h, mitUhr, a, b) => {
+    h = +h; if (!(h >= 1 && h <= 11)) return h;
+    const u = a == null ? "" : umfeld(a, b), spaet = NT_SPAET.test(u), frueh = NT_FRUEH.test(u.replace(/morgen(?!s)/g, ""));
+    if (spaet && !frueh) return h + 12; // „10 Uhr abends“, „abends um 7“
+    if (frueh && !spaet) return h;      // „morgens um 10“
+    // ohne Tageszeit direkt dabei: ausdrücklich genannte Uhrzeit bleibt (nur 1–5 Uhr ist nachts kaum ein Termin); sonst wie bisher geschätzt
+    const neu = mitUhr ? (h <= 5 ? h + 12 : h) : (h <= 7 ? h + 12 : h);
+    if (!mitUhr || h <= 5 || fernSpaet || fernFrueh) unklar = true; // dann im Fenster beide Möglichkeiten anbieten
+    return neu;
+  };
+  const hm = (h, mi, mitUhr, a, b) => { h = stunde(h, mitUhr, a, b); mi = +(mi || 0); return h <= 24 && mi < 60 ? `${String(h % 24).padStart(2, "0")}:${String(mi).padStart(2, "0")}` : null; };
+  alle(/(^|[^\d.:])(?:von\s+|ab\s+)?(\d{1,2})(?:[:.](\d\d))?\s*(?:uhr\s*)?(?:-|–|bis)\s*(\d{1,2})(?:[:.](\d\d))?\s*(uhr|h)(?![a-zäöüß])/g, (m, a0, b0) => {
+    if (zeit) return false; const a = hm(m[2], m[3], true, a0, b0), b = hm(m[4], m[5], true, a0, b0); if (!a || !b) return false; zeit = a; bis = b < a ? null : b; });
+  alle(/(^|[^\d.:])(\d{1,2})[:.](\d\d)\s*(uhr|h)?(?![\d.a-zäöüß])/g, (m, a0, b0) => {
     if (zeit) return false; const davor = s.slice(Math.max(0, a0 - 7), a0); if (!m[4] && !/:/.test(m[0]) && !/(um|ab|gegen|von|bis)\s*$/.test(davor)) return false;
-    zeit = hm(m[2], m[3], true); if (!zeit) return false; });
-  alle(/(^|[^\d.:])(\d{1,2})\s*(uhr|h)(?![a-zäöüß])/g, (m) => { if (zeit) return false; zeit = hm(m[2], 0, true); if (!zeit) return false; });
-  alle(new RegExp(`(^|[^a-zäöüß])(halb|viertel nach|viertel vor|dreiviertel)\\s+(\\d{1,2}|${Object.keys(NT_ZAHL).join("|")})(?!${NT_B}|\\d)`, "g"), (m) => {
+    zeit = hm(m[2], m[3], true, a0, b0); if (!zeit) return false; });
+  alle(/(^|[^\d.:])(\d{1,2})\s*(uhr|h)(?![a-zäöüß])/g, (m, a0, b0) => { if (zeit) return false; zeit = hm(m[2], 0, true, a0, b0); if (!zeit) return false; });
+  alle(new RegExp(`(^|[^a-zäöüß])(halb|viertel nach|viertel vor|dreiviertel)\\s+(\\d{1,2}|${Object.keys(NT_ZAHL).join("|")})(?!${NT_B}|\\d)`, "g"), (m, a0, b0) => {
     if (zeit) return false; const h = ntZahl(m[3]); if (!(h >= 1 && h <= 12)) return false;
-    zeit = m[2] === "viertel nach" ? hm(h, 15, false) : hm(h - 1 || 12, m[2] === "halb" ? 30 : 45, false); if (!zeit) return false; });
-  alle(/(^|[^a-zäöüß])(?:um|gegen|ab)\s+(\d{1,2})(?![\d.:,]|\s*(?:tag|tage|wochen?|minuten?|personen|leute|euro|€|mal|stück)(?![a-zäöüß]))/g, (m) => { if (zeit) return false; zeit = hm(m[2], 0, false); if (!zeit) return false; });
+    zeit = m[2] === "viertel nach" ? hm(h, 15, false, a0, b0) : hm(h - 1 || 12, m[2] === "halb" ? 30 : 45, false, a0, b0); if (!zeit) return false; });
+  alle(/(^|[^a-zäöüß])(?:um|gegen|ab)\s+(\d{1,2})(?![\d.:,]|\s*(?:tag|tage|wochen?|minuten?|personen|leute|euro|€|mal|stück)(?![a-zäöüß]))/g, (m, a0, b0) => { if (zeit) return false; zeit = hm(m[2], 0, false, a0, b0); if (!zeit) return false; });
   if (!datum && !zeit) return null;
   const sicher = !!datum && (fest || !!zeit); // „heute“, „morgen“, „Freitag“ allein sind oft kein Termin – erst mit Uhrzeit bekommt die Nachricht den Knopf
   if (!datum) datum = bezug; // nur Uhrzeit: am Tag der Nachricht (kein Knopf an der Nachricht, aber über 📅 übernehmbar)
@@ -31854,7 +31868,10 @@ function ntErkennen(text, bezug) {
   t = t.replace(/\b(am|um|ab|gegen|von|bis|den|dem|uhr|ist|wir)\s+(?=[,.!?;:]|$)/gi, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/\s{2,}/g, " ")
     .replace(/^[\s,.;:–-]+|[\s,;:–-]+$/g, "").replace(/^(am|um|ab|und|also|ok|okay|ja)\s+/i, "").trim();
   if (t.length > 70) { const i = t.search(/[.!?]\s/), satz = i > 0 ? t.slice(0, i + 1) : t; t = satz.length <= 70 && satz.length >= 8 ? satz : t.slice(0, 70).replace(/\s+\S*$/, "") + " …"; }
-  return { datum, zeit, bis, titel: t ? t.charAt(0).toUpperCase() + t.slice(1) : "", ort, sicher };
+  // 2.612.0: bei unklarer Tageszeit die andere Möglichkeit mitgeben (10:00 ↔ 22:00) – das Fenster fragt nach, statt zu raten
+  const anders = (z) => { if (!z) return null; const h = +z.slice(0, 2); return h >= 1 && h <= 23 && h !== 12 ? `${String(h < 12 ? h + 12 : h - 12).padStart(2, "0")}${z.slice(2)}` : null; };
+  const alt = unklar && zeit ? anders(zeit) : null;
+  return { datum, zeit, bis, alt, altBis: alt && bis ? anders(bis) : null, titel: t ? t.charAt(0).toUpperCase() + t.slice(1) : "", ort, sicher };
 }
 const NT_CACHE = new Map();
 function ntAusText(m) { // je Nachricht nur einmal rechnen (Bezug: der Tag, an dem sie geschrieben wurde – „morgen“ von vorgestern ist gestern)
@@ -31862,7 +31879,7 @@ function ntAusText(m) { // je Nachricht nur einmal rechnen (Bezug: der Tag, an d
   let r = null; try { r = m.text && m.text !== "📎" && !m.umfrage && !m.kontakt ? ntErkennen(m.text, m.zeit ? berlinIso(m.zeit) : heuteIso()) : null; } catch { r = null; }
   if (NT_CACHE.size > 800) NT_CACHE.clear(); NT_CACHE.set(k, r); return r;
 }
-const ntWann = (r) => `${fTag.format(new Date(r.datum + "T12:00:00Z"))}${r.zeit ? ", " + r.zeit + (r.bis ? "–" + r.bis : "") + " Uhr" : ""}`;
+const ntWann = (r) => `${fTag.format(new Date(r.datum + "T12:00:00Z"))}${r.zeit ? ", " + r.zeit + (r.bis ? "–" + r.bis : "") + (r.alt ? " oder " + r.alt : "") + " Uhr" : ""}`; // 2.612.0: unklare Tageszeit zeigt beide
 function ntKnopfHtml(m) { // Knopf direkt an der Nachricht – nur bei eindeutigem Tag, der nicht vorbei ist
   const r = ntAusText(m); if (!r?.sicher || r.datum < heuteIso()) return "";
   return `<button type="button" class="nt-knopf" title="Als Termin in den Kalender übernehmen" onclick="event.stopPropagation();ntAusNachricht('${m.id}')">📅 ${esc(ntWann(r))} – eintragen</button>`;
@@ -31883,6 +31900,7 @@ function ntFenster(q) {
   const f = blattAuf("ntBlatt", `<h3 style="margin-top:0">📅 Als Termin übernehmen</h3>
     ${q.text ? `<div class="na-vorschau">${esc(q.von)}: ${esc(String(q.text).slice(0, 200))}</div>` : ""}
     <p class="hinweis" style="margin:6px 0">${r ? `✨ Erkannt: <b>${esc(ntWann(r))}</b> – bitte kurz prüfen.` : "Kein Tag gefunden – bitte Tag und Uhrzeit wählen."}</p>
+    ${r?.alt && !ganz ? `<div class="karte" id="ntUhrWahl" style="margin:6px 0"><b>🕙 Welche Uhrzeit ist gemeint?</b><div class="artwahl" style="margin-top:6px">${[[r.zeit, r.bis], [r.alt, r.altBis]].sort((x, y) => x[0].localeCompare(y[0])).map(([z, b]) => `<button type="button" class="knopf" data-ntz="${z}" data-ntb="${b || ""}">${z}${b ? "–" + b : ""} Uhr</button>`).join("")}</div></div>` : ""}<!-- 2.612.0 KC-CLUB-TERMIN-UHRZEIT -->
     ${club ? `<div class="artwahl" id="ntZiel"><button type="button" class="knopf haupt" data-z="privat">🔒 Mein Kalender</button><button type="button" class="knopf" data-z="club">📅 Clubtermin für alle</button></div>` : ""}
     <label class="feld">Was<input id="ntTitel" maxlength="120" value="${esc(r?.titel || "")}" placeholder="z. B. Grillabend bei Klaus"></label>
     <div class="zwei"><label class="feld">Tag<input id="ntDatum" type="date" value="${r?.datum || tagPlus(heuteIso(), 1)}"></label><label class="feld">Uhrzeit<input id="ntZeit" type="time" value="${r?.zeit || (r ? "" : "18:00")}" ${ganz ? "disabled" : ""}></label></div>
@@ -31898,11 +31916,19 @@ function ntFenster(q) {
     f.querySelector("#ntPrivat").classList.toggle("versteckt", ziel === "club"); f.querySelector("#ntLos").textContent = ziel === "club" ? "➡️ Weiter zum Clubtermin" : "✅ Eintragen";
   });
   f.querySelector("#ntGanz").onchange = (e) => { f.querySelector("#ntZeit").disabled = f.querySelector("#ntBis").disabled = e.target.checked; };
+  // 2.612.0 KC-CLUB-TERMIN-UHRZEIT: unklare Tageszeit – erst nach der Wahl (oder eigener Eingabe) eintragen
+  f.dataset.ntUnklar = f.querySelector("#ntUhrWahl") ? "1" : "";
+  f.querySelectorAll("#ntUhrWahl [data-ntz]").forEach((b) => b.onclick = () => {
+    f.querySelector("#ntZeit").value = b.dataset.ntz; f.querySelector("#ntBis").value = b.dataset.ntb; f.dataset.ntUnklar = "";
+    f.querySelectorAll("#ntUhrWahl [data-ntz]").forEach((x) => x.classList.toggle("haupt", x === b));
+  });
+  f.querySelector("#ntZeit").addEventListener("input", () => { f.dataset.ntUnklar = ""; });
   f.querySelector("#ntLos").onclick = (e) => einmal(e.currentTarget, () => ntEintragen(q, ziel));
 }
 async function ntEintragen(q, ziel) {
   const titel = $("ntTitel").value.trim() || "Termin", datum = $("ntDatum").value, ganz = $("ntGanz").checked || !$("ntZeit").value, zeit = $("ntZeit").value, bisZ = $("ntBis").value;
   if (!datum) return melde("Bitte einen Tag wählen.", true);
+  if (!ganz && $("ntBlatt")?.dataset.ntUnklar === "1") return melde("Bitte oben wählen, welche Uhrzeit gemeint ist.", true); // 2.612.0 KC-CLUB-TERMIN-UHRZEIT
   const beginn = taZeitpunkt(datum, ganz ? "00:00" : zeit), ende = !ganz && bisZ ? taZeitpunkt(datum, bisZ) : null, ort = $("ntOrt").value.trim();
   if (ende && ende <= beginn) return melde("„bis“ liegt vor dem Beginn.", true);
   const notiz = q.text ? `Aus dem Chat – ${q.von} schrieb: „${String(q.text).slice(0, 900)}“` : "";

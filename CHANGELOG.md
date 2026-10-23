@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.612.0 – 2026-10-23 – 🕙 Termin aus Nachricht: Uhrzeit nicht mehr verdreht (KC-CLUB-TERMIN-UHRZEIT)
+Fund Hansi: „…haben wir uns auf 10 Uhr verständigt. Nachmittags wird es schon früh dunkel“ wurde als 22:00 Uhr übernommen. Ursache: Ein „abends/nachmittags/mittags“ irgendwo in der Nachricht hat jede Uhrzeit von 1 bis 11 auf den Abend geschoben.
+- Tageszeit-Wörter zählen nur noch direkt bei der Uhrzeit, nie über Komma oder Satzende hinweg („10 Uhr abends“, „abends um 7“, „morgens um 10“).
+- Eine ausdrücklich genannte Uhrzeit (10 Uhr, 10:00) bleibt, wie sie ist. Nur 1–5 Uhr wird weiter als Nachmittag vermutet.
+- Bleibt es unklar (z. B. „um 7“, „halb 8“ oder ein „nachmittags“ an anderer Stelle), zeigt „📅 Als Termin übernehmen“ beide Möglichkeiten zur Wahl („10:00 Uhr“ / „22:00 Uhr“); eingetragen wird erst nach der Wahl oder eigener Eingabe. Der Knopf an der Nachricht zeigt „10:00 oder 22:00 Uhr“.
+- Vertragstest mit Hansis Nachricht und Gegenproben.
+
 ## 2.611.0 – 2026-10-23 – Start: Anfrage und Anzeige gleichzeitig
 Beim Öffnen schickt die App die Anfrage an den Server jetzt zuerst los und zeichnet währenddessen den gespeicherten Stand – vorher lief beides nacheinander (KC-CLUB-START-GLEICHZEITIG). Neu gemessen: wann die Startseite zu sehen ist (KC-CLUB-START-SICHTBAR).
 
