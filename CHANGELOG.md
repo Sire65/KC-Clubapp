@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.610.0 – 2026-10-23 – 🚂 Kachel-Zug etwas schneller (KC-CLUB-KACHEL-ZUG-TEMPO)
+Wunsch Hansi („Der Effekt Zug ist jetzt gut, aber er dauert zu lange, bis alle Karten an ihrem Platz liegen – etwas schneller fahren lassen“): jede Kachel 2,4 s statt 3 s unterwegs, dichter hintereinander (höchstens 170 ms Abstand, alle Abfahrten zusammen höchstens 2,6 s). Bei 16 Kacheln ~5 s statt ~7 s bis alle liegen; gleiche Bahn, gleicher Ablauf. Eingespielt zum 12-Uhr-Termin. Rückweg: App 2.609.0.
+
 ## 2.609.0 – 2026-10-23 – ✍️ Abstimmung mit freier Antwort + Vorlage Weihnachtsessen (KC-CLUB-ABSTIMMUNG-FREITEXT)
 Wunsch Hansi („welche Allergie oder Unverträglichkeiten“ und „beim Restaurant-Vorschlag Platz lassen für einen Namen“).
 - Abstimmung mit mehreren Fragen: neue Frage-Art „✍️ Freie Antwort – zum Eintippen statt Ankreuzen“ (höchstens 100 Zeichen, ändern oder leeren bis zum Ende). Nur bei offenen Abstimmungen – bei geheimen würde der Text verraten, wer schreibt.

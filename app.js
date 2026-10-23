@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.609.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.610.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15693,7 +15693,10 @@ function regEffekt(richtung, art) {
         { transform: zu(lx + bogen * 0.3, un - bogen * 0.3, sk, -20), offset: 0.46 }, { transform: zu(lx + bogen, un, sk, -40), offset: 0.54 }, // Kurve nach rechts
         { transform: zu(zx, un, sk, -10), offset: 0.7 }, // unten entlang
         { transform: `translate(0, -6%) rotate(2deg) scale(1.05)`, opacity: 1, offset: 0.9 }, { transform: "none", opacity: 1 }]; // hinauf auf den Platz, einrasten
-      o = { duration: 3000, delay: i * Math.min(260, 4200 / k.length), easing: "linear" }; // 2.586.0 (Hansi „zu schnell, man sieht keinen Effekt“): langsam und gleichmäßig wie ein Zug
+      // 2.586.0 (Hansi „zu schnell, man sieht keinen Effekt“): langsam und gleichmäßig wie ein Zug · 2.610.0 KC-CLUB-KACHEL-ZUG-TEMPO (Hansi „der Zug ist
+      // gut, aber es dauert zu lange, bis alle Karten an ihrem Platz liegen – etwas schneller fahren lassen“): je Kachel 2,4 s statt 3 s, dichter
+      // hintereinander (höchstens 170 ms Abstand, alle Abfahrten zusammen höchstens 2,6 s) – bei 16 Kacheln ~5 s statt ~7 s, gleiche Bahn
+      o = { duration: 2400, delay: i * Math.min(170, 2600 / k.length), easing: "linear" };
     } else { // Umdrehen: eine schnelle Drehung um die eigene Achse, kommt wie eine Karte nach vorn
       f = [{ transform: P + "rotateY(-300deg) scale(.6)", opacity: 0 }, { transform: P + "rotateY(18deg) scale(1.05)", opacity: 1, offset: 0.7 }, { transform: P + "rotateY(0) scale(1)", opacity: 1 }];
       o = { duration: 640, delay: i * 42, easing: "cubic-bezier(.2,.7,.3,1)" };

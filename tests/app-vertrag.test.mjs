@@ -12152,7 +12152,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\["fallblatt", "🕰️ Fallblatt-Uhr"\], \["zug", "🚂 Kachel-Zug"\],/.test(html) && /const REG_ARTEN = REG_EFFEKTE\.map/.test(html), "wählbar im Zahnrad, auch in Zufall/Abwechselnd");
   const z = html.slice(html.indexOf('} else if (w === "zug") {'), html.indexOf("} else { // Umdrehen"));
   assert.ok(/zu\(lx, un - bogen, sk, 0\), opacity: 1, offset: 0\.38/.test(z) && /zu\(lx \+ bogen, un, sk, -40\), offset: 0\.54/.test(z) && /\{ transform: "none", opacity: 1 \}\]/.test(z), "links hinunter, Kurve nach rechts, Ende genau auf dem Platz");
-  assert.ok(/un = Math\.min\(innerHeight - 120, rb\.bottom\)/.test(z) && /duration: 3000, delay: i \* Math\.min\(260, 4200 \/ k\.length\), easing: "linear"/.test(z), "Kurve über der Leiste; eine nach der anderen, gut sichtbar (2.586.0: langsamer)");
+  assert.ok(/un = Math\.min\(innerHeight - 120, rb\.bottom\)/.test(z) && /duration: 2400, delay: i \* Math\.min\(170, 2600 \/ k\.length\), easing: "linear"/.test(z), "Kurve über der Leiste; eine nach der anderen, gut sichtbar (2.586.0: langsamer)");
   assert.ok(/if \(w === "aus" \|\| !einst\("animiert", true\) \|\| SPAR\?\.an \|\| kaBearb \|\| einfach\(\)\) return false;/.test(html), "wie alle Effekte: aus bei „Bewegung aus“, Sparmodus, einfacher Ansicht");
   assert.ok(!/style\.(left|top|width|height|margin)|api\(/.test(z) && (z.match(/\{ transform: [^}]*\}/g) || []).every((k) => !/(left|top|width|height):/.test(k)), "nur transform/opacity (Lage wird nur gelesen)");
 }
