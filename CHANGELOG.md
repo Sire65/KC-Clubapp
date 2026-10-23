@@ -8,6 +8,7 @@ Fund Hansi: „Info-Band läuft nicht weiter“ – es hielt (seit 2.337.0 KC-CL
 Fund Hansi: „Erste Nachricht an Klaus verschlüsselt geschickt – keinen Geheimagent gesehen.“ Seit 2.603.0 (KC-CLUB-SENDE-SCHLANGE) gehen Texte in einem bestehenden Chat über die Sende-Schlange; dort drehte sich nur der 🔑, der Agent fehlte.
 - Verschlüsselte Nachrichten im bestehenden Chat: erst dreht sich der 🔑, dann läuft der 🕵️ Geheimagent – wie bei einer neuen Unterhaltung. Bei 🏎️ Express bleibt es beim Rennwagen.
 - Beim Empfänger war der Agent nie betroffen.
+- Wunsch Hansi „in den Voreinstellungen kann man ihn nicht sehen“: unter ⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“ gibt es jetzt „🕵️ Vorschau „verschlüsselt““ (neben „🚨 Vorschau „wichtig““), dazu ein Satz im Hinweis. Fester Bote bleibt er nicht – er gehört zu 🔒.
 
 ## 2.616.0 – 2026-10-24 – 🕐 Testlisten mit Tagesangabe · 🕰️ Stundenuhr still nach eigener Ruhezeit (KC-CLUB-TESTLISTE-HEUTE, KC-CLUB-KUCKUCK-RUHEZEIT)
 Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.

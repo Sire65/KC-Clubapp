@@ -16182,6 +16182,7 @@ function sendeEffektVorschau(knopf) {
   papierflieger(knopf, false);
 }
 function blaulichtVorschau(knopf) { if (!fxAn()) return fxAusHinweis(() => blaulichtVorschau(knopf)); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); papierflieger(knopf, true); }
+function agentVorschau(knopf) { if (!fxAn()) return fxAusHinweis(() => agentVorschau(knopf)); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); vnSchluesselZeigen(knopf); setTimeout(() => papierflieger(knopf, false, null, false, true), 650); } // 2.617.0 KC-CLUB-AGENT-VORSCHAU (Wunsch Hansi: Agent in den Voreinstellungen sehen)
 // KC-CLUB-FEE (2.372.0, Wunsch Hansi): bei jeder 20. Anmeldung (Server zählt je Mitglied über alle Geräte) schwebt eine kleine Fee
 // durchs obere Startbild – bleibt kurz stehen, lächelt, fliegt weiter. Antippen = ein motivierender Spruch. „🧚 Fee ansehen“ zeigt sie jederzeit.
 const FEE_SPRUECHE = [

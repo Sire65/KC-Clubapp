@@ -12408,3 +12408,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const sq = programm.slice(programm.indexOf("if (sqDarf()) {"), programm.indexOf("const r = chatId ? await api(\"nachricht_senden\""));
   assert.ok(sq.length > 0 && /if \(vnIst\(text\)\) \{ vnSchluesselZeigen\(\$\("sendenKnopf"\)\); setTimeout\(\(\) => papierflieger\(\$\("sendenKnopf"\), !!daten\.wichtig, null, !!daten\.express, true\), 650\); \}/.test(sq), "Sende-Schlange: verschlüsselt → Geheimagent");
 }
+// 2.617.0 KC-CLUB-AGENT-VORSCHAU: Geheimagent in den Voreinstellungen ansehen
+{
+  const idx = lies("index.html");
+  assert.ok(/onclick="agentVorschau\(this\)">🕵️ Vorschau „verschlüsselt“/.test(idx), "Knopf Vorschau „verschlüsselt“");
+  assert.ok(/function agentVorschau\(knopf\) \{[^\n]*papierflieger\(knopf, false, null, false, true\)/.test(programm), "Vorschau zeigt den Agenten");
+}
