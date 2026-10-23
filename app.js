@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.614.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.615.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -41565,8 +41565,8 @@ let nzPuffer = (() => { try { return JSON.parse(localStorage.getItem("kc_club_nu
 let nzStdPuffer = (() => { try { return Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem("kc_club_nutzung_std") || "{}")).filter(([k]) => /^(\d|1\d|2[0-3])$/.test(k))); } catch { return {}; } })(); // 2.45.1: alte „NaN“-Einträge verwerfen
 // KC-CLUB-STUNDE (2.45.1, Fund Hansi „Uhrzeiten sind nicht drin“): Stunde 0–23 in deutscher Zeit. Früher Number("11 Uhr") = NaN –
 // darum blieben Nachrichten-Statistik (Uhrzeit) und Nutzung je Uhrzeit leer. Jetzt über formatToParts (nur die Zahl).
-function berlinStunde(d = new Date()) {
-  try { const t = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }).formatToParts(new Date(d)).find((x) => x.type === "hour"); const h = Number(t?.value); if (h >= 0 && h <= 23) return h; } catch {}
+function berlinStunde(d = new Date()) { // KC-CLUB-STATISTIK-SCHNELL: Umrechner nur einmal bauen (an der Funktion gemerkt)
+  try { if (!berlinStunde.f) berlinStunde.f = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "numeric", hourCycle: "h23" }); const t = berlinStunde.f.formatToParts(new Date(d)).find((x) => x.type === "hour"); const h = Number(t?.value); if (h >= 0 && h <= 23) return h; } catch {}
   return new Date(d).getHours();
 }
 const nzStunde = () => berlinStunde();
@@ -42316,15 +42316,22 @@ function nachrichtenStatistikZeigen() {
   const fuss = NST.eigen ? "" : `<div class="knoepfe"><button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
   if (!d) { $("adminBlattInhalt").innerHTML = kopf + `<p class="hinweis">Bitte oben ein Mitglied wählen.</p>` + fuss; $("adminBlatt").classList.remove("versteckt"); return; }
   const mails = d.email || [], push = d.push || [], clubB = (d.club || []).filter((x) => x.a === "bekommen"), clubG = (d.club || []).filter((x) => x.a === "geschrieben");
-  const tag = (z) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(z)), stunde = (z) => berlinStunde(z);
+  // KC-CLUB-STATISTIK-SCHNELL (23.10.2026, Fund Hansi „dauert sehr lange, Meldung: hat gehangen“ – App 13 s blockiert bei ~1.900 Einträgen):
+  // vorher entstand für JEDEN Eintrag × JEDEN Tag bzw. × JEDE Stunde ein neuer Datums-Umrechner (~160.000 Stück). Jetzt: ein Umrechner,
+  // Tag und Stunde je Eintrag einmal ausrechnen und nur noch zählen – gleiche Anzeige, Bruchteil der Zeit.
+  const fTag = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ });
+  const tag = (z) => fTag.format(new Date(z)), stunde = (z) => berlinStunde(z); // berlinStunde merkt sich seinen Umrechner
   const tage = Array.from({ length: Math.min(d.tage, 60) }, (_, i) => tag(new Date(Date.now() - (Math.min(d.tage, 60) - 1 - i) * 86400000)));
   const zaehl = (l, k) => l.filter((x) => k(x)).length;
   const reihen = [["mail", "✉️", mails], ["push", "🔔", push], ["club", "💬", clubB]];
-  const maxT = Math.max(1, ...tage.map((t) => reihen.reduce((n, [, , l]) => n + zaehl(l, (x) => tag(x.z) === t), 0)));
-  const balken = tage.map((t) => { const teile = reihen.map(([k, , l]) => [k, zaehl(l, (x) => tag(x.z) === t)]), sum = teile.reduce((n, x) => n + x[1], 0);
+  const jeTag = new Map(); // "mail|2026-10-23" → Anzahl
+  for (const [k, , l] of reihen) for (const x of l) { const s = k + "|" + tag(x.z); jeTag.set(s, (jeTag.get(s) || 0) + 1); }
+  const anTag = (k, t) => jeTag.get(k + "|" + t) || 0;
+  const maxT = Math.max(1, ...tage.map((t) => reihen.reduce((n, [k]) => n + anTag(k, t), 0)));
+  const balken = tage.map((t) => { const teile = reihen.map(([k]) => [k, anTag(k, t)]), sum = teile.reduce((n, x) => n + x[1], 0);
     return `<div class="ns-spalte" title="${t.slice(8)}.${t.slice(5, 7)}.: ${sum}">${teile.map(([k, n]) => n ? `<i class="ns-${k}" style="height:${(n / maxT) * 100}%"></i>` : "").join("")}</div>`; }).join("");
   const alle = [...mails.map((x) => ({ ...x, k: "mail" })), ...push.map((x) => ({ ...x, k: "push" })), ...clubB.map((x) => ({ ...x, k: "club" }))];
-  const proStd = Array.from({ length: 24 }, (_, h) => zaehl(alle, (x) => stunde(x.z) === h)), maxS = Math.max(1, ...proStd);
+  const proStd = Array(24).fill(0); for (const x of alle) proStd[stunde(x.z)]++; const maxS = Math.max(1, ...proStd); // KC-CLUB-STATISTIK-SCHNELL
   const MS = { sent: "verschickt", delivered: "zugestellt", displayed: "angezeigt", opened: "geöffnet", failed: "fehlgeschlagen", dead_letter: "fehlgeschlagen", deduplicated: "schon zugestellt", queued: "wartet", pending: "wartet" };
   const letzte = alle.sort((a, b) => String(b.z).localeCompare(String(a.z))).slice(0, 20).map((x) => `<tr><td style="text-align:left;white-space:nowrap">${esc(zeitKurz(x.z))}</td><td>${x.k === "mail" ? "✉️ E-Mail" : x.k === "push" ? "🔔 Push" : "💬 Club"}</td>
     <td style="text-align:left">${esc(x.k === "club" ? "Nachricht bekommen" : x.a || "")}</td><td style="text-align:left">${esc(x.k === "push" ? (x.auf ? "geöffnet" : x.an ? "angezeigt" : MS[x.s] || x.s || "") : x.k === "mail" ? MS[x.s] || x.s || "" : "")}</td></tr>`).join("");

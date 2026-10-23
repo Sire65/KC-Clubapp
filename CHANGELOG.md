@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.615.0 – 2026-10-23 – 📊 Nachrichten-Statistik öffnet sofort statt nach Minuten (KC-CLUB-STATISTIK-SCHNELL)
+- Fehler (Fund Hansi „dauert sehr lange, Meldung: hat gehangen“): Bei ~1.900 Einträgen in 30 Tagen war die App 13 s blockiert – der Server antwortete nach ~1,3 s, die Zeit ging beim Zeichnen verloren: für jeden Eintrag × jeden Tag bzw. × jede Stunde entstand ein neuer Datums-Umrechner (~160.000 Stück).
+- Jetzt Tag und Stunde je Eintrag einmal berechnen, dann nur zählen; `berlinStunde` merkt sich seinen Umrechner. Browser-Vergleich mit 1.900 Einträgen: 42 s → 0,05 s (Handy-Tempo 264 s → 0,17 s), Anzeige Zeichen für Zeichen gleich. Nur App. Auf Wunsch Hansi sofort eingespielt.
+
 ## 2.614.0 – 2026-10-23 – 🧑‍🍳 „An alle“ ohne Aushilfen (KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN)
 Wunsch Hansi („Leon und Ruth sollen keine E-Mails usw. bekommen – immer wenn man Schnellnachricht an alle anklickt, bekommen die Aushilfen auch Infos“). Beide haben den Zugang „Aushilfe“; bisher fielen bei „👥 Alle“ nur Personen mit 📵 heraus.
 - Neue Regel: Alles, was **an alle** geht, erreicht nur Personen mit Zugang „Mitglied“ (Admin immer). Aushilfen und Gäste fallen heraus – im Server (zentrale Liste `sammelEmpfaenger`, Zugang aus `kc_club_rollen`) und in der App.
