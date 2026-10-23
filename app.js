@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.610.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.611.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26802,10 +26802,13 @@ function neuLaden(vonHand) {
   return (NEU_LADEN_LAUF = lauf);
 }
 async function neuLadenRoh(vonHand) {
+  // 2.611.0 KC-CLUB-START-GLEICHZEITIG (Messung 23.10.: der Sofortstart zeichnete erst den gespeicherten Stand und schickte DANACH die Anfrage –
+  // beide Wartezeiten liefen hintereinander): erst die Anfrage an den Server losschicken, dann – während sie unterwegs ist – den Stand zeichnen.
+  const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
+  const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
-    const tInit = performance.now(); // KC-CLUB-STARTZEIT: nur die erste Anfrage nach dem Öffnen zählt
-    INIT = await api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -26875,7 +26878,8 @@ function standZeigen(g, vorab) {
 const SOFORT_MAX_MS = 3 * 86400000;
 function sofortStart() {
   const g = standLesen(); if (!g?.zeit || Date.now() - g.zeit > SOFORT_MAX_MS) return false;
-  try { return standZeigen(g, true); } catch { return false; }
+  // 2.611.0 KC-CLUB-START-SICHTBAR: messen, wann die Startseite (gespeicherter Stand) zu sehen ist – das ist die gefühlte Startzeit
+  try { const ok = standZeigen(g, true); if (ok && !START_MESS.sichtbar) START_MESS.sichtbar = performance.now(); return ok; } catch { return false; }
 }
 function offlineStandZeigen(an) {
   let el = $("offlineStand");
@@ -39882,6 +39886,8 @@ function startMessFertig() {
   if (Number.isFinite(INIT?.srvMs)) { p.srv = INIT.srvMs; p.anm = INIT.anmMs ?? null; }
   // was zwischen „eingerichtet“ und der Server-Anfrage liegt (kurz), zählt zum Einrichten – die Summe ergibt immer die Gesamtzeit
   p.einrichten += rund(m.initAb - m.eingerichtet);
+  // 2.611.0 KC-CLUB-START-SICHTBAR: gefühlte Startzeit – Startseite sichtbar (gespeicherter Stand, „wird aktualisiert“) bzw. ohne Stand erst mit den frischen Daten
+  p.sichtbar = rund(m.sichtbar && m.sichtbar < m.fertig ? m.sichtbar : m.fertig); p.sofort = !!(m.sichtbar && m.sichtbar < m.fertig);
   const eintrag = { z: Date.now(), v: APP_VERSION, netz: navigator.connection?.effectiveType || "", quelle: !prog ? "" : prog.transferSize === 0 ? "speicher" : "netz", ges: rund(m.fertig), p };
   try { localStorage.setItem(STARTMESS_SPEICHER, JSON.stringify([eintrag, ...startMessLesen()].slice(0, 10))); } catch {}
   try { if (!sessionStorage.getItem("kc_club_fp_startzeit")) { sessionStorage.setItem("kc_club_fp_startzeit", "1"); fpNeu("startzeit", { ms: eintrag.ges, netz: eintrag.netz, quelle: eintrag.quelle, ...p, ...startMessTeile() }); } } catch {}
@@ -39900,7 +39906,8 @@ function startMessHtml() {
   return `<details class="startmess"><summary class="zeile" style="cursor:pointer"><span>⏱️ Startzeit zuletzt</span><b style="margin-left:auto">${sek(a.ges)}</b></summary>
     <p class="hinweis" style="margin:4px 0">Beim letzten Öffnen (${esc(new Date(a.z).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }))} Uhr, Version ${esc(a.v)}${a.netz ? ", Netz " + esc(a.netz.toUpperCase()) : ""}${a.quelle ? ", Programm " + (a.quelle === "speicher" ? "aus dem Speicher" : "aus dem Netz") : ""}):</p>
     <table class="vb-tabelle">${STARTMESS_TEILE.map(([k, t]) => `<tr><td>${t}</td><td style="text-align:right;white-space:nowrap">${sek(a.p[k] || 0)}</td><td style="width:32%"><div style="height:8px;border-radius:4px;background:#8884"><div style="height:8px;border-radius:4px;background:var(--textGruen, #1e8449);width:${Math.max(2, Math.round(((a.p[k] || 0) / max) * 100))}%"></div></div></td></tr>`).join("")}
-      <tr><td><b>Gesamt</b></td><td style="text-align:right"><b>${sek(a.ges)}</b></td><td></td></tr></table>
+      <tr><td><b>Gesamt</b></td><td style="text-align:right"><b>${sek(a.ges)}</b></td><td></td></tr>
+      ${a.p.sofort ? `<tr><td>👀 Startseite zu sehen (letzter Stand, „wird aktualisiert“)</td><td style="text-align:right;white-space:nowrap"><b>${sek(a.p.sichtbar)}</b></td><td></td></tr>` : ""}</table><!-- 2.611.0 KC-CLUB-START-SICHTBAR -->
     <p class="hinweis" style="margin:6px 0 0">Letzte ${l.length} Starts: ${l.map((e) => sek(e.ges)).join(" · ")}<br>Durchschnitt: <b>${sek(schnitt)}</b>. Gemessen wird nur beim Öffnen der App, nicht beim Zurückholen.</p></details>`;
 }
 async function appInfoZeigen() {

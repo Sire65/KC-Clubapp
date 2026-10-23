@@ -3675,7 +3675,7 @@ assert.ok(/const UH_HERVOR = \["Innovation"\];/.test(html) && /function uhAmeise
 }
 // 341. 2.22.13 (Fehler aus 2.22.12): nach dem Laden muss ICH gesetzt werden – kein Zeilenkommentar darf den Rest der Zeile verschlucken
 {
-  const z = html.split("\n").find((l) => l.includes('INIT = await api("init"')) || "";
+  const z = html.split("\n").find((l) => l.includes('INIT = await api("init"') || l.includes("INIT = await initAnfrage;")) || ""; // 2.611.0: Anfrage wird vorher losgeschickt
   assert.ok(/ICH = INIT\.ich;/.test(z) && !/\/\/[^\n]*ICH = INIT\.ich/.test(z), "ICH = INIT.ich wird ausgeführt (nicht auskommentiert)");
 }
 // 342. 2.22.14: Kachel-Zahl oben rechts (verdeckt keinen Text)
@@ -6344,7 +6344,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG (Fund Hansi: Fehlalarm „setting 'checked'“, App war zweimal offen) + Igel ganz mit Stacheln
 {
   assert.ok(/if \(window\.KCFP\) window\.KCFP\.schlaeft = true;/.test(html) && /if \(window\.KCFP && window\.KCFP\.schlaeft\) return;/.test(html), "geleertes Fenster meldet nichts mehr");
-  assert.ok(/function anwendenDesign\(\) \{\n\s+if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /\{ warten: !!vonHand \}\); if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /if \(h && hg\) \{/.test(html), "Tag/Nacht und Laden stoppen im geleerten Fenster");
+  assert.ok(/function anwendenDesign\(\) \{\n\s+if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /(\{ warten: !!vonHand \}\)|INIT = await initAnfrage); if \(window\.KCFP\?\.schlaeft\) return;/.test(html) && /if \(h && hg\) \{/.test(html), "Tag/Nacht und Laden stoppen im geleerten Fenster");
   assert.ok(!/c\.ellipse\(-1, -4, 9\.4, 5\.6, 0, Math\.PI, 0\)/.test(html), "Igel: keine glatte braune Fläche mehr");
 }
 // 2.395.0 KC-CLUB-MEINE-EINSTELLUNGEN (Wunsch Hansi): Kachel in „Meins“ heißt „Meine Einstellungen“
@@ -12316,4 +12316,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/TREFFEN_IDX\.set\(k, \{ id: k, titel, beginn, ende, ganztaegig: ganz, ort, beschreibung: notiz \}\); inKalender\(k\);/.test(programm), "Handy-Kalender über das vorhandene inKalender");
   assert.ok(/const r = q\.r, club = !!ICH\?\.vorstand/.test(programm), "Clubtermin nur für die Clubleitung");
   assert.ok(html.includes('id="ntZeilenKnopf"') && html.includes('onclick="ntAusZeile()"'), "📅 in der kleinen Zeile");
+}
+// 2.611.0 KC-CLUB-START-SICHTBAR: gefühlte Startzeit messen (Sofortstart zeigt den letzten Stand, bevor die frischen Daten da sind)
+{
+  assert.ok(/const ok = standZeigen\(g, true\); if \(ok && !START_MESS\.sichtbar\) START_MESS\.sichtbar = performance\.now\(\); return ok;/.test(programm), "Zeitpunkt „sichtbar“ beim Sofortstart");
+  assert.ok(/p\.sichtbar = rund\(m\.sichtbar && m\.sichtbar < m\.fertig \? m\.sichtbar : m\.fertig\); p\.sofort = !!\(m\.sichtbar && m\.sichtbar < m\.fertig\);/.test(programm), "ohne Sofortstart gilt die Gesamtzeit");
+  const nl = programm.slice(programm.indexOf("async function neuLadenRoh(vonHand) {"), programm.indexOf("INIT = await initAnfrage;"));
+  assert.ok(nl.length > 0 && nl.indexOf('const initAnfrage = api("init"') >= 0 && nl.indexOf('const initAnfrage = api("init"') < nl.indexOf("if (!INIT) sofortStart();"), "erst die Anfrage losschicken, dann den gespeicherten Stand zeichnen (KC-CLUB-START-GLEICHZEITIG)");
+  assert.ok(/initAnfrage\.catch\(\(\) => \{\}\);/.test(nl), "kein „unbehandelter Fehler“, solange der Stand gezeichnet wird – das await behandelt ihn");
+  assert.ok(/STARTMESS_TEILE = \[\["seite", "📄 Seite laden"\], \["programm", "📦 Programm laden"\], \["einrichten", "⚙️ Programm einrichten"\], \["server", "🌐 Warten auf den Server"\], \["anzeige", "🖼️ Anzeigen"\]\]/.test(programm), "die fünf Teile (Summe = Gesamtzeit) bleiben unverändert");
 }

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.611.0 – 2026-10-23 – Start: Anfrage und Anzeige gleichzeitig
+Beim Öffnen schickt die App die Anfrage an den Server jetzt zuerst los und zeichnet währenddessen den gespeicherten Stand – vorher lief beides nacheinander (KC-CLUB-START-GLEICHZEITIG). Neu gemessen: wann die Startseite zu sehen ist (KC-CLUB-START-SICHTBAR).
+
 ## 2.610.0 – 2026-10-23 – 🚂 Kachel-Zug etwas schneller (KC-CLUB-KACHEL-ZUG-TEMPO)
 Wunsch Hansi („Der Effekt Zug ist jetzt gut, aber er dauert zu lange, bis alle Karten an ihrem Platz liegen – etwas schneller fahren lassen“): jede Kachel 2,4 s statt 3 s unterwegs, dichter hintereinander (höchstens 170 ms Abstand, alle Abfahrten zusammen höchstens 2,6 s). Bei 16 Kacheln ~5 s statt ~7 s bis alle liegen; gleiche Bahn, gleicher Ablauf. Eingespielt zum 12-Uhr-Termin. Rückweg: App 2.609.0.
 
