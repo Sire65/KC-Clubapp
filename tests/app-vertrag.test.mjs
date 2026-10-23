@@ -12308,6 +12308,18 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   for (const t of ["Guten Morgen zusammen!", "bin um 19.10. da", "Kommst du um 3 Personen?", "So geht das nicht", "Ich komme so 5 Minuten später", "Kosten 19.50 €", "Tel 0171 1234567"]) assert.equal(nt(t, B), null, "kein Termin: " + t);
   for (const t of ["Heute war schön", "Am Freitag war es toll", "Wir sehen uns am Sonntag", "um 19 Uhr"]) assert.equal(nt(t, B)?.sicher, false, "ohne eindeutigen Tag+Zeit kein Knopf: " + t);
   assert.equal(nt("Morgen 18 Uhr", "2026-10-20").datum, "2026-10-21", "„morgen“ zählt ab dem Tag der Nachricht");
+  // 2.612.0 KC-CLUB-TERMIN-UHRZEIT: Tageszeit nur direkt bei der Uhrzeit; ausdrückliche Uhrzeit bleibt; unklar → beide zur Wahl
+  const hansi = "Hallo zusammen. Klaus und ich haben mal einen Termin rausgesucht, um an der Hütte die Ösen anzubringen. Kommenden Mittwoch, den 28.10.26. da hat der Bauhof auch geöffnet . Nachmittags wird es schon früh dunkel, deswegen haben wir uns auf 10 Uhr verständigt.";
+  fall(hansi, { datum: "2026-10-28", zeit: "10:00", alt: "22:00" });
+  fall("Freitag 10 Uhr Aufbau, abends Essen bei Klaus", { zeit: "10:00", alt: "22:00" });
+  fall("Samstag 10 Uhr abends Feier", { zeit: "22:00", alt: null });
+  fall("Treffen um 7 abends", { zeit: "19:00", alt: null });
+  fall("morgens um 10 Bauhof", { zeit: "10:00", alt: null });
+  fall("Freitag 10 Uhr Aufbau", { zeit: "10:00", alt: null });
+  fall("Mo 9:00 Zahnarzt", { zeit: "09:00", alt: null });
+  fall("Sa 3 Uhr Kaffee", { zeit: "15:00", alt: "03:00" });
+  fall("Wir treffen uns übermorgen um 7", { zeit: "19:00", alt: "07:00" });
+  assert.ok(/\$\{r\?\.alt && !ganz \? `<div class="karte" id="ntUhrWahl"/.test(programm) && /if \(!ganz && \$\("ntBlatt"\)\?\.dataset\.ntUnklar === "1"\) return melde\(/.test(programm), "Fenster fragt bei unklarer Tageszeit nach und trägt erst nach der Wahl ein");
   // Wege und Ziele: nur vorhandene Funktionen, gespeichert erst mit „Eintragen“
   assert.ok(/if \(!r\?\.sicher \|\| r\.datum < heuteIso\(\)\) return "";/.test(programm), "Knopf an der Nachricht nur bei eindeutigem, kommendem Tag");
   assert.ok(programm.includes("${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}") && programm.includes("ntAusNachricht('${id}')\">📅 Als Termin übernehmen"), "Knopf an der Nachricht + Menü");
