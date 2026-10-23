@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.608.0 – 2026-10-23 – Nachricht als Termin übernehmen
+Die App erkennt Tag, Uhrzeit, Ort und Titel in Nachrichten (viele Schreibweisen). Knopf „📅 … eintragen“ direkt an der Nachricht, „📅 Als Termin übernehmen“ im Nachrichten-Menü und 📅 in der kleinen Zeile am Schreibfeld. Ziel: eigener Kalender (mit Erinnerung, auf Wunsch auch Handy-Kalender) oder – Clubleitung – Clubtermin über das gewohnte Formular (KC-CLUB-NACHRICHT-TERMIN).
+
 ## 2.607.0 – 2026-10-23 – 🔐 Sicherheit: Zugangslinks aufräumen, Geheimnis-Wächter, Durchsicht der Datenbank-Funktionen (KC-CLUB-ZUGANG-AUFRAEUMEN, KC-CLUB-GEHEIMNIS-WAECHTER)
 Wunsch Hansi („baue deine 4, 5, 6“ nach der Frage zur PHP-Lücke – Club-App nutzt kein PHP, nicht betroffen).
 - 🔑 Sicherheits-Check (nur Admin): neue Karte „Zugangslinks“ – oben stehen 💤 seit über 21 Tagen nie benutzte Links, 🕰️ über 60 Tage nicht in der App, 🚪 Links von Personen, die kein aktives Mitglied mehr sind. Je Person „⛔ Link abschalten“ (sofort ungültig, auch auf angemeldeten Geräten) oder „🔗 Neuer Link“. Die App schaltet nie von selbst ab; eigener Zugang nicht abschaltbar.

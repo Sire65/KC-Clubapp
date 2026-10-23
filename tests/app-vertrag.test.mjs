@@ -12272,3 +12272,38 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(ICH\?\.admin\) \{ fremdZeigen\(\); zgZeigen\(\); \}/.test(html) && /<b>\$\{ZG_SYM\[x\.stufe\] \|\| ""\} \$\{esc\(x\.name\)\}<\/b>/.test(html), "App: Karte im Sicherheits-Check, Namen escaped");
   assert.ok(/run: node tests\/geheimnis-waechter\.test\.mjs/.test(lies(".github/workflows/tests.yml")), "Geheimnis-Wächter läuft vor dem Einspielen");
 }
+// 2.608.0 KC-CLUB-NACHRICHT-TERMIN: Termin aus einer Nachricht erkennen (viele Schreibweisen) und über vorhandene Wege eintragen
+{
+  const a = programm.indexOf("const NT_MONATE"), e = programm.indexOf("const NT_CACHE");
+  assert.ok(a > 0 && e > a, "Erkennungs-Block vorhanden");
+  const block = programm.slice(a, e);
+  assert.ok(!/\(\?<[=!]/.test(block), "kein lookbehind – ältere iPhones kennen es nicht");
+  const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const nt = new Function("tagPlus", "heuteIso", block + "; return ntErkennen;")(tagPlus, () => "2026-10-23");
+  const B = "2026-10-23"; // Freitag
+  const fall = (t, erw) => { const r = nt(t, B); for (const [k, v] of Object.entries(erw)) assert.equal(r?.[k], v, `${t} → ${k}`); };
+  fall("Grillabend bei Klaus am Samstag um 18 Uhr", { datum: "2026-10-24", zeit: "18:00", titel: "Grillabend bei Klaus", ort: "bei Klaus", sicher: true });
+  fall("Sitzung am 14.11. um 19:30 in der Clubküche", { datum: "2026-11-14", zeit: "19:30", titel: "Sitzung in der Clubküche", ort: "Clubküche" });
+  fall("Treffen 14.11.2026 19.30 Uhr", { datum: "2026-11-14", zeit: "19:30", titel: "Treffen" });
+  fall("Am 3. Dezember Weihnachtsfeier im Kolpinghaus ab 18:00", { datum: "2026-12-03", zeit: "18:00", ort: "Kolpinghaus" });
+  fall("Morgen um halb 8 Probekochen", { datum: "2026-10-24", zeit: "19:30", titel: "Probekochen" });
+  fall("Nächsten Freitag 19 Uhr Stammtisch", { datum: "2026-10-30", zeit: "19:00" });
+  fall("nächste Woche Dienstag 18-20 Uhr Vorstand", { datum: "2026-10-27", zeit: "18:00", bis: "20:00" });
+  fall("Wir treffen uns übermorgen um 7", { datum: "2026-10-25", zeit: "19:00" });
+  fall("Fr. 6.11. Kegeln 20 Uhr", { datum: "2026-11-06", zeit: "20:00", titel: "Kegeln" });
+  fall("in 3 Tagen Einkauf bei Metro um 10", { datum: "2026-10-26", zeit: "10:00" });
+  fall("Am 5.1. Neujahrsempfang", { datum: "2027-01-05", zeit: null, sicher: true });
+  fall("Sa 15 Uhr Aufbau Weihnachtsmarkt in Werne", { datum: "2026-10-24", zeit: "15:00", ort: "Werne" });
+  fall("Mo 9:00 Zahnarzt", { datum: "2026-10-26", zeit: "09:00" });
+  for (const t of ["Guten Morgen zusammen!", "bin um 19.10. da", "Kommst du um 3 Personen?", "So geht das nicht", "Ich komme so 5 Minuten später", "Kosten 19.50 €", "Tel 0171 1234567"]) assert.equal(nt(t, B), null, "kein Termin: " + t);
+  for (const t of ["Heute war schön", "Am Freitag war es toll", "Wir sehen uns am Sonntag", "um 19 Uhr"]) assert.equal(nt(t, B)?.sicher, false, "ohne eindeutigen Tag+Zeit kein Knopf: " + t);
+  assert.equal(nt("Morgen 18 Uhr", "2026-10-20").datum, "2026-10-21", "„morgen“ zählt ab dem Tag der Nachricht");
+  // Wege und Ziele: nur vorhandene Funktionen, gespeichert erst mit „Eintragen“
+  assert.ok(/if \(!r\?\.sicher \|\| r\.datum < heuteIso\(\)\) return "";/.test(programm), "Knopf an der Nachricht nur bei eindeutigem, kommendem Tag");
+  assert.ok(programm.includes("${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}") && programm.includes("ntAusNachricht('${id}')\">📅 Als Termin übernehmen"), "Knopf an der Nachricht + Menü");
+  assert.ok(/await api\("privattermin_speichern", \{ titel, beginn, ende, ganztaegig: ganz, ort, notiz,/.test(programm), "privat über das vorhandene privattermin_speichern");
+  assert.ok(/return treffenForm\(\{ titel, beginn, ende, ganztaegig: ganz, ort,/.test(programm), "Clubtermin über das vorhandene Formular (veröffentlicht erst dort)");
+  assert.ok(/TREFFEN_IDX\.set\(k, \{ id: k, titel, beginn, ende, ganztaegig: ganz, ort, beschreibung: notiz \}\); inKalender\(k\);/.test(programm), "Handy-Kalender über das vorhandene inKalender");
+  assert.ok(/const r = q\.r, club = !!ICH\?\.vorstand/.test(programm), "Clubtermin nur für die Clubleitung");
+  assert.ok(html.includes('id="ntZeilenKnopf"') && html.includes('onclick="ntAusZeile()"'), "📅 in der kleinen Zeile");
+}

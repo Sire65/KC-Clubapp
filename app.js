@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.607.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.608.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5338,6 +5338,7 @@ const HILFE = [
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
+  { id: "nachricht_termin", thema: "nachrichten", sym: "📅", t: "Nachricht als Termin übernehmen", x: "Steht in einer Nachricht ein Termin – z. B. <b>„Samstag 18 Uhr Grillen bei Klaus“</b> oder <b>„am 14.11. um 19:30 Sitzung“</b> –, liest die App Tag, Uhrzeit, Ort und Titel selbst heraus. Drei Wege: <b>1.</b> Unter der Nachricht steht ein Knopf <b>„📅 Sa., 24.10., 18:00 Uhr – eintragen“</b>. <b>2.</b> Nachricht antippen → <b>„📅 Als Termin übernehmen“</b>. <b>3.</b> In der kleinen Zeile am Schreibfeld (neben ▾ und ⌨️) das <b>📅</b> – es nimmt, was du gerade schreibst, sonst die neueste Nachricht mit Termin. Im Fenster ist alles vorausgefüllt: kurz prüfen, <b>✅ Eintragen</b> – fertig. Der Termin steht dann in deinem Kalender (nur du siehst ihn), auf Wunsch mit Erinnerung und zusätzlich im Kalender deines Handys. Die Clubleitung kann stattdessen <b>„📅 Clubtermin für alle“</b> wählen – dann öffnet sich das gewohnte Termin-Formular, schon ausgefüllt. Die App versteht viele Schreibweisen: 14.11. · 14.11.2026 · 14. November · morgen · übermorgen · nächsten Freitag · nächste Woche Dienstag · in 3 Tagen · 19 Uhr · 19:30 · 19.30 Uhr · 18–20 Uhr · halb 8 · viertel nach 7 · „um 7“ (= 19 Uhr).", seit: "2.608.0" },
   { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen (es wird grün), Nachricht schreiben, senden. Die App fragt erst: <b>„🔒 Ja, mit Schlüssel“</b> oder <b>„✉️ Normal senden“</b> – „Normal senden“ schaltet das Schloss aus und schickt die Nachricht wie immer. Mit „Ja“ legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“); ein 🔑 dreht sich, und der <b>🕵️ Geheimagent</b> bringt die Nachricht. Beim Wechsel in einen anderen Chat geht das Schloss von selbst aus. Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt. Alles im Video <b>„🕵️ Geheim schreiben“</b>.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.517.0" },
   { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b> – bis 10 Dateien, jeder Dateityp (Fotos, PDF, Word, Excel, Videos …). Du siehst „Im Ablagekorb abgelegt“; Hansi kümmert sich darum und legt es ab – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart. Gibt es die Datei schon in der Club-App, sagt dir die App: <b>„… gibt es schon in der Club-App“</b>. Kommt nichts an, nennt die App den Grund und was hilft (z. B. App neu installieren, bis dahin im Chat über 📎).", seit: "2.511.0" },
   { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt. Seit 2.512.0: bei mehreren Dateien je Datei ein <b>Häkchen</b> – nur die ausgewählten <b>ins Fotoalbum</b> oder <b>löschen</b>; <b>⚠️ gibt es schon</b> zeigt Dubletten (gleiche Datei in Fotoalbum, Archiv, Chat oder Ablagekorb, im Album auch gleiche Aufnahme), „⚠️ Dubletten“ wählt sie mit einem Tipp aus.", nur: () => !!ICH?.admin, seit: "2.511.0" },
@@ -31462,7 +31463,7 @@ async function chatLaden(scrollen, merk) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}
       ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
@@ -31744,6 +31745,7 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAnheften('${id}', ${!m.angeheftet})">${m.angeheftet ? "📌 Lösen (nicht mehr oben)" : "📌 Oben anheften"}</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naMerken('${id}', ${!m.gemerkt})">${m.gemerkt ? "⭐ Nicht mehr merken" : "⭐ Merken"}</button>
     ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ Bearbeiten</button>` : ""}
+    ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();ntAusNachricht('${id}')">📅 Als Termin übernehmen</button>` : ""}<!-- 2.608.0 KC-CLUB-NACHRICHT-TERMIN -->
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naVorlesen('${id}')">🔊 Vorlesen</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();chatVorlesenStart('${id}')">🔊 Ab hier alles vorlesen</button>
@@ -31755,6 +31757,148 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
+}
+// ---------- 2.608.0 KC-CLUB-NACHRICHT-TERMIN (Wunsch Hansi 23.10.: „In die kleine Zeile über dem Chat ein Icon Termin – damit kann man die Nachricht
+// direkt in den Terminplan übernehmen, ohne viele Schritte“ + „Terminerkennung und sofort ein Kalender-Icon an der Nachricht“). Die App liest Tag, Uhrzeit,
+// Ort und Titel selbst aus dem Text – auf dem Handy, ohne bezahlten Dienst. Drei Wege: 📅 in der kleinen Zeile, „📅 Als Termin“ im Nachrichten-Menü und
+// der Knopf „📅 … eintragen“ direkt an einer Nachricht mit Datum. Ziele (vorhandene Funktionen): privater Termin (privattermin_speichern), Clubtermin
+// (vorhandenes Termin-Formular, vorausgefüllt – veröffentlicht erst dort), Handy-Kalender (vorhandenes inKalender). Gespeichert wird nur mit „Eintragen“.
+const NT_MONATE = { januar: 1, jan: 1, jänner: 1, februar: 2, feb: 2, märz: 3, maerz: 3, mär: 3, mrz: 3, april: 4, apr: 4, mai: 5, juni: 6, jun: 6, juli: 7, jul: 7, august: 8, aug: 8,
+  september: 9, sept: 9, sep: 9, oktober: 10, okt: 10, november: 11, nov: 11, dezember: 12, dez: 12 };
+const NT_WTAGE = { sonntag: 0, montag: 1, dienstag: 2, mittwoch: 3, donnerstag: 4, freitag: 5, samstag: 6, sonnabend: 6, so: 0, mo: 1, di: 2, mi: 3, do: 4, fr: 5, sa: 6 };
+const NT_ZAHL = { eins: 1, ein: 1, eine: 1, einem: 1, einer: 1, zwei: 2, drei: 3, vier: 4, fünf: 5, fuenf: 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, elf: 11, zwölf: 12, zwoelf: 12 };
+const NT_B = "[a-zäöüß]"; // Buchstabe (für Wortgrenzen mit Umlauten – ohne „lookbehind“, das ältere iPhones nicht kennen)
+const ntZahl = (x) => /^\d+$/.test(x) ? Number(x) : NT_ZAHL[x] ?? NaN;
+function ntErkennen(text, bezug) {
+  const s = String(text || "").toLowerCase().replace(/ /g, " "), weg = [];
+  if (!s.trim() || s.length > 2000) return null;
+  bezug = /^\d{4}-\d\d-\d\d$/.test(bezug || "") ? bezug : heuteIso();
+  const frei = (a, b) => !weg.some(([x, y]) => a < y && b > x), merk = (a, b) => weg.push([a, b]);
+  const alle = (re, f) => { re.lastIndex = 0; let m; while ((m = re.exec(s))) { const a = m.index + (m[1] || "").length, b = m.index + m[0].length; if (frei(a, b) && f(m, a, b) !== false) merk(a, b); if (!re.global) break; } };
+  const iso = (j, mo, t) => { const d = new Date(Date.UTC(j, mo - 1, t)); return d.getUTCMonth() === mo - 1 && d.getUTCDate() === t ? d.toISOString().slice(0, 10) : null; };
+  const ohneJahr = (mo, t) => { const j = Number(bezug.slice(0, 4)); let d = iso(j, mo, t); if (d && d < tagPlus(bezug, -60)) d = iso(j + 1, mo, t); return d; };
+  const wtagVon = (d) => new Date(d + "T12:00:00Z").getUTCDay();
+  let datum = null, fest = false, zeit = null, bis = null; // fest = eindeutiger Tag (Datum, „in 3 Tagen“, „nächsten Freitag“); sonst erst mit Uhrzeit sicher
+  // 1) feste Daten: 2026-11-14 · 14.11.2026 · 14.11.26 · 14.11. · „am 14.11“ · 14. November (2026) · 14 nov
+  alle(/()(\d{4})-(\d\d)-(\d\d)/g, (m) => { if (datum) return false; datum = iso(+m[2], +m[3], +m[4]); if (!datum) return false; });
+  alle(/(^|[^\d.:])(\d{1,2})\.\s?(\d{1,2})\.(\d{4}|\d\d)?(?![\d:])/g, (m, a) => { if (datum || /(um|ab|gegen|von|bis)\s*$/.test(s.slice(Math.max(0, a - 7), a))) return false; const t = +m[2], mo = +m[3];
+    datum = m[4] ? iso(m[4].length === 2 ? 2000 + +m[4] : +m[4], mo, t) : ohneJahr(mo, t); if (!datum) return false; });
+  alle(/(^|[^\d.:])(?:am|ab|bis|vom)\s+(\d{1,2})\.(\d{1,2})(?![\d.:])/g, (m) => { if (datum) return false; datum = ohneJahr(+m[3], +m[2]); if (!datum) return false; });
+  const monRe = Object.keys(NT_MONATE).sort((a, b) => b.length - a.length).join("|");
+  alle(new RegExp(`(^|[^\\d])(\\d{1,2})\\.?\\s*(${monRe})\\.?(?!${NT_B})(?:\\s+(\\d{4}))?`, "g"), (m) => { if (datum) return false; const mo = NT_MONATE[m[3]];
+    datum = m[4] ? iso(+m[4], mo, +m[2]) : ohneJahr(mo, +m[2]); if (!datum) return false; });
+  if (datum) fest = true;
+  // 2) heute / morgen / übermorgen / in 3 Tagen / in einer Woche („heute morgen“ = heute früh)
+  alle(new RegExp(`(^|[^a-zäöüß])(übermorgen|uebermorgen|heute|morgen)(?!${NT_B})`, "g"), (m, a) => { if (datum) { return m[2] === "morgen" && /heute/.test(s) ? undefined : false; }
+    if (m[2] === "morgen" && /(guten|schönen|schoenen)\s*$/.test(s.slice(Math.max(0, a - 9), a))) return false; // „Guten Morgen“ ist kein Termin
+    datum = tagPlus(bezug, m[2] === "heute" ? 0 : m[2] === "morgen" ? 1 : 2); });
+  alle(new RegExp(`(^|[^a-zäöüß])in\\s+(\\d+|${Object.keys(NT_ZAHL).join("|")})\\s+(tag|tagen|woche|wochen)(?!${NT_B})`, "g"), (m) => { if (datum) return false; const n = ntZahl(m[2]); if (!(n >= 1 && n <= 60)) return false;
+    datum = tagPlus(bezug, /^woche/.test(m[3]) ? 7 * n : n); fest = true; });
+  // 3) Wochentage: „Freitag“, „am Fr.“, „nächsten Freitag“, „nächste Woche Dienstag“, „Fr. 14.11.“ (das feste Datum gilt)
+  const naechsteWoche = new RegExp(`(^|[^a-zäöüß])(nächste|naechste|kommende)\\s+woche(?!${NT_B})`).exec(s);
+  alle(new RegExp(`(^|[^a-zäöüß])((?:(?:am|diesen|diese[nm]?|nächsten|naechsten|kommenden|übernächsten|uebernaechsten)\\s+)?)(sonntag|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonnabend|(?:so|mo|di|mi|do|fr|sa)\\.?(?=\\s*\\d{1,2}(?:[.:]\\d|\\s*uhr|\\.)))s?(?!${NT_B})`, "g"), (m) => {
+    if (datum) return; // „Fr. 14.11.“: Datum steht schon – den Wochentag nur aus dem Titel nehmen
+    const w = NT_WTAGE[m[3].replace(".", "")], vor = m[2].trim(); let d = (w - wtagVon(bezug) + 7) % 7;
+    if (naechsteWoche) d = 7 - ((wtagVon(bezug) + 6) % 7) + ((w + 6) % 7);
+    else if (/über|ueber/.test(vor)) d += d === 0 ? 14 : 7;
+    else if (d === 0 && /chst|kommend/.test(vor)) d = 7;
+    datum = tagPlus(bezug, d); if (naechsteWoche || /chst|kommend/.test(vor)) fest = true;
+  });
+  if (naechsteWoche && datum) merk(naechsteWoche.index + naechsteWoche[1].length, naechsteWoche.index + naechsteWoche[0].length);
+  // 4) Uhrzeit: 19 Uhr · 19h · 19:30 · 19.30 Uhr · um 19 · 18–20 Uhr · von 18 bis 20 Uhr · halb 8 · viertel nach 7 · viertel vor 8 · dreiviertel 8
+  const abends = new RegExp(`abend|nachmittag|mittags`).test(s), frueh = new RegExp(`morgens|früh|frueh|vormittag`).test(s);
+  const stunde = (h, mitUhr) => { h = +h; if (h >= 1 && h <= 11 && (abends || (!frueh && !mitUhr && h <= 7) || (!frueh && mitUhr && h <= 5))) h += 12; return h; };
+  const hm = (h, mi, mitUhr) => { h = stunde(h, mitUhr); mi = +(mi || 0); return h <= 24 && mi < 60 ? `${String(h % 24).padStart(2, "0")}:${String(mi).padStart(2, "0")}` : null; };
+  alle(/(^|[^\d.:])(?:von\s+|ab\s+)?(\d{1,2})(?:[:.](\d\d))?\s*(?:uhr\s*)?(?:-|–|bis)\s*(\d{1,2})(?:[:.](\d\d))?\s*(uhr|h)(?![a-zäöüß])/g, (m) => {
+    if (zeit) return false; const a = hm(m[2], m[3], true), b = hm(m[4], m[5], true); if (!a || !b) return false; zeit = a; bis = b < a ? null : b; });
+  alle(/(^|[^\d.:])(\d{1,2})[:.](\d\d)\s*(uhr|h)?(?![\d.a-zäöüß])/g, (m, a0) => {
+    if (zeit) return false; const davor = s.slice(Math.max(0, a0 - 7), a0); if (!m[4] && !/:/.test(m[0]) && !/(um|ab|gegen|von|bis)\s*$/.test(davor)) return false;
+    zeit = hm(m[2], m[3], true); if (!zeit) return false; });
+  alle(/(^|[^\d.:])(\d{1,2})\s*(uhr|h)(?![a-zäöüß])/g, (m) => { if (zeit) return false; zeit = hm(m[2], 0, true); if (!zeit) return false; });
+  alle(new RegExp(`(^|[^a-zäöüß])(halb|viertel nach|viertel vor|dreiviertel)\\s+(\\d{1,2}|${Object.keys(NT_ZAHL).join("|")})(?!${NT_B}|\\d)`, "g"), (m) => {
+    if (zeit) return false; const h = ntZahl(m[3]); if (!(h >= 1 && h <= 12)) return false;
+    zeit = m[2] === "viertel nach" ? hm(h, 15, false) : hm(h - 1 || 12, m[2] === "halb" ? 30 : 45, false); if (!zeit) return false; });
+  alle(/(^|[^a-zäöüß])(?:um|gegen|ab)\s+(\d{1,2})(?![\d.:,]|\s*(?:tag|tage|wochen?|minuten?|personen|leute|euro|€|mal|stück)(?![a-zäöüß]))/g, (m) => { if (zeit) return false; zeit = hm(m[2], 0, false); if (!zeit) return false; });
+  if (!datum && !zeit) return null;
+  const sicher = !!datum && (fest || !!zeit); // „heute“, „morgen“, „Freitag“ allein sind oft kein Termin – erst mit Uhrzeit bekommt die Nachricht den Knopf
+  if (!datum) datum = bezug; // nur Uhrzeit: am Tag der Nachricht (kein Knopf an der Nachricht, aber über 📅 übernehmbar)
+  // 5) Ort: „in der Clubküche“, „bei Klaus“, „im Kolpinghaus“, „in Werne“ – bis zu drei groß geschriebene Wörter
+  let ort = "";
+  const tOrig = String(text), ortM = /(?:^|[\s(])(in der|in dem|im|beim|bei|auf dem|auf der|am|in)\s+((?:[A-ZÄÖÜ][\wäöüßÄÖÜ'’-]*)(?:\s+(?:[A-ZÄÖÜ][\wäöüßÄÖÜ'’-]*|an der|am|im)){0,3})/g;
+  for (let m; (m = ortM.exec(tOrig));) {
+    const teile = []; for (const x of m[2].split(/\s+/)) { const kx = x.toLowerCase().replace(/[.,]$/, ""); if (kx in NT_MONATE || kx in NT_WTAGE || /^uhr$/.test(kx)) break; teile.push(x); }
+    const w = teile.join(" ").replace(/\s+(an der|an|der|am|im)$/, ""), k = (teile[0] || "").toLowerCase();
+    if (!k || k in NT_MONATE || k in NT_WTAGE || /^(uhr|abend|nachmittag|morgen|club|köcheclub|chat|namen|moment|prinzip|grunde|ordnung|anschluss|januar)$/i.test(k)) continue;
+    ort = (m[1] === "bei" || m[1] === "beim" ? m[1] + " " : "") + w; break;
+  }
+  // 6) Titel: der Text ohne Datum, Uhrzeit und Füllwörter (gekürzt)
+  const raus = [...weg].sort((a, b) => b[0] - a[0]); let t = tOrig;
+  for (let [a, b] of raus) { const f = /(?:^|\s)(am|um|ab|gegen|von|vom|bis|den|ca\.?)\s+$/i.exec(t.slice(0, a)); if (f) a = f.index; t = t.slice(0, a) + " " + t.slice(b); } // „am“/„um“ vor dem Datum mit weg
+  t = t.replace(/\b(am|um|ab|gegen|von|bis|den|dem|uhr|ist|wir)\s+(?=[,.!?;:]|$)/gi, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/\s{2,}/g, " ")
+    .replace(/^[\s,.;:–-]+|[\s,;:–-]+$/g, "").replace(/^(am|um|ab|und|also|ok|okay|ja)\s+/i, "").trim();
+  if (t.length > 70) { const i = t.search(/[.!?]\s/), satz = i > 0 ? t.slice(0, i + 1) : t; t = satz.length <= 70 && satz.length >= 8 ? satz : t.slice(0, 70).replace(/\s+\S*$/, "") + " …"; }
+  return { datum, zeit, bis, titel: t ? t.charAt(0).toUpperCase() + t.slice(1) : "", ort, sicher };
+}
+const NT_CACHE = new Map();
+function ntAusText(m) { // je Nachricht nur einmal rechnen (Bezug: der Tag, an dem sie geschrieben wurde – „morgen“ von vorgestern ist gestern)
+  const k = m.id + "|" + (m.text || "").length + "|" + (m.zeit || ""); if (NT_CACHE.has(k)) return NT_CACHE.get(k);
+  let r = null; try { r = m.text && m.text !== "📎" && !m.umfrage && !m.kontakt ? ntErkennen(m.text, m.zeit ? berlinIso(m.zeit) : heuteIso()) : null; } catch { r = null; }
+  if (NT_CACHE.size > 800) NT_CACHE.clear(); NT_CACHE.set(k, r); return r;
+}
+const ntWann = (r) => `${fTag.format(new Date(r.datum + "T12:00:00Z"))}${r.zeit ? ", " + r.zeit + (r.bis ? "–" + r.bis : "") + " Uhr" : ""}`;
+function ntKnopfHtml(m) { // Knopf direkt an der Nachricht – nur bei eindeutigem Tag, der nicht vorbei ist
+  const r = ntAusText(m); if (!r?.sicher || r.datum < heuteIso()) return "";
+  return `<button type="button" class="nt-knopf" title="Als Termin in den Kalender übernehmen" onclick="event.stopPropagation();ntAusNachricht('${m.id}')">📅 ${esc(ntWann(r))} – eintragen</button>`;
+}
+function ntAusNachricht(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  ntFenster({ text: m.text || "", von: m.eigen ? "Du" : m.von, bezug: m.zeit ? berlinIso(m.zeit) : heuteIso(), r: ntAusText(m) });
+}
+function ntAusZeile() { // 📅 in der kleinen Zeile: erst was ich gerade schreibe, sonst die neueste Nachricht mit Termin im offenen Chat
+  const eig = ($("text")?.value || "").trim(), r0 = eig ? ntErkennen(eig, heuteIso()) : null;
+  if (r0) return ntFenster({ text: eig, von: "Du", bezug: heuteIso(), r: r0 });
+  const ids = [...document.querySelectorAll("#chat .blase[data-id]")].map((e) => e.dataset.id).reverse();
+  for (const id of ids) { const m = NA.nachrichten.get(id), r = m && ntAusText(m); if (r?.sicher && r.datum >= heuteIso()) return ntFenster({ text: m.text, von: m.eigen ? "Du" : m.von, bezug: berlinIso(m.zeit), r }); }
+  ntFenster({ text: eig, von: "Du", bezug: heuteIso(), r: null });
+}
+function ntFenster(q) {
+  const r = q.r, club = !!ICH?.vorstand, ganz = !!r && !r.zeit;
+  const f = blattAuf("ntBlatt", `<h3 style="margin-top:0">📅 Als Termin übernehmen</h3>
+    ${q.text ? `<div class="na-vorschau">${esc(q.von)}: ${esc(String(q.text).slice(0, 200))}</div>` : ""}
+    <p class="hinweis" style="margin:6px 0">${r ? `✨ Erkannt: <b>${esc(ntWann(r))}</b> – bitte kurz prüfen.` : "Kein Tag gefunden – bitte Tag und Uhrzeit wählen."}</p>
+    ${club ? `<div class="artwahl" id="ntZiel"><button type="button" class="knopf haupt" data-z="privat">🔒 Mein Kalender</button><button type="button" class="knopf" data-z="club">📅 Clubtermin für alle</button></div>` : ""}
+    <label class="feld">Was<input id="ntTitel" maxlength="120" value="${esc(r?.titel || "")}" placeholder="z. B. Grillabend bei Klaus"></label>
+    <div class="zwei"><label class="feld">Tag<input id="ntDatum" type="date" value="${r?.datum || tagPlus(heuteIso(), 1)}"></label><label class="feld">Uhrzeit<input id="ntZeit" type="time" value="${r?.zeit || (r ? "" : "18:00")}" ${ganz ? "disabled" : ""}></label></div>
+    <label class="feld">bis Uhrzeit (freiwillig)<input id="ntBis" type="time" value="${r?.bis || ""}" ${ganz ? "disabled" : ""}></label>
+    <label class="schalter"><span>Ganztägig (ohne Uhrzeit)</span><input type="checkbox" id="ntGanz" ${ganz ? "checked" : ""}></label>
+    <label class="feld">Ort (freiwillig)<input id="ntOrt" maxlength="200" value="${esc(r?.ort || "")}"></label>
+    <div id="ntPrivat"><label class="feld">⏰ Erinnerung<select id="ntErinnerung">${PT_ERINNERUNG.map(([m, t]) => `<option value="${m}" ${m === 60 ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label class="schalter"><span>📲 Auch in den Kalender meines Handys</span><input type="checkbox" id="ntHandy"></label></div>
+    <div class="dlg-knoepfe"><button class="knopf haupt" id="ntLos">✅ Eintragen</button><button class="knopf" onclick="$('ntBlatt').remove()">Abbrechen</button></div>`);
+  let ziel = "privat";
+  f.querySelectorAll("#ntZiel [data-z]").forEach((b) => b.onclick = () => {
+    ziel = b.dataset.z; f.querySelectorAll("#ntZiel [data-z]").forEach((x) => x.classList.toggle("haupt", x === b));
+    f.querySelector("#ntPrivat").classList.toggle("versteckt", ziel === "club"); f.querySelector("#ntLos").textContent = ziel === "club" ? "➡️ Weiter zum Clubtermin" : "✅ Eintragen";
+  });
+  f.querySelector("#ntGanz").onchange = (e) => { f.querySelector("#ntZeit").disabled = f.querySelector("#ntBis").disabled = e.target.checked; };
+  f.querySelector("#ntLos").onclick = (e) => einmal(e.currentTarget, () => ntEintragen(q, ziel));
+}
+async function ntEintragen(q, ziel) {
+  const titel = $("ntTitel").value.trim() || "Termin", datum = $("ntDatum").value, ganz = $("ntGanz").checked || !$("ntZeit").value, zeit = $("ntZeit").value, bisZ = $("ntBis").value;
+  if (!datum) return melde("Bitte einen Tag wählen.", true);
+  const beginn = taZeitpunkt(datum, ganz ? "00:00" : zeit), ende = !ganz && bisZ ? taZeitpunkt(datum, bisZ) : null, ort = $("ntOrt").value.trim();
+  if (ende && ende <= beginn) return melde("„bis“ liegt vor dem Beginn.", true);
+  const notiz = q.text ? `Aus dem Chat – ${q.von} schrieb: „${String(q.text).slice(0, 900)}“` : "";
+  if (ziel === "club") { // vorhandenes Termin-Formular, vorausgefüllt – dort wählt die Clubleitung Art, Gastgeber, Benachrichtigung und speichert
+    $("ntBlatt")?.remove(); termineArt = "liste"; if (aktuelleAnsicht !== "termine") zeige("termine");
+    return treffenForm({ titel, beginn, ende, ganztaegig: ganz, ort, beschreibung: q.text ? String(q.text).slice(0, 2000) : "" });
+  }
+  try {
+    await api("privattermin_speichern", { titel, beginn, ende, ganztaegig: ganz, ort, notiz, erinnerung_min: Number($("ntErinnerung").value), wiederholung: "keine", wiederholung_bis: null, startseite: false });
+  } catch (e) { return meldeFehler(e); }
+  const handy = $("ntHandy").checked; $("ntBlatt")?.remove(); CD.stand = 0;
+  melde(`📅 Eingetragen: ${titel} – in deinem Kalender (nur du siehst ihn)`);
+  if (handy) { const k = "nt-" + Date.now(); TREFFEN_IDX.set(k, { id: k, titel, beginn, ende, ganztaegig: ganz, ort, beschreibung: notiz }); inKalender(k); }
 }
 // ---------- KC-CLUB-ANHEFTEN / -MERKEN / -CHATUMFRAGE / -KONTAKT (1.10.0, Wunsch Hansi – wie WhatsApp) ----------
 // ---------- KC-CLUB-DIALOG (1.46.0, Wunsch Hansi „überall das gleiche Bedienkonzept“): App-Fenster statt der grauen
