@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.603.0 – 2026-10-23 – Nachrichten: Sofort-Senden mit Warteschlange
+➤ legt die Nachricht in eine Warteschlange: sie steht sofort im Chat (⏳), das Schreibfeld ist sofort frei – gleich weiterschreiben. Abgearbeitet wird der Reihe nach, 🏎️ Express überholt die wartenden. Bei Netz-Wacklern bis zu 3 neue Versuche; der Server speichert jede Nachricht trotzdem nur einmal (Kennung). Klappt es nicht: ⚠️ mit 🔄 Nochmal / 🗑️ Löschen. Der Server antwortet nach dem Speichern sofort, Push/Mail laufen im Hintergrund (Notfall, Express, ❗ wichtig, @Erwähnung wie bisher). (KC-CLUB-SENDE-SCHLANGE)
+
 ## 2.602.0 – 2026-10-23 – Start schneller, Schritt 2: Kern in einem Aufruf
 Start-Paket, ungelesene Nachrichten je Chat, Kachel-Zahlen und Live-Leitung kommen jetzt in EINEM Datenbank-Aufruf statt vier (KC-CLUB-START-KERN) – genau die vorhandenen Funktionen, gebündelt; fehlt ein Teil, wird nur er einzeln geholt; Not-Aus. Außerdem leeren die Paket-Abfragen den Zwischenspeicher des Servers nicht mehr.
 

@@ -131,7 +131,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.602.0";
+const SERVER_VERSION = "2.603.0";
 const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -10929,7 +10929,24 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: b } = await db.from("kc_communication_messages").select("id,thread_id").eq("id", String(p.antwort_auf)).maybeSingle();
           if (b && b.thread_id === threadId) antwortAuf = b.id;
         }
-        const { data: m, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || (einmal ? EINMAL_TEXT : "📎"), reply_to_message_id: antwortAuf }).select("id,created_at").single();
+        // 2.603.0 KC-CLUB-SENDE-SCHLANGE: Kennung der App (cid) – dieselbe Nachricht wird nur EINMAL gespeichert (neuer Versuch nach Netz-Wackler →
+        // Antwort mit der schon gespeicherten Nachricht). Läuft der erste Versuch noch → 409 (die App versucht es gleich noch einmal).
+        const cid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(p.cid || "")) ? String(p.cid).toLowerCase() : null;
+        if (cid) {
+          const { error: ce } = await db.from("kc_club_sende_kennung").insert({ cid, person_id: ich.person_id, thread_id: threadId });
+          if (ce) {
+            const { data: alt } = await db.from("kc_club_sende_kennung").select("person_id,thread_id,message_id,erstellt_am").eq("cid", cid).maybeSingle();
+            if (!alt || alt.person_id !== ich.person_id) throw new Fehler("Nachricht konnte nicht gespeichert werden – bitte nochmal senden.", 409);
+            if (alt.message_id) return json({ ok: true, id: alt.thread_id, mid: alt.message_id, doppelt: true, versand: { doppelt: true } });
+            if (Date.now() - Date.parse(alt.erstellt_am) < 60000) throw new Fehler("Diese Nachricht wird gerade noch gesendet.", 409);
+            await db.from("kc_club_sende_kennung").update({ erstellt_am: jetzt(), thread_id: threadId }).eq("cid", cid).is("message_id", null); // verwaist → übernehmen
+          }
+          if (Math.random() < 0.02) nebenbei(Promise.resolve(db.from("kc_club_sende_kennung").delete().lt("erstellt_am", new Date(Date.now() - 2 * 86400000).toISOString())));
+        }
+        let m: any = null, slNachricht = 0;
+        try { // 2.603.0: klappt das Speichern nicht, wird die Kennung wieder frei (ein neuer Versuch darf dann speichern)
+        const { data: mm, error: me } = await db.from("kc_communication_messages").insert({ thread_id: threadId, sender_person_id: ich.person_id, body: text || (einmal ? EINMAL_TEXT : "📎"), reply_to_message_id: antwortAuf }).select("id,created_at").single();
+        m = mm;
         db.from("kc_club_tippen").delete().eq("thread_id", threadId).eq("person_id", ich.person_id).then(() => {}); // „schreibt …“ endet mit dem Senden
         if (me || !m) throw new Fehler("Nachricht konnte nicht gespeichert werden.", 500);
         if (anlagen.length) await db.from("kc_communication_message_attachments").insert(anlagen.map((attachment_id: string) => ({ message_id: m.id, attachment_id, hochgeladen_von_person_id: ich.person_id })));
@@ -10962,7 +10979,6 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (we) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Wichtige Nachricht konnte nicht gespeichert werden.", 500); }
         }
         // KC-CLUB-SELBSTLOESCHEN (2.148.0): ⏳ dieser Nachricht (0 = bewusst aus) vor der Einstellung des Chats; Notfall löscht sich nie
-        let slNachricht = 0;
         if (!notfall) {
           if (p.ablauf_std !== undefined && p.ablauf_std !== null) slNachricht = slStd(p.ablauf_std);
           else { const { data: sc } = await db.from("kc_club_chat_selbstloeschen").select("stunden").eq("thread_id", threadId).maybeSingle(); slNachricht = slStd(sc?.stunden); }
@@ -10971,16 +10987,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { error: ae } = await db.from("kc_club_nachricht_ablauf").insert({ message_id: m.id, thread_id: threadId, stunden: slNachricht, loescht_am: new Date(Date.parse(m.created_at) + slNachricht * 3600000).toISOString() });
           if (ae) { await db.from("kc_communication_messages").delete().eq("id", m.id); throw new Fehler("Selbstlöschen konnte nicht gespeichert werden – Nachricht nicht gesendet.", 500); }
         }
+        } catch (e) { if (cid) await db.from("kc_club_sende_kennung").delete().eq("cid", cid).is("message_id", null); throw e; }
         // Selbstlöschende Nachrichten: Text nie in Push/Mail (eine Mail bliebe sonst im Postfach stehen)
         // 2.517.0 KC-CLUB-VERSCHLUESSELT: verschlüsselte Nachricht (nur das Handy kennt den Schlüssel) → Push/Mail ohne Zeichensalat
         const slHinweis = /^🔒KCV1:/.test(text) ? "🔒 Verschlüsselte Nachricht – in der Club-App mit dem Schlüssel öffnen" : slNachricht ? `⏳ Nachricht löscht sich nach ${slText(slNachricht)} – nur in der App lesen` : "";
         const wMarke = notfall ? "🚨 NOTFALL – " : wichtig ? "❗ Wichtig – " : "";
         await Promise.all([
+          cid ? db.from("kc_club_sende_kennung").update({ message_id: m.id, thread_id: threadId }).eq("cid", cid) : Promise.resolve(null), // 2.603.0: jetzt gilt sie als gespeichert
           // neue Nachricht: wer die Unterhaltung ausgeblendet hatte, sieht sie wieder (wie bei WhatsApp)
           db.from("kc_communication_thread_participants").update({ hidden_at: null }).eq("thread_id", threadId).not("hidden_at", "is", null),
           db.from("kc_communication_threads").update({ updated_at: jetzt() }).eq("id", threadId),
           db.from("kc_communication_thread_participants").update({ last_read_at: m.created_at }).eq("thread_id", threadId).eq("person_id", ich.person_id),
         ]);
+        // 2.603.0 KC-CLUB-SENDE-SCHLANGE (B): ab hier nur noch Benachrichtigen (Push/Mail) + Protokoll. Die Nachricht ist gespeichert und der Empfänger
+        // hat sein Live-Signal schon (Datenbank-Auslöser kc_club_rt_nachricht beim Speichern). Bei normalen Nachrichten antwortet der Server deshalb
+        // sofort und benachrichtigt im Hintergrund weiter; Notfall, Express, ❗ wichtig, SOS-Probe und @Erwähnungen laufen wie bisher bis zum Ende.
+        const nachVersand = async () => {
         // 2.593.0 KC-CLUB-GLEICHZEITIG: Empfänger, Betreff, Gruppe und alle Teilnehmer gleichzeitig lesen statt nacheinander (keine hängt an
         // einer anderen; die Empfänger erst nach dem Wieder-Einblenden oben, wie bisher). Gleiche Abfragen, gleiches Ergebnis.
         const [{ data: tn }, { data: th }, { data: grp }, { data: alleTn }] = await Promise.all([
@@ -11031,7 +11053,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.431.0 KC-CLUB-ELTERN: Nachricht der Clubleitung/des Admins → Eltern bekommen nur einen Hinweis (nie den Text, nie Chats unter Mitgliedern)
         if ((ich.admin || ich.vorstand) && !probe) elternHinweis([...tnIds].filter((id) => id !== ich.person_id), notfall ? "notfall" : "nachricht",
           notfall ? "🚨 Notfall-Meldung des Köcheclubs – {kind}" : "📨 Nachricht der Clubleitung – {kind}", notfall ? "Bitte die Köcheclub-App von {kind} ansehen." : "{kind} hat eine Nachricht der Clubleitung in der Köcheclub-App.");
-        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}) });
+        await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}), ...(hinten ? { hintergrund: true } : {}) });
+        return versand;
+        };
+        const hinten = !notfall && !express && !wichtig && !probe && !(Array.isArray(p.erwaehnt) && p.erwaehnt.length);
+        if (hinten) { nebenbei(nachVersand().catch((e) => console.error("nachricht versand", String(e)))); return json({ ok: true, id: threadId, versand: { hintergrund: true }, mid: m.id }); }
+        const versand = await nachVersand();
         return json({ ok: true, id: threadId, versand, mid: m.id, ...(express ? { expressStand: await expressStand(ich) } : {}) }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger
       }
 

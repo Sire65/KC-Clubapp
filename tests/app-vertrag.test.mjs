@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -11095,7 +11095,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.429.0 KC-CLUB-TAGE-EINKLAPPEN / KC-CLUB-NETZ-SYMBOL: Chat-Tage einklappen, Router/Satellit in Nachrichten
 {
-  assert.ok(/const blaseHtml = \(m\) => `\$\{m\.id === NA\.trennerVor/.test(programm) && /\$\("chat"\)\.innerHTML = naTageHtml\(u, blaseHtml\) \+ notWartendeHtml\(chatId\)/.test(programm), "Chat zeichnet über naTageHtml");
+  assert.ok(/const blaseHtml = \(m\) => `\$\{m\.id === NA\.trennerVor/.test(programm) && /\$\("chat"\)\.innerHTML = \(?naTageHtml\(u, blaseHtml\) \+ notWartendeHtml\(chatId\)/.test(programm), "Chat zeichnet über naTageHtml"); // 2.603.0: in Klammern, dahinter die Sende-Schlange
   assert.ok(/const ein = einst\("chatEinklappen", true\) && !RG\.an && !CS\.offen/.test(programm), "Rundgang und Suche: alles offen");
   assert.ok(/const mussOffen = \(t\) => (?:t === letzter \|\| )?t\.key === heute \|\| t\.ns\.some\(\(m\) => m\.id === NA\.trennerVor \|\| ungelesen\(m\)\)/.test(programm), "heute und Ungelesenes offen");
   assert.ok(/if \(!el && NA\.nachrichten\.has\(id\)\) return naTagAufFuer\(id\)/.test(programm), "Sprung klappt den Tag auf");
@@ -12222,4 +12222,21 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(Array\.isArray\(ku\)\) return \{ data: ku, error: null \};/.test(server) && /k\?\.kz && typeof k\.kz === "object" \? \{ data: k\.kz, error: null \} : einzeln\(\)/.test(server) && /typeof k\?\.rt === "string" \? k\.rt :/.test(server), "Rückfall je Teil");
   assert.ok(/return s\?\.data\?\.wert\?\.aus \? null : kp;/.test(server), "Not-Aus des Start-Pakets gilt weiter");
   assert.ok(/"kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket"/.test(server), "Pakete als nur lesend eingetragen");
+}
+// 2.603.0 KC-CLUB-SENDE-SCHLANGE: Sofort-Senden mit Warteschlange (der Reihe nach, Express überholt), Kennung gegen Doppelte, Versand im Hintergrund
+{
+  const sq = html.slice(html.indexOf("// ---------- 2.603.0 KC-CLUB-SENDE-SCHLANGE"), html.indexOf("async function senden() {"));
+  assert.ok(/y\.chat === x\.chat && y\.status === "wartet" && !y\.express/.test(sq), "Express vor die erste noch wartende normale Nachricht");
+  assert.ok(/if \(x\.status === "fertig" \|\| gesehen\.has\(x\.chat\)\) continue;/.test(sq) && /if \(SQ\.laeuft \|\| !ICH\) return; SQ\.laeuft = true;/.test(sq), "je Chat der Reihe nach, nie zwei gleichzeitig");
+  assert.ok(/api\("nachricht_senden", \{ id: x\.chat, \.\.\.x\.daten, cid: x\.lid \}, \{ still: true \}\)/.test(sq), "Kennung mitschicken");
+  assert.ok(/e\?\.status === 409 \|\| e\?\.leitung \|\| e\?\.zeit \|\| !navigator\.onLine/.test(sq) && /SQ_WARTEN_MS = \[2000, 5000, 10000\]/.test(sq), "nur Netz/409 automatisch neu, höchstens 3×");
+  assert.ok(/g\.schluessel === KEY\.slice\(-8\) && g\.person === ICH\.person_id/.test(sq), "gemerkte Schlange nur für dieselbe Person");
+  assert.ok(/const sqDarf = \(\) => !!chatId && !anlagen\.length && !neuEntwurf\?\.mehrfach;/.test(sq) && /if \(sqDarf\(\)\) \{/.test(html), "nur Text im bestehenden Chat – sonst wie bisher");
+  assert.ok(/\+ sqBlasenHtml\(chatId\); \/\/ 2\.603\.0/.test(html) && /\{ leitung: leitungKaputt, status: r\.status \}/.test(html), "Anzeige im Chat + Status im Fehler");
+  const mig = lies("supabase/migrations/20261023_kc_club_sende_kennung.sql");
+  assert.ok(/cid uuid primary key/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_sende_kennung from anon, authenticated;/.test(mig), "Kennungs-Tabelle gesperrt");
+  const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf("// ----- KC-CLUB-PRIVATTERMIN"));
+  assert.ok(/if \(alt\.message_id\) return json\(\{ ok: true, id: alt\.thread_id, mid: alt\.message_id, doppelt: true/.test(ns) && /throw new Fehler\("Diese Nachricht wird gerade noch gesendet\.", 409\)/.test(ns), "doppelt → gespeicherte Nachricht, laufend → 409");
+  assert.ok(/\} catch \(e\) \{ if \(cid\) await db\.from\("kc_club_sende_kennung"\)\.delete\(\)\.eq\("cid", cid\)\.is\("message_id", null\); throw e; \}/.test(ns), "Fehler beim Speichern gibt die Kennung frei");
+  assert.ok(/const hinten = !notfall && !express && !wichtig && !probe && !\(Array\.isArray\(p\.erwaehnt\) && p\.erwaehnt\.length\);/.test(ns) && /nebenbei\(nachVersand\(\)/.test(ns), "Benachrichtigen im Hintergrund – Notfall/Express/wichtig/Erwähnung wie bisher");
 }

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.602.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.603.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14321,7 +14321,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
-  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt });
+  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
 }
 
@@ -31391,8 +31391,8 @@ async function chatLaden(scrollen, merk) {
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;
-    $("chat").innerHTML = naTageHtml(u, blaseHtml) + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2 · 2.429.0 KC-CLUB-TAGE-EINKLAPPEN
-      || '<p class="hinweis">Schreib die erste Nachricht.</p>';
+    $("chat").innerHTML = (naTageHtml(u, blaseHtml) + notWartendeHtml(chatId) // KC-CLUB-NOTBETRIEB-STUFE2 · 2.429.0 KC-CLUB-TAGE-EINKLAPPEN
+      || '<p class="hinweis">Schreib die erste Nachricht.</p>') + sqBlasenHtml(chatId); // 2.603.0 KC-CLUB-SENDE-SCHLANGE: wartende eigene Nachrichten unten
     document.querySelectorAll("img[data-anlage]").forEach(bildLaden);
     naWischenEinrichten();
     naReaktionenZeigen(u.nachrichten);
@@ -33660,6 +33660,94 @@ async function anlagenFertig(maxMs = 180000) {
   while (anlagen.some((a) => a.laedt)) { if (Date.now() > bis) return false; await new Promise((r) => setTimeout(r, 250)); }
   return true;
 }
+// ---------- 2.603.0 KC-CLUB-SENDE-SCHLANGE (Wunsch Hansi: „Nachrichten sicher, schnell, bedienerfreundlich – auch wenn ziemlich schnell hin und her
+// geschrieben wird; eine Warteschlange, die der Reihe nach abarbeitet; Express wird vorgezogen und überholt die anderen“) ----------
+// Wie bei WhatsApp: ➤ legt die Nachricht in die Schlange – sie steht SOFORT im Chat (⏳), das Schreibfeld ist sofort frei, man schreibt weiter.
+// Abgearbeitet wird je Chat streng der Reihe nach (eine nach der anderen, nie zwei gleichzeitig); 🏎️ Express stellt sich vor alle noch wartenden
+// normalen Nachrichten (die gerade laufende wird nicht überholt). Jede Nachricht hat eine Kennung (cid) – der Server speichert sie auch bei einem
+// neuen Versuch nur EINMAL. Netz-Wackler: bis zu 3 neue Versuche (2 s, 5 s, 10 s), danach „⚠️ nicht gesendet – 🔄 Nochmal / 🗑️ Löschen“; dahinter
+// wartende Nachrichten desselben Chats überholen sie nicht (Reihenfolge bleibt). Die Schlange überlebt das Schließen der App (nur dieses Gerät,
+// nur dieselbe Person). Nur Text in einem bestehenden Chat – Anhänge, neue Chats und Mehrfach-Senden laufen wie bisher.
+const SQ_KEY = "kc_club_sende_schlange", SQ_WARTEN_MS = [2000, 5000, 10000], SQ_FERTIG_HALTEN_MS = 60000;
+const SQ = { liste: [], laeuft: false, uhr: null, geladen: false };
+function sqLaden() {
+  if (SQ.geladen || !KEY || !ICH) return; SQ.geladen = true;
+  try { const g = JSON.parse(localStorage.getItem(SQ_KEY) || "null");
+    if (g && g.schluessel === KEY.slice(-8) && g.person === ICH.person_id && Array.isArray(g.liste))
+      SQ.liste = g.liste.filter((x) => x?.lid && x.chat && x.daten).map((x) => ({ ...x, status: x.status === "fehler" ? "fehler" : "wartet", naechster: 0 })); // „sendet“ beim Schließen → neu versuchen (cid verhindert doppelt)
+  } catch {}
+}
+function sqSpeichern() {
+  try { const l = SQ.liste.filter((x) => x.status !== "fertig");
+    l.length ? localStorage.setItem(SQ_KEY, JSON.stringify({ schluessel: KEY.slice(-8), person: ICH?.person_id, liste: l })) : localStorage.removeItem(SQ_KEY); } catch {}
+}
+const sqNeueId = () => { try { return crypto.randomUUID(); } catch { const h = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join(""); return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`; } };
+// Einreihen: Express vor die erste noch WARTENDE normale Nachricht desselben Chats, sonst ans Ende
+function sqEinreihen(x) {
+  sqLaden();
+  const i = x.express ? SQ.liste.findIndex((y) => y.chat === x.chat && y.status === "wartet" && !y.express) : -1;
+  if (i >= 0) SQ.liste.splice(i, 0, x); else SQ.liste.push(x);
+  sqSpeichern(); sqZeigen(); sqWeiter();
+}
+// je Chat nur der ERSTE noch nicht fertige Eintrag darf laufen (Reihenfolge) – und nur, wenn seine Wartezeit vorbei ist
+function sqNaechster() {
+  const gesehen = new Set();
+  for (const x of SQ.liste) {
+    if (x.status === "fertig" || gesehen.has(x.chat)) continue;
+    gesehen.add(x.chat);
+    if (x.status === "wartet" && (x.naechster || 0) <= Date.now()) return x;
+  }
+  return null;
+}
+async function sqWeiter() {
+  sqLaden();
+  if (SQ.laeuft || !ICH) return; SQ.laeuft = true; clearTimeout(SQ.uhr); SQ.uhr = null;
+  let gesendetIn = new Set();
+  try {
+    for (let x; (x = sqNaechster());) {
+      x.status = "sendet"; sqZeigen();
+      try {
+        const r = await api("nachricht_senden", { id: x.chat, ...x.daten, cid: x.lid }, { still: true });
+        x.status = "fertig"; x.mid = r?.mid || null; x.fertigAm = Date.now(); gesendetIn.add(x.chat);
+        if (x.daten.express) { const st = r?.expressStand; if (st) EXS.stand = st; melde("🏎️ Per Express versandt" + expressWegeText(r?.versand) + ". Unter der Nachricht siehst du, wann sie angekommen ist und gelesen wurde."); }
+      } catch (e) {
+        x.versuche = (x.versuche || 0) + 1;
+        const nochmal = e?.status === 409 || e?.leitung || e?.zeit || !navigator.onLine; // 409 = erster Versuch läuft noch / Netz: gleich nochmal
+        if (nochmal && x.versuche <= SQ_WARTEN_MS.length) { x.status = "wartet"; x.naechster = Date.now() + SQ_WARTEN_MS[x.versuche - 1]; }
+        else { x.status = "fehler"; x.fehler = String(e?.message || "Fehler").slice(0, 200); }
+      }
+      sqSpeichern(); sqZeigen();
+    }
+  } finally { SQ.laeuft = false; }
+  // Gesendetes sichtbar machen: den offenen Chat einmal (gebündelt) neu laden – bei schnellem Hin und Her nur einmal je 0,5 s
+  if (chatId && gesendetIn.has(chatId) && aktuelleAnsicht === "chat") chatSignalLaden(true);
+  const w = SQ.liste.filter((x) => x.status === "wartet" && x.naechster > Date.now()).map((x) => x.naechster);
+  if (w.length) SQ.uhr = setTimeout(sqWeiter, Math.max(300, Math.min(...w) - Date.now()));
+}
+function sqNochmal(lid) { const x = SQ.liste.find((y) => y.lid === lid); if (!x) return; x.status = "wartet"; x.versuche = 0; x.naechster = 0; x.fehler = ""; sqSpeichern(); sqZeigen(); sqWeiter(); }
+async function sqWeg(lid) {
+  const x = SQ.liste.find((y) => y.lid === lid); if (!x || x.status !== "fehler") return;
+  if (!(await frage("🗑️ Diese nicht gesendete Nachricht löschen?\n\nSie wurde nicht verschickt – niemand hat sie bekommen.", { ja: "🗑️ Löschen", nein: "Behalten" }))) return;
+  SQ.liste = SQ.liste.filter((y) => y.lid !== lid); sqSpeichern(); sqZeigen(); sqWeiter();
+}
+// wartende/fehlgeschlagene Nachrichten unten im Chat; gesendete bleiben stehen, bis der Chat sie selbst zeigt (kein Flackern)
+function sqBlasenHtml(id) {
+  SQ.liste = SQ.liste.filter((x) => !(x.status === "fertig" && ((x.mid && NA.nachrichten.has(x.mid)) || Date.now() - (x.fertigAm || 0) > SQ_FERTIG_HALTEN_MS)));
+  const l = SQ.liste.filter((x) => x.chat === id);
+  return `<div id="sqWarte">${l.map((x) => {
+    const fuss = x.status === "fehler" ? `<div class="sq-fehler">⚠️ Nicht gesendet${x.fehler ? ": " + esc(x.fehler) : ""}</div><div class="sq-knoepfe"><button type="button" class="knopf klein" onclick="sqNochmal('${esc(x.lid)}')">🔄 Nochmal</button><button type="button" class="knopf klein" onclick="sqWeg('${esc(x.lid)}')">🗑️ Löschen</button></div>`
+      : `<div class="fuss">${x.status === "fertig" ? "✓ gesendet" : x.versuche ? "⏳ Netz hakt – neuer Versuch …" : "⏳ wird gesendet …"}</div>`;
+    return `<div class="blase eigen sq sq-${x.status}${x.daten.wichtig ? " wichtig" : ""}" data-sq="${esc(x.lid)}">${x.daten.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${x.daten.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}<div class="txt">${vnIst(x.daten.text || "") ? "🔒 Verschlüsselte Nachricht" : naText(x.daten.text || "")}</div>${fuss}</div>`;
+  }).join("")}</div>`;
+}
+function sqZeigen() {
+  const z = $("chat"); if (!z || !chatId || aktuelleAnsicht !== "chat") return;
+  const html = sqBlasenHtml(chatId), alt = $("sqWarte");
+  if (alt) alt.outerHTML = html; else z.insertAdjacentHTML("beforeend", html);
+}
+const sqDarf = () => !!chatId && !anlagen.length && !neuEntwurf?.mehrfach; // nur Text in einem bestehenden Chat
+addEventListener("online", () => { try { if (SQ.liste.some((x) => x.status === "wartet")) { SQ.liste.forEach((x) => { if (x.status === "wartet") x.naechster = 0; }); sqWeiter(); } } catch {} });
+setInterval(() => { try { if (ICH && !SQ.laeuft) { sqLaden(); if (SQ.liste.some((x) => x.status === "wartet" && (x.naechster || 0) <= Date.now())) sqWeiter(); } } catch {} }, 15000); // nach dem Öffnen: Liegengebliebenes weiter senden
 async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   let text = $("text").value.trim();
@@ -33694,6 +33782,21 @@ async function senden() {
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}), // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht
       ...(lvSendeUrl(text) ? { vorschau_url: lvSendeUrl(text) } : {}) }; // KC-CLUB-LINK-VORSCHAU
     if (!chatId && neuEntwurf?.mehrfach) return await uhMehrfachSenden(daten, text); // KC-CLUB-MEHRFACH-NACHRICHT
+    // 2.603.0 KC-CLUB-SENDE-SCHLANGE: Text in einem bestehenden Chat → sofort in die Schlange (steht gleich mit ⏳ im Chat), Schreibfeld sofort frei
+    if (sqDarf()) {
+      const vorher = chatId;
+      sqEinreihen({ lid: sqNeueId(), chat: chatId, daten, zeit: Date.now(), status: "wartet", versuche: 0, express: !!daten.express });
+      if (vnIst(text)) vnSchluesselZeigen($("sendenKnopf")); else papierflieger($("sendenKnopf"));
+      HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL
+      const empfIds = (CHAT?.teilnehmer || []).map((t) => t.person_id);
+      lvZurueck(); entwurfWeg(vorher); clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); if (VN.an) vnUmschalten(false);
+      $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null };
+      spur("gesendet", vorher); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text
+      if (ZW.whatsapp && text) whatsappWeitergeben(text, empfIds.filter((id) => id !== ICH.person_id));
+      setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 30);
+      $("sendenKnopf").disabled = false; try { $("text").focus({ preventScroll: true }); } catch {} // Tastatur bleibt offen – gleich weiterschreiben
+      return;
+    }
     const r = chatId ? await api("nachricht_senden", { id: chatId, ...daten }) : await api("nachricht_senden", { ...daten, ...neuEntwurf });
     if (vnIst(text)) { vnSchluesselZeigen($("sendenKnopf")); setTimeout(() => papierflieger($("sendenKnopf"), undefined, r?.mid, undefined, true), 650); } // 2.530.0 KC-CLUB-GEHEIMAGENT: 🔑 dreht sich, dann der Agent
     else papierflieger($("sendenKnopf"), undefined, r?.mid); // 2.172.0 KC-CLUB-EFFEKTE-2, 2.177.0 mid
