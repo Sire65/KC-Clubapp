@@ -12240,3 +12240,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\} catch \(e\) \{ if \(cid\) await db\.from\("kc_club_sende_kennung"\)\.delete\(\)\.eq\("cid", cid\)\.is\("message_id", null\); throw e; \}/.test(ns), "Fehler beim Speichern gibt die Kennung frei");
   assert.ok(/const hinten = !notfall && !express && !wichtig && !probe && !\(Array\.isArray\(p\.erwaehnt\) && p\.erwaehnt\.length\);/.test(ns) && /nebenbei\(nachVersand\(\)/.test(ns), "Benachrichtigen im Hintergrund – Notfall/Express/wichtig/Erwähnung wie bisher");
 }
+// 2.605.0 KC-CLUB-PUSH-RUHE: Push bei offenem Chat lädt nur den Chat (gebündelt), sonst mehrere Pushes = einmal Startseite nach 1,5 s
+{
+  const fn = programm.slice(programm.indexOf("function pushNeuLaden()"), programm.indexOf("function pushNeuLaden()") + 400);
+  assert.ok(/if \(chatId && aktuelleAnsicht === "chat"\) \{ NEU_NACH_CHAT = true; return; \}/.test(fn) && /clearTimeout\(RT\.zaehlen\); RT\.zaehlen = setTimeout\(\(\) => \{ if \(!document\.hidden\) neuLaden\(\); \}, 1500\);/.test(fn), "Push gebündelt, im Chat nur der Chat");
+  assert.ok(/if \(e\.data\?\.typ === "push"\) \{ onlinePushGezeigt\(e\.data\.titel\); \/\* 2\.383\.0 \*\/ pushNeuLaden\(\);/.test(programm) && /if \(chatId && aktuelleAnsicht === "chat"\) chatSignalLaden\(true\); else if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\);/.test(programm), "Push-Handler nutzt die Bündelung, Ansage bleibt sofort");
+}

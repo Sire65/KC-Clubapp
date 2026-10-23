@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.604.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.605.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26782,6 +26782,13 @@ function wichtigZeigen() {
 let NEU_LADEN_LAUF = null, NEU_LADEN_FOLGE = null;
 let NEU_ZULETZT = 0; // 2.359.0 KC-CLUB-AKKU-4: wann zuletzt alles neu geladen wurde
 let NEU_NACH_CHAT = false; // 2.594.0 KC-CLUB-CHAT-RUHE: im offenen Chat kam Neues – nach dem Chat beim nächsten Takt die Startseite frisch laden
+// 2.605.0 KC-CLUB-PUSH-RUHE (Fund beim Schnell-Schreib-Test Hansi 23.10.: 14 Nachrichten in 45 s an sich selbst → 14 Push-Mitteilungen →
+// die offene App lud jedes Mal sofort die ganze Startseite (init) – zusammen ~14 Starts, Datenbank kurz überlastet). Jetzt wie bei der direkten
+// Leitung (2.594.0): ist ein Chat offen, lädt nur der Chat (gebündelt) und die Startseite nach dem Chat; sonst mehrere Pushes = einmal Laden nach 1,5 s.
+function pushNeuLaden() {
+  if (chatId && aktuelleAnsicht === "chat") { NEU_NACH_CHAT = true; return; }
+  clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500);
+}
 function neuLaden(vonHand) {
   NEU_ZULETZT = Date.now(); NEU_NACH_CHAT = false;
   // 2.1.1: läuft schon eins, kommt GENAU EIN frisches Laden danach (wer gerade gespeichert hat, sieht sonst den alten Stand)
@@ -42309,7 +42316,7 @@ const KOCH = { ok: true, bild: null };
   history.replaceState({ basis: true }, "", url.pathname);
   history.pushState({ v: "start", tiefe: 1 }, "", url.pathname);
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ neuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
   }

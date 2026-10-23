@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.605.0 – 2026-10-23 – Push-Ruhe beim schnellen Schreiben
+Kommen viele Push-Mitteilungen schnell hintereinander, lädt die offene App nur einmal neu – bei offenem Chat nur den Chat (KC-CLUB-PUSH-RUHE).
+
 ## 2.604.0 – 2026-10-23 – Sofort-Senden (Korrektur Versionsnotiz)
 Wie 2.603.0 (Sende-Warteschlange); 2.603.0 wurde wegen eines roten Tests (Versionsnotiz) nicht eingespielt – hier korrigiert.
 
