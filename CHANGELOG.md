@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.618.0 – 2026-10-24 – 🎡 Sim-Jü: großes Herz, Schießbude, Lauflichter, Feuerwerk am Montag um 21 Uhr (KC-CLUB-SIMJUE-SCHIESSBUDE, KC-CLUB-SIMJUE-LAUFLICHT, KC-CLUB-SIMJUE-FEUERWERK)
+Wunsch Hansi: „Das Sim-Jü-Herz größer und mittig, dass man den Namen lesen kann, links noch eine Schießbude, und am Montag um 21 Uhr Feuerwerk gleichzeitig mit dem echten Feuerwerk.“
+- Das Lebkuchenherz ist fast doppelt so groß und hängt in der Mitte unten im Bodenstreifen – der Vorname steht groß darauf und liegt nicht mehr unter dem Infofeld.
+- Links eine Schießbude: rot-weiß gestreiftes Dach, Schild „🎯 SCHIESSBUDE“, hinten laufen Enten und Sterne, vorn liegt ein Gewehr – alle paar Sekunden ein Treffer mit Mündungsblitz und „Treffer!“.
+- Lauflichter am Riesenrad (Wunsch Hansi): ein bunter Lichterpulk läuft rund um den Kranz (Farbe wechselt je Runde), auf den Speichen laufen Lichter nach außen, an den Stützen läuft ein Licht hoch.
+- Am Sim-Jü-Montag (2026: 26.10.) von 21:00 bis 21:20 Uhr großes Feuerwerk in der Szene, zur selben Zeit wie das echte: dunkler Himmel, ununterbrochen Raketen, größere Sterne, Goldregen. In dieser Zeit wird nicht ausgeblendet und das Bild bleibt nicht stehen.
+
 ## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 🥠 Glückskeks · 🚧 Baustelle · 🎡 Sim-Jü für alle · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-GLUECKSKEKS, KC-CLUB-BAUSTELLE, KC-CLUB-SIMJUE-FUER-ALLE, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
 Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll; in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin.“
 - Büro → Geburtstage & Jubiläen → „🎂 Meine Geburtstagsgrüße“ (nur Admin): ein/aus, die Geburtstage der nächsten 60 Tage mit Stand (ausgewählt, automatisch, verschickt).
