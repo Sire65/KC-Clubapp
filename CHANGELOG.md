@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.622.0 – 2026-10-24 – 🚧 Baustelle: nach der Sprengung gesprungenes Handyglas (KC-CLUB-BAUSTELLE-GLASBRUCH)
+Wunsch Hansi: „Nach der Sprengung, als wenn der ganze Handy-Bildschirm kaputt ist – das ganze Glas gesprungen, wie wenn ein Handy runtergefallen ist.“
+- Mit dem Knall legt sich über den ganzen Bildschirm ein Spinnennetz aus Sprüngen („Spider-App“): Risse vom Aufschlagpunkt nach außen, Ringe dazwischen, kleine Splitter in der Mitte. Die Sprünge wachsen blitzschnell, bleiben gut 4 Sekunden und verblassen dann – kurz bevor der Kopf zurückkommt.
+- Nur ein Bild: Tippen geht hindurch, nichts ist wirklich kaputt.
+
 ## 2.621.0 – 2026-10-24 – 🥠 Nachhol-Keks (KC-CLUB-GLUECKSKEKS-NACHHOLEN)
 Wunsch Hansi: Wer schon über dem 10. Tag war, als es den Glückskeks noch nicht gab (z. B. Klaus, Willfried), bekommt seinen ersten Keks beim nächsten Öffnen an einem neuen Tag – statt erst am 20. Tag. Kommt der nächste reguläre Keks ohnehin in weniger als 3 Tagen, wartet er auf diesen (kein Doppel-Keks).
 
