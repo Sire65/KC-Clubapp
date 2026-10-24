@@ -1,5 +1,36 @@
 # Änderungen
 
+## 2.623.0 – 2026-10-24 – 🧾 Weniger Server-Protokoll, Push für das neue Apple-Format vorbereitet (KC-CLUB-LOG-SPARSAM, KC-CLUB-PUSH-DEKLARATIV)
+Anbieter-Check 24.10.2026 (Wunsch Hansi, „sparsam“): Supabase berechnet ab Anfang 2027 auch das Schreiben ins Protokoll.
+- Der Club-Server schreibt nur noch Ausreißer ins Protokoll: Messzeile erst ab 120 statt 15 Datenbank-Abfragen, Tempo-Zeile erst ab 5 statt 1,5 Sekunden. Fehler werden weiter protokolliert.
+- Der Service Worker versteht zusätzlich das neue Apple-Push-Format (Declarative Web Push, iPhone ab iOS 18.4).
+- Communicator (kc-communication-dispatch v21, am 24.10. direkt hochgeladen; Kopie unter docs/archiv/communicator/): iPhones der Club-App bekommen das neue Format mit „mutable“ – der Service Worker zeigt die Mitteilung wie bisher (mit Quittungen), schläft er, zeigt das iPhone sie selbst. Titel/Text/Link stehen zusätzlich wie bisher oben, damit ältere Geräte und alte App-Stände nichts merken. Android/PC unverändert.
+
+## 2.622.0 – 2026-10-24 – 🚧 Baustelle: nach der Sprengung gesprungenes Handyglas (KC-CLUB-BAUSTELLE-GLASBRUCH)
+Wunsch Hansi: „Nach der Sprengung, als wenn der ganze Handy-Bildschirm kaputt ist – das ganze Glas gesprungen, wie wenn ein Handy runtergefallen ist.“
+- Mit dem Knall legt sich über den ganzen Bildschirm ein Spinnennetz aus Sprüngen („Spider-App“): Risse vom Aufschlagpunkt nach außen, Ringe dazwischen, kleine Splitter in der Mitte. Die Sprünge wachsen blitzschnell, bleiben gut 4 Sekunden und verblassen dann – kurz bevor der Kopf zurückkommt.
+- Nur ein Bild: Tippen geht hindurch, nichts ist wirklich kaputt.
+
+## 2.621.0 – 2026-10-24 – 🥠 Nachhol-Keks (KC-CLUB-GLUECKSKEKS-NACHHOLEN)
+Wunsch Hansi: Wer schon über dem 10. Tag war, als es den Glückskeks noch nicht gab (z. B. Klaus, Willfried), bekommt seinen ersten Keks beim nächsten Öffnen an einem neuen Tag – statt erst am 20. Tag. Kommt der nächste reguläre Keks ohnehin in weniger als 3 Tagen, wartet er auf diesen (kein Doppel-Keks).
+
+## 2.620.0 – 2026-10-24 – 🎡 Sim-Jü: Feuerwerk nur am Montag, Schießbude ruhiger (KC-CLUB-SIMJUE-FEUERWERK-MONTAG)
+Wunsch Hansi: „Bei Sim-Jü außer Montag kein Feuerwerk, und die Figuren in der Schießbude langsamer laufen lassen.“
+- In der Sim-Jü-Woche gibt es das kleine Feuerwerk am Ende jedes Durchlaufs nur noch am Montag; dazu wie gehabt das große Feuerwerk Montag 21:00–21:20 Uhr. Außerhalb der Sim-Jü-Woche (Thema oder Vorschau) bleibt es wie bisher.
+- Enten und Sterne in der Schießbude laufen weniger als halb so schnell, ein Treffer alle 4 statt 2,6 Sekunden.
+
+## 2.619.0 – 2026-10-24 – 🎡 Sim-Jü im Info-Feld ausschalten (KC-CLUB-SIMJUE-SCHALTER)
+Wunsch Hansi: „Im Info-Feld einen Schalter Sim-Jü ausschalten – wem es nicht gefällt, kann es dann ausmachen.“
+- Während Sim-Jü steht im Info-Feld „🎡 Sim-Jü im Kopf der Startseite – Gefällt dir nicht? Hier kannst du es ausschalten“ mit dem Knopf „🚫 Sim-Jü aus“.
+- Ausgeschaltet zeigt der Kopf wieder die eigene Einstellung; im Info-Feld steht dann „🎡 Einschalten“. Gilt je Gerät und nur für dieses Jahr – beim nächsten Sim-Jü ist es wieder an.
+
+## 2.618.0 – 2026-10-24 – 🎡 Sim-Jü: großes Herz, Schießbude, Lauflichter, Feuerwerk am Montag um 21 Uhr (KC-CLUB-SIMJUE-SCHIESSBUDE, KC-CLUB-SIMJUE-LAUFLICHT, KC-CLUB-SIMJUE-FEUERWERK)
+Wunsch Hansi: „Das Sim-Jü-Herz größer und mittig, dass man den Namen lesen kann, links noch eine Schießbude, und am Montag um 21 Uhr Feuerwerk gleichzeitig mit dem echten Feuerwerk.“
+- Das Lebkuchenherz ist fast doppelt so groß und hängt in der Mitte unten im Bodenstreifen – der Vorname steht groß darauf und liegt nicht mehr unter dem Infofeld.
+- Links eine Schießbude: rot-weiß gestreiftes Dach, Schild „🎯 SCHIESSBUDE“, hinten laufen Enten und Sterne, vorn liegt ein Gewehr – alle paar Sekunden ein Treffer mit Mündungsblitz und „Treffer!“.
+- Lauflichter am Riesenrad (Wunsch Hansi): ein bunter Lichterpulk läuft rund um den Kranz (Farbe wechselt je Runde), auf den Speichen laufen Lichter nach außen, an den Stützen läuft ein Licht hoch.
+- Am Sim-Jü-Montag (2026: 26.10.) von 21:00 bis 21:20 Uhr großes Feuerwerk in der Szene, zur selben Zeit wie das echte: dunkler Himmel, ununterbrochen Raketen, größere Sterne, Goldregen. In dieser Zeit wird nicht ausgeblendet und das Bild bleibt nicht stehen.
+
 ## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 🥠 Glückskeks · 🚧 Baustelle · 🎡 Sim-Jü für alle · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-GLUECKSKEKS, KC-CLUB-BAUSTELLE, KC-CLUB-SIMJUE-FUER-ALLE, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
 Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll; in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin.“
 - Büro → Geburtstage & Jubiläen → „🎂 Meine Geburtstagsgrüße“ (nur Admin): ein/aus, die Geburtstage der nächsten 60 Tage mit Stand (ausgewählt, automatisch, verschickt).

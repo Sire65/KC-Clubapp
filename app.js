@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.617.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.623.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5398,7 +5398,7 @@ const HILFE = [
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
-  { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas). Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
+  { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
@@ -16605,9 +16605,19 @@ const jzWahl = () => { const t = themaWert("jz"); if (t) return t; try { const w
 // Mittwoch um 0 Uhr stellt sich der Kopf von selbst zurück (Minuten-Prüfung unten). Eine Vorschau geht weiter vor; „Jahreszeiten im Kopf“ aus bleibt aus.
 // 2.617.0 (Wunsch Hansi „auch bei denen, die es nicht anhaben – viele wissen gar nicht, dass man es einschalten kann“): in der Sim-Jü-Zeit läuft die
 // Szene auch bei „Jahreszeiten im Kopf“ aus und bei ausgeschalteten Animationen. Nur der Sparmodus (Akku) hält sie weiter an.
-const jzSimJue = () => themaFestZeit() === "simjue";
+// 2.619.0 KC-CLUB-SIMJUE-SCHALTER (Wunsch Hansi „im Info-Feld einen Schalter Sim-Jü ausschalten – wem es nicht gefällt, kann es dann ausmachen“): je Gerät,
+// gilt für das laufende Jahr (nächstes Sim-Jü ist es wieder an). Ausgeschaltet gilt die eigene Einstellung wie sonst.
+const SJ_AUS_KEY = "kc_club_simjue_aus";
+const jzSimJueAus = (d = new Date()) => { try { return localStorage.getItem(SJ_AUS_KEY) === String(d.getFullYear()); } catch { return false; } };
+const jzSimJueZeit = (d = new Date()) => themaFestZeit(d) === "simjue" && !jzSimJueAus(d);
+function jzSimJueSchalten() {
+  const aus = !jzSimJueAus(); try { if (aus) localStorage.setItem(SJ_AUS_KEY, String(new Date().getFullYear())); else localStorage.removeItem(SJ_AUS_KEY); } catch {}
+  melde(aus ? "🚫 Sim-Jü im Kopf ausgeschaltet – im Info-Feld kannst du es wieder einschalten." : "🎡 Sim-Jü im Kopf ist wieder an.");
+  JZB.vorschau = ""; jahreszeitKopf(); try { ilZeigen(); } catch {}
+}
+const jzSimJue = () => jzSimJueZeit();
 const jzbDarf = () => { const sj = jzSimJue(); return (fxAn() || (sj && !SPAR?.an && !!document.body?.animate)) && (einst("jahreszeit", true) || sj); };
-const jahreszeitAktuell = (d = new Date()) => (themaFestZeit(d) === "simjue" ? "kirmes" : jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
+const jahreszeitAktuell = (d = new Date()) => (jzSimJueZeit(d) ? "kirmes" : jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
 function jzWahlSetzen(w) { if (!themaEigenSetzen("jz", w)) try { localStorage.setItem("kc_club_jzWahl", w); } catch {} JZB.vorschau = null; jzWahlZeigen(); jahreszeitKopf(); melde(w === "auto" ? "🔄 Automatik: die Jahreszeit stellt sich von selbst um" : `${JZ_WAHL.find(([k]) => k === w)[1]} fest eingestellt`); }
 function jzWahlZeigen() {
   const z = $("jzWahl"); if (!z) return;
@@ -18681,7 +18691,7 @@ const jzbSchwach = (() => { try { return (navigator.hardwareConcurrency || 8) <=
 const jzbFps = () => ((JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) ? JZB_FPS : !jzbSchwach && !jzbAkkuKnapp && Date.now() - jzbBedient < JZB_RUHE_BEDIENT_MS ? JZB_FPS_BEDIENT : JZB_FPS_RUHE);
 // 2.361.0 KC-CLUB-AKKU-6 (Hansi „unsere App saugt das Handy leer“): Auch 6–12 Bilder/s halten Grafikchip und Bildschirm-Elektronik dauernd wach.
 // Nach 3 Minuten ohne Bedienung bleibt das Kopfbild jetzt stehen (wie ein Foto); das erste Antippen/Wischen lässt es sofort weiterlaufen.
-const jzbStehen = () => !(JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) && Date.now() - jzbBedient > JZB_STEHEN_MS;
+const jzbStehen = () => !(JZB.vorschau && Date.now() - (JZB.vorschauSeit || 0) < 120000) && !(JZB.saison === "kirmes" && jzbSimJueFeuerwerk()) && Date.now() - jzbBedient > JZB_STEHEN_MS; // 2.617.0: Sim-Jü-Feuerwerk läuft durch
 ["pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, () => { if (JZB.steht) { JZB.steht = false; JZB.letzt = 0; jzbWeiter(); } }, { passive: true }));
 setInterval(() => { try { if ((JZB.vorschau || JZB.extra) && JZB.vorschauSeit && Date.now() - JZB.vorschauSeit > 15 * 60000) { JZB.vorschauSeit = 0; // still beenden – ohne auf die Startseite zu springen
   JZB.vorschau = ""; JZB.extra = ""; JZB.eisName = null; JZB.eisStueck = null; JZB.nussName = null; if (aktuelleAnsicht === "start") jahreszeitKopf(); jzVorschauLeiste(); } } catch {} }, 30000);
@@ -19206,6 +19216,9 @@ function jzbGastMalen(c, g) {
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
 const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle"]; // 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
+// 2.617.0 KC-CLUB-SIMJUE-FEUERWERK (Wunsch Hansi „am Montag 21 Uhr Feuerwerk gleichzeitig mit dem echten Feuerwerk“): am Sim-Jü-Montag von 21:00 bis 21:20
+// steigen in der Sim-Jü-Szene ununterbrochen Raketen (mehr, größer, auch Goldregen), der Himmel wird dunkel – und das Bild bleibt in der Zeit nicht stehen.
+const jzbSimJueFeuerwerk = (d = new Date()) => d.getDay() === 1 && d.getHours() === 21 && d.getMinutes() < 20 && themaFestZeit(d) === "simjue";
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
 function jzbFestStart() {
   JZB.fest = { t: 0, a: 0, raketen: [], raketUhr: 0, ballons: [], ballonUhr: jzbZ(2, 5), spritzer: [], schild: -1, boot: null, bootUhr: jzbZ(2, 6),
@@ -19223,22 +19236,24 @@ function jzbFest(dt) {
   if (J.saison === "bauernhof") return jzbBhSchritt(F, dt); // 2.445.0: ein Tag auf dem Hof – Morgen bis Nacht, dann wieder Morgen
   if (J.saison === "weltraum") return jzbWrSchritt(F, dt); // 2.444.0: eigener Ablauf (Rakete, Astronaut, UFO)
   if (J.saison === "unterwasser") return jzbUwSchritt(F, dt); // 2.434.0: eigener Ablauf (Regen füllt, Stöpsel leert) – ohne Ein-/Ausblenden
-  F.a = Math.min(1, F.t / 2.5, Math.max(0, (JZB_FEST_DAUER - F.t) / 4));
-  if (F.t >= JZB_FEST_DAUER) { J.fest = null; return jzbLaufEnde(); }
+  const fw = J.saison === "kirmes" && jzbSimJueFeuerwerk(); // 2.617.0: während des großen Feuerwerks kein Ausblenden und kein neuer Lauf
+  F.a = fw ? 1 : Math.min(1, F.t / 2.5, Math.max(0, (JZB_FEST_DAUER - F.t) / 4));
+  if (F.t >= JZB_FEST_DAUER && !fw) { J.fest = null; return jzbLaufEnde(); }
   for (const s of F.spritzer) { s.vy += 260 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.a -= dt * 1.3; }
   F.spritzer = F.spritzer.filter((s) => s.a > 0 && s.y < J.h + 4);
   if (J.saison === "kirmes") {
     if ((F.ballonUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 15) { F.ballonUhr = jzbZ(5, 11); F.ballons.push({ x: jzbZ(J.w * .1, J.w * .7), y: J.h + 20 * k, v: jzbZ(18, 28) * k, ph: jzbZ(0, 6), farbe: jzbW(JZB_FEST_BUNT.slice(0, 6)) }); }
     for (const b of F.ballons) { b.y -= b.v * dt; b.ph += dt; b.x += Math.sin(b.ph * 1.3) * 8 * dt; }
     F.ballons = F.ballons.filter((b) => b.y > -40 * k);
-    // 🎆 Feuerwerk zum Schluss (am Sim-Jü-Montag gibt es das echte)
-    if (F.t > JZB_FEST_DAUER - 30 && F.t < JZB_FEST_DAUER - 7 && (F.raketUhr -= dt) <= 0) { F.raketUhr = jzbZ(.45, 1.1);
-      F.raketen.push({ x: jzbZ(J.w * .3, J.w - 30), y: J.h, ziel: jzbZ(J.h * .12, J.h * .42), v: jzbZ(120, 160) * Math.max(.7, k), farbe: jzbW(JZB_FEST_BUNT) }); }
+    // 🎆 Feuerwerk zum Schluss (am Sim-Jü-Montag gibt es das echte) · 2.617.0: Montag 21:00–21:20 großes Feuerwerk gleichzeitig mit dem echten
+    const gross = jzbSimJueFeuerwerk(), heute = new Date(), fwTag = themaFestZeit(heute) !== "simjue" || heute.getDay() === 1; // 2.620.0 KC-CLUB-SIMJUE-FEUERWERK-MONTAG: in der Sim-Jü-Woche nur am Montag
+    if ((gross || (fwTag && F.t > JZB_FEST_DAUER - 30 && F.t < JZB_FEST_DAUER - 7)) && (F.raketUhr -= dt) <= 0) { F.raketUhr = gross ? jzbZ(.15, .45) : jzbZ(.45, 1.1);
+      F.raketen.push({ x: jzbZ(J.w * (gross ? .08 : .3), J.w - 30), y: J.h, ziel: jzbZ(J.h * (gross ? .06 : .12), J.h * .42), v: jzbZ(120, 160) * Math.max(.7, k), farbe: jzbW(JZB_FEST_BUNT), gold: gross && Math.random() < .3 }); }
     for (const r of F.raketen) {
       r.y -= r.v * dt; r.x += Math.sin(r.y * .08) * 6 * dt;
-      if (r.y <= r.ziel) { r.weg = true; const n = 22, zwei = Math.random() < .4 ? jzbW(JZB_FEST_BUNT) : r.farbe;
-        for (let i = 0; i < n; i++) { const w = i / n * Math.PI * 2, v = jzbZ(35, 70) * Math.max(.7, k);
-          J.fx.push({ typ: "funke", x: r.x, y: r.y, vx: Math.cos(w) * v, vy: Math.sin(w) * v, s: jzbZ(1.8, 3.2), a: 1, farbe: i % 2 ? r.farbe : zwei }); } }
+      if (r.y <= r.ziel) { r.weg = true; const n = gross ? 34 : 22, zwei = Math.random() < .4 ? jzbW(JZB_FEST_BUNT) : r.farbe;
+        for (let i = 0; i < n; i++) { const w = i / n * Math.PI * 2, v = jzbZ(35, 70) * Math.max(.7, k) * (gross ? 1.35 : 1);
+          J.fx.push({ typ: "funke", x: r.x, y: r.y, vx: Math.cos(w) * v * (r.gold ? .6 : 1), vy: Math.sin(w) * v * (r.gold ? .6 : 1), s: jzbZ(1.8, 3.2), a: 1, farbe: r.gold ? (i % 2 ? "#ffd166" : "#fff1a8") : i % 2 ? r.farbe : zwei }); } }
     }
     F.raketen = F.raketen.filter((r) => !r.weg);
   } else if (J.saison === "wiesn") {
@@ -19270,8 +19285,8 @@ function jzbKetteY(x, y0, hang) { // Girlande in zwei Bögen über die Breite
   const J = JZB, a = JZB_RAND, b = J.w - JZB_RAND, m = (a + b) / 2, l = x < m ? a : m, r = x < m ? m : b, u = (x - l) / (r - l);
   return y0 + Math.sin(u * Math.PI) * hang;
 }
-function jzbHerzMalen(c, x, y0, k, t) { // 🧡 Lebkuchenherz mit Zuckerguss und dem eigenen Vornamen – hängt am Band und schaukelt
-  const J = JZB, name = jzbEisNameText() || "Köcheclub", b = 16 * k, w = Math.sin(J.T * 1.4 + 1) * .07;
+function jzbHerzMalen(c, x, y0, k, t, gr = 1) { // 🧡 Lebkuchenherz mit Zuckerguss und dem eigenen Vornamen – hängt am Band und schaukelt · gr: Größe (2.617.0 Sim-Jü größer)
+  const J = JZB, name = jzbEisNameText() || "Köcheclub", b = 16 * k * gr, w = Math.sin(J.T * 1.4 + 1) * (gr > 1 ? .04 : .07);
   c.save(); c.translate(x, y0); c.rotate(w);
   c.strokeStyle = "#c0392b"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 4 * k); c.stroke();
   c.translate(0, 4 * k + b * .2);
@@ -19282,9 +19297,10 @@ function jzbHerzMalen(c, x, y0, k, t) { // 🧡 Lebkuchenherz mit Zuckerguss und
   herz(); const g = c.createLinearGradient(0, -b, 0, b * .4); g.addColorStop(0, "#b8743a"); g.addColorStop(1, "#7a4319"); c.fillStyle = g; c.fill();
   c.setLineDash([1.6 * k, 2.2 * k]); c.lineCap = "round"; c.strokeStyle = "#fff"; c.lineWidth = 1.6 * k; c.save(); c.scale(.86, .86); c.translate(0, -b * .05); herz(); c.stroke(); c.restore(); c.setLineDash([]);
   c.fillStyle = "#ff8fb1"; for (const s of [-1, 1]) { c.beginPath(); c.arc(s * b * .55, -b * .62, 1.8 * k, 0, 7); c.fill(); }
-  let fs = 8.5 * k; c.font = `700 ${fs}px "Comic Sans MS","Segoe Print",cursive,sans-serif`; const tw = c.measureText(name).width;
-  if (tw > b * 1.35) { fs *= b * 1.35 / tw; c.font = `700 ${fs}px "Comic Sans MS","Segoe Print",cursive,sans-serif`; }
-  c.textAlign = "center"; c.textBaseline = "middle"; c.lineWidth = 2 * k; c.strokeStyle = "rgba(122,67,25,.9)"; c.strokeText(name, 0, -b * .38); c.fillStyle = "#fffaf0"; c.fillText(name, 0, -b * .38);
+  const breit = gr > 1 ? 1.55 : 1.35; // 2.617.0: im großen Herz darf der Name breiter sein (besser lesbar)
+  let fs = 8.5 * k * gr; c.font = `700 ${fs}px "Comic Sans MS","Segoe Print",cursive,sans-serif`; const tw = c.measureText(name).width;
+  if (tw > b * breit) { fs *= b * breit / tw; c.font = `700 ${fs}px "Comic Sans MS","Segoe Print",cursive,sans-serif`; }
+  c.textAlign = "center"; c.textBaseline = "middle"; c.lineWidth = 2 * k * Math.min(1.6, gr); c.strokeStyle = "rgba(122,67,25,.9)"; c.strokeText(name, 0, -b * .38); c.fillStyle = "#fffaf0"; c.fillText(name, 0, -b * .38);
   c.restore(); void t;
 }
 function jzbPfostenMalen(c, x, y, x1) { // Holzpfosten mit Querlatte unten links (dort ist unter dem Infofeld Platz) – daran hängen Herz und Brezn
@@ -19311,8 +19327,46 @@ function jzbFestMalen(c) {
   c.restore();
 }
 // ---- 🎡 Sim-Jü ----
+// 🎯 Schießbude: gestreiftes Dach, Schild, hinten laufen Enten und Sterne vorbei, vorn liegt ein Gewehr – ab und zu ein Treffer
+function jzbSchiessbudeMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, x0 = JZB_RAND + 2 * k, bw = 100 * k, unten = J.h - 3 * k, oben = unten - 34 * k, theke = unten - 11 * k; // flach – bleibt unter dem Infofeld sichtbar
+  c.save();
+  c.fillStyle = "#3b2a5a"; c.fillRect(x0, oben, bw, theke - oben); // Rückwand
+  c.fillStyle = "rgba(255,255,255,.08)"; for (let i = 0; i < 6; i++) c.fillRect(x0 + i * bw / 6, oben, bw / 12, theke - oben);
+  // Enten und Sterne laufen auf einer Schiene von links nach rechts
+  const schiene = theke - 9 * k; c.fillStyle = "#c9a227"; c.fillRect(x0 + 3 * k, schiene + 5.5 * k, bw - 6 * k, 1.4 * k);
+  const tr = Math.floor(T / 4), trP = (T % 4) / 4; // alle 4 s ein Treffer – 2.620.0 (Wunsch Hansi): Figuren laufen langsamer, Treffer seltener
+  for (let i = 0; i < 6; i++) {
+    const p = ((T * 4.5 * k + i * bw / 6) % (bw - 10 * k)), x = x0 + 5 * k + p, ente = i % 2 === 0, getroffen = i === tr % 6 && trP < .55;
+    c.save(); c.translate(x, schiene + 5 * k); if (getroffen) c.scale(1, Math.max(.15, 1 - trP * 3));
+    if (ente) { c.fillStyle = "#ffd23f"; c.beginPath(); c.ellipse(0, -3.4 * k, 4.2 * k, 2.6 * k, 0, 0, 7); c.fill(); c.beginPath(); c.arc(3 * k, -6.4 * k, 1.9 * k, 0, 7); c.fill();
+      c.fillStyle = "#ff8c00"; c.beginPath(); c.moveTo(4.6 * k, -6.6 * k); c.lineTo(6.8 * k, -6 * k); c.lineTo(4.6 * k, -5.6 * k); c.fill(); c.fillStyle = "#222"; c.fillRect(3.2 * k, -7.2 * k, .9 * k, .9 * k); }
+    else { c.fillStyle = "#ffffff"; c.beginPath(); for (let j = 0; j < 10; j++) { const r = j % 2 ? 1.6 * k : 4 * k, a = -Math.PI / 2 + j * Math.PI / 5; c.lineTo(Math.cos(a) * r, -4 * k + Math.sin(a) * r); } c.closePath(); c.fill();
+      c.fillStyle = "#e63946"; c.beginPath(); c.arc(0, -4 * k, 1.3 * k, 0, 7); c.fill(); }
+    c.restore();
+    if (getroffen && trP < .3) { c.fillStyle = `rgba(255,240,150,${1 - trP / .35})`; for (let j = 0; j < 8; j++) { const a = j * Math.PI / 4; c.beginPath(); c.arc(x + Math.cos(a) * (3 + trP * 22) * k, schiene + Math.sin(a) * (3 + trP * 22) * k, 1 * k, 0, 7); c.fill(); }
+      c.font = `800 ${8 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.lineWidth = 2 * k; c.strokeStyle = "rgba(0,0,0,.6)"; c.strokeText("Treffer!", x, schiene - 12 * k - trP * 10 * k); c.fillStyle = "#fff"; c.fillText("Treffer!", x, schiene - 12 * k - trP * 10 * k); }
+  }
+  // Seitenpfosten, Theke, Gewehr mit Mündungsblitz
+  c.fillStyle = "#8b5a2b"; c.fillRect(x0 - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k); c.fillRect(x0 + bw - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k);
+  const tg = c.createLinearGradient(0, theke, 0, unten); tg.addColorStop(0, "#c0392b"); tg.addColorStop(1, "#7b1d14"); c.fillStyle = tg; c.fillRect(x0, theke, bw, unten - theke);
+  c.fillStyle = "#ffd23f"; for (let i = 0; i < 9; i++) { c.beginPath(); c.arc(x0 + 6 * k + i * (bw - 12 * k) / 8, theke + 3 * k, 1.2 * k, 0, 7); c.fill(); } // Glühbirnen an der Theke
+  c.fillStyle = "#5a3b1e"; c.fillRect(x0, theke - 1.6 * k, bw, 2.4 * k);
+  const gx = x0 + bw * .62; c.save(); c.translate(gx, theke - 2 * k); c.rotate(-.06);
+  c.fillStyle = "#6b4226"; c.fillRect(-14 * k, -2.4 * k, 12 * k, 3.4 * k); c.fillStyle = "#333"; c.fillRect(-3 * k, -1.8 * k, 18 * k, 1.6 * k); c.restore();
+  if (trP < .08) { c.fillStyle = "rgba(255,220,100,.9)"; c.beginPath(); c.arc(gx + 16 * k, theke - 3 * k, 2.6 * k, 0, 7); c.fill(); }
+  // Dach: rot-weiß gestreifte Markise mit Bögen, darüber das Schild
+  const dy = oben - 4 * k, st = 9;
+  for (let i = 0; i < st; i++) { const a = x0 - 4 * k + i * (bw + 8 * k) / st, b = (bw + 8 * k) / st; c.fillStyle = i % 2 ? "#ffffff" : "#e63946";
+    c.beginPath(); c.moveTo(a, dy - 9 * k); c.lineTo(a + b, dy - 9 * k); c.lineTo(a + b, dy); c.quadraticCurveTo(a + b / 2, dy + 5 * k, a, dy); c.closePath(); c.fill(); }
+  c.fillStyle = "#1d3557"; const sw = 70 * k, sx = x0 + bw / 2 - sw / 2, sh = 11 * k; c.fillRect(sx, dy - 9 * k - sh, sw, sh);
+  c.strokeStyle = "#ffd23f"; c.lineWidth = 1 * k; c.strokeRect(sx + 1 * k, dy - 9 * k - sh + 1 * k, sw - 2 * k, sh - 2 * k);
+  c.font = `800 ${7.5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = Math.floor(T * 2) % 2 ? "#ffd23f" : "#fff3a0"; c.fillText("🎯 SCHIESSBUDE", x0 + bw / 2, dy - 9 * k - sh / 2 + .5 * k);
+  c.restore(); void F;
+}
 function jzbKirmesMalen(c, F) {
   const J = JZB, k = J.k, T = J.T, R = Math.max(22, Math.min(50, J.h * .34)) * Math.max(.8, k), cx = J.w - R - 40, cy = J.h - R - 13 * k;
+  if (jzbSimJueFeuerwerk()) { c.fillStyle = "rgba(8,12,40,.5)"; c.fillRect(0, 0, J.w, J.h); } // 2.617.0: Nachthimmel beim großen Feuerwerk
   // 2.336.0 (Wunsch Hansi „ganz oben nichts – keine Wimpel usw.“): die Lichterkette hängt jetzt als Deko an der Leiste (KC-CLUB-DEKO)
   const takt = Math.floor(T * 3.5);
   // Luftballons
@@ -19322,8 +19376,11 @@ function jzbKirmesMalen(c, F) {
     c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(b.x - 2.2 * k, b.y - 3 * k, 1.5 * k, 2.4 * k, -.4, 0, 7); c.fill();
     c.fillStyle = b.farbe; c.beginPath(); c.moveTo(b.x, b.y + 8 * k); c.lineTo(b.x - 1.6 * k, b.y + 10.5 * k); c.lineTo(b.x + 1.6 * k, b.y + 10.5 * k); c.fill();
   }
-  // Lebkuchenherz links neben dem Riesenrad an der Lichterkette
-  const sy = jzbStangeY(); jzbPfostenMalen(c, JZB_RAND + 3, sy, JZB_RAND + 50 * k); jzbHerzMalen(c, JZB_RAND + 28 * k, sy, k, F.t);
+  // 2.617.0 KC-CLUB-SIMJUE-SCHIESSBUDE (Wunsch Hansi „Herz größer und mittig, Name lesbar, links eine Schießbude“): Schießbude links,
+  // großes Lebkuchenherz in der Mitte – unten im Bodenstreifen, damit der Name nicht unter dem Infofeld liegt
+  jzbSchiessbudeMalen(c, F);
+  const hg = 1.8, hb = 16 * k * hg, hx = Math.max(JZB_RAND + 150 * k, J.w * .5), hy = J.h - 3 * k - 4 * k - 1.465 * hb;
+  jzbPfostenMalen(c, hx - hb * 1.45, hy, hx + 1 * k); jzbHerzMalen(c, hx, hy, k, F.t, hg);
   // Riesenrad
   c.strokeStyle = "#5b6472"; c.lineWidth = 2.6 * k; c.lineCap = "round";
   c.beginPath(); c.moveTo(cx - R * .62, J.h - 2); c.lineTo(cx, cy); c.lineTo(cx + R * .62, J.h - 2); c.stroke();
@@ -19333,7 +19390,22 @@ function jzbKirmesMalen(c, F) {
   for (let i = 0; i < n * 2; i++) { const a = th + i / (n * 2) * Math.PI * 2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); c.stroke(); }
   c.strokeStyle = "#e9edf5"; c.lineWidth = 2.2 * k; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
   c.lineWidth = 1 * k; c.beginPath(); c.arc(cx, cy, R * .82, 0, 7); c.stroke();
-  for (let i = 0; i < 24; i++) { const a = th + i / 24 * Math.PI * 2, an = (i + takt) % 2 === 0; c.fillStyle = an ? "#fff3a0" : "rgba(255,200,120,.45)"; c.beginPath(); c.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, (an ? 1.6 : 1.1) * k, 0, 7); c.fill(); }
+  // 2.618.0 KC-CLUB-SIMJUE-LAUFLICHT (Wunsch Hansi „Lauflichter an das Riesenrad“): bunte Lauflichter rund um den Kranz (Lichterpulk läuft im
+  // Kreis, Farbe wechselt je Runde), Lichter auf den Speichen laufen von innen nach außen, an den Stützen läuft ein Licht hoch
+  const LL = 36, lauf = T * 14, rund = Math.floor(lauf / LL), farben = ["#ffe066", "#ff4d6d", "#3ec1ff", "#7bed6f", "#c77dff"];
+  for (let i = 0; i < LL; i++) {
+    const a = th + i / LL * Math.PI * 2, d = ((lauf - i) % LL + LL) % LL, an = d < 6 || (i + takt) % 6 === 0, hell = d < 6 ? 1 - d / 6 : .55;
+    const f = farben[(rund + (d < 6 ? 0 : i)) % farben.length], x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+    if (an) { c.fillStyle = f; c.globalAlpha = hell; c.beginPath(); c.arc(x, y, (1.2 + hell) * k, 0, 7); c.fill();
+      if (d < 3) { c.globalAlpha = hell * .35; c.beginPath(); c.arc(x, y, 4 * k, 0, 7); c.fill(); } c.globalAlpha = 1; }
+    else { c.fillStyle = "rgba(255,220,160,.35)"; c.beginPath(); c.arc(x, y, 1 * k, 0, 7); c.fill(); }
+  }
+  for (let i = 0; i < 8; i++) { const a = th + i / 8 * Math.PI * 2, p = (T * 1.2 + i * .125) % 1; // Speichen: Licht läuft nach außen
+    for (const q of [p, (p + .5) % 1]) { const r = R * (.15 + q * .78); c.fillStyle = farben[(i + Math.floor(T * 1.2)) % farben.length]; c.globalAlpha = .9 - q * .4;
+      c.beginPath(); c.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1.1 * k, 0, 7); c.fill(); } }
+  c.globalAlpha = 1;
+  for (const sx of [-1, 1]) for (let j = 0; j < 6; j++) { const q = j / 6, an = Math.floor(T * 8) % 6 === (5 - j); // Stützen: Licht läuft hoch
+    c.fillStyle = an ? "#fff3a0" : "rgba(255,210,140,.3)"; c.beginPath(); c.arc(cx + sx * R * .62 * (1 - q), J.h - 2 - (J.h - 2 - cy) * q, (an ? 1.5 : .9) * k, 0, 7); c.fill(); }
   for (let i = 0; i < n; i++) { // Gondeln hängen immer senkrecht und pendeln leicht
     const a = th + i / n * Math.PI * 2, gx = cx + Math.cos(a) * R, gy = cy + Math.sin(a) * R, p = Math.sin(T * 1.7 + i) * .08, gw = 9 * k, gh = 7 * k;
     c.save(); c.translate(gx, gy); c.rotate(p);
@@ -20666,10 +20738,49 @@ function jzbBsSprengen() {
     box.appendChild(f); f.animate([{ transform: "scale(.2)", opacity: 1 }, { transform: `scale(${z(1.6, 2.6)}) translateY(-${z(10, 40)}px)`, opacity: .9, offset: .35 }, { transform: `scale(${z(2.8, 3.6)}) translateY(-${z(40, 90)}px)`, opacity: 0, filter: "grayscale(1)" }], { duration: z(1500, 2300), easing: "ease-out", fill: "forwards" });
   }
   document.body.appendChild(box);
+  jzbBsGlasBruch(); // 2.622.0: danach sieht der ganze Bildschirm aus wie gesprungenes Handyglas
   h.style.visibility = "hidden";
   try { document.querySelector("#v-start")?.animate([0, 1, 2, 3, 4, 5, 6].map((i) => ({ transform: i === 6 ? "none" : `translate(${z(-7, 7)}px,${z(-5, 5)}px)` })), { duration: 600 }); } catch {}
   setTimeout(() => box.remove(), 2700);
   setTimeout(() => { h.style.visibility = ""; delete h.dataset.gesprengt; try { h.animate([{ opacity: 0, transform: "scale(.94)" }, { opacity: 1, transform: "none" }], { duration: 900, easing: "ease-out" }); } catch {} }, JZB_BS_PAUSE * 1000);
+}
+// 2.622.0 KC-CLUB-BAUSTELLE-GLASBRUCH (Wunsch Hansi „nach der Sprengung, als wenn der ganze Handy-Bildschirm kaputt ist – das ganze Glas gesprungen,
+// Spider-App, wie wenn ein Handy runtergefallen ist“): über den ganzen Bildschirm legt sich ein Spinnennetz aus Sprüngen – vom Aufschlagpunkt
+// Risse nach außen, Ringe dazwischen, kleine Splitter in der Mitte. Die Sprünge wachsen in einer Viertelsekunde, bleiben gut 4 s und verblassen dann.
+// Nur Bild: Tippen geht hindurch (pointer-events: none), nichts wird gespeichert.
+function jzbBsGlasBruch() {
+  if (document.querySelector(".bs-glas")) return;
+  const W = innerWidth, H = innerHeight, z = (a, b) => a + Math.random() * (b - a), ix = W * z(.35, .65), iy = H * z(.22, .45), n = Math.round(z(15, 19)), weit = Math.hypot(W, H);
+  const strahl = [];
+  for (let i = 0; i < n; i++) { // Risse vom Aufschlag nach außen, leicht zackig
+    let a = (i / n) * Math.PI * 2 + z(-.12, .12), r = 0, x = ix, y = iy; const pk = [[x, y]];
+    while (r < weit) { r += z(18, 46); a += z(-.09, .09); x = ix + Math.cos(a) * r; y = iy + Math.sin(a) * r; pk.push([x, y]); }
+    strahl.push(pk);
+  }
+  const punktBei = (pk, rr) => { for (const p of pk) if (Math.hypot(p[0] - ix, p[1] - iy) >= rr) return p; return pk[pk.length - 1]; };
+  const wege = [];
+  for (const pk of strahl) wege.push({ d: "M" + pk.map((p) => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L"), w: z(1, 1.8) });
+  for (const rr of [22, 48, 85, 140, 215, 320, 470]) for (let i = 0; i < n; i++) { // Ringe zwischen den Rissen (nicht jeder Abschnitt)
+    if (rr > 100 && Math.random() < .35) continue;
+    const p = punktBei(strahl[i], rr * z(.85, 1.15)), q = punktBei(strahl[(i + 1) % n], rr * z(.85, 1.15)), mx = (p[0] + q[0]) / 2 + z(-6, 6), my = (p[1] + q[1]) / 2 + z(-6, 6);
+    wege.push({ d: `M${p[0].toFixed(1)} ${p[1].toFixed(1)} L${mx.toFixed(1)} ${my.toFixed(1)} L${q[0].toFixed(1)} ${q[1].toFixed(1)}`, w: z(.6, 1.2) });
+  }
+  for (let i = 0; i < 26; i++) { const a = z(0, 7), r1 = z(2, 10), r2 = r1 + z(6, 20); wege.push({ d: `M${(ix + Math.cos(a) * r1).toFixed(1)} ${(iy + Math.sin(a) * r1).toFixed(1)} L${(ix + Math.cos(a + z(-.4, .4)) * r2).toFixed(1)} ${(iy + Math.sin(a + z(-.4, .4)) * r2).toFixed(1)}`, w: z(.5, 1) }); }
+  const splitter = Array.from({ length: 7 }, () => { const a = z(0, 7), r = z(6, 34), g = z(5, 14); const x = ix + Math.cos(a) * r, y = iy + Math.sin(a) * r;
+    return `<polygon points="${x},${y} ${x + g},${y + z(-3, 4)} ${x + z(0, g)},${y + g}" fill="rgba(255,255,255,${z(.12, .3).toFixed(2)})"/>`; }).join("");
+  const box = document.createElement("div"); box.className = "bs-glas"; box.setAttribute("aria-hidden", "true");
+  box.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9500";
+  box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
+    <radialGradient id="bsGlasLicht" cx="${(ix / W * 100).toFixed(1)}%" cy="${(iy / H * 100).toFixed(1)}%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <rect width="${W}" height="${H}" fill="url(#bsGlasLicht)"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      ${wege.map((w) => `<path d="${w.d}" pathLength="1" stroke="rgba(0,0,0,.35)" stroke-width="${(w.w + 1.2).toFixed(2)}" transform="translate(.8 .8)"/>`).join("")}
+      ${wege.map((w) => `<path class="bs-riss" d="${w.d}" pathLength="1" stroke="rgba(255,255,255,.9)" stroke-width="${w.w.toFixed(2)}"/>`).join("")}
+    </g>${splitter}<circle cx="${ix}" cy="${iy}" r="5" fill="rgba(255,255,255,.55)"/></svg>`;
+  document.body.appendChild(box);
+  try { box.querySelectorAll("path").forEach((p, i) => { p.style.strokeDasharray = "1"; p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 160 + (i % 9) * 22, easing: "ease-out", fill: "both" }); }); } catch {}
+  setTimeout(() => { try { box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 900, fill: "forwards" }).onfinish = () => box.remove(); } catch { box.remove(); } }, 4600);
+  setTimeout(() => box.remove(), 6500);
 }
 // 🔊 Ton (nur ⚙️ Ton an, nicht in der Ruhezeit): Piepen beim Zählen, Rumms + klirrendes Glas beim Knall
 function jzbBsTon(art, n = 0) {
@@ -26374,6 +26485,9 @@ function ilMeldungen() {
     t: th.anzahl ? `${th.anzahl === 1 ? "1 Thema" : th.anzahl + " Themen"} für die Sitzung am ${fTag.format(new Date(t.beginn))}` : `Themen für die Sitzung am ${fTag.format(new Date(t.beginn))}`,
     u: th.anzahl ? (th.offen ? "Bitte stimme ab (👍) – oder reiche selbst eins ein" : "Du hast alle unterstützt – hast du noch ein eigenes?") : "Noch keine Themen – reiche selbst eins ein",
     auf: "zeige('vorschlaege')", knoepfe: [...(th.anzahl ? [["👍 Abstimmen", "zeige('vorschlaege')"]] : []), ["＋ Thema", `ilThemaNeu('${esc(th.treffen)}')`]] });
+  if (themaFestZeit() === "simjue") { const aus = jzSimJueAus(); // 2.619.0 KC-CLUB-SIMJUE-SCHALTER
+    add({ id: "simjue:" + new Date().getFullYear() + (aus ? ":aus" : ""), stufe: "gold", sym: "🎡", t: aus ? "Sim-Jü im Kopf ist ausgeschaltet" : "Sim-Jü im Kopf der Startseite",
+      u: aus ? "Riesenrad, Schießbude und Feuerwerk wieder anzeigen?" : "Gefällt dir nicht? Hier kannst du es ausschalten", knoepfe: [[aus ? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten()"]] }); }
   // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (Wunschliste #20): angekündigte Termine (z. B. Adventsmarkt der Freilichtbühne) – mit 🌐 Webseite
   { const ah = akHeute(); if (ah && akAn() && !akOffen().includes(ah)) add({ id: "advent:" + ah, stufe: "gold", sym: "🎄", t: `Adventskalender: Türchen ${ah} wartet auf dich`, u: "Antippen und öffnen", auf: "akZeigen()" }); } // 2.468.0 KC-CLUB-ADVENTSKALENDER
   for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,

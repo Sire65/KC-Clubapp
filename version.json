@@ -1,5 +1,5 @@
 {
-  "version": "2.617.0",
+  "version": "2.623.0",
   "datum": "2026-10-24",
   "stufe": "RC",
   "mindest": "2.500.0",
@@ -7,6 +7,48 @@
     "Kleine Systemanpassung"
   ],
   "verlauf": [
+    {
+      "version": "2.623.0",
+      "datum": "2026-10-24",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.622.0",
+      "datum": "2026-10-24",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.621.0",
+      "datum": "2026-10-24",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.620.0",
+      "datum": "2026-10-24",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.619.0",
+      "datum": "2026-10-24",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
+    {
+      "version": "2.618.0",
+      "datum": "2026-10-24",
+      "neu": [
+        "Kleine Systemanpassung"
+      ]
+    },
     {
       "version": "2.617.0",
       "datum": "2026-10-24",
@@ -241,48 +283,6 @@
     {
       "version": "2.584.0",
       "datum": "2026-10-22",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.583.0",
-      "datum": "2026-10-22",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.582.0",
-      "datum": "2026-10-22",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.581.0",
-      "datum": "2026-10-22",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.579.0",
-      "datum": "2026-10-22",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.578.0",
-      "datum": "2026-10-21",
-      "neu": [
-        "Kleine Systemanpassung"
-      ]
-    },
-    {
-      "version": "2.577.0",
-      "datum": "2026-10-21",
       "neu": [
         "Kleine Systemanpassung"
       ]

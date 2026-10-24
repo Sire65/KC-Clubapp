@@ -6097,8 +6097,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const [id, jz] of [["simjue", "kirmes"], ["oktoberfest", "wiesn"], ["karibik", "karibik"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
   assert.ok(/const JZB_ARTEN = \[[^\]]*"kirmes", "wiesn", "karibik"[^\]]*\]/.test(html) && /const JZB_FESTE = \["kirmes", "wiesn", "karibik"[^\]]*\];/.test(html), "Fest-Bühnen eingetragen");
   assert.ok(/else if \(JZB_FESTE\.includes\(S\)\) jzbFest\(dt\);/.test(html) && /if \(J\.fest\) jzbFestMalen\(c\);/.test(html), "Bühne rechnet und zeichnet die Feste");
-  assert.ok(/if \(F\.t >= JZB_FEST_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(html), "Lauf endet und beginnt neu");
-  assert.ok(/function jzbHerzMalen\(c, x, y0, k, t\) \{[^\n]*\n\s*const J = JZB, name = jzbEisNameText\(\)/.test(html) && /const name = jzbEisNameText\(\), nx = J\.w \* \.74/.test(html), "Vorname auf dem Lebkuchenherz und im Sand");
+  assert.ok(/if \(F\.t >= JZB_FEST_DAUER(?: && !fw)?\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(html), "Lauf endet und beginnt neu");
+  assert.ok(/function jzbHerzMalen\(c, x, y0, k, t(?:, gr = 1)?\) \{[^\n]*\n\s*const J = JZB, name = jzbEisNameText\(\)/.test(html) && /const name = jzbEisNameText\(\), nx = J\.w \* \.74/.test(html), "Vorname auf dem Lebkuchenherz und im Sand");
   assert.ok(/function themaFestZeit\(d = new Date\(\)\)/.test(html) && /const THEMA_KAL = \(d = new Date\(\)\) => \{ const f = themaFestZeit\(d\); if \(f\) return f;/.test(html), "Kalender: Oktoberfest und Sim-Jü");
   const fz = new Function((html.match(/function osterSonntag\(jahr\) \{[\s\S]*?\n\}/)?.[0] || "") + html.match(/function themaFestZeit\(d = new Date\(\)\) \{[\s\S]*?\n\}/)[0] + "; return themaFestZeit;")();
   assert.equal(fz(new Date(2026, 9, 24)), "simjue"); assert.equal(fz(new Date(2026, 9, 27)), "simjue"); assert.equal(fz(new Date(2026, 9, 28)), null); assert.equal(fz(new Date(2026, 9, 23)), null);
@@ -8427,7 +8427,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/on public\.kc_club_protokoll \(aktion, zeit desc\)/.test(m) && /on public\.kc_club_protokoll \(person_id, aktion, zeit desc\)/.test(m) && /kc_club_person_einstellung \(schluessel\)/.test(m), "Verzeichnisse für die wachsende Protokoll-Tabelle");
   assert.ok(!/\b(drop|delete|update|truncate|alter)\b/i.test(m.replace(/^--.*$/gm, "")), "nur neue Verzeichnisse, keine Datenänderung");
   assert.ok((m.match(/create index if not exists kc_club_tempo_/g) || []).length >= 20, "alle mit kc_club_tempo_ (Rückweg)");
-  assert.ok(/const TEMPO_LOG_MS = 1500;/.test(server) && /if \(serverMs >= TEMPO_LOG_MS\) console\.log\(JSON\.stringify\(\{ tempo: txt\(a, 40\), ms: serverMs, anmeldungMs \}\)\);/.test(server), "Tempo-Log ohne Inhalte");
+  assert.ok(/const TEMPO_LOG_MS = 5000;/.test(server) && /if \(serverMs >= TEMPO_LOG_MS\) console\.log\(JSON\.stringify\(\{ tempo: txt\(a, 40\), ms: serverMs, anmeldungMs \}\)\);/.test(server), "Tempo-Log ohne Inhalte");
   assert.ok(/if \(!INIT\) sofortStart\(\);/.test(programm) && /const SOFORT_MAX_MS = 3 \* 86400000;/.test(programm), "Sofort-Start");
   assert.ok(/INIT = \{ \.\.\.g\.init, _offline: g\.zeit, _vorab: vorab \}/.test(programm) && /wird gerade aktualisiert …/.test(programm), "Sofort-Stand sichtbar markiert (nie als aktuell)");
   assert.ok(/if \(INIT\?\._vorab\) \{[^\n]*\n[^\n]*INIT\._vorab = false; offlineStandZeigen\(true\);/.test(programm), "scheitert das Laden: als alter Stand markiert");
@@ -11341,7 +11341,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.464.0 KC-CLUB-DB-SPARSAM: jeder App-Aufruf mit eigenem Lese-Puffer (2 s), Messung je Aktion ins Server-Log (keine Datenbank-Schreibung)
 {
-  assert.ok(/const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;/.test(server) && /Deno\.serve\(\(req\) => \{\n  const pf = dbPufferNeu\(DB_PUFFER_MS\);\n  return DB_PUFFER\.run\(pf, async \(\) => \{/.test(server), "jeder Aufruf mit eigenem, kurzlebigem Puffer");
+  assert.ok(/const DB_PUFFER_MS = 2000, DB_LOG_AB = 120;/.test(server) && /Deno\.serve\(\(req\) => \{\n  const pf = dbPufferNeu\(DB_PUFFER_MS\);\n  return DB_PUFFER\.run\(pf, async \(\) => \{/.test(server), "jeder Aufruf mit eigenem, kurzlebigem Puffer");
   assert.ok(/if \(a && pf\.haltbarMs && Date\.now\(\) - \(pf\.zeit\.get\(schluessel\) \?\? 0\) > pf\.haltbarMs\) a = undefined;/.test(server), "gepufferte Antwort nur DB_PUFFER_MS gültig");
   assert.ok(/console\.log\(JSON\.stringify\(\{ db: txt\(pf\.aktion \|\| req\.method, 40\), netz: pf\.netz, puffer: pf\.puffer, ms: Date\.now\(\) - t0(, \.\.\.\(pf\.pfade \? \{ pfade: Object\.fromEntries\(pf\.pfade\) \} : \{\}\))? \}\)\)/.test(server), "Messung nur ins Log: Aktion und Zahlen, keine Inhalte/Personen");
   // 2.494.0: die Pfad-Zählung KC-CLUB-DB-PFADE (2.489.0) ist wieder ausgebaut (KC-SPARSAM-PROTOKOLLE: Messen über eigene Tabellen, nicht übers Log)
@@ -12493,7 +12493,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.deepEqual(treffer, [10, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 300, 365], "Tage mit Keks");
   assert.ok(ms(730) && !ms(400), "danach jedes volle Jahr");
   const sm = server.slice(server.indexOf('case "start_melden": {'), server.indexOf('case "start_statistik": {'));
-  assert.ok(/if \(tage && keksMeilenstein\(tage\)\)/.test(sm) && /fee: false, keks: \{ n: tage, von: von \|\| null \}/.test(sm) && /if \(!kt \|\| kt\.tag !== heute\)/.test(sm), "Server zählt Tage, je Tag einmal, meldet Keks statt Fee");
+  assert.ok(/keks = keksMeilenstein\(tage\) \|\| \(!gehabt && tage > 10 && naechster - tage >= 3\);/.test(sm) && /gehabt: gehabt \|\| keks/.test(sm) && /if \(keks\) \{/.test(sm) && /fee: false, keks: \{ n: tage, von: von \|\| null \}/.test(sm) && /if \(!kt \|\| kt\.tag !== heute\)/.test(sm), "Server zählt Tage, je Tag einmal, meldet Keks statt Fee");
   assert.ok(/aid && aid !== ich\.person_id \?/.test(sm), "der Admin grüßt sich nicht selbst");
   const k = programm.slice(programm.indexOf("const KEKS_SPRUECHE = ["), programm.indexOf("// KC-CLUB-FEE (2.372.0"));
   const spr = new Function(k.slice(0, k.indexOf("const KEKS_KEY")) + ";return KEKS_SPRUECHE;")();
@@ -12523,7 +12523,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 function idx0() { return lies("index.html"); }
 // 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE: Sim-Jü-Szene für alle von Samstag bis einschließlich Dienstag
 {
-  assert.ok(/const jahreszeitAktuell = \(d = new Date\(\)\) => \(themaFestZeit\(d\) === "simjue" \? "kirmes" :/.test(programm), "Sim-Jü geht vor der eigenen Wahl");
+  assert.ok(/const jahreszeitAktuell = \(d = new Date\(\)\) => \(jzSimJueZeit\(d\) \? "kirmes" :/.test(programm), "Sim-Jü geht vor der eigenen Wahl");
   const a = programm.indexOf("function themaFestZeit("), b = programm.indexOf("\n}\n", a) + 3;
   const f = new Function("osterSonntag", programm.slice(a, b) + ";return themaFestZeit;")((y) => `${y}-04-05`);
   assert.equal(f(new Date(2026, 9, 23, 23, 59)), null, "Freitag 23.10. noch nicht");
@@ -12535,4 +12535,45 @@ function idx0() { return lies("index.html"); }
 {
   assert.ok(/const jzbDarf = \(\) => \{ const sj = jzSimJue\(\); return \(fxAn\(\) \|\| \(sj && !SPAR\?\.an && !!document\.body\?\.animate\)\) && \(einst\("jahreszeit", true\) \|\| sj\); \};/.test(programm), "Sim-Jü überstimmt die Schalter, nicht den Sparmodus");
   assert.ok(/if \(!jzbDarf\(\)\) \{ if \(einst\("jahreszeit", true\)\) jzDeko/.test(programm) && /JZB\.pruef = 0; if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(programm), "Kopf und Bildschleife fragen jzbDarf");
+}
+// 2.617.0 KC-CLUB-SIMJUE-SCHIESSBUDE / -FEUERWERK: großes Herz mittig, Schießbude links, Montag 21:00–21:20 großes Feuerwerk
+{
+  assert.ok(/function jzbHerzMalen\(c, x, y0, k, t, gr = 1\)/.test(programm) && /jzbHerzMalen\(c, hx, hy, k, F\.t, hg\);/.test(programm) && /const hg = 1\.8,/.test(programm), "Herz größer und mittig");
+  assert.ok(/jzbSchiessbudeMalen\(c, F\);/.test(programm) && /🎯 SCHIESSBUDE/.test(programm) && /Treffer!/.test(programm), "Schießbude mit Treffern");
+  const m = programm.match(/const jzbSimJueFeuerwerk = (\(d = new Date\(\)\) => [^\n;]+);/); assert.ok(m, "Feuerwerk-Zeit");
+  const a = programm.indexOf("function themaFestZeit("), b = programm.indexOf("\n}\n", a) + 3;
+  const themaFestZeit = new Function("osterSonntag", programm.slice(a, b) + ";return themaFestZeit;")((y) => `${y}-04-05`);
+  const fw = new Function("themaFestZeit", "return " + m[1])(themaFestZeit);
+  assert.equal(fw(new Date(2026, 9, 26, 21, 0)), true, "Montag 26.10.2026 21:00");
+  assert.equal(fw(new Date(2026, 9, 26, 21, 19)), true, "21:19 noch");
+  assert.equal(fw(new Date(2026, 9, 26, 21, 20)), false, "21:20 vorbei");
+  assert.equal(fw(new Date(2026, 9, 26, 20, 59)), false, "20:59 noch nicht");
+  assert.equal(fw(new Date(2026, 10, 2, 21, 5)), false, "nicht an anderen Montagen");
+  assert.ok(/!\(JZB\.saison === "kirmes" && jzbSimJueFeuerwerk\(\)\)/.test(programm) && /if \(F\.t >= JZB_FEST_DAUER && !fw\)/.test(programm), "Bild bleibt während des Feuerwerks nicht stehen, kein Ausblenden");
+}
+// 2.618.0 KC-CLUB-SIMJUE-LAUFLICHT: Lauflichter am Riesenrad (Kranz, Speichen, Stützen)
+{
+  assert.ok(/KC-CLUB-SIMJUE-LAUFLICHT/.test(programm) && /const LL = 36, lauf = T \* 14/.test(programm) && /Speichen: Licht läuft nach außen/.test(programm) && /Stützen: Licht läuft hoch/.test(programm), "Lauflichter am Riesenrad");
+}
+// 2.619.0 KC-CLUB-SIMJUE-SCHALTER: Sim-Jü im Info-Feld ausschalten (je Gerät, nur dieses Jahr)
+{
+  assert.ok(/const jzSimJueZeit = \(d = new Date\(\)\) => themaFestZeit\(d\) === "simjue" && !jzSimJueAus\(d\);/.test(programm), "ausgeschaltet → keine Sim-Jü-Pflicht");
+  assert.ok(/localStorage\.getItem\(SJ_AUS_KEY\) === String\(d\.getFullYear\(\)\)/.test(programm), "gilt nur für dieses Jahr");
+  assert.ok(/if \(themaFestZeit\(\) === "simjue"\) \{ const aus = jzSimJueAus\(\);/.test(programm) && /\[aus \? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten\(\)"\]/.test(programm), "Schalter im Info-Feld");
+}
+// 2.620.0 KC-CLUB-SIMJUE-FEUERWERK-MONTAG: in der Sim-Jü-Woche Feuerwerk nur am Montag, Schießbude langsamer
+{
+  assert.ok(/fwTag = themaFestZeit\(heute\) !== "simjue" \|\| heute\.getDay\(\) === 1;/.test(programm) && /\(gross \|\| \(fwTag && F\.t > JZB_FEST_DAUER - 30/.test(programm), "Feuerwerk nur montags (außer großem Feuerwerk)");
+  assert.ok(/T \* 4\.5 \* k \+ i \* bw \/ 6/.test(programm) && /Math\.floor\(T \/ 4\)/.test(programm), "Schießbude langsamer");
+}
+// 2.622.0 KC-CLUB-BAUSTELLE-GLASBRUCH: nach der Sprengung gesprungenes Handyglas über dem ganzen Bildschirm
+{
+  const g = programm.slice(programm.indexOf("function jzbBsGlasBruch("), programm.indexOf("function jzbBsTon("));
+  assert.ok(/jzbBsGlasBruch\(\); \/\/ 2\.622\.0/.test(programm) && /position:fixed;inset:0;pointer-events:none;z-index:9500/.test(g), "über den ganzen Bildschirm, Tippen geht hindurch");
+  assert.ok(/for \(const rr of \[22, 48, 85, 140, 215, 320, 470\]\)/.test(g) && /setTimeout\(\(\) => box\.remove\(\), 6500\);/.test(g), "Spinnennetz mit Ringen, verschwindet sicher wieder");
+}
+// 2.623.0 KC-CLUB-PUSH-DEKLARATIV: Service Worker versteht das Apple-Format (Declarative Web Push)
+{
+  const sw = lies("sw.js");
+  assert.ok(/if \(d && d\.web_push === 8030 && d\.notification\) \{ const n = d\.notification; d = \{ title: n\.title, body: n\.body, data: \{ url: n\.navigate \|\| "\.\/"/.test(sw), "deklaratives Format wird umgesetzt");
 }

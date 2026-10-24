@@ -134,7 +134,7 @@ const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitt
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
 const SERVER_VERSION = "2.614.0";
-const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
+const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
 // Rechte (kc_club_person_einstellung „studio_recht“, setzt nur der Admin): zeigen = dauerhaft „📺 Live zeigen“; alles_bis = für kurze Zeit
@@ -7890,7 +7890,7 @@ Köcheclub Werne`,
 // einen eigenen Lese-Puffer – dieselbe Leseabfrage innerhalb von DB_PUFFER_MS nur einmal an die Datenbank (Schreiben leert ihn, Fehler nie
 // gepuffert, andere gleichzeitige Aufrufe sehen ihn nie). Messung: ab DB_LOG_AB Abfragen eine Zeile ins Server-Log mit Aktion und Zahlen
 // (keine Inhalte, keine Personen, keine Datenbank-Schreibung – kostet nichts). So sieht man, welche Aktion wie viele Abfragen braucht.
-const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;
+const DB_PUFFER_MS = 2000, DB_LOG_AB = 120; // 2.623.0 KC-CLUB-LOG-SPARSAM: nur noch Ausreißer (vorher ab 15 – jeder App-Start und jede Wartung schrieb eine Zeile)
 // 2.584.0 KC-CLUB-EINGANG-PAKET: welche Listen der Büro-Eingang in einem Aufruf holen darf (nur lesend, jede prüft ihre Rechte selbst)
 const BUERO_EINGANG_TEILE = ["leihen_liste", "vorschlaege_liste", "hilfe_liste", "protokolle_liste", "archiv_liste", "aenderungen_liste", "eingang_korb", "buero_start"];
 Deno.serve((req) => {
@@ -11707,14 +11707,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Such dir einen Glückskeks aus. Liebe Grüße Hansi“): Gruß vom Admin; die App zeigt 3 Glückskekse. Dann keine Fee zugleich.
         // Tage mit der App: je Berliner Kalendertag einmal weiterzählen; beim ersten Mal aus den App-Starts nachzählen (Aufzeichnung 180 Tage)
         const heute = berlinTag(new Date());
-        let tage = 0;
+        let tage = 0, keks = false;
         if (!kt || kt.tag !== heute) {
           if (kt) tage = (Number(kt.n) || 0) + 1;
           else { const { data: st } = await db.from("kc_club_protokoll").select("zeit,details").eq("person_id", ich.person_id).eq("aktion", "app_start").limit(5000);
             tage = new Set((st ?? []).filter((x: any) => !x.details?.hinter).map((x: any) => berlinTag(new Date(x.zeit)))).size || 1; }
-          await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "keks_tage", wert: { n: tage, tag: heute }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+          // 2.621.0 KC-CLUB-GLUECKSKEKS-NACHHOLEN (Wunsch Hansi): wer schon über dem 10. Tag war, als es den Keks noch nicht gab, bekommt seinen ersten Keks
+          // gleich – außer der nächste reguläre Keks kommt ohnehin in weniger als 3 Tagen. „gehabt“ merkt, dass es schon einen gab.
+          const gehabt = !!kt?.gehabt, naechster = [10, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 300, 365].find((m) => m > tage) ?? Infinity;
+          keks = keksMeilenstein(tage) || (!gehabt && tage > 10 && naechster - tage >= 3);
+          await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "keks_tage", wert: { n: tage, tag: heute, gehabt: gehabt || keks }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         }
-        if (tage && keksMeilenstein(tage)) {
+        if (keks) {
           const [aid] = await adminIds().catch(() => [] as string[]);
           const von = aid && aid !== ich.person_id ? vorname((await personen([aid])).get(aid) ?? null) : "";
           return json({ ok: true, anmeldungen, fee: false, keks: { n: tage, von: von || null } });
