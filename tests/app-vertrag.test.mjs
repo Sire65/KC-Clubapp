@@ -12566,3 +12566,9 @@ function idx0() { return lies("index.html"); }
   assert.ok(/fwTag = themaFestZeit\(heute\) !== "simjue" \|\| heute\.getDay\(\) === 1;/.test(programm) && /\(gross \|\| \(fwTag && F\.t > JZB_FEST_DAUER - 30/.test(programm), "Feuerwerk nur montags (außer großem Feuerwerk)");
   assert.ok(/T \* 4\.5 \* k \+ i \* bw \/ 6/.test(programm) && /Math\.floor\(T \/ 4\)/.test(programm), "Schießbude langsamer");
 }
+// 2.622.0 KC-CLUB-BAUSTELLE-GLASBRUCH: nach der Sprengung gesprungenes Handyglas über dem ganzen Bildschirm
+{
+  const g = programm.slice(programm.indexOf("function jzbBsGlasBruch("), programm.indexOf("function jzbBsTon("));
+  assert.ok(/jzbBsGlasBruch\(\); \/\/ 2\.622\.0/.test(programm) && /position:fixed;inset:0;pointer-events:none;z-index:9500/.test(g), "über den ganzen Bildschirm, Tippen geht hindurch");
+  assert.ok(/for \(const rr of \[22, 48, 85, 140, 215, 320, 470\]\)/.test(g) && /setTimeout\(\(\) => box\.remove\(\), 6500\);/.test(g), "Spinnennetz mit Ringen, verschwindet sicher wieder");
+}

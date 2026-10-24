@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.621.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.622.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5398,7 +5398,7 @@ const HILFE = [
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
-  { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas). Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
+  { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
   { id: "ablage_mehrere", thema: "club", sym: "🗄️", t: "In mehrere Ordner ablegen", x: "Ist etwas im Eingangskorb erledigt, fragt die App <b>„Wo ablegen?“</b>. Setz einfach Häkchen – es dürfen mehrere sein: im Ordner des Mitglieds (zum Nachvollziehen), in unseren Club-Ordnern mit passendem Register oder in deinem eigenen Ordner. Die App merkt sich deine Wahl fürs nächste Mal. Nachträglich geht es über <b>„🗄️ Ablegen …“</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => { buStart(); buEingang(); }, seit: "2.23.8" },
@@ -20738,10 +20738,49 @@ function jzbBsSprengen() {
     box.appendChild(f); f.animate([{ transform: "scale(.2)", opacity: 1 }, { transform: `scale(${z(1.6, 2.6)}) translateY(-${z(10, 40)}px)`, opacity: .9, offset: .35 }, { transform: `scale(${z(2.8, 3.6)}) translateY(-${z(40, 90)}px)`, opacity: 0, filter: "grayscale(1)" }], { duration: z(1500, 2300), easing: "ease-out", fill: "forwards" });
   }
   document.body.appendChild(box);
+  jzbBsGlasBruch(); // 2.622.0: danach sieht der ganze Bildschirm aus wie gesprungenes Handyglas
   h.style.visibility = "hidden";
   try { document.querySelector("#v-start")?.animate([0, 1, 2, 3, 4, 5, 6].map((i) => ({ transform: i === 6 ? "none" : `translate(${z(-7, 7)}px,${z(-5, 5)}px)` })), { duration: 600 }); } catch {}
   setTimeout(() => box.remove(), 2700);
   setTimeout(() => { h.style.visibility = ""; delete h.dataset.gesprengt; try { h.animate([{ opacity: 0, transform: "scale(.94)" }, { opacity: 1, transform: "none" }], { duration: 900, easing: "ease-out" }); } catch {} }, JZB_BS_PAUSE * 1000);
+}
+// 2.622.0 KC-CLUB-BAUSTELLE-GLASBRUCH (Wunsch Hansi „nach der Sprengung, als wenn der ganze Handy-Bildschirm kaputt ist – das ganze Glas gesprungen,
+// Spider-App, wie wenn ein Handy runtergefallen ist“): über den ganzen Bildschirm legt sich ein Spinnennetz aus Sprüngen – vom Aufschlagpunkt
+// Risse nach außen, Ringe dazwischen, kleine Splitter in der Mitte. Die Sprünge wachsen in einer Viertelsekunde, bleiben gut 4 s und verblassen dann.
+// Nur Bild: Tippen geht hindurch (pointer-events: none), nichts wird gespeichert.
+function jzbBsGlasBruch() {
+  if (document.querySelector(".bs-glas")) return;
+  const W = innerWidth, H = innerHeight, z = (a, b) => a + Math.random() * (b - a), ix = W * z(.35, .65), iy = H * z(.22, .45), n = Math.round(z(15, 19)), weit = Math.hypot(W, H);
+  const strahl = [];
+  for (let i = 0; i < n; i++) { // Risse vom Aufschlag nach außen, leicht zackig
+    let a = (i / n) * Math.PI * 2 + z(-.12, .12), r = 0, x = ix, y = iy; const pk = [[x, y]];
+    while (r < weit) { r += z(18, 46); a += z(-.09, .09); x = ix + Math.cos(a) * r; y = iy + Math.sin(a) * r; pk.push([x, y]); }
+    strahl.push(pk);
+  }
+  const punktBei = (pk, rr) => { for (const p of pk) if (Math.hypot(p[0] - ix, p[1] - iy) >= rr) return p; return pk[pk.length - 1]; };
+  const wege = [];
+  for (const pk of strahl) wege.push({ d: "M" + pk.map((p) => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L"), w: z(1, 1.8) });
+  for (const rr of [22, 48, 85, 140, 215, 320, 470]) for (let i = 0; i < n; i++) { // Ringe zwischen den Rissen (nicht jeder Abschnitt)
+    if (rr > 100 && Math.random() < .35) continue;
+    const p = punktBei(strahl[i], rr * z(.85, 1.15)), q = punktBei(strahl[(i + 1) % n], rr * z(.85, 1.15)), mx = (p[0] + q[0]) / 2 + z(-6, 6), my = (p[1] + q[1]) / 2 + z(-6, 6);
+    wege.push({ d: `M${p[0].toFixed(1)} ${p[1].toFixed(1)} L${mx.toFixed(1)} ${my.toFixed(1)} L${q[0].toFixed(1)} ${q[1].toFixed(1)}`, w: z(.6, 1.2) });
+  }
+  for (let i = 0; i < 26; i++) { const a = z(0, 7), r1 = z(2, 10), r2 = r1 + z(6, 20); wege.push({ d: `M${(ix + Math.cos(a) * r1).toFixed(1)} ${(iy + Math.sin(a) * r1).toFixed(1)} L${(ix + Math.cos(a + z(-.4, .4)) * r2).toFixed(1)} ${(iy + Math.sin(a + z(-.4, .4)) * r2).toFixed(1)}`, w: z(.5, 1) }); }
+  const splitter = Array.from({ length: 7 }, () => { const a = z(0, 7), r = z(6, 34), g = z(5, 14); const x = ix + Math.cos(a) * r, y = iy + Math.sin(a) * r;
+    return `<polygon points="${x},${y} ${x + g},${y + z(-3, 4)} ${x + z(0, g)},${y + g}" fill="rgba(255,255,255,${z(.12, .3).toFixed(2)})"/>`; }).join("");
+  const box = document.createElement("div"); box.className = "bs-glas"; box.setAttribute("aria-hidden", "true");
+  box.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9500";
+  box.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
+    <radialGradient id="bsGlasLicht" cx="${(ix / W * 100).toFixed(1)}%" cy="${(iy / H * 100).toFixed(1)}%" r="60%"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <rect width="${W}" height="${H}" fill="url(#bsGlasLicht)"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      ${wege.map((w) => `<path d="${w.d}" pathLength="1" stroke="rgba(0,0,0,.35)" stroke-width="${(w.w + 1.2).toFixed(2)}" transform="translate(.8 .8)"/>`).join("")}
+      ${wege.map((w) => `<path class="bs-riss" d="${w.d}" pathLength="1" stroke="rgba(255,255,255,.9)" stroke-width="${w.w.toFixed(2)}"/>`).join("")}
+    </g>${splitter}<circle cx="${ix}" cy="${iy}" r="5" fill="rgba(255,255,255,.55)"/></svg>`;
+  document.body.appendChild(box);
+  try { box.querySelectorAll("path").forEach((p, i) => { p.style.strokeDasharray = "1"; p.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 160 + (i % 9) * 22, easing: "ease-out", fill: "both" }); }); } catch {}
+  setTimeout(() => { try { box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 900, fill: "forwards" }).onfinish = () => box.remove(); } catch { box.remove(); } }, 4600);
+  setTimeout(() => box.remove(), 6500);
 }
 // 🔊 Ton (nur ⚙️ Ton an, nicht in der Ruhezeit): Piepen beim Zählen, Rumms + klirrendes Glas beim Knall
 function jzbBsTon(art, n = 0) {
