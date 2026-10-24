@@ -14392,6 +14392,8 @@ const VB_VERLAUF_MAX = 6;
 function netzErkannt() { const t = navigator.connection?.type; return t === "wifi" || t === "ethernet" ? "wlan" : t === "cellular" ? "mobil" : null; }
 function vbNetz() { if (VB.netz) return VB.netz; let l = null; try { l = localStorage.getItem("kc_club_netzart"); } catch {} return netzErkannt() || (NETZARTEN[l] ? l : "unbekannt"); }
 function vbNetzWahl(n) { VB.netz = n; try { localStorage.setItem("kc_club_netzart", n); } catch {} vbBlattZeigen(); }
+// KC-CLUB-VB-AUFTEILUNG: „728 ms“ → darunter „Netz 340 · Server 388“ (Netz = Weg Handy ↔ Rechenzentrum, Server = Arbeit von Supabase samt Datenbank)
+const vbAufteilung = (t) => t?.srv != null && t.srv >= 0 && t.ping != null ? `<br><small class="hinweis" style="white-space:nowrap">Netz ${Math.max(0, t.ping - t.srv).toLocaleString("de-DE")} · Server ${Number(t.srv).toLocaleString("de-DE")}</small>` : "";
 function vbVerlauf() { try { return JSON.parse(localStorage.getItem("kc_club_vbtests") || "[]").slice(0, VB_VERLAUF_MAX); } catch { return []; } }
 function vbVerlaufMerken(t) { try { localStorage.setItem("kc_club_vbtests", JSON.stringify([t, ...vbVerlauf()].slice(0, VB_VERLAUF_MAX))); } catch {} }
 const VB = { comm: null, commZeit: 0, letzteOk: 0, letzterFehler: 0, fehlerText: "", anfragen: 0, fehler: 0, laufend: 0, zeiten: [], server: null, wartung: null, update: false, bytes: 0, test: null };
@@ -14803,9 +14805,9 @@ function vbBlattZeigen() {
     <button class="knopf haupt" id="vbTestKnopf" onclick="verbindungTesten()" ${VB.test?.laeuft ? "disabled" : ""}>▶️ Verbindung testen</button>
     <button class="knopf" onclick="$('verbindungBlatt').classList.add('versteckt');ttOeffnen()">🔬 Internet-Tiefentest (Aussetzer, Router, Dauertest)</button>
     ${(() => { const v = vbVerlauf(); if (!v.length) return ""; const z = (x, e) => (x == null ? "–" : x.toLocaleString("de-DE") + e);
-      return `<b style="font-size:.9rem">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle"><tr><td><b>Wann</b></td><td><b>Netz</b></td><td><b>Antwort</b></td><td><b>↓ / ↑ Mbit/s</b></td></tr>
-        ${v.map((t) => `<tr><td>${esc(zeitMitTag(new Date(t.zeit).toISOString()))}</td><td>${NETZARTEN[t.netz] || "–"}</td><td>${z(t.ping, " ms")}</td><td>${z(t.down, "")} / ${z(t.up, "")}</td></tr>`).join("")}</table>
-        <p class="hinweis" style="font-size:.8rem;margin:0">WLAN und Mobilfunk unterscheiden sich bei Antwortzeit, Download und Upload. „Datenbank … ms“ misst der Server selbst – das ist bei beiden gleich.</p>`; })()}
+      return `<b style="font-size:.9rem">Letzte Tests auf diesem Gerät</b><table class="vb-tabelle"><tr><td><b>Wann</b></td><td><b>Netz</b></td><td><b>Antwort</b><br><small class="hinweis">Netz · Server</small></td><td><b>↓ / ↑ Mbit/s</b></td></tr>
+        ${v.map((t) => `<tr><td>${esc(zeitMitTag(new Date(t.zeit).toISOString()))}</td><td>${NETZARTEN[t.netz] || "–"}</td><td>${z(t.ping, " ms")}${vbAufteilung(t)}</td><td>${z(t.down, "")} / ${z(t.up, "")}</td></tr>`).join("")}</table>
+        <p class="hinweis" style="font-size:.8rem;margin:0">WLAN und Mobilfunk unterscheiden sich bei Antwortzeit, Download und Upload. „Datenbank … ms“ misst der Server selbst – das ist bei beiden gleich. <b>Netz</b> = Weg vom Handy zum Rechenzentrum und zurück · <b>Server</b> = Arbeit bei Supabase (startet gerade eine neue Server-Kopie, dauert es bis zu ½ Sekunde länger – das ist normal).</p>`; })()}
     ${vbCommBlock()}
     <div class="vb-knoepfe"><button class="knopf" onclick="druckStarten('verbindung')">🖨️ Drucken</button><button class="knopf" onclick="verbindungMelden(this)">📨 An Admin senden</button></div>
     ${ICH?.admin ? `<button class="knopf" onclick="wartungUmschalten()">${VB.wartung?.an ? "✅ Wartung beenden" : "🔧 Wartung ankündigen (LED blau)"}</button>` : ""}
@@ -14817,9 +14819,12 @@ async function verbindungTesten() {
   const text = (t) => { const e = $("vbTestText"); if (e) e.textContent = t; };
   try {
     const zeiten = [], srv = []; let db = null;
-    for (let i = 0; i < 5; i++) { text(`⏳ Antwortzeit messen … ${i + 1}/5`); const t0 = performance.now(); const r = await api("ping"); zeiten.push(performance.now() - t0); db = r.dbMs; if (r.serverMs != null) srv.push(r.serverMs); VB.server = r.server; VB.wartung = r.wartung; }
+    for (let i = 0; i < 5; i++) { text(`⏳ Antwortzeit messen … ${i + 1}/5`); const t0 = performance.now(); const r = await api("ping"); zeiten.push(performance.now() - t0); db = r.dbMs; srv.push(r.serverMs ?? null); VB.server = r.server; VB.wartung = r.wartung; }
     const ping = Math.round(Math.min(...zeiten));
-    VB.test.ping = ping; VB.test.db = db; VB.test.srv = srv.length ? Math.min(...srv) : null; // 0.56.0: reine Server-Zeit (Rest = Übertragung) vbBlattZeigen(); text("⏳ Download messen …");
+    // KC-CLUB-VB-AUFTEILUNG (24.10.2026, Wunsch Hansi „immer so unterschiedlich“ → „Ja“): Server-Anteil aus DERSELBEN Messung wie die beste
+    // Antwortzeit – so ergibt „Netz + Server“ genau die Antwortzeit (vorher kleinster Server-Wert aus irgendeiner der 5 Messungen)
+    const iBest = zeiten.indexOf(Math.min(...zeiten)), sBest = srv[iBest];
+    VB.test.ping = ping; VB.test.db = db; VB.test.srv = sBest != null ? Math.min(ping, Math.round(sBest)) : (srv.some((x) => x != null) ? Math.min(...srv.filter((x) => x != null)) : null); // 0.56.0: reine Server-Zeit (Rest = Übertragung) vbBlattZeigen(); text("⏳ Download messen …");
     const DOWN = 1024 * 1024, UP = 512 * 1024;
     let t0 = performance.now(); await api("ping", { groesse: DOWN });
     VB.test.down = Math.round((DOWN * 8 / 1e6) / Math.max(0.05, (performance.now() - t0 - ping) / 1000) * 10) / 10; vbBlattZeigen(); text("⏳ Upload messen …");
@@ -14830,7 +14835,7 @@ async function verbindungTesten() {
     VB.test.up = Math.round((UP * 8 / 1e6) / Math.max(0.05, (performance.now() - t0 - ping) / 1000) * 10) / 10;
     text("⏳ KC Communicator prüfen …"); await communicatorPruefen();
     VB.test.zeit = Date.now(); VB.test.laeuft = false; VB.test.netz = vbNetz();
-    vbVerlaufMerken({ zeit: VB.test.zeit, netz: VB.test.netz, ping, down: VB.test.down, up: VB.test.up, db: VB.test.db });
+    vbVerlaufMerken({ zeit: VB.test.zeit, netz: VB.test.netz, ping, down: VB.test.down, up: VB.test.up, db: VB.test.db, srv: VB.test.srv });
     api("diagnose", { art: "verbindung", daten: { netz: VB.test.netz, erkannt: netzErkannt() || "", ping, down: VB.test.down, up: VB.test.up, db: VB.test.db ?? -1, srv: VB.test.srv ?? -1, tempo: navigator.connection?.effectiveType || "" } }).catch(() => {});
     vbBlattZeigen();
     melde(`✔ ${NETZARTEN[VB.test.netz]}: ${ping} ms, ↓ ${VB.test.down.toLocaleString("de-DE")} / ↑ ${VB.test.up.toLocaleString("de-DE")} Mbit/s`);

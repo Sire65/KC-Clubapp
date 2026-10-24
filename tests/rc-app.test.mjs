@@ -79,3 +79,10 @@ console.log("rc-app: alle Prüfungen bestanden");
   assert.ok(/status\?\.level==="critical"\|\|\(status\?\.level==="warning"&&status\?\.geplant!==true\)/.test(tg), "Startseite: geplante Warnung still, kritisch immer");
   assert.ok(tg.includes("🔵 Geplante Last") && lies("index.html").includes('kc-traffic-guard-ui.js?v=4'), "Admin-Anzeige + neue Datei-Version");
 }
+
+// KC-CLUB-VB-AUFTEILUNG (24.10.2026): Antwortzeit im Verbindungstest als „Netz · Server“ aus derselben Messung
+{
+  const a = lies("app.js");
+  assert.ok(/const iBest = zeiten\.indexOf\(Math\.min\(\.\.\.zeiten\)\), sBest = srv\[iBest\];/.test(a) && /db: VB\.test\.db, srv: VB\.test\.srv \}\);/.test(a), "Server-Anteil aus der besten Messung, im Verlauf gemerkt");
+  assert.ok(/const vbAufteilung = \(t\) =>/.test(a) && /\$\{z\(t\.ping, " ms"\)\}\$\{vbAufteilung\(t\)\}/.test(a), "Tabelle zeigt Netz · Server");
+}
