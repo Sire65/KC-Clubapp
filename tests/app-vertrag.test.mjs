@@ -6097,8 +6097,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const [id, jz] of [["simjue", "kirmes"], ["oktoberfest", "wiesn"], ["karibik", "karibik"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
   assert.ok(/const JZB_ARTEN = \[[^\]]*"kirmes", "wiesn", "karibik"[^\]]*\]/.test(html) && /const JZB_FESTE = \["kirmes", "wiesn", "karibik"[^\]]*\];/.test(html), "Fest-Bühnen eingetragen");
   assert.ok(/else if \(JZB_FESTE\.includes\(S\)\) jzbFest\(dt\);/.test(html) && /if \(J\.fest\) jzbFestMalen\(c\);/.test(html), "Bühne rechnet und zeichnet die Feste");
-  assert.ok(/if \(F\.t >= JZB_FEST_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(html), "Lauf endet und beginnt neu");
-  assert.ok(/function jzbHerzMalen\(c, x, y0, k, t\) \{[^\n]*\n\s*const J = JZB, name = jzbEisNameText\(\)/.test(html) && /const name = jzbEisNameText\(\), nx = J\.w \* \.74/.test(html), "Vorname auf dem Lebkuchenherz und im Sand");
+  assert.ok(/if \(F\.t >= JZB_FEST_DAUER(?: && !fw)?\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(html), "Lauf endet und beginnt neu");
+  assert.ok(/function jzbHerzMalen\(c, x, y0, k, t(?:, gr = 1)?\) \{[^\n]*\n\s*const J = JZB, name = jzbEisNameText\(\)/.test(html) && /const name = jzbEisNameText\(\), nx = J\.w \* \.74/.test(html), "Vorname auf dem Lebkuchenherz und im Sand");
   assert.ok(/function themaFestZeit\(d = new Date\(\)\)/.test(html) && /const THEMA_KAL = \(d = new Date\(\)\) => \{ const f = themaFestZeit\(d\); if \(f\) return f;/.test(html), "Kalender: Oktoberfest und Sim-Jü");
   const fz = new Function((html.match(/function osterSonntag\(jahr\) \{[\s\S]*?\n\}/)?.[0] || "") + html.match(/function themaFestZeit\(d = new Date\(\)\) \{[\s\S]*?\n\}/)[0] + "; return themaFestZeit;")();
   assert.equal(fz(new Date(2026, 9, 24)), "simjue"); assert.equal(fz(new Date(2026, 9, 27)), "simjue"); assert.equal(fz(new Date(2026, 9, 28)), null); assert.equal(fz(new Date(2026, 9, 23)), null);
@@ -12535,4 +12535,19 @@ function idx0() { return lies("index.html"); }
 {
   assert.ok(/const jzbDarf = \(\) => \{ const sj = jzSimJue\(\); return \(fxAn\(\) \|\| \(sj && !SPAR\?\.an && !!document\.body\?\.animate\)\) && \(einst\("jahreszeit", true\) \|\| sj\); \};/.test(programm), "Sim-Jü überstimmt die Schalter, nicht den Sparmodus");
   assert.ok(/if \(!jzbDarf\(\)\) \{ if \(einst\("jahreszeit", true\)\) jzDeko/.test(programm) && /JZB\.pruef = 0; if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(programm), "Kopf und Bildschleife fragen jzbDarf");
+}
+// 2.617.0 KC-CLUB-SIMJUE-SCHIESSBUDE / -FEUERWERK: großes Herz mittig, Schießbude links, Montag 21:00–21:20 großes Feuerwerk
+{
+  assert.ok(/function jzbHerzMalen\(c, x, y0, k, t, gr = 1\)/.test(programm) && /jzbHerzMalen\(c, hx, hy, k, F\.t, hg\);/.test(programm) && /const hg = 1\.8,/.test(programm), "Herz größer und mittig");
+  assert.ok(/jzbSchiessbudeMalen\(c, F\);/.test(programm) && /🎯 SCHIESSBUDE/.test(programm) && /Treffer!/.test(programm), "Schießbude mit Treffern");
+  const m = programm.match(/const jzbSimJueFeuerwerk = (\(d = new Date\(\)\) => [^\n;]+);/); assert.ok(m, "Feuerwerk-Zeit");
+  const a = programm.indexOf("function themaFestZeit("), b = programm.indexOf("\n}\n", a) + 3;
+  const themaFestZeit = new Function("osterSonntag", programm.slice(a, b) + ";return themaFestZeit;")((y) => `${y}-04-05`);
+  const fw = new Function("themaFestZeit", "return " + m[1])(themaFestZeit);
+  assert.equal(fw(new Date(2026, 9, 26, 21, 0)), true, "Montag 26.10.2026 21:00");
+  assert.equal(fw(new Date(2026, 9, 26, 21, 19)), true, "21:19 noch");
+  assert.equal(fw(new Date(2026, 9, 26, 21, 20)), false, "21:20 vorbei");
+  assert.equal(fw(new Date(2026, 9, 26, 20, 59)), false, "20:59 noch nicht");
+  assert.equal(fw(new Date(2026, 10, 2, 21, 5)), false, "nicht an anderen Montagen");
+  assert.ok(/!\(JZB\.saison === "kirmes" && jzbSimJueFeuerwerk\(\)\)/.test(programm) && /if \(F\.t >= JZB_FEST_DAUER && !fw\)/.test(programm), "Bild bleibt während des Feuerwerks nicht stehen, kein Ausblenden");
 }
