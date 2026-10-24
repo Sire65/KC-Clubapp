@@ -10156,7 +10156,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/fill="#e03131"\/>\s*<rect x="\$\{x - 9\.2\}"/.test(b) && /class="bw-schweiss"/.test(b) && !/fi-muetze/.test(b), "Schweißstirnband statt Kochmütze, rote Turnschuhe (2.294.0)");
   for (const g of ["sitzen", "stehen", "kueche"]) assert.ok(new RegExp(`g: "${g}"`).test(b), "Übungen " + g);
   for (const h of ["schneebesen", "loeffel", "nudelholz", "flasche", "deckel", "tuch"]) assert.ok(new RegExp(`\\b${h}: \\(x, y\\) =>`).test(b), "Küchenhelfer " + h);
-  assert.ok(/L\.rest === 3 \? "Noch 3" : L\.rest === 2 \? "noch 2" : "noch 1"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| (u\.c\?\.\[1\] \|\| )?(BW_LOB|bwNimm\(BW_LOB)/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
+  assert.ok(/L\.rest === 3 \? "Noch 3 Sekunden" : L\.rest === 2 \? "zwei" : "eins"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| (u\.c\?\.\[1\] \|\| )?(BW_LOB|bwNimm\(BW_LOB)/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \(BW\.lauf (\|\| BW\.hoeren )?\|\| BWM\.laeuft\) bwStopp\(\);/.test(html), "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
   assert.ok(/window\.AudioContext \|\| window\.webkitAudioContext/.test(b) && !/new Audio\(|\.mp3|https?:\/\//.test(b), "Musik im Handy erzeugt – keine Datei, kein Internet");
   assert.ok(!/\bapi\(/.test(b), "nichts wird gespeichert oder gesendet");
@@ -12590,4 +12590,13 @@ function idx0() { return lies("index.html"); }
   assert.ok(/<input type="checkbox" id="tfInfo" \$\{art === "treffen" && !t\?\.id \? "checked" : ""\}>/.test(programm), "neu: Sitzung angehakt, ändern: aus");
   assert.ok(/\$\("treffenForm"\)\.dataset\.aendern = t\?\.id \? "1" : "";/.test(programm) && /if \(!start && !\$\("treffenForm"\)\.dataset\.aendern\) \$\("tfInfo"\)\.checked = art === "treffen";/.test(programm), "Art-Wechsel setzt den Haken beim Ändern nicht");
   assert.ok(/benachrichtigen: \$\("tfInfo"\)\.checked/.test(programm), "Server bekommt weiter genau den Haken");
+}
+// 2.628.0 KC-CLUB-BUEHNE-ORDNUNG (Wunschliste #31): Ansagen nennen Sekunden, Erklärung liegt nicht mehr auf den Knöpfen, Auswahl in Schritten
+{
+  const ende = programm.match(/const BW_ENDSPURT = \[([^\]]+)\]/)[1];
+  assert.ok(ende.split('", "').every((t) => /Sekunden/.test(t)), "jede „noch 10“-Ansage sagt Sekunden");
+  assert.ok(/bwSag\(L\.rest === 3 \? "Noch 3 Sekunden" : L\.rest === 2 \? "zwei" : "eins", true\)/.test(programm), "3-2-1 als Sekunden-Countdown");
+  assert.ok(/<div class="bw-unten"><div class="bw-tipp">/.test(programm) && /\.bw-unten \{ position: absolute;[^}]*flex-direction: column/.test(html), "Erklärung und Knöpfe untereinander");
+  assert.ok(/class="bw-schritt">① Wie möchtest du üben\?/.test(programm) && /class="bw-reihe bw-start"><button type="button" class="es-k es-haupt bw-los"/.test(programm) && /class="bw-reihe bw-neben"><span>Außerdem:<\/span>/.test(programm), "Schritte, ein großer Start, Nebensachen klein");
+  assert.ok(/function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\); esDiaMusikAus\(\); bwTrainingKnoepfe\(false\);/.test(programm) && /if \(v !== "start" && !BW\.lauf\) bwTrainingKnoepfe\(false\);/.test(programm), "Hilfe-Knöpfe kommen beim Verlassen der Bühne zurück");
 }

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.627.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.628.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17038,7 +17038,7 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { esSpiegelAus(); qzStop(); esDiaMusikAus(); clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { esSpiegelAus(); qzStop(); esDiaMusikAus(); bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (BW.lauf || BW.hoeren || BWM.laeuft) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
   esSchreib("tab", k); esStop();
@@ -17855,7 +17855,8 @@ const BW_FRECH = ["Hättest du nicht so viel am Pudding genascht, bräuchten wir
   "Wer jetzt schwitzt, spart sich die Sauna!", "Jede Wiederholung – ein Löffel Sahne weniger!", "Mein Sixpack versteckt sich noch unter dem Sonntagsbraten!",
   "Lieber jetzt schwitzen als nachher die Hose weiter machen!", "Wir verbrennen gerade mehr Kalorien als der Herd auf Stufe neun!", "Der Gürtel bekommt bald ein neues Loch – nach innen!",
   "So kriegen wir das Fett weg!"];
-const BW_ENDSPURT = ["Noch 10 – gleich gibt’s Applaus!", "Noch 10 Sekunden – gib nochmal alles!", "Endspurt – noch 10!", "Die letzten 10 – du schaffst das!", "Noch 10 – zeig, was du kannst!"];
+// 2.628.0 (Wunschliste #31, Hansi: „bei ‚noch 10‘ müssten noch 10 Übungen kommen – kurz danach kommt schon ‚noch 3‘“): gezählt werden Sekunden – das sagt Twinkey jetzt immer dazu
+const BW_ENDSPURT = ["Noch 10 Sekunden – gleich gibt’s Applaus!", "Noch 10 Sekunden – gib nochmal alles!", "Endspurt – noch 10 Sekunden!", "Die letzten 10 Sekunden – du schaffst das!", "Noch 10 Sekunden – zeig, was du kannst!"];
 const BW_SCHUETTELN_SAG = ["Und jetzt ausschütteln!", "Super! Locker ausschütteln!", "Prima! Arme und Beine ausschütteln!", "Geschafft – und schön ausschütteln!"];
 const BW_SEK = 30, BW_SCHUETTELN = 6, BW_BEREIT = 7;
 const BW = { lauf: null, takt: 0, wach: null };
@@ -17990,11 +17991,15 @@ function esBuehneZeigen(f) {
     <div class="bw-wahl">
       <div class="bw-titel">🎭 Bühne frei für Bewegung!</div>
       ${hinweis ? `<div class="bw-hinweis">🩺 Mach nur so viel, wie es dir angenehm ist. Bei Schmerzen, Schwindel oder Atemnot sofort aufhören.<button type="button" class="es-k es-haupt" onclick="fiLsSetzen(FI_HINWEIS_KEY, true);esBuehneZeigen($('hrFlaeche'))">👍 Verstanden</button></div>` : ""}
+      <div class="bw-schritt">① Wie möchtest du üben?</div><!-- 2.628.0 KC-CLUB-BUEHNE-ORDNUNG (Wunschliste #31): Schritte beschriftet, ein großer Start-Knopf, Nebensachen klein -->
       <div class="bw-reihe">${BW_MODI.map(([k, t]) => `<button type="button" class="es-k${w.modus === k ? " an" : ""}" onclick="bwWahlSetzen({modus:'${k}'})">${t}</button>`).join("")}</div>
+      <div class="bw-schritt">② Wie lange – und mit Musik und Ansage?</div>
       <div class="bw-reihe">${w.modus === "kette" ? `<span class="es-k an bw-kette-info">🔁 3 Durchgänge · ca. 4 Min.</span>` : BW_DAUER.map((d) => `<button type="button" class="es-k${w.dauer === d ? " an" : ""}" onclick="bwWahlSetzen({dauer:${d}})">${d} Min.</button>`).join("")}
         <button type="button" class="es-k${w.musik ? " an" : ""}" onclick="bwWahlSetzen({musik:${!w.musik}})" aria-label="Musik ${w.musik ? "aus" : "an"}">${w.musik ? "🎵 Musik" : "🔇 Musik"}</button>
         <button type="button" class="es-k${w.ansage ? " an" : ""}" onclick="bwWahlSetzen({ansage:${!w.ansage}})" aria-label="Ansage ${w.ansage ? "aus" : "an"}">${w.ansage ? "🔊 Ansage" : "🔈 Ansage"}</button></div>
-      <div class="bw-reihe"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwVorher()">▶️ Vorhang auf!</button><button type="button" class="es-k bw-hoeren-los" onclick="bwClubSong()">🎤 Club-Song</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`; // 2.302.0 KC-CLUB-BUEHNE-MUSIK
+      <div class="bw-reihe bw-start"><button type="button" class="es-k es-haupt bw-los" ${hinweis ? "disabled" : ""} onclick="bwVorher()">▶️ Vorhang auf!</button></div>
+      <div class="bw-reihe bw-neben"><span>Außerdem:</span><button type="button" class="es-k bw-hoeren-los" onclick="bwClubSong()">🎤 Club-Song</button><button type="button" class="es-k bw-hoeren-los" onclick="bwHoeren()">🎶 Nur Musik hören</button></div></div></div>`;
+  bwTrainingKnoepfe(true); // 2.628.0: die schwebenden Knöpfe 👆 ❓ 🔍 lagen auf „Nur Musik hören“ – auf der Bühne ausgeblendet wie im Training // 2.302.0 KC-CLUB-BUEHNE-MUSIK
 }
 // ----- 2.309.0 KC-CLUB-BUEHNE-BEREIT (Wunsch Hansi „vorher ansagen: lege dir bereit …“; „mit Weiter eine Übung überspringen“) -----
 // Vor dem Start zeigt und sagt Twinkey, was für DIESEN Durchgang gebraucht wird (aus den Übungen abgeleitet: Hand-Helfer p, Dinge ding, bedarf).
@@ -18084,7 +18089,7 @@ function bwTick() {
     else if (L.rest === 15) bwSag(u.w || u.c?.[1] || bwNimm(BW_LOB, L, "lob"), false, "", !u.w);
     else if (L.rest === 10) bwSag(bwZufall(BW_ENDSPURT, L), false, "", true);
     else if (L.rest === 6) bwSag(bwZufall(BW_KURZ, L), false, "", true);
-    else if (L.rest >= 1 && L.rest <= 3) bwSag(L.rest === 3 ? "Noch 3" : L.rest === 2 ? "noch 2" : "noch 1", true);
+    else if (L.rest >= 1 && L.rest <= 3) bwSag(L.rest === 3 ? "Noch 3 Sekunden" : L.rest === 2 ? "zwei" : "eins", true);
   }
   if (L.phase === "schuetteln" && L.wisch && L.rest === 3) bwLaufZeigen(); // 2.311.0: Stirn ist trocken – jetzt ausschütteln
   if (L.rest > 0) return bwZahl();
@@ -18124,10 +18129,11 @@ function bwLaufZeigen(vorhangAuf) {
     <div class="bw-sprech" id="bwSprech" aria-live="polite">${esc(alt)}</div>
     <div class="bw-mitte">${bwBuehneFigur(u, L.phase, anim, sitz, L.farbe + L.i)}</div>
     <div class="bw-uhr" aria-label="Trainingsuhr"><div><small>⏱ schon</small><b id="bwUhrAb">0:00</b></div><div class="noch"><small>⏳ noch</small><b id="bwUhrNoch">0:00</b></div></div>
-    <div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div>${bwLautRegler("musik")}${bwLautRegler("stimme")}
+    ${bwLautRegler("musik")}${bwLautRegler("stimme")}
+    <div class="bw-unten"><div class="bw-tipp">${esc(L.phase === "schuetteln" ? "Gut gemacht! 👏" : u.h)}</div><!-- 2.628.0 KC-CLUB-BUEHNE-ORDNUNG: Erklärung lag auf den Knöpfen -->
     <div class="es-leiste"><button type="button" class="es-k es-haupt" onclick="bwPause()">${L.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwWeiter()" aria-label="Übung überspringen">⏭ Weiter</button>
-      <button type="button" class="es-k${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
-      <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
+      <button type="button" class="es-k bw-mini${L.musik ? " an" : ""}" onclick="bwMusikSchalten()" aria-label="Musik an oder aus">${L.musik ? "🎵" : "🔇"}</button><button type="button" class="es-k bw-mini${L.ansage ? " an" : ""}" onclick="bwAnsageSchalten()" aria-label="Ansage an oder aus">${L.ansage ? "🔊" : "🔈"}</button>
+      <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div></div>`;
   if (u.um && L.phase === "uebung" && L.rest <= BW_SEK / 2) f.querySelector(".bw-figur")?.classList.add("bw-um"); // 2.310.0 KC-CLUB-BUEHNE-ECHT: „Und jetzt andersherum!“ wirklich andersherum
   if (alt && Date.now() - (BW.sprechZeit || 0) < 4000) $("bwSprech").classList.add("an"); // gerade Gesagtes bleibt lesbar
   bwZahl();
@@ -27788,7 +27794,7 @@ function zeige(v, ausHistorie) {
   setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   if (v !== "chat" && CHAT_FILTER_STAND === "keine") chatFilterSetzen("alle", true); /* 2.591.0 KC-CLUB-CHAT-NUR-HG: außerhalb des Chats nichts ausgeblendet */
-  document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */
+  document.body.classList.remove("kt-aktiv"); /* 2.17.1: Fußleiste nach dem Quiz wieder zeigen */ if (v !== "start" && !BW.lauf) bwTrainingKnoepfe(false); /* 2.628.0: Bühnen-Auswahl blendet 👆 ❓ 🔍 aus – woanders sind sie wieder da */
   if (v !== "spiele") { $("spPause")?.classList.add("versteckt"); document.body.classList.remove("sch-fokus"); } /* 2.18.0, KC-CLUB-SCHACH-FOKUS: Fußleiste außerhalb der Spiele immer da */
   if (!ICH && !ZEIGE_OHNE_ICH.has(v)) {
     if (!ZEIGE_WARTET) melde("⏳ Einen Moment – die App meldet dich noch an …");

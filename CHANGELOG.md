@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.628.0 – 2026-10-24 – Bühne: klarer, Ansagen in Sekunden
+Wunschliste #31: Twinkey sagt beim Endspurt „noch 10 Sekunden“ (gezählt werden Sekunden, keine Wiederholungen), danach „noch 3 Sekunden – zwei – eins“. Beim Training liegt die Erklärung nicht mehr auf den Knöpfen Pause/Weiter. Die Auswahl ist in Schritte gegliedert (① Wie? ② Wie lange?), mit einem großen Start-Knopf; Club-Song und Nur Musik klein darunter; die schwebenden Hilfe-Knöpfe verdecken nichts mehr (KC-CLUB-BUEHNE-ORDNUNG).
+
 ## 2.627.0 – 2026-10-24 – Termin ändern: Benachrichtigung aus
 Beim Ändern eines Termins ist „Mitglieder benachrichtigen“ jetzt aus – wer nur einen Tippfehler korrigiert, verschickt keine neue Einladung mehr. Bei wichtigen Änderungen (Tag, Uhrzeit, Ort) den Haken setzen. Beim Neuanlegen bleibt alles wie bisher (KC-CLUB-AENDERN-STILL).
 
