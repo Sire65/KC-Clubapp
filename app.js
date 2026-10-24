@@ -19331,6 +19331,107 @@ function jzbFestMalen(c) {
   if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
+// ---------- KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): einmalig eine rote Baccara-Rose aus der Sim-Jü-Schießbude – „Nur für dich“ ----------
+// Wer sie bekommt, wählt der Admin per Häkchen in der Mitgliedskarte (rose_setzen) – die App kennt kein Geschlecht und rät nie nach Namen.
+// Der Server sagt im Start nur „rose: true“ (Häkchen an, noch nicht bekommen). Sie kommt nach insgesamt 3 Minuten sichtbarer Startseite, nie über
+// einem offenen Fenster oder beim Tippen. Läuft die Sim-Jü-Szene mit der Schießbude gerade sichtbar, fliegt sie aus der Schießbude; sonst (nach der Kirmes,
+// „Sim-Jü aus“, Sparmodus) kommt sie von unten ins Bild mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen“ (Änderung Hansi, 24.10.2026). Nach dem Zeigen merkt der Server es (rose_erhalten) – klappt das nicht, merkt es dieses Gerät und meldet es beim nächsten Start.
+// Sparmodus oder „weniger Bewegung“: die Rose steht gleich da, ohne Flug. Nie zweimal auf demselben Gerät.
+// KC-CLUB-ROSE-ANFANG
+const ROSE_KEY = "kc_club_rose", ROSE_MS = 180000;
+const ROSE = { ms: 0, letzt: 0, gezeigt: false };
+const roseLs = () => { try { return JSON.parse(localStorage.getItem(ROSE_KEY) || "null"); } catch { return null; } };
+const roseLsSetzen = (w) => { try { localStorage.setItem(ROSE_KEY, JSON.stringify(w)); } catch {} };
+const roseSzeneDa = () => !!(JZB.cv?.isConnected && JZB.saison === "kirmes" && JZB.imBild && JZB.w && jzSimJueZeit() && !SPAR?.an);
+function roseFrei() {
+  const a = document.activeElement, tippt = !!a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable);
+  return !tippt && !document.querySelector(".blatt:not(.versteckt)") && !$("roseSchicht") && !RG?.an && !ES.offen;
+}
+function roseMelden() { // erst wenn sie gezeigt wurde; bei Fehler beim nächsten Start noch einmal
+  const s = roseLs(); if (!s || s.gemeldet || !ICH || s.pid !== ICH.person_id) return;
+  api("rose_erhalten").then(() => { roseLsSetzen({ ...s, gemeldet: true }); if (INIT) INIT.rose = false; }).catch(() => {});
+}
+function roseTakt() {
+  const jetzt = Date.now(), d = ROSE.letzt ? Math.min(10000, jetzt - ROSE.letzt) : 0; ROSE.letzt = jetzt;
+  if (!INIT?.rose || INIT._offline || !ICH || ROSE.gezeigt) return;
+  const s = roseLs(); if (s && s.pid === ICH.person_id) { ROSE.gezeigt = true; return roseMelden(); } // auf diesem Gerät schon gezeigt
+  if (document.hidden || aktuelleAnsicht !== "start") return; // nur sichtbare Startseite zählt
+  if ((ROSE.ms += d) < ROSE_MS || !roseFrei()) return; // nicht stören – warten, bis alles frei ist
+  ROSE.gezeigt = true; roseLsSetzen({ pid: ICH.person_id, am: new Date().toISOString(), gemeldet: false });
+  roseZeigen(ICH.vorname || String(ICH.name || "").split(" ")[0] || "", roseSzeneDa() ? roseQuelle() : null); roseMelden(); // ohne Szene: Gruß-Variante
+}
+setInterval(() => { try { roseTakt(); } catch {} }, 5000);
+function roseQuelle() { // Mitte der Schießbude im Kopfbild (siehe jzbSchiessbudeMalen)
+  try { const r = JZB.cv.getBoundingClientRect(), k = JZB.k; return { x: r.left + JZB_RAND + 52 * k, y: r.top + JZB.h - 24 * k }; } catch { return null; }
+}
+function roseSvg() {
+  const blatt = (x, y, w, dreh, id) => `<g transform="translate(${x} ${y}) rotate(${dreh})"><path d="M0 0C${w * .2} ${-w * .34} ${w * .7} ${-w * .36} ${w} 0C${w * .7} ${w * .36} ${w * .2} ${w * .34} 0 0Z" fill="url(#${id})" stroke="#1f4a1a" stroke-width=".8"/>`
+    + `<path d="M1 0L${w * .92} 0" stroke="#a9d88f" stroke-width=".9" opacity=".7"/>${[.25, .45, .65].map((q) => `<path d="M${w * q} 0l${w * .12} ${-w * .14}M${w * q} 0l${w * .12} ${w * .14}" stroke="#a9d88f" stroke-width=".6" opacity=".45"/>`).join("")}</g>`;
+  const dorn = (x, y, s) => `<path d="M${x} ${y - 4}L${x + s * 7} ${y - 7}L${x} ${y + 2}Z" fill="#6b3d1f"/>`;
+  return `<svg class="rose-svg" viewBox="0 0 200 540" aria-hidden="true">
+  <defs>
+    <radialGradient id="roHinten" cx="50%" cy="20%" r="80%"><stop offset="0" stop-color="#b3112c"/><stop offset=".6" stop-color="#6e0418"/><stop offset="1" stop-color="#33000a"/></radialGradient>
+    <radialGradient id="roMitte" cx="45%" cy="25%" r="75%"><stop offset="0" stop-color="#e0203f"/><stop offset=".55" stop-color="#9c0a24"/><stop offset="1" stop-color="#4a0010"/></radialGradient>
+    <radialGradient id="roVorn" cx="50%" cy="10%" r="95%"><stop offset="0" stop-color="#d4183a"/><stop offset=".5" stop-color="#a00c26"/><stop offset="1" stop-color="#3d000c"/></radialGradient>
+    <radialGradient id="roKern" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#3a0008"/><stop offset=".7" stop-color="#8a0820"/><stop offset="1" stop-color="#c2163a"/></radialGradient>
+    <linearGradient id="roStiel" x1="0" x2="1"><stop offset="0" stop-color="#1d4a1a"/><stop offset=".45" stop-color="#5aa443"/><stop offset="1" stop-color="#1d4a1a"/></linearGradient>
+    <linearGradient id="roBlatt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f9a3c"/><stop offset="1" stop-color="#1f5a1f"/></linearGradient>
+    <linearGradient id="roBlatt2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fae46"/><stop offset="1" stop-color="#245f22"/></linearGradient>
+    <filter id="roSamt" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .22 0" result="m"/><feComposite in="m" in2="SourceGraphic" operator="in" result="k"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="k"/></feMerge></filter>
+  </defs>
+  <path d="M100 150C97 250 108 360 101 532" fill="none" stroke="url(#roStiel)" stroke-width="7" stroke-linecap="round"/>
+  ${dorn(101, 215, 1)}${dorn(100, 262, -1)}${dorn(104, 322, 1)}${dorn(103, 392, -1)}${dorn(102, 452, 1)}${dorn(101, 498, -1)}
+  <path d="M101 300C88 292 74 286 60 284" fill="none" stroke="#2f6b28" stroke-width="2.4"/>
+  ${blatt(60, 284, 44, 200, "roBlatt")}${blatt(78, 289, 30, 235, "roBlatt2")}${blatt(80, 288, 30, 155, "roBlatt")}
+  <path d="M104 372C118 364 132 356 146 352" fill="none" stroke="#2f6b28" stroke-width="2.4"/>
+  ${blatt(146, 352, 44, -20, "roBlatt2")}${blatt(126, 361, 30, -60, "roBlatt")}${blatt(126, 361, 30, 25, "roBlatt2")}
+  ${blatt(102, 182, 26, -38, "roBlatt2")}
+  <g filter="url(#roSamt)">
+    <path d="M100 146C60 146 34 116 38 70C50 58 64 54 78 58C86 76 94 108 100 146Z" fill="url(#roHinten)"/>
+    <path d="M100 146C140 146 166 116 162 70C150 58 136 54 122 58C114 76 106 108 100 146Z" fill="url(#roHinten)"/>
+    <path d="M62 70C62 40 84 22 102 24C124 22 142 40 140 68C128 56 116 52 102 52C86 52 72 58 62 70Z" fill="url(#roHinten)"/>
+    <path d="M62 70C58 62 54 58 48 57C56 52 64 54 70 60Z M140 68C144 60 150 56 156 56C148 51 140 53 134 60Z" fill="#c21a3a" opacity=".85"/>
+    <path d="M70 84C68 56 86 40 104 40C124 40 136 58 132 84C130 102 120 112 102 112C84 112 72 102 70 84Z" fill="url(#roKern)"/>
+    <path d="M86 62C92 50 112 48 120 58C126 66 122 78 110 80C100 82 92 76 94 68C96 62 104 60 108 64" fill="none" stroke="#e0425f" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+    <path d="M78 74C80 60 90 52 100 50" fill="none" stroke="#ff6d85" stroke-width="1.4" opacity=".5"/>
+    <path d="M48 88C48 128 70 152 100 154C130 152 152 128 152 88C132 106 68 106 48 88Z" fill="#5c0414"/>
+    <path d="M100 152C64 152 44 130 46 96C48 84 56 76 66 74C70 98 86 114 114 120C112 134 108 146 100 152Z" fill="url(#roMitte)"/>
+    <path d="M100 152C136 152 156 130 154 96C152 84 144 76 134 74C130 98 114 114 86 120C88 134 92 146 100 152Z" fill="url(#roMitte)"/>
+    <path d="M58 92C68 130 86 148 102 148C122 148 140 130 144 92C130 100 116 104 100 104C84 104 70 100 58 92Z" fill="url(#roVorn)"/>
+    <path d="M66 74C62 70 56 70 52 73C58 74 62 78 64 82Z M134 74C138 70 144 70 148 73C142 74 138 78 136 82Z" fill="#d8264a"/>
+    <path d="M60 94C72 101 86 104 100 104C116 104 130 101 142 94" fill="none" stroke="#ff8a9e" stroke-width="1.4" opacity=".35" stroke-linecap="round"/>
+    <path d="M48 96C50 84 58 76 66 74M152 96C150 84 142 76 134 74" fill="none" stroke="#ff6d85" stroke-width="1.2" opacity=".5"/>
+  </g>
+  <path d="M100 146C90 152 74 160 56 176C76 170 90 164 100 158Z" fill="#2f7a2a"/>
+  <path d="M100 146C110 152 126 160 144 176C124 170 110 164 100 158Z" fill="#2a6e26"/>
+  <path d="M100 148C95 160 94 172 100 190C106 172 105 160 100 148Z" fill="#358a2e"/>
+  <ellipse cx="100" cy="156" rx="9" ry="7" fill="#3c8a32"/>
+</svg>`;
+}
+function roseZeigen(name, quelle) { // quelle = Punkt der Schießbude; null = Gruß-Variante (Sim-Jü nicht sichtbar)
+  $("roseSchicht")?.remove(); themaSchriftLaden("zart");
+  const still = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })() || !!SPAR?.an || !document.body.animate;
+  const s = document.createElement("div"); s.id = "roseSchicht"; s.className = "rose-schicht"; s.setAttribute("role", "dialog"); s.setAttribute("aria-label", "Eine Rose – nur für dich");
+  const funken = still ? "" : Array.from({ length: 14 }, (_, i) => `<i class="rose-funke" style="--x:${(i * 37 + 11) % 100}%;--y:${(i * 53 + 7) % 70}%;--d:${1.6 + (i % 5) * .5}s;--v:${(i * .37) % 2.4}s"></i>`).join("")
+    + Array.from({ length: 7 }, (_, i) => `<i class="rose-blatt" style="--x:${(i * 29 + 17) % 90 + 5}%;--d:${6 + (i % 3) * 2}s;--v:${2.2 + i * .9}s;--r:${(i % 2 ? 1 : -1) * (120 + i * 30)}deg"></i>`).join("");
+  s.innerHTML = `<div class="rose-glanz"></div>${funken}<div class="rose-buehne"><div class="rose-flug">${roseSvg()}
+    <div class="rose-schild"><span class="rose-faden"></span><div class="rose-karte"><b>Nur für dich</b>${name ? `<small>${esc(name)}</small>` : ""}</div></div></div></div>
+    ${quelle ? "" : '<p class="rose-gruss">Ein Gruß aus der Schießbude –<br>habe ich für dich geschossen 🎯</p>'}<button type="button" class="knopf haupt rose-danke">💝 Danke</button>`;
+  s.querySelector(".rose-danke").onclick = () => { if (still) return s.remove(); s.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: "forwards" }).onfinish = () => s.remove(); };
+  document.body.appendChild(s);
+  if (!still) { // aus der Schießbude heraus wachsen und zur Mitte fliegen – ohne Schießbude von unten seitlich ins Bild
+    const f = s.querySelector(".rose-flug"), r = f.getBoundingClientRect(), q = quelle || { x: innerWidth * .15, y: innerHeight * 1.5 };
+    const dx = q.x - (r.left + r.width / 2), dy = q.y - (r.top + r.height * .85);
+    f.animate(quelle ? [{ transform: `translate(${dx}px,${dy}px) scale(.06) rotate(-25deg)`, opacity: .2 }, { transform: `translate(${dx * .4}px,${dy * .55 - 60}px) scale(.45) rotate(10deg)`, opacity: 1, offset: .45 },
+      { transform: "translate(0,0) scale(1) rotate(0)", opacity: 1 }] : [{ transform: `translate(${dx}px,${innerHeight}px) scale(.7) rotate(-30deg)`, opacity: .4 }, { transform: "translate(0,0) scale(1) rotate(0)", opacity: 1 }],
+      { duration: 2600, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" });
+    s.animate([{ background: "rgba(20,0,6,0)" }, { background: "rgba(20,0,6,.72)" }], { duration: 1200, fill: "backwards" });
+  }
+  setTimeout(() => { try { s.querySelector(".rose-danke").focus(); } catch {} }, still ? 50 : 2600);
+  return s;
+}
+// KC-CLUB-ROSE-ENDE
 // ---- 🎡 Sim-Jü ----
 // 🎯 Schießbude: gestreiftes Dach, Schild, hinten laufen Enten und Sterne vorbei, vorn liegt ein Gewehr – ab und zu ein Treffer
 function jzbSchiessbudeMalen(c, F) {
@@ -39998,10 +40099,23 @@ function mitgliedZeigen() {
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
     ${prKarte(m)}
+    ${ICH?.admin && m.rose ? roseAdminKarte(m) : ""}
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
       <p class="hinweis" style="margin-top:0">Oben steht alles, was über dich gespeichert ist. 🔒 = nicht freigegeben, sehen die anderen nicht. Freigeben kannst du unter ⚙️ Mehr → Privatsphäre.</p>
       <div class="knoepfe"><button class="knopf" onclick="zeige('einstellungen')">🔒 Freigaben ändern</button><button class="knopf" onclick="korrekturMelden()">📝 Korrektur an ${adminName()} melden</button></div></div>` : ""}`;
   mdKachelnOrdnen(); // KC-CLUB-MD-KACHELN
+}
+// KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): Häkchen nur für den Admin – die App rät nie nach Namen, wer eine Rose bekommt
+function roseAdminKarte(m) {
+  const r = m.rose || {}, am = r.erhalten ? new Date(r.erhalten).toLocaleString("de-DE", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+  return `<div class="karte"><label class="zeile" style="gap:10px;align-items:center"><input type="checkbox" id="roseHaken" ${r.an || r.erhalten ? "checked" : ""} ${r.erhalten ? "disabled" : ""}
+    onchange="roseSetzen('${esc(m.person_id)}', this)"><b style="flex:1">🌹 Rose aus der Schießbude (einmalig)</b></label>
+    <p class="hinweis" style="margin:6px 0 0">${r.erhalten ? `✅ Schon bekommen am ${esc(am)}` : r.an ? "🌹 An – kommt beim nächsten Mal" : "Aus"} · Kommt nur einmal: nach 3 Minuten auf der Startseite – zur Kirmes aus der Schießbude, sonst als Gruß aus der Schießbude.</p></div>`;
+}
+async function roseSetzen(pid, el) {
+  const an = !!el.checked; el.disabled = true;
+  try { await api("rose_setzen", { person_id: pid, an }, { warten: true }); if (MD?.person_id === pid) { MD.rose = { ...(MD.rose || {}), an }; mitgliedZeigen(); } melde(an ? "🌹 Rose ist bereit – sie kommt einmal." : "Rose wieder ausgeschaltet."); }
+  catch (e) { el.checked = !an; meldeFehler(e); } finally { el.disabled = false; }
 }
 // ---------- KC-CLUB-PROBEPHASE (2.51.0, Wunsch Hansi): Mitglied testet die App erst – Admin startet, übernimmt oder beendet ----------
 // In der Probe: kein Willkommens-Zettel, keine Begrüßung, Push/Mail nur nach eigener Wahl, nicht in der Nutzung, noch keine Stimmabgabe.

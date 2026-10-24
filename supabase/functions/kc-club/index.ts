@@ -1601,6 +1601,12 @@ const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x)
 const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "uhu", "muenchhausen", "wechsel", "aus"]; // 2.362.0: + Fahrrad, Flaschenpost, Rakete, Ballon · 2.363.0: + Münchhausen
 const MAHNUNG_TAGE = 5; // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0): ab so vielen Tagen ungelesen blinkt die Nachrichten-Kachel
 const RC_EIGENE_MAX = 12; // KC-CLUB-REISE-CHECKLISTE (2.223.0): eigene Punkte je Reise
+// KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): der Admin wählt per Häkchen, wer einmalig eine Rose aus der Sim-Jü-Schießbude bekommt (kein Geschlechtsfeld,
+// nie nach Namen raten). „rose_schiessbude“ setzt nur der Admin (rose_setzen), „rose_erhalten“ schreibt die App nach dem Zeigen (rose_erhalten) –
+// beide stehen absichtlich NICHT in EINSTELLUNGEN (einstellung_setzen kennt sie nicht). Das Mitglied sieht im Start nur „rose: true/false“.
+const ROSE_KEYS = ["rose_schiessbude", "rose_erhalten"];
+const roseStand = (e: Record<string, any>) => ({ an: !!e.rose_schiessbude?.an, erhalten: e.rose_erhalten?.am ?? null, gesetzt_am: e.rose_schiessbude?.gesetzt_am ?? null });
+const roseFaellig = (e: Record<string, any>) => !!e.rose_schiessbude?.an && !e.rose_erhalten;
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi): je Kreuzfahrt (Aktions-ID) die abgehakten Punkte, eigene Punkte, gewählte Art
   // (Ausdruck / am Bildschirm), wie viele noch offen sind (für die Erinnerung 2 Tage vorher) und wann sie im Archiv abgelegt wurde
@@ -8183,6 +8189,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const terminfindungOffen = await pTermin;
         const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }, anrufAntw] = await pRest;
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
+        const rose = roseFaellig(einstellungen); for (const k of ROSE_KEYS) delete einstellungen[k]; // KC-CLUB-ROSE: aus den schon geladenen Einstellungen, Merker selbst bleiben verborgen
         const communicator = await pComm;
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
         const benachrichtigung = Object.fromEntries(BEREICHE.map((b) => { const x: any = (wahl ?? []).find((y: any) => y.bereich === b); return [b, x ? { push: x.push, email: x.email } : STANDARD_WAHL[b]]; }));
@@ -8194,7 +8201,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -10917,12 +10924,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           .eq("person_id", pid).maybeSingle();
         if (!pe?.active || pe.org_id !== ORG) throw new Fehler("Mitglied nicht gefunden.", 404);
         const selbst = pid === ich.person_id;
-        const [{ data: fr }, { data: rolle }, st, { data: avE }] = await Promise.all([
+        const [{ data: fr }, { data: rolle }, st, { data: avL }] = await Promise.all([
           db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", pid),
           db.from("kc_club_rollen").select("aemter").eq("person_id", pid).maybeSingle(),
           statusMap([pid], true),
-          db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "avatar").maybeSingle(), // 2.23.89: Bild oben
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ich.admin ? ["avatar", ...ROSE_KEYS] : ["avatar"]), // 2.23.89: Bild oben · KC-CLUB-ROSE: Admin sieht die Merker in derselben Abfrage
         ]);
+        const mdEinst: Record<string, any> = Object.fromEntries(((avL as any[]) ?? []).map((x: any) => [x.schluessel, x.wert])), avE = { wert: mdEinst.avatar };
         const frei = (b: string) => !!(fr ?? []).find((x: any) => x.bereich === b)?.erlaubt;
         const darf = (f: string) => selbst || ich.admin || (ich.kontakte && frei("kontakt_" + f));
         // 2.593.0 KC-CLUB-GLEICHZEITIG: Festnetz, Notfallkontakt, „zuletzt da“, Chat-Anzahl und Probephase gleichzeitig statt nacheinander –
@@ -10954,6 +10962,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           zuletztDa: zdPid, // KC-CLUB-ZULETZT-DA (1.20.0)
           chatAnzahl, // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
           ...(ich.admin && !selbst ? { probe: probeEintrag, probeMoeglich: !/^KC-P-TEST/.test(pid) } : {}), // KC-CLUB-PROBEPHASE
+          ...(ich.admin ? { rose: roseStand(mdEinst) } : {}), // KC-CLUB-ROSE: nur der Admin
         });
       }
 
@@ -16582,6 +16591,32 @@ Köcheclub-App`,
         const { data: av } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "avatar").maybeSingle();
         if (AVF_CODE.test((av?.wert as any)?.figur || "")) await db.from("kc_club_person_einstellung").update({ wert: { figur: null }, geaendert_am: jetzt() }).eq("person_id", pid).eq("schluessel", "avatar");
         await protokoll(ich.person_id, "avatar_foto_entfernt", { fuer: pid });
+        return json({ ok: true });
+      }
+      // KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): Admin setzt das Häkchen; das Mitglied meldet „gezeigt“ – nur einmal, nie zweimal
+      case "rose_setzen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || ""), an = p.an === true;
+        if (!/^KC-P-[A-Z0-9-]{1,30}$/i.test(pid)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const { data: pe } = await db.from("kc_core_people").select("person_id,active,org_id").eq("person_id", pid).maybeSingle();
+        if (!pe?.active || pe.org_id !== ORG) throw new Fehler("Mitglied nicht gefunden.", 404);
+        schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "rose_schiessbude", wert: { an, gesetzt_von: ich.person_id, gesetzt_am: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
+        await protokoll(ich.person_id, "rose_gesetzt", { fuer: pid, an });
+        return json({ ok: true, an });
+      }
+      case "rose_liste": { // nur Admin: wer das Häkchen hat und wer sie schon bekommen hat
+        nurAdmin(ich);
+        const { data } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("schluessel", ROSE_KEYS);
+        const m = new Map<string, Record<string, any>>(); for (const x of (data ?? []) as any[]) m.set(x.person_id, { ...(m.get(x.person_id) ?? {}), [x.schluessel]: x.wert });
+        return json({ liste: [...m].map(([person_id, e]) => ({ person_id, ...roseStand(e) })).filter((x) => x.an || x.erhalten) });
+      }
+      case "rose_erhalten": { // nur für mich selbst, nur mit Häkchen, nur einmal (ignoreDuplicates: der erste Zeitpunkt bleibt)
+        const { data } = await db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).in("schluessel", ROSE_KEYS);
+        const e = Object.fromEntries(((data ?? []) as any[]).map((x: any) => [x.schluessel, x.wert]));
+        if (e.rose_erhalten) return json({ ok: true, schon: true });
+        if (!e.rose_schiessbude?.an) return json({ ok: false });
+        schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "rose_erhalten", wert: { am: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel", ignoreDuplicates: true }));
+        await protokoll(ich.person_id, "rose_erhalten", {});
         return json({ ok: true });
       }
       case "einstellung_setzen": {
