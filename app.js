@@ -19364,49 +19364,94 @@ setInterval(() => { try { roseTakt(); } catch {} }, 5000);
 function roseQuelle() { // Mitte der Schießbude im Kopfbild (siehe jzbSchiessbudeMalen)
   try { const r = JZB.cv.getBoundingClientRect(), k = JZB.k; return { x: r.left + JZB_RAND + 52 * k, y: r.top + JZB.h - 24 * k }; } catch { return null; }
 }
-function roseSvg() {
-  const blatt = (x, y, w, dreh, id) => `<g transform="translate(${x} ${y}) rotate(${dreh})"><path d="M0 0C${w * .2} ${-w * .34} ${w * .7} ${-w * .36} ${w} 0C${w * .7} ${w * .36} ${w * .2} ${w * .34} 0 0Z" fill="url(#${id})" stroke="#1f4a1a" stroke-width=".8"/>`
-    + `<path d="M1 0L${w * .92} 0" stroke="#a9d88f" stroke-width=".9" opacity=".7"/>${[.25, .45, .65].map((q) => `<path d="M${w * q} 0l${w * .12} ${-w * .14}M${w * q} 0l${w * .12} ${w * .14}" stroke="#a9d88f" stroke-width=".6" opacity=".45"/>`).join("")}</g>`;
-  const dorn = (x, y, s) => `<path d="M${x} ${y - 4}L${x + s * 7} ${y - 7}L${x} ${y + 2}Z" fill="#6b3d1f"/>`;
+function roseSvg() { // Baccara-Rose, halb geöffnet, leicht von der Seite; Stiel als sanft gebogene, nach oben dünner werdende Fläche
+  const f = (n) => Math.round(n * 10) / 10;
+  const S = [[100, 150], [116, 240], [80, 372], [97, 534]]; // Mittellinie des Stiels (sanftes S)
+  const pkt = (t) => { const u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
+    return [a * S[0][0] + b * S[1][0] + c * S[2][0] + d * S[3][0], a * S[0][1] + b * S[1][1] + c * S[2][1] + d * S[3][1]]; };
+  const nor = (t) => { const p = pkt(Math.max(0, t - .01)), q = pkt(Math.min(1, t + .01)), dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1; return [dy / l, -dx / l, dx / l, dy / l]; };
+  const breite = (t) => 2 + 2.3 * t; // halbe Stielbreite: oben dünn, unten kräftig
+  const links = [], rechts = [];
+  for (let i = 0; i <= 40; i++) { const t = i / 40, p = pkt(t), n = nor(t), w = breite(t); links.push(f(p[0] - n[0] * w) + " " + f(p[1] - n[1] * w)); rechts.unshift(f(p[0] + n[0] * w) + " " + f(p[1] + n[1] * w)); }
+  const stiel = "M" + links.join("L") + "L" + rechts.join("L") + "Z";
+  const kante = "M" + links.join("L");
+  const dorn = (t, s) => { const p = pkt(t), n = nor(t), w = breite(t), bx = p[0] + s * n[0] * w * .8, by = p[1] + s * n[1] * w * .8;
+    return `<path d="M${f(bx + n[2] * 3.5)} ${f(by + n[3] * 3.5)}Q${f(bx + s * n[0] * 4)} ${f(by + s * n[1] * 4 + 1)} ${f(bx + s * n[0] * 7.5 - n[2] * 4)} ${f(by + s * n[1] * 7.5 - n[3] * 4)}Q${f(bx + s * n[0] * 2)} ${f(by + s * n[1] * 2 - 2)} ${f(bx - n[2] * 3)} ${f(by - n[3] * 3)}Z" fill="url(#roDorn)"/>`; };
+  const blatt = (x, y, w, dreh, id) => { // fein gesägter Rand, Mittelrippe, Seitenadern
+    const z = []; for (let i = 1; i < 10; i++) { const q = i / 10; z.push([w * q, Math.sin(Math.PI * Math.pow(q, .75)) * w * .32]); }
+    const oben = z.map((p) => `L${f(p[0] - w * .025)} ${f(-p[1] * .94)}L${f(p[0] + w * .01)} ${f(-p[1] - .6)}`).join(""), unten = z.slice().reverse().map((p) => `L${f(p[0] + w * .01)} ${f(p[1] + .6)}L${f(p[0] - w * .025)} ${f(p[1] * .94)}`).join("");
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${dreh})"><path d="M0 0${oben}L${w} 0${unten}Z" fill="url(#${id})" stroke="#173d14" stroke-width=".6" stroke-linejoin="round"/>`
+      + `<path d="M0 0Q${f(w * .5)} ${f(-w * .04)} ${f(w * .95)} 0" fill="none" stroke="#b5e09a" stroke-width=".9" opacity=".6"/>${[.22, .42, .62, .8].map((q) => `<path d="M${f(w * q)} 0q${f(w * .08)} ${f(-w * .1)} ${f(w * .15)} ${f(-w * .2)}M${f(w * q)} 0q${f(w * .08)} ${f(w * .1)} ${f(w * .15)} ${f(w * .2)}" fill="none" stroke="#b5e09a" stroke-width=".55" opacity=".4"/>`).join("")}`
+      + `<path d="M${f(w * .1)} ${f(-w * .08)}Q${f(w * .5)} ${f(-w * .3)} ${f(w * .85)} ${f(-w * .06)}" fill="none" stroke="#e6ffd0" stroke-width="1" opacity=".18"/></g>`; };
+  const zweig = (t, s, lang, dreh) => { // Fiederblatt: Endblättchen und ein Paar Seitenblättchen am gebogenen Zweig
+    const p = pkt(t), m = [p[0] + s * lang * .5, p[1] - 3], e = [p[0] + s * lang, p[1] + lang * .3], h = [(p[0] + 2 * m[0] + e[0]) / 4, (p[1] + 2 * m[1] + e[1]) / 4];
+    return `<path d="M${f(p[0])} ${f(p[1])}Q${f(m[0])} ${f(m[1])} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#2f6b28" stroke-width="1.8" stroke-linecap="round"/>`
+      + blatt(h[0], h[1], 25, dreh - s * 55, "roBlatt2") + blatt(h[0], h[1], 24, dreh + s * 50, "roBlatt") + blatt(e[0], e[1], 38, dreh, "roBlatt"); };
   return `<svg class="rose-svg" viewBox="0 0 200 540" aria-hidden="true">
   <defs>
-    <radialGradient id="roHinten" cx="50%" cy="20%" r="80%"><stop offset="0" stop-color="#b3112c"/><stop offset=".6" stop-color="#6e0418"/><stop offset="1" stop-color="#33000a"/></radialGradient>
-    <radialGradient id="roMitte" cx="45%" cy="25%" r="75%"><stop offset="0" stop-color="#e0203f"/><stop offset=".55" stop-color="#9c0a24"/><stop offset="1" stop-color="#4a0010"/></radialGradient>
-    <radialGradient id="roVorn" cx="50%" cy="10%" r="95%"><stop offset="0" stop-color="#d4183a"/><stop offset=".5" stop-color="#a00c26"/><stop offset="1" stop-color="#3d000c"/></radialGradient>
-    <radialGradient id="roKern" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#3a0008"/><stop offset=".7" stop-color="#8a0820"/><stop offset="1" stop-color="#c2163a"/></radialGradient>
-    <linearGradient id="roStiel" x1="0" x2="1"><stop offset="0" stop-color="#1d4a1a"/><stop offset=".45" stop-color="#5aa443"/><stop offset="1" stop-color="#1d4a1a"/></linearGradient>
+    <radialGradient id="roHinten" cx="50%" cy="85%" r="85%"><stop offset="0" stop-color="#1e0004"/><stop offset=".5" stop-color="#5e0313"/><stop offset="1" stop-color="#a3102a"/></radialGradient>
+    <radialGradient id="roMitte" cx="50%" cy="90%" r="90%"><stop offset="0" stop-color="#2a0006"/><stop offset=".5" stop-color="#7a0619"/><stop offset="1" stop-color="#c0163a"/></radialGradient>
+    <radialGradient id="roVorn" cx="50%" cy="100%" r="100%"><stop offset="0" stop-color="#2a0006"/><stop offset=".5" stop-color="#760518"/><stop offset=".85" stop-color="#a50d2a"/><stop offset="1" stop-color="#c01a38"/></radialGradient>
+    <radialGradient id="roKern" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#c8183a"/><stop offset=".6" stop-color="#7e0619"/><stop offset="1" stop-color="#3a0009"/></radialGradient>
+    <linearGradient id="roRand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5c76"/><stop offset=".4" stop-color="#d41f3f"/><stop offset="1" stop-color="#7a0519"/></linearGradient>
+    <linearGradient id="roStiel" x1="0" x2="1"><stop offset="0" stop-color="#173f14"/><stop offset=".4" stop-color="#5aa443"/><stop offset=".6" stop-color="#3e8030"/><stop offset="1" stop-color="#143812"/></linearGradient>
+    <linearGradient id="roKelch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f9a3c"/><stop offset="1" stop-color="#1c4d19"/></linearGradient>
+    <linearGradient id="roDorn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a2a"/><stop offset="1" stop-color="#4a2410"/></linearGradient>
     <linearGradient id="roBlatt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f9a3c"/><stop offset="1" stop-color="#1f5a1f"/></linearGradient>
     <linearGradient id="roBlatt2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fae46"/><stop offset="1" stop-color="#245f22"/></linearGradient>
-    <filter id="roSamt" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="7" result="n"/>
-      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .22 0" result="m"/><feComposite in="m" in2="SourceGraphic" operator="in" result="k"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="k"/></feMerge></filter>
+    <radialGradient id="roGlanz"><stop offset="0" stop-color="#ffb3c0" stop-opacity=".32"/><stop offset="1" stop-color="#ffb3c0" stop-opacity="0"/></radialGradient>
+    <filter id="roSchatten" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="2.2"/><feOffset dy="-2.5" result="b"/>
+      <feFlood flood-color="#1a0004" flood-opacity=".85"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="roSamt" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .2 0" result="m"/><feComposite in="m" in2="SourceGraphic" operator="in" result="k"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="k"/></feMerge></filter>
   </defs>
-  <path d="M100 150C97 250 108 360 101 532" fill="none" stroke="url(#roStiel)" stroke-width="7" stroke-linecap="round"/>
-  ${dorn(101, 215, 1)}${dorn(100, 262, -1)}${dorn(104, 322, 1)}${dorn(103, 392, -1)}${dorn(102, 452, 1)}${dorn(101, 498, -1)}
-  <path d="M101 300C88 292 74 286 60 284" fill="none" stroke="#2f6b28" stroke-width="2.4"/>
-  ${blatt(60, 284, 44, 200, "roBlatt")}${blatt(78, 289, 30, 235, "roBlatt2")}${blatt(80, 288, 30, 155, "roBlatt")}
-  <path d="M104 372C118 364 132 356 146 352" fill="none" stroke="#2f6b28" stroke-width="2.4"/>
-  ${blatt(146, 352, 44, -20, "roBlatt2")}${blatt(126, 361, 30, -60, "roBlatt")}${blatt(126, 361, 30, 25, "roBlatt2")}
-  ${blatt(102, 182, 26, -38, "roBlatt2")}
+  <path d="${stiel}" fill="url(#roStiel)"/>
+  <path d="${kante}" fill="none" stroke="#9fd884" stroke-width=".7" opacity=".35"/>
+  ${dorn(.2, 1)}${dorn(.3, -1)}${dorn(.44, 1)}${dorn(.6, -1)}${dorn(.74, 1)}${dorn(.88, -1)}
+  ${zweig(.37, -1, 42, 200)}${zweig(.55, 1, 44, -20)}
+  <g transform="rotate(-7 100 160)">
   <g filter="url(#roSamt)">
-    <path d="M100 146C60 146 34 116 38 70C50 58 64 54 78 58C86 76 94 108 100 146Z" fill="url(#roHinten)"/>
-    <path d="M100 146C140 146 166 116 162 70C150 58 136 54 122 58C114 76 106 108 100 146Z" fill="url(#roHinten)"/>
-    <path d="M62 70C62 40 84 22 102 24C124 22 142 40 140 68C128 56 116 52 102 52C86 52 72 58 62 70Z" fill="url(#roHinten)"/>
-    <path d="M62 70C58 62 54 58 48 57C56 52 64 54 70 60Z M140 68C144 60 150 56 156 56C148 51 140 53 134 60Z" fill="#c21a3a" opacity=".85"/>
-    <path d="M70 84C68 56 86 40 104 40C124 40 136 58 132 84C130 102 120 112 102 112C84 112 72 102 70 84Z" fill="url(#roKern)"/>
-    <path d="M86 62C92 50 112 48 120 58C126 66 122 78 110 80C100 82 92 76 94 68C96 62 104 60 108 64" fill="none" stroke="#e0425f" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
-    <path d="M78 74C80 60 90 52 100 50" fill="none" stroke="#ff6d85" stroke-width="1.4" opacity=".5"/>
-    <path d="M48 88C48 128 70 152 100 154C130 152 152 128 152 88C132 106 68 106 48 88Z" fill="#5c0414"/>
-    <path d="M100 152C64 152 44 130 46 96C48 84 56 76 66 74C70 98 86 114 114 120C112 134 108 146 100 152Z" fill="url(#roMitte)"/>
-    <path d="M100 152C136 152 156 130 154 96C152 84 144 76 134 74C130 98 114 114 86 120C88 134 92 146 100 152Z" fill="url(#roMitte)"/>
-    <path d="M58 92C68 130 86 148 102 148C122 148 140 130 144 92C130 100 116 104 100 104C84 104 70 100 58 92Z" fill="url(#roVorn)"/>
-    <path d="M66 74C62 70 56 70 52 73C58 74 62 78 64 82Z M134 74C138 70 144 70 148 73C142 74 138 78 136 82Z" fill="#d8264a"/>
-    <path d="M60 94C72 101 86 104 100 104C116 104 130 101 142 94" fill="none" stroke="#ff8a9e" stroke-width="1.4" opacity=".35" stroke-linecap="round"/>
-    <path d="M48 96C50 84 58 76 66 74M152 96C150 84 142 76 134 74" fill="none" stroke="#ff6d85" stroke-width="1.2" opacity=".5"/>
+    <path d="M98 122C70 124 46 110 42 86C40 72 38 60 25 49C42 46 56 50 64 59C70 44 84 33 98 31Z" fill="url(#roHinten)"/>
+    <path d="M101 122C129 124 152 108 156 84C158 70 162 59 175 50C159 47 145 50 137 58C131 43 117 32 101 30Z" fill="url(#roHinten)"/>
+    <path d="M25 49C42 46 56 50 64 59C55 56 46 58 40 63C38 57 33 53 25 49Z M175 50C159 47 145 50 137 58C146 55 155 57 161 62C163 56 168 53 175 50Z" fill="url(#roRand)"/>
+    <path d="M78 50C80 34 92 22 106 20C118 21 126 27 129 36C131 32 134 28 139 26C135 32 132 40 128 48C118 41 90 41 78 50Z" fill="url(#roHinten)"/>
+    <path d="M129 36C131 32 134 28 139 26C135 32 133 37 131 42Z" fill="url(#roRand)"/>
+    <path d="M80 45C86 31 96 23 106 22C116 23 124 29 128 38" fill="none" stroke="#ff6d85" stroke-width="1.3" stroke-linecap="round" opacity=".45"/>
+    <path d="M62 100C46 104 35 114 31 130C30 135 28 140 22 145C32 144 39 146 46 149C62 155 82 156 100 155C80 145 66 127 62 100Z" fill="url(#roHinten)"/>
+    <path d="M139 100C155 104 166 114 170 130C171 135 173 140 179 144C169 144 162 146 155 149C139 155 119 156 101 155C121 145 135 127 139 100Z" fill="url(#roHinten)"/>
+    <path d="M31 130C30 135 28 140 22 145C32 144 39 146 46 149C40 144 35 138 31 130Z M170 130C171 135 173 140 179 144C169 144 162 146 155 149C161 144 166 138 170 130Z" fill="url(#roRand)" opacity=".9"/>
+    <path d="M36 124C38 114 48 106 60 102M165 124C163 114 153 106 141 102" fill="none" stroke="#ff6d85" stroke-width="1.1" opacity=".4"/>
+    <path d="M76 54C76 80 88 100 102 106C116 100 128 80 128 54A26 10 0 0 0 76 54Z" fill="url(#roKern)"/>
+    <ellipse cx="102" cy="53" rx="24" ry="8.5" fill="#2e0007"/>
+    <path d="M79 54C81 45 95 41 109 43C120 45 126 49 126 55C118 49 104 47 92 51C86 53 82 55 79 54Z" fill="#b5122f"/>
+    <path d="M85 57C89 49 103 47 114 51C108 51 100 53 95 59Z" fill="#d8264a"/>
+    <path d="M118 56C118 50 110 47 103 49C109 51 112 54 112 58Z" fill="#8e0820"/>
+    <path d="M89 57C91 50 99 47 108 48" fill="none" stroke="#ff7a90" stroke-width=".9" opacity=".6"/>
+    <path d="M97 55C99 51 106 50 108 54C109 57 105 59 102 57C100 56 101 54 103 54" fill="none" stroke="#e0425f" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M76 55C82 63 94 66 104 66C116 66 124 62 128 55C122 59 112 61 102 61C92 61 82 59 76 55Z" fill="url(#roRand)"/>
+    <path d="M75 60C73 80 82 98 100 105C92 92 88 76 90 62C86 60 80 59 75 60Z" fill="#6e0418" opacity=".8"/>
+    <g filter="url(#roSchatten)">
+      <path d="M101 124C78 124 61 107 61 85C61 72 64 62 57 53C68 52 77 56 82 63C84 79 90 95 101 106C104 112 104 118 101 124Z" fill="url(#roMitte)"/>
+      <path d="M101 124C124 124 140 107 140 85C140 72 138 62 145 54C134 52 125 56 121 63C119 79 112 95 103 106C99 112 99 118 101 124Z" fill="url(#roMitte)"/>
+      <path d="M57 53C68 52 77 56 82 63C76 60 69 60 63 63C62 59 60 56 57 53Z M145 54C134 52 125 56 121 63C127 60 134 60 140 63C141 59 142 57 145 54Z" fill="url(#roRand)"/>
+    </g>
+    <path d="M63 64C61 70 61 78 62 86M139 64C141 70 141 78 140 86" fill="none" stroke="#ff7088" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+    <g filter="url(#roSchatten)">
+      <path d="M53 80C67 92 85 99 101 103C117 99 135 92 149 80C153 110 139 143 101 149C63 143 49 110 53 80Z" fill="url(#roVorn)"/>
+      <path d="M53 80C67 92 85 99 101 103C117 99 135 92 149 80C152 76 156 74 161 73C154 80 149 89 143 96C132 105 118 109 110 110C106 111 103 113 101 116C99 113 96 111 92 110C84 109 70 105 59 96C53 89 47 80 40 73C45 74 50 76 53 80Z" fill="url(#roRand)"/>
+    </g>
+    <path d="M59 96C70 105 84 109 92 110C96 111 99 113 101 116C103 113 106 111 110 110C118 109 132 105 143 96" fill="none" stroke="#2a0006" stroke-width="1.2" opacity=".4"/>
+    <path d="M60 86C72 95 88 101 101 103C114 101 130 95 142 86" fill="none" stroke="#ffa0b0" stroke-width="1.1" opacity=".6" stroke-linecap="round"/>
+    <ellipse cx="88" cy="126" rx="36" ry="17" fill="url(#roGlanz)" opacity=".5"/>
+    <path d="M68 114C72 130 84 141 98 145" fill="none" stroke="#ff7088" stroke-width="1" opacity=".25"/>
   </g>
-  <path d="M100 146C90 152 74 160 56 176C76 170 90 164 100 158Z" fill="#2f7a2a"/>
-  <path d="M100 146C110 152 126 160 144 176C124 170 110 164 100 158Z" fill="#2a6e26"/>
-  <path d="M100 148C95 160 94 172 100 190C106 172 105 160 100 148Z" fill="#358a2e"/>
-  <ellipse cx="100" cy="156" rx="9" ry="7" fill="#3c8a32"/>
+  <path d="M98 148C84 151 68 160 55 180C68 167 84 159 100 155Z" fill="url(#roKelch)"/>
+  <path d="M102 148C116 151 132 160 145 181C132 168 116 159 100 155Z" fill="url(#roKelch)"/>
+  <path d="M99 150C91 160 85 175 82 194C89 178 95 166 102 156Z" fill="#2d6f27"/>
+  <path d="M101 150C109 160 115 173 119 191C112 176 105 165 98 156Z" fill="#2a6a25"/>
+  <path d="M98.5 151C96 166 97 183 101 202C104 183 104.5 166 101.5 151Z" fill="#3a8a30"/>
+  <ellipse cx="100" cy="152" rx="7" ry="5" fill="url(#roKelch)"/>
+  </g>
 </svg>`;
 }
 function roseZeigen(name, quelle) { // quelle = Punkt der Schießbude; null = Gruß-Variante (Sim-Jü nicht sichtbar)
