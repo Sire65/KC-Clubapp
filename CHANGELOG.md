@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.625.0 – 2026-10-24 – 🌹 Rose aus der Schießbude (KC-CLUB-ROSE) · Server 2.625.0
+- Wunsch Hansi: Wer in der Mitglieder-Karte (nur Admin) das Häkchen „🌹 Rose aus der Schießbude (einmalig)“ hat, bekommt nach 3 Minuten auf der Startseite (sichtbar, kein Fenster offen, nichts getippt) einmalig eine große rote langstielige Baccara-Rose mit Schild „Nur für dich“ und Vornamen. Zur Kirmes (Sim-Jü mit Schießbude sichtbar) wächst sie aus der Schießbude; sonst kommt sie mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen 🎯“. Sparmodus/weniger Bewegung: ohne Flug.
+- Server: Aktionen rose_setzen / rose_liste (nur Admin), rose_erhalten (nur für sich, nie zweimal); init leitet „rose“ aus den schon geladenen Einstellungen ab (keine zusätzliche Abfrage); Merker nicht über einstellung_setzen setzbar.
+- Tests: tests/rose.test.mjs, tools/rose/rose-browser.mjs. Auf Wunsch Hansi sofort eingespielt.
+
 ## 2.624.0 – 2026-10-24 – 🔵 Geplante Lastspitzen ohne Warnkasten · 📶 Verbindungstest: Netz und Server getrennt (KC-TRAFFIC-GEPLANT-STILL, KC-CLUB-VB-AUFTEILUNG)
 - KC-TRAFFIC-GEPLANT-STILL (Fund Hansi 24.10., 3:03 Uhr: gelber Kasten „ungewöhnlich hohe Datenbanklast … Ursache (geplant): Datensicherung“): Erkennt der Last-Wächter eine geplante Spitze (geplant=true – Datensicherung, neue Version, Notpaket, Rundnachricht), steht auf der Startseite kein Warnkasten mehr; im Admin-Bereich „🔵 Geplante Last – kein Grund zur Sorge“. Kritische Last zeigt weiter immer. kc-traffic-guard-ui.js?v=4.
 - KC-CLUB-VB-AUFTEILUNG (Wunsch Hansi „immer so unterschiedlich“ → „Ja“): Im Verbindungstest steht unter jeder Antwortzeit „Netz … · Server …“; der Server-Anteil stammt jetzt aus derselben Messung wie die beste Antwortzeit und wird im Geräte-Verlauf gemerkt.

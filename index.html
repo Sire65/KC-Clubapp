@@ -4757,6 +4757,32 @@
   .bu-top-knoepfe button, .ar-farben button { min-width: 40px; min-height: 40px; } .rund.zustell-knopf { width: 40px; height: 40px; min-width: 40px; }
   /* KC-CLUB-RC-PRUEFUNG (20.10.2026): Einstellungs-Reiter lesbar – größere Schrift, Umbruch statt „…“, Beschriftung nicht blass */
   .rk-tab { opacity: 1; } .rk-tab small { font-size: .8rem; line-height: 1.15; max-width: 84px; white-space: normal; overflow: visible; text-overflow: clip; text-align: center; overflow-wrap: anywhere; hyphens: auto; }
+  /* KC-CLUB-ROSE-CSS-ANFANG */
+  /* KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): Rose aus der Schießbude – „Nur für dich“ */
+  .rose-schicht { position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 40%, rgba(90,0,22,.55), rgba(20,0,6,.82) 70%); }
+  .rose-glanz { position: absolute; left: 50%; top: 18%; width: 70vmin; height: 70vmin; transform: translate(-50%,-30%); border-radius: 50%; background: radial-gradient(circle, rgba(255,190,200,.35), rgba(255,120,150,0) 65%); pointer-events: none; }
+  .rose-buehne { position: relative; height: 62vh; aspect-ratio: 200 / 540; max-width: 80vw; }
+  .rose-flug { position: absolute; inset: 0; transform-origin: 50% 85%; }
+  .rose-svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 10px 18px rgba(0,0,0,.45)); }
+  .rose-schild { position: absolute; left: 53.5%; top: 33%; transform-origin: 0 0; animation: roseSchwing 4s ease-in-out infinite; }
+  .rose-faden { position: absolute; left: -2px; top: 0; width: 46px; height: 32px; border-left: 1.5px solid #e8d3a8; border-bottom: 1.5px solid #e8d3a8; border-bottom-left-radius: 30px; }
+  .rose-karte { position: absolute; left: 40px; top: 18px; padding: 8px 14px 7px; min-width: 112px; text-align: center; background: linear-gradient(#fffaf0, #f3e6cc); color: #741521;
+    border: 1.5px solid #b88a4a; border-radius: 6px 14px 6px 14px; box-shadow: 0 4px 10px rgba(0,0,0,.35); transform: rotate(7deg); font-family: "KC Zart", "Segoe Script", cursive; line-height: 1.05; }
+  .rose-karte::before { content: ""; position: absolute; left: -5px; top: 12px; width: 8px; height: 8px; border-radius: 50%; background: #f5eee3; border: 1.5px solid #b88a4a; }
+  .rose-karte b { display: block; font-size: 1.45rem; font-weight: 700; white-space: nowrap; }
+  .rose-karte small { display: block; font-size: 1rem; opacity: .8; margin-top: 2px; }
+  .rose-gruss { margin: 0; max-width: 320px; text-align: center; color: #ffe9ee; font: 700 1.2rem/1.25 "KC Zart", "Segoe Script", cursive; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .rose-danke { position: relative; z-index: 1; min-width: 160px; font-size: 1.1rem; }
+  .rose-funke { position: absolute; left: var(--x); top: var(--y); width: 6px; height: 6px; border-radius: 50%; background: #fff4c2; box-shadow: 0 0 8px 3px rgba(255,220,150,.8);
+    opacity: 0; animation: roseFunke var(--d) ease-in-out var(--v) infinite; pointer-events: none; }
+  .rose-blatt { position: absolute; left: var(--x); top: -30px; width: 14px; height: 18px; border-radius: 70% 10% 70% 10%; background: radial-gradient(circle at 30% 30%, #d81f44, #6e0418);
+    opacity: 0; animation: roseFall var(--d) linear var(--v) infinite; pointer-events: none; }
+  @keyframes roseFunke { 0%, 100% { opacity: 0; transform: scale(.3); } 50% { opacity: 1; transform: scale(1); } }
+  @keyframes roseFall { 0% { opacity: 0; transform: translate(0,0) rotate(0); } 10% { opacity: .9; } 100% { opacity: 0; transform: translate(40px,110vh) rotate(var(--r)); } }
+  @keyframes roseSchwing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg); } }
+  @media (prefers-reduced-motion: reduce) { .rose-schild, .rose-funke, .rose-blatt { animation: none; } }
+  /* KC-CLUB-ROSE-CSS-ENDE */
 </style>
 </head>
 <body>
@@ -5770,7 +5796,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.624.0" data-v="2.624.0"></script>
+<script src="app.js?v=2.625.0" data-v="2.625.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

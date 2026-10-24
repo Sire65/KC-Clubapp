@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.624.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.625.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19331,6 +19331,152 @@ function jzbFestMalen(c) {
   if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
+// ---------- KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): einmalig eine rote Baccara-Rose aus der Sim-Jü-Schießbude – „Nur für dich“ ----------
+// Wer sie bekommt, wählt der Admin per Häkchen in der Mitgliedskarte (rose_setzen) – die App kennt kein Geschlecht und rät nie nach Namen.
+// Der Server sagt im Start nur „rose: true“ (Häkchen an, noch nicht bekommen). Sie kommt nach insgesamt 3 Minuten sichtbarer Startseite, nie über
+// einem offenen Fenster oder beim Tippen. Läuft die Sim-Jü-Szene mit der Schießbude gerade sichtbar, fliegt sie aus der Schießbude; sonst (nach der Kirmes,
+// „Sim-Jü aus“, Sparmodus) kommt sie von unten ins Bild mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen“ (Änderung Hansi, 24.10.2026). Nach dem Zeigen merkt der Server es (rose_erhalten) – klappt das nicht, merkt es dieses Gerät und meldet es beim nächsten Start.
+// Sparmodus oder „weniger Bewegung“: die Rose steht gleich da, ohne Flug. Nie zweimal auf demselben Gerät.
+// KC-CLUB-ROSE-ANFANG
+const ROSE_KEY = "kc_club_rose", ROSE_MS = 180000;
+const ROSE = { ms: 0, letzt: 0, gezeigt: false };
+const roseLs = () => { try { return JSON.parse(localStorage.getItem(ROSE_KEY) || "null"); } catch { return null; } };
+const roseLsSetzen = (w) => { try { localStorage.setItem(ROSE_KEY, JSON.stringify(w)); } catch {} };
+const roseSzeneDa = () => !!(JZB.cv?.isConnected && JZB.saison === "kirmes" && JZB.imBild && JZB.w && jzSimJueZeit() && !SPAR?.an);
+function roseFrei() {
+  const a = document.activeElement, tippt = !!a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable);
+  return !tippt && !document.querySelector(".blatt:not(.versteckt)") && !$("roseSchicht") && !RG?.an && !ES.offen;
+}
+function roseMelden() { // erst wenn sie gezeigt wurde; bei Fehler beim nächsten Start noch einmal
+  const s = roseLs(); if (!s || s.gemeldet || !ICH || s.pid !== ICH.person_id) return;
+  api("rose_erhalten").then(() => { roseLsSetzen({ ...s, gemeldet: true }); if (INIT) INIT.rose = false; }).catch(() => {});
+}
+function roseTakt() {
+  const jetzt = Date.now(), d = ROSE.letzt ? Math.min(10000, jetzt - ROSE.letzt) : 0; ROSE.letzt = jetzt;
+  if (!INIT?.rose || INIT._offline || !ICH || ROSE.gezeigt) return;
+  const s = roseLs(); if (s && s.pid === ICH.person_id) { ROSE.gezeigt = true; return roseMelden(); } // auf diesem Gerät schon gezeigt
+  if (document.hidden || aktuelleAnsicht !== "start") return; // nur sichtbare Startseite zählt
+  if ((ROSE.ms += d) < ROSE_MS || !roseFrei()) return; // nicht stören – warten, bis alles frei ist
+  ROSE.gezeigt = true; roseLsSetzen({ pid: ICH.person_id, am: new Date().toISOString(), gemeldet: false });
+  roseZeigen(ICH.vorname || String(ICH.name || "").split(" ")[0] || "", roseSzeneDa() ? roseQuelle() : null); roseMelden(); // ohne Szene: Gruß-Variante
+}
+setInterval(() => { try { roseTakt(); } catch {} }, 5000);
+function roseQuelle() { // Mitte der Schießbude im Kopfbild (siehe jzbSchiessbudeMalen)
+  try { const r = JZB.cv.getBoundingClientRect(), k = JZB.k; return { x: r.left + JZB_RAND + 52 * k, y: r.top + JZB.h - 24 * k }; } catch { return null; }
+}
+function roseSvg() { // Baccara-Rose, halb geöffnet, leicht von der Seite; Stiel als sanft gebogene, nach oben dünner werdende Fläche
+  const f = (n) => Math.round(n * 10) / 10;
+  const S = [[100, 150], [116, 240], [80, 372], [97, 534]]; // Mittellinie des Stiels (sanftes S)
+  const pkt = (t) => { const u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
+    return [a * S[0][0] + b * S[1][0] + c * S[2][0] + d * S[3][0], a * S[0][1] + b * S[1][1] + c * S[2][1] + d * S[3][1]]; };
+  const nor = (t) => { const p = pkt(Math.max(0, t - .01)), q = pkt(Math.min(1, t + .01)), dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1; return [dy / l, -dx / l, dx / l, dy / l]; };
+  const breite = (t) => 2 + 2.3 * t; // halbe Stielbreite: oben dünn, unten kräftig
+  const links = [], rechts = [];
+  for (let i = 0; i <= 40; i++) { const t = i / 40, p = pkt(t), n = nor(t), w = breite(t); links.push(f(p[0] - n[0] * w) + " " + f(p[1] - n[1] * w)); rechts.unshift(f(p[0] + n[0] * w) + " " + f(p[1] + n[1] * w)); }
+  const stiel = "M" + links.join("L") + "L" + rechts.join("L") + "Z";
+  const kante = "M" + links.join("L");
+  const dorn = (t, s) => { const p = pkt(t), n = nor(t), w = breite(t), bx = p[0] + s * n[0] * w * .8, by = p[1] + s * n[1] * w * .8;
+    return `<path d="M${f(bx + n[2] * 3.5)} ${f(by + n[3] * 3.5)}Q${f(bx + s * n[0] * 4)} ${f(by + s * n[1] * 4 + 1)} ${f(bx + s * n[0] * 7.5 - n[2] * 4)} ${f(by + s * n[1] * 7.5 - n[3] * 4)}Q${f(bx + s * n[0] * 2)} ${f(by + s * n[1] * 2 - 2)} ${f(bx - n[2] * 3)} ${f(by - n[3] * 3)}Z" fill="url(#roDorn)"/>`; };
+  const blatt = (x, y, w, dreh, id) => { // fein gesägter Rand, Mittelrippe, Seitenadern
+    const z = []; for (let i = 1; i < 10; i++) { const q = i / 10; z.push([w * q, Math.sin(Math.PI * Math.pow(q, .75)) * w * .32]); }
+    const oben = z.map((p) => `L${f(p[0] - w * .025)} ${f(-p[1] * .94)}L${f(p[0] + w * .01)} ${f(-p[1] - .6)}`).join(""), unten = z.slice().reverse().map((p) => `L${f(p[0] + w * .01)} ${f(p[1] + .6)}L${f(p[0] - w * .025)} ${f(p[1] * .94)}`).join("");
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${dreh})"><path d="M0 0${oben}L${w} 0${unten}Z" fill="url(#${id})" stroke="#173d14" stroke-width=".6" stroke-linejoin="round"/>`
+      + `<path d="M0 0Q${f(w * .5)} ${f(-w * .04)} ${f(w * .95)} 0" fill="none" stroke="#b5e09a" stroke-width=".9" opacity=".6"/>${[.22, .42, .62, .8].map((q) => `<path d="M${f(w * q)} 0q${f(w * .08)} ${f(-w * .1)} ${f(w * .15)} ${f(-w * .2)}M${f(w * q)} 0q${f(w * .08)} ${f(w * .1)} ${f(w * .15)} ${f(w * .2)}" fill="none" stroke="#b5e09a" stroke-width=".55" opacity=".4"/>`).join("")}`
+      + `<path d="M${f(w * .1)} ${f(-w * .08)}Q${f(w * .5)} ${f(-w * .3)} ${f(w * .85)} ${f(-w * .06)}" fill="none" stroke="#e6ffd0" stroke-width="1" opacity=".18"/></g>`; };
+  const zweig = (t, s, lang, dreh) => { // Fiederblatt: Endblättchen und ein Paar Seitenblättchen am gebogenen Zweig
+    const p = pkt(t), m = [p[0] + s * lang * .5, p[1] - 3], e = [p[0] + s * lang, p[1] + lang * .3], h = [(p[0] + 2 * m[0] + e[0]) / 4, (p[1] + 2 * m[1] + e[1]) / 4];
+    return `<path d="M${f(p[0])} ${f(p[1])}Q${f(m[0])} ${f(m[1])} ${f(e[0])} ${f(e[1])}" fill="none" stroke="#2f6b28" stroke-width="1.8" stroke-linecap="round"/>`
+      + blatt(h[0], h[1], 25, dreh - s * 55, "roBlatt2") + blatt(h[0], h[1], 24, dreh + s * 50, "roBlatt") + blatt(e[0], e[1], 38, dreh, "roBlatt"); };
+  return `<svg class="rose-svg" viewBox="0 0 200 540" aria-hidden="true">
+  <defs>
+    <radialGradient id="roHinten" cx="50%" cy="85%" r="85%"><stop offset="0" stop-color="#1e0004"/><stop offset=".5" stop-color="#5e0313"/><stop offset="1" stop-color="#a3102a"/></radialGradient>
+    <radialGradient id="roMitte" cx="50%" cy="90%" r="90%"><stop offset="0" stop-color="#2a0006"/><stop offset=".5" stop-color="#7a0619"/><stop offset="1" stop-color="#c0163a"/></radialGradient>
+    <radialGradient id="roVorn" cx="50%" cy="100%" r="100%"><stop offset="0" stop-color="#2a0006"/><stop offset=".5" stop-color="#760518"/><stop offset=".85" stop-color="#a50d2a"/><stop offset="1" stop-color="#c01a38"/></radialGradient>
+    <radialGradient id="roKern" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#c8183a"/><stop offset=".6" stop-color="#7e0619"/><stop offset="1" stop-color="#3a0009"/></radialGradient>
+    <linearGradient id="roRand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5c76"/><stop offset=".4" stop-color="#d41f3f"/><stop offset="1" stop-color="#7a0519"/></linearGradient>
+    <linearGradient id="roStiel" x1="0" x2="1"><stop offset="0" stop-color="#173f14"/><stop offset=".4" stop-color="#5aa443"/><stop offset=".6" stop-color="#3e8030"/><stop offset="1" stop-color="#143812"/></linearGradient>
+    <linearGradient id="roKelch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f9a3c"/><stop offset="1" stop-color="#1c4d19"/></linearGradient>
+    <linearGradient id="roDorn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a2a"/><stop offset="1" stop-color="#4a2410"/></linearGradient>
+    <linearGradient id="roBlatt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f9a3c"/><stop offset="1" stop-color="#1f5a1f"/></linearGradient>
+    <linearGradient id="roBlatt2" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fae46"/><stop offset="1" stop-color="#245f22"/></linearGradient>
+    <radialGradient id="roGlanz"><stop offset="0" stop-color="#ffb3c0" stop-opacity=".32"/><stop offset="1" stop-color="#ffb3c0" stop-opacity="0"/></radialGradient>
+    <filter id="roSchatten" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="2.2"/><feOffset dy="-2.5" result="b"/>
+      <feFlood flood-color="#1a0004" flood-opacity=".85"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="roSamt" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .2 0" result="m"/><feComposite in="m" in2="SourceGraphic" operator="in" result="k"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="k"/></feMerge></filter>
+  </defs>
+  <path d="${stiel}" fill="url(#roStiel)"/>
+  <path d="${kante}" fill="none" stroke="#9fd884" stroke-width=".7" opacity=".35"/>
+  ${dorn(.2, 1)}${dorn(.3, -1)}${dorn(.44, 1)}${dorn(.6, -1)}${dorn(.74, 1)}${dorn(.88, -1)}
+  ${zweig(.37, -1, 42, 200)}${zweig(.55, 1, 44, -20)}
+  <g transform="rotate(-7 100 160)">
+  <g filter="url(#roSamt)">
+    <path d="M98 122C70 124 46 110 42 86C40 72 38 60 25 49C42 46 56 50 64 59C70 44 84 33 98 31Z" fill="url(#roHinten)"/>
+    <path d="M101 122C129 124 152 108 156 84C158 70 162 59 175 50C159 47 145 50 137 58C131 43 117 32 101 30Z" fill="url(#roHinten)"/>
+    <path d="M25 49C42 46 56 50 64 59C55 56 46 58 40 63C38 57 33 53 25 49Z M175 50C159 47 145 50 137 58C146 55 155 57 161 62C163 56 168 53 175 50Z" fill="url(#roRand)"/>
+    <path d="M78 50C80 34 92 22 106 20C118 21 126 27 129 36C131 32 134 28 139 26C135 32 132 40 128 48C118 41 90 41 78 50Z" fill="url(#roHinten)"/>
+    <path d="M129 36C131 32 134 28 139 26C135 32 133 37 131 42Z" fill="url(#roRand)"/>
+    <path d="M80 45C86 31 96 23 106 22C116 23 124 29 128 38" fill="none" stroke="#ff6d85" stroke-width="1.3" stroke-linecap="round" opacity=".45"/>
+    <path d="M62 100C46 104 35 114 31 130C30 135 28 140 22 145C32 144 39 146 46 149C62 155 82 156 100 155C80 145 66 127 62 100Z" fill="url(#roHinten)"/>
+    <path d="M139 100C155 104 166 114 170 130C171 135 173 140 179 144C169 144 162 146 155 149C139 155 119 156 101 155C121 145 135 127 139 100Z" fill="url(#roHinten)"/>
+    <path d="M31 130C30 135 28 140 22 145C32 144 39 146 46 149C40 144 35 138 31 130Z M170 130C171 135 173 140 179 144C169 144 162 146 155 149C161 144 166 138 170 130Z" fill="url(#roRand)" opacity=".9"/>
+    <path d="M36 124C38 114 48 106 60 102M165 124C163 114 153 106 141 102" fill="none" stroke="#ff6d85" stroke-width="1.1" opacity=".4"/>
+    <path d="M76 54C76 80 88 100 102 106C116 100 128 80 128 54A26 10 0 0 0 76 54Z" fill="url(#roKern)"/>
+    <ellipse cx="102" cy="53" rx="24" ry="8.5" fill="#2e0007"/>
+    <path d="M79 54C81 45 95 41 109 43C120 45 126 49 126 55C118 49 104 47 92 51C86 53 82 55 79 54Z" fill="#b5122f"/>
+    <path d="M85 57C89 49 103 47 114 51C108 51 100 53 95 59Z" fill="#d8264a"/>
+    <path d="M118 56C118 50 110 47 103 49C109 51 112 54 112 58Z" fill="#8e0820"/>
+    <path d="M89 57C91 50 99 47 108 48" fill="none" stroke="#ff7a90" stroke-width=".9" opacity=".6"/>
+    <path d="M97 55C99 51 106 50 108 54C109 57 105 59 102 57C100 56 101 54 103 54" fill="none" stroke="#e0425f" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M76 55C82 63 94 66 104 66C116 66 124 62 128 55C122 59 112 61 102 61C92 61 82 59 76 55Z" fill="url(#roRand)"/>
+    <path d="M75 60C73 80 82 98 100 105C92 92 88 76 90 62C86 60 80 59 75 60Z" fill="#6e0418" opacity=".8"/>
+    <g filter="url(#roSchatten)">
+      <path d="M101 124C78 124 61 107 61 85C61 72 64 62 57 53C68 52 77 56 82 63C84 79 90 95 101 106C104 112 104 118 101 124Z" fill="url(#roMitte)"/>
+      <path d="M101 124C124 124 140 107 140 85C140 72 138 62 145 54C134 52 125 56 121 63C119 79 112 95 103 106C99 112 99 118 101 124Z" fill="url(#roMitte)"/>
+      <path d="M57 53C68 52 77 56 82 63C76 60 69 60 63 63C62 59 60 56 57 53Z M145 54C134 52 125 56 121 63C127 60 134 60 140 63C141 59 142 57 145 54Z" fill="url(#roRand)"/>
+    </g>
+    <path d="M63 64C61 70 61 78 62 86M139 64C141 70 141 78 140 86" fill="none" stroke="#ff7088" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+    <g filter="url(#roSchatten)">
+      <path d="M53 80C67 92 85 99 101 103C117 99 135 92 149 80C153 110 139 143 101 149C63 143 49 110 53 80Z" fill="url(#roVorn)"/>
+      <path d="M53 80C67 92 85 99 101 103C117 99 135 92 149 80C152 76 156 74 161 73C154 80 149 89 143 96C132 105 118 109 110 110C106 111 103 113 101 116C99 113 96 111 92 110C84 109 70 105 59 96C53 89 47 80 40 73C45 74 50 76 53 80Z" fill="url(#roRand)"/>
+    </g>
+    <path d="M59 96C70 105 84 109 92 110C96 111 99 113 101 116C103 113 106 111 110 110C118 109 132 105 143 96" fill="none" stroke="#2a0006" stroke-width="1.2" opacity=".4"/>
+    <path d="M60 86C72 95 88 101 101 103C114 101 130 95 142 86" fill="none" stroke="#ffa0b0" stroke-width="1.1" opacity=".6" stroke-linecap="round"/>
+    <ellipse cx="88" cy="126" rx="36" ry="17" fill="url(#roGlanz)" opacity=".5"/>
+    <path d="M68 114C72 130 84 141 98 145" fill="none" stroke="#ff7088" stroke-width="1" opacity=".25"/>
+  </g>
+  <path d="M98 148C84 151 68 160 55 180C68 167 84 159 100 155Z" fill="url(#roKelch)"/>
+  <path d="M102 148C116 151 132 160 145 181C132 168 116 159 100 155Z" fill="url(#roKelch)"/>
+  <path d="M99 150C91 160 85 175 82 194C89 178 95 166 102 156Z" fill="#2d6f27"/>
+  <path d="M101 150C109 160 115 173 119 191C112 176 105 165 98 156Z" fill="#2a6a25"/>
+  <path d="M98.5 151C96 166 97 183 101 202C104 183 104.5 166 101.5 151Z" fill="#3a8a30"/>
+  <ellipse cx="100" cy="152" rx="7" ry="5" fill="url(#roKelch)"/>
+  </g>
+</svg>`;
+}
+function roseZeigen(name, quelle) { // quelle = Punkt der Schießbude; null = Gruß-Variante (Sim-Jü nicht sichtbar)
+  $("roseSchicht")?.remove(); themaSchriftLaden("zart");
+  const still = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })() || !!SPAR?.an || !document.body.animate;
+  const s = document.createElement("div"); s.id = "roseSchicht"; s.className = "rose-schicht"; s.setAttribute("role", "dialog"); s.setAttribute("aria-label", "Eine Rose – nur für dich");
+  const funken = still ? "" : Array.from({ length: 14 }, (_, i) => `<i class="rose-funke" style="--x:${(i * 37 + 11) % 100}%;--y:${(i * 53 + 7) % 70}%;--d:${1.6 + (i % 5) * .5}s;--v:${(i * .37) % 2.4}s"></i>`).join("")
+    + Array.from({ length: 7 }, (_, i) => `<i class="rose-blatt" style="--x:${(i * 29 + 17) % 90 + 5}%;--d:${6 + (i % 3) * 2}s;--v:${2.2 + i * .9}s;--r:${(i % 2 ? 1 : -1) * (120 + i * 30)}deg"></i>`).join("");
+  s.innerHTML = `<div class="rose-glanz"></div>${funken}<div class="rose-buehne"><div class="rose-flug">${roseSvg()}
+    <div class="rose-schild"><span class="rose-faden"></span><div class="rose-karte"><b>Nur für dich</b>${name ? `<small>${esc(name)}</small>` : ""}</div></div></div></div>
+    ${quelle ? "" : '<p class="rose-gruss">Ein Gruß aus der Schießbude –<br>habe ich für dich geschossen 🎯</p>'}<button type="button" class="knopf haupt rose-danke">💝 Danke</button>`;
+  s.querySelector(".rose-danke").onclick = () => { if (still) return s.remove(); s.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: "forwards" }).onfinish = () => s.remove(); };
+  document.body.appendChild(s);
+  if (!still) { // aus der Schießbude heraus wachsen und zur Mitte fliegen – ohne Schießbude von unten seitlich ins Bild
+    const f = s.querySelector(".rose-flug"), r = f.getBoundingClientRect(), q = quelle || { x: innerWidth * .15, y: innerHeight * 1.5 };
+    const dx = q.x - (r.left + r.width / 2), dy = q.y - (r.top + r.height * .85);
+    f.animate(quelle ? [{ transform: `translate(${dx}px,${dy}px) scale(.06) rotate(-25deg)`, opacity: .2 }, { transform: `translate(${dx * .4}px,${dy * .55 - 60}px) scale(.45) rotate(10deg)`, opacity: 1, offset: .45 },
+      { transform: "translate(0,0) scale(1) rotate(0)", opacity: 1 }] : [{ transform: `translate(${dx}px,${innerHeight}px) scale(.7) rotate(-30deg)`, opacity: .4 }, { transform: "translate(0,0) scale(1) rotate(0)", opacity: 1 }],
+      { duration: 2600, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" });
+    s.animate([{ background: "rgba(20,0,6,0)" }, { background: "rgba(20,0,6,.72)" }], { duration: 1200, fill: "backwards" });
+  }
+  setTimeout(() => { try { s.querySelector(".rose-danke").focus(); } catch {} }, still ? 50 : 2600);
+  return s;
+}
+// KC-CLUB-ROSE-ENDE
 // ---- 🎡 Sim-Jü ----
 // 🎯 Schießbude: gestreiftes Dach, Schild, hinten laufen Enten und Sterne vorbei, vorn liegt ein Gewehr – ab und zu ein Treffer
 function jzbSchiessbudeMalen(c, F) {
@@ -39998,10 +40144,23 @@ function mitgliedZeigen() {
       ${zeilen ? '<button class="knopf" onclick="kontaktSpeichern()"><span class="kt-ico">📇</span>Ins Telefonbuch</button>' : ""}
     </div>
     ${prKarte(m)}
+    ${ICH?.admin && m.rose ? roseAdminKarte(m) : ""}
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
       <p class="hinweis" style="margin-top:0">Oben steht alles, was über dich gespeichert ist. 🔒 = nicht freigegeben, sehen die anderen nicht. Freigeben kannst du unter ⚙️ Mehr → Privatsphäre.</p>
       <div class="knoepfe"><button class="knopf" onclick="zeige('einstellungen')">🔒 Freigaben ändern</button><button class="knopf" onclick="korrekturMelden()">📝 Korrektur an ${adminName()} melden</button></div></div>` : ""}`;
   mdKachelnOrdnen(); // KC-CLUB-MD-KACHELN
+}
+// KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): Häkchen nur für den Admin – die App rät nie nach Namen, wer eine Rose bekommt
+function roseAdminKarte(m) {
+  const r = m.rose || {}, am = r.erhalten ? new Date(r.erhalten).toLocaleString("de-DE", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+  return `<div class="karte"><label class="zeile" style="gap:10px;align-items:center"><input type="checkbox" id="roseHaken" ${r.an || r.erhalten ? "checked" : ""} ${r.erhalten ? "disabled" : ""}
+    onchange="roseSetzen('${esc(m.person_id)}', this)"><b style="flex:1">🌹 Rose aus der Schießbude (einmalig)</b></label>
+    <p class="hinweis" style="margin:6px 0 0">${r.erhalten ? `✅ Schon bekommen am ${esc(am)}` : r.an ? "🌹 An – kommt beim nächsten Mal" : "Aus"} · Kommt nur einmal: nach 3 Minuten auf der Startseite – zur Kirmes aus der Schießbude, sonst als Gruß aus der Schießbude.</p></div>`;
+}
+async function roseSetzen(pid, el) {
+  const an = !!el.checked; el.disabled = true;
+  try { await api("rose_setzen", { person_id: pid, an }, { warten: true }); if (MD?.person_id === pid) { MD.rose = { ...(MD.rose || {}), an }; mitgliedZeigen(); } melde(an ? "🌹 Rose ist bereit – sie kommt einmal." : "Rose wieder ausgeschaltet."); }
+  catch (e) { el.checked = !an; meldeFehler(e); } finally { el.disabled = false; }
 }
 // ---------- KC-CLUB-PROBEPHASE (2.51.0, Wunsch Hansi): Mitglied testet die App erst – Admin startet, übernimmt oder beendet ----------
 // In der Probe: kein Willkommens-Zettel, keine Begrüßung, Push/Mail nur nach eigener Wahl, nicht in der Nutzung, noch keine Stimmabgabe.
