@@ -12523,7 +12523,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 function idx0() { return lies("index.html"); }
 // 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE: Sim-Jü-Szene für alle von Samstag bis einschließlich Dienstag
 {
-  assert.ok(/const jahreszeitAktuell = \(d = new Date\(\)\) => \(themaFestZeit\(d\) === "simjue" \? "kirmes" :/.test(programm), "Sim-Jü geht vor der eigenen Wahl");
+  assert.ok(/const jahreszeitAktuell = \(d = new Date\(\)\) => \(jzSimJueZeit\(d\) \? "kirmes" :/.test(programm), "Sim-Jü geht vor der eigenen Wahl");
   const a = programm.indexOf("function themaFestZeit("), b = programm.indexOf("\n}\n", a) + 3;
   const f = new Function("osterSonntag", programm.slice(a, b) + ";return themaFestZeit;")((y) => `${y}-04-05`);
   assert.equal(f(new Date(2026, 9, 23, 23, 59)), null, "Freitag 23.10. noch nicht");
@@ -12554,4 +12554,10 @@ function idx0() { return lies("index.html"); }
 // 2.618.0 KC-CLUB-SIMJUE-LAUFLICHT: Lauflichter am Riesenrad (Kranz, Speichen, Stützen)
 {
   assert.ok(/KC-CLUB-SIMJUE-LAUFLICHT/.test(programm) && /const LL = 36, lauf = T \* 14/.test(programm) && /Speichen: Licht läuft nach außen/.test(programm) && /Stützen: Licht läuft hoch/.test(programm), "Lauflichter am Riesenrad");
+}
+// 2.619.0 KC-CLUB-SIMJUE-SCHALTER: Sim-Jü im Info-Feld ausschalten (je Gerät, nur dieses Jahr)
+{
+  assert.ok(/const jzSimJueZeit = \(d = new Date\(\)\) => themaFestZeit\(d\) === "simjue" && !jzSimJueAus\(d\);/.test(programm), "ausgeschaltet → keine Sim-Jü-Pflicht");
+  assert.ok(/localStorage\.getItem\(SJ_AUS_KEY\) === String\(d\.getFullYear\(\)\)/.test(programm), "gilt nur für dieses Jahr");
+  assert.ok(/if \(themaFestZeit\(\) === "simjue"\) \{ const aus = jzSimJueAus\(\);/.test(programm) && /\[aus \? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten\(\)"\]/.test(programm), "Schalter im Info-Feld");
 }

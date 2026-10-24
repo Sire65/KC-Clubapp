@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.618.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.619.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16605,9 +16605,19 @@ const jzWahl = () => { const t = themaWert("jz"); if (t) return t; try { const w
 // Mittwoch um 0 Uhr stellt sich der Kopf von selbst zurück (Minuten-Prüfung unten). Eine Vorschau geht weiter vor; „Jahreszeiten im Kopf“ aus bleibt aus.
 // 2.617.0 (Wunsch Hansi „auch bei denen, die es nicht anhaben – viele wissen gar nicht, dass man es einschalten kann“): in der Sim-Jü-Zeit läuft die
 // Szene auch bei „Jahreszeiten im Kopf“ aus und bei ausgeschalteten Animationen. Nur der Sparmodus (Akku) hält sie weiter an.
-const jzSimJue = () => themaFestZeit() === "simjue";
+// 2.619.0 KC-CLUB-SIMJUE-SCHALTER (Wunsch Hansi „im Info-Feld einen Schalter Sim-Jü ausschalten – wem es nicht gefällt, kann es dann ausmachen“): je Gerät,
+// gilt für das laufende Jahr (nächstes Sim-Jü ist es wieder an). Ausgeschaltet gilt die eigene Einstellung wie sonst.
+const SJ_AUS_KEY = "kc_club_simjue_aus";
+const jzSimJueAus = (d = new Date()) => { try { return localStorage.getItem(SJ_AUS_KEY) === String(d.getFullYear()); } catch { return false; } };
+const jzSimJueZeit = (d = new Date()) => themaFestZeit(d) === "simjue" && !jzSimJueAus(d);
+function jzSimJueSchalten() {
+  const aus = !jzSimJueAus(); try { if (aus) localStorage.setItem(SJ_AUS_KEY, String(new Date().getFullYear())); else localStorage.removeItem(SJ_AUS_KEY); } catch {}
+  melde(aus ? "🚫 Sim-Jü im Kopf ausgeschaltet – im Info-Feld kannst du es wieder einschalten." : "🎡 Sim-Jü im Kopf ist wieder an.");
+  JZB.vorschau = ""; jahreszeitKopf(); try { ilZeigen(); } catch {}
+}
+const jzSimJue = () => jzSimJueZeit();
 const jzbDarf = () => { const sj = jzSimJue(); return (fxAn() || (sj && !SPAR?.an && !!document.body?.animate)) && (einst("jahreszeit", true) || sj); };
-const jahreszeitAktuell = (d = new Date()) => (themaFestZeit(d) === "simjue" ? "kirmes" : jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
+const jahreszeitAktuell = (d = new Date()) => (jzSimJueZeit(d) ? "kirmes" : jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
 function jzWahlSetzen(w) { if (!themaEigenSetzen("jz", w)) try { localStorage.setItem("kc_club_jzWahl", w); } catch {} JZB.vorschau = null; jzWahlZeigen(); jahreszeitKopf(); melde(w === "auto" ? "🔄 Automatik: die Jahreszeit stellt sich von selbst um" : `${JZ_WAHL.find(([k]) => k === w)[1]} fest eingestellt`); }
 function jzWahlZeigen() {
   const z = $("jzWahl"); if (!z) return;
@@ -26436,6 +26446,9 @@ function ilMeldungen() {
     t: th.anzahl ? `${th.anzahl === 1 ? "1 Thema" : th.anzahl + " Themen"} für die Sitzung am ${fTag.format(new Date(t.beginn))}` : `Themen für die Sitzung am ${fTag.format(new Date(t.beginn))}`,
     u: th.anzahl ? (th.offen ? "Bitte stimme ab (👍) – oder reiche selbst eins ein" : "Du hast alle unterstützt – hast du noch ein eigenes?") : "Noch keine Themen – reiche selbst eins ein",
     auf: "zeige('vorschlaege')", knoepfe: [...(th.anzahl ? [["👍 Abstimmen", "zeige('vorschlaege')"]] : []), ["＋ Thema", `ilThemaNeu('${esc(th.treffen)}')`]] });
+  if (themaFestZeit() === "simjue") { const aus = jzSimJueAus(); // 2.619.0 KC-CLUB-SIMJUE-SCHALTER
+    add({ id: "simjue:" + new Date().getFullYear() + (aus ? ":aus" : ""), stufe: "gold", sym: "🎡", t: aus ? "Sim-Jü im Kopf ist ausgeschaltet" : "Sim-Jü im Kopf der Startseite",
+      u: aus ? "Riesenrad, Schießbude und Feuerwerk wieder anzeigen?" : "Gefällt dir nicht? Hier kannst du es ausschalten", knoepfe: [[aus ? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten()"]] }); }
   // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (Wunschliste #20): angekündigte Termine (z. B. Adventsmarkt der Freilichtbühne) – mit 🌐 Webseite
   { const ah = akHeute(); if (ah && akAn() && !akOffen().includes(ah)) add({ id: "advent:" + ah, stufe: "gold", sym: "🎄", t: `Adventskalender: Türchen ${ah} wartet auf dich`, u: "Antippen und öffnen", auf: "akZeigen()" }); } // 2.468.0 KC-CLUB-ADVENTSKALENDER
   for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,
