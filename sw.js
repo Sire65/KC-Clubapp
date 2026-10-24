@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.622.0";
+const VERSION = "2.623.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -108,6 +108,9 @@ async function quittung(requestId, state) {
 }
 self.addEventListener("push", (e) => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data ? e.data.text() : "" }; }
+  // 2.623.0 KC-CLUB-PUSH-DEKLARATIV: versteht auch das neue Apple-Format (Declarative Web Push, { web_push: 8030, notification: {…} }) –
+  // so kann der Versender später umgestellt werden, ohne dass Android/PC etwas verlieren
+  if (d && d.web_push === 8030 && d.notification) { const n = d.notification; d = { title: n.title, body: n.body, data: { url: n.navigate || "./", requestId: n.data?.requestId || "" } }; }
   let titel = d.title || "Köcheclub Werne";
   e.waitUntil((async () => {
     const fenster = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

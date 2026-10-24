@@ -134,7 +134,7 @@ const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitt
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
 const SERVER_VERSION = "2.614.0";
-const TEMPO_LOG_MS = 1500; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log
+const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
 // Rechte (kc_club_person_einstellung „studio_recht“, setzt nur der Admin): zeigen = dauerhaft „📺 Live zeigen“; alles_bis = für kurze Zeit
@@ -7890,7 +7890,7 @@ Köcheclub Werne`,
 // einen eigenen Lese-Puffer – dieselbe Leseabfrage innerhalb von DB_PUFFER_MS nur einmal an die Datenbank (Schreiben leert ihn, Fehler nie
 // gepuffert, andere gleichzeitige Aufrufe sehen ihn nie). Messung: ab DB_LOG_AB Abfragen eine Zeile ins Server-Log mit Aktion und Zahlen
 // (keine Inhalte, keine Personen, keine Datenbank-Schreibung – kostet nichts). So sieht man, welche Aktion wie viele Abfragen braucht.
-const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;
+const DB_PUFFER_MS = 2000, DB_LOG_AB = 120; // 2.623.0 KC-CLUB-LOG-SPARSAM: nur noch Ausreißer (vorher ab 15 – jeder App-Start und jede Wartung schrieb eine Zeile)
 // 2.584.0 KC-CLUB-EINGANG-PAKET: welche Listen der Büro-Eingang in einem Aufruf holen darf (nur lesend, jede prüft ihre Rechte selbst)
 const BUERO_EINGANG_TEILE = ["leihen_liste", "vorschlaege_liste", "hilfe_liste", "protokolle_liste", "archiv_liste", "aenderungen_liste", "eingang_korb", "buero_start"];
 Deno.serve((req) => {
