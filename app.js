@@ -29870,7 +29870,8 @@ function buFesteHtml() {
 // Nur Admin. Texte, Auswahl und Versand liegen beim Server (Aktion „geb_gruss“); die App zeigt Übersicht und Auswahl. Push „Gruß auswählen“ → #gebgruss=…
 const GG = { stand: null };
 const ggTag = (x) => x.tage === 0 ? "heute 🎉" : x.tage === 1 ? "morgen" : x.tage === 2 ? "übermorgen" : `${fTagDp.format(new Date(x.tag + "T12:00:00Z"))} · in ${x.tage} Tagen`;
-const ggStatus = (x) => x.gesendet ? `✅ verschickt (Gruß ${x.gesendet.nr}${x.gesendet.auto ? ", automatisch" : ""})` : x.wahl ? `✍️ Gruß ${x.wahl} ausgewählt` : "🤖 noch keiner gewählt – geht automatisch";
+const ggNr = (nr) => nr > 100 ? "Gruß zum runden Geburtstag" : `Gruß ${nr}`;
+const ggStatus = (x) => x.gesendet ? `✅ verschickt (${ggNr(x.gesendet.nr)}${x.gesendet.auto ? ", automatisch" : ""})` : x.wahl ? `✍️ ${ggNr(x.wahl)} ausgewählt` : "🤖 noch keiner gewählt – geht automatisch";
 async function ggUebersicht() {
   if (!ICH?.admin) return;
   try { GG.stand = await api("geb_gruss", { a: "stand", tage: 60 }); } catch (e) { return meldeFehler(e); }
@@ -29881,7 +29882,7 @@ async function ggUebersicht() {
     ${s.meineAnrede ? "" : `<p class="hinweis">✍️ Unterschrift: ${ggAnredeKnoepfe(ICH.person_id, null, "Dein", "Deine")} – sonst „Liebe Grüße“.</p>`}
     <div class="abschnitt"><h3>Die nächsten 60 Tage</h3></div>
     ${s.liste.length ? s.liste.map((x) => `<button class="mini-kachel" style="width:100%;text-align:left" onclick="ggWahl('${esc(x.person_id)}')"><span class="mk-sym">🎂</span>
-      <span class="mk-titel">${esc(x.name)}</span><span class="mk-unter">${esc(ggTag(x))}</span><span class="mk-unter">${esc(ggStatus(x))}${x.anrede ? "" : " · ⚠️ Lieber/Liebe fehlt"}</span></button>`).join("")
+      <span class="mk-titel">${esc(x.name)}</span><span class="mk-unter">${esc(ggTag(x))}${x.rund ? ` · <b>wird ${x.rund} 🎉</b>` : ""}</span><span class="mk-unter">${esc(ggStatus(x))}${x.anrede ? "" : " · ⚠️ Lieber/Liebe fehlt"}</span></button>`).join("")
       : '<div class="karte hinweis">In den nächsten 60 Tagen hat niemand Geburtstag.</div>'}
     ${s.ohneDatum ? `<p class="hinweis">ℹ️ ${s.ohneDatum} Mitglied${s.ohneDatum === 1 ? " hat" : "er haben"} kein Geburtsdatum in der KC-Verwaltung – ${s.ohneDatum === 1 ? "es bekommt" : "sie bekommen"} keinen Gruß.</p>` : ""}
     <div class="knoepfe"><button class="knopf" onclick="$('ggBlatt').remove()">Schließen</button></div>`);
@@ -29901,17 +29902,20 @@ async function ggWahl(pid) {
   let v; try { v = await api("geb_gruss", { a: "vorschau", person_id: pid }); } catch (e) { return meldeFehler(e); }
   const gesendet = v.gesendet;
   blattAuf("ggWahlBlatt", `<div style="text-align:center"><div style="font-size:2.4rem;line-height:1.2" aria-hidden="true">🎂</div>
-      <h3 style="margin:4px 0">${esc(v.name)}</h3><p style="margin:0">${esc(ggTag(v))}</p></div>
+      <h3 style="margin:4px 0">${esc(v.name)}</h3><p style="margin:0">${esc(ggTag(v))}${v.rund ? ` · <b>wird ${v.rund.alter} 🎉</b>` : ""}</p></div>
     <p class="hinweis" style="margin-top:8px">Anrede: ${ggAnredeKnoepfe(pid, v.anrede)}${v.anrede ? "" : " – noch offen, bis dahin „Hallo“"}</p>
-    ${gesendet ? `<div class="karte">✅ Schon verschickt: Gruß ${gesendet.nr}.</div>` : `<p class="hinweis">Tippe einen Gruß an – er geht kurz nach 0 Uhr am Geburtstag als Nachricht von dir raus.</p>`}
-    <button type="button" class="karte" style="display:block;width:100%;text-align:left${v.wahl ? "" : ";outline:3px solid var(--akzent, #2a7)"}" ${gesendet ? "disabled" : ""} onclick="ggWaehlen('${esc(pid)}',0)">🤖 <b>Automatisch</b> – passend ausgesucht (zurzeit Gruß ${v.auto})</button>
-    ${v.texte.map((t, i) => `<button type="button" class="karte" style="display:block;width:100%;text-align:left;white-space:pre-line${v.wahl === i + 1 ? ";outline:3px solid var(--akzent, #2a7)" : ""}" ${gesendet ? "disabled" : ""} aria-pressed="${v.wahl === i + 1}" onclick="ggWaehlen('${esc(pid)}',${i + 1})"><b>${i + 1}.</b> ${esc(t)}</button>`).join("")}
+    ${gesendet ? `<div class="karte">✅ Schon verschickt: ${ggNr(gesendet.nr)}.</div>` : `<p class="hinweis">Tippe einen Gruß an – er geht kurz nach 0 Uhr am Geburtstag als Nachricht von dir raus.</p>`}
+    <button type="button" class="karte" style="display:block;width:100%;text-align:left${v.wahl ? "" : ";outline:3px solid var(--akzent, #2a7)"}" ${gesendet ? "disabled" : ""} onclick="ggWaehlen('${esc(pid)}',0)">🤖 <b>Automatisch</b> – passend ausgesucht (zurzeit ${v.auto > 100 ? "ein Gruß zum runden " + v.rund?.alter + "." : "Gruß " + v.auto})</button>
+    ${[...(v.rund ? [`<div class="abschnitt"><h3>🎉 Zum runden ${v.rund.alter}.</h3></div>`, ...v.rund.texte.map((x) => ggKarte(pid, x.nr, x.text, v.wahl, gesendet, "🎉")), '<div class="abschnitt"><h3>🎂 Alle Geburtstagsgrüße</h3></div>'] : []),
+      ...v.texte.map((t, i) => ggKarte(pid, i + 1, t, v.wahl, gesendet, `${i + 1}.`))].join("")}
     <div class="knoepfe"><button class="knopf" onclick="$('ggWahlBlatt').remove();ggUebersicht()">🎂 Alle Geburtstage</button><button class="knopf" onclick="$('ggWahlBlatt').remove()">Schließen</button></div>`);
   if (v.wahl) setTimeout(() => document.querySelector(`#ggWahlBlatt [aria-pressed="true"]`)?.scrollIntoView({ block: "center" }), 50);
 }
+// 2.617.0 KC-CLUB-SPRUCH-ARCHIV: runder Geburtstag → eigene Grüße mit Alter (Nr. ab 101) stehen oben
+const ggKarte = (pid, nr, t, wahl, gesendet, marke) => `<button type="button" class="karte" style="display:block;width:100%;text-align:left;white-space:pre-line${wahl === nr ? ";outline:3px solid var(--akzent, #2a7)" : ""}" ${gesendet ? "disabled" : ""} aria-pressed="${wahl === nr}" onclick="ggWaehlen('${esc(pid)}',${nr})"><b>${marke}</b> ${esc(t)}</button>`;
 async function ggWaehlen(pid, nr) {
   try { await api("geb_gruss", { a: "waehlen", person_id: pid, nr }); } catch (e) { return meldeFehler(e); }
-  melde(nr ? `✍️ Gruß ${nr} ausgewählt – geht kurz nach 0 Uhr raus.` : "🤖 Automatisch – ein passender Gruß geht kurz nach 0 Uhr raus.");
+  melde(nr ? `✍️ ${ggNr(nr)} ausgewählt – geht kurz nach 0 Uhr raus.` : "🤖 Automatisch – ein passender Gruß geht kurz nach 0 Uhr raus.");
   $("ggWahlBlatt")?.remove(); ggUebersicht();
 }
 function buFest(art, pid) { return (art === "geb" ? BU_F?.geburtstage : BU_F?.jubilaeen)?.find((x) => x.person_id === pid); }
@@ -40172,6 +40176,91 @@ function updateSelbst() {
 // ---------- KC-CLUB-NUTZUNG (0.99.0): Nutzungsstatistik OHNE Namen ----------
 // Gezählt wird nur, wie oft ein Bereich geöffnet wird – auf dem Gerät gesammelt, alle 2 Minuten gebündelt geschickt.
 // Der Server speichert nur Tag + Bereich + Anzahl, nie wer.
+// ---------- 2.617.0 KC-CLUB-SPRUCH-ARCHIV (Wunsch Hansi „Spruch-Archiv nur für mich – Ordner in meinem Archiv mit Registern für die Anlässe“) ----------
+// Nur Admin: steht im Regal „👤 Mein Ordner“. Vorlagen + eigene Sprüche vom Server (Aktion „spruch_archiv“). Kopieren, als Nachricht senden
+// ([Name] → Vorname), eigene Sprüche anlegen/ändern/löschen, Vorlagen ausblenden.
+const SPA = { daten: null, reg: "", suche: "" };
+const sprOhneMarke = (t) => String(t).replace(/^(?:\d️?⃣)+\s*/u, ""); // „8️⃣0️⃣“ vorn ist nur die Markierung im Archiv
+const sprRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#b36b00" onclick="sprStart()" title="Mein Spruch-Archiv"><span class="sym">📜</span>
+    <span class="schild"><span class="jahr">Sprüche</span><span class="name">nur für mich</span></span><span class="anz">${SPA.daten ? SPA.daten.register.reduce((n, r) => n + r.sprueche.length, 0) + " Sprüche" : "Anlässe"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
+async function sprStart(reg) {
+  AR.spruch = true; if (reg !== undefined) SPA.reg = reg;
+  if (aktuelleAnsicht !== "archiv") { AR.ordner = null; AR.korb = false; zeige("archiv"); }
+  if (!SPA.daten) { $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>'; try { SPA.daten = await api("spruch_archiv", { a: "liste" }); } catch (e) { AR.spruch = false; return meldeFehler(e); } }
+  sprZeigen();
+}
+function sprZu() { AR.spruch = false; arZeigen(); }
+function sprZeigen() {
+  const d = SPA.daten; if (!d || !$("arInhalt")) return;
+  $("arKopf").textContent = "📜 Mein Spruch-Archiv";
+  if (SPA.reg && !d.register.some((r) => r.id === SPA.reg)) SPA.reg = "";
+  const alle = d.register.reduce((n, r) => n + r.sprueche.length, 0);
+  const tab = (id, t, n, i) => `<button class="${SPA.reg === id ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="SPA.reg='${id}';sprZeigen()">${esc(t)} <small>${n}</small></button>`;
+  $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:#b36b00"><span class="sym">📜</span><div><b>Sprüche</b><div class="klein">Dein Spruch-Archiv · nur du siehst es</div></div><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></div>
+    <div class="knoepfe" style="margin:8px 0"><button class="knopf klein" onclick="sprZu()">⬅️ Zum Regal</button><button class="knopf klein haupt" onclick="sprForm()">＋ Eigener Spruch</button><button class="knopf klein" onclick="ggUebersicht()">🎂 Meine Geburtstagsgrüße</button></div>
+    <input id="spSuche" class="ar-ordnersuche" type="search" autocomplete="off" placeholder="🔍 Sprüche durchsuchen … (z. B. 80, Hochzeit, Wein)" value="${esc(SPA.suche)}" oninput="SPA.suche=this.value;sprListe()">
+    <div class="ar-register">${[["", "Alle", alle], ...d.register.map((r) => [r.id, `${r.sym} ${r.t}`, r.sprueche.length])].map(([id, t, n], i) => tab(id, t, n, i)).join("")}</div>
+    <div class="ar-blatt" id="sprListe"></div>
+    ${d.ausgeblendet ? `<p class="hinweis">🙈 ${d.ausgeblendet} Vorlage${d.ausgeblendet === 1 ? "" : "n"} ausgeblendet – <button class="knopf klein" onclick="sprAktion('zuruecksetzen')">wieder zeigen</button></p>` : ""}`;
+  sprListe();
+}
+function sprListe() {
+  const d = SPA.daten, z = $("sprListe"); if (!d || !z) return;
+  const q = SPA.suche.trim().toLowerCase();
+  const zeilen = d.register.filter((r) => !SPA.reg || r.id === SPA.reg).flatMap((r) => r.sprueche.map((s) => ({ ...s, r })))
+    .filter((s) => !q || s.text.toLowerCase().includes(q) || s.r.t.toLowerCase().includes(q));
+  z.innerHTML = zeilen.length ? zeilen.map((s) => `<div class="karte" style="margin:6px 0">
+      <div style="white-space:pre-line">${esc(s.text)}</div>
+      <div class="hinweis" style="margin-top:4px">${SPA.reg ? "" : `${s.r.sym} ${esc(s.r.t)} · `}${s.eigen ? "✍️ eigener Spruch" : "Vorlage"}</div>
+      <div class="knoepfe" style="margin-top:6px"><button class="knopf klein" onclick="sprKopieren('${s.id}')">📋 Kopieren</button><button class="knopf klein haupt" onclick="sprSenden('${s.id}')">💬 Senden</button>
+        ${s.eigen ? `<button class="knopf klein" onclick="sprForm('${s.id}')">✏️</button><button class="knopf klein" onclick="sprLoeschen('${s.id}')">🗑️</button>` : `<button class="knopf klein" onclick="sprForm(null,'${s.id}')" title="als eigenen Spruch abwandeln">✏️ Abwandeln</button><button class="knopf klein" onclick="sprLoeschen('${s.id}')" title="Vorlage ausblenden">🙈</button>`}</div></div>`).join("")
+    : '<div class="karte hinweis">Nichts gefunden.</div>';
+}
+const sprFinden = (id) => SPA.daten?.register.flatMap((r) => r.sprueche.map((s) => ({ ...s, reg: r.id }))).find((s) => s.id === id);
+async function sprKopieren(id) {
+  const s = sprFinden(id); if (!s) return;
+  try { await navigator.clipboard.writeText(sprOhneMarke(s.text)); melde("📋 Spruch kopiert – [Name] noch durch den Namen ersetzen"); } catch { melde("Kopieren ging nicht – bitte den Text lange antippen und kopieren.", true); }
+}
+async function sprSenden(id) {
+  const s = sprFinden(id); if (!s) return;
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const f = blattAuf("spAn", `<h3 style="margin-top:0">💬 An wen?</h3><p class="hinweis" style="white-space:pre-line">${esc(sprOhneMarke(s.text))}</p>
+    <input id="spAnSuche" type="search" placeholder="🔍 Name …" oninput="sprAnListe('${id}')" autocomplete="off"><div id="sprAnListe"></div>
+    <div class="knoepfe"><button class="knopf" onclick="$('spAn').remove()">Abbrechen</button></div>`);
+  sprAnListe(id); return f;
+}
+function sprAnListe(id) {
+  const q = ($("spAnSuche")?.value || "").trim().toLowerCase(), z = $("sprAnListe"); if (!z) return;
+  z.innerHTML = (MITGLIEDER || []).filter((m) => m.person_id !== ICH?.person_id && (!q || m.name.toLowerCase().includes(q))).slice(0, 40)
+    .map((m) => `<button class="knopf" style="display:block;width:100%;text-align:left;margin:4px 0" onclick="sprSendenAn('${id}','${esc(m.person_id)}')">👤 ${esc(m.name)}</button>`).join("") || '<p class="hinweis">Niemand gefunden.</p>';
+}
+async function sprSendenAn(id, pid) {
+  const s = sprFinden(id), m = (MITGLIEDER || []).find((x) => x.person_id === pid); if (!s || !m) return;
+  $("spAn")?.remove();
+  await direkt(pid); textVorbelegen(sprOhneMarke(s.text).replaceAll("[Name]", m.vorname || m.name)); $("text").dispatchEvent(new Event("input")); entwurfMarkeZeigen?.();
+  melde("💬 Spruch ist vorbereitet – „Liebe/r“ u. Ä. anpassen und mit ➤ senden");
+}
+function sprForm(id, vorlage) {
+  const e = id ? sprFinden(id) : null, v = vorlage ? sprFinden(vorlage) : null, reg = e?.reg || v?.reg || SPA.reg || SPA.daten.register[0].id;
+  const f = blattAuf("sprForm", `<h3 style="margin-top:0">${e ? "✏️ Spruch ändern" : "＋ Eigener Spruch"}</h3>
+    ${e ? "" : `<label class="feld">Register<select id="spFormReg">${SPA.daten.register.map((r) => `<option value="${r.id}" ${r.id === reg ? "selected" : ""}>${r.sym} ${esc(r.t)}</option>`).join("")}</select></label>`}
+    <label class="feld">Spruch<textarea id="spFormText" rows="6" maxlength="1000" placeholder="z. B. 🎉 Liebe/r [Name], …">${esc(e ? e.text : v ? sprOhneMarke(v.text) : "")}</textarea></label>
+    <p class="hinweis">Tipp: [Name] wird beim Senden durch den Vornamen ersetzt. Emojis gehen über die Handy-Tastatur.</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="sprSpeichern(${e ? `'${e.id}'` : "null"})">💾 Speichern</button><button class="knopf" onclick="$('sprForm').remove()">Abbrechen</button></div>`);
+  setTimeout(() => $("spFormText")?.focus(), 50); return f;
+}
+async function sprSpeichern(id) {
+  const text = ($("spFormText")?.value || "").trim(); if (!text) return melde("Bitte einen Spruch eingeben.", true);
+  try { SPA.daten = await api("spruch_archiv", id ? { a: "aendern", id, text } : { a: "neu", reg: $("spFormReg").value, text }); } catch (e) { return meldeFehler(e); }
+  if (!id) SPA.reg = $("spFormReg")?.value ?? SPA.reg;
+  $("sprForm")?.remove(); melde(id ? "✏️ Spruch geändert" : "✍️ Spruch gespeichert"); sprZeigen();
+}
+async function sprLoeschen(id) {
+  const s = sprFinden(id); if (!s) return;
+  if (s.eigen && !(await frage("Diesen eigenen Spruch löschen?"))) return;
+  await sprAktion("loeschen", { id }); melde(s.eigen ? "🗑️ Spruch gelöscht" : "🙈 Vorlage ausgeblendet");
+}
+async function sprAktion(a, extra = {}) { try { SPA.daten = await api("spruch_archiv", { a, ...extra }); } catch (e) { return meldeFehler(e); } sprZeigen(); }
 // ---------- KC-CLUB-ARCHIV (1.2.0, Wunsch Hansi): Regal mit Aktenordnern (Jahreszahl + Inhalt), innen Register ----------
 // Automatisch: „Clubleben JJJJ“ je Jahr aus vorhandenen Daten (nur lesen). Von Hand: Ordner mit Art, Jahr, Farbe, Registern.
 // Pflegen (Ordner, Hochladen, Ändern, Löschen): Clubsprecher und Admin – der Server prüft das.
@@ -40188,7 +40277,7 @@ const AR_AUTO = { treffen: ["📅", "Termine"], protokoll: ["📄", "Protokolle"
 let AR = { ziel: null, daten: null, ordner: null, register: "", suche: "", jahr: "", art: "", korb: false, datei: null };
 try { const f = JSON.parse(localStorage.getItem("kc_club_archiv_filter") || "null"); if (f) { AR.jahr = f.jahr || ""; AR.art = f.art || ""; } } catch {}
 const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter", JSON.stringify({ jahr: AR.jahr, art: AR.art })); } catch {} };
-function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; zeige("archiv"); }
+function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; AR.spruch = false; zeige("archiv"); }
 // 1.65.0: direkt einen Ordner einer Art öffnen (z. B. die Chronik aus dem Büro-Regal); fehlt er, bleibt das Regal offen
 function arStartArt(art) { AR.zielArt = art; arStart(); }
 function eingangOeffnen() { AR.zielEingang = true; arStart(); } // 2.432.0 KC-CLUB-EINGANGSKORB: direkt in den Ordner mit den wartenden Dokumenten
@@ -40221,6 +40310,7 @@ function arPasst(o) {
 }
 function arZeigen() {
   const d = AR.daten; if (!d) return;
+  if (AR.spruch) return sprZeigen(); // 2.617.0 KC-CLUB-SPRUCH-ARCHIV
   $("arKopf").textContent = AR.korb ? "🗑️ Archiv – Papierkorb" : "🗄️ Archiv";
   if (AR.korb) return arKorbZeigen();
   if (AR.ordner) return arOrdnerZeigen();
@@ -40242,7 +40332,7 @@ function arListeZeigen() {
   const eigene = d.ordner.filter((o) => o.eigen).sort((a, b) => b.jahr - a.jahr), geteilt = d.ordner.filter((o) => o.besitzer && !o.eigen);
   const sp = d.speicher || { belegt: 0, grenze: 1 };
   const pers = `<div class="abschnitt ar-pers"><h3>👤 Mein Ordner</h3><button class="knopf klein" onclick="arNeuesJahr()">＋ weiteres Jahr</button></div>
-      <div class="regal">${eigene.map(arRuecken).join("")}${arAlben(true).map(arAlbumRuecken).join("")}</div>
+      <div class="regal">${sprRuecken()}${eigene.map(arRuecken).join("")}${arAlben(true).map(arAlbumRuecken).join("")}</div>
       <p class="hinweis" style="margin:2px 6px 10px">🔒 Nur du siehst deine Ordner – auch der Admin nicht. Mit 🔓 kannst du anderen etwas auf Zeit freigeben. Belegt: ${arGroesse(sp.belegt) || "0 KB"} von ${arGroesse(sp.grenze)}.</p>`
     + (geteilt.length ? `<div class="abschnitt"><h3>🤝 Mit mir geteilt</h3></div><div class="regal">${geteilt.map(arRuecken).join("")}</div>` : "");
   // KC-CLUB-CHRONIK (1.64.0): die Clubchronik steht über allen Jahren (ein Ordner für alle Jahre)
@@ -40527,7 +40617,7 @@ function arFreiRegister(o, nurHochladen) {
 }
 function arOrdnerOeffnen(id) {
   if (AR.daten?.ordner?.find((o) => o.id === id)?.art === "chronik") nzZaehlen("chronik"); // KC-CLUB-NUTZUNG-BEREICHE
-  AR.ordner = id; AR.register = ""; AR.suche = ""; AR.ordnerSuche = "";
+  AR.ordner = id; AR.register = ""; AR.suche = ""; AR.ordnerSuche = ""; AR.spruch = false;
   history.pushState({ v: "archiv", id }, "", location.pathname + "#archiv");
   arZeigen(); window.scrollTo(0, 0);
 }

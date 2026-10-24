@@ -12419,10 +12419,12 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const a = server.indexOf("const GEB_GRUESSE: string[] = ["), b = server.indexOf("async function gebGrussDaten(");
   assert.ok(a > 0 && b > a, "Grüße-Block vorhanden");
   const js = server.slice(a, b).replace(": string[] =", " =")
-    .replace(/\(nr: number, empf: \{[^}]*\}, abs: \{[^}]*\}\)/, "(nr, empf, abs)").replace(/\(bd: string, tag: string\)/, "(bd, tag)").replace(/\(bd: string, heute: string\)/, "(bd, heute)")
-    .replace(/\(pid: string, jahr: string, verlauf: number\[\], kuerzlich: number\[\]\)/, "(pid, jahr, verlauf, kuerzlich)");
+    .replace(/\(nr: number, empf: \{[^}]*\}, abs: \{[^}]*\}, alter = 0\)/, "(nr, empf, abs, alter = 0)").replace(/\(bd: string, tag: string\)/g, "(bd, tag)").replace(/\(bd: string, heute: string\)/, "(bd, heute)")
+    .replace(/\(pid: string, jahr: string, verlauf: number\[\], kuerzlich: number\[\]\)/, "(pid, jahr, verlauf, kuerzlich)").replace(/\(nr: number, alter: number\)/, "(nr, alter)").replace(/\(pid: string, jahr: string\)/, "(pid, jahr)");
   const berlinTag = (d) => d.toISOString().slice(0, 10);
-  const f = new Function("berlinTag", js + ";return { GEB_GRUESSE, GG_STUNDEN, gebGrussText, gebTrifft, gebNaechster, gebGrussAuto };")(berlinTag);
+  const a2 = server.indexOf("const GEB_RUND: string[] = ["), b2 = server.indexOf("const SPRUCH_ARCHIV:");
+  const rund = server.slice(a2, b2).replace(": string[] =", " =").replace("(alter: number)", "(alter)");
+  const f = new Function("berlinTag", js + rund + ";return { GEB_GRUESSE, GG_STUNDEN, gebGrussText, gebTrifft, gebNaechster, gebGrussAuto, GEB_RUND, gebRund, gebAlter, gebRundGueltig, gebGrussAutoRund };")(berlinTag);
   assert.equal(f.GEB_GRUESSE.length, 30, "30 Grüße");
   assert.equal(new Set(f.GEB_GRUESSE).size, 30, "alle verschieden");
   const hansi = { vorname: "Hansi", anrede: "Lieber" };
@@ -12451,4 +12453,34 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall), "nur Admin");
   assert.ok(/hashSprung/.test(programm) && /h\.startsWith\("#gebgruss="\)\) ggWahl\(/.test(programm), "Push öffnet die Auswahl");
   assert.ok(/ICH\?\.admin \? '<button class="knopf"[^']*onclick="ggUebersicht\(\)">🎂 Meine Geburtstagsgrüße/.test(programm), "Büro → Geburtstage: Knopf für den Admin");
+}
+// 2.617.0 KC-CLUB-SPRUCH-ARCHIV: Spruch-Archiv nur für den Admin + runde Geburtstage in den Geburtstagsgrüßen
+{
+  const a = server.indexOf("const GEB_GRUESSE: string[] = ["), b = server.indexOf("async function gebGrussDaten(");
+  const a2 = server.indexOf("const GEB_RUND: string[] = ["), b2 = server.indexOf("// Ein Zettel der Clubleitung");
+  const js = (server.slice(a, b) + server.slice(a2, b2)).replace(/: string\[\] =/g, " =").replace(/: \{ id: string; sym: string; t: string; sprueche: string\[\] \}\[\] =/, " =")
+    .replace(/\(nr: number, empf: \{[^}]*\}, abs: \{[^}]*\}, alter = 0\)/, "(nr, empf, abs, alter = 0)").replace(/\(bd: string, tag: string\)/g, "(bd, tag)").replace(/\(bd: string, heute: string\)/, "(bd, heute)")
+    .replace(/\(pid: string, jahr: string, verlauf: number\[\], kuerzlich: number\[\]\)/, "(pid, jahr, verlauf, kuerzlich)").replace(/\(nr: number, alter: number\)/, "(nr, alter)").replace(/\(pid: string, jahr: string\)/, "(pid, jahr)")
+    .replace("(alter: number)", "(alter)").replace("(t: string)", "(t)").replace("(eigen: { eigene?: any[]; weg?: string[] })", "(eigen)").replace(/async function gebGrussLauf[\s\S]*$/, "");
+  const f = new Function("berlinTag", js + ";return { SPRUCH_ARCHIV, spruchArchiv, GEB_RUND, gebRund, gebAlter, gebGrussText, gebRundGueltig };")((d) => d.toISOString().slice(0, 10));
+  const ids = f.SPRUCH_ARCHIV.map((r) => r.id);
+  for (const id of ["geburtstag", "rund", "jubilaeum", "geburt", "namenstag", "hochzeit", "trauer"]) assert.ok(ids.includes(id), `Register ${id}`);
+  assert.equal(new Set(ids).size, ids.length, "Register eindeutig");
+  const reg = f.spruchArchiv({});
+  assert.ok(reg.every((r) => r.sprueche.length >= 4 && r.sprueche.every((s) => /^\S/.test(s.text) && !/[{}|]/.test(s.text))), "jedes Register gefüllt, ohne Platzhalter-Reste");
+  assert.ok(reg.find((r) => r.id === "geburtstag").sprueche.length >= 30, "die 30 Geburtstagsgrüße im Register Geburtstag");
+  assert.ok(reg.find((r) => r.id === "rund").sprueche.filter((s) => /\b80\b|Achtzig/.test(s.text)).length >= 10, "mindestens 10 Sprüche zum 80.");
+  const mit = f.spruchArchiv({ eigene: [{ id: "e1", reg: "trauer", text: "Eigener" }], weg: ["trauer-1"] }).find((r) => r.id === "trauer");
+  assert.ok(mit.sprueche[0].eigen && mit.sprueche[0].text === "Eigener" && !mit.sprueche.some((s) => s.id === "trauer-1"), "eigene oben, ausgeblendete weg");
+  assert.ok(f.gebRund(80) && f.gebRund(75) && f.gebRund(50) && !f.gebRund(79) && !f.gebRund(20), "rund: 50/75/80, nicht 79");
+  assert.equal(f.gebAlter("1947-12-17", "2027-12-17"), 80, "Alter");
+  const t = f.gebGrussText(101, { vorname: "Klaus", anrede: "Lieber" }, { vorname: "Hansi", anrede: "Lieber" }, 80);
+  assert.ok(t.startsWith("🎉 Lieber Klaus, 80 Jahre") && t.endsWith("Dein Hansi"), "runder Gruß mit Alter: " + t);
+  assert.ok(f.gebRundGueltig(101, 80) && !f.gebRundGueltig(101, 79), "runde Grüße nur bei rundem Geburtstag");
+  const fall = server.slice(server.indexOf('case "spruch_archiv": {'), server.indexOf('case "buero_feste": {'));
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall) && /eq\("person_id", ich\.person_id\)\.eq\("schluessel", "spruch_archiv"\)/.test(fall), "nur Admin, nur eigene Zeile");
+  assert.ok(/<div class="regal">\$\{sprRuecken\(\)\}/.test(programm) && /const sprRuecken = \(\) => ICH\?\.admin \?/.test(programm), "📜 Sprüche im Regal „Mein Ordner“, nur Admin");
+  assert.ok(/if \(AR\.spruch\) return sprZeigen\(\);/.test(programm), "Archiv zeigt das Spruch-Archiv");
+  const marke = new Function("return " + programm.match(/const sprOhneMarke = (\(t\) => [^\n;]+);/)[1])();
+  assert.equal(marke("8️⃣0️⃣ 🎉 Hallo"), "🎉 Hallo", "Markierung 80 beim Senden weg");
 }

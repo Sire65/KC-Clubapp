@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
+## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
 Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll; in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin.“
 - Büro → Geburtstage & Jubiläen → „🎂 Meine Geburtstagsgrüße“ (nur Admin): ein/aus, die Geburtstage der nächsten 60 Tage mit Stand (ausgewählt, automatisch, verschickt).
 - Antippen zeigt alle 30 Grüße fertig mit Namen und passender Form (Lieber/Liebe, er/sie); Lieber/Liebe lässt sich dort festlegen (unbekannt → „Hallo“).
@@ -8,6 +8,11 @@ Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich
 - Nichts ausgewählt → automatisch ein passender Gruß: nie einer, den die Person schon bekam, und nicht die zuletzt verschickten.
 - 2 Tage vorher ab 9 Uhr ein Push „🎂 … hat übermorgen Geburtstag – Gruß auswählen“ (nur wenn noch keiner gewählt ist), Antippen öffnet die Auswahl.
 - Sparsam: der Lauf prüft nur zu 7 Stundenläufen am Tag (1 Abfrage, wenn ausgeschaltet).
+
+📜 Spruch-Archiv (KC-CLUB-SPRUCH-ARCHIV, Wunsch Hansi „Spruch-Archiv nur für mich, Ordner mit Registern für die Anlässe, schon gefüllt“):
+- Archiv → 👤 Mein Ordner → Ordner „📜 Sprüche“ (nur Admin). 16 Register mit 163 Sprüchen und Emojis: Geburtstag (mit den 30 Geburtstagsgrüßen), Runder Geburtstag (12 zum 80., dazu 50/60/70/75/90), Jubiläum, Geburt eines Kindes, Taufe & Kommunion, Namenstag, Hochzeit, Hochzeitstag, Trauer, Gute Besserung, Ruhestand, Dank & Anerkennung, Feste & Feiertage, Willkommen, Küchen-Sprüche.
+- Je Spruch: 📋 Kopieren, 💬 Senden (Mitglied wählen – [Name] wird zum Vornamen, Text bleibt vor dem Senden änderbar), ✏️ Abwandeln. Eigene Sprüche anlegen, ändern, löschen; Vorlagen ausblenden (🙈) und wieder zeigen. Suche über alle Register.
+- Runde Geburtstage (50, 60, 70, 75, 80 …) bekommen in den Geburtstagsgrüßen oben 8 eigene Grüße mit Alter („Lieber Klaus, 80 Jahre …“); automatisch wird dann einer davon gewählt. Übersicht zeigt „wird 80 🎉“.
 
 Fund Hansi: „Info-Band läuft nicht weiter“ – es hielt (seit 2.337.0 KC-CLUB-AKKU-2) wie die Daueranimationen nach 45 s ohne Antippen an.
 - Das Info-Band blättert jetzt weiter, auch wenn niemand das Display berührt (es wechselt nur alle 6 s den Text). Angehalten wird es nur noch bei knappem Akku (unter 30 % und nicht am Laden), beim Antippen (9 s) und wenn die App im Hintergrund ist.
