@@ -2520,6 +2520,331 @@ async function geburtstagZettelAbnehmen() {
   const alt = (data ?? []).filter((x: any) => x.details?.tag && x.details.tag < heute).map((x: any) => String(x.details.zettel || "")).filter(Boolean);
   if (alt.length) await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: null }).in("id", alt).is("entfernt_am", null);
 }
+// 2.617.0 KC-CLUB-GLUECKSKEKS: Anmeldungen, zu denen es einen Glückskeks gibt – 10, 20, 25, 30, 40, 50, dann alle 25, ab 200 alle 50
+// Gezählt werden Tage mit mindestens einer Öffnung (Wunsch Hansi „Tage zählen“ – Vielnutzer bekommen sonst zu schnell Kekse)
+const keksMeilenstein = (n: number) => [10, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 300].includes(n) || (n >= 365 && n % 365 === 0);
+// ---------- 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS (Wunsch Hansi „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll;
+// in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin“) ----------
+// Nur für den Admin, der es unter Büro → Geburtstage einschaltet. Grüße gehen als ganz normale Nachricht im Zweiergespräch von ihm
+// (Push/Mail nach den Einstellungen des Empfängers, wie jede Nachricht). Lauf: Wartung zur vollen Stunde – 0 Uhr (00:04) senden,
+// spätere Stundenläufe holen einen ausgefallenen Lauf nach; ab 9 Uhr 2 Tage vorher ein Push „Gruß auswählen“, falls noch keiner gewählt ist.
+// Anrede aus kc_besuche_anrede (Lieber/Liebe, unbekannt → „Hallo“); [er|sie|neutral] im Text. Gespeichert beim Absender:
+// „geb_gruss“ { an, wahl: { person_id: { tag, nr } } } (nur er ändert es) und „geb_gruss_lauf“ { gesendet, erinnert, verlauf, kuerzlich } (nur der Lauf).
+const GEB_GRUESSE: string[] = [
+  "🎂 {an}, ich gratuliere dir von Herzen zum Geburtstag! Bleib gesund, fröhlich und genau so, wie du bist.",
+  "🎉 Alles Gute zum Geburtstag, {v}! [Schön, dass du ein Clubkamerad bist, auf den man sich immer verlassen kann.|Schön, dass du eine Clubkameradin bist, auf die man sich immer verlassen kann.|Schön, dass du bei uns bist – auf dich kann man sich immer verlassen.]",
+  "💐 {an}, zu deinem Ehrentag wünsche ich dir Gesundheit, Glück und viele schöne Stunden mit den Menschen, die dir wichtig sind.",
+  "🌟 Herzlichen Glückwunsch, {v}! Danke für alles, was du für unseren Club tust. Heute bist du dran, dich feiern zu lassen.",
+  "🎈 {an}, ein neues Lebensjahr beginnt – ich wünsche dir, dass es dein bestes wird!",
+  "❤️ Happy Birthday, {v}! Mit dir ist unser Club ein Stück reicher. Lass dich heute richtig verwöhnen.",
+  "👨‍🍳 {an}, für dein neues Lebensjahr wünsche ich dir das beste Rezept: eine Prise Glück, ein Löffel Gesundheit und ganz viel Freude. Gut umrühren und genießen!",
+  "🍲 Alles Gute, {v}! Heute darfst du mal nicht am Herd stehen – heute wirst du bekocht und gefeiert.",
+  "🧂 {an}, du bist das Salz in unserer Suppe! Herzlichen Glückwunsch zum Geburtstag.",
+  "🍰 Herzlichen Glückwunsch, {v}! Möge dein Jahr so gelingen wie ein perfekter Kuchen: locker, süß und mit einer Kirsche obendrauf.",
+  "🔪 {an}, scharfe Messer, heiße Töpfe und ein Herz aus Gold – das bist du! Alles Gute zum Geburtstag.",
+  "🥘 Happy Birthday, {v}! Ich wünsche dir ein Jahr, das nie anbrennt, immer gut gewürzt ist und reichlich Nachschlag bietet.",
+  "🍷 {an}, wie ein guter Wein wirst du mit jedem Jahr besser. Zum Wohl und herzlichen Glückwunsch!",
+  "📖 Alles Gute, {v}! Im Kochbuch deines Lebens beginnt heute ein neues Kapitel – ich freue mich auf viele leckere Seiten mit dir.",
+  "🎂 [Lieber Küchenchef|Liebe Küchenchefin|Hallo Küchenprofi] {v}, heute bekommst du die größte Torte! Herzlichen Glückwunsch.",
+  "🥄 {an}, die Zutaten für ein schönes neues Lebensjahr: Freunde, Lachen, Gesundheit – und natürlich gutes Essen. Alles Gute!",
+  "😄 Herzlichen Glückwunsch, {v}! Keine Sorge wegen des Alters – Käse und Wein werden auch erst mit den Jahren richtig gut.",
+  "🕯️ {an}, ich habe die Kerzen gezählt … und dann aufgehört. Hauptsache, du bist gesund und hast Spaß! Alles Gute!",
+  "🎁 Happy Birthday, {v}! Mein Geschenk an dich: Heute musst du keinen einzigen Abwasch machen.",
+  "😉 Alles Gute, {v}! Du bist nicht älter geworden – du bist nur länger lecker.",
+  "🏆 {an}, für dich gibt’s heute fünf Sterne – und zwar nicht nur für deine Küche! Herzlichen Glückwunsch.",
+  "⏰ Herzlichen Glückwunsch, {v}! Ein Jahr mehr Erfahrung am Herd – ab heute bist du offiziell [Kochexperte|Kochexpertin|Kochprofi].",
+  "🎂 Alles Gute zum Geburtstag, {v}!",
+  "🎉 Happy Birthday, {v}! Feier schön!",
+  "🥳 {an}, hoch sollst du leben! Herzlichen Glückwunsch!",
+  "🌻 Herzliche Glückwünsche, {v} – genieß deinen Tag!",
+  "✨ {an}, zu deinem Geburtstag wünsche ich dir, dass alle deine Wünsche in Erfüllung gehen. Danke, dass du Teil unserer Gemeinschaft bist.",
+  "🌈 {an}, möge das neue Lebensjahr dir viele Momente schenken, an die du dich gerne erinnerst. Herzlichen Glückwunsch!",
+  "🙏 Alles Gute, {v}! Ich bin dankbar für jede Stunde, die wir gemeinsam im Club verbringen. Bleib uns noch lange erhalten!",
+  "🎶 {an}, heute singe ich für dich: Happy Birthday! Ich wünsche dir Gesundheit, Glück und Gottes Segen.",
+];
+const GG_STUNDEN = [0, 1, 2, 7, 9, 12, 18]; // KC-DB-SPARSAM: nur diese Stundenläufe (0 Uhr senden, danach nachholen, ab 9 Uhr erinnern)
+function gebGrussText(nr: number, empf: { vorname: string; anrede?: string | null }, abs: { vorname: string; anrede?: string | null }, alter = 0) {
+  const t = nr > 100 ? GEB_RUND[nr - 101]?.replaceAll("{alter}", String(alter)) : GEB_GRUESSE[nr - 1]; if (!t) return "";
+  const g = empf.anrede === "Lieber" ? 0 : empf.anrede === "Liebe" ? 1 : 2;
+  const s = t.replace(/\[([^\]|]*)\|([^\]|]*)\|([^\]]*)\]/g, (_m, a, b, c) => [a, b, c][g])
+    .replaceAll("{an}", `${["Lieber", "Liebe", "Hallo"][g]} {v}`).replaceAll("{v}", empf.vorname);
+  const gruss = abs.anrede === "Lieber" ? `Dein ${abs.vorname}` : abs.anrede === "Liebe" ? `Deine ${abs.vorname}` : `Liebe Grüße\n${abs.vorname}`;
+  return `${s}\n\n${gruss}`;
+}
+// 29.02. → in Nicht-Schaltjahren am 28.02. (wie der Geburtstags-Push)
+function gebTrifft(bd: string, tag: string) {
+  const md = bd.slice(5, 10), t = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
+  return md === t || (!schalt && t === "02-28" && md === "02-29");
+}
+// nächster Geburtstag ab heute (Berlin), Tage bis dahin
+function gebNaechster(bd: string, heute: string) {
+  for (let i = 0; i <= 366; i++) { const tag = berlinTag(new Date(Date.parse(heute + "T12:00:00Z") + i * 86400000)); if (gebTrifft(bd, tag)) return { tag, tage: i }; }
+  return null;
+}
+// „passend“: nichts, was diese Person schon bekam, und nicht die zuletzt verschickten – sonst fester Zufall je Person und Jahr
+function gebGrussAuto(pid: string, jahr: string, verlauf: number[], kuerzlich: number[]) {
+  const alle = GEB_GRUESSE.map((_, i) => i + 1);
+  let frei = alle.filter((n) => !verlauf.includes(n) && !kuerzlich.includes(n));
+  if (!frei.length) frei = alle.filter((n) => !verlauf.slice(-5).includes(n));
+  if (!frei.length) frei = alle;
+  let h = 0; for (const c of pid + jahr) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return frei[h % frei.length];
+}
+// runder Geburtstag (50, 60, 70, 75, 80 …): eigene Grüße mit Alter – Nummern ab 101
+const gebAlter = (bd: string, tag: string) => Number(tag.slice(0, 4)) - Number(String(bd).slice(0, 4));
+const gebRundGueltig = (nr: number, alter: number) => nr > 100 && gebRund(alter) && !!GEB_RUND[nr - 101];
+function gebGrussAutoRund(pid: string, jahr: string) { let h = 0; for (const c of pid + jahr) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 101 + (h % GEB_RUND.length); }
+async function gebGrussDaten(pid: string) {
+  const { data } = await db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ["geb_gruss", "geb_gruss_lauf"]);
+  const w = (k: string) => (data ?? []).find((x: any) => x.schluessel === k)?.wert ?? {};
+  const e = w("geb_gruss"), l = w("geb_gruss_lauf");
+  return { an: e.an === true, wahl: (e.wahl && typeof e.wahl === "object" ? e.wahl : {}) as Record<string, { tag: string; nr: number }>,
+    lauf: { gesendet: l.gesendet ?? {}, erinnert: l.erinnert ?? {}, verlauf: l.verlauf ?? {}, kuerzlich: Array.isArray(l.kuerzlich) ? l.kuerzlich : [] } as any };
+}
+const gebGrussSpeichern = (pid: string, k: "geb_gruss" | "geb_gruss_lauf", wert: unknown) =>
+  db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: k, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+async function gebAnreden(ids: string[]) {
+  const { data } = ids.length ? await db.from("kc_besuche_anrede").select("person_id,anrede").in("person_id", ids) : { data: [] as any[] };
+  return new Map((data ?? []).map((x: any) => [x.person_id, x.anrede as string]));
+}
+// Mitglieder mit Geburtsdatum (ohne Aushilfen/Gäste, ohne den Absender)
+async function gebGrussLeute(absender: string) {
+  return (await sammelEmpfaenger()).filter((m) => m.birth_date && m.person_id !== absender);
+}
+async function gebGrussLauf() {
+  const stunde = berlinStunde(new Date());
+  if (!GG_STUNDEN.includes(stunde)) return { aus: true };
+  const { data: an } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "geb_gruss").contains("wert", { an: true });
+  if (!an?.length) return { absender: 0 };
+  const heute = berlinTag(new Date()), in2 = berlinTag(new Date(Date.now() + 2 * 86400000)), z = { gesendet: 0, erinnert: 0, fehler: 0 };
+  for (const a of an) {
+    const ich = await geplantIch(a.person_id); if (!ich?.admin) continue;
+    const d = await gebGrussDaten(a.person_id), leute = await gebGrussLeute(a.person_id);
+    const heuteDran = leute.filter((m) => gebTrifft(String(m.birth_date), heute) && d.lauf.gesendet[m.person_id]?.tag !== heute);
+    const bald = stunde >= 9 ? leute.filter((m) => gebTrifft(String(m.birth_date), in2) && d.lauf.erinnert[m.person_id] !== in2 && d.wahl[m.person_id]?.tag !== in2) : [];
+    if (!heuteDran.length && !bald.length) continue;
+    const anr = await gebAnreden([a.person_id, ...heuteDran.map((m) => m.person_id)]);
+    for (const m of heuteDran) {
+      const w = d.wahl[m.person_id], verlauf: number[] = d.lauf.verlauf[m.person_id] ?? [], alter = gebAlter(String(m.birth_date), heute);
+      const gewaehlt = w?.tag === heute && (GEB_GRUESSE[w.nr - 1] || gebRundGueltig(w.nr, alter)) ? w.nr : 0;
+      const nr = gewaehlt || (gebRund(alter) ? gebGrussAutoRund(m.person_id, heute.slice(0, 4)) : gebGrussAuto(m.person_id, heute.slice(0, 4), verlauf, d.lauf.kuerzlich));
+      // erst vermerken, dann senden – zwei Läufe gleichzeitig senden so nie doppelt; klappt das Senden nicht, wird der Vermerk zurückgenommen
+      d.lauf.gesendet[m.person_id] = { tag: heute, nr, am: jetzt(), auto: !gewaehlt };
+      await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+      const text = gebGrussText(nr, { vorname: vorname(m), anrede: anr.get(m.person_id) }, { vorname: ich.vorname, anrede: anr.get(a.person_id) }, alter);
+      try {
+        const r = await aktionAusfuehren("nachricht_senden", { empfaenger: { personen: [m.person_id] }, text, wege: [] }, ich, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
+        if (!r.ok) { const j: any = await r.json().catch(() => ({})); throw new Error(txt(j?.error, 200) || `Status ${r.status}`); }
+        if (nr <= 100) { d.lauf.verlauf[m.person_id] = [...verlauf, nr].slice(-10); d.lauf.kuerzlich = [...d.lauf.kuerzlich, nr].slice(-8); }
+        await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+        await protokoll(a.person_id, "geburtstag_gruss_gesendet", { an: m.person_id, nr, auto: d.lauf.gesendet[m.person_id].auto });
+        z.gesendet++;
+      } catch (e) {
+        delete d.lauf.gesendet[m.person_id]; await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+        console.error("geburtstag gruss", String(e)); z.fehler++;
+      }
+    }
+    const anrBald = bald.length ? await gebAnreden(bald.map((m) => m.person_id)) : new Map<string, string>();
+    for (const m of bald) {
+      d.lauf.erinnert[m.person_id] = in2;
+      await sendenGewaehlt("club_geburtstag", [a.person_id], ["push"], {
+        titel: `🎂 ${vorname(m)} hat übermorgen Geburtstag`, kurz: `${anrBald.get(m.person_id) ? "" : "⚠️ Lieber/Liebe fehlt noch – bitte festlegen. "}Gruß auswählen – sonst schicke ich kurz nach 0 Uhr automatisch einen passenden in deinem Namen.`,
+        betreff: `Köcheclub Werne – ${m.display_name} hat übermorgen Geburtstag`,
+        text: `${m.display_name} hat übermorgen (${fTag.format(new Date(in2 + "T12:00:00Z"))}) Geburtstag. Gruß auswählen: ${APP_URL}#gebgruss=${m.person_id}`,
+        url: `${APP_URL}#gebgruss=${m.person_id}`,
+      }, `club-geb-gruss:${a.person_id}:${m.person_id}:${in2}`).catch((e) => console.error("geb gruss erinnern", String(e)));
+      z.erinnert++;
+    }
+    if (bald.length) await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+  }
+  return z;
+}
+// ---------- 2.617.0 KC-CLUB-SPRUCH-ARCHIV (Wunsch Hansi „ein Spruch-Archiv nur für mich – ein Ordner in meinem Archiv mit Registern für die
+// Anlässe: Geburtstag, Jubiläum, Geburt eines Kindes, Namenstag, Eheschließung, Tod usw., schon mit passenden Sprüchen und Emojis gefüllt“) ----------
+// Nur Admin. Vorlagen stehen hier; eigene Sprüche und ausgeblendete Vorlagen beim Admin in kc_club_person_einstellung „spruch_archiv“
+// { eigene: [{ id, reg, text }], weg: [vorlagen-id] }. [Name] setzt die App beim Senden ein. Das Register „Geburtstag“ enthält auch die 30 Geburtstagsgrüße.
+const GEB_RUND: string[] = [
+  "🎉 {an}, {alter} Jahre – und kein bisschen leise! Ich gratuliere dir von Herzen zu deinem runden Geburtstag.",
+  "🥂 Herzlichen Glückwunsch zum {alter}., {v}! Auf die nächsten Jahre voller Gesundheit, Freude und gutem Essen – zum Wohl!",
+  "🎂 {an}, {alter} Kerzen passen kaum noch auf die Torte – aber du passt perfekt in unseren Club! Alles Liebe zum runden Geburtstag.",
+  "🌟 {an}, {alter} Jahre Lebenserfahrung, Herzlichkeit und Humor – ich bin froh, dich zu kennen. Feier deinen großen Tag!",
+  "👨‍🍳 {an}, {alter} Jahre – das ist wie ein gutes Schmorgericht: Je länger es zieht, desto besser wird es. Herzlichen Glückwunsch!",
+  "🍷 Zum {alter}. Geburtstag alles Gute, {v}! Wie ein edler Tropfen hast du mit den Jahren immer mehr Charakter bekommen.",
+  "✨ {an}, zu deinem {alter}. Geburtstag wünsche ich dir Gesundheit, Zufriedenheit und noch viele schöne Stunden mit uns am Herd.",
+  "🎈 {alter} Jahre jung, {v}! Ich wünsche dir einen Festtag, so bunt und fröhlich wie du selbst.",
+];
+const gebRund = (alter: number) => alter >= 30 && (alter % 10 === 0 || alter % 25 === 0);
+const SPRUCH_ARCHIV: { id: string; sym: string; t: string; sprueche: string[] }[] = [
+  { id: "geburtstag", sym: "🎂", t: "Geburtstag", sprueche: [
+    "🎂 „Älter werden ist nichts für Feiglinge.“ – Gut, dass du so mutig bist! Alles Gute zum Geburtstag, [Name].",
+    "🌻 Zum Geburtstag wünsche ich dir Zeit – Zeit zum Genießen, zum Lachen und für alles, was dir wichtig ist.",
+    "🎁 Das schönste Geschenk an deinem Geburtstag bist du selbst – für alle, die dich kennen. Herzlichen Glückwunsch!",
+    "☀️ Möge dein neues Lebensjahr so warm wie die Sonne, so süß wie Honig und so bunt wie ein Sommergarten sein.",
+    "🍀 Glück, Gesundheit und ein voller Kühlschrank – mehr braucht man nicht. Alles Gute, [Name]!",
+  ] },
+  { id: "rund", sym: "🎉", t: "Runder Geburtstag", sprueche: [
+    "8️⃣0️⃣ 🎉 Liebe/r [Name], 80 Jahre – und noch immer mittendrin! Ich gratuliere dir von Herzen zu deinem großen Tag.",
+    "8️⃣0️⃣ 🥂 Herzlichen Glückwunsch zum 80., [Name]! Achtzig Jahre voller Geschichten, Rezepte und Lebensfreude – auf viele weitere!",
+    "8️⃣0️⃣ 🎂 Mit 80 ist man nicht alt – man ist ein Klassiker! Alles Gute zum Geburtstag, [Name].",
+    "8️⃣0️⃣ 🌳 Liebe/r [Name], 80 Jahre wie ein starker Baum: tief verwurzelt, mit vielen Jahresringen und immer noch voller Leben. Herzlichen Glückwunsch!",
+    "8️⃣0️⃣ 🍷 80 Jahre – wie ein großer Jahrgangswein: selten, wertvoll und mit jedem Jahr besser. Zum Wohl, [Name]!",
+    "8️⃣0️⃣ 👨‍🍳 Liebe/r [Name], dein Rezept für 80 erfüllte Jahre: viel Liebe, eine gute Portion Humor und nie zu wenig Salz. Alles Gute!",
+    "8️⃣0️⃣ 🕰️ Achtzig Jahre, [Name] – über 29.000 Tage Lebenserfahrung! Schön, dass so viele davon auch unserem Club gehören.",
+    "8️⃣0️⃣ 🎶 Achtzig Kerzen, ein Club voller Freunde und ein Lied nur für dich: Happy Birthday, [Name]!",
+    "8️⃣0️⃣ 💐 Liebe/r [Name], zu deinem 80. Geburtstag wünsche ich dir vor allem Gesundheit, Zufriedenheit und noch viele gemeinsame Stunden mit uns.",
+    "8️⃣0️⃣ 🏆 80 Jahre jung und ein Vorbild für uns alle – herzlichen Glückwunsch, [Name]!",
+    "8️⃣0️⃣ 📖 Liebe/r [Name], 80 Jahre – ein dickes Buch voller Geschichten. Ich freue mich auf viele weitere Kapitel mit dir!",
+    "8️⃣0️⃣ 🎩 „Mit 80 weiß man, worauf es ankommt.“ – Und du weißt es ganz bestimmt! Alles Gute zum 80., [Name].",
+    "5️⃣0️⃣ 🎉 Ein halbes Jahrhundert, [Name] – und du siehst keinen Tag älter aus als 49! Herzlichen Glückwunsch zum 50.",
+    "5️⃣0️⃣ 🍳 50 Jahre: Die erste Hälfte war die Vorspeise – jetzt kommt der Hauptgang! Alles Gute, [Name].",
+    "6️⃣0️⃣ 🥂 60 Jahre – das beste Alter, um das Leben richtig zu genießen. Herzlichen Glückwunsch, [Name]!",
+    "6️⃣0️⃣ 🌅 Mit 60 fängt das Leben erst richtig an – mehr Zeit für Freunde, Reisen und gutes Essen. Alles Gute, [Name]!",
+    "7️⃣0️⃣ 🌟 70 Jahre voller Herz, Erfahrung und guter Laune – ich gratuliere dir von Herzen, [Name]!",
+    "7️⃣0️⃣ 🍷 Siebzig Jahre gereift wie ein edler Wein – zum Wohl und alles Gute zum 70., [Name]!",
+    "7️⃣5️⃣ 💎 Ein Dreivierteljahrhundert, [Name]! 75 Jahre – ein echtes Juwel. Herzlichen Glückwunsch!",
+    "9️⃣0️⃣ 👑 90 Jahre – ein großes, reiches Leben. Ich verneige mich und gratuliere dir von ganzem Herzen, [Name]!",
+    "9️⃣0️⃣ 🌹 Liebe/r [Name], zu deinem 90. Geburtstag wünsche ich dir Gesundheit, Wärme und viele liebe Menschen um dich herum.",
+  ] },
+  { id: "jubilaeum", sym: "🏅", t: "Jubiläum", sprueche: [
+    "🏅 Liebe/r [Name], [Zahl] Jahre im Köcheclub – danke für deine Treue, deinen Einsatz und viele unvergessliche Stunden!",
+    "🎖️ Herzlichen Glückwunsch zum Clubjubiläum! [Zahl] Jahre, in denen du unseren Club mitgeprägt hast.",
+    "🤝 [Zahl] Jahre gemeinsam am Herd – auf viele weitere Jahre voller Freundschaft und guter Rezepte!",
+    "🌟 Ein Jubiläum ist ein guter Moment, Danke zu sagen: Danke, [Name], dass du dabei bist!",
+    "🥇 [Zahl] Jahre Treue verdienen mehr als ein Dankeschön – aber das kommt von Herzen: Danke, [Name]!",
+    "🍾 Auf [Zahl] Jahre Zusammenhalt, Spaß und gutes Essen – herzlichen Glückwunsch zum Jubiläum!",
+    "💼 Herzlichen Glückwunsch zum Dienstjubiläum, [Name]! [Zahl] Jahre Erfahrung, Zuverlässigkeit und Engagement.",
+    "🏆 [Zahl] Jahre – das ist ein Meilenstein. Ich bin stolz, dich in unserem Club zu haben!",
+    "🎉 Unser Club wird [Zahl] Jahre alt! Danke an alle, die mit Herz, Hand und Kochlöffel dabei sind.",
+  ] },
+  { id: "geburt", sym: "👶", t: "Geburt eines Kindes", sprueche: [
+    "👶 Herzlich willkommen auf der Welt, kleine/r [Name]! Den stolzen Eltern alles Liebe und Gute.",
+    "🍼 Ein kleines Wunder ist angekommen – herzlichen Glückwunsch zur Geburt eurer Tochter / eures Sohnes!",
+    "🌈 Ein neuer Mensch, ein neues Glück. Ich freue mich mit euch und wünsche euch eine wunderschöne Zeit zu dritt.",
+    "⭐ „Kinder sind Sterne, die nie verglühen.“ – Herzlichen Glückwunsch zu eurem kleinen Stern!",
+    "🧸 Willkommen, kleine/r [Name]! Möge dein Leben voller Liebe, Lachen und leckerem Brei sein. 😉",
+    "💕 Zehn kleine Finger, zehn kleine Zehen – und ganz viel Liebe. Herzlichen Glückwunsch zum Nachwuchs!",
+    "🎈 Der Köcheclub gratuliert zum neuen Küchenhelfer! In ein paar Jahren stehen wir zusammen am Herd. 👨‍🍳",
+    "🌼 Ich wünsche euch viel Kraft, wenig schlaflose Nächte und unzählige glückliche Momente mit eurem Baby.",
+    "👣 Die kleinsten Füße hinterlassen die größten Spuren in unseren Herzen. Herzlichen Glückwunsch!",
+  ] },
+  { id: "taufe", sym: "🕯️", t: "Taufe & Kommunion", sprueche: [
+    "🕯️ Zur Taufe wünsche ich dir Gottes Segen, liebe Menschen an deiner Seite und ein Leben voller Licht.",
+    "🌿 Herzlichen Glückwunsch zur Taufe! Möge dich dein Weg immer behütet und fröhlich durchs Leben führen.",
+    "🕊️ „Ich wünsche dir Engel, die dich begleiten.“ – Alles Liebe zu deinem besonderen Tag.",
+    "✝️ Herzliche Glückwünsche zur Erstkommunion, [Name]! Möge dieser Tag dir immer in schöner Erinnerung bleiben.",
+    "🌸 Zur Konfirmation alles Gute, [Name]! Ich wünsche dir Mut, Zuversicht und viele gute Wegbegleiter.",
+    "🙏 Zu deinem Fest wünsche ich dir Gottes Segen – heute und an jedem Tag deines Lebens.",
+  ] },
+  { id: "namenstag", sym: "📛", t: "Namenstag", sprueche: [
+    "📛 Alles Gute zum Namenstag, [Name]! Ein schöner Name für einen besonderen Menschen.",
+    "🌷 Heute ist dein Namenstag – ein guter Grund, dich zu feiern. Herzliche Glückwünsche!",
+    "😇 Dein Namenspatron schaut heute bestimmt besonders freundlich auf dich herab. Alles Liebe zum Namenstag!",
+    "🎀 Zum Namenstag wünsche ich dir, dass du deinem Namen immer Ehre machst – das tust du ja sowieso!",
+    "☕ Herzlichen Glückwunsch zum Namenstag, [Name]! Gönn dir heute ein Stück Kuchen extra.",
+    "🌟 Ein Name ist mehr als ein Wort – er steht für dich. Alles Gute zu deinem Namenstag!",
+  ] },
+  { id: "hochzeit", sym: "💍", t: "Hochzeit", sprueche: [
+    "💍 Herzlichen Glückwunsch zur Hochzeit! Ich wünsche euch ein Leben voller Liebe, Vertrauen und gemeinsamer Abenteuer.",
+    "💒 „Die Liebe ist das einzige, was wächst, wenn man es verschwendet.“ – Alles Gute für eure gemeinsame Zukunft!",
+    "🥂 Auf das Brautpaar! Möge eure Ehe so gut gelingen wie ein perfektes Festtagsmenü.",
+    "👨‍🍳 Das Rezept für eine glückliche Ehe: zwei Herzen, eine Prise Humor, viel Geduld – und immer gemeinsam abschmecken!",
+    "💐 Heute sagt ihr Ja – ich sage: Herzlichen Glückwunsch und alles Liebe für euren gemeinsamen Weg!",
+    "❤️ Zwei Menschen, ein Weg, eine Liebe. Ich freue mich von Herzen mit euch!",
+    "🕊️ Möge eure Liebe mit jedem Jahr wachsen und euer Zuhause immer voller Wärme und Lachen sein.",
+    "🎊 Herzlichen Glückwunsch zur Vermählung! Auf ein Leben, in dem ihr euch jeden Tag aufs Neue füreinander entscheidet.",
+    "🍰 Möge eure Ehe süß wie die Hochzeitstorte und stabil wie ihre unterste Etage sein. Alles Gute!",
+  ] },
+  { id: "hochzeitstag", sym: "💞", t: "Hochzeitstag", sprueche: [
+    "🥈 Herzlichen Glückwunsch zur Silberhochzeit! 25 Jahre gemeinsam – das ist gelebte Liebe.",
+    "🥇 50 Jahre Ehe – herzlichen Glückwunsch zur Goldenen Hochzeit! Ihr seid ein Vorbild für uns alle.",
+    "💎 60 Jahre Seite an Seite – alles Liebe zur Diamantenen Hochzeit!",
+    "🌹 Zum Hochzeitstag wünsche ich euch, dass ihr euch weiterhin jeden Tag zum Lachen bringt.",
+    "💞 [Zahl] Jahre verheiratet und noch immer ein Herz und eine Seele – herzlichen Glückwunsch!",
+    "🥂 Auf euch zwei! Möge eure Liebe weiter so gut reifen wie ein edler Wein.",
+  ] },
+  { id: "trauer", sym: "🖤", t: "Trauer", sprueche: [
+    "🖤 In stiller Trauer und tiefem Mitgefühl denke ich an dich und deine Familie.",
+    "🕯️ Worte können den Schmerz nicht lindern – aber sie können sagen: Du bist nicht allein. In Gedanken bin ich bei dir.",
+    "🕊️ „Was man tief in seinem Herzen besitzt, kann man nicht durch den Tod verlieren.“ (Goethe) – Mein aufrichtiges Beileid.",
+    "🌹 Wir verlieren mit [Name] einen wunderbaren Menschen und Freund. Wir werden [Name] in liebevoller Erinnerung behalten.",
+    "🤍 Herzliches Beileid. Möge die Erinnerung an die gemeinsamen Jahre dir Kraft und Trost schenken.",
+    "🌅 Wenn die Sonne des Lebens untergeht, leuchten die Sterne der Erinnerung. In stiller Anteilnahme.",
+    "🍂 Der Köcheclub trauert um [Name]. Unsere Gedanken sind bei der Familie und allen, die [Name] nahestanden.",
+    "🕯️ Ein Licht ist erloschen, aber die Wärme bleibt in unseren Herzen. In tiefer Verbundenheit.",
+    "🙏 Wenn du reden möchtest oder Hilfe brauchst – ich bin für dich da. Von Herzen mein Beileid.",
+    "⭐ [Name] wird an unserem Herd immer einen Platz haben. Wir werden [Name] sehr vermissen.",
+  ] },
+  { id: "besserung", sym: "🌷", t: "Gute Besserung", sprueche: [
+    "🌷 Gute Besserung, [Name]! Werd schnell wieder gesund – am Herd fehlst du uns.",
+    "🍲 Ich schicke dir eine große Portion Kraft und eine heiße Hühnersuppe in Gedanken. Gute Besserung!",
+    "☀️ Nach jedem Regen kommt die Sonne – ich wünsche dir, dass es dir bald wieder richtig gut geht.",
+    "💪 Kopf hoch, [Name]! Du schaffst das. Alles Gute für deine Genesung.",
+    "🤗 Ruh dich gut aus und lass dich verwöhnen. Wir freuen uns, wenn du wieder dabei bist!",
+    "🍵 Tee, Ruhe und liebe Grüße – das beste Rezept für eine schnelle Genesung. Gute Besserung!",
+    "🌈 Ich drücke dir ganz fest die Daumen, dass die OP gut verläuft und du schnell wieder auf den Beinen bist.",
+  ] },
+  { id: "ruhestand", sym: "🌅", t: "Ruhestand", sprueche: [
+    "🌅 Herzlichen Glückwunsch zum Ruhestand! Jetzt beginnt die Zeit für alles, wofür bisher zu wenig Zeit war.",
+    "⛱️ Endlich Rentner/in – kein Wecker, kein Stress, dafür mehr Zeit für den Köcheclub! Alles Gute, [Name].",
+    "🎣 Ruhestand heißt nicht Stillstand – ich wünsche dir viele neue Abenteuer und Hobbys!",
+    "📅 Ab heute ist jeder Tag ein Samstag. Genieß den neuen Lebensabschnitt in vollen Zügen!",
+    "🍳 Mehr Zeit zum Kochen, Reisen und Genießen – herzlichen Glückwunsch zum wohlverdienten Ruhestand!",
+    "🌻 Für deinen Ruhestand wünsche ich dir Gesundheit, Gelassenheit und viele schöne Stunden.",
+  ] },
+  { id: "dank", sym: "🙏", t: "Dank & Anerkennung", sprueche: [
+    "🙏 Danke, [Name], für deine Hilfe – ohne dich hätten wir das nicht geschafft!",
+    "🌟 Ein riesiges Dankeschön an alle Helferinnen und Helfer – ihr seid großartig!",
+    "💐 Danke für deinen unermüdlichen Einsatz für unseren Club. Das ist nicht selbstverständlich!",
+    "👨‍🍳 Danke an das ganze Küchenteam – der Abend war ein voller Erfolg!",
+    "❤️ Manche Menschen machen die Welt ein bisschen besser. Du gehörst dazu. Danke!",
+    "🏅 Vielen Dank für deine Zuverlässigkeit – auf dich ist einfach Verlass.",
+    "🎉 Danke an alle, die mitgemacht haben – gemeinsam sind wir unschlagbar!",
+    "🤝 Ein herzliches Dankeschön für deine Spende und deine Unterstützung unseres Clubs.",
+  ] },
+  { id: "feiertage", sym: "🎄", t: "Feste & Feiertage", sprueche: [
+    "🎄 Ich wünsche dir und deiner Familie frohe Weihnachten, besinnliche Stunden und ein gutes Festessen!",
+    "⭐ Fröhliche Weihnachten und ein gesundes, glückliches neues Jahr – mit vielen gemeinsamen Stunden im Club.",
+    "🎆 Prosit Neujahr! Möge das neue Jahr dir Gesundheit, Glück und viele schöne Momente schenken.",
+    "🥂 Ein gutes neues Jahr! Auf 365 neue Tage voller Freude, Freundschaft und gutem Essen.",
+    "🐣 Frohe Ostern! Ich wünsche dir sonnige Feiertage und eine erfolgreiche Eiersuche.",
+    "🌷 Schöne Ostertage im Kreis deiner Liebsten!",
+    "🕯️ Eine friedliche und besinnliche Adventszeit wünsche ich dir!",
+    "🎃 Ein schaurig-schönes Halloween! 👻",
+    "💕 Alles Liebe zum Muttertag / Vatertag – danke für alles!",
+  ] },
+  { id: "willkommen", sym: "👋", t: "Willkommen", sprueche: [
+    "👋 Herzlich willkommen im Köcheclub Werne, [Name]! Schön, dass du da bist.",
+    "👨‍🍳 Willkommen in unserer Küchenfamilie! Ich freue mich auf viele gemeinsame Stunden am Herd.",
+    "🎉 Ein neues Gesicht im Club – herzlich willkommen, [Name]! Bei Fragen bin ich jederzeit für dich da.",
+    "🍴 Herzlich willkommen! Bei uns gibt es gutes Essen, gute Laune und gute Freunde – fühl dich wie zu Hause.",
+  ] },
+  { id: "kueche", sym: "👨‍🍳", t: "Küchen-Sprüche", sprueche: [
+    "👨‍🍳 „Kochen ist Liebe, die man essen kann.“",
+    "🧂 „Das Geheimnis guter Küche ist die Liebe zum Detail – und eine Prise Salz.“",
+    "🍲 „Viele Köche verderben den Brei“ – außer im Köcheclub Werne! 😉",
+    "🍷 „Ich koche mit Wein. Manchmal tue ich ihn sogar ins Essen.“",
+    "🥄 „Wer nicht genießt, wird ungenießbar.“",
+    "🍳 „Das Leben ist zu kurz für schlechtes Essen.“",
+    "🔥 „Es gibt nur zwei Arten von Köchen: die, die sich verbrannt haben, und die, die es noch werden.“",
+    "🥕 „Essen ist ein Bedürfnis, Genießen ist eine Kunst.“ (La Rochefoucauld)",
+    "🍰 „Erst das Dessert – das Leben ist unberechenbar.“",
+    "😋 „Gutes Essen ist die Grundlage für wahres Glück.“ (Auguste Escoffier)",
+  ] },
+];
+// Vorlage für das Archiv: neutrale Form, [Name] statt Vorname, „Liebe/r [Name]“ statt Anrede
+function gebGrussVorlage(t: string) {
+  return t.replace(/\[([^\]|]*)\|([^\]|]*)\|([^\]]*)\]/g, (_m, _a, _b, c) => c).replaceAll("{an}", "Liebe/r [Name]").replaceAll("{v}", "[Name]");
+}
+function spruchArchiv(eigen: { eigene?: any[]; weg?: string[] }) {
+  const weg = new Set(eigen.weg ?? []), eigene = Array.isArray(eigen.eigene) ? eigen.eigene : [];
+  return SPRUCH_ARCHIV.map((r) => {
+    const vorlagen = r.id === "geburtstag" ? [...GEB_GRUESSE.map(gebGrussVorlage), ...r.sprueche] : r.id === "rund" ? [...r.sprueche, ...GEB_RUND.map((t) => gebGrussVorlage(t).replaceAll("{alter}", "[Alter]"))] : r.sprueche;
+    return { id: r.id, sym: r.sym, t: r.t, sprueche: [
+      ...eigene.filter((e) => e.reg === r.id).map((e) => ({ id: String(e.id), text: String(e.text), eigen: true })),
+      ...vorlagen.map((text, i) => ({ id: `${r.id}-${i + 1}`, text, eigen: false })).filter((s) => !weg.has(s.id)),
+    ] };
+  });
+}
 // Ein Zettel der Clubleitung (Willkommen, Geburtstag): Sperre setzen, Platz schaffen (ältesten früheren Club-Zettel abnehmen), aufhängen, vermerken
 const CLUB_ZETTEL_AKTIONEN = ["pinnwand_willkommen", "pinnwand_geburtstag"];
 async function clubZettelAushaengen(pid: string, sperreKey: string, text: string, aktion: string, extra: Record<string, unknown>): Promise<boolean | undefined> {
@@ -7116,6 +7441,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (stuendlich) await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       if (stuendlich) await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       if (stuendlich) await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
+      if (stuendlich) await gebGrussLauf().catch((e) => console.error("geburtstag gruss lauf", String(e))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: 0 Uhr (00:04) senden, ab 9 Uhr erinnern
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
       if (stuendlich) await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
       if (stuendlich) await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
@@ -8827,6 +9153,81 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // ----- KC-CLUB-BUERO-FESTE (1.29.0): Geburtstage (nur freigegebene, nur Tag/Monat) & Vereinsjubiläen (Eintritt aus dem KC Manager) -----
+      // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: eigene Geburtstagsgrüße (nur Admin) – Stand, Vorschau der 30 Grüße, Auswahl, ein/aus
+      case "geb_gruss": {
+        nurAdmin(ich);
+        const a = String(p.a || "stand"), heute = berlinTag(new Date());
+        const d = await gebGrussDaten(ich.person_id);
+        if (a === "schalten") {
+          await gebGrussSpeichern(ich.person_id, "geb_gruss", { an: p.an === true, wahl: d.wahl });
+          await protokoll(ich.person_id, p.an === true ? "geburtstag_gruss_an" : "geburtstag_gruss_aus", {});
+          return json({ ok: true, an: p.an === true });
+        }
+        const alleM = await sammelEmpfaenger(), leute = alleM.filter((m) => m.birth_date && m.person_id !== ich.person_id);
+        if (a === "stand") {
+          const [anr, { data: fr }] = await Promise.all([gebAnreden(leute.map((m) => m.person_id)),
+            db.from("kc_club_freigaben").select("person_id").eq("bereich", "geburtstag").eq("erlaubt", true)]);
+          const frei = new Set((fr ?? []).map((x: any) => x.person_id)), tage = Math.min(366, Math.max(7, Math.floor(Number(p.tage) || 60)));
+          const liste = leute.map((m) => ({ m, n: gebNaechster(String(m.birth_date), heute) })).filter((x) => x.n && x.n.tage <= tage)
+            .sort((x, y) => x.n!.tage - y.n!.tage).map(({ m, n }) => {
+              const w = d.wahl[m.person_id], g = d.lauf.gesendet[m.person_id];
+              const alter = gebAlter(String(m.birth_date), n!.tag);
+              return { person_id: m.person_id, name: m.display_name, vorname: vorname(m), tag: n!.tag, tage: n!.tage, anrede: anr.get(m.person_id) || null, rund: gebRund(alter) ? alter : null,
+                wahl: w?.tag === n!.tag ? w.nr : null, gesendet: g?.tag === n!.tag ? { nr: g.nr, am: g.am, auto: !!g.auto } : null, freigegeben: frei.has(m.person_id) };
+            });
+          return json({ an: d.an, liste, anzahl: GEB_GRUESSE.length, ohneDatum: alleM.filter((m) => !m.birth_date && m.person_id !== ich.person_id).length,
+            meineAnrede: (await gebAnreden([ich.person_id])).get(ich.person_id) || null });
+        }
+        const m = leute.find((x) => x.person_id === String(p.person_id || ""));
+        if (!m) throw new Fehler("Mitglied ohne Geburtsdatum oder nicht gefunden.", 404);
+        const n = gebNaechster(String(m.birth_date), heute)!;
+        if (a === "vorschau") {
+          const anr = await gebAnreden([m.person_id, ich.person_id]);
+          const empf = { vorname: vorname(m), anrede: anr.get(m.person_id) }, abs = { vorname: ich.vorname, anrede: anr.get(ich.person_id) }, alter = gebAlter(String(m.birth_date), n.tag);
+          return json({ person_id: m.person_id, name: m.display_name, tag: n.tag, tage: n.tage, anrede: empf.anrede || null, wahl: d.wahl[m.person_id]?.tag === n.tag ? d.wahl[m.person_id].nr : null,
+            gesendet: d.lauf.gesendet[m.person_id]?.tag === n.tag ? { nr: d.lauf.gesendet[m.person_id].nr } : null,
+            auto: gebRund(alter) ? gebGrussAutoRund(m.person_id, n.tag.slice(0, 4)) : gebGrussAuto(m.person_id, n.tag.slice(0, 4), d.lauf.verlauf[m.person_id] ?? [], d.lauf.kuerzlich),
+            texte: GEB_GRUESSE.map((_, i) => gebGrussText(i + 1, empf, abs)), // 2.617.0 KC-CLUB-SPRUCH-ARCHIV: runder Geburtstag → eigene Grüße mit Alter (Nr. ab 101)
+            rund: gebRund(alter) ? { alter, texte: GEB_RUND.map((_, i) => ({ nr: 101 + i, text: gebGrussText(101 + i, empf, abs, alter) })) } : null });
+        }
+        if (a === "waehlen") {
+          const nr = Math.floor(Number(p.nr) || 0);
+          if (nr < 0 || (nr > GEB_GRUESSE.length && !gebRundGueltig(nr, gebAlter(String(m.birth_date), n.tag)))) throw new Fehler("Gruß nicht gefunden.");
+          if (d.lauf.gesendet[m.person_id]?.tag === n.tag) throw new Fehler("Der Gruß für diesen Geburtstag ist schon verschickt.", 409);
+          const wahl = { ...d.wahl }; if (nr) wahl[m.person_id] = { tag: n.tag, nr }; else delete wahl[m.person_id];
+          await gebGrussSpeichern(ich.person_id, "geb_gruss", { an: d.an, wahl });
+          return json({ ok: true, nr: nr || null, tag: n.tag });
+        }
+        throw new Fehler("Unbekannte Aktion.");
+      }
+      // 2.617.0 KC-CLUB-SPRUCH-ARCHIV: eigenes Spruch-Archiv (nur Admin) – Register je Anlass, Vorlagen + eigene Sprüche
+      case "spruch_archiv": {
+        nurAdmin(ich);
+        const a = String(p.a || "liste");
+        const { data: zeile } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "spruch_archiv").maybeSingle();
+        const w = { eigene: Array.isArray(zeile?.wert?.eigene) ? zeile!.wert.eigene : [], weg: Array.isArray(zeile?.wert?.weg) ? zeile!.wert.weg : [] };
+        const speichern = () => db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "spruch_archiv", wert: w, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        if (a === "neu") {
+          const reg = String(p.reg || ""), text = txt(p.text, 1000);
+          if (!SPRUCH_ARCHIV.some((r) => r.id === reg)) throw new Fehler("Register nicht gefunden.");
+          if (!text) throw new Fehler("Bitte einen Spruch eingeben.");
+          if (w.eigene.length >= 500) throw new Fehler("Höchstens 500 eigene Sprüche.");
+          w.eigene.unshift({ id: "e" + crypto.randomUUID().slice(0, 8), reg, text }); await speichern();
+        } else if (a === "aendern") {
+          const e = w.eigene.find((x: any) => x.id === String(p.id)), text = txt(p.text, 1000);
+          if (!e) throw new Fehler("Nur eigene Sprüche lassen sich ändern – Vorlage einfach kopieren und als eigenen Spruch speichern.", 404);
+          if (!text) throw new Fehler("Bitte einen Spruch eingeben.");
+          e.text = text; await speichern();
+        } else if (a === "loeschen") {
+          const id = String(p.id || "");
+          if (w.eigene.some((x: any) => x.id === id)) w.eigene = w.eigene.filter((x: any) => x.id !== id);
+          else if (/^[a-z]+-\d+$/.test(id) && !w.weg.includes(id)) w.weg.push(id);
+          await speichern();
+        } else if (a === "zuruecksetzen") { w.weg = []; await speichern(); }
+        else if (a !== "liste") throw new Fehler("Unbekannte Aktion.");
+        const { data: anr } = await db.from("kc_besuche_anrede").select("person_id,anrede"); // „Liebe/r“ beim Senden → Lieber/Liebe des Empfängers
+        return json({ register: spruchArchiv(w), ausgeblendet: w.weg.length, anreden: Object.fromEntries((anr ?? []).map((x: any) => [x.person_id, x.anrede])) });
+      }
       case "buero_feste": {
         nurBueroLesen(ich);
         const heute = berlinTag(new Date()), tage = Math.min(366, Math.max(7, Math.floor(Number(p.tage) || 60)));
@@ -11298,9 +11699,26 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (await protokollPlatz(ich.person_id, "app_start", 60)) await protokoll(ich.person_id, "app_start", d);
         // KC-CLUB-FEE (2.372.0): jede 20. Anmeldung je Mitglied (über alle Geräte) – dann schwebt die Fee durchs Startbild
         if (d.hinter) return json({ ok: true });
-        const fz = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fee_zaehler").maybeSingle();
+        const { data: zz } = await db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).in("schluessel", ["fee_zaehler", "keks_tage"]);
+        const fz = { data: (zz ?? []).find((x: any) => x.schluessel === "fee_zaehler") }, kt: any = (zz ?? []).find((x: any) => x.schluessel === "keks_tage")?.wert;
         const anmeldungen = (Number((fz.data?.wert as any)?.n) || 0) + 1;
         await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fee_zaehler", wert: { n: anmeldungen }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        // 2.617.0 KC-CLUB-GLUECKSKEKS (Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung eine Nachricht – Hey Klaus, das ist heute deine x. Anmeldung …
+        // Such dir einen Glückskeks aus. Liebe Grüße Hansi“): Gruß vom Admin; die App zeigt 3 Glückskekse. Dann keine Fee zugleich.
+        // Tage mit der App: je Berliner Kalendertag einmal weiterzählen; beim ersten Mal aus den App-Starts nachzählen (Aufzeichnung 180 Tage)
+        const heute = berlinTag(new Date());
+        let tage = 0;
+        if (!kt || kt.tag !== heute) {
+          if (kt) tage = (Number(kt.n) || 0) + 1;
+          else { const { data: st } = await db.from("kc_club_protokoll").select("zeit,details").eq("person_id", ich.person_id).eq("aktion", "app_start").limit(5000);
+            tage = new Set((st ?? []).filter((x: any) => !x.details?.hinter).map((x: any) => berlinTag(new Date(x.zeit)))).size || 1; }
+          await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "keks_tage", wert: { n: tage, tag: heute }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        }
+        if (tage && keksMeilenstein(tage)) {
+          const [aid] = await adminIds().catch(() => [] as string[]);
+          const von = aid && aid !== ich.person_id ? vorname((await personen([aid])).get(aid) ?? null) : "";
+          return json({ ok: true, anmeldungen, fee: false, keks: { n: tage, von: von || null } });
+        }
         return json({ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 });
       }
       case "start_statistik": {

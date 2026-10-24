@@ -1,5 +1,43 @@
 # Änderungen
 
+## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 🥠 Glückskeks · 🚧 Baustelle · 🎡 Sim-Jü für alle · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-GLUECKSKEKS, KC-CLUB-BAUSTELLE, KC-CLUB-SIMJUE-FUER-ALLE, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
+Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll; in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin.“
+- Büro → Geburtstage & Jubiläen → „🎂 Meine Geburtstagsgrüße“ (nur Admin): ein/aus, die Geburtstage der nächsten 60 Tage mit Stand (ausgewählt, automatisch, verschickt).
+- Antippen zeigt alle 30 Grüße fertig mit Namen und passender Form (Lieber/Liebe, er/sie); Lieber/Liebe lässt sich dort festlegen (unbekannt → „Hallo“).
+- Kurz nach 0 Uhr (00:04) geht der Gruß als normale Nachricht von Hansi ins Zweiergespräch – Push/Mail nach den Einstellungen des Empfängers (ohne App per Mail, in der Ruhezeit ohne Ton). Fällt der Lauf aus, holen die nächsten Stundenläufe ihn nach.
+- Nichts ausgewählt → automatisch ein passender Gruß: nie einer, den die Person schon bekam, und nicht die zuletzt verschickten.
+- 2 Tage vorher ab 9 Uhr ein Push „🎂 … hat übermorgen Geburtstag – Gruß auswählen“ (nur wenn noch keiner gewählt ist), Antippen öffnet die Auswahl.
+- Sparsam: der Lauf prüft nur zu 7 Stundenläufen am Tag (1 Abfrage, wenn ausgeschaltet).
+
+📜 Spruch-Archiv (KC-CLUB-SPRUCH-ARCHIV, Wunsch Hansi „Spruch-Archiv nur für mich, Ordner mit Registern für die Anlässe, schon gefüllt“):
+- Archiv → 👤 Mein Ordner → Ordner „📜 Sprüche“ (nur Admin). 16 Register mit 163 Sprüchen und Emojis: Geburtstag (mit den 30 Geburtstagsgrüßen), Runder Geburtstag (12 zum 80., dazu 50/60/70/75/90), Jubiläum, Geburt eines Kindes, Taufe & Kommunion, Namenstag, Hochzeit, Hochzeitstag, Trauer, Gute Besserung, Ruhestand, Dank & Anerkennung, Feste & Feiertage, Willkommen, Küchen-Sprüche.
+- Je Spruch: 📋 Kopieren, 💬 Senden (Mitglied wählen – [Name] wird zum Vornamen, Text bleibt vor dem Senden änderbar), ✏️ Abwandeln. Eigene Sprüche anlegen, ändern, löschen; Vorlagen ausblenden (🙈) und wieder zeigen. Suche über alle Register.
+- Senden aus dem Archiv setzt „Liebe/r“ passend ein (Lieber/Liebe aus der Anrede-Liste, auch „Rentner/in“); für alle Mitglieder ist die Anrede jetzt hinterlegt (Wunsch Hansi). Die Erinnerung 2 Tage vorher warnt, falls sie bei einem neuen Mitglied fehlt.
+- Runde Geburtstage (50, 60, 70, 75, 80 …) bekommen in den Geburtstagsgrüßen oben 8 eigene Grüße mit Alter („Lieber Klaus, 80 Jahre …“); automatisch wird dann einer davon gewählt. Übersicht zeigt „wird 80 🎉“.
+
+Fund Hansi: „Info-Band läuft nicht weiter“ – es hielt (seit 2.337.0 KC-CLUB-AKKU-2) wie die Daueranimationen nach 45 s ohne Antippen an.
+- Das Info-Band blättert jetzt weiter, auch wenn niemand das Display berührt (es wechselt nur alle 6 s den Text). Angehalten wird es nur noch bei knappem Akku (unter 30 % und nicht am Laden), beim Antippen (9 s) und wenn die App im Hintergrund ist.
+- Laufende Rahmen und atmende Lämpchen halten weiterhin nach 45 s an.
+
+Fund Hansi: „Erste Nachricht an Klaus verschlüsselt geschickt – keinen Geheimagent gesehen.“ Seit 2.603.0 (KC-CLUB-SENDE-SCHLANGE) gehen Texte in einem bestehenden Chat über die Sende-Schlange; dort drehte sich nur der 🔑, der Agent fehlte.
+- Verschlüsselte Nachrichten im bestehenden Chat: erst dreht sich der 🔑, dann läuft der 🕵️ Geheimagent – wie bei einer neuen Unterhaltung. Bei 🏎️ Express bleibt es beim Rennwagen.
+- Beim Empfänger war der Agent nie betroffen.
+- Wunsch Hansi „in den Voreinstellungen kann man ihn nicht sehen“: unter ⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“ gibt es jetzt „🕵️ Vorschau „verschlüsselt““ (neben „🚨 Vorschau „wichtig““), dazu ein Satz im Hinweis. Fester Bote bleibt er nicht – er gehört zu 🔒.
+
+🥠 Glückskeks (KC-CLUB-GLUECKSKEKS, Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung eine Nachricht – Hey Klaus, das ist heute deine x. Anmeldung … Such dir einen Glückskeks aus. Liebe Grüße Hansi“):
+- Gezählt werden Tage mit der App, nicht jede Öffnung (Wunsch Hansi „Tage zählen“ – sonst bekämen Vielnutzer zu schnell Kekse). Am 10., 20., 25., 30., 40., 50., 75., 100., 150., 200., 250., 300. und 365. Tag (danach jedes volle Jahr) erscheint die Nachricht von Hansi („Heute ist schon dein 20. Tag mit der Köcheclub-App …“) mit 3 Glückskeksen. Der Zähler startet mit den Tagen seit Beginn der Aufzeichnung (7.10.).
+- Antippen: der Keks wackelt, zerspringt in zwei Hälften (Krümel fliegen), und ein weißer Papierstreifen mit Spruch und Glückszahlen kommt heraus. 40 Sprüche, ohne Wiederholung, bis alle einmal dran waren.
+- Zur selben Anmeldung keine Fee. Ohne Bewegung (Einstellung/Sparmodus) erscheint der Streifen sofort.
+
+🚧 Thema Baustelle (KC-CLUB-BAUSTELLE, Wunsch Hansi): wählbar wie die anderen Themen, Vorschau unter ⚙️ → ✨ Effekte → 🚧 Baustelle.
+- Rechts ein Erdhaufen; ein Radlader in Baustellengelb schaufelt ihn in vier Ladungen auf einen Kipplaster (Haufen schrumpft, Ladefläche füllt sich), wendet dabei jedes Mal. Aus seinem Auspuff steigen Rauchwolken, die zum Vornamen werden.
+- Zwischendurch laufen Bauarbeiter mit gelben Helmen durch (mit Brett, Schubkarre, winkend). Der Laster fährt voll davon, der Radlader weg.
+- Das Sprengkommando (rote Helme, Kiste TNT) verteilt überall Dynamit, Schild „Achtung Sprengung“, Kabel zum Zündkasten mit T-Griff, 3 – 2 – 1 (Piepen) – Auslöser: Blitz, und der ganze Kopf zerfällt in Stücke und fliegt davon (Feuerbälle, Wackeln). Ton bei ⚙️ Ton an und außerhalb der Ruhezeit: Rumms und klirrendes Glas.
+- Nach 6,5 Sekunden ist der Kopf wieder da und alles beginnt von vorn (ein Lauf ≈ 77 s).
+
+🎡 Sim-Jü für alle (KC-CLUB-SIMJUE-FUER-ALLE, Wunsch Hansi): von Samstag bis einschließlich Dienstag der Sim-Jü-Woche (2026: 24.–27.10.) zeigt jeder Kopf die Sim-Jü-Szene mit Riesenrad, Lebkuchenherz und Feuerwerk – egal welche Jahreszeit oder welches Thema eingestellt ist. Mittwoch um 0 Uhr stellt er sich von selbst zurück; so jedes Jahr.
+- Auch bei allen, die „🍂 Jahreszeiten im Kopf“ oder die Animationen ausgeschaltet haben (Wunsch Hansi: „viele wissen gar nicht, dass man es einschalten kann“). Nur der Sparmodus (Akku) hält die Szene weiter an. Nach Sim-Jü gilt wieder die eigene Einstellung.
+
 ## 2.616.0 – 2026-10-24 – 🕐 Testlisten mit Tagesangabe · 🕰️ Stundenuhr still nach eigener Ruhezeit (KC-CLUB-TESTLISTE-HEUTE, KC-CLUB-KUCKUCK-RUHEZEIT)
 Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.
 - „Verbindung testen“ und „Internet-Tiefentest“: Zeit immer mit Tagesangabe – „heute 01:01“, „gestern 19:32“, sonst „23.10. 08:42“.

@@ -6108,7 +6108,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.332.0 KC-CLUB-THEMEN-BUEHNE-2 (Wunsch Hansi „weitere Themen: Ostern, Karneval und Halloween“)
 {
   for (const [id, jz] of [["ostern", "fruehling"], ["karneval", "karneval"], ["halloween", "halloween"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
+  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
   assert.ok(/const txt = name \? `Helau, \$\{name\}!` : "Helau!";/.test(html) && /const txt = name \? `Buuuh, \$\{name\}!` : "Buuuh!";/.test(html), "Vorname auf dem Wagen und beim Gespenst");
   assert.ok(/if \(te === "ostern" && J\.saison === "fruehling"\) x\.ostern = true;/.test(html) && /J\.gaeste\.push\(\{ typ: "osterhase", x: J\.w \+ 24, t: 0 \}\)/.test(html) && /if \(e\.da === false && hase\) continue;/.test(html) && /!v\.gef && v\.da !== false/.test(html), "Ostern: Osterhase legt die Eier, erst dann sicht- und findbar");
   assert.ok(/function osterSonntag\(jahr\)/.test(html) && /const ostern = osterSonntag\(jahr\);/.test(html), "eine Osterformel für Feiertage und Themen");
@@ -6559,7 +6559,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2): Thema Weltraum mit eigener Szene (Sterne, Planet, Rakete, Astronaut schreibt den Namen, UFO)
 {
   assert.ok(/\{ id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "weltraum"\) return jzbWrSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "weltraum"\) jzbWeltraumMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const w = programm.slice(programm.indexOf("function jzbWrSchritt("), programm.indexOf("function jzbWrBahn("));
   assert.ok(/if \(t >= JZB_WR_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(w), "Lauf endet, neuer Lauf");
@@ -6570,7 +6570,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3): Thema Bauernhof – ein Tag von Morgen bis Nacht, dann wieder Morgen
 {
   assert.ok(/\{ id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "bauernhof"\) return jzbBhSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "bauernhof"\) jzbBauernhofMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const b = programm.slice(programm.indexOf("function jzbBhSchritt("), programm.indexOf("function jzbBhHimmel("));
   assert.ok(/if \(t >= JZB_BH_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(b) && /if \(abend\) \{ T\.ziel = st\.tuer;/.test(b) && /B\.tor = Math\.max\(0, B\.tor - dt \* \.8\)/.test(b), "abends in den Stall, Tor zu, neuer Lauf");
@@ -6582,7 +6582,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4): Thema Kegelabend – 6 Würfe, Tafel mit Namen und Strichen, „Alle Neune“, Tafel wischen
 {
   assert.ok(/\{ id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "kegeln"\) return jzbKgSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "kegeln"\) jzbKegelnMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbKgNeu("), programm.indexOf("function jzbKgKegelMalen("));
   assert.ok(/i === JZB_KG_WUERFE - 1 \? 9 :/.test(g) && /if \(t >= JZB_KG_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(g) && /K\.wisch = Math\.min\(1, K\.wisch \+ dt \/ 3\)/.test(g), "letzter Wurf alle Neune, Tafel wischen, neuer Lauf");
@@ -7230,7 +7230,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.548.0 KC-CLUB-WUESTE + KC-CLUB-FRIEDENSPFEIFE-2: Thema Wüste (Pyramiden, Karawane, Oase, Pharao, Flaschengeist, Goldstaub-Name, Sonnenuntergang) · Pfeife langsamer
 {
   assert.ok(/\{ id: "wueste", sym: "🐪", name: "Wüste", design: "sonnenuntergang", jz: "wueste"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest", "wueste"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest", "wueste"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "wueste"\) return jzbWuSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wueste"\) jzbWuesteMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   assert.ok(/JZB_WU_NAME_AB = 47, JZB_WU_TAKT = 2\.6/.test(programm) && /const jzbWuName = \(\) => \[\.\.\.\(jzbEisNameText\(\) \|\| "Köcheclub"\)\]\.slice\(0, 12\);/.test(programm), "Name langsam aus Goldstaub, ohne Namen Köcheclub");
   assert.ok(/jahreszeitVorschau\('wueste'\)">🐪 Wüste</.test(seite) && /\{ id: "wueste", thema: "darstellung"/.test(programm) && /\{ id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao\?"/.test(programm), "Vorschau, Hilfe, Twinkey");
@@ -9988,10 +9988,10 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
-  assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
+  assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
   assert.ok(/\.jz-buehne canvas \{ position: absolute; inset: 0;/.test(seite) && /jahreszeitVorschau\('winter'\)/.test(seite), "Canvas im Kopf, Vorschau in den Einstellungen");
 }
 
@@ -10779,8 +10779,8 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.372.0 KC-CLUB-FEE: Fee bei jeder 20. Anmeldung, antippen = Mut-Spruch
 {
-  assert.ok(/schluessel", "fee_zaehler"\)\.maybeSingle\(\)/.test(server) && /return json\(\{ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 \}\);/.test(server) && /if \(d\.hinter\) return json\(\{ ok: true \}\);/.test(server), "Server zählt Anmeldungen (ohne Hintergrund-Starts)");
-  assert.ok(/\.then\(\(r\) => \{ if \(r\?\.fee\) setTimeout\(feeKommt, 1500\); \}\)/.test(html), "App ruft die Fee bei fee: true");
+  assert.ok(/\.in\("schluessel", \["fee_zaehler", "keks_tage"\]\)/.test(server) && /return json\(\{ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 \}\);/.test(server) && /if \(d\.hinter\) return json\(\{ ok: true \}\);/.test(server), "Server zählt Anmeldungen (ohne Hintergrund-Starts)");
+  assert.ok(/\.then\(\(r\) => \{ if \(r\?\.keks\) setTimeout\(\(\) => keksZeigen\(r\.keks\), 1500\); else if \(r\?\.fee\) setTimeout\(feeKommt, 1500\); \}\)/.test(html), "App ruft die Fee bei fee: true (Glückskeks geht vor, 2.617.0)");
   assert.ok(/function feeKommt\(vorschau\)/.test(html) && /function feeSpruch\(\)/.test(html) && /onclick="feeKommt\(true\)">🧚 Fee ansehen</.test(html), "Fee, Spruch und Vorschau-Knopf");
   const n = (html.match(/const FEE_SPRUECHE = \[([\s\S]*?)\n\];/) || [, ""])[1].split("\n").filter((z) => z.trim().startsWith('"')).length;
   assert.ok(n >= 30, "genug Sprüche (" + n + ")");
@@ -11238,7 +11238,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.434.0 KC-CLUB-UNTERWASSER: Thema Unterwasserwelt mit eigener Szene (Regen füllt, Stöpsel leert)
 {
   assert.ok(/\{ id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "unterwasser"\) return jzbUwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "unterwasser"\) jzbUnterwasserMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const u = programm.slice(programm.indexOf("function jzbUwSchritt("), programm.indexOf("function jzbUwSog("));
   assert.ok(/U\.phase = "ablauf"; U\.at = 0; U\.plopp = 0;/.test(u) && /J\.fest = null; return jzbLaufEnde\(\);/.test(u), "Stöpsel → ablaufen → neuer Lauf");
@@ -11784,7 +11784,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.529.0 KC-CLUB-WILDWEST (Wunsch Hansi): Thema Wilder Westen – Tipi, Lagerfeuer, Büffel am Horizont, Cowboys, Postkutsche, Herde trampelt alles nieder, Staubwolke, von vorn
 {
   assert.ok(/\{ id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "wildwest"\) return jzbWwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wildwest"\) jzbWildwestMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbWwSchritt("), programm.indexOf("function jzbWwBueffelMalen("));
   assert.ok(/if \(t >= JZB_WW_DAUER\) \{ J\.fest = null; J\.wwStaub = true; return jzbLaufEnde\(\); \}/.test(g) && /W\.zeltFall = Math\.min\(1, W\.zeltFall \+ dt \* 1\.6\)/.test(g) && /W\.feuerAus = Math\.min\(1, W\.feuerAus \+ dt \* 3\)/.test(g), "Herde trampelt Zelt und Feuer nieder, nächster Lauf aus der Staubwolke");
@@ -12396,4 +12396,143 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.equal(inRuhe([8, 0], ruhe), false, "08:00 → mit Ton");
   assert.equal(inRuhe([1, 0], null), false, "ohne Ruhezeit → mit Ton, auch nachts");
   assert.equal(inRuhe([1, 0], { ...ruhe, an: false }), false, "Ruhezeit aus → mit Ton");
+}
+// 2.617.0 KC-CLUB-INFOBAND-WEITER: Info-Band hält nicht mehr nach 45 s Ruhe an – nur bei knappem Akku
+{
+  assert.ok(/if \(document\.hidden \|\| aktuelleAnsicht !== "start" \|\| jzbAkkuKnapp \|\| Date\.now\(\) < IL\.halt \|\| !document\.getElementById\("infoLaufband"\)\) return;/.test(programm), "Info-Band: nur knapper Akku hält an");
+  assert.ok(/document\.documentElement\.classList\.toggle\("kc-ruhe", jzbAkkuKnapp \|\| Date\.now\(\) - jzbBedient > JZB_RUHE_MS\)/.test(programm), "Daueranimationen halten weiter nach 45 s an");
+  assert.ok(programm.indexOf("let jzbAkkuKnapp") > 0, "jzbAkkuKnapp ist global");
+}
+// 2.617.0 KC-CLUB-GEHEIMAGENT-SCHLANGE: verschlüsselt über die Sende-Schlange → 🔑, dann Agent
+{
+  const sq = programm.slice(programm.indexOf("if (sqDarf()) {"), programm.indexOf("const r = chatId ? await api(\"nachricht_senden\""));
+  assert.ok(sq.length > 0 && /if \(vnIst\(text\)\) \{ vnSchluesselZeigen\(\$\("sendenKnopf"\)\); setTimeout\(\(\) => papierflieger\(\$\("sendenKnopf"\), !!daten\.wichtig, null, !!daten\.express, true\), 650\); \}/.test(sq), "Sende-Schlange: verschlüsselt → Geheimagent");
+}
+// 2.617.0 KC-CLUB-AGENT-VORSCHAU: Geheimagent in den Voreinstellungen ansehen
+{
+  const idx = lies("index.html");
+  assert.ok(/onclick="agentVorschau\(this\)">🕵️ Vorschau „verschlüsselt“/.test(idx), "Knopf Vorschau „verschlüsselt“");
+  assert.ok(/function agentVorschau\(knopf\) \{[^\n]*papierflieger\(knopf, false, null, false, true\)/.test(programm), "Vorschau zeigt den Agenten");
+}
+// 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: 30 Grüße in Hansis Namen, Anrede er/sie/unbekannt, 0 Uhr senden, 2 Tage vorher Push „Gruß auswählen“
+{
+  const a = server.indexOf("const GEB_GRUESSE: string[] = ["), b = server.indexOf("async function gebGrussDaten(");
+  assert.ok(a > 0 && b > a, "Grüße-Block vorhanden");
+  const js = server.slice(a, b).replace(": string[] =", " =")
+    .replace(/\(nr: number, empf: \{[^}]*\}, abs: \{[^}]*\}, alter = 0\)/, "(nr, empf, abs, alter = 0)").replace(/\(bd: string, tag: string\)/g, "(bd, tag)").replace(/\(bd: string, heute: string\)/, "(bd, heute)")
+    .replace(/\(pid: string, jahr: string, verlauf: number\[\], kuerzlich: number\[\]\)/, "(pid, jahr, verlauf, kuerzlich)").replace(/\(nr: number, alter: number\)/, "(nr, alter)").replace(/\(pid: string, jahr: string\)/, "(pid, jahr)");
+  const berlinTag = (d) => d.toISOString().slice(0, 10);
+  const a2 = server.indexOf("const GEB_RUND: string[] = ["), b2 = server.indexOf("const SPRUCH_ARCHIV:");
+  const rund = server.slice(a2, b2).replace(": string[] =", " =").replace("(alter: number)", "(alter)");
+  const f = new Function("berlinTag", js + rund + ";return { GEB_GRUESSE, GG_STUNDEN, gebGrussText, gebTrifft, gebNaechster, gebGrussAuto, GEB_RUND, gebRund, gebAlter, gebRundGueltig, gebGrussAutoRund };")(berlinTag);
+  assert.equal(f.GEB_GRUESSE.length, 30, "30 Grüße");
+  assert.equal(new Set(f.GEB_GRUESSE).size, 30, "alle verschieden");
+  const hansi = { vorname: "Hansi", anrede: "Lieber" };
+  for (let i = 1; i <= 30; i++) for (const anrede of ["Lieber", "Liebe", null]) {
+    const t = f.gebGrussText(i, { vorname: "Kim", anrede }, hansi);
+    assert.ok(t.includes("Kim") && !/[{}\[\]|]/.test(t) && t.endsWith("\n\nDein Hansi"), `Gruß ${i} (${anrede}) sauber: ${t}`);
+    assert.ok(!/Köcheclub gratuliert|wünschen wir|der ganze Club/.test(t), `Gruß ${i} in Hansis Namen`);
+  }
+  assert.ok(f.gebGrussText(2, { vorname: "Kim", anrede: "Liebe" }, hansi).includes("eine Clubkameradin bist, auf die"), "sie-Form");
+  assert.ok(f.gebGrussText(2, { vorname: "Kim", anrede: "Lieber" }, hansi).includes("ein Clubkamerad bist, auf den"), "er-Form");
+  assert.ok(f.gebGrussText(1, { vorname: "Kim", anrede: null }, hansi).startsWith("🎂 Hallo Kim,"), "unbekannt → Hallo");
+  assert.ok(f.gebGrussText(1, { vorname: "Kim", anrede: "Liebe" }, hansi).startsWith("🎂 Liebe Kim,"), "Liebe …");
+  assert.ok(f.gebGrussText(1, { vorname: "Kim" }, { vorname: "Hansi" }).endsWith("\n\nLiebe Grüße\nHansi"), "Unterschrift ohne Anrede");
+  assert.equal(f.gebTrifft("1960-02-29", "2027-02-28"), true, "29.02. → 28.02. im Nicht-Schaltjahr");
+  assert.equal(f.gebTrifft("1960-02-29", "2028-02-28"), false, "Schaltjahr: am 29.02.");
+  assert.deepEqual(f.gebNaechster("1970-11-28", "2026-11-26"), { tag: "2026-11-28", tage: 2 }, "nächster Geburtstag");
+  const auto = f.gebGrussAuto("KC-P-1", "2026", [1, 2, 3], [4, 5]);
+  assert.ok(auto >= 6 && auto <= 30 && auto === f.gebGrussAuto("KC-P-1", "2026", [1, 2, 3], [4, 5]), "automatisch: nie schon bekommen, nie gerade verschickt, fest");
+  assert.ok(f.GG_STUNDEN.includes(0) && f.GG_STUNDEN.length <= 8, "0 Uhr dabei, wenige Läufe (KC-DB-SPARSAM)");
+  assert.ok(/if \(stuendlich\) await gebGrussLauf\(\)/.test(server), "Wartung zur vollen Stunde ruft den Lauf");
+  const lauf = server.slice(server.indexOf("async function gebGrussLauf("), server.indexOf("// Ein Zettel der Clubleitung"));
+  assert.ok(/if \(!ich\?\.admin\) continue;/.test(lauf) && /aktionAusfuehren\("nachricht_senden", \{ empfaenger: \{ personen: \[m\.person_id\] \}, text, wege: \[\] \}, ich/.test(lauf), "als Nachricht vom Admin, Wege nach Empfänger-Einstellung");
+  assert.ok(lauf.indexOf('d.lauf.gesendet[m.person_id] = {') < lauf.indexOf('aktionAusfuehren("nachricht_senden"') && /delete d\.lauf\.gesendet\[m\.person_id\]/.test(lauf), "erst vermerken, bei Fehler zurück");
+  assert.ok(/stunde >= 9 \?/.test(lauf) && /#gebgruss=\$\{m\.person_id\}/.test(lauf), "Erinnerung ab 9 Uhr mit Sprung zur Auswahl");
+  const fall = server.slice(server.indexOf('case "geb_gruss": {'), server.indexOf('case "buero_feste": {'));
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall), "nur Admin");
+  assert.ok(/hashSprung/.test(programm) && /h\.startsWith\("#gebgruss="\)\) ggWahl\(/.test(programm), "Push öffnet die Auswahl");
+  assert.ok(/ICH\?\.admin \? '<button class="knopf"[^']*onclick="ggUebersicht\(\)">🎂 Meine Geburtstagsgrüße/.test(programm), "Büro → Geburtstage: Knopf für den Admin");
+}
+// 2.617.0 KC-CLUB-SPRUCH-ARCHIV: Spruch-Archiv nur für den Admin + runde Geburtstage in den Geburtstagsgrüßen
+{
+  const a = server.indexOf("const GEB_GRUESSE: string[] = ["), b = server.indexOf("async function gebGrussDaten(");
+  const a2 = server.indexOf("const GEB_RUND: string[] = ["), b2 = server.indexOf("// Ein Zettel der Clubleitung");
+  const js = (server.slice(a, b) + server.slice(a2, b2)).replace(/: string\[\] =/g, " =").replace(/: \{ id: string; sym: string; t: string; sprueche: string\[\] \}\[\] =/, " =")
+    .replace(/\(nr: number, empf: \{[^}]*\}, abs: \{[^}]*\}, alter = 0\)/, "(nr, empf, abs, alter = 0)").replace(/\(bd: string, tag: string\)/g, "(bd, tag)").replace(/\(bd: string, heute: string\)/, "(bd, heute)")
+    .replace(/\(pid: string, jahr: string, verlauf: number\[\], kuerzlich: number\[\]\)/, "(pid, jahr, verlauf, kuerzlich)").replace(/\(nr: number, alter: number\)/, "(nr, alter)").replace(/\(pid: string, jahr: string\)/, "(pid, jahr)")
+    .replace("(alter: number)", "(alter)").replace("(t: string)", "(t)").replace("(eigen: { eigene?: any[]; weg?: string[] })", "(eigen)").replace(/async function gebGrussLauf[\s\S]*$/, "");
+  const f = new Function("berlinTag", js + ";return { SPRUCH_ARCHIV, spruchArchiv, GEB_RUND, gebRund, gebAlter, gebGrussText, gebRundGueltig };")((d) => d.toISOString().slice(0, 10));
+  const ids = f.SPRUCH_ARCHIV.map((r) => r.id);
+  for (const id of ["geburtstag", "rund", "jubilaeum", "geburt", "namenstag", "hochzeit", "trauer"]) assert.ok(ids.includes(id), `Register ${id}`);
+  assert.equal(new Set(ids).size, ids.length, "Register eindeutig");
+  const reg = f.spruchArchiv({});
+  assert.ok(reg.every((r) => r.sprueche.length >= 4 && r.sprueche.every((s) => /^\S/.test(s.text) && !/[{}|]/.test(s.text))), "jedes Register gefüllt, ohne Platzhalter-Reste");
+  assert.ok(reg.find((r) => r.id === "geburtstag").sprueche.length >= 30, "die 30 Geburtstagsgrüße im Register Geburtstag");
+  assert.ok(reg.find((r) => r.id === "rund").sprueche.filter((s) => /\b80\b|Achtzig/.test(s.text)).length >= 10, "mindestens 10 Sprüche zum 80.");
+  const mit = f.spruchArchiv({ eigene: [{ id: "e1", reg: "trauer", text: "Eigener" }], weg: ["trauer-1"] }).find((r) => r.id === "trauer");
+  assert.ok(mit.sprueche[0].eigen && mit.sprueche[0].text === "Eigener" && !mit.sprueche.some((s) => s.id === "trauer-1"), "eigene oben, ausgeblendete weg");
+  assert.ok(f.gebRund(80) && f.gebRund(75) && f.gebRund(50) && !f.gebRund(79) && !f.gebRund(20), "rund: 50/75/80, nicht 79");
+  assert.equal(f.gebAlter("1947-12-17", "2027-12-17"), 80, "Alter");
+  const t = f.gebGrussText(101, { vorname: "Klaus", anrede: "Lieber" }, { vorname: "Hansi", anrede: "Lieber" }, 80);
+  assert.ok(t.startsWith("🎉 Lieber Klaus, 80 Jahre") && t.endsWith("Dein Hansi"), "runder Gruß mit Alter: " + t);
+  assert.ok(f.gebRundGueltig(101, 80) && !f.gebRundGueltig(101, 79), "runde Grüße nur bei rundem Geburtstag");
+  const fall = server.slice(server.indexOf('case "spruch_archiv": {'), server.indexOf('case "buero_feste": {'));
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall) && /eq\("person_id", ich\.person_id\)\.eq\("schluessel", "spruch_archiv"\)/.test(fall), "nur Admin, nur eigene Zeile");
+  assert.ok(/<div class="regal">\$\{sprRuecken\(\)\}/.test(programm) && /const sprRuecken = \(\) => ICH\?\.admin \?/.test(programm), "📜 Sprüche im Regal „Mein Ordner“, nur Admin");
+  assert.ok(/if \(AR\.spruch\) return sprZeigen\(\);/.test(programm), "Archiv zeigt das Spruch-Archiv");
+  const marke = new Function("return " + programm.match(/const sprOhneMarke = (\(t\) => [^\n;]+);/)[1])();
+  assert.equal(marke("8️⃣0️⃣ 🎉 Hallo"), "🎉 Hallo", "Markierung 80 beim Senden weg");
+}
+// 2.617.0 KC-CLUB-GLUECKSKEKS: Glückskeks bei der 10., 20., 25., 30. … Anmeldung – Gruß vom Admin, 3 Kekse, Keks zerspringt, Papierstreifen
+{
+  const m = server.match(/const keksMeilenstein = \(n: number\) => ([^\n]+);/);
+  assert.ok(m, "keksMeilenstein");
+  const ms = new Function("n", "return " + m[1]);
+  const treffer = Array.from({ length: 400 }, (_, i) => i + 1).filter(ms);
+  assert.deepEqual(treffer, [10, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 300, 365], "Tage mit Keks");
+  assert.ok(ms(730) && !ms(400), "danach jedes volle Jahr");
+  const sm = server.slice(server.indexOf('case "start_melden": {'), server.indexOf('case "start_statistik": {'));
+  assert.ok(/if \(tage && keksMeilenstein\(tage\)\)/.test(sm) && /fee: false, keks: \{ n: tage, von: von \|\| null \}/.test(sm) && /if \(!kt \|\| kt\.tag !== heute\)/.test(sm), "Server zählt Tage, je Tag einmal, meldet Keks statt Fee");
+  assert.ok(/aid && aid !== ich\.person_id \?/.test(sm), "der Admin grüßt sich nicht selbst");
+  const k = programm.slice(programm.indexOf("const KEKS_SPRUECHE = ["), programm.indexOf("// KC-CLUB-FEE (2.372.0"));
+  const spr = new Function(k.slice(0, k.indexOf("const KEKS_KEY")) + ";return KEKS_SPRUECHE;")();
+  assert.ok(spr.length >= 30 && new Set(spr).size === spr.length, "mindestens 30 verschiedene Sprüche");
+  assert.ok(/Heute ist schon dein <b>\$\{Number\(k\.n\) \|\| "x"\}\. Tag<\/b> mit der Köcheclub-App\. Schön, dass du dabei bist!/.test(k) && /Such dir einen Glückskeks aus\./.test(k) && /Liebe Grüße<br>\$\{esc\(k\.von \|\| "deine Köcheclub-App"\)\}/.test(k), "Wortlaut Hansi");
+  assert.ok((k.match(/onclick="keksOeffnen\(this\)"/g) || []).length === 1 && /\[0, 1, 2\]\.map/.test(k), "drei Kekse");
+  assert.ok(/translate\(-34px,14px\) rotate\(-38deg\)/.test(k) && /translate\(34px,14px\) rotate\(38deg\)/.test(k) && /id="keksPapier"/.test(k) && /background:#fffefa/.test(k), "Keks zerspringt in zwei Hälften, weißer Papierstreifen");
+  assert.ok(/const spruch = keksSpruch\(\), zahlen = keksZahlen\(\), animiert = fxAn\(\);/.test(k), "ohne Animation trotzdem Spruch");
+}
+// 2.617.0 KC-CLUB-SPRUCH-ARCHIV: beim Senden „Liebe/r“ → Lieber/Liebe des Empfängers; Erinnerung warnt, wenn die Anrede fehlt
+{
+  assert.ok(/\.replace\(\/Liebe\\\/r\/g, an \|\| "Hallo"\)/.test(programm) && /const an = SPA\.daten\?\.anreden\?\.\[pid\];/.test(programm), "Anrede beim Senden aus dem Archiv");
+  assert.ok(/anreden: Object\.fromEntries/.test(server) && /⚠️ Lieber\/Liebe fehlt noch – bitte festlegen\./.test(server), "Server liefert Anreden, Erinnerung warnt");
+}
+// 2.617.0 KC-CLUB-BAUSTELLE: Thema Baustelle – Radlader, Kipplaster, Abgas-Name, Arbeiter, Sprengkommando, Kopf fliegt in die Luft, Ton mit Glasklirren
+{
+  assert.ok(/\{ id: "baustelle", sym: "🚧", name: "Baustelle", design: "[a-z]+", jz: "baustelle"/.test(programm), "Thema wählbar");
+  assert.ok(/if \(J\.saison === "baustelle"\) return jzbBsSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "baustelle"\) jzbBaustelleMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
+  assert.ok(/jahreszeitVorschau\('baustelle'\)">🚧 Baustelle</.test(idx0()) && /baustelle: "Baustelle"/.test(programm), "Vorschau in den Einstellungen");
+  assert.ok(/f(?:unction)? jzbBsLaderMalen/.test(programm) && /c\.fillStyle = "#f2b705"/.test(programm), "Radlader in Baustellengelb");
+  assert.ok(/const A = jzbBsAuspuff\(jzbBsLader\(s, O\), O\)/.test(programm), "Rauchwolken kommen aus dem Auspuff und werden zum Namen");
+  assert.ok(/const JZB_BS_ARBEITER = \[\d+, \d+, \d+\];/.test(programm) && /helm: "#d62828"/.test(programm) && /ACHTUNG SPRENGUNG/.test(programm), "Arbeiter, Sprengkommando, Schild");
+  assert.ok(/setTimeout\(jzbBsSprengen, 90\)/.test(programm) && /document\.querySelector\("#v-start \.hero"\)/.test(programm.slice(programm.indexOf("function jzbBsSprengen"))) && /h\.style\.visibility = "hidden";/.test(programm) && /JZB_BS_PAUSE \* 1000\);/.test(programm), "der ganze Kopf fliegt weg und kommt wieder");
+  const ton = programm.slice(programm.indexOf("function jzbBsTon("), programm.indexOf("const JZB_WW_DAUER"));
+  assert.ok(/if \(!einst\("ton", true\) \|\| document\.hidden\) return;/.test(ton) && /inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)/.test(ton) && /Glas klirrt/.test(ton), "Ton nur bei Ton an, nicht in der Ruhezeit; mit Glasklirren");
+}
+function idx0() { return lies("index.html"); }
+// 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE: Sim-Jü-Szene für alle von Samstag bis einschließlich Dienstag
+{
+  assert.ok(/const jahreszeitAktuell = \(d = new Date\(\)\) => \(themaFestZeit\(d\) === "simjue" \? "kirmes" :/.test(programm), "Sim-Jü geht vor der eigenen Wahl");
+  const a = programm.indexOf("function themaFestZeit("), b = programm.indexOf("\n}\n", a) + 3;
+  const f = new Function("osterSonntag", programm.slice(a, b) + ";return themaFestZeit;")((y) => `${y}-04-05`);
+  assert.equal(f(new Date(2026, 9, 23, 23, 59)), null, "Freitag 23.10. noch nicht");
+  for (const t of [24, 25, 26, 27]) assert.equal(f(new Date(2026, 9, t, 12)), "simjue", `${t}.10.2026 Sim-Jü`);
+  assert.equal(f(new Date(2026, 9, 27, 23, 59)), "simjue", "Dienstag bis Mitternacht");
+  assert.equal(f(new Date(2026, 9, 28, 0, 1)), null, "Mittwoch vorbei");
+}
+// 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE: auch bei „Jahreszeiten im Kopf“ aus / Animationen aus – nur der Sparmodus hält an
+{
+  assert.ok(/const jzbDarf = \(\) => \{ const sj = jzSimJue\(\); return \(fxAn\(\) \|\| \(sj && !SPAR\?\.an && !!document\.body\?\.animate\)\) && \(einst\("jahreszeit", true\) \|\| sj\); \};/.test(programm), "Sim-Jü überstimmt die Schalter, nicht den Sparmodus");
+  assert.ok(/if \(!jzbDarf\(\)\) \{ if \(einst\("jahreszeit", true\)\) jzDeko/.test(programm) && /JZB\.pruef = 0; if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(programm), "Kopf und Bildschleife fragen jzbDarf");
 }
