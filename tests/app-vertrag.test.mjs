@@ -12493,7 +12493,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.deepEqual(treffer, [10, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 300, 365], "Tage mit Keks");
   assert.ok(ms(730) && !ms(400), "danach jedes volle Jahr");
   const sm = server.slice(server.indexOf('case "start_melden": {'), server.indexOf('case "start_statistik": {'));
-  assert.ok(/if \(tage && keksMeilenstein\(tage\)\)/.test(sm) && /fee: false, keks: \{ n: tage, von: von \|\| null \}/.test(sm) && /if \(!kt \|\| kt\.tag !== heute\)/.test(sm), "Server zählt Tage, je Tag einmal, meldet Keks statt Fee");
+  assert.ok(/keks = keksMeilenstein\(tage\) \|\| \(!gehabt && tage > 10 && naechster - tage >= 3\);/.test(sm) && /gehabt: gehabt \|\| keks/.test(sm) && /if \(keks\) \{/.test(sm) && /fee: false, keks: \{ n: tage, von: von \|\| null \}/.test(sm) && /if \(!kt \|\| kt\.tag !== heute\)/.test(sm), "Server zählt Tage, je Tag einmal, meldet Keks statt Fee");
   assert.ok(/aid && aid !== ich\.person_id \?/.test(sm), "der Admin grüßt sich nicht selbst");
   const k = programm.slice(programm.indexOf("const KEKS_SPRUECHE = ["), programm.indexOf("// KC-CLUB-FEE (2.372.0"));
   const spr = new Function(k.slice(0, k.indexOf("const KEKS_KEY")) + ";return KEKS_SPRUECHE;")();

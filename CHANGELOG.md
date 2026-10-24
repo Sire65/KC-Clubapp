@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.621.0 – 2026-10-24 – 🥠 Nachhol-Keks (KC-CLUB-GLUECKSKEKS-NACHHOLEN)
+Wunsch Hansi: Wer schon über dem 10. Tag war, als es den Glückskeks noch nicht gab (z. B. Klaus, Willfried), bekommt seinen ersten Keks beim nächsten Öffnen an einem neuen Tag – statt erst am 20. Tag. Kommt der nächste reguläre Keks ohnehin in weniger als 3 Tagen, wartet er auf diesen (kein Doppel-Keks).
+
 ## 2.620.0 – 2026-10-24 – 🎡 Sim-Jü: Feuerwerk nur am Montag, Schießbude ruhiger (KC-CLUB-SIMJUE-FEUERWERK-MONTAG)
 Wunsch Hansi: „Bei Sim-Jü außer Montag kein Feuerwerk, und die Figuren in der Schießbude langsamer laufen lassen.“
 - In der Sim-Jü-Woche gibt es das kleine Feuerwerk am Ende jedes Durchlaufs nur noch am Montag; dazu wie gehabt das große Feuerwerk Montag 21:00–21:20 Uhr. Außerhalb der Sim-Jü-Woche (Thema oder Vorschau) bleibt es wie bisher.
