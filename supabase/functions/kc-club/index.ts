@@ -2520,6 +2520,136 @@ async function geburtstagZettelAbnehmen() {
   const alt = (data ?? []).filter((x: any) => x.details?.tag && x.details.tag < heute).map((x: any) => String(x.details.zettel || "")).filter(Boolean);
   if (alt.length) await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: null }).in("id", alt).is("entfernt_am", null);
 }
+// ---------- 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS (Wunsch Hansi „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll;
+// in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin“) ----------
+// Nur für den Admin, der es unter Büro → Geburtstage einschaltet. Grüße gehen als ganz normale Nachricht im Zweiergespräch von ihm
+// (Push/Mail nach den Einstellungen des Empfängers, wie jede Nachricht). Lauf: Wartung zur vollen Stunde – 0 Uhr (00:04) senden,
+// spätere Stundenläufe holen einen ausgefallenen Lauf nach; ab 9 Uhr 2 Tage vorher ein Push „Gruß auswählen“, falls noch keiner gewählt ist.
+// Anrede aus kc_besuche_anrede (Lieber/Liebe, unbekannt → „Hallo“); [er|sie|neutral] im Text. Gespeichert beim Absender:
+// „geb_gruss“ { an, wahl: { person_id: { tag, nr } } } (nur er ändert es) und „geb_gruss_lauf“ { gesendet, erinnert, verlauf, kuerzlich } (nur der Lauf).
+const GEB_GRUESSE: string[] = [
+  "🎂 {an}, ich gratuliere dir von Herzen zum Geburtstag! Bleib gesund, fröhlich und genau so, wie du bist.",
+  "🎉 Alles Gute zum Geburtstag, {v}! [Schön, dass du ein Clubkamerad bist, auf den man sich immer verlassen kann.|Schön, dass du eine Clubkameradin bist, auf die man sich immer verlassen kann.|Schön, dass du bei uns bist – auf dich kann man sich immer verlassen.]",
+  "💐 {an}, zu deinem Ehrentag wünsche ich dir Gesundheit, Glück und viele schöne Stunden mit den Menschen, die dir wichtig sind.",
+  "🌟 Herzlichen Glückwunsch, {v}! Danke für alles, was du für unseren Club tust. Heute bist du dran, dich feiern zu lassen.",
+  "🎈 {an}, ein neues Lebensjahr beginnt – ich wünsche dir, dass es dein bestes wird!",
+  "❤️ Happy Birthday, {v}! Mit dir ist unser Club ein Stück reicher. Lass dich heute richtig verwöhnen.",
+  "👨‍🍳 {an}, für dein neues Lebensjahr wünsche ich dir das beste Rezept: eine Prise Glück, ein Löffel Gesundheit und ganz viel Freude. Gut umrühren und genießen!",
+  "🍲 Alles Gute, {v}! Heute darfst du mal nicht am Herd stehen – heute wirst du bekocht und gefeiert.",
+  "🧂 {an}, du bist das Salz in unserer Suppe! Herzlichen Glückwunsch zum Geburtstag.",
+  "🍰 Herzlichen Glückwunsch, {v}! Möge dein Jahr so gelingen wie ein perfekter Kuchen: locker, süß und mit einer Kirsche obendrauf.",
+  "🔪 {an}, scharfe Messer, heiße Töpfe und ein Herz aus Gold – das bist du! Alles Gute zum Geburtstag.",
+  "🥘 Happy Birthday, {v}! Ich wünsche dir ein Jahr, das nie anbrennt, immer gut gewürzt ist und reichlich Nachschlag bietet.",
+  "🍷 {an}, wie ein guter Wein wirst du mit jedem Jahr besser. Zum Wohl und herzlichen Glückwunsch!",
+  "📖 Alles Gute, {v}! Im Kochbuch deines Lebens beginnt heute ein neues Kapitel – ich freue mich auf viele leckere Seiten mit dir.",
+  "🎂 [Lieber Küchenchef|Liebe Küchenchefin|Hallo Küchenprofi] {v}, heute bekommst du die größte Torte! Herzlichen Glückwunsch.",
+  "🥄 {an}, die Zutaten für ein schönes neues Lebensjahr: Freunde, Lachen, Gesundheit – und natürlich gutes Essen. Alles Gute!",
+  "😄 Herzlichen Glückwunsch, {v}! Keine Sorge wegen des Alters – Käse und Wein werden auch erst mit den Jahren richtig gut.",
+  "🕯️ {an}, ich habe die Kerzen gezählt … und dann aufgehört. Hauptsache, du bist gesund und hast Spaß! Alles Gute!",
+  "🎁 Happy Birthday, {v}! Mein Geschenk an dich: Heute musst du keinen einzigen Abwasch machen.",
+  "😉 Alles Gute, {v}! Du bist nicht älter geworden – du bist nur länger lecker.",
+  "🏆 {an}, für dich gibt’s heute fünf Sterne – und zwar nicht nur für deine Küche! Herzlichen Glückwunsch.",
+  "⏰ Herzlichen Glückwunsch, {v}! Ein Jahr mehr Erfahrung am Herd – ab heute bist du offiziell [Kochexperte|Kochexpertin|Kochprofi].",
+  "🎂 Alles Gute zum Geburtstag, {v}!",
+  "🎉 Happy Birthday, {v}! Feier schön!",
+  "🥳 {an}, hoch sollst du leben! Herzlichen Glückwunsch!",
+  "🌻 Herzliche Glückwünsche, {v} – genieß deinen Tag!",
+  "✨ {an}, zu deinem Geburtstag wünsche ich dir, dass alle deine Wünsche in Erfüllung gehen. Danke, dass du Teil unserer Gemeinschaft bist.",
+  "🌈 {an}, möge das neue Lebensjahr dir viele Momente schenken, an die du dich gerne erinnerst. Herzlichen Glückwunsch!",
+  "🙏 Alles Gute, {v}! Ich bin dankbar für jede Stunde, die wir gemeinsam im Club verbringen. Bleib uns noch lange erhalten!",
+  "🎶 {an}, heute singe ich für dich: Happy Birthday! Ich wünsche dir Gesundheit, Glück und Gottes Segen.",
+];
+const GG_STUNDEN = [0, 1, 2, 7, 9, 12, 18]; // KC-DB-SPARSAM: nur diese Stundenläufe (0 Uhr senden, danach nachholen, ab 9 Uhr erinnern)
+function gebGrussText(nr: number, empf: { vorname: string; anrede?: string | null }, abs: { vorname: string; anrede?: string | null }) {
+  const t = GEB_GRUESSE[nr - 1]; if (!t) return "";
+  const g = empf.anrede === "Lieber" ? 0 : empf.anrede === "Liebe" ? 1 : 2;
+  const s = t.replace(/\[([^\]|]*)\|([^\]|]*)\|([^\]]*)\]/g, (_m, a, b, c) => [a, b, c][g])
+    .replaceAll("{an}", `${["Lieber", "Liebe", "Hallo"][g]} {v}`).replaceAll("{v}", empf.vorname);
+  const gruss = abs.anrede === "Lieber" ? `Dein ${abs.vorname}` : abs.anrede === "Liebe" ? `Deine ${abs.vorname}` : `Liebe Grüße\n${abs.vorname}`;
+  return `${s}\n\n${gruss}`;
+}
+// 29.02. → in Nicht-Schaltjahren am 28.02. (wie der Geburtstags-Push)
+function gebTrifft(bd: string, tag: string) {
+  const md = bd.slice(5, 10), t = tag.slice(5), schalt = new Date(Date.UTC(+tag.slice(0, 4), 1, 29)).getUTCDate() === 29;
+  return md === t || (!schalt && t === "02-28" && md === "02-29");
+}
+// nächster Geburtstag ab heute (Berlin), Tage bis dahin
+function gebNaechster(bd: string, heute: string) {
+  for (let i = 0; i <= 366; i++) { const tag = berlinTag(new Date(Date.parse(heute + "T12:00:00Z") + i * 86400000)); if (gebTrifft(bd, tag)) return { tag, tage: i }; }
+  return null;
+}
+// „passend“: nichts, was diese Person schon bekam, und nicht die zuletzt verschickten – sonst fester Zufall je Person und Jahr
+function gebGrussAuto(pid: string, jahr: string, verlauf: number[], kuerzlich: number[]) {
+  const alle = GEB_GRUESSE.map((_, i) => i + 1);
+  let frei = alle.filter((n) => !verlauf.includes(n) && !kuerzlich.includes(n));
+  if (!frei.length) frei = alle.filter((n) => !verlauf.slice(-5).includes(n));
+  if (!frei.length) frei = alle;
+  let h = 0; for (const c of pid + jahr) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return frei[h % frei.length];
+}
+async function gebGrussDaten(pid: string) {
+  const { data } = await db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ["geb_gruss", "geb_gruss_lauf"]);
+  const w = (k: string) => (data ?? []).find((x: any) => x.schluessel === k)?.wert ?? {};
+  const e = w("geb_gruss"), l = w("geb_gruss_lauf");
+  return { an: e.an === true, wahl: (e.wahl && typeof e.wahl === "object" ? e.wahl : {}) as Record<string, { tag: string; nr: number }>,
+    lauf: { gesendet: l.gesendet ?? {}, erinnert: l.erinnert ?? {}, verlauf: l.verlauf ?? {}, kuerzlich: Array.isArray(l.kuerzlich) ? l.kuerzlich : [] } as any };
+}
+const gebGrussSpeichern = (pid: string, k: "geb_gruss" | "geb_gruss_lauf", wert: unknown) =>
+  db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: k, wert, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+async function gebAnreden(ids: string[]) {
+  const { data } = ids.length ? await db.from("kc_besuche_anrede").select("person_id,anrede").in("person_id", ids) : { data: [] as any[] };
+  return new Map((data ?? []).map((x: any) => [x.person_id, x.anrede as string]));
+}
+// Mitglieder mit Geburtsdatum (ohne Aushilfen/Gäste, ohne den Absender)
+async function gebGrussLeute(absender: string) {
+  return (await sammelEmpfaenger()).filter((m) => m.birth_date && m.person_id !== absender);
+}
+async function gebGrussLauf() {
+  const stunde = berlinStunde(new Date());
+  if (!GG_STUNDEN.includes(stunde)) return { aus: true };
+  const { data: an } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "geb_gruss").contains("wert", { an: true });
+  if (!an?.length) return { absender: 0 };
+  const heute = berlinTag(new Date()), in2 = berlinTag(new Date(Date.now() + 2 * 86400000)), z = { gesendet: 0, erinnert: 0, fehler: 0 };
+  for (const a of an) {
+    const ich = await geplantIch(a.person_id); if (!ich?.admin) continue;
+    const d = await gebGrussDaten(a.person_id), leute = await gebGrussLeute(a.person_id);
+    const heuteDran = leute.filter((m) => gebTrifft(String(m.birth_date), heute) && d.lauf.gesendet[m.person_id]?.tag !== heute);
+    const bald = stunde >= 9 ? leute.filter((m) => gebTrifft(String(m.birth_date), in2) && d.lauf.erinnert[m.person_id] !== in2 && d.wahl[m.person_id]?.tag !== in2) : [];
+    if (!heuteDran.length && !bald.length) continue;
+    const anr = await gebAnreden([a.person_id, ...heuteDran.map((m) => m.person_id)]);
+    for (const m of heuteDran) {
+      const w = d.wahl[m.person_id], verlauf: number[] = d.lauf.verlauf[m.person_id] ?? [];
+      const nr = w?.tag === heute && GEB_GRUESSE[w.nr - 1] ? w.nr : gebGrussAuto(m.person_id, heute.slice(0, 4), verlauf, d.lauf.kuerzlich);
+      // erst vermerken, dann senden – zwei Läufe gleichzeitig senden so nie doppelt; klappt das Senden nicht, wird der Vermerk zurückgenommen
+      d.lauf.gesendet[m.person_id] = { tag: heute, nr, am: jetzt(), auto: !(w?.tag === heute) };
+      await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+      const text = gebGrussText(nr, { vorname: vorname(m), anrede: anr.get(m.person_id) }, { vorname: ich.vorname, anrede: anr.get(a.person_id) });
+      try {
+        const r = await aktionAusfuehren("nachricht_senden", { empfaenger: { personen: [m.person_id] }, text, wege: [] }, ich, new Request(APP_URL, { method: "POST" }), Date.now(), 0);
+        if (!r.ok) { const j: any = await r.json().catch(() => ({})); throw new Error(txt(j?.error, 200) || `Status ${r.status}`); }
+        d.lauf.verlauf[m.person_id] = [...verlauf, nr].slice(-10); d.lauf.kuerzlich = [...d.lauf.kuerzlich, nr].slice(-8);
+        await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+        await protokoll(a.person_id, "geburtstag_gruss_gesendet", { an: m.person_id, nr, auto: d.lauf.gesendet[m.person_id].auto });
+        z.gesendet++;
+      } catch (e) {
+        delete d.lauf.gesendet[m.person_id]; await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+        console.error("geburtstag gruss", String(e)); z.fehler++;
+      }
+    }
+    for (const m of bald) {
+      d.lauf.erinnert[m.person_id] = in2;
+      await sendenGewaehlt("club_geburtstag", [a.person_id], ["push"], {
+        titel: `🎂 ${vorname(m)} hat übermorgen Geburtstag`, kurz: "Gruß auswählen – sonst schicke ich kurz nach 0 Uhr automatisch einen passenden in deinem Namen.",
+        betreff: `Köcheclub Werne – ${m.display_name} hat übermorgen Geburtstag`,
+        text: `${m.display_name} hat übermorgen (${fTag.format(new Date(in2 + "T12:00:00Z"))}) Geburtstag. Gruß auswählen: ${APP_URL}#gebgruss=${m.person_id}`,
+        url: `${APP_URL}#gebgruss=${m.person_id}`,
+      }, `club-geb-gruss:${a.person_id}:${m.person_id}:${in2}`).catch((e) => console.error("geb gruss erinnern", String(e)));
+      z.erinnert++;
+    }
+    if (bald.length) await gebGrussSpeichern(a.person_id, "geb_gruss_lauf", d.lauf);
+  }
+  return z;
+}
 // Ein Zettel der Clubleitung (Willkommen, Geburtstag): Sperre setzen, Platz schaffen (ältesten früheren Club-Zettel abnehmen), aufhängen, vermerken
 const CLUB_ZETTEL_AKTIONEN = ["pinnwand_willkommen", "pinnwand_geburtstag"];
 async function clubZettelAushaengen(pid: string, sperreKey: string, text: string, aktion: string, extra: Record<string, unknown>): Promise<boolean | undefined> {
@@ -7116,6 +7246,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (stuendlich) await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
       if (stuendlich) await todoFristenErinnern().catch((e) => console.error("todo erinnern", String(e))); // KC-CLUB-TODO-ERINNERUNG (2.132.0)
       if (stuendlich) await geburtstagZettelAbnehmen().catch((e) => console.error("geburtstag zettel ab", String(e))); // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0)
+      if (stuendlich) await gebGrussLauf().catch((e) => console.error("geburtstag gruss lauf", String(e))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: 0 Uhr (00:04) senden, ab 9 Uhr erinnern
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
       if (stuendlich) await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
       if (stuendlich) await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
@@ -8827,6 +8958,51 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // ----- KC-CLUB-BUERO-FESTE (1.29.0): Geburtstage (nur freigegebene, nur Tag/Monat) & Vereinsjubiläen (Eintritt aus dem KC Manager) -----
+      // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: eigene Geburtstagsgrüße (nur Admin) – Stand, Vorschau der 30 Grüße, Auswahl, ein/aus
+      case "geb_gruss": {
+        nurAdmin(ich);
+        const a = String(p.a || "stand"), heute = berlinTag(new Date());
+        const d = await gebGrussDaten(ich.person_id);
+        if (a === "schalten") {
+          await gebGrussSpeichern(ich.person_id, "geb_gruss", { an: p.an === true, wahl: d.wahl });
+          await protokoll(ich.person_id, p.an === true ? "geburtstag_gruss_an" : "geburtstag_gruss_aus", {});
+          return json({ ok: true, an: p.an === true });
+        }
+        const alleM = await sammelEmpfaenger(), leute = alleM.filter((m) => m.birth_date && m.person_id !== ich.person_id);
+        if (a === "stand") {
+          const [anr, { data: fr }] = await Promise.all([gebAnreden(leute.map((m) => m.person_id)),
+            db.from("kc_club_freigaben").select("person_id").eq("bereich", "geburtstag").eq("erlaubt", true)]);
+          const frei = new Set((fr ?? []).map((x: any) => x.person_id)), tage = Math.min(366, Math.max(7, Math.floor(Number(p.tage) || 60)));
+          const liste = leute.map((m) => ({ m, n: gebNaechster(String(m.birth_date), heute) })).filter((x) => x.n && x.n.tage <= tage)
+            .sort((x, y) => x.n!.tage - y.n!.tage).map(({ m, n }) => {
+              const w = d.wahl[m.person_id], g = d.lauf.gesendet[m.person_id];
+              return { person_id: m.person_id, name: m.display_name, vorname: vorname(m), tag: n!.tag, tage: n!.tage, anrede: anr.get(m.person_id) || null,
+                wahl: w?.tag === n!.tag ? w.nr : null, gesendet: g?.tag === n!.tag ? { nr: g.nr, am: g.am, auto: !!g.auto } : null, freigegeben: frei.has(m.person_id) };
+            });
+          return json({ an: d.an, liste, anzahl: GEB_GRUESSE.length, ohneDatum: alleM.filter((m) => !m.birth_date && m.person_id !== ich.person_id).length,
+            meineAnrede: (await gebAnreden([ich.person_id])).get(ich.person_id) || null });
+        }
+        const m = leute.find((x) => x.person_id === String(p.person_id || ""));
+        if (!m) throw new Fehler("Mitglied ohne Geburtsdatum oder nicht gefunden.", 404);
+        const n = gebNaechster(String(m.birth_date), heute)!;
+        if (a === "vorschau") {
+          const anr = await gebAnreden([m.person_id, ich.person_id]);
+          const empf = { vorname: vorname(m), anrede: anr.get(m.person_id) }, abs = { vorname: ich.vorname, anrede: anr.get(ich.person_id) };
+          return json({ person_id: m.person_id, name: m.display_name, tag: n.tag, tage: n.tage, anrede: empf.anrede || null, wahl: d.wahl[m.person_id]?.tag === n.tag ? d.wahl[m.person_id].nr : null,
+            gesendet: d.lauf.gesendet[m.person_id]?.tag === n.tag ? { nr: d.lauf.gesendet[m.person_id].nr } : null,
+            auto: gebGrussAuto(m.person_id, n.tag.slice(0, 4), d.lauf.verlauf[m.person_id] ?? [], d.lauf.kuerzlich),
+            texte: GEB_GRUESSE.map((_, i) => gebGrussText(i + 1, empf, abs)) });
+        }
+        if (a === "waehlen") {
+          const nr = Math.floor(Number(p.nr) || 0);
+          if (nr < 0 || nr > GEB_GRUESSE.length) throw new Fehler("Gruß nicht gefunden.");
+          if (d.lauf.gesendet[m.person_id]?.tag === n.tag) throw new Fehler("Der Gruß für diesen Geburtstag ist schon verschickt.", 409);
+          const wahl = { ...d.wahl }; if (nr) wahl[m.person_id] = { tag: n.tag, nr }; else delete wahl[m.person_id];
+          await gebGrussSpeichern(ich.person_id, "geb_gruss", { an: d.an, wahl });
+          return json({ ok: true, nr: nr || null, tag: n.tag });
+        }
+        throw new Fehler("Unbekannte Aktion.");
+      }
       case "buero_feste": {
         nurBueroLesen(ich);
         const heute = berlinTag(new Date()), tage = Math.min(366, Math.max(7, Math.floor(Number(p.tage) || 60)));

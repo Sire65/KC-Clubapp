@@ -12414,3 +12414,41 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/onclick="agentVorschau\(this\)">🕵️ Vorschau „verschlüsselt“/.test(idx), "Knopf Vorschau „verschlüsselt“");
   assert.ok(/function agentVorschau\(knopf\) \{[^\n]*papierflieger\(knopf, false, null, false, true\)/.test(programm), "Vorschau zeigt den Agenten");
 }
+// 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: 30 Grüße in Hansis Namen, Anrede er/sie/unbekannt, 0 Uhr senden, 2 Tage vorher Push „Gruß auswählen“
+{
+  const a = server.indexOf("const GEB_GRUESSE: string[] = ["), b = server.indexOf("async function gebGrussDaten(");
+  assert.ok(a > 0 && b > a, "Grüße-Block vorhanden");
+  const js = server.slice(a, b).replace(": string[] =", " =")
+    .replace(/\(nr: number, empf: \{[^}]*\}, abs: \{[^}]*\}\)/, "(nr, empf, abs)").replace(/\(bd: string, tag: string\)/, "(bd, tag)").replace(/\(bd: string, heute: string\)/, "(bd, heute)")
+    .replace(/\(pid: string, jahr: string, verlauf: number\[\], kuerzlich: number\[\]\)/, "(pid, jahr, verlauf, kuerzlich)");
+  const berlinTag = (d) => d.toISOString().slice(0, 10);
+  const f = new Function("berlinTag", js + ";return { GEB_GRUESSE, GG_STUNDEN, gebGrussText, gebTrifft, gebNaechster, gebGrussAuto };")(berlinTag);
+  assert.equal(f.GEB_GRUESSE.length, 30, "30 Grüße");
+  assert.equal(new Set(f.GEB_GRUESSE).size, 30, "alle verschieden");
+  const hansi = { vorname: "Hansi", anrede: "Lieber" };
+  for (let i = 1; i <= 30; i++) for (const anrede of ["Lieber", "Liebe", null]) {
+    const t = f.gebGrussText(i, { vorname: "Kim", anrede }, hansi);
+    assert.ok(t.includes("Kim") && !/[{}\[\]|]/.test(t) && t.endsWith("\n\nDein Hansi"), `Gruß ${i} (${anrede}) sauber: ${t}`);
+    assert.ok(!/Köcheclub gratuliert|wünschen wir|der ganze Club/.test(t), `Gruß ${i} in Hansis Namen`);
+  }
+  assert.ok(f.gebGrussText(2, { vorname: "Kim", anrede: "Liebe" }, hansi).includes("eine Clubkameradin bist, auf die"), "sie-Form");
+  assert.ok(f.gebGrussText(2, { vorname: "Kim", anrede: "Lieber" }, hansi).includes("ein Clubkamerad bist, auf den"), "er-Form");
+  assert.ok(f.gebGrussText(1, { vorname: "Kim", anrede: null }, hansi).startsWith("🎂 Hallo Kim,"), "unbekannt → Hallo");
+  assert.ok(f.gebGrussText(1, { vorname: "Kim", anrede: "Liebe" }, hansi).startsWith("🎂 Liebe Kim,"), "Liebe …");
+  assert.ok(f.gebGrussText(1, { vorname: "Kim" }, { vorname: "Hansi" }).endsWith("\n\nLiebe Grüße\nHansi"), "Unterschrift ohne Anrede");
+  assert.equal(f.gebTrifft("1960-02-29", "2027-02-28"), true, "29.02. → 28.02. im Nicht-Schaltjahr");
+  assert.equal(f.gebTrifft("1960-02-29", "2028-02-28"), false, "Schaltjahr: am 29.02.");
+  assert.deepEqual(f.gebNaechster("1970-11-28", "2026-11-26"), { tag: "2026-11-28", tage: 2 }, "nächster Geburtstag");
+  const auto = f.gebGrussAuto("KC-P-1", "2026", [1, 2, 3], [4, 5]);
+  assert.ok(auto >= 6 && auto <= 30 && auto === f.gebGrussAuto("KC-P-1", "2026", [1, 2, 3], [4, 5]), "automatisch: nie schon bekommen, nie gerade verschickt, fest");
+  assert.ok(f.GG_STUNDEN.includes(0) && f.GG_STUNDEN.length <= 8, "0 Uhr dabei, wenige Läufe (KC-DB-SPARSAM)");
+  assert.ok(/if \(stuendlich\) await gebGrussLauf\(\)/.test(server), "Wartung zur vollen Stunde ruft den Lauf");
+  const lauf = server.slice(server.indexOf("async function gebGrussLauf("), server.indexOf("// Ein Zettel der Clubleitung"));
+  assert.ok(/if \(!ich\?\.admin\) continue;/.test(lauf) && /aktionAusfuehren\("nachricht_senden", \{ empfaenger: \{ personen: \[m\.person_id\] \}, text, wege: \[\] \}, ich/.test(lauf), "als Nachricht vom Admin, Wege nach Empfänger-Einstellung");
+  assert.ok(lauf.indexOf('d.lauf.gesendet[m.person_id] = {') < lauf.indexOf('aktionAusfuehren("nachricht_senden"') && /delete d\.lauf\.gesendet\[m\.person_id\]/.test(lauf), "erst vermerken, bei Fehler zurück");
+  assert.ok(/stunde >= 9 \?/.test(lauf) && /#gebgruss=\$\{m\.person_id\}/.test(lauf), "Erinnerung ab 9 Uhr mit Sprung zur Auswahl");
+  const fall = server.slice(server.indexOf('case "geb_gruss": {'), server.indexOf('case "buero_feste": {'));
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall), "nur Admin");
+  assert.ok(/hashSprung/.test(programm) && /h\.startsWith\("#gebgruss="\)\) ggWahl\(/.test(programm), "Push öffnet die Auswahl");
+  assert.ok(/ICH\?\.admin \? '<button class="knopf"[^']*onclick="ggUebersicht\(\)">🎂 Meine Geburtstagsgrüße/.test(programm), "Büro → Geburtstage: Knopf für den Admin");
+}

@@ -1,6 +1,14 @@
 # Änderungen
 
-## 2.617.0 – 2026-10-24 – 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
+## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
+Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll; in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin.“
+- Büro → Geburtstage & Jubiläen → „🎂 Meine Geburtstagsgrüße“ (nur Admin): ein/aus, die Geburtstage der nächsten 60 Tage mit Stand (ausgewählt, automatisch, verschickt).
+- Antippen zeigt alle 30 Grüße fertig mit Namen und passender Form (Lieber/Liebe, er/sie); Lieber/Liebe lässt sich dort festlegen (unbekannt → „Hallo“).
+- Kurz nach 0 Uhr (00:04) geht der Gruß als normale Nachricht von Hansi ins Zweiergespräch – Push/Mail nach den Einstellungen des Empfängers (ohne App per Mail, in der Ruhezeit ohne Ton). Fällt der Lauf aus, holen die nächsten Stundenläufe ihn nach.
+- Nichts ausgewählt → automatisch ein passender Gruß: nie einer, den die Person schon bekam, und nicht die zuletzt verschickten.
+- 2 Tage vorher ab 9 Uhr ein Push „🎂 … hat übermorgen Geburtstag – Gruß auswählen“ (nur wenn noch keiner gewählt ist), Antippen öffnet die Auswahl.
+- Sparsam: der Lauf prüft nur zu 7 Stundenläufen am Tag (1 Abfrage, wenn ausgeschaltet).
+
 Fund Hansi: „Info-Band läuft nicht weiter“ – es hielt (seit 2.337.0 KC-CLUB-AKKU-2) wie die Daueranimationen nach 45 s ohne Antippen an.
 - Das Info-Band blättert jetzt weiter, auch wenn niemand das Display berührt (es wechselt nur alle 6 s den Text). Angehalten wird es nur noch bei knappem Akku (unter 30 % und nicht am Laden), beim Antippen (9 s) und wenn die App im Hintergrund ist.
 - Laufende Rahmen und atmende Lämpchen halten weiterhin nach 45 s an.

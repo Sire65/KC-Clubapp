@@ -26077,6 +26077,7 @@ function hashSprung(h) {
   h = String(h || "");
     if (h.startsWith("#nachricht=")) chatOeffnen(h.slice(11));
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
+    else if (h.startsWith("#gebgruss=")) ggWahl(decodeURIComponent(h.slice(10))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: Push „Gruß auswählen“
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
@@ -29854,6 +29855,7 @@ function buFesteHtml() {
   const alle = [...d.geburtstage.map((f) => ({ ...f, art: "geb" })), ...d.jubilaeen.map((f) => ({ ...f, art: "jub" }))].sort((a, b) => a.datum.localeCompare(b.datum));
   const gruppe = (titel, l) => l.length ? `<div class="abschnitt"><h3>${titel}</h3></div><div class="mini-kacheln">${l.map((f) => buFesteKachel(f, f.art)).join("")}</div>` : "";
   return `<div class="karte bu-gruss">🎉 <b>Geburtstage & Jubiläen</b> – antippen zum Gratulieren (Nachricht, Brief oder Pinnwand).</div>
+    ${ICH?.admin ? '<button class="knopf" style="width:100%;margin-bottom:8px" onclick="ggUebersicht()">🎂 Meine Geburtstagsgrüße – automatisch kurz nach 0 Uhr in meinem Namen</button>' : ""}
     <div class="hl-chips">${[30, 60, 90, 366].map((t) => `<button class="chip${d.tage === t ? " an" : ""}" onclick="buFesteListe(${t}).then(buZeigen)">${t === 366 ? "ganzes Jahr" : `nächste ${t} Tage`}</button>`).join("")}</div>
     ${gruppe("🎉 Heute", alle.filter((f) => f.tage === 0))}
     ${gruppe("📅 Diese Woche", alle.filter((f) => f.tage > 0 && f.tage <= 7))}
@@ -29862,6 +29864,55 @@ function buFesteHtml() {
     ${!alle.length ? '<div class="karte hinweis">In diesem Zeitraum steht nichts an.</div>' : ""}
     ${d.ohneFreigabe ? `<p class="hinweis">🔒 ${d.ohneFreigabe} Mitglied${d.ohneFreigabe === 1 ? " hat seinen" : "er haben ihren"} Geburtstag nicht freigegeben – deshalb ${d.ohneFreigabe === 1 ? "erscheint er" : "erscheinen sie"} hier nicht.</p>` : ""}
     <div class="knoepfe"><button class="knopf" onclick="druckStarten('feste')">🖨️ Liste drucken</button>${BU.festeVonFl ? '<button class="knopf" onclick="buFreudLeid()">🤍 Zurück zu Freud & Leid</button>' : '<button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button>'}</div>`;
+}
+// ---------- 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS (Wunsch Hansi „30 verschiedene Geburtstagsgrüße, 2 Tage vorher klicke ich an, welchen er bekommen soll –
+// in meinem Namen; vergesse ich es, automatisch einen passenden, kurz nach 24 Uhr“) ----------
+// Nur Admin. Texte, Auswahl und Versand liegen beim Server (Aktion „geb_gruss“); die App zeigt Übersicht und Auswahl. Push „Gruß auswählen“ → #gebgruss=…
+const GG = { stand: null };
+const ggTag = (x) => x.tage === 0 ? "heute 🎉" : x.tage === 1 ? "morgen" : x.tage === 2 ? "übermorgen" : `${fTagDp.format(new Date(x.tag + "T12:00:00Z"))} · in ${x.tage} Tagen`;
+const ggStatus = (x) => x.gesendet ? `✅ verschickt (Gruß ${x.gesendet.nr}${x.gesendet.auto ? ", automatisch" : ""})` : x.wahl ? `✍️ Gruß ${x.wahl} ausgewählt` : "🤖 noch keiner gewählt – geht automatisch";
+async function ggUebersicht() {
+  if (!ICH?.admin) return;
+  try { GG.stand = await api("geb_gruss", { a: "stand", tage: 60 }); } catch (e) { return meldeFehler(e); }
+  const s = GG.stand;
+  blattAuf("ggBlatt", `<h3 style="margin-top:0">🎂 Meine Geburtstagsgrüße</h3>
+    <div class="schalter"><div><b>Grüße in meinem Namen verschicken</b><div class="hinweis">Kurz nach 0 Uhr bekommt jedes Mitglied an seinem Geburtstag eine Nachricht von dir – den Gruß, den du ausgewählt hast, sonst automatisch einen passenden (nie zweimal denselben für dieselbe Person). 2 Tage vorher erinnert dich ein Push: „Gruß auswählen“.</div></div>
+      <input type="checkbox" id="ggAn" aria-label="Geburtstagsgrüße an oder aus" ${s.an ? "checked" : ""} onchange="ggSchalten(this.checked)"></div>
+    ${s.meineAnrede ? "" : `<p class="hinweis">✍️ Unterschrift: ${ggAnredeKnoepfe(ICH.person_id, null, "Dein", "Deine")} – sonst „Liebe Grüße“.</p>`}
+    <div class="abschnitt"><h3>Die nächsten 60 Tage</h3></div>
+    ${s.liste.length ? s.liste.map((x) => `<button class="mini-kachel" style="width:100%;text-align:left" onclick="ggWahl('${esc(x.person_id)}')"><span class="mk-sym">🎂</span>
+      <span class="mk-titel">${esc(x.name)}</span><span class="mk-unter">${esc(ggTag(x))}</span><span class="mk-unter">${esc(ggStatus(x))}${x.anrede ? "" : " · ⚠️ Lieber/Liebe fehlt"}</span></button>`).join("")
+      : '<div class="karte hinweis">In den nächsten 60 Tagen hat niemand Geburtstag.</div>'}
+    ${s.ohneDatum ? `<p class="hinweis">ℹ️ ${s.ohneDatum} Mitglied${s.ohneDatum === 1 ? " hat" : "er haben"} kein Geburtsdatum in der KC-Verwaltung – ${s.ohneDatum === 1 ? "es bekommt" : "sie bekommen"} keinen Gruß.</p>` : ""}
+    <div class="knoepfe"><button class="knopf" onclick="$('ggBlatt').remove()">Schließen</button></div>`);
+}
+const ggAnredeKnoepfe = (pid, anrede, er = "Lieber", sie = "Liebe") => `<button type="button" class="chip${anrede === "Lieber" ? " an" : ""}" onclick="ggAnrede('${esc(pid)}','Lieber')">${er}</button> <button type="button" class="chip${anrede === "Liebe" ? " an" : ""}" onclick="ggAnrede('${esc(pid)}','Liebe')">${sie}</button>`;
+async function ggSchalten(an) {
+  try { await api("geb_gruss", { a: "schalten", an: !!an }); melde(an ? "🎂 Geburtstagsgrüße in deinem Namen sind eingeschaltet." : "Geburtstagsgrüße ausgeschaltet."); } catch (e) { meldeFehler(e); }
+  ggUebersicht();
+}
+async function ggAnrede(pid, anrede) {
+  try { await api("besuch", { a: "anrede", person_id: pid, anrede }); } catch (e) { return meldeFehler(e); }
+  if ($("ggWahlBlatt") && pid !== ICH.person_id) return ggWahl(pid);
+  ggUebersicht();
+}
+async function ggWahl(pid) {
+  if (!ICH?.admin) return;
+  let v; try { v = await api("geb_gruss", { a: "vorschau", person_id: pid }); } catch (e) { return meldeFehler(e); }
+  const gesendet = v.gesendet;
+  blattAuf("ggWahlBlatt", `<div style="text-align:center"><div style="font-size:2.4rem;line-height:1.2" aria-hidden="true">🎂</div>
+      <h3 style="margin:4px 0">${esc(v.name)}</h3><p style="margin:0">${esc(ggTag(v))}</p></div>
+    <p class="hinweis" style="margin-top:8px">Anrede: ${ggAnredeKnoepfe(pid, v.anrede)}${v.anrede ? "" : " – noch offen, bis dahin „Hallo“"}</p>
+    ${gesendet ? `<div class="karte">✅ Schon verschickt: Gruß ${gesendet.nr}.</div>` : `<p class="hinweis">Tippe einen Gruß an – er geht kurz nach 0 Uhr am Geburtstag als Nachricht von dir raus.</p>`}
+    <button type="button" class="karte" style="display:block;width:100%;text-align:left${v.wahl ? "" : ";outline:3px solid var(--akzent, #2a7)"}" ${gesendet ? "disabled" : ""} onclick="ggWaehlen('${esc(pid)}',0)">🤖 <b>Automatisch</b> – passend ausgesucht (zurzeit Gruß ${v.auto})</button>
+    ${v.texte.map((t, i) => `<button type="button" class="karte" style="display:block;width:100%;text-align:left;white-space:pre-line${v.wahl === i + 1 ? ";outline:3px solid var(--akzent, #2a7)" : ""}" ${gesendet ? "disabled" : ""} aria-pressed="${v.wahl === i + 1}" onclick="ggWaehlen('${esc(pid)}',${i + 1})"><b>${i + 1}.</b> ${esc(t)}</button>`).join("")}
+    <div class="knoepfe"><button class="knopf" onclick="$('ggWahlBlatt').remove();ggUebersicht()">🎂 Alle Geburtstage</button><button class="knopf" onclick="$('ggWahlBlatt').remove()">Schließen</button></div>`);
+  if (v.wahl) setTimeout(() => document.querySelector(`#ggWahlBlatt [aria-pressed="true"]`)?.scrollIntoView({ block: "center" }), 50);
+}
+async function ggWaehlen(pid, nr) {
+  try { await api("geb_gruss", { a: "waehlen", person_id: pid, nr }); } catch (e) { return meldeFehler(e); }
+  melde(nr ? `✍️ Gruß ${nr} ausgewählt – geht kurz nach 0 Uhr raus.` : "🤖 Automatisch – ein passender Gruß geht kurz nach 0 Uhr raus.");
+  $("ggWahlBlatt")?.remove(); ggUebersicht();
 }
 function buFest(art, pid) { return (art === "geb" ? BU_F?.geburtstage : BU_F?.jubilaeen)?.find((x) => x.person_id === pid); }
 function buFestInfo(art, pid) {
