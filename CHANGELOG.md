@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.619.0 – 2026-10-24 – 🎡 Sim-Jü im Info-Feld ausschalten (KC-CLUB-SIMJUE-SCHALTER)
+Wunsch Hansi: „Im Info-Feld einen Schalter Sim-Jü ausschalten – wem es nicht gefällt, kann es dann ausmachen.“
+- Während Sim-Jü steht im Info-Feld „🎡 Sim-Jü im Kopf der Startseite – Gefällt dir nicht? Hier kannst du es ausschalten“ mit dem Knopf „🚫 Sim-Jü aus“.
+- Ausgeschaltet zeigt der Kopf wieder die eigene Einstellung; im Info-Feld steht dann „🎡 Einschalten“. Gilt je Gerät und nur für dieses Jahr – beim nächsten Sim-Jü ist es wieder an.
+
 ## 2.618.0 – 2026-10-24 – 🎡 Sim-Jü: großes Herz, Schießbude, Lauflichter, Feuerwerk am Montag um 21 Uhr (KC-CLUB-SIMJUE-SCHIESSBUDE, KC-CLUB-SIMJUE-LAUFLICHT, KC-CLUB-SIMJUE-FEUERWERK)
 Wunsch Hansi: „Das Sim-Jü-Herz größer und mittig, dass man den Namen lesen kann, links noch eine Schießbude, und am Montag um 21 Uhr Feuerwerk gleichzeitig mit dem echten Feuerwerk.“
 - Das Lebkuchenherz ist fast doppelt so groß und hängt in der Mitte unten im Bodenstreifen – der Vorname steht groß darauf und liegt nicht mehr unter dem Infofeld.
