@@ -40338,8 +40338,10 @@ function sprAnListe(id) {
 async function sprSendenAn(id, pid) {
   const s = sprFinden(id), m = (MITGLIEDER || []).find((x) => x.person_id === pid); if (!s || !m) return;
   $("spAn")?.remove();
-  await direkt(pid); textVorbelegen(sprOhneMarke(s.text).replaceAll("[Name]", m.vorname || m.name)); $("text").dispatchEvent(new Event("input")); entwurfMarkeZeigen?.();
-  melde("💬 Spruch ist vorbereitet – „Liebe/r“ u. Ä. anpassen und mit ➤ senden");
+  const an = SPA.daten?.anreden?.[pid]; // Lieber/Liebe aus der Anrede-Liste, sonst „Hallo“
+  const text = sprOhneMarke(s.text).replaceAll("[Name]", m.vorname || m.name).replace(/Liebe\/r/g, an || "Hallo").replace(/Rentner\/in/g, an === "Liebe" ? "Rentnerin" : an === "Lieber" ? "Rentner" : "Rentner/in");
+  await direkt(pid); textVorbelegen(text); $("text").dispatchEvent(new Event("input")); entwurfMarkeZeigen?.();
+  melde(an ? "💬 Spruch ist vorbereitet – mit ➤ senden oder vorher ändern" : "💬 Spruch ist vorbereitet – Lieber/Liebe fehlt noch, deshalb „Hallo“ – mit ➤ senden");
 }
 function sprForm(id, vorlage) {
   const e = id ? sprFinden(id) : null, v = vorlage ? sprFinden(vorlage) : null, reg = e?.reg || v?.reg || SPA.reg || SPA.daten.register[0].id;

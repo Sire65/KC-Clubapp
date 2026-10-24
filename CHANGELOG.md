@@ -12,6 +12,7 @@ Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich
 📜 Spruch-Archiv (KC-CLUB-SPRUCH-ARCHIV, Wunsch Hansi „Spruch-Archiv nur für mich, Ordner mit Registern für die Anlässe, schon gefüllt“):
 - Archiv → 👤 Mein Ordner → Ordner „📜 Sprüche“ (nur Admin). 16 Register mit 163 Sprüchen und Emojis: Geburtstag (mit den 30 Geburtstagsgrüßen), Runder Geburtstag (12 zum 80., dazu 50/60/70/75/90), Jubiläum, Geburt eines Kindes, Taufe & Kommunion, Namenstag, Hochzeit, Hochzeitstag, Trauer, Gute Besserung, Ruhestand, Dank & Anerkennung, Feste & Feiertage, Willkommen, Küchen-Sprüche.
 - Je Spruch: 📋 Kopieren, 💬 Senden (Mitglied wählen – [Name] wird zum Vornamen, Text bleibt vor dem Senden änderbar), ✏️ Abwandeln. Eigene Sprüche anlegen, ändern, löschen; Vorlagen ausblenden (🙈) und wieder zeigen. Suche über alle Register.
+- Senden aus dem Archiv setzt „Liebe/r“ passend ein (Lieber/Liebe aus der Anrede-Liste, auch „Rentner/in“); für alle Mitglieder ist die Anrede jetzt hinterlegt (Wunsch Hansi). Die Erinnerung 2 Tage vorher warnt, falls sie bei einem neuen Mitglied fehlt.
 - Runde Geburtstage (50, 60, 70, 75, 80 …) bekommen in den Geburtstagsgrüßen oben 8 eigene Grüße mit Alter („Lieber Klaus, 80 Jahre …“); automatisch wird dann einer davon gewählt. Übersicht zeigt „wird 80 🎉“.
 
 Fund Hansi: „Info-Band läuft nicht weiter“ – es hielt (seit 2.337.0 KC-CLUB-AKKU-2) wie die Daueranimationen nach 45 s ohne Antippen an.

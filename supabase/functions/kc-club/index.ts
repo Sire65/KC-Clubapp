@@ -2643,10 +2643,11 @@ async function gebGrussLauf() {
         console.error("geburtstag gruss", String(e)); z.fehler++;
       }
     }
+    const anrBald = bald.length ? await gebAnreden(bald.map((m) => m.person_id)) : new Map<string, string>();
     for (const m of bald) {
       d.lauf.erinnert[m.person_id] = in2;
       await sendenGewaehlt("club_geburtstag", [a.person_id], ["push"], {
-        titel: `🎂 ${vorname(m)} hat übermorgen Geburtstag`, kurz: "Gruß auswählen – sonst schicke ich kurz nach 0 Uhr automatisch einen passenden in deinem Namen.",
+        titel: `🎂 ${vorname(m)} hat übermorgen Geburtstag`, kurz: `${anrBald.get(m.person_id) ? "" : "⚠️ Lieber/Liebe fehlt noch – bitte festlegen. "}Gruß auswählen – sonst schicke ich kurz nach 0 Uhr automatisch einen passenden in deinem Namen.`,
         betreff: `Köcheclub Werne – ${m.display_name} hat übermorgen Geburtstag`,
         text: `${m.display_name} hat übermorgen (${fTag.format(new Date(in2 + "T12:00:00Z"))}) Geburtstag. Gruß auswählen: ${APP_URL}#gebgruss=${m.person_id}`,
         url: `${APP_URL}#gebgruss=${m.person_id}`,
@@ -9223,7 +9224,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           await speichern();
         } else if (a === "zuruecksetzen") { w.weg = []; await speichern(); }
         else if (a !== "liste") throw new Fehler("Unbekannte Aktion.");
-        return json({ register: spruchArchiv(w), ausgeblendet: w.weg.length });
+        const { data: anr } = await db.from("kc_besuche_anrede").select("person_id,anrede"); // „Liebe/r“ beim Senden → Lieber/Liebe des Empfängers
+        return json({ register: spruchArchiv(w), ausgeblendet: w.weg.length, anreden: Object.fromEntries((anr ?? []).map((x: any) => [x.person_id, x.anrede])) });
       }
       case "buero_feste": {
         nurBueroLesen(ich);

@@ -12503,3 +12503,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/translate\(-34px,14px\) rotate\(-38deg\)/.test(k) && /translate\(34px,14px\) rotate\(38deg\)/.test(k) && /id="keksPapier"/.test(k) && /background:#fffefa/.test(k), "Keks zerspringt in zwei Hälften, weißer Papierstreifen");
   assert.ok(/const spruch = keksSpruch\(\), zahlen = keksZahlen\(\), animiert = fxAn\(\);/.test(k), "ohne Animation trotzdem Spruch");
 }
+// 2.617.0 KC-CLUB-SPRUCH-ARCHIV: beim Senden „Liebe/r“ → Lieber/Liebe des Empfängers; Erinnerung warnt, wenn die Anrede fehlt
+{
+  assert.ok(/\.replace\(\/Liebe\\\/r\/g, an \|\| "Hallo"\)/.test(programm) && /const an = SPA\.daten\?\.anreden\?\.\[pid\];/.test(programm), "Anrede beim Senden aus dem Archiv");
+  assert.ok(/anreden: Object\.fromEntries/.test(server) && /⚠️ Lieber\/Liebe fehlt noch – bitte festlegen\./.test(server), "Server liefert Anreden, Erinnerung warnt");
+}
