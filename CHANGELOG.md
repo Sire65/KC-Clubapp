@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.624.0 – 2026-10-24 – 🔵 Geplante Lastspitzen ohne Warnkasten · 📶 Verbindungstest: Netz und Server getrennt (KC-TRAFFIC-GEPLANT-STILL, KC-CLUB-VB-AUFTEILUNG)
+- KC-TRAFFIC-GEPLANT-STILL (Fund Hansi 24.10., 3:03 Uhr: gelber Kasten „ungewöhnlich hohe Datenbanklast … Ursache (geplant): Datensicherung“): Erkennt der Last-Wächter eine geplante Spitze (geplant=true – Datensicherung, neue Version, Notpaket, Rundnachricht), steht auf der Startseite kein Warnkasten mehr; im Admin-Bereich „🔵 Geplante Last – kein Grund zur Sorge“. Kritische Last zeigt weiter immer. kc-traffic-guard-ui.js?v=4.
+- KC-CLUB-VB-AUFTEILUNG (Wunsch Hansi „immer so unterschiedlich“ → „Ja“): Im Verbindungstest steht unter jeder Antwortzeit „Netz … · Server …“; der Server-Anteil stammt jetzt aus derselben Messung wie die beste Antwortzeit und wird im Geräte-Verlauf gemerkt.
+- Nur App. Auf Wunsch Hansi sofort eingespielt.
+
 ## 2.623.0 – 2026-10-24 – 🧾 Weniger Server-Protokoll, Push für das neue Apple-Format vorbereitet (KC-CLUB-LOG-SPARSAM, KC-CLUB-PUSH-DEKLARATIV)
 Anbieter-Check 24.10.2026 (Wunsch Hansi, „sparsam“): Supabase berechnet ab Anfang 2027 auch das Schreiben ins Protokoll.
 - Der Club-Server schreibt nur noch Ausreißer ins Protokoll: Messzeile erst ab 120 statt 15 Datenbank-Abfragen, Tempo-Zeile erst ab 5 statt 1,5 Sekunden. Fehler werden weiter protokolliert.
