@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.620.0 – 2026-10-24 – 🎡 Sim-Jü: Feuerwerk nur am Montag, Schießbude ruhiger (KC-CLUB-SIMJUE-FEUERWERK-MONTAG)
+Wunsch Hansi: „Bei Sim-Jü außer Montag kein Feuerwerk, und die Figuren in der Schießbude langsamer laufen lassen.“
+- In der Sim-Jü-Woche gibt es das kleine Feuerwerk am Ende jedes Durchlaufs nur noch am Montag; dazu wie gehabt das große Feuerwerk Montag 21:00–21:20 Uhr. Außerhalb der Sim-Jü-Woche (Thema oder Vorschau) bleibt es wie bisher.
+- Enten und Sterne in der Schießbude laufen weniger als halb so schnell, ein Treffer alle 4 statt 2,6 Sekunden.
+
 ## 2.619.0 – 2026-10-24 – 🎡 Sim-Jü im Info-Feld ausschalten (KC-CLUB-SIMJUE-SCHALTER)
 Wunsch Hansi: „Im Info-Feld einen Schalter Sim-Jü ausschalten – wem es nicht gefällt, kann es dann ausmachen.“
 - Während Sim-Jü steht im Info-Feld „🎡 Sim-Jü im Kopf der Startseite – Gefällt dir nicht? Hier kannst du es ausschalten“ mit dem Knopf „🚫 Sim-Jü aus“.

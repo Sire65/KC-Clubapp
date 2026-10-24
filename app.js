@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.619.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.620.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19246,8 +19246,8 @@ function jzbFest(dt) {
     for (const b of F.ballons) { b.y -= b.v * dt; b.ph += dt; b.x += Math.sin(b.ph * 1.3) * 8 * dt; }
     F.ballons = F.ballons.filter((b) => b.y > -40 * k);
     // 🎆 Feuerwerk zum Schluss (am Sim-Jü-Montag gibt es das echte) · 2.617.0: Montag 21:00–21:20 großes Feuerwerk gleichzeitig mit dem echten
-    const gross = jzbSimJueFeuerwerk();
-    if ((gross || (F.t > JZB_FEST_DAUER - 30 && F.t < JZB_FEST_DAUER - 7)) && (F.raketUhr -= dt) <= 0) { F.raketUhr = gross ? jzbZ(.15, .45) : jzbZ(.45, 1.1);
+    const gross = jzbSimJueFeuerwerk(), heute = new Date(), fwTag = themaFestZeit(heute) !== "simjue" || heute.getDay() === 1; // 2.620.0 KC-CLUB-SIMJUE-FEUERWERK-MONTAG: in der Sim-Jü-Woche nur am Montag
+    if ((gross || (fwTag && F.t > JZB_FEST_DAUER - 30 && F.t < JZB_FEST_DAUER - 7)) && (F.raketUhr -= dt) <= 0) { F.raketUhr = gross ? jzbZ(.15, .45) : jzbZ(.45, 1.1);
       F.raketen.push({ x: jzbZ(J.w * (gross ? .08 : .3), J.w - 30), y: J.h, ziel: jzbZ(J.h * (gross ? .06 : .12), J.h * .42), v: jzbZ(120, 160) * Math.max(.7, k), farbe: jzbW(JZB_FEST_BUNT), gold: gross && Math.random() < .3 }); }
     for (const r of F.raketen) {
       r.y -= r.v * dt; r.x += Math.sin(r.y * .08) * 6 * dt;
@@ -19335,16 +19335,16 @@ function jzbSchiessbudeMalen(c, F) {
   c.fillStyle = "rgba(255,255,255,.08)"; for (let i = 0; i < 6; i++) c.fillRect(x0 + i * bw / 6, oben, bw / 12, theke - oben);
   // Enten und Sterne laufen auf einer Schiene von links nach rechts
   const schiene = theke - 9 * k; c.fillStyle = "#c9a227"; c.fillRect(x0 + 3 * k, schiene + 5.5 * k, bw - 6 * k, 1.4 * k);
-  const tr = Math.floor(T / 2.6), trP = (T % 2.6) / 2.6; // alle 2,6 s ein Treffer
+  const tr = Math.floor(T / 4), trP = (T % 4) / 4; // alle 4 s ein Treffer – 2.620.0 (Wunsch Hansi): Figuren laufen langsamer, Treffer seltener
   for (let i = 0; i < 6; i++) {
-    const p = ((T * 11 * k + i * bw / 6) % (bw - 10 * k)), x = x0 + 5 * k + p, ente = i % 2 === 0, getroffen = i === tr % 6 && trP < .55;
+    const p = ((T * 4.5 * k + i * bw / 6) % (bw - 10 * k)), x = x0 + 5 * k + p, ente = i % 2 === 0, getroffen = i === tr % 6 && trP < .55;
     c.save(); c.translate(x, schiene + 5 * k); if (getroffen) c.scale(1, Math.max(.15, 1 - trP * 3));
     if (ente) { c.fillStyle = "#ffd23f"; c.beginPath(); c.ellipse(0, -3.4 * k, 4.2 * k, 2.6 * k, 0, 0, 7); c.fill(); c.beginPath(); c.arc(3 * k, -6.4 * k, 1.9 * k, 0, 7); c.fill();
       c.fillStyle = "#ff8c00"; c.beginPath(); c.moveTo(4.6 * k, -6.6 * k); c.lineTo(6.8 * k, -6 * k); c.lineTo(4.6 * k, -5.6 * k); c.fill(); c.fillStyle = "#222"; c.fillRect(3.2 * k, -7.2 * k, .9 * k, .9 * k); }
     else { c.fillStyle = "#ffffff"; c.beginPath(); for (let j = 0; j < 10; j++) { const r = j % 2 ? 1.6 * k : 4 * k, a = -Math.PI / 2 + j * Math.PI / 5; c.lineTo(Math.cos(a) * r, -4 * k + Math.sin(a) * r); } c.closePath(); c.fill();
       c.fillStyle = "#e63946"; c.beginPath(); c.arc(0, -4 * k, 1.3 * k, 0, 7); c.fill(); }
     c.restore();
-    if (getroffen && trP < .35) { c.fillStyle = `rgba(255,240,150,${1 - trP / .35})`; for (let j = 0; j < 8; j++) { const a = j * Math.PI / 4; c.beginPath(); c.arc(x + Math.cos(a) * (3 + trP * 22) * k, schiene + Math.sin(a) * (3 + trP * 22) * k, 1 * k, 0, 7); c.fill(); }
+    if (getroffen && trP < .3) { c.fillStyle = `rgba(255,240,150,${1 - trP / .35})`; for (let j = 0; j < 8; j++) { const a = j * Math.PI / 4; c.beginPath(); c.arc(x + Math.cos(a) * (3 + trP * 22) * k, schiene + Math.sin(a) * (3 + trP * 22) * k, 1 * k, 0, 7); c.fill(); }
       c.font = `800 ${8 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.lineWidth = 2 * k; c.strokeStyle = "rgba(0,0,0,.6)"; c.strokeText("Treffer!", x, schiene - 12 * k - trP * 10 * k); c.fillStyle = "#fff"; c.fillText("Treffer!", x, schiene - 12 * k - trP * 10 * k); }
   }
   // Seitenpfosten, Theke, Gewehr mit Mündungsblitz
