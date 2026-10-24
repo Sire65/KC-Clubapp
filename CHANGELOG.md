@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.626.0 – 2026-10-24 – Zeitumstellung auch per E-Mail
+Die automatische Meldung zur Zeitumstellung (Samstag vorher, 18 Uhr) geht an alle Mitglieder: mit App als Push wie bisher, ohne App jetzt als E-Mail mit demselben Text. Wie jeder Sammelversand nur Zugang „Mitglied“ (KC-CLUB-ZEITUMSTELLUNG-MAIL) · Server 2.626.0.
+
 ## 2.625.0 – 2026-10-24 – 🌹 Rose aus der Schießbude (KC-CLUB-ROSE) · Server 2.625.0
 - Wunsch Hansi: Wer in der Mitglieder-Karte (nur Admin) das Häkchen „🌹 Rose aus der Schießbude (einmalig)“ hat, bekommt nach 3 Minuten auf der Startseite (sichtbar, kein Fenster offen, nichts getippt) einmalig eine große rote langstielige Baccara-Rose mit Schild „Nur für dich“ und Vornamen. Zur Kirmes (Sim-Jü mit Schießbude sichtbar) wächst sie aus der Schießbude; sonst kommt sie mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen 🎯“. Sparmodus/weniger Bewegung: ohne Flug.
 - Server: Aktionen rose_setzen / rose_liste (nur Admin), rose_erhalten (nur für sich, nie zweimal); init leitet „rose“ aus den schon geladenen Einstellungen ab (keine zusätzliche Abfrage); Merker nicht über einstellung_setzen setzbar.

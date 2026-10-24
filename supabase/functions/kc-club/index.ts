@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.625.0";
+const SERVER_VERSION = "2.626.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2509,16 +2509,24 @@ async function zeitumstellungMelden() {
   if (!art || berlinStunde(jetztD) < 18) return;
   const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "zeitumstellung_push").eq("details->>tag", heute).limit(1);
   if (schon?.length) return;
+  // 2.626.0 KC-CLUB-ZEITUMSTELLUNG-MAIL (Wunsch Hansi 24.10.: „Push bzw. E-Mail, dass die Uhren zurückgestellt werden“ → „Ja“ zur Mail an die
+  // Mitglieder ohne App): Empfänger wie jeder Sammelversand nur Zugang „mitglied“ (2.614.0, Aushilfen/Gäste nicht); mit App → Push wie bisher,
+  // ohne App → E-Mail mit demselben Text. Gesperrte / „keine Benachrichtigungen“ filtert routerSenden wie immer.
+  const leute = await sammelEmpfaenger();
   await protokoll(null, "zeitumstellung_push", { tag: heute, art }); // erst merken, dann senden – nie doppelt
-  const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null);
-  const ids = [...new Set((zug ?? []).map((z: any) => z.person_id as string))];
+  const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).not("zuletzt_gesehen", "is", null).in("person_id", leute.map((m) => m.person_id));
+  const mitApp = new Set((zug ?? []).map((z: any) => z.person_id as string));
+  const ids = [...mitApp], ohneApp = leute.filter((m) => !mitApp.has(m.person_id) && m.email).map((m) => m.person_id);
   const winter = art === "winter";
-  await sendenGewaehlt("club_erinnerung", ids, ["push"], {
+  const vars = {
     titel: winter ? "🕑 Heute Nacht: Uhr zurückstellen" : "🕑 Heute Nacht: Uhr vorstellen",
     kurz: winter ? "Um 3 Uhr wird die Uhr auf 2 Uhr zurückgestellt – eine Stunde länger schlafen! 😴 Handy stellt sich selbst um, Backofen- und Autouhr von Hand."
       : "Um 2 Uhr wird die Uhr auf 3 Uhr vorgestellt – eine Stunde weniger Schlaf. ⏰ Handy stellt sich selbst um, Backofen- und Autouhr von Hand.",
     url: APP_URL,
-  }, `club-zeitumstellung:${heute}`);
+  };
+  if (ids.length) await sendenGewaehlt("club_erinnerung", ids, ["push"], vars, `club-zeitumstellung:${heute}`);
+  if (ohneApp.length) await sendenGewaehlt("club_erinnerung", ohneApp, ["email"], vars, `club-zeitumstellung-mail:${heute}`);
+  await protokoll(null, "zeitumstellung_versand", { tag: heute, art, push: ids.length, mail: ohneApp.length });
 }
 async function geburtstagZettelAbnehmen() {
   const heute = berlinTag(new Date());
