@@ -12561,3 +12561,8 @@ function idx0() { return lies("index.html"); }
   assert.ok(/localStorage\.getItem\(SJ_AUS_KEY\) === String\(d\.getFullYear\(\)\)/.test(programm), "gilt nur für dieses Jahr");
   assert.ok(/if \(themaFestZeit\(\) === "simjue"\) \{ const aus = jzSimJueAus\(\);/.test(programm) && /\[aus \? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten\(\)"\]/.test(programm), "Schalter im Info-Feld");
 }
+// 2.620.0 KC-CLUB-SIMJUE-FEUERWERK-MONTAG: in der Sim-Jü-Woche Feuerwerk nur am Montag, Schießbude langsamer
+{
+  assert.ok(/fwTag = themaFestZeit\(heute\) !== "simjue" \|\| heute\.getDay\(\) === 1;/.test(programm) && /\(gross \|\| \(fwTag && F\.t > JZB_FEST_DAUER - 30/.test(programm), "Feuerwerk nur montags (außer großem Feuerwerk)");
+  assert.ok(/T \* 4\.5 \* k \+ i \* bw \/ 6/.test(programm) && /Math\.floor\(T \/ 4\)/.test(programm), "Schießbude langsamer");
+}
