@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
+## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 🥠 Glückskeks · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-GLUECKSKEKS, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
 Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll; in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin.“
 - Büro → Geburtstage & Jubiläen → „🎂 Meine Geburtstagsgrüße“ (nur Admin): ein/aus, die Geburtstage der nächsten 60 Tage mit Stand (ausgewählt, automatisch, verschickt).
 - Antippen zeigt alle 30 Grüße fertig mit Namen und passender Form (Lieber/Liebe, er/sie); Lieber/Liebe lässt sich dort festlegen (unbekannt → „Hallo“).
@@ -22,6 +22,11 @@ Fund Hansi: „Erste Nachricht an Klaus verschlüsselt geschickt – keinen Gehe
 - Verschlüsselte Nachrichten im bestehenden Chat: erst dreht sich der 🔑, dann läuft der 🕵️ Geheimagent – wie bei einer neuen Unterhaltung. Bei 🏎️ Express bleibt es beim Rennwagen.
 - Beim Empfänger war der Agent nie betroffen.
 - Wunsch Hansi „in den Voreinstellungen kann man ihn nicht sehen“: unter ⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“ gibt es jetzt „🕵️ Vorschau „verschlüsselt““ (neben „🚨 Vorschau „wichtig““), dazu ein Satz im Hinweis. Fester Bote bleibt er nicht – er gehört zu 🔒.
+
+🥠 Glückskeks (KC-CLUB-GLUECKSKEKS, Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung eine Nachricht – Hey Klaus, das ist heute deine x. Anmeldung … Such dir einen Glückskeks aus. Liebe Grüße Hansi“):
+- Bei der 10., 20., 25., 30., 40. und 50. Anmeldung, danach alle 25 (75, 100, 125 …), ab 200 alle 50 erscheint die Nachricht von Hansi mit 3 Glückskeksen.
+- Antippen: der Keks wackelt, zerspringt in zwei Hälften (Krümel fliegen), und ein weißer Papierstreifen mit Spruch und Glückszahlen kommt heraus. 40 Sprüche, ohne Wiederholung, bis alle einmal dran waren.
+- Zur selben Anmeldung keine Fee. Ohne Bewegung (Einstellung/Sparmodus) erscheint der Streifen sofort.
 
 ## 2.616.0 – 2026-10-24 – 🕐 Testlisten mit Tagesangabe · 🕰️ Stundenuhr still nach eigener Ruhezeit (KC-CLUB-TESTLISTE-HEUTE, KC-CLUB-KUCKUCK-RUHEZEIT)
 Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.

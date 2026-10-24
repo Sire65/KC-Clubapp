@@ -2520,6 +2520,8 @@ async function geburtstagZettelAbnehmen() {
   const alt = (data ?? []).filter((x: any) => x.details?.tag && x.details.tag < heute).map((x: any) => String(x.details.zettel || "")).filter(Boolean);
   if (alt.length) await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: null }).in("id", alt).is("entfernt_am", null);
 }
+// 2.617.0 KC-CLUB-GLUECKSKEKS: Anmeldungen, zu denen es einen Glückskeks gibt – 10, 20, 25, 30, 40, 50, dann alle 25, ab 200 alle 50
+const keksMeilenstein = (n: number) => n <= 50 ? [10, 20, 25, 30, 40, 50].includes(n) : n <= 200 ? n % 25 === 0 : n % 50 === 0;
 // ---------- 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS (Wunsch Hansi „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll;
 // in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin“) ----------
 // Nur für den Admin, der es unter Büro → Geburtstage einschaltet. Grüße gehen als ganz normale Nachricht im Zweiergespräch von ihm
@@ -11697,6 +11699,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const fz = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fee_zaehler").maybeSingle();
         const anmeldungen = (Number((fz.data?.wert as any)?.n) || 0) + 1;
         await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fee_zaehler", wert: { n: anmeldungen }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        // 2.617.0 KC-CLUB-GLUECKSKEKS (Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung eine Nachricht – Hey Klaus, das ist heute deine x. Anmeldung …
+        // Such dir einen Glückskeks aus. Liebe Grüße Hansi“): Gruß vom Admin; die App zeigt 3 Glückskekse. Dann keine Fee zugleich.
+        if (keksMeilenstein(anmeldungen)) {
+          const [aid] = await adminIds().catch(() => [] as string[]);
+          const von = aid && aid !== ich.person_id ? vorname((await personen([aid])).get(aid) ?? null) : "";
+          return json({ ok: true, anmeldungen, fee: false, keks: { n: anmeldungen, von: von || null } });
+        }
         return json({ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 });
       }
       case "start_statistik": {

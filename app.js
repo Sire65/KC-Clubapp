@@ -16183,6 +16183,107 @@ function sendeEffektVorschau(knopf) {
 }
 function blaulichtVorschau(knopf) { if (!fxAn()) return fxAusHinweis(() => blaulichtVorschau(knopf)); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); papierflieger(knopf, true); }
 function agentVorschau(knopf) { if (!fxAn()) return fxAusHinweis(() => agentVorschau(knopf)); if (sendeEffektWahl() === "aus") return melde("Sende-Effekt ist aus – oben einen auswählen.", true); vnSchluesselZeigen(knopf); setTimeout(() => papierflieger(knopf, false, null, false, true), 650); } // 2.617.0 KC-CLUB-AGENT-VORSCHAU (Wunsch Hansi: Agent in den Voreinstellungen sehen)
+// ---------- 2.617.0 KC-CLUB-GLUECKSKEKS (Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung: Hey Klaus, das ist heute deine x. Anmeldung in der
+// Köcheclub-App. Schön, dass du dabei bist. Such dir einen Glückskeks aus. Liebe Grüße Hansi – 3 Glückskekse, antippen: der Keks zerspringt und
+// ein weißer Papierstreifen mit dem Spruch kommt heraus, wie bei echten Glückskeksen“) ----------
+// Wann: der Server zählt die Anmeldungen (start_melden, wie die Fee) und meldet keks: { n, von }. Sprüche nur hier; zuletzt gezogene kommen
+// erst wieder, wenn alle durch sind (je Gerät). Ohne Animation (⚙️ Bewegung aus / Sparmodus): der Streifen erscheint gleich.
+const KEKS_SPRUECHE = [
+  "Ein gutes Essen ist der Anfang einer wunderbaren Freundschaft.",
+  "Heute gelingt dir alles – sogar die Soße ohne Klümpchen.",
+  "Wer mit Liebe kocht, dem schmeckt das Leben.",
+  "Bald bekommst du ein Lob, mit dem du nicht rechnest.",
+  "Dein nächstes Rezept wird ein voller Erfolg.",
+  "Ein Lächeln von dir macht heute jemanden glücklich.",
+  "Das Glück sitzt mit am Tisch – du musst nur Platz machen.",
+  "Neue Abenteuer warten auf dich – vielleicht schon in der Küche.",
+  "Geduld ist die wichtigste Zutat. Du hast sie.",
+  "Heute ist ein guter Tag für ein Stück Kuchen extra.",
+  "Wer teilt, bekommt doppelt zurück – das gilt auch für Nachtisch.",
+  "Eine überraschende Nachricht bringt dich heute zum Lachen.",
+  "Du bist das Salz in der Suppe deiner Freunde.",
+  "Was du anfängst, wird gut – Schritt für Schritt.",
+  "Ein alter Freund denkt gerade an dich.",
+  "Die besten Dinge im Leben riechen nach frischem Brot.",
+  "Deine gute Laune ist ansteckend – verteil sie großzügig.",
+  "Ein kleines Missgeschick bringt dir heute großes Glück.",
+  "In dir steckt ein Sternekoch – lass ihn raus!",
+  "Heute ist der perfekte Tag, etwas Neues auszuprobieren.",
+  "Glück ist, wenn das Essen fertig ist und alle schon am Tisch sitzen.",
+  "Deine Hilfsbereitschaft kommt bald zu dir zurück.",
+  "Ein schöner Abend mit lieben Menschen steht dir bevor.",
+  "Wer lacht, hat mehr vom Leben – und vom Essen.",
+  "Du wirst bald für etwas gelobt, das du gern machst.",
+  "Gute Ideen kommen beim Kochen. Halte einen Zettel bereit!",
+  "Die Sonne scheint heute ein bisschen extra für dich.",
+  "Ein unerwarteter Gast bringt Freude ins Haus.",
+  "Was lange schmort, wird endlich gut.",
+  "Dein Weg ist richtig – auch wenn er Umwege hat.",
+  "Heute wirst du jemandem eine große Freude machen.",
+  "Der Köcheclub ist froh, dass es dich gibt.",
+  "Ein Glück kommt selten allein – heute kommen gleich zwei.",
+  "Würze dein Leben mit einer Prise Mut.",
+  "Wer gut isst, denkt gut. Du denkst heute großartig.",
+  "Eine Tasse Kaffee und ein gutes Gespräch – mehr braucht es heute nicht.",
+  "Deine Großzügigkeit macht die Welt ein Stück wärmer.",
+  "Bald kostest du etwas, das du nie vergessen wirst.",
+  "Kleine Freuden sind die größten. Halte heute die Augen offen.",
+  "Du hast mehr Glück, als in diesen Keks passt.",
+];
+const KEKS_KEY = "kc_club_keks_gehabt";
+const keksHalbe = (rechts) => `<svg viewBox="0 0 60 70" width="46" height="54" style="display:block${rechts ? ";transform:scaleX(-1)" : ""}" aria-hidden="true">
+  <defs><radialGradient id="kg${rechts ? "r" : "l"}" cx="35%" cy="35%" r="75%"><stop offset="0" stop-color="#ffe2a0"/><stop offset=".55" stop-color="#eeb456"/><stop offset="1" stop-color="#b8741f"/></radialGradient></defs>
+  <path d="M58 14 C40 0 6 10 4 36 C3 58 30 70 58 56 C50 44 50 26 58 14 Z" fill="url(#kg${rechts ? "r" : "l"})" stroke="#9a5d15" stroke-width="1.6"/>
+  <path d="M56 18 C44 12 22 18 18 34" fill="none" stroke="#fff3cf" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M58 56 C52 46 52 26 58 14" fill="none" stroke="#9a5d15" stroke-width="2"/></svg>`;
+function keksSpruch() {
+  let gehabt = []; try { gehabt = JSON.parse(localStorage.getItem(KEKS_KEY) || "[]"); } catch {}
+  let frei = KEKS_SPRUECHE.map((_, i) => i).filter((i) => !gehabt.includes(i)); if (!frei.length) { gehabt = []; frei = KEKS_SPRUECHE.map((_, i) => i); }
+  const i = frei[Math.floor(Math.random() * frei.length)];
+  try { localStorage.setItem(KEKS_KEY, JSON.stringify([...gehabt, i])); } catch {}
+  return KEKS_SPRUECHE[i];
+}
+const keksZahlen = () => { const z = new Set(); while (z.size < 3) z.add(1 + Math.floor(Math.random() * 49)); return [...z].sort((a, b) => a - b).join(" · "); };
+function keksZeigen(k = {}) {
+  const vn = ICH?.vorname || ICH?.name || "";
+  const f = blattAuf("keksBlatt", `<div style="text-align:center">
+      <div class="karte" style="text-align:left;margin:0 0 12px">👋 <b>Hey ${esc(vn)}!</b><br>Das ist heute deine <b>${Number(k.n) || "x"}. Anmeldung</b> in der Köcheclub-App. Schön, dass du dabei bist! 😊<br>Such dir einen Glückskeks aus.<br><br>Liebe Grüße<br>${esc(k.von || "deine Köcheclub-App")}</div>
+      <div id="keksReihe" style="display:flex;justify-content:center;gap:10px;margin:18px 0 6px;min-height:76px">${[0, 1, 2].map((i) => `<button type="button" class="keks" aria-label="Glückskeks ${i + 1} öffnen" onclick="keksOeffnen(this)" style="position:relative;background:none;border:0;padding:4px;cursor:pointer;display:flex">
+        <span class="keks-l" style="display:block">${keksHalbe(false)}</span><span class="keks-r" style="display:block;margin-left:-3px">${keksHalbe(true)}</span></button>`).join("")}</div>
+      <div id="keksStreifen" style="height:0;overflow:visible"></div>
+      <p class="hinweis" id="keksTipp">Tippe einen Keks an 🥠</p>
+      <div class="knoepfe" style="justify-content:center"><button class="knopf" onclick="$('keksBlatt').remove()">Schließen</button></div></div>`);
+  if (fxAn()) f.querySelectorAll(".keks").forEach((b, i) => b.animate([{ transform: "translateY(0) rotate(0)" }, { transform: "translateY(-6px) rotate(-4deg)" }, { transform: "translateY(0) rotate(0)" }], { duration: 1600, delay: i * 260, iterations: Infinity, easing: "ease-in-out" }));
+  return f;
+}
+async function keksOeffnen(knopf) {
+  const f = $("keksBlatt"); if (!f || f.dataset.offen) return; f.dataset.offen = "1";
+  const spruch = keksSpruch(), zahlen = keksZahlen(), animiert = fxAn();
+  try { navigator.vibrate?.(40); } catch {}
+  f.querySelectorAll(".keks").forEach((b) => { b.getAnimations().forEach((a) => a.cancel()); b.disabled = true; if (b !== knopf) animiert ? b.animate([{ opacity: 1 }, { opacity: 0, transform: "scale(.6)" }], { duration: 400, fill: "forwards" }) : (b.style.opacity = "0"); });
+  $("keksTipp").textContent = "";
+  const l = knopf.querySelector(".keks-l"), r = knopf.querySelector(".keks-r");
+  if (animiert) {
+    await knopf.animate([0, -9, 9, -7, 7, -4, 0].map((g) => ({ transform: `rotate(${g}deg)` })), { duration: 520, easing: "ease-in-out" }).finished.catch(() => {});
+    // Krümel fliegen
+    const rb = knopf.getBoundingClientRect();
+    for (let i = 0; i < 14; i++) {
+      const c = document.createElement("span"), w = 3 + Math.random() * 5, a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+      c.style.cssText = `position:fixed;left:${rb.left + rb.width / 2}px;top:${rb.top + rb.height / 2}px;width:${w}px;height:${w * .8}px;border-radius:40%;background:${["#e8a94a", "#c9852c", "#f3cb7c"][i % 3]};pointer-events:none;z-index:99999`;
+      document.body.appendChild(c);
+      c.animate([{ transform: "translate(0,0) rotate(0)", opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d * .6 + 50}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }], { duration: 900 + Math.random() * 400, easing: "cubic-bezier(.2,.7,.4,1)" }).onfinish = () => c.remove();
+    }
+    l.animate([{ transform: "none" }, { transform: "translate(-34px,14px) rotate(-38deg)" }], { duration: 650, easing: "cubic-bezier(.2,.8,.3,1)", fill: "forwards" });
+    r.animate([{ transform: "none" }, { transform: "translate(34px,14px) rotate(38deg)" }], { duration: 650, easing: "cubic-bezier(.2,.8,.3,1)", fill: "forwards" });
+  } else { l.style.transform = "translate(-34px,14px) rotate(-38deg)"; r.style.transform = "translate(34px,14px) rotate(38deg)"; }
+  const st = $("keksStreifen");
+  st.innerHTML = `<div id="keksPapier" role="status" style="position:relative;margin:-46px auto 22px;max-width:300px;background:#fffefa;color:#2a2a2a;padding:12px 16px 9px;border-radius:2px;
+      box-shadow:0 3px 10px rgba(0,0,0,.35);font-family:Georgia,'Times New Roman',serif;font-size:1.02rem;line-height:1.35;transform-origin:center">
+      <div>${esc(spruch)}</div><div style="margin-top:7px;font-size:.78rem;color:#b3261e;letter-spacing:.04em">Glückszahlen: ${zahlen}</div></div>`;
+  const p = $("keksPapier");
+  if (animiert) p.animate([{ transform: "scaleX(.05) translateY(10px)", opacity: 0 }, { transform: "scaleX(.05) translateY(0)", opacity: 1, offset: .25 }, { transform: "scaleX(1.04) translateY(0)", offset: .85 }, { transform: "scaleX(1) translateY(0)", opacity: 1 }], { duration: 900, delay: 350, easing: "ease-out", fill: "backwards" });
+  spur("glueckskeks");
+}
 // KC-CLUB-FEE (2.372.0, Wunsch Hansi): bei jeder 20. Anmeldung (Server zählt je Mitglied über alle Geräte) schwebt eine kleine Fee
 // durchs obere Startbild – bleibt kurz stehen, lächelt, fliegt weiter. Antippen = ein motivierender Spruch. „🧚 Fee ansehen“ zeigt sie jederzeit.
 const FEE_SPRUECHE = [
@@ -39987,7 +40088,7 @@ function startMessFertig() {
   spur("geoeffnet"); setTimeout(spurSenden, 3000);
   // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeden Start mit Dauer, Gerät und Browser melden (für die Startstatistik des Admins)
   setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an, hinter: !!START_MESS.hinter,
-    app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).then((r) => { if (r?.fee) setTimeout(feeKommt, 1500); }).catch(() => {}), 1500); // 2.372.0 KC-CLUB-FEE: jede 20. Anmeldung
+    app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).then((r) => { if (r?.keks) setTimeout(() => keksZeigen(r.keks), 1500); else if (r?.fee) setTimeout(feeKommt, 1500); }).catch(() => {}), 1500); // 2.372.0 KC-CLUB-FEE: jede 20. Anmeldung
 }
 const sek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s";
 function startMessHtml() {
@@ -41772,7 +41873,7 @@ async function spurSenden() {
 function spurBaldSenden() { if (SPAR.an || document.hidden) return; clearTimeout(SPUR_BALD); SPUR_BALD = setTimeout(spurSenden, 15000); }
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
-const SPUR_WAS = { vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
+const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
