@@ -2521,7 +2521,8 @@ async function geburtstagZettelAbnehmen() {
   if (alt.length) await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: null }).in("id", alt).is("entfernt_am", null);
 }
 // 2.617.0 KC-CLUB-GLUECKSKEKS: Anmeldungen, zu denen es einen Glückskeks gibt – 10, 20, 25, 30, 40, 50, dann alle 25, ab 200 alle 50
-const keksMeilenstein = (n: number) => n <= 50 ? [10, 20, 25, 30, 40, 50].includes(n) : n <= 200 ? n % 25 === 0 : n % 50 === 0;
+// Gezählt werden Tage mit mindestens einer Öffnung (Wunsch Hansi „Tage zählen“ – Vielnutzer bekommen sonst zu schnell Kekse)
+const keksMeilenstein = (n: number) => [10, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 300].includes(n) || (n >= 365 && n % 365 === 0);
 // ---------- 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS (Wunsch Hansi „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll;
 // in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin“) ----------
 // Nur für den Admin, der es unter Büro → Geburtstage einschaltet. Grüße gehen als ganz normale Nachricht im Zweiergespräch von ihm
@@ -11698,15 +11699,25 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (await protokollPlatz(ich.person_id, "app_start", 60)) await protokoll(ich.person_id, "app_start", d);
         // KC-CLUB-FEE (2.372.0): jede 20. Anmeldung je Mitglied (über alle Geräte) – dann schwebt die Fee durchs Startbild
         if (d.hinter) return json({ ok: true });
-        const fz = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "fee_zaehler").maybeSingle();
+        const { data: zz } = await db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).in("schluessel", ["fee_zaehler", "keks_tage"]);
+        const fz = { data: (zz ?? []).find((x: any) => x.schluessel === "fee_zaehler") }, kt: any = (zz ?? []).find((x: any) => x.schluessel === "keks_tage")?.wert;
         const anmeldungen = (Number((fz.data?.wert as any)?.n) || 0) + 1;
         await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "fee_zaehler", wert: { n: anmeldungen }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
         // 2.617.0 KC-CLUB-GLUECKSKEKS (Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung eine Nachricht – Hey Klaus, das ist heute deine x. Anmeldung …
         // Such dir einen Glückskeks aus. Liebe Grüße Hansi“): Gruß vom Admin; die App zeigt 3 Glückskekse. Dann keine Fee zugleich.
-        if (keksMeilenstein(anmeldungen)) {
+        // Tage mit der App: je Berliner Kalendertag einmal weiterzählen; beim ersten Mal aus den App-Starts nachzählen (Aufzeichnung 180 Tage)
+        const heute = berlinTag(new Date());
+        let tage = 0;
+        if (!kt || kt.tag !== heute) {
+          if (kt) tage = (Number(kt.n) || 0) + 1;
+          else { const { data: st } = await db.from("kc_club_protokoll").select("zeit,details").eq("person_id", ich.person_id).eq("aktion", "app_start").limit(5000);
+            tage = new Set((st ?? []).filter((x: any) => !x.details?.hinter).map((x: any) => berlinTag(new Date(x.zeit)))).size || 1; }
+          await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "keks_tage", wert: { n: tage, tag: heute }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+        }
+        if (tage && keksMeilenstein(tage)) {
           const [aid] = await adminIds().catch(() => [] as string[]);
           const von = aid && aid !== ich.person_id ? vorname((await personen([aid])).get(aid) ?? null) : "";
-          return json({ ok: true, anmeldungen, fee: false, keks: { n: anmeldungen, von: von || null } });
+          return json({ ok: true, anmeldungen, fee: false, keks: { n: tage, von: von || null } });
         }
         return json({ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 });
       }

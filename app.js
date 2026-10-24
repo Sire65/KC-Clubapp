@@ -16189,7 +16189,7 @@ function agentVorschau(knopf) { if (!fxAn()) return fxAusHinweis(() => agentVors
 // ---------- 2.617.0 KC-CLUB-GLUECKSKEKS (Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung: Hey Klaus, das ist heute deine x. Anmeldung in der
 // Köcheclub-App. Schön, dass du dabei bist. Such dir einen Glückskeks aus. Liebe Grüße Hansi – 3 Glückskekse, antippen: der Keks zerspringt und
 // ein weißer Papierstreifen mit dem Spruch kommt heraus, wie bei echten Glückskeksen“) ----------
-// Wann: der Server zählt die Anmeldungen (start_melden, wie die Fee) und meldet keks: { n, von }. Sprüche nur hier; zuletzt gezogene kommen
+// Wann: der Server zählt die Tage mit der App (start_melden; je Kalendertag einmal – Wunsch Hansi „Tage zählen“) und meldet keks: { n, von }. Sprüche nur hier; zuletzt gezogene kommen
 // erst wieder, wenn alle durch sind (je Gerät). Ohne Animation (⚙️ Bewegung aus / Sparmodus): der Streifen erscheint gleich.
 const KEKS_SPRUECHE = [
   "Ein gutes Essen ist der Anfang einer wunderbaren Freundschaft.",
@@ -16250,7 +16250,7 @@ const keksZahlen = () => { const z = new Set(); while (z.size < 3) z.add(1 + Mat
 function keksZeigen(k = {}) {
   const vn = ICH?.vorname || ICH?.name || "";
   const f = blattAuf("keksBlatt", `<div style="text-align:center">
-      <div class="karte" style="text-align:left;margin:0 0 12px">👋 <b>Hey ${esc(vn)}!</b><br>Das ist heute deine <b>${Number(k.n) || "x"}. Anmeldung</b> in der Köcheclub-App. Schön, dass du dabei bist! 😊<br>Such dir einen Glückskeks aus.<br><br>Liebe Grüße<br>${esc(k.von || "deine Köcheclub-App")}</div>
+      <div class="karte" style="text-align:left;margin:0 0 12px">👋 <b>Hey ${esc(vn)}!</b><br>Heute ist schon dein <b>${Number(k.n) || "x"}. Tag</b> mit der Köcheclub-App. Schön, dass du dabei bist! 😊<br>Such dir einen Glückskeks aus.<br><br>Liebe Grüße<br>${esc(k.von || "deine Köcheclub-App")}</div>
       <div id="keksReihe" style="display:flex;justify-content:center;gap:10px;margin:18px 0 6px;min-height:76px">${[0, 1, 2].map((i) => `<button type="button" class="keks" aria-label="Glückskeks ${i + 1} öffnen" onclick="keksOeffnen(this)" style="position:relative;background:none;border:0;padding:4px;cursor:pointer;display:flex">
         <span class="keks-l" style="display:block">${keksHalbe(false)}</span><span class="keks-r" style="display:block;margin-left:-3px">${keksHalbe(true)}</span></button>`).join("")}</div>
       <div id="keksStreifen" style="height:0;overflow:visible"></div>

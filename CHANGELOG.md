@@ -25,7 +25,7 @@ Fund Hansi: „Erste Nachricht an Klaus verschlüsselt geschickt – keinen Gehe
 - Wunsch Hansi „in den Voreinstellungen kann man ihn nicht sehen“: unter ⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“ gibt es jetzt „🕵️ Vorschau „verschlüsselt““ (neben „🚨 Vorschau „wichtig““), dazu ein Satz im Hinweis. Fester Bote bleibt er nicht – er gehört zu 🔒.
 
 🥠 Glückskeks (KC-CLUB-GLUECKSKEKS, Wunsch Hansi „bei der 10., 20., 25., 30. … Anmeldung eine Nachricht – Hey Klaus, das ist heute deine x. Anmeldung … Such dir einen Glückskeks aus. Liebe Grüße Hansi“):
-- Bei der 10., 20., 25., 30., 40. und 50. Anmeldung, danach alle 25 (75, 100, 125 …), ab 200 alle 50 erscheint die Nachricht von Hansi mit 3 Glückskeksen.
+- Gezählt werden Tage mit der App, nicht jede Öffnung (Wunsch Hansi „Tage zählen“ – sonst bekämen Vielnutzer zu schnell Kekse). Am 10., 20., 25., 30., 40., 50., 75., 100., 150., 200., 250., 300. und 365. Tag (danach jedes volle Jahr) erscheint die Nachricht von Hansi („Heute ist schon dein 20. Tag mit der Köcheclub-App …“) mit 3 Glückskeksen. Der Zähler startet mit den Tagen seit Beginn der Aufzeichnung (7.10.).
 - Antippen: der Keks wackelt, zerspringt in zwei Hälften (Krümel fliegen), und ein weißer Papierstreifen mit Spruch und Glückszahlen kommt heraus. 40 Sprüche, ohne Wiederholung, bis alle einmal dran waren.
 - Zur selben Anmeldung keine Fee. Ohne Bewegung (Einstellung/Sparmodus) erscheint der Streifen sofort.
 

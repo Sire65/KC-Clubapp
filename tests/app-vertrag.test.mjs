@@ -10779,7 +10779,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.372.0 KC-CLUB-FEE: Fee bei jeder 20. Anmeldung, antippen = Mut-Spruch
 {
-  assert.ok(/schluessel", "fee_zaehler"\)\.maybeSingle\(\)/.test(server) && /return json\(\{ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 \}\);/.test(server) && /if \(d\.hinter\) return json\(\{ ok: true \}\);/.test(server), "Server zählt Anmeldungen (ohne Hintergrund-Starts)");
+  assert.ok(/\.in\("schluessel", \["fee_zaehler", "keks_tage"\]\)/.test(server) && /return json\(\{ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 \}\);/.test(server) && /if \(d\.hinter\) return json\(\{ ok: true \}\);/.test(server), "Server zählt Anmeldungen (ohne Hintergrund-Starts)");
   assert.ok(/\.then\(\(r\) => \{ if \(r\?\.keks\) setTimeout\(\(\) => keksZeigen\(r\.keks\), 1500\); else if \(r\?\.fee\) setTimeout\(feeKommt, 1500\); \}\)/.test(html), "App ruft die Fee bei fee: true (Glückskeks geht vor, 2.617.0)");
   assert.ok(/function feeKommt\(vorschau\)/.test(html) && /function feeSpruch\(\)/.test(html) && /onclick="feeKommt\(true\)">🧚 Fee ansehen</.test(html), "Fee, Spruch und Vorschau-Knopf");
   const n = (html.match(/const FEE_SPRUECHE = \[([\s\S]*?)\n\];/) || [, ""])[1].split("\n").filter((z) => z.trim().startsWith('"')).length;
@@ -12490,15 +12490,15 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(m, "keksMeilenstein");
   const ms = new Function("n", "return " + m[1]);
   const treffer = Array.from({ length: 400 }, (_, i) => i + 1).filter(ms);
-  assert.deepEqual(treffer.slice(0, 9), [10, 20, 25, 30, 40, 50, 75, 100, 125], "Meilensteine bis 125");
-  assert.ok(ms(250) && ms(300) && !ms(225) && !ms(35) && !ms(15), "ab 200 alle 50");
+  assert.deepEqual(treffer, [10, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 300, 365], "Tage mit Keks");
+  assert.ok(ms(730) && !ms(400), "danach jedes volle Jahr");
   const sm = server.slice(server.indexOf('case "start_melden": {'), server.indexOf('case "start_statistik": {'));
-  assert.ok(/if \(keksMeilenstein\(anmeldungen\)\)/.test(sm) && /fee: false, keks: \{ n: anmeldungen, von: von \|\| null \}/.test(sm), "Server meldet Keks statt Fee");
+  assert.ok(/if \(tage && keksMeilenstein\(tage\)\)/.test(sm) && /fee: false, keks: \{ n: tage, von: von \|\| null \}/.test(sm) && /if \(!kt \|\| kt\.tag !== heute\)/.test(sm), "Server zählt Tage, je Tag einmal, meldet Keks statt Fee");
   assert.ok(/aid && aid !== ich\.person_id \?/.test(sm), "der Admin grüßt sich nicht selbst");
   const k = programm.slice(programm.indexOf("const KEKS_SPRUECHE = ["), programm.indexOf("// KC-CLUB-FEE (2.372.0"));
   const spr = new Function(k.slice(0, k.indexOf("const KEKS_KEY")) + ";return KEKS_SPRUECHE;")();
   assert.ok(spr.length >= 30 && new Set(spr).size === spr.length, "mindestens 30 verschiedene Sprüche");
-  assert.ok(/Das ist heute deine <b>\$\{Number\(k\.n\) \|\| "x"\}\. Anmeldung<\/b> in der Köcheclub-App\. Schön, dass du dabei bist!/.test(k) && /Such dir einen Glückskeks aus\./.test(k) && /Liebe Grüße<br>\$\{esc\(k\.von \|\| "deine Köcheclub-App"\)\}/.test(k), "Wortlaut Hansi");
+  assert.ok(/Heute ist schon dein <b>\$\{Number\(k\.n\) \|\| "x"\}\. Tag<\/b> mit der Köcheclub-App\. Schön, dass du dabei bist!/.test(k) && /Such dir einen Glückskeks aus\./.test(k) && /Liebe Grüße<br>\$\{esc\(k\.von \|\| "deine Köcheclub-App"\)\}/.test(k), "Wortlaut Hansi");
   assert.ok((k.match(/onclick="keksOeffnen\(this\)"/g) || []).length === 1 && /\[0, 1, 2\]\.map/.test(k), "drei Kekse");
   assert.ok(/translate\(-34px,14px\) rotate\(-38deg\)/.test(k) && /translate\(34px,14px\) rotate\(38deg\)/.test(k) && /id="keksPapier"/.test(k) && /background:#fffefa/.test(k), "Keks zerspringt in zwei Hälften, weißer Papierstreifen");
   assert.ok(/const spruch = keksSpruch\(\), zahlen = keksZahlen\(\), animiert = fxAn\(\);/.test(k), "ohne Animation trotzdem Spruch");
