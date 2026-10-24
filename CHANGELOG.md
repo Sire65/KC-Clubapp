@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 🥠 Glückskeks · 🚧 Baustelle · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-GLUECKSKEKS, KC-CLUB-BAUSTELLE, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
+## 2.617.0 – 2026-10-24 – 🎂 Geburtstagsgrüße in meinem Namen · 📜 Spruch-Archiv · 🥠 Glückskeks · 🚧 Baustelle · 🎡 Sim-Jü für alle · 📣 Info-Band läuft weiter · 🕵️ Geheimagent auch im Chat (KC-CLUB-GEBURTSTAG-GRUSS, KC-CLUB-SPRUCH-ARCHIV, KC-CLUB-GLUECKSKEKS, KC-CLUB-BAUSTELLE, KC-CLUB-SIMJUE-FUER-ALLE, KC-CLUB-INFOBAND-WEITER, KC-CLUB-GEHEIMAGENT-SCHLANGE)
 Wunsch Hansi: „30 verschiedene Geburtstagsgrüße – 2 Tage vorher klicke ich an, welchen er bekommen soll; in meinem Namen; vergesse ich es, automatisch einen passenden; kurz nach 24 Uhr, damit ich immer der Erste bin.“
 - Büro → Geburtstage & Jubiläen → „🎂 Meine Geburtstagsgrüße“ (nur Admin): ein/aus, die Geburtstage der nächsten 60 Tage mit Stand (ausgewählt, automatisch, verschickt).
 - Antippen zeigt alle 30 Grüße fertig mit Namen und passender Form (Lieber/Liebe, er/sie); Lieber/Liebe lässt sich dort festlegen (unbekannt → „Hallo“).
@@ -34,6 +34,8 @@ Fund Hansi: „Erste Nachricht an Klaus verschlüsselt geschickt – keinen Gehe
 - Zwischendurch laufen Bauarbeiter mit gelben Helmen durch (mit Brett, Schubkarre, winkend). Der Laster fährt voll davon, der Radlader weg.
 - Das Sprengkommando (rote Helme, Kiste TNT) verteilt überall Dynamit, Schild „Achtung Sprengung“, Kabel zum Zündkasten mit T-Griff, 3 – 2 – 1 (Piepen) – Auslöser: Blitz, und der ganze Kopf zerfällt in Stücke und fliegt davon (Feuerbälle, Wackeln). Ton bei ⚙️ Ton an und außerhalb der Ruhezeit: Rumms und klirrendes Glas.
 - Nach 6,5 Sekunden ist der Kopf wieder da und alles beginnt von vorn (ein Lauf ≈ 77 s).
+
+🎡 Sim-Jü für alle (KC-CLUB-SIMJUE-FUER-ALLE, Wunsch Hansi): von Samstag bis einschließlich Dienstag der Sim-Jü-Woche (2026: 24.–27.10.) zeigt jeder Kopf die Sim-Jü-Szene mit Riesenrad, Lebkuchenherz und Feuerwerk – egal welche Jahreszeit oder welches Thema eingestellt ist. Mittwoch um 0 Uhr stellt er sich von selbst zurück; so jedes Jahr.
 
 ## 2.616.0 – 2026-10-24 – 🕐 Testlisten mit Tagesangabe · 🕰️ Stundenuhr still nach eigener Ruhezeit (KC-CLUB-TESTLISTE-HEUTE, KC-CLUB-KUCKUCK-RUHEZEIT)
 Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.

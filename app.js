@@ -16600,7 +16600,10 @@ function jahreszeitArt(d = new Date()) {
 // Wahl je Gerät: „auto“ (Standard) stellt sich von selbst um; sonst eine feste Jahreszeit
 const JZ_WAHL = [["auto", "🔄 Automatik"], ["fruehling", "🌱 Frühling"], ["sommer", "🌻 Sommer"], ["herbst", "🍂 Herbst"], ["winter", "⛄ Winter"]];
 const jzWahl = () => { const t = themaWert("jz"); if (t) return t; try { const w = localStorage.getItem("kc_club_jzWahl"); return JZ_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } }; // 2.323.0: Thema zuerst (auch advent/silvester)
-const jahreszeitAktuell = (d = new Date()) => (jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
+// 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE (Wunsch Hansi „bei allen automatisch die Sim-Jü-Szene im Kopf, bis einschließlich Dienstag – dann ist Sim-Jü zu Ende“):
+// in der Sim-Jü-Zeit (Samstag bis Dienstag um Simon und Juda, themaFestZeit) zeigt jeder Kopf das Riesenrad – egal welche Jahreszeit oder welches Thema gewählt ist.
+// Mittwoch um 0 Uhr stellt sich der Kopf von selbst zurück (Minuten-Prüfung unten). Eine Vorschau geht weiter vor; „Jahreszeiten im Kopf“ aus bleibt aus.
+const jahreszeitAktuell = (d = new Date()) => (themaFestZeit(d) === "simjue" ? "kirmes" : jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
 function jzWahlSetzen(w) { if (!themaEigenSetzen("jz", w)) try { localStorage.setItem("kc_club_jzWahl", w); } catch {} JZB.vorschau = null; jzWahlZeigen(); jahreszeitKopf(); melde(w === "auto" ? "🔄 Automatik: die Jahreszeit stellt sich von selbst um" : `${JZ_WAHL.find(([k]) => k === w)[1]} fest eingestellt`); }
 function jzWahlZeigen() {
   const z = $("jzWahl"); if (!z) return;

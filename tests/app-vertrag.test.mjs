@@ -12521,3 +12521,13 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/if \(!einst\("ton", true\) \|\| document\.hidden\) return;/.test(ton) && /inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)/.test(ton) && /Glas klirrt/.test(ton), "Ton nur bei Ton an, nicht in der Ruhezeit; mit Glasklirren");
 }
 function idx0() { return lies("index.html"); }
+// 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE: Sim-Jü-Szene für alle von Samstag bis einschließlich Dienstag
+{
+  assert.ok(/const jahreszeitAktuell = \(d = new Date\(\)\) => \(themaFestZeit\(d\) === "simjue" \? "kirmes" :/.test(programm), "Sim-Jü geht vor der eigenen Wahl");
+  const a = programm.indexOf("function themaFestZeit("), b = programm.indexOf("\n}\n", a) + 3;
+  const f = new Function("osterSonntag", programm.slice(a, b) + ";return themaFestZeit;")((y) => `${y}-04-05`);
+  assert.equal(f(new Date(2026, 9, 23, 23, 59)), null, "Freitag 23.10. noch nicht");
+  for (const t of [24, 25, 26, 27]) assert.equal(f(new Date(2026, 9, t, 12)), "simjue", `${t}.10.2026 Sim-Jü`);
+  assert.equal(f(new Date(2026, 9, 27, 23, 59)), "simjue", "Dienstag bis Mitternacht");
+  assert.equal(f(new Date(2026, 9, 28, 0, 1)), null, "Mittwoch vorbei");
+}
