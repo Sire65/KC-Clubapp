@@ -6108,7 +6108,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.332.0 KC-CLUB-THEMEN-BUEHNE-2 (Wunsch Hansi „weitere Themen: Ostern, Karneval und Halloween“)
 {
   for (const [id, jz] of [["ostern", "fruehling"], ["karneval", "karneval"], ["halloween", "halloween"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
+  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
   assert.ok(/const txt = name \? `Helau, \$\{name\}!` : "Helau!";/.test(html) && /const txt = name \? `Buuuh, \$\{name\}!` : "Buuuh!";/.test(html), "Vorname auf dem Wagen und beim Gespenst");
   assert.ok(/if \(te === "ostern" && J\.saison === "fruehling"\) x\.ostern = true;/.test(html) && /J\.gaeste\.push\(\{ typ: "osterhase", x: J\.w \+ 24, t: 0 \}\)/.test(html) && /if \(e\.da === false && hase\) continue;/.test(html) && /!v\.gef && v\.da !== false/.test(html), "Ostern: Osterhase legt die Eier, erst dann sicht- und findbar");
   assert.ok(/function osterSonntag\(jahr\)/.test(html) && /const ostern = osterSonntag\(jahr\);/.test(html), "eine Osterformel für Feiertage und Themen");
@@ -6559,7 +6559,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2): Thema Weltraum mit eigener Szene (Sterne, Planet, Rakete, Astronaut schreibt den Namen, UFO)
 {
   assert.ok(/\{ id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "weltraum"\) return jzbWrSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "weltraum"\) jzbWeltraumMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const w = programm.slice(programm.indexOf("function jzbWrSchritt("), programm.indexOf("function jzbWrBahn("));
   assert.ok(/if \(t >= JZB_WR_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(w), "Lauf endet, neuer Lauf");
@@ -6570,7 +6570,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3): Thema Bauernhof – ein Tag von Morgen bis Nacht, dann wieder Morgen
 {
   assert.ok(/\{ id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "bauernhof"\) return jzbBhSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "bauernhof"\) jzbBauernhofMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const b = programm.slice(programm.indexOf("function jzbBhSchritt("), programm.indexOf("function jzbBhHimmel("));
   assert.ok(/if \(t >= JZB_BH_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(b) && /if \(abend\) \{ T\.ziel = st\.tuer;/.test(b) && /B\.tor = Math\.max\(0, B\.tor - dt \* \.8\)/.test(b), "abends in den Stall, Tor zu, neuer Lauf");
@@ -6582,7 +6582,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4): Thema Kegelabend – 6 Würfe, Tafel mit Namen und Strichen, „Alle Neune“, Tafel wischen
 {
   assert.ok(/\{ id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "kegeln"\) return jzbKgSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "kegeln"\) jzbKegelnMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbKgNeu("), programm.indexOf("function jzbKgKegelMalen("));
   assert.ok(/i === JZB_KG_WUERFE - 1 \? 9 :/.test(g) && /if \(t >= JZB_KG_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(g) && /K\.wisch = Math\.min\(1, K\.wisch \+ dt \/ 3\)/.test(g), "letzter Wurf alle Neune, Tafel wischen, neuer Lauf");
@@ -7230,7 +7230,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.548.0 KC-CLUB-WUESTE + KC-CLUB-FRIEDENSPFEIFE-2: Thema Wüste (Pyramiden, Karawane, Oase, Pharao, Flaschengeist, Goldstaub-Name, Sonnenuntergang) · Pfeife langsamer
 {
   assert.ok(/\{ id: "wueste", sym: "🐪", name: "Wüste", design: "sonnenuntergang", jz: "wueste"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest", "wueste"\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest", "wueste"\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "wueste"\) return jzbWuSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wueste"\) jzbWuesteMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   assert.ok(/JZB_WU_NAME_AB = 47, JZB_WU_TAKT = 2\.6/.test(programm) && /const jzbWuName = \(\) => \[\.\.\.\(jzbEisNameText\(\) \|\| "Köcheclub"\)\]\.slice\(0, 12\);/.test(programm), "Name langsam aus Goldstaub, ohne Namen Köcheclub");
   assert.ok(/jahreszeitVorschau\('wueste'\)">🐪 Wüste</.test(seite) && /\{ id: "wueste", thema: "darstellung"/.test(programm) && /\{ id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao\?"/.test(programm), "Vorschau, Hilfe, Twinkey");
@@ -9988,7 +9988,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
@@ -11238,7 +11238,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.434.0 KC-CLUB-UNTERWASSER: Thema Unterwasserwelt mit eigener Szene (Regen füllt, Stöpsel leert)
 {
   assert.ok(/\{ id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "unterwasser"\) return jzbUwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "unterwasser"\) jzbUnterwasserMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const u = programm.slice(programm.indexOf("function jzbUwSchritt("), programm.indexOf("function jzbUwSog("));
   assert.ok(/U\.phase = "ablauf"; U\.at = 0; U\.plopp = 0;/.test(u) && /J\.fest = null; return jzbLaufEnde\(\);/.test(u), "Stöpsel → ablaufen → neuer Lauf");
@@ -11784,7 +11784,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.529.0 KC-CLUB-WILDWEST (Wunsch Hansi): Thema Wilder Westen – Tipi, Lagerfeuer, Büffel am Horizont, Cowboys, Postkutsche, Herde trampelt alles nieder, Staubwolke, von vorn
 {
   assert.ok(/\{ id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"(?:, "wueste")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"(?:, "wueste")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "wildwest"\) return jzbWwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wildwest"\) jzbWildwestMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbWwSchritt("), programm.indexOf("function jzbWwBueffelMalen("));
   assert.ok(/if \(t >= JZB_WW_DAUER\) \{ J\.fest = null; J\.wwStaub = true; return jzbLaufEnde\(\); \}/.test(g) && /W\.zeltFall = Math\.min\(1, W\.zeltFall \+ dt \* 1\.6\)/.test(g) && /W\.feuerAus = Math\.min\(1, W\.feuerAus \+ dt \* 3\)/.test(g), "Herde trampelt Zelt und Feuer nieder, nächster Lauf aus der Staubwolke");
@@ -12508,3 +12508,16 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/\.replace\(\/Liebe\\\/r\/g, an \|\| "Hallo"\)/.test(programm) && /const an = SPA\.daten\?\.anreden\?\.\[pid\];/.test(programm), "Anrede beim Senden aus dem Archiv");
   assert.ok(/anreden: Object\.fromEntries/.test(server) && /⚠️ Lieber\/Liebe fehlt noch – bitte festlegen\./.test(server), "Server liefert Anreden, Erinnerung warnt");
 }
+// 2.617.0 KC-CLUB-BAUSTELLE: Thema Baustelle – Radlader, Kipplaster, Abgas-Name, Arbeiter, Sprengkommando, Kopf fliegt in die Luft, Ton mit Glasklirren
+{
+  assert.ok(/\{ id: "baustelle", sym: "🚧", name: "Baustelle", design: "[a-z]+", jz: "baustelle"/.test(programm), "Thema wählbar");
+  assert.ok(/if \(J\.saison === "baustelle"\) return jzbBsSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "baustelle"\) jzbBaustelleMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
+  assert.ok(/jahreszeitVorschau\('baustelle'\)">🚧 Baustelle</.test(idx0()) && /baustelle: "Baustelle"/.test(programm), "Vorschau in den Einstellungen");
+  assert.ok(/f(?:unction)? jzbBsLaderMalen/.test(programm) && /c\.fillStyle = "#f2b705"/.test(programm), "Radlader in Baustellengelb");
+  assert.ok(/const A = jzbBsAuspuff\(jzbBsLader\(s, O\), O\)/.test(programm), "Rauchwolken kommen aus dem Auspuff und werden zum Namen");
+  assert.ok(/const JZB_BS_ARBEITER = \[\d+, \d+, \d+\];/.test(programm) && /helm: "#d62828"/.test(programm) && /ACHTUNG SPRENGUNG/.test(programm), "Arbeiter, Sprengkommando, Schild");
+  assert.ok(/setTimeout\(jzbBsSprengen, 90\)/.test(programm) && /document\.querySelector\("#v-start \.hero"\)/.test(programm.slice(programm.indexOf("function jzbBsSprengen"))) && /h\.style\.visibility = "hidden";/.test(programm) && /JZB_BS_PAUSE \* 1000\);/.test(programm), "der ganze Kopf fliegt weg und kommt wieder");
+  const ton = programm.slice(programm.indexOf("function jzbBsTon("), programm.indexOf("const JZB_WW_DAUER"));
+  assert.ok(/if \(!einst\("ton", true\) \|\| document\.hidden\) return;/.test(ton) && /inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)/.test(ton) && /Glas klirrt/.test(ton), "Ton nur bei Ton an, nicht in der Ruhezeit; mit Glasklirren");
+}
+function idx0() { return lies("index.html"); }
