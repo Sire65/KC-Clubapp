@@ -8427,7 +8427,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/on public\.kc_club_protokoll \(aktion, zeit desc\)/.test(m) && /on public\.kc_club_protokoll \(person_id, aktion, zeit desc\)/.test(m) && /kc_club_person_einstellung \(schluessel\)/.test(m), "Verzeichnisse für die wachsende Protokoll-Tabelle");
   assert.ok(!/\b(drop|delete|update|truncate|alter)\b/i.test(m.replace(/^--.*$/gm, "")), "nur neue Verzeichnisse, keine Datenänderung");
   assert.ok((m.match(/create index if not exists kc_club_tempo_/g) || []).length >= 20, "alle mit kc_club_tempo_ (Rückweg)");
-  assert.ok(/const TEMPO_LOG_MS = 1500;/.test(server) && /if \(serverMs >= TEMPO_LOG_MS\) console\.log\(JSON\.stringify\(\{ tempo: txt\(a, 40\), ms: serverMs, anmeldungMs \}\)\);/.test(server), "Tempo-Log ohne Inhalte");
+  assert.ok(/const TEMPO_LOG_MS = 5000;/.test(server) && /if \(serverMs >= TEMPO_LOG_MS\) console\.log\(JSON\.stringify\(\{ tempo: txt\(a, 40\), ms: serverMs, anmeldungMs \}\)\);/.test(server), "Tempo-Log ohne Inhalte");
   assert.ok(/if \(!INIT\) sofortStart\(\);/.test(programm) && /const SOFORT_MAX_MS = 3 \* 86400000;/.test(programm), "Sofort-Start");
   assert.ok(/INIT = \{ \.\.\.g\.init, _offline: g\.zeit, _vorab: vorab \}/.test(programm) && /wird gerade aktualisiert …/.test(programm), "Sofort-Stand sichtbar markiert (nie als aktuell)");
   assert.ok(/if \(INIT\?\._vorab\) \{[^\n]*\n[^\n]*INIT\._vorab = false; offlineStandZeigen\(true\);/.test(programm), "scheitert das Laden: als alter Stand markiert");
@@ -11341,7 +11341,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.464.0 KC-CLUB-DB-SPARSAM: jeder App-Aufruf mit eigenem Lese-Puffer (2 s), Messung je Aktion ins Server-Log (keine Datenbank-Schreibung)
 {
-  assert.ok(/const DB_PUFFER_MS = 2000, DB_LOG_AB = 15;/.test(server) && /Deno\.serve\(\(req\) => \{\n  const pf = dbPufferNeu\(DB_PUFFER_MS\);\n  return DB_PUFFER\.run\(pf, async \(\) => \{/.test(server), "jeder Aufruf mit eigenem, kurzlebigem Puffer");
+  assert.ok(/const DB_PUFFER_MS = 2000, DB_LOG_AB = 120;/.test(server) && /Deno\.serve\(\(req\) => \{\n  const pf = dbPufferNeu\(DB_PUFFER_MS\);\n  return DB_PUFFER\.run\(pf, async \(\) => \{/.test(server), "jeder Aufruf mit eigenem, kurzlebigem Puffer");
   assert.ok(/if \(a && pf\.haltbarMs && Date\.now\(\) - \(pf\.zeit\.get\(schluessel\) \?\? 0\) > pf\.haltbarMs\) a = undefined;/.test(server), "gepufferte Antwort nur DB_PUFFER_MS gültig");
   assert.ok(/console\.log\(JSON\.stringify\(\{ db: txt\(pf\.aktion \|\| req\.method, 40\), netz: pf\.netz, puffer: pf\.puffer, ms: Date\.now\(\) - t0(, \.\.\.\(pf\.pfade \? \{ pfade: Object\.fromEntries\(pf\.pfade\) \} : \{\}\))? \}\)\)/.test(server), "Messung nur ins Log: Aktion und Zahlen, keine Inhalte/Personen");
   // 2.494.0: die Pfad-Zählung KC-CLUB-DB-PFADE (2.489.0) ist wieder ausgebaut (KC-SPARSAM-PROTOKOLLE: Messen über eigene Tabellen, nicht übers Log)
@@ -12571,4 +12571,9 @@ function idx0() { return lies("index.html"); }
   const g = programm.slice(programm.indexOf("function jzbBsGlasBruch("), programm.indexOf("function jzbBsTon("));
   assert.ok(/jzbBsGlasBruch\(\); \/\/ 2\.622\.0/.test(programm) && /position:fixed;inset:0;pointer-events:none;z-index:9500/.test(g), "über den ganzen Bildschirm, Tippen geht hindurch");
   assert.ok(/for \(const rr of \[22, 48, 85, 140, 215, 320, 470\]\)/.test(g) && /setTimeout\(\(\) => box\.remove\(\), 6500\);/.test(g), "Spinnennetz mit Ringen, verschwindet sicher wieder");
+}
+// 2.623.0 KC-CLUB-PUSH-DEKLARATIV: Service Worker versteht das Apple-Format (Declarative Web Push)
+{
+  const sw = lies("sw.js");
+  assert.ok(/if \(d && d\.web_push === 8030 && d\.notification\) \{ const n = d\.notification; d = \{ title: n\.title, body: n\.body, data: \{ url: n\.navigate \|\| "\.\/"/.test(sw), "deklaratives Format wird umgesetzt");
 }

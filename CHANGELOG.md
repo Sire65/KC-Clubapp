@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.623.0 – 2026-10-24 – 🧾 Weniger Server-Protokoll, Push für das neue Apple-Format vorbereitet (KC-CLUB-LOG-SPARSAM, KC-CLUB-PUSH-DEKLARATIV)
+Anbieter-Check 24.10.2026 (Wunsch Hansi, „sparsam“): Supabase berechnet ab Anfang 2027 auch das Schreiben ins Protokoll.
+- Der Club-Server schreibt nur noch Ausreißer ins Protokoll: Messzeile erst ab 120 statt 15 Datenbank-Abfragen, Tempo-Zeile erst ab 5 statt 1,5 Sekunden. Fehler werden weiter protokolliert.
+- Der Service Worker versteht zusätzlich das neue Apple-Push-Format (Declarative Web Push, iPhone ab iOS 18.4).
+- Communicator (kc-communication-dispatch v21, am 24.10. direkt hochgeladen; Kopie unter docs/archiv/communicator/): iPhones der Club-App bekommen das neue Format mit „mutable“ – der Service Worker zeigt die Mitteilung wie bisher (mit Quittungen), schläft er, zeigt das iPhone sie selbst. Titel/Text/Link stehen zusätzlich wie bisher oben, damit ältere Geräte und alte App-Stände nichts merken. Android/PC unverändert.
+
 ## 2.622.0 – 2026-10-24 – 🚧 Baustelle: nach der Sprengung gesprungenes Handyglas (KC-CLUB-BAUSTELLE-GLASBRUCH)
 Wunsch Hansi: „Nach der Sprengung, als wenn der ganze Handy-Bildschirm kaputt ist – das ganze Glas gesprungen, wie wenn ein Handy runtergefallen ist.“
 - Mit dem Knall legt sich über den ganzen Bildschirm ein Spinnennetz aus Sprüngen („Spider-App“): Risse vom Aufschlagpunkt nach außen, Ringe dazwischen, kleine Splitter in der Mitte. Die Sprünge wachsen blitzschnell, bleiben gut 4 Sekunden und verblassen dann – kurz bevor der Kopf zurückkommt.
