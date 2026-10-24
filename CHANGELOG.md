@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.627.0 – 2026-10-24 – Termin ändern: Benachrichtigung aus
+Beim Ändern eines Termins ist „Mitglieder benachrichtigen“ jetzt aus – wer nur einen Tippfehler korrigiert, verschickt keine neue Einladung mehr. Bei wichtigen Änderungen (Tag, Uhrzeit, Ort) den Haken setzen. Beim Neuanlegen bleibt alles wie bisher (KC-CLUB-AENDERN-STILL).
+
 ## 2.626.0 – 2026-10-24 – Zeitumstellung auch per E-Mail
 Die automatische Meldung zur Zeitumstellung (Samstag vorher, 18 Uhr) geht an alle Mitglieder: mit App als Push wie bisher, ohne App jetzt als E-Mail mit demselben Text. Wie jeder Sammelversand nur Zugang „Mitglied“ (KC-CLUB-ZEITUMSTELLUNG-MAIL) · Server 2.626.0.
 

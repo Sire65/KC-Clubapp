@@ -12585,3 +12585,9 @@ function idx0() { return lies("index.html"); }
   assert.ok(/ohneApp = leute\.filter\(\(m\) => !mitApp\.has\(m\.person_id\) && m\.email\)/.test(z) && /sendenGewaehlt\("club_erinnerung", ids, \["push"\], vars,/.test(z) && /sendenGewaehlt\("club_erinnerung", ohneApp, \["email"\], vars, `club-zeitumstellung-mail:\$\{heute\}`\)/.test(z), "mit App Push, ohne App Mail – niemand doppelt");
   assert.ok(/Uhr wird die Uhr auf 2 Uhr zurückgestellt/.test(z), "Text: zurückgestellt");
 }
+// 2.627.0 KC-CLUB-AENDERN-STILL: beim Ändern eines Termins ist „benachrichtigen“ aus (Tippfehler-Korrektur verschickt keine neue Einladung)
+{
+  assert.ok(/<input type="checkbox" id="tfInfo" \$\{art === "treffen" && !t\?\.id \? "checked" : ""\}>/.test(programm), "neu: Sitzung angehakt, ändern: aus");
+  assert.ok(/\$\("treffenForm"\)\.dataset\.aendern = t\?\.id \? "1" : "";/.test(programm) && /if \(!start && !\$\("treffenForm"\)\.dataset\.aendern\) \$\("tfInfo"\)\.checked = art === "treffen";/.test(programm), "Art-Wechsel setzt den Haken beim Ändern nicht");
+  assert.ok(/benachrichtigen: \$\("tfInfo"\)\.checked/.test(programm), "Server bekommt weiter genau den Haken");
+}

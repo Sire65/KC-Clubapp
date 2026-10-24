@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.626.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.627.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28383,6 +28383,7 @@ async function treffenForm(t) {
   const datum = t?.beginn ? tagIso(t.beginn) : "", zeit = t?.beginn && !ganz ? fZeit.format(new Date(t.beginn)) : "18:00";
   const bisDatum = t?.ende && tagIso(t.ende) !== datum ? tagIso(t.ende) : "", bisZeit = t?.ende && !ganz ? fZeit.format(new Date(t.ende)) : "";
   oaLeeren("tf"); // 2.461.0: Prospekt – nur neue Anlagen; schon angehängte bleiben
+  $("treffenForm").dataset.aendern = t?.id ? "1" : ""; // 2.627.0 KC-CLUB-AENDERN-STILL
   $("treffenForm").innerHTML = `<h3>${t?.id ? "Termin ändern" : "Neuer Termin"}</h3>
     ${t?.id ? "" : `<label class="schalter pt-privat"><span><b>🔒 Privat</b> – nur ich sehe diesen Termin</span><input type="checkbox" onchange="if(this.checked)privatForm(ptAusTreffen())"></label>`}
     <div class="artwahl"><button type="button" class="knopf ${art === "treffen" ? "haupt" : ""}" data-art="treffen" onclick="tfArtWahl('treffen')">👥 Sitzungen</button><button type="button" class="knopf ${art === "veranstaltung" ? "haupt" : ""}" data-art="veranstaltung" onclick="tfArtWahl('veranstaltung')">🎪 Veranstaltung</button></div>
@@ -28399,7 +28400,8 @@ async function treffenForm(t) {
     <label class="feld">🌐 Link zur Webseite (freiwillig)<input id="tfLink" type="url" inputmode="url" autocapitalize="off" maxlength="500" value="${esc(t?.link || "")}" placeholder="z. B. www.freilichtbuehne-werne.de"></label>
     ${oaFeld("tf")}${t?.id ? '<p class="hinweis" style="margin:-4px 0 0">Schon angehängte Prospekte bleiben – hier nur neue dazunehmen.</p>' : ""}
     <label class="schalter"><span><b>📣 Im Info-Laufband ankündigen</b><br><small class="hinweis">oben auf der Startseite, ab 3 Wochen vorher bis zum Termin</small></span><input type="checkbox" id="tfLauf" ${t?.imLaufband ? "checked" : ""}></label>
-    <label class="schalter"><span>Alle Mitglieder benachrichtigen (Push/Mail)</span><input type="checkbox" id="tfInfo" ${art === "treffen" ? "checked" : ""}></label>
+    <!-- 2.627.0 KC-CLUB-AENDERN-STILL (Fund Hansi 24.10.: nur ein Tippfehler korrigiert → neue Einladung an alle): beim Ändern ist der Haken aus -->
+    <label class="schalter"><span>${t?.id ? "Mitglieder über die Änderung benachrichtigen (Push/Mail) – nur bei Wichtigem wie Tag, Uhrzeit oder Ort" : "Alle Mitglieder benachrichtigen (Push/Mail)"}</span><input type="checkbox" id="tfInfo" ${art === "treffen" && !t?.id ? "checked" : ""}></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="treffenSpeichern('${t?.id || ""}', this)">💾 Speichern</button><button class="knopf" onclick="$('treffenForm').classList.add('versteckt')">Abbrechen</button></div>`;
   tfArtWahl(art, true);
   $("treffenForm").classList.remove("versteckt"); window.scrollTo(0, 0);
@@ -28410,7 +28412,7 @@ function tfArtWahl(art, start) {
   document.querySelectorAll("#treffenForm .artwahl .knopf").forEach((k) => k.classList.toggle("haupt", k.dataset.art === art));
   $("tfGastZeile").classList.toggle("versteckt", art !== "treffen");
   $("tfGanzZeile").classList.toggle("versteckt", art !== "veranstaltung");
-  if (!start) $("tfInfo").checked = art === "treffen";
+  if (!start && !$("treffenForm").dataset.aendern) $("tfInfo").checked = art === "treffen"; // 2.627.0: beim Ändern setzt der Art-Wechsel den Haken nicht
 }
 // Doppel-Tipp-Sperre: Knopf ist gesperrt, bis der Server geantwortet hat (sonst entstehen doppelte Einträge)
 // KC-CLUB-EINMAL-SENDEN (1.97.0, Gesamtprüfung): Absende-Aktionen ohne eigenen Knopf-Schutz laufen nie doppelt gleichzeitig
