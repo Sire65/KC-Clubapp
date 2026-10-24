@@ -16603,6 +16603,10 @@ const jzWahl = () => { const t = themaWert("jz"); if (t) return t; try { const w
 // 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE (Wunsch Hansi „bei allen automatisch die Sim-Jü-Szene im Kopf, bis einschließlich Dienstag – dann ist Sim-Jü zu Ende“):
 // in der Sim-Jü-Zeit (Samstag bis Dienstag um Simon und Juda, themaFestZeit) zeigt jeder Kopf das Riesenrad – egal welche Jahreszeit oder welches Thema gewählt ist.
 // Mittwoch um 0 Uhr stellt sich der Kopf von selbst zurück (Minuten-Prüfung unten). Eine Vorschau geht weiter vor; „Jahreszeiten im Kopf“ aus bleibt aus.
+// 2.617.0 (Wunsch Hansi „auch bei denen, die es nicht anhaben – viele wissen gar nicht, dass man es einschalten kann“): in der Sim-Jü-Zeit läuft die
+// Szene auch bei „Jahreszeiten im Kopf“ aus und bei ausgeschalteten Animationen. Nur der Sparmodus (Akku) hält sie weiter an.
+const jzSimJue = () => themaFestZeit() === "simjue";
+const jzbDarf = () => { const sj = jzSimJue(); return (fxAn() || (sj && !SPAR?.an && !!document.body?.animate)) && (einst("jahreszeit", true) || sj); };
 const jahreszeitAktuell = (d = new Date()) => (themaFestZeit(d) === "simjue" ? "kirmes" : jzWahl() === "auto" ? jahreszeitArt(d) : jzWahl());
 function jzWahlSetzen(w) { if (!themaEigenSetzen("jz", w)) try { localStorage.setItem("kc_club_jzWahl", w); } catch {} JZB.vorschau = null; jzWahlZeigen(); jahreszeitKopf(); melde(w === "auto" ? "🔄 Automatik: die Jahreszeit stellt sich von selbst um" : `${JZ_WAHL.find(([k]) => k === w)[1]} fest eingestellt`); }
 function jzWahlZeigen() {
@@ -16766,7 +16770,7 @@ const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "�
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
-  if (!fxAn() || !einst("jahreszeit", true)) { if (einst("jahreszeit", true)) jzDeko(h, JZB.vorschau || jahreszeitAktuell()); return; } // 2.335.0: die Deko ist ein stilles Bild – auch im Sparmodus
+  if (!jzbDarf()) { if (einst("jahreszeit", true)) jzDeko(h, JZB.vorschau || jahreszeitAktuell()); return; } // 2.617.0: in der Sim-Jü-Zeit für alle // 2.335.0: die Deko ist ein stilles Bild – auch im Sparmodus
   // 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE: Herbst, Advent/Winter, Frühling und Sommer mit Boden (Laub, Schnee, Gras, Sonnenblume) – Silvester bleibt Feuerwerk
   // 2.263.0 (Fund Hansi „Blätter bleiben immer noch nicht liegen“): sein Handy meldet „Bewegung reduzieren“ (wie schon bei der Jalousie, 2.161.0) –
   // dann lief bisher nur die alte Emoji-Deko, bei der nichts liegen bleibt. Die Bühne ist ruhig und lässt sich mit „🍂 Jahreszeiten im Kopf“ abschalten,
@@ -18685,7 +18689,7 @@ function jzbBild(ts) {
   JZB.raf = 0;
   if (!JZB.cv?.isConnected) return jzbStop();
   const dt = JZB.letzt ? Math.min(.09, (ts - JZB.letzt) / 1000) : .016; JZB.letzt = ts;
-  if ((JZB.pruef += dt) > 1) { JZB.pruef = 0; if (!fxAn() || !einst("jahreszeit", true)) return jahreszeitKopf(); }
+  if ((JZB.pruef += dt) > 1) { JZB.pruef = 0; if (!jzbDarf()) return jahreszeitKopf(); }
   if (JZB.w) { if ((JZB.extraPruef -= dt) <= 0) { JZB.extraPruef = 30; jzbExtrasBestimmen(); } JZB.T += dt; JZB.pt += dt; jzbSchritt(dt); jzbMalen(); }
   if (jzbStehen()) { JZB.steht = true; return; } // 2.361.0: steht still bis zur nächsten Bedienung
   JZB.raf = -1; clearTimeout(JZB.warteUhr); JZB.warteUhr = setTimeout(() => { JZB.raf = 0; jzbWeiter(); }, Math.max(0, 1000 / jzbFps() - 10)); // schlafen – das nächste Bild kommt mit dem nächsten Bildwechsel danach

@@ -36,6 +36,7 @@ Fund Hansi: „Erste Nachricht an Klaus verschlüsselt geschickt – keinen Gehe
 - Nach 6,5 Sekunden ist der Kopf wieder da und alles beginnt von vorn (ein Lauf ≈ 77 s).
 
 🎡 Sim-Jü für alle (KC-CLUB-SIMJUE-FUER-ALLE, Wunsch Hansi): von Samstag bis einschließlich Dienstag der Sim-Jü-Woche (2026: 24.–27.10.) zeigt jeder Kopf die Sim-Jü-Szene mit Riesenrad, Lebkuchenherz und Feuerwerk – egal welche Jahreszeit oder welches Thema eingestellt ist. Mittwoch um 0 Uhr stellt er sich von selbst zurück; so jedes Jahr.
+- Auch bei allen, die „🍂 Jahreszeiten im Kopf“ oder die Animationen ausgeschaltet haben (Wunsch Hansi: „viele wissen gar nicht, dass man es einschalten kann“). Nur der Sparmodus (Akku) hält die Szene weiter an. Nach Sim-Jü gilt wieder die eigene Einstellung.
 
 ## 2.616.0 – 2026-10-24 – 🕐 Testlisten mit Tagesangabe · 🕰️ Stundenuhr still nach eigener Ruhezeit (KC-CLUB-TESTLISTE-HEUTE, KC-CLUB-KUCKUCK-RUHEZEIT)
 Fund Hansi: In „Letzte Tests auf diesem Gerät“ sah der Test von 01:01 Uhr wie ein Datum (1. Januar) aus – Tests von heute zeigten nur die Uhrzeit.

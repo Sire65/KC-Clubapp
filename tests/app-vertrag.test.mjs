@@ -9991,7 +9991,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
-  assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!fxAn\(\) \|\| !einst\("jahreszeit", true\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
+  assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
   assert.ok(/\.jz-buehne canvas \{ position: absolute; inset: 0;/.test(seite) && /jahreszeitVorschau\('winter'\)/.test(seite), "Canvas im Kopf, Vorschau in den Einstellungen");
 }
 
@@ -12530,4 +12530,9 @@ function idx0() { return lies("index.html"); }
   for (const t of [24, 25, 26, 27]) assert.equal(f(new Date(2026, 9, t, 12)), "simjue", `${t}.10.2026 Sim-Jü`);
   assert.equal(f(new Date(2026, 9, 27, 23, 59)), "simjue", "Dienstag bis Mitternacht");
   assert.equal(f(new Date(2026, 9, 28, 0, 1)), null, "Mittwoch vorbei");
+}
+// 2.617.0 KC-CLUB-SIMJUE-FUER-ALLE: auch bei „Jahreszeiten im Kopf“ aus / Animationen aus – nur der Sparmodus hält an
+{
+  assert.ok(/const jzbDarf = \(\) => \{ const sj = jzSimJue\(\); return \(fxAn\(\) \|\| \(sj && !SPAR\?\.an && !!document\.body\?\.animate\)\) && \(einst\("jahreszeit", true\) \|\| sj\); \};/.test(programm), "Sim-Jü überstimmt die Schalter, nicht den Sparmodus");
+  assert.ok(/if \(!jzbDarf\(\)\) \{ if \(einst\("jahreszeit", true\)\) jzDeko/.test(programm) && /JZB\.pruef = 0; if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(programm), "Kopf und Bildschleife fragen jzbDarf");
 }
