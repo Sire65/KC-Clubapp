@@ -32,7 +32,10 @@
     if(!start)return;
     let b=document.getElementById("kcTrafficGuardHome");
     const admin=document.getElementById("adminBereich");
-    const show=isLoggedIn() && !!admin && !admin.classList.contains("versteckt") && (status?.level==="warning"||status?.level==="critical");
+    // KC-TRAFFIC-GEPLANT-STILL (24.10.2026, Fund Hansi: gelber Kasten „ungewöhnlich hohe Datenbanklast … Ursache (geplant): Datensicherung“ um 3 Uhr):
+    // Der Wächter erkennt geplante Spitzen (Datensicherung, neue Version, Notpaket, Rundnachricht) und schickt dafür keinen Push –
+    // dann auch kein Warnkasten auf der Startseite. Im Admin-Bereich steht es weiter, als „geplante Last“. Kritische Last zeigt immer.
+    const show=isLoggedIn() && !!admin && !admin.classList.contains("versteckt") && (status?.level==="critical"||(status?.level==="warning"&&status?.geplant!==true));
     if(!show){b?.remove();return;}
     if(!b){b=document.createElement("div");b.id="kcTrafficGuardHome";b.style.cssText="margin:10px 12px;padding:10px 12px;border:2px solid #a15a22;border-radius:12px;background:var(--gelbbg,#fff0c9);color:var(--text,#222);";const hero=start.querySelector(".hero");if(hero)hero.insertAdjacentElement("afterend",b);else start.prepend(b);}
     const red=status.level==="critical";b.style.borderColor=red?"#c62828":"#b47b00";
@@ -45,7 +48,8 @@
     const out=el.querySelector("#kcTrafficGuardClubDetail");
     const d=current||{level:"unknown",detail:"Keine Messung"};
     const labels={normal:"🟢 Last unauffällig",warning:"🟡 Erhöhte Last",critical:"🔴 Kritische Last",unknown:"⚪ Noch keine verlässliche Messung"};
-    if(out)out.innerHTML='<b>'+esc(labels[d.level]||labels.unknown)+'</b><br>'+
+    const stufe=d.geplant===true&&d.level==="warning"?"🔵 Geplante Last – kein Grund zur Sorge":(labels[d.level]||labels.unknown); // KC-TRAFFIC-GEPLANT-STILL
+    if(out)out.innerHTML='<b>'+esc(stufe)+'</b><br>'+
       esc(d.detail||"Keine Details")+'<br><small>SQL-Aufrufe / 15 Min.: '+(d.calls_15m==null?'—':Math.round(Number(d.calls_15m)).toLocaleString("de-DE"))+
       ' · Ergebniszeilen / 15 Min.: '+(d.rows_15m==null?'—':Math.round(Number(d.rows_15m)).toLocaleString("de-DE"))+
       ' · Letzte Messung: '+esc(dateText(d.measured_at))+
