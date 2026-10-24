@@ -12551,3 +12551,7 @@ function idx0() { return lies("index.html"); }
   assert.equal(fw(new Date(2026, 10, 2, 21, 5)), false, "nicht an anderen Montagen");
   assert.ok(/!\(JZB\.saison === "kirmes" && jzbSimJueFeuerwerk\(\)\)/.test(programm) && /if \(F\.t >= JZB_FEST_DAUER && !fw\)/.test(programm), "Bild bleibt während des Feuerwerks nicht stehen, kein Ausblenden");
 }
+// 2.618.0 KC-CLUB-SIMJUE-LAUFLICHT: Lauflichter am Riesenrad (Kranz, Speichen, Stützen)
+{
+  assert.ok(/KC-CLUB-SIMJUE-LAUFLICHT/.test(programm) && /const LL = 36, lauf = T \* 14/.test(programm) && /Speichen: Licht läuft nach außen/.test(programm) && /Stützen: Licht läuft hoch/.test(programm), "Lauflichter am Riesenrad");
+}

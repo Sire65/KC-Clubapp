@@ -19380,7 +19380,22 @@ function jzbKirmesMalen(c, F) {
   for (let i = 0; i < n * 2; i++) { const a = th + i / (n * 2) * Math.PI * 2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); c.stroke(); }
   c.strokeStyle = "#e9edf5"; c.lineWidth = 2.2 * k; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
   c.lineWidth = 1 * k; c.beginPath(); c.arc(cx, cy, R * .82, 0, 7); c.stroke();
-  for (let i = 0; i < 24; i++) { const a = th + i / 24 * Math.PI * 2, an = (i + takt) % 2 === 0; c.fillStyle = an ? "#fff3a0" : "rgba(255,200,120,.45)"; c.beginPath(); c.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, (an ? 1.6 : 1.1) * k, 0, 7); c.fill(); }
+  // 2.618.0 KC-CLUB-SIMJUE-LAUFLICHT (Wunsch Hansi „Lauflichter an das Riesenrad“): bunte Lauflichter rund um den Kranz (Lichterpulk läuft im
+  // Kreis, Farbe wechselt je Runde), Lichter auf den Speichen laufen von innen nach außen, an den Stützen läuft ein Licht hoch
+  const LL = 36, lauf = T * 14, rund = Math.floor(lauf / LL), farben = ["#ffe066", "#ff4d6d", "#3ec1ff", "#7bed6f", "#c77dff"];
+  for (let i = 0; i < LL; i++) {
+    const a = th + i / LL * Math.PI * 2, d = ((lauf - i) % LL + LL) % LL, an = d < 6 || (i + takt) % 6 === 0, hell = d < 6 ? 1 - d / 6 : .55;
+    const f = farben[(rund + (d < 6 ? 0 : i)) % farben.length], x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+    if (an) { c.fillStyle = f; c.globalAlpha = hell; c.beginPath(); c.arc(x, y, (1.2 + hell) * k, 0, 7); c.fill();
+      if (d < 3) { c.globalAlpha = hell * .35; c.beginPath(); c.arc(x, y, 4 * k, 0, 7); c.fill(); } c.globalAlpha = 1; }
+    else { c.fillStyle = "rgba(255,220,160,.35)"; c.beginPath(); c.arc(x, y, 1 * k, 0, 7); c.fill(); }
+  }
+  for (let i = 0; i < 8; i++) { const a = th + i / 8 * Math.PI * 2, p = (T * 1.2 + i * .125) % 1; // Speichen: Licht läuft nach außen
+    for (const q of [p, (p + .5) % 1]) { const r = R * (.15 + q * .78); c.fillStyle = farben[(i + Math.floor(T * 1.2)) % farben.length]; c.globalAlpha = .9 - q * .4;
+      c.beginPath(); c.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1.1 * k, 0, 7); c.fill(); } }
+  c.globalAlpha = 1;
+  for (const sx of [-1, 1]) for (let j = 0; j < 6; j++) { const q = j / 6, an = Math.floor(T * 8) % 6 === (5 - j); // Stützen: Licht läuft hoch
+    c.fillStyle = an ? "#fff3a0" : "rgba(255,210,140,.3)"; c.beginPath(); c.arc(cx + sx * R * .62 * (1 - q), J.h - 2 - (J.h - 2 - cy) * q, (an ? 1.5 : .9) * k, 0, 7); c.fill(); }
   for (let i = 0; i < n; i++) { // Gondeln hängen immer senkrecht und pendeln leicht
     const a = th + i / n * Math.PI * 2, gx = cx + Math.cos(a) * R, gy = cy + Math.sin(a) * R, p = Math.sin(T * 1.7 + i) * .08, gw = 9 * k, gh = 7 * k;
     c.save(); c.translate(gx, gy); c.rotate(p);
