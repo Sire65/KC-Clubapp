@@ -12824,3 +12824,11 @@ function idx0() { return lies("index.html"); }
   const f = server.slice(server.indexOf("async function mailAnlagen("), server.indexOf("async function routerSendenRoh("));
   assert.ok(/x\.file_name === "kc-verschluesselt\.bin"/.test(f) && /MAIL_ANL_DATEI = 10 \* 1024 \* 1024, MAIL_ANL_SUMME = 15 \* 1024 \* 1024/.test(server) && /liste\.length !== ids\.length/.test(f), "verschlüsselte oder zu große Anlagen: nur Hinweis wie bisher");
 }
+// 2.648.0 KC-CLUB-WAS-MACHT: „?“ auf der Mitglieder-Kachel – nur Admin, nur online, nie bei mir; öffnet die Wege der Person; Server nur Admin
+{
+  assert.ok(/const was = ICH\.admin && on && !ich \? `<button type="button" class="mg-was"/.test(programm) && /\$\{was\}\$\{kreis\(m, m\.name, 58\)\}/.test(programm), "Fragezeichen nur Admin, nur online, nicht bei mir");
+  assert.ok(/function mgWasMacht\(pid\) \{ if \(!ICH\?\.admin\) return; spurAdmin\(heuteIso\(\), pid\); \}/.test(programm), "öffnet die Wege der Person (heute), nur Admin");
+  const fall = server.slice(server.indexOf('case "spur_liste": {'), server.indexOf('case "spur_liste": {') + 200);
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall), "Server gibt die Wege nur dem Admin");
+  assert.ok(/\.mg-kachel \{ position: relative; \}/.test(html) && /\.mg-was \{ position: absolute; top: 6px; right: 6px;/.test(html), "oben rechts in der Kachel");
+}

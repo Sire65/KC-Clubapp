@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.647.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.648.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36995,12 +36995,16 @@ function mgDaText(m) {
   const tage = Math.round((Date.parse(heuteIso() + "T12:00:00Z") - Date.parse(z.tag + "T12:00:00Z")) / 86400000);
   return tage <= 1 ? "zuletzt online gestern" : `zuletzt online am ${z.tag.slice(8, 10)}.${z.tag.slice(5, 7)}.`;
 }
+function mgWasMacht(pid) { if (!ICH?.admin) return; spurAdmin(heuteIso(), pid); } // 2.648.0 KC-CLUB-WAS-MACHT
 function mgKachelnHtml(liste) {
   const k = (m) => {
     const ich = m.person_id === ICH.person_id, on = mgOn(m);
     const da = on ? '<span class="mk-unter" style="color:var(--textGruen);font-weight:800">● online</span>' : m.zuletztDa ? `<span class="mk-unter">🕒 ${esc(zuletztText(m.zuletztDa))}</span>` : m.status || m.aktiv ? "" : '<span class="mk-unter">⚪ noch nicht in der App</span>';
+    // 2.648.0 KC-CLUB-WAS-MACHT (Wunsch Hansi „nur für Admin: ist ein Mitglied online, rechts oben ein Fragezeichen – Klick zeigt, was die Person
+    // gerade in der App macht“): öffnet die vorhandenen „Wege der Mitglieder“ (heute, nur diese Person). Nur Admin und nur bei online; der Server prüft „spur_liste“ mit nurAdmin.
+    const was = ICH.admin && on && !ich ? `<button type="button" class="mg-was" title="Was macht ${esc(m.name.split(" ")[0])} gerade?" aria-label="Was macht ${esc(m.name)} gerade in der App?" onclick="event.stopPropagation();mgWasMacht('${m.person_id}')">?</button>` : "";
     return `<div class="mini-kachel mg-kachel${on ? " mg-online" : ""}" onclick="mitgliedOeffnen('${m.person_id}')" role="button" tabindex="0">
-      ${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
+      ${was}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
       ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()">${mgStern(m)}<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
