@@ -1150,7 +1150,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/typen: \["available", "preferred", "if_needed", "unavailable"\]/.test(server), "Wunscharten nicht wie DP2");
   const mig = lies("supabase/migrations/20260929_kc_dp_wunsch_eingang_v1.sql");
   assert.ok(/kc_dp_wish_inbox_ack/.test(mig) && /kc_dp_days_publish/.test(mig) && /'KC_CLUBAPP'/.test(mig), "Datenbankvertrag fehlt");
-  assert.ok(/\{ id: "dienstwunsch", sym: "📝", t: "Dienstwünsche"[^}]*aktion: "dwOeffnen\(\)" \}/.test(html) && /src="dienstwunsch\.html\?v=\$\{APP_VERSION\}"/.test(html), "Kachel/Fenster fehlt");
+  assert.ok(/\{ id: "dienstwunsch", sym: "📝", t: "Dienstwünsche"[^}]*aktion: "dwOeffnen\(\)" \}/.test(html) && /src="dienstwunsch\.html\?v=\$\{APP_VERSION\}(\$\{VT\.fuer[^}]*\})?"/.test(html), "Kachel/Fenster fehlt" /* 2.629.0: + KC-CLUB-VERTRETUNG */);
   assert.ok(/if \(e\.origin !== location\.origin/.test(html) && /e\.data === "dienstwunsch-zu"/.test(html) && /else if \(h === "#dienstwunsch"\) dwOeffnen\(\);/.test(html), "Nachrichten aus dem Fenster ungeprüft / Sprung fehlt");
 }
 
@@ -2402,7 +2402,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const worker = lies("notbetrieb/worker.js"), wf = lies(".github/workflows/notbetrieb-hochladen.yml"), mig = lies("supabase/migrations/20261002_kc_club_v1520_notbetrieb.sql");
   // Server: eine Regel – dieselben Aktionen intern, nur lesend; Paket nur bei Änderung, signiert
-  assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request/.test(server) && /(return await|const antwort = await) aktionAusfuehren\(a, p, ich, req, t0Anfrage, anmeldungMs\);/.test(server), "Aktionen in einer Funktion (auch intern nutzbar)");
+  assert.ok(/async function aktionAusfuehren\(a: string, p: any, ich: Ich, req: Request/.test(server) && /(return await|const antwort = await) aktionAusfuehren\(a, p, (ich|handelnd), req, t0Anfrage, anmeldungMs\);/.test(server), "Aktionen in einer Funktion (auch intern nutzbar)");
   assert.ok(/nurLesen: true/.test(server) && /if \(!ich\.nurLesen\) await protokoll\(ich\.person_id, "sos_geoeffnet"/.test(server) && /fremd\.length && !ich\.nurLesen/.test(server) && /if \(!ich\.nurLesen( && p\.vorschau !== true)?\) await db\.from\("kc_communication_thread_participants"\)\.update/.test(server), "Paket-Bau schreibt nichts");
   assert.ok(/st\.fingerabdruck === fp/.test(server) && /name: "Ed25519"/.test(server) && /if \(!st\.url\) return \{ ok: true, aus:/.test(server), "nur bei Änderung, signiert, aus solange nicht eingerichtet");
   assert.ok(/'secret', false, false, false/.test(mig) && /cron\.schedule\('kc-club-notpaket-15min'/.test(mig), "Schlüssel nie gespiegelt, Lauf alle 15 Min.");
@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12599,4 +12599,25 @@ function idx0() { return lies("index.html"); }
   assert.ok(/<div class="bw-unten"><div class="bw-tipp">/.test(programm) && /\.bw-unten \{ position: absolute;[^}]*flex-direction: column/.test(html), "Erklärung und Knöpfe untereinander");
   assert.ok(/class="bw-schritt">① Wie möchtest du üben\?/.test(programm) && /class="bw-reihe bw-start"><button type="button" class="es-k es-haupt bw-los"/.test(programm) && /class="bw-reihe bw-neben"><span>Außerdem:<\/span>/.test(programm), "Schritte, ein großer Start, Nebensachen klein");
   assert.ok(/function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\); esDiaMusikAus\(\); bwTrainingKnoepfe\(false\);/.test(programm) && /if \(v !== "start" && !BW\.lauf\) bwTrainingKnoepfe\(false\);/.test(programm), "Hilfe-Knöpfe kommen beim Verlassen der Bühne zurück");
+}
+// 2.629.0 KC-CLUB-VERTRETUNG (Wunschliste #35): Admin erlaubt „Karla darf für Ruth“ – nur Termine, Terminumfragen, Dienstwünsche, Abstimmungen
+{
+  const liste = (q, name) => q.match(new RegExp("const " + name + " = new Set\\(\\[([^\\]]+)\\]\\)"))[1];
+  assert.equal(liste(server, "VERTRETUNG_AKTIONEN"), liste(programm, "VT_AKTIONEN"), "App und Server kennen dieselben Vertretungs-Aktionen");
+  assert.ok(!/nachricht|einstellung|rolle|daten|loeschen|geheim/.test(liste(server, "VERTRETUNG_AKTIONEN")), "nie Nachrichten, Einstellungen, Rechte, Daten");
+  assert.ok(!/"vertretung_fuer"/.test(server.slice(server.indexOf("const EINSTELLUNGEN"), server.indexOf("const EINSTELLUNGEN") + 20000).split("\n};")[0]), "Mitglied kann sich die Erlaubnis nicht selbst geben");
+  const v = server.slice(server.indexOf("async function vertretungIch("), server.indexOf("async function vertretungIch(") + 1200);
+  assert.ok(/if \(!VERTRETUNG_AKTIONEN\.has\(a\)\) throw/.test(v) && /\.eq\("person_id", ich\.person_id\)\.eq\("schluessel", VERTRETUNG_KEY\)/.test(v) && /if \(!vertretungIds\(data\?\.wert\)\.includes\(fuer\)\) throw/.test(v), "Erlaubnis bei jeder Anfrage neu geprüft");
+  assert.ok(/const ziel = await geplantIch\(fuer\);/.test(v) && /await sperreFuer\(ziel\.person_id\)/.test(v), "eigene Rechte und Sperre des Vertretenen");
+  assert.ok(/handelnd = await vertretungIch\(ich, fuer, a\);/.test(server) && /await protokoll\(ich\.person_id, "vertretung", \{ aktion: a, fuer \}\); await protokoll\(fuer, "vertreten", \{ aktion: a, von: ich\.person_id \}\);/.test(server)
+    && /const antwort = await aktionAusfuehren\(a, p, handelnd, req, t0Anfrage, anmeldungMs\);/.test(server), "als Vertretener ausgeführt, bei beiden im Protokoll");
+  const st = server.slice(server.indexOf('case "vertretung_setzen": {'), server.indexOf('case "rose_liste": {'));
+  assert.ok(/nurAdmin\(ich\);/.test(st) && /x\.active && x\.org_id === ORG/.test(st), "nur der Admin, nur aktive Clubmitglieder");
+  assert.ok(/if \(ich\.vertreter && v\.geheim\) throw/.test(server), "geheime Abstimmung nie in Vertretung");
+  assert.ok(/delete einstellungen\[VERTRETUNG_KEY\]/.test(server) && /vertretung: await pVertretung/.test(server), "Start: nur Namen der Erlaubten");
+  assert.ok(/daten = vtDaten\(action, daten\);/.test(programm) && /if \(NOT\.an\) throw/.test(programm.slice(programm.indexOf("function vtDaten("), programm.indexOf("function vtDaten(") + 400)), "App schickt „fuer“ nur bei den Aktionen, nie im Notbetrieb");
+  assert.ok(programm.indexOf("const VT = { fuer: null };") < programm.indexOf("async function api(action"), "VT steht vor api() (läuft schon beim Laden)");
+  assert.ok(/<div class="vt-ort"><\/div>/.test(html) && /id="vtLeiste"|b\.id = "vtLeiste"/.test(programm), "Wahl „Handeln für“ + Leiste „Du handelst für …“");
+  const lader = lies("dp2-club/lader.js");
+  assert.ok(/if \(fuer\) daten = \{ \.\.\.daten, fuer \};/.test(lader), "Twinkey schickt in Vertretung jede Anfrage mit „fuer“");
 }

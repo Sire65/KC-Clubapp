@@ -3,7 +3,7 @@
 // start.js dort, wo DP2 twinkey-test-boot.js lädt. Die Seite hat <base href="dp2/">: Pfade sind relativ zu dp2/.
 (function () {
   "use strict";
-  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.628.0";
+  const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club", APP_VERSION = "2.629.0";
   const laden = document.getElementById("dwLaden");
   // CSP ohne Inline-Skripte: Knopf per addEventListener
   const zurueck = () => (parent !== window ? parent.postMessage("dienstwunsch-zu", location.origin) : history.back());
@@ -17,7 +17,11 @@
   if (!key) return fehler("Bitte die Club-App mit deinem persönlichen Link öffnen.");
   // KC-CLUB-NAHE-REGION (1.16.0): wie die Club-App – Server neben der Datenbank; antwortet die Region nicht, Standardweg
   let regionAus = false;
+  // KC-CLUB-VERTRETUNG (25.10.2026): „?fuer=KC-P-…“ = Wünsche für ein anderes Mitglied – geht bei JEDER Anfrage mit (der Server erlaubt nur
+  // dienstwunsch_laden/-speichern in Vertretung und prüft die Erlaubnis jedes Mal; alles andere lehnt er ab, statt es unter eigenem Namen zu tun)
+  const fuer = (/^KC-P-[A-Z0-9-]{1,30}$/i.exec(new URLSearchParams(location.search).get("fuer") || "") || [""])[0];
   window.KC_CLUB_DW_API = async (action, daten = {}) => {
+    if (fuer) daten = { ...daten, fuer };
     const anfrage = (url) => { const ab = new AbortController(), t = setTimeout(() => ab.abort(), 20000); // Frist 20 s je Anfrage
       return fetch(url, { method: "POST", signal: ab.signal, headers: { "Content-Type": "application/json", "x-club-token": key, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }) }).finally(() => clearTimeout(t)); };
     let r;

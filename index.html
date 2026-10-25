@@ -1974,6 +1974,15 @@
   .antworten button.an.vielleicht { background: var(--gold); border-color: var(--gold); color: #fff; }
   .namen { margin-top: 10px; font-size: .92rem; line-height: 1.6; }
 
+  /* KC-CLUB-VERTRETUNG: „Handeln für“ + Leiste unten */
+  .vt-wahl { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:4px 0 10px; }
+  .vt-wahl span { font-weight:700; color:var(--rot, #741521); margin-right:2px; }
+  .vt-wahl button { min-height:40px; padding:6px 12px; border-radius:20px; border:1.5px solid #741521; background:#fff8ee; color:#741521; font:inherit; font-weight:600; }
+  .vt-wahl button.an { background:#741521; color:#fff; }
+  .dw-kopf .vt-wahl { margin:6px 8px 4px; }
+  .vt-leiste { position:fixed; left:12px; bottom:calc(152px + env(safe-area-inset-bottom)); z-index:2100; display:flex; gap:10px; align-items:center;
+    max-width:calc(100vw - 24px); white-space:nowrap; overflow:hidden; padding:5px 6px 5px 14px; border-radius:24px; background:#741521; color:#fff; border:2px solid #c9a46a; box-shadow:0 4px 14px rgba(0,0,0,.3); }
+  .vt-leiste .knopf { background:#f3e9dc; color:#741521; min-height:36px; }
   /* Vorschläge & Abstimmungen */
   .wahl { display: grid; gap: 8px; margin-top: 12px; }
   .wahl button { border: 2px solid var(--linie); background: var(--karte); border-radius: 14px; padding: 13px 14px; font-weight: 800; cursor: pointer; text-align: left; }
@@ -4868,6 +4877,7 @@
   <!-- TERMINE -->
   <section id="v-termine" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>📅 Termine</h2><button type="button" class="knopf klein kalv-kopf" onclick="kalVerbinden()" title="Alle Club-Termine automatisch in deinen Handy-Kalender (iPhone, Google, Outlook)" aria-label="Kalender verbinden">📲</button><button id="neuTreffenKnopf" class="knopf haupt klein" onclick="termineNeuWahl()" title="Neuer Termin, Terminanfrage oder Terminfindung">＋ Neu</button><button type="button" class="druckknopf" title="Drucken: Kalender (Tag/Woche/Monat/Jahr) oder To-do-Liste" aria-label="Drucken" onclick="druckStarten('termine')" id="druckTermine"></button></div>
+    <div class="vt-ort"></div>
     <div class="umschalter modus3" data-zyklus="Ansicht"><button data-m="liste" onclick="termineModus('liste')">☰ Liste</button><button data-m="kalender" onclick="termineModus('kalender')">🗓️ Kalender</button><button data-m="todo" onclick="termineModus('todo')">✅ To-do</button></div>
     <div id="todoBereich" class="versteckt"></div>
     <div id="treffenForm" class="karte versteckt"></div>
@@ -4900,6 +4910,7 @@
   <!-- VORSCHLÄGE & ABSTIMMUNGEN -->
   <section id="v-vorschlaege" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><h2>🗳️ Vorschläge</h2><button class="knopf haupt klein" id="vorschlagNeuKnopf" onclick="vorschlagForm()">＋ Neu</button></div>
+    <div class="vt-ort"></div>
     <div id="vorschlagHinweis"></div>
     <div id="vorschlagForm" class="karte versteckt"></div>
     <div id="vorschlagListe"><div class="karte hinweis">Wird geladen …</div></div>
@@ -5803,7 +5814,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.628.0" data-v="2.628.0"></script>
+<script src="app.js?v=2.629.0" data-v="2.629.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

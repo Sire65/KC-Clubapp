@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.628.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.629.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13938,12 +13938,17 @@ function wartenEnde() {
   wartenZahl = Math.max(0, wartenZahl - 1); if (wartenZahl) return;
   clearTimeout(wartenTimer); wartenTimer = null; clearTimeout(wartenLangTimer); wartenLangTimer = null; $("warten").classList.remove("an"); setTimeout(() => { if (!wartenZahl) $("warten").classList.add("versteckt"); }, 200);
 }
+// KC-CLUB-VERTRETUNG (Beschreibung bei vtWahlHtml): hier oben, weil api() schon beim Laden läuft
+const VT_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
+const VT = { fuer: null }; // { person_id, name, vorname }
+const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
 async function api(action, daten = {}, opt = {}) {
   const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
   const warte = wartenStart(action, opt.warten, opt.still);
   try { for (;;) {
   // 2.422.0 KC-CLUB-ZUGANG: für Gäste/Aushilfen nicht freigegebene Aktionen gar nicht erst schicken (der Server lehnt sie ohnehin ab)
   if (!zugangAktion(action)) throw Object.assign(new Error(zugang() === "gast" ? "🔒 Das ist für Gäste nicht freigeschaltet." : "🔒 Das ist für Aushilfen nicht freigeschaltet."), { zugang: true, status: 403 });
+  daten = vtDaten(action, daten); // KC-CLUB-VERTRETUNG: im „Für … handeln“-Modus bei den erlaubten Aktionen „fuer“ mitschicken
   const lauf = sichtbar ? ladeBeginn(action) : null;
   try {
     if (NOT.an) return await notApi(action, daten); // KC-CLUB-NOTBETRIEB
@@ -15018,19 +15023,19 @@ function dwOeffnen() {
   // 2.23.29 (Hansi: „Drucker-Symbol reingequetscht“): geordnete Knöpfe. 2.312.0 KC-CLUB-DW-KOMPAKT (Hansi nach der Eingabe mit Christina:
   // „man muss den Bildschirm runterschieben, weil oben zu viele Sachen stehen“): alles in EINER Reihe, der Sperrzeit-Tipp ist zugeklappt
   f.innerHTML = `<div class="dw-kopf"><div class="dw-reihe">
-    <button class="knopf klein" data-k="zu" aria-label="Zurück zur Club-App">‹ Zurück</button><b class="dw-titel">📝 Dienstwünsche</b>
-    <button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken" aria-label="Leerer Bogen">🖨️ Bogen</button>
-    <button class="knopf haupt klein" data-k="fertig" title="Bestätigung mit Zusammenfassung deiner Eingaben per E-Mail anfordern" aria-label="Fertig – Bestätigung per E-Mail anfordern">✅ Fertig</button></div>
+    <button class="knopf klein" data-k="zu" aria-label="Zurück zur Club-App">‹ Zurück</button><b class="dw-titel"${VT.fuer ? ' style="visibility:visible"' : ""}>📝 Dienstwünsche${VT.fuer ? ` für ${esc(VT.fuer.vorname || VT.fuer.name)}` : ""}</b>
+    ${VT.fuer ? "" : `<button class="knopf klein" data-k="bogen" title="Leeren persönlichen Wunschbogen mit QR-Code drucken oder per E-Mail schicken" aria-label="Leerer Bogen">🖨️ Bogen</button>
+    <button class="knopf haupt klein" data-k="fertig" title="Bestätigung mit Zusammenfassung deiner Eingaben per E-Mail anfordern" aria-label="Fertig – Bestätigung per E-Mail anfordern">✅ Fertig</button>`}</div>${vtListe().length ? '<div class="vt-ort"></div>' : ""}
     <div class="dw-reihe2"><details class="dw-tipp"><summary>💡 Tipp: Wann eine Sperrzeit?</summary><b>Sperrzeit nur, wenn du innerhalb deiner Kann-Zeit kurz weg musst.</b> Beispiel: Kann 10–18 Uhr, Arzt 13–14 Uhr → Sperrzeit 13–14 Uhr.
       Außerhalb der Kann-Zeit bist du automatisch frei.</details>${dvKnopf()}</div></div>
     <div style="flex:1;position:relative;display:flex">
       <!-- 1.40.0: drehende Mütze schon, während die Twinkey-Seite selbst noch lädt (danach zeigt die Seite ihre eigene) -->
       <div class="warten an" style="position:absolute;left:50%;top:42%;z-index:0"><div class="muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></div><b>Twinkey wird geladen …</b></div>
-      <iframe title="Dienstwünsche mit Twinkey" src="dienstwunsch.html?v=${APP_VERSION}" style="flex:1;border:0;width:100%;background:transparent;position:relative;z-index:1" allow="autoplay" onload="this.previousElementSibling?.remove();this.style.background='#fff8ee'"></iframe></div>`;
+      <iframe title="Dienstwünsche mit Twinkey" src="dienstwunsch.html?v=${APP_VERSION}${VT.fuer ? "&fuer=" + encodeURIComponent(VT.fuer.person_id) : ""}" style="flex:1;border:0;width:100%;background:transparent;position:relative;z-index:1" allow="autoplay" onload="this.previousElementSibling?.remove();this.style.background='#fff8ee'"></iframe></div>`;
   f.querySelector('[data-k="zu"]').onclick = dwZurueck; DWB.geaendert = false; DWB.bestaetigt = false;
-  f.querySelector('[data-k="fertig"]').onclick = (e) => einmal(e.currentTarget, () => dwBestaetigen());
-  f.querySelector('[data-k="bogen"]').onclick = () => wbStart();
-  document.body.appendChild(f); document.body.style.overflow = "hidden";
+  if (!VT.fuer) { f.querySelector('[data-k="fertig"]').onclick = (e) => einmal(e.currentTarget, () => dwBestaetigen());
+    f.querySelector('[data-k="bogen"]').onclick = () => wbStart(); } // KC-CLUB-VERTRETUNG: Bestätigung/Bogen gehen an einen selbst – in Vertretung nicht
+  document.body.appendChild(f); document.body.style.overflow = "hidden"; vtZeigen();
 }
 function dwSchliessen() { document.getElementById("dwFenster")?.remove(); document.body.style.overflow = ""; }
 // KC-CLUB-SPERRZEIT-PRUEFUNG (2.23.75, Fund Hansi): Twinkey meldet nach jedem gespeicherten Tag Sperrzeiten außerhalb der Kann-Zeit
@@ -27839,6 +27844,7 @@ function zeige(v, ausHistorie) {
   if (v !== "chat") tipptZeigen([]);
   if (v !== "chat") chatId = null;
   if (v === "termine") treffenLaden();
+  if (v === "termine" || v === "vorschlaege") vtZeigen(); // KC-CLUB-VERTRETUNG
   if (v === "sos") { sosZeigen(); sosLaden(); } // 2.480.0 KC-CLUB-ZEIGE-FUELLEN: Notrufnummern auf jedem Weg (Hilfe, Twinkey, Zurück, Kachel)
   if (v === "sicherheit" && !SI.laeuft) sicherheitPruefen();
   if (v === "vorschlaege") { $("vorschlagForm").classList.add("versteckt"); $("vorschlagHinweis").innerHTML = ""; $("vorschlagNeuKnopf").classList.remove("vs-puls"); VS_ZIEL = null; vorschlaegeLaden(); }
@@ -28248,6 +28254,7 @@ async function geburtstagFreigabe(an) {
 
 // ---------- Treffen ----------
 async function treffenLaden() {
+  if (VT.fuer && termineArt !== "liste") termineArt = "liste"; // KC-CLUB-VERTRETUNG: nur die Clubtermine – Kalender, To-dos, Privattermine sind die eigenen
   document.querySelectorAll("#v-termine > .umschalter button").forEach((b) => b.classList.toggle("an", b.dataset.m === termineArt));
   $("kalender").classList.toggle("versteckt", termineArt !== "kalender");
   $("treffenListe").classList.toggle("versteckt", termineArt !== "liste");
@@ -28256,7 +28263,8 @@ async function treffenLaden() {
   $("terminanfragen").classList.toggle("versteckt", termineArt === "todo");
   $("privattermine").classList.toggle("versteckt", termineArt !== "liste");
   if (termineArt === "todo") return todoLaden();
-  terminfindungLaden(); taLaden(); ptLaden();
+  if (VT.fuer) { $("terminanfragen").classList.add("versteckt"); $("privattermine").classList.add("versteckt"); terminfindungLaden(); }
+  else { terminfindungLaden(); taLaden(); ptLaden(); }
   if (termineArt === "kalender") return kalLaden();
   try {
     const { treffen, geburtstage } = await api("treffen_liste"); orteMerken(treffen);
@@ -28281,7 +28289,7 @@ function treffenKachel(t, vorbei) {
   TREFFEN_IDX.set(t.id, t);
   const va = t.art === "veranstaltung", ab = t.status === "abgesagt", offen = t.status === "geplant" && !vorbei;
   const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : "");
-  const meine = va || ab || !offen ? "" : t.meine === "ja" ? '<span class="marke gruen">✅ Du kommst</span>' : t.meine === "vielleicht" ? '<span class="marke gelb">❓ Vielleicht</span>'
+  const meine = va || ab || !offen ? "" : t.meine === "ja" ? `<span class="marke gruen">✅ ${VT.fuer ? esc(VT.fuer.vorname || VT.fuer.name) + " kommt" : "Du kommst"}</span>` : t.meine === "vielleicht" ? '<span class="marke gelb">❓ Vielleicht</span>'
     : t.meine === "nein" ? '<span class="marke rot">❌ Kann nicht</span>' : '<span class="marke gelb">👉 Antwort fehlt</span>';
   const frei = (t.mitfahrten || []).reduce((n, m) => n + (m.eigen ? 0 : m.frei || 0), 0);
   return `<button class="mini-kachel tr-kachel${va ? " tr-va" : ""}${ab ? " tr-ab" : ""}" onclick="treffenInfo('${t.id}', ${!!vorbei})"><span class="mk-sym">${ab ? "🚫" : va ? "🎪" : "🍽️"}</span>
@@ -40153,6 +40161,7 @@ function mitgliedZeigen() {
     </div>
     ${prKarte(m)}
     ${ICH?.admin && m.rose ? roseAdminKarte(m) : ""}
+    ${ICH?.admin && Array.isArray(m.vertretung) ? vtAdminKarte(m) : ""}
     ${m.selbst ? `<div class="karte"><h3>Deine Daten</h3>
       <p class="hinweis" style="margin-top:0">Oben steht alles, was über dich gespeichert ist. 🔒 = nicht freigegeben, sehen die anderen nicht. Freigeben kannst du unter ⚙️ Mehr → Privatsphäre.</p>
       <div class="knoepfe"><button class="knopf" onclick="zeige('einstellungen')">🔒 Freigaben ändern</button><button class="knopf" onclick="korrekturMelden()">📝 Korrektur an ${adminName()} melden</button></div></div>` : ""}`;
@@ -40169,6 +40178,56 @@ async function roseSetzen(pid, el) {
   const an = !!el.checked; el.disabled = true;
   try { await api("rose_setzen", { person_id: pid, an }, { warten: true }); if (MD?.person_id === pid) { MD.rose = { ...(MD.rose || {}), an }; mitgliedZeigen(); } melde(an ? "🌹 Rose ist bereit – sie kommt einmal." : "Rose wieder ausgeschaltet."); }
   catch (e) { el.checked = !an; meldeFehler(e); } finally { el.disabled = false; }
+}
+// ---------- KC-CLUB-VERTRETUNG (25.10.2026, Wunschliste #35, Wunsch Hansi „Karla darf für Ruth“) ----------
+// Der Admin legt in der Mitgliedskarte fest, für wen jemand handeln darf. Wer das darf, sieht in Termine, Abstimmungen und Dienstwünsche
+// „Handeln für: 👤 Mich · 🤝 Ruth“ und unten die Leiste „Du handelst für Ruth – ✖ Beenden“. Dann gehen NUR diese Aktionen mit „fuer“ an den
+// Server (er prüft die Erlaubnis jedes Mal neu und schreibt beide ins Protokoll). Nachrichten, Daten und Rechte bleiben immer die eigenen.
+// Der Modus gilt nur bis zum Neustart der App (nie gespeichert) und nie im Notbetrieb (der Ersatz-Server kennt keine Vertretung).
+// VT_AKTIONEN, VT und vtListe stehen vor api() – api() läuft schon beim Laden des Programms
+function vtDaten(action, daten) {
+  if (!VT.fuer || !VT_AKTIONEN.has(action) || daten?.fuer) return daten;
+  if (NOT.an) throw Object.assign(new Error(`Im Notbetrieb geht „Für ${VT.fuer.vorname || VT.fuer.name} handeln“ nicht – bitte später noch einmal.`), { status: 409 });
+  return { ...daten, fuer: VT.fuer.person_id };
+}
+function vtWahlHtml() {
+  const l = vtListe(); if (!l.length) return "";
+  const k = (pid, t) => `<button type="button" class="${(VT.fuer?.person_id || "") === pid ? "an" : ""}" onclick="vtSetzen('${esc(pid)}')">${t}</button>`;
+  return `<div class="vt-wahl" role="group" aria-label="Handeln für"><span>Handeln für:</span>${k("", "👤 Mich")}${l.map((p) => k(p.person_id, "🤝 " + esc(p.vorname || p.name))).join("")}</div>`;
+}
+function vtZeigen() {
+  if (VT.fuer && !vtListe().some((p) => p.person_id === VT.fuer.person_id)) VT.fuer = null; // Erlaubnis weg → sofort wieder man selbst
+  document.querySelectorAll(".vt-ort").forEach((o) => (o.innerHTML = vtWahlHtml()));
+  let b = $("vtLeiste");
+  if (!VT.fuer) return b?.remove();
+  if (!b) { b = document.createElement("div"); b.id = "vtLeiste"; b.className = "vt-leiste"; b.setAttribute("role", "status"); document.body.appendChild(b); }
+  b.innerHTML = `<span>🤝 Für <b>${esc(VT.fuer.vorname || VT.fuer.name)}</b></span><button type="button" class="knopf klein" onclick="vtSetzen('')">✖ Beenden</button>`;
+  b.title = `Du handelst für ${VT.fuer.name}`;
+}
+function vtSetzen(pid) {
+  const neu = pid ? vtListe().find((p) => p.person_id === pid) || null : null;
+  if ((neu?.person_id || "") === (VT.fuer?.person_id || "")) return;
+  VT.fuer = neu; vtZeigen();
+  melde(neu ? `🤝 Du handelst jetzt für ${neu.vorname || neu.name}: Termine zusagen, Dienstwünsche, Abstimmungen.` : "👤 Du handelst wieder für dich.");
+  if (aktuelleAnsicht === "termine") treffenLaden();
+  if (aktuelleAnsicht === "vorschlaege") vorschlaegeLaden();
+  if (document.getElementById("dwFenster")) { dwSchliessen(); dwOeffnen(); } // Twinkey neu – mit den Wünschen des anderen
+}
+function vtAdminKarte(m) {
+  const ids = m.vertretung || [], wer = esc(m.vorname || String(m.name || "").split(" ")[0]);
+  return `<div class="karte"><h3>🤝 Darf für … handeln</h3>
+    <p class="hinweis" style="margin-top:0">${wer} kann für diese Mitglieder Termine zu- und absagen, Dienstwünsche eintragen und abstimmen (nicht geheim). Nachrichten, Daten und Rechte nie. Alles steht im Protokoll.</p>
+    <p style="margin:6px 0"><b>${ids.length ? esc(todoNamen(ids)) : "Für niemanden"}</b></p>
+    <button class="knopf" onclick="vtAdminWaehlen('${esc(m.person_id)}')">✏️ Auswählen</button></div>`;
+}
+function vtAdminWaehlen(pid) {
+  personenWaehlen({ titel: `🤝 Für wen darf ${MD?.vorname || MD?.name || ""} handeln?`, max: 5, leerText: "für niemanden", auswahl: MD?.vertretung || [],
+    fertig: async (ids) => {
+      try { const r = await api("vertretung_setzen", { person_id: pid, ids: ids.filter((x) => x !== pid) }, { warten: true });
+        if (MD?.person_id === pid) { MD.vertretung = r.ids; mitgliedZeigen(); }
+        melde(r.ids.length ? `🤝 Gespeichert: darf für ${todoNamen(r.ids)} handeln – gilt beim nächsten Öffnen der App.` : "🤝 Vertretung ausgeschaltet."); }
+      catch (e) { meldeFehler(e); }
+    } });
 }
 // ---------- KC-CLUB-PROBEPHASE (2.51.0, Wunsch Hansi): Mitglied testet die App erst – Admin startet, übernimmt oder beendet ----------
 // In der Probe: kein Willkommens-Zettel, keine Begrüßung, Push/Mail nur nach eigener Wahl, nicht in der Nutzung, noch keine Stimmabgabe.

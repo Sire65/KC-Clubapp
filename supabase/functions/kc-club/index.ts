@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.626.0";
+const SERVER_VERSION = "2.629.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1607,6 +1607,23 @@ const RC_EIGENE_MAX = 12; // KC-CLUB-REISE-CHECKLISTE (2.223.0): eigene Punkte j
 const ROSE_KEYS = ["rose_schiessbude", "rose_erhalten"];
 const roseStand = (e: Record<string, any>) => ({ an: !!e.rose_schiessbude?.an, erhalten: e.rose_erhalten?.am ?? null, gesetzt_am: e.rose_schiessbude?.gesetzt_am ?? null });
 const roseFaellig = (e: Record<string, any>) => !!e.rose_schiessbude?.an && !e.rose_erhalten;
+// KC-CLUB-VERTRETUNG (25.10.2026, Wunschliste #35, Wunsch Hansi „Karla darf für Ruth“): Der Admin legt in der Mitgliedskarte fest, für wen ein
+// Mitglied handeln darf („vertretung_fuer“ beim Vertreter, NICHT in EINSTELLUNGEN – nur vertretung_setzen schreibt es). Die App schickt dann bei
+// den Aktionen aus VERTRETUNG_AKTIONEN „fuer“ mit; der Server prüft bei JEDER Anfrage neu, ob die Erlaubnis noch gilt, und führt die Aktion als
+// das vertretene Mitglied aus (eigene Rechte, eigene Sperre). Nur Termine zu-/absagen, Terminumfragen, Dienstwünsche und Abstimmungen (keine
+// geheimen) – nie Nachrichten, Daten oder Rechte. Jeder Schritt steht im Protokoll beider: „vertretung“ beim Vertreter, „vertreten“ beim Mitglied.
+const VERTRETUNG_KEY = "vertretung_fuer", VERTRETUNG_MAX = 5;
+const VERTRETUNG_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
+const vertretungIds = (w: any): string[] => [...new Set((Array.isArray(w?.ids) ? w.ids : []).map(String).filter((x: string) => /^KC-P-[A-Z0-9-]{1,30}$/i.test(x)))].slice(0, VERTRETUNG_MAX) as string[];
+async function vertretungIch(ich: Ich, fuer: string, a: string): Promise<Ich> {
+  if (!VERTRETUNG_AKTIONEN.has(a)) throw new Fehler("Das geht nicht in Vertretung – bitte oben „Für mich handeln“ wählen.", 403);
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", VERTRETUNG_KEY).maybeSingle();
+  if (!vertretungIds(data?.wert).includes(fuer)) throw new Fehler("Du darfst nicht (mehr) für dieses Mitglied handeln – bitte beim Admin melden.", 403);
+  const ziel = await geplantIch(fuer);
+  if (!ziel) throw new Fehler("Dieses Mitglied ist nicht mehr aktiv.", 404);
+  if (!ziel.admin && await sperreFuer(ziel.person_id)) throw new Fehler("Dieses Mitglied ist im Moment gesperrt.", 423);
+  return { ...ziel, vertreter: { person_id: ich.person_id, name: ich.name, vorname: ich.vorname } };
+}
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi): je Kreuzfahrt (Aktions-ID) die abgehakten Punkte, eigene Punkte, gewählte Art
   // (Ausdruck / am Bildschirm), wie viele noch offen sind (für die Erinnerung 2 Tage vorher) und wann sie im Archiv abgelegt wurde
@@ -3454,6 +3471,7 @@ const ohneLinks = (t: string) => t.replace(/(https?:\/\/|www\.)\S+/gi, "[Link en
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
   zugang: "mitglied" | "aushilfe" | "gast"; // 2.422.0 KC-CLUB-ZUGANG
+  vertreter?: { person_id: string; name: string; vorname: string }; // KC-CLUB-VERTRETUNG: wer gerade für dieses Mitglied handelt
   nurLesen?: boolean }; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
 // KC-CLUB-BUERO-RECHTE (1.37.0): Büro je Mitglied vom Admin freigeschaltet – null = kein Büro; Admin immer „schreiben“
 type BueroRecht = "lesen" | "schreiben" | null;
@@ -7885,7 +7903,14 @@ Köcheclub Werne`,
       return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
     }
     const anmeldungMs = Date.now() - tAnm;
-    const antwort = await aktionAusfuehren(a, p, ich, req, t0Anfrage, anmeldungMs);
+    // KC-CLUB-VERTRETUNG: „fuer“ = für ein anderes Mitglied handeln (nur erlaubte Aktionen, Erlaubnis jedes Mal neu geprüft)
+    const fuer = p && typeof p.fuer === "string" && p.fuer && p.fuer !== ich.person_id ? p.fuer : "";
+    let handelnd = ich;
+    if (fuer) {
+      handelnd = await vertretungIch(ich, fuer, a); delete p.fuer;
+      if (!/_liste$|_laden$/.test(a)) { await protokoll(ich.person_id, "vertretung", { aktion: a, fuer }); await protokoll(fuer, "vertreten", { aktion: a, von: ich.person_id }); }
+    }
+    const antwort = await aktionAusfuehren(a, p, handelnd, req, t0Anfrage, anmeldungMs);
     // KC-CLUB-TEMPO (2.113.0, Wunsch Hansi „Tempo-Check“): langsame Vorgänge mit Namen und Dauer ins Server-Log (keine Inhalte,
     // keine Personen) – so sieht man über die Tage, welche Stelle bremst. Keine Datenbank-Schreibung, kostet nichts.
     const serverMs = Date.now() - t0Anfrage;
@@ -8197,6 +8222,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const terminfindungOffen = await pTermin;
         const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }, anrufAntw] = await pRest;
         const einstellungen = Object.fromEntries((pe ?? []).map((x: any) => [x.schluessel, x.wert]));
+        const vtIds = vertretungIds(einstellungen[VERTRETUNG_KEY]); delete einstellungen[VERTRETUNG_KEY]; // KC-CLUB-VERTRETUNG: nur die Liste mit Namen
+        const pVertretung = vtIds.length ? db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,active").in("person_id", vtIds)
+          .then(({ data }) => (data ?? []).filter((x: any) => x.active).map((x: any) => ({ person_id: x.person_id, name: x.display_name, vorname: vorname(x) }))) : Promise.resolve([]);
         const rose = roseFaellig(einstellungen); for (const k of ROSE_KEYS) delete einstellungen[k]; // KC-CLUB-ROSE: aus den schon geladenen Einstellungen, Merker selbst bleiben verborgen
         const communicator = await pComm;
         const kontaktFreigabe = Object.fromEntries(KONTAKT_FELDER.map((f) => [f, !!(kf ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt]));
@@ -8209,7 +8237,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -8898,6 +8926,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (v.status !== "offen") throw new Fehler("Hier kann nicht mehr abgestimmt werden.", 409);
         if (await inProbe(ich.person_id)) throw new Fehler("In der Probephase kann noch nicht abgestimmt werden.", 403); // KC-CLUB-PROBEPHASE
         if (v.ziel_ids && !v.ziel_ids.includes(ich.person_id)) throw new Fehler("Diese Abstimmung ist nur für eine bestimmte Gruppe.", 403); // KC-CLUB-ABSTIMMUNG-ZIEL
+        if (ich.vertreter && v.geheim) throw new Fehler("Geheime Abstimmungen gehen nicht in Vertretung – das Wahlgeheimnis bleibt beim Mitglied.", 403); // KC-CLUB-VERTRETUNG
         if (unterstuetzbar(v.art)) {
           // Unterstützen an/aus (Thema und Spendenprojekt)
           // 2.462.0 KC-CLUB-STIMMEN-TABELLE (Fund 18.10.): seit 2.351.0 stand hier versehentlich kc_club_video_stimmen (Twinkey-Stimmen) – Stimmen gingen verloren
@@ -10936,7 +10965,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", pid),
           db.from("kc_club_rollen").select("aemter").eq("person_id", pid).maybeSingle(),
           statusMap([pid], true),
-          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ich.admin ? ["avatar", ...ROSE_KEYS] : ["avatar"]), // 2.23.89: Bild oben · KC-CLUB-ROSE: Admin sieht die Merker in derselben Abfrage
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ich.admin ? ["avatar", ...ROSE_KEYS, VERTRETUNG_KEY] : ["avatar"]), // 2.23.89: Bild oben · KC-CLUB-ROSE: Admin sieht die Merker in derselben Abfrage
         ]);
         const mdEinst: Record<string, any> = Object.fromEntries(((avL as any[]) ?? []).map((x: any) => [x.schluessel, x.wert])), avE = { wert: mdEinst.avatar };
         const frei = (b: string) => !!(fr ?? []).find((x: any) => x.bereich === b)?.erlaubt;
@@ -10970,7 +10999,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           zuletztDa: zdPid, // KC-CLUB-ZULETZT-DA (1.20.0)
           chatAnzahl, // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
           ...(ich.admin && !selbst ? { probe: probeEintrag, probeMoeglich: !/^KC-P-TEST/.test(pid) } : {}), // KC-CLUB-PROBEPHASE
-          ...(ich.admin ? { rose: roseStand(mdEinst) } : {}), // KC-CLUB-ROSE: nur der Admin
+          ...(ich.admin ? { rose: roseStand(mdEinst), vertretung: vertretungIds(mdEinst[VERTRETUNG_KEY]) } : {}), // KC-CLUB-ROSE · KC-CLUB-VERTRETUNG: nur der Admin
         });
       }
 
@@ -16611,6 +16640,21 @@ Köcheclub-App`,
         schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "rose_schiessbude", wert: { an, gesetzt_von: ich.person_id, gesetzt_am: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
         await protokoll(ich.person_id, "rose_gesetzt", { fuer: pid, an });
         return json({ ok: true, an });
+      }
+      // KC-CLUB-VERTRETUNG: Admin legt fest, für wen person_id handeln darf (leere Liste = keine Vertretung mehr)
+      case "vertretung_setzen": {
+        nurAdmin(ich);
+        const pid = String(p.person_id || "");
+        if (!/^KC-P-[A-Z0-9-]{1,30}$/i.test(pid)) throw new Fehler("Mitglied nicht gefunden.", 404);
+        const ids = vertretungIds({ ids: p.ids }).filter((x) => x !== pid);
+        if (Array.isArray(p.ids) && p.ids.length > VERTRETUNG_MAX) throw new Fehler(`Höchstens ${VERTRETUNG_MAX} Mitglieder.`);
+        const { data: pe } = await db.from("kc_core_people").select("person_id,active,org_id").in("person_id", [pid, ...ids]);
+        const ok = new Set((pe ?? []).filter((x: any) => x.active && x.org_id === ORG).map((x: any) => x.person_id));
+        if (!ok.has(pid) || ids.some((x) => !ok.has(x))) throw new Fehler("Mitglied nicht gefunden.", 404);
+        if (ids.length) schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: VERTRETUNG_KEY, wert: { ids, gesetzt_von: ich.person_id, gesetzt_am: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
+        else await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", VERTRETUNG_KEY).then((r) => schreibOk(r, "Entfernen"));
+        await protokoll(ich.person_id, "vertretung_gesetzt", { vertreter: pid, fuer: ids });
+        return json({ ok: true, ids });
       }
       case "rose_liste": { // nur Admin: wer das Häkchen hat und wer sie schon bekommen hat
         nurAdmin(ich);

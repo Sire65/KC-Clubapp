@@ -26,7 +26,7 @@ assert.ok(/nurAdmin\(ich\);/.test(fall("rose_liste")), "rose_liste nur Admin");
 assert.ok(/const rose = roseFaellig\(einstellungen\); for \(const k of ROSE_KEYS\) delete einstellungen\[k\];/.test(server) && /einstellungen, rose, /.test(server), "init gibt nur rose: true/false");
 assert.ok(/const roseFaellig = \(e: Record<string, any>\) => !!e\.rose_schiessbude\?\.an && !e\.rose_erhalten;/.test(server), "fällig = an und nicht erhalten");
 // 5. Mitgliedskarte: Merker nur für den Admin, in derselben Abfrage wie das Bild
-assert.ok(/in\("schluessel", ich\.admin \? \["avatar", \.\.\.ROSE_KEYS\] : \["avatar"\]\)/.test(server) && /\.\.\.\(ich\.admin \? \{ rose: roseStand\(mdEinst\) \} : \{\}\)/.test(server), "Admin sieht Stand");
+assert.ok(/in\("schluessel", ich\.admin \? \["avatar", \.\.\.ROSE_KEYS(, VERTRETUNG_KEY)?\] : \["avatar"\]\)/.test(server) && /\.\.\.\(ich\.admin \? \{ rose: roseStand\(mdEinst\)(, vertretung: vertretungIds\(mdEinst\[VERTRETUNG_KEY\]\))? \} : \{\}\)/.test(server), "Admin sieht Stand");
 assert.ok(/\$\{ICH\?\.admin && m\.rose \? roseAdminKarte\(m\) : ""\}/.test(app) && /api\("rose_setzen", \{ person_id: pid, an \}/.test(app) && /Rose aus der Schießbude \(einmalig\)/.test(app), "Admin-Häkchen");
 // 6. Bedingungen im Browser
 assert.ok(/if \(!INIT\?\.rose \|\| INIT\._offline \|\| !ICH \|\| ROSE\.gezeigt\) return;/.test(block), "nur wenn fällig, nicht aus dem Offline-Stand");

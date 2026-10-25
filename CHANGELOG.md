@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.629.0 – 2026-10-25 – Vertretung: für ein anderes Mitglied handeln
+KC-CLUB-VERTRETUNG (Wunschliste #35, Wunsch Hansi „Karla darf für Ruth“): Der Admin legt in der Mitgliedskarte unter „🤝 Darf für … handeln“ fest, für wen ein Mitglied handeln darf (höchstens 5). Dieses Mitglied sieht in Termine, Abstimmungen und Dienstwünsche „Handeln für: 👤 Mich · 🤝 Ruth“ und unten die Leiste „🤝 Für Ruth – ✖ Beenden“. Erlaubt sind nur Termine zu-/absagen, Terminumfragen, Dienstwünsche (Twinkey) und Abstimmungen (nicht geheime). Nachrichten, Daten und Rechte nie. Der Server prüft die Erlaubnis bei jeder Anfrage neu, nutzt Rechte und Sperre des Vertretenen und schreibt jeden Schritt bei beiden ins Protokoll. Der Modus gilt nur bis zum Neustart der App und nie im Notbetrieb. Server 2.629.0.
+
 ## 2.628.0 – 2026-10-24 – Bühne: klarer, Ansagen in Sekunden
 Wunschliste #31: Twinkey sagt beim Endspurt „noch 10 Sekunden“ (gezählt werden Sekunden, keine Wiederholungen), danach „noch 3 Sekunden – zwei – eins“. Beim Training liegt die Erklärung nicht mehr auf den Knöpfen Pause/Weiter. Die Auswahl ist in Schritte gegliedert (① Wie? ② Wie lange?), mit einem großen Start-Knopf; Club-Song und Nur Musik klein darunter; die schwebenden Hilfe-Knöpfe verdecken nichts mehr (KC-CLUB-BUEHNE-ORDNUNG).
 
