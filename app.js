@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.650.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.651.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8763,12 +8763,17 @@ const SST_TONHOEHE = `class KcTonhoehe extends AudioWorkletProcessor {
 }
 registerProcessor("kc-tonhoehe", KcTonhoehe);`;
 const SST = { wahl: "normal", vorwahl: null, ctx: null, quelle: null, ziel: null, knoten: [], worklet: false, spur: null };
-async function sstKontext() {
-  if (SST.ctx && SST.ctx.state !== "closed") return SST.ctx;
-  SST.ctx = new (window.AudioContext || window.webkitAudioContext)(); SST.worklet = false;
-  try { await SST.ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([SST_TONHOEHE], { type: "application/javascript" }))); SST.worklet = true; } catch {}
+// 2.651.0 KC-CLUB-SPASSSTIMME-LAUT (Fund Hansi „Stimmen kaum zu hören oder gar nicht da – beim Probehören“): der Ton-Baustein wird jetzt
+// SOFORT beim Antippen angelegt und gestartet (vorher erst nach der Aufnahme → auf Handys blieb er stumm), Laden des Tonhöhen-Moduls läuft nebenher.
+function sstKontextJetzt() {
+  if (!SST.ctx || SST.ctx.state === "closed") {
+    SST.ctx = new (window.AudioContext || window.webkitAudioContext)(); SST.worklet = false;
+    SST.laden = (SST.ctx.audioWorklet ? SST.ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([SST_TONHOEHE], { type: "application/javascript" }))).then(() => { SST.worklet = true; }) : Promise.resolve()).catch(() => {});
+  }
+  try { SST.ctx.resume?.(); } catch {}
   return SST.ctx;
 }
+async function sstKontext() { const ctx = sstKontextJetzt(); await SST.laden; return ctx; }
 // Baut den Effekt für eine Stimme zwischen ein (AudioNode) und aus (AudioNode); gibt die Knoten zum späteren Abbauen zurück
 function sstBauen(ctx, ein, aus, id) {
   const K = [], neu = (n) => (K.push(n), n);
@@ -8790,19 +8795,19 @@ function sstBauen(ctx, ein, aus, id) {
     case "maus": kette(ton(1.9), filt("highshelf", 2500, 1, 4)); break;
     case "helium": kette(ton(1.5), filt("highpass", 250), filt("peaking", 3000, 1, 5)); break;
     case "ente": kette(ton(1.65), filt("bandpass", 1700, 3), verzerr(4), laut(1.6)); break;
-    case "alien": { const r = ring(420, 0.55); const t = ton(1.25); if (t) { ein.connect(t); r.ein(t); } else r.ein(ein); r.aus.connect(aus); break; }
+    case "alien": { const r = ring(420, 0.55); const t = ton(1.25); if (t) { ein.connect(t); r.ein(t); } else r.ein(ein); r.aus.connect(laut(2)).connect(aus); break; }
     case "roboter": { const r = ring(55, 1); r.ein(ein); const k = kamm(0.006, 0.45); r.aus.connect(k); r.aus.connect(aus); k.connect(aus); break; }
-    case "blech": { const k = kamm(0.0035, 0.75), b = filt("bandpass", 1500, 1.2); ein.connect(k); k.connect(b); ein.connect(b); b.connect(laut(1.3)).connect(aus); break; }
+    case "blech": { const k = kamm(0.0035, 0.75), b = filt("bandpass", 1500, 1.2); ein.connect(k); k.connect(b); ein.connect(b); b.connect(laut(2.6)).connect(aus); break; }
     case "brumm": kette(ton(0.68), filt("lowshelf", 250, 1, 4)); break;
     case "riese": { const t = ton(0.55), h = hall(1.6, 3), n = laut(0.5); const q = t || ein; if (t) ein.connect(t); q.connect(aus); q.connect(h); h.connect(n).connect(aus); break; }
     case "geist": { const t = ton(0.85), h = hall(2.5, 2), n = laut(0.7), tr = neu(ctx.createGain()), o = neu(ctx.createOscillator()), tg = neu(ctx.createGain());
       o.frequency.value = 5; tg.gain.value = 0.35; tr.gain.value = 0.65; o.connect(tg).connect(tr.gain); o.start();
-      const q = t || ein; if (t) ein.connect(t); q.connect(tr); tr.connect(aus); tr.connect(h); h.connect(n).connect(aus); break; }
+      const q = t || ein; if (t) ein.connect(t); const g2 = laut(1.4); q.connect(tr); tr.connect(g2); g2.connect(aus); tr.connect(h); h.connect(n).connect(aus); break; }
     case "radio": kette(filt("highpass", 450), filt("lowpass", 2800), verzerr(3), laut(0.9)); break;
-    case "megafon": kette(filt("highpass", 650), filt("peaking", 2000, 1, 9), filt("lowpass", 3800), verzerr(6), laut(0.8)); break;
+    case "megafon": kette(filt("highpass", 650), filt("peaking", 2000, 1, 9), filt("lowpass", 3800), verzerr(6), laut(0.5)); break;
     case "echo": { const d = neu(ctx.createDelay(2)); d.delayTime.value = 0.3; const r = laut(0.45); ein.connect(aus); ein.connect(d); d.connect(r).connect(d); r.connect(aus); break; }
     case "wasser": { const d = neu(ctx.createDelay(0.1)); d.delayTime.value = 0.01; const o = neu(ctx.createOscillator()), g = neu(ctx.createGain()); o.frequency.value = 4; g.gain.value = 0.004; o.connect(g).connect(d.delayTime); o.start();
-      kette(filt("lowpass", 550, 2), d, laut(1.4)); break; }
+      kette(filt("lowpass", 550, 2), d, laut(0.9)); break; }
     default: ein.connect(aus);
   }
   return K;
@@ -8843,29 +8848,59 @@ function sstAufraeumen() {
 function sstWahl(modus = "gespraech") {
   return new Promise((fertig) => {
     const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎭 Spaßstimme</h3>
-      <p class="dlg-text">${modus === "gespraech" ? "Dein Gegenüber hört dich mit dieser Stimme – du selbst hörst normal. Jederzeit umschaltbar." : modus === "annehmen" ? "Mit welcher Stimme meldest du dich? Danach wird gleich verbunden." : "Tippe eine Stimme an, sprich 3 Sekunden – dann hörst du dich damit."}</p>
+      <p class="dlg-text">${modus === "gespraech" ? "Dein Gegenüber hört dich mit dieser Stimme – du selbst hörst normal. Jederzeit umschaltbar." : modus === "annehmen" ? "Mit welcher Stimme meldest du dich? Danach wird gleich verbunden." : "Tippe eine Stimme an, sprich 3 Sekunden laut und deutlich – dann hörst du dich damit über den Lautsprecher (Medien-Lautstärke am Handy hochdrehen)."}</p>
       <div class="sst-wahl">${SST_STIMMEN.map((x) => `<button type="button" class="knopf klein${x.id === (modus === "gespraech" ? SST.wahl : "") ? " haupt" : ""}" data-s="${x.id}">${x.sym} ${esc(x.t)}</button>`).join("")}</div>
       ${modus === "gespraech" ? '<p class="hinweis" style="margin:6px 0 0;font-size:.8rem">Tipp: Mit Kopfhörer klingt es fürs Gegenüber am besten.</p>' : ""}`, () => fertig(null));
     const zu = () => { f.remove(); fertig(null); };
     f.querySelector('[data-a="zu"]').onclick = zu;
     f.querySelectorAll("[data-s]").forEach((b) => (b.onclick = async () => {
       if (modus === "probe") return sstProbe(b.dataset.s, b);
+      if (b.dataset.s !== "normal") sstKontextJetzt(); // 2.651.0: im Tippen starten, sonst bleibt der Effekt auf dem Handy stumm
       f.remove(); if (modus === "gespraech") await sstSetzen(b.dataset.s); fertig(b.dataset.s);
     }));
   });
 }
-// Probehören ohne Rückkopplung: 3 s aufnehmen, dann mit dem Effekt abspielen
+// Probehören ohne Rückkopplung: 3 s aufnehmen, dann mit dem Effekt abspielen.
+// 2.651.0: Android/iPhone schalten nach einer Aufnahme mit Echo-Unterdrückung in den „Telefon-Modus“ (leise, Hörmuschel) – darum hier ohne
+// Echo-/Rausch-Unterdrückung aufnehmen, den Effekt vorab berechnen, auf volle Lautstärke bringen und über ein normales Audio-Element (Lautsprecher,
+// Medien-Lautstärke) abspielen. Das Audio-Element wird schon beim Antippen freigeschaltet (iPhone erlaubt Ton sonst nur direkt nach dem Tippen).
+const SST_STILLE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+function sstWav(d, rate) {
+  const b = new DataView(new ArrayBuffer(44 + d.length * 2)), t = (o, x) => { for (let i = 0; i < x.length; i++) b.setUint8(o + i, x.charCodeAt(i)); };
+  t(0, "RIFF"); b.setUint32(4, 36 + d.length * 2, true); t(8, "WAVEfmt "); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+  b.setUint32(24, rate, true); b.setUint32(28, rate * 2, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); t(36, "data"); b.setUint32(40, d.length * 2, true);
+  for (let i = 0; i < d.length; i++) b.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[i])) * 32767, true);
+  return new Blob([b], { type: "audio/wav" });
+}
+async function sstBerechnen(puf, id) {
+  const ctx = new OfflineAudioContext(1, Math.ceil(puf.duration * puf.sampleRate) + puf.sampleRate * 2, puf.sampleRate); // +2 s für Hall/Echo
+  let wk = false; try { await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([SST_TONHOEHE], { type: "application/javascript" }))); wk = true; } catch {}
+  const altWk = SST.worklet; SST.worklet = wk;
+  const q = ctx.createBufferSource(); q.buffer = puf; const z = ctx.createGain(); z.connect(ctx.destination); sstBauen(ctx, q, z, id); q.start();
+  SST.worklet = altWk;
+  const d = (await ctx.startRendering()).getChannelData(0); let m = 0, e = 0; for (const x of d) { m = Math.max(m, Math.abs(x)); e += x * x; }
+  // auf gut hörbare, für alle Stimmen gleiche Lautstärke bringen (Mittelwert, höchstens 40-fach) – Spitzen weich begrenzt statt hart abgeschnitten
+  const rms = Math.sqrt(e / d.length), g = rms > 0.00005 ? Math.min(40, 0.2 / rms) : 1; for (let i = 0; i < d.length; i++) d[i] = Math.tanh(d[i] * g);
+  return { d, rate: puf.sampleRate, leise: m < 0.01 };
+}
 async function sstProbe(id, knopf) {
-  let strom; try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch { return melde("Bitte das Mikrofon erlauben – sonst geht das Probehören nicht."); }
+  const el = new Audio(); el.src = SST_STILLE; el.play().catch(() => {}); // freischalten, solange das Tippen „frisch“ ist
+  sstKontextJetzt();
+  let strom; try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } }); } catch { return melde("Bitte das Mikrofon erlauben – sonst geht das Probehören nicht."); }
   const alt = knopf.textContent; knopf.disabled = true; knopf.textContent = "🎙️ Sprich jetzt … 3";
   const teile = [], rec = new MediaRecorder(strom); rec.ondataavailable = (e) => e.data.size && teile.push(e.data);
   let n = 3; const uhr = setInterval(() => { n--; if (n > 0) knopf.textContent = `🎙️ Sprich jetzt … ${n}`; }, 1000);
+  const fertig = () => { knopf.disabled = false; knopf.textContent = alt; };
   rec.onstop = async () => {
-    clearInterval(uhr); strom.getTracks().forEach((t) => t.stop()); knopf.textContent = "🔊 Hör mal …";
-    try { const ctx = await sstKontext(); await ctx.resume?.(); const puf = await ctx.decodeAudioData(await new Blob(teile).arrayBuffer());
-      const q = ctx.createBufferSource(); q.buffer = puf; const ziel = ctx.createGain(); ziel.connect(ctx.destination); const k = sstBauen(ctx, q, ziel, id); q.start();
-      q.onended = () => setTimeout(() => { k.forEach((x) => { try { x.stop?.(); } catch {} try { x.disconnect(); } catch {} }); try { ziel.disconnect(); } catch {} knopf.disabled = false; knopf.textContent = alt; }, 1500);
-    } catch { knopf.disabled = false; knopf.textContent = alt; melde("Probehören hat nicht geklappt."); }
+    clearInterval(uhr); strom.getTracks().forEach((t) => t.stop()); knopf.textContent = "⏳ Einen Moment …";
+    try {
+      const ctx = sstKontextJetzt(), puf = await ctx.decodeAudioData(await new Blob(teile).arrayBuffer());
+      const r = await sstBerechnen(puf, id);
+      if (r.leise) melde("🎙️ Es kam kaum Ton vom Mikrofon an – bitte näher ans Handy und etwas lauter sprechen.");
+      el.src = URL.createObjectURL(sstWav(r.d, r.rate)); el.volume = 1; knopf.textContent = "🔊 Hör mal …";
+      el.onended = () => { URL.revokeObjectURL(el.src); fertig(); }; el.onerror = () => { fertig(); melde("Probehören hat nicht geklappt."); };
+      await el.play();
+    } catch { fertig(); melde("Probehören hat nicht geklappt – bitte noch einmal antippen."); }
   };
   rec.start(); setTimeout(() => rec.state !== "inactive" && rec.stop(), 3000);
 }

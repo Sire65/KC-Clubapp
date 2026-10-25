@@ -7421,6 +7421,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(html, /onclick="sstWahl\('probe'\)">🎭 Spaßstimmen fürs Gespräch ausprobieren/, "Probehören");
   assert.match(programm, /\$\("klopfStimme"\)\.classList\.toggle\("versteckt", !sp\)/, "nur bei Sprechen");
 }
+// 2.651.0 KC-CLUB-SPASSSTIMME-LAUT: Probehören hörbar, Ton-Baustein im Tippen gestartet, Stimmen gleich laut
+{
+  assert.match(programm, /function sstKontextJetzt\(\) \{[\s\S]{0,500}SST\.ctx\.resume\?\.\(\)/, "Ton-Baustein sofort anlegen und starten");
+  assert.match(programm, /if \(b\.dataset\.s !== "normal"\) sstKontextJetzt\(\); \/\/ 2\.651\.0/, "beim Antippen der Stimme");
+  assert.match(programm, /const el = new Audio\(\); el\.src = SST_STILLE; el\.play\(\)\.catch\(\(\) => \{\}\); \/\/ freischalten/, "Wiedergabe im Tippen freischalten");
+  assert.match(programm, /getUserMedia\(\{ audio: \{ echoCancellation: false, noiseSuppression: false, autoGainControl: true \} \}\)/, "Probe ohne Telefon-Modus");
+  assert.match(programm, /g = rms > 0\.00005 \? Math\.min\(40, 0\.2 \/ rms\) : 1; for \(let i = 0; i < d\.length; i\+\+\) d\[i\] = Math\.tanh\(d\[i\] \* g\)/, "auf gleiche Lautstärke");
+  assert.match(programm, /el\.src = URL\.createObjectURL\(sstWav\(r\.d, r\.rate\)\)/, "über Audio-Element (Lautsprecher)");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

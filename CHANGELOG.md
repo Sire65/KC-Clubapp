@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.651.0 – 2026-10-25 – 🎭 Spaßstimmen laut und deutlich (KC-CLUB-SPASSSTIMME-LAUT)
+Fund Hansi („die Stimmen sind kaum zu hören oder gar nicht da – beim Probehören“). Ursachen: (1) der Ton-Baustein wurde erst nach der Aufnahme angelegt – auf Handys bleibt er dann stumm; (2) Aufnahme mit Echo-Unterdrückung schaltet Android/iPhone in den leisen „Telefon-Modus“ (Hörmuschel); (3) einzelne Stimmen waren leiser. Jetzt: Ton-Baustein startet sofort beim Antippen (auch im Gespräch und bei „Mit Spaßstimme annehmen“); Probehören nimmt ohne Echo-Unterdrückung auf, berechnet den Effekt vorab, bringt ihn auf gleiche, gut hörbare Lautstärke und spielt ihn über den Lautsprecher (Medien-Lautstärke); kam kaum Ton vom Mikrofon an, gibt es einen Hinweis. Alle 14 Stimmen im Gespräch auf ±2 dB gleich laut wie die normale Stimme (gemessen).
+
 ## 2.650.0 – 2026-10-25 – 🎭 Spaßstimmen im App-Gespräch (KC-CLUB-SPASSSTIMME)
 Wunsch Hansi („verfremdete Stimmen: wenn einer anklopft und Sprechen wählt, melde ich mich z. B. mit Maus-, Roboter- oder Helium-Stimme – ruhig ein paar mehr“, für alle Mitglieder): Im App-Gespräch neuer Knopf 🎭 – 13 Stimmen: 🐭 Mäusestimme, 🎈 Helium, 🦆 Ente, 👽 Außerirdischer, 🤖 Roboter, 🥫 Blechdose, 🐻 Brummbär, 🏔️ Riese in der Höhle, 👻 Gespenst, 📻 Altes Radio, 📢 Megafon, 🔁 Echo, 🫧 Unter Wasser (und 🙂 Normal). Das Gegenüber hört die verfremdete Stimme, man selbst normal; jederzeit umschaltbar, Stumm wirkt weiter. Beim Anklopfen mit „Sprechen“ zusätzlich „🎭 Mit Spaßstimme annehmen“. Probehören (3 s aufnehmen, mit Effekt abspielen) unter Einstellungen beim Anklopfton. Technik: Web Audio auf dem Handy (Tonhöhe per AudioWorklet, Ringmodulator, Filter, Hall) – kein Server, keine Datenbank; ohne Spaßstimme bleibt der Anruf genau wie bisher.
 
