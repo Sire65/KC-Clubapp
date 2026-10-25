@@ -12910,3 +12910,10 @@ function idx0() { return lies("index.html"); }
   assert.ok(/:where\(:root\.sch-an\) :is\(\.hero \.info, \.hero \.mini, \.hero \.rund, \.hero \.ipfeil, \.hero \.statusleiste, \.hero \.logo\) \{ box-shadow: var\(--sch-box\); \}/.test(html), "Felder auf dem Kopf mit Schatten");
   assert.ok(/:root\.dunkel \{ --sch-auto: 0, 0, 0; --sch-box: var\(--sch-box-n\); --sch-box-gross: var\(--sch-box-gross-n\); \}/.test(html) && /const SCHT_KONTRAST = \{ aus:.*normal:.*stark:/.test(programm) && /kontrast: SCHT_KONTRAST\[j\.kontrast\] \? j\.kontrast : "normal"/.test(programm), "Nacht: Kontrast (Standard normal)");
 }
+// 2.658.0 KC-CLUB-WECKER-TON (Fund Hansi „Der Wecker und Timer haben keinen Ton“) · KC-CLUB-SIMJUE-KARUSSELL-3 („Lauflicht zu schnell“)
+{
+  const sc = programm.slice(programm.indexOf("function wkSchlag() {"), programm.indexOf("function wkKlingelAus("));
+  assert.ok(/audio\.__zuletzt = Date\.now\(\);/.test(sc) && /dauer = kkLautsprecherWecken\(true\);/.test(sc) && /Promise\.resolve\(audio\.resume\?\.\(\)\)\.then\(/.test(sc), "Ton wach halten, Lautsprecher wecken, schlafenden Ton wecken und spielen");
+  assert.ok(/wk-tonhinweis" onclick="wkTonFrei\(\)">🔊 Antippen für Ton/.test(sc) && /function wkTonFrei\(\)/.test(programm), "gesperrter Ton: Antippen anbieten");
+  assert.ok(/jzbLauflicht\(c, ll, k, T, 3, 4\);/.test(programm) && /jzbLauflicht\(c, kante, k, T, 2\.5, 3\);/.test(programm) && /jzbLauflicht\(c, rand, k, T \+ \.5, 3, 4\);/.test(programm), "Lauflicht am Karussell langsamer");
+}

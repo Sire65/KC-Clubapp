@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.657.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.658.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18105,7 +18105,7 @@ function wkKlingeln(art) {
   wkServerWeg(e.sid); // App klingelt selbst → kein Push mehr hinterher
   if (timer) st.timer = null; else st.wecker = null; wkMerken(st); wkNeuZeichnen();
   if (spaet) return melde(timer ? "⏲️ Dein Timer ist schon abgelaufen." : `⏰ Dein Wecker für ${wkUhrzeit(e.um)} Uhr ist schon vorbei${e.text ? " – " + e.text : ""}.`);
-  WKK.art = art; WKK.bis = Date.now() + WK_KLINGEL_MS; WKK.i = 0; WKK.text = e.text || ""; WKK.um = timer ? e.ende : e.um;
+  WKK.art = art; WKK.bis = Date.now() + WK_KLINGEL_MS; WKK.i = 0; WKK.geweckt = false; WKK.text = e.text || ""; WKK.um = timer ? e.ende : e.um;
   const f = blattAuf("wkKlingel", `<div class="wk-klingel"><div class="wk-glocke" aria-hidden="true">${timer ? "⏲️" : "⏰"}</div>
     <h3 style="margin:4px 0">${timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${wkUhrzeit(e.um)} Uhr`}</h3>${e.text && !timer ? `<p style="margin:0 0 10px">${esc(e.text)}</p>` : ""}
     <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button type="button" class="knopf haupt" data-w="aus">🔕 Aus</button>
@@ -18114,17 +18114,37 @@ function wkKlingeln(art) {
   f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => wkKlingelAus(b.dataset.w === "mehr"));
   wkTon(); wkSchlag();
 }
+// 2.658.0 KC-CLUB-WECKER-TON (Fund Hansi „Wecker und Timer haben keinen Ton“): Ursache wie 2.428.0 beim Kuckuck – der Akku-Schutz (KC-CLUB-AKKU-6)
+// legt die Tonausgabe 3 s nach dem letzten Ton schlafen; beim Klingeln Minuten später galt „nur bei laufendem Ton“ nie (Wecken dauert ein paar ms,
+// der Akku-Schutz legte sie gleich wieder schlafen) → stumm. Jetzt: solange es klingelt, bleibt der Ton wach; jeder Schlag weckt ihn und spielt,
+// sobald er läuft; vor dem ersten Schlag wird der Lautsprecher geweckt. Ist der Ton gesperrt (App neu geöffnet, noch nicht getippt):
+// „🔊 Antippen für Ton“ im Fenster – Tippen gibt ihn frei.
+function wkSpielen() {
+  const U = suUhr(suFuerStunde(new Date().getHours())), t = audio.currentTime + 0.05; audio.__zuletzt = Date.now();
+  if (U && WKK.i === 1) suAufnahmenLaden(U);
+  if (U) { U.schlag(t, WKK.i); return Math.max(1200, Math.min(4000, U.takt(WKK.i))); }
+  if (KK_AUFNAHME.puffer) kkAufnahmeSpielen(t); else kkTon(t); return 2600;
+}
+function wkTonFrei() { // im Tippen erlaubt: Ton anwerfen und gleich weiterklingeln
+  $("wkKlingel")?.querySelector(".wk-tonhinweis")?.remove(); wkTon(); kkAufnahmeLaden();
+  Promise.race([Promise.resolve(audio?.resume?.()), new Promise((r) => setTimeout(r, 1500))]).catch(() => {}).then(() => { if (!WKK.art) return; WKK.geweckt = false; clearTimeout(WKK.t); wkSchlag(); });
+}
 function wkSchlag() {
   if (!WKK.art || !$("wkKlingel")) return wkKlingelAus(false); // Fenster anders geschlossen (Zurück-Taste) → still aus
   if (Date.now() > WKK.bis) return wkKlingelAus(false, true);
   try { navigator.vibrate?.([400, 200, 400]); } catch (e) { /* kein Vibrieren */ }
   let dauer = 2600;
   try {
-    if (audio && audio.state !== "running") audio.resume?.();
-    if (audio && audio.state === "running") {
-      audio.__zuletzt = Date.now(); const U = suUhr(suFuerStunde(new Date().getHours())), t = audio.currentTime + 0.05;
-      WKK.i++; if (U && WKK.i === 1) suAufnahmenLaden(U);
-      if (U) { U.schlag(t, WKK.i); dauer = Math.max(1200, Math.min(4000, U.takt(WKK.i))); } else kkTon(t);
+    if (!audio) wkTon();
+    if (audio) {
+      audio.__zuletzt = Date.now(); kkAufnahmeLaden();
+      if (audio.state === "running" && !WKK.geweckt) { WKK.geweckt = true; dauer = kkLautsprecherWecken(true); } // Lautsprecher wecken, dann erster Schlag
+      else if (audio.state === "running") { WKK.i++; dauer = wkSpielen(); }
+      else {
+        const ab = Date.now(); Promise.resolve(audio.resume?.()).then(() => { if (audio.state === "running" && Date.now() - ab < 400 && WKK.art) { WKK.i++; clearTimeout(WKK.t); WKK.geweckt = true; WKK.t = setTimeout(wkSchlag, wkSpielen()); } }, () => {});
+        setTimeout(() => { const f = $("wkKlingel"); if (WKK.art && f && audio?.state !== "running" && !f.querySelector(".wk-tonhinweis")) // Ton bleibt gesperrt → Antippen anbieten
+          f.querySelector(".wk-klingel")?.insertAdjacentHTML("afterbegin", '<button type="button" class="knopf haupt wk-tonhinweis" onclick="wkTonFrei()">🔊 Antippen für Ton</button>'); }, 800);
+      }
     }
   } catch (e) { /* Ton geht nicht – Bild und Vibration bleiben */ }
   clearTimeout(WKK.t); WKK.t = setTimeout(wkSchlag, dauer);
@@ -20182,11 +20202,11 @@ function jzbKinderkarussellMalen(c, F) {
   // Lauflicht: an der Krempe, die Dachkanten hoch und unten um die Platte
   const ll = [];
   for (let i = 0; i <= 22; i++) ll.push([cx - rx - 3 * k + i * (rx + 3 * k) * 2 / 22, krempe - 1.3 * k]);
-  jzbLauflicht(c, ll, k, T, 9, 4);
+  jzbLauflicht(c, ll, k, T, 3, 4); // 2.658.0 Wunsch Hansi „Lauflicht am Karussell zu schnell“: 3 statt 9 Schritte je Sekunde
   const kante = []; for (let i = 1; i <= 7; i++) { const q = i / 8; kante.push([cx - (rx + 3 * k) * (1 - q), krempe - (krempe - spitze) * q]); } for (let i = 7; i >= 1; i--) { const q = i / 8; kante.push([cx + (rx + 3 * k) * (1 - q), krempe - (krempe - spitze) * q]); }
-  jzbLauflicht(c, kante, k, T, 7, 3);
+  jzbLauflicht(c, kante, k, T, 2.5, 3);
   const rand = []; for (let i = 0; i < 18; i++) { const a = i / 17 * Math.PI; rand.push([cx - Math.cos(a) * (rx + 1 * k), boden + Math.sin(a) * (ry + 1 * k) + 1.5 * k]); }
-  jzbLauflicht(c, rand, k, T + .5, 9, 4);
+  jzbLauflicht(c, rand, k, T + .5, 3, 4);
   c.restore(); void F;
 }
 function jzbNaschbudeMalen(c, F) {
