@@ -2865,7 +2865,7 @@
     #druck .dpd-leg i.dienst { background: var(--dienst); } #druck .dpd-leg i.ber { background: repeating-linear-gradient(45deg, var(--ber) 0 .6mm, #fff .6mm 1.4mm); } #druck .dpd-leg i.fehlt { background: var(--fehltbg); color: var(--fehlt); } #druck .dpd-leg i.zu { background: var(--zu); }
     #druck .dpd-raster { border-collapse: collapse; table-layout: fixed; width: 100%; font-size: 6.5pt; }
     #druck .dpd.breit .dpd-raster { font-size: 7.5pt; }
-    #druck .dpd-raster col.tag { width: 23mm; } #druck .dpd-raster col.wer { width: 30mm; }
+    #druck .dpd-raster col.tag { width: 24mm; } #druck .dpd-raster col.wer { width: 30mm; }
     #druck .dpd-raster th, #druck .dpd-raster td { border: .15mm solid var(--lin); padding: 0; height: 5.4mm; font-variant-numeric: tabular-nums; }
     #druck .dpd.breit .dpd-raster th, #druck .dpd.breit .dpd-raster td { height: 5.6mm; }
     #druck .dpd-raster thead th { font-weight: 600; color: var(--mut); text-align: left; padding-left: .5mm; height: 4mm; }
@@ -2891,6 +2891,36 @@
     #druck .dpd-raster tr.s td { font-size: 5.5pt; color: var(--mut); }
     #druck .dpd-raster td.fehlt { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; font-size: 7pt; }
     #druck .dpd-fuss { margin-top: 1.5mm; font-size: 6.5pt; color: var(--mut); border-top: .3mm dashed var(--mut); padding-top: 1mm; }
+    /* 2.646.0 KC-CLUB-DP-DRUCK-STUNDEN: Spalte „Std.“, Ampel-Zeile (rot fehlt, grün passt, gelb zu viel), Blatt „Stunden je Person“ */
+    #druck .dpd-raster col.std { width: 12mm; }
+    #druck .dpd-raster th.std { text-align: center; padding: 0; border-left: .4mm solid var(--ink); }
+    #druck .dpd-raster td.std { border-left: .4mm solid var(--ink); line-height: 1; }
+    #druck .dpd-raster td.std b { display: block; font-size: 7.5pt; } #druck .dpd-raster td.std small { display: block; font-size: 5pt; color: var(--mut); }
+    #druck .dpd-raster td.std.f b { color: var(--fehlt); } #druck .dpd-raster td.std.b b { color: var(--ber); }
+    #druck .dpd-raster td.a-rot { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; font-size: 7pt; }
+    #druck .dpd-raster td.a-gruen { background: #d4ecd9; color: #1f5a3e; font-weight: 700; font-size: 6pt; }
+    #druck .dpd-raster td.a-gelb { background: #fde7b0; color: #8a5a00; font-weight: 800; font-size: 7pt; }
+    #druck .dpd-leg i.a-rot { background: var(--fehltbg); color: var(--fehlt); } #druck .dpd-leg i.a-gruen { background: #d4ecd9; color: #1f5a3e; } #druck .dpd-leg i.a-gelb { background: #fde7b0; color: #8a5a00; }
+    #druck .dpd-raster th.tag .zahl { color: var(--mut); } #druck .dpd-raster th.tag .bil.gruen { color: #1f5a3e; font-weight: 700; } #druck .dpd-raster th.tag .bil.gelb { color: #8a5a00; font-weight: 700; }
+    #druck .dpd-sum { border-collapse: collapse; width: 100%; font-size: 8pt; font-variant-numeric: tabular-nums; margin-top: 3mm; }
+    #druck .dpd-sum th, #druck .dpd-sum td { border: .15mm solid var(--lin); padding: 1.2mm 1.5mm; text-align: center; }
+    #druck .dpd-sum th:first-child, #druck .dpd-sum td:first-child { text-align: left; white-space: nowrap; }
+    #druck .dpd-sum thead th { background: #f3e9dc; font-weight: 700; } #druck .dpd-sum small { display: block; font-weight: 400; color: var(--mut); font-size: 6.5pt; }
+    #druck .dpd-sum .ges { border-left: .5mm solid var(--ink); font-weight: 800; }
+    #druck .dpd-sum tr.alle td { border-top: .6mm solid var(--ink); font-weight: 800; } #druck .dpd-sum tr.bed td { color: var(--mut); }
+    #druck .dpd-sum td.rot { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; } #druck .dpd-sum td.gruen { background: #d4ecd9; color: #1f5a3e; font-weight: 700; } #druck .dpd-sum td.gelb { background: #fde7b0; color: #8a5a00; }
+    #druck .dpd-sum td.leer { color: #c9c2b8; }
+    #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
+    #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9.4mm; }
+    #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
+    #druck .dpd-bed thead th:nth-child(1) { width: 17mm; } #druck .dpd-bed thead th:nth-child(2) { width: 25mm; } #druck .dpd-bed thead th:last-child { width: 78mm; }
+    #druck .dpd-bed th.tg, #druck .dpd-bed td.rz, #druck .dpd-bed td.bd { text-align: left; padding: .8mm 1.2mm; }
+    #druck .dpd-bed small { display: block; font-size: 5.5pt; color: var(--mut); font-weight: 400; white-space: nowrap; }
+    #druck .dpd-bed td b { font-size: 9pt; } #druck .dpd-bed td.rz b, #druck .dpd-bed td.bd b { font-size: 7pt; }
+    #druck .dpd-bed td.bd { font-size: 6.2pt; line-height: 1.5; white-space: normal; } #druck .dpd-bed td.bd.zwei { column-count: 2; column-gap: 2mm; font-size: 5.8pt; line-height: 1.25; }
+    #druck .dpd-bed td.zu { background: #fff; } #druck .dpd-bed .bnd { white-space: nowrap; margin-right: 2.2mm; display: inline-block; }
+    #druck .dpd-bed td.wu, #druck .dpd-leg i.wu { background: #eef0fa; } #druck .dpd-bed td.wu b, #druck .dpd-bed tr.ohne td.rz b { color: #3d5fa8; }
+    #druck .dpd-bed tr.ohne small { white-space: normal; } #druck .dpd-bed .ganz { display: block; column-span: all; color: var(--mut); margin-bottom: .4mm; }
   }
   /* KC-CLUB-PROTOKOLL-FILTER (2.23.36) */
   .pr-filter-raster { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; } .pr-filter-raster .feld { margin: 0; font-weight: 700; font-size: .9rem; } .pr-filter-raster select { width: 100%; margin-top: 4px; }
@@ -5904,7 +5934,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.645.0" data-v="2.645.0"></script>
+<script src="app.js?v=2.646.0" data-v="2.646.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

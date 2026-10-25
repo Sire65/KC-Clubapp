@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.644.0";
+const SERVER_VERSION = "2.646.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -503,6 +503,15 @@ async function kommunikationAus(): Promise<Set<string>> {
   if (error) { if (KA_STAND) return KA_STAND.ids; throw new Error("Liste „keine Benachrichtigungen“ nicht lesbar – nichts gesendet"); }
   KA_STAND = { t: Date.now(), ids: new Set((data ?? []).map((x: any) => String(x.person_id))) };
   return KA_STAND.ids;
+}
+// 2.646.0 KC-CLUB-MAIL-ANHANG: welche Anlagen einer Nachricht direkt an die E-Mail dürfen (ohne verschlüsselte, in den Grenzen des Versanddienstes)
+const MAIL_ANL_DATEI = 10 * 1024 * 1024, MAIL_ANL_SUMME = 15 * 1024 * 1024;
+async function mailAnlagen(ids: string[]): Promise<{ id: string; name: string }[]> {
+  const { data } = await db.from("kc_communication_attachments").select("id,file_name,size_bytes").in("id", ids.slice(0, 10));
+  const liste = ids.map((id) => (data ?? []).find((x: any) => x.id === id)).filter(Boolean) as any[];
+  if (liste.length !== ids.length || liste.some((x) => x.file_name === "kc-verschluesselt.bin" || Number(x.size_bytes || 0) > MAIL_ANL_DATEI)) return [];
+  if (liste.reduce((n, x) => n + Number(x.size_bytes || 0), 0) > MAIL_ANL_SUMME) return [];
+  return liste.map((x) => ({ id: String(x.id), name: String(x.file_name || "Anlage") }));
 }
 async function routerSendenRoh(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
   // KC-CLUB-PERSON-SPERRE (2.23.77): Gesperrte mit „Benachrichtigungen aus“ bekommen nichts (alle Club-Wege laufen hier durch)
@@ -11791,11 +11800,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-PUSH-NUR-OFFLINE (2.138.0): wer gerade in der App ist, bekommt bei normalen Nachrichten keinen Push/keine Mail – Notfall und ❗ wichtig weiter immer
         const inApp = notfall || wichtig || express ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
         for (let i = ziel.length - 1; i >= 0; i--) if (inApp.has(ziel[i])) ziel.splice(i, 1);
+        // 2.646.0 KC-CLUB-MAIL-ANHANG (Wunsch Hansi „über Büro → Nachricht & Mail mit Anhang geschickt, aber das PDF war nicht in der Mail“):
+        // Geht die Nachricht (auch) per E-Mail, hängen die Anlagen jetzt direkt an der Mail – nicht bei 🔒 verschlüsselten Nachrichten/Anlagen,
+        // Einmal-Fotos und Nachrichten, die sich selbst löschen. Grenzen wie beim Versanddienst (je Datei 10 MB, zusammen 15 MB) – sonst wie bisher nur der Hinweis.
+        const mailAnl = anlagen.length && wege.includes("email") && !einmal && !slHinweis ? await mailAnlagen(anlagen) : [];
         const nachrichtVars = {
           titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
-          text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
-          url: `${APP_URL}#nachricht=${threadId}`, ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT
+          text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${mailAnl.length ? `\n\n📎 Im Anhang: ${mailAnl.map((x) => x.name).join(", ")}` : anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+          url: `${APP_URL}#nachricht=${threadId}`, ...(mailAnl.length ? { attachmentIds: mailAnl.map((x) => x.id) } : {}), ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT
         };
         // 2.403.0 KC-CLUB-EXPRESS-PRIO1: Express (ohne Notfall) je Empfänger parallel mit Priorität 1 – sonst wie bisher
         const versand = express && !notfall ? await expressSenden(ziel.filter((x: string) => x !== ich.person_id), nachrichtVars, `club-nachricht:${m.id}`)

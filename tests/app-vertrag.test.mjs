@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12782,10 +12782,25 @@ function idx0() { return lies("index.html"); }
   const r = f.dpdTag(tag, 8, 11);
   assert.equal(f.dpdBereiche(tag, 8), "9–11", "Regelzeit aus dem Bedarf");
   assert.equal(r.fehl, 1, "fehlende Stunden");
-  assert.deepEqual(r.rows.map((x) => x.art), ["p", "b", "s", "f"], "Person, Bereitschaft, Bedarf, Fehlt");
+  assert.deepEqual(r.rows.map((x) => x.art), ["p", "b", "s", "f"], "Person, Bereitschaft, Bedarf, Ampel");
   assert.ok(r.rows[0].cells[2][0].includes("dienst anf") && r.rows[0].cells[2][1] === "9–10:30" && r.rows[0].cells[5][0].startsWith("unav") && r.rows[0].cells[5][1] === "×", "Dienst mit Zeit, Sperre mit ×");
-  assert.deepEqual(r.rows[3].cells.map((c) => c[1]), ["", "", "", "−1", "−1", ""], "fehlende Personen rot");
+  assert.deepEqual(r.rows[3].cells.map((c) => c[1]), ["", "", "✓", "−1", "−1", "✓"], "Ampel: fehlende Personen rot, passend grün");
+  // 2.646.0 KC-CLUB-DP-DRUCK-STUNDEN: rechts Stunden (Tag + gesamt), Ampel auch für zu viel, vorne Regelzeit/Bedarf/eingeplant, letztes Blatt Stunden je Person
+  const r2 = f.dpdTag({ ...tag, besetzt: [0, 1, 3, 2, 4, 3], fehlt: [0, 0, 0, 1, 0, 0] }, 8, 11, { A: 12.5 });
+  assert.deepEqual(r2.rows[3].cells.map((c) => c[0].split(" ")[0]), ["leer", "a-gelb", "a-gruen", "a-rot", "a-gelb", "a-gruen"], "Ampel: gelb zu viel (auch ohne Bedarf), grün, rot");
+  assert.ok(r2.rows[0].std === "1,5" && r2.rows[0].klein === "ges. 12,5" && r2.ueber === 1 && r2.fehl === 0.5 && r2.regelStd === 2 && r2.bedarfStd === 6, "Stunden je Zeile und Tag");
+  assert.ok(/function dpdUebersicht\(tage, ges, gesBer\)/.test(programm) && /Stunden je Person – alle Tage/.test(programm) && /<td class="std \$\{r\.art\}">/.test(programm), "Stundenspalte und Blatt „Stunden je Person“");
+  assert.ok(/#druck \.dpd-raster td\.a-gelb \{/.test(html) && /#druck \.dpd-sum \{/.test(html), "Ampel- und Übersichts-Stil im Druckblock");
+  assert.ok(/function dpdBedarf\(tage, von, bis\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = bed \+ blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
+  assert.ok(/if \(t\.art !== "Markttag"\) \{ \/\/ Aufbau\/Nachbereitung: keine Vorgabe/.test(programm) && /So haben sich eingetragen:/.test(programm) && /"aus Wunschplänen, keine Vorgabe"/.test(programm), "Aufbau und Nachbereitung ohne Vorgabe, aus den Wunschplänen");
   assert.ok(/#druck:has\(\.dpd\) \{ padding: 0 !important; width: 297mm !important; \}/.test(html) && /#druck \.dpd-blatt \{[^}]*height: 210mm;[^}]*break-after: page;/.test(html), "je Blatt genau A4 quer");
   const druckBlock = html.slice(html.indexOf("  @media print {"), html.indexOf("\n  }\n", html.indexOf("  @media print {")));
   assert.ok(druckBlock.includes("#druck .dpd-blatt {"), "Regeln im ersten Druckblock (Vorschau/PDF übernehmen nur diesen)");
+}
+// 2.646.0 KC-CLUB-MAIL-ANHANG: Nachricht (auch) per E-Mail → Anlagen hängen direkt an der Mail; nie bei 🔒/Selbstlöschen/Einmal-Foto, nur in den Grenzen
+{
+  assert.ok(/const mailAnl = anlagen\.length && wege\.includes\("email"\) && !einmal && !slHinweis \? await mailAnlagen\(anlagen\) : \[\];/.test(server), "nur per Mail, nicht bei Einmal-Foto, 🔒 oder Selbstlöschen");
+  assert.ok(/\.\.\.\(mailAnl\.length \? \{ attachmentIds: mailAnl\.map\(\(x\) => x\.id\) \} : \{\}\)/.test(server) && /📎 Im Anhang: \$\{mailAnl\.map/.test(server), "Anhang an der Mail, Text nennt die Dateien");
+  const f = server.slice(server.indexOf("async function mailAnlagen("), server.indexOf("async function routerSendenRoh("));
+  assert.ok(/x\.file_name === "kc-verschluesselt\.bin"/.test(f) && /MAIL_ANL_DATEI = 10 \* 1024 \* 1024, MAIL_ANL_SUMME = 15 \* 1024 \* 1024/.test(server) && /liste\.length !== ids\.length/.test(f), "verschlüsselte oder zu große Anlagen: nur Hinweis wie bisher");
 }
