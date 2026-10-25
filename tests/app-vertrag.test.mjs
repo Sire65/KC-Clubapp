@@ -12752,3 +12752,11 @@ function idx0() { return lies("index.html"); }
   assert.ok(/aus: qzAusschnitt\(z\)/.test(programm) && /A = !S\.fertig && B\.aus \? B\.aus : null/.test(programm) && /S\.stufe = -1; qzMalen\(\);/.test(programm), "Ausschnitt bis zum Auflösen, dann ganzes Bild; Woche mit festem Zufall");
   assert.ok(/!qzAehnlich\(m\.a, a\)/.test(programm) && /\["Marktplatz", "Altes Rathaus"\]/.test(programm), "nie zwei richtige Tipps");
 }
+// 2.643.0 KC-CLUB-MESSUNG-SPARSAM (Wunschliste #7): Club-Messungen alle 30 statt 10 Minuten, Fenster passend, zeitversetzt
+{
+  const mig = lies("supabase/migrations/20261025_kc_club_v2643_messung_30min.sql");
+  assert.ok(/cron\.schedule\('kc-club-messung-30min', '0,30 \* \* \* \*'/.test(mig) && /cron\.schedule\('kc-club-db-last-30min', '15,45 \* \* \* \*'/.test(mig), "alle 30 Min., zeitversetzt");
+  assert.ok(/cron\.unschedule\('kc-club-messung-10min'\)/.test(mig) && /cron\.unschedule\('kc-club-db-last-10min'\)/.test(mig), "alte 10-Minuten-Läufe weg");
+  assert.ok((mig.match(/interval '30 minutes'/g) || []).length === 2 && !/interval '10 minutes'/.test(mig), "Hintergrund-Aufrufe über 30 Min. gezählt");
+  assert.ok(/Gemessen alle 30 Minuten/.test(programm) && !/Gemessen wird alle 10 Minuten/.test(programm), "Hinweis in der App passt");
+}

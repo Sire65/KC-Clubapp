@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.642.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.643.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25004,7 +25004,7 @@ async function wuSchieben(id, richtung) { // ▲▼ innerhalb der offenen Punkte
 }
 async function wuLoeschen(id) { if (!(await frage("Diesen Punkt löschen?", { ja: "🗑️ Löschen" }))) return; try { await api("wl_loeschen", { id }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
 // ---------- 2.341.0 KC-CLUB-ADMIN-VERLAUF (Admin-Register Stufe 2, vorbereitet in 2.21.0, Wunsch Hansi): Verlauf aus kc_club_messwerte ----------
-// Messung in der Datenbank alle 10 Min. (pg_cron, ohne Datenschnittstelle: Größe, Verbindungen, Hintergrund-Aufrufe ok/fehlgeschlagen) und
+// Messung in der Datenbank alle 30 Min. (2.643.0, vorher 10; pg_cron, ohne Datenschnittstelle: Größe, Verbindungen, Hintergrund-Aufrufe ok/fehlgeschlagen) und
 // über die Datenschnittstelle alle 15 Min. vom Club-Server (Antwortzeit). Fehlt die Schnittstellen-Messung → rot. Nie grün ohne Messung.
 async function adVerlaufLaden(tage, erzwingen) {
   const v = AD.verlauf[tage] || (AD.verlauf[tage] = { d: null, zeit: 0, fehler: null });
@@ -26334,7 +26334,7 @@ async function dbBelegungLaden() {
 }
 // ---------- 2.389.0 KC-CLUB-DB-LAST (Wunsch Hansi „Balkengrafik unter Supabase: Datenbank-Abfragen mit Wochentag und Uhrzeit und woher
 // sie kommen“): die letzten 7 Tage je Stunde, farbig nach Quelle (Programm); darunter die Summe je Uhrzeit und die Quellen mit Anteil.
-// Balken antippen zeigt die Stunde im Klartext. Daten: alle 10 Min. gemessen (kc_club_db_last), nur Admin. ----------
+// Balken antippen zeigt die Stunde im Klartext. Daten: alle 30 Min. gemessen (kc_club_db_last, 2.643.0), nur Admin. ----------
 const DBL_FARBEN = { "Club-App": "#741521", "Verwaltung / PC-Manager": "#2e7d32", "Kasse / Money Butler": "#f9a825", "Dienstplan DP2": "#1565c0",
   "Kommunikation (Push/Mail)": "#8e24aa", "Spiegel / Sicherung": "#00838f", "Überwachung": "#6d4c41", "Termine / Kalender": "#c2185b",
   "Zeitpläne (Cron)": "#78909c", "Anmeldung (Supabase)": "#ef6c00", "Realtime": "#5c6bc0", "Supabase intern": "#b0bec5", "Sonstiges": "#9e9e9e" };
@@ -26361,7 +26361,7 @@ function dbLastZeigen() {
   const ord = new Map(quellen.map(([q], i) => [q, i]));
   const max = Math.max(1, ...stunden.map((d) => (je.get(dblStunde(d)) || []).reduce((s, x) => s + x.v, 0)));
   const einheit = DBL.art === "ms" ? "Sek. Rechenzeit" : "Abfragen";
-  if (!DBL.werte.length) { el.innerHTML = `<b>📊 Datenbank-Abfragen</b><p class="hinweis" style="margin:4px 0 0">Die Messung läuft – die ersten Balken erscheinen nach etwa 10 Minuten. Gemessen wird alle 10 Minuten, aufbewahrt 35 Tage.</p>`; return; }
+  if (!DBL.werte.length) { el.innerHTML = `<b>📊 Datenbank-Abfragen</b><p class="hinweis" style="margin:4px 0 0">Die Messung läuft – die ersten Balken erscheinen nach etwa 30 Minuten. Gemessen wird alle 30 Minuten, aufbewahrt 35 Tage.</p>`; return; }
   const saeule = (d) => { const l = (je.get(dblStunde(d)) || []).slice().sort((a, b) => (ord.get(a.q) ?? 99) - (ord.get(b.q) ?? 99)), s = l.reduce((a, x) => a + x.v, 0);
     return `<div class="dbl-s${d.getHours() === 0 ? " dbl-mitternacht" : ""}" data-h="${dblStunde(d)}" title="">${l.map((x) => `<i style="height:${(x.v / max * 100).toFixed(2)}%;background:${dblFarbe(x.q)}"></i>`).join("")}${s ? "" : ""}</div>`; };
   const fTagLang = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "numeric" });
@@ -26377,7 +26377,7 @@ function dbLastZeigen() {
     <div class="dbl-tage">${[0, 6, 12, 18].map((h) => `<span style="flex:6">${h} Uhr</span>`).join("")}</div>
     <b style="font-size:.95rem;display:block;margin-top:8px">Woher kommen sie? (${dblZahl(gesamt)} ${einheit})</b>
     <table class="vb-tabelle">${quellen.map(([q, v]) => `<tr><td><i class="dbl-punkt" style="background:${dblFarbe(q)}"></i>${esc(q)}</td><td style="text-align:right;white-space:nowrap">${dblZahl(v)}</td><td style="text-align:right">${Math.round(v / Math.max(1, gesamt) * 100)} %</td><td style="width:30%"><div style="height:8px;border-radius:4px;background:${dblFarbe(q)};width:${(v / Math.max(1, quellen[0][1]) * 100).toFixed(1)}%"></div></td></tr>`).join("")}</table>
-    <p class="hinweis" style="margin:6px 0 0">Gemessen alle 10 Minuten. Die Quelle wird am Namen der Datenbank-Tabelle erkannt (z. B. kc_club_ = Club-App).</p>`;
+    <p class="hinweis" style="margin:6px 0 0">Gemessen alle 30 Minuten. Die Quelle wird am Namen der Datenbank-Tabelle erkannt (z. B. kc_club_ = Club-App).</p>`;
   $("dblChart").onclick = (e) => { const s = e.target.closest(".dbl-s"); if (!s) return; const h = s.dataset.h, l = (je.get(h) || []).slice().sort((a, b) => b.v - a.v), sum = l.reduce((a, x) => a + x.v, 0);
     const d = new Date(h.slice(0, 10) + "T" + h.slice(11) + ":00:00");
     document.querySelectorAll("#dblChart .dbl-s.an").forEach((x) => x.classList.remove("an")); s.classList.add("an");

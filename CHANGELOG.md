@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.643.0 – 2026-10-25 – Club-Messungen sparsamer: alle 30 statt 10 Minuten (KC-CLUB-MESSUNG-SPARSAM, Wunschliste #7)
+Messung 25.10.: 85.000 Datenbank-Anfragen am Tag (18.10.: 139.000), 99,7 % von den eigenen Hintergrunddiensten. Die beiden Club-Messungen („DB-Last messen“ – über 0,5 s Rechenzeit je Lauf – und die Club-Messung für den Verlauf) laufen jetzt alle 30 statt 10 Minuten, zeitversetzt; die Club-Messung zählt die Hintergrund-Aufrufe über 30 Minuten. Grafiken im Admin bleiben vollständig. Überwachung/KICC (Codex) bewusst unverändert.
+
 ## 2.642.0 – 2026-10-25 – Rätsel: mehr Bilder und mehr Abwechslung (KC-CLUB-RAETSEL-ABWECHSLUNG, Wunschliste #30)
 15 weitere Werne-Bilder (u. a. Marktplatz, Zeche Werne, Hotel Ickhorn, Feuerwache, Kino, Busbahnhof) und 14 weitere Küchen-Bilder (u. a. Zimt, Vanille, Steinpilz, Granatapfel, Mörser) – jetzt 35 + 29 Motive, freie Fotos von Wikimedia Commons mit Bildnachweis. Übungsrunden nehmen zuerst Bilder, die man auf diesem Gerät noch nicht hatte. Jedes Bild kommt mit wechselndem Ausschnitt (herangezoomt, andere Stelle, manchmal gespiegelt); aufgelöst wird mit dem ganzen Bild; beim Wochen-Rätsel für alle gleich. Motive, die auf einem Bild mit zu sehen sind (z. B. Marktplatz/Altes Rathaus), kommen nie zusammen als Tipps.
 
