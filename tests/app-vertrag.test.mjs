@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12796,4 +12796,11 @@ function idx0() { return lies("index.html"); }
   assert.ok(/#druck:has\(\.dpd\) \{ padding: 0 !important; width: 297mm !important; \}/.test(html) && /#druck \.dpd-blatt \{[^}]*height: 210mm;[^}]*break-after: page;/.test(html), "je Blatt genau A4 quer");
   const druckBlock = html.slice(html.indexOf("  @media print {"), html.indexOf("\n  }\n", html.indexOf("  @media print {")));
   assert.ok(druckBlock.includes("#druck .dpd-blatt {"), "Regeln im ersten Druckblock (Vorschau/PDF übernehmen nur diesen)");
+}
+// 2.646.0 KC-CLUB-MAIL-ANHANG: Nachricht (auch) per E-Mail → Anlagen hängen direkt an der Mail; nie bei 🔒/Selbstlöschen/Einmal-Foto, nur in den Grenzen
+{
+  assert.ok(/const mailAnl = anlagen\.length && wege\.includes\("email"\) && !einmal && !slHinweis \? await mailAnlagen\(anlagen\) : \[\];/.test(server), "nur per Mail, nicht bei Einmal-Foto, 🔒 oder Selbstlöschen");
+  assert.ok(/\.\.\.\(mailAnl\.length \? \{ attachmentIds: mailAnl\.map\(\(x\) => x\.id\) \} : \{\}\)/.test(server) && /📎 Im Anhang: \$\{mailAnl\.map/.test(server), "Anhang an der Mail, Text nennt die Dateien");
+  const f = server.slice(server.indexOf("async function mailAnlagen("), server.indexOf("async function routerSendenRoh("));
+  assert.ok(/x\.file_name === "kc-verschluesselt\.bin"/.test(f) && /MAIL_ANL_DATEI = 10 \* 1024 \* 1024, MAIL_ANL_SUMME = 15 \* 1024 \* 1024/.test(server) && /liste\.length !== ids\.length/.test(f), "verschlüsselte oder zu große Anlagen: nur Hinweis wie bisher");
 }
