@@ -12897,3 +12897,11 @@ function idx0() { return lies("index.html"); }
   assert.ok((programm.match(/jzbLauflicht\(c, /g) || []).length >= 5 && /POPCORN · ZUCKERWATTE/.test(programm), "Lauflichter, Schild");
   assert.ok(/!SPAR\?\.an && jzbKirmesVariante\(\) === "riesenrad"\);/.test(programm), "Rose aus der Schießbude nur, wenn sie im Bild ist – sonst Gruß-Variante");
 }
+// 2.656.0 KC-CLUB-SCHATTEN (Wunsch Hansi „Schatten bei allen Elementen wie Knöpfe, Kopf usw. – Stärke, Farbe, Position, einklappbar“)
+{
+  assert.ok(/<input type="checkbox" id="setSchatten" onchange="schattenSpeichern\(\{ an: this\.checked \}\)">/.test(html) && /<details class="abh-klappe" data-abh="setSchatten"><summary>🌗 Schatten einstellen<\/summary><div id="schattenWahl"><\/div><\/details>/.test(html), "Schalter unter Effekte, einklappbar");
+  assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel, \.karte, \.knopf, \.chip, \.blase, \.fuss-leiste[^)]*\) \{ box-shadow: var\(--sch-box\); \}/.test(html) && /:where\(:root\.sch-an\) \.hero \{ box-shadow: var\(--sch-box-gross\); \}/.test(html), "Knöpfe, Kacheln, Kopf … – schwache Regel, Inkognito-Rahmen bleibt");
+  assert.ok(/const SCHATTEN = "kc_club_schatten";/.test(programm) && /return \{ an: !!j\.an, staerke:/.test(programm), "je Gerät, Standard aus");
+  assert.ok(/SCHT_STAERKE = \{ leicht:.*mittel:.*kraeftig:.*sehr:/.test(programm) && /SCHT_FARBEN = \{ auto:/.test(programm) && /SCHT_POS = \{ unten:.*rechts:.*links:.*oben:.*rundum:/.test(programm), "Stärke, Farbe, Position");
+  assert.ok(/suWahlZeigen\(\); kopfEffektEinstellungen\(\); schattenEinstellungen\(\);/.test(programm) && /try \{ schattenAnwenden\(\); \} catch \{\}/.test(programm), "beim Laden angewendet, Einstellungen gefüllt");
+}

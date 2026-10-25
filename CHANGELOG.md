@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.656.0 – 2026-10-26 – 🌗 Schatten einstellbar (KC-CLUB-SCHATTEN)
+- Wunsch Hansi („Schatten bei allen Elementen wie Knöpfe, Kopf usw. – unter Effekte einstellen: Stärke, Farbe, Position, einklappbar“): ⚙️ → „✨ Effekte“ → **„🌗 Schatten“** (je Gerät, Standard aus = wie bisher). Darunter einklappbar **„🌗 Schatten einstellen“** mit kleiner Vorschau: **💪 Stärke** (leicht, mittel, kräftig, sehr kräftig), **🎨 Farbe** (automatisch – braun im hellen, schwarz im dunklen Bild –, Schwarz, Braun, Weinrot, Blau, Grün, Gold oder eigene Farbe), **📍 Position** (unten, unten rechts, unten links, oben, rundum wie ein Leuchten). Gilt für Knöpfe, Kacheln, Karten, Chips, Sprechblasen, Umschalter, Fußleiste, Spiele-Kacheln und den Kopf (größerer Schatten). Knöpfe mit eigenem Leuchten und der Inkognito-Rahmen bleiben unverändert.
+- Hilfe-Eintrag, Twinkey-Frage, Lupe-Eintrag. Tests: Vertragstest-Block 2.656.0, `tools/schatten/schatten-browser.mjs`. Nur App.
+
 ## 2.655.0 – 2026-10-26 – 🎠 Kinderkarussell dreht langsamer (KC-CLUB-SIMJUE-KARUSSELL-2)
 - Wunsch Hansi („Scene passt gut, allerdings dreht sich das Karussell zu schnell“): eine Runde dauert jetzt gut 20 statt 8 Sekunden, die Pferdchen gehen gemächlicher auf und ab. Nur App.
 
