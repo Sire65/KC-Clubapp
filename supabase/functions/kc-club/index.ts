@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.647.0";
+const SERVER_VERSION = "2.649.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -10637,6 +10637,39 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true, ...versand, empfaenger: ziel.length, cc: cc.length, bcc: bcc.length });
       }
 
+      case "mail_rund": {
+        // 2.649.0 KC-CLUB-VERSANDWAHL „✉️ Nur als Mail, nicht im Chat“ (Wunsch Hansi, nur Admin): Rundmail aus dem Schreibfeld – keine Unterhaltung,
+        // keine Chat-Nachricht, nur die E-Mail (mit Anlagen im Anhang) an die gewählten Mitglieder mit hinterlegter Adresse. Höchstens 3 je Minute.
+        nurAdmin(ich);
+        const ids: string[] = [...new Set<string>((Array.isArray(p.empfaenger) ? p.empfaenger : []).map((x: unknown) => String(x)))].filter((id) => id && id !== ich.person_id).slice(0, 200);
+        if (!ids.length) throw new Fehler("Bitte mindestens einen Empfänger wählen.", 400);
+        const text = txt(p.text, 3000), betreff = txt(p.betreff, 150);
+        const anl: string[] = [...new Set<string>((Array.isArray(p.anlagen) ? p.anlagen : []).map((x: unknown) => String(x)))].slice(0, 10);
+        if (!text && !anl.length) throw new Fehler("Bitte einen Text schreiben oder eine Anlage anhängen.", 400);
+        if (anl.length) {
+          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").in("id", anl);
+          if ((att ?? []).length !== anl.length || (att ?? []).some((x: any) => !String(x.object_path).startsWith(`club/${ich.person_id}/`))) throw new Fehler("Eine Anlage wurde nicht gefunden – bitte neu anhängen.", 403);
+        }
+        const mAnl = anl.length ? await mailAnlagen(anl) : [];
+        if (anl.length && !mAnl.length) throw new Fehler("Die Anlage kann nicht per E-Mail verschickt werden (zu groß oder verschlüsselt) – bitte als Nachricht senden.", 413);
+        const mitMail = new Set((await aktiveMitglieder()).filter((m: any) => m.email).map((m: any) => m.person_id));
+        const ziel = ids.filter((id) => mitMail.has(id));
+        if (!ziel.length) throw new Fehler("Bei keinem der Empfänger ist eine E-Mail-Adresse hinterlegt.", 400);
+        await protokoll(ich.person_id, "mail_rund_versuch", { empfaenger: ziel.length });
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "mail_rund_versuch").gte("zeit", new Date(Date.now() - 60_000).toISOString());
+        if ((count ?? 0) > 3) throw new Fehler("Gerade sind schon mehrere Mails verschickt worden – bitte eine Minute warten.", 429);
+        const titel = betreff || `Nachricht von ${ich.name}`;
+        const versand = await routerSenden("club_nachricht_mail", ziel, {
+          titel: `✉️ ${titel}`, kurz: mAnl.length ? `${mAnl.length === 1 ? "1 Anhang" : mAnl.length + " Anhänge"} von ${ich.vorname}` : txt(text, 140),
+          betreff: `Köcheclub Werne – ${titel}`,
+          text: `Hallo,\n\n${text || `im Anhang ${mAnl.length === 1 ? "findest du das Dokument" : "findest du die Dokumente"}.`}${mAnl.length ? `\n\n📎 Im Anhang: ${mAnl.map((x) => x.name).join(", ")}` : ""}\n\nViele Grüße\n${ich.name}`,
+          url: APP_URL, ...(mAnl.length ? { attachmentIds: mAnl.map((x) => x.id) } : {}),
+        }, `club-mail-rund:${ich.person_id}:${Date.now()}`);
+        await protokoll(ich.person_id, "mail_rund", { empfaenger: ziel.length, ohne_mail: ids.length - ziel.length, anhaenge: mAnl.length, versand });
+        if (!versand.gesendet) throw new Fehler("Die E-Mail konnte gerade nicht verschickt werden – bitte später noch einmal.", 502);
+        return json({ ok: true, ...versand, empfaenger: ziel.length, ohneMail: ids.length - ziel.length });
+      }
+
       case "wunschbogen_mailen": {
         // KC-CLUB-WUNSCHBOGEN (2.23.28, Wunsch Hansi): den leeren, persönlichen Wunschbogen (PDF aus DP2s Druckteil, QR = Mitglieds-ID)
         // an die eigene hinterlegte Adresse – falls gerade kein Drucker da ist. Nur PDF, nur an mich, höchstens 1× je 2 Minuten.
@@ -11777,7 +11810,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (count === 1) ziel.push(ich.person_id); // Test-Unterhaltung nur mit mir
         }
         // KC-CLUB-WICHTIGKEIT (2.287.0, Wunsch Hansi): ❗ Wichtigkeit hoch geht wie der Notfall immer per Push UND E-Mail raus
-        const wege = notfall || wichtig || express ? ["push", "email"] : zustellwege(p.wege);
+        // 2.649.0 KC-CLUB-VERSANDWAHL (Wunsch Hansi „nur E-Mail heißt nur E-Mail“): „✉️ Nur E-Mail“ bleibt E-Mail – auch bei ❗ wichtig kein Push dazu
+        // und auch an Empfänger, die gerade in der App sind. Notfall und Express gehen weiter auf allen Wegen.
+        const gewaehlt = zustellwege(p.wege), nurMail = gewaehlt.length === 1 && gewaehlt[0] === "email" && !notfall && !express;
+        const wege = notfall || express || (wichtig && !nurMail) ? ["push", "email"] : gewaehlt;
         // KC-CLUB-ERWAEHNUNG (0.97.0): @Erwähnte (nur Teilnehmer dieser Unterhaltung) bekommen eine eigene, deutliche Meldung –
         // immer aufs Handy (bzw. Mail, wenn sie die App noch nie geöffnet haben), statt der normalen Nachrichten-Meldung.
         const tnIds = new Set((alleTn ?? []).map((x: any) => x.person_id));
@@ -11798,8 +11834,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (notfall || express) stumm.clear(); // KC-CLUB-NOTFALL-MELDUNG: Notfall erreicht auch stummgeschaltete Chats · 2.362.0: Express ebenso
         for (let i = ziel.length - 1; i >= 0; i--) if (stumm.has(ziel[i])) ziel.splice(i, 1);
         // KC-CLUB-PUSH-NUR-OFFLINE (2.138.0): wer gerade in der App ist, bekommt bei normalen Nachrichten keinen Push/keine Mail – Notfall und ❗ wichtig weiter immer
-        const inApp = notfall || wichtig || express ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
+        const inApp = notfall || wichtig || express || nurMail ? new Set<string>() : await geradeInDerApp(ziel.filter((x: string) => x !== ich.person_id)).catch(() => new Set<string>());
         for (let i = ziel.length - 1; i >= 0; i--) if (inApp.has(ziel[i])) ziel.splice(i, 1);
+        if (p.nur_app === true && !notfall && !express) ziel.length = 0; // 2.649.0 KC-CLUB-VERSANDWAHL: „📱 Nur in der App“ – keine Benachrichtigung
         // 2.646.0 KC-CLUB-MAIL-ANHANG (Wunsch Hansi „über Büro → Nachricht & Mail mit Anhang geschickt, aber das PDF war nicht in der Mail“):
         // Geht die Nachricht (auch) per E-Mail, hängen die Anlagen jetzt direkt an der Mail – nicht bei 🔒 verschlüsselten Nachrichten/Anlagen,
         // Einmal-Fotos und Nachrichten, die sich selbst löschen. Grenzen wie beim Versanddienst (je Datei 10 MB, zusammen 15 MB) – sonst wie bisher nur der Hinweis.

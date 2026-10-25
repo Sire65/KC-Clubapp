@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.649.0 – 2026-10-25 – 📤 „Wie verschicken?“ bei Nachrichten (KC-CLUB-VERSANDWAHL)
+Wunsch Hansi („unter Nachrichten so wie im Büro wählen: Alles, Mail, Push, WhatsApp – mit Anlage“; Entscheidungen: Pflicht bei mehreren Empfängern oder Anlage · „wichtig“ ohne Push bei Nur-E-Mail · „Nur als Mail“ nur für den Admin):
+- Vor dem Senden an mehrere oder mit Anlage fragt die App **„📤 Wie verschicken?“**: ✉️ Nur E-Mail · 🔔 Nur Push · 🟢 WhatsApp · ✅ Alles · 📱 Nur in der App · ⚙️ Wie jeder es eingestellt hat. Darunter steht vorher, was rausgeht (z. B. „✉️ 15 bekommen eine E-Mail mit Anhang · 1 ohne E-Mail-Adresse · kein Push“). Erst dann „📤 Jetzt senden“. Notfall, Express und 🔒 verschlüsselt wie bisher ohne Abfrage.
+- **„✉️ Nur E-Mail“ heißt nur E-Mail:** auch bei ❗ wichtig kein Push dazu, und auch wer gerade in der App ist, bekommt die Mail. Anlagen hängen an der Mail (2.646.0).
+- **📱 Nur in der App:** Nachricht im Chat, niemand wird benachrichtigt.
+- **Nur Admin – „Nur als Mail, nicht im Chat zeigen“** (bei ✉️ Nur E-Mail): Rundmail an die gewählten Mitglieder mit Anhang, ohne neuen Chat und ohne rote Zahl; danach wie gewohnt das Angebot, die Datei abzulegen. Server-Aktion „mail_rund“ (nur Admin, höchstens 3 je Minute, nur hinterlegte Adressen).
+Server 2.649.0. Rückweg: App 2.648.0 / Server 2.647.0.
+
 ## 2.648.0 – 2026-10-25 – ❓ Was macht das Mitglied gerade? (KC-CLUB-WAS-MACHT, nur Admin)
 Wunsch Hansi („nur für Admin: in der Kachelansicht bei einem Mitglied, das online ist, rechts oben ein Fragezeichen – Klick zeigt, was die Person gerade in der App macht; ganz sicher nur für Admin“): In 👥 Mitglieder (Kachelansicht) hat jede Kachel eines Mitglieds, das gerade online ist, oben rechts ein grünes „?“. Antippen öffnet sofort die vorhandenen „👣 Wege der Mitglieder“ für heute und genau diese Person (aktualisiert sich alle 20 Sekunden, ohne Inhalte). Das „?“ erscheint nur beim Admin, nur bei online und nie bei der eigenen Kachel; der Server gibt die Wege weiterhin nur dem Admin heraus (spur_liste mit nurAdmin). Rückweg: App 2.647.0.
 
