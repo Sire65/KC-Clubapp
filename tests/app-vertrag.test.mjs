@@ -7382,7 +7382,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.match(programm, /const SJ_BIS = Date\.parse\("2026-10-27T00:00:00\+01:00"\)/, "nur bis Dienstag 0 Uhr");
   assert.match(programm, /if \(sjAn\(\)\) add\(\{ id: "simjue"/, "Punkt im Info-Laufband");
-  assert.match(programm, /SJ_TON = \{ datei: "simjue-orgel\.mp3", was: "„An der schönen blauen Donau“ \(Johann Strauss, 1866, gemeinfrei\)/, "Ton gemeinfrei mit Nennung");
+  assert.match(programm, /urheber: "Thijs Haenen", lizenz: "CC BY-SA 3\.0"[^\n]*quelle: "https:\/\/commons\.wikimedia\.org\/wiki\/File:Carl_Frei_kermisorgel/, "Ton mit Urheber, Lizenz und Quelle");
+  assert.match(programm, /Aufnahme \$\{esc\(SJ_TON\.urheber\)\}, <a href="\$\{SJ_TON\.lizenzLink\}"/, "Nennung sichtbar im Blatt");
   assert.match(programm, /const zu = \(\) => \{ sjStopp\(\); f\.remove\(\); \}/, "Musik stoppt beim Schließen");
   assert.ok(fs.existsSync(new URL("../simjue-orgel.webp", import.meta.url)) && fs.existsSync(new URL("../simjue-orgel.mp3", import.meta.url)), "Foto und Ton liegen bei");
 }

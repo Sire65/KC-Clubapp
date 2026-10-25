@@ -33295,7 +33295,7 @@ function eingabe(text, wert = "", opt = {}) {
 }
 // ---------- 2.645.0 KC-CLUB-SIMJUE-ORGEL (Wunsch Hansi 25.10.: „Bild von einer Orgel von Sim-Jü in die Club-App – nur bis Dienstag 0 Uhr, am besten mit Ton“)
 // Nur bis Di 27.10.2026, 0 Uhr deutscher Zeit: ein Punkt im Info-Laufband öffnet Foto + Orgelmusik. Ton wird erst beim Antippen geladen.
-const SJ_BIS = Date.parse("2026-10-27T00:00:00+01:00"), SJ_TON = { datei: "simjue-orgel.mp3", was: "„An der schönen blauen Donau“ (Johann Strauss, 1866, gemeinfrei) im Klang einer Kirmesorgel – für die Club-App nachgebaut" };
+const SJ_BIS = Date.parse("2026-10-27T00:00:00+01:00"), SJ_TON = { datei: "simjue-orgel.mp3", was: "Carl-Frei-Kirmesorgel (Breda's Museum), „Mina de Rumbakoningin“", urheber: "Thijs Haenen", lizenz: "CC BY-SA 3.0", lizenzLink: "https://creativecommons.org/licenses/by-sa/3.0/deed.de", quelle: "https://commons.wikimedia.org/wiki/File:Carl_Frei_kermisorgel_-_SoundCloud_-_Thijs_Haenen.ogg" };
 const sjAn = () => Date.now() < SJ_BIS;
 let sjAudio = null;
 function sjStopp() { if (sjAudio) { sjAudio.pause(); sjAudio = null; } $("sjKnopf") && ($("sjKnopf").textContent = "▶️ Orgel hören"); }
@@ -33305,7 +33305,7 @@ function sjOeffnen() {
     <img src="simjue-orgel.webp" alt="Die Orgel von H. Schäfer auf Sim-Jü: Ruth & Voigt, Anno 1904" style="width:100%;border-radius:12px;display:block">
     <p style="margin:8px 0">Die prächtige Konzertorgel von <b>H. Schäfer</b> – gebaut von <b>Ruth & Voigt, Anno 1904</b>. Mit Pauke, Becken, Glockenspiel und den kleinen Musikanten-Figuren. Viel Spaß auf der Kirmes!</p>
     <button type="button" class="knopf haupt" id="sjKnopf">▶️ Orgel hören</button>
-    <p class="hinweis" style="margin:8px 0 0;font-size:.78rem">Musik: ${esc(SJ_TON.was)}. Foto: Hansi.</p>
+    <p class="hinweis" style="margin:8px 0 0;font-size:.78rem">Musik: ${esc(SJ_TON.was)} – Aufnahme ${esc(SJ_TON.urheber)}, <a href="${SJ_TON.lizenzLink}" target="_blank" rel="noopener">${SJ_TON.lizenz}</a>, <a href="${SJ_TON.quelle}" target="_blank" rel="noopener">Quelle</a> (als MP3 umgewandelt). Foto: Hansi.</p>
     <button type="button" class="knopf" id="sjZu" style="margin-top:8px">Schließen</button>`);
   const zu = () => { sjStopp(); f.remove(); };
   f.querySelector("#sjZu").onclick = zu; f.onclick = (e) => { if (e.target === f) zu(); };
