@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.640.0";
+const SERVER_VERSION = "2.641.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -993,9 +993,17 @@ async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; ein
     for (const x of pk.einst) { const m = einst.get(x.schluessel) ?? new Map(); m.set(x.person_id, x.wert); einst.set(x.schluessel, m); }
     const inko = new Set(pk.inko.map(String)), ids = [...new Set(pk.ids.map(String))];
     const erg = { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id))), einst };
+    const t0 = Date.now();
     if (Math.random() < 1 / ONLINE_PAKET_VERGLEICH) nebenbei(onlineJetztMitAlt(weitere, seit).then(async (alt) => {
       const a = [...alt.on].sort().join(), b = [...erg.on].sort().join();
-      if (a !== b) await protokoll(null, "online_paket_abweichung", { alt: alt.on.size, neu: erg.on.size });
+      // 2.641.0 KC-CLUB-VERGLEICH-GENAUER (Wunsch Hansi „ja“ zur genaueren Aufzeichnung): wer fehlt bzw. ist zu viel, wann diese Person zuletzt
+      // gesehen wurde und wie viel später die Gegenprobe lief – so lässt sich ein Zeitunterschied von einem echten Fehler unterscheiden.
+      if (a !== b) {
+        const nurAlt = [...alt.on].filter((id) => !erg.on.has(id)).slice(0, 5), nurNeu = [...erg.on].filter((id) => !alt.on.has(id)).slice(0, 5);
+        const { data: zg } = await db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", [...nurAlt, ...nurNeu]);
+        await protokoll(null, "online_paket_abweichung", { alt: alt.on.size, neu: erg.on.size, nurAlt, nurNeu, seit, spaeterMs: Date.now() - t0,
+          zuletzt: Object.fromEntries((zg ?? []).map((x: any) => [x.person_id, x.zuletzt_gesehen])) });
+      }
     }).catch((e) => console.error("online paket vergleich", String(e))));
     return erg;
   }
@@ -11164,7 +11172,21 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!pk) return json({ unterhaltungen: await unterhaltungenAlt(ich, true) });
         const liste = await unterhaltungenAusPaket(ich, pk);
         if (Math.random() < 1 / UNTERHALTUNGEN_PAKET_VERGLEICH) nebenbei(unterhaltungenAlt(ich, false).then(async (alt) => {
-          if (!spGleich(alt, liste)) await protokoll(ich.person_id, "unterhaltungen_paket_abweichung", { alt: alt.length, neu: liste.length });
+          // 2.641.0 KC-CLUB-VERGLEICH-GENAUER: welche Felder in welchem Chat abweichen (Zahlen und Zeiten mit Wert, Texte nur als „Text anders“ – kein Inhalt)
+          if (!spGleich(alt, liste)) {
+            const neuMap = new Map(liste.map((x: any) => [x.id, x])), felder: any[] = [];
+            for (const x of alt as any[]) {
+              const y: any = neuMap.get(x.id); if (!y) { felder.push({ chat: String(x.id).slice(0, 8), feld: "fehlt_neu" }); continue; }
+              for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) {
+                if (spGleich(x[k], y[k])) continue;
+                if (k === "letzte") { for (const u of ["von", "text", "zeit"]) if (!spGleich(x[k]?.[u], y[k]?.[u])) felder.push({ chat: String(x.id).slice(0, 8), feld: "letzte." + u, ...(u === "zeit" ? { alt: x[k]?.zeit ?? null, neu: y[k]?.zeit ?? null } : {}) }); }
+                else felder.push({ chat: String(x.id).slice(0, 8), feld: k, ...(["ungelesen", "nachrichten", "wichtigNeu", "anzahl", "aktualisiert", "archiviert"].includes(k) ? { alt: x[k] ?? null, neu: y[k] ?? null } : {}) });
+              }
+            }
+            const altIds = new Set((alt as any[]).map((x: any) => x.id));
+            for (const y of liste as any[]) if (!altIds.has(y.id)) felder.push({ chat: String(y.id).slice(0, 8), feld: "fehlt_alt" });
+            await protokoll(ich.person_id, "unterhaltungen_paket_abweichung", { alt: alt.length, neu: liste.length, felder: felder.slice(0, 12) });
+          }
         }).catch((e) => console.error("unterhaltungen paket vergleich", String(e))));
         return json({ unterhaltungen: liste });
       }
