@@ -2911,13 +2911,15 @@
     #druck .dpd-sum td.rot { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; } #druck .dpd-sum td.gruen { background: #d4ecd9; color: #1f5a3e; font-weight: 700; } #druck .dpd-sum td.gelb { background: #fde7b0; color: #8a5a00; }
     #druck .dpd-sum td.leer { color: #c9c2b8; }
     #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
-    #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 10mm; }
+    #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9mm; }
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
     #druck .dpd-bed thead th:nth-child(1) { width: 17mm; } #druck .dpd-bed thead th:nth-child(2) { width: 25mm; } #druck .dpd-bed thead th:last-child { width: 78mm; }
     #druck .dpd-bed th.tg, #druck .dpd-bed td.rz, #druck .dpd-bed td.bd { text-align: left; padding: .8mm 1.2mm; }
     #druck .dpd-bed small { display: block; font-size: 5.5pt; color: var(--mut); font-weight: 400; white-space: nowrap; }
     #druck .dpd-bed td b { font-size: 9pt; } #druck .dpd-bed td.rz b, #druck .dpd-bed td.bd b { font-size: 7pt; }
     #druck .dpd-bed td.bd { font-size: 5.8pt; line-height: 1.25; column-count: 2; column-gap: 2mm; } #druck .dpd-bed td.zu { background: var(--zu); }
+    #druck .dpd-bed td.wu, #druck .dpd-leg i.wu { background: #eef0fa; } #druck .dpd-bed td.wu b, #druck .dpd-bed tr.ohne td.rz b { color: #3d5fa8; }
+    #druck .dpd-bed tr.ohne small { white-space: normal; } #druck .dpd-bed .ganz { display: block; column-span: all; color: var(--mut); margin-bottom: .4mm; }
   }
   /* KC-CLUB-PROTOKOLL-FILTER (2.23.36) */
   .pr-filter-raster { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; } .pr-filter-raster .feld { margin: 0; font-weight: 700; font-size: .9rem; } .pr-filter-raster select { width: 100%; margin-top: 4px; }
