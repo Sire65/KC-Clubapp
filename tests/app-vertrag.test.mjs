@@ -12886,3 +12886,12 @@ function idx0() { return lies("index.html"); }
   assert.ok(/ICH\?\.admin && !String\(m\.text \|\| ""\)\.startsWith\(VN_PRE\)[^\n]*naNachsenden\('\$\{id\}'\)/.test(html) && /async function naNachsenden\(id\)/.test(html), "Knopf im Nachrichten-Menü (nur Admin)");
   assert.ok(/api\("nachsenden_stumm", \{ id, nur_pruefen: true \}/.test(html) && /await frage\(`📨 Einmalig per E-Mail nachschicken\?/.test(html), "erst zeigen, dann fragen, dann senden");
 }
+// 2.654.0 KC-CLUB-SIMJUE-KARUSSELL (Wunsch Hansi „Rummelplatz umbauen: Kinderkarussell, Herz in der Mitte, Popcorn- und Zuckerwatte-Bude, Lauflicht – die jetzige Szene für nächstes Jahr speichern“)
+{
+  assert.ok(/const JZB_KIRMES_JAHR = \{ 2027: "riesenrad" \};/.test(programm) && /function jzbKirmesMalen\(c, F\) \{ return jzbKirmesVariante\(\) === "riesenrad" \? jzbKirmesRiesenradMalen\(c, F\) : jzbKirmesKarussellMalen\(c, F\); \}/.test(programm), "neue Szene, die alte für 2027 gespeichert");
+  assert.ok(/function jzbKirmesRiesenradMalen\(c, F\) \{/.test(programm) && /jzbSchiessbudeMalen\(c, F\);/.test(programm), "Riesenrad-Szene vollständig erhalten");
+  const ks = programm.slice(programm.indexOf("function jzbKirmesKarussellMalen("), programm.indexOf("function jzbKirmesMalen(c, F) { return"));
+  assert.ok(/jzbKinderkarussellMalen\(c, F\);/.test(ks) && /jzbHerzMalen\(c, hx, hy, k, F\.t, hg\);/.test(ks) && /jzbNaschbudeMalen\(c, F\);/.test(ks), "Karussell links, Herz Mitte, Naschbude rechts");
+  assert.ok((programm.match(/jzbLauflicht\(c, /g) || []).length >= 5 && /POPCORN · ZUCKERWATTE/.test(programm), "Lauflichter, Schild");
+  assert.ok(/!SPAR\?\.an && jzbKirmesVariante\(\) === "riesenrad"\);/.test(programm), "Rose aus der Schießbude nur, wenn sie im Bild ist – sonst Gruß-Variante");
+}

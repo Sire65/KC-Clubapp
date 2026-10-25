@@ -19860,7 +19860,7 @@ const ROSE_KEY = "kc_club_rose", ROSE_MS = 20000; // 2.653.0 KC-CLUB-ROSE-20S (W
 const ROSE = { ms: 0, letzt: 0, gezeigt: false };
 const roseLs = () => { try { return JSON.parse(localStorage.getItem(ROSE_KEY) || "null"); } catch { return null; } };
 const roseLsSetzen = (w) => { try { localStorage.setItem(ROSE_KEY, JSON.stringify(w)); } catch {} };
-const roseSzeneDa = () => !!(JZB.cv?.isConnected && JZB.saison === "kirmes" && JZB.imBild && JZB.w && jzSimJueZeit() && !SPAR?.an);
+const roseSzeneDa = () => !!(JZB.cv?.isConnected && JZB.saison === "kirmes" && JZB.imBild && JZB.w && jzSimJueZeit() && !SPAR?.an && jzbKirmesVariante() === "riesenrad"); // 2.654.0: nur wenn die Schießbude im Bild ist
 function roseFrei() {
   const a = document.activeElement, tippt = !!a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable);
   return !tippt && !document.querySelector(".blatt:not(.versteckt)") && !$("roseSchicht") && !RG?.an && !ES.offen;
@@ -20033,7 +20033,8 @@ function jzbSchiessbudeMalen(c, F) {
   c.font = `800 ${7.5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = Math.floor(T * 2) % 2 ? "#ffd23f" : "#fff3a0"; c.fillText("🎯 SCHIESSBUDE", x0 + bw / 2, dy - 9 * k - sh / 2 + .5 * k);
   c.restore(); void F;
 }
-function jzbKirmesMalen(c, F) {
+// 2.654.0: die Szene bis 25.10.2026 (Schießbude, Herz, Riesenrad mit Lauflicht) – gespeichert für 2027 (JZB_KIRMES_JAHR)
+function jzbKirmesRiesenradMalen(c, F) {
   const J = JZB, k = J.k, T = J.T, R = Math.max(22, Math.min(50, J.h * .34)) * Math.max(.8, k), cx = J.w - R - 40, cy = J.h - R - 13 * k;
   if (jzbSimJueFeuerwerk()) { c.fillStyle = "rgba(8,12,40,.5)"; c.fillRect(0, 0, J.w, J.h); } // 2.617.0: Nachthimmel beim großen Feuerwerk
   // 2.336.0 (Wunsch Hansi „ganz oben nichts – keine Wimpel usw.“): die Lichterkette hängt jetzt als Deko an der Leiste (KC-CLUB-DEKO)
@@ -20087,6 +20088,165 @@ function jzbKirmesMalen(c, F) {
   // Raketen mit Leuchtspur (die Funken zeichnet die Bühne)
   for (const r of F.raketen) { c.strokeStyle = "rgba(255,230,160,.8)"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(r.x, r.y); c.lineTo(r.x, r.y + 12 * k); c.stroke(); c.fillStyle = "#fff"; c.beginPath(); c.arc(r.x, r.y, 1.6, 0, 7); c.fill(); }
 }
+// ---- 2.654.0 KC-CLUB-SIMJUE-KARUSSELL (Wunsch Hansi 25.10.2026 „Rummelplatz umbauen: ein Kinderkarussell, das Herz bleibt in der Mitte, rechts eine
+// Popcorn- und Zuckerwatte-Bude – alles schön mit Rummel-Beleuchtung, Lauflicht. Die jetzige Szene gespeichert für nächstes Jahr“) ----
+// Links dreht sich ein Kinderkarussell (Pferdchen, Auto, Feuerwehr, Schwan – auf und ab, mit Kindern), Dach mit Zackenbehang und Lauflicht.
+// In der Mitte das große Lebkuchenherz wie bisher. Rechts die Naschbude: Popcornmaschine mit hüpfenden Körnern, Zuckerwatte-Kessel, in dem die
+// Watte am Stab wächst, Tüten und Watte auf der Theke, Schild mit umlaufendem Lauflicht. Die bisherige Szene (Schießbude + Riesenrad) bleibt als
+// „riesenrad“ gespeichert und kommt 2027 wieder (JZB_KIRMES_JAHR). Alles nur Bild, aus der Zeit berechnet.
+const JZB_KIRMES_JAHR = { 2027: "riesenrad" };
+const jzbKirmesVariante = (d = new Date()) => JZB_KIRMES_JAHR[d.getFullYear()] || "karussell";
+const JZB_LL_FARBEN = ["#ffe066", "#ff4d6d", "#3ec1ff", "#7bed6f", "#c77dff"];
+function jzbLauflicht(c, punkte, k, T, schritt = 8, abstand = 4) { // Rummel-Lauflicht: jede 4. Birne hell, das Muster läuft weiter, Farbe wechselt je Runde
+  const p = Math.floor(T * schritt), f = JZB_LL_FARBEN[Math.floor(p / punkte.length) % JZB_LL_FARBEN.length];
+  punkte.forEach(([x, y], i) => { const an = (i + p) % abstand === 0;
+    if (an) { c.fillStyle = f; c.globalAlpha = .35; c.beginPath(); c.arc(x, y, 3.2 * k, 0, 7); c.fill(); c.globalAlpha = 1; c.beginPath(); c.arc(x, y, 1.6 * k, 0, 7); c.fill(); }
+    else { c.fillStyle = "rgba(255,226,170,.55)"; c.beginPath(); c.arc(x, y, 1.05 * k, 0, 7); c.fill(); } });
+}
+function jzbKirmesBallons(c, F) {
+  const k = JZB.k;
+  for (const b of F.ballons) {
+    c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .8; c.beginPath(); c.moveTo(b.x, b.y + 9 * k); c.quadraticCurveTo(b.x + Math.sin(b.ph * 2) * 4, b.y + 17 * k, b.x, b.y + 25 * k); c.stroke();
+    c.fillStyle = b.farbe; c.beginPath(); c.ellipse(b.x, b.y, 6.5 * k, 8.5 * k, Math.sin(b.ph) * .1, 0, 7); c.fill();
+    c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(b.x - 2.2 * k, b.y - 3 * k, 1.5 * k, 2.4 * k, -.4, 0, 7); c.fill();
+    c.fillStyle = b.farbe; c.beginPath(); c.moveTo(b.x, b.y + 8 * k); c.lineTo(b.x - 1.6 * k, b.y + 10.5 * k); c.lineTo(b.x + 1.6 * k, b.y + 10.5 * k); c.fill();
+  }
+}
+function jzbKarussellFigur(c, typ, k, farbe) { // Figur im Ursprung (Füße/Boden bei y = 0), Blick nach rechts
+  const kind = (x, y, mz) => { c.fillStyle = mz; c.fillRect(x - 2 * k, y - 5 * k, 4 * k, 5 * k); c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(x, y - 7.2 * k, 2.3 * k, 0, 7); c.fill();
+    c.fillStyle = mz; c.beginPath(); c.arc(x, y - 8.2 * k, 2.4 * k, Math.PI, 0); c.fill(); };
+  if (typ === "pferd") {
+    c.fillStyle = farbe; c.beginPath(); c.ellipse(0, -6 * k, 7 * k, 3.4 * k, 0, 0, 7); c.fill(); // Rumpf
+    c.beginPath(); c.moveTo(4.5 * k, -8 * k); c.lineTo(7.5 * k, -14 * k); c.lineTo(10 * k, -12.6 * k); c.lineTo(7 * k, -6 * k); c.closePath(); c.fill(); // Hals
+    c.beginPath(); c.ellipse(9.6 * k, -13.4 * k, 2.8 * k, 1.6 * k, .4, 0, 7); c.fill(); // Kopf
+    c.strokeStyle = farbe; c.lineWidth = 1.6 * k; c.lineCap = "round"; c.beginPath(); c.moveTo(-5 * k, -4 * k); c.lineTo(-7 * k, 0); c.moveTo(-3 * k, -4 * k); c.lineTo(-2 * k, 0); c.moveTo(3 * k, -4 * k); c.lineTo(5 * k, -1 * k); c.moveTo(5 * k, -4 * k); c.lineTo(7.5 * k, -2 * k); c.stroke();
+    c.strokeStyle = "#e63946"; c.lineWidth = 1.2 * k; c.beginPath(); c.moveTo(5.5 * k, -9 * k); c.lineTo(8 * k, -15 * k); c.stroke(); // Mähne/Zaum
+    c.fillStyle = "#e63946"; c.fillRect(-2.6 * k, -10 * k, 5 * k, 1.6 * k); // Sattel
+    c.strokeStyle = "#8b5a2b"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(-7 * k, -7 * k); c.quadraticCurveTo(-10 * k, -5 * k, -9 * k, -1 * k); c.stroke(); // Schweif
+    kind(0, -9.6 * k, "#3a86ff");
+  } else if (typ === "auto") {
+    c.fillStyle = farbe; c.beginPath(); c.roundRect ? c.roundRect(-8 * k, -9 * k, 16 * k, 6 * k, 2 * k) : c.rect(-8 * k, -9 * k, 16 * k, 6 * k); c.fill();
+    c.fillStyle = "#222"; for (const x of [-5 * k, 5 * k]) { c.beginPath(); c.arc(x, -2.6 * k, 2.4 * k, 0, 7); c.fill(); }
+    c.fillStyle = "#ffd23f"; c.beginPath(); c.arc(7.4 * k, -6.5 * k, 1 * k, 0, 7); c.fill();
+    kind(-1 * k, -8 * k, "#ff9f1c"); c.strokeStyle = "#444"; c.lineWidth = 1 * k; c.beginPath(); c.arc(3 * k, -10 * k, 1.8 * k, 0, 7); c.stroke(); // Lenkrad
+  } else if (typ === "feuerwehr") {
+    c.fillStyle = "#d62828"; c.fillRect(-9 * k, -10 * k, 18 * k, 7 * k); c.fillRect(3 * k, -13 * k, 6 * k, 3 * k);
+    c.fillStyle = "#cfd5e0"; c.fillRect(-8 * k, -12 * k, 9 * k, 1.2 * k); for (let i = 0; i < 4; i++) c.fillRect(-7.5 * k + i * 2.4 * k, -12.6 * k, .7 * k, 2 * k); // Leiter
+    c.fillStyle = Math.floor(JZB.T * 4) % 2 ? "#3ec1ff" : "#1d3557"; c.fillRect(5 * k, -14.6 * k, 2.4 * k, 1.6 * k); // Blaulicht
+    c.fillStyle = "#222"; for (const x of [-5.5 * k, 5.5 * k]) { c.beginPath(); c.arc(x, -2.6 * k, 2.4 * k, 0, 7); c.fill(); }
+    kind(-1.5 * k, -10 * k, "#d62828");
+  } else { // Schwan
+    c.fillStyle = "#ffffff"; c.beginPath(); c.ellipse(-1 * k, -5.5 * k, 8 * k, 4 * k, 0, 0, 7); c.fill();
+    c.strokeStyle = "#ffffff"; c.lineWidth = 2.4 * k; c.lineCap = "round"; c.beginPath(); c.moveTo(5 * k, -7 * k); c.quadraticCurveTo(10 * k, -10 * k, 7 * k, -15 * k); c.stroke();
+    c.fillStyle = "#ff9f1c"; c.beginPath(); c.moveTo(7.5 * k, -15.5 * k); c.lineTo(10.5 * k, -14.6 * k); c.lineTo(7.5 * k, -14 * k); c.fill();
+    c.fillStyle = "#e6e9f0"; c.beginPath(); c.ellipse(-3 * k, -7 * k, 4 * k, 2.2 * k, -.3, 0, 7); c.fill(); // Flügel
+    kind(-2 * k, -8 * k, "#c77dff");
+  }
+}
+function jzbKinderkarussellMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, cx = JZB_RAND + 52 * k, unten = J.h - 3 * k, boden = unten - 5 * k, rx = 46 * k, ry = 7 * k;
+  const krempe = unten - 33 * k, spitze = unten - 52 * k, dreh = T * .75; // eine Runde in gut 8 Sekunden
+  c.save();
+  // Bodenplatte (Sockel, Holzdielen-Rand) – hinten zuerst
+  c.fillStyle = "#7b4a2a"; c.beginPath(); c.ellipse(cx, boden + 2.5 * k, rx + 2 * k, ry + 1 * k, 0, 0, 7); c.fill();
+  c.fillStyle = "#c98b4f"; c.beginPath(); c.ellipse(cx, boden, rx, ry, 0, 0, 7); c.fill();
+  c.strokeStyle = "rgba(90,50,20,.35)"; c.lineWidth = .8; for (let i = 0; i < 12; i++) { const a = dreh + i / 12 * Math.PI * 2; c.beginPath(); c.moveTo(cx, boden); c.lineTo(cx + Math.cos(a) * rx, boden + Math.sin(a) * ry); c.stroke(); }
+  // Figuren auf der Platte, je nach Tiefe sortiert (hinten = sin < 0 zuerst)
+  const figuren = [["pferd", "#ffffff"], ["auto", "#3ec1ff"], ["pferd", "#8b5a2b"], ["feuerwehr", ""], ["pferd", "#f4d35e"], ["schwan", ""]].map(([typ, farbe], i) => {
+    const a = dreh + i / 6 * Math.PI * 2, s = Math.sin(a); return { typ, farbe, i, x: cx + Math.cos(a) * rx * .72, y: boden + s * ry * .72, s, dir: Math.sin(a) >= 0 ? -1 : 1 }; }).sort((a, b) => a.s - b.s);
+  const mitte = () => { // Mittelsäule mit Spiegelflächen
+    const g = c.createLinearGradient(cx - 6 * k, 0, cx + 6 * k, 0); g.addColorStop(0, "#c9a227"); g.addColorStop(.5, "#fff3a0"); g.addColorStop(1, "#c9a227");
+    c.fillStyle = g; c.fillRect(cx - 6 * k, krempe, 12 * k, boden - krempe);
+    for (let j = 0; j < 4; j++) { c.fillStyle = j % 2 ? "#3ec1ff" : "#ff4d6d"; c.fillRect(cx - 4 * k, krempe + 3 * k + j * 6 * k, 8 * k, 4 * k); } };
+  let saeule = false;
+  for (const f of figuren) {
+    if (!saeule && f.s >= 0) { mitte(); saeule = true; }
+    const auf = Math.sin(T * 2.6 + f.i * 1.3) * (f.typ === "pferd" ? 3 : 1) * k, sc = .78 + .22 * (f.s + 1) / 2;
+    c.strokeStyle = "#e9c46a"; c.lineWidth = 1.1 * k; c.beginPath(); c.moveTo(f.x, krempe + 4 * k); c.lineTo(f.x, f.y); c.stroke(); // Messingstange
+    c.save(); c.translate(f.x, f.y - 3 * k + auf); c.scale(sc * f.dir, sc); c.globalAlpha = f.s < -.3 ? .85 : 1; jzbKarussellFigur(c, f.typ, k, f.farbe); c.restore();
+  }
+  if (!saeule) mitte();
+  // Dach: Kegel mit bunten Bahnen, Krempe, Zackenbehang, Spitze mit Fähnchen
+  const bahnen = 10;
+  for (let i = 0; i < bahnen; i++) { const a0 = -Math.PI + i / bahnen * Math.PI, a1 = -Math.PI + (i + 1) / bahnen * Math.PI; // vordere Hälfte reicht für die Ansicht
+    c.fillStyle = i % 2 ? "#ffffff" : "#e63946"; c.beginPath(); c.moveTo(cx, spitze); c.lineTo(cx + Math.cos(a0) * (rx + 3 * k), krempe - Math.sin(a0) * 0); c.lineTo(cx + Math.cos(a1) * (rx + 3 * k), krempe); c.closePath(); c.fill(); }
+  c.fillStyle = "#1d3557"; c.beginPath(); c.ellipse(cx, krempe, rx + 4 * k, 3 * k, 0, 0, Math.PI); c.fill(); c.fillRect(cx - rx - 4 * k, krempe - 2.6 * k, (rx + 4 * k) * 2, 2.6 * k);
+  const zacken = 14;
+  for (let i = 0; i < zacken; i++) { const xa = cx - rx - 4 * k + i * (rx + 4 * k) * 2 / zacken, b = (rx + 4 * k) * 2 / zacken;
+    c.fillStyle = i % 2 ? "#ffd23f" : "#e63946"; c.beginPath(); c.moveTo(xa, krempe + 1.5 * k); c.lineTo(xa + b, krempe + 1.5 * k); c.lineTo(xa + b / 2, krempe + 6.5 * k); c.closePath(); c.fill(); }
+  c.strokeStyle = "#8b5a2b"; c.lineWidth = 1 * k; c.beginPath(); c.moveTo(cx, spitze); c.lineTo(cx, spitze - 8 * k); c.stroke();
+  c.fillStyle = "#ffd23f"; c.beginPath(); c.moveTo(cx, spitze - 8 * k); c.lineTo(cx + 7 * k + Math.sin(T * 5) * 1.2 * k, spitze - 6.5 * k); c.lineTo(cx, spitze - 4.5 * k); c.closePath(); c.fill();
+  // Lauflicht: an der Krempe, die Dachkanten hoch und unten um die Platte
+  const ll = [];
+  for (let i = 0; i <= 22; i++) ll.push([cx - rx - 3 * k + i * (rx + 3 * k) * 2 / 22, krempe - 1.3 * k]);
+  jzbLauflicht(c, ll, k, T, 9, 4);
+  const kante = []; for (let i = 1; i <= 7; i++) { const q = i / 8; kante.push([cx - (rx + 3 * k) * (1 - q), krempe - (krempe - spitze) * q]); } for (let i = 7; i >= 1; i--) { const q = i / 8; kante.push([cx + (rx + 3 * k) * (1 - q), krempe - (krempe - spitze) * q]); }
+  jzbLauflicht(c, kante, k, T, 7, 3);
+  const rand = []; for (let i = 0; i < 18; i++) { const a = i / 17 * Math.PI; rand.push([cx - Math.cos(a) * (rx + 1 * k), boden + Math.sin(a) * (ry + 1 * k) + 1.5 * k]); }
+  jzbLauflicht(c, rand, k, T + .5, 9, 4);
+  c.restore(); void F;
+}
+function jzbNaschbudeMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, bw = 108 * k, x1 = J.w - JZB_RAND - 2 * k, x0 = x1 - bw, unten = J.h - 3 * k, oben = unten - 36 * k, theke = unten - 12 * k;
+  c.save();
+  // Rückwand rosa mit Streifen
+  c.fillStyle = "#ffd6e8"; c.fillRect(x0, oben, bw, theke - oben); c.fillStyle = "rgba(255,255,255,.45)"; for (let i = 0; i < 9; i++) c.fillRect(x0 + i * bw / 9, oben, bw / 18, theke - oben);
+  // 🍿 Popcornmaschine links: rote Kiste mit Glas, Körner hüpfen, oben quillt es über
+  const px = x0 + 8 * k, pw = 30 * k, py = oben + 3 * k, ph = theke - py - 1 * k;
+  c.fillStyle = "#c1121f"; c.fillRect(px, py, pw, ph); c.fillStyle = "rgba(255,248,220,.85)"; c.fillRect(px + 2.5 * k, py + 4 * k, pw - 5 * k, ph - 9 * k);
+  c.fillStyle = "#ffd23f"; c.fillRect(px - 1 * k, py - 1.5 * k, pw + 2 * k, 2.5 * k);
+  c.fillStyle = "#fffbe6"; c.beginPath(); for (let i = 0; i < 9; i++) c.arc(px + 4 * k + i * (pw - 8 * k) / 8, py + ph - 6 * k - (i % 3) * .8 * k, 2.4 * k, 0, 7); c.fill(); // Popcornberg im Glas
+  c.fillStyle = "#c9a227"; c.fillRect(px + pw / 2 - 4 * k, py + 4.5 * k, 8 * k, 3 * k); // Kessel
+  for (let j = 0; j < 14; j++) { const p = (T * 1.25 + j * .137) % 1, sx = px + pw / 2 + Math.sin(j * 2.1) * (pw * .32) * p, sy = py + 7 * k - Math.sin(p * Math.PI) * 3 * k + p * (ph - 13 * k);
+    c.fillStyle = j % 3 ? "#fffbe6" : "#ffe9a8"; c.beginPath(); c.arc(sx, sy, (1.1 + (j % 2) * .4) * k, 0, 7); c.fill(); }
+  c.font = `800 ${4.6 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#ffd23f"; c.fillText("POPCORN", px + pw / 2, py + ph - 2.4 * k);
+  // 🍭 Zuckerwatte rechts: silberner Kessel, darin dreht sich die Watte; am Stab wächst eine Wolke (alle 9 s neu)
+  const zx = x1 - 20 * k, zy = theke - 2 * k, zr = 11 * k;
+  c.fillStyle = "#aeb6c2"; c.beginPath(); c.ellipse(zx, zy - 5 * k, zr, 3.6 * k, 0, 0, 7); c.fill(); c.fillRect(zx - zr, zy - 5 * k, zr * 2, 5 * k);
+  c.fillStyle = "#dfe4ea"; c.beginPath(); c.ellipse(zx, zy - 5 * k, zr - 1.5 * k, 2.6 * k, 0, 0, 7); c.fill();
+  c.strokeStyle = "rgba(255,140,200,.75)"; c.lineWidth = .8 * k; for (let i = 0; i < 5; i++) { const a = T * 6 + i * 1.26; c.beginPath(); c.ellipse(zx, zy - 6 * k, (zr - 3 * k) * (.4 + i * .12), 1.6 * k, 0, a, a + 2.4); c.stroke(); }
+  const w = (T % 9) / 9, wr = (2 + w * 7) * k, sx = zx + Math.sin(T * 1.3) * 1.5 * k;
+  c.strokeStyle = "#f5f0e6"; c.lineWidth = 1 * k; c.beginPath(); c.moveTo(sx, zy - 6 * k); c.lineTo(sx, zy - 6 * k - 11 * k); c.stroke();
+  c.fillStyle = "rgba(255,150,205,.92)"; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + T; c.beginPath(); c.arc(sx + Math.cos(a) * wr * .45, zy - 6 * k - 9 * k + Math.sin(a) * wr * .4, wr * .62, 0, 7); c.fill(); }
+  c.fillStyle = "rgba(255,255,255,.35)"; c.beginPath(); c.arc(sx - wr * .3, zy - 16 * k - wr * .2, wr * .3, 0, 7); c.fill();
+  c.font = `800 ${4.6 * k}px "Trebuchet MS",sans-serif`; c.fillStyle = "#c2185b"; c.fillText("ZUCKERWATTE", zx - 4 * k, oben + 4.5 * k);
+  // Theke mit Glühbirnen, darauf Popcorn-Tüten und fertige Zuckerwatte
+  const tg = c.createLinearGradient(0, theke, 0, unten); tg.addColorStop(0, "#ff4d8d"); tg.addColorStop(1, "#a3134f"); c.fillStyle = tg; c.fillRect(x0, theke, bw, unten - theke);
+  c.fillStyle = "#5a3b1e"; c.fillRect(x0, theke - 1.6 * k, bw, 2.4 * k);
+  for (let i = 0; i < 3; i++) { const tx = x0 + 44 * k + i * 7.5 * k, ty = theke - 1.6 * k; // Tüten rot-weiß gestreift
+    c.fillStyle = "#ffffff"; c.beginPath(); c.moveTo(tx - 3 * k, ty - 9 * k); c.lineTo(tx + 3 * k, ty - 9 * k); c.lineTo(tx + 2.2 * k, ty); c.lineTo(tx - 2.2 * k, ty); c.closePath(); c.fill();
+    c.fillStyle = "#e63946"; c.fillRect(tx - 1.6 * k, ty - 9 * k, 1.1 * k, 9 * k); c.fillRect(tx + .6 * k, ty - 9 * k, 1.1 * k, 9 * k);
+    c.fillStyle = "#fffbe6"; for (let j = 0; j < 3; j++) { c.beginPath(); c.arc(tx - 2 * k + j * 2 * k, ty - 10 * k - (j % 2) * k, 1.7 * k, 0, 7); c.fill(); } }
+  for (const [vx, farbe] of [[x0 + 66 * k, "rgba(255,150,205,.95)"], [x0 + 74 * k, "rgba(150,205,255,.95)"]]) { // Watte im Ständer
+    c.strokeStyle = "#f5f0e6"; c.lineWidth = .9 * k; c.beginPath(); c.moveTo(vx, theke - 1.6 * k); c.lineTo(vx, theke - 10 * k); c.stroke();
+    c.fillStyle = farbe; c.beginPath(); c.arc(vx, theke - 13 * k, 4 * k, 0, 7); c.arc(vx - 2.4 * k, theke - 11 * k, 3 * k, 0, 7); c.arc(vx + 2.4 * k, theke - 11.4 * k, 3 * k, 0, 7); c.fill(); }
+  jzbLauflicht(c, Array.from({ length: 13 }, (_, i) => [x0 + 5 * k + i * (bw - 10 * k) / 12, theke + 4 * k]), k, T, 8, 3); // Theke
+  c.fillStyle = "#8b5a2b"; c.fillRect(x0 - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k); c.fillRect(x1 - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k);
+  // Markise rosa-weiß mit Bögen, darüber das Schild mit umlaufendem Lauflicht
+  const dy = oben - 4 * k, st = 10;
+  for (let i = 0; i < st; i++) { const a = x0 - 4 * k + i * (bw + 8 * k) / st, b = (bw + 8 * k) / st; c.fillStyle = i % 2 ? "#ffffff" : "#ff5fa2";
+    c.beginPath(); c.moveTo(a, dy - 9 * k); c.lineTo(a + b, dy - 9 * k); c.lineTo(a + b, dy); c.quadraticCurveTo(a + b / 2, dy + 5 * k, a, dy); c.closePath(); c.fill(); }
+  const sw = 92 * k, sh = 13 * k, sx0 = x0 + bw / 2 - sw / 2, sy0 = dy - 9 * k - sh;
+  c.fillStyle = "#3b1d5a"; c.fillRect(sx0, sy0, sw, sh);
+  c.font = `800 ${7 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = Math.floor(T * 2) % 2 ? "#ffd23f" : "#fff3a0";
+  c.fillText("🍿 POPCORN · ZUCKERWATTE 🍭", x0 + bw / 2, sy0 + sh / 2 + .5 * k);
+  const rahmen = [], n = 16, m = 4; // Birnen rund um das Schild
+  for (let i = 0; i < n; i++) rahmen.push([sx0 + i * sw / n, sy0 - 1 * k]); for (let i = 0; i < m; i++) rahmen.push([sx0 + sw + 1 * k, sy0 + i * sh / m]);
+  for (let i = n; i > 0; i--) rahmen.push([sx0 + i * sw / n, sy0 + sh + 1 * k]); for (let i = m; i > 0; i--) rahmen.push([sx0 - 1 * k, sy0 + i * sh / m]);
+  jzbLauflicht(c, rahmen, k, T, 12, 4);
+  c.restore(); void F;
+}
+function jzbKirmesKarussellMalen(c, F) {
+  const J = JZB, k = J.k;
+  if (jzbSimJueFeuerwerk()) { c.fillStyle = "rgba(8,12,40,.5)"; c.fillRect(0, 0, J.w, J.h); }
+  jzbKirmesBallons(c, F);
+  jzbKinderkarussellMalen(c, F);
+  const hg = 1.8, hb = 16 * k * hg, hx = Math.max(JZB_RAND + 150 * k, J.w * .5), hy = J.h - 3 * k - 4 * k - 1.465 * hb; // Herz bleibt in der Mitte
+  jzbPfostenMalen(c, hx - hb * 1.45, hy, hx + 1 * k); jzbHerzMalen(c, hx, hy, k, F.t, hg);
+  jzbNaschbudeMalen(c, F);
+  for (const r of F.raketen) { c.strokeStyle = "rgba(255,230,160,.8)"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(r.x, r.y); c.lineTo(r.x, r.y + 12 * k); c.stroke(); c.fillStyle = "#fff"; c.beginPath(); c.arc(r.x, r.y, 1.6, 0, 7); c.fill(); }
+}
+function jzbKirmesMalen(c, F) { return jzbKirmesVariante() === "riesenrad" ? jzbKirmesRiesenradMalen(c, F) : jzbKirmesKarussellMalen(c, F); }
 // ---- 🥨 Oktoberfest ----
 function jzbWiesnFass() { const J = JZB, k = J.k, r = Math.max(13, Math.min(22, J.h * .15)) * Math.max(.8, k), fx = J.w - r * 1.6 - 46; return { fx, fy: J.h - 2 - 10 * k - r, r, kx: fx - r * 1.55, ky: J.h - 2 }; }
 const jzbWiesnKrugMitte = () => JZB.w * .5;
@@ -27398,7 +27558,7 @@ function ilMeldungen() {
     auf: "zeige('vorschlaege')", knoepfe: [...(th.anzahl ? [["👍 Abstimmen", "zeige('vorschlaege')"]] : []), ["＋ Thema", `ilThemaNeu('${esc(th.treffen)}')`]] });
   if (themaFestZeit() === "simjue") { const aus = jzSimJueAus(); // 2.619.0 KC-CLUB-SIMJUE-SCHALTER
     add({ id: "simjue:" + new Date().getFullYear() + (aus ? ":aus" : ""), stufe: "gold", sym: "🎡", t: aus ? "Sim-Jü im Kopf ist ausgeschaltet" : "Sim-Jü im Kopf der Startseite",
-      u: aus ? "Riesenrad, Schießbude und Feuerwerk wieder anzeigen?" : "Gefällt dir nicht? Hier kannst du es ausschalten", knoepfe: [[aus ? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten()"]] }); }
+      u: aus ? "Kinderkarussell, Naschbude und Feuerwerk wieder anzeigen?" : "Gefällt dir nicht? Hier kannst du es ausschalten", knoepfe: [[aus ? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten()"]] }); }
   // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (Wunschliste #20): angekündigte Termine (z. B. Adventsmarkt der Freilichtbühne) – mit 🌐 Webseite
   { const ah = akHeute(); if (ah && akAn() && !akOffen().includes(ah)) add({ id: "advent:" + ah, stufe: "gold", sym: "🎄", t: `Adventskalender: Türchen ${ah} wartet auf dich`, u: "Antippen und öffnen", auf: "akZeigen()" }); } // 2.468.0 KC-CLUB-ADVENTSKALENDER
   for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,
