@@ -20143,8 +20143,9 @@ function jzbKarussellFigur(c, typ, k, farbe) { // Figur im Ursprung (Füße/Bode
     kind(-2 * k, -8 * k, "#c77dff");
   }
 }
+const JZB_KARUSSELL_GROESSE = 1.35; // 2.654.0 (Wunsch Hansi „das Kinderkarussell etwas größer“)
 function jzbKinderkarussellMalen(c, F) {
-  const J = JZB, k = J.k, T = J.T, cx = JZB_RAND + 52 * k, unten = J.h - 3 * k, boden = unten - 5 * k, rx = 46 * k, ry = 7 * k;
+  const J = JZB, k = J.k * JZB_KARUSSELL_GROESSE, T = J.T, cx = JZB_RAND + 52 * k, unten = J.h - 3 * J.k, boden = unten - 10 * k, rx = 46 * k, ry = 7 * k;
   const krempe = unten - 33 * k, spitze = unten - 52 * k, dreh = T * .75; // eine Runde in gut 8 Sekunden
   c.save();
   // Bodenplatte (Sockel, Holzdielen-Rand) – hinten zuerst
