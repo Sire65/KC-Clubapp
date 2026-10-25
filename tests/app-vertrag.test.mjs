@@ -12905,3 +12905,7 @@ function idx0() { return lies("index.html"); }
   assert.ok(/SCHT_STAERKE = \{ leicht:.*mittel:.*kraeftig:.*sehr:/.test(programm) && /SCHT_FARBEN = \{ auto:/.test(programm) && /SCHT_POS = \{ unten:.*rechts:.*links:.*oben:.*rundum:/.test(programm), "Stärke, Farbe, Position");
   assert.ok(/suWahlZeigen\(\); kopfEffektEinstellungen\(\); schattenEinstellungen\(\);/.test(programm) && /try \{ schattenAnwenden\(\); \} catch \{\}/.test(programm), "beim Laden angewendet, Einstellungen gefüllt");
 }
+// 2.657.0 KC-CLUB-SCHATTEN-KOPFFELDER (Frage Hansi „Hat der Kopfbereich auch Schatten und darauf die Felder?“)
+{
+  assert.ok(/:where\(:root\.sch-an\) :is\(\.hero \.info, \.hero \.mini, \.hero \.rund, \.hero \.ipfeil, \.hero \.statusleiste, \.hero \.logo\) \{ box-shadow: var\(--sch-box\); \}/.test(html), "Felder auf dem Kopf mit Schatten");
+}

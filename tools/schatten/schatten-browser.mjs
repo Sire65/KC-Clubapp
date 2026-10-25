@@ -20,6 +20,9 @@ await seite.evaluate(() => schattenSpeichern({ an: true, staerke: "kraeftig", fa
 const hero = await schatten("#v-start .hero"), knopf = await seite.evaluate(() => { const k = document.querySelector(".knopf"); return getComputedStyle(k).boxShadow; });
 ok(hero !== vorher && /rgba\(29, 78, 137, 0\.45\) 12px 12px 38px/.test(hero), "Kopf: großer blauer Schatten unten rechts – " + hero);
 ok(/rgba\(29, 78, 137, 0\.45\) 8px 8px 24px/.test(knopf), "Knopf: Schatten – " + knopf);
+const felder = await seite.evaluate(() => { const h = document.querySelector("#v-start .hero"), m = document.createElement("button"); m.className = "mini"; h.appendChild(m);
+  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste"].map((s) => getComputedStyle(h.querySelector(s)).boxShadow); m.remove(); return r; });
+ok(felder.every((x) => /rgba\(29, 78, 137, 0\.45\) 8px 8px 24px/.test(x)), "2.657.0: Felder auf dem Kopf (Infofeld, Zahlen-Felder, runde Knöpfe, Logo, Statusleiste) – " + felder.join(" | "));
 if (bilder) await weg(), await seite.screenshot({ path: path.join(bilder, "schatten-hell.png") });
 await seite.evaluate(() => { document.documentElement.classList.add("dunkel"); schattenSpeichern({ farbe: "auto", pos: "oben", staerke: "sehr" }); });
 ok(/rgba\(0, 0, 0, 0\.62\) 0px -14px 32px/.test(await schatten(".kachel")), "dunkel + automatisch: schwarz, oben, sehr kräftig");

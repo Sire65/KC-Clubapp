@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.657.0 – 2026-10-26 – 🌗 Schatten auch für die Felder auf dem Kopf (KC-CLUB-SCHATTEN-KOPFFELDER)
+- Frage Hansi („Hat der Kopfbereich auch Schatten und darauf die Felder?“): Der Kopf hatte ihn schon, jetzt auch die Felder darauf – Infofeld (z. B. „Kein Termin geplant“), die Zahlen-Felder (Neue Nachrichten, Mitglieder, Clubtreffen …), Sonne und ↻, Blätter-Pfeile, Statusleiste und Logo. Nur wenn „🌗 Schatten“ an ist; Stärke, Farbe und Position wie eingestellt. Mahn-Felder mit eigenem Rahmen bleiben. Nur App.
+
 ## 2.656.0 – 2026-10-26 – 🌗 Schatten einstellbar (KC-CLUB-SCHATTEN)
 - Wunsch Hansi („Schatten bei allen Elementen wie Knöpfe, Kopf usw. – unter Effekte einstellen: Stärke, Farbe, Position, einklappbar“): ⚙️ → „✨ Effekte“ → **„🌗 Schatten“** (je Gerät, Standard aus = wie bisher). Darunter einklappbar **„🌗 Schatten einstellen“** mit kleiner Vorschau: **💪 Stärke** (leicht, mittel, kräftig, sehr kräftig), **🎨 Farbe** (automatisch – braun im hellen, schwarz im dunklen Bild –, Schwarz, Braun, Weinrot, Blau, Grün, Gold oder eigene Farbe), **📍 Position** (unten, unten rechts, unten links, oben, rundum wie ein Leuchten). Gilt für Knöpfe, Kacheln, Karten, Chips, Sprechblasen, Umschalter, Fußleiste, Spiele-Kacheln und den Kopf (größerer Schatten). Knöpfe mit eigenem Leuchten und der Inkognito-Rahmen bleiben unverändert.
 - Hilfe-Eintrag, Twinkey-Frage, Lupe-Eintrag. Tests: Vertragstest-Block 2.656.0, `tools/schatten/schatten-browser.mjs`. Nur App.
