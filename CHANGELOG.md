@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.655.0 – 2026-10-26 – 🎠 Kinderkarussell dreht langsamer (KC-CLUB-SIMJUE-KARUSSELL-2)
+- Wunsch Hansi („Scene passt gut, allerdings dreht sich das Karussell zu schnell“): eine Runde dauert jetzt gut 20 statt 8 Sekunden, die Pferdchen gehen gemächlicher auf und ab. Nur App.
+
 ## 2.654.0 – 2026-10-25 – 📨 Nachricht per E-Mail nachschicken (Admin) · ✉️ Rundmails immer über web.de · 🎠 Sim-Jü: Kinderkarussell und Naschbude (KC-CLUB-NACHSENDEN, KC-COMM-WEBDE-IMMER, KC-CLUB-SIMJUE-KARUSSELL) · Server 2.654.0 · Communicator Router v25
 Anlass 25.10.: Die Besetzungsmatrix (Rundnachricht an alle) erreichte Thomas nicht – er steht auf „Keine Benachrichtigungen“; zwei von Hand nachgeschobene Mails liefen über Brevo (Spam-Ordner). Und die Ankündigung ging als Express zu 13 von 16 über Brevo. Wunsch Hansi: „Ja, Knopf bauen und Rundmails immer über web.de“.
 - **📨 Per E-Mail nachschicken** (nur Admin): Nachricht antippen → „📨 Per E-Mail nachschicken (an ‚Keine Benachrichtigungen‘)“. Die App zeigt, wer in diesem Chat wegen „Keine Benachrichtigungen“ oder einer stummen Sperre nichts bekommen hat, und schickt genau diese Nachricht mit Anlagen **einmal** per E-Mail – persönliche Anrede, Betreff des Chats, Link in die App, über den normalen Versandweg (web.de). Die Einstellung der Person bleibt; dieselbe Nachricht an dieselbe Person geht nie zweimal raus. Verschlüsselte Nachrichten nicht. Server: Aktion `nachsenden_stumm` (nur Admin, mit `nur_pruefen`), `routerSenden(…, { trotzStumm })` nur dafür.

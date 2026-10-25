@@ -12893,6 +12893,7 @@ function idx0() { return lies("index.html"); }
   const ks = programm.slice(programm.indexOf("function jzbKirmesKarussellMalen("), programm.indexOf("function jzbKirmesMalen(c, F) { return"));
   assert.ok(/jzbKinderkarussellMalen\(c, F\);/.test(ks) && /jzbHerzMalen\(c, hx, hy, k, F\.t, hg\);/.test(ks) && /jzbNaschbudeMalen\(c, F\);/.test(ks), "Karussell links, Herz Mitte, Naschbude rechts");
   assert.ok(/const JZB_KARUSSELL_GROESSE = 1\.35;/.test(programm), "Karussell größer (Wunsch Hansi)");
+  assert.ok(/dreh = T \* \.3;/.test(programm), "2.655.0: Karussell dreht langsamer");
   assert.ok((programm.match(/jzbLauflicht\(c, /g) || []).length >= 5 && /POPCORN · ZUCKERWATTE/.test(programm), "Lauflichter, Schild");
   assert.ok(/!SPAR\?\.an && jzbKirmesVariante\(\) === "riesenrad"\);/.test(programm), "Rose aus der Schießbude nur, wenn sie im Bild ist – sonst Gruß-Variante");
 }

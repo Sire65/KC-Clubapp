@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.654.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.655.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20146,7 +20146,7 @@ function jzbKarussellFigur(c, typ, k, farbe) { // Figur im Ursprung (Füße/Bode
 const JZB_KARUSSELL_GROESSE = 1.35; // 2.654.0 (Wunsch Hansi „das Kinderkarussell etwas größer“)
 function jzbKinderkarussellMalen(c, F) {
   const J = JZB, k = J.k * JZB_KARUSSELL_GROESSE, T = J.T, cx = JZB_RAND + 52 * k, unten = J.h - 3 * J.k, boden = unten - 10 * k, rx = 46 * k, ry = 7 * k;
-  const krempe = unten - 33 * k, spitze = unten - 52 * k, dreh = T * .75; // eine Runde in gut 8 Sekunden
+  const krempe = unten - 33 * k, spitze = unten - 52 * k, dreh = T * .3; // eine Runde in gut 20 Sekunden (2.655.0 Wunsch Hansi „dreht sich zu schnell“, vorher gut 8 s)
   c.save();
   // Bodenplatte (Sockel, Holzdielen-Rand) – hinten zuerst
   c.fillStyle = "#7b4a2a"; c.beginPath(); c.ellipse(cx, boden + 2.5 * k, rx + 2 * k, ry + 1 * k, 0, 0, 7); c.fill();
@@ -20162,7 +20162,7 @@ function jzbKinderkarussellMalen(c, F) {
   let saeule = false;
   for (const f of figuren) {
     if (!saeule && f.s >= 0) { mitte(); saeule = true; }
-    const auf = Math.sin(T * 2.6 + f.i * 1.3) * (f.typ === "pferd" ? 3 : 1) * k, sc = .78 + .22 * (f.s + 1) / 2;
+    const auf = Math.sin(T * 1.4 + f.i * 1.3) * (f.typ === "pferd" ? 3 : 1) * k, sc = .78 + .22 * (f.s + 1) / 2;
     c.strokeStyle = "#e9c46a"; c.lineWidth = 1.1 * k; c.beginPath(); c.moveTo(f.x, krempe + 4 * k); c.lineTo(f.x, f.y); c.stroke(); // Messingstange
     c.save(); c.translate(f.x, f.y - 3 * k + auf); c.scale(sc * f.dir, sc); c.globalAlpha = f.s < -.3 ? .85 : 1; jzbKarussellFigur(c, f.typ, k, f.farbe); c.restore();
   }
