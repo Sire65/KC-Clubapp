@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.630.0 – 2026-10-25 – Vertretung: E-Mail an das vertretene Mitglied
+KC-CLUB-VERTRETUNG-MAIL (Hansi 25.10.: „Ja, Ruth hat E-Mail“): Handelt ein Mitglied für ein anderes, bekommt das vertretene Mitglied nach jedem gespeicherten Schritt eine E-Mail, z. B. „Karla hat beim Termin „Clubabend“ für dich zugesagt“. Dienstwünsche höchstens eine Mail am Tag (Twinkey speichert bei jeder Änderung); dieselbe Meldung nie doppelt (erst Protokoll, dann senden). Läuft im Hintergrund, der Vertreter wartet nicht. Server 2.630.0.
+
 ## 2.629.0 – 2026-10-25 – Vertretung: für ein anderes Mitglied handeln
 KC-CLUB-VERTRETUNG (Wunschliste #35, Wunsch Hansi „Karla darf für Ruth“): Der Admin legt in der Mitgliedskarte unter „🤝 Darf für … handeln“ fest, für wen ein Mitglied handeln darf (höchstens 5). Dieses Mitglied sieht in Termine, Abstimmungen und Dienstwünsche „Handeln für: 👤 Mich · 🤝 Ruth“ und unten die Leiste „🤝 Für Ruth – ✖ Beenden“. Erlaubt sind nur Termine zu-/absagen, Terminumfragen, Dienstwünsche (Twinkey) und Abstimmungen (nicht geheime). Nachrichten, Daten und Rechte nie. Der Server prüft die Erlaubnis bei jeder Anfrage neu, nutzt Rechte und Sperre des Vertretenen und schreibt jeden Schritt bei beiden ins Protokoll. Der Modus gilt nur bis zum Neustart der App und nie im Notbetrieb. Server 2.629.0.
 

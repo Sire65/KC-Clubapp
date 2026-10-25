@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.629.0";
+const SERVER_VERSION = "2.630.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1623,6 +1623,41 @@ async function vertretungIch(ich: Ich, fuer: string, a: string): Promise<Ich> {
   if (!ziel) throw new Fehler("Dieses Mitglied ist nicht mehr aktiv.", 404);
   if (!ziel.admin && await sperreFuer(ziel.person_id)) throw new Fehler("Dieses Mitglied ist im Moment gesperrt.", 423);
   return { ...ziel, vertreter: { person_id: ich.person_id, name: ich.name, vorname: ich.vorname } };
+}
+// 2.630.0 KC-CLUB-VERTRETUNG-MAIL (Hansi 25.10.: „Ja, Ruth hat E-Mail“): Das vertretene Mitglied bekommt nach jedem gespeicherten Schritt
+// eine E-Mail „Karla hat für dich … zugesagt“. Dienstwünsche speichert Twinkey bei jeder Änderung – dafür höchstens eine Mail am Tag.
+// Gleiche Meldung nie doppelt: erst im Protokoll merken (vertretung_mail mit Schlüssel), dann senden. Läuft im Hintergrund.
+const VT_ANTWORT: Record<string, string> = { ja: "zugesagt", nein: "abgesagt", vielleicht: "mit „Vielleicht“ geantwortet", keine: "die Antwort zurückgenommen", "": "die Antwort zurückgenommen" };
+async function vertretungMelden(von: Ich, fuer: Ich, a: string, p: any) {
+  let was = "", schluessel = `${a}:`;
+  if (a === "treffen_antwort") {
+    const { data: t } = await db.from("kc_club_treffen").select("titel,beginn").eq("id", String(p.id || "")).maybeSingle();
+    if (!t) return;
+    const ant = String(p.antwort || "");
+    was = `beim Termin „${t.titel}“ (${wann(t.beginn)}) ${VT_ANTWORT[ant] ?? "geantwortet"}`; schluessel += `${p.id}:${ant}`;
+  } else if (a === "terminumfrage_antwort") {
+    const { data: o } = await db.from("kc_club_terminumfrage_optionen").select("umfrage_id,beginn").eq("id", String(p.option_id || "")).maybeSingle();
+    const { data: u } = o ? await db.from("kc_club_terminumfragen").select("titel").eq("id", o.umfrage_id).maybeSingle() : { data: null };
+    const ant = String(p.antwort || "");
+    was = `bei der Terminfindung „${u?.titel ?? "Termin"}“${o?.beginn ? ` für ${wann(o.beginn)}` : ""} ${VT_ANTWORT[ant] ?? "geantwortet"}`; schluessel += `${p.option_id}:${ant}`;
+  } else if (a === "vorschlag_stimme") {
+    const { data: v } = await db.from("kc_club_vorschlaege").select("titel").eq("id", String(p.id || "")).maybeSingle();
+    if (!v) return;
+    const leer = p.wahl === "" || p.wahl == null || p.wahl === false || (Array.isArray(p.wahl) && !p.wahl.length);
+    was = leer ? `bei „${v.titel}“ die Stimme zurückgenommen` : `bei „${v.titel}“ abgestimmt`; schluessel += `${p.id}:${txt(JSON.stringify(p.wahl ?? ""), 200)}`;
+  } else if (a === "dienstwunsch_speichern") {
+    was = "deine Dienstwünsche (Twinkey) eingetragen bzw. geändert"; schluessel += berlinTag(new Date());
+  } else return;
+  schluessel = `${fuer.person_id}:${von.person_id}:${schluessel}`;
+  const { data: schon } = await db.from("kc_club_protokoll").select("id").eq("aktion", "vertretung_mail").eq("details->>schluessel", schluessel).limit(1);
+  if (schon?.length) return;
+  await protokoll(fuer.person_id, "vertretung_mail", { schluessel, von: von.person_id, aktion: a });
+  await sendenGewaehlt("club_erinnerung", [fuer.person_id], ["email"], {
+    titel: `🤝 ${von.vorname} hat für dich gehandelt`, kurz: `${von.vorname} hat ${was}.`,
+    betreff: `Köcheclub Werne – ${von.name} hat für dich ${a === "dienstwunsch_speichern" ? "Dienstwünsche eingetragen" : a === "vorschlag_stimme" ? "abgestimmt" : "geantwortet"}`,
+    text: `Hallo ${fuer.vorname},\n\n${von.name} hat in der Köcheclub-App für dich ${was}.\n\nDas geht, weil ${von.vorname} für dich handeln darf. Wenn etwas nicht stimmt, sag bitte ${von.vorname} oder Hansi Bescheid.\n\nViele Grüße\nKöcheclub Werne`,
+    url: APP_URL + (a === "vorschlag_stimme" ? "#vorschlaege" : a === "dienstwunsch_speichern" ? "#dienstwunsch" : "#termine"),
+  }, `club-vertretung:${schluessel}`);
 }
 const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi): je Kreuzfahrt (Aktions-ID) die abgehakten Punkte, eigene Punkte, gewählte Art
@@ -7910,7 +7945,12 @@ Köcheclub Werne`,
       handelnd = await vertretungIch(ich, fuer, a); delete p.fuer;
       if (!/_liste$|_laden$/.test(a)) { await protokoll(ich.person_id, "vertretung", { aktion: a, fuer }); await protokoll(fuer, "vertreten", { aktion: a, von: ich.person_id }); }
     }
+    const pVorher = fuer ? { ...p } : null;
     const antwort = await aktionAusfuehren(a, p, handelnd, req, t0Anfrage, anmeldungMs);
+    if (fuer && pVorher && antwort.ok && !/_liste$|_laden$/.test(a)) { // 2.630.0 KC-CLUB-VERTRETUNG-MAIL: im Hintergrund, Karla wartet nicht
+      const lauf = vertretungMelden(ich, handelnd, a, pVorher).catch((e) => console.error("vertretung mail", String(e)));
+      try { (globalThis as any).EdgeRuntime?.waitUntil?.(lauf); } catch { /* läuft trotzdem an */ }
+    }
     // KC-CLUB-TEMPO (2.113.0, Wunsch Hansi „Tempo-Check“): langsame Vorgänge mit Namen und Dauer ins Server-Log (keine Inhalte,
     // keine Personen) – so sieht man über die Tage, welche Stelle bremst. Keine Datenbank-Schreibung, kostet nichts.
     const serverMs = Date.now() - t0Anfrage;
