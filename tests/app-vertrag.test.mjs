@@ -2874,7 +2874,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const sw = lies("sw.js");
   assert.ok(/c\.postMessage\(\{ typ: "push", titel, text: d\.body \|\| d\.text \|\| "", url: d\.data\?\.url \|\| "" \}\)/.test(sw), "Service Worker gibt Text/Link weiter");
   assert.ok(/if \(chatId\) chatLaden\(false\); ansageAusPush\(e\.data\);( if \(aktuelleAnsicht === "spiele"[^}]*)? \}/.test(html), "Push → Ansage"); // 2.7.0: + Spiel auffrischen
-  assert.ok(/klopfTonSpielen\(klopfStand\(\)\.ton\);\n  ansageMelden\(\{ art: "anklopfen"/.test(html), "Anklopfen wird angesagt");
+  assert.ok(/klopfTonSpielen\(klopfStand\(\)\.ton\);( klopfWiederholen\(k\.id\);)?\n  ansageMelden\(\{ art: "anklopfen"/.test(html), "Anklopfen wird angesagt");
   for (const id of ["nachricht", "anklopfen", "pinnwand", "helfen", "mitfahrt", "standort", "termine"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+",[^\\n]*bsp: "`).test(html), "Ansage-Art " + id);
   assert.ok(/\{ id: "nachricht",[^\n]*an: true \}/.test(html) && /\{ id: "anklopfen",[^\n]*an: true \}/.test(html) && !/\{ id: "pinnwand",[^\n]*an: true/.test(html), "Standard nur Nachrichten + Anklopfen");
   assert.ok(/onclick="ansBlatt\(\)">Auswählen<\/button>/.test(html) && /aria-label="Beispiel anhören"/.test(html), "eine Zeile + ▶ Beispiel");
@@ -7395,6 +7395,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /if \(annehmen && \(r\.art === "sprechen" \|\| klopfSprechen\(k\)\)\) anrufen\(k\.von\.person_id\)/, "Sprechen → anrufen");
   assert.match(programm, /api\("anklopfen", \{ an: pid, art \}\); if \(r\.ab\)/, "Weiter anklopfen behält die Wahl");
   assert.match(html, /id="klopfJa" onclick="klopfAntwort\(true\)"/, "Annehmen-Knopf beschriftbar");
+  assert.match(programm, /const KLOPF_VIBRATION = \[350, 150, 350, 150, 600\];/, "kräftige Anklopf-Vibration");
+  assert.match(programm, /setTimeout\(\(\) => \{ try \{ navigator\.vibrate\?\.\(KLOPF_VIBRATION\); \} catch \{\} \}, 700\); \/\/ erst der Ton, dann vibrieren/, "erst Ton, dann vibrieren");
+  assert.match(programm, /klopfTonSpielen\(klopfStand\(\)\.ton\); klopfWiederholen\(k\.id\);/, "wiederholt, solange die Frage offen ist");
+  assert.match(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8"), /\/\^👋\/\.test\(titel\) \? \[350, 150, 350, 150, 600\]/, "Push vibriert beim Anklopfen kräftig");
   assert.match(programm, /if \(klopfSprechenAnnehmen\(\)\) return; \/\/ 2\.646\.0/, "Rückruf wird beim Anklopfer von selbst angenommen");
   assert.match(programm, /RUF\.art === "video" \|\| RUF\.konferenzId \|\| RUF\.gegen\?\.person_id !== w\.pid\) return false;/, "nur genau diese Person, nur Ton, nur 90 s");
   assert.match(server, /insert\(\{ von: ich\.person_id, an, \.\.\.\(art === "sprechen" \? \{ art \} : \{\}\) \}\)[^\n]*\n\s*if \(error && art === "sprechen"\)/, "Server: art speichern, ohne Spalte weiter");

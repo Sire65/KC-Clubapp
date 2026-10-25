@@ -8043,7 +8043,7 @@ function klopfZeigen(k, antworten) {
   $("klopfKacheln").innerHTML = `<button class="klopf-ab" onclick="klopfKurz('ab', this.textContent)">📼 Anrufbeantworter einschalten</button>` // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
     + (antworten || []).map((a) => `<button onclick="klopfKurz('${esc(a.id)}', this.textContent)">${esc(a.text)}</button>`).join("");
   $("klopfBlatt").classList.remove("versteckt");
-  klopfTonSpielen(klopfStand().ton);
+  klopfTonSpielen(klopfStand().ton); klopfWiederholen(k.id);
   ansageMelden({ art: "anklopfen", text: `${k.von.vorname} klopft gerade bei dir an und will mit dir ${sp ? "sprechen" : "schreiben"}` }); // KC-CLUB-SPRACHANSAGEN
 }
 async function klopfKurz(antwort, text) {
@@ -8197,8 +8197,19 @@ const KLOPF_TOENE = [
   { id: "aus", t: "🔕 Kein Ton (nur Vibration)", n: [] },
 ];
 const klopfStand = () => ({ erlaubt: true, ton: "klopf", ...(INIT?.einstellungen?.anklopfen || {}) });
+// 2.646.0 KC-CLUB-ANKLOPFEN-VIBRATION (Wunsch Hansi „der Anklopfton und dann soll das Handy noch vibrieren“): nach dem Ton deutlich vibrieren
+// (klopf-klopf-klopf), solange die Frage offen ist alle 5 s Ton + Vibration – höchstens 30 s. iPhones können nicht vibrieren (kein Vibrations-Zugriff für Web-Apps).
+const KLOPF_VIBRATION = [350, 150, 350, 150, 600];
+let KLOPF_WDH = null;
+function klopfWiederholen(id) {
+  clearInterval(KLOPF_WDH); const bis = Date.now() + 30000;
+  KLOPF_WDH = setInterval(() => {
+    if (KLOPF?.id !== id || $("klopfBlatt").classList.contains("versteckt") || Date.now() > bis) { clearInterval(KLOPF_WDH); KLOPF_WDH = null; try { navigator.vibrate?.(0); } catch {} return; }
+    klopfTonSpielen(klopfStand().ton);
+  }, 5000);
+}
 function klopfTonSpielen(id) {
-  try { navigator.vibrate?.([120, 80, 120]); } catch {}
+  setTimeout(() => { try { navigator.vibrate?.(KLOPF_VIBRATION); } catch {} }, 700); // erst der Ton, dann vibrieren
   const t = KLOPF_TOENE.find((x) => x.id === id) || KLOPF_TOENE[0];
   if (!t.n.length) return;
   try {

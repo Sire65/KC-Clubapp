@@ -128,7 +128,7 @@ self.addEventListener("push", (e) => {
     await self.registration.showNotification(titel, {
       body: d.body || d.text || "", icon: "icon-192.png", badge: "badge-muetze.png", /* 2.572.0 KC-CLUB-PUSH-MUETZE: Kochmütze statt Viereck oben in der Leiste (Android zeigt nur die Form); 2.575.0: aus dem Club-Logo (kc-kochmuetze-weiss.webp) */ tag: d.data?.url || "kc-club",
       // KC-CLUB-ERINNERUNG-WAHL (2.23.22): Erinnerungen (⏰) bleiben stehen, bis man sie antippt, und vibrieren kräftiger
-      renotify: true, silent: false, requireInteraction: /^⏰/.test(titel), vibrate: /^⏰/.test(titel) ? [400, 200, 400, 200, 400] : [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
+      renotify: true, silent: false, requireInteraction: /^⏰/.test(titel), vibrate: /^⏰/.test(titel) ? [400, 200, 400, 200, 400] : /^👋/.test(titel) ? [350, 150, 350, 150, 600] /* 2.646.0 KC-CLUB-ANKLOPFEN-VIBRATION */ : [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
     });
     await quittung(d.data?.requestId, "displayed");
   })());
