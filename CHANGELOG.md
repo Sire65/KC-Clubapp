@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.633.0 – 2026-10-25 – Neues Kopf-Thema Seifenblasen
+KC-CLUB-SEIFENBLASEN (Wunschliste #33, Wunsch Hansi): Neues Thema 🫧 Seifenblasen im Kopf der Startseite. Ein Kind läuft in die Mitte und pustet Seifenblasen, dann kommen von links und rechts drei weitere Kinder dazu. Die Blasen (klein, groß, schillernd mit Glanzlicht) steigen, platzen und hinterlassen Schlieren auf einer „Scheibe“ über dem Kopf (Tippen geht hindurch) – der Kopf wird immer verschmierter. Drei dicke Blasen wölben den Kopf jeweils kurz wie ein Fischauge (nicht bei „Animationen aus“/Sparmodus). Dann kommt der Fensterputzer mit Leiter, Eimer und gelbem Tuch und wischt die Scheibe an drei Stellen in Bahnen wieder klar; danach beginnt alles von vorn. Vorschau unter ⚙️ → ✨ Effekte. Nur Bild, nichts wird gespeichert oder gesendet.
+
 ## 2.632.0 – 2026-10-25 – Chat: größere Einklapp-Pfeile
 KC-CLUB-KLAPP-PFEILE (Wunschliste #32, Wunsch Hansi „die Einklapp-Pfeile sind zu klein“): Im Chat sind die Pfeile an eingeklappten Tagen und Wochen jetzt runde Weinrot-Knöpfe mit weißem Pfeil (30 px statt Textgröße, grau). Aufgeklappte Tages- und Wochenköpfe zeigen denselben Knopf mit ▾ zum Zuklappen. Sonst unverändert.
 

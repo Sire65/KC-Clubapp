@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.632.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.633.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -936,6 +936,7 @@ const THEMEN = [
   { id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest", effekt: "flieger", schrift: "kirmes", kopf: "bude" }, // 2.529.0 KC-CLUB-WILDWEST
   { id: "wueste", sym: "🐪", name: "Wüste", design: "sonnenuntergang", jz: "wueste", effekt: "flieger", schrift: "kirmes", kopf: "theater" }, // 2.548.0 KC-CLUB-WUESTE
   { id: "baustelle", sym: "🚧", name: "Baustelle", design: "ocker", jz: "baustelle", effekt: "postauto" }, // 2.617.0 KC-CLUB-BAUSTELLE
+  { id: "seifenblasen", sym: "🫧", name: "Seifenblasen", design: "lagune", jz: "seifenblasen", effekt: "ballon" }, // 2.633.0 KC-CLUB-SEIFENBLASEN (Wunschliste #33)
   { id: "oktoberfest", sym: "🥨", name: "Oktoberfest", design: "nordsee", jz: "wiesn", effekt: "postauto", schrift: "fraktur", kopf: "bude" },
   { id: "herbst", sym: "🍂", name: "Herbst", design: "ocker", jz: "herbst", effekt: "flieger" },
   { id: "indian", sym: "🍁", name: "Indian Summer", design: "glut", jz: "herbst", effekt: "taube",
@@ -5398,6 +5399,7 @@ const HILFE = [
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
+  { id: "seifenblasen", thema: "darstellung", sym: "🫧", t: "Thema Seifenblasen", x: "Im Thema <b>🫧 Seifenblasen</b> kommt unten im Kopf der Startseite ein <b>Kind</b> auf die Wiese und pustet <b>Seifenblasen</b> – kleine, große, leicht schillernd wie echte. Dann kommen von links und rechts <b>weitere Kinder</b> dazu. Die Blasen steigen, <b>platzen</b> und hinterlassen <b>Schlieren auf der Scheibe</b> – der Kopf wird immer verschmierter. Ab und zu wölbt eine <b>dicke Blase</b> den Kopf kurz wie ein <b>Fischauge</b>. Zum Schluss kommt der <b>Fensterputzer</b> mit Leiter, Eimer und Tuch und wischt die Scheibe wieder sauber – dann beginnt alles von vorn. Tippen geht durch die Schlieren hindurch. Vorschau: ⚙️ → ✨ Effekte → 🫧 Seifenblasen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.633.0" },
   { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
   { id: "eingangskorb_mitglied", thema: "club", sym: "📥", t: "Dein Eingangskorb fürs Archiv", x: "Legt dir die Clubleitung ein Dokument hin (z. B. eine Anleitung oder Urkunde), steht unter <b>„Heute wichtig“ → 📥 Eingangskorb</b>. Antippen – du siehst das Dokument und entscheidest: <b>✔ annehmen</b> – dann fragt die App <b>„Wohin?“</b> (Ordner und Register, der 💡 Vorschlag des Absenders ist schon ausgewählt) und legt es in deinen persönlichen Archiv-Ordner – oder <b>✖ ablehnen</b>, dann wird es gelöscht. Dein Ordner bleibt privat. <i>Clubleitung:</i> Mitglied antippen → <b>„📥 In den Eingangskorb“</b>.", seit: "2.432.0" },
@@ -9677,7 +9679,7 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4
   ["verschluesseln", "verschluesselt", "verschluesselung", "geheim", "schluessel", "schloss", "kennwort", "codiert", "schluesselbund", "geheimagent", "agent"],
   ["ablagekorb", "dateimanager", "hochschicken"], ["versandleiste", "normal", "wichtig", "leiste"], ["schreibt", "tippt", "diktiert"],
-  ["pdf", "drucken", "ausdrucken", "briefbogen", "papier"], ["cowboy", "indianer", "westen", "wildwest", "bueffel", "kutsche"], ["wueste", "pyramide", "pharao", "kamel", "karawane", "flaschengeist", "geist", "oase"], ["baustelle", "bagger", "radlader", "laster", "sprengung", "dynamit", "explosion", "bauarbeiter"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
+  ["pdf", "drucken", "ausdrucken", "briefbogen", "papier"], ["cowboy", "indianer", "westen", "wildwest", "bueffel", "kutsche"], ["wueste", "pyramide", "pharao", "kamel", "karawane", "flaschengeist", "geist", "oase"], ["baustelle", "bagger", "radlader", "laster", "sprengung", "dynamit", "explosion", "bauarbeiter"], ["seifenblasen", "seifenblase", "blasen", "fensterputzer", "fischauge", "pusten"]]; // 2.252.0 Fund Hansi: Wilfried fragte „Kochbild“
 // Twinkeys eigene Fragen und Antworten (Wunsch Hansi: „mehr Fragen und Antworten“) – kurz, mit Sprung an die richtige Stelle
 const TW_FAQ = [
   { id: "chat-nur-hg", sym: "🖼️", t: "Wie sehe ich meinen Chat-Hintergrund ohne die Nachrichten?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld dreimal auf <b>👥</b> tippen – dann steht dort <b>🖼️</b>, alle Nachrichten sind ausgeblendet und du siehst nur den Hintergrund. Noch einmal tippen (oder den gelben Hinweis oben) zeigt wieder alles.", los: () => hzZuEintrag("h:chat_filter") }, // 2.591.0
@@ -9696,6 +9698,7 @@ const TW_FAQ = [
   { id: "erstattung-pdf", sym: "📄", t: "Kann ich meinen Erstattungsantrag ausdrucken?", x: "Ja – nach dem Einreichen bietet die App den Antrag auf dem <b>Club-Briefbogen</b> an: <b>📄 PDF speichern / teilen</b> oder <b>🖨️ Drucken</b>, mit Feldern für die Unterschriften. Ein PDF gibt es in jeder Druckvorschau der App.", los: () => zeige("erstattung") },
   { id: "vorschlag-sitzung-offen", sym: "📅", t: "Die nächste Sitzung hat noch kein Datum – kann ich trotzdem etwas vorschlagen?", x: "Ja. Beim Vorschlag unter „Für welchen Termin?“ <b>„📅 Nächste/Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung im Kalender steht, ordnet die App den Vorschlag selbst zu.", los: () => zeige("vorschlaege") },
   { id: "wildwest", sym: "🤠", t: "Gibt es ein Thema mit Cowboys und Indianern?", x: "Ja – das Thema <b>🤠 Wilder Westen</b>: Tipi mit Lagerfeuer, Indianer und Häuptling (aus seiner Friedenspfeife steigt dein Vorname in Rauchschrift auf), Kakteen, Steppenläufer, Cowboys, Postkutsche, ein Duell und zum Schluss die große Büffelherde. Unter ⚙️ → „✨ Effekte“ → 🤠 Wilder Westen gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
+  { id: "seifenblasen", sym: "🫧", t: "Gibt es ein Thema mit Seifenblasen?", x: "Ja – das Thema <b>🫧 Seifenblasen</b>: Kinder pusten Seifenblasen, die platzen und die Scheibe verschmieren, dicke Blasen wirken kurz wie ein Fischauge – und der Fensterputzer putzt alles wieder sauber. Unter ⚙️ → „✨ Effekte“ → 🫧 Seifenblasen gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
   { id: "baustelle", sym: "🚧", t: "Gibt es ein Thema mit Bagger und Sprengung?", x: "Ja – das Thema <b>🚧 Baustelle</b>: Ein gelber Radlader schaufelt Erde auf einen Kipplaster, seine Abgase schreiben deinen Vornamen, Bauarbeiter laufen durch – und zum Schluss sprengt das Sprengkommando den ganzen Kopf in die Luft. Unter ⚙️ → „✨ Effekte“ → 🚧 Baustelle gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
   { id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao?", x: "Ja – das Thema <b>🐪 Wüste</b>: Pyramiden, Oase, Karawane, der Pharao auf seiner Sänfte und ein Flaschengeist aus der Lampe, der deinen Vornamen aus Goldstaub in den Himmel schreibt – zum Schluss ein Sonnenuntergang mit Sternen. Unter ⚙️ → „✨ Effekte“ → 🐪 Wüste gibt es eine Vorschau.", los: () => einstiegHin("effekte", "jzWahl") },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Fragen zu den neuen Möglichkeiten (nur Mitglieder-Funktionen)
@@ -9871,7 +9874,7 @@ const TW_VIDEOS = { "h:verschluesselt": ["geheim"], "h:schluesselbund": ["geheim
   "h:info_laufband": ["oberflaeche"], "h:kachel_auswahl": ["oberflaeche"], "h:kachel_vorschlag": ["oberflaeche"], "h:gelesen_von": ["chatprofi"], "h:tastatur_knopf": ["chatprofi"],
   "h:schreiben_klappen": ["chatprofi"], "h:tage_einklappen": ["chatprofi"], "h:anlage_mitschicken": ["vorschlag"], "h:termin_link_prospekt": ["termin"], "h:sonderstunden": ["dienst", "erstattung"],
   "h:avatar_bearbeiten": ["figur", "figurbau"], "h:schuerze": ["figurbau"], "h:foto_muetze": ["figur"], "h:bild_zuletzt": ["figur"], "h:stundenuhren": ["effekte"], "h:kuckuck_ton": ["effekte"],
-  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:wueste": ["anpassen"], "h:baustelle": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
+  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:wueste": ["anpassen"], "h:baustelle": ["anpassen"], "h:seifenblasen": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
   "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "t:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
 }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 const TW_HILFETEXT = { "f:mein-bild": "h:mein_bild", "f:figur-bauen": "h:mein_bild", "f:verschluesseln": "h:verschluesselt", "f:schluessel-frage": "h:verschluesselt", "f:schluessel-oeffnen": "h:verschluesselt", "f:schluesselbund": "h:schluesselbund", "f:geheimagent": "h:boten", "f:versand-leiste": "h:versand_leiste", "f:schreibt-dir": "h:schreibt_hinweis", "f:graue-haken": "h:haken" }; // 2.533.0: + Verschlüsseln & Co.
@@ -16683,9 +16686,9 @@ const JZ_DEKO_WAHL = [["auto", "🔄 Automatisch"], ["wimpel", "🎏 Wimpel"], [
 const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff6b9a", "#8ac926"], pastell: ["#f7a8c4", "#9fd3ff", "#fff3a0", "#b6f0b0", "#d9b8f7"],
   bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
   warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"],
-  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"], western: ["#9b2226", "#e9c46a", "#264653", "#bc6c25"], wueste: ["#1d4e89", "#ffd166", "#9b2226", "#2a9d8f"], baustelle: ["#ffd000", "#1d1d1d", "#ff7b00", "#ffffff"] }; // 2.617.0: baustelle // 2.548.0: wueste // 2.529.0: western · 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
+  meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"], western: ["#9b2226", "#e9c46a", "#264653", "#bc6c25"], wueste: ["#1d4e89", "#ffd166", "#9b2226", "#2a9d8f"], baustelle: ["#ffd000", "#1d1d1d", "#ff7b00", "#ffffff"], seifenblasen: ["#7fd3ff", "#ff8fb1", "#ffd166", "#b9f3c9", "#c7a6ff"] }; // 2.617.0: baustelle // 2.548.0: wueste // 2.529.0: western · 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
 const JZ_DEKO_AUTO = { herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
-  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"], wildwest: ["wimpel", "western"], wueste: ["laternen", "wueste"], baustelle: ["wimpel", "baustelle"] }; // 2.617.0: + Baustelle // 2.548.0: + Wüste // 2.529.0: + Wilder Westen
+  wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"], wildwest: ["wimpel", "western"], wueste: ["laternen", "wueste"], baustelle: ["wimpel", "baustelle"], seifenblasen: ["wimpel", "seifenblasen"] }; // 2.617.0: + Baustelle // 2.548.0: + Wüste // 2.529.0: + Wilder Westen
 const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
 const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
 function jzDekoArt(art) { // → [Art, Farben] oder null
@@ -16808,7 +16811,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
     jzTropfTakt();
   }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
-const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"], wildwest: ["🤠", "🐃", "🌵", "🔥"], wueste: ["🐪", "🌴", "🪔", "✨"], baustelle: ["🚧", "👷", "🧱", "💥"] };
+const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"], wildwest: ["🤠", "🐃", "🌵", "🔥"], wueste: ["🐪", "🌴", "🪔", "✨"], baustelle: ["🚧", "👷", "🧱", "💥"], seifenblasen: ["🫧", "✨", "🫧"] };
 function jahreszeitKopf() {
   const h = document.querySelector("#v-start .hero"); if (!h) return;
   h.querySelector(".jz-schicht")?.remove(); h.querySelector(".jz-sprech")?.remove(); h.classList.remove("jz-boden"); jzbStop(); jzDekoWeg(h);
@@ -18648,7 +18651,7 @@ function bwHoerPause() { const H = BW.hoeren; if (!H) return; H.pause = !H.pause
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle"]; // 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen"]; // 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
 const JZB_BLUEHT = 150; // 2.250.0 (Fund Hansi „Sonnenblume nur kurz“): Blumen/Sonnenblume blühen 2½ Min., bevor der Wind kommt
 const JZB_SP = 3, JZB_RAND = 22; // 2.259.0: 22 statt 16 – nichts in die runden Ecken (Radius 26) // Bodenspalten in px; nichts in den runden Ecken ablegen
 const JZB_LAUB = ["#e0802a", "#c8432b", "#e8b23a", "#a85a2a", "#d96a1f", "#b33a2a", "#cf9a2b"];
@@ -18688,7 +18691,7 @@ function jzbStart(h, art) {
   jzbGroesse(); jzbWeiter();
   return true;
 }
-function jzbStop() { if (JZB.raf) cancelAnimationFrame(JZB.raf); clearTimeout(JZB.warteUhr); JZB.raf = 0; JZB.ro?.disconnect(); JZB.io?.disconnect(); JZB.ro = JZB.io = JZB.cv = null; }
+function jzbStop() { jzbSbAufraeumen(); /* 2.633.0: Scheibe und Fischauge weg */ if (JZB.raf) cancelAnimationFrame(JZB.raf); clearTimeout(JZB.warteUhr); JZB.raf = 0; JZB.ro?.disconnect(); JZB.io?.disconnect(); JZB.ro = JZB.io = JZB.cv = null; }
 function jzbGroesse() {
   const { s, cv } = JZB; if (!cv) return;
   const w = s.clientWidth, h = s.clientHeight, dpr = Math.min(1.5, window.devicePixelRatio || 1); // 2.334.0: 1,5 statt 2 – knapp halb so viele Bildpunkte
@@ -19252,7 +19255,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle"]; // 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen"]; // 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 // 2.617.0 KC-CLUB-SIMJUE-FEUERWERK (Wunsch Hansi „am Montag 21 Uhr Feuerwerk gleichzeitig mit dem echten Feuerwerk“): am Sim-Jü-Montag von 21:00 bis 21:20
 // steigen in der Sim-Jü-Szene ununterbrochen Raketen (mehr, größer, auch Goldregen), der Himmel wird dunkel – und das Bild bleibt in der Zeit nicht stehen.
@@ -19267,6 +19270,7 @@ function jzbFest(dt) {
   const J = JZB, k = J.k;
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
+  if (J.saison === "seifenblasen") return jzbSbSchritt(F, dt); // 2.633.0: Kinder pusten Seifenblasen, die Scheibe verschmiert, der Fensterputzer putzt
   if (J.saison === "baustelle") return jzbBsSchritt(F, dt); // 2.617.0: Radlader, Kipplaster, Abgas-Name, Arbeiter – zum Schluss wird der Kopf gesprengt
   if (J.saison === "wueste") return jzbWuSchritt(F, dt); // 2.548.0: Pyramiden, Karawane, Oase, Pharao, Flaschengeist – Name aus Goldstaub, Sonnenuntergang
   if (J.saison === "wildwest") return jzbWwSchritt(F, dt); // 2.529.0: Tipi, Lagerfeuer, Cowboys, Kutsche – zum Schluss die Büffelherde
@@ -19361,7 +19365,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "seifenblasen") jzbSeifenblasenMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---------- KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): einmalig eine rote Baccara-Rose aus der Sim-Jü-Schießbude – „Nur für dich“ ----------
@@ -20664,6 +20668,242 @@ function jzbWuesteMalen(c, F) {
     c.save(); c.globalAlpha *= Math.min(1, nacht * 1.4); for (let i = 0; i < 3; i++) jzbWuKamelMalen(c, O.oase + 30 * k + i * 22 * k, O.boden, k * (1 - i * .06), 0, { liegt: true });
     c.fillStyle = "rgba(255,170,60,.9)"; c.beginPath(); c.arc(O.oase + 52 * k, O.boden - 2 * k, 2 * k + Math.sin(T * 12) * .5 * k, 0, 7); c.fill(); c.restore(); // kleines Lagerfeuer
   }
+}
+// ---- 🫧 Seifenblasen (2.633.0 KC-CLUB-SEIFENBLASEN, Wunschliste #33, Wunsch Hansi „erst kommt ein Kind ungefähr in die Mitte und macht Seifenblasen,
+// dann kommen von rechts und links weitere Kinder … kleine, große, leicht bunte wie echte – die fliegen hoch, zerplatzen und machen den Bildschirm
+// immer beschmierter; dann kommt ein Fensterputzer mit Eimer, Leiter, Putztuch und putzt die Scheibe wieder sauber; einige dicke Blasen machen im
+// Kopfbereich einen Fischaugeneffekt für einen kurzen Moment“) ----
+// Ablauf je Lauf (≈ 100 s): Kind 1 läuft zur Mitte und pustet → drei weitere Kinder kommen von links und rechts → die Blasen steigen, platzen und
+// jede hinterlässt Schlieren auf der „Scheibe“ (eigene Schicht ÜBER dem Kopf, nur im Kopfbild, Tippen geht hindurch) → die Kinder gehen → der
+// Fensterputzer bringt Leiter, Eimer und Tuch und wischt an drei Stellen die Scheibe frei → geht → von vorn. Drei dicke Blasen wölben den Kopf kurz
+// wie ein Fischauge (SVG-Verschiebungsfilter, je ~1,6 s, nie bei „Animationen aus“). Nur Bild, nichts wird gespeichert oder gesendet.
+const JZB_SB_KINDER = [{ ab: 0, von: -1, ziel: .47 }, { ab: 11, von: -1, ziel: .2 }, { ab: 13, von: 1, ziel: .74 }, { ab: 16, von: 1, ziel: .9 }];
+const JZB_SB_PUSTEN_BIS = 56, JZB_SB_PUTZER = 62, JZB_SB_STATIONEN = [.8, .5, .2], JZB_SB_STATION = 9, JZB_SB_DICK = [22, 35, 47], JZB_SB_LINSE_DAUER = 1.6;
+const JZB_SB_HAAR = ["#3b2416", "#c98b3a", "#f1d07a", "#7a3e1d", "#1d1d1d"];
+const jzbSbS = () => JZB.k * 1.15; // Maßstab der Figuren
+const jzbSbBoden = () => JZB.h - 4 * JZB.k;
+const jzbSbAnkunft = () => JZB_SB_PUTZER + 3; // Putzer steht an der ersten Stelle
+const jzbSbFertig = () => jzbSbAnkunft() + JZB_SB_STATIONEN.length * JZB_SB_STATION; // letzte Stelle geputzt
+const jzbSbEnde = () => jzbSbFertig() + 6;
+function jzbSbKindLage(i, t) { // x, dir, laeuft, steht (seit wann)
+  const J = JZB, k = J.k, K = JZB_SB_KINDER[i], d = t - K.ab; if (d < 0) return null;
+  const start = K.von < 0 ? -18 * k : J.w + 18 * k, ziel = J.w * K.ziel, v = 26 * k, hin = Math.sign(ziel - start), da = Math.abs(ziel - start) / v;
+  const blick = K.ziel < .5 ? 1 : -1, weg = K.ziel < .5 ? -1 : 1, g = t - (JZB_SB_PUSTEN_BIS + i * .8);
+  if (g >= 0) { const x = ziel + weg * g * v * 1.2; return x < -30 * k || x > J.w + 30 * k ? null : { x, dir: weg, laeuft: true }; }
+  if (d < da) return { x: start + hin * d * v, dir: hin, laeuft: true };
+  return { x: ziel, dir: blick, steht: d - da };
+}
+function jzbSbNeu() {
+  const fa = jzbKindFarben(4);
+  return { blasen: [], tropfen: [], kinder: JZB_SB_KINDER.map((_, i) => ({ uhr: jzbZ(.2, .6), f: fa[i % 4], haar: JZB_SB_HAAR[(i * 2 + Math.floor(jzbZ(0, 5))) % JZB_SB_HAAR.length], zopf: i % 2 === 1 })),
+    dick: {}, linse: null, wisch: null, nass: [] };
+}
+function jzbSbBlase(x, y, dir, gross) {
+  const k = JZB.k, z = Math.random(), r = gross ? jzbZ(17, 21) * k : z < .62 ? jzbZ(1.8, 3.6) * k : z < .93 ? jzbZ(4.5, 7.5) * k : jzbZ(8.5, 12) * k;
+  return { x, y, r, vx: dir * jzbZ(gross ? 6 : 10, gross ? 12 : 34) * k, vy: -jzbZ(gross ? 42 : 14, gross ? 55 : 34) * k, ph: jzbZ(0, 6), hue: jzbZ(0, 360), alt: 0,
+    leben: gross ? 99 : jzbZ(6, 13), oben: gross ? 0 : jzbZ(3 * k, JZB.h * .62), dick: !!gross };
+}
+function jzbSbSchritt(F, dt) {
+  const J = JZB, k = J.k, t = F.t, W = F.sb || (F.sb = jzbSbNeu()), s = jzbSbS(), boden = jzbSbBoden();
+  if (t >= jzbSbEnde()) { jzbSbAufraeumen(); J.fest = null; return jzbLaufEnde(); }
+  F.a = Math.min(1, t / 2);
+  const G = jzbSbGlas(true);
+  // 🫧 Kinder pusten: kurz eintauchen, dann ein paar Sekunden Blasen
+  JZB_SB_KINDER.forEach((_, i) => { const L = jzbSbKindLage(i, t), K = W.kinder[i]; K.pustet = false; K.taucht = false;
+    if (!L || L.steht === undefined || L.steht < .6 || t > JZB_SB_PUSTEN_BIS - .5) return;
+    const p = (L.steht + i * 1.3) % 4.2; if (p < .7) { K.taucht = true; return; } K.pustet = true;
+    const ringX = L.x + L.dir * 11.5 * s, ringY = boden - 22.8 * s;
+    if ((K.uhr -= dt) <= 0 && W.blasen.length < 70) { K.uhr = jzbZ(.1, .32); const n = Math.random() < .3 ? 2 : 1;
+      for (let m = 0; m < n; m++) W.blasen.push(jzbSbBlase(ringX + L.dir * jzbZ(1, 4) * k, ringY + jzbZ(-2, 2) * k, L.dir, false)); }
+    if (i === 0) for (const z of JZB_SB_DICK) if (t >= z && !W.dick[z]) { W.dick[z] = 1; W.blasen.push(jzbSbBlase(ringX + L.dir * 14 * k, ringY - 6 * k, L.dir, true)); } });
+  // Blasen steigen und wackeln, platzen oben oder nach einer Weile → Schlieren auf der Scheibe
+  for (const b of W.blasen) { b.alt += dt; b.ph += dt; b.vy -= 2 * k * dt; b.vx *= 1 - .25 * dt; b.vy *= 1 - .08 * dt;
+    b.x += (b.vx + Math.sin(b.ph * 2.1) * 6 * k) * dt; b.y += b.vy * dt;
+    if (b.dick && !b.linse && !W.linse && b.y < J.h * .5) { b.linse = 1; W.linse = { b, t: 0 }; } // oben im Kopf: Fischauge
+    if (b.linse && W.linse?.b === b) { b.vy *= 1 - 2.5 * dt; b.vx *= 1 - 2 * dt; } // die dicke Blase schwebt dabei fast still
+    if (b.y < b.oben || b.alt > b.leben || b.x < -b.r || b.x > J.w + b.r || (b.dick && b.linse && W.linse?.b !== b)) b.platzt = true; }
+  if (W.linse) { W.linse.t += dt; if (W.linse.t > JZB_SB_LINSE_DAUER) { W.linse.b.platzt = true; W.linse = null; } }
+  for (const b of W.blasen.filter((x) => x.platzt)) {
+    for (let i = 0; i < Math.min(10, 3 + b.r / k); i++) { const a = jzbZ(0, 7), v = jzbZ(15, 45) * k; W.tropfen.push({ x: b.x + Math.cos(a) * b.r, y: b.y + Math.sin(a) * b.r, vx: Math.cos(a) * v, vy: Math.sin(a) * v, a: 1 }); }
+    if (G && b.x > 0 && b.x < J.w && b.y > 0) jzbSbFleck(G, b.x, b.y, b.r);
+  }
+  W.blasen = W.blasen.filter((b) => !b.platzt);
+  for (const d of W.tropfen) { d.vy += 120 * k * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.a -= dt * 2.5; }
+  W.tropfen = W.tropfen.filter((d) => d.a > 0);
+  // 🔍 Fischauge: die dicke Blase wölbt kurz den ganzen Kopf
+  const h = J.s?.parentElement;
+  if (W.linse && !jzbSbLinseAus()) { const L = W.linse, q = Math.min(1, L.t / .35, (JZB_SB_LINSE_DAUER - L.t) / .35); jzbSbLinseSetzen(h, L.b.x, L.b.y, L.b.r * 2.4, Math.max(0, q)); }
+  else jzbSbLinseSetzen(h, 0, 0, 0);
+  // 🧽 Fensterputzer: wischt in Bahnen – was er wischt, ist wieder klar
+  const P = jzbSbPutzer(t);
+  if (P?.wischt != null && G) { const ww = jzbSbWischPunkt(P);
+    if (W.wisch) { const c = G.dctx; c.save(); c.globalCompositeOperation = "destination-out"; c.lineCap = "round"; c.lineJoin = "round";
+      c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = 34 * k; c.beginPath(); c.moveTo(W.wisch.x, W.wisch.y); c.lineTo(ww.x, ww.y); c.stroke();
+      c.strokeStyle = "rgba(0,0,0,1)"; c.lineWidth = 26 * k; c.stroke(); c.restore();
+      W.nass.push({ x0: W.wisch.x, y0: W.wisch.y, x1: ww.x, y1: ww.y, a: .5 }); }
+    W.wisch = ww; } else W.wisch = null;
+  for (const n of W.nass) n.a -= dt * .45; W.nass = W.nass.filter((n) => n.a > 0).slice(-120);
+  if (G) G.blass = t > jzbSbFertig() ? Math.min(1, (t - jzbSbFertig()) / 1.5) : 0; // zum Schluss: Reste verschwinden – die Scheibe ist sauber
+}
+function jzbSbPutzer(t) { // x, dir, laeuft, traegt (Leiter auf der Schulter), klettern 0…1, wischt 0…1, cx (Stelle)
+  const J = JZB, k = J.k, w = J.w, st = JZB_SB_STATIONEN.map((f) => w * f), A0 = jzbSbAnkunft(); if (t < JZB_SB_PUTZER) return null;
+  if (t < A0) { const p = jzbEase((t - JZB_SB_PUTZER) / (A0 - JZB_SB_PUTZER)); return { x: w + 40 * k + (st[0] - w - 40 * k) * p, dir: -1, laeuft: p < 1, traegt: true }; }
+  const i = Math.floor((t - A0) / JZB_SB_STATION);
+  if (i >= st.length) { const x = st[st.length - 1] - (t - jzbSbFertig()) * 34 * k; return x < -60 * k ? null : { x, dir: -1, laeuft: true, traegt: true }; }
+  const p = t - A0 - i * JZB_SB_STATION, cx = st[i];
+  if (p < 1.2) return i ? { x: st[i - 1] + (cx - st[i - 1]) * jzbEase(p / 1.2), dir: -1, laeuft: true, traegt: true } : { x: cx, dir: -1, klettern: 0 };
+  if (p < 1.8) return { x: cx, dir: -1, klettern: (p - 1.2) / .6 };
+  if (p < 8.4) return { x: cx, dir: -1, klettern: 1, wischt: (p - 1.8) / 6.6, cx };
+  return { x: cx, dir: -1, klettern: Math.max(0, 1 - (p - 8.4) / .6) };
+}
+function jzbSbWischPunkt(P) { // das Tuch fährt in 10 Bahnen hin und her von oben nach unten
+  const J = JZB, k = J.k, halb = J.w * .18, oben = 4 * k, unten = J.h - 8 * k;
+  return { x: P.cx + Math.sin(P.wischt * Math.PI * 10) * halb, y: oben + P.wischt * (unten - oben) };
+}
+const jzbSbLinseAus = () => document.documentElement.classList.contains("ohne-anim") || (typeof SPAR !== "undefined" && SPAR?.an) || matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+// ---- Scheibe (Schicht über dem Kopf): Schlieren sammeln sich in einem eigenen Bild, das Tuch radiert sie wieder weg ----
+function jzbSbGlas(an) {
+  const J = JZB, h = J.s?.parentElement; let g = h?.querySelector(":scope > .bb-glas");
+  if (!an || !h) { document.querySelectorAll(".bb-glas").forEach((x) => x.remove()); J.sbGlas = null; return null; } // auch, wenn die Bühne schon weg ist
+  if (!g || !J.sbGlas) { g?.remove(); g = document.createElement("canvas"); g.className = "jz-schicht bb-glas"; g.setAttribute("aria-hidden", "true"); h.appendChild(g);
+    const dreck = document.createElement("canvas"); J.sbGlas = { cv: g, ctx: g.getContext("2d"), dreck, dctx: dreck.getContext("2d"), w: 0, h: 0, blass: 0 }; }
+  const G = J.sbGlas, w = g.clientWidth, hh = g.clientHeight, dpr = J.dpr || 1;
+  if (w && hh && (w !== G.w || hh !== G.h)) { for (const cv of [G.cv, G.dreck]) { cv.width = Math.round(w * dpr); cv.height = Math.round(hh * dpr); }
+    G.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); G.dctx.setTransform(dpr, 0, 0, dpr, 0, 0); G.w = w; G.h = hh; }
+  return G;
+}
+function jzbSbFleck(G, x, y, r) { // geplatzte Blase: milchiger Fleck mit schillerndem Rand, Spritzer und – bei größeren – eine Laufspur nach unten
+  const c = G.dctx, k = JZB.k, R = r * jzbZ(1.3, 2);
+  const g = c.createRadialGradient(x, y, R * .15, x, y, R); g.addColorStop(0, "rgba(255,255,255,.08)"); g.addColorStop(.75, "rgba(255,255,255,.2)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  c.fillStyle = g; c.beginPath(); c.arc(x, y, R, 0, 7); c.fill();
+  const a0 = jzbZ(0, 6); c.lineWidth = .8 * k; c.strokeStyle = `hsla(${jzbZ(0, 360)},80%,82%,.28)`; c.beginPath(); c.arc(x, y, R * .8, a0, a0 + jzbZ(2, 4.5)); c.stroke();
+  for (let i = 0; i < Math.round(3 + r / k); i++) { const a = jzbZ(0, 7), d = R * jzbZ(.9, 1.9); c.fillStyle = "rgba(255,255,255,.38)"; c.beginPath(); c.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, jzbZ(.5, 1.4) * k, 0, 7); c.fill(); }
+  if (r > 4 * k) { const l = jzbZ(8, 22) * k * Math.min(2.5, r / (6 * k)), lg = c.createLinearGradient(x, y, x, y + l);
+    lg.addColorStop(0, "rgba(255,255,255,.18)"); lg.addColorStop(1, "rgba(255,255,255,.04)"); c.fillStyle = lg;
+    c.beginPath(); c.moveTo(x - 1.3 * k, y); c.lineTo(x + 1.3 * k, y); c.lineTo(x + .5 * k, y + l); c.lineTo(x - .5 * k, y + l); c.closePath(); c.fill();
+    c.fillStyle = "rgba(255,255,255,.3)"; c.beginPath(); c.arc(x, y + l, 1.4 * k, 0, 7); c.fill(); }
+}
+function jzbSbAufraeumen() { jzbSbGlas(false); jzbSbLinseSetzen(JZB.s?.parentElement || document.querySelector("#v-start .hero"), 0, 0, 0); }
+// ---- 🔍 Fischauge: SVG-Filter auf dem Kopf; die Verschiebungskarte zieht Bildpunkte zur Mitte der Blase (= Vergrößerung, zum Rand hin weich) ----
+let JZB_SB_KARTE = "";
+function jzbSbLinseKarte() {
+  if (JZB_SB_KARTE) return JZB_SB_KARTE;
+  const n = 96, cv = document.createElement("canvas"); cv.width = cv.height = n; const c = cv.getContext("2d"), img = c.createImageData(n, n);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const u = (i + .5) / n * 2 - 1, v = (j + .5) / n * 2 - 1, q = u * u + v * v, o = (j * n + i) * 4;
+    if (q >= 1) continue; const f = (1 - q) * .45; img.data[o] = Math.round((.5 - u * f) * 255); img.data[o + 1] = Math.round((.5 - v * f) * 255); img.data[o + 2] = 128; img.data[o + 3] = 255; }
+  c.putImageData(img, 0, 0); return (JZB_SB_KARTE = cv.toDataURL());
+}
+function jzbSbLinseSetzen(h, x, y, r, staerke = 1) { // r = 0 → aus
+  if (!h) return;
+  if (!r || staerke <= 0) { if (h.style.filter) h.style.filter = ""; return; }
+  let s = document.getElementById("kcSbLinseSvg");
+  if (!s) { const d = document.createElement("div");
+    d.innerHTML = '<svg id="kcSbLinseSvg" width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><filter id="kcSbLinse" x="-0.05" y="-0.05" width="1.1" height="1.15" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">'
+      + '<feFlood flood-color="rgb(128,128,128)" result="n"/><feImage id="kcSbLinseBild" preserveAspectRatio="none" result="k"/><feComposite in="k" in2="n" operator="over" result="m"/>'
+      + '<feDisplacementMap id="kcSbLinseDm" in="SourceGraphic" in2="m" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter></svg>';
+    s = d.firstElementChild; document.body.appendChild(s);
+    const b = s.querySelector("#kcSbLinseBild"), u = jzbSbLinseKarte(); b.setAttribute("href", u); b.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", u); }
+  const b = s.querySelector("#kcSbLinseBild");
+  b.setAttribute("x", (x - r).toFixed(1)); b.setAttribute("y", (y - r).toFixed(1)); b.setAttribute("width", (2 * r).toFixed(1)); b.setAttribute("height", (2 * r).toFixed(1));
+  s.querySelector("#kcSbLinseDm").setAttribute("scale", (r * staerke).toFixed(1));
+  if (!h.style.filter) h.style.filter = "url(#kcSbLinse)";
+}
+// ---- Malen ----
+function jzbSbBlaseMalen(c, b) { // echte Seifenblase: fast durchsichtig, schillernder Rand, Glanzlicht
+  const r = b.r * (1 + Math.sin(b.ph * 3) * .04), x = b.x, y = b.y;
+  const g = c.createRadialGradient(x - r * .3, y - r * .3, r * .1, x, y, r);
+  g.addColorStop(0, "rgba(255,255,255,.03)"); g.addColorStop(.78, `hsla(${b.hue},90%,82%,.1)`); g.addColorStop(1, "rgba(255,255,255,.38)");
+  c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  c.lineWidth = Math.max(.6, r * .08);
+  c.strokeStyle = `hsla(${b.hue},90%,74%,.6)`; c.beginPath(); c.arc(x, y, r * .93, b.ph, b.ph + 2.2); c.stroke();
+  c.strokeStyle = `hsla(${(b.hue + 140) % 360},90%,72%,.5)`; c.beginPath(); c.arc(x, y, r * .93, b.ph + 2.7, b.ph + 4.7); c.stroke();
+  c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = .6; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
+  c.fillStyle = "rgba(255,255,255,.88)"; c.beginPath(); c.ellipse(x - r * .38, y - r * .42, Math.max(.6, r * .22), Math.max(.4, r * .12), -.6, 0, 7); c.fill();
+  if (r > 3) { c.fillStyle = "rgba(255,255,255,.5)"; c.beginPath(); c.arc(x + r * .42, y + r * .4, r * .08, 0, 7); c.fill(); }
+}
+function jzbSbKindMalen(c, x, y, s, dir, K, opt) { // Sommerkind: T-Shirt, kurze Hose, Pustering am Stab
+  const T = JZB.T, sw = opt.laeuft ? Math.sin(T * 12 + opt.ph) * 3 : 0, f = K.f, haut = "#f2c29b";
+  c.save(); c.translate(x, y); c.scale(dir * s, s); c.lineCap = "round"; c.lineJoin = "round";
+  c.strokeStyle = haut; c.lineWidth = 2.3; c.beginPath(); c.moveTo(-1.5, -7); c.lineTo(-1.5 - sw, -.8); c.moveTo(1.5, -7); c.lineTo(1.5 + sw, -.8); c.stroke();
+  c.fillStyle = "#2b2b2b"; for (const fx of [-1.5 - sw, 1.5 + sw]) { c.beginPath(); c.ellipse(fx + .8, -.5, 1.9, 1.1, 0, 0, 7); c.fill(); }
+  c.fillStyle = f[1]; c.beginPath(); c.moveTo(-3.8, -10.5); c.lineTo(3.8, -10.5); c.lineTo(3.6, -6.5); c.lineTo(.3, -6.5); c.lineTo(0, -8); c.lineTo(-.3, -6.5); c.lineTo(-3.6, -6.5); c.closePath(); c.fill();
+  const ky = -10;
+  c.strokeStyle = haut; c.lineWidth = 2; c.beginPath(); c.moveTo(-1, ky - 7); c.lineTo(-3 - sw * .4, ky - 1); c.stroke(); // hinterer Arm
+  c.fillStyle = f[0]; c.beginPath(); c.ellipse(0, ky - 4.5, 4.2, 5.4, 0, 0, 7); c.fill();
+  c.fillStyle = "rgba(0,0,0,.12)"; c.beginPath(); c.ellipse(-1.3, ky - 4, 2.2, 4.6, 0, 0, 7); c.fill();
+  const hx = opt.pustet ? 6.5 : opt.taucht ? 5 : 3 + sw * .4, hy = opt.pustet ? ky - 11 : opt.taucht ? ky - 2 : ky - 1;
+  c.strokeStyle = haut; c.lineWidth = 2; c.beginPath(); c.moveTo(1, ky - 7); c.quadraticCurveTo(hx - 1, (ky - 7 + hy) / 2 + 2, hx, hy); c.stroke();
+  // Stab und Ring (mit Seifenhaut)
+  const rx = hx + 2.6, ry = hy - 1.2; c.strokeStyle = "#e63946"; c.lineWidth = .9; c.beginPath(); c.moveTo(hx, hy); c.lineTo(rx, ry); c.stroke();
+  c.fillStyle = "rgba(200,235,255,.35)"; c.strokeStyle = "#e63946"; c.lineWidth = .8; c.beginPath(); c.ellipse(rx + 1.9, ry - .6, 1.9, 2.3, 0, 0, 7); c.fill(); c.stroke();
+  if (opt.taucht) { c.fillStyle = "#7fd3ff"; c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = .5; c.beginPath(); c.rect(rx - .5, ry + 1.5, 4.6, 5); c.fill(); c.stroke(); } // Fläschchen mit Seifenlauge
+  const kh = ky - 13.5; // Kopf
+  c.fillStyle = "#f6cba6"; c.beginPath(); c.arc(0, kh, 4.2, 0, 7); c.fill();
+  c.fillStyle = K.haar; c.beginPath(); c.arc(-.4, kh - .8, 4.4, Math.PI * .92, Math.PI * 2.08); c.fill(); c.beginPath(); c.arc(-3, kh + .2, 2, 0, 7); c.fill();
+  if (K.zopf) { c.beginPath(); c.ellipse(-5.6, kh + 1.6, 1.5, 3, .5, 0, 7); c.fill(); c.fillStyle = f[2]; c.beginPath(); c.arc(-4.6, kh - .2, .9, 0, 7); c.fill(); }
+  c.fillStyle = "#3a2a1a"; c.beginPath(); c.arc(2.1, kh - .3, .6, 0, 7); c.fill();
+  if (opt.pustet) { c.fillStyle = "rgba(255,130,130,.55)"; c.beginPath(); c.arc(2.4, kh + 1.5, 1.5, 0, 7); c.fill(); c.strokeStyle = "#a0523a"; c.lineWidth = .7; c.beginPath(); c.arc(3.7, kh + 1.4, .7, 0, 7); c.stroke(); }
+  else { c.strokeStyle = "#a0523a"; c.lineWidth = .7; c.beginPath(); c.arc(2, kh + 1.3, 1.2, .2, Math.PI * .8); c.stroke(); }
+  c.restore();
+}
+function jzbSbPutzerMalen(c, P, k, W) { // Fensterputzer: blaue Latzhose, Kappe, Leiter, Eimer, gelbes Tuch (weit weg: an der Teleskopstange)
+  const s = jzbSbS(), boden = jzbSbBoden(), T = JZB.T, haut = "#f1c19a";
+  const leiterH = 46 * s, steh = (P.klettern || 0) * leiterH * .42;
+  if (!P.traegt) { // Eimer und angelehnte Leiter
+    c.save(); c.translate(P.x + 15 * s, boden); c.fillStyle = "#9aa4ad"; c.strokeStyle = "#5c656d"; c.lineWidth = .8 * k;
+    c.beginPath(); c.moveTo(-5 * s, -9 * s); c.lineTo(5 * s, -9 * s); c.lineTo(4 * s, 0); c.lineTo(-4 * s, 0); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = "rgba(190,230,255,.9)"; c.beginPath(); c.ellipse(0, -9 * s, 5 * s, 1.4 * s, 0, 0, 7); c.fill();
+    c.beginPath(); c.arc(0, -9 * s, 5 * s, Math.PI, 0); c.stroke(); c.restore();
+    c.save(); c.translate(P.x, boden); c.strokeStyle = "#b8c0c8"; c.lineWidth = 1.6 * s; c.lineCap = "round";
+    c.beginPath(); c.moveTo(-6 * s, 0); c.lineTo(-2 * s, -leiterH); c.moveTo(6 * s, 0); c.lineTo(2 * s, -leiterH); c.stroke();
+    c.lineWidth = 1.1 * s; for (let i = 1; i < 9; i++) { const q = i / 9, y = -leiterH * q, b = 6 - 4 * q; c.beginPath(); c.moveTo(-b * s, y); c.lineTo(b * s, y); c.stroke(); }
+    c.restore(); }
+  // Figur
+  const fy = boden - steh, sw = P.laeuft ? Math.sin(T * 11) * 3 : 0;
+  c.save(); c.translate(P.x, fy); c.scale(P.dir * s, s); c.lineCap = "round"; c.lineJoin = "round";
+  c.strokeStyle = "#24476b"; c.lineWidth = 3; c.beginPath(); c.moveTo(-1.6, -10); c.lineTo(-1.6 - sw, -1); c.moveTo(1.6, -10); c.lineTo(1.6 + sw, -1); c.stroke();
+  c.fillStyle = "#2b2b2b"; for (const fx of [-1.6 - sw, 1.6 + sw]) { c.beginPath(); c.ellipse(fx + .9, -.6, 2.2, 1.2, 0, 0, 7); c.fill(); }
+  c.fillStyle = "#e9e3d6"; c.beginPath(); c.ellipse(0, -17, 4.6, 6.6, 0, 0, 7); c.fill(); // Hemd
+  c.fillStyle = "#2f5d8c"; c.fillRect(-4, -18, 8, 9); c.fillRect(-3.4, -22, 1.2, 5); c.fillRect(2.2, -22, 1.2, 5); // Latzhose
+  c.fillStyle = "#f6cba6"; c.beginPath(); c.arc(0, -27, 4.4, 0, 7); c.fill();
+  c.fillStyle = "#3a2a1a"; c.beginPath(); c.arc(2.2, -27.4, .6, 0, 7); c.fill(); c.strokeStyle = "#a0523a"; c.lineWidth = .7; c.beginPath(); c.arc(2, -25.6, 1.2, .2, Math.PI * .8); c.stroke();
+  c.fillStyle = "#d62828"; c.beginPath(); c.arc(0, -28.5, 4.6, Math.PI, 0); c.fill(); c.fillRect(0, -29, 7, 1.6); // Kappe mit Schirm
+  c.restore();
+  // Arm: trägt die Leiter, hält das Tuch oder wischt (die Stange verlängert, wenn das Tuch weit weg ist)
+  const sx = P.x + P.dir * 1 * s, sy = fy - 21 * s;
+  if (P.traegt) {
+    c.save(); c.translate(P.x, fy - 23 * s); c.rotate(-.06); c.strokeStyle = "#b8c0c8"; c.lineWidth = 1.5 * s; c.lineCap = "round";
+    c.beginPath(); c.moveTo(-26 * s, -1.5 * s); c.lineTo(22 * s, -1.5 * s); c.moveTo(-26 * s, 1.5 * s); c.lineTo(22 * s, 1.5 * s); c.stroke();
+    for (let x = -24; x <= 20; x += 5) { c.beginPath(); c.moveTo(x * s, -1.5 * s); c.lineTo(x * s, 1.5 * s); c.stroke(); } c.restore();
+    c.strokeStyle = haut; c.lineWidth = 2 * s; c.beginPath(); c.moveTo(sx, sy); c.lineTo(sx + P.dir * 3 * s, sy - 3 * s); c.stroke();
+    c.save(); c.translate(P.x - P.dir * 7 * s, boden); c.fillStyle = "#9aa4ad"; c.fillRect(-4 * s, -12 * s, 8 * s, 8 * s); c.restore(); // Eimer in der anderen Hand
+    return; }
+  const ziel = P.wischt != null ? jzbSbWischPunkt(P) : { x: sx + P.dir * 6 * s, y: sy + 6 * s }, arm = 9 * s, d = Math.hypot(ziel.x - sx, ziel.y - sy);
+  const hx = d > arm ? sx + (ziel.x - sx) / d * arm : ziel.x, hy = d > arm ? sy + (ziel.y - sy) / d * arm : ziel.y;
+  c.strokeStyle = haut; c.lineWidth = 2.1 * s; c.lineCap = "round"; c.beginPath(); c.moveTo(sx, sy); c.lineTo(hx, hy); c.stroke();
+  if (d > arm) { c.strokeStyle = "#8d99a6"; c.lineWidth = 1.1 * s; c.beginPath(); c.moveTo(hx, hy); c.lineTo(ziel.x, ziel.y); c.stroke(); }
+  c.save(); c.translate(ziel.x, ziel.y); c.rotate(Math.sin(T * 9) * .3); c.fillStyle = "#ffd23f"; c.strokeStyle = "#c79a00"; c.lineWidth = .6;
+  c.beginPath(); c.moveTo(-5 * s, -3 * s); c.quadraticCurveTo(0, -5 * s, 5 * s, -3 * s); c.lineTo(4.4 * s, 3.4 * s); c.quadraticCurveTo(0, 5 * s, -4.6 * s, 3 * s); c.closePath(); c.fill(); c.stroke(); c.restore();
+  void W;
+}
+function jzbSeifenblasenMalen(c, F) {
+  const J = JZB, k = J.k, W = F.sb, t = F.t; if (!W) return;
+  const boden = jzbSbBoden(), s = jzbSbS();
+  // Wiese
+  const g = c.createLinearGradient(0, boden - 6 * k, 0, J.h); g.addColorStop(0, "rgba(98,170,72,.92)"); g.addColorStop(1, "rgba(60,128,48,.97)");
+  c.fillStyle = g; c.beginPath(); c.moveTo(0, J.h); for (let x = 0; x <= J.w; x += 6 * k) c.lineTo(x, boden - 3 * k - Math.sin(x * .09) * 1.4 * k); c.lineTo(J.w, J.h); c.closePath(); c.fill();
+  for (let i = 0; i < 14; i++) { const x = (i * 71 % 100) / 100 * J.w, y = boden + (i * 37 % 4) * k; c.fillStyle = ["#fff", "#ffd23f", "#ff8fb1"][i % 3]; c.beginPath(); c.arc(x, y, 1.3 * k, 0, 7); c.fill(); }
+  // Kinder
+  JZB_SB_KINDER.forEach((_, i) => { const L = jzbSbKindLage(i, t); if (!L) return; const K = W.kinder[i];
+    jzbSbKindMalen(c, L.x, boden, s, L.dir, K, { laeuft: L.laeuft, ph: i * 1.7, pustet: K.pustet, taucht: K.taucht }); });
+  for (const b of W.blasen) jzbSbBlaseMalen(c, b);
+  c.fillStyle = "rgba(255,255,255,.75)"; for (const d of W.tropfen) { c.globalAlpha = Math.max(0, d.a) * F.a; c.beginPath(); c.arc(d.x, d.y, .9 * k, 0, 7); c.fill(); } c.globalAlpha = F.a;
+  // Scheibe: Schlieren, nasse Wischspur, Fensterputzer (vor dem Kopf)
+  const G = J.sbGlas; if (!G?.cv?.isConnected) return;
+  const gc = G.ctx; gc.clearRect(0, 0, G.w, G.h);
+  gc.globalAlpha = 1 - (G.blass || 0); gc.drawImage(G.dreck, 0, 0, G.w, G.h); gc.globalAlpha = 1;
+  gc.lineCap = "round"; for (const n of W.nass) { gc.strokeStyle = `rgba(255,255,255,${n.a * .25})`; gc.lineWidth = 3 * k; gc.beginPath(); gc.moveTo(n.x0, n.y0 + 10 * k); gc.lineTo(n.x1, n.y1 + 10 * k); gc.stroke(); }
+  const P = jzbSbPutzer(t); if (P) jzbSbPutzerMalen(gc, P, k, W);
 }
 // ---- 🚧 Baustelle (2.617.0 KC-CLUB-BAUSTELLE, Wunsch Hansi „rechts ein Haufen Erde, ein Radlader in Baustellengelb schaufelt ihn auf einen
 // Kipplaster, die Abgase schreiben den Namen, zwischendurch laufen Arbeiter mit gelben Helmen durch; dann kommt ein Sprengkommando, packt überall
@@ -22677,7 +22917,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
 const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", kuerbis: "Kürbis-Hund", twinkey: "Twinkey fegt",
-  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", wueste: "Wüste", baustelle: "Baustelle", advent: "Advent" };
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", wueste: "Wüste", baustelle: "Baustelle", seifenblasen: "Seifenblasen", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
   let b = $("jzVorschauAus");
