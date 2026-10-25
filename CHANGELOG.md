@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.650.0 – 2026-10-25 – 🎭 Spaßstimmen im App-Gespräch (KC-CLUB-SPASSSTIMME)
+Wunsch Hansi („verfremdete Stimmen: wenn einer anklopft und Sprechen wählt, melde ich mich z. B. mit Maus-, Roboter- oder Helium-Stimme – ruhig ein paar mehr“, für alle Mitglieder): Im App-Gespräch neuer Knopf 🎭 – 13 Stimmen: 🐭 Mäusestimme, 🎈 Helium, 🦆 Ente, 👽 Außerirdischer, 🤖 Roboter, 🥫 Blechdose, 🐻 Brummbär, 🏔️ Riese in der Höhle, 👻 Gespenst, 📻 Altes Radio, 📢 Megafon, 🔁 Echo, 🫧 Unter Wasser (und 🙂 Normal). Das Gegenüber hört die verfremdete Stimme, man selbst normal; jederzeit umschaltbar, Stumm wirkt weiter. Beim Anklopfen mit „Sprechen“ zusätzlich „🎭 Mit Spaßstimme annehmen“. Probehören (3 s aufnehmen, mit Effekt abspielen) unter Einstellungen beim Anklopfton. Technik: Web Audio auf dem Handy (Tonhöhe per AudioWorklet, Ringmodulator, Filter, Hall) – kein Server, keine Datenbank; ohne Spaßstimme bleibt der Anruf genau wie bisher.
+
 ## 2.649.0 – 2026-10-25 – 📤 „Wie verschicken?“ bei Nachrichten (KC-CLUB-VERSANDWAHL)
 Wunsch Hansi („unter Nachrichten so wie im Büro wählen: Alles, Mail, Push, WhatsApp – mit Anlage“; Entscheidungen: Pflicht bei mehreren Empfängern oder Anlage · „wichtig“ ohne Push bei Nur-E-Mail · „Nur als Mail“ nur für den Admin):
 - Vor dem Senden an mehrere oder mit Anlage fragt die App **„📤 Wie verschicken?“**: ✉️ Nur E-Mail · 🔔 Nur Push · 🟢 WhatsApp · ✅ Alles · 📱 Nur in der App · ⚙️ Wie jeder es eingestellt hat. Darunter steht vorher, was rausgeht (z. B. „✉️ 15 bekommen eine E-Mail mit Anhang · 1 ohne E-Mail-Adresse · kein Push“). Erst dann „📤 Jetzt senden“. Notfall, Express und 🔒 verschlüsselt wie bisher ohne Abfrage.

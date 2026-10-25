@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.649.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.650.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5367,6 +5367,7 @@ const HILFE = [
   { id: "spiel_pause", thema: "club", sym: "⏸", t: "Spiel kurz anhalten", x: "Kommt beim Spielen gegen den Computer etwas dazwischen? Unten auf <b>„⏸ Pause“</b> tippen – mit <b>„▶ Weiter“</b> geht es genau dort weiter.", zeig: () => spStart(), seit: "2.23.1" },
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
+  { id: "spassstimme", thema: "toene", sym: "🎭", t: "Spaßstimmen im Gespräch", x: "Im App-Gespräch auf <b>🎭</b> tippen und eine Stimme wählen – z. B. 🐭 Mäusestimme, 🎈 Helium, 🤖 Roboter, 🐻 Brummbär oder 👻 Gespenst. Dein Gegenüber hört dich damit, du selbst hörst normal; mit 🙂 Normal geht es zurück. Klopft jemand mit „Sprechen“ an, kannst du gleich <b>„🎭 Mit Spaßstimme annehmen“</b>. Ausprobieren: ⚙️ → Privatsphäre → beim Anklopfton.", seit: "2.650.0" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
   { id: "wer_ist_da", thema: "toene", sym: "👋", t: "Wer ist da, wenn ich reinkomme?", x: "Beim Reinkommen – also beim Öffnen der App oder nach mindestens 10 Minuten Pause – sagt sie einmal, wer gerade da ist – z. B. <b>„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“</b> Oben erscheint dazu eine kurze Meldung. Ist niemand da, kommt nichts. Wer seinen Online-Status verbirgt, wird nicht genannt. Das Handy spricht erst, wenn du einmal auf den Bildschirm getippt hast. Ausschalten: ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → <b>„👋 Beim Öffnen“</b>.", zeig: () => einstiegHin("ansagen"), seit: "2.454.0" },
   { id: "ansage_verlassen", thema: "toene", sym: "🚪", t: "Ansage, wenn jemand die App verlässt", x: "Neben „… ist jetzt online“ kann das Handy auch ansagen, wenn jemand die App verlässt. Das ist zunächst aus – unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ kannst du es dazunehmen, wenn du magst.", zeig: () => einstiegHin("ansagen"), seit: "2.23.1" },
@@ -8039,6 +8040,7 @@ function klopfZeigen(k, antworten) {
   const sp = klopfSprechen(k); // 2.647.0 KC-CLUB-ANKLOPFEN-ART
   $("klopfText").innerHTML = `<h3>👋 ${esc(k.von.vorname)} klopft an</h3><p class="klopf-art ${sp ? "sprechen" : "schreiben"}">${sp ? "📞 will mit dir sprechen" : "💬 will mit dir schreiben"}</p><p style="margin:0">${esc(k.von.name)} möchte gerade mit dir ${sp ? "sprechen (Anruf in der App)" : "schreiben"}. Möchtest du das Gespräch annehmen?</p>`;
   $("klopfJa").textContent = sp ? "📞 Annehmen – jetzt sprechen" : "✅ Annehmen – jetzt schreiben";
+  $("klopfStimme").classList.toggle("versteckt", !sp); // 2.650.0 KC-CLUB-SPASSSTIMME
   // KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0): Kurzantworten aus der Server-Registry – antippen beendet das Anklopfen sofort
   $("klopfKacheln").innerHTML = `<button class="klopf-ab" onclick="klopfKurz('ab', this.textContent)">📼 Anrufbeantworter einschalten</button>` // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
     + (antworten || []).map((a) => `<button onclick="klopfKurz('${esc(a.id)}', this.textContent)">${esc(a.text)}</button>`).join("");
@@ -8359,6 +8361,10 @@ async function schnellSetzen(teil) {
 }
 function nfpZeigenOderAusfuellen() { if (nfpGefuellt(nfpLesen())) nfpZeigen(); else nfpBearbeiten(); }
 
+async function klopfMitStimme() { // 2.650.0 KC-CLUB-SPASSSTIMME: erst Stimme wählen, dann wie „Annehmen – jetzt sprechen“
+  if (!KLOPF) return; const id = await sstWahl("annehmen"); if (!id) return;
+  SST.vorwahl = id === "normal" ? null : id; klopfAntwort(true);
+}
 async function klopfAntwort(annehmen) {
   $("klopfBlatt").classList.add("versteckt");
   if (!KLOPF) return;
@@ -8726,6 +8732,143 @@ async function rufVideoRate(pc, bps, aktiv = true) {
     p.encodings[0].maxBitrate = bps; p.encodings[0].active = aktiv; if (mitVorrang) p.degradationPreference = "balanced"; await s.setParameters(p); return true; };
   try { return await setze(true); } catch { try { return await setze(false); } catch { return false; } }
 }
+// ---------- 2.650.0 KC-CLUB-SPASSSTIMME (Wunsch Hansi „verfremdete Stimmen: wenn einer anklopft und Sprechen wählt, melde ich mich z. B. mit
+// Maus-, Roboter- oder Helium-Stimme“ – „ruhig ein paar mehr“, für alle). Alles auf dem Handy: Mikrofon → Effekt → Gegenüber (Web Audio).
+// Das Gegenüber hört die verfremdete Stimme, man selbst hört ganz normal. Umschalten jederzeit im Gespräch; „Normal“ = durchgereicht.
+// Stumm bleibt wie bisher (die Mikrofon-Spur wird abgeschaltet → der Effekt bekommt Stille). Kein Server, keine Datenbank.
+const SST_STIMMEN = [
+  { id: "normal", sym: "🙂", t: "Normal" }, { id: "maus", sym: "🐭", t: "Mäusestimme" }, { id: "helium", sym: "🎈", t: "Helium" },
+  { id: "ente", sym: "🦆", t: "Ente" }, { id: "alien", sym: "👽", t: "Außerirdischer" }, { id: "roboter", sym: "🤖", t: "Roboter" },
+  { id: "blech", sym: "🥫", t: "Blechdose" }, { id: "brumm", sym: "🐻", t: "Brummbär" }, { id: "riese", sym: "🏔️", t: "Riese in der Höhle" },
+  { id: "geist", sym: "👻", t: "Gespenst" }, { id: "radio", sym: "📻", t: "Altes Radio" }, { id: "megafon", sym: "📢", t: "Megafon" },
+  { id: "echo", sym: "🔁", t: "Echo" }, { id: "wasser", sym: "🫧", t: "Unter Wasser" },
+];
+const SST_TONHOEHE = `class KcTonhoehe extends AudioWorkletProcessor {
+  static get parameterDescriptors() { return [{ name: "faktor", defaultValue: 1, minValue: 0.25, maxValue: 3 }]; }
+  constructor() { super(); this.n = 8192; this.b = new Float32Array(this.n); this.w = 0; this.ph = 0; this.L = 1536; }
+  lies(d) { let p = this.w - 1 - d; while (p < 0) p += this.n; const i = Math.floor(p), f = p - i, a = this.b[i % this.n], c = this.b[(i + 1) % this.n]; return a + (c - a) * f; }
+  process(ein, aus, par) {
+    const e = ein[0] && ein[0][0], o = aus[0]; if (!o || !o[0]) return true;
+    const r = par.faktor[0], L = this.L, h = L / 2;
+    for (let k = 0; k < o[0].length; k++) {
+      this.b[this.w] = e ? e[k] : 0;
+      this.ph += 1 - r; if (this.ph >= L) this.ph -= L; if (this.ph < 0) this.ph += L;
+      const d1 = this.ph, d2 = (this.ph + h) % L, g1 = 0.5 - 0.5 * Math.cos(2 * Math.PI * d1 / L), g2 = 1 - g1;
+      const v = this.lies(d1) * g1 + this.lies(d2) * g2;
+      for (let c = 0; c < o.length; c++) o[c][k] = v;
+      this.w = (this.w + 1) % this.n;
+    }
+    return true;
+  }
+}
+registerProcessor("kc-tonhoehe", KcTonhoehe);`;
+const SST = { wahl: "normal", vorwahl: null, ctx: null, quelle: null, ziel: null, knoten: [], worklet: false, spur: null };
+async function sstKontext() {
+  if (SST.ctx && SST.ctx.state !== "closed") return SST.ctx;
+  SST.ctx = new (window.AudioContext || window.webkitAudioContext)(); SST.worklet = false;
+  try { await SST.ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([SST_TONHOEHE], { type: "application/javascript" }))); SST.worklet = true; } catch {}
+  return SST.ctx;
+}
+// Baut den Effekt für eine Stimme zwischen ein (AudioNode) und aus (AudioNode); gibt die Knoten zum späteren Abbauen zurück
+function sstBauen(ctx, ein, aus, id) {
+  const K = [], neu = (n) => (K.push(n), n);
+  const ton = (f) => { if (!SST.worklet) return null; const n = neu(new AudioWorkletNode(ctx, "kc-tonhoehe")); n.parameters.get("faktor").value = f; return n; };
+  const filt = (typ, f, q = 1, g = 0) => { const n = neu(ctx.createBiquadFilter()); n.type = typ; n.frequency.value = f; n.Q.value = q; n.gain.value = g; return n; };
+  const verzerr = (st) => { const n = neu(ctx.createWaveShaper()), c = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; c[i] = Math.tanh(st * x) / Math.tanh(st); } n.curve = c; return n; };
+  const ring = (f, mix) => { // Ringmodulator (Roboter/Alien): Signal × Sinus
+    const g = neu(ctx.createGain()); g.gain.value = 0; const o = neu(ctx.createOscillator()); o.frequency.value = f;
+    const t = neu(ctx.createGain()); t.gain.value = 1; o.connect(t).connect(g.gain); o.start();
+    const nass = neu(ctx.createGain()); nass.gain.value = mix; const trocken = neu(ctx.createGain()); trocken.gain.value = 1 - mix; const sum = neu(ctx.createGain());
+    return { ein: (x) => { x.connect(g); x.connect(trocken); g.connect(nass); nass.connect(sum); trocken.connect(sum); }, aus: sum };
+  };
+  const kamm = (sek, fb) => { const d = neu(ctx.createDelay(1)); d.delayTime.value = sek; const r = neu(ctx.createGain()); r.gain.value = fb; d.connect(r).connect(d); return d; };
+  const hall = (sek, abkl) => { const n = neu(ctx.createConvolver()), len = Math.floor(ctx.sampleRate * sek), b = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, abkl); } n.buffer = b; return n; };
+  const kette = (...n) => { let a = ein; for (const x of n.filter(Boolean)) { a.connect(x); a = x; } a.connect(aus); };
+  const laut = (v) => { const g = neu(ctx.createGain()); g.gain.value = v; return g; };
+  switch (id) {
+    case "maus": kette(ton(1.9), filt("highshelf", 2500, 1, 4)); break;
+    case "helium": kette(ton(1.5), filt("highpass", 250), filt("peaking", 3000, 1, 5)); break;
+    case "ente": kette(ton(1.65), filt("bandpass", 1700, 3), verzerr(4), laut(1.6)); break;
+    case "alien": { const r = ring(420, 0.55); const t = ton(1.25); if (t) { ein.connect(t); r.ein(t); } else r.ein(ein); r.aus.connect(aus); break; }
+    case "roboter": { const r = ring(55, 1); r.ein(ein); const k = kamm(0.006, 0.45); r.aus.connect(k); r.aus.connect(aus); k.connect(aus); break; }
+    case "blech": { const k = kamm(0.0035, 0.75), b = filt("bandpass", 1500, 1.2); ein.connect(k); k.connect(b); ein.connect(b); b.connect(laut(1.3)).connect(aus); break; }
+    case "brumm": kette(ton(0.68), filt("lowshelf", 250, 1, 4)); break;
+    case "riese": { const t = ton(0.55), h = hall(1.6, 3), n = laut(0.5); const q = t || ein; if (t) ein.connect(t); q.connect(aus); q.connect(h); h.connect(n).connect(aus); break; }
+    case "geist": { const t = ton(0.85), h = hall(2.5, 2), n = laut(0.7), tr = neu(ctx.createGain()), o = neu(ctx.createOscillator()), tg = neu(ctx.createGain());
+      o.frequency.value = 5; tg.gain.value = 0.35; tr.gain.value = 0.65; o.connect(tg).connect(tr.gain); o.start();
+      const q = t || ein; if (t) ein.connect(t); q.connect(tr); tr.connect(aus); tr.connect(h); h.connect(n).connect(aus); break; }
+    case "radio": kette(filt("highpass", 450), filt("lowpass", 2800), verzerr(3), laut(0.9)); break;
+    case "megafon": kette(filt("highpass", 650), filt("peaking", 2000, 1, 9), filt("lowpass", 3800), verzerr(6), laut(0.8)); break;
+    case "echo": { const d = neu(ctx.createDelay(2)); d.delayTime.value = 0.3; const r = laut(0.45); ein.connect(aus); ein.connect(d); d.connect(r).connect(d); r.connect(aus); break; }
+    case "wasser": { const d = neu(ctx.createDelay(0.1)); d.delayTime.value = 0.01; const o = neu(ctx.createOscillator()), g = neu(ctx.createGain()); o.frequency.value = 4; g.gain.value = 0.004; o.connect(g).connect(d.delayTime); o.start();
+      kette(filt("lowpass", 550, 2), d, laut(1.4)); break; }
+    default: ein.connect(aus);
+  }
+  return K;
+}
+function sstUmbauen() {
+  if (!SST.quelle || !SST.ziel) return;
+  try { SST.quelle.disconnect(); } catch {}
+  for (const n of SST.knoten) { try { n.stop?.(); } catch {} try { n.disconnect(); } catch {} }
+  SST.knoten = sstBauen(SST.ctx, SST.quelle, SST.ziel, SST.wahl);
+}
+// Im Gespräch: statt der Mikrofon-Spur die Effekt-Spur senden (für jede Verbindung, auch neu aufgebaute/Konferenz)
+async function sstSender(pc) {
+  const mik = RUF?.strom?.getAudioTracks()[0]; if (!pc || !mik) return;
+  if (SST.wahl === "normal" && !SST.spur) return; // nie umgeschaltet → alles wie bisher
+  try {
+    const ctx = await sstKontext(); ctx.resume?.();
+    if (!SST.spur || SST.mik !== mik) {
+      SST.mik = mik; SST.quelle = ctx.createMediaStreamSource(new MediaStream([mik])); SST.ziel = ctx.createMediaStreamDestination();
+      SST.spur = SST.ziel.stream.getAudioTracks()[0]; sstUmbauen();
+    }
+    const snd = pc.getSenders().find((x) => x.track?.kind === "audio" || x.track === null); if (snd && snd.track !== SST.spur) await snd.replaceTrack(SST.spur);
+  } catch {}
+}
+async function sstSetzen(id) {
+  SST.wahl = SST_STIMMEN.some((x) => x.id === id) ? id : "normal";
+  if (!RUF?.pc) return sstKnopf();
+  if (!SST.spur) await sstSender(RUF.pc); else sstUmbauen();
+  if (RUF.konf) for (const b of RUF.konf.beine.values()) await sstSender(b.pc);
+  sstKnopf(); const s = SST_STIMMEN.find((x) => x.id === SST.wahl); melde(SST.wahl === "normal" ? "🙂 Wieder deine normale Stimme" : `${s.sym} Du sprichst jetzt als ${s.t}`);
+  if (!SST.worklet && ["maus", "helium", "ente", "brumm", "riese"].includes(SST.wahl)) melde("Dieses Handy kann die Tonhöhe nicht verändern – der Effekt ist schwächer.");
+}
+function sstKnopf() { const b = $("anrufStimmeKnopf"); if (b) { const s = SST_STIMMEN.find((x) => x.id === SST.wahl); b.textContent = SST.wahl === "normal" ? "🎭" : s.sym; b.className = "rund2 " + (SST.wahl === "normal" ? "grau" : "an"); } }
+function sstAufraeumen() {
+  for (const n of SST.knoten) { try { n.stop?.(); } catch {} } SST.knoten = [];
+  try { SST.ctx?.close(); } catch {} Object.assign(SST, { wahl: "normal", ctx: null, quelle: null, ziel: null, spur: null, mik: null });
+}
+// Auswahl-Fenster: im Gespräch sofort umschalten; vorher (Annehmen mit Spaßstimme) nur merken; außerhalb: Probehören
+function sstWahl(modus = "gespraech") {
+  return new Promise((fertig) => {
+    const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎭 Spaßstimme</h3>
+      <p class="dlg-text">${modus === "gespraech" ? "Dein Gegenüber hört dich mit dieser Stimme – du selbst hörst normal. Jederzeit umschaltbar." : modus === "annehmen" ? "Mit welcher Stimme meldest du dich? Danach wird gleich verbunden." : "Tippe eine Stimme an, sprich 3 Sekunden – dann hörst du dich damit."}</p>
+      <div class="sst-wahl">${SST_STIMMEN.map((x) => `<button type="button" class="knopf klein${x.id === (modus === "gespraech" ? SST.wahl : "") ? " haupt" : ""}" data-s="${x.id}">${x.sym} ${esc(x.t)}</button>`).join("")}</div>
+      ${modus === "gespraech" ? '<p class="hinweis" style="margin:6px 0 0;font-size:.8rem">Tipp: Mit Kopfhörer klingt es fürs Gegenüber am besten.</p>' : ""}`, () => fertig(null));
+    const zu = () => { f.remove(); fertig(null); };
+    f.querySelector('[data-a="zu"]').onclick = zu;
+    f.querySelectorAll("[data-s]").forEach((b) => (b.onclick = async () => {
+      if (modus === "probe") return sstProbe(b.dataset.s, b);
+      f.remove(); if (modus === "gespraech") await sstSetzen(b.dataset.s); fertig(b.dataset.s);
+    }));
+  });
+}
+// Probehören ohne Rückkopplung: 3 s aufnehmen, dann mit dem Effekt abspielen
+async function sstProbe(id, knopf) {
+  let strom; try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch { return melde("Bitte das Mikrofon erlauben – sonst geht das Probehören nicht."); }
+  const alt = knopf.textContent; knopf.disabled = true; knopf.textContent = "🎙️ Sprich jetzt … 3";
+  const teile = [], rec = new MediaRecorder(strom); rec.ondataavailable = (e) => e.data.size && teile.push(e.data);
+  let n = 3; const uhr = setInterval(() => { n--; if (n > 0) knopf.textContent = `🎙️ Sprich jetzt … ${n}`; }, 1000);
+  rec.onstop = async () => {
+    clearInterval(uhr); strom.getTracks().forEach((t) => t.stop()); knopf.textContent = "🔊 Hör mal …";
+    try { const ctx = await sstKontext(); await ctx.resume?.(); const puf = await ctx.decodeAudioData(await new Blob(teile).arrayBuffer());
+      const q = ctx.createBufferSource(); q.buffer = puf; const ziel = ctx.createGain(); ziel.connect(ctx.destination); const k = sstBauen(ctx, q, ziel, id); q.start();
+      q.onended = () => setTimeout(() => { k.forEach((x) => { try { x.stop?.(); } catch {} try { x.disconnect(); } catch {} }); try { ziel.disconnect(); } catch {} knopf.disabled = false; knopf.textContent = alt; }, 1500);
+    } catch { knopf.disabled = false; knopf.textContent = alt; melde("Probehören hat nicht geklappt."); }
+  };
+  rec.start(); setTimeout(() => rec.state !== "inactive" && rec.stop(), 3000);
+}
 async function anrufVerbindung(mitBild) {
   if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Dieses Handy/dieser Browser kann keine App-Anrufe.");
   const iceWarte = rufIce(); // KC-CLUB-ANRUF-TURN: gleichzeitig mit der Mikrofon-/Kamera-Freigabe holen
@@ -8735,6 +8878,8 @@ async function anrufVerbindung(mitBild) {
   catch { throw new Error(mitBild ? "Bitte Kamera und Mikrofon erlauben (Chrome fragt danach) – sonst geht der Videoanruf nicht." : "Bitte das Mikrofon erlauben (Chrome fragt danach) – sonst geht der Anruf nicht."); }
   const pc = new RTCPeerConnection({ iceServers: await iceWarte });
   strom.getTracks().forEach((t) => pc.addTrack(t, strom));
+  if (SST.vorwahl) { SST.wahl = SST.vorwahl; SST.vorwahl = null; } // 2.650.0 KC-CLUB-SPASSSTIMME: „mit Spaßstimme annehmen“
+  if (RUF) RUF.strom = RUF.strom || strom; sstSender(pc).then(sstKnopf); // nur wenn eine Spaßstimme gewählt ist
   // KC-CLUB-VIDEO: wer „nur mit Ton“ annimmt, empfängt das Bild trotzdem (der Video-Kanal kommt aus dem Angebot)
   if (mitBild) { $("anrufSelbst").srcObject = strom; $("anrufSelbst").classList.remove("versteckt"); }
   pc.ontrack = (e) => {
@@ -8922,7 +9067,7 @@ function anrufKnoepfe(art) {
   const video = RUF?.art === "video", kamera = !!RUF?.strom?.getVideoTracks().length;
   $("anrufKnoepfe").innerHTML = art === "eingehend"
     ? `<button class="rund2 rotk" title="Ablehnen" onclick="anrufAuflegen()">✖</button><button class="rund2 gruen" title="${video ? "Nur mit Ton annehmen" : "Annehmen"}" onclick="anrufAnnehmen(false)">📞</button>${video ? `<button class="rund2 gruen" title="Mit Bild annehmen" onclick="anrufAnnehmen(true)">🎥</button>` : ""}`
-    : `<button class="rund2 grau" id="anrufStummKnopf" title="Stumm" onclick="anrufStumm()">🎙️</button>${!kamera && RUF?.art === "ton" && art === "aktiv" ? `<button class="rund2 grau" title="Jemanden dazuholen (Konferenz)" onclick="konfWahl()">➕</button>` : ""}${kamera ? `<button class="rund2 grau" id="anrufKameraKnopf" title="Kamera aus/an" onclick="anrufKamera()">📷</button><button class="rund2 grau" title="Kamera wechseln" onclick="anrufKameraWechseln()">🔄</button>` : ""}<button class="rund2 rotk" title="Auflegen" onclick="anrufAuflegen()">✖</button>`;
+    : `<button class="rund2 grau" id="anrufStummKnopf" title="Stumm" onclick="anrufStumm()">🎙️</button>${art === "aktiv" || art === "rufe" ? `<button class="rund2 ${SST.wahl === "normal" ? "grau" : "an"}" id="anrufStimmeKnopf" title="Spaßstimme" onclick="sstWahl()">${SST.wahl === "normal" ? "🎭" : SST_STIMMEN.find((x) => x.id === SST.wahl).sym}</button>` : ""}${!kamera && RUF?.art === "ton" && art === "aktiv" ? `<button class="rund2 grau" title="Jemanden dazuholen (Konferenz)" onclick="konfWahl()">➕</button>` : ""}${kamera ? `<button class="rund2 grau" id="anrufKameraKnopf" title="Kamera aus/an" onclick="anrufKamera()">📷</button><button class="rund2 grau" title="Kamera wechseln" onclick="anrufKameraWechseln()">🔄</button>` : ""}<button class="rund2 rotk" title="Auflegen" onclick="anrufAuflegen()">✖</button>`;
 }
 function anrufUhr() {
   clearInterval(RUF.uhr);
@@ -9075,7 +9220,7 @@ function konfStart(k) {
 }
 function konfPc(gegen) {
   const pc = new RTCPeerConnection({ iceServers: rufIceJetzt() }); // KC-CLUB-ANRUF-TURN: Wege vom Gesprächsbeginn (gemerkt)
-  RUF.strom.getAudioTracks().forEach((t) => pc.addTrack(t, RUF.strom));
+  RUF.strom.getAudioTracks().forEach((t) => pc.addTrack(t, RUF.strom)); sstSender(pc); // 2.650.0 KC-CLUB-SPASSSTIMME: auch Konferenz-/Neu-Verbindung
   const audio = document.createElement("audio"); audio.autoplay = true; audio.setAttribute("playsinline", ""); audio.className = "konf-ton"; $("anrufSchirm").appendChild(audio);
   const bein = { pc, gegen, audio };
   pc.ontrack = (e) => { audio.srcObject = e.streams[0]; audio.play?.().catch(() => {}); };
@@ -9304,6 +9449,7 @@ function anrufAufraeumen() {
   document.querySelectorAll("#anrufSchirm .konf-ton").forEach((a) => a.remove()); $("anrufKonf").innerHTML = ""; $("konfWahlBlatt").classList.add("versteckt");
   klangAus(); clearInterval(RUF.poll); clearInterval(RUF.uhr); rufNeuWeg(RUF); clearInterval(RUF.q?.uhr); rufQAnzeigen(true); // KC-CLUB-ANRUF-BESSER
   try { RUF.strom?.getTracks().forEach((t) => t.stop()); } catch {}
+  sstAufraeumen(); // 2.650.0 KC-CLUB-SPASSSTIMME
   try { RUF.pc?.close(); } catch {}
   $("anrufTon").srcObject = null; $("anrufVideo").srcObject = null; $("anrufSelbst").srcObject = null;
   $("anrufVideo").classList.add("versteckt"); $("anrufSelbst").classList.add("versteckt"); $("anrufSchirm").classList.remove("mitbild");

@@ -1011,6 +1011,7 @@
   .cj-form textarea, .cj-form select, .cj-leitung select, .cj-leitung input[type=date] { width: 100%; box-sizing: border-box; font-size: 1rem; min-height: 44px; }
   .cj-leitung { margin-top: 14px; } .cj-leitung > summary { font-weight: 700; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
   .ca-leute { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; } .ca-leute .knopf { width: auto; } .ca-chip { background: var(--karte2); border-radius: 12px; padding: 4px 10px; font-size: .9rem; }
+  .sst-wahl { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; } .sst-wahl .knopf { width: auto; } #anrufStimmeKnopf.an { background: #8e44ad; color: #fff; }
   .klopf-art { display: inline-block; margin: 2px 0 8px; padding: 4px 12px; border-radius: 14px; font-weight: 700; font-size: 1.05rem; } .klopf-art.schreiben { background: var(--blaubg, #e3eefb); color: var(--blau, #1d4f8a); } .klopf-art.sprechen { background: var(--gruenbg); color: var(--gruen); }
   .ca-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 4px 0 2px; font-size: .82rem; } .ca-legende .ca-amp { border-left: 4px solid transparent; padding-left: 5px; }
   .ca-amp.ja { border-left: 5px solid var(--gruen); } .ca-leute .ca-amp.ja { background: var(--gruenbg); }
@@ -5458,6 +5459,7 @@
       <div class="hinweis" style="margin:0 0 8px">Wer bei dir anklopft, kann dir dann eine Nachricht aufsprechen (bis zu 2 Minuten). „Immer sofort“ gilt auch, wenn Anklopfen ausgeschaltet ist. Abhören: 💬 Nachrichten → 📼 Mein Anrufbeantworter.</div>
       <details class="abh-klappe" data-abh="setAnklopfen"><summary>🔔 Anklopfton</summary> <!-- 2.478.0 KC-CLUB-EINST-KLAPPEN: klappt mit dem Häkchen darüber auf -->
         <div class="zwei"><label class="feld">🔔 Anklopfton<select id="setKlopfTon" onchange="anklopfenSetzen({ ton: this.value })"></select></label><button class="knopf klein" style="align-self:end" onclick="klopfTonSpielen($('setKlopfTon').value)">▶ Testton</button></div>
+        <button class="knopf klein" style="margin-top:6px" onclick="sstWahl('probe')">🎭 Spaßstimmen fürs Gespräch ausprobieren</button><!-- 2.650.0 KC-CLUB-SPASSSTIMME -->
       </details>
       <div class="schalter"><div><b>👁️ Andere sehen live, was ich tippe</b><div class="hinweis">In Unterhaltungen sehen die anderen deinen Text schon beim Schreiben – auch, was du wieder löschst. Nicht gesendete Entwürfe werden nicht gespeichert und nach wenigen Sekunden verworfen. Standard: aus.</div></div><input type="checkbox" id="setLiveTippen" onchange="liveTippenSetzen(this.checked)"></div>
       <p class="hinweis" style="margin:14px 0 0"><b>Für andere Mitglieder sichtbar:</b> (Aushilfen sehen keine Kontaktdaten)</p>
@@ -5852,6 +5854,7 @@
 <div class="blatt versteckt" id="klopfBlatt">
   <div class="blatt-innen klopfen"><div id="klopfText"></div>
     <button class="knopf haupt" id="klopfJa" onclick="klopfAntwort(true)">✅ Annehmen – jetzt schreiben</button>
+    <button class="knopf versteckt" id="klopfStimme" onclick="klopfMitStimme()">🎭 Mit Spaßstimme annehmen</button>
     <div class="klopf-kacheln" id="klopfKacheln"></div>
     <button class="knopf" onclick="klopfAntwort(false)">⏳ Später</button></div>
 </div>
@@ -5945,7 +5948,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.649.0" data-v="2.649.0"></script>
+<script src="app.js?v=2.650.0" data-v="2.650.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

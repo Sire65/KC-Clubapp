@@ -7407,6 +7407,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const mig = fs.readFileSync(new URL("../supabase/migrations/20261025_kc_club_anklopfen_art.sql", import.meta.url), "utf8");
   assert.match(mig, /add column if not exists art text;[\s\S]*check \(art is null or art in \('schreiben', 'sprechen'\)\)/, "Migration: Spalte art");
 }
+// 2.650.0 KC-CLUB-SPASSSTIMME: verfremdete Stimmen im App-Gespräch
+{
+  const ids = [...programm.matchAll(/\{ id: "([a-z]+)", sym: "[^"]+", t: "[^"]+" \}/g)].map((m) => m[1]);
+  for (const id of ["normal", "maus", "helium", "ente", "alien", "roboter", "blech", "brumm", "riese", "geist", "radio", "megafon", "echo", "wasser"]) assert.ok(ids.includes(id), "Stimme " + id);
+  assert.match(programm, /registerProcessor\("kc-tonhoehe", KcTonhoehe\)/, "Tonhöhe per AudioWorklet");
+  assert.match(programm, /if \(SST\.wahl === "normal" && !SST\.spur\) return; \/\/ nie umgeschaltet → alles wie bisher/, "ohne Spaßstimme unverändert");
+  assert.match(programm, /await snd\.replaceTrack\(SST\.spur\)/, "Effekt-Spur wird gesendet");
+  assert.match(programm, /pc\.addTrack\(t, RUF\.strom\)\); sstSender\(pc\);/, "auch Konferenz/Neuaufbau");
+  assert.match(programm, /sstAufraeumen\(\); \/\/ 2\.650\.0 KC-CLUB-SPASSSTIMME\n  try \{ RUF\.pc\?\.close\(\); \} catch \{\}/, "nach dem Gespräch aufräumen");
+  assert.match(programm, /id="anrufStimmeKnopf" title="Spaßstimme" onclick="sstWahl\(\)"/, "Knopf im Gespräch");
+  assert.match(html, /id="klopfStimme" onclick="klopfMitStimme\(\)">🎭 Mit Spaßstimme annehmen/, "beim Anklopfen mit Sprechen");
+  assert.match(html, /onclick="sstWahl\('probe'\)">🎭 Spaßstimmen fürs Gespräch ausprobieren/, "Probehören");
+  assert.match(programm, /\$\("klopfStimme"\)\.classList\.toggle\("versteckt", !sp\)/, "nur bei Sprechen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
