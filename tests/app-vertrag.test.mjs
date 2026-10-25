@@ -7395,6 +7395,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /if \(annehmen && \(r\.art === "sprechen" \|\| klopfSprechen\(k\)\)\) anrufen\(k\.von\.person_id\)/, "Sprechen → anrufen");
   assert.match(programm, /api\("anklopfen", \{ an: pid, art \}\); if \(r\.ab\)/, "Weiter anklopfen behält die Wahl");
   assert.match(html, /id="klopfJa" onclick="klopfAntwort\(true\)"/, "Annehmen-Knopf beschriftbar");
+  assert.match(programm, /if \(klopfSprechenAnnehmen\(\)\) return; \/\/ 2\.646\.0/, "Rückruf wird beim Anklopfer von selbst angenommen");
+  assert.match(programm, /RUF\.art === "video" \|\| RUF\.konferenzId \|\| RUF\.gegen\?\.person_id !== w\.pid\) return false;/, "nur genau diese Person, nur Ton, nur 90 s");
   assert.match(server, /insert\(\{ von: ich\.person_id, an, \.\.\.\(art === "sprechen" \? \{ art \} : \{\}\) \}\)[^\n]*\n\s*if \(error && art === "sprechen"\)/, "Server: art speichern, ohne Spalte weiter");
   assert.match(server, /db\.from\("kc_club_anklopfen"\)\.select\("\*"\) \/\/ 2\.646\.0/, "online liest art mit, ohne Spaltenliste");
   assert.match(server, /titel: `👋 \$\{ich\.vorname\} klopft an` \+ \(art === "sprechen" \? " – 📞 möchte sprechen" : " – 💬 möchte schreiben"\)/, "Push sagt, was gewünscht ist");

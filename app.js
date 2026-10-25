@@ -7628,7 +7628,7 @@ async function onlinePing() {
       ONL.erledigt.add("a" + a.id);
       if (ONL.wartet === a.id) { ONL.wartet = null; onlineTakt(); }
       if (KW?.id === a.id) klopfWartenEnde();
-      if (a.status === "angenommen" && klopfSprechen(a)) { melde(`✅ ${a.an.vorname} hat angenommen und ruft dich gleich an 📞`); try { navigator.vibrate?.(60); } catch {} } // 2.646.0
+      if (a.status === "angenommen" && klopfSprechen(a)) { melde(`✅ ${a.an.vorname} hat angenommen – ihr werdet gleich verbunden 📞`); try { navigator.vibrate?.(60); } catch {} klopfSprechenErwarten(a.an.person_id); } // 2.646.0
       else if (a.status === "angenommen" && a.thread) { melde(`✅ ${a.an.vorname} hat angenommen – schreibt los!`); try { navigator.vibrate?.(60); } catch {} chatOeffnen(a.thread); }
       else if (a.status === "anrufbeantworter") abAngebot(a.an, a.id); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
       else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
@@ -7920,6 +7920,18 @@ function klopfArtWaehlen(name) {
   });
 }
 const klopfSprechen = (k) => k?.art === "sprechen";
+// Wer „Sprechen“ angeklopft hat, muss den Rückruf nicht noch einmal annehmen (Hansi: „Gespräch annehmen klicken und bin dann verbunden“):
+// ruft genau diese Person innerhalb von 90 s per Ton an, nimmt die App von selbst an – egal ob Antwort oder Anruf zuerst ankommt.
+let KLOPF_SPRICHT = null;
+function klopfSprechenErwarten(pid) {
+  KLOPF_SPRICHT = { pid, bis: Date.now() + 90000 };
+  if (RUF?.rolle === "angerufen" && !RUF.pc) klopfSprechenAnnehmen();
+}
+function klopfSprechenAnnehmen() {
+  const w = KLOPF_SPRICHT;
+  if (!w || Date.now() > w.bis || RUF?.rolle !== "angerufen" || RUF.pc || RUF.art === "video" || RUF.konferenzId || RUF.gegen?.person_id !== w.pid) return false;
+  KLOPF_SPRICHT = null; anrufAnnehmen(false); return true;
+}
 // 2.481.0 KC-CLUB-ANKLOPFEN-GESPERRT (Wunsch Hansi „klopfe ich bei jemandem an, der das blockiert hat: Meldung ‚Dieter hat Anklopfen blockiert –
 // schreib ihm doch eine Nachricht über die Chat-Funktion oder ruf an‘“): eigenes Fenster mit beiden Wegen statt einer kurzen Einblendung.
 const KLOPF_GESPERRT_RE = /Anklopfen ausgeschaltet/;
@@ -8989,6 +9001,7 @@ async function anrufEingehend(id) {
       vf: !r.konferenz && VF.status === "laeuft" && !!r.gegenueber?.person_id && r.gegenueber.person_id === vfPartner() }; // KC-CLUB-VORFUEHREN-TON
     RUF.ms = !RUF.vf && !r.konferenz && !!r.gegenueber?.person_id && r.gegenueber.person_id === msPartner(); // KC-CLUB-FERNHILFE F4
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
+    if (klopfSprechenAnnehmen()) return; // 2.646.0 KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     rufTaktWahl(true); rufLeisten(); // KC-CLUB-ANRUF-BESSER 3)
   } catch {}
