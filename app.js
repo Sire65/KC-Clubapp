@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.646.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.647.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7628,7 +7628,8 @@ async function onlinePing() {
       ONL.erledigt.add("a" + a.id);
       if (ONL.wartet === a.id) { ONL.wartet = null; onlineTakt(); }
       if (KW?.id === a.id) klopfWartenEnde();
-      if (a.status === "angenommen" && a.thread) { melde(`✅ ${a.an.vorname} hat angenommen – schreibt los!`); try { navigator.vibrate?.(60); } catch {} chatOeffnen(a.thread); }
+      if (a.status === "angenommen" && klopfSprechen(a)) { melde(`✅ ${a.an.vorname} hat angenommen – ihr werdet gleich verbunden 📞`); try { navigator.vibrate?.(60); } catch {} klopfSprechenErwarten(a.an.person_id); } // 2.647.0
+      else if (a.status === "angenommen" && a.thread) { melde(`✅ ${a.an.vorname} hat angenommen – schreibt los!`); try { navigator.vibrate?.(60); } catch {} chatOeffnen(a.thread); }
       else if (a.status === "anrufbeantworter") abAngebot(a.an, a.id); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
       else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
       else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
@@ -7899,13 +7900,37 @@ async function anklopfen(pid) {
   const m = MITGLIEDER?.find((x) => x.person_id === pid) || ONL.liste.find((x) => x.person_id === pid);
   const name = m?.vorname || m?.name || "";
   if (ONL.liste.find((x) => x.person_id === pid)?.klopfbar === false) return klopfGesperrt(pid, name);
-  if (!(await frage(`Bei ${name} anklopfen?\n\n${name} bekommt sofort die Frage, ob ihr jetzt schreiben wollt.`))) return;
+  const art = await klopfArtWaehlen(name); if (!art) return; // 2.647.0 KC-CLUB-ANKLOPFEN-ART
   spur("anklopfen", pid); // KC-CLUB-SPUR
   try {
-    const r = await api("anklopfen", { an: pid });
+    const r = await api("anklopfen", { an: pid, art });
     if (r.ab) { ONL.erledigt.add("a" + r.id); return abAngebot({ person_id: pid, vorname: name, name }, r.id); } // 2.568.0: Anrufbeantworter steht auf „sofort“
-    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush, r.abSpaeter);
+    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush, r.abSpaeter, art);
   } catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) klopfGesperrt(pid, name); else meldeFehler(e); }
+}
+// 2.647.0 KC-CLUB-ANKLOPFEN-ART (Wunsch Hansi „wenn jemand anklopfen will, soll er gefragt werden: Textnachrichten austauschen oder sprechen –
+// dann bekomme ich den Hinweis ‚X will mit dir schreiben‘ oder ‚will mit dir sprechen‘“). Sprechen = nach dem Annehmen ruft das Gegenüber in der App an.
+function klopfArtWaehlen(name) {
+  return new Promise((fertig) => {
+    const n = esc(name || "dem Mitglied"), n1 = esc(name || "Das Mitglied");
+    const f = dlgOeffnen(`<h3 class="dlg-kopf">👋 Bei ${n} anklopfen</h3>
+      <p class="dlg-text">Was möchtest du? ${n1} sieht es sofort beim Anklopfen.</p>
+      <div class="dlg-knoepfe"><button class="knopf haupt" data-w="schreiben">💬 Schreiben – Nachrichten austauschen</button><button class="knopf haupt" data-w="sprechen">📞 Sprechen – in der App telefonieren</button><button class="knopf" data-w="zu">Abbrechen</button></div>`, () => fertig(null));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); fertig(b.dataset.w === "zu" ? null : b.dataset.w); }));
+  });
+}
+const klopfSprechen = (k) => k?.art === "sprechen";
+// Wer „Sprechen“ angeklopft hat, muss den Rückruf nicht noch einmal annehmen (Hansi: „Gespräch annehmen klicken und bin dann verbunden“):
+// ruft genau diese Person innerhalb von 90 s per Ton an, nimmt die App von selbst an – egal ob Antwort oder Anruf zuerst ankommt.
+let KLOPF_SPRICHT = null;
+function klopfSprechenErwarten(pid) {
+  KLOPF_SPRICHT = { pid, bis: Date.now() + 90000 };
+  if (RUF?.rolle === "angerufen" && !RUF.pc) klopfSprechenAnnehmen();
+}
+function klopfSprechenAnnehmen() {
+  const w = KLOPF_SPRICHT;
+  if (!w || Date.now() > w.bis || RUF?.rolle !== "angerufen" || RUF.pc || RUF.art === "video" || RUF.konferenzId || RUF.gegen?.person_id !== w.pid) return false;
+  KLOPF_SPRICHT = null; anrufAnnehmen(false); return true;
 }
 // 2.481.0 KC-CLUB-ANKLOPFEN-GESPERRT (Wunsch Hansi „klopfe ich bei jemandem an, der das blockiert hat: Meldung ‚Dieter hat Anklopfen blockiert –
 // schreib ihm doch eine Nachricht über die Chat-Funktion oder ruf an‘“): eigenes Fenster mit beiden Wegen statt einer kurzen Einblendung.
@@ -7922,18 +7947,18 @@ function klopfGesperrt(pid, name) {
 // weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
 const KLOPF_WARTEN_SEK = 60;
 let KW = null;
-function klopfWartenStart(id, pid, name, ohnePush, abSpaeter) {
+function klopfWartenStart(id, pid, name, ohnePush, abSpaeter, art) {
   klopfWartenEnde();
-  KW = { id, pid, name, ohnePush: !!ohnePush, abSpaeter: !!abSpaeter, bis: Date.now() + KLOPF_WARTEN_SEK * 1000, timer: null };
+  KW = { id, pid, name, art: art || "schreiben", ohnePush: !!ohnePush, abSpaeter: !!abSpaeter, bis: Date.now() + KLOPF_WARTEN_SEK * 1000, timer: null };
   const f = blattAuf("klopfWarten", `<div id="kwInhalt"></div>`); f.onclick = null; // nicht aus Versehen wegtippen
   klopfWartenZeichnen(); KW.timer = setInterval(klopfWartenZeichnen, 1000);
 }
 function klopfWartenZeichnen() {
   if (!KW) return;
   const el = $("kwInhalt"), sek = Math.max(0, Math.ceil((KW.bis - Date.now()) / 1000));
-  if (el) el.innerHTML = `<div class="kw-knopf">👋 Klopfe gerade an bei ${esc(KW.name)} …</div>
+  if (el) el.innerHTML = `<div class="kw-knopf">👋 Klopfe gerade an bei ${esc(KW.name)} … <small>(${KW.art === "sprechen" ? "📞 sprechen" : "💬 schreiben"})</small></div>
     <div class="kw-uhr" aria-live="polite">${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, "0")}</div>
-    <p class="hinweis" style="text-align:center;margin:0 0 10px">Warte auf Antwort – sobald ${esc(KW.name)} annimmt, geht der Chat auf.</p>
+    <p class="hinweis" style="text-align:center;margin:0 0 10px">Warte auf Antwort – sobald ${esc(KW.name)} annimmt, ${KW.art === "sprechen" ? "ruft sie/er dich in der App an" : "geht der Chat auf"}.</p>
     ${KW.push && klopfPushText(KW.push, KW.name, false) ? `<p class="hinweis kw-push" style="text-align:center;margin:0 0 10px">${esc(klopfPushText(KW.push, KW.name, false))}</p>` : ""}
     ${KW.ohnePush ? `<p class="hinweis" style="margin:0 0 10px;padding:8px 10px;border-radius:10px;background:#fff3d6;color:#5a4410">⚠️ <b>${esc(KW.name)}</b> hat auf dem Handy gerade keine Benachrichtigungen an – das Anklopfen sieht ${esc(KW.name)} erst, wenn die App offen ist. Schick lieber eine Nachricht.</p>` : ""}
     <button class="knopf" style="width:100%;text-align:center" onclick="klopfAuflegen()">📵 Auflegen</button>`;
@@ -7959,9 +7984,9 @@ function klopfWartenFrage() {
 const klopfMeldeText = () => `Melde dich doch mal bei mir. Gruß ${ICH?.vorname || ICH?.name || ""}`.trim();
 async function klopfWeiter() {
   if (!KW) return;
-  const { pid, name } = KW;
-  try { const r = await api("anklopfen", { an: pid }); if (r.ab) { klopfWartenEnde(); ONL.erledigt.add("a" + r.id); return abAngebot({ person_id: pid, vorname: name, name }, r.id); }
-    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush, r.abSpaeter); }
+  const { pid, name, art } = KW;
+  try { const r = await api("anklopfen", { an: pid, art }); if (r.ab) { klopfWartenEnde(); ONL.erledigt.add("a" + r.id); return abAngebot({ person_id: pid, vorname: name, name }, r.id); }
+    ONL.wartet = r.id; onlineTakt(); klopfWartenStart(r.id, pid, name, r.ohnePush, r.abSpaeter, art); }
   catch (e) { if (KLOPF_GESPERRT_RE.test(e?.message || "")) { klopfWartenEnde(); klopfGesperrt(pid, name); } else meldeFehler(e); }
 }
 async function klopfAuflegen(still) {
@@ -8011,13 +8036,15 @@ function klopfWartenEnde() { if (KW?.timer) clearInterval(KW.timer); KW = null; 
 let KLOPF = null;
 function klopfZeigen(k, antworten) {
   KLOPF = k; ONL.erledigt.add(k.id);
-  $("klopfText").innerHTML = `<h3>👋 ${esc(k.von.vorname)} klopft an</h3><p style="margin:0">${esc(k.von.name)} möchte gerade mit dir schreiben. Möchtest du das Gespräch annehmen?</p>`;
+  const sp = klopfSprechen(k); // 2.647.0 KC-CLUB-ANKLOPFEN-ART
+  $("klopfText").innerHTML = `<h3>👋 ${esc(k.von.vorname)} klopft an</h3><p class="klopf-art ${sp ? "sprechen" : "schreiben"}">${sp ? "📞 will mit dir sprechen" : "💬 will mit dir schreiben"}</p><p style="margin:0">${esc(k.von.name)} möchte gerade mit dir ${sp ? "sprechen (Anruf in der App)" : "schreiben"}. Möchtest du das Gespräch annehmen?</p>`;
+  $("klopfJa").textContent = sp ? "📞 Annehmen – jetzt sprechen" : "✅ Annehmen – jetzt schreiben";
   // KC-CLUB-ANKLOPFEN-ANTWORT (1.8.0): Kurzantworten aus der Server-Registry – antippen beendet das Anklopfen sofort
   $("klopfKacheln").innerHTML = `<button class="klopf-ab" onclick="klopfKurz('ab', this.textContent)">📼 Anrufbeantworter einschalten</button>` // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
     + (antworten || []).map((a) => `<button onclick="klopfKurz('${esc(a.id)}', this.textContent)">${esc(a.text)}</button>`).join("");
   $("klopfBlatt").classList.remove("versteckt");
-  klopfTonSpielen(klopfStand().ton);
-  ansageMelden({ art: "anklopfen", text: `${k.von.vorname} klopft gerade bei dir an` }); // KC-CLUB-SPRACHANSAGEN
+  klopfTonSpielen(klopfStand().ton); klopfWiederholen(k.id);
+  ansageMelden({ art: "anklopfen", text: `${k.von.vorname} klopft gerade bei dir an und will mit dir ${sp ? "sprechen" : "schreiben"}` }); // KC-CLUB-SPRACHANSAGEN
 }
 async function klopfKurz(antwort, text) {
   $("klopfBlatt").classList.add("versteckt");
@@ -8170,8 +8197,19 @@ const KLOPF_TOENE = [
   { id: "aus", t: "🔕 Kein Ton (nur Vibration)", n: [] },
 ];
 const klopfStand = () => ({ erlaubt: true, ton: "klopf", ...(INIT?.einstellungen?.anklopfen || {}) });
+// 2.647.0 KC-CLUB-ANKLOPFEN-VIBRATION (Wunsch Hansi „der Anklopfton und dann soll das Handy noch vibrieren“): nach dem Ton deutlich vibrieren
+// (klopf-klopf-klopf), solange die Frage offen ist alle 5 s Ton + Vibration – höchstens 30 s. iPhones können nicht vibrieren (kein Vibrations-Zugriff für Web-Apps).
+const KLOPF_VIBRATION = [350, 150, 350, 150, 600];
+let KLOPF_WDH = null;
+function klopfWiederholen(id) {
+  clearInterval(KLOPF_WDH); const bis = Date.now() + 30000;
+  KLOPF_WDH = setInterval(() => {
+    if (KLOPF?.id !== id || $("klopfBlatt").classList.contains("versteckt") || Date.now() > bis) { clearInterval(KLOPF_WDH); KLOPF_WDH = null; try { navigator.vibrate?.(0); } catch {} return; }
+    klopfTonSpielen(klopfStand().ton);
+  }, 5000);
+}
 function klopfTonSpielen(id) {
-  try { navigator.vibrate?.([120, 80, 120]); } catch {}
+  setTimeout(() => { try { navigator.vibrate?.(KLOPF_VIBRATION); } catch {} }, 700); // erst der Ton, dann vibrieren
   const t = KLOPF_TOENE.find((x) => x.id === id) || KLOPF_TOENE[0];
   if (!t.n.length) return;
   try {
@@ -8325,7 +8363,9 @@ async function klopfAntwort(annehmen) {
   $("klopfBlatt").classList.add("versteckt");
   if (!KLOPF) return;
   const k = KLOPF; KLOPF = null;
-  try { const r = await api("anklopfen_antwort", { id: k.id, annehmen }); if (annehmen && r.thread) chatOeffnen(r.thread); }
+  try { const r = await api("anklopfen_antwort", { id: k.id, annehmen });
+    if (annehmen && (r.art === "sprechen" || klopfSprechen(k))) anrufen(k.von.person_id); // 2.647.0: Sprechen → gleich in der App anrufen
+    else if (annehmen && r.thread) chatOeffnen(r.thread); }
   catch (e) { meldeFehler(e); }
 }
 // aus dem Push („… klopft an“) geöffnet: #anklopfen=<id>
@@ -8972,6 +9012,7 @@ async function anrufEingehend(id) {
       vf: !r.konferenz && VF.status === "laeuft" && !!r.gegenueber?.person_id && r.gegenueber.person_id === vfPartner() }; // KC-CLUB-VORFUEHREN-TON
     RUF.ms = !RUF.vf && !r.konferenz && !!r.gegenueber?.person_id && r.gegenueber.person_id === msPartner(); // KC-CLUB-FERNHILFE F4
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
+    if (klopfSprechenAnnehmen()) return; // 2.647.0 KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     rufTaktWahl(true); rufLeisten(); // KC-CLUB-ANRUF-BESSER 3)
   } catch {}

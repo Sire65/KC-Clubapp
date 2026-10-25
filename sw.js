@@ -1,6 +1,6 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.646.0";
+const VERSION = "2.647.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
@@ -128,7 +128,7 @@ self.addEventListener("push", (e) => {
     await self.registration.showNotification(titel, {
       body: d.body || d.text || "", icon: "icon-192.png", badge: "badge-muetze.png", /* 2.572.0 KC-CLUB-PUSH-MUETZE: Kochmütze statt Viereck oben in der Leiste (Android zeigt nur die Form); 2.575.0: aus dem Club-Logo (kc-kochmuetze-weiss.webp) */ tag: d.data?.url || "kc-club",
       // KC-CLUB-ERINNERUNG-WAHL (2.23.22): Erinnerungen (⏰) bleiben stehen, bis man sie antippt, und vibrieren kräftiger
-      renotify: true, silent: false, requireInteraction: /^⏰/.test(titel), vibrate: /^⏰/.test(titel) ? [400, 200, 400, 200, 400] : [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
+      renotify: true, silent: false, requireInteraction: /^⏰/.test(titel), vibrate: /^⏰/.test(titel) ? [400, 200, 400, 200, 400] : /^👋/.test(titel) ? [350, 150, 350, 150, 600] /* 2.647.0 KC-CLUB-ANKLOPFEN-VIBRATION */ : [120, 60, 120], data: { url: d.data?.url || "./", requestId: d.data?.requestId || "" },
     });
     await quittung(d.data?.requestId, "displayed");
   })());
