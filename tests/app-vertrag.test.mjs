@@ -12688,3 +12688,12 @@ function idx0() { return lies("index.html"); }
   assert.ok((programm.match(/VN\.klar\.set\((v|t|b\.dataset\.vn), (text|klar|k)\)/g) || []).length === 1 && /function vnKlarSetzen\(t, klar\)/.test(programm), "jeder entschlüsselte Text läuft über vnKlarSetzen (Anlagen-Schlüssel nie sichtbar)");
   assert.ok(/a\.name === VN_ANL_NAME \? vnAnlHtml\(a\)/.test(programm) && /🔒 Verschlüsselte Anlage/.test(programm), "ohne Schlüssel nur Schloss");
 }
+// 2.637.0 KC-CLUB-WEITERE-EMPFAENGER + KC-CLUB-WA-MEHRERE (Wunschliste #40): ➕ weitere Empfänger → Runde mit allen; WhatsApp je Person
+{
+  assert.ok(/id="weKnopf"[^>]*onclick="weWaehlen\(\)"[^>]*>➕<\/button>/.test(html), "➕ in der kleinen Zeile");
+  const s = programm.slice(programm.indexOf("async function senden() {"), programm.indexOf("async function uhMehrfachSenden("));
+  assert.ok(/if \(chatId && WE\.ids\.length\) \{/.test(s) && /neuEntwurf = \{ empfaenger: \{ personen: \[\.\.\.new Set\(\[\.\.\.bisher, \.\.\.WE\.ids\]\)\]/.test(s) && /chatId = null;/.test(s), "Runde mit allen, alter Verlauf bleibt privat");
+  assert.ok(s.indexOf("if (chatId && WE.ids.length)") < s.indexOf("if (sqDarf())"), "vor der Sende-Schlange (die nur für bestehende Chats gilt)");
+  assert.ok(/if \(VN\.an\) return melde\("🔒 Verschlüsselt geht nur an die bisherigen Empfänger/.test(s), "🔒 nie an Neue mit fremdem Schlüssel");
+  assert.ok(/if \(ids\.length > 1\) return waMehrere\(nachricht, ids\);/.test(programm) && /class="knopf haupt wa-person" href=/.test(programm), "WhatsApp: je Person ein Knopf");
+}

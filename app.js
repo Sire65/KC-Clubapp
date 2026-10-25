@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.636.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.637.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32281,7 +32281,7 @@ function uhNeu() { return UH.mark.size && aktuelleAnsicht === "nachrichten" ? uh
 function uhMehrfachStarten() {
   const chats = [...UH.mark].map((id) => UH.liste.find((u) => u.id === id)).filter(Boolean);
   if (!chats.length) { uhMarkAufheben(); return neueNachricht(); }
-  ZW = { push: false, email: false, whatsapp: false }; CHAT = null; zustellZeigen(); anlagen = []; chipsZeigen();
+  ZW = { push: false, email: false, whatsapp: false }; CHAT = null; zustellZeigen(); anlagen = []; chipsZeigen(); WE.ids = []; weZeigen(); // 2.637.0
   neuEntwurf = { mehrfach: chats.map((u) => u.id) };
   chatId = null; zeige("chat"); chatStand = "";
   $("chatTitel").textContent = `📨 Gleiche Nachricht an ${chats.length} Chat${chats.length === 1 ? "" : "s"}`;
@@ -32423,6 +32423,7 @@ async function chatOeffnen(id, ausHistorie) {
   vorlesenZeigen(); // KC-CLUB-VORLESEN: Lautsprecher oben zeigt den gespeicherten Zustand
   if (id !== chatId) { naAntwortWeg(); NA.erw.clear(); } // KC-CLUB-ANTWORT: Antwort/Erwähnung gehört zum vorigen Chat
   if (id !== chatId) ZW = { push: false, email: false, whatsapp: false };
+  if (id !== chatId && WE.ids.length) { WE.ids = []; weZeigen(); } // 2.637.0 KC-CLUB-WEITERE-EMPFAENGER: gehört zum vorigen Chat
   if (id !== chatId && CS.offen) chatSucheZu(); // KC-CLUB-CHATSUCHE: Suche gehört zum vorigen Chat
   chatFilterSetzen("alle", true); // 2.577.0 KC-CLUB-CHAT-FILTER: beim Öffnen immer alle Nachrichten
   if (id !== chatId) { entwurfLaden(id); zustellUmschalten(false); versandZurueck(); } // KC-CLUB-ENTWURF / -RUHIGE-EINGABE (1.12.0) / -WICHTIG / -VERSANDART
@@ -34538,6 +34539,7 @@ async function waSenden() {
 }
 async function whatsappWeitergeben(text, ids) {
   const nachricht = `${text}\n\n– ${ICH.vorname} (Köcheclub-App)`;
+  if (ids.length > 1) return waMehrere(nachricht, ids); // 2.637.0 KC-CLUB-WA-MEHRERE
   try {
     if (ids.length === 1) {
       const m = MITGLIEDER?.find((x) => x.person_id === ids[0]);
@@ -34555,6 +34557,44 @@ async function whatsappWeitergeben(text, ids) {
   } catch (e) { if (e?.name !== "AbortError") melde("WhatsApp: " + (e.message || e), true); }
 }
 
+// 2.637.0 KC-CLUB-WA-MEHRERE (Wunschliste #40, Hansi „mit dem grünen WhatsApp-Knopf sollen die gewählten Personen die Nachricht per WhatsApp
+// bekommen“): WhatsApp nimmt aus einer App immer nur EINEN Empfänger – darum je Person ein Knopf, der WhatsApp direkt im richtigen Chat öffnet
+// (Text schon drin, dort nur noch senden). Getippte bekommen ✅. Ohne freigegebene Handynummer: ausgegraut mit Hinweis.
+async function waMehrere(nachricht, ids) {
+  const t = encodeURIComponent(nachricht), leute = await Promise.all(ids.slice(0, 30).map(async (id) => {
+    const m = MITGLIEDER?.find((x) => x.person_id === id) || { person_id: id, name: "Mitglied" };
+    let nr = null; if (m.wege?.whatsapp) try { const d = await api("mitglied_details", { person_id: id }, { still: true }); if (d.kontakt?.handy) nr = waNummer(d.kontakt.handy); } catch {}
+    return { name: String(m.vorname || m.name || "Mitglied").split(" ")[0], nr };
+  }));
+  const link = (n) => IST_ANDROID ? `intent://send?phone=${n}&text=${t}#Intent;scheme=whatsapp;S.browser_fallback_url=${encodeURIComponent(`https://wa.me/${n}?text=${t}`)};end` : `https://wa.me/${n}?text=${t}`;
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">🟢 Per WhatsApp weitergeben</h3>
+    <p class="dlg-text">WhatsApp nimmt immer nur einen Empfänger auf einmal. Tippe der Reihe nach auf die Namen – WhatsApp öffnet sich im richtigen Chat, der Text steht schon drin, du drückst nur noch Senden.</p>
+    <div class="wa-mehrere">${leute.map((p) => p.nr ? `<a class="knopf haupt wa-person" href="${esc(link(p.nr))}" rel="noopener">💬 an ${esc(p.name)}</a>` : `<span class="knopf wa-person" aria-disabled="true">🚫 ${esc(p.name)} – keine WhatsApp-Nummer freigegeben</span>`).join("")}</div>
+    <div class="dlg-knoepfe"><button type="button" class="knopf" data-a="zu">Fertig</button></div>`, () => f.remove());
+  f.querySelectorAll('[data-a="zu"]').forEach((b) => (b.onclick = () => f.remove()));
+  f.querySelectorAll("a.wa-person").forEach((a) => a.addEventListener("click", () => { a.textContent = "✅ " + a.textContent.replace(/^💬 /, ""); a.classList.remove("haupt"); }));
+}
+// ---------- 2.637.0 KC-CLUB-WEITERE-EMPFAENGER: ➕ in der kleinen Zeile über der Tastatur ----------
+const WE = { ids: [] };
+function weWaehlen() {
+  if (CHAT?.gruppe && chatId) return melde("👥 Das ist eine feste Gruppe – weitere Mitglieder fügst du oben über ⋮ → „Gruppe bearbeiten“ hinzu.", true);
+  if (neuEntwurf?.mehrfach) return melde("Beim Senden an mehrere Chats geht ➕ nicht – bitte die Chats in der Liste markieren.", true);
+  const schon = new Set([ICH.person_id, ...(chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : neuEntwurf?.empfaenger?.personen || [])]);
+  personenWaehlen({ titel: "➕ Wer soll die Nachricht auch bekommen?", max: 20, leerText: "noch niemand", auswahl: WE.ids,
+    fertig: (ids) => {
+      const neu = ids.filter((x) => !schon.has(x));
+      if (!chatId && neuEntwurf?.empfaenger) { // neue Nachricht: einfach zu den Empfängern dazu
+        neuEntwurf.empfaenger.personen = [...new Set([...(neuEntwurf.empfaenger.personen || []), ...neu])];
+        $("chatTeilnehmer").textContent = "An: " + todoNamen(neuEntwurf.empfaenger.personen.filter((x) => x !== ICH.person_id));
+        return melde(neu.length ? `➕ ${todoNamen(neu)} bekommt die Nachricht auch.` : "Niemand dazu gewählt.");
+      }
+      WE.ids = neu; weZeigen();
+    } });
+}
+function weZeigen() {
+  let z = $("weZeile"); if (!z) { z = document.createElement("div"); z.id = "weZeile"; z.className = "we-zeile"; $("anlagenChips")?.before(z); }
+  z.innerHTML = WE.ids.length ? `<span>➕ auch an: <b>${esc(todoNamen(WE.ids))}</b> <small>– daraus wird eine Runde mit allen</small></span><button type="button" class="knopf klein" onclick="WE.ids=[];weZeigen()" aria-label="Weitere Empfänger entfernen">✕</button>` : "";
+}
 // ---------- Gruppen (KC-CLUB-GRUPPEN) ----------
 const GR_SYMBOLE = ["👥", "👨‍🍳", "🍳", "🎖️", "🧳", "🎉", "📋", "🍷", "⭐", "🏠"];
 let GR = null; // { id?, name, symbol, personen[], vorher[], admins[] }
@@ -35083,6 +35123,14 @@ async function senden() {
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
+  // 2.637.0 KC-CLUB-WEITERE-EMPFAENGER (Wunschliste #40, Hansi: „➕ in der kleinen Zeile, weitere wählen – Variante B“): mit weiteren Empfängern wird
+  // aus dem Chat eine Runde mit allen (bisherige Teilnehmer + neue); die Nachricht geht dorthin. Der alte Verlauf bleibt, wo er ist (nie für die Neuen sichtbar).
+  if (chatId && WE.ids.length) {
+    if (VN.an) return melde("🔒 Verschlüsselt geht nur an die bisherigen Empfänger – bitte ➕ weitere Empfänger wieder entfernen oder das Schloss ausschalten.", true);
+    const alt = chatId, bisher = (CHAT?.id === chatId ? CHAT.teilnehmer || [] : []).map((t) => t.person_id).filter((x) => x !== ICH.person_id);
+    neuEntwurf = { empfaenger: { personen: [...new Set([...bisher, ...WE.ids])], aemter: [], alle: false, vorstand: false }, betreff: "" };
+    entwurfWeg(alt); naAntwortWeg(); chatId = null; WE.ids = []; weZeigen();
+  }
   let vnIds = null; // 2.636.0 KC-CLUB-VN-ANLAGEN: Kennungen der verschlüsselt hochgeladenen Anlagen
   if (VN.an && anlagen.length) {
     if (EINMAL) return melde("👁️ Einmal-Foto und 🔒 verschlüsselt gehen nicht zusammen – bitte eins von beiden ausschalten.", true);
