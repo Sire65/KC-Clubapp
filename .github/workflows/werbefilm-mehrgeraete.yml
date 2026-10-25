@@ -1,7 +1,9 @@
 name: KC Werbefilm Installationshinweis
 
+# Nur auf main (Wunsch Hansi 25.10.2026): früher lief der Ablauf auch auf Arbeitszweigen und legte dort einen Film-Commit ab.
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/werbefilm-mehrgeraete.yml'
   workflow_dispatch:
@@ -11,6 +13,7 @@ permissions:
 
 jobs:
   film-korrigieren:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
