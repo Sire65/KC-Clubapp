@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.652.0 – 2026-10-25 – 🌹 Rose schon nach 20 Sekunden (KC-CLUB-ROSE-20S)
+- Wunsch Hansi („Ja, nach 20 Sekunden und sofort einspielen“): Von 7 angehakten Mitgliedern hatte erst eine die Rose – die übrigen öffneten die App nur kurz, 3 Minuten ruhige Startseite kamen nie zusammen. Jetzt kommt sie nach 20 Sekunden sichtbarer Startseite (weiter nicht über einem offenen Fenster oder beim Tippen, nur einmal). Hinweis in der Admin-Karte angepasst.
+- Nur App. Auf Wunsch Hansi sofort eingespielt.
+
 ## 2.651.0 – 2026-10-25 – 🎭 Spaßstimmen laut und deutlich (KC-CLUB-SPASSSTIMME-LAUT)
 Fund Hansi („die Stimmen sind kaum zu hören oder gar nicht da – beim Probehören“). Ursachen: (1) der Ton-Baustein wurde erst nach der Aufnahme angelegt – auf Handys bleibt er dann stumm; (2) Aufnahme mit Echo-Unterdrückung schaltet Android/iPhone in den leisen „Telefon-Modus“ (Hörmuschel); (3) einzelne Stimmen waren leiser. Jetzt: Ton-Baustein startet sofort beim Antippen (auch im Gespräch und bei „Mit Spaßstimme annehmen“); Probehören nimmt ohne Echo-Unterdrückung auf, berechnet den Effekt vorab, bringt ihn auf gleiche, gut hörbare Lautstärke und spielt ihn über den Lautsprecher (Medien-Lautstärke); kam kaum Ton vom Mikrofon an, gibt es einen Hinweis. Alle 14 Stimmen im Gespräch auf ±2 dB gleich laut wie die normale Stimme (gemessen).
 

@@ -31,7 +31,7 @@ assert.ok(/\$\{ICH\?\.admin && m\.rose \? roseAdminKarte\(m\) : ""\}/.test(app) 
 // 6. Bedingungen im Browser
 assert.ok(/if \(!INIT\?\.rose \|\| INIT\._offline \|\| !ICH \|\| ROSE\.gezeigt\) return;/.test(block), "nur wenn fällig, nicht aus dem Offline-Stand");
 assert.ok(/if \(s && s\.pid === ICH\.person_id\) \{ ROSE\.gezeigt = true; return roseMelden\(\); \}/.test(block), "nie zweimal auf demselben Gerät, Meldung nachholen");
-assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "start"/.test(block) && /ROSE_MS = 180000/.test(block) && /\(ROSE\.ms \+= d\) < ROSE_MS \|\| !roseFrei\(\)/.test(block), "3 Minuten sichtbare Startseite");
+assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "start"/.test(block) && /ROSE_MS = 20000;/.test(block) && /\(ROSE\.ms \+= d\) < ROSE_MS \|\| !roseFrei\(\)/.test(block), "20 Sekunden sichtbare Startseite (2.652.0)");
 assert.ok(/\.blatt:not\(\.versteckt\)/.test(block) && /INPUT\|TEXTAREA\|SELECT/.test(block) && /isContentEditable/.test(block), "nicht über Fenstern oder beim Tippen");
 assert.ok(/JZB\.saison === "kirmes" && JZB\.imBild/.test(block) && /jzSimJueZeit\(\)/.test(block) && /!SPAR\?\.an/.test(block), "Schießbude nur bei sichtbarer Sim-Jü-Szene");
 assert.ok(/roseSzeneDa\(\) \? roseQuelle\(\) : null/.test(block) && /Ein Gruß aus der Schießbude/.test(block), "sonst Gruß-Variante");

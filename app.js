@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.651.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.652.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19825,12 +19825,12 @@ function jzbFestMalen(c) {
 }
 // ---------- KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): einmalig eine rote Baccara-Rose aus der Sim-Jü-Schießbude – „Nur für dich“ ----------
 // Wer sie bekommt, wählt der Admin per Häkchen in der Mitgliedskarte (rose_setzen) – die App kennt kein Geschlecht und rät nie nach Namen.
-// Der Server sagt im Start nur „rose: true“ (Häkchen an, noch nicht bekommen). Sie kommt nach insgesamt 3 Minuten sichtbarer Startseite, nie über
+// Der Server sagt im Start nur „rose: true“ (Häkchen an, noch nicht bekommen). Sie kommt nach insgesamt 20 Sekunden sichtbarer Startseite (bis 2.651.0: 3 Minuten), nie über
 // einem offenen Fenster oder beim Tippen. Läuft die Sim-Jü-Szene mit der Schießbude gerade sichtbar, fliegt sie aus der Schießbude; sonst (nach der Kirmes,
 // „Sim-Jü aus“, Sparmodus) kommt sie von unten ins Bild mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen“ (Änderung Hansi, 24.10.2026). Nach dem Zeigen merkt der Server es (rose_erhalten) – klappt das nicht, merkt es dieses Gerät und meldet es beim nächsten Start.
 // Sparmodus oder „weniger Bewegung“: die Rose steht gleich da, ohne Flug. Nie zweimal auf demselben Gerät.
 // KC-CLUB-ROSE-ANFANG
-const ROSE_KEY = "kc_club_rose", ROSE_MS = 180000;
+const ROSE_KEY = "kc_club_rose", ROSE_MS = 20000; // 2.652.0 KC-CLUB-ROSE-20S (Wunsch Hansi): 20 Sekunden statt 3 Minuten
 const ROSE = { ms: 0, letzt: 0, gezeigt: false };
 const roseLs = () => { try { return JSON.parse(localStorage.getItem(ROSE_KEY) || "null"); } catch { return null; } };
 const roseLsSetzen = (w) => { try { localStorage.setItem(ROSE_KEY, JSON.stringify(w)); } catch {} };
@@ -41125,7 +41125,7 @@ function roseAdminKarte(m) {
   const r = m.rose || {}, am = r.erhalten ? new Date(r.erhalten).toLocaleString("de-DE", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
   return `<div class="karte"><label class="zeile" style="gap:10px;align-items:center"><input type="checkbox" id="roseHaken" ${r.an || r.erhalten ? "checked" : ""} ${r.erhalten ? "disabled" : ""}
     onchange="roseSetzen('${esc(m.person_id)}', this)"><b style="flex:1">🌹 Rose aus der Schießbude (einmalig)</b></label>
-    <p class="hinweis" style="margin:6px 0 0">${r.erhalten ? `✅ Schon bekommen am ${esc(am)}` : r.an ? "🌹 An – kommt beim nächsten Mal" : "Aus"} · Kommt nur einmal: nach 3 Minuten auf der Startseite – zur Kirmes aus der Schießbude, sonst als Gruß aus der Schießbude.</p></div>`;
+    <p class="hinweis" style="margin:6px 0 0">${r.erhalten ? `✅ Schon bekommen am ${esc(am)}` : r.an ? "🌹 An – kommt beim nächsten Mal" : "Aus"} · Kommt nur einmal: nach 20 Sekunden auf der Startseite – zur Kirmes aus der Schießbude, sonst als Gruß aus der Schießbude.</p></div>`;
 }
 async function roseSetzen(pid, el) {
   const an = !!el.checked; el.disabled = true;
