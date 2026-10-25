@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.648.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.649.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35416,12 +35416,76 @@ function sqZeigen() {
 const sqDarf = () => !!chatId && !anlagen.length && !neuEntwurf?.mehrfach; // nur Text in einem bestehenden Chat
 addEventListener("online", () => { try { if (SQ.liste.some((x) => x.status === "wartet")) { SQ.liste.forEach((x) => { if (x.status === "wartet") x.naechster = 0; }); sqWeiter(); } } catch {} });
 setInterval(() => { try { if (ICH && !SQ.laeuft) { sqLaden(); if (SQ.liste.some((x) => x.status === "wartet" && (x.naechster || 0) <= Date.now())) sqWeiter(); } } catch {} }, 15000); // nach dem Öffnen: Liegengebliebenes weiter senden
+// ---------- 2.649.0 KC-CLUB-VERSANDWAHL (Wunsch Hansi „unter Nachrichten so wie im Büro wählen: Alles, Mail, Push, WhatsApp – mit Anlage“) ----------
+// Bei mehreren Empfängern oder mit Anlage fragt die App vor dem Senden „Wie verschicken?“ (genau eine Wahl) und zeigt vorher, was rausgeht.
+// „✉️ Nur E-Mail“ heißt nur E-Mail (Server: kein Push dazu, auch bei ❗ wichtig; auch an Empfänger, die gerade in der App sind).
+// Nur Admin: „Nur als Mail, nicht im Chat zeigen“ → Rundmail ohne Unterhaltung (Server „mail_rund“). Notfall, Express und 🔒 bleiben wie bisher.
+const VW_ARTEN = [["mail", "✉️ Nur E-Mail", "Mail mit Anhang, kein Push"], ["push", "🔔 Nur Push", "Hinweis aufs Handy"], ["whatsapp", "🟢 WhatsApp", "danach je Person in WhatsApp öffnen"],
+  ["alles", "✅ Alles", "Push, E-Mail und WhatsApp"], ["app", "📱 Nur in der App", "keine Benachrichtigung"], ["eingestellt", "⚙️ Wie jeder es eingestellt hat", "bisheriger Weg"]];
+let VW = { nurApp: false };
+function versandWahl(empf, anl) {
+  const art0 = ZW.push && ZW.email && ZW.whatsapp ? "alles" : ZW.email && !ZW.push && !ZW.whatsapp ? "mail" : ZW.push && !ZW.email && !ZW.whatsapp ? "push" : ZW.whatsapp && !ZW.push && !ZW.email ? "whatsapp" : "";
+  const mg = new Map((MITGLIEDER || []).map((m) => [m.person_id, m])), mitMail = empf.filter((id) => mg.get(id)?.wege?.mail).length;
+  return new Promise((ok) => {
+    const f = blattAuf("versandBlatt", `<h3 style="margin-top:0">📤 Wie verschicken?</h3>
+      <p class="hinweis" style="margin:0 0 8px">An <b>${empf.length} ${empf.length === 1 ? "Person" : "Personen"}</b>${anl.length ? ` · 📎 ${anl.map((a) => esc(a.name || "Anlage")).join(", ")}` : ""}</p>
+      <div class="vw-arten" role="radiogroup" aria-label="Versandweg">${VW_ARTEN.map(([k, t, x]) => `<button type="button" class="knopf vw-art${k === art0 ? " an" : ""}" role="radio" aria-checked="${k === art0}" data-k="${k}"><b>${t}</b><small>${x}</small></button>`).join("")}</div>
+      ${ICH?.admin ? `<label class="vw-ohne versteckt"><input type="checkbox" id="vwOhneChat"> <span><b>Nur als Mail, nicht im Chat zeigen</b><br><small>Rundmail: kein neuer Chat, keine rote Zahl – Antworten kommen per E-Mail</small></span></label>` : ""}
+      <p id="vwVorschau" class="hinweis" style="margin:8px 0" role="status"></p>
+      <div class="knoepfe"><button class="knopf haupt" id="vwSenden" disabled>📤 Jetzt senden</button><button class="knopf" id="vwAbbruch">Abbrechen</button></div>`);
+    let art = art0;
+    const zeigen = () => {
+      f.querySelectorAll(".vw-art").forEach((b) => { const an = b.dataset.k === art; b.classList.toggle("an", an); b.setAttribute("aria-checked", String(an)); });
+      f.querySelector(".vw-ohne")?.classList.toggle("versteckt", art !== "mail");
+      const ohneChat = art === "mail" && !!$("vwOhneChat")?.checked, ohne = empf.length - mitMail;
+      const t = { mail: `✉️ ${mitMail} bekommen eine E-Mail${anl.length ? " mit Anhang" : ""}${ohne ? ` · ${ohne} ohne E-Mail-Adresse${ohneChat ? " bekommen nichts" : " sehen es nur in der App"}` : ""} · kein Push${ohneChat ? " · kein Chat" : ""}`,
+        push: `🔔 Push an alle mit Handy-Benachrichtigung${anl.length ? " – die Anlage sehen sie in der App" : ""}`, whatsapp: "🟢 Nach dem Senden je Person „In WhatsApp öffnen“ (WhatsApp nimmt nur Text – die Anlage sehen sie in der App)",
+        alles: `🔔 Push + ✉️ E-Mail${anl.length ? " mit Anhang" : ""} + 🟢 WhatsApp`, app: "📱 Nur im Chat – niemand wird benachrichtigt", eingestellt: "⚙️ So, wie jeder es bei sich eingestellt hat" }[art];
+      $("vwVorschau").textContent = t || "Bitte oben einen Weg wählen."; $("vwSenden").disabled = !art;
+    };
+    f.querySelectorAll(".vw-art").forEach((b) => b.onclick = () => { art = b.dataset.k; zeigen(); });
+    $("vwOhneChat")?.addEventListener("change", zeigen);
+    const fertig = (x) => { f._zu = null; f.remove(); ok(x); };
+    f._zu = () => fertig(null); $("vwAbbruch").onclick = () => fertig(null);
+    $("vwSenden").onclick = () => fertig({ art, ohneChat: art === "mail" && !!$("vwOhneChat")?.checked && !!ICH?.admin });
+    zeigen();
+  });
+}
+function versandWahlAnwenden(art) { // setzt die Glocke passend zur Wahl; „Nur in der App“ merkt sich VW.nurApp für diese eine Nachricht
+  ZW = { push: art === "push" || art === "alles", email: art === "mail" || art === "alles", whatsapp: art === "whatsapp" || art === "alles" };
+  VW.nurApp = art === "app"; zustellZeigen();
+}
+async function mailRundSenden(text, empf) { // nur Admin: Rundmail ohne Chat
+  $("sendenKnopf").disabled = true;
+  try {
+    for (const a of anlagen) if (!a.id && a.roh) { const r = await anlageHochladen(a.roh); Object.assign(a, { id: r.id, name: r.name }); }
+    const vorher = [...anlagen];
+    const r = await api("mail_rund", { empfaenger: empf, text, betreff: neuEntwurf?.betreff || "", anlagen: anlagen.filter((a) => a.id).map((a) => a.id) }, { warten: true });
+    $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); zustellUmschalten(false); versandZurueck();
+    spur("mail_rund", null); // nur die Aktion, nie Text oder Empfänger
+    melde(`✉️ Rundmail an ${r.empfaenger === 1 ? "1 Person" : r.empfaenger + " Personen"} verschickt${r.ohneMail ? ` · ${r.ohneMail} ohne E-Mail-Adresse` : ""} – kein Chat angelegt`);
+    const ablegbar = gesendetAblegbar(vorher); if (ablegbar.length) setTimeout(() => gesendetAblageFragen(ablegbar), 500);
+    if (!chatId) { neuEntwurf = null; zeige("nachrichten"); }
+  } catch (e) { meldeFehler(e); }
+  $("sendenKnopf").disabled = false;
+}
+
 async function senden() {
   emoUmschalten(false); // KC-CLUB-EMOJI
   let text = $("text").value.trim();
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
+  VW.nurApp = false;
+  if (!VN.an && !EXPRESS && !neuEntwurf?.mehrfach && !/^\s*(🚨|notfall)/i.test(text)) { // 2.649.0 KC-CLUB-VERSANDWAHL
+    if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
+    const empf = [...new Set([...(chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : sendenEmpfaenger(MITGLIEDER || [])), ...(chatId ? WE.ids : [])])].filter((id) => id !== ICH?.person_id);
+    if (anlagen.length || empf.length > 1) {
+      const w = await versandWahl(empf, anlagen); if (!w) return;
+      if (w.ohneChat) return await mailRundSenden(text, empf);
+      versandWahlAnwenden(w.art);
+    }
+  }
   // 2.637.0 KC-CLUB-WEITERE-EMPFAENGER (Wunschliste #40, Hansi: „➕ in der kleinen Zeile, weitere wählen – Variante B“): mit weiteren Empfängern wird
   // aus dem Chat eine Runde mit allen (bisherige Teilnehmer + neue); die Nachricht geht dorthin. Der alte Verlauf bleibt, wo er ist (nie für die Neuen sichtbar).
   if (chatId && WE.ids.length) {
@@ -35464,6 +35528,7 @@ async function senden() {
     const daten = { text, anlagen: vnIds ?? anlagen.filter((a) => a.id).map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
       ...(WICHTIG ? { wichtig: true } : {}), // KC-CLUB-WICHTIG
+      ...(VW.nurApp ? { nur_app: true } : {}), // 2.649.0 KC-CLUB-VERSANDWAHL
       ...(EXPRESS ? { express: true } : {}), // 2.362.0 KC-CLUB-EXPRESS
       ...(EINMAL && anlagen.length === 1 ? { einmal: true } : {}), // KC-CLUB-EINMAL-FOTO
       ...(SL.std !== null && SL.chat === chatId ? { ablauf_std: SL.std } : {}), // KC-CLUB-SELBSTLOESCHEN: ⏳ nur diese Nachricht

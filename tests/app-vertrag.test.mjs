@@ -3525,7 +3525,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/if \(notfall\) \{\s*if \(ich\.zugang !== "mitglied"\) throw new Fehler\([^\n]*403\);/.test(ns), "2.425.0: Gäste/Aushilfen nie Notfall an alle – auch wenn SOS für alle freigegeben ist");
   assert.ok(/const sosDarf = \(\) => !!\(ICH\?\.admin \|\| \(INIT\?\.sosFuerAlle && zugang\(\) === "mitglied"\)\);/.test(html) && !/classList\.toggle\("sos-frei", (?!sosDarf\(\))/.test(html), "2.425.0: App zeigt Gästen/Aushilfen den Alarm an alle nicht");
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
-  assert.ok(/if \(notfall( \|\| express)?\) stumm\.clear\(\);/.test(ns) && /const wege = notfall (?:\|\| wichtig )?(?:\|\| express )?\? \["push", "email"\]/.test(ns) && /\{ notfall(: notfall \|\| express)? \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
+  assert.ok(/if \(notfall( \|\| express)?\) stumm\.clear\(\);/.test(ns) && /const wege = notfall (?:\|\| wichtig )?(?:\|\| express )?(?:\|\| \(wichtig && !nurMail\) )?\? \["push", "email"\]/.test(ns) && /\{ notfall(: notfall \|\| express)? \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
   assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:gedenken: await pGedenken, )?(?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
   assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8887,7 +8887,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 // 2.138.0 KC-CLUB-PUSH-NUR-OFFLINE (Wunsch Hansi): bei normalen Nachrichten kein Push/keine Mail an Mitglieder, die gerade in der App sind
 {
   const f = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf('// ----- KC-CLUB-PRIVATTERMIN'));
-  assert.ok(/const inApp = notfall \|\| wichtig (\|\| express )?\? new Set<string>\(\) : await geradeInDerApp\(/.test(f) && f.indexOf("const inApp") < f.indexOf('await sendenGewaehlt("club_nachricht", ziel, wege'), "vor dem Versand herausgenommen; Notfall und ❗ wichtig immer");
+  assert.ok(/const inApp = notfall \|\| wichtig (\|\| express )?(\|\| nurMail )?\? new Set<string>\(\) : await geradeInDerApp\(/.test(f) && f.indexOf("const inApp") < f.indexOf('await sendenGewaehlt("club_nachricht", ziel, wege'), "vor dem Versand herausgenommen; Notfall und ❗ wichtig immer");
   assert.ok(f.indexOf('sendenGewaehlt("club_nachricht", erwaehnt') < f.indexOf("const inApp"), "@Erwähnung bleibt unverändert");
   assert.ok(/const IN_APP_SEK = 75;/.test(server) && /\.gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/.test(server), "nur wer die App gerade sichtbar offen hat");
   assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
@@ -10154,7 +10154,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/!inko\.has\(e\.person_id\)/.test(server) && /!inko\.has\(pid\)/.test(server), "Inkognito-Admin wird über „Club-App geöffnet“ nicht verraten");
   // 2.524.0 KC-CLUB-VERSANDART: die Frage vor dem Senden ist durch die Versand-Leiste ersetzt (Freigabe Hansi) – der Schalter heißt jetzt „Versand-Leiste immer zeigen“
   assert.ok(!/wichtigkeitFragen/.test(html) && /id="setWichtigFrage" onchange="versandImmerSetzen\(this\.checked\)"/.test(html), "Versand-Leiste statt Frage + Schalter");
-  assert.ok(/const wege = notfall \|\| wichtig (\|\| express )?\? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
+  assert.ok(/const wege = notfall \|\| (wichtig (\|\| express )?|express \|\| \(wichtig && !nurMail\) )\? \["push", "email"\]/.test(server) && /vars\.wichtigkeit === "hoch" \? \{ priority: "high" \}/.test(server), "Hoch: Push + E-Mail, Priorität an den Communicator");
   assert.ok(/await wichtigUngelesenMelden\(\)/.test(server) && /await protokoll\(null, "wichtig_ungelesen"[^\n]*\n\s*if \(!offen\.length\) continue;/.test(server), "24-Std.-Hinweis einmal (erst merken, dann senden)");
 }
 
@@ -12831,4 +12831,15 @@ function idx0() { return lies("index.html"); }
   const fall = server.slice(server.indexOf('case "spur_liste": {'), server.indexOf('case "spur_liste": {') + 200);
   assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall), "Server gibt die Wege nur dem Admin");
   assert.ok(/\.mg-kachel \{ position: relative; \}/.test(html) && /\.mg-was \{ position: absolute; top: 6px; right: 6px;/.test(html), "oben rechts in der Kachel");
+}
+// 2.649.0 KC-CLUB-VERSANDWAHL: „Wie verschicken?“ bei mehreren/Anlage · Nur E-Mail = nur E-Mail · Nur App · Rundmail ohne Chat nur Admin
+{
+  assert.ok(/if \(anlagen\.length \|\| empf\.length > 1\) \{\s*const w = await versandWahl\(empf, anlagen\); if \(!w\) return;\s*if \(w\.ohneChat\) return await mailRundSenden\(text, empf\);\s*versandWahlAnwenden\(w\.art\);/.test(programm), "Abfrage bei mehreren oder mit Anlage, Abbrechen sendet nichts");
+  assert.ok(/if \(!VN\.an && !EXPRESS && !neuEntwurf\?\.mehrfach && !\/\^\\s\*\(🚨\|notfall\)\/i\.test\(text\)\)/.test(programm), "nicht bei 🔒, Express, Notfall");
+  assert.ok(/\$\{ICH\?\.admin \? `<label class="vw-ohne versteckt">/.test(programm) && /ohneChat: art === "mail" && !!\$\("vwOhneChat"\)\?\.checked && !!ICH\?\.admin/.test(programm), "Nur als Mail – nur Admin");
+  assert.ok(/\.\.\.\(VW\.nurApp \? \{ nur_app: true \} : \{\}\)/.test(programm), "Nur in der App an den Server");
+  assert.ok(/nurMail = gewaehlt\.length === 1 && gewaehlt\[0\] === "email" && !notfall && !express;/.test(server) && /const wege = notfall \|\| express \|\| \(wichtig && !nurMail\) \? \["push", "email"\] : gewaehlt;/.test(server), "wichtig ohne Push bei Nur-E-Mail");
+  assert.ok(/const inApp = notfall \|\| wichtig \|\| express \|\| nurMail \? new Set<string>\(\)/.test(server) && /if \(p\.nur_app === true && !notfall && !express\) ziel\.length = 0;/.test(server), "Nur E-Mail auch an Leute in der App; Nur App ohne Benachrichtigung");
+  const fall = server.slice(server.indexOf('case "mail_rund": {'), server.indexOf('case "wunschbogen_mailen": {'));
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall) && /startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(fall) && /mail_rund_versuch/.test(fall) && /routerSenden\("club_nachricht_mail", ziel/.test(fall) && !/kc_communication_messages/.test(fall), "Rundmail: nur Admin, eigene Anlagen, Bremse, kein Chat");
 }
