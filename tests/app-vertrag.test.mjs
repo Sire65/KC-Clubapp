@@ -7426,9 +7426,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /function sstKontextJetzt\(\) \{[\s\S]{0,500}SST\.ctx\.resume\?\.\(\)/, "Ton-Baustein sofort anlegen und starten");
   assert.match(programm, /if \(b\.dataset\.s !== "normal"\) sstKontextJetzt\(\); \/\/ 2\.651\.0/, "beim Antippen der Stimme");
   assert.match(programm, /const el = new Audio\(\); el\.src = SST_STILLE; el\.play\(\)\.catch\(\(\) => \{\}\); \/\/ freischalten/, "Wiedergabe im Tippen freischalten");
-  assert.match(programm, /getUserMedia\(\{ audio: \{ echoCancellation: false, noiseSuppression: false, autoGainControl: true \} \}\)/, "Probe ohne Telefon-Modus");
-  assert.match(programm, /g = rms > 0\.00005 \? Math\.min\(40, 0\.2 \/ rms\) : 1; for \(let i = 0; i < d\.length; i\+\+\) d\[i\] = Math\.tanh\(d\[i\] \* g\)/, "auf gleiche Lautstärke");
+  assert.match(programm, /getUserMedia\(\{ audio: \{ echoCancellation: false, noiseSuppression: (false|true), autoGainControl: true \} \}\)/, "Probe ohne Telefon-Modus");
+  assert.match(programm, /const rms = Math\.sqrt\(e \/ d\.length\), g = rms > 0\.00005 \? Math\.min\(/, "auf gleiche Lautstärke");
   assert.match(programm, /el\.src = URL\.createObjectURL\(sstWav\(r\.d, r\.rate\)\)/, "über Audio-Element (Lautsprecher)");
+}
+// 2.652.0 KC-CLUB-SPASSSTIMME-KLAR: Tonhöhe ohne Flattern, Probehören ohne Übersteuern
+{
+  assert.match(programm, /sprung\(p, rueck, fak\) \{[\s\S]{0,200}j0 = Math\.max\(this\.jmin, Math\.ceil\(this\.F \* Math\.abs\(fak - 1\)\) \+ 200\)/, "Sprung an passender Stelle");
+  assert.match(programm, /this\.F = 768; this\.min = 600; this\.max = 4800; this\.K = 512; this\.jmin = 400; this\.jmax = 2000;/, "gemessene Einstellung");
+  assert.match(programm, /noiseSuppression: true, autoGainControl: true \} \}\)/, "Probe mit Rauschunterdrückung");
+  assert.match(programm, /Math\.min\(12, 0\.16 \/ rms, 0\.95 \/ Math\.max\(m, 1e-6\)\)/, "höchstens 12-fach, nie übersteuert");
+  assert.ok(!/d\[i\] = Math\.tanh\(d\[i\] \* g\)/.test(programm), "keine Sättigung mehr");
+  assert.match(programm, /case "maus": kette\(ton\(2\.0\)/, "Maus eine Oktave höher");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
