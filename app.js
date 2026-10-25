@@ -8927,7 +8927,22 @@ function sstBauen(ctx, ein, aus, id) {
     case "ente": { const t = ton(1.2), b = filt("bandpass", 1100, 5), v = verzerr(9), tr = neu(ctx.createGain()); tr.gain.value = 0.6; lfo(7, 0.4, tr.gain); kette(t, b, v, tr, laut(1.8)); break; } // quäkend, näselnd, „quak-quak“
     case "alien": { const t = ton(1.15), r = ring(700, 0.5), fl = neu(ctx.createDelay(0.05)), fb = laut(0.6); fl.delayTime.value = 0.004; lfo(0.3, 0.002, fl.delayTime);
       const q = t || ein; if (t) ein.connect(t); r.ein(q); r.aus.connect(fl); fl.connect(fb).connect(fl); r.aus.connect(laut(1.4)).connect(aus); fl.connect(laut(1.2)).connect(aus); break; } // schwebender Weltraum-Klang
-    case "roboter": { const r = ring(90, 1), st = stufen(12), k = kamm(0.005, 0.3); r.ein(ein); r.aus.connect(st); st.connect(k); st.connect(laut(1.2)).connect(aus); k.connect(aus); break; } // summend, digital, blechern-abgehackt
+    case "roboter": { // 2.653.0 (Hansi „Roboter noch stärker machen“): echter Vocoder wie im Film – die Wörter steuern einen gleichbleibenden Maschinenton
+      // (Sägezahn 110 Hz + Rauschen für S/Z), 14 Bänder; dazu wenig zerhackte Originalstimme für die Verständlichkeit und ein metallischer Kamm
+      const traeger = neu(ctx.createOscillator()); traeger.type = "sawtooth"; traeger.frequency.value = 110; traeger.start();
+      const t2 = neu(ctx.createOscillator()); t2.type = "square"; t2.frequency.value = 220.5; t2.start(); const t2g = laut(0.35); t2.connect(t2g);
+      const rausch = neu(ctx.createBufferSource()), rb = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), rd = rb.getChannelData(0); for (let i = 0; i < rd.length; i++) rd[i] = Math.random() * 2 - 1;
+      rausch.buffer = rb; rausch.loop = true; rausch.start(); const rg = laut(0.25); rausch.connect(rg);
+      const gl = neu(ctx.createWaveShaper()), gc = new Float32Array(1024); for (let i = 0; i < 1024; i++) gc[i] = Math.abs(i / 512 - 1); gl.curve = gc; // Gleichrichter
+      const summe = laut(1), vb = [200, 280, 390, 540, 750, 1000, 1350, 1800, 2400, 3100, 4000, 5100, 6400, 8000];
+      for (const f of vb) {
+        const sb = filt("bandpass", f, 6), g1 = neu(ctx.createWaveShaper()); g1.curve = gc; const hl = filt("lowpass", 35), st = laut(f > 4500 ? 14 : 9);
+        ein.connect(sb); sb.connect(g1); g1.connect(hl); hl.connect(st);
+        const tb = filt("bandpass", f, 6), vca = neu(ctx.createGain()); vca.gain.value = 0; st.connect(vca.gain);
+        (f > 4500 ? rg : traeger).connect(tb); if (f <= 4500) t2g.connect(tb); tb.connect(vca); vca.connect(summe);
+      }
+      const r = ring(60, 1); r.ein(ein); const rz = laut(0.18); r.aus.connect(rz); rz.connect(summe);
+      const k = kamm(0.004, 0.55); summe.connect(k); summe.connect(laut(1)).connect(aus); k.connect(laut(0.5)).connect(aus); break; }
     case "blech": { const k = kamm(0.0025, 0.85), b = filt("bandpass", 2200, 2), h = filt("highpass", 800); ein.connect(k); k.connect(b); ein.connect(b); b.connect(h); h.connect(laut(4)).connect(aus); break; } // winzig und hohl wie aus der Dose
     case "brumm": kette(ton(0.72), filt("lowshelf", 250, 1, 5), laut(0.62)); break; // tief und warm
     case "riese": { const t = ton(0.5), h = hall(2.5, 2.5), n = laut(0.9); const q = t || ein; if (t) ein.connect(t); q.connect(laut(1.1)).connect(aus); q.connect(h); h.connect(n).connect(aus); break; } // ganz tief + großer Höhlenhall
