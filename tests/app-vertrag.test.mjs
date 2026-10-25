@@ -12642,3 +12642,9 @@ function idx0() { return lies("index.html"); }
   assert.ok(/if \(!\(Number\(r\?\.gesendet\) > 0\)\)/.test(b) && b.indexOf("gesendet) > 0") < b.indexOf("Bestätigung ist unterwegs"), "„unterwegs“ nur nach echtem Versand");
   assert.ok(/if \(\$\("dwFenster"\) && !\$\("dwFenster"\)\.inert && VERLAUF\.state\) \{ history\.pushState\(VERLAUF\.state, "", VERLAUF\.url\); dwZurueck\(\); return; \}/.test(programm), "Zurück-Taste = ‹ Zurück mit Prüfung");
 }
+// 2.632.0 KC-CLUB-KLAPP-PFEILE (Wunschliste #32): große runde Pfeile an eingeklappten Zeilen und an aufgeklappten Tages-/Wochenköpfen
+{
+  assert.equal((programm.match(/<span class="tz-pfeil" aria-hidden="true">▸<\/span>/g) || []).length, 2, "▸ an Tag- und Wochenzeile");
+  assert.equal((programm.match(/<span class="tz-pfeil" aria-hidden="true">▾<\/span>/g) || []).length, 2, "▾ an offenem Tag und offener Woche");
+  assert.ok(/\.tz-pfeil \{[^}]*width: 30px; height: 30px; border-radius: 50%; background: #741521; color: #fff;/.test(html), "runder Weinrot-Knopf");
+}

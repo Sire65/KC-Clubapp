@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.631.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.632.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -33270,8 +33270,8 @@ function naTageHtml(u, blase) {
   const tagOffen = (t) => !ein || mussOffen(t) || offen.has("t:" + t.key);
   let zu = 0;
   const tagHtml = (t) => {
-    if (!tagOffen(t)) { zu++; return `<button type="button" class="tag-zu" onclick="naTagUm('t:${t.key}')"><span class="tz-pfeil">▸</span><span class="tz-info">${ntAnzahl(t.ns.length)} · ${esc(ntWer(t.ns))}</span><b class="tz-datum">${ntTagKurz(t.zeit)}</b></button>`; }
-    const kopf = ein && !mussOffen(t) ? `<button type="button" class="tag-trenner auf" id="nt-t-${t.key}" onclick="naTagUm('t:${t.key}')"><span>▾ ${ntTrenner(t.zeit)}</span></button>` : `<div class="tag-trenner" id="nt-t-${t.key}"><span>${ntTrenner(t.zeit)}</span></div>`;
+    if (!tagOffen(t)) { zu++; return `<button type="button" class="tag-zu" onclick="naTagUm('t:${t.key}')"><span class="tz-pfeil" aria-hidden="true">▸</span><span class="tz-info">${ntAnzahl(t.ns.length)} · ${esc(ntWer(t.ns))}</span><b class="tz-datum">${ntTagKurz(t.zeit)}</b></button>`; }
+    const kopf = ein && !mussOffen(t) ? `<button type="button" class="tag-trenner auf" id="nt-t-${t.key}" onclick="naTagUm('t:${t.key}')" aria-label="${ntTrenner(t.zeit)} zuklappen"><span class="tz-pfeil" aria-hidden="true">▾</span><span>${ntTrenner(t.zeit)}</span></button>` : `<div class="tag-trenner" id="nt-t-${t.key}"><span>${ntTrenner(t.zeit)}</span></div>`;
     return kopf + t.ns.map(blase).join("");
   };
   let html = "";
@@ -33282,10 +33282,10 @@ function naTageHtml(u, blase) {
       while (i < tage.length && ntTageAlt(tage[i].zeit) >= 7 && ntKw(tage[i].zeit) === wk) woche.push(tage[i++]);
       if (!(offen.has("w:" + wk) || woche.some(mussOffen))) {
         zu++; const alle = woche.flatMap((x) => x.ns);
-        html += `<button type="button" class="tag-zu kw" onclick="naTagUm('w:${wk}')"><span class="tz-pfeil">▸</span><span class="tz-info">${ntAnzahl(alle.length)} an ${woche.length} ${woche.length === 1 ? "Tag" : "Tagen"} · ${esc(ntWer(alle))}</span><b class="tz-datum">${wk}</b></button>`;
+        html += `<button type="button" class="tag-zu kw" onclick="naTagUm('w:${wk}')"><span class="tz-pfeil" aria-hidden="true">▸</span><span class="tz-info">${ntAnzahl(alle.length)} an ${woche.length} ${woche.length === 1 ? "Tag" : "Tagen"} · ${esc(ntWer(alle))}</span><b class="tz-datum">${wk}</b></button>`;
         continue;
       }
-      html += `<button type="button" class="kw-kopf" id="nt-w-${wk.replace(/\W/g, "")}" onclick="naTagUm('w:${wk}')">▾ ${wk}</button>` + woche.map(tagHtml).join("");
+      html += `<button type="button" class="kw-kopf" id="nt-w-${wk.replace(/\W/g, "")}" onclick="naTagUm('w:${wk}')" aria-label="${wk} zuklappen"><span class="tz-pfeil" aria-hidden="true">▾</span>${wk}</button>` + woche.map(tagHtml).join("");
       continue;
     }
     html += tagHtml(t); i++;
