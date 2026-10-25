@@ -12791,6 +12791,7 @@ function idx0() { return lies("index.html"); }
   assert.ok(r2.rows[0].std === "1,5" && r2.rows[0].klein === "ges. 12,5" && r2.ueber === 1 && r2.fehl === 0.5 && r2.regelStd === 2 && r2.bedarfStd === 6, "Stunden je Zeile und Tag");
   assert.ok(/function dpdUebersicht\(tage, ges, gesBer\)/.test(programm) && /Stunden je Person – alle Tage/.test(programm) && /<td class="std \$\{r\.art\}">/.test(programm), "Stundenspalte und Blatt „Stunden je Person“");
   assert.ok(/#druck \.dpd-raster td\.a-gelb \{/.test(html) && /#druck \.dpd-sum \{/.test(html), "Ampel- und Übersichts-Stil im Druckblock");
+  assert.ok(/function dpdBedarf\(tage, von, bis\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = bed \+ blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
   assert.ok(/#druck:has\(\.dpd\) \{ padding: 0 !important; width: 297mm !important; \}/.test(html) && /#druck \.dpd-blatt \{[^}]*height: 210mm;[^}]*break-after: page;/.test(html), "je Blatt genau A4 quer");
   const druckBlock = html.slice(html.indexOf("  @media print {"), html.indexOf("\n  }\n", html.indexOf("  @media print {")));
   assert.ok(druckBlock.includes("#druck .dpd-blatt {"), "Regeln im ersten Druckblock (Vorschau/PDF übernehmen nur diesen)");

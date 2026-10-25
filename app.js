@@ -41694,6 +41694,8 @@ function dpdBereiche(d, von) { // „10–23“ aus den Halbstunden mit Bedarf
 // 2.646.0 KC-CLUB-DP-DRUCK-STUNDEN (Wunsch Hansi „hinten die Gesamtstunden pro Person und insgesamt über alle Tage, vorne die Regelzeit mit Stunden,
 // unten drunter eine Ampel: zu viel, zu wenig, richtig besetzt“): rechts Spalte „Std.“ (Tag + „ges.“ über alle Tage), vorne Regelzeit/Bedarf/eingeplant
 // mit Ampelpunkt, statt „Fehlt“ die Ampel-Zeile je halbe Stunde (rot −n, grün ✓, gelb +n), zum Schluss das Blatt „Stunden je Person – alle Tage“.
+// Vorn das Blatt „Regelzeit und Besetzung je Stunde“ (Wunsch Hansi „Regelzeit pro Tag und Besetzung pro Stunde, z. B. 11–12 2 Personen, 1 H, 1 V“).
+// Aushilfen ohne Zeiten (z. B. Leon) liefert das Planungswerkzeug als Leerzeile jeden Tag mit (z: „Aushilfe“, keine Wünsche, kein Dienst).
 function dpdTag(d, von, bis, ges = {}) { // Zeilen eines Tages: je Person, Bereitschaft, Bedarf/besetzt, Ampel; je Zeile 30 Zellen [Klasse, Text] und rechts die Stunden
   const S = dpdSlots(von, bis), zu = (i) => (d.bedarf[i] ? "" : " zu"), rows = [];
   for (const p of d.leute) {
@@ -41742,6 +41744,16 @@ function dpdUebersicht(tage, ges, gesBer) { // letztes Blatt: Stunden je Person 
   return `<table class="dpd-sum"><thead><tr><th>Mitglied</th>${tage.map((t) => `<th>${t.wt}<small>${t.dt}</small></th>`).join("")}<th class="ges">Gesamt</th><th>Bereitschaft<small>Vorschlag</small></th></tr></thead><tbody>${zeilen}</tbody></table>
     <p class="dpd-eb" style="margin-top:3mm;text-transform:none;letter-spacing:0">Stunden laut Entwurf (eingeplante Dienste). Bereitschaft zählt nicht mit. Ampel je Tag: rot = so viele Personenstunden fehlen, gelb = zu viel eingeplant, grün = richtig besetzt.</p>`;
 }
+function dpdBedarf(tage, von, bis) { // erstes Blatt: Regelzeit je Tag und Besetzung je Stunde (Personen gesamt, darunter vorne/hinten), daneben die Zeitblöcke
+  const std = Array.from({ length: bis - von }, (_, i) => von + i), zelle = (t, i) => [t.bedarf[i] || 0, t.vorne?.[i] ?? null, t.hinten?.[i] ?? null];
+  const zeilen = tage.map((t) => {
+    const stunden = std.map((h) => { const [p, v, hi] = zelle(t, (h - von) * 2); return p ? `<td><b>${p}</b>${v !== null ? `<small>${v} V · ${hi} H</small>` : ""}</td>` : '<td class="zu"></td>'; }).join("");
+    const bl = []; t.bedarf.forEach((_, i) => { const z = zelle(t, i), l = bl[bl.length - 1]; if (!z[0]) return; if (l && l.b === von + i / 2 && l.z.join() === z.join()) l.b += 0.5; else bl.push({ a: von + i / 2, b: von + i / 2 + 0.5, z }); });
+    const baender = bl.map((x) => `${dpdUhr(x.a)}–${dpdUhr(x.b)} Uhr: <b>${x.z[0]} Pers.</b>${x.z[1] !== null ? ` (${x.z[1]} V, ${x.z[2]} H)` : ""}`).join("<br>");
+    return `<tr><th class="tg"><b>${t.wt} ${t.dt}</b><small>${esc(t.art)}</small></th><td class="rz"><b>${esc(t.regel)} Uhr</b><small>${dpdStd(t.regelStd)} Std. · Bedarf ${dpdStd(t.bedarfStd)} Std.</small></td>${stunden}<td class="bd">${baender}</td></tr>`; }).join("");
+  return `<table class="dpd-bed"><thead><tr><th>Tag</th><th>Regelzeit</th>${std.map((h) => `<th>${h}–${h + 1}</th>`).join("")}<th>Besetzung</th></tr></thead><tbody>${zeilen}</tbody></table>
+    <p class="dpd-eb" style="margin-top:2mm;text-transform:none;letter-spacing:0">Aufbau und Abbau ohne Aufteilung vorne/hinten. Zusammen ${dpdStd(tage.reduce((a, t) => a + t.bedarfStd, 0))} Personenstunden.</p>`;
+}
 async function dpdBauen() {
   const d = await api("dp_druck", {});
   if (!d?.tage?.length) { melde("Noch keine Übersicht abgelegt – Claude bitten, sie zu rechnen.", true); return null; }
@@ -41750,12 +41762,13 @@ async function dpdBauen() {
   for (const t of d.tage) { for (const p of t.leute) ges[p.n] = (ges[p.n] || 0) + (p.s ? p.s[1] - p.s[0] : 0); for (const x of t.ber || []) gesBer[x.n] = (gesBer[x.n] || 0) + x.s[1] - x.s[0]; }
   const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, ges), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
   const blaetter = [[]]; let n = 0;
-  for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
+  for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN - (breit === "2" ? 4.5 : 0)) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
   const S = dpdSlots(von, bis), teile = breit === "2" ? [S.filter((s) => s < 16), S.filter((s) => s >= 15.5)] : [S];
   const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · Entwurf, nicht veröffentlicht${stand ? " · Stand " + esc(stand) : ""}</p>`;
   const leg = `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>`;
-  const nb = blaetter.length, html = blaetter.flatMap((bl, i) => teile.map((teil, k) => {
-    const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb + 1}`,
+  const bed = `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Regelzeit und Besetzung je Stunde</h1></div><div class="dpd-leg"><span><b>3</b> = Personen gesamt</span><span><b>2 V · 1 H</b> = davon vorne / hinten</span><span><i class="zu"></i>kein Dienst</span></div></header>${dpdBedarf(tage, von, bis)}<footer class="dpd-fuss">Regelzeit und Besetzung · vorne vor Blatt 1</footer></section>`;
+  const nb = blaetter.length, html = bed + blaetter.flatMap((bl, i) => teile.map((teil, k) => {
+    const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb}`,
       teile.length > 1 ? (k ? `linken Rand bis 16 Uhr umknicken und auf Blatt ${i + 1} links legen` : `rechts an Blatt ${i + 1} rechts anlegen (Klebekante 15:30–16 Uhr)`) : "",
       i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : "danach: Stunden je Person"].filter(Boolean).join(" · ");
     return `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}
