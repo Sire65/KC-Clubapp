@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.630.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.631.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14961,9 +14961,29 @@ let BEST = null;
 // Eingabe anklickbar „📧 Bestätigung mit Zusammenfassung per E-Mail anfordern“ – wenn alle Tage eingetragen sind (Leiste unten im
 // Fenster) und beim Zurückgehen, wenn in dieser Sitzung etwas gespeichert und noch keine Bestätigung angefordert wurde.
 const DWB = { geaendert: false, bestaetigt: false };
-async function dwBestaetigen(kurz) {
-  try { await api("eingaben_bestaetigen", { art: "dienstwunsch" }, { warten: true }); }
+// 2.631.0 KC-CLUB-DW-UNGESPEICHERT: vor „Fertig“, „Zurück“ und der Zurück-Taste fragen, ob in Twinkey noch etwas ungespeichert ist
+// (dp2-club/daten.js → KC_CLUB_DW_PRUEFEN). true = alles beim Server · false = zurück in die Eingabe · "verlassen" = trotzdem weiter.
+// Niemand bleibt gefangen: „Trotzdem verlassen“ geht immer (wie 2.326.0).
+async function dwPruefen() {
+  let r = { ok: true };
+  try { const w = document.querySelector("#dwFenster iframe")?.contentWindow; if (w?.KC_CLUB_DW_PRUEFEN) r = await w.KC_CLUB_DW_PRUEFEN(); } catch { r = { ok: true }; }
+  if (r?.offen) return (await frage("💾 Noch nicht gespeichert!\n\nDu hast etwas geändert, aber noch nicht auf „💾 Tag speichern“ getippt. Ohne Speichern ist die Änderung weg – auch der Planer sieht sie nicht.",
+    { ja: "💾 Zurück zum Speichern", nein: "Trotzdem verlassen", gefahr: false })) ? false : "verlassen";
+  if (r?.fehler) return (await frage(`⚠️ Deine letzte Änderung ist noch nicht beim Server angekommen.\n\n${r.fehler}\n\nBitte Internet prüfen und im Tag noch einmal „Tag speichern“ tippen.`,
+    { ja: "Zurück zur Eingabe", nein: "Trotzdem verlassen", gefahr: false })) ? false : "verlassen";
+  return true;
+}
+async function dwBestaetigen(kurz, geprueft) {
+  if (!geprueft) { const p = await dwPruefen(); if (p === false) return false; if (p === "verlassen") { melde("Bestätigung nicht angefordert – die Änderung war noch nicht gespeichert.", true); return false; } }
+  let r;
+  try { r = await api("eingaben_bestaetigen", { art: "dienstwunsch" }, { warten: true }); }
   catch (e) { meldeFehler(e); return false; }
+  // 2.631.0 KC-CLUB-DW-BESTAETIGUNG-EHRLICH (Wunschliste #37, Fund Karla 24.10.: Versand scheiterte, die App sagte trotzdem „unterwegs“ →
+  // Karla drückte zweimal Fertig): „unterwegs“ nur, wenn der Server den Versand wirklich meldet
+  if (!(Number(r?.gesendet) > 0)) {
+    await frage("✅ Deine Dienstwünsche sind gespeichert.\n\n⚠️ Nur die Bestätigung (E-Mail/App-Nachricht) ging gerade nicht raus. Bitte später noch einmal auf „✅ Fertig“ tippen.", { ja: "OK", nein: "Schließen", gefahr: false });
+    return false;
+  }
   DWB.bestaetigt = true; DWB.geaendert = false; document.getElementById("dwFertigLeiste")?.remove();
   melde("📧 Bestätigung ist unterwegs – per E-Mail und als App-Nachricht");
   if (kurz) { await frage("📧 Die Bestätigung mit der Zusammenfassung deiner Eingaben ist unterwegs – schau gleich in dein E-Mail-Postfach (auch im Spam-Ordner).\n\nDenk dran: Das ist deine Wunschplanung, noch nicht der fertige, freigegebene Dienstplan.", { ja: "👍 OK", nein: "Schließen" }); return true; }
@@ -14985,10 +15005,12 @@ function dwFertigLeiste(tage) { // alle Tage eingetragen → deutlich anklickbar
 // anbieten“): Wer etwas gespeichert und noch nicht mit „Fertig“ abgeschlossen hat, kommt nur über „✅ Fertig“ (Bestätigung per E-Mail) hinaus;
 // „Abbrechen“ führt zurück in die Eingabe. Klappt der Versand nicht (z. B. Netz), darf man danach trotzdem gehen – niemand bleibt gefangen.
 async function dwZurueck() {
-  if (DWB.geaendert && !DWB.bestaetigt && document.getElementById("dwFenster")) {
+  const geprueft = await dwPruefen(); // 2.631.0 KC-CLUB-DW-UNGESPEICHERT
+  if (geprueft === false) return;
+  if (DWB.geaendert && !DWB.bestaetigt && document.getElementById("dwFenster")) { // Fertig-Pflicht gilt auch nach „Trotzdem verlassen“ (für schon Gespeichertes)
     const ja = await frage("✅ Bitte mit „Fertig“ abschließen\n\nDeine Eingaben sind gespeichert. Mit Fertig schließt du ab und bekommst die Bestätigung mit der Zusammenfassung per E-Mail – mit dem Hinweis, dass es deine Wunschplanung ist (noch nicht der fertige Dienstplan).\n\nMit Abbrechen gehst du zurück zur Eingabe.", { ja: "✅ Fertig", nein: "Abbrechen", gefahr: false });
     if (!ja) return; // zurück in die Eingabe
-    if (!await dwBestaetigen(true)) { DWB.geaendert = false; return; } // Versand ging nicht: Fehler steht da, beim nächsten Zurück darf man gehen
+    if (!await dwBestaetigen(true, true)) { DWB.geaendert = false; return; } // Versand ging nicht: Fehler steht da, beim nächsten Zurück darf man gehen
   }
   dwSchliessen();
 }
@@ -28046,6 +28068,8 @@ window.addEventListener("popstate", (e) => {
     else offen.forEach(fensterZu);
     history.pushState(VERLAUF.state, "", VERLAUF.url); return;
   }
+  // 2.631.0 KC-CLUB-DW-UNGESPEICHERT: Zurück-Taste bei offenen Dienstwünschen = wie „‹ Zurück“ (mit Prüfung auf Ungespeichertes)
+  if ($("dwFenster") && !$("dwFenster").inert && VERLAUF.state) { history.pushState(VERLAUF.state, "", VERLAUF.url); dwZurueck(); return; }
   VERLAUF.state = e.state; VERLAUF.url = location.href;
   const s = e.state || {};
   // 2.481.0 KC-CLUB-ZURUECK-SITZUNG: Eintrag eines früheren Starts → Startseite zeigen und weiter zurück (so schließt sich die App wie angekündigt)

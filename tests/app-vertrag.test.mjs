@@ -10414,7 +10414,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   const z = html.slice(html.indexOf("async function dwZurueck()"), html.indexOf("async function bestaetigungZeigen"));
   assert.ok(/\{ ja: "✅ Fertig", nein: "Abbrechen", gefahr: false \}/.test(z) && /if \(!ja\) return; \/\/ zurück in die Eingabe/.test(z), "Fertig oder Abbrechen");
-  assert.ok(/if \(!await dwBestaetigen\(true\)\) \{ DWB\.geaendert = false; return; \}/.test(z) && !/Nein, danke/.test(z), "kein Weg ohne Fertig, außer der Versand scheitert");
+  assert.ok(/if \(!await dwBestaetigen\(true(, true)?\)\) \{ DWB\.geaendert = false; return; \}/.test(z) && !/Nein, danke/.test(z), "kein Weg ohne Fertig, außer der Versand scheitert");
   assert.ok(/if \(await dwBestaetigen\(true\)\) dwSchliessen\(\);/.test(html) && />Abbrechen<\/button><\/div>`\);/.test(html), "Leiste: Fertig schließt ab");
 }
 
@@ -12628,4 +12628,17 @@ function idx0() { return lies("index.html"); }
   assert.ok(m.indexOf('await protokoll(fuer.person_id, "vertretung_mail"') < m.indexOf("await sendenGewaehlt("), "erst merken, dann senden");
   assert.ok(/sendenGewaehlt\("club_erinnerung", \[fuer\.person_id\], \["email"\]/.test(m), "nur an das vertretene Mitglied, per E-Mail");
   assert.ok(/if \(fuer && pVorher && antwort\.ok && !\/_liste\$\|_laden\$\/\.test\(a\)\)/.test(server) && /EdgeRuntime\?\.waitUntil\?\.\(lauf\)/.test(server), "nur nach Erfolg, nur Schreiben, im Hintergrund");
+}
+// 2.631.0 KC-CLUB-DW-UNGESPEICHERT + KC-CLUB-DW-BESTAETIGUNG-EHRLICH (Fund Karla 24.10., Wunschliste #37): Ungespeichertes in Twinkey wird vor
+// „Fertig“, „Zurück“ und der Zurück-Taste abgefangen; „Bestätigung ist unterwegs“ nur, wenn der Server den Versand meldet
+{
+  const dat = lies("dp2-club/daten.js");
+  assert.ok(/window\.KC_CLUB_DW_PRUEFEN = async \(\) => \{/.test(dat) && /angefasst\.has\(x\) && x\.offsetParent !== null/.test(dat) && /if \(JSON\.stringify\(stand\(\)\) !== zuletzt\) await K\.persistAll\(\);/.test(dat), "Twinkey-Formular ungespeichert erkannt, Gemerktes nachgeschickt");
+  assert.ok(/e\.target\.closest\('\[type="submit"\],#mmSave,#mmSaveNext'\)/.test(dat), "der Speichern-Knopf selbst zählt nicht als Änderung");
+  const z = programm.slice(programm.indexOf("async function dwZurueck()"), programm.indexOf("async function bestaetigungZeigen"));
+  assert.ok(/const geprueft = await dwPruefen\(\);/.test(z) && /if \(geprueft === false\) return;/.test(z), "Zurück prüft zuerst");
+  const b = programm.slice(programm.indexOf("async function dwBestaetigen("), programm.indexOf("async function dwBestaetigen(") + 1500);
+  assert.ok(/if \(!geprueft\) \{ const p = await dwPruefen\(\);/.test(b) && b.indexOf("dwPruefen()") < b.indexOf('api("eingaben_bestaetigen"'), "Fertig prüft vor der Bestätigung");
+  assert.ok(/if \(!\(Number\(r\?\.gesendet\) > 0\)\)/.test(b) && b.indexOf("gesendet) > 0") < b.indexOf("Bestätigung ist unterwegs"), "„unterwegs“ nur nach echtem Versand");
+  assert.ok(/if \(\$\("dwFenster"\) && !\$\("dwFenster"\)\.inert && VERLAUF\.state\) \{ history\.pushState\(VERLAUF\.state, "", VERLAUF\.url\); dwZurueck\(\); return; \}/.test(programm), "Zurück-Taste = ‹ Zurück mit Prüfung");
 }

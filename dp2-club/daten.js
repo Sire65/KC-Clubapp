@@ -148,6 +148,27 @@
     laeuft = (async () => { do { nochmal = false; await senden(); } while (nochmal); return true; })().finally(() => { laeuft = null; });
     return laeuft;
   };
+  // 2.631.0 KC-CLUB-DW-UNGESPEICHERT (Fund 25.10.: Karla hakte am 05.12. „Ganzer Tag gesperrt“ an, tippte aber nie „Tag speichern“ – die
+  // Bestätigung kam mit den alten Zeiten; Hansi: „Die App muss es abfangen, wenn man verlassen will, aber nicht alle Knöpfe gedrückt wurden“).
+  // Twinkey selbst bleibt unverändert. Hier merkt sich die Club-App, ob in einem offenen Twinkey-Formular etwas geändert wurde (Eingabe,
+  // Haken, Knopf – nicht der Speichern-Knopf) und ob der gemerkte Stand schon beim Server ist. Die Club-App fragt das vor „✅ Fertig“,
+  // „‹ Zurück“ und der Zurück-Taste ab. Nach „Tag speichern“ baut Twinkey ein neues Formular – das gilt dann wieder als unverändert.
+  const angefasst = new WeakSet();
+  const merken = (e) => {
+    const f = e.target?.closest?.("form");
+    if (!f || (e.type === "click" && !e.target.closest("button")) || e.target.closest('[type="submit"],#mmSave,#mmSaveNext')) return;
+    angefasst.add(f);
+  };
+  for (const art of ["input", "change", "click"]) document.addEventListener(art, merken, true);
+  window.KC_CLUB_DW_PRUEFEN = async () => {
+    const f = [...document.querySelectorAll("form")].find((x) => angefasst.has(x) && x.offsetParent !== null);
+    if (f) return { offen: true };
+    try { if (laeuft) await laeuft; if (JSON.stringify(stand()) !== zuletzt) await K.persistAll(); } // Gemerktes, aber (z. B. Netz weg) nicht Angekommenes jetzt senden
+    catch (e) { return { fehler: String(e?.message || e).slice(0, 200) }; }
+    return { ok: true };
+  };
+  // App wird weggewischt/gewechselt: schon Gemerktes noch schnell zum Server (ein offenes, ungespeichertes Formular kann nur das Mitglied speichern)
+  document.addEventListener("visibilitychange", () => { if (document.hidden && JSON.stringify(stand()) !== zuletzt) K.persistAll().catch(() => {}); });
   // KC-CLUB-WUNSCHBOGEN (2.23.28): leerer persönlicher Bogen (DP2s „Persönliche Verfügbarkeitsmatrix“, Name + QR oben rechts) auf
   // Anfrage der Club-App erzeugen – mit DP2s eigenem Druckteil (personalizedForms + pdfAdapter); die Club-App zeigt/druckt/mailt ihn.
   const bogenBauen = async () => {
