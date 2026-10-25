@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.641.0 – 2026-10-25 – 🔎 Pakete-Vergleich schreibt genauer auf (KC-CLUB-VERGLEICH-GENAUER)
+## 2.641.0 – 2026-10-25 – 🔎 Pakete-Vergleich genauer, 🍽️ Anwesenheit mit Ampel (KC-CLUB-VERGLEICH-GENAUER, KC-CLUB-ANWESEND-AMPEL)
 Wunsch Hansi („Ja“ zur genaueren Aufzeichnung nach der Auswertung vom 24.10.: Online 28×, Übersicht 11× Abweichung, vermutlich nur Zeitunterschiede). Server: Weicht die nebenbei laufende Gegenprobe ab, steht jetzt im Protokoll beim Online-Takt, wer fehlt bzw. zu viel ist, wann diese Person zuletzt gesehen wurde und wie viel später die Probe lief; bei der Nachrichten-Übersicht, welche Felder in welchem Chat abweichen (Zahlen/Zeiten mit Wert, Texte nur als „Text anders“ – kein Nachrichteninhalt). Für die Mitglieder ändert sich nichts. Rückweg: App/Server 2.640.0.
 
 🍽️ Clubabend Live – Anwesenheit mit Ampel (KC-CLUB-ANWESEND-AMPEL, Wunsch Hansi „besser unterscheiden, wer angemeldet ist: grün, gelb wer noch nicht genau weiß, rot noch nicht gemeldet“): In der Liste „✅ Anwesend“ (Clubleitung) hat jeder Name Farbe und Zeichen nach seiner Antwort zum Treffen – 🟢 grün = zugesagt, 🟡 gelb = vielleicht, 🔴 rot = noch nicht gemeldet, ⚪ blass/durchgestrichen = abgesagt; wer angetippt ist, steht wie bisher als ✅ da. Darüber eine Zeile mit den Zahlen je Farbe; sortiert grün → gelb → rot → abgesagt. Nur Anzeige, kein Server- oder Datenbank-Aufruf mehr.
