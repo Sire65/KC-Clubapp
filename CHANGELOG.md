@@ -1,8 +1,11 @@
 # Änderungen
 
-## 2.652.0 – 2026-10-25 – 🌹 Rose schon nach 20 Sekunden (KC-CLUB-ROSE-20S)
+## 2.653.0 – 2026-10-25 – 🌹 Rose schon nach 20 Sekunden (KC-CLUB-ROSE-20S)
 - Wunsch Hansi („Ja, nach 20 Sekunden und sofort einspielen“): Von 7 angehakten Mitgliedern hatte erst eine die Rose – die übrigen öffneten die App nur kurz, 3 Minuten ruhige Startseite kamen nie zusammen. Jetzt kommt sie nach 20 Sekunden sichtbarer Startseite (weiter nicht über einem offenen Fenster oder beim Tippen, nur einmal). Hinweis in der Admin-Karte angepasst.
 - Nur App. Auf Wunsch Hansi sofort eingespielt.
+
+## 2.652.0 – 2026-10-25 – 🎭 Spaßstimmen ohne Störgeräusche, deutlich verschieden (KC-CLUB-SPASSSTIMME-KLAR)
+Fund Hansi („Stimmen noch nicht so gut, manchmal Störgeräusche drin und teilweise zu ähnlich“). (1) Neue Tonhöhen-Verschiebung: springt an der Stelle, wo die Wellenform zusammenpasst, statt stur alle 32 ms – gemessen mit Sinus-Tönen Störanteil vorher bis −1 dB (doppelte Tonhöhe fast nur Flattern), jetzt −46 … −71 dB. (2) Probehören: Rauschunterdrückung wieder an, höchstens 12-fach statt 40-fach verstärkt, kein Übersteuern mehr (Kompressor + Begrenzung statt Sättigung), Rauschen zwischen den Wörtern sanft abgesenkt. (3) Stimmen klar unterschieden: Maus eine Oktave höher und piepsig, Helium wackelnd, Ente quäkend „quak-quak“, Außerirdischer schwebend, Roboter summend-digital, Blechdose winzig-hohl, Brummbär tief-warm, Riese ganz tief mit Höhlenhall, Gespenst hauchig-schwellend, Radio dünn, Megafon verzerrt mit Platz-Nachhall, Echo deutlich, Unter Wasser dumpf-blubbernd. Alle im Gespräch auf ±1,6 dB gleich laut wie die normale Stimme.
 
 ## 2.651.0 – 2026-10-25 – 🎭 Spaßstimmen laut und deutlich (KC-CLUB-SPASSSTIMME-LAUT)
 Fund Hansi („die Stimmen sind kaum zu hören oder gar nicht da – beim Probehören“). Ursachen: (1) der Ton-Baustein wurde erst nach der Aufnahme angelegt – auf Handys bleibt er dann stumm; (2) Aufnahme mit Echo-Unterdrückung schaltet Android/iPhone in den leisen „Telefon-Modus“ (Hörmuschel); (3) einzelne Stimmen waren leiser. Jetzt: Ton-Baustein startet sofort beim Antippen (auch im Gespräch und bei „Mit Spaßstimme annehmen“); Probehören nimmt ohne Echo-Unterdrückung auf, berechnet den Effekt vorab, bringt ihn auf gleiche, gut hörbare Lautstärke und spielt ihn über den Lautsprecher (Medien-Lautstärke); kam kaum Ton vom Mikrofon an, gibt es einen Hinweis. Alle 14 Stimmen im Gespräch auf ±2 dB gleich laut wie die normale Stimme (gemessen).

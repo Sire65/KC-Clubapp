@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.652.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.653.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8743,20 +8743,38 @@ const SST_STIMMEN = [
   { id: "geist", sym: "👻", t: "Gespenst" }, { id: "radio", sym: "📻", t: "Altes Radio" }, { id: "megafon", sym: "📢", t: "Megafon" },
   { id: "echo", sym: "🔁", t: "Echo" }, { id: "wasser", sym: "🫧", t: "Unter Wasser" },
 ];
+// 2.652.0 KC-CLUB-SPASSSTIMME-KLAR (Fund Hansi „Störgeräusche drin und teilweise zu ähnlich“): neue Tonhöhen-Verschiebung – springt nicht mehr
+// stur alle 32 ms, sondern an der Stelle, wo die Wellenform zusammenpasst (Ähnlichkeitssuche). Gemessen mit Sinus-Tönen: Störanteil vorher bis −1 dB
+// (bei doppelter Tonhöhe fast nur Flattern), jetzt −46 … −71 dB.
 const SST_TONHOEHE = `class KcTonhoehe extends AudioWorkletProcessor {
   static get parameterDescriptors() { return [{ name: "faktor", defaultValue: 1, minValue: 0.25, maxValue: 3 }]; }
-  constructor() { super(); this.n = 8192; this.b = new Float32Array(this.n); this.w = 0; this.ph = 0; this.L = 1536; }
-  lies(d) { let p = this.w - 1 - d; while (p < 0) p += this.n; const i = Math.floor(p), f = p - i, a = this.b[i % this.n], c = this.b[(i + 1) % this.n]; return a + (c - a) * f; }
+  constructor() {
+    super(); this.N = 32768; this.b = new Float32Array(this.N); this.w = 0; this.r = -2400; this.alt = 0; this.f = 0;
+    this.F = 768; this.min = 600; this.max = 4800; this.K = 512; this.jmin = 400; this.jmax = 2000;
+  }
+  lies(p) { const n = this.N; p = ((p % n) + n) % n; const i = Math.floor(p), x = p - i, a = this.b[i], c = this.b[(i + 1) % n]; return a + (c - a) * x; }
+  // passende Sprungweite suchen: Wellenform an der neuen Stelle soll möglichst gut zur alten passen (keine Knackser/Flattern)
+  sprung(p, rueck, fak) {
+    let best = -1e9, j0 = Math.max(this.jmin, Math.ceil(this.F * Math.abs(fak - 1)) + 200), bj = j0;
+    for (let j = j0; j <= this.jmax; j += 2) {
+      const q = rueck ? p - j : p + j; let s = 0, e = 1e-9;
+      for (let k = 0; k < this.K; k += 3) { const a = this.lies(p + k), c = this.lies(q + k); s += a * c; e += c * c; }
+      const v = s / Math.sqrt(e); if (v > best) { best = v; bj = j; }
+    }
+    return rueck ? p - bj : p + bj;
+  }
   process(ein, aus, par) {
     const e = ein[0] && ein[0][0], o = aus[0]; if (!o || !o[0]) return true;
-    const r = par.faktor[0], L = this.L, h = L / 2;
+    const fak = par.faktor[0];
     for (let k = 0; k < o[0].length; k++) {
-      this.b[this.w] = e ? e[k] : 0;
-      this.ph += 1 - r; if (this.ph >= L) this.ph -= L; if (this.ph < 0) this.ph += L;
-      const d1 = this.ph, d2 = (this.ph + h) % L, g1 = 0.5 - 0.5 * Math.cos(2 * Math.PI * d1 / L), g2 = 1 - g1;
-      const v = this.lies(d1) * g1 + this.lies(d2) * g2;
+      this.b[this.w % this.N] = e ? e[k] : 0;
+      const d = this.w - this.r;
+      if (this.f === 0 && (d < this.min || d > this.max)) { this.alt = this.r; this.r = this.sprung(this.r, d < this.min, fak); this.f = this.F; }
+      let v = this.lies(this.r);
+      if (this.f > 0) { const g = this.f / this.F; v = v * (1 - g) + this.lies(this.alt) * g; this.alt += fak; this.f--; }
       for (let c = 0; c < o.length; c++) o[c][k] = v;
-      this.w = (this.w + 1) % this.n;
+      this.r += fak; this.w++;
+      if (this.w > 1e9) { this.w -= 1e9; this.r -= 1e9; this.alt -= 1e9; }
     }
     return true;
   }
@@ -8791,23 +8809,26 @@ function sstBauen(ctx, ein, aus, id) {
     for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, abkl); } n.buffer = b; return n; };
   const kette = (...n) => { let a = ein; for (const x of n.filter(Boolean)) { a.connect(x); a = x; } a.connect(aus); };
   const laut = (v) => { const g = neu(ctx.createGain()); g.gain.value = v; return g; };
+  // 2.652.0: Stimmen deutlicher voneinander unterschieden (Tonhöhe, Klangfarbe, Bewegung, Raum)
+  const lfo = (hz, tiefe, ziel) => { const o = neu(ctx.createOscillator()), g = neu(ctx.createGain()); o.frequency.value = hz; g.gain.value = tiefe; o.connect(g).connect(ziel); o.start(); return o; };
+  const stufen = (n) => { const w = neu(ctx.createWaveShaper()), c = new Float32Array(2048); for (let i = 0; i < 2048; i++) { const x = i / 1024 - 1; c[i] = Math.round(x * n) / n; } w.curve = c; return w; };
   switch (id) {
-    case "maus": kette(ton(1.9), filt("highshelf", 2500, 1, 4)); break;
-    case "helium": kette(ton(1.5), filt("highpass", 250), filt("peaking", 3000, 1, 5)); break;
-    case "ente": kette(ton(1.65), filt("bandpass", 1700, 3), verzerr(4), laut(1.6)); break;
-    case "alien": { const r = ring(420, 0.55); const t = ton(1.25); if (t) { ein.connect(t); r.ein(t); } else r.ein(ein); r.aus.connect(laut(2)).connect(aus); break; }
-    case "roboter": { const r = ring(55, 1); r.ein(ein); const k = kamm(0.006, 0.45); r.aus.connect(k); r.aus.connect(aus); k.connect(aus); break; }
-    case "blech": { const k = kamm(0.0035, 0.75), b = filt("bandpass", 1500, 1.2); ein.connect(k); k.connect(b); ein.connect(b); b.connect(laut(2.6)).connect(aus); break; }
-    case "brumm": kette(ton(0.68), filt("lowshelf", 250, 1, 4)); break;
-    case "riese": { const t = ton(0.55), h = hall(1.6, 3), n = laut(0.5); const q = t || ein; if (t) ein.connect(t); q.connect(aus); q.connect(h); h.connect(n).connect(aus); break; }
-    case "geist": { const t = ton(0.85), h = hall(2.5, 2), n = laut(0.7), tr = neu(ctx.createGain()), o = neu(ctx.createOscillator()), tg = neu(ctx.createGain());
-      o.frequency.value = 5; tg.gain.value = 0.35; tr.gain.value = 0.65; o.connect(tg).connect(tr.gain); o.start();
-      const q = t || ein; if (t) ein.connect(t); const g2 = laut(1.4); q.connect(tr); tr.connect(g2); g2.connect(aus); tr.connect(h); h.connect(n).connect(aus); break; }
-    case "radio": kette(filt("highpass", 450), filt("lowpass", 2800), verzerr(3), laut(0.9)); break;
-    case "megafon": kette(filt("highpass", 650), filt("peaking", 2000, 1, 9), filt("lowpass", 3800), verzerr(6), laut(0.5)); break;
-    case "echo": { const d = neu(ctx.createDelay(2)); d.delayTime.value = 0.3; const r = laut(0.45); ein.connect(aus); ein.connect(d); d.connect(r).connect(d); r.connect(aus); break; }
-    case "wasser": { const d = neu(ctx.createDelay(0.1)); d.delayTime.value = 0.01; const o = neu(ctx.createOscillator()), g = neu(ctx.createGain()); o.frequency.value = 4; g.gain.value = 0.004; o.connect(g).connect(d.delayTime); o.start();
-      kette(filt("lowpass", 550, 2), d, laut(0.9)); break; }
+    case "maus": kette(ton(2.0), filt("highpass", 350), filt("peaking", 3500, 1, 3)); break; // eine Oktave höher, hell und piepsig
+    case "helium": { const t = ton(1.45); if (t) lfo(6, 0.07, t.parameters.get("faktor")); kette(t, filt("highpass", 300), filt("peaking", 2500, 1, 6)); break; } // höher + wackelt wie Luftballon-Luft
+    case "ente": { const t = ton(1.2), b = filt("bandpass", 1100, 5), v = verzerr(9), tr = neu(ctx.createGain()); tr.gain.value = 0.6; lfo(7, 0.4, tr.gain); kette(t, b, v, tr, laut(1.8)); break; } // quäkend, näselnd, „quak-quak“
+    case "alien": { const t = ton(1.15), r = ring(700, 0.5), fl = neu(ctx.createDelay(0.05)), fb = laut(0.6); fl.delayTime.value = 0.004; lfo(0.3, 0.002, fl.delayTime);
+      const q = t || ein; if (t) ein.connect(t); r.ein(q); r.aus.connect(fl); fl.connect(fb).connect(fl); r.aus.connect(laut(1.4)).connect(aus); fl.connect(laut(1.2)).connect(aus); break; } // schwebender Weltraum-Klang
+    case "roboter": { const r = ring(90, 1), st = stufen(12), k = kamm(0.005, 0.3); r.ein(ein); r.aus.connect(st); st.connect(k); st.connect(laut(1.2)).connect(aus); k.connect(aus); break; } // summend, digital, blechern-abgehackt
+    case "blech": { const k = kamm(0.0025, 0.85), b = filt("bandpass", 2200, 2), h = filt("highpass", 800); ein.connect(k); k.connect(b); ein.connect(b); b.connect(h); h.connect(laut(4)).connect(aus); break; } // winzig und hohl wie aus der Dose
+    case "brumm": kette(ton(0.72), filt("lowshelf", 250, 1, 5), laut(0.62)); break; // tief und warm
+    case "riese": { const t = ton(0.5), h = hall(2.5, 2.5), n = laut(0.9); const q = t || ein; if (t) ein.connect(t); q.connect(laut(1.1)).connect(aus); q.connect(h); h.connect(n).connect(aus); break; } // ganz tief + großer Höhlenhall
+    case "geist": { const t = ton(0.9), hp = filt("highpass", 300), h = hall(3, 1.8), tr = neu(ctx.createGain()); tr.gain.value = 0.5; lfo(4, 0.45, tr.gain);
+      const q = t || ein; if (t) ein.connect(t); q.connect(hp); hp.connect(tr); tr.connect(laut(2.2)).connect(aus); tr.connect(h); h.connect(laut(1.8)).connect(aus); break; } // hauchig, an- und abschwellend, schaurig hallend
+    case "radio": kette(filt("highpass", 600), filt("lowpass", 2200), verzerr(2), laut(1.3)); break; // klein und dünn wie ein altes Kofferradio
+    case "megafon": { const v = verzerr(12), d = neu(ctx.createDelay(0.5)); d.delayTime.value = 0.09; const ch = [filt("highpass", 900), filt("peaking", 1800, 2, 12), v];
+      let a = ein; for (const x of ch) { a.connect(x); a = x; } const g = laut(0.26); a.connect(g); g.connect(aus); g.connect(d); d.connect(laut(0.35)).connect(aus); break; } // laut verzerrt + Nachhall vom Platz
+    case "echo": { const d = neu(ctx.createDelay(2)); d.delayTime.value = 0.35; const r = laut(0.5); ein.connect(aus); ein.connect(d); d.connect(r).connect(d); r.connect(aus); break; } // deutliche Wiederholungen
+    case "wasser": { const t = ton(0.9), d = neu(ctx.createDelay(0.1)); d.delayTime.value = 0.012; lfo(2, 0.006, d.delayTime); kette(t, filt("lowpass", 380, 4), d, laut(0.82)); break; } // dumpf und blubbernd
     default: ein.connect(aus);
   }
   return K;
@@ -8876,17 +8897,21 @@ async function sstBerechnen(puf, id) {
   const ctx = new OfflineAudioContext(1, Math.ceil(puf.duration * puf.sampleRate) + puf.sampleRate * 2, puf.sampleRate); // +2 s für Hall/Echo
   let wk = false; try { await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([SST_TONHOEHE], { type: "application/javascript" }))); wk = true; } catch {}
   const altWk = SST.worklet; SST.worklet = wk;
-  const q = ctx.createBufferSource(); q.buffer = puf; const z = ctx.createGain(); z.connect(ctx.destination); sstBauen(ctx, q, z, id); q.start();
+  const q = ctx.createBufferSource(); q.buffer = puf; const z = ctx.createGain(), komp = ctx.createDynamicsCompressor(); // 2.652.0: Spitzen zähmen statt übersteuern
+  komp.threshold.value = -26; komp.ratio.value = 4; komp.attack.value = 0.003; komp.release.value = 0.15; z.connect(komp).connect(ctx.destination); sstBauen(ctx, q, z, id); q.start();
   SST.worklet = altWk;
   const d = (await ctx.startRendering()).getChannelData(0); let m = 0, e = 0; for (const x of d) { m = Math.max(m, Math.abs(x)); e += x * x; }
-  // auf gut hörbare, für alle Stimmen gleiche Lautstärke bringen (Mittelwert, höchstens 40-fach) – Spitzen weich begrenzt statt hart abgeschnitten
-  const rms = Math.sqrt(e / d.length), g = rms > 0.00005 ? Math.min(40, 0.2 / rms) : 1; for (let i = 0; i < d.length; i++) d[i] = Math.tanh(d[i] * g);
+  // 2.652.0: auf gut hörbare, gleiche Lautstärke bringen – aber höchstens 12-fach und ohne Übersteuern (vorher bis 40-fach + Sättigung → Rauschen
+  // und Kratzen wurden mit verstärkt). Leise Stellen zwischen den Wörtern (Rauschen) werden sanft abgesenkt.
+  const rms = Math.sqrt(e / d.length), g = rms > 0.00005 ? Math.min(12, 0.16 / rms, 0.95 / Math.max(m, 1e-6)) : 1;
+  const sr = puf.sampleRate, fen = Math.round(sr * 0.02), schwelle = rms * 0.25; let huell = 0, tor = 0;
+  for (let i = 0; i < d.length; i++) { huell = Math.max(Math.abs(d[i]), huell * Math.exp(-1 / fen)); const ziel = huell > schwelle ? 1 : 0.15; tor += (ziel - tor) * (ziel > tor ? 0.01 : 0.0005); d[i] *= g * tor; }
   return { d, rate: puf.sampleRate, leise: m < 0.01 };
 }
 async function sstProbe(id, knopf) {
   const el = new Audio(); el.src = SST_STILLE; el.play().catch(() => {}); // freischalten, solange das Tippen „frisch“ ist
   sstKontextJetzt();
-  let strom; try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } }); } catch { return melde("Bitte das Mikrofon erlauben – sonst geht das Probehören nicht."); }
+  let strom; try { strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } }); } catch { return melde("Bitte das Mikrofon erlauben – sonst geht das Probehören nicht."); }
   const alt = knopf.textContent; knopf.disabled = true; knopf.textContent = "🎙️ Sprich jetzt … 3";
   const teile = [], rec = new MediaRecorder(strom); rec.ondataavailable = (e) => e.data.size && teile.push(e.data);
   let n = 3; const uhr = setInterval(() => { n--; if (n > 0) knopf.textContent = `🎙️ Sprich jetzt … ${n}`; }, 1000);
@@ -19825,12 +19850,12 @@ function jzbFestMalen(c) {
 }
 // ---------- KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): einmalig eine rote Baccara-Rose aus der Sim-Jü-Schießbude – „Nur für dich“ ----------
 // Wer sie bekommt, wählt der Admin per Häkchen in der Mitgliedskarte (rose_setzen) – die App kennt kein Geschlecht und rät nie nach Namen.
-// Der Server sagt im Start nur „rose: true“ (Häkchen an, noch nicht bekommen). Sie kommt nach insgesamt 20 Sekunden sichtbarer Startseite (bis 2.651.0: 3 Minuten), nie über
+// Der Server sagt im Start nur „rose: true“ (Häkchen an, noch nicht bekommen). Sie kommt nach insgesamt 20 Sekunden sichtbarer Startseite (bis 2.652.0: 3 Minuten), nie über
 // einem offenen Fenster oder beim Tippen. Läuft die Sim-Jü-Szene mit der Schießbude gerade sichtbar, fliegt sie aus der Schießbude; sonst (nach der Kirmes,
 // „Sim-Jü aus“, Sparmodus) kommt sie von unten ins Bild mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen“ (Änderung Hansi, 24.10.2026). Nach dem Zeigen merkt der Server es (rose_erhalten) – klappt das nicht, merkt es dieses Gerät und meldet es beim nächsten Start.
 // Sparmodus oder „weniger Bewegung“: die Rose steht gleich da, ohne Flug. Nie zweimal auf demselben Gerät.
 // KC-CLUB-ROSE-ANFANG
-const ROSE_KEY = "kc_club_rose", ROSE_MS = 20000; // 2.652.0 KC-CLUB-ROSE-20S (Wunsch Hansi): 20 Sekunden statt 3 Minuten
+const ROSE_KEY = "kc_club_rose", ROSE_MS = 20000; // 2.653.0 KC-CLUB-ROSE-20S (Wunsch Hansi): 20 Sekunden statt 3 Minuten
 const ROSE = { ms: 0, letzt: 0, gezeigt: false };
 const roseLs = () => { try { return JSON.parse(localStorage.getItem(ROSE_KEY) || "null"); } catch { return null; } };
 const roseLsSetzen = (w) => { try { localStorage.setItem(ROSE_KEY, JSON.stringify(w)); } catch {} };
