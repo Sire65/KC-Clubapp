@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.630.0";
+const SERVER_VERSION = "2.634.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -425,6 +425,23 @@ async function objAnlagenHolen(art: string, objektIds: string[]): Promise<Map<st
     m.set(x.objekt_id, [...(m.get(x.objekt_id) ?? []), { id: a.id, name: a.file_name, mime: a.mime_type, groesse: a.size_bytes }]); }
   return m;
 }
+// 2.634.0 KC-CLUB-WUNSCH-ANLAGEN (Wunschliste #34): Kopie der Anlagen eines Wunsches als Base64 direkt an der Zeile – so kann Claude
+// Bildschirmfotos und Dateien in der Datenbank lesen (je höchstens 1,5 MB; größere nur mit Name). Fehler beim Kopieren stören das Speichern nie.
+const WL_KOPIE_MAX = 1_500_000;
+async function wlAnlagenKopie(wunschId: string) {
+  try {
+    const { data: v } = await db.from("kc_club_objekt_anlagen").select("attachment_id,reihenfolge").eq("art", "wunsch").eq("objekt_id", wunschId).order("reihenfolge");
+    const ids = (v ?? []).map((x: any) => x.attachment_id);
+    const { data: att } = ids.length ? await db.from("kc_communication_attachments").select("id,bucket,object_path,file_name,mime_type,size_bytes").in("id", ids) : { data: [] as any[] };
+    const kopie: any[] = [];
+    for (const id of ids) { const a: any = (att ?? []).find((y: any) => y.id === id); if (!a) continue;
+      if (Number(a.size_bytes) > WL_KOPIE_MAX) { kopie.push({ name: a.file_name, mime: a.mime_type, zuGross: true }); continue; }
+      const { data: blob } = await db.storage.from(a.bucket).download(a.object_path); if (!blob) { kopie.push({ name: a.file_name, mime: a.mime_type, fehlt: true }); continue; }
+      const bytes = new Uint8Array(await blob.arrayBuffer()); let b = ""; for (let i = 0; i < bytes.length; i += 0x8000) b += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      kopie.push({ name: a.file_name, mime: a.mime_type, b64: btoa(b) }); }
+    await db.from("kc_club_wunschliste").update({ anlagen_kopie: kopie.length ? kopie : null }).eq("id", wunschId);
+  } catch (e) { console.error("wunsch anlagen kopie", String(e)); }
+}
 // Darf ich die Anlage sehen? Genau dann, wenn ich den Eintrag sehen darf (gleiche Regeln wie die Listen).
 async function objAnlageSichtbar(ich: Ich, art: string, objektId: string) {
   if (art === "vorschlag") {
@@ -433,6 +450,7 @@ async function objAnlageSichtbar(ich: Ich, art: string, objektId: string) {
     return !!v && (!v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin);
   }
   if (art === "treffen") { const { data: t } = await db.from("kc_club_treffen").select("id").eq("id", objektId).maybeSingle(); return !!t; } // 2.461.0: Clubtermine sieht jeder
+  if (art === "wunsch") return ich.admin; // 2.634.0 KC-CLUB-WUNSCH-ANLAGEN: die Wunschliste ist nur für den Admin
   if (art === "terminumfrage") { const { data: u } = await db.from("kc_club_terminumfragen").select("id").eq("id", objektId).maybeSingle(); return !!u; }
   if (art === "terminanfrage") {
     if (ich.zugang !== "mitglied") return false;
@@ -16253,7 +16271,8 @@ Köcheclub-App`,
         const { data, error } = await db.from("kc_club_wunschliste").select("id,nr,text,bereich,wichtig,status,antwort,rueckmeldung,version,reihenfolge,erstellt_am,geaendert_am,erledigt_am")
           .order("reihenfolge", { ascending: true }).limit(500);
         if (error) throw new Fehler("Wunschliste gerade nicht abrufbar.", 503);
-        return json({ liste: data ?? [] });
+        const anl = await objAnlagenHolen("wunsch", (data ?? []).map((x: any) => x.id)); // 2.634.0 KC-CLUB-WUNSCH-ANLAGEN
+        return json({ liste: (data ?? []).map((x: any) => ({ ...x, anlagen: anl.get(x.id) ?? [] })) });
       }
       case "wl_speichern": {
         nurAdmin(ich);
@@ -16265,10 +16284,12 @@ Köcheclub-App`,
           if (p.rueckmeldung !== undefined) { neu.rueckmeldung = txt(p.rueckmeldung, 4000) || null; if (neu.rueckmeldung) neu.status = "offen"; } // Antwort auf Rückfrage → wieder an Claude
           const { error } = await db.from("kc_club_wunschliste").update(neu).eq("id", String(p.id));
           if (error) throw new Fehler("Konnte nicht speichern.", 500);
+          if (Array.isArray(p.anlagen)) { await objAnlagenErsetzen(ich, "wunsch", String(p.id), p.anlagen); await wlAnlagenKopie(String(p.id)); } // 2.634.0
           return json({ ok: true });
         }
         const { data, error } = await db.from("kc_club_wunschliste").insert({ text, bereich, wichtig, erstellt_von: ich.person_id }).select("id,nr").single();
         if (error) throw new Fehler("Konnte nicht speichern.", 500);
+        if (await objAnlagenSetzen(ich, "wunsch", data.id, p.anlagen)) await wlAnlagenKopie(data.id); // 2.634.0 KC-CLUB-WUNSCH-ANLAGEN
         return json({ ok: true, id: data.id, nr: data.nr });
       }
       case "wl_status": { // Admin: zurückstellen, wieder öffnen, nach oben/unten

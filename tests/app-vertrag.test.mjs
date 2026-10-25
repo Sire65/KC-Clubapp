@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12658,4 +12658,14 @@ function idx0() { return lies("index.html"); }
   assert.ok(/\.hero > \.jz-schicht\.bb-glas \{ z-index: 6;/.test(html) && /g\.className = "jz-schicht bb-glas"/.test(programm), "Scheibe über dem Kopf, Tippen geht hindurch (jz-schicht: pointer-events none)");
   assert.ok(/<feDisplacementMap id="kcSbLinseDm"/.test(programm) && /if \(W\.linse && !jzbSbLinseAus\(\)\)/.test(programm) && /ohne-anim/.test(programm.slice(programm.indexOf("const jzbSbLinseAus"), programm.indexOf("const jzbSbLinseAus") + 200)), "Fischauge nur kurz, nie bei Animationen aus");
   assert.ok(/function jzbStop\(\) \{ jzbSbAufraeumen\(\);/.test(programm), "beim Wechsel bleibt nichts zurück");
+}
+// 2.634.0 KC-CLUB-KOPF-KOMPAKT + KC-CLUB-WUNSCH-ANLAGEN (Wunschliste #34): Kopfbild enger, Wünsche mit Anlagen (Foto, Datei, Bild)
+{
+  assert.ok(/#v-start \.hero \.statusleiste \{ margin-top: 8px;/.test(html) && /#v-start \.hero \.info \{ margin-top: 12px; padding: 11px; \}/.test(html) && /#v-start \.hero \.statusleiste \.statuschip \{ white-space: nowrap; flex: 0 0 auto; \}/.test(html), "Kopf kompakter, Status nicht abgeschnitten");
+  assert.ok(/\.statusleiste\.jz-deko-an \+ \.info \{ margin-top: 20px; \}/.test(html), "Platz für Wimpel/Lichterkette bleibt");
+  assert.ok(/data-diktat>\$\{esc\(entwurf\)\}<\/textarea>\$\{oaFeld\("wu"\)\}/.test(programm) && /api\("wl_speichern", \{ text: t, bereich: \$\("wuBereich"\)\.value, wichtig: \$\("wuWichtig"\)\.checked, anlagen \}\)/.test(programm), "Anlagen beim Eintragen");
+  assert.ok(/\$\{oaAnzeige\(x\.anlagen\)\}/.test(programm), "Anlagen am Wunsch sichtbar");
+  assert.ok(/if \(art === "wunsch"\) return ich\.admin;/.test(server) && /objAnlagenSetzen\(ich, "wunsch", data\.id, p\.anlagen\)/.test(server) && /objAnlagenHolen\("wunsch"/.test(server), "Server: nur Admin, gleicher Anlagen-Baustein");
+  const mig = lies("supabase/migrations/20261025_kc_club_v2634_wunsch_anlagen.sql");
+  assert.ok(/'treffen', 'wunsch'\)/.test(mig) && /add column if not exists anlagen_kopie jsonb/.test(mig), "Datenbank: art wunsch + Kopie für Claude");
 }

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.633.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.634.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24715,15 +24715,15 @@ async function wuStart() {
 function wuZeile(x, art) {
   const wann = (z) => z ? new Date(z).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : "";
   const kopf = `<div class="wu-kopf"><b>#${x.nr}</b>${x.wichtig ? ' <span title="wichtig">⭐</span>' : ""} <span class="marke">${esc(x.bereich)}</span> <span class="wu-st wu-${x.status}">${WU_STATUS[x.status]}</span><span class="hinweis" style="margin-left:auto">${wann(x.erstellt_am)}</span></div>`;
-  if (WU.bearbeiten === x.id) return `<div class="karte wu-z">${kopf}<textarea id="wuEdit" rows="4" maxlength="4000" data-diktat>${esc(x.text)}</textarea>
+  if (WU.bearbeiten === x.id) return `<div class="karte wu-z">${kopf}<textarea id="wuEdit" rows="4" maxlength="4000" data-diktat>${esc(x.text)}</textarea>${oaFeld("wuEd")}
     <div class="knoepfe"><button class="knopf haupt klein" onclick="wuSpeichern('${x.id}')">💾 Speichern</button><button class="knopf klein" onclick="WU.bearbeiten=null;wuZeigen()">Abbrechen</button></div></div>`;
-  const text = `<div class="wu-text">${esc(x.text).replace(/\n/g, "<br>")}</div>`;
+  const text = `<div class="wu-text">${esc(x.text).replace(/\n/g, "<br>")}</div>${oaAnzeige(x.anlagen)}`; // 2.634.0 KC-CLUB-WUNSCH-ANLAGEN
   const antwort = x.antwort ? `<div class="wu-antwort"><b>🤖 Claude${x.version ? ` · v${esc(x.version)}` : ""}:</b> ${esc(x.antwort).replace(/\n/g, "<br>")}</div>` : "";
   const rm = x.rueckmeldung ? `<div class="wu-rm"><b>🧑‍🍳 Deine Antwort:</b> ${esc(x.rueckmeldung).replace(/\n/g, "<br>")}</div>` : "";
-  if (art === "rueckfrage") return `<div class="karte wu-z wu-frage">${kopf}${text}${antwort}${rm}<textarea id="wuRm_${x.id}" rows="3" maxlength="4000" placeholder="Deine Antwort an Claude …" data-diktat></textarea>
+  if (art === "rueckfrage") return `<div class="karte wu-z wu-frage">${kopf}${text}${antwort}${rm}<textarea id="wuRm_${x.id}" rows="3" maxlength="4000" placeholder="Deine Antwort an Claude …" data-diktat></textarea>${oaFeld("wuRm" + x.id.replace(/\W/g, ""))}
     <div class="knoepfe"><button class="knopf haupt klein" onclick="wuAntworten('${x.id}')">↩️ Antworten</button></div></div>`;
   const knoepfe = art === "offen" ? `<div class="knoepfe"><button class="knopf klein" title="früher" onclick="wuSchieben('${x.id}', -1)">▲</button><button class="knopf klein" title="später" onclick="wuSchieben('${x.id}', 1)">▼</button>
-      <button class="knopf klein" onclick="WU.bearbeiten='${x.id}';wuZeigen()">✏️ Ändern</button><button class="knopf klein" onclick="wuWichtig('${x.id}')">${x.wichtig ? "☆ nicht wichtig" : "⭐ wichtig"}</button>
+      <button class="knopf klein" onclick="wuBearbeiten('${x.id}')">✏️ Ändern</button><button class="knopf klein" onclick="wuWichtig('${x.id}')">${x.wichtig ? "☆ nicht wichtig" : "⭐ wichtig"}</button>
       <button class="knopf klein" onclick="wuStatus('${x.id}', 'zurueckgestellt')">⏸ Später</button>${x.status === "offen" && !x.antwort ? `<button class="knopf klein" onclick="wuLoeschen('${x.id}')" aria-label="Löschen" title="Löschen">🗑️</button>` : ""}</div>`
     : art === "zurueck" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">▶️ Wieder aufnehmen</button></div>`
     : art === "erledigt" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">↩️ Nochmal öffnen</button></div>` : "";
@@ -24735,7 +24735,7 @@ function wuZeigen() {
   const entwurf = $("wuText")?.value || "";
   f.innerHTML = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">📝 Wünsche an Claude</h3><button class="knopf klein" onclick="$('wuBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>
     <p class="hinweis" style="margin:0 0 8px">Schreib hier hinein, was geändert, gebaut oder repariert werden soll – gern mit 🎤. Claude schaut regelmäßig hinein, arbeitet die Punkte <b>der Reihe nach</b> ab (⭐ wichtig zuerst) und schreibt dir hier, was gemacht wurde und in welcher Version. Hat Claude eine Frage, steht sie ganz oben.</p>
-    <div class="karte" style="margin:0 0 10px"><textarea id="wuText" rows="3" maxlength="4000" placeholder="Was soll Claude machen? Zum Beispiel: Im Kalender die Feiertage fetter schreiben" data-diktat>${esc(entwurf)}</textarea>
+    <div class="karte" style="margin:0 0 10px"><textarea id="wuText" rows="3" maxlength="4000" placeholder="Was soll Claude machen? Zum Beispiel: Im Kalender die Feiertage fetter schreiben" data-diktat>${esc(entwurf)}</textarea>${oaFeld("wu")}
       <div class="knoepfe" style="align-items:center"><select id="wuBereich" aria-label="Bereich">${WU_BEREICHE.map((b) => `<option>${b}</option>`).join("")}</select>
         <label class="wu-wichtig"><input type="checkbox" id="wuWichtig"> ⭐ wichtig</label><button class="knopf haupt" onclick="wuNeu()">➕ Eintragen</button></div></div>
     ${frage.length ? `<h4 class="wu-h">❓ Rückfragen von Claude (${frage.length})</h4>${frage.map((x) => wuZeile(x, "rueckfrage")).join("")}` : ""}
@@ -24745,17 +24745,22 @@ function wuZeigen() {
 }
 async function wuNeu() {
   const t = $("wuText")?.value.trim(); if (!t) return melde("Bitte erst etwas hineinschreiben", true);
-  try { const r = await api("wl_speichern", { text: t, bereich: $("wuBereich").value, wichtig: $("wuWichtig").checked }); $("wuText").value = ""; melde(`📝 Eingetragen als #${r.nr} – Claude kümmert sich darum`); await wuLaden(); wuZeigen(); }
+  let anlagen; try { anlagen = oaIds("wu"); } catch (e) { return meldeFehler(e); }
+  try { const r = await api("wl_speichern", { text: t, bereich: $("wuBereich").value, wichtig: $("wuWichtig").checked, anlagen }); $("wuText").value = ""; oaLeeren("wu"); melde(`📝 Eingetragen als #${r.nr} – Claude kümmert sich darum`); await wuLaden(); wuZeigen(); }
   catch (e) { meldeFehler(e); }
 }
 async function wuSpeichern(id) {
   const x = (WU.liste || []).find((y) => y.id === id), t = $("wuEdit")?.value.trim(); if (!x || !t) return;
-  try { await api("wl_speichern", { id, text: t, bereich: x.bereich, wichtig: x.wichtig }); WU.bearbeiten = null; await wuLaden(); wuZeigen(); melde("💾 Geändert"); } catch (e) { meldeFehler(e); }
+  let anlagen; try { anlagen = oaIds("wuEd"); } catch (e) { return meldeFehler(e); }
+  try { await api("wl_speichern", { id, text: t, bereich: x.bereich, wichtig: x.wichtig, anlagen }); WU.bearbeiten = null; oaLeeren("wuEd"); await wuLaden(); wuZeigen(); melde("💾 Geändert"); } catch (e) { meldeFehler(e); }
 }
 async function wuAntworten(id) {
   const x = (WU.liste || []).find((y) => y.id === id), t = $("wuRm_" + id)?.value.trim(); if (!x) return; if (!t) return melde("Bitte erst die Antwort hineinschreiben", true);
-  try { await api("wl_speichern", { id, text: x.text, bereich: x.bereich, wichtig: x.wichtig, rueckmeldung: t }); await wuLaden(); wuZeigen(); melde("↩️ Antwort ist bei Claude – der Punkt ist wieder offen"); } catch (e) { meldeFehler(e); }
+  const pre = "wuRm" + id.replace(/\W/g, ""); let neu; try { neu = oaIds(pre); } catch (e) { return meldeFehler(e); }
+  const anlagen = neu.length ? [...(x.anlagen || []).map((a) => a.id), ...neu] : undefined; // 2.634.0: neue Anlagen zur Antwort dazu, die alten bleiben
+  try { await api("wl_speichern", { id, text: x.text, bereich: x.bereich, wichtig: x.wichtig, rueckmeldung: t, anlagen }); oaLeeren(pre); await wuLaden(); wuZeigen(); melde("↩️ Antwort ist bei Claude – der Punkt ist wieder offen"); } catch (e) { meldeFehler(e); }
 }
+function wuBearbeiten(id) { const x = (WU.liste || []).find((y) => y.id === id); OBJA.wuEd = (x?.anlagen || []).map((a) => ({ ...a })); WU.bearbeiten = id; wuZeigen(); } // 2.634.0: vorhandene Anlagen zum Ändern
 async function wuWichtig(id) { const x = (WU.liste || []).find((y) => y.id === id); if (!x) return; try { await api("wl_speichern", { id, text: x.text, bereich: x.bereich, wichtig: !x.wichtig }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
 async function wuStatus(id, status) { try { await api("wl_status", { id, status }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
 async function wuSchieben(id, richtung) { // ▲▼ innerhalb der offenen Punkte gleicher Wichtigkeit: Reihenfolge-Wert zwischen die Nachbarn legen
