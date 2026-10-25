@@ -12697,3 +12697,9 @@ function idx0() { return lies("index.html"); }
   assert.ok(/if \(VN\.an\) return melde\("🔒 Verschlüsselt geht nur an die bisherigen Empfänger/.test(s), "🔒 nie an Neue mit fremdem Schlüssel");
   assert.ok(/if \(ids\.length > 1\) return waMehrere\(nachricht, ids\);/.test(programm) && /class="knopf haupt wa-person" href=/.test(programm), "WhatsApp: je Person ein Knopf");
 }
+// 2.638.0 KC-CLUB-INKO-FUSS (Wunschliste #41): bei Inkognito pulsiert auch die Fußzeile gelb/rot wie oben
+{
+  assert.ok(/body\.inkognito #fuss \{ background-image: linear-gradient\(rgba\(241,196,15,\.22\)/.test(html) && /animation: inkoFussBlink 1\.2s ease-in-out infinite;/.test(html), "Fußzeile pulsiert im Takt wie der Kopf");
+  assert.ok(/@keyframes inkoFussBlink \{ 0%, 100% \{ box-shadow: 0 0 0 4px #f1c40f/.test(html) && /50% \{ box-shadow: 0 0 0 4px #d32f2f/.test(html), "gleiche Farben gelb → rot");
+  assert.ok(/prefers-reduced-motion: reduce\) \{ body\.inkognito #fuss \{ animation-duration: 2\.4s; \}/.test(html), "weniger Bewegung: langsamer");
+}
