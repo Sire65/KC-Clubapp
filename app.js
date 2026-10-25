@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.643.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.644.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -40134,6 +40134,7 @@ const DRUCKARTEN = {
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
+  dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
@@ -41641,6 +41642,79 @@ async function sprLoeschen(id) {
   await sprAktion("loeschen", { id }); melde(s.eigen ? "🗑️ Spruch gelöscht" : "🙈 Vorlage ausgeblendet");
 }
 async function sprAktion(a, extra = {}) { try { SPA.daten = await api("spruch_archiv", { a, ...extra }); } catch (e) { return meldeFehler(e); } sprZeigen(); }
+// ---------- 2.642.0 KC-CLUB-DP-DRUCK (Wunsch Hansi „Übersicht in der Club App, jederzeit ausdrucken – und neu machen, wenn neue Zeiten kommen“) ----------
+// Nur Admin: Ordner „🗓️ Dienstplan-Druck“ im Regal „👤 Mein Ordner“. Die Daten (Wünsche, Entwurf, Bereitschaft, Bedarf je halbe Stunde) legt
+// das Planungswerkzeug (KICC tools/dienstplan-entwurf/druck.py) beim Admin in kc_club_person_einstellung „dp_druck“ ab; Aktion „dp_druck“ liest sie.
+// Gedruckt wird über die Druckvorschau (A4 quer, randlos): „1 Blatt breit“ (Blätter untereinander anlegen) oder „2 Blätter breit“
+// (größer; 8–16 und 15:30–23 Uhr, die halbe Stunde 15:30–16 ist die Klebekante).
+const DPD = { daten: null, breit: "1" };
+const DPD_ZEILEN = 34; // so viele Zeilen passen auf ein Blatt; ein Tag wird nie geteilt
+const DPD_WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], DPD_ART = { p: "pref", a: "avai", i: "if_n", u: "unav" };
+const dpdUhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return m ? `${h}:${String(m).padStart(2, "0")}` : String(h); };
+const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
+const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3e" onclick="dpdStart()" title="Dienstplan zum Ausdrucken"><span class="sym">🗓️</span>
+    <span class="schild"><span class="jahr">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
+function dpdStart() { druckStarten("dpDruck"); }
+function dpdOptionen() {
+  const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
+  return `<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
+    ${r("1", "1 Blatt breit", "8–23 Uhr auf einem Blatt, die Blätter untereinander legen")}${r("2", "2 Blätter breit (größer)", "links 8–16, rechts 15:30–23 Uhr – nebeneinander legen, 15:30–16 ist die Klebekante")}
+    <p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>`;
+}
+// Halbstunden-Liste von–bis (Schritt 0,5)
+const dpdSlots = (a, b) => Array.from({ length: Math.round((b - a) * 2) }, (_, i) => a + i / 2);
+function dpdBereiche(d, von) { // „10–23“ aus den Halbstunden mit Bedarf
+  const out = []; d.bedarf.forEach((n, i) => { if (!n) return; const s = von + i / 2; const l = out[out.length - 1]; if (l && l[1] === s) l[1] = s + 0.5; else out.push([s, s + 0.5]); });
+  return out.map(([a, b]) => `${dpdUhr(a)}–${dpdUhr(b)}`).join(", ");
+}
+function dpdTag(d, von, bis) { // Zeilen eines Tages: je Person, Bereitschaft, Bedarf/besetzt, Fehlt; je Zeile 30 Zellen [Klasse, Text]
+  const S = dpdSlots(von, bis), zu = (i) => (d.bedarf[i] ? "" : " zu"), rows = [];
+  for (const p of d.leute) {
+    const [a, b] = p.s || [null, null], cells = S.map((s, i) => {
+      const t = DPD_ART[p.w[i]] || "leer"; let cl = t + zu(i), txt = "";
+      if (a !== null && s >= a && s < b) { cl += " dienst"; if (s === a) { cl += " anf"; txt = `${dpdUhr(a)}–${dpdUhr(b)}`; } if (s + 0.5 === b) cl += " end"; }
+      else if (t === "unav") txt = "×";
+      return [cl, txt]; });
+    const nurGesperrt = [...p.w].every((c) => c === "u" || c === "-") && p.w.includes("u");
+    rows.push({ art: "p", name: p.n, sub: [p.z, a !== null ? dpdStd(b - a) + " h" : nurGesperrt ? "gesperrt" : "nicht eingeplant"].filter(Boolean).join(" · "), cells, dienst: a !== null ? [a, b] : null });
+  }
+  for (const x of d.ber || []) rows.push({ art: "b", name: x.n, sub: "Bereitschaft · Vorschlag", dienst: x.s,
+    cells: S.map((s, i) => (s >= x.s[0] && s < x.s[1] ? ["ber" + (s === x.s[0] ? " anf" : "") + zu(i), s === x.s[0] ? `${dpdUhr(x.s[0])}–${dpdUhr(x.s[1])}` : ""] : ["leer" + zu(i), ""])) });
+  const fehl = d.fehlt.reduce((n, x) => n + x, 0) / 2;
+  rows.push({ art: "s", name: "Bedarf / besetzt", sub: "", cells: S.map((s, i) => ["sum" + zu(i), d.bedarf[i] ? `${d.bedarf[i]}/${d.besetzt[i]}` : ""]) });
+  rows.push({ art: "f", name: "Fehlt", sub: fehl ? dpdStd(fehl) + " Std." : "voll besetzt", cells: S.map((s, i) => [(d.fehlt[i] ? "fehlt" : "ok") + zu(i), d.fehlt[i] ? "−" + d.fehlt[i] : ""]) });
+  return { rows, fehl };
+}
+function dpdTabelle(tage, von, teil) {
+  const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s));
+  const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}</colgroup><thead><tr><th class="tag">Tag · Regelzeit</th><th class="wer">Mitglied</th>${teil.map((s) => `<th class="t${s % 1 ? "" : " voll"}">${s % 1 ? "" : s}</th>`).join("")}</tr></thead>`;
+  const body = tage.flatMap((t) => t.rows.map((r, i) => {
+    const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.art)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="bil${t.fehl ? " rot" : ""}">${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "voll besetzt"}</span></th>`;
+    const zellen = idx.map((k, j) => { let [cl, txt] = r.cells[k];
+      if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
+      return `<td class="${cl}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
+    return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}</tr>`; })).join("");
+  return `<table class="dpd-raster">${kopf}<tbody>${body}</tbody></table>`;
+}
+async function dpdBauen() {
+  const d = await api("dp_druck", {});
+  if (!d?.tage?.length) { melde("Noch keine Übersicht abgelegt – Claude bitten, sie zu rechnen.", true); return null; }
+  DPD.daten = d; const breit = document.querySelector('input[name="dpdBreit"]:checked')?.value || DPD.breit; DPD.breit = breit;
+  const von = d.von ?? 8, bis = d.bis ?? 23;
+  const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
+  const blaetter = [[]]; let n = 0;
+  for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
+  const S = dpdSlots(von, bis), teile = breit === "2" ? [S.filter((s) => s < 16), S.filter((s) => s >= 15.5)] : [S];
+  const stand = d.stand ? wann(d.stand) : "";
+  const leg = `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="fehlt">−2</i>so viele fehlen</span><span><i class="zu"></i>kein Bedarf</span></div>`;
+  const nb = blaetter.length, html = blaetter.flatMap((bl, i) => teile.map((teil, k) => {
+    const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb}`,
+      teile.length > 1 ? (k ? `linken Rand bis 16 Uhr umknicken und auf Blatt ${i + 1} links legen` : `rechts an Blatt ${i + 1} rechts anlegen (Klebekante 15:30–16 Uhr)`) : "",
+      i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : ""].filter(Boolean).join(" · ");
+    return `<section class="dpd-blatt"><header class="dpd-kopf"><div><p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · Entwurf, nicht veröffentlicht${stand ? " · Stand " + esc(stand) : ""}</p>
+      <h1>Dienstplan – Wünsche und offene Zeiten</h1></div>${leg}</header>${dpdTabelle(bl, von, teil)}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("");
+  return { titel: `Dienstplan ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd${breit === "2" ? " breit" : ""}">${html}</div>` };
+}
 // ---------- KC-CLUB-ARCHIV (1.2.0, Wunsch Hansi): Regal mit Aktenordnern (Jahreszahl + Inhalt), innen Register ----------
 // Automatisch: „Clubleben JJJJ“ je Jahr aus vorhandenen Daten (nur lesen). Von Hand: Ordner mit Art, Jahr, Farbe, Registern.
 // Pflegen (Ordner, Hochladen, Ändern, Löschen): Clubsprecher und Admin – der Server prüft das.
@@ -41712,7 +41786,7 @@ function arListeZeigen() {
   const eigene = d.ordner.filter((o) => o.eigen).sort((a, b) => b.jahr - a.jahr), geteilt = d.ordner.filter((o) => o.besitzer && !o.eigen);
   const sp = d.speicher || { belegt: 0, grenze: 1 };
   const pers = `<div class="abschnitt ar-pers"><h3>👤 Mein Ordner</h3><button class="knopf klein" onclick="arNeuesJahr()">＋ weiteres Jahr</button></div>
-      <div class="regal">${sprRuecken()}${eigene.map(arRuecken).join("")}${arAlben(true).map(arAlbumRuecken).join("")}</div>
+      <div class="regal">${sprRuecken()}${dpdRuecken()}${eigene.map(arRuecken).join("")}${arAlben(true).map(arAlbumRuecken).join("")}</div>
       <p class="hinweis" style="margin:2px 6px 10px">🔒 Nur du siehst deine Ordner – auch der Admin nicht. Mit 🔓 kannst du anderen etwas auf Zeit freigeben. Belegt: ${arGroesse(sp.belegt) || "0 KB"} von ${arGroesse(sp.grenze)}.</p>`
     + (geteilt.length ? `<div class="abschnitt"><h3>🤝 Mit mir geteilt</h3></div><div class="regal">${geteilt.map(arRuecken).join("")}</div>` : "");
   // KC-CLUB-CHRONIK (1.64.0): die Clubchronik steht über allen Jahren (ein Ordner für alle Jahre)

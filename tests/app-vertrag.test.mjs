@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12759,4 +12759,24 @@ function idx0() { return lies("index.html"); }
   assert.ok(/cron\.unschedule\('kc-club-messung-10min'\)/.test(mig) && /cron\.unschedule\('kc-club-db-last-10min'\)/.test(mig), "alte 10-Minuten-Läufe weg");
   assert.ok((mig.match(/interval '30 minutes'/g) || []).length === 2 && !/interval '10 minutes'/.test(mig), "Hintergrund-Aufrufe über 30 Min. gezählt");
   assert.ok(/Gemessen alle 30 Minuten/.test(programm) && !/Gemessen wird alle 10 Minuten/.test(programm), "Hinweis in der App passt");
+}
+// 2.644.0 KC-CLUB-DP-DRUCK: Dienstplan-Übersicht zum Drucken – nur Admin, nur eigene Zeile, Blätter A4 quer, 1 oder 2 Blätter breit
+{
+  const fall = server.slice(server.indexOf('case "dp_druck": {'), server.indexOf('case "spruch_archiv": {'));
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall) && /eq\("person_id", ich\.person_id\)\.eq\("schluessel", "dp_druck"\)/.test(fall) && !/upsert|insert|update\(/.test(fall), "Server liest nur, nur Admin, nur eigene Zeile");
+  assert.ok(/\$\{sprRuecken\(\)\}\$\{dpdRuecken\(\)\}/.test(programm) && /const dpdRuecken = \(\) => ICH\?\.admin \?/.test(programm), "Ordner im Regal „Mein Ordner“, nur Admin");
+  assert.ok(/dpDruck: \{ titel: "🗓️ Dienstplan drucken", optionen: \(\) => dpdOptionen\(\), bauen: \(\) => dpdBauen\(\) \}/.test(programm), "Druckart mit Auswahl");
+  assert.ok(/ohneRahmen: true, randlos: true, quer: true/.test(programm.slice(programm.indexOf("async function dpdBauen"))), "A4 quer, randlos");
+  const block = programm.slice(programm.indexOf("const DPD_WD"), programm.indexOf("function dpdTabelle"));
+  const f = new Function("esc", block + "; return { dpdTag, dpdBereiche, dpdUhr };")((s) => String(s));
+  const tag = { bedarf: [0, 0, 3, 3, 3, 3], besetzt: [0, 0, 3, 2, 2, 3], fehlt: [0, 0, 0, 1, 1, 0], leute: [{ n: "A", z: "vorne", w: "--ppau", s: [9, 10.5] }], ber: [{ n: "B", s: [10, 11] }] };
+  const r = f.dpdTag(tag, 8, 11);
+  assert.equal(f.dpdBereiche(tag, 8), "9–11", "Regelzeit aus dem Bedarf");
+  assert.equal(r.fehl, 1, "fehlende Stunden");
+  assert.deepEqual(r.rows.map((x) => x.art), ["p", "b", "s", "f"], "Person, Bereitschaft, Bedarf, Fehlt");
+  assert.ok(r.rows[0].cells[2][0].includes("dienst anf") && r.rows[0].cells[2][1] === "9–10:30" && r.rows[0].cells[5][0].startsWith("unav") && r.rows[0].cells[5][1] === "×", "Dienst mit Zeit, Sperre mit ×");
+  assert.deepEqual(r.rows[3].cells.map((c) => c[1]), ["", "", "", "−1", "−1", ""], "fehlende Personen rot");
+  assert.ok(/#druck:has\(\.dpd\) \{ padding: 0 !important; width: 297mm !important; \}/.test(html) && /#druck \.dpd-blatt \{[^}]*height: 210mm;[^}]*break-after: page;/.test(html), "je Blatt genau A4 quer");
+  const druckBlock = html.slice(html.indexOf("  @media print {"), html.indexOf("\n  }\n", html.indexOf("  @media print {")));
+  assert.ok(druckBlock.includes("#druck .dpd-blatt {"), "Regeln im ersten Druckblock (Vorschau/PDF übernehmen nur diesen)");
 }
