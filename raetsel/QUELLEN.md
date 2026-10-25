@@ -40,3 +40,32 @@ GFDL-Lizenztext: GFDL-1.2.txt (in diesem Ordner). Creative-Commons-Lizenzen: htt
 | kochloeffel.webp | Kochlöffel | Clément Bucco-Lechat | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Cuiller_en_bois_-_dessus.jpg |
 | zwiebel.webp | Rote Zwiebel | Colin | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Red_Onion_on_White.JPG |
 | paprika.webp | Paprika | AntanO | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Red_bell_pepper.jpg |
+| fachwerk-kirchplatz.webp | Fachwerkhaus am Kirchplatz | Mbdortmund | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Kirchplatz-Werne-DSC_0056.JPG |
+| juedischer-friedhof.webp | Jüdischer Friedhof | smial | FAL | https://commons.wikimedia.org/wiki/File:Werne_am_jued_friedhof_IMGP0297_wp.jpg |
+| zeche.webp | Zeche Werne | smial | FAL | https://commons.wikimedia.org/wiki/File:Zeche_Werne_Schacht_3_IMGP2179_smial_wp.jpg |
+| amazon.webp | Amazon-Logistikzentrum | Icy2008 | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Amazon_Logistikzentrum_Werne.jpg |
+| marktplatz.webp | Marktplatz | Vincent van Zeijst | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Germany%2C_Nordrhein-Westfalen%2C_Kreis_Unna%2C_Werne%2C_Markt_%282%29.jpg |
+| ickhorn.webp | Hotel Ickhorn | Mbdortmund | GFDL 1.2 | https://commons.wikimedia.org/wiki/File:Werne-070602_7692-Hotel-Ickhorn.jpg |
+| sparkasse.webp | Sparkasse | Mbdortmund | GFDL 1.2 | https://commons.wikimedia.org/wiki/File:Werne-070602_7715-Sparkasse.jpg |
+| feuerwache.webp | Feuerwache | Mbdortmund | GFDL 1.2 | https://commons.wikimedia.org/wiki/File:Werne-070602_7762-Feuerwehr.jpg |
+| kino.webp | Kino | Mbdortmund | GFDL 1.2 | https://commons.wikimedia.org/wiki/File:Werne-20090522-Kino-DSC_7134.jpg |
+| roggenmarkt.webp | Roggenmarkt | LAV02 | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Wohnhaus%2C_Roggenmarkt_12%2C_Werne.jpg |
+| busbahnhof.webp | Busbahnhof | Mbdortmund | GFDL 1.2 | https://commons.wikimedia.org/wiki/File:Werne-070602_7760-Skyline.jpg |
+| christusfigur.webp | Kreuz an St. Christophorus | Mbdortmund | CC BY-SA 2.5 | https://commons.wikimedia.org/wiki/File:Christusfigur%2C_St._Christophorus-Kirche%2C_Werne.jpg |
+| fussgaengerzone.webp | Fußgängerzone | Mbdortmund | GFDL 1.2 | https://commons.wikimedia.org/wiki/File:Werne-12-07-08_110.JPG |
+| giebel.webp | Geschnitzter Giebel | smial | FAL | https://commons.wikimedia.org/wiki/File:Werne_giebelverzierung_IMGP0289_wp.jpg |
+| teigelkoetter.webp | Haus Teigelkötter | Mbdortmund | GFDL 1.2 | https://commons.wikimedia.org/wiki/File:Werne-070602_7636-Teigelk%C3%B6tter.jpg |
+| zimt.webp | Zimtstangen | Fumikas Sagisavas | gemeinfrei | https://commons.wikimedia.org/wiki/File:Cinnamon_sticks_%281%29.jpg |
+| vanille.webp | Vanilleschoten | B.navez (bearbeitet: Andrzej 22) | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Vanilla_6beans_%28rot._90_deg.%29.JPG |
+| lorbeer.webp | Lorbeerblätter | Fumikas Sagisavas | gemeinfrei | https://commons.wikimedia.org/wiki/File:Dried_bay_leaves_%2820240502%29.jpg |
+| basilikum.webp | Basilikum | Paul Goyette | CC BY-SA 2.0 | https://commons.wikimedia.org/wiki/File:Basil_leaves.jpg |
+| rotebete.webp | Rote Bete | Evan-Amos | gemeinfrei | https://commons.wikimedia.org/wiki/File:Beets-Bundle.jpg |
+| kuerbis.webp | Hokkaido-Kürbis | unbekannt | gemeinfrei | https://commons.wikimedia.org/wiki/File:Pumpkin_hokaido_still_life.jpg |
+| fenchel.webp | Fenchel | Mauro Cateb | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Fennel_bulb_from_Brazil.jpg |
+| nudelholz.webp | Nudelholz | Fructibus | gemeinfrei | https://commons.wikimedia.org/wiki/File:Rolling_pin_2017.jpg |
+| moerser.webp | Mörser | Jacek Halicki | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:2023_Mo%C5%BAdzierz_ceramiczny_%281%29.jpg |
+| kardamom.webp | Kardamom | Misterneedlemouse | gemeinfrei | https://commons.wikimedia.org/wiki/File:Green_Cardamom_Pods.jpg |
+| steinpilz.webp | Steinpilz | Holger Krisp | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:%28Gemeine_Steinpilz%29_Boletus_edulis.jpg |
+| granatapfel.webp | Granatapfel | Ivar Leidus | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Pomegranate_%28opened%29.jpg |
+| lauch.webp | Lauch | Rasbak | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Allium_ampeloprasum_var._porrum_%27Farinto%27_%281%29.jpg |
+| radieschen.webp | Radieschen | TeWeBs | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:A_Bunch_of_Radishes.JPG |

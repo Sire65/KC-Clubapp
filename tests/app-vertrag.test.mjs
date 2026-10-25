@@ -10485,7 +10485,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   assert.ok(/\["raetsel", "🧩", "Rätsel"\]/.test(html) && /else if \(k === "raetsel"\) esRaetselZeigen\(f\);/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\);/.test(html), "Reiter auf der Rückseite");
   assert.ok(/const QZ_SEK = 30, QZ_STUFEN = \[26, 18, 12, 8, 5, 3, 2, 1\], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;/.test(html) && /const QZ_ZEITEN = \[0, 2, 4\.5, 7, 10, 13, 17, 22\], QZ_ENDE = 250;/.test(html), "30 s, 8 Stufen (2.340.0: früher kenntlich), 1000 → 250 Punkte, −150");
   const motive = html.slice(html.indexOf("const QZ_MOTIVE = ["), html.indexOf("// Zusätzliche, gut klingende falsche"));
-  assert.equal((motive.match(/", "werne", "/g) || []).length, 20, "20 Werne-Motive"); assert.equal((motive.match(/", "kueche", "/g) || []).length, 15, "15 Küchen-Motive");
+  assert.ok((motive.match(/", "werne", "/g) || []).length >= 20, "mind. 20 Werne-Motive"); assert.ok((motive.match(/", "kueche", "/g) || []).length >= 15, "mind. 15 Küchen-Motive"); // 2.641.0: mehr Motive
   for (const [, id] of motive.matchAll(/\n  \["([a-z-]+)", "(?:werne|kueche)"/g)) assert.ok(fs.existsSync(new URL("../raetsel/" + id + ".webp", import.meta.url)), "Bild fehlt: " + id);
   assert.ok(fs.existsSync(new URL("../raetsel/GFDL-1.2.txt", import.meta.url)) && /\| altes-rathaus\.webp \| Altes Rathaus \| Vincent van Zeijst \| CC BY-SA 4\.0/.test(lies("raetsel/QUELLEN.md")), "Lizenztext und Bildnachweise");
   assert.ok(/case "raetsel_stand":/.test(srv) && /case "raetsel_ergebnis":/.test(srv) && /if \(String\(p\.woche \|\| ""\) !== woche\)/.test(srv) && /String\(error\.code\) === "23505"/.test(srv), "Server: Woche geprüft, erster Durchgang zählt");
@@ -12738,4 +12738,17 @@ function idx0() { return lies("index.html"); }
   assert.ok(/wkServerWeg\(e\.sid\); \/\/ App klingelt selbst/.test(programm) && /!WKK\.art && !document\.hidden\) wkKlingeln/.test(programm), "App klingelt nur sichtbar und bestellt dann den Push ab");
   assert.ok(/U\.schlag\(t, WKK\.i\)/.test(programm) && /💤 \$\{WK_SCHLUMMER_MIN\} Min\. später/.test(programm) && /"\+1 Min\."/.test(programm), "Stundenuhr-Klang, Aus / +1 Min. / 5 Min. später");
   assert.ok(/id="wkChip"[^>]*onclick="wkChipTippen\(\)"/.test(html) && /else if \(h === "#wecker"\) wkChipTippen\(\);/.test(programm), "Startseite zeigt, was läuft; Push öffnet die Uhr");
+}
+// 2.641.0 KC-CLUB-RAETSEL-ABWECHSLUNG (Wunschliste #30): mehr Bilder, erst ungesehene, wechselnder Ausschnitt, keine zwei richtigen Tipps
+{
+  const motive = programm.slice(programm.indexOf("const QZ_MOTIVE = ["), programm.indexOf("// Zusätzliche, gut klingende falsche"));
+  assert.equal((motive.match(/", "werne", "/g) || []).length, 35, "35 Werne-Motive"); assert.equal((motive.match(/", "kueche", "/g) || []).length, 29, "29 Küchen-Motive");
+  const quellen = lies("raetsel/QUELLEN.md"), liz = programm.slice(programm.indexOf("const QZ_LIZ = {"), programm.indexOf("const QZ_MOTIVE = ["));
+  for (const [, id, , , , , l] of motive.matchAll(/\n  \["([a-z-]+)", "(werne|kueche)", "([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"/g)) {
+    assert.ok(quellen.includes(`| ${id}.webp |`), "Bildnachweis fehlt: " + id);
+    assert.ok(liz.includes(`"${l}":`), "Lizenz-Link fehlt: " + l);
+  }
+  assert.ok(/bilder = qzUngesehenZuerst\(qzMischen\(alle\.filter\(\(m\) => m\.kat === art\), z\)\)\.slice\(0, QZ_RUNDE\)/.test(programm) && /qzGesehenMerken\(B\.m\.id\);/.test(programm), "Übung: erst ungesehene (nur auf dem Gerät gemerkt)");
+  assert.ok(/aus: qzAusschnitt\(z\)/.test(programm) && /A = !S\.fertig && B\.aus \? B\.aus : null/.test(programm) && /S\.stufe = -1; qzMalen\(\);/.test(programm), "Ausschnitt bis zum Auflösen, dann ganzes Bild; Woche mit festem Zufall");
+  assert.ok(/!qzAehnlich\(m\.a, a\)/.test(programm) && /\["Marktplatz", "Altes Rathaus"\]/.test(programm), "nie zwei richtige Tipps");
 }

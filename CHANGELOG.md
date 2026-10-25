@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.642.0 – 2026-10-25 – Rätsel: mehr Bilder und mehr Abwechslung (KC-CLUB-RAETSEL-ABWECHSLUNG, Wunschliste #30)
+15 weitere Werne-Bilder (u. a. Marktplatz, Zeche Werne, Hotel Ickhorn, Feuerwache, Kino, Busbahnhof) und 14 weitere Küchen-Bilder (u. a. Zimt, Vanille, Steinpilz, Granatapfel, Mörser) – jetzt 35 + 29 Motive, freie Fotos von Wikimedia Commons mit Bildnachweis. Übungsrunden nehmen zuerst Bilder, die man auf diesem Gerät noch nicht hatte. Jedes Bild kommt mit wechselndem Ausschnitt (herangezoomt, andere Stelle, manchmal gespiegelt); aufgelöst wird mit dem ganzen Bild; beim Wochen-Rätsel für alle gleich. Motive, die auf einem Bild mit zu sehen sind (z. B. Marktplatz/Altes Rathaus), kommen nie zusammen als Tipps.
+
 ## 2.641.0 – 2026-10-25 – 🔎 Pakete-Vergleich genauer, 🍽️ Anwesenheit mit Ampel (KC-CLUB-VERGLEICH-GENAUER, KC-CLUB-ANWESEND-AMPEL)
 Wunsch Hansi („Ja“ zur genaueren Aufzeichnung nach der Auswertung vom 24.10.: Online 28×, Übersicht 11× Abweichung, vermutlich nur Zeitunterschiede). Server: Weicht die nebenbei laufende Gegenprobe ab, steht jetzt im Protokoll beim Online-Takt, wer fehlt bzw. zu viel ist, wann diese Person zuletzt gesehen wurde und wie viel später die Probe lief; bei der Nachrichten-Übersicht, welche Felder in welchem Chat abweichen (Zahlen/Zeiten mit Wert, Texte nur als „Text anders“ – kein Nachrichteninhalt). Für die Mitglieder ändert sich nichts. Rückweg: App/Server 2.640.0.
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.641.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.642.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17091,7 +17091,9 @@ const QZ_SEK = 30, QZ_STUFEN = [26, 18, 12, 8, 5, 3, 2, 1], QZ_START = 1000, QZ_
 const QZ_ZEITEN = [0, 2, 4.5, 7, 10, 13, 17, 22], QZ_ENDE = 250;
 const QZ_KAT = { werne: ["🏛️", "Werne"], kueche: ["🥕", "Küche"], club: ["📸", "Köcheclub"] };
 const QZ_LIZ = { "CC BY-SA 4.0": "https://creativecommons.org/licenses/by-sa/4.0/deed.de", "CC BY 4.0": "https://creativecommons.org/licenses/by/4.0/deed.de",
-  "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/deed.de", "GFDL 1.2": "raetsel/GFDL-1.2.txt", "gemeinfrei": "" };
+  "CC BY-SA 3.0": "https://creativecommons.org/licenses/by-sa/3.0/deed.de", "GFDL 1.2": "raetsel/GFDL-1.2.txt", "gemeinfrei": "",
+  "CC BY-SA 2.5": "https://creativecommons.org/licenses/by-sa/2.5/deed.de", "CC BY-SA 2.0": "https://creativecommons.org/licenses/by-sa/2.0/deed.de",
+  "CC BY 3.0": "https://creativecommons.org/licenses/by/3.0/deed.de", "FAL": "https://artlibre.org/licence/lal/de1-3/" }; // 2.641.0
 // [Datei, Gruppe, Lösung, Satz nach dem Auflösen, Fotograf, Lizenz, Commons-Datei]
 const QZ_MOTIVE = [
   ["altes-rathaus", "werne", "Altes Rathaus", "Das Alte Rathaus am Markt – mit seinen Arkaden das Wahrzeichen von Werne.", "Vincent van Zeijst", "CC BY-SA 4.0", "Germany, Nordrhein-Westfalen, Kreis Unna, Werne, Markt, old town hall.jpg"],
@@ -17129,6 +17131,36 @@ const QZ_MOTIVE = [
   ["kochloeffel", "kueche", "Kochlöffel", "Der Kochlöffel – das wichtigste Werkzeug in jeder Küche.", "Clément Bucco-Lechat", "CC BY-SA 3.0", "Cuiller en bois - dessus.jpg"],
   ["zwiebel", "kueche", "Rote Zwiebel", "Die rote Zwiebel – mild und süßlich, schön im Salat.", "Colin", "CC BY-SA 3.0", "Red Onion on White.JPG"],
   ["paprika", "kueche", "Paprika", "Rote Paprika – süß und voller Vitamin C.", "AntanO", "CC BY-SA 4.0", "Red bell pepper.jpg"],
+  // 2.641.0 KC-CLUB-RAETSEL-ABWECHSLUNG (Wunschliste #30): 15 weitere Werne- und 14 Küchen-Motive (freie Fotos von Wikimedia Commons)
+  ["fachwerk-kirchplatz", "werne", "Fachwerkhaus am Kirchplatz", "Ein Fachwerkhaus am Kirchplatz – mit grüner Haustür.", "Mbdortmund", "CC BY-SA 3.0", "Kirchplatz-Werne-DSC 0056.JPG"],
+  ["juedischer-friedhof", "werne", "Jüdischer Friedhof", "Die Mauer am alten jüdischen Friedhof.", "smial", "FAL", "Werne am jued friedhof IMGP0297 wp.jpg"],
+  ["zeche", "werne", "Zeche Werne", "Die frühere Zeche Werne – hier wurde früher Steinkohle gefördert.", "smial", "FAL", "Zeche Werne Schacht 3 IMGP2179 smial wp.jpg"],
+  ["amazon", "werne", "Amazon-Logistikzentrum", "Das große Amazon-Logistikzentrum in Werne.", "Icy2008", "CC BY-SA 4.0", "Amazon Logistikzentrum Werne.jpg"],
+  ["marktplatz", "werne", "Marktplatz", "Der Marktplatz mit dem Alten Rathaus und dem Turm von St. Christophorus.", "Vincent van Zeijst", "CC BY-SA 4.0", "Germany, Nordrhein-Westfalen, Kreis Unna, Werne, Markt (2).jpg"],
+  ["ickhorn", "werne", "Hotel Ickhorn", "Das Hotel Ickhorn in der Innenstadt.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7692-Hotel-Ickhorn.jpg"],
+  ["sparkasse", "werne", "Sparkasse", "Die Sparkasse in der Innenstadt.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7715-Sparkasse.jpg"],
+  ["feuerwache", "werne", "Feuerwache", "Die Feuerwache der Werner Feuerwehr.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7762-Feuerwehr.jpg"],
+  ["kino", "werne", "Kino", "Das Kino in der Innenstadt.", "Mbdortmund", "GFDL 1.2", "Werne-20090522-Kino-DSC 7134.jpg"],
+  ["roggenmarkt", "werne", "Roggenmarkt", "Ein altes Backsteinhaus am Roggenmarkt.", "LAV02", "CC BY-SA 4.0", "Wohnhaus, Roggenmarkt 12, Werne.jpg"],
+  ["busbahnhof", "werne", "Busbahnhof", "Der Busbahnhof – im Hintergrund der Turm von St. Christophorus.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7760-Skyline.jpg"],
+  ["christusfigur", "werne", "Kreuz an St. Christophorus", "Das Steinkreuz mit Christusfigur an der St.-Christophorus-Kirche.", "Mbdortmund", "CC BY-SA 2.5", "Christusfigur, St. Christophorus-Kirche, Werne.jpg"],
+  ["fussgaengerzone", "werne", "Fußgängerzone", "Die Fußgängerzone mit ihren Geschäften.", "Mbdortmund", "GFDL 1.2", "Werne-12-07-08 110.JPG"],
+  ["giebel", "werne", "Geschnitzter Giebel", "Alte Schnitzereien an einem Fachwerkgiebel.", "smial", "FAL", "Werne giebelverzierung IMGP0289 wp.jpg"],
+  ["teigelkoetter", "werne", "Haus Teigelkötter", "Das Fachwerkhaus Teigelkötter mit der großen Uhr.", "Mbdortmund", "GFDL 1.2", "Werne-070602 7636-Teigelkötter.jpg"],
+  ["zimt", "kueche", "Zimtstangen", "Zimtstangen – die gerollte Rinde des Zimtbaums.", "Fumikas Sagisavas", "gemeinfrei", "Cinnamon sticks (1).jpg"],
+  ["vanille", "kueche", "Vanilleschoten", "Vanilleschoten – die getrockneten Früchte einer Orchidee.", "B.navez (bearbeitet: Andrzej 22)", "CC BY-SA 3.0", "Vanilla 6beans (rot. 90 deg.).JPG"],
+  ["lorbeer", "kueche", "Lorbeerblätter", "Getrocknete Lorbeerblätter – gehören in Suppe und Sauerbraten.", "Fumikas Sagisavas", "gemeinfrei", "Dried bay leaves (20240502).jpg"],
+  ["basilikum", "kueche", "Basilikum", "Basilikum – das Kraut für Tomate-Mozzarella und Pesto.", "Paul Goyette", "CC BY-SA 2.0", "Basil leaves.jpg"],
+  ["rotebete", "kueche", "Rote Bete", "Rote Bete – färbt alles schön rot.", "Evan-Amos", "gemeinfrei", "Beets-Bundle.jpg"],
+  ["kuerbis", "kueche", "Hokkaido-Kürbis", "Der Hokkaido-Kürbis – die Schale kann man mitessen.", "unbekannt", "gemeinfrei", "Pumpkin hokaido still life.jpg"],
+  ["fenchel", "kueche", "Fenchel", "Gemüsefenchel – schmeckt leicht nach Anis.", "Mauro Cateb", "CC BY-SA 4.0", "Fennel bulb from Brazil.jpg"],
+  ["nudelholz", "kueche", "Nudelholz", "Das Nudelholz – zum Ausrollen von Teig.", "Fructibus", "gemeinfrei", "Rolling pin 2017.jpg"],
+  ["moerser", "kueche", "Mörser", "Mörser und Stößel – zum Zerstoßen von Gewürzen.", "Jacek Halicki", "CC BY-SA 4.0", "2023 Moździerz ceramiczny (1).jpg"],
+  ["kardamom", "kueche", "Kardamom", "Grüne Kardamomkapseln – typisch für Spekulatius und Chai.", "Misterneedlemouse", "gemeinfrei", "Green Cardamom Pods.jpg"],
+  ["steinpilz", "kueche", "Steinpilz", "Der Steinpilz – einer der beliebtesten Speisepilze.", "Holger Krisp", "CC BY 3.0", "(Gemeine Steinpilz) Boletus edulis.jpg"],
+  ["granatapfel", "kueche", "Granatapfel", "Ein aufgebrochener Granatapfel – voller roter Kerne.", "Ivar Leidus", "CC BY-SA 4.0", "Pomegranate (opened).jpg"],
+  ["lauch", "kueche", "Lauch", "Lauch (Porree) auf dem Feld.", "Rasbak", "CC BY-SA 3.0", "Allium ampeloprasum var. porrum 'Farinto' (1).jpg"],
+  ["radieschen", "kueche", "Radieschen", "Ein Bund Radieschen – knackig und scharf.", "TeWeBs", "CC BY-SA 4.0", "A Bunch of Radishes.JPG"],
 ].map(([id, kat, a, info, autor, liz, datei]) => ({ id, kat, a, info, autor, liz, datei, src: `raetsel/${id}.webp` }));
 // Zusätzliche, gut klingende falsche Antworten je Gruppe (damit die 6 Tipps abwechslungsreich sind)
 const QZ_EXTRA = { werne: ["Marktplatz", "Natur-Solebad", "Gradierwerk", "Lippeaue", "Stadtpark", "Lippebrücke", "Alte Post"],
@@ -17144,8 +17176,12 @@ function qzZufall(saat) { let h = 2166136261; for (const c of String(saat)) h = 
   return () => { h += 0x6d2b79f5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const qzMischen = (l, z = Math.random) => { const a = l.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(z() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const qzAlle = () => [...QZ_MOTIVE, ...QZ.eigene];
+// 2.641.0 KC-CLUB-RAETSEL-ABWECHSLUNG: Motive, die auf dem Bild des anderen mit zu sehen sind, nie gemeinsam als Tipps (sonst zwei richtige Antworten)
+const QZ_AEHNLICH = [["Marktplatz", "Altes Rathaus"], ["Marktplatz", "St.-Christophorus-Kirche"], ["Kreuz an St. Christophorus", "St.-Christophorus-Kirche"],
+  ["Busbahnhof", "St.-Christophorus-Kirche"], ["Fachwerkhaus am Kirchplatz", "Kirchhof"], ["Marktplatz", "Der Ausrufer"], ["Sparkasse", "Fußgängerzone"]];
+const qzAehnlich = (a, b) => QZ_AEHNLICH.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
 function qzTipps(m, z = Math.random) { // 1 richtige + 5 falsche aus derselben Gruppe (ohne doppelte)
-  const andere = [...new Set([...qzAlle().filter((x) => x.kat === m.kat && x.a !== m.a).map((x) => x.a), ...(QZ_EXTRA[m.kat] || [])])].filter((a) => a !== m.a);
+  const andere = [...new Set([...qzAlle().filter((x) => x.kat === m.kat && x.a !== m.a).map((x) => x.a), ...(QZ_EXTRA[m.kat] || [])])].filter((a) => a !== m.a && !qzAehnlich(m.a, a));
   return qzMischen([m.a, ...qzMischen(andere, z).slice(0, 5)], z);
 }
 async function qzStandHolen() {
@@ -17164,14 +17200,23 @@ async function esRaetselZeigen(f) {
     <div class="qz-reihe"><button type="button" class="qz-klein" onclick="qzStart('werne')">🏛️ Werne üben</button><button type="button" class="qz-klein" onclick="qzStart('kueche')">🥕 Küche üben</button>${clubN ? `<button type="button" class="qz-klein" onclick="qzStart('club')">📸 Köcheclub (${clubN})</button>` : ""}</div>
     ${s ? "" : '<p class="qz-hinweis">Die Bestenliste ist gerade nicht erreichbar – Üben geht trotzdem.</p>'}`;
 }
+// 2.641.0 KC-CLUB-RAETSEL-ABWECHSLUNG (Wunschliste #30, Wunsch Hansi „Mehr Bilder – wenn man mehrmals spielt, erkennt man die Bilder zu schnell“):
+// Übungsrunden nehmen zuerst Bilder, die man auf diesem Gerät noch nicht hatte (gemerkt nur hier, nichts geht an den Server); sind alle durch,
+// zuerst die am längsten nicht gesehenen. Jedes Bild kommt mit wechselndem Ausschnitt (etwas herangezoomt, andere Stelle, manchmal gespiegelt) –
+// beim Wochen-Rätsel für alle gleich (fester Zufall). Aufgelöst wird immer mit dem ganzen, ungespiegelten Bild.
+const QZ_GESEHEN_KEY = "kc_club_raetsel_gesehen", QZ_ZOOM = [1.2, 1.65];
+function qzGesehen() { try { return JSON.parse(localStorage.getItem(QZ_GESEHEN_KEY) || "{}") || {}; } catch (e) { return {}; } }
+function qzGesehenMerken(id) { try { const g = qzGesehen(); g[id] = Date.now(); localStorage.setItem(QZ_GESEHEN_KEY, JSON.stringify(g)); } catch (e) { /* ohne Speicher nur Zufall */ } }
+function qzUngesehenZuerst(liste) { const g = qzGesehen(); return [...liste.filter((m) => !g[m.id]), ...liste.filter((m) => g[m.id]).sort((a, b) => g[a.id] - g[b.id])]; } // stabil: Ungesehene bleiben gemischt
+const qzAusschnitt = (z) => ({ zoom: QZ_ZOOM[0] + z() * (QZ_ZOOM[1] - QZ_ZOOM[0]), fx: z(), fy: z(), spiegel: z() < 0.4 });
 function qzStart(art) {
   const woche = art === "woche", z = woche ? qzZufall("kc-raetsel-" + qzWoche()) : Math.random, alle = qzAlle();
   let bilder;
   if (woche) { const w = qzMischen(alle.filter((m) => m.kat === "werne"), z), k = qzMischen(alle.filter((m) => m.kat === "kueche"), z), c = qzMischen(alle.filter((m) => m.kat === "club"), z);
     bilder = qzMischen([...w.slice(0, c.length ? 2 : 3), ...k.slice(0, 2), ...c.slice(0, 1)], z); }
-  else bilder = qzMischen(alle.filter((m) => m.kat === art), z).slice(0, QZ_RUNDE);
+  else bilder = qzUngesehenZuerst(qzMischen(alle.filter((m) => m.kat === art), z)).slice(0, QZ_RUNDE); // 2.641.0 KC-CLUB-RAETSEL-ABWECHSLUNG
   if (!bilder.length) return melde("Für diese Gruppe gibt es noch keine Bilder.", true);
-  QZ.spiel = { art, zaehlt: woche && !QZ.stand?.meins && !!QZ.stand, woche: qzWoche(), bilder: bilder.map((m) => ({ m, tipps: qzTipps(m, z) })), i: 0, punkte: 0, richtig: 0 };
+  QZ.spiel = { art, zaehlt: woche && !QZ.stand?.meins && !!QZ.stand, woche: qzWoche(), bilder: bilder.map((m) => ({ m, tipps: qzTipps(m, z), aus: qzAusschnitt(z) })), i: 0, punkte: 0, richtig: 0 };
   qzBild();
 }
 async function qzBildLaden(m) {
@@ -17187,6 +17232,7 @@ async function qzBild() {
     <div class="qz-unten" id="qzUnten"><button type="button" class="qz-buzzer" id="qzBuzzer" onclick="qzBuzz()" aria-label="Buzzer – ich weiß es"><span>BUZZ</span></button></div></div>`;
   const im = await qzBildLaden(B.m); if (!$("qzBild") || QZ.spiel !== S) return;
   if (!im) { melde("Das Bild konnte nicht geladen werden – nächstes Bild.", true); return qzWeiter(true); }
+  qzGesehenMerken(B.m.id);
   Object.assign(S, { t: 0, lauf: true, falsch: 0, stufe: -1, letzt: performance.now(), fertig: false });
   qzMalen(); clearInterval(QZ.uhr); QZ.uhr = setInterval(qzTakt, 100);
 }
@@ -17205,13 +17251,17 @@ function qzMalen() { // nur neu malen, wenn eine neue Schärfe-Stufe erreicht is
   const st = S.fertig ? QZ_STUFEN.length - 1 : Math.max(0, QZ_ZEITEN.findLastIndex((z) => S.t >= z)); if (st === S.stufe && cv.width) return; S.stufe = st;
   const box = cv.parentElement.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1), W = Math.max(50, Math.round(box.width * dpr)), H = Math.max(50, Math.round(box.height * dpr));
   if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-  const im = B.m.img, s = Math.min(W / im.width, H / im.height), w = im.width * s, h = im.height * s, x = (W - w) / 2, y = (H - h) / 2, c = cv.getContext("2d");
-  c.fillStyle = "#1b1b1b"; c.fillRect(0, 0, W, H);
+  // 2.641.0 KC-CLUB-RAETSEL-ABWECHSLUNG: bis zum Auflösen nur ein Ausschnitt (sw × sh ab sx/sy), evtl. gespiegelt
+  const im = B.m.img, A = !S.fertig && B.aus ? B.aus : null, zoom = A ? A.zoom : 1, sw = im.width / zoom, sh = im.height / zoom;
+  const sx = A ? A.fx * (im.width - sw) : 0, sy = A ? A.fy * (im.height - sh) : 0;
+  const s = Math.min(W / sw, H / sh), w = sw * s, h = sh * s, x = (W - w) / 2, y = (H - h) / 2, c = cv.getContext("2d");
+  c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = "#1b1b1b"; c.fillRect(0, 0, W, H);
+  if (A?.spiegel) c.setTransform(-1, 0, 0, 1, W, 0);
   const blk = QZ_STUFEN[st] * dpr;
-  if (blk <= 1.5) { c.imageSmoothingEnabled = true; c.drawImage(im, x, y, w, h); return; }
+  if (blk <= 1.5) { c.imageSmoothingEnabled = true; c.drawImage(im, sx, sy, sw, sh, x, y, w, h); c.setTransform(1, 0, 0, 1, 0, 0); return; }
   const kw = Math.max(2, Math.round(w / blk)), kh = Math.max(2, Math.round(h / blk)), k = (QZ.klein = QZ.klein || document.createElement("canvas")); k.width = kw; k.height = kh;
-  const kc = k.getContext("2d"); kc.imageSmoothingEnabled = true; kc.drawImage(im, 0, 0, kw, kh);
-  c.imageSmoothingEnabled = false; c.drawImage(k, 0, 0, kw, kh, x, y, w, h);
+  const kc = k.getContext("2d"); kc.imageSmoothingEnabled = true; kc.drawImage(im, sx, sy, sw, sh, 0, 0, kw, kh);
+  c.imageSmoothingEnabled = false; c.drawImage(k, 0, 0, kw, kh, x, y, w, h); c.setTransform(1, 0, 0, 1, 0, 0);
 }
 function qzTon(art) { try { const A = (QZ.ac = QZ.ac || new (window.AudioContext || window.webkitAudioContext)()), o = A.createOscillator(), g = A.createGain(), t = A.currentTime;
   if (!einst("ton", true)) return; o.connect(g); g.connect(A.destination);
@@ -17235,7 +17285,7 @@ function qzTipp(i) {
 function qzAufloesen(ok, zeit) {
   const S = QZ.spiel; if (!S || S.fertig) return; S.fertig = true; S.lauf = false; clearInterval(QZ.uhr); QZ.uhr = 0;
   const B = S.bilder[S.i], p = ok ? qzPunkteJetzt(S) : 0; S.punkte += p; if (ok) S.richtig++;
-  qzTon(ok ? "richtig" : "falsch"); qzMalen(); $("qzTipps")?.classList.add("versteckt"); if ($("qzBalken")) $("qzBalken").style.width = "0";
+  qzTon(ok ? "richtig" : "falsch"); S.stufe = -1; qzMalen(); $("qzTipps")?.classList.add("versteckt"); if ($("qzBalken")) $("qzBalken").style.width = "0";
   const nachweis = B.m.liz ? `Foto: ${esc(B.m.autor)} · ${B.m.liz === "gemeinfrei" ? "gemeinfrei" : `<a href="${QZ_LIZ[B.m.liz]}" target="_blank" rel="noopener">${esc(B.m.liz)}</a>`} · <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(B.m.datei.replace(/ /g, "_"))}" target="_blank" rel="noopener">Wikimedia Commons</a>` : "Foto: Köcheclub Werne";
   const l = $("qzLoesung"); l.innerHTML = `<div class="qz-ergebnis ${ok ? "gut" : "schade"}">${ok ? `🎉 Richtig! +${p} Punkte` : zeit ? "⏰ Die Zeit ist um!" : "😕 Diesmal nicht"}</div><b>${esc(B.m.a)}</b>${B.m.info ? `<span>${esc(B.m.info)}</span>` : ""}<small>${nachweis}</small>`;
   l.classList.remove("versteckt"); if (ok) try { const r = $("qzBild").getBoundingClientRect(); konfetti(r.left + r.width / 2, r.top + r.height / 2, 60); } catch (e) {}
