@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.654.0 – 2026-10-25 – 📨 Nachricht per E-Mail nachschicken (Admin) · ✉️ Rundmails immer über web.de (KC-CLUB-NACHSENDEN, KC-COMM-WEBDE-IMMER) · Server 2.654.0 · Communicator Router v25
+Anlass 25.10.: Die Besetzungsmatrix (Rundnachricht an alle) erreichte Thomas nicht – er steht auf „Keine Benachrichtigungen“; zwei von Hand nachgeschobene Mails liefen über Brevo (Spam-Ordner). Und die Ankündigung ging als Express zu 13 von 16 über Brevo. Wunsch Hansi: „Ja, Knopf bauen und Rundmails immer über web.de“.
+- **📨 Per E-Mail nachschicken** (nur Admin): Nachricht antippen → „📨 Per E-Mail nachschicken (an ‚Keine Benachrichtigungen‘)“. Die App zeigt, wer in diesem Chat wegen „Keine Benachrichtigungen“ oder einer stummen Sperre nichts bekommen hat, und schickt genau diese Nachricht mit Anlagen **einmal** per E-Mail – persönliche Anrede, Betreff des Chats, Link in die App, über den normalen Versandweg (web.de). Die Einstellung der Person bleibt; dieselbe Nachricht an dieselbe Person geht nie zweimal raus. Verschlüsselte Nachrichten nicht. Server: Aktion `nachsenden_stumm` (nur Admin, mit `nur_pruefen`), `routerSenden(…, { trotzStumm })` nur dafür.
+- **✉️ Rundmails immer über web.de** (Communicator, Router v25, Repo KC-Communication): Mails warten auf ihren web.de-Platz (3 je Minute, 20 je Stunde) jetzt bis zu **3 Stunden** statt 15 Minuten, und auch Express/Notfall-Mails springen nicht mehr sofort zu Brevo – deren Push geht weiter sofort raus. Brevo nur noch, wenn web.de beim Senden scheitert oder in 3 Stunden kein Platz frei ist.
+- Hilfe-Eintrag „Nachricht per E-Mail nachschicken (Admin)“. Tests: Vertragstest-Block 2.654.0, Communicator `tests/warten.test.mjs`.
+- Rückweg: App/Server 2.653.0 erneut einspielen; Communicator v24 (Repo-Stand bd1a652).
+
 ## 2.653.0 – 2026-10-25 – 🌹 Rose schon nach 20 Sekunden (KC-CLUB-ROSE-20S)
 - Wunsch Hansi („Ja, nach 20 Sekunden und sofort einspielen“): Von 7 angehakten Mitgliedern hatte erst eine die Rose – die übrigen öffneten die App nur kurz, 3 Minuten ruhige Startseite kamen nie zusammen. Jetzt kommt sie nach 20 Sekunden sichtbarer Startseite (weiter nicht über einem offenen Fenster oder beim Tippen, nur einmal). Hinweis in der Admin-Karte angepasst.
 - Nur App. Auf Wunsch Hansi sofort eingespielt.

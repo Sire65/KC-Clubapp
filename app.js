@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.653.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.654.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5352,6 +5352,7 @@ const HILFE = [
   { id: "versand_leiste", thema: "nachrichten", sym: "📝", t: "Normal, ❗ Wichtig oder 🏎️ Express – die Leiste über dem Schreibfeld", x: "Sobald du etwas ins Schreibfeld tippst (oder etwas anhängst), erscheint darüber die Leiste <b>📝 Normal · ❗ Wichtig · 🏎️ Express</b>. <b>Normal</b> ist schon angehakt – eine normale Nachricht braucht nur ➤. Hakst du <b>❗ Wichtig</b> oder <b>🏎️ Express</b> an, geht der Haken bei Normal weg; beides zusammen geht auch. Neben Express steht, wie viele du heute schon hattest (z. B. 2/5). Nach dem Senden und beim Chatwechsel steht wieder Normal. Soll die Leiste immer zu sehen sein: ⚙️ → „🔔 Benachrichtigungen“ → <b>„📝❗🏎️ Versand-Leiste immer zeigen“</b>.", zeig: () => einstiegHin("benachrichtigung", "setWichtigFrage"), seit: "2.524.0" },
   { id: "schreibt_hinweis", thema: "nachrichten", sym: "✍️", t: "„… schreibt dir gerade“ – auch wenn der Chat zu ist", x: "Schreibt dir jemand im <b>Zweier-Chat</b>, während du woanders in der App bist, steht oben kurz <b>„✍️ Anne schreibt dir gerade …“</b> – oder <b>„🗣️ … diktiert dir gerade eine Nachricht …“</b> bzw. <b>„🎤 … nimmt gerade eine Sprachnachricht für dich auf …“</b>. So weißt du: Gleich kommt etwas. Antippen öffnet den Chat; ist die Nachricht da, verschwindet der Hinweis. Im offenen Chat steht es wie gewohnt über dem Schreibfeld – der ✏️ Stift schreibt dabei mit. Nicht in Gruppen und nicht bei stumm geschalteten Chats; wer seine Online-Anzeige ausgeschaltet hat, meldet kein Schreiben.", seit: "2.529.0" },
   { id: "druck_pdf", thema: "club", sym: "📄", t: "Aus jeder Druckvorschau ein PDF", x: "Überall, wo die App etwas zum Drucken zeigt (Termine, Protokoll, Erstattung, Wunschbogen …), gibt es neben <b>🖨️ Drucken</b> den Knopf <b>📄 PDF speichern / teilen</b>. Die App baut das PDF selbst auf dem Handy – du kannst es z. B. per WhatsApp oder Mail weiterschicken oder speichern. Nichts geht dafür an fremde Dienste.", seit: "2.526.0" },
+  { id: "nachsenden", thema: "nachrichten", sym: "📨", t: "Nachricht per E-Mail nachschicken (Admin)", nur: () => !!ICH?.admin, x: "Wer auf <b>„Keine Benachrichtigungen“</b> steht, bekommt Chat-Nachrichten weder als Push noch als E-Mail. Musst du jemandem eine bestimmte Nachricht trotzdem zukommen lassen: Nachricht antippen → <b>„📨 Per E-Mail nachschicken“</b>. Die App zeigt, wer in diesem Chat nichts bekommen hat, und schickt genau diese Nachricht mit Anlagen <b>einmal</b> per E-Mail (über web.de). Die Einstellung der Person bleibt, doppelt geht nichts raus.", seit: "2.654.0" },
   { id: "chat_filter", thema: "nachrichten", sym: "👥", t: "Nur die anderen, nur meine – oder nur den Hintergrund", x: "Im Chat in der kleinen Zeile über dem Schreibfeld sitzt der Knopf <b>👥</b>. Einmal antippen: <b>👤 nur die Nachrichten der anderen</b>. Zweimal: <b>🙋 nur deine</b>. Dreimal: <b>🖼️ nur der Hintergrund</b> – alle Nachrichten verschwinden, und du siehst dein Hintergrundbild in voller Stärke (eins wählen: oben ⋮ → Chat-Farben). Viermal: wieder alle. Oben steht dabei ein gelber Hinweis – antippen zeigt sofort wieder alles. Es wird nur ausgeblendet, nichts gelöscht; beim nächsten Öffnen des Chats siehst du wieder alle Nachrichten.", seit: "2.591.0" },
   // 2.534.0 KC-CLUB-EINST-WEGWEISER
   { id: "einst_wegweiser", thema: "start", sym: "🧭", t: "Alle Einstellungen erklärt – wie im Explorer", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> stehen alle Einstellungen deiner App wie Ordner im Windows-Explorer: <b>▸</b> klappt einen Bereich auf (z. B. 🔔 Benachrichtigungen), rechts steht, wie es gerade eingestellt ist. <b>Antippen</b> erklärt, was die Einstellung bewirkt – mit <b>👉 Hinbringen</b> (direkt zum Schalter), <b>📖 Ganze Hilfe</b> und <b>🎬 Video</b>. Oben suchst du nach einem Wort (auch mit 🎤), mit <b>🖨️ Als Schriftstück</b> druckst du alles oder speicherst es als PDF. Umgestellt wird dort nichts.", zeig: () => ewStart(), seit: "2.534.0" },
@@ -33288,10 +33289,25 @@ function nachrichtMenue(id) {
     ${(m.anlagen || []).some((a) => ARCHIV_TYP_OK(a.mime) && !a.einmal) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naAnlagenArchiv('${id}')">🗄️ Datei in mein Archiv</button>` : ""}
     ${naZurueckMoeglich(m) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naZurueckholen('${id}')">↩️ Zurückholen und ändern (noch nicht gelesen)</button>` : ""}
     <button class="knopf" onclick="document.getElementById('naMenue').remove();nachrichtInfo('${id}')">ℹ️ Details – wann gesendet, angekommen, gelesen</button>
+    ${ICH?.admin && !String(m.text || "").startsWith(VN_PRE) && (CHAT?.teilnehmer || []).length > 1 ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naNachsenden('${id}')">📨 Per E-Mail nachschicken (an „Keine Benachrichtigungen“)</button>` : ""}<!-- 2.654.0 KC-CLUB-NACHSENDEN -->
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naLoeschenFragen('${id}')">🗑️ Löschen</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
+}
+// ---------- 2.654.0 KC-CLUB-NACHSENDEN (Wunsch Hansi 25.10.: Thomas stand auf „Keine Benachrichtigungen“ und bekam die Besetzungsmatrix nicht –
+// „Knopf bauen“): nur für den Admin. Zeigt, wer in diesem Chat wegen „Keine Benachrichtigungen“ (oder stummer Sperre) nichts bekommen hat, und schickt
+// genau diese Nachricht mit Anlagen einmalig per E-Mail (normaler Weg über web.de). Die Einstellung der Person bleibt; doppelt geht nichts raus.
+async function naNachsenden(id) {
+  try {
+    const r = await api("nachsenden_stumm", { id, nur_pruefen: true }, { warten: true }), leute = r?.personen || [];
+    if (!leute.length) return melde("✅ In diesem Chat steht niemand auf „Keine Benachrichtigungen“ – alle haben die Nachricht auf dem normalen Weg bekommen.");
+    const mit = leute.filter((x) => x.mail), ohne = leute.filter((x) => !x.mail);
+    if (!mit.length) return melde(`✉️ Keine E-Mail-Adresse hinterlegt bei: ${ohne.map((x) => x.name).join(", ")}`, true);
+    if (!(await frage(`📨 Einmalig per E-Mail nachschicken?\nDiese Nachricht (mit Anlagen) geht einmal per E-Mail an: ${mit.map((x) => x.name).join(", ")}.${ohne.length ? `\nOhne E-Mail-Adresse: ${ohne.map((x) => x.name).join(", ")}.` : ""}\n„Keine Benachrichtigungen“ bleibt eingeschaltet – es ist nur diese eine Mail.`, { ja: "📨 Nachschicken", nein: "Abbrechen" }))) return;
+    const e = await api("nachsenden_stumm", { id, personen: mit.map((x) => x.person_id) }, { warten: true });
+    melde(e?.gesendet ? `📨 Nachgeschickt an ${(e.namen || []).join(", ")} – über web.de, kann wegen der Versandbremse ein paar Minuten dauern.` : "Die E-Mail konnte gerade nicht verschickt werden – bitte später nochmal.", !e?.gesendet);
+  } catch (x) { meldeFehler(x); }
 }
 // ---------- 2.608.0 KC-CLUB-NACHRICHT-TERMIN (Wunsch Hansi 23.10.: „In die kleine Zeile über dem Chat ein Icon Termin – damit kann man die Nachricht
 // direkt in den Terminplan übernehmen, ohne viele Schritte“ + „Terminerkennung und sofort ein Kalender-Icon an der Nachricht“). Die App liest Tag, Uhrzeit,

@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.649.0";
+const SERVER_VERSION = "2.654.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -489,8 +489,8 @@ async function geloescht(ich: { person_id: string }, was: string, sicherung: Rec
 // Versand über den KC Communicator (Push, sonst/zusätzlich Mail über web.de).
 // 2.0.0 (Gesamtprüfung): Communicator nicht erreichbar → KEIN Absturz (sonst meldet die App einen Fehler, obwohl die Nachricht
 // schon gespeichert ist, und das Mitglied schickt sie nochmal) – stattdessen „0 gesendet, n Fehler“ zurückgeben und protokollieren
-async function routerSenden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
-  try { return await routerSendenRoh(eventKey, personIds, vars, korrelation, kopie); }
+async function routerSenden(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }, opt: { trotzStumm?: boolean } = {}) {
+  try { return await routerSendenRoh(eventKey, personIds, vars, korrelation, kopie, opt); }
   catch (e) { console.error("routerSenden", eventKey, String(e)); return { gesendet: 0, fehler: personIds.length }; }
 }
 // 2.536.0 KC-CLUB-KOMMUNIKATION-AUS (Wunsch Hansi „aus der Kommunikation der Club-App herausnehmen“): Registry kc_club_kommunikation_aus.
@@ -513,9 +513,10 @@ async function mailAnlagen(ids: string[]): Promise<{ id: string; name: string }[
   if (liste.reduce((n, x) => n + Number(x.size_bytes || 0), 0) > MAIL_ANL_SUMME) return [];
   return liste.map((x) => ({ id: String(x.id), name: String(x.file_name || "Anlage") }));
 }
-async function routerSendenRoh(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
+async function routerSendenRoh(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }, opt: { trotzStumm?: boolean } = {}) {
   // KC-CLUB-PERSON-SPERRE (2.23.77): Gesperrte mit „Benachrichtigungen aus“ bekommen nichts (alle Club-Wege laufen hier durch)
-  const stumm = new Set([...(await sperrenAktuell()).stumm, ...await kommunikationAus()]); // 2.536.0 KC-CLUB-KOMMUNIKATION-AUS
+  // 2.654.0 KC-CLUB-NACHSENDEN: einzige Ausnahme – der Admin schickt ausdrücklich EINE Nachricht einmalig per Mail nach (nachsenden_stumm)
+  const stumm = opt.trotzStumm ? new Set<string>() : new Set([...(await sperrenAktuell()).stumm, ...await kommunikationAus()]); // 2.536.0 KC-CLUB-KOMMUNIKATION-AUS
   if (stumm.size) {
     personIds = personIds.filter((id) => !stumm.has(id));
     if (kopie) kopie = { cc: kopie.cc?.filter((id) => !stumm.has(id)), bcc: kopie.bcc?.filter((id) => !stumm.has(id)) };
@@ -10635,6 +10636,48 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "buero_mail", { empfaenger: ziel.length, anhaenge: anl.length, cc: cc.length, bcc: bcc.length, kopie: !!p.kopie, versand });
         if (!versand.gesendet) throw new Fehler("Die E-Mail konnte gerade nicht verschickt werden – bitte später noch einmal.", 502);
         return json({ ok: true, ...versand, empfaenger: ziel.length, cc: cc.length, bcc: bcc.length });
+      }
+
+      case "nachsenden_stumm": {
+        // 2.654.0 KC-CLUB-NACHSENDEN (Wunsch Hansi 25.10.: Thomas stand auf „Keine Benachrichtigungen“ und bekam die Besetzungsmatrix nicht – „Knopf bauen“):
+        // Der Admin schickt EINE Chat-Nachricht einmalig per E-Mail (mit ihren Anlagen) an die Teilnehmer dieses Chats, die wegen „Keine Benachrichtigungen“
+        // oder einer stummen Sperre nichts bekommen haben. Die Einstellung selbst bleibt. Geht über den normalen Versandweg (web.de); dieselbe Nachricht
+        // an dieselbe Person nur einmal (Kennung club-nachsenden:<Nachricht>). nur_pruefen = nur die Namen liefern.
+        nurAdmin(ich);
+        const mid = String(p.id || "");
+        const { data: msg } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body,created_at").eq("id", mid).maybeSingle();
+        if (!msg) throw new Fehler("Die Nachricht wurde nicht gefunden.", 404);
+        if (/^🔒KCV1:/.test(String(msg.body || ""))) throw new Fehler("Verschlüsselte Nachrichten können nicht per E-Mail nachgeschickt werden.", 400);
+        const [{ data: tn }, { data: th }, { data: ma }, sp, aus] = await Promise.all([
+          db.from("kc_communication_thread_participants").select("person_id").eq("thread_id", msg.thread_id),
+          db.from("kc_communication_threads").select("subject").eq("id", msg.thread_id).maybeSingle(),
+          db.from("kc_communication_message_attachments").select("attachment_id").eq("message_id", mid),
+          sperrenAktuell(), kommunikationAus()]);
+        const stumm = new Set([...sp.stumm, ...aus]);
+        const kandidaten = [...new Set((tn ?? []).map((x: any) => String(x.person_id)))].filter((id) => id !== msg.sender_person_id && stumm.has(id));
+        const leute = await personen(kandidaten), mitMail = new Set((await aktiveMitglieder()).filter((m: any) => m.email).map((m: any) => m.person_id));
+        const liste = kandidaten.map((id) => ({ person_id: id, name: leute.get(id)?.display_name || id, mail: mitMail.has(id) }));
+        if (p.nur_pruefen) return json({ personen: liste });
+        const wahl = new Set<string>((Array.isArray(p.personen) ? p.personen : []).map((x: unknown) => String(x)));
+        const ziel = liste.filter((x) => x.mail && (!wahl.size || wahl.has(x.person_id))).map((x) => x.person_id);
+        if (!ziel.length) throw new Fehler("Niemand mit hinterlegter E-Mail-Adresse zum Nachschicken.", 400);
+        const anl = (ma ?? []).map((x: any) => String(x.attachment_id)), mAnl = anl.length ? await mailAnlagen(anl) : [];
+        const absender = (await personen([msg.sender_person_id])).get(msg.sender_person_id), absName = absender?.display_name || "Ein Mitglied";
+        const betreffZeile = String(th?.subject || "").trim(), text = String(msg.body || "").replace(/^📎$/, "");
+        const link = `${APP_URL}#nachricht=${msg.thread_id}`;
+        let gesendet = 0, fehler = 0;
+        for (const pid of ziel) { // je Person eigene Anrede
+          const vn = vorname(leute.get(pid) ?? null) || "";
+          const r = await routerSenden("club_nachricht_mail", [pid], {
+            titel: `💬 ${absName}`, kurz: txt(text || (mAnl.length ? "Anhang" : ""), 140),
+            betreff: `Köcheclub Werne – ${betreffZeile || `Nachricht von ${absName}`}`,
+            text: `Hallo${vn ? " " + vn : ""},\n\n${absName} hat im Köcheclub geschrieben${betreffZeile ? ` („${betreffZeile}“)` : ""}:\n\n${text || "(siehe Anhang)"}${mAnl.length ? `\n\n📎 Im Anhang: ${mAnl.map((x) => x.name).join(", ")}` : anl.length ? "\n\n📎 Die Anlage ist zu groß für die E-Mail – bitte in der Club-App ansehen." : ""}\n\nIn der Köcheclub-App: ${link}\n\nViele Grüße\nKöcheclub Werne`,
+            url: link, ...(mAnl.length ? { attachmentIds: mAnl.map((x) => x.id) } : {}),
+          }, `club-nachsenden:${mid}`, undefined, { trotzStumm: true });
+          gesendet += r.gesendet; fehler += r.fehler;
+        }
+        await protokoll(ich.person_id, "nachsenden_stumm", { nachricht: mid, empfaenger: ziel, gesendet, fehler });
+        return json({ ok: gesendet > 0, gesendet, fehler, namen: ziel.map((id) => liste.find((x) => x.person_id === id)?.name || id) });
       }
 
       case "mail_rund": {
