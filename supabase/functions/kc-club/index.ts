@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.634.0";
+const SERVER_VERSION = "2.635.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -741,7 +741,7 @@ async function chatArchivSetzen(pid: string, threads: Record<string, string>) {
   if (error) throw new Fehler("Archiv konnte nicht gespeichert werden.", 500);
 }
 // KC-CLUB-BEARBEITEN (1.9.0): eigene Nachricht bis zu 15 Minuten nach dem Senden ändern (wie WhatsApp)
-const BEARBEITEN_MIN = 15;
+const BEARBEITEN_MIN = 52_560_000; // 2.635.0 KC-CLUB-BEARBEITEN-JEDERZEIT (Wunschliste #36, Hansi „auch für normale Texte jederzeit“): 100 Jahre = jederzeit (vorher 15 Min.)
 // KC-CLUB-SCHILDER (2.150.0): nur bekannte Felder, kurze Texte, Auswahl-Kennungen als Kurzwörter – Gestaltung kommt aus den Listen der App
 const SCHILD_ID = /^[a-z0-9_-]{0,30}$/;
 function schildDaten(d: any) {
@@ -11304,7 +11304,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             bearbeitet: bearbMap.get(m.id) ?? null, loeschtAm: ablaufMap.get(m.id) ?? null,
             gemerkt: gemSet.has(m.id), angeheftet: pinIds.includes(m.id), umfrage: umfrageVon(m.id), kontakt: kontaktVon(m.id), wichtig: wichtigIds.has(m.id),
             ...(exIds.has(m.id) ? { express: eigen ? { quittungen: exQuittung(m.id), versandt: m.created_at, empfaenger: exEmpfaenger(m) } : true } : {}),
-            ...(eigen && m.body !== "📎" && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
+            ...(eigen && !(umf ?? []).some((x: any) => x.message_id === m.id) && !(kon ?? []).some((x: any) => x.message_id === m.id) && Date.now() - Date.parse(m.created_at) < BEARBEITEN_MIN * 60000 ? { bearbeitbarBis: new Date(Date.parse(m.created_at) + BEARBEITEN_MIN * 60000).toISOString() } : {}),
           };
         });
         // KC-CLUB-CHAT-KARTEI (2.191.0): „vorschau“ = Blick in die Rollkartei der Chats – zählt NICHT als gelesen (keine Lesehaken für andere)
@@ -12188,20 +12188,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-BEARBEITEN (1.9.0): nur eigene Nachrichten mit Text, bis BEARBEITEN_MIN Minuten nach dem Senden.
         // Kein neuer Push/keine neue Mail (wie WhatsApp); im Protokoll steht nur, DASS bearbeitet wurde – nicht der Text.
         const text = txt(p.text, 4000);
-        if (!text) throw new Fehler("Bitte einen Text eingeben – zum Entfernen „Löschen“ benutzen.");
         const { data: m } = await db.from("kc_communication_messages").select("id,thread_id,sender_person_id,body,created_at").eq("id", String(p.id || "")).maybeSingle();
         if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
         await binTeilnehmer(m.thread_id, ich.person_id);
         if (m.sender_person_id !== ich.person_id) throw new Fehler("Du kannst nur deine eigenen Nachrichten bearbeiten.", 403);
-        if (m.body === "📎") throw new Fehler("Nachrichten nur mit Anlage haben keinen Text zum Bearbeiten.");
+        // 2.635.0 KC-CLUB-BEARBEITEN-JEDERZEIT: auch Bilder/Dateien bekommen (nachträglich) eine Unterschrift; leer = wieder nur die Anlage („📎“)
+        const { data: mAnl } = await db.from("kc_communication_message_attachments").select("attachment_id").eq("message_id", m.id).limit(1);
+        if (!text && !mAnl?.length) throw new Fehler("Bitte einen Text eingeben – zum Entfernen „Löschen“ benutzen.");
+        const neuBody = text || "📎";
         const [{ data: uf }, { data: kk }] = await Promise.all([
           db.from("kc_club_chat_umfrage").select("message_id").eq("message_id", m.id).maybeSingle(),
           db.from("kc_club_chat_kontakt").select("message_id").eq("message_id", m.id).maybeSingle(),
         ]);
         if (uf || kk) throw new Fehler("Abstimmungen und Kontaktkarten lassen sich nicht bearbeiten.");
         if (Date.now() - Date.parse(m.created_at) > BEARBEITEN_MIN * 60000) throw new Fehler(`Bearbeiten geht nur ${BEARBEITEN_MIN} Minuten nach dem Senden.`, 409);
-        if (text === m.body) return json({ ok: true, unveraendert: true });
-        const { error } = await db.from("kc_communication_messages").update({ body: text }).eq("id", m.id).eq("sender_person_id", ich.person_id);
+        if (neuBody === m.body) return json({ ok: true, unveraendert: true });
+        const { error } = await db.from("kc_communication_messages").update({ body: neuBody }).eq("id", m.id).eq("sender_person_id", ich.person_id);
         if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
         const am = jetzt();
         await db.from("kc_club_nachricht_bearbeitet").upsert({ message_id: m.id, bearbeitet_am: am }, { onConflict: "message_id" });

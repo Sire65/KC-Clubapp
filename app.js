@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.634.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.635.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32767,7 +32767,7 @@ function nachrichtMenue(id) {
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAntworten('${id}')">↩️ Antworten</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naAnheften('${id}', ${!m.angeheftet})">${m.angeheftet ? "📌 Lösen (nicht mehr oben)" : "📌 Oben anheften"}</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove();naMerken('${id}', ${!m.gemerkt})">${m.gemerkt ? "⭐ Nicht mehr merken" : "⭐ Merken"}</button>
-    ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ Bearbeiten</button>` : ""}
+    ${m.bearbeitbarBis && Date.parse(m.bearbeitbarBis) > Date.now() && !String(m.text || "").startsWith(VN_PRE) ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naBearbeiten('${id}')">✏️ ${m.anlagen?.length ? (m.text && m.text !== "📎" ? "Unterschrift ändern" : "Unterschrift hinzufügen") : "Bearbeiten"}</button>` : ""}
     ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();ntAusNachricht('${id}')">📅 Als Termin übernehmen</button>` : ""}<!-- 2.608.0 KC-CLUB-NACHRICHT-TERMIN -->
     ${m.text ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naKopieren('${id}')">📋 Kopieren</button>` : ""}
     ${m.text && m.text !== "📎" ? `<button class="knopf" onclick="document.getElementById('naMenue').remove();naVorlesen('${id}')">🔊 Vorlesen</button>` : ""}
@@ -33297,24 +33297,25 @@ async function sicherheitMelden() {
     melde("📨 Gesendet – " + adminName() + " bekommt das Prüfergebnis per Push und E-Mail");
   } catch (e) { meldeFehler(e); }
 }
-// ---------- KC-CLUB-BEARBEITEN (1.9.0, Wunsch Hansi – wie WhatsApp): eigene Nachricht bis 15 Min. nach dem Senden ändern ----------
+// ---------- KC-CLUB-BEARBEITEN (1.9.0, Wunsch Hansi – wie WhatsApp): eigene Nachricht ändern ----------
+// 2.635.0 KC-CLUB-BEARBEITEN-JEDERZEIT (Wunschliste #36): ohne Zeitgrenze; Bilder/Dateien bekommen auch nachträglich eine Unterschrift (leer = keine)
 function naBearbeiten(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
   document.getElementById("naMenue")?.remove();
   const f = document.createElement("div"); f.id = "naMenue"; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true");
-  const rest = Math.max(1, Math.round((Date.parse(m.bearbeitbarBis) - Date.now()) / 60000));
-  f.innerHTML = `<div class="blatt-innen na-menue"><h3 style="margin:0">✏️ Nachricht bearbeiten</h3>
+  const rest = Math.max(1, Math.round((Date.parse(m.bearbeitbarBis) - Date.now()) / 60000)), anl = !!m.anlagen?.length;
+  f.innerHTML = `<div class="blatt-innen na-menue"><h3 style="margin:0">✏️ ${anl ? "Unterschrift zum Bild bzw. zur Datei" : "Nachricht bearbeiten"}</h3>
     <textarea id="naBearbText" spellcheck="true" lang="de" autocapitalize="sentences" autocorrect="on" maxlength="4000" style="width:100%;min-height:110px;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--linie);font:inherit;background:var(--karte);color:inherit"></textarea>
-    <p class="hinweis" style="margin:0">Noch ${rest} Min. möglich. Die anderen sehen danach „bearbeitet“ – es kommt keine neue Benachrichtigung.</p>
+    <p class="hinweis" style="margin:0">${rest > 1440 ? "Jederzeit möglich." : `Noch ${rest} Min. möglich.`}${anl ? " Leer lassen = ohne Unterschrift." : ""} Die anderen sehen danach „bearbeitet“ – es kommt keine neue Benachrichtigung.</p>
     <button class="knopf haupt" onclick="naBearbeitenSpeichern('${id}')">💾 Speichern</button>
     <button class="knopf" onclick="document.getElementById('naMenue').remove()">Abbrechen</button></div>`;
   f.onclick = (e) => { if (e.target === f) f.remove(); };
   document.body.appendChild(f);
-  const ta = $("naBearbText"); ta.value = m.text || ""; ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  const ta = $("naBearbText"); ta.value = m.text && m.text !== "📎" ? m.text : ""; ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
 }
 async function naBearbeitenSpeichern(id) {
   const text = $("naBearbText")?.value.trim() || "";
-  if (!text) return melde("Bitte einen Text eingeben – zum Entfernen „Löschen“ benutzen.", true);
+  if (!text && !NA.nachrichten.get(id)?.anlagen?.length) return melde("Bitte einen Text eingeben – zum Entfernen „Löschen“ benutzen.", true);
   try { await api("nachricht_bearbeiten", { id, text }); document.getElementById("naMenue")?.remove(); melde("✏️ Geändert"); chatStand = ""; await chatLaden(false); }
   catch (e) { meldeFehler(e); }
 }

@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.635.0 – 2026-10-25 – Nachrichten und Bildunterschriften jederzeit ändern
+KC-CLUB-BEARBEITEN-JEDERZEIT (Wunschliste #36, Teil 1, Hansi „jederzeit Bildunterschriften ändern wie bei WhatsApp – auch für normale Texte“): Eigene Nachrichten lassen sich ohne Zeitgrenze ändern (vorher 15 Minuten). Bilder und Dateien bekommen im Menü „✏️ Unterschrift hinzufügen“ bzw. „✏️ Unterschrift ändern“ – leer lassen entfernt die Unterschrift. Wie bisher steht „bearbeitet“ daran und es kommt keine neue Benachrichtigung; verschlüsselte 🔒-Texte werden nicht im Klartext bearbeitet. Server 2.635.0.
+
 ## 2.634.0 – 2026-10-25 – Kopfbild kompakter, Wünsche mit Anlagen
 KC-CLUB-KOPF-KOMPAKT (Wunschliste #34, Hansi „das Kopfbild der Startseite mit den LEDs etwas zusammenschieben – zwischen den Bereichen ist Platz“): weniger Rand oben, kleinere Abstände Kopfzeile → Statusleiste (LEDs) → Infofeld, kleinerer Innenrand im Infofeld; der Status „🟢 verfügbar“ steht in einer Zeile (vorher Umbruch). In der erweiterten Ansicht rund 45 Pixel weniger Höhe; Platz für Wimpel/Lichterkette bleibt. KC-CLUB-WUNSCH-ANLAGEN: Bei „Wünsche an Claude“ lassen sich Fotos, Kamera-Bilder und Dateien (PDF usw.) anhängen – beim Eintragen, Ändern und beim Antworten auf Rückfragen; sie erscheinen als Vorschau am Wunsch. Nur Admin. Server 2.634.0, Datenbank: art „wunsch“ + Kopie für Claude.
 
