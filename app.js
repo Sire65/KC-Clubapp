@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.639.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.640.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15430,7 +15430,7 @@ const ZUGANG_AKTIONEN = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -17621,14 +17621,16 @@ async function esTafelNach(wohin, art) {
 const ES_SEG = { 0: "abcdef", 1: "bc", 2: "abdeg", 3: "abcdg", 4: "bcfg", 5: "acdfg", 6: "acdefg", 7: "abc", 8: "abcdefg", 9: "abcdfg" };
 const esTagName = (d) => d.toLocaleDateString("de-DE", { weekday: "long", timeZone: "Europe/Berlin" });
 function esUhrZeigen(f) {
-  const stil = esLies("uhr", "digital");
-  f.innerHTML = `<div class="es-uhr es-uhr-${stil}" id="esUhr"></div>
+  const stil = esLies("uhr", "digital"), modus = wkModus(); // 2.640.0 KC-CLUB-UHR-WECKER: oben Uhr · Wecker · Stoppuhr · Timer
+  f.innerHTML = `<div class="es-leiste wk-modi" role="tablist">${WK_MODI.map(([k, t, lang]) => `<button type="button" class="es-k${k === modus ? " an" : ""}" role="tab" aria-selected="${k === modus}" title="${lang}" onclick="wkModusSetzen('${k}')">${t}</button>`).join("")}</div>
+    <div class="es-uhr es-uhr-${stil}${modus === "uhr" ? "" : " wk-mit"}" id="esUhr"></div>${modus === "uhr" ? "" : `<div class="wk-steuer" id="wkSteuer"></div>`}
     <div class="es-leiste es-uhr-leiste">${ES_UHREN.map(([k, t, lang]) => `<button type="button" class="es-k${k === stil ? " an" : ""}" title="${lang}" aria-label="Uhr: ${lang}" onclick="esUhrStil('${k}')">${t}</button>`).join("")}</div>`;
-  ES.uhr.letzte = ""; ES.uhr.fb = null; esUhrTick(); esStop(); ES.timer = setInterval(() => { if (esSichtbar()) esUhrTick(); }, 250);
+  ES.uhr.letzte = ""; ES.uhr.fb = null; wkSteuerZeigen(); esUhrTick(); esStop(); ES.timer = setInterval(() => { if (esSichtbar()) esUhrTick(); }, modus === "stopp" ? 100 : 250);
 }
 function esUhrStil(k) { esSchreib("uhr", k); esUhrZeigen($("hrFlaeche")); }
 function esUhrTick() {
   const el = $("esUhr"); if (!el) return esStop();
+  if (wkModus() !== "uhr") return wkTick(el); // 2.640.0 KC-CLUB-UHR-WECKER
   const d = new Date(), z = new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23", timeZone: "Europe/Berlin" }).format(d).split(":");
   const stil = esLies("uhr", "digital"), datum = d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" });
   const schluessel = stil + z.join("") + (stil === "bahnhof" ? Math.floor(d.getMilliseconds() / 250) : "");
@@ -17662,6 +17664,187 @@ function esFallblatt(el, oben, unten) { // jede Klappe dreht nur, wenn sich ihr 
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && ES.offen && $("esUhr")) { ES.uhr.letzte = ""; esUhrTick(); } });
 addEventListener("resize", () => { if (ES.offen && $("esUhr")) { ES.uhr.letzte = ""; esUhrTick(); } });
+// ---------- 2.640.0 KC-CLUB-UHR-WECKER (Wunschliste #38, Wunsch Hansi „Wecker, Stoppuhr und Timer in der Uhr oben im Bühnenbereich – ja mit Push“) ----------
+// Oben auf der Uhr-Seite: 🕰️ Uhr · ⏰ Wecker · ⏱️ Stoppuhr · ⏲️ Timer – jeweils im gewählten Uhren-Stil (Digital, Fallblatt, Bahnhof, Klar).
+// Stoppuhr: Start/Pause, Runde, Zurück (mit Zehnteln) – nur auf diesem Gerät. Timer: 1/3/5/10/15 Min. oder eigene Minuten, die letzten 10 s rot.
+// Wecker: Uhrzeit + kurzer Text. Ist es so weit, klingelt die App mit der gewählten Stundenuhr (sonst Glocke) und zeigt „Aus“ und „+1 Min.“ bzw.
+// „💤 5 Min. später“. Ist die App zu, schickt der Server zur Zeit einen Push (Wecker/Timer werden dafür dort gemerkt: nur Zeit, Art, Text).
+// Klingelt die App selbst (sichtbar), wird der Push gleich abbestellt. Läuft etwas, zeigt die Startseite oben ein kleines Feld (z. B. „⏲️ 4:32“).
+const WK_KEY = "kc_club_wecker", WK_MODI = [["uhr", "🕰️ Uhr", "Uhrzeit"], ["wecker", "⏰ Wecker", "Wecker"], ["stopp", "⏱️ Stoppuhr", "Stoppuhr"], ["timer", "⏲️ Timer", "Timer"]];
+const WK_SCHNELL = [1, 3, 5, 10, 15], WK_ROT_MS = 10000, WK_KLINGEL_MS = 120000, WK_SPAET_MS = 90000, WK_SCHLUMMER_MIN = 5;
+const wkLeer = () => ({ wecker: null, timer: null, stopp: { ab: 0, summe: 0, runden: [] } });
+function wkStand() { try { const x = JSON.parse(localStorage.getItem(WK_KEY) || "null"); if (x) return { ...wkLeer(), ...x, stopp: { ...wkLeer().stopp, ...(x.stopp || {}) } }; } catch (e) { /* defekt → leer */ } return wkLeer(); }
+function wkMerken(st) { try { localStorage.setItem(WK_KEY, JSON.stringify(st)); } catch (e) { /* ohne Speicher läuft es nur bis zum Schließen */ } wkChip(); }
+const wkModus = () => { const m = esLies("uhrmodus", "uhr"); return WK_MODI.some(([k]) => k === m) ? m : "uhr"; };
+function wkModusSetzen(m) { esSchreib("uhrmodus", m); esUhrZeigen($("hrFlaeche")); }
+const wkStoppMs = (s) => s.summe + (s.ab ? Date.now() - s.ab : 0);
+const wkRest = (t) => t ? (t.pause != null ? t.pause : t.ende - Date.now()) : 0;
+function wkZeit(ms, zehntel) { // 83400 → „01:23“ (mit Zehnteln „01:23,4“); ab einer Stunde „1:23:20“
+  ms = Math.max(0, ms); const s = zehntel ? Math.floor(ms / 1000) : Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sek = s % 60, z = (n) => String(n).padStart(2, "0");
+  return (h ? `${h}:${z(m)}:${z(sek)}` : `${z(m)}:${z(sek)}`) + (zehntel ? "," + Math.floor(ms / 100) % 10 : "");
+}
+const wkUhrzeit = (ms) => new Date(ms).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+function wkNochText(ms) { const min = Math.max(0, Math.round(ms / 60000)), h = Math.floor(min / 60); return min < 1 ? "gleich" : h ? `in ${h} Std.${min % 60 ? ` ${min % 60} Min.` : ""}` : `in ${min} Min.`; }
+// ----- Anzeige im gewählten Stil -----
+function wkTick(el) {
+  const st = wkStand(), m = wkModus(), stil = esLies("uhr", "digital");
+  let titel = "", haupt = "", unten = "", rot = false, zeiger = null;
+  if (m === "stopp") { const ms = wkStoppMs(st.stopp); titel = "STOPPUHR"; haupt = wkZeit(ms, true); unten = st.stopp.ab ? "läuft" : ms ? "angehalten" : "bereit"; zeiger = ms; }
+  else if (m === "timer") {
+    const t = st.timer, r = wkRest(t); titel = "TIMER"; haupt = wkZeit(t ? r : 0, false); zeiger = t ? r : 0;
+    unten = !t ? "Zeit wählen" : t.pause != null ? "angehalten" : `fertig um ${wkUhrzeit(t.ende)} Uhr`; rot = !!t && t.pause == null && r <= WK_ROT_MS;
+  } else {
+    const w = st.wecker; titel = "WECKER"; haupt = w ? wkUhrzeit(w.um) : "--:--"; unten = w ? `${wkNochText(w.um - Date.now())}${w.text ? " · " + w.text : ""}` : "noch nicht gestellt";
+    zeiger = w ? null : 0;
+  }
+  const schluessel = [stil, m, haupt, unten, rot].join("|"); if (schluessel === ES.uhr.letzte) return; ES.uhr.letzte = schluessel;
+  const groesse = Math.max(10, Math.min(el.clientWidth / 7.5, el.clientHeight / 2.4)); el.style.setProperty("--g", groesse + "px"); el.classList.toggle("wk-rot", rot);
+  const [hz, zehn] = haupt.split(",");
+  if (stil === "digital") {
+    const teil = (c) => /\d/.test(c) ? `<span class="seg-z">${"abcdefg".split("").map((x) => `<i class="seg ${x}${ES_SEG[+c].includes(x) ? " an" : ""}"></i>`).join("")}</span>` : c === ":" ? `<span class="seg-punkt"><i></i><i></i></span>` : `<span class="seg-z wk-strich"></span>`;
+    el.innerHTML = `<div class="seg-datum">${esc(titel)}</div><div class="seg-zeile">${[...hz].map(teil).join("")}${zehn != null ? `<span class="seg-sek">,${zehn}</span>` : ""}</div><div class="seg-datum">${esc(unten.toUpperCase())}</div>`;
+  } else if (stil === "fallblatt") {
+    const kurz = hz.length > 5 ? hz.slice(0, -3) : hz; // ab einer Stunde Std:Min (Fallblatt hat 5 Klappen)
+    esFallblatt(el, ((zehn != null ? titel + " " + zehn : titel) + "          ").slice(0, 10), kurz.padStart(5, " "));
+    if (!el.querySelector(".wk-fb-unten")) el.insertAdjacentHTML("beforeend", `<div class="wk-fb-unten"></div>`); el.querySelector(".wk-fb-unten").textContent = unten;
+  } else if (stil === "bahnhof") {
+    if (!el.querySelector(".wk-bh")) el.innerHTML = `<svg viewBox="-110 -110 220 220" class="bh-svg wk-bh" role="img" aria-label="${esc(titel)}"><circle r="104" class="bh-rand"/><circle r="98" class="bh-blatt"/>
+      ${Array.from({ length: 60 }, (_, i) => `<rect x="${i % 5 ? -1.2 : -3.2}" y="-94" width="${i % 5 ? 2.4 : 6.4}" height="${i % 5 ? 7 : 20}" transform="rotate(${i * 6})" class="bh-strich"/>`).join("")}
+      <rect id="wkH" x="-5" y="-56" width="10" height="70" class="bh-zeiger"/><rect id="wkM" x="-3.6" y="-86" width="7.2" height="102" class="bh-zeiger"/>
+      <g id="wkS"><rect x="-1.3" y="-64" width="2.6" height="92" class="bh-sek"/><circle cy="-62" r="9" class="bh-sek"/></g><circle r="3" class="bh-mitte"/>
+      <text y="-38" text-anchor="middle" class="wk-bh-titel"></text><text y="58" text-anchor="middle" class="wk-bh-zahl"></text></svg><div class="bh-datum" id="wkBhText"></div>`;
+    // Stoppuhr/Timer: großer Zeiger = Minuten, roter = Sekunden; Wecker: Zeiger zeigen die Weckzeit
+    const w = st.wecker, d = zeiger == null && w ? new Date(w.um) : null, sek = zeiger == null ? 0 : zeiger / 1000;
+    const mi = d ? d.getMinutes() : sek / 60, h = d ? (d.getHours() % 12) + d.getMinutes() / 60 : sek / 3600;
+    el.querySelector("#wkH").setAttribute("transform", `rotate(${h * 30})`); el.querySelector("#wkM").setAttribute("transform", `rotate(${mi * 6})`);
+    el.querySelector("#wkS").setAttribute("transform", `rotate(${d ? 0 : (sek % 60) * 6})`); el.querySelector("#wkS").style.display = d ? "none" : "";
+    el.querySelector(".wk-bh-titel").textContent = titel; el.querySelector(".wk-bh-zahl").textContent = haupt; el.querySelector("#wkBhText").textContent = unten;
+  } else {
+    el.innerHTML = `<div class="kl-datum">${esc(titel)}</div><div class="kl-zeit">${esc(hz)}${zehn != null ? `<small>,${zehn}</small>` : ""}</div><div class="kl-datum">${esc(unten)}</div>`;
+  }
+}
+// ----- Knöpfe unter der Anzeige -----
+function wkSteuerZeigen() {
+  const f = $("wkSteuer"); if (!f) return; const st = wkStand(), m = wkModus();
+  if (m === "stopp") {
+    const s = st.stopp, ms = wkStoppMs(s);
+    f.innerHTML = `<div class="wk-reihe"><button type="button" class="es-k es-haupt wk-gross" onclick="wkStopp('los')">${s.ab ? "⏸️ Pause" : ms ? "▶️ Weiter" : "▶️ Start"}</button>
+      <button type="button" class="es-k wk-gross" onclick="wkStopp('runde')"${s.ab ? "" : " disabled"}>🏁 Runde</button><button type="button" class="es-k wk-gross" onclick="wkStopp('null')"${ms ? "" : " disabled"}>↺ Zurück</button></div>
+      ${s.runden.length ? `<ol class="wk-runden">${s.runden.map((r, i) => `<li><span>Runde ${i + 1}</span><b>${wkZeit(r - (s.runden[i - 1] || 0), true)}</b><em>${wkZeit(r, true)}</em></li>`).reverse().join("")}</ol>` : ""}`;
+  } else if (m === "timer") {
+    const t = st.timer;
+    f.innerHTML = t ? `<div class="wk-reihe"><button type="button" class="es-k es-haupt wk-gross" onclick="wkTimer('pause')">${t.pause != null ? "▶️ Weiter" : "⏸️ Pause"}</button>
+      <button type="button" class="es-k wk-gross" onclick="wkTimer('plus')">+1 Min.</button><button type="button" class="es-k wk-gross" onclick="wkTimer('stopp')">⏹️ Stopp</button></div>`
+      : `<div class="wk-reihe">${WK_SCHNELL.map((n) => `<button type="button" class="es-k wk-gross" onclick="wkTimerStart(${n})">${n} Min.</button>`).join("")}</div>
+      <div class="wk-reihe"><label class="wk-feld">eigene Zeit <input type="number" id="wkEigen" inputmode="numeric" min="1" max="600" placeholder="Min."></label><button type="button" class="es-k es-haupt wk-gross" onclick="wkTimerStart(+$('wkEigen').value)">▶️ Start</button></div>`;
+  } else {
+    const w = st.wecker, vor = new Date(Date.now() + 3600000), z = (n) => String(n).padStart(2, "0");
+    f.innerHTML = w ? `<div class="wk-reihe"><button type="button" class="es-k wk-gross" onclick="wkWeckerAus()">🔕 Wecker ausschalten</button></div>`
+      : `<div class="wk-reihe"><label class="wk-feld">Uhrzeit <input type="time" id="wkUm" value="${z(vor.getHours())}:00"></label>
+        <label class="wk-feld wk-text">Wofür? <input type="text" id="wkText" maxlength="120" placeholder="z. B. Kuchen aus dem Ofen"></label></div>
+      <div class="wk-reihe"><button type="button" class="es-k es-haupt wk-gross" onclick="wkWeckerStellen()">⏰ Wecker stellen</button></div>`;
+  }  wkPlatz();
+}
+function wkPlatz() { // Anzeige zwischen die Leisten setzen – die Leisten brechen je nach Breite ein- oder zweizeilig um
+  const f = $("hrFlaeche"), st = $("wkSteuer"), u = $("esUhr"); if (!f || !st || !u) return;
+  const oben = f.querySelector(".wk-modi")?.offsetHeight || 0, unten = f.querySelector(".es-uhr-leiste")?.offsetHeight || 0;
+  st.style.bottom = unten + 12 + "px"; u.style.paddingTop = oben + 12 + "px"; u.style.paddingBottom = unten + st.offsetHeight + 18 + "px"; ES.uhr.letzte = "";
+}
+addEventListener("resize", () => { if (ES.offen && $("wkSteuer")) wkPlatz(); });
+function wkNeuZeichnen() { ES.uhr.letzte = ""; wkSteuerZeigen(); const el = $("esUhr"); if (el && wkModus() !== "uhr") wkTick(el); }
+function wkTon() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); } catch (e) { /* ohne Ton klingelt nur das Bild */ } }
+function wkStopp(was) {
+  const st = wkStand(), s = st.stopp;
+  if (was === "los") { if (s.ab) { s.summe += Date.now() - s.ab; s.ab = 0; } else s.ab = Date.now(); }
+  else if (was === "runde" && s.ab) s.runden = [...s.runden, wkStoppMs(s)].slice(-50);
+  else if (was === "null") st.stopp = wkLeer().stopp;
+  wkMerken(st); wkNeuZeichnen();
+}
+// ----- Server-Push (nur Wecker und Timer): stellen, ersetzen, abbestellen – Fehler halten die App nicht auf -----
+async function wkServer(art, um, text, altId) {
+  try { const r = await api("wecker_setzen", { art, um: new Date(um).toISOString(), text: text || "", ...(altId ? { id: altId } : {}) }, { still: true }); return r?.id || null; }
+  catch (e) { melde("Hinweis: Der Push bei geschlossener App konnte gerade nicht gestellt werden – in der offenen App klingelt es trotzdem.", true); return null; }
+}
+function wkServerWeg(id) { if (id) api("wecker_loeschen", { id }, { still: true }).catch(() => {}); }
+async function wkTimerStart(min) {
+  min = Math.round(+min); if (!(min >= 1 && min <= 600)) return melde("Bitte 1 bis 600 Minuten eingeben.", true);
+  wkTon(); const st = wkStand(), ende = Date.now() + min * 60000;
+  wkServerWeg(st.timer?.sid); st.timer = { ende, dauer: min * 60000, pause: null, sid: null }; wkMerken(st); wkNeuZeichnen();
+  const sid = await wkServer("timer", ende, `${min} Min. sind um.`); const n = wkStand(); if (n.timer && n.timer.ende === ende) { n.timer.sid = sid; wkMerken(n); } else wkServerWeg(sid);
+}
+async function wkTimer(was) {
+  const st = wkStand(), t = st.timer; if (!t) return wkNeuZeichnen(); wkTon();
+  if (was === "stopp") { wkServerWeg(t.sid); st.timer = null; wkMerken(st); return wkNeuZeichnen(); }
+  if (was === "pause" && t.pause == null) { t.pause = Math.max(0, t.ende - Date.now()); wkServerWeg(t.sid); t.sid = null; wkMerken(st); return wkNeuZeichnen(); }
+  const alt = t.sid; t.ende = (t.pause != null ? Date.now() + t.pause : t.ende) + (was === "plus" ? 60000 : 0); t.pause = null; t.sid = null; wkMerken(st); wkNeuZeichnen();
+  const ende = t.ende, sid = await wkServer("timer", ende, "Dein Timer ist abgelaufen.", alt); const n = wkStand(); if (n.timer && n.timer.ende === ende) { n.timer.sid = sid; wkMerken(n); } else wkServerWeg(sid);
+}
+async function wkWeckerStellen(um, text) {
+  if (um == null) {
+    const [h, m] = String($("wkUm")?.value || "").split(":").map(Number); if (!Number.isFinite(h) || !Number.isFinite(m)) return melde("Bitte eine Uhrzeit wählen.", true);
+    const d = new Date(); d.setHours(h, m, 0, 0); if (d.getTime() <= Date.now() + 5000) d.setDate(d.getDate() + 1); // schon vorbei → morgen
+    um = d.getTime(); text = String($("wkText")?.value || "").trim().slice(0, 120);
+  }
+  wkTon(); const st = wkStand(); wkServerWeg(st.wecker?.sid); st.wecker = { um, text: text || "", sid: null }; wkMerken(st); wkNeuZeichnen();
+  melde(`⏰ Wecker gestellt: ${new Date(um).toLocaleDateString("de-DE", { weekday: "long" })}, ${wkUhrzeit(um)} Uhr (${wkNochText(um - Date.now())})`);
+  const sid = await wkServer("wecker", um, text); const n = wkStand(); if (n.wecker && n.wecker.um === um) { n.wecker.sid = sid; wkMerken(n); } else wkServerWeg(sid);
+}
+function wkWeckerAus() { const st = wkStand(); wkServerWeg(st.wecker?.sid); st.wecker = null; wkMerken(st); wkNeuZeichnen(); melde("🔕 Wecker ausgeschaltet"); }
+// ----- Klingeln: Wache jede Sekunde (auch außerhalb der Uhr), Ton mit der gewählten Stundenuhr -----
+const WKK = { art: "", t: 0, bis: 0, i: 0 };
+function wkWache() {
+  const st = wkStand(), jetzt = Date.now();
+  const timerFaellig = st.timer && st.timer.pause == null && st.timer.ende <= jetzt, weckerFaellig = st.wecker && st.wecker.um <= jetzt;
+  if ((timerFaellig || weckerFaellig) && !WKK.art && !document.hidden) wkKlingeln(timerFaellig ? "timer" : "wecker");
+  wkChip();
+  if (ES.offen && $("esUhr") && wkModus() !== "uhr" && esSichtbar() && !document.querySelector("#wkSteuer :focus")) { const z = [!!st.timer, st.timer?.pause != null, !!st.wecker].join(); if (z !== WKK.zustand) { WKK.zustand = z; wkSteuerZeigen(); } }
+}
+function wkKlingeln(art) {
+  const st = wkStand(), timer = art === "timer", e = timer ? st.timer : st.wecker; if (!e) return;
+  const spaet = Date.now() - (timer ? e.ende : e.um) > WK_SPAET_MS;
+  wkServerWeg(e.sid); // App klingelt selbst → kein Push mehr hinterher
+  if (timer) st.timer = null; else st.wecker = null; wkMerken(st); wkNeuZeichnen();
+  if (spaet) return melde(timer ? "⏲️ Dein Timer ist schon abgelaufen." : `⏰ Dein Wecker für ${wkUhrzeit(e.um)} Uhr ist schon vorbei${e.text ? " – " + e.text : ""}.`);
+  WKK.art = art; WKK.bis = Date.now() + WK_KLINGEL_MS; WKK.i = 0; WKK.text = e.text || ""; WKK.um = timer ? e.ende : e.um;
+  const f = blattAuf("wkKlingel", `<div class="wk-klingel"><div class="wk-glocke" aria-hidden="true">${timer ? "⏲️" : "⏰"}</div>
+    <h3 style="margin:4px 0">${timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${wkUhrzeit(e.um)} Uhr`}</h3>${e.text && !timer ? `<p style="margin:0 0 10px">${esc(e.text)}</p>` : ""}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button type="button" class="knopf haupt" data-w="aus">🔕 Aus</button>
+      <button type="button" class="knopf" data-w="mehr">${timer ? "+1 Min." : `💤 ${WK_SCHLUMMER_MIN} Min. später`}</button></div></div>`);
+  f.onclick = null; // nur mit „Aus“ oder „später“ – daneben tippen schließt nicht aus Versehen
+  f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => wkKlingelAus(b.dataset.w === "mehr"));
+  wkTon(); wkSchlag();
+}
+function wkSchlag() {
+  if (!WKK.art || !$("wkKlingel")) return wkKlingelAus(false); // Fenster anders geschlossen (Zurück-Taste) → still aus
+  if (Date.now() > WKK.bis) return wkKlingelAus(false, true);
+  try { navigator.vibrate?.([400, 200, 400]); } catch (e) { /* kein Vibrieren */ }
+  let dauer = 2600;
+  try {
+    if (audio && audio.state !== "running") audio.resume?.();
+    if (audio && audio.state === "running") {
+      audio.__zuletzt = Date.now(); const U = suUhr(suFuerStunde(new Date().getHours())), t = audio.currentTime + 0.05;
+      WKK.i++; if (U && WKK.i === 1) suAufnahmenLaden(U);
+      if (U) { U.schlag(t, WKK.i); dauer = Math.max(1200, Math.min(4000, U.takt(WKK.i))); } else kkTon(t);
+    }
+  } catch (e) { /* Ton geht nicht – Bild und Vibration bleiben */ }
+  clearTimeout(WKK.t); WKK.t = setTimeout(wkSchlag, dauer);
+}
+function wkKlingelAus(mehr, vonSelbst) {
+  const art = WKK.art, text = WKK.text; clearTimeout(WKK.t); WKK.art = ""; $("wkKlingel")?.remove(); try { navigator.vibrate?.(0); } catch (e) { /* egal */ }
+  if (!art) return;
+  if (mehr) { if (art === "timer") wkTimerStart(1); else wkWeckerStellen(Date.now() + WK_SCHLUMMER_MIN * 60000, text); }
+  else if (vonSelbst) melde(art === "timer" ? "⏲️ Timer abgelaufen (Klingeln nach 2 Min. beendet)." : "⏰ Wecker hat 2 Min. geklingelt.");
+}
+// ----- kleines Feld oben auf der Startseite: was gerade läuft (antippen → zur Uhr) -----
+function wkChip() {
+  const c = $("wkChip"); if (!c) return; const st = wkStand(), t = st.timer, w = st.wecker, s = st.stopp;
+  const text = WKK.art ? (WKK.art === "timer" ? "⏲️ Zeit ist um!" : "⏰ Wecker!") : t ? `⏲️ ${t.pause != null ? "⏸ " : ""}${wkZeit(wkRest(t), false)}` : w ? `⏰ ${wkUhrzeit(w.um)}` : s.ab ? `⏱️ ${wkZeit(wkStoppMs(s), false)}` : "";
+  const modus = t ? "timer" : w ? "wecker" : "stopp";
+  if (c.textContent !== text) c.textContent = text; c.dataset.modus = modus; c.classList.toggle("versteckt", !text); c.classList.toggle("wk-rot", !!t && t.pause == null && wkRest(t) <= WK_ROT_MS || !!WKK.art);
+}
+function wkChipTippen() { if (WKK.art && $("wkKlingel")) return; wkChip(); const c = $("wkChip"); if (c && !c.classList.contains("versteckt")) esSchreib("uhrmodus", c.dataset.modus); esOeffnen("uhr"); }
+setInterval(wkWache, 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) wkWache(); });
 // ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0, Wunsch Hansi): 🎭 Bühne für Bewegung auf der Rückseite des Kopfes ----------
 // Twinkey (mit Schweißstirnband statt Kochmütze) turnt auf der Bühne vor – im Sitzen, im Stehen oder mit Küchenhelfern (großer Schneebesen,
 // Kochlöffel, Nudelholz, Wasserflaschen, Topfdeckel, Geschirrtuch). Dazu Musik (im Handy erzeugt, keine Datei, kein Internet) und Ansagen
@@ -27020,6 +27203,7 @@ function hashSprung(h) {
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
+    else if (h === "#wecker") wkChipTippen(); // 2.640.0 KC-CLUB-UHR-WECKER: aus dem Push „Zeit ist um“ / „Wecker“
     else if (h === "#anruf") anrufZurueck(); // KC-CLUB-ANRUF-ANZEIGE (2.237.0): aus der Mitteilung in der Statusleiste
     else if (h === "#dienstgruss") dgZeigen(true); // KC-CLUB-DIENST-GRUSS (2.224.0): aus der Push am Morgen
     else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher

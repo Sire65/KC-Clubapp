@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.640.0 – 2026-10-25 – Uhr: Wecker, Stoppuhr, Timer (KC-CLUB-UHR-WECKER, Wunschliste #38)
+Auf der Uhr-Seite der Kopf-Rückseite oben die Wahl 🕰️ Uhr · ⏰ Wecker · ⏱️ Stoppuhr · ⏲️ Timer – jeweils im gewählten Uhren-Stil. Stoppuhr mit Runden und Zehnteln; Timer mit 1/3/5/10/15 Min. oder eigener Zeit, letzte 10 s rot; Wecker mit Uhrzeit und Text. Klingeln mit der gewählten Stundenuhr (Aus, +1 Min., 💤 5 Min. später). Ist die App zu, kommt ein Push (neue Tabelle kc_club_wecker, Minuten-Zeitplan erweitert). Startseite zeigt oben, was läuft.
+
 ## 2.639.0 – 2026-10-25 – Clubabend Live: Auswahl bei mehreren
 KC-CLUB-CLUBABEND-AUSWAHL (Wunschliste #42, Hansi „Clubabend-Auswahl, wenn mehrere da sind, im Knopf Clubabend Live“): Gibt es mehr als einen passenden Clubabend, fragt „🍽️ Clubabend Live“ zuerst „Welcher Clubabend?“ – der heutige steht oben mit ⭐; danach öffnet sich das gewohnte Fenster für genau diesen Abend (auch die 20-Sekunden-Aktualisierung bleibt bei ihm). Gibt es nur einen, öffnet er sich sofort wie bisher. Mitglieder sehen weiter nur den Abend selbst, die Vorschau bis 60 Tage gibt es für die Clubleitung. Server 2.639.0 (prüft, dass nur ein erlaubter Abend geöffnet wird).
 

@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.639.0";
+const SERVER_VERSION = "2.640.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3649,7 +3649,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
     "unterhaltungen", "unterhaltung", "unterhaltung_stand", "tippen_stand", "tippen", "nachricht_senden", "nachricht_details", "einzelchat_finden", "express_stand", "express_angezeigt",
-    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
+    "express_antwort", "startnachricht_bestaetigen", "stadt_woche", "ferien", "geplant_speichern", "geplant_loeschen", "geplant_jetzt", "geplant_abrufen", "wecker_setzen", "wecker_loeschen", "reaktion_setzen", "nachricht_loeschen", "nachricht_zurueckholen",
     "chat_selbstloeschen", "link_vorschau", "unterstuetzung_meine", "unterstuetzung_senden", "nachricht_bearbeiten", "nachricht_merken", "gemerkte_nachrichten", "chat_umfrage_stimmen", "nachricht_ausblenden",
     "unterhaltung_ausblenden", "unterhaltung_archivieren", "unterhaltung_leeren", "gruppe_verlassen", "anlage_hochladen", "anlage_url",
     "einmal_foto_ansehen", "meine_nachrichten_statistik", "mf_antwort", "mf_gelesen", "sos_kontakte", "sos_ort", "notfall_setzen", "spiele_liste",
@@ -7273,6 +7273,30 @@ async function geplantFaelligLauf() {
   }
   return z;
 }
+// 2.640.0 KC-CLUB-UHR-WECKER (Wunschliste #38): Wecker/Timer aus der Uhr – klingelt in der App; ist die App zu, kommt hier der Push.
+// Erst belegen (status „fertig“), dann senden – zwei Läufe gleichzeitig senden nie doppelt. Den Wecker hat man selbst gestellt, er kommt
+// daher auch in der eigenen Ruhezeit. Über 2 Stunden zu spät (Zeitplaner war aus) = „verpasst“, kein Push mehr mitten in der Nacht.
+const WECKER_MAX = 10, WECKER_TAGE = 7, WECKER_SPAET_MS = 2 * 3600000;
+async function weckerFaelligLauf() {
+  const z = { gesendet: 0, fehler: 0, verpasst: 0 };
+  const { data: faellig } = await db.from("kc_club_wecker").select("id,person_id,art,faellig_um,text").eq("status", "offen").lte("faellig_um", jetzt()).order("faellig_um").limit(50);
+  for (const w of faellig ?? []) {
+    const spaet = Date.now() - Date.parse(w.faellig_um) > WECKER_SPAET_MS;
+    const { data: belegt } = await db.from("kc_club_wecker").update({ status: spaet ? "verpasst" : "fertig", gesendet_am: jetzt() }).eq("id", w.id).eq("status", "offen").select("id");
+    if (!belegt?.length || spaet) { if (belegt?.length) z.verpasst++; continue; }
+    try {
+      const timer = w.art === "timer", um = fZeit.format(new Date(w.faellig_um));
+      await sendenGewaehlt("club_erinnerung", [w.person_id], ["push"], {
+        titel: timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${um} Uhr`, kurz: txt(w.text, 120) || (timer ? "Dein Timer ist abgelaufen." : "Dein Wecker klingelt."),
+        url: `${APP_URL}#wecker`, wichtigkeit: "hoch" }, `club-wecker:${w.id}`, { notfall: true });
+      z.gesendet++;
+    } catch (e) {
+      await db.from("kc_club_wecker").update({ status: "fehler" }).eq("id", w.id);
+      z.fehler++;
+    }
+  }
+  return z;
+}
 
 // KC-CLUB-PRIVATTERMIN (1.0.0): persönliche Einträge – immer nur die eigenen (person_id = ich)
 async function privatListe(ich: Ich, von: string, bis?: string) {
@@ -7488,7 +7512,8 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
       const lauf = await geplantFaelligLauf();
       const warteschlange = await mailWarteschlange().catch((e) => ({ fehler: String(e) })); // 2.520.0 KC-COMM-WARTEN
-      return json({ ok: true, ...lauf, warteschlange });
+      const wecker = await weckerFaelligLauf().catch((e) => ({ fehler: String(e) })); // 2.640.0 KC-CLUB-UHR-WECKER
+      return json({ ok: true, ...lauf, warteschlange, wecker });
     }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
@@ -11482,6 +11507,27 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data } = await db.from("kc_club_geplant").update({ status: "geloescht", geaendert_am: jetzt() }).eq("id", String(p.id || "")).eq("person_id", ich.person_id).eq("status", "offen").select("id");
         if (!data?.length) throw new Fehler("Diese geplante Nachricht gibt es nicht mehr.", 404);
         await protokoll(ich.person_id, "geplant_geloescht", { id: data[0].id });
+        return json({ ok: true });
+      }
+      // ----- 2.640.0 KC-CLUB-UHR-WECKER: Wecker/Timer für den Push stellen bzw. abstellen – immer nur die eigenen -----
+      case "wecker_setzen": {
+        const um = new Date(String(p.um || "")), art = p.art === "timer" ? "timer" : "wecker";
+        if (isNaN(um.getTime())) throw new Fehler("Bitte eine Zeit wählen.");
+        if (um.getTime() < Date.now() + 5000) throw new Fehler("Die Zeit liegt schon in der Vergangenheit.");
+        if (um.getTime() > Date.now() + WECKER_TAGE * 86400000) throw new Fehler(`Höchstens ${WECKER_TAGE} Tage im Voraus.`);
+        const text = txt(p.text, 120);
+        if (p.id) { // ersetzt den eigenen (z. B. „5 Min. später“, „+1 Min.“, Pause → weiter)
+          await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("id", String(p.id)).eq("person_id", ich.person_id).eq("status", "offen");
+        }
+        const { count } = await db.from("kc_club_wecker").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("status", "offen");
+        if ((count ?? 0) >= WECKER_MAX) throw new Fehler(`Höchstens ${WECKER_MAX} Wecker und Timer gleichzeitig.`);
+        const { data: w, error } = await db.from("kc_club_wecker").insert({ person_id: ich.person_id, art, faellig_um: um.toISOString(), text }).select("id").single();
+        if (error || !w) throw new Fehler("Konnte nicht gestellt werden.", 500);
+        return json({ ok: true, id: w.id });
+      }
+      case "wecker_loeschen": {
+        const id = String(p.id || "");
+        if (/^[0-9a-f-]{36}$/i.test(id)) await db.from("kc_club_wecker").update({ status: "geloescht" }).eq("id", id).eq("person_id", ich.person_id).eq("status", "offen");
         return json({ ok: true });
       }
       case "geplant_jetzt": {
