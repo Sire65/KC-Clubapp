@@ -7378,6 +7378,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /<div class="ca-legende">/, "Legende mit Zahlen");
   assert.match(html, /\.ca-leute \.ca-amp\.of \{ background: var\(--rotbg\); \}/, "rot hinterlegt");
 }
+// 2.645.0 KC-CLUB-SIMJUE-ORGEL: Sim-Jü-Orgel nur bis Di 27.10.2026 0 Uhr, Ton mit Nennung
+{
+  assert.match(programm, /const SJ_BIS = Date\.parse\("2026-10-27T00:00:00\+01:00"\)/, "nur bis Dienstag 0 Uhr");
+  assert.match(programm, /if \(sjAn\(\)\) add\(\{ id: "simjue"/, "Punkt im Info-Laufband");
+  assert.match(programm, /SJ_TON = \{ datei: "simjue-orgel\.mp3", was: "„An der schönen blauen Donau“ \(Johann Strauss, 1866, gemeinfrei\)/, "Ton gemeinfrei mit Nennung");
+  assert.match(programm, /const zu = \(\) => \{ sjStopp\(\); f\.remove\(\); \}/, "Musik stoppt beim Schließen");
+  assert.ok(fs.existsSync(new URL("../simjue-orgel.webp", import.meta.url)) && fs.existsSync(new URL("../simjue-orgel.mp3", import.meta.url)), "Foto und Ton liegen bei");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

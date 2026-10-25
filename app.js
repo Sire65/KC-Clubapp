@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.644.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.645.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27140,6 +27140,7 @@ function ilMeldungen() {
     if (c?.offen && c.meins === "rueckfrage") add({ id: "clubjahr_rueck:" + c.jahr, stufe: "rot", sym: "📸", t: "Rückfrage zu deinem Clubmoment", u: "Die Clubleitung hat eine Frage – bitte ansehen", auf: "cjOeffnen()" });
     else if (c?.offen && !c.meins) add({ id: "clubjahr:" + c.jahr, stufe: "gold", sym: "📸", t: `Unser Clubjahr ${c.jahr}: dein schönster Clubmoment`, u: `Ein Foto und ein, zwei Sätze – bis ${fTagDe(c.ende)}`, auf: "cjOeffnen()" });
     if (c && ICH?.vorstand && c.pruefen > 0) add({ id: "clubjahr_pruefen:" + c.jahr, stufe: "orange", sym: "📖", t: c.pruefen === 1 ? "Clubjahr: 1 Clubmoment wartet auf Freigabe" : `Clubjahr: ${c.pruefen} Clubmomente warten auf Freigabe`, u: "Ansehen und freigeben", auf: "cjOeffnen()" }); }
+  if (sjAn()) add({ id: "simjue", stufe: "gold", sym: "🎡", t: "Sim-Jü: die Orgel von Schäfer", u: "Ruth & Voigt, Anno 1904 – antippen, ansehen und hören", auf: "sjOeffnen()" }); // 2.645.0 KC-CLUB-SIMJUE-ORGEL
   if (caHeute()) add({ id: "clubabend:" + t.id, stufe: "gold", sym: "🍽️", t: `Heute Clubabend${t.beginn ? " um " + fZeit.format(new Date(t.beginn)) + " Uhr" : ""}`, u: "Tagesordnung, wer da ist, Fotos des Abends", auf: "caOeffnen()" }); // 2.569.0 KC-CLUB-CLUBABEND
   // 2.463.0 KC-CLUB-THEMEN-LAUFBAND (Wunschliste #22): vor der nächsten Sitzung zum Abstimmen über die Themen bzw. Einreichen auffordern
   const th = INIT?.themenNaechste;
@@ -33291,6 +33292,29 @@ function eingabe(text, wert = "", opt = {}) {
     feld.addEventListener("keydown", (e) => { if (e.key === "Enter" && feld.tagName === "INPUT") zu(feld.value); if (e.key === "Escape") { e.preventDefault(); zu(null); } }); // 2.1.1: nur dieses Fenster schließen
     setTimeout(() => { feld.focus(); feld.select?.(); }, 50);
   });
+}
+// ---------- 2.645.0 KC-CLUB-SIMJUE-ORGEL (Wunsch Hansi 25.10.: „Bild von einer Orgel von Sim-Jü in die Club-App – nur bis Dienstag 0 Uhr, am besten mit Ton“)
+// Nur bis Di 27.10.2026, 0 Uhr deutscher Zeit: ein Punkt im Info-Laufband öffnet Foto + Orgelmusik. Ton wird erst beim Antippen geladen.
+const SJ_BIS = Date.parse("2026-10-27T00:00:00+01:00"), SJ_TON = { datei: "simjue-orgel.mp3", was: "„An der schönen blauen Donau“ (Johann Strauss, 1866, gemeinfrei) im Klang einer Kirmesorgel – für die Club-App nachgebaut" };
+const sjAn = () => Date.now() < SJ_BIS;
+let sjAudio = null;
+function sjStopp() { if (sjAudio) { sjAudio.pause(); sjAudio = null; } $("sjKnopf") && ($("sjKnopf").textContent = "▶️ Orgel hören"); }
+function sjOeffnen() {
+  if (!sjAn()) return melde("🎡 Sim-Jü ist vorbei – bis zum nächsten Jahr!");
+  const f = blattAuf("sjBlatt", `<h3 style="margin:0 0 6px">🎡 Sim-Jü in Werne</h3>
+    <img src="simjue-orgel.webp" alt="Die Orgel von H. Schäfer auf Sim-Jü: Ruth & Voigt, Anno 1904" style="width:100%;border-radius:12px;display:block">
+    <p style="margin:8px 0">Die prächtige Konzertorgel von <b>H. Schäfer</b> – gebaut von <b>Ruth & Voigt, Anno 1904</b>. Mit Pauke, Becken, Glockenspiel und den kleinen Musikanten-Figuren. Viel Spaß auf der Kirmes!</p>
+    <button type="button" class="knopf haupt" id="sjKnopf">▶️ Orgel hören</button>
+    <p class="hinweis" style="margin:8px 0 0;font-size:.78rem">Musik: ${esc(SJ_TON.was)}. Foto: Hansi.</p>
+    <button type="button" class="knopf" id="sjZu" style="margin-top:8px">Schließen</button>`);
+  const zu = () => { sjStopp(); f.remove(); };
+  f.querySelector("#sjZu").onclick = zu; f.onclick = (e) => { if (e.target === f) zu(); };
+  $("sjKnopf").onclick = () => {
+    if (sjAudio) return sjStopp();
+    sjAudio = new Audio(SJ_TON.datei); sjAudio.volume = 0.8;
+    sjAudio.onended = sjStopp; sjAudio.play().then(() => ($("sjKnopf").textContent = "⏸️ Anhalten")).catch(() => { sjStopp(); melde("🔇 Der Ton ließ sich nicht abspielen"); });
+    const wache = setInterval(() => { if (!$("sjBlatt") || document.hidden) { clearInterval(wache); sjStopp(); } else if (!sjAudio) clearInterval(wache); }, 1000); // Blatt zu oder App weg → Musik aus
+  };
 }
 function blattAuf(id, html) {
   document.getElementById(id)?.remove();
