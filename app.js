@@ -23928,17 +23928,23 @@ const SCHATTEN = "kc_club_schatten";
 const SCHT_STAERKE = { leicht: ["🌤️ Leicht", 3, 8, .18], mittel: ["⛅ Mittel", 6, 16, .3], kraeftig: ["🌥️ Kräftig", 10, 24, .45], sehr: ["🌑 Sehr kräftig", 14, 32, .62] };
 const SCHT_FARBEN = { auto: ["Automatisch (passt hell und dunkel)", ""], schwarz: ["Schwarz", "#000000"], braun: ["Braun", "#5a321e"], rot: ["Weinrot", "#8b1a2b"], blau: ["Blau", "#1d4e89"], gruen: ["Grün", "#2e7d32"], gold: ["Gold", "#c99700"] };
 const SCHT_POS = { unten: ["⬇️ Unten", 0, 1], rechts: ["↘️ Unten rechts", .75, .75], links: ["↙️ Unten links", -.75, .75], oben: ["⬆️ Oben", 0, -1], rundum: ["⭕ Rundum (Leuchten)", 0, 0] };
+const SCHT_KONTRAST = { aus: ["Aus – Schatten wie am Tag"], normal: ["🌙 Normal – heller Schatten und feine Lichtkante"], stark: ["🌟 Stark – deutliches Leuchten und helle Kante"] };
 function schattenStand() {
   try { const j = JSON.parse(localStorage.getItem(SCHATTEN) || "{}");
-    return { an: !!j.an, staerke: SCHT_STAERKE[j.staerke] ? j.staerke : "mittel", farbe: SCHT_FARBEN[j.farbe] || /^#[0-9a-f]{6}$/i.test(j.farbe || "") ? j.farbe : "auto", pos: SCHT_POS[j.pos] ? j.pos : "unten" };
-  } catch { return { an: false, staerke: "mittel", farbe: "auto", pos: "unten" }; }
+    return { an: !!j.an, staerke: SCHT_STAERKE[j.staerke] ? j.staerke : "mittel", farbe: SCHT_FARBEN[j.farbe] || /^#[0-9a-f]{6}$/i.test(j.farbe || "") ? j.farbe : "auto", pos: SCHT_POS[j.pos] ? j.pos : "unten", kontrast: SCHT_KONTRAST[j.kontrast] ? j.kontrast : "normal" };
+  } catch { return { an: false, staerke: "mittel", farbe: "auto", pos: "unten", kontrast: "normal" }; }
 }
 function schattenAnwenden() {
   const st = schattenStand(), [, o, b, a] = SCHT_STAERKE[st.staerke], [, dx, dy] = SCHT_POS[st.pos], r = document.documentElement;
-  const hex = SCHT_FARBEN[st.farbe] ? SCHT_FARBEN[st.farbe][1] : st.farbe;
-  r.style.setProperty("--sch-rgb", hex ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ") : "var(--sch-auto)");
-  const box = (f) => `${Math.round(dx * o * f)}px ${Math.round(dy * o * f)}px ${Math.round(b * f)}px ${st.pos === "rundum" ? Math.round(o * f / 3) : 0}px rgba(var(--sch-rgb), ${a})`;
-  r.style.setProperty("--sch-box", box(1)); r.style.setProperty("--sch-box-gross", box(1.6)); r.classList.toggle("sch-an", st.an);
+  const hex = SCHT_FARBEN[st.farbe] ? SCHT_FARBEN[st.farbe][1] : st.farbe, rgb = hex ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) : null;
+  r.style.setProperty("--sch-rgb", rgb ? rgb.join(", ") : "var(--sch-auto)");
+  const box = (f, farbe, alpha) => `${Math.round(dx * o * f)}px ${Math.round(dy * o * f)}px ${Math.round(b * f)}px ${st.pos === "rundum" ? Math.round(o * f / 3) : 0}px rgba(${farbe}, ${alpha})`;
+  // 2.657.0 Hinweis Hansi „Kontrast, wenn Nacht eingestellt ist“: auf dunklem Grund ist ein dunkler Schatten unsichtbar – nachts heller (dunkle Farben
+  // zur Hälfte mit Weiß gemischt, „Automatisch“ warmweiß) und mit feiner Lichtkante; „Aus“ = wie am Tag
+  const hell = rgb ? (rgb[0] * .3 + rgb[1] * .59 + rgb[2] * .11) / 255 : 0, nachtRgb = !rgb ? "255, 236, 220" : (hell < .55 ? rgb.map((x) => Math.round(x + (255 - x) * .5)) : rgb).join(", ");
+  const k = { normal: [.55, .12], stark: [.85, .28] }[st.kontrast], nacht = (f) => k ? `${box(f, nachtRgb, +(a * k[0]).toFixed(2))}, 0 0 0 1px rgba(255, 255, 255, ${k[1]})` : box(f, "var(--sch-rgb)", a);
+  r.style.setProperty("--sch-box-t", box(1, "var(--sch-rgb)", a)); r.style.setProperty("--sch-box-gross-t", box(1.6, "var(--sch-rgb)", a));
+  r.style.setProperty("--sch-box-n", nacht(1)); r.style.setProperty("--sch-box-gross-n", nacht(1.6)); r.classList.toggle("sch-an", st.an);
 }
 function schattenSpeichern(neu) { try { localStorage.setItem(SCHATTEN, JSON.stringify({ ...schattenStand(), ...neu })); } catch {} schattenAnwenden(); if (!("an" in neu)) return; schattenEinstellungen(); }
 if (typeof document !== "undefined") try { schattenAnwenden(); } catch {} // gleich beim Laden – auch die Anmeldeseite
@@ -23950,7 +23956,8 @@ function schattenEinstellungen() {
     + `<div class="sch-gruppe"><b>💪 Schattenstärke</b>${wahl("staerke", SCHT_STAERKE)}</div>`
     + '<div class="sch-gruppe"><b>🎨 Schattenfarbe</b><div class="sch-farben">' + Object.entries(SCHT_FARBEN).map(([k, [t, h]]) => `<label class="sch-farbe"><input type="radio" name="sch_farbe" value="${k}" ${st.farbe === k ? "checked" : ""} onchange="schattenSpeichern({ farbe: this.value })"><i style="background:${h || "linear-gradient(135deg,#5a321e 50%,#000 50%)"}"></i> ${t}</label>`).join("")
     + `<label class="sch-farbe"><input type="radio" name="sch_farbe" value="eigen" ${SCHT_FARBEN[st.farbe] ? "" : "checked"} onchange="schattenSpeichern({ farbe: $('schEigen').value })"> Eigene: <input type="color" id="schEigen" value="${eigen}" aria-label="Eigene Schattenfarbe" oninput="this.previousElementSibling.checked = true; schattenSpeichern({ farbe: this.value })"></label></div></div>`
-    + `<div class="sch-gruppe"><b>📍 Schattenposition</b>${wahl("pos", SCHT_POS)}</div>`;
+    + `<div class="sch-gruppe"><b>📍 Schattenposition</b>${wahl("pos", SCHT_POS)}</div>`
+    + `<div class="sch-gruppe"><b>🌙 Kontrast bei Nacht</b><div class="hinweis">Im dunklen Bild (Nacht) wäre ein dunkler Schatten kaum zu sehen – dann wird er heller und bekommt eine feine Lichtkante.</div>${wahl("kontrast", SCHT_KONTRAST)}</div>`;
 }
 // 2.547.0 KC-CLUB-KOPF-EMBLEM (Wunsch Hansi „auf die Holzklappe und die Glocke die Kochmütze mit since 1991“): CD-Kochmütze + Schriftzug
 const KE_MARKE = '<span class="ke-marke" aria-hidden="true"><img src="kc-kochmuetze-weiss.webp" alt=""><small>since 1991</small></span>';

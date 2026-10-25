@@ -12908,4 +12908,5 @@ function idx0() { return lies("index.html"); }
 // 2.657.0 KC-CLUB-SCHATTEN-KOPFFELDER (Frage Hansi „Hat der Kopfbereich auch Schatten und darauf die Felder?“)
 {
   assert.ok(/:where\(:root\.sch-an\) :is\(\.hero \.info, \.hero \.mini, \.hero \.rund, \.hero \.ipfeil, \.hero \.statusleiste, \.hero \.logo\) \{ box-shadow: var\(--sch-box\); \}/.test(html), "Felder auf dem Kopf mit Schatten");
+  assert.ok(/:root\.dunkel \{ --sch-auto: 0, 0, 0; --sch-box: var\(--sch-box-n\); --sch-box-gross: var\(--sch-box-gross-n\); \}/.test(html) && /const SCHT_KONTRAST = \{ aus:.*normal:.*stark:/.test(programm) && /kontrast: SCHT_KONTRAST\[j\.kontrast\] \? j\.kontrast : "normal"/.test(programm), "Nacht: Kontrast (Standard normal)");
 }
