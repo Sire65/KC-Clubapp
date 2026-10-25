@@ -9212,7 +9212,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/if \(anlagen\.some\(\(a\) => a\.laedt\)\) \{[\s\S]{0,200}const fertig = await anlagenFertig\(\);/.test(s), "Senden wartet auf ladende Anlagen");
   assert.ok(/if \(!fertig\) return melde\([^)]*nichts wurde gesendet/.test(s), "klappt das Hochladen nicht: nichts senden, Text bleibt");
   assert.ok(s.indexOf("await anlagenFertig()") < s.indexOf("const daten = {"), "erst warten, dann Anlagen einsammeln");
-  assert.ok(/anlagen: anlagen\.filter\(\(a\) => a\.id\)\.map\(\(a\) => a\.id\)/.test(s), "nie eine Anlage ohne Kennung mitschicken");
+  assert.ok(/anlagen: (vnIds \?\? )?anlagen\.filter\(\(a\) => a\.id\)\.map\(\(a\) => a\.id\)/.test(s), "nie eine Anlage ohne Kennung mitschicken"); // 2.636.0: oder die verschlüsselt hochgeladenen
   assert.ok(/async function anlagenFertig\(maxMs = 180000\) \{[\s\S]{0,200}while \(anlagen\.some\(\(a\) => a\.laedt\)\)/.test(html), "Warten mit Obergrenze");
 }
 // 2.165.0 KC-CLUB-ANLAGE-OEFFNEN (Fund Hansi: „Liste im Chat angeklickt – öffnet sich nicht“): Fenster erst nach dem Laden → Android blockt es still
@@ -12676,4 +12676,15 @@ function idx0() { return lies("index.html"); }
   assert.ok(/if \(!text && !mAnl\?\.length\) throw/.test(nb) && /const neuBody = text \|\| "📎";/.test(nb) && /update\(\{ body: neuBody \}\)/.test(nb), "Unterschrift an Bild/Datei, leer = nur Anlage");
   assert.ok(/m\.sender_person_id !== ich\.person_id\) throw/.test(nb), "weiter nur eigene Nachrichten");
   assert.ok(/!String\(m\.text \|\| ""\)\.startsWith\(VN_PRE\)/.test(programm) && /Unterschrift hinzufügen/.test(programm), "Menü: Unterschrift ändern/hinzufügen, nie bei 🔒-Texten");
+}
+// 2.636.0 KC-CLUB-VN-ANLAGEN (Wunschliste #36 Teil 2): im 🔒-Modus Fotos/Dateien auf dem Handy verschlüsseln, erst dann hochladen
+{
+  const v = programm.slice(programm.indexOf("async function vnAnlVerschluesseln("), programm.indexOf("async function vnAnlVerschluesseln(") + 1400);
+  assert.ok(/crypto\.getRandomValues\(new Uint8Array\(32\)\)/.test(v) && /name: "AES-GCM", iv/.test(v) && /api\("anlage_hochladen", \{ name: VN_ANL_NAME, mime: "application\/octet-stream"/.test(v), "je Datei eigener Schlüssel, nur Datensalat auf dem Server");
+  assert.ok(/if \(VN\.an\) \{ eintrag\.vnWartet = true; chipsZeigen\(\); continue; \}/.test(programm), "bei 🔒 beim Auswählen nicht unverschlüsselt hochladen");
+  assert.ok(/const v = await vnVerschluesseln\(text \+ VN_ANL \+ JSON\.stringify\(enc\)\);/.test(programm) && /anlagen: vnIds \?\? anlagen\.filter/.test(programm), "Dateischlüssel reisen im verschlüsselten Text");
+  assert.ok(/if \(EINMAL\) return melde\("👁️ Einmal-Foto und 🔒 verschlüsselt gehen nicht zusammen/.test(programm), "Einmal-Foto + 🔒 nicht zusammen");
+  assert.ok(!/Nur der Text wird verschlüsselt – Fotos und Dateien nicht/.test(programm), "alter Hinweis weg");
+  assert.ok((programm.match(/VN\.klar\.set\((v|t|b\.dataset\.vn), (text|klar|k)\)/g) || []).length === 1 && /function vnKlarSetzen\(t, klar\)/.test(programm), "jeder entschlüsselte Text läuft über vnKlarSetzen (Anlagen-Schlüssel nie sichtbar)");
+  assert.ok(/a\.name === VN_ANL_NAME \? vnAnlHtml\(a\)/.test(programm) && /🔒 Verschlüsselte Anlage/.test(programm), "ohne Schlüssel nur Schloss");
 }

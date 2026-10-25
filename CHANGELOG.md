@@ -5,6 +5,9 @@
 - Neu: Daten je Tabelle statt aller 40 auf einmal; verschlüsselte Daten stückweise (1 MB) lesen und ohne atob-Zwischenkopie entschlüsseln; bricht ein Paket trotzdem ab, wird es halbiert (bis zur einzelnen Tabelle). Prüfregeln, Prüfsummen, Antwortformat und Einträge unverändert; eine nicht prüfbare Tabelle bleibt Fehler.
 - Geprüft am echten Satz vom 24.10.: große Tabelle 28 Zeilen, Prüfsumme gleich; Paket 40/40; vollständige Probe 283/283, 0 Fehler. Quelle jetzt im Repo (supabase/functions/kc-db-backup-verify-v2), Test tests/backup-verify-teile.test.mjs. Eingespielt per Supabase (Version 12 der Funktion).
 
+## 2.636.0 – 2026-10-25 – Fotos und Dateien verschlüsselt senden
+KC-CLUB-VN-ANLAGEN (Wunschliste #36, Teil 2, Hansi „Bilder und Anhänge auch verschlüsseln“): Ist im Chat das 🔒 an, werden ausgewählte Fotos und Dateien nicht mehr unverschlüsselt hochgeladen, sondern erst beim Senden auf dem Handy verschlüsselt (AES-GCM 256, je Datei ein eigener Zufallsschlüssel) – auf dem Server liegt nur unlesbarer Datensalat. Die Dateischlüssel reisen im verschlüsselten Text mit (eigener Schlüssel oder Schlüsselbund). Ohne Schlüssel sieht man „🔒 Verschlüsselte Anlage“, mit Schlüssel erscheinen Bild bzw. Datei normal. Einmal-Foto und 🔒 gehen nicht zusammen; vorher schon unverschlüsselt hochgeladene Anlagen meldet die App. Hilfe und Rundgang-Text angepasst.
+
 ## 2.635.0 – 2026-10-25 – Nachrichten und Bildunterschriften jederzeit ändern
 KC-CLUB-BEARBEITEN-JEDERZEIT (Wunschliste #36, Teil 1, Hansi „jederzeit Bildunterschriften ändern wie bei WhatsApp – auch für normale Texte“): Eigene Nachrichten lassen sich ohne Zeitgrenze ändern (vorher 15 Minuten). Bilder und Dateien bekommen im Menü „✏️ Unterschrift hinzufügen“ bzw. „✏️ Unterschrift ändern“ – leer lassen entfernt die Unterschrift. Wie bisher steht „bearbeitet“ daran und es kommt keine neue Benachrichtigung; verschlüsselte 🔒-Texte werden nicht im Klartext bearbeitet. Server 2.635.0.
 

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.635.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.636.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -3514,7 +3514,7 @@ const RG_GEHEIM = [
   { v: "chat", vor: rgGeheimAuf, sel: [() => $("msg-rg-gh-3")], mussSel: true, puls: [() => document.querySelector("#msg-rg-gh-3 .vn-auf")], t: "🔑 Mit Schlüsselbund: öffnet sich von selbst",
     x: "Habt ihr einen Schlüsselbund, muss Klaus gar nichts tun: Der Agent bringt die Nachricht, die App probiert die Schlüssel durch und zeigt den Text gleich mit dem offenen Schloss. Passt ausnahmsweise keiner – etwa bei einem älteren Schlüsselbund –, sagt die App das, und er kann den Schlüssel eintippen." },
   { v: "chat", vor: rgGeheimAuf, sel: [".eg-griffe", "#vnKnopf"], t: "⚠️ Gut zu wissen",
-    x: "Nur der Text wird verschlüsselt – Fotos und Dateien nicht, darauf weist die App hin. Ein verschlüsselter Text darf etwa zweitausendachthundert Zeichen lang sein. Und: Wer den Schlüssel vergisst, kann die Nachricht nicht mehr lesen – dann kann niemand mehr helfen." },
+    x: "Auch Fotos und Dateien werden verschlüsselt – wähle sie einfach aus, während das Schloss an ist; ohne Schlüssel sieht man nur ein Schloss. Ein verschlüsselter Text darf etwa zweitausendachthundert Zeichen lang sein. Und: Wer den Schlüssel vergisst, kann die Nachricht nicht mehr lesen – dann kann niemand mehr helfen." },
   { v: "chat", vor: rgGeheimAuf, t: "✅ Fertig", x: "Das war's: Schloss antippen, Rückfrage mit Ja beantworten, Schlüssel festlegen und auf anderem Weg weitersagen – oder einmal einen Schlüsselbund anlegen. Der Geheimagent bringt die Nachricht, und nur ihr beide könnt sie lesen." },
 ];
 // ---------- 2.348.0 KC-CLUB-VIDEO-GRUPPEN (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
@@ -5344,7 +5344,7 @@ const HILFE = [
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
   { id: "nachricht_termin", thema: "nachrichten", sym: "📅", t: "Nachricht als Termin übernehmen", x: "Steht in einer Nachricht ein Termin – z. B. <b>„Samstag 18 Uhr Grillen bei Klaus“</b> oder <b>„am 14.11. um 19:30 Sitzung“</b> –, liest die App Tag, Uhrzeit, Ort und Titel selbst heraus. Drei Wege: <b>1.</b> Unter der Nachricht steht ein Knopf <b>„📅 Sa., 24.10., 18:00 Uhr – eintragen“</b>. <b>2.</b> Nachricht antippen → <b>„📅 Als Termin übernehmen“</b>. <b>3.</b> In der kleinen Zeile am Schreibfeld (neben ▾ und ⌨️) das <b>📅</b> – es nimmt, was du gerade schreibst, sonst die neueste Nachricht mit Termin. Im Fenster ist alles vorausgefüllt: kurz prüfen, <b>✅ Eintragen</b> – fertig. Der Termin steht dann in deinem Kalender (nur du siehst ihn), auf Wunsch mit Erinnerung und zusätzlich im Kalender deines Handys. Die Clubleitung kann stattdessen <b>„📅 Clubtermin für alle“</b> wählen – dann öffnet sich das gewohnte Termin-Formular, schon ausgefüllt. Die App versteht viele Schreibweisen: 14.11. · 14.11.2026 · 14. November · morgen · übermorgen · nächsten Freitag · nächste Woche Dienstag · in 3 Tagen · 19 Uhr · 19:30 · 19.30 Uhr · 18–20 Uhr · halb 8 · viertel nach 7 · „um 7“ (= 19 Uhr).", seit: "2.608.0" },
-  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen (es wird grün), Nachricht schreiben, senden. Die App fragt erst: <b>„🔒 Ja, mit Schlüssel“</b> oder <b>„✉️ Normal senden“</b> – „Normal senden“ schaltet das Schloss aus und schickt die Nachricht wie immer. Mit „Ja“ legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“); ein 🔑 dreht sich, und der <b>🕵️ Geheimagent</b> bringt die Nachricht. Beim Wechsel in einen anderen Chat geht das Schloss von selbst aus. Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar; Fotos und Dateien werden nicht verschlüsselt. Alles im Video <b>„🕵️ Geheim schreiben“</b>.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.517.0" },
+  { id: "verschluesselt", thema: "nachrichten", sym: "🔒", t: "Nachricht verschlüsselt senden", x: "Für Geheimes: im Chat oben am Schreibfeld in der kleinen Zeile (neben ▾, ⌨️ und 🔊) auf das Schloss <b>🔒</b> tippen (es wird grün), Nachricht schreiben, senden. Die App fragt erst: <b>„🔒 Ja, mit Schlüssel“</b> oder <b>„✉️ Normal senden“</b> – „Normal senden“ schaltet das Schloss aus und schickt die Nachricht wie immer. Mit „Ja“ legst du einen <b>Schlüssel</b> fest (mindestens 6 Zeichen, z. B. „Kochmütze7“); ein 🔑 dreht sich, und der <b>🕵️ Geheimagent</b> bringt die Nachricht. Beim Wechsel in einen anderen Chat geht das Schloss von selbst aus. Die Nachricht wird auf deinem Handy verschlüsselt; niemand sonst kann sie lesen – auch nicht der Server. Den Schlüssel sagst du dem Empfänger <b>auf einem anderen Weg</b>: persönlich, am Telefon oder per SMS. Er tippt auf „🔒 Verschlüsselte Nachricht“ und gibt ihn ein. Das Handy merkt sich den Schlüssel je Unterhaltung. Bequemer im Zweier-Chat: oben ⋮ → <b>🔑 Schlüsselbund</b> – die App legt 5 zufällige Schlüssel an, die du per WhatsApp oder Signal als Datei schickst; der Partner liest sie ein (Teilen → Club-App). Danach geht alles ohne Eintippen, passt kein Schlüssel, kommt eine Fehlermeldung. Fotos und Dateien, die du auswählst, während das Schloss an ist, werden ebenfalls verschlüsselt – ohne Schlüssel sieht man nur „🔒 Verschlüsselte Anlage“. Achtung: Schlüssel vergessen = Nachricht nicht mehr lesbar. Alles im Video <b>„🕵️ Geheim schreiben“</b>.", zeig: () => rgListeAbspielen(["geheim"]), seit: "2.517.0" },
   { id: "ablagekorb", thema: "club", sym: "📥", t: "Teilen → Köcheclub: alles landet im Ablagekorb", x: "Fotos, Dokumente oder Texte aus anderen Programmen (Galerie, WhatsApp, Mail, Dateien) schickst du mit <b>Teilen → Köcheclub</b>. Alles kommt zuerst in den <b>📥 Ablagekorb</b> – bis 10 Dateien, jeder Dateityp (Fotos, PDF, Word, Excel, Videos …). Du siehst „Im Ablagekorb abgelegt“; Hansi kümmert sich darum und legt es ab – Fotoalbum, Ordner, Chat, Aufgabe, Thema für die Sitzung oder weiter an Clubsprecher bzw. Kassenwart. Gibt es die Datei schon in der Club-App, sagt dir die App: <b>„… gibt es schon in der Club-App“</b>. Kommt nichts an, nennt die App den Grund und was hilft (z. B. App neu installieren, bis dahin im Chat über 📎).", seit: "2.511.0" },
   { id: "ablagekorb_admin", thema: "club", sym: "📥", t: "Ablagekorb bearbeiten (Admin)", x: "Was Mitglieder geteilt haben, liegt im <b>📥 Ablagekorb</b> (Admin-Kachel, Hinweis im Info-Feld, Push). Je Eintrag: <b>📷 Fotoalbum</b>, <b>🗄️ In Ordner</b>, <b>💬 In Chat</b>, <b>👤 Weitergeben</b> (Clubsprecher und Kassenwart stehen oben), <b>✅ Als Aufgabe</b> (To-do + Unterlagen per Nachricht), <b>🗳️ Vorschlag Sitzung</b>, <b>✔ Erledigt</b> oder <b>🗑️ Löschen</b>. Erledigtes wird nach 14 Tagen weggeräumt. Seit 2.512.0: bei mehreren Dateien je Datei ein <b>Häkchen</b> – nur die ausgewählten <b>ins Fotoalbum</b> oder <b>löschen</b>; <b>⚠️ gibt es schon</b> zeigt Dubletten (gleiche Datei in Fotoalbum, Archiv, Chat oder Ablagekorb, im Album auch gleiche Aufnahme), „⚠️ Dubletten“ wählt sie mit einem Tipp aus.", nur: () => !!ICH?.admin, seit: "2.511.0" },
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4 (Wunsch Hansi „Prüfe alles und baue die Hilfen neu auf wie Twinkey, Lupe, Suchfunktion, Sprachsuche, Video auch mit Verschlüsselung“)
@@ -32487,7 +32487,7 @@ async function chatLaden(scrollen, merk) {
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}
-      ${m.anlagen.map((a) => a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
+      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;
@@ -32518,7 +32518,7 @@ const NA_SCHNELL = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 // verschlüsselt“; Antwort: Schlüssel auf anderem Weg weitergeben; Wahl Hansi: selbst gewählter Schlüssel, mind. 6 Zeichen, je Person merkbar).
 // Nur auf dem Handy: PBKDF2-SHA-256 (310 000 Runden) → AES-GCM 256. Gesendet wird „🔒KCV1:“ + Base64(Salz 16 | IV 12 | Geheimtext) – Server, Push,
 // Mail und Datenbank sehen nur Zeichensalat bzw. „🔒 Verschlüsselte Nachricht“. Den Schlüssel merkt sich das Gerät je Unterhaltung (nur lokal).
-// Anlagen werden nicht verschlüsselt (Hinweis). Schlüssel vergessen = Nachricht nicht mehr lesbar (niemand kann helfen).
+// 2.636.0: Anlagen werden mitverschlüsselt (KC-CLUB-VN-ANLAGEN). Schlüssel vergessen = Nachricht nicht mehr lesbar (niemand kann helfen).
 const VN_PRE = "🔒KCV1:", VN_MIN = 6, VN_MAX_TEXT = 2900, VN = { an: false, klar: new Map() };
 const vnIst = (t) => typeof t === "string" && t.startsWith(VN_PRE);
 const vnKurz = (t) => (vnIst(t) ? (VN.klar.has(t) ? "🔓 " + VN.klar.get(t) : "🔒 Verschlüsselte Nachricht") : t);
@@ -32554,9 +32554,8 @@ function vnUmschalten(an) {
 }
 async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den verschlüsselten Text zurück (oder null = abbrechen)
   if (new TextEncoder().encode(text).length > VN_MAX_TEXT) { melde("🔒 Für eine verschlüsselte Nachricht ist der Text zu lang (etwa 2.800 Zeichen, Emojis zählen mehr) – bitte kürzen.", true); return null; } // Geheimtext muss unter die 4.000-Zeichen-Grenze passen
-  if (anlagen.length) melde("🔒 Hinweis: Nur der Text wird verschlüsselt – Fotos und Dateien nicht.");
   const vp = vbPartner(), bund = vp && vbHolen(vp.person_id);
-  if (bund) { const v = await vnVer(text, "", bund.schluessel[crypto.getRandomValues(new Uint32Array(1))[0] % bund.schluessel.length]); VN.klar.set(v, text); return v; } // 2.518.0: einer der 5 Schlüssel, zufällig
+  if (bund) { const v = await vnVer(text, "", bund.schluessel[crypto.getRandomValues(new Uint32Array(1))[0] % bund.schluessel.length]); vnKlarSetzen(v, text); return v; } // 2.518.0: einer der 5 Schlüssel, zufällig
   // 2.529.0 KC-CLUB-VN-RUECKFRAGE (Fund Hansi „ich wollte Klaus antworten, soll aber eine Verschlüsselungsnummer eingeben – ich will gar nicht
   // verschlüsseln“): das Schloss neben ▾ ⌨️ 🔊 ist schnell aus Versehen angetippt – erst fragen; „Normal senden“ schaltet es aus und sendet wie immer
   if (!(await frage("🔒 Verschlüsselt senden ist eingeschaltet\nDas Schloss am Schreibfeld ist an. Soll diese Nachricht wirklich verschlüsselt werden? Dann braucht der Empfänger einen Schlüssel, den du ihm persönlich sagst.",
@@ -32570,8 +32569,38 @@ async function vnVerschluesseln(text) { // fragt den Schlüssel, gibt den versch
     melde(`🔒 Bitte mindestens ${VN_MIN} Zeichen – „1234“ errät ein Computer in Sekunden.`, true);
   }
   const v = await vnVer(text, pw);
-  VN.klar.set(v, text); if (chatId) vnMerken(chatId, pw);
+  vnKlarSetzen(v, text); if (chatId) vnMerken(chatId, pw);
   return v;
+}
+// ---------- 2.636.0 KC-CLUB-VN-ANLAGEN (Wunschliste #36 Teil 2, Hansi „Bilder und Anhänge auch verschlüsseln“) ----------
+// Im 🔒-Modus werden Fotos und Dateien erst beim Senden auf dem Handy verschlüsselt (AES-GCM 256, je Datei ein eigener Zufallsschlüssel) und erst
+// dann hochgeladen – auf dem Server liegt nur „kc-verschluesselt.bin“ (unlesbar). Die Dateischlüssel samt Name und Typ stehen im verschlüsselten
+// Text der Nachricht (hinter VN_ANL). Wer den Text öffnen kann (Schlüssel oder Schlüsselbund), sieht auch die Anlagen; sonst „🔒 Verschlüsselte Anlage“.
+// Ist 🔒 beim Auswählen schon an, wird die Datei vorher gar nicht unverschlüsselt hochgeladen.
+const VN_ANL = "\n\u2063KCANL1:", VN_ANL_NAME = "kc-verschluesselt.bin";
+VN.anl = new Map(); VN.anlUrl = new Map();
+function vnKlarSetzen(t, klar) { // Klartext und Anlagen-Schlüssel trennen; angezeigt wird nur der Text
+  const i = String(klar).indexOf(VN_ANL); let text = String(klar);
+  if (i >= 0) { text = text.slice(0, i); try { for (const a of JSON.parse(String(klar).slice(i + VN_ANL.length))) if (a?.id && a?.k) VN.anl.set(String(a.id), a); } catch {} setTimeout(vnAnlNeuZeichnen, 0); }
+  VN.klar.set(t, text);
+}
+function vnAnlNeuZeichnen() { if (chatId && [...document.querySelectorAll(".vn-anl-zu")].some((e) => VN.anl.has(e.dataset.id))) naNeuZeichnen(); }
+function vnAnlHtml(a) {
+  const e = VN.anl.get(a.id);
+  if (!e) return `<div class="anlage vn-anl-zu" data-id="${esc(a.id)}">🔒 Verschlüsselte Anlage<small> – öffnet sich mit dem Text</small></div>`;
+  if (/^image\//.test(e.mime || "")) { setTimeout(vnAnlBilderLaden, 0); return `<img data-vnanl="${esc(a.id)}" alt="${esc(e.name || "Foto")}" onclick="event.stopPropagation();vnAnlOeffnen(${jsArg(a.id)})">`; }
+  return `<div class="anlage" onclick="event.stopPropagation();vnAnlOeffnen(${jsArg(a.id)})">🔓 ${esc(e.name || "Datei")}</div>`;
+}
+async function vnAnlBilderLaden() {
+  for (const img of document.querySelectorAll("img[data-vnanl]:not([data-geladen])")) { img.dataset.geladen = "1";
+    try { img.src = await vnAnlBlob(img.dataset.vnanl); } catch { img.alt = "🔒 Bild konnte nicht entschlüsselt werden"; } }
+}
+async function vnAnlOeffnen(id) {
+  const e = VN.anl.get(id); if (!e) return;
+  try { const u = await vnAnlBlob(id), a = document.createElement("a"); a.href = u;
+    if (/^image\/|pdf/.test(e.mime || "")) a.target = "_blank"; else a.download = e.name || "Anlage";
+    document.body.appendChild(a); a.click(); a.remove(); }
+  catch (x) { meldeFehler(x); }
 }
 function vnHtml(t) {
   if (VN.klar.has(t)) return `<span class="vn-auf" title="Verschlüsselte Nachricht – auf diesem Handy geöffnet">🔓</span> ${naText(VN.klar.get(t))}`;
@@ -32589,10 +32618,10 @@ async function vnOeffnen(knopf) {
     klar = await vnEnt(t, String(pw));
     if (klar === null) melde("❌ Falscher Schlüssel – bitte nochmal versuchen.", true);
   }
-  VN.klar.set(t, klar); if (chatId && pw) vnMerken(chatId, String(pw));
+  vnKlarSetzen(t, klar); if (chatId && pw) vnMerken(chatId, String(pw));
   document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
   // weitere Nachrichten dieser Unterhaltung mit demselben Schlüssel gleich mit öffnen
-  if (pw) for (const b of [...document.querySelectorAll(".vn-zu")]) { const k = await vnEnt(b.dataset.vn, String(pw)); if (k !== null) { VN.klar.set(b.dataset.vn, k); b.outerHTML = vnHtml(b.dataset.vn); } }
+  if (pw) for (const b of [...document.querySelectorAll(".vn-zu")]) { const k = await vnEnt(b.dataset.vn, String(pw)); if (k !== null) { vnKlarSetzen(b.dataset.vn, k); b.outerHTML = vnHtml(b.dataset.vn); } }
 }
 // ---------- 2.518.0 KC-CLUB-SCHLUESSELBUND (Wunsch Hansi „mit einem Partner 5 verschiedene Schlüssel festlegen, die hat man auf dem Handy in einer
 // Datei; kommt die Nachricht an, guckt das Handy, ob ein Schlüssel passt – wenn ja anzeigen, sonst Fehlermeldung“; Wahl Hansi: Übergabe per Datei).
@@ -32629,7 +32658,7 @@ async function vbProbieren() {
     if (VN.klar.has(t) || VBR.fehl.has(t)) continue;
     const klar = await vbEntRing(t);
     if (klar === null) { VBR.fehl.add(t); continue; }
-    VN.klar.set(t, klar); document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
+    vnKlarSetzen(t, klar); document.querySelectorAll(".vn-zu").forEach((b) => { if (b.dataset.vn === t) b.outerHTML = vnHtml(t); });
   }
 }
 function vbNeuProbieren() { VBR.fehl.clear(); document.querySelectorAll(".vn-zu").forEach((b) => VBR.warte.add(b.dataset.vn)); vbProbieren(); }
@@ -35054,7 +35083,17 @@ async function senden() {
   if (!text && !anlagen.length) return;
   if (!(await sensibelGaesteOk(text))) return; // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
   await inkoChatFrage(chatId ? "c:" + chatId : "neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT: auch beim Schreiben in einem schon offenen Chat (einmal je Chat)
-  if (VN.an && text) { const v = await vnVerschluesseln(text); if (!v) return; text = v; } // 2.517.0 KC-CLUB-VERSCHLUESSELT: erst jetzt (Prüfungen oben sahen den Klartext)
+  let vnIds = null; // 2.636.0 KC-CLUB-VN-ANLAGEN: Kennungen der verschlüsselt hochgeladenen Anlagen
+  if (VN.an && anlagen.length) {
+    if (EINMAL) return melde("👁️ Einmal-Foto und 🔒 verschlüsselt gehen nicht zusammen – bitte eins von beiden ausschalten.", true);
+    if (anlagen.some((a) => a.id && !a.vnWartet) && !(await frage("🔒 Anlage schon hochgeladen\nDiese Anlage wurde ausgewählt, bevor 🔒 an war, und liegt schon unverschlüsselt auf dem Server. Für echte Geheimhaltung: entfernen und mit 🔒 neu auswählen.\n\nTrotzdem verschlüsselt senden?", { ja: "🔒 Verschlüsselt senden", nein: "Abbrechen" }))) return;
+    $("sendenKnopf").disabled = true; melde("🔒 Anlagen werden auf dem Handy verschlüsselt …");
+    let enc; try { enc = await vnAnlVerschluesseln(anlagen); } catch (e) { $("sendenKnopf").disabled = false; return meldeFehler(e); }
+    $("sendenKnopf").disabled = false;
+    const v = await vnVerschluesseln(text + VN_ANL + JSON.stringify(enc)); if (!v) return;
+    if (vnIst(v)) { text = v; vnIds = enc.map((x) => x.id); }
+    // „Normal senden“ gewählt: Text wie getippt, Anlagen unverschlüsselt (die verschlüsselten Kopien bleiben ungenutzt liegen)
+  } else if (VN.an && text) { const v = await vnVerschluesseln(text); if (!v) return; text = v; } // 2.517.0 KC-CLUB-VERSCHLUESSELT: erst jetzt (Prüfungen oben sahen den Klartext)
   // 2.164.0 KC-CLUB-ANLAGE-WARTEN (Fund Hansi: PDF fehlte – Senden getippt, während die Anlage noch hochlud; sie wurde still weggelassen):
   // lädt noch eine Anlage, wird gewartet, bis sie fertig ist – dann geht alles zusammen raus. Klappt das Hochladen nicht, bleibt der Text stehen.
   if (anlagen.some((a) => a.laedt)) {
@@ -35074,7 +35113,8 @@ async function senden() {
   $("sendenKnopf").disabled = true;
   const anlagenVorher = [...anlagen];
   try {
-    const daten = { text, anlagen: anlagen.filter((a) => a.id).map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
+    if (!vnIds) for (const a of anlagen) if (!a.id && a.roh) { const r = await anlageHochladen(a.roh); Object.assign(a, { id: r.id, name: r.name, vnWartet: false }); } // 2.636.0: ohne 🔒 doch normal
+    const daten = { text, anlagen: vnIds ?? anlagen.filter((a) => a.id).map((a) => a.id), wege: ["push", "email"].filter((w) => ZW[w]),
       ...(NA.antwort && chatId ? { antwort_auf: NA.antwort.id } : {}), ...(chatId ? { erwaehnt: naErwaehnteIds(text) } : {}), // KC-CLUB-ANTWORT / -ERWAEHNUNG
       ...(WICHTIG ? { wichtig: true } : {}), // KC-CLUB-WICHTIG
       ...(EXPRESS ? { express: true } : {}), // 2.362.0 KC-CLUB-EXPRESS
@@ -35391,7 +35431,7 @@ async function teilenInChat(id) {
   if (id) await chatOeffnen(id); else await neueNachricht();
   $("text").value = t.text; $("text").style.height = "auto"; $("text").style.height = $("text").scrollHeight + "px"; entwurfMarkeZeigen();
   for (const d of t.dateien) {
-    const e = { name: d.name, laedt: true, bild: anlageVorschau(d) }; anlagen.push(e); chipsZeigen();
+    const e = { name: d.name, laedt: true, bild: anlageVorschau(d), roh: d }; anlagen.push(e); chipsZeigen();
     try { const r = await anlageHochladen(d); Object.assign(e, { id: r.id, name: r.name, laedt: false }); } catch (err) { anlagen.splice(anlagen.indexOf(e), 1); melde(err.message, true); }
     chipsZeigen();
   }
@@ -35899,7 +35939,7 @@ function einmalSchliessen() { const f = $("einmalSchirm"); if (!f) return; f._we
 function chipsZeigen() {
   versandZeigen(); // 2.524.0 KC-CLUB-VERSANDART: mit Anhang auch ohne Text
   if (!(anlagen.length === 1 && anlagen[0].bild)) EINMAL = false; // KC-CLUB-EINMAL-FOTO: nur bei genau einem Foto
-  $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
+  $("anlagenChips").innerHTML = anlagen.map((a, i) => `<span class="chip anl-chip"><button type="button" class="anl-auf" onclick="anlageAnsehen(${i})" aria-label="Anhang ansehen: ${esc(a.name)}">${a.vnWartet ? "🔒" : ""}${a.bild ? `<img src="${a.bild}" alt="">` : a.laedt ? "⏳" : "📎"} ${esc(a.name)}</button><button type="button" class="anl-weg" onclick="anlageEntfernen(${i})" aria-label="Anhang entfernen" title="Anhang entfernen">✕</button></span>`).join("");
   if (anlagen.length === 1 && anlagen[0].bild) $("anlagenChips").insertAdjacentHTML("beforeend", `<button type="button" class="chip einmal-chip${EINMAL ? " an" : ""}" onclick="einmalUmschalten()" aria-pressed="${EINMAL}" title="Der Empfänger kann das Foto nur ein einziges Mal öffnen">👁️ Einmal ansehen: ${EINMAL ? "An" : "Aus"}</button>`);
 }
 function anlageEntfernen(i) { const a = anlagen[i]; if (!a) return; anlagen.splice(i, 1); try { if (a.bild) URL.revokeObjectURL(a.bild); } catch {} chipsZeigen(); melde("📎 Anhang entfernt"); }
@@ -35927,9 +35967,35 @@ async function anlageHochladen(roh) {
   if (d.size > 8 * 1024 * 1024) throw new Error(`${roh.name} ist zu groß (höchstens 8 MB).`);
   return await api("anlage_hochladen", { name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) });
 }
+// 2.636.0 KC-CLUB-VN-ANLAGEN: Hochladen/Abholen der verschlüsselten Anlagen (an den Server geht nur Datensalat – Schlüssel bleiben auf dem Handy)
+async function vnAnlVerschluesseln(liste) { // → [{ id, k, name, mime }]: jede Datei verschlüsselt hochgeladen
+  const raus = [];
+  for (const a of liste) {
+    if (!a.roh) throw new Error(`🔒 „${a.name}“ kann nicht verschlüsselt werden (kommt aus der Ablage) – bitte entfernen oder ohne 🔒 senden.`);
+    const d = await verkleinern(a.roh), daten = new Uint8Array(await d.arrayBuffer());
+    const kRoh = crypto.getRandomValues(new Uint8Array(32)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await crypto.subtle.importKey("raw", kRoh, "AES-GCM", false, ["encrypt"]);
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, daten));
+    const alles = new Uint8Array(12 + ct.length); alles.set(iv, 0); alles.set(ct, 12);
+    if (alles.length > 8 * 1024 * 1024) throw new Error(`${a.name} ist zu groß (höchstens 8 MB).`);
+    const r = await api("anlage_hochladen", { name: VN_ANL_NAME, mime: "application/octet-stream", daten: base64(alles.buffer) });
+    raus.push({ id: r.id, k: vnB64(kRoh), name: String(d.name || a.name || "Anlage").slice(0, 120), mime: String(d.type || a.roh.type || "").slice(0, 80) });
+  }
+  return raus;
+}
+async function vnAnlBlob(id) { // holt die verschlüsselte Datei, entschlüsselt sie auf dem Handy → Objekt-Adresse (bleibt bis zum Neustart)
+  if (VN.anlUrl.has(id)) return VN.anlUrl.get(id);
+  const e = VN.anl.get(id); if (!e) throw new Error("🔒 Diese Anlage ist verschlüsselt – erst den Text mit dem Schlüssel öffnen.");
+  const { url } = await api("anlage_url", { id }, { still: true });
+  const b = new Uint8Array(await (await fetch(url, { signal: zeitSignal(60000) })).arrayBuffer());
+  const key = await crypto.subtle.importKey("raw", vnUnB64(e.k), "AES-GCM", false, ["decrypt"]);
+  const klar = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(0, 12) }, key, b.slice(12));
+  const u = URL.createObjectURL(new Blob([klar], { type: e.mime || "application/octet-stream" })); VN.anlUrl.set(id, u); return u;
+}
 async function dateienGewaehlt(input) {
   for (const roh of [...input.files].slice(0, 10)) {
-    const eintrag = { name: roh.name, laedt: true, bild: anlageVorschau(roh) }; anlagen.push(eintrag); chipsZeigen();
+    const eintrag = { name: roh.name, laedt: !VN.an, bild: anlageVorschau(roh), roh }; anlagen.push(eintrag); chipsZeigen();
+    if (VN.an) { eintrag.vnWartet = true; chipsZeigen(); continue; } // 2.636.0 KC-CLUB-VN-ANLAGEN: erst beim Senden – verschlüsselt
     try {
       const r = await anlageHochladen(roh);
       Object.assign(eintrag, { id: r.id, name: r.name, laedt: false });
