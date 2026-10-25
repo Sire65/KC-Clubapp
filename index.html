@@ -1011,6 +1011,7 @@
   .cj-form textarea, .cj-form select, .cj-leitung select, .cj-leitung input[type=date] { width: 100%; box-sizing: border-box; font-size: 1rem; min-height: 44px; }
   .cj-leitung { margin-top: 14px; } .cj-leitung > summary { font-weight: 700; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
   .ca-leute { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; } .ca-leute .knopf { width: auto; } .ca-chip { background: var(--karte2); border-radius: 12px; padding: 4px 10px; font-size: .9rem; }
+  .klopf-art { display: inline-block; margin: 2px 0 8px; padding: 4px 12px; border-radius: 14px; font-weight: 700; font-size: 1.05rem; } .klopf-art.schreiben { background: var(--blaubg, #e3eefb); color: var(--blau, #1d4f8a); } .klopf-art.sprechen { background: var(--gruenbg); color: var(--gruen); }
   .ca-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 4px 0 2px; font-size: .82rem; } .ca-legende .ca-amp { border-left: 4px solid transparent; padding-left: 5px; }
   .ca-amp.ja { border-left: 5px solid var(--gruen); } .ca-leute .ca-amp.ja { background: var(--gruenbg); }
   .ca-amp.vl { border-left: 5px solid #e0a800; } .ca-leute .ca-amp.vl { background: var(--gelbbg); }
@@ -5810,7 +5811,7 @@
 </div>
 <div class="blatt versteckt" id="klopfBlatt">
   <div class="blatt-innen klopfen"><div id="klopfText"></div>
-    <button class="knopf haupt" onclick="klopfAntwort(true)">✅ Annehmen – jetzt schreiben</button>
+    <button class="knopf haupt" id="klopfJa" onclick="klopfAntwort(true)">✅ Annehmen – jetzt schreiben</button>
     <div class="klopf-kacheln" id="klopfKacheln"></div>
     <button class="knopf" onclick="klopfAntwort(false)">⏳ Später</button></div>
 </div>
@@ -5904,7 +5905,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.645.0" data-v="2.645.0"></script>
+<script src="app.js?v=2.646.0" data-v="2.646.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

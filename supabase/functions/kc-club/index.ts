@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.644.0";
+const SERVER_VERSION = "2.646.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1025,8 +1025,8 @@ async function onlineJetztMitAlt(weitere: string[], seit: string): Promise<{ on:
 function onlineAnklopfenTeilen(rows: any[], ich: string, seit: string, seit10: string) {
   const neu = [...rows].sort((a, b) => String(b.erstellt_am).localeCompare(String(a.erstellt_am)));
   return {
-    anMich: neu.filter((x) => x.an === ich && x.status === "offen" && Date.parse(x.erstellt_am) >= Date.parse(seit)).slice(0, 3).map((x) => ({ id: x.id, von: x.von, erstellt_am: x.erstellt_am })),
-    vonMir: neu.filter((x) => x.von === ich && Date.parse(x.erstellt_am) >= Date.parse(seit10)).map((x) => ({ id: x.id, an: x.an, status: x.status, thread_id: x.thread_id, beantwortet_am: x.beantwortet_am, antwort: x.antwort })),
+    anMich: neu.filter((x) => x.an === ich && x.status === "offen" && Date.parse(x.erstellt_am) >= Date.parse(seit)).slice(0, 3).map((x) => ({ id: x.id, von: x.von, erstellt_am: x.erstellt_am, art: x.art === "sprechen" ? "sprechen" : "schreiben" })),
+    vonMir: neu.filter((x) => x.von === ich && Date.parse(x.erstellt_am) >= Date.parse(seit10)).map((x) => ({ id: x.id, an: x.an, status: x.status, thread_id: x.thread_id, beantwortet_am: x.beantwortet_am, antwort: x.antwort, art: x.art === "sprechen" ? "sprechen" : "schreiben" })),
   };
 }
 // Anrufe an mich der letzten 24 h → klingelt gerade (ANRUF_KLINGEL_SEK, neuester) und verpasst (nicht angenommen, Hinweis nicht gesehen, neueste 5)
@@ -12737,7 +12737,7 @@ Köcheclub-App`,
         const klingelEnde = new Date(t - ANRUF_KLINGEL_SEK * 1000).toISOString();
         const [{ data: meine }, { data: klopf }, { data: spAn }, { data: anrufe24 }] = await Promise.all([
           db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).in("schluessel", ["online_seit", "fenster", "online", "vorfuehren", "schnappschuss", "klopf_verpasst"]),
-          db.from("kc_club_anklopfen").select("id,von,an,status,thread_id,beantwortet_am,antwort,erstellt_am")
+          db.from("kc_club_anklopfen").select("*") // 2.646.0: auch art (sobald die Spalte da ist)
             .or(`and(an.eq.${ich.person_id},erstellt_am.gte."${new Date(t - 86400000).toISOString()}"),and(von.eq.${ich.person_id},erstellt_am.gte."${seit10}")`).order("erstellt_am", { ascending: false }).limit(60), // 2.567.0: an mich 24 h (verpasst)
           // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): frische Herausforderungen an mich (15 Min.) – die App zeigt sie sofort als Fenster
           db.from("kc_club_spiele").select("id,von,spiel,groesse,uhr,erstellt_am").eq("an", ich.person_id).eq("status", "angefragt")
@@ -12803,9 +12803,9 @@ Köcheclub-App`,
         const geraetMap = new Map<string, string>();
         if (ich.admin) for (const id of on) { const l = (einst.get("fenster")?.get(id)?.liste || []).filter((y: any) => y && GERAETE.has(y.g) && Date.now() - Number(y.t) < FENSTER_SEK * 1000).sort((a: any, b: any) => b.t - a.t);
           if (l[0]) geraetMap.set(id, l[0].g); }
-        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}), ...(geraetMap.has(id) ? { geraet: geraetMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am })),
+        return json({ fensterAnders, liveTermin: liveT ? { id: liveT.id, stand: liveT.geaendert_am } : null, zeigen, verpasst: verp.map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })), online: [...on].map((id) => ({ ...wer(id), klopfbar: klopfbar.get(id) !== false, ...(seitMap.has(id) ? { seitSek: seitMap.get(id) } : {}), ...(geraetMap.has(id) ? { geraet: geraetMap.get(id) } : {}) })), klopfen: (anMich ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.erstellt_am, art: x.art })),
           klopfAntworten: (anMich ?? []).length ? Object.entries(KLOPF_ANTWORTEN).map(([id, text]) => ({ id, text })) : undefined,
-          antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null, ...(pushStand.has(x.id) ? { push: pushStand.get(x.id) } : {}) })),
+          antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null, art: x.art, ...(pushStand.has(x.id) ? { push: pushStand.get(x.id) } : {}) })),
           ...(kVerp.length ? { klopfVerpasst: kVerp.map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.zeit })) } : {}),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
           spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, uhrMin: x.uhr?.min ?? null, zeit: x.erstellt_am })),
@@ -13017,7 +13017,11 @@ Köcheclub-App`,
         // Bremse: ein offenes Anklopfen je Person reicht (innerhalb von 3 Minuten)
         const { data: offen } = await db.from("kc_club_anklopfen").select("id").eq("von", ich.person_id).eq("an", an).eq("status", "offen").gte("erstellt_am", new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString()).limit(1);
         if (offen?.length) return json({ ok: true, id: offen[0].id, schon: true });
-        const { data: k, error } = await db.from("kc_club_anklopfen").insert({ von: ich.person_id, an }).select("id").single();
+        // 2.646.0 KC-CLUB-ANKLOPFEN-ART (Wunsch Hansi „beim Anklopfen fragen: schreiben oder sprechen – ich sehe dann, was X will“):
+        // „sprechen“ steht in der Spalte art (null = schreiben wie bisher). Fehlt die Spalte noch (Datenbank nicht nachgezogen), ohne art weiter.
+        const art = p.art === "sprechen" ? "sprechen" : "schreiben";
+        let { data: k, error } = await db.from("kc_club_anklopfen").insert({ von: ich.person_id, an, ...(art === "sprechen" ? { art } : {}) }).select("id").single();
+        if (error && art === "sprechen") ({ data: k, error } = await db.from("kc_club_anklopfen").insert({ von: ich.person_id, an }).select("id").single());
         if (error || !k) throw new Fehler("Anklopfen hat nicht geklappt.", 500);
         // Push (nur wer die App schon benutzt; keine Mail – Anklopfen ist nur jetzt sinnvoll)
         const { data: zug } = await db.from("kc_club_zugang").select("person_id").eq("person_id", an).eq("aktiv", true).not("zuletzt_gesehen", "is", null);
@@ -13027,13 +13031,13 @@ Köcheclub-App`,
         const [{ data: abo }, imApp] = await Promise.all([db.from("kc_member_push_subscriptions").select("id").eq("person_id", an).eq("active", true).limit(1), geradeInDerApp([an])]);
         const ohnePush = !abo?.length && !imApp.has(an);
         if (zug?.length && abo?.length) versand = await routerSenden("club_nachricht_push", [an], {
-          titel: `👋 ${ich.vorname} klopft an`, kurz: "Möchtest du das Gespräch annehmen? Hier antippen.",
-          betreff: `${ich.vorname} klopft an`, text: `${ich.name} möchte kurz mit dir schreiben.`, url: `${APP_URL}#anklopfen=${k.id}`,
+          titel: `👋 ${ich.vorname} klopft an` + (art === "sprechen" ? " – 📞 möchte sprechen" : " – 💬 möchte schreiben"), kurz: "Möchtest du das Gespräch annehmen? Hier antippen.",
+          betreff: `${ich.vorname} klopft an`, text: `${ich.name} möchte kurz mit dir ${art === "sprechen" ? "sprechen" : "schreiben"}.`, url: `${APP_URL}#anklopfen=${k.id}`,
           // 2.431.0 KC-CLUB-ANKLOPFEN-SOFORT (Fall Steven, älteres Android-Tablet; Wunsch Hansi „ist ja dringend“): wie Express als „critical“ →
           // Push mit hoher Dringlichkeit, damit Android ihn im Stromsparmodus nicht zurückhält. Ruhezeit/Stumm bleiben unverändert (Anklopfen-Schalter).
           eilig: true,
         }, `club-anklopfen:${k.id}`);
-        await protokoll(ich.person_id, "angeklopft", { an, versand, ohnePush });
+        await protokoll(ich.person_id, "angeklopft", { an, versand, ohnePush, art });
         return json({ ok: true, id: k.id, push: versand.gesendet > 0, ohnePush, ...(abModus === "spaeter" ? { abSpaeter: true } : {}) });
       }
 
@@ -13143,7 +13147,7 @@ Köcheclub-App`,
         }
         await db.from("kc_club_anklopfen").update({ status: "angenommen", beantwortet_am: jetzt(), thread_id: thread }).eq("id", k.id);
         await protokoll(ich.person_id, "anklopfen_angenommen", { von: k.von });
-        return json({ ok: true, status: "angenommen", thread });
+        return json({ ok: true, status: "angenommen", thread, art: k.art === "sprechen" ? "sprechen" : "schreiben" });
       }
 
       // ----- Anruf per Ton (KC-CLUB-ANRUF, Test) -----

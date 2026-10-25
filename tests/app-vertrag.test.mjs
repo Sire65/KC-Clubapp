@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6073,7 +6073,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!r\.frueher \|\| \(r\.aktiv \|\| 0\) - altHier > 0\) return;/.test(html) && /lsSetzen\("kc_club_push_wieder_gefragt", heute\)/.test(html) && /🔔 Jetzt wieder einschalten/.test(html), "nur wenn früher Push lief und kein anderes Gerät mehr (2.481.0: alte Abos dieses Geräts zählen nicht) – höchstens einmal am Tag");
   assert.ok(/if \(!PUSH_PRUEF\.lief\) \{ PUSH_PRUEF\.lief = true; setTimeout\(\(\) => pushPruefen\(\)\.catch\(\(\) => \{\}\), 6000\); \}/.test(html), "einmal je Start, nicht im Startweg");
   assert.ok(/const ohnePush = !abo\?\.length && !imApp\.has\(an\);/.test(server) && /if \(zug\?\.length && abo\?\.length\) versand = await routerSenden\("club_nachricht_push"/.test(server) && /return json\(\{ ok: true, id: k\.id, push: versand\.gesendet > 0, ohnePush(, \.\.\.\(abModus === "spaeter" \? \{ abSpaeter: true \} : \{\}\))? \}\);/.test(server), "Anklopfen: ehrliche Rückmeldung ohne Push-Zugang");
-  assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush(, r\.abSpaeter)?\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
+  assert.ok(/klopfWartenStart\(r\.id, pid, name, r\.ohnePush(, r\.abSpaeter)?(, art)?\)/.test(html) && /hat auf dem Handy gerade keine Benachrichtigungen an/.test(html), "Hinweis im Anklopf-Fenster");
 }
 // 2.322.0 KC-CLUB-EIS-TAKT (Fund Hansi „noch keinen fallenden Eiszapfen gesehen“): Tropfen-/Eis-Takt auch bei „Bewegung reduzieren“, erstes Stück sofort
 {
@@ -7386,6 +7386,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /Aufnahme \$\{esc\(SJ_TON\.urheber\)\}, <a href="\$\{SJ_TON\.lizenzLink\}"/, "Nennung sichtbar im Blatt");
   assert.match(programm, /const zu = \(\) => \{ sjStopp\(\); f\.remove\(\); \}/, "Musik stoppt beim Schließen");
   assert.ok(fs.existsSync(new URL("../simjue-orgel.webp", import.meta.url)) && fs.existsSync(new URL("../simjue-orgel.mp3", import.meta.url)), "Foto und Ton liegen bei");
+}
+// 2.646.0 KC-CLUB-ANKLOPFEN-ART: beim Anklopfen schreiben oder sprechen wählen, Angeklopfter sieht es
+{
+  assert.match(programm, /const art = await klopfArtWaehlen\(name\); if \(!art\) return;[^\n]*\n[^\n]*\n[^\n]*\n[^\n]*api\("anklopfen", \{ an: pid, art \}\)/, "Wahl vor dem Anklopfen, art an den Server");
+  assert.match(programm, /data-w="schreiben">💬 Schreiben[^\n]*data-w="sprechen">📞 Sprechen/, "zwei Wege zur Wahl");
+  assert.match(programm, /\$\{sp \? "📞 will mit dir sprechen" : "💬 will mit dir schreiben"\}/, "Hinweis beim Angeklopften");
+  assert.match(programm, /if \(annehmen && \(r\.art === "sprechen" \|\| klopfSprechen\(k\)\)\) anrufen\(k\.von\.person_id\)/, "Sprechen → anrufen");
+  assert.match(programm, /api\("anklopfen", \{ an: pid, art \}\); if \(r\.ab\)/, "Weiter anklopfen behält die Wahl");
+  assert.match(html, /id="klopfJa" onclick="klopfAntwort\(true\)"/, "Annehmen-Knopf beschriftbar");
+  assert.match(server, /insert\(\{ von: ich\.person_id, an, \.\.\.\(art === "sprechen" \? \{ art \} : \{\}\) \}\)[^\n]*\n\s*if \(error && art === "sprechen"\)/, "Server: art speichern, ohne Spalte weiter");
+  assert.match(server, /db\.from\("kc_club_anklopfen"\)\.select\("\*"\) \/\/ 2\.646\.0/, "online liest art mit, ohne Spaltenliste");
+  assert.match(server, /titel: `👋 \$\{ich\.vorname\} klopft an` \+ \(art === "sprechen" \? " – 📞 möchte sprechen" : " – 💬 möchte schreiben"\)/, "Push sagt, was gewünscht ist");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261025_kc_club_anklopfen_art.sql", import.meta.url), "utf8");
+  assert.match(mig, /add column if not exists art text;[\s\S]*check \(art is null or art in \('schreiben', 'sprechen'\)\)/, "Migration: Spalte art");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
