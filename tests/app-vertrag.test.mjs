@@ -7370,6 +7370,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"online_paket_abweichung", \{ alt: alt\.on\.size, neu: erg\.on\.size, nurAlt, nurNeu, seit, spaeterMs/.test(server), "Online: wer, wann");
   assert.ok(/"unterhaltungen_paket_abweichung", \{ alt: alt\.length, neu: liste\.length, felder: felder\.slice\(0, 12\) \}/.test(server) && /feld: "letzte\." \+ u, \.\.\.\(u === "zeit"/.test(server), "Übersicht: welche Felder, Text ohne Inhalt");
 }
+// 2.641.0 KC-CLUB-ANWESEND-AMPEL: Clubabend-Anwesenheit mit Ampel nach Zusage
+{
+  assert.match(programm, /const CA_AMPEL = \{ ja: \{ k: "ja", sym: "🟢", t: "zugesagt" \}, vielleicht: \{ k: "vl", sym: "🟡"[^\n]*offen: \{ k: "of", sym: "🔴", t: "nicht gemeldet" \}, nein: \{ k: "nein"/, "Ampel grün/gelb/rot/abgesagt");
+  assert.match(programm, /ampel = \(z\) => CA_AMPEL\[z === "ja" \|\| z === "vielleicht" \|\| z === "nein" \? z : "offen"\]/, "ohne Antwort = rot");
+  assert.match(programm, /class="knopf klein ca-amp \$\{d \? "da haupt" : a\.k\}" data-da=/, "Knopf trägt Ampel, Antippen bleibt");
+  assert.match(programm, /<div class="ca-legende">/, "Legende mit Zahlen");
+  assert.match(html, /\.ca-leute \.ca-amp\.of \{ background: var\(--rotbg\); \}/, "rot hinterlegt");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

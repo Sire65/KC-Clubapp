@@ -1011,6 +1011,12 @@
   .cj-form textarea, .cj-form select, .cj-leitung select, .cj-leitung input[type=date] { width: 100%; box-sizing: border-box; font-size: 1rem; min-height: 44px; }
   .cj-leitung { margin-top: 14px; } .cj-leitung > summary { font-weight: 700; cursor: pointer; min-height: 44px; display: flex; align-items: center; }
   .ca-leute { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; } .ca-leute .knopf { width: auto; } .ca-chip { background: var(--karte2); border-radius: 12px; padding: 4px 10px; font-size: .9rem; }
+  .ca-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 4px 0 2px; font-size: .82rem; } .ca-legende .ca-amp { border-left: 4px solid transparent; padding-left: 5px; }
+  .ca-amp.ja { border-left: 5px solid var(--gruen); } .ca-leute .ca-amp.ja { background: var(--gruenbg); }
+  .ca-amp.vl { border-left: 5px solid #e0a800; } .ca-leute .ca-amp.vl { background: var(--gelbbg); }
+  .ca-amp.of { border-left: 5px solid #d32f2f; } .ca-leute .ca-amp.of { background: var(--rotbg); }
+  .ca-amp.nein { border-left: 5px solid var(--grau, #999); } .ca-leute .ca-amp.nein { opacity: .6; text-decoration: line-through; }
+  .ca-amp.da { border-left: 5px solid var(--gruen); }
   .ca-leitung { margin: 8px 0; } .ca-kachel { border: 2px solid var(--gold, #c9a46a); }
   .zteil { margin-top: 6px; font-size: .8rem; font-weight: 700; background: rgba(255,255,255,.55); border-radius: 6px; padding: 3px 6px; } /* 2.554.0 KC-CLUB-PINNWAND-TEIL-AB */
   .zettel details { margin-top: 6px; font-size: .78rem; } .zettel summary { cursor: pointer; font-weight: 800; }

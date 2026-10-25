@@ -36532,6 +36532,8 @@ function caAuswahl(vorschau, liste) {
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
   f.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { f.remove(); caOeffnen(vorschau, b.dataset.id); }));
 }
+const CA_RANG = ["ja", "vl", "of", "nein"];
+const CA_AMPEL = { ja: { k: "ja", sym: "🟢", t: "zugesagt" }, vielleicht: { k: "vl", sym: "🟡", t: "vielleicht" }, offen: { k: "of", sym: "🔴", t: "nicht gemeldet" }, nein: { k: "nein", sym: "⚪", t: "abgesagt" } };
 function caZeichnen() {
   const r = CA.stand; if (!r) return;
   const alt = $("caBlatt")?.querySelector(".blatt-innen")?.scrollTop || 0, L = r.leitung, tr = r.treffen;
@@ -36539,7 +36541,12 @@ function caZeichnen() {
   const top = r.tagesordnung.map((x, i) => `<div class="ca-top${x.erledigt ? " fertig" : ""}">${L ? `<button type="button" class="ca-haken" data-top="${i}" aria-label="${x.erledigt ? "Wieder offen" : "Abhaken"}">${x.erledigt ? "☑️" : "⬜"}</button>` : `<span class="ca-haken">${x.erledigt ? "✅" : "▫️"}</span>`}
     <span class="ca-tx">${i + 1}. ${esc(x.t)}${x.vorschlag ? ` <small class="hinweis">👍 ${x.stimmen}</small>` : ""}</span></div>`).join("");
   const da = new Set(r.anwesend.map((a) => a.person_id));
-  const anw = L ? `<p class="hinweis" style="margin:4px 0">Antippen, wer da ist – geht so ins Protokoll.</p><div class="ca-leute">${(r.mitglieder || []).map((m) => `<button type="button" class="knopf klein${da.has(m.person_id) ? " haupt" : ""}" data-da="${esc(m.person_id)}">${da.has(m.person_id) ? "✅ " : ""}${esc(m.name)}${m.zusage === "ja" && !da.has(m.person_id) ? " ·zugesagt" : ""}</button>`).join("")}</div>`
+  // 2.641.0 KC-CLUB-ANWESEND-AMPEL (Wunsch Hansi „besser unterscheiden, wer angemeldet ist: grün, gelb wer noch nicht genau weiß, rot noch nicht gemeldet“)
+  const ampel = (z) => CA_AMPEL[z === "ja" || z === "vielleicht" || z === "nein" ? z : "offen"], leute = [...(r.mitglieder || [])].sort((x, y) => CA_RANG.indexOf(ampel(x.zusage).k) - CA_RANG.indexOf(ampel(y.zusage).k)); // grün oben, dann gelb, rot, abgesagt
+  const zahl = (k) => leute.filter((m) => !da.has(m.person_id) && ampel(m.zusage).k === k).length;
+  const legende = `<div class="ca-legende">${Object.values(CA_AMPEL).map((a) => `<span class="ca-amp ${a.k}">${a.sym} ${a.t} <b>${zahl(a.k)}</b></span>`).join("")}<span class="ca-amp da">✅ da <b>${da.size}</b></span></div>`;
+  const anw = L ? `<p class="hinweis" style="margin:4px 0">Antippen, wer da ist – geht so ins Protokoll.</p>${legende}<div class="ca-leute">${leute.map((m) => { const a = ampel(m.zusage), d = da.has(m.person_id);
+      return `<button type="button" class="knopf klein ca-amp ${d ? "da haupt" : a.k}" data-da="${esc(m.person_id)}" title="${d ? "ist da" : a.t}">${d ? "✅" : a.sym} ${esc(m.name)}</button>`; }).join("")}</div>`
     : r.anwesend.length ? `<div class="ca-leute">${r.anwesend.map((a) => `<span class="ca-chip">✅ ${esc(a.name)}</span>`).join("")}</div>` : `<p class="hinweis">Die Clubleitung trägt vor Ort ein, wer da ist.</p>`;
   const fotos = r.album ? `<button type="button" class="knopf" onclick="$('caBlatt').remove();albumOeffnen('${esc(r.album.id)}')">📸 ${esc(r.album.name)} öffnen</button>` : L ? `<button type="button" class="knopf" data-k="album">📸 Album für heute anlegen</button>` : `<p class="hinweis">Noch kein Album für heute.</p>`;
   const gb = r.geburtstage.length ? r.geburtstage.map((g) => `<div>🎂 <b>${esc(g.name)}</b> – ${g.heute ? "heute!" : esc(fTag.format(new Date(g.tag + "T12:00:00")))}</div>`).join("") : `<p class="hinweis">Keine Geburtstage seit dem letzten Treffen.</p>`;
