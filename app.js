@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.645.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.646.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -41691,7 +41691,10 @@ function dpdBereiche(d, von) { // „10–23“ aus den Halbstunden mit Bedarf
   const out = []; d.bedarf.forEach((n, i) => { if (!n) return; const s = von + i / 2; const l = out[out.length - 1]; if (l && l[1] === s) l[1] = s + 0.5; else out.push([s, s + 0.5]); });
   return out.map(([a, b]) => `${dpdUhr(a)}–${dpdUhr(b)}`).join(", ");
 }
-function dpdTag(d, von, bis) { // Zeilen eines Tages: je Person, Bereitschaft, Bedarf/besetzt, Fehlt; je Zeile 30 Zellen [Klasse, Text]
+// 2.646.0 KC-CLUB-DP-DRUCK-STUNDEN (Wunsch Hansi „hinten die Gesamtstunden pro Person und insgesamt über alle Tage, vorne die Regelzeit mit Stunden,
+// unten drunter eine Ampel: zu viel, zu wenig, richtig besetzt“): rechts Spalte „Std.“ (Tag + „ges.“ über alle Tage), vorne Regelzeit/Bedarf/eingeplant
+// mit Ampelpunkt, statt „Fehlt“ die Ampel-Zeile je halbe Stunde (rot −n, grün ✓, gelb +n), zum Schluss das Blatt „Stunden je Person – alle Tage“.
+function dpdTag(d, von, bis, ges = {}) { // Zeilen eines Tages: je Person, Bereitschaft, Bedarf/besetzt, Ampel; je Zeile 30 Zellen [Klasse, Text] und rechts die Stunden
   const S = dpdSlots(von, bis), zu = (i) => (d.bedarf[i] ? "" : " zu"), rows = [];
   for (const p of d.leute) {
     const [a, b] = p.s || [null, null], cells = S.map((s, i) => {
@@ -41700,43 +41703,64 @@ function dpdTag(d, von, bis) { // Zeilen eines Tages: je Person, Bereitschaft, B
       else if (t === "unav") txt = "×";
       return [cl, txt]; });
     const nurGesperrt = [...p.w].every((c) => c === "u" || c === "-") && p.w.includes("u");
-    rows.push({ art: "p", name: p.n, sub: [p.z, a !== null ? dpdStd(b - a) + " h" : nurGesperrt ? "gesperrt" : "nicht eingeplant"].filter(Boolean).join(" · "), cells, dienst: a !== null ? [a, b] : null });
+    rows.push({ art: "p", name: p.n, sub: [p.z, a !== null ? dpdStd(b - a) + " h" : nurGesperrt ? "gesperrt" : "nicht eingeplant"].filter(Boolean).join(" · "), cells, dienst: a !== null ? [a, b] : null,
+      std: a !== null ? dpdStd(b - a) : "–", klein: "ges. " + dpdStd(ges[p.n] || 0) });
   }
-  for (const x of d.ber || []) rows.push({ art: "b", name: x.n, sub: "Bereitschaft · Vorschlag", dienst: x.s,
+  for (const x of d.ber || []) rows.push({ art: "b", name: x.n, sub: "Bereitschaft · Vorschlag", dienst: x.s, std: dpdStd(x.s[1] - x.s[0]), klein: "Bereitsch.",
     cells: S.map((s, i) => (s >= x.s[0] && s < x.s[1] ? ["ber" + (s === x.s[0] ? " anf" : "") + zu(i), s === x.s[0] ? `${dpdUhr(x.s[0])}–${dpdUhr(x.s[1])}` : ""] : ["leer" + zu(i), ""])) });
-  const fehl = d.fehlt.reduce((n, x) => n + x, 0) / 2;
-  rows.push({ art: "s", name: "Bedarf / besetzt", sub: "", cells: S.map((s, i) => ["sum" + zu(i), d.bedarf[i] ? `${d.bedarf[i]}/${d.besetzt[i]}` : ""]) });
-  rows.push({ art: "f", name: "Fehlt", sub: fehl ? dpdStd(fehl) + " Std." : "voll besetzt", cells: S.map((s, i) => [(d.fehlt[i] ? "fehlt" : "ok") + zu(i), d.fehlt[i] ? "−" + d.fehlt[i] : ""]) });
-  return { rows, fehl };
+  const bes = d.besetzt, fehl = d.fehlt.reduce((n, x) => n + x, 0) / 2;
+  const ueber = d.bedarf.reduce((n, x, i) => n + Math.max(0, bes[i] - x), 0) / 2, bedarfStd = d.bedarf.reduce((n, x) => n + x, 0) / 2;
+  rows.push({ art: "s", name: "Bedarf / besetzt", sub: "Personen je halbe Stunde", std: dpdStd(bedarfStd), klein: "Bedarf",
+    cells: S.map((s, i) => ["sum" + zu(i), d.bedarf[i] || bes[i] ? `${d.bedarf[i]}/${bes[i]}` : ""]) });
+  rows.push({ art: "f", name: "Ampel", sub: "rot fehlt · grün passt · gelb zu viel", std: fehl ? "−" + dpdStd(fehl) : "✓", klein: ueber ? `+${dpdStd(ueber)} über` : "Std.",
+    cells: S.map((s, i) => { const x = bes[i] - d.bedarf[i]; return !d.bedarf[i] && !bes[i] ? ["leer zu", ""] : [x < 0 ? "a-rot" : x > 0 ? "a-gelb" : "a-gruen", x < 0 ? "−" + -x : x > 0 ? "+" + x : "✓"]; }) });
+  return { rows, fehl, ueber, bedarfStd, einpl: bedarfStd - fehl, regelStd: d.bedarf.filter(Boolean).length / 2 };
 }
-function dpdTabelle(tage, von, teil) {
-  const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s));
-  const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}</colgroup><thead><tr><th class="tag">Tag · Regelzeit</th><th class="wer">Mitglied</th>${teil.map((s) => `<th class="t${s % 1 ? "" : " voll"}">${s % 1 ? "" : s}</th>`).join("")}</tr></thead>`;
+function dpdTabelle(tage, von, teil, letzte) {
+  const S = dpdSlots(von, von + tage[0].rows[0].cells.length / 2), idx = teil.map((s) => S.indexOf(s)), rechts = teil[teil.length - 1] === letzte;
+  const kopf = `<colgroup><col class="tag"><col class="wer">${teil.map(() => "<col>").join("")}${rechts ? '<col class="std">' : ""}</colgroup><thead><tr><th class="tag">Tag · Regelzeit</th><th class="wer">Mitglied</th>${teil.map((s) => `<th class="t${s % 1 ? "" : " voll"}">${s % 1 ? "" : s}</th>`).join("")}${rechts ? '<th class="std">Std.</th>' : ""}</tr></thead>`;
   const body = tage.flatMap((t) => t.rows.map((r, i) => {
-    const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.art)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="bil${t.fehl ? " rot" : ""}">${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "voll besetzt"}</span></th>`;
+    const tag = i ? "" : `<th class="tag" rowspan="${t.rows.length}"><b>${t.wt} ${t.dt}</b><span class="kind">${esc(t.art)}</span><span class="regel">${esc(t.regel)} Uhr</span><span class="zahl">Regelzeit ${dpdStd(t.regelStd)} Std.</span><span class="zahl">Bedarf ${dpdStd(t.bedarfStd)} Std.</span><span class="zahl">eingeplant ${dpdStd(t.einpl)} Std.</span><span class="bil ${t.fehl ? "rot" : "gruen"}">● ${t.fehl ? "fehlt " + dpdStd(t.fehl) + " Std." : "richtig besetzt"}</span>${t.ueber ? `<span class="bil gelb">● ${dpdStd(t.ueber)} Std. zu viel</span>` : ""}</th>`;
     const zellen = idx.map((k, j) => { let [cl, txt] = r.cells[k];
       if (j === 0 && r.dienst && !txt && teil[0] > r.dienst[0] && teil[0] < r.dienst[1]) txt = `${dpdUhr(r.dienst[0])}–${dpdUhr(r.dienst[1])}`; // läuft vom linken Blatt herüber
       return `<td class="${cl}">${txt ? `<span>${esc(txt)}</span>` : ""}</td>`; }).join("");
-    return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}</tr>`; })).join("");
+    const std = rechts ? `<td class="std ${r.art}"><b>${esc(r.std)}</b><small>${esc(r.klein)}</small></td>` : "";
+    return `<tr class="${r.art}${i ? "" : " erste"}">${tag}<th class="wer ${r.art}">${esc(r.name)}<small>${esc(r.sub)}</small></th>${zellen}${std}</tr>`; })).join("");
   return `<table class="dpd-raster">${kopf}<tbody>${body}</tbody></table>`;
+}
+function dpdUebersicht(tage, ges, gesBer) { // letztes Blatt: Stunden je Person über alle Tage, Bedarf und Ampel je Tag
+  const namen = [...new Set(tage.flatMap((t) => t.leute.map((p) => p.n)))].sort((a, b) => (ges[b] || 0) - (ges[a] || 0) || a.localeCompare(b, "de"));
+  const tagStd = (t, n) => { const p = t.leute.find((x) => x.n === n); return p?.s ? p.s[1] - p.s[0] : null; };
+  const summe = (t) => t.leute.reduce((s, p) => s + (p.s ? p.s[1] - p.s[0] : 0), 0);
+  const amp = (t) => (t.fehl ? ["rot", "−" + dpdStd(t.fehl)] : t.ueber ? ["gelb", "+" + dpdStd(t.ueber)] : ["gruen", "✓"]);
+  const alle = Object.values(ges).reduce((a, b) => a + b, 0), alleBer = Object.values(gesBer).reduce((a, b) => a + b, 0);
+  const tf = tage.reduce((a, t) => a + t.fehl, 0), tu = tage.reduce((a, t) => a + t.ueber, 0);
+  const zeilen = namen.map((n) => `<tr><td>${esc(n)}</td>${tage.map((t) => { const h = tagStd(t, n); return `<td class="${h === null ? "leer" : ""}">${h === null ? "–" : dpdStd(h)}</td>`; }).join("")}<td class="ges">${dpdStd(ges[n] || 0)}</td><td>${gesBer[n] ? dpdStd(gesBer[n]) : "–"}</td></tr>`).join("")
+    + `<tr class="alle"><td>Alle zusammen</td>${tage.map((t) => `<td>${dpdStd(summe(t))}</td>`).join("")}<td class="ges">${dpdStd(alle)}</td><td>${dpdStd(alleBer)}</td></tr>`
+    + `<tr class="bed"><td>Bedarf</td>${tage.map((t) => `<td>${dpdStd(t.bedarfStd)}</td>`).join("")}<td class="ges">${dpdStd(tage.reduce((a, t) => a + t.bedarfStd, 0))}</td><td></td></tr>`
+    + `<tr><td>Ampel (fehlt / zu viel)</td>${tage.map((t) => `<td class="${amp(t)[0]}">${amp(t)[1]}${t.fehl && t.ueber ? `<small>+${dpdStd(t.ueber)}</small>` : ""}</td>`).join("")}<td class="ges ${tf ? "rot" : "gruen"}">${tf ? "−" + dpdStd(tf) : "✓"}</td><td>${tu ? `+${dpdStd(tu)} zu viel` : ""}</td></tr>`;
+  return `<table class="dpd-sum"><thead><tr><th>Mitglied</th>${tage.map((t) => `<th>${t.wt}<small>${t.dt}</small></th>`).join("")}<th class="ges">Gesamt</th><th>Bereitschaft<small>Vorschlag</small></th></tr></thead><tbody>${zeilen}</tbody></table>
+    <p class="dpd-eb" style="margin-top:3mm;text-transform:none;letter-spacing:0">Stunden laut Entwurf (eingeplante Dienste). Bereitschaft zählt nicht mit. Ampel je Tag: rot = so viele Personenstunden fehlen, gelb = zu viel eingeplant, grün = richtig besetzt.</p>`;
 }
 async function dpdBauen() {
   const d = await api("dp_druck", {});
   if (!d?.tage?.length) { melde("Noch keine Übersicht abgelegt – Claude bitten, sie zu rechnen.", true); return null; }
   DPD.daten = d; const breit = document.querySelector('input[name="dpdBreit"]:checked')?.value || DPD.breit; DPD.breit = breit;
-  const von = d.von ?? 8, bis = d.bis ?? 23;
-  const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
+  const von = d.von ?? 8, bis = d.bis ?? 23, ges = {}, gesBer = {};
+  for (const t of d.tage) { for (const p of t.leute) ges[p.n] = (ges[p.n] || 0) + (p.s ? p.s[1] - p.s[0] : 0); for (const x of t.ber || []) gesBer[x.n] = (gesBer[x.n] || 0) + x.s[1] - x.s[0]; }
+  const tage = d.tage.map((t) => { const x = new Date(t.d + "T12:00:00"); return { ...t, ...dpdTag(t, von, bis, ges), wt: DPD_WD[x.getDay()], dt: `${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, regel: dpdBereiche(t, von) }; });
   const blaetter = [[]]; let n = 0;
   for (const t of tage) { const z = t.rows.length + 0.6; if (blaetter[blaetter.length - 1].length && n + z > DPD_ZEILEN) { blaetter.push([]); n = 0; } blaetter[blaetter.length - 1].push(t); n += z; }
   const S = dpdSlots(von, bis), teile = breit === "2" ? [S.filter((s) => s < 16), S.filter((s) => s >= 15.5)] : [S];
-  const stand = d.stand ? wann(d.stand) : "";
-  const leg = `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="fehlt">−2</i>so viele fehlen</span><span><i class="zu"></i>kein Bedarf</span></div>`;
+  const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · Entwurf, nicht veröffentlicht${stand ? " · Stand " + esc(stand) : ""}</p>`;
+  const leg = `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>`;
   const nb = blaetter.length, html = blaetter.flatMap((bl, i) => teile.map((teil, k) => {
-    const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb}`,
+    const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb + 1}`,
       teile.length > 1 ? (k ? `linken Rand bis 16 Uhr umknicken und auf Blatt ${i + 1} links legen` : `rechts an Blatt ${i + 1} rechts anlegen (Klebekante 15:30–16 Uhr)`) : "",
-      i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : ""].filter(Boolean).join(" · ");
-    return `<section class="dpd-blatt"><header class="dpd-kopf"><div><p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · Entwurf, nicht veröffentlicht${stand ? " · Stand " + esc(stand) : ""}</p>
-      <h1>Dienstplan – Wünsche und offene Zeiten</h1></div>${leg}</header>${dpdTabelle(bl, von, teil)}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("");
+      i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : "danach: Stunden je Person"].filter(Boolean).join(" · ");
+    return `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}
+      <h1>Dienstplan – Wünsche und offene Zeiten</h1></div>${leg}</header>${dpdTabelle(bl, von, teil, S[S.length - 1])}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("")
+    + `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Stunden je Person – alle Tage</h1></div></header>${dpdUebersicht(tage, ges, gesBer)}<footer class="dpd-fuss">Stundenübersicht · letztes Blatt</footer></section>`;
   return { titel: `Dienstplan ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd${breit === "2" ? " breit" : ""}">${html}</div>` };
 }
 // ---------- KC-CLUB-ARCHIV (1.2.0, Wunsch Hansi): Regal mit Aktenordnern (Jahreszahl + Inhalt), innen Register ----------

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.646.0 – 2026-10-25 – 🗓️ Dienstplan-Druck mit Stunden und Ampel (KC-CLUB-DP-DRUCK-STUNDEN)
+Wunsch Hansi („hinten die Gesamtstunden pro Person und insgesamt über alle Tage, vorne die Regelzeit mit Stunden und unten drunter ein Ampelsystem: Überbesetzung, unterbesetzt, richtig besetzt“): Die Druckübersicht (Archiv → Mein Ordner → „🗓️ Dienstplan zum Drucken“) hat rechts die Spalte „Std.“ – je Person die Stunden des Tages und darunter „ges.“ über alle Tage, bei der Bereitschaft ihre Stunden, beim Bedarf die Bedarfsstunden. Vorne je Tag Regelzeit mit Stundenzahl, Bedarf und eingeplante Stunden und ein Ampelpunkt (fehlt / richtig besetzt / zu viel). Die Zeile „Fehlt“ ist jetzt die Ampel je halbe Stunde: rot −n fehlen, grün ✓ richtig, gelb +n zu viel. Neues letztes Blatt „Stunden je Person – alle Tage“: je Mitglied die Stunden pro Tag, Gesamt und Bereitschaft (Vorschlag), dazu „Alle zusammen“, Bedarf und Ampel je Tag. Nur Anzeige; Daten und Server unverändert. Rückweg: App 2.645.0.
+
 ## 2.645.0 – 2026-10-25 – 🎡 Sim-Jü: die Orgel von Schäfer (KC-CLUB-SIMJUE-ORGEL)
 Wunsch Hansi („Bild von einer Orgel von Sim-Jü in die Club-App – nur bis Dienstag 0 Uhr, am besten mit Ton“): Bis Di 27.10.2026, 0 Uhr steht im Info-Laufband „🎡 Sim-Jü: die Orgel von Schäfer“. Antippen öffnet Hansis Foto der Konzertorgel (Ruth & Voigt, Anno 1904) mit ▶️ Orgel hören. Ton: echte Carl-Frei-Kirmesorgel aus Breda's Museum („Mina de Rumbakoningin“), Aufnahme Thijs Haenen, CC BY-SA 3.0 (Wikimedia Commons; von Hansi geladen, als MP3 umgewandelt, 2:35, 2,1 MB) – Nennung mit Lizenz und Quelle im Blatt; wird erst beim Antippen geladen, stoppt beim Schließen. Danach verschwindet der Punkt von selbst.
 
