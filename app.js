@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.638.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.639.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36330,11 +36330,23 @@ function caHeute() {
   const b = Date.parse(t.beginn), ende = t.ende ? Date.parse(t.ende) + 3600000 : b + CA_DAUER_STD * 3600000, j = Date.now();
   return j >= b - CA_VORHER_MIN * 60000 && j <= ende;
 }
-async function caOeffnen(vorschau) {
-  try { const r = await api("clubabend", vorschau ? { vorschau: true } : {}); if (!r.aktiv) return melde("🍽️ Heute ist kein Clubabend – die Kachel erscheint am Abend selbst (2 Std. vorher).");
+async function caOeffnen(vorschau, treffenId) {
+  // 2.639.0 KC-CLUB-CLUBABEND-AUSWAHL (Wunschliste #42, Hansi „Clubabend-Auswahl, wenn mehrere da sind“): mehrere → erst wählen, einer → sofort wie bisher
+  const daten = () => ({ ...(vorschau ? { vorschau: true } : {}), ...(treffenId ? { treffen_id: treffenId } : { auswahl: true }) });
+  try { const r = await api("clubabend", daten()); if (!r.aktiv) return melde("🍽️ Heute ist kein Clubabend – die Kachel erscheint am Abend selbst (2 Std. vorher).");
+    if (r.auswahl) return caAuswahl(vorschau, r.auswahl);
+    treffenId = r.treffen?.id || treffenId; // der Takt bleibt bei genau diesem Abend
     CA.stand = r; caZeichnen(); clearInterval(CA.takt);
-    CA.takt = setInterval(async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; try { const n = await api("clubabend", vorschau ? { vorschau: true } : {}); if (n.aktiv && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {} }, CA_TAKT_MS);
+    CA.takt = setInterval(async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; try { const n = await api("clubabend", daten()); if (n.aktiv && !n.auswahl && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {} }, CA_TAKT_MS);
   } catch (e) { meldeFehler(e); }
+}
+function caAuswahl(vorschau, liste) {
+  const heute = new Date().toDateString();
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">🍽️ Welcher Clubabend?</h3>
+    <div class="ca-wahl">${liste.map((t) => { const h = new Date(t.beginn).toDateString() === heute;
+      return `<button type="button" class="knopf${h ? " haupt" : ""}" data-id="${esc(t.id)}">${h ? "⭐ Heute · " : "🍽️ "}${esc(wann(t.beginn))} – ${esc(t.titel || "Clubabend")}${t.ort ? `<small> · ${esc(t.ort)}</small>` : ""}</button>`; }).join("")}</div>`, () => f.remove());
+  f.querySelector('[data-a="zu"]').onclick = () => f.remove();
+  f.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { f.remove(); caOeffnen(vorschau, b.dataset.id); }));
 }
 function caZeichnen() {
   const r = CA.stand; if (!r) return;

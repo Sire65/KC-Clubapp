@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12702,4 +12702,11 @@ function idx0() { return lies("index.html"); }
   assert.ok(/body\.inkognito #fuss \{ background-image: linear-gradient\(rgba\(241,196,15,\.22\)/.test(html) && /animation: inkoFussBlink 1\.2s ease-in-out infinite;/.test(html), "Fußzeile pulsiert im Takt wie der Kopf");
   assert.ok(/@keyframes inkoFussBlink \{ 0%, 100% \{ box-shadow: 0 0 0 4px #f1c40f/.test(html) && /50% \{ box-shadow: 0 0 0 4px #d32f2f/.test(html), "gleiche Farben gelb → rot");
   assert.ok(/prefers-reduced-motion: reduce\) \{ body\.inkognito #fuss \{ animation-duration: 2\.4s; \}/.test(html), "weniger Bewegung: langsamer");
+}
+// 2.639.0 KC-CLUB-CLUBABEND-AUSWAHL (Wunschliste #42): mehrere Clubabende → Auswahl, einer → sofort
+{
+  const c = server.slice(server.indexOf('case "clubabend": {'), server.indexOf('case "clubabend_setzen": {'));
+  assert.ok(/clubabendTreffenListe\(p\.vorschau === true && ich\.vorstand\)/.test(c) && /if \(!tid && p\.auswahl === true && liste\.length > 1\) return json\(\{ aktiv: true, auswahl:/.test(c), "Auswahl nur bei mehreren, Vorschau nur Clubleitung");
+  assert.ok(/const t = tid \? liste\.find\(\(x: any\) => x\.id === tid\) : liste\[0\];/.test(c), "treffen_id nur aus der erlaubten Liste");
+  assert.ok(/if \(r\.auswahl\) return caAuswahl\(vorschau, r\.auswahl\);/.test(programm) && /🍽️ Welcher Clubabend\?/.test(programm), "App fragt nur bei mehreren");
 }

@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.635.0";
+const SERVER_VERSION = "2.639.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5613,14 +5613,14 @@ async function startPaketVergleich(ich: Ich, pk: any) { // nebenbei: bisherige E
 // offene Aufgaben); abhaken, Anwesenheit eintragen, Protokoll/Abstimmung/Album starten nur die Clubleitung. Tagesordnung = Büro-Vorbereitung
 // (sonst die Standard-Tagesordnung mit den Themen), Anwesenheit geht ins Protokoll.
 const CA_VORHER_MIN = 120, CA_DAUER_STD = 6;
-async function clubabendTreffen(vorschau: boolean) {
+// 2.639.0 KC-CLUB-CLUBABEND-AUSWAHL (Wunschliste #42): alle passenden Clubabende (am Abend selbst: der laufende; Vorschau der Clubleitung: bis 60 Tage)
+async function clubabendTreffenListe(vorschau: boolean) {
   const jetztMs = Date.now();
   const { data } = await db.from("kc_club_treffen").select("id,titel,beginn,ende,ort").eq("art", "treffen").eq("status", "geplant")
-    .gte("beginn", new Date(jetztMs - CA_DAUER_STD * 3600000).toISOString()).lte("beginn", new Date(jetztMs + (vorschau ? 60 * 86400000 : CA_VORHER_MIN * 60000)).toISOString()).order("beginn").limit(1);
-  const t = data?.[0]; if (!t) return null;
-  if (!vorschau && t.ende && jetztMs > Date.parse(t.ende) + 3600000) return null; // eine Stunde nach dem Ende ist der Abend vorbei
-  return t;
+    .gte("beginn", new Date(jetztMs - CA_DAUER_STD * 3600000).toISOString()).lte("beginn", new Date(jetztMs + (vorschau ? 60 * 86400000 : CA_VORHER_MIN * 60000)).toISOString()).order("beginn").limit(8);
+  return (data ?? []).filter((t: any) => vorschau || !t.ende || jetztMs <= Date.parse(t.ende) + 3600000); // eine Stunde nach dem Ende ist der Abend vorbei
 }
+async function clubabendTreffen(vorschau: boolean) { return (await clubabendTreffenListe(vorschau))[0] ?? null; }
 const caSchluessel = (x: any) => (x.id ? String(x.id) : "t:" + String(x.t || "").slice(0, 80));
 async function clubabendStand(ich: Ich, t: any) {
   const b = await bueroSitzung(ich, t.id);
@@ -14910,8 +14910,13 @@ Köcheclub Werne`,
       }
       // ----- 2.569.0 KC-CLUB-CLUBABEND: sehen alle Mitglieder, ändern nur die Clubleitung -----
       case "clubabend": {
-        const t = await clubabendTreffen(p.vorschau === true && ich.vorstand);
-        if (!t) return json({ aktiv: false });
+        // 2.639.0 KC-CLUB-CLUBABEND-AUSWAHL: mehrere → erst die Auswahl (nur wenn die App danach fragt); treffen_id nur aus derselben erlaubten Liste
+        const liste = await clubabendTreffenListe(p.vorschau === true && ich.vorstand);
+        if (!liste.length) return json({ aktiv: false });
+        const tid = String(p.treffen_id || "");
+        if (!tid && p.auswahl === true && liste.length > 1) return json({ aktiv: true, auswahl: liste.map((t: any) => ({ id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort })) });
+        const t = tid ? liste.find((x: any) => x.id === tid) : liste[0];
+        if (!t) throw new Fehler("Dieser Clubabend ist gerade nicht verfügbar.", 404);
         return json(await clubabendStand(ich, t));
       }
       case "clubabend_setzen": {
