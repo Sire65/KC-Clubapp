@@ -12917,3 +12917,9 @@ function idx0() { return lies("index.html"); }
   assert.ok(/wk-tonhinweis" onclick="wkTonFrei\(\)">🔊 Antippen für Ton/.test(sc) && /function wkTonFrei\(\)/.test(programm), "gesperrter Ton: Antippen anbieten");
   assert.ok(/jzbLauflicht\(c, ll, k, T, 3, 4\);/.test(programm) && /jzbLauflicht\(c, kante, k, T, 2\.5, 3\);/.test(programm) && /jzbLauflicht\(c, rand, k, T \+ \.5, 3, 4\);/.test(programm), "Lauflicht am Karussell langsamer");
 }
+// 2.659.0 KC-CLUB-KACHEL-ECKEN (Wunsch Hansi „Slider: Kacheln von 4-eckig bis fast rund, Standard-Knopf“)
+{
+  assert.ok(/<input type="range" id="setKachelEcken" min="0" max="60"[^>]*oninput="kachelEckenSetzen\(this\.value\)">/.test(html) && /id="kachelEckenStandard" onclick="kachelEckenSetzen\(null\)">↺ Standard<\/button>/.test(html), "Regler und Standard-Knopf");
+  assert.ok(/:root\.kr-an \.kachel, :root\.kr-an #raster \.kachel \{ border-radius: var\(--kachel-r\); \}/.test(html), "wirkt auf die Kacheln, ohne Wert Standard");
+  assert.ok(/const KACHEL_ECKEN = "kc_club_kachel_ecken";/.test(programm) && /if \(v === null\) localStorage\.removeItem\(KACHEL_ECKEN\);/.test(programm) && /try \{ kachelEckenAnwenden\(\); \} catch \{\}/.test(programm), "je Gerät, Standard löscht, beim Laden angewendet");
+}

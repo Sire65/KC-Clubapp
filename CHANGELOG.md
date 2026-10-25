@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.659.0 – 2026-10-26 – ⬜ Ecken der Kacheln per Regler (KC-CLUB-KACHEL-ECKEN)
+- Wunsch Hansi („Slider: Kacheln von 4-eckig bis fast rund einstellen, und ein Standard-Knopf“): ⚙️ → „✨ Effekte“ → **„⬜ Ecken der Kacheln“** (unter „🌗 Schatten“). Regler ganz links ◼️ eckig, ganz rechts ⚪ fast rund (0–60 px), wirkt sofort; Anzeige „ganz eckig · fast eckig · leicht abgerundet · stark abgerundet · fast rund“. **↺ Standard** stellt die normalen Ecken wieder her (ausgegraut, solange Standard gilt). Gilt für dieses Gerät, bleibt nach dem Neuladen. Hilfe-Eintrag, Twinkey-Frage, Lupe. Test: `tools/kachel-ecken/kachel-ecken-browser.mjs`. Nur App.
+
 ## 2.658.0 – 2026-10-26 – ⏰ Wecker und Timer klingeln wieder hörbar · 🎠 Lauflicht am Karussell ruhiger (KC-CLUB-WECKER-TON, KC-CLUB-SIMJUE-KARUSSELL-3)
 - Fund Hansi („Der Wecker und Timer haben keinen Ton“): Der Akku-Schutz (2.361.0) legt die Tonausgabe 3 s nach dem letzten Ton schlafen. Beim Klingeln Minuten später spielte der Wecker nur bei „laufendem Ton“ – das Wecken dauert ein paar Millisekunden, der Akku-Schutz legte sie gleich wieder schlafen → stumm (nachgestellt: alter Stand 0 hörbare Schläge). Jetzt wie beim Kuckuck (2.428.0/2.436.0): jeder Schlag weckt den Ton und spielt, sobald er läuft; vor dem ersten Schlag wird der Lautsprecher geweckt; ist der Ton gesperrt (App frisch geöffnet, noch nicht getippt), zeigt das Klingel-Fenster „🔊 Antippen für Ton“. Bei geschlossener App klingelt wie bisher der Push. Test: `tools/wecker-ton/wecker-ton-browser.mjs`.
 - Wunsch Hansi („Lauflicht am Karussell zu schnell“): Lauflichter am Kinderkarussell laufen etwa ein Drittel so schnell (3 statt 9 Schritte je Sekunde). Nur App.

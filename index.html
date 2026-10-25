@@ -4945,6 +4945,10 @@
   .sch-farbe input[type=color] { width: 32px; height: 26px; padding: 0; border: none; background: none; }
   .sch-probe { display: flex; gap: 12px; align-items: center; justify-content: center; padding: 14px; margin: 8px 0; border-radius: 14px; background: var(--bg); }
   .sch-probe span { padding: 10px 14px; border-radius: 12px; background: var(--karte); font-weight: 700; box-shadow: var(--sch-box); }
+  /* 2.659.0 KC-CLUB-KACHEL-ECKEN: Ecken der Kacheln per Regler (0 = eckig … 60 = fast rund); aus = Standard */
+  :root.kr-an .kachel, :root.kr-an #raster .kachel { border-radius: var(--kachel-r); }
+  .kr-zeile { flex-wrap: wrap; } .kr-regler { display: flex; align-items: center; gap: 10px; margin-top: 10px; } .kr-regler input { flex: 1; min-width: 0; height: 32px; accent-color: var(--rot); }
+  .kr-unten { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -5530,6 +5534,10 @@
       <!-- 2.656.0 KC-CLUB-SCHATTEN (Wunsch Hansi 25.10.2026): Schatten unter Knöpfen, Kacheln, Karten, Kopf … – Stärke, Farbe, Position -->
       <div class="schalter"><div><b>🌗 Schatten</b><div class="hinweis">Knöpfe, Kacheln, Karten, Kopf und Leisten bekommen einen Schatten – Stärke, Farbe und Position unten einstellen. Aus: wie bisher. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setSchatten" onchange="schattenSpeichern({ an: this.checked })"></div>
       <details class="abh-klappe" data-abh="setSchatten"><summary>🌗 Schatten einstellen</summary><div id="schattenWahl"></div></details>
+      <!-- 2.659.0 KC-CLUB-KACHEL-ECKEN (Wunsch Hansi 25.10.2026): Regler – Kacheln von eckig bis fast rund, „Standard“ setzt zurück -->
+      <div class="schalter kr-zeile"><div style="flex:1"><b>⬜ Ecken der Kacheln</b><div class="hinweis">Mit dem Regler die Kacheln von eckig bis fast rund einstellen. „Standard“ stellt wieder die normalen Ecken ein. Gilt für dieses Gerät.</div>
+        <div class="kr-regler"><span aria-hidden="true">◼️</span><input type="range" id="setKachelEcken" min="0" max="60" step="1" value="18" aria-label="Ecken der Kacheln: links eckig, rechts fast rund" oninput="kachelEckenSetzen(this.value)"><span aria-hidden="true">⚪</span></div>
+        <div class="kr-unten"><span id="kachelEckenText" class="hinweis">Standard</span><button type="button" class="knopf klein" id="kachelEckenStandard" onclick="kachelEckenSetzen(null)">↺ Standard</button></div></div></div>
       <div class="schalter"><div><b>🕰️ Uhr zur vollen Stunde</b><div class="hinweis">Solange die App offen ist, kommt zu jeder vollen Stunde die Uhr – Kuckuck, Big Ben, Kölner Dom und mehr (unten auswählen) – und schlägt so oft, wie es Uhr ist (nachts 22–7 Uhr ohne Ton). Antippen schließt sie. Gilt für dieses Gerät.</div></div><button type="button" class="knopf klein" onclick="kuckuckZeigen(kkJetzt().h, true)" title="Kuckucksuhr jetzt mit Ton zeigen">🔊 Probe</button><input type="checkbox" id="setKuckuck" onchange="einstellung('kuckuck', this.checked)"></div> <!-- 2.402.0 KC-CLUB-KUCKUCKSUHR -->
       <details class="su-wahl" data-abh="setKuckuck"><summary>🔔 Welche Uhr? <small class="hinweis">– jede Uhr zum Aufklappen, ▶ zum Anhören, mehrere = jede Stunde eine andere</small></summary><div id="stundenUhrWahl"></div></details> <!-- 2.467.0 KC-CLUB-STUNDENUHREN -->
       <div class="schalter versteckt" id="setAdventZeile"><div><b>🎄 Adventskalender</b><div class="hinweis">Vom 1. bis 24. Dezember jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei – Erinnerung oben im Info-Laufband. Aus: keine Erinnerung. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="akZeigen()">🎄 Kalender ansehen</button></div><input type="checkbox" id="setAdvent" aria-label="Adventskalender an oder aus" onchange="einstellung('advent', this.checked)"></div> <!-- 2.468.0 KC-CLUB-ADVENTSKALENDER -->
@@ -5965,7 +5973,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.658.0" data-v="2.658.0"></script>
+<script src="app.js?v=2.659.0" data-v="2.659.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
