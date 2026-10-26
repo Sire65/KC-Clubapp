@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.668.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.669.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36581,6 +36581,7 @@ function einlZiel(dateien, { korbId = null, titel = "" } = {}) {
   const L = !!(ICH?.vorstand || ICH?.admin), nichtArchiv = dateien.filter((d) => !ARCHIV_TYP_OK(einlMime(d))).length;
   blattAuf("einlBlatt", `<h3 style="margin-top:0">📄 Wohin damit?</h3>
     <p style="margin:0 0 8px">${dateien.map((d) => `${arDateiSym(d.type)} <b>${esc(d.name)}</b>`).join("<br>")}</p>
+    <div id="einlErk"></div><!-- 2.669.0 KC-CLUB-ERKENNUNG-DATEI -->
     ${nichtArchiv ? `<p class="hinweis" style="margin:0 0 8px">⚠️ ${nichtArchiv === 1 ? "Eine Datei hat" : nichtArchiv + " Dateien haben"} ein Format, das nicht ins Archiv passt – Senden geht trotzdem.</p>` : ""}
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" onclick="einlAblegen()">🗄️ In einen Ordner ablegen <small>(mit Vorschlag)</small></button>
@@ -36589,6 +36590,118 @@ function einlZiel(dateien, { korbId = null, titel = "" } = {}) {
       <button class="knopf" onclick="einlPerMail()">📧 Per E-Mail mit Anhang</button>
       <button class="knopf" onclick="fensterZu($('einlBlatt'));EINL=null">Abbrechen</button></div>
     <p class="hinweis" style="margin:8px 0 0">💬 Bei „Als Nachricht“ wählst du im Chat wie gewohnt, ob zusätzlich Push oder E-Mail-Hinweis rausgeht. 📧 „Per E-Mail“ schickt die Datei direkt aus der App an Mitglieder (An, CC, BCC) – für andere Adressen gibt es dort „📤 Anderes Mail-Programm“.</p>`);
+  erkDateiStart(dateien); // 2.669.0 KC-CLUB-ERKENNUNG-DATEI: nebenbei – das Fenster ist sofort bedienbar
+}
+// ---------- 2.669.0 KC-CLUB-ERKENNUNG-DATEI (Teil 3 der „Erkennung“, Wunsch Hansi): beim Einlesen erkennen, was es ist – nur Vorschläge ----------
+// 🧾 Kassenbon / Tank- / Parkbeleg → „Erstattung damit anlegen?“ (Betrag, Datum, Geschäft vorausgefüllt, die Datei hängt als Beleg dran)
+// 📝 Wunschbogen / Bestätigung / Stimmzettel (QR KCDP-FORM-PROFILE-1) → Person erkannt, Titel gesetzt
+// 📋 Protokoll / ✉️ Einladung / 📑 Rechnung → passender Titel, damit „Ablegen“ den richtigen Ordner vorschlägt
+// Alles auf dem Gerät, nichts geht an fremde Dienste: PDF-Text mit pdf.js, Fotos mit tesseract.js (lib/ocr, einmalig ca. 5 MB – erst nach
+// einem Tipp, danach automatisch), QR mit BarcodeDetector oder jsQR.
+const ERKD_BETRAG = /(\d{1,4}(?:\.\d{3})*,\d{2}|\d{1,4}\.\d{2})(?!\d)/g;
+function erkDokument(text) { // → { art: "beleg" | "rechnung" | "protokoll" | "einladung" | null, betrag, datum, geschaeft, auslage }
+  const t = String(text || ""), zeilen = t.split(/\n+/).map((z) => z.trim()).filter(Boolean);
+  const zahl = (x) => Number(x.replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", "."));
+  const dm = /\b(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})\b/.exec(t);
+  let datum = null;
+  if (dm) { const j = dm[3].length === 2 ? 2000 + +dm[3] : +dm[3], m = +dm[2], d = +dm[1]; if (m >= 1 && m <= 12 && d >= 1 && d <= 31 && j >= 2000 && j <= 2100) datum = `${j}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`; }
+  // Betrag: Zeile „Summe / Gesamt / zu zahlen …“ (die erste solche Zeile gewinnt), sonst Zahlungszeile, sonst der größte Betrag mit € / EUR
+  let betrag = null, zahlung = null;
+  for (const z of zeilen) {
+    const b = [...z.matchAll(ERKD_BETRAG)].map((x) => zahl(x[1])).filter((x) => x > 0 && x < 10000); if (!b.length) continue;
+    if (/\b(summe|gesamt\w*|zu zahlen|total|endbetrag)\b/i.test(z)) { betrag = b[b.length - 1]; break; }
+    if (zahlung === null && /\b(bar|ec[- ]?karte|girocard|kartenzahlung|visa|mastercard|betrag)\b/i.test(z)) zahlung = b[b.length - 1];
+  }
+  if (betrag === null) betrag = zahlung;
+  if (betrag === null) { const b = zeilen.filter((z) => /€|\beur\b/i.test(z)).flatMap((z) => [...z.matchAll(ERKD_BETRAG)].map((x) => zahl(x[1]))).filter((x) => x > 0 && x < 10000); if (b.length) betrag = Math.max(...b); }
+  const bon = betrag !== null && /\b(summe|zu zahlen|betrag|mwst|ust|kassenbon|quittung|beleg|bon|parkschein|kartenzahlung|girocard|ec[- ]?karte|bar|rückgeld|wechselgeld|kassierer\w*)\b/i.test(t);
+  const rechnung = /\b(rechnung(?:snummer|sdatum)?|invoice)\b/i.test(t) && !/\b(kassenbon|quittung|rückgeld|wechselgeld|kassierer\w*)\b/i.test(t);
+  const art = rechnung ? "rechnung" : bon ? "beleg" : /\b(protokoll|niederschrift|sitzungsprotokoll)\b/i.test(t) ? "protokoll" : /\b(einladung|tagesordnung)\b/i.test(t) ? "einladung" : null;
+  const auslage = /\b(super|diesel|e10|e5|benzin|kraftstoff|tankstelle|zapfsäule|liter)\b/i.test(t) ? "kraftstoff" : /\b(parkhaus|parkplatz|parkschein|parkgebühr\w*|parkautomat|parken|parking)\b/i.test(t) ? "parken" : "einkauf";
+  const geschaeft = art === "beleg" || art === "rechnung" ? (zeilen.slice(0, 4).find((z) => /[A-Za-zÄÖÜäöü]{3}/.test(z) && !/\d{3,}/.test(z) && z.length <= 40) || "").replace(/[^\wÄÖÜäöüß&.,' -]/g, "").trim().slice(0, 60) : "";
+  return { art, betrag: art === "beleg" || art === "rechnung" ? betrag : null, datum, geschaeft, auslage };
+}
+function erkQrDeuten(roh) { // Profil-QR wie auf Wunschbogen, Bestätigung und Stimmzettel
+  try { const j = JSON.parse(String(roh || "")); if (j?.schema !== "KCDP-FORM-PROFILE-1" || !j.profileId) return null;
+    const k = String(j.kind || ""); return { person: String(j.profileId), art: /bestaetigung/.test(k) ? "bestaetigung" : /abstimmung/.test(k) ? "abstimmung" : "wunschbogen" };
+  } catch { return null; }
+}
+const OCR_PFAD = "lib/ocr/", OCR_OK = "kc_club_ocr_ok", ERKD = { lauf: 0, merk: new WeakMap(), r: null };
+let ocrLaden = null, jsqrLaden = null;
+function skriptLaden(src) { return new Promise((ok, nein) => { const x = document.createElement("script"); x.src = src; x.onload = ok; x.onerror = () => nein(new Error("Baustein konnte nicht geladen werden.")); document.head.appendChild(x); }); }
+async function ocrText(bild) {
+  if (!ocrLaden) ocrLaden = (window.Tesseract ? Promise.resolve() : skriptLaden(OCR_PFAD + "tesseract.min.js?v=7.0.0")).catch((e) => { ocrLaden = null; throw e; });
+  await ocrLaden;
+  const u = (x) => new URL(OCR_PFAD + x, location.href).href;
+  const w = await window.Tesseract.createWorker("deu", 1, { workerPath: u("worker.min.js?v=7.0.0"), corePath: u("tesseract-core-lstm.wasm.js"), langPath: u("").replace(/\/$/, ""), gzip: true, workerBlobURL: false });
+  try { const t = (await w.recognize(bild)).data.text || ""; lsSetzen(OCR_OK, "1"); return t; } finally { w.terminate(); }
+}
+async function erkdBild(d) { // Foto oder 1. PDF-Seite als Bild (höchstens 2000 Pixel)
+  const c = document.createElement("canvas");
+  if (/pdf/.test(d.type || "") || /\.pdf$/i.test(d.name || "")) {
+    const pdf = await (await pdfjsHolen()).getDocument({ data: new Uint8Array(await d.arrayBuffer()), isEvalSupported: false }).promise, seite = await pdf.getPage(1);
+    const v0 = seite.getViewport({ scale: 1 }), v = seite.getViewport({ scale: Math.min(2.5, 2000 / Math.max(v0.width, v0.height)) });
+    c.width = Math.round(v.width); c.height = Math.round(v.height); await seite.render({ canvasContext: c.getContext("2d"), viewport: v }).promise; return c;
+  }
+  const b = await createImageBitmap(d), sc = Math.min(1, 2000 / Math.max(b.width, b.height));
+  c.width = Math.round(b.width * sc); c.height = Math.round(b.height * sc); c.getContext("2d").drawImage(b, 0, 0, c.width, c.height); b.close?.(); return c;
+}
+async function erkdQr(c) {
+  try { if ("BarcodeDetector" in window) { const f = await new window.BarcodeDetector({ formats: ["qr_code"] }).detect(c); if (f[0]?.rawValue) return f[0].rawValue; } } catch {}
+  if (!jsqrLaden) jsqrLaden = (window.jsQR ? Promise.resolve() : skriptLaden(OCR_PFAD + "jsQR.js?v=1.4.0")).catch((e) => { jsqrLaden = null; throw e; });
+  await jsqrLaden; const x = c.getContext("2d").getImageData(0, 0, c.width, c.height);
+  return window.jsQR(x.data, x.width, x.height)?.data || null;
+}
+async function erkdPdfText(d) {
+  const pdf = await (await pdfjsHolen()).getDocument({ data: new Uint8Array(await d.arrayBuffer()), isEvalSupported: false }).promise; let t = "";
+  for (let i = 1; i <= Math.min(2, pdf.numPages); i++) t += (await (await pdf.getPage(i)).getTextContent()).items.map((x) => x.str + (x.hasEOL ? "\n" : " ")).join("") + "\n";
+  return t;
+}
+async function erkDateiStart(dateien, ocrJetzt) {
+  const d = dateien?.[0], lauf = ++ERKD.lauf; if (!d || dateien.length > 3 || !$("einlErk")) return;
+  const pdf = /pdf/.test(d.type || "") || /\.pdf$/i.test(d.name || ""); if (!pdf && !/^image\//.test(d.type || "")) return;
+  const zeig = (h) => { if (lauf === ERKD.lauf && $("einlErk")) $("einlErk").innerHTML = h; };
+  const fertig = (r) => { ERKD.merk.set(d, r); if (lauf === ERKD.lauf) { ERKD.r = r; zeig(erkdHtml(r)); } };
+  if (ERKD.merk.has(d)) return fertig(ERKD.merk.get(d)); // schon einmal erkannt (z. B. „Zurück“ aus dem Ablegen)
+  zeig('<p class="hinweis" style="margin:0 0 8px">🔍 Ich schaue nach, was es ist …</p>');
+  try {
+    const c = await erkdBild(d).catch(() => null), qr = c ? erkQrDeuten(await erkdQr(c).catch(() => null)) : null;
+    if (qr) { if (!MITGLIEDER) await mitgliederHolen().catch(() => {}); const m = (MITGLIEDER || []).find((x) => x.person_id === qr.person); return fertig({ ...qr, name: m?.name || "" }); }
+    let text = pdf ? await erkdPdfText(d).catch(() => "") : "";
+    if (text.replace(/\s/g, "").length < 30) { // Foto oder eingescannte PDF: Text erst lesen
+      let auto = false; try { auto = localStorage.getItem(OCR_OK) === "1"; } catch {}
+      if (!ocrJetzt && !auto) return zeig(`<button type="button" class="knopf erkd-los" onclick="erkDateiStart(EINL?.dateien || [], true)">🔍 Text erkennen – Kassenbon? Protokoll? <small>(beim ersten Mal ca. 5 MB laden)</small></button>`);
+      zeig('<p class="hinweis" style="margin:0 0 8px">🔍 Ich lese den Text … (ein paar Sekunden)</p>');
+      text = c ? await ocrText(c) : "";
+    }
+    fertig(erkDokument(text));
+  } catch { zeig(ocrJetzt ? '<p class="hinweis" style="margin:0 0 8px">🔍 Der Text ließ sich nicht lesen – einfach wie gewohnt weiter.</p>' : ""); }
+}
+const ERKD_ART = { beleg: ["🧾", "Kassenbon"], rechnung: ["📑", "Rechnung"], protokoll: ["📋", "Protokoll"], einladung: ["✉️", "Einladung"],
+  wunschbogen: ["📝", "Wunschbogen"], bestaetigung: ["✅", "Bestätigung"], abstimmung: ["🗳️", "Stimmzettel"] };
+function erkdHtml(r) {
+  if (!r?.art || !ERKD_ART[r.art] || !EINL) return "";
+  const [sym, t0] = ERKD_ART[r.art], t = r.art === "beleg" ? (r.auslage === "kraftstoff" ? "Tankbeleg" : r.auslage === "parken" ? "Parkbeleg" : t0) : t0;
+  const tag = r.datum ? r.datum.split("-").reverse().join(".") : "";
+  EINL.titel = [t, r.name || r.geschaeft, tag].filter(Boolean).join(" ").slice(0, 120); // passender Titel → „Ablegen“ schlägt den Ordner danach vor
+  const zeile = [r.betrag ? eur(r.betrag) : "", tag, r.name || r.geschaeft].filter(Boolean).map(esc).join(" · ");
+  return `<div class="karte erkd-karte" role="status"><b>${sym} Sieht aus wie ${r.art === "einladung" || r.art === "rechnung" || r.art === "bestaetigung" ? "eine" : "ein"} ${esc(t)}</b>${zeile ? `<br>${zeile}` : ""}
+    ${r.art === "beleg" ? `<div class="knoepfe" style="margin-top:6px"><button type="button" class="knopf haupt" onclick="erkdErstattung()">💶 Erstattung damit anlegen</button></div><small class="hinweis">Betrag und Datum bitte prüfen – die Datei hängt dann als Beleg dran.</small>`
+      : r.art === "wunschbogen" ? `<br><small class="hinweis">Titel ist gesetzt. Am besten 📥 in den Eingangskorb – dann die Zeiten unter 📝 Dienstwünsche eintragen.</small>`
+      : `<br><small class="hinweis">Titel „${esc(EINL.titel)}“ – „🗄️ Ablegen“ schlägt den passenden Ordner vor.</small>`}</div>`;
+}
+async function erkdErstattung() {
+  const E = EINL, r = ERKD.r, d = E?.dateien?.[0]; if (!E || r?.art !== "beleg") return;
+  $("einlBlatt")?.remove(); EINL = null;
+  if (!ERS.geladen) await erstattungLaden().catch(() => {});
+  ERS.vorDatum = r.datum && r.datum <= heuteIso() ? r.datum : null;
+  KR_ZEIGE("erstattung", async () => {
+    erstattungArt(r.auslage, true);
+    if (r.betrag && $("ersBetrag")) $("ersBetrag").value = r.betrag.toFixed(2).replace(".", ",");
+    if (r.geschaeft && $("ersGeschaeft")) $("ersGeschaeft").value = r.geschaeft;
+    if (d) await erstattungBeleg({ files: [d], value: "" });
+    melde("🧾 Aus dem Beleg vorausgefüllt – bitte Betrag, Datum und „Wofür“ prüfen, dann hinzufügen.");
+  });
 }
 function einlAblegen() {
   const E = EINL; if (!E) return; $("einlBlatt")?.remove();

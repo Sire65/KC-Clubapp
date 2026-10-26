@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|668)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12998,4 +12998,26 @@ function idx0() { return lies("index.html"); }
   assert.ok(/await binTeilnehmer\(m\.thread_id, ich\.person_id\);/.test(server) && /m\.sender_person_id === ich\.person_id\) throw new Fehler\("Das ist deine eigene Nachricht\."/.test(server), "nur Nachrichten anderer im eigenen Chat");
   assert.ok(/f = dtAnbietenPruefen\(d, t, offen\);/.test(server) && /von_person: pid, nachricht: grund/.test(server), "Tauschbörse mit denselben Regeln, für die Person");
   assert.ok(/`club-erkennung:\$\{m\.id\}:\$\{tr\.id\}:\$\{antwort\}`/.test(server), "Person bekommt Bescheid über die eingetragene Zu-/Absage");
+}
+// 2.669.0 KC-CLUB-ERKENNUNG-DATEI: beim Einlesen erkennen (Beleg, Rechnung, Protokoll, Einladung, Wunschbogen-QR) – auf dem Gerät, nur Vorschläge
+{
+  const a = programm.indexOf("const ERKD_BETRAG"), e = programm.indexOf("const OCR_PFAD");
+  assert.ok(a > 0 && e > a, "Erkennungs-Block vorhanden");
+  assert.ok(!/\(\?<[=!]/.test(programm.slice(a, e)), "kein lookbehind – ältere iPhones kennen es nicht");
+  const { erk, qr } = new Function(programm.slice(a, e) + "; return { erk: erkDokument, qr: erkQrDeuten };")();
+  const fall = (t, erw) => { const r = erk(t); for (const [k, v] of Object.entries(erw)) assert.deepEqual(r[k], v, `${t.slice(0, 30)} → ${k}`); };
+  fall("EDEKA Werne\nMarkt 12\nGrünkohl 2kg 7,98\nSUMME EUR 9,47\nBar 10,00\nRückgeld 0,53\n24.10.2026 14:31", { art: "beleg", betrag: 9.47, datum: "2026-10-24", geschaeft: "EDEKA Werne", auslage: "einkauf" });
+  fall("ARAL Tankstelle\nSuper E10 35,21 l\nGesamt 63,34 €\nGirocard\n23.10.26", { art: "beleg", betrag: 63.34, datum: "2026-10-23", auslage: "kraftstoff" });
+  fall("Parkhaus Zentrum\nParkschein\n22.10.2026\nBetrag 4,50 EUR", { art: "beleg", betrag: 4.5, auslage: "parken" });
+  fall("Metzgerei Schulte\nRechnung Nr. 2026-117\nRechnungsdatum 20.10.2026\nGesamtbetrag 107,00 €", { art: "rechnung", betrag: 107 });
+  fall("Protokoll der Sitzung vom 12.11.2026", { art: "protokoll", datum: "2026-11-12" });
+  fall("Einladung zur Jahreshauptversammlung am 05.12.2026\nTagesordnung", { art: "einladung" });
+  fall("Liebe Grüße aus dem Urlaub", { art: null, betrag: null });
+  assert.deepEqual(qr('{"schema":"KCDP-FORM-PROFILE-1","profileId":"KC-P-M0015","periodId":""}'), { person: "KC-P-M0015", art: "wunschbogen" });
+  assert.equal(qr("https://beispiel.de"), null);
+  assert.ok(/<div id="einlErk"><\/div><!-- 2\.669\.0 KC-CLUB-ERKENNUNG-DATEI -->/.test(programm) && /\n  erkDateiStart\(dateien\); \/\/ 2\.669\.0/.test(programm), "läuft nebenbei im Fenster „Wohin damit?“");
+  assert.ok(/if \(!ocrJetzt && !auto\) return zeig\(/.test(programm), "Texterkennung für Fotos erst nach einem Tipp (einmal ca. 5 MB)");
+  assert.ok(/const OCR_PFAD = "lib\/ocr\/"/.test(programm) && !/tesseract[^"\n]*https?:/i.test(programm), "Bausteine liegen bei uns – nichts von fremden Servern");
+  for (const d of ["tesseract.min.js", "worker.min.js", "tesseract-core-lstm.wasm.js", "deu.traineddata.gz", "jsQR.js", "README.txt"]) assert.ok(fs.existsSync(new URL(`../lib/ocr/${d}`, import.meta.url)), `lib/ocr/${d}`);
+  assert.ok(/if \(url\.pathname\.includes\("\/lib\/ocr\/"\)\) return;/.test(lies("sw.js")), "Service Worker merkt die 5 MB nicht je Version");
 }
