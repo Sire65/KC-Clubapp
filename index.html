@@ -2938,21 +2938,22 @@
     #druck .dpd-sum td.rot { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; } #druck .dpd-sum td.gruen { background: #d4ecd9; color: #1f5a3e; font-weight: 700; } #druck .dpd-sum td.gelb { background: #fde7b0; color: #8a5a00; }
     #druck .dpd-sum td.leer { color: #c9c2b8; }
     /* 2.676.0 KC-CLUB-DP-LUECKEN: Blatt „Hier fehlen noch Helfer“ – CD-Kopf, Tabelle mit Längs- und Querlinien */
-    #druck .dpl { display: flex; flex-direction: column; padding: 9mm 10mm; } #druck .dpl .cd-kopf { margin-bottom: 4mm; } #druck .dpl .cd-fuss { margin-top: auto; }
+    #druck .dpl { display: flex; flex-direction: column; padding: 7mm 10mm 5mm; } #druck .dpl .cd-kopf { margin-bottom: 3mm; } #druck .dpl .cd-fuss { padding-top: 1.5mm; } #druck .dpl .cd-fuss { margin-top: auto; }
     #druck .dpl-tab { border-collapse: collapse; width: 100%; font-size: 9pt; font-variant-numeric: tabular-nums; }
-    #druck .dpl-tab th, #druck .dpl-tab td { border: .25mm solid #8a7f72; padding: 1.3mm 1mm; text-align: center; vertical-align: middle; }
+    #druck .dpl-tab th, #druck .dpl-tab td { border: .25mm solid #8a7f72; padding: .9mm 1mm; text-align: center; vertical-align: middle; }
     #druck .dpl-tab thead th { background: var(--cd-beige, #f3e9dc); color: var(--cd-rot, #741521); font-weight: 800; font-size: 8pt; border-bottom: .6mm solid var(--cd-rot, #741521); }
     #druck .dpl-tab th small { display: block; font-weight: 400; font-size: 6pt; color: #5b544d; }
     #druck .dpl-tab .tag { text-align: left; white-space: nowrap; width: 22mm; } #druck .dpl-tab td.tag small { display: block; font-size: 6.5pt; color: #5b544d; }
     #druck .dpl-tab td.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; font-size: 10.5pt; } #druck .dpl-tab td.ok { background: #e3f1e6; color: #1f5a3e; }
     #druck .dpl-tab td.zu { background: repeating-linear-gradient(135deg, #f1ede7 0 1.2mm, #e6e0d8 1.2mm 2.4mm); }
-    #druck .dpl-tab .text { text-align: left; font-size: 7.5pt; width: 62mm; } #druck .dpl-tab .std { width: 11mm; font-weight: 800; }
+    #druck .dpl-tab .text { text-align: left; font-size: 7.5pt; width: 58mm; } #druck .dpl-tab .std { width: 12mm; font-weight: 800; } #druck .dpl-tab .std small { font-size: 5.5pt; } #druck .dpl-tab td.alle { color: #5b544d; font-weight: 700; background: #f7f3ee; } #druck .dpl-tab tfoot td.std.alle { color: #5b544d; }
     #druck .dpl-tab tbody tr:nth-child(even) td.text, #druck .dpl-tab tbody tr:nth-child(even) td.tag { background: #faf6f0; }
     #druck .dpl-tab tfoot td { border-top: .6mm solid var(--cd-rot, #741521); font-weight: 800; text-align: right; } #druck .dpl-tab tfoot td.std { text-align: center; color: #8b1a12; }
     #druck .dpl-tab sup, #druck .dpl-leg sup { font-size: 6pt; }
     #druck .dpl-leg { display: flex; flex-wrap: wrap; gap: 5mm; margin: 2.5mm 0 0; font-size: 7.5pt; color: #5b544d; } #druck .dpl-leg i { display: inline-block; min-width: 6mm; height: 4.5mm; margin-right: 1.5mm; border: .25mm solid #8a7f72; font-style: normal; text-align: center; line-height: 4.5mm; vertical-align: middle; }
     #druck .dpl-leg i.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } #druck .dpl-leg i.ok { background: #e3f1e6; color: #1f5a3e; } #druck .dpl-leg i.zu { background: repeating-linear-gradient(135deg, #f1ede7 0 1.2mm, #e6e0d8 1.2mm 2.4mm); }
-    #druck .dpl-hinweis { margin-top: 3mm; padding: 2mm 3mm; border: .3mm solid var(--cd-beige-rand, #e0cfb9); border-left: 1.2mm solid var(--cd-rot, #741521); background: var(--cd-beige, #f3e9dc); font-size: 9pt; }
+    #druck .dpl-hinweis { margin-top: 2mm; padding: 1.5mm 3mm; border: .3mm solid var(--cd-beige-rand, #e0cfb9); border-left: 1.2mm solid var(--cd-rot, #741521); background: var(--cd-beige, #f3e9dc); font-size: 9pt; }
+    #druck .dpl-hinweis.dpl-abend { border-left-color: #1d3557; background: #e8eef6; } /* 2.683.0 KC-CLUB-DP-LUECKEN-ABEND */
     #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
     #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9.4mm; }
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
@@ -6024,7 +6025,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.682.0" data-v="2.682.0"></script>
+<script src="app.js?v=2.683.0" data-v="2.683.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
