@@ -41,7 +41,7 @@ import { bskNeu, bskErlaubt, bskSpielen, bskStichAbschliessen, bskErgebnis } fro
 import { maeNeu, maeMoeglich, maeWuerfeln, maeZiehen, maeComputerWahl } from "./mae.js"; // KC-CLUB-MAE (2.26.0): Regeln = wörtliche Kopie aus app.js (tools/mae/server-kopie.mjs)
 import { FDK_FELD, fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkAugen, fdkWeiter, fdkKarteSpielen, fdkHygiene, fdkAbgeben, fdkSieger } from "./fdk.js"; // KC-CLUB-FDK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/fdk/server-kopie.mjs)
 import { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkComputerKarte } from "./doppelkopf.js"; // KC-CLUB-DK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/dk/server-kopie.mjs)
-import { dpRechnen } from "./dp-rechnen.js"; // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug)
+import { dpRechnen, DP_REGEL } from "./dp-rechnen.js"; // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug)
 import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): Fragen = wörtliche Kopie aus lib/kuechenterror/fragen.js
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.673.0";
+const SERVER_VERSION = "2.676.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4584,7 +4584,7 @@ const DP_ART: Record<string, string> = { preferred: "pref", available: "avai", i
 const dpKurzname = (name: string) => { const t = String(name || "").trim().split(/\s+/); return t.length > 1 ? `${t[0]} ${t[1][0]}` : t[0] || "?"; };
 async function dpDruckNeu(adminId: string) {
   const [{ data: k }, { data: tageRoh }, { data: wRoh }] = await Promise.all([
-    db.from("kc_club_person_einstellung").select("wert").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
+    db.from("kc_club_person_einstellung").select("wert,geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
     db.from("kc_dp_days_published").select("work_date,day_type,label,demand").eq("event_id", DW.veranstaltung).order("work_date"),
     db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
   ]);
@@ -4611,6 +4611,7 @@ async function dpDruckNeu(adminId: string) {
     leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
     bereitschaft: (Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })),
     max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
+    wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
   });
   const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
@@ -4628,6 +4629,22 @@ async function erkNachricht(ich: Ich, id: string) {
   await binTeilnehmer(m.thread_id, ich.person_id);
   if (!m.sender_person_id || m.sender_person_id === ich.person_id) throw new Fehler("Das ist deine eigene Nachricht.", 409);
   return m as { id: string; thread_id: string; sender_person_id: string };
+}
+// 2.676.0 KC-CLUB-DP-AUTO (Wunsch Hansi „so bauen, dass es sich von allein anpasst, wenn sich was ändert“): Der gespeicherte Stand ist veraltet, wenn
+// seitdem ein Wunschplan, der Bedarf oder die Einstellungen (dp_druck_konfig) geändert wurden oder die Rechenregel neu ist (DP_REGEL).
+async function dpDruckVeraltet(adminId: string, w: any) {
+  if (!w || !Array.isArray(w.tage) || w.regel !== DP_REGEL) return true;
+  const seit = String(w.stand || "");
+  const [{ count: wn }, { count: tn }, { data: k }] = await Promise.all([
+    db.from("kc_dp_wish_inbox").select("id", { count: "exact", head: true }).eq("org_id", ORG).eq("event_id", DW.veranstaltung).gt("updated_at", seit),
+    db.from("kc_dp_days_published").select("work_date", { count: "exact", head: true }).eq("event_id", DW.veranstaltung).gt("updated_at", seit),
+    db.from("kc_club_person_einstellung").select("geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle()]);
+  return (wn ?? 0) > 0 || (tn ?? 0) > 0 || (!!k?.geaendert_am && Date.parse(String(k.geaendert_am)) > Date.parse(seit));
+}
+async function dpDruckAlleNeu() { // für jeden Admin mit eigener Dienstplan-Druck-Einstellung (nach einem neuen Wunschplan)
+  const { data } = await db.from("kc_club_person_einstellung").select("person_id").eq("schluessel", "dp_druck_konfig").limit(5);
+  const adm = new Set(await adminIds());
+  for (const r of data ?? []) if (adm.has(r.person_id)) await dpDruckNeu(r.person_id).catch((e) => console.error("dp auto", String(e)));
 }
 async function dpDruckNeueWuensche(seit: string | null) {
   let q = db.from("kc_dp_wish_inbox").select("person_id,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300);
@@ -9621,6 +9638,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         nurAdmin(ich);
         const { data: zeile } = await db.from("kc_club_person_einstellung").select("wert, geaendert_am").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();
         const w = zeile?.wert && typeof zeile.wert === "object" ? zeile.wert : null;
+        if (await dpDruckVeraltet(ich.person_id, w).catch(() => false)) { // 2.676.0 KC-CLUB-DP-AUTO: veraltet → gleich neu rechnen
+          try { await dpDruckNeu(ich.person_id); const { data: f } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();
+            if (f?.wert && Array.isArray((f.wert as any).tage)) return json({ ...(f.wert as any), neu: [], auto: true }); } catch (e) { console.error("dp auto", String(e)); }
+        }
         const stand = w && Array.isArray(w.tage) ? w.stand || zeile!.geaendert_am : null;
         const neu = await dpDruckNeueWuensche(stand).catch(() => [] as string[]); // 2.650.0: neue/geänderte Wunschpläne seit dem Stand (nur lesen)
         return json(w && Array.isArray(w.tage) ? { ...w, stand, neu } : { tage: [], neu });
@@ -11306,9 +11327,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "dienstwunsch_gespeichert", { eintraege: entries.length, bereitschaftTage: Object.keys(standby).length, revision: r.data.revision });
         // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Admin bekommt den Hinweis „Dienstplan-Druck neu rechnen?“ (nicht bei eigenen Wünschen, nie Testpersonen)
         if (!ich.person_id.startsWith("KC-P-TEST")) nebenbei((async () => {
+          await dpDruckAlleNeu(); // 2.676.0 KC-CLUB-DP-AUTO: Dienstplan-Druck und Lücken-Blatt rechnen sich gleich selbst neu
           const adm = (await adminIds()).filter((id) => id !== ich.person_id);
-          if (adm.length) await routerSenden("club_nachricht_push", adm, { titel: `🗓️ ${alt ? "Geänderter" : "Neuer"} Wunschplan von ${ich.vorname}`, kurz: "Dienstplan-Druck neu rechnen? Antippen öffnet den Ordner.",
-            betreff: `Köcheclub Werne – ${alt ? "geänderter" : "neuer"} Wunschplan von ${ich.name}`, text: `${ich.name} hat den Wunschplan ${alt ? "geändert" : "abgegeben"}. Im Archiv → Mein Ordner → „Dienstplan zum Drucken“ kannst du neu rechnen.`, url: `${APP_URL}#dpdruck` },
+          if (adm.length) await routerSenden("club_nachricht_push", adm, { titel: `🗓️ ${alt ? "Geänderter" : "Neuer"} Wunschplan von ${ich.vorname}`, kurz: "Dienstplan-Druck und Lücken sind schon neu gerechnet – antippen öffnet den Ordner.",
+            betreff: `Köcheclub Werne – ${alt ? "geänderter" : "neuer"} Wunschplan von ${ich.name}`, text: `${ich.name} hat den Wunschplan ${alt ? "geändert" : "abgegeben"}. Dienstplan-Druck und Lücken-Blatt sind schon neu gerechnet: Archiv → Mein Ordner → „Dienstplan zum Drucken“.`, url: `${APP_URL}#dpdruck` },
             `club-dp-wunsch:${ich.person_id}:${r.data.revision}`);
         })().catch((e) => console.error("dp hinweis", String(e))));
         return json({ ok: true, revision: r.data.revision, status: "offen" });

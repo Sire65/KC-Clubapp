@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.675.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.676.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -41295,6 +41295,7 @@ const DRUCKARTEN = {
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
+  dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
@@ -42837,7 +42838,8 @@ function dpdOptionen() {
       <div>${i?.stand ? `Stand: <b>${esc(wann(i.stand))}</b>` : "Noch kein Stand abgelegt."}</div>
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
       <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
-      <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet den Entwurf aus Bedarf und allen Wunschplänen neu (Leon und Bereitschaft bleiben). Nichts geht nach DP2.</div></div>`;
+      <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nichts geht nach DP2.</div>
+      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpLuecken')">🧩 Nur das Blatt „Wo noch Helfer fehlen“</button></div>`;
   return `${stand}<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
     ${r("1", "1 Blatt breit", "8–23 Uhr auf einem Blatt, die Blätter untereinander legen")}${r("2", "2 Blätter breit (größer)", "links 8–16, rechts 15:30–23 Uhr – nebeneinander legen, 15:30–16 ist die Klebekante")}
     <p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>`;
@@ -42932,7 +42934,7 @@ async function dpdBauen() {
   const stand = d.stand ? wann(d.stand) : "", eb = `<p class="dpd-eb">Köcheclub Werne · ${esc(d.titel || "Dienstplan")} · Entwurf, nicht veröffentlicht${stand ? " · Stand " + esc(stand) : ""}</p>`;
   const leg = `<div class="dpd-leg"><span><i class="pref"></i>Wunschzeit</span><span><i class="avai"></i>kann</span><span><i class="if_n"></i>nur wenn nötig</span><span><i class="unav">×</i>gesperrt</span><span><i class="dienst"></i>im Entwurf eingeplant</span><span><i class="ber"></i>Bereitschaft (Vorschlag)</span><span><i class="a-rot">−2</i>fehlen</span><span><i class="a-gruen">✓</i>richtig besetzt</span><span><i class="a-gelb">+1</i>zu viel</span><span><i class="zu"></i>kein Bedarf</span></div>`;
   const bed = `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Regelzeit und Besetzung je Stunde</h1></div><div class="dpd-leg"><span><b>3</b> = Personen gesamt</span><span><b>2 V · 1 H</b> = davon vorne / hinten</span><span><i style="background:#fff"></i>kein Dienst</span><span><i class="wu"></i><b style="color:#3d5fa8">7</b> = so viele haben sich eingetragen (Aufbau/Nachbereitung)</span></div></header>${dpdBedarf(tage, von, bis)}<footer class="dpd-fuss">Regelzeit und Besetzung · vorne vor Blatt 1</footer></section>`;
-  const nb = blaetter.length, html = bed + blaetter.flatMap((bl, i) => teile.map((teil, k) => {
+  const nb = blaetter.length, html = bed + dpdLueckenBlatt(d) + blaetter.flatMap((bl, i) => teile.map((teil, k) => {
     const fuss = [teile.length > 1 ? `Blatt ${i + 1} ${k ? "rechts" : "links"}` : `Blatt ${i + 1} von ${nb}`,
       teile.length > 1 ? (k ? `linken Rand bis 16 Uhr umknicken und auf Blatt ${i + 1} links legen` : `rechts an Blatt ${i + 1} rechts anlegen (Klebekante 15:30–16 Uhr)`) : "",
       i < nb - 1 ? `unten geht es mit Blatt ${i + 2} weiter` : "danach: Stunden je Person"].filter(Boolean).join(" · ");
@@ -42940,6 +42942,38 @@ async function dpdBauen() {
       <h1>Dienstplan – Wünsche und offene Zeiten</h1></div>${leg}</header>${dpdTabelle(bl, von, teil, S[S.length - 1])}<footer class="dpd-fuss">${esc(fuss)}</footer></section>`; })).join("")
     + `<section class="dpd-blatt"><header class="dpd-kopf"><div>${eb}<h1>Stunden je Person – alle Tage</h1></div></header>${dpdUebersicht(tage, ges, gesBer)}<footer class="dpd-fuss">Stundenübersicht · letztes Blatt</footer></section>`;
   return { titel: `Dienstplan ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd${breit === "2" ? " breit" : ""}">${html}</div>` };
+}
+// ---------- 2.676.0 KC-CLUB-DP-LUECKEN (Wunsch Hansi „Übersicht, an welchen Tagen zu welchen Zeiten noch Leute fehlen – mit Kopf und Logo nach CD,
+// darunter Tage und Stundenbereiche als Tabelle mit Längs- und Querlinien“): je Tag eine Zeile, je Stunde eine Spalte (Zahl = so viele fehlen,
+// ✓ = besetzt, grau = kein Dienst), rechts die genauen Zeiten (halbe Stunden) und die fehlenden Stunden. Daten: derselbe Stand wie der Dienstplan-Druck.
+function dpdLueckenDaten(d) {
+  const von = d.von ?? 8, bis = d.bis ?? 23, stunden = [];
+  for (let h = Math.floor(von); h < bis; h++) if (d.tage.some((t) => t.bedarf[(h - von) * 2] || t.bedarf[(h - von) * 2 + 1])) stunden.push(h);
+  const tage = d.tage.map((t) => {
+    const zelle = (h) => { const i = (h - von) * 2, b = (t.bedarf[i] || 0) + (t.bedarf[i + 1] || 0), f = Math.max(t.fehlt[i] || 0, t.fehlt[i + 1] || 0), halb = !!(t.fehlt[i] || 0) !== !!(t.fehlt[i + 1] || 0);
+      return !b ? { k: "zu", t: "" } : f ? { k: "rot", t: String(f), halb } : { k: "ok", t: "✓" }; };
+    const x = new Date(t.d + "T12:00:00");
+    return { tag: `${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, art: t.art, zellen: stunden.map(zelle),
+      text: (() => { const out = []; let i = 0; while (i < t.fehlt.length) { if (!t.fehlt[i]) { i++; continue; } let j = i; while (j < t.fehlt.length && t.fehlt[j] === t.fehlt[i]) j++; out.push(`${dpdUhr(von + i / 2)}–${dpdUhr(von + j / 2)}: ${t.fehlt[i]}`); i = j; } return out; })(),
+      std: t.fehlt.reduce((a, b) => a + b, 0) / 2 };
+  });
+  return { stunden, tage, summe: tage.reduce((a, t) => a + t.std, 0) };
+}
+function dpdLueckenBlatt(d) {
+  const L = dpdLueckenDaten(d), stand = d.stand ? wann(d.stand) : "";
+  return `<section class="dpd-blatt dpl">${cdKopf("Hier fehlen noch Helfer", `${d.titel || "Weihnachtsmarkt"}${stand ? " · Stand " + stand : ""}`)}
+    <table class="dpl-tab"><thead><tr><th class="tag">Tag</th>${L.stunden.map((h) => `<th>${h}–${h + 1}<small>Uhr</small></th>`).join("")}<th class="text">Es fehlen (Uhrzeit: Personen)</th><th class="std">Std.</th></tr></thead>
+    <tbody>${L.tage.map((t) => `<tr><td class="tag"><b>${esc(t.tag)}</b><small>${esc(t.art || "")}</small></td>${t.zellen.map((z) => `<td class="${z.k}">${z.t}${z.halb ? "<sup>½</sup>" : ""}</td>`).join("")}
+      <td class="text">${t.text.length ? t.text.map(esc).join(" · ") : "✓ alles besetzt"}</td><td class="std">${t.std ? dpdStd(t.std) : "–"}</td></tr>`).join("")}</tbody>
+    <tfoot><tr><td class="tag" colspan="${L.stunden.length + 2}">Zusammen fehlen noch</td><td class="std">${dpdStd(L.summe)}</td></tr></tfoot></table>
+    <div class="dpl-leg"><span><i class="rot">2</i> so viele Personen fehlen</span><span><i class="rot">1<sup>½</sup></i> nur eine halbe Stunde</span><span><i class="ok">✓</i> besetzt</span><span><i class="zu"></i> kein Dienst</span></div>
+    <div class="dpl-hinweis">📝 <b>So trägst du dich ein:</b> Club-App → <b>📝 Dienstwünsche</b> → Tag antippen → Zeit wählen → speichern. Der Plan rechnet sich dann von selbst neu.</div>
+    ${cdFuss("Dienstplan-Entwurf – nicht veröffentlicht. Fragen? Einfach Hansi in der Club-App schreiben.")}</section>`;
+}
+async function dpdLueckenBauen() {
+  const d = await api("dp_druck", {});
+  if (!d?.tage?.length) { melde("Noch kein Dienstplan-Stand vorhanden.", true); return null; }
+  return { titel: `Hier fehlen noch Helfer – ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd">${dpdLueckenBlatt(d)}</div>` };
 }
 // ---------- KC-CLUB-ARCHIV (1.2.0, Wunsch Hansi): Regal mit Aktenordnern (Jahreszahl + Inhalt), innen Register ----------
 // Automatisch: „Clubleben JJJJ“ je Jahr aus vorhandenen Daten (nur lesen). Von Hand: Ordner mit Art, Jahr, Farbe, Registern.
