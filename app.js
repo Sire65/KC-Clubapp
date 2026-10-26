@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.674.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.675.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8927,7 +8927,22 @@ function sstBauen(ctx, ein, aus, id) {
     case "ente": { const t = ton(1.2), b = filt("bandpass", 1100, 5), v = verzerr(9), tr = neu(ctx.createGain()); tr.gain.value = 0.6; lfo(7, 0.4, tr.gain); kette(t, b, v, tr, laut(1.8)); break; } // quäkend, näselnd, „quak-quak“
     case "alien": { const t = ton(1.15), r = ring(700, 0.5), fl = neu(ctx.createDelay(0.05)), fb = laut(0.6); fl.delayTime.value = 0.004; lfo(0.3, 0.002, fl.delayTime);
       const q = t || ein; if (t) ein.connect(t); r.ein(q); r.aus.connect(fl); fl.connect(fb).connect(fl); r.aus.connect(laut(1.4)).connect(aus); fl.connect(laut(1.2)).connect(aus); break; } // schwebender Weltraum-Klang
-    case "roboter": { const r = ring(90, 1), st = stufen(12), k = kamm(0.005, 0.3); r.ein(ein); r.aus.connect(st); st.connect(k); st.connect(laut(1.2)).connect(aus); k.connect(aus); break; } // summend, digital, blechern-abgehackt
+    case "roboter": { // 2.674.0 (Hansi „Roboter noch stärker machen“): echter Vocoder wie im Film – die Wörter steuern einen gleichbleibenden Maschinenton
+      // (Sägezahn 110 Hz + Rauschen für S/Z), 14 Bänder; dazu wenig zerhackte Originalstimme für die Verständlichkeit und ein metallischer Kamm
+      const traeger = neu(ctx.createOscillator()); traeger.type = "sawtooth"; traeger.frequency.value = 110; traeger.start();
+      const t2 = neu(ctx.createOscillator()); t2.type = "square"; t2.frequency.value = 220.5; t2.start(); const t2g = laut(0.35); t2.connect(t2g);
+      const rausch = neu(ctx.createBufferSource()), rb = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), rd = rb.getChannelData(0); for (let i = 0; i < rd.length; i++) rd[i] = Math.random() * 2 - 1;
+      rausch.buffer = rb; rausch.loop = true; rausch.start(); const rg = laut(0.25); rausch.connect(rg);
+      const gl = neu(ctx.createWaveShaper()), gc = new Float32Array(1024); for (let i = 0; i < 1024; i++) gc[i] = Math.abs(i / 512 - 1); gl.curve = gc; // Gleichrichter
+      const summe = laut(1), vb = [200, 280, 390, 540, 750, 1000, 1350, 1800, 2400, 3100, 4000, 5100, 6400, 8000];
+      for (const f of vb) {
+        const sb = filt("bandpass", f, 6), g1 = neu(ctx.createWaveShaper()); g1.curve = gc; const hl = filt("lowpass", 35), st = laut(f > 4500 ? 14 : 9);
+        ein.connect(sb); sb.connect(g1); g1.connect(hl); hl.connect(st);
+        const tb = filt("bandpass", f, 6), vca = neu(ctx.createGain()); vca.gain.value = 0; st.connect(vca.gain);
+        (f > 4500 ? rg : traeger).connect(tb); if (f <= 4500) t2g.connect(tb); tb.connect(vca); vca.connect(summe);
+      }
+      const r = ring(60, 1); r.ein(ein); const rz = laut(0.18); r.aus.connect(rz); rz.connect(summe);
+      const k = kamm(0.004, 0.55); summe.connect(k); summe.connect(laut(1)).connect(aus); k.connect(laut(0.5)).connect(aus); break; }
     case "blech": { const k = kamm(0.0025, 0.85), b = filt("bandpass", 2200, 2), h = filt("highpass", 800); ein.connect(k); k.connect(b); ein.connect(b); b.connect(h); h.connect(laut(4)).connect(aus); break; } // winzig und hohl wie aus der Dose
     case "brumm": kette(ton(0.72), filt("lowshelf", 250, 1, 5), laut(0.62)); break; // tief und warm
     case "riese": { const t = ton(0.5), h = hall(2.5, 2.5), n = laut(0.9); const q = t || ein; if (t) ein.connect(t); q.connect(laut(1.1)).connect(aus); q.connect(h); h.connect(n).connect(aus); break; } // ganz tief + großer Höhlenhall
@@ -24297,7 +24312,7 @@ function schattenAnwenden() {
   const k = { normal: [.55, .12], stark: [.85, .28] }[st.kontrast], nacht = (f) => k ? `${box(f, nachtRgb, +(a * k[0]).toFixed(2))}, 0 0 0 1px rgba(255, 255, 255, ${k[1]})` : box(f, "var(--sch-rgb)", a);
   r.style.setProperty("--sch-box-t", box(1, "var(--sch-rgb)", a)); r.style.setProperty("--sch-box-gross-t", box(1.6, "var(--sch-rgb)", a));
   r.style.setProperty("--sch-box-n", nacht(1)); r.style.setProperty("--sch-box-gross-n", nacht(1.6)); r.classList.toggle("sch-an", st.an);
-  // 2.674.0 KC-CLUB-SCHATTEN-RASTER (Bild Hansi „der Schatten pro Kachel wird von der nächsten Kachel etwas verdeckt“): im Kachel-Raster wirft das
+  // 2.675.0 KC-CLUB-SCHATTEN-RASTER (Bild Hansi „der Schatten pro Kachel wird von der nächsten Kachel etwas verdeckt“): im Kachel-Raster wirft das
   // ganze Raster EINEN Schatten (filter: drop-shadow) – er liegt unter allen Kacheln, keine Nachbarkachel deckt ihn mehr ab
   const filt = (farbe, alpha, kante) => `drop-shadow(${Math.round(dx * o)}px ${Math.round(dy * o)}px ${Math.round(b * .6)}px rgba(${farbe}, ${alpha}))${kante ? ` drop-shadow(0 0 1px rgba(255, 255, 255, ${kante}))` : ""}`;
   r.style.setProperty("--sch-filt-t", filt("var(--sch-rgb)", a)); r.style.setProperty("--sch-filt-n", k ? filt(nachtRgb, +(a * k[0]).toFixed(2), k[1]) : filt("var(--sch-rgb)", a));

@@ -28,7 +28,7 @@ const felder = await seite.evaluate(async () => { const h = document.querySelect
 ok(felder.every((x) => /rgba\(29, 78, 137, 0\.56\) 8px 8px 24px/.test(x)), "2.661.0: Felder auf dem Kopf (Infofeld, Zahlen-Felder, runde Knöpfe, Logo, Statusleiste) – " + felder.join(" | "));
 if (bilder) await weg(), await seite.screenshot({ path: path.join(bilder, "schatten-hell.png") });
 await seite.evaluate(() => { document.documentElement.classList.add("dunkel"); schattenSpeichern({ farbe: "auto", pos: "oben", staerke: "sehr" }); });
-// 2.674.0: Kacheln im Raster haben keinen eigenen Schatten mehr – das ganze Raster wirft einen gemeinsamen (drop-shadow); gemessen wird am Knopf „App schließen“
+// 2.675.0: Kacheln im Raster haben keinen eigenen Schatten mehr – das ganze Raster wirft einen gemeinsamen (drop-shadow); gemessen wird am Knopf „App schließen“
 const ras = await seite.evaluate(() => ({ f: getComputedStyle($("raster")).filter, k: getComputedStyle(document.querySelector("#raster .kachel")).boxShadow }));
 ok(/drop-shadow\(rgba\(255, 236, 220, 0\.34\) 0px -14px 19px\) drop-shadow\(rgba\(255, 255, 255, 0\.12\) 0px 0px 1px\)/.test(ras.f) && ras.k === "none", "Kachel-Raster: ein gemeinsamer Schatten, keine Kachel deckt ihn ab – " + ras.f);
 const nacht = await schatten(".tuer");

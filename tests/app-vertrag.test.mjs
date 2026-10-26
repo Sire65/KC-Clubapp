@@ -7443,6 +7443,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!/d\[i\] = Math\.tanh\(d\[i\] \* g\)/.test(programm), "keine Sättigung mehr");
   assert.match(programm, /case "maus": kette\(ton\(2\.0\)/, "Maus eine Oktave höher");
 }
+// 2.674.0 KC-CLUB-SPASSSTIMME-ROBOTER: Roboter als Vocoder
+{
+  assert.match(programm, /case "roboter": \{ \/\/ 2\.674\.0 \(Hansi „Roboter noch stärker machen“\): echter Vocoder/, "Roboter-Vocoder");
+  assert.match(programm, /traeger\.type = "sawtooth"; traeger\.frequency\.value = 110;/, "gleichbleibender Maschinenton");
+  assert.match(programm, /const summe = laut\(1\), vb = \[200, 280, 390, 540, 750, 1000, 1350, 1800, 2400, 3100, 4000, 5100, 6400, 8000\];/, "14 Bänder");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -13071,7 +13077,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.ok(/\{ id: "schilder", thema: "club", sym: "🪧", t: "Schilder-Druckerei \(Clubleitung\)", nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html) && !/<i>Clubleitung:<\/i> Mitglied antippen/.test(html) && !/Die Clubleitung kann stattdessen <b>„📅 Clubtermin für alle“/.test(html), "nichts von Admin für Mitglieder");
   assert.ok(!/(geht direkt an den Admin|Hat der Admin ein Club-Thema|selbst an den Admin)/.test(hz + html.slice(html.indexOf("const TW_FAQ = ["), html.indexOf("const TW_FAQ = [") + 60000)), "„Admin“ nicht in Mitglieder-Texten");
 }
-// 2.674.0 KC-CLUB-SCHATTEN-RASTER (Bild Hansi: Schatten von der Nachbarkachel verdeckt, „App schließen“ ohne Schatten)
+// 2.675.0 KC-CLUB-SCHATTEN-RASTER (Bild Hansi: Schatten von der Nachbarkachel verdeckt, „App schließen“ ohne Schatten)
 {
   assert.ok(/:where\(:root\.sch-an\) \.raster \{ filter: var\(--sch-filt\); \}/.test(html) && /:where\(:root\.sch-an\) \.raster > \.kachel \{ box-shadow: none; \}/.test(html), "ein gemeinsamer Schatten fürs Kachel-Raster");
   assert.ok(/:root \{ --sch-filt: var\(--sch-filt-t\); \} :root\.dunkel \{ --sch-filt: var\(--sch-filt-n\); \}/.test(html) && /r\.style\.setProperty\("--sch-filt-t", filt\(/.test(programm), "Tag/Nacht wie die übrigen Schatten");
