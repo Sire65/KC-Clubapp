@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.676.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.677.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9074,7 +9074,7 @@ async function anrufVerbindung(mitBild) {
     if (!RUF || RUF.pc !== pc) return;
     const R = RUF, s = pc.connectionState;
     if (s === "connected" && !R.verbunden) { R.verbunden = true; R.start = Date.now(); klangAus(); anrufUhr(); anrufKnoepfe("aktiv"); rufQStart(); rufTaktWahl(); if (R.vf || R.ms) { melde(`🔊 Ton an – ihr könnt jetzt miteinander sprechen`); rufLeisten(); } }
-    if (s === "connected") { clearTimeout(R.wackelUhr); R.wackelt = false; if (R.neu && !R.neuOffen) { rufNeuWeg(R); rufTaktWahl(); } } // KC-CLUB-ANRUF-BESSER: wieder da
+    if (s === "connected") { rufWach(); clearTimeout(R.wackelUhr); R.wackelt = false; if (R.neu && !R.neuOffen) { rufNeuWeg(R); rufTaktWahl(); } } // KC-CLUB-ANRUF-BESSER: wieder da
     if (s === "connected" && R.konf) { const h = R.konf.beine.get(R.id); if (h) h.verbunden = true; konfAnzeigen(); } // KC-CLUB-KONFERENZ: Hauptverbindung steht
     // KC-CLUB-ANRUF-BESSER 2): stand das Gespräch schon, erst neu aufbauen (Konferenz: wie bisher)
     if (s === "failed") { if (R.konf) konfBeinWeg(R.id, true); else if (R.verbunden) rufGestoert(R); else anrufFehlgeschlagen(); }
@@ -9627,8 +9627,23 @@ async function anrufAuflegen() {
   if (id) { api("anruf_ende", { id, verbunden }).catch(() => {}); if (verbunden) api("diagnose", { art: "anruf", daten: { verbunden: true, dauer, rolle, umleitung } }).catch(() => {}); }
   if (verbunden) melde(`📞 Aufgelegt · ${Math.floor(dauer / 60)}:${String(dauer % 60).padStart(2, "0")}`);
 }
+// 2.677.0 KC-CLUB-ANRUF-BILDSCHIRM (Fall Klaus „immer wenn mein Bildschirm dunkel wird, ist das Gespräch unterbrochen – und auf einmal war es ganz weg“):
+// (1) während des Gesprächs bleibt der Bildschirm an (Wake Lock, wie bei Videos und Bühne) – sonst sperrt Android der App bei dunklem Bildschirm Netz und Takt;
+// (2) wird die App wieder sichtbar, fragt sie sofort nach dem Stand und baut eine abgerissene Verbindung gleich neu auf (statt bis zu 6 s zu warten).
+async function rufWach() {
+  if (!RUF || document.hidden || RUF.wach) return;
+  try { const w = await navigator.wakeLock?.request("screen"); if (!w) return; if (!RUF) { w.release().catch(() => {}); return; } RUF.wach = w; w.addEventListener?.("release", () => { if (RUF?.wach === w) RUF.wach = null; }); } catch {}
+}
+function rufWachWeg(R) { try { R?.wach?.release?.(); } catch {} if (R) R.wach = null; }
+document.addEventListener("visibilitychange", () => {
+  const R = RUF; if (!R || document.hidden) return;
+  rufWach();
+  if (R.id && !R.konf) setTimeout(() => { if (RUF === R) anrufPruefen(); }, 300);
+  if (R.verbunden && !R.konf && R.pc && R.pc.connectionState !== "connected") { if (R.rolle === "rufer") anrufNeuAufbau(true); else { R.schnellBis = Date.now() + 15000; rufNeuStart(R); } }
+});
 function anrufAufraeumen() {
   if (!RUF) return;
+  rufWachWeg(RUF); // 2.677.0 KC-CLUB-ANRUF-BILDSCHIRM
   if (RUF.konf) { clearInterval(RUF.konf.takt); for (const b of RUF.konf.beine.values()) { try { b.pc.close(); } catch {} } RUF.konf = null; }
   document.querySelectorAll("#anrufSchirm .konf-ton").forEach((a) => a.remove()); $("anrufKonf").innerHTML = ""; $("konfWahlBlatt").classList.add("versteckt");
   klangAus(); clearInterval(RUF.poll); clearInterval(RUF.uhr); rufNeuWeg(RUF); clearInterval(RUF.q?.uhr); rufQAnzeigen(true); // KC-CLUB-ANRUF-BESSER
@@ -14356,7 +14371,7 @@ async function api(action, daten = {}, opt = {}) {
     // KC-CLUB-NOTBETRIEB: Server mehrmals nicht erreichbar (oder schon der Start scheitert) → Ersatz-Server versuchen
     // 2.3.3: vorher Gegenprobe – nur umschalten, wenn der Club-Server auch nach kurzer Pause wirklich nicht antwortet
     if (!NOT.an && e?.leitung) { NOT.letzteAktion = String(action).slice(0, 40); NOT.letzterFehler = String(e?.message || "").slice(0, 120); } // 2.598.0 KC-CLUB-NOTBETRIEB-BERICHT
-    if (!NOT.an && e?.leitung && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notGegenprobe()) && (await notEinschaltenEinmal("auto"))) {
+    if (!NOT.an && e?.leitung && !document.hidden && (++NOT.fehler >= NOT_FEHLER_GRENZE || action === "init") && (await notGegenprobe()) && (await notEinschaltenEinmal("auto"))) { // 2.677.0: !hidden – dunkler Bildschirm ist kein Serverausfall
       if (action !== "init") setTimeout(() => neuLaden(), 0);
       // 2.0.0 (Gesamtprüfung): Schreib-Aktionen nicht still nachschieben – sie könnten den Server schon erreicht haben (doppelt)
       if (API_LESEN.test(action)) try { return await notApi(action, daten); } catch (e2) { e = e2; }

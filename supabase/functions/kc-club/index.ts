@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.676.0";
+const SERVER_VERSION = "2.677.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8216,7 +8216,10 @@ Köcheclub Werne`,
     }
     const anmeldungMs = Date.now() - tAnm;
     // KC-CLUB-VERTRETUNG: „fuer“ = für ein anderes Mitglied handeln (nur erlaubte Aktionen, Erlaubnis jedes Mal neu geprüft)
-    const fuer = p && typeof p.fuer === "string" && p.fuer && p.fuer !== ich.person_id ? p.fuer : "";
+    // 2.677.0 KC-CLUB-VERTRETUNG-NUR-ERLAUBT (Fall Klaus 26.10.): „fuer“ heißt nur bei den Vertretungs-Aktionen „für ein Mitglied handeln“. Andere
+    // Aktionen nutzen das Feld selbst (anruf_neu_antwort: ICE-Kennung, todo_anlegen „ich/alle“, pinnwand_anheften, dienst_tausch_aktion, clubjahr_speichern,
+    // freigabe_setzen) – seit 2.629.0 wurden sie mit „Das geht nicht in Vertretung“ abgewiesen; beim Anruf scheiterte so jeder Neuaufbau der Verbindung.
+    const fuer = p && VERTRETUNG_AKTIONEN.has(a) && typeof p.fuer === "string" && p.fuer && p.fuer !== ich.person_id ? p.fuer : "";
     let handelnd = ich;
     if (fuer) {
       handelnd = await vertretungIch(ich, fuer, a); delete p.fuer;

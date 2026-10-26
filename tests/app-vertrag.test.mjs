@@ -2414,7 +2414,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/signaturOk\(env, roh, req\.headers\.get\("x-kc-signatur"\)\)/.test(worker) && /String\(p\.erstellt\) <= String\(alt\.erstellt\)/.test(worker) && !/service_role|SUPABASE_SERVICE/.test(worker), "Paket nur signiert und neuer, keine Geheimnisse");
   assert.ok(/CLOUDFLARE_API_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/.test(wf) && /Cloudflare noch nicht eingerichtet/.test(wf), "Hochladen nur mit Secrets, sonst still");
   // App: Umschalten, Band, Rückkehr, Probe, Handschalter
-  assert.ok(/if \(NOT\.an\) return await notApi\(action, daten\);/.test(html) && /e\?\.leitung && \(\+\+NOT\.fehler >= NOT_FEHLER_GRENZE \|\| action === "init"\)/.test(html), "automatisch umschalten");
+  assert.ok(/if \(NOT\.an\) return await notApi\(action, daten\);/.test(html) && /e\?\.leitung && (!document\.hidden && )?\(\+\+NOT\.fehler >= NOT_FEHLER_GRENZE \|\| action === "init"\)/.test(html), "automatisch umschalten");
   assert.ok(/Ansehen geht(, Ändern, Fotos und Push gerade nicht\.|\. Nachrichten, Zu-\/Absagen, Status und Zettel werden später übertragen\. Fotos und Push gerade nicht\.)/.test(html) && /if \(\+\+NOT\.ok >= 2\) notAus\(/.test(html) && /id="notProbeKnopf"/.test(html) && /k\?\.modus === "an"/.test(html), "Band, Rückkehr, Probe, Handschalter");
   const nb = JSON.parse(lies("notbetrieb.json")); assert.ok(["auto", "an", "aus"].includes(nb.modus), "notbetrieb.json gültig");
 }
@@ -5917,7 +5917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -13099,4 +13099,12 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.ok(/dpLuecken: \{ titel: "🧩 Wo noch Helfer fehlen"/.test(programm) && /html = bed \+ dpdLueckenBlatt\(d\) \+/.test(programm), "eigenes Blatt und im Gesamtdruck");
   assert.ok(/cdKopf\("Hier fehlen noch Helfer"/.test(programm) && /\$\{cdFuss\(/.test(programm.slice(programm.indexOf("function dpdLueckenBlatt"))), "Kopf und Fuß nach CD");
   assert.ok(/#druck \.dpl-tab th, #druck \.dpl-tab td \{ border: \.25mm solid/.test(html), "Längs- und Querlinien");
+}
+// 2.677.0 KC-CLUB-ANRUF-BILDSCHIRM / KC-CLUB-VERTRETUNG-NUR-ERLAUBT (Fall Klaus: Gespräch bricht bei dunklem Bildschirm ab, Neuaufbau vom Server abgewiesen)
+{
+  assert.ok(/const fuer = p && VERTRETUNG_AKTIONEN\.has\(a\) && typeof p\.fuer === "string"/.test(server), "„fuer“ nur bei Vertretungs-Aktionen als Vertretung");
+  assert.ok(!/VERTRETUNG_AKTIONEN = new Set\(\[[^\]]*"anruf_/.test(server) && /api\("anruf_neu_antwort", \{ id: R\.id, antwort: pc\.localDescription\.sdp, fuer: sdpUfrag\(angebot\) \}\)/.test(programm), "Anruf-Neuaufbau schickt seine Kennung weiter in „fuer“ – darf nicht als Vertretung gelten");
+  assert.ok(/async function rufWach\(\)/.test(programm) && /navigator\.wakeLock\?\.request\("screen"\)/.test(programm.slice(programm.indexOf("async function rufWach()"), programm.indexOf("async function rufWach()") + 400)) && /if \(s === "connected"\) \{ rufWach\(\);/.test(programm) && /rufWachWeg\(RUF\); \/\/ 2\.677\.0/.test(programm), "Bildschirm bleibt im Gespräch an, wird beim Auflegen freigegeben");
+  assert.ok(/!NOT\.an && e\?\.leitung && !document\.hidden && \(\+\+NOT\.fehler/.test(programm), "kein automatischer Notbetrieb aus dem Hintergrund");
+  assert.ok(/if \(R\.verbunden && !R\.konf && R\.pc && R\.pc\.connectionState !== "connected"\) \{ if \(R\.rolle === "rufer"\) anrufNeuAufbau\(true\);/.test(programm), "zurück im Bild: gleich neu verbinden");
 }
