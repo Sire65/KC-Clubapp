@@ -1482,6 +1482,9 @@
   .erk-dienst { display: flex; gap: 8px; align-items: flex-start; }
   .erkd-karte { margin: 0 0 8px; border: 1px dashed #c9a46a; background: #fff8e6; color: #3a2a1a; } /* 2.669.0 KC-CLUB-ERKENNUNG-DATEI */
   .erkd-los { width: 100%; margin: 0 0 8px; text-align: left; }
+  .wk-klingel-knoepfe { display: flex; gap: 10px; } /* 2.670.0 KC-CLUB-WECKER-SCHLUMMER: Aus und Schlummern nebeneinander, gleich groß */
+  .wk-klingel-knoepfe .knopf { flex: 1; min-height: 64px; font-size: 1.1rem; }
+  .wk-schlummer small { display: block; font-size: .8rem; font-weight: 400; opacity: .85; }
   .na-seite .na-info { background: #1565c0; color: #fff; font: italic 700 15px/1 Georgia, serif; }
   .blase.wischt .na-seite { display: none; }
   /* KC-CLUB-BEARBEITEN / KC-CLUB-CHATSUCHE (1.9.0) */
@@ -5988,7 +5991,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.669.0" data-v="2.669.0"></script>
+<script src="app.js?v=2.670.0" data-v="2.670.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

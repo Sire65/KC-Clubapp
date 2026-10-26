@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.669.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.670.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17994,10 +17994,10 @@ addEventListener("resize", () => { if (ES.offen && $("esUhr")) { ES.uhr.letzte =
 // Oben auf der Uhr-Seite: 🕰️ Uhr · ⏰ Wecker · ⏱️ Stoppuhr · ⏲️ Timer – jeweils im gewählten Uhren-Stil (Digital, Fallblatt, Bahnhof, Klar).
 // Stoppuhr: Start/Pause, Runde, Zurück (mit Zehnteln) – nur auf diesem Gerät. Timer: 1/3/5/10/15 Min. oder eigene Minuten, die letzten 10 s rot.
 // Wecker: Uhrzeit + kurzer Text. Ist es so weit, klingelt die App mit der gewählten Stundenuhr (sonst Glocke) und zeigt „Aus“ und „+1 Min.“ bzw.
-// „💤 5 Min. später“. Ist die App zu, schickt der Server zur Zeit einen Push (Wecker/Timer werden dafür dort gemerkt: nur Zeit, Art, Text).
+// „💤 Schlummern“ (seit 2.670.0 10 Min., vorher 5). Ist die App zu, schickt der Server zur Zeit einen Push (Wecker/Timer werden dafür dort gemerkt: nur Zeit, Art, Text).
 // Klingelt die App selbst (sichtbar), wird der Push gleich abbestellt. Läuft etwas, zeigt die Startseite oben ein kleines Feld (z. B. „⏲️ 4:32“).
 const WK_KEY = "kc_club_wecker", WK_MODI = [["uhr", "🕰️ Uhr", "Uhrzeit"], ["wecker", "⏰ Wecker", "Wecker"], ["stopp", "⏱️ Stoppuhr", "Stoppuhr"], ["timer", "⏲️ Timer", "Timer"]];
-const WK_SCHNELL = [1, 3, 5, 10, 15], WK_ROT_MS = 10000, WK_KLINGEL_MS = 120000, WK_SPAET_MS = 90000, WK_SCHLUMMER_MIN = 5;
+const WK_SCHNELL = [1, 3, 5, 10, 15], WK_ROT_MS = 10000, WK_KLINGEL_MS = 120000, WK_SPAET_MS = 90000, WK_SCHLUMMER_MIN = 10; // 2.670.0 KC-CLUB-WECKER-SCHLUMMER: Schlummern 10 Min. (Wunsch Hansi)
 const wkLeer = () => ({ wecker: null, timer: null, stopp: { ab: 0, summe: 0, runden: [] } });
 function wkStand() { try { const x = JSON.parse(localStorage.getItem(WK_KEY) || "null"); if (x) return { ...wkLeer(), ...x, stopp: { ...wkLeer().stopp, ...(x.stopp || {}) } }; } catch (e) { /* defekt → leer */ } return wkLeer(); }
 function wkMerken(st) { try { localStorage.setItem(WK_KEY, JSON.stringify(st)); } catch (e) { /* ohne Speicher läuft es nur bis zum Schließen */ } wkChip(); }
@@ -18122,8 +18122,30 @@ function wkWache() {
   const st = wkStand(), jetzt = Date.now();
   const timerFaellig = st.timer && st.timer.pause == null && st.timer.ende <= jetzt, weckerFaellig = st.wecker && st.wecker.um <= jetzt;
   if ((timerFaellig || weckerFaellig) && !WKK.art && !document.hidden) wkKlingeln(timerFaellig ? "timer" : "wecker");
+  wkTimerPiep(st, jetzt); // 2.670.0 KC-CLUB-TIMER-PIEP
   wkChip();
   if (ES.offen && $("esUhr") && wkModus() !== "uhr" && esSichtbar() && !document.querySelector("#wkSteuer :focus")) { const z = [!!st.timer, st.timer?.pause != null, !!st.wecker].join(); if (z !== WKK.zustand) { WKK.zustand = z; wkSteuerZeigen(); } }
+}
+// 2.670.0 KC-CLUB-TIMER-PIEP (Wunsch Hansi „beim Timer die letzten 5 Sekunden ein Beep runterzählen, dann Alarm, und jede Minute ein Minutensignal“):
+// solange der Timer läuft und die App offen ist: zu jeder vollen Minute ein kurzer Ton, die letzten 5 Sekunden 5 – 4 – 3 – 2 – 1 (der letzte höher),
+// dann klingelt es wie bisher. Die Töne werden auf die Millisekunde im Voraus gestellt (die Wache läuft nur jede Sekunde); Pause/Stopp nimmt sie zurück.
+function wkPiep(nachMs, hz, s) {
+  try {
+    wkTon(); if (!audio) return;
+    const t = audio.currentTime + Math.max(0.02, nachMs / 1000), o = audio.createOscillator(), g = audio.createGain();
+    o.type = "sine"; o.frequency.value = hz; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + s);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + s + 0.03);
+    WKK.osc = [...(WKK.osc || []), o]; o.onended = () => { WKK.osc = (WKK.osc || []).filter((x) => x !== o); };
+  } catch (e) { /* ohne Ton zählt nur das Bild */ }
+}
+function wkPiepWeg() { for (const o of WKK.osc || []) try { o.stop(); } catch (e) { /* schon vorbei */ } WKK.osc = []; WKK.cd = 0; }
+function wkTimerPiep(st, jetzt) {
+  const t = st.timer, rest = t ? t.ende - jetzt : 0;
+  if (!t || t.pause != null || document.hidden || rest <= 0) { if (WKK.cd || WKK.osc?.length) wkPiepWeg(); return; }
+  if (WKK.cd && WKK.cd !== t.ende) wkPiepWeg(); // Timer verlängert (+1 Min.) oder neu → Countdown neu stellen
+  if (rest <= 6500 && WKK.cd !== t.ende) { WKK.cd = t.ende; for (let k = 5; k >= 1; k--) if (rest - k * 1000 > 30) wkPiep(rest - k * 1000, k === 1 ? 1320 : 990, 0.13); }
+  const k = Math.floor(rest / 60000), bis = rest - k * 60000, schl = `${t.ende}:${k}`; // nächste volle Minute in „bis“ ms
+  if (k >= 1 && bis <= 1500 && WKK.mi !== schl && (t.dauer || 0) - k * 60000 > 3000) { WKK.mi = schl; wkPiep(bis, 740, 0.18); }
 }
 function wkKlingeln(art) {
   const st = wkStand(), timer = art === "timer", e = timer ? st.timer : st.wecker; if (!e) return;
@@ -18134,8 +18156,8 @@ function wkKlingeln(art) {
   WKK.art = art; WKK.bis = Date.now() + WK_KLINGEL_MS; WKK.i = 0; WKK.geweckt = false; WKK.text = e.text || ""; WKK.um = timer ? e.ende : e.um;
   const f = blattAuf("wkKlingel", `<div class="wk-klingel"><div class="wk-glocke" aria-hidden="true">${timer ? "⏲️" : "⏰"}</div>
     <h3 style="margin:4px 0">${timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${wkUhrzeit(e.um)} Uhr`}</h3>${e.text && !timer ? `<p style="margin:0 0 10px">${esc(e.text)}</p>` : ""}
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button type="button" class="knopf haupt" data-w="aus">🔕 Aus</button>
-      <button type="button" class="knopf" data-w="mehr">${timer ? "+1 Min." : `💤 ${WK_SCHLUMMER_MIN} Min. später`}</button></div></div>`);
+    <div class="knoepfe wk-klingel-knoepfe"><button type="button" class="knopf haupt" data-w="aus">🔕 Aus</button><!-- 2.670.0 KC-CLUB-WECKER-SCHLUMMER: Schlummertaste daneben -->
+      <button type="button" class="knopf wk-schlummer" data-w="mehr">${timer ? "+1 Min." : `💤 Schlummern<small>${WK_SCHLUMMER_MIN} Min. später</small>`}</button></div></div>`);
   f.onclick = null; // nur mit „Aus“ oder „später“ – daneben tippen schließt nicht aus Versehen
   f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => wkKlingelAus(b.dataset.w === "mehr"));
   wkTon(); wkSchlag();
