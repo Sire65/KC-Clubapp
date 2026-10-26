@@ -5917,7 +5917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12853,7 +12853,7 @@ function idx0() { return lies("index.html"); }
   assert.ok(r2.rows[0].std === "1,5" && r2.rows[0].klein === "ges. 12,5" && r2.ueber === 1 && r2.fehl === 0.5 && r2.regelStd === 2 && r2.bedarfStd === 6, "Stunden je Zeile und Tag");
   assert.ok(/function dpdUebersicht\(tage, ges, gesBer\)/.test(programm) && /Stunden je Person – alle Tage/.test(programm) && /<td class="std \$\{r\.art\}">/.test(programm), "Stundenspalte und Blatt „Stunden je Person“");
   assert.ok(/#druck \.dpd-raster td\.a-gelb \{/.test(html) && /#druck \.dpd-sum \{/.test(html), "Ampel- und Übersichts-Stil im Druckblock");
-  assert.ok(/function dpdBedarf\(tage, von, bis\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = bed \+ blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
+  assert.ok(/function dpdBedarf\(tage, von, bis\)/.test(programm) && /Regelzeit und Besetzung je Stunde/.test(programm) && /html = bed \+ (?:dpdLueckenBlatt\(d\) \+ )?blaetter\.flatMap/.test(programm) && /#druck \.dpd-bed \{/.test(html), "vorn das Blatt Regelzeit und Besetzung je Stunde");
   assert.ok(/if \(t\.art !== "Markttag"\) \{ \/\/ Aufbau\/Nachbereitung: keine Vorgabe/.test(programm) && /So haben sich eingetragen:/.test(programm) && /"aus Wunschplänen, keine Vorgabe"/.test(programm), "Aufbau und Nachbereitung ohne Vorgabe, aus den Wunschplänen");
   assert.ok(/#druck:has\(\.dpd\) \{ padding: 0 !important; width: 297mm !important; \}/.test(html) && /#druck \.dpd-blatt \{[^}]*height: 210mm;[^}]*break-after: page;/.test(html), "je Blatt genau A4 quer");
   const druckBlock = html.slice(html.indexOf("  @media print {"), html.indexOf("\n  }\n", html.indexOf("  @media print {")));
@@ -12976,7 +12976,7 @@ function idx0() { return lies("index.html"); }
   assert.equal(t.leute[2].z, "Aushilfe");
   assert.deepEqual(t.fehlt.slice(4, 12), [0, 0, 1, 1, 1, 1, 1, 1], "ab 11 Uhr fehlt eine Person");
   assert.deepEqual(t.ber, [{ n: "Bert Bau", s: [12, 14] }]);
-  assert.ok(/import \{ dpRechnen \} from "\.\/dp-rechnen\.js";/.test(server), "Server nutzt dieselbe Rechnung");
+  assert.ok(/import \{ dpRechnen(?:, DP_REGEL)? \} from "\.\/dp-rechnen\.js";/.test(server), "Server nutzt dieselbe Rechnung");
   const fall = server.slice(server.indexOf('case "dp_druck_rechnen": {'), server.indexOf('case "dp_druck_rechnen": {') + 300);
   assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall) && /dpDruckNeu\(ich\.person_id\)/.test(fall), "neu rechnen nur Admin");
   assert.ok(/\(e\.revision \?\? null\) === \(w \? w\.revision : null\)/.test(server), "Ersatz gilt nur bis zum nächsten eigenen Wunschplan");
@@ -13082,4 +13082,21 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.ok(/:where\(:root\.sch-an\) \.raster \{ filter: var\(--sch-filt\); \}/.test(html) && /:where\(:root\.sch-an\) \.raster > \.kachel \{ box-shadow: none; \}/.test(html), "ein gemeinsamer Schatten fürs Kachel-Raster");
   assert.ok(/:root \{ --sch-filt: var\(--sch-filt-t\); \} :root\.dunkel \{ --sch-filt: var\(--sch-filt-n\); \}/.test(html) && /r\.style\.setProperty\("--sch-filt-t", filt\(/.test(programm), "Tag/Nacht wie die übrigen Schatten");
   assert.ok(/:where\(:root\.sch-an\) \.tuer \{ box-shadow: var\(--sch-box\); \}/.test(html), "„App schließen“ mit Schatten");
+}
+// 2.676.0 KC-CLUB-DP-WUNSCHDECKEL / KC-CLUB-DP-AUTO / KC-CLUB-DP-LUECKEN: nie länger als die Wunschzeit (mind. Hälfte darin), rechnet sich von selbst neu, Blatt „Hier fehlen noch Helfer“
+{
+  const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  assert.equal(DP_REGEL, 2, "Regel-Stand");
+  const tag = { d: "2026-12-04", art: "Markttag", baender: [{ start: 11, end: 23, total: 1, front: null, back: null }] };
+  const e = { tage: [tag], personen: [{ key: "Chris B", name: "Christina B", eintraege: [{ d: "2026-12-04", t: "avai", z: "B", a: 11, b: 23 }, { d: "2026-12-04", t: "pref", z: "B", a: 17, b: 23 }] }], max: 8 };
+  const s = dpRechnen(e).tage[0].leute[0].s; assert.ok(s && s[1] - s[0] <= 6 + 1e-9, `höchstens so lang wie die Wunschzeit (${s})`);
+  assert.ok(s[0] >= 14 - 1e-9, "mindestens die Hälfte in der Wunschzeit");
+  const s2 = dpRechnen({ ...e, wunschDeckel: false }).tage[0].leute[0].s; assert.equal(s2[1] - s2[0], 8, "abschaltbar über dp_druck_konfig (wunschDeckel: false)");
+  const nurKann = dpRechnen({ tage: [tag], personen: [{ key: "Frank B", name: "Frank B", eintraege: [{ d: "2026-12-04", t: "avai", z: "B", a: 11, b: 23 }] }], max: 8 }).tage[0].leute[0].s;
+  assert.equal(nurKann[1] - nurKann[0], 8, "ohne Wunschzeit gilt wie bisher die Kann-Zeit");
+  assert.ok(/if \(await dpDruckVeraltet\(ich\.person_id, w\)\.catch\(\(\) => false\)\)/.test(server) && /w\.regel !== DP_REGEL/.test(server), "Stand veraltet (Wunsch, Bedarf, Einstellung, Regel) → von selbst neu");
+  assert.ok(/await dpDruckAlleNeu\(\); \/\/ 2\.676\.0/.test(server), "neuer Wunschplan → gleich neu gerechnet");
+  assert.ok(/dpLuecken: \{ titel: "🧩 Wo noch Helfer fehlen"/.test(programm) && /html = bed \+ dpdLueckenBlatt\(d\) \+/.test(programm), "eigenes Blatt und im Gesamtdruck");
+  assert.ok(/cdKopf\("Hier fehlen noch Helfer"/.test(programm) && /\$\{cdFuss\(/.test(programm.slice(programm.indexOf("function dpdLueckenBlatt"))), "Kopf und Fuß nach CD");
+  assert.ok(/#druck \.dpl-tab th, #druck \.dpl-tab td \{ border: \.25mm solid/.test(html), "Längs- und Querlinien");
 }

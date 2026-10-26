@@ -11,9 +11,14 @@ const LV = { pref: 3, avai: 2, if_n: 1 };
 const ART = { pref: 3, avai: 2, if_n: 1, unav: 9 };
 const W = { 3: 1.0, 2: 0.85, 1: 0.35 };
 const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für Zeichenketten
+// 2.676.0 KC-CLUB-DP-WUNSCHDECKEL (Wunsch Hansi „nicht länger einplanen, als jemand bei Wunschzeit eingetragen hat – Verlagerungen oder Kürzungen sind ok“):
+// Wer an einem Tag eine Wunschzeit hat, bekommt höchstens so viele Stunden, wie die Wunschzeit lang ist (wunschDeckel), und mindestens die Hälfte
+// (wunschAnteil) des Dienstes liegt in der Wunschzeit – den Rest darf die Kann-Zeit füllen. Ohne Wunschzeit gilt wie bisher die Kann-Zeit.
+// DP_REGEL steigt, wenn sich die Rechnung ändert – der Server rechnet dann den gespeicherten Stand von selbst neu.
+export const DP_REGEL = 2;
 
 export function dpRechnen(e) {
-  const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23;
+  const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;
   // Bedarf je Halbstunde: [gesamt, vorne, hinten] (vorne/hinten null an Aufbau/Nachbereitung)
   const dem = new Map();
   for (const t of e.tage) {
@@ -78,8 +83,10 @@ export function dpRechnen(e) {
         for (const s of ss) { if (cur.length && Math.abs(s - cur[cur.length - 1] - H) > 1e-9) { blocks.push(cur); cur = []; } cur.push(s); }
         if (cur.length) blocks.push(cur);
         for (const blk of blocks) {
-          const lo = blk[0], hi = blk[blk.length - 1] + H, minlen = Math.min(2.0, hi - lo);
-          for (let a = lo; a < hi - 1e-9; a += H) for (let b = a + minlen; b <= Math.min(hi, a + MAXLEN) + 1e-9; b += H) {
+          const lo = blk[0], hi = blk[blk.length - 1] + H, wunsch = DECKEL ? [...av.get(k).values()].filter((x) => x[0] === 3).length * H : 0;
+          const deckel = wunsch > 0 ? Math.min(MAXLEN, wunsch) : MAXLEN, minlen = Math.min(2.0, hi - lo, deckel);
+          for (let a = lo; a < hi - 1e-9; a += H) for (let b = a + minlen; b <= Math.min(hi, a + deckel) + 1e-9; b += H) {
+            if (wunsch > 0 && slots(a, b).filter((x) => av.get(k).get(x)?.[0] === 3).length * H < (b - a) * ANTEIL - 1e-9) continue; // zu wenig in der Wunschzeit
             const cov = gain(n, a, b), g = cov * Math.max(0.05, 1 - FAIR * (hours.get(n) || 0) / 100);
             if (cov > 0.05 && (best === null || g > best[0])) best = [g, n, a, b];
           }
@@ -115,5 +122,5 @@ export function dpRechnen(e) {
       ber: (e.bereitschaft || []).filter((x) => x.d === d).map((x) => ({ n: x.name, s: [Number(x.von), Number(x.bis)] })),
     };
   });
-  return { v: 1, von: LO, bis: HI, tage, stunden: Object.fromEntries([...hours].map(([n, h]) => [full.get(n) || n, h])) };
+  return { v: 1, regel: DP_REGEL, von: LO, bis: HI, tage, stunden: Object.fromEntries([...hours].map(([n, h]) => [full.get(n) || n, h])) };
 }
