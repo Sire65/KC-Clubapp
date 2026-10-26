@@ -12797,7 +12797,7 @@ function idx0() { return lies("index.html"); }
   assert.ok(/WK_MODI = \[\["uhr", "🕰️ Uhr"[^\n]*\["wecker", "⏰ Wecker"[^\n]*\["stopp", "⏱️ Stoppuhr"[^\n]*\["timer", "⏲️ Timer"/.test(programm) && /if \(wkModus\(\) !== "uhr"\) return wkTick\(el\);/.test(programm), "Modi oben, Anzeige im gewählten Stil");
   assert.ok(/const WK_SCHNELL = \[1, 3, 5, 10, 15\], WK_ROT_MS = 10000/.test(programm) && /rot = !!t && t\.pause == null && r <= WK_ROT_MS/.test(programm), "Timer: Schnellwahl, letzte 10 s rot");
   assert.ok(/wkServerWeg\(e\.sid\); \/\/ App klingelt selbst/.test(programm) && /!WKK\.art && !document\.hidden\) wkKlingeln/.test(programm), "App klingelt nur sichtbar und bestellt dann den Push ab");
-  assert.ok(/U\.schlag\(t, WKK\.i\)/.test(programm) && /💤 \$\{WK_SCHLUMMER_MIN\} Min\. später/.test(programm) && /"\+1 Min\."/.test(programm), "Stundenuhr-Klang, Aus / +1 Min. / 5 Min. später");
+  assert.ok(/U\.schlag\(t, WKK\.i\)/.test(programm) && /💤 Schlummern<small>\$\{WK_SCHLUMMER_MIN\} Min\. später<\/small>/.test(programm) && /"\+1 Min\."/.test(programm), "Stundenuhr-Klang, Aus / +1 Min. / 5 Min. später");
   assert.ok(/id="wkChip"[^>]*onclick="wkChipTippen\(\)"/.test(html) && /else if \(h === "#wecker"\) wkChipTippen\(\);/.test(programm), "Startseite zeigt, was läuft; Push öffnet die Uhr");
 }
 // 2.641.0 KC-CLUB-RAETSEL-ABWECHSLUNG (Wunschliste #30): mehr Bilder, erst ungesehene, wechselnder Ausschnitt, keine zwei richtigen Tipps
@@ -12950,7 +12950,7 @@ function idx0() { return lies("index.html"); }
 {
   assert.ok(/theke \+ 4 \* k\]\), k, T, 3, 3\);/.test(programm) && /jzbLauflicht\(c, rahmen, k, T, 4, 4\);/.test(programm), "Lauflicht an der Bude langsamer");
   assert.ok(/function jzbClownSchritt\(F, dt\)/.test(programm) && /function jzbClownMalen\(c, F\)/.test(programm) && /jzbClownSchritt\(F, dt\); \/\/ 2\.667\.0/.test(programm) && /jzbClownMalen\(c, F\); \/\/ 2\.667\.0/.test(programm), "Clown läuft und wird gemalt");
-  assert.ok(/kind: JZB_CLOWN_N\+\+ % 2 \? "junge" : "maedchen"/.test(programm), "abwechselnd Mädchen und Junge");
+  assert.ok(/const kind = n % 2 \? "junge" : "maedchen";/.test(programm), "abwechselnd Mädchen und Junge");
 }
 // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Server rechnet den Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug) – nur Admin, Hinweis bei neuem Wunschplan
 {
@@ -13021,3 +13021,30 @@ function idx0() { return lies("index.html"); }
   for (const d of ["tesseract.min.js", "worker.min.js", "tesseract-core-lstm.wasm.js", "deu.traineddata.gz", "jsQR.js", "README.txt"]) assert.ok(fs.existsSync(new URL(`../lib/ocr/${d}`, import.meta.url)), `lib/ocr/${d}`);
   assert.ok(/if \(url\.pathname\.includes\("\/lib\/ocr\/"\)\) return;/.test(lies("sw.js")), "Service Worker merkt die 5 MB nicht je Version");
 }
+// 2.670.0 KC-CLUB-WECKER-SCHLUMMER / KC-CLUB-TIMER-PIEP: Schlummertaste 10 Min. neben „Aus“; Timer: Minutensignal und Countdown 5…1 vor dem Alarm
+{
+  assert.ok(/WK_SCHLUMMER_MIN = 10;/.test(programm) && /<div class="knoepfe wk-klingel-knoepfe"><button type="button" class="knopf haupt" data-w="aus">🔕 Aus<\/button>/.test(programm), "Schlummern 10 Min., neben Aus");
+  assert.ok(/\.wk-klingel-knoepfe \{ display: flex; gap: 10px; \}/.test(html), "nebeneinander");
+  const a = programm.indexOf("function wkTimerPiep("), e = programm.indexOf("function wkKlingeln(");
+  assert.ok(a > 0 && e > a && /wkTimerPiep\(st, jetzt\); \/\/ 2\.670\.0/.test(programm), "läuft in der Wache");
+  const piep = [], WKK = {};
+  const f = new Function("WKK", "wkPiep", "wkPiepWeg", "document", programm.slice(a, e) + "; return wkTimerPiep;")(WKK, (ms, hz) => piep.push([Math.round(ms), hz]), () => { WKK.cd = 0; }, { hidden: false });
+  const T0 = 1e12, ende = T0 + 125000, st = { timer: { ende, dauer: 180000, pause: null } }, folge = [];
+  for (let t = T0; t <= ende + 500; t += 1000) { const n = piep.length; f(st, t); if (piep.length > n) folge.push([Math.round((ende - t) / 1000), piep.slice(n).map((x) => x[1])]); }
+  assert.deepEqual(folge, [[121, [740]], [61, [740]], [6, [990, 990, 990, 990, 1320]]], "2:00 und 1:00 Minutensignal, dann 5-4-3-2-1 (letzter höher), Start nicht");
+  piep.length = 0; f({ timer: { ende, dauer: 180000, pause: 5000 } }, ende - 3000); assert.equal(piep.length, 0, "Pause: still");
+}
+// 2.670.0 KC-CLUB-CLOWN-PLATZEN: jedes 3. Mädchen lässt den Ballon los (platzt, weint, neuer Ballon), jeder 2. Junge erschreckt den Clown (alle platzen, Clown weint, holt neue)
+{
+  const a = programm.indexOf("function jzbClownArt("), e = programm.indexOf("function jzbPlopp(");
+  const art = new Function(programm.slice(a, e) + "; return jzbClownArt;")();
+  let n = 0, m = 0, j = 0; const folge = [];
+  for (let i = 0; i < 12; i++) { const x = art(n, m, j); folge.push(x.kind[0] + (x.v === "normal" ? "" : x.v === "platzen" ? "*" : "!")); n++; if (x.kind === "maedchen") m++; else j++; }
+  assert.deepEqual(folge, ["m", "j", "m", "j!", "m*", "j", "m", "j!", "m", "j", "m*", "j!"], "jedes 3. Mädchen *, jeder 2. Junge !");
+  for (const p of ['ph("links")', 'ph("loslassen")', 'ph("weinen")', 'ph("huepfen")', 'ph("weiter")', 'ph("buh")', 'ph("schreck")', 'ph("clownweint")', 'ph("holen")'])
+    assert.ok(programm.includes(p), `Ablauf: ${p}`);
+  assert.ok(/if \(a\.v !== "normal" && F\.t > JZB_FEST_DAUER - 62\) \{ F\.clownUhr = Infinity; return; \}/.test(programm), "Geschichte nur, wenn sie noch in den Lauf passt");
+  assert.ok(/function jzbPlopp\(\) \{[^\n]*\n\s*if \(!einst\("ton", true\) \|\| document\.hidden\) return;\s*try \{ if \(inRuheJetzt/.test(programm), "Peng nur mit Ton an und nicht in der Ruhezeit");
+}
+// 2.670.0 KC-CLUB-SCHATTEN-REGISTER: die Register-Knöpfe (Club, Meins, Technik) haben denselben Schatten wie die Kacheln
+assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box-shadow: var\(--sch-box\); \}/.test(html), "Register-Knöpfe mit Schatten");
