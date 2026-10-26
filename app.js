@@ -20311,25 +20311,81 @@ function jzbNaschbudeMalen(c, F) {
 // 2.667.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „ab und an einen Luftballon-Verkäufer durch die Kirmes-Szene laufen lassen – ein Clown mit einem Strauß
 // Luftballons; dann kommt ein kleines Mädchen und bekommt einen. Beim nächsten Mal ein Junge“): der Clown läuft von links bis vor das Herz und wartet,
 // von rechts kommt das Kind, bekommt einen Ballon (er schwebt vom Strauß in die Hand) und hüpft damit davon; der Clown zieht weiter. Abwechselnd Mädchen/Junge.
-let JZB_CLOWN_N = 0; const JZB_CLOWN_GR = 1.25; // Größe von Clown und Kind (Wunsch Hansi beim Karussell: „etwas größer“)
+// 2.670.0 KC-CLUB-CLOWN-PLATZEN (Wunsch Hansi): zwei kleine Geschichten im Wechsel mit dem normalen Lauf –
+// 🎈 jedes 3. Mädchen: geht mit dem Ballon nach links weiter, bleibt stehen, lässt ihn los – er fliegt hoch und zerplatzt, das Mädchen weint,
+//    der Clown kommt und schenkt ihr einen neuen; sie hüpft vor Freude und geht weiter.
+// 😱 jeder 2. Junge: ruft „BUH!“ – der Clown lässt vor Schreck alle Ballons los, die fliegen hoch und zerplatzen nacheinander; der Clown weint,
+//    geht nach links neue holen und kommt mit einem vollen Strauß zurück.
+let JZB_CLOWN_N = 0, JZB_CLOWN_MAEDCHEN = 0, JZB_CLOWN_JUNGE = 0; const JZB_CLOWN_GR = 1.25; // Größe von Clown und Kind (Wunsch Hansi beim Karussell: „etwas größer“)
 const JZB_CLOWN_FARBEN = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c"];
+function jzbClownArt(n, maedchen, junge) { // → { kind, v }: abwechselnd Mädchen/Junge; jedes 3. Mädchen „platzen“, jeder 2. Junge „schreck“
+  const kind = n % 2 ? "junge" : "maedchen";
+  return { kind, v: kind === "maedchen" ? ((maedchen + 1) % 3 === 0 ? "platzen" : "normal") : ((junge + 1) % 2 === 0 ? "schreck" : "normal") };
+}
+function jzbPlopp() { // 🔊 kurzes „Peng“ beim Platzen (nur ⚙️ Ton an, nicht in der Ruhezeit)
+  if (!einst("ton", true) || document.hidden) return;
+  try { if (inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return; } catch {}
+  try {
+    const A = audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const t0 = A.currentTime + .02, b = A.createBuffer(1, Math.floor(A.sampleRate * .12), A.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const q = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(); q.buffer = b; f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = .8;
+    g.gain.setValueAtTime(.5, t0); q.connect(f); f.connect(g); g.connect(A.destination); q.start(t0);
+  } catch { /* ohne Ton platzt es nur im Bild */ }
+}
 function jzbClownSchritt(F, dt) {
-  const J = JZB, k = J.k * JZB_CLOWN_GR;
+  const J = JZB, k = J.k * JZB_CLOWN_GR, boden = J.h - 3 * J.k;
   if (!F.clown) {
     if (F.clownUhr === undefined) F.clownUhr = jzbZ(6, 12);
-    if ((F.clownUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 28)
-      F.clown = { x: -30 * k, ziel: J.w * .6, ph: "rein", lauf: 0, kind: JZB_CLOWN_N++ % 2 ? "junge" : "maedchen", kx: J.w + 16 * k, kRicht: -1, kLauf: 0, g: 0, hat: false, farben: JZB_CLOWN_FARBEN.slice() };
+    if ((F.clownUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 28) {
+      const a = jzbClownArt(JZB_CLOWN_N, JZB_CLOWN_MAEDCHEN, JZB_CLOWN_JUNGE);
+      if (a.v !== "normal" && F.t > JZB_FEST_DAUER - 62) { F.clownUhr = Infinity; return; } // Geschichte passt nicht mehr in diesen Lauf → im nächsten
+      JZB_CLOWN_N++; if (a.kind === "maedchen") JZB_CLOWN_MAEDCHEN++; else JZB_CLOWN_JUNGE++;
+      F.clown = { x: -30 * k, ziel: J.w * .6, ph: "rein", uhr: 0, lauf: 0, kind: a.kind, v: a.v, kx: J.w + 16 * k, kRicht: -1, kLauf: 0, g: 0, hat: false, raus: 0, bi: 5, cRicht: 1,
+        farben: JZB_CLOWN_FARBEN.slice(), frei: null, flug: [], pops: [] };
+    }
     return;
   }
-  const C = F.clown, v = 24 * k, kv = 30 * k, kZiel = C.ziel + 17 * k;
-  if (C.ph === "rein") { C.x += v * dt; C.lauf += dt; if (C.x >= C.ziel) { C.x = C.ziel; C.ph = "warten"; } }
-  if (C.ph === "weg") { C.x += v * dt; C.lauf += dt; }
-  if (C.ph !== "weg" && C.x > C.ziel - 70 * k) { // das Kind kommt, sobald der Clown fast da ist
-    if (C.kx > kZiel) { C.kx = Math.max(kZiel, C.kx - kv * dt); C.kLauf += dt; }
-    else if (C.ph === "warten") C.ph = "geben";
+  const C = F.clown, v = 24 * k, kv = 30 * k, kZiel = C.ziel + 17 * k, ph = (p) => { C.ph = p; C.uhr = 0; };
+  C.uhr += dt; C.cGeht = false; C.kGeht = false; C.kHuepf = false;
+  const clownLauf = (r, f = 1) => { C.x += r * v * f * dt; C.lauf += dt; C.cGeht = true; C.cRicht = r; };
+  const kindLauf = (r, f = 1, huepf) => { C.kx += r * kv * f * dt; C.kLauf += dt; C.kGeht = true; C.kRicht = r; C.kHuepf = !!huepf; };
+  if (C.ph === "rein") { clownLauf(1); if (C.x >= C.ziel) { C.x = C.ziel; ph("warten"); } }
+  if ((C.ph === "rein" || C.ph === "warten") && C.x > C.ziel - 70 * k) { // das Kind kommt, sobald der Clown fast da ist
+    if (C.kx > kZiel) { C.kx = Math.max(kZiel, C.kx - kv * dt); C.kLauf += dt; C.kGeht = true; }
+    else if (C.ph === "warten") { if (C.v === "schreck") ph("buh"); else { C.raus = 1; ph("geben"); } }
   }
-  if (C.ph === "geben" && (C.g += dt / 1.6) >= 1) { C.g = 1; C.hat = true; C.ph = "weg"; C.kRicht = 1; }
-  if (C.ph === "weg") { C.kx += kv * 1.15 * dt; C.kLauf += dt; }
+  if (C.ph === "geben" && (C.g += dt / 1.6) >= 1) {
+    C.g = 1; C.hat = true;
+    if (C.v === "platzen" && C.bi === 5) ph("links"); else if (C.v === "platzen") ph("huepfen"); else { ph("weg"); C.kRicht = 1; }
+  }
+  if (C.ph === "weg") { clownLauf(1); C.kx += kv * 1.15 * dt; C.kLauf += dt; C.kGeht = true; C.kHuepf = C.hat; }
+  // 🎈 Mädchen: nach links, stehen bleiben, loslassen, platzen, weinen, neuer Ballon, hüpfen, weiter
+  if (C.ph === "links") { kindLauf(-1); if (C.kx <= J.w * .3) ph("stehen"); }
+  if (C.ph === "stehen" && C.uhr > .9) { C.hat = false; C.frei = { x: C.kx - 2.5 * k, y: boden - 27 * k, t: 0, f: jzbClownStrauss(C, k)[5].f }; ph("loslassen"); }
+  if (C.ph === "loslassen" && C.frei) {
+    const b = C.frei; b.t += dt; b.y -= (14 + b.t * 22) * k * dt; b.x += Math.sin(b.t * 2) * 6 * k * dt;
+    if (b.y < J.h * .16 || b.t > 3.5) { C.pops.push({ x: b.x, y: b.y, t: 0, f: b.f }); C.frei = null; jzbPlopp(); ph("weinen"); }
+  }
+  if (C.ph === "weinen") {
+    if (C.x > C.kx + 22 * k) clownLauf(-1); else C.cRicht = -1;
+    if (C.x <= C.kx + 22 * k && C.uhr >= 2) { C.kRicht = 1; C.raus = 2; C.bi = 4; C.g = 0; C.hat = false; ph("geben"); }
+  }
+  if (C.ph === "huepfen") { C.kHuepf = true; C.kLauf += dt; if (C.uhr > 1.4) ph("weiter"); }
+  if (C.ph === "weiter") { kindLauf(-1, 1.15, true); clownLauf(1); if (C.kx < -24 * k && C.x > J.w + 40 * k) { F.clown = null; F.clownUhr = jzbZ(28, 42); } }
+  // 😱 Junge: BUH! – alle Ballons fliegen weg und platzen nacheinander, der Clown weint und holt neue
+  if (C.ph === "buh" && C.uhr > .9) { C.flug = jzbClownStrauss(C, k).map((b, i) => ({ x: C.x + 8 * k + b.dx, y: boden - 31 * k + b.dy, t: 0, f: b.f, i, weg: false })); C.raus = 6; ph("schreck"); }
+  if (C.ph === "schreck" || C.ph === "clownweint" || C.ph === "holen") {
+    for (const b of C.flug) if (!b.weg) { b.t += dt; b.y = Math.max(6 * k, b.y - (5 + b.t * 3) * k * dt); b.x += ((b.i - 2.5) * 5 + Math.sin(b.t * 2 + b.i) * 4) * k * dt; // auffächern, im Bild bleiben
+      if (b.t >= 1.2 + b.i * .45) { b.weg = true; C.pops.push({ x: b.x, y: b.y, t: 0, f: b.f }); jzbPlopp(); } }
+    if (C.uhr > .6 && C.kx < J.w + 24 * k) kindLauf(1, 1.5); // der Junge rennt kichernd davon
+  }
+  if (C.ph === "schreck" && C.flug.every((b) => b.weg) && C.uhr > 1.2 + 5 * .45 + .4) ph("clownweint");
+  if (C.ph === "clownweint" && C.uhr > 2.4) ph("holen");
+  if (C.ph === "holen") { clownLauf(-1, 1.1); if (C.x < -30 * k) ph("pause"); }
+  if (C.ph === "pause" && C.uhr > 1.5) { C.raus = 0; C.flug = []; C.farben = JZB_CLOWN_FARBEN.slice().sort(() => Math.random() - .5); C.kx = J.w + 30 * k; ph("weg"); }
+  for (const p of C.pops) p.t += dt;
+  C.pops = C.pops.filter((p) => p.t < .6);
   if (C.ph === "weg" && C.x > J.w + 40 * k && C.kx > J.w + 20 * k) { F.clown = null; F.clownUhr = jzbZ(28, 42); }
 }
 function jzbBallonMalen(c, x, y, r, farbe) { // ein Luftballon (Mitte x/y), Faden nach unten zeichnet der Aufrufer
@@ -20340,11 +20396,17 @@ function jzbBallonMalen(c, x, y, r, farbe) { // ein Luftballon (Mitte x/y), Fade
 function jzbClownStrauss(C, k) { // Lage der Ballons im Strauß relativ zur Hand
   return [[-7, -20], [0, -24], [7, -20], [-4, -15], [4, -15], [0, -19]].map(([dx, dy], i) => ({ dx: dx * k, dy: dy * k, f: C.farben[i % C.farben.length] }));
 }
+function jzbTraenen(c, augen, k, T) { // 💧 Tränen kullern (2.670.0)
+  c.fillStyle = "#6ec6ff"; for (const [x, y] of augen) for (let i = 0; i < 2; i++) { const f = (T * 1.6 + i * .5) % 1; c.globalAlpha = 1 - f; c.beginPath(); c.ellipse(x + (i ? .6 : -.6) * k, y + f * 6 * k, .55 * k, .8 * k, 0, 0, 7); c.fill(); }
+  c.globalAlpha = 1;
+}
 function jzbClownMalen(c, F) {
   const C = F?.clown; if (!C) return;
-  const J = JZB, k = J.k * JZB_CLOWN_GR, T = J.T, boden = J.h - 3 * J.k, geht = C.ph === "rein" || C.ph === "weg";
-  const sw = geht ? Math.sin(C.lauf * 7) : 0, bob = geht ? Math.abs(Math.sin(C.lauf * 7)) * 1.2 * k : 0;
-  c.save(); c.translate(C.x, boden - bob); c.lineCap = "round";
+  const J = JZB, k = J.k * JZB_CLOWN_GR, T = J.T, boden = J.h - 3 * J.k, geht = !!C.cGeht, r = C.cRicht || 1;
+  const weint = C.ph === "clownweint" || C.ph === "holen", schreck = C.ph === "schreck" && C.uhr < .7; // 2.670.0 KC-CLUB-CLOWN-PLATZEN
+  const sw = geht ? Math.sin(C.lauf * 7) : 0, bob = geht ? Math.abs(Math.sin(C.lauf * 7)) * 1.2 * k : schreck ? Math.sin(C.uhr / .7 * Math.PI) * 6 * k : 0;
+  if (C.x > -40 * k && C.x < J.w + 50 * k) {
+  c.save(); c.translate(C.x, boden - bob); c.scale(r, 1); c.lineCap = "round";
   // Beine und große rote Schuhe
   c.strokeStyle = "#3a5bd9"; c.lineWidth = 3 * k;
   for (const s of [-1, 1]) { const fx = s * 3 * k + sw * s * 3 * k; c.beginPath(); c.moveTo(s * 2 * k, -10 * k); c.lineTo(fx, -1.5 * k); c.stroke();
@@ -20365,41 +20427,64 @@ function jzbClownMalen(c, F) {
   c.fillStyle = "#ff9f1c"; for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 4.6 * k, -28.5 * k, 2.6 * k, 0, 7); c.fill(); }
   c.fillStyle = "#fdf3e7"; c.beginPath(); c.arc(0, -29 * k, 4.2 * k, 0, 7); c.fill();
   c.fillStyle = "#d62828"; c.beginPath(); c.arc(1.2 * k, -28.6 * k, 1.3 * k, 0, 7); c.fill();
-  c.strokeStyle = "#d62828"; c.lineWidth = .9 * k; c.beginPath(); c.arc(1 * k, -27.4 * k, 2 * k, .25, Math.PI - .25); c.stroke();
-  c.fillStyle = "#222"; c.beginPath(); c.arc(-.6 * k, -30.4 * k, .5 * k, 0, 7); c.arc(2.6 * k, -30.4 * k, .5 * k, 0, 7); c.fill();
+  c.strokeStyle = "#d62828"; c.lineWidth = .9 * k; c.beginPath();
+  if (weint || schreck) c.arc(1 * k, -24.6 * k, 2 * k, Math.PI + .5, -.5); else c.arc(1 * k, -27.4 * k, 2 * k, .25, Math.PI - .25); c.stroke(); // weint/erschrickt: Mund nach unten
+  c.fillStyle = "#222"; c.beginPath(); c.arc(-.6 * k, -30.4 * k, schreck ? .8 * k : .5 * k, 0, 7); c.arc(2.6 * k, -30.4 * k, schreck ? .8 * k : .5 * k, 0, 7); c.fill();
+  if (weint) jzbTraenen(c, [[-.6 * k, -29.6 * k], [2.6 * k, -29.6 * k]], k, T);
   c.fillStyle = "#2a9d8f"; c.beginPath(); c.moveTo(-3 * k, -32.4 * k); c.lineTo(3 * k, -32.4 * k); c.lineTo(.4 * k, -38 * k); c.closePath(); c.fill();
   c.fillStyle = "#ffd23f"; c.beginPath(); c.arc(.4 * k, -38.3 * k, 1 * k, 0, 7); c.fill();
   // Strauß: Fäden von der Hand, Ballons wiegen sich
-  const strauss = jzbClownStrauss(C, k).slice(0, C.hat || C.ph === "geben" ? 5 : 6), wieg = Math.sin(T * 1.4) * 1.5 * k;
+  const strauss = jzbClownStrauss(C, k).slice(0, 6 - (C.raus || 0)), wieg = Math.sin(T * 1.4) * 1.5 * k;
   c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7;
   for (const b of strauss) { c.beginPath(); c.moveTo(hx, hy); c.lineTo(hx + b.dx + wieg, hy + b.dy + 5 * k); c.stroke(); }
   for (const b of strauss) jzbBallonMalen(c, hx + b.dx + wieg, hy + b.dy, 4.6 * k, b.f);
   c.fillStyle = "#fff"; c.beginPath(); c.arc(hx, hy, 1.4 * k, 0, 7); c.fill();
   c.restore();
+  if (schreck || (C.ph === "schreck" && C.uhr < 1.4)) { c.fillStyle = "#ffd23f"; c.font = `900 ${9 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.fillText("!", C.x - r * 9 * k, boden - bob - 34 * k); }
+  }
   // Kind: kommt von rechts, bekommt den Ballon und hüpft davon
-  const kGeht = C.kx > C.ziel + 17 * k + .5 || C.ph === "weg", ksw = kGeht ? Math.sin(C.kLauf * 9) : 0, kbob = kGeht ? Math.abs(Math.sin(C.kLauf * 9)) * (C.hat ? 2.6 : 1) * k : 0;
-  const kHandX = C.kx - C.kRicht * -3.5 * k, kHandY = boden - kbob - 11 * k, ballon = jzbClownStrauss(C, k)[5];
-  if (C.kx < J.w + 18 * k) {
+  const kGeht = !!C.kGeht, kHuepf = !!C.kHuepf, ksw = kGeht ? Math.sin(C.kLauf * 9) : 0;
+  const kbob = kHuepf ? Math.abs(Math.sin(C.kLauf * (C.ph === "huepfen" ? 7 : 9))) * (C.ph === "huepfen" ? 5 : 2.6) * k : kGeht ? Math.abs(Math.sin(C.kLauf * 9)) * 1 * k : 0;
+  const kHandX = C.kx - C.kRicht * -3.5 * k, kHandY = boden - kbob - 11 * k, ballon = jzbClownStrauss(C, k)[C.bi ?? 5];
+  if (C.kx < J.w + 18 * k && C.kx > -20 * k) {
     c.save(); c.translate(C.kx, boden - kbob); c.scale(C.kRicht, 1); c.lineCap = "round";
     const m = C.kind === "maedchen";
     c.strokeStyle = "#f1c27d"; c.lineWidth = 1.6 * k; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 1.2 * k, -6 * k); c.lineTo(s * 1.2 * k + ksw * s * 1.6 * k, -.8 * k); c.stroke(); }
     c.fillStyle = m ? "#c1121f" : "#333"; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 1.2 * k + ksw * s * 1.6 * k + .6 * k, -.6 * k, 1.5 * k, .8 * k, 0, 0, 7); c.fill(); }
     if (m) { c.fillStyle = "#ff8fc7"; c.beginPath(); c.moveTo(-4 * k, -5.5 * k); c.lineTo(4 * k, -5.5 * k); c.lineTo(2 * k, -13 * k); c.lineTo(-2 * k, -13 * k); c.closePath(); c.fill(); }
     else { c.fillStyle = "#1d3557"; c.fillRect(-2.6 * k, -8 * k, 5.2 * k, 3 * k); c.fillStyle = "#3a86ff"; c.fillRect(-2.8 * k, -13 * k, 5.6 * k, 5.4 * k); }
-    c.strokeStyle = "#f1c27d"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(1.5 * k, -12 * k); c.lineTo(3.5 * k, C.hat || C.ph === "geben" ? -11 * k + (C.hat ? -2 * k : 0) : -8 * k); c.stroke(); // Arm (Hand vorn)
+    const buh = C.ph === "buh", hoch = C.hat || C.ph === "geben" || C.ph === "stehen";
+    c.strokeStyle = "#f1c27d"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(1.5 * k, -12 * k); c.lineTo(buh ? 3 * k : 3.5 * k, buh ? -19 * k : hoch ? -11 * k + (C.hat ? -2 * k : 0) : C.ph === "loslassen" && C.uhr < .8 ? -17 * k : -8 * k); c.stroke(); // Arm (Hand vorn)
+    if (buh) { c.beginPath(); c.moveTo(-1.5 * k, -12 * k); c.lineTo(-3 * k, -19 * k); c.stroke(); } // „BUH!“ – beide Arme hoch
     c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(0, -15.5 * k, 2.6 * k, 0, 7); c.fill();
     if (m) { c.fillStyle = "#8d5524"; c.beginPath(); c.arc(0, -16.4 * k, 2.7 * k, Math.PI * .95, Math.PI * 2.05); c.fill(); for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 3 * k, -14.6 * k, 1.2 * k, 0, 7); c.fill(); } }
     else { c.fillStyle = "#e63946"; c.beginPath(); c.arc(0, -16.3 * k, 2.7 * k, Math.PI, 0); c.fill(); c.fillRect(0, -16.6 * k, 4 * k, 1 * k); }
     c.fillStyle = "#222"; c.beginPath(); c.arc(1.2 * k, -15.8 * k, .4 * k, 0, 7); c.fill();
+    if (C.ph === "weinen") { c.strokeStyle = "#7a3b1f"; c.lineWidth = .7 * k; c.beginPath(); c.arc(1.4 * k, -12.6 * k, 1 * k, Math.PI + .5, -.5); c.stroke(); jzbTraenen(c, [[1.4 * k, -15.4 * k]], k, T); }
     c.restore();
+    if (C.ph === "buh") { // Sprechblase „BUH!“
+      const bx = C.kx - 8 * k, by = boden - 30 * k; c.fillStyle = "#fff"; c.beginPath(); c.ellipse(bx, by, 9 * k, 5 * k, 0, 0, 7); c.fill();
+      c.beginPath(); c.moveTo(bx + 3 * k, by + 4 * k); c.lineTo(C.kx - 2 * k, boden - 21 * k); c.lineTo(bx + 6 * k, by + 3 * k); c.fill();
+      c.fillStyle = "#c1121f"; c.font = `900 ${5.5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("BUH!", bx, by + .3 * k);
+    }
   }
   // der geschenkte Ballon: schwebt vom Strauß zur Hand des Kindes, dann mit dem Kind davon
   if (C.ph === "geben" || C.hat) {
-    const sx = C.x + 8 * k + ballon.dx, sy = boden - 31 * k + ballon.dy, zx = kHandX + 1 * k, zy = kHandY - 16 * k, g = C.hat ? 1 : C.g, e = g * g * (3 - 2 * g);
+    const cr = C.cRicht || 1, sx = C.x + cr * (8 * k + ballon.dx), sy = boden - 31 * k + ballon.dy, zx = kHandX + 1 * k, zy = kHandY - 16 * k, g = C.hat ? 1 : C.g, e = g * g * (3 - 2 * g);
     const bx = sx + (zx - sx) * e + (C.hat ? Math.sin(T * 2) * 1.5 * k : 0), by = sy + (zy - sy) * e - Math.sin(e * Math.PI) * 6 * k;
-    const fx = C.hat ? kHandX : C.x + 8 * k + (kHandX - C.x - 8 * k) * e, fy = C.hat ? kHandY : boden - 31 * k + (kHandY - boden + 31 * k) * e;
+    const fx = C.hat ? kHandX : C.x + cr * 8 * k + (kHandX - C.x - cr * 8 * k) * e, fy = C.hat ? kHandY : boden - 31 * k + (kHandY - boden + 31 * k) * e;
     c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7; c.beginPath(); c.moveTo(fx, fy); c.quadraticCurveTo(bx + 2 * k, (fy + by) / 2, bx, by + 5.6 * k); c.stroke();
     jzbBallonMalen(c, bx, by, 4.6 * k, ballon.f);
+  }
+  // 2.670.0 KC-CLUB-CLOWN-PLATZEN: losgelassene Ballons steigen (Faden flattert), beim Platzen ein Stern mit „PENG!“
+  for (const b of [C.frei, ...(C.flug || []).filter((x) => !x.weg)].filter(Boolean)) {
+    c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7; c.beginPath(); c.moveTo(b.x, b.y + 5.6 * k); c.quadraticCurveTo(b.x + Math.sin(T * 6 + b.y) * 2 * k, b.y + 10 * k, b.x - 1 * k, b.y + 15 * k); c.stroke();
+    jzbBallonMalen(c, b.x, b.y, 4.6 * k, b.f);
+  }
+  for (const p of C.pops || []) {
+    const e = p.t / .6; c.save(); c.globalAlpha = 1 - e; c.strokeStyle = p.f; c.lineWidth = 1.4 * k;
+    for (let i = 0; i < 8; i++) { const w = i / 8 * Math.PI * 2, r1 = (2 + e * 5) * k, r2 = (4 + e * 9) * k; c.beginPath(); c.moveTo(p.x + Math.cos(w) * r1, p.y + Math.sin(w) * r1); c.lineTo(p.x + Math.cos(w) * r2, p.y + Math.sin(w) * r2); c.stroke(); }
+    c.fillStyle = "#fff"; c.font = `900 ${5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("PENG!", p.x, Math.max(4 * k, p.y - (8 + e * 4) * k)); c.restore();
   }
 }
 function jzbKirmesKarussellMalen(c, F) {
