@@ -33,6 +33,23 @@ const r = await seite.evaluate(async () => {
   let gesendet = false; const apiAlt = api; window.api = api = async (x, d) => { gesendet = true; return {}; }; $("vwSenden").click(); await warte(500); api = apiAlt;
   a.nachImmer = vwVorwahl();
   vwVorwahlSetzen("eingestellt", true);
+  // 📌 Chat-Weg (Menü mit Haken), gilt vor der Voreinstellung, nicht in anderen Chats
+  vwMenue(); $("vwChatMerk").checked = true; document.querySelector('#vwMenueBlatt [data-k="mail"]').click(); await warte(200);
+  a.chatWeg = { gemerkt: vwChatWahl("C1"), knopf: $("vwWegWahl").textContent, wirk: vwWirksam() };
+  const c1 = chatId; chatId = "C9"; a.chatWeg.anderer = vwWirksam(); chatId = c1;
+  a.chatSend = await entscheide();
+  vwChatMerken(null);
+  // Lernen: dreimal derselbe Weg → Merken anbieten
+  localStorage.removeItem("kc_club_versand_lernen"); for (let i = 0; i < 3; i++) vwLernen("push"); await warte(1200);
+  a.lernFrage = [...document.querySelectorAll(".dlg-kopf, .dlg-text")].some((e) => /schon 3× „🔔 Nur Push“/.test(e.textContent)); document.querySelectorAll('[data-w="0"]').forEach((b) => b.click());
+  // Sicherheitsnetz: Anne ohne Push und länger nicht in der App
+  MITGLIEDER = MITGLIEDER.map((m) => ({ ...m, aktiv: m.person_id !== "P3", wege: { mail: true, push: m.person_id !== "P3" } }));
+  VW.einmal = "push"; $("text").value = "Test"; ZW = { push: false, email: false, whatsapp: false }; let p3 = senden(); await warte(500);
+  a.sicher = { blatt: !!$("vwSicherBlatt"), text: $("vwSicherBlatt")?.textContent || "" };
+  document.querySelector('#vwSicherBlatt [data-w="eingestellt"]')?.click(); await Promise.race([p3, warte(800)]); a.sicher.danach = { ...ZW };
+  VW.einmal = "push"; $("text").value = "Test"; p3 = senden(); await warte(500); document.querySelector('#vwSicherBlatt [data-w="so"]')?.click(); await Promise.race([p3, warte(800)]);
+  VW.einmal = "push"; $("text").value = "Test"; ZW = { push: false, email: false, whatsapp: false }; p3 = senden(); await warte(500); a.sicher.zweitesMal = !!$("vwSicherBlatt"); $("vwSicherBlatt")?.remove(); await Promise.race([p3, warte(800)]);
+  VW.einmal = null;
   // Einstellungen
   vwVorwahlEinstellungen(); a.einst = $("vwVorwahlWahl").querySelectorAll("input[type=radio]").length;
   // Chat-Kopf
@@ -52,6 +69,10 @@ ok(/Nur E-Mail/.test(r.a.knopfEinmal) && !r.a.einmal.blatt && r.a.einmal.zw.emai
 ok(r.a.fragen.blatt, "„❓ Jedes Mal fragen“: das Fenster kommt wieder");
 ok(r.a.nachImmer === "push", "Fenster: „☑️ Immer so – nicht mehr fragen“ macht die Wahl zur Voreinstellung");
 ok(r.a.einst === 7, "Einstellungen: 6 Wege + „Jedes Mal fragen“");
+ok(r.a.chatWeg.gemerkt === "mail" && /^📌 ✉️ Nur E-Mail/.test(r.a.chatWeg.knopf) && r.a.chatWeg.wirk === "mail" && r.a.chatWeg.anderer === "eingestellt" && r.a.chatSend.zw.email && !r.a.chatSend.blatt, "📌 Chat merkt sich „Nur E-Mail“ – gilt nur in diesem Chat, ohne Fenster");
+ok(r.a.lernFrage, "dreimal derselbe Weg in einem Chat → „Soll sich der Chat das merken?“");
+ok(r.a.sicher.blatt && /Anne/.test(r.a.sicher.text) && /keinen Push/.test(r.a.sicher.text) && !r.a.sicher.danach.push, "Sicherheitsnetz: „Nur Push“, aber Anne hat keinen Push → Nachfrage, „Lieber wie jeder es eingestellt hat“ greift");
+ok(!r.a.sicher.zweitesMal, "„Trotzdem so senden“ fragt in diesem Chat 12 Std. nicht nochmal");
 ok(r.k.pfeil && r.k.zu < 40 && r.k.auf > r.k.zu * 2 && r.k.offen, `Chat-Kopf: Teilnehmer einzeilig (${Math.round(r.k.zu)} px) mit Pfeil, aufgeklappt ${Math.round(r.k.auf)} px`);
 ok(r.k.neuerChatZu, "neuer Chat beginnt eingeklappt");
 if (bilder) { await seite.evaluate(() => { chatTnKlappen(false); }); await seite.screenshot({ path: path.join(bilder, "chatkopf-zu.png"), clip: { x: 0, y: 0, width: 412, height: 220 } });

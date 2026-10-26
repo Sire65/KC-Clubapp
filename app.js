@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.677.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.678.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1913,7 +1913,7 @@ const RG_NACHRICHT = [
       <div class="hl-chips" style="flex-wrap:wrap">${VW_ARTEN.map(([k, t]) => `<span class="chip${k === "eingestellt" ? " an" : ""}" data-s="${k}">${t}</span>`).join("")}</div>
       <p class="hinweis" style="margin:10px 0" data-s="was">✉️ 15 bekommen eine E-Mail mit Anhang · 🔔 Push nach Einstellung</p><span class="knopf haupt" data-s="los">📤 Jetzt senden</span></div></div>`, "ueber"),
     nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="mail"]', '#rgSim [data-s="app"]', '#rgSim [data-s="was"]', '#rgSim [data-s="los"]'], t: "📤 Wie verschicken?",
-    x: "Schreibst du an mehrere oder hängst etwas an, fragt die App vor dem Senden: Wie verschicken? Nur E-Mail – dann hängen Fotos und Dateien an der Mail –, nur Push, WhatsApp, alles, nur in der App oder wie jeder es eingestellt hat. Darunter steht, was rausgeht. Erst mit Jetzt senden geht es los." },
+    x: "Schreibst du an mehrere oder hängst etwas an, geht die Nachricht so raus, wie du es in den Einstellungen festgelegt hast – ohne Nachfrage. Die Wege sind: nur E-Mail, dann hängen Fotos und Dateien an der Mail, nur Push, WhatsApp, alles, nur in der App oder wie jeder es eingestellt hat. Über dem Schreibfeld zeigt das Feld mit dem Briefkasten, wie es rausgeht; antippen ändert es nur für diese Nachricht oder merkt es für den Chat. Wer lieber jedes Mal gefragt wird, bekommt dieses Fenster." },
   { v: "nachrichten", t: "✅ Fertig", x: "Das war's: Plus Neu, Empfänger wählen, schreiben, senden. Probier es aus – zum Beispiel mit einer Nachricht an dich selbst über Test." },
 ];
 const RG_TERMIN = [
@@ -5377,7 +5377,7 @@ const HILFE = [
   { id: "geplant_vorab", thema: "nachrichten", sym: "📩", t: "Geplante Nachricht schon vorher lesen lassen", x: "Planst du eine Nachricht mit <b>⏰</b> für später, fragt die App: <b>„📩 Darf … die Nachricht schon vorher abrufen?“</b> Sagst du Ja, bekommt der Empfänger gleich einen Hinweis – ohne den Text – und im Chat den Knopf <b>„📩 Jetzt abrufen“</b>. Du erfährst, wenn er sie abgerufen hat. Ändern kannst du das jederzeit über das ⏰ neben der geplanten Nachricht.", seit: "2.551.0" },
   { id: "pinnwand_teil_ab", thema: "club", sym: "🧹", t: "Zettel nur bei denen abnehmen, die ihn gelesen haben", x: "Deinen Zettel <b>🗑️ abnehmen</b>, obwohl ihn noch nicht alle gesehen haben? Dann fragt die App: <b>„🧹 Nur bei denen abnehmen, die ihn gelesen haben“</b> oder <b>„Für alle abnehmen“</b>. Wer ihn noch nicht gesehen hat, behält ihn – nach dem Lesen fällt er auch dort ab.", zeig: () => zeige("pinnwand"), seit: "2.554.0" },
   { id: "abstimmung_mehrere", thema: "club", sym: "📋", t: "Abstimmung mit Überschrift und mehreren Fragen", x: "Unter <b>Vorschläge → ＋ Neu → 🗳️ Abstimmung</b> wählst du <b>„❓ Eine Frage“</b> oder <b>„📋 Mehrere Fragen mit Überschrift“</b>: Überschrift, Beschreibung, Bereiche mit Fragen – jede mit eigenen Antworten. Eine Frage kann auch <b>„✍️ Freie Antwort“</b> sein, zum Eintippen statt Ankreuzen (nicht bei geheimen Abstimmungen). Im Fenster der Abstimmung gibt es <b>🖨️ Ankreuzbogen</b> zum Ausdrucken und, sobald abgestimmt wurde, <b>📊 Ergebnis drucken</b>.", zeig: () => zeige("vorschlaege"), seit: "2.555.0" },
-  { id: "wie_verschicken", thema: "nachrichten", sym: "📤", t: "„Wie verschicken?“ – an mehrere oder mit Anlage", x: "Geht deine Nachricht an mehrere oder hat sie eine Anlage, fragt die App vor dem Senden <b>„📤 Wie verschicken?“</b>: <b>✉️ Nur E-Mail</b> (Fotos und Dateien hängen dann an der Mail), <b>🔔 Nur Push</b>, <b>🟢 WhatsApp</b> (danach je Person in WhatsApp öffnen), <b>✅ Alles</b>, <b>📱 Nur in der App</b> oder <b>⚙️ Wie jeder es eingestellt hat</b>. Darunter steht, was rausgeht – erst dann <b>„📤 Jetzt senden“</b>. Notfall, Express und 🔒 verschlüsselt gehen ohne diese Frage.", zeig: () => zeige("nachrichten"), seit: "2.649.0" },
+  { id: "wie_verschicken", thema: "nachrichten", sym: "📤", t: "„Wie verschicken?“ – an mehrere oder mit Anlage", x: "Wie eine Nachricht an mehrere oder mit Anlage rausgeht, legst du einmal fest: ⚙️ → Benachrichtigungen → <b>„📤 Nachrichten an mehrere oder mit Anlage“</b> – <b>⚙️ Wie jeder es eingestellt hat</b> (Standard), <b>✅ Alles</b>, <b>✉️ Nur E-Mail</b> (Fotos und Dateien hängen an der Mail), <b>🔔 Nur Push</b>, <b>🟢 WhatsApp</b>, <b>📱 Nur in der App</b> oder <b>❓ Jedes Mal fragen</b>. Dann wird ohne Nachfrage gesendet. In der Versand-Leiste über dem Schreibfeld zeigt <b>📤 …</b>, wie es rausgeht – antippen ändert es nur für diese Nachricht; mit <b>📌 Für diesen Chat merken</b> merkt sich ein Chat seinen eigenen Weg. Bekäme jemand so gar nichts mit, fragt die App einmal nach.", zeig: () => einstiegHin("benachrichtigung", "vwVorwahlWahl"), seit: "2.649.0" },
   { id: "weitere_empfaenger", thema: "nachrichten", sym: "➕", t: "Weitere Empfänger mit ➕ dazunehmen", x: "Soll eine Nachricht auch an andere gehen? Im Chat in der kleinen Zeile über der Tastatur auf <b>➕</b> tippen und Mitglieder wählen – über dem Schreibfeld steht dann „➕ auch an: …“. Beim Senden wird daraus eine Runde mit allen; euer bisheriger Verlauf bleibt privat.", zeig: () => zeige("nachrichten"), seit: "2.637.0" },
   { id: "sende_schlange", thema: "nachrichten", sym: "⏳", t: "Senden, ohne zu warten", x: "Nach <b>➤</b> steht deine Nachricht sofort im Chat (⏳) und das Schreibfeld ist gleich wieder frei – einfach weiterschreiben. Die App schickt alles der Reihe nach los, 🏎️ Express überholt. Klappt es einmal nicht, steht ⚠️ daran: <b>🔄 Nochmal</b> oder <b>🗑️ Löschen</b>.", zeig: () => zeige("nachrichten"), seit: "2.603.0" },
   { id: "nachricht_aendern", thema: "nachrichten", sym: "✏️", t: "Nachricht oder Bildunterschrift ändern", x: "Eigene Nachricht antippen → <b>„✏️ Bearbeiten“</b> – ohne Zeitgrenze. Bei Fotos und Dateien heißt es <b>„✏️ Unterschrift hinzufügen“</b> bzw. <b>„✏️ Unterschrift ändern“</b>; leer lassen entfernt sie. Die anderen sehen „bearbeitet“, eine neue Benachrichtigung gibt es nicht. 🔒 verschlüsselte Texte lassen sich nicht bearbeiten.", zeig: () => zeige("nachrichten"), seit: "2.635.0" },
@@ -10088,7 +10088,7 @@ const TW_FAQ = [
   { id: "wecker", sym: "⏰", t: "Kann die App mich wecken oder einen Timer stellen?", x: "Ja: doppelt aufs <b>Eselsohr</b> im Kopf tippen → <b>🕰️ Uhr</b> → oben <b>⏰ Wecker</b>, <b>⏱️ Stoppuhr</b> oder <b>⏲️ Timer</b>. Ist es so weit, klingelt die Stundenuhr – <b>🔕 Aus</b> und daneben <b>💤 Schlummern</b> (10 Min. später) bzw. beim Timer <b>+1 Min.</b>. Ist die App zu, kommt eine Benachrichtigung.", los: () => esOeffnen("uhr") },
   { id: "wecker-stumm", sym: "🔊", t: "Mein Wecker oder Timer ist stumm – warum?", x: "Hast du die App gerade erst geöffnet und noch nicht getippt, lässt das Handy keinen Ton zu. Dann steht im Klingel-Fenster <b>„🔊 Antippen für Ton“</b> – einmal tippen, und es klingelt hörbar. Sonst: Ist das Handy laut gestellt?", los: () => hzZuEintrag("h:wecker_ton") },
   { id: "kachel-effekt", sym: "🎬", t: "Können die Kacheln anders hereinkommen?", x: "Ja: ⚙️ → „✨ Effekte“ → <b>„🎬 Effekt beim Register-Wechsel“</b> – z. B. 🌀 Hereindrehen, 🎰 Spielautomat, 🫧 Seifenblasen, 🧲 Magnet, 🍳 Pfanne, 🕰️ Fallblatt-Uhr oder 🚂 Kachel-Zug, dazu 🔁 Abwechselnd und 🎲 Zufall. <b>▶ Vorschau</b> zeigt ihn sofort.", los: () => einstiegHin("effekte", "regEffektWahl") },
-  { id: "wie-verschicken", sym: "📤", t: "Was bedeutet „Wie verschicken?“ beim Senden?", x: "Bei Nachrichten an mehrere oder mit Anlage wählst du, wie sie rausgehen: <b>✉️ Nur E-Mail</b> (mit Anhang), <b>🔔 Nur Push</b>, <b>🟢 WhatsApp</b>, <b>✅ Alles</b>, <b>📱 Nur in der App</b> oder <b>⚙️ Wie jeder es eingestellt hat</b>. Darunter steht, was passiert – dann <b>„📤 Jetzt senden“</b>.", los: () => hzZuEintrag("h:wie_verschicken") },
+  { id: "wie-verschicken", sym: "📤", t: "Wie stelle ich ein, wie Nachrichten an mehrere rausgehen?", x: "Einmal festlegen unter ⚙️ → Benachrichtigungen → <b>„📤 Nachrichten an mehrere oder mit Anlage“</b> (Standard: ⚙️ Wie jeder es eingestellt hat) – dann fragt die App nicht mehr. Für eine einzelne Nachricht tippst du in der Versand-Leiste auf <b>📤 …</b>; mit <b>📌 Für diesen Chat merken</b> merkt sich der Chat seinen Weg. Wer das Fenster jedes Mal will, wählt <b>❓ Jedes Mal fragen</b>.", los: () => hzZuEintrag("h:wie_verschicken") },
   { id: "auch-an", sym: "➕", t: "Wie nehme ich weitere Empfänger dazu?", x: "Im Chat in der kleinen Zeile über der Tastatur auf <b>➕</b> tippen und Mitglieder wählen. Über dem Schreibfeld steht dann „➕ auch an: …“ – beim Senden wird daraus eine Runde mit allen, der alte Verlauf bleibt privat.", los: () => hzZuEintrag("h:weitere_empfaenger") },
   { id: "nachricht-aendern", sym: "✏️", t: "Kann ich eine Nachricht später noch ändern?", x: "Ja, jederzeit: eigene Nachricht antippen → <b>„✏️ Bearbeiten“</b>. Bei Fotos und Dateien heißt es <b>„✏️ Unterschrift hinzufügen“</b> oder <b>„… ändern“</b>. Die anderen sehen „bearbeitet“, ohne neue Benachrichtigung.", los: () => hzZuEintrag("h:nachricht_aendern") },
   { id: "sanduhr", sym: "⏳", t: "Was bedeutet die Sanduhr an meiner Nachricht?", x: "<b>⏳</b> heißt: Die Nachricht ist in der Warteschlange und geht gleich raus – du kannst schon weiterschreiben. Steht dort ⚠️, hat es nicht geklappt: <b>🔄 Nochmal</b> oder <b>🗑️ Löschen</b>. Ohne Netz wartet sie, bis wieder Verbindung da ist.", los: () => hzZuEintrag("h:sende_schlange") },
@@ -36374,6 +36374,41 @@ let VW = { nurApp: false, einmal: null };
 const VW_KEY = "kc_club_versand_vorwahl", VW_WAHLEN = [...VW_ARTEN.map(([k]) => k), "fragen"];
 const vwVorwahl = () => { try { const v = localStorage.getItem(VW_KEY); return VW_WAHLEN.includes(v) ? v : "eingestellt"; } catch { return "eingestellt"; } };
 function vwVorwahlSetzen(v, still) { try { localStorage.setItem(VW_KEY, v); } catch {} vwVorwahlEinstellungen(); versandZeigen(); if (!still) melde(`📤 Voreinstellung: ${vwName(v)}`); }
+// 2.678.0 KC-CLUB-VERSAND-KLUG (Wunsch Hansi „und danach noch cleverer“): (5) ein Chat merkt sich seinen eigenen Weg (📌, je Gerät) – gilt vor der
+// Voreinstellung; wer in einem Chat dreimal denselben Weg wählt, bekommt das Merken angeboten. (4) Sicherheitsnetz: bekämen mit dem gewählten Weg
+// Empfänger gar nichts (kein passender Weg und länger nicht in der App), fragt die App einmal nach – „Trotzdem so“ gilt dann 12 Std. für diesen Chat.
+const VW_CHAT_KEY = "kc_club_versand_chat", VW_LERN_KEY = "kc_club_versand_lernen", VW_OK_KEY = "kc_club_versand_ok";
+const vwLies = (k) => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch { return {}; } };
+const vwSchreib = (k, o) => { try { localStorage.setItem(k, JSON.stringify(o)); } catch {} };
+const vwChatWahl = (id = chatId) => { const w = id ? vwLies(VW_CHAT_KEY)[id] : null; return VW_WAHLEN.includes(w) ? w : null; };
+function vwChatMerken(art, id = chatId) { if (!id) return; const m = vwLies(VW_CHAT_KEY); if (art) m[id] = art; else delete m[id]; vwSchreib(VW_CHAT_KEY, m); vwKnopfZeigen(); }
+const vwWirksam = () => VW.einmal || vwChatWahl() || vwVorwahl();
+function vwLernen(art) { // nach dem Senden mit Einmal-Wahl: dreimal derselbe Weg in diesem Chat → Merken anbieten
+  if (!chatId || !art || vwChatWahl()) return; const l = vwLies(VW_LERN_KEY), e = l[chatId] && l[chatId].art === art ? l[chatId] : { art, n: 0 };
+  e.n++; l[chatId] = e; vwSchreib(VW_LERN_KEY, l);
+  if (e.n >= 3 && !e.gefragt) { e.gefragt = true; vwSchreib(VW_LERN_KEY, l); const id = chatId;
+    setTimeout(async () => { if (await frage(`📌 Du hast in diesem Chat schon ${e.n}× „${vwName(art)}“ gewählt.\n\nSoll sich der Chat das merken? Dann geht hier immer alles so raus – ändern kannst du es jederzeit über 📤.`, { ja: "📌 Ja, merken", nein: "Nein", gefahr: false })) { vwChatMerken(art, id); melde(`📌 Dieser Chat: ${vwName(art)}`); } }, 900); }
+}
+function vwVerpassen(art, empf) { // wer bekäme mit diesem Weg gar nichts? (ohne „Keine Benachrichtigungen“ – die bekommen ohnehin nichts)
+  if (!["push", "mail", "whatsapp", "alles", "app"].includes(art)) return [];
+  const mg = new Map((MITGLIEDER || []).map((m) => [m.person_id, m]));
+  return empf.map((id) => mg.get(id)).filter((m) => m && !m.ohne_komm && !m.aktiv && !(art === "push" ? m.wege?.push : art === "mail" ? m.wege?.mail : art === "whatsapp" ? m.wege?.whatsapp : art === "alles" ? (m.wege?.push || m.wege?.mail || m.wege?.whatsapp) : false));
+}
+async function vwSicher(art, empf) { // true = so senden, "eingestellt" = umgestellt, null = abbrechen
+  const weg = vwVerpassen(art, empf); if (!weg.length) return true;
+  const ok = vwLies(VW_OK_KEY), schl = (chatId || "neu") + ":" + art; if (ok[schl] && Date.now() - ok[schl] < 12 * 3600000) return true;
+  const namen = weg.slice(0, 5).map((m) => String(m.name || "").split(" ")[0]).join(", ") + (weg.length > 5 ? ` und ${weg.length - 5} weitere` : "");
+  const grund = { push: "keinen Push", mail: "keine E-Mail-Adresse", whatsapp: "kein WhatsApp", alles: "weder Push noch E-Mail", app: "keine Benachrichtigung" }[art];
+  return new Promise((fertig) => {
+    const f = blattAuf("vwSicherBlatt", `<h3 style="margin-top:0">⚠️ ${weg.length === 1 ? "1 Person bekommt" : weg.length + " bekommen"} so nichts mit</h3>
+      <p style="margin:0 0 10px"><b>${esc(namen)}</b> – ${grund} und länger nicht in der App. Mit „${esc(vwName(art))}“ merken ${weg.length === 1 ? "sie" : "sie"} die Nachricht nicht.</p>
+      <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" data-w="eingestellt">⚙️ Lieber wie jeder es eingestellt hat</button>
+      <button class="knopf" data-w="so">Trotzdem so senden</button><button class="knopf" data-w="zu">Abbrechen</button></div>`);
+    const zu = (x) => { f._zu = null; f.remove(); fertig(x); };
+    f._zu = () => zu(null);
+    f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => { const w = b.dataset.w; if (w === "so") { ok[schl] = Date.now(); vwSchreib(VW_OK_KEY, ok); zu(true); } else zu(w === "zu" ? null : "eingestellt"); });
+  });
+}
 const vwName = (k) => k === "fragen" ? "❓ Jedes Mal fragen" : (VW_ARTEN.find(([x]) => x === k) || [])[1] || k;
 function vwEmpfaenger() { // wer bekommt die Nachricht (ohne mich) – wie beim Senden
   return [...new Set([...(chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : sendenEmpfaenger(MITGLIEDER || [])), ...(chatId ? WE.ids : [])])].filter((id) => id !== ICH?.person_id);
@@ -36381,15 +36416,20 @@ function vwEmpfaenger() { // wer bekommt die Nachricht (ohne mich) – wie beim 
 const vwNoetig = () => { try { return !VN.an && !EXPRESS && !neuEntwurf?.mehrfach && (anlagen.length > 0 || vwEmpfaenger().length > 1); } catch { return false; } };
 function vwKnopfZeigen() {
   const k = $("vwWegWahl"); if (!k) return; const da = vwNoetig(); k.classList.toggle("versteckt", !da); if (!da) return;
-  const w = VW.einmal || vwVorwahl(); k.textContent = `${vwName(w)} ▾`; k.classList.toggle("an", !!VW.einmal);
+  const w = vwWirksam(), chatW = !VW.einmal && vwChatWahl(); k.textContent = `${chatW ? "📌 " : ""}${vwName(w)} ▾`; k.classList.toggle("an", !!VW.einmal || !!chatW);
   k.title = VW.einmal ? "Nur für diese Nachricht anders – antippen zum Ändern" : "So geht die Nachricht raus (Voreinstellung) – antippen, um es nur für diese Nachricht zu ändern";
 }
 function vwMenue() {
-  const jetzt = VW.einmal || vwVorwahl();
+  const jetzt = vwWirksam(), chatW = vwChatWahl();
   const f = blattAuf("vwMenueBlatt", `<h3 style="margin-top:0">📤 Wie verschicken – nur diese Nachricht</h3>
     <div class="vw-arten" role="radiogroup" aria-label="Versandweg für diese Nachricht">${[...VW_ARTEN, ["fragen", "❓ Fenster öffnen", "alle Wege mit Vorschau"]].map(([k, t, x]) => `<button type="button" class="knopf vw-art${k === jetzt ? " an" : ""}" role="radio" aria-checked="${k === jetzt}" data-k="${k}"><b>${t}</b><small>${x}</small></button>`).join("")}</div>
+    ${chatId ? `<label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input type="checkbox" id="vwChatMerk"${chatW ? " checked" : ""}> <span><b>📌 Für diesen Chat merken</b><br><small class="hinweis">${chatW ? `gemerkt: ${esc(vwName(chatW))} – Haken weg = wieder die Voreinstellung` : "dann geht hier immer alles so raus"}</small></span></label>` : ""}
     <p class="hinweis" style="margin:8px 0">Voreinstellung: <b>${esc(vwName(vwVorwahl()))}</b> – <a href="#" id="vwZurEinst">⚙️ ändern</a></p>`);
-  f.querySelectorAll(".vw-art").forEach((b) => b.onclick = () => { VW.einmal = b.dataset.k === vwVorwahl() ? null : b.dataset.k; fensterZu(f); vwKnopfZeigen(); });
+  f.querySelectorAll(".vw-art").forEach((b) => b.onclick = () => {
+    const k = b.dataset.k, merk = !!$("vwChatMerk")?.checked;
+    if (merk) { vwChatMerken(k); VW.einmal = null; } else { if (chatW) vwChatMerken(null); VW.einmal = k === vwVorwahl() ? null : k; }
+    fensterZu(f); vwKnopfZeigen(); });
+  $("vwChatMerk")?.addEventListener("change", (e) => { if (!e.target.checked && chatW) { vwChatMerken(null); fensterZu(f); melde(`📤 Wieder die Voreinstellung: ${vwName(vwVorwahl())}`); } });
   f.querySelector("#vwZurEinst").onclick = (e) => { e.preventDefault(); fensterZu(f); einstiegHin("benachrichtigung", "vwVorwahlWahl"); };
 }
 function vwVorwahlEinstellungen() {
@@ -36456,8 +36496,8 @@ async function senden() {
     if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
     const empf = vwEmpfaenger();
     if (anlagen.length || empf.length > 1) {
-      const wahl = VW.einmal || vwVorwahl(); // 2.678.0 KC-CLUB-VERSAND-VORWAHL: Fenster nur noch bei „❓ Jedes Mal fragen“
-      if (wahl !== "fragen") versandWahlAnwenden(wahl);
+      let wahl = VW.einmal || vwChatWahl() || vwVorwahl(); // 2.678.0 KC-CLUB-VERSAND-VORWAHL: Fenster nur noch bei „❓ Jedes Mal fragen“ · KC-CLUB-VERSAND-KLUG: Chat-Weg
+      if (wahl !== "fragen") { const s = await vwSicher(wahl, empf); if (!s) return; if (s === "eingestellt") wahl = "eingestellt"; else if (VW.einmal) vwLernen(VW.einmal); versandWahlAnwenden(wahl); }
       else {
         const w = await versandWahl(empf, anlagen); if (!w) return;
         if (w.ohneChat) return await mailRundSenden(text, empf);
@@ -44210,7 +44250,7 @@ function suAppListe() {
     ["⏰", "Wecker, Stoppuhr, Timer (große Uhr)", "wecker wecken stoppuhr timer eieruhr kurzzeitwecker countdown alarm klingeln uhr runden", () => esOeffnen("uhr")],
     ["🔊", "Wecker/Timer ohne Ton („Antippen für Ton“)", "wecker timer stumm kein ton leise hört nichts antippen für ton klingelt nicht", () => hzZuEintrag("h:wecker_ton")],
     ["🎬", "Effekt beim Register-Wechsel (Kachel-Zug, Hereindrehen …)", "kachel effekt register wechsel hereindrehen kachelzug zug spielautomat seifenblasen magnet pfanne einfliegen fallblatt abwechselnd zufall", () => einstiegHin("effekte", "regEffektWahl")],
-    ["📤", "„Wie verschicken?“ (E-Mail, Push, WhatsApp, nur App)", "wie verschicken versand wahl nur email nur push nur in der app whatsapp alles anhang mehrere empfänger", () => hzZuEintrag("h:wie_verschicken")],
+    ["📤", "„Wie verschicken?“ – Voreinstellung (E-Mail, Push, WhatsApp, nur App)", "wie verschicken versand wahl voreinstellung nicht mehr fragen nervt nur email nur push nur in der app whatsapp alles anhang mehrere empfänger chat merken", () => einstiegHin("benachrichtigung", "vwVorwahlWahl")],
     ["➕", "Weitere Empfänger dazunehmen (➕ auch an)", "weitere empfänger auch an plus hinzufügen dazu runde mehrere personen chat erweitern", () => hzZuEintrag("h:weitere_empfaenger")],
     ["✏️", "Nachricht oder Bildunterschrift ändern", "nachricht ändern bearbeiten bildunterschrift unterschrift foto text korrigieren vertippt", () => hzZuEintrag("h:nachricht_aendern")],
     ["⏳", "Sanduhr an der Nachricht (Warteschlange)", "sanduhr warteschlange wartet senden nochmal fehler ausrufezeichen hängt", () => hzZuEintrag("h:sende_schlange")],

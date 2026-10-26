@@ -12876,7 +12876,7 @@ function idx0() { return lies("index.html"); }
 }
 // 2.649.0 KC-CLUB-VERSANDWAHL: „Wie verschicken?“ bei mehreren/Anlage · Nur E-Mail = nur E-Mail · Nur App · Rundmail ohne Chat nur Admin
 {
-  assert.ok(/if \(anlagen\.length \|\| empf\.length > 1\) \{[^}]*?const wahl = VW\.einmal \|\| vwVorwahl\(\);[^\n]*\n\s*if \(wahl !== "fragen"\) versandWahlAnwenden\(wahl\);\s*else \{\s*const w = await versandWahl\(empf, anlagen\); if \(!w\) return;\s*if \(w\.ohneChat\) return await mailRundSenden\(text, empf\);\s*versandWahlAnwenden\(w\.art\);/.test(programm), "bei mehreren oder mit Anlage: Voreinstellung (2.678.0), Fenster nur bei „Jedes Mal fragen“ – Abbrechen sendet nichts");
+  assert.ok(/if \(anlagen\.length \|\| empf\.length > 1\) \{[^}]*?let wahl = VW\.einmal \|\| vwChatWahl\(\) \|\| vwVorwahl\(\);[^\n]*\n\s*if \(wahl !== "fragen"\) \{ const s = await vwSicher\(wahl, empf\); if \(!s\) return;[^\n]*versandWahlAnwenden\(wahl\); \}\s*else \{\s*const w = await versandWahl\(empf, anlagen\); if \(!w\) return;\s*if \(w\.ohneChat\) return await mailRundSenden\(text, empf\);\s*versandWahlAnwenden\(w\.art\);/.test(programm), "bei mehreren oder mit Anlage: Voreinstellung (2.678.0), Fenster nur bei „Jedes Mal fragen“ – Abbrechen sendet nichts");
   assert.ok(/if \(!VN\.an && !EXPRESS && !neuEntwurf\?\.mehrfach && !\/\^\\s\*\(🚨\|notfall\)\/i\.test\(text\)\)/.test(programm), "nicht bei 🔒, Express, Notfall");
   assert.ok(/\$\{ICH\?\.admin \? `<label class="vw-ohne versteckt">/.test(programm) && /ohneChat: art === "mail" && !!\$\("vwOhneChat"\)\?\.checked && !!ICH\?\.admin/.test(programm), "Nur als Mail – nur Admin");
   assert.ok(/\.\.\.\(VW\.nurApp \? \{ nur_app: true \} : \{\}\)/.test(programm), "Nur in der App an den Server");
@@ -13107,4 +13107,13 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.ok(/async function rufWach\(\)/.test(programm) && /navigator\.wakeLock\?\.request\("screen"\)/.test(programm.slice(programm.indexOf("async function rufWach()"), programm.indexOf("async function rufWach()") + 400)) && /if \(s === "connected"\) \{ rufWach\(\);/.test(programm) && /rufWachWeg\(RUF\); \/\/ 2\.677\.0/.test(programm), "Bildschirm bleibt im Gespräch an, wird beim Auflegen freigegeben");
   assert.ok(/!NOT\.an && e\?\.leitung && !document\.hidden && \(\+\+NOT\.fehler/.test(programm), "kein automatischer Notbetrieb aus dem Hintergrund");
   assert.ok(/if \(R\.verbunden && !R\.konf && R\.pc && R\.pc\.connectionState !== "connected"\) \{ if \(R\.rolle === "rufer"\) anrufNeuAufbau\(true\);/.test(programm), "zurück im Bild: gleich neu verbinden");
+}
+// 2.678.0 KC-CLUB-VERSAND-VORWAHL / KC-CLUB-VERSAND-KLUG / KC-CLUB-CHAT-KOPF-KLAPPEN (Wunsch Hansi „Wie verschicken nervt – Voreinstellung“; „Chat-Kopf einklappbar“)
+{
+  assert.ok(/const vwVorwahl = \(\) => \{ try \{ const v = localStorage\.getItem\(VW_KEY\); return VW_WAHLEN\.includes\(v\) \? v : "eingestellt"; \}/.test(programm), "Standard: wie jeder es eingestellt hat");
+  assert.ok(/id="vwWegWahl" onclick="vwMenue\(\)"/.test(html) && /<div id="vwVorwahlWahl"><\/div>/.test(html), "📤-Feld in der Versand-Leiste, Voreinstellung im Zahnrad");
+  assert.ok(/id="vwImmer"/.test(programm) && /if \(\$\("vwImmer"\)\?\.checked && !x\.ohneChat\) vwVorwahlSetzen\(art\);/.test(programm), "„Immer so – nicht mehr fragen“");
+  assert.ok(/id="vwChatMerk"/.test(programm) && /function vwLernen\(art\)/.test(programm) && /async function vwSicher\(art, empf\)/.test(programm) && /12 \* 3600000/.test(programm), "Chat-Weg, Lernen, Sicherheitsnetz");
+  assert.ok(/function versandZurueck\(\) \{[^\n]*VW\.einmal = null;/.test(programm), "Einmal-Wahl nach dem Senden zurück");
+  assert.ok(/id="chatTeilnehmerPfeil"[^>]*onclick="chatTnKlappen\(\)">▸<\/button>/.test(html) && /class="tz-pfeil ct-pfeil versteckt"/.test(html) && /if \(CHAT_TN_ZULETZT !== chatId\) \{ CHAT_TN_ZULETZT = chatId; z\.classList\.remove\("auf"\); \}/.test(programm), "Chat-Kopf: weinroter Pfeil, neuer Chat eingeklappt");
 }
