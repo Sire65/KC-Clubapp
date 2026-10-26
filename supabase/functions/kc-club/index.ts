@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.665.0";
+const SERVER_VERSION = "2.666.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4524,6 +4524,15 @@ async function dpDruckNeu(adminId: string) {
   return { stand, fehlt, bedarf, stunden: ergebnis.stunden };
 }
 // welche Wunschpläne seit dem letzten Rechnen neu oder geändert sind (für den Hinweis im Ordner „Dienstplan zum Drucken“)
+// 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT: Nachricht, zu der der Admin einen Vorschlag annimmt – er muss im Chat sein, und sie muss von jemand anderem stammen
+const ERK = { diensteMax: 12, treffenMax: 15 };
+async function erkNachricht(ich: Ich, id: string) {
+  const { data: m } = id ? await db.from("kc_communication_messages").select("id,thread_id,sender_person_id").eq("id", id).maybeSingle() : { data: null };
+  if (!m) throw new Fehler("Nachricht nicht gefunden.", 404);
+  await binTeilnehmer(m.thread_id, ich.person_id);
+  if (!m.sender_person_id || m.sender_person_id === ich.person_id) throw new Fehler("Das ist deine eigene Nachricht.", 409);
+  return m as { id: string; thread_id: string; sender_person_id: string };
+}
 async function dpDruckNeueWuensche(seit: string | null) {
   let q = db.from("kc_dp_wish_inbox").select("person_id,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300);
   if (seit) q = q.gt("updated_at", seit);
@@ -9422,6 +9431,74 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // 2.642.0 KC-CLUB-DP-DRUCK: Dienstplan-Übersicht zum Drucken (nur Admin, nur eigene Zeile). Abgelegt vom Planungswerkzeug
       // (KICC tools/dienstplan-entwurf/druck.py) in kc_club_person_einstellung „dp_druck“; hier wird nur gelesen.
+      // 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT (Teil 2 der „Erkennung“, Wunsch Hansi): Die App erkennt in Nachrichten an den Admin Krankmeldung, Tauschwunsch
+      // und Zu-/Absage (Regeln, ohne fremde Dienste) und schlägt vor. erkennung_lage liest nur; erkennung_aktion ändert erst nach dem Tipp des Admins.
+      case "erkennung_lage": {
+        nurAdmin(ich);
+        const m = await erkNachricht(ich, String(p.nachricht || "")), pid = m.sender_person_id, t = Date.now();
+        const [dienste, { data: angeb }, { data: tr }, pm, { data: st }, fg] = await Promise.all([
+          dtMeineDienste(pid),
+          db.from("kc_club_dienst_tausch").select("dienst_ref,status").eq("von_person", pid).in("status", ["offen", "uebernommen"]).limit(50),
+          db.from("kc_club_treffen").select("id,titel,beginn,art").eq("status", "geplant").gte("beginn", new Date(t - 3 * 3600000).toISOString()).order("beginn").limit(ERK.treffenMax),
+          personen([pid]),
+          db.from("kc_club_status").select("status,bis").eq("person_id", pid).maybeSingle(),
+          freigaben()]);
+        const ids = (tr ?? []).map((x: any) => x.id);
+        const { data: tn } = ids.length ? await db.from("kc_club_teilnahme").select("treffen_id,antwort").eq("person_id", pid).in("treffen_id", ids) : { data: [] as any[] };
+        const an = new Map((angeb ?? []).map((a: any) => [a.dienst_ref, a.status])), antw = new Map((tn ?? []).map((x: any) => [x.treffen_id, x.antwort]));
+        return json({ person: pid, name: pm.get(pid)?.display_name || pid, status: st?.status || null, statusBis: st?.bis || null, tausch: fg.dienst_tausch || "admin",
+          dienste: dienste.filter((d) => d.endeMs > t).slice(0, ERK.diensteMax).map((d) => ({ ref: d.ref, datum: d.datum, text: dtText(d, TZ), angeboten: an.get(d.ref) || null,
+            hinweis: an.get(d.ref) ? null : dtAnbietenPruefen(d, t, []) })),
+          treffen: (tr ?? []).map((x: any) => ({ id: x.id, titel: x.titel, beginn: x.beginn, art: x.art, antwort: antw.get(x.id) || null })) });
+      }
+      case "erkennung_aktion": {
+        nurAdmin(ich);
+        const m = await erkNachricht(ich, String(p.nachricht || "")), pid = m.sender_person_id, art = String(p.art || ""), t = Date.now();
+        const pm = await personen([pid]), name = pm.get(pid)?.display_name || pid, vn = name.split(" ")[0];
+        if (art === "dienst_anbieten") { // wie dienst_tausch_anbieten, aber für die Person, die geschrieben hat
+          const refs = (Array.isArray(p.refs) ? p.refs : []).map((x: unknown) => String(x)).slice(0, ERK.diensteMax);
+          if (!refs.length) throw new Fehler("Bitte mindestens einen Dienst wählen.", 400);
+          const grund = txt(p.grund_text, DT.nachrichtMax) || null;
+          const [meine, { data: eigene }] = await Promise.all([dtMeineDienste(pid),
+            db.from("kc_club_dienst_tausch").select("dienst_ref,status").eq("von_person", pid).in("status", ["offen", "uebernommen"]).limit(50)]);
+          const offen = [...(eigene ?? [])], fertig: string[] = [], fehler: string[] = [];
+          for (const ref of refs) {
+            const d = meine.find((x) => x.ref === ref) || null, f = dtAnbietenPruefen(d, t, offen);
+            if (f) { fehler.push(`${d ? dtText(d, TZ) : "Dienst"}: ${f.replace("Diesen Dienst hast du", "Dieser Dienst ist")}`); continue; }
+            const { data: neu, error } = await db.from("kc_club_dienst_tausch").insert({ org_id: ORG, event_id: d!.event, dienst_ref: d!.ref, work_date: d!.datum, start_zeit: new Date(d!.startMs).toISOString(),
+              ende_zeit: new Date(d!.endeMs).toISOString(), pause_min: d!.pause || 0, bereich: d!.bereich, zone: d!.zone, von_person: pid, nachricht: grund }).select("id").single();
+            if (error || !neu) { fehler.push(`${dtText(d!, TZ)}: konnte nicht gespeichert werden`); continue; }
+            offen.push({ dienst_ref: d!.ref, status: "offen" }); fertig.push(dtText(d!, TZ));
+            await protokoll(ich.person_id, "dienst_tausch", { id: neu.id, aktion: "anbieten", ref: d!.ref, fuer: pid, erkennung: true });
+            const andere = (await aktiveMitglieder()).map((x) => x.person_id).filter((x) => x !== pid);
+            await dtSenden(andere, false, { titel: `🔁 ${vn} sucht Ersatz`, kurz: `${dtText(d!, TZ)}${grund ? ` – „${grund.slice(0, 80)}“` : ""} · Kannst du übernehmen?` }, `${neu.id}:neu`);
+          }
+          if (fertig.length) await dtSenden([pid], false, { titel: `🔁 ${ich.vorname} hat deinen Dienst in die Tauschbörse gestellt`, kurz: `${fertig.join(" · ")} · Wer übernimmt, bestätigt der Planer.` }, `erk:${m.id}:${t}`);
+          await protokoll(ich.person_id, "erkennung", { art, person: pid, anzahl: fertig.length });
+          return json({ ok: true, fertig, fehler });
+        }
+        if (art === "krank") {
+          const bis = /^\d{4}-\d{2}-\d{2}$/.test(String(p.bis || "")) ? String(p.bis) : null;
+          schreibOk(await db.from("kc_club_status").upsert({ person_id: pid, status: "krank", hinweis: txt(p.hinweis, 120) || `gemeldet an ${ich.vorname}`, bis, geaendert_am: jetzt() }));
+          await protokoll(ich.person_id, "erkennung", { art, person: pid, bis });
+          return json({ ok: true });
+        }
+        if (art === "teilnahme") {
+          const antwort = String(p.antwort || "");
+          if (!["ja", "nein", "vielleicht"].includes(antwort)) throw new Fehler("Bitte Zusage, Absage oder Vielleicht wählen.", 400);
+          const { data: tr } = await db.from("kc_club_treffen").select("id,titel,beginn,status").eq("id", String(p.treffen || "")).maybeSingle();
+          if (!tr || tr.status !== "geplant") throw new Fehler("Dieser Termin ist nicht mehr offen.", 409);
+          schreibOk(await db.from("kc_club_teilnahme").upsert({ treffen_id: tr.id, person_id: pid, antwort, notiz: txt(p.notiz, 300) || `eingetragen von ${ich.vorname} (aus der Nachricht)`, geaendert_am: jetzt() }), "Antworten");
+          if (antwort !== "ja") await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", "treffen").eq("bezug_id", tr.id).eq("person_id", pid);
+          const was = { ja: "Zusage", nein: "Absage", vielleicht: "Vielleicht" }[antwort];
+          await senden("club_treffen", [pid], { titel: `${antwort === "ja" ? "✅" : antwort === "nein" ? "✖" : "🤔"} ${ich.vorname} hat deine ${was} eingetragen`, kurz: `${tr.titel} – ${wann(tr.beginn)}`,
+            betreff: `Köcheclub Werne – deine ${was}: ${tr.titel}`, text: `Hallo ${vn},\n\n${ich.name} hat aus deiner Nachricht deine ${was} eingetragen:\n\n📌 ${tr.titel}\n📅 ${wann(tr.beginn)}\n\nStimmt etwas nicht? In der App unter Termine kannst du es jederzeit ändern.\n${APP_URL}#termine`,
+            url: APP_URL + "#termine" }, `club-erkennung:${m.id}:${tr.id}:${antwort}`).catch(() => null);
+          await protokoll(ich.person_id, "erkennung", { art, person: pid, treffen: tr.id, antwort });
+          return json({ ok: true, titel: tr.titel });
+        }
+        throw new Fehler("Unbekannte Aktion.", 400);
+      }
       case "dp_druck": {
         nurAdmin(ich);
         const { data: zeile } = await db.from("kc_club_person_einstellung").select("wert, geaendert_am").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();

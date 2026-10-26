@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12966,4 +12966,30 @@ function idx0() { return lies("index.html"); }
   assert.ok(/\(e\.revision \?\? null\) === \(w \? w\.revision : null\)/.test(server), "Ersatz gilt nur bis zum nächsten eigenen Wunschplan");
   assert.ok(/titel: `🗓️ \$\{alt \? "Geänderter" : "Neuer"\} Wunschplan von \$\{ich\.vorname\}`/.test(server) && /url: `\$\{APP_URL\}#dpdruck`/.test(server), "Hinweis an den Admin");
   assert.ok(/else if \(h === "#dpdruck" && ICH\?\.admin\) dpdStart\(\);/.test(programm) && /async function dpdNeuRechnen\(k\) \{\s*if \(!ICH\?\.admin\) return;/.test(programm) && /🔄 Jetzt neu rechnen/.test(programm), "App: Stand, Hinweis und Knopf nur Admin");
+}
+// 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT: Krankmeldung, Tausch, Zu-/Absage in Nachrichten erkennen – nur Admin, nur Vorschlag, Server prüft nochmal
+{
+  const a = programm.indexOf("const ERK_REGELN"), e = programm.indexOf("const ERK_CACHE");
+  assert.ok(a > 0 && e > a, "Erkennungs-Regeln vorhanden");
+  assert.ok(!/\(\?<[=!]/.test(programm.slice(a, e)), "kein lookbehind – ältere iPhones kennen es nicht");
+  const erk = new Function(programm.slice(a, e) + "; return erkErkennen;")();
+  const fall = (t, erw) => assert.deepEqual(erk(t), erw, t);
+  fall("Hallo Hansi, ich bin leider krank und kann morgen nicht zum Dienst", ["krank"]);
+  fall("Kann jemand am Samstag mit mir tauschen?", ["tausch"]);
+  fall("Kannst du meinen Dienst am 5.12. übernehmen?", ["tausch"]);
+  fall("Ich komme gerne zur Sitzung", ["zusage"]);
+  fall("Ich komme leider nicht am Freitag", ["absage"]);
+  fall("Ich sage für Samstag ab", ["absage"]);
+  fall("Ich sage dir ab morgen Bescheid", []);
+  fall("Ich bin da nicht sicher", []);
+  fall("Guten Morgen, wie geht's?", []);
+  assert.ok(/if \(!ICH\?\.admin \|\| m\.eigen \|\| !m\.vonId \|\| !m\.text \|\| vnIst\(m\.text\)/.test(programm), "nur Admin, nur fremde, nie verschlüsselte Nachrichten");
+  assert.ok(/\$\{erkKnopfHtml\(m\) \/\* 2\.666\.0 KC-CLUB-ERKENNUNG-NACHRICHT \*\/\}/.test(programm), "Vorschlag an der Nachricht");
+  for (const c of ["erkennung_lage", "erkennung_aktion"]) {
+    const i = server.indexOf(`case "${c}": {`); assert.ok(i > 0, c);
+    assert.ok(/^\s*nurAdmin\(ich\);\s*\n\s*const m = await erkNachricht\(ich, String\(p\.nachricht \|\| ""\)\)/.test(server.slice(i + c.length + 12, i + c.length + 200)), `${c}: nur Admin, Nachricht geprüft`);
+  }
+  assert.ok(/await binTeilnehmer\(m\.thread_id, ich\.person_id\);/.test(server) && /m\.sender_person_id === ich\.person_id\) throw new Fehler\("Das ist deine eigene Nachricht\."/.test(server), "nur Nachrichten anderer im eigenen Chat");
+  assert.ok(/f = dtAnbietenPruefen\(d, t, offen\);/.test(server) && /von_person: pid, nachricht: grund/.test(server), "Tauschbörse mit denselben Regeln, für die Person");
+  assert.ok(/`club-erkennung:\$\{m\.id\}:\$\{tr\.id\}:\$\{antwort\}`/.test(server), "Person bekommt Bescheid über die eingetragene Zu-/Absage");
 }

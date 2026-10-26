@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.665.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.666.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -33259,7 +33259,7 @@ async function chatLaden(scrollen, merk) {
     }
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
-      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}
+      ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
       ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
@@ -33706,6 +33706,84 @@ const ntWann = (r) => `${fTag.format(new Date(r.datum + "T12:00:00Z"))}${r.zeit 
 function ntKnopfHtml(m) { // Knopf direkt an der Nachricht – nur bei eindeutigem Tag, der nicht vorbei ist
   const r = ntAusText(m); if (!r?.sicher || r.datum < heuteIso()) return "";
   return `<button type="button" class="nt-knopf" title="Als Termin in den Kalender übernehmen" onclick="event.stopPropagation();ntAusNachricht('${m.id}')">📅 ${esc(ntWann(r))} – eintragen</button>`;
+}
+// ---------- 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT (Teil 2 der „Erkennung“, Wunsch Hansi „eine Erkennung, die bestimmte Sachen direkt verarbeitet“) ----------
+// Nur für den Admin, nur an Nachrichten anderer: Krankmeldung, Tauschwunsch, Zu-/Absage werden über Wort-Regeln erkannt – auf dem Handy, kostenlos,
+// nichts geht an fremde Dienste. An der Nachricht steht dann „💡 … – übernehmen?“; erst der Tipp öffnet das Fenster, erst „Eintragen“ ändert etwas
+// (der Server prüft nochmal: nur Admin, nur im eigenen Chat). Termine erkennt schon 2.608.0 (📅 an der Nachricht).
+const ERK_REGELN = {
+  krank: /\b(krank\w*|erk[aä]ltet|erk[aä]ltung|grippe|fieber|corona|covid|magen-?darm|migr[aä]ne|liege flach|lieg[e]? im bett|beim arzt|zum arzt|krankenhaus|gesundheitlich|nicht fit|unwohl|falle .{0,15}aus|ausfallen)\b/i,
+  tausch: /\b(tausch\w*|einspringen|springt .{0,25}ein|vertret\w*|übernimmt|übernehmen|uebernehmen|meinen dienst|meine schicht)\b/i,
+  absage: /\b(sage?\s+(?:\S+\s+){0,3}?ab\b(?!\s*(?:\d|morgen|heute|sofort|jetzt|wann))|absagen|absage|kann .{0,25}nicht (?:kommen|dabei sein|teilnehmen)|komme? .{0,15}nicht\b|bin .{0,15}nicht dabei|schaffe? .{0,20}nicht\b|klappt .{0,15}nicht\b)/i,
+  zusage: /\b(ich komme|wir kommen|komme gern\w*|bin (?:gerne? |auch )?dabei|sind (?:gerne? |auch )?dabei|sage?\s+(?:\S+\s+){0,2}?zu\b|zusage|klar komme ich)\b/i,
+};
+function erkErkennen(text) { // → ["krank", "tausch", "absage", "zusage"] (Teilmenge); eine Absage schließt die Zusage aus („ich komme nicht“)
+  const t = String(text || "").replace(/\s+/g, " ");
+  if (t.length < 4 || t.length > 1500) return [];
+  const arten = Object.keys(ERK_REGELN).filter((k) => ERK_REGELN[k].test(t));
+  return arten.includes("absage") ? arten.filter((a) => a !== "zusage") : arten;
+}
+const ERK_CACHE = new Map(), ERK_WEG = "kc_club_erk_weg", ERK_TAGE = 21;
+const ERK_SYM = { krank: "🤒 Krankmeldung", tausch: "🔁 Tauschwunsch", absage: "✖ Absage", zusage: "✅ Zusage" };
+let ERK_W = null;
+function erkWeg() { if (!ERK_W) try { ERK_W = new Set(JSON.parse(localStorage.getItem(ERK_WEG) || "[]")); } catch { ERK_W = new Set(); } return ERK_W; }
+function erkArten(m) {
+  if (!ICH?.admin || m.eigen || !m.vonId || !m.text || vnIst(m.text) || m.umfrage || m.kontakt) return [];
+  if (m.zeit && Date.now() - Date.parse(m.zeit) > ERK_TAGE * 86400000) return []; // alte Nachrichten: nichts mehr vorschlagen
+  const k = m.id + "|" + m.text.length;
+  if (!ERK_CACHE.has(k)) { if (ERK_CACHE.size > 800) ERK_CACHE.clear(); ERK_CACHE.set(k, erkErkennen(m.text)); }
+  return ERK_CACHE.get(k);
+}
+function erkKnopfHtml(m) {
+  const a = erkArten(m); if (!a.length || erkWeg().has(m.id)) return "";
+  return `<div class="erk-zeile"><button type="button" class="erk-knopf" title="Vorschlag – nur du siehst das" onclick="event.stopPropagation();erkStart('${m.id}')">💡 ${a.map((x) => ERK_SYM[x]).join(" · ")} – übernehmen?</button><button type="button" class="erk-weg" title="Passt nicht – ausblenden" aria-label="Vorschlag ausblenden" onclick="event.stopPropagation();erkAusblenden('${m.id}')">✕</button></div>`;
+}
+function erkAusblenden(id) {
+  const w = erkWeg(); w.add(id); ERK_W = new Set([...w].slice(-300));
+  try { localStorage.setItem(ERK_WEG, JSON.stringify([...ERK_W])); } catch {}
+  document.querySelector(`#msg-${id} .erk-zeile`)?.remove();
+}
+async function erkStart(id) {
+  const m = NA.nachrichten.get(id); if (!m) return;
+  const arten = erkArten(m), tag = ntAusText(m)?.datum || null;
+  let L; try { L = await api("erkennung_lage", { nachricht: id }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const vn = String(L.name || "").split(" ")[0], dienstArt = arten.some((a) => a !== "zusage");
+  const dienste = L.dienste || [], frei = dienste.filter((d) => !d.angeboten && !d.hinweis), tr = L.treffen || [];
+  const vor = (d) => (tag ? d.datum === tag : arten.includes("krank") && d.datum <= tagPlus(heuteIso(), 2)); // vorgewählt: Tag aus der Nachricht, bei Krankheit die nächsten Tage
+  const trVor = (tag && tr.find((x) => berlinIso(x.beginn) === tag)) || tr[0], teil = arten.includes("zusage") || arten.includes("absage");
+  const ANTW = { ja: "zugesagt", nein: "abgesagt", vielleicht: "vielleicht" };
+  const f = blattAuf("erkBlatt", `<h3 style="margin-top:0">💡 Vorschlag aus der Nachricht</h3>
+    <div class="na-vorschau">${esc(m.von)}: ${esc(String(m.text).slice(0, 240))}</div>
+    <p class="hinweis" style="margin:6px 0">Erkannt: <b>${arten.map((x) => ERK_SYM[x]).join(", ")}</b>${tag ? ` · Tag: <b>${esc(fTag.format(new Date(tag + "T12:00:00Z")))}</b>` : ""}<br>Nur du siehst das – geändert wird erst mit deinem Tipp.</p>
+    ${arten.includes("krank") ? `<div class="karte erk-teil"><b>🤒 Status „krank“ setzen</b>${L.status === "krank" ? ` <small>(steht schon auf krank${L.statusBis ? " bis " + esc(fDatumKurz(L.statusBis)) : ""})</small>` : ""}
+      <label class="feld">bis (freiwillig)<input type="date" id="erkBis" value="${tag && tag >= heuteIso() ? tag : ""}"></label>
+      <button class="knopf" id="erkKrank">🤒 Status für ${esc(vn)} setzen</button></div>` : ""}
+    ${dienstArt ? `<div class="karte erk-teil"><b>🔁 Dienst in die Tauschbörse stellen</b>
+      ${dienste.length ? dienste.map((d) => `<label class="erk-dienst"><input type="checkbox" value="${esc(d.ref)}" ${d.angeboten || d.hinweis ? "disabled" : vor(d) ? "checked" : ""}> <span>${esc(d.text)}${d.angeboten ? " <small>· schon in der Tauschbörse</small>" : d.hinweis ? ` <small>· ${esc(d.hinweis)}</small>` : ""}</span></label>`).join("")
+        : `<p class="hinweis" style="margin:4px 0">${esc(vn)} hat keine kommenden Dienste im Plan.</p>`}
+      ${frei.length ? `<label class="feld">Hinweis für alle (freiwillig)<input id="erkGrund" maxlength="200" value="${arten.includes("krank") ? "krank" : ""}"></label>
+      ${L.tausch !== "alle" ? '<p class="hinweis" style="margin:4px 0">🔒 Die Tauschbörse ist noch im Test – die Mitglieder sehen das Angebot erst nach der Freigabe.</p>' : ""}
+      <button class="knopf" id="erkDienst">🔁 Angekreuzte Dienste anbieten</button>` : ""}</div>` : ""}
+    ${teil ? `<div class="karte erk-teil"><b>${arten.includes("zusage") ? "✅ Zusage" : "✖ Absage"} zu einem Termin eintragen</b>
+      ${tr.length ? `<label class="feld">Termin<select id="erkTreffen">${tr.map((x) => `<option value="${esc(x.id)}" ${x === trVor ? "selected" : ""}>${esc(x.titel)} – ${esc(fTag.format(new Date(x.beginn)))}${x.antwort ? ` (jetzt: ${ANTW[x.antwort] || esc(x.antwort)})` : ""}</option>`).join("")}</select></label>
+      <div class="knoepfe"><button class="knopf" data-ant="ja">✅ Zusage</button><button class="knopf" data-ant="vielleicht">🤔 Vielleicht</button><button class="knopf" data-ant="nein">✖ Absage</button></div>
+      <p class="hinweis" style="margin:4px 0">${esc(vn)} bekommt eine kurze Nachricht, dass du es eingetragen hast.</p>` : '<p class="hinweis" style="margin:4px 0">Es gibt gerade keine offenen Termine.</p>'}</div>` : ""}
+    <div class="dlg-knoepfe"><button class="knopf" id="erkWegK">✕ Passt nicht – ausblenden</button><button class="knopf haupt" onclick="$('erkBlatt').remove()">Fertig</button></div>`);
+  const tun = async (knopf, daten, ok) => {
+    knopf.disabled = true;
+    try { const r = await api("erkennung_aktion", { nachricht: id, ...daten }, { warten: true }); if (ok(r) !== false) knopf.textContent = "✓ Erledigt"; else knopf.disabled = false; } catch (e) { knopf.disabled = false; meldeFehler(e); }
+  };
+  f.querySelector("#erkKrank")?.addEventListener("click", (e) => tun(e.currentTarget, { art: "krank", bis: $("erkBis").value || null }, () => melde(`🤒 ${vn}: Status „krank“ gesetzt`)));
+  f.querySelector("#erkDienst")?.addEventListener("click", (e) => {
+    const refs = [...f.querySelectorAll(".erk-dienst input:checked")].map((x) => x.value);
+    if (!refs.length) return melde("Bitte mindestens einen Dienst ankreuzen.", true);
+    tun(e.currentTarget, { art: "dienst_anbieten", refs, grund_text: $("erkGrund")?.value || "" }, (r) => {
+      if (!r.fertig.length) { melde("🔁 Nicht möglich: " + r.fehler.join("; "), true); return false; }
+      melde(`🔁 ${r.fertig.length === 1 ? "1 Dienst" : r.fertig.length + " Dienste"} von ${vn} in der Tauschbörse${r.fehler.length ? " · nicht möglich: " + r.fehler.join("; ") : ""}`, !!r.fehler.length);
+    });
+  });
+  f.querySelectorAll("[data-ant]").forEach((b) => b.onclick = () => tun(b, { art: "teilnahme", treffen: $("erkTreffen").value, antwort: b.dataset.ant }, (r) => melde(`${b.textContent} für ${vn} eingetragen: ${r.titel}`)));
+  f.querySelector("#erkWegK").onclick = () => { erkAusblenden(id); f.remove(); };
 }
 function ntAusNachricht(id) {
   const m = NA.nachrichten.get(id); if (!m) return;
