@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.666.0";
+const SERVER_VERSION = "2.668.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -524,6 +524,35 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
     if (!personIds.length && !kopie?.cc?.length && !kopie?.bcc?.length) return { gesendet: 0, fehler: 0 };
   }
   dbPufferLeeren(); // KC-CLUB-DB-SPARSAM: der Communicator schreibt selbst
+  // KC-CLUB-TEMPO-VERSAND (26.10.2026, Wunsch Hansi „Versanddienst parallel“): Der Versanddienst arbeitet die Empfänger eines Auftrags nacheinander ab
+  // (je Empfänger ca. 0,6–1,2 s → 18 Empfänger 15–25 s, Zeitlimit 20 s). Ab ROUTER_STUECK+1 Empfängern daher in Stücke geteilt, höchstens ROUTER_PARALLEL
+  // gleichzeitig, um ROUTER_VERSATZ_MS versetzt gestartet (web.de-Bremse). Sicher: der Versanddienst entdoppelt je Kennung + Empfänger + Weg,
+  // Kopien (cc/bcc) nur am ersten Stück, Ergebnisse werden zusammengezählt. Ein abgelehntes Stück (z. B. 429) zählt als Fehler seiner Empfänger.
+  const stuecke: string[][] = [];
+  for (let i = 0; i < personIds.length; i += ROUTER_STUECK) stuecke.push(personIds.slice(i, i + ROUTER_STUECK));
+  if (!stuecke.length) stuecke.push([]);
+  const teile: { sent: number; failed: number; results: any[] }[] = new Array(stuecke.length);
+  let naechstes = 0;
+  const arbeiter = async () => {
+    for (let i = naechstes++; i < stuecke.length; i = naechstes++) {
+      if (i > 0 && i < ROUTER_PARALLEL) await new Promise((ok) => setTimeout(ok, i * ROUTER_VERSATZ_MS));
+      teile[i] = await routerAufruf(eventKey, stuecke[i], vars, korrelation, i === 0 ? kopie : undefined)
+        .catch((e) => { console.error("routerSenden Stück", eventKey, String(e)); return { sent: 0, failed: stuecke[i].length, results: [] }; });
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(ROUTER_PARALLEL, stuecke.length) }, arbeiter));
+  const out = { sent: teile.reduce((n, t) => n + t.sent, 0), failed: teile.reduce((n, t) => n + t.failed, 0), results: teile.flatMap((t) => t.results) };
+  dbPufferLeeren();
+  const ergebnis: { gesendet: number; fehler: number; wege?: Record<string, { push: string; mail: string }> } = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
+  // 2.403.0 KC-CLUB-EXPRESS-WEGE: je Empfänger, was auf welchem Weg wirklich passiert ist (aus der Antwort des Versanddienstes) –
+  // „ja“ = raus, „kein“ = kein Push-Gerät bzw. keine Mail-Adresse, „fehler“ = versucht und gescheitert, „-“ = nicht vorgesehen
+  if (out.results.length) ergebnis.wege = Object.fromEntries(out.results.filter((x: any) => x?.personId).map((x: any) => [x.personId, routerWege(x.attempts)]));
+  if (VORGANG_KOPIE.test(korrelation) && !korrelation.endsWith(":kopie")) await vorgangKopie(eventKey, personIds, vars, korrelation, ergebnis).catch((e) => console.error("vorgangKopie", String(e)));
+  return ergebnis;
+}
+const ROUTER_STUECK = 4, ROUTER_PARALLEL = 4, ROUTER_VERSATZ_MS = 300; // KC-CLUB-TEMPO-VERSAND
+// Ein Auftrag an den Versanddienst (bis 20 s). Antwort: { sent, failed, results } – bei Ablehnung/Zeitüberschreitung alle Empfänger als Fehler.
+async function routerAufruf(eventKey: string, personIds: string[], vars: Record<string, unknown>, korrelation: string, kopie?: { cc?: string[]; bcc?: string[] }) {
   const r = await fetch(`${SUPA}/functions/v1/kc-communication-router`, { signal: AbortSignal.timeout(20000),
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}`, apikey: SERVICE },
@@ -536,13 +565,9 @@ async function routerSendenRoh(eventKey: string, personIds: string[], vars: Reco
       ...(kopie?.cc?.length ? { cc: kopie.cc.map((personId) => ({ personId })) } : {}), ...(kopie?.bcc?.length ? { bcc: kopie.bcc.map((personId) => ({ personId })) } : {}) }),
   });
   const out = await r.json().catch(() => ({}));
-  dbPufferLeeren();
-  const ergebnis: { gesendet: number; fehler: number; wege?: Record<string, { push: string; mail: string }> } = { gesendet: Number(out?.sent || 0), fehler: Number(out?.failed || 0) };
-  // 2.403.0 KC-CLUB-EXPRESS-WEGE: je Empfänger, was auf welchem Weg wirklich passiert ist (aus der Antwort des Versanddienstes) –
-  // „ja“ = raus, „kein“ = kein Push-Gerät bzw. keine Mail-Adresse, „fehler“ = versucht und gescheitert, „-“ = nicht vorgesehen
-  if (Array.isArray(out?.results)) ergebnis.wege = Object.fromEntries(out.results.filter((x: any) => x?.personId).map((x: any) => [x.personId, routerWege(x.attempts)]));
-  if (VORGANG_KOPIE.test(korrelation) && !korrelation.endsWith(":kopie")) await vorgangKopie(eventKey, personIds, vars, korrelation, ergebnis).catch((e) => console.error("vorgangKopie", String(e)));
-  return ergebnis;
+  dbPufferLeeren(); // je Stück: der Communicator hat geschrieben
+  if (!r.ok && !out?.sent && !out?.failed) return { sent: 0, failed: personIds.length, results: [] as any[] };
+  return { sent: Number(out?.sent || 0), failed: Number(out?.failed || 0), results: Array.isArray(out?.results) ? out.results : [] };
 }
 function routerWege(attempts: any[]): { push: string; mail: string } {
   const weg = (k: string) => { const a = (Array.isArray(attempts) ? attempts : []).filter((x: any) => x?.channel === k);
@@ -8100,6 +8125,9 @@ Köcheclub Werne`,
     // keine Personen) – so sieht man über die Tage, welche Stelle bremst. Keine Datenbank-Schreibung, kostet nichts.
     const serverMs = Date.now() - t0Anfrage;
     if (serverMs >= TEMPO_LOG_MS) console.log(JSON.stringify({ tempo: txt(a, 40), ms: serverMs, anmeldungMs }));
+    // KC-CLUB-TEMPO-SCHNECKE (26.10.2026, Wunsch Hansi „Schnecke ehrlicher“): Server-Zeit jeder Antwort als Kopfzeile – die App zieht sie von der
+    // gemessenen Zeit ab, damit die 🐌 nur das Netz bewertet (nicht einen langsamen Server). Expose-Headers gilt je Antwort (keine 2-Std.-Merkfrist).
+    try { antwort.headers.set("x-club-ms", String(serverMs)); antwort.headers.set("Access-Control-Expose-Headers", "x-club-ms"); } catch { /* Kopfzeile ist Beiwerk */ }
     return DB_AUS.n !== dbAusVorher ? dbWeg() : antwort; // KC-CLUB-DB-ZEITGRENZE: kein halbes Ergebnis
   } catch (e) {
     if (DB_AUS.n !== dbAusVorher) return dbWeg(); // KC-CLUB-DB-ZEITGRENZE
@@ -12004,7 +12032,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         ]);
         // 2.603.0 KC-CLUB-SENDE-SCHLANGE (B): ab hier nur noch Benachrichtigen (Push/Mail) + Protokoll. Die Nachricht ist gespeichert und der Empfänger
         // hat sein Live-Signal schon (Datenbank-Auslöser kc_club_rt_nachricht beim Speichern). Bei normalen Nachrichten antwortet der Server deshalb
-        // sofort und benachrichtigt im Hintergrund weiter; Notfall, Express, ❗ wichtig, SOS-Probe und @Erwähnungen laufen wie bisher bis zum Ende.
+        // sofort und benachrichtigt im Hintergrund weiter; Notfall, Express und SOS-Probe laufen bis zum Ende (Ergebnis für die Anzeige); seit KC-CLUB-TEMPO-VERSAND ❗ wichtig und @Erwähnungen im Hintergrund.
         const nachVersand = async () => {
         // 2.593.0 KC-CLUB-GLEICHZEITIG: Empfänger, Betreff, Gruppe und alle Teilnehmer gleichzeitig lesen statt nacheinander (keine hängt an
         // einer anderen; die Empfänger erst nach dem Wieder-Einblenden oben, wie bisher). Gleiche Abfragen, gleiches Ergebnis.
@@ -12067,7 +12095,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, probe ? "notfall_probe" : notfall ? "notfall_meldung" : weiterVon ? "nachricht_weitergeleitet" : "nachricht_gesendet", { thread: threadId, neu, empfaenger: ziel.length, stumm: stumm.size, in_app: inApp.size, umfrage: !!umfrage, kontakt: !!kontaktPid, anlagen: anlagen.length, wege, versand, antwort: !!antwortAuf, erwaehnt: erwaehnt.length, versandErw, wichtig, selbstloeschen: slNachricht, ...(weiterVon ? { von_nachricht: weiterVon.id } : {}), ...(hinten ? { hintergrund: true } : {}) });
         return versand;
         };
-        const hinten = !notfall && !express && !wichtig && !probe && !(Array.isArray(p.erwaehnt) && p.erwaehnt.length);
+        // KC-CLUB-TEMPO-VERSAND (26.10.2026, Wunsch Hansi „bei Nachrichten an 18 Teilnehmer dreht die Sanduhr“): auch ❗ wichtig und @Erwähnungen
+        // benachrichtigen im Hintergrund – die Nachricht ist gespeichert, die App zeigt für sie kein Versandergebnis (nur Express und Notfall tun das).
+        // Vorher wartete die App auf Push + Mail an alle (bei 18 Empfängern 15–30 s, ab 20 s „Fehler“, obwohl alles ankam).
+        const hinten = !notfall && !express && !probe;
         if (hinten) { nebenbei(nachVersand().catch((e) => console.error("nachricht versand", String(e)))); return json({ ok: true, id: threadId, versand: { hintergrund: true }, mid: m.id }); }
         const versand = await nachVersand();
         return json({ ok: true, id: threadId, versand, mid: m.id, ...(express ? { expressStand: await expressStand(ich) } : {}) }); // mid: KC-CLUB-EMPFANGS-EFFEKT (2.177.0) – gleicher „Abwechselnd“-Effekt bei Absender und Empfänger

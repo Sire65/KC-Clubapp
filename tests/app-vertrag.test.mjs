@@ -5910,10 +5910,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.301.0 KC-CLUB-SCHNECKE-NETZ + KC-CLUB-SCHNECKE-START (Wunsch Hansi „warum kommen ab und an die Schnecken“): Schnecke nur bei langsamem Netz, Admin-Start schneller
 {
-  assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
+  assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|668)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8417,7 +8417,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.106.0: Schnecke bei langsamem Netz überall (KC-CLUB-SCHNECKE) + Twinkey hängt nicht mehr (KC-CLUB-TWINKEY-FRIST)
 {
   assert.ok(/const SCHNECKE_LANGSAM_MS = 2500, SCHNECKE_SCHNELL_MS = 1500, SCHNECKE_ALTER_MS = 120000;/.test(programm), "Grenzen");
-  assert.ok(/try \{ if \(r\.ok && API_LESEN\.test\(action\) && !SCHNECKE_NICHT\.has\(action\)\) \{ const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - /.test(programm), "nur Lese-Anfragen messen (2.301.0: nur Netzzeit)");
+  assert.ok(/try \{ if \(r\.ok && API_LESEN\.test\(action\) && !SCHNECKE_NICHT\.has\(action\)\) \{ const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - /.test(programm), "nur Lese-Anfragen messen (2.301.0: nur Netzzeit)");
   assert.ok(/vbEnde\(false, 0, "Server antwortet nicht"\); try \{ if \(navigator\.onLine\) schneckeMessen\(zeitMs\);/.test(programm), "Zeitüberschreitung zählt");
   assert.ok(/if \(!navigator\.onLine\) an = false;/.test(programm), "offline = rote LED, keine Schnecke");
   assert.ok(/jetzt - m\.t < SCHNECKE_ALTER_MS/.test(programm), "alte Messungen zählen nicht");
@@ -12348,7 +12348,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf("// ----- KC-CLUB-PRIVATTERMIN"));
   assert.ok(/if \(alt\.message_id\) return json\(\{ ok: true, id: alt\.thread_id, mid: alt\.message_id, doppelt: true/.test(ns) && /throw new Fehler\("Diese Nachricht wird gerade noch gesendet\.", 409\)/.test(ns), "doppelt → gespeicherte Nachricht, laufend → 409");
   assert.ok(/\} catch \(e\) \{ if \(cid\) await db\.from\("kc_club_sende_kennung"\)\.delete\(\)\.eq\("cid", cid\)\.is\("message_id", null\); throw e; \}/.test(ns), "Fehler beim Speichern gibt die Kennung frei");
-  assert.ok(/const hinten = !notfall && !express && !wichtig && !probe && !\(Array\.isArray\(p\.erwaehnt\) && p\.erwaehnt\.length\);/.test(ns) && /nebenbei\(nachVersand\(\)/.test(ns), "Benachrichtigen im Hintergrund – Notfall/Express/wichtig/Erwähnung wie bisher");
+  assert.ok(/const hinten = !notfall && !express && !probe;/.test(ns) && /nebenbei\(nachVersand\(\)/.test(ns), "Benachrichtigen im Hintergrund – Notfall/Express/Probe warten (KC-CLUB-TEMPO-VERSAND: ❗ wichtig und @Erwähnung im Hintergrund)");
 }
 // 2.605.0 KC-CLUB-PUSH-RUHE: Push bei offenem Chat lädt nur den Chat (gebündelt), sonst mehrere Pushes = einmal Startseite nach 1,5 s
 {
