@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.688.0";
+const SERVER_VERSION = "2.689.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3781,7 +3781,7 @@ async function anmeldenDb(hash: string, version: string | null, ua = "", req?: R
 // Dieselbe Liste steht in app.js (ZUGANG_AKTIONEN) – der Vertragstest prüft, dass beide gleich sind.
 type Zugang = "mitglied" | "aushilfe" | "gast";
 const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
-  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "video_bewerten", "stimmen",
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
@@ -7474,6 +7474,27 @@ async function geplantIch(personId: string): Promise<Ich | null> {
   ]);
   return pe?.active ? ichAus(pe, ro ?? null) : null;
 }
+// KC-CLUB-VERLASSEN-ERINNERN: fällige Erinnerungen als Push (Ruhezeit wird beachtet). War die Person inzwischen wieder in der App
+// (mehr als 2 Min. nach dem Antippen), entfällt sie. Danach wird der Merker gelöscht.
+const VE_KEY = "verlassen_erinnern", VE_MINUTEN = [60, 120, 240];
+async function verlassenErinnernLauf() {
+  const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", VE_KEY).lte("wert->>faellig", jetzt()).limit(50);
+  if (!data?.length) return;
+  const ids = data.map((x: any) => String(x.person_id));
+  const [{ data: zug }, leute] = await Promise.all([db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", ids), personen(ids)]);
+  const gesehen = new Map((zug ?? []).map((z: any) => [String(z.person_id), Date.parse(z.zuletzt_gesehen || "") || 0]));
+  for (const x of data) {
+    const pid = String(x.person_id), w: any = x.wert || {}, seit = Date.parse(w.gesetzt || "") || 0;
+    if ((gesehen.get(pid) ?? 0) <= seit + 120000) {
+      const vn = vorname(leute.get(pid) ?? null), was = txt(String(w.was || ""), 200);
+      await sendenGewaehlt("club_nachricht", [pid], ["push"], { titel: `🔔 ${vn ? vn + ", " : ""}kurze Erinnerung aus der Club-App`,
+        kurz: was ? `Da wartet noch: ${was}` : "Da wartet noch etwas auf dich.", betreff: "Köcheclub-App: Erinnerung",
+        text: `Hallo${vn ? " " + vn : ""},\n\ndu wolltest erinnert werden: In der Köcheclub-App wartet noch ${was || "etwas auf dich"}.\n\n${APP_URL}\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL },
+        `club-verlassen:${pid}:${w.faellig || ""}`).catch((e) => console.error("verlassen push", String(e)));
+    }
+    await db.from("kc_club_person_einstellung").delete().eq("person_id", pid).eq("schluessel", VE_KEY);
+  }
+}
 async function geplantFaelligLauf() {
   const z = { gesendet: 0, fehler: 0 };
   const { data: faellig } = await db.from("kc_club_geplant").select(GEPLANT_FELDER + ",person_id,status").eq("status", "offen").lte("senden_um", jetzt()).order("senden_um").limit(20);
@@ -7759,6 +7780,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       // KC-CLUB-FP-UEBERWACHUNG (1.58.0): neue schwerwiegende Einträge im Fehlerprotokoll → Push an den Admin
       await fpUeberwachen().catch((e) => console.error("fp ueberwachung", String(e)));
       await postausgangLauf().catch((e) => console.error("postausgang", String(e))); // KC-CLUB-POSTAUSGANG (1.69.1)
+      await verlassenErinnernLauf().catch((e) => console.error("verlassen erinnern", String(e))); // KC-CLUB-VERLASSEN-ERINNERN (alle 15 Min., eine Abfrage)
       if (stuendlich) await adminAbwesendPruefen().catch((e) => console.error("admin abwesend", String(e))); // KC-CLUB-VERTRETUNG (2.2.0)
       if (stuendlich) await stadtAutoLauf().catch((e) => console.error("stadt termine", String(e)));
       if (stuendlich) await cjWartung().catch((e) => console.error("clubjahr", String(e))); // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE
@@ -12281,6 +12303,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       // ----- KC-CLUB-SPUR (2.23.88, Wunsch Hansi): Wege durch die App – was geöffnet wurde und mit wem, mit Uhrzeit, NIE Inhalte.
       // Getrennt von der namenlosen Nutzung oben (die bleibt ohne Namen). 30 Tage (Wartung löscht), lesen nur der Admin.
+      // KC-CLUB-VERLASSEN-ERINNERN (26.10.2026, Wunsch Hansi „beim Verlassen Hinweis: du hast noch x ungelesene Nachrichten … – Ja, Nein, später
+      // nochmals erinnern“): „⏰ Später erinnern“ merkt eine Erinnerung vor (eine je Person, neue ersetzt alte). Der Wartungslauf schickt sie als Push.
+      case "verlassen_erinnern": {
+        if (ich.nurLesen) return json({ ok: true });
+        const minuten = VE_MINUTEN.includes(Number(p.minuten)) ? Number(p.minuten) : 120;
+        const was = txt(String(p.was ?? ""), 200).replace(/https?:\/\/\S+/g, "").trim();
+        const faellig = new Date(Date.now() + minuten * 60000).toISOString();
+        schreibOk(await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: VE_KEY, wert: { faellig, gesetzt: jetzt(), was }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" }));
+        return json({ ok: true, faellig });
+      }
       case "spur_melden": {
         const jetztMs = Date.now();
         const s = (Array.isArray(p.s) ? p.s : []).slice(0, 200).filter((x: any) => Array.isArray(x)
