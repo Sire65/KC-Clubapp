@@ -156,7 +156,11 @@ Deno.serve(async(req)=>{
     // Höchstens einmal je 30 Min. (parallele Pakete eines Laufs schreiben sonst mehrfach). Für die Admin-Zentrale der Club-App.
     if(neon){try{const {data:zuletzt}=await sb.from("kc_db_mirror_runs").select("started_at").eq("run_type","neon_groesse").gte("started_at",new Date(Date.now()-30*60000).toISOString()).limit(1).maybeSingle();
       if(!zuletzt){const g=await neon.unsafe("select pg_database_size(current_database())::bigint as b");const now=new Date().toISOString();
-        await sb.from("kc_db_mirror_runs").insert({run_type:"neon_groesse",status:"ok",started_at:now,finished_at:now,source_rows:0,target_rows:0,mismatch_count:0,message:"Neon-Datenbankgröße gemessen",metrics:{bytes:Number(g[0]?.b??0),batch_id:batchId}})}}catch(e){console.error("neon_groesse",String(e))}}
+        // KC-NEON-PRUEFUNG (26.10.2026, Wunsch Hansi „Prüfung in der Kachel Neon“): Anteil des Sicherungs-Archivs, Größe des neuesten Satzes
+        // und Aufbewahrung – daraus rechnet die App, wie groß das Archiv höchstens wird. Läuft in derselben offenen Verbindung (keine Extra-Rechenzeit).
+        let archiv:any=null;try{const a=await neon.unsafe("select pg_total_relation_size('public.kc_backup_snapshots')::bigint as archiv,(select count(*) from public.kc_backup_sets)::int as saetze,(select coalesce(sum(pg_column_size(s.payload)),0) from public.kc_backup_snapshots s)::bigint as nutz,(select coalesce(sum(pg_column_size(s.payload)),0) from public.kc_backup_snapshots s where s.backup_set=(select backup_set from public.kc_backup_sets where status='ok' order by started_at desc limit 1))::bigint as letzter,(select tage+wochen+monate from public.kc_backup_retention_policy where id='primary')::int as behalten_max");
+          archiv={bytes:Number(a[0]?.archiv??0),saetze:Number(a[0]?.saetze??0),nutz:Number(a[0]?.nutz??0),letzter:Number(a[0]?.letzter??0),behalten_max:Number(a[0]?.behalten_max??0)||14}}catch(e){console.error("neon_archiv",String(e))}
+        await sb.from("kc_db_mirror_runs").insert({run_type:"neon_groesse",status:"ok",started_at:now,finished_at:now,source_rows:0,target_rows:0,mismatch_count:0,message:"Neon-Datenbankgröße gemessen",metrics:{bytes:Number(g[0]?.b??0),archiv,batch_id:batchId}})}}catch(e){console.error("neon_groesse",String(e))}}
   }finally{if(neon)await neon.end({timeout:5})}
   const failed=results.some(r=>r.status==="error");return new Response(JSON.stringify({ok:!failed,batch_id:batchId,batch_total:batchTotal,results}),{status:failed?500:200,headers:jsonHeaders});
 });

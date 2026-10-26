@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.663.0 – 2026-10-26 – 📈 Neon-Kachel: Kontingent-Prüfung · 🗄️ Neon-Sicherung schlanker (KC-NEON-PRUEFUNG)
+- Wunsch Hansi („Prüfe, ob die Compute bei Neon reichen … diese Prüfung im Adminbereich unter Kachel Neon einbauen“): Admin → 🪞 Neon-Spiegel zeigt neu **📈 Kostenloses Kontingent** – ⚙️ Rechenzeit und 📡 Datenübertragung des Monats mit Hochrechnung aufs Monatsende (100 Std. / 5 GB kostenlos; braucht den Lese-Schlüssel NEON_API_KEY, sonst „Schlüssel fehlt“) und 🔮 Speicher-Prognose: wie groß der Spiegel bei der eingestellten Aufbewahrung der täglichen Sicherungen höchstens wird (gelb ab 80 %, rot ab 95 % von 1 GB). Das Archiv misst der Spiegel-Arbeiter nebenbei in der ohnehin offenen Verbindung, die Neon-Schnittstelle wird höchstens alle 30 Min. gefragt und weckt die Datenbank nicht. Test: `tests/neon-pruefung.test.mjs`.
+- Freigabe Hansi „Setze A um“ / „Setze B auch um“: Die Dienstplan-Arbeitsstände sind nicht mehr in der täglichen Neon-Sicherung (je Satz 18 MB, unverändert seit 23.10.) – sie bleiben im Spiegel, in der Frankfurt-Sicherung und im B2-Backup. Aufbewahrung im Neon-Archiv: 7 Tage, 2 Wochen- und 1 Monatssatz (vorher 4/3). Prognose ca. 420 statt 830 MB von 1 GB. Server 2.663.0, Spiegel-Arbeiter.
+
 ## 2.662.0 – 2026-10-26 – 🎩 Schatten auch für die Karte im Infofeld (KC-CLUB-SCHATTEN-INFOKARTE)
 - Hinweis Hansi („So wie es aussieht hat das Infofeld keinen Schatten“): Die Karte im Infofeld (z. B. „Heute in Werne: Sim-Jü“, mit hellem Rahmen) ist ein eigenes Element und fehlte; jetzt hat sie den Kopf-Schatten, ebenso die Zeilen in „🔔 Für dich“. Rote und orange Warnkarten behalten ihr Glühen. Als Teil von 2.661.0 (auf Wunsch Hansi sofort) gleich eingespielt. Nur App.
 

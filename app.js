@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.662.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.663.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25183,6 +25183,32 @@ function adminBalken(titel, belegt, grenze, warn, krit, stand = null, altStd = 1
   const f = alt ? "grau" : pct >= krit ? "rot" : pct >= warn ? "gelb" : "gruen";
   return `<div class="abalken">${lampe(f)}<span>${titel}</span><b>${mb(belegt)} / ${mb(grenze)}</b><div class="aspur"><i class="${f}" style="width:${Math.min(100, pct)}%"></i></div><small>${String(pct).replace(".", ",")} % belegt · ${mb(Math.max(0, grenze - belegt))} frei${stand ? ` · gemessen ${esc(seitText(stand))}${alt ? " ⚠️ veraltet" : ""}` : ""}</small></div>`;
 }
+// ---------- KC-NEON-PRUEFUNG (26.10.2026, Wunsch Hansi „Prüfe, ob die Compute bei Neon reichen … diese Prüfung im Adminbereich unter Kachel Neon einbauen“) ----------
+// Kostenloses Kontingent des Spiegels im Monat: Rechenzeit, Datenübertragung (beide mit Hochrechnung aufs Monatsende) und Speicher mit Prognose,
+// wie groß das Sicherungs-Archiv bei der eingestellten Aufbewahrung höchstens wird. Keine eigene Abfrage – die Werte kommen mit dem Admin-Bericht.
+function neonPruefBalken(titel, wert, grenze, text, hoch = null, hochName = "Hochrechnung") {
+  const pct = Math.round((wert / grenze) * 1000) / 10, ph = hoch == null ? pct : Math.round((hoch / grenze) * 1000) / 10;
+  const f = ph >= 95 ? "rot" : ph >= 80 ? "gelb" : "gruen";
+  return `<div class="abalken">${lampe(f)}<span>${titel}</span><b>${text}</b><div class="aspur"><i class="${f}" style="width:${Math.min(100, pct)}%"></i></div><small>${String(pct).replace(".", ",")} % verbraucht${hoch == null ? "" : ` · ${hochName} ${String(ph).replace(".", ",")} %`}</small></div>`;
+}
+function neonPruefung(sp) {
+  const v = sp?.verbrauch, g = sp?.groesse, a = g?.archiv, teile = [];
+  const zahl = (x, n = 1) => x.toLocaleString("de-DE", { maximumFractionDigits: n });
+  if (v?.rechenStd != null && v.ab && v.bis) {
+    const ab = Date.parse(v.ab), bis = Date.parse(v.bis), anteil = Math.min(1, Math.max(0.03, (Date.parse(v.zeit) - ab) / (bis - ab)));
+    const rh = v.rechenStd / anteil, uh = v.uebertragung / anteil;
+    teile.push(neonPruefBalken("⚙️ Rechenzeit (Monat)", v.rechenStd, v.rechenGrenze, `${zahl(v.rechenStd)} / ${v.rechenGrenze} Std.`, rh));
+    teile.push(neonPruefBalken("📡 Datenübertragung (Monat)", v.uebertragung, v.uebertragGrenze, `${mb(v.uebertragung)} / ${mb(v.uebertragGrenze)}`, uh));
+    teile.push(`<p class="hinweis" style="margin:0">Hochrechnung bis Monatsende: Rechenzeit ca. ${zahl(rh)} Std., Übertragung ca. ${mb(uh)} · Datenbank wach ${zahl(v.aktivStd)} Std. · gemessen ${esc(seitText(v.zeit))}</p>`);
+  } else if (v && v.schluessel === false) teile.push(adZeile("grau", "Rechenzeit / Übertragung", "Neon-Schlüssel fehlt (Geheimnis NEON_API_KEY bei Supabase)"));
+  else if (v?.fehler) teile.push(adZeile("grau", "Rechenzeit / Übertragung", "nicht abrufbar: " + v.fehler));
+  if (a?.bytes && g?.bytes && a.nutz > 0) {
+    const faktor = a.bytes / a.nutz, prognose = g.bytes - a.bytes + a.letzter * faktor * a.behalten_max, grenze = g.grenze || 1024 * 1048576;
+    teile.push(neonPruefBalken("🔮 Speicher-Prognose", g.bytes, grenze, `${mb(prognose)} / ${mb(grenze)}`, prognose, "Prognose"));
+    teile.push(`<p class="hinweis" style="margin:0">Sicherungs-Archiv: ${mb(a.bytes)} in ${a.saetze} Sätzen, neuester Satz ${mb(a.letzter * faktor)}. Aufbewahrt werden höchstens ${a.behalten_max} Sätze (7 Tage, Wochen, Monate) – so groß wird der Speicher höchstens, wenn die Daten gleich bleiben.</p>`);
+  }
+  return teile.length ? `<div class="ps-schritt"><b>📈 Kostenloses Kontingent</b>${teile.join("")}</div>` : "";
+}
 function infoAdmin() {
   const d = INFO_DATEN.admin;
   if (!d?.r) return `<h2>🛡️ Admin-Zentrale</h2><div class="unter">${d?.fehler ? "⚠️ " + esc(d.fehler) : "Wird geladen …"}</div>`;
@@ -25700,6 +25726,7 @@ function adBlatt(id) {
         ${r?.spiegel?.archiv ? adminBalken("🗂️ Archiv-Kopie", r.spiegel.archiv.bytes, r.spiegel.archiv.grenze, 80, 95, r.spiegel.archiv.zeit, ARCHIV_KOPIE_ALT_STD) : ""}
         ${r?.spiegel?.archiv?.teile ? `<p class="hinweis" style="margin:0">Archiv-Kopie in Frankfurt: Archiv ${r.spiegel.archiv.teile.archiv?.dateien ?? 0} Dateien (${mb(r.spiegel.archiv.teile.archiv?.bytes ?? 0)}) · Handbücher &amp; Schulungsunterlagen ${r.spiegel.archiv.teile.dokumente?.dateien ?? 0} PDFs (${mb(r.spiegel.archiv.teile.dokumente?.bytes ?? 0)}). Läuft jede Nacht von 2 bis 5 Uhr.</p>` : ""}
         ${r?.spiegel?.groesse?.bytes ? adminBalken("🪞 Neon-Speicher", r.spiegel.groesse.bytes, r.spiegel.groesse.grenze || 1024 * 1048576, r.datenbank.warnPct, r.datenbank.kritPct, r.spiegel.groesse.zeit) : ""}
+        ${id === "neon" ? neonPruefung(r?.spiegel) : ""}
         <p class="hinweis" style="margin:0">Der Spiegel läuft alle 6 Stunden von selbst; fällt der Anstoß aus, springt stündlich der Spiegel-Wächter (GitHub) ein.</p>
         <div class="knoepfe">${adKnopf("🪞 Jetzt spiegeln – nur im Notfall", "adminSpiegeln()")}${adKnopf("📋 Alle Einzelheiten", "adminBlatt()")}</div>${adLinks("neon")}${adLinks("github")}`;
       break;
