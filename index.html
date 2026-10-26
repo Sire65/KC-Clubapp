@@ -1482,6 +1482,9 @@
   .erk-dienst { display: flex; gap: 8px; align-items: flex-start; }
   .erkd-karte { margin: 0 0 8px; border: 1px dashed #c9a46a; background: #fff8e6; color: #3a2a1a; } /* 2.669.0 KC-CLUB-ERKENNUNG-DATEI */
   .erkd-los { width: 100%; margin: 0 0 8px; text-align: left; }
+  .wk-klingel-knoepfe { display: flex; gap: 10px; } /* 2.670.0 KC-CLUB-WECKER-SCHLUMMER: Aus und Schlummern nebeneinander, gleich groß */
+  .wk-klingel-knoepfe .knopf { flex: 1; min-height: 64px; font-size: 1.1rem; }
+  .wk-schlummer small { display: block; font-size: .8rem; font-weight: 400; opacity: .85; }
   .na-seite .na-info { background: #1565c0; color: #fff; font: italic 700 15px/1 Georgia, serif; }
   .blase.wischt .na-seite { display: none; }
   /* KC-CLUB-BEARBEITEN / KC-CLUB-CHATSUCHE (1.9.0) */
@@ -4942,7 +4945,8 @@
   /* 2.656.0 KC-CLUB-SCHATTEN: eigener Schatten für Knöpfe, Kacheln, Karten, Kopf … (:where – Knöpfe mit eigenem Leuchten/Rahmen behalten ihn, Inkognito-Rahmen bleibt) */
   :root { --sch-auto: 80, 30, 20; --sch-box: var(--sch-box-t); --sch-box-gross: var(--sch-box-gross-t); }
   :root.dunkel { --sch-auto: 0, 0, 0; --sch-box: var(--sch-box-n); --sch-box-gross: var(--sch-box-gross-n); } /* 2.657.0: nachts eigener Schatten mit Kontrast */
-  :where(:root.sch-an) :is(.kachel, .karte, .knopf, .chip, .blase, .fuss-leiste, .su-klein, .hz-frage, .umschalter, .sp-kachel, .sp-edition) { box-shadow: var(--sch-box); }
+  :where(:root.sch-an) :is(.kachel, .karte, .knopf, .chip, .blase, .fuss-leiste, .su-klein, .hz-frage, .umschalter, .sp-kachel, .sp-edition, .register button) { box-shadow: var(--sch-box); }
+  /* 2.670.0 KC-CLUB-SCHATTEN-REGISTER (Hinweis Hansi „die Register-Tabs Club, Meins, Technik haben noch keine Schatten wie die Kacheln“) */
   /* 2.657.0 (Frage Hansi „Hat der Kopfbereich auch Schatten und darauf die Felder?“): auch die Felder auf dem Kopf – Infofeld, Zahlen-Felder, runde Knöpfe, Pfeile, Statusleiste, Logo */
   /* 2.664.0 KC-CLUB-SCHATTEN-HINTER-SZENE (Bild Hansi „der Schatten verdeckt Karussell und Bude – er muss im Hintergrund bleiben“): Die Szene im Kopf
      (Sim-Jü, Jahreszeit-Bühne) liegt mit z-index -1 hinter den Feldern – ein box-shadow der Felder wurde darüber gemalt. Jetzt malt ein ::before mit
@@ -5988,7 +5992,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.670.0" data-v="2.670.0"></script>
+<script src="app.js?v=2.671.0" data-v="2.671.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

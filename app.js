@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.670.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.671.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1908,7 +1908,7 @@ const RG_NACHRICHT = [
   { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann hakst du über dem Schreibfeld Express an: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Neben Express steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
   { v: "neu", sel: ["#spaeterKnopf"], t: "⏰ Später senden", x: "Mit dem Wecker schickst du die Nachricht später – zum Beispiel morgen früh um acht, oder jeden Montag. Und hast du dich vertippt: Solange noch niemand die Nachricht gelesen hat, tippst du sie an und holst sie mit Zurückholen und ändern wieder in dein Schreibfeld." },
   { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: In Mitglieder beim Mitglied auf den Stern tippen – oder hier rechts am Chat auf die drei Punkte tippen und Als Favorit wählen. Es ist derselbe Stern. Dazu kommen automatisch die fünf Chats, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
-  // 2.670.0 KC-CLUB-HILFE-NACHTRAG-5: „Wie verschicken?“ – nur ein Beispielbild, es wird nichts gesendet
+  // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: „Wie verschicken?“ – nur ein Beispielbild, es wird nichts gesendet
   { v: "nachrichten", vor: () => rgSim(`<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 8px">📤 Wie verschicken?</h3>
       <div class="hl-chips" style="flex-wrap:wrap">${VW_ARTEN.map(([k, t]) => `<span class="chip${k === "eingestellt" ? " an" : ""}" data-s="${k}">${t}</span>`).join("")}</div>
       <p class="hinweis" style="margin:10px 0" data-s="was">✉️ 15 bekommen eine E-Mail mit Anhang · 🔔 Push nach Einstellung</p><span class="knopf haupt" data-s="los">📤 Jetzt senden</span></div></div>`, "ueber"),
@@ -2697,7 +2697,7 @@ const RG_EFFEKTE = [
     x: "Ganz oben der Hauptschalter: Animierte Knöpfe. Ist er aus, ist alles ruhig – auch die Jahreszeiten und alle Effekte. Nichts davon ist Pflicht, und du kannst alles jederzeit wieder einschalten." },
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setKopfEffekt"), rgSchalter("setGbVogel")], puls: ["#setKopfEffekt", "#setGbVogel"], mussSel: true, t: "🎪 Kopf und Geburtstag",
     x: "Hier wählst du den Effekt für den Kopf – mit Ausprobieren siehst du ihn sofort. Und hier schaltest du den Geburtstags-Vogel ein oder aus; mit Vorschau kommt er gleich angeflogen." },
-  // 2.670.0 KC-CLUB-HILFE-NACHTRAG-5: Schatten und Ecken der Kacheln (nur gezeigt, nichts wird umgestellt)
+  // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: Schatten und Ecken der Kacheln (nur gezeigt, nichts wird umgestellt)
   { v: "einstellungen", vor: () => rgAuf("effekte"), sel: [rgSchalter("setSchatten"), ".kr-zeile"], puls: ["#setSchatten", "#setKachelEcken", "#kachelEckenStandard"], mussSel: true, t: "🌗 Schatten und Ecken",
     x: "Darunter zwei Dinge fürs Aussehen: Schatten gibt Knöpfen, Kacheln und dem Kopf Tiefe – Stärke, Farbe und Position klappst du darunter auf, dazu den Schatten im Kopf und mehr Kontrast bei Nacht. Und mit dem Regler Ecken der Kacheln machst du die Kacheln eckig oder fast rund; Standard stellt sie zurück." },
   { v: "start", nur: () => INFO_FELDER.some((f) => f.id === "wetter"), vor: () => { rgKopf("offen"); rgWetterFeld(); }, sel: ["#infoFeld .wtage", "#heroInfo"], mussSel: true, t: "🌦️ Das Wetter im Info-Feld",
@@ -3087,7 +3087,7 @@ const RUNDGAENGE = [
   { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
   { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
   { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Eselsohr, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
-  { id: "wecker", stand: "1", sym: "⏰", t: "Wecker, Stoppuhr & Timer", u: "Eselsohr, Uhr, Wecker stellen, Stoppuhr mit Runden, Timer – und wenn es klingelt (ca. 2 Min.)", st: () => RG_WECKER, nur: () => esAn() }, // 2.670.0 KC-CLUB-VIDEO-WECKER
+  { id: "wecker", stand: "1", sym: "⏰", t: "Wecker, Stoppuhr & Timer", u: "Eselsohr, Uhr, Wecker stellen, Stoppuhr mit Runden, Timer – und wenn es klingelt (ca. 2 Min.)", st: () => RG_WECKER, nur: () => esAn() }, // 2.671.0 KC-CLUB-VIDEO-WECKER
   { id: "rueckseite", stand: "2", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr, Bühne mit Twinkey, Spiegel und Rätsel – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
   { id: "zentrale", stand: "1", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
   { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
@@ -3424,7 +3424,7 @@ const RG_CHATPROFI = [
   { v: "nachrichten", vor: () => { if ($("schreibtHinweis")) return; const el = document.createElement("div"); el.id = "schreibtHinweis"; el.className = "schreibt-hinweis"; el.innerHTML = '<span class="punkte3"><i></i><i></i><i></i></span> ✍️ <b>Anne</b> schreibt dir gerade …'; document.body.appendChild(el); },
     nach: () => $("schreibtHinweis")?.remove(), sel: ["#schreibtHinweis"], mussSel: true, puls: ["#schreibtHinweis"], t: "✍️ Anne schreibt dir gerade",
     x: "Schreibt dir jemand im Zweier-Chat, während du woanders in der App bist, steht oben kurz: Anne schreibt dir gerade. Oder: diktiert dir gerade eine Nachricht, oder: nimmt gerade eine Sprachnachricht für dich auf. So weißt du, dass gleich etwas kommt. Antippen öffnet den Chat, mit der Nachricht verschwindet der Hinweis. Bei stumm geschalteten Chats bleibt es still." },
-  // 2.670.0 KC-CLUB-HILFE-NACHTRAG-5: Senden ohne Warten, jederzeit ändern, weitere Empfänger – Beispielbilder, es wird nichts gesendet oder geändert
+  // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: Senden ohne Warten, jederzeit ändern, weitere Empfänger – Beispielbilder, es wird nichts gesendet oder geändert
   { v: "nachrichten", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 10px">⏳ Senden ohne Warten</h3>
       <div class="blase meine" style="margin:0 0 8px auto;max-width:85%" data-s="warte">Bin um sieben da 👍 <small>⏳</small></div>
       <div class="blase meine" style="margin:0 0 8px auto;max-width:85%" data-s="fehler">Bringst du den Kuchen mit? <small>⚠️</small><div style="margin-top:6px"><span class="knopf klein">🔄 Nochmal</span> <span class="knopf klein">🗑️ Löschen</span></div></div></div></div>`, "ueber"),
@@ -3443,7 +3443,7 @@ const RG_CHATPROFI = [
 ];
 
 
-// 2.670.0 KC-CLUB-VIDEO-WECKER (Hilfe-Nachtrag 5): die Uhr der Kopf-Rückseite mit Wecker, Stoppuhr und Timer. Es wird nichts gestellt und nichts an den
+// 2.671.0 KC-CLUB-VIDEO-WECKER (Hilfe-Nachtrag 5): die Uhr der Kopf-Rückseite mit Wecker, Stoppuhr und Timer. Es wird nichts gestellt und nichts an den
 // Server geschickt (Wecker und Timer nur gezeigt, das Klingel-Fenster ist ein Beispielbild); die Stoppuhr läuft kurz zur Vorführung – am Ende sind
 // Stoppuhr-Stand und gewählte Anzeige wie vorher.
 function rgWk(modus) {
@@ -3453,9 +3453,9 @@ function rgWk(modus) {
       esSchreib("uhrmodus", altModus); try { wkChip(); if (ES.offen && $("hrFlaeche")) esUhrZeigen($("hrFlaeche")); } catch {} }); }
   if (modus && wkModus() !== modus) wkModusSetzen(modus);
 }
-const rgWkKlingelBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg" style="text-align:center"><div style="font-size:2.6rem;line-height:1">⏲️</div>
-  <h3 style="margin:6px 0 10px">⏲️ Zeit ist um!</h3><div class="knoepfe" style="flex-direction:column;align-items:stretch">
-  <span class="knopf haupt" data-s="ton">🔊 Antippen für Ton</span><span class="knopf haupt" data-s="aus">🔕 Aus</span><span class="knopf" data-s="mehr">+1 Min.</span></div></div></div>`;
+const rgWkKlingelBild = () => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg" style="text-align:center"><div style="font-size:2.6rem;line-height:1">⏰</div>
+  <h3 style="margin:6px 0 10px">⏰ Wecker 7:00 Uhr</h3><p style="margin:0 0 10px">Kuchen aus dem Ofen</p><span class="knopf haupt" data-s="ton" style="display:block;margin-bottom:8px">🔊 Antippen für Ton</span>
+  <div class="knoepfe" style="display:flex;gap:8px"><span class="knopf haupt" data-s="aus" style="flex:1">🔕 Aus</span><span class="knopf" data-s="mehr" style="flex:1">💤 Schlummern<br><small>${WK_SCHLUMMER_MIN} Min. später</small></span></div></div></div>`;
 const RG_WECKER = [
   { v: "start", vor: () => { rgKopf("offen"); esEinsetzen(); }, sel: ["#eselsohr"], mussSel: true, puls: ["#eselsohr"], t: "📄 Über das Eselsohr",
     x: "Wecker, Stoppuhr und Timer stecken in der großen Uhr auf der Rückseite des Kopfes. Dorthin kommst du mit dem Eselsohr unten rechts im Kopf: doppelt tippen, und der Kopf dreht sich um." },
@@ -3472,9 +3472,9 @@ const RG_WECKER = [
       await L.tipp('#wkSteuer [onclick="wkStopp(\'los\')"]'); wkStopp("los"); L.ziel(); await L.warte(1500);
       await L.tipp('#wkSteuer [onclick="wkStopp(\'null\')"]'); wkStopp("null"); L.ziel(); } },
   { v: "start", vor: () => rgWk("timer"), sel: ["#wkSteuer"], mussSel: true, puls: [() => [...document.querySelectorAll('#wkSteuer [onclick^="wkTimerStart"]')]], t: "⏲️ Timer",
-    x: "Beim Timer tippst du einfach auf eine, drei, fünf, zehn oder fünfzehn Minuten – oder trägst eine eigene Zeit ein. Die letzten zehn Sekunden sind rot. Läuft etwas, zeigt die Startseite oben ein kleines Feld mit der Zeit; antippen bringt dich hierher." },
+    x: "Beim Timer tippst du einfach auf eine, drei, fünf, zehn oder fünfzehn Minuten – oder trägst eine eigene Zeit ein. Jede volle Minute kommt ein kurzer Ton, die letzten fünf Sekunden zählt er hörbar herunter und sind rot. Läuft etwas, zeigt die Startseite oben ein kleines Feld mit der Zeit; antippen bringt dich hierher." },
   { v: "start", vor: rgSimNeu(rgWkKlingelBild, "ueber"), nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="aus"]', '#rgSim [data-s="mehr"]'], t: "🔔 Wenn es klingelt",
-    x: "Ist es so weit, klingelt die App mit deiner Stundenuhr – zum Beispiel dem Kuckuck. Aus beendet das Klingeln, plus eine Minute verlängert den Timer, beim Wecker heißt der Knopf fünf Minuten später. Ist die App zu, kommt eine Benachrichtigung." },
+    x: "Ist es so weit, klingelt die App mit deiner Stundenuhr – zum Beispiel dem Kuckuck. Aus beendet das Klingeln. Daneben beim Wecker die Schlummertaste: zehn Minuten später klingelt er noch einmal. Beim Timer heißt der Knopf plus eine Minute. Ist die App zu, kommt eine Benachrichtigung." },
   { v: "start", vor: rgSimNeu(rgWkKlingelBild, "ueber"), nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="ton"]'], t: "🔊 Antippen für Ton",
     x: "Hast du die App gerade erst geöffnet und noch nirgends getippt, lässt das Handy noch keinen Ton zu. Dann steht oben im Fenster: Antippen für Ton. Ein Tipp – und es klingelt hörbar." },
   { v: "start", vor: () => rgWk(null), t: "✅ Fertig",
@@ -5368,9 +5368,9 @@ const HILFE = [
   { id: "foto_muetze", thema: "privat", sym: "🎅", t: "Nikolausmütze oder Hut aufs eigene Foto", x: "Bei <b>Mein Bild → 🤳 Selfie, 🖼️ Galerie oder 📁 Datei</b> kannst du vor dem Übernehmen eine <b>Mütze aufsetzen</b> – z. B. Nikolausmütze, Kochmütze, Jägerhut, Cowboyhut, Zylinder, Krone – und mit dem Finger an die richtige Stelle schieben, größer/kleiner machen und drehen. Dazu ein <b>Rahmen</b> (Weinrot, Gold, Weihnacht, Bunt). Ohne Mütze bleibt das Foto, wie es ist. Dein voriges Bild findest du jederzeit unter 🕘 Zuletzt benutzt.", seit: "2.451.0" },
   { id: "unterstuetzung_anfrage", thema: "technik", sym: "🙋", t: "Hilfe bei der App anfragen", x: "Du kommst mit etwas nicht klar? Unter <b>Mehr → 🙋 Unterstützung anfragen</b> (oder im Info-Laufband) kreuzt du an, wobei du Hilfe möchtest – zum Beispiel Benachrichtigungen oder die Schrift – und wie: Anruf, Nachricht oder persönlich. Hansi bekommt Bescheid und meldet sich bei dir.", seit: "2.492.0" },
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3 (Wunsch Hansi „Hilfetexte, Lupe, Twinkey und Videos an die neuen Sachen anpassen – nix von Adminfunktionen“)
-  // 2.670.0 KC-CLUB-HILFE-NACHTRAG-5 (Wunsch Hansi „Check, ob durch die vielen Änderungen die Hilfe angepasst werden muss – Twinkey, Lupe, Suche, Erklär-Videos,
+  // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5 (Wunsch Hansi „Check, ob durch die vielen Änderungen die Hilfe angepasst werden muss – Twinkey, Lupe, Suche, Erklär-Videos,
   // evtl. neue Videos. Alles auf den neuesten Stand. Aber keine Admin-Funktionen dort veröffentlichen, nichts von Admin erwähnen“): Neuheiten 2.534.0–2.668.0, nur Mitglieder-Funktionen
-  { id: "uhr_wecker", thema: "start", sym: "⏰", t: "Wecker, Stoppuhr und Timer", x: "Doppelt aufs <b>Eselsohr</b> unten rechts im Kopf tippen → Reiter <b>🕰️ Uhr</b>. Oben wählst du <b>⏰ Wecker</b> (Uhrzeit und ein kurzer Text), <b>⏱️ Stoppuhr</b> (mit Runden und Zehnteln) oder <b>⏲️ Timer</b> (1, 3, 5, 10 oder 15 Minuten oder eine eigene Zeit – die letzten 10 Sekunden rot) – alles im Stil deiner großen Uhr. Läuft etwas, zeigt die Startseite oben ein kleines Feld, z. B. „⏲️ 4:32“. Ist es so weit, klingelt die App mit deiner Stundenuhr: <b>🔕 Aus</b>, <b>+1 Min.</b> oder <b>💤 5 Min. später</b>. Ist die App zu, kommt eine Benachrichtigung.", zeig: () => esOeffnen("uhr"), seit: "2.640.0" },
+  { id: "uhr_wecker", thema: "start", sym: "⏰", t: "Wecker, Stoppuhr und Timer", x: "Doppelt aufs <b>Eselsohr</b> unten rechts im Kopf tippen → Reiter <b>🕰️ Uhr</b>. Oben wählst du <b>⏰ Wecker</b> (Uhrzeit und ein kurzer Text), <b>⏱️ Stoppuhr</b> (mit Runden und Zehnteln) oder <b>⏲️ Timer</b> (1, 3, 5, 10 oder 15 Minuten oder eine eigene Zeit – die letzten 10 Sekunden rot) – alles im Stil deiner großen Uhr. Läuft etwas, zeigt die Startseite oben ein kleines Feld, z. B. „⏲️ 4:32“. Beim Timer kommt jede volle Minute ein kurzer Ton und in den letzten 5 Sekunden ein Countdown. Ist es so weit, klingelt die App mit deiner Stundenuhr: <b>🔕 Aus</b> und daneben beim Wecker <b>💤 Schlummern</b> (10 Min. später), beim Timer <b>+1 Min.</b>. Ist die App zu, kommt eine Benachrichtigung.", zeig: () => esOeffnen("uhr"), seit: "2.640.0" },
   { id: "wecker_ton", thema: "toene", sym: "🔊", t: "Wecker oder Timer klingelt ohne Ton", x: "Frisch geöffnet und noch nirgends getippt? Dann lässt das Handy noch keinen Ton zu – das Klingel-Fenster zeigt dafür <b>„🔊 Antippen für Ton“</b>. Ein Tipp, und es klingelt hörbar weiter. Hörst du trotzdem nichts, prüfe, ob das Handy laut gestellt ist.", zeig: () => esOeffnen("uhr"), seit: "2.658.0" },
   { id: "kachel_effekte", thema: "darstellung", sym: "🎬", t: "Kacheln mit Effekt: Hereindrehen, Kachel-Zug & Co.", x: "Wechselst du zwischen Club, Meins und Technik, kommen die Kacheln mit einem Effekt herein. Unter ⚙️ → „✨ Effekte“ → <b>„🎬 Effekt beim Register-Wechsel“</b> wählst du z. B. 🪟 Jalousie, 🃏 Kartenstapel, 🌀 Hereindrehen, 🎰 Spielautomat, 🫧 Seifenblasen, 🧲 Magnet, 🍳 Pfanne, 🧭 Einfliegen, 🕰️ Fallblatt-Uhr oder 🚂 Kachel-Zug – <b>🔁 Abwechselnd</b> nimmt jedes Mal den nächsten, <b>🎲 Zufall</b> irgendeinen. <b>▶ Vorschau</b> zeigt ihn gleich. Darunter: 🚀 Kacheln beim Öffnen der App, 💧 Welle beim Antippen, 🔔 Neues wackelt und 👋 Abschied beim Abmelden.", zeig: () => einstiegHin("effekte", "regEffektWahl"), seit: "2.566.0" },
   { id: "clubabend_live", thema: "club", sym: "🍽️", t: "Am Clubabend: alles auf einen Blick", x: "Am Tag des Clubabends – ab zwei Stunden vorher bis zum Ende – erscheint die Kachel <b>🍽️ Clubabend Live</b>, dazu ein Hinweis im Info-Feld. Darin stehen die Tagesordnung, wer da ist, Fotos vom Abend, Geburtstage seit dem letzten Treffen und offene Aufgaben aus dem letzten Protokoll – alle 20 Sekunden aktuell.", seit: "2.569.0" },
@@ -5779,7 +5779,7 @@ function sbErkennen(roh, mitglieder = [], ich = "") {
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: neue Möglichkeiten per Sprache → Lupe mit dem passenden Treffer
   for (const [re, q] of [[/verschlüssel|geheime? nachricht|geheim schreiben/, "verschlüsselt"], [/schlüssel ?bund/, "schlüsselbund"], [/^(eine |die )?dia ?show( starten| zeigen| ansehen)?$/, "diashow fotoalbum"],
     [/ablage ?korb/, "ablagekorb"], [/versand ?leiste/, "versand leiste"],
-    // 2.670.0 KC-CLUB-HILFE-NACHTRAG-5
+    // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5
     [/^(einen? |den )?(wecker|timer|stoppuhr|eieruhr)( stellen| starten| öffnen)?$/, "wecker stoppuhr timer"], [/kachel ?effekt|kachel ?zug|hereindrehen/, "effekt register wechsel"],
     [/wie verschicken/, "wie verschicken"], [/weitere empfänger|auch an/, "weitere empfänger"], [/clubmoment|club ?jahr/, "clubmoment"], [/clubabend live/, "clubabend live"]]) if (re.test(t)) return { art: "suche", q };
   let q; if ((q = t.match(/^(?:such(?:e)?|finde?|wo ist)(?: nach)? (.+)$/))) return { art: "suche", q: q[1] };
@@ -10040,8 +10040,8 @@ const TW_SYN = [["termin", "verabredung", "treffen", "datum", "verabreden", "aus
 const TW_FAQ = [
   { id: "chat-nur-hg", sym: "🖼️", t: "Wie sehe ich meinen Chat-Hintergrund ohne die Nachrichten?", x: "Im Chat in der kleinen Zeile über dem Schreibfeld dreimal auf <b>👥</b> tippen – dann steht dort <b>🖼️</b>, alle Nachrichten sind ausgeblendet und du siehst nur den Hintergrund. Noch einmal tippen (oder den gelben Hinweis oben) zeigt wieder alles.", los: () => hzZuEintrag("h:chat_filter") }, // 2.591.0
   { id: "einstellungen-erklaert", sym: "🧭", t: "Was bewirken die ganzen Einstellungen?", x: "Unter <b>Technik → 🧭 Einstellungen erklärt</b> siehst du alle Einstellungen wie Ordner im Explorer – antippen erklärt, was sie bewirken, und <b>👉 Hinbringen</b> führt dich zum Schalter. Mit 🖨️ auch zum Ausdrucken.", los: () => ewStart() }, // 2.534.0
-  // 2.670.0 KC-CLUB-HILFE-NACHTRAG-5: Fragen zu den Neuheiten 2.534.0–2.668.0 (nur Mitglieder-Funktionen)
-  { id: "wecker", sym: "⏰", t: "Kann die App mich wecken oder einen Timer stellen?", x: "Ja: doppelt aufs <b>Eselsohr</b> im Kopf tippen → <b>🕰️ Uhr</b> → oben <b>⏰ Wecker</b>, <b>⏱️ Stoppuhr</b> oder <b>⏲️ Timer</b>. Ist es so weit, klingelt die Stundenuhr – <b>🔕 Aus</b>, <b>+1 Min.</b> oder <b>💤 5 Min. später</b>. Ist die App zu, kommt eine Benachrichtigung.", los: () => esOeffnen("uhr") },
+  // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: Fragen zu den Neuheiten 2.534.0–2.668.0 (nur Mitglieder-Funktionen)
+  { id: "wecker", sym: "⏰", t: "Kann die App mich wecken oder einen Timer stellen?", x: "Ja: doppelt aufs <b>Eselsohr</b> im Kopf tippen → <b>🕰️ Uhr</b> → oben <b>⏰ Wecker</b>, <b>⏱️ Stoppuhr</b> oder <b>⏲️ Timer</b>. Ist es so weit, klingelt die Stundenuhr – <b>🔕 Aus</b> und daneben <b>💤 Schlummern</b> (10 Min. später) bzw. beim Timer <b>+1 Min.</b>. Ist die App zu, kommt eine Benachrichtigung.", los: () => esOeffnen("uhr") },
   { id: "wecker-stumm", sym: "🔊", t: "Mein Wecker oder Timer ist stumm – warum?", x: "Hast du die App gerade erst geöffnet und noch nicht getippt, lässt das Handy keinen Ton zu. Dann steht im Klingel-Fenster <b>„🔊 Antippen für Ton“</b> – einmal tippen, und es klingelt hörbar. Sonst: Ist das Handy laut gestellt?", los: () => hzZuEintrag("h:wecker_ton") },
   { id: "kachel-effekt", sym: "🎬", t: "Können die Kacheln anders hereinkommen?", x: "Ja: ⚙️ → „✨ Effekte“ → <b>„🎬 Effekt beim Register-Wechsel“</b> – z. B. 🌀 Hereindrehen, 🎰 Spielautomat, 🫧 Seifenblasen, 🧲 Magnet, 🍳 Pfanne, 🕰️ Fallblatt-Uhr oder 🚂 Kachel-Zug, dazu 🔁 Abwechselnd und 🎲 Zufall. <b>▶ Vorschau</b> zeigt ihn sofort.", los: () => einstiegHin("effekte", "regEffektWahl") },
   { id: "wie-verschicken", sym: "📤", t: "Was bedeutet „Wie verschicken?“ beim Senden?", x: "Bei Nachrichten an mehrere oder mit Anlage wählst du, wie sie rausgehen: <b>✉️ Nur E-Mail</b> (mit Anhang), <b>🔔 Nur Push</b>, <b>🟢 WhatsApp</b>, <b>✅ Alles</b>, <b>📱 Nur in der App</b> oder <b>⚙️ Wie jeder es eingestellt hat</b>. Darunter steht, was passiert – dann <b>„📤 Jetzt senden“</b>.", los: () => hzZuEintrag("h:wie_verschicken") },
@@ -10240,7 +10240,7 @@ async function twFrageStart(vorgabe = "") {
 // KC-CLUB-TWINKEY-VIDEOS (2.252.0, Wunsch Hansi „Du kannst es im Hilfetext nachlesen. Aber es gibt auch Erklär-Videos. Was möchtest du dir
 // ansehen?“): Antwort-Eintrag → passende Erklär-Videos (Registry RUNDGAENGE, nur die für das Mitglied sichtbaren) und der ausführliche Hilfetext.
 // Neue Videos hier einfach dem passenden Eintrag (f: Twinkeys Fragen, h: Hilfe-Zentrum) zuordnen.
-const TW_VIDEOS = { "h:uhr_wecker": ["wecker"], "f:wecker": ["wecker"], "h:wecker_ton": ["wecker"], "f:wecker-stumm": ["wecker"], "h:kachel_effekte": ["effekte"], "f:kachel-effekt": ["effekte"], "h:wie_verschicken": ["nachricht"], "f:wie-verschicken": ["nachricht"], "h:sende_schlange": ["chatprofi"], "f:sanduhr": ["chatprofi"], "h:nachricht_aendern": ["chatprofi"], "f:nachricht-aendern": ["chatprofi"], "h:weitere_empfaenger": ["chatprofi"], "f:auch-an": ["chatprofi"], "h:anklopfen_wahl": ["mitglieder"], "f:anklopfen-art": ["mitglieder"], "f:anklopfen-blass": ["mitglieder"], "h:schatten": ["effekte"], "f:schatten-kopf": ["effekte"], "h:kachel_ecken": ["effekte"], "h:abstimmung_mehrere": ["vorschlag"], "f:abstimmung-mehrere": ["vorschlag"], // 2.670.0
+const TW_VIDEOS = { "h:uhr_wecker": ["wecker"], "f:wecker": ["wecker"], "h:wecker_ton": ["wecker"], "f:wecker-stumm": ["wecker"], "h:kachel_effekte": ["effekte"], "f:kachel-effekt": ["effekte"], "h:wie_verschicken": ["nachricht"], "f:wie-verschicken": ["nachricht"], "h:sende_schlange": ["chatprofi"], "f:sanduhr": ["chatprofi"], "h:nachricht_aendern": ["chatprofi"], "f:nachricht-aendern": ["chatprofi"], "h:weitere_empfaenger": ["chatprofi"], "f:auch-an": ["chatprofi"], "h:anklopfen_wahl": ["mitglieder"], "f:anklopfen-art": ["mitglieder"], "f:anklopfen-blass": ["mitglieder"], "h:schatten": ["effekte"], "f:schatten-kopf": ["effekte"], "h:kachel_ecken": ["effekte"], "h:abstimmung_mehrere": ["vorschlag"], "f:abstimmung-mehrere": ["vorschlag"], // 2.671.0
   "h:verschluesselt": ["geheim"], "h:schluesselbund": ["geheim"], "f:verschluesseln": ["geheim"], "f:schluessel-frage": ["geheim"], "f:schluessel-oeffnen": ["geheim"], "f:schluesselbund": ["geheim"], "f:geheimagent": ["geheim"], "h:schreibt_hinweis": ["chatprofi"], "f:schreibt-dir": ["chatprofi"], "h:versand_leiste": ["nachricht"], "f:versand-leiste": ["nachricht"], "f:graue-haken": ["chatprofi"], "f:tippton-aus": ["geheim"], "f:wildwest": ["anpassen"], "h:kopf_effekte": ["effekte", "anpassen"], "h:geburtstag_vogel": ["effekte"], "h:dienst_uebersicht": ["dienst"], "f:dienst-uebersicht": ["dienst"], "f:kopf-effekt": ["effekte"], "f:geburtstag-vogel": ["effekte"], "h:anpassen": ["anpassen"], "h:themen": ["anpassen"], "h:farbe": ["anpassen"], "h:deko_leiste": ["anpassen"], "h:jahreszeit_kopf": ["anpassen", "effekte"], "h:kopf_besucher": ["anpassen"], "h:sparmodus": ["anpassen"], "h:raetsel": ["raetsel", "rueckseite"], "f:aussehen": ["anpassen"], "f:kopf-ruhig": ["anpassen"], "f:raetsel": ["rueckseite"], "h:wetter": ["effekte"], "f:diktieren": ["sprache"], "h:infofeld": ["spezial"], "h:modus_knopf": ["spezial"], "h:frage_knopf": ["einfach", "spezial"], "h:schnecke": ["probleme", "spezial"], "f:update": ["probleme", "technik"], "f:feedback": ["feedback"], "f:dienstwunsch": ["dienst"], "f:dienstplan": ["dienst"], "f:status": ["status"], "f:protokoll": ["lesen"], "f:handbuch": ["lesen"], "f:adresse": ["meinedaten"], "f:mein-bild": ["figur", "figurbau"], "h:mein_bild": ["figur", "figurbau"], "f:figur-bauen": ["figurbau"],
   "f:nachricht": ["nachricht", "zentrale", "sprache"], "f:termin-neu": ["termin"], "f:zettel": ["pinnwand"], "f:vorschlag": ["vorschlag"], "f:zusagen": ["zusagen"],
   "f:foto-album": ["fotos"], "f:geld": ["erstattung"], "f:notfall": ["sos"], "f:hilfe-suchen": ["helfen"], "f:leihen": ["helfen"], "f:anrufen": ["mitglieder"], "f:online": ["mitglieder"],
@@ -18096,10 +18096,10 @@ addEventListener("resize", () => { if (ES.offen && $("esUhr")) { ES.uhr.letzte =
 // Oben auf der Uhr-Seite: 🕰️ Uhr · ⏰ Wecker · ⏱️ Stoppuhr · ⏲️ Timer – jeweils im gewählten Uhren-Stil (Digital, Fallblatt, Bahnhof, Klar).
 // Stoppuhr: Start/Pause, Runde, Zurück (mit Zehnteln) – nur auf diesem Gerät. Timer: 1/3/5/10/15 Min. oder eigene Minuten, die letzten 10 s rot.
 // Wecker: Uhrzeit + kurzer Text. Ist es so weit, klingelt die App mit der gewählten Stundenuhr (sonst Glocke) und zeigt „Aus“ und „+1 Min.“ bzw.
-// „💤 5 Min. später“. Ist die App zu, schickt der Server zur Zeit einen Push (Wecker/Timer werden dafür dort gemerkt: nur Zeit, Art, Text).
+// „💤 Schlummern“ (seit 2.670.0 10 Min., vorher 5). Ist die App zu, schickt der Server zur Zeit einen Push (Wecker/Timer werden dafür dort gemerkt: nur Zeit, Art, Text).
 // Klingelt die App selbst (sichtbar), wird der Push gleich abbestellt. Läuft etwas, zeigt die Startseite oben ein kleines Feld (z. B. „⏲️ 4:32“).
 const WK_KEY = "kc_club_wecker", WK_MODI = [["uhr", "🕰️ Uhr", "Uhrzeit"], ["wecker", "⏰ Wecker", "Wecker"], ["stopp", "⏱️ Stoppuhr", "Stoppuhr"], ["timer", "⏲️ Timer", "Timer"]];
-const WK_SCHNELL = [1, 3, 5, 10, 15], WK_ROT_MS = 10000, WK_KLINGEL_MS = 120000, WK_SPAET_MS = 90000, WK_SCHLUMMER_MIN = 5;
+const WK_SCHNELL = [1, 3, 5, 10, 15], WK_ROT_MS = 10000, WK_KLINGEL_MS = 120000, WK_SPAET_MS = 90000, WK_SCHLUMMER_MIN = 10; // 2.670.0 KC-CLUB-WECKER-SCHLUMMER: Schlummern 10 Min. (Wunsch Hansi)
 const wkLeer = () => ({ wecker: null, timer: null, stopp: { ab: 0, summe: 0, runden: [] } });
 function wkStand() { try { const x = JSON.parse(localStorage.getItem(WK_KEY) || "null"); if (x) return { ...wkLeer(), ...x, stopp: { ...wkLeer().stopp, ...(x.stopp || {}) } }; } catch (e) { /* defekt → leer */ } return wkLeer(); }
 function wkMerken(st) { try { localStorage.setItem(WK_KEY, JSON.stringify(st)); } catch (e) { /* ohne Speicher läuft es nur bis zum Schließen */ } wkChip(); }
@@ -18224,8 +18224,30 @@ function wkWache() {
   const st = wkStand(), jetzt = Date.now();
   const timerFaellig = st.timer && st.timer.pause == null && st.timer.ende <= jetzt, weckerFaellig = st.wecker && st.wecker.um <= jetzt;
   if ((timerFaellig || weckerFaellig) && !WKK.art && !document.hidden) wkKlingeln(timerFaellig ? "timer" : "wecker");
+  wkTimerPiep(st, jetzt); // 2.670.0 KC-CLUB-TIMER-PIEP
   wkChip();
   if (ES.offen && $("esUhr") && wkModus() !== "uhr" && esSichtbar() && !document.querySelector("#wkSteuer :focus")) { const z = [!!st.timer, st.timer?.pause != null, !!st.wecker].join(); if (z !== WKK.zustand) { WKK.zustand = z; wkSteuerZeigen(); } }
+}
+// 2.670.0 KC-CLUB-TIMER-PIEP (Wunsch Hansi „beim Timer die letzten 5 Sekunden ein Beep runterzählen, dann Alarm, und jede Minute ein Minutensignal“):
+// solange der Timer läuft und die App offen ist: zu jeder vollen Minute ein kurzer Ton, die letzten 5 Sekunden 5 – 4 – 3 – 2 – 1 (der letzte höher),
+// dann klingelt es wie bisher. Die Töne werden auf die Millisekunde im Voraus gestellt (die Wache läuft nur jede Sekunde); Pause/Stopp nimmt sie zurück.
+function wkPiep(nachMs, hz, s) {
+  try {
+    wkTon(); if (!audio) return;
+    const t = audio.currentTime + Math.max(0.02, nachMs / 1000), o = audio.createOscillator(), g = audio.createGain();
+    o.type = "sine"; o.frequency.value = hz; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + s);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + s + 0.03);
+    WKK.osc = [...(WKK.osc || []), o]; o.onended = () => { WKK.osc = (WKK.osc || []).filter((x) => x !== o); };
+  } catch (e) { /* ohne Ton zählt nur das Bild */ }
+}
+function wkPiepWeg() { for (const o of WKK.osc || []) try { o.stop(); } catch (e) { /* schon vorbei */ } WKK.osc = []; WKK.cd = 0; }
+function wkTimerPiep(st, jetzt) {
+  const t = st.timer, rest = t ? t.ende - jetzt : 0;
+  if (!t || t.pause != null || document.hidden || rest <= 0) { if (WKK.cd || WKK.osc?.length) wkPiepWeg(); return; }
+  if (WKK.cd && WKK.cd !== t.ende) wkPiepWeg(); // Timer verlängert (+1 Min.) oder neu → Countdown neu stellen
+  if (rest <= 6500 && WKK.cd !== t.ende) { WKK.cd = t.ende; for (let k = 5; k >= 1; k--) if (rest - k * 1000 > 30) wkPiep(rest - k * 1000, k === 1 ? 1320 : 990, 0.13); }
+  const k = Math.floor(rest / 60000), bis = rest - k * 60000, schl = `${t.ende}:${k}`; // nächste volle Minute in „bis“ ms
+  if (k >= 1 && bis <= 1500 && WKK.mi !== schl && (t.dauer || 0) - k * 60000 > 3000) { WKK.mi = schl; wkPiep(bis, 740, 0.18); }
 }
 function wkKlingeln(art) {
   const st = wkStand(), timer = art === "timer", e = timer ? st.timer : st.wecker; if (!e) return;
@@ -18236,8 +18258,8 @@ function wkKlingeln(art) {
   WKK.art = art; WKK.bis = Date.now() + WK_KLINGEL_MS; WKK.i = 0; WKK.geweckt = false; WKK.text = e.text || ""; WKK.um = timer ? e.ende : e.um;
   const f = blattAuf("wkKlingel", `<div class="wk-klingel"><div class="wk-glocke" aria-hidden="true">${timer ? "⏲️" : "⏰"}</div>
     <h3 style="margin:4px 0">${timer ? "⏲️ Zeit ist um!" : `⏰ Wecker ${wkUhrzeit(e.um)} Uhr`}</h3>${e.text && !timer ? `<p style="margin:0 0 10px">${esc(e.text)}</p>` : ""}
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button type="button" class="knopf haupt" data-w="aus">🔕 Aus</button>
-      <button type="button" class="knopf" data-w="mehr">${timer ? "+1 Min." : `💤 ${WK_SCHLUMMER_MIN} Min. später`}</button></div></div>`);
+    <div class="knoepfe wk-klingel-knoepfe"><button type="button" class="knopf haupt" data-w="aus">🔕 Aus</button><!-- 2.670.0 KC-CLUB-WECKER-SCHLUMMER: Schlummertaste daneben -->
+      <button type="button" class="knopf wk-schlummer" data-w="mehr">${timer ? "+1 Min." : `💤 Schlummern<small>${WK_SCHLUMMER_MIN} Min. später</small>`}</button></div></div>`);
   f.onclick = null; // nur mit „Aus“ oder „später“ – daneben tippen schließt nicht aus Versehen
   f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => wkKlingelAus(b.dataset.w === "mehr"));
   wkTon(); wkSchlag();
@@ -20391,25 +20413,81 @@ function jzbNaschbudeMalen(c, F) {
 // 2.667.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „ab und an einen Luftballon-Verkäufer durch die Kirmes-Szene laufen lassen – ein Clown mit einem Strauß
 // Luftballons; dann kommt ein kleines Mädchen und bekommt einen. Beim nächsten Mal ein Junge“): der Clown läuft von links bis vor das Herz und wartet,
 // von rechts kommt das Kind, bekommt einen Ballon (er schwebt vom Strauß in die Hand) und hüpft damit davon; der Clown zieht weiter. Abwechselnd Mädchen/Junge.
-let JZB_CLOWN_N = 0; const JZB_CLOWN_GR = 1.25; // Größe von Clown und Kind (Wunsch Hansi beim Karussell: „etwas größer“)
+// 2.670.0 KC-CLUB-CLOWN-PLATZEN (Wunsch Hansi): zwei kleine Geschichten im Wechsel mit dem normalen Lauf –
+// 🎈 jedes 3. Mädchen: geht mit dem Ballon nach links weiter, bleibt stehen, lässt ihn los – er fliegt hoch und zerplatzt, das Mädchen weint,
+//    der Clown kommt und schenkt ihr einen neuen; sie hüpft vor Freude und geht weiter.
+// 😱 jeder 2. Junge: ruft „BUH!“ – der Clown lässt vor Schreck alle Ballons los, die fliegen hoch und zerplatzen nacheinander; der Clown weint,
+//    geht nach links neue holen und kommt mit einem vollen Strauß zurück.
+let JZB_CLOWN_N = 0, JZB_CLOWN_MAEDCHEN = 0, JZB_CLOWN_JUNGE = 0; const JZB_CLOWN_GR = 1.25; // Größe von Clown und Kind (Wunsch Hansi beim Karussell: „etwas größer“)
 const JZB_CLOWN_FARBEN = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c"];
+function jzbClownArt(n, maedchen, junge) { // → { kind, v }: abwechselnd Mädchen/Junge; jedes 3. Mädchen „platzen“, jeder 2. Junge „schreck“
+  const kind = n % 2 ? "junge" : "maedchen";
+  return { kind, v: kind === "maedchen" ? ((maedchen + 1) % 3 === 0 ? "platzen" : "normal") : ((junge + 1) % 2 === 0 ? "schreck" : "normal") };
+}
+function jzbPlopp() { // 🔊 kurzes „Peng“ beim Platzen (nur ⚙️ Ton an, nicht in der Ruhezeit)
+  if (!einst("ton", true) || document.hidden) return;
+  try { if (inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return; } catch {}
+  try {
+    const A = audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+    const t0 = A.currentTime + .02, b = A.createBuffer(1, Math.floor(A.sampleRate * .12), A.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const q = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain(); q.buffer = b; f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = .8;
+    g.gain.setValueAtTime(.5, t0); q.connect(f); f.connect(g); g.connect(A.destination); q.start(t0);
+  } catch { /* ohne Ton platzt es nur im Bild */ }
+}
 function jzbClownSchritt(F, dt) {
-  const J = JZB, k = J.k * JZB_CLOWN_GR;
+  const J = JZB, k = J.k * JZB_CLOWN_GR, boden = J.h - 3 * J.k;
   if (!F.clown) {
     if (F.clownUhr === undefined) F.clownUhr = jzbZ(6, 12);
-    if ((F.clownUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 28)
-      F.clown = { x: -30 * k, ziel: J.w * .6, ph: "rein", lauf: 0, kind: JZB_CLOWN_N++ % 2 ? "junge" : "maedchen", kx: J.w + 16 * k, kRicht: -1, kLauf: 0, g: 0, hat: false, farben: JZB_CLOWN_FARBEN.slice() };
+    if ((F.clownUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 28) {
+      const a = jzbClownArt(JZB_CLOWN_N, JZB_CLOWN_MAEDCHEN, JZB_CLOWN_JUNGE);
+      if (a.v !== "normal" && F.t > JZB_FEST_DAUER - 62) { F.clownUhr = Infinity; return; } // Geschichte passt nicht mehr in diesen Lauf → im nächsten
+      JZB_CLOWN_N++; if (a.kind === "maedchen") JZB_CLOWN_MAEDCHEN++; else JZB_CLOWN_JUNGE++;
+      F.clown = { x: -30 * k, ziel: J.w * .6, ph: "rein", uhr: 0, lauf: 0, kind: a.kind, v: a.v, kx: J.w + 16 * k, kRicht: -1, kLauf: 0, g: 0, hat: false, raus: 0, bi: 5, cRicht: 1,
+        farben: JZB_CLOWN_FARBEN.slice(), frei: null, flug: [], pops: [] };
+    }
     return;
   }
-  const C = F.clown, v = 24 * k, kv = 30 * k, kZiel = C.ziel + 17 * k;
-  if (C.ph === "rein") { C.x += v * dt; C.lauf += dt; if (C.x >= C.ziel) { C.x = C.ziel; C.ph = "warten"; } }
-  if (C.ph === "weg") { C.x += v * dt; C.lauf += dt; }
-  if (C.ph !== "weg" && C.x > C.ziel - 70 * k) { // das Kind kommt, sobald der Clown fast da ist
-    if (C.kx > kZiel) { C.kx = Math.max(kZiel, C.kx - kv * dt); C.kLauf += dt; }
-    else if (C.ph === "warten") C.ph = "geben";
+  const C = F.clown, v = 24 * k, kv = 30 * k, kZiel = C.ziel + 17 * k, ph = (p) => { C.ph = p; C.uhr = 0; };
+  C.uhr += dt; C.cGeht = false; C.kGeht = false; C.kHuepf = false;
+  const clownLauf = (r, f = 1) => { C.x += r * v * f * dt; C.lauf += dt; C.cGeht = true; C.cRicht = r; };
+  const kindLauf = (r, f = 1, huepf) => { C.kx += r * kv * f * dt; C.kLauf += dt; C.kGeht = true; C.kRicht = r; C.kHuepf = !!huepf; };
+  if (C.ph === "rein") { clownLauf(1); if (C.x >= C.ziel) { C.x = C.ziel; ph("warten"); } }
+  if ((C.ph === "rein" || C.ph === "warten") && C.x > C.ziel - 70 * k) { // das Kind kommt, sobald der Clown fast da ist
+    if (C.kx > kZiel) { C.kx = Math.max(kZiel, C.kx - kv * dt); C.kLauf += dt; C.kGeht = true; }
+    else if (C.ph === "warten") { if (C.v === "schreck") ph("buh"); else { C.raus = 1; ph("geben"); } }
   }
-  if (C.ph === "geben" && (C.g += dt / 1.6) >= 1) { C.g = 1; C.hat = true; C.ph = "weg"; C.kRicht = 1; }
-  if (C.ph === "weg") { C.kx += kv * 1.15 * dt; C.kLauf += dt; }
+  if (C.ph === "geben" && (C.g += dt / 1.6) >= 1) {
+    C.g = 1; C.hat = true;
+    if (C.v === "platzen" && C.bi === 5) ph("links"); else if (C.v === "platzen") ph("huepfen"); else { ph("weg"); C.kRicht = 1; }
+  }
+  if (C.ph === "weg") { clownLauf(1); C.kx += kv * 1.15 * dt; C.kLauf += dt; C.kGeht = true; C.kHuepf = C.hat; }
+  // 🎈 Mädchen: nach links, stehen bleiben, loslassen, platzen, weinen, neuer Ballon, hüpfen, weiter
+  if (C.ph === "links") { kindLauf(-1); if (C.kx <= J.w * .3) ph("stehen"); }
+  if (C.ph === "stehen" && C.uhr > .9) { C.hat = false; C.frei = { x: C.kx - 2.5 * k, y: boden - 27 * k, t: 0, f: jzbClownStrauss(C, k)[5].f }; ph("loslassen"); }
+  if (C.ph === "loslassen" && C.frei) {
+    const b = C.frei; b.t += dt; b.y -= (14 + b.t * 22) * k * dt; b.x += Math.sin(b.t * 2) * 6 * k * dt;
+    if (b.y < J.h * .16 || b.t > 3.5) { C.pops.push({ x: b.x, y: b.y, t: 0, f: b.f }); C.frei = null; jzbPlopp(); ph("weinen"); }
+  }
+  if (C.ph === "weinen") {
+    if (C.x > C.kx + 22 * k) clownLauf(-1); else C.cRicht = -1;
+    if (C.x <= C.kx + 22 * k && C.uhr >= 2) { C.kRicht = 1; C.raus = 2; C.bi = 4; C.g = 0; C.hat = false; ph("geben"); }
+  }
+  if (C.ph === "huepfen") { C.kHuepf = true; C.kLauf += dt; if (C.uhr > 1.4) ph("weiter"); }
+  if (C.ph === "weiter") { kindLauf(-1, 1.15, true); clownLauf(1); if (C.kx < -24 * k && C.x > J.w + 40 * k) { F.clown = null; F.clownUhr = jzbZ(28, 42); } }
+  // 😱 Junge: BUH! – alle Ballons fliegen weg und platzen nacheinander, der Clown weint und holt neue
+  if (C.ph === "buh" && C.uhr > .9) { C.flug = jzbClownStrauss(C, k).map((b, i) => ({ x: C.x + 8 * k + b.dx, y: boden - 31 * k + b.dy, t: 0, f: b.f, i, weg: false })); C.raus = 6; ph("schreck"); }
+  if (C.ph === "schreck" || C.ph === "clownweint" || C.ph === "holen") {
+    for (const b of C.flug) if (!b.weg) { b.t += dt; b.y = Math.max(6 * k, b.y - (5 + b.t * 3) * k * dt); b.x += ((b.i - 2.5) * 5 + Math.sin(b.t * 2 + b.i) * 4) * k * dt; // auffächern, im Bild bleiben
+      if (b.t >= 1.2 + b.i * .45) { b.weg = true; C.pops.push({ x: b.x, y: b.y, t: 0, f: b.f }); jzbPlopp(); } }
+    if (C.uhr > .6 && C.kx < J.w + 24 * k) kindLauf(1, 1.5); // der Junge rennt kichernd davon
+  }
+  if (C.ph === "schreck" && C.flug.every((b) => b.weg) && C.uhr > 1.2 + 5 * .45 + .4) ph("clownweint");
+  if (C.ph === "clownweint" && C.uhr > 2.4) ph("holen");
+  if (C.ph === "holen") { clownLauf(-1, 1.1); if (C.x < -30 * k) ph("pause"); }
+  if (C.ph === "pause" && C.uhr > 1.5) { C.raus = 0; C.flug = []; C.farben = JZB_CLOWN_FARBEN.slice().sort(() => Math.random() - .5); C.kx = J.w + 30 * k; ph("weg"); }
+  for (const p of C.pops) p.t += dt;
+  C.pops = C.pops.filter((p) => p.t < .6);
   if (C.ph === "weg" && C.x > J.w + 40 * k && C.kx > J.w + 20 * k) { F.clown = null; F.clownUhr = jzbZ(28, 42); }
 }
 function jzbBallonMalen(c, x, y, r, farbe) { // ein Luftballon (Mitte x/y), Faden nach unten zeichnet der Aufrufer
@@ -20420,11 +20498,17 @@ function jzbBallonMalen(c, x, y, r, farbe) { // ein Luftballon (Mitte x/y), Fade
 function jzbClownStrauss(C, k) { // Lage der Ballons im Strauß relativ zur Hand
   return [[-7, -20], [0, -24], [7, -20], [-4, -15], [4, -15], [0, -19]].map(([dx, dy], i) => ({ dx: dx * k, dy: dy * k, f: C.farben[i % C.farben.length] }));
 }
+function jzbTraenen(c, augen, k, T) { // 💧 Tränen kullern (2.670.0)
+  c.fillStyle = "#6ec6ff"; for (const [x, y] of augen) for (let i = 0; i < 2; i++) { const f = (T * 1.6 + i * .5) % 1; c.globalAlpha = 1 - f; c.beginPath(); c.ellipse(x + (i ? .6 : -.6) * k, y + f * 6 * k, .55 * k, .8 * k, 0, 0, 7); c.fill(); }
+  c.globalAlpha = 1;
+}
 function jzbClownMalen(c, F) {
   const C = F?.clown; if (!C) return;
-  const J = JZB, k = J.k * JZB_CLOWN_GR, T = J.T, boden = J.h - 3 * J.k, geht = C.ph === "rein" || C.ph === "weg";
-  const sw = geht ? Math.sin(C.lauf * 7) : 0, bob = geht ? Math.abs(Math.sin(C.lauf * 7)) * 1.2 * k : 0;
-  c.save(); c.translate(C.x, boden - bob); c.lineCap = "round";
+  const J = JZB, k = J.k * JZB_CLOWN_GR, T = J.T, boden = J.h - 3 * J.k, geht = !!C.cGeht, r = C.cRicht || 1;
+  const weint = C.ph === "clownweint" || C.ph === "holen", schreck = C.ph === "schreck" && C.uhr < .7; // 2.670.0 KC-CLUB-CLOWN-PLATZEN
+  const sw = geht ? Math.sin(C.lauf * 7) : 0, bob = geht ? Math.abs(Math.sin(C.lauf * 7)) * 1.2 * k : schreck ? Math.sin(C.uhr / .7 * Math.PI) * 6 * k : 0;
+  if (C.x > -40 * k && C.x < J.w + 50 * k) {
+  c.save(); c.translate(C.x, boden - bob); c.scale(r, 1); c.lineCap = "round";
   // Beine und große rote Schuhe
   c.strokeStyle = "#3a5bd9"; c.lineWidth = 3 * k;
   for (const s of [-1, 1]) { const fx = s * 3 * k + sw * s * 3 * k; c.beginPath(); c.moveTo(s * 2 * k, -10 * k); c.lineTo(fx, -1.5 * k); c.stroke();
@@ -20445,41 +20529,64 @@ function jzbClownMalen(c, F) {
   c.fillStyle = "#ff9f1c"; for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 4.6 * k, -28.5 * k, 2.6 * k, 0, 7); c.fill(); }
   c.fillStyle = "#fdf3e7"; c.beginPath(); c.arc(0, -29 * k, 4.2 * k, 0, 7); c.fill();
   c.fillStyle = "#d62828"; c.beginPath(); c.arc(1.2 * k, -28.6 * k, 1.3 * k, 0, 7); c.fill();
-  c.strokeStyle = "#d62828"; c.lineWidth = .9 * k; c.beginPath(); c.arc(1 * k, -27.4 * k, 2 * k, .25, Math.PI - .25); c.stroke();
-  c.fillStyle = "#222"; c.beginPath(); c.arc(-.6 * k, -30.4 * k, .5 * k, 0, 7); c.arc(2.6 * k, -30.4 * k, .5 * k, 0, 7); c.fill();
+  c.strokeStyle = "#d62828"; c.lineWidth = .9 * k; c.beginPath();
+  if (weint || schreck) c.arc(1 * k, -24.6 * k, 2 * k, Math.PI + .5, -.5); else c.arc(1 * k, -27.4 * k, 2 * k, .25, Math.PI - .25); c.stroke(); // weint/erschrickt: Mund nach unten
+  c.fillStyle = "#222"; c.beginPath(); c.arc(-.6 * k, -30.4 * k, schreck ? .8 * k : .5 * k, 0, 7); c.arc(2.6 * k, -30.4 * k, schreck ? .8 * k : .5 * k, 0, 7); c.fill();
+  if (weint) jzbTraenen(c, [[-.6 * k, -29.6 * k], [2.6 * k, -29.6 * k]], k, T);
   c.fillStyle = "#2a9d8f"; c.beginPath(); c.moveTo(-3 * k, -32.4 * k); c.lineTo(3 * k, -32.4 * k); c.lineTo(.4 * k, -38 * k); c.closePath(); c.fill();
   c.fillStyle = "#ffd23f"; c.beginPath(); c.arc(.4 * k, -38.3 * k, 1 * k, 0, 7); c.fill();
   // Strauß: Fäden von der Hand, Ballons wiegen sich
-  const strauss = jzbClownStrauss(C, k).slice(0, C.hat || C.ph === "geben" ? 5 : 6), wieg = Math.sin(T * 1.4) * 1.5 * k;
+  const strauss = jzbClownStrauss(C, k).slice(0, 6 - (C.raus || 0)), wieg = Math.sin(T * 1.4) * 1.5 * k;
   c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7;
   for (const b of strauss) { c.beginPath(); c.moveTo(hx, hy); c.lineTo(hx + b.dx + wieg, hy + b.dy + 5 * k); c.stroke(); }
   for (const b of strauss) jzbBallonMalen(c, hx + b.dx + wieg, hy + b.dy, 4.6 * k, b.f);
   c.fillStyle = "#fff"; c.beginPath(); c.arc(hx, hy, 1.4 * k, 0, 7); c.fill();
   c.restore();
+  if (schreck || (C.ph === "schreck" && C.uhr < 1.4)) { c.fillStyle = "#ffd23f"; c.font = `900 ${9 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.fillText("!", C.x - r * 9 * k, boden - bob - 34 * k); }
+  }
   // Kind: kommt von rechts, bekommt den Ballon und hüpft davon
-  const kGeht = C.kx > C.ziel + 17 * k + .5 || C.ph === "weg", ksw = kGeht ? Math.sin(C.kLauf * 9) : 0, kbob = kGeht ? Math.abs(Math.sin(C.kLauf * 9)) * (C.hat ? 2.6 : 1) * k : 0;
-  const kHandX = C.kx - C.kRicht * -3.5 * k, kHandY = boden - kbob - 11 * k, ballon = jzbClownStrauss(C, k)[5];
-  if (C.kx < J.w + 18 * k) {
+  const kGeht = !!C.kGeht, kHuepf = !!C.kHuepf, ksw = kGeht ? Math.sin(C.kLauf * 9) : 0;
+  const kbob = kHuepf ? Math.abs(Math.sin(C.kLauf * (C.ph === "huepfen" ? 7 : 9))) * (C.ph === "huepfen" ? 5 : 2.6) * k : kGeht ? Math.abs(Math.sin(C.kLauf * 9)) * 1 * k : 0;
+  const kHandX = C.kx - C.kRicht * -3.5 * k, kHandY = boden - kbob - 11 * k, ballon = jzbClownStrauss(C, k)[C.bi ?? 5];
+  if (C.kx < J.w + 18 * k && C.kx > -20 * k) {
     c.save(); c.translate(C.kx, boden - kbob); c.scale(C.kRicht, 1); c.lineCap = "round";
     const m = C.kind === "maedchen";
     c.strokeStyle = "#f1c27d"; c.lineWidth = 1.6 * k; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 1.2 * k, -6 * k); c.lineTo(s * 1.2 * k + ksw * s * 1.6 * k, -.8 * k); c.stroke(); }
     c.fillStyle = m ? "#c1121f" : "#333"; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 1.2 * k + ksw * s * 1.6 * k + .6 * k, -.6 * k, 1.5 * k, .8 * k, 0, 0, 7); c.fill(); }
     if (m) { c.fillStyle = "#ff8fc7"; c.beginPath(); c.moveTo(-4 * k, -5.5 * k); c.lineTo(4 * k, -5.5 * k); c.lineTo(2 * k, -13 * k); c.lineTo(-2 * k, -13 * k); c.closePath(); c.fill(); }
     else { c.fillStyle = "#1d3557"; c.fillRect(-2.6 * k, -8 * k, 5.2 * k, 3 * k); c.fillStyle = "#3a86ff"; c.fillRect(-2.8 * k, -13 * k, 5.6 * k, 5.4 * k); }
-    c.strokeStyle = "#f1c27d"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(1.5 * k, -12 * k); c.lineTo(3.5 * k, C.hat || C.ph === "geben" ? -11 * k + (C.hat ? -2 * k : 0) : -8 * k); c.stroke(); // Arm (Hand vorn)
+    const buh = C.ph === "buh", hoch = C.hat || C.ph === "geben" || C.ph === "stehen";
+    c.strokeStyle = "#f1c27d"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(1.5 * k, -12 * k); c.lineTo(buh ? 3 * k : 3.5 * k, buh ? -19 * k : hoch ? -11 * k + (C.hat ? -2 * k : 0) : C.ph === "loslassen" && C.uhr < .8 ? -17 * k : -8 * k); c.stroke(); // Arm (Hand vorn)
+    if (buh) { c.beginPath(); c.moveTo(-1.5 * k, -12 * k); c.lineTo(-3 * k, -19 * k); c.stroke(); } // „BUH!“ – beide Arme hoch
     c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(0, -15.5 * k, 2.6 * k, 0, 7); c.fill();
     if (m) { c.fillStyle = "#8d5524"; c.beginPath(); c.arc(0, -16.4 * k, 2.7 * k, Math.PI * .95, Math.PI * 2.05); c.fill(); for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 3 * k, -14.6 * k, 1.2 * k, 0, 7); c.fill(); } }
     else { c.fillStyle = "#e63946"; c.beginPath(); c.arc(0, -16.3 * k, 2.7 * k, Math.PI, 0); c.fill(); c.fillRect(0, -16.6 * k, 4 * k, 1 * k); }
     c.fillStyle = "#222"; c.beginPath(); c.arc(1.2 * k, -15.8 * k, .4 * k, 0, 7); c.fill();
+    if (C.ph === "weinen") { c.strokeStyle = "#7a3b1f"; c.lineWidth = .7 * k; c.beginPath(); c.arc(1.4 * k, -12.6 * k, 1 * k, Math.PI + .5, -.5); c.stroke(); jzbTraenen(c, [[1.4 * k, -15.4 * k]], k, T); }
     c.restore();
+    if (C.ph === "buh") { // Sprechblase „BUH!“
+      const bx = C.kx - 8 * k, by = boden - 30 * k; c.fillStyle = "#fff"; c.beginPath(); c.ellipse(bx, by, 9 * k, 5 * k, 0, 0, 7); c.fill();
+      c.beginPath(); c.moveTo(bx + 3 * k, by + 4 * k); c.lineTo(C.kx - 2 * k, boden - 21 * k); c.lineTo(bx + 6 * k, by + 3 * k); c.fill();
+      c.fillStyle = "#c1121f"; c.font = `900 ${5.5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("BUH!", bx, by + .3 * k);
+    }
   }
   // der geschenkte Ballon: schwebt vom Strauß zur Hand des Kindes, dann mit dem Kind davon
   if (C.ph === "geben" || C.hat) {
-    const sx = C.x + 8 * k + ballon.dx, sy = boden - 31 * k + ballon.dy, zx = kHandX + 1 * k, zy = kHandY - 16 * k, g = C.hat ? 1 : C.g, e = g * g * (3 - 2 * g);
+    const cr = C.cRicht || 1, sx = C.x + cr * (8 * k + ballon.dx), sy = boden - 31 * k + ballon.dy, zx = kHandX + 1 * k, zy = kHandY - 16 * k, g = C.hat ? 1 : C.g, e = g * g * (3 - 2 * g);
     const bx = sx + (zx - sx) * e + (C.hat ? Math.sin(T * 2) * 1.5 * k : 0), by = sy + (zy - sy) * e - Math.sin(e * Math.PI) * 6 * k;
-    const fx = C.hat ? kHandX : C.x + 8 * k + (kHandX - C.x - 8 * k) * e, fy = C.hat ? kHandY : boden - 31 * k + (kHandY - boden + 31 * k) * e;
+    const fx = C.hat ? kHandX : C.x + cr * 8 * k + (kHandX - C.x - cr * 8 * k) * e, fy = C.hat ? kHandY : boden - 31 * k + (kHandY - boden + 31 * k) * e;
     c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7; c.beginPath(); c.moveTo(fx, fy); c.quadraticCurveTo(bx + 2 * k, (fy + by) / 2, bx, by + 5.6 * k); c.stroke();
     jzbBallonMalen(c, bx, by, 4.6 * k, ballon.f);
+  }
+  // 2.670.0 KC-CLUB-CLOWN-PLATZEN: losgelassene Ballons steigen (Faden flattert), beim Platzen ein Stern mit „PENG!“
+  for (const b of [C.frei, ...(C.flug || []).filter((x) => !x.weg)].filter(Boolean)) {
+    c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7; c.beginPath(); c.moveTo(b.x, b.y + 5.6 * k); c.quadraticCurveTo(b.x + Math.sin(T * 6 + b.y) * 2 * k, b.y + 10 * k, b.x - 1 * k, b.y + 15 * k); c.stroke();
+    jzbBallonMalen(c, b.x, b.y, 4.6 * k, b.f);
+  }
+  for (const p of C.pops || []) {
+    const e = p.t / .6; c.save(); c.globalAlpha = 1 - e; c.strokeStyle = p.f; c.lineWidth = 1.4 * k;
+    for (let i = 0; i < 8; i++) { const w = i / 8 * Math.PI * 2, r1 = (2 + e * 5) * k, r2 = (4 + e * 9) * k; c.beginPath(); c.moveTo(p.x + Math.cos(w) * r1, p.y + Math.sin(w) * r1); c.lineTo(p.x + Math.cos(w) * r2, p.y + Math.sin(w) * r2); c.stroke(); }
+    c.fillStyle = "#fff"; c.font = `900 ${5 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("PENG!", p.x, Math.max(4 * k, p.y - (8 + e * 4) * k)); c.restore();
   }
 }
 function jzbKirmesKarussellMalen(c, F) {
@@ -43980,7 +44087,7 @@ function suAppListe() {
     ["🍽️", "Clubabend (Tagesordnung, Anwesende)", "clubabend sitzung tagesordnung anwesend abhaken", () => caOeffnen(!!ICH?.vorstand)], // 2.569.0 KC-CLUB-CLUBABEND: Clubleitung auch vorher als Vorschau
     ["🖼️", "Chat: nur den Hintergrund zeigen (Nachrichten ausblenden)", "hintergrund chat nachrichten ausblenden verstecken nur meine nur andere filter bild ansehen", () => hzZuEintrag("h:chat_filter")], // 2.591.0
     ["🧭", "Einstellungen erklärt (alle Einstellungen wie im Explorer)", "einstellungen erklärt erklärung übersicht alle einstellungen explorer wegweiser anleitung voreinstellungen was bewirkt bedeutet schritt für schritt", () => ewStart()], // 2.534.0
-    // 2.670.0 KC-CLUB-HILFE-NACHTRAG-5: Neuheiten 2.534.0–2.668.0 (nur Mitglieder-Funktionen) – auch per 🎤 Sprachsuche
+    // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: Neuheiten 2.534.0–2.668.0 (nur Mitglieder-Funktionen) – auch per 🎤 Sprachsuche
     ["⏰", "Wecker, Stoppuhr, Timer (große Uhr)", "wecker wecken stoppuhr timer eieruhr kurzzeitwecker countdown alarm klingeln uhr runden", () => esOeffnen("uhr")],
     ["🔊", "Wecker/Timer ohne Ton („Antippen für Ton“)", "wecker timer stumm kein ton leise hört nichts antippen für ton klingelt nicht", () => hzZuEintrag("h:wecker_ton")],
     ["🎬", "Effekt beim Register-Wechsel (Kachel-Zug, Hereindrehen …)", "kachel effekt register wechsel hereindrehen kachelzug zug spielautomat seifenblasen magnet pfanne einfliegen fallblatt abwechselnd zufall", () => einstiegHin("effekte", "regEffektWahl")],

@@ -1,4 +1,4 @@
-// 2.670.0 KC-CLUB-HILFE-NACHTRAG-5: Browser-Test des echten app.js (Chromium über playwright-core).
+// 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: Browser-Test des echten app.js (Chromium über playwright-core).
 // Videos „Wecker, Stoppuhr & Timer“ (neu), „Effekte“, „Neue Nachricht“, „Chat für Fortgeschrittene“ und „Mitglieder“ Schritt für Schritt: keine Fehler,
 // Pflicht-Ziele sichtbar, nichts an den Server, am Ende alles wie vorher. Dazu Twinkey, Lupe und Sprachsuche zu den Neuheiten – und für Mitglieder keine Admin-Einträge.
 // Start: PW_CORE=… PW_CHROME=… node tools/hilfe/hilfe-nachtrag5-browser.mjs
