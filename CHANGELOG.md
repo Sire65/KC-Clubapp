@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.674.0 – 2026-10-26 – 🤖 Spaßstimme Roboter stärker (KC-CLUB-SPASSSTIMME-ROBOTER)
+Wunsch Hansi („Roboter noch stärker machen“): Der Roboter ist jetzt ein echter Vocoder wie im Film – die Wörter steuern einen gleichbleibenden Maschinenton (Sägezahn 110 Hz + Rechteck, Rauschen für S/Z), 14 Bänder; dazu wenig zerhackte Originalstimme für die Verständlichkeit und ein metallischer Kamm. Gemessen: Tonhöhe bleibt fest bei 110 Hz, Lautstärke wie die normale Stimme (±0,2 dB). Alles auf dem Handy, kein Server.
+
 ## 2.673.0 – 2026-10-26 – 👣 Wege der Mitglieder vollständig (KC-CLUB-SPUR-KEEPALIVE)
 - Fund Hansi („Klaus hat sich angemeldet, laut Wegen aber nur die App geöffnet – ist das korrekt?“): Er hatte 10 s später den Chat „Besetzungsmatrix Weihnachtsmarkt“ geöffnet und die App gleich wieder geschlossen; Android beendete die Seite, bevor die gesammelten Schritte gesendet waren (sie wären erst beim nächsten Start nachgekommen). Jetzt schickt die App die Schritte beim Verlassen/Schließen mit keepalive – der Browser stellt sie auch nach dem Schließen noch zu. Kommt keine Antwort, bleiben sie auf dem Gerät und kommen beim nächsten Start; der Server zeigt doppelt angekommene Schritte nur einmal. Keine zusätzliche Datenbank-Last. Test: `tests/spur-keepalive.test.mjs`. Server 2.673.0.
 

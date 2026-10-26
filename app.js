@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.673.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.674.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8927,7 +8927,7 @@ function sstBauen(ctx, ein, aus, id) {
     case "ente": { const t = ton(1.2), b = filt("bandpass", 1100, 5), v = verzerr(9), tr = neu(ctx.createGain()); tr.gain.value = 0.6; lfo(7, 0.4, tr.gain); kette(t, b, v, tr, laut(1.8)); break; } // quäkend, näselnd, „quak-quak“
     case "alien": { const t = ton(1.15), r = ring(700, 0.5), fl = neu(ctx.createDelay(0.05)), fb = laut(0.6); fl.delayTime.value = 0.004; lfo(0.3, 0.002, fl.delayTime);
       const q = t || ein; if (t) ein.connect(t); r.ein(q); r.aus.connect(fl); fl.connect(fb).connect(fl); r.aus.connect(laut(1.4)).connect(aus); fl.connect(laut(1.2)).connect(aus); break; } // schwebender Weltraum-Klang
-    case "roboter": { // 2.653.0 (Hansi „Roboter noch stärker machen“): echter Vocoder wie im Film – die Wörter steuern einen gleichbleibenden Maschinenton
+    case "roboter": { // 2.674.0 (Hansi „Roboter noch stärker machen“): echter Vocoder wie im Film – die Wörter steuern einen gleichbleibenden Maschinenton
       // (Sägezahn 110 Hz + Rauschen für S/Z), 14 Bänder; dazu wenig zerhackte Originalstimme für die Verständlichkeit und ein metallischer Kamm
       const traeger = neu(ctx.createOscillator()); traeger.type = "sawtooth"; traeger.frequency.value = 110; traeger.start();
       const t2 = neu(ctx.createOscillator()); t2.type = "square"; t2.frequency.value = 220.5; t2.start(); const t2g = laut(0.35); t2.connect(t2g);
