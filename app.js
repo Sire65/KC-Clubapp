@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.679.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.680.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -43551,9 +43551,10 @@ function arZeile(x, auto, mitOrt, m) {
   if (auto) {
     const [sym] = AR_AUTO[x.art];
     const klick = x.art === "protokoll" ? `protokollOeffnen('${x.id}')` : x.art === "aktion" ? `aktionOeffnen(${esc(JSON.stringify(x.id))})` : x.art === "anhang" ? `arAnlage('${x.id}')` : "";
-    return `<div class="ar-dok${klick ? " klickbar" : ""}" ${klick ? `onclick="${klick}"` : ""}><span class="sym">${x.art === "anhang" ? arDateiSym(x.mime) : sym}</span>
+    const mehr = x.art === "anhang" ? `arAnhMenue('${x.id}')` : x.art === "protokoll" ? `arProtMenue('${x.id}')` : ""; // 2.644.0 KC-CLUB-ARCHIV-ALLES
+    return `<div class="ar-dok${klick ? " klickbar" : ""}"${x.art === "anhang" ? ` data-anh="${esc(x.id)}"` : ""} ${klick ? `onclick="${klick}"` : ""}><span class="sym">${x.art === "anhang" ? arDateiSym(x.mime) : sym}</span>
       <div><b>${mk(x.titel)}</b><div class="hinweis">${esc(arTag(x.datum))}${x.text ? " · " + mk(x.text) : ""}${x.art === "anhang" && x.groesse ? " · " + arGroesse(x.groesse) : ""}${mitOrt ? " · 🤖 Clubleben " + arJahr(x.datum) : ""}</div>
-      ${x.voll && x.voll !== x.titel ? `<div class="ar-voll">${mk(x.voll)}</div>` : ""}</div>${klick ? '<span class="pfeil">›</span>' : ""}<button class="knopf klein ar-weg" title="Entfernen" aria-label="Entfernen" onclick="event.stopPropagation();arAusblenden(${esc(JSON.stringify({ art: x.art, id: x.id, titel: x.titel, nachricht: x.nachricht || null, vonMir: !!x.vonMir }))})">🗑️</button></div>`;
+      ${x.voll && x.voll !== x.titel ? `<div class="ar-voll">${mk(x.voll)}</div>` : ""}</div>${mehr ? `<button class="knopf klein ar-dok-mehr" onclick="event.stopPropagation();${mehr}" title="Mehr: Drucken, Senden, Teilen, Speichern, in einen Ordner …" aria-label="Mehr">⋮</button>` : klick ? '<span class="pfeil">›</span>' : ""}<button class="knopf klein ar-weg" title="Entfernen" aria-label="Entfernen" onclick="event.stopPropagation();arAusblenden(${esc(JSON.stringify({ art: x.art, id: x.id, titel: x.titel, nachricht: x.nachricht || null, vonMir: !!x.vonMir }))})">🗑️</button></div>`;
   }
   const o = AR.daten.ordner.find((y) => y.id === x.ordner_id), pruef = x.status === "pruefung";
   const darfAendern = !pruef && (o?.eigen || (!o?.besitzer && AR.daten.darf));
@@ -43739,6 +43740,7 @@ function arDokMenue(id) {
   blattAuf("arMenue", `<h3 style="margin:0 0 2px">${arDateiSym(x.mime)} ${esc(x.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(arName(o))} › ${esc(x.register || "Allgemein")}</p>
     <div class="knoepfe ar-menue" style="flex-direction:column;align-items:stretch">
     ${k("👁️", "Öffnen", `arAnlage('${x.id}', true)`, " haupt")}
+    ${k("🖨️", "Drucken", `arDrucken(arDokInfo('${x.id}').x)`)}
     ${darf ? k("✂️", "Ausschneiden", `arMerken('${x.id}','verschieben')`) + k("📋", "Kopieren", `arMerken('${x.id}','kopieren')`)
       + k("📂", "Kopie in anderen Ordner …", `arZielBlatt('${x.id}','kopieren')`) + k("➡️", "Verschieben nach …", `arZielBlatt('${x.id}','verschieben')`)
       + k("✏️", "Umbenennen / ändern", `arDokForm('${x.id}')`) : ""}
@@ -43791,6 +43793,84 @@ async function arDokVersenden(id, wie) {
   if (wie === "mail") return einlPerMail();
   einlNachricht();
 }
+// ---------- 2.644.0 KC-CLUB-ARCHIV-ALLES (Wunsch Hansi „aus dem Archiv heraus alle Möglichkeiten: drucken, versenden, in einen Ordner …“) ----------
+// Auch die automatisch gesammelten Einträge im „🤖 Clubleben“ bekommen ein ⋮-Menü (Antippen auf ⋮ oder langes Drücken):
+// Anhänge aus Nachrichten: Öffnen · 🖨️ Drucken · 💬 Als Nachricht · 📧 Per E-Mail (Büro) · 📤 Teilen · ⬇️ Speichern · 🗄️ In einen Ordner ablegen
+// (als Kopie, mit neuem Namen – z. B. „Abstimmungsbogen“ statt eines zufälligen Dateinamens). Protokolle: Öffnen · 🖨️ Drucken / PDF.
+// Ordner-Dokumente haben das Menü schon; dort kommt 🖨️ Drucken dazu. Drucken: PDF über die PDF-Ansicht der App, Bilder direkt,
+// andere Dateien öffnen sich im passenden Programm (dort ⋮ → Drucken). Der Server prüft wie immer, ob man die Datei sehen darf.
+let AR_M = null;
+const arAnhX = (id) => { const x = (AR.daten?.auto || []).find((y) => y.art === "anhang" && y.id === id); return x ? { datei: x.id, name: x.titel, titel: x.titel, mime: x.mime, datum: x.datum } : null; };
+function arAnhMenue(id) {
+  const x = arAnhX(id); if (!x) return; AR_M = x;
+  const k = (sym, t, was, art = "") => `<button class="knopf${art}" style="text-align:left" onclick="arDateiAktion('${was}')">${sym} ${t}</button>`;
+  blattAuf("arMenue", `<h3 style="margin:0 0 2px">${arDateiSym(x.mime)} ${esc(x.titel)}</h3><p class="hinweis" style="margin:0 0 10px">📎 Anhang aus einer Nachricht · ${esc(arTag(x.datum))}</p>
+    <div class="knoepfe ar-menue" style="flex-direction:column;align-items:stretch">
+    ${k("👁️", "Öffnen", "oeffnen", " haupt")}${k("🖨️", "Drucken", "drucken")}
+    ${k("💬", "Als Nachricht in der App senden", "nachricht")}${ICH?.buero === "schreiben" ? k("📧", "Per E-Mail senden", "mail") : ""}
+    ${k("📤", "Teilen / Weiterleiten", "teilen")}${k("⬇️", "Auf dem Gerät speichern", "speichern")}
+    ${k("🗄️", "In einen Ordner ablegen (Kopie, mit eigenem Namen) …", "ablegen")}
+    <button class="knopf" onclick="$('arMenue')?.remove()">Schließen</button></div>`);
+}
+function arDateiAktion(was) {
+  const x = AR_M; $("arMenue")?.remove(); if (!x) return;
+  if (was === "oeffnen") { arDateiVorladen(x); return anlageDateiZeigen(); }
+  if (was === "drucken") return arDrucken(x);
+  if (was === "teilen" || was === "speichern") { arDateiVorladen(x); return anlageTeilen(was === "speichern"); }
+  if (was === "nachricht" || was === "mail") return arVersenden(x, was);
+  if (was === "ablegen") return arInOrdner(x);
+}
+async function arVersenden(x, wie) {
+  const t = arDateiVorladen(x); melde("⏳ Datei wird geladen …"); await t.warten;
+  if (!t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
+  EINL = { dateien: [t.datei], titel: x.titel, kopf: "📤 Versenden", unter: `${arDateiSym(x.mime)} ${x.titel}`, ausArchiv: true };
+  if (wie === "mail") return einlPerMail();
+  einlNachricht();
+}
+// Kopie in einen eigenen Ordner (oder – für die Archiv-Pflege – einen Club-Ordner) mit frei wählbarem Namen
+async function arInOrdner(x) {
+  const endung = (String(x.name || "").match(/\.[a-z0-9]{2,5}$/i) || [""])[0];
+  const vorschlag = String(x.titel || "Dokument").replace(/\.[a-z0-9]{2,5}$/i, "").replace(/[_-]+/g, " ").trim();
+  const titel = await eingabe("🗄️ Wie soll das Dokument im Ordner heißen?", vorschlag, { ja: "Weiter" }); if (titel == null) return;
+  const name = (titel.trim() || vorschlag).slice(0, 120);
+  if (!ARCHIV_TYP_OK(x.mime)) return melde("Diese Dateiart nimmt das Archiv nicht auf (nur PDF, Bilder, Text, Word, Excel).", true);
+  const gefragt = await archivAblageFragen("anlage", { titel: name, datum: x.datum, hinweis: "Kopie – das Original bleibt im Clubleben.", frage: "In welchen Ordner?", ja: "Ablegen", nein: "Abbrechen",
+    dateien: async () => { const d = await anlageAlsDatei({ id: x.datei, name: x.name, mime: x.mime }); return [{ titel: name, name: name.replace(/[\\/:*?"<>|]+/g, " ") + endung, mime: d.mime, blob: d.blob }]; } });
+  if (!gefragt) melde("Das Archiv ist gerade nicht erreichbar (oder es gibt noch keinen eigenen Ordner) – bitte später nochmal.", true);
+}
+async function arDrucken(x) {
+  if (!x?.datei) return;
+  const t = arDateiVorladen(x); melde("⏳ Datei wird zum Drucken geladen …"); await t.warten;
+  if (!t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
+  if (istPdf(x.name, x.mime)) { // PDF: Ansicht der App öffnen und drucken, sobald alle Seiten da sind
+    try { await dokAnzeigen({ id: "anl:" + x.datei, t: x.titel || x.name || "Dokument", datei: t.datei }); } catch (e) { return meldeFehler(e); }
+    for (let i = 0; i < 60 && $("dokaDrucken")?.disabled; i++) await new Promise((ok) => setTimeout(ok, 250));
+    return $("dokaDrucken") && !$("dokaDrucken").disabled ? dokDrucken() : melde("Die Seiten laden noch – oben auf „🖨️ Drucken“ tippen, sobald sie da sind.");
+  }
+  if (/^image\//.test(x.mime || t.datei.type)) { // Bild: in einem unsichtbaren Rahmen drucken
+    const url = URL.createObjectURL(t.datei), f = document.createElement("iframe");
+    f.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0"; f.setAttribute("aria-hidden", "true");
+    f.srcdoc = `<!doctype html><title>${esc(x.titel || "Bild")}</title><style>@page{margin:12mm}body{margin:0;text-align:center}img{max-width:100%;max-height:96vh}</style><img src="${url}">`;
+    f.onload = () => { const img = f.contentDocument?.querySelector("img"), los = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch { extOeffnen(url); } setTimeout(() => { f.remove(); URL.revokeObjectURL(url); }, 60000); };
+      if (img && !img.complete) img.onload = los; else los(); };
+    return document.body.appendChild(f);
+  }
+  const url = URL.createObjectURL(t.datei), w = window.open(url, "_blank"); if (w) { try { w.opener = null; } catch {} } else anlageLinkZeigen(url, x.name || "Datei");
+  melde("📄 Die Datei ist geöffnet – zum Drucken dort im Menü (⋮ oder Teilen) „Drucken“ wählen.");
+}
+function arProtMenue(id) {
+  blattAuf("arMenue", `<h3 style="margin:0 0 10px">📄 Protokoll</h3><div class="knoepfe ar-menue" style="flex-direction:column;align-items:stretch">
+    <button class="knopf haupt" style="text-align:left" onclick="$('arMenue')?.remove();protokollOeffnen('${esc(id)}')">👁️ Öffnen</button>
+    <button class="knopf" style="text-align:left" onclick="$('arMenue')?.remove();arProtDrucken('${esc(id)}')">🖨️ Drucken / PDF (auch zum Versenden)</button>
+    <button class="knopf" onclick="$('arMenue')?.remove()">Schließen</button></div>`);
+}
+async function arProtDrucken(id) {
+  protokollOeffnen(id);
+  for (let i = 0; i < 40 && !document.querySelector('[onclick*="prDrucken"]'); i++) await new Promise((ok) => setTimeout(ok, 250));
+  if (document.querySelector('[onclick*="prDrucken"]')) return prDrucken();
+  melde("Das Protokoll lädt noch – dort unten auf „🖨️ Drucken / PDF“ tippen.");
+}
+if (typeof document !== "undefined") document.addEventListener("contextmenu", (e) => { const z = e.target.closest?.(".ar-dok[data-anh]"); if (!z) return; e.preventDefault(); arAnhMenue(z.dataset.anh); });
 // rechte Maustaste / langes Drücken auf einem Dokument (nur Dokumente mit data-dok, nicht die automatischen)
 if (typeof document !== "undefined") { // (in Tests wird dieser Teil ohne Browser geladen)
 document.addEventListener("contextmenu", (e) => { const z = e.target.closest?.(".ar-dok[data-dok]"); if (!z) return; e.preventDefault(); arDokMenue(z.dataset.dok); });

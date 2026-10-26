@@ -13131,3 +13131,16 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.ok(/name: dpdArtName\(t\.art, x\), wt: DPD_WD/.test(programm) && /<span class="kind">\$\{esc\(t\.name\)\}<\/span>/.test(programm) && (programm.match(/<small>\$\{esc\(t\.name\)\}<\/small><\/th>/g) || []).length === 2 && /art: dpdArtName\(t\.art, x\), zellen/.test(programm), "Matrix, Tagesblätter und Lückenliste zeigen den Namen");
   assert.ok(/if \(t\.art !== "Markttag"\) \{ \/\/ Aufbau\/Nachbereitung/.test(programm), "Rechnung hängt weiter an „Markttag“");
 }
+// 2.644.0 KC-CLUB-ARCHIV-ALLES (Wunsch Hansi „aus dem Archiv heraus alle Möglichkeiten: drucken, versenden, in einen Ordner …“)
+{
+  assert.ok(/const mehr = x\.art === "anhang" \? `arAnhMenue\('\$\{x\.id\}'\)` : x\.art === "protokoll" \? `arProtMenue\('\$\{x\.id\}'\)`/.test(programm) && /aria-label="Mehr">⋮<\/button>` : klick \?/.test(programm), "⋮ auch bei Anhängen und Protokollen im Clubleben");
+  const m = programm.slice(programm.indexOf("function arAnhMenue("), programm.indexOf("function arDateiAktion("));
+  for (const w of ["oeffnen", "drucken", "nachricht", "teilen", "speichern", "ablegen"]) assert.ok(m.includes(`"${w}"`), "Anhang-Menü: " + w);
+  assert.ok(/ICH\?\.buero === "schreiben" \? k\("📧", "Per E-Mail senden", "mail"\)/.test(m), "E-Mail nur wie bisher fürs Büro");
+  assert.ok(/\$\{k\("🖨️", "Drucken", `arDrucken\(arDokInfo\('\$\{x\.id\}'\)\.x\)`\)\}/.test(programm), "Ordner-Dokumente: Drucken");
+  const d = programm.slice(programm.indexOf("async function arDrucken("), programm.indexOf("function arProtMenue("));
+  assert.ok(/istPdf\(x\.name, x\.mime\)/.test(d) && /dokDrucken\(\)/.test(d) && /contentWindow\.print\(\)/.test(d), "PDF über die App-Ansicht, Bilder direkt drucken");
+  const o = programm.slice(programm.indexOf("async function arInOrdner("), programm.indexOf("async function arDrucken("));
+  assert.ok(/await eingabe\("🗄️ Wie soll das Dokument im Ordner heißen\?"/.test(o) && /archivAblageFragen\("anlage"/.test(o) && /ARCHIV_TYP_OK\(x\.mime\)/.test(o), "Kopie in einen Ordner mit eigenem Namen, nur erlaubte Dateiarten");
+  assert.ok(/\.ar-dok b, #arMenue h3 \{ overflow-wrap: anywhere; \}/.test(html), "lange Dateinamen brechen um");
+}

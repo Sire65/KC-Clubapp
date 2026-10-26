@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.680.0 – 2026-10-26 – Archiv: alles aus dem Archiv heraus – Drucken, Senden, Teilen, in einen Ordner (KC-CLUB-ARCHIV-ALLES)
+Auch die automatisch gesammelten Einträge im „🤖 Clubleben“ haben jetzt ein ⋮-Menü (oder langes Drücken). Anhänge aus Nachrichten: Öffnen, 🖨️ Drucken, 💬 Als Nachricht senden, 📧 Per E-Mail (Büro), 📤 Teilen, ⬇️ Speichern, 🗄️ In einen Ordner ablegen (Kopie mit eigenem Namen). Protokolle: Öffnen, 🖨️ Drucken / PDF. Ordner-Dokumente bekommen 🖨️ Drucken dazu. Lange Dateinamen brechen um, damit die Knöpfe sichtbar bleiben.
+
 ## 2.679.0 – 2026-10-26 – 🗓️ Besetzungsmatrix: Wochenmarkt, WM und Nikolaus (KC-CLUB-DP-MARKTNAME)
 Wunsch Hansi („Nenne nur die Dienstage und Freitage Wochenmarkt, die anderen nur WM für Weihnachtsmarkt. Und am Sonntag noch Nikolaus dazu. Aufbau und Nachbereitung so lassen“).
 - Im **Dienstplan zum Drucken** (Blatt „Regelzeit und Besetzung je Stunde“, Tagesblätter und Lückenliste) heißt ein Markttag am **Dienstag oder Freitag „Wochenmarkt“**, an allen anderen Tagen **„WM“** (Weihnachtsmarkt), am **Sonntag „WM · Nikolaus“**. Aufbau und Nachbereitung bleiben, wie sie sind. Rechnung, Regelzeit und Bedarf unverändert. Vertragstest-Block 2.679.0. Nur App.
