@@ -21,12 +21,16 @@ const hero = await schatten("#v-start .hero"), knopf = await seite.evaluate(() =
 ok(hero !== vorher && /rgba\(29, 78, 137, 0\.45\) 12px 12px 38px/.test(hero), "Kopf: großer blauer Schatten unten rechts – " + hero);
 ok(/rgba\(29, 78, 137, 0\.45\) 8px 8px 24px/.test(knopf), "Knopf: Schatten – " + knopf);
 const felder = await seite.evaluate(() => { const h = document.querySelector("#v-start .hero"), m = document.createElement("button"); m.className = "mini"; h.appendChild(m);
-  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste"].map((s) => getComputedStyle(h.querySelector(s)).boxShadow); m.remove(); return r; });
-ok(felder.every((x) => /rgba\(29, 78, 137, 0\.45\) 8px 8px 24px/.test(x)), "2.657.0: Felder auf dem Kopf (Infofeld, Zahlen-Felder, runde Knöpfe, Logo, Statusleiste) – " + felder.join(" | "));
+  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste", ".statuschip"].map((s) => getComputedStyle(h.querySelector(s)).boxShadow); m.remove(); return r; });
+ok(felder.every((x) => /rgba\(29, 78, 137, 0\.56\) 8px 8px 24px/.test(x)), "2.661.0: Felder auf dem Kopf (Infofeld, Zahlen-Felder, runde Knöpfe, Logo, Statusleiste) – " + felder.join(" | "));
 if (bilder) await weg(), await seite.screenshot({ path: path.join(bilder, "schatten-hell.png") });
 await seite.evaluate(() => { document.documentElement.classList.add("dunkel"); schattenSpeichern({ farbe: "auto", pos: "oben", staerke: "sehr" }); });
 const nacht = await schatten(".kachel");
 ok(/rgba\(255, 236, 220, 0\.34\) 0px -14px 32px 0px, rgba\(255, 255, 255, 0\.12\) 0px 0px 0px 1px/.test(nacht), "Nacht + automatisch: heller Schatten oben mit Lichtkante (Kontrast normal) – " + nacht);
+const kopfNacht = await schatten("#v-start .hero .statusleiste");
+ok(/^rgba\(0, 0, 0, 0\.56\) 0px -10px 24px 0px$/.test(kopfNacht), "Nacht: Felder im Kopf behalten dunklen Schatten – " + kopfNacht);
+await seite.evaluate(() => schattenSpeichern({ kopf: "aus" })); ok((await schatten("#v-start .hero .statusleiste")) === "none", "Schatten im Kopf: Aus");
+await seite.evaluate(() => schattenSpeichern({ kopf: "kraeftig" }));
 await seite.evaluate(() => schattenSpeichern({ farbe: "blau", kontrast: "stark" }));
 ok(/rgba\(142, 167, 196, 0\.53\) 0px -14px 32px 0px, rgba\(255, 255, 255, 0\.28\) 0px 0px 0px 1px/.test(await schatten(".kachel")), "Nacht + Blau + stark: aufgehellt, helle Kante");
 await seite.evaluate(() => schattenSpeichern({ kontrast: "aus" }));
@@ -40,7 +44,7 @@ ok(/241, 196, 15/.test(await schatten("#v-start .hero")), "Inkognito-Rahmen am K
 await seite.evaluate(() => document.body.classList.remove("inkognito"));
 await seite.evaluate(() => { zeige("einstellungen"); const d = document.querySelector('details[data-klappe="effekte"]'); d.open = true; document.querySelector('details[data-abh="setSchatten"]').open = true; document.querySelector('details[data-abh="setSchatten"]').scrollIntoView(); });
 const ui = await seite.evaluate(() => (schattenEinstellungen(), { cb: $("setSchatten").checked, n: document.querySelectorAll("#schattenWahl input[type=radio]").length, eigen: document.querySelector('#schattenWahl input[value=eigen]').checked }));
-ok(ui.cb && ui.n === 4 + 8 + 5 + 3 && ui.eigen, JSON.stringify(ui) + " Einstellungen: Schalter an, 4 Stärken, 7 Farben + eigene, 5 Positionen, 3 Kontrast-Stufen");
+ok(ui.cb && ui.n === 4 + 8 + 5 + 5 + 3 && ui.eigen, JSON.stringify(ui) + " Einstellungen: Schalter an, 4 Stärken, 7 Farben + eigene, 5 Positionen, 5 Kopf-Stufen, 3 Kontrast-Stufen");
 if (bilder) await weg(), await seite.screenshot({ path: path.join(bilder, "schatten-einstellungen.png") });
 await seite.evaluate(() => schattenSpeichern({ an: false }));
 ok((await schatten("#v-start .hero")) === vorher, "aus: wieder wie bisher");

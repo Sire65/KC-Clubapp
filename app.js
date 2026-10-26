@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.660.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.661.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23974,11 +23974,12 @@ const SCHATTEN = "kc_club_schatten";
 const SCHT_STAERKE = { leicht: ["🌤️ Leicht", 3, 8, .18], mittel: ["⛅ Mittel", 6, 16, .3], kraeftig: ["🌥️ Kräftig", 10, 24, .45], sehr: ["🌑 Sehr kräftig", 14, 32, .62] };
 const SCHT_FARBEN = { auto: ["Automatisch (passt hell und dunkel)", ""], schwarz: ["Schwarz", "#000000"], braun: ["Braun", "#5a321e"], rot: ["Weinrot", "#8b1a2b"], blau: ["Blau", "#1d4e89"], gruen: ["Grün", "#2e7d32"], gold: ["Gold", "#c99700"] };
 const SCHT_POS = { unten: ["⬇️ Unten", 0, 1], rechts: ["↘️ Unten rechts", .75, .75], links: ["↙️ Unten links", -.75, .75], oben: ["⬆️ Oben", 0, -1], rundum: ["⭕ Rundum (Leuchten)", 0, 0] };
+const SCHT_KOPF = { aus: ["Aus – Felder im Kopf ohne Schatten"], leicht: ["🌤️ Leicht"], mittel: ["⛅ Mittel"], kraeftig: ["🌥️ Kräftig"], sehr: ["🌑 Sehr kräftig"] }; // 2.661.0 KC-CLUB-SCHATTEN-KOPF
 const SCHT_KONTRAST = { aus: ["Aus – Schatten wie am Tag"], normal: ["🌙 Normal – heller Schatten und feine Lichtkante"], stark: ["🌟 Stark – deutliches Leuchten und helle Kante"] };
 function schattenStand() {
   try { const j = JSON.parse(localStorage.getItem(SCHATTEN) || "{}");
-    return { an: !!j.an, staerke: SCHT_STAERKE[j.staerke] ? j.staerke : "mittel", farbe: SCHT_FARBEN[j.farbe] || /^#[0-9a-f]{6}$/i.test(j.farbe || "") ? j.farbe : "auto", pos: SCHT_POS[j.pos] ? j.pos : "unten", kontrast: SCHT_KONTRAST[j.kontrast] ? j.kontrast : "normal" };
-  } catch { return { an: false, staerke: "mittel", farbe: "auto", pos: "unten", kontrast: "normal" }; }
+    return { an: !!j.an, staerke: SCHT_STAERKE[j.staerke] ? j.staerke : "mittel", farbe: SCHT_FARBEN[j.farbe] || /^#[0-9a-f]{6}$/i.test(j.farbe || "") ? j.farbe : "auto", pos: SCHT_POS[j.pos] ? j.pos : "unten", kontrast: SCHT_KONTRAST[j.kontrast] ? j.kontrast : "normal", kopf: SCHT_KOPF[j.kopf] ? j.kopf : "kraeftig" };
+  } catch { return { an: false, staerke: "mittel", farbe: "auto", pos: "unten", kontrast: "normal", kopf: "kraeftig" }; }
 }
 function schattenAnwenden() {
   const st = schattenStand(), [, o, b, a] = SCHT_STAERKE[st.staerke], [, dx, dy] = SCHT_POS[st.pos], r = document.documentElement;
@@ -23991,6 +23992,9 @@ function schattenAnwenden() {
   const k = { normal: [.55, .12], stark: [.85, .28] }[st.kontrast], nacht = (f) => k ? `${box(f, nachtRgb, +(a * k[0]).toFixed(2))}, 0 0 0 1px rgba(255, 255, 255, ${k[1]})` : box(f, "var(--sch-rgb)", a);
   r.style.setProperty("--sch-box-t", box(1, "var(--sch-rgb)", a)); r.style.setProperty("--sch-box-gross-t", box(1.6, "var(--sch-rgb)", a));
   r.style.setProperty("--sch-box-n", nacht(1)); r.style.setProperty("--sch-box-gross-n", nacht(1.6)); r.classList.toggle("sch-an", st.an);
+  // 2.661.0 KC-CLUB-SCHATTEN-KOPF (Bild Hansi: Kacheln mit Schatten, Felder im Kopf kaum): der Kopf ist immer farbig (Rot, Türkis …) – ein heller
+  // Nacht-Schatten verschwindet darauf. Darum eigener, immer dunkler Schatten für die Felder im Kopf (Farbe wie gewählt, „Automatisch“ = Schwarz), eigene Stärke
+  const ks = SCHT_STAERKE[st.kopf]; r.style.setProperty("--sch-kopf", ks ? `${Math.round(dx * ks[1])}px ${Math.round(dy * ks[1])}px ${ks[2]}px ${st.pos === "rundum" ? Math.round(ks[1] / 3) : 0}px rgba(${rgb ? rgb.join(", ") : "0, 0, 0"}, ${Math.min(.8, +(ks[3] * 1.25).toFixed(2))})` : "none");
 }
 function schattenSpeichern(neu) { try { localStorage.setItem(SCHATTEN, JSON.stringify({ ...schattenStand(), ...neu })); } catch {} schattenAnwenden(); if (!("an" in neu)) return; schattenEinstellungen(); }
 if (typeof document !== "undefined") try { schattenAnwenden(); } catch {} // gleich beim Laden – auch die Anmeldeseite
@@ -24003,6 +24007,7 @@ function schattenEinstellungen() {
     + '<div class="sch-gruppe"><b>🎨 Schattenfarbe</b><div class="sch-farben">' + Object.entries(SCHT_FARBEN).map(([k, [t, h]]) => `<label class="sch-farbe"><input type="radio" name="sch_farbe" value="${k}" ${st.farbe === k ? "checked" : ""} onchange="schattenSpeichern({ farbe: this.value })"><i style="background:${h || "linear-gradient(135deg,#5a321e 50%,#000 50%)"}"></i> ${t}</label>`).join("")
     + `<label class="sch-farbe"><input type="radio" name="sch_farbe" value="eigen" ${SCHT_FARBEN[st.farbe] ? "" : "checked"} onchange="schattenSpeichern({ farbe: $('schEigen').value })"> Eigene: <input type="color" id="schEigen" value="${eigen}" aria-label="Eigene Schattenfarbe" oninput="this.previousElementSibling.checked = true; schattenSpeichern({ farbe: this.value })"></label></div></div>`
     + `<div class="sch-gruppe"><b>📍 Schattenposition</b>${wahl("pos", SCHT_POS)}</div>`
+    + `<div class="sch-gruppe"><b>🎩 Schatten im Kopf</b><div class="hinweis">Für die Felder oben im Kopf (Status, Wecker, Lämpchen, Infofeld, Zahlen-Felder, Knöpfe) – immer dunkel, damit man ihn auf dem farbigen Kopf auch nachts sieht.</div>${wahl("kopf", SCHT_KOPF)}</div>`
     + `<div class="sch-gruppe"><b>🌙 Kontrast bei Nacht</b><div class="hinweis">Im dunklen Bild (Nacht) wäre ein dunkler Schatten kaum zu sehen – dann wird er heller und bekommt eine feine Lichtkante.</div>${wahl("kontrast", SCHT_KONTRAST)}</div>`;
 }
 // 2.659.0 KC-CLUB-KACHEL-ECKEN (Wunsch Hansi „Slider: Kacheln von 4-eckig bis fast rund, und Standard-Knopf“): je Gerät, ohne Wert = Standard
