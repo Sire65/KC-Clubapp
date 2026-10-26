@@ -13021,3 +13021,22 @@ function idx0() { return lies("index.html"); }
   for (const d of ["tesseract.min.js", "worker.min.js", "tesseract-core-lstm.wasm.js", "deu.traineddata.gz", "jsQR.js", "README.txt"]) assert.ok(fs.existsSync(new URL(`../lib/ocr/${d}`, import.meta.url)), `lib/ocr/${d}`);
   assert.ok(/if \(url\.pathname\.includes\("\/lib\/ocr\/"\)\) return;/.test(lies("sw.js")), "Service Worker merkt die 5 MB nicht je Version");
 }
+// 2.670.0 KC-CLUB-HILFE-NACHTRAG-5 (Wunsch Hansi „Hilfe auf den neuesten Stand – Twinkey, Lupe, Suche, Videos; keine Admin-Funktionen, nichts von Admin erwähnen“)
+{
+  const hz = html.slice(html.indexOf("const HILFE = ["), html.indexOf("\n];", html.indexOf("const HILFE = [")));
+  for (const id of ["uhr_wecker", "wecker_ton", "kachel_effekte", "clubabend_live", "geplant_vorab", "pinnwand_teil_ab", "abstimmung_mehrere", "wie_verschicken", "weitere_empfaenger", "sende_schlange", "nachricht_aendern", "chat_neu_markiert", "anklopfen_wahl", "clubmoment", "vertretung"])
+    assert.ok(new RegExp(`\\{ id: "${id}", thema: "`).test(hz), "Hilfe-Eintrag " + id);
+  for (const id of ["wecker", "wecker-stumm", "kachel-effekt", "wie-verschicken", "auch-an", "nachricht-aendern", "sanduhr", "vorher-abrufen", "anklopfen-art", "anklopfen-blass", "zettel-teil-ab", "abstimmung-mehrere", "pdf-senden", "clubabend", "clubmoment", "spassstimme", "glueckskeks", "schatten-kopf"])
+    assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?"`).test(html), "Twinkey-Frage " + id);
+  assert.ok(/\{ id: "wecker", stand: "1", sym: "⏰", t: "Wecker, Stoppuhr & Timer"[^\n]*st: \(\) => RG_WECKER, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"rueckseite", "wecker"/.test(html), "Video Wecker registriert (nur mit Eselsohr), im Thema");
+  const wk = html.slice(html.indexOf("// 2.670.0 KC-CLUB-VIDEO-WECKER (Hilfe-Nachtrag 5)"), html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"));
+  assert.ok(wk.length > 3000 && wk.length < 9000 && !/wkWeckerStellen\(\)|wkTimerStart\(|wkServer|api\(|wkKlingeln\(/.test(wk.replace(/'[^'\n]*'/g, "''").replace(/"[^"\n]*"/g, '""')), "Wecker-Video stellt nichts und sendet nichts");
+  assert.ok(/RG\.zurueck\.push\(\(\) => \{ RG\.wkZurueck = false;/.test(wk), "Wecker-Video stellt Stoppuhr und Anzeige zurück");
+  assert.ok(/\{ id: "effekte", stand: "3"/.test(html) && /t: "🌗 Schatten und Ecken"/.test(html) && /\{ id: "chatprofi", stand: "3"/.test(html) && /t: "⏳ Senden ohne Warten"/.test(html) && /\{ id: "nachricht", stand: "3"/.test(html) && /t: "📤 Wie verschicken\?"/.test(html), "Videos erweitert");
+  assert.ok(/"h:uhr_wecker": \["wecker"\]/.test(html) && /"h:wie_verschicken": \["nachricht"\]/.test(html), "Twinkey bietet die Videos an");
+  assert.ok(/\["⏰", "Wecker, Stoppuhr, Timer \(große Uhr\)"/.test(html) && /\["📤", "„Wie verschicken\?“/.test(html), "Lupe");
+  assert.ok(/\[\/\^\(einen\? \|den \)\?\(wecker\|timer\|stoppuhr\|eieruhr\)/.test(html), "Sprachsuche Wecker");
+  assert.ok(/x: "Eigene Nachricht antippen → „✏️ Bearbeiten“ – jederzeit, ohne Zeitgrenze/.test(html) && !/„✏️ Bearbeiten“ – bis 15 Minuten nach dem Senden/.test(html), "Tipp: Bearbeiten ohne Zeitgrenze");
+  assert.ok(/\{ id: "schilder", thema: "club", sym: "🪧", t: "Schilder-Druckerei \(Clubleitung\)", nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html) && !/<i>Clubleitung:<\/i> Mitglied antippen/.test(html) && !/Die Clubleitung kann stattdessen <b>„📅 Clubtermin für alle“/.test(html), "nichts von Admin für Mitglieder");
+  assert.ok(!/(geht direkt an den Admin|Hat der Admin ein Club-Thema|selbst an den Admin)/.test(hz + html.slice(html.indexOf("const TW_FAQ = ["), html.indexOf("const TW_FAQ = [") + 60000)), "„Admin“ nicht in Mitglieder-Texten");
+}
