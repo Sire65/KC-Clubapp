@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.672.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.673.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -44440,17 +44440,27 @@ function spur(w, mit) {
   } catch {}
 }
 let SPUR_LAEUFT = false, SPUR_BALD = null;
-async function spurSenden() {
+// KC-CLUB-SPUR-KEEPALIVE (26.10.2026, Fund Hansi „Klaus hat laut Wegen nur die App geöffnet“ – er hatte 10 s später einen Chat geöffnet und die App
+// gleich geschlossen; Android beendete die Seite, bevor die letzte Sendung raus war): beim Schließen mit keepalive senden – der Browser stellt sie
+// auch nach dem Schließen noch zu. Bleibt die Antwort aus, bleiben die Schritte auf dem Gerät und kommen beim nächsten Start (der Server entdoppelt).
+async function spurSenden(schliessen = false) {
   if (!INIT || !SPUR.length || SPUR_LAEUFT) return; // 2.81.0: nie zwei Sendungen gleichzeitig (sonst doppelte Schritte)
   SPUR_LAEUFT = true; const teil = SPUR.slice(0, 200);
-  try { await api("spur_melden", { s: teil }); SPUR = SPUR.slice(teil.length); spurSchreiben(); } catch {} // ohne Netz: beim nächsten Mal
+  try {
+    if (schliessen === true && KEY && !NOT.an) {
+      const r = await fetch(API, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "spur_melden", s: teil }), signal: zeitSignal(10000) });
+      if (!r.ok) throw new Error("spur");
+    } else await api("spur_melden", { s: teil });
+    SPUR = SPUR.slice(teil.length); spurSchreiben();
+  } catch {} // ohne Netz: beim nächsten Mal
   finally { SPUR_LAEUFT = false; }
 }
 // KC-CLUB-SPUR-LIVE (2.81.0, Wunsch Hansi „schnell sehen, wenn gerade einer drin ist“): neue Schritte schon nach 15 s schicken
 // (gebündelt – ein Aufruf je Ruhepause), nicht erst beim 2-Minuten-Takt. Im Sparmodus bleibt es beim langen Takt.
 function spurBaldSenden() { if (SPAR.an || document.hidden) return; clearTimeout(SPUR_BALD); SPUR_BALD = setTimeout(spurSenden, 15000); }
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
-document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(true); }); // KC-CLUB-SPUR-KEEPALIVE
+window.addEventListener("pagehide", () => spurSenden(true));
 const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
