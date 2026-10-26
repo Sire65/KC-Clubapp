@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.682.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.683.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -43285,18 +43285,21 @@ function dpdLueckenDaten(d) {
     const x = new Date(t.d + "T12:00:00");
     return { tag: `${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`, art: dpdArtName(t.art, x), zellen: stunden.map(zelle),
       text: (() => { const out = []; let i = 0; while (i < t.fehlt.length) { if (!t.fehlt[i]) { i++; continue; } let j = i; while (j < t.fehlt.length && t.fehlt[j] === t.fehlt[i]) j++; out.push(`${dpdUhr(von + i / 2)}–${dpdUhr(von + j / 2)}: ${t.fehlt[i]}`); i = j; } return out; })(),
-      std: t.fehlt.reduce((a, b) => a + b, 0) / 2 };
+      std: t.fehlt.reduce((a, b) => a + b, 0) / 2,
+      // 2.682.0 (Wunsch Hansi „beides anzeigen“): fehlt auch dann noch, wenn alle ihre ganze angebotene Zeit (Wunsch, kann, nur wenn nötig) arbeiten
+      alle: t.bedarf.reduce((a, b, i) => a + Math.max(0, b - t.leute.filter((p) => "pai".includes(p.w?.[i])).length), 0) / 2 };
   });
-  return { stunden, tage, summe: tage.reduce((a, t) => a + t.std, 0) };
+  return { stunden, tage, summe: tage.reduce((a, t) => a + t.std, 0), summeAlle: tage.reduce((a, t) => a + t.alle, 0) };
 }
 function dpdLueckenBlatt(d) {
   const L = dpdLueckenDaten(d), stand = d.stand ? wann(d.stand) : "";
   return `<section class="dpd-blatt dpl">${cdKopf("Hier fehlen noch Helfer", `${d.titel || "Weihnachtsmarkt"}${stand ? " · Stand " + stand : ""}`)}
-    <table class="dpl-tab"><thead><tr><th class="tag">Tag</th>${L.stunden.map((h) => `<th>${h}–${h + 1}<small>Uhr</small></th>`).join("")}<th class="text">Es fehlen (Uhrzeit: Personen)</th><th class="std">Std.</th></tr></thead>
+    <table class="dpl-tab"><thead><tr><th class="tag">Tag</th>${L.stunden.map((h) => `<th>${h}–${h + 1}<small>Uhr</small></th>`).join("")}<th class="text">Es fehlen laut Plan (Uhrzeit: Personen)</th><th class="std">Std.<small>laut Plan</small></th><th class="std alle">Std.<small>wenn alle ganz</small></th></tr></thead>
     <tbody>${L.tage.map((t) => `<tr><td class="tag"><b>${esc(t.tag)}</b><small>${esc(t.art || "")}</small></td>${t.zellen.map((z) => `<td class="${z.k}">${z.t}${z.halb ? "<sup>½</sup>" : ""}</td>`).join("")}
-      <td class="text">${t.text.length ? t.text.map(esc).join(" · ") : "✓ alles besetzt"}</td><td class="std">${t.std ? dpdStd(t.std) : "–"}</td></tr>`).join("")}</tbody>
-    <tfoot><tr><td class="tag" colspan="${L.stunden.length + 2}">Zusammen fehlen noch</td><td class="std">${dpdStd(L.summe)}</td></tr></tfoot></table>
-    <div class="dpl-leg"><span><i class="rot">2</i> so viele Personen fehlen</span><span><i class="rot">1<sup>½</sup></i> nur eine halbe Stunde</span><span><i class="ok">✓</i> besetzt</span><span><i class="zu"></i> kein Dienst</span></div>
+      <td class="text">${t.text.length ? t.text.map(esc).join(" · ") : "✓ alles besetzt"}</td><td class="std">${t.std ? dpdStd(t.std) : "–"}</td><td class="std alle">${t.alle ? dpdStd(t.alle) : "–"}</td></tr>`).join("")}</tbody>
+    <tfoot><tr><td class="tag" colspan="${L.stunden.length + 2}">Zusammen fehlen noch</td><td class="std">${dpdStd(L.summe)}</td><td class="std alle">${dpdStd(L.summeAlle)}</td></tr></tfoot></table>
+    <div class="dpl-leg"><span><i class="rot">2</i> so viele Personen fehlen</span><span><i class="rot">1<sup>½</sup></i> nur eine halbe Stunde</span><span><i class="ok">✓</i> besetzt</span><span><i class="zu"></i> kein Dienst</span><span><b>Std. laut Plan</b> = fehlt nach der Einteilung (nie länger als die Wunschzeit) · <b>wenn alle ganz</b> = fehlt selbst dann, wenn alle ihre ganze angebotene Zeit arbeiten</span></div>
+    ${d.tage.some((t) => t.art === "Markttag" && (t.bedarf[(23 - (d.von ?? 8)) * 2 - 1] || 0)) ? '<div class="dpl-hinweis dpl-abend">🌙 <b>Abends:</b> Der Markt geht teils bis 23 Uhr, mit Aufräumen auch mal bis ca. 23:30 Uhr. Wer sich nur bis 22 Uhr eingetragen hat: bitte möglichst bis 23 Uhr verlängern.</div>' : ""}<!-- 2.683.0 KC-CLUB-DP-LUECKEN-ABEND -->
     <div class="dpl-hinweis">📝 <b>So trägst du dich ein:</b> Club-App → <b>📝 Dienstwünsche</b> → Tag antippen → Zeit wählen → speichern. Der Plan rechnet sich dann von selbst neu.</div>
     ${cdFuss("Dienstplan-Entwurf – nicht veröffentlicht. Fragen? Einfach Hansi in der Club-App schreiben.")}</section>`;
 }
