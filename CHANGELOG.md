@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.687.0 – 2026-10-26 – ⏰ Treffen-Erinnerungen erst ab 10 Uhr (KC-CLUB-ERINNERUNG-10UHR)
+Fund 26.10. bei der Frage „wann bekommen die Mitglieder die Einladung zur Sitzung am Freitag“, Wunsch Hansi „ändere auf 10 Uhr und einspielen“: Das Nachfassen 3 Tage vorher („noch nicht zu- oder abgesagt“) und die Erinnerung „⏰ Morgen: …“ am Vortag gingen beim ersten Lauf nach Mitternacht raus (~0:05 Uhr) – mitten in der Nacht, bei „Nicht stören“ ohne Push. Jetzt erst ab 10 Uhr deutscher Zeit (einmal am Tag, holt später am Tag nach, falls ein Lauf ausfällt). Die Erinnerung 48 Std. vorher und die Einladung beim Anlegen bleiben unverändert.
+
 ## 2.686.0 – 2026-10-26 – 𝐅 Nachrichten: Wörter fett, kursiv, durchgestrichen (KC-CLUB-CHAT-FETT)
 Wunsch Hansi („in Nachrichten ein Wort z. B. fett machen – wie kann das einfach passieren“): Im Schreibfeld ein Wort markieren → darüber erscheinen „F fett · K kursiv · D durch“; antippen rahmt das Markierte ein, nochmal antippen nimmt es weg. Ohne Markierung über F in der kleinen Zeile: zwei Zeichen, der Strich steht dazwischen. Wie bei WhatsApp: *fett*, _kursiv_, ~durchgestrichen~ – in der Nachricht steht dann wirklich fett/kursiv/durchgestrichen (nur am Wortanfang/-ende, Links mit _ bleiben unberührt; nichts außer <b>/<i>/<s>). Push und E-Mail zeigen die Zeichen wie geschrieben.
 

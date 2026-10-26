@@ -5917,7 +5917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7489,6 +7489,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(html, /id="formatLeiste"[^\n]*onclick="naFormatSetzen\('\*'\)"[^\n]*onclick="naFormatSetzen\('_'\)"[^\n]*onclick="naFormatSetzen\('~'\)"/, "Knöpfe F K D");
   assert.match(html, /id="fettKnopf"/, "F in der kleinen Zeile");
   assert.match(programm, /document\.addEventListener\("selectionchange", \(\) => \{ if \(document\.activeElement\?\.id === "text"\) naFormatLeiste\(\); \}\);/, "erscheint beim Markieren");
+}
+// 2.687.0 KC-CLUB-ERINNERUNG-10UHR: Nachfassen und „Morgen ist Treffen“ erst ab 10 Uhr
+{
+  assert.match(server, /const abZehn = berlinStunde\(new Date\(\)\) >= 10;\n      if \(stuendlich && abZehn\) \{ \/\/ KC-CLUB-WARTUNG-STUNDE: 3 Tage vorher/, "Nachfassen ab 10 Uhr");
+  assert.match(server, /for \(const t of abZehn \? ts \?\? \[\] : \[\]\) \{ \/\/ 2\.687\.0: erst ab 10 Uhr\n\s*if \(berlinTag\(new Date\(t\.beginn\)\) !== morgen\) continue;/, "Erinnerung am Vortag ab 10 Uhr");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -11562,7 +11567,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   for (const f of ["fpUeberwachen", "postausgangLauf", "aeUebernahmeMelden", "aeFreigabeMelden", "gastgeberStandLauf", "archivKopieLauf", "sonderstundenWartung", "ekDienstwunschMelden"])
     assert.ok(new RegExp(`\\n      await ${f}\\(`).test(wa), `Wartung: ${f} weiter alle 15 Min.`);
   const rest = server.slice(server.indexOf('if (stunde < 9) return json({ ok: true, erinnerungen: 0'), server.indexOf('if (stunde < 9) return json({ ok: true, erinnerungen: 0') + 30000);
-  assert.ok(/let geb = 0;\n      if \(stuendlich\) \{/.test(rest) && /let nachfass = 0;\n      if \(stuendlich\) \{/.test(rest) && /KC-CLUB-SPIEL-TERMIN/.test(rest), "Geburtstag/Nachfassen stündlich, Termin-Erinnerungen weiter alle 15 Min.");
+  assert.ok(/let geb = 0;\n      if \(stuendlich\) \{/.test(rest) && /let nachfass = 0;\n(?:[^\n]*\n){0,4}      if \(stuendlich( && abZehn)?\) \{/.test(rest) && /KC-CLUB-SPIEL-TERMIN/.test(rest), "Geburtstag/Nachfassen stündlich, Termin-Erinnerungen weiter alle 15 Min.");
 }
 
 // KC-CLUB-FERNHILFE F2 (18.10.2026): nach dem ersten Vollbild nur noch Änderungen; Lücke → Vollbild; spätestens alle 60 s Vollbild; ältere Apps nur Vollbilder

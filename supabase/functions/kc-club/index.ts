@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.685.0";
+const SERVER_VERSION = "2.687.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7849,7 +7849,10 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       }
       // KC-CLUB-NACHFASSEN: 3 Tage vor dem Treffen einmal an alle, die noch nicht zu- oder abgesagt haben
       let nachfass = 0;
-      if (stuendlich) { // KC-CLUB-WARTUNG-STUNDE: 3 Tage vorher, einmal
+      // 2.687.0 KC-CLUB-ERINNERUNG-10UHR (Fund 26.10., Wunsch Hansi „ändere auf 10 Uhr“): Nachfassen (3 Tage vorher) und „Morgen ist Treffen“ gingen beim
+      // ersten Lauf nach Mitternacht raus (~0:05 Uhr) – mitten in der Nacht bzw. in der Ruhezeit ohne Push. Jetzt erst ab 10 Uhr (deutsche Zeit), einmal am Tag.
+      const abZehn = berlinStunde(new Date()) >= 10;
+      if (stuendlich && abZehn) { // KC-CLUB-WARTUNG-STUNDE: 3 Tage vorher, einmal
         const in3 = berlinTag(new Date(Date.now() + 3 * 86400000));
         const { data: tf } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").eq("art", "treffen").is("nachfass_gesendet_am", null)
           .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 4 * 86400000).toISOString());
@@ -7896,7 +7899,7 @@ Köcheclub Werne`,
       const { data: ts } = await db.from("kc_club_treffen").select("*").eq("status", "geplant").eq("art", "treffen").is("erinnerung_gesendet_am", null)
         .gte("beginn", new Date().toISOString()).lte("beginn", new Date(Date.now() + 2 * 86400000).toISOString());
       let n = 0;
-      for (const t of ts ?? []) {
+      for (const t of abZehn ? ts ?? [] : []) { // 2.687.0: erst ab 10 Uhr
         if (berlinTag(new Date(t.beginn)) !== morgen) continue;
         const { data: ok } = await db.from("kc_club_treffen").update({ erinnerung_gesendet_am: jetzt() }).eq("id", t.id).is("erinnerung_gesendet_am", null).select("id");
         if (!ok?.length) continue;
