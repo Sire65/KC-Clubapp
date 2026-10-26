@@ -20,8 +20,10 @@ await seite.evaluate(() => schattenSpeichern({ an: true, staerke: "kraeftig", fa
 const hero = await schatten("#v-start .hero"), knopf = await seite.evaluate(() => { const k = document.querySelector(".knopf"); return getComputedStyle(k).boxShadow; });
 ok(hero !== vorher && /rgba\(29, 78, 137, 0\.45\) 12px 12px 38px/.test(hero), "Kopf: großer blauer Schatten unten rechts – " + hero);
 ok(/rgba\(29, 78, 137, 0\.45\) 8px 8px 24px/.test(knopf), "Knopf: Schatten – " + knopf);
-const felder = await seite.evaluate(() => { const h = document.querySelector("#v-start .hero"), m = document.createElement("button"); m.className = "mini"; h.appendChild(m);
-  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste", ".statuschip"].map((s) => getComputedStyle(h.querySelector(s)).boxShadow); m.remove(); return r; });
+const felder = await seite.evaluate(async () => { const h = document.querySelector("#v-start .hero"), m = document.createElement("button"); m.className = "mini"; h.appendChild(m);
+  const il = document.createElement("div"); il.className = "il il-weiss"; il.style.transition = "none"; il.style.animation = "none"; il.textContent = "Heute in Werne"; $("heroInfo").appendChild(il); await new Promise((w) => setTimeout(w, 600));
+  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste", ".statuschip", ".il"].map((s) => getComputedStyle(h.querySelector(s)).boxShadow);
+  il.className = "il il-rot"; await new Promise((w) => setTimeout(w, 600)); const rot = getComputedStyle(il).boxShadow; m.remove(); il.remove(); return [...r, /255, 90, 90/.test(rot) ? r[0] : "rot verloren: " + rot]; });
 ok(felder.every((x) => /rgba\(29, 78, 137, 0\.56\) 8px 8px 24px/.test(x)), "2.661.0: Felder auf dem Kopf (Infofeld, Zahlen-Felder, runde Knöpfe, Logo, Statusleiste) – " + felder.join(" | "));
 if (bilder) await weg(), await seite.screenshot({ path: path.join(bilder, "schatten-hell.png") });
 await seite.evaluate(() => { document.documentElement.classList.add("dunkel"); schattenSpeichern({ farbe: "auto", pos: "oben", staerke: "sehr" }); });

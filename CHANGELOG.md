@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.662.0 – 2026-10-26 – 🎩 Schatten auch für die Karte im Infofeld (KC-CLUB-SCHATTEN-INFOKARTE)
+- Hinweis Hansi („So wie es aussieht hat das Infofeld keinen Schatten“): Die Karte im Infofeld (z. B. „Heute in Werne: Sim-Jü“, mit hellem Rahmen) ist ein eigenes Element und fehlte; jetzt hat sie den Kopf-Schatten, ebenso die Zeilen in „🔔 Für dich“. Rote und orange Warnkarten behalten ihr Glühen. Als Teil von 2.661.0 (auf Wunsch Hansi sofort) gleich eingespielt. Nur App.
+
 ## 2.661.0 – 2026-10-26 – 🎩 Schatten im Kopf – sichtbar und einstellbar (KC-CLUB-SCHATTEN-KOPF)
 - Bild Hansi (türkiser Kopf, Nacht): Kacheln mit Schatten, Felder im Kopf kaum – „Elemente im Kopf auch Schatten wie die Kacheln, am besten einstellbar im Zahnrad“. Ursache: nachts wird der Schatten für den Kontrast hell (2.657.0) – auf dem farbigen Kopf verschwindet er. Jetzt bekommen die Felder im Kopf einen eigenen, **immer dunklen** Schatten (gewählte Farbe, „Automatisch“ = Schwarz), auch nachts; neu dabei: Status-Knopf, Wecker-Feld und Lämpchen. Unter „🌗 Schatten einstellen“ neue Gruppe **🎩 Schatten im Kopf**: Aus, Leicht, Mittel, Kräftig (Standard), Sehr kräftig. Position wie bei den Kacheln. Nur App.
 
