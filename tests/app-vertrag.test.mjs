@@ -13117,3 +13117,17 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.ok(/function versandZurueck\(\) \{[^\n]*VW\.einmal = null;/.test(programm), "Einmal-Wahl nach dem Senden zurück");
   assert.ok(/id="chatTeilnehmerPfeil"[^>]*onclick="chatTnKlappen\(\)">▸<\/button>/.test(html) && /class="tz-pfeil ct-pfeil versteckt"/.test(html) && /if \(CHAT_TN_ZULETZT !== chatId\) \{ CHAT_TN_ZULETZT = chatId; z\.classList\.remove\("auf"\); \}/.test(programm), "Chat-Kopf: weinroter Pfeil, neuer Chat eingeklappt");
 }
+// 2.679.0 KC-CLUB-DP-MARKTNAME (Wunsch Hansi „Di/Fr Wochenmarkt, sonst WM, sonntags Nikolaus, Aufbau/Nachbereitung so lassen“)
+{
+  const z = programm.match(/const dpdArtName = [^\n]*/)[0];
+  const dpdArtName = new Function(z + "; return dpdArtName;")();
+  const tag = (d) => new Date(d + "T12:00:00");
+  assert.equal(dpdArtName("Markttag", tag("2026-12-01")), "Wochenmarkt", "Dienstag");
+  assert.equal(dpdArtName("Markttag", tag("2026-12-04")), "Wochenmarkt", "Freitag");
+  assert.equal(dpdArtName("Markttag", tag("2026-12-03")), "WM", "Donnerstag");
+  assert.equal(dpdArtName("Markttag", tag("2026-12-06")), "WM · Nikolaus", "Sonntag");
+  assert.equal(dpdArtName("Aufbau", tag("2026-12-06")), "Aufbau", "Aufbau bleibt");
+  assert.equal(dpdArtName("Nachbereitung", tag("2026-12-01")), "Nachbereitung", "Nachbereitung bleibt");
+  assert.ok(/name: dpdArtName\(t\.art, x\), wt: DPD_WD/.test(programm) && /<span class="kind">\$\{esc\(t\.name\)\}<\/span>/.test(programm) && (programm.match(/<small>\$\{esc\(t\.name\)\}<\/small><\/th>/g) || []).length === 2 && /art: dpdArtName\(t\.art, x\), zellen/.test(programm), "Matrix, Tagesblätter und Lückenliste zeigen den Namen");
+  assert.ok(/if \(t\.art !== "Markttag"\) \{ \/\/ Aufbau\/Nachbereitung/.test(programm), "Rechnung hängt weiter an „Markttag“");
+}

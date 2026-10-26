@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.679.0 – 2026-10-26 – 🗓️ Besetzungsmatrix: Wochenmarkt, WM und Nikolaus (KC-CLUB-DP-MARKTNAME)
+Wunsch Hansi („Nenne nur die Dienstage und Freitage Wochenmarkt, die anderen nur WM für Weihnachtsmarkt. Und am Sonntag noch Nikolaus dazu. Aufbau und Nachbereitung so lassen“).
+- Im **Dienstplan zum Drucken** (Blatt „Regelzeit und Besetzung je Stunde“, Tagesblätter und Lückenliste) heißt ein Markttag am **Dienstag oder Freitag „Wochenmarkt“**, an allen anderen Tagen **„WM“** (Weihnachtsmarkt), am **Sonntag „WM · Nikolaus“**. Aufbau und Nachbereitung bleiben, wie sie sind. Rechnung, Regelzeit und Bedarf unverändert. Vertragstest-Block 2.679.0. Nur App.
+
 ## 2.678.0 – 2026-10-26 – 📤 Versand an mehrere ohne Nachfrage: Voreinstellung, 📌 Chat-Weg, Sicherheitsnetz · 👥 Chat-Kopf einklappbar (KC-CLUB-VERSAND-VORWAHL, KC-CLUB-VERSAND-KLUG, KC-CLUB-CHAT-KOPF-KLAPPEN)
 Wunsch Hansi („nach dem Nachrichten senden kommt die Frage ‚Wie verschicken?‘ – das nervt jedes Mal. Da muss es eine Voreinstellung geben“ → Konzept, „Bau 1, 2, 3 und danach noch cleverer“).
 - **1 · Voreinstellung:** ⚙️ → Benachrichtigungen → **„📤 Nachrichten an mehrere oder mit Anlage“**: ⚙️ Wie jeder es eingestellt hat (**Standard**, wie vor 2.649.0), ✅ Alles, ✉️ Nur E-Mail, 🔔 Nur Push, 🟢 WhatsApp, 📱 Nur in der App oder ❓ Jedes Mal fragen. Ohne „Jedes Mal fragen“ wird **ohne Fenster** gesendet. Gilt je Gerät.
