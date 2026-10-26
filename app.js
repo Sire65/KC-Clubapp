@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.673.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.674.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24297,6 +24297,10 @@ function schattenAnwenden() {
   const k = { normal: [.55, .12], stark: [.85, .28] }[st.kontrast], nacht = (f) => k ? `${box(f, nachtRgb, +(a * k[0]).toFixed(2))}, 0 0 0 1px rgba(255, 255, 255, ${k[1]})` : box(f, "var(--sch-rgb)", a);
   r.style.setProperty("--sch-box-t", box(1, "var(--sch-rgb)", a)); r.style.setProperty("--sch-box-gross-t", box(1.6, "var(--sch-rgb)", a));
   r.style.setProperty("--sch-box-n", nacht(1)); r.style.setProperty("--sch-box-gross-n", nacht(1.6)); r.classList.toggle("sch-an", st.an);
+  // 2.674.0 KC-CLUB-SCHATTEN-RASTER (Bild Hansi „der Schatten pro Kachel wird von der nächsten Kachel etwas verdeckt“): im Kachel-Raster wirft das
+  // ganze Raster EINEN Schatten (filter: drop-shadow) – er liegt unter allen Kacheln, keine Nachbarkachel deckt ihn mehr ab
+  const filt = (farbe, alpha, kante) => `drop-shadow(${Math.round(dx * o)}px ${Math.round(dy * o)}px ${Math.round(b * .6)}px rgba(${farbe}, ${alpha}))${kante ? ` drop-shadow(0 0 1px rgba(255, 255, 255, ${kante}))` : ""}`;
+  r.style.setProperty("--sch-filt-t", filt("var(--sch-rgb)", a)); r.style.setProperty("--sch-filt-n", k ? filt(nachtRgb, +(a * k[0]).toFixed(2), k[1]) : filt("var(--sch-rgb)", a));
   // 2.661.0 KC-CLUB-SCHATTEN-KOPF (Bild Hansi: Kacheln mit Schatten, Felder im Kopf kaum): der Kopf ist immer farbig (Rot, Türkis …) – ein heller
   // Nacht-Schatten verschwindet darauf. Darum eigener, immer dunkler Schatten für die Felder im Kopf (Farbe wie gewählt, „Automatisch“ = Schwarz), eigene Stärke
   const ks = SCHT_STAERKE[st.kopf]; r.style.setProperty("--sch-kopf", ks ? `${Math.round(dx * ks[1])}px ${Math.round(dy * ks[1])}px ${ks[2]}px ${st.pos === "rundum" ? Math.round(ks[1] / 3) : 0}px rgba(${rgb ? rgb.join(", ") : "0, 0, 0"}, ${Math.min(.8, +(ks[3] * 1.25).toFixed(2))})` : "none");

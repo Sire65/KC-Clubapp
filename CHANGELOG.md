@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.674.0 – 2026-10-26 – 🌗 Schatten: Kacheln verdecken sich nicht mehr · „🚪 App schließen“ mit Schatten (KC-CLUB-SCHATTEN-RASTER)
+- Bild Hansi („Unten die Taste App verlassen hat keinen Schatten, und der Schatten pro Kachel wirkt nicht so gut, da er schon von der nächsten Kachel etwas verdeckt wird“): Jede Kachel warf ihren Schatten selbst, die nächste Kachel wurde darüber gezeichnet – bei kräftigem Schatten (bis ~20 px) und 9 px Abstand verschwand er halb unter der Nachbarkachel. Jetzt wirft das ganze Kachel-Raster **einen gemeinsamen Schatten** (drop-shadow) mit Stärke, Farbe, Position und Nacht-Kontrast wie eingestellt – er liegt unter allen Kacheln. Der Knopf **„🚪 App schließen“** bekommt den Schatten wie die anderen Knöpfe. Nur mit „🌗 Schatten“ an. Nur App.
+
 ## 2.673.0 – 2026-10-26 – 👣 Wege der Mitglieder vollständig (KC-CLUB-SPUR-KEEPALIVE)
 - Fund Hansi („Klaus hat sich angemeldet, laut Wegen aber nur die App geöffnet – ist das korrekt?“): Er hatte 10 s später den Chat „Besetzungsmatrix Weihnachtsmarkt“ geöffnet und die App gleich wieder geschlossen; Android beendete die Seite, bevor die gesammelten Schritte gesendet waren (sie wären erst beim nächsten Start nachgekommen). Jetzt schickt die App die Schritte beim Verlassen/Schließen mit keepalive – der Browser stellt sie auch nach dem Schließen noch zu. Kommt keine Antwort, bleiben sie auf dem Gerät und kommen beim nächsten Start; der Server zeigt doppelt angekommene Schritte nur einmal. Keine zusätzliche Datenbank-Last. Test: `tests/spur-keepalive.test.mjs`. Server 2.673.0.
 

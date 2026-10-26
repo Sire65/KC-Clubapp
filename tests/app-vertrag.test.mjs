@@ -13071,3 +13071,9 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.ok(/\{ id: "schilder", thema: "club", sym: "🪧", t: "Schilder-Druckerei \(Clubleitung\)", nur: \(\) => !!\(ICH\?\.vorstand \|\| ICH\?\.admin\)/.test(html) && !/<i>Clubleitung:<\/i> Mitglied antippen/.test(html) && !/Die Clubleitung kann stattdessen <b>„📅 Clubtermin für alle“/.test(html), "nichts von Admin für Mitglieder");
   assert.ok(!/(geht direkt an den Admin|Hat der Admin ein Club-Thema|selbst an den Admin)/.test(hz + html.slice(html.indexOf("const TW_FAQ = ["), html.indexOf("const TW_FAQ = [") + 60000)), "„Admin“ nicht in Mitglieder-Texten");
 }
+// 2.674.0 KC-CLUB-SCHATTEN-RASTER (Bild Hansi: Schatten von der Nachbarkachel verdeckt, „App schließen“ ohne Schatten)
+{
+  assert.ok(/:where\(:root\.sch-an\) \.raster \{ filter: var\(--sch-filt\); \}/.test(html) && /:where\(:root\.sch-an\) \.raster > \.kachel \{ box-shadow: none; \}/.test(html), "ein gemeinsamer Schatten fürs Kachel-Raster");
+  assert.ok(/:root \{ --sch-filt: var\(--sch-filt-t\); \} :root\.dunkel \{ --sch-filt: var\(--sch-filt-n\); \}/.test(html) && /r\.style\.setProperty\("--sch-filt-t", filt\(/.test(programm), "Tag/Nacht wie die übrigen Schatten");
+  assert.ok(/:where\(:root\.sch-an\) \.tuer \{ box-shadow: var\(--sch-box\); \}/.test(html), "„App schließen“ mit Schatten");
+}
