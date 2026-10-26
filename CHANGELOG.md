@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.685.0 – 2026-10-26 – 🔐 Link besser festhalten (KC-CLUB-SCHLUESSEL-SICHERN)
+- Wunsch Hansi („Das darf bei den Usern nicht passieren – die wissen dann nicht, was sie machen sollen. Das muss abgesichert sein“, Stufe A): Nach jeder gültigen Anmeldung liegt der persönliche Schlüssel zusätzlich in zwei weiteren Ablagen des Browsers (IndexedDB und Cache-Speicher), und die App bittet um Dauer-Speicher – der Browser räumt dann nicht mehr von selbst auf. Fehlt der gespeicherte Link beim Start (z. B. weil ein Reinigungsprogramm nur einen Teil gelöscht hat), holt die App ihn still zurück und meldet sich wie gewohnt an (im Fehlerprotokoll als Info „aus der Zweitablage wiederhergestellt“). Kein Cookie (der Schlüssel ginge sonst an den Webserver). Grenze: Löscht jemand alle Website-Daten, hilft das nicht – dann erklärt die Anmeldeseite den Weg. Browser-Test: Link gelöscht → still wieder angemeldet, alles gelöscht → Anmeldeseite. Test: `tests/schluessel-sichern.test.mjs`. Server 2.685.0.
+
 ## 2.684.0 – 2026-10-26 – 💻 Hilfe am PC, wenn der Link weg ist (KC-CLUB-ZUGANG-HILFE-PC)
 - Fall Hansi („Ich wollte mich am PC anmelden, bekomme eine Fehlermeldung – ich habe nichts geändert“): Der Browser hatte seine gespeicherten Daten gelöscht (neue Gerätekennung) – und damit den Link. Öffnet jemand die App am PC ohne Link, erklärt die Anmeldeseite jetzt genau das und den schnellsten Weg: am Handy ⚙️ → App-Installation → „🔢 Code für ein anderes Gerät“, Code am PC eingeben (der Link gilt dann auf beiden Geräten; bewusst nicht „Link verloren?“, das würde den Handy-Link ablösen) – plus Tipp, sire65.github.io in Chrome bei „Websites, die immer Cookies verwenden dürfen“ einzutragen. Nur App.
 

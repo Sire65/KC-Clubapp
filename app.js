@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.684.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.685.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -29100,7 +29100,7 @@ async function neuLadenRoh(vonHand) {
   const initAnfrage = api("init", { fotosSeit: kzSeit("fotos"), dienstSeit: kzSeit("dienste") }, { warten: !!vonHand }); initAnfrage.catch(() => {}); // Fehler behandelt unten das await
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
-    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
+    INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
     alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
@@ -45938,6 +45938,32 @@ async function fpAdmin(tage) {
 const KOCH_EMO = { "🧑‍🍳": "1f9d1-200d-1f373", "👨‍🍳": "1f468-200d-1f373", "👩‍🍳": "1f469-200d-1f373" };
 const KOCH_RE = /🧑‍🍳|👨‍🍳|👩‍🍳/g;
 const KOCH = { ok: true, bild: null };
+// ---------- KC-CLUB-SCHLUESSEL-SICHERN (26.10.2026, Wunsch Hansi „das darf bei den Usern nicht passieren – muss abgesichert sein“, Stufe A) ----------
+// Fall Hansi: am PC war der gespeicherte Link weg (der Browser hatte seinen Speicher geleert). Nach jeder gültigen Anmeldung liegt der Schlüssel
+// deshalb zusätzlich in IndexedDB und im Cache-Speicher (eigener Name „kcclub-sicher“ – der Service Worker räumt nur „kc-club-…“ auf), und die App
+// bittet um Dauer-Speicher (navigator.storage.persist: der Browser räumt dann nicht von selbst auf). Fehlt der Schlüssel beim Start, holt die App
+// ihn still zurück. Löscht jemand ALLE Website-Daten, hilft das nicht – dann erklärt die Anmeldeseite den Weg (KC-CLUB-ZUGANG-HILFE).
+// Kein Cookie: der Schlüssel ginge sonst bei jedem Seitenabruf an den Webserver.
+const SK_DB = "kcclub-sicher", SK_CACHE = "kcclub-sicher", SK_URL = "/kcclub-sicher/schluessel";
+const skGut = (k) => typeof k === "string" && /^[0-9a-f]{32,96}$/.test(k);
+function skDb() {
+  return new Promise((ok, nein) => { try { const r = indexedDB.open(SK_DB, 1); r.onupgradeneeded = () => r.result.createObjectStore("k"); r.onsuccess = () => ok(r.result); r.onerror = () => nein(r.error); } catch (e) { nein(e); } });
+}
+async function schluesselSichern(k) {
+  if (!skGut(k) || schluesselSichern.k === k) return; schluesselSichern.k = k;
+  try { const db = await skDb(); await new Promise((ok) => { const t = db.transaction("k", "readwrite"); t.objectStore("k").put(k, "schluessel"); t.oncomplete = ok; t.onerror = ok; t.onabort = ok; }); db.close(); } catch {}
+  try { if (window.caches) await (await caches.open(SK_CACHE)).put(SK_URL, new Response(k, { headers: { "Content-Type": "text/plain" } })); } catch {}
+  try { if (navigator.storage?.persist && !(await navigator.storage.persisted?.())) await navigator.storage.persist(); } catch {}
+}
+async function schluesselZurueck() {
+  const mitZeit = (p, ms = 1500) => Promise.race([p, new Promise((ok) => setTimeout(() => ok(""), ms))]); // nie den Start aufhalten
+  let k = "";
+  try { k = await mitZeit((async () => { const db = await skDb(); const v = await new Promise((ok) => { const r = db.transaction("k").objectStore("k").get("schluessel"); r.onsuccess = () => ok(r.result || ""); r.onerror = () => ok(""); }); db.close(); return v; })()); } catch {}
+  if (!skGut(k)) { try { k = await mitZeit((async () => { if (!window.caches) return ""; const r = await (await caches.open(SK_CACHE)).match(SK_URL); return r ? (await r.text()).trim() : ""; })()); } catch { k = ""; } }
+  if (!skGut(k)) return "";
+  try { fpNeu("schluessel_zurueck", { text: "Gespeicherter Link fehlte – aus der Zweitablage wiederhergestellt" }); } catch {}
+  return k;
+}
 // ---------- Start der App ----------
 (function start() {
   START_MESS.eingerichtet = performance.now(); // KC-CLUB-STARTZEIT
@@ -45956,7 +45982,8 @@ const KOCH = { ok: true, bild: null };
   // 2.425.0 KC-CLUB-GENERALCHECK: SOS an alle, Kurznachricht und Weiterleiten gingen bei langsamem Netz und Doppeltippen doppelt raus
   notfallSenden = nurEinmal("notfallSenden", notfallSenden); zeSenden = nurEinmal("zeSenden", zeSenden); weiterleiten = nurEinmal("weiterleiten", weiterleiten);
   $("appLaedt")?.remove(); // 2.481.0 KC-CLUB-LADEANZEIGE: Programm ist da – Ladeanzeige weg (die App zeigt ab hier selbst ihren Stand)
-  if (!KEY) { $("gesperrt").classList.remove("versteckt"); fpOhneLink(); return; }
+  // KC-CLUB-SCHLUESSEL-SICHERN: kein Schlüssel im Speicher → erst still aus der Zweitablage holen (IndexedDB / Cache), dann neu starten
+  if (!KEY) { schluesselZurueck().then((z) => { if (z) { location.replace(location.pathname + "?k=" + z + location.hash); return; } $("gesperrt").classList.remove("versteckt"); fpOhneLink(); }); return; }
   $("app").classList.remove("versteckt");
   iosStartMitSchluessel();
   // 2.0.0: jeder Aufbauschritt für sich – ein Fehler in einem Teil hält den Rest (und die Update-Prüfung) nicht auf
