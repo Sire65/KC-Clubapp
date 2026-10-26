@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12946,9 +12946,30 @@ function idx0() { return lies("index.html"); }
   assert.ok(/::before \{ content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var\(--sch-kopf\); z-index: -2; pointer-events: none; \}/.test(html), "Schatten auf Ebene -2, hinter der Szene (-1)");
   assert.ok(/\.hero > \.jz-schicht\.jz-buehne \{ z-index: -1; \}/.test(html), "Szene bleibt auf -1");
 }
-// 2.665.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „Lauflicht bei der Bude langsamer; ab und an ein Luftballon-Verkäufer – ein Clown mit Strauß; ein Mädchen bekommt einen, beim nächsten Mal ein Junge“)
+// 2.666.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „Lauflicht bei der Bude langsamer; ab und an ein Luftballon-Verkäufer – ein Clown mit Strauß; ein Mädchen bekommt einen, beim nächsten Mal ein Junge“)
 {
   assert.ok(/theke \+ 4 \* k\]\), k, T, 3, 3\);/.test(programm) && /jzbLauflicht\(c, rahmen, k, T, 4, 4\);/.test(programm), "Lauflicht an der Bude langsamer");
-  assert.ok(/function jzbClownSchritt\(F, dt\)/.test(programm) && /function jzbClownMalen\(c, F\)/.test(programm) && /jzbClownSchritt\(F, dt\); \/\/ 2\.665\.0/.test(programm) && /jzbClownMalen\(c, F\); \/\/ 2\.665\.0/.test(programm), "Clown läuft und wird gemalt");
+  assert.ok(/function jzbClownSchritt\(F, dt\)/.test(programm) && /function jzbClownMalen\(c, F\)/.test(programm) && /jzbClownSchritt\(F, dt\); \/\/ 2\.666\.0/.test(programm) && /jzbClownMalen\(c, F\); \/\/ 2\.666\.0/.test(programm), "Clown läuft und wird gemalt");
   assert.ok(/kind: JZB_CLOWN_N\+\+ % 2 \? "junge" : "maedchen"/.test(programm), "abwechselnd Mädchen und Junge");
+}
+// 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Server rechnet den Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug) – nur Admin, Hinweis bei neuem Wunschplan
+{
+  const { dpRechnen, slots } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  assert.deepEqual(slots(8, 9.5), [8, 8.5, 9], "halbe Stunden");
+  const e = { tage: [{ d: "2026-12-04", art: "Markttag", baender: [{ start: 10, end: 14, total: 2, front: 1, back: 1 }] }],
+    personen: [{ key: "Anna A", name: "Anna Alt", eintraege: [{ d: "2026-12-04", t: "pref", z: "V", a: 10, b: 14 }] },
+      { key: "Bert B", name: "Bert Bau", eintraege: [{ d: "2026-12-04", t: "avai", z: "H", a: 10, b: 12 }, { d: "2026-12-04", t: "unav", z: "B", a: 11, b: 12 }] }],
+    leer: [{ key: "Leon W", name: "Leon Wörde", label: "Aushilfe" }], bereitschaft: [{ d: "2026-12-04", name: "Bert Bau", von: 12, bis: 14 }] };
+  const r = dpRechnen(e), t = r.tage[0];
+  assert.deepEqual(t.leute.map((x) => [x.n, x.s]), [["Anna Alt", [10, 14]], ["Bert Bau", [10, 11]], ["Leon Wörde", null]], "Anna geplant (Wunsch), Bert nur bis zur Sperre, Leon Leerzeile zuletzt");
+  assert.equal(t.leute[1].w.slice(4, 8), "aauu".slice(0, 2) + "uu", "Sperre gewinnt über kann");
+  assert.equal(t.leute[2].z, "Aushilfe");
+  assert.deepEqual(t.fehlt.slice(4, 12), [0, 0, 1, 1, 1, 1, 1, 1], "ab 11 Uhr fehlt eine Person");
+  assert.deepEqual(t.ber, [{ n: "Bert Bau", s: [12, 14] }]);
+  assert.ok(/import \{ dpRechnen \} from "\.\/dp-rechnen\.js";/.test(server), "Server nutzt dieselbe Rechnung");
+  const fall = server.slice(server.indexOf('case "dp_druck_rechnen": {'), server.indexOf('case "dp_druck_rechnen": {') + 300);
+  assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall) && /dpDruckNeu\(ich\.person_id\)/.test(fall), "neu rechnen nur Admin");
+  assert.ok(/\(e\.revision \?\? null\) === \(w \? w\.revision : null\)/.test(server), "Ersatz gilt nur bis zum nächsten eigenen Wunschplan");
+  assert.ok(/titel: `🗓️ \$\{alt \? "Geänderter" : "Neuer"\} Wunschplan von \$\{ich\.vorname\}`/.test(server) && /url: `\$\{APP_URL\}#dpdruck`/.test(server), "Hinweis an den Admin");
+  assert.ok(/else if \(h === "#dpdruck" && ICH\?\.admin\) dpdStart\(\);/.test(programm) && /async function dpdNeuRechnen\(k\) \{\s*if \(!ICH\?\.admin\) return;/.test(programm) && /🔄 Jetzt neu rechnen/.test(programm), "App: Stand, Hinweis und Knopf nur Admin");
 }

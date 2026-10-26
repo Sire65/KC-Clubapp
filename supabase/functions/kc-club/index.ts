@@ -41,6 +41,7 @@ import { bskNeu, bskErlaubt, bskSpielen, bskStichAbschliessen, bskErgebnis } fro
 import { maeNeu, maeMoeglich, maeWuerfeln, maeZiehen, maeComputerWahl } from "./mae.js"; // KC-CLUB-MAE (2.26.0): Regeln = wörtliche Kopie aus app.js (tools/mae/server-kopie.mjs)
 import { FDK_FELD, fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkAugen, fdkWeiter, fdkKarteSpielen, fdkHygiene, fdkAbgeben, fdkSieger } from "./fdk.js"; // KC-CLUB-FDK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/fdk/server-kopie.mjs)
 import { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkComputerKarte } from "./doppelkopf.js"; // KC-CLUB-DK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/dk/server-kopie.mjs)
+import { dpRechnen } from "./dp-rechnen.js"; // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug)
 import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): Fragen = wörtliche Kopie aus lib/kuechenterror/fragen.js
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
@@ -133,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.663.0";
+const SERVER_VERSION = "2.665.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4478,6 +4479,58 @@ async function dbWarnungLauf() {
     url: APP_URL,
   }, `club-db-warnung:${berlinTag(new Date())}`);
   await protokoll(null, "db_warnung_gesendet", { bytes });
+}
+// 2.665.0 KC-CLUB-DP-NEU-RECHNEN (Wunsch Hansi „neuer Wunschplan → Dienstplan-Druck mit einem Tipp neu rechnen“): rechnet den Entwurf aus dem
+// veröffentlichten Bedarf (kc_dp_days_published) und den Wunschplänen (kc_dp_wish_inbox) neu und legt ihn beim Admin unter „dp_druck“ ab.
+// Ergänzungen beim Admin in „dp_druck_konfig“: Bereitschaft (Vorschlag), Leerzeilen (Aushilfen ohne Zeiten) und Ersatz-Einträge je Person,
+// die nur gelten, solange die Person keinen neueren Wunschplan abgegeben hat (gleiche Revision). Nichts davon geht nach DP2.
+const DP_ART: Record<string, string> = { preferred: "pref", available: "avai", if_needed: "if_n", unavailable: "unav" };
+const dpKurzname = (name: string) => { const t = String(name || "").trim().split(/\s+/); return t.length > 1 ? `${t[0]} ${t[1][0]}` : t[0] || "?"; };
+async function dpDruckNeu(adminId: string) {
+  const [{ data: k }, { data: tageRoh }, { data: wRoh }] = await Promise.all([
+    db.from("kc_club_person_einstellung").select("wert").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
+    db.from("kc_dp_days_published").select("work_date,day_type,label,demand").eq("event_id", DW.veranstaltung).order("work_date"),
+    db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
+  ]);
+  const konf: any = k?.wert && typeof k.wert === "object" ? k.wert : {};
+  if (!(tageRoh ?? []).length) throw new Fehler("Für die Veranstaltung ist noch kein Bedarf veröffentlicht.", 409);
+  const ersatz: Record<string, any> = konf.ersatz && typeof konf.ersatz === "object" ? konf.ersatz : {};
+  const leerIds = (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => String(x.person_id));
+  const ids = [...new Set([...(wRoh ?? []).map((w: any) => String(w.person_id)), ...leerIds, ...Object.keys(ersatz), ...(Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => String(x.person_id))])]
+    .filter((id) => !id.startsWith("KC-P-TEST"));
+  const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name").in("person_id", ids) : { data: [] as any[] };
+  const name = new Map((leute ?? []).map((p: any) => [String(p.person_id), String(p.display_name || p.person_id)]));
+  const wRev = new Map((wRoh ?? []).map((w: any) => [String(w.person_id), w]));
+  const eintraegeVon = (pid: string) => {
+    const e = ersatz[pid], w: any = wRev.get(pid);
+    if (e && Array.isArray(e.eintraege) && (e.revision ?? null) === (w ? w.revision : null)) return e.eintraege.map((x: any) => ({ d: String(x.d), t: String(x.t), z: String(x.z || "B"), a: Number(x.a), b: Number(x.b) }));
+    return (Array.isArray(w?.entries) ? w.entries : []).filter((x: any) => DP_ART[x?.wishType] && x.start != null && x.end != null)
+      .map((x: any) => ({ d: String(x.date), t: DP_ART[x.wishType], z: ["V", "H", "B"].includes(x.wishZone) ? x.wishZone : "B", a: Number(x.start), b: Number(x.end) }));
+  };
+  const personen = ids.filter((pid) => !leerIds.includes(pid) || wRev.has(pid) || ersatz[pid]).map((pid) => ({ key: dpKurzname(name.get(pid) || pid), name: name.get(pid) || pid, eintraege: eintraegeVon(pid) })).filter((p) => p.eintraege.length);
+  const ergebnis = dpRechnen({
+    tage: (tageRoh ?? []).map((t: any) => ({ d: String(t.work_date), art: t.day_type === "market" ? "Markttag" : t.day_type === "prep" ? "Aufbau" : String(t.label || "Nachbereitung"),
+      baender: (Array.isArray(t.demand) ? t.demand : []).map((b: any) => ({ start: Number(b.start), end: Number(b.end), total: Number(b.total) || 0, front: b.front ?? null, back: b.back ?? null })) })),
+    personen,
+    leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
+    bereitschaft: (Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })),
+    max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
+  });
+  const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
+  const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
+  if (error) throw new Fehler("Der neue Stand konnte nicht gespeichert werden.", 500);
+  const fehlt = ergebnis.tage.reduce((n: number, t: any) => n + t.fehlt.reduce((a: number, x: number) => a + x, 0) / 2, 0);
+  const bedarf = ergebnis.tage.reduce((n: number, t: any) => n + t.bedarf.reduce((a: number, x: number) => a + x, 0) / 2, 0);
+  return { stand, fehlt, bedarf, stunden: ergebnis.stunden };
+}
+// welche Wunschpläne seit dem letzten Rechnen neu oder geändert sind (für den Hinweis im Ordner „Dienstplan zum Drucken“)
+async function dpDruckNeueWuensche(seit: string | null) {
+  let q = db.from("kc_dp_wish_inbox").select("person_id,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300);
+  if (seit) q = q.gt("updated_at", seit);
+  const { data } = await q;
+  const ids = (data ?? []).map((w: any) => String(w.person_id)).filter((id) => !id.startsWith("KC-P-TEST"));
+  const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name").in("person_id", ids) : { data: [] as any[] };
+  return (leute ?? []).map((p: any) => String(p.display_name || p.person_id).split(" ")[0]).sort();
 }
 async function adminIds(): Promise<string[]> {
   const { data } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
@@ -9373,7 +9426,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         nurAdmin(ich);
         const { data: zeile } = await db.from("kc_club_person_einstellung").select("wert, geaendert_am").eq("person_id", ich.person_id).eq("schluessel", "dp_druck").maybeSingle();
         const w = zeile?.wert && typeof zeile.wert === "object" ? zeile.wert : null;
-        return json(w && Array.isArray(w.tage) ? { ...w, stand: w.stand || zeile!.geaendert_am } : { tage: [] });
+        const stand = w && Array.isArray(w.tage) ? w.stand || zeile!.geaendert_am : null;
+        const neu = await dpDruckNeueWuensche(stand).catch(() => [] as string[]); // 2.650.0: neue/geänderte Wunschpläne seit dem Stand (nur lesen)
+        return json(w && Array.isArray(w.tage) ? { ...w, stand, neu } : { tage: [], neu });
+      }
+      case "dp_druck_rechnen": { // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: nur Admin – Entwurf neu rechnen und als neuen Druck-Stand ablegen
+        nurAdmin(ich);
+        const r = await dpDruckNeu(ich.person_id);
+        await protokoll(ich.person_id, "dp_druck_gerechnet", { fehlt: r.fehlt, bedarf: r.bedarf });
+        return json({ ok: true, ...r });
       }
       // 2.617.0 KC-CLUB-SPRUCH-ARCHIV: eigenes Spruch-Archiv (nur Admin) – Register je Anlass, Vorlagen + eigene Sprüche
       case "spruch_archiv": {
@@ -11048,6 +11109,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           : await db.from("kc_dp_wish_inbox").insert({ ...zeile, revision: 1 }).select("revision").single();
         if (r.error) throw new Fehler("Wünsche konnten nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "dienstwunsch_gespeichert", { eintraege: entries.length, bereitschaftTage: Object.keys(standby).length, revision: r.data.revision });
+        // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Admin bekommt den Hinweis „Dienstplan-Druck neu rechnen?“ (nicht bei eigenen Wünschen, nie Testpersonen)
+        if (!ich.person_id.startsWith("KC-P-TEST")) nebenbei((async () => {
+          const adm = (await adminIds()).filter((id) => id !== ich.person_id);
+          if (adm.length) await routerSenden("club_nachricht_push", adm, { titel: `🗓️ ${alt ? "Geänderter" : "Neuer"} Wunschplan von ${ich.vorname}`, kurz: "Dienstplan-Druck neu rechnen? Antippen öffnet den Ordner.",
+            betreff: `Köcheclub Werne – ${alt ? "geänderter" : "neuer"} Wunschplan von ${ich.name}`, text: `${ich.name} hat den Wunschplan ${alt ? "geändert" : "abgegeben"}. Im Archiv → Mein Ordner → „Dienstplan zum Drucken“ kannst du neu rechnen.`, url: `${APP_URL}#dpdruck` },
+            `club-dp-wunsch:${ich.person_id}:${r.data.revision}`);
+        })().catch((e) => console.error("dp hinweis", String(e))));
         return json({ ok: true, revision: r.data.revision, status: "offen" });
       }
 

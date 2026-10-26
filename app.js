@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.665.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.666.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19816,7 +19816,7 @@ function jzbFest(dt) {
     if ((F.ballonUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 15) { F.ballonUhr = jzbZ(5, 11); F.ballons.push({ x: jzbZ(J.w * .1, J.w * .7), y: J.h + 20 * k, v: jzbZ(18, 28) * k, ph: jzbZ(0, 6), farbe: jzbW(JZB_FEST_BUNT.slice(0, 6)) }); }
     for (const b of F.ballons) { b.y -= b.v * dt; b.ph += dt; b.x += Math.sin(b.ph * 1.3) * 8 * dt; }
     F.ballons = F.ballons.filter((b) => b.y > -40 * k);
-    jzbClownSchritt(F, dt); // 2.665.0 KC-CLUB-SIMJUE-CLOWN
+    jzbClownSchritt(F, dt); // 2.666.0 KC-CLUB-SIMJUE-CLOWN
     // 🎆 Feuerwerk zum Schluss (am Sim-Jü-Montag gibt es das echte) · 2.617.0: Montag 21:00–21:20 großes Feuerwerk gleichzeitig mit dem echten
     const gross = jzbSimJueFeuerwerk(), heute = new Date(), fwTag = themaFestZeit(heute) !== "simjue" || heute.getDay() === 1; // 2.620.0 KC-CLUB-SIMJUE-FEUERWERK-MONTAG: in der Sim-Jü-Woche nur am Montag
     if ((gross || (fwTag && F.t > JZB_FEST_DAUER - 30 && F.t < JZB_FEST_DAUER - 7)) && (F.raketUhr -= dt) <= 0) { F.raketUhr = gross ? jzbZ(.15, .45) : jzbZ(.45, 1.1);
@@ -20270,7 +20270,7 @@ function jzbNaschbudeMalen(c, F) {
   for (const [vx, farbe] of [[x0 + 66 * k, "rgba(255,150,205,.95)"], [x0 + 74 * k, "rgba(150,205,255,.95)"]]) { // Watte im Ständer
     c.strokeStyle = "#f5f0e6"; c.lineWidth = .9 * k; c.beginPath(); c.moveTo(vx, theke - 1.6 * k); c.lineTo(vx, theke - 10 * k); c.stroke();
     c.fillStyle = farbe; c.beginPath(); c.arc(vx, theke - 13 * k, 4 * k, 0, 7); c.arc(vx - 2.4 * k, theke - 11 * k, 3 * k, 0, 7); c.arc(vx + 2.4 * k, theke - 11.4 * k, 3 * k, 0, 7); c.fill(); }
-  jzbLauflicht(c, Array.from({ length: 13 }, (_, i) => [x0 + 5 * k + i * (bw - 10 * k) / 12, theke + 4 * k]), k, T, 3, 3); // Theke · 2.665.0 Wunsch Hansi: auch an der Bude langsamer (3 statt 8 Schritte je Sekunde)
+  jzbLauflicht(c, Array.from({ length: 13 }, (_, i) => [x0 + 5 * k + i * (bw - 10 * k) / 12, theke + 4 * k]), k, T, 3, 3); // Theke · 2.666.0 Wunsch Hansi: auch an der Bude langsamer (3 statt 8 Schritte je Sekunde)
   c.fillStyle = "#8b5a2b"; c.fillRect(x0 - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k); c.fillRect(x1 - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k);
   // Markise rosa-weiß mit Bögen, darüber das Schild mit umlaufendem Lauflicht
   const dy = oben - 4 * k, st = 10;
@@ -20283,10 +20283,10 @@ function jzbNaschbudeMalen(c, F) {
   const rahmen = [], n = 16, m = 4; // Birnen rund um das Schild
   for (let i = 0; i < n; i++) rahmen.push([sx0 + i * sw / n, sy0 - 1 * k]); for (let i = 0; i < m; i++) rahmen.push([sx0 + sw + 1 * k, sy0 + i * sh / m]);
   for (let i = n; i > 0; i--) rahmen.push([sx0 + i * sw / n, sy0 + sh + 1 * k]); for (let i = m; i > 0; i--) rahmen.push([sx0 - 1 * k, sy0 + i * sh / m]);
-  jzbLauflicht(c, rahmen, k, T, 4, 4); // 2.665.0: 4 statt 12
+  jzbLauflicht(c, rahmen, k, T, 4, 4); // 2.666.0: 4 statt 12
   c.restore(); void F;
 }
-// 2.665.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „ab und an einen Luftballon-Verkäufer durch die Kirmes-Szene laufen lassen – ein Clown mit einem Strauß
+// 2.666.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „ab und an einen Luftballon-Verkäufer durch die Kirmes-Szene laufen lassen – ein Clown mit einem Strauß
 // Luftballons; dann kommt ein kleines Mädchen und bekommt einen. Beim nächsten Mal ein Junge“): der Clown läuft von links bis vor das Herz und wartet,
 // von rechts kommt das Kind, bekommt einen Ballon (er schwebt vom Strauß in die Hand) und hüpft damit davon; der Clown zieht weiter. Abwechselnd Mädchen/Junge.
 let JZB_CLOWN_N = 0; const JZB_CLOWN_GR = 1.25; // Größe von Clown und Kind (Wunsch Hansi beim Karussell: „etwas größer“)
@@ -20388,7 +20388,7 @@ function jzbKirmesKarussellMalen(c, F) {
   const hg = 1.8, hb = 16 * k * hg, hx = Math.max(JZB_RAND + 150 * k, J.w * .5), hy = J.h - 3 * k - 4 * k - 1.465 * hb; // Herz bleibt in der Mitte
   jzbPfostenMalen(c, hx - hb * 1.45, hy, hx + 1 * k); jzbHerzMalen(c, hx, hy, k, F.t, hg);
   jzbNaschbudeMalen(c, F);
-  jzbClownMalen(c, F); // 2.665.0 KC-CLUB-SIMJUE-CLOWN
+  jzbClownMalen(c, F); // 2.666.0 KC-CLUB-SIMJUE-CLOWN
   for (const r of F.raketen) { c.strokeStyle = "rgba(255,230,160,.8)"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(r.x, r.y); c.lineTo(r.x, r.y + 12 * k); c.stroke(); c.fillStyle = "#fff"; c.beginPath(); c.arc(r.x, r.y, 1.6, 0, 7); c.fill(); }
 }
 function jzbKirmesMalen(c, F) { return jzbKirmesVariante() === "riesenrad" ? jzbKirmesRiesenradMalen(c, F) : jzbKirmesKarussellMalen(c, F); }
@@ -27887,6 +27887,7 @@ function hashSprung(h) {
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
     else if (h === "#wecker") wkChipTippen(); // 2.640.0 KC-CLUB-UHR-WECKER: aus dem Push „Zeit ist um“ / „Wecker“
+    else if (h === "#dpdruck" && ICH?.admin) dpdStart(); // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: aus dem Push „Neuer Wunschplan“
     else if (h === "#anruf") anrufZurueck(); // KC-CLUB-ANRUF-ANZEIGE (2.237.0): aus der Mitteilung in der Statusleiste
     else if (h === "#dienstgruss") dgZeigen(true); // KC-CLUB-DIENST-GRUSS (2.224.0): aus der Push am Morgen
     else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher
@@ -42395,10 +42396,30 @@ const dpdUhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); r
 const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
 const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3e" onclick="dpdStart()" title="Dienstplan zum Ausdrucken"><span class="sym">🗓️</span>
     <span class="schild"><span class="jahr">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
-function dpdStart() { druckStarten("dpDruck"); }
+// 2.665.0 KC-CLUB-DP-NEU-RECHNEN: vor dem Öffnen den Stand holen (Stand, neue Wunschpläne seit dem Rechnen) – „🔄 Jetzt neu rechnen“ rechnet auf dem Club-Server
+async function dpdStart() {
+  if (!ICH?.admin) return;
+  try { const d = await api("dp_druck", {}); DPD.daten = d; DPD.info = { stand: d.stand || null, neu: Array.isArray(d.neu) ? d.neu : [] }; } catch { DPD.info = null; }
+  druckStarten("dpDruck");
+}
+async function dpdNeuRechnen(k) {
+  if (!ICH?.admin) return;
+  if (k) { k.disabled = true; k.textContent = "⏳ Wird gerechnet …"; }
+  try {
+    const r = await api("dp_druck_rechnen", {}, { warten: true });
+    melde(`🗓️ Neu gerechnet – Bedarf ${dpdStd(r.bedarf)} Std., es fehlen noch ${dpdStd(r.fehlt)} Std.`);
+    druckZu(); await dpdStart();
+  } catch (e) { meldeFehler(e); if (k) { k.disabled = false; k.textContent = "🔄 Jetzt neu rechnen"; } }
+}
 function dpdOptionen() {
   const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
-  return `<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
+  const i = DPD.info, neu = i?.neu || [];
+  const stand = `<div class="karte" style="margin:0 0 10px;padding:10px">
+      <div>${i?.stand ? `Stand: <b>${esc(wann(i.stand))}</b>` : "Noch kein Stand abgelegt."}</div>
+      ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
+      <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
+      <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet den Entwurf aus Bedarf und allen Wunschplänen neu (Leon und Bereitschaft bleiben). Nichts geht nach DP2.</div></div>`;
+  return `${stand}<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
     ${r("1", "1 Blatt breit", "8–23 Uhr auf einem Blatt, die Blätter untereinander legen")}${r("2", "2 Blätter breit (größer)", "links 8–16, rechts 15:30–23 Uhr – nebeneinander legen, 15:30–16 ist die Klebekante")}
     <p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>`;
 }
