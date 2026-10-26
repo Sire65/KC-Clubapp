@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.688.0 – 2026-10-26 – 📋 Tagesordnung in der Erinnerung am Vortag (KC-CLUB-ERINNERUNG-THEMEN)
+Wunsch Hansi („Tagesordnung in die Erinnerung am Donnerstag aufnehmen – einspielen“): Die Erinnerung „⏰ Morgen: …“ (ab 10 Uhr am Vortag) nennt jetzt die Themen – im Push kurz („· Themen: Club-App · Metallschilder · …“, gekürzt), in der E-Mail als nummerierte Liste „📋 Tagesordnung“. Quelle: Punkte aus dem Protokoll(-Entwurf) des Treffens, dazu eingereichte Themen-Vorschläge, die dort noch fehlen (höchstens 12, doppelte nur einmal). Ohne Themen bleibt der Text wie bisher. Dazu (Daten, auf Wunsch Hansi): im Protokoll-Entwurf zur Sitzung am 30.10. die Punkte „Besetzungsmatrix besprechen“ und „Diverse Fragen klären und darüber abstimmen“ nachgetragen.
+
 ## 2.687.0 – 2026-10-26 – ⏰ Treffen-Erinnerungen erst ab 10 Uhr (KC-CLUB-ERINNERUNG-10UHR)
 Fund 26.10. bei der Frage „wann bekommen die Mitglieder die Einladung zur Sitzung am Freitag“, Wunsch Hansi „ändere auf 10 Uhr und einspielen“: Das Nachfassen 3 Tage vorher („noch nicht zu- oder abgesagt“) und die Erinnerung „⏰ Morgen: …“ am Vortag gingen beim ersten Lauf nach Mitternacht raus (~0:05 Uhr) – mitten in der Nacht, bei „Nicht stören“ ohne Push. Jetzt erst ab 10 Uhr deutscher Zeit (einmal am Tag, holt später am Tag nach, falls ein Lauf ausfällt). Die Erinnerung 48 Std. vorher und die Einladung beim Anlegen bleiben unverändert.
 

@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.687.0";
+const SERVER_VERSION = "2.688.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6766,6 +6766,18 @@ async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
   }
   return [...ids];
 }
+// 2.688.0 KC-CLUB-ERINNERUNG-THEMEN (Wunsch Hansi „Tagesordnung in die Erinnerung am Donnerstag“): Tagesordnung eines Treffens = die Punkte aus dem
+// Protokoll(-Entwurf) dieses Treffens, dazu eingereichte Themen-Vorschläge, die dort noch fehlen (gleiche Schreibweise zählt doppelt nur einmal). Höchstens 12.
+async function treffenThemen(treffenId: string): Promise<string[]> {
+  const [{ data: pr }, { data: th }] = await Promise.all([
+    db.from("kc_club_sitzungsprotokolle").select("tagesordnung").eq("treffen_id", treffenId).order("erstellt_am", { ascending: false }).limit(1),
+    db.from("kc_club_vorschlaege").select("titel,status").eq("treffen_id", treffenId).eq("art", "thema").neq("status", "abgelehnt").order("erstellt_am"),
+  ]);
+  const aus: string[] = [], schon = new Set<string>(), add = (x: unknown) => { const v = txt(x, 120); const k = v.toLowerCase().replace(/[^a-z0-9äöüß]/g, ""); if (v && k && !schon.has(k)) { schon.add(k); aus.push(v); } };
+  for (const x of (pr?.[0]?.tagesordnung ?? []) as string[]) add(x);
+  for (const x of th ?? []) add((x as any).titel);
+  return aus.slice(0, 12);
+}
 // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0, Wunsch Hansi): 2 Tage (48 Std.) vor einem Köcheclub-Treffen eine Push-Erinnerung an alle,
 // die noch nicht zu- oder abgesagt haben („vielleicht“ zählt nicht) – passend zum rot blinkenden Hinweis in der App. Einmal je Treffen.
 async function antwortErinnerung2T() {
@@ -7908,10 +7920,11 @@ Köcheclub Werne`,
         const ziel = (await sammelEmpfaenger()).map((x) => x.person_id).filter((id) => !nein.has(id));
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ort = t.ort || (g ? `bei ${vorname(g)}` : "");
+        const themen = await treffenThemen(t.id).catch(() => [] as string[]); // 2.688.0 KC-CLUB-ERINNERUNG-THEMEN
         await senden("club_erinnerung", ziel, {
           betreff: `Köcheclub Werne – Erinnerung: morgen ${t.titel}, ${fZeit.format(new Date(t.beginn))} Uhr`,
-          titel: "⏰ Morgen: " + t.titel, kurz: `${wann(t.beginn)}${ort ? " – " + ort : ""}`,
-          text: `Hallo,\n\nkurze Erinnerung an unser Treffen morgen:\n\n📅 ${wann(t.beginn, true)}${ort ? "\n📍 " + ort : ""}\n\nZu- oder absagen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          titel: "⏰ Morgen: " + t.titel, kurz: `${wann(t.beginn)}${ort ? " – " + ort : ""}${themen.length ? ` · Themen: ${themen.join(" · ")}`.slice(0, 160) : ""}`,
+          text: `Hallo,\n\nkurze Erinnerung an unser Treffen morgen:\n\n📅 ${wann(t.beginn, true)}${ort ? "\n📍 " + ort : ""}${themen.length ? `\n\n📋 Tagesordnung:\n${themen.map((x, i) => `${i + 1}. ${x}`).join("\n")}` : ""}\n\nZu- oder absagen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + "#termine",
         }, `club-erinnerung:${t.id}`);
         elternHinweis(ziel, "erinnerung", "⏰ Morgen Köcheclub – {kind}", `${t.titel}: ${wann(t.beginn)}${ort ? " – " + ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
