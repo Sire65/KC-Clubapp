@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.659.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.660.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7941,11 +7941,35 @@ function klopfSprechenAnnehmen() {
 const KLOPF_GESPERRT_RE = /Anklopfen ausgeschaltet/;
 function klopfGesperrt(pid, name) {
   const n = esc(name || "Das Mitglied");
-  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔕 ${n} hat Anklopfen blockiert</h3>
-    <p class="dlg-text">${n} möchte gerade nicht angeklopft werden. Schreib ${n} doch eine Nachricht über den Chat – oder ruf an.</p>
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔕 ${n} hat Anklopfen deaktiviert</h3>
+    <p class="dlg-text">Bei ${n} kannst du nicht anklopfen. Schreib am besten eine Nachricht – oder ruf an.</p>
     <div class="dlg-knoepfe"><button class="knopf haupt" data-w="chat">💬 Nachricht schreiben</button><button class="knopf" data-w="anruf">📞 Anrufen</button><button class="knopf" data-w="zu">Schließen</button></div>`, () => {});
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); $("onlineBlatt")?.classList.add("versteckt");
     if (b.dataset.w === "chat") direkt(pid); else if (b.dataset.w === "anruf") anrufen(pid); }));
+}
+// 2.660.0 KC-CLUB-ANKLOPFEN-HINWEIS (Wunsch Hansi „klopfe ich bei jemandem an, der es nicht freigeschaltet hat, will ich den Hinweis: X hat Anklopfen
+// deaktiviert, schreib am besten eine Nachricht – dann weiß ich, dass ich es nicht versuchen kann“): der 👋 bleibt sichtbar (blass) und erklärt, warum es nicht geht
+function mgKlopfStand(m) { // "an" | "aus" (Anklopfen deaktiviert) | "ich" (ich verberge selbst) | "verborgen" (zeigt online nicht) | "offline"
+  if (!m || m.person_id === ICH?.person_id) return null;
+  if (ONL.zeigen === false) return "ich";
+  if (m.verborgen) return "verborgen";
+  if (!mgOn(m)) return "offline";
+  return ONL.liste.find((x) => x.person_id === m.person_id)?.klopfbar === false ? "aus" : "an";
+}
+function mgKlopfKnopf(m, klasse = "knopf klein", inhalt = null) {
+  const st = mgKlopfStand(m); if (!st) return "";
+  const an = st === "an", sym = st === "aus" ? "🔕" : "👋";
+  return `<button class="${klasse}${an ? "" : " mg-aus"}" title="${an ? "Anklopfen" : "Anklopfen geht gerade nicht – antippen für den Grund"}" onclick="${an || st === "aus" ? `anklopfen('${m.person_id}')` : `klopfNichtMoeglich('${m.person_id}')`}">${inhalt ? inhalt(st, sym) : sym}</button>`;
+}
+function klopfNichtMoeglich(pid) {
+  const m = MITGLIEDER?.find((x) => x.person_id === pid) || { person_id: pid }, st = mgKlopfStand(m), n = esc(String(m.vorname || m.name || "Das Mitglied").split(" ")[0]);
+  if (st === "an" || st === "aus") return anklopfen(pid);
+  const [kopf, text] = st === "ich" ? ["🙈 Du zeigst nicht, wann du online bist", `Darum siehst du selbst niemanden online und kannst nicht anklopfen. Schreib ${n} am besten eine Nachricht – oder schalte unter ⚙️ → „🔒 Privatsphäre“ „🟢 Anderen zeigen, wann ich online bin“ ein.`]
+    : st === "verborgen" ? [`🔕 ${n} zeigt den Online-Status nicht`, `Darum kannst du bei ${n} nicht anklopfen. Schreib am besten eine Nachricht – die kommt sicher an.`]
+    : [`💤 ${n} ist gerade nicht online`, `Anklopfen geht nur, wenn ${n} die App gerade offen hat (🟢). Schreib am besten eine Nachricht – ${n} sieht sie beim nächsten Öffnen.`];
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">${kopf}</h3><p class="dlg-text">${text}</p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="chat">💬 Nachricht schreiben</button>${st === "ich" ? '<button class="knopf" data-w="einst">⚙️ Einstellung öffnen</button>' : ""}<button class="knopf" data-w="zu">Schließen</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "chat") direkt(pid); else if (b.dataset.w === "einst") einstiegHin("privat", "setOnline"); }));
 }
 // KC-CLUB-ANKLOPFEN-WARTEN (1.51.0, Wunsch Hansi): „👋 Klopfe gerade an bei X“ mit Sekunden-Uhr; nach 1 Minute fragen:
 // weiter anklopfen, auflegen oder eine Nachricht „Melde dich doch mal bei mir“ schicken. Antwortet X, schließt sich alles.
@@ -37526,7 +37550,7 @@ function mgKachelnHtml(liste) {
       ${was}${kreis(m, m.name, 58)}<span class="mk-titel">${esc(m.name)}${gbKerze(m.person_id)}</span>
       ${m.aemter?.length ? `<span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
       ${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : ""}${da}${ICH.admin && m.unerreichbar ? '<span class="mk-unter" title="kein Push, keine E-Mail – nur über 🔗 Link oder Telefon">📵 nicht erreichbar</span>' : ""}${ICH.admin && m.probe ? `<span class="mk-unter" title="Probephase – nur für dich als Admin sichtbar">🧪 Probe${m.probe.bis ? " bis " + esc(prDatum(m.probe.bis)) : ""}</span>` : ""}
-      ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()">${mgStern(m)}<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${on ? `<button class="knopf klein" title="Anklopfen" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
+      ${ich ? '<span class="mk-unter"><b>(du)</b></span>' : `<span class="mg-knoepfe" onclick="event.stopPropagation()">${mgStern(m)}<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgKlopfKnopf(m)}${mgAnrufKnoepfe(m)}</span>`}</div>`; // 2.23.87 (Wunsch Hansi): 📞/🎥 auch auf der Kachel – aktiv bei online (gleicher Baustein wie in der Liste)
   };
   return `<p class="hinweis" style="margin:0 2px 8px;font-size:.85rem">🟢 online · 🔵 heute da · 🟠 abwesend · ⚪ noch nie in der App – Kachel antippen für Telefon, Adresse${ICH?.admin ? ", 🔗 Link und 🎖️ Ämter" : " usw."}</p>
     <div class="mini-kacheln mg-kacheln">${liste.map(k).join("")}</div>`;
@@ -37617,7 +37641,7 @@ function mitgliederZeichnen() {
       <div style="flex:1;cursor:pointer" onclick="mitgliedOeffnen('${m.person_id}')"><b>${esc(m.name)}</b>${gbKerze(m.person_id)}${wegIcons(m)} <span class="hinweis">›</span>${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}
         <div class="hinweis" style="font-size:.85rem">${mgOn(m) ? '<b style="color:var(--textGruen)">● online</b> · ' : ""}${m.status || m.aktiv ? `<span class="stmarke st-${statusArt(m.status)}">${esc(m.status ? statusText(m.status) : "🟢 verfügbar")}</span>` : "⚪ noch nicht in der App"}${m.aktiv ? " · 📲 aktiv" : ""}${!mgOn(m) && m.zuletztDa ? ` · 🕒 ${esc(zuletztText(m.zuletztDa))}` : ""}</div>
         ${ICH.admin && (m.app || m.push || !m.mail || m.protokolle === false || m.unerreichbar || m.probe) ? `<div class="hinweis" style="font-size:.85rem">${[m.app && m.zuletzt ? "zuletzt " + zeitKurz(m.zuletzt) : m.app ? "Link verschickt" : "", m.push ? "🔔 Push" : "", m.unerreichbar ? "📵 nicht erreichbar – kein Push, keine Mail" : m.mail ? "" : "⚠️ keine Mail", m.protokolle === false ? "📄 ohne Protokolle" : "", m.probe ? "🧪 Probephase" : "", m.app && m.zuletzt ? (m.ansicht === "einfach" ? "🟢 einfache Ansicht" : m.ansicht === "erweitert" ? "🔧 erweiterte Ansicht" : "❔ Ansicht noch nicht gewählt") : ""].filter(Boolean).join(" · ")}</div>` : ""}</div>
-      <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${mgStern(m)}${mgOn(m) ? `<button class="knopf klein" title="Anklopfen – direkt schreiben" onclick="anklopfen('${m.person_id}')">👋</button>` : ""}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
+      <div class="mg-akt${ICH.admin ? " mg-akt3" : ""}">${mgStern(m)}${mgKlopfKnopf(m)}${m.person_id !== ICH.person_id ? `<button class="knopf klein" title="Nachricht" onclick="direkt('${m.person_id}')">💬</button>${mgAnrufKnoepfe(m)}` : ""}
       ${ICH.admin ? `<button class="knopf klein" title="App-Link" onclick="linkTeilen('${m.person_id}')">🔗</button><button class="knopf klein" title="Einrichtungskarte drucken" onclick="einrichtungskarte('${m.person_id}')">🖨️</button><button class="knopf klein" title="Amt & Rechte" onclick="rolleBearbeiten('${m.person_id}')">🎖️</button>` : ""}</div></div>`).join("")
       + '<p class="hinweis">Namen antippen für Details (Telefon, Adresse … sofern freigegeben).</p>'
       + (ICH.admin ? '<p class="hinweis">🔗 = persönlichen App-Link erzeugen und per WhatsApp schicken (ein neuer Link macht den alten ungültig). 🎖️ = Amt und Rechte.</p>' : "");
@@ -41376,6 +41400,7 @@ function mitgliedZeigen() {
     ${m.notfall ? `<div class="karte"><h3>🆘 Notfallkontakt</h3><div class="zeile"><div style="flex:1"><b>${esc(m.notfall.name || "–")}</b>${m.notfall.beziehung ? ` <span class="hinweis">(${esc(m.notfall.beziehung)})</span>` : ""}<div class="hinweis">${esc(m.notfall.telefon || "")}</div></div>${m.notfall.telefon ? `<a class="knopf klein" href="tel:${esc(nurZiffern(m.notfall.telefon))}">📞</a>` : ""}</div><p class="hinweis" style="font-size:.85rem;margin-bottom:0">🔒 Nur für ${m.selbst ? "dich und " : ""}Clubsprecher, Kassenwart und Admin sichtbar.</p></div>` : m.selbst ? '<p class="hinweis">🆘 Noch kein Notfallkontakt – eintragen unter ⚙️ Mehr → Privatsphäre.</p>' : ""}
     <div class="md-kacheln" id="mdKacheln">
       ${!m.selbst && ONL.ids.has(m.person_id) ? `<button class="knopf haupt breit" onclick="anklopfen('${m.person_id}')"><span class="kt-ico">👋</span>Anklopfen – ist gerade online</button><button class="knopf" onclick="anrufen('${m.person_id}')"><span class="kt-ico">📞</span>Anrufen (Test)</button><button class="knopf" onclick="anrufen('${m.person_id}', true)"><span class="kt-ico">🎥</span>Video (Test)</button>` : ""}
+      ${!m.selbst && !ONL.ids.has(m.person_id) ? mgKlopfKnopf(m, "knopf breit", (st) => `<span class="kt-ico">👋</span>Anklopfen – ${st === "verborgen" ? "zeigt nicht, wann online" : st === "ich" ? "du zeigst nicht, wann du online bist" : "gerade nicht online"}`) : ""}
       ${!m.selbst && !ONL.ids.has(m.person_id) ? `<p class="hinweis breit" style="margin:4px 0">📞 🎥 Anrufen und Video gehen, sobald ${esc(String(m.name || "").split(" ")[0])} die App offen hat (🟢 online).</p>` : ""}
       ${m.selbst ? "" : `<button class="knopf ${ONL.ids.has(m.person_id) ? "" : "haupt"}" onclick="direkt('${m.person_id}')"><span class="kt-ico">💬</span>Nachricht in der App${m.chatAnzahl ? `<small class="md-zahl">${m.chatAnzahl} ${m.chatAnzahl === 1 ? "Nachricht" : "Nachrichten"}</small>` : ""}</button><div id="mdSpiel" hidden></div>`}
       ${ICH?.admin ? `<button class="knopf" onclick="nachrichtenStatistik('${m.person_id}')"><span class="kt-ico">📊</span>Statistik</button>` : ""}

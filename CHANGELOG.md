@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.660.0 – 2026-10-26 – 👋 Anklopfen: Hinweis, wenn es nicht geht (KC-CLUB-ANKLOPFEN-HINWEIS)
+- Wunsch Hansi („Klopfe ich bei jemandem an, der es nicht freigeschaltet hat, will ich den Hinweis: X hat Anklopfen deaktiviert, schreib am besten eine Nachricht – dann weiß ich, dass ich es nicht versuchen kann“): Der 👋-Knopf verschwindet nicht mehr kommentarlos, sondern bleibt blass sichtbar (Mitglieder-Kachel, Mitglieder-Liste, Mitglied-Seite). Antippen erklärt den Grund, jeweils mit **💬 Nachricht schreiben**: **🔕 X hat Anklopfen deaktiviert** (Knopf 🔕) · **💤 X ist gerade nicht online** (Anklopfen nur bei offener App) · **🔕 X zeigt den Online-Status nicht** · **🙈 Du zeigst nicht, wann du online bist** (dann sieht man selbst niemanden online – mit „⚙️ Einstellung öffnen“). Test: `tools/anklopfen-hinweis/anklopfen-hinweis-browser.mjs`. Nur App.
+
 ## 2.659.0 – 2026-10-26 – ⬜ Ecken der Kacheln per Regler (KC-CLUB-KACHEL-ECKEN)
 - Wunsch Hansi („Slider: Kacheln von 4-eckig bis fast rund einstellen, und ein Standard-Knopf“): ⚙️ → „✨ Effekte“ → **„⬜ Ecken der Kacheln“** (unter „🌗 Schatten“). Regler ganz links ◼️ eckig, ganz rechts ⚪ fast rund (0–60 px), wirkt sofort; Anzeige „ganz eckig · fast eckig · leicht abgerundet · stark abgerundet · fast rund“. **↺ Standard** stellt die normalen Ecken wieder her (ausgegraut, solange Standard gilt). Gilt für dieses Gerät, bleibt nach dem Neuladen. Hilfe-Eintrag, Twinkey-Frage, Lupe. Test: `tools/kachel-ecken/kachel-ecken-browser.mjs`. Nur App.
 

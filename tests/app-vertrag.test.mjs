@@ -11561,7 +11561,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.481.0 KC-CLUB-ANKLOPFEN-GESPERRT: Anklopfen blockiert → eigenes Fenster mit „💬 Nachricht schreiben“ und „📞 Anrufen“
 {
   const k = html.slice(html.indexOf("function klopfGesperrt("), html.indexOf("// KC-CLUB-ANKLOPFEN-WARTEN (1.51.0"));
-  assert.ok(/hat Anklopfen blockiert<\/h3>/.test(k) && /data-w="chat">💬 Nachricht schreiben/.test(k) && /data-w="anruf">📞 Anrufen/.test(k) && /direkt\(pid\); else if \(b\.dataset\.w === "anruf"\) anrufen\(pid\)/.test(k), "Fenster mit Chat und Anruf");
+  assert.ok(/hat Anklopfen (blockiert|deaktiviert)<\/h3>/.test(k) && /data-w="chat">💬 Nachricht schreiben/.test(k) && /data-w="anruf">📞 Anrufen/.test(k) && /direkt\(pid\); else if \(b\.dataset\.w === "anruf"\) anrufen\(pid\)/.test(k), "Fenster mit Chat und Anruf");
   assert.ok(/klopfbar === false\) return klopfGesperrt\(pid, name\);/.test(html) && (html.match(/KLOPF_GESPERRT_RE\.test\(e\?\.message \|\| ""\)/g) || []).length === 2, "beim Antippen und bei der Antwort des Servers (auch „weiter anklopfen“)");
   assert.ok(/hat Anklopfen ausgeschaltet – schreib einfach eine Nach/.test(server), "Server-Text passt zur Erkennung");
 }
@@ -12922,4 +12922,11 @@ function idx0() { return lies("index.html"); }
   assert.ok(/<input type="range" id="setKachelEcken" min="0" max="60"[^>]*oninput="kachelEckenSetzen\(this\.value\)">/.test(html) && /id="kachelEckenStandard" onclick="kachelEckenSetzen\(null\)">↺ Standard<\/button>/.test(html), "Regler und Standard-Knopf");
   assert.ok(/:root\.kr-an \.kachel, :root\.kr-an #raster \.kachel \{ border-radius: var\(--kachel-r\); \}/.test(html), "wirkt auf die Kacheln, ohne Wert Standard");
   assert.ok(/const KACHEL_ECKEN = "kc_club_kachel_ecken";/.test(programm) && /if \(v === null\) localStorage\.removeItem\(KACHEL_ECKEN\);/.test(programm) && /try \{ kachelEckenAnwenden\(\); \} catch \{\}/.test(programm), "je Gerät, Standard löscht, beim Laden angewendet");
+}
+// 2.660.0 KC-CLUB-ANKLOPFEN-HINWEIS (Wunsch Hansi „Hinweis: X hat Anklopfen deaktiviert, schreib am besten eine Nachricht“)
+{
+  assert.ok(/function mgKlopfStand\(m\)/.test(programm) && /function mgKlopfKnopf\(m, /.test(programm) && /function klopfNichtMoeglich\(pid\)/.test(programm), "Bausteine");
+  assert.ok((programm.match(/mgKlopfKnopf\(m[,)]/g) || []).length >= 3, "Kachel, Liste und Mitglied-Seite zeigen den Knopf auch, wenn es nicht geht");
+  assert.ok(/hat Anklopfen deaktiviert<\/h3>/.test(programm) && /ist gerade nicht online`/.test(programm) && /zeigt den Online-Status nicht`/.test(programm) && /Du zeigst nicht, wann du online bist/.test(programm), "alle Gründe erklärt");
+  assert.ok(/\.knopf\.mg-aus \{ opacity: \.45; \}/.test(html), "blass");
 }
