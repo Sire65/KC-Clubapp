@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.665.0 – 2026-10-26 – 🤡 Sim-Jü: Luftballon-Clown · Lauflicht an der Bude ruhiger (KC-CLUB-SIMJUE-CLOWN)
+- Wunsch Hansi („Mach das Lauflicht bei der Bude auch langsamer“): Lauflicht an der Theke 3 statt 8, am Schild 4 statt 12 Schritte je Sekunde.
+- Wunsch Hansi („ab und an einen Luftballon-Verkäufer durch die Kirmes-Szene laufen lassen. Der ist ein Clown und hat einen Strauß Luftballons. Dann kommt ein kleines Mädchen und bekommt einen. Beim nächsten Mal ein Junge“): Etwa alle 30–40 Sekunden läuft ein Clown (gelb-blauer Anzug mit Punkten, rote Schuhe, Halskrause, rote Nase, bunte Haare, Hütchen) mit einem Strauß aus sechs Ballons von links bis vor die Bude und wartet. Von rechts kommt ein Kind – beim ersten Mal ein Mädchen (rosa Kleid, Zöpfe), beim nächsten Mal ein Junge (blaues Hemd, rote Kappe), dann wieder abwechselnd. Ein Ballon schwebt vom Strauß in die Hand des Kindes, es hüpft damit davon, der Clown zieht weiter. Auch in der Riesenrad-Szene 2027. Test: `tools/simjue/karussell-browser.mjs` (Ablauf Mädchen → Junge). Nur App.
+
 ## 2.664.0 – 2026-10-26 – 🎠 Schatten im Kopf liegt hinter der Szene (KC-CLUB-SCHATTEN-HINTER-SZENE)
 - Bild Hansi („Jetzt sieht es so aus, dass der Schatten das Karussell und die Bude verdeckt. Der Schatten muss im Hintergrund bleiben“): Die Szene im Kopf (Sim-Jü, Jahreszeit-Bühne) liegt bewusst hinter den Feldern; der Schatten der Felder wurde darüber gemalt. Jetzt zeichnet eine unsichtbare Unterlage (::before, Ebene −2) den Schatten **hinter** die Szene (Ebene −1); der Kopf bildet dafür eine eigene Ebene. Karussell, Herz und Bude bleiben frei. Die Karte im Laufband und die Pfeile behalten den normalen Schatten (liegen nie über der Szene). Korrektur zu 2.661.0/2.662.0 (Nummer 2.663.0 war schon von der Neon-Kachel belegt), gleich eingespielt. Nur App.
 ## 2.663.0 – 2026-10-26 – 📈 Neon-Kachel: Kontingent-Prüfung · 🗄️ Neon-Sicherung schlanker (KC-NEON-PRUEFUNG)

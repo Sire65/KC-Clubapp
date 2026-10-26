@@ -12946,3 +12946,9 @@ function idx0() { return lies("index.html"); }
   assert.ok(/::before \{ content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var\(--sch-kopf\); z-index: -2; pointer-events: none; \}/.test(html), "Schatten auf Ebene -2, hinter der Szene (-1)");
   assert.ok(/\.hero > \.jz-schicht\.jz-buehne \{ z-index: -1; \}/.test(html), "Szene bleibt auf -1");
 }
+// 2.665.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „Lauflicht bei der Bude langsamer; ab und an ein Luftballon-Verkäufer – ein Clown mit Strauß; ein Mädchen bekommt einen, beim nächsten Mal ein Junge“)
+{
+  assert.ok(/theke \+ 4 \* k\]\), k, T, 3, 3\);/.test(programm) && /jzbLauflicht\(c, rahmen, k, T, 4, 4\);/.test(programm), "Lauflicht an der Bude langsamer");
+  assert.ok(/function jzbClownSchritt\(F, dt\)/.test(programm) && /function jzbClownMalen\(c, F\)/.test(programm) && /jzbClownSchritt\(F, dt\); \/\/ 2\.665\.0/.test(programm) && /jzbClownMalen\(c, F\); \/\/ 2\.665\.0/.test(programm), "Clown läuft und wird gemalt");
+  assert.ok(/kind: JZB_CLOWN_N\+\+ % 2 \? "junge" : "maedchen"/.test(programm), "abwechselnd Mädchen und Junge");
+}

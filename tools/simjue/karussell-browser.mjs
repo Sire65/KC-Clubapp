@@ -16,14 +16,17 @@ const r = await seite.evaluate(() => {
   const lauf = (variante) => { const jahr = new Date().getFullYear(), alt = JZB_KIRMES_JAHR[jahr]; if (variante) JZB_KIRMES_JAHR[jahr] = variante; else delete JZB_KIRMES_JAHR[jahr];
     const cv = document.createElement("canvas"); cv.width = 420; cv.height = 150; const c = cv.getContext("2d");
     Object.assign(JZB, { ctx: c, w: 420, h: 150, k: 1, T: 0, fx: [], boden: [], liegt: [], gaeste: [], halme: [], blumen: [], saison: "kirmes", art: "kirmes", vorschau: "kirmes", phase: "anfang" });
-    let n = 0, fehlerText = null, v = jzbKirmesVariante();
-    try { for (let i = 0; i < 30 * 125; i++) { JZB.T += 1 / 30; jzbFest(1 / 30); if (JZB.fest) { c.clearRect(0, 0, 420, 150); jzbKirmesMalen(c, JZB.fest); n++; } } } catch (x) { fehlerText = String(x); }
+    let n = 0, fehlerText = null, v = jzbKirmesVariante(); const clown = []; // 2.665.0 KC-CLUB-SIMJUE-CLOWN: Ablauf mitschreiben
+    try { for (let i = 0; i < 30 * 125; i++) { JZB.T += 1 / 30; jzbFest(1 / 30); if (JZB.fest) { c.clearRect(0, 0, 420, 150); jzbKirmesMalen(c, JZB.fest); n++;
+      const C = JZB.fest.clown, z = C ? C.kind + ":" + C.ph + (C.hat ? "+ballon" : "") : ""; if (z && clown[clown.length - 1] !== z) clown.push(z); } } } catch (x) { fehlerText = String(x); }
     if (alt) JZB_KIRMES_JAHR[jahr] = alt; else delete JZB_KIRMES_JAHR[jahr];
-    return { n, fehlerText, v }; };
+    return { n, fehlerText, v, clown }; };
   return { neu: lauf(null), alt: lauf("riesenrad"), j2027: jzbKirmesVariante(new Date(2027, 9, 24)), j2026: jzbKirmesVariante(new Date(2026, 9, 25)) };
 });
 ok(!r.neu.fehlerText && r.neu.v === "karussell" && r.neu.n > 3000, `neue Szene (Kinderkarussell, Herz, Naschbude): ${r.neu.n} Bilder ohne Fehler`);
 ok(!r.alt.fehlerText && r.alt.v === "riesenrad" && r.alt.n > 3000, `gespeicherte Riesenrad-Szene: ${r.alt.n} Bilder ohne Fehler`);
 ok(r.j2026 === "karussell" && r.j2027 === "riesenrad", "2026 Karussell, 2027 wieder die Riesenrad-Szene");
+const cl = r.neu.clown.join(" → ");
+ok(/maedchen:rein → maedchen:warten → maedchen:geben → maedchen:weg\+ballon/.test(cl) && /junge:rein → junge:warten → junge:geben → junge:weg\+ballon/.test(cl) && cl.indexOf("maedchen") < cl.indexOf("junge"), "2.665.0 Clown: Mädchen bekommt einen Ballon, beim nächsten Mal ein Junge – " + cl);
 ok(!fehler.length, "keine Fehler auf der Seite" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close(); console.log("ALLE TESTS GRÜN");

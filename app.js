@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.664.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.665.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19816,6 +19816,7 @@ function jzbFest(dt) {
     if ((F.ballonUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 15) { F.ballonUhr = jzbZ(5, 11); F.ballons.push({ x: jzbZ(J.w * .1, J.w * .7), y: J.h + 20 * k, v: jzbZ(18, 28) * k, ph: jzbZ(0, 6), farbe: jzbW(JZB_FEST_BUNT.slice(0, 6)) }); }
     for (const b of F.ballons) { b.y -= b.v * dt; b.ph += dt; b.x += Math.sin(b.ph * 1.3) * 8 * dt; }
     F.ballons = F.ballons.filter((b) => b.y > -40 * k);
+    jzbClownSchritt(F, dt); // 2.665.0 KC-CLUB-SIMJUE-CLOWN
     // 🎆 Feuerwerk zum Schluss (am Sim-Jü-Montag gibt es das echte) · 2.617.0: Montag 21:00–21:20 großes Feuerwerk gleichzeitig mit dem echten
     const gross = jzbSimJueFeuerwerk(), heute = new Date(), fwTag = themaFestZeit(heute) !== "simjue" || heute.getDay() === 1; // 2.620.0 KC-CLUB-SIMJUE-FEUERWERK-MONTAG: in der Sim-Jü-Woche nur am Montag
     if ((gross || (fwTag && F.t > JZB_FEST_DAUER - 30 && F.t < JZB_FEST_DAUER - 7)) && (F.raketUhr -= dt) <= 0) { F.raketUhr = gross ? jzbZ(.15, .45) : jzbZ(.45, 1.1);
@@ -20269,7 +20270,7 @@ function jzbNaschbudeMalen(c, F) {
   for (const [vx, farbe] of [[x0 + 66 * k, "rgba(255,150,205,.95)"], [x0 + 74 * k, "rgba(150,205,255,.95)"]]) { // Watte im Ständer
     c.strokeStyle = "#f5f0e6"; c.lineWidth = .9 * k; c.beginPath(); c.moveTo(vx, theke - 1.6 * k); c.lineTo(vx, theke - 10 * k); c.stroke();
     c.fillStyle = farbe; c.beginPath(); c.arc(vx, theke - 13 * k, 4 * k, 0, 7); c.arc(vx - 2.4 * k, theke - 11 * k, 3 * k, 0, 7); c.arc(vx + 2.4 * k, theke - 11.4 * k, 3 * k, 0, 7); c.fill(); }
-  jzbLauflicht(c, Array.from({ length: 13 }, (_, i) => [x0 + 5 * k + i * (bw - 10 * k) / 12, theke + 4 * k]), k, T, 8, 3); // Theke
+  jzbLauflicht(c, Array.from({ length: 13 }, (_, i) => [x0 + 5 * k + i * (bw - 10 * k) / 12, theke + 4 * k]), k, T, 3, 3); // Theke · 2.665.0 Wunsch Hansi: auch an der Bude langsamer (3 statt 8 Schritte je Sekunde)
   c.fillStyle = "#8b5a2b"; c.fillRect(x0 - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k); c.fillRect(x1 - 2 * k, oben - 4 * k, 4 * k, unten - oben + 4 * k);
   // Markise rosa-weiß mit Bögen, darüber das Schild mit umlaufendem Lauflicht
   const dy = oben - 4 * k, st = 10;
@@ -20282,8 +20283,102 @@ function jzbNaschbudeMalen(c, F) {
   const rahmen = [], n = 16, m = 4; // Birnen rund um das Schild
   for (let i = 0; i < n; i++) rahmen.push([sx0 + i * sw / n, sy0 - 1 * k]); for (let i = 0; i < m; i++) rahmen.push([sx0 + sw + 1 * k, sy0 + i * sh / m]);
   for (let i = n; i > 0; i--) rahmen.push([sx0 + i * sw / n, sy0 + sh + 1 * k]); for (let i = m; i > 0; i--) rahmen.push([sx0 - 1 * k, sy0 + i * sh / m]);
-  jzbLauflicht(c, rahmen, k, T, 12, 4);
+  jzbLauflicht(c, rahmen, k, T, 4, 4); // 2.665.0: 4 statt 12
   c.restore(); void F;
+}
+// 2.665.0 KC-CLUB-SIMJUE-CLOWN (Wunsch Hansi „ab und an einen Luftballon-Verkäufer durch die Kirmes-Szene laufen lassen – ein Clown mit einem Strauß
+// Luftballons; dann kommt ein kleines Mädchen und bekommt einen. Beim nächsten Mal ein Junge“): der Clown läuft von links bis vor das Herz und wartet,
+// von rechts kommt das Kind, bekommt einen Ballon (er schwebt vom Strauß in die Hand) und hüpft damit davon; der Clown zieht weiter. Abwechselnd Mädchen/Junge.
+let JZB_CLOWN_N = 0; const JZB_CLOWN_GR = 1.25; // Größe von Clown und Kind (Wunsch Hansi beim Karussell: „etwas größer“)
+const JZB_CLOWN_FARBEN = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c"];
+function jzbClownSchritt(F, dt) {
+  const J = JZB, k = J.k * JZB_CLOWN_GR;
+  if (!F.clown) {
+    if (F.clownUhr === undefined) F.clownUhr = jzbZ(6, 12);
+    if ((F.clownUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 28)
+      F.clown = { x: -30 * k, ziel: J.w * .6, ph: "rein", lauf: 0, kind: JZB_CLOWN_N++ % 2 ? "junge" : "maedchen", kx: J.w + 16 * k, kRicht: -1, kLauf: 0, g: 0, hat: false, farben: JZB_CLOWN_FARBEN.slice() };
+    return;
+  }
+  const C = F.clown, v = 24 * k, kv = 30 * k, kZiel = C.ziel + 17 * k;
+  if (C.ph === "rein") { C.x += v * dt; C.lauf += dt; if (C.x >= C.ziel) { C.x = C.ziel; C.ph = "warten"; } }
+  if (C.ph === "weg") { C.x += v * dt; C.lauf += dt; }
+  if (C.ph !== "weg" && C.x > C.ziel - 70 * k) { // das Kind kommt, sobald der Clown fast da ist
+    if (C.kx > kZiel) { C.kx = Math.max(kZiel, C.kx - kv * dt); C.kLauf += dt; }
+    else if (C.ph === "warten") C.ph = "geben";
+  }
+  if (C.ph === "geben" && (C.g += dt / 1.6) >= 1) { C.g = 1; C.hat = true; C.ph = "weg"; C.kRicht = 1; }
+  if (C.ph === "weg") { C.kx += kv * 1.15 * dt; C.kLauf += dt; }
+  if (C.ph === "weg" && C.x > J.w + 40 * k && C.kx > J.w + 20 * k) { F.clown = null; F.clownUhr = jzbZ(28, 42); }
+}
+function jzbBallonMalen(c, x, y, r, farbe) { // ein Luftballon (Mitte x/y), Faden nach unten zeichnet der Aufrufer
+  c.fillStyle = farbe; c.beginPath(); c.ellipse(x, y, r * .78, r, 0, 0, 7); c.fill();
+  c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(x - r * .28, y - r * .38, r * .18, r * .3, -.4, 0, 7); c.fill();
+  c.fillStyle = farbe; c.beginPath(); c.moveTo(x, y + r * .95); c.lineTo(x - r * .2, y + r * 1.22); c.lineTo(x + r * .2, y + r * 1.22); c.fill();
+}
+function jzbClownStrauss(C, k) { // Lage der Ballons im Strauß relativ zur Hand
+  return [[-7, -20], [0, -24], [7, -20], [-4, -15], [4, -15], [0, -19]].map(([dx, dy], i) => ({ dx: dx * k, dy: dy * k, f: C.farben[i % C.farben.length] }));
+}
+function jzbClownMalen(c, F) {
+  const C = F?.clown; if (!C) return;
+  const J = JZB, k = J.k * JZB_CLOWN_GR, T = J.T, boden = J.h - 3 * J.k, geht = C.ph === "rein" || C.ph === "weg";
+  const sw = geht ? Math.sin(C.lauf * 7) : 0, bob = geht ? Math.abs(Math.sin(C.lauf * 7)) * 1.2 * k : 0;
+  c.save(); c.translate(C.x, boden - bob); c.lineCap = "round";
+  // Beine und große rote Schuhe
+  c.strokeStyle = "#3a5bd9"; c.lineWidth = 3 * k;
+  for (const s of [-1, 1]) { const fx = s * 3 * k + sw * s * 3 * k; c.beginPath(); c.moveTo(s * 2 * k, -10 * k); c.lineTo(fx, -1.5 * k); c.stroke();
+    c.fillStyle = "#d62828"; c.beginPath(); c.ellipse(fx + 2.2 * k, -1.2 * k, 4.2 * k, 1.8 * k, 0, 0, 7); c.fill(); }
+  // weiter Anzug, halb gelb, halb blau, mit Punkten
+  c.fillStyle = "#ffd23f"; c.beginPath(); c.moveTo(-6.5 * k, -9 * k); c.lineTo(0, -9 * k); c.lineTo(0, -24 * k); c.lineTo(-4.5 * k, -24 * k); c.closePath(); c.fill();
+  c.fillStyle = "#3ec1ff"; c.beginPath(); c.moveTo(6.5 * k, -9 * k); c.lineTo(0, -9 * k); c.lineTo(0, -24 * k); c.lineTo(4.5 * k, -24 * k); c.closePath(); c.fill();
+  c.fillStyle = "#d62828"; for (const [px, py] of [[-3, -13], [-2, -19], [3, -16], [2.5, -21], [-4, -17], [4, -11.5]]) { c.beginPath(); c.arc(px * k, py * k, .9 * k, 0, 7); c.fill(); }
+  c.fillStyle = "#fff"; for (let i = 0; i < 2; i++) { c.beginPath(); c.arc(0, -11.5 * k - i * 5 * k, .9 * k, 0, 7); c.fill(); } // Knöpfe
+  // Halskrause
+  c.fillStyle = "#ffffff"; for (let i = -2; i <= 2; i++) { c.beginPath(); c.arc(i * 1.9 * k, -24.5 * k, 1.6 * k, 0, 7); c.fill(); }
+  // linker Arm schwingt, rechter Arm hält den Strauß hoch
+  c.strokeStyle = "#ffd23f"; c.lineWidth = 2.2 * k; c.beginPath(); c.moveTo(-4.5 * k, -22 * k); c.lineTo(-7.5 * k - sw * 1.5 * k, -14 * k); c.stroke();
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(-7.5 * k - sw * 1.5 * k, -13.5 * k, 1.4 * k, 0, 7); c.fill();
+  const hx = 8 * k, hy = -31 * k;
+  c.strokeStyle = "#3ec1ff"; c.beginPath(); c.moveTo(4.5 * k, -22 * k); c.lineTo(hx, hy + 2 * k); c.stroke();
+  // Kopf: weißes Gesicht, rote Nase, bunte Haare, kleiner Hut
+  c.fillStyle = "#ff9f1c"; for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 4.6 * k, -28.5 * k, 2.6 * k, 0, 7); c.fill(); }
+  c.fillStyle = "#fdf3e7"; c.beginPath(); c.arc(0, -29 * k, 4.2 * k, 0, 7); c.fill();
+  c.fillStyle = "#d62828"; c.beginPath(); c.arc(1.2 * k, -28.6 * k, 1.3 * k, 0, 7); c.fill();
+  c.strokeStyle = "#d62828"; c.lineWidth = .9 * k; c.beginPath(); c.arc(1 * k, -27.4 * k, 2 * k, .25, Math.PI - .25); c.stroke();
+  c.fillStyle = "#222"; c.beginPath(); c.arc(-.6 * k, -30.4 * k, .5 * k, 0, 7); c.arc(2.6 * k, -30.4 * k, .5 * k, 0, 7); c.fill();
+  c.fillStyle = "#2a9d8f"; c.beginPath(); c.moveTo(-3 * k, -32.4 * k); c.lineTo(3 * k, -32.4 * k); c.lineTo(.4 * k, -38 * k); c.closePath(); c.fill();
+  c.fillStyle = "#ffd23f"; c.beginPath(); c.arc(.4 * k, -38.3 * k, 1 * k, 0, 7); c.fill();
+  // Strauß: Fäden von der Hand, Ballons wiegen sich
+  const strauss = jzbClownStrauss(C, k).slice(0, C.hat || C.ph === "geben" ? 5 : 6), wieg = Math.sin(T * 1.4) * 1.5 * k;
+  c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7;
+  for (const b of strauss) { c.beginPath(); c.moveTo(hx, hy); c.lineTo(hx + b.dx + wieg, hy + b.dy + 5 * k); c.stroke(); }
+  for (const b of strauss) jzbBallonMalen(c, hx + b.dx + wieg, hy + b.dy, 4.6 * k, b.f);
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(hx, hy, 1.4 * k, 0, 7); c.fill();
+  c.restore();
+  // Kind: kommt von rechts, bekommt den Ballon und hüpft davon
+  const kGeht = C.kx > C.ziel + 17 * k + .5 || C.ph === "weg", ksw = kGeht ? Math.sin(C.kLauf * 9) : 0, kbob = kGeht ? Math.abs(Math.sin(C.kLauf * 9)) * (C.hat ? 2.6 : 1) * k : 0;
+  const kHandX = C.kx - C.kRicht * -3.5 * k, kHandY = boden - kbob - 11 * k, ballon = jzbClownStrauss(C, k)[5];
+  if (C.kx < J.w + 18 * k) {
+    c.save(); c.translate(C.kx, boden - kbob); c.scale(C.kRicht, 1); c.lineCap = "round";
+    const m = C.kind === "maedchen";
+    c.strokeStyle = "#f1c27d"; c.lineWidth = 1.6 * k; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 1.2 * k, -6 * k); c.lineTo(s * 1.2 * k + ksw * s * 1.6 * k, -.8 * k); c.stroke(); }
+    c.fillStyle = m ? "#c1121f" : "#333"; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 1.2 * k + ksw * s * 1.6 * k + .6 * k, -.6 * k, 1.5 * k, .8 * k, 0, 0, 7); c.fill(); }
+    if (m) { c.fillStyle = "#ff8fc7"; c.beginPath(); c.moveTo(-4 * k, -5.5 * k); c.lineTo(4 * k, -5.5 * k); c.lineTo(2 * k, -13 * k); c.lineTo(-2 * k, -13 * k); c.closePath(); c.fill(); }
+    else { c.fillStyle = "#1d3557"; c.fillRect(-2.6 * k, -8 * k, 5.2 * k, 3 * k); c.fillStyle = "#3a86ff"; c.fillRect(-2.8 * k, -13 * k, 5.6 * k, 5.4 * k); }
+    c.strokeStyle = "#f1c27d"; c.lineWidth = 1.4 * k; c.beginPath(); c.moveTo(1.5 * k, -12 * k); c.lineTo(3.5 * k, C.hat || C.ph === "geben" ? -11 * k + (C.hat ? -2 * k : 0) : -8 * k); c.stroke(); // Arm (Hand vorn)
+    c.fillStyle = "#f1c27d"; c.beginPath(); c.arc(0, -15.5 * k, 2.6 * k, 0, 7); c.fill();
+    if (m) { c.fillStyle = "#8d5524"; c.beginPath(); c.arc(0, -16.4 * k, 2.7 * k, Math.PI * .95, Math.PI * 2.05); c.fill(); for (const s of [-1, 1]) { c.beginPath(); c.arc(s * 3 * k, -14.6 * k, 1.2 * k, 0, 7); c.fill(); } }
+    else { c.fillStyle = "#e63946"; c.beginPath(); c.arc(0, -16.3 * k, 2.7 * k, Math.PI, 0); c.fill(); c.fillRect(0, -16.6 * k, 4 * k, 1 * k); }
+    c.fillStyle = "#222"; c.beginPath(); c.arc(1.2 * k, -15.8 * k, .4 * k, 0, 7); c.fill();
+    c.restore();
+  }
+  // der geschenkte Ballon: schwebt vom Strauß zur Hand des Kindes, dann mit dem Kind davon
+  if (C.ph === "geben" || C.hat) {
+    const sx = C.x + 8 * k + ballon.dx, sy = boden - 31 * k + ballon.dy, zx = kHandX + 1 * k, zy = kHandY - 16 * k, g = C.hat ? 1 : C.g, e = g * g * (3 - 2 * g);
+    const bx = sx + (zx - sx) * e + (C.hat ? Math.sin(T * 2) * 1.5 * k : 0), by = sy + (zy - sy) * e - Math.sin(e * Math.PI) * 6 * k;
+    const fx = C.hat ? kHandX : C.x + 8 * k + (kHandX - C.x - 8 * k) * e, fy = C.hat ? kHandY : boden - 31 * k + (kHandY - boden + 31 * k) * e;
+    c.strokeStyle = "rgba(80,80,80,.6)"; c.lineWidth = .7; c.beginPath(); c.moveTo(fx, fy); c.quadraticCurveTo(bx + 2 * k, (fy + by) / 2, bx, by + 5.6 * k); c.stroke();
+    jzbBallonMalen(c, bx, by, 4.6 * k, ballon.f);
+  }
 }
 function jzbKirmesKarussellMalen(c, F) {
   const J = JZB, k = J.k;
@@ -20293,6 +20388,7 @@ function jzbKirmesKarussellMalen(c, F) {
   const hg = 1.8, hb = 16 * k * hg, hx = Math.max(JZB_RAND + 150 * k, J.w * .5), hy = J.h - 3 * k - 4 * k - 1.465 * hb; // Herz bleibt in der Mitte
   jzbPfostenMalen(c, hx - hb * 1.45, hy, hx + 1 * k); jzbHerzMalen(c, hx, hy, k, F.t, hg);
   jzbNaschbudeMalen(c, F);
+  jzbClownMalen(c, F); // 2.665.0 KC-CLUB-SIMJUE-CLOWN
   for (const r of F.raketen) { c.strokeStyle = "rgba(255,230,160,.8)"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(r.x, r.y); c.lineTo(r.x, r.y + 12 * k); c.stroke(); c.fillStyle = "#fff"; c.beginPath(); c.arc(r.x, r.y, 1.6, 0, 7); c.fill(); }
 }
 function jzbKirmesMalen(c, F) { return jzbKirmesVariante() === "riesenrad" ? jzbKirmesRiesenradMalen(c, F) : jzbKirmesKarussellMalen(c, F); }
