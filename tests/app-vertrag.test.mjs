@@ -13046,3 +13046,5 @@ function idx0() { return lies("index.html"); }
   assert.ok(/if \(a\.v !== "normal" && F\.t > JZB_FEST_DAUER - 62\) \{ F\.clownUhr = Infinity; return; \}/.test(programm), "Geschichte nur, wenn sie noch in den Lauf passt");
   assert.ok(/function jzbPlopp\(\) \{[^\n]*\n\s*if \(!einst\("ton", true\) \|\| document\.hidden\) return;\s*try \{ if \(inRuheJetzt/.test(programm), "Peng nur mit Ton an und nicht in der Ruhezeit");
 }
+// 2.670.0 KC-CLUB-SCHATTEN-REGISTER: die Register-Knöpfe (Club, Meins, Technik) haben denselben Schatten wie die Kacheln
+assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box-shadow: var\(--sch-box\); \}/.test(html), "Register-Knöpfe mit Schatten");
