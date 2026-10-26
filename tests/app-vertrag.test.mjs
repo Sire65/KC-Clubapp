@@ -5913,7 +5913,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\); schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -12907,7 +12907,7 @@ function idx0() { return lies("index.html"); }
 }
 // 2.657.0 KC-CLUB-SCHATTEN-KOPFFELDER (Frage Hansi „Hat der Kopfbereich auch Schatten und darauf die Felder?“)
 {
-  assert.ok(/:where\(:root\.sch-an\) :is\(\.hero \.info, \.hero \.mini, \.hero \.rund, \.hero \.statusleiste, \.hero \.logo[^{]*\)::before \{[^}]*box-shadow: var\(--sch-kopf\)/.test(html) && /\.hero \.ipfeil, [^{]*\) \{ box-shadow: var\(--sch-kopf\); \}/.test(html), "Felder auf dem Kopf mit Schatten (2.661.0: eigener Kopf-Schatten; 2.663.0: hinter der Szene)");
+  assert.ok(/:where\(:root\.sch-an\) :is\(\.hero \.info, \.hero \.mini, \.hero \.rund, \.hero \.statusleiste, \.hero \.logo[^{]*\)::before \{[^}]*box-shadow: var\(--sch-kopf\)/.test(html) && /\.hero \.ipfeil, [^{]*\) \{ box-shadow: var\(--sch-kopf\); \}/.test(html), "Felder auf dem Kopf mit Schatten (2.661.0: eigener Kopf-Schatten; 2.664.0: hinter der Szene)");
   assert.ok(/:root\.dunkel \{ --sch-auto: 0, 0, 0; --sch-box: var\(--sch-box-n\); --sch-box-gross: var\(--sch-box-gross-n\); \}/.test(html) && /const SCHT_KONTRAST = \{ aus:.*normal:.*stark:/.test(programm) && /kontrast: SCHT_KONTRAST\[j\.kontrast\] \? j\.kontrast : "normal"/.test(programm), "Nacht: Kontrast (Standard normal)");
 }
 // 2.658.0 KC-CLUB-WECKER-TON (Fund Hansi „Der Wecker und Timer haben keinen Ton“) · KC-CLUB-SIMJUE-KARUSSELL-3 („Lauflicht zu schnell“)
@@ -12940,7 +12940,7 @@ function idx0() { return lies("index.html"); }
 {
   assert.ok(/\.hero \.il:not\(\.il-rot\):not\(\.il-orange\), \.hero \.ifz\) \{ box-shadow: var\(--sch-kopf\); \}/.test(html), "Infokarte mit Kopf-Schatten, Warnkarten glühen weiter");
 }
-// 2.663.0 KC-CLUB-SCHATTEN-HINTER-SZENE (Bild Hansi „der Schatten verdeckt Karussell und Bude – er muss im Hintergrund bleiben“)
+// 2.664.0 KC-CLUB-SCHATTEN-HINTER-SZENE (Bild Hansi „der Schatten verdeckt Karussell und Bude – er muss im Hintergrund bleiben“)
 {
   assert.ok(/:where\(:root\.sch-an\) \.hero \{ isolation: isolate; \}/.test(html), "Kopf eigene Ebene");
   assert.ok(/::before \{ content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var\(--sch-kopf\); z-index: -2; pointer-events: none; \}/.test(html), "Schatten auf Ebene -2, hinter der Szene (-1)");

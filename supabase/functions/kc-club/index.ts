@@ -133,7 +133,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.654.0";
+const SERVER_VERSION = "2.663.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3214,8 +3214,28 @@ async function dienstwunschAufstellung(ich: Ich) {
   return { veranstaltung: DW.name, hinweis: DW_HINWEIS(DW.name), name: ich.name, stand, revision: m?.revision ?? 0, status: m?.status ?? null, uebernommen: !!m?.taken_at, freigabe: !!m?.share_with_colleagues, tage };
 }
 const NEON_GRENZE = 1024 * 1024 * 1024; // Neon kostenlos: 1 GB Speicher je Projekt (seit 02.10.2026, vorher 0,5 GB)
+// KC-NEON-PRUEFUNG (26.10.2026, Wunsch Hansi „Prüfung in der Kachel Neon“): Rechenzeit und Datenübertragung des Spiegels im Monat.
+// Nur mit dem Lese-Schlüssel NEON_API_KEY (Supabase-Geheimnis); ohne ihn zeigt die Kachel „Schlüssel fehlt“. Höchstens 1 Abruf je 30 Min. und Server-Instanz,
+// die Neon-Schnittstelle ist kostenlos und weckt die Datenbank nicht. Kostenlos (free_v3): 100 Rechenstunden und 5 GB Übertragung je Projekt und Monat.
+const NEON_PROJEKT = "purple-hat-23047492", NEON_RECHEN_GRENZE_STD = 100, NEON_UEBERTRAG_GRENZE = 5 * 1024 * 1024 * 1024;
+let NEON_VERBRAUCH: { t: number; w: any } = { t: 0, w: null };
+async function neonVerbrauch() {
+  const key = Deno.env.get("NEON_API_KEY") || "";
+  if (!key) return { schluessel: false };
+  if (Date.now() - NEON_VERBRAUCH.t < 30 * 60000 && NEON_VERBRAUCH.w) return NEON_VERBRAUCH.w;
+  try {
+    const r = await fetch(`https://console.neon.tech/api/v2/projects/${NEON_PROJEKT}`, { headers: { Authorization: `Bearer ${key}`, Accept: "application/json" }, signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return { schluessel: true, fehler: `Neon antwortet ${r.status}` };
+    const p = (await r.json())?.project ?? {};
+    const w = { schluessel: true, zeit: new Date().toISOString(), rechenStd: Math.round((Number(p.compute_time_seconds) || 0) / 36) / 100, aktivStd: Math.round((Number(p.active_time_seconds) || 0) / 36) / 100,
+      uebertragung: Number(p.data_transfer_bytes) || 0, ab: p.consumption_period_start ?? null, bis: p.consumption_period_end ?? null, rechenGrenze: NEON_RECHEN_GRENZE_STD, uebertragGrenze: NEON_UEBERTRAG_GRENZE };
+    NEON_VERBRAUCH = { t: Date.now(), w };
+    return w;
+  } catch (e) { return { schluessel: true, fehler: String(e).slice(0, 120) }; }
+}
 // Neon-Spiegel und Backup (0.48.0): liest nur die Protokolle des KC-Spiegels (kc_db_mirror_*, kc_neon_compute_policy) – steuert nichts
 async function adminSpiegel() {
+  const verbrauchP = neonVerbrauch(); // KC-NEON-PRUEFUNG: läuft parallel zu den Abfragen unten
   const letzter = (typ: string) => db.from("kc_db_mirror_runs").select("started_at,message").eq("run_type", typ).eq("status", "ok").order("started_at", { ascending: false }).limit(1).maybeSingle();
   const [{ data: pol }, { data: compute }, { data: snap }, { data: backup }, { data: restore }, { data: pause }, { data: abdeckung }, { data: wd }, { data: ng }, { data: ak }, { data: fs }] = await Promise.all([
     db.from("kc_db_mirror_policies").select("name,mode,target,enabled,lag_threshold_sec,updated_at"),
@@ -3229,6 +3249,7 @@ async function adminSpiegel() {
     db.from("kc_club_archiv_kopie_stand").select("zeit,status,text,metrics").eq("id", 1).maybeSingle(), // KC-CLUB-ARCHIV-KOPIE (2.232.0)
     db.from("kc_club_fra_sicherung_stand").select("lauf,zeit,status,text,metrics").eq("id", 1).maybeSingle(), // KC-CLUB-FRA-SICHERUNG (2.236.0)
   ]);
+  const verbrauch = await verbrauchP; // KC-NEON-PRUEFUNG
   const p = pol ?? [], neon = p.filter((x: any) => x.target === "neon" && x.mode !== "realtime"), bk = p.filter((x: any) => x.mode === "backup");
   const aktivLag = neon.filter((x: any) => x.enabled).map((x: any) => Number(x.lag_threshold_sec) || 720);
   return {
@@ -3240,7 +3261,8 @@ async function adminSpiegel() {
     // Abdeckung: Tabellen ohne Spiegel-Regel (werden weder gespiegelt noch gesichert) + letzter Watchdog-Lauf
     abdeckung: abdeckung ? { tabellen: abdeckung.tabellen, ohne: abdeckung.ohne_regel, liste: abdeckung.liste } : null,
     watchdog: wd ? { zeit: wd.started_at, status: wd.status, text: wd.message } : null,
-    groesse: ng ? { bytes: Number(ng.metrics?.bytes) || null, zeit: ng.started_at, grenze: NEON_GRENZE } : null,
+    groesse: ng ? { bytes: Number(ng.metrics?.bytes) || null, zeit: ng.started_at, grenze: NEON_GRENZE, archiv: ng.metrics?.archiv ?? null } : null,
+    verbrauch, // KC-NEON-PRUEFUNG: Rechenzeit/Übertragung im Monat (nur mit NEON_API_KEY)
     archiv: ak ? { zeit: ak.zeit, status: ak.status, text: ak.text, dateien: Number(ak.metrics?.dateien) || 0, bytes: Number(ak.metrics?.bytes) || 0, offen: Number(ak.metrics?.offen) || 0, grenze: ARCHIV_KOPIE_GRENZE, teile: ak.metrics?.archiv ? { archiv: ak.metrics.archiv, dokumente: ak.metrics.dokumente } : null } : null,
     fra: fs ? { lauf: fs.lauf, zeit: fs.zeit, status: fs.status, text: fs.text, tabellen: Number(fs.metrics?.tabellen) || 0, bytes: Number(fs.metrics?.bytes) || 0, zeilen: Number(fs.metrics?.zeilen) || 0, geprueft: Number(fs.metrics?.geprueft) || 0, teile: Number(fs.metrics?.teile) || 0, grenze: FRA_GRENZE } : null,
     pause: pause && /paus/i.test(pause.action) ? { zeit: pause.happened_at, text: pause.detail } : null,

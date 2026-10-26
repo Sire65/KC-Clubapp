@@ -22,7 +22,7 @@ ok(hero !== vorher && /rgba\(29, 78, 137, 0\.45\) 12px 12px 38px/.test(hero), "K
 ok(/rgba\(29, 78, 137, 0\.45\) 8px 8px 24px/.test(knopf), "Knopf: Schatten – " + knopf);
 const felder = await seite.evaluate(async () => { const h = document.querySelector("#v-start .hero"), m = document.createElement("button"); m.className = "mini"; h.appendChild(m);
   const il = document.createElement("div"); il.className = "il il-weiss"; il.style.transition = "none"; il.style.animation = "none"; il.textContent = "Heute in Werne"; $("heroInfo").appendChild(il); await new Promise((w) => setTimeout(w, 600));
-  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste", ".statuschip", ".il"].map((s) => { const e = h.querySelector(s), b = getComputedStyle(e, "::before"); // 2.663.0: Schatten im ::before (Ebene -2, hinter der Szene)
+  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste", ".statuschip", ".il"].map((s) => { const e = h.querySelector(s), b = getComputedStyle(e, "::before"); // 2.664.0: Schatten im ::before (Ebene -2, hinter der Szene)
     return s === ".il" ? getComputedStyle(e).boxShadow : b.zIndex === "-2" ? b.boxShadow : "kein ::before auf Ebene -2"; });
   il.className = "il il-rot"; await new Promise((w) => setTimeout(w, 600)); const rot = getComputedStyle(il).boxShadow; m.remove(); il.remove(); return [...r, /255, 90, 90/.test(rot) ? r[0] : "rot verloren: " + rot]; });
 ok(felder.every((x) => /rgba\(29, 78, 137, 0\.56\) 8px 8px 24px/.test(x)), "2.661.0: Felder auf dem Kopf (Infofeld, Zahlen-Felder, runde Knöpfe, Logo, Statusleiste) – " + felder.join(" | "));
