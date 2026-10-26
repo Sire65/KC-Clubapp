@@ -1050,7 +1050,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -8783,6 +8783,20 @@ function tipptZeigen(namen, entwurf = [], sprechen = [], diktiert = []) {
   e.classList.remove("versteckt");
 }
 
+// 2.678.0 KC-CLUB-CHAT-KOPF-KLAPPEN (Wunsch Hansi „den oberen Bereich als Klappbereich – es geht zu viel Platz weg. Beim Öffnen immer geschlossen,
+// zum Anzeigen ein weinroter Pfeil wie bei den Nachrichten“): die Teilnehmerzeile steht einzeilig da (… am Ende); der runde Pfeil (.tz-pfeil wie bei den
+// eingeklappten Tagen) klappt alle Namen auf und wieder zu. Jeder neu geöffnete Chat beginnt eingeklappt.
+let CHAT_TN_ZULETZT = null;
+function chatTnPfeil() {
+  const z = $("chatUnterzeile"), t = $("chatTeilnehmer"), p = $("chatTeilnehmerPfeil"); if (!z || !t || !p) return;
+  if (CHAT_TN_ZULETZT !== chatId) { CHAT_TN_ZULETZT = chatId; z.classList.remove("auf"); }
+  const auf = z.classList.contains("auf"), lang = auf || t.scrollWidth > t.clientWidth + 2;
+  p.classList.toggle("versteckt", !lang); p.setAttribute("aria-expanded", String(auf)); p.title = auf ? "Teilnehmer einklappen" : "Alle Teilnehmer zeigen"; p.textContent = auf ? "▾" : "▸";
+}
+function chatTnKlappen(an) {
+  const z = $("chatUnterzeile"); if (!z) return; z.classList.toggle("auf", an ?? !z.classList.contains("auf")); chatTnPfeil(); try { chatAbstand(); } catch {}
+}
+addEventListener("resize", () => { if (chatId) chatTnPfeil(); });
 // ---------- KC-CLUB-ANRUF (0.31.0, Test): Sprechen per Ton, direkt App zu App (WebRTC) ----------
 // Aufbau: Anrufer schickt sein „Angebot“ (SDP) über unseren Server, der Angerufene seine „Antwort“; danach läuft die Sprache
 // direkt zwischen den Handys. Kostenlose öffentliche STUN-Server helfen, den Weg durchs Heimnetz zu finden. Klappt das nicht
@@ -33575,6 +33589,7 @@ async function chatLaden(scrollen, merk) {
     if (merk) $("chatTeilnehmer").textContent = `🔄 Stand von ${fZeit.format(new Date(merk.zeit))} Uhr – wird aktualisiert …`; // Regel 11: nicht als aktuell zeigen
     else if (u.tippt?.length && andere.length === 1) $("chatTeilnehmer").textContent = "✍️ schreibt …";
     else if (u.diktiert?.length && andere.length === 1) $("chatTeilnehmer").textContent = "🗣️ diktiert …"; // 2.529.0
+    chatTnPfeil(); // 2.678.0 KC-CLUB-CHAT-KOPF-KLAPPEN
     };
     kopf(); zustellZeigen();
     if (andere.length === 1 && !MITGLIEDER) chatMgHolen().then(() => { if (chatId === fuer && CHAT === u) kopf(); }, () => {});
@@ -35971,6 +35986,7 @@ function versandZeigen() {
   n?.classList.toggle("an", normal); n?.setAttribute("aria-pressed", String(normal));
   if (t) t.placeholder = EXPRESS && WICHTIG ? "🏎️❗ Wichtige Express-Sendung schreiben …" : EXPRESS ? "🏎️ Express-Sendung schreiben …" : WICHTIG ? "❗ Wichtige Nachricht schreiben …" : "Nachricht schreiben …";
   l?.classList.toggle("versteckt", !(t?.value.trim() || anlagen.length || !normal || versandImmerAn()));
+  try { vwKnopfZeigen(); } catch {} // 2.678.0 KC-CLUB-VERSAND-VORWAHL
 }
 function versandNormal() {
   if (!WICHTIG && !EXPRESS) return versandZeigen();
@@ -35978,7 +35994,7 @@ function versandNormal() {
   melde("📝 Normal – wie immer");
 }
 // Nach dem Senden und beim Chatwechsel: wieder 📝 Normal
-function versandZurueck() { wichtigUmschalten(false); expressUmschalten(false); }
+function versandZurueck() { wichtigUmschalten(false); expressUmschalten(false); try { VW.einmal = null; vwKnopfZeigen(); } catch {} } // 2.678.0: auch die Einmal-Wahl „📤“
 document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => { try { expressPruefen(); } catch {} }, 1200); }); // 2.362.0 KC-CLUB-EXPRESS
 document.addEventListener("visibilitychange", () => { if (!document.hidden && SS?.id) ssHolen(true); }); // 2.364.0 KC-CLUB-AKKU-7: Mitschauen nach dem Zurückkommen sofort frisch
 // ---------- 2.362.0 KC-CLUB-EXPRESS (Wunsch Hansi „per Rennwagen – Express-Sendung, wird sofort zugestellt; beim Empfänger ploppt ein Fenster auf:
@@ -36350,7 +36366,37 @@ setInterval(() => { try { if (ICH && !SQ.laeuft) { sqLaden(); if (SQ.liste.some(
 // Nur Admin: „Nur als Mail, nicht im Chat zeigen“ → Rundmail ohne Unterhaltung (Server „mail_rund“). Notfall, Express und 🔒 bleiben wie bisher.
 const VW_ARTEN = [["mail", "✉️ Nur E-Mail", "Mail mit Anhang, kein Push"], ["push", "🔔 Nur Push", "Hinweis aufs Handy"], ["whatsapp", "🟢 WhatsApp", "danach je Person in WhatsApp öffnen"],
   ["alles", "✅ Alles", "Push, E-Mail und WhatsApp"], ["app", "📱 Nur in der App", "keine Benachrichtigung"], ["eingestellt", "⚙️ Wie jeder es eingestellt hat", "bisheriger Weg"]];
-let VW = { nurApp: false };
+let VW = { nurApp: false, einmal: null };
+// 2.678.0 KC-CLUB-VERSAND-VORWAHL (Wunsch Hansi „die Frage ‚Wie verschicken?‘ nervt jedes Mal – da muss es eine Voreinstellung geben“, Bau 1, 2, 3):
+// (1) Voreinstellung je Gerät unter ⚙️ → Benachrichtigungen (Standard „⚙️ Wie jeder es eingestellt hat“ = wie vor 2.649.0, ohne Fenster; „❓ Jedes Mal fragen“ = Fenster);
+// (2) in der Versand-Leiste das Feld „📤 …“ (nur bei mehreren Empfängern oder Anlage) – ändert den Weg nur für diese eine Nachricht;
+// (3) im Fenster „☑️ Immer so – nicht mehr fragen“ macht die Wahl zur Voreinstellung.
+const VW_KEY = "kc_club_versand_vorwahl", VW_WAHLEN = [...VW_ARTEN.map(([k]) => k), "fragen"];
+const vwVorwahl = () => { try { const v = localStorage.getItem(VW_KEY); return VW_WAHLEN.includes(v) ? v : "eingestellt"; } catch { return "eingestellt"; } };
+function vwVorwahlSetzen(v, still) { try { localStorage.setItem(VW_KEY, v); } catch {} vwVorwahlEinstellungen(); versandZeigen(); if (!still) melde(`📤 Voreinstellung: ${vwName(v)}`); }
+const vwName = (k) => k === "fragen" ? "❓ Jedes Mal fragen" : (VW_ARTEN.find(([x]) => x === k) || [])[1] || k;
+function vwEmpfaenger() { // wer bekommt die Nachricht (ohne mich) – wie beim Senden
+  return [...new Set([...(chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : sendenEmpfaenger(MITGLIEDER || [])), ...(chatId ? WE.ids : [])])].filter((id) => id !== ICH?.person_id);
+}
+const vwNoetig = () => { try { return !VN.an && !EXPRESS && !neuEntwurf?.mehrfach && (anlagen.length > 0 || vwEmpfaenger().length > 1); } catch { return false; } };
+function vwKnopfZeigen() {
+  const k = $("vwWegWahl"); if (!k) return; const da = vwNoetig(); k.classList.toggle("versteckt", !da); if (!da) return;
+  const w = VW.einmal || vwVorwahl(); k.textContent = `${vwName(w)} ▾`; k.classList.toggle("an", !!VW.einmal);
+  k.title = VW.einmal ? "Nur für diese Nachricht anders – antippen zum Ändern" : "So geht die Nachricht raus (Voreinstellung) – antippen, um es nur für diese Nachricht zu ändern";
+}
+function vwMenue() {
+  const jetzt = VW.einmal || vwVorwahl();
+  const f = blattAuf("vwMenueBlatt", `<h3 style="margin-top:0">📤 Wie verschicken – nur diese Nachricht</h3>
+    <div class="vw-arten" role="radiogroup" aria-label="Versandweg für diese Nachricht">${[...VW_ARTEN, ["fragen", "❓ Fenster öffnen", "alle Wege mit Vorschau"]].map(([k, t, x]) => `<button type="button" class="knopf vw-art${k === jetzt ? " an" : ""}" role="radio" aria-checked="${k === jetzt}" data-k="${k}"><b>${t}</b><small>${x}</small></button>`).join("")}</div>
+    <p class="hinweis" style="margin:8px 0">Voreinstellung: <b>${esc(vwName(vwVorwahl()))}</b> – <a href="#" id="vwZurEinst">⚙️ ändern</a></p>`);
+  f.querySelectorAll(".vw-art").forEach((b) => b.onclick = () => { VW.einmal = b.dataset.k === vwVorwahl() ? null : b.dataset.k; fensterZu(f); vwKnopfZeigen(); });
+  f.querySelector("#vwZurEinst").onclick = (e) => { e.preventDefault(); fensterZu(f); einstiegHin("benachrichtigung", "vwVorwahlWahl"); };
+}
+function vwVorwahlEinstellungen() {
+  const z = $("vwVorwahlWahl"); if (!z) return; const v = vwVorwahl();
+  z.innerHTML = [...VW_ARTEN.map(([k, t, x]) => [k, t, x]), ["fragen", "❓ Jedes Mal fragen", "Fenster mit allen Wegen und Vorschau"]]
+    .map(([k, t, x]) => `<label class="ke-wahl"><input type="radio" name="vwVorwahl" value="${k}" ${v === k ? "checked" : ""} onchange="vwVorwahlSetzen(this.value)"> ${t} <small class="hinweis">– ${x}</small></label>`).join("");
+}
 function versandWahl(empf, anl) {
   const art0 = ZW.push && ZW.email && ZW.whatsapp ? "alles" : ZW.email && !ZW.push && !ZW.whatsapp ? "mail" : ZW.push && !ZW.email && !ZW.whatsapp ? "push" : ZW.whatsapp && !ZW.push && !ZW.email ? "whatsapp" : "";
   const mg = new Map((MITGLIEDER || []).map((m) => [m.person_id, m])), mitMail = empf.filter((id) => mg.get(id)?.wege?.mail).length;
@@ -36360,6 +36406,7 @@ function versandWahl(empf, anl) {
       <div class="vw-arten" role="radiogroup" aria-label="Versandweg">${VW_ARTEN.map(([k, t, x]) => `<button type="button" class="knopf vw-art${k === art0 ? " an" : ""}" role="radio" aria-checked="${k === art0}" data-k="${k}"><b>${t}</b><small>${x}</small></button>`).join("")}</div>
       ${ICH?.admin ? `<label class="vw-ohne versteckt"><input type="checkbox" id="vwOhneChat"> <span><b>Nur als Mail, nicht im Chat zeigen</b><br><small>Rundmail: kein neuer Chat, keine rote Zahl – Antworten kommen per E-Mail</small></span></label>` : ""}
       <p id="vwVorschau" class="hinweis" style="margin:8px 0" role="status"></p>
+      <label class="vw-immer" style="display:flex;gap:8px;align-items:center;margin:0 0 8px"><input type="checkbox" id="vwImmer"> <span><b>☑️ Immer so – nicht mehr fragen</b><br><small class="hinweis">wird deine Voreinstellung (⚙️ → Benachrichtigungen)</small></span></label>
       <div class="knoepfe"><button class="knopf haupt" id="vwSenden" disabled>📤 Jetzt senden</button><button class="knopf" id="vwAbbruch">Abbrechen</button></div>`);
     let art = art0;
     const zeigen = () => {
@@ -36375,7 +36422,7 @@ function versandWahl(empf, anl) {
     $("vwOhneChat")?.addEventListener("change", zeigen);
     const fertig = (x) => { f._zu = null; f.remove(); ok(x); };
     f._zu = () => fertig(null); $("vwAbbruch").onclick = () => fertig(null);
-    $("vwSenden").onclick = () => fertig({ art, ohneChat: art === "mail" && !!$("vwOhneChat")?.checked && !!ICH?.admin });
+    $("vwSenden").onclick = () => { const x = { art, ohneChat: art === "mail" && !!$("vwOhneChat")?.checked && !!ICH?.admin }; if ($("vwImmer")?.checked && !x.ohneChat) vwVorwahlSetzen(art); fertig(x); };
     zeigen();
   });
 }
@@ -36407,11 +36454,15 @@ async function senden() {
   VW.nurApp = false;
   if (!VN.an && !EXPRESS && !neuEntwurf?.mehrfach && !/^\s*(🚨|notfall)/i.test(text)) { // 2.649.0 KC-CLUB-VERSANDWAHL
     if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
-    const empf = [...new Set([...(chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : sendenEmpfaenger(MITGLIEDER || [])), ...(chatId ? WE.ids : [])])].filter((id) => id !== ICH?.person_id);
+    const empf = vwEmpfaenger();
     if (anlagen.length || empf.length > 1) {
-      const w = await versandWahl(empf, anlagen); if (!w) return;
-      if (w.ohneChat) return await mailRundSenden(text, empf);
-      versandWahlAnwenden(w.art);
+      const wahl = VW.einmal || vwVorwahl(); // 2.678.0 KC-CLUB-VERSAND-VORWAHL: Fenster nur noch bei „❓ Jedes Mal fragen“
+      if (wahl !== "fragen") versandWahlAnwenden(wahl);
+      else {
+        const w = await versandWahl(empf, anlagen); if (!w) return;
+        if (w.ohneChat) return await mailRundSenden(text, empf);
+        versandWahlAnwenden(w.art);
+      }
     }
   }
   // 2.637.0 KC-CLUB-WEITERE-EMPFAENGER (Wunschliste #40, Hansi: „➕ in der kleinen Zeile, weitere wählen – Variante B“): mit weiteren Empfängern wird

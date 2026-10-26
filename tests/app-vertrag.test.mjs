@@ -12876,7 +12876,7 @@ function idx0() { return lies("index.html"); }
 }
 // 2.649.0 KC-CLUB-VERSANDWAHL: „Wie verschicken?“ bei mehreren/Anlage · Nur E-Mail = nur E-Mail · Nur App · Rundmail ohne Chat nur Admin
 {
-  assert.ok(/if \(anlagen\.length \|\| empf\.length > 1\) \{\s*const w = await versandWahl\(empf, anlagen\); if \(!w\) return;\s*if \(w\.ohneChat\) return await mailRundSenden\(text, empf\);\s*versandWahlAnwenden\(w\.art\);/.test(programm), "Abfrage bei mehreren oder mit Anlage, Abbrechen sendet nichts");
+  assert.ok(/if \(anlagen\.length \|\| empf\.length > 1\) \{[^}]*?const wahl = VW\.einmal \|\| vwVorwahl\(\);[^\n]*\n\s*if \(wahl !== "fragen"\) versandWahlAnwenden\(wahl\);\s*else \{\s*const w = await versandWahl\(empf, anlagen\); if \(!w\) return;\s*if \(w\.ohneChat\) return await mailRundSenden\(text, empf\);\s*versandWahlAnwenden\(w\.art\);/.test(programm), "bei mehreren oder mit Anlage: Voreinstellung (2.678.0), Fenster nur bei „Jedes Mal fragen“ – Abbrechen sendet nichts");
   assert.ok(/if \(!VN\.an && !EXPRESS && !neuEntwurf\?\.mehrfach && !\/\^\\s\*\(🚨\|notfall\)\/i\.test\(text\)\)/.test(programm), "nicht bei 🔒, Express, Notfall");
   assert.ok(/\$\{ICH\?\.admin \? `<label class="vw-ohne versteckt">/.test(programm) && /ohneChat: art === "mail" && !!\$\("vwOhneChat"\)\?\.checked && !!ICH\?\.admin/.test(programm), "Nur als Mail – nur Admin");
   assert.ok(/\.\.\.\(VW\.nurApp \? \{ nur_app: true \} : \{\}\)/.test(programm), "Nur in der App an den Server");
