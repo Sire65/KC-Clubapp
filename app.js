@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.664.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.665.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27791,6 +27791,7 @@ function hashSprung(h) {
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
     else if (h === "#wecker") wkChipTippen(); // 2.640.0 KC-CLUB-UHR-WECKER: aus dem Push „Zeit ist um“ / „Wecker“
+    else if (h === "#dpdruck" && ICH?.admin) dpdStart(); // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: aus dem Push „Neuer Wunschplan“
     else if (h === "#anruf") anrufZurueck(); // KC-CLUB-ANRUF-ANZEIGE (2.237.0): aus der Mitteilung in der Statusleiste
     else if (h === "#dienstgruss") dgZeigen(true); // KC-CLUB-DIENST-GRUSS (2.224.0): aus der Push am Morgen
     else if (h.startsWith("#reisecheckliste=")) rcOeffnen(decodeURIComponent(h.slice(17))); // KC-CLUB-REISE-CHECKLISTE (2.223.0): Erinnerung 2 Tage vorher
@@ -42299,10 +42300,30 @@ const dpdUhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); r
 const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
 const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3e" onclick="dpdStart()" title="Dienstplan zum Ausdrucken"><span class="sym">🗓️</span>
     <span class="schild"><span class="jahr">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
-function dpdStart() { druckStarten("dpDruck"); }
+// 2.665.0 KC-CLUB-DP-NEU-RECHNEN: vor dem Öffnen den Stand holen (Stand, neue Wunschpläne seit dem Rechnen) – „🔄 Jetzt neu rechnen“ rechnet auf dem Club-Server
+async function dpdStart() {
+  if (!ICH?.admin) return;
+  try { const d = await api("dp_druck", {}); DPD.daten = d; DPD.info = { stand: d.stand || null, neu: Array.isArray(d.neu) ? d.neu : [] }; } catch { DPD.info = null; }
+  druckStarten("dpDruck");
+}
+async function dpdNeuRechnen(k) {
+  if (!ICH?.admin) return;
+  if (k) { k.disabled = true; k.textContent = "⏳ Wird gerechnet …"; }
+  try {
+    const r = await api("dp_druck_rechnen", {}, { warten: true });
+    melde(`🗓️ Neu gerechnet – Bedarf ${dpdStd(r.bedarf)} Std., es fehlen noch ${dpdStd(r.fehlt)} Std.`);
+    druckZu(); await dpdStart();
+  } catch (e) { meldeFehler(e); if (k) { k.disabled = false; k.textContent = "🔄 Jetzt neu rechnen"; } }
+}
 function dpdOptionen() {
   const r = (v, t, x) => `<label class="feld" style="display:flex;gap:8px;align-items:flex-start"><input type="radio" name="dpdBreit" value="${v}" ${DPD.breit === v ? "checked" : ""} onchange="DPD.breit=this.value"><span><b>${t}</b><br><small>${x}</small></span></label>`;
-  return `<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
+  const i = DPD.info, neu = i?.neu || [];
+  const stand = `<div class="karte" style="margin:0 0 10px;padding:10px">
+      <div>${i?.stand ? `Stand: <b>${esc(wann(i.stand))}</b>` : "Noch kein Stand abgelegt."}</div>
+      ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
+      <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
+      <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet den Entwurf aus Bedarf und allen Wunschplänen neu (Leon und Bereitschaft bleiben). Nichts geht nach DP2.</div></div>`;
+  return `${stand}<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
     ${r("1", "1 Blatt breit", "8–23 Uhr auf einem Blatt, die Blätter untereinander legen")}${r("2", "2 Blätter breit (größer)", "links 8–16, rechts 15:30–23 Uhr – nebeneinander legen, 15:30–16 ist die Klebekante")}
     <p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>`;
 }
