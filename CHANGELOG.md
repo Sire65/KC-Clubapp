@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.684.0 – 2026-10-26 – 💻 Hilfe am PC, wenn der Link weg ist (KC-CLUB-ZUGANG-HILFE-PC)
+- Fall Hansi („Ich wollte mich am PC anmelden, bekomme eine Fehlermeldung – ich habe nichts geändert“): Der Browser hatte seine gespeicherten Daten gelöscht (neue Gerätekennung) – und damit den Link. Öffnet jemand die App am PC ohne Link, erklärt die Anmeldeseite jetzt genau das und den schnellsten Weg: am Handy ⚙️ → App-Installation → „🔢 Code für ein anderes Gerät“, Code am PC eingeben (der Link gilt dann auf beiden Geräten; bewusst nicht „Link verloren?“, das würde den Handy-Link ablösen) – plus Tipp, sire65.github.io in Chrome bei „Websites, die immer Cookies verwenden dürfen“ einzutragen. Nur App.
+
 ## 2.683.0 – 2026-10-26 – 🌙 Lücken-Blatt: Hinweis zum Abend (KC-CLUB-DP-LUECKEN-ABEND)
 - Wunsch Hansi („Abends ist der Markt mal bis 22, mal bis 23 Uhr auf, mit Aufräumen auch bis 23:34 – einige haben sich nur bis 22 eingetragen, müssen aber bis 23 bleiben“): Das Blatt „Hier fehlen noch Helfer“ zeigt, wenn ein Markttag Bedarf bis 23 Uhr hat, den Hinweis „🌙 Abends: Der Markt geht teils bis 23 Uhr, mit Aufräumen auch mal bis ca. 23:30 Uhr. Wer sich nur bis 22 Uhr eingetragen hat: bitte möglichst bis 23 Uhr verlängern.“ Tabelle etwas kompakter, damit alles auf ein Blatt passt.
 - Wunsch Hansi („beides anzeigen, zweite Spalte rechts“): rechts zwei Spalten – „Std. laut Plan“ (fehlt nach der Einteilung, nie länger als die Wunschzeit) und „Std. wenn alle ganz“ (fehlt selbst dann, wenn alle ihre ganze angebotene Zeit inkl. „kann“ arbeiten), unten jeweils die Summe (derzeit 109,5 bzw. 75,5 Std.). Server unverändert.

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.683.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.684.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -45793,6 +45793,8 @@ function ohneLinkTipp() {
   const t = privat ? "🕶️ <b>Privater Modus:</b> Hier merkt sich das Handy nichts – auch nicht deinen Link. Bitte die App im normalen Browser-Fenster öffnen."
     : FP_IOS && zhStartSymbol() ? "📱 <b>iPhone:</b> Das Symbol auf dem Home-Bildschirm kennt deinen Link nicht. So geht's: den Link aus WhatsApp oder Mail in <b>Safari</b> öffnen → unten <b>Teilen □↑ → „Zum Home-Bildschirm“</b>. Schneller: unten den <b>6-stelligen Code</b> eingeben."
     : /SamsungBrowser/.test(ua) ? "📱 <b>Samsung-Browser „Internet“:</b> Hier bist du nicht angemeldet – vermutlich hast du die App sonst in <b>Chrome</b>. Nimm das Köcheclub-Symbol aus Chrome oder öffne deinen Link hier einmal."
+    // KC-CLUB-ZUGANG-HILFE-PC (26.10.2026, Fall Hansi: am PC plötzlich ohne Link – der Browser hatte seine gespeicherten Daten gelöscht)
+    : !FP_IOS && !/Android|Mobile/i.test(ua) ? "💻 <b>Am PC:</b> Wahrscheinlich hat der Browser seine gespeicherten Daten gelöscht (z. B. beim Schließen oder durch ein Reinigungsprogramm) – und damit auch deinen Link. Am schnellsten: am <b>Handy</b> in der App ⚙️ → App-Installation → <b>„🔢 Code für ein anderes Gerät“</b>, dann den Code unten eingeben. So gilt dein Link auf beiden Geräten weiter (bitte dafür nicht „Link verloren?“ nehmen – ein neuer Link würde den auf dem Handy ablösen).<br>Damit es nicht wieder passiert: in Chrome unter Einstellungen → Datenschutz → Cookies <b>sire65.github.io</b> bei „Websites, die immer Cookies verwenden dürfen“ eintragen."
     : "";
   k.innerHTML = t ? `<p style="margin:0">${t}</p>` : ""; k.classList.toggle("versteckt", !t);
 }
