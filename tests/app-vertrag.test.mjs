@@ -12907,7 +12907,7 @@ function idx0() { return lies("index.html"); }
 }
 // 2.657.0 KC-CLUB-SCHATTEN-KOPFFELDER (Frage Hansi „Hat der Kopfbereich auch Schatten und darauf die Felder?“)
 {
-  assert.ok(/:where\(:root\.sch-an\) :is\(\.hero \.info, \.hero \.mini, \.hero \.rund, \.hero \.ipfeil, \.hero \.statusleiste, \.hero \.logo[^{]*\) \{ box-shadow: var\(--sch-kopf\); \}/.test(html), "Felder auf dem Kopf mit Schatten (2.661.0: eigener Kopf-Schatten)");
+  assert.ok(/:where\(:root\.sch-an\) :is\(\.hero \.info, \.hero \.mini, \.hero \.rund, \.hero \.statusleiste, \.hero \.logo[^{]*\)::before \{[^}]*box-shadow: var\(--sch-kopf\)/.test(html) && /\.hero \.ipfeil, [^{]*\) \{ box-shadow: var\(--sch-kopf\); \}/.test(html), "Felder auf dem Kopf mit Schatten (2.661.0: eigener Kopf-Schatten; 2.663.0: hinter der Szene)");
   assert.ok(/:root\.dunkel \{ --sch-auto: 0, 0, 0; --sch-box: var\(--sch-box-n\); --sch-box-gross: var\(--sch-box-gross-n\); \}/.test(html) && /const SCHT_KONTRAST = \{ aus:.*normal:.*stark:/.test(programm) && /kontrast: SCHT_KONTRAST\[j\.kontrast\] \? j\.kontrast : "normal"/.test(programm), "Nacht: Kontrast (Standard normal)");
 }
 // 2.658.0 KC-CLUB-WECKER-TON (Fund Hansi „Der Wecker und Timer haben keinen Ton“) · KC-CLUB-SIMJUE-KARUSSELL-3 („Lauflicht zu schnell“)
@@ -12934,9 +12934,15 @@ function idx0() { return lies("index.html"); }
 {
   assert.ok(/const SCHT_KOPF = \{ aus:.*leicht:.*mittel:.*kraeftig:.*sehr:/.test(programm) && /kopf: SCHT_KOPF\[j\.kopf\] \? j\.kopf : "kraeftig"/.test(programm), "eigene Stärke für den Kopf, Standard kräftig");
   assert.ok(/r\.style\.setProperty\("--sch-kopf", ks \?/.test(programm) && /rgb \? rgb\.join\(", "\) : "0, 0, 0"/.test(programm), "immer dunkel (Automatisch = Schwarz), auch nachts");
-  assert.ok(/\.hero \.statuschip, \.hero \.wk-chip, \.hero \.leds[,)][^{]*\{ box-shadow: var\(--sch-kopf\); \}/.test(html) && /<b>🎩 Schatten im Kopf<\/b>/.test(programm), "auch Status, Wecker, Lämpchen; im Zahnrad einstellbar");
+  assert.ok(/\.hero \.statuschip, \.hero \.wk-chip, \.hero \.leds\)::before \{[^}]*box-shadow: var\(--sch-kopf\)/.test(html) && /<b>🎩 Schatten im Kopf<\/b>/.test(programm), "auch Status, Wecker, Lämpchen; im Zahnrad einstellbar");
 }
 // 2.662.0 KC-CLUB-SCHATTEN-INFOKARTE (Hinweis Hansi „das Infofeld hat keinen Schatten“): die Karte im Infofeld (.il) und die Zeilen „Für dich“ (.ifz)
 {
   assert.ok(/\.hero \.il:not\(\.il-rot\):not\(\.il-orange\), \.hero \.ifz\) \{ box-shadow: var\(--sch-kopf\); \}/.test(html), "Infokarte mit Kopf-Schatten, Warnkarten glühen weiter");
+}
+// 2.663.0 KC-CLUB-SCHATTEN-HINTER-SZENE (Bild Hansi „der Schatten verdeckt Karussell und Bude – er muss im Hintergrund bleiben“)
+{
+  assert.ok(/:where\(:root\.sch-an\) \.hero \{ isolation: isolate; \}/.test(html), "Kopf eigene Ebene");
+  assert.ok(/::before \{ content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var\(--sch-kopf\); z-index: -2; pointer-events: none; \}/.test(html), "Schatten auf Ebene -2, hinter der Szene (-1)");
+  assert.ok(/\.hero > \.jz-schicht\.jz-buehne \{ z-index: -1; \}/.test(html), "Szene bleibt auf -1");
 }

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.663.0 – 2026-10-26 – 🎠 Schatten im Kopf liegt hinter der Szene (KC-CLUB-SCHATTEN-HINTER-SZENE)
+- Bild Hansi („Jetzt sieht es so aus, dass der Schatten das Karussell und die Bude verdeckt. Der Schatten muss im Hintergrund bleiben“): Die Szene im Kopf (Sim-Jü, Jahreszeit-Bühne) liegt bewusst hinter den Feldern; der Schatten der Felder wurde darüber gemalt. Jetzt zeichnet eine unsichtbare Unterlage (::before, Ebene −2) den Schatten **hinter** die Szene (Ebene −1); der Kopf bildet dafür eine eigene Ebene. Karussell, Herz und Bude bleiben frei. Die Karte im Laufband und die Pfeile behalten den normalen Schatten (liegen nie über der Szene). Korrektur zu 2.661.0/2.662.0, gleich eingespielt. Nur App.
+
 ## 2.662.0 – 2026-10-26 – 🎩 Schatten auch für die Karte im Infofeld (KC-CLUB-SCHATTEN-INFOKARTE)
 - Hinweis Hansi („So wie es aussieht hat das Infofeld keinen Schatten“): Die Karte im Infofeld (z. B. „Heute in Werne: Sim-Jü“, mit hellem Rahmen) ist ein eigenes Element und fehlte; jetzt hat sie den Kopf-Schatten, ebenso die Zeilen in „🔔 Für dich“. Rote und orange Warnkarten behalten ihr Glühen. Als Teil von 2.661.0 (auf Wunsch Hansi sofort) gleich eingespielt. Nur App.
 

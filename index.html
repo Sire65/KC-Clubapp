@@ -4937,7 +4937,14 @@
   :root.dunkel { --sch-auto: 0, 0, 0; --sch-box: var(--sch-box-n); --sch-box-gross: var(--sch-box-gross-n); } /* 2.657.0: nachts eigener Schatten mit Kontrast */
   :where(:root.sch-an) :is(.kachel, .karte, .knopf, .chip, .blase, .fuss-leiste, .su-klein, .hz-frage, .umschalter, .sp-kachel, .sp-edition) { box-shadow: var(--sch-box); }
   /* 2.657.0 (Frage Hansi „Hat der Kopfbereich auch Schatten und darauf die Felder?“): auch die Felder auf dem Kopf – Infofeld, Zahlen-Felder, runde Knöpfe, Pfeile, Statusleiste, Logo */
-  :where(:root.sch-an) :is(.hero .info, .hero .mini, .hero .rund, .hero .ipfeil, .hero .statusleiste, .hero .logo, .hero .statuschip, .hero .wk-chip, .hero .leds, .hero .il:not(.il-rot):not(.il-orange), .hero .ifz) { box-shadow: var(--sch-kopf); } /* 2.661.0: eigener, immer dunkler Kopf-Schatten; 2.662.0: auch die Karte im Infofeld (Bild Hansi) – Warnkarten behalten ihr Glühen */
+  /* 2.663.0 KC-CLUB-SCHATTEN-HINTER-SZENE (Bild Hansi „der Schatten verdeckt Karussell und Bude – er muss im Hintergrund bleiben“): Die Szene im Kopf
+     (Sim-Jü, Jahreszeit-Bühne) liegt mit z-index -1 hinter den Feldern – ein box-shadow der Felder wurde darüber gemalt. Jetzt malt ein ::before mit
+     z-index -2 den Schatten, also HINTER der Szene; der Kopf bildet dafür immer eine eigene Ebene (isolation). Karte im Laufband (.il, überläuft
+     versteckt) und ihre Zeilen behalten den normalen Schatten – sie liegen innerhalb des Infofelds, nie über der Szene; Pfeile (eigene Ebene) ebenso. */
+  :where(:root.sch-an) .hero { isolation: isolate; }
+  :where(:root.sch-an) :is(.hero .info, .hero .mini, .hero .rund, .hero .statusleiste, .hero .logo, .hero .statuschip, .hero .wk-chip, .hero .leds) { position: relative; }
+  :where(:root.sch-an) :is(.hero .info, .hero .mini, .hero .rund, .hero .statusleiste, .hero .logo, .hero .statuschip, .hero .wk-chip, .hero .leds)::before { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--sch-kopf); z-index: -2; pointer-events: none; }
+  :where(:root.sch-an) :is(.hero .ipfeil, .hero .il:not(.il-rot):not(.il-orange), .hero .ifz) { box-shadow: var(--sch-kopf); }
   :where(:root.sch-an) .hero { box-shadow: var(--sch-box-gross); }
   .sch-gruppe { margin: 8px 0 4px; } .sch-gruppe > b { display: block; margin-bottom: 2px; }
   .sch-farben { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0; }
@@ -5974,7 +5981,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.662.0" data-v="2.662.0"></script>
+<script src="app.js?v=2.663.0" data-v="2.663.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

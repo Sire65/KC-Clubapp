@@ -22,16 +22,17 @@ ok(hero !== vorher && /rgba\(29, 78, 137, 0\.45\) 12px 12px 38px/.test(hero), "K
 ok(/rgba\(29, 78, 137, 0\.45\) 8px 8px 24px/.test(knopf), "Knopf: Schatten – " + knopf);
 const felder = await seite.evaluate(async () => { const h = document.querySelector("#v-start .hero"), m = document.createElement("button"); m.className = "mini"; h.appendChild(m);
   const il = document.createElement("div"); il.className = "il il-weiss"; il.style.transition = "none"; il.style.animation = "none"; il.textContent = "Heute in Werne"; $("heroInfo").appendChild(il); await new Promise((w) => setTimeout(w, 600));
-  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste", ".statuschip", ".il"].map((s) => getComputedStyle(h.querySelector(s)).boxShadow);
+  const r = ["#heroInfo", ".mini", ".rund", ".logo", ".statusleiste", ".statuschip", ".il"].map((s) => { const e = h.querySelector(s), b = getComputedStyle(e, "::before"); // 2.663.0: Schatten im ::before (Ebene -2, hinter der Szene)
+    return s === ".il" ? getComputedStyle(e).boxShadow : b.zIndex === "-2" ? b.boxShadow : "kein ::before auf Ebene -2"; });
   il.className = "il il-rot"; await new Promise((w) => setTimeout(w, 600)); const rot = getComputedStyle(il).boxShadow; m.remove(); il.remove(); return [...r, /255, 90, 90/.test(rot) ? r[0] : "rot verloren: " + rot]; });
 ok(felder.every((x) => /rgba\(29, 78, 137, 0\.56\) 8px 8px 24px/.test(x)), "2.661.0: Felder auf dem Kopf (Infofeld, Zahlen-Felder, runde Knöpfe, Logo, Statusleiste) – " + felder.join(" | "));
 if (bilder) await weg(), await seite.screenshot({ path: path.join(bilder, "schatten-hell.png") });
 await seite.evaluate(() => { document.documentElement.classList.add("dunkel"); schattenSpeichern({ farbe: "auto", pos: "oben", staerke: "sehr" }); });
 const nacht = await schatten(".kachel");
 ok(/rgba\(255, 236, 220, 0\.34\) 0px -14px 32px 0px, rgba\(255, 255, 255, 0\.12\) 0px 0px 0px 1px/.test(nacht), "Nacht + automatisch: heller Schatten oben mit Lichtkante (Kontrast normal) – " + nacht);
-const kopfNacht = await schatten("#v-start .hero .statusleiste");
+const kopfNacht = await seite.evaluate(() => getComputedStyle(document.querySelector("#v-start .hero .statusleiste"), "::before").boxShadow);
 ok(/^rgba\(0, 0, 0, 0\.56\) 0px -10px 24px 0px$/.test(kopfNacht), "Nacht: Felder im Kopf behalten dunklen Schatten – " + kopfNacht);
-await seite.evaluate(() => schattenSpeichern({ kopf: "aus" })); ok((await schatten("#v-start .hero .statusleiste")) === "none", "Schatten im Kopf: Aus");
+await seite.evaluate(() => schattenSpeichern({ kopf: "aus" })); ok((await seite.evaluate(() => getComputedStyle(document.querySelector("#v-start .hero .statusleiste"), "::before").boxShadow)) === "none", "Schatten im Kopf: Aus");
 await seite.evaluate(() => schattenSpeichern({ kopf: "kraeftig" }));
 await seite.evaluate(() => schattenSpeichern({ farbe: "blau", kontrast: "stark" }));
 ok(/rgba\(142, 167, 196, 0\.53\) 0px -14px 32px 0px, rgba\(255, 255, 255, 0\.28\) 0px 0px 0px 1px/.test(await schatten(".kachel")), "Nacht + Blau + stark: aufgehellt, helle Kante");
