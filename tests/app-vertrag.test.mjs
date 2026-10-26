@@ -3136,7 +3136,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/<h2>💬 Nachrichten<\/h2>/.test(html) && !/Vereinsarchiv|Vereinsordner/.test(html) && /"🤖 Clubleben"/.test(html), "Begriffe");
   assert.ok(/:root\.gross \.fuss-leiste button \{ font-size: 10px;/.test(html) && /\.knopf\.klein \{ min-height: (?:40|44)px; \}/.test(html), "große Schrift / Tippflächen");
   assert.ok(/const inapp = \/; wv\\\)\|FBAN\|FBAV\|Instagram\|Line\\\/\|GSA\\\/\/\.test\(ua\);/.test(html) && /Erst in Chrome öffnen/.test(html) && /Erst in Safari öffnen/.test(html), "Mini-Browser im Assistenten");
-  assert.ok(/iPhone\/iPad: in Safari öffnen, Android: in Chrome/.test(server), "Mail nennt Safari/Chrome");
+  assert.ok(/auf dem iPhone\/iPad in Safari, auf Android in Chrome/.test(server), "Mail nennt Safari/Chrome"); // KC-CLUB-ZUGANG-HILFE: neue Mail mit Schritten
 }
 // 280. 1.99.0: Admin-Name statt fest „Hansi“, „bald“-Kacheln ausgeblendet, Manifest-Symbole getrennt
 {

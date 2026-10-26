@@ -263,10 +263,20 @@ async function neuenLinkMailen(pid: string): Promise<any | null> {
   if (!bisher?.aktiv) await rtNeu(pid); // 2.426.0: Zugang neu eingerichtet → direkte Leitung neu
   anmeldungenVergessen();
   const link = `${APP_URL}?k=${token}`;
+  const anrede = vorname((await personen([pid])).get(pid) ?? null); // KC-CLUB-ZUGANG-HILFE: persönliche Anrede
   const versand = await routerSenden("club_nachricht_mail", [pid], {
     titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
     betreff: "Köcheclub Werne – dein persönlicher Link zur App",
-    text: `Hallo,\n\nhier ist dein neuer persönlicher Link zur Köcheclub-App:\n\n${link}\n\nBitte antippen – die App zeigt dir dann Schritt für Schritt, wie du sie auf dein Handy legst (iPhone/iPad: in Safari öffnen, Android: in Chrome).\n\nDer Link ist nur für dich – bitte nicht weitergeben. Sobald du ihn öffnest, gilt ein früherer Link nicht mehr. Der Link gilt 24 Stunden.\nDu hast keinen neuen Link angefordert? Dann bitte kurz ${await adminVorname()} Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
+    // KC-CLUB-ZUGANG-HILFE (26.10.2026, Wunsch Hansi „in der Mail erklären, dass das alte Symbol runter muss und was sonst zu beachten ist –
+    // und den Link sofort zum Anklicken zeigen“): Link ganz oben, dann die Schritte je Gerät, zuerst das alte Symbol löschen.
+    text: `Hallo${anrede ? " " + anrede : ""},\n\n👉 Hier tippen, um die Köcheclub-App zu öffnen:\n${link}\n\n` +
+      `Das ist dein neuer persönlicher Link. So klappt es sicher:\n\n` +
+      `1. Altes Köcheclub-Symbol löschen: Hast du die App schon auf dem Handy? Dann das alte Symbol vom Startbildschirm entfernen (lange drücken → „Entfernen“ bzw. „App löschen“). Das alte Symbol kennt nur den alten Link und funktioniert nicht mehr.\n` +
+      `2. Link öffnen: auf den Link oben tippen – auf dem iPhone/iPad in Safari, auf Android in Chrome.\n` +
+      `3. Neu auf den Startbildschirm legen: iPhone/iPad: unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Android (Chrome): oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\n` +
+      `4. Ab jetzt die App immer über das neue Symbol öffnen. Alte Links aus WhatsApp oder älteren Mails bitte nicht mehr benutzen.\n\n` +
+      `Gut zu wissen:\n• Sobald du diesen Link öffnest, gilt der frühere nicht mehr. Der Link gilt 24 Stunden.\n• Du nutzt die App auch auf einem zweiten Gerät (z. B. Tablet)? In der App unter ⚙️ → App-Installation → „🔢 Code für ein anderes Gerät“ – dann brauchst du keinen weiteren Link.\n• Der Link ist nur für dich – bitte nicht weitergeben.\n\n` +
+      `Du hast keinen neuen Link angefordert? Dann bitte kurz ${await adminVorname()} Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
     url: link,
   }, `club-zugang:${pid}:${Date.now()}`);
   await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ: Schlüssel nicht im Mail-Speicher lassen

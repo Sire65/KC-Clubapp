@@ -25,4 +25,8 @@ assert.ok(/neuenLinkMailen\(t\.pid\)/.test(zh) && /routerSenden\("club_nachricht
 assert.ok(/zugangHilfeZeigen\(j\?\.hilfe\)/.test(app) && /Hallo \$\{esc\(h\.vorname\)\}, schön, dass du da bist!/.test(app) && /knopf\("hansi", "📨 Hansi Bescheid geben", true\)/.test(app), "Begrüßung und Hansi-Knopf");
 assert.ok(/Dein Link ist nicht vollständig angekommen/.test(app) && /SamsungBrowser/.test(app) && /Privater Modus/.test(app) && /id="ohneLinkTipp"/.test(seite), "Tipps je Ursache");
 assert.ok(/if \(window\.KCFP\.startOk \|\| window\.KCFP\.ohneLink\) return;/.test(seite) && /window\.KCFP\.ohneLink = true; ohneLinkTipp\(\);/.test(app), "kein falsches „Start hängt“");
+// 5. Mail mit neuem Link: Link ganz oben, altes Symbol löschen, Schritte; WhatsApp-Vorlage mit demselben Hinweis
+const nl = block("async function neuenLinkMailen(", "// ---------- KC-CLUB-KURZCODE");
+assert.ok(/👉 Hier tippen, um die Köcheclub-App zu öffnen:\\n\$\{link\}/.test(nl) && /1\. Altes Köcheclub-Symbol löschen/.test(nl) && /Zum Home-Bildschirm/.test(nl) && /App installieren/.test(nl), "Mail-Anleitung");
+assert.ok(/zuerst das \*alte Köcheclub-Symbol\* vom Startbildschirm löschen/.test(app), "WhatsApp-Vorlage mit Symbol-Hinweis");
 console.log("zugang-hilfe: alle Prüfungen bestanden");
