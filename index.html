@@ -79,7 +79,7 @@
   setTimeout(function () { var k = document.getElementById("appLaedtNeu"); if (k) k.hidden = false; }, 45000);
   var startPruefN = 0;
   setTimeout(function startPruefen() {
-    if (window.KCFP.startOk) return;
+    if (window.KCFP.startOk || window.KCFP.ohneLink) return; // KC-CLUB-ZUGANG-HILFE: ohne gültigen Link ist die Hilfe-Seite kein „hängender Start“
     // 2.0.0 (Gesamtprüfung): auch „Programm da, aber Bildschirm leer“ (Start abgebrochen) zählt als kaputt → Hilfe zeigen
     var leer = (function () { var a = document.getElementById("app"), g = document.getElementById("gesperrt"); return !!(a && g && a.classList.contains("versteckt") && g.classList.contains("versteckt")); })();
     var appDa = typeof window.zeige === "function" && !leer;
@@ -4985,6 +4985,7 @@
     <input id="kcCode" class="kc-code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="6 Ziffern" aria-label="6-stelliger Code" oninput="kcCodeTippen(this)" onkeydown="if(event.key==='Enter')kurzcodeEinloesen()">
     <button class="knopf haupt" id="kcCodeKnopf" style="width:100%;margin-top:8px" onclick="kurzcodeEinloesen()">✅ Anmelden</button>
     <p class="hinweis" id="kcCodeAntwort" style="margin:6px 0 0"></p></div>
+  <div class="karte versteckt" id="ohneLinkTipp" style="border:2px solid var(--akzent, #1565c0)"></div><!-- KC-CLUB-ZUGANG-HILFE -->
   <div class="karte"><h3>🔑 Persönlicher Link nötig</h3><p>Bitte öffne die App über deinen <b>persönlichen Link</b>, den du von Hansi bekommen hast (per WhatsApp oder Mail). Danach kannst du sie auf den Startbildschirm legen.</p>
     <p class="hinweis" style="margin:0"><b>Link funktioniert nicht?</b> Dann nimm immer den <b>neuesten</b> Link – oder fordere unten einfach einen neuen an.</p></div>
   <div class="karte"><h3>✉️ Link verloren?</h3><p style="margin-top:0">Gib die E-Mail-Adresse ein, die im Club hinterlegt ist. Wir schicken dir sofort einen neuen persönlichen Link.</p>
@@ -5992,7 +5993,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.671.0" data-v="2.671.0"></script>
+<script src="app.js?v=2.672.0" data-v="2.672.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

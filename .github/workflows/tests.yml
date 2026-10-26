@@ -36,3 +36,4 @@ jobs:
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs
       - run: node tests/tempo-versand.test.mjs
+      - run: node tests/zugang-hilfe.test.mjs
