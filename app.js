@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.685.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.686.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5450,6 +5450,7 @@ const HILFE = [
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
   { id: "spassstimme", thema: "toene", sym: "🎭", t: "Spaßstimmen im Gespräch", x: "Im App-Gespräch auf <b>🎭</b> tippen und eine Stimme wählen – z. B. 🐭 Mäusestimme, 🎈 Helium, 🤖 Roboter, 🐻 Brummbär oder 👻 Gespenst. Dein Gegenüber hört dich damit, du selbst hörst normal; mit 🙂 Normal geht es zurück. Klopft jemand mit „Sprechen“ an, kannst du gleich <b>„🎭 Mit Spaßstimme annehmen“</b>. Ausprobieren: ⚙️ → Privatsphäre → beim Anklopfton.", seit: "2.650.0" },
+  { id: "fett", thema: "nachrichten", sym: "𝐅", t: "Ein Wort fett, kursiv oder durchgestrichen", x: "Im Schreibfeld ein Wort <b>markieren</b> (lange drücken oder doppelt tippen) – darüber erscheinen <b>F fett</b>, <i>K kursiv</i> und <s>D durch</s>. Antippen, fertig. Oder in der kleinen Zeile über dem Schreibfeld auf <b>F</b> tippen. Wie bei WhatsApp geht es auch mit Zeichen: <b>*fett*</b>, <i>_kursiv_</i>, <s>~durchgestrichen~</s>. Nochmal antippen nimmt es wieder weg.", seit: "2.686.0" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
   { id: "wer_ist_da", thema: "toene", sym: "👋", t: "Wer ist da, wenn ich reinkomme?", x: "Beim Reinkommen – also beim Öffnen der App oder nach mindestens 10 Minuten Pause – sagt sie einmal, wer gerade da ist – z. B. <b>„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“</b> Oben erscheint dazu eine kurze Meldung. Ist niemand da, kommt nichts. Wer seinen Online-Status verbirgt, wird nicht genannt. Das Handy spricht erst, wenn du einmal auf den Bildschirm getippt hast. Ausschalten: ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → <b>„👋 Beim Öffnen“</b>.", zeig: () => einstiegHin("ansagen"), seit: "2.454.0" },
   { id: "ansage_verlassen", thema: "toene", sym: "🚪", t: "Ansage, wenn jemand die App verlässt", x: "Neben „… ist jetzt online“ kann das Handy auch ansagen, wenn jemand die App verlässt. Das ist zunächst aus – unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ kannst du es dazunehmen, wenn du magst.", zeig: () => einstiegHin("ansagen"), seit: "2.23.1" },
@@ -34067,10 +34068,37 @@ async function vbEinlesen(d) { // true = war eine Schlüsselbund-Datei (eingeles
   melde(`🔑 Schlüsselbund mit ${vn} eingelesen – verschlüsselte Nachrichten öffnen sich jetzt von selbst. Die Datei kannst du jetzt löschen.`);
   vbNeuProbieren(); return true;
 }
+// 2.686.0 KC-CLUB-CHAT-FETT (Wunsch Hansi „in Nachrichten ein Wort fett machen – wie kann das einfach passieren“): wie bei WhatsApp –
+// *fett*, _kursiv_, ~durchgestrichen~. Nur wenn das Zeichen am Wortanfang/-ende steht (so bleiben z. B. Links mit _ unberührt).
+const NA_FORMAT = [["*", "b"], ["_", "i"], ["~", "s"]];
+function naFormat(h) { // h ist schon sicher (esc) – es kommen nur <b>/<i>/<s> dazu
+  for (const [z, tag] of NA_FORMAT) { const e = z.replace(/[*~]/, "\\$&");
+    h = h.replace(new RegExp(`(^|[\\s(„"'>;])${e}([^\\s${e}](?:[^${e}\\n]*?[^\\s${e}])?)${e}(?=$|[\\s.,!?;:)“"'<])`, "g"), `$1<${tag}>$2</${tag}>`); }
+  return h;
+}
 function naText(t) { // Text sicher ausgeben, @Namen hervorheben, App-Sprünge als Knopf (KC-CLUB-SPRUNGKNOPF 2.23.97)
   if (vnIst(t)) return vnHtml(t); // 2.517.0 KC-CLUB-VERSCHLUESSELT
-  return esc(t).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
+  return naFormat(esc(t)).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
 }
+// Knöpfe F · K · D über dem Schreibfeld: erscheinen, sobald man im Text etwas markiert (Wort lange drücken / doppelt tippen), und über 𝐅 in der
+// kleinen Zeile. Markiertes wird eingerahmt (*Wort*); ohne Markierung kommen zwei Zeichen, der Strich steht dazwischen – einfach weiterschreiben.
+function naFormatSetzen(z) {
+  const f = $("text"); if (!f) return;
+  let a = f.selectionStart ?? f.value.length, e = f.selectionEnd ?? a; const v = f.value;
+  while (e > a && /\s/.test(v[e - 1])) e--; while (a < e && /\s/.test(v[a])) a++; // Leerzeichen am Rand der Markierung bleiben draußen
+  const mitte = v.slice(a, e), schon = mitte.length > 1 && mitte.startsWith(z) && mitte.endsWith(z);
+  const neu = schon ? mitte.slice(1, -1) : z + mitte + z; // zweimal tippen nimmt es wieder weg
+  f.value = v.slice(0, a) + neu + v.slice(e); f.focus();
+  if (mitte) f.setSelectionRange(a, a + neu.length); else f.setSelectionRange(a + 1, a + 1);
+  f.dispatchEvent(new Event("input", { bubbles: true })); naFormatLeiste();
+}
+function naFormatLeiste(immer) {
+  const f = $("text"), l = $("formatLeiste"); if (!f || !l) return;
+  const sel = document.activeElement === f && f.selectionEnd > f.selectionStart;
+  if (immer !== undefined) l.dataset.offen = immer ? "1" : "";
+  l.classList.toggle("versteckt", !(sel || l.dataset.offen));
+}
+document.addEventListener("selectionchange", () => { if (document.activeElement?.id === "text") naFormatLeiste(); });
 // ---------- KC-CLUB-SPRUNGKNOPF (2.23.97, Wunsch Hansi): Knopf in einer Nachricht, der an eine Stelle der App führt ----------
 // In der Nachricht steht eine ganz normale App-Adresse (…/KC-Clubapp/#zu=avatar): ältere Apps, Push und E-Mail zeigen den Link,
 // der die App an genau dieser Stelle öffnet; die App zeigt statt der Adresse einen Knopf. Ziele nur aus dieser Liste (kein freier Code).

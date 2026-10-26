@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.686.0 – 2026-10-26 – 𝐅 Nachrichten: Wörter fett, kursiv, durchgestrichen (KC-CLUB-CHAT-FETT)
+Wunsch Hansi („in Nachrichten ein Wort z. B. fett machen – wie kann das einfach passieren“): Im Schreibfeld ein Wort markieren → darüber erscheinen „F fett · K kursiv · D durch“; antippen rahmt das Markierte ein, nochmal antippen nimmt es weg. Ohne Markierung über F in der kleinen Zeile: zwei Zeichen, der Strich steht dazwischen. Wie bei WhatsApp: *fett*, _kursiv_, ~durchgestrichen~ – in der Nachricht steht dann wirklich fett/kursiv/durchgestrichen (nur am Wortanfang/-ende, Links mit _ bleiben unberührt; nichts außer <b>/<i>/<s>). Push und E-Mail zeigen die Zeichen wie geschrieben.
+
 ## 2.685.0 – 2026-10-26 – 🔐 Link besser festhalten (KC-CLUB-SCHLUESSEL-SICHERN)
 - Wunsch Hansi („Das darf bei den Usern nicht passieren – die wissen dann nicht, was sie machen sollen. Das muss abgesichert sein“, Stufe A): Nach jeder gültigen Anmeldung liegt der persönliche Schlüssel zusätzlich in zwei weiteren Ablagen des Browsers (IndexedDB und Cache-Speicher), und die App bittet um Dauer-Speicher – der Browser räumt dann nicht mehr von selbst auf. Fehlt der gespeicherte Link beim Start (z. B. weil ein Reinigungsprogramm nur einen Teil gelöscht hat), holt die App ihn still zurück und meldet sich wie gewohnt an (im Fehlerprotokoll als Info „aus der Zweitablage wiederhergestellt“). Kein Cookie (der Schlüssel ginge sonst an den Webserver). Grenze: Löscht jemand alle Website-Daten, hilft das nicht – dann erklärt die Anmeldeseite den Weg. Browser-Test: Link gelöscht → still wieder angemeldet, alles gelöscht → Anmeldeseite. Test: `tests/schluessel-sichern.test.mjs`. Server 2.685.0.
 

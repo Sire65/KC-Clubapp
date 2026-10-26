@@ -7478,6 +7478,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const tf = new Function(programm.match(/function osterSonntag[\s\S]*?\n\}/)[0] + "\n" + programm.match(/function themaFestZeit[\s\S]*?\n\}/)[0] + "\nreturn themaFestZeit;")();
   assert.equal(tf(new Date(2026, 9, 27, 10)), "simjue"); assert.equal(new Date(2026, 9, 27).getDay(), 2);
 }
+// 2.686.0 KC-CLUB-CHAT-FETT: *fett*, _kursiv_, ~durch~ in Nachrichten, Knöpfe am Schreibfeld
+{
+  const esc0 = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const nf = new Function(programm.match(/const NA_FORMAT = [\s\S]*?\n\}\n/)[0] + "\nreturn naFormat;")();
+  assert.equal(nf(esc0("Morgen *18 Uhr* am _Clubheim_ – ~Freitag~ Samstag!")), "Morgen <b>18 Uhr</b> am <i>Clubheim</i> – <s>Freitag</s> Samstag!");
+  assert.equal(nf(esc0("Link https://x.de/a_b_c und 5*3*2")), "Link https://x.de/a_b_c und 5*3*2", "Links und Rechnungen bleiben");
+  assert.equal(nf(esc0("*<script>*")), "<b>&lt;script&gt;</b>", "bleibt sicher (erst esc, dann nur b/i/s)");
+  assert.match(programm, /return naFormat\(esc\(t\)\)\.replace\(/, "in jeder Nachricht");
+  assert.match(html, /id="formatLeiste"[^\n]*onclick="naFormatSetzen\('\*'\)"[^\n]*onclick="naFormatSetzen\('_'\)"[^\n]*onclick="naFormatSetzen\('~'\)"/, "Knöpfe F K D");
+  assert.match(html, /id="fettKnopf"/, "F in der kleinen Zeile");
+  assert.match(programm, /document\.addEventListener\("selectionchange", \(\) => \{ if \(document\.activeElement\?\.id === "text"\) naFormatLeiste\(\); \}\);/, "erscheint beim Markieren");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -7597,7 +7609,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/nachrichtMenue\('\$\{m\.id\}'\)/.test(html) && /const NA_SCHNELL = \["👍", "❤️", "😂", "😮", "😢", "🙏"\]/.test(html), "Menü mit Schnell-Reaktionen fehlt");
   assert.ok(/function naAntworten\(/.test(html) && /id="antwortLeiste"/.test(html) && /antwort_auf: NA\.antwort\.id/.test(html), "Antworten fehlt");
   assert.ok(/function naErwPruefen\(/.test(html) && /id="erwVorschlag"/.test(html) && /erwaehnt: naErwaehnteIds\(text\)/.test(html), "@Erwähnen fehlt");
-  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
+  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return (naFormat\()?esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
 }
 
 // 122. 0.98.0: Weiterleiten, Nicht stören, Meine Geräte
