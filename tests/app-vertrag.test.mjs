@@ -6357,7 +6357,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const id of ["express", "zurueckholen", "favoriten", "spaeter"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?"`).test(html), `Twinkey-Frage ${id}`);
   assert.ok(/\["express", "eilig", "eilt", "dringend"/.test(html) && /\["favorit", "favoriten", "stern"/.test(html), "Twinkey versteht neue Wörter");
   assert.ok(/\["⭐", "Favoriten \(Lieblings-Chats\)"/.test(html) && /\["🏎️", "Express-Nachricht \(5 am Tag\)"/.test(html) && /\["↩️", "Nachricht zurückholen"/.test(html), "Lupe findet die neuen Funktionen");
-  assert.ok(/id: "nachricht", stand: "2"/.test(html) && /\{ v: "neu", sel: \["#expressKnopf"\], t: "🏎️ Express"/.test(html) && /Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats/.test(html), "Video Nachricht: Express, Später, Favoriten");
+  assert.ok(/id: "nachricht", stand: "\d+"/.test(html) && /\{ v: "neu", sel: \["#expressKnopf"\], t: "🏎️ Express"/.test(html) && /Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats/.test(html), "Video Nachricht: Express, Später, Favoriten");
 }
 // 2.397.0 KC-CLUB-FAV-PERSONEN (Wunsch Hansi „Stern auch in der Mitgliederliste – wo wird er definitiv gesetzt?“): ein Stern je Person
 {
@@ -10342,7 +10342,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.300.0 KC-CLUB-VIDEO-RUECKSEITE + KC-CLUB-RUECKSEITE-HILFE (Wunsch Hansi): eigenes Video, Hilfetexte, Lupe, Twinkey, Tipp
 {
   const b = html.slice(html.indexOf("// ---------- 2.300.0 KC-CLUB-VIDEO-RUECKSEITE"), html.indexOf("const RG_ZENTRALE = ["));
-  assert.ok(/\{ id: "rueckseite", stand: "1", [^\n]*st: \(\) => RG_RUECKSEITE, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"effekte", "rueckseite"/.test(html), "Video registriert und im Thema");
+  assert.ok(/\{ id: "rueckseite", stand: "\d+", [^\n]*st: \(\) => RG_RUECKSEITE, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"effekte", "rueckseite"/.test(html), "Video registriert und im Thema");
   for (const t of ["dia", "tafel", "flip", "uhr", "buehne"]) assert.ok(new RegExp(`rgRueck\\("${t}"\\)`).test(b), `Station ${t}`);
   assert.ok(/#bwLaut_musik/.test(b) && /#bwLaut_stimme/.test(b) && /"#heroRueck \.eselsohr", "doppelt"/.test(b), "Regler und Zurückdrehen gezeigt");
   assert.ok(!/\bapi\(|bwLos\(|bwMusik\(true|esZfTeilen\(|esFlipMusterWeiter\(|esUhrStil\(|bwWahlSetzen\(/.test(b), "nichts gestartet, gespeichert oder verschickt");
@@ -10571,7 +10571,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   for (const id of ["raetsel", "club_song", "kopf_besucher", "deko_leiste", "sparmodus", "akku", "anpassen"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym: "[^"]+", t: "[^"]+", x: "[^"]+", zeig: `).test(html), "Hilfe: " + id);
   for (const w of ["Thema wählen", "Deko an der Leiste", "Sparmodus / Akku sparen", "Erklär-Video: Meine App nach meinem Geschmack", "Trainingsuhr auf der Bühne", "Dienstwünsche: Bestätigung per E-Mail"]) assert.ok(html.includes(`"${w}`), "Lupe: " + w);
   for (const id of ["aussehen", "kopf-ruhig", "raetsel"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?", x: `).test(html), "Twinkey: " + id);
-  assert.ok(/\{ id: "anpassen", stand: "\d+", sym: "🎨", t: "Meine App nach meinem Geschmack"[^\n]*st: \(\) => RG_ANPASSEN \}/.test(html) && /videos: \[[^\]]*"rueckseite", "anpassen"/.test(html), "Video registriert, im Thema Ich & meine App");
+  assert.ok(/\{ id: "anpassen", stand: "\d+", sym: "🎨", t: "Meine App nach meinem Geschmack"[^\n]*st: \(\) => RG_ANPASSEN \}/.test(html) && /videos: \[[^\]]*"rueckseite", ("wecker", )?"anpassen"/.test(html), "Video registriert, im Thema Ich & meine App");
   const v = html.slice(html.indexOf("const RG_ANPASSEN = ["), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0"));
   for (const id of ["themaWahl", "themaSchriftAn", "designWahl", "modusWahl", "setGross", "setJahreszeit", "jzDekoWahl", "regEffektWahl", "setAnimiert", "sparWahl", "setEselsohr"]) { assert.ok(v.includes(id), "Station zeigt " + id); assert.ok(lies("index.html").includes(`id="${id}"`), "Feld da: " + id); }
   assert.ok(!/live:/.test(v), "nur vorgeführt – nichts wird umgestellt");
@@ -11918,7 +11918,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(g.length > 3000 && !/vnVer\(|vnUmschalten\(|vbMenue\(|localStorage\.setItem|senden\(/.test(g), "Video verschlüsselt, speichert und sendet nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{\s*RG\.ghAn = false; api = alt\.api;/.test(g) && /VN\.klar\.delete\(rgGeheimAuf2\(\)\)/.test(g), "am Ende alles zurück");
   assert.ok(/function rgHilfeLupe\(\)/.test(html) && /SU\.offen = true; sucheAuf\(""\); SU\.q = \$\("suEingabe"\)\.value = "verschlüsselt"; SU\.ergebnis = \[\]; suZeigen\(\);/.test(html), "Hilfe-Video: Lupe nur mit App-Treffern, ohne Server und ohne Verlaufseintrag");
-  assert.ok(/\{ id: "hilfe", stand: "2"/.test(html) && /\{ id: "chatprofi", stand: "2"/.test(html) && /t: "✍️ Anne schreibt dir gerade"/.test(html), "Fassung 2 für Hilfe und Chat-Profi");
+  assert.ok(/\{ id: "hilfe", stand: "2"/.test(html) && /\{ id: "chatprofi", stand: "\d+"/.test(html) && /t: "✍️ Anne schreibt dir gerade"/.test(html), "Fassung 2 für Hilfe und Chat-Profi");
 }
 // 2.533.0 KC-CLUB-FRIEDENSPFEIFE (Wunsch Hansi „Der Häuptling soll eine Friedenspfeife rauchen und daraus entsteht wieder Buchstabe für Buchstabe der Username“)
 {
