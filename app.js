@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.681.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.682.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5482,6 +5482,7 @@ const HILFE = [
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
+  { id: "viehmarkt", thema: "darstellung", sym: "🐄", t: "Viehmarkt auf Sim-Jü", x: "Am <b>Sim-Jü-Dienstag</b> (Vieh- und Krammarkt) zeigt der Kopf der Startseite abwechselnd mit der Kirmes-Szene den <b>🐄 Viehmarkt</b>: links Kuh, Schwein und ein Hühnerkäfig, der Händler mit Pfeife feilscht mit zwei Bauern – per <b>Handschlag</b> wird verkauft –, ein Bauer mit Holzschuhen führt seinen Haflinger vorbei, rechts ruft die Händlerin am Kurzwarenstand. Zum Schluss büxt das Ferkel aus, und nach einem „Prost!“ ist Feierabend.", seit: "2.682.0" },
   { id: "seifenblasen", thema: "darstellung", sym: "🫧", t: "Thema Seifenblasen", x: "Im Thema <b>🫧 Seifenblasen</b> kommt unten im Kopf der Startseite ein <b>Kind</b> auf die Wiese und pustet <b>Seifenblasen</b> – kleine, große, leicht schillernd wie echte. Dann kommen von links und rechts <b>weitere Kinder</b> dazu. Die Blasen steigen, <b>platzen</b> und hinterlassen <b>Schlieren auf der Scheibe</b> – der Kopf wird immer verschmierter. Ab und zu wölbt eine <b>dicke Blase</b> den Kopf kurz wie ein <b>Fischauge</b>. Zum Schluss kommt der <b>Fensterputzer</b> mit Leiter, Eimer und Tuch und wischt die Scheibe wieder sauber – dann beginnt alles von vorn. Tippen geht durch die Schlieren hindurch. Vorschau: ⚙️ → ✨ Effekte → 🫧 Seifenblasen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.633.0" },
   { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
@@ -19958,8 +19959,10 @@ const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 // steigen in der Sim-Jü-Szene ununterbrochen Raketen (mehr, größer, auch Goldregen), der Himmel wird dunkel – und das Bild bleibt in der Zeit nicht stehen.
 const jzbSimJueFeuerwerk = (d = new Date()) => d.getDay() === 1 && d.getHours() === 21 && d.getMinutes() < 20 && themaFestZeit(d) === "simjue";
 const JZB_FEST_BUNT = ["#ff4d6d", "#ffd23f", "#3ec1ff", "#7bed6f", "#c77dff", "#ff9f1c", "#ffffff"];
+let JZB_VM_ZAEHLER = 0; // 2.682.0 KC-CLUB-VIEHMARKT: am Sim-Jü-Dienstag abwechselnd Viehmarkt und Kirmes-Szene (der erste Lauf ist der Viehmarkt)
 function jzbFestStart() {
-  JZB.fest = { t: 0, a: 0, raketen: [], raketUhr: 0, ballons: [], ballonUhr: jzbZ(2, 5), spritzer: [], schild: -1, boot: null, bootUhr: jzbZ(2, 6),
+  const vm = JZB.saison === "kirmes" && jzbViehmarktTag() && (JZB_VM_ZAEHLER++ % 2 === 0);
+  JZB.fest = { vm, t: 0, a: 0, raketen: [], raketUhr: 0, ballons: [], ballonUhr: jzbZ(2, 5), spritzer: [], schild: -1, boot: null, bootUhr: jzbZ(2, 6),
     gast: null, gastUhr: jzbZ(8, 14), nuss: null, nussUhr: jzbZ(18, 30), welle: -1, prost: [],
     konfetti: [], liegt: [], kamelle: [], wagen: null, wagenUhr: jzbZ(3, 6), kanone: false, fleder: [], flederUhr: jzbZ(1, 4), geist: null, geistUhr: jzbZ(5, 9) }; // 2.332.0
 }
@@ -19967,6 +19970,7 @@ function jzbFest(dt) {
   const J = JZB, k = J.k;
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
+  if (J.saison === "kirmes" && F.vm) return jzbVmSchritt(F, dt); // 2.682.0 KC-CLUB-VIEHMARKT
   if (J.saison === "seifenblasen") return jzbSbSchritt(F, dt); // 2.633.0: Kinder pusten Seifenblasen, die Scheibe verschmiert, der Fensterputzer putzt
   if (J.saison === "baustelle") return jzbBsSchritt(F, dt); // 2.617.0: Radlader, Kipplaster, Abgas-Name, Arbeiter – zum Schluss wird der Kopf gesprengt
   if (J.saison === "wueste") return jzbWuSchritt(F, dt); // 2.548.0: Pyramiden, Karawane, Oase, Pharao, Flaschengeist – Name aus Goldstaub, Sonnenuntergang
@@ -20479,10 +20483,12 @@ function jzbPlopp() { // 🔊 kurzes „Peng“ beim Platzen (nur ⚙️ Ton an,
     g.gain.setValueAtTime(.5, t0); q.connect(f); f.connect(g); g.connect(A.destination); q.start(t0);
   } catch { /* ohne Ton platzt es nur im Bild */ }
 }
+const JZB_CLOWN_TEMPO = 1.6; // 2.682.0 KC-CLUB-CLOWN-SCHNELLER (Wunsch Hansi „die Clown-Szene muss schneller ablaufen – dauert zu lange, bis was passiert“): alles 1,6-mal so schnell, kommt nach 1,5–3 s, danach alle 10–16 s
 function jzbClownSchritt(F, dt) {
   const J = JZB, k = J.k * JZB_CLOWN_GR, boden = J.h - 3 * J.k;
+  dt *= JZB_CLOWN_TEMPO;
   if (!F.clown) {
-    if (F.clownUhr === undefined) F.clownUhr = jzbZ(6, 12);
+    if (F.clownUhr === undefined) F.clownUhr = jzbZ(1.5, 3);
     if ((F.clownUhr -= dt) <= 0 && F.t < JZB_FEST_DAUER - 28) {
       const a = jzbClownArt(JZB_CLOWN_N, JZB_CLOWN_MAEDCHEN, JZB_CLOWN_JUNGE);
       if (a.v !== "normal" && F.t > JZB_FEST_DAUER - 62) { F.clownUhr = Infinity; return; } // Geschichte passt nicht mehr in diesen Lauf → im nächsten
@@ -20518,7 +20524,7 @@ function jzbClownSchritt(F, dt) {
     if (C.x <= C.kx + 22 * k && C.uhr >= 2) { C.kRicht = 1; C.raus = 2; C.bi = 4; C.g = 0; C.hat = false; ph("geben"); }
   }
   if (C.ph === "huepfen") { C.kHuepf = true; C.kLauf += dt; if (C.uhr > 1.4) ph("weiter"); }
-  if (C.ph === "weiter") { kindLauf(-1, 1.15, true); clownLauf(1); if (C.kx < -24 * k && C.x > J.w + 40 * k) { F.clown = null; F.clownUhr = jzbZ(28, 42); } }
+  if (C.ph === "weiter") { kindLauf(-1, 1.15, true); clownLauf(1); if (C.kx < -24 * k && C.x > J.w + 40 * k) { F.clown = null; F.clownUhr = jzbZ(10, 16); } }
   // 😱 Junge: BUH! – alle Ballons fliegen weg und platzen nacheinander, der Clown weint und holt neue
   if (C.ph === "buh" && C.uhr > .9) { C.flug = jzbClownStrauss(C, k).map((b, i) => ({ x: C.x + 8 * k + b.dx, y: boden - 31 * k + b.dy, t: 0, f: b.f, i, weg: false })); C.raus = 6; ph("schreck"); }
   if (C.ph === "schreck" || C.ph === "clownweint" || C.ph === "holen") {
@@ -20532,7 +20538,7 @@ function jzbClownSchritt(F, dt) {
   if (C.ph === "pause" && C.uhr > 1.5) { C.raus = 0; C.flug = []; C.farben = JZB_CLOWN_FARBEN.slice().sort(() => Math.random() - .5); C.kx = J.w + 30 * k; ph("weg"); }
   for (const p of C.pops) p.t += dt;
   C.pops = C.pops.filter((p) => p.t < .6);
-  if (C.ph === "weg" && C.x > J.w + 40 * k && C.kx > J.w + 20 * k) { F.clown = null; F.clownUhr = jzbZ(28, 42); }
+  if (C.ph === "weg" && C.x > J.w + 40 * k && C.kx > J.w + 20 * k) { F.clown = null; F.clownUhr = jzbZ(10, 16); }
 }
 function jzbBallonMalen(c, x, y, r, farbe) { // ein Luftballon (Mitte x/y), Faden nach unten zeichnet der Aufrufer
   c.fillStyle = farbe; c.beginPath(); c.ellipse(x, y, r * .78, r, 0, 0, 7); c.fill();
@@ -20644,7 +20650,223 @@ function jzbKirmesKarussellMalen(c, F) {
   jzbClownMalen(c, F); // 2.667.0 KC-CLUB-SIMJUE-CLOWN
   for (const r of F.raketen) { c.strokeStyle = "rgba(255,230,160,.8)"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(r.x, r.y); c.lineTo(r.x, r.y + 12 * k); c.stroke(); c.fillStyle = "#fff"; c.beginPath(); c.arc(r.x, r.y, 1.6, 0, 7); c.fill(); }
 }
-function jzbKirmesMalen(c, F) { return jzbKirmesVariante() === "riesenrad" ? jzbKirmesRiesenradMalen(c, F) : jzbKirmesKarussellMalen(c, F); }
+function jzbKirmesMalen(c, F) { if (F.vm) return jzbVmMalen(c, F); return jzbKirmesVariante() === "riesenrad" ? jzbKirmesRiesenradMalen(c, F) : jzbKirmesKarussellMalen(c, F); } // 2.682.0: Viehmarkt
+// ---------- 2.682.0 KC-CLUB-VIEHMARKT (Wunsch Hansi „Morgen ist Vieh- und Krammarkt auf Sim-Jü – da sollten wir eine Szene bauen: links eine Kuh,
+// ein Schwein und ein Käfig mit Hühnern, ein Bauer mit Kappe und Holzschuhen geht mit einem Pferd ab und an durchs Bild, andere Bauern begutachten
+// die Tiere, um evtl. eins zu kaufen; rechts ein Marktstand mit Kurzwaren“). Nur am Sim-Jü-Dienstag (Vieh- und Krammarkt), im Wechsel mit der Kirmes-Szene.
+// Ablauf (2 Min.): Händler und zwei Bauern feilschen um die Kuh – Handschlag, „Verkauft!“ –, danach um das Schwein; zwischendurch führt ein Bauer sein
+// Pferd vorbei (klapp-klapp), am Kurzwarenstand ruft die Händlerin. Nur Bild, nichts wird gespeichert oder gesendet.
+const jzbViehmarktTag = (d = new Date()) => themaFestZeit(d) === "simjue" && d.getDay() === 2;
+// 2.682.0 (Hansi „ja, bau das so“): mit Ende – das Ferkel büxt aus (quer durch den Kurzwarenstand, Garn und Knöpfe fliegen, ein Holzschuh fliegt mit),
+// die Händlerin fängt es mit einem Stoffband, ein Korn auf den Handel („Prost!“), dann werden Kuh und Schwein weggeführt, der Händler zählt sein Geld
+// („Feierabend!“) und der Stand klappt zu. Schneller: es geht nach 2 s los, ein Lauf dauert 100 s.
+const JZB_VM_DAUER = 100;
+const JZB_VM_REDEN = [ // [Sekunde, wer, Text] – wer: h = Händler, a = Bauer Anton, b = Bauer Bernd, f = Kurzwaren-Frau
+  [2.5, "a", "Schöne Kuh!"], [5.5, "b", "Gibt die auch gut Milch?"], [8.5, "h", "Die beste vom Hof!"], [11.5, "a", "Wat soll se kosten?"], [14.5, "h", "900 Euro!"],
+  [17.5, "a", "600 – mehr nicht!"], [20.5, "h", "Sagen wir 750?"], [23.5, "a", "Abgemacht!"], [27, "f", "Knöpfe, Garn, Gummiband!"],
+  [31, "b", "Und dat Schwein?"], [34, "h", "Prima Ferkel, 200!"], [37, "b", "150 und 'nen Korn!"], [40, "h", "Na gut – Hand drauf!"],
+  [47, "h", "Haltet dat Ferkel!"], [51, "f", "Huch – mein Garn!"], [57, "f", "Hab dich!"], [60, "b", "Danke, Frau!"],
+  [66, "h", "Auf den Handel!"], [77, "f", "Feierabend für heute!"], [82, "h", "Feierabend!"],
+];
+const JZB_VM_HAND = [[26.5, "a"], [43.5, "b"]]; // Handschlag: Sekunde, wer mit dem Händler
+const JZB_VM_AUS = 46, JZB_VM_GEFANGEN = 57, JZB_VM_PROST = 68, JZB_VM_ABGANG = 73, JZB_VM_ZU = 86; // Ferkel büxt aus · gefangen · Prost · Weggehen · Stand klappt zu
+function jzbVmSchritt(F, dt) {
+  const J = JZB, k = J.k, t = F.t;
+  F.a = Math.min(1, t / 2, Math.max(0, (JZB_VM_DAUER - t) / 4));
+  if (t >= JZB_VM_DAUER) { J.fest = null; return jzbLaufEnde(); }
+  const P = jzbVmPlatz();
+  const V = F.vmz || (F.vmz = { pferd: null, pferdUhr: jzbZ(4, 7), ax: -40 * k, bx: -50 * k, adir: 1, bdir: 1, sx: P.schwein, sdir: 1, sLauf: false, kx: P.kuh, kdir: 1, kLauf: false, teile: [], schuh: null, band: false });
+  const hin = (x, ziel, v) => Math.abs(ziel - x) < v * dt ? ziel : x + Math.sign(ziel - x) * v * dt;
+  // Ferkel: büxt aus → nach rechts durch den Stand → kehrt um → wird gefangen → folgt Bernd zurück → wird weggeführt
+  const standL = P.stand - 42 * k, wende = Math.min(J.w - JZB_RAND - 6 * k, P.stand + 40 * k), fang = P.stand - 30 * k;
+  let sZiel = P.schwein, sV = 0;
+  if (t >= JZB_VM_AUS && t < JZB_VM_AUS + 6) { sZiel = wende; sV = 62 * k; }
+  else if (t >= JZB_VM_AUS + 6 && t < JZB_VM_GEFANGEN) { sZiel = fang; sV = 46 * k; }
+  else if (t >= JZB_VM_GEFANGEN + 3 && t < JZB_VM_ABGANG + 6) { sZiel = P.schwein; sV = 26 * k; }
+  else if (t >= JZB_VM_ABGANG + 6) { sZiel = -80 * k; sV = 26 * k; }
+  if (t >= JZB_VM_GEFANGEN) V.band = t < JZB_VM_GEFANGEN + 3; // die Händlerin hält es am Stoffband, bis Bernd es übernimmt
+  const sAlt = V.sx; if (sV) V.sx = hin(V.sx, sZiel, sV); V.sLauf = Math.abs(V.sx - sAlt) > .01; if (V.sLauf) V.sdir = V.sx > sAlt ? 1 : -1;
+  // 🧵 mitten durch den Stand: Garnrollen und Knöpfe fliegen
+  if (t >= JZB_VM_AUS && t < JZB_VM_AUS + 6 && V.sx > standL && !V.krach) { V.krach = true; const farben = ["#c1121f", "#023e8a", "#2a9d8f", "#ffb703", "#6a4c93", "#f72585", "#fff"];
+    for (let i = 0; i < 16; i++) V.teile.push({ x: P.stand + jzbZ(-20, 30) * k, y: J.h - 22 * k, vx: jzbZ(-60, 60) * k, vy: jzbZ(-110, -50) * k, r: jzbZ(.8, 1.6) * k, f: jzbW(farben), rund: Math.random() < .5, a: 1, liegt: 0 }); }
+  const boden = J.h - 3 * k;
+  for (const q of V.teile) { if (q.liegt) { q.liegt += dt; q.a = Math.max(0, 1 - (q.liegt - 6) / 2); continue; } q.vy += 260 * k * dt; q.x += q.vx * dt; q.y += q.vy * dt; if (q.y >= boden - q.r) { q.y = boden - q.r; q.liegt = .01; } }
+  V.teile = V.teile.filter((q) => q.a > 0);
+  // Bauern: zuerst zum Handeln, bei der Jagd hinter dem Ferkel her, dann zurück, zum Schluss mit den Tieren nach links weg
+  const ax0 = V.ax, bx0 = V.bx;
+  if (t < JZB_VM_AUS + 1) { V.ax = hin(V.ax, P.anton, 40 * k); V.bx = hin(V.bx, P.bernd, 38 * k); }
+  else if (t < JZB_VM_GEFANGEN) { V.ax = hin(V.ax, V.sx - 26 * k * V.sdir, 50 * k); V.bx = hin(V.bx, V.sx - 14 * k * V.sdir, 56 * k); }
+  else if (t < JZB_VM_ABGANG) { V.ax = hin(V.ax, P.anton, 30 * k); V.bx = hin(V.bx, t < JZB_VM_GEFANGEN + 3 ? fang + 12 * k : P.bernd, 26 * k); }
+  else { V.ax = hin(V.ax, -60 * k, 22 * k); if (t > JZB_VM_ABGANG + 6) V.bx = hin(V.bx, -60 * k, 24 * k); }
+  V.aGeht = Math.abs(V.ax - ax0) > .01; V.bGeht = Math.abs(V.bx - bx0) > .01;
+  V.adir = V.aGeht ? (V.ax > ax0 ? 1 : -1) : t >= JZB_VM_ABGANG ? -1 : -1; V.bdir = V.bGeht ? (V.bx > bx0 ? 1 : -1) : -1;
+  if (t >= JZB_VM_GEFANGEN + 3 && t < JZB_VM_ABGANG + 6 && !V.bGeht) V.bdir = -1;
+  // Kuh geht mit Anton weg (vor ihm, am Strick)
+  if (t >= JZB_VM_ABGANG) { const k0 = V.kx; V.kx = Math.min(V.kx, V.ax - 22 * k); V.kLauf = V.kx < k0 - .01; V.kdir = -1; }
+  // 👞 Bernd verliert bei der Jagd einen Holzschuh – hebt ihn auf, wenn er zurückkommt
+  if (!V.schuh && t > JZB_VM_AUS + 3 && t < JZB_VM_AUS + 4) V.schuh = { x: V.bx, y: boden - 3 * k, vx: -40 * k, vy: -90 * k, dreh: 0, liegt: false };
+  if (V.schuh && !V.schuh.liegt) { const q = V.schuh; q.vy += 260 * k * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.dreh += dt * 9; if (q.y >= boden - 1 * k) { q.y = boden - 1 * k; q.liegt = true; q.dreh = 0; } }
+  if (V.schuh?.liegt && t > JZB_VM_GEFANGEN && Math.abs(V.bx - V.schuh.x) < 5 * k) V.schuh = null;
+  // 🐴 Bauer mit Pferd: nur vor der Jagd (danach ist der Platz voll)
+  if (!V.pferd && (V.pferdUhr -= dt) <= 0 && t < JZB_VM_AUS - 22) { const r = Math.random() < .5 ? 1 : -1; V.pferd = { x: r > 0 ? -60 * k : J.w + 60 * k, dir: r, ph: 0 }; }
+  if (V.pferd) { const R = V.pferd; R.x += R.dir * 24 * k * dt; R.ph += dt; if ((R.dir > 0 && R.x > J.w + 70 * k) || (R.dir < 0 && R.x < -70 * k)) { V.pferd = null; V.pferdUhr = jzbZ(4, 8); } }
+}
+function jzbVmPlatz() { // Stellplätze (links Tiere, Mitte Händler und Bauern, rechts Stand) – passt sich der Breite an
+  const J = JZB, k = J.k, l = JZB_RAND + 4 * k;
+  const kuh = l + 20 * k, schwein = kuh + 52 * k, kaefig = schwein + 36 * k, haendler = kaefig + 32 * k;
+  return { kuh, schwein, kaefig, haendler, anton: haendler + 17 * k, bernd: haendler + 31 * k, stand: Math.max(haendler + 95 * k, J.w - JZB_RAND - 62 * k) };
+}
+function jzbVmBauerMalen(c, x, y, k, dir, o = {}) { // 👨‍🌾 Bauer: Schirmmütze, blauer Kittel, Holzschuhe; o.geht, o.ph, o.arm ("zeigt"|"kinn"|"hand"|"seil"|"stock"), o.schuett (Handschlag)
+  const sw = o.geht ? Math.sin(o.ph * 7) : 0, bob = o.geht ? Math.abs(Math.sin(o.ph * 7)) * .9 * k : 0;
+  c.save(); c.translate(x, y - bob); c.scale(dir, 1); c.lineCap = "round";
+  c.strokeStyle = "#4a3b2a"; c.lineWidth = 2.6 * k; // Hose
+  for (const s of [-1, 1]) { const fx = s * 2.2 * k + sw * s * 3 * k; c.beginPath(); c.moveTo(s * 1.6 * k, -12 * k); c.lineTo(fx, -2.2 * k); c.stroke();
+    c.fillStyle = "#d4a24c"; c.strokeStyle = "#8a5f22"; c.lineWidth = .7 * k; c.beginPath(); c.moveTo(fx - 2.4 * k, -.2 * k); c.lineTo(fx - 2.2 * k, -2.6 * k); c.lineTo(fx + 2 * k, -2.6 * k);
+    c.quadraticCurveTo(fx + 4.6 * k, -2 * k, fx + 4.4 * k, -.2 * k); c.closePath(); c.fill(); c.stroke(); c.strokeStyle = "#4a3b2a"; c.lineWidth = 2.6 * k; } // Holzschuhe
+  c.fillStyle = o.farbe || "#2b4c7e"; c.beginPath(); c.moveTo(-5.4 * k, -10.5 * k); c.lineTo(5.4 * k, -10.5 * k); c.lineTo(4 * k, -25 * k); c.lineTo(-4 * k, -25 * k); c.closePath(); c.fill(); // Kittel
+  c.strokeStyle = "rgba(255,255,255,.25)"; c.lineWidth = .6 * k; c.beginPath(); c.moveTo(0, -24 * k); c.lineTo(0, -11 * k); c.stroke();
+  // Arme
+  const arm = (x0, y0, x1, y1, hand = true) => { c.strokeStyle = o.farbe || "#2b4c7e"; c.lineWidth = 2.2 * k; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+    if (hand) { c.fillStyle = "#e9b98f"; c.beginPath(); c.arc(x1, y1, 1.3 * k, 0, 7); c.fill(); } };
+  arm(-3.6 * k, -23 * k, -5.5 * k - sw * 2 * k, -14 * k); // hinterer Arm hängt
+  const sch = o.schuett ? Math.sin(o.schuett * 18) * 1.6 * k : 0;
+  if (o.arm === "zeigt") arm(3.6 * k, -23 * k, 10 * k, -21 * k);
+  else if (o.arm === "kinn") arm(3.6 * k, -23 * k, 3 * k, -28 * k);
+  else if (o.arm === "hand") arm(3.6 * k, -22 * k, 9.5 * k, -17 * k + sch);
+  else if (o.arm === "seil") arm(3.6 * k, -22 * k, 8 * k, -17 * k);
+  else if (o.arm === "prost") { arm(3.6 * k, -23 * k, 7.5 * k, -29 * k); c.fillStyle = "rgba(230,240,245,.9)"; c.fillRect(6.4 * k, -33 * k, 2.4 * k, 3.6 * k); c.fillStyle = "rgba(255,250,220,.85)"; c.fillRect(6.7 * k, -31.6 * k, 1.8 * k, 1.8 * k); }
+  else if (o.arm === "geld") { const w = Math.sin(JZB.T * 12) * 1.2 * k; arm(3.6 * k, -23 * k, 7 * k, -27 * k + w); c.fillStyle = "#8d6a3a"; c.beginPath(); c.ellipse(7.5 * k, -24.5 * k + w, 2.6 * k, 3 * k, 0, 0, 7); c.fill();
+    c.fillStyle = "#ffd166"; c.font = `800 ${4.4 * k}px sans-serif`; c.textAlign = "center"; c.fillText("€", 7.5 * k, -23.2 * k + w); }
+  else if (o.arm === "stock") { arm(3.6 * k, -22 * k, 7 * k, -16 * k); c.strokeStyle = "#7a5230"; c.lineWidth = 1.2 * k; c.beginPath(); c.moveTo(7 * k, -22 * k); c.lineTo(8.5 * k, 0); c.stroke(); }
+  else arm(3.6 * k, -23 * k, 5.5 * k + sw * 2 * k, -14 * k);
+  // Kopf mit Schirmmütze
+  c.fillStyle = "#e9b98f"; c.beginPath(); c.arc(.6 * k, -28.6 * k, 3.6 * k, 0, 7); c.fill();
+  if (o.bart) { c.strokeStyle = "#6b5a45"; c.lineWidth = 1 * k; c.beginPath(); c.moveTo(1.8 * k, -27 * k); c.quadraticCurveTo(3 * k, -26 * k, 4.2 * k, -27.2 * k); c.stroke(); }
+  c.fillStyle = "#222"; c.beginPath(); c.arc(2.4 * k, -29.4 * k, .5 * k, 0, 7); c.fill();
+  c.fillStyle = o.kappe || "#3d3d3d"; c.beginPath(); c.ellipse(.2 * k, -31.4 * k, 4.2 * k, 2.2 * k, 0, Math.PI, 0); c.fill(); c.fillRect(-4 * k, -31.6 * k, 8.4 * k, 1.2 * k);
+  c.beginPath(); c.ellipse(5 * k, -31 * k, 3.2 * k, .9 * k, .1, 0, 7); c.fill(); // Schirm nach vorn
+  if (o.pfeife) { c.strokeStyle = "#5a3818"; c.lineWidth = .9 * k; c.beginPath(); c.moveTo(3.6 * k, -27 * k); c.lineTo(6 * k, -26.4 * k); c.stroke(); c.fillStyle = "#5a3818"; c.fillRect(5.6 * k, -28.4 * k, 1.6 * k, 2.2 * k);
+    const pf = (JZB.T * .6) % 1; c.fillStyle = `rgba(200,200,200,${.5 * (1 - pf)})`; c.beginPath(); c.arc(6.6 * k + pf * 2 * k, -30 * k - pf * 7 * k, (1 + pf * 1.6) * k, 0, 7); c.fill(); }
+  c.restore();
+}
+function jzbVmPferdMalen(c, x, y, k, dir, ph) { // 🐴 Haflinger (goldbraun, helle Mähne) im Schritt, Blick in Laufrichtung; Kopf bei x + 24k
+  c.save(); c.translate(x, y); c.scale(dir * k, k); c.lineCap = "round";
+  const b = (i) => Math.sin(ph * 5 + i * Math.PI / 2) * 3;
+  c.strokeStyle = "#a86f2c"; c.lineWidth = 2.6; for (const [bx, i] of [[-12, 0], [-9, 2], [9, 1], [12, 3]]) { c.beginPath(); c.moveTo(bx, -16); c.lineTo(bx + b(i), -1.5); c.stroke();
+    c.strokeStyle = "#222"; c.lineWidth = 2.8; c.beginPath(); c.moveTo(bx + b(i) - .6, -1.2); c.lineTo(bx + b(i) + 1.4, -1.2); c.stroke(); c.strokeStyle = "#a86f2c"; c.lineWidth = 2.6; }
+  const g = c.createLinearGradient(0, -28, 0, -12); g.addColorStop(0, "#d99a4e"); g.addColorStop(1, "#a86f2c");
+  c.fillStyle = g; c.beginPath(); c.ellipse(0, -20, 15, 7, 0, 0, 7); c.fill(); // Rumpf
+  c.beginPath(); c.moveTo(10, -24); c.quadraticCurveTo(16, -36, 21, -37); c.lineTo(25, -34); c.quadraticCurveTo(19, -30, 15, -18); c.closePath(); c.fill(); // Hals
+  c.beginPath(); c.ellipse(24.5, -34, 5.4, 3, .5, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#f3e2b3"; c.beginPath(); c.moveTo(11, -26); c.quadraticCurveTo(15, -37, 21, -38.5); c.lineTo(20, -36); c.quadraticCurveTo(15, -33, 13, -24); c.fill(); // Mähne
+  c.fillStyle = "#a86f2c"; c.beginPath(); c.moveTo(20.5, -38.5); c.lineTo(21.5, -42); c.lineTo(23, -38); c.fill(); // Ohr
+  c.strokeStyle = "#f3e2b3"; c.lineWidth = 2.4; c.beginPath(); c.moveTo(-15, -22); c.quadraticCurveTo(-21, -18 + Math.sin(ph * 3) * 2, -19, -9); c.stroke(); // Schweif
+  c.fillStyle = "#111"; c.beginPath(); c.arc(25, -35.6, .7, 0, 7); c.fill();
+  c.strokeStyle = "#c1121f"; c.lineWidth = .9; c.beginPath(); c.moveTo(21, -36.5); c.lineTo(27.5, -32); c.moveTo(22.5, -32.5); c.lineTo(25, -37.5); c.stroke(); // Halfter
+  c.restore();
+}
+function jzbVmKaefigMalen(c, x, y, k, T) { // 🐔 Holzkäfig mit zwei Hühnern
+  const b = 30 * k, h = 17 * k, l = x - b / 2;
+  c.fillStyle = "#c69c6d"; c.fillRect(l, y - h, b, h); c.fillStyle = "rgba(60,35,15,.35)"; c.fillRect(l, y - h, b, h);
+  jzbBhHuhnMalen(c, x - 6 * k, y - 2 * k, k * 1.25, 1, T, Math.sin(T * 1.3) > .2, false);
+  jzbBhHuhnMalen(c, x + 7 * k, y - 2 * k, k * 1.25, -1, T + 1.7, Math.sin(T * 1.1 + 2) > .3, false);
+  c.fillStyle = "#8b5e34"; c.fillRect(l - 1 * k, y - h - 2.4 * k, b + 2 * k, 2.6 * k); c.fillRect(l - 1 * k, y - 2.2 * k, b + 2 * k, 2.4 * k); // Deckel, Boden
+  c.fillStyle = "#a47448"; for (let i = 0; i <= 6; i++) c.fillRect(l + i * (b / 6) - .7 * k, y - h, 1.4 * k, h - 2 * k); // Stäbe
+}
+function jzbVmStandMalen(c, x, y, k, T, F, zu = 0, band = null) { // 🧵 Kurzwaren-Stand mit gestreiftem Dach, Garnrollen, Knöpfen, Stoffballen und Händlerin
+  const b = 84 * k, l = x - b / 2, dach = y - 44 * k;
+  c.fillStyle = "#7a5230"; c.fillRect(l + 2 * k, dach, 2.4 * k, 44 * k); c.fillRect(l + b - 4.4 * k, dach, 2.4 * k, 44 * k); // Pfosten
+  // Händlerin hinter dem Tisch (Kopftuch, Schürze)
+  const fx = x + 6 * k, fy = y - 10 * k, ruft = (F.vmRuf || 0) > 0 || !!band;
+  c.fillStyle = "#8e3b46"; c.beginPath(); c.moveTo(fx - 5 * k, fy); c.lineTo(fx + 5 * k, fy); c.lineTo(fx + 3.6 * k, fy - 14 * k); c.lineTo(fx - 3.6 * k, fy - 14 * k); c.closePath(); c.fill();
+  c.fillStyle = "#f1e3c8"; c.fillRect(fx - 2.6 * k, fy - 11 * k, 5.2 * k, 11 * k);
+  c.strokeStyle = "#8e3b46"; c.lineWidth = 2 * k; c.lineCap = "round"; c.beginPath(); c.moveTo(fx - 3.2 * k, fy - 12 * k);
+  if (band) { c.lineTo(fx - 9 * k, fy - 9 * k); c.stroke(); c.strokeStyle = "#e63946"; c.lineWidth = 1.2 * k; c.beginPath(); c.moveTo(fx - 9 * k, fy - 9 * k); c.quadraticCurveTo((fx + band.x) / 2, Math.max(fy, band.y) + 4 * k, band.x, band.y); c.stroke(); } // Stoffband zum Ferkel
+  else { c.lineTo(fx - (ruft ? 8 : 6) * k, fy - (ruft ? 20 : 6) * k); c.stroke(); } // winkt beim Rufen
+  c.fillStyle = "#e9b98f"; c.beginPath(); c.arc(fx, fy - 17.5 * k, 3.4 * k, 0, 7); c.fill();
+  c.fillStyle = "#2a9d8f"; c.beginPath(); c.arc(fx, fy - 18.5 * k, 3.8 * k, Math.PI * 1.05, Math.PI * 1.95); c.lineTo(fx + 4 * k, fy - 15 * k); c.lineTo(fx - 4 * k, fy - 15 * k); c.closePath(); c.fill(); // Kopftuch
+  c.fillStyle = "#222"; c.beginPath(); c.arc(fx - 1.2 * k, fy - 17.6 * k, .45 * k, 0, 7); c.arc(fx + 1.2 * k, fy - 17.6 * k, .45 * k, 0, 7); c.fill();
+  // Tisch mit Decke
+  c.fillStyle = "#3a6ea5"; c.fillRect(l, y - 13 * k, b, 13 * k); c.fillStyle = "#2d5784"; for (let i = 0; i < 8; i++) c.fillRect(l + i * b / 8, y - 13 * k, b / 16, 13 * k);
+  c.fillStyle = "#e9d8a6"; c.fillRect(l - 1 * k, y - 14.5 * k, b + 2 * k, 2 * k);
+  // Ware: Stoffballen, Garnrollen, Knopfkarten
+  const stoff = ["#e63946", "#ffd166", "#8ecae6", "#b5e48c"]; stoff.forEach((f, i) => { c.fillStyle = f; c.fillRect(l + 4 * k + i * 7 * k, y - 21 * k, 6 * k, 6.5 * k); c.fillStyle = "rgba(0,0,0,.18)"; c.fillRect(l + 4 * k + i * 7 * k, y - 21 * k, 6 * k, 1.2 * k); });
+  const garn = ["#c1121f", "#023e8a", "#2a9d8f", "#ffb703", "#6a4c93", "#f72585"]; garn.forEach((f, i) => { const gx = x + 16 * k + i * 4.2 * k; c.fillStyle = "#d9c2a0"; c.fillRect(gx - 1.6 * k, y - 20.6 * k, 3.2 * k, 6 * k); c.fillStyle = f; c.fillRect(gx - 1.3 * k, y - 19.8 * k, 2.6 * k, 4.4 * k); });
+  for (let i = 0; i < 3; i++) { const kx = l + 34 * k + i * 6 * k; c.fillStyle = "#fff"; c.fillRect(kx, y - 20 * k, 5 * k, 5 * k); c.fillStyle = ["#264653", "#e76f51", "#8d5a2b"][i];
+    for (const [dx, dy] of [[1.4, 1.4], [3.6, 1.4], [1.4, 3.6], [3.6, 3.6]]) { c.beginPath(); c.arc(kx + dx * k, y - 20 * k + dy * k, .8 * k, 0, 7); c.fill(); } }
+  // gestreiftes Dach mit Bogenkante (klappt zum Feierabend hoch: zu 0 → 1)
+  if (zu > 0) { c.save(); c.translate(0, dach - 9 * k); c.scale(1, Math.max(.15, 1 - zu * .85)); c.translate(0, -(dach - 9 * k)); }
+  const n = 8, sb = (b + 8 * k) / n; for (let i = 0; i < n; i++) { c.fillStyle = i % 2 ? "#fff" : "#d62828"; c.beginPath(); c.moveTo(l - 4 * k + i * sb, dach - 9 * k); c.lineTo(l - 4 * k + (i + 1) * sb, dach - 9 * k); c.lineTo(l - 4 * k + (i + 1) * sb, dach); c.arc(l - 4 * k + (i + .5) * sb, dach, sb / 2, 0, Math.PI); c.closePath(); c.fill(); }
+  if (zu > 0) c.restore();
+  if (zu > .6) { c.fillStyle = "#5a3818"; c.fillRect(l + 2 * k, y - 22 * k, b - 4 * k, 9 * k); c.fillStyle = "#fff4d6"; c.font = `800 ${6.4 * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Geschlossen", x, y - 17.4 * k); } // Tuch über der Ware
+  // Schild
+  const fs = 7.4 * k; c.font = `700 ${fs}px Georgia,serif`; const tw = c.measureText("Kurzwaren").width + 8 * k;
+  c.fillStyle = "#fff4d6"; c.strokeStyle = "#7a5230"; c.lineWidth = 1; c.beginPath(); c.roundRect ? c.roundRect(x - tw / 2, dach - 20 * k, tw, fs + 4 * k, 2 * k) : c.rect(x - tw / 2, dach - 20 * k, tw, fs + 4 * k); c.fill(); c.stroke();
+  c.fillStyle = "#7a1f2b"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("Kurzwaren", x, dach - 20 * k + (fs + 4 * k) / 2 + .4 * k);
+  return { fx, fy: fy - 23 * k };
+}
+function jzbVmBlase(c, x, y, text, k, a) { // 💬 Sprechblase über einem Kopf
+  if (a <= 0) return; const fs = 7.6 * k; c.save(); c.globalAlpha *= a; c.font = `700 ${fs}px "Trebuchet MS",sans-serif`;
+  const w = c.measureText(text).width + 9 * k, h = fs + 6 * k, bx = Math.max(JZB_RAND + 2, Math.min(JZB.w - JZB_RAND - w - 2, x - w / 2)), by = y - h;
+  c.fillStyle = "rgba(255,255,255,.96)"; c.strokeStyle = "rgba(60,40,20,.55)"; c.lineWidth = 1; c.beginPath(); c.roundRect ? c.roundRect(bx, by, w, h, 4 * k) : c.rect(bx, by, w, h); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(x - 2.5 * k, by + h - .5); c.lineTo(x, by + h + 4 * k); c.lineTo(x + 2.5 * k, by + h - .5); c.closePath(); c.fill();
+  c.fillStyle = "#3b2412"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(text, bx + w / 2, by + h / 2 + .4 * k); c.restore();
+}
+function jzbVmSchildMalen(c, x, y, k, text, s) { // 🪧 „Verkauft!“ an einer Schnur
+  if (s <= 0) return; c.save(); c.translate(x, y); c.scale(s, s); c.rotate(Math.sin(JZB.T * 2) * .06);
+  const fs = 6.6 * k; c.font = `800 ${fs}px "Trebuchet MS",sans-serif`; const w = c.measureText(text).width + 6 * k;
+  c.strokeStyle = "#5a3818"; c.lineWidth = .8; c.beginPath(); c.moveTo(-w / 3, 0); c.lineTo(0, -5 * k); c.lineTo(w / 3, 0); c.stroke();
+  c.fillStyle = "#c1121f"; c.fillRect(-w / 2, 0, w, fs + 3.4 * k); c.fillStyle = "#fff"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(text, 0, (fs + 3.4 * k) / 2 + .3 * k); c.restore();
+}
+function jzbVmMalen(c, F) {
+  const J = JZB, k = J.k, T = J.T, t = F.t, boden = J.h - 3 * k, P = jzbVmPlatz(), V = F.vmz; if (!V) return;
+  // Pflaster vom Marktplatz
+  c.fillStyle = "rgba(120,110,100,.55)"; c.fillRect(0, boden - 1 * k, J.w, J.h - boden + 1 * k);
+  c.fillStyle = "rgba(255,255,255,.12)"; for (let x = 4; x < J.w; x += 9 * k) c.fillRect(x, boden + .6 * k, 6 * k, 1 * k);
+  // 🪧 Schild „Viehmarkt“
+  const sx = P.kuh - 8 * k; c.fillStyle = "#6b4423"; c.fillRect(sx, boden - 44 * k, 2 * k, 44 * k);
+  { const fs = 7 * k; c.font = `700 ${fs}px Georgia,serif`; const w = c.measureText("Viehmarkt").width + 8 * k; c.fillStyle = "#c08a4e"; c.fillRect(sx - 2 * k, boden - 50 * k, w, fs + 4 * k);
+    c.fillStyle = "#3b2412"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("Viehmarkt", sx + 2 * k, boden - 50 * k + (fs + 4 * k) / 2 + .3 * k); }
+  // Kurzwaren-Stand (Dach klappt zum Feierabend zu; Stoffband, solange die Händlerin das Ferkel hält)
+  F.vmRuf = JZB_VM_REDEN.some(([s0, w]) => w === "f" && t >= s0 && t < s0 + 3) ? 1 : 0;
+  const zu = t > JZB_VM_ZU ? Math.min(1, (t - JZB_VM_ZU) / 2.5) : 0;
+  const St = jzbVmStandMalen(c, P.stand, boden, k, T, F, zu, V.band ? { x: V.sx + 8 * k * V.sdir, y: boden - 10 * k } : null);
+  // fliegende Garnrollen und Knöpfe
+  for (const q of V.teile) { c.globalAlpha = F.a * q.a; c.fillStyle = q.f; c.beginPath(); if (q.rund) c.arc(q.x, q.y, q.r, 0, 7); else c.rect(q.x - q.r, q.y - q.r * 1.4, q.r * 2, q.r * 2.8); c.fill(); }
+  c.globalAlpha = F.a;
+  // Tiere: Kuh (geht am Schluss mit Anton), Schwein (büxt aus), Hühnerkäfig
+  if (V.kx > -40 * k) { jzbBhKuhMalen(c, V.kx, boden, k * 1.6, V.kdir, T, V.kLauf); if (t >= JZB_VM_ABGANG && V.kLauf) { c.strokeStyle = "#7a5230"; c.lineWidth = .9; c.beginPath(); c.moveTo(V.kx + 4 * k, boden - 20 * k); c.quadraticCurveTo(V.kx + 14 * k, boden - 12 * k, V.ax - 6 * k, boden - 17 * k); c.stroke(); } }
+  if (V.sx > -40 * k) { jzbBhSchweinMalen(c, V.sx, boden, k * 1.45, V.sdir, T * (V.sLauf ? 2.5 : 1), V.sLauf, false);
+    if (t >= JZB_VM_GEFANGEN + 3 && V.sLauf) { c.strokeStyle = "#e63946"; c.lineWidth = 1.1 * k; c.beginPath(); c.moveTo(V.sx + 10 * k * V.sdir, boden - 12 * k); c.quadraticCurveTo(V.sx + 18 * k * V.sdir, boden - 6 * k, V.bx - 5 * k * V.sdir, boden - 17 * k); c.stroke(); } }
+  jzbVmKaefigMalen(c, P.kaefig, boden, k, T);
+  if (t < JZB_VM_ABGANG) { jzbVmSchildMalen(c, V.kx, boden - 27 * k, k, "Verkauft!", t > 29 ? jzbHopp((t - 29) / .7) : 0);
+    if (!V.sLauf && t < JZB_VM_AUS) jzbVmSchildMalen(c, V.sx, boden - 19 * k, k, "Verkauft!", t > 45 ? jzbHopp((t - 45) / .7) : 0); }
+  if (V.schuh) { const q = V.schuh; c.save(); c.translate(q.x, q.y); c.rotate(q.dreh); c.fillStyle = "#d4a24c"; c.strokeStyle = "#8a5f22"; c.lineWidth = .7 * k; c.beginPath(); c.moveTo(-3 * k, 0); c.lineTo(-3 * k, -2.4 * k); c.lineTo(1.4 * k, -2.4 * k); c.quadraticCurveTo(4 * k, -1.8 * k, 3.8 * k, 0); c.closePath(); c.fill(); c.stroke(); c.restore(); }
+  // Händler und Bauern
+  const hand = JZB_VM_HAND.find(([s0]) => t >= s0 - .8 && t < s0 + 2.6), hs = hand ? Math.max(0, t - hand[0]) : 0;
+  const prost = t >= JZB_VM_PROST - .5 && t < JZB_VM_PROST + 3.5, geld = t >= JZB_VM_ABGANG + 2;
+  const armH = hand ? "hand" : prost ? "prost" : geld ? "geld" : t >= JZB_VM_AUS && t < JZB_VM_GEFANGEN ? "zeigt" : "stock";
+  jzbVmBauerMalen(c, P.haendler, boden, k, 1, { arm: armH, schuett: hand ? hs : 0, pfeife: armH === "stock", farbe: "#5a6b7a", kappe: "#2b2b2b" });
+  const heranA = hand && hand[1] === "a", heranB = hand && hand[1] === "b";
+  const armA = heranA ? "hand" : prost ? "prost" : t >= JZB_VM_ABGANG ? "seil" : t > 2 && t < 26 ? (Math.floor(t / 3) % 2 ? "zeigt" : "kinn") : null;
+  const armB = heranB ? "hand" : prost ? "prost" : t >= JZB_VM_GEFANGEN + 3 && V.bGeht ? "seil" : t > 30 && t < 43 ? (Math.floor(t / 3) % 2 ? "kinn" : "zeigt") : null;
+  const ax = V.ax + (heranA ? -3 * k : 0), bx = V.bx + (heranB ? -14 * k : 0);
+  jzbVmBauerMalen(c, bx, boden, k, V.bdir, { geht: V.bGeht, ph: T * (t >= JZB_VM_AUS && t < JZB_VM_GEFANGEN ? 1.8 : 1), arm: armB, schuett: heranB ? hs : 0, bart: true, farbe: "#4f7cac" });
+  jzbVmBauerMalen(c, ax, boden, k, V.adir, { geht: V.aGeht, ph: T * (t >= JZB_VM_AUS && t < JZB_VM_GEFANGEN ? 1.8 : 1) + .5, arm: armA, schuett: heranA ? hs : 0, farbe: "#3d6fb6", kappe: "#6b4f2a" });
+  const ruf = (text, x, y, farbe = "#c1121f", gr = 9) => { c.save(); c.font = `900 ${gr * k}px "Trebuchet MS",sans-serif`; c.textAlign = "center"; c.lineWidth = 3; c.strokeStyle = "rgba(255,255,255,.9)"; c.strokeText(text, x, y); c.fillStyle = farbe; c.fillText(text, x, y); c.restore(); };
+  if (hand && hs > .2 && hs < 2.2) { c.save(); c.globalAlpha *= Math.min(1, (2.2 - hs) * 3); ruf("Patsch!", (P.haendler + (heranA ? ax : bx)) / 2, boden - 38 * k); c.restore(); }
+  if (prost && t > JZB_VM_PROST) { c.save(); c.globalAlpha *= Math.min(1, (JZB_VM_PROST + 3.5 - t) * 2); ruf("Prost!", (P.haendler + bx) / 2, boden - 40 * k, "#b5651d", 10); c.restore(); }
+  if (t >= JZB_VM_AUS && t < JZB_VM_AUS + 2.5) ruf("Quiiiek!", V.sx, boden - 24 * k, "#d6336c", 8);
+  // Sprechblasen
+  for (const [s0, w, text] of JZB_VM_REDEN) { if (t < s0 || t > s0 + 3) continue; const a = Math.min(1, (t - s0) * 4, (s0 + 3 - t) * 3);
+    const x = w === "h" ? P.haendler + 2 * k : w === "a" ? ax : w === "b" ? bx : St.fx; jzbVmBlase(c, x, w === "f" ? St.fy - 22 * k : boden - 38 * k, text, k, a); }
+  // 🐴 Bauer mit Pferd vorn quer durchs Bild
+  if (V.pferd) { const R = V.pferd, kx = R.x + R.dir * 34 * k; jzbVmPferdMalen(c, R.x, boden + 1 * k, k * 1.05, R.dir, R.ph);
+    c.strokeStyle = "#7a5230"; c.lineWidth = .9; c.beginPath(); c.moveTo(R.x + R.dir * 27 * k, boden - 33 * k); c.quadraticCurveTo(R.x + R.dir * 31 * k, boden - 20 * k, kx + R.dir * 7 * k, boden - 17 * k); c.stroke(); // Führstrick
+    jzbVmBauerMalen(c, kx, boden + 1 * k, k, R.dir, { geht: true, ph: R.ph, arm: "seil", kappe: "#1b1b1b", farbe: "#2a7f8f" });
+    if (Math.sin(R.ph * 5) > .97) jzbVmBlase(c, R.x, boden - 46 * k, "klapp, klapp", k * .8, .8); }
+}
+
 // ---- 🥨 Oktoberfest ----
 function jzbWiesnFass() { const J = JZB, k = J.k, r = Math.max(13, Math.min(22, J.h * .15)) * Math.max(.8, k), fx = J.w - r * 1.6 - 46; return { fx, fy: J.h - 2 - 10 * k - r, r, kx: fx - r * 1.55, ky: J.h - 2 }; }
 const jzbWiesnKrugMitte = () => JZB.w * .5;

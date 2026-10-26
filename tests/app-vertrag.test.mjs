@@ -7456,6 +7456,28 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(i === 12 && v.bereiche.at(-1).name === "Verkauf" && !alle[i].optionen, "Frage 13 im Bereich Verkauf, Ja/Nein/Enthaltung");
   assert.ok(alle[i + 1].freitext && alle[i + 1].wenn?.nr === i && alle[i + 1].wenn.antwort === "Ja" && /Logo-Glas.*Feuerzange.*Bundle/.test(alle[i + 1].beschreibung), "Preise (Glas, Zange, Bundle) nur bei Ja");
 }
+// 2.682.0 KC-CLUB-VIEHMARKT: Viehmarkt-Szene am Sim-Jü-Dienstag
+{
+  assert.match(programm, /const jzbViehmarktTag = \(d = new Date\(\)\) => themaFestZeit\(d\) === "simjue" && d\.getDay\(\) === 2;/, "nur am Sim-Jü-Dienstag");
+  assert.match(programm, /const vm = JZB\.saison === "kirmes" && jzbViehmarktTag\(\) && \(JZB_VM_ZAEHLER\+\+ % 2 === 0\);/, "im Wechsel mit dem Riesenrad");
+  assert.match(programm, /if \(J\.saison === "kirmes" && F\.vm\) return jzbVmSchritt\(F, dt\);/, "eigener Ablauf");
+  assert.match(programm, /function jzbKirmesMalen\(c, F\) \{ if \(F\.vm\) return jzbVmMalen\(c, F\);/, "eigenes Bild");
+  for (const f of ["jzbVmBauerMalen", "jzbVmPferdMalen", "jzbVmKaefigMalen", "jzbVmStandMalen", "jzbVmBlase", "jzbVmSchildMalen"]) assert.match(programm, new RegExp("function " + f + "\\("), f);
+  assert.match(programm, /jzbBhKuhMalen\(c, V\.kx,[\s\S]{0,600}jzbBhSchweinMalen\(c, V\.sx,[\s\S]{0,600}jzbVmKaefigMalen\(c, P\.kaefig/, "Kuh, Schwein, Hühnerkäfig links");
+  // Ende: Ferkel büxt aus, wird gefangen, Prost, Feierabend, Stand klappt zu; 100 s je Lauf
+  assert.match(programm, /const JZB_VM_AUS = 46, JZB_VM_GEFANGEN = 57, JZB_VM_PROST = 68, JZB_VM_ABGANG = 73, JZB_VM_ZU = 86;/, "Ablauf des Endes");
+  for (const t of ["Haltet dat Ferkel!", "Hab dich!", "Auf den Handel!", "Feierabend!"]) assert.ok(programm.includes(`"${t}"`), t);
+  assert.match(programm, /ruf\("Prost!",/, "Prost");
+  assert.match(programm, /fillText\("Geschlossen", x, y - 17\.4 \* k\)/, "Stand klappt zu");
+  assert.match(programm, /const JZB_VM_DAUER = 100;/, "schneller: 100 s");
+  // Clown schneller
+  assert.match(programm, /const JZB_CLOWN_TEMPO = 1\.6;[^\n]*\nfunction jzbClownSchritt\(F, dt\) \{\n[^\n]*\n  dt \*= JZB_CLOWN_TEMPO;/, "Clown 1,6-mal so schnell");
+  assert.match(programm, /if \(F\.clownUhr === undefined\) F\.clownUhr = jzbZ\(1\.5, 3\);/, "Clown kommt gleich");
+  assert.ok(!/F\.clownUhr = jzbZ\(28, 42\)/.test(programm), "keine langen Pausen mehr");
+  // Kalender: 2026 ist der Sim-Jü-Dienstag der 27.10.
+  const tf = new Function(programm.match(/function osterSonntag[\s\S]*?\n\}/)[0] + "\n" + programm.match(/function themaFestZeit[\s\S]*?\n\}/)[0] + "\nreturn themaFestZeit;")();
+  assert.equal(tf(new Date(2026, 9, 27, 10)), "simjue"); assert.equal(new Date(2026, 9, 27).getDay(), 2);
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -12905,7 +12927,7 @@ function idx0() { return lies("index.html"); }
 }
 // 2.654.0 KC-CLUB-SIMJUE-KARUSSELL (Wunsch Hansi „Rummelplatz umbauen: Kinderkarussell, Herz in der Mitte, Popcorn- und Zuckerwatte-Bude, Lauflicht – die jetzige Szene für nächstes Jahr speichern“)
 {
-  assert.ok(/const JZB_KIRMES_JAHR = \{ 2027: "riesenrad" \};/.test(programm) && /function jzbKirmesMalen\(c, F\) \{ return jzbKirmesVariante\(\) === "riesenrad" \? jzbKirmesRiesenradMalen\(c, F\) : jzbKirmesKarussellMalen\(c, F\); \}/.test(programm), "neue Szene, die alte für 2027 gespeichert");
+  assert.ok(/const JZB_KIRMES_JAHR = \{ 2027: "riesenrad" \};/.test(programm) && /function jzbKirmesMalen\(c, F\) \{ (if \(F\.vm\) return jzbVmMalen\(c, F\); )?return jzbKirmesVariante\(\) === "riesenrad" \? jzbKirmesRiesenradMalen\(c, F\) : jzbKirmesKarussellMalen\(c, F\); \}/.test(programm), "neue Szene, die alte für 2027 gespeichert");
   assert.ok(/function jzbKirmesRiesenradMalen\(c, F\) \{/.test(programm) && /jzbSchiessbudeMalen\(c, F\);/.test(programm), "Riesenrad-Szene vollständig erhalten");
   const ks = programm.slice(programm.indexOf("function jzbKirmesKarussellMalen("), programm.indexOf("function jzbKirmesMalen(c, F) { return"));
   assert.ok(/jzbKinderkarussellMalen\(c, F\);/.test(ks) && /jzbHerzMalen\(c, hx, hy, k, F\.t, hg\);/.test(ks) && /jzbNaschbudeMalen\(c, F\);/.test(ks), "Karussell links, Herz Mitte, Naschbude rechts");
