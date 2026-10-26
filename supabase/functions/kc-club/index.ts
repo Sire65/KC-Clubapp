@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.668.0";
+const SERVER_VERSION = "2.672.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -198,7 +198,7 @@ const cors = {
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" } });
-class Fehler extends Error { constructor(msg: string, public status = 400) { super(msg); } }
+class Fehler extends Error { constructor(msg: string, public status = 400, public extra?: Record<string, unknown>) { super(msg); } } // extra: KC-CLUB-ZUGANG-HILFE (Grund bei 401)
 // KC-CLUB-RC-PRUEFUNG (20.10.2026): Schreiben mit Rückmeldung – schlägt es fehl, meldet die App das ehrlich statt „gespeichert“ (Freigaben, Notfall, Zusagen, Links)
 function schreibOk<R extends { error: unknown }>(r: R, was = "Speichern"): R { if (r?.error) throw new Fehler(`${was} hat nicht geklappt – bitte gleich noch einmal versuchen.`, 500); return r; }
 // KC-CLUB-RC-PRUEFUNG (20.10.2026): Arbeit nebenbei (ohne zu warten) – EdgeRuntime.waitUntil hält die Funktion wach, bis sie fertig ist
@@ -214,6 +214,73 @@ async function kalenderToken(pid: string, erstellt: string) {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode("kc-kalender|" + SERVICE), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const b = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${pid}|${new Date(erstellt).toISOString()}`)));
   return [...b.slice(0, 24)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+// ---------- KC-CLUB-ZUGANG-HILFE (26.10.2026, Wunsch Hansi „wenn sich jemand ohne gültigen Link anmelden will und schon bekannt ist – z. B. Marianne –
+// Vertrauen aufbauen, freundlicher Hinweis, Taste → Hansi bekommt eine Info; echte Hinweise und Lösungsvorschläge je nach Ursache“) ----------
+// Bei einer abgelehnten Anmeldung schickt der Server den Grund mit: alt (Link einer bekannten Person, inzwischen ersetzt), pausiert (gesperrt/
+// abgeschaltet), unvollstaendig (Schlüssel zu kurz/kaputt – meist von WhatsApp abgeschnitten) oder unbekannt. Nur bei alt/pausiert: Vorname,
+// Datum, maskierte Mail und eine kurzlebige, vom Server unterschriebene Hilfe-Kennung (ohne sie kann niemand Meldungen für beliebige Personen auslösen).
+// Ein neuer Link wird nie angezeigt – er geht nur an die hinterlegte Mail oder über Hansi.
+const ZH_GUELTIG_MS = 30 * 60000, ZH_JE_PERSON_STD = 1, ZH_MAX_TAG = 10;
+const mailMaske = (m: string) => { const [n, d] = m.split("@"); return n && d ? `${n[0]}•••@${d}` : null; };
+async function zhSignatur(text: string) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode("kc-zugang-hilfe|" + SERVICE), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return [...new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(text))).slice(0, 16)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function zhTicket(pid: string, art: string) { const bis = Date.now() + ZH_GUELTIG_MS; return `${pid}.${art}.${bis}.${await zhSignatur(`${pid}|${art}|${bis}`)}`; }
+async function zhTicketPruefen(t: string): Promise<{ pid: string; art: string } | null> {
+  const m = /^(KC-P-[A-Za-z0-9-]{1,30})\.(alt|pausiert)\.(\d{13})\.([0-9a-f]{32})$/.exec(t);
+  if (!m || Number(m[3]) < Date.now()) return null;
+  const soll = await zhSignatur(`${m[1]}|${m[2]}|${m[3]}`);
+  let d = 0; for (let i = 0; i < soll.length; i++) d |= soll.charCodeAt(i) ^ m[4].charCodeAt(i); // gleich lang (32) – Vergleich ohne frühes Abbrechen
+  return d === 0 ? { pid: m[1], art: m[2] } : null;
+}
+async function zugangHilfeInfo(hash: string, gesperrtPid: string | null): Promise<Record<string, unknown>> {
+  try {
+    let pid = gesperrtPid, art = gesperrtPid ? "pausiert" : "unbekannt", seit: string | null = null;
+    if (!pid) {
+      const { data: alt } = await db.from("kc_club_zugang_alt").select("person_id,ersetzt_am,grund").eq("token_hash", hash).maybeSingle();
+      if (alt) { pid = String(alt.person_id); art = alt.grund === "abgeschaltet" ? "pausiert" : "alt"; seit = alt.ersetzt_am; }
+    }
+    if (!pid) return { art };
+    const { data: pe } = await db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email,active").eq("person_id", pid).maybeSingle();
+    if (!pe?.active) return { art: "unbekannt" };
+    const mail = String(pe.email || "").trim();
+    return { art, vorname: vorname(pe as Person), seit, mail: art === "alt" && mail ? mailMaske(mail) : null, ticket: await zhTicket(pid, art) };
+  } catch { return { art: "unbekannt" }; }
+}
+// KC-CLUB-ZUGANG-HILFE (26.10.2026): neuer Link per Mail – gemeinsam für „Link verloren?“ (zugang_anfordern) und die Zugangs-Hilfe.
+// Gibt das Versandergebnis zurück, null wenn der Link nicht gespeichert werden konnte (dann wird nie ein Link verschickt).
+async function neuenLinkMailen(pid: string): Promise<any | null> {
+  const token = zufall();
+  // KC-CLUB-ZUGANG-VORMERKEN (1.96.0, Sicherheitsprüfung): Wer nur die Mail-Adresse kennt, darf niemanden aussperren – der neue
+  // Link wird vorgemerkt (24 h), der bisherige bleibt gültig, bis der neue zum ersten Mal geöffnet wird. Ohne bisherigen Zugang wie früher.
+  const { data: bisher } = await db.from("kc_club_zugang").select("person_id,aktiv").eq("person_id", pid).maybeSingle();
+  const { error: zf } = bisher?.aktiv
+    ? await db.from("kc_club_zugang").update({ neu_token_hash: await sha256(token), neu_bis: new Date(Date.now() + ZUGANG_VORMERK_MS).toISOString() }).eq("person_id", pid)
+    : await db.from("kc_club_zugang").upsert({ person_id: pid, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pid, neu_token_hash: null, neu_bis: null });
+  if (zf) { console.error("zugang_anfordern", zf.message); return null; } // 2.1.1: nie einen Link verschicken, der nicht gespeichert ist
+  if (!bisher?.aktiv) await rtNeu(pid); // 2.426.0: Zugang neu eingerichtet → direkte Leitung neu
+  anmeldungenVergessen();
+  const link = `${APP_URL}?k=${token}`;
+  const anrede = vorname((await personen([pid])).get(pid) ?? null); // KC-CLUB-ZUGANG-HILFE: persönliche Anrede
+  const versand = await routerSenden("club_nachricht_mail", [pid], {
+    titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
+    betreff: "Köcheclub Werne – dein persönlicher Link zur App",
+    // KC-CLUB-ZUGANG-HILFE (26.10.2026, Wunsch Hansi „in der Mail erklären, dass das alte Symbol runter muss und was sonst zu beachten ist –
+    // und den Link sofort zum Anklicken zeigen“): Link ganz oben, dann die Schritte je Gerät, zuerst das alte Symbol löschen.
+    text: `Hallo${anrede ? " " + anrede : ""},\n\n👉 Hier tippen, um die Köcheclub-App zu öffnen:\n${link}\n\n` +
+      `Das ist dein neuer persönlicher Link. So klappt es sicher:\n\n` +
+      `1. Altes Köcheclub-Symbol löschen: Hast du die App schon auf dem Handy? Dann das alte Symbol vom Startbildschirm entfernen (lange drücken → „Entfernen“ bzw. „App löschen“). Das alte Symbol kennt nur den alten Link und funktioniert nicht mehr.\n` +
+      `2. Link öffnen: auf den Link oben tippen – auf dem iPhone/iPad in Safari, auf Android in Chrome.\n` +
+      `3. Neu auf den Startbildschirm legen: iPhone/iPad: unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Android (Chrome): oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\n` +
+      `4. Ab jetzt die App immer über das neue Symbol öffnen. Alte Links aus WhatsApp oder älteren Mails bitte nicht mehr benutzen.\n\n` +
+      `Gut zu wissen:\n• Sobald du diesen Link öffnest, gilt der frühere nicht mehr. Der Link gilt 24 Stunden.\n• Du nutzt die App auch auf einem zweiten Gerät (z. B. Tablet)? In der App unter ⚙️ → App-Installation → „🔢 Code für ein anderes Gerät“ – dann brauchst du keinen weiteren Link.\n• Der Link ist nur für dich – bitte nicht weitergeben.\n\n` +
+      `Du hast keinen neuen Link angefordert? Dann bitte kurz ${await adminVorname()} Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
+    url: link,
+  }, `club-zugang:${pid}:${Date.now()}`);
+  await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ: Schlüssel nicht im Mail-Speicher lassen
+  return versand;
 }
 // ---------- KC-CLUB-KURZCODE (1.87.0, Wunsch Hansi: Installation ohne langen Link) ----------
 // 6-stelliger Code (15 Min., einmal). Der Schlüssel des Mitglieds liegt bis zum Einlösen AES-GCM-verschlüsselt in
@@ -3661,7 +3728,7 @@ function fremdMerken(req: Request, grund: string, hash: string | null, person: s
 }
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
-  if (!/^[0-9a-f]{32,96}$/.test(token)) { if (token) fremdMerken(req, "kaputt", null); throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401); }
+  if (!/^[0-9a-f]{32,96}$/.test(token)) { if (token) fremdMerken(req, "kaputt", null); throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401, token ? { hilfe: { art: "unvollstaendig" } } : undefined); }
   const hash = await sha256(token), jetztMs = Date.now(), version = txt(req.headers.get("x-club-version"), 20) || null;
   const c = ANMELDUNGEN.get(hash);
   if (c && c.bis > jetztMs) {
@@ -3673,7 +3740,11 @@ async function anmelden(req: Request): Promise<Ich> {
     return { ...c.ich, aemter: [...c.ich.aemter] };
   }
   ANMELDUNG_TREFFER = false;
-  const ich = await anmeldenDb(hash, version, req.headers.get("user-agent") || "", req);
+  const ich = await anmeldenDb(hash, version, req.headers.get("user-agent") || "", req).catch((e) => {
+    // KC-CLUB-ZUGANG-HILFE: unbekannter Schlüssel mit falscher Länge (unsere sind 48 Zeichen) → fast immer abgeschnitten
+    if (e instanceof Fehler && (e.extra?.hilfe as any)?.art === "unbekannt" && token.length !== 48) e.extra = { hilfe: { art: "unvollstaendig" } };
+    throw e;
+  });
   netzKennung(req).then((n) => { NETZ_ANGEMELDET.set(n, { person: ich.person_id, t: Date.now() }); if (NETZ_ANGEMELDET.size > 400) NETZ_ANGEMELDET.delete(NETZ_ANGEMELDET.keys().next().value!); }).catch(() => {}); // 2.579.0
   if (ANMELDUNGEN.size >= ANMELDUNG_CACHE_MAX) for (const [k, v] of ANMELDUNGEN) if (v.bis <= jetztMs) ANMELDUNGEN.delete(k);
   if (ANMELDUNGEN.size < ANMELDUNG_CACHE_MAX) ANMELDUNGEN.set(hash, { ich: { ...ich, aemter: [...ich.aemter] }, bis: jetztMs + ANMELDUNG_CACHE_MS, gesehen: jetztMs, version });
@@ -3692,9 +3763,9 @@ async function anmeldenDb(hash: string, version: string | null, ua = "", req?: R
     ({ data: a, error } = await db.rpc("kc_club_anmeldung", { p_hash: hash, p_version: version }));
     if (error) throw new Fehler("Anmeldung gerade nicht möglich – bitte gleich noch einmal versuchen.", 503);
   }
-  if (!a) { if (req) fremdMerken(req, "unbekannt", hash); throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401); }
+  if (!a) { if (req) fremdMerken(req, "unbekannt", hash); throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401, req ? { hilfe: await zugangHilfeInfo(hash, null) } : undefined); }
   const p = a.person, r = a.rollen;
-  if (!p?.active) { if (req) fremdMerken(req, "gesperrt", hash, p?.person_id || null); throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401); }
+  if (!p?.active) { if (req) fremdMerken(req, "gesperrt", hash, p?.person_id || null); throw new Fehler("Kein Zugang – bitte bei Hansi melden.", 401, req && p?.person_id ? { hilfe: await zugangHilfeInfo(hash, String(p.person_id)) } : undefined); }
   // KC-CLUB-ONLINE-PUSH (1.57.0): nach ≥ 10 Min. Pause (oder zum ersten Mal) wieder da → Admins benachrichtigen (im Hintergrund)
   if (!a.vorher || Date.now() - Date.parse(a.vorher) >= ONLINE_PUSH_PAUSE_MS) {
     const lauf = onlinePushMelden(ichAus(p, r), ua).catch((e) => console.error("online push", String(e)));
@@ -8007,26 +8078,45 @@ Köcheclub Werne`,
       if (!pe || String(pe.person_id).startsWith("KC-P-TEST")) { await protokoll(null, "zugang_angefordert", { treffer: false }); return json({ ok: true, text }); }
       const { count: kuerzlich } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "zugang_angefordert").eq("person_id", pe.person_id).gte("zeit", seit15);
       if ((kuerzlich ?? 0) > 0) return json({ ok: true, text });
-      const token = zufall();
-      // KC-CLUB-ZUGANG-VORMERKEN (1.96.0, Sicherheitsprüfung): Wer nur die Mail-Adresse kennt, darf niemanden aussperren – der neue
-      // Link wird vorgemerkt (24 h), der bisherige bleibt gültig, bis der neue zum ersten Mal geöffnet wird. Ohne bisherigen Zugang wie früher.
-      const { data: bisher } = await db.from("kc_club_zugang").select("person_id,aktiv").eq("person_id", pe.person_id).maybeSingle();
-      const { error: zf } = bisher?.aktiv
-        ? await db.from("kc_club_zugang").update({ neu_token_hash: await sha256(token), neu_bis: new Date(Date.now() + ZUGANG_VORMERK_MS).toISOString() }).eq("person_id", pe.person_id)
-        : await db.from("kc_club_zugang").upsert({ person_id: pe.person_id, token_hash: await sha256(token), aktiv: true, erstellt_am: jetzt(), erstellt_von: pe.person_id, neu_token_hash: null, neu_bis: null });
-      if (zf) { console.error("zugang_anfordern", zf.message); return json({ ok: true, text }); } // 2.1.1: nie einen Link verschicken, der nicht gespeichert ist
-      if (!bisher?.aktiv) await rtNeu(pe.person_id); // 2.426.0: Zugang neu eingerichtet → direkte Leitung neu
-      anmeldungenVergessen();
-      const link = `${APP_URL}?k=${token}`;
-      const versand = await routerSenden("club_nachricht_mail", [pe.person_id], {
-        titel: "🔑 Dein Link zur Köcheclub-App", kurz: "Hier ist dein neuer persönlicher Link.",
-        betreff: "Köcheclub Werne – dein persönlicher Link zur App",
-        text: `Hallo,\n\nhier ist dein neuer persönlicher Link zur Köcheclub-App:\n\n${link}\n\nBitte antippen – die App zeigt dir dann Schritt für Schritt, wie du sie auf dein Handy legst (iPhone/iPad: in Safari öffnen, Android: in Chrome).\n\nDer Link ist nur für dich – bitte nicht weitergeben. Sobald du ihn öffnest, gilt ein früherer Link nicht mehr. Der Link gilt 24 Stunden.\nDu hast keinen neuen Link angefordert? Dann bitte kurz ${await adminVorname()} Bescheid geben.\n\nViele Grüße\nKöcheclub Werne`,
-        url: link,
-      }, `club-zugang:${pe.person_id}:${Date.now()}`);
-      await db.rpc("kc_club_zugangslinks_schwaerzen").then(() => {}, () => {}); // KC-CLUB-LINKSCHUTZ: Schlüssel nicht im Mail-Speicher lassen
+      const versand = await neuenLinkMailen(pe.person_id);
+      if (versand === null) return json({ ok: true, text });
       await protokoll(pe.person_id, "zugang_angefordert", { treffer: true, versand });
       return json({ ok: true, text });
+    }
+
+    // ----- KC-CLUB-ZUGANG-HILFE (26.10.2026): Hilfe-Knopf bei ungültigem Link (ohne Anmeldung, nur mit der unterschriebenen Hilfe-Kennung) -----
+    // weg "hansi": Admins bekommen Push + Mail („Marianne braucht einen neuen Link“); weg "mail": neuer Link an die hinterlegte Adresse (nicht bei pausiert).
+    // Bremse: je Person und Weg 1× je Stunde, insgesamt ZH_MAX_TAG je Tag. Der neue Link wird nie angezeigt.
+    if (a === "zugang_hilfe") {
+      const t = await zhTicketPruefen(txt(p.ticket, 120));
+      if (!t) throw new Fehler("Diese Hilfe ist abgelaufen – bitte die App einmal neu öffnen.", 400);
+      const weg = p.weg === "mail" ? "mail" : "hansi";
+      if (weg === "mail" && t.art !== "alt") throw new Fehler("Das geht hier leider nicht – bitte tippe auf „Hansi Bescheid geben“.", 400);
+      const [{ count: schon }, { count: heute }, { data: pe }] = await Promise.all([
+        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "zugang_hilfe").eq("person_id", t.pid).eq("details->>weg", weg)
+          .gte("zeit", new Date(Date.now() - ZH_JE_PERSON_STD * 3600000).toISOString()),
+        db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "zugang_hilfe").gte("zeit", new Date(Date.now() - 86400000).toISOString()),
+        db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name,email,active").eq("person_id", t.pid).maybeSingle(),
+      ]);
+      if (!pe?.active) throw new Fehler("Das geht hier leider nicht – bitte melde dich direkt bei Hansi.", 400);
+      if ((schon ?? 0) > 0) return json({ ok: true, schon: true, text: weg === "mail" ? "Die Mail ist schon unterwegs – bitte im Posteingang nachsehen (auch im Spam-Ordner)." : "Hansi weiß schon Bescheid und schickt dir einen neuen Link." });
+      if ((heute ?? 0) >= ZH_MAX_TAG) return json({ ok: true, text: "Gerade sind sehr viele Anfragen unterwegs – bitte versuche es später noch einmal." });
+      const geraetText = [txt(p.system, 40), txt(p.browser, 40)].filter(Boolean).join(", ") || "unbekanntes Gerät";
+      const name = vorname(pe as Person) || pe.display_name;
+      let versand: any = null;
+      if (weg === "mail") {
+        versand = await neuenLinkMailen(t.pid);
+        if (versand === null) throw new Fehler("Der neue Link konnte gerade nicht gespeichert werden – bitte gleich noch einmal versuchen.", 503);
+      } else {
+        const adm = await adminIds();
+        const grund = t.art === "alt" ? "versucht es mit einem alten, inzwischen ersetzten Link" : "versucht es mit einem abgeschalteten Link";
+        versand = adm.length ? await routerSenden("club_nachricht_beide", adm, { titel: `🔑 ${name} braucht einen neuen Link`, kurz: `${grund} · ${geraetText}`,
+          betreff: `Köcheclub-App: ${pe.display_name} braucht einen neuen Link`,
+          text: `Hallo,\n\n${pe.display_name} ${grund} und hat in der App auf „Hansi Bescheid geben“ getippt.\n\nGerät: ${geraetText}\nZeit: ${NOT_UHR.format(new Date())} Uhr\n\nBitte einen neuen persönlichen Link schicken: Mitglieder → ${pe.display_name} → 🔗 Link.\n${APP_URL}#mitglied=${encodeURIComponent(t.pid)}\n\nViele Grüße\nKöcheclub-App`,
+          url: `${APP_URL}#mitglied=${encodeURIComponent(t.pid)}` }, `club-zugang-hilfe:${t.pid}:${Date.now()}`) : null;
+      }
+      await protokoll(t.pid, "zugang_hilfe", { weg, art: t.art, geraet: txt(p.geraet, 40), system: txt(p.system, 40), browser: txt(p.browser, 40), versand });
+      return json({ ok: true, text: weg === "mail" ? `Der neue Link ist unterwegs an ${mailMaske(String(pe.email || "")) || "deine hinterlegte Adresse"} – bitte die Mail öffnen und den Link antippen.` : `Danke, ${name}! Hansi hat eine Nachricht bekommen und schickt dir einen neuen Link.` });
     }
 
     // ----- KC-CLUB-KURZCODE (1.87.0): Code einlösen (ohne Anmeldung) → persönlicher Schlüssel für dieses Gerät -----
@@ -8131,7 +8221,7 @@ Köcheclub Werne`,
     return DB_AUS.n !== dbAusVorher ? dbWeg() : antwort; // KC-CLUB-DB-ZEITGRENZE: kein halbes Ergebnis
   } catch (e) {
     if (DB_AUS.n !== dbAusVorher) return dbWeg(); // KC-CLUB-DB-ZEITGRENZE
-    if (e instanceof Fehler) return json({ error: e.message }, e.status);
+    if (e instanceof Fehler) return json({ error: e.message, ...(e.extra ?? {}) }, e.status);
     // 2.0.0 (Gesamtprüfung): interne Fehlertexte nicht nach außen – kurze Nummer zum Wiederfinden im Server-Log
     const nr = crypto.randomUUID().slice(0, 8);
     console.error("Fehler-Nr.", nr, a, e);

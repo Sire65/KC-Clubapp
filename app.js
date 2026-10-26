@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.671.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.672.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14713,7 +14713,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
-  if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); throw new Error(j?.error || "Kein Zugang"); }
+  if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
 }
@@ -42185,7 +42185,7 @@ async function linkTeilen(pid) {
   try {
     const { link } = await api("link_erzeugen", { person_id: pid });
     // 0.27.3: Anleitung wie unter ⚙️ → App-Installation (richtige App statt Verknüpfung)
-    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, ${ICH?.vorname || adminName()}`;
+    const text = `Hallo ${m.vorname}, hier ist dein persönlicher Link zur Köcheclub-App:\n${link}\n\nHattest du die App schon? Dann zuerst das *alte Köcheclub-Symbol* vom Startbildschirm löschen (lange drücken → „Entfernen“) – es kennt nur den alten Link.\n\nSo geht's (Android): Link in Chrome öffnen → oben rechts ⋮ → „App installieren“ (bzw. „Zum Startbildschirm hinzufügen“ → „Installieren“, nicht „Verknüpfung“). Samsung-Browser „Internet“: unten ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.\niPhone: den Link in *Safari* öffnen → unten Teilen □↑ → „Zum Home-Bildschirm“ → „Hinzufügen“. Danach die App über das neue Symbol öffnen.\n\nFunktioniert der Link nicht (z. B. weil es einen neueren gibt)? Die Seite zeigt dann „Link verloren?“ – dort deine E-Mail-Adresse eingeben, der neue Link kommt sofort per Mail.\n\nBitte nicht weitergeben – der Link ist dein persönlicher Zugang. Viele Grüße, ${ICH?.vorname || adminName()}`;
     // 2.2.0 (Gesamtprüfung): zwei echte Knöpfe statt „Abbrechen = kopieren“
     const f = blattAuf("linkBlatt", `${einwHtml("b-link")}<h3 style="margin-top:0">🔗 Link für ${esc(m.name)} erzeugt</h3><p class="hinweis">Der alte Link gilt ab jetzt nicht mehr. Wie soll er zu ${esc(m.vorname || m.name)}?</p>
       <div class="dlg-knoepfe"><button class="knopf haupt" data-w="wa">🟢 Per WhatsApp schicken</button><button class="knopf" data-w="mail">📧 An mich mailen (zum Einrichten)</button><button class="knopf" data-w="kopie">📋 Kopieren</button><button class="knopf" data-w="zu">Schließen</button></div>
@@ -45271,7 +45271,57 @@ function fpNachAnmeldung() {
   // Läuft die App nach der Anmeldung 30 s ordentlich, zählt das als „klappt“ → Zähler für „mehrmals geöffnet“ auf null.
   setTimeout(() => { try { localStorage.setItem("kc_club_starts", "[]"); } catch {} }, 30000);
 }
+// ---------- KC-CLUB-ZUGANG-HILFE (26.10.2026, Wunsch Hansi „wenn sich jemand ohne gültigen Link anmelden will und schon bekannt ist – z. B. Marianne –
+// Vertrauen aufbauen, freundlicher Hinweis, Taste → Hansi bekommt eine Info; echte Hinweise und Lösungsvorschläge je nach Ursache“) ----------
+// Der Server schickt bei „Kein Zugang“ den Grund mit (alt · pausiert · unvollstaendig · unbekannt); bei alt/pausiert auch Vorname, Datum, maskierte Mail
+// und eine kurzlebige Hilfe-Kennung. Die Karte erklärt die Ursache und bietet passende Knöpfe. Ein neuer Link wird nie angezeigt.
+let ZH = null;
+const zhStartSymbol = () => { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch { return false; } };
+function zugangHilfeZeigen(h) {
+  const k = $("linkUngueltig"); if (!k || !h || typeof h !== "object") return; ZH = h;
+  const tag = (iso) => { try { return new Date(iso).toLocaleDateString("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric" }); } catch { return ""; } };
+  const knopf = (weg, t, haupt) => `<button type="button" class="knopf${haupt ? " haupt" : ""}" style="width:100%;margin-top:8px" onclick="zugangHilfe('${weg}', this)">${t}</button>`;
+  const p = (t, oben = 8) => `<p class="hinweis" style="margin:${oben}px 0 0">${t}</p>`;
+  if (h.art === "alt" || h.art === "pausiert") {
+    const warum = h.art === "alt"
+      ? `Dein bisheriger Zugangslink gilt ${h.seit ? `seit dem ${esc(tag(h.seit))} ` : ""}leider nicht mehr – er wurde durch einen neueren ersetzt (zum Beispiel, weil du dir einen neuen per Mail geholt hast). Aus Sicherheitsgründen funktioniert immer nur der <b>neueste</b> Link.`
+      : "Dein Zugang ist gerade pausiert – aus Sicherheitsgründen funktioniert der Link deshalb nicht.";
+    k.innerHTML = `<h3>👋 ${h.vorname ? `Hallo ${esc(h.vorname)}, schön, dass du da bist!` : "Schön, dass du da bist!"}</h3><p style="margin:0">${warum}</p>
+      ${knopf("hansi", "📨 Hansi Bescheid geben", true)}${p("Hansi bekommt sofort eine Info und schickt dir einen neuen Link.", 4)}
+      ${h.art === "alt" && h.mail ? knopf("mail", `✉️ Neuen Link an ${esc(h.mail)} schicken`) + p("Kommt sofort – nur an die Adresse, die im Club hinterlegt ist.", 4) : ""}
+      ${h.art === "alt" ? p("🔢 Auf einem anderen Gerät schon angemeldet? Dann unten den <b>6-stelligen Code</b> eingeben.") : ""}
+      ${zhStartSymbol() ? p("💡 Tipp: Lösch danach das alte Köcheclub-Symbol vom Startbildschirm und leg es mit dem neuen Link neu an.") : ""}
+      <p class="hinweis" id="zhAntwort" style="margin:8px 0 0" aria-live="polite"></p>`;
+    k.style.borderColor = "var(--akzent, #1565c0)";
+  } else if (h.art === "unvollstaendig") {
+    k.innerHTML = `<h3>🔗 Dein Link ist nicht vollständig angekommen</h3><p style="margin:0">Das passiert oft, wenn WhatsApp oder die Mail den langen Link in mehrere Zeilen umbricht und nur ein Teil geöffnet wird.</p>
+      ${p("So geht's: in WhatsApp den Link <b>lange drücken → Kopieren</b>, dann unten bei <b>„📋 Link einfügen“</b> einfügen und <b>„Link übernehmen“</b> tippen. Oder bei <b>„✉️ Link verloren?“</b> deine E-Mail-Adresse eingeben.")}`;
+    k.style.borderColor = "var(--akzent, #1565c0)";
+  }
+}
+async function zugangHilfe(weg, knopf) {
+  if (!ZH?.ticket || !knopf) return; knopf.disabled = true; const a = $("zhAntwort"); if (a) a.textContent = "⏳ Wird gesendet …";
+  let geraet = ""; try { geraet = localStorage.getItem("kc_club_geraet") || ""; } catch {}
+  try {
+    const body = JSON.stringify({ action: "zugang_hilfe", ticket: ZH.ticket, weg, geraet, system: fpSystem(), browser: fpBrowser() });
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body, signal: zeitSignal(30000) });
+    const j = await r.json().catch(() => ({}));
+    if (a) a.innerHTML = r.ok ? "✅ " + esc(j.text || "Erledigt.") : "⚠️ " + esc(j.error || "Das hat nicht geklappt – bitte gleich nochmal versuchen.");
+  } catch { if (a) a.textContent = "⚠️ Keine Verbindung oder das Netz ist zu langsam – bitte gleich nochmal versuchen."; }
+  setTimeout(() => { knopf.disabled = false; }, 20000);
+}
+// Ohne Link geöffnet: die häufigsten Ursachen erkennen und konkret erklären (iPhone-Symbol, Samsung-Browser, privater Modus)
+function ohneLinkTipp() {
+  const k = $("ohneLinkTipp"); if (!k) return;
+  const ua = navigator.userAgent, privat = window.KCFP && window.KCFP.speicherOk === false;
+  const t = privat ? "🕶️ <b>Privater Modus:</b> Hier merkt sich das Handy nichts – auch nicht deinen Link. Bitte die App im normalen Browser-Fenster öffnen."
+    : FP_IOS && zhStartSymbol() ? "📱 <b>iPhone:</b> Das Symbol auf dem Home-Bildschirm kennt deinen Link nicht. So geht's: den Link aus WhatsApp oder Mail in <b>Safari</b> öffnen → unten <b>Teilen □↑ → „Zum Home-Bildschirm“</b>. Schneller: unten den <b>6-stelligen Code</b> eingeben."
+    : /SamsungBrowser/.test(ua) ? "📱 <b>Samsung-Browser „Internet“:</b> Hier bist du nicht angemeldet – vermutlich hast du die App sonst in <b>Chrome</b>. Nimm das Köcheclub-Symbol aus Chrome oder öffne deinen Link hier einmal."
+    : "";
+  k.innerHTML = t ? `<p style="margin:0">${t}</p>` : ""; k.classList.toggle("versteckt", !t);
+}
 function fpOhneLink() {
+  try { if (window.KCFP) window.KCFP.ohneLink = true; ohneLinkTipp(); } catch {} // KC-CLUB-ZUGANG-HILFE: kein falsches „Start hängt“, passender Tipp je Gerät
   fpNeu($("linkUngueltig") && !$("linkUngueltig").classList.contains("versteckt") ? "link_ungueltig" : "ohne_link", { browser: fpBrowser(), system: fpSystem(), start: START_ART, text: "App ohne gültigen persönlichen Link geöffnet" });
   window.KCFP?.senden(true); setTimeout(fpHinweisPruefen, 800);
 }
