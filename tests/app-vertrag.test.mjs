@@ -7449,6 +7449,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /traeger\.type = "sawtooth"; traeger\.frequency\.value = 110;/, "gleichbleibender Maschinenton");
   assert.match(programm, /const summe = laut\(1\), vb = \[200, 280, 390, 540, 750, 1000, 1350, 1800, 2400, 3100, 4000, 5100, 6400, 8000\];/, "14 Bänder");
 }
+// 2.681.0 KC-CLUB-ABSTIMMUNG-VORLAGE-VERKAUF (Wunsch Hansi „Logo-Gläser und Feuerzangen bei Bedarf verkaufen – Preis jeweils und Bundle“)
+{
+  const v = JSON.parse(lies("vorlagen/abstimmungen.json")).vorlagen.find((x) => x.titel === "Technik, Bilderrechner, Abrechnung"), alle = v.bereiche.flatMap((b) => b.fragen);
+  const i = alle.findIndex((f) => /Logo-Gläser und Feuerzangen verkaufen/.test(f.frage));
+  assert.ok(i === 12 && v.bereiche.at(-1).name === "Verkauf" && !alle[i].optionen, "Frage 13 im Bereich Verkauf, Ja/Nein/Enthaltung");
+  assert.ok(alle[i + 1].freitext && alle[i + 1].wenn?.nr === i && alle[i + 1].wenn.antwort === "Ja" && /Logo-Glas.*Feuerzange.*Bundle/.test(alle[i + 1].beschreibung), "Preise (Glas, Zange, Bundle) nur bei Ja");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

@@ -59,6 +59,13 @@
             { "frage": "Sollen finanzielle Zuwendungen generell als Spende verbucht werden oder aufgeteilt nach Spende und Trinkgeld?", "optionen": ["Alles als Spende", "Aufteilen: Spende und Trinkgeld", "Enthaltung"] },
             { "frage": "Und bei „Stimmt so“ und Aufrunden – wie soll das verbucht werden?", "optionen": ["Als Spende", "Als Trinkgeld", "Aufteilen: Spende und Trinkgeld", "Enthaltung"] }
           ]
+        },
+        {
+          "name": "Verkauf",
+          "fragen": [
+            { "frage": "Sollen wir bei Bedarf unsere Logo-Gläser und Feuerzangen verkaufen?" },
+            { "frage": "Zu welchem Preis?", "beschreibung": "Bitte eintragen: Logo-Glas ___ € · Feuerzange ___ € · Bundle (Logo-Glas und Feuerzange zusammen) ___ €", "freitext": true, "wenn": { "nr": 12, "antwort": "Ja" } }
+          ]
         }
       ]
     }

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.681.0 – 2026-10-26 – Abstimmungs-Vorlage: Verkauf Logo-Gläser und Feuerzangen
+KC-CLUB-ABSTIMMUNG-VORLAGE-VERKAUF: In der Vorlage „Technik, Bilderrechner, Abrechnung“ neuer Bereich Verkauf – Frage 13 (Logo-Gläser und Feuerzangen bei Bedarf verkaufen?) und Frage 14 (Preis Logo-Glas, Feuerzange, Bundle; nur bei Ja).
+
 ## 2.680.0 – 2026-10-26 – Archiv: alles aus dem Archiv heraus – Drucken, Senden, Teilen, in einen Ordner (KC-CLUB-ARCHIV-ALLES)
 Auch die automatisch gesammelten Einträge im „🤖 Clubleben“ haben jetzt ein ⋮-Menü (oder langes Drücken). Anhänge aus Nachrichten: Öffnen, 🖨️ Drucken, 💬 Als Nachricht senden, 📧 Per E-Mail (Büro), 📤 Teilen, ⬇️ Speichern, 🗄️ In einen Ordner ablegen (Kopie mit eigenem Namen). Protokolle: Öffnen, 🖨️ Drucken / PDF. Ordner-Dokumente bekommen 🖨️ Drucken dazu. Lange Dateinamen brechen um, damit die Knöpfe sichtbar bleiben.
 
