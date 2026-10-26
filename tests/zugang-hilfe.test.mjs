@@ -29,4 +29,5 @@ assert.ok(/if \(window\.KCFP\.startOk \|\| window\.KCFP\.ohneLink\) return;/.tes
 const nl = block("async function neuenLinkMailen(", "// ---------- KC-CLUB-KURZCODE");
 assert.ok(/👉 Hier tippen, um die Köcheclub-App zu öffnen:\\n\$\{link\}/.test(nl) && /1\. Altes Köcheclub-Symbol löschen/.test(nl) && /Zum Home-Bildschirm/.test(nl) && /App installieren/.test(nl), "Mail-Anleitung");
 assert.ok(/zuerst das \*alte Köcheclub-Symbol\* vom Startbildschirm löschen/.test(app), "WhatsApp-Vorlage mit Symbol-Hinweis");
+assert.ok(/!FP_IOS && !\/Android\|Mobile\/i\.test\(ua\) \? "💻 <b>Am PC:<\/b>/.test(app) && /Code für ein anderes Gerät/.test(app), "PC-Tipp (KC-CLUB-ZUGANG-HILFE-PC)");
 console.log("zugang-hilfe: alle Prüfungen bestanden");
