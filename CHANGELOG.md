@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.720.0 – 2026-10-27 – 🗂️ Nachrichten-Übersicht gegliedert (KC-CLUB-NACHRICHTEN-GLIEDERUNG)
+Wunsch Hansi („Nachrichten-Übersicht einklappbar wie im Chat – sehr übersichtlich und ordentlich, im Zahnrad einstellbar; wenn ein Chat nach unten wandert und noch Ungelesenes drin ist, muss man das sehen“): Die Chat-Liste ist jetzt in Abschnitte zum Auf- und Zuklappen gegliedert. Oben drei Knöpfe **🕒 Zeit · 👥 Art · 🔤 Name**, daneben ⤢/⤡ alle auf/zu.
+- **🔴 Ungelesen** steht immer ganz oben – jeder Chat mit ungelesenen (oder ❗ wichtigen) Nachrichten, egal wie alt. So rutscht nichts Ungelesenes in einen zugeklappten Abschnitt. Stummgeschaltete Chats bleiben an ihrem Platz; ein zugeklappter Abschnitt zeigt dann einen grauen Punkt mit der Zahl.
+- **🕒 Zeit:** Heute, Gestern, Diese Woche (offen) · Letzte Woche mit KW und Datum, Früher im Monat, ältere Monate (zugeklappt, mit Namen der Chats in der Kopfzeile).
+- **👥 Art:** Feste Gruppen, Runden, Einzelchats. **🔤 Name:** A–Z mit Buchstaben-Trennern.
+- Auf-/Zuklappen merkt sich das Gerät. ⚙️ → 🧩 Startseite & Ansicht → „🗂️ Gliederung der Nachrichten-Übersicht“ (auch „Aus – eine lange Liste“ wie bisher). Archiv, Favoriten und Karteikarten bleiben wie bisher. Kein zusätzlicher Server-Aufruf.
+
 ## 2.719.0 – 2026-10-27 – 🖼️ Keine Hilfe-Blase beim Zusehen (KC-CLUB-HILFE-NICHT-BEIM-ZUSEHEN)
 Twinkeys Hilfe von selbst meldet sich nicht mehr, während man nur zusieht: Diashow und alles auf der Kopf-Rückseite, Vollbild, laufendes Video oder laufende Musik. Tipper aufs Foto zählen dabei nicht als Suchen; danach fangen die Zähler frisch an.
 

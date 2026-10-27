@@ -7691,6 +7691,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /function hsPruefen\(\) \{\n  if \(hsZuschauen\(\)\) return hsNeuAnfangen\(\);/, "Zähler fangen nach dem Zusehen frisch an");
   assert.match(programm, /if \(hsZuschauen\(\)\) return hsNeuAnfangen\(\);\n    HS\.klicks\+\+;/, "Tipper beim Zusehen zählen nicht");
 }
+// 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG: Übersicht in Abschnitten, Ungelesenes immer oben, im Zahnrad einstellbar
+{
+  assert.match(programm, /zeigen\.length && uhGliedAn\(\) \? uhGliedHtml\(zeigen\) : zeigen\.map\(uhZeile\)\.join\(""\)/, "Liste gegliedert oder wie bisher");
+  assert.match(programm, /const neu = zeigen\.filter\(oben\)/, "Ungelesen-Abschnitt");
+  assert.match(programm, /for \(const u of zeigen\) \{ if \(oben\(u\)\) continue;/, "Ungelesenes nicht doppelt und nie in zugeklappten Abschnitten");
+  assert.match(programm, /punkt stumm" title="ungelesen in stummgeschalteten Chats"/, "grauer Punkt für stumme Chats im zugeklappten Abschnitt");
+  assert.match(html, /<select id="setUhGlied" onchange="uhGliedSetzen\(this\.value\)"/, "Einstellung im Zahnrad");
+  assert.match(programm, /const uhGliedAn = \(\) => !!UH_GLIED_ARTEN\[uhGlied\(\)\] && !UH\.archivAnsicht && !UH\.favAnsicht;/, "Archiv/Favoriten unverändert");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

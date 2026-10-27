@@ -2325,6 +2325,29 @@
   .tag-zu .tz-info { flex: 1; min-width: 0; font-size: .85rem; color: var(--grau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tag-zu .tz-datum { flex: none; font-size: .85rem; }
   .tag-zu.kw { background: var(--karte2); border-style: dashed; } .tag-zu.kw .tz-datum { background: var(--karte); border-radius: 8px; padding: 1px 8px; }
+  /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG: Abschnitte in der Nachrichten-Übersicht */
+  .uhg-leiste { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; }
+  .uhg-leiste > button { border: 1px solid var(--linie); background: var(--karte2); color: var(--text); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+  .uhg-leiste > button.an { background: var(--rot); border-color: var(--rot); color: #fff; }
+  .uhg-alle { margin-left: auto; display: inline-flex; gap: 4px; }
+  .uhg-alle button { border: 1px solid var(--linie); background: var(--karte); color: var(--grau); border-radius: 8px; width: 34px; height: 30px; font: inherit; font-weight: 800; cursor: pointer; }
+  .uhg { margin: 0 0 8px; }
+  .uhg-kopf { display: flex; align-items: center; gap: 8px; width: 100%; border: 1px solid var(--linie); background: var(--karte2); color: var(--text); border-radius: 12px; padding: 7px 10px; font: inherit; cursor: pointer; text-align: left; }
+  .uhg-kopf.fest { cursor: default; padding-left: 14px; }
+  .uhg.auf > .uhg-kopf { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .uhg-titel { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .uhg-az { border-top: 1px solid var(--linie); border-radius: 12px; }
+  .uhg-buchstabe { position: sticky; top: 0; z-index: 1; margin: 0 -8px; padding: 3px 14px; background: var(--karte2); color: var(--textRot); font-weight: 800; font-size: .9rem; border-bottom: 1px solid var(--linie); }
+  .uhg-az > .uhg-buchstabe:first-child { border-radius: 12px 12px 0 0; }
+  .uhg-zahl { flex: none; min-width: 24px; text-align: center; font-size: .78rem; font-weight: 800; color: var(--grau); background: var(--karte); border: 1px solid var(--linie); border-radius: 999px; padding: 1px 7px; }
+  .uhg-wer { flex: 1; min-width: 0; font-size: .82rem; color: var(--grau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .uhg-rechts { margin-left: auto; flex: none; font-size: .8rem; color: var(--grau); font-weight: 700; }
+  .uhg-wer + .uhg-rechts, .uhg-wer + .punkt { margin-left: 0; }
+  .uhg-kopf .punkt.stumm { background: var(--grau); }
+  .uhg-inhalt { border: 1px solid var(--linie); border-top: none; border-radius: 0 0 12px 12px; padding: 0 8px; background: var(--karte); }
+  .uhg-inhalt > .unterh:last-of-type { border-bottom: none; }
+  .uhg-neu > .uhg-kopf { background: #741521; border-color: #741521; color: #fff; }
+  .uhg-neu > .uhg-kopf .uhg-zahl { background: #fff; color: #741521; border-color: #fff; } .uhg-neu > .uhg-kopf .uhg-rechts { color: #fff; }
   .kw-kopf { align-self: center; border: 1px dashed var(--linie); background: var(--karte2); color: var(--text); border-radius: 10px; padding: 3px 12px; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; margin: 6px 0 2px; }
   /* 2.429.0 KC-CLUB-NETZ-SYMBOL: Router (WLAN) / Satellit (Mobilfunk) oben links in Nachrichten */
   .na-netz { flex: none; border: none; background: none; padding: 0; width: 42px; height: 34px; cursor: pointer; }
@@ -5670,6 +5693,8 @@
       <summary>🧩 Startseite &amp; Ansicht</summary>
       <div class="schalter"><div><b>📂 Vergangene Tage im Chat einklappen</b><div class="hinweis">Nur heute, der Tag der letzten Nachricht und Ungelesenes offen – frühere Tage als eine Zeile, rechts das Datum (z. B. „Mo, 11.11.26“). Antippen klappt auf. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setChatEinklappen" onchange="einstellung('chatEinklappen', this.checked)"></div> <!-- KC-CLUB-TAGE-EINKLAPPEN 2.429.0 -->
       <div class="schalter"><div><b>📅 Ältere Wochen als Kalenderwoche</b><div class="hinweis">Nachrichten, die älter als 7 Tage sind, als eine Zeile je Woche („KW 45/26“).</div></div><input type="checkbox" id="setChatKW" onchange="einstellung('chatKW', this.checked)"></div>
+      <div class="schalter"><div><b>🗂️ Gliederung der Nachrichten-Übersicht</b><div class="hinweis">Chats in Abschnitten zum Auf- und Zuklappen: nach Zeit (Heute, Gestern, Diese Woche, Letzte Woche, Monate), nach Art (Gruppen, Runden, Einzelchats) oder nach Name A–Z. Chats mit ungelesenen Nachrichten stehen immer ganz oben. Gilt für dieses Gerät.</div></div>
+        <select id="setUhGlied" onchange="uhGliedSetzen(this.value)" aria-label="Gliederung der Nachrichten-Übersicht"><option value="zeit">🕒 nach Zeit</option><option value="art">👥 nach Art</option><option value="name">🔤 nach Name</option><option value="aus">Aus – eine lange Liste</option></select></div> <!-- 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG -->
       <!-- KC-CLUB-ESELSOHR (2.292.0) -->
       <div class="schalter"><div><b>📄 Eselsohr am Kopf</b><div class="hinweis">Unten rechts am Kopf doppelt tippen (oder nach links ziehen) – der Kopf dreht sich um: 🖼️ Diashow, 🖍️ Tafel, 📋 Flipchart, 🕰️ große Uhr, 🎭 Bühne für Bewegung, 🪞 Spiegel. Nochmal doppelt tippen dreht zurück.</div></div><input type="checkbox" id="setEselsohr" checked onchange="eselsohrSchalter(this.checked)"></div>
       <!-- KC-CLUB-BEWEGUNG-EINLADUNG (2.314.0) -->
@@ -6071,7 +6096,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.719.0" data-v="2.719.0"></script>
+<script src="app.js?v=2.720.0" data-v="2.720.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

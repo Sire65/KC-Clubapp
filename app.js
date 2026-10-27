@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.719.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.720.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1050,7 +1050,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -33713,14 +33713,82 @@ async function unterhLaden() {
     uhKarteiKnopf(); $("unterhListe").classList.toggle("karte", !(rkAn("chats") && !UH.archivAnsicht && zeigen.length));
     const neuKopf = UH.archivAnsicht ? "" : neuEntwurfKopf(); // 2.708.0 KC-CLUB-NEU-ENTWURF
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = neuKopf + archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
-    $("unterhListe").innerHTML = neuKopf + archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
-      ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div>${uhLesestand(u)}</div>
-      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
+    $("unterhListe").innerHTML = neuKopf + archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + (zeigen.length && uhGliedAn() ? uhGliedHtml(zeigen) : zeigen.map(uhZeile).join(""))
       || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Rechts am Chat auf <b>⋯</b> tippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
     uhAmeisen();
   } catch (e) { meldeFehler(e); ladeFehlerStand("unterhListe", e, "unterhLaden()"); }
+}
+// ---------- 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG (Wunsch Hansi „Nachrichten-Übersicht einklappbar wie im Chat – sehr übersichtlich, im Zahnrad
+// einstellbar; ein Chat mit Ungelesenem darf nicht unten verschwinden“) ----------
+// Gliederung je Gerät (⚙️ → 🧩 Startseite & Ansicht): 🕒 Zeit (Heute, Gestern, Diese Woche, Letzte Woche, dann Monate), 👥 Art (Gruppen, Runden,
+// Einzelchats), 🔤 Name A–Z – oder aus (wie bisher). Chats mit Ungelesenem stehen IMMER oben im Abschnitt „🔴 Ungelesen“ (auch stummgeschaltete
+// mit ❗ wichtig); ein zugeklappter Abschnitt zeigt trotzdem einen Punkt, falls darin noch etwas Ungelesenes steckt. Kein zusätzlicher Server-Aufruf.
+const UH_GLIED_ARTEN = { zeit: "🕒 Zeit", art: "👥 Art", name: "🔤 Name" };
+const uhGlied = () => { try { const v = localStorage.getItem("kc_club_uhGlied"); return v === null ? "zeit" : v; } catch { return "zeit"; } };
+const uhGliedAn = () => !!UH_GLIED_ARTEN[uhGlied()] && !UH.archivAnsicht && !UH.favAnsicht;
+function uhGliedOffen() { try { return JSON.parse(localStorage.getItem("kc_club_uhGliedOffen") || "{}") || {}; } catch { return {}; } }
+function uhGliedSetzen(v) { try { localStorage.setItem("kc_club_uhGlied", v); } catch {} if ($("setUhGlied")) $("setUhGlied").value = v; if (aktuelleAnsicht === "nachrichten") unterhLaden(); }
+function uhGliedUm(k, offenNorm) {
+  const o = uhGliedOffen(), jetzt = k in o ? o[k] : offenNorm; o[k] = !jetzt;
+  try { localStorage.setItem("kc_club_uhGliedOffen", JSON.stringify(o)); } catch {}
+  unterhLaden().then(() => document.getElementById("uhg-" + k)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+}
+function uhGliedAlle(auf) { // „Alle auf-/zuklappen“: merkt jeden sichtbaren Abschnitt
+  const o = {}; document.querySelectorAll("#unterhListe .uhg-kopf[data-k]").forEach((b) => (o[b.dataset.k] = auf));
+  try { localStorage.setItem("kc_club_uhGliedOffen", JSON.stringify(o)); } catch {} unterhLaden();
+}
+const uhgMonat = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" });
+const uhgKurz = (d) => `${ntZwei(d.getDate())}.${ntZwei(d.getMonth() + 1)}.`;
+function uhgZeitAbschnitt(u) {
+  if (!u.letzte?.zeit) return { k: "ohne", t: "💤 Noch ohne Nachricht", rang: 9e15, offen: false };
+  const z = u.letzte.zeit, alt = ntTageAlt(z), kw = ntKw(z), heuteKw = ntKw(new Date().toISOString()), vorKw = ntKw(new Date(Date.now() - 7 * 86400000).toISOString());
+  const kwKurz = kw.replace(/\/\d+$/, "");
+  if (alt <= 0) return { k: "heute", t: "📅 Heute", rang: 0, offen: true };
+  if (alt === 1) return { k: "gestern", t: "📅 Gestern", rang: 1, offen: true };
+  if (kw === heuteKw) return { k: "woche", t: "📅 Diese Woche", rang: 2, offen: true, rechts: kwKurz };
+  if (kw === vorKw) { const d = new Date(z), mo = new Date(d); mo.setDate(d.getDate() - ((d.getDay() + 6) % 7)); const so = new Date(mo); so.setDate(mo.getDate() + 6);
+    return { k: "vorwoche", t: "🗓️ Letzte Woche", rang: 3, offen: false, rechts: `${kwKurz} · ` + (mo.getMonth() === so.getMonth() ? `${ntZwei(mo.getDate())}.–${uhgKurz(so)}` : `${uhgKurz(mo)}–${uhgKurz(so)}`) }; }
+  const d = new Date(z), jetzt = new Date(), dieser = d.getFullYear() === jetzt.getFullYear() && d.getMonth() === jetzt.getMonth();
+  return { k: `m${d.getFullYear()}${ntZwei(d.getMonth() + 1)}`, t: dieser ? `🗂️ Früher im ${uhgMonat.format(d).split(" ")[0]}` : `🗂️ ${d.getFullYear() === jetzt.getFullYear() ? uhgMonat.format(d).split(" ")[0] : uhgMonat.format(d)}`, rang: 100 + (new Date().getFullYear() - d.getFullYear()) * 12 + (new Date().getMonth() - d.getMonth()), offen: false };
+}
+function uhgArtAbschnitt(u) {
+  return u.gruppe ? { k: "gruppen", t: "🔗 Feste Gruppen", rang: 0, offen: true } : u.anzahl > 2 ? { k: "runden", t: "👥 Runden", rang: 1, offen: true } : { k: "einzel", t: "🙋 Einzelchats", rang: 2, offen: true };
+}
+function uhgNameAbschnitt(u) {
+  const b = (unterhName(u).trim()[0] || "#").toLocaleUpperCase("de-DE").replace(/[ÄÖÜ]/, (x) => ({ Ä: "A", Ö: "O", Ü: "U" })[x]);
+  const buch = /[A-Z]/.test(b) ? b : "#"; return { k: "b" + buch, t: buch, rang: buch === "#" ? 99 : buch.charCodeAt(0), offen: true };
+}
+function uhGliedHtml(zeigen) {
+  const art = uhGlied(), merk = uhGliedOffen(), oben = (u) => uhUngelesen(u) || !!u.wichtigNeu;
+  const ab = art === "art" ? uhgArtAbschnitt : art === "name" ? uhgNameAbschnitt : uhgZeitAbschnitt;
+  const neu = zeigen.filter(oben), gruppen = new Map();
+  for (const u of zeigen) { if (oben(u)) continue; const a = ab(u); if (!gruppen.has(a.k)) gruppen.set(a.k, { ...a, liste: [] }); gruppen.get(a.k).liste.push(u); }
+  const liste = [...gruppen.values()].sort((x, y) => x.rang - y.rang);
+  if (art === "name") liste.forEach((g) => g.liste.sort((x, y) => unterhName(x).localeCompare(unterhName(y), "de")));
+  const wer = (l) => { const n = [...new Set(l.map((u) => (u.gruppe?.name || u.betreff || u.teilnehmer[0] || "").split(" ")[0]).filter(Boolean))]; return n.slice(0, 3).join(", ") + (n.length > 3 ? " …" : ""); };
+  if (art === "name") { // A–Z: eine Liste mit schlanken Buchstaben-Trennern (Kästen je Buchstabe wären unruhig)
+    const alle = liste.flatMap((g) => g.liste); let b = "";
+    return wahl() + neuTeil() + `<div class="uhg-inhalt uhg-az">${alle.map((u) => { const x = uhgNameAbschnitt(u).t, kopf = x !== b ? `<div class="uhg-buchstabe">${esc(x)}</div>` : ""; b = x; return kopf + uhZeile(u); }).join("")}</div>`;
+  }
+  const abschnitt = (g) => {
+    const auf = g.k in merk ? merk[g.k] : g.offen, rest = g.liste.reduce((n, u) => n + (u.ungelesen || 0), 0); // rest: nur stummgeschaltete (der Rest steht oben)
+    return `<section class="uhg${auf ? " auf" : ""}"><button type="button" class="uhg-kopf" id="uhg-${g.k}" data-k="${g.k}" aria-expanded="${auf}" onclick="uhGliedUm('${g.k}', ${g.offen})">
+      <span class="tz-pfeil" aria-hidden="true">${auf ? "▾" : "▸"}</span><span class="uhg-titel">${esc(g.t)}</span><span class="uhg-zahl">${g.liste.length}</span>
+      ${auf || g.rechts ? "" : `<span class="uhg-wer">${esc(wer(g.liste))}</span>`}${rest ? `<span class="punkt stumm" title="ungelesen in stummgeschalteten Chats">${rest}</span>` : ""}${g.rechts ? `<span class="uhg-rechts">${esc(g.rechts)}</span>` : ""}</button>
+      ${auf ? `<div class="uhg-inhalt">${g.liste.map(uhZeile).join("")}</div>` : ""}</section>`;
+  };
+  function wahl() { return `<div class="uhg-leiste" role="group" aria-label="Übersicht ordnen nach">${Object.entries(UH_GLIED_ARTEN).map(([k, t]) => `<button type="button" class="${k === art ? "an" : ""}" aria-pressed="${k === art}" onclick="uhGliedSetzen('${k}')">${t}</button>`).join("")}
+    ${art === "name" ? "" : `<span class="uhg-alle"><button type="button" onclick="uhGliedAlle(true)" title="Alle Abschnitte aufklappen">⤢</button><button type="button" onclick="uhGliedAlle(false)" title="Alle Abschnitte zuklappen">⤡</button></span>`}</div>`; }
+  function neuTeil() { return neu.length ? `<section class="uhg auf uhg-neu"><div class="uhg-kopf fest"><span class="uhg-titel">🔴 Ungelesen</span><span class="uhg-zahl">${neu.length}</span><span class="uhg-rechts">${neu.reduce((n, u) => n + (u.ungelesen || 0), 0)} neu</span></div>
+    <div class="uhg-inhalt">${neu.map(uhZeile).join("")}</div></section>` : ""; }
+  return wahl() + neuTeil() + liste.map(abschnitt).join("");
+}
+function uhZeile(u) {
+  return `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
+      ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div>${uhLesestand(u)}</div>
+      <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`;
 }
 // ---------- KC-CLUB-CHAT-KARTEI (2.191.0) ----------
 // Je Chat eine Karteikarte; vorn (und die nächste) werden die letzten 6 Nachrichten gezeigt – als „Vorschau“, die NICHT als gelesen
