@@ -7586,6 +7586,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function atDruckWahl\(\)/.test(html) && /data-dk=/.test(html) && /function atDruckSchritt\(\)/.test(html) && /⏭️ Überspringen/.test(html) && /onclick="atDruckWahl\(\)">🖨️ Drucken – auswählen/.test(html), "App: Druckliste mit Kästchen, Schritt für Schritt");
   assert.ok(/async function atTeilDruckenOhneWechsel\(i\)/.test(html) && /PR = await api\("protokoll_laden", \{ id: i\.ref \}\); return druckStarten\("protokoll"\)/.test(html) && /if \(teil === "vorschlag"\)/.test(html), "jedes Teil druckbar, ohne die Tasche zu verlassen");
 }
+// 2.698.0 KC-CLUB-AKTENTASCHE-RAUM (Hansi „wo finde ich die Tasche“): 💼 auch in der Büro-Raum-Ansicht, nicht nur in der Liste
+{
+  assert.ok(/onclick="buAnsichtWechseln\(\)">☰ Liste<\/button>\$\{ICH\?\.vorstand \? '<button class="knopf klein" onclick="atStart\(\)">💼 Aktentasche/.test(html), "💼 im Büro-Raum");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

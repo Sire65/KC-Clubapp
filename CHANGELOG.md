@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.698.0 – 2026-10-27 – Aktentasche auch im Büro-Raum
+KC-CLUB-AKTENTASCHE-RAUM: Knopf 💼 Aktentasche auch in der Büro-Raum-Ansicht (Regal/Schreibtisch), nicht nur in der Liste.
+
 ## 2.697.0 – 2026-10-26 – 📄 PDF mit gutem Seitenwechsel (KC-CLUB-DRUCK-SEITENWECHSEL)
 - Fund Hansi (Abstimmungsbogen: „Die Seiten sind nicht gut – auf Seite 2 muss ein Kopf mit Logo und Datum und Seite 2 von x, also ein guter Seitenwechsel“): Das PDF aus der Druckvorschau schnitt die Seite stur alle 297 mm ab – mitten durch Tabellenzeilen und Wörter („Gö|nner“). Jetzt wechselt die Seite nur zwischen Zeilen, Absätzen und Blöcken; ab Seite 2 steht oben ein Kopf mit Logo im weinroten Kreis, Titel, Datum und „Seite 2 von 3“, auf Seite 1 unten „Seite 1 von 3“. Bei „ein Bogen je Mitglied“ zählen die Seiten je Bogen. Gilt für alle Ausdrucke mit „📄 PDF“; passt alles auf eine Seite, bleibt es wie bisher. Test: `tests/druck-seitenwechsel.test.mjs`. Nur App.
 

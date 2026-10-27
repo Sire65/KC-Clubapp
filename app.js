@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.697.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.698.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -31176,7 +31176,7 @@ function buRaumHtml() {
   const kal = naechst ? new Date(naechst.beginn) : null;
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">
-      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
+      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
       ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>
