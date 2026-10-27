@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.703.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.704.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15682,7 +15682,7 @@ function pdfjsHolen() {
 }
 const dokUrl = (d) => d.url ? d.url : d.datei instanceof Blob ? URL.createObjectURL(d.datei) : new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
 const dokAktuell = () => (DOKA.anl && DOKA.anl.id === DOKA.id ? DOKA.anl : DOKUMENTE.find((x) => x.id === DOKA.id) || null); // 2.165.0: auch Chat-Anlagen
-// 2.702.0: ‹ Zurück führt dorthin, wo das Dokument steht (Chat-Anlage → Chat, ort "technik" → Freigegebene Programme, sonst Meine Dokumente)
+// 2.704.0: ‹ Zurück führt dorthin, wo das Dokument steht (Chat-Anlage → Chat, ort "technik" → Freigegebene Programme, sonst Meine Dokumente)
 const dokZurueckZiel = () => (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : "dokumente");
 async function dokAnzeigen(d, ausHistorie) {
   DOKA.id = d.id; DOKA.bilder = []; DOKA.fehler = ""; DOKA.anl = d.datei instanceof Blob || d.url ? d : null; const lauf = ++DOKA.lauf;
@@ -42017,7 +42017,7 @@ const DRUCKARTEN = {
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
-  haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
+  haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? "Händler-Ausweise – Probeblatt Duplex" : `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
@@ -42952,17 +42952,22 @@ async function ausweisZeigen() {
 // beidseitigen Druck, lange Kante). QR-Code mit Nummer + Prüfcode (vom Server, nicht fälschbar). Gezeichnet in Druckauflösung (300 dpi) – Druck,
 // Vorschau und PDF sind dadurch millimetergenau gleich. Dazu eine Ausgabeliste (Nr, Prüfcode, Stand/Firma, Name, ausgegeben). Nur Clubleitung.
 const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "", datum: "" };
-const HA_MM = 300 / 25.4, HA_K = { w: 85, h: 54, gx: 6, gy: 4 }, HA_SCHRIFT = '"DejaVu Sans","Helvetica Neue",Arial,sans-serif';
+// 2.704.0 KC-CLUB-HAENDLERAUSWEIS-SCHNITT (Wunsch Hansi „Standardmaß behalten, zwischen den Karten nur EIN Schnitt – erst die 4 Ränder weg, dann je ein
+// Schnitt zwischen den Karten; sorgfältige Schneidemarken, die nicht zu stark auffallen“): Scheckkarte 85,6 × 54 mm, Karte an Karte (keine Lücken),
+// eckig; Marken nur im weißen Rand außen (fein, hellgrau), Kontrollmaß 50 mm; unten ein 1,5-mm-Streifen in Weinrot, damit ein knapper Schnitt nicht blitzt.
+const HA_MM = 300 / 25.4, HA_K = { w: 85.6, h: 54, gx: 0, gy: 0, streifen: 1.5 }, HA_SCHRIFT = '"DejaVu Sans","Helvetica Neue",Arial,sans-serif';
 function haStart() {
   const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🪪 Händler-Ausweis Weihnachtsmarkt</h3>
     <p class="dlg-text">Für Händler und Marktbeschicker: Rabatt am Köcheclub-Stand gegen Vorzeigen. Je A4-Blatt 10 Ausweise mit Schnittmarken – beidseitig drucken (lange Kante).</p>
     <div class="zwei"><label class="feld">Jahr<input id="haJahr" type="number" min="2024" max="2100" value="${HA.jahr}"></label><label class="feld">Rabatt in % (leer = zum Eintragen)<input id="haRabatt" type="number" min="1" max="100" value="${esc(HA.rabatt)}" placeholder="z. B. 10"></label></div>
     <div class="zwei"><label class="feld">Nummer von<input id="haVon" type="number" min="1" max="999" value="${HA.von}"></label><label class="feld">bis<input id="haBis" type="number" min="1" max="999" value="${HA.bis}"></label></div>
     <label class="feld">Gültig (leer = „Gültig nur zum Weihnachtsmarkt Werne ${HA.jahr}“)<input id="haDatum" type="text" maxlength="60" value="${esc(HA.datum)}" placeholder="z. B. Gültig vom 04.12. bis 23.12.2026"></label>
-    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="zu">Abbrechen</button></div>`, () => {});
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="probe">🎯 Probeblatt (Duplex prüfen)</button><button class="knopf" data-a="zu">Abbrechen</button></div>
+    <p class="hinweis" style="margin:6px 0 0">Schneiden: erst die 4 Ränder, dann 1 Schnitt senkrecht in der Mitte und 4 waagerecht – die feinen grauen Marken im Rand zeigen, wo.</p>`, () => {});
   const lesen = () => { HA.jahr = Math.trunc(+$("haJahr").value) || new Date().getFullYear(); HA.von = Math.max(1, Math.trunc(+$("haVon").value) || 1); HA.bis = Math.max(HA.von, Math.trunc(+$("haBis").value) || HA.von);
     HA.rabatt = String($("haRabatt").value || "").trim(); HA.datum = String($("haDatum").value || "").trim(); };
   f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = async () => { const a = b.dataset.a; if (a === "zu") return f.remove(); lesen();
+    if (a === "probe") { f.remove(); return druckStarten("haendlerausweis", { jahr: HA.jahr, bilder: [haProbe(false), haProbe(true)], n: 0, probe: true }); } // 2.704.0
     if (HA.bis - HA.von >= 120) return melde("Höchstens 120 Ausweise auf einmal.", true);
     b.disabled = true; const alt = b.textContent; b.textContent = "⏳ Einen Moment …";
     try { const r = await api("haendlerausweis_codes", { jahr: HA.jahr, von: HA.von, bis: HA.bis });
@@ -42981,10 +42986,38 @@ function haBlatt(teil, hinten, jahr, logo) {
   const M = HA_MM, K = HA_K, c = document.createElement("canvas"); c.width = Math.round(210 * M); c.height = Math.round(297 * M);
   const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
   const L = 2 * K.w + K.gx, T = 5 * K.h + 4 * K.gy, x0 = (210 - L) / 2, y0 = (297 - T) / 2;
+  // 2.704.0: unter dem Block Weinrot (dort liegen die Schnitte Rot an Rot) und Karten auf ganze Bildpunkte – sonst blitzt zwischen den Reihen ein heller Haarstrich
+  g.fillStyle = "#741521"; g.fillRect(Math.round(x0 * M), Math.round(y0 * M), Math.round(L * M), Math.round(T * M));
   teil.forEach((x, i) => { const r = Math.floor(i / 2), sp = hinten ? 1 - (i % 2) : i % 2; // Rückseite gespiegelt: passt beim beidseitigen Druck hinter die Vorderseite
-    g.save(); g.translate((x0 + sp * (K.w + K.gx)) * M, (y0 + r * (K.h + K.gy)) * M); (hinten ? haHinten : haVorne)(g, x, jahr, logo); g.restore(); });
-  g.fillStyle = "#000"; const xs = [0, K.w, K.w + K.gx, 2 * K.w + K.gx].map((v) => x0 + v), ys = []; for (let r = 0; r < 5; r++) ys.push(y0 + r * (K.h + K.gy), y0 + r * (K.h + K.gy) + K.h);
-  for (const x of xs) for (const y of ys) { g.fillRect((x - 3) * M, y * M - 1, 6 * M, 2); g.fillRect(x * M - 1, (y - 3) * M, 2, 6 * M); } // Schnittmarken
+    g.save(); g.translate(Math.round((x0 + sp * (K.w + K.gx)) * M), Math.round((y0 + r * (K.h + K.gy)) * M)); (hinten ? haHinten : haVorne)(g, x, jahr, logo); g.restore(); });
+  if (teil.length < 10) { g.fillStyle = "#fff"; for (let i = teil.length; i < 10; i++) { const r = Math.floor(i / 2), sp = hinten ? 1 - (i % 2) : i % 2; // leere Plätze bleiben weiß
+    g.fillRect(Math.round((x0 + sp * K.w) * M), Math.round((y0 + r * K.h) * M), Math.ceil(K.w * M) + 1, Math.ceil(K.h * M) + 1); } }
+  if (!hinten) haMarken(g, x0, y0, L, T);
+  return c.toDataURL("image/png");
+}
+// Schneidemarken nur im Rand: je Schnittlinie ein feiner hellgrauer Strich (0,15 mm, 4 mm lang, 2 mm Abstand zum Block) – auf den Karten selbst nichts
+function haMarken(g, x0, y0, L, T) {
+  const M = HA_MM, K = HA_K, ab = 2, lang = 4; g.strokeStyle = "#9a9a9a"; g.lineWidth = .15 * M; g.lineCap = "butt";
+  const linie = (xa, ya, xb, yb) => { g.beginPath(); g.moveTo(xa * M, ya * M); g.lineTo(xb * M, yb * M); g.stroke(); };
+  for (let i = 0; i <= 2; i++) { const x = x0 + i * K.w; linie(x, y0 - ab - lang, x, y0 - ab); linie(x, y0 + T + ab, x, y0 + T + ab + lang); }
+  for (let r = 0; r <= 5; r++) { const y = y0 + r * K.h; linie(x0 - ab - lang, y, x0 - ab, y); linie(x0 + L + ab, y, x0 + L + ab + lang, y); }
+  // Kontrollmaß: bei „Tatsächliche Größe / 100 %“ genau 50 mm
+  const ky = y0 + T + 9.5; g.strokeStyle = "#b5b5b5"; linie(x0, ky, x0 + 50, ky); linie(x0, ky - 1.2, x0, ky + 1.2); linie(x0 + 50, ky - 1.2, x0 + 50, ky + 1.2);
+  haText(g, "Kontrollmaß: genau 5 cm – sonst beim Drucken „Tatsächliche Größe / 100 %“ wählen · erst die 4 Ränder, dann zwischen den Karten schneiden", x0 + 52, ky + .7, 1.9, { farbe: "#9a9a9a" });
+}
+// Probeblatt: zeigt, ob der Drucker Vorder- und Rückseite genau übereinander druckt (gegen das Licht halten – die Kreuze müssen sich decken)
+function haProbe(hinten) {
+  const M = HA_MM, K = HA_K, c = document.createElement("canvas"); c.width = Math.round(210 * M); c.height = Math.round(297 * M);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+  const L = 2 * K.w, T = 5 * K.h, x0 = (210 - L) / 2, y0 = (297 - T) / 2;
+  g.strokeStyle = hinten ? "#741521" : "#222"; g.lineWidth = .2 * M;
+  const kreuz = (x, y) => { g.beginPath(); g.moveTo((x - 5) * M, y * M); g.lineTo((x + 5) * M, y * M); g.moveTo(x * M, (y - 5) * M); g.lineTo(x * M, (y + 5) * M); g.stroke(); g.beginPath(); g.arc(x * M, y * M, 2.5 * M, 0, 7); g.stroke(); };
+  for (const x of [x0, x0 + K.w, x0 + L]) for (const y of [y0, y0 + T / 2, y0 + T]) kreuz(x, y);
+  g.setLineDash([1.2 * M, 1.2 * M]); g.strokeRect(x0 * M, y0 * M, L * M, T * M); g.setLineDash([]);
+  haText(g, hinten ? "RÜCKSEITE" : "VORDERSEITE", 105, 140, 9, { gew: 900, farbe: hinten ? "#741521" : "#222", aus: "center" });
+  haText(g, hinten ? "Gegen das Licht halten: Die roten Kreuze müssen genau auf den schwarzen liegen." : "Dieses Blatt beidseitig drucken (an der langen Kante wenden), 100 %.", 105, 152, 3.6, { farbe: "#555", aus: "center", max: 180 });
+  haText(g, "Liegen sie daneben: im Druckdialog den Rand/Versatz einstellen oder einen anderen Drucker nehmen.", 105, 158, 3.2, { farbe: "#555", aus: "center", max: 180 });
+  if (!hinten) haMarken(g, x0, y0, L, T);
   return c.toDataURL("image/png");
 }
 function haText(g, t, x, y, mm, o = {}) { g.font = `${o.stil || ""} ${o.gew || 400} ${mm * HA_MM}px ${o.schrift || HA_SCHRIFT}`; g.fillStyle = o.farbe || "#3b1d14";
@@ -42993,7 +43026,7 @@ function haText(g, t, x, y, mm, o = {}) { g.font = `${o.stil || ""} ${o.gew || 4
 function haRund(g, x, y, w, h, r) { const M = HA_MM; g.beginPath(); g.moveTo((x + r) * M, y * M); g.arcTo((x + w) * M, y * M, (x + w) * M, (y + h) * M, r * M); g.arcTo((x + w) * M, (y + h) * M, x * M, (y + h) * M, r * M); g.arcTo(x * M, (y + h) * M, x * M, y * M, r * M); g.arcTo(x * M, y * M, (x + w) * M, y * M, r * M); g.closePath(); }
 function haVorne(g, x, jahr, logo) {
   const M = HA_MM, W = HA_K.w, H = HA_K.h;
-  g.save(); haRund(g, 0, 0, W, H, 3); g.clip();
+  g.save(); g.beginPath(); g.rect(0, 0, W * M, H * M); g.clip(); // 2.704.0: eckig – ein gerader Schnitt zwischen den Karten
   const gr = g.createLinearGradient(0, 0, 0, H * M); gr.addColorStop(0, "#fffaf0"); gr.addColorStop(1, "#fff4dc"); g.fillStyle = gr; g.fillRect(0, 0, W * M, H * M);
   g.fillStyle = "#741521"; g.fillRect(0, 0, W * M, 15.5 * M); // Kopf
   if (logo) g.drawImage(logo, 3 * M, 3 * M, 9.5 * M * (logo.width / logo.height || 1.4), 9.5 * M);
@@ -43002,9 +43035,10 @@ function haVorne(g, x, jahr, logo) {
   g.font = `800 ${2.8 * M}px ${HA_SCHRIFT}`; const nt = `Nr. ${x.nr}`, nw = g.measureText(nt).width / M + 3.2; g.fillStyle = "#c9a46a"; haRund(g, 17.5 + sw + 1.5, 8.6, nw, 4, 1.5); g.fill();
   haText(g, nt, 17.5 + sw + 1.5 + nw / 2, 11.6, 2.8, { gew: 800, aus: "center" });
   // QR-Code oben rechts auf Weiß
-  g.fillStyle = "#fff"; g.fillRect((W - 17) * M, 0, 17 * M, 15.5 * M); g.fillStyle = "#c9a46a"; g.fillRect((W - 17) * M, 0, .4 * M, 15.5 * M);
+  // 2.704.0: weißes QR-Feld 1 mm vom oberen und rechten Rand eingerückt – am Schnitt liegt dann Rot an Rot
+  g.fillStyle = "#fff"; g.fillRect((W - 17.5) * M, 1 * M, 16.5 * M, 14.5 * M); g.fillStyle = "#c9a46a"; g.fillRect((W - 17.5) * M, 1 * M, .4 * M, 14.5 * M);
   const q = qrcode(0, "M"); q.addData(`Koecheclub Werne Haendler-Ausweis ${jahr} Nr ${x.nr} Code ${x.code}`); q.make();
-  const n = q.getModuleCount(), qs = 13, mod = qs / n, qx = W - 15, qy = 1.25; g.fillStyle = "#000"; // mit weißem Rand rundum (Ruhezone)
+  const n = q.getModuleCount(), qs = 12.5, mod = qs / n, qx = W - 15, qy = 2; g.fillStyle = "#000"; // mit weißem Rand rundum (Ruhezone)
   for (let r = 0; r < n; r++) for (let s2 = 0; s2 < n; s2++) if (q.isDark(r, s2)) g.fillRect(Math.floor((qx + s2 * mod) * M), Math.floor((qy + r * mod) * M), Math.ceil(mod * M), Math.ceil(mod * M));
   // Titel, Markt, Felder
   haText(g, "HÄNDLER-AUSWEIS", W / 2, 23.4, 6, { gew: 900, farbe: "#741521", aus: "center", max: W - 8 });
@@ -43014,15 +43048,16 @@ function haVorne(g, x, jahr, logo) {
   // „NICHT ÜBERTRAGBAR“ als Stempel, Gültigkeit, Stempelfeld
   g.save(); g.translate(6 * M, 47.4 * M); g.rotate(-5 * Math.PI / 180); g.font = `900 ${2.9 * M}px ${HA_SCHRIFT}`; const st = "NICHT ÜBERTRAGBAR", stw = g.measureText(st).width / M + 3.2;
   g.fillStyle = "rgba(255,255,255,.65)"; haRund(g, 0, -3.6, stw, 4.6, 1); g.fill(); g.strokeStyle = "#c1121f"; g.lineWidth = .5 * M; g.stroke(); haText(g, st, 1.6, -.4, 2.9, { gew: 900, farbe: "#c1121f" }); g.restore();
-  haText(g, HA.datum || `Gültig nur zum Weihnachtsmarkt Werne ${jahr}`, 4, 51.4, 1.85, { farbe: "#6b4a3a", max: 62 });
+  haText(g, HA.datum || `Gültig nur zum Weihnachtsmarkt Werne ${jahr}`, 4, 50.6, 1.85, { farbe: "#6b4a3a", max: 62 });
   g.setLineDash([.9 * M, .6 * M]); g.strokeStyle = "#b08a6a"; g.lineWidth = .25 * M; g.beginPath(); g.arc((W - 10) * M, (H - 8.3) * M, 5.75 * M, 0, 7); g.stroke(); g.setLineDash([]);
   haText(g, "Stempel", W - 10, H - 8.6, 1.7, { farbe: "#b08a6a", aus: "center" }); haText(g, "Köcheclub", W - 10, H - 6.5, 1.7, { farbe: "#b08a6a", aus: "center" });
-  g.restore();
-  g.strokeStyle = "#c9a46a"; g.lineWidth = .25 * M; haRund(g, .12, .12, W - .24, H - .24, 3); g.stroke();
+  g.restore(); // 2.704.0: kein Goldrand am Kartenrand (läge genau auf dem Schnitt)
+  g.fillStyle = "#741521"; g.fillRect(0, (H - HA_K.streifen) * M, W * M + 1, HA_K.streifen * M + 2); // 2.704.0: Streifen unten – am Schnitt Rot an Rot (2 Bildpunkte über, die nächste Karte deckt sie)
 }
 function haHinten(g, x, jahr) {
   const M = HA_MM, W = HA_K.w, H = HA_K.h;
-  g.save(); haRund(g, 0, 0, W, H, 3); g.clip(); g.fillStyle = "#fffaf0"; g.fillRect(0, 0, W * M, H * M); g.fillStyle = "#741521"; g.fillRect(0, 0, W * M, 3 * M);
+  g.save(); g.beginPath(); g.rect(0, 0, W * M, H * M); g.clip(); g.fillStyle = "#fffaf0"; g.fillRect(0, 0, W * M, H * M); g.fillStyle = "#741521"; g.fillRect(0, 0, W * M, 3 * M);
+
   haText(g, "Händlerrabatt am Köcheclub-Stand", W / 2, 9, 3.5, { gew: 900, farbe: "#741521", aus: "center", max: W - 6 });
   const rb = HA.rabatt ? `${HA.rabatt} %` : "____ %"; g.font = `800 ${4.4 * M}px ${HA_SCHRIFT}`; const rw = g.measureText(rb).width / M; g.font = `400 ${2.8 * M}px ${HA_SCHRIFT}`; const tw = g.measureText(" auf Speisen & Getränke").width / M;
   const rx = W / 2 - (rw + tw) / 2; haText(g, rb, rx, 14.6, 4.4, { gew: 800, farbe: "#c1121f" }); haText(g, " auf Speisen & Getränke", rx + rw, 14.6, 2.8);
@@ -43030,8 +43065,9 @@ function haHinten(g, x, jahr) {
     ["", "Gültig nur ausgefüllt und mit Stempel des Köcheclubs."], ["", "Bei Missbrauch wird der Ausweis eingezogen."], ["", "Nicht mit anderen Aktionen kombinierbar, keine Barauszahlung."]];
   regeln.forEach(([fett, rest], i) => { const y = 20.6 + i * 3.6; g.fillStyle = "#741521"; g.beginPath(); g.arc(4.6 * M, (y - .8) * M, .5 * M, 0, 7); g.fill();
     let xx = 6.4; if (fett) xx += haText(g, fett, xx, y, 2.3, { gew: 800 }); haText(g, rest, xx, y, 2.3, { max: W - xx - 3 }); });
-  haText(g, `Köcheclub Werne · Weihnachtsmarkt ${jahr} · Nr. ${x.nr} · Prüfcode ${x.code}`, W / 2, H - 2.4, 1.9, { farbe: "#8a6a5a", aus: "center", max: W - 6 });
-  g.restore(); g.strokeStyle = "#c9a46a"; g.lineWidth = .25 * M; haRund(g, .12, .12, W - .24, H - .24, 3); g.stroke();
+  haText(g, `Köcheclub Werne · Weihnachtsmarkt ${jahr} · Nr. ${x.nr} · Prüfcode ${x.code}`, W / 2, H - 3.3, 1.9, { farbe: "#8a6a5a", aus: "center", max: W - 6 });
+  g.restore(); // 2.704.0: kein Goldrand mehr am Kartenrand (läge genau auf dem Schnitt)
+  g.fillStyle = "#741521"; g.fillRect(0, (H - HA_K.streifen) * M, W * M + 1, HA_K.streifen * M + 2); // 2.704.0: Streifen unten (wie vorne)
 }
 function druckHaendlerListe(p) {
   const zeilen = (p?.liste || []).map((x) => `<tr><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td></td><td></td><td></td><td></td></tr>`).join("");

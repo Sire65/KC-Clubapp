@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.704.0 – 2026-10-27 – Händler-Ausweise: ein Schnitt zwischen den Karten
+KC-CLUB-HAENDLERAUSWEIS-SCHNITT: Scheckkarten-Maß 85,6 × 54 mm, Karte an Karte (erst 4 Ränder, dann 1 Schnitt senkrecht + 4 waagerecht), eckig, feine hellgraue Schneidemarken nur im Rand, Kontrollmaß 50 mm, 1,5-mm-Streifen unten in Weinrot (Schnitt Rot an Rot), QR-Feld eingerückt. Neu: 🎯 Probeblatt zum Prüfen des Duplex-Drucks.
+
 ## 2.703.0 – 2026-10-27 – 🗂️ Karteikarten 4.5: erste Seite passt auf ein Blatt
 KC-CLUB-KASSE-KARTEIKARTEN: Fund Hansi („die erste Seite passt nicht auf eine Seite und hat unten keinen Rand – nur die erste anpassen“). Technik → Freigegebene Programme → 🗂️ Kassen-Training Karteikarten zeigt jetzt **Version 4.5** (`dokumente/Kassen-Training_Karteikarten_V4.5.pdf`): Anleitung auf Seite 1 etwas kompakter, unten wieder gut 15 mm Rand. Seiten 2–20 (Karten) pixelgleich mit 4.4. Version 4.4 bleibt als Datei unverändert (Regel 17).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.

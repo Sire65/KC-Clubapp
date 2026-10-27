@@ -7627,6 +7627,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/DOKUMENTE\.filter\(\(d\) => !d\.nur \|\| d\.nur\(\)\)\.filter\(\(d\) => !d\.ort\)/.test(html) && /&& !d\.ort && dokNeu\(d\)/.test(html), "Technik-Dokumente nicht doppelt unter Meine Dokumente");
   assert.ok(/onclick="zurueck\(dokZurueckZiel\(\)\)"/.test(seite) && /id="dokaZurueck" onclick="zeige\(dokZurueckZiel\(\)\)"/.test(seite) && /ort === "technik" \? "programme"/.test(html), "‹ Zurück führt zu Freigegebene Programme");
 }
+// 2.704.0 KC-CLUB-HAENDLERAUSWEIS-SCHNITT (Wunsch Hansi „Standardmaß behalten, zwischen den Karten nur ein Schnitt; sorgfältige, unauffällige Schneidemarken“)
+{
+  assert.ok(/HA_K = \{ w: 85\.6, h: 54, gx: 0, gy: 0, streifen: 1\.5 \}/.test(html), "Scheckkarte 85,6 × 54 mm, Karte an Karte");
+  assert.ok(/function haMarken\(g, x0, y0, L, T\)/.test(html) && /g\.strokeStyle = "#9a9a9a"; g\.lineWidth = \.15 \* M/.test(html) && /Kontrollmaß: genau 5 cm/.test(html), "feine graue Marken nur im Rand, Kontrollmaß");
+  assert.ok(/if \(!hinten\) haMarken\(g, x0, y0, L, T\);/.test(html) && !/haRund\(g, 0, 0, W, H, 3\); g\.clip\(\)/.test(html), "eckig, Marken nur vorne");
+  assert.ok(/function haProbe\(hinten\)/.test(html) && /data-a="probe">🎯 Probeblatt/.test(html), "Probeblatt Duplex");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
