@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.707.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.708.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8625,7 +8625,8 @@ const entwurfSchluessel = () => "kc_club_entwurf_" + (ICH?.person_id || "x");
 function entwurfAlle() { try { const d = JSON.parse(localStorage.getItem(entwurfSchluessel()) || "{}"); return d && typeof d === "object" ? d : {}; } catch { return {}; } }
 let entwurfTimer = null;
 function entwurfMerken() {
-  if (!chatId) return; const id = chatId;
+  if (!chatId) return neuEntwurfMerken(); // 2.708.0 KC-CLUB-NEU-ENTWURF: auch neue Nachrichten (noch ohne Chat) merken
+  const id = chatId;
   clearTimeout(entwurfTimer);
   entwurfTimer = setTimeout(() => {
     const d = entwurfAlle(), t = $("text").value;
@@ -8668,6 +8669,51 @@ function sprungHinweisZeigen() {
   const ziele = [...t.value.matchAll(SPRUNG_RE)].map((m) => sprungDef(m[1])).filter(Boolean);
   h.classList.toggle("versteckt", !ziele.length);
   h.textContent = ziele.length ? `🔘 Wird nach dem Senden als Knopf angezeigt: ${ziele.map((z) => `„${z.sym} ${z.t}“`).join(", ")}` : "";
+}
+// ---------- 2.708.0 KC-CLUB-NEU-ENTWURF (Fund Hansi 27.10.2026 „Nachricht vorbereitet, kurz rausgegangen – jetzt finde ich sie nicht mehr“):
+// eine NEUE Nachricht (Empfänger gewählt, noch kein Chat) lebte nur im Speicher – schloss das Handy die App im Hintergrund, war alles weg.
+// Jetzt: Empfänger, Betreff und Text bleiben auf diesem Gerät (wie der Entwurf je Chat), 14 Tage. Beim nächsten „Neue Nachricht“ und oben in der
+// Chat-Liste: „✏️ Angefangene Nachricht an … fortsetzen“. Nach dem Senden oder „Verwerfen“ ist er weg. Nie auf dem Server, nie der Test an mich.
+const neuEntwurfSchluessel = () => entwurfSchluessel() + "_neu", NEU_ENTWURF_TAGE = 14;
+function neuEntwurfMerken() {
+  const e = neuEntwurf?.empfaenger; if (!e || empfTest()) return;
+  clearTimeout(entwurfTimer);
+  entwurfTimer = setTimeout(() => {
+    const t = $("text")?.value || "";
+    try { if (t.trim()) localStorage.setItem(neuEntwurfSchluessel(), JSON.stringify({ e, b: neuEntwurf?.betreff || "", t: t.slice(0, 4000), am: Date.now() })); else localStorage.removeItem(neuEntwurfSchluessel()); } catch {}
+  }, 400);
+}
+function neuEntwurfHolen() {
+  try { const d = JSON.parse(localStorage.getItem(neuEntwurfSchluessel()) || "null");
+    if (d && d.e && String(d.t || "").trim() && Date.now() - Number(d.am || 0) < NEU_ENTWURF_TAGE * 86400000) return d;
+    if (d) localStorage.removeItem(neuEntwurfSchluessel()); } catch {}
+  return null;
+}
+function neuEntwurfWeg() { try { localStorage.removeItem(neuEntwurfSchluessel()); } catch {} }
+function neuEntwurfAn(d) {
+  if (d.e.alle) return "alle Mitglieder";
+  const n = (d.e.personen || []).map((p) => MITGLIEDER?.find((m) => m.person_id === p)?.name?.split(" ")[0]).filter(Boolean);
+  const z = (d.e.personen || []).length + (d.e.aemter || []).length;
+  return n.length && n.length <= 3 ? n.join(", ") : `${z} ${z === 1 ? "Person" : "Personen"}`;
+}
+function neuEntwurfKopf() {
+  const d = neuEntwurfHolen(); if (!d) return "";
+  return `<div class="karte bu-tipp" style="margin-bottom:8px">✏️ <b>Angefangene Nachricht</b> an ${esc(neuEntwurfAn(d))}${d.b ? ` · „${esc(d.b)}“` : ""}<br><small class="hinweis">${esc(d.t.slice(0, 80))}${d.t.length > 80 ? " …" : ""}</small>
+    <div class="knoepfe" style="margin-top:6px"><button class="knopf klein haupt" onclick="neuEntwurfFortsetzen()">✏️ Fortsetzen</button><button class="knopf klein" onclick="neuEntwurfVerwerfen()">🗑️ Verwerfen</button></div></div>`;
+}
+async function neuEntwurfFortsetzen() {
+  const d = neuEntwurfHolen(); if (!d) return neueNachricht(true);
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  empfWahl = { personen: [], aemter: [], alle: false, vorstand: false, ...d.e }; $("neuBetreff").value = d.b || ""; $("empfSuche").value = "";
+  zeige("neu"); empfListe(); await neuWeiter();
+  if (chatId) textVorbelegen(d.t); else $("text").value = d.t; // eine Person ohne Betreff → vorhandener Chat
+  $("text").dispatchEvent(new Event("input")); if (chatId) neuEntwurfWeg();
+  melde("✏️ Deine angefangene Nachricht ist wieder da – weiterschreiben und mit ➤ senden");
+}
+function neuEntwurfVerwerfen() {
+  const d = neuEntwurfHolen(); neuEntwurfWeg(); if (aktuelleAnsicht === "nachrichten") unterhLaden();
+  if (d) { melde("🗑️ Angefangene Nachricht verworfen – hier antippen: ↩️ Rückgängig"); const m = [...document.querySelectorAll(".meldung")].pop();
+    if (m) m.onclick = () => { m.remove(); try { localStorage.setItem(neuEntwurfSchluessel(), JSON.stringify(d)); } catch {} if (aktuelleAnsicht === "nachrichten") unterhLaden(); }; }
 }
 function entwurfWeg(id) { const d = entwurfAlle(); if (!(id in d)) return; delete d[id]; try { localStorage.setItem(entwurfSchluessel(), JSON.stringify(d)); } catch {} }
 // ---------- KC-CLUB-NACH-UNTEN (1.12.0): ⬇️ nur, wenn man weit nach oben gescrollt hat ----------
@@ -33570,8 +33616,9 @@ async function unterhLaden() {
       : arch.length ? `<button class="uh-archiv-zeile" onclick="uhArchivAnsicht(true)"><span>📦 Archiviert</span><span class="hinweis">${arch.length} Chat${arch.length === 1 ? "" : "s"}</span>${archNeu ? `<span class="punkt">${archNeu}</span>` : ""}</button>` : "";
     // KC-CLUB-CHAT-KARTEI (2.191.0, Wunsch Hansi): Chats als Rollkartei – die vordere Karte ist schon „offen“ (letzte Nachrichten)
     uhKarteiKnopf(); $("unterhListe").classList.toggle("karte", !(rkAn("chats") && !UH.archivAnsicht && zeigen.length));
-    if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
-    $("unterhListe").innerHTML = archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
+    const neuKopf = UH.archivAnsicht ? "" : neuEntwurfKopf(); // 2.708.0 KC-CLUB-NEU-ENTWURF
+    if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = neuKopf + archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
+    $("unterhListe").innerHTML = neuKopf + archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
       <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div></div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
@@ -36023,9 +36070,16 @@ async function anlageTeilen(speichern) {
 
 let ONLINE_SICHTBAR = true; // KC-CLUB-ONLINEFILTER: sehe ich überhaupt, wer online ist? (Server: onlineSichtbar)
 async function mitgliederHolen() { const r = await api("mitglieder"); MITGLIEDER = r.mitglieder; MITGLIEDER_STAND = Date.now(); AEMTER = r.aemter; ONLINE_SICHTBAR = r.onlineSichtbar !== false; return r; }
-async function neueNachricht() {
+async function neueNachricht(ohneEntwurf = false) {
   await inkoChatFrage("neu"); // 2.153.0 KC-CLUB-INKOGNITO-CHAT
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  // 2.708.0 KC-CLUB-NEU-ENTWURF: angefangene neue Nachricht? → erst fragen
+  const nd = ohneEntwurf ? null : neuEntwurfHolen();
+  if (nd && await new Promise((ok) => { const zu = (v) => { f.remove(); ok(v); };
+    const f = dlgOeffnen(`<h3 class="dlg-kopf">✏️ Angefangene Nachricht</h3><p>Du hast eine Nachricht an <b>${esc(neuEntwurfAn(nd))}</b> angefangen${nd.b ? ` („${esc(nd.b)}“)` : ""}:</p>
+      <p class="hinweis" style="white-space:pre-wrap">${esc(nd.t.slice(0, 200))}${nd.t.length > 200 ? " …" : ""}</p>
+      <div class="knoepfe"><button class="knopf haupt" data-a="ja">✏️ Fortsetzen</button><button class="knopf" data-a="nein">✉️ Neue Nachricht <small>(Entwurf bleibt)</small></button></div>`, () => zu(false));
+    f.querySelector('[data-a="ja"]').onclick = () => zu(true); f.querySelector('[data-a="nein"]').onclick = () => zu(false); })) return neuEntwurfFortsetzen();
   empfWahl = { personen: [], aemter: [], alle: false, vorstand: false }; $("neuBetreff").value = ""; $("empfSuche").value = "";
   zeige("neu"); empfListe(); neuGruppenZeigen("neuGruppen", true);
 }
@@ -36940,7 +36994,7 @@ async function senden() {
     HAKEN_SEIT = Date.now(); // 2.367.0 KC-CLUB-HAKEN-SCHNELL: Zustell-Haken eine Minute lang zügig nachsehen
     const empfIds = chatId ? (CHAT?.teilnehmer || []).map((t) => t.person_id) : [...(neuEntwurf?.empfaenger?.personen || [])];
     lvZurueck(); // KC-CLUB-LINK-VORSCHAU
-    if (chatId) entwurfWeg(chatId); clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN / -VERSANDART
+    if (chatId) entwurfWeg(chatId); else neuEntwurfWeg(); clearTimeout(entwurfTimer); zustellUmschalten(false); versandZurueck(); slZurueck(); // KC-CLUB-ENTWURF / -RUHIGE-EINGABE / -WICHTIG / -SELBSTLOESCHEN / -VERSANDART
     if (VN.an) vnUmschalten(false); // 2.517.0 KC-CLUB-VERSCHLUESSELT: 🔒 gilt nur für diese Nachricht
     $("text").value = ""; $("text").style.height = "auto"; entwurfMarkeZeigen(); anlagen = []; EINMAL = false; chipsZeigen(); neuEntwurf = null; naAntwortWeg(); NA.erw.clear(); clearTimeout(TIPP.nach); TIPP = { zuletzt: 0, id: null, nach: null }; // Server beendet „schreibt …“
     spur(daten.anlagen.length ? "gesendet_anlage" : "gesendet", r?.id || chatId); // KC-CLUB-SPUR: nur „gesendet“ + Unterhaltung, nie der Text

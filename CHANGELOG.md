@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.708.0 – 2026-10-26 – Angefangene Nachrichten gehen nicht mehr verloren
+- ✏️ Eine neue, noch nicht gesendete Nachricht (Empfänger, Betreff, Text) bleibt jetzt auf dem Gerät erhalten – auch wenn das Handy die App im Hintergrund schließt. „Neue Nachricht“ und die Chat-Liste bieten „✏️ Fortsetzen“ oder „🗑️ Verwerfen“ an (KC-CLUB-NEU-ENTWURF).
+
 ## 2.707.0 – 2026-10-26 – Mitgliederliste „Alle Daten“
 - 📋 Neue Mitgliederliste „Alle Daten“ im Büro: Handy, Festnetz, E-Mail und Anschrift aller aktiven Mitglieder in einer Tabelle, quer gedruckt, als vertraulich gekennzeichnet (KC-CLUB-ML-ALLE).
 
