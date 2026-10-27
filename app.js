@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.713.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.714.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20190,13 +20190,17 @@ function jzbFestMalen(c) {
 // „Sim-Jü aus“, Sparmodus) kommt sie von unten ins Bild mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen“ (Änderung Hansi, 24.10.2026). Nach dem Zeigen merkt der Server es (rose_erhalten) – klappt das nicht, merkt es dieses Gerät und meldet es beim nächsten Start.
 // Sparmodus oder „weniger Bewegung“: die Rose steht gleich da, ohne Flug. Nie zweimal auf demselben Gerät.
 // KC-CLUB-ROSE-ANFANG
-const ROSE_KEY = "kc_club_rose", ROSE_MS = 20000; // 2.653.0 KC-CLUB-ROSE-20S (Wunsch Hansi): 20 Sekunden statt 3 Minuten
+const ROSE_KEY = "kc_club_rose", ROSE_MS = 4500; // 2.714.0: ≈5 s (Takt 5 s – knapp darunter, sonst erst beim übernächsten Takt) // 2.653.0 KC-CLUB-ROSE-20S (Wunsch Hansi): 20 Sekunden statt 3 Minuten
+// 2.714.0 KC-CLUB-ROSE-UEBERALL (Fund Hansi 27.10.2026 „sonst ist Sim-Jü vorbei und sie haben keine Rose“): Christina und Reinhilde öffnen die App
+// über die Benachrichtigung direkt im Chat/Termin und kamen nie 20 s auf die Startseite. Jetzt: 5 s ruhiger Bildschirm auf JEDER Seite (kein offenes
+// Fenster, in den letzten 4 s nicht getippt – ein Schreibfeld, das nur den Fokus hat, blockiert nicht mehr). Außerhalb der Startseite die Gruß-Variante.
 const ROSE = { ms: 0, letzt: 0, gezeigt: false };
+let ROSE_TIPP = 0; try { document.addEventListener("keydown", () => { ROSE_TIPP = Date.now(); }, true); document.addEventListener("input", () => { ROSE_TIPP = Date.now(); }, true); } catch {}
 const roseLs = () => { try { return JSON.parse(localStorage.getItem(ROSE_KEY) || "null"); } catch { return null; } };
 const roseLsSetzen = (w) => { try { localStorage.setItem(ROSE_KEY, JSON.stringify(w)); } catch {} };
 const roseSzeneDa = () => !!(JZB.cv?.isConnected && JZB.saison === "kirmes" && JZB.imBild && JZB.w && jzSimJueZeit() && !SPAR?.an && jzbKirmesVariante() === "riesenrad"); // 2.654.0: nur wenn die Schießbude im Bild ist
 function roseFrei() {
-  const a = document.activeElement, tippt = !!a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable);
+  const tippt = Date.now() - ROSE_TIPP < 4000; // 2.714.0: gerade getippt (nicht bloß Fokus im Schreibfeld)
   return !tippt && !document.querySelector(".blatt:not(.versteckt)") && !$("roseSchicht") && !RG?.an && !ES.offen;
 }
 function roseMelden() { // erst wenn sie gezeigt wurde; bei Fehler beim nächsten Start noch einmal
@@ -20207,10 +20211,10 @@ function roseTakt() {
   const jetzt = Date.now(), d = ROSE.letzt ? Math.min(10000, jetzt - ROSE.letzt) : 0; ROSE.letzt = jetzt;
   if (!INIT?.rose || INIT._offline || !ICH || ROSE.gezeigt) return;
   const s = roseLs(); if (s && s.pid === ICH.person_id) { ROSE.gezeigt = true; return roseMelden(); } // auf diesem Gerät schon gezeigt
-  if (document.hidden || aktuelleAnsicht !== "start") return; // nur sichtbare Startseite zählt
+  if (document.hidden) return; // 2.714.0: jede sichtbare Seite zählt (vorher nur die Startseite)
   if ((ROSE.ms += d) < ROSE_MS || !roseFrei()) return; // nicht stören – warten, bis alles frei ist
   ROSE.gezeigt = true; roseLsSetzen({ pid: ICH.person_id, am: new Date().toISOString(), gemeldet: false });
-  roseZeigen(ICH.vorname || String(ICH.name || "").split(" ")[0] || "", roseSzeneDa() ? roseQuelle() : null); roseMelden(); // ohne Szene: Gruß-Variante
+  roseZeigen(ICH.vorname || String(ICH.name || "").split(" ")[0] || "", aktuelleAnsicht === "start" && roseSzeneDa() ? roseQuelle() : null); roseMelden(); // ohne Szene: Gruß-Variante
 }
 setInterval(() => { try { roseTakt(); } catch {} }, 5000);
 function roseQuelle() { // Mitte der Schießbude im Kopfbild (siehe jzbSchiessbudeMalen)
