@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.705.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.706.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -30964,8 +30964,15 @@ function buNeuOeffnen() {
   chatOeffnen(u.id); // springt zur ersten ungelesenen Nachricht
 }
 function buNeuWeg() { BNN.liste.forEach((u) => BNN.weg.add(bnnSchluessel(u))); buNeuZeigen([]); }
+// KC-CLUB-BUERO-SCHNELL (27.10.2026, Fund Hansi „großer Hänger, Sanduhr läuft lange“ beim Öffnen des Büros, während der Spiegel-Welle > 20 s):
+// Das Büro wartete mit der Sanduhr über dem ganzen Bildschirm, bis ALLE fünf Teile da waren. Jetzt ohne Sanduhr (die Seite zeigt selbst „Wird geladen …“),
+// und jeder Teil erscheint, sobald er da ist – Sitzungen/Eingang zuerst, Nachher, Feste, Freud & Leid und Änderungen kommen nach. Gleiche Abfragen.
+const BU_STILL = { still: true };
 async function buLaden() {
-  try { [BU.start] = await Promise.all([api("buero_start"), buNachherListe(), buFesteListe(BU_F?.tage || 60), flLaden(), ICH?.vorstand || ICH?.admin ? aeEingangLaden().catch(() => null) : null]); } catch (e) { $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; return; }
+  const nachzeichnen = () => { if (aktuelleAnsicht === "buero" && BU.sicht === "start") buZeigen(); };
+  const nach = (p) => Promise.resolve(p).then(nachzeichnen, () => {});
+  nach(buNachherListe(BU_STILL)); nach(buFesteListe(BU_F?.tage || 60, BU_STILL)); nach(flLaden(BU_STILL)); if (ICH?.vorstand || ICH?.admin) nach(aeEingangLaden(BU_STILL));
+  try { BU.start = await api("buero_start", {}, BU_STILL); } catch (e) { if (BU.start) return; $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; return; }
   buZeigen();
 }
 function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
@@ -32151,7 +32158,7 @@ function buKBrief() {
 // Nutzt das vorhandene Protokoll (Anlagen, Aufgaben, Veröffentlichen mit Einspruchsfrist): die Büro-Seite rendert #prAnlagen/#prAufgaben,
 // damit die bekannten Funktionen (protokollDateien, prNeuLaden, aufgabeZeile) hier genauso arbeiten.
 let BU_N = { liste: null, t: null, wer: new Set(), was: "", bis: "" };
-async function buNachherListe() { try { const r = await api("buero_nachher"); BU_N.liste = Array.isArray(r?.sitzungen) ? r.sitzungen : []; } catch { BU_N.liste = []; } return BU_N.liste; }
+async function buNachherListe(opt = {}) { try { const r = await api("buero_nachher", {}, opt); BU_N.liste = Array.isArray(r?.sitzungen) ? r.sitzungen : []; } catch { BU_N.liste = []; } return BU_N.liste; }
 // Hinweis auf der Büro-Startseite: was nach der letzten Sitzung noch fehlt
 function buNachherTipp() {
   const t = (BU_N.liste || []).find((x) => new Date(x.beginn) < Date.now() && Date.now() - new Date(x.beginn) < 21 * 86400000); if (!t) return null;
@@ -32238,8 +32245,8 @@ async function buNMitteilen(knopf) {
 // ---------- KC-CLUB-BUERO-FESTE (1.29.0, Wunsch Hansi): Geburtstage & Jubiläen im Büro – gratulieren per Nachricht, Brief oder Pinnwand ----------
 // Geburtstage nur, wer sie freigegeben hat, und nur Tag/Monat (wie überall in der App); Jubiläen aus dem Eintrittsdatum im KC Manager.
 let BU_F = null;
-async function buFesteListe(tage = 60) {
-  try { const r = await api("buero_feste", { tage }); BU_F = r && Array.isArray(r.geburtstage) && Array.isArray(r.jubilaeen) ? r : null; } catch { BU_F = null; } // unvollständig = nichts anzeigen statt Absturz
+async function buFesteListe(tage = 60, opt = {}) {
+  try { const r = await api("buero_feste", { tage }, opt); BU_F = r && Array.isArray(r.geburtstage) && Array.isArray(r.jubilaeen) ? r : null; } catch { BU_F = null; } // unvollständig = nichts anzeigen statt Absturz
   return BU_F;
 }
 const buFTag = (f) => f.tage === 0 ? "heute 🎉" : f.tage === 1 ? "morgen" : f.tage === -1 ? "gestern" : f.tage < 0 ? `vor ${-f.tage} Tagen` : `${fTagDp.format(new Date(f.datum + "T12:00:00Z"))} · in ${f.tage} Tagen`;
@@ -32413,7 +32420,7 @@ function druckMitgliederliste() {
 // ---------- KC-CLUB-FREUD-LEID (1.32.0, Wunsch Hansi): Freud & Leid – nur Clubleitung ----------
 // Fall anlegen in drei Schritten (Was? – Wen? – Was ist zu tun?), Checkliste aus der Server-Registry mit Wer/Bis wann vorbelegt.
 let FL = { d: null, neu: null, fall: null };
-async function flLaden() { try { const r = await api("fl_liste"); FL.d = r && Array.isArray(r.faelle) ? r : null; } catch { FL.d = null; } return FL.d; }
+async function flLaden(opt = {}) { try { const r = await api("fl_liste", {}, opt); FL.d = r && Array.isArray(r.faelle) ? r : null; } catch { FL.d = null; } return FL.d; }
 function buFreudLeid() { BU.sicht = "fl"; buZeigen(); Promise.all([flLaden(), BU_F ? null : buFesteListe(60)]).then(() => { if (aktuelleAnsicht === "buero" && BU.sicht === "fl") buZeigen(); }); window.scrollTo(0, 0); } // 2.129.0: Geburtstage gleich mit laden
 const flArt = (k) => FL.d?.arten?.[k] || { sym: "🤍", t: k, gruppe: "freude" };
 const flLeid = (f) => flArt(f.art).gruppe === "leid";
@@ -40902,7 +40909,7 @@ async function aeZurueck(id) {
 }
 // ---- Eingang der Clubleitung ----
 // 2.22.19: Zahl = was auf mich wartet (noch nicht zur Kenntnis genommen, oder ich darf freigeben)
-async function aeEingangLaden() { AE.eingang = await api("aenderungen_liste", {}); AE.offen = AE.eingang.meldungen.filter((x) => x.wartetAufMich ?? x.status === "offen").length; }
+async function aeEingangLaden(opt = {}) { AE.eingang = await api("aenderungen_liste", {}, opt); AE.offen = AE.eingang.meldungen.filter((x) => x.wartetAufMich ?? x.status === "offen").length; }
 async function aeEingang() {
   if (!ICH?.vorstand && !ICH?.admin) return aeStart();
   blattAuf("aeEingBlatt", '<h3 style="margin:0">📬 Änderungen</h3><p class="hinweis">⏳ Wird geladen …</p>');
