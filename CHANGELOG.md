@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.702.0 – 2026-10-27 – 🗂️ Karteikarten zum Kassen-Training unter Technik
+KC-CLUB-KASSE-KARTEIKARTEN: Wunsch Hansi („Karteikarten der Kassenschulung in der neuesten Version in die Club-App unter Technik“). Register **Technik → 💻 Freigegebene Programme** hat neben der Kassen-Schulung die Kachel **🗂️ Kassen-Training Karteikarten** (Version 4.4, 74 Karten, `dokumente/Kassen-Training_Karteikarten_V4.4.pdf`). Sie öffnet die PDF in der App-Anzeige mit 🖨️ Drucken, 📤 Teilen/Speichern und ↗ PDF-Betrachter; ‹ Zurück führt wieder zu „Freigegebene Programme“. Das Dokument steht im Dokumenten-Register (`DOKUMENTE`, `ort: "technik"`) und wird darum nicht zusätzlich unter „Meine Dokumente“ gezeigt. Version 4.4 der Karteikarten: Seiten exakt A4 (Duplexdruck), 6 mm Freirand in jeder Karte.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.701.0 – 2026-10-27 – Fallblatt-Uhr leichter finden
 KC-CLUB-EINST-SUCHE-EINFACH: „🔍 Einstellung suchen“ findet auch Einstellungen in Bereichen, die in der einfachen Ansicht ausgeblendet sind, und blendet sie ein. Fallblatt-Uhr (Countdown in der Termin-Kachel) mit den Wörtern Fallblatt/Falluhr/Blätteruhr in Suche, Lupe und Twinkey-Hilfe.
 

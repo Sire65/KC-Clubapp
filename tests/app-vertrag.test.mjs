@@ -2698,7 +2698,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/id="v-dokansicht"/.test(html) && /"start", "dokumente", "dokansicht",/.test(html), "Ansicht dokansicht fehlt");
   const v = html.slice(html.indexOf('<section id="v-dokansicht"'), html.indexOf("</section>", html.indexOf('<section id="v-dokansicht"')));
-  assert.ok(/onclick="zeige\('dokumente'\)"/.test(v) && /onclick="dokDrucken\(\)"/.test(v) && /onclick="dokTeilen\(\)"/.test(v) && /onclick="dokExtern\(\)"/.test(v), "Zurück/Drucken/Teilen/Extern fehlen");
+  // 2.702.0: Zurück über dokZurueckZiel() – für normale Dokumente weiter „Meine Dokumente“, für Technik-Dokumente „Freigegebene Programme“
+  assert.ok(/onclick="zeige\(dokZurueckZiel\(\)\)"/.test(v) && /: "dokumente"\);/.test(html.slice(html.indexOf("const dokZurueckZiel"))) && /onclick="dokDrucken\(\)"/.test(v) && /onclick="dokTeilen\(\)"/.test(v) && /onclick="dokExtern\(\)"/.test(v), "Zurück/Drucken/Teilen/Extern fehlen");
   assert.ok(/  dokAnzeigen\(d, ausHistorie\);/.test(html) && /function dokExtern\(\) \{ const d = dokAktuell\(\); if \(d\) extOeffnen\(dokUrl\(d\)\); \}/.test(html), "Anzeige in der App bzw. alter Weg fehlt");
   assert.ok(/dokument: \{ bauen: \(\) => dokDruckSeite\(\) \}/.test(html) && /s\.randlos \? " margin: 0;" : ""/.test(html), "Druck über den Druck-Kern fehlt");
   assert.ok(/isEvalSupported: false/.test(html) && /PDFJS_BIB = "lib\/pdfjs\/pdf\.min\.js\?v=4\.10\.38"/.test(html), "pdf.js lokal und ohne eval");
@@ -7616,6 +7617,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(t && getComputedStyle\(d\)\.display === "none" && !d\.classList\.contains\("einfach-sichtbar"\)\) d\.classList\.add\("einfach-sichtbar", "such-sichtbar"\)/.test(html), "Suche blendet in der einfachen Ansicht versteckte Bereiche mit Treffer ein");
   assert.ok(/Fallblatt-Uhr \(Falluhr, Blätteruhr wie am Bahnhof\)/.test(seite) && /id: "fallblatt_countdown"/.test(html) && /"fallblatt falluhr fallblattuhr blätteruhr/.test(html), "Fallblatt-Uhr: Suche, Lupe und Twinkey finden sie");
 }
+// 2.702.0 KC-CLUB-KASSE-KARTEIKARTEN (Hansi „Karteikarten der Kassenschulung in der neuesten Version in die Club-App unter Technik“)
+{
+  assert.ok(/\{ id: "kasse-karteikarten", sym: "🗂️", t: "Kassen-Training Karteikarten", u: "[^"]*", datei: "dokumente\/Kassen-Training_Karteikarten_V4\.4\.pdf", ort: "technik" \}/.test(html), "Karteikarten 4.4 im Dokumenten-Register mit ort technik");
+  const pdf = fs.readFileSync(new URL("../dokumente/Kassen-Training_Karteikarten_V4.4.pdf", import.meta.url), "latin1");
+  const boxen = pdf.match(/\/MediaBox\s*\[[^\]]*\]/g) || [];
+  assert.ok(boxen.length === 20 && boxen.every((b) => b.replace(/\s+/g, " ").replace(/ \]$/, "]") === "/MediaBox [0 0 595.28 841.89]"), "Karteikarten-PDF: 20 Seiten, jede exakt A4 (sonst verweigern Drucker den Duplexdruck)");
+  assert.ok(/\{ id: "kasse-karteikarten", dok: "kasse-karteikarten" \}/.test(html) && /if \(p\.dok\) return dokOeffnen\(p\.dok\);/.test(html), "Kachel unter Technik → Freigegebene Programme öffnet das Dokument in der App");
+  assert.ok(/DOKUMENTE\.filter\(\(d\) => !d\.nur \|\| d\.nur\(\)\)\.filter\(\(d\) => !d\.ort\)/.test(html) && /&& !d\.ort && dokNeu\(d\)/.test(html), "Technik-Dokumente nicht doppelt unter Meine Dokumente");
+  assert.ok(/onclick="zurueck\(dokZurueckZiel\(\)\)"/.test(seite) && /id="dokaZurueck" onclick="zeige\(dokZurueckZiel\(\)\)"/.test(seite) && /ort === "technik" \? "programme"/.test(html), "‹ Zurück führt zu Freigegebene Programme");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9475,7 +9486,8 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   const o = html.slice(html.indexOf("async function anlageOeffnen("), html.indexOf("function anlageLinkZeigen("));
   assert.ok(o.indexOf('window.open("", "_blank")') < o.indexOf('await api("anlage_url"') && /anlageLinkZeigen\(r\.url, "Datei"\)/.test(o), "Fenster sofort beim Antippen, sonst Link-Knopf");
   assert.ok(/d\.datei instanceof Blob \? \{ data: new Uint8Array\(await d\.datei\.arrayBuffer\(\)\), isEvalSupported: false \}/.test(html) && /function dokAufraeumen\(\) \{[^}]*DOKA\.anl = null;/.test(html), "Dokument-Anzeige kann Anlagen, räumt auf");
-  assert.ok(/onclick="zurueck\(DOKA\.anl \? 'chat' : 'dokumente'\)"/.test(html), "Zurück führt in den Chat");
+  // 2.702.0: Ziel steht jetzt in dokZurueckZiel() (Chat-Anlage → Chat bleibt; dazu Technik-Dokumente → Freigegebene Programme)
+  assert.ok(/onclick="zurueck\(dokZurueckZiel\(\)\)"/.test(html) && /const dokZurueckZiel = \(\) => \(DOKA\.anl \? "chat" :/.test(html), "Zurück führt in den Chat");
 }
 // 2.166.0 KC-CLUB-ANLAGE-OEFFNEN (Hansi: „PDF öffnen sich nicht“): Diagnose je Schritt + zweiter Weg (Betrachter holt die Datei selbst)
 {

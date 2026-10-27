@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.701.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.702.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5318,7 +5318,7 @@ const HILFE = [
   { id: "haengt", thema: "technik", sym: "🧯", t: "Die App hängt oder zeigt Altes", x: "Zuerst die App ganz schließen und neu öffnen. Hilft das nicht: Register Technik → „🔄 Update prüfen“. Bleibt das Problem, schreib kurz über <b>💭 Feedback</b>, was passiert ist. Fehler beim Starten meldet die App außerdem von selbst an Hansi – nur Technik, keine Inhalte.", zeig: () => zeige("feedback") },
   { id: "mikrofon", thema: "technik", sym: "🎤", t: "Diktieren oder Sprachnachricht klappt nicht", x: "Fragt das Handy nach dem Mikrofon, tippe <b>„Zulassen“</b>. Wurde es einmal abgelehnt, zeigt die App beim nächsten Versuch eine Anleitung, wie du das Mikrofon in den Handy-Einstellungen wieder erlaubst. Am einfachsten: <b>🧭 Mikrofon-Assistent</b> – er prüft selbst, woran es liegt, und führt dich Schritt für Schritt (WhatsApp-Test, Handy-Einstellung, Browser-Einstellung – für Chrome, Samsung, Firefox, Opera, Edge und Safari).", zeig: () => mikroAssistent() },
   { id: "version", thema: "technik", sym: "ℹ️", t: "Welche Version habe ich?", x: () => `Du hast gerade <b>Version ${esc(APP_VERSION)}</b>. Mehr dazu unter ⚙️ → „ℹ️ App-Info“.`, zeig: () => einstiegHin("app") },
-  { id: "programme_frei", thema: "technik", sym: "💻", t: "Freigegebene Programme", x: "Programme, die der Club für dich freigeschaltet hat (z. B. die Kassen-Schulung), liegen im Register Technik unter „💻 Freigegebene Programme“.", zeig: () => zeige("programme") },
+  { id: "programme_frei", thema: "technik", sym: "💻", t: "Freigegebene Programme", x: "Programme, die der Club für dich freigeschaltet hat (z. B. die Kassen-Schulung und die 🗂️ Karteikarten zum Kassen-Training zum Ausdrucken), liegen im Register Technik unter „💻 Freigegebene Programme“.", zeig: () => zeige("programme") },
   // 🤝 Clubleben
   { id: "feedback", thema: "club", sym: "💭", t: "Wunsch oder Fehler melden", x: "Dir fehlt etwas, oder etwas stört? Über die Kachel <b>💭 Feedback</b> geht deine Meinung direkt an Hansi – viele Funktionen der App sind so entstanden.", zeig: () => zeige("feedback") },
   { id: "daten_geaendert", thema: "club", sym: "✏️", t: "Neue Anschrift oder Telefonnummer?", x: "Umgezogen oder eine neue Nummer? Im Register Meins → „✏️ Änderung melden“ meldest du es in wenigen Schritten. Die Meldung geht von selbst an die Richtigen im Club, und du bekommst Bescheid, sobald alles eingetragen ist.", zeig: () => aeStart() },
@@ -6661,7 +6661,7 @@ const SH_ABLAEUFE = {
   ],
   // 2.105.0 KC-CLUB-SCHRITT-HILFE-KOMPLETT: alle übrigen Seiten (SOS bleibt bewusst ohne)
   start: [{ id: "kachel", ruhe: true, ziel: "#raster", t: "Tippe eine Kachel an, um den Bereich zu öffnen. Unten in der Leiste: 🏠 Start, Termine, Nachrichten, Mitglieder und Mehr", fertig: () => false }],
-  dokansicht: [{ id: "oben", ruhe: true, ziel: "#dokaDrucken", t: "Oben: 🖨️ Drucken oder 📤 Teilen / Speichern. Mit ‹ geht es zurück zu Meine Dokumente", fertig: () => false }],
+  dokansicht: [{ id: "oben", ruhe: true, ziel: "#dokaDrucken", t: "Oben: 🖨️ Drucken oder 📤 Teilen / Speichern. Mit ‹ geht es zurück", fertig: () => false }],
   "programme": [{ id: "wahl", ruhe: true, ziel: "#progRaster", t: "Tippe ein Programm an, um es zu öffnen", fertig: () => false }],
   ueberblick: [{ id: "lesen", ruhe: true, ziel: "#ueInhalt", t: "Hier siehst du auf einen Blick, was die Club-App alles kann – zum Lesen und Ausdrucken", fertig: () => false }],
   standort: [{ id: "wahl", ruhe: true, ziel: "#stListe", t: "Die Standorte des Clubs – antippen zeigt Adresse und den Weg dorthin", fertig: () => false }],
@@ -15636,13 +15636,17 @@ const DOKUMENTE = [
   { id: "bedienung-club-app-v9", sym: "📖", t: "Bedienungsanleitung Club-App", u: "Version 9 · alles erklärt, mit Bildern · 63 Seiten", datei: "dokumente/Koecheclub-App_Anleitung_V9.pdf", neuBis: "2026-12-31" }, // 2.110.0: ersetzt V8 (KC-CLUB-ANLEITUNG-V9)
   // KC-CLUB-VERTRETUNG (2.2.0): Betriebsanleitung für die Admin-Vertretung + Notfall-Umschlag (ohne Zugangsdaten) – nur für Admins sichtbar
   { id: "vertretung", sym: "🛡️", t: "Vertretung des Admins", u: "Betriebsanleitung + Notfall-Umschlag zum Ausfüllen", datei: "dokumente/Vertretung_Admin_V1.pdf", nur: () => !!ICH?.admin },
+  // 2.702.0 KC-CLUB-KASSE-KARTEIKARTEN (Wunsch Hansi „Karteikarten der Kassenschulung in der neuesten Version in die Club-App unter Technik“):
+  // ort: "technik" = steht nicht in „Meine Dokumente“, sondern als Kachel unter Technik → 💻 Freigegebene Programme (PROGRAMME, dok:);
+  // Anzeige, Drucken, Teilen und ‹ Zurück wie bei allen Dokumenten. PDF exakt A4 für den Duplexdruck (Kasse, Karteikarten 4.4).
+  { id: "kasse-karteikarten", sym: "🗂️", t: "Kassen-Training Karteikarten", u: "Version 4.4 · 74 Karten · beidseitig drucken", datei: "dokumente/Kassen-Training_Karteikarten_V4.4.pdf", ort: "technik" },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.3 · 33 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf" }, // 2.233.1: ersetzt V4.2 (Kombi-Bilder halb Getränk/halb Essen, jede Kombi nur einmal, Sammelbestellung neu fotografiert) – V4.2 bleibt als Datei · 2.154.1: ersetzt V4.1 (Reklamation mit Bildern, Parken verbinden, halbe Portion, Gutschein-Teilzahlung)
 ];
 // Gesamtprüfung 3 (2.23.84): lange zusammengesetzte Wörter auf schmalen Kacheln an der richtigen Stelle trennen (weiches Trennzeichen)
 const kachelTrennen = (t) => String(t).replace(/(\p{L}{4,})(anleitung|rechner|schulung|übersicht|programme|einstellungen|verwaltung)/giu, "$1\u00AD$2");
 function dokumenteZeigen() {
   const da = (d) => !!(d.datei || d.v);
-  $("dokRaster").innerHTML = DOKUMENTE.filter((d) => !d.nur || d.nur()).map((d) => `<button class="kachel${da(d) ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
+  $("dokRaster").innerHTML = DOKUMENTE.filter((d) => !d.nur || d.nur()).filter((d) => !d.ort).map((d) => `<button class="kachel${da(d) ? "" : " bald"}" onclick="dokOeffnen('${d.id}')">
     <div class="sym">${d.sym}</div><b>${esc(kachelTrennen(d.t))}</b><small>${esc(d.u)}</small>${da(d) ? (dokNeu(d) ? '<span class="zahl">NEU</span>' : "") : '<span class="zahl">bald</span>'}</button>`).join("");
 }
 // KC-CLUB-DOK-NEU (1.61.0, Wunsch Hansi: „nicht mit zu vielen Meldungen überhäufen“): Neues Dokument (neuBis im Eintrag)
@@ -15651,7 +15655,7 @@ function dokumenteZeigen() {
 const DOK_GESEHEN = "kc_club_dok_gesehen";
 const dokGesehen = () => { try { return JSON.parse(lsLesen(DOK_GESEHEN) || "[]"); } catch { return []; } };
 function dokNeu(d) { return !!(d?.datei && d.neuBis && heuteIso() <= d.neuBis && !dokGesehen().includes(d.id)); }
-function dokHinweis() { return DOKUMENTE.find((d) => (!d.nur || d.nur()) && dokNeu(d)) || null; }
+function dokHinweis() { return DOKUMENTE.find((d) => (!d.nur || d.nur()) && !d.ort && dokNeu(d)) || null; }
 function dokErledigt(id) {
   const g = dokGesehen(); if (!g.includes(id)) { g.push(id); try { localStorage.setItem(DOK_GESEHEN, JSON.stringify(g.slice(-30))); } catch {} }
   if (typeof wichtigZeigen === "function" && INIT) { wichtigZeigen(); infoFelderAktualisieren(); }
@@ -15678,10 +15682,13 @@ function pdfjsHolen() {
 }
 const dokUrl = (d) => d.url ? d.url : d.datei instanceof Blob ? URL.createObjectURL(d.datei) : new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
 const dokAktuell = () => (DOKA.anl && DOKA.anl.id === DOKA.id ? DOKA.anl : DOKUMENTE.find((x) => x.id === DOKA.id) || null); // 2.165.0: auch Chat-Anlagen
+// 2.702.0: ‹ Zurück führt dorthin, wo das Dokument steht (Chat-Anlage → Chat, ort "technik" → Freigegebene Programme, sonst Meine Dokumente)
+const dokZurueckZiel = () => (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : "dokumente");
 async function dokAnzeigen(d, ausHistorie) {
   DOKA.id = d.id; DOKA.bilder = []; DOKA.fehler = ""; DOKA.anl = d.datei instanceof Blob || d.url ? d : null; const lauf = ++DOKA.lauf;
   $("dokaTitel").textContent = d.t; $("dokaSeiten").innerHTML = ""; $("dokaDrucken").disabled = true;
   $("dokaStand").textContent = "Wird geladen …";
+  $("dokaZurueck").textContent = dokZurueckZiel() === "programme" ? "‹ Zurück zu „Freigegebene Programme“" : "‹ Zurück zu „Meine Dokumente“";
   zeige("dokansicht", ausHistorie);
   try {
     const pdfjs = await pdfjsHolen();
@@ -15736,11 +15743,13 @@ function extOeffnen(url) { const w = window.open(url, "_blank"); if (w) w.opener
 // KC-CLUB-PROGRAMME (0.83.0, Wunsch Hansi): freigegebene KC-Programme als Kacheln – Registry, neue Programme nur hier eintragen
 const PROGRAMME = [
   { id: "kasse-schulung", sym: "🧾", t: "Kassen-Schulung", u: "Bilderrechner interaktiv üben", url: "https://sire65.github.io/Kasse/schulung/" },
+  { id: "kasse-karteikarten", dok: "kasse-karteikarten" }, // 2.702.0 KC-CLUB-KASSE-KARTEIKARTEN: Dokument aus DOKUMENTE (ort "technik") – Symbol, Titel, Datei stehen dort
 ];
+const programmEintrag = (p) => (p.dok ? { ...DOKUMENTE.find((d) => d.id === p.dok), id: p.id } : p);
 function programmeZeigen() {
-  $("progRaster").innerHTML = PROGRAMME.map((p) => `<button class="kachel" onclick="programmOeffnen('${p.id}')"><div class="sym">${p.sym}</div><b>${esc(kachelTrennen(p.t))}</b><small>${esc(kachelTrennen(p.u))}</small></button>`).join("");
+  $("progRaster").innerHTML = PROGRAMME.map(programmEintrag).map((p) => `<button class="kachel" onclick="programmOeffnen('${p.id}')"><div class="sym">${p.sym}</div><b>${esc(kachelTrennen(p.t))}</b><small>${esc(kachelTrennen(p.u))}</small></button>`).join("");
 }
-function programmOeffnen(id) { const p = PROGRAMME.find((x) => x.id === id); if (p) extOeffnen(p.url); }
+function programmOeffnen(id) { const p = PROGRAMME.find((x) => x.id === id); if (!p) return; if (p.dok) return dokOeffnen(p.dok); extOeffnen(p.url); }
 
 // ---- KC-CLUB-UEBERBLICK (0.79.0, Wunsch Hansi): „Unsere Club-App auf einen Blick“ – aktualisiert sich selbst:
 // Bereiche kommen aus der Kachel-Registry (KACHELN: fertige, für mich freigegebene), Neuigkeiten aus version.json (verlauf).
@@ -15863,7 +15872,7 @@ const KACHELN = {
   ],
   programme: [
     { id: "update", sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
-    { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kassen-Schulung …", v: "programme" },
+    { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kassen-Schulung · Karteikarten", v: "programme" },
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
