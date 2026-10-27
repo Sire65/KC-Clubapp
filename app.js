@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.709.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.710.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5275,6 +5275,7 @@ const HILFE = [
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
   { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🧩 Startseite &amp; Ansicht</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Erweiterte Ansicht“.", zeig: () => einstiegHin(einfach() ? "einfach" : "startseite") },
+  { id: "hilfe_von_selbst", thema: "start", sym: "🧑‍🍳", t: "Twinkey hilft von selbst", x: "Merkt die App, dass du in einem Bereich nicht weiterkommst – lange suchen, oft hin und her, viel herumtippen –, meldet sich Twinkey: <b>„Hallo …, sehr gerne gebe ich dir hier Hilfestellung“</b> mit <b>🎬 Video ansehen</b> oder <b>📖 Hilfe lesen</b>. Höchstens zweimal am Tag, nie beim Tippen. <b>„Hier nicht mehr anbieten“</b> merkt sich den Bereich; ganz abschalten unter ⚙️ → „🧑‍🍳 Twinkey hilft von selbst“. Erkannt wird nur auf deinem Gerät.", zeig: () => einstiegHin("ansagen", "setHs"), seit: "2.710.0" },
   { id: "fallblatt_countdown", thema: "start", sym: "🕰️", t: "Fallblatt-Uhr in der Termin-Kachel", x: "Die Tage bis zum nächsten Termin (und Datum/Uhrzeit) können in der Termin-Kachel als <b>Fallblatt-Uhr</b> wie am Bahnhof umklappen. Einstellen: ⚙️ → „Startseite &amp; Ansicht“ → <b>„⏳ Countdown oben in der Termin-Kachel“</b> → Darstellung <b>🔢 Fallblatt (wie Bahnhofsuhr)</b> oder 🔤 Normal. Gilt für jedes Gerät einzeln – am PC also dort noch einmal einstellen.", zeig: () => einstiegHin("startseite", "cdWahl"), seit: "2.210.0" }, // 2.701.0: für Suche und Twinkey
   { id: "infofeld", thema: "start", sym: "🪧", t: "Das farbige Info-Feld oben", x: "Oben auf der Startseite blätterst du mit <b>‹ ›</b> (oder Wischen im Feld) durch die Info-Karten. Auf der ersten Karte läuft das <b>📣 Info-Laufband</b> mit allem, was gerade ansteht – erster Punkt ist immer das nächste Treffen. Meldungen ohne eigenes Ziel (z. B. „Uhr zurückstellen“) öffnen beim Antippen die ganze Nachricht zum Lesen. Ob das Feld beim Start erscheint, stellst du unter ⚙️ → 🧩 Startseite &amp; Ansicht → „🪧 Info-Feld oben beim Start“ ein.", zeig: () => einstiegHin("startseite", "setInfoStart") },
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
@@ -6975,7 +6976,7 @@ function hzFrageSchalter(an) {
 // darunter der Weg zum ganzen Kapitel (HZ_SICHT_THEMA). Neue Ansicht/Hilfe = hier eintragen; der Vertragstest prüft jede ID.
 const HZ_SICHT_HILFEN = {
   "start": ["e:start", "h:kachel_lang", "h:kachel_aus", "h:register_ziehen", "h:register_wischen", "h:ansicht", "h:infofeld", "h:info_springen", "t:schnellstart", "t:lupe", "h:frage_knopf", "h:status", "h:modus_knopf", "h:verbindung", "h:info_laufband", "h:kachel_auswahl", "h:kachel_vorschlag"],
-  "einstellungen": ["e:einstellungen", "h:einstellung_suchen", "h:klappen_alle", "t:alle_klappen", "t:klappe", "h:farbe", "h:schrift", "h:nacht", "h:push", "h:meine_geraete", "t:ruhe", "h:privatsphaere", "h:tipps_schalter", "h:einweisung_wieder", "h:frage_knopf", "h:installieren", "h:stundenuhren", "h:kuckuck_ton"],
+  "einstellungen": ["e:einstellungen", "h:einstellung_suchen", "h:hilfe_von_selbst", "h:klappen_alle", "t:alle_klappen", "t:klappe", "h:farbe", "h:schrift", "h:nacht", "h:push", "h:meine_geraete", "t:ruhe", "h:privatsphaere", "h:tipps_schalter", "h:einweisung_wieder", "h:frage_knopf", "h:installieren", "h:stundenuhren", "h:kuckuck_ton"],
   "sos": ["e:sos", "t:sos", "h:wo_bin_ich", "h:notfallkontakt", "t:notfallpass", "h:notfallpass_sichern", "e:b-notfall"],
   "nachrichten": ["e:nachrichten", "h:wie_verschicken", "h:sende_schlange", "h:weitere_empfaenger", "h:nachricht_aendern", "h:chat_neu_markiert", "h:geplant_vorab", "t:wischen", "h:merken", "h:neue_linie", "t:stumm", "t:anklopfen", "h:ohne_netz", "t:emoji", "t:diktieren", "h:gruppe_loeschen", "h:netz_symbol", "h:tage_einklappen"],
   "chat": ["e:nachrichten", "t:reaktion", "t:bearbeiten", "h:anheften", "h:merken", "h:kopieren", "h:weiterleiten", "t:erwaehnung", "t:emoji", "t:diktieren", "h:mikrofon", "h:chat_abstimmung", "h:kontakt_teilen", "h:haken", "h:sprachtempo", "h:chat_vorlesen", "h:whatsapp", "h:entwurf", "h:ohne_netz", "t:rechtschreibung", "t:stumm", "h:gruppe_loeschen", "h:gelesen_von", "h:tastatur_knopf", "h:schreiben_klappen", "h:tage_einklappen", "h:anlage_mitschicken"],
@@ -7096,6 +7097,7 @@ function hzZeigen() {
       .map((e, i) => ({ e, i, titel: w.every((x) => suNorm(e.t).includes(x)) })).sort((a, b) => b.titel - a.titel || a.i - b.i).map((x) => x.e); // Treffer im Titel zuerst
     // KC-CLUB-SUCHE-UNSCHARF (2.225.0): nichts genau gefunden → ähnlich geschriebene Wörter (Tippfehler)
     const treffer = genau.length ? genau : alle.filter((e) => suUnscharf(HZ.q, `${e.t} ${e.x.replace(/<[^>]+>/g, " ")}`));
+    if (!treffer.length) hsSucheLeer(HZ.q); // 2.710.0
     html = `<p class="hinweis" style="margin:0 2px 6px">${treffer.length ? `${treffer.length} Treffer für „${esc(HZ.q)}“` : `Nichts gefunden für „${esc(HZ.q)}“ – versuch ein anderes Wort oder schau ins <a href="#" onclick="hzThema(null);return false">📖 Inhalt</a>.`}</p>` + treffer.map((e) => hzKarte(e, nr[e.id], true)).join("");
   } else if (HZ.sicht) {
     const ids = HZ_SICHT_HILFEN[HZ.sicht] || [], es = ids.map((id) => alle.find((e) => e.id === id)).filter(Boolean), kap = themen.find((t) => t.id === HZ_SICHT_THEMA[HZ.sicht]);
@@ -14248,6 +14250,7 @@ function meldeFehler(e) {
   melde(t, true);
 }
 function melde(t, fehler) {
+  if (!fehler) try { hsErfolg(); } catch {} // 2.710.0: etwas geklappt → keine Hilfe aufdrängen
   if (fehler && JS_FEHLER.test(String(t))) { // Programmfehler über einen anderen Weg → trotzdem melden und verständlich zeigen
     try { window.KCFP?.neu("gefangen", { text: String(t), stack: fehlerStapel(new Error().stack) }); } catch {}
     t = JS_FEHLER_TEXT;
@@ -25226,6 +25229,7 @@ function einstSuchen(q, leeren) {
     if (t && getComputedStyle(d).display === "none" && !d.classList.contains("einfach-sichtbar")) d.classList.add("einfach-sichtbar", "such-sichtbar");
     if (t && getComputedStyle(d).display !== "none") irgendwas = true; }
   $("einstSucheNichts")?.classList.toggle("versteckt", irgendwas);
+  if (!irgendwas) hsSucheLeer(q); // 2.710.0
   if (RK.einst?.an) rkAufbauen(RK.einst);
 }
 // ---------- 2.552.0 KC-CLUB-EINST-UEBERSICHT (Wunsch Hansi „Einstellungen übersichtlich, bedienerfreundlich, logisch – Deluxe, nichts überladen“):
@@ -29522,6 +29526,7 @@ const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
+  try { hsSicht(v, ausHistorie); } catch {} // 2.710.0 KC-CLUB-HILFE-VON-SELBST
   setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   if (v !== "chat" && CHAT_FILTER_STAND === "keine") chatFilterSetzen("alle", true); /* 2.591.0 KC-CLUB-CHAT-NUR-HG: außerhalb des Chats nichts ausgeblendet */
@@ -45252,6 +45257,7 @@ function suAppListe() {
     ["🖼️", "Chat: nur den Hintergrund zeigen (Nachrichten ausblenden)", "hintergrund chat nachrichten ausblenden verstecken nur meine nur andere filter bild ansehen", () => hzZuEintrag("h:chat_filter")], // 2.591.0
     ["🧭", "Einstellungen erklärt (alle Einstellungen wie im Explorer)", "einstellungen erklärt erklärung übersicht alle einstellungen explorer wegweiser anleitung voreinstellungen was bewirkt bedeutet schritt für schritt", () => ewStart()], // 2.534.0
     // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: Neuheiten 2.534.0–2.668.0 (nur Mitglieder-Funktionen) – auch per 🎤 Sprachsuche
+    ["🧑‍🍳", "Twinkey hilft von selbst (Hilfe-Angebot an/aus)", "hilfe von selbst twinkey meldet sich hilfestellung angebot nervt abschalten video hilfe lesen nicht mehr anbieten", () => einstiegHin("ansagen", "setHs")], // 2.710.0
     ["🕰️", "Fallblatt-Uhr in der Termin-Kachel (Countdown wie am Bahnhof)", "fallblatt falluhr fallblattuhr blätteruhr klappuhr klappkarten bahnhof bahnhofsuhr countdown termin terminkachel kachel info feld rechts tage zähler darstellung normal", () => einstiegHin("startseite", "cdWahl")], // 2.701.0 (Hansi: Suche fand sie nicht)
     ["⏰", "Wecker, Stoppuhr, Timer (große Uhr)", "wecker wecken stoppuhr timer eieruhr kurzzeitwecker countdown alarm klingeln uhr runden", () => esOeffnen("uhr")],
     ["🔊", "Wecker/Timer ohne Ton („Antippen für Ton“)", "wecker timer stumm kein ton leise hört nichts antippen für ton klingelt nicht", () => hzZuEintrag("h:wecker_ton")],
@@ -46390,6 +46396,7 @@ function nzZeitHtml(r) {
 async function nzAdmin(tage) {
   if (tage) NZ_TAGE = tage;
   let r; try { r = await api("nutzung_statistik", { tage: NZ_TAGE }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const hsZeilen = r.zeilen.filter((z) => String(z.bereich).startsWith("hs_")); r.zeilen = r.zeilen.filter((z) => !String(z.bereich).startsWith("hs_")); // 2.710.0 KC-CLUB-HILFE-VON-SELBST
   const summe = new Map(); for (const z of r.zeilen) summe.set(z.bereich, (summe.get(z.bereich) || 0) + z.anzahl);
   const liste = [...summe.entries()].sort((a, b) => b[1] - a[1]), max = Math.max(1, ...liste.map((x) => x[1])), gesamt = liste.reduce((a, x) => a + x[1], 0);
   const tageMap = new Map(); for (const z of r.zeilen) tageMap.set(z.tag, (tageMap.get(z.tag) || 0) + z.anzahl);
@@ -46406,13 +46413,119 @@ async function nzAdmin(tage) {
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>
-    ${nzZeitHtml(r)}
+    ${nzZeitHtml(r)}${nzHsHtml(hsZeilen)}
     ${liste.length ? zeilen.map(([b, n, unter]) => `<div class="nz-zeile${unter ? " nz-unter" : ""}"><span>${unter ? "↳ " : ""}${esc(NZ_NAMEN[b] || b)}</span><div class="nz-balken"><i style="width:${Math.round(n / max * 100)}%"></i></div><b>${n}</b>${werZ(b)}</div>`).join("")
       : '<p class="hinweis">Noch keine Zahlen – die Statistik füllt sich, sobald die Mitglieder die neue Version nutzen.</p>'}
     ${liste.length && ungenutzt.length ? `<div class="karte nz-nie" style="margin:6px 0 0"><b>🚫 Nie geöffnet in ${r.tage} Tagen</b> <span class="hinweis">– vielleicht erklären oder vereinfachen</span><div style="margin-top:6px">${ungenutzt.map((b) => `<span class="stmarke" style="display:inline-block;margin:2px 4px 2px 0">${esc(NZ_NAMEN[b])}</span>`).join("")}</div></div>` : ""}`;
   $("adminBlatt").classList.remove("versteckt");
 }
 
+// ---------- 2.710.0 KC-CLUB-HILFE-VON-SELBST (Wunschliste #43, Wunsch Hansi „wenn jemand oft in einen Punkt reinschaut und nicht gut klarkommt – lange
+// sucht, rumklickt – meldet sich das Programm: Hallo Marianne, sehr gerne gebe ich dir hier Hilfestellung. Video oder nachlesen?“; Antwort „für alle“) ----------
+// Erkennt nur auf dem Gerät (nichts geht an den Server außer anonymen Zählern für die Nutzung): lange im selben Bereich mit vielen Tippern und ohne
+// Erfolg, Hin-und-her zwischen zwei Bereichen, oft „Zurück“, zweimal gesucht ohne Treffer, viele Tipper auf Stellen, die nichts tun. Dann bietet Twinkey
+// das Erklär-Video des Bereichs (TW_VIDEOS/RUNDGAENGE) oder die Hilfe zum Bereich (HZ_SICHT_HILFEN) an. Bremsen: 1× je Bereich und Tag, 2× am Tag,
+// nie beim Tippen, im Video oder in Fenstern, nie in den ersten 20 s; „Hier nicht mehr anbieten“ und Schalter unter ⚙️.
+const HS_AUS = "kc_club_hs_aus", HS_TAG = "kc_club_hs_tag", HS_NIE = "kc_club_hs_nie";
+const HS_GRENZE = { lange: 90000, klicks: 8, pendeln: 4, zurueck: 6, leer: 2, tot: 6, proTag: 2 };
+// normales Hin und Her zwischen Liste und Eintrag (Chats lesen, Mitglied ansehen, Protokoll öffnen) ist kein „nicht klarkommen“
+const hsListePaar = (a, b) => (a === "chat" && b === "nachrichten") || (b === "chat" && a === "nachrichten") || a.startsWith(b) || b.startsWith(a) || a === "start" || b === "start";
+const HS = { start: Date.now(), v: null, seit: 0, klicks: 0, erfolg: false, verlauf: [], zurueck: [], leer: [], tot: [], uhr: null, sucheUhr: null };
+const HS_VIDEO_SICHT = { vorschlaege: "vorschlag", termine: "termin", nachrichten: "nachricht", chat: "chatprofi", start: "ueberblick" };
+const hsAn = () => { try { return localStorage.getItem(HS_AUS) !== "1"; } catch { return true; } };
+const hsLies = (k, leer) => { try { return JSON.parse(localStorage.getItem(k) || "null") || leer; } catch { return leer; } };
+const hsSchreib = (k, w) => { try { localStorage.setItem(k, JSON.stringify(w)); } catch {} };
+function hsVideo(v) { // passendes Erklär-Video zum Bereich (nur die für das Mitglied sichtbaren)
+  const ids = [HS_VIDEO_SICHT[v], v, ...(HZ_SICHT_HILFEN[v] || []).flatMap((id) => TW_VIDEOS[id] || [])].filter(Boolean);
+  for (const id of ids) { const r = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())); if (r) return r; }
+  return null;
+}
+function hsSicht(v, zurueck) {
+  if (!ICH) return;
+  const jetzt = Date.now();
+  if (zurueck && !["chat", "nachrichten"].includes(v)) HS.zurueck.push(jetzt);
+  if (v !== HS.v) { HS.v = v; HS.seit = jetzt; HS.klicks = 0; HS.erfolg = false; HS.verlauf.push({ v, t: jetzt }); HS.verlauf = HS.verlauf.slice(-8); }
+  if (v === "einstellungen") hsEinstZeigen();
+  hsPruefen();
+}
+function hsErfolg() { HS.erfolg = true; }
+function hsSucheLeer(q) { // erst zählen, wenn die Suche 1,5 s steht (nicht jeden Buchstaben)
+  clearTimeout(HS.sucheUhr); if (String(q || "").trim().length < 3) return;
+  HS.sucheUhr = setTimeout(() => { HS.leer.push(Date.now()); hsPruefen(); }, 1500);
+}
+function hsGrund() { // → "lange" | "pendeln" | "zurueck" | "suche" | "klicks" | null
+  const jetzt = Date.now(), frisch = (l, ms) => l.filter((t) => jetzt - t < ms);
+  HS.zurueck = frisch(HS.zurueck, 60000); HS.leer = frisch(HS.leer, 180000); HS.tot = frisch(HS.tot, 8000);
+  if (HS.tot.length >= HS_GRENZE.tot) return "klicks";
+  if (HS.leer.length >= HS_GRENZE.leer) return "suche";
+  if (HS.zurueck.length >= HS_GRENZE.zurueck) return "zurueck";
+  const l = HS.verlauf.filter((x) => jetzt - x.t < 120000).map((x) => x.v);
+  if (l.length >= HS_GRENZE.pendeln + 1) { const a = l[l.length - 1], b = l[l.length - 2], r = l.slice(-(HS_GRENZE.pendeln + 1)); if (a !== b && !hsListePaar(a, b) && r.every((x, i) => x === (i % 2 === (r.length - 1) % 2 ? a : b))) return "pendeln"; }
+  if (!HS.erfolg && HS.klicks >= HS_GRENZE.klicks && jetzt - HS.seit > HS_GRENZE.lange) return "lange";
+  return null;
+}
+function hsDarf(v) {
+  if (!ICH || !hsAn() || !v || !HZ_SICHT_HILFEN[v] || v === "hilfezentrum" || Date.now() - HS.start < 20000 || $("hsBlase")) return false;
+  if (typeof RG !== "undefined" && RG.an) return false; // Erklär-Video läuft
+  if (document.querySelector(".dlg-blatt, #druckVorschau:not(.versteckt)")) return false;
+  const a = document.activeElement; if (a && a.matches?.("input:not([type=checkbox]):not([type=radio]), textarea, [contenteditable='true']")) return false;
+  if (hsLies(HS_NIE, []).includes(v)) return false;
+  const t = hsLies(HS_TAG, {}); if (t.tag !== heuteIso()) return true;
+  return (t.n || 0) < HS_GRENZE.proTag && !(t.sichten || []).includes(v);
+}
+function hsPruefen() {
+  const v = HS.v, grund = hsGrund(); if (!grund || !hsDarf(v)) return;
+  HS.zurueck = []; HS.leer = []; HS.tot = []; HS.verlauf = []; HS.klicks = 0; HS.seit = Date.now();
+  const t = hsLies(HS_TAG, {}), heute = heuteIso(), neu = t.tag === heute ? t : { tag: heute, n: 0, sichten: [] };
+  neu.n = (neu.n || 0) + 1; neu.sichten = [...new Set([...(neu.sichten || []), v])]; hsSchreib(HS_TAG, neu);
+  hsZeigen(v, grund);
+}
+function hsZeigen(v, grund) {
+  const vid = hsVideo(v), name = ICH?.vorname || (ICH?.name || "").split(" ")[0] || "";
+  if (/^[a-z_]{2,25}$/.test(v)) nzZaehlen("hs_a_" + v); // anonym: Bereich + Art, nie wer
+  $("hsBlase")?.remove();
+  const b = document.createElement("div"); b.id = "hsBlase"; b.className = "hs-blase"; b.setAttribute("role", "dialog"); b.setAttribute("aria-label", "Twinkey bietet Hilfe an"); b.dataset.grund = grund;
+  b.innerHTML = `<span class="hs-kopf" aria-hidden="true">🧑‍🍳</span><div class="hs-text"><b>Hallo ${esc(name)}, sehr gerne gebe ich dir hier Hilfestellung.</b>
+    <span>${vid ? "Möchtest du dir das Video ansehen oder lieber in der Hilfe nachlesen?" : "Möchtest du in der Hilfe nachlesen, wie es hier geht?"}</span>
+    <div class="hs-knoepfe">${vid ? `<button type="button" class="knopf haupt klein" data-hs="video">🎬 Video ansehen</button>` : ""}<button type="button" class="knopf${vid ? "" : " haupt"} klein" data-hs="hilfe">📖 Hilfe lesen</button>
+      <button type="button" class="knopf klein" data-hs="nein">Nein danke</button><button type="button" class="hs-nie" data-hs="nie">Hier nicht mehr anbieten</button></div></div>`;
+  document.body.appendChild(b);
+  b.querySelectorAll("[data-hs]").forEach((k) => (k.onclick = () => hsWahl(k.dataset.hs, v, vid)));
+  clearTimeout(HS.uhr); HS.uhr = setTimeout(() => $("hsBlase")?.remove(), 45000);
+}
+function hsWahl(w, v, vid) {
+  $("hsBlase")?.remove(); clearTimeout(HS.uhr);
+  if (/^[a-z_]{2,25}$/.test(v)) nzZaehlen({ video: "hs_v_", hilfe: "hs_l_", nein: "hs_n_", nie: "hs_x_" }[w] + v);
+  if (w === "video" && vid) return rundgangStart(false, vid.id);
+  if (w === "hilfe") return hzFrage(v);
+  if (w === "nie") { hsSchreib(HS_NIE, [...new Set([...hsLies(HS_NIE, []), v])]); melde("👍 Hier biete ich keine Hilfe mehr von selbst an – zurückholen unter ⚙️ Einstellungen"); }
+}
+function hsSchalter(an) { try { localStorage.setItem(HS_AUS, an ? "0" : "1"); } catch {} hsEinstZeigen(); melde(an ? "🧑‍🍳 Twinkey hilft wieder von selbst" : "🧑‍🍳 Twinkey bietet keine Hilfe mehr von selbst an"); }
+function hsNieZurueck() { hsSchreib(HS_NIE, []); hsEinstZeigen(); melde("🧑‍🍳 Twinkey darf wieder überall Hilfe anbieten"); }
+function hsEinstZeigen() {
+  for (const id of ["setHsE", "setHs"]) { const c = $(id); if (c) c.checked = hsAn(); }
+  const n = hsLies(HS_NIE, []).length; document.querySelectorAll(".hs-nie-zahl").forEach((e) => { e.textContent = n ? `(${n} ${n === 1 ? "Bereich" : "Bereiche"} ausgenommen – zurücksetzen)` : ""; e.classList.toggle("versteckt", !n); });
+}
+(function hsStart() {
+  if (typeof document === "undefined") return;
+  // Tipper zählen; Tipper auf Stellen ohne Funktion = „Rumklickerei“
+  document.addEventListener("click", (e) => {
+    if (!ICH || e.target.closest?.("#hsBlase")) return;
+    HS.klicks++;
+    const aktiv = e.target.closest?.("button, a, input, select, textarea, label, summary, [onclick], [role=button], [tabindex], .knopf, .kachel, .mini-kachel, .chip, canvas, video, img");
+    if (!aktiv) { HS.tot.push(Date.now()); hsPruefen(); }
+  }, true);
+  setInterval(() => { if (!document.hidden) hsPruefen(); }, 10000);
+})();
+// 2.710.0 KC-CLUB-HILFE-VON-SELBST: wo Twinkey Hilfe angeboten hat und was gewählt wurde (ohne Namen) – dort lohnt es sich, die Bedienung zu verbessern
+function nzHsHtml(zeilen) {
+  const m = new Map(); for (const z of zeilen || []) { const x = /^hs_([avlnx])_(.+)$/.exec(z.bereich); if (!x) continue; const e = m.get(x[2]) || { a: 0, v: 0, l: 0, n: 0, x: 0 }; e[x[1]] += z.anzahl; m.set(x[2], e); }
+  const l = [...m.entries()].sort((a, b) => b[1].a - a[1].a);
+  return `<details class="karte" style="margin:8px 0"><summary><b>🧑‍🍳 Twinkey hat von selbst Hilfe angeboten</b> <small class="hinweis">(${l.reduce((s, [, e]) => s + e.a, 0)}×)</small></summary>
+    <p class="hinweis" style="margin:4px 0">Bereiche, in denen Mitglieder nicht gut weiterkamen – ohne Namen. Viele Angebote = dort lohnt es sich, die Bedienung zu vereinfachen.</p>
+    ${l.length ? `<table class="nz-hs"><thead><tr><th>Bereich</th><th title="angeboten">🧑‍🍳</th><th title="Video angesehen">🎬</th><th title="Hilfe gelesen">📖</th><th title="Nein danke">👋</th><th title="Hier nicht mehr anbieten">🚫</th></tr></thead>
+      <tbody>${l.map(([v, e]) => `<tr><td>${esc(hzSichtName(v))}</td><td>${e.a}</td><td>${e.v}</td><td>${e.l}</td><td>${e.n}</td><td>${e.x}</td></tr>`).join("")}</tbody></table>` : '<p class="hinweis">Noch nichts – gut so.</p>'}</details>`;
+}
 // ---------- KC-CLUB-FEHLERPROTOKOLL (0.93.0) ----------
 // Der Fehlerfänger (window.KCFP) steht ganz oben im <head> und läuft auch, wenn die App selbst nicht startet. Hier hängt die
 // App ihre eigenen Beobachtungen an (Serveranfragen, alte Version, Gerät/Browser) und zeigt verständliche Hilfe-Schritte.

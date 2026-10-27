@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.709.0";
+const SERVER_VERSION = "2.710.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12786,7 +12786,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       case "nutzung_melden": {
         if (await ichInProbe(ich)) return json({ ok: true, probe: true }); // KC-CLUB-PROBEPHASE: Probe zählt nicht in der Nutzung
         const z = (p.zaehler && typeof p.zaehler === "object") ? p.zaehler : {};
-        const paare = Object.entries(z).filter(([b, n]) => NUTZUNG_BEREICHE.has(String(b)) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 40)
+        const paare = Object.entries(z).filter(([b, n]) => (NUTZUNG_BEREICHE.has(String(b)) || /^hs_[avlnx]_[a-z_]{2,25}$/.test(String(b))) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 40) // 2.710.0 KC-CLUB-HILFE-VON-SELBST: anonyme Hilfe-Zähler
           .map(([b, n]) => [String(b), Math.min(200, Math.round(Number(n)))] as [string, number]);
         if (paare.length) await db.rpc("kc_club_nutzung_zaehlen", { p_tag: berlinTag(new Date()), p_bereiche: paare.map((x) => x[0]), p_anzahlen: paare.map((x) => x[1]) });
         // KC-CLUB-NUTZUNG-UHRZEIT (2.23.17, Wunsch Hansi): je Stunde (0–23, beim Antippen) nur die Anzahl – ohne Person, Gerät und Bereich

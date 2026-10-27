@@ -5918,7 +5918,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7633,6 +7633,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function haMarken\(g, x0, y0, L, T\)/.test(html) && /g\.strokeStyle = "#9a9a9a"; g\.lineWidth = \.15 \* M/.test(html) && /Kontrollmaß: genau 5 cm/.test(html), "feine graue Marken nur im Rand, Kontrollmaß");
   assert.ok(/if \(!hinten\) haMarken\(g, x0, y0, L, T\);/.test(html) && !/haRund\(g, 0, 0, W, H, 3\); g\.clip\(\)/.test(html), "eckig, Marken nur vorne");
   assert.ok(/function haProbe\(hinten\)/.test(html) && /data-a="probe">🎯 Probeblatt/.test(html), "Probeblatt Duplex");
+}
+// 2.710.0 KC-CLUB-HILFE-VON-SELBST (Wunschliste #43, Wunsch Hansi „wenn jemand nicht gut klarkommt, meldet sich das Programm: Hallo Marianne … Video oder nachlesen?“; „für alle“)
+{
+  assert.ok(/function hsGrund\(\)/.test(html) && /return "klicks"/.test(html) && /return "suche"/.test(html) && /return "zurueck"/.test(html) && /return "pendeln"/.test(html) && /return "lange"/.test(html), "fünf Anzeichen: Rumklicken, Suche ohne Treffer, Zurück, Hin und her, lange ohne Erfolg");
+  assert.ok(/sehr gerne gebe ich dir hier Hilfestellung/.test(html) && /data-hs="video">🎬 Video ansehen/.test(html) && /data-hs="hilfe">📖 Hilfe lesen/.test(html) && /data-hs="nie">Hier nicht mehr anbieten/.test(html), "Twinkeys Angebot mit Video, Hilfe, Nein, Nie");
+  assert.ok(/proTag: 2/.test(html) && /!\(t\.sichten \|\| \[\]\)\.includes\(v\)/.test(html) && /Date\.now\(\) - HS\.start < 20000/.test(html) && /input:not\(\[type=checkbox\]\)/.test(html), "Bremsen: 2× am Tag, 1× je Bereich, nicht gleich nach Start, nie beim Tippen");
+  assert.ok(/const hsListePaar = /.test(html) && /!hsListePaar\(a, b\)/.test(html), "normales Liste↔Eintrag (Chats lesen) zählt nicht");
+  assert.ok(/try \{ hsSicht\(v, ausHistorie\); \} catch \{\}/.test(html) && /if \(!fehler\) try \{ hsErfolg\(\); \} catch \{\}/.test(html), "Hook in zeige und melde");
+  assert.ok(/id="setHsE" checked onchange="hsSchalter\(this\.checked\)"/.test(seite) && /id="setHs" checked/.test(seite), "Schalter in den Einstellungen (Standard an)");
+  assert.ok(/\/\^hs_\[avlnx\]_\[a-z_\]\{2,25\}\$\/\.test\(String\(b\)\)/.test(server) && /function nzHsHtml\(zeilen\)/.test(html), "anonyme Zähler für die Nutzung, Auswertung für den Admin");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

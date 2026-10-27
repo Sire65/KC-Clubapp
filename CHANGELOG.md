@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.710.0 – 2026-10-27 – Twinkey hilft von selbst
+KC-CLUB-HILFE-VON-SELBST (Wunschliste #43): Merkt die App, dass jemand in einem Bereich nicht weiterkommt (lange ohne Erfolg mit vielen Tippern, Hin und her zwischen zwei Bereichen, oft Zurück, 2× Suche ohne Treffer, Tipper auf Stellen ohne Funktion), bietet Twinkey an: „Hallo …, sehr gerne gebe ich dir hier Hilfestellung“ – 🎬 Video, 📖 Hilfe, Nein danke, Hier nicht mehr anbieten. Höchstens 2× am Tag, 1× je Bereich; nur auf dem Gerät erkannt; für alle an, abschaltbar unter ⚙️. Admin: anonyme Auswertung unter 📊 Nutzung.
+
 ## 2.709.0 – 2026-10-26 – 📭 Ungelesen-Übersicht für den Admin
 - 📭 Neu für den Admin: Übersicht, welche deiner Chat-Nachrichten noch nicht gelesen wurden – nach Person oder nach Nachricht, Filter 7/14/30 Tage, nur wichtige, nur Einzelchats, Suche; „💬 Erinnern“ öffnet den Chat mit fertigem Text (KC-CLUB-UNGELESEN-ADMIN).
 
