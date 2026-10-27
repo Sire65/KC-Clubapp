@@ -7611,6 +7611,11 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const ch of benutzt) assert.ok(neu.includes(ch), `Emoji ${ch} (U+${ch.codePointAt(0).toString(16)}) in EMO_NEU eintragen und Bild in lib/emoji/ legen`);
   assert.ok(/<b>📐 Ecken der Kacheln<\/b>/.test(seite), "⬜ sah aus wie ein Kästchen → 📐");
 }
+// 2.701.0 KC-CLUB-EINST-SUCHE-EINFACH (Hansi „im Handy eine Fallblatt-Uhr, am PC nicht – wo stelle ich das ein? Twinkey und die Suche fanden es nicht“)
+{
+  assert.ok(/if \(t && getComputedStyle\(d\)\.display === "none" && !d\.classList\.contains\("einfach-sichtbar"\)\) d\.classList\.add\("einfach-sichtbar", "such-sichtbar"\)/.test(html), "Suche blendet in der einfachen Ansicht versteckte Bereiche mit Treffer ein");
+  assert.ok(/Fallblatt-Uhr \(Falluhr, Blätteruhr wie am Bahnhof\)/.test(seite) && /id: "fallblatt_countdown"/.test(html) && /"fallblatt falluhr fallblattuhr blätteruhr/.test(html), "Fallblatt-Uhr: Suche, Lupe und Twinkey finden sie");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

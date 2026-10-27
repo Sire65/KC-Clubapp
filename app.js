@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.700.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.701.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5275,6 +5275,7 @@ const HILFE = [
   { id: "register_ziehen", thema: "start", sym: "↔️", t: "Register umsortieren (Club, Meins, Technik …)", x: "Ein Register oben auf der Startseite <b>festhalten</b>, bis es sich hebt – dann nach links oder rechts ziehen und loslassen. Die App merkt sich deine Reihenfolge auf allen deinen Geräten. (Nur in der erweiterten Ansicht.)", zeig: () => zeige("start") },
   { id: "register_wischen", thema: "start", sym: "👆", t: "Zwischen den Registern wischen", x: "Auf der Startseite wischst du über die Kacheln nach <b>links oder rechts</b> und kommst zum nächsten Register. Die kleine Zahl am Register zeigt, wie viele Kacheln darin liegen – „8/10“ heißt: 2 sind ausgeblendet.", zeig: () => zeige("start") },
   { id: "ansicht", thema: "start", sym: "🟢", t: "Einfache oder erweiterte Ansicht", x: "Die <b>einfache Ansicht</b> zeigt nur das Wichtigste mit großen Knöpfen, die <b>erweiterte</b> alle Funktionen mit Registern. Umschalten: ⚙️ Einstellungen → <b>🧩 Startseite &amp; Ansicht</b> → „🟢 Einfache Ansicht“ – oder ganz unten auf der Startseite. Zurück geht es mit „🔧 Erweiterte Ansicht“.", zeig: () => einstiegHin(einfach() ? "einfach" : "startseite") },
+  { id: "fallblatt_countdown", thema: "start", sym: "🕰️", t: "Fallblatt-Uhr in der Termin-Kachel", x: "Die Tage bis zum nächsten Termin (und Datum/Uhrzeit) können in der Termin-Kachel als <b>Fallblatt-Uhr</b> wie am Bahnhof umklappen. Einstellen: ⚙️ → „Startseite &amp; Ansicht“ → <b>„⏳ Countdown oben in der Termin-Kachel“</b> → Darstellung <b>🔢 Fallblatt (wie Bahnhofsuhr)</b> oder 🔤 Normal. Gilt für jedes Gerät einzeln – am PC also dort noch einmal einstellen.", zeig: () => einstiegHin("startseite", "cdWahl"), seit: "2.210.0" }, // 2.701.0: für Suche und Twinkey
   { id: "infofeld", thema: "start", sym: "🪧", t: "Das farbige Info-Feld oben", x: "Oben auf der Startseite blätterst du mit <b>‹ ›</b> (oder Wischen im Feld) durch die Info-Karten. Auf der ersten Karte läuft das <b>📣 Info-Laufband</b> mit allem, was gerade ansteht – erster Punkt ist immer das nächste Treffen. Meldungen ohne eigenes Ziel (z. B. „Uhr zurückstellen“) öffnen beim Antippen die ganze Nachricht zum Lesen. Ob das Feld beim Start erscheint, stellst du unter ⚙️ → 🧩 Startseite &amp; Ansicht → „🪧 Info-Feld oben beim Start“ ein.", zeig: () => einstiegHin("startseite", "setInfoStart") },
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
@@ -25140,6 +25141,7 @@ function einstSuchen(q, leeren) {
   if (leeren) { $("einstSuche").value = ""; q = ""; }
   q = String(q || "").trim().toLowerCase(); $("einstSucheWeg")?.classList.toggle("versteckt", !q);
   w.querySelectorAll(".such-weg, .such-treffer").forEach((x) => x.classList.remove("such-weg", "such-treffer"));
+  w.querySelectorAll(".such-sichtbar").forEach((x) => x.classList.remove("such-sichtbar", "einfach-sichtbar")); // 2.701.0: von der Suche eingeblendete Bereiche wieder weg
   const alle = [...w.querySelectorAll("details")];
   if (q.length < 2) {
     const warSuche = !!EINST_SUCHE.offen;
@@ -25163,7 +25165,10 @@ function einstSuchen(q, leeren) {
     if (treffer || sumTreffer) d.open = true; return treffer || sumTreffer;
   };
   let irgendwas = false;
-  for (const d of w.querySelectorAll(":scope > details[data-klappe]")) { const t = pruefe(d); d.classList.toggle("such-weg", !t); if (t && getComputedStyle(d).display !== "none") irgendwas = true; }
+  for (const d of w.querySelectorAll(":scope > details[data-klappe]")) { const t = pruefe(d); d.classList.toggle("such-weg", !t);
+    // 2.701.0 (Hansi: „die Suche konnte die Fallblatt-Uhr nicht finden“): in der einfachen Ansicht ausgeblendete Bereiche mit Treffer einblenden (wie die Hilfe-Sprünge)
+    if (t && getComputedStyle(d).display === "none" && !d.classList.contains("einfach-sichtbar")) d.classList.add("einfach-sichtbar", "such-sichtbar");
+    if (t && getComputedStyle(d).display !== "none") irgendwas = true; }
   $("einstSucheNichts")?.classList.toggle("versteckt", irgendwas);
   if (RK.einst?.an) rkAufbauen(RK.einst);
 }
@@ -45079,6 +45084,7 @@ function suAppListe() {
     ["🖼️", "Chat: nur den Hintergrund zeigen (Nachrichten ausblenden)", "hintergrund chat nachrichten ausblenden verstecken nur meine nur andere filter bild ansehen", () => hzZuEintrag("h:chat_filter")], // 2.591.0
     ["🧭", "Einstellungen erklärt (alle Einstellungen wie im Explorer)", "einstellungen erklärt erklärung übersicht alle einstellungen explorer wegweiser anleitung voreinstellungen was bewirkt bedeutet schritt für schritt", () => ewStart()], // 2.534.0
     // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: Neuheiten 2.534.0–2.668.0 (nur Mitglieder-Funktionen) – auch per 🎤 Sprachsuche
+    ["🕰️", "Fallblatt-Uhr in der Termin-Kachel (Countdown wie am Bahnhof)", "fallblatt falluhr fallblattuhr blätteruhr klappuhr klappkarten bahnhof bahnhofsuhr countdown termin terminkachel kachel info feld rechts tage zähler darstellung normal", () => einstiegHin("startseite", "cdWahl")], // 2.701.0 (Hansi: Suche fand sie nicht)
     ["⏰", "Wecker, Stoppuhr, Timer (große Uhr)", "wecker wecken stoppuhr timer eieruhr kurzzeitwecker countdown alarm klingeln uhr runden", () => esOeffnen("uhr")],
     ["🔊", "Wecker/Timer ohne Ton („Antippen für Ton“)", "wecker timer stumm kein ton leise hört nichts antippen für ton klingelt nicht", () => hzZuEintrag("h:wecker_ton")],
     ["🎬", "Effekt beim Register-Wechsel (Kachel-Zug, Hereindrehen …)", "kachel effekt register wechsel hereindrehen kachelzug zug spielautomat seifenblasen magnet pfanne einfliegen fallblatt abwechselnd zufall", () => einstiegHin("effekte", "regEffektWahl")],

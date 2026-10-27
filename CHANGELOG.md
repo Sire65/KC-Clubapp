@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.701.0 – 2026-10-27 – Fallblatt-Uhr leichter finden
+KC-CLUB-EINST-SUCHE-EINFACH: „🔍 Einstellung suchen“ findet auch Einstellungen in Bereichen, die in der einfachen Ansicht ausgeblendet sind, und blendet sie ein. Fallblatt-Uhr (Countdown in der Termin-Kachel) mit den Wörtern Fallblatt/Falluhr/Blätteruhr in Suche, Lupe und Twinkey-Hilfe.
+
 ## 2.700.0 – 2026-10-27 – Leere Kästchen statt Bildzeichen behoben
 KC-CLUB-EMOJI-ERSATZ: Neuere Bildzeichen (z. B. 🪟 🪪 🪞 🫧) kennt Windows 10 nicht und zeigte sie als leeres Kästchen. Die App prüft beim Start (wie beim Koch-Emoji), welche das Gerät malt, und zeigt die anderen als kleines Bild (Twemoji, CC BY 4.0). „⬜ Ecken der Kacheln“ → „📐“ (sah aus wie ein Kästchen).
 
