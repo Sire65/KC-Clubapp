@@ -11976,7 +11976,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   assert.ok(/erstAnsehen\(blatt, \(\) => erstattungAblageFragen\(kopie, r\)\)/.test(programm) && /data-fn="ekErstBlatt\('\$\{x\.id\}'\)">📄 Antrag als PDF \/ Drucken/.test(programm), "Antrag angeboten: nach dem Einreichen und im Eingang");
   assert.ok(/<div>Datum, Unterschrift Antragsteller<\/div><div>Sachlich geprüft \/ ausgezahlt am – Kassenwart<\/div><div>Freigabe – Leitungsteam<\/div>/.test(programm), "drei Unterschriften");
-  assert.ok(/id="druckVorschauPdf" onclick="druckPdf\(\)"/.test(seite) && /function pdfAusCanvas\(c, quer\)/.test(programm) && /<foreignObject/.test(programm), "PDF in der Vorschau, selbst gebaut");
+  assert.ok(/id="druckVorschauPdf" onclick="druckPdf\(\)"/.test(seite) && /function pdfAusCanvas\(c, quer(, seiten = null)?\)/.test(programm) && /<foreignObject/.test(programm), "PDF in der Vorschau, selbst gebaut");
   assert.ok(/onclick="faDiashow\(\)"/.test(seite) && /esSchreib\("album", id\); esSchreib\("diaMusik"/.test(programm), "Diashow im Fotoalbum mit Album und Musik");
 }
 
