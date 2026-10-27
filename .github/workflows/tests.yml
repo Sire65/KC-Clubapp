@@ -42,3 +42,4 @@ jobs:
       - run: node tests/verlassen-erinnern.test.mjs
       - run: node tests/druck-seitenwechsel.test.mjs
       - run: node tests/buero-schnell.test.mjs
+      - run: node tests/ml-alle-daten.test.mjs

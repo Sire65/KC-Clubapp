@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.707.0 – 2026-10-26 – Mitgliederliste „Alle Daten“
+- 📋 Neue Mitgliederliste „Alle Daten“ im Büro: Handy, Festnetz, E-Mail und Anschrift aller aktiven Mitglieder in einer Tabelle, quer gedruckt, als vertraulich gekennzeichnet (KC-CLUB-ML-ALLE).
+
 ## 2.706.0 – 2026-10-26 – 💼 Büro öffnet ohne Sanduhr (KC-CLUB-BUERO-SCHNELL)
 - Fund Hansi („großer Hänger, Sanduhr läuft lange“ – das Büro brauchte während der Spiegel-Welle über 20 s): Das Büro wartete mit der Sanduhr über dem ganzen Bildschirm, bis alle fünf Teile geladen waren. Jetzt öffnet es sofort (zuerst „Wird geladen …“), die Übersicht mit Sitzungen und Eingang erscheint, sobald sie da ist, und Nachher-Liste, Feste, Freud & Leid und Änderungen kommen einzeln nach. Gleiche Abfragen, keine zusätzliche Last. Im Browser mit langsamem Server geprüft. Test: `tests/buero-schnell.test.mjs`. Nur App.
 

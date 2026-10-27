@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.706.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.707.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32372,6 +32372,8 @@ const ML_ARTEN = {
   uebersicht: { sym: "📇", t: "Übersicht", u: "Name · Ämter · Mitglied seit", spalten: ["name", "aemter", "eintritt"] },
   telefon: { sym: "📞", t: "Telefonliste", u: "Name · Handy · Festnetz · E-Mail", spalten: ["name", "handy", "festnetz", "mail"] },
   adressen: { sym: "🏠", t: "Adressliste", u: "Name · Anschrift", spalten: ["name", "adresse"] },
+  // KC-CLUB-ML-ALLE (27.10.2026, Wunsch Hansi „eine Übersicht aller Mitgliederdaten mit Telefon und Adresse“): alles in einer Tabelle, quer gedruckt
+  alle: { sym: "📋", t: "Alle Daten", u: "Telefon, E-Mail und Anschrift zusammen", spalten: ["nr", "name", "handy", "festnetz", "mail", "adresse"], quer: true },
   unterschrift: { sym: "✍️", t: "Unterschriften", u: "z. B. Anwesenheit, Empfang", spalten: ["nr", "name", "unterschrift"] },
   abhaken: { sym: "☑️", t: "Abhakliste", u: "z. B. Beitrag, Rückmeldung", spalten: ["nr", "name", "haken", "notiz"] },
 };
@@ -32395,7 +32397,7 @@ function buListeHtml() {
   const d = ML.daten, a = ML_ARTEN[ML.art];
   const vorschau = d ? `<div class="karte" style="overflow-x:auto"><table class="ml-tab"><thead><tr>${a.spalten.map((s) => `<th>${esc(ML_SPALTEN[s])}</th>`).join("")}</tr></thead>
     <tbody>${mlZeilen().map((m, i) => `<tr>${a.spalten.map((s) => `<td>${esc(mlWert(m, s, i))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : '<div class="karte hinweis">Wird geladen …</div>';
-  const hinweis = d && d.verborgen && ["telefon", "adressen"].includes(ML.art) ? `<p class="hinweis">🔒 ${d.verborgen} Angabe${d.verborgen === 1 ? " ist" : "n sind"} nicht freigegeben und ${d.verborgen === 1 ? "bleibt" : "bleiben"} leer.</p>` : "";
+  const hinweis = d && d.verborgen && ["telefon", "adressen", "alle"].includes(ML.art) ? `<p class="hinweis">🔒 ${d.verborgen} Angabe${d.verborgen === 1 ? " ist" : "n sind"} nicht freigegeben und ${d.verborgen === 1 ? "bleibt" : "bleiben"} leer.</p>` : "";
   // KC-CLUB-AENDERUNG (2.22.10, Wunsch Hansi): Änderungsmeldungen + Größen gehören in den Ordner „Mitglieder“ (vorher eigener Ordner)
   const ae = `<button class="knopf${AE.offen ? " haupt" : ""}" style="width:100%;margin-bottom:8px" onclick="aeEingang()">📬 Änderungsmeldungen${AE.offen ? ` – ${AE.offen} offen` : ""} · 👕 Größen</button>`;
   return `${ae}<div class="karte bu-gruss">📇 <b>Mitgliederliste</b> – Art antippen, prüfen, drucken. ${d ? `${d.liste.length} aktive Mitglieder.` : ""}</div>
@@ -32412,9 +32414,9 @@ function druckMitgliederliste() {
   const zelle = "padding:1.4mm 2mm;border-bottom:.2mm solid #999;vertical-align:middle;";
   const html = `<table style="width:100%;border-collapse:collapse;font-size:3.5mm"><thead><tr style="text-align:left;border-bottom:.5mm solid #741521">${a.spalten.map((s) => `<th style="padding:1.4mm 2mm;${breit[s] ? `width:${breit[s]};` : ""}">${esc(ML_SPALTEN[s])}</th>`).join("")}</tr></thead>
     <tbody>${mlZeilen().map((m, i) => `<tr style="break-inside:avoid">${a.spalten.map((s) => `<td style="${zelle}${hoch}${s === "name" ? "font-weight:700;" : ""}">${esc(mlWert(m, s, i))}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
-  const privat = ["telefon", "adressen"].includes(ML.art);
+  const privat = ["telefon", "adressen", "alle"].includes(ML.art);
   return { titel: ML.titel.trim() || `Mitgliederliste – ${a.t}`, unter: `${d.liste.length} aktive Mitglieder · ${ML.sort === "eintritt" ? "nach Eintritt" : "nach Name"}${ML.titel.trim() ? " · " + a.t : ""}`, html,
-    fuss: privat ? "Vertraulich – nur für Vereinszwecke, nicht weitergeben · nur freigegebene Angaben" : "" };
+    fuss: privat ? "Vertraulich – nur für Vereinszwecke, nicht weitergeben · nur freigegebene Angaben" : "", quer: !!a.quer }; // KC-CLUB-ML-ALLE: „Alle Daten“ quer
 }
 
 // ---------- KC-CLUB-FREUD-LEID (1.32.0, Wunsch Hansi): Freud & Leid – nur Clubleitung ----------
