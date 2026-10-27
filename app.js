@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.715.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.716.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20187,7 +20187,7 @@ function jzbFestMalen(c) {
 // Wer sie bekommt, wählt der Admin per Häkchen in der Mitgliedskarte (rose_setzen) – die App kennt kein Geschlecht und rät nie nach Namen.
 // Der Server sagt im Start nur „rose: true“ (Häkchen an, noch nicht bekommen). Sie kommt nach insgesamt 20 Sekunden sichtbarer Startseite (bis 2.652.0: 3 Minuten), nie über
 // einem offenen Fenster oder beim Tippen. Läuft die Sim-Jü-Szene mit der Schießbude gerade sichtbar, fliegt sie aus der Schießbude; sonst (nach der Kirmes,
-// „Sim-Jü aus“, Sparmodus) kommt sie von unten ins Bild mit „Ein Gruß aus der Schießbude – habe ich für dich geschossen“ (Änderung Hansi, 24.10.2026). Nach dem Zeigen merkt der Server es (rose_erhalten) – klappt das nicht, merkt es dieses Gerät und meldet es beim nächsten Start.
+// „Sim-Jü aus“, Sparmodus) kommt sie von unten ins Bild mit „Ein Gruß aus der Schießbude – hab ich für dich auf der Sim-Jü geschossen“ (Änderung Hansi, 24.10. und 27.10.2026). Nach dem Zeigen merkt der Server es (rose_erhalten) – klappt das nicht, merkt es dieses Gerät und meldet es beim nächsten Start.
 // Sparmodus oder „weniger Bewegung“: die Rose steht gleich da, ohne Flug. Nie zweimal auf demselben Gerät.
 // KC-CLUB-ROSE-ANFANG
 const ROSE_KEY = "kc_club_rose", ROSE_MS = 4500; // 2.714.0: ≈5 s (Takt 5 s – knapp darunter, sonst erst beim übernächsten Takt) // 2.653.0 KC-CLUB-ROSE-20S (Wunsch Hansi): 20 Sekunden statt 3 Minuten
@@ -20318,7 +20318,7 @@ function roseZeigen(name, quelle) { // quelle = Punkt der Schießbude; null = Gr
     + Array.from({ length: 7 }, (_, i) => `<i class="rose-blatt" style="--x:${(i * 29 + 17) % 90 + 5}%;--d:${6 + (i % 3) * 2}s;--v:${2.2 + i * .9}s;--r:${(i % 2 ? 1 : -1) * (120 + i * 30)}deg"></i>`).join("");
   s.innerHTML = `<div class="rose-glanz"></div>${funken}<div class="rose-buehne"><div class="rose-flug">${roseSvg()}
     <div class="rose-schild"><span class="rose-faden"></span><div class="rose-karte"><b>Nur für dich</b>${name ? `<small>${esc(name)}</small>` : ""}</div></div></div></div>
-    ${quelle ? "" : '<p class="rose-gruss">Ein Gruß aus der Schießbude –<br>habe ich für dich geschossen 🎯</p>'}<button type="button" class="knopf haupt rose-danke">💝 Danke</button>`;
+    ${quelle ? "" : '<p class="rose-gruss">Ein Gruß aus der Schießbude –<br>hab ich für dich auf der Sim-Jü geschossen 🎯</p>'}<button type="button" class="knopf haupt rose-danke">💝 Danke</button>`;
   s.querySelector(".rose-danke").onclick = () => { if (still) return s.remove(); s.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: "forwards" }).onfinish = () => s.remove(); };
   document.body.appendChild(s);
   if (!still) { // aus der Schießbude heraus wachsen und zur Mitte fliegen – ohne Schießbude von unten seitlich ins Bild
