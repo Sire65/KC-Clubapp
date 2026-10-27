@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.712.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.713.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9731,6 +9731,20 @@ function anrufAufraeumen() {
 // Einzelheiten zu Push/Mail weiterhin unter ℹ️.
 const HAKEN_EINS = '<svg viewBox="0 0 13 11" width="15" height="12" aria-hidden="true"><path d="M1.5 6.2l3.3 3.3L11.5 1.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const HAKEN_ZWEI = '<svg viewBox="0 0 19 11" width="21" height="12" aria-hidden="true"><path d="M1.5 6.2l3.3 3.3L11.5 1.8M8.2 8.6l.9.9L17.5 1.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// 2.713.0 KC-CLUB-CHAT-LESESTAND (Wunsch Hansi „in der Nachrichten-Übersicht sofort sehen: wie viele Empfänger, wie viele mit 2 Haken,
+// wie viele mit blauen Haken – in allen Chats, für alle“): Stand MEINER letzten eigenen Nachricht je Chat (Zahlen vom Server, dieselben Regeln
+// wie ℹ️ Details). Einzelchat: ein Zeichen wie bei WhatsApp; Gruppe: „17 → ✓✓ 10 · ✓✓ 4“ (angekommen einschließlich gelesen · davon gelesen).
+// Antippen öffnet die ℹ️ Details mit Namen.
+function uhLesestand(u) {
+  const s = u.meinStand; if (!s || !s.empf) return "";
+  const zeichen = (art) => art === "gelesen" ? `<span class="haken blau" aria-hidden="true">${HAKEN_ZWEI}</span>` : art === "angekommen" ? `<span class="haken" aria-hidden="true">${HAKEN_ZWEI}</span>` : `<span class="haken" aria-hidden="true">${HAKEN_EINS}</span>`;
+  const eigeneLetzte = u.letzte?.von === "Du", vor = eigeneLetzte ? "" : '<span class="uh-lese-vor">Deine letzte: </span>';
+  const inhalt = s.empf === 1
+    ? (s.gelesen ? zeichen("gelesen") + " gelesen" : s.angekommen ? zeichen("angekommen") + " angekommen" : zeichen("gesendet") + " gesendet")
+    : `<b>${s.empf}</b> →${zeichen("angekommen")}<b>${s.angekommen}</b> ·${zeichen("gelesen")}<b>${s.gelesen}</b>`;
+  const titel = s.empf === 1 ? "Antippen: Details zu deiner letzten Nachricht" : `${s.empf} Empfänger · bei ${s.angekommen} angekommen · ${s.gelesen} gelesen – antippen für die Namen`;
+  return `<div class="uh-lese" role="button" tabindex="0" title="${esc(titel)}" aria-label="${esc(titel)}" onclick="event.stopPropagation();nachrichtInfo('${esc(s.id)}')">${vor}${inhalt}</div>`;
+}
 function hakenHtml(m, anzahl) {
   const h = m.haken || (m.gelesenAlle ? "gelesen" : "gesendet");
   const zeichen = h === "gelesen" ? `<span class="haken blau" title="gelesen" aria-label="gelesen">${HAKEN_ZWEI}</span>` : h === "angekommen" ? `<span class="haken" title="auf dem Handy angekommen – noch nicht gelesen" aria-label="angekommen">${HAKEN_ZWEI}</span>` : `<span class="haken" title="gesendet – noch nicht auf dem Handy angekommen" aria-label="gesendet">${HAKEN_EINS}</span>`;
@@ -33627,7 +33641,7 @@ async function unterhLaden() {
     if (rkAn("chats") && !UH.archivAnsicht && zeigen.length) { $("unterhListe").innerHTML = neuKopf + archKopf + uhKarteiHtml(zeigen); uhKarteiAn(); uhAmeisen(); return; }
     $("unterhListe").innerHTML = neuKopf + archKopf + (zeigen.length ? `<p class="hinweis uhtipp">Antippen = öffnen · <b>⋯</b> = ⭐ Favorit, ${UH.archivAnsicht ? "📤 wieder aktivieren" : "📦 archivieren"}, 🗑️ löschen · lange drücken = markieren (gleiche Nachricht an mehrere)</p>` : "") + zeigen.map((u) => `<div class="unterh${u.id === UH.wahl ? " gewaehlt" : ""}${UH.mark.has(u.id) ? " markiert" : ""}${u.wichtigNeu ? " wichtig-neu" : ""}${uhUngelesen(u) ? " uh-neu" : ""}" data-id="${u.id}" onclick="unterhTipp('${u.id}')">
       ${u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 46)}
-      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div></div>
+      <div class="mitte"><div><b>${esc(u.gruppe?.name || u.betreff || u.teilnehmer.join(", "))}</b>${istFav(u) ? ' <span title="Favorit">⭐</span>' : UH.favAnsicht && u.haeufig ? ' <span class="hinweis" style="font-size:.8rem" title="Hier schreibst du am meisten">· oft</span>' : ""}${stummAn(u.id) ? ' <span title="stummgeschaltet">🔕</span>' : ""}${u.gruppe ? ` <span class="hinweis" style="font-size:.8rem">· ${u.anzahl} Mitgl.</span>` : ""}</div><div class="hinweis">${entwurfAlle()[u.id]?.trim() ? `<span class="entwurf-marke">✏️ Entwurf:</span> ${esc(entwurfAlle()[u.id].trim().slice(0, 80))}` : u.letzte ? esc(u.letzte.von + ": " + vnKurz(u.letzte.text)) : "Noch keine Nachricht"}</div>${uhLesestand(u)}</div>
       <div style="text-align:right"><div class="hinweis" style="font-size:.8rem">${u.letzte ? zeitKurz(u.letzte.zeit) : ""}</div>${u.nachrichten ? `<div class="hinweis uh-zahl" title="Nachrichten in dieser Unterhaltung">💬 ${u.nachrichten >= 1000 ? "999+" : u.nachrichten}</div>` : ""}${u.ungelesen ? `<span class="punkt${u.wichtigNeu ? " wichtig" : ""}" title="${u.wichtigNeu ? "darunter wichtige Nachricht" : ""}">${u.wichtigNeu ? "❗ " : ""}${u.ungelesen}</span>` : ""}</div><button type="button" class="uh-mehr" aria-label="Mehr zu diesem Chat: Favorit, archivieren, löschen" aria-expanded="${u.id === UH.wahl}" onclick="event.stopPropagation();uhMenue('${u.id}')">⋯</button></div>${u.id === UH.wahl ? unterhAktionen(u) : ""}`).join("")
       || (favKopf ? '<p class="hinweis">Noch keine Favoriten. Rechts am Chat auf <b>⋯</b> tippen und „⭐ Als Favorit“ wählen.</p>' : arch.length ? '<p class="hinweis">Alle Chats sind archiviert – oben auf „📦 Archiviert“ tippen.</p>' : '<p class="hinweis">Noch keine Nachrichten. Tippe oben auf „＋ Neu“.</p>');
     UH.mark.forEach((id) => { if (!zeigen.some((u) => u.id === id)) UH.mark.delete(id); }); uhMarkZeichnen(); uhLangDruck(); // KC-CLUB-MEHRFACH-NACHRICHT
@@ -33649,7 +33663,7 @@ function uhKarteiHtml(liste) {
   return `<div class="rk-box" id="uhKartei">${rkOnlineVorn(liste, uhOn).map((u) => { const titel = u.gruppe?.name || u.betreff || u.teilnehmer.join(", ");
     const bild = u.gruppe || u.anzahl > 2 ? uhRundeKreis(u) : kreis(MITGLIEDER?.find((m) => m.name === u.teilnehmer[0]) || null, u.teilnehmer[0], 30);
     return `<details class="karte uhk${uhUngelesen(u) ? " uh-neu" : ""}" data-klappe="uhk" data-id="${esc(u.id)}" data-stand="${esc(u.letzte?.zeit || "")}" open><summary>${bild}<span>${esc(titel)}</span>${u.ungelesen ? `<span class="punkt">${u.ungelesen}</span>` : ""}</summary>
-      <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>
+      <div class="hinweis uhk-info">${u.gruppe ? `🔗 Feste Gruppe · ${u.anzahl} Mitgl.` : u.anzahl > 2 ? `Runde · ${u.anzahl} Personen` : "Einzelchat"}${uhOn(u) ? " · 🟢 online" : ""}${u.letzte ? ` · zuletzt ${esc(zeitKurz(u.letzte.zeit))}` : ""}${stummAn(u.id) ? " · 🔕" : ""}</div>${uhLesestand(u)}
       <div class="uhk-verlauf" data-teil="verlauf">${u.letzte ? '<p class="hinweis">Wird geladen …</p>' : '<p class="hinweis">Noch keine Nachricht.</p>'}</div>
       <div class="uhk-knoepfe"><button type="button" class="knopf haupt" onclick="chatOeffnen('${esc(u.id)}')">💬 Öffnen &amp; antworten${u.ungelesen ? ` (${u.ungelesen} neu)` : ""}</button></div>
     </details>`; }).join("")}</div>`;

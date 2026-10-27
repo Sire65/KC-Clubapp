@@ -5756,6 +5756,8 @@ async function unterhaltungenAusPaket(ich: Ich, pk: any) {
     chatArchivHolen(ich.person_id), // KC-CLUB-CHAT-ARCHIV (2.23.28)
   ]);
   const gruppe = new Map(pk.gr.map((g: any) => [g.thread_id, g]));
+  // 2.713.0 KC-CLUB-CHAT-LESESTAND: Stand meiner letzten eigenen Nachricht je Chat (fehlt bei älterer Datenbank-Fassung → keine Haken in der Liste)
+  const stand = new Map<string, any>((Array.isArray(pk.stand) ? pk.stand : []).map((s: any) => [s.thread_id, s]));
   quittungMerken(ich, pk.agg.filter((a: any) => a.quittung).map((a: any) => a.thread_id as string), "angekommen"); // 2.447.0
   return pk.th.map((t: any) => {
     const a = agg.get(t.id), l = a?.letzte;
@@ -5771,6 +5773,8 @@ async function unterhaltungenAusPaket(ich: Ich, pk: any) {
       wichtigNeu: Number(a?.wichtig_neu ?? 0),
       aktualisiert: l?.created_at || t.updated_at,
       ...(archiv[t.id] ? { archiviert: archiv[t.id] } : {}),
+      ...(stand.has(t.id) ? { meinStand: { id: stand.get(t.id).id, zeit: stand.get(t.id).zeit, empf: Number(stand.get(t.id).empf) || 0,
+        angekommen: Number(stand.get(t.id).angekommen) || 0, gelesen: Number(stand.get(t.id).gelesen) || 0 } } : {}),
     };
   }).sort((x: any, y: any) => String(y.aktualisiert).localeCompare(String(x.aktualisiert)));
 }
@@ -11854,7 +11858,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             for (const x of alt as any[]) {
               const y: any = neuMap.get(x.id); if (!y) { felder.push({ chat: String(x.id).slice(0, 8), feld: "fehlt_neu" }); continue; }
               for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) {
-                if (spGleich(x[k], y[k])) continue;
+                if (k === "meinStand" || spGleich(x[k], y[k])) continue; // 2.713.0: Lesestand liefert nur das Paket
                 if (k === "letzte") { for (const u of ["von", "text", "zeit"]) if (!spGleich(x[k]?.[u], y[k]?.[u])) felder.push({ chat: String(x.id).slice(0, 8), feld: "letzte." + u, ...(u === "zeit" ? { alt: x[k]?.zeit ?? null, neu: y[k]?.zeit ?? null } : {}) }); }
                 else felder.push({ chat: String(x.id).slice(0, 8), feld: k, ...(["ungelesen", "nachrichten", "wichtigNeu", "anzahl", "aktualisiert", "archiviert"].includes(k) ? { alt: x[k] ?? null, neu: y[k] ?? null } : {}) });
               }

@@ -7660,6 +7660,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/<video controls playsinline preload="metadata"/.test(programm) && /api\("video_oeffnen", \{ id: v\.id \}\)/.test(programm), "Video: Abspieler");
   assert.ok(/const groesse = await faGroesseFrage\(faDateien\.length\); if \(!groesse\) return;/.test(programm) && /groesse === "spar" \? await verkleinern\(roh, 1280, 0\.72\)/.test(programm), "Foto-Platz: Frage vor jedem Hochladen, platzsparend 1280 px");
 }
+// 2.713.0 KC-CLUB-CHAT-LESESTAND (Hansi „in der Übersicht: Empfänger, 2 Haken, blaue Haken – in allen Chats, für alle“)
+{
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261027_kc_club_v2713_chat_lesestand.sql", import.meta.url), "utf8");
+  const alt = fs.readFileSync(new URL("../supabase/migrations/20261022_kc_club_unterhaltungen_paket.sql", import.meta.url), "utf8");
+  const teil = (q, von, bis) => q.slice(q.indexOf(von), q.indexOf(bis, q.indexOf(von)));
+  assert.equal(teil(mig, "with meine as", "), mein as").trim(), teil(alt, "with meine as", "\n  )\n  select").trim(), "Lesestand: bisherige Teile des Pakets unverändert");
+  assert.ok(/'stand', coalesce\(\(select jsonb_agg\(jsonb_build_object\('thread_id', s\.thread_id, 'id', s\.id, 'zeit', s\.created_at, 'empf', s\.empf, 'angekommen', s\.angekommen, 'gelesen', s\.gelesen\)\)/.test(mig)
+    && /revoke all on function public\.kc_club_unterhaltungen_paket\(text\) from public, anon, authenticated;/.test(mig) && /Rückweg:/.test(mig), "Lesestand: Paket liefert stand, nur Server darf aufrufen");
+  assert.ok(/p\.person_id not in \(select person_id from inko\)/.test(mig) && /join kc_club_rollen r on r\.person_id = e\.person_id and r\.ist_admin/.test(mig), "Lesestand: Inkognito (nur Admins) zählt nicht als angekommen");
+  assert.ok(/\.\.\.\(stand\.has\(t\.id\) \? \{ meinStand: \{/.test(server) && /if \(k === "meinStand" \|\| spGleich\(x\[k\], y\[k\]\)\) continue;/.test(server), "Lesestand: Server reicht meinStand durch, Vergleich alt/neu ignoriert ihn");
+  assert.ok(/function uhLesestand\(u\)/.test(programm) && /"Noch keine Nachricht"\}<\/div>\$\{uhLesestand\(u\)\}<\/div>/.test(programm) && /nachrichtInfo\('\$\{esc\(s\.id\)\}'\)/.test(programm), "Lesestand: Anzeige in der Liste, Antippen → Details");
+  assert.equal((programm.match(/\$\{uhLesestand\(u\)\}/g) || []).length, 2, "Lesestand: Liste und Rollkartei");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

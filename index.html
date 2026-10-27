@@ -2564,6 +2564,10 @@
   /* KC-CLUB-HAKEN (1.55.0): Haken wie WhatsApp – grau gesendet/angekommen, blau gelesen */
   .haken { display: inline-flex; vertical-align: -2px; margin: 0 2px 0 4px; color: var(--grau); } .blase.eigen .haken { color: rgba(255,255,255,.8); }
   .haken.blau, .blase.eigen .haken.blau { color: #5fd3ff; filter: drop-shadow(0 0 1px rgba(0,0,0,.6)); } .haken-teil { opacity: .85; }
+  /* 2.713.0 KC-CLUB-CHAT-LESESTAND: Lese-Stand der eigenen letzten Nachricht in der Chat-Übersicht */
+  .uh-lese { display: inline-flex; align-items: center; gap: 2px; margin-top: 2px; font-size: .82rem; color: var(--grau); cursor: pointer; flex-wrap: wrap; }
+  .uh-lese .haken { margin: 0 1px 0 4px; } .uh-lese .haken.blau { color: #1e9bd7; filter: none; } .uh-lese b { color: var(--text, inherit); font-weight: 700; }
+  .uh-lese-vor { opacity: .85; }
   .fp-gesamt { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 12px; background: var(--karte2); } /* KC-CLUB-FP-UEBERWACHUNG */
   .blase.wartet { opacity: .78; } .blase.wartet .fuss { font-style: italic; } /* KC-CLUB-NOTBETRIEB-STUFE2 */
   .ni-zeile.ni-wichtig { border: 2px solid #ff9800; border-radius: 12px; padding: 8px 10px; background: rgba(255,152,0,.12); font-weight: 700; }
@@ -6061,7 +6065,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.712.0" data-v="2.712.0"></script>
+<script src="app.js?v=2.713.0" data-v="2.713.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

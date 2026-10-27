@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.713.0 – 2026-10-27 – ✓✓ Lese-Stand in der Chat-Übersicht
+KC-CLUB-CHAT-LESESTAND: Wunsch Hansi („in der Nachrichten-Übersicht sofort sehen: wie viele Empfänger, wie viele mit 2 Haken, wie viele mit blauen Haken – in allen Chats, für alle“). Unter jedem Chat steht der Stand deiner **letzten eigenen Nachricht**: in Gruppen „**17 → ✓✓ 10 · ✓✓ 4**“ (17 Empfänger · bei 10 angekommen, gelesene mitgezählt · davon 4 gelesen, blaue Haken), im Einzelchat ein Zeichen wie bei WhatsApp (✓ gesendet · graue ✓✓ angekommen · blaue ✓✓ gelesen). Hat danach noch jemand geschrieben, steht „Deine letzte:“ davor. Antippen öffnet ℹ️ Details mit den Namen. Auch in der Rollkartei. Gleiche Regeln wie ℹ️ Details (gelesen = Chat seitdem geöffnet; angekommen = App-Rückmeldung oder App seitdem geöffnet; Inkognito zählt nicht als angekommen); Push-Rückmeldungen des Handys zählt nur ℹ️ Details. Kein zusätzlicher Datenbank-Aufruf – das Paket der Übersicht rechnet es mit (Migration `20261027_kc_club_v2713_chat_lesestand.sql`, gemessen ca. 10 ms wie vorher).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.712.0 – 2026-10-26 – 📭 Ungelesen auch für die Clubleitung, Filter aufgeräumt
 - 📭 „Ungelesen“ gibt es jetzt auch für Klaus und Dieter (Kachel unter „Meins“ und Knopf in den Nachrichten) – jeder sieht nur seine eigenen Nachrichten. Die Filter stehen ordentlich im Klappbereich „🔎 Filter“ (KC-CLUB-UNGELESEN-LEITUNG).
 
