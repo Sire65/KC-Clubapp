@@ -47,3 +47,19 @@ jobs:
       - run: node tests/vm-stier.test.mjs
       - run: node tests/fee-blase.test.mjs
       - run: node tests/ungelesen-admin.test.mjs
+      # 2.725.0 KC-CLUB-TESTS-ALLE (Prüfbericht Etappe 5): fehlten in dieser Liste (beim Veröffentlichen liefen sie schon) – ein Wächter in
+      # app-vertrag.test.mjs meldet künftig jeden tests/*.test.mjs, der hier nicht steht
+      - run: node tests/anruf-besser.test.mjs
+      - run: node tests/backup-verify-teile.test.mjs
+      - run: node tests/rose.test.mjs
+  # 2.725.0 KC-CLUB-RUNDGANG: Klick-Rundgang im echten Browser (Testdaten, nichts nach draußen) – Programmfehler und Schutzschild-Sperren werden rot
+  rundgang:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock playwright@1.49.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/rundgang.browser.mjs

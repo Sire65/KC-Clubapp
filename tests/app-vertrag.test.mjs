@@ -7743,6 +7743,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(seite, /@media \(max-width: 1023px\) \{\n    \.su-klein, \.hz-frage, \.hz-klick, \.sb-knopf \{ transition/, "nur am Handy/Tablet (Breitbild: stehen im Rand)");
   assert.match(programm, /document\.body\.classList\.toggle\("knoepfe-weg", d > 0 && y > 40 && !ende\);/, "weg nur beim Runterscrollen, nicht oben und nicht am Ende");
   assert.match(programm, /document\.body\.classList\.remove\("knoepfe-weg"\); KNW\.y = 0;/, "neue Seite → Knöpfe wieder da");
+  // KC-CLUB-TESTS-ALLE + KC-CLUB-RUNDGANG (Etappe 5): jeder Test steht in der Tests-Prüfung, Klick-Rundgang im Browser läuft mit
+  const wf = fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8");
+  for (const t of fs.readdirSync(new URL("./", import.meta.url)).filter((f) => f.endsWith(".test.mjs"))) assert.ok(wf.includes(`node tests/${t}`), `Test ${t} fehlt in .github/workflows/tests.yml`);
+  assert.match(wf, /run: node tests\/rundgang\.browser\.mjs/, "Klick-Rundgang in der Tests-Prüfung");
+  const rg = fs.readFileSync(new URL("./rundgang.browser.mjs", import.meta.url), "utf8");
+  assert.match(rg, /\/\^\(skript\|versprechen\|gefangen\|instabil\|schutz\|start_kaputt\)\$\//, "Rundgang: Programmfehler und Schutzschild-Sperren machen rot");
+  assert.match(rg, /return r\.abort\(\); \/\/ nichts nach draußen/, "Rundgang: keine echten Server");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
