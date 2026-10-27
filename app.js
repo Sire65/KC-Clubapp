@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.721.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.722.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5455,7 +5455,7 @@ const HILFE = [
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
   { id: "spassstimme", thema: "toene", sym: "🎭", t: "Spaßstimmen im Gespräch", x: "Im App-Gespräch auf <b>🎭</b> tippen und eine Stimme wählen – z. B. 🐭 Mäusestimme, 🎈 Helium, 🤖 Roboter, 🐻 Brummbär oder 👻 Gespenst. Dein Gegenüber hört dich damit, du selbst hörst normal; mit 🙂 Normal geht es zurück. Klopft jemand mit „Sprechen“ an, kannst du gleich <b>„🎭 Mit Spaßstimme annehmen“</b>. Ausprobieren: ⚙️ → Privatsphäre → beim Anklopfton.", seit: "2.650.0" },
   { id: "haendlerausweis", thema: "club", sym: "🪪", t: "Händler-Ausweis für den Weihnachtsmarkt", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Büro → <b>🖨️ Drucker</b> → <b>🪪 Händler-Ausweis</b>: Jahr, Rabatt in % und die Nummern wählen – je A4-Blatt 10 Ausweise mit Schnittmarken, beidseitig drucken (lange Kante). Jeder Ausweis hat Nummer und QR-Code mit Prüfcode. Mit <b>📋 Ausgabeliste</b> trägst du ein, wer welchen Ausweis bekommen hat; am Stand QR-Code scannen und Prüfcode vergleichen.", seit: "2.690.0" },
-  { id: "fett", thema: "nachrichten", sym: "𝐅", t: "Ein Wort fett, kursiv oder durchgestrichen", x: "Im Schreibfeld ein Wort <b>markieren</b> (lange drücken oder doppelt tippen) – darüber erscheinen <b>F fett</b>, <i>K kursiv</i> und <s>D durch</s>. Antippen, fertig. Oder in der kleinen Zeile über dem Schreibfeld auf <b>F</b> tippen. Wie bei WhatsApp geht es auch mit Zeichen: <b>*fett*</b>, <i>_kursiv_</i>, <s>~durchgestrichen~</s>. Nochmal antippen nimmt es wieder weg.", seit: "2.686.0" },
+  { id: "fett", thema: "nachrichten", sym: "𝐅", t: "Ein Wort fett, kursiv oder durchgestrichen", x: "Im Schreibfeld ein Wort <b>markieren</b> (lange drücken oder doppelt tippen) – darüber erscheinen <b>F fett</b>, <i>K kursiv</i> und <s>D durch</s>. Antippen, fertig. Oder in der kleinen Zeile über dem Schreibfeld auf <b>F</b> tippen. Wie bei WhatsApp geht es auch mit Zeichen: <b>*fett*</b>, <i>_kursiv_</i>, <s>~durchgestrichen~</s>. Nochmal antippen nimmt es wieder weg. Daneben die Farben <span class=\"nf nf-rot\">Rot</span>, <span class=\"nf nf-blau\">Blau</span>, <span class=\"nf nf-gruen\">Grün</span> und <span class=\"nf nf-gelb\">Gelb</span> (Textmarker) – genauso: markieren, Farbe antippen.", seit: "2.686.0" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
   { id: "wer_ist_da", thema: "toene", sym: "👋", t: "Wer ist da, wenn ich reinkomme?", x: "Beim Reinkommen – also beim Öffnen der App oder nach mindestens 10 Minuten Pause – sagt sie einmal, wer gerade da ist – z. B. <b>„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“</b> Oben erscheint dazu eine kurze Meldung. Ist niemand da, kommt nichts. Wer seinen Online-Status verbirgt, wird nicht genannt. Das Handy spricht erst, wenn du einmal auf den Bildschirm getippt hast. Ausschalten: ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → <b>„👋 Beim Öffnen“</b>.", zeig: () => einstiegHin("ansagen"), seit: "2.454.0" },
   { id: "ansage_verlassen", thema: "toene", sym: "🚪", t: "Ansage, wenn jemand die App verlässt", x: "Neben „… ist jetzt online“ kann das Handy auch ansagen, wenn jemand die App verlässt. Das ist zunächst aus – unter ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ kannst du es dazunehmen, wenn du magst.", zeig: () => einstiegHin("ansagen"), seit: "2.23.1" },
@@ -34200,7 +34200,7 @@ const NA_SCHNELL = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 // 2.636.0: Anlagen werden mitverschlüsselt (KC-CLUB-VN-ANLAGEN). Schlüssel vergessen = Nachricht nicht mehr lesbar (niemand kann helfen).
 const VN_PRE = "🔒KCV1:", VN_MIN = 6, VN_MAX_TEXT = 2900, VN = { an: false, klar: new Map() };
 const vnIst = (t) => typeof t === "string" && t.startsWith(VN_PRE);
-const vnKurz = (t) => (vnIst(t) ? (VN.klar.has(t) ? "🔓 " + VN.klar.get(t) : "🔒 Verschlüsselte Nachricht") : t);
+const vnKurz = (t) => (vnIst(t) ? (VN.klar.has(t) ? "🔓 " + naOhneFarbe(VN.klar.get(t)) : "🔒 Verschlüsselte Nachricht") : naOhneFarbe(t)); // 2.722.0: Vorschau ohne [rot]…[/rot]
 const vnKeyName = (id) => "kc_club_vschluessel:" + (id || "neu");
 function vnGemerkt(id) { try { return localStorage.getItem(vnKeyName(id)) || ""; } catch { return ""; } }
 function vnMerken(id, k) { try { if (id && k) localStorage.setItem(vnKeyName(id), k); } catch {} }
@@ -34405,9 +34405,16 @@ function naFormat(h) { // h ist schon sicher (esc) – es kommen nur <b>/<i>/<s>
     h = h.replace(new RegExp(`(^|[\\s(„"'>;])${e}([^\\s${e}](?:[^${e}\\n]*?[^\\s${e}])?)${e}(?=$|[\\s.,!?;:)“"'<])`, "g"), `$1<${tag}>$2</${tag}>`); }
   return h;
 }
+// 2.722.0 KC-CLUB-CHAT-FARBE (Wunsch Hansi „Text oder bestimmte Wörter in Farbe – starke Farben: knallrot, blau, grün, gelb, kein Pastell –
+// neben dem F“): Markiertes wird zu [rot]Wort[/rot] (ältere Apps, Push und E-Mail zeigen nur das Wort bzw. die Klammern). Gelb ist ein Textmarker
+// (gelber Grund, schwarze Schrift), weil gelbe Schrift auf Weiß nicht lesbar ist; in der eigenen (farbigen) Blase sind alle Farben Marker.
+const NA_FARBEN = { rot: "Rot", blau: "Blau", grün: "Grün", gelb: "Gelb" };
+const NA_FARB_RE = /\[(rot|blau|grün|gelb)\]([\s\S]+?)\[\/\1\]/g;
+const naOhneFarbe = (t) => String(t ?? "").replace(NA_FARB_RE, "$2");
+const naFarbe = (h) => h.replace(NA_FARB_RE, (x, f, w) => `<span class="nf nf-${f === "grün" ? "gruen" : f}">${w}</span>`); // h ist schon sicher (esc)
 function naText(t) { // Text sicher ausgeben, @Namen hervorheben, App-Sprünge als Knopf (KC-CLUB-SPRUNGKNOPF 2.23.97)
   if (vnIst(t)) return vnHtml(t); // 2.517.0 KC-CLUB-VERSCHLUESSELT
-  return naFormat(esc(t)).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
+  return naFormat(naFarbe(esc(t))).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
 }
 // Knöpfe F · K · D über dem Schreibfeld: erscheinen, sobald man im Text etwas markiert (Wort lange drücken / doppelt tippen), und über 𝐅 in der
 // kleinen Zeile. Markiertes wird eingerahmt (*Wort*); ohne Markierung kommen zwei Zeichen, der Strich steht dazwischen – einfach weiterschreiben.
@@ -34420,6 +34427,16 @@ function naFormatSetzen(z) {
   f.value = v.slice(0, a) + neu + v.slice(e); f.focus();
   if (mitte) f.setSelectionRange(a, a + neu.length); else f.setSelectionRange(a + 1, a + 1);
   f.dispatchEvent(new Event("input", { bubbles: true })); naFormatLeiste();
+}
+function naFarbeSetzen(f) { // wie naFormatSetzen, nur mit [farbe]…[/farbe]; andere Farbe am selben Text wird ersetzt, gleiche nimmt sie weg
+  const el = $("text"); if (!el) return;
+  let a = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? a; const v = el.value;
+  while (e > a && /\s/.test(v[e - 1])) e--; while (a < e && /\s/.test(v[a])) a++;
+  const mitte = v.slice(a, e), m = /^\[(rot|blau|grün|gelb)\]([\s\S]*)\[\/\1\]$/.exec(mitte), auf = `[${f}]`, zu = `[/${f}]`;
+  const neu = m ? (m[1] === f ? m[2] : auf + m[2] + zu) : auf + mitte + zu;
+  el.value = v.slice(0, a) + neu + v.slice(e); el.focus();
+  if (mitte) el.setSelectionRange(a, a + neu.length); else el.setSelectionRange(a + auf.length, a + auf.length);
+  el.dispatchEvent(new Event("input", { bubbles: true })); naFormatLeiste();
 }
 function naFormatLeiste(immer) {
   const f = $("text"), l = $("formatLeiste"); if (!f || !l) return;

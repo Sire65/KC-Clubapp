@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.722.0 – 2026-10-27 – 🎨 Farbe in Nachrichten (KC-CLUB-CHAT-FARBE)
+Wunsch Hansi („Text oder bestimmte Wörter in Nachrichten in Farbe – sehr starke Kontrastfarben: knallrot, blau, grün, gelb, kein Pastell – neben dem F“): In der Leiste über dem Schreibfeld (erscheint beim Markieren oder über 𝐅) stehen neben **F · K · D** jetzt vier kräftige Farbknöpfe **Rot · Blau · Grün · Gelb**. Wort oder Text markieren (lange drücken / doppelt tippen), Farbe antippen – fertig; nochmal dieselbe Farbe nimmt sie weg, eine andere ersetzt sie. Ohne Markierung kommt die Farbe an die Schreibstelle, einfach weiterschreiben.
+- Im Text steht dafür `[rot]Wort[/rot]` (ältere Apps zeigen das so). **Gelb** ist ein Textmarker (gelber Grund, schwarze Schrift), weil gelbe Schrift auf Weiß nicht lesbar ist. In der eigenen, farbigen Blase werden alle Farben als Marker gezeigt, damit Rot auf Weinrot lesbar bleibt. Im Nachtmodus etwas hellere Töne. Mit fett kombinierbar: `[rot]*Achtung*[/rot]`.
+- Chat-Liste, Push und E-Mail zeigen nur das Wort ohne die Farbzeichen.
+
 ## 2.721.0 – 2026-10-27 – 🚗 Anfahrt in km · 🗓️ Dienstplan gründlich nachgebessert (KC-CLUB-ANFAHRT, KC-CLUB-DP-NACHBESSERN, KC-CLUB-DP-VORSCHLAG)
 - Wunsch Hansi („wer von weiter weg kommt – aus den Adressen in den Stammdaten eine km-Anzeige machen“): Der Club-Server rechnet aus der Postleitzahl der Stammdaten die Entfernung zum Weihnachtsmarkt (Werne, Marktplatz) – Luftlinie und geschätzte Fahrt (× 1,3). Daten: GeoNames-Postleitzahlen (CC BY 4.0) liegen im Server (`anfahrt.js`), keine Adresse geht an einen fremden Dienst; ändert sich die Adresse, stimmt die Anzeige sofort. Sichtbar: Büro → Mitgliederliste → neue Liste **🚗 Anfahrt** (Wohnort und km, weiteste zuerst – nur Clubleitung), in der Mitglieder-Karte „🚗 Anfahrt zum Markt Werne“ (man selbst und Clubleitung) und unter „Meine Daten“.
 - Prüfung Hansi („Plan gründlich prüfen, bevor ich ihn am Freitag vorstelle“) – Dienstplan-Rechnung (Regel 3, rechnet sich beim Öffnen von selbst neu):

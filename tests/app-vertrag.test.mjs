@@ -5918,7 +5918,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7486,7 +7486,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(nf(esc0("Morgen *18 Uhr* am _Clubheim_ – ~Freitag~ Samstag!")), "Morgen <b>18 Uhr</b> am <i>Clubheim</i> – <s>Freitag</s> Samstag!");
   assert.equal(nf(esc0("Link https://x.de/a_b_c und 5*3*2")), "Link https://x.de/a_b_c und 5*3*2", "Links und Rechnungen bleiben");
   assert.equal(nf(esc0("*<script>*")), "<b>&lt;script&gt;</b>", "bleibt sicher (erst esc, dann nur b/i/s)");
-  assert.match(programm, /return naFormat\(esc\(t\)\)\.replace\(/, "in jeder Nachricht");
+  assert.match(programm, /return naFormat\((naFarbe\()?esc\(t\)\)\)?\.replace\(/, "in jeder Nachricht");
   assert.match(html, /id="formatLeiste"[^\n]*onclick="naFormatSetzen\('\*'\)"[^\n]*onclick="naFormatSetzen\('_'\)"[^\n]*onclick="naFormatSetzen\('~'\)"/, "Knöpfe F K D");
   assert.match(html, /id="fettKnopf"/, "F in der kleinen Zeile");
   assert.match(programm, /document\.addEventListener\("selectionchange", \(\) => \{ if \(document\.activeElement\?\.id === "text"\) naFormatLeiste\(\); \}\);/, "erscheint beim Markieren");
@@ -7700,6 +7700,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(html, /<select id="setUhGlied" onchange="uhGliedSetzen\(this\.value\)"/, "Einstellung im Zahnrad");
   assert.match(programm, /const uhGliedAn = \(\) => !!UH_GLIED_ARTEN\[uhGlied\(\)\] && !UH\.archivAnsicht && !UH\.favAnsicht;/, "Archiv/Favoriten unverändert");
 }
+// 2.722.0 KC-CLUB-CHAT-FARBE: [rot]…[/rot] usw. – Knöpfe neben F/K/D, Vorschau/Push/E-Mail ohne Farbzeichen
+{
+  assert.match(programm, /const NA_FARB_RE = \/\\\[\(rot\|blau\|grün\|gelb\)\\\]/, "nur vier feste Farben");
+  assert.match(programm, /return naFormat\(naFarbe\(esc\(t\)\)\)/, "Farbe nach esc (sicher), vor fett");
+  assert.match(programm, /<span class="nf nf-\$\{f === "grün" \? "gruen" : f\}">\$\{w\}<\/span>/, "nur Klasse, keine freie Farbe");
+  assert.equal((html.match(/onclick="naFarbeSetzen\('(rot|blau|grün|gelb)'\)"/g) || []).length, 4, "vier Farbknöpfe");
+  assert.match(programm, /naOhneFarbe\(t\)\); \/\/ 2\.722\.0: Vorschau/, "Vorschau ohne Farbzeichen");
+  assert.match(server, /const ohneFarbe = \(t: string\) =>/, "Server entfernt Farbzeichen");
+  assert.ok((server.match(/\$\{slHinweis \|\| ohneFarbe\(text\)\}/g) || []).length >= 2, "Mail ohne Farbzeichen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -7819,7 +7829,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/nachrichtMenue\('\$\{m\.id\}'\)/.test(html) && /const NA_SCHNELL = \["👍", "❤️", "😂", "😮", "😢", "🙏"\]/.test(html), "Menü mit Schnell-Reaktionen fehlt");
   assert.ok(/function naAntworten\(/.test(html) && /id="antwortLeiste"/.test(html) && /antwort_auf: NA\.antwort\.id/.test(html), "Antworten fehlt");
   assert.ok(/function naErwPruefen\(/.test(html) && /id="erwVorschlag"/.test(html) && /erwaehnt: naErwaehnteIds\(text\)/.test(html), "@Erwähnen fehlt");
-  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return (naFormat\()?esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
+  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return (naFormat\()?(naFarbe\()?esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
 }
 
 // 122. 0.98.0: Weiterleiten, Nicht stören, Meine Geräte
@@ -9273,7 +9283,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(c) && !/nurAdmin|ich\.admin/.test(c) && /protokoll\(ich\.person_id, "chat_selbstloeschen", \{ thread: id, stunden: std, alte_eigene: alteMeine \}\)/.test(c), "jeder Teilnehmer darf, Protokoll ohne Text");
   assert.ok(/hat Selbstlöschen eingeschaltet/.test(c) && /hat Selbstlöschen ausgeschaltet/.test(c), "alle sehen die Änderung im Chat");
   const s = sv.slice(sv.indexOf('case "nachricht_senden"'), sv.indexOf('case "privattermin_speichern"'));
-  assert.ok(/if \(!notfall\)/.test(s) && /kc_club_nachricht_ablauf"\)\.insert/.test(s) && /\$\{slHinweis \|\| text\}/.test(s) && /slHinweis \? slHinweis :/.test(s), "Notfall löscht sich nie; Push/Mail ohne Text");
+  assert.ok(/if \(!notfall\)/.test(s) && /kc_club_nachricht_ablauf"\)\.insert/.test(s) && /\$\{slHinweis \|\| (ohneFarbe\()?text\)?\}/.test(s) && /slHinweis \? slHinweis :/.test(s), "Notfall löscht sich nie; Push/Mail ohne Text");
   assert.ok(/Date\.parse\(String\(bis\)\) <= Date\.now\(\)\) \{ wegIds\.add\(mid\)/.test(sv) && /loeschtAm: ablaufMap\.get\(m\.id\)/.test(sv), "Abgelaufenes wird nie gezeigt");
   assert.ok(/on delete cascade/.test(m) && /cron\.schedule\('kc-club-selbstloeschen', '\*\/5 \* \* \* \*'/.test(m) && /a\.loescht_am <= now\(\)/.test(m) && /revoke all on function public\.kc_club_selbstloeschen_ausfuehren\(\) from public, anon, authenticated/.test(m), "Server löscht selbst, nur abgelaufene, nur service_role");
   assert.ok(!/\b(drop|truncate|update)\b/i.test(m.replace(/^--.*$/gm, "")) && !/alter table kc_communication/i.test(m), "Kern-Tabellen unverändert");

@@ -1035,6 +1035,16 @@
   .hs-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .hs-nie { all: unset; cursor: pointer; font-size: .85rem; text-decoration: underline; opacity: .75; padding: 6px 2px; }
   .nz-hs { width: 100%; border-collapse: collapse; } .nz-hs th, .nz-hs td { padding: 4px 6px; border-bottom: 1px solid var(--rand, #e5d9c8); text-align: center; } .nz-hs td:first-child, .nz-hs th:first-child { text-align: left; }
   @keyframes hsRein { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } } @media (prefers-reduced-motion: reduce) { .hs-blase { animation: none; } }
+  /* 2.722.0 KC-CLUB-CHAT-FARBE: kräftige Farben, kein Pastell; Gelb als Textmarker; in der eigenen Blase alle als Marker */
+  .nf { font-weight: 700; } .nf-rot { color: #e00000; } .nf-blau { color: #0047ff; } .nf-gruen { color: #008a00; }
+  .nf-gelb { background: #ffe600; color: #000; border-radius: 3px; padding: 0 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  :root.dunkel .nf-rot { color: #ff3b3b; } :root.dunkel .nf-blau { color: #5b9bff; } :root.dunkel .nf-gruen { color: #2ee52e; }
+  .blase.eigen .nf { border-radius: 3px; padding: 0 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .blase.eigen .nf-rot { background: #ff1a1a; color: #fff; box-shadow: 0 0 0 1px #fff; } .blase.eigen .nf-blau { background: #0047ff; color: #fff; } .blase.eigen .nf-gruen { background: #008a00; color: #fff; }
+  .format-leiste .fl-trenn { width: 1px; align-self: stretch; background: var(--linie); margin: 0 2px; }
+  .format-leiste .fl-farbe { font-weight: 800; border-width: 2px; }
+  .format-leiste .fl-rot { color: #fff; background: #e00000; border-color: #e00000; } .format-leiste .fl-blau { color: #fff; background: #0047ff; border-color: #0047ff; }
+  .format-leiste .fl-gruen { color: #fff; background: #008a00; border-color: #008a00; } .format-leiste .fl-gelb { color: #000; background: #ffe600; border-color: #d4bf00; }
   .format-leiste { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 0 6px 6px; } .format-leiste .fl-titel { font-size: .8rem; color: var(--grau); } .format-leiste button { border: 1px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 14px; padding: 5px 12px; font-size: .95rem; cursor: pointer; } .format-leiste .fl-zu { padding: 5px 9px; margin-left: auto; }
   .klopf-art { display: inline-block; margin: 2px 0 8px; padding: 4px 12px; border-radius: 14px; font-weight: 700; font-size: 1.05rem; } .klopf-art.schreiben { background: var(--blaubg, #e3eefb); color: var(--blau, #1d4f8a); } .klopf-art.sprechen { background: var(--gruenbg); color: var(--gruen); }
   .ca-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 4px 0 2px; font-size: .82rem; } .ca-legende .ca-amp { border-left: 4px solid transparent; padding-left: 5px; }
@@ -5847,7 +5857,7 @@
   <div class="hinweis versteckt" id="liveHinweis" style="font-size:.78rem;margin:0 6px 4px">👁️ Live-Tippen ist an – die anderen sehen, was du schreibst (⚙️ Mehr → Privatsphäre)</div>
   <div class="zustell versteckt" id="zustell"></div>
   <!-- 2.686.0 KC-CLUB-CHAT-FETT: erscheint beim Markieren im Schreibfeld (oder über F in der kleinen Zeile) -->
-  <div class="format-leiste versteckt" id="formatLeiste" role="group" aria-label="Text hervorheben"><span class="fl-titel">Markiertes:</span><button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatSetzen('*')" aria-label="fett"><b>F</b> fett</button><button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatSetzen('_')" aria-label="kursiv"><i>K</i> kursiv</button><button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatSetzen('~')" aria-label="durchgestrichen"><s>D</s> durch</button><button type="button" class="fl-zu" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatLeiste(false)" aria-label="Schließen">✕</button></div>
+  <div class="format-leiste versteckt" id="formatLeiste" role="group" aria-label="Text hervorheben"><span class="fl-titel">Markiertes:</span><button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatSetzen('*')" aria-label="fett"><b>F</b> fett</button><button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatSetzen('_')" aria-label="kursiv"><i>K</i> kursiv</button><button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatSetzen('~')" aria-label="durchgestrichen"><s>D</s> durch</button><span class="fl-trenn" aria-hidden="true"></span><button type="button" class="fl-farbe fl-rot" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFarbeSetzen('rot')" aria-label="Rot färben" title="Rot">Rot</button><button type="button" class="fl-farbe fl-blau" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFarbeSetzen('blau')" aria-label="Blau färben" title="Blau">Blau</button><button type="button" class="fl-farbe fl-gruen" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFarbeSetzen('grün')" aria-label="Grün färben" title="Grün">Grün</button><button type="button" class="fl-farbe fl-gelb" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFarbeSetzen('gelb')" aria-label="Gelb färben" title="Gelb">Gelb</button><button type="button" class="fl-zu" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="naFormatLeiste(false)" aria-label="Schließen">✕</button></div>
   <div class="chips" id="anlagenChips"></div>
   <!-- KC-CLUB-ANTWORT / -ERWAEHNUNG (0.97.0) -->
   <div class="antwort-leiste versteckt" id="antwortLeiste"></div>
@@ -6098,7 +6108,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.721.0" data-v="2.721.0"></script>
+<script src="app.js?v=2.722.0" data-v="2.722.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
