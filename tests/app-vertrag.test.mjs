@@ -5918,7 +5918,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -13452,4 +13452,22 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
   assert.ok(!r.tage[3].ber.some((x) => x.n === "Manfred S"), "am freien Tag keine Bereitschaft");
   assert.ok(/maxTageAmStueck: Number\.isFinite\(Number\(konf\.maxTageAmStueck\)\) \? Number\(konf\.maxTageAmStueck\) : 5/.test(server), "Standard 5 Tage, einstellbar");
   assert.ok(/pk\[pid\]\?\.keineBereitschaft !== true/.test(server) && /pid !== adminId \|\| pk\[pid\]\?\.bereitschaft === true/.test(server), "Bereitschaft je Person ein-/ausschaltbar");
+}
+// 2.722.0 (Wunsch Hansi „Leon als Aushilfe abends mit Anne, aber nicht nur“, „Marianne fällt evtl. aus“): begleitet = so viele andere müssen mit da sein, hinweis neben dem Namen
+{
+  const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  assert.ok(DP_REGEL >= 5, "Regel-Stand steigt → gespeicherter Stand wird von selbst neu gerechnet");
+  const tage = [{ d: "2026-12-04", art: "Markttag", baender: [{ start: 17, end: 23, total: 3, front: null, back: null }] }];
+  const ein = (a, b) => [{ d: "2026-12-04", t: "avai", z: "B", a, b }];
+  // nur Anne da (17–20): Leon braucht 2 andere → wird nicht eingeplant; mit Anne und Klaus (17–23) schon
+  let r = dpRechnen({ tage, personen: [{ key: "Anne R", name: "Anne R", eintraege: ein(17, 20) }, { key: "Leon W", name: "Leon W", eintraege: ein(17, 23), begleitet: 2 }] });
+  assert.ok(!r.tage[0].leute.find((x) => x.n === "Leon W").s, "Aushilfe nie ohne genug andere");
+  r = dpRechnen({ tage, personen: [{ key: "Anne R", name: "Anne R", eintraege: ein(17, 23) }, { key: "Klaus Z", name: "Klaus Z", eintraege: ein(19, 23) },
+    { key: "Leon W", name: "Leon W", eintraege: ein(17, 23), begleitet: 2, hinweis: "nur mit anderen" }, { key: "Marianne B", name: "Marianne B", eintraege: ein(17, 19), hinweis: "unsicher – evtl. Augen-OP" }] });
+  const leon = r.tage[0].leute.find((x) => x.n === "Leon W");
+  assert.ok(leon.s, "Aushilfe mit genug anderen eingeplant");
+  const staff = (h) => r.tage[0].leute.filter((x) => x.n !== "Leon W" && x.s && x.s[0] <= h && x.s[1] > h).length;
+  for (let h = leon.s[0]; h < leon.s[1]; h += 0.5) assert.ok(staff(h) >= 2, `um ${h} Uhr mindestens 2 andere mit Leon`);
+  assert.ok(/nur mit anderen/.test(leon.z) && /unsicher – evtl\. Augen-OP/.test(r.tage[0].leute.find((x) => x.n === "Marianne B").z), "Hinweis steht neben dem Namen");
+  assert.ok(/Number\.isFinite\(Number\(pk\[pid\]\?\.begleitet\)\) \? \{ begleitet: Number\(pk\[pid\]\.begleitet\) \}/.test(server) && /pk\[pid\]\?\.hinweis \? \{ hinweis:/.test(server), "Server reicht begleitet und hinweis aus der Konfig durch");
 }
