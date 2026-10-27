@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.724.0 – 2026-10-27 – 🗓️ Dienstplan: Aushilfe nur mit anderen, Hinweise im Plan (KC-CLUB-DP-NACHBESSERN)
+Wunsch Hansi („Leon als Aushilfe können wir abends einteilen mit Anne, aber nicht nur“) – Dienstplan-Rechnung Regel 5 (rechnet sich beim Öffnen von selbst neu):
+- **Nur mit anderen** (`dp_druck_konfig.personen[pid].begleitet`): so viele andere müssen in jeder halben Stunde des Dienstes mit am Stand sein – auch bei der Nachbesserung. Leon: 2.
+- **Hinweis neben dem Namen** (`personen[pid].hinweis`, höchstens 60 Zeichen) steht im Plan neben der Zone, z. B. Leon „nur mit anderen“.
+- Vorläufige Zeiten (bis eigene Wunschpläne kommen; ein eigener Wunschplan geht immer vor): Anne an den Markttagen ab 16 Uhr bis Ende (bevorzugt), Leon abends ab 17 Uhr (außer 07.12. und 09.12.) und Thomas ab 11 Uhr bis 16 Uhr (höchstens 30 Std.).
+
 ## 2.723.0 – 2026-10-27 – 🛡️ Schutzschild im Browser (KC-CLUB-SCHUTZSCHILD)
 Prüfbericht Etappe 1 (Wunsch #44): Die App hat jetzt eine Content-Security-Policy. Programmcode kommt nur noch von der eigenen Seite, Daten gehen nur an die eigenen Server (Club-Server, Live-Verbindung, Notbetrieb, Störungs- und Tempo-Prüfung), eingebettet werden nur Karten. Wird etwas gesperrt, steht es als „🛡️ Schutzschild“ im Fehlerprotokoll.
 

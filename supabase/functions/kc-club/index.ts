@@ -135,7 +135,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.722.0";
+const SERVER_VERSION = "2.724.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4642,6 +4642,7 @@ async function dpDruckNeu(adminId: string) {
   const kmVon = new Map((leute ?? []).map((p: any) => [String(p.person_id), Number.isFinite(Number(pk[p.person_id]?.anfahrtKm)) ? Number(pk[p.person_id].anfahrtKm) : (anfahrt(p.postal_code, p.city)?.fahrt ?? 0)]));
   const grenzeKm = Number(konf.anfahrtGrenzeKm ?? 10), minWeit = Number(konf.anfahrtMinDienst ?? 3);
   const grenzen = (pid: string) => ({ ...(Number.isFinite(Number(pk[pid]?.maxGesamt)) ? { maxGesamt: Number(pk[pid].maxGesamt) } : {}), ...(Number.isFinite(Number(pk[pid]?.maxDienst)) ? { maxDienst: Number(pk[pid].maxDienst) } : {}),
+    ...(Number.isFinite(Number(pk[pid]?.begleitet)) ? { begleitet: Number(pk[pid].begleitet) } : {}), ...(pk[pid]?.hinweis ? { hinweis: String(pk[pid].hinweis).slice(0, 60) } : {}), // 2.722.0
     ...((kmVon.get(pid) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}) });
   const name = new Map((leute ?? []).map((p: any) => [String(p.person_id), String(p.display_name || p.person_id)]));
   const wRev = new Map((wRoh ?? []).map((w: any) => [String(w.person_id), w]));
