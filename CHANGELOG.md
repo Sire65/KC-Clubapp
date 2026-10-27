@@ -1,10 +1,15 @@
 # Änderungen
 
-## 2.722.0 – 2026-10-27 – 🗓️ Dienstplan: Aushilfe nur mit anderen, Hinweise im Plan (KC-CLUB-DP-NACHBESSERN)
+## 2.723.0 – 2026-10-27 – 🗓️ Dienstplan: Aushilfe nur mit anderen, Hinweise im Plan (KC-CLUB-DP-NACHBESSERN)
 Wunsch Hansi („Leon als Aushilfe können wir abends einteilen mit Anne, aber nicht nur“) – Dienstplan-Rechnung Regel 5 (rechnet sich beim Öffnen von selbst neu):
 - **Nur mit anderen** (`dp_druck_konfig.personen[pid].begleitet`): so viele andere müssen in jeder halben Stunde des Dienstes mit am Stand sein – auch bei der Nachbesserung. Leon: 2.
 - **Hinweis neben dem Namen** (`personen[pid].hinweis`, höchstens 60 Zeichen) steht im Plan neben der Zone, z. B. Leon „nur mit anderen“.
 - Vorläufige Zeiten (bis eigene Wunschpläne kommen; ein eigener Wunschplan geht immer vor): Anne an den Markttagen ab 16 Uhr bis Ende (bevorzugt), Leon abends ab 17 Uhr (außer 07.12. und 09.12.) und Thomas ab 11 Uhr bis 16 Uhr (höchstens 30 Std.).
+
+## 2.722.0 – 2026-10-27 – 🎨 Farbe in Nachrichten (KC-CLUB-CHAT-FARBE)
+Wunsch Hansi („Text oder bestimmte Wörter in Nachrichten in Farbe – sehr starke Kontrastfarben: knallrot, blau, grün, gelb, kein Pastell – neben dem F“): In der Leiste über dem Schreibfeld (erscheint beim Markieren oder über 𝐅) stehen neben **F · K · D** jetzt vier kräftige Farbknöpfe **Rot · Blau · Grün · Gelb**. Wort oder Text markieren (lange drücken / doppelt tippen), Farbe antippen – fertig; nochmal dieselbe Farbe nimmt sie weg, eine andere ersetzt sie. Ohne Markierung kommt die Farbe an die Schreibstelle, einfach weiterschreiben.
+- **Wie ein Textmarker** (Wunsch Hansi): kräftiger Marker-Strich mit schrägen, ausfransenden Enden hinter dem Wort – Rot und Blau mit weißer, Grün und Gelb mit schwarzer Schrift, gleich in fremden und eigenen Blasen, Tag und Nacht. Im Text steht dafür `[rot]Wort[/rot]` (ältere Apps zeigen das so). Mit fett kombinierbar: `[rot]*Achtung*[/rot]`.
+- Chat-Liste, Push und E-Mail zeigen nur das Wort ohne die Farbzeichen.
 
 ## 2.721.0 – 2026-10-27 – 🚗 Anfahrt in km · 🗓️ Dienstplan gründlich nachgebessert (KC-CLUB-ANFAHRT, KC-CLUB-DP-NACHBESSERN, KC-CLUB-DP-VORSCHLAG)
 - Wunsch Hansi („wer von weiter weg kommt – aus den Adressen in den Stammdaten eine km-Anzeige machen“): Der Club-Server rechnet aus der Postleitzahl der Stammdaten die Entfernung zum Weihnachtsmarkt (Werne, Marktplatz) – Luftlinie und geschätzte Fahrt (× 1,3). Daten: GeoNames-Postleitzahlen (CC BY 4.0) liegen im Server (`anfahrt.js`), keine Adresse geht an einen fremden Dienst; ändert sich die Adresse, stimmt die Anzeige sofort. Sichtbar: Büro → Mitgliederliste → neue Liste **🚗 Anfahrt** (Wohnort und km, weiteste zuerst – nur Clubleitung), in der Mitglieder-Karte „🚗 Anfahrt zum Markt Werne“ (man selbst und Clubleitung) und unter „Meine Daten“.

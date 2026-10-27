@@ -135,7 +135,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.722.0";
+const SERVER_VERSION = "2.723.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6941,6 +6941,9 @@ async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
   }
   return [...ids];
 }
+// 2.722.0 KC-CLUB-CHAT-FARBE: [rot]Wort[/rot] färbt in der App – Push und E-Mail bekommen nur das Wort
+const FARB_RE = /\[(rot|blau|grün|gelb)\]([\s\S]+?)\[\/\1\]/g;
+const ohneFarbe = (t: string) => String(t ?? "").replace(FARB_RE, "$2");
 // 2.692.0 KC-CLUB-VORSCHLAG-VON: wer welchen Tagesordnungspunkt vorgeschlagen hat – Punkt (Text) ↔ Vorschlag dieser Sitzung mit gleichem Text
 const topSchluessel = (x: unknown) => txt(x, 160).toLowerCase().replace(/^🗳️\s*/, "").replace(/[^a-z0-9äöüß]/g, "");
 async function tagesordnungVon(treffenId: string | null, punkte: string[]): Promise<(string | null)[]> {
@@ -12470,9 +12473,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (erwaehnt.length) {
           await db.from("kc_club_erwaehnungen").insert(erwaehnt.map((person_id) => ({ message_id: m.id, person_id })));
           versandErw = await sendenGewaehlt("club_nachricht", erwaehnt, ["push"], {
-            titel: `${wMarke}📣 ${ich.vorname} hat dich erwähnt${grp ? ` – ${grp.symbol} ${grp.name}` : ""}`, kurz: (slHinweis || txt(text, 140)) || "Neue Nachricht",
+            titel: `${wMarke}📣 ${ich.vorname} hat dich erwähnt${grp ? ` – ${grp.symbol} ${grp.name}` : ""}`, kurz: (slHinweis || txt(ohneFarbe(text), 140)) || "Neue Nachricht",
             betreff: `Köcheclub Werne – ${ich.name} hat dich erwähnt${grp ? " in " + grp.name : ""}`,
-            text: `Hallo,\n\n${ich.name} hat dich${grp ? ` in der Gruppe „${grp.name}“` : ""} erwähnt:\n\n${slHinweis || text}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+            text: `Hallo,\n\n${ich.name} hat dich${grp ? ` in der Gruppe „${grp.name}“` : ""} erwähnt:\n\n${slHinweis || ohneFarbe(text)}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
             url: `${APP_URL}#nachricht=${threadId}`,
           }, `club-nachricht:${m.id}:erwaehnt`, { erwaehnung: true });
           for (let i = ziel.length - 1; i >= 0; i--) if (erwaehnt.includes(ziel[i])) ziel.splice(i, 1);
@@ -12490,9 +12493,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Einmal-Fotos und Nachrichten, die sich selbst löschen. Grenzen wie beim Versanddienst (je Datei 10 MB, zusammen 15 MB) – sonst wie bisher nur der Hinweis.
         const mailAnl = anlagen.length && wege.includes("email") && !einmal && !slHinweis ? await mailAnlagen(anlagen) : [];
         const nachrichtVars = {
-          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(text, 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
+          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(ohneFarbe(text), 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
-          text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || text}${mailAnl.length ? `\n\n📎 Im Anhang: ${mailAnl.map((x) => x.name).join(", ")}` : anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
+          text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || ohneFarbe(text)}${mailAnl.length ? `\n\n📎 Im Anhang: ${mailAnl.map((x) => x.name).join(", ")}` : anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`, ...(mailAnl.length ? { attachmentIds: mailAnl.map((x) => x.id) } : {}), ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT
         };
         // 2.403.0 KC-CLUB-EXPRESS-PRIO1: Express (ohne Notfall) je Empfänger parallel mit Priorität 1 – sonst wie bisher
