@@ -1035,12 +1035,14 @@
   .hs-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .hs-nie { all: unset; cursor: pointer; font-size: .85rem; text-decoration: underline; opacity: .75; padding: 6px 2px; }
   .nz-hs { width: 100%; border-collapse: collapse; } .nz-hs th, .nz-hs td { padding: 4px 6px; border-bottom: 1px solid var(--rand, #e5d9c8); text-align: center; } .nz-hs td:first-child, .nz-hs th:first-child { text-align: left; }
   @keyframes hsRein { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } } @media (prefers-reduced-motion: reduce) { .hs-blase { animation: none; } }
-  /* 2.722.0 KC-CLUB-CHAT-FARBE: kräftige Farben, kein Pastell; Gelb als Textmarker; in der eigenen Blase alle als Marker */
-  .nf { font-weight: 700; } .nf-rot { color: #e00000; } .nf-blau { color: #0047ff; } .nf-gruen { color: #008a00; }
-  .nf-gelb { background: #ffe600; color: #000; border-radius: 3px; padding: 0 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-  :root.dunkel .nf-rot { color: #ff3b3b; } :root.dunkel .nf-blau { color: #5b9bff; } :root.dunkel .nf-gruen { color: #2ee52e; }
-  .blase.eigen .nf { border-radius: 3px; padding: 0 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-  .blase.eigen .nf-rot { background: #ff1a1a; color: #fff; box-shadow: 0 0 0 1px #fff; } .blase.eigen .nf-blau { background: #0047ff; color: #fff; } .blase.eigen .nf-gruen { background: #008a00; color: #fff; }
+  /* 2.722.0 KC-CLUB-CHAT-FARBE (Wunsch Hansi „wie ein Textmarker“): kräftiger Marker-Strich mit schrägen, ausfransenden Enden – kein Pastell;
+     Rot/Blau mit weißer, Grün/Gelb mit schwarzer Schrift; gleich in fremden und eigenen Blasen, Tag und Nacht */
+  .nf { font-weight: 700; padding: .05em .45em; margin: 0 -.1em; border-radius: .8em .3em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .nf-rot { color: #fff; background: linear-gradient(100deg, rgba(230,0,0,0) .9%, rgba(230,0,0,1) 2.4%, rgba(230,0,0,.9) 5.8%, rgba(230,0,0,1) 93%, rgba(230,0,0,.8) 96%, rgba(230,0,0,0) 98.5%), linear-gradient(182deg, rgba(230,0,0,0) 0%, rgba(230,0,0,.35) 8%, rgba(230,0,0,0) 16%); }
+  .nf-blau { color: #fff; background: linear-gradient(100deg, rgba(0,72,255,0) .9%, rgba(0,72,255,1) 2.4%, rgba(0,72,255,.9) 5.8%, rgba(0,72,255,1) 93%, rgba(0,72,255,.8) 96%, rgba(0,72,255,0) 98.5%), linear-gradient(182deg, rgba(0,72,255,0) 0%, rgba(0,72,255,.35) 8%, rgba(0,72,255,0) 16%); }
+  .nf-gruen { color: #000; background: linear-gradient(100deg, rgba(0,214,0,0) .9%, rgba(0,214,0,1) 2.4%, rgba(0,214,0,.9) 5.8%, rgba(0,214,0,1) 93%, rgba(0,214,0,.8) 96%, rgba(0,214,0,0) 98.5%), linear-gradient(182deg, rgba(0,214,0,0) 0%, rgba(0,214,0,.35) 8%, rgba(0,214,0,0) 16%); }
+  .nf-gelb { color: #000; background: linear-gradient(100deg, rgba(255,230,0,0) .9%, rgba(255,230,0,1) 2.4%, rgba(255,230,0,.9) 5.8%, rgba(255,230,0,1) 93%, rgba(255,230,0,.8) 96%, rgba(255,230,0,0) 98.5%), linear-gradient(182deg, rgba(255,230,0,0) 0%, rgba(255,230,0,.35) 8%, rgba(255,230,0,0) 16%); }
+  .blase.eigen .nf-rot { box-shadow: 0 0 0 1px rgba(255,255,255,.55); border-radius: .8em .3em; } /* Rot auf Weinrot: feiner heller Rand */
   .format-leiste .fl-trenn { width: 1px; align-self: stretch; background: var(--linie); margin: 0 2px; }
   .format-leiste .fl-farbe { font-weight: 800; border-width: 2px; }
   .format-leiste .fl-rot { color: #fff; background: #e00000; border-color: #e00000; } .format-leiste .fl-blau { color: #fff; background: #0047ff; border-color: #0047ff; }

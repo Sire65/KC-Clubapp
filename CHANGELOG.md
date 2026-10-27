@@ -2,7 +2,7 @@
 
 ## 2.722.0 – 2026-10-27 – 🎨 Farbe in Nachrichten (KC-CLUB-CHAT-FARBE)
 Wunsch Hansi („Text oder bestimmte Wörter in Nachrichten in Farbe – sehr starke Kontrastfarben: knallrot, blau, grün, gelb, kein Pastell – neben dem F“): In der Leiste über dem Schreibfeld (erscheint beim Markieren oder über 𝐅) stehen neben **F · K · D** jetzt vier kräftige Farbknöpfe **Rot · Blau · Grün · Gelb**. Wort oder Text markieren (lange drücken / doppelt tippen), Farbe antippen – fertig; nochmal dieselbe Farbe nimmt sie weg, eine andere ersetzt sie. Ohne Markierung kommt die Farbe an die Schreibstelle, einfach weiterschreiben.
-- Im Text steht dafür `[rot]Wort[/rot]` (ältere Apps zeigen das so). **Gelb** ist ein Textmarker (gelber Grund, schwarze Schrift), weil gelbe Schrift auf Weiß nicht lesbar ist. In der eigenen, farbigen Blase werden alle Farben als Marker gezeigt, damit Rot auf Weinrot lesbar bleibt. Im Nachtmodus etwas hellere Töne. Mit fett kombinierbar: `[rot]*Achtung*[/rot]`.
+- **Wie ein Textmarker** (Wunsch Hansi): kräftiger Marker-Strich mit schrägen, ausfransenden Enden hinter dem Wort – Rot und Blau mit weißer, Grün und Gelb mit schwarzer Schrift, gleich in fremden und eigenen Blasen, Tag und Nacht. Im Text steht dafür `[rot]Wort[/rot]` (ältere Apps zeigen das so). Mit fett kombinierbar: `[rot]*Achtung*[/rot]`.
 - Chat-Liste, Push und E-Mail zeigen nur das Wort ohne die Farbzeichen.
 
 ## 2.721.0 – 2026-10-27 – 🚗 Anfahrt in km · 🗓️ Dienstplan gründlich nachgebessert (KC-CLUB-ANFAHRT, KC-CLUB-DP-NACHBESSERN, KC-CLUB-DP-VORSCHLAG)
