@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.695.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.696.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -38197,9 +38197,31 @@ async function atStart() {
   if (!r.termine.length) return melde("In den nächsten Wochen steht kein Termin im Kalender.", true);
   const erst = r.termine.find((t) => t.art === "treffen")?.id || r.termine[0].id;
   const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">💼 Aktentasche – für welchen Anlass?</h3>
-    <div class="ca-wahl">${r.termine.map((t) => `<button type="button" class="knopf${t.id === erst ? " haupt" : ""}" data-id="${esc(t.id)}" style="text-align:left">${t.art === "treffen" ? "🍽️" : "📅"} ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}${t.tasche ? `<br><small>${t.tasche.status === "gepackt" ? "✅ gepackt" : "💼 wird gepackt"} · ${t.tasche.anzahl} ${t.tasche.anzahl === 1 ? "Teil" : "Teile"}</small>` : ""}</button>`).join("")}</div>`, () => f.remove());
+    <div class="ca-wahl">${r.termine.map((t) => `<button type="button" class="knopf${t.id === erst ? " haupt" : ""}" data-id="${esc(t.id)}" style="text-align:left">${t.art === "treffen" ? "🍽️" : "📅"} ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}${t.tasche ? `<br><small>${t.tasche.status === "gepackt" ? "✅ gepackt" : "💼 wird gepackt"} · ${t.tasche.anzahl} ${t.tasche.anzahl === 1 ? "Teil" : "Teile"}</small>` : ""}</button>`).join("")}</div>
+    ${r.frueher?.length ? `<button type="button" class="knopf" data-a="archiv" style="width:100%;margin-top:8px">🗄️ Frühere Taschen ansehen (${r.frueher.length})</button>` : ""}`, () => f.remove());
+  f.querySelector('[data-a="zu"]').onclick = () => f.remove();
+  const archiv = f.querySelector('[data-a="archiv"]'); if (archiv) archiv.onclick = () => { f.remove(); atArchivTaschen(r.frueher); };
+  f.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { f.remove(); atOeffnen(b.dataset.id); }));
+}
+// 2.696.0 KC-CLUB-AKTENTASCHE-ARCHIV (Wunsch Hansi „gepackte Taschen wieder ansehen und evtl. für eine andere Sitzung reaktivieren“): frühere Taschen bleiben
+function atArchivTaschen(liste) {
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">🗄️ Frühere Taschen</h3>
+    <div class="ca-wahl">${liste.map((t) => `<button type="button" class="knopf" data-id="${esc(t.id)}" style="text-align:left">💼 ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}<br><small>${t.tasche.status === "gepackt" ? "✅ gepackt" : "💼 nicht fertig gepackt"} · ${t.tasche.anzahl} ${t.tasche.anzahl === 1 ? "Teil" : "Teile"}</small></button>`).join("")}</div>`, () => f.remove());
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
   f.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { f.remove(); atOeffnen(b.dataset.id); }));
+}
+const atVorbei = () => !!AT.d?.treffen && Date.parse(AT.d.treffen.beginn) < Date.now() - 12 * 3600000;
+async function atUebernehmen() {
+  let r; try { r = await api("aktentasche_termine"); } catch (e) { return meldeFehler(e); }
+  const ziel = r.termine.filter((t) => t.id !== AT.tid); if (!ziel.length) return melde("Es steht gerade keine kommende Sitzung im Kalender.", true);
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">🔁 Für welche Sitzung übernehmen?</h3>
+    <p class="dlg-text">Eure selbst dazugelegten Dateien und die Notizen kommen mit. Protokolle, Tagesordnung und Vorschläge schlägt die App für die neue Sitzung frisch vor.</p>
+    <div class="ca-wahl">${ziel.map((t, i) => `<button type="button" class="knopf${i === 0 ? " haupt" : ""}" data-id="${esc(t.id)}" style="text-align:left">${t.art === "treffen" ? "🍽️" : "📅"} ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}${t.tasche ? `<br><small>hat schon eine Tasche (${t.tasche.anzahl} Teile) – wird ergänzt</small>` : ""}</button>`).join("")}</div>`, () => f.remove());
+  f.querySelector('[data-a="zu"]').onclick = () => f.remove();
+  f.querySelectorAll("[data-id]").forEach((b) => (b.onclick = async () => { f.remove(); const von = AT.tid;
+    try { await api("aktentasche_aendern", { treffen_id: b.dataset.id, op: "uebernehmen", von }); } catch (e) { return meldeFehler(e); }
+    melde("🔁 Übernommen – jetzt noch den Vorschlag für die neue Sitzung ansehen"); await atOeffnen(b.dataset.id);
+    if (AT.d?.tasche?.inhalt?.length && AT.d.vorschlag.some((v) => !AT.d.tasche.inhalt.some((i) => i.k === v.k))) atPackenZeigen(); }));
 }
 async function atOeffnen(tid, reg) {
   AT.tid = tid; AT.reg = reg || "packliste";
@@ -38240,7 +38262,7 @@ function atZeichnen() {
       + d.register.filter((r) => zahl(r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => teil(i, true)).join("")}`).join("")
       + `<label class="feld" style="margin-top:12px">📝 Notizen <small class="hinweis" id="atNotizStand">${x.geaendert ? `zuletzt geändert von ${esc(x.geaendert)}` : ""}</small>
         <textarea id="atNotiz" rows="8" placeholder="Eigene Notizen für diesen Termin – speichert sich von selbst. Alle drei sehen dieselben Notizen." oninput="atNotizTippen()" onblur="atNotizJetzt()">${esc(x.notiz || "")}</textarea></label>`
-      + `<div class="knoepfe"><button class="knopf" onclick="druckStarten('aktentasche', { teil: 'packliste' })">🖨️ Packliste drucken</button>${fehlt ? `<button class="knopf" onclick="atPackenZeigen()">💡 Vorschläge nachpacken (${fehlt})</button>` : ""}</div>`;
+      + `<div class="knoepfe"><button class="knopf haupt" onclick="atDruckWahl()">🖨️ Drucken – auswählen</button>${fehlt ? `<button class="knopf" onclick="atPackenZeigen()">💡 Vorschläge nachpacken (${fehlt})</button>` : ""}</div>`;
   } else {
     const l = inh.filter((i) => i.reg === AT.reg);
     inhalt = (l.length ? l.map((i) => teil(i, false)).join("") : `<p class="hinweis">Noch nichts in diesem Register.</p>`)
@@ -38248,7 +38270,8 @@ function atZeichnen() {
         <button class="knopf" onclick="atDatei('pdf')">📄 PDF</button><button class="knopf" onclick="atDatei('datei')">📁 Datei</button><button class="knopf" onclick="atArchiv()">🗄️ Archiv</button></div>`;
   }
   const status = x.status === "gepackt" ? `<span class="marke gruen">✅ gepackt${x.gepackt ? " von " + esc(x.gepackt) : ""}</span>` : `<span class="marke gelb">💼 wird gepackt</span>`;
-  const f = blattAuf("atBlatt", `<h3 style="margin:0">💼 Aktentasche</h3><p class="hinweis" style="margin:2px 0 6px">${esc(atKopf())}<br>${status}</p>
+  const archiv = atVorbei() ? `<div class="karte at-archiv">🗄️ <b>Aus dem Archiv</b> – der Termin ist vorbei.<br><button class="knopf haupt" style="margin-top:6px" onclick="atUebernehmen()">🔁 Für eine andere Sitzung übernehmen</button></div>` : "";
+  const f = blattAuf("atBlatt", `<h3 style="margin:0">💼 Aktentasche</h3><p class="hinweis" style="margin:2px 0 6px">${esc(atKopf())}<br>${status}</p>${archiv}
     <div class="hl-chips at-tabs">${tabs}</div><div class="at-inhalt">${inhalt}</div>
     <div class="knoepfe bs-fuss">${x.status === "gepackt" ? `<button class="knopf" onclick="atStatus('offen', this)">↩️ Noch etwas ändern</button>` : `<button class="knopf haupt" onclick="atStatus('gepackt', this)">✔ Tasche gepackt – fertig</button>`}
       <button class="knopf" onclick="atNotizJetzt();$('atBlatt').remove()">Schließen</button></div>`);
@@ -38279,7 +38302,7 @@ async function atNotizJetzt() {
 }
 function atTeilMenue(k) {
   const i = atTeil(k); if (!i) return;
-  const druck = ["tagesordnung", "teilnehmer", "aufgaben", "protokoll", "abstimmung", "anlage"].includes(i.art);
+  const druck = true; // 2.696.0: jedes Teil lässt sich drucken (Vorschlag mit Beschreibung im CD)
   const knopf = (sym, t, js, kl = "") => `<button class="knopf${kl}" style="text-align:left" onclick="$('atMenue').remove();${js}">${sym} ${t}</button>`;
   blattAuf("atMenue", `<h3 style="margin:0 0 2px">${atSym(i)} ${esc(i.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(AT_REG[i.reg]?.[1] || "")}${i.vonName ? " · eingepackt von " + esc(i.vonName) : ""}</p>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">${knopf("👁️", "Öffnen", `atTeilOeffnen('${esc(k)}')`, " haupt")}${druck ? knopf("🖨️", "Drucken", `atTeilDrucken('${esc(k)}')`) : ""}
@@ -38304,10 +38327,7 @@ async function atTeilOeffnen(k) {
 }
 async function atTeilDrucken(k) {
   const i = atTeil(k); if (!i) return;
-  if (["tagesordnung", "teilnehmer", "aufgaben"].includes(i.art)) return druckStarten("aktentasche", { teil: i.art });
-  if (i.art === "anlage") return atAnlage(k, "drucken");
-  if (i.art === "abstimmung") { melde("⏳ Wird geladen …"); await vorschlaegeLaden(); return abBogenDrucken(i.ref); }
-  if (i.art === "protokoll") { atNotizJetzt(); $("atBlatt")?.remove(); await protokollOeffnen(i.ref); if (PR?.protokoll) druckStarten("protokoll"); }
+  melde("⏳ Wird geladen …"); try { await atTeilDruckenOhneWechsel(i); } catch (e) { meldeFehler(e); }
 }
 function atListeZeigen(art) {
   const b = AT.d.blatt, kopf = { tagesordnung: "🗓️ Tagesordnung", teilnehmer: "👥 Zusagen & Absagen", aufgaben: "📌 Offene Aufgaben" }[art];
@@ -38350,7 +38370,45 @@ async function atArchiv() {
       if (await atAendern({ op: "dazu", reg: AT.reg === "packliste" ? "sonstiges" : AT.reg, quelle: "archiv", datei: { id: d.datei, name: d.name, mime: d.mime, titel: d.titel || d.name } })) melde("🗄️ Aus dem Archiv in die Tasche gelegt"); })); };
   $("atArchivSuche").oninput = zeichnen; zeichnen();
 }
-// Drucken im Köcheclub-Design: Packliste (mit Notizen), Tagesordnung, Zusagen (zum Abhaken), offene Aufgaben
+// 2.696.0 KC-CLUB-AKTENTASCHE-DRUCKEN (Wunsch Hansi „alles auflisten und Druck per Klickkästchen – dann kann man selber wählen, was gedruckt werden soll“):
+// Liste mit Kästchen; danach Schritt für Schritt – jedes gewählte Teil mit seinem eigenen Druck (Vorschau, PDF-Ansicht, Ankreuzbogen …), dazwischen „weiter“.
+const AT_PACKLISTE = { k: "_packliste", art: "packliste", titel: "Packliste mit Notizen", reg: "packliste" };
+function atDruckWahl() {
+  atNotizJetzt();
+  const inh = AT.d.tasche?.inhalt || [], zahl = inh.length + 1;
+  const zeile = (i, an) => `<label class="at-wahl"><input type="checkbox" data-dk="${esc(i.k)}" ${an ? "checked" : ""}><span><b>${i.art === "packliste" ? "📋" : atSym(i)} ${esc(i.titel)}</b>${i.unter ? `<br><small>${esc(i.unter)}</small>` : ""}</span></label>`;
+  blattAuf("atDruckBlatt", `<h3 style="margin:0">🖨️ Was soll gedruckt werden?</h3><p class="hinweis" style="margin:2px 0 6px">${esc(atKopf())} · ${zahl} zur Auswahl</p>
+    <div class="hl-chips"><button type="button" class="chip" onclick="document.querySelectorAll('#atDruckBlatt [data-dk]').forEach((c) => (c.checked = true))">☑️ Alle</button><button type="button" class="chip" onclick="document.querySelectorAll('#atDruckBlatt [data-dk]').forEach((c) => (c.checked = false))">⬜ Keine</button></div>
+    ${zeile(AT_PACKLISTE, true)}${AT.d.register.filter((r) => inh.some((i) => i.reg === r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => zeile(i, false)).join("")}`).join("")}
+    <p class="hinweis" style="margin:10px 0 0">Danach geht es Schritt für Schritt: Teil für Teil öffnet sich die Druckansicht – drucken oder überspringen.</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="atDruckLos()">🖨️ Ausgewählte drucken</button><button class="knopf" onclick="$('atDruckBlatt').remove()">Abbrechen</button></div>`);
+}
+function atDruckLos() {
+  const keys = [...document.querySelectorAll("#atDruckBlatt [data-dk]:checked")].map((c) => c.dataset.dk);
+  if (!keys.length) return melde("Bitte mindestens ein Kästchen ankreuzen.", true);
+  $("atDruckBlatt").remove(); AT.druck = keys.map((k) => (k === AT_PACKLISTE.k ? AT_PACKLISTE : atTeil(k))).filter(Boolean); AT.druckNr = 0; atDruckSchritt();
+}
+function atDruckSchritt() {
+  const l = AT.druck || [], i = l[AT.druckNr];
+  if (!i) { $("atDruckSchrittBlatt")?.remove(); AT.druck = null; return melde(`🖨️ Fertig – ${l.length} ${l.length === 1 ? "Teil" : "Teile"} durchgegangen`); }
+  // normales Fenster (unter der Druckansicht): nach dem Drucken/Schließen der Vorschau steht hier das nächste Teil
+  blattAuf("atDruckSchrittBlatt", `<h3 style="margin:0">🖨️ Drucken – ${AT.druckNr + 1} von ${l.length}</h3><p style="margin:8px 0"><b>${i.art === "packliste" ? "📋" : atSym(i)} ${esc(i.titel)}</b>${i.unter ? `<br><small class="hinweis">${esc(i.unter)}</small>` : ""}</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="atDruckJetzt(this)">🖨️ Drucken</button><button class="knopf" onclick="AT.druckNr++;atDruckSchritt()">⏭️ Überspringen</button><button class="knopf" onclick="AT.druck=null;$('atDruckSchrittBlatt').remove()">Abbrechen</button></div>`);
+}
+async function atDruckJetzt(knopf) {
+  const i = AT.druck?.[AT.druckNr]; if (!i) return;
+  await einmal(knopf, async () => { try { await atTeilDruckenOhneWechsel(i); } catch (e) { meldeFehler(e); } });
+  AT.druckNr++; atDruckSchritt();
+}
+async function atTeilDruckenOhneWechsel(i) { // drucken, ohne die Tasche zu verlassen
+  if (i.art === "packliste") return druckStarten("aktentasche", { teil: "packliste" });
+  if (["tagesordnung", "teilnehmer", "aufgaben"].includes(i.art)) return druckStarten("aktentasche", { teil: i.art });
+  if (i.art === "anlage") return atAnlage(i.k, "drucken");
+  if (i.art === "abstimmung") { await vorschlaegeLaden(); return abBogenDrucken(i.ref); }
+  if (i.art === "vorschlag") { await vorschlaegeLaden(); if (!VORSCHLAG_MAP.has(i.ref)) throw new Error("Diesen Vorschlag gibt es nicht mehr."); return druckStarten("aktentasche", { teil: "vorschlag", ref: i.ref }); }
+  if (i.art === "protokoll") { if (!MITGLIEDER) await mitgliederHolen(); PR = await api("protokoll_laden", { id: i.ref }); return druckStarten("protokoll"); }
+}
+// Drucken im Köcheclub-Design: Packliste (mit Notizen), Tagesordnung, Zusagen (zum Abhaken), offene Aufgaben, Vorschlag
 function atDruck(teil) {
   const d = AT.d; if (!d) throw new Error("Bitte die Aktentasche zuerst öffnen.");
   const x = d.tasche || { inhalt: [], notiz: "" }, b = d.blatt, t = d.treffen;
@@ -38365,6 +38423,11 @@ function atDruck(teil) {
         <tbody>${b.mitglieder.map((m) => `<tr style="break-inside:avoid"><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999;font-weight:700">${esc(m.name)}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${esc(antw[m.antwort] || "–")}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${box(false)}</td></tr>`).join("")}</tbody></table>` }; }
   if (teil === "aufgaben") return { titel: "Offene Aufgaben", unter, fuss: "Aktentasche",
     html: b.aufgaben.length ? `<table style="width:100%;border-collapse:collapse;font-size:3.6mm"><tbody>${b.aufgaben.map((a) => `<tr style="break-inside:avoid"><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999;width:8mm">${box(false)}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999;width:30mm;font-weight:700">${esc(a.wer)}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${esc(a.text)}${a.faellig ? ` <small>(bis ${esc(a.faellig.split("-").reverse().join("."))})</small>` : ""}</td></tr>`).join("")}</tbody></table>` : "<p>Keine offenen Aufgaben.</p>" };
+  if (teil === "vorschlag") { const v = VORSCHLAG_MAP.get(DRUCK?.param?.ref); if (!v) throw new Error("Vorschlag nicht gefunden.");
+    const e = v.ergebnis?.[0]; return { titel: v.titel, unter: `${v.art === "spende" ? "Spendenvorschlag" : "Thema"} für ${unter}`, fuss: "Aktentasche",
+      html: `<p style="font-size:3.8mm"><b>Vorschlag von ${esc(v.von?.name || "")}</b> · eingereicht ${esc(wann(v.erstellt_am))}</p>${v.beschreibung ? `<div style="font-size:3.8mm;white-space:pre-wrap;line-height:1.5">${esc(v.beschreibung)}</div>` : ""}
+        ${(v.spenden || []).length ? `<ul style="font-size:3.8mm">${v.spenden.map((s) => `<li>💝 ${esc(s.empfaenger)}: ${esc(euro(Number(s.betrag) || 0))}</li>`).join("")}</ul>` : ""}
+        ${e ? `<p style="font-size:3.8mm">👍 ${e.anzahl} Unterstützer${e.namen?.length ? ": " + esc(e.namen.join(", ")) : ""}</p>` : ""}${(v.anlagen || []).length ? `<p style="font-size:3.4mm;color:#555">📎 Anlagen: ${esc(v.anlagen.map((a) => a.name).join(", "))} – liegen einzeln in der Tasche</p>` : ""}` }; }
   const regs = d.register.filter((r) => x.inhalt.some((i) => i.reg === r));
   return { titel: "💼 Aktentasche – Packliste", unter, fuss: `Aktentasche · ${x.inhalt.length} Teile`,
     html: regs.map((r) => h(`${AT_REG[r][0]} ${esc(AT_REG[r][1])}`) + x.inhalt.filter((i) => i.reg === r).map((i) => `<div style="font-size:3.8mm;margin:1.6mm 0;break-inside:avoid">${box(i.dabei)}${esc(i.titel)}${i.unter ? ` <small style="color:#555">· ${esc(i.unter)}</small>` : ""}</div>`).join("")).join("")

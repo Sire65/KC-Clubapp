@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.695.0";
+const SERVER_VERSION = "2.696.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -15647,8 +15647,14 @@ Köcheclub Werne`,
           .gt("beginn", new Date(Date.now() - 12 * 3600000).toISOString()).lt("beginn", new Date(Date.now() + 90 * 86400000).toISOString()).order("beginn").limit(30);
         const ids = (tr ?? []).map((t: any) => t.id);
         const { data: ta } = ids.length ? await db.from("kc_club_aktentasche").select("treffen_id,status,inhalt").in("treffen_id", ids) : { data: [] as any[] };
+        // 2.696.0 KC-CLUB-AKTENTASCHE-ARCHIV: frühere Taschen (Termin vorbei) zum Ansehen und Übernehmen
+        const { data: alle } = await db.from("kc_club_aktentasche").select("treffen_id,status,inhalt,gepackt_am").order("erstellt_am", { ascending: false }).limit(200);
+        const altIds = (alle ?? []).map((x: any) => x.treffen_id).filter((id: string) => !ids.includes(id));
+        const { data: altT } = altIds.length ? await db.from("kc_club_treffen").select("id,titel,beginn,ort,art").in("id", altIds).lt("beginn", jetzt()) : { data: [] as any[] };
+        const frueher = (altT ?? []).sort((a: any, b: any) => b.beginn.localeCompare(a.beginn)).slice(0, 60).map((t: any) => { const x: any = (alle ?? []).find((y: any) => y.treffen_id === t.id);
+          return { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, art: t.art, tasche: { status: x.status, anzahl: (x.inhalt ?? []).length } }; });
         return json({ termine: (tr ?? []).map((t: any) => { const x: any = (ta ?? []).find((y: any) => y.treffen_id === t.id);
-          return { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, art: t.art, tasche: x ? { status: x.status, anzahl: (x.inhalt ?? []).length } : null }; }) });
+          return { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, art: t.art, tasche: x ? { status: x.status, anzahl: (x.inhalt ?? []).length } : null }; }), frueher });
       }
       case "aktentasche_holen": {
         nurVorstand(ich);
@@ -15681,6 +15687,20 @@ Köcheclub Werne`,
             const { error: oe } = await db.from("kc_club_objekt_anlagen").upsert({ art: "aktentasche", objekt_id: x.id, attachment_id: id, reihenfolge: 0 }, { onConflict: "art,objekt_id,attachment_id" });
             if (oe) throw new Fehler("Dazugelegt – aber die Freigabe für die anderen hat nicht geklappt. Bitte noch einmal versuchen.", 500);
           }
+        } else if (op === "uebernehmen") { // 2.696.0 KC-CLUB-AKTENTASCHE-ARCHIV: eigene Dateien und Notizen einer früheren Tasche für diese Sitzung übernehmen
+          const von = await atTermin(String(p.von || "")); if (von.id === t.id) throw new Fehler("Bitte eine andere Sitzung wählen.");
+          const alt = await atTasche(von.id); if (!alt) throw new Fehler("Diese Tasche gibt es nicht mehr.", 404);
+          const dateien = (alt.inhalt ?? []).filter((i: any) => i.art === "anlage" && String(i.k).startsWith("datei:"));
+          const kopf = `— übernommen aus der Tasche „${von.titel}“ vom ${berlinTag(new Date(von.beginn)).split("-").reverse().join(".")} —`;
+          x = await atAendern(ich, t.id, (k) => {
+            for (const i of dateien) if (!k.inhalt.some((y: any) => y.ref === i.ref)) k.inhalt.push({ ...i, dabei: false, am: jetzt() });
+            if (String(alt.notiz || "").trim()) k.notiz = txt([k.notiz, kopf + "\n" + alt.notiz].filter((z) => String(z || "").trim()).join("\n\n"), 20000);
+          });
+          const { data: frei } = await db.from("kc_club_objekt_anlagen").select("attachment_id").eq("art", "aktentasche").eq("objekt_id", alt.id);
+          const ok = new Set((frei ?? []).map((z: any) => String(z.attachment_id))), neu = dateien.filter((i: any) => ok.has(String(i.ref)));
+          if (neu.length) { const { error: oe } = await db.from("kc_club_objekt_anlagen").upsert(neu.map((i: any) => ({ art: "aktentasche", objekt_id: x.id, attachment_id: i.ref, reihenfolge: 0 })), { onConflict: "art,objekt_id,attachment_id" });
+            if (oe) throw new Fehler("Übernommen – aber die Dateien sind für die anderen noch nicht freigegeben. Bitte noch einmal versuchen.", 500); }
+          await protokoll(ich.person_id, "aktentasche_uebernommen", { von: von.id, nach: t.id, dateien: dateien.length });
         } else if (op === "weg") {
           const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.filter((y: any) => y.k !== k0); });
         } else if (op === "dabei") {

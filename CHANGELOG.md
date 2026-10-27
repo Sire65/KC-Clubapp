@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.696.0 – 2026-10-27 – Aktentasche: Archiv, Übernehmen, Drucken per Kästchen
+KC-CLUB-AKTENTASCHE-ARCHIV: frühere Taschen ansehen (Büro → 💼 Aktentasche → 🗄️ Frühere Taschen) und mit 🔁 für eine andere Sitzung übernehmen (eigene Dateien und Notizen; Rest schlägt die App frisch vor). KC-CLUB-AKTENTASCHE-DRUCKEN: 🖨️ Drucken – auswählen: alle Teile mit Kästchen, danach Schritt für Schritt drucken oder überspringen; jedes Teil druckbar (auch Vorschläge mit Beschreibung).
+
 ## 2.695.0 – 2026-10-27 – Aktentasche für die Clubleitung
 KC-CLUB-AKTENTASCHE: Clubsprecher, Kassenwart und Admin packen eine gemeinsame Aktentasche je Termin (Büro → 💼 Aktentasche): Anlass wählen, Vorschlag der App (Einladung/Tagesordnung, Protokollentwurf, letztes Protokoll, Vorschläge mit Anlagen, Zusagen, Aufgaben) ankreuzen, in Register packen; je Register Foto, Galerie, PDF, Datei oder Archiv-Dokument dazulegen; vorn Packliste zum Abhaken mit Notizen (Druck im CD). ✔ gepackt → Knopf in der Kachel Clubabend (nur Leitung); Info-Feld erinnert in der Woche davor. DB: kc_club_aktentasche.
 
