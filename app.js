@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.691.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.692.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -30168,7 +30168,7 @@ function vorschlagKarte(v) {
   const kopf = `${v.art === "abstimmung" ?`<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
     ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
     ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
-  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
+  const unter = `<div class="vs-von">${vsVon(v, true)}</div><div class="hinweis" style="font-size:.85rem">eingereicht ${esc(vsWann(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
   let mitte = "";
   if (v.art !== "abstimmung") { // Thema und Spendenprojekt: unterstützen 👍
     const e = v.ergebnis?.[0] || { anzahl: 0, namen: [] };
@@ -30236,7 +30236,15 @@ function spendeKachel(v) {
   return `<button class="mini-kachel" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">💝</span>
     <span class="mk-titel">${esc(sp[0]?.empfaenger || "Spende")}${sp.length > 1 ? ` <small>+${sp.length - 1} weitere</small>` : ""}</span>
     <span class="mk-gross">${esc(spEuro(v.summe ?? sp.reduce((s, x) => s + Number(x.betrag || 0), 0)))}</span>
-    <span class="mk-unter">👍 ${e}${v.meine ? " · auch von dir" : ""} · von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl(v)}</button>`;
+    <span class="mk-von">${vsVon(v)}</span><span class="mk-unter">👍 ${e}${v.meine ? " · auch von dir" : ""}</span>${vsAnlagenZahl(v)}</button>`;
+}
+// 2.692.0 KC-CLUB-VORSCHLAG-VON (Wunsch Hansi „bei Vorschlägen: wer hat den Vorschlag eingereicht – z. B. Vorschlag von Hansi, Vorschlag von Dieter“):
+// deutlich unter dem Titel statt klein und grau unten; eigene als „Dein Vorschlag“. Kachel mit Rufnamen, im großen Blatt mit vollem Namen.
+const vsWann = (iso) => (new Date(iso).toDateString() === new Date().toDateString() ? "heute " : "am ") + zeitKurz(iso) + " Uhr";
+function vsVon(v, voll) {
+  const ich = v.von?.person_id && v.von.person_id === ICH?.person_id, n = voll ? v.von?.name : v.von?.vorname || String(v.von?.name || "").split(" ")[0];
+  const was = v.art === "abstimmung" ? "Abstimmung" : "Vorschlag", sym = v.art === "abstimmung" ? "🗳️" : v.art === "spende" ? "💝" : "💡";
+  return ich ? `${sym} ${v.art === "abstimmung" ? "Deine Abstimmung" : "Dein Vorschlag"}` : `${sym} ${was} von <b>${esc(n || "?")}</b>`;
 }
 // KC-CLUB-VORSCHLAG-ANLAGEN-ZAHL (Wunsch Hansi 19.10.2026 „bei den Vorschlägen die Anzahl der Anhänge dabei“): „📎 2 Anlagen“ auf der Kachel
 const vsAnlagenZahl = (v) => { const n = v.anlagen?.length || 0; return n ? `<span class="mk-unter mk-anlagen">📎 ${n} ${n === 1 ? "Anlage" : "Anlagen"}</span>` : ""; };
@@ -30251,8 +30259,8 @@ function vorschlagKachel(v) {
   const zahl = (v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`) + (v.ziel ? ` · 🔐 ${v.ziel}` : ""); // KC-CLUB-ABSTIMMUNG-ZIEL
   const spaeter = offen && !v.treffen && v.sitzungSpaeter ? `<span class="marke">📅 ${VS_SITZ[v.sitzungSpaeter - 1]} Sitzung</span>` : ""; // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
   return `<button class="mini-kachel${offen && v.art === "abstimmung" && !(v.meine || v.abgestimmt) ? " mk-offen" : ""}" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">${sym}</span>
-    <span class="mk-titel">${esc(v.titel)}</span>${lage}${spaeter}<span class="mk-unter">${zahl}</span>
-    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl(v)}</button>`;
+    <span class="mk-titel">${esc(v.titel)}</span><span class="mk-von">${vsVon(v)}</span>${lage}${spaeter}<span class="mk-unter">${zahl}</span>
+    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}${vsAnlagenZahl(v)}</button>`;
 }
 function vorschlagInfo(id) {
   const v = VORSCHLAG_MAP.get(id);
@@ -30286,8 +30294,8 @@ function paketKachel(pid) {
   const lage = !offen ? (l.some((x) => x.status === "abgeschlossen") ? '<span class="marke gruen">✔ beendet</span>' : '<span class="marke rot">zurückgezogen</span>')
     : fehlt ? `<span class="marke gelb">👉 ${pkBeantwortet(mir) ? `noch ${mir.length - pkBeantwortet(mir)} offen` : "Stimme fehlt"}</span>` : '<span class="marke gruen">✔ Du hast abgestimmt</span>';
   return `<button class="mini-kachel${fehlt ? " mk-offen" : ""}" onclick="vorschlagPaketInfo('${esc(pid)}')"><span class="mk-sym">🗳️</span>
-    <span class="mk-titel">${esc(v.paket.titel || v.titel)}</span>${lage}<span class="mk-unter">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</span>
-    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}<span class="mk-unter">von ${esc(v.von?.name || "?")}</span>${vsAnlagenZahl({ anlagen: l.flatMap((x) => x.anlagen || []) })}</button>`;
+    <span class="mk-titel">${esc(v.paket.titel || v.titel)}</span><span class="mk-von">${vsVon(v)}</span>${lage}<span class="mk-unter">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</span>
+    ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}${vsAnlagenZahl({ anlagen: l.flatMap((x) => x.anlagen || []) })}</button>`;
 }
 // Eine Frage im Paket: Frage, freiwillige Erklärung, Antwortknöpfe, Ergebnis – ohne Kopfzeilen (die stehen einmal oben)
 function paketFrageKarte(v, l = []) {
@@ -30315,7 +30323,7 @@ function vorschlagPaketInfo(pid) {
   const v = l[0], offen = l.some((x) => x.status === "offen"), mir = pkMeine(l);
   const kopf = `<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span> <span class="marke">📋 ${l.length} ${l.length === 1 ? "Frage" : "Fragen"}</span>
     ${!offen ? ' <span class="marke gruen">✔ beendet</span>' : v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
-  const unter = `<div class="hinweis" style="font-size:.85rem">von ${esc(v.von.name)} · ${esc(zeitKurz(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</div>`;
+  const unter = `<div class="vs-von">${vsVon(v, true)}</div><div class="hinweis" style="font-size:.85rem">eingereicht ${esc(vsWann(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : ""}${v.ziel ? ` · 🔐 ${esc(v.ziel)}` : ""}</div>`;
   const stand = offen && mir.length ? `<p class="hinweis" style="margin:8px 0 0">Du hast <b>${pkBeantwortet(mir)} von ${mir.length}</b> Fragen beantwortet.${v.geheim ? " 🔒 Geheim: Niemand sieht, wie du stimmst; jede Stimme gilt sofort und lässt sich nicht mehr ändern." : " Bis zum Ende kannst du deine Antworten noch ändern."}</p>` : "";
   let bereich, fragen = "";
   for (const x of l) {

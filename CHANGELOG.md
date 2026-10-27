@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.692.0 – 2026-10-27 – 💡 Vorschläge: „Vorschlag von Hansi“ (KC-CLUB-VORSCHLAG-VON)
+Wunsch Hansi („bei Vorschläge: wer hat den Vorschlag eingereicht – z. B. Vorschlag von Hansi, Vorschlag von Dieter“): Auf jeder Kachel (Thema, Spende, Abstimmung, Abstimmungs-Paket) steht jetzt deutlich direkt unter dem Titel „💡 Vorschlag von **Dieter**“ bzw. „🗳️ Abstimmung von **Klaus**“ (Rufname, farbig) – eigene als „Dein Vorschlag“; vorher stand der volle Name klein und grau in der letzten Zeile. Im großen Blatt „Vorschlag von **Dieter Beispiel**“ mit vollem Namen, darunter „eingereicht am 24.10. 07:41 Uhr“. Server schickt dafür zusätzlich den Rufnamen.
+
 ## 2.691.0 – 2026-10-27 – 🖨️ Drucker auch in der Büro-Listenansicht (KC-CLUB-DRUCKER-LISTE)
 Fund Hansi („wo sind die Ausweise“): Der Büro-Drucker mit allen Druckvorlagen (Sitzungs-Vorlage, Mitgliederliste, Termine, Geburtstage, Briefbogen, Einrichtungskarte, Händler-Ausweis) war nur im gezeichneten Büro-Raum zu finden. Jetzt auch in der Listen-Ansicht: neuer Bereich „🖨️ Drucken & Vorlagen“ mit „Alle Druckvorlagen“ und (Clubleitung) „🪪 Händler-Ausweis“.
 
