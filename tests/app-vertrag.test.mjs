@@ -7673,6 +7673,12 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/function uhLesestand\(u\)/.test(programm) && /"Noch keine Nachricht"\}<\/div>\$\{uhLesestand\(u\)\}<\/div>/.test(programm) && /nachrichtInfo\('\$\{esc\(s\.id\)\}'\)/.test(programm), "Lesestand: Anzeige in der Liste, Antippen → Details");
   assert.equal((programm.match(/\$\{uhLesestand\(u\)\}/g) || []).length, 2, "Lesestand: Liste und Rollkartei");
 }
+// 2.715.0 KC-CLUB-FOTO-ENDGUELTIG (Hansi „im Papierkorb einen Mülleimer für endgültig löschen – nicht erst nach 30 Tagen“)
+{
+  const c = server.slice(server.indexOf('case "foto_endgueltig_loeschen"'), server.indexOf("return json({ ok: true });", server.indexOf('case "foto_endgueltig_loeschen"')));
+  assert.ok(/nurAdmin\(ich\);/.test(c) && /if \(!f\.geloescht_am\) throw/.test(c) && /await dateienEntfernen\(\[f\.attachment_id, f\.vorschau_id\]\);/.test(c) && /"foto_endgueltig_geloescht"/.test(c), "Endgültig löschen: nur Admin, nur aus dem Papierkorb, Dateien weg, protokolliert");
+  assert.ok(/data-w="weg">🗑️ Endgültig löschen<\/button>/.test(programm) && /api\("foto_endgueltig_loeschen", \{ id \}, \{ warten: true \}\)/.test(programm) && /🗑️ Foto endgültig löschen\?/.test(programm), "Endgültig löschen: Knopf im Papierkorb mit Rückfrage");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

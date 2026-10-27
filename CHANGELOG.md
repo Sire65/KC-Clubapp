@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.715.0 – 2026-10-27 – 🗑️ Fotos im Papierkorb sofort endgültig löschen
+KC-CLUB-FOTO-ENDGUELTIG: Wunsch Hansi („im Papierkorb einen Mülleimer für endgültig löschen – nicht erst nach 30 Tagen; ich habe ein falsches Foto“). Fotoalbum → 🗑️ Papierkorb (nur Admin) → Foto antippen: **♻️ Zurückholen** oder **🗑️ Endgültig löschen** (mit Rückfrage). Endgültig heißt: Eintrag weg, Foto und Vorschau sofort aus dem Speicher – wie sonst die Wartung nach 30 Tagen. Protokolliert als `foto_endgueltig_geloescht`.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.714.0 – 2026-10-26 – 🌹 Rose kommt auf jeder Seite
 - 🌹 Die Rose aus der Schießbude kommt jetzt nach etwa 5 Sekunden ruhigem Bildschirm auf jeder Seite – auch wer die App über eine Benachrichtigung direkt im Chat öffnet, bekommt sie (KC-CLUB-ROSE-UEBERALL).
 

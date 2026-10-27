@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.714.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.715.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -41363,7 +41363,7 @@ function fotosZeigen() {
   // nach Monaten gruppiert, neueste zuerst
   const gruppen = new Map();
   FA.fotos.forEach((f, i) => { const k = f.datum.slice(0, 7); if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push([f, i]); });
-  $("fotoListe").innerHTML = (faPapierkorb ? '<p class="hinweis">🗑️ Gelöschte Fotos werden 30 Tage nach dem Löschen endgültig entfernt. ♻️ holt ein Foto zurück.</p>' : "") + [...gruppen.entries()].map(([k, liste]) => `
+  $("fotoListe").innerHTML = (faPapierkorb ? '<p class="hinweis">🗑️ Gelöschte Fotos werden 30 Tage nach dem Löschen endgültig entfernt. Foto antippen: ♻️ zurückholen oder 🗑️ sofort endgültig löschen.</p>' : "") + [...gruppen.entries()].map(([k, liste]) => `
     <div class="abschnitt" style="margin-top:16px"><h3 style="font-size:1.05rem">${MONATE[Number(k.slice(5)) - 1]} ${k.slice(0, 4)}</h3><span class="hinweis">${liste.length} Foto${liste.length > 1 ? "s" : ""}</span></div>
     <div class="fotoraster">${liste.map(([f, i]) => `<button class="fotokachel${FAW.an && FAW.ids.has(f.id) ? " gewaehlt" : ""}" data-id="${f.id}" onclick="${faPapierkorb ? `fotoWiederherstellen('${f.id}')` : FAW.an ? `faWahl('${f.id}', this)` : `fotoAnsehen(${i})`}" title="${esc([f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · "))}">
       ${f.vorschau ? `<img src="${esc(f.vorschau)}" alt="${esc(f.beschreibung || f.thema || "Foto")}" loading="lazy">` : "📷"}${faPapierkorb ? '<span class="fk-marke">♻️</span>' : ""}${FAW.an ? '<span class="fk-haken">✓</span>' : ""}</button>`).join("")}</div>`).join("");
@@ -41534,9 +41534,20 @@ async function faAlbenKorb() {
     f.querySelectorAll("[data-zurueck]").forEach((b) => (b.onclick = async () => { try { await api("foto_album_wiederherstellen", { id: b.dataset.zurueck }); f.remove(); melde("♻️ Album ist wieder da"); fotosLaden(); } catch (e) { meldeFehler(e); } }));
   } catch (e) { meldeFehler(e); }
 }
+// Papierkorb: Foto antippen → ♻️ zurückholen oder (2.715.0 KC-CLUB-FOTO-ENDGUELTIG, Wunsch Hansi) 🗑️ sofort endgültig löschen
 async function fotoWiederherstellen(id) {
-  if (!(await frage("Dieses Foto aus dem Papierkorb zurückholen?"))) return;
-  try { await api("foto_wiederherstellen", { id }); melde("♻️ Foto ist wieder im Album"); fotosLaden(); } catch (e) { meldeFehler(e); }
+  const wahl = await new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">Foto im Papierkorb</h3><p class="dlg-text">Zurück ins Album holen – oder sofort endgültig löschen (sonst nach 30 Tagen von selbst).</p>
+      <div class="dlg-knoepfe"><button class="knopf haupt" data-w="zurueck">♻️ Zurückholen</button><button class="knopf dlg-gefahr" data-w="weg">🗑️ Endgültig löschen</button><button class="knopf" data-w="">Abbrechen</button></div>`, () => zu(null));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w || null)));
+  });
+  if (wahl === "zurueck") {
+    try { await api("foto_wiederherstellen", { id }); melde("♻️ Foto ist wieder im Album"); fotosLaden(); } catch (e) { meldeFehler(e); }
+  } else if (wahl === "weg") {
+    if (!(await frage("🗑️ Foto endgültig löschen?\n\nDas Foto wird sofort aus dem Speicher entfernt und kann nicht mehr zurückgeholt werden."))) return;
+    try { await api("foto_endgueltig_loeschen", { id }, { warten: true }); melde("🗑️ Foto endgültig gelöscht"); fotosLaden(); } catch (e) { meldeFehler(e); }
+  }
 }
 
 // Hochladen: mehrere Fotos auf einmal, gemeinsames Thema/Anlass; Datum je Foto aus den Bilddaten (EXIF)

@@ -16500,6 +16500,17 @@ Köcheclub Werne`,
         await protokoll(ich.person_id, "foto_wiederhergestellt", { foto: f.id });
         return json({ ok: true });
       }
+      // 2.715.0 KC-CLUB-FOTO-ENDGUELTIG (Wunsch Hansi „im Papierkorb einen Mülleimer für endgültig löschen – nicht erst nach 30 Tagen“):
+      // nur Admin, nur Fotos im Papierkorb; macht genau das, was die Wartung nach 30 Tagen macht (Eintrag weg, Datei + Vorschau aus dem Speicher)
+      case "foto_endgueltig_loeschen": {
+        nurAdmin(ich);
+        const f = await fotoHolen(p.id);
+        if (!f.geloescht_am) throw new Fehler("Das Foto ist nicht im Papierkorb – bitte zuerst im Album löschen.", 409);
+        await db.from("kc_club_fotos").delete().eq("id", f.id);
+        await dateienEntfernen([f.attachment_id, f.vorschau_id]);
+        await protokoll(ich.person_id, "foto_endgueltig_geloescht", { foto: f.id, von: f.hochgeladen_von, datum: f.datum, thema: f.thema, geloescht_am: f.geloescht_am });
+        return json({ ok: true });
+      }
 
       // ----- 2.711.0 KC-CLUB-VIDEOS -----
       case "videos_liste": {
