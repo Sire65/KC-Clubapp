@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.716.0 – 2026-10-26 – 🌹 Rosen-Gruß mit Sim-Jü
+- 🌹 Der Gruß zur Rose lautet jetzt „Ein Gruß aus der Schießbude – hab ich für dich auf der Sim-Jü geschossen 🎯“ (KC-CLUB-ROSE-TEXT).
+
 ## 2.715.0 – 2026-10-27 – 🗑️ Fotos im Papierkorb sofort endgültig löschen
 KC-CLUB-FOTO-ENDGUELTIG: Wunsch Hansi („im Papierkorb einen Mülleimer für endgültig löschen – nicht erst nach 30 Tagen; ich habe ein falsches Foto“). Fotoalbum → 🗑️ Papierkorb (nur Admin) → Foto antippen: **♻️ Zurückholen** oder **🗑️ Endgültig löschen** (mit Rückfrage). Endgültig heißt: Eintrag weg, Foto und Vorschau sofort aus dem Speicher – wie sonst die Wartung nach 30 Tagen. Protokolliert als `foto_endgueltig_geloescht`.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
