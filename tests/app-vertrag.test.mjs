@@ -5917,7 +5917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7534,6 +7534,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /const buVon = \(s, t\) =>/, "buVon");
   assert.ok((programm.match(/buVon\(s, t\)/g) || []).length >= 6, "Büro-Liste, Vorlage, Einladung");
   assert.match(programm, /\$\{x\.von \? `💡 \$\{esc\(x\.von\)\} · ` : ""\}/, "Clubabend Live");
+}
+// 2.693.0 KC-CLUB-SPUR-STOERUNG (Wunsch Hansi „Klaus war drin, taucht unter Wege der Mitglieder aber nicht auf“)
+{
+  const sl = server.slice(server.indexOf('case "spur_liste":'), server.indexOf("// „mit wem“"));
+  assert.ok(/like\("aktion", "fehler_%"\)/.test(sl) && /\.not\("aktion", "in", "\(fehler_startzeit,fehler_umgebung\)"\)/.test(sl) && /if \(je\.has\(id\) \|\| !id\.startsWith\("KC-P-"\) \|\| berlinTag\(new Date\(t\)\) !== tag\) continue;/.test(sl), "Server: nur Mitglieder ohne Wege, nur dieser Tag, ohne Hinweis-Arten");
+  assert.ok(/anzahl: 0,/.test(sl) && /stoerung: e\.netz \? "netz" : "app"/.test(sl) && !/details/.test(sl.slice(sl.indexOf("KC-CLUB-SPUR-STOERUNG"), sl.indexOf("const leute"))), "Server: nur Art und Uhrzeit, nie Inhalte");
+  assert.ok(/x\.stoerung && !on\(x\.person_id\) \? `<button class="knopf spur-stoerung"/.test(html) && /war kurz da/.test(html) && /📶 Verbindung gestört/.test(html), "App: „war kurz da“ mit Grund");
+  assert.ok(/\.spur-stoerung \{ border: 2px dashed/.test(seite), "gestrichelter Rahmen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.692.0";
+const SERVER_VERSION = "2.693.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12543,9 +12543,19 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // KC-CLUB-SPUR-JETZT (2.81.0, Wunsch Hansi „was macht jeder gerade, was ruft er auf“): letzter Schritt je Person (nur die Art, nie Inhalte)
           const je = new Map<string, { anzahl: number; erste: number; letzte: number; w: string }>();
           for (const x of schritte) { const e = je.get(x.p) ?? { anzahl: 0, erste: x.t, letzte: x.t, w: x.w }; e.anzahl++; e.letzte = x.t; e.w = x.w; je.set(x.p, e); }
-          const leute = await personen([...je.keys()]);
-          return json({ tag, personen: [...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
-            erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString(), zuletzt: e.w })).sort((a, b) => b.letzte.localeCompare(a.letzte)) });
+          // KC-CLUB-SPUR-STOERUNG (Wunsch Hansi „Klaus war drin, taucht aber nicht auf“): Mitglieder, von denen an diesem Tag nur eine Störung ankam
+          // (z. B. keine Verbindung beim Aktualisieren) – erscheinen mit „war kurz da“ statt gar nicht. Nur Art und Uhrzeit, nie Inhalte.
+          const { data: fe } = await db.from("kc_club_protokoll").select("person_id,aktion,zeit").like("aktion", "fehler_%").not("person_id", "is", null)
+            .not("aktion", "in", "(fehler_startzeit,fehler_umgebung)").gte("zeit", new Date(t0 - 86400000).toISOString()).lt("zeit", new Date(t0 + 2 * 86400000).toISOString()).limit(2000);
+          const stoer = new Map<string, { erste: number; letzte: number; netz: boolean }>();
+          for (const z of fe ?? []) { const t = Date.parse((z as any).zeit), id = String((z as any).person_id);
+            if (je.has(id) || !id.startsWith("KC-P-") || berlinTag(new Date(t)) !== tag) continue;
+            const e = stoer.get(id) ?? { erste: t, letzte: t, netz: false }; e.erste = Math.min(e.erste, t); e.letzte = Math.max(e.letzte, t); e.netz ||= (z as any).aktion === "fehler_api"; stoer.set(id, e); }
+          const leute = await personen([...je.keys(), ...stoer.keys()]);
+          return json({ tag, personen: [...[...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
+            erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString(), zuletzt: e.w })),
+            ...[...stoer.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: 0, erste: new Date(e.erste).toISOString(),
+              letzte: new Date(e.letzte).toISOString(), zuletzt: null, stoerung: e.netz ? "netz" : "app" }))].sort((a, b) => b.letzte.localeCompare(a.letzte)) });
         }
         // „mit wem“: Mitglieds-Kennung → Name; Unterhaltung → Gruppenname oder die anderen Teilnehmer (keine Inhalte)
         const chats = [...new Set<string>(schritte.filter((x: any) => x.mit && !x.mit.startsWith("KC-P-")).map((x: any) => x.mit as string))].filter((x) => UUID_ALBUM.test(x)).slice(0, 200);

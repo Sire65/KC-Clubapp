@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.693.0 – 2026-10-27 – Wege der Mitglieder: „war kurz da“ bei Störung
+KC-CLUB-SPUR-STOERUNG: Kam von einem Mitglied an einem Tag nur eine Störung an (z. B. keine Verbindung beim Aktualisieren), erscheint es in „👣 Wege der Mitglieder“ mit „war kurz da“, Uhrzeit und Grund statt gar nicht. Nur Art und Uhrzeit, nie Inhalte.
+
 ## 2.692.0 – 2026-10-27 – 💡 Vorschläge: „Vorschlag von Hansi“ (KC-CLUB-VORSCHLAG-VON)
 Wunsch Hansi („bei Vorschläge: wer hat den Vorschlag eingereicht – z. B. Vorschlag von Hansi, Vorschlag von Dieter“): Auf jeder Kachel (Thema, Spende, Abstimmung, Abstimmungs-Paket) steht jetzt deutlich direkt unter dem Titel „💡 Vorschlag von **Dieter**“ bzw. „🗳️ Abstimmung von **Klaus**“ (Rufname, farbig) – eigene als „Dein Vorschlag“; vorher stand der volle Name klein und grau in der letzten Zeile. Im großen Blatt „Vorschlag von **Dieter Beispiel**“ mit vollem Namen, darunter „eingereicht am 24.10. 07:41 Uhr“. Server schickt dafür zusätzlich den Rufnamen. Auch in der **Tagesordnung** steht jetzt, wer einen Punkt vorgeschlagen hat („Km-Pauschale – Vorschlag von Dieter“): im Protokoll (Ansicht, Druck, Text zum Teilen), im Clubabend Live, im Büro beim Vorbereiten, auf der gedruckten Sitzungs-Vorlage, in der Einladung und in der Erinnerungs-Mail am Donnerstag. Die App vergleicht dazu jeden Punkt mit den eingereichten Themen dieser Sitzung; frei getippte Punkte bleiben ohne Namen.
 
