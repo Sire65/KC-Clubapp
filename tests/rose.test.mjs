@@ -31,8 +31,9 @@ assert.ok(/\$\{ICH\?\.admin && m\.rose \? roseAdminKarte\(m\) : ""\}/.test(app) 
 // 6. Bedingungen im Browser
 assert.ok(/if \(!INIT\?\.rose \|\| INIT\._offline \|\| !ICH \|\| ROSE\.gezeigt\) return;/.test(block), "nur wenn fällig, nicht aus dem Offline-Stand");
 assert.ok(/if \(s && s\.pid === ICH\.person_id\) \{ ROSE\.gezeigt = true; return roseMelden\(\); \}/.test(block), "nie zweimal auf demselben Gerät, Meldung nachholen");
-assert.ok(/document\.hidden \|\| aktuelleAnsicht !== "start"/.test(block) && /ROSE_MS = 20000;/.test(block) && /\(ROSE\.ms \+= d\) < ROSE_MS \|\| !roseFrei\(\)/.test(block), "20 Sekunden sichtbare Startseite (2.653.0)");
-assert.ok(/\.blatt:not\(\.versteckt\)/.test(block) && /INPUT\|TEXTAREA\|SELECT/.test(block) && /isContentEditable/.test(block), "nicht über Fenstern oder beim Tippen");
+assert.ok(/if \(document\.hidden\) return;/.test(block) && !/aktuelleAnsicht !== "start"/.test(block) && /ROSE_MS = 4500;/.test(block) && /\(ROSE\.ms \+= d\) < ROSE_MS \|\| !roseFrei\(\)/.test(block), "5 Sekunden ruhiger Bildschirm auf jeder Seite (2.714.0)");
+assert.ok(/const tippt = Date\.now\(\) - ROSE_TIPP < 4000;/.test(block) && /aktuelleAnsicht === "start" && roseSzeneDa\(\) \? roseQuelle\(\) : null/.test(block), "nur echtes Tippen hält auf, Schießbude nur auf der Startseite (2.714.0)");
+assert.ok(/\.blatt:not\(\.versteckt\)/.test(block) && /document\.addEventListener\("keydown", \(\) => \{ ROSE_TIPP = Date\.now\(\); \}, true\)/.test(block), "nicht über Fenstern oder beim Tippen (2.714.0: echtes Tippen statt Fokus)");
 assert.ok(/JZB\.saison === "kirmes" && JZB\.imBild/.test(block) && /jzSimJueZeit\(\)/.test(block) && /!SPAR\?\.an/.test(block), "Schießbude nur bei sichtbarer Sim-Jü-Szene");
 assert.ok(/roseSzeneDa\(\) \? roseQuelle\(\) : null/.test(block) && /Ein Gruß aus der Schießbude/.test(block), "sonst Gruß-Variante");
 assert.ok(/roseLsSetzen\(\{ pid: ICH\.person_id, am: [^}]+gemeldet: false \}\);\s*roseZeigen\([^;]+;\s*roseMelden\(\);/.test(block), "erst merken, zeigen, dann melden");
