@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.693.0";
+const SERVER_VERSION = "2.694.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5115,6 +5115,22 @@ async function vorschlaegeSitzungZuordnen() {
   return n;
 }
 const sitzungNrPruefen = (x: unknown) => ([1, 2, 3].includes(Number(x)) ? Number(x) : null);
+// 2.694.0 KC-CLUB-ANMELDESCHLUSS (Wunsch Hansi 27.10.2026 „Anmeldeschluss für Vorschläge bis 17 Uhr am Vorabend, in der Info anzeigen; danach auf die
+// nächste Sitzung oder Häkchen dringend – Clubsprecher, Admin und Kassenwart entscheiden: dringender TOP oder ablehnen und auf die nächste Sitzung“).
+// Gilt für Themen und Spenden zu einer Sitzung (Termin der Art „Treffen“). Entscheiden darf jeder aus der Leitung – wer zuerst tippt.
+const ANMELDESCHLUSS_STUNDE = 17;
+function anmeldeschluss(beginnIso: string): Date {
+  const t = berlinTeile(new Date(beginnIso)), v = new Date(Date.UTC(t.y, t.m - 1, t.d) - 86400000);
+  return berlinZuUtc(v.getUTCFullYear(), v.getUTCMonth() + 1, v.getUTCDate(), ANMELDESCHLUSS_STUNDE, 0);
+}
+const schlussVorbei = (beginnIso: string, jetztMs = Date.now()) => jetztMs >= anmeldeschluss(beginnIso).getTime() && jetztMs < Date.parse(beginnIso);
+// die Sitzung danach: fest, wenn schon im Kalender – sonst „nächste Sitzung ab Beginn dieser“ (ordnet sich selbst zu, 2.527.0)
+async function sitzungDanach(t: { beginn: string }) {
+  const { data } = await db.from("kc_club_treffen").select("id,titel,beginn").eq("art", "treffen").neq("status", "abgesagt").gt("beginn", t.beginn).order("beginn").limit(1);
+  const n: any = data?.[0];
+  return n ? { felder: { treffen_id: n.id, sitzung_nr: null }, text: `${n.titel} · ${wann(n.beginn)}` }
+    : { felder: { treffen_id: null, sitzung_nr: 1, sitzung_ab: t.beginn }, text: "die nächste Sitzung (Datum folgt)" };
+}
 async function vorschlaegeListe(ich: Ich) {
   const [{ data: offen }, { data: fertig }] = await Promise.all([
     db.from("kc_club_vorschlaege").select("*").eq("status", "offen").order("erstellt_am", { ascending: false }).limit(100),
@@ -5130,7 +5146,7 @@ async function vorschlaegeListe(ich: Ich) {
     ids.length ? db.from("kc_club_geheime_stimmen").select("vorschlag_id,wahl").in("vorschlag_id", ids) : Promise.resolve(leer),
     tids.length ? db.from("kc_club_treffen").select("id,titel,beginn").in("id", tids) : Promise.resolve(leer),
   ]);
-  const leute = await personen([...alle.map((v: any) => v.erstellt_von), ...(st ?? []).map((x: any) => x.person_id)]);
+  const leute = await personen([...alle.map((v: any) => v.erstellt_von), ...alle.map((v: any) => v.dringend?.von), ...(st ?? []).map((x: any) => x.person_id)]);
   const treffen = new Map((tr ?? []).map((t: any) => [t.id, t]));
   const [berechtigt, anl] = await Promise.all([aktiveMitglieder().then((l) => l.length), objAnlagenHolen("vorschlag", ids)]); // 2.448.0: + Anlagen
   return alle.map((v: any) => {
@@ -5152,6 +5168,7 @@ async function vorschlaegeListe(ich: Ich) {
       status: v.status, frist: v.frist, erstellt_am: v.erstellt_am, abgeschlossen_am: v.abgeschlossen_am,
       von: { person_id: v.erstellt_von, name: leute.get(v.erstellt_von)?.display_name || v.erstellt_von, vorname: vorname(leute.get(v.erstellt_von) ?? null) || null }, // 2.692.0 KC-CLUB-VORSCHLAG-VON: Rufname für „Vorschlag von Hansi“
       treffen: t ? { id: t.id, titel: t.titel, beginn: t.beginn } : null, sitzungSpaeter: t ? null : v.sitzung_nr ?? null, // 2.527.0
+      dringend: v.dringend ? { stand: v.dringend.stand, von: v.dringend.von ? leute.get(v.dringend.von)?.display_name || null : null } : null, // 2.694.0 KC-CLUB-ANMELDESCHLUSS
       abgestimmt: !!mein, meine: v.geheim ? null : v.paket?.mehrfach ? wahlListe(mein?.wahl) : mein?.wahl ?? null, stimmen: s.length, berechtigt: v.ziel_ids?.length || berechtigt, ergebnis,
       ziel: v.ziel_text || null, fuerMich: !v.ziel_ids || v.ziel_ids.includes(ich.person_id),
       darfAbschliessen: v.status === "offen" && (ich.vorstand || (eigener && unterstuetzbar(v.art))),
@@ -5580,7 +5597,7 @@ const BUERO_TOP_HINTEN = ["Verschiedenes"];
 const BUERO_ZEILEN = [0, 3, 5, 8, 12];
 // KC-CLUB-TAGESINFO: Grenze der Datenbank im Supabase-Tarif „Free“ (500 MB) – bei Tarifwechsel hier anpassen
 const DB_GRENZE_BYTES = 500 * 1024 * 1024;
-const topVorschlag = (v: any) => v.art === "spende" ? `${v.titel}${(v.spenden ?? []).length > 1 ? ` (zusammen ${euroRund(spendenSumme(v.spenden))})` : ""}` : v.art === "abstimmung" ? `🗳️ ${v.titel}` : v.titel;
+const topVorschlag = (v: any): string => v.dringend?.stand === "aufgenommen" ? "❗ " + topVorschlag({ ...v, dringend: null }) : v.art === "spende" ? `${v.titel}${(v.spenden ?? []).length > 1 ? ` (zusammen ${euroRund(spendenSumme(v.spenden))})` : ""}` : v.art === "abstimmung" ? `🗳️ ${v.titel}` : v.titel;
 async function bueroNaechste() {
   const { data } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art,status").eq("status", "geplant").neq("art", "veranstaltung")
     .gte("beginn", new Date(Date.now() - 6 * 3600000).toISOString()).order("beginn").limit(6);
@@ -5885,7 +5902,7 @@ async function bueroSitzung(ich: Ich, tid: string) {
     const { data: st } = await db.from("kc_club_stimmen").select("vorschlag_id").in("vorschlag_id", (vs ?? []).map((v: any) => v.id));
     (st ?? []).forEach((s: any) => unterst.set(s.vorschlag_id, (unterst.get(s.vorschlag_id) ?? 0) + 1));
   }
-  const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0,
+  const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid && v.dringend?.stand !== "offen", dringend: v.dringend?.stand ?? null, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0,
     von: vorname(leute.get(v.erstellt_von) ?? null) || null })); // 2.692.0 KC-CLUB-VORSCHLAG-VON: „Vorschlag von Dieter“ in der Tagesordnung
   // Vorschlag für die Anmerkung: Stand des letzten Protokolls
   let anmerkungVorschlag = "";
@@ -6779,7 +6796,7 @@ async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
 const topSchluessel = (x: unknown) => txt(x, 160).toLowerCase().replace(/^🗳️\s*/, "").replace(/[^a-z0-9äöüß]/g, "");
 async function tagesordnungVon(treffenId: string | null, punkte: string[]): Promise<(string | null)[]> {
   if (!treffenId || !punkte?.length) return (punkte ?? []).map(() => null);
-  const { data: vs } = await db.from("kc_club_vorschlaege").select("titel,art,spenden,erstellt_von").eq("treffen_id", treffenId).neq("status", "zurueckgezogen");
+  const { data: vs } = await db.from("kc_club_vorschlaege").select("titel,art,spenden,erstellt_von,dringend").eq("treffen_id", treffenId).neq("status", "zurueckgezogen");
   const leute = await personen((vs ?? []).map((v: any) => v.erstellt_von)), m = new Map<string, string>();
   for (const v of vs ?? []) { const n = vorname(leute.get((v as any).erstellt_von) ?? null); if (!n) continue; m.set(topSchluessel(topVorschlag(v)), n); m.set(topSchluessel((v as any).titel), n); }
   return punkte.map((x) => m.get(topSchluessel(x)) ?? null);
@@ -8517,7 +8534,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const th = (vo ?? []).filter((x: any) => x.art === "thema" && (x.treffen_id === s0.id || x.treffen_id == null)).slice(0, 100);
           const ids = (th ?? []).map((x: any) => x.id);
           const { data: meine } = ids.length ? await db.from("kc_club_stimmen").select("vorschlag_id").eq("person_id", ich.person_id).in("vorschlag_id", ids) : { data: [] as any[] };
-          return { treffen: s0.id, anzahl: ids.length, offen: ids.length - (meine ?? []).length };
+          // 2.694.0 KC-CLUB-ANMELDESCHLUSS: Frist für die Info; Leitung: dringende Vorschläge, die auf eine Entscheidung warten
+          const { data: dr } = ich.vorstand ? await db.from("kc_club_vorschlaege").select("id,titel,erstellt_von").eq("status", "offen").eq("dringend->>stand", "offen").limit(10) : { data: [] as any[] };
+          const drVon = (dr ?? []).length ? await personen((dr ?? []).map((x: any) => x.erstellt_von)) : new Map();
+          return { treffen: s0.id, anzahl: ids.length, offen: ids.length - (meine ?? []).length, schluss: anmeldeschluss(s0.beginn).toISOString(),
+            dringend: (dr ?? []).map((x: any) => ({ id: x.id, titel: x.titel, von: vorname(drVon.get(x.erstellt_von) ?? null) || drVon.get(x.erstellt_von)?.display_name || "" })) };
         })().catch(() => null);
         let ungelesen = 0, ungelesenLaut = 0, zaehlUnsicher = false;
         const { data: stummE } = await pStumm;
@@ -9220,10 +9241,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const frist = abstimmungFrist(p.frist);
         const { zielIds, zielText } = art === "abstimmung" ? await abstimmungZiel(p, ich) : { zielIds: null, zielText: null };
+        // 2.694.0 KC-CLUB-ANMELDESCHLUSS: nach 17 Uhr am Vorabend → ❗ dringend (Leitung entscheidet) oder auf die Sitzung danach
+        let schluss: { dringend: any; danach: { felder: any; text: string } | null; sitzung: any } = { dringend: null, danach: null, sitzung: null };
+        if (art !== "abstimmung" && p.treffen_id) {
+          const { data: ts } = await db.from("kc_club_treffen").select("id,titel,beginn,art").eq("id", String(p.treffen_id)).maybeSingle();
+          if (ts && ts.art === "treffen" && schlussVorbei(ts.beginn)) schluss = p.dringend === true ? { dringend: { stand: "offen", am: jetzt(), fuer: ts.id }, danach: null, sitzung: ts }
+            : { dringend: null, danach: await sitzungDanach(ts), sitzung: ts };
+        }
         const { data: v, error } = await db.from("kc_club_vorschlaege").insert({ ziel_ids: zielIds, ziel_text: zielText,
           art, titel, beschreibung: txt(p.beschreibung, 2000) || null, optionen, geheim: art === "abstimmung" && !!p.geheim, spenden,
           treffen_id: p.treffen_id ? String(p.treffen_id) : null, frist: art === "abstimmung" && frist ? frist.toISOString() : null, erstellt_von: ich.person_id,
           ...(!p.treffen_id && sitzungNrPruefen(p.sitzung_nr) ? { sitzung_nr: sitzungNrPruefen(p.sitzung_nr), sitzung_ab: jetzt() } : {}), // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
+          ...(schluss.danach ? schluss.danach.felder : {}), ...(schluss.dringend ? { dringend: schluss.dringend } : {}),
         }).select().single();
         if (error || !v) throw new Fehler("Speichern fehlgeschlagen.", 500);
         await objAnlagenSetzen(ich, "vorschlag", v.id, p.anlagen); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN (z. B. Skizze, Flyer des Spendenempfängers)
@@ -9234,7 +9263,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             : await leitungIds(); // KC-CLUB-EINGANGSKORB (2.23.6): Clubsprecher, Kassenwart UND Admin
           const fristText = v.frist ? ` Abstimmen bis ${wann(v.frist)}.` : "";
           const spText = spenden ? "\n\n" + spenden.map((x) => `💝 ${x.empfaenger}: ${euroRund(x.betrag)}`).join("\n") + (spenden.length > 1 ? `\nZusammen: ${euroRund(spendenSumme(spenden))}` : "") : "";
-          versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), art === "abstimmung" ? {
+          versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), schluss.dringend ? {
+            titel: "❗ Dringender Vorschlag – bitte entscheiden", kurz: `${ich.name}: ${titel} (nach Anmeldeschluss)`,
+            betreff: `Köcheclub Werne – dringender Vorschlag nach Anmeldeschluss: ${titel}`,
+            text: `Hallo,\n\n${ich.name} hat nach dem Anmeldeschluss (17 Uhr am Vorabend) einen dringenden Vorschlag für die Sitzung ${schluss.sitzung.titel} am ${wann(schluss.sitzung.beginn)} eingereicht:\n\n❗ ${titel}${spText}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nBitte in der App entscheiden: als dringenden TOP aufnehmen oder ablehnen (dann kommt er auf die nächste Sitzung). Es reicht, wenn einer von euch entscheidet.\n\nKöcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub-App`,
+            url: APP_URL + "#vorschlaege",
+          } : art === "abstimmung" ? {
             titel: "🗳️ Abstimmung: " + titel, kurz: `Bitte in der App abstimmen.${fristText}`,
             betreff: `Köcheclub Werne – Abstimmung: ${titel}`,
             text: `Hallo,\n\nes gibt eine neue Abstimmung${v.geheim ? " (geheim)" : ""}${zielText ? ` (nur für: ${zielText})` : ""}:\n\n🗳️ ${titel}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nAntworten: ${optionen.join(" / ")}${fristText ? "\n" + fristText.trim() : ""}\n\nAbstimmen in der Köcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne`,
@@ -9246,8 +9280,49 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             url: APP_URL + "#vorschlaege",
           }, `club-vorschlag:${v.id}`);
         }
-        await protokoll(ich.person_id, "vorschlag_angelegt", { vorschlag: v.id, art, geheim: v.geheim, versand, ...(spenden ? { spenden: spenden.length, summe: spendenSumme(spenden) } : {}) });
-        return json({ ok: true, id: v.id, versand });
+        await protokoll(ich.person_id, "vorschlag_angelegt", { vorschlag: v.id, art, geheim: v.geheim, versand, ...(spenden ? { spenden: spenden.length, summe: spendenSumme(spenden) } : {}), ...(schluss.sitzung ? { schluss: schluss.dringend ? "dringend" : "danach" } : {}) });
+        return json({ ok: true, id: v.id, versand, ...(schluss.sitzung ? { dringend: !!schluss.dringend, verschoben: schluss.danach?.text ?? null } : {}) });
+      }
+      // 2.694.0 KC-CLUB-ANMELDESCHLUSS: dringender Vorschlag – Clubsprecher, Kassenwart oder Admin entscheidet (wer zuerst tippt)
+      case "vorschlag_dringend": {
+        nurVorstand(ich);
+        const aufnehmen = p.entscheidung === "aufnehmen";
+        if (!aufnehmen && p.entscheidung !== "ablehnen") throw new Fehler("Bitte „aufnehmen“ oder „ablehnen“ wählen.");
+        const { data: v } = await db.from("kc_club_vorschlaege").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!v || v.status !== "offen" || !v.dringend) throw new Fehler("Dieser Vorschlag wartet auf keine Entscheidung (mehr).", 404);
+        const schonVon = async () => (await personen([v.dringend.von])).get(v.dringend.von)?.display_name || null;
+        if (v.dringend.stand !== "offen") return json({ ok: false, stand: v.dringend.stand, von: await schonVon() });
+        const { data: t } = v.treffen_id ? await db.from("kc_club_treffen").select("id,titel,beginn").eq("id", v.treffen_id).maybeSingle() : { data: null as any };
+        const danach = aufnehmen ? null : await sitzungDanach(t ?? { beginn: jetzt() });
+        const dr = { ...v.dringend, stand: aufnehmen ? "aufgenommen" : "abgelehnt", von: ich.person_id, entschieden_am: jetzt() };
+        const { data: hit, error } = await db.from("kc_club_vorschlaege").update({ dringend: dr, ...(danach ? danach.felder : {}) }).eq("id", v.id).eq("dringend->>stand", "offen").select("id");
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        if (!hit?.length) { const { data: n } = await db.from("kc_club_vorschlaege").select("dringend").eq("id", v.id).maybeSingle(); v.dringend = n?.dringend ?? v.dringend;
+          return json({ ok: false, stand: v.dringend.stand, von: await schonVon() }); } // ein anderer war schneller
+        // schon vorbereitete Tagesordnung: dringenden TOP vor „Verschiedenes“ einfügen
+        if (aufnehmen && t) {
+          const { data: prep } = await db.from("kc_club_buero_sitzung").select("tagesordnung").eq("treffen_id", t.id).maybeSingle();
+          const l: any[] = Array.isArray(prep?.tagesordnung) ? [...prep.tagesordnung] : [];
+          if (l.length && !l.some((x: any) => x.id === v.id)) {
+            let i = l.findIndex((x: any) => x.art === "fest" && BUERO_TOP_HINTEN.includes(x.t)); if (i < 0) i = l.length;
+            l.splice(i, 0, { t: topVorschlag({ ...v, dringend: dr }), art: "vorschlag", id: v.id });
+            await db.from("kc_club_buero_sitzung").update({ tagesordnung: l }).eq("treffen_id", t.id);
+          }
+        }
+        const sitz = t ? `${t.titel} am ${wann(t.beginn)}` : "diese Sitzung";
+        const ergebnis = aufnehmen ? `wird als dringender Tagesordnungspunkt auf ${sitz} besprochen` : `kommt nicht mehr auf ${sitz}, sondern auf ${danach!.text}`;
+        const leitung = (await leitungIds()).filter((id) => id !== ich.person_id && id !== v.erstellt_von);
+        await Promise.all([
+          v.erstellt_von !== ich.person_id ? senden("club_vorschlag", [v.erstellt_von], { titel: aufnehmen ? "❗ Dein Vorschlag kommt noch dran" : "📅 Dein Vorschlag kommt auf die nächste Sitzung",
+            kurz: `${v.titel} – ${ergebnis}.`, betreff: `Köcheclub Werne – dein Vorschlag: ${v.titel}`,
+            text: `Hallo,\n\ndein Vorschlag „${v.titel}“ ${ergebnis}.\nEntschieden von ${ich.name}.\n\nKöcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub-App`, url: APP_URL + "#vorschlaege" },
+            `club-vorschlag-dringend:${v.id}:mitglied`).catch(() => null) : null,
+          leitung.length ? senden("club_vorschlag", leitung, { titel: "✅ Dringender Vorschlag entschieden", kurz: `${ich.name}: „${v.titel}“ ${ergebnis}.`,
+            betreff: `Köcheclub Werne – entschieden: ${v.titel}`, text: `Hallo,\n\n${ich.name} hat entschieden: „${v.titel}“ ${ergebnis}.\n\nViele Grüße\nKöcheclub-App`, url: APP_URL + "#vorschlaege" },
+            `club-vorschlag-dringend:${v.id}:leitung`).catch(() => null) : null,
+        ]);
+        await protokoll(ich.person_id, "vorschlag_dringend_entschieden", { vorschlag: v.id, stand: dr.stand, treffen: t?.id ?? null });
+        return json({ ok: true, stand: dr.stand, naechste: danach?.text ?? null });
       }
 
       // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“):

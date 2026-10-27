@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.694.0 – 2026-10-27 – Anmeldeschluss für Vorschläge (17 Uhr am Vorabend) + dringend
+KC-CLUB-ANMELDESCHLUSS: Themen/Spenden für eine Sitzung bis 17:00 Uhr am Vorabend (Info-Feld, Formular). Danach: ❗ dringend – Clubsprecher, Kassenwart oder Admin entscheiden (wer zuerst tippt): als dringender TOP aufnehmen oder ablehnen → nächste Sitzung; Einreicher und Leitung bekommen Bescheid. Sonst automatisch auf die nächste Sitzung. DB: kc_club_vorschlaege.dringend.
+
 ## 2.693.0 – 2026-10-27 – Wege der Mitglieder: „war kurz da“ bei Störung
 KC-CLUB-SPUR-STOERUNG: Kam von einem Mitglied an einem Tag nur eine Störung an (z. B. keine Verbindung beim Aktualisieren), erscheint es in „👣 Wege der Mitglieder“ mit „war kurz da“, Uhrzeit und Grund statt gar nicht. Nur Art und Uhrzeit, nie Inhalte.
 

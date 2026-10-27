@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.693.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.694.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5442,6 +5442,7 @@ const HILFE = [
   { id: "hilfe_veroeffentlichen", thema: "club", sym: "📣", t: "Hilfe-Aufruf oder Angebot veröffentlichen", x: "Beim Einstellen fragt die App: <b>„📣 Wie möchtest du es veröffentlichen?“</b> – <b>📌 Pinnwand</b> (grüner Aushang, antippbar), <b>🔔 Push</b> und/oder <b>✉️ E-Mail</b> an alle Mitglieder. Mehrere gehen, die Wahl merkt sich dein Handy. Nichts angehakt: nur in Helfen &amp; Leihen sichtbar. Bei einem fremden Angebot schreibt <b>„💬 Nachricht“</b> gleich den Betreff „Dein Angebot … vom …“ für dich.", zeig: () => hlStart("helfen"), seit: "2.23.44" },
   { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
+  { id: "anmeldeschluss", thema: "club", sym: "⏰", t: "Anmeldeschluss für Themen: 17 Uhr am Vorabend", x: "Themen und Spenden für eine Sitzung bitte bis <b>17:00 Uhr am Vorabend</b> einreichen – die Frist steht im Info-Feld und beim Vorschlag. Danach fragt die App: <b>„❗ Dringend“</b> – dann entscheidet Clubsprecher, Kassenwart oder Admin (wer zuerst tippt), ob er noch als dringender TOP drankommt – oder <b>„📅 Auf die nächste Sitzung“</b>.", zeig: () => zeige("vorschlaege"), seit: "2.694.0" },
   { id: "vorschlag_spaeter", thema: "club", sym: "📅", t: "Vorschlag für eine spätere Sitzung", x: "Steht die übernächste Sitzung noch nicht im Kalender? Beim Vorschlag unter „Für welchen Termin?“ einfach <b>„📅 Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung angelegt ist, ordnet die App den Vorschlag ihr automatisch zu – bis dahin steht „(Datum folgt)“ dabei.", seit: "2.527.0" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
@@ -28293,8 +28294,13 @@ function ilMeldungen() {
   const th = INIT?.themenNaechste;
   if (th && t?.id === th.treffen && Date.parse(t.beginn) > Date.now()) add({ id: "themen:" + th.treffen, stufe: th.offen > 0 ? "gold" : "weiss", sym: "🗳️",
     t: th.anzahl ? `${th.anzahl === 1 ? "1 Thema" : th.anzahl + " Themen"} für die Sitzung am ${fTag.format(new Date(t.beginn))}` : `Themen für die Sitzung am ${fTag.format(new Date(t.beginn))}`,
-    u: th.anzahl ? (th.offen ? "Bitte stimme ab (👍) – oder reiche selbst eins ein" : "Du hast alle unterstützt – hast du noch ein eigenes?") : "Noch keine Themen – reiche selbst eins ein",
+    u: (th.schluss && Date.now() >= Date.parse(th.schluss) ? "⏰ Anmeldeschluss vorbei – neue Themen nur noch ❗ dringend" // 2.694.0 KC-CLUB-ANMELDESCHLUSS
+      : (th.anzahl ? (th.offen ? "Bitte stimme ab (👍) – oder reiche selbst eins ein" : "Du hast alle unterstützt – hast du noch ein eigenes?") : "Noch keine Themen – reiche selbst eins ein")
+      + (th.schluss ? ` · ⏰ Einreichen bis ${wann(th.schluss)}` : "")),
     auf: "zeige('vorschlaege')", knoepfe: [...(th.anzahl ? [["👍 Abstimmen", "zeige('vorschlaege')"]] : []), ["＋ Thema", `ilThemaNeu('${esc(th.treffen)}')`]] });
+  // 2.694.0 KC-CLUB-ANMELDESCHLUSS: Leitung – dringende Vorschläge nach Anmeldeschluss, wer zuerst tippt, entscheidet
+  for (const d of (ICH?.vorstand && th?.dringend) || []) add({ id: "dringend:" + d.id, stufe: "rot", sym: "❗", t: `Dringender Vorschlag: ${d.titel}`, u: `${d.von ? "Von " + d.von + " · " : ""}nach Anmeldeschluss – bitte entscheiden`,
+    auf: "zeige('vorschlaege')", ohneAus: true, knoepfe: [["✅ Als TOP", `vsDringend('${esc(d.id)}', 'aufnehmen')`], ["📅 Nächste Sitzung", `vsDringend('${esc(d.id)}', 'ablehnen')`]] });
   if (themaFestZeit() === "simjue") { const aus = jzSimJueAus(); // 2.619.0 KC-CLUB-SIMJUE-SCHALTER
     add({ id: "simjue:" + new Date().getFullYear() + (aus ? ":aus" : ""), stufe: "gold", sym: "🎡", t: aus ? "Sim-Jü im Kopf ist ausgeschaltet" : "Sim-Jü im Kopf der Startseite",
       u: aus ? "Kinderkarussell, Naschbude und Feuerwerk wieder anzeigen?" : "Gefällt dir nicht? Hier kannst du es ausschalten", knoepfe: [[aus ? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten()"]] }); }
@@ -30133,6 +30139,26 @@ function vsTerminOptionen(termine, gewaehlt, spaeter) {
   return termine.map((t) => `<option value="${t.id}" ${t.id === gewaehlt ? "selected" : ""}>${esc(t.titel)} · ${esc(wann(t.beginn))}</option>`).join("")
     + offen.map((k) => `<option value="s:${k}" ${spaeter === k ? "selected" : ""}>📅 ${VS_SITZ[k - 1]} Sitzung – Datum noch offen</option>`).join("");
 }
+// 2.694.0 KC-CLUB-ANMELDESCHLUSS (Wunsch Hansi 27.10.2026): Themen und Spenden für eine Sitzung bis 17:00 Uhr am Vorabend. Danach fragt die App:
+// ❗ dringend (Clubsprecher, Kassenwart oder Admin entscheiden – wer zuerst tippt) oder 📅 auf die nächste Sitzung. Der Server prüft dasselbe.
+const ANMELDESCHLUSS_STUNDE = 17;
+const vsSchluss = (t) => (t?.beginn && (!t.art || t.art === "treffen") ? new Date(taZeitpunkt(tagPlus(isoBerlin(new Date(t.beginn)), -1), `${ANMELDESCHLUSS_STUNDE}:00`)) : null);
+const vsSchlussVorbei = (t, jetzt = Date.now()) => { const d = vsSchluss(t); return !!d && jetzt >= d.getTime() && jetzt < Date.parse(t.beginn); };
+function vfSchlussZeigen() {
+  const el = $("vfSchluss"); if (!el) return;
+  const t = vfArt === "abstimmung" ? null : VORSCHLAG_TREFFEN.find((x) => x.id === $("vfTreffen")?.value), d = vsSchluss(t);
+  el.classList.toggle("versteckt", !d);
+  if (d) el.innerHTML = vsSchlussVorbei(t) ? `⏰ <b>Anmeldeschluss vorbei</b> (${esc(wann(d.toISOString()))}) – nur noch ❗ dringend, sonst kommt es auf die nächste Sitzung.` : `⏰ Anmeldeschluss: <b>${esc(wann(d.toISOString()))}</b>`;
+}
+async function vsDringend(id, entscheidung) {
+  let r; try { r = await api("vorschlag_dringend", { id, entscheidung }); } catch (e) { return meldeFehler(e); }
+  const ziel = (st) => (st === "aufgenommen" ? "kommt als dringender TOP dran" : "kommt auf die nächste Sitzung");
+  melde(!r.ok ? `Schon entschieden${r.von ? " von " + r.von : ""}: ${ziel(r.stand)}.` : r.stand === "aufgenommen" ? "❗ Als dringender TOP aufgenommen – alle sind informiert" : `📅 Abgelehnt – kommt auf ${r.naechste || "die nächste Sitzung"}`);
+  if (INIT?.themenNaechste?.dringend) INIT.themenNaechste.dringend = INIT.themenNaechste.dringend.filter((x) => x.id !== id);
+  document.getElementById("vorschlagInfo")?.remove(); ilZeigen(); if (aktuelleAnsicht === "vorschlaege") vorschlaegeLaden();
+}
+const vsDringendMarke = (v) => (v.status !== "offen" || !v.dringend ? "" : v.dringend.stand === "offen" ? '<span class="marke rot">❗ dringend – wartet auf Entscheidung</span>'
+  : v.dringend.stand === "aufgenommen" ? '<span class="marke rot">❗ dringender TOP</span>' : '<span class="marke">📅 auf die nächste Sitzung verschoben</span>');
 const vsTerminWert = (w) => (/^s:\d$/.test(w || "") ? { treffen_id: null, sitzung_nr: Number(w.slice(2)) } : { treffen_id: w || null });
 async function vorschlaegeLaden() {
   try {
@@ -30167,8 +30193,10 @@ function vorschlagKarte(v) {
   const offen = v.status === "offen";
   const kopf = `${v.art === "abstimmung" ?`<span class="marke">🗳️ Abstimmung</span> <span class="marke">${v.geheim ? "🔒 geheim" : "👁️ offen"}</span>` : v.art === "spende" ? '<span class="marke">💝 Spende</span>' : '<span class="marke">💡 Thema</span>'}
     ${v.status === "abgeschlossen" ? ' <span class="marke gruen">✔ erledigt</span>' : v.status === "zurueckgezogen" ? ' <span class="marke rot">zurückgezogen</span>' : ""}
-    ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""}`;
-  const unter = `<div class="vs-von">${vsVon(v, true)}</div><div class="hinweis" style="font-size:.85rem">eingereicht ${esc(vsWann(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
+    ${offen && v.frist ? ` <span class="marke gelb">⏳ bis ${esc(wann(v.frist))}</span>` : ""} ${vsDringendMarke(v)}`;
+  const unter = (offen && v.dringend?.stand === "offen" && ICH?.vorstand ? `<div class="karte vs-dringend"><b>❗ Nach dem Anmeldeschluss eingereicht</b><br><small class="hinweis">Noch auf diese Sitzung nehmen? Es reicht, wenn einer aus der Leitung entscheidet.</small>
+    <div class="knoepfe"><button class="knopf haupt" onclick="vsDringend('${esc(v.id)}', 'aufnehmen')">✅ Als dringenden TOP aufnehmen</button><button class="knopf" onclick="vsDringend('${esc(v.id)}', 'ablehnen')">📅 Ablehnen – nächste Sitzung</button></div></div>` : "")
+    + (v.dringend?.von && v.dringend.stand !== "offen" ? `<div class="hinweis" style="font-size:.85rem">Entschieden von ${esc(v.dringend.von)}</div>` : "") + `<div class="vs-von">${vsVon(v, true)}</div><div class="hinweis" style="font-size:.85rem">eingereicht ${esc(vsWann(v.erstellt_am))}${v.treffen ? " · für " + esc(v.treffen.titel) + " am " + esc(fKurz.format(new Date(v.treffen.beginn))) : v.sitzungSpaeter ? ` · für die ${VS_SITZ[v.sitzungSpaeter - 1].toLowerCase()} Sitzung (Datum folgt)` : ""}</div>`;
   let mitte = "";
   if (v.art !== "abstimmung") { // Thema und Spendenprojekt: unterstützen 👍
     const e = v.ergebnis?.[0] || { anzahl: 0, namen: [] };
@@ -30259,7 +30287,7 @@ function vorschlagKachel(v) {
   const zahl = (v.art === "abstimmung" ? `🗳️ ${v.stimmen ?? 0} von ${v.berechtigt ?? "?"}` : `👍 ${e}${v.meine ? " · auch von dir" : ""}`) + (v.ziel ? ` · 🔐 ${v.ziel}` : ""); // KC-CLUB-ABSTIMMUNG-ZIEL
   const spaeter = offen && !v.treffen && v.sitzungSpaeter ? `<span class="marke">📅 ${VS_SITZ[v.sitzungSpaeter - 1]} Sitzung</span>` : ""; // 2.527.0 KC-CLUB-VORSCHLAG-SPAETER
   return `<button class="mini-kachel${offen && v.art === "abstimmung" && !(v.meine || v.abgestimmt) ? " mk-offen" : ""}" onclick="vorschlagInfo('${v.id}')"><span class="mk-sym">${sym}</span>
-    <span class="mk-titel">${esc(v.titel)}</span><span class="mk-von">${vsVon(v)}</span>${lage}${spaeter}<span class="mk-unter">${zahl}</span>
+    <span class="mk-titel">${esc(v.titel)}</span><span class="mk-von">${vsVon(v)}</span>${lage}${spaeter}${vsDringendMarke(v)}<span class="mk-unter">${zahl}</span>
     ${offen && v.frist ? `<span class="mk-unter">⏳ bis ${esc(wann(v.frist))}</span>` : ""}${vsAnlagenZahl(v)}</button>`;
 }
 function vorschlagInfo(id) {
@@ -30621,7 +30649,8 @@ function vorschlagForm(art, paket) {
     ${vfArt === "abstimmung" ? `<div class="hl-chips" id="vfPaketWahl" style="margin-top:8px"><button type="button" class="chip${pk ? "" : " an"}" onclick="vorschlagForm('abstimmung', false)">❓ Eine Frage</button><button type="button" class="chip${pk ? " an" : ""}" onclick="vorschlagForm('abstimmung', true)">📋 Mehrere Fragen mit Überschrift</button><button type="button" class="chip" onclick="vfVorlagen()">📄 Vorlage</button></div>` : ""}
     <label class="feld">${pk ? "Überschrift" : vfArt === "abstimmung" ? "Frage" : vfArt === "spende" ? "Überschrift (freiwillig – sonst automatisch)" : "Thema"}<input id="vfTitel" maxlength="150" placeholder="${pk ? "z. B. Technik, Bilderrechner, Abrechnung" : vfArt === "abstimmung" ? "z. B. Sollen wir im Mai ein Grillfest machen?" : vfArt === "spende" ? "z. B. Spenden aus dem Weihnachtsmarkt" : "z. B. Grillfest im Mai"}"></label>
     <label class="feld">Beschreibung (freiwillig)<textarea id="vfBeschr" rows="3"></textarea></label>
-    <label class="feld">Für welchen Termin?<select id="vfTreffen"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
+    <label class="feld">Für welchen Termin?<select id="vfTreffen" onchange="vfSchlussZeigen()"><option value="">– allgemein –</option>${vsTerminOptionen(VORSCHLAG_TREFFEN, t0, null)}</select></label>
+    <p class="hinweis versteckt" id="vfSchluss" style="margin:-4px 0 8px"></p>
     ${pk ? '<div class="feld"><b>Bereiche und Fragen</b><div id="vfPaket"></div></div>' : vfArt === "abstimmung" ? '<label class="feld">Antworten (eine pro Zeile)<textarea id="vfOptionen" rows="3">Ja\nNein\nEnthaltung</textarea></label>' : ""}
     ${vfArt === "abstimmung" ? `
       <label class="schalter"><span><b>🔒 Geheime Abstimmung</b><br><small class="hinweis">Niemand sieht, wer wie gestimmt hat; Ergebnis erst am Ende</small></span><input type="checkbox" id="vfGeheim"></label>
@@ -30631,6 +30660,7 @@ function vorschlagForm(art, paket) {
     <label class="schalter"><span>${vfArt === "abstimmung" ? "Teilnehmer benachrichtigen (Push/Mail)" : "Clubsprecher & Kassenwart benachrichtigen"}</span><input type="checkbox" id="vfInfo" checked></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="vorschlagSpeichern(this)">${vfArt === "abstimmung" ? "Abstimmung starten" : "Vorschlagen"}</button>${pk ? '<button class="knopf" id="vfBogenKnopf" onclick="vfBogenVorschau()">🖨️ Bogen ansehen / senden</button>' : ""}<button class="knopf" onclick="$('vorschlagForm').classList.add('versteckt')">Abbrechen</button></div>`;
   $("vorschlagForm").classList.remove("versteckt"); window.scrollTo(0, 0);
+  vfSchlussZeigen(); // 2.694.0 KC-CLUB-ANMELDESCHLUSS
   if (vfArt === "spende") vfSpZeigen();
   if (behalten) { $("vfTitel").value = behalten.t; $("vfBeschr").value = behalten.b; }
   if (pk) vfPkZeigen();
@@ -30704,13 +30734,17 @@ async function vorschlagSpeichern(knopf) {
     if (VF_ZIEL.art === "gruppe") { const g = MG_GRUPPEN.find((x) => x.id === VF_ZIEL.gruppe); if (!g) return melde("Bitte eine Gruppe antippen.", true); daten.ziel = { art: "gruppe", name: g.gruppe.name, ids: g.personen }; }
     if (VF_ZIEL.art === "auswahl") { if (!VF_ZIEL.ids.length) return melde("Bitte Mitglieder auswählen.", true); daten.ziel = { art: "auswahl", ids: VF_ZIEL.ids }; }
   }
+  { const t = vfArt === "abstimmung" ? null : VORSCHLAG_TREFFEN.find((x) => x.id === daten.treffen_id); // 2.694.0 KC-CLUB-ANMELDESCHLUSS
+    if (vsSchlussVorbei(t)) daten.dringend = await frage(`⏰ Anmeldeschluss vorbei\n\nVorschläge für „${t.titel}“ gingen bis ${wann(vsSchluss(t).toISOString())}. Ist es dringend? Dann entscheiden Clubsprecher, Kassenwart oder Admin, ob es noch drankommt. Sonst kommt es auf die nächste Sitzung.`,
+      { ja: "❗ Dringend – noch für diesen Abend", nein: "📅 Auf die nächste Sitzung", gefahr: false }); }
   await einmal(knopf, async () => {
     try {
       daten.anlagen = oaIds("vf"); // 2.448.0
       const r = await api(pk ? "abstimmungspaket_speichern" : "vorschlag_speichern", daten);
       oaLeeren("vf"); $("vorschlagForm").classList.add("versteckt");
       if (pk) VF_PK = [];
-      melde(r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
+      melde(r.dringend ? "❗ Dringend eingereicht – Clubsprecher, Kassenwart oder Admin entscheiden" : r.verschoben ? `📅 Anmeldeschluss vorbei – dein Vorschlag kommt auf ${r.verschoben}`
+        : r.versand ? `Gespeichert – ${r.versand.gesendet} benachrichtigt` : "Gespeichert"); vorschlaegeLaden();
     } catch (e) { meldeFehler(e); }
   });
 }

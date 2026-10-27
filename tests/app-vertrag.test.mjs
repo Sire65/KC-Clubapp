@@ -5917,7 +5917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7542,6 +7542,23 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/anzahl: 0,/.test(sl) && /stoerung: e\.netz \? "netz" : "app"/.test(sl) && !/details/.test(sl.slice(sl.indexOf("KC-CLUB-SPUR-STOERUNG"), sl.indexOf("const leute"))), "Server: nur Art und Uhrzeit, nie Inhalte");
   assert.ok(/x\.stoerung && !on\(x\.person_id\) \? `<button class="knopf spur-stoerung"/.test(html) && /war kurz da/.test(html) && /📶 Verbindung gestört/.test(html), "App: „war kurz da“ mit Grund");
   assert.ok(/\.spur-stoerung \{ border: 2px dashed/.test(seite), "gestrichelter Rahmen");
+}
+// 2.694.0 KC-CLUB-ANMELDESCHLUSS (Wunsch Hansi „Anmeldeschluss für Vorschläge bis 17 Uhr am Vorabend, in der Info; danach nächste Sitzung oder dringend –
+// Clubsprecher, Admin und Kassenwart entscheiden, wer zuerst tippt: dringender TOP oder ablehnen und auf die nächste Sitzung“)
+{
+  const mig = lies("supabase/migrations/20261027_kc_club_vorschlag_dringend.sql");
+  assert.ok(/add column if not exists dringend jsonb/.test(mig), "DB: Feld dringend");
+  assert.ok(/const ANMELDESCHLUSS_STUNDE = 17;/.test(server) && /function anmeldeschluss\(beginnIso: string\): Date \{/.test(server) && /Date\.UTC\(t\.y, t\.m - 1, t\.d\) - 86400000/.test(server), "Server: 17 Uhr am Vorabend (Berliner Zeit)");
+  const sp = server.slice(server.indexOf('case "vorschlag_speichern"'), server.indexOf('case "vorschlag_dringend"'));
+  assert.ok(/if \(art !== "abstimmung" && p\.treffen_id\)/.test(sp) && /ts\.art === "treffen" && schlussVorbei\(ts\.beginn\)/.test(sp) && /p\.dringend === true \? \{ dringend: \{ stand: "offen"/.test(sp) && /danach: await sitzungDanach\(ts\)/.test(sp), "Server: nach Schluss dringend oder auf die Sitzung danach");
+  assert.ok(/schluss\.dringend \? \{\s*titel: "❗ Dringender Vorschlag – bitte entscheiden"/.test(sp) && /await leitungIds\(\)/.test(sp), "Leitung bekommt Bescheid");
+  const dr = server.slice(server.indexOf('case "vorschlag_dringend"'), server.indexOf('case "vorschlag_dringend"') + 6000);
+  assert.ok(/nurVorstand\(ich\);/.test(dr) && /\.eq\("dringend->>stand", "offen"\)\.select\("id"\)/.test(dr) && /if \(!hit\?\.length\)/.test(dr), "nur Leitung; wer zuerst tippt (atomar), der Zweite erfährt das Ergebnis");
+  assert.ok(/BUERO_TOP_HINTEN\.includes\(x\.t\)/.test(dr) && /club-vorschlag-dringend:\$\{v\.id\}:mitglied/.test(dr), "dringender TOP vor „Verschiedenes“, Einreicher bekommt Bescheid");
+  assert.ok(/fuerDiese: v\.treffen_id === tid && v\.dringend\?\.stand !== "offen"/.test(server) && /v\.dringend\?\.stand === "aufgenommen" \? "❗ "/.test(server), "Tagesordnung: offene dringende noch nicht, aufgenommene mit ❗");
+  assert.ok(/schluss: anmeldeschluss\(s0\.beginn\)\.toISOString\(\)/.test(server), "Frist in den Startdaten");
+  assert.ok(/const vsSchluss = \(t\) =>/.test(html) && /id="vfSchluss"/.test(html) && /daten\.dringend = await frage\(`⏰ Anmeldeschluss vorbei/.test(html), "App: Frist im Formular, Frage nach Schluss");
+  assert.ok(/⏰ Einreichen bis \$\{wann\(th\.schluss\)\}/.test(html) && /id: "dringend:" \+ d\.id, stufe: "rot"/.test(html) && /vsDringend\('\$\{esc\(v\.id\)\}', 'aufnehmen'\)/.test(html), "App: Info-Feld (Frist + Leitung entscheidet) und Knöpfe am Vorschlag");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
