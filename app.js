@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.689.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.690.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5450,6 +5450,7 @@ const HILFE = [
   // 🔔 Benachrichtigungen & Töne
   { id: "meine_geraete", thema: "toene", sym: "📱", t: "Auf welchen Geräten kommt Push an?", x: "Kommt auf dem Tablet nichts an? Unter ⚙️ → „🔔 Benachrichtigungen“ zeigt <b>„📱 Meine Geräte“</b>, welche deiner Handys und Tablets Benachrichtigungen bekommen. Daneben schickt „Test-Push senden“ eine Probe.", zeig: () => einstiegHin("benachrichtigung"), seit: "2.23.1" },
   { id: "spassstimme", thema: "toene", sym: "🎭", t: "Spaßstimmen im Gespräch", x: "Im App-Gespräch auf <b>🎭</b> tippen und eine Stimme wählen – z. B. 🐭 Mäusestimme, 🎈 Helium, 🤖 Roboter, 🐻 Brummbär oder 👻 Gespenst. Dein Gegenüber hört dich damit, du selbst hörst normal; mit 🙂 Normal geht es zurück. Klopft jemand mit „Sprechen“ an, kannst du gleich <b>„🎭 Mit Spaßstimme annehmen“</b>. Ausprobieren: ⚙️ → Privatsphäre → beim Anklopfton.", seit: "2.650.0" },
+  { id: "haendlerausweis", thema: "club", sym: "🪪", t: "Händler-Ausweis für den Weihnachtsmarkt", nur: () => !!(ICH?.vorstand || ICH?.admin), x: "Büro → <b>🖨️ Drucker</b> → <b>🪪 Händler-Ausweis</b>: Jahr, Rabatt in % und die Nummern wählen – je A4-Blatt 10 Ausweise mit Schnittmarken, beidseitig drucken (lange Kante). Jeder Ausweis hat Nummer und QR-Code mit Prüfcode. Mit <b>📋 Ausgabeliste</b> trägst du ein, wer welchen Ausweis bekommen hat; am Stand QR-Code scannen und Prüfcode vergleichen.", seit: "2.690.0" },
   { id: "fett", thema: "nachrichten", sym: "𝐅", t: "Ein Wort fett, kursiv oder durchgestrichen", x: "Im Schreibfeld ein Wort <b>markieren</b> (lange drücken oder doppelt tippen) – darüber erscheinen <b>F fett</b>, <i>K kursiv</i> und <s>D durch</s>. Antippen, fertig. Oder in der kleinen Zeile über dem Schreibfeld auf <b>F</b> tippen. Wie bei WhatsApp geht es auch mit Zeichen: <b>*fett*</b>, <i>_kursiv_</i>, <s>~durchgestrichen~</s>. Nochmal antippen nimmt es wieder weg.", seit: "2.686.0" },
   { id: "anklopfton", thema: "toene", sym: "🔔", t: "Ein Anklopfton nach deinem Geschmack", x: "Holz-Klopfen, Ding-Dong, Gong oder Glöckchen: Welcher Ton erklingt, wenn jemand bei dir anklopft, suchst du dir unter ⚙️ → „🔒 Privatsphäre“ aus.", zeig: () => einstiegHin("privat"), seit: "2.23.1" },
   { id: "wer_ist_da", thema: "toene", sym: "👋", t: "Wer ist da, wenn ich reinkomme?", x: "Beim Reinkommen – also beim Öffnen der App oder nach mindestens 10 Minuten Pause – sagt sie einmal, wer gerade da ist – z. B. <b>„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.“</b> Oben erscheint dazu eine kurze Meldung. Ist niemand da, kommt nichts. Wer seinen Online-Status verbirgt, wird nicht genannt. Das Handy spricht erst, wenn du einmal auf den Bildschirm getippt hast. Ausschalten: ⚙️ → „🗣️ Ansagen, Töne &amp; Tipps“ → <b>„👋 Beim Öffnen“</b>.", zeig: () => einstiegHin("ansagen"), seit: "2.454.0" },
@@ -31178,7 +31179,8 @@ function buDrucker() {
   const L = !!ICH?.vorstand, S = buSchreiben();
   const w = [[true, "📝", "Sitzungs-Vorlage", "mit Schreiblinien", "buDruckWahl()"], [L, "📇", "Mitgliederliste", "Telefon · Adressen · Unterschriften", "buListe()"],
     [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"],
-    [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"]].filter((x) => x[0]);
+    [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"],
+    [L, "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()"]].filter((x) => x[0]); // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   const f = blattAuf("buDruckerBlatt", `${einwHtml("b-bu-drucker")}<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
@@ -41686,6 +41688,8 @@ const DRUCKARTEN = {
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
+  haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
+  haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
   einrichtungskarte: { bauen: (o, param) => druckEinrichtungskarte(param) }, // KC-CLUB-EINRICHTUNGSKARTE (1.88.0) // KC-CLUB-BESTAETIGUNG (1.69.0): Aufstellung der eigenen Eingaben
 };
 // ---- KC-CLUB-KURZANLEITUNG (0.62.0): die App in 3 Schritten – für Einsteiger, zum Ausdrucken oder Verschicken ----
@@ -42561,6 +42565,99 @@ async function ausweisZeigen() {
     if (x) try { localStorage.setItem(ausweisSpeicher(), JSON.stringify(x)); } catch {}
     const f = $("ausweisBlatt")?.querySelector(".blatt-innen"); if (f) f.innerHTML = ausweisHtml(x, true);
   } catch (e) { if (!alt) { $("ausweisBlatt")?.remove(); meldeFehler(e); } }
+}
+// ---------- 2.690.0 KC-CLUB-HAENDLERAUSWEIS (Wunsch Hansi „Händler und Marktbeschicker bekommen auf dem Weihnachtsmarkt Rabatt – vorher einen Ausweis,
+// den sie am Stand vorzeigen; draufstehen soll ‚nicht übertragbar‘ usw.“ + „QR-Code oben rechts“ + „ins Büro, wo die Formulare und Druckvorlagen sind“) ----------
+// Scheckkarte 85 × 54 mm, 10 je A4 mit Schnittmarken an jeder Ecke; Blatt 1 Vorderseiten (fortlaufend nummeriert), Blatt 2 Rückseiten (gespiegelt für
+// beidseitigen Druck, lange Kante). QR-Code mit Nummer + Prüfcode (vom Server, nicht fälschbar). Gezeichnet in Druckauflösung (300 dpi) – Druck,
+// Vorschau und PDF sind dadurch millimetergenau gleich. Dazu eine Ausgabeliste (Nr, Prüfcode, Stand/Firma, Name, ausgegeben). Nur Clubleitung.
+const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "", datum: "" };
+const HA_MM = 300 / 25.4, HA_K = { w: 85, h: 54, gx: 6, gy: 4 }, HA_SCHRIFT = '"DejaVu Sans","Helvetica Neue",Arial,sans-serif';
+function haStart() {
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🪪 Händler-Ausweis Weihnachtsmarkt</h3>
+    <p class="dlg-text">Für Händler und Marktbeschicker: Rabatt am Köcheclub-Stand gegen Vorzeigen. Je A4-Blatt 10 Ausweise mit Schnittmarken – beidseitig drucken (lange Kante).</p>
+    <div class="zwei"><label class="feld">Jahr<input id="haJahr" type="number" min="2024" max="2100" value="${HA.jahr}"></label><label class="feld">Rabatt in % (leer = zum Eintragen)<input id="haRabatt" type="number" min="1" max="100" value="${esc(HA.rabatt)}" placeholder="z. B. 10"></label></div>
+    <div class="zwei"><label class="feld">Nummer von<input id="haVon" type="number" min="1" max="999" value="${HA.von}"></label><label class="feld">bis<input id="haBis" type="number" min="1" max="999" value="${HA.bis}"></label></div>
+    <label class="feld">Gültig (leer = „Gültig nur zum Weihnachtsmarkt Werne ${HA.jahr}“)<input id="haDatum" type="text" maxlength="60" value="${esc(HA.datum)}" placeholder="z. B. Gültig vom 04.12. bis 23.12.2026"></label>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="zu">Abbrechen</button></div>`, () => {});
+  const lesen = () => { HA.jahr = Math.trunc(+$("haJahr").value) || new Date().getFullYear(); HA.von = Math.max(1, Math.trunc(+$("haVon").value) || 1); HA.bis = Math.max(HA.von, Math.trunc(+$("haBis").value) || HA.von);
+    HA.rabatt = String($("haRabatt").value || "").trim(); HA.datum = String($("haDatum").value || "").trim(); };
+  f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = async () => { const a = b.dataset.a; if (a === "zu") return f.remove(); lesen();
+    if (HA.bis - HA.von >= 120) return melde("Höchstens 120 Ausweise auf einmal.", true);
+    b.disabled = true; const alt = b.textContent; b.textContent = "⏳ Einen Moment …";
+    try { const r = await api("haendlerausweis_codes", { jahr: HA.jahr, von: HA.von, bis: HA.bis });
+      if (a === "liste") { f.remove(); return druckStarten("haendlerausweis_liste", { jahr: r.jahr, liste: r.liste }); }
+      await qrLaden(); const bilder = await haBilder(r.jahr, r.liste); f.remove(); druckStarten("haendlerausweis", { jahr: r.jahr, bilder, n: r.liste.length });
+    } catch (e) { b.disabled = false; b.textContent = alt; meldeFehler(e); } }));
+}
+async function haBild(src) { return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; }); }
+async function haBilder(jahr, liste) { // je 10 Karten: Vorderseiten-Blatt + Rückseiten-Blatt (als Bilder in 300 dpi)
+  try { const ff = new FontFace("KCXmas", "url(schriften/mountains-of-christmas.woff2)"); await ff.load(); document.fonts.add(ff); } catch { /* ohne Zierschrift geht es auch */ }
+  const logo = await haBild("kc-kochmuetze-weiss.webp"), seiten = [];
+  for (let i = 0; i < liste.length; i += 10) { const teil = liste.slice(i, i + 10); seiten.push(haBlatt(teil, false, jahr, logo), haBlatt(teil, true, jahr, logo)); }
+  return seiten;
+}
+function haBlatt(teil, hinten, jahr, logo) {
+  const M = HA_MM, K = HA_K, c = document.createElement("canvas"); c.width = Math.round(210 * M); c.height = Math.round(297 * M);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+  const L = 2 * K.w + K.gx, T = 5 * K.h + 4 * K.gy, x0 = (210 - L) / 2, y0 = (297 - T) / 2;
+  teil.forEach((x, i) => { const r = Math.floor(i / 2), sp = hinten ? 1 - (i % 2) : i % 2; // Rückseite gespiegelt: passt beim beidseitigen Druck hinter die Vorderseite
+    g.save(); g.translate((x0 + sp * (K.w + K.gx)) * M, (y0 + r * (K.h + K.gy)) * M); (hinten ? haHinten : haVorne)(g, x, jahr, logo); g.restore(); });
+  g.fillStyle = "#000"; const xs = [0, K.w, K.w + K.gx, 2 * K.w + K.gx].map((v) => x0 + v), ys = []; for (let r = 0; r < 5; r++) ys.push(y0 + r * (K.h + K.gy), y0 + r * (K.h + K.gy) + K.h);
+  for (const x of xs) for (const y of ys) { g.fillRect((x - 3) * M, y * M - 1, 6 * M, 2); g.fillRect(x * M - 1, (y - 3) * M, 2, 6 * M); } // Schnittmarken
+  return c.toDataURL("image/png");
+}
+function haText(g, t, x, y, mm, o = {}) { g.font = `${o.stil || ""} ${o.gew || 400} ${mm * HA_MM}px ${o.schrift || HA_SCHRIFT}`; g.fillStyle = o.farbe || "#3b1d14";
+  g.textAlign = o.aus || "left"; g.textBaseline = "alphabetic"; if (o.max) { while (g.measureText(t).width > o.max * HA_MM && mm > 1) { mm *= .95; g.font = `${o.stil || ""} ${o.gew || 400} ${mm * HA_MM}px ${o.schrift || HA_SCHRIFT}`; } }
+  g.fillText(t, x * HA_MM, y * HA_MM); return g.measureText(t).width / HA_MM; }
+function haRund(g, x, y, w, h, r) { const M = HA_MM; g.beginPath(); g.moveTo((x + r) * M, y * M); g.arcTo((x + w) * M, y * M, (x + w) * M, (y + h) * M, r * M); g.arcTo((x + w) * M, (y + h) * M, x * M, (y + h) * M, r * M); g.arcTo(x * M, (y + h) * M, x * M, y * M, r * M); g.arcTo(x * M, y * M, (x + w) * M, y * M, r * M); g.closePath(); }
+function haVorne(g, x, jahr, logo) {
+  const M = HA_MM, W = HA_K.w, H = HA_K.h;
+  g.save(); haRund(g, 0, 0, W, H, 3); g.clip();
+  const gr = g.createLinearGradient(0, 0, 0, H * M); gr.addColorStop(0, "#fffaf0"); gr.addColorStop(1, "#fff4dc"); g.fillStyle = gr; g.fillRect(0, 0, W * M, H * M);
+  g.fillStyle = "#741521"; g.fillRect(0, 0, W * M, 15.5 * M); // Kopf
+  if (logo) g.drawImage(logo, 3 * M, 3 * M, 9.5 * M * (logo.width / logo.height || 1.4), 9.5 * M);
+  haText(g, "KÖCHECLUB WERNE", 17.5, 7.4, 3.3, { gew: 800, farbe: "#fff" });
+  const sw = haText(g, "seit 1991", 17.5, 11.6, 2.3, { stil: "italic", farbe: "rgba(255,255,255,.85)" });
+  g.font = `800 ${2.8 * M}px ${HA_SCHRIFT}`; const nt = `Nr. ${x.nr}`, nw = g.measureText(nt).width / M + 3.2; g.fillStyle = "#c9a46a"; haRund(g, 17.5 + sw + 1.5, 8.6, nw, 4, 1.5); g.fill();
+  haText(g, nt, 17.5 + sw + 1.5 + nw / 2, 11.6, 2.8, { gew: 800, aus: "center" });
+  // QR-Code oben rechts auf Weiß
+  g.fillStyle = "#fff"; g.fillRect((W - 17) * M, 0, 17 * M, 15.5 * M); g.fillStyle = "#c9a46a"; g.fillRect((W - 17) * M, 0, .4 * M, 15.5 * M);
+  const q = qrcode(0, "M"); q.addData(`Koecheclub Werne Haendler-Ausweis ${jahr} Nr ${x.nr} Code ${x.code}`); q.make();
+  const n = q.getModuleCount(), qs = 13, mod = qs / n, qx = W - 15, qy = 1.25; g.fillStyle = "#000"; // mit weißem Rand rundum (Ruhezone)
+  for (let r = 0; r < n; r++) for (let s2 = 0; s2 < n; s2++) if (q.isDark(r, s2)) g.fillRect(Math.floor((qx + s2 * mod) * M), Math.floor((qy + r * mod) * M), Math.ceil(mod * M), Math.ceil(mod * M));
+  // Titel, Markt, Felder
+  haText(g, "HÄNDLER-AUSWEIS", W / 2, 23.4, 6, { gew: 900, farbe: "#741521", aus: "center", max: W - 8 });
+  haText(g, `Weihnachtsmarkt Werne ${jahr}`, W / 2, 28.6, 4.6, { gew: 700, farbe: "#a67c2e", aus: "center", schrift: '"KCXmas",Georgia,serif' });
+  g.strokeStyle = "#6b4a3a"; g.lineWidth = .25 * M;
+  for (const [t, y] of [["Stand / Firma", 34.6], ["Name", 39.8]]) { const tw = haText(g, t, 4, y, 2.4, { farbe: "#6b4a3a" }); g.beginPath(); g.moveTo((4 + tw + 1.5) * M, (y + .4) * M); g.lineTo((W - 4) * M, (y + .4) * M); g.stroke(); }
+  // „NICHT ÜBERTRAGBAR“ als Stempel, Gültigkeit, Stempelfeld
+  g.save(); g.translate(6 * M, 47.4 * M); g.rotate(-5 * Math.PI / 180); g.font = `900 ${2.9 * M}px ${HA_SCHRIFT}`; const st = "NICHT ÜBERTRAGBAR", stw = g.measureText(st).width / M + 3.2;
+  g.fillStyle = "rgba(255,255,255,.65)"; haRund(g, 0, -3.6, stw, 4.6, 1); g.fill(); g.strokeStyle = "#c1121f"; g.lineWidth = .5 * M; g.stroke(); haText(g, st, 1.6, -.4, 2.9, { gew: 900, farbe: "#c1121f" }); g.restore();
+  haText(g, HA.datum || `Gültig nur zum Weihnachtsmarkt Werne ${jahr}`, 4, 51.4, 1.85, { farbe: "#6b4a3a", max: 62 });
+  g.setLineDash([.9 * M, .6 * M]); g.strokeStyle = "#b08a6a"; g.lineWidth = .25 * M; g.beginPath(); g.arc((W - 10) * M, (H - 8.3) * M, 5.75 * M, 0, 7); g.stroke(); g.setLineDash([]);
+  haText(g, "Stempel", W - 10, H - 8.6, 1.7, { farbe: "#b08a6a", aus: "center" }); haText(g, "Köcheclub", W - 10, H - 6.5, 1.7, { farbe: "#b08a6a", aus: "center" });
+  g.restore();
+  g.strokeStyle = "#c9a46a"; g.lineWidth = .25 * M; haRund(g, .12, .12, W - .24, H - .24, 3); g.stroke();
+}
+function haHinten(g, x, jahr) {
+  const M = HA_MM, W = HA_K.w, H = HA_K.h;
+  g.save(); haRund(g, 0, 0, W, H, 3); g.clip(); g.fillStyle = "#fffaf0"; g.fillRect(0, 0, W * M, H * M); g.fillStyle = "#741521"; g.fillRect(0, 0, W * M, 3 * M);
+  haText(g, "Händlerrabatt am Köcheclub-Stand", W / 2, 9, 3.5, { gew: 900, farbe: "#741521", aus: "center", max: W - 6 });
+  const rb = HA.rabatt ? `${HA.rabatt} %` : "____ %"; g.font = `800 ${4.4 * M}px ${HA_SCHRIFT}`; const rw = g.measureText(rb).width / M; g.font = `400 ${2.8 * M}px ${HA_SCHRIFT}`; const tw = g.measureText(" auf Speisen & Getränke").width / M;
+  const rx = W / 2 - (rw + tw) / 2; haText(g, rb, rx, 14.6, 4.4, { gew: 800, farbe: "#c1121f" }); haText(g, " auf Speisen & Getränke", rx + rw, 14.6, 2.8);
+  const regeln = [["", "Nur für Händler, Marktbeschicker und ihr Standpersonal."], ["Nicht übertragbar", " – nicht an Kunden oder Dritte weitergeben."], ["", "Bei jeder Bestellung unaufgefordert vorzeigen."],
+    ["", "Gültig nur ausgefüllt und mit Stempel des Köcheclubs."], ["", "Bei Missbrauch wird der Ausweis eingezogen."], ["", "Nicht mit anderen Aktionen kombinierbar, keine Barauszahlung."]];
+  regeln.forEach(([fett, rest], i) => { const y = 20.6 + i * 3.6; g.fillStyle = "#741521"; g.beginPath(); g.arc(4.6 * M, (y - .8) * M, .5 * M, 0, 7); g.fill();
+    let xx = 6.4; if (fett) xx += haText(g, fett, xx, y, 2.3, { gew: 800 }); haText(g, rest, xx, y, 2.3, { max: W - xx - 3 }); });
+  haText(g, `Köcheclub Werne · Weihnachtsmarkt ${jahr} · Nr. ${x.nr} · Prüfcode ${x.code}`, W / 2, H - 2.4, 1.9, { farbe: "#8a6a5a", aus: "center", max: W - 6 });
+  g.restore(); g.strokeStyle = "#c9a46a"; g.lineWidth = .25 * M; haRund(g, .12, .12, W - .24, H - .24, 3); g.stroke();
+}
+function druckHaendlerListe(p) {
+  const zeilen = (p?.liste || []).map((x) => `<tr><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td></td><td></td><td></td><td></td></tr>`).join("");
+  return { titel: `Händler-Ausweise Weihnachtsmarkt ${p.jahr} – Ausgabeliste`, unter: "Wer hat welchen Ausweis? Am Stand: QR-Code scannen und Prüfcode vergleichen.", fuss: "Ausgabeliste Händler-Ausweise",
+    html: `<table class="dtab" style="width:100%;border-collapse:collapse"><thead><tr><th style="width:11mm">Nr.</th><th style="width:20mm">Prüfcode</th><th>Stand / Firma</th><th>Name</th><th style="width:24mm">ausgegeben am</th><th style="width:28mm">Unterschrift</th></tr></thead>
+      <tbody>${zeilen}</tbody></table><style>#druck .dtab td,#druck .dtab th{border:.3mm solid #999;padding:2.2mm 2mm;text-align:left;font-size:3.4mm}#druck .dtab tr{height:9mm}</style>` };
 }
 async function einrichtungskarte(pid) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }

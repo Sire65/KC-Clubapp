@@ -5917,7 +5917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7500,6 +7500,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(server, /async function treffenThemen\(treffenId: string\): Promise<string\[\]> \{/, "Themen-Sammler");
   assert.match(server, /select\("tagesordnung"\)\.eq\("treffen_id", treffenId\)[\s\S]{0,300}\.eq\("art", "thema"\)\.neq\("status", "abgelehnt"\)/, "Protokoll-Punkte + Themen-Vorschläge");
   assert.match(server, /const themen = await treffenThemen\(t\.id\)[^\n]*\n[\s\S]{0,400}· Themen: \$\{themen\.join\(" · "\)\}`[\s\S]{0,300}📋 Tagesordnung:/, "Push kurz + Mail mit Tagesordnung");
+}
+// 2.690.0 KC-CLUB-HAENDLERAUSWEIS: Händler-Ausweis im Büro-Drucker (Prüfcode vom Server, QR, 10 je A4, Ausgabeliste)
+{
+  assert.match(programm, /\[L, "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart\(\)"\]/, "im Büro-Drucker, nur Clubleitung");
+  assert.match(programm, /api\("haendlerausweis_codes", \{ jahr: HA\.jahr, von: HA\.von, bis: HA\.bis \}\)/, "Prüfcodes vom Server");
+  assert.match(server, /case "haendlerausweis_codes": \{[^\n]*\n\s*nurLeitung\(ich\);/, "Server: nur Clubleitung");
+  assert.match(server, /"kc-haendlerausweis\|" \+ SERVICE/, "Code aus dem Server-Geheimnis abgeleitet, nicht gespeichert");
+  assert.match(programm, /q\.addData\(`Koecheclub Werne Haendler-Ausweis \$\{jahr\} Nr \$\{x\.nr\} Code \$\{x\.code\}`\)/, "QR mit Nummer und Prüfcode");
+  assert.match(programm, /const r = Math\.floor\(i \/ 2\), sp = hinten \? 1 - \(i % 2\) : i % 2;/, "Rückseiten gespiegelt");
+  assert.match(programm, /haendlerausweis: \{ bauen: \(o, p\) => \(\{ ohneRahmen: true, randlos: true,/, "randlos gedruckt (Schnittmarken stimmen)");
+  for (const t of ["NICHT ÜBERTRAGBAR", "Nicht übertragbar", "Bei Missbrauch wird der Ausweis eingezogen."]) assert.ok(programm.includes(t), t);
+  assert.match(programm, /haendlerausweis_liste: \{ bauen: \(o, p\) => druckHaendlerListe\(p\) \}/, "Ausgabeliste");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

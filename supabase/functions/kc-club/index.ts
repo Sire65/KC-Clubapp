@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.689.0";
+const SERVER_VERSION = "2.690.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -208,6 +208,14 @@ function nebenbei(p: Promise<unknown>) { try { (globalThis as any).EdgeRuntime?.
 async function sha256(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+// 2.690.0 KC-CLUB-HAENDLERAUSWEIS (Wunsch Hansi „Händler-Ausweise für den Weihnachtsmarkt ins Büro, zu den Druckvorlagen“): Prüfcode je Ausweis-Nummer
+// aus dem Server-Geheimnis abgeleitet (nicht gespeichert) – 4 Zeichen ohne Verwechsler (kein 0/O, 1/I). Nachgemachte Ausweise haben keinen passenden Code.
+const HA_ZEICHEN = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+async function haendlerCode(jahr: number, nr: number) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode("kc-haendlerausweis|" + SERVICE), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const b = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`WM${jahr}-${String(nr).padStart(3, "0")}`)));
+  return [...b.slice(0, 4)].map((x) => HA_ZEICHEN[x % 32]).join("");
 }
 // 2.430.0 KC-CLUB-KALENDER-EINFACH: Kalender-Link aus dem Server-Geheimnis abgeleitet (nicht gespeichert, nur sein Hash)
 async function kalenderToken(pid: string, erstellt: string) {
@@ -17492,6 +17500,15 @@ Köcheclub-App`,
         }
         await protokoll(ich.person_id, "probe_beendet", { fuer: pid, seit: w.seit ?? null, gruppen: inGruppen.length, nachrichten_entfernt: entfernt });
         return json({ ok: true, gruppen: inGruppen.length, entfernt, name });
+      }
+      case "haendlerausweis_codes": { // 2.690.0 KC-CLUB-HAENDLERAUSWEIS: nur Clubleitung; höchstens 120 Nummern je Abruf, Nummern 1–999
+        nurLeitung(ich);
+        const jahr = Math.trunc(Number(p.jahr)) || new Date().getFullYear(), von = Math.max(1, Math.trunc(Number(p.von)) || 1), bis = Math.min(999, Math.trunc(Number(p.bis)) || von);
+        if (jahr < 2024 || jahr > 2100 || bis < von || bis - von >= 120) throw new Fehler("Bitte Jahr und Nummern prüfen (höchstens 120 Ausweise auf einmal).");
+        const liste = [];
+        for (let n = von; n <= bis; n++) liste.push({ nr: String(n).padStart(3, "0"), code: await haendlerCode(jahr, n) });
+        await protokoll(ich.person_id, "haendlerausweis_gedruckt", { jahr, von, bis });
+        return json({ ok: true, jahr, liste });
       }
       case "link_erzeugen": {
         nurAdmin(ich);
