@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.717.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.718.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -34369,6 +34369,7 @@ const SPRUENGE = {
   wunschbogen: { sym: "🖨️", t: "Leeren Wunschbogen holen", fn: () => wbStart() },
   termine: { sym: "📅", t: "Zu den Terminen", fn: () => zeige("termine") },
   pinnwand: { sym: "📌", t: "Zur Pinnwand", fn: () => zeige("pinnwand") },
+  nachrichten: { sym: "💬", t: "Zu meinen Nachrichten", fn: () => zeige("nachrichten") }, // 2.718.0 KC-CLUB-SPRUNG-NACHRICHTEN (Fund Hansi: Startnachricht „schau deine ungelesenen Nachrichten an“)
   mitglieder: { sym: "👥", t: "Zu den Mitgliedern", fn: () => zeige("mitglieder") },
   tafel: { sym: "📋", t: "Anwesenheitstafel", fn: () => { zeige("mitglieder"); mgAnsichtSetzen("tafel"); } },
   fotos: { sym: "📷", t: "Zum Fotoalbum", fn: () => zeige("fotos") },

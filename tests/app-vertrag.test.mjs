@@ -7679,6 +7679,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/nurAdmin\(ich\);/.test(c) && /if \(!f\.geloescht_am\) throw/.test(c) && /await dateienEntfernen\(\[f\.attachment_id, f\.vorschau_id\]\);/.test(c) && /"foto_endgueltig_geloescht"/.test(c), "Endgültig löschen: nur Admin, nur aus dem Papierkorb, Dateien weg, protokolliert");
   assert.ok(/data-w="weg">🗑️ Endgültig löschen<\/button>/.test(programm) && /api\("foto_endgueltig_loeschen", \{ id \}, \{ warten: true \}\)/.test(programm) && /🗑️ Foto endgültig löschen\?/.test(programm), "Endgültig löschen: Knopf im Papierkorb mit Rückfrage");
 }
+// 2.718.0 KC-CLUB-SPRUNG-NACHRICHTEN: Sprung-Ziel „Zu meinen Nachrichten“ (Startnachricht, Chat-Links)
+{
+  assert.match(programm, /nachrichten: \{ sym: "💬", t: "Zu meinen Nachrichten", fn: \(\) => zeige\("nachrichten"\) \}/, "Sprung-Ziel Nachrichten");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

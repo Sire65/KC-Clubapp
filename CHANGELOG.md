@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.718.0 – 2026-10-27 – 💬 Sprung-Knopf „Zu meinen Nachrichten“ (KC-CLUB-SPRUNG-NACHRICHTEN)
+Fund Hansi („ich habe aber keinen Knopf Nachrichten“): In der Startnachricht (und bei Sprung-Links im Chat) gibt es jetzt das Ziel „💬 Zu meinen Nachrichten“ – z. B. für eine Startnachricht an Mitglieder mit vielen ungelesenen Nachrichten. Antippen = gelesen und direkt in die Nachrichten.
+
 ## 2.717.0 – 2026-10-27 – 🐂 Stier auf dem Viehmarkt
 - 🐂 Viehmarkt auf Sim-Jü: Nach Feierabend trabt ein Stier mit großen Hörnern und Nasenring herein, schnaubt – und aus den Dampfwolken entsteht dein Name (KC-CLUB-VM-STIER).
 - 🧚 Die Fee hat jetzt eine Sprechblase „Tipp mich an!“, solange sie stehen bleibt – nach dem Antippen verschwindet sie (KC-CLUB-FEE-BLASE).
