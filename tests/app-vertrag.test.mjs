@@ -7710,6 +7710,26 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(server, /const ohneFarbe = \(t: string\) =>/, "Server entfernt Farbzeichen");
   assert.ok((server.match(/\$\{slHinweis \|\| ohneFarbe\(text\)\}/g) || []).length >= 2, "Mail ohne Farbzeichen");
 }
+// 2.723.0 KC-CLUB-SCHUTZSCHILD: Content-Security-Policy in index.html – vor jedem Skript, alle genutzten Server erlaubt, Fremdes gesperrt und protokolliert
+{
+  const seite = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const m = seite.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/);
+  assert.ok(m, "Schutzschild (CSP) vorhanden");
+  assert.ok(seite.indexOf(m[0]) < seite.indexOf("<script"), "Schutzschild steht vor dem ersten Skript");
+  const csp = Object.fromEntries(m[1].split(";").map((x) => x.trim().split(/\s+/)).map(([k, ...w]) => [k, w]));
+  for (const k of ["default-src", "script-src", "connect-src", "img-src", "frame-src", "worker-src", "object-src", "base-uri", "form-action"]) assert.ok(csp[k], "CSP-Regel " + k);
+  assert.deepEqual(csp["default-src"], ["'self'"], "Grundregel: nur eigene Seite");
+  assert.ok(!csp["script-src"].some((w) => /^https?:|^\*$/.test(w)), "kein fremder Programmcode");
+  const host = (u) => new URL(u).origin;
+  const api = programm.match(/const API = "([^"]+)"/)[1], rt = programm.match(/const RT_URL = "([^"]+)"/)[1];
+  const not = JSON.parse(fs.readFileSync(new URL("../notbetrieb.json", import.meta.url), "utf8")).url;
+  for (const u of [host(api), host(rt).replace(/^https/, "wss"), host(not), "https://kc-failover-gateway.ha-joko.workers.dev", "https://status.supabase.com", programm.match(/const TT_CF = "([^"]+)"/)[1], "https://api.github.com"])
+    assert.ok(csp["connect-src"].includes(u), "Schutzschild erlaubt Verbindung zu " + u);
+  for (const u of ["https://www.openstreetmap.org", "https://maps.google.com", "https://www.google.com"]) assert.ok(csp["frame-src"].includes(u), "Karte darf eingebettet werden: " + u);
+  assert.ok(csp["worker-src"].includes("blob:") && csp["script-src"].includes("'unsafe-eval'"), "Stimmen/Texterkennung/PDF laufen weiter");
+  assert.match(seite, /addEventListener\("securitypolicyviolation", function \(ev\) \{\n    var u = String\(ev\.blockedURI \|\| ""\)\.split\("\?"\)\[0\]/, "Gesperrtes wird ohne ?-Teil protokolliert");
+  assert.match(programm, /schutz: \["🛡️", "Schutzschild hat etwas gesperrt"/, "Fehlerprotokoll kennt „schutz“");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

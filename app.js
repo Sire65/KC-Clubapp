@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.722.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.723.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -47122,6 +47122,7 @@ const FP_ARTEN = {
   mehrfachstart: ["🔁", "Mehrmals kurz hintereinander geöffnet", "Zeichen für „geht nicht auf“ – Hilfe wurde angeboten"],
   speicher: ["🔒", "Speicher gesperrt (privater Modus)", "App vergisst den Zugang – normal öffnen"],
   startzeit: ["⏱️", "Startzeit", "Abschnitte des Starts (nur Messung)"],
+  schutz: ["🛡️", "Schutzschild hat etwas gesperrt", "Art und Adresse stehen im Eintrag – an Claude weitergeben, falls dadurch etwas nicht ging"], // 2.723.0 KC-CLUB-SCHUTZSCHILD
   alte_version: ["🕰️", "Alte App-Version", "„Jetzt aktualisieren“ wurde angeboten"],
   update_getippt: ["🔄", "Aktualisieren getippt", ""],
   update_selbst: ["🔄", "App hat sich selbst aktualisiert", "neue Version geladen – nichts zu tun"], // 2.310.2

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.723.0 – 2026-10-27 – 🛡️ Schutzschild im Browser (KC-CLUB-SCHUTZSCHILD)
+Prüfbericht Etappe 1 (Wunsch #44): Die App hat jetzt eine Content-Security-Policy. Programmcode kommt nur noch von der eigenen Seite, Daten gehen nur an die eigenen Server (Club-Server, Live-Verbindung, Notbetrieb, Störungs- und Tempo-Prüfung), eingebettet werden nur Karten. Wird etwas gesperrt, steht es als „🛡️ Schutzschild“ im Fehlerprotokoll.
+
 ## 2.722.0 – 2026-10-27 – 🎨 Farbe in Nachrichten (KC-CLUB-CHAT-FARBE)
 Wunsch Hansi („Text oder bestimmte Wörter in Nachrichten in Farbe – sehr starke Kontrastfarben: knallrot, blau, grün, gelb, kein Pastell – neben dem F“): In der Leiste über dem Schreibfeld (erscheint beim Markieren oder über 𝐅) stehen neben **F · K · D** jetzt vier kräftige Farbknöpfe **Rot · Blau · Grün · Gelb**. Wort oder Text markieren (lange drücken / doppelt tippen), Farbe antippen – fertig; nochmal dieselbe Farbe nimmt sie weg, eine andere ersetzt sie. Ohne Markierung kommt die Farbe an die Schreibstelle, einfach weiterschreiben.
 - **Wie ein Textmarker** (Wunsch Hansi): kräftiger Marker-Strich mit schrägen, ausfransenden Enden hinter dem Wort – Rot und Blau mit weißer, Grün und Gelb mit schwarzer Schrift, gleich in fremden und eigenen Blasen, Tag und Nacht. Im Text steht dafür `[rot]Wort[/rot]` (ältere Apps zeigen das so). Mit fett kombinierbar: `[rot]*Achtung*[/rot]`.
