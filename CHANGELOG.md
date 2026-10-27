@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.691.0 – 2026-10-27 – 🖨️ Drucker auch in der Büro-Listenansicht (KC-CLUB-DRUCKER-LISTE)
+Fund Hansi („wo sind die Ausweise“): Der Büro-Drucker mit allen Druckvorlagen (Sitzungs-Vorlage, Mitgliederliste, Termine, Geburtstage, Briefbogen, Einrichtungskarte, Händler-Ausweis) war nur im gezeichneten Büro-Raum zu finden. Jetzt auch in der Listen-Ansicht: neuer Bereich „🖨️ Drucken & Vorlagen“ mit „Alle Druckvorlagen“ und (Clubleitung) „🪪 Händler-Ausweis“.
+
 ## 2.690.0 – 2026-10-27 – 🪪 Händler-Ausweis im Büro-Drucker (KC-CLUB-HAENDLERAUSWEIS)
 Wunsch Hansi („Händler und Marktbeschicker bekommen auf dem Weihnachtsmarkt Rabatt – vorher einen Ausweis, den sie am Stand vorzeigen; ‚nicht übertragbar‘ usw.“, „QR-Code oben rechts“, „ins Büro, wo Formulare und Druckvorlagen sind“): Büro → 🖨️ Drucker → 🪪 Händler-Ausweis (nur Clubleitung). Jahr, Rabatt in % (leer = zum Eintragen), Nummern von–bis (höchstens 120), Gültig-Text. Scheckkarte 85 × 54 mm, 10 je A4 mit Schnittmarken an jeder Ecke; Blatt 1 Vorderseiten (Kopf mit Kochmütze und Nummer, QR-Code oben rechts, HÄNDLER-AUSWEIS, Stand/Firma, Name, Stempel „NICHT ÜBERTRAGBAR“, Stempelfeld), Blatt 2 Rückseiten (Rabatt, Regeln, Nummer + Prüfcode) gespiegelt für beidseitigen Druck. Prüfcode je Nummer vom Server aus dem Server-Geheimnis abgeleitet (nicht gespeichert, nicht fälschbar); QR enthält Nummer + Prüfcode. Gezeichnet in 300 dpi, randlos – Druck, Vorschau und PDF millimetergenau gleich (im Test alle QR-Codes lesbar, auch bei 100 dpi). 📋 Ausgabeliste: Nr., Prüfcode, Stand/Firma, Name, ausgegeben am, Unterschrift.
 

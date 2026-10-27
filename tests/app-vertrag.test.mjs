@@ -7513,6 +7513,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const t of ["NICHT ÜBERTRAGBAR", "Nicht übertragbar", "Bei Missbrauch wird der Ausweis eingezogen."]) assert.ok(programm.includes(t), t);
   assert.match(programm, /haendlerausweis_liste: \{ bauen: \(o, p\) => druckHaendlerListe\(p\) \}/, "Ausgabeliste");
 }
+// 2.691.0 KC-CLUB-DRUCKER-LISTE: Drucker und Händler-Ausweis auch in der Büro-Listenansicht
+{
+  assert.match(programm, /buBereich\("drucken", "🖨️ Drucken & Vorlagen", `<div class="mini-kacheln">\$\{k\("drucker", "🖨️", "Alle Druckvorlagen",[^\n]*"buDrucker\(\)"\)\}\$\{L \? k\("haendler", "🪪", "Händler-Ausweis",[^\n]*"haStart\(\)"\)/, "Drucken & Vorlagen in der Liste");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
