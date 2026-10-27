@@ -7601,6 +7601,16 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="atOeffnen\('\$\{esc\(s\.treffen\.id\)\}'\)">💼 Aktentasche für diese Sitzung/.test(html), "Knopf bei Sitzung vorbereiten");
   assert.ok(/atStatus\('vorlaeufig', this\)">🟠 Vorläufig gepackt/.test(html) && /✔ Fertig gepackt/.test(html) && /class="karte at-neu"/.test(html) && /id: "aktentasche_neu:"/.test(html), "App: Stufen, 🆕-Hinweis in Tasche und Info-Feld");
 }
+// 2.700.0 KC-CLUB-EMOJI-ERSATZ (Fund Hansi „keine einheitlichen Klickkästchen in den Voreinstellungen“ – 🪟 am Windows-PC als leeres Kästchen)
+{
+  const neu = (html.match(/const EMO_NEU = "([^"]+)";/) || [])[1] || "";
+  assert.ok(neu.length > 20 && /function emoNeuPruefen\(\)/.test(html) && /KOCH\.re = new RegExp\(Object\.keys\(KOCH\.src\)\.join\("\|"\), "gu"\)/.test(html), "neuere Emoji: prüfen, sonst Bild (gleicher Kern wie Koch-Emoji)");
+  for (const ch of neu) assert.ok(fs.existsSync(new URL("../lib/emoji/" + ch.codePointAt(0).toString(16) + ".svg", import.meta.url)), "Bild fehlt für " + ch);
+  // jedes neuere Emoji (Unicode 12–14, U+1FA70–1FAFF, U+1F6D5–1F6DF), das in der App vorkommt, braucht ein Ersatzbild
+  const benutzt = new Set([...(html + seite)].filter((c) => { const o = c.codePointAt(0); return (o >= 0x1fa70 && o <= 0x1faff) || (o >= 0x1f6d5 && o <= 0x1f6df); }));
+  for (const ch of benutzt) assert.ok(neu.includes(ch), `Emoji ${ch} (U+${ch.codePointAt(0).toString(16)}) in EMO_NEU eintragen und Bild in lib/emoji/ legen`);
+  assert.ok(/<b>📐 Ecken der Kacheln<\/b>/.test(seite), "⬜ sah aus wie ein Kästchen → 📐");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

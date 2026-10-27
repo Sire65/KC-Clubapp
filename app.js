@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.699.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.700.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5385,7 +5385,7 @@ const HILFE = [
   { id: "anklopfen_wahl", thema: "club", sym: "👋", t: "Anklopfen: schreiben oder sprechen", x: "Ist ein Mitglied gerade online (🟢), tippst du auf <b>👋</b>. Die App fragt: <b>💬 Schreiben</b> oder <b>📞 Sprechen</b> – das sieht der andere gleich beim Anklopfen. Nimmt er bei „Sprechen“ an, seid ihr sofort in der App verbunden. Geht Anklopfen gerade nicht, ist 👋 blass: Antippen sagt dir warum (nicht online, Anklopfen deaktiviert, Online-Status verborgen) und bietet <b>💬 Nachricht schreiben</b> an. Ein verpasstes Anklopfen zeigt die App beim nächsten Öffnen – mit <b>👋 Zurück anklopfen</b>.", zeig: () => zeige("mitglieder"), seit: "2.647.0" },
   { id: "clubmoment", thema: "club", sym: "📸", t: "Mein Clubmoment fürs Clubjahr", x: "Ab 1. November kannst du deinen schönsten Clubmoment des Jahres einreichen: ein Foto und ein, zwei Sätze – bis 15. Dezember, über die Kachel <b>📖 Unser Clubjahr</b> oder den Hinweis im Info-Feld. Daraus entsteht das Clubjahr-Heft fürs Weihnachtsessen.", seit: "2.581.0" },
   { id: "vertretung", thema: "termine", sym: "🤝", t: "Für ein anderes Mitglied zu- oder absagen", nur: () => { try { return vtListe().length > 0; } catch { return false; } }, x: "Darfst du für jemanden handeln (z. B. für den Partner), steht in Termine, Abstimmungen und Dienstwünschen oben <b>„Handeln für: 👤 Mich · 🤝 …“</b>. Wählst du den Namen, zeigt unten eine Leiste, für wen du gerade handelst – <b>✖ Beenden</b> schaltet zurück. Erlaubt sind Zu- und Absagen, Terminumfragen, Dienstwünsche und offene Abstimmungen; das andere Mitglied bekommt jedes Mal eine E-Mail. Nachrichten und Daten nie.", seit: "2.629.0" },
-  { id: "kachel_ecken", thema: "darstellung", sym: "⬜", t: "Kacheln eckig oder rund", x: "Lieber kantig oder lieber weich? Bei ⚙️ → „✨ Effekte“ → <b>„⬜ Ecken der Kacheln“</b> schiebst du den Regler: ganz links sind die Kacheln <b>◼️ eckig</b>, ganz rechts <b>⚪ fast rund</b> – du siehst es sofort. <b>↺ Standard</b> holt die normalen Ecken zurück.", zeig: () => einstiegHin("effekte", "setKachelEcken"), seit: "2.659.0" },
+  { id: "kachel_ecken", thema: "darstellung", sym: "📐", t: "Kacheln eckig oder rund", x: "Lieber kantig oder lieber weich? Bei ⚙️ → „✨ Effekte“ → <b>„📐 Ecken der Kacheln“</b> schiebst du den Regler: ganz links sind die Kacheln <b>◼️ eckig</b>, ganz rechts <b>⚪ fast rund</b> – du siehst es sofort. <b>↺ Standard</b> holt die normalen Ecken zurück.", zeig: () => einstiegHin("effekte", "setKachelEcken"), seit: "2.659.0" },
   { id: "schatten", thema: "darstellung", sym: "🌗", t: "Schatten für Knöpfe, Kacheln und Kopf", x: "Ein bisschen Tiefe gefällig? Mit ⚙️ → „✨ Effekte“ → <b>„🌗 Schatten“</b> bekommen Knöpfe, Kacheln, Karten, Chips, Sprechblasen, Leisten und der Kopf einen Schatten. Darunter klappst du <b>„🌗 Schatten einstellen“</b> auf: <b>💪 Stärke</b> (leicht, mittel, kräftig, sehr kräftig), <b>🎨 Farbe</b> (automatisch – passt hell und dunkel –, Schwarz, Braun, Weinrot, Blau, Grün, Gold oder eine eigene) und <b>📍 Position</b> (unten, unten rechts, unten links, oben oder rundum wie ein Leuchten). Für die Felder oben im Kopf gibt es <b>🎩 Schatten im Kopf</b> mit eigener Stärke, und <b>🌙 Kontrast bei Nacht</b> macht den Schatten im dunklen Bild heller, damit man ihn sieht. Die kleine Vorschau zeigt es sofort. Aus: wie bisher.", zeig: () => einstiegHin("effekte", "setSchatten"), seit: "2.656.0" },
   { id: "kopf_effekte", thema: "darstellung", sym: "🎪", t: "Wie geht der Kopf auf und zu?", x: "Tippst du oben am Kopf auf <b>⌃</b> oder <b>⌃⌃</b>, rollt er sich ein – normal wie eine <b>🪟 Jalousie</b>. Unter ⚙️ → „✨ Effekte“ → <b>„🪟 Anderer Effekt beim Einrollen des Kopfes“</b> wählst du stattdessen: <b>🎭 Lamellenvorhang</b> (zu den Seiten), <b>🗄️ Climber</b> (krempelt sich Lamelle für Lamelle hoch), <b>🎪 Theatervorhang</b> (weinroter Samt), <b>🍽️ Servierglocke</b> („Voilà!“), <b>🏠 Marktbude</b> (die Holzklappe geht zu), <b>🔄 Automatisch</b> (jedes Mal ein anderer) oder <b>🎭 Passend zum Thema</b> – z. B. im Advent die Marktbude, zu Karneval der Theatervorhang. Mit <b>▶ Ausprobieren</b> siehst du ihn sofort.", zeig: () => einstiegHin("effekte", "setKopfEffekt"), seit: "2.505.0" },
   { id: "geburtstag_vogel", thema: "start", sym: "🎁", t: "Ein Vogel bringt ein Geschenk?", x: "Hat heute jemand aus dem Club Geburtstag, fliegt oben im Kopf ein <b>Vogel mit einem Geschenkpaket</b> herein und lässt es fallen. Unten platzt es, ein <b>Blumenstrauß</b> springt heraus, darüber steht bunt <b>„Happy Birthday“</b> mit dem Vornamen. Er kommt höchstens einmal pro Stunde und ist nie im Weg. Abschalten oder als Vorschau ansehen: ⚙️ → „✨ Effekte“ → <b>„🎁 Geburtstags-Vogel“</b>.", zeig: () => einstiegHin("effekte", "setGbVogel"), seit: "2.508.0" },
@@ -10128,7 +10128,7 @@ const TW_FAQ = [
   // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: Fragen zu den neuen Möglichkeiten (nur Mitglieder-Funktionen)
   { id: "dienst-uebersicht", sym: "📊", t: "Wo sehe ich, wer wann beim Weihnachtsmarkt kann?", x: "Tippe in <b>🗓️ Dienstpläne</b>, in <b>„Mein Dienst“</b> oder in den Dienstwünschen auf <b>📊</b>. Die Übersicht zeigt deine Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben.", los: () => zeige("dienste") },
   { id: "tippgeraeusche", sym: "⌨️", t: "Kann ich hören, wenn jemand tippt?", x: "Ja – wenn die andere Person <b>„Andere sehen live, was ich tippe“</b> eingeschaltet hat. Unter ⚙️ → „🔔 Benachrichtigungen“ → <b>„⌨️ Tippgeräusche“</b> wählst du Tastatur oder Schreibmaschine.", los: () => einstiegHin("benachrichtigung", "setTippTon") },
-  { id: "kachel-ecken", sym: "⬜", t: "Können die Kacheln runder oder eckiger sein?", x: "Ja: ⚙️ → „✨ Effekte“ → <b>„⬜ Ecken der Kacheln“</b> – den Regler nach links schieben macht sie eckig, nach rechts fast rund. <b>↺ Standard</b> stellt die normalen Ecken wieder her. Gilt für dieses Gerät.", los: () => einstiegHin("effekte", "setKachelEcken") },
+  { id: "kachel-ecken", sym: "📐", t: "Können die Kacheln runder oder eckiger sein?", x: "Ja: ⚙️ → „✨ Effekte“ → <b>„📐 Ecken der Kacheln“</b> – den Regler nach links schieben macht sie eckig, nach rechts fast rund. <b>↺ Standard</b> stellt die normalen Ecken wieder her. Gilt für dieses Gerät.", los: () => einstiegHin("effekte", "setKachelEcken") },
   { id: "schatten", sym: "🌗", t: "Kann ich Knöpfe und Kacheln mit Schatten versehen?", x: "Ja: ⚙️ → „✨ Effekte“ → <b>„🌗 Schatten“</b> einschalten und unter <b>„🌗 Schatten einstellen“</b> Stärke (leicht bis sehr kräftig), Farbe (automatisch, Schwarz, Braun, Weinrot, Blau, Grün, Gold oder eine eigene) und Position (unten, unten rechts/links, oben oder rundum) wählen. Gilt für dieses Gerät.", los: () => einstiegHin("effekte", "setSchatten") },
   { id: "kopf-effekt", sym: "🎪", t: "Kann der Kopf anders zugehen als mit der Jalousie?", x: "Ja: ⚙️ → „✨ Effekte“ → <b>„🪟 Anderer Effekt beim Einrollen des Kopfes“</b> – Lamellenvorhang, Climber, Theatervorhang, Servierglocke, Marktbude, Automatisch oder passend zum Thema. <b>▶ Ausprobieren</b> zeigt ihn sofort.", los: () => einstiegHin("effekte", "setKopfEffekt") },
   { id: "geburtstag-vogel", sym: "🎁", t: "Warum fliegt oben ein Vogel mit einem Paket?", x: "Dann hat heute jemand aus dem Club Geburtstag! 🎂 Das Paket platzt, ein Blumenstrauß und „Happy Birthday“ erscheinen. Abschalten: ⚙️ → „✨ Effekte“ → <b>„🎁 Geburtstags-Vogel“</b>.", los: () => einstiegHin("effekte", "setGbVogel") },
@@ -45070,7 +45070,7 @@ function suAppListe() {
     ["📍", "Standort teilen", "standort teilen wo bin ich", () => stBlatt()],
     // 2.508.0 KC-CLUB-HILFE-NACHTRAG-3: neue Möglichkeiten direkt über die Lupe
     ["📊", "Dienstzeiten-Übersicht (wer kann wann)", "dienstzeiten übersicht weihnachtsmarkt wer kann wann dienst plan balken", () => dvStart()],
-    ["⬜", "Ecken der Kacheln (eckig bis rund)", "ecken kacheln rund eckig abgerundet regler slider radius form", () => einstiegHin("effekte", "setKachelEcken")],
+    ["📐", "Ecken der Kacheln (eckig bis rund)", "ecken kacheln rund eckig abgerundet regler slider radius form", () => einstiegHin("effekte", "setKachelEcken")],
     ["🌗", "Schatten einstellen (Stärke, Farbe, Position)", "schatten schattenfarbe schattenstärke schattenposition knöpfe kacheln kopf tiefe 3d", () => einstiegHin("effekte", "setSchatten")],
     ["🎪", "Kopf-Effekt wählen (Jalousie, Vorhang, Glocke …)", "kopf effekt jalousie vorhang theater servierglocke marktbude climber einrollen", () => einstiegHin("effekte", "setKopfEffekt")],
     ["⌨️", "Tippgeräusche (Tastatur, Schreibmaschine)", "tippgeräusche tastatur schreibmaschine tippen hören live", () => einstiegHin("benachrichtigung", "setTippTon")],
@@ -46463,7 +46463,11 @@ async function fpAdmin(tage) {
 // vorher stand „const KOCH“ dahinter (Zeitzone vor der Zuweisung → ReferenceError)
 const KOCH_EMO = { "🧑‍🍳": "1f9d1-200d-1f373", "👨‍🍳": "1f468-200d-1f373", "👩‍🍳": "1f469-200d-1f373" };
 const KOCH_RE = /🧑‍🍳|👨‍🍳|👩‍🍳/g;
-const KOCH = { ok: true, bild: null };
+const KOCH = { ok: true, bild: null, re: null, src: {} };
+// 2.700.0 KC-CLUB-EMOJI-ERSATZ (Fund Hansi „keine einheitlichen Klickkästchen in den Voreinstellungen“ – am Windows-PC stand bei „🪟 Anderer Effekt …“
+// ein leeres Kästchen): neuere Emoji (Unicode 12–14) kennt Windows 10 nicht und malt ein leeres Rechteck. Wie beim Koch (2.355.0): beim Start einmal prüfen,
+// welche das Gerät farbig malt – die anderen überall als kleines Bild (Twemoji, lib/emoji/). Neue Emoji dieser Art bitte hier eintragen (Test prüft das).
+const EMO_NEU = "🪞🪪🪧🪟🫧🩺🪑🩹🪩🫑🛟🪔🫣🪄🪐🪢🪵🪦🫙🪣🫶🫡🫂🫘🫒🫐🫕🪅🪛🛞";
 // ---------- KC-CLUB-SCHLUESSEL-SICHERN (26.10.2026, Wunsch Hansi „das darf bei den Usern nicht passieren – muss abgesichert sein“, Stufe A) ----------
 // Fall Hansi: am PC war der gespeicherte Link weg (der Browser hatte seinen Speicher geleert). Nach jeder gültigen Anmeldung liegt der Schlüssel
 // deshalb zusätzlich in IndexedDB und im Cache-Speicher (eigener Name „kcclub-sicher“ – der Service Worker räumt nur „kc-club-…“ auf), und die App
@@ -46568,26 +46572,47 @@ function kochEmojiPruefen() {
   return KOCH.ok;
 }
 const kochBildSrc = (m) => `lib/emoji/${KOCH_EMO[m] || KOCH_EMO["🧑‍🍳"]}.svg`;
+function emoFarbig(ch, c) { // farbige Punkte = das Gerät malt das Emoji; ein leeres Kästchen ist grau/schwarz
+  c.clearRect(0, 0, 28, 28); c.fillText(ch, 2, 22);
+  const d = c.getImageData(0, 0, 28, 28).data;
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 100 && (Math.abs(d[i] - d[i + 1]) > 30 || Math.abs(d[i + 1] - d[i + 2]) > 30)) return true;
+  return false;
+}
+function emoNeuPruefen() { // → Liste der Emoji, die das Gerät nicht kann
+  let erzwingen = ""; try { erzwingen = localStorage.getItem("kc_club_emoji_bild") || ""; } catch {}
+  if (erzwingen === "0") return []; if (erzwingen === "1") return [...EMO_NEU];
+  try {
+    const cv = document.createElement("canvas"); cv.width = cv.height = 28;
+    const c = cv.getContext("2d", { willReadFrequently: true }); c.font = `20px ${JZB_EMOJI}`;
+    if (!emoFarbig("😀", c)) return []; // malt das Gerät gar keine farbigen Emoji, lässt sich nichts messen – dann nichts ersetzen
+    return [...EMO_NEU].filter((ch) => !emoFarbig(ch, c));
+  } catch { return []; }
+}
 function kochErsetzen(wurzel) {
-  if (!wurzel || KOCH.ok) return;
+  if (!wurzel || !KOCH.re) return;
+  const re = KOCH.re; // 2.700.0: Koch-Emoji und/oder fehlende neuere Emoji
   const nimm = (n) => { const p = n.parentElement; return !p || p.closest("textarea, input, select, option, [contenteditable=''], [contenteditable='true'], script, style, title, svg, canvas, .emo-koch") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; };
   const liste = [];
-  if (wurzel.nodeType === 3) { KOCH_RE.lastIndex = 0; if (KOCH_RE.test(wurzel.data) && nimm(wurzel) === NodeFilter.FILTER_ACCEPT) liste.push(wurzel); }
+  if (wurzel.nodeType === 3) { re.lastIndex = 0; if (re.test(wurzel.data) && nimm(wurzel) === NodeFilter.FILTER_ACCEPT) liste.push(wurzel); }
   else if (wurzel.nodeType === 1) {
-    const w = document.createTreeWalker(wurzel, NodeFilter.SHOW_TEXT, { acceptNode: (n) => { KOCH_RE.lastIndex = 0; return KOCH_RE.test(n.data) ? nimm(n) : NodeFilter.FILTER_REJECT; } });
+    const w = document.createTreeWalker(wurzel, NodeFilter.SHOW_TEXT, { acceptNode: (n) => { re.lastIndex = 0; return re.test(n.data) ? nimm(n) : NodeFilter.FILTER_REJECT; } });
     while (w.nextNode()) liste.push(w.currentNode);
   }
   for (const n of liste) {
     const f = document.createDocumentFragment(), t = n.data; let i = 0;
-    t.replace(KOCH_RE, (m, pos) => { if (pos > i) f.append(t.slice(i, pos)); const im = document.createElement("img"); im.className = "emo-koch"; im.alt = m; im.src = kochBildSrc(m); im.draggable = false; f.append(im); i = pos + m.length; return m; });
+    t.replace(re, (m, pos) => { if (pos > i) f.append(t.slice(i, pos)); const im = document.createElement("img"); im.className = "emo-koch"; im.alt = m; im.src = `lib/emoji/${KOCH.src[m]}.svg`; im.draggable = false; f.append(im); i = pos + m.length; return m; });
     if (i < t.length) f.append(t.slice(i));
     n.replaceWith(f);
   }
 }
 (function kochStart() {
-  if (typeof document === "undefined" || !document.body || kochEmojiPruefen()) return;
-  document.documentElement.classList.add("koch-bild");
-  KOCH.bild = new Image(); KOCH.bild.src = kochBildSrc("🧑‍🍳"); // für Twinkey im Kopf (Canvas)
+  if (typeof document === "undefined" || !document.body) return;
+  const kochFehlt = !kochEmojiPruefen(), fehlt = emoNeuPruefen(); // 2.700.0 KC-CLUB-EMOJI-ERSATZ
+  if (!kochFehlt && !fehlt.length) return;
+  KOCH.src = Object.fromEntries([...(kochFehlt ? Object.entries(KOCH_EMO) : []), ...fehlt.map((ch) => [ch, ch.codePointAt(0).toString(16)])]);
+  KOCH.re = new RegExp(Object.keys(KOCH.src).join("|"), "gu");
+  if (kochFehlt) { document.documentElement.classList.add("koch-bild");
+    KOCH.bild = new Image(); KOCH.bild.src = kochBildSrc("🧑‍🍳"); } // für Twinkey im Kopf (Canvas)
   kochErsetzen(document.body);
   let offen = new Set(), wartet = false;
   new MutationObserver((ms) => {

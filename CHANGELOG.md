@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.700.0 – 2026-10-27 – Leere Kästchen statt Bildzeichen behoben
+KC-CLUB-EMOJI-ERSATZ: Neuere Bildzeichen (z. B. 🪟 🪪 🪞 🫧) kennt Windows 10 nicht und zeigte sie als leeres Kästchen. Die App prüft beim Start (wie beim Koch-Emoji), welche das Gerät malt, und zeigt die anderen als kleines Bild (Twemoji, CC BY 4.0). „⬜ Ecken der Kacheln“ → „📐“ (sah aus wie ein Kästchen).
+
 ## 2.699.0 – 2026-10-27 – Aktentasche: vorläufig gepackt, Neues kommt von selbst
 KC-CLUB-AKTENTASCHE-STUFEN: Knopf 💼 auch bei „Sitzung vorbereiten“. Stufen: wird gepackt · 🟠 vorläufig gepackt (liegt schon in der Clubabend-Kachel) · ✅ fertig gepackt. Neue Unterlagen (Vorschläge, Protokollentwurf, Anlagen) kommen bis zur Sitzung automatisch in die Tasche, mit 🆕 markiert (Hinweis in Tasche und Info-Feld, ✓ Gesehen); Herausgenommenes kommt nicht wieder. DB: Stufe vorläufig, Spalte entfernt.
 
