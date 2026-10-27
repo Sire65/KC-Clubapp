@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.710.0";
+const SERVER_VERSION = "2.712.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -13028,8 +13028,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // ----- 2.709.0 KC-CLUB-UNGELESEN-ADMIN (Wunsch Hansi 27.10.2026 „Übersicht nur für Admin, welche meiner Chatnachrichten noch nicht gelesen wurden“):
       // nur EIGENE Nachrichten des Admins (7/14/30 Tage), auch Rundschreiben an alle. „Gelesen“ = Chat bis zu dieser Nachricht in der App geöffnet
       // (last_read_at – dieselbe Grundlage wie die Häkchen). Nur beim Öffnen berechnet: kein Zeitplan, keine neue Tabelle. Ohne Testpersonen/Ausgetretene.
+      // 2.712.0 KC-CLUB-UNGELESEN-LEITUNG (Wunsch Hansi „auch für Klaus und Dieter freischalten“): ganze Clubleitung (vorstand = Clubsprecher,
+      // Kassenwart, Admin) – jeder sieht nur SEINE eigenen Nachrichten (sender = ich), nie die anderer.
       case "ungelesen_uebersicht": {
-        nurAdmin(ich);
+        if (!ich.vorstand) throw new Fehler("Das ist nur für die Clubleitung.", 403);
         const tage = [7, 14, 30].includes(Number(p.tage)) ? Number(p.tage) : 14;
         const { data: ms } = await db.from("kc_communication_messages").select("id,thread_id,body,created_at").eq("sender_person_id", ich.person_id)
           .gte("created_at", new Date(Date.now() - tage * 86400000).toISOString()).order("created_at", { ascending: false }).limit(600);

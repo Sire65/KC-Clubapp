@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.712.0 – 2026-10-26 – 📭 Ungelesen auch für die Clubleitung, Filter aufgeräumt
+- 📭 „Ungelesen“ gibt es jetzt auch für Klaus und Dieter (Kachel unter „Meins“ und Knopf in den Nachrichten) – jeder sieht nur seine eigenen Nachrichten. Die Filter stehen ordentlich im Klappbereich „🔎 Filter“ (KC-CLUB-UNGELESEN-LEITUNG).
+
 ## 2.711.0 – 2026-10-27 – 🎬 Videos im Fotoalbum, Fotos platzsparend
 - KC-CLUB-VIDEOS: Wunsch Hansi („Abspieler für Handy-Videos – Szenen vom Clubtreffen für alle hochladen, aufgeteilt nach Foto und Video“; Wahl: bei Supabase bleiben, streng begrenzt). Im Fotoalbum oben **📷 Fotos | 🎬 Videos** (nur Mitglieder). Video auswählen oder aufnehmen, Thema/Anlass/Datum/Beschreibung wie bei Fotos. Die App verkleinert jedes Video vor dem Hochladen selbst (720p, ca. 10 MB je Minute, höchstens 60 Sekunden – längere werden nach Rückfrage auf die ersten 60 Sekunden gekürzt) und lädt es direkt in den Speicher; der Server prüft Größe (höchstens 15 MB), Dauer und Inhalt und trägt es erst dann ein. Alle Videos zusammen höchstens **300 MB** des kostenlosen 1-GB-Speichers (Anzeige „x von 300 MB“, ca. 30 Videos von 1 Minute). Abspieler mit ⬇️ Speichern; 🗑️ Löschen (endgültig, nur wer hochgeladen hat oder Clubsprecher/Kassenwart). Liegen gebliebene Uploads räumt die Wartung nach 2 Stunden weg. Eigene Tabelle `kc_club_videos` (Migration `20261027_kc_club_v2708_videos.sql`), damit Startseite, „Neueste Fotos“, Diashow und Ablagekorb weiter nur Fotos sehen.
 - KC-CLUB-FOTO-PLATZ: Wunsch Hansi („beim Foto-Hochladen eine Abfrage: wegen Platz etwas verkleinern“; Wahl: immer fragen). Vor jedem Hochladen fragt die App: **💾 Platzsparend** (ca. 130 KB, 1280 px) · **Normale Größe** (ca. 250 KB wie bisher) · Abbrechen.

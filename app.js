@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.711.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.712.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15917,6 +15917,7 @@ const KACHELN = {
     { id: "fitness", sym: "🏋️", t: "Fit bleiben", u: () => (nurTest("fitness") ? "🔒 nur für dich (Test) · " : "") + "Übungen mit Twinkey", aktion: "fiStart()", nur: () => frei("fitness") }, // KC-CLUB-FITNESS (2.55.0)
     // 2.143.0 KC-CLUB-STUDIO (Wunsch Hansi): Kachel nur unter „Meins“ und nur, solange ein Mitglied freigeschaltet ist – der Admin nutzt die Studio-Karte im Kopf
     { id: "studio", sym: "🎬", t: "Studio", u: () => studioStufe() === "alles" ? "Foto · Mitschauen · Live zeigen" : "Live zeigen", aktion: "stOeffnen()", nur: () => !ICH?.admin && !!studioStufe() },
+    { id: "ungelesen_leitung", sym: "📭", t: "Ungelesen", u: "Wer hat meine Nachrichten noch nicht gelesen?", aktion: "ugStart()", nur: () => !!ICH?.vorstand && !ICH?.admin }, // 2.712.0 KC-CLUB-UNGELESEN-LEITUNG: Klaus, Dieter unter „Meins“
     { id: "einstellungen", sym: "⚙️", t: "Meine Einstellungen", u: "Push, Ton, Schrift", v: "einstellungen" },
     { id: "test", sym: "🧪", t: "Test an mich", u: "Push & Mail ausprobieren", aktion: "testAnMichStarten()" },
   ],
@@ -33824,7 +33825,7 @@ function favListe(liste) {
   return [...stern, ...oft];
 }
 const favKopfHtml = () => `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhFavAnsicht(false)">← Alle Chats</button><b>⭐ Favoriten</b><span class="hinweis" style="font-size:.85rem">mit ⭐ markiert + wo du am meisten schreibst</span></div>`;
-function favKnopfZeigen() { $("ugKnopf")?.classList.toggle("versteckt", !ICH?.admin); /* 2.709.0 KC-CLUB-UNGELESEN-ADMIN */ const k = $("uhFavKnopf"); if (k) { k.classList.toggle("haupt", !!UH.favAnsicht); k.setAttribute("aria-pressed", String(!!UH.favAnsicht)); } }
+function favKnopfZeigen() { $("ugKnopf")?.classList.toggle("versteckt", !ugDarf()); /* 2.709.0 KC-CLUB-UNGELESEN-ADMIN */ const k = $("uhFavKnopf"); if (k) { k.classList.toggle("haupt", !!UH.favAnsicht); k.setAttribute("aria-pressed", String(!!UH.favAnsicht)); } }
 function uhFavAnsicht(an) { UH.favAnsicht = !!an; UH.archivAnsicht = false; UH.wahl = null; unterhLaden(); }
 async function favSpeichern(fav, pers, an) {
   const w = { threads: [...fav].slice(0, 50), personen: [...pers].slice(0, 100) }, vorher = INIT?.einstellungen?.chat_favoriten;
@@ -34740,9 +34741,12 @@ async function naMerken(id, an) {
 // ---------- 2.709.0 KC-CLUB-UNGELESEN-ADMIN (Wunsch Hansi 27.10.2026 „Übersicht nur für Admin, welche meiner Chatnachrichten noch nicht gelesen wurden“) ----------
 // Zwei Ansichten: nach Person und nach Nachricht; Filter Zeitraum, Suche, nur wichtige, nur Einzelchats. Auch Rundschreiben an alle.
 // „💬 Erinnern“ öffnet den Chat mit fertigem Text – gesendet wird erst mit ➤ (nichts geht von selbst raus).
-const UG = { tage: 14, ansicht: "person", suche: "", wichtig: false, einzeln: false, d: null, auf: new Set() };
+// 2.712.0 KC-CLUB-UNGELESEN-LEITUNG: auch Klaus und Dieter (Clubleitung, Kachel unter „Meins“) – jeder nur seine eigenen Nachrichten.
+// Filter ordentlich: Ansicht als zwei gleich breite Knöpfe, Filter im Klappbereich „🔎 Filter“ (Zeitraum nebeneinander, Häkchen untereinander, Suche).
+const UG = { tage: 14, ansicht: "person", suche: "", wichtig: false, einzeln: false, d: null, auf: new Set(), filterAuf: false };
+const ugDarf = () => !!(ICH?.admin || ICH?.vorstand);
 async function ugStart(tage) {
-  if (!ICH?.admin) return;
+  if (!ugDarf()) return;
   if (tage) UG.tage = tage;
   if (!$("ugBlatt")) blattAuf("ugBlatt", '<h3 style="margin:0">📭 Noch nicht gelesen</h3><p class="hinweis">Wird geladen …</p>');
   try { UG.d = await api("ungelesen_uebersicht", { tage: UG.tage }, { warten: true }); } catch (e) { $("ugBlatt")?.remove(); return meldeFehler(e); }
@@ -34766,18 +34770,28 @@ function ugPersonen(liste) {
 const ugTageHer = (iso) => { const t = Math.floor((Date.now() - Date.parse(iso)) / 86400000); return t <= 0 ? "heute" : t === 1 ? "gestern" : `vor ${t} Tagen`; };
 function ugNachrichtZeile(n, mitNamen) {
   return `<div class="karte" style="margin:4px 0;padding:8px 10px"><div style="display:flex;justify-content:space-between;gap:6px"><small class="hinweis">${n.wichtig ? "⚠️ " : ""}${esc(n.chat)} · ${esc(zeitKurz(n.am))}</small>
-    <small><b>${n.empfaenger - n.offen.length} von ${n.empfaenger}</b> gelesen</small></div><div style="margin:2px 0">${esc(n.text || "📎")}</div>
+    <small style="white-space:nowrap"><b>${n.empfaenger - n.offen.length} von ${n.empfaenger}</b> gelesen</small></div><div style="margin:2px 0">${esc(n.text || "📎")}</div>
     ${mitNamen ? `<small class="hinweis">Noch nicht gelesen: ${n.offen.map((o) => esc(o.name)).join(", ")}</small>` : ""}
-    <div style="text-align:right"><button class="knopf klein" onclick="nachrichtInfo('${n.id}')">🚦 Ampel</button> <button class="knopf klein" onclick="$('ugBlatt')?.remove();chatOeffnen('${n.thread}')">💬 Chat</button></div></div>`;
+    <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px"><button class="knopf klein" onclick="nachrichtInfo('${n.id}')">🚦 Ampel</button><button class="knopf klein" onclick="$('ugBlatt')?.remove();chatOeffnen('${n.thread}')">💬 Chat</button></div></div>`;
+}
+function ugFilterText() {
+  const t = [`${UG.tage} Tage`]; if (UG.wichtig) t.push("nur wichtige"); if (UG.einzeln) t.push("nur Einzelchats"); if (UG.suche.trim()) t.push(`„${UG.suche.trim()}“`);
+  return t.join(" · ");
 }
 function ugZeigen() {
   const f = $("ugBlatt"); if (!f || !UG.d) return;
   const liste = ugGefiltert(), leute = ugPersonen(liste), offenSumme = liste.reduce((s, n) => s + n.offen.length, 0);
-  const knopf = (an, text, fn) => `<button class="knopf klein${an ? " haupt" : ""}" onclick="${fn}">${text}</button>`;
+  const knopf = (an, text, fn) => `<button type="button" class="knopf klein${an ? " haupt" : ""}" style="width:100%;margin:0" onclick="${fn}">${text}</button>`;
+  const reihe = (n, inhalt) => `<div style="display:grid;grid-template-columns:repeat(${n},1fr);gap:6px">${inhalt}</div>`;
+  const haken = (an, text, fn) => `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer"><input type="checkbox"${an ? " checked" : ""} onchange="${fn}"> ${text}</label>`;
   const kopf = `<h3 style="margin:0">📭 Noch nicht gelesen</h3><p class="hinweis" style="margin:2px 0 8px">Deine Nachrichten der letzten ${UG.d.tage} Tage: ${UG.d.gesamt} geschrieben, bei ${liste.length} fehlt noch jemand (${offenSumme}× ungelesen, ${leute.length} ${leute.length === 1 ? "Person" : "Personen"}).</p>
-    <div class="bu-knopfreihe" style="margin-bottom:6px">${knopf(UG.ansicht === "person", "👤 Nach Person", "UG.ansicht='person';ugZeigen()")}${knopf(UG.ansicht === "nachricht", "💬 Nach Nachricht", "UG.ansicht='nachricht';ugZeigen()")}</div>
-    <div class="bu-knopfreihe" style="margin-bottom:6px">${[7, 14, 30].map((t) => knopf(UG.tage === t, `${t} Tage`, `ugStart(${t})`)).join("")}${knopf(UG.wichtig, "⚠️ nur wichtige", "UG.wichtig=!UG.wichtig;ugZeigen()")}${knopf(UG.einzeln, "👤 nur Einzelchats", "UG.einzeln=!UG.einzeln;ugZeigen()")}</div>
-    <input id="ugSuche" type="search" placeholder="🔍 Name, Chat oder Text suchen" value="${esc(UG.suche)}" style="width:100%;margin-bottom:6px">`;
+    ${reihe(2, knopf(UG.ansicht === "person", "👤 Nach Person", "UG.ansicht='person';ugZeigen()") + knopf(UG.ansicht === "nachricht", "💬 Nach Nachricht", "UG.ansicht='nachricht';ugZeigen()"))}
+    <details class="karte" id="ugFilter" style="margin:8px 0;padding:8px 10px"${UG.filterAuf ? " open" : ""}><summary style="display:block;cursor:pointer"><b>🔎 Filter</b> <small class="hinweis">· ${esc(ugFilterText())}</small></summary>
+      <div style="margin-top:8px"><small class="hinweis">Zeitraum</small>${reihe(3, [7, 14, 30].map((t) => knopf(UG.tage === t, `${t} Tage`, `ugStart(${t})`)).join(""))}</div>
+      <div style="margin-top:8px"><small class="hinweis">Nur zeigen</small>${haken(UG.wichtig, "⚠️ nur wichtige Nachrichten", "UG.wichtig=this.checked;ugZeigen()")}${haken(UG.einzeln, "👤 nur Einzelchats (keine Gruppen)", "UG.einzeln=this.checked;ugZeigen()")}</div>
+      <div style="margin-top:8px"><small class="hinweis">Suchen</small><input id="ugSuche" type="search" placeholder="🔍 Name, Chat oder Text" value="${esc(UG.suche)}" style="width:100%;box-sizing:border-box"></div>
+      ${UG.wichtig || UG.einzeln || UG.suche.trim() || UG.tage !== 14 ? `<div style="margin-top:8px">${knopf(false, "↺ Filter zurücksetzen", "UG.wichtig=false;UG.einzeln=false;UG.suche='';UG.tage===14?ugZeigen():ugStart(14)")}</div>` : ""}
+    </details>`;
   let inhalt;
   if (!liste.length) inhalt = `<p class="hinweis">✅ ${UG.d.nachrichten.length ? "Nichts passt zum Filter." : "Alle haben deine Nachrichten gelesen."}</p>`;
   else if (UG.ansicht === "person") inhalt = leute.map((e) => `<details class="karte" style="margin:4px 0;padding:8px 10px"${UG.auf.has(e.person_id) ? " open" : ""} data-ug="${esc(e.person_id)}"><summary style="display:block;cursor:pointer">▸ <b>${esc(e.name)}</b> – ${e.n} offen${e.w ? ` <small>(⚠️ ${e.w} wichtig)</small>` : ""}<br>
@@ -34786,6 +34800,7 @@ function ugZeigen() {
   else inhalt = liste.map((n) => ugNachrichtZeile(n, true)).join("");
   f.querySelector(".blatt-innen").innerHTML = `${kopf}<div id="ugInhalt">${inhalt}</div><div class="knoepfe"><button class="knopf" onclick="$('ugBlatt').remove()">Schließen</button></div>`;
   f.querySelectorAll("details[data-ug]").forEach((d) => (d.ontoggle = () => { d.open ? UG.auf.add(d.dataset.ug) : UG.auf.delete(d.dataset.ug); }));
+  $("ugFilter").ontoggle = () => { UG.filterAuf = $("ugFilter").open; };
   const s = $("ugSuche"); s.oninput = () => { UG.suche = s.value; const p = s.selectionStart; ugZeigen(); const n = $("ugSuche"); n.focus(); n.setSelectionRange(p, p); };
 }
 async function ugErinnern(pid, n) {
