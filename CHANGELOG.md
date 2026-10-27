@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.699.0 – 2026-10-27 – Aktentasche: vorläufig gepackt, Neues kommt von selbst
+KC-CLUB-AKTENTASCHE-STUFEN: Knopf 💼 auch bei „Sitzung vorbereiten“. Stufen: wird gepackt · 🟠 vorläufig gepackt (liegt schon in der Clubabend-Kachel) · ✅ fertig gepackt. Neue Unterlagen (Vorschläge, Protokollentwurf, Anlagen) kommen bis zur Sitzung automatisch in die Tasche, mit 🆕 markiert (Hinweis in Tasche und Info-Feld, ✓ Gesehen); Herausgenommenes kommt nicht wieder. DB: Stufe vorläufig, Spalte entfernt.
+
 ## 2.698.0 – 2026-10-27 – Aktentasche auch im Büro-Raum
 KC-CLUB-AKTENTASCHE-RAUM: Knopf 💼 Aktentasche auch in der Büro-Raum-Ansicht (Regal/Schreibtisch), nicht nur in der Liste.
 

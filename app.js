@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.698.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.699.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28300,9 +28300,13 @@ function ilMeldungen() {
       + (th.schluss ? ` · ⏰ Einreichen bis ${wann(th.schluss)}` : "")),
     auf: "zeige('vorschlaege')", knoepfe: [...(th.anzahl ? [["👍 Abstimmen", "zeige('vorschlaege')"]] : []), ["＋ Thema", `ilThemaNeu('${esc(th.treffen)}')`]] });
   // 2.695.0 KC-CLUB-AKTENTASCHE: Leitung – in der Woche vor der Sitzung an die Aktentasche erinnern, bis sie gepackt ist
-  if (ICH?.vorstand && th?.tasche && th.tasche !== "gepackt" && t?.id === th.treffen && Date.parse(t.beginn) - Date.now() < 7 * 86400000 && Date.parse(t.beginn) > Date.now())
-    add({ id: "aktentasche:" + th.treffen, stufe: "gold", sym: "💼", t: `Aktentasche für die Sitzung am ${fTag.format(new Date(t.beginn))} packen`,
-      u: th.tasche === "offen" ? "Wird schon gepackt – noch nicht fertig" : "Mein Vorschlag liegt bereit: Protokoll, Einladung, Vorschläge …", auf: `atOeffnen('${esc(th.treffen)}')` });
+  { const ts = th?.tasche && typeof th.tasche === "object" ? th.tasche : th?.tasche ? { status: th.tasche, neu: 0 } : null; // 2.699.0: { status, neu }
+    if (ICH?.vorstand && ts && t?.id === th.treffen && Date.parse(t.beginn) > Date.now()) {
+      if (ts.neu > 0) add({ id: "aktentasche_neu:" + th.treffen + ":" + ts.neu, stufe: "gold", sym: "🆕", t: `Aktentasche: ${ts.neu} ${ts.neu === 1 ? "neue Unterlage" : "neue Unterlagen"} nachgepackt`,
+        u: `Für die Sitzung am ${fTag.format(new Date(t.beginn))} – antippen zum Ansehen`, auf: `atOeffnen('${esc(th.treffen)}')` });
+      else if (ts.status !== "gepackt" && Date.parse(t.beginn) - Date.now() < 7 * 86400000)
+        add({ id: "aktentasche:" + th.treffen, stufe: "gold", sym: "💼", t: `Aktentasche für die Sitzung am ${fTag.format(new Date(t.beginn))} ${ts.status === "vorlaeufig" ? "fertig packen" : "packen"}`,
+          u: ts.status === "vorlaeufig" ? "Vorläufig gepackt – Neues kommt von selbst dazu" : ts.status === "offen" ? "Wird schon gepackt – noch nicht fertig" : "Mein Vorschlag liegt bereit: Protokoll, Einladung, Vorschläge …", auf: `atOeffnen('${esc(th.treffen)}')` }); } }
   // 2.694.0 KC-CLUB-ANMELDESCHLUSS: Leitung – dringende Vorschläge nach Anmeldeschluss, wer zuerst tippt, entscheidet
   for (const d of (ICH?.vorstand && th?.dringend) || []) add({ id: "dringend:" + d.id, stufe: "rot", sym: "❗", t: `Dringender Vorschlag: ${d.titel}`, u: `${d.von ? "Von " + d.von + " · " : ""}nach Anmeldeschluss – bitte entscheiden`,
     auf: "zeige('vorschlaege')", ohneAus: true, knoepfe: [["✅ Als TOP", `vsDringend('${esc(d.id)}', 'aufnehmen')`], ["📅 Nächste Sitzung", `vsDringend('${esc(d.id)}', 'ablehnen')`]] });
@@ -31400,7 +31404,7 @@ function buSitzungHtml() {
   const haken = (x) => `<label class="bu-haken${f.anwesend.has(x.person_id) ? " an" : ""}"><input type="checkbox" ${f.anwesend.has(x.person_id) ? "checked" : ""} onchange="buAnw('${x.person_id}', this.checked)"> ${esc(x.name)} <small>${x.antwort === "ja" ? "✅" : x.antwort === "vielleicht" ? "❓" : ""}</small></label>`;
   const verfuegbar = s.vorschlaege.filter((v) => !f.tagesordnung.some((t) => t.id === v.id));
   // 1.37.0: nur Leserecht → alles sichtbar, aber gesperrt (fieldset disabled); Drucken bleibt
-  return `${buSchreiben() ? "" : '<p class="bu-tipp">👁️ Nur ansehen – Ändern schaltet der Admin frei.</p>'}<fieldset class="bu-fs"${buSchreiben() ? "" : " disabled"}><div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>Köcheclub Werne</b><br><span style="font-size:1.15rem;font-weight:800">${esc(s.treffen.titel)}</span><br>${esc(wann(s.treffen.beginn, true))}${s.treffen.ort ? " · 📍 " + esc(s.treffen.ort) : ""}</div></div>
+  return `${ICH?.vorstand && s.treffen?.id ? `<button class="knopf at-sitzung" onclick="atOeffnen('${esc(s.treffen.id)}')">💼 Aktentasche für diese Sitzung</button>` : ""}${buSchreiben() ? "" : '<p class="bu-tipp">👁️ Nur ansehen – Ändern schaltet der Admin frei.</p>'}<fieldset class="bu-fs"${buSchreiben() ? "" : " disabled"}><div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>Köcheclub Werne</b><br><span style="font-size:1.15rem;font-weight:800">${esc(s.treffen.titel)}</span><br>${esc(wann(s.treffen.beginn, true))}${s.treffen.ort ? " · 📍 " + esc(s.treffen.ort) : ""}</div></div>
     <div class="karte"><h3 style="margin-top:0">1️⃣ Wer ist dabei?</h3><p class="hinweis" style="margin:0 0 6px">Angehakt sind alle, die zugesagt haben. Antippen ändert es.</p>
       <div class="bu-haken-liste">${rest.map(haken).join("")}</div>
       <p style="margin:10px 0 0"><b>Entschuldigt:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` <small class="hinweis">(${esc(x.notiz)})</small>` : "")).join(", ") : "–"}</p></div>
@@ -38189,6 +38193,8 @@ const AT_REG = { packliste: ["📋", "Packliste"], einladung: ["🗓️", "Einla
   mitglieder: ["👥", "Mitglieder"], aufgaben: ["📌", "Aufgaben"], sonstiges: ["📎", "Sonstiges"] };
 const AT_ART_SYM = { tagesordnung: "🗓️", teilnehmer: "👥", protokoll: "📝", vorschlag: "💡", abstimmung: "🗳️", aufgaben: "📌" };
 const AT = { tid: null, d: null, reg: "packliste", notizUhr: null };
+const AT_STAND = { offen: "💼 wird gepackt", vorlaeufig: "🟠 vorläufig gepackt", gepackt: "✅ gepackt" }; // 2.699.0 KC-CLUB-AKTENTASCHE-STUFEN
+
 const atSym = (i) => (i.art === "anlage" ? arDateiSym(i.mime) : AT_ART_SYM[i.art] || "📄");
 const atKopf = () => { const t = AT.d?.treffen; return t ? `${t.titel} · ${wann(t.beginn)}` : ""; };
 const atTeil = (k) => (AT.d?.tasche?.inhalt || []).find((i) => i.k === k);
@@ -38197,7 +38203,7 @@ async function atStart() {
   if (!r.termine.length) return melde("In den nächsten Wochen steht kein Termin im Kalender.", true);
   const erst = r.termine.find((t) => t.art === "treffen")?.id || r.termine[0].id;
   const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">💼 Aktentasche – für welchen Anlass?</h3>
-    <div class="ca-wahl">${r.termine.map((t) => `<button type="button" class="knopf${t.id === erst ? " haupt" : ""}" data-id="${esc(t.id)}" style="text-align:left">${t.art === "treffen" ? "🍽️" : "📅"} ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}${t.tasche ? `<br><small>${t.tasche.status === "gepackt" ? "✅ gepackt" : "💼 wird gepackt"} · ${t.tasche.anzahl} ${t.tasche.anzahl === 1 ? "Teil" : "Teile"}</small>` : ""}</button>`).join("")}</div>
+    <div class="ca-wahl">${r.termine.map((t) => `<button type="button" class="knopf${t.id === erst ? " haupt" : ""}" data-id="${esc(t.id)}" style="text-align:left">${t.art === "treffen" ? "🍽️" : "📅"} ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}${t.tasche ? `<br><small>${AT_STAND[t.tasche.status] || ""} · ${t.tasche.anzahl} ${t.tasche.anzahl === 1 ? "Teil" : "Teile"}</small>` : ""}</button>`).join("")}</div>
     ${r.frueher?.length ? `<button type="button" class="knopf" data-a="archiv" style="width:100%;margin-top:8px">🗄️ Frühere Taschen ansehen (${r.frueher.length})</button>` : ""}`, () => f.remove());
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
   const archiv = f.querySelector('[data-a="archiv"]'); if (archiv) archiv.onclick = () => { f.remove(); atArchivTaschen(r.frueher); };
@@ -38206,7 +38212,7 @@ async function atStart() {
 // 2.696.0 KC-CLUB-AKTENTASCHE-ARCHIV (Wunsch Hansi „gepackte Taschen wieder ansehen und evtl. für eine andere Sitzung reaktivieren“): frühere Taschen bleiben
 function atArchivTaschen(liste) {
   const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen" title="Schließen">✕</button><h3 class="dlg-kopf">🗄️ Frühere Taschen</h3>
-    <div class="ca-wahl">${liste.map((t) => `<button type="button" class="knopf" data-id="${esc(t.id)}" style="text-align:left">💼 ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}<br><small>${t.tasche.status === "gepackt" ? "✅ gepackt" : "💼 nicht fertig gepackt"} · ${t.tasche.anzahl} ${t.tasche.anzahl === 1 ? "Teil" : "Teile"}</small></button>`).join("")}</div>`, () => f.remove());
+    <div class="ca-wahl">${liste.map((t) => `<button type="button" class="knopf" data-id="${esc(t.id)}" style="text-align:left">💼 ${esc(wann(t.beginn))} – ${esc(t.titel || "Termin")}<br><small>${t.tasche.status === "offen" ? "💼 nicht fertig gepackt" : AT_STAND[t.tasche.status]} · ${t.tasche.anzahl} ${t.tasche.anzahl === 1 ? "Teil" : "Teile"}</small></button>`).join("")}</div>`, () => f.remove());
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
   f.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { f.remove(); atOeffnen(b.dataset.id); }));
 }
@@ -38253,12 +38259,14 @@ function atZeichnen() {
   const tabs = ["packliste", ...d.register].map((r) => { const n = r === "packliste" ? inh.length : zahl(r);
     return `<button type="button" class="chip${AT.reg === r ? " an" : ""}" onclick="atRegister('${r}')">${AT_REG[r][0]} ${AT_REG[r][1]}${n ? ` <small>(${n})</small>` : ""}</button>`; }).join("");
   const teil = (i, liste) => `<div class="at-teil${i.dabei ? " dabei" : ""}">${liste ? `<button type="button" class="at-haken" aria-label="${i.dabei ? "Doch nicht dabei" : "Liegt dabei"}" title="${i.dabei ? "liegt dabei" : "antippen, wenn es dabei ist"}" onclick="atDabei('${esc(i.k)}', ${!i.dabei})">${i.dabei ? "☑️" : "⬜"}</button>` : ""}
-    <button type="button" class="at-teil-text" onclick="atTeilOeffnen('${esc(i.k)}')"><b>${atSym(i)} ${esc(i.titel)}</b>${i.unter ? `<br><small>${esc(i.unter)}</small>` : ""}${i.vonName ? `<br><small class="hinweis">eingepackt von ${esc(i.vonName)}</small>` : ""}</button>
+    <button type="button" class="at-teil-text" onclick="atTeilOeffnen('${esc(i.k)}')"><b>${i.neu ? '<span class="marke gelb">🆕 neu</span> ' : ""}${atSym(i)} ${esc(i.titel)}</b>${i.unter ? `<br><small>${esc(i.unter)}</small>` : ""}<br><small class="hinweis">${i.vonName ? `eingepackt von ${esc(i.vonName)}` : "von selbst nachgepackt"}</small></button>
     <button type="button" class="rund at-mehr" aria-label="Mehr zu ${esc(i.titel)}" title="Mehr" onclick="atTeilMenue('${esc(i.k)}')">⋮</button></div>`;
   let inhalt;
   if (AT.reg === "packliste") {
     const dabei = inh.filter((i) => i.dabei).length, fehlt = d.vorschlag.filter((v) => !inh.some((i) => i.k === v.k)).length;
-    inhalt = `<p class="hinweis" style="margin:4px 0">Alles, was in der Tasche ist. ⬜ antippen, wenn es eingepackt bzw. dabei ist – <b>${dabei} von ${inh.length}</b>.</p>`
+    const neu = inh.filter((i) => i.neu).length;
+    inhalt = (neu ? `<div class="karte at-neu">🆕 <b>${neu} ${neu === 1 ? "Unterlage ist" : "Unterlagen sind"} von selbst nachgekommen</b> – unten mit 🆕 markiert. Was nicht gebraucht wird: ⋮ → aus der Tasche nehmen.<br><button class="knopf" style="margin-top:6px" onclick="atAendern({ op: 'gesehen' })">✓ Gesehen</button></div>` : "")
+      + `<p class="hinweis" style="margin:4px 0">Alles, was in der Tasche ist. ⬜ antippen, wenn es eingepackt bzw. dabei ist – <b>${dabei} von ${inh.length}</b>.</p>`
       + d.register.filter((r) => zahl(r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => teil(i, true)).join("")}`).join("")
       + `<label class="feld" style="margin-top:12px">📝 Notizen <small class="hinweis" id="atNotizStand">${x.geaendert ? `zuletzt geändert von ${esc(x.geaendert)}` : ""}</small>
         <textarea id="atNotiz" rows="8" placeholder="Eigene Notizen für diesen Termin – speichert sich von selbst. Alle drei sehen dieselben Notizen." oninput="atNotizTippen()" onblur="atNotizJetzt()">${esc(x.notiz || "")}</textarea></label>`
@@ -38269,11 +38277,13 @@ function atZeichnen() {
       + `<div class="at-reg-kopf">＋ Dazulegen</div><div class="knoepfe at-dazu"><button class="knopf" onclick="atDatei('kamera')">📷 Foto</button><button class="knopf" onclick="atDatei('galerie')">🖼️ Galerie</button>
         <button class="knopf" onclick="atDatei('pdf')">📄 PDF</button><button class="knopf" onclick="atDatei('datei')">📁 Datei</button><button class="knopf" onclick="atArchiv()">🗄️ Archiv</button></div>`;
   }
-  const status = x.status === "gepackt" ? `<span class="marke gruen">✅ gepackt${x.gepackt ? " von " + esc(x.gepackt) : ""}</span>` : `<span class="marke gelb">💼 wird gepackt</span>`;
+  const status = `<span class="marke ${x.status === "gepackt" ? "gruen" : "gelb"}">${AT_STAND[x.status] || AT_STAND.offen}${x.status !== "offen" && x.gepackt ? " von " + esc(x.gepackt) : ""}</span>`
+    + (x.status !== "gepackt" && !atVorbei() ? `<br><small>Neue Unterlagen (Vorschläge, Protokollentwurf, Anlagen) kommen bis zur Sitzung von selbst dazu – mit 🆕.</small>` : "");
   const archiv = atVorbei() ? `<div class="karte at-archiv">🗄️ <b>Aus dem Archiv</b> – der Termin ist vorbei.<br><button class="knopf haupt" style="margin-top:6px" onclick="atUebernehmen()">🔁 Für eine andere Sitzung übernehmen</button></div>` : "";
   const f = blattAuf("atBlatt", `<h3 style="margin:0">💼 Aktentasche</h3><p class="hinweis" style="margin:2px 0 6px">${esc(atKopf())}<br>${status}</p>${archiv}
     <div class="hl-chips at-tabs">${tabs}</div><div class="at-inhalt">${inhalt}</div>
-    <div class="knoepfe bs-fuss">${x.status === "gepackt" ? `<button class="knopf" onclick="atStatus('offen', this)">↩️ Noch etwas ändern</button>` : `<button class="knopf haupt" onclick="atStatus('gepackt', this)">✔ Tasche gepackt – fertig</button>`}
+    <div class="knoepfe bs-fuss">${x.status === "gepackt" ? `<button class="knopf" onclick="atStatus('vorlaeufig', this)">↩️ Doch nur vorläufig</button>`
+      : `${x.status === "offen" ? `<button class="knopf" onclick="atStatus('vorlaeufig', this)">🟠 Vorläufig gepackt</button>` : ""}<button class="knopf haupt" onclick="atStatus('gepackt', this)">✔ Fertig gepackt</button>`}
       <button class="knopf" onclick="atNotizJetzt();$('atBlatt').remove()">Schließen</button></div>`);
   f.querySelector(".blatt-innen").scrollTop = alt;
 }
@@ -38286,9 +38296,9 @@ function atDabei(k, an) { return atAendern({ op: "dabei", k, an }); }
 async function atStatus(st, knopf) {
   atNotizJetzt();
   if (st === "gepackt") { const offen = (AT.d.tasche?.inhalt || []).filter((i) => !i.dabei).length;
-    if (offen && !(await frage(`✔ Tasche gepackt?\n\n${offen} ${offen === 1 ? "Teil ist" : "Teile sind"} noch nicht abgehakt. Trotzdem als gepackt melden? Dann liegt die Tasche am Abend in der Kachel 🍽️ Clubabend – nur bei Clubsprecher, Kassenwart und Admin.`, { ja: "✔ Ja, gepackt", nein: "Noch nicht", gefahr: false }))) return; }
+    if (offen && !(await frage(`✔ Fertig gepackt?\n\n${offen} ${offen === 1 ? "Teil ist" : "Teile sind"} noch nicht abgehakt. Trotzdem als gepackt melden? Dann liegt die Tasche am Abend in der Kachel 🍽️ Clubabend – nur bei Clubsprecher, Kassenwart und Admin.`, { ja: "✔ Ja, gepackt", nein: "Noch nicht", gefahr: false }))) return; }
   const r = await atAendern({ op: "status", status: st }, knopf);
-  if (r) melde(st === "gepackt" ? "✅ Tasche gepackt – sie liegt am Abend in der Kachel 🍽️ Clubabend" : "💼 Tasche ist wieder offen zum Packen");
+  if (r) melde(st === "gepackt" ? "✅ Tasche fertig gepackt – sie liegt am Abend in der Kachel 🍽️ Clubabend" : st === "vorlaeufig" ? "🟠 Vorläufig gepackt – liegt schon in der Kachel 🍽️ Clubabend, Neues kommt von selbst dazu" : "💼 Tasche ist wieder offen zum Packen");
 }
 function atNotizTippen() {
   clearTimeout(AT.notizUhr); const s = $("atNotizStand"); if (s) s.textContent = "✏️ …";
@@ -38454,7 +38464,7 @@ function caZeichnen() {
   const auf = r.aufgaben.length ? r.aufgaben.map((a) => `<div>📌 <b>${esc(String(a.wer).split(" ")[0])}</b>: ${esc(a.text)}${a.faellig ? ` <small class="hinweis">(bis ${esc(fTag.format(new Date(a.faellig + "T12:00:00")))})</small>` : ""}</div>`).join("") : `<p class="hinweis">Keine offenen Aufgaben${r.letztesProtokoll ? " aus dem letzten Protokoll" : ""}.</p>`;
   const f = blattAuf("caBlatt", `<h3 style="margin:0">🍽️ ${/clubabend/i.test(tr.titel || "") ? esc(tr.titel) : `Clubabend – ${esc(tr.titel || "Köcheclub")}`}</h3>
     <p class="hinweis" style="margin:2px 0 8px">${esc(wann(tr.beginn))}${tr.ort ? " · " + esc(tr.ort) : ""}${L ? "" : " · nur ansehen – abhaken macht die Clubleitung"}</p>
-    ${L && r.aktentasche ? `<button type="button" class="knopf haupt ca-tasche" onclick="atOeffnen('${esc(tr.id)}')">💼 Aktentasche öffnen <small>(${r.aktentasche.anzahl} ${r.aktentasche.anzahl === 1 ? "Teil" : "Teile"})</small></button>` : ""}
+    ${L && r.aktentasche ? `<button type="button" class="knopf haupt ca-tasche" onclick="atOeffnen('${esc(tr.id)}')">💼 Aktentasche öffnen <small>(${r.aktentasche.anzahl} ${r.aktentasche.anzahl === 1 ? "Teil" : "Teile"}${r.aktentasche.vorlaeufig ? " · vorläufig" : ""})</small></button>` : ""}
     ${klappe("top", `📋 Tagesordnung <small>(${fertig} von ${r.tagesordnung.length} erledigt)</small>`, `<div class="ca-liste">${top || '<p class="hinweis">Noch keine Tagesordnung.</p>'}</div>`)}
     ${klappe("da", `✅ Anwesend <small>(${r.anwesend.length})</small>`, anw)}
     ${L ? `<div class="knoepfe ca-leitung"><button type="button" class="knopf" data-k="protokoll">📝 Protokoll ${r.protokoll ? "öffnen" : "anlegen"}</button><button type="button" class="knopf" data-k="termin">🗓️ Nächsten Termin abstimmen</button></div>` : ""}

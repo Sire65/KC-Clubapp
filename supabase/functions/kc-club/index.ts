@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.696.0";
+const SERVER_VERSION = "2.699.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5925,15 +5925,33 @@ async function atAendern(ich: Ich, tid: string, aenderung: (x: any) => void) {
       if (error && !/duplicate|unique/i.test(String(error.message))) throw new Fehler("Die Aktentasche konnte nicht angelegt werden.", 500);
       x = neu ?? await atTasche(tid); if (!x) continue;
     }
-    const kopie = { ...x, inhalt: [...(x.inhalt ?? [])] };
+    const kopie = { ...x, inhalt: [...(x.inhalt ?? [])], entfernt: [...(x.entfernt ?? [])] };
     aenderung(kopie);
     if (kopie.inhalt.length > AT_MAX) throw new Fehler(`Die Tasche ist voll (höchstens ${AT_MAX} Teile).`);
-    const { data: hit, error } = await db.from("kc_club_aktentasche").update({ inhalt: kopie.inhalt, notiz: kopie.notiz, status: kopie.status, gepackt_von: kopie.gepackt_von ?? null,
+    const { data: hit, error } = await db.from("kc_club_aktentasche").update({ inhalt: kopie.inhalt, notiz: kopie.notiz, status: kopie.status, gepackt_von: kopie.gepackt_von ?? null, entfernt: kopie.entfernt ?? [],
       gepackt_am: kopie.gepackt_am ?? null, version: x.version + 1, geaendert_von: ich.person_id, geaendert_am: jetzt() }).eq("id", x.id).eq("version", x.version).select().maybeSingle();
     if (error) throw new Fehler("Die Aktentasche konnte nicht gespeichert werden.", 500);
     if (hit) return hit;
   }
   throw new Fehler("Gerade packt jemand anderes – bitte gleich noch einmal versuchen.", 409);
+}
+// 2.699.0 KC-CLUB-AKTENTASCHE-STUFEN (Hansi „erst kommen die ganzen Unterlagen … danach in die Tasche“, Antwort „A: automatisch“): ist die Tasche
+// einmal gepackt, kommen neue Unterlagen von selbst hinein – mit 🆕 markiert, bis jemand „gesehen“ tippt. Herausgenommenes (entfernt) kommt nie wieder.
+async function atNachpacken(ich: Ich, t: any, x: any, v?: any) {
+  if (!x || !(x.inhalt ?? []).length) return { x, v, neu: 0 };
+  v ??= await atVorschlag(ich, t);
+  const raus = new Set((x.entfernt ?? []).map(String)), drin = new Set((x.inhalt ?? []).map((i: any) => i.k));
+  const neue = (v.liste as any[]).filter((i) => i.vor && !drin.has(i.k) && !raus.has(i.k));
+  if (!neue.length) return { x, v, neu: 0 };
+  const y = await atAendern(ich, t.id, (k) => { for (const i of neue) if (!k.inhalt.some((z: any) => z.k === i.k)) { const { vor: _v, grund: _g, ...rest } = i; k.inhalt.push({ ...rest, von: null, am: jetzt(), dabei: false, neu: true }); } });
+  return { x: y, v, neu: neue.length };
+}
+// Startdaten (nur Leitung): Stand + 🆕-Zahl; in der Woche vor der Sitzung im Hintergrund nachpacken (Start bleibt schnell – zählt beim nächsten Mal)
+async function atStartStand(ich: Ich, s0: any) {
+  const x = await atTasche(s0.id); if (!x) return { status: "keine", neu: 0 };
+  if ((x.inhalt ?? []).length && new Date(s0.beginn).getTime() - Date.now() < 7 * 86400000)
+    nebenbei(atTermin(s0.id).then((t) => atNachpacken(ich, t, x)).catch((e) => console.error("aktentasche nachpacken", String(e))));
+  return { status: x.status, neu: (x.inhalt ?? []).filter((i: any) => i.neu).length };
 }
 async function atTermin(tid: string) {
   if (!/^[0-9a-f-]{36}$/i.test(tid)) throw new Fehler("Bitte einen Termin wählen.");
@@ -5959,7 +5977,7 @@ async function clubabendStand(ich: Ich, t: any) {
   const namen = new Map(b.mitglieder.map((m: any) => [m.person_id, m.name]));
   const at = ich.vorstand ? await atTasche(t.id).catch(() => null) : null; // 2.695.0 KC-CLUB-AKTENTASCHE: nur die Leitung, nur wenn gepackt
   return { aktiv: true, leitung: ich.vorstand, treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende ?? null, ort: t.ort ?? null },
-    aktentasche: at?.status === "gepackt" ? { anzahl: (at.inhalt ?? []).length } : null,
+    aktentasche: at && at.status !== "offen" ? { anzahl: (at.inhalt ?? []).length, vorlaeufig: at.status === "vorlaeufig" } : null, // 2.699.0: auch vorläufig gepackt
     tagesordnung: top, anwesend: anwesend.map((id) => ({ person_id: id, name: namen.get(id) || id })),
     ...(ich.vorstand ? { mitglieder: b.mitglieder.map((m: any) => ({ person_id: m.person_id, name: m.name, zusage: m.antwort })), protokoll: b.protokoll } : {}),
     geburtstage: gb, aufgaben: b.aufgaben.filter((a: any) => !a.erledigt), letztesProtokoll: b.letztes, album, seit: von };
@@ -8618,7 +8636,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // 2.694.0 KC-CLUB-ANMELDESCHLUSS: Frist für die Info; Leitung: dringende Vorschläge, die auf eine Entscheidung warten
           const { data: dr } = ich.vorstand ? await db.from("kc_club_vorschlaege").select("id,titel,erstellt_von").eq("status", "offen").eq("dringend->>stand", "offen").limit(10) : { data: [] as any[] };
           const drVon = (dr ?? []).length ? await personen((dr ?? []).map((x: any) => x.erstellt_von)) : new Map();
-          const tasche = ich.vorstand ? (await db.from("kc_club_aktentasche").select("status").eq("treffen_id", s0.id).maybeSingle()).data?.status ?? "keine" : null; // 2.695.0 KC-CLUB-AKTENTASCHE
+          const tasche = ich.vorstand ? await atStartStand(ich, s0).catch(() => null) : null; // 2.695.0/2.699.0 KC-CLUB-AKTENTASCHE
           return { treffen: s0.id, anzahl: ids.length, offen: ids.length - (meine ?? []).length, schluss: anmeldeschluss(s0.beginn).toISOString(), tasche,
             dringend: (dr ?? []).map((x: any) => ({ id: x.id, titel: x.titel, von: vorname(drVon.get(x.erstellt_von) ?? null) || drVon.get(x.erstellt_von)?.display_name || "" })) };
         })().catch(() => null);
@@ -15659,7 +15677,8 @@ Köcheclub Werne`,
       case "aktentasche_holen": {
         nurVorstand(ich);
         const t = await atTermin(String(p.treffen_id || ""));
-        const [v, x] = await Promise.all([atVorschlag(ich, t), atTasche(t.id)]);
+        const [v, x0] = await Promise.all([atVorschlag(ich, t), atTasche(t.id)]);
+        const x = Date.parse(t.beginn) > Date.now() - 12 * 3600000 ? (await atNachpacken(ich, t, x0, v)).x : x0; // vorbei → Archiv, nichts mehr nachpacken
         return json({ treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, art: t.art }, tasche: await atAnzeige(x), vorschlag: v.liste, blatt: v.blatt, register: AT_REGISTER });
       }
       case "aktentasche_aendern": {
@@ -15669,8 +15688,10 @@ Köcheclub Werne`,
         let x: any;
         if (op === "packen") { // nur Teile aus dem Vorschlag des Servers – nichts Fremdes
           const want = new Set((Array.isArray(p.keys) ? p.keys : []).map(String));
-          const v = (await atVorschlag(ich, t)).liste.filter((i: any) => want.has(i.k));
-          x = await atAendern(ich, t.id, (k) => { for (const i of v) if (!k.inhalt.some((y: any) => y.k === i.k)) { const { vor: _v, grund: _g, ...rest } = i; k.inhalt.push(neuTeil(rest)); } });
+          const vAlle = await atVorschlag(ich, t), v = vAlle.liste.filter((i: any) => want.has(i.k));
+          const alle = vAlle.liste.map((i: any) => i.k);
+          x = await atAendern(ich, t.id, (k) => { for (const i of v) if (!k.inhalt.some((y: any) => y.k === i.k)) { const { vor: _v, grund: _g, ...rest } = i; k.inhalt.push(neuTeil(rest)); }
+            k.entfernt = [...new Set([...k.entfernt.filter((z: string) => !want.has(z)), ...alle.filter((z: string) => !want.has(z) && !k.inhalt.some((y: any) => y.k === z))])]; }); // nicht Gewähltes kommt nicht automatisch nach
         } else if (op === "dazu") {
           const d = p.datei ?? {}, id = String(d.id || ""), reg = AT_REGISTER.includes(String(p.reg)) ? String(p.reg) : "sonstiges", archiv = p.quelle === "archiv";
           if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Fehler("Datei fehlt.");
@@ -15702,15 +15723,17 @@ Köcheclub Werne`,
             if (oe) throw new Fehler("Übernommen – aber die Dateien sind für die anderen noch nicht freigegeben. Bitte noch einmal versuchen.", 500); }
           await protokoll(ich.person_id, "aktentasche_uebernommen", { von: von.id, nach: t.id, dateien: dateien.length });
         } else if (op === "weg") {
-          const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.filter((y: any) => y.k !== k0); });
+          const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.filter((y: any) => y.k !== k0); if (!k0.startsWith("datei:") && !k.entfernt.includes(k0)) k.entfernt.push(k0); });
         } else if (op === "dabei") {
-          const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.map((y: any) => (y.k === k0 ? { ...y, dabei: !!p.an } : y)); });
+          const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.map((y: any) => (y.k === k0 ? { ...y, dabei: !!p.an, neu: false } : y)); });
+        } else if (op === "gesehen") { // 2.699.0: 🆕-Markierungen weg
+          x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.map((y: any) => (y.neu ? { ...y, neu: false } : y)); });
         } else if (op === "notiz") {
           const n = txt(p.text, 20000); x = await atAendern(ich, t.id, (k) => { k.notiz = n; });
         } else if (op === "status") {
-          const g = p.status === "gepackt";
-          x = await atAendern(ich, t.id, (k) => { k.status = g ? "gepackt" : "offen"; k.gepackt_von = g ? ich.person_id : null; k.gepackt_am = g ? jetzt() : null; });
-          await protokoll(ich.person_id, g ? "aktentasche_gepackt" : "aktentasche_geoeffnet", { treffen: t.id, teile: (x.inhalt ?? []).length });
+          const st = ["gepackt", "vorlaeufig"].includes(String(p.status)) ? String(p.status) : "offen", g = st !== "offen"; // 2.699.0: + vorläufig gepackt
+          x = await atAendern(ich, t.id, (k) => { k.status = st; k.gepackt_von = g ? ich.person_id : null; k.gepackt_am = g ? jetzt() : null; });
+          await protokoll(ich.person_id, "aktentasche_" + st, { treffen: t.id, teile: (x.inhalt ?? []).length });
         } else throw new Fehler("Unbekannter Schritt.");
         return json({ ok: true, tasche: await atAnzeige(x) });
       }
