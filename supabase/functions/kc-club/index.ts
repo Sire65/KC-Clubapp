@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.699.0";
+const SERVER_VERSION = "2.709.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -12984,6 +12984,51 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, p.an ? "nachricht_wichtig_an" : "nachricht_wichtig_aus", { nachricht: m.id });
         return json({ ok: true });
       }
+      // ----- 2.709.0 KC-CLUB-UNGELESEN-ADMIN (Wunsch Hansi 27.10.2026 „Übersicht nur für Admin, welche meiner Chatnachrichten noch nicht gelesen wurden“):
+      // nur EIGENE Nachrichten des Admins (7/14/30 Tage), auch Rundschreiben an alle. „Gelesen“ = Chat bis zu dieser Nachricht in der App geöffnet
+      // (last_read_at – dieselbe Grundlage wie die Häkchen). Nur beim Öffnen berechnet: kein Zeitplan, keine neue Tabelle. Ohne Testpersonen/Ausgetretene.
+      case "ungelesen_uebersicht": {
+        nurAdmin(ich);
+        const tage = [7, 14, 30].includes(Number(p.tage)) ? Number(p.tage) : 14;
+        const { data: ms } = await db.from("kc_communication_messages").select("id,thread_id,body,created_at").eq("sender_person_id", ich.person_id)
+          .gte("created_at", new Date(Date.now() - tage * 86400000).toISOString()).order("created_at", { ascending: false }).limit(600);
+        const tids = [...new Set((ms ?? []).map((m: any) => m.thread_id))], mids = (ms ?? []).map((m: any) => m.id);
+        if (!tids.length) return json({ tage, gesamt: 0, nachrichten: [], personen: [] });
+        const tn: any[] = [], wi: any[] = [];
+        const [{ data: th }, { data: gr }, aktiv] = await Promise.all([
+          db.from("kc_communication_threads").select("id,subject").in("id", tids),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").in("thread_id", tids),
+          aktiveMitglieder(),
+          (async () => { for (let i = 0; i < tids.length; i += 40) { const { data } = await db.from("kc_communication_thread_participants").select("thread_id,person_id,last_read_at").in("thread_id", tids.slice(i, i + 40)).neq("person_id", ich.person_id); tn.push(...(data ?? [])); } })(),
+          (async () => { for (let i = 0; i < mids.length; i += 150) { const { data } = await db.from("kc_club_nachricht_wichtig").select("message_id").in("message_id", mids.slice(i, i + 150)); wi.push(...(data ?? [])); } })()]);
+        const leute = new Map(aktiv.map((m) => [m.person_id, m.display_name])), wichtig = new Set(wi.map((x: any) => x.message_id));
+        const proChat = new Map<string, any[]>();
+        for (const x of tn) if (leute.has(x.person_id)) { const l = proChat.get(x.thread_id) ?? []; l.push(x); proChat.set(x.thread_id, l); }
+        const chatName = (tid: string) => { const g: any = (gr ?? []).find((x: any) => x.thread_id === tid); if (g) return `${g.symbol || "👥"} ${g.name}`;
+          const t: any = (th ?? []).find((x: any) => x.id === tid); if (t?.subject) return t.subject;
+          return (proChat.get(tid) ?? []).map((x: any) => leute.get(x.person_id)).join(", ") || "Nur du"; };
+        const nachrichten: any[] = [], pro = new Map<string, any>();
+        for (const m of (ms ?? []) as any[]) {
+          const tl = proChat.get(m.thread_id) ?? [];
+          const offen = tl.filter((x: any) => !x.last_read_at || x.last_read_at < m.created_at).map((x: any) => x.person_id);
+          if (!tl.length || !offen.length) continue;
+          const w = wichtig.has(m.id);
+          nachrichten.push({ id: m.id, thread: m.thread_id, chat: chatName(m.thread_id), text: String(m.body || "").replace(/\s+/g, " ").trim().slice(0, 90), am: m.created_at, wichtig: w,
+            empfaenger: tl.length, offen: offen.map((id: string) => ({ person_id: id, name: leute.get(id) })).sort((a: any, b: any) => a.name.localeCompare(b.name, "de")) });
+          for (const id of offen) {
+            const e = pro.get(id) ?? { person_id: id, name: leute.get(id), offen: 0, wichtig: 0, aeltest: m.created_at, chats: new Set<string>() };
+            e.offen++; if (w) e.wichtig++; if (m.created_at < e.aeltest) e.aeltest = m.created_at; e.chats.add(m.thread_id); pro.set(id, e);
+          }
+        }
+        const pids = [...pro.keys()];
+        const { data: zg } = pids.length ? await db.from("kc_club_zugang").select("person_id,zuletzt_gesehen").in("person_id", pids).not("zuletzt_gesehen", "is", null) : { data: [] as any[] };
+        const app = new Map<string, string>();
+        for (const z of (zg ?? []) as any[]) if (!app.has(z.person_id) || z.zuletzt_gesehen > app.get(z.person_id)!) app.set(z.person_id, z.zuletzt_gesehen);
+        const personenListe = [...pro.values()].map((e) => ({ person_id: e.person_id, name: e.name, offen: e.offen, wichtig: e.wichtig, chats: e.chats.size, aeltest: e.aeltest, app: app.get(e.person_id) || null }))
+          .sort((a, b) => b.offen - a.offen || a.name.localeCompare(b.name, "de"));
+        return json({ tage, gesamt: (ms ?? []).length, nachrichten, personen: personenListe });
+      }
+
       case "gemerkte_nachrichten": {
         const { data: gm } = await db.from("kc_club_gemerkt").select("message_id,am").eq("person_id", ich.person_id).order("am", { ascending: false }).limit(200);
         const ids = (gm ?? []).map((x: any) => x.message_id);

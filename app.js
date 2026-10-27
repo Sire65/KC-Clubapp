@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.708.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.709.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15884,6 +15884,7 @@ const KACHELN = {
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
     { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe bei der App?", aktion: "uaAdmin()", nur: () => !!ICH?.admin, zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
+    { id: "ungelesen_admin", sym: "📭", t: "Ungelesen", u: "Wer hat meine Nachrichten noch nicht gelesen?", aktion: "ugStart()", nur: () => !!ICH?.admin }, // 2.709.0 KC-CLUB-UNGELESEN-ADMIN
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
     { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror · Mensch ärgere dich nicht · Fang den Koch", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
     // KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen
@@ -33818,7 +33819,7 @@ function favListe(liste) {
   return [...stern, ...oft];
 }
 const favKopfHtml = () => `<div class="uh-archiv-kopf"><button class="knopf klein" onclick="uhFavAnsicht(false)">← Alle Chats</button><b>⭐ Favoriten</b><span class="hinweis" style="font-size:.85rem">mit ⭐ markiert + wo du am meisten schreibst</span></div>`;
-function favKnopfZeigen() { const k = $("uhFavKnopf"); if (k) { k.classList.toggle("haupt", !!UH.favAnsicht); k.setAttribute("aria-pressed", String(!!UH.favAnsicht)); } }
+function favKnopfZeigen() { $("ugKnopf")?.classList.toggle("versteckt", !ICH?.admin); /* 2.709.0 KC-CLUB-UNGELESEN-ADMIN */ const k = $("uhFavKnopf"); if (k) { k.classList.toggle("haupt", !!UH.favAnsicht); k.setAttribute("aria-pressed", String(!!UH.favAnsicht)); } }
 function uhFavAnsicht(an) { UH.favAnsicht = !!an; UH.archivAnsicht = false; UH.wahl = null; unterhLaden(); }
 async function favSpeichern(fav, pers, an) {
   const w = { threads: [...fav].slice(0, 50), personen: [...pers].slice(0, 100) }, vorher = INIT?.einstellungen?.chat_favoriten;
@@ -34730,6 +34731,65 @@ async function naMerken(id, an) {
     await chatLaden(false);
   }
   catch (e) { meldeFehler(e); }
+}
+// ---------- 2.709.0 KC-CLUB-UNGELESEN-ADMIN (Wunsch Hansi 27.10.2026 „Übersicht nur für Admin, welche meiner Chatnachrichten noch nicht gelesen wurden“) ----------
+// Zwei Ansichten: nach Person und nach Nachricht; Filter Zeitraum, Suche, nur wichtige, nur Einzelchats. Auch Rundschreiben an alle.
+// „💬 Erinnern“ öffnet den Chat mit fertigem Text – gesendet wird erst mit ➤ (nichts geht von selbst raus).
+const UG = { tage: 14, ansicht: "person", suche: "", wichtig: false, einzeln: false, d: null, auf: new Set() };
+async function ugStart(tage) {
+  if (!ICH?.admin) return;
+  if (tage) UG.tage = tage;
+  if (!$("ugBlatt")) blattAuf("ugBlatt", '<h3 style="margin:0">📭 Noch nicht gelesen</h3><p class="hinweis">Wird geladen …</p>');
+  try { UG.d = await api("ungelesen_uebersicht", { tage: UG.tage }, { warten: true }); } catch (e) { $("ugBlatt")?.remove(); return meldeFehler(e); }
+  ugZeigen();
+}
+function ugGefiltert() {
+  const q = UG.suche.trim().toLowerCase();
+  return (UG.d?.nachrichten || []).filter((n) => (!UG.wichtig || n.wichtig) && (!UG.einzeln || n.empfaenger === 1)
+    && (!q || n.chat.toLowerCase().includes(q) || n.text.toLowerCase().includes(q) || n.offen.some((o) => o.name.toLowerCase().includes(q))));
+}
+function ugPersonen(liste) {
+  const m = new Map();
+  for (const n of liste) for (const o of n.offen) {
+    const e = m.get(o.person_id) || { ...((UG.d.personen || []).find((p) => p.person_id === o.person_id) || { person_id: o.person_id, name: o.name }), n: 0, w: 0, alt: n.am, liste: [] };
+    e.n++; if (n.wichtig) e.w++; if (n.am < e.alt) e.alt = n.am; e.liste.push(n); m.set(o.person_id, e);
+  }
+  const q = UG.suche.trim().toLowerCase(), alle = [...m.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, "de"));
+  const namen = q ? alle.filter((e) => e.name.toLowerCase().includes(q)) : [];
+  return namen.length ? namen : alle; // Suche nach Namen → nur diese Personen; sonst alle aus den passenden Nachrichten
+}
+const ugTageHer = (iso) => { const t = Math.floor((Date.now() - Date.parse(iso)) / 86400000); return t <= 0 ? "heute" : t === 1 ? "gestern" : `vor ${t} Tagen`; };
+function ugNachrichtZeile(n, mitNamen) {
+  return `<div class="karte" style="margin:4px 0;padding:8px 10px"><div style="display:flex;justify-content:space-between;gap:6px"><small class="hinweis">${n.wichtig ? "⚠️ " : ""}${esc(n.chat)} · ${esc(zeitKurz(n.am))}</small>
+    <small><b>${n.empfaenger - n.offen.length} von ${n.empfaenger}</b> gelesen</small></div><div style="margin:2px 0">${esc(n.text || "📎")}</div>
+    ${mitNamen ? `<small class="hinweis">Noch nicht gelesen: ${n.offen.map((o) => esc(o.name)).join(", ")}</small>` : ""}
+    <div style="text-align:right"><button class="knopf klein" onclick="nachrichtInfo('${n.id}')">🚦 Ampel</button> <button class="knopf klein" onclick="$('ugBlatt')?.remove();chatOeffnen('${n.thread}')">💬 Chat</button></div></div>`;
+}
+function ugZeigen() {
+  const f = $("ugBlatt"); if (!f || !UG.d) return;
+  const liste = ugGefiltert(), leute = ugPersonen(liste), offenSumme = liste.reduce((s, n) => s + n.offen.length, 0);
+  const knopf = (an, text, fn) => `<button class="knopf klein${an ? " haupt" : ""}" onclick="${fn}">${text}</button>`;
+  const kopf = `<h3 style="margin:0">📭 Noch nicht gelesen</h3><p class="hinweis" style="margin:2px 0 8px">Deine Nachrichten der letzten ${UG.d.tage} Tage: ${UG.d.gesamt} geschrieben, bei ${liste.length} fehlt noch jemand (${offenSumme}× ungelesen, ${leute.length} ${leute.length === 1 ? "Person" : "Personen"}).</p>
+    <div class="bu-knopfreihe" style="margin-bottom:6px">${knopf(UG.ansicht === "person", "👤 Nach Person", "UG.ansicht='person';ugZeigen()")}${knopf(UG.ansicht === "nachricht", "💬 Nach Nachricht", "UG.ansicht='nachricht';ugZeigen()")}</div>
+    <div class="bu-knopfreihe" style="margin-bottom:6px">${[7, 14, 30].map((t) => knopf(UG.tage === t, `${t} Tage`, `ugStart(${t})`)).join("")}${knopf(UG.wichtig, "⚠️ nur wichtige", "UG.wichtig=!UG.wichtig;ugZeigen()")}${knopf(UG.einzeln, "👤 nur Einzelchats", "UG.einzeln=!UG.einzeln;ugZeigen()")}</div>
+    <input id="ugSuche" type="search" placeholder="🔍 Name, Chat oder Text suchen" value="${esc(UG.suche)}" style="width:100%;margin-bottom:6px">`;
+  let inhalt;
+  if (!liste.length) inhalt = `<p class="hinweis">✅ ${UG.d.nachrichten.length ? "Nichts passt zum Filter." : "Alle haben deine Nachrichten gelesen."}</p>`;
+  else if (UG.ansicht === "person") inhalt = leute.map((e) => `<details class="karte" style="margin:4px 0;padding:8px 10px"${UG.auf.has(e.person_id) ? " open" : ""} data-ug="${esc(e.person_id)}"><summary style="display:block;cursor:pointer">▸ <b>${esc(e.name)}</b> – ${e.n} offen${e.w ? ` <small>(⚠️ ${e.w} wichtig)</small>` : ""}<br>
+      <small class="hinweis">älteste vom ${esc(fKurz.format(new Date(e.alt)))} · App zuletzt geöffnet: ${e.app ? esc(ugTageHer(e.app)) : "unbekannt"}</small></summary>
+      <div style="margin:6px 0"><button class="knopf klein haupt" onclick="ugErinnern('${esc(e.person_id)}', ${e.n})">💬 Erinnern</button></div>${e.liste.map((n) => ugNachrichtZeile(n, false)).join("")}</details>`).join("");
+  else inhalt = liste.map((n) => ugNachrichtZeile(n, true)).join("");
+  f.querySelector(".blatt-innen").innerHTML = `${kopf}<div id="ugInhalt">${inhalt}</div><div class="knoepfe"><button class="knopf" onclick="$('ugBlatt').remove()">Schließen</button></div>`;
+  f.querySelectorAll("details[data-ug]").forEach((d) => (d.ontoggle = () => { d.open ? UG.auf.add(d.dataset.ug) : UG.auf.delete(d.dataset.ug); }));
+  const s = $("ugSuche"); s.oninput = () => { UG.suche = s.value; const p = s.selectionStart; ugZeigen(); const n = $("ugSuche"); n.focus(); n.setSelectionRange(p, p); };
+}
+async function ugErinnern(pid, n) {
+  const e = (UG.d?.personen || []).find((p) => p.person_id === pid), vn = (e?.name || "").split(" ")[0] || "du";
+  $("ugBlatt")?.remove();
+  await direkt(pid);
+  textVorbelegen(`Hallo ${vn}, in der Club-App ${n === 1 ? "wartet noch eine Nachricht" : `warten noch ${n} Nachrichten`} von mir auf dich. Schau bitte kurz rein. Viele Grüße, ${ICH?.vorname || ICH?.name || ""}`);
+  $("text")?.dispatchEvent(new Event("input"));
+  melde("💬 Text steht drin – anpassen und mit ➤ senden");
 }
 async function gemerktZeigen() {
   let r; try { r = await api("gemerkte_nachrichten", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
