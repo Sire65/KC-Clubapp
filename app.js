@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.720.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.721.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27549,7 +27549,7 @@ function mdatAbschnitte(d) {
   return [
     ["👤 Stammdaten", [["Mitglieds-Nr.", w(p.nummer)], ["Name", w(p.name)], ["Vorname / Nachname", `${w(p.vorname)} / ${w(p.nachname)}`], ["Rufname", w(p.rufname)],
       ["E-Mail", w(p.email)], ["Telefon", w(p.telefon)], ["Geburtstag", p.geburtstag ? String(p.geburtstag).split("-").reverse().join(".") : "–"],
-      ["Anschrift", [p.strasse, [p.plz, p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "–"], ["Gespeichert seit", t(p.seit)]]],
+      ["Anschrift", [p.strasse, [p.plz, p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "–"], ["Anfahrt zum Markt Werne", p.anfahrt ? anfahrtText(p.anfahrt) : "–"], ["Gespeichert seit", t(p.seit)]]],
     ["🔑 Zugang zur App", d.zugang ? [["Zugang aktiv", ja(d.zugang.aktiv)], ["Link erstellt", t(d.zugang.erstellt)], ["Zum ersten Mal geöffnet", t(d.zugang.erstmals)],
       ["Zuletzt da", t(d.zugang.zuletzt)], ["App-Version", w(d.zugang.version)]] : [["Zugang", "keiner"]]],
     ["🛡️ Rollen & Rechte", [["Admin", ja(d.rollen.admin)], ["Clubleitung", ja(d.rollen.clubleitung)], ["Ämter", (d.rollen.aemter || []).join(", ") || "–"],
@@ -32517,8 +32517,12 @@ const ML_ARTEN = {
   alle: { sym: "📋", t: "Alle Daten", u: "Telefon, E-Mail und Anschrift zusammen", spalten: ["nr", "name", "handy", "festnetz", "mail", "adresse"], quer: true },
   unterschrift: { sym: "✍️", t: "Unterschriften", u: "z. B. Anwesenheit, Empfang", spalten: ["nr", "name", "unterschrift"] },
   abhaken: { sym: "☑️", t: "Abhakliste", u: "z. B. Beitrag, Rückmeldung", spalten: ["nr", "name", "haken", "notiz"] },
+  // 2.721.0 KC-CLUB-ANFAHRT (Wunsch Hansi „aus den Adressen eine km-Anzeige machen“): Wohnort und Entfernung zum Markt, weiteste zuerst
+  anfahrt: { sym: "🚗", t: "Anfahrt", u: "Wohnort · km zum Markt Werne", spalten: ["nr", "name", "ort", "anfahrt"], sortKm: true },
 };
-const ML_SPALTEN = { nr: "Nr.", name: "Name", aemter: "Ämter", eintritt: "Mitglied seit", handy: "Handy", festnetz: "Festnetz", mail: "E-Mail", adresse: "Anschrift", unterschrift: "Unterschrift", haken: "✓", notiz: "Notiz" };
+const ML_SPALTEN = { ort: "Wohnort", anfahrt: "Anfahrt zum Markt", nr: "Nr.", name: "Name", aemter: "Ämter", eintritt: "Mitglied seit", handy: "Handy", festnetz: "Festnetz", mail: "E-Mail", adresse: "Anschrift", unterschrift: "Unterschrift", haken: "✓", notiz: "Notiz" };
+// 2.721.0 KC-CLUB-ANFAHRT: km aus der PLZ (Server), „Fahrt“ ist geschätzt (Luftlinie × 1,3)
+const anfahrtText = (a) => !a ? "" : a.luft < 3 ? "in Werne" : `ca. ${a.fahrt} km Fahrt (Luftlinie ${a.luft} km)`;
 let ML = { daten: null, art: "uebersicht", sort: "name", titel: "" };
 async function buListe() {
   BU.sicht = "liste"; buZeigen(); window.scrollTo(0, 0);
@@ -32527,12 +32531,13 @@ async function buListe() {
 }
 function mlZeilen() {
   const l = (ML.daten?.liste || []).slice();
+  if (ML_ARTEN[ML.art]?.sortKm) return l.sort((a, b) => (b.anfahrt?.luft ?? -1) - (a.anfahrt?.luft ?? -1) || a.nachname.localeCompare(b.nachname)); // 2.721.0: weiteste Anfahrt zuerst
   return ML.sort === "eintritt" ? l.sort((a, b) => (a.eintritt || "9999").localeCompare(b.eintritt || "9999") || a.nachname.localeCompare(b.nachname))
     : l.sort((a, b) => a.nachname.localeCompare(b.nachname) || a.name.localeCompare(b.name));
 }
 function mlWert(m, s, i) {
   const k = m.kontakt || {};
-  return { nr: String(i + 1), name: m.name, aemter: (m.aemter || []).join(", "), eintritt: m.eintritt ? m.eintritt.split("-").reverse().join(".") : "", handy: k.handy || "", festnetz: k.festnetz || "", mail: k.mail || "", adresse: k.adresse || "", unterschrift: "", haken: "☐", notiz: "" }[s] ?? "";
+  return { ort: m.anfahrt?.ort || "", anfahrt: anfahrtText(m.anfahrt), nr: String(i + 1), name: m.name, aemter: (m.aemter || []).join(", "), eintritt: m.eintritt ? m.eintritt.split("-").reverse().join(".") : "", handy: k.handy || "", festnetz: k.festnetz || "", mail: k.mail || "", adresse: k.adresse || "", unterschrift: "", haken: "☐", notiz: "" }[s] ?? "";
 }
 function buListeHtml() {
   const d = ML.daten, a = ML_ARTEN[ML.art];
@@ -43181,6 +43186,7 @@ function mitgliedZeigen() {
     k.festnetz ? zeile("festnetz", k.festnetz, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.festnetz))}" onclick="spur('telefon', mitgliedId)">📞</a>`) : "",
     k.mail ? zeile("mail", k.mail, `<a class="knopf klein" href="mailto:${esc(k.mail)}" onclick="spur('mail', mitgliedId)">✉️</a>`) : "",
     k.adresse ? zeile("adresse", adresseText(k.adresse), `<button class="knopf klein" onclick="extern('route', adresseText(MD.kontakt.adresse))">🗺️ Route</button>`) : "",
+    m.anfahrt ? `<div class="zeile"><div style="flex:1"><div class="hinweis" style="font-size:.85rem">🚗 Anfahrt zum Markt Werne <small>· nur für ${m.selbst ? "dich" : "die Clubleitung"}</small></div><b>${esc(anfahrtText(m.anfahrt))}</b></div></div>` : "", // 2.721.0 KC-CLUB-ANFAHRT
   ].join("");
   const leer = !zeilen ? `<p class="hinweis">${!m.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : m.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(m.vorname)} hat noch keine Kontaktdaten freigegeben.`}</p>` : "";
   $("mitgliedInhalt").innerHTML = `

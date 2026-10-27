@@ -5918,7 +5918,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -13399,3 +13399,17 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
 // 2.683.0 KC-CLUB-DP-LUECKEN-ABEND: Hinweis auf dem Lücken-Blatt – Markt teils bis 23 Uhr, wer bis 22 eingetragen ist, bitte verlängern
 assert.ok(/<div class="dpl-hinweis dpl-abend">🌙 <b>Abends:<\/b> Der Markt geht teils bis 23 Uhr/.test(programm) && /#druck \.dpl-hinweis\.dpl-abend \{/.test(html), "Abend-Hinweis auf dem Lücken-Blatt");
 assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(programm) && /alle: t\.bedarf\.reduce\(\(a, b, i\) => a \+ Math\.max\(0, b - t\.leute\.filter\(\(p\) => "pai"\.includes\(p\.w\?\.\[i\]\)\)\.length\), 0\) \/ 2/.test(programm), "zweite Spalte: fehlt, wenn alle ihre ganze Zeit arbeiten");
+// 2.721.0 KC-CLUB-ANFAHRT: km Wohnort → Markt Werne aus der PLZ (GeoNames, im Server gerechnet), Anzeige für Clubleitung und einen selbst
+{
+  const { anfahrt, ANFAHRT_ZIEL } = await import(new URL("../supabase/functions/kc-club/anfahrt.js", import.meta.url));
+  assert.equal(ANFAHRT_ZIEL.name, "Werne, Marktplatz");
+  assert.deepEqual(anfahrt("59368", "Werne"), { ort: "Werne", luft: 0, fahrt: 0 }, "Werne selbst");
+  const kamen = anfahrt("59174", "Kamen"); assert.ok(kamen.luft >= 6 && kamen.luft <= 10 && kamen.fahrt === Math.round(kamen.luft * 1.3) || Math.abs(kamen.fahrt - kamen.luft * 1.3) < 1, "Kamen ca. 8 km Luftlinie");
+  assert.ok(anfahrt("38707", "")?.luft > 150, "Harz weit weg");
+  assert.equal(anfahrt("1234", "x"), null); assert.equal(anfahrt("00000", "x"), null);
+  assert.ok(/import \{ anfahrt \} from "\.\/anfahrt\.js";/.test(server) && /\.\.\.\(selbst \|\| ich\.admin \|\| ich\.vorstand \? \{ anfahrt: anfahrt\(pe\.postal_code, pe\.city\) \} : \{\}\)/.test(server), "Mitglied: nur selbst und Clubleitung");
+  const ml = server.slice(server.indexOf('case "buero_mitgliederliste": {'), server.indexOf('case "buero_mitgliederliste": {') + 400);
+  assert.ok(/nurVorstand\(ich\);/.test(ml) && /anfahrt: anfahrt\(p\.postal_code, p\.city\) \}/.test(server), "Liste nur für die Clubleitung, ohne Straße");
+  assert.ok(/anfahrt: \{ sym: "🚗", t: "Anfahrt", u: "Wohnort · km zum Markt Werne", spalten: \["nr", "name", "ort", "anfahrt"\], sortKm: true \}/.test(programm), "Büro-Liste „Anfahrt“");
+  assert.ok(!/fetch\(|https?:\/\//.test(lies("supabase/functions/kc-club/anfahrt.js").replace(/www\.geonames\.org/, "")), "km-Rechnung ohne fremde Dienste");
+}
