@@ -8,6 +8,7 @@
   - **Nachbesserung:** überbesetzte Ränder kürzen, an Lücken angrenzende Dienste im Rahmen des Angebots verlängern, übersehene Leute einsetzen (Prüfung: 7,5 Std. Überbesetzung → ~1–2 Std., Steven am 04.12. war übersehen).
   - **Bereitschaft automatisch** für die größte Lücke des Tages (sonst abends): nur wer im Wunschplan „generell bereit“ ist, an dem Tag nicht „nein“ gesagt hat und zu der Zeit selbst keinen Dienst hat – reihum (vorher standen feste Einträge mit Leuten drin, die selbst Dienst hatten).
   - **Pausenhinweis** im Plan bei Diensten über 6 Std. („☕ 30 Min. Pause“).
+  - **Freier Tag** (Wunsch Hansi „nicht alle Tage am Stück, besser zwischendrin 1 Tag Pause“): nach höchstens 5 Tagen am Stück (`maxTageAmStueck`) ist der nächste Tag frei – an dem Tag auch keine Bereitschaft. Bereitschaft je Person ein-/ausschaltbar (`keineBereitschaft`, z. B. Dieter; `bereitschaft` für den Admin selbst).
 - Neues internes Blatt **„💡 Vorschläge zu den Lücken“** (nur Admin, Ordner „Dienstplan zum Drucken“): je Lücke, wer früher kommen oder länger bleiben könnte (✅ hat die Zeit angeboten / ❓ erst fragen), die Bereitschaft des Tages und wo neue Helfer nötig sind.
 
 ## 2.720.0 – 2026-10-27 – 🗂️ Nachrichten-Übersicht gegliedert (KC-CLUB-NACHRICHTEN-GLIEDERUNG)

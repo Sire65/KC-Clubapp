@@ -4653,7 +4653,9 @@ async function dpDruckNeu(adminId: string) {
   };
   const personen = ids.filter((pid) => !leerIds.includes(pid) || wRev.has(pid) || ersatz[pid]).map((pid) => ({ key: dpKurzname(name.get(pid) || pid), name: name.get(pid) || pid, eintraege: eintraegeVon(pid), ...grenzen(pid) })).filter((p) => p.eintraege.length);
   // Bereitschaft automatisch (wenn nicht ausdrücklich bereitschaftAuto: false): generell bereit laut Wunschplan, ohne den Admin selbst und ohne „aus“
-  const bereitschaftAuto = konf.bereitschaftAuto === false ? undefined : (wRoh ?? []).filter((w: any) => w.standby_general === true && String(w.person_id) !== adminId && !aus(String(w.person_id)) && !String(w.person_id).startsWith("KC-P-TEST"))
+  // personen[pid].keineBereitschaft schließt aus (z. B. Dieter), personen[adminId].bereitschaft = true nimmt den Admin selbst mit dazu
+  const bereitschaftAuto = konf.bereitschaftAuto === false ? undefined : (wRoh ?? []).filter((w: any) => { const pid = String(w.person_id);
+      return w.standby_general === true && (pid !== adminId || pk[pid]?.bereitschaft === true) && pk[pid]?.keineBereitschaft !== true && !aus(pid) && !pid.startsWith("KC-P-TEST"); })
     .map((w: any) => ({ key: dpKurzname(name.get(String(w.person_id)) || String(w.person_id)), name: name.get(String(w.person_id)) || String(w.person_id),
       nein: Object.entries(w.standby && typeof w.standby === "object" ? w.standby : {}).filter(([, v]: any) => v?.answer === "no").map(([d]) => d) }));
   const ergebnis = dpRechnen({
@@ -4663,7 +4665,7 @@ async function dpDruckNeu(adminId: string) {
     leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
     bereitschaft: (Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })),
     max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
-    bereitschaftAuto, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
+    bereitschaftAuto, maxTageAmStueck: Number.isFinite(Number(konf.maxTageAmStueck)) ? Number(konf.maxTageAmStueck) : 5, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
   });
   const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });

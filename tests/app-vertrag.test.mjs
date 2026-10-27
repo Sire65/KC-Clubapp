@@ -13416,7 +13416,7 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
 // 2.721.0 KC-CLUB-DP-NACHBESSERN / KC-CLUB-DP-VORSCHLAG: Grenzen je Person, weite Anfahrt ≥ 3 Std., Nachbesserung, Bereitschaft automatisch, Pausenhinweis, Vorschlags-Blatt
 {
   const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
-  assert.equal(DP_REGEL, 3, "Regel-Stand 3 → gespeicherter Stand wird von selbst neu gerechnet");
+  assert.ok(DP_REGEL >= 3, "Regel-Stand steigt → gespeicherter Stand wird von selbst neu gerechnet");
   const tag = (d, a, b, n) => ({ d, art: "Markttag", baender: [{ start: a, end: b, total: n, front: null, back: null }] });
   const p = (key, eintraege, x = {}) => ({ key, name: key, eintraege, ...x });
   // maxGesamt: Thomas höchstens 6 Std. über zwei Tage
@@ -13441,4 +13441,15 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
   assert.ok(/\(kmVon\.get\(pid\) \?\? 0\) >= grenzeKm \? \{ minDienst: minWeit \}/.test(server) && /pk\[p\.person_id\]\?\.anfahrtKm/.test(server), "weite Anfahrt aus den Stammdaten, mit Ausnahme je Person");
   assert.ok(/b - a > 6 \? " · ☕ 30 Min\. Pause" : ""/.test(programm), "Pausenhinweis ab 6 Std.");
   assert.ok(/dpVorschlag: \{ titel: "💡 Vorschläge zu den Lücken"/.test(programm) && /if \(!ICH\?\.admin\) return null;\s*const d = await api\("dp_druck", \{\}\);/.test(programm), "Vorschlags-Blatt nur für den Admin");
+}
+// 2.721.0 (Wunsch Hansi „nicht alle Tage am Stück, besser zwischendrin 1 Tag Pause“): nach maxTageAmStueck Tagen ein freier Tag, dann auch keine Bereitschaft
+{
+  const { dpRechnen } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  const tage = ["2026-12-04", "2026-12-05", "2026-12-06", "2026-12-07"].map((d) => ({ d, art: "Markttag", baender: [{ start: 15, end: 19, total: 1, front: null, back: null }] }));
+  const r = dpRechnen({ tage, personen: [{ key: "Manfred S", name: "Manfred S", eintraege: tage.map((t) => ({ d: t.d, t: "pref", z: "B", a: 15, b: 19 })) }], maxTageAmStueck: 3,
+    bereitschaftAuto: [{ key: "Manfred S" }] });
+  assert.deepEqual(r.tage.map((t) => !!t.leute[0].s), [true, true, true, false], "nach 3 Tagen ein freier Tag");
+  assert.ok(!r.tage[3].ber.some((x) => x.n === "Manfred S"), "am freien Tag keine Bereitschaft");
+  assert.ok(/maxTageAmStueck: Number\.isFinite\(Number\(konf\.maxTageAmStueck\)\) \? Number\(konf\.maxTageAmStueck\) : 5/.test(server), "Standard 5 Tage, einstellbar");
+  assert.ok(/pk\[pid\]\?\.keineBereitschaft !== true/.test(server) && /pid !== adminId \|\| pk\[pid\]\?\.bereitschaft === true/.test(server), "Bereitschaft je Person ein-/ausschaltbar");
 }
