@@ -13338,7 +13338,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
 // 2.676.0 KC-CLUB-DP-WUNSCHDECKEL / KC-CLUB-DP-AUTO / KC-CLUB-DP-LUECKEN: nie länger als die Wunschzeit (mind. Hälfte darin), rechnet sich von selbst neu, Blatt „Hier fehlen noch Helfer“
 {
   const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
-  assert.equal(DP_REGEL, 2, "Regel-Stand");
+  assert.ok(DP_REGEL >= 2, "Regel-Stand");
   const tag = { d: "2026-12-04", art: "Markttag", baender: [{ start: 11, end: 23, total: 1, front: null, back: null }] };
   const e = { tage: [tag], personen: [{ key: "Chris B", name: "Christina B", eintraege: [{ d: "2026-12-04", t: "avai", z: "B", a: 11, b: 23 }, { d: "2026-12-04", t: "pref", z: "B", a: 17, b: 23 }] }], max: 8 };
   const s = dpRechnen(e).tage[0].leute[0].s; assert.ok(s && s[1] - s[0] <= 6 + 1e-9, `höchstens so lang wie die Wunschzeit (${s})`);
@@ -13412,4 +13412,33 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
   assert.ok(/nurVorstand\(ich\);/.test(ml) && /anfahrt: anfahrt\(p\.postal_code, p\.city\) \}/.test(server), "Liste nur für die Clubleitung, ohne Straße");
   assert.ok(/anfahrt: \{ sym: "🚗", t: "Anfahrt", u: "Wohnort · km zum Markt Werne", spalten: \["nr", "name", "ort", "anfahrt"\], sortKm: true \}/.test(programm), "Büro-Liste „Anfahrt“");
   assert.ok(!/fetch\(|https?:\/\//.test(lies("supabase/functions/kc-club/anfahrt.js").replace(/www\.geonames\.org/, "")), "km-Rechnung ohne fremde Dienste");
+}
+// 2.721.0 KC-CLUB-DP-NACHBESSERN / KC-CLUB-DP-VORSCHLAG: Grenzen je Person, weite Anfahrt ≥ 3 Std., Nachbesserung, Bereitschaft automatisch, Pausenhinweis, Vorschlags-Blatt
+{
+  const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  assert.equal(DP_REGEL, 3, "Regel-Stand 3 → gespeicherter Stand wird von selbst neu gerechnet");
+  const tag = (d, a, b, n) => ({ d, art: "Markttag", baender: [{ start: a, end: b, total: n, front: null, back: null }] });
+  const p = (key, eintraege, x = {}) => ({ key, name: key, eintraege, ...x });
+  // maxGesamt: Thomas höchstens 6 Std. über zwei Tage
+  let r = dpRechnen({ tage: [tag("2026-12-04", 11, 19, 1), tag("2026-12-05", 11, 19, 1)], personen: [p("Thomas H", ["2026-12-04", "2026-12-05"].map((d) => ({ d, t: "avai", z: "B", a: 11, b: 19 })), { maxGesamt: 6 })] });
+  assert.ok(r.stunden["Thomas H"] <= 6 + 1e-9, `höchstens ${r.stunden["Thomas H"]} ≤ 6 Std.`);
+  // maxDienst: Willfried höchstens 4 Std. am Stück
+  r = dpRechnen({ tage: [tag("2026-12-04", 11, 19, 1)], personen: [p("Willfried W", [{ d: "2026-12-04", t: "avai", z: "B", a: 11, b: 19 }], { maxDienst: 4 })] });
+  const s = r.tage[0].leute[0].s; assert.ok(s && s[1] - s[0] <= 4 + 1e-9, "Dienst höchstens 4 Std.");
+  // minDienst (weite Anfahrt): bei nur 1 Std. Bedarf trotzdem 3 Std. oder gar nicht – nie 1 Std.
+  r = dpRechnen({ tage: [tag("2026-12-04", 15, 16, 1)], personen: [p("Steven L", [{ d: "2026-12-04", t: "avai", z: "B", a: 14, b: 19 }], { minDienst: 3 })] });
+  const s2 = r.tage[0].leute[0].s; assert.ok(!s2 || s2[1] - s2[0] >= 3 - 1e-9, "weite Anfahrt: kein kurzer Dienst");
+  // Nachbesserung: angrenzender Dienst wird im Rahmen des Angebots verlängert
+  r = dpRechnen({ tage: [tag("2026-12-04", 11, 17, 1)], personen: [p("Anna A", [{ d: "2026-12-04", t: "avai", z: "B", a: 11, b: 17 }])], max: 8 });
+  assert.deepEqual(r.tage[0].fehlt.filter(Boolean), [], "keine Lücke, wenn das Angebot reicht");
+  // Bereitschaft automatisch: nie, wer selbst Dienst hat, nicht bei „nein“, reihum
+  r = dpRechnen({ tage: [tag("2026-12-04", 17, 23, 2), tag("2026-12-05", 17, 23, 2)],
+    personen: [p("Frank B", ["2026-12-04", "2026-12-05"].map((d) => ({ d, t: "avai", z: "B", a: 17, b: 23 })))],
+    bereitschaftAuto: [{ key: "Frank B" }, { key: "Dieter Z", name: "Dieter Z" }, { key: "Karla K", name: "Karla K", nein: ["2026-12-05"] }] });
+  assert.ok(r.tage.every((t) => !t.ber.some((x) => x.n === "Frank B")), "wer Dienst hat, ist nicht Bereitschaft");
+  assert.ok(!r.tage[1].ber.some((x) => x.n === "Karla K"), "„nein“ zur Bereitschaft wird beachtet");
+  assert.ok(/const aus = \(pid: string\) => pk\[pid\]\?\.aus === true;/.test(server) && /\.filter\(\(id\) => !id\.startsWith\("KC-P-TEST"\) && !aus\(id\)\)/.test(server), "„aus“ wird nie eingeplant");
+  assert.ok(/\(kmVon\.get\(pid\) \?\? 0\) >= grenzeKm \? \{ minDienst: minWeit \}/.test(server) && /pk\[p\.person_id\]\?\.anfahrtKm/.test(server), "weite Anfahrt aus den Stammdaten, mit Ausnahme je Person");
+  assert.ok(/b - a > 6 \? " · ☕ 30 Min\. Pause" : ""/.test(programm), "Pausenhinweis ab 6 Std.");
+  assert.ok(/dpVorschlag: \{ titel: "💡 Vorschläge zu den Lücken"/.test(programm) && /if \(!ICH\?\.admin\) return null;\s*const d = await api\("dp_druck", \{\}\);/.test(programm), "Vorschlags-Blatt nur für den Admin");
 }

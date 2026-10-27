@@ -4626,15 +4626,23 @@ async function dpDruckNeu(adminId: string) {
   const [{ data: k }, { data: tageRoh }, { data: wRoh }] = await Promise.all([
     db.from("kc_club_person_einstellung").select("wert,geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
     db.from("kc_dp_days_published").select("work_date,day_type,label,demand").eq("event_id", DW.veranstaltung).order("work_date"),
-    db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
+    db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at,standby,standby_general").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
   ]);
   const konf: any = k?.wert && typeof k.wert === "object" ? k.wert : {};
+  // 2.721.0 KC-CLUB-DP-NACHBESSERN: Angaben je Person in dp_druck_konfig.personen[pid] – aus (nie einplanen), maxGesamt, maxDienst, anfahrtKm (statt der
+  // km aus der Adresse, z. B. „wohnt in der Zeit bei ihrem Bruder in Werne“), notiz. Wer ab anfahrtGrenzeKm (10) fährt, bekommt Dienste ab anfahrtMinDienst (3) Std.
+  const pk: Record<string, any> = konf.personen && typeof konf.personen === "object" ? konf.personen : {};
+  const aus = (pid: string) => pk[pid]?.aus === true;
   if (!(tageRoh ?? []).length) throw new Fehler("Für die Veranstaltung ist noch kein Bedarf veröffentlicht.", 409);
   const ersatz: Record<string, any> = konf.ersatz && typeof konf.ersatz === "object" ? konf.ersatz : {};
   const leerIds = (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => String(x.person_id));
   const ids = [...new Set([...(wRoh ?? []).map((w: any) => String(w.person_id)), ...leerIds, ...Object.keys(ersatz), ...(Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => String(x.person_id))])]
-    .filter((id) => !id.startsWith("KC-P-TEST"));
-  const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name").in("person_id", ids) : { data: [] as any[] };
+    .filter((id) => !id.startsWith("KC-P-TEST") && !aus(id));
+  const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name,postal_code,city").in("person_id", ids) : { data: [] as any[] };
+  const kmVon = new Map((leute ?? []).map((p: any) => [String(p.person_id), Number.isFinite(Number(pk[p.person_id]?.anfahrtKm)) ? Number(pk[p.person_id].anfahrtKm) : (anfahrt(p.postal_code, p.city)?.fahrt ?? 0)]));
+  const grenzeKm = Number(konf.anfahrtGrenzeKm ?? 10), minWeit = Number(konf.anfahrtMinDienst ?? 3);
+  const grenzen = (pid: string) => ({ ...(Number.isFinite(Number(pk[pid]?.maxGesamt)) ? { maxGesamt: Number(pk[pid].maxGesamt) } : {}), ...(Number.isFinite(Number(pk[pid]?.maxDienst)) ? { maxDienst: Number(pk[pid].maxDienst) } : {}),
+    ...((kmVon.get(pid) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}) });
   const name = new Map((leute ?? []).map((p: any) => [String(p.person_id), String(p.display_name || p.person_id)]));
   const wRev = new Map((wRoh ?? []).map((w: any) => [String(w.person_id), w]));
   const eintraegeVon = (pid: string) => {
@@ -4643,7 +4651,11 @@ async function dpDruckNeu(adminId: string) {
     return (Array.isArray(w?.entries) ? w.entries : []).filter((x: any) => DP_ART[x?.wishType] && x.start != null && x.end != null)
       .map((x: any) => ({ d: String(x.date), t: DP_ART[x.wishType], z: ["V", "H", "B"].includes(x.wishZone) ? x.wishZone : "B", a: Number(x.start), b: Number(x.end) }));
   };
-  const personen = ids.filter((pid) => !leerIds.includes(pid) || wRev.has(pid) || ersatz[pid]).map((pid) => ({ key: dpKurzname(name.get(pid) || pid), name: name.get(pid) || pid, eintraege: eintraegeVon(pid) })).filter((p) => p.eintraege.length);
+  const personen = ids.filter((pid) => !leerIds.includes(pid) || wRev.has(pid) || ersatz[pid]).map((pid) => ({ key: dpKurzname(name.get(pid) || pid), name: name.get(pid) || pid, eintraege: eintraegeVon(pid), ...grenzen(pid) })).filter((p) => p.eintraege.length);
+  // Bereitschaft automatisch (wenn nicht ausdrücklich bereitschaftAuto: false): generell bereit laut Wunschplan, ohne den Admin selbst und ohne „aus“
+  const bereitschaftAuto = konf.bereitschaftAuto === false ? undefined : (wRoh ?? []).filter((w: any) => w.standby_general === true && String(w.person_id) !== adminId && !aus(String(w.person_id)) && !String(w.person_id).startsWith("KC-P-TEST"))
+    .map((w: any) => ({ key: dpKurzname(name.get(String(w.person_id)) || String(w.person_id)), name: name.get(String(w.person_id)) || String(w.person_id),
+      nein: Object.entries(w.standby && typeof w.standby === "object" ? w.standby : {}).filter(([, v]: any) => v?.answer === "no").map(([d]) => d) }));
   const ergebnis = dpRechnen({
     tage: (tageRoh ?? []).map((t: any) => ({ d: String(t.work_date), art: t.day_type === "market" ? "Markttag" : t.day_type === "prep" ? "Aufbau" : String(t.label || "Nachbereitung"),
       baender: (Array.isArray(t.demand) ? t.demand : []).map((b: any) => ({ start: Number(b.start), end: Number(b.end), total: Number(b.total) || 0, front: b.front ?? null, back: b.back ?? null })) })),
@@ -4651,7 +4663,7 @@ async function dpDruckNeu(adminId: string) {
     leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
     bereitschaft: (Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })),
     max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
-    wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
+    bereitschaftAuto, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
   });
   const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
