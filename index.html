@@ -977,7 +977,7 @@
   .rg-hinweis .knoepfe { margin-top: 10px; flex-wrap: wrap; }
   .rg-kompakt { display: flex; align-items: center; gap: 10px; padding: 10px 12px; } .rg-kompakt .rg-h-sym { font-size: 1.6rem; }
   .rg-k-text { flex: 1; min-width: 0; } .rg-k-text b, .rg-k-text small { display: block; } .rg-k-text small { color: var(--text2, inherit); }
-  .rg-k-neben { margin-top: 2px; font-size: .9rem; } .rg-k-link { border: 0; background: none; padding: 6px 2px; min-height: 32px; color: var(--rot); text-decoration: underline; font: inherit; cursor: pointer; }
+  .rg-k-neben { margin-top: 2px; font-size: .9rem; } .rg-k-link { border: 0; background: none; padding: 6px 2px; min-height: 44px; color: var(--textRot); text-decoration: underline; font: inherit; cursor: pointer; }
   body.rg-an .hz-frage, body.rg-an .su-klein { z-index: 8999; }
   body.rg-ohne-admin #adminBereich, body.rg-ohne-admin #register [data-r="admin"], body.rg-ohne-admin #raster .kachel.ad { display: none !important; } /* KC-CLUB-ERKLAERVIDEOS-ROLLEN */
   body.rg-ohne-leitung #leitungStart, body.rg-ohne-leitung #raster .kachel[data-id="buero"] { display: none !important; }
@@ -1908,7 +1908,7 @@
   .kachel .sym { font-size: 1.65rem; line-height: 1; }
   .kachel b { display: block; font-size: 1.02rem; margin-top: 7px; }
   .kachel b, .kachel small { overflow-wrap: break-word; hyphens: manual; -webkit-hyphens: manual; } /* Gesamtprüfung 3 (2.23.84): lange Wörter („Bedienungsanleitung“) trennen statt abschneiden */
-  .kachel small { color: var(--grau); font-weight: 700; font-size: .82rem; }
+  .kachel small { color: var(--grau); font-weight: 700; font-size: .875rem; }
   /* KC-CLUB-NEU-KACHEL (1.21.4, Wunsch Hansi): Kachel mit neuen Nachrichten bekommt einen anderen, auffälligen Hintergrund (grün wie WhatsApp) */
   .kachel.neu-da { background: linear-gradient(135deg, #d9f7e2, #a9e8bf); box-shadow: 0 0 0 3px #25a55a inset, var(--schatten); animation: neuDa 2.4s ease-in-out infinite; }
   .kachel.neu-da small { color: #1d5e36; } .kachel.neu-da .zahl { background: #1e8449; }
@@ -2744,7 +2744,7 @@
 
   /* Fußleiste */
   .fuss-leiste { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(8px + env(safe-area-inset-bottom)); width: min(760px, calc(100% - 16px)); background: var(--karte); border-radius: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.14); display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px; z-index: 20; }
-  .fuss-leiste button { border: none; background: none; border-radius: 16px; padding: 8px 2px; font-size: .74rem; font-weight: 800; cursor: pointer; position: relative; }
+  .fuss-leiste button { border: none; background: none; border-radius: 16px; padding: 8px 2px; font-size: clamp(.74rem, 3.2vw, .84rem); font-weight: 800; cursor: pointer; position: relative; }
   .fuss-leiste button span { display: block; font-size: 1.3rem; }
   .fuss-leiste button.an { background: var(--karte2); color: var(--rot); }
   .fuss-leiste .zaehler { position: absolute; top: 2px; right: 18%; background: var(--rot); color: #fff; border-radius: 10px; font-size: .7rem; padding: 1px 6px; }
@@ -3389,8 +3389,8 @@
   .eu-zeile { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--linie); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; min-height: 64px; }
   .eu-zeile:last-child { border-bottom: 0; } .eu-zeile:active { background: var(--karte2); }
   .eu-sym { width: 40px; height: 40px; border-radius: 11px; background: var(--karte2); display: grid; place-items: center; font-size: 1.3rem; flex: none; }
-  .eu-tx { flex: 1; min-width: 0; } .eu-tx b { display: block; font-size: 1.05rem; } .eu-tx small { display: block; color: var(--grau); font-size: .84rem; margin-top: 2px; }
-  .eu-stand { display: inline-block; margin-top: 3px; font-size: .76rem; font-weight: 700; color: var(--textGruen, #2e7d32); }
+  .eu-tx { flex: 1; min-width: 0; } .eu-tx b { display: block; font-size: 1.05rem; } .eu-tx small { display: block; color: var(--grau); font-size: .9rem; margin-top: 2px; }
+  .eu-stand { display: inline-block; margin-top: 3px; font-size: .82rem; font-weight: 700; color: var(--textGruen, #2e7d32); }
   .eu-pfeil { color: var(--textRot, var(--rot)); font-size: 1.7rem; font-weight: 900; flex: none; line-height: 1; }
   /* gut sichtbare Klappen in den Einstellungen: Goldrand, rechts runder weinroter Knopf ⌄ (zu) / gedreht (auf) */
   #v-einstellungen details:not(.karte):not(.iv-ordner), #v-einstellungen details.karte.innen { border: 2px solid var(--gold, #c9a46a); border-radius: 14px; padding: 0 12px; margin: 10px 0; background: var(--karte); box-shadow: none; }
@@ -4998,6 +4998,21 @@
     .hz-klick { right: auto; left: calc(50% + 392px); } .hz-frage { left: calc(50% + 444px); } .su-klein { left: calc(50% + 496px); }
     .sb-knopf { right: calc(50% + 392px); }
   }
+  /* 2.725.0 KC-CLUB-KNOEPFE-WEG (Prüfbericht Etappe 2, Wunsch #44): am Handy/Tablet verdecken 👆 ? 🔍 🎙️ beim Lesen Zeilen und Pfeile –
+     beim Runterscrollen gleiten sie weg, beim Hochscrollen, oben und am Seitenende sind sie wieder da (Breitbild: stehen ohnehin im Rand) */
+  @media (max-width: 1023px) {
+    .su-klein, .hz-frage, .hz-klick, .sb-knopf { transition: opacity .2s, translate .2s; }
+    body.knoepfe-weg :is(.su-klein, .hz-frage, .hz-klick, .sb-knopf) { opacity: 0; translate: 0 24px; pointer-events: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .su-klein, .hz-frage, .hz-klick, .sb-knopf { transition: none; } }
+  /* 2.725.0 KC-CLUB-TIPPFLAECHEN-2 (Prüfbericht Etappe 2): kleine Knöpfe im Kopf und am Start bekommen eine unsichtbar größere Tippfläche
+     (Fingerkuppe ≈ 44 px) – sichtbar bleibt alles gleich; wie 2.481.0 bei Pfeilen, Leuchtpunkten und Version */
+  .statusleiste .statuschip, .statusleiste .leds, .herz, #inkoKnopf, .ansichtname, .sz-link, #versionMarke { position: relative; }
+  .statusleiste .statuschip::after, .statusleiste .leds::after { content: ""; position: absolute; inset: -9px 0; }
+  #ledRt { z-index: 1; } #ledOnline { z-index: 2; } /* die beiden Punkte mit eigener Funktion bleiben über der größeren Fläche; „Wer ist online?“ liegt vorn (die Fläche der Leitung verdeckte ihn) */
+  .herz::after { content: ""; position: absolute; inset: -11px -8px; } #inkoKnopf::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+  .ansichtname::after { content: ""; position: absolute; inset: -8px 0; } .sz-link::after { content: ""; position: absolute; inset: -6px 0; }
+  #versionMarke::after { content: ""; position: absolute; inset: -12px -4px; }
   /* 2.481.0 KC-CLUB-LADEANZEIGE (CD: Weinrot/Beige, Kochmütze) */
   .app-laedt { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center; background: #f3e9dc; color: #741521; font-family: inherit; }
   .app-laedt-logo { width: 96px; height: 96px; border-radius: 50%; background: #741521; display: flex; align-items: center; justify-content: center; }
@@ -6119,7 +6134,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.724.0" data-v="2.724.0"></script>
+<script src="app.js?v=2.725.0" data-v="2.725.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.724.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.725.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8729,6 +8729,15 @@ function nachUntenPruefen() {
 }
 function nachUntenSpringen() { NA.neuUnten = false; window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" }); setTimeout(nachUntenPruefen, 600); }
 window.addEventListener("scroll", () => { if (aktuelleAnsicht === "chat") nachUntenPruefen(); }, { passive: true });
+// 2.725.0 KC-CLUB-KNOEPFE-WEG (Prüfbericht Etappe 2, Wunsch #44): beim Runterscrollen gleiten 👆 ? 🔍 🎙️ weg (verdecken sonst Zeilen und Pfeile),
+// beim Hochscrollen, ganz oben und am Seitenende sind sie wieder da. Nur Anzeige – die Knöpfe selbst bleiben unverändert (CSS: nur am Handy/Tablet).
+const KNW = { y: 0 };
+function knoepfeWegPruefen() {
+  const y = scrollY, ende = y + innerHeight >= document.documentElement.scrollHeight - 80, d = y - KNW.y;
+  if (Math.abs(d) < 12 && !ende && y > 40) return;
+  document.body.classList.toggle("knoepfe-weg", d > 0 && y > 40 && !ende); KNW.y = y;
+}
+window.addEventListener("scroll", knoepfeWegPruefen, { passive: true });
 function tippenAus() { clearTimeout(TIPP.nach); if (TIPP.id) api("tippen", { id: TIPP.id, aus: true }).catch(() => {}); TIPP = { zuletzt: 0, id: null, nach: null }; }
 async function liveTippenSetzen(an) {
   try { await api("einstellung_setzen", { schluessel: "live_tippen", wert: { an } }); if (INIT?.einstellungen) INIT.einstellungen.live_tippen = { an };
@@ -29616,6 +29625,7 @@ let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoes
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
   try { hsSicht(v, ausHistorie); } catch {} // 2.710.0 KC-CLUB-HILFE-VON-SELBST
+  document.body.classList.remove("knoepfe-weg"); KNW.y = 0; // 2.725.0 KC-CLUB-KNOEPFE-WEG: neue Seite → Knöpfe wieder da
   setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
   if (v !== "chat" && CV.an) chatVorlesenStopp(true); /* KC-CLUB-CHAT-VORLESEN: nur im offenen Chat */
   if (v !== "chat" && CHAT_FILTER_STAND === "keine") chatFilterSetzen("alle", true); /* 2.591.0 KC-CLUB-CHAT-NUR-HG: außerhalb des Chats nichts ausgeblendet */

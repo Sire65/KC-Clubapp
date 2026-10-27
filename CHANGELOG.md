@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.725.0 – 2026-10-27 – 👆 Bedienung: größere Tippflächen, Schrift, Knöpfe beim Scrollen (KC-CLUB-BEDIENUNG-PAKET)
+Prüfbericht Etappe 2 (Wunsch #44): Kleine Knöpfe im Kopf (verfügbar, Leuchtpunkte, Herz, Inkognito, QR, Ansicht) haben eine unsichtbar größere Tippfläche. „Wer ist online?“ lässt sich wieder einzeln antippen, auch wenn die Direkte Leitung daneben leuchtet. Leiste unten, Kachel-Unterzeilen und Einstellungen etwas größer. 👆 ? 🔍 🎙️ gleiten beim Runterscrollen weg und kommen beim Hochscrollen und am Seitenende wieder. „Später · Nein, danke“ im Nachtmodus gut lesbar.
+
 ## 2.724.0 – 2026-10-27 – 🗓️ Dienstplan: Aushilfe nur mit anderen, Hinweise im Plan (KC-CLUB-DP-NACHBESSERN)
 Wunsch Hansi („Leon als Aushilfe können wir abends einteilen mit Anne, aber nicht nur“) – Dienstplan-Rechnung Regel 5 (rechnet sich beim Öffnen von selbst neu):
 - **Nur mit anderen** (`dp_druck_konfig.personen[pid].begleitet`): so viele andere müssen in jeder halben Stunde des Dienstes mit am Stand sein – auch bei der Nachbesserung. Leon: 2.

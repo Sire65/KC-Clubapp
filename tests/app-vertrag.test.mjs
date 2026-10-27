@@ -7730,6 +7730,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(seite, /addEventListener\("securitypolicyviolation", function \(ev\) \{\n    var u = String\(ev\.blockedURI \|\| ""\)\.split\("\?"\)\[0\]/, "Gesperrtes wird ohne ?-Teil protokolliert");
   assert.match(programm, /schutz: \["🛡️", "Schutzschild hat etwas gesperrt"/, "Fehlerprotokoll kennt „schutz“");
 }
+// 2.725.0 KC-CLUB-BEDIENUNG-PAKET (Prüfbericht Etappe 2, Wunsch #44): Tippflächen, Schrift, Knöpfe weg beim Scrollen, Lesbarkeit im Nachtmodus
+{
+  const seite = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(seite, /\.statusleiste \.statuschip::after, \.statusleiste \.leds::after \{ content: ""; position: absolute; inset: -9px 0; \}/, "Status und Leuchtpunkte: größere Tippfläche");
+  assert.match(seite, /#ledRt \{ z-index: 1; \} #ledOnline \{ z-index: 2; \}/, "„Wer ist online?“ und „Direkte Leitung“ bleiben einzeln antippbar");
+  assert.match(seite, /\.herz::after \{ content: ""; position: absolute; inset: -11px -8px; \}/, "Herz: größere Tippfläche");
+  assert.match(seite, /\.rg-k-link \{ border: 0; background: none; padding: 6px 2px; min-height: 44px; color: var\(--textRot\);/, "Später/Nein danke: groß genug und im Nachtmodus lesbar");
+  assert.match(seite, /\.fuss-leiste button \{[^}]*font-size: clamp\(\.74rem, 3\.2vw, \.84rem\);/, "Leiste unten: Schrift wächst mit der Breite");
+  assert.match(seite, /\.kachel small \{ color: var\(--grau\); font-weight: 700; font-size: \.875rem; \}/, "Kachel-Unterzeilen 14 px");
+  assert.match(seite, /body\.knoepfe-weg :is\(\.su-klein, \.hz-frage, \.hz-klick, \.sb-knopf\) \{ opacity: 0; translate: 0 24px; pointer-events: none; \}/, "Schwebeknöpfe gleiten beim Scrollen weg");
+  assert.match(seite, /@media \(max-width: 1023px\) \{\n    \.su-klein, \.hz-frage, \.hz-klick, \.sb-knopf \{ transition/, "nur am Handy/Tablet (Breitbild: stehen im Rand)");
+  assert.match(programm, /document\.body\.classList\.toggle\("knoepfe-weg", d > 0 && y > 40 && !ende\);/, "weg nur beim Runterscrollen, nicht oben und nicht am Ende");
+  assert.match(programm, /document\.body\.classList\.remove\("knoepfe-weg"\); KNW\.y = 0;/, "neue Seite → Knöpfe wieder da");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
