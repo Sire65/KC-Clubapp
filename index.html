@@ -5235,7 +5235,7 @@
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
-    <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst">⭐ Favoriten</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
+    <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst">⭐ Favoriten</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein versteckt" id="ugKnopf" onclick="ugStart()" title="Admin: welche deiner Nachrichten noch nicht gelesen wurden">📭 Ungelesen</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
     <div id="onlineLeiste"></div>
     <button type="button" class="knopf klein ab-merker" id="abMerker" onclick="abOeffnen()">📼 Mein Anrufbeantworter</button><!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER -->
     <div id="uhMarkLeiste"></div>
@@ -6045,7 +6045,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.708.0" data-v="2.708.0"></script>
+<script src="app.js?v=2.709.0" data-v="2.709.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

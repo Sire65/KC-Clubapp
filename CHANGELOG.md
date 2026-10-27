@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.709.0 – 2026-10-26 – 📭 Ungelesen-Übersicht für den Admin
+- 📭 Neu für den Admin: Übersicht, welche deiner Chat-Nachrichten noch nicht gelesen wurden – nach Person oder nach Nachricht, Filter 7/14/30 Tage, nur wichtige, nur Einzelchats, Suche; „💬 Erinnern“ öffnet den Chat mit fertigem Text (KC-CLUB-UNGELESEN-ADMIN).
+
 ## 2.708.0 – 2026-10-26 – Angefangene Nachrichten gehen nicht mehr verloren
 - ✏️ Eine neue, noch nicht gesendete Nachricht (Empfänger, Betreff, Text) bleibt jetzt auf dem Gerät erhalten – auch wenn das Handy die App im Hintergrund schließt. „Neue Nachricht“ und die Chat-Liste bieten „✏️ Fortsetzen“ oder „🗑️ Verwerfen“ an (KC-CLUB-NEU-ENTWURF).
 
