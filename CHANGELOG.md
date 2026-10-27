@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.703.0 – 2026-10-27 – 🗂️ Karteikarten 4.5: erste Seite passt auf ein Blatt
+KC-CLUB-KASSE-KARTEIKARTEN: Fund Hansi („die erste Seite passt nicht auf eine Seite und hat unten keinen Rand – nur die erste anpassen“). Technik → Freigegebene Programme → 🗂️ Kassen-Training Karteikarten zeigt jetzt **Version 4.5** (`dokumente/Kassen-Training_Karteikarten_V4.5.pdf`): Anleitung auf Seite 1 etwas kompakter, unten wieder gut 15 mm Rand. Seiten 2–20 (Karten) pixelgleich mit 4.4. Version 4.4 bleibt als Datei unverändert (Regel 17).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.702.0 – 2026-10-27 – 🗂️ Karteikarten zum Kassen-Training unter Technik
 KC-CLUB-KASSE-KARTEIKARTEN: Wunsch Hansi („Karteikarten der Kassenschulung in der neuesten Version in die Club-App unter Technik“). Register **Technik → 💻 Freigegebene Programme** hat neben der Kassen-Schulung die Kachel **🗂️ Kassen-Training Karteikarten** (Version 4.4, 74 Karten, `dokumente/Kassen-Training_Karteikarten_V4.4.pdf`). Sie öffnet die PDF in der App-Anzeige mit 🖨️ Drucken, 📤 Teilen/Speichern und ↗ PDF-Betrachter; ‹ Zurück führt wieder zu „Freigegebene Programme“. Das Dokument steht im Dokumenten-Register (`DOKUMENTE`, `ort: "technik"`) und wird darum nicht zusätzlich unter „Meine Dokumente“ gezeigt. Version 4.4 der Karteikarten: Seiten exakt A4 (Duplexdruck), 6 mm Freirand in jeder Karte.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.

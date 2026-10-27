@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.702.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.703.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15639,7 +15639,7 @@ const DOKUMENTE = [
   // 2.702.0 KC-CLUB-KASSE-KARTEIKARTEN (Wunsch Hansi „Karteikarten der Kassenschulung in der neuesten Version in die Club-App unter Technik“):
   // ort: "technik" = steht nicht in „Meine Dokumente“, sondern als Kachel unter Technik → 💻 Freigegebene Programme (PROGRAMME, dok:);
   // Anzeige, Drucken, Teilen und ‹ Zurück wie bei allen Dokumenten. PDF exakt A4 für den Duplexdruck (Kasse, Karteikarten 4.4).
-  { id: "kasse-karteikarten", sym: "🗂️", t: "Kassen-Training Karteikarten", u: "Version 4.4 · 74 Karten · beidseitig drucken", datei: "dokumente/Kassen-Training_Karteikarten_V4.4.pdf", ort: "technik" },
+  { id: "kasse-karteikarten", sym: "🗂️", t: "Kassen-Training Karteikarten", u: "Version 4.5 · 74 Karten · beidseitig drucken", datei: "dokumente/Kassen-Training_Karteikarten_V4.5.pdf", ort: "technik" }, // 2.703.0: V4.5 – Seite 1 (Anleitung) passt wieder auf eine Seite; V4.4 bleibt als Datei
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.3 · 33 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf" }, // 2.233.1: ersetzt V4.2 (Kombi-Bilder halb Getränk/halb Essen, jede Kombi nur einmal, Sammelbestellung neu fotografiert) – V4.2 bleibt als Datei · 2.154.1: ersetzt V4.1 (Reklamation mit Bildern, Parken verbinden, halbe Portion, Gutschein-Teilzahlung)
 ];
 // Gesamtprüfung 3 (2.23.84): lange zusammengesetzte Wörter auf schmalen Kacheln an der richtigen Stelle trennen (weiches Trennzeichen)
