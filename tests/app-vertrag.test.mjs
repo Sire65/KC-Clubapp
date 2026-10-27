@@ -7683,6 +7683,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.match(programm, /nachrichten: \{ sym: "💬", t: "Zu meinen Nachrichten", fn: \(\) => zeige\("nachrichten"\) \}/, "Sprung-Ziel Nachrichten");
 }
+// 2.719.0 KC-CLUB-HILFE-NICHT-BEIM-ZUSEHEN: keine Hilfe-Blase bei Diashow/Rückseite, Vollbild, laufendem Video oder Musik
+{
+  assert.match(programm, /function hsZuschauen\(\) \{\n  if \(typeof ES !== "undefined" && ES\.offen\) return true;/, "Rückseite (Diashow) = nur Zusehen");
+  assert.match(programm, /document\.fullscreenElement/, "Vollbild = nur Zusehen");
+  assert.match(programm, /if \(hsZuschauen\(\)\) return false;/, "hsDarf sperrt beim Zusehen");
+  assert.match(programm, /function hsPruefen\(\) \{\n  if \(hsZuschauen\(\)\) return hsNeuAnfangen\(\);/, "Zähler fangen nach dem Zusehen frisch an");
+  assert.match(programm, /if \(hsZuschauen\(\)\) return hsNeuAnfangen\(\);\n    HS\.klicks\+\+;/, "Tipper beim Zusehen zählen nicht");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

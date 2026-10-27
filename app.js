@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.718.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.719.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -46747,13 +46747,25 @@ function hsGrund() { // → "lange" | "pendeln" | "zurueck" | "suche" | "klicks"
 function hsDarf(v) {
   if (!ICH || !hsAn() || !v || !HZ_SICHT_HILFEN[v] || v === "hilfezentrum" || Date.now() - HS.start < 20000 || $("hsBlase")) return false;
   if (typeof RG !== "undefined" && RG.an) return false; // Erklär-Video läuft
+  if (hsZuschauen()) return false; // 2.719.0: Diashow, Vollbild, Video oder Musik – nur Zusehen
   if (document.querySelector(".dlg-blatt, #druckVorschau:not(.versteckt)")) return false;
   const a = document.activeElement; if (a && a.matches?.("input:not([type=checkbox]):not([type=radio]), textarea, [contenteditable='true']")) return false;
   if (hsLies(HS_NIE, []).includes(v)) return false;
   const t = hsLies(HS_TAG, {}); if (t.tag !== heuteIso()) return true;
   return (t.n || 0) < HS_GRENZE.proTag && !(t.sichten || []).includes(v);
 }
+// 2.719.0 KC-CLUB-HILFE-NICHT-BEIM-ZUSEHEN (Hansi: „Foto-Diashow angesehen – sofort kam der Hilfehinweis, dort überflüssig“):
+// Wer nur zusieht (Kopf-Rückseite mit Diashow/Uhr/Bühne/Spiegel/Rätsel, Vollbild, laufendes Video oder Musik), bekommt keine Blase.
+// Die Zähler fangen danach frisch an – Tipper aufs Foto oder lange Zeit beim Zusehen zählen nicht als „sucht etwas“.
+function hsZuschauen() {
+  if (typeof ES !== "undefined" && ES.offen) return true;
+  if (typeof BW !== "undefined" && BW.lauf) return true;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+  return [...document.querySelectorAll("video, audio")].some((m) => !m.paused && !m.ended);
+}
+function hsNeuAnfangen() { HS.zurueck = []; HS.leer = []; HS.tot = []; HS.klicks = 0; HS.seit = Date.now(); }
 function hsPruefen() {
+  if (hsZuschauen()) return hsNeuAnfangen();
   const v = HS.v, grund = hsGrund(); if (!grund || !hsDarf(v)) return;
   HS.zurueck = []; HS.leer = []; HS.tot = []; HS.verlauf = []; HS.klicks = 0; HS.seit = Date.now();
   const t = hsLies(HS_TAG, {}), heute = heuteIso(), neu = t.tag === heute ? t : { tag: heute, n: 0, sichten: [] };
@@ -46791,6 +46803,7 @@ function hsEinstZeigen() {
   // Tipper zählen; Tipper auf Stellen ohne Funktion = „Rumklickerei“
   document.addEventListener("click", (e) => {
     if (!ICH || e.target.closest?.("#hsBlase")) return;
+    if (hsZuschauen()) return hsNeuAnfangen();
     HS.klicks++;
     const aktiv = e.target.closest?.("button, a, input, select, textarea, label, summary, [onclick], [role=button], [tabindex], .knopf, .kachel, .mini-kachel, .chip, canvas, video, img");
     if (!aktiv) { HS.tot.push(Date.now()); hsPruefen(); }

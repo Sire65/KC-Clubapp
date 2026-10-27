@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.719.0 – 2026-10-27 – 🖼️ Keine Hilfe-Blase beim Zusehen (KC-CLUB-HILFE-NICHT-BEIM-ZUSEHEN)
+Twinkeys Hilfe von selbst meldet sich nicht mehr, während man nur zusieht: Diashow und alles auf der Kopf-Rückseite, Vollbild, laufendes Video oder laufende Musik. Tipper aufs Foto zählen dabei nicht als Suchen; danach fangen die Zähler frisch an.
+
 ## 2.718.0 – 2026-10-27 – 💬 Sprung-Knopf „Zu meinen Nachrichten“ (KC-CLUB-SPRUNG-NACHRICHTEN)
 Fund Hansi („ich habe aber keinen Knopf Nachrichten“): In der Startnachricht (und bei Sprung-Links im Chat) gibt es jetzt das Ziel „💬 Zu meinen Nachrichten“ – z. B. für eine Startnachricht an Mitglieder mit vielen ungelesenen Nachrichten. Antippen = gelesen und direkt in die Nachrichten.
 
