@@ -44,4 +44,5 @@ jobs:
       - run: node tests/buero-schnell.test.mjs
       - run: node tests/ml-alle-daten.test.mjs
       - run: node tests/neu-entwurf.test.mjs
+      - run: node tests/vm-stier.test.mjs
       - run: node tests/ungelesen-admin.test.mjs

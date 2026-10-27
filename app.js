@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.716.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.717.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5488,7 +5488,7 @@ const HILFE = [
   { id: "bauernhof", thema: "darstellung", sym: "🐄", t: "Thema Bauernhof", x: "Im Thema <b>🐄 Bauernhof</b> läuft im Kopf der Startseite ein ganzer Tag auf dem Hof: Morgens geht die Sonne auf und der <b>Hahn</b> kräht auf dem Zaunpfosten. <b>Kuh</b>, <b>Schwein</b> und <b>Hühner</b> kommen auf die Wiese – das Schwein suhlt sich in der Pfütze. Der <b>Traktor</b> bringt Stroh und lädt einen Ballen ab, dann steht ein Holzschild <b>„Hof“ mit deinem Vornamen</b>. Abends gehen alle Tiere in den <b>Stall</b>, das Tor geht zu, nachts schläft der Hahn – und am nächsten Morgen beginnt alles von vorn. Vorschau: ⚙️ → ✨ Effekte → 🐄 Bauernhof.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.445.0" },
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
-  { id: "viehmarkt", thema: "darstellung", sym: "🐄", t: "Viehmarkt auf Sim-Jü", x: "Am <b>Sim-Jü-Dienstag</b> (Vieh- und Krammarkt) zeigt der Kopf der Startseite abwechselnd mit der Kirmes-Szene den <b>🐄 Viehmarkt</b>: links Kuh, Schwein und ein Hühnerkäfig, der Händler mit Pfeife feilscht mit zwei Bauern – per <b>Handschlag</b> wird verkauft –, ein Bauer mit Holzschuhen führt seinen Haflinger vorbei, rechts ruft die Händlerin am Kurzwarenstand. Zum Schluss büxt das Ferkel aus, und nach einem „Prost!“ ist Feierabend.", seit: "2.682.0" },
+  { id: "viehmarkt", thema: "darstellung", sym: "🐄", t: "Viehmarkt auf Sim-Jü", x: "Am <b>Sim-Jü-Dienstag</b> (Vieh- und Krammarkt) zeigt der Kopf der Startseite abwechselnd mit der Kirmes-Szene den <b>🐄 Viehmarkt</b>: links Kuh, Schwein und ein Hühnerkäfig, der Händler mit Pfeife feilscht mit zwei Bauern – per <b>Handschlag</b> wird verkauft –, ein Bauer mit Holzschuhen führt seinen Haflinger vorbei, rechts ruft die Händlerin am Kurzwarenstand. Zum Schluss büxt das Ferkel aus, und nach einem „Prost!“ ist Feierabend. Dann trabt ein <b>🐂 Stier</b> mit großen Hörnern und Nasenring herein und schnaubt deinen Namen in den Himmel.", seit: "2.682.0" },
   { id: "seifenblasen", thema: "darstellung", sym: "🫧", t: "Thema Seifenblasen", x: "Im Thema <b>🫧 Seifenblasen</b> kommt unten im Kopf der Startseite ein <b>Kind</b> auf die Wiese und pustet <b>Seifenblasen</b> – kleine, große, leicht schillernd wie echte. Dann kommen von links und rechts <b>weitere Kinder</b> dazu. Die Blasen steigen, <b>platzen</b> und hinterlassen <b>Schlieren auf der Scheibe</b> – der Kopf wird immer verschmierter. Ab und zu wölbt eine <b>dicke Blase</b> den Kopf kurz wie ein <b>Fischauge</b>. Zum Schluss kommt der <b>Fensterputzer</b> mit Leiter, Eimer und Tuch und wischt die Scheibe wieder sauber – dann beginnt alles von vorn. Tippen geht durch die Schlieren hindurch. Vorschau: ⚙️ → ✨ Effekte → 🫧 Seifenblasen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.633.0" },
   { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
@@ -20777,7 +20777,14 @@ const jzbViehmarktTag = (d = new Date()) => themaFestZeit(d) === "simjue" && d.g
 // 2.682.0 (Hansi „ja, bau das so“): mit Ende – das Ferkel büxt aus (quer durch den Kurzwarenstand, Garn und Knöpfe fliegen, ein Holzschuh fliegt mit),
 // die Händlerin fängt es mit einem Stoffband, ein Korn auf den Handel („Prost!“), dann werden Kuh und Schwein weggeführt, der Händler zählt sein Geld
 // („Feierabend!“) und der Stand klappt zu. Schneller: es geht nach 2 s los, ein Lauf dauert 100 s.
-const JZB_VM_DAUER = 100;
+const JZB_VM_DAUER = 115; // 2.717.0 KC-CLUB-VM-STIER: +15 s für den Stier (vorher 100)
+// ---- 2.717.0 KC-CLUB-VM-STIER (Wunsch Hansi 27.10.2026 „in die Sim-Jü-Szene Krammarkt noch einen Stier mit großen Hörnern, der einen Ring durch die
+// Nase hat und durchs Bild läuft mit schnaubenden Nasenlöchern – daraus wird wieder der Username“): nach dem Feierabend (Stand zu) trabt ab
+// JZB_VM_STIER ein schwarzbrauner Stier von rechts herein, bleibt in der Mitte stehen und schnaubt; jede Dampfwolke aus den Nüstern schwebt nach oben
+// und wird ein Buchstabe des Vornamens (ohne Namen: „Köcheclub“, wie bei der Friedenspfeife). Dann trabt er links hinaus, der Name verweht.
+// Alles aus der Zeit im Lauf berechnet, nur Bild, nichts wird gespeichert oder gesendet.
+const JZB_VM_STIER = 87, JZB_VM_ST_REIN = 6, JZB_VM_ST_STEHT = 20, JZB_VM_ST_RAUS = 7, JZB_VM_ST_WOLKE = 1.6;
+const jzbVmStierTakt = () => Math.min(1.4, 8 / Math.max(1, jzbWwNameText().length));
 const JZB_VM_REDEN = [ // [Sekunde, wer, Text] – wer: h = Händler, a = Bauer Anton, b = Bauer Bernd, f = Kurzwaren-Frau
   [2.5, "a", "Schöne Kuh!"], [5.5, "b", "Gibt die auch gut Milch?"], [8.5, "h", "Die beste vom Hof!"], [11.5, "a", "Wat soll se kosten?"], [14.5, "h", "900 Euro!"],
   [17.5, "a", "600 – mehr nicht!"], [20.5, "h", "Sagen wir 750?"], [23.5, "a", "Abgemacht!"], [27, "f", "Knöpfe, Garn, Gummiband!"],
@@ -20827,6 +20834,60 @@ function jzbVmSchritt(F, dt) {
   // 🐴 Bauer mit Pferd: nur vor der Jagd (danach ist der Platz voll)
   if (!V.pferd && (V.pferdUhr -= dt) <= 0 && t < JZB_VM_AUS - 22) { const r = Math.random() < .5 ? 1 : -1; V.pferd = { x: r > 0 ? -60 * k : J.w + 60 * k, dir: r, ph: 0 }; }
   if (V.pferd) { const R = V.pferd; R.x += R.dir * 24 * k * dt; R.ph += dt; if ((R.dir > 0 && R.x > J.w + 70 * k) || (R.dir < 0 && R.x < -70 * k)) { V.pferd = null; V.pferdUhr = jzbZ(4, 8); } }
+}
+function jzbVmStierLage(t) { // Ort und Zustand des Stiers aus der Zeit: x, dir, geht, ph (Schritt), schnaubt (0…1)
+  const J = JZB, k = J.k, s = t - JZB_VM_STIER, mitte = J.w * .68, rechts = J.w + 70 * k, links = -80 * k;
+  if (s < 0 || s > JZB_VM_ST_STEHT + JZB_VM_ST_RAUS) return null;
+  if (s < JZB_VM_ST_REIN) { const p = jzbEase(s / JZB_VM_ST_REIN); return { x: rechts + (mitte - rechts) * p, dir: -1, geht: p < .98, ph: s * 1.6, schnaubt: 0 }; }
+  if (s < JZB_VM_ST_STEHT) { const z = (s - JZB_VM_ST_REIN) % 1.2; return { x: mitte, dir: -1, geht: false, ph: 0, schnaubt: z < .35 ? 1 - z / .35 : 0 }; }
+  const p = (s - JZB_VM_ST_STEHT) / JZB_VM_ST_RAUS; return { x: mitte + (links - mitte) * p * p, dir: -1, geht: true, ph: s * 1.8, schnaubt: 0 };
+}
+function jzbVmStierMalen(c, x, y, k, dir, ph, schnaubt, T) { // 🐂 Stier: schwarzbraun, Buckel, große geschwungene Hörner, Messingring durch die Nase; Nüstern bei x + 29,5k
+  c.save(); c.translate(x, y); c.scale(dir * k, k); c.lineCap = "round";
+  const b = (i) => Math.sin(ph * 5 + i * Math.PI / 2) * 3;
+  for (const [bx, i] of [[-13, 0], [-9, 2], [9, 1], [13, 3]]) { c.strokeStyle = "#2b160c"; c.lineWidth = 3.6; c.beginPath(); c.moveTo(bx, -17); c.lineTo(bx + b(i), -1.6); c.stroke();
+    c.strokeStyle = "#111"; c.lineWidth = 3.8; c.beginPath(); c.moveTo(bx + b(i) - .8, -1.2); c.lineTo(bx + b(i) + 1.4, -1.2); c.stroke(); }
+  const g = c.createLinearGradient(0, -32, 0, -12); g.addColorStop(0, "#5a3420"); g.addColorStop(1, "#2b160c");
+  c.fillStyle = g; c.beginPath(); c.ellipse(0, -21, 18, 9.5, 0, 0, 7); c.fill(); // Rumpf
+  c.beginPath(); c.ellipse(9, -27.5, 9, 6, -.2, 0, 7); c.fill(); // Buckel
+  c.beginPath(); c.moveTo(12, -29); c.quadraticCurveTo(20, -30, 24, -27); c.lineTo(25, -18); c.quadraticCurveTo(18, -15, 13, -16); c.closePath(); c.fill(); // massiger Hals
+  const nick = schnaubt * 1.2; // beim Schnauben senkt er kurz den Kopf
+  c.save(); c.translate(0, nick);
+  c.fillStyle = "#3d2214"; c.beginPath(); c.ellipse(24.5, -23.5, 6.6, 5.4, .35, 0, 7); c.fill(); // Kopf
+  c.fillStyle = "#7a5a4a"; c.beginPath(); c.ellipse(28.6, -20.4, 3.8, 3.1, .2, 0, 7); c.fill(); // Maul
+  c.fillStyle = "#1a0d06"; const nr = .65 + schnaubt * .45; c.beginPath(); c.arc(30.4, -21.4, nr, 0, 7); c.arc(29.4, -19.6, nr * .9, 0, 7); c.fill(); // Nüstern (geweitet beim Schnauben)
+  c.strokeStyle = "#e9c46a"; c.lineWidth = 1; c.beginPath(); c.arc(30.6, -17.9, 1.9, -1.2, 4.3); c.stroke(); c.strokeStyle = "rgba(255,255,255,.6)"; c.lineWidth = .4; c.beginPath(); c.arc(30.6, -17.9, 1.9, -.6, .4); c.stroke(); // Nasenring
+  for (const [hx, cx, ex, w] of [[22, 13, 16, 2.6], [25.5, 33, 30, 2.2]]) { // zwei große Hörner, nach außen und oben geschwungen
+    c.strokeStyle = "#efe3c2"; c.lineWidth = w; c.beginPath(); c.moveTo(hx, -27.5); c.quadraticCurveTo(cx, -31, ex, -39); c.stroke();
+    c.strokeStyle = "#3b3226"; c.lineWidth = w * .8; c.beginPath(); c.moveTo(ex + (cx - ex) * .12, -38); c.lineTo(ex, -39.4); c.stroke(); }
+  c.fillStyle = "#3d2214"; c.beginPath(); c.ellipse(19.5, -27, 2.6, 1.3, -.5, 0, 7); c.fill(); // Ohr
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(25.4, -25.6, 1.1, 0, 7); c.fill(); c.fillStyle = "#111"; c.beginPath(); c.arc(25.7, -25.6, .7, 0, 7); c.fill(); // grimmiges Auge
+  c.strokeStyle = "#111"; c.lineWidth = .7; c.beginPath(); c.moveTo(23.8, -27.3); c.lineTo(26.8, -26.4); c.stroke(); // Braue
+  c.restore();
+  c.strokeStyle = "#2b160c"; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-17.5, -24); c.quadraticCurveTo(-22, -18 + Math.sin((ph || T) * 3) * 2, -20, -8); c.stroke(); // Schwanz
+  c.fillStyle = "#1a0d06"; c.beginPath(); c.ellipse(-20, -7, 1.6, 2.4, 0, 0, 7); c.fill(); // Quaste
+  c.restore();
+}
+function jzbVmStierNameMalen(c, t, k, T, S, boden) { // Dampf aus den Nüstern → Buchstaben des Vornamens über der Bühne
+  const J = JZB, z = jzbWwNameText(), takt = jzbVmStierTakt(), ab = JZB_VM_STIER + JZB_VM_ST_REIN + .6;
+  const fs = Math.round(Math.max(11, Math.min(26 * k, (boden - 50 * k) * .7))), f = `700 ${fs}px Georgia, "Times New Roman", serif`;
+  c.save(); c.font = f; const br = z.map((ch) => c.measureText(ch).width + 1.5 * k); const ges = br.reduce((a, v) => a + v, 0);
+  let px = Math.max(JZB_RAND, Math.min(J.w - JZB_RAND - ges, J.w * .5 - ges / 2)); const pos = br.map((w) => { const m = px + w / 2; px += w; return m; });
+  const ly = Math.max(fs * .9 + 2, boden - 58 * k), weht = Math.max(0, t - (JZB_VM_STIER + JZB_VM_ST_STEHT)), aus = Math.max(0, 1 - weht / 3);
+  const nx = S ? S.x + S.dir * 30 * k * 1.25 : 0, ny = boden - 20.5 * k * 1.25;
+  c.textAlign = "center"; c.textBaseline = "alphabetic";
+  z.forEach((ch, i) => {
+    const d = t - (ab + i * takt); if (d < 0) return;
+    if (d < JZB_VM_ST_WOLKE + .1 && S) { // Dampfwolke aus den Nüstern schwebt an ihren Platz
+      const p = jzbEase(Math.min(1, d / JZB_VM_ST_WOLKE)), x = nx + (pos[i] - nx) * p, y = ny + (ly - fs * .35 - ny) * p - Math.sin(p * Math.PI) * 10 * k, r = 2 * k + p * fs * .14;
+      const a = (.6 - p * .25) * (d > JZB_VM_ST_WOLKE - .3 ? (JZB_VM_ST_WOLKE + .1 - d) / .4 : 1);
+      for (const [ox, oy, rr] of [[0, 0, 1], [-.7, .3, .75], [.7, .35, .7], [0, -.6, .65]]) { c.fillStyle = `rgba(245,245,245,${a})`; c.beginPath(); c.arc(x + ox * r, y + oy * r, rr * r, 0, 7); c.fill(); }
+    }
+    const sicht = Math.min(1, Math.max(0, (d - (JZB_VM_ST_WOLKE - .3)) / 1)) * aus; if (sicht <= 0) return;
+    c.shadowColor = "rgba(255,255,255,.9)"; c.shadowBlur = 6 * k; c.fillStyle = `rgba(250,250,250,${.9 * sicht})`;
+    c.fillText(ch, pos[i] + Math.sin(T * 1.3 + i * 1.7) * .8 * k + weht * (14 + i * 2) * k, ly + Math.cos(T * 1.1 + i) * .6 * k - weht * (5 + i % 3 * 2) * k); c.shadowBlur = 0;
+  });
+  c.restore();
 }
 function jzbVmPlatz() { // Stellplätze (links Tiere, Mitte Händler und Bauern, rechts Stand) – passt sich der Breite an
   const J = JZB, k = J.k, l = JZB_RAND + 4 * k;
@@ -20982,6 +21043,13 @@ function jzbVmMalen(c, F) {
     c.strokeStyle = "#7a5230"; c.lineWidth = .9; c.beginPath(); c.moveTo(R.x + R.dir * 27 * k, boden - 33 * k); c.quadraticCurveTo(R.x + R.dir * 31 * k, boden - 20 * k, kx + R.dir * 7 * k, boden - 17 * k); c.stroke(); // Führstrick
     jzbVmBauerMalen(c, kx, boden + 1 * k, k, R.dir, { geht: true, ph: R.ph, arm: "seil", kappe: "#1b1b1b", farbe: "#2a7f8f" });
     if (Math.sin(R.ph * 5) > .97) jzbVmBlase(c, R.x, boden - 46 * k, "klapp, klapp", k * .8, .8); }
+  // 🐂 2.717.0 KC-CLUB-VM-STIER: Stier trabt herein, schnaubt den Namen in den Himmel, trabt hinaus
+  const S = jzbVmStierLage(t);
+  if (S) { jzbVmStierMalen(c, S.x, boden + 1 * k, k * 1.25, S.dir, S.ph, S.schnaubt, T);
+    if (S.schnaubt > .6) { const nx = S.x + S.dir * 30 * k * 1.25, ny = boden - 20.5 * k * 1.25; c.fillStyle = `rgba(240,240,240,${.5 * S.schnaubt})`; // kurze Dampfstöße beim Schnauben
+      for (let j = 0; j < 3; j++) { c.beginPath(); c.arc(nx + S.dir * (3 + j * 3) * k, ny + (1 + j) * k, (1.4 + j * .8) * k, 0, 7); c.fill(); } }
+    const s = t - JZB_VM_STIER; if (s > JZB_VM_ST_REIN && s < JZB_VM_ST_REIN + 2.2) ruf("Schnauf!", S.x, boden - 52 * k, "#5a3420", 9); }
+  if (t >= JZB_VM_STIER) jzbVmStierNameMalen(c, t, k, T, S, boden);
 }
 
 // ---- 🥨 Oktoberfest ----

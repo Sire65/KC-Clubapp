@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.717.0 – 2026-10-26 – 🐂 Stier auf dem Viehmarkt
+- 🐂 Viehmarkt auf Sim-Jü: Nach Feierabend trabt ein Stier mit großen Hörnern und Nasenring herein, schnaubt – und aus den Dampfwolken entsteht dein Name (KC-CLUB-VM-STIER).
+
 ## 2.716.0 – 2026-10-26 – 🌹 Rosen-Gruß mit Sim-Jü
 - 🌹 Der Gruß zur Rose lautet jetzt „Ein Gruß aus der Schießbude – hab ich für dich auf der Sim-Jü geschossen 🎯“ (KC-CLUB-ROSE-TEXT).
 

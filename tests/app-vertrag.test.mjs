@@ -7470,7 +7470,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const t of ["Haltet dat Ferkel!", "Hab dich!", "Auf den Handel!", "Feierabend!"]) assert.ok(programm.includes(`"${t}"`), t);
   assert.match(programm, /ruf\("Prost!",/, "Prost");
   assert.match(programm, /fillText\("Geschlossen", x, y - 17\.4 \* k\)/, "Stand klappt zu");
-  assert.match(programm, /const JZB_VM_DAUER = 100;/, "schneller: 100 s");
+  assert.match(programm, /const JZB_VM_DAUER = 115;/, "100 s + 15 s Stier (2.717.0)");
   // Clown schneller
   assert.match(programm, /const JZB_CLOWN_TEMPO = 1\.6;[^\n]*\nfunction jzbClownSchritt\(F, dt\) \{\n[^\n]*\n  dt \*= JZB_CLOWN_TEMPO;/, "Clown 1,6-mal so schnell");
   assert.match(programm, /if \(F\.clownUhr === undefined\) F\.clownUhr = jzbZ\(1\.5, 3\);/, "Clown kommt gleich");
