@@ -4665,6 +4665,10 @@
   .fotoraster { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px; }
   .fotokachel { position: relative; aspect-ratio: 1; border: none; padding: 0; border-radius: 8px; overflow: hidden; background: var(--karte2); cursor: pointer; font-size: 1.6rem; }
   .fotokachel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* 2.711.0 KC-CLUB-VIDEOS */
+  .fa-aus { display: none !important; }
+  .vi-kachel .vi-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 2.2rem; height: 2.2rem; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem; padding-left: 3px; }
+  .vi-kachel .vi-dauer { position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.65); color: #fff; border-radius: 8px; padding: 1px 6px; font-size: .8rem; font-weight: 700; }
   .fotokachel .fk-marke { position: absolute; right: 4px; bottom: 4px; background: rgba(0,0,0,.6); border-radius: 10px; padding: 2px 6px; font-size: 1rem; }
   /* KC-CLUB-BLAETTERN (1.64.0): Ordner wie ein Prospekt – Vollbild, Umblättern, Lesezeichen je Register */
   .bl { position: fixed; inset: 0; z-index: 2050; background: #2b2320; color: #fff; display: flex; flex-direction: column; }
@@ -5179,6 +5183,9 @@
   <!-- FOTOALBUM (KC-CLUB-FOTOALBUM) -->
   <section id="v-fotos" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf klein" onclick="faDiashow()" title="Diashow mit Musik – Album wählen" aria-label="Diashow starten">▶️ Diashow</button><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
+    <!-- 2.711.0 KC-CLUB-VIDEOS: Fotos und Videos getrennt -->
+    <div class="umschalter" id="faArtWahl" role="tablist"><button type="button" data-art="fotos" class="an" onclick="faArt('fotos')">📷 Fotos</button><button type="button" data-art="videos" onclick="faArt('videos')">🎬 Videos</button></div>
+    <div id="videoBereich" class="versteckt"><div id="videoForm" class="karte versteckt"></div><div id="videoPlatz"></div><div id="videoListe"></div></div>
     <div id="fotoForm" class="karte versteckt"></div>
     <div id="fotoSpeicher"></div>
     <div id="fotoAlben"></div><!-- KC-CLUB-FOTO-ALBEN (1.63.0) -->
@@ -6054,7 +6061,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.710.0" data-v="2.710.0"></script>
+<script src="app.js?v=2.711.0" data-v="2.711.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

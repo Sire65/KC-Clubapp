@@ -7644,6 +7644,22 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/id="setHsE" checked onchange="hsSchalter\(this\.checked\)"/.test(seite) && /id="setHs" checked/.test(seite), "Schalter in den Einstellungen (Standard an)");
   assert.ok(/\/\^hs_\[avlnx\]_\[a-z_\]\{2,25\}\$\/\.test\(String\(b\)\)/.test(server) && /function nzHsHtml\(zeilen\)/.test(html), "anonyme Zähler für die Nutzung, Auswertung für den Admin");
 }
+// 2.711.0 KC-CLUB-VIDEOS + KC-CLUB-FOTO-PLATZ (Hansi „Abspieler für Handy-Videos, aufgeteilt nach Foto und Video“, „beim Foto-Hochladen eine Abfrage“)
+{
+  for (const a of ["videos_liste", "video_hochladen_start", "video_hochladen_fertig", "video_oeffnen", "video_loeschen"]) assert.ok(aktionen.has(a), `Video: Server-Aktion ${a} fehlt`);
+  assert.ok(/const VIDEO_MAX_BYTES = 15 \* 1024 \* 1024, VIDEO_MAX_SEK = 60, VIDEO_GRENZE = 300 \* 1024 \* 1024/.test(server), "Video: Grenzen 15 MB, 60 s, 300 MB");
+  assert.ok(/createSignedUploadUrl\(pfad\)/.test(server) && /if \(!videoPfadOk\(ich, pfad\)\) throw/.test(server) && /bytes\[4\] === 0x66 && bytes\[5\] === 0x74 && bytes\[6\] === 0x79 && bytes\[7\] === 0x70/.test(server), "Video: direkter Upload, nur eigener Pfad, Inhalt geprüft");
+  assert.ok(/await videoPlatzPruefen\(ich, groesse\);/.test(server) && /await videoPlatzPruefen\(ich, bytes\.length, true\);/.test(server), "Video: Platz vor und nach dem Hochladen geprüft");
+  assert.ok(/eq\("aktion", "video_start"\)[\s\S]{0,400}\.lt\("zeit", new Date\(Date\.now\(\) - 2 \* 3600000\)/.test(server), "Video: Wartung räumt liegen gebliebene Uploads weg");
+  assert.ok(!/from\("kc_club_fotos"\)[^;]*kc_club_videos/.test(server), "Video: eigene Tabelle, nicht in den Fotos");
+  const mig = fs.readFileSync(new URL("../supabase/migrations/20261027_kc_club_v2708_videos.sql", import.meta.url), "utf8");
+  assert.ok(/create table if not exists public\.kc_club_videos/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_videos from public, anon, authenticated;/.test(mig)
+    && /grant select, insert, update, delete on public\.kc_club_videos to service_role;/.test(mig) && /Rückweg:/.test(mig), "Video: Migration mit RLS, Rechten und Rückweg");
+  assert.ok(/id="faArtWahl"/.test(seite) && /onclick="faArt\('videos'\)"/.test(seite) && /id="videoBereich" class="versteckt"/.test(seite), "Video: Umschalter Fotos | Videos im Fotoalbum");
+  assert.ok(/c\.captureStream\(30\)/.test(programm) && /videoBitsPerSecond: 1200000/.test(programm) && /Math\.min\(1, 720 \/ Math\.min\(v\.videoWidth, v\.videoHeight\), 1280 \/ Math\.max/.test(programm), "Video: App verkleinert auf 720p, 1,2 Mbit/s");
+  assert.ok(/<video controls playsinline preload="metadata"/.test(programm) && /api\("video_oeffnen", \{ id: v\.id \}\)/.test(programm), "Video: Abspieler");
+  assert.ok(/const groesse = await faGroesseFrage\(faDateien\.length\); if \(!groesse\) return;/.test(programm) && /groesse === "spar" \? await verkleinern\(roh, 1280, 0\.72\)/.test(programm), "Foto-Platz: Frage vor jedem Hochladen, platzsparend 1280 px");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

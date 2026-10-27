@@ -1423,6 +1423,36 @@ async function speicherStand() {
     fotosMoeglich: Math.max(0, Math.floor((SPEICHER_GRENZE * FOTO_STOPP - belegt) / FOTO_SCHNITT)) };
 }
 const darfFotoAendern = (ich: Ich, f: any) => f.hochgeladen_von === ich.person_id || ich.vorstand;
+// ---------- 2.711.0 KC-CLUB-VIDEOS (Wunsch Hansi „Abspieler für Handy-Videos – Szenen vom Clubtreffen für alle, aufgeteilt nach Foto und Video“;
+// Wahl Hansi: bei Supabase bleiben, streng begrenzt). Die App verkleinert vor dem Hochladen (720p, ca. 1,2 Mbit/s ≈ 10 MB je Minute).
+// Grenzen: je Video höchstens 60 Sekunden und 15 MB; alle Videos zusammen höchstens 300 MB des kostenlosen 1-GB-Speichers (Rest bleibt für
+// Fotos, Archiv und Anlagen); ab 95 % Gesamtspeicher nimmt der Server nichts mehr an (wie bei Fotos). Die App lädt die Datei direkt in den
+// Speicher (signierter Upload-Link, kein Base64 durch den Server); erst „video_hochladen_fertig“ prüft die Datei und trägt sie ein.
+// Liegen gebliebene Uploads (Start ohne Fertig) räumt die Wartung nach 2 Stunden weg.
+const VIDEO_MAX_BYTES = 15 * 1024 * 1024, VIDEO_MAX_SEK = 60, VIDEO_GRENZE = 300 * 1024 * 1024, VIDEO_SCHNITT = 10 * 1024 * 1024;
+const VIDEO_MIME = /^video\/(mp4|webm)$/;
+async function videoBelegt() {
+  const { data, error } = await db.from("kc_club_videos").select("groesse").limit(5000);
+  if (error) throw new Fehler("Videos gerade nicht erreichbar – bitte später noch einmal.", 503);
+  return (data ?? []).reduce((a: number, v: any) => a + (Number(v.groesse) || 0), 0);
+}
+async function videoPlatzPruefen(ich: Ich, groesse: number, schonImSpeicher = false) {
+  const [sp, belegt] = await Promise.all([speicherStand(), videoBelegt()]);
+  if (sp.belegt - (schonImSpeicher ? groesse : 0) >= SPEICHER_GRENZE * FOTO_STOPP) throw new Fehler(`Der kostenlose Speicher ist fast voll – bitte ${await adminVorname()} Bescheid geben.`, 507);
+  if (belegt + groesse > VIDEO_GRENZE) throw new Fehler(`Der Platz für Videos ist voll (${Math.round(belegt / 1048576)} von ${Math.round(VIDEO_GRENZE / 1048576)} MB) – bitte zuerst alte Videos löschen oder ${await adminVorname()} Bescheid geben.`, 507);
+  if (!ich.admin && (ich as any).zugang) { // Tageskontingent wie bei Anlagen (2.425.0)
+    const { data: heute, error: he } = await db.from("kc_communication_attachments").select("size_bytes").like("object_path", `club/${ich.person_id}/%`).gte("created_at", new Date(Date.now() - 86400000).toISOString()).limit(2000);
+    const summe = (heute ?? []).reduce((a: number, x: any) => a + (Number(x.size_bytes) || 0), 0), grenze = ich.zugang === "mitglied" ? UPLOAD_TAG_MITGLIED : UPLOAD_TAG_GAST;
+    if (!he && summe + (schonImSpeicher ? 0 : groesse) > grenze) throw new Fehler(`Heute hast du schon ${Math.round(summe / 1048576)} MB hochgeladen – mehr geht ab morgen wieder.`, 429);
+  }
+  return { belegt, grenze: VIDEO_GRENZE };
+}
+const videoPfadOk = (ich: Ich, pfad: string) => pfad.startsWith(`club/${ich.person_id}/`) && /^video-[0-9a-f-]{36}\.(mp4|webm)$/.test(pfad.slice(`club/${ich.person_id}/`.length));
+async function videoHolen(id: unknown) {
+  const { data: v } = await db.from("kc_club_videos").select("*").eq("id", String(id || "")).maybeSingle();
+  if (!v) throw new Fehler("Video nicht gefunden.", 404);
+  return v;
+}
 // KC-CLUB-FOTO-ALBEN (1.63.0, Wunsch Hansi): benannte Alben aus Fotos des Fotoalbums (nur Verweise, keine Kopien).
 // privat = nur Besitzer · alle = alle Mitglieder; ändern: Besitzer, bei Club-Alben auch die Clubleitung. Sichtbarkeit nur der Besitzer.
 const ALBUM_MAX_FOTOS = 600, ALBUM_MAX_JE_PERSON = 200, ALBUM_JE_AUFRUF = 300;
@@ -8229,6 +8259,17 @@ Köcheclub Werne`,
           fotosEntfernt++;
         }
         if (fotosEntfernt) await protokoll(null, "fotos_endgueltig_entfernt", { anzahl: fotosEntfernt });
+      }
+      // 2.711.0 KC-CLUB-VIDEOS: hochgeladen, aber nie fertig eingetragen (App zu, Netz weg) → nach 2 Stunden aus dem Speicher entfernen
+      {
+        const { data: starts } = await db.from("kc_club_protokoll").select("details").eq("aktion", "video_start")
+          .lt("zeit", new Date(Date.now() - 2 * 3600000).toISOString()).gte("zeit", new Date(Date.now() - 3 * 86400000).toISOString()).limit(100);
+        const pfade = [...new Set((starts ?? []).map((x: any) => String(x.details?.pfad || "")).filter((x: string) => /^club\/[^/]+\/video-[0-9a-f-]{36}\.(mp4|webm)$/.test(x)))];
+        if (pfade.length) {
+          const { data: da } = await db.from("kc_communication_attachments").select("object_path").in("object_path", pfade);
+          const eingetragen = new Set((da ?? []).map((x: any) => x.object_path)), reste = pfade.filter((x) => !eingetragen.has(x));
+          if (reste.length) await db.storage.from(BUCKET).remove(reste).catch(() => null);
+        }
       }
       // KC-CLUB-ARCHIV: Papierkorb nach 30 Tagen endgültig leeren (Dokumente, dann leere gelöschte Ordner)
       let archivEntfernt = 0;
@@ -16451,6 +16492,97 @@ Köcheclub Werne`,
         const f = await fotoHolen(p.id);
         await db.from("kc_club_fotos").update({ geloescht_am: null, geloescht_von: null }).eq("id", f.id);
         await protokoll(ich.person_id, "foto_wiederhergestellt", { foto: f.id });
+        return json({ ok: true });
+      }
+
+      // ----- 2.711.0 KC-CLUB-VIDEOS -----
+      case "videos_liste": {
+        const [{ data: vids, error }, speicher] = await Promise.all([
+          db.from("kc_club_videos").select("*").order("datum", { ascending: false }).order("hochgeladen_am", { ascending: false }).limit(300),
+          speicherStand(),
+        ]);
+        if (error) throw new Fehler("Videos gerade nicht erreichbar – bitte später noch einmal.", 503);
+        const liste = vids ?? [];
+        const [leute, { data: att }] = await Promise.all([
+          personen(liste.map((v: any) => v.hochgeladen_von)),
+          liste.some((v: any) => v.vorschau_id) ? db.from("kc_communication_attachments").select("id,object_path").in("id", liste.map((v: any) => v.vorschau_id).filter(Boolean)) : Promise.resolve({ data: [] as any[] }),
+        ]);
+        const pfad = new Map((att ?? []).map((a: any) => [a.id, a.object_path]));
+        const pfade = [...new Set([...pfad.values()])] as string[];
+        const { data: urls } = pfade.length ? await db.storage.from(BUCKET).createSignedUrls(pfade, 3600) : { data: [] as any[] };
+        const url = new Map((urls ?? []).map((u: any) => [u.path, u.signedUrl]));
+        const belegt = liste.reduce((a: number, v: any) => a + (Number(v.groesse) || 0), 0);
+        return json({
+          videos: liste.map((v: any) => ({ id: v.id, thema: v.thema, datum: v.datum, beschreibung: v.beschreibung, bezug_art: v.bezug_art, bezug_id: v.bezug_id,
+            dauer: Number(v.dauer_sek), groesse: Number(v.groesse), hochgeladen: v.hochgeladen_am, darfAendern: darfFotoAendern(ich, v),
+            von: { person_id: v.hochgeladen_von, name: leute.get(v.hochgeladen_von)?.display_name ?? "" }, vorschau: url.get(pfad.get(v.vorschau_id)) ?? null })),
+          platz: { belegt, grenze: VIDEO_GRENZE, maxBytes: VIDEO_MAX_BYTES, maxSek: VIDEO_MAX_SEK, moeglich: Math.max(0, Math.floor((VIDEO_GRENZE - belegt) / VIDEO_SCHNITT)) },
+          speicher,
+        });
+      }
+      case "video_hochladen_start": {
+        const mime = String(p.mime || ""), groesse = Number(p.groesse), dauer = Number(p.dauer);
+        if (!VIDEO_MIME.test(mime)) throw new Fehler("Dieses Videoformat geht hier nicht.", 400);
+        if (!(groesse > 0) || groesse > VIDEO_MAX_BYTES) throw new Fehler(`Das Video ist zu groß (höchstens ${VIDEO_MAX_BYTES / 1048576} MB).`, 400);
+        if (!(dauer > 0) || dauer > VIDEO_MAX_SEK + 1) throw new Fehler(`Ein Video darf höchstens ${VIDEO_MAX_SEK} Sekunden lang sein.`, 400);
+        await videoPlatzPruefen(ich, groesse);
+        const pfad = `club/${ich.person_id}/video-${crypto.randomUUID()}.${mime === "video/mp4" ? "mp4" : "webm"}`;
+        const { data, error } = await db.storage.from(BUCKET).createSignedUploadUrl(pfad);
+        if (error || !data?.signedUrl) throw new Fehler("Hochladen geht gerade nicht – bitte gleich noch einmal.", 500);
+        await protokoll(ich.person_id, "video_start", { pfad, groesse });
+        return json({ url: data.signedUrl, pfad });
+      }
+      case "video_hochladen_fertig": {
+        const pfad = String(p.pfad || "");
+        if (!videoPfadOk(ich, pfad)) throw new Fehler("Unbekanntes Video.", 400);
+        const weg = () => db.storage.from(BUCKET).remove([pfad]).catch(() => null);
+        const { data: blob, error: de } = await db.storage.from(BUCKET).download(pfad);
+        if (de || !blob) throw new Fehler("Das Video ist nicht angekommen – bitte noch einmal hochladen.", 404);
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        // Inhalt prüfen: MP4 („ftyp“ ab Byte 4) oder WebM (EBML-Kopf) – sonst weg
+        const mime = bytes.length > 12 && bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70 ? "video/mp4"
+          : bytes.length > 4 && bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3 ? "video/webm" : "";
+        const dauer = Math.round(Number(p.dauer) * 10) / 10;
+        try {
+          if (!mime) throw new Fehler("Die Datei ist kein Video.", 400);
+          if (!bytes.length || bytes.length > VIDEO_MAX_BYTES) throw new Fehler(`Das Video ist zu groß (höchstens ${VIDEO_MAX_BYTES / 1048576} MB).`, 400);
+          if (!(dauer > 0) || dauer > VIDEO_MAX_SEK + 1) throw new Fehler(`Ein Video darf höchstens ${VIDEO_MAX_SEK} Sekunden lang sein.`, 400);
+          await videoPlatzPruefen(ich, bytes.length, true);
+        } catch (e) { await weg(); throw e; }
+        const datum = fotoDatum(p.datum), bezug = await fotoBezugPruefen(p.bezug_art, p.bezug_id).catch(async (e) => { await weg(); throw e; });
+        const { data: link } = await db.from("kc_core_user_links").select("user_id").eq("person_id", SYSTEM_UPLOADER).eq("active", true).limit(1).maybeSingle();
+        const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((x) => x.toString(16).padStart(2, "0")).join("");
+        const { data: att, error: ae } = await db.from("kc_communication_attachments").insert({
+          org_id: ORG, uploaded_by: link?.user_id, bucket: BUCKET, object_path: pfad, file_name: `Video ${datum}.${mime === "video/mp4" ? "mp4" : "webm"}`, mime_type: mime, size_bytes: bytes.length, sha256: hash,
+        }).select("id").single();
+        if (ae || !att) { await weg(); throw new Fehler("Video konnte nicht gespeichert werden.", 500); }
+        let vorschau: { id: string; groesse: number } | null = null;
+        try {
+          if (p.vorschau) vorschau = await dateiAblegen(ich, "vorschau-video.jpg", "image/jpeg", p.vorschau, /^image\/jpeg$/).catch(() => null);
+          const { data: v, error } = await db.from("kc_club_videos").insert({
+            attachment_id: att.id, vorschau_id: vorschau?.id ?? null, thema: txt(p.thema, 60), datum, ...bezug, beschreibung: txt(p.beschreibung, 300),
+            dauer_sek: dauer, groesse: bytes.length + (vorschau?.groesse ?? 0), mime, hochgeladen_von: ich.person_id,
+          }).select("id").single();
+          if (error || !v) throw new Fehler("Video konnte nicht gespeichert werden.", 500);
+          await protokoll(ich.person_id, "video_hochgeladen", { video: v.id, groesse: bytes.length, dauer });
+          return json({ ok: true, id: v.id });
+        } catch (e) { await dateienEntfernen([att.id, vorschau?.id]); throw e; }
+      }
+      case "video_oeffnen": {
+        const v = await videoHolen(p.id);
+        const { data: att } = await db.from("kc_communication_attachments").select("bucket,object_path,file_name").eq("id", v.attachment_id).maybeSingle();
+        if (!att) throw new Fehler("Video nicht gefunden.", 404);
+        const { data: su } = await db.storage.from(att.bucket).createSignedUrl(att.object_path, 3600, p.herunterladen ? { download: att.file_name } : undefined);
+        if (!su?.signedUrl) throw new Fehler("Video kann gerade nicht geöffnet werden.", 500);
+        return json({ url: su.signedUrl, name: att.file_name });
+      }
+      case "video_loeschen": {
+        // endgültig (die App fragt vorher nach) – macht sofort Platz für neue Videos
+        const v = await videoHolen(p.id);
+        if (!darfFotoAendern(ich, v)) throw new Fehler("Löschen darf nur, wer das Video hochgeladen hat (oder Clubsprecher/Kassenwart).", 403);
+        await db.from("kc_club_videos").delete().eq("id", v.id);
+        await dateienEntfernen([v.attachment_id, v.vorschau_id]);
+        await protokoll(ich.person_id, "video_geloescht", { video: v.id, von: v.hochgeladen_von, datum: v.datum, thema: v.thema, groesse: v.groesse });
         return json({ ok: true });
       }
 

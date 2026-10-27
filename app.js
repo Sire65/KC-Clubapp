@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.710.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.711.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -41122,6 +41122,169 @@ async function notfallSpeichern() {
   try { await api("notfall_setzen", d); INIT.notfall = d.name || d.telefon ? d : null; melde(d.name || d.telefon ? "🆘 Notfallkontakt gespeichert" : "Notfallkontakt entfernt"); } catch (e) { meldeFehler(e); }
 }
 
+// ---------- 2.711.0 KC-CLUB-FOTO-PLATZ (Wunsch Hansi „beim Foto-Hochladen eine Abfrage: Fotos wegen Platz etwas verkleinern“; Wahl: immer fragen) ----------
+// Normal: 1600 px, Qualität 0,82 (ca. 250 KB) wie bisher · Platzsparend: 1280 px, 0,72 (ca. 130 KB). Schließen/Abbrechen = nicht hochladen.
+function faGroesseFrage(anzahl) {
+  const sp = FA?.speicher, belegt = sp ? `Speicher: ${sp.prozent.toLocaleString("de-DE")} % belegt.` : "";
+  return new Promise((fertig) => {
+    let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">💾 ${anzahl === 1 ? "Foto" : anzahl + " Fotos"} platzsparend speichern?</h3>
+      <p class="dlg-text">${esc(belegt)} Platzsparend werden die Fotos etwas kleiner gespeichert (ca. 130 statt 250 KB) – auf dem Handy sieht man kaum einen Unterschied, es passen aber fast doppelt so viele ins Album.</p>
+      <div class="dlg-knoepfe"><button class="knopf haupt" data-w="spar">💾 Platzsparend</button><button class="knopf" data-w="normal">Normale Größe</button><button class="knopf" data-w="">Abbrechen</button></div>`, () => zu(null));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w || null)));
+  });
+}
+
+// ---------- 2.711.0 KC-CLUB-VIDEOS (Wunsch Hansi „Abspieler für Handy-Videos – Szenen vom Clubtreffen für alle hochladen, aufgeteilt nach
+// Foto und Video“; Wahl: bei Supabase bleiben, streng begrenzt). Im Fotoalbum oben „📷 Fotos | 🎬 Videos“. Die App verkleinert jedes Video vor
+// dem Hochladen selbst (Bild-für-Bild neu aufgenommen: 720p, 1,2 Mbit/s ≈ 10 MB je Minute, höchstens 60 Sekunden) und lädt es direkt in den
+// Speicher (signierter Link); der Server prüft Größe, Dauer und Inhalt und trägt es erst dann ein. Grenzen stehen im Server (videos_liste → platz).
+const VI = { daten: null, art: "fotos", datei: null, info: null };
+const sekText = (s) => `${Math.floor((s || 0) / 60)}:${String(Math.round((s || 0) % 60)).padStart(2, "0")}`;
+function faArt(art) {
+  VI.art = art === "videos" && zugang() === "mitglied" ? "videos" : "fotos";
+  document.querySelectorAll("#faArtWahl button").forEach((b) => b.classList.toggle("an", b.dataset.art === VI.art));
+  ["fotoForm", "fotoSpeicher", "fotoAlben", "fotoFilter", "faLeiste", "fotoListe"].forEach((id) => $(id)?.classList.toggle("fa-aus", VI.art === "videos"));
+  $("videoBereich")?.classList.toggle("versteckt", VI.art !== "videos");
+  if (VI.art === "videos") videosLaden();
+}
+async function videosLaden() {
+  if (!VI.daten) $("videoListe").innerHTML = '<div class="karte hinweis">Wird geladen …</div>';
+  try { VI.daten = await api("videos_liste", {}); videosZeigen(); }
+  catch (e) { $("videoListe").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e))}<div style="margin-top:8px"><button type="button" class="knopf klein" onclick="videosLaden()">🔄 Nochmal laden</button></div></div>`; }
+}
+function videosZeigen() {
+  const d = VI.daten, pl = d.platz, pz = Math.round((pl.belegt / pl.grenze) * 1000) / 10;
+  $("videoPlatz").innerHTML = `<div class="karte"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>🎬 ${mb(pl.belegt)} von ${mb(pl.grenze)} für Videos belegt</b><span class="hinweis">${pz.toLocaleString("de-DE")} %</span></div>
+    <div class="speicherbalken"><i style="width:${Math.min(100, Math.max(1, pz))}%;${pz >= 80 ? "background:var(--rot3)" : ""}"></i></div>
+    <div class="hinweis" style="font-size:.9rem">${pl.moeglich ? `Platz für ca. <b>${pl.moeglich}</b> weitere Videos von 1 Minute. Jedes Video höchstens ${pl.maxSek} Sekunden – die App verkleinert es vor dem Hochladen.` : "⚠️ Der Platz für Videos ist voll – bitte alte Videos löschen."}</div>
+    <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" onclick="videoForm()" ${pl.moeglich ? "" : "disabled"}>＋ Video hinzufügen</button></div></div>`;
+  $("videoListe").innerHTML = !d.videos.length ? '<div class="karte hinweis">Noch keine Videos. Tippe oben auf „＋ Video hinzufügen“ – z. B. eine kurze Szene vom Clubtreffen.</div>'
+    : `<div class="fotoraster">${d.videos.map((v, i) => `<button class="fotokachel vi-kachel" onclick="videoAnsehen(${i})" title="${esc([v.thema, fTagDe(v.datum), v.beschreibung].filter(Boolean).join(" · "))}">${v.vorschau ? `<img src="${esc(v.vorschau)}" alt="${esc(v.beschreibung || v.thema || "Video")}" loading="lazy">` : "🎬"}<span class="vi-play" aria-hidden="true">▶</span><span class="vi-dauer">${sekText(v.dauer)}</span></button>`).join("")}</div>`;
+}
+function videoForm() {
+  VI.datei = null; VI.info = null;
+  $("videoForm").innerHTML = `<h3>🎬 Video hinzufügen</h3>
+    <div class="knoepfe" style="margin-top:0"><button class="knopf haupt" onclick="$('viDatei').click()">🎞️ Video auswählen</button><button class="knopf haupt" onclick="$('viKamera').click()">🎥 Aufnehmen</button></div>
+    <input type="file" id="viDatei" accept="video/*" hidden onchange="videoGewaehlt(this)"><input type="file" id="viKamera" accept="video/*" capture="environment" hidden onchange="videoGewaehlt(this)">
+    <div id="viAuswahl" class="hinweis" style="margin:8px 0">Noch kein Video gewählt.</div>
+    <label class="feld">Thema${themaAuswahl("viThema", "")}</label>
+    <label class="feld">Anlass (freiwillig)${anlassAuswahl("viAnlass")}</label>
+    <label class="feld">Datum<input type="date" id="viDatum" value="${heuteIso()}"></label>
+    <label class="feld">Beschreibung (freiwillig)<input id="viBeschr" maxlength="300" placeholder="z. B. Anstoßen beim Clubtreffen"></label>
+    <div id="viFortschritt" class="hinweis"></div>
+    <div class="knoepfe"><button class="knopf haupt" id="viKnopf" onclick="videoHochladen()">⬆️ Hochladen</button><button class="knopf" onclick="$('videoForm').classList.add('versteckt')">Abbrechen</button></div>
+    <p class="hinweis" style="font-size:.85rem;margin-bottom:0">Höchstens ${VI.daten?.platz?.maxSek || 60} Sekunden. Die App verkleinert das Video vor dem Hochladen (ca. 10 MB je Minute) – das dauert etwa so lange wie das Video selbst; bitte die App dabei offen lassen. Alle Clubmitglieder mit App können die Videos sehen.</p>`;
+  $("videoForm").classList.remove("versteckt");
+}
+function videoInfo(datei) {
+  return new Promise((ok, fehler) => {
+    const v = document.createElement("video"), url = URL.createObjectURL(datei);
+    const zu = (x, e) => { URL.revokeObjectURL(url); e ? fehler(e) : ok(x); };
+    v.preload = "metadata"; v.muted = true; v.playsInline = true;
+    v.onloadedmetadata = () => zu({ dauer: Number.isFinite(v.duration) ? v.duration : null, breite: v.videoWidth, hoehe: v.videoHeight });
+    v.onerror = () => zu(null, new Error("Dieses Video kann das Handy hier nicht öffnen – bitte ein anderes wählen."));
+    v.src = url;
+  });
+}
+async function videoGewaehlt(input) {
+  const d = input.files?.[0]; input.value = "";
+  if (!d) return;
+  VI.datei = d; VI.info = null;
+  try { VI.info = await videoInfo(d); } catch (e) { VI.datei = null; $("viAuswahl").textContent = "⚠️ " + e.message; return; }
+  if (d.lastModified) $("viDatum").value = tagVon(d.lastModified) > heuteIso() ? heuteIso() : tagVon(d.lastModified);
+  const max = VI.daten?.platz?.maxSek || 60, lang = VI.info.dauer && VI.info.dauer > max + 0.5;
+  $("viAuswahl").innerHTML = `<b>🎞️ Video gewählt</b> · ${VI.info.dauer ? sekText(VI.info.dauer) : "Länge unbekannt"} · ${mb(d.size)}${lang ? `<br>✂️ Länger als ${max} Sekunden – hochgeladen werden nur die ersten ${max} Sekunden.` : ""}`;
+}
+// Vorschaubild (JPEG, Base64 ohne Kopf) aus dem gerade gezeigten Bild
+function viBild(v, max, q) {
+  const f = Math.min(1, max / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement("canvas");
+  c.width = Math.round(v.videoWidth * f); c.height = Math.round(v.videoHeight * f); c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", q).split(",")[1];
+}
+const VI_TYPEN = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+async function videoVerkleinern(datei, { maxSek = 60, fortschritt = () => {} } = {}) {
+  const typ = window.MediaRecorder && HTMLCanvasElement.prototype.captureStream ? VI_TYPEN.find((t) => MediaRecorder.isTypeSupported(t)) : null;
+  const url = URL.createObjectURL(datei), v = document.createElement("video");
+  v.playsInline = true; v.preload = "auto"; v.muted = true;
+  let ac = null;
+  try {
+    await new Promise((ok, f) => { v.onloadeddata = ok; v.onerror = () => f(new Error("Dieses Video kann das Handy hier nicht öffnen – bitte ein anderes wählen.")); v.src = url; });
+    const dauerVoll = Number.isFinite(v.duration) ? v.duration : maxSek, dauer = Math.min(dauerVoll, maxSek);
+    v.currentTime = Math.min(1, dauer / 3); await new Promise((ok) => (v.onseeked = ok));
+    const vorschau = viBild(v, 360, 0.7);
+    if (!typ) { // Gerät kann nicht neu aufnehmen: Original nur, wenn es schon passt
+      if (/^video\/(mp4|webm)$/.test(datei.type) && dauerVoll <= maxSek + 0.5) return { datei, dauer: Math.round(dauerVoll * 10) / 10, vorschau };
+      throw new Error("Dieses Handy kann Videos nicht verkleinern. Bitte ein kurzes MP4-Video (höchstens 15 MB) wählen.");
+    }
+    const f = Math.min(1, 720 / Math.min(v.videoWidth, v.videoHeight), 1280 / Math.max(v.videoWidth, v.videoHeight));
+    const c = document.createElement("canvas"); c.width = Math.max(2, Math.round((v.videoWidth * f) / 2) * 2); c.height = Math.max(2, Math.round((v.videoHeight * f) / 2) * 2);
+    const cx = c.getContext("2d"), strom = c.captureStream(30);
+    try { // Ton über die Audio-Schnittstelle abgreifen – so ist beim Verkleinern nichts zu hören
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const quelle = ac.createMediaElementSource(v), ziel = ac.createMediaStreamDestination(); quelle.connect(ziel);
+      ziel.stream.getAudioTracks().forEach((t) => strom.addTrack(t)); await ac.resume();
+    } catch { ac = null; }
+    const rec = new MediaRecorder(strom, { mimeType: typ, videoBitsPerSecond: 1200000, audioBitsPerSecond: 64000 });
+    const teile = []; rec.ondataavailable = (e) => { if (e.data?.size) teile.push(e.data); };
+    const fertig = new Promise((ok) => (rec.onstop = ok));
+    v.currentTime = 0; await new Promise((ok) => (v.onseeked = ok));
+    v.muted = !ac; // ohne Audio-Schnittstelle stumm (sonst wäre der Ton laut zu hören) – das Video hat dann keinen Ton
+    let laeuft = true;
+    const ende = () => { if (!laeuft) return; laeuft = false; v.pause(); if (rec.state !== "inactive") rec.stop(); };
+    const malen = () => {
+      if (!laeuft) return;
+      cx.drawImage(v, 0, 0, c.width, c.height); fortschritt(Math.min(1, v.currentTime / dauer));
+      if (v.currentTime >= dauer || v.ended) return ende();
+      if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(malen); else requestAnimationFrame(malen);
+    };
+    v.onended = ende;
+    rec.start(1000); await v.play(); malen();
+    await fertig;
+    const mime = typ.split(";")[0], blob = new Blob(teile, { type: mime });
+    return { datei: new File([blob], `video.${mime === "video/mp4" ? "mp4" : "webm"}`, { type: mime }), dauer: Math.max(0.1, Math.round(Math.min(dauer, v.currentTime || dauer) * 10) / 10), vorschau };
+  } finally { try { await ac?.close(); } catch {} v.removeAttribute("src"); v.load(); URL.revokeObjectURL(url); }
+}
+async function videoHochladen() {
+  const roh = VI.datei; if (!roh) return melde("Bitte zuerst ein Video auswählen.", true);
+  const knopf = $("viKnopf"), st = (h) => ($("viFortschritt").innerHTML = h);
+  knopf.disabled = true;
+  let sperre = null; try { sperre = await navigator.wakeLock?.request("screen"); } catch {} // Bildschirm bleibt an, solange verkleinert wird
+  try {
+    const max = VI.daten?.platz?.maxSek || 60, maxB = VI.daten?.platz?.maxBytes || 15 * 1048576;
+    st("⏳ Video wird verkleinert …");
+    const v = await videoVerkleinern(roh, { maxSek: max, fortschritt: (p) => st(`⏳ Video wird verkleinert … ${Math.round(p * 100)} %<div class="speicherbalken"><i style="width:${Math.round(p * 100)}%"></i></div><small>Bitte die App offen lassen.</small>`) });
+    if (v.datei.size > maxB) throw new Error(`Das Video ist auch verkleinert noch zu groß (${mb(v.datei.size)}, höchstens ${mb(maxB)}). Bitte ein kürzeres Video wählen.`);
+    st(`⏳ Wird hochgeladen (${mb(v.datei.size)}) …`);
+    const s = await api("video_hochladen_start", { mime: v.datei.type, groesse: v.datei.size, dauer: v.dauer }, { warten: true });
+    const r = await fetch(s.url, { method: "PUT", headers: { "content-type": v.datei.type, "x-upsert": "false" }, body: v.datei, signal: zeitSignal(300000) }); // 15 MB auch bei langsamem Netz
+    if (!r.ok) throw new Error("Hochladen hat nicht geklappt – bitte noch einmal versuchen.");
+    st("⏳ Wird gespeichert …");
+    const [art, ...bid] = ($("viAnlass").value || "").split("|");
+    await api("video_hochladen_fertig", { pfad: s.pfad, dauer: v.dauer, vorschau: v.vorschau, thema: $("viThema").value === "__neu" ? "" : $("viThema").value,
+      beschreibung: $("viBeschr").value.trim(), datum: $("viDatum").value || heuteIso(), bezug_art: art || null, bezug_id: art ? bid.join("|") : null }, { warten: true });
+    VI.datei = null; $("videoForm").classList.add("versteckt"); melde("✔ Video ist im Album"); await videosLaden();
+  } catch (e) { st(`<div style="color:var(--textRot, #c62828)">⚠️ ${esc(e?.message || fehlerText(e))}</div>`); }
+  finally { knopf.disabled = false; try { await sperre?.release(); } catch {} }
+}
+async function videoAnsehen(i) {
+  const v = VI.daten?.videos?.[i]; if (!v) return;
+  let f; const zu = () => { const sp = f?.querySelector("video"); if (sp) { sp.pause(); sp.removeAttribute("src"); sp.load(); } f?.remove(); };
+  f = dlgOeffnen(`<h3 class="dlg-kopf">🎬 ${esc(v.thema || "Video")}</h3>
+    <video controls playsinline preload="metadata" ${v.vorschau ? `poster="${esc(v.vorschau)}"` : ""} style="width:100%;max-height:70vh;border-radius:8px;background:#000"></video>
+    <p class="hinweis" style="margin:6px 0">${esc([fTagDe(v.datum), v.von?.name, sekText(v.dauer), v.beschreibung].filter(Boolean).join(" · "))}</p>
+    <div class="dlg-knoepfe">${v.darfAendern ? '<button class="knopf" data-w="loeschen">🗑️ Löschen</button>' : ""}<button class="knopf" data-w="speichern">⬇️ Speichern</button><button class="knopf haupt" data-w="zu">Schließen</button></div>`, zu);
+  f.querySelector("[data-w='zu']").onclick = zu;
+  f.querySelector("[data-w='speichern']").onclick = async () => { try { extOeffnen((await api("video_oeffnen", { id: v.id, herunterladen: true })).url); } catch (e) { meldeFehler(e); } };
+  const lo = f.querySelector("[data-w='loeschen']");
+  if (lo) lo.onclick = async () => {
+    if (!(await frage("🗑️ Video löschen?\n\nDas Video wird endgültig gelöscht und ist für alle weg. Dafür wird sofort Platz für neue Videos frei."))) return;
+    try { await api("video_loeschen", { id: v.id }, { warten: true }); zu(); melde("🗑️ Video gelöscht"); videosLaden(); } catch (e) { meldeFehler(e); }
+  };
+  try { const sp = f.querySelector("video"); sp.src = (await api("video_oeffnen", { id: v.id })).url; sp.play().catch(() => {}); }
+  catch (e) { f.querySelector("video")?.insertAdjacentHTML("afterend", `<p class="hinweis">⚠️ ${esc(fehlerText(e))}</p>`); }
+}
+
 // ---------- Fotoalbum (KC-CLUB-FOTOALBUM) ----------
 // Fotos liegen im Supabase-Dateispeicher (Anlagen-Kern). Beim Hochladen verkleinert (~250 KB) + kleine Vorschau fürs Raster.
 // Filter: Thema, Jahr, Anlass (Treffen/Aktion). Löschen → Papierkorb (30 Tage, Admin kann wiederherstellen).
@@ -41137,6 +41300,7 @@ let faAusKorb = null; // 2.513.0 KC-CLUB-ABLAGEKORB-ALBUM-FIX: { id, ids } – e
 let faGeteilt = null; // KC-CLUB-TEILEN: aus der Galerie geteilte Fotos, die ins Hochlade-Formular sollen
 async function fotosLaden(formBehalten) {
   if (!formBehalten) $("fotoForm").classList.add("versteckt");
+  $("faArtWahl")?.classList.toggle("versteckt", zugang() !== "mitglied"); if (VI.art === "videos" && zugang() !== "mitglied") faArt("fotos"); // 2.711.0: Videos nur für Mitglieder
   try { FA = await api("fotos_liste", { ...faFilter, papierkorb: faPapierkorb }); fotosZeigen();
     if (faGeteilt) { const d = faGeteilt; faGeteilt = null; fotoForm(); faGewaehlt({ files: d, value: "" });
       if (faAusKorb && $("faFortschritt")) $("faFortschritt").innerHTML = '<div class="karte" style="border:2px solid var(--gold)">📥 Aus dem Ablagekorb: Thema wählen und <b>„Hochladen“</b> tippen – erst dann sind die Fotos im Album. Der Eintrag im Korb bleibt bis dahin offen.</div>'; } }
@@ -41370,7 +41534,7 @@ function fotoForm() {
     <label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-weight:700"><input type="checkbox" id="faOrt" checked style="width:22px;height:22px;accent-color:var(--rot)"> 📍 Aufnahmeort mitspeichern (falls das Handy ihn im Foto gespeichert hat)</label>
     <div id="faFortschritt" class="hinweis"></div>
     <div class="knoepfe"><button class="knopf haupt" id="faKnopf" onclick="fotosHochladen()">⬆️ Hochladen</button><button class="knopf" onclick="$('fotoForm').classList.add('versteckt')">Abbrechen</button></div>
-    <p class="hinweis" style="font-size:.85rem;margin-bottom:0">Die Fotos werden vor dem Hochladen verkleinert (ca. 250 KB) – auf dem Handy sieht man keinen Unterschied, aber es passen viel mehr ins Album. Alle Clubmitglieder mit App können die Fotos sehen.</p>`;
+    <p class="hinweis" style="font-size:.85rem;margin-bottom:0">Die Fotos werden vor dem Hochladen verkleinert (ca. 250 KB, platzsparend ca. 130 KB – die App fragt beim Hochladen) – auf dem Handy sieht man keinen Unterschied, aber es passen viel mehr ins Album. Alle Clubmitglieder mit App können die Fotos sehen.</p>`;
   $("fotoForm").classList.remove("versteckt"); window.scrollTo(0, 0);
 }
 function faGewaehlt(input) {
@@ -41430,13 +41594,14 @@ async function fotosHochladen() {
   const thema = $("faThema").value === "__neu" ? "" : $("faThema").value, beschreibung = $("faBeschr").value.trim(), festDatum = $("faDatum").value;
   const [bezug_art, ...bid] = ($("faAnlass").value || "").split("|"), bezug_id = bid.join("|");
   const anlass = bezug_art ? FA.anlaesse.find((x) => x.art === bezug_art && x.id === bezug_id) : null;
+  const groesse = await faGroesseFrage(faDateien.length); if (!groesse) return; // 2.711.0 KC-CLUB-FOTO-PLATZ
   const knopf = $("faKnopf"); knopf.disabled = true;
   let ok = 0; const fehler = [];
   for (let i = 0; i < faDateien.length; i++) {
     const roh = faDateien[i];
     $("faFortschritt").innerHTML = `⏳ Lade Foto ${i + 1} von ${faDateien.length} hoch …<div class="speicherbalken"><i style="width:${Math.round((i / faDateien.length) * 100)}%"></i></div>`;
     try {
-      const bild = await verkleinern(roh, 1600, 0.82), klein = await verkleinern(roh, 360, 0.7);
+      const bild = groesse === "spar" ? await verkleinern(roh, 1280, 0.72) : await verkleinern(roh, 1600, 0.82), klein = await verkleinern(roh, 360, 0.7);
       if (!/^image\/(jpeg|png|webp)$/.test(bild.type)) throw new Error("Format wird nicht unterstützt (bitte als JPG speichern)");
       if (bild.size > 8 * 1024 * 1024) throw new Error("zu groß");
       const meta = await exifLesen(roh);
