@@ -5917,7 +5917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7559,6 +7559,22 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/schluss: anmeldeschluss\(s0\.beginn\)\.toISOString\(\)/.test(server), "Frist in den Startdaten");
   assert.ok(/const vsSchluss = \(t\) =>/.test(html) && /id="vfSchluss"/.test(html) && /daten\.dringend = await frage\(`⏰ Anmeldeschluss vorbei/.test(html), "App: Frist im Formular, Frage nach Schluss");
   assert.ok(/⏰ Einreichen bis \$\{wann\(th\.schluss\)\}/.test(html) && /id: "dringend:" \+ d\.id, stufe: "rot"/.test(html) && /vsDringend\('\$\{esc\(v\.id\)\}', 'aufnehmen'\)/.test(html), "App: Info-Feld (Frist + Leitung entscheidet) und Knöpfe am Vorschlag");
+}
+// 2.695.0 KC-CLUB-AKTENTASCHE (Wunsch Hansi „Aktentasche packen für Clubsprecher, Kassenwart, Admin – Anlass, Vorschlag, Register, Foto/Galerie/PDF/Datei,
+// Packliste vorn, Notizen, gepackt → Kachel Clubabend nur bei uns 3“; „gemeinsame Tasche, aber jeden was dazu packen lassen“)
+{
+  const mig = lies("supabase/migrations/20261027_kc_club_aktentasche.sql");
+  assert.ok(/create table if not exists public\.kc_club_aktentasche/.test(mig) && /treffen_id uuid not null unique/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_aktentasche from anon, authenticated/.test(mig), "DB: eine Tasche je Termin, nur der Server");
+  assert.ok(/'aktentasche'\]\)\)/.test(mig) && /if \(art === "aktentasche"\) return ich\.vorstand && ich\.zugang === "mitglied";/.test(server), "dazugelegte Dateien sieht nur die Leitung");
+  for (const a of ["aktentasche_termine", "aktentasche_holen", "aktentasche_aendern"]) { const c = server.slice(server.indexOf(`case "${a}"`), server.indexOf(`case "${a}"`) + 300); assert.ok(/nurVorstand\(ich\);/.test(c), a + ": nur Clubsprecher, Kassenwart, Admin"); }
+  const ae = server.slice(server.indexOf('case "aktentasche_aendern"'), server.indexOf('case "clubabend_setzen"'));
+  assert.ok(/const v = \(await atVorschlag\(ich, t\)\)\.liste\.filter\(\(i: any\) => want\.has\(i\.k\)\)/.test(ae), "Packen nur aus dem Vorschlag des Servers");
+  assert.ok(/startsWith\(`club\/\$\{ich\.person_id\}\/`\)/.test(ae) && /kc_club_archiv_dokumente/.test(ae), "Dazulegen: eigene Uploads oder Archiv-Dokumente");
+  assert.ok(/\.eq\("version", x\.version\)/.test(server) && /Gerade packt jemand anderes/.test(server), "gemeinsame Tasche: Versionsprüfung");
+  assert.ok(/aktentasche: at\?\.status === "gepackt" \? \{ anzahl:/.test(server) && /const at = ich\.vorstand \? await atTasche/.test(server), "Clubabend: nur Leitung, nur gepackt");
+  assert.ok(/async function atStart\(\)/.test(html) && /function atPackenZeigen\(\)/.test(html) && /function atZeichnen\(\)/.test(html) && /id="atNotiz"/.test(html), "App: Anlass, Vorschlag, Tasche, Notizen");
+  assert.ok(/onclick="atDatei\('kamera'\)">📷 Foto/.test(html) && /atDatei\('galerie'\)/.test(html) && /atDatei\('pdf'\)/.test(html) && /atDatei\('datei'\)/.test(html) && /onclick="atArchiv\(\)">🗄️ Archiv/.test(html), "Dazulegen: Foto, Galerie, PDF, Datei, Archiv");
+  assert.ok(/aktentasche: \{ bauen: \(o, p\) => atDruck\(p\?\.teil\) \}/.test(html) && /L && r\.aktentasche \?/.test(html) && /ICH\?\.vorstand \? '<button class="knopf klein" onclick="atStart\(\)">💼 Aktentasche/.test(html), "Drucken (CD), Clubabend-Kachel, Büro");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

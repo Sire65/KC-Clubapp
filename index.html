@@ -1014,6 +1014,18 @@
   .sst-wahl { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; } .sst-wahl .knopf { width: auto; } #anrufStimmeKnopf.an { background: #8e44ad; color: #fff; }
   .mini-kachel .mk-von { display: block; font-size: .82rem; margin: 2px 0 3px; color: var(--text); } .mini-kachel .mk-von b { color: var(--rot); } .vs-von { font-size: 1rem; margin: 4px 0 2px; } .vs-von b { color: var(--rot); } :root.dunkel .mini-kachel .mk-von b, :root.dunkel .vs-von b { color: var(--textRot); }
   .vs-dringend { border: 2px solid var(--rot); margin: 8px 0; } .vs-dringend .knoepfe { margin-top: 8px; } /* 2.694.0 KC-CLUB-ANMELDESCHLUSS */
+  /* 2.695.0 KC-CLUB-AKTENTASCHE: Register-Reiter, Teile mit Haken und ⋮, Vorschlagsliste zum Ankreuzen */
+  .at-tabs { margin: 4px 0 8px; } .at-reg-kopf { font-weight: 800; color: var(--rot); margin: 12px 0 4px; border-bottom: 2px solid var(--rot); padding-bottom: 2px; }
+  :root.dunkel .at-reg-kopf { color: var(--textRot); border-color: var(--textRot); }
+  .at-teil { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--rand, #e5d9c8); }
+  .at-teil:not(:has(.at-haken)) { grid-template-columns: 1fr auto; }
+  .at-teil-text { all: unset; cursor: pointer; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; } .at-teil-text:focus-visible { outline: 3px solid var(--gold, #c9a227); }
+  .at-teil.dabei .at-teil-text b { text-decoration: line-through; opacity: .7; }
+  .at-haken { all: unset; cursor: pointer; font-size: 1.6rem; line-height: 1; padding: 2px; } .at-haken:focus-visible { outline: 3px solid var(--gold, #c9a227); }
+  .at-wahl { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; padding: 6px 0; border-bottom: 1px solid var(--rand, #e5d9c8); }
+  .at-wahl input { width: 22px; height: 22px; margin-top: 2px; } .at-wahl span { min-width: 0; overflow-wrap: anywhere; }
+  .at-dazu .knopf { flex: 1 1 30%; } .at-liste { line-height: 1.6; } .at-liste > div { padding: 3px 0; border-bottom: 1px solid var(--rand, #e5d9c8); }
+  #atNotiz { min-height: 9em; font-size: 1rem; } .ca-tasche { width: 100%; margin: 0 0 8px; }
   .format-leiste { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 0 6px 6px; } .format-leiste .fl-titel { font-size: .8rem; color: var(--grau); } .format-leiste button { border: 1px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 14px; padding: 5px 12px; font-size: .95rem; cursor: pointer; } .format-leiste .fl-zu { padding: 5px 9px; margin-left: auto; }
   .klopf-art { display: inline-block; margin: 2px 0 8px; padding: 4px 12px; border-radius: 14px; font-weight: 700; font-size: 1.05rem; } .klopf-art.schreiben { background: var(--blaubg, #e3eefb); color: var(--blau, #1d4f8a); } .klopf-art.sprechen { background: var(--gruenbg); color: var(--gruen); }
   .ca-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 4px 0 2px; font-size: .82rem; } .ca-legende .ca-amp { border-left: 4px solid transparent; padding-left: 5px; }
@@ -6031,7 +6043,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.694.0" data-v="2.694.0"></script>
+<script src="app.js?v=2.695.0" data-v="2.695.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

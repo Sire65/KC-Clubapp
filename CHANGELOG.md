@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.695.0 – 2026-10-27 – Aktentasche für die Clubleitung
+KC-CLUB-AKTENTASCHE: Clubsprecher, Kassenwart und Admin packen eine gemeinsame Aktentasche je Termin (Büro → 💼 Aktentasche): Anlass wählen, Vorschlag der App (Einladung/Tagesordnung, Protokollentwurf, letztes Protokoll, Vorschläge mit Anlagen, Zusagen, Aufgaben) ankreuzen, in Register packen; je Register Foto, Galerie, PDF, Datei oder Archiv-Dokument dazulegen; vorn Packliste zum Abhaken mit Notizen (Druck im CD). ✔ gepackt → Knopf in der Kachel Clubabend (nur Leitung); Info-Feld erinnert in der Woche davor. DB: kc_club_aktentasche.
+
 ## 2.694.0 – 2026-10-27 – Anmeldeschluss für Vorschläge (17 Uhr am Vorabend) + dringend
 KC-CLUB-ANMELDESCHLUSS: Themen/Spenden für eine Sitzung bis 17:00 Uhr am Vorabend (Info-Feld, Formular). Danach: ❗ dringend – Clubsprecher, Kassenwart oder Admin entscheiden (wer zuerst tippt): als dringender TOP aufnehmen oder ablehnen → nächste Sitzung; Einreicher und Leitung bekommen Bescheid. Sonst automatisch auf die nächste Sitzung. DB: kc_club_vorschlaege.dringend.
 

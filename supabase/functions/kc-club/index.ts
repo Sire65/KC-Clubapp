@@ -134,7 +134,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.694.0";
+const SERVER_VERSION = "2.695.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -526,6 +526,7 @@ async function objAnlageSichtbar(ich: Ich, art: string, objektId: string) {
     return !!v && (!v.ziel_ids || v.ziel_ids.includes(ich.person_id) || v.erstellt_von === ich.person_id || ich.admin);
   }
   if (art === "treffen") { const { data: t } = await db.from("kc_club_treffen").select("id").eq("id", objektId).maybeSingle(); return !!t; } // 2.461.0: Clubtermine sieht jeder
+  if (art === "aktentasche") return ich.vorstand && ich.zugang === "mitglied"; // 2.695.0 KC-CLUB-AKTENTASCHE: nur die Leitung
   if (art === "wunsch") return ich.admin; // 2.634.0 KC-CLUB-WUNSCH-ANLAGEN: die Wunschliste ist nur für den Admin
   if (art === "terminumfrage") { const { data: u } = await db.from("kc_club_terminumfragen").select("id").eq("id", objektId).maybeSingle(); return !!u; }
   if (art === "terminanfrage") {
@@ -5862,6 +5863,84 @@ async function clubabendTreffenListe(vorschau: boolean) {
 }
 async function clubabendTreffen(vorschau: boolean) { return (await clubabendTreffenListe(vorschau))[0] ?? null; }
 const caSchluessel = (x: any) => (x.id ? String(x.id) : "t:" + String(x.t || "").slice(0, 80));
+// ---------- 2.695.0 KC-CLUB-AKTENTASCHE (Wunsch Hansi 27.10.2026 „Aktentasche packen für Clubsprecher, Kassenwart, Admin: Anlass wählen, dein Vorschlag,
+// was hinein soll – Protokollentwurf, Einladung, Vorschläge, Mitglieder, Zeichnungen –, in eigene Register; Foto, Galerie, PDF, Datei dazu; vorn die
+// Packliste; großes Notizfeld; gepackt → in der Kachel Clubabend, nur bei uns 3“; „gemeinsame Tasche, aber jeden was dazu packen lassen“).
+// Eine Tasche je Termin. Inhalt = Verweise auf die Originale (immer der aktuelle Stand); selbst dazugelegte Dateien hängen als Objekt-Anlage
+// „aktentasche“ an der Tasche (sehen darf sie die Leitung). Gleichzeitiges Packen: Versionsnummer, bei Zusammenstoß neu lesen und noch einmal.
+const AT_REGISTER = ["einladung", "protokolle", "vorschlaege", "mitglieder", "aufgaben", "sonstiges"];
+const AT_MAX = 80;
+async function atVorschlag(ich: Ich, t: any) {
+  const tag = berlinTag(new Date(t.beginn)), sitzung = t.art === "treffen";
+  const [b, { data: letzt }, { data: vs }, tAnl] = await Promise.all([
+    bueroSitzung(ich, t.id),
+    db.from("kc_club_sitzungsprotokolle").select("id,titel,status,datum").lt("datum", tag).order("datum", { ascending: false }).limit(1).maybeSingle(),
+    db.from("kc_club_vorschlaege").select("id,art,titel,status,paket,dringend,spenden").eq("treffen_id", t.id).neq("status", "zurueckgezogen").order("erstellt_am"),
+    objAnlagenHolen("treffen", [t.id]),
+  ]);
+  const deDatum = (d: string) => String(d).slice(0, 10).split("-").reverse().join(".");
+  const L: any[] = [];
+  const top = ((b.vorbereitung?.tagesordnung?.length ? b.vorbereitung.tagesordnung : b.standard.tagesordnung) as any[]).map((x: any) => String(x.t || "")).filter(Boolean);
+  L.push({ k: "tagesordnung", reg: "einladung", art: "tagesordnung", ref: t.id, titel: "Tagesordnung & Einladung", vor: sitzung,
+    grund: b.vorbereitung?.einladung_am ? `Einladung verschickt am ${wann(b.vorbereitung.einladung_am)}` : b.vorbereitung ? "Tagesordnung ist vorbereitet" : "noch nicht vorbereitet – Stand aus den Vorschlägen" });
+  for (const a of tAnl.get(t.id) ?? []) L.push({ k: "anlage:" + a.id, reg: "einladung", art: "anlage", ref: a.id, name: a.name, mime: a.mime, titel: a.name, grund: "Anlage am Termin", vor: true });
+  if (b.protokoll) L.push({ k: "protokoll:" + b.protokoll.id, reg: "protokolle", art: "protokoll", ref: b.protokoll.id, titel: b.protokoll.status === "entwurf" ? "Protokollentwurf für diesen Abend" : "Protokoll dieses Abends", grund: "wird an diesem Abend geschrieben", vor: true });
+  if (letzt && letzt.id !== b.protokoll?.id) L.push({ k: "protokoll:" + letzt.id, reg: "protokolle", art: "protokoll", ref: letzt.id, titel: `Letztes Protokoll vom ${deDatum(letzt.datum)}`, grund: letzt.status === "entwurf" ? "noch Entwurf – fertigstellen" : "zum Nachlesen und Genehmigen", vor: sitzung });
+  const offeneAuf = (b.aufgaben as any[]).filter((a) => !a.erledigt);
+  if (offeneAuf.length) L.push({ k: "aufgaben", reg: "aufgaben", art: "aufgaben", ref: t.id, titel: `Offene Aufgaben aus dem letzten Protokoll (${offeneAuf.length})`, grund: "nachfragen, was erledigt ist", vor: true });
+  L.push({ k: "teilnehmer", reg: "mitglieder", art: "teilnehmer", ref: t.id, titel: "Zusagen & Absagen – Liste zum Abhaken", grund: `${(b.mitglieder as any[]).filter((m) => m.antwort === "ja").length} zugesagt`, vor: true });
+  const pakete = new Set<string>();
+  for (const v of (vs ?? []) as any[]) {
+    if (v.paket?.id) { if (pakete.has(v.paket.id)) continue; pakete.add(v.paket.id);
+      L.push({ k: "abstimmung:" + v.paket.id, reg: "vorschlaege", art: "abstimmung", ref: v.paket.id, titel: v.paket.titel, grund: "Abstimmung – Ankreuzbogen zum Drucken", vor: true }); continue; }
+    const dr = v.dringend?.stand;
+    L.push({ k: "vorschlag:" + v.id, reg: "vorschlaege", art: v.art === "abstimmung" ? "abstimmung" : "vorschlag", ref: v.id, titel: v.art === "abstimmung" ? v.titel : topVorschlag(v), vor: dr !== "abgelehnt",
+      grund: dr === "offen" ? "❗ dringend – Entscheidung offen" : dr === "abgelehnt" ? "abgelehnt – kommt auf die nächste Sitzung" : v.art === "spende" ? "Spendenvorschlag" : v.art === "abstimmung" ? "Abstimmung – Ankreuzbogen zum Drucken" : "Thema für diesen Termin" });
+  }
+  const anl = await objAnlagenHolen("vorschlag", (vs ?? []).map((v: any) => v.id));
+  for (const v of (vs ?? []) as any[]) for (const a of anl.get(v.id) ?? [])
+    if (!L.some((x) => x.k === "anlage:" + a.id)) L.push({ k: "anlage:" + a.id, reg: "vorschlaege", art: "anlage", ref: a.id, name: a.name, mime: a.mime, titel: a.name, unter: `zu „${v.paket?.titel || v.titel}“`, grund: "Unterlage/Zeichnung zum Vorschlag", vor: true });
+  const blatt = { tagesordnung: top, einladung_am: b.vorbereitung?.einladung_am ?? null,
+    mitglieder: (b.mitglieder as any[]).map((m) => ({ name: m.name, antwort: m.antwort })).sort((x, y) => x.name.localeCompare(y.name, "de")),
+    aufgaben: offeneAuf.map((a: any) => ({ wer: a.wer, text: a.text, faellig: a.faellig })) };
+  return { liste: L, blatt };
+}
+async function atTasche(tid: string) {
+  const { data } = await db.from("kc_club_aktentasche").select("*").eq("treffen_id", tid).maybeSingle();
+  return data as any;
+}
+async function atAnzeige(x: any) {
+  if (!x) return null;
+  const leute = await personen([x.erstellt_von, x.geaendert_von, x.gepackt_von, ...(x.inhalt ?? []).map((i: any) => i.von)].filter(Boolean));
+  const n = (id: string | null) => (id ? vorname(leute.get(id) ?? null) || leute.get(id)?.display_name || "" : "");
+  return { id: x.id, status: x.status, notiz: x.notiz, version: x.version, geaendert_am: x.geaendert_am, geaendert: n(x.geaendert_von), gepackt_am: x.gepackt_am, gepackt: n(x.gepackt_von),
+    inhalt: (x.inhalt ?? []).map((i: any) => ({ ...i, vonName: n(i.von) })) };
+}
+// Änderung mit Versionsprüfung (gemeinsame Tasche: packen zwei gleichzeitig → neu lesen und noch einmal anwenden)
+async function atAendern(ich: Ich, tid: string, aenderung: (x: any) => void) {
+  for (let versuch = 0; versuch < 4; versuch++) {
+    let x = await atTasche(tid);
+    if (!x) {
+      const { data: neu, error } = await db.from("kc_club_aktentasche").insert({ treffen_id: tid, erstellt_von: ich.person_id, geaendert_von: ich.person_id }).select().maybeSingle();
+      if (error && !/duplicate|unique/i.test(String(error.message))) throw new Fehler("Die Aktentasche konnte nicht angelegt werden.", 500);
+      x = neu ?? await atTasche(tid); if (!x) continue;
+    }
+    const kopie = { ...x, inhalt: [...(x.inhalt ?? [])] };
+    aenderung(kopie);
+    if (kopie.inhalt.length > AT_MAX) throw new Fehler(`Die Tasche ist voll (höchstens ${AT_MAX} Teile).`);
+    const { data: hit, error } = await db.from("kc_club_aktentasche").update({ inhalt: kopie.inhalt, notiz: kopie.notiz, status: kopie.status, gepackt_von: kopie.gepackt_von ?? null,
+      gepackt_am: kopie.gepackt_am ?? null, version: x.version + 1, geaendert_von: ich.person_id, geaendert_am: jetzt() }).eq("id", x.id).eq("version", x.version).select().maybeSingle();
+    if (error) throw new Fehler("Die Aktentasche konnte nicht gespeichert werden.", 500);
+    if (hit) return hit;
+  }
+  throw new Fehler("Gerade packt jemand anderes – bitte gleich noch einmal versuchen.", 409);
+}
+async function atTermin(tid: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(tid)) throw new Fehler("Bitte einen Termin wählen.");
+  const { data: t } = await db.from("kc_club_treffen").select("id,titel,beginn,ende,ort,art,status").eq("id", tid).maybeSingle();
+  if (!t) throw new Fehler("Termin nicht gefunden.", 404);
+  return t as any;
+}
 async function clubabendStand(ich: Ich, t: any) {
   const b = await bueroSitzung(ich, t.id);
   const { data: ca } = await db.from("kc_club_clubabend").select("*").eq("treffen_id", t.id).maybeSingle();
@@ -5878,7 +5957,9 @@ async function clubabendStand(ich: Ich, t: any) {
   let album = null;
   if (ca?.album_id) { const { data: a } = await db.from("kc_club_foto_alben").select("id,name").eq("id", ca.album_id).is("geloescht_am", null).maybeSingle(); album = a ?? null; }
   const namen = new Map(b.mitglieder.map((m: any) => [m.person_id, m.name]));
+  const at = ich.vorstand ? await atTasche(t.id).catch(() => null) : null; // 2.695.0 KC-CLUB-AKTENTASCHE: nur die Leitung, nur wenn gepackt
   return { aktiv: true, leitung: ich.vorstand, treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende ?? null, ort: t.ort ?? null },
+    aktentasche: at?.status === "gepackt" ? { anzahl: (at.inhalt ?? []).length } : null,
     tagesordnung: top, anwesend: anwesend.map((id) => ({ person_id: id, name: namen.get(id) || id })),
     ...(ich.vorstand ? { mitglieder: b.mitglieder.map((m: any) => ({ person_id: m.person_id, name: m.name, zusage: m.antwort })), protokoll: b.protokoll } : {}),
     geburtstage: gb, aufgaben: b.aufgaben.filter((a: any) => !a.erledigt), letztesProtokoll: b.letztes, album, seit: von };
@@ -8537,7 +8618,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // 2.694.0 KC-CLUB-ANMELDESCHLUSS: Frist für die Info; Leitung: dringende Vorschläge, die auf eine Entscheidung warten
           const { data: dr } = ich.vorstand ? await db.from("kc_club_vorschlaege").select("id,titel,erstellt_von").eq("status", "offen").eq("dringend->>stand", "offen").limit(10) : { data: [] as any[] };
           const drVon = (dr ?? []).length ? await personen((dr ?? []).map((x: any) => x.erstellt_von)) : new Map();
-          return { treffen: s0.id, anzahl: ids.length, offen: ids.length - (meine ?? []).length, schluss: anmeldeschluss(s0.beginn).toISOString(),
+          const tasche = ich.vorstand ? (await db.from("kc_club_aktentasche").select("status").eq("treffen_id", s0.id).maybeSingle()).data?.status ?? "keine" : null; // 2.695.0 KC-CLUB-AKTENTASCHE
+          return { treffen: s0.id, anzahl: ids.length, offen: ids.length - (meine ?? []).length, schluss: anmeldeschluss(s0.beginn).toISOString(), tasche,
             dringend: (dr ?? []).map((x: any) => ({ id: x.id, titel: x.titel, von: vorname(drVon.get(x.erstellt_von) ?? null) || drVon.get(x.erstellt_von)?.display_name || "" })) };
         })().catch(() => null);
         let ungelesen = 0, ungelesenLaut = 0, zaehlUnsicher = false;
@@ -15557,6 +15639,60 @@ Köcheclub Werne`,
         const t = tid ? liste.find((x: any) => x.id === tid) : liste[0];
         if (!t) throw new Fehler("Dieser Clubabend ist gerade nicht verfügbar.", 404);
         return json(await clubabendStand(ich, t));
+      }
+      // 2.695.0 KC-CLUB-AKTENTASCHE: Termine zur Auswahl, Tasche holen (mit Vorschlag), packen/dazulegen/abhaken/Notiz/gepackt – nur die Leitung
+      case "aktentasche_termine": {
+        nurVorstand(ich);
+        const { data: tr } = await db.from("kc_club_treffen").select("id,titel,beginn,ort,art,status").neq("status", "abgesagt")
+          .gt("beginn", new Date(Date.now() - 12 * 3600000).toISOString()).lt("beginn", new Date(Date.now() + 90 * 86400000).toISOString()).order("beginn").limit(30);
+        const ids = (tr ?? []).map((t: any) => t.id);
+        const { data: ta } = ids.length ? await db.from("kc_club_aktentasche").select("treffen_id,status,inhalt").in("treffen_id", ids) : { data: [] as any[] };
+        return json({ termine: (tr ?? []).map((t: any) => { const x: any = (ta ?? []).find((y: any) => y.treffen_id === t.id);
+          return { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, art: t.art, tasche: x ? { status: x.status, anzahl: (x.inhalt ?? []).length } : null }; }) });
+      }
+      case "aktentasche_holen": {
+        nurVorstand(ich);
+        const t = await atTermin(String(p.treffen_id || ""));
+        const [v, x] = await Promise.all([atVorschlag(ich, t), atTasche(t.id)]);
+        return json({ treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort, art: t.art }, tasche: await atAnzeige(x), vorschlag: v.liste, blatt: v.blatt, register: AT_REGISTER });
+      }
+      case "aktentasche_aendern": {
+        nurVorstand(ich);
+        const t = await atTermin(String(p.treffen_id || "")), op = String(p.op || "");
+        const neuTeil = (i: any) => ({ ...i, von: ich.person_id, am: jetzt(), dabei: false });
+        let x: any;
+        if (op === "packen") { // nur Teile aus dem Vorschlag des Servers – nichts Fremdes
+          const want = new Set((Array.isArray(p.keys) ? p.keys : []).map(String));
+          const v = (await atVorschlag(ich, t)).liste.filter((i: any) => want.has(i.k));
+          x = await atAendern(ich, t.id, (k) => { for (const i of v) if (!k.inhalt.some((y: any) => y.k === i.k)) { const { vor: _v, grund: _g, ...rest } = i; k.inhalt.push(neuTeil(rest)); } });
+        } else if (op === "dazu") {
+          const d = p.datei ?? {}, id = String(d.id || ""), reg = AT_REGISTER.includes(String(p.reg)) ? String(p.reg) : "sonstiges", archiv = p.quelle === "archiv";
+          if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Fehler("Datei fehlt.");
+          if (!archiv) { // selbst hochgeladen → an die Tasche hängen, damit die anderen aus der Leitung sie öffnen dürfen
+            const { data: att } = await db.from("kc_communication_attachments").select("id,object_path").eq("id", id).maybeSingle();
+            if (!att || !String(att.object_path).startsWith(`club/${ich.person_id}/`)) throw new Fehler("Nur selbst hochgeladene Dateien können dazugelegt werden.", 403);
+          } else { // aus dem Archiv: nur ein Verweis – öffnen darf es, wer das Dokument im Archiv sehen darf
+            const { data: ad } = await db.from("kc_club_archiv_dokumente").select("id").eq("attachment_id", id).is("geloescht_am", null).limit(1);
+            if (!ad?.length) throw new Fehler("Dieses Dokument liegt nicht (mehr) im Archiv.", 404);
+          }
+          x = await atAendern(ich, t.id, (k) => { if (!k.inhalt.some((y: any) => y.ref === id)) k.inhalt.push(neuTeil({ k: "datei:" + id, reg, art: "anlage", ref: id, name: txt(d.name, 200), mime: txt(d.mime, 100),
+            titel: txt(d.titel, 150) || txt(d.name, 150) || "Datei", unter: archiv ? "aus dem Archiv" : null })); });
+          if (!archiv) {
+            const { error: oe } = await db.from("kc_club_objekt_anlagen").upsert({ art: "aktentasche", objekt_id: x.id, attachment_id: id, reihenfolge: 0 }, { onConflict: "art,objekt_id,attachment_id" });
+            if (oe) throw new Fehler("Dazugelegt – aber die Freigabe für die anderen hat nicht geklappt. Bitte noch einmal versuchen.", 500);
+          }
+        } else if (op === "weg") {
+          const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.filter((y: any) => y.k !== k0); });
+        } else if (op === "dabei") {
+          const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.map((y: any) => (y.k === k0 ? { ...y, dabei: !!p.an } : y)); });
+        } else if (op === "notiz") {
+          const n = txt(p.text, 20000); x = await atAendern(ich, t.id, (k) => { k.notiz = n; });
+        } else if (op === "status") {
+          const g = p.status === "gepackt";
+          x = await atAendern(ich, t.id, (k) => { k.status = g ? "gepackt" : "offen"; k.gepackt_von = g ? ich.person_id : null; k.gepackt_am = g ? jetzt() : null; });
+          await protokoll(ich.person_id, g ? "aktentasche_gepackt" : "aktentasche_geoeffnet", { treffen: t.id, teile: (x.inhalt ?? []).length });
+        } else throw new Fehler("Unbekannter Schritt.");
+        return json({ ok: true, tasche: await atAnzeige(x) });
       }
       case "clubabend_setzen": {
         nurVorstand(ich);
