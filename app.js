@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.688.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.689.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14081,7 +14081,41 @@ async function kmSatzLoeschen(id) {
 
 // ---------- KC-CLUB-SCHLIESSEN: Ausgangstür ----------
 // Installierte App: window.close() beendet sie. Klappt das nicht (z. B. im Browser-Tab), kurze Anleitung statt stiller Nichtreaktion.
-function appSchliessen() {
+// ---------- KC-CLUB-VERLASSEN-ERINNERN (26.10.2026, Wunsch Hansi „wenn jemand die Club-App verlassen will, noch ein Hinweis: Karla, du hast noch
+// x ungelesene Nachrichten oder x Termine noch nicht bestätigt. Trotzdem verlassen? Ja, Nein, später nochmals erinnern“) ----------
+// Beim Verlassen über „Zurück“ (ganz am Anfang) oder „🚪 App schließen“: nur wenn wirklich etwas offen ist, höchstens alle 10 Min. einmal.
+// „Später“ merkt auf dem Server eine Erinnerung vor (Push in 2 Std., entfällt, wenn man vorher wieder in der App war). Zahlen kommen aus INIT – keine Abfrage.
+const VLF = { gefragt: 0 };
+function offenesZaehlen() {
+  const t = [], n = Number(INIT?.ungelesen) || 0, tr = INIT?.naechstesTreffen, ab = Number(INIT?.offeneAbstimmungen) || 0;
+  const ta = (INIT?.terminanfragenOffen || []).length, tf = (INIT?.terminfindungOffen || []).length, auf = (INIT?.meineAufgaben || []).length;
+  const mz = (z, ein, mehr) => `${z} ${z > 1 ? mehr : ein}`;
+  if (n) t.push({ text: mz(n, "ungelesene Nachricht", "ungelesene Nachrichten"), ziel: () => zeige("nachrichten") });
+  if (tr && !tr.meine) t.push({ text: `1 Termin noch nicht bestätigt (${tr.titel})`, ziel: () => zumTreffen() });
+  if (ta) t.push({ text: mz(ta, "Terminanfrage ohne Antwort", "Terminanfragen ohne Antwort"), ziel: () => zeige("termine") });
+  if (tf) t.push({ text: mz(tf, "Terminumfrage zum Ankreuzen", "Terminumfragen zum Ankreuzen"), ziel: () => zeige("termine") });
+  if (ab) t.push({ text: mz(ab, "offene Abstimmung", "offene Abstimmungen"), ziel: () => zeige("vorschlaege") });
+  if (auf) t.push({ text: mz(auf, "offene Aufgabe", "offene Aufgaben"), ziel: () => { zeige("start"); setTimeout(() => $("wichtig")?.scrollIntoView({ behavior: "smooth", block: "center" }), 300); } });
+  return t;
+}
+function verlassenFragen(weiter) { // true = Frage gezeigt (weiter() kommt nach der Antwort), false = nichts offen → weiter() sofort
+  const t = INIT && !INIT._offline && !VT?.fuer ? offenesZaehlen() : [];
+  if (!t.length || Date.now() - VLF.gefragt < 10 * 60000) { weiter(); return false; }
+  VLF.gefragt = Date.now();
+  const vn = esc(ICH?.vorname || "");
+  const f = blattAuf("verlassenBlatt", `<h3 style="margin-top:0">👋 ${vn ? vn + ", du" : "Du"} hast noch …</h3>
+    <ul style="margin:6px 0 10px 20px;padding:0">${t.map((x) => `<li>${esc(x.text)}</li>`).join("")}</ul><p style="margin:0 0 8px"><b>Trotzdem verlassen?</b></p>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-w="nein">👀 Nein, jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später nochmal erinnern</button><button class="knopf" data-w="ja">🚪 Ja, verlassen</button></div>
+    <p class="hinweis" style="margin:8px 0 0">„Später“: in 2 Stunden kommt eine Erinnerung aufs Handy – außer du schaust vorher wieder rein.</p>`);
+  f.querySelector('[data-w="ja"]').onclick = () => { f.remove(); weiter(); };
+  f.querySelector('[data-w="nein"]').onclick = () => { f.remove(); try { t[0].ziel(); } catch {} };
+  f.querySelector('[data-w="spaeter"]').onclick = async () => { f.remove();
+    try { await api("verlassen_erinnern", { minuten: 120, was: t.map((x) => x.text).join(", ") }); melde("⏰ Gut – in 2 Stunden kommt eine Erinnerung."); } catch (e) { meldeFehler(e); }
+    weiter(); };
+  return true;
+}
+function appSchliessen() { verlassenFragen(appSchliessenJetzt); } // KC-CLUB-VERLASSEN-ERINNERN: vorher fragen, wenn etwas offen ist
+function appSchliessenJetzt() {
   try { window.close(); } catch {}
   setTimeout(() => { if (!document.hidden) melde("Dieses Fenster lässt sich nicht selbst schließen. So geht's: zweimal „Zurück“ tippen – oder unten vom Rand nach oben wischen und die Köcheclub-App wegwischen."); }, 400);
 }
@@ -15849,7 +15883,7 @@ const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur(
 // und nur passende Kacheln zeigt. Gast: Termine, Nachrichten, SOS (nur Clubleitung), Spiele, Hilfe/Einstellungen. Aushilfe: dazu Mein Dienst,
 // Dienstwünsche, Fotoalbum ansehen, Schulung. Der Vertragstest prüft, dass ZUGANG_AKTIONEN hier und im Server gleich sind.
 const ZUGANG_AKTIONEN = {
-  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "video_bewerten", "stimmen",
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
@@ -29670,8 +29704,8 @@ window.addEventListener("popstate", (e) => {
   if (s.basis) {
     // ganz am Anfang angekommen: Startseite zeigen; erst das nächste „Zurück“ schließt die App
     zeige("start", true);
-    if (Date.now() - letztesZurueck > 3000) melde("Zum Beenden nochmal auf „Zurück“ tippen");
-    letztesZurueck = Date.now();
+    // KC-CLUB-VERLASSEN-ERINNERN: ist noch etwas offen, erst fragen – „Ja“/„Später“ → das nächste „Zurück“ schließt die App
+    verlassenFragen(() => { if (Date.now() - letztesZurueck > 3000) melde("Zum Beenden nochmal auf „Zurück“ tippen"); letztesZurueck = Date.now(); });
     return;
   }
   if (s.v === "chat" && s.id) chatOeffnen(s.id, true);

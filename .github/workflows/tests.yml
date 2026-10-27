@@ -39,3 +39,4 @@ jobs:
       - run: node tests/zugang-hilfe.test.mjs
       - run: node tests/spur-keepalive.test.mjs
       - run: node tests/schluessel-sichern.test.mjs
+      - run: node tests/verlassen-erinnern.test.mjs
