@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://ptblnpiroqftcvlsrhac.supabase.co" crossorigin> <!-- 2.342.0 KC-CLUB-TEMPO: Verbindung zum Club-Server schon beim Laden aufbauen (DNS + Verschlüsselung parallel statt danach) -->
+<!-- 2.723.0 KC-CLUB-SCHUTZSCHILD (Prüfbericht Etappe 1, Wunsch #44): Content-Security-Policy – die Seite darf Programmcode nur von hier laden,
+     Daten nur mit den eigenen Servern austauschen und keine fremden Seiten einbetten. Neue Adresse nötig? Hier UND im Test eintragen.
+     Gesperrtes landet als „schutz“ im Fehlerprotokoll (siehe unten). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; media-src 'self' data: blob: https://ptblnpiroqftcvlsrhac.supabase.co; connect-src 'self' data: blob: https://ptblnpiroqftcvlsrhac.supabase.co wss://ptblnpiroqftcvlsrhac.supabase.co https://kc-club-notbetrieb.ha-joko.workers.dev https://kc-failover-gateway.ha-joko.workers.dev https://status.supabase.com https://speed.cloudflare.com https://api.github.com; worker-src 'self' blob:; frame-src 'self' blob: data: https://www.openstreetmap.org https://maps.google.com https://www.google.com; object-src 'self' blob: data:; manifest-src 'self'; base-uri 'self'; form-action 'self'">
 <script>
 /* KC-CLUB-FEHLERPROTOKOLL (0.93.0) – läuft VOR der eigentlichen App, bewusst altes, einfaches JavaScript (ES5):
    So wird auch dann noch mitgeschrieben, wenn die App auf einem alten Handy gar nicht erst startet.
@@ -64,6 +68,11 @@
     var t = ev && ev.target; if (!t || t === window || !t.tagName) return;
     neu("laden", { text: t.tagName.toLowerCase() + " nicht geladen: " + String(t.src || t.href || "").split("/").pop().split("?")[0] });
   }, true);
+  // 2.723.0 KC-CLUB-SCHUTZSCHILD: hat das Schutzschild (Content-Security-Policy) etwas gesperrt, wird es mitgeschrieben – Adresse ohne ?…-Teil (keine Zugangsdaten)
+  document.addEventListener("securitypolicyviolation", function (ev) {
+    var u = String(ev.blockedURI || "").split("?")[0].split("#")[0];
+    neu("schutz", { text: (ev.effectiveDirective || ev.violatedDirective || "?") + " sperrt " + kurz(u, 120), datei: String(ev.sourceFile || "").split("/").pop().split("?")[0], zeile: ev.lineNumber || 0 });
+  });
   // Mehrfach geöffnet in kurzer Zeit? (Zeichen für „geht nicht richtig auf“)
   try {
     var st = JSON.parse(localStorage.getItem("kc_club_starts") || "[]"), jetzt = Date.now();
@@ -6110,7 +6119,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.723.0" data-v="2.723.0"></script>
+<script src="app.js?v=2.724.0" data-v="2.724.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
