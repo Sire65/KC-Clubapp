@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.705.0 – 2026-10-27 – 🗂️ Bilderrechner-Training Karteikarten 4.6
+KC-CLUB-KASSE-KARTEIKARTEN: Wunsch Hansi („nenne das ganze Bilderrechner-Training, nicht Kasse“, „auf der ersten Seite eine Fußzeile“). Die Kachel unter Technik → Freigegebene Programme heißt jetzt **🗂️ Bilderrechner-Training Karteikarten** und zeigt **Version 4.6** (`dokumente/Bilderrechner-Training_Karteikarten_V4.6.pdf`): Name Bilderrechner-Training auf allen Seiten und Karten, Seite 1 mit Fußzeile. Versionen 4.4 und 4.5 bleiben als Datei unverändert (Regel 17).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.704.0 – 2026-10-27 – Händler-Ausweise: ein Schnitt zwischen den Karten
 KC-CLUB-HAENDLERAUSWEIS-SCHNITT: Scheckkarten-Maß 85,6 × 54 mm, Karte an Karte (erst 4 Ränder, dann 1 Schnitt senkrecht + 4 waagerecht), eckig, feine hellgraue Schneidemarken nur im Rand, Kontrollmaß 50 mm, 1,5-mm-Streifen unten in Weinrot (Schnitt Rot an Rot), QR-Feld eingerückt. Neu: 🎯 Probeblatt zum Prüfen des Duplex-Drucks.
 

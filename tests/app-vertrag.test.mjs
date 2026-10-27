@@ -7619,8 +7619,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.702.0 KC-CLUB-KASSE-KARTEIKARTEN (Hansi „Karteikarten der Kassenschulung in der neuesten Version in die Club-App unter Technik“)
 {
-  assert.ok(/\{ id: "kasse-karteikarten", sym: "🗂️", t: "Kassen-Training Karteikarten", u: "[^"]*", datei: "dokumente\/Kassen-Training_Karteikarten_V4\.5\.pdf", ort: "technik" \}/.test(html) && fs.existsSync(new URL("../dokumente/Kassen-Training_Karteikarten_V4.4.pdf", import.meta.url)), "Karteikarten 4.5 im Dokumenten-Register mit ort technik (V4.4 bleibt als Datei)");
-  const pdf = fs.readFileSync(new URL("../dokumente/Kassen-Training_Karteikarten_V4.5.pdf", import.meta.url), "latin1");
+  assert.ok(/\{ id: "kasse-karteikarten", sym: "🗂️", t: "Bilderrechner-Training Karteikarten", u: "[^"]*", datei: "dokumente\/Bilderrechner-Training_Karteikarten_V4\.6\.pdf", ort: "technik" \}/.test(html) && ["V4.4", "V4.5"].every((v) => fs.existsSync(new URL(`../dokumente/Kassen-Training_Karteikarten_${v}.pdf`, import.meta.url))), "Karteikarten 4.6 (Bilderrechner-Training) im Dokumenten-Register mit ort technik (V4.4/V4.5 bleiben als Datei)");
+  const pdf = fs.readFileSync(new URL("../dokumente/Bilderrechner-Training_Karteikarten_V4.6.pdf", import.meta.url), "latin1");
   const boxen = pdf.match(/\/MediaBox\s*\[[^\]]*\]/g) || [];
   assert.ok(boxen.length === 20 && boxen.every((b) => b.replace(/\s+/g, " ").replace(/ \]$/, "]") === "/MediaBox [0 0 595.28 841.89]"), "Karteikarten-PDF: 20 Seiten, jede exakt A4 (sonst verweigern Drucker den Duplexdruck)");
   assert.ok(/\{ id: "kasse-karteikarten", dok: "kasse-karteikarten" \}/.test(html) && /if \(p\.dok\) return dokOeffnen\(p\.dok\);/.test(html), "Kachel unter Technik → Freigegebene Programme öffnet das Dokument in der App");
