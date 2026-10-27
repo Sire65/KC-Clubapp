@@ -7499,7 +7499,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.match(server, /async function treffenThemen\(treffenId: string\): Promise<string\[\]> \{/, "Themen-Sammler");
   assert.match(server, /select\("tagesordnung"\)\.eq\("treffen_id", treffenId\)[\s\S]{0,300}\.eq\("art", "thema"\)\.neq\("status", "abgelehnt"\)/, "Protokoll-Punkte + Themen-Vorschläge");
-  assert.match(server, /const themen = await treffenThemen\(t\.id\)[^\n]*\n[\s\S]{0,400}· Themen: \$\{themen\.join\(" · "\)\}`[\s\S]{0,300}📋 Tagesordnung:/, "Push kurz + Mail mit Tagesordnung");
+  assert.match(server, /const themen = await treffenThemen\(t\.id\)[^\n]*\n[\s\S]{0,650}· Themen: \$\{themen\.join\(" · "\)\}`[\s\S]{0,300}📋 Tagesordnung:/, "Push kurz + Mail mit Tagesordnung");
 }
 // 2.690.0 KC-CLUB-HAENDLERAUSWEIS: Händler-Ausweis im Büro-Drucker (Prüfcode vom Server, QR, 10 je A4, Ausgabeliste)
 {
@@ -7525,6 +7525,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal((programm.match(/<span class="mk-von">\$\{vsVon\(v\)\}<\/span>/g) || []).length, 3, "auf allen drei Kachel-Arten");
   assert.equal((programm.match(/<div class="vs-von">\$\{vsVon\(v, true\)\}<\/div>/g) || []).length, 2, "im großen Blatt mit vollem Namen");
   assert.ok(!/<span class="mk-unter">von \$\{esc\(v\.von\?\.name/.test(programm), "alte kleine Zeile weg");
+  // Tagesordnung: Name des Einreichers an allen Stellen
+  assert.match(server, /async function tagesordnungVon\(treffenId: string \| null, punkte: string\[\]\)/, "Server ordnet Punkte den Vorschlägen zu");
+  assert.match(server, /tagesordnungVon: await tagesordnungVon\(pr\.treffen_id, pr\.tagesordnung\)/, "Protokoll bekommt die Namen");
+  assert.match(server, /von: x\.id \? vonV\.get\(x\.id\) \?\? null : null/, "Clubabend bekommt die Namen");
+  assert.match(server, /– Vorschlag von \$\{themenVon\[i\]\}/, "Erinnerungs-Mail nennt den Namen");
+  assert.equal((programm.match(/p\.tagesordnungVon\)/g) || []).length, 3, "Protokoll: Ansicht, Druck, Text");
+  assert.match(programm, /const buVon = \(s, t\) =>/, "buVon");
+  assert.ok((programm.match(/buVon\(s, t\)/g) || []).length >= 6, "Büro-Liste, Vorlage, Einladung");
+  assert.match(programm, /\$\{x\.von \? `💡 \$\{esc\(x\.von\)\} · ` : ""\}/, "Clubabend Live");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

@@ -5849,9 +5849,9 @@ async function clubabendStand(ich: Ich, t: any) {
   const b = await bueroSitzung(ich, t.id);
   const { data: ca } = await db.from("kc_club_clubabend").select("*").eq("treffen_id", t.id).maybeSingle();
   const erledigt = new Set<string>(ca?.erledigt ?? []), anwesend: string[] = ca?.anwesend ?? [];
-  const stimmen = new Map(b.vorschlaege.map((v: any) => [v.id, v.unterstuetzt]));
+  const stimmen = new Map(b.vorschlaege.map((v: any) => [v.id, v.unterstuetzt])), vonV = new Map(b.vorschlaege.map((v: any) => [v.id, v.von]));
   const top = ((b.vorbereitung?.tagesordnung?.length ? b.vorbereitung.tagesordnung : b.standard.tagesordnung) as any[])
-    .map((x: any) => ({ k: caSchluessel(x), t: String(x.t || ""), vorschlag: !!x.id, stimmen: x.id ? stimmen.get(x.id) ?? 0 : null, erledigt: erledigt.has(caSchluessel(x)) }));
+    .map((x: any) => ({ k: caSchluessel(x), t: String(x.t || ""), vorschlag: !!x.id, stimmen: x.id ? stimmen.get(x.id) ?? 0 : null, von: x.id ? vonV.get(x.id) ?? null : null, erledigt: erledigt.has(caSchluessel(x)) }));
   // Geburtstage seit dem letzten Treffen (nur freigegebene, ohne Jahr)
   const heute = berlinTag(new Date()), { data: vor } = await db.from("kc_club_treffen").select("beginn").eq("art", "treffen").eq("status", "geplant").lt("beginn", t.beginn).order("beginn", { ascending: false }).limit(1);
   let von = vor?.[0] ? berlinTag(new Date(vor[0].beginn)) : tagDazu(heute, -30); if (von < tagDazu(heute, -120)) von = tagDazu(heute, -120);
@@ -5878,14 +5878,15 @@ async function bueroSitzung(ich: Ich, tid: string) {
     db.from("kc_club_sitzungsprotokolle").select("id,titel,datum,status,einspruch_bis,veroeffentlicht_am").lt("datum", berlinTag(new Date(t.beginn))).order("datum", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const { data: auf } = letzt ? await db.from("kc_club_aufgaben").select("person_id,text,faellig,erledigt_am").eq("protokoll_id", letzt.id) : { data: [] as any[] };
-  const leute = await personen((auf ?? []).map((a: any) => a.person_id));
+  const leute = await personen([...(auf ?? []).map((a: any) => a.person_id), ...(vs ?? []).map((v: any) => v.erstellt_von)]); // 2.692.0: + Einreicher der Vorschläge
   const ant = new Map<string, any>((teil ?? []).map((x: any) => [x.person_id as string, x]));
   const unterst = new Map<string, number>();
   if ((vs ?? []).length) {
     const { data: st } = await db.from("kc_club_stimmen").select("vorschlag_id").in("vorschlag_id", (vs ?? []).map((v: any) => v.id));
     (st ?? []).forEach((s: any) => unterst.set(s.vorschlag_id, (unterst.get(s.vorschlag_id) ?? 0) + 1));
   }
-  const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0 }));
+  const vorschlaege: any[] = (vs ?? []).map((v: any) => ({ id: v.id, art: v.art, titel: v.titel, text: topVorschlag(v), fuerDiese: v.treffen_id === tid, status: v.status, unterstuetzt: unterst.get(v.id) ?? 0,
+    von: vorname(leute.get(v.erstellt_von) ?? null) || null })); // 2.692.0 KC-CLUB-VORSCHLAG-VON: „Vorschlag von Dieter“ in der Tagesordnung
   // Vorschlag für die Anmerkung: Stand des letzten Protokolls
   let anmerkungVorschlag = "";
   if (letzt) {
@@ -6773,6 +6774,15 @@ async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
     (tn ?? []).forEach((x: any) => { if (x.person_id !== ich.person_id && aktiv.has(x.person_id)) ids.add(String(x.person_id)); });
   }
   return [...ids];
+}
+// 2.692.0 KC-CLUB-VORSCHLAG-VON: wer welchen Tagesordnungspunkt vorgeschlagen hat – Punkt (Text) ↔ Vorschlag dieser Sitzung mit gleichem Text
+const topSchluessel = (x: unknown) => txt(x, 160).toLowerCase().replace(/^🗳️\s*/, "").replace(/[^a-z0-9äöüß]/g, "");
+async function tagesordnungVon(treffenId: string | null, punkte: string[]): Promise<(string | null)[]> {
+  if (!treffenId || !punkte?.length) return (punkte ?? []).map(() => null);
+  const { data: vs } = await db.from("kc_club_vorschlaege").select("titel,art,spenden,erstellt_von").eq("treffen_id", treffenId).neq("status", "zurueckgezogen");
+  const leute = await personen((vs ?? []).map((v: any) => v.erstellt_von)), m = new Map<string, string>();
+  for (const v of vs ?? []) { const n = vorname(leute.get((v as any).erstellt_von) ?? null); if (!n) continue; m.set(topSchluessel(topVorschlag(v)), n); m.set(topSchluessel((v as any).titel), n); }
+  return punkte.map((x) => m.get(topSchluessel(x)) ?? null);
 }
 // 2.688.0 KC-CLUB-ERINNERUNG-THEMEN (Wunsch Hansi „Tagesordnung in die Erinnerung am Donnerstag“): Tagesordnung eines Treffens = die Punkte aus dem
 // Protokoll(-Entwurf) dieses Treffens, dazu eingereichte Themen-Vorschläge, die dort noch fehlen (gleiche Schreibweise zählt doppelt nur einmal). Höchstens 12.
@@ -7951,10 +7961,11 @@ Köcheclub Werne`,
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ort = t.ort || (g ? `bei ${vorname(g)}` : "");
         const themen = await treffenThemen(t.id).catch(() => [] as string[]); // 2.688.0 KC-CLUB-ERINNERUNG-THEMEN
+        const themenVon = await tagesordnungVon(t.id, themen).catch(() => [] as (string | null)[]); // 2.692.0: „– Vorschlag von Dieter“ in der Mail
         await senden("club_erinnerung", ziel, {
           betreff: `Köcheclub Werne – Erinnerung: morgen ${t.titel}, ${fZeit.format(new Date(t.beginn))} Uhr`,
           titel: "⏰ Morgen: " + t.titel, kurz: `${wann(t.beginn)}${ort ? " – " + ort : ""}${themen.length ? ` · Themen: ${themen.join(" · ")}`.slice(0, 160) : ""}`,
-          text: `Hallo,\n\nkurze Erinnerung an unser Treffen morgen:\n\n📅 ${wann(t.beginn, true)}${ort ? "\n📍 " + ort : ""}${themen.length ? `\n\n📋 Tagesordnung:\n${themen.map((x, i) => `${i + 1}. ${x}`).join("\n")}` : ""}\n\nZu- oder absagen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          text: `Hallo,\n\nkurze Erinnerung an unser Treffen morgen:\n\n📅 ${wann(t.beginn, true)}${ort ? "\n📍 " + ort : ""}${themen.length ? `\n\n📋 Tagesordnung:\n${themen.map((x, i) => `${i + 1}. ${x}${themenVon[i] ? ` – Vorschlag von ${themenVon[i]}` : ""}`).join("\n")}` : ""}\n\nZu- oder absagen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + "#termine",
         }, `club-erinnerung:${t.id}`);
         elternHinweis(ziel, "erinnerung", "⏰ Morgen Köcheclub – {kind}", `${t.titel}: ${wann(t.beginn)}${ort ? " – " + ort : ""}`); // 2.431.0 KC-CLUB-ELTERN
@@ -15545,7 +15556,7 @@ Köcheclub Werne`,
         return json({
           protokoll: {
             id: pr.id, treffen_id: pr.treffen_id, titel: pr.titel, datum: pr.datum, ort: pr.ort, gaeste: pr.gaeste, kurzfassung: pr.kurzfassung, naechster_termin: pr.naechster_termin ?? null,
-            tagesordnung: pr.tagesordnung, beschluesse: pr.beschluesse, version: pr.version, veroeffentlicht_am: pr.veroeffentlicht_am, einspruch_bis: pr.einspruch_bis,
+            tagesordnung: pr.tagesordnung, tagesordnungVon: await tagesordnungVon(pr.treffen_id, pr.tagesordnung).catch(() => []), beschluesse: pr.beschluesse, version: pr.version, veroeffentlicht_am: pr.veroeffentlicht_am, einspruch_bis: pr.einspruch_bis,
             status: protokollStatus(pr, (ew ?? []).filter((x: any) => !x.erledigt_am).length), roh: pr.status,
             verfasser: { person_id: pr.verfasser, name: name(pr.verfasser) },
             anwesend: pr.anwesend.map((id: string) => ({ person_id: id, name: name(id) })), entschuldigt: pr.entschuldigt.map((id: string) => ({ person_id: id, name: name(id) })),

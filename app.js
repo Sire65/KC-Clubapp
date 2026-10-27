@@ -31369,7 +31369,7 @@ function buSitzungHtml() {
       <label class="feld" style="margin:0"><textarea id="buAnmerkung" rows="3" maxlength="1000" oninput="BU.f.anmerkung=this.value;lvAuffrischen()">${esc(f.anmerkung)}</textarea></label>
       ${s.aufgaben.filter((a) => !a.erledigt).length ? `<p style="margin:8px 0 2px"><b>Offene Aufgaben aus dem letzten Protokoll:</b></p><ul style="margin:0;padding-left:20px">${s.aufgaben.filter((a) => !a.erledigt).map((a) => `<li>${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}</div>
     <div class="karte"><h3 style="margin-top:0">3️⃣ Tagesordnung</h3>
-      <ol class="bu-top">${f.tagesordnung.map((t, i) => `<li class="bu-top-${t.art}"><span>${esc(t.t)}${t.art === "vorschlag" ? ' <small class="hinweis">· Vorschlag</small>' : ""}</span>
+      <ol class="bu-top">${f.tagesordnung.map((t, i) => `<li class="bu-top-${t.art}"><span>${esc(t.t)}${t.art === "vorschlag" ? ` <small class="hinweis">· ${buVon(s, t) ? `Vorschlag von ${esc(buVon(s, t))}` : "Vorschlag"}</small>` : ""}</span>
         <span class="bu-top-knoepfe"><button ${i ? "" : "disabled"} onclick="buTop(${i},-1)" aria-label="nach oben">▲</button><button ${i < f.tagesordnung.length - 1 ? "" : "disabled"} onclick="buTop(${i},1)" aria-label="nach unten">▼</button><button onclick="buTopWeg(${i})" aria-label="streichen">✕</button></span></li>`).join("")}</ol>
       ${verfuegbar.length ? `<p class="hinweis" style="margin:8px 0 4px">Weitere Vorschläge – antippen zum Aufnehmen:</p><div class="hl-chips">${verfuegbar.map((v) => `<button class="chip" onclick="buTopVorschlag('${v.id}')">＋ ${esc(v.text)}${v.unterstuetzt ? ` · 👍${v.unterstuetzt}` : ""}</button>`).join("")}</div>` : ""}
       <div class="zwei" style="align-items:end"><label class="feld">Eigener Punkt<input id="buNeu" maxlength="200" placeholder="z. B. Planung Weihnachtsmarkt" value="${esc(f.neu)}" oninput="BU.f.neu=this.value"></label><button class="knopf" onclick="buTopNeu()">＋ Dazu</button></div></div>
@@ -31380,6 +31380,9 @@ function buSitzungHtml() {
     ${buSchreiben() ? "" : '<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buDruckWahl()">🖨️ Vorlage drucken</button></div>'}`;
 }
 function buAnw(id, an) { an ? BU.f.anwesend.add(id) : BU.f.anwesend.delete(id); lvAuffrischen(); }
+// 2.692.0 KC-CLUB-VORSCHLAG-VON: Name des Einreichers bei Tagesordnungspunkten (Büro, Vorlage, Einladung, Protokoll)
+const buVon = (s, t) => (t?.id ? (s?.vorschlaege || []).find((v) => v.id === t.id)?.von : null) || null;
+const topVon = (von, i) => (von?.[i] ? ` <small class="hinweis" style="font-style:italic">– Vorschlag von ${esc(von[i])}</small>` : "");
 function buTop(i, d) { const l = BU.f.tagesordnung, j = i + d; [l[i], l[j]] = [l[j], l[i]]; buZeigen(); }
 function buTopWeg(i) { BU.f.tagesordnung.splice(i, 1); buZeigen(); }
 // neue Punkte vor „Verschiedenes“ einreihen
@@ -31425,7 +31428,7 @@ function druckSitzung() {
     <p style="margin:2mm 0 0;font-size:3.6mm"><b>Gäste:</b> ${strich(150)}</p>
     ${h("Anmerkung zum letzten Protokoll")}<div style="font-size:3.6mm;white-space:pre-wrap">${esc(f.anmerkung || "")}</div>
     ${auf.length ? `<p style="margin:2mm 0 1mm;font-size:3.6mm"><b>Offene Aufgaben:</b></p><ul style="margin:0;padding-left:6mm;font-size:3.5mm">${auf.map((a) => `<li>${box(false)}${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}${linien(2)}
-    ${h("Tagesordnung")}${f.tagesordnung.map((t, i) => `<div style="break-inside:avoid;margin:0 0 3mm"><div style="font-size:4mm;font-weight:800;margin-top:3mm">TOP ${i + 1}: ${esc(t.t)}</div>${linien(f.zeilen)}</div>`).join("")}
+    ${h("Tagesordnung")}${f.tagesordnung.map((t, i) => `<div style="break-inside:avoid;margin:0 0 3mm"><div style="font-size:4mm;font-weight:800;margin-top:3mm">TOP ${i + 1}: ${esc(t.t)}${buVon(s, t) ? ` <span style="font-weight:400;font-size:3.4mm">(Vorschlag von ${esc(buVon(s, t))})</span>` : ""}</div>${linien(f.zeilen)}</div>`).join("")}
     <div style="break-inside:avoid">${h("Beschlüsse / Sonstiges")}${linien(Math.max(3, f.zeilen))}
     <p style="margin:3mm 0 0;font-size:3.8mm"><b>Nächster Termin:</b> ${weiter ? `${esc(wann(weiter.beginn, true))}${weiter.ort ? " · " + esc(weiter.ort) : ""}` : `Datum ${strich(30)} Uhrzeit ${strich(18)} Ort ${strich(55)}`}</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:9mm;font-size:3.3mm"><div style="border-top:1px solid #222;padding-top:1mm">Protokoll (Name, Unterschrift)</div><div style="border-top:1px solid #222;padding-top:1mm">Sitzungsleitung (Name, Unterschrift)</div></div></div>`;
@@ -31434,7 +31437,7 @@ function druckSitzung() {
 // Einladung / Erinnerung: Vorschau, Weg wählen, erst nach Bestätigung senden
 async function buEinladung(id, nurOffen) {
   let s; try { s = await api("buero_sitzung", { treffen_id: id }, { warten: true }); } catch (e) { return meldeFehler(e); }
-  const top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`);
+  const top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}${buVon(s, t) ? ` – Vorschlag von ${buVon(s, t)}` : ""}`);
   if (!nurOffen && !top.length && !(await frage("Die Sitzung ist noch nicht vorbereitet – die Einladung geht dann ohne Tagesordnung.\n\nTrotzdem weiter?"))) return buSitzungOeffnen(id);
   const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
   const anzahl = nurOffen ? ohne : s.mitglieder.length;
@@ -38146,7 +38149,7 @@ function caZeichnen() {
   const alt = $("caBlatt")?.querySelector(".blatt-innen")?.scrollTop || 0, L = r.leitung, tr = r.treffen;
   const fertig = r.tagesordnung.filter((x) => x.erledigt).length, klappe = (k, kopf, inhalt) => `<details data-ca="${k}"${CA.offen.has(k) ? " open" : ""}><summary>${kopf}</summary>${inhalt}</details>`;
   const top = r.tagesordnung.map((x, i) => `<div class="ca-top${x.erledigt ? " fertig" : ""}">${L ? `<button type="button" class="ca-haken" data-top="${i}" aria-label="${x.erledigt ? "Wieder offen" : "Abhaken"}">${x.erledigt ? "☑️" : "⬜"}</button>` : `<span class="ca-haken">${x.erledigt ? "✅" : "▫️"}</span>`}
-    <span class="ca-tx">${i + 1}. ${esc(x.t)}${x.vorschlag ? ` <small class="hinweis">👍 ${x.stimmen}</small>` : ""}</span></div>`).join("");
+    <span class="ca-tx">${i + 1}. ${esc(x.t)}${x.vorschlag ? ` <small class="hinweis">${x.von ? `💡 ${esc(x.von)} · ` : ""}👍 ${x.stimmen}</small>` : ""}</span></div>`).join("");
   const da = new Set(r.anwesend.map((a) => a.person_id));
   // 2.641.0 KC-CLUB-ANWESEND-AMPEL (Wunsch Hansi „besser unterscheiden, wer angemeldet ist: grün, gelb wer noch nicht genau weiß, rot noch nicht gemeldet“)
   const ampel = (z) => CA_AMPEL[z === "ja" || z === "vielleicht" || z === "nein" ? z : "offen"], leute = [...(r.mitglieder || [])].sort((x, y) => CA_RANG.indexOf(ampel(x.zusage).k) - CA_RANG.indexOf(ampel(y.zusage).k)); // grün oben, dann gelb, rot, abgesagt
@@ -38401,7 +38404,7 @@ async function protokollLoeschen(id, veroeffentlicht) {
 function protokollLesen() {
   const p = PR.protokoll, einspruchOffen = p.einspruch_bis && new Date(p.einspruch_bis) > new Date() && p.roh === "veroeffentlicht";
   $("prTitel").textContent = "📄 Protokoll";
-  const liste = (a, tag) => a.length ? `<${tag} style="margin:4px 0 0;padding-left:22px">${a.map((x) => `<li>${esc(x)}</li>`).join("")}</${tag}>` : "";
+  const liste = (a, tag, von) => a.length ? `<${tag} style="margin:4px 0 0;padding-left:22px">${a.map((x, i) => `<li>${esc(x)}${topVon(von, i)}</li>`).join("")}</${tag}>` : "";
   const offeneEw = PR.einwaende.filter((e) => !e.erledigt_am);
   $("protokollInhalt").innerHTML = `
     <div class="karte">${prStatusMarke(p)}${p.version > 1 ? ` <span class="marke">Fassung ${p.version} (korrigiert)</span>` : ""}
@@ -38411,7 +38414,7 @@ function protokollLesen() {
       ${p.anwesend.length ? `<p style="margin:10px 0 0"><b>✅ Anwesend (${p.anwesend.length}):</b> ${esc(p.anwesend.map((x) => x.name).join(", "))}</p>` : ""}
       ${p.entschuldigt.length ? `<p style="margin:6px 0 0"><b>🙋 Entschuldigt (${p.entschuldigt.length}):</b> ${esc(p.entschuldigt.map((x) => x.name).join(", "))}</p>` : ""}
       ${p.gaeste ? `<p style="margin:6px 0 0"><b>Gäste:</b> ${esc(p.gaeste)}</p>` : ""}
-      ${p.tagesordnung.length ? `<p style="margin:10px 0 0"><b>Tagesordnung</b></p>${liste(p.tagesordnung, "ol")}` : ""}
+      ${p.tagesordnung.length ? `<p style="margin:10px 0 0"><b>Tagesordnung</b></p>${liste(p.tagesordnung, "ol", p.tagesordnungVon)}` : ""}
       ${p.beschluesse.length ? `<p style="margin:10px 0 0"><b>Beschlüsse</b></p>${liste(p.beschluesse, "ul")}` : ""}
       ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
       ${p.naechster_termin ? `<p style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
@@ -41971,14 +41974,14 @@ async function druckTreffen(id) {
 // ---- Sitzungsprotokoll ----
 function druckProtokoll() {
   if (!PR?.protokoll) throw new Error("Protokoll nicht geladen.");
-  const p = PR.protokoll, liste = (a, tag) => (a.length ? `<${tag}>${a.map((x) => `<li>${esc(x)}</li>`).join("")}</${tag}>` : "<p>–</p>");
+  const p = PR.protokoll, liste = (a, tag, von) => (a.length ? `<${tag}>${a.map((x, i) => `<li>${esc(x)}${topVon(von, i)}</li>`).join("")}</${tag}>` : "<p>–</p>");
   const status = p.roh === "entwurf" ? "Entwurf" : p.einspruch_bis && new Date(p.einspruch_bis) > new Date() ? `veröffentlicht – Einwände bis ${wann(p.einspruch_bis)}` : "veröffentlicht und genehmigt";
   return { titel: p.titel, unter: `Sitzungsprotokoll · ${dz(p.datum)}${p.ort ? " · " + p.ort : ""}`, fuss: `Fassung ${p.version} · ${status}`,
     html: `<table class="dinfo"><tbody><tr><th style="width:36mm">Datum</th><td>${esc(fDatumLang.format(new Date(p.datum + "T12:00:00Z")))}</td></tr>${p.ort ? `<tr><th>Ort</th><td>${esc(p.ort)}</td></tr>` : ""}
         <tr><th>Schriftführer</th><td>${esc(p.verfasser.name)}</td></tr><tr><th>Anwesend (${p.anwesend.length})</th><td>${esc(p.anwesend.map((x) => x.name).join(", ") || "–")}</td></tr>
         ${p.entschuldigt.length ? `<tr><th>Entschuldigt</th><td>${esc(p.entschuldigt.map((x) => x.name).join(", "))}</td></tr>` : ""}${p.gaeste ? `<tr><th>Gäste</th><td>${esc(p.gaeste)}</td></tr>` : ""}
         <tr><th>Stand</th><td>Fassung ${p.version} · ${esc(status)}</td></tr></tbody></table>
-      <h2>Tagesordnung</h2>${liste(p.tagesordnung, "ol")}<h2>Beschlüsse</h2>${liste(p.beschluesse, "ul")}
+      <h2>Tagesordnung</h2>${liste(p.tagesordnung, "ol", p.tagesordnungVon)}<h2>Beschlüsse</h2>${liste(p.beschluesse, "ul")}
       ${p.kurzfassung ? `<h2>Kurzfassung</h2><p style="white-space:pre-wrap">${esc(p.kurzfassung)}</p>` : ""}
       ${PR.aufgaben.length ? `<h2>Aufgaben</h2><table><thead><tr><th style="width:9mm">✓</th><th>Aufgabe</th><th style="width:44mm">Wer</th><th style="width:22mm">bis</th></tr></thead><tbody>${druckAufgabenZeilen(PR.aufgaben)}</tbody></table>` : ""}
       ${PR.anlagen.length ? `<h2>Anlagen</h2><ul>${PR.anlagen.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>` : ""}
@@ -44503,10 +44506,10 @@ function fotoInsArchiv() {
 }
 // ----- 1.19.0: Protokoll (Text als Datei + auf Wunsch die Protokoll-Dateien/Fotos) -----
 function protokollText(p) {
-  const l = (t, a) => a?.length ? [`${t}:`, ...a.map((x, i) => `  ${i + 1}. ${typeof x === "string" ? x : x.name}`), ""] : [];
+  const l = (t, a, von) => a?.length ? [`${t}:`, ...a.map((x, i) => `  ${i + 1}. ${typeof x === "string" ? x : x.name}${von?.[i] ? ` – Vorschlag von ${von[i]}` : ""}`), ""] : [];
   return [`Köcheclub Werne – Protokoll`, p.titel, `${tagKurz(p.datum)}${p.ort ? " · " + p.ort : ""} · geschrieben von ${p.verfasser?.name || ""}${p.version > 1 ? ` · Fassung ${p.version}` : ""}`, "────────────────────", "",
     ...(p.anwesend?.length ? [`Anwesend (${p.anwesend.length}): ${p.anwesend.map((x) => x.name).join(", ")}`] : []), ...(p.entschuldigt?.length ? [`Entschuldigt: ${p.entschuldigt.map((x) => x.name).join(", ")}`] : []),
-    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
+    ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung, p.tagesordnungVon), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
     ...l("Anlagen", PR.anlagen), `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}`, ""].join("\n");
 }
 function protokollInsArchiv() {
