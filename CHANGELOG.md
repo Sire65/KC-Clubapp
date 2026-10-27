@@ -1,23 +1,24 @@
 # Änderungen
 
-## 2.717.0 – 2026-10-26 – 🐂 Stier auf dem Viehmarkt
+## 2.717.0 – 2026-10-27 – 🐂 Stier auf dem Viehmarkt
 - 🐂 Viehmarkt auf Sim-Jü: Nach Feierabend trabt ein Stier mit großen Hörnern und Nasenring herein, schnaubt – und aus den Dampfwolken entsteht dein Name (KC-CLUB-VM-STIER).
+- 🧚 Die Fee hat jetzt eine Sprechblase „Tipp mich an!“, solange sie stehen bleibt – nach dem Antippen verschwindet sie (KC-CLUB-FEE-BLASE).
 
-## 2.716.0 – 2026-10-26 – 🌹 Rosen-Gruß mit Sim-Jü
+## 2.716.0 – 2026-10-27 – 🌹 Rosen-Gruß mit Sim-Jü
 - 🌹 Der Gruß zur Rose lautet jetzt „Ein Gruß aus der Schießbude – hab ich für dich auf der Sim-Jü geschossen 🎯“ (KC-CLUB-ROSE-TEXT).
 
 ## 2.715.0 – 2026-10-27 – 🗑️ Fotos im Papierkorb sofort endgültig löschen
 KC-CLUB-FOTO-ENDGUELTIG: Wunsch Hansi („im Papierkorb einen Mülleimer für endgültig löschen – nicht erst nach 30 Tagen; ich habe ein falsches Foto“). Fotoalbum → 🗑️ Papierkorb (nur Admin) → Foto antippen: **♻️ Zurückholen** oder **🗑️ Endgültig löschen** (mit Rückfrage). Endgültig heißt: Eintrag weg, Foto und Vorschau sofort aus dem Speicher – wie sonst die Wartung nach 30 Tagen. Protokolliert als `foto_endgueltig_geloescht`.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
-## 2.714.0 – 2026-10-26 – 🌹 Rose kommt auf jeder Seite
+## 2.714.0 – 2026-10-27 – 🌹 Rose kommt auf jeder Seite
 - 🌹 Die Rose aus der Schießbude kommt jetzt nach etwa 5 Sekunden ruhigem Bildschirm auf jeder Seite – auch wer die App über eine Benachrichtigung direkt im Chat öffnet, bekommt sie (KC-CLUB-ROSE-UEBERALL).
 
 ## 2.713.0 – 2026-10-27 – ✓✓ Lese-Stand in der Chat-Übersicht
 KC-CLUB-CHAT-LESESTAND: Wunsch Hansi („in der Nachrichten-Übersicht sofort sehen: wie viele Empfänger, wie viele mit 2 Haken, wie viele mit blauen Haken – in allen Chats, für alle“). Unter jedem Chat steht der Stand deiner **letzten eigenen Nachricht**: in Gruppen „**17 → ✓✓ 10 · ✓✓ 4**“ (17 Empfänger · bei 10 angekommen, gelesene mitgezählt · davon 4 gelesen, blaue Haken), im Einzelchat ein Zeichen wie bei WhatsApp (✓ gesendet · graue ✓✓ angekommen · blaue ✓✓ gelesen). Hat danach noch jemand geschrieben, steht „Deine letzte:“ davor. Antippen öffnet ℹ️ Details mit den Namen. Auch in der Rollkartei. Gleiche Regeln wie ℹ️ Details (gelesen = Chat seitdem geöffnet; angekommen = App-Rückmeldung oder App seitdem geöffnet; Inkognito zählt nicht als angekommen); Push-Rückmeldungen des Handys zählt nur ℹ️ Details. Kein zusätzlicher Datenbank-Aufruf – das Paket der Übersicht rechnet es mit (Migration `20261027_kc_club_v2713_chat_lesestand.sql`, gemessen ca. 10 ms wie vorher).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
-## 2.712.0 – 2026-10-26 – 📭 Ungelesen auch für die Clubleitung, Filter aufgeräumt
+## 2.712.0 – 2026-10-27 – 📭 Ungelesen auch für die Clubleitung, Filter aufgeräumt
 - 📭 „Ungelesen“ gibt es jetzt auch für Klaus und Dieter (Kachel unter „Meins“ und Knopf in den Nachrichten) – jeder sieht nur seine eigenen Nachrichten. Die Filter stehen ordentlich im Klappbereich „🔎 Filter“ (KC-CLUB-UNGELESEN-LEITUNG).
 
 ## 2.711.0 – 2026-10-27 – 🎬 Videos im Fotoalbum, Fotos platzsparend
@@ -28,13 +29,13 @@ KC-CLUB-CHAT-LESESTAND: Wunsch Hansi („in der Nachrichten-Übersicht sofort se
 ## 2.710.0 – 2026-10-27 – Twinkey hilft von selbst
 KC-CLUB-HILFE-VON-SELBST (Wunschliste #43): Merkt die App, dass jemand in einem Bereich nicht weiterkommt (lange ohne Erfolg mit vielen Tippern, Hin und her zwischen zwei Bereichen, oft Zurück, 2× Suche ohne Treffer, Tipper auf Stellen ohne Funktion), bietet Twinkey an: „Hallo …, sehr gerne gebe ich dir hier Hilfestellung“ – 🎬 Video, 📖 Hilfe, Nein danke, Hier nicht mehr anbieten. Höchstens 2× am Tag, 1× je Bereich; nur auf dem Gerät erkannt; für alle an, abschaltbar unter ⚙️. Admin: anonyme Auswertung unter 📊 Nutzung.
 
-## 2.709.0 – 2026-10-26 – 📭 Ungelesen-Übersicht für den Admin
+## 2.709.0 – 2026-10-27 – 📭 Ungelesen-Übersicht für den Admin
 - 📭 Neu für den Admin: Übersicht, welche deiner Chat-Nachrichten noch nicht gelesen wurden – nach Person oder nach Nachricht, Filter 7/14/30 Tage, nur wichtige, nur Einzelchats, Suche; „💬 Erinnern“ öffnet den Chat mit fertigem Text (KC-CLUB-UNGELESEN-ADMIN).
 
-## 2.708.0 – 2026-10-26 – Angefangene Nachrichten gehen nicht mehr verloren
+## 2.708.0 – 2026-10-27 – Angefangene Nachrichten gehen nicht mehr verloren
 - ✏️ Eine neue, noch nicht gesendete Nachricht (Empfänger, Betreff, Text) bleibt jetzt auf dem Gerät erhalten – auch wenn das Handy die App im Hintergrund schließt. „Neue Nachricht“ und die Chat-Liste bieten „✏️ Fortsetzen“ oder „🗑️ Verwerfen“ an (KC-CLUB-NEU-ENTWURF).
 
-## 2.707.0 – 2026-10-26 – Mitgliederliste „Alle Daten“
+## 2.707.0 – 2026-10-27 – Mitgliederliste „Alle Daten“
 - 📋 Neue Mitgliederliste „Alle Daten“ im Büro: Handy, Festnetz, E-Mail und Anschrift aller aktiven Mitglieder in einer Tabelle, quer gedruckt, als vertraulich gekennzeichnet (KC-CLUB-ML-ALLE).
 
 ## 2.706.0 – 2026-10-26 – 💼 Büro öffnet ohne Sanduhr (KC-CLUB-BUERO-SCHNELL)

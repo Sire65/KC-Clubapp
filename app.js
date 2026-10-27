@@ -17040,7 +17040,8 @@ function feeKommt(vorschau) {
   const held = vorschau === true ? null : document.querySelector("#v-start .hero");
   const r = held?.getBoundingClientRect(), bw = innerWidth, top = r && r.height > 60 ? Math.max(4, r.top) : 70, hoehe = r && r.height > 60 ? Math.min(r.height, 260) : 220;
   const f = document.createElement("div"); f.className = "fee"; f.setAttribute("role", "button"); f.setAttribute("aria-label", "Fee – antippen für einen schönen Spruch");
-  f.innerHTML = `<div class="fee-innen"><div class="fee-seite">${FEE_SVG}</div><div class="fee-vorn">${FEE_VORN_SVG}</div></div>`;
+  // 2.717.0 KC-CLUB-FEE-BLASE (Wunsch Hansi „bei der Fee noch eine Sprechblase: Tipp mich an!“): erscheint, solange sie steht und lächelt; weg nach dem Antippen
+  f.innerHTML = `<div class="fee-innen"><div class="fee-seite">${FEE_SVG}</div><div class="fee-vorn">${FEE_VORN_SVG}</div></div><div class="fee-blase" aria-hidden="true">Tipp mich an!</div>`;
   document.body.appendChild(f); FEE_LAEUFT = true;
   const W = 120, B = feeBahn(), minY = Math.max(2, top - 16), maxY = Math.max(minY + 20, top + hoehe - 96);
   const hx = Math.round(bw * B.halt - W / 2), hy = Math.min(maxY, Math.max(minY, top + Math.max(4, hoehe / 2 - 64))), y0 = minY + (maxY - minY) * B.hoch;
@@ -17056,7 +17057,8 @@ function feeKommt(vorschau) {
       s.animate([{ transform: `translate(${sx}px,${sy}px) scale(1)`, opacity: 1 }, { transform: `translate(${sx + dx}px,${sy + dy}px) scale(.2)`, opacity: 0 }], { duration: viel ? 900 : kreis ? 1300 : 1100 + Math.random() * 500, easing: "ease-out" }).onfinish = () => s.remove();
     }
   };
-  f.onclick = (e) => { e.stopPropagation(); const [sx, sy] = stern(); staub(sx, sy, 18); feeSpruch(); };
+  let getippt = false;
+  f.onclick = (e) => { e.stopPropagation(); getippt = true; f.classList.remove("blase"); const [sx, sy] = stern(); staub(sx, sy, 18); feeSpruch(); };
   // 2.431.0 KC-CLUB-FEE-3D (Wunsch Hansi „beim Umdrehen mehr 3D – nicht von platter Seitenansicht zu Frontansicht“): echte Drehung um die
   // Hochachse mit Perspektive – die Seitenansicht dreht sich weg und wird dunkler, die Vorderansicht dreht sich überlappend herein,
   // dabei hebt sich die Fee kurz, neigt sich und schlägt schneller mit den Flügeln.
@@ -17083,10 +17085,10 @@ function feeKommt(vorschau) {
     } else if (t < ein + steh) { // Stehen: umdrehen, lächeln, wedeln, Zauberschnee
       const s = t - ein; x = hx; y = hy + Math.sin(t / 520) * 4;
       if (!stufe) { stufe = "dreht"; drehen(true); }
-      if (stufe === "dreht" && s > 450) { stufe = "lacht"; f.classList.add("lacht"); }
+      if (stufe === "dreht" && s > 450) { stufe = "lacht"; f.classList.add("lacht"); if (!getippt) { f.classList.toggle("blase-unten", hy < 40); f.classList.add("blase"); } } // 2.717.0: Sprechblase (oben zu wenig Platz → darunter)
       if (stufe === "lacht" && s > 950) { stufe = "zaubert"; f.classList.add("zaubert"); }
       if (stufe === "zaubert" && s > 2150) { stufe = "schnee"; const [sx, sy] = stern(); feeZauberschnee(sx, sy, top, hoehe); }
-      if (stufe === "schnee" && s > 3600) { stufe = "zurueck"; f.classList.remove("lacht", "zaubert"); drehen(false); }
+      if (stufe === "schnee" && s > 3600) { stufe = "zurueck"; f.classList.remove("lacht", "zaubert", "blase"); drehen(false); }
     } else if (t < ein + steh + aus) { // weiter nach links – jede Bahn anders
       const k = (t - ein - steh) / aus, kk = k * k;
       x = lerp(hx, -W - 20, kk); y = hy;
