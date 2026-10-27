@@ -39,3 +39,17 @@ Schnittstelle (supabase-js, PostgREST) mit „permission denied“ – auch dem 
    und – wie bisher – `enable row level security` sowie `revoke all … from public, anon, authenticated;`.
 2. Nur wenn die App die Tabelle wirklich direkt ohne Club-Server liest/schreibt: zusätzlich gezielte Rechte für `authenticated`/`anon` mit passender Policy.
 3. Der Test `tests/migration-rechte.test.mjs` prüft das für alle Migrationen ab 21.10.2026; ein roter Test verhindert das Einspielen.
+
+## Vor dem Einspielen: Ruhe prüfen (KC-EINSPIELEN-RUHIG, 27.10.2026, Wunsch Hansi „nicht gerade mit einer Spiegelung oder Datensicherung und nicht, wenn mehr als 2 drin sind“)
+
+Gilt für jedes Einspielen (12-/20-Uhr-Bündel und „sofort“), keine technische Sperre – jede Sitzung prüft selbst direkt vor dem Push auf `main`:
+
+1. **Nicht während Spiegelung/Datensicherung** (Zeiten UTC; Berlin Winter +1, Sommer +2):
+   - Neon-Spiegel: **4:05–4:30, 10:05–10:30, 16:05–16:30, 22:05–22:30** (Anstoß :10, Welle :11–:22),
+   - Neon-Nachtsicherung: **0:35–1:00**, FRA-Sicherung: **1:00–3:00**.
+   Fällt ein Termin hinein (z. B. Sommerzeit: 20 Uhr Berlin = 18 UTC – passt; Winter 17 Uhr Berlin = 16 UTC – nicht), danach einspielen.
+2. **Nicht, wenn mehr als 2 Mitglieder in der App sind:**
+   `select count(*) from kc_club_zugang where zuletzt_gesehen > now() - interval '3 minutes';` (nur lesen) – Ergebnis **> 2** → warten,
+   alle 10 Minuten neu prüfen, höchstens 60 Minuten; danach Hansi fragen (nicht ungefragt trotzdem einspielen).
+3. Echte Notfälle (Sicherheit, Fehler, der Mitglieder behindert, Datensicherung kaputt) dürfen nach kurzer Rückmeldung an Hansi trotzdem sofort.
+4. Die Prüfung nutzt nur die eigene Tabelle `kc_club_zugang` – keine Supabase-Protokolle durchsuchen (KC-SPARSAM-PROTOKOLLE).
