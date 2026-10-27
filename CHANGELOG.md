@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.706.0 – 2026-10-26 – 💼 Büro öffnet ohne Sanduhr (KC-CLUB-BUERO-SCHNELL)
+- Fund Hansi („großer Hänger, Sanduhr läuft lange“ – das Büro brauchte während der Spiegel-Welle über 20 s): Das Büro wartete mit der Sanduhr über dem ganzen Bildschirm, bis alle fünf Teile geladen waren. Jetzt öffnet es sofort (zuerst „Wird geladen …“), die Übersicht mit Sitzungen und Eingang erscheint, sobald sie da ist, und Nachher-Liste, Feste, Freud & Leid und Änderungen kommen einzeln nach. Gleiche Abfragen, keine zusätzliche Last. Im Browser mit langsamem Server geprüft. Test: `tests/buero-schnell.test.mjs`. Nur App.
+
 ## 2.705.0 – 2026-10-27 – 🗂️ Bilderrechner-Training Karteikarten 4.6
 KC-CLUB-KASSE-KARTEIKARTEN: Wunsch Hansi („nenne das ganze Bilderrechner-Training, nicht Kasse“, „auf der ersten Seite eine Fußzeile“). Die Kachel unter Technik → Freigegebene Programme heißt jetzt **🗂️ Bilderrechner-Training Karteikarten** und zeigt **Version 4.6** (`dokumente/Bilderrechner-Training_Karteikarten_V4.6.pdf`): Name Bilderrechner-Training auf allen Seiten und Karten, Seite 1 mit Fußzeile. Versionen 4.4 und 4.5 bleiben als Datei unverändert (Regel 17).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
