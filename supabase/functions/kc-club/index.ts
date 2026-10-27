@@ -41,7 +41,8 @@ import { bskNeu, bskErlaubt, bskSpielen, bskStichAbschliessen, bskErgebnis } fro
 import { maeNeu, maeMoeglich, maeWuerfeln, maeZiehen, maeComputerWahl } from "./mae.js"; // KC-CLUB-MAE (2.26.0): Regeln = wörtliche Kopie aus app.js (tools/mae/server-kopie.mjs)
 import { FDK_FELD, fdkNeu, fdkOptionen, fdkZiehen, fdkWurfBeginn, fdkAugen, fdkWeiter, fdkKarteSpielen, fdkHygiene, fdkAbgeben, fdkSieger } from "./fdk.js"; // KC-CLUB-FDK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/fdk/server-kopie.mjs)
 import { dkNeu, dkVorbehalt, dkErlaubt, dkSpielen, dkStichAbschliessen, dkErgebnis, dkComputerKarte } from "./doppelkopf.js"; // KC-CLUB-DK-MG (2.219.0): Regeln = wörtliche Kopie aus app.js (tools/dk/server-kopie.mjs)
-import { dpRechnen, DP_REGEL } from "./dp-rechnen.js"; // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug)
+import { dpRechnen, DP_REGEL } from "./dp-rechnen.js";
+import { anfahrt } from "./anfahrt.js"; // 2.721.0 KC-CLUB-ANFAHRT: km Wohnort → Markt aus der PLZ (ohne fremde Dienste) // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Dienstplan-Entwurf (gleiche Rechnung wie das Planungswerkzeug)
 import { KT_FRAGEN } from "./kt-fragen.js"; // KC-CLUB-KUECHENTERROR (2.14.0): Fragen = wörtliche Kopie aus lib/kuechenterror/fragen.js
 
 const SUPA = Deno.env.get("SUPABASE_URL")!;
@@ -134,7 +135,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.712.0";
+const SERVER_VERSION = "2.721.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4625,15 +4626,23 @@ async function dpDruckNeu(adminId: string) {
   const [{ data: k }, { data: tageRoh }, { data: wRoh }] = await Promise.all([
     db.from("kc_club_person_einstellung").select("wert,geaendert_am").eq("person_id", adminId).eq("schluessel", "dp_druck_konfig").maybeSingle(),
     db.from("kc_dp_days_published").select("work_date,day_type,label,demand").eq("event_id", DW.veranstaltung).order("work_date"),
-    db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
+    db.from("kc_dp_wish_inbox").select("person_id,revision,entries,updated_at,standby,standby_general").eq("org_id", ORG).eq("event_id", DW.veranstaltung).limit(300),
   ]);
   const konf: any = k?.wert && typeof k.wert === "object" ? k.wert : {};
+  // 2.721.0 KC-CLUB-DP-NACHBESSERN: Angaben je Person in dp_druck_konfig.personen[pid] – aus (nie einplanen), maxGesamt, maxDienst, anfahrtKm (statt der
+  // km aus der Adresse, z. B. „wohnt in der Zeit bei ihrem Bruder in Werne“), notiz. Wer ab anfahrtGrenzeKm (10) fährt, bekommt Dienste ab anfahrtMinDienst (3) Std.
+  const pk: Record<string, any> = konf.personen && typeof konf.personen === "object" ? konf.personen : {};
+  const aus = (pid: string) => pk[pid]?.aus === true;
   if (!(tageRoh ?? []).length) throw new Fehler("Für die Veranstaltung ist noch kein Bedarf veröffentlicht.", 409);
   const ersatz: Record<string, any> = konf.ersatz && typeof konf.ersatz === "object" ? konf.ersatz : {};
   const leerIds = (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => String(x.person_id));
   const ids = [...new Set([...(wRoh ?? []).map((w: any) => String(w.person_id)), ...leerIds, ...Object.keys(ersatz), ...(Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => String(x.person_id))])]
-    .filter((id) => !id.startsWith("KC-P-TEST"));
-  const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name").in("person_id", ids) : { data: [] as any[] };
+    .filter((id) => !id.startsWith("KC-P-TEST") && !aus(id));
+  const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name,postal_code,city").in("person_id", ids) : { data: [] as any[] };
+  const kmVon = new Map((leute ?? []).map((p: any) => [String(p.person_id), Number.isFinite(Number(pk[p.person_id]?.anfahrtKm)) ? Number(pk[p.person_id].anfahrtKm) : (anfahrt(p.postal_code, p.city)?.fahrt ?? 0)]));
+  const grenzeKm = Number(konf.anfahrtGrenzeKm ?? 10), minWeit = Number(konf.anfahrtMinDienst ?? 3);
+  const grenzen = (pid: string) => ({ ...(Number.isFinite(Number(pk[pid]?.maxGesamt)) ? { maxGesamt: Number(pk[pid].maxGesamt) } : {}), ...(Number.isFinite(Number(pk[pid]?.maxDienst)) ? { maxDienst: Number(pk[pid].maxDienst) } : {}),
+    ...((kmVon.get(pid) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}) });
   const name = new Map((leute ?? []).map((p: any) => [String(p.person_id), String(p.display_name || p.person_id)]));
   const wRev = new Map((wRoh ?? []).map((w: any) => [String(w.person_id), w]));
   const eintraegeVon = (pid: string) => {
@@ -4642,7 +4651,13 @@ async function dpDruckNeu(adminId: string) {
     return (Array.isArray(w?.entries) ? w.entries : []).filter((x: any) => DP_ART[x?.wishType] && x.start != null && x.end != null)
       .map((x: any) => ({ d: String(x.date), t: DP_ART[x.wishType], z: ["V", "H", "B"].includes(x.wishZone) ? x.wishZone : "B", a: Number(x.start), b: Number(x.end) }));
   };
-  const personen = ids.filter((pid) => !leerIds.includes(pid) || wRev.has(pid) || ersatz[pid]).map((pid) => ({ key: dpKurzname(name.get(pid) || pid), name: name.get(pid) || pid, eintraege: eintraegeVon(pid) })).filter((p) => p.eintraege.length);
+  const personen = ids.filter((pid) => !leerIds.includes(pid) || wRev.has(pid) || ersatz[pid]).map((pid) => ({ key: dpKurzname(name.get(pid) || pid), name: name.get(pid) || pid, eintraege: eintraegeVon(pid), ...grenzen(pid) })).filter((p) => p.eintraege.length);
+  // Bereitschaft automatisch (wenn nicht ausdrücklich bereitschaftAuto: false): generell bereit laut Wunschplan, ohne den Admin selbst und ohne „aus“
+  // personen[pid].keineBereitschaft schließt aus (z. B. Dieter), personen[adminId].bereitschaft = true nimmt den Admin selbst mit dazu
+  const bereitschaftAuto = konf.bereitschaftAuto === false ? undefined : (wRoh ?? []).filter((w: any) => { const pid = String(w.person_id);
+      return w.standby_general === true && (pid !== adminId || pk[pid]?.bereitschaft === true) && pk[pid]?.keineBereitschaft !== true && !aus(pid) && !pid.startsWith("KC-P-TEST"); })
+    .map((w: any) => ({ key: dpKurzname(name.get(String(w.person_id)) || String(w.person_id)), name: name.get(String(w.person_id)) || String(w.person_id),
+      nein: Object.entries(w.standby && typeof w.standby === "object" ? w.standby : {}).filter(([, v]: any) => v?.answer === "no").map(([d]) => d) }));
   const ergebnis = dpRechnen({
     tage: (tageRoh ?? []).map((t: any) => ({ d: String(t.work_date), art: t.day_type === "market" ? "Markttag" : t.day_type === "prep" ? "Aufbau" : String(t.label || "Nachbereitung"),
       baender: (Array.isArray(t.demand) ? t.demand : []).map((b: any) => ({ start: Number(b.start), end: Number(b.end), total: Number(b.total) || 0, front: b.front ?? null, back: b.back ?? null })) })),
@@ -4650,7 +4665,7 @@ async function dpDruckNeu(adminId: string) {
     leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
     bereitschaft: (Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })),
     max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
-    wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
+    bereitschaftAuto, maxTageAmStueck: Number.isFinite(Number(konf.maxTageAmStueck)) ? Number(konf.maxTageAmStueck) : 5, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
   });
   const stand = jetzt(), wert = { ...ergebnis, titel: konf.titel || "Weihnachtsmarkt Werne 2026", stand, gerechnet: "club-server" };
   const { error } = await db.from("kc_club_person_einstellung").upsert({ person_id: adminId, schluessel: "dp_druck", wert, geaendert_am: stand }, { onConflict: "person_id,schluessel" });
@@ -10080,7 +10095,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           for (const f of KONTAKT_FELDER) { if (!werte[f]) continue; if (darf(f)) kontakt[f] = werte[f]; else verborgen++; }
           return { person_id: m.person_id, name: m.display_name, nachname: txt(p.family_name, 80) || m.display_name.split(" ").slice(-1)[0], aemter: (rollen ?? []).find((r: any) => r.person_id === m.person_id)?.aemter ?? [],
             eintritt: /^\d{4}-\d{2}-\d{2}/.test(String(km?.joinedAt || "")) ? String(km.joinedAt).slice(0, 10) : null,
-            geburtstag: p.birth_date && (frei("geburtstag") || m.person_id === ich.person_id) ? String(p.birth_date).slice(5, 10) : null, kontakt };
+            geburtstag: p.birth_date && (frei("geburtstag") || m.person_id === ich.person_id) ? String(p.birth_date).slice(5, 10) : null, kontakt,
+            anfahrt: anfahrt(p.postal_code, p.city) }; // 2.721.0 KC-CLUB-ANFAHRT: nur Ort und km (Liste sieht nur die Clubleitung)
         });
         await protokoll(ich.person_id, "buero_mitgliederliste", { anzahl: liste.length, verborgen });
         return json({ liste, verborgen, admin: ich.admin });
@@ -11767,6 +11783,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           ...(selbst || ich.admin ? { freigegeben: Object.fromEntries(KONTAKT_FELDER.map((f) => [f, frei("kontakt_" + f)])) } : {}),
           darfKontakte: ich.kontakte || ich.admin,
           notfall: nf ?? null,
+          ...(selbst || ich.admin || ich.vorstand ? { anfahrt: anfahrt(pe.postal_code, pe.city) } : {}), // 2.721.0 KC-CLUB-ANFAHRT: km zum Markt (man selbst und Clubleitung)
           zuletztDa: zdPid, // KC-CLUB-ZULETZT-DA (1.20.0)
           chatAnzahl, // KC-CLUB-NACHRICHTEN-ZAHL (2.34.0)
           ...(ich.admin && !selbst ? { probe: probeEintrag, probeMoeglich: !/^KC-P-TEST/.test(pid) } : {}), // KC-CLUB-PROBEPHASE
@@ -14621,7 +14638,7 @@ Köcheclub-App`,
         return json({
           stand: jetzt(),
           person: pe ? { nummer: pe.person_id, name: pe.display_name, vorname: pe.given_name, nachname: pe.family_name, rufname: pe.preferred_name, email: pe.email, telefon: pe.phone,
-            geburtstag: pe.birth_date, strasse: pe.street, plz: pe.postal_code, ort: pe.city, land: pe.country_code, seit: pe.created_at } : null,
+            geburtstag: pe.birth_date, strasse: pe.street, plz: pe.postal_code, ort: pe.city, land: pe.country_code, seit: pe.created_at, anfahrt: anfahrt(pe.postal_code, pe.city) } : null,
           zugang: zu ? { aktiv: zu.aktiv, erstellt: zu.erstellt_am, erstmals: zu.erstmals_gesehen, zuletzt: zu.zuletzt_gesehen, version: zu.app_version } : null,
           rollen: { admin: !!ro?.ist_admin, clubleitung: !!ro?.ist_vorstand, aemter: ro?.aemter ?? [], protokolle: ro ? ro.protokolle_lesen !== false : true, kontakte: ro ? ro.kontakte_sehen !== false : true, buero: ich.buero },
           status: st ?? null, benachrichtigung: be ?? [], einstellungen: (ei ?? []).map((x: any) => x.schluessel),

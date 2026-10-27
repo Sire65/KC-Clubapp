@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.720.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.721.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27549,7 +27549,7 @@ function mdatAbschnitte(d) {
   return [
     ["👤 Stammdaten", [["Mitglieds-Nr.", w(p.nummer)], ["Name", w(p.name)], ["Vorname / Nachname", `${w(p.vorname)} / ${w(p.nachname)}`], ["Rufname", w(p.rufname)],
       ["E-Mail", w(p.email)], ["Telefon", w(p.telefon)], ["Geburtstag", p.geburtstag ? String(p.geburtstag).split("-").reverse().join(".") : "–"],
-      ["Anschrift", [p.strasse, [p.plz, p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "–"], ["Gespeichert seit", t(p.seit)]]],
+      ["Anschrift", [p.strasse, [p.plz, p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ") || "–"], ["Anfahrt zum Markt Werne", p.anfahrt ? anfahrtText(p.anfahrt) : "–"], ["Gespeichert seit", t(p.seit)]]],
     ["🔑 Zugang zur App", d.zugang ? [["Zugang aktiv", ja(d.zugang.aktiv)], ["Link erstellt", t(d.zugang.erstellt)], ["Zum ersten Mal geöffnet", t(d.zugang.erstmals)],
       ["Zuletzt da", t(d.zugang.zuletzt)], ["App-Version", w(d.zugang.version)]] : [["Zugang", "keiner"]]],
     ["🛡️ Rollen & Rechte", [["Admin", ja(d.rollen.admin)], ["Clubleitung", ja(d.rollen.clubleitung)], ["Ämter", (d.rollen.aemter || []).join(", ") || "–"],
@@ -32517,8 +32517,12 @@ const ML_ARTEN = {
   alle: { sym: "📋", t: "Alle Daten", u: "Telefon, E-Mail und Anschrift zusammen", spalten: ["nr", "name", "handy", "festnetz", "mail", "adresse"], quer: true },
   unterschrift: { sym: "✍️", t: "Unterschriften", u: "z. B. Anwesenheit, Empfang", spalten: ["nr", "name", "unterschrift"] },
   abhaken: { sym: "☑️", t: "Abhakliste", u: "z. B. Beitrag, Rückmeldung", spalten: ["nr", "name", "haken", "notiz"] },
+  // 2.721.0 KC-CLUB-ANFAHRT (Wunsch Hansi „aus den Adressen eine km-Anzeige machen“): Wohnort und Entfernung zum Markt, weiteste zuerst
+  anfahrt: { sym: "🚗", t: "Anfahrt", u: "Wohnort · km zum Markt Werne", spalten: ["nr", "name", "ort", "anfahrt"], sortKm: true },
 };
-const ML_SPALTEN = { nr: "Nr.", name: "Name", aemter: "Ämter", eintritt: "Mitglied seit", handy: "Handy", festnetz: "Festnetz", mail: "E-Mail", adresse: "Anschrift", unterschrift: "Unterschrift", haken: "✓", notiz: "Notiz" };
+const ML_SPALTEN = { ort: "Wohnort", anfahrt: "Anfahrt zum Markt", nr: "Nr.", name: "Name", aemter: "Ämter", eintritt: "Mitglied seit", handy: "Handy", festnetz: "Festnetz", mail: "E-Mail", adresse: "Anschrift", unterschrift: "Unterschrift", haken: "✓", notiz: "Notiz" };
+// 2.721.0 KC-CLUB-ANFAHRT: km aus der PLZ (Server), „Fahrt“ ist geschätzt (Luftlinie × 1,3)
+const anfahrtText = (a) => !a ? "" : a.luft < 3 ? "in Werne" : `ca. ${a.fahrt} km Fahrt (Luftlinie ${a.luft} km)`;
 let ML = { daten: null, art: "uebersicht", sort: "name", titel: "" };
 async function buListe() {
   BU.sicht = "liste"; buZeigen(); window.scrollTo(0, 0);
@@ -32527,12 +32531,13 @@ async function buListe() {
 }
 function mlZeilen() {
   const l = (ML.daten?.liste || []).slice();
+  if (ML_ARTEN[ML.art]?.sortKm) return l.sort((a, b) => (b.anfahrt?.luft ?? -1) - (a.anfahrt?.luft ?? -1) || a.nachname.localeCompare(b.nachname)); // 2.721.0: weiteste Anfahrt zuerst
   return ML.sort === "eintritt" ? l.sort((a, b) => (a.eintritt || "9999").localeCompare(b.eintritt || "9999") || a.nachname.localeCompare(b.nachname))
     : l.sort((a, b) => a.nachname.localeCompare(b.nachname) || a.name.localeCompare(b.name));
 }
 function mlWert(m, s, i) {
   const k = m.kontakt || {};
-  return { nr: String(i + 1), name: m.name, aemter: (m.aemter || []).join(", "), eintritt: m.eintritt ? m.eintritt.split("-").reverse().join(".") : "", handy: k.handy || "", festnetz: k.festnetz || "", mail: k.mail || "", adresse: k.adresse || "", unterschrift: "", haken: "☐", notiz: "" }[s] ?? "";
+  return { ort: m.anfahrt?.ort || "", anfahrt: anfahrtText(m.anfahrt), nr: String(i + 1), name: m.name, aemter: (m.aemter || []).join(", "), eintritt: m.eintritt ? m.eintritt.split("-").reverse().join(".") : "", handy: k.handy || "", festnetz: k.festnetz || "", mail: k.mail || "", adresse: k.adresse || "", unterschrift: "", haken: "☐", notiz: "" }[s] ?? "";
 }
 function buListeHtml() {
   const d = ML.daten, a = ML_ARTEN[ML.art];
@@ -42492,6 +42497,7 @@ const DRUCKARTEN = {
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
+  dpVorschlag: { titel: "💡 Vorschläge zu den Lücken", optionen: () => '<p class="hinweis">Nur für dich zur Planung (nicht verteilen): je Lücke, wer früher kommen oder länger bleiben könnte, ob er die Zeit schon angeboten hat, wer Bereitschaft hat – und wo neue Helfer nötig sind.</p>', bauen: () => dpdVorschlagBauen() }, // 2.721.0 KC-CLUB-DP-VORSCHLAG
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN
   haendlerausweis: { bauen: (o, p) => ({ ohneRahmen: true, randlos: true, titel: p.probe ? "Händler-Ausweise – Probeblatt Duplex" : `Händler-Ausweise Weihnachtsmarkt ${p.jahr} (${p.n} Stück)`, html: p.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") }) }, // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   haendlerausweis_liste: { bauen: (o, p) => druckHaendlerListe(p) },
@@ -43181,6 +43187,7 @@ function mitgliedZeigen() {
     k.festnetz ? zeile("festnetz", k.festnetz, `<a class="knopf klein" href="tel:${esc(nurZiffern(k.festnetz))}" onclick="spur('telefon', mitgliedId)">📞</a>`) : "",
     k.mail ? zeile("mail", k.mail, `<a class="knopf klein" href="mailto:${esc(k.mail)}" onclick="spur('mail', mitgliedId)">✉️</a>`) : "",
     k.adresse ? zeile("adresse", adresseText(k.adresse), `<button class="knopf klein" onclick="extern('route', adresseText(MD.kontakt.adresse))">🗺️ Route</button>`) : "",
+    m.anfahrt ? `<div class="zeile"><div style="flex:1"><div class="hinweis" style="font-size:.85rem">🚗 Anfahrt zum Markt Werne <small>· nur für ${m.selbst ? "dich" : "die Clubleitung"}</small></div><b>${esc(anfahrtText(m.anfahrt))}</b></div></div>` : "", // 2.721.0 KC-CLUB-ANFAHRT
   ].join("");
   const leer = !zeilen ? `<p class="hinweis">${!m.darfKontakte ? "Kontaktdaten anderer Mitglieder sind für dich nicht freigeschaltet." : m.selbst ? "Für dich sind keine Kontaktdaten gespeichert." : `${esc(m.vorname)} hat noch keine Kontaktdaten freigegeben.`}</p>` : "";
   $("mitgliedInhalt").innerHTML = `
@@ -44220,7 +44227,8 @@ function dpdOptionen() {
       ${neu.length ? `<div style="margin-top:4px;color:var(--textRot,#b3261e);font-weight:700">🆕 ${neu.length === 1 ? "1 neuer oder geänderter Wunschplan" : neu.length + " neue oder geänderte Wunschpläne"} seit dem letzten Rechnen: ${neu.map(esc).join(", ")}</div>` : i ? '<div class="hinweis" style="margin-top:4px">✅ Alle Wunschpläne sind eingerechnet.</div>' : ""}
       <button type="button" class="knopf${neu.length ? " haupt" : ""}" style="margin-top:8px" onclick="dpdNeuRechnen(this)">🔄 Jetzt neu rechnen</button>
       <div class="hinweis" style="margin-top:4px;font-size:.8rem">Rechnet sich von selbst neu, sobald ein Wunschplan, der Bedarf oder die Einstellungen sich ändern. Regel: nie länger als die Wunschzeit, mindestens die Hälfte darin. Nichts geht nach DP2.</div>
-      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpLuecken')">🧩 Nur das Blatt „Wo noch Helfer fehlen“</button></div>`;
+      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpLuecken')">🧩 Nur das Blatt „Wo noch Helfer fehlen“</button>
+      <button type="button" class="knopf" style="margin-top:8px" onclick="druckZu();druckStarten('dpVorschlag')">💡 Vorschläge zu den Lücken (nur für dich)</button></div>`;
   return `${stand}<p class="hinweis">Zeigt den neuesten Stand, den Claude für dich gerechnet hat: alle Wünsche, den Entwurf, Bereitschaft (Vorschlag) und rot, wo noch Leute fehlen. Neue Wünsche oder Änderungen? Claude macht die Übersicht neu – dann hier wieder drucken.</p>
     ${r("1", "1 Blatt breit", "8–23 Uhr auf einem Blatt, die Blätter untereinander legen")}${r("2", "2 Blätter breit (größer)", "links 8–16, rechts 15:30–23 Uhr – nebeneinander legen, 15:30–16 ist die Klebekante")}
     <p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>`;
@@ -44246,7 +44254,7 @@ function dpdTag(d, von, bis, ges = {}) { // Zeilen eines Tages: je Person, Berei
       else if (t === "unav") txt = "×";
       return [cl, txt]; });
     const nurGesperrt = [...p.w].every((c) => c === "u" || c === "-") && p.w.includes("u");
-    rows.push({ art: "p", name: p.n, sub: [p.z, a !== null ? dpdStd(b - a) + " h" : nurGesperrt ? "gesperrt" : "nicht eingeplant"].filter(Boolean).join(" · "), cells, dienst: a !== null ? [a, b] : null,
+    rows.push({ art: "p", name: p.n, sub: [p.z, a !== null ? dpdStd(b - a) + " h" + (b - a > 6 ? " · ☕ 30 Min. Pause" : "") : nurGesperrt ? "gesperrt" : "nicht eingeplant"].filter(Boolean).join(" · "), cells, // 2.721.0: über 6 Std. Pausenhinweis dienst: a !== null ? [a, b] : null,
       std: a !== null ? dpdStd(b - a) : "–", klein: "ges. " + dpdStd(ges[p.n] || 0) });
   }
   for (const x of d.ber || []) rows.push({ art: "b", name: x.n, sub: "Bereitschaft · Vorschlag", dienst: x.s, std: dpdStd(x.s[1] - x.s[0]), klein: "Bereitsch.",
@@ -44353,6 +44361,45 @@ function dpdLueckenBlatt(d) {
     ${d.tage.some((t) => t.art === "Markttag" && (t.bedarf[(23 - (d.von ?? 8)) * 2 - 1] || 0)) ? '<div class="dpl-hinweis dpl-abend">🌙 <b>Abends:</b> Der Markt geht teils bis 23 Uhr, mit Aufräumen auch mal bis ca. 23:30 Uhr. Wer sich nur bis 22 Uhr eingetragen hat: bitte möglichst bis 23 Uhr verlängern.</div>' : ""}<!-- 2.683.0 KC-CLUB-DP-LUECKEN-ABEND -->
     <div class="dpl-hinweis">📝 <b>So trägst du dich ein:</b> Club-App → <b>📝 Dienstwünsche</b> → Tag antippen → Zeit wählen → speichern. Der Plan rechnet sich dann von selbst neu.</div>
     ${cdFuss("Dienstplan-Entwurf – nicht veröffentlicht. Fragen? Einfach Hansi in der Club-App schreiben.")}</section>`;
+}
+// ---------- 2.721.0 KC-CLUB-DP-VORSCHLAG (Wunsch Hansi „Liste, wo noch Stunden besetzt werden müssen – mit Vorschlag, z. B. eine Stunde ab 15 Uhr frei,
+// um 16 kommt der Nächste, dann könnte jemand anders eine Stunde länger bleiben“): je Lücke die Leute, deren Dienst direkt davor endet oder danach
+// beginnt (✅ hat die Zeit angeboten / ❓ müsste gefragt werden), Übersehene mit Angebot, die Bereitschaft des Tages – sonst „neue Helfer nötig“.
+function dpdVorschlaege(d) {
+  const von = d.von ?? 8, vn = (n) => { const t = String(n).split(" "); return t[0] + (t[1] ? " " + t[1][0] + "." : ""); }, out = [];
+  for (const t of d.tage) {
+    const f = t.fehlt, x = new Date(t.d + "T12:00:00"), tag = `${DPD_WD[x.getDay()]} ${t.d.slice(8, 10)}.${t.d.slice(5, 7)}.`;
+    for (let i = 0; i < f.length;) {
+      if (!f[i]) { i++; continue; } let j = i; while (j < f.length && f[j]) j++;
+      const a = von + i / 2, b = von + j / 2, max = Math.max(...f.slice(i, j)), std = f.slice(i, j).reduce((p, q) => p + q, 0) / 2, ideen = [];
+      const angeboten = (p, i0, i1) => [...p.w.slice(i0, i1)].every((c) => "pai".includes(c));
+      for (const p of t.leute) { if (!p.s) continue; const [s0, s1] = p.s, dauer = s1 - s0;
+        if (Math.abs(s1 - a) < 1e-9) { const ext = Math.min(b - a, 2), ok = angeboten(p, i, i + ext * 2);
+          ideen.push(`${ok ? "✅" : "❓"} ${vn(p.n)} ${dpdStd(ext)} Std. länger (bis ${dpdUhr(s1 + ext)}, dann ${dpdStd(dauer + ext)} Std.${dauer + ext > 8 ? " – über 8 Std.!" : ""})`); }
+        if (Math.abs(s0 - b) < 1e-9) { const ext = Math.min(b - a, 2), ok = angeboten(p, j - ext * 2, j);
+          ideen.push(`${ok ? "✅" : "❓"} ${vn(p.n)} ${dpdStd(ext)} Std. früher (ab ${dpdUhr(s0 - ext)}, dann ${dpdStd(dauer + ext)} Std.${dauer + ext > 8 ? " – über 8 Std.!" : ""})`); } }
+      for (const p of t.leute) if (!p.s && [...p.w.slice(i, j)].filter((c) => "pai".includes(c)).length >= 2) ideen.push(`✅ ${vn(p.n)} hat Zeit angeboten, ist aber nicht eingeplant`);
+      for (const z of t.ber || []) if (z.s[0] < b && a < z.s[1]) ideen.push(`🛟 Bereitschaft: ${vn(z.n)}`);
+      out.push({ tag, art: t.art, zeit: `${dpdUhr(a)}–${dpdUhr(b)}`, max, std, ideen, neu: !ideen.some((x) => x.startsWith("✅")) && (max >= 2 || b - a >= 3) });
+      i = j;
+    }
+  }
+  return out;
+}
+function dpdVorschlagBlatt(d) {
+  const L = dpdVorschlaege(d), stand = d.stand ? wann(d.stand) : "";
+  return `<section class="dpd-blatt dpl dpv">${cdKopf("Vorschläge zu den Lücken", `${d.titel || "Weihnachtsmarkt"} · nur für die Planung${stand ? " · Stand " + stand : ""}`)}
+    <table class="dpl-tab dpv-tab"><thead><tr><th class="tag">Tag</th><th>Lücke</th><th>fehlen</th><th class="std">Std.</th><th class="text">Vorschlag</th></tr></thead>
+    <tbody>${L.map((x) => `<tr><td class="tag"><b>${esc(x.tag)}</b><small>${esc(x.art || "")}</small></td><td>${esc(x.zeit)}</td><td class="rot">${x.max}</td><td class="std">${dpdStd(x.std)}</td>
+      <td class="text">${x.ideen.map(esc).join("<br>")}${x.neu ? `${x.ideen.length ? "<br>" : ""}<b>➕ neue Helfer nötig</b>` : ""}</td></tr>`).join("")}</tbody></table>
+    <div class="dpl-leg"><span>✅ hat die Zeit schon angeboten – nur Bescheid geben</span><span>❓ über die eigene Angabe hinaus – erst fragen</span><span>🛟 Bereitschaft des Tages</span><span>☕ ab 6 Std. Dienst 30 Min. Pause</span></div>
+    ${cdFuss("Nur für die Planung – nicht an die Mitglieder verteilen.")}</section>`;
+}
+async function dpdVorschlagBauen() {
+  if (!ICH?.admin) return null;
+  const d = await api("dp_druck", {});
+  if (!d?.tage?.length) { melde("Noch kein Dienstplan-Stand vorhanden.", true); return null; }
+  return { titel: `Vorschläge zu den Lücken – ${d.titel || ""}`.trim(), ohneRahmen: true, randlos: true, quer: true, html: `<div class="dpd">${dpdVorschlagBlatt(d)}</div>` };
 }
 async function dpdLueckenBauen() {
   const d = await api("dp_druck", {});

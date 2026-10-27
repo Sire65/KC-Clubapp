@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.721.0 – 2026-10-27 – 🚗 Anfahrt in km · 🗓️ Dienstplan gründlich nachgebessert (KC-CLUB-ANFAHRT, KC-CLUB-DP-NACHBESSERN, KC-CLUB-DP-VORSCHLAG)
+- Wunsch Hansi („wer von weiter weg kommt – aus den Adressen in den Stammdaten eine km-Anzeige machen“): Der Club-Server rechnet aus der Postleitzahl der Stammdaten die Entfernung zum Weihnachtsmarkt (Werne, Marktplatz) – Luftlinie und geschätzte Fahrt (× 1,3). Daten: GeoNames-Postleitzahlen (CC BY 4.0) liegen im Server (`anfahrt.js`), keine Adresse geht an einen fremden Dienst; ändert sich die Adresse, stimmt die Anzeige sofort. Sichtbar: Büro → Mitgliederliste → neue Liste **🚗 Anfahrt** (Wohnort und km, weiteste zuerst – nur Clubleitung), in der Mitglieder-Karte „🚗 Anfahrt zum Markt Werne“ (man selbst und Clubleitung) und unter „Meine Daten“.
+- Prüfung Hansi („Plan gründlich prüfen, bevor ich ihn am Freitag vorstelle“) – Dienstplan-Rechnung (Regel 3, rechnet sich beim Öffnen von selbst neu):
+  - **Grenzen je Person** in `dp_druck_konfig.personen`: `aus` (nie einplanen, z. B. Fridbert), `maxGesamt` (z. B. Thomas höchstens 30 Std.), `maxDienst` (z. B. Willfried kurze Dienste), `anfahrtKm` (z. B. Anne wohnt in der Zeit bei ihrem Bruder in Werne), `notiz`.
+  - **Weite Anfahrt:** Wer laut Stammdaten ab 10 km fährt, bekommt keine Dienste unter 3 Std. (`anfahrtGrenzeKm`, `anfahrtMinDienst`).
+  - **Nachbesserung:** überbesetzte Ränder kürzen, an Lücken angrenzende Dienste im Rahmen des Angebots verlängern, übersehene Leute einsetzen (Prüfung: 7,5 Std. Überbesetzung → ~1–2 Std., Steven am 04.12. war übersehen).
+  - **Bereitschaft automatisch** für die größte Lücke des Tages (sonst abends): nur wer im Wunschplan „generell bereit“ ist, an dem Tag nicht „nein“ gesagt hat und zu der Zeit selbst keinen Dienst hat – reihum (vorher standen feste Einträge mit Leuten drin, die selbst Dienst hatten).
+  - **Pausenhinweis** im Plan bei Diensten über 6 Std. („☕ 30 Min. Pause“).
+  - **Freier Tag** (Wunsch Hansi „nicht alle Tage am Stück, besser zwischendrin 1 Tag Pause“): nach höchstens 5 Tagen am Stück (`maxTageAmStueck`) ist der nächste Tag frei – an dem Tag auch keine Bereitschaft. Bereitschaft je Person ein-/ausschaltbar (`keineBereitschaft`, z. B. Dieter; `bereitschaft` für den Admin selbst).
+- Neues internes Blatt **„💡 Vorschläge zu den Lücken“** (nur Admin, Ordner „Dienstplan zum Drucken“): je Lücke, wer früher kommen oder länger bleiben könnte (✅ hat die Zeit angeboten / ❓ erst fragen), die Bereitschaft des Tages und wo neue Helfer nötig sind.
+
 ## 2.720.0 – 2026-10-27 – 🗂️ Nachrichten-Übersicht gegliedert (KC-CLUB-NACHRICHTEN-GLIEDERUNG)
 Wunsch Hansi („Nachrichten-Übersicht einklappbar wie im Chat – sehr übersichtlich und ordentlich, im Zahnrad einstellbar; wenn ein Chat nach unten wandert und noch Ungelesenes drin ist, muss man das sehen“): Die Chat-Liste ist jetzt in Abschnitte zum Auf- und Zuklappen gegliedert. Oben drei Knöpfe **🕒 Zeit · 👥 Art · 🔤 Name**, daneben ⤢/⤡ alle auf/zu.
 - **🔴 Ungelesen** steht immer ganz oben – jeder Chat mit ungelesenen (oder ❗ wichtigen) Nachrichten, egal wie alt. So rutscht nichts Ungelesenes in einen zugeklappten Abschnitt. Stummgeschaltete Chats bleiben an ihrem Platz; ein zugeklappter Abschnitt zeigt dann einen grauen Punkt mit der Zahl.

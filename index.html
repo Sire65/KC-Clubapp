@@ -3005,6 +3005,8 @@
     #druck .dpl-leg i.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } #druck .dpl-leg i.ok { background: #e3f1e6; color: #1f5a3e; } #druck .dpl-leg i.zu { background: repeating-linear-gradient(135deg, #f1ede7 0 1.2mm, #e6e0d8 1.2mm 2.4mm); }
     #druck .dpl-hinweis { margin-top: 2mm; padding: 1.5mm 3mm; border: .3mm solid var(--cd-beige-rand, #e0cfb9); border-left: 1.2mm solid var(--cd-rot, #741521); background: var(--cd-beige, #f3e9dc); font-size: 9pt; }
     #druck .dpl-hinweis.dpl-abend { border-left-color: #1d3557; background: #e8eef6; } /* 2.683.0 KC-CLUB-DP-LUECKEN-ABEND */
+    #druck .dpv-tab { table-layout: fixed; } #druck .dpv-tab td { padding: 1mm 1.5mm; } #druck .dpv-tab th:nth-child(1) { width: 24mm; } #druck .dpv-tab th:nth-child(2) { width: 22mm; } #druck .dpv-tab th:nth-child(3), #druck .dpv-tab th:nth-child(4) { width: 13mm; } #druck .dpv-tab th.text, #druck .dpv-tab td.text { width: auto; font-size: 8.5pt; line-height: 1.35; } #druck .dpv-tab tr { break-inside: avoid; } #druck .dpv-tab td.rot { background: #f6d3d0; color: #8b1a12; font-weight: 800; } /* 2.721.0 KC-CLUB-DP-VORSCHLAG */
+    #druck .dpv { height: auto; min-height: 210mm; overflow: visible; }
     #druck .dpd-bed { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7pt; font-variant-numeric: tabular-nums; }
     #druck .dpd-bed th, #druck .dpd-bed td { border: .15mm solid var(--lin); padding: .6mm .5mm; text-align: center; vertical-align: middle; height: 9.4mm; }
     #druck .dpd-bed thead th { background: #f3e9dc; font-weight: 700; font-size: 6.5pt; height: auto; }
@@ -6096,7 +6098,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.720.0" data-v="2.720.0"></script>
+<script src="app.js?v=2.721.0" data-v="2.721.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

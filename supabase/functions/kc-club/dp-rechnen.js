@@ -15,7 +15,13 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // Wer an einem Tag eine Wunschzeit hat, bekommt höchstens so viele Stunden, wie die Wunschzeit lang ist (wunschDeckel), und mindestens die Hälfte
 // (wunschAnteil) des Dienstes liegt in der Wunschzeit – den Rest darf die Kann-Zeit füllen. Ohne Wunschzeit gilt wie bisher die Kann-Zeit.
 // DP_REGEL steigt, wenn sich die Rechnung ändert – der Server rechnet dann den gespeicherten Stand von selbst neu.
-export const DP_REGEL = 2;
+// 2.721.0 KC-CLUB-DP-NACHBESSERN (Prüfung Hansi „Plan gründlich prüfen, bevor ich ihn am Freitag vorstelle“): Grenzen je Person (personen[].maxGesamt,
+// maxDienst, minDienst – z. B. „höchstens 30 Std.“, „nicht so viele Stunden“, „wer weit fährt, keine kurzen Dienste“), danach ein Nachbesserungs-Schritt
+// (überbesetzte Ränder kürzen, an Lücken angrenzende Dienste im Rahmen des Angebots verlängern, übersehene Leute einsetzen) und Bereitschaft
+// automatisch (bereitschaftAuto: nur wer generell bereit ist, an dem Tag nicht „nein“ gesagt hat und zu der Zeit nicht selbst Dienst hat).
+// 2.721.0 (Wunsch Hansi „nicht alle Tage am Stück, besser zwischendrin 1 Tag Pause“): maxTageAmStueck (Standard 5) – wer so viele Tage hintereinander
+// eingeplant ist, hat am nächsten Tag frei.
+export const DP_REGEL = 4;
 
 export function dpRechnen(e) {
   const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;
@@ -51,6 +57,11 @@ export function dpRechnen(e) {
   }
   for (const [k, ss] of un) if (av.has(k)) for (const s of ss) av.get(k).delete(s);
   const people = [...new Set([...av.keys()].map((k) => k.split("\u0000")[0]))].sort(vgl);
+  const LIM = new Map((e.personen || []).map((p) => [p.key, { maxGesamt: Number.isFinite(p.maxGesamt) ? p.maxGesamt : Infinity, maxDienst: Number.isFinite(p.maxDienst) ? p.maxDienst : Infinity, minDienst: Number.isFinite(p.minDienst) ? p.minDienst : 0 }]));
+  const lim = (n) => LIM.get(n) || { maxGesamt: Infinity, maxDienst: Infinity, minDienst: 0 };
+  const MAXTAGE = Number.isFinite(e.maxTageAmStueck) && e.maxTageAmStueck > 0 ? e.maxTageAmStueck : Infinity, tageVon = new Map(); // Person → Set der eingeplanten Tage
+  const vortag = (d, n) => { const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() - n); return x.toISOString().slice(0, 10); };
+  const ruhetag = (n, d) => { const t = tageVon.get(n); if (!t || MAXTAGE === Infinity) return false; for (let i = 1; i <= MAXTAGE; i++) if (!t.has(vortag(d, i))) return false; return true; };
   const hours = new Map(), plan = new Map(), gapsJe = new Map();
   for (const d of [...dem.keys()].sort(vgl)) {
     const need = dem.get(d), staff = new Map([...need.keys()].map((s) => [s, []])), used = new Set(), liste = [];
@@ -77,14 +88,16 @@ export function dpRechnen(e) {
       let best = null;
       for (const n of people) {
         const k = k2(n, d);
-        if (used.has(n) || !av.has(k)) continue;
+        if (used.has(n) || !av.has(k) || ruhetag(n, d)) continue;
         const ss = [...av.get(k).keys()].sort((a, b) => a - b), blocks = [];
         let cur = [];
         for (const s of ss) { if (cur.length && Math.abs(s - cur[cur.length - 1] - H) > 1e-9) { blocks.push(cur); cur = []; } cur.push(s); }
         if (cur.length) blocks.push(cur);
         for (const blk of blocks) {
-          const lo = blk[0], hi = blk[blk.length - 1] + H, wunsch = DECKEL ? [...av.get(k).values()].filter((x) => x[0] === 3).length * H : 0;
-          const deckel = wunsch > 0 ? Math.min(MAXLEN, wunsch) : MAXLEN, minlen = Math.min(2.0, hi - lo, deckel);
+          const lo = blk[0], hi = blk[blk.length - 1] + H, wunsch = DECKEL ? [...av.get(k).values()].filter((x) => x[0] === 3).length * H : 0, L = lim(n);
+          const deckel = Math.min(wunsch > 0 ? Math.min(MAXLEN, wunsch) : MAXLEN, L.maxDienst, L.maxGesamt - (hours.get(n) || 0));
+          if (hi - lo < L.minDienst - 1e-9 || deckel < Math.max(L.minDienst, H) - 1e-9) continue; // Block zu kurz für den Mindestdienst / Stunden aufgebraucht
+          const minlen = Math.max(Math.min(2.0, hi - lo, deckel), L.minDienst);
           for (let a = lo; a < hi - 1e-9; a += H) for (let b = a + minlen; b <= Math.min(hi, a + deckel) + 1e-9; b += H) {
             if (wunsch > 0 && slots(a, b).filter((x) => av.get(k).get(x)?.[0] === 3).length * H < (b - a) * ANTEIL - 1e-9) continue; // zu wenig in der Wunschzeit
             const cov = gain(n, a, b), g = cov * Math.max(0.05, 1 - FAIR * (hours.get(n) || 0) / 100);
@@ -97,7 +110,30 @@ export function dpRechnen(e) {
       used.add(n); hours.set(n, (hours.get(n) || 0) + b - a); liste.push([n, a, b]);
       for (const s of slots(a, b)) if (staff.has(s)) staff.get(s).push(n);
     }
+    if (e.nachbessern !== false) { // 2.721.0 KC-CLUB-DP-NACHBESSERN
+      const kk = (n) => k2(n, d), luecke = (s) => need.has(s) && staff.get(s).length < need.get(s)[0], ueber = (s) => !need.has(s) || staff.get(s).length > need.get(s)[0];
+      const passt = (n, a, b, schon = 0) => { const m = av.get(kk(n)), L = lim(n); if (!m || b - a > Math.min(MAXLEN, L.maxDienst) + 1e-9 || (hours.get(n) || 0) - schon + (b - a) > L.maxGesamt + 1e-9) return false;
+        for (const s of slots(a, b)) if (!m.has(s)) return false;
+        const w = DECKEL ? [...m.values()].filter((x) => x[0] === 3).length * H : 0;
+        return !(w > 0 && (b - a > w + 1e-9 || slots(a, b).filter((x) => m.get(x)[0] === 3).length * H < (b - a) * ANTEIL - 1e-9)); };
+      const weg = (n, s) => { if (staff.has(s)) staff.set(s, staff.get(s).filter((x) => x !== n)); }, dazu = (n, s) => { if (staff.has(s)) staff.get(s).push(n); };
+      for (const z of liste) { const mind = Math.max(2, lim(z[0]).minDienst); // überbesetzte Ränder kürzen (Dienst bleibt mind. 2 Std. bzw. Mindestdienst)
+        while (z[2] - z[1] - H >= mind - 1e-9 && ueber(z[1]) && passt(z[0], z[1] + H, z[2], z[2] - z[1])) { weg(z[0], z[1]); hours.set(z[0], hours.get(z[0]) - H); z[1] += H; }
+        while (z[2] - z[1] - H >= mind - 1e-9 && ueber(z[2] - H) && passt(z[0], z[1], z[2] - H, z[2] - z[1])) { weg(z[0], z[2] - H); hours.set(z[0], hours.get(z[0]) - H); z[2] -= H; } }
+      for (let r = 0; r < 60; r++) { let besser = false; // an Lücken angrenzende Dienste verlängern – nur im Rahmen des Angebots und der Regeln, wer weniger Stunden hat zuerst
+        for (const z of liste.slice().sort((x, y) => (hours.get(x[0]) || 0) - (hours.get(y[0]) || 0) || vgl(x[0], y[0]))) { const [n, a, b] = z;
+          if (luecke(b) && passt(n, a, b + H, b - a)) { z[2] = b + H; dazu(n, b); hours.set(n, hours.get(n) + H); besser = true; }
+          else if (luecke(a - H) && passt(n, a - H, b, b - a)) { z[1] = a - H; dazu(n, a - H); hours.set(n, hours.get(n) + H); besser = true; } }
+        if (!besser) break; }
+      for (const n of [...people].sort((x, y) => (hours.get(x) || 0) - (hours.get(y) || 0) || vgl(x, y))) { // übersehene Leute in Lücken einsetzen
+        if (used.has(n) || !av.has(kk(n)) || ruhetag(n, d)) continue; let best = null; const mind = Math.max(2, lim(n).minDienst);
+        for (const a of [...av.get(kk(n)).keys()].sort((x, y) => x - y)) for (let b = a + mind; b <= a + MAXLEN + 1e-9; b += H) {
+          if (!passt(n, a, b)) continue; const g = slots(a, b).filter(luecke).length;
+          if (g >= 2 && (!best || g > best[0] || (g === best[0] && b - a < best[2] - best[1]))) best = [g, a, b]; }
+        if (best) { const [, a, b] = best; used.add(n); liste.push([n, a, b]); hours.set(n, (hours.get(n) || 0) + b - a); for (const s of slots(a, b)) dazu(n, s); } }
+    }
     plan.set(d, liste);
+    for (const [n] of liste) { if (!tageVon.has(n)) tageVon.set(n, new Set()); tageVon.get(n).add(d); }
     gapsJe.set(d, new Map([...need.keys()].map((s) => [s, [staff.get(s).length, Math.max(0, need.get(s)[0] - staff.get(s).length)]])));
   }
   // Ausgabe wie druck.py (Kurzform für die Club App)
@@ -109,6 +145,20 @@ export function dpRechnen(e) {
     if (kind.get(d) !== "Markttag" || !z || !z.size) return "";
     return z.has("B") || z.size > 1 ? "vorne+hinten" : z.has("V") ? "vorne" : "hinten";
   };
+  // 2.721.0: Bereitschaft für die größte Lücke des Tages (sonst abends am Markttag) – generell Bereite, an dem Tag nicht „nein“, nicht selbst im Dienst
+  const berZahl = new Map();
+  const berAuto = (d) => {
+    const need = dem.get(d), gm = gapsJe.get(d), S = [...need.keys()].sort((a, b) => a - b), bloecke = []; let cur = null;
+    for (const s of S) { const f = gm.get(s)[1]; if (!f) { cur = null; continue; } if (cur && Math.abs(cur[1] - s) < 1e-9) { cur[1] = s + H; cur[2] += f; } else bloecke.push(cur = [s, s + H, f]); }
+    const best = bloecke.sort((x, y) => y[2] - x[2] || x[0] - y[0])[0] || null; // größte Lücke (Personen × Zeit)
+    const fenster = best ? [best[0], best[1]] : kind.get(d) === "Markttag" && S.length ? [Math.max(S[0], S[S.length - 1] + H - 6), S[S.length - 1] + H] : null;
+    if (!fenster) return [];
+    const imDienst = (n) => (plan.get(d) || []).some(([x, a, b]) => x === n && a < fenster[1] && fenster[0] < b), gesperrt = (n) => slots(fenster[0], fenster[1]).some((s) => un.get(k2(n, d))?.has(s));
+    const c = e.bereitschaftAuto.filter((x) => !(x.nein || []).includes(d) && !imDienst(x.key) && !gesperrt(x.key) && !ruhetag(x.key, d)) // am freien Tag auch keine Bereitschaft
+      .sort((x, y) => (berZahl.get(x.key) || 0) - (berZahl.get(y.key) || 0) || (hours.get(x.key) || 0) - (hours.get(y.key) || 0) || vgl(x.key, y.key))[0]; // reihum, dann wer weniger Stunden hat
+    if (c) berZahl.set(c.key, (berZahl.get(c.key) || 0) + 1);
+    return c ? [{ n: full.get(c.key) || c.name || c.key, s: fenster }] : [];
+  };
   const tage = [...dem.keys()].sort(vgl).map((d) => {
     const need = dem.get(d), gm = gapsJe.get(d), dienst = new Map(plan.get(d).map(([n, a, b]) => [n, [a, b]]));
     const mitWunsch = new Set([...wun.keys()].filter((k) => k.split("\u0000")[1] === d).map((k) => k.split("\u0000")[0]));
@@ -119,7 +169,7 @@ export function dpRechnen(e) {
       vorne: ALL.map((s) => (need.has(s) ? need.get(s)[1] : null)), hinten: ALL.map((s) => (need.has(s) ? need.get(s)[2] : null)),
       bedarf: ALL.map((s) => (need.has(s) ? need.get(s)[0] : 0)), besetzt: ALL.map((s) => (gm.has(s) ? gm.get(s)[0] : 0)), fehlt: ALL.map((s) => (gm.has(s) ? gm.get(s)[1] : 0)),
       leute: leute.map((n) => ({ n: full.get(n) || n, z: zonetext(n, d), w: ALL.map((s) => WK[wun.get(k2(n, d))?.get(s)] || "-").join(""), s: dienst.has(n) ? dienst.get(n) : null })),
-      ber: (e.bereitschaft || []).filter((x) => x.d === d).map((x) => ({ n: x.name, s: [Number(x.von), Number(x.bis)] })),
+      ber: e.bereitschaftAuto ? berAuto(d) : (e.bereitschaft || []).filter((x) => x.d === d).map((x) => ({ n: x.name, s: [Number(x.von), Number(x.bis)] })),
     };
   });
   return { v: 1, regel: DP_REGEL, von: LO, bis: HI, tage, stunden: Object.fromEntries([...hours].map(([n, h]) => [full.get(n) || n, h])) };
