@@ -21,8 +21,8 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // automatisch (bereitschaftAuto: nur wer generell bereit ist, an dem Tag nicht „nein“ gesagt hat und zu der Zeit nicht selbst Dienst hat).
 // 2.721.0 (Wunsch Hansi „nicht alle Tage am Stück, besser zwischendrin 1 Tag Pause“): maxTageAmStueck (Standard 5) – wer so viele Tage hintereinander
 // eingeplant ist, hat am nächsten Tag frei.
-// 2.722.0 (Wunsch Hansi „Leon als Aushilfe abends mit Anne, aber nicht nur“, „Marianne fällt evtl. aus“): personen[].begleitet = so viele andere müssen
-// in jeder halben Stunde seines Dienstes mit da sein; personen[].hinweis erscheint im Plan neben dem Namen (z. B. „unsicher – evtl. Augen-OP“).
+// 2.722.0 (Wunsch Hansi „Leon als Aushilfe abends mit Anne, aber nicht nur“, „Hinweis im Plan“): personen[].begleitet = so viele andere müssen
+// in jeder halben Stunde seines Dienstes mit da sein; personen[].hinweis erscheint im Plan neben dem Namen (z. B. „nur mit anderen“).
 export const DP_REGEL = 5;
 
 export function dpRechnen(e) {

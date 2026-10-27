@@ -13453,7 +13453,7 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
   assert.ok(/maxTageAmStueck: Number\.isFinite\(Number\(konf\.maxTageAmStueck\)\) \? Number\(konf\.maxTageAmStueck\) : 5/.test(server), "Standard 5 Tage, einstellbar");
   assert.ok(/pk\[pid\]\?\.keineBereitschaft !== true/.test(server) && /pid !== adminId \|\| pk\[pid\]\?\.bereitschaft === true/.test(server), "Bereitschaft je Person ein-/ausschaltbar");
 }
-// 2.722.0 (Wunsch Hansi „Leon als Aushilfe abends mit Anne, aber nicht nur“, „Marianne fällt evtl. aus“): begleitet = so viele andere müssen mit da sein, hinweis neben dem Namen
+// 2.722.0 (Wunsch Hansi „Leon als Aushilfe abends mit Anne, aber nicht nur“, „Hinweis im Plan“): begleitet = so viele andere müssen mit da sein, hinweis neben dem Namen
 {
   const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
   assert.ok(DP_REGEL >= 5, "Regel-Stand steigt → gespeicherter Stand wird von selbst neu gerechnet");
@@ -13463,11 +13463,11 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
   let r = dpRechnen({ tage, personen: [{ key: "Anne R", name: "Anne R", eintraege: ein(17, 20) }, { key: "Leon W", name: "Leon W", eintraege: ein(17, 23), begleitet: 2 }] });
   assert.ok(!r.tage[0].leute.find((x) => x.n === "Leon W").s, "Aushilfe nie ohne genug andere");
   r = dpRechnen({ tage, personen: [{ key: "Anne R", name: "Anne R", eintraege: ein(17, 23) }, { key: "Klaus Z", name: "Klaus Z", eintraege: ein(19, 23) },
-    { key: "Leon W", name: "Leon W", eintraege: ein(17, 23), begleitet: 2, hinweis: "nur mit anderen" }, { key: "Marianne B", name: "Marianne B", eintraege: ein(17, 19), hinweis: "unsicher – evtl. Augen-OP" }] });
+    { key: "Leon W", name: "Leon W", eintraege: ein(17, 23), begleitet: 2, hinweis: "nur mit anderen" }, { key: "Marianne B", name: "Marianne B", eintraege: ein(17, 19), hinweis: "nur vormittags" }] });
   const leon = r.tage[0].leute.find((x) => x.n === "Leon W");
   assert.ok(leon.s, "Aushilfe mit genug anderen eingeplant");
   const staff = (h) => r.tage[0].leute.filter((x) => x.n !== "Leon W" && x.s && x.s[0] <= h && x.s[1] > h).length;
   for (let h = leon.s[0]; h < leon.s[1]; h += 0.5) assert.ok(staff(h) >= 2, `um ${h} Uhr mindestens 2 andere mit Leon`);
-  assert.ok(/nur mit anderen/.test(leon.z) && /unsicher – evtl\. Augen-OP/.test(r.tage[0].leute.find((x) => x.n === "Marianne B").z), "Hinweis steht neben dem Namen");
+  assert.ok(/nur mit anderen/.test(leon.z) && /nur vormittags/.test(r.tage[0].leute.find((x) => x.n === "Marianne B").z), "Hinweis steht neben dem Namen");
   assert.ok(/Number\.isFinite\(Number\(pk\[pid\]\?\.begleitet\)\) \? \{ begleitet: Number\(pk\[pid\]\.begleitet\) \}/.test(server) && /pk\[pid\]\?\.hinweis \? \{ hinweis:/.test(server), "Server reicht begleitet und hinweis aus der Konfig durch");
 }
