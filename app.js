@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.696.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.697.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -42077,12 +42077,13 @@ function druckVorschauZu() { $("druckVorschau").classList.add("versteckt"); $("d
   const danach = DRUCK?.danach; if (danach) { DRUCK.danach = null; setTimeout(danach, 250); } } // 2.526.0: z. B. Ablage-Frage nach dem Erstattungsantrag
 // ---------- 2.526.0 KC-CLUB-DRUCK-PDF: „📄 PDF“ in jeder Druckvorschau – echtes A4-PDF (mehrseitig) aus der Druckseite. html2canvas liegt in lib/,
 // das PDF baut die App selbst (wie bei den Schildern) – nichts geht an fremde Dienste. Teilen, wo das Handy es kann, sonst herunterladen.
-function pdfAusCanvas(c, quer) {
+function pdfAusCanvas(c, quer, seiten = null) { // seiten: fertige Seiten-Bilder (KC-CLUB-DRUCK-SEITENWECHSEL) – sonst wie bisher in A4-Stücke schneiden
   const pw = quer ? 841.89 : 595.28, ph = quer ? 595.28 : 841.89, seiteH = Math.round(c.width * ph / pw);
-  const n = Math.max(1, Math.ceil((c.height - seiteH * 0.03) / seiteH)), bilder = [];
+  const n = seiten ? seiten.length : Math.max(1, Math.ceil((c.height - seiteH * 0.03) / seiteH)), bilder = [];
   for (let i = 0; i < n; i++) {
-    const s = document.createElement("canvas"); s.width = c.width; s.height = seiteH; const g = s.getContext("2d");
-    g.fillStyle = "#fff"; g.fillRect(0, 0, s.width, s.height); g.drawImage(c, 0, -i * seiteH);
+    let s = seiten?.[i];
+    if (!s) { s = document.createElement("canvas"); s.width = c.width; s.height = seiteH; const g = s.getContext("2d");
+      g.fillStyle = "#fff"; g.fillRect(0, 0, s.width, s.height); g.drawImage(c, 0, -i * seiteH); }
     bilder.push(Uint8Array.from(atob(s.toDataURL("image/jpeg", 0.88).split(",")[1]), (z) => z.charCodeAt(0)));
   }
   const enc = new TextEncoder(), teile = [], off = []; let len = 0;
@@ -42099,6 +42100,56 @@ function pdfAusCanvas(c, quer) {
   const anzahl = 3 + n * 3, xref = len;
   add(`xref\n0 ${anzahl}\n0000000000 65535 f \n${Array.from({ length: anzahl - 1 }, (_, k) => String(off[k + 1]).padStart(10, "0") + " 00000 n \n").join("")}trailer\n<< /Size ${anzahl} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
   return new Blob(teile, { type: "application/pdf" });
+}
+// ---------- KC-CLUB-DRUCK-SEITENWECHSEL (27.10.2026, Fund Hansi „Die Seiten sind nicht gut – auf Seite 2 muss ein Kopf mit Logo und Datum und
+// Seite 2 von x, also ein guter Seitenwechsel“): das PDF schnitt die Druckseite stur alle 297 mm ab – mitten durch Tabellenzeilen und Text.
+// Jetzt: Seitenwechsel nur zwischen Zeilen/Absätzen (nie in einer Tabellenzeile, einem Absatz, einer Überschrift, einem Bild oder einem Block mit
+// „break-inside:avoid“), ab Seite 2 ein Kopf mit Logo, Titel, Datum und „Seite x von y“, auf Seite 1 unten „Seite 1 von y“. Erzwungene Wechsel
+// („break-after:page“, z. B. ein Bogen je Mitglied) bleiben – die Seitenzahlen zählen dann je Bogen. Passt alles auf eine Seite, bleibt es wie bisher.
+const DS_ATOM = "tr, li, p, h1, h2, h3, h4, h5, img, svg, pre, blockquote, .cd-kopf, .cd-fuss, .dseite, [style*='break-inside:avoid'], [style*='break-inside: avoid']";
+function druckSeitenBilden(c, el, breite, quer) {
+  try {
+    const RAND = 45, KOPF = 40, seiteH = Math.round(breite * (quer ? 210 / 297 : 297 / 210)), k = c.width / breite, oben = el.getBoundingClientRect().top;
+    const ende = Math.min(c.height / k, el.scrollHeight);
+    if (ende <= seiteH + 2) return null; // eine Seite – wie bisher
+    const pos = (e) => { const r = e.getBoundingClientRect(); return [r.top - oben, r.bottom - oben]; };
+    const platzVoll = seiteH - 2 * RAND;
+    const atome = [...el.querySelectorAll(DS_ATOM)].map(pos).filter(([a, b]) => b - a > 1 && b - a < platzVoll * 0.9);
+    const zwang = [...el.querySelectorAll("[style*='break-after:page'], [style*='break-after: page']")].map((e) => pos(e)[1]).filter((y) => y > 5 && y < ende - 5).sort((a, b) => a - b);
+    const teile = []; let a0 = 0; for (const y of [...zwang, ende]) { if (y - a0 > 5) teile.push([a0, y]); a0 = y; }
+    const schnitt = (start, max) => { let y = max;
+      for (let i = 0; i < 300; i++) { const s = atome.find(([a, b]) => a < y - 0.5 && b > y + 0.5); if (!s) return y; y = s[0]; if (y <= start + platzVoll * 0.2) return max; }
+      return max; };
+    const logo = el.querySelector(".cd-kopf img, .cd-logo img"), datum = fKurzJahr.format(new Date()), seiten = [];
+    for (const [von, bis] of teile) {
+      const titelEl = [...el.querySelectorAll(".cd-titel h1")].find((h) => { const [t] = pos(h); return t >= von - 1 && t < bis; });
+      const titel = (titelEl?.textContent || DRUCK?.titel || "").trim(), stuecke = []; let y = von;
+      while (y < bis - 2) { const erste = !stuecke.length, platz = (erste ? (von === 0 ? seiteH - RAND : seiteH - 2 * RAND) : seiteH - 2 * RAND - KOPF);
+        const z = bis - y <= platz ? bis : schnitt(y, y + platz); stuecke.push([y, z]); y = z; }
+      stuecke.forEach(([y1, y2], i) => {
+        const s = document.createElement("canvas"); s.width = c.width; s.height = Math.round(seiteH * k); const g = s.getContext("2d");
+        g.fillStyle = "#fff"; g.fillRect(0, 0, s.width, s.height);
+        const ziel = i === 0 ? (von === 0 ? 0 : RAND) : RAND + KOPF;
+        g.drawImage(c, 0, y1 * k, c.width, (y2 - y1) * k, 0, ziel * k, c.width, (y2 - y1) * k);
+        g.scale(k, k); g.textBaseline = "middle";
+        const nr = `Seite ${i + 1} von ${stuecke.length}`;
+        if (i > 0) { // Kopf ab Seite 2: Logo · Titel · Datum · Seite x von y
+          const mitte = RAND + KOPF / 2 - 6; let x = RAND;
+          if (logo?.complete && logo.naturalWidth) { try { // wie im Kopf von Seite 1: weißes Logo im weinroten Kreis
+            g.fillStyle = "#741521"; g.beginPath(); g.arc(x + 15, mitte, 15, 0, Math.PI * 2); g.fill(); g.drawImage(logo, x + 3, mitte - 12, 24, 24); x += 38; } catch {} }
+          g.fillStyle = "#741521"; g.font = "bold 15px Georgia, 'Times New Roman', serif";
+          let t = titel || "Köcheclub Werne"; const frei = breite - x - RAND - 170;
+          while (t.length > 4 && g.measureText(t).width > frei) t = t.slice(0, -2);
+          if (t !== (titel || "Köcheclub Werne")) t = t.replace(/\s*\S?$/, "") + " …";
+          g.fillText(t, x, mitte);
+          g.fillStyle = "#5b544d"; g.font = "12px Arial, sans-serif"; g.textAlign = "right"; g.fillText(`${datum} · ${nr}`, breite - RAND, mitte); g.textAlign = "left";
+          g.strokeStyle = "#741521"; g.lineWidth = 1; g.beginPath(); g.moveTo(RAND, RAND + KOPF - 8); g.lineTo(breite - RAND, RAND + KOPF - 8); g.stroke();
+        } else if (stuecke.length > 1) { g.fillStyle = "#5b544d"; g.font = "11px Arial, sans-serif"; g.textAlign = "right"; g.fillText(nr, breite - RAND, seiteH - RAND / 2); g.textAlign = "left"; }
+        seiten.push(s);
+      });
+    }
+    return seiten.length ? seiten : null;
+  } catch (e) { console.warn("Seitenwechsel", e); return null; } // im Zweifel wie bisher schneiden
 }
 async function druckPdfBlob() { // Druckseite im unsichtbaren A4-Blatt messen, dann als SVG-Bild (foreignObject) zeichnen – Logo als data:-Adresse, nichts Fremdes
   const ifr = document.createElement("iframe"); ifr.setAttribute("aria-hidden", "true");
@@ -42120,7 +42171,7 @@ async function druckPdfBlob() { // Druckseite im unsichtbaren A4-Blatt messen, d
     const bild = await new Promise((ok, fehler) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => fehler(new Error("PDF konnte nicht gezeichnet werden.")); im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
     const c = document.createElement("canvas"); c.width = breite * 2; c.height = hoehe * 2;
     const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.scale(2, 2); g.drawImage(bild, 0, 0);
-    return pdfAusCanvas(c, DRUCK.quer);
+    return pdfAusCanvas(c, DRUCK.quer, druckSeitenBilden(c, el, breite, DRUCK.quer));
   } finally { ifr.remove(); }
 }
 const druckDateiName = () => (DRUCK.titel || "Koecheclub").replace(/[^\wäöüÄÖÜß.-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) + ".pdf";
