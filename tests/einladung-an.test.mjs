@@ -8,20 +8,22 @@ const app = programmText(), server = fs.readFileSync("supabase/functions/kc-club
 // --- Einladung: An wen? (Alle · Gruppe · Auswahl)
 const bl = app.slice(app.indexOf("async function buEinladung("), app.indexOf("function buWeg(w) {"));
 assert.ok(/An wen\?<\/div><div id="buAn"><\/div>/.test(bl) && bl.indexOf('id="buAn"') < bl.indexOf("Wie benachrichtigen?"), "„An wen?“ vor „Wie benachrichtigen?“");
-assert.ok(/chip\("alle", "👥 Alle"\)\}\$\{chip\("gruppe", "🧑‍🤝‍🧑 Gruppe"\)\}\$\{chip\("auswahl", "☑️ Auswahl"\)\}/.test(bl), "drei Wahlmöglichkeiten");
-assert.ok(/an: \{ art: "alle"/.test(bl), "Alle ist vorgewählt (wie bisher)");
-assert.ok(/✅ Zugesagt/.test(bl) && /❓ Noch ohne Antwort/.test(bl) && /AEMTER/.test(bl) && /MG_GRUPPEN/.test(bl), "Gruppen: Zugesagt, ohne Antwort, Ämter, eigene Gruppen");
-assert.ok(/zielAuswahl\("☑️ Wer bekommt die Einladung\?"/.test(bl), "Auswahl über das gemeinsame Fenster");
+// 2.741.0: Wahl über den gemeinsamen Baustein (KC-CLUB-ZIELWAHL) – Alle · Einzeln · Gruppe · Amt
+assert.ok(/chip\("alle", "👥 Alle"\)\}\$\{chip\("einzeln", "👤 Einzeln"\)\}\$\{chip\("gruppe", "🧑‍🤝‍🧑 Gruppe"\)\}\$\{chip\("amt", "🎖️ Amt"\)\}/.test(app), "vier Wahlmöglichkeiten");
+assert.ok(/function zwStart\(feld, opt\) \{ ZWAHL\[feld\] = \{ art: "alle"/.test(app), "Alle ist vorgewählt (wie bisher)");
+assert.ok(/zwStart\("buAn", \{ titel: "👤 Wer bekommt die Einladung\?"/.test(bl) && /✅ Zugesagt/.test(bl) && /❓ Noch ohne Antwort/.test(bl), "Einladung: Zugesagt, ohne Antwort");
+assert.ok(/AEMTER/.test(app.slice(app.indexOf("const zwAemter"), app.indexOf("const zwIds"))) && /MG_GRUPPEN/.test(app.slice(app.indexOf("function zwGruppen"), app.indexOf("const zwAemter"))), "Ämter, eigene Gruppen");
+assert.ok(/zielAuswahl\(Z\.titel \|\| "👤 Wer soll es bekommen\?"/.test(app), "Einzeln über das gemeinsame Fenster");
 const se = app.slice(app.indexOf("async function buSenden(knopf)"), app.indexOf("// ---------- KC-CLUB-BUERO-EINGANG"));
 assert.ok(/A\.art === "alle" \? \{\} : \{ ziel: \{ art: A\.art, name: A\.name \|\| "", ids: A\.ids \} \}/.test(se), "Ziel geht an den Server, „Alle“ unverändert");
-assert.ok(/Bitte Mitglieder auswählen\./.test(se) && /Bitte eine Gruppe antippen\./.test(se), "ohne Auswahl wird nichts gesendet");
+assert.ok(/if \(!zwBereit\("buAn"\)\) return melde/.test(se) && /Bitte Mitglieder auswählen\./.test(se), "ohne Auswahl wird nichts gesendet");
 // Abstimmung nutzt weiter dasselbe Fenster
 assert.ok(/async function vfAuswahl\(\) \{ VF_ZIEL\.art = "auswahl"; vfZielZeigen\(\); zielAuswahl\("☑️ Wer soll abstimmen\?"/.test(app), "Abstimmung unverändert");
 
 // Server: nur Schnittmenge mit den sonst berechtigten Empfängern
 const sv = server.slice(server.indexOf('case "buero_einladung"'), server.indexOf('case "buero_nachher"'));
 assert.ok(/const an = einladungZiel\(p\.ziel\);/.test(sv) && /\(!an \|\| an\.ids\.has\(id\)\)/.test(sv), "Server filtert auf die Auswahl");
-assert.ok(/ids: new Set<string>\(z\.ids\.map\(String\)\.slice\(0, 500\)\)/.test(server) && /z\.art === "gruppe" \|\| z\.art === "auswahl"/.test(server), "Ziel geprüft und begrenzt");
+assert.ok(/ids: new Set<string>\(z\.ids\.map\(String\)\.slice\(0, 500\)\)/.test(server) && /\["gruppe", "auswahl", "einzeln", "amt"\]\.includes\(z\.art\)/.test(server), "Ziel geprüft und begrenzt");
 
 // --- Sammelnachricht: Titel vom Server → Ansage in der App (echte Funktionen ausführen)
 const st = server.match(/const sammelTitel = \(empfaenger: number\) => (.+);/)[1];

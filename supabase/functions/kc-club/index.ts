@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.740.0";
+const SERVER_VERSION = "2.741.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -800,7 +800,7 @@ function einladungBrief(d: { vorname: string; titel: string; beginn: string; ort
     + (d.zusatz ? `\n\n${d.zusatz}` : "")
     + `\n\nWir freuen uns auf eine schöne, konstruktive Sitzung.\nBitte sag kurz in der Club-App zu oder ab:\n${d.url}\n\n${gruss}`;
 }
-const einladungZiel = (z: any) => (z && (z.art === "gruppe" || z.art === "auswahl") && Array.isArray(z.ids)
+const einladungZiel = (z: any) => (z && ["gruppe", "auswahl", "einzeln", "amt"].includes(z.art) && Array.isArray(z.ids) // 2.741.0 KC-CLUB-ZIELWAHL: + einzeln, amt
   ? { art: String(z.art), name: txt(z.name, 80), ids: new Set<string>(z.ids.map(String).slice(0, 500)) } : null);
 // 2.403.0 KC-CLUB-EXPRESS-PRIO1 (Wunsch Hansi „Express so schnell wie möglich raus, in der Warteschlange bevorzugt – Priorität 1“):
 // Express geht nicht als ein Sammelauftrag (der Versanddienst arbeitet die Empfänger darin nacheinander ab), sondern je Empfänger
@@ -17255,6 +17255,57 @@ Köcheclub-App`,
       // 2.432.0 KC-CLUB-EINGANGSKORB (Wunsch Hansi: „Steven ein Dokument in seinen Archiv-Ordner legen“ – „Eingangskorb für Mitglieder“):
       // Admin/Clubleitung legt ein Dokument in den persönlichen Ordner eines Mitglieds – ohne Freigabe, aber nur „zur Prüfung“: sichtbar und
       // im Ordner erst, wenn das Mitglied es annimmt; ablehnen löscht es. Der Ordner bleibt privat (die Leitung sieht danach nichts darin).
+      // ---------- KC-CLUB-AKTENTASCHE-FREIGEBEN (2.741.0, Wunsch Hansi „Aktentasche → anhaken → Freigeben → an alle/einzeln/Gruppe/Amt → in den
+      // Eingangskorb der Mitglieder“): eine Datei an viele Eingangskörbe (vorhandener Kern KC-CLUB-EINGANGSKORB: Dokument im persönlichen Ordner,
+      // Status „pruefung“ → das Mitglied legt ab oder löscht). Die Datei kommt einmal an (zählt einmal fürs Tageskontingent); jeder Empfänger bekommt
+      // eine eigene Kopie (Löschen bei einem trifft nie die anderen). Verteilen im Hintergrund; Bescheid einmal je Empfänger beim letzten Teil.
+      case "archiv_eingang_verteilen": {
+        nurLeitung(ich);
+        const ids = [...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => id !== ich.person_id).slice(0, 200);
+        if (!ids.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.");
+        const mime = txt(p.mime, 100);
+        if (!ARCHIV_DATEITYPEN.test(mime)) throw new Fehler("Diese Datei passt nicht ins Archiv – bitte PDF, Bild, Word, Excel oder Text.");
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * ARCHIV_STOPP) throw new Fehler("Der kostenlose Speicher ist voll – bitte zuerst Altes löschen.", 507);
+        const [{ data: pe }, { data: ro }] = await Promise.all([
+          db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name").in("person_id", ids).eq("active", true),
+          db.from("kc_club_rollen").select("*").in("person_id", ids)]);
+        const rolle = new Map((ro ?? []).map((r: any) => [r.person_id, r]));
+        const ok: any[] = [], weg: { name: string; grund: string }[] = [];
+        for (const x of pe ?? []) { if (zugangAus(rolle.get(x.person_id)) === "mitglied") ok.push(x); else weg.push({ name: vorname(x), grund: "Gast/Aushilfe – kein Archiv" }); }
+        if (!ok.length) return json({ ok: true, empfaenger: 0, uebersprungen: weg });
+        let frei: any = await dateiAblegen(ich, p.name, mime, p.daten, ARCHIV_DATEITYPEN); // prüft Typ und Größe, zählt einmal
+        const sys = { ...ich, zugang: undefined } as any; // Kopien für die weiteren Empfänger zählen nicht noch einmal (wie Systemablagen)
+        const titel = txt(p.titel, 120) || frei.name, notiz = txt(p.notiz, 500), reg = String(p.register || ""), letzte = p.letzte !== false;
+        const anzahl = Math.max(1, Math.min(20, Math.floor(Number(p.anzahl)) || 1)), erstId = frei.id;
+        const verteilen = async () => {
+          let abgelegt = 0;
+          for (const x of ok) {
+            try {
+              if ((await archivBelegtVon(x.person_id)) >= PERSOENLICH_GRENZE) continue;
+              const oid = await archivOrdnerVon(x.person_id, x.display_name || vorname(x), new Date().getFullYear(), ich.person_id);
+              const { data: o } = oid ? await db.from("kc_club_archiv_ordner").select("id,register,geloescht_am").eq("id", oid).single() : { data: null as any };
+              if (!o || o.geloescht_am) continue;
+              const datei = frei ?? await dateiAblegen(sys, p.name, mime, p.daten, ARCHIV_DATEITYPEN); frei = null;
+              const regs: string[] = o.register ?? PERSOENLICH_REGISTER, register = regs.includes(reg) ? reg : regs.includes("Sonstiges") ? "Sonstiges" : regs[0] ?? null;
+              const { error } = await db.from("kc_club_archiv_dokumente").insert({ ordner_id: oid, register, titel, datum: archivDatum(null), stichworte: archivStichworte(null), beschreibung: notiz,
+                attachment_id: datei.id, datei_name: datei.name, mime, groesse: datei.groesse, hochgeladen_von: ich.person_id, status: "pruefung" });
+              if (error) { await dateienEntfernen([datei.id]); continue; }
+              abgelegt++;
+              if (letzte) await senden("club_nachricht", [x.person_id], {
+                titel: "📥 Neu in deinem Eingangskorb", kurz: `${ich.name}: ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} – ansehen, dann ablegen oder löschen`,
+                betreff: "Köcheclub Werne – neu in deinem Eingangskorb",
+                text: `Hallo ${vorname(x)},\n\n${ich.name} hat dir ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} in deinen Eingangskorb gelegt.${notiz ? `\n\n${notiz}` : ""}\n\nIn der Club-App siehst du ${anzahl === 1 ? "es" : "sie"} dir an und entscheidest: in deinem Archiv ablegen oder löschen.\n\n${APP_URL}#archiv\n\nViele Grüße\nKöcheclub Werne`,
+                url: `${APP_URL}#archiv`,
+              }, `club-eingang-verteilt:${erstId}:${x.person_id}`).catch(() => null);
+            } catch (e) { console.error("eingang verteilen", String(e)); }
+          }
+          if (frei) await dateienEntfernen([frei.id]); // niemand hat die erste Datei bekommen
+          await protokoll(ich.person_id, "archiv_eingang_verteilt", { titel: txt(titel, 60), empfaenger: ok.length, abgelegt, uebersprungen: weg.length });
+        };
+        nebenbei(verteilen().catch((e) => console.error("eingang verteilen", String(e))));
+        return json({ ok: true, empfaenger: ok.length, uebersprungen: weg });
+      }
       case "archiv_eingang_senden": {
         nurLeitung(ich);
         const pid = String(p.person_id || "");

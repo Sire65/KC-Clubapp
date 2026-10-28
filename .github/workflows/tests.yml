@@ -43,6 +43,8 @@ jobs:
       - run: node tests/einladung-an.test.mjs
       # KC-CLUB-EINLADUNG-BRIEF (2.740.0)
       - run: node tests/einladung-brief.test.mjs
+      # KC-CLUB-AKTENTASCHE-FREIGEBEN, KC-CLUB-EINGANG-DURCHGEHEN, KC-CLUB-ZIELWAHL (2.741.0)
+      - run: node tests/aktentasche-freigeben.test.mjs
       - run: node tests/zugang-pruefen.test.mjs
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs

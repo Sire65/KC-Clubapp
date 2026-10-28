@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.740.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.741.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26677,7 +26677,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -29009,7 +29009,7 @@ async function buEinladung(id, nurOffen) {
   const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
   const anzahl = nurOffen ? ohne : s.mitglieder.length;
   const schon = nurOffen ? s.vorbereitung?.erinnerung_am : s.vorbereitung?.einladung_am;
-  window.__buSend = { id, nurOffen, wege: [], an: { art: "alle", gruppe: null, name: "", ids: [] }, s }; // KC-CLUB-EINLADUNG-AN (2.739.0)
+  window.__buSend = { id, nurOffen, wege: [], s }; // KC-CLUB-EINLADUNG-AN (2.739.0) · Empfänger: ZWAHL.buAn (KC-CLUB-ZIELWAHL)
   blattAuf("buEinladung", `${einwHtml("b-bu-einladung")}<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
     ${schon ? `<p class="hinweis" style="margin:0">ℹ️ Schon einmal gesendet: ${esc(zeitKurz(schon))}</p>` : ""}
     <p class="hinweis" style="margin:0 0 4px">So sieht der Brief aus – jeder bekommt ihn mit seinem eigenen Vornamen:</p>
@@ -29021,7 +29021,8 @@ async function buEinladung(id, nurOffen) {
     <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" id="buSendKnopf" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this)">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
     <button class="knopf" style="text-align:center" onclick="$('buEinladung').remove()">Abbrechen</button></div>`);
   window.__buSend.top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`); buBriefZeigen(); // KC-CLUB-EINLADUNG-BRIEF (2.740.0): wie der Server
-  buAnZeigen(); mgGruppenLaden().then(() => { if ($("buAn")) buAnZeigen(); }); // eigene Gruppen + Ämter kommen nach
+  zwStart("buAn", { titel: "👤 Wer bekommt die Einladung?", alleText: nurOffen ? "alle, die noch nicht geantwortet haben" : "alle Mitglieder", alle: buBerechtigt, nachher: buAnNachher,
+    extra: () => [["ja", "✅ Zugesagt", s.mitglieder.filter((m) => zwIch(m.person_id) && m.antwort === "ja").map((m) => m.person_id)], ["ohne", "❓ Noch ohne Antwort", s.mitglieder.filter((m) => zwIch(m.person_id) && (!m.antwort || m.antwort === "keine")).map((m) => m.person_id)]] });
 }
 // KC-CLUB-EINLADUNG-AN (2.739.0, Wunsch Hansi „vor dem Absenden auswählen, an wen die Einladung geht: Alle, Gruppen, Auswahl“):
 // 👥 Alle (wie bisher) · 🧑‍🤝‍🧑 Gruppe (Zugesagt, Noch ohne Antwort, Ämter, eigene Gruppen) · ☑️ Auswahl (gemeinsames Auswahlfenster zielAuswahl).
@@ -29041,47 +29042,56 @@ function einladungBrief(d) {
 }
 function buBriefZeigen() {
   const x = window.__buSend, z = $("buBrief"); if (!x || !z) return; const t = x.s.treffen;
-  const erst = x.an.art !== "alle" && x.an.ids[0] ? vfName(x.an.ids[0]).split(" ")[0] : "Marianne"; // Beispiel-Anrede
+  const Z = ZWAHL.buAn, erst = Z && Z.art !== "alle" && Z.ids[0] ? vfName(Z.ids[0]).split(" ")[0] : "Marianne"; // Beispiel-Anrede
   z.textContent = einladungBrief({ vorname: erst, titel: t.titel, beginn: t.beginn, ort: t.ort || "", top: x.top || [], zusatz: ($("buZusatz")?.value || "").trim(), url: "(Link zur Club-App)",
     von: ICH?.vorname || ICH?.name || "", amt: (ICH?.aemter || []).find((a) => BRIEF_AMT_RE.test(a)) || (ICH?.aemter || [])[0] || "", erinnerung: x.nurOffen });
 }
-function buAnGruppen() {
-  const s = window.__buSend?.s; if (!s) return [];
-  const ich = (id) => id !== ICH?.person_id, mit = (f) => s.mitglieder.filter((m) => ich(m.person_id) && f(m)).map((m) => m.person_id);
-  const l = [["ja", "✅ Zugesagt", mit((m) => m.antwort === "ja")], ["ohne", "❓ Noch ohne Antwort", mit((m) => !m.antwort || m.antwort === "keine")]];
-  for (const amt of AEMTER || []) { const ids = (MITGLIEDER || []).filter((m) => ich(m.person_id) && (m.aemter || []).includes(amt)).map((m) => m.person_id); if (ids.length) l.push(["amt:" + amt, "🎖️ " + amt, ids]); }
-  for (const g of MG_GRUPPEN) l.push(["g:" + g.id, `${g.gruppe.symbol || "👥"} ${g.gruppe.name}`, g.personen.filter(ich)]);
+// KC-CLUB-ZIELWAHL (2.741.0, Wunsch Hansi „Auswahl der Empfänger wie alle, Einzel, Gruppe, Amt usw.“): ein Baustein „An wen?“ für Einladung
+// und Aktentasche-Freigabe. 👥 Alle · 👤 Einzeln (gemeinsames Auswahlfenster zielAuswahl) · 🧑‍🤝‍🧑 Gruppe (eigene Gruppen + was der Aufrufer
+// dazugibt, z. B. „Zugesagt“) · 🎖️ Amt. Zustand je Feld in ZWAHL; der Aufrufer gibt alle() (wer „Alle“ ist) und nachher() (Knopf, Vorschau) mit.
+const ZWAHL = {};
+const zwIch = (id) => id !== ICH?.person_id;
+function zwStart(feld, opt) { ZWAHL[feld] = { art: "alle", gruppe: null, name: "", ids: [], ...opt }; zwZeigen(feld); mgGruppenLaden().then(() => { if ($(feld)) zwZeigen(feld); }); }
+function zwGruppen(feld) {
+  const l = [...(ZWAHL[feld].extra?.() || [])];
+  for (const g of MG_GRUPPEN) l.push(["g:" + g.id, `${g.gruppe.symbol || "👥"} ${g.gruppe.name}`, g.personen.filter(zwIch)]);
   return l.filter(([, , ids]) => ids.length);
 }
-function buAnZahl() { // so viele bekommen sie wirklich (wie der Server rechnet)
-  const x = window.__buSend, s = x.s, alle = s.mitglieder.filter((m) => m.person_id !== ICH?.person_id && (!x.nurOffen || !m.antwort || m.antwort === "keine")).map((m) => m.person_id);
-  return x.an.art === "alle" ? alle.length : alle.filter((id) => x.an.ids.includes(id)).length; // ohne mich selbst – wie der Server
-}
-function buAnZeigen() {
-  const x = window.__buSend, z = $("buAn"); if (!x || !z) return; const A = x.an;
-  const chip = (a, t) => `<button type="button" class="chip${A.art === a ? " an" : ""}" onclick="buAnArt('${a}')">${t}</button>`;
-  const gr = buAnGruppen(), name = (pid) => vfName(pid).split(" ")[0];
+const zwAemter = () => (AEMTER || []).map((amt) => ["amt:" + amt, "🎖️ " + amt, (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && (m.aemter || []).includes(amt)).map((m) => m.person_id)]).filter(([, , ids]) => ids.length);
+const zwIds = (feld) => { const Z = ZWAHL[feld]; return Z.art === "alle" ? Z.alle() : Z.ids.filter(zwIch); };
+const zwBereit = (feld) => ZWAHL[feld].art === "alle" || ZWAHL[feld].ids.length > 0;
+function zwZeigen(feld) {
+  const Z = ZWAHL[feld], z = $(feld); if (!Z || !z) return;
+  const chip = (a, t) => `<button type="button" class="chip${Z.art === a ? " an" : ""}" onclick='zwArt(${hlJs(feld)}, "${a}")'>${t}</button>`;
+  const liste = Z.art === "gruppe" ? zwGruppen(feld) : Z.art === "amt" ? zwAemter() : [], name = (pid) => vfName(pid).split(" ")[0];
   let unten = "";
-  if (A.art === "gruppe") unten = gr.length ? `<div class="hl-chips" style="margin-top:6px">${gr.map(([k, t, ids]) => `<button type="button" class="chip${A.gruppe === k ? " an" : ""}" onclick='buAnGruppe(${hlJs(k)})'>${esc(t)} <small>(${ids.length})</small></button>`).join("")}</div>`
-    : '<p class="hinweis" style="margin:6px 0">Noch keine Gruppen – oder ☑️ Auswahl nehmen.</p>';
-  if (A.art === "auswahl") unten = `<div class="knoepfe" style="margin-top:6px"><button type="button" class="knopf klein" onclick="buAnAuswahl()">☑️ Mitglieder auswählen${A.ids.length ? ` (${A.ids.length})` : ""}</button></div>`;
-  const g = gr.find(([k]) => k === A.gruppe);
-  const an = A.art === "alle" ? (x.nurOffen ? "alle, die noch nicht geantwortet haben" : "alle Mitglieder") : A.art === "gruppe" ? (g ? `${g[1]} – ${g[2].map(name).join(", ")}` : "bitte eine Gruppe antippen")
-    : A.ids.length ? `${A.ids.length} ausgewählt – ${A.ids.map(name).join(", ")}` : "noch niemand ausgewählt";
-  z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("auswahl", "☑️ Auswahl")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
-  const n = A.art === "alle" || A.ids.length ? buAnZahl() : 0, k = $("buSendKnopf");
-  buBriefZeigen();
-  if (k) { k.disabled = !n; k.textContent = n ? `📨 Jetzt an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden` : A.art === "alle" ? "Alle haben schon geantwortet 👍" : "Bitte erst auswählen"; }
+  if (Z.art === "gruppe" || Z.art === "amt") unten = liste.length ? `<div class="hl-chips" style="margin-top:6px">${liste.map(([k, t, ids]) => `<button type="button" class="chip${Z.gruppe === k ? " an" : ""}" onclick='zwGruppe(${hlJs(feld)}, ${hlJs(k)})'>${esc(t)} <small>(${ids.length})</small></button>`).join("")}</div>`
+    : `<p class="hinweis" style="margin:6px 0">${Z.art === "amt" ? "Keine Ämter vergeben" : "Noch keine Gruppen"} – oder 👤 Einzeln nehmen.</p>`;
+  if (Z.art === "einzeln") unten = `<div class="knoepfe" style="margin-top:6px"><button type="button" class="knopf klein" onclick='zwEinzeln(${hlJs(feld)})'>👤 Mitglieder auswählen${Z.ids.length ? ` (${Z.ids.length})` : ""}</button></div>`;
+  const g = liste.find(([k]) => k === Z.gruppe);
+  const an = Z.art === "alle" ? Z.alleText || "alle Mitglieder" : Z.art === "einzeln" ? (Z.ids.length ? `${Z.ids.length} ausgewählt – ${Z.ids.map(name).join(", ")}` : "noch niemand ausgewählt")
+    : g ? `${g[1]} – ${g[2].map(name).join(", ")}` : Z.art === "amt" ? "bitte ein Amt antippen" : "bitte eine Gruppe antippen";
+  z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("einzeln", "👤 Einzeln")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("amt", "🎖️ Amt")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
+  Z.nachher?.();
 }
-function buAnArt(a) { const A = window.__buSend.an; A.art = a; if (a !== "gruppe") A.gruppe = null; if (a === "alle") A.ids = []; if (a === "gruppe" && !A.gruppe) A.ids = []; buAnZeigen(); if (a === "auswahl") buAnAuswahl(); }
-function buAnGruppe(k) { const g = buAnGruppen().find(([x]) => x === k); if (!g) return; Object.assign(window.__buSend.an, { art: "gruppe", gruppe: k, name: g[1], ids: g[2].slice() }); buAnZeigen(); }
-function buAnAuswahl() { const A = window.__buSend.an; zielAuswahl("☑️ Wer bekommt die Einladung?", A.ids, (ids) => { A.ids = ids; A.art = "auswahl"; A.gruppe = null; A.name = ""; buAnZeigen(); }); }
+function zwArt(feld, a) { const Z = ZWAHL[feld]; if (Z.art !== a) { Z.gruppe = null; Z.name = ""; if (a !== "einzeln") Z.ids = []; } Z.art = a; zwZeigen(feld); if (a === "einzeln") zwEinzeln(feld); } // Einzeln: angetippte Gruppe bleibt vorgewählt
+function zwGruppe(feld, k) { const Z = ZWAHL[feld], g = [...zwGruppen(feld), ...zwAemter()].find(([x]) => x === k); if (!g) return; Object.assign(Z, { gruppe: k, name: g[1], ids: g[2].slice() }); zwZeigen(feld); }
+function zwEinzeln(feld) { const Z = ZWAHL[feld]; zielAuswahl(Z.titel || "👤 Wer soll es bekommen?", Z.ids, (ids) => { Object.assign(Z, { art: "einzeln", gruppe: null, name: "", ids }); zwZeigen(feld); }); }
+// Einladung: wer sie überhaupt bekäme (wie der Server rechnet – ohne mich, bei der Erinnerung nur ohne Antwort)
+function buBerechtigt() { const x = window.__buSend; return x.s.mitglieder.filter((m) => zwIch(m.person_id) && (!x.nurOffen || !m.antwort || m.antwort === "keine")).map((m) => m.person_id); }
+function buAnZahl() { const Z = ZWAHL.buAn, b = buBerechtigt(); return Z.art === "alle" ? b.length : b.filter((id) => Z.ids.includes(id)).length; }
+function buAnNachher() {
+  buBriefZeigen();
+  const n = zwBereit("buAn") ? buAnZahl() : 0, k = $("buSendKnopf");
+  if (k) { k.disabled = !n; k.textContent = n ? `📨 Jetzt an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden` : ZWAHL.buAn.art === "alle" ? "Alle haben schon geantwortet 👍" : "Bitte erst auswählen"; }
+}
 function buWeg(w) { window.__buSend.wege = w === "beide" ? ["push", "email"] : w ? [w] : []; document.querySelectorAll("#buWege .chip").forEach((b) => b.classList.toggle("an", b.dataset.w === w)); }
 async function buSenden(knopf) {
-  const x = window.__buSend, anzahl = buAnZahl(), A = x.an;
-  if (A.art !== "alle" && !A.ids.length) return melde(A.art === "gruppe" ? "Bitte eine Gruppe antippen." : "Bitte Mitglieder auswählen.", true);
+  const x = window.__buSend, A = ZWAHL.buAn;
+  if (!zwBereit("buAn")) return melde(A.art === "gruppe" ? "Bitte eine Gruppe antippen." : A.art === "amt" ? "Bitte ein Amt antippen." : "Bitte Mitglieder auswählen.", true);
+  const anzahl = buAnZahl();
   if (!anzahl) return melde("An diese Auswahl geht nichts – alle haben schon geantwortet oder niemand passt.", true);
-  if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} ${anzahl === 1 ? "Mitglied" : "Mitglieder"} senden?${A.art === "gruppe" ? `\n\nGruppe: ${A.name}` : A.art === "auswahl" ? "\n\nNur an deine Auswahl." : ""}`))) return;
+  if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} ${anzahl === 1 ? "Mitglied" : "Mitglieder"} senden?${A.art === "gruppe" || A.art === "amt" ? `\n\n${A.art === "amt" ? "Amt" : "Gruppe"}: ${A.name.replace(/^\S+ /, "")}` : A.art === "einzeln" ? "\n\nNur an deine Auswahl." : ""}`))) return;
   await einmal(knopf, async () => {
     try {
       const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "", ...(A.art === "alle" ? {} : { ziel: { art: A.art, name: A.name || "", ids: A.ids } }) });
@@ -36067,7 +36077,7 @@ function atZeichnen() {
       + d.register.filter((r) => zahl(r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => teil(i, true)).join("")}`).join("")
       + `<label class="feld" style="margin-top:12px">📝 Notizen <small class="hinweis" id="atNotizStand">${x.geaendert ? `zuletzt geändert von ${esc(x.geaendert)}` : ""}</small>
         <textarea id="atNotiz" rows="8" placeholder="Eigene Notizen für diesen Termin – speichert sich von selbst. Alle drei sehen dieselben Notizen." oninput="atNotizTippen()" onblur="atNotizJetzt()">${esc(x.notiz || "")}</textarea></label>`
-      + `<div class="knoepfe"><button class="knopf haupt" onclick="atDruckWahl()">🖨️ Drucken – auswählen</button>${fehlt ? `<button class="knopf" onclick="atPackenZeigen()">💡 Vorschläge nachpacken (${fehlt})</button>` : ""}</div>`;
+      + `<div class="knoepfe"><button class="knopf haupt" onclick="atDruckWahl()">🖨️ Drucken – auswählen</button><button class="knopf haupt" onclick="atFreigabeWahl()">📤 Freigeben</button>${fehlt ? `<button class="knopf" onclick="atPackenZeigen()">💡 Vorschläge nachpacken (${fehlt})</button>` : ""}</div>`;
   } else {
     const l = inh.filter((i) => i.reg === AT.reg);
     inhalt = (l.length ? l.map((i) => teil(i, false)).join("") : `<p class="hinweis">Noch nichts in diesem Register.</p>`)
@@ -36189,6 +36199,64 @@ function atDruckWahl() {
     ${zeile(AT_PACKLISTE, true)}${AT.d.register.filter((r) => inh.some((i) => i.reg === r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => zeile(i, false)).join("")}`).join("")}
     <p class="hinweis" style="margin:10px 0 0">Danach geht es Schritt für Schritt: Teil für Teil öffnet sich die Druckansicht – drucken oder überspringen.</p>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="atDruckLos()">🖨️ Ausgewählte drucken</button><button class="knopf" onclick="$('atDruckBlatt').remove()">Abbrechen</button></div>`);
+}
+// ---------- KC-CLUB-AKTENTASCHE-FREIGEBEN (2.741.0, Wunsch Hansi „Clubsprecher, Admin oder Kassenwart öffnet die Aktentasche, hakt ein oder mehrere
+// Sachen an und unten auf Freigeben; dann Auswahl der Empfänger wie alle, einzeln, Gruppe, Amt; dann senden – aber in den Eingangskorb der Mitglieder“) ----------
+// Jedes Teil wird zur Datei: Anlagen so, wie sie sind, alles andere als PDF aus der Druckansicht (vorhandener Druck-Kern). Je Teil ein Aufruf
+// archiv_eingang_verteilen – der Server legt es jedem in den Eingangskorb (vorhandener Kern KC-CLUB-EINGANGSKORB) und sagt beim letzten Teil einmal Bescheid.
+function atFreigabeWahl() {
+  atNotizJetzt();
+  const inh = AT.d.tasche?.inhalt || [];
+  if (!inh.length) return melde("Die Tasche ist noch leer.", true);
+  const zeile = (i) => `<label class="at-wahl"><input type="checkbox" data-fk="${esc(i.k)}" onchange="atFreiKnopf()"><span><b>${atSym(i)} ${esc(i.titel)}</b>${i.unter ? `<br><small>${esc(i.unter)}</small>` : ""}</span></label>`;
+  blattAuf("atFreiBlatt", `<h3 style="margin:0">📤 Freigeben – in den Eingangskorb</h3><p class="hinweis" style="margin:2px 0 6px">${esc(atKopf())}<br>Anhaken, was die Mitglieder bekommen sollen. Es kommt als PDF (Dateien so, wie sie sind) in ihren 📥 Eingangskorb – sie sehen es an und legen es in ihrem Archiv ab oder löschen es.</p>
+    ${AT.d.register.filter((r) => inh.some((i) => i.reg === r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map(zeile).join("")}`).join("")}
+    <div class="at-reg-kopf">👥 An wen?</div><div id="atFreiAn"></div>
+    <label class="feld" style="margin-top:8px">Ablage-Vorschlag (Register im Archiv der Mitglieder)<select id="atFreiReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
+    <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="atFreiNotiz" rows="2" maxlength="500" placeholder="z. B. Unterlagen zur Clubsitzung – bitte vorher durchlesen."></textarea></label>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="atFreiLos" onclick="atFreigeben(this)" disabled>📤 Senden</button><button class="knopf" onclick="$('atFreiBlatt').remove()">Abbrechen</button></div>`);
+  zwStart("atFreiAn", { titel: "👤 Wer bekommt die Unterlagen?", alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: atFreiKnopf });
+}
+const atFreiTeile = () => [...document.querySelectorAll("#atFreiBlatt [data-fk]:checked")].map((c) => atTeil(c.dataset.fk)).filter(Boolean);
+function atFreiKnopf() {
+  const k = $("atFreiLos"); if (!k || !ZWAHL.atFreiAn) return;
+  const t = atFreiTeile().length, n = zwBereit("atFreiAn") ? zwIds("atFreiAn").length : 0;
+  k.disabled = !t || !n; k.textContent = !t ? "Bitte erst etwas anhaken" : !n ? "Bitte Empfänger wählen" : `📤 ${t === 1 ? "1 Teil" : t + " Teile"} an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden`;
+}
+// ein Teil der Tasche als Datei (für den Eingangskorb): Anlage unverändert, sonst PDF aus derselben Druckansicht wie „🖨️ Drucken“
+async function atTeilDatei(i) {
+  if (i.art === "anlage") { const d = await anlageAlsDatei({ id: i.ref, name: i.name || i.titel, mime: i.mime }); return new File([d.blob], d.name, { type: d.mime || i.mime || "application/octet-stream" }); }
+  const alt = DRUCK;
+  try {
+    if (["tagesordnung", "teilnehmer", "aufgaben"].includes(i.art)) DRUCK = { art: "aktentasche", param: { teil: i.art } };
+    else if (i.art === "vorschlag") { await vorschlaegeLaden(); if (!VORSCHLAG_MAP.has(i.ref)) throw new Error(`„${i.titel}“ gibt es nicht mehr.`); DRUCK = { art: "aktentasche", param: { teil: "vorschlag", ref: i.ref } }; }
+    else if (i.art === "abstimmung") { await vorschlaegeLaden(); await Promise.all([MITGLIEDER ? null : mitgliederHolen(), qrLaden().catch(() => {})]); DRUCK = { art: "abstimmung", param: { pid: i.ref } }; }
+    else if (i.art === "protokoll") { if (!MITGLIEDER) await mitgliederHolen(); PR = await api("protokoll_laden", { id: i.ref }); DRUCK = { art: "protokoll" }; }
+    else throw new Error(`„${i.titel}“ lässt sich nicht freigeben.`);
+    if (!(await druckSeiteBauen())) throw new Error(`„${i.titel}“ konnte nicht vorbereitet werden.`);
+    const pdf = await druckPdfBlob();
+    return new File([pdf], (i.titel || "Unterlage").replace(/[^\wäöüÄÖÜß.-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) + ".pdf", { type: "application/pdf" });
+  } finally { DRUCK = alt; }
+}
+async function atFreigeben(knopf) {
+  const teile = atFreiTeile(), ids = zwBereit("atFreiAn") ? zwIds("atFreiAn") : [], reg = $("atFreiReg").value, notiz = $("atFreiNotiz").value.trim();
+  if (!teile.length || !ids.length) return atFreiKnopf();
+  const Z = ZWAHL.atFreiAn, wer = Z.art === "alle" ? "alle Mitglieder" : Z.art === "einzeln" ? `${ids.length} ausgewählte Mitglieder` : Z.name.replace(/^\S+ /, "");
+  if (!(await frage(`📤 ${teile.length === 1 ? `„${teile[0].titel}“` : `${teile.length} Teile`} in den Eingangskorb legen – an ${wer} (${ids.length})?\n\nJeder bekommt einen Hinweis und entscheidet selbst: ablegen oder löschen.`, { ja: "📤 Senden", nein: "Zurück" }))) return;
+  await einmal(knopf, async () => {
+    let r = null;
+    try {
+      for (let n = 0; n < teile.length; n++) {
+        const i = teile[n]; knopf.textContent = `⏳ ${n + 1} von ${teile.length}: ${i.titel.slice(0, 30)} …`;
+        const f = await atTeilDatei(i);
+        if (!ARCHIV_TYP_OK(f.type)) throw new Error(`„${i.titel}“ passt nicht ins Archiv (nur PDF, Bild, Word, Excel, Text).`);
+        r = await api("archiv_eingang_verteilen", { personen: ids, name: f.name, mime: f.type, daten: base64(await f.arrayBuffer()), titel: i.titel, register: reg, notiz, letzte: n === teile.length - 1, anzahl: teile.length }, { warten: true });
+      }
+      $("atFreiBlatt")?.remove();
+      const weg = r?.uebersprungen || [];
+      melde(`📤 ${teile.length === 1 ? "Liegt" : "Liegen"} jetzt im Eingangskorb von ${r?.empfaenger ?? ids.length} ${(r?.empfaenger ?? ids.length) === 1 ? "Mitglied" : "Mitgliedern"} – sie bekommen Bescheid${weg.length ? ` · nicht möglich bei: ${weg.map((x) => `${x.name} (${x.grund})`).join(", ")}` : ""}`);
+    } catch (e) { meldeFehler(e); atFreiKnopf(); }
+  });
 }
 function atDruckLos() {
   const keys = [...document.querySelectorAll("#atDruckBlatt [data-dk]:checked")].map((c) => c.dataset.dk);
@@ -41903,6 +41971,64 @@ const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter
 function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; AR.spruch = false; zeige("archiv"); }
 // 1.65.0: direkt einen Ordner einer Art öffnen (z. B. die Chronik aus dem Büro-Regal); fehlt er, bleibt das Regal offen
 function arStartArt(art) { AR.zielArt = art; arStart(); }
+// ---------- KC-CLUB-EINGANG-DURCHGEHEN (2.741.0, Wunsch Hansi „die Mitglieder erhalten einen Hinweis: Neu in deinem Eingangskorb – und sofort
+// einen Knopf ‚Ansehen?‘; wenn ja, anzeigen; danach die Frage: Möchtest du das Dokument ablegen oder löschen? Bei Ablegen den Ordner im Archiv
+// vorschlagen und dort ablegen“) ----------
+// Nutzt den vorhandenen Eingangskorb (archiv_liste, archiv_pruefung, arWohin mit Ordner- und Register-Vorschlag) – nur der Weg ist geführt:
+// Hinweis beim Öffnen (und wenn die Mitteilung bei offener App kommt) → Dokument im Fenster → 🗄️ Ablegen / 🗑️ Löschen / ⏰ Später → nächstes.
+const EGH = { gezeigt: false, versuche: 0 };
+async function eingangHinweisPruefen(neu = false) {
+  if (!ICH || (!neu && !(INIT?.eingangskorb > 0)) || (EGH.gezeigt && !neu)) return;
+  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht, #egBlatt") || aktuelleAnsicht === "dokansicht") { if (++EGH.versuche < 30) setTimeout(() => eingangHinweisPruefen(neu), 3000); return; }
+  EGH.gezeigt = true; EGH.versuche = 0;
+  const n = neu ? 0 : INIT.eingangskorb;
+  const wahl = await new Promise((fertig) => {
+    let d; const zu = (w) => { d?.remove(); fertig(w); };
+    d = dlgOeffnen(`<h3 class="dlg-kopf">📥 Neu in deinem Eingangskorb</h3><p class="dlg-text">${n > 1 ? `${n} Dokumente warten auf dich.` : n === 1 ? "Ein Dokument wartet auf dich." : "Es ist etwas Neues für dich da."} Möchtest du ${n > 1 ? "sie" : "es"} jetzt ansehen?</p>
+      <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">👀 Ja, ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button></div>`, () => zu("spaeter"));
+    d.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
+  });
+  if (wahl === "an") return eingangDurchgehen();
+  melde("📥 Gut – du findest es unter „Heute wichtig“ → Eingangskorb.");
+}
+async function eingangDurchgehen() {
+  let d; try { d = AR.daten = await api("archiv_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const eigen = new Map((d.ordner || []).filter((o) => o.eigen).map((o) => [o.id, o]));
+  const liste = (d.dokumente || []).filter((x) => x.status === "pruefung" && eigen.has(x.ordner_id));
+  if (INIT) { INIT.eingangskorb = liste.length; try { wichtigZeigen(); } catch {} }
+  if (!liste.length) return melde("📥 Dein Eingangskorb ist leer.");
+  egZeigen(liste, 0, eigen);
+}
+function egZeigen(liste, i, eigen) {
+  const x = liste[i], o = eigen.get(x.ordner_id), weiter = () => (i + 1 < liste.length ? egZeigen(liste, i + 1, eigen) : (melde("✅ Eingangskorb erledigt"), INIT && (INIT.eingangskorb = 0), wichtigZeigen?.()));
+  const f = blattAuf("egBlatt", `<h3 style="margin:0">📥 Eingangskorb${liste.length > 1 ? ` · ${i + 1} von ${liste.length}` : ""}</h3>
+    <p class="hinweis" style="margin:2px 0 6px"><b>${esc(x.titel)}</b>${x.von ? ` · von ${esc(x.von)}` : ""}</p>${x.beschreibung ? `<div class="karte" style="margin:0 0 8px;white-space:pre-wrap">${esc(x.beschreibung)}</div>` : ""}
+    <div id="egVorschau" class="eg-vorschau"><p class="hinweis">⏳ Wird geladen …</p></div>
+    <p style="margin:10px 0 4px;font-weight:700">Möchtest du das Dokument ablegen oder löschen?</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" data-w="ab">🗄️ Ablegen</button><button class="knopf" data-w="weg">🗑️ Löschen</button><button class="knopf" data-w="spaeter">⏰ Später</button></div>`);
+  f.querySelector('[data-w="ab"]').onclick = () => { f.remove(); arWohin(x, o, weiter); }; // Ordner + Register sind vorgeschlagen (Absender/aktuelles Jahr)
+  f.querySelector('[data-w="weg"]').onclick = async (e) => {
+    if (!(await frage(`„${x.titel}“ löschen? Es wird nicht abgelegt, und ${x.von ? String(x.von).split(" ")[0] : "der Absender"} bekommt Bescheid.`, { ja: "🗑️ Löschen", nein: "Zurück" }))) return;
+    e.target.disabled = true;
+    try { await api("archiv_pruefung", { id: x.id, annehmen: false }); f.remove(); melde("🗑️ Gelöscht"); weiter(); } catch (er) { meldeFehler(er); e.target.disabled = false; }
+  };
+  f.querySelector('[data-w="spaeter"]').onclick = () => { f.remove(); melde("📥 Bleibt im Eingangskorb – unter „Heute wichtig“."); };
+  egVorschau(x);
+}
+async function egVorschau(x) { // PDF-Seiten als Bilder, Bilder direkt, sonst „Öffnen“ – mit dem vorhandenen Datei-Laden (arDateiVorladen)
+  const z = () => $("egVorschau"), t = arDateiVorladen(x); await t.warten;
+  if (!z()) return;
+  if (!t.datei) { z().innerHTML = `<p class="hinweis">Die Datei lässt sich gerade nicht laden. <button class="knopf klein" onclick="arDateiVorladen(${hlJs(x)});anlageDateiZeigen()">↗ Öffnen</button></p>`; return; }
+  if (istPdf(t.datei.name, t.datei.type)) {
+    try { const pdfjs = await pdfjsHolen(), pdf = await pdfjs.getDocument({ data: new Uint8Array(await t.datei.arrayBuffer()), isEvalSupported: false }).promise;
+      if (!z()) return pdf.destroy(); z().innerHTML = "";
+      for (let n = 1; n <= Math.min(pdf.numPages, 12); n++) { const img = new Image(); img.src = await pdfSeiteAlsBild(pdf, n, 900); img.alt = `Seite ${n}`; if (!z()) break; z().appendChild(img); }
+      if (pdf.numPages > 12 && z()) z().insertAdjacentHTML("beforeend", `<p class="hinweis">… und ${pdf.numPages - 12} weitere Seiten – nach dem Ablegen im Archiv.</p>`);
+      pdf.destroy();
+    } catch { if (z()) z().innerHTML = `<p class="hinweis">Die Vorschau klappt hier nicht. <button class="knopf klein" onclick="anlageDateiZeigen()">↗ Öffnen</button></p>`; }
+  } else if (/^image\//.test(t.datei.type)) { const img = new Image(); img.src = URL.createObjectURL(t.datei); img.alt = x.titel; z().innerHTML = ""; z().appendChild(img); }
+  else z().innerHTML = `<p>📄 ${esc(t.datei.name)}</p><button class="knopf klein" onclick="anlageDateiZeigen()">↗ Öffnen</button>`;
+}
 function eingangOeffnen() { AR.zielEingang = true; arStart(); } // 2.432.0 KC-CLUB-EINGANGSKORB: direkt in den Ordner mit den wartenden Dokumenten
 function arStartTitel(titel) { AR.zielTitel = titel; arStart(); } // Club-Ordner nach Beschriftung öffnen (neuester Jahrgang)
 async function arLaden() {
@@ -43026,21 +43152,21 @@ async function arPruefung(id, annehmen) {
 }
 // 2.433.0 KC-CLUB-EINGANG-WOHIN (Wunsch Hansi „fragen, in welchen Ordner und welches Register – aber schon mit Vorschlag“):
 // Beim Annehmen wählt das Mitglied Ordner (eigene Jahrgänge) und Register; vorausgewählt ist der Vorschlag des Absenders.
-function arWohin(x, o) {
+function arWohin(x, o, fertig) { // fertig: KC-CLUB-EINGANG-DURCHGEHEN (2.741.0) – danach das nächste Dokument
   const eigene = (AR.daten.ordner || []).filter((y) => y.eigen && !y.geloescht_am).sort((a, b) => b.jahr - a.jahr);
   const regOpt = (oid, wahl) => ((eigene.find((y) => y.id === oid) || o).register || []).map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
-  const f = blattAuf("arWohinBlatt", `<h3 style="margin-top:0">✔ „${esc(x.titel)}“ annehmen</h3>
+  const f = blattAuf("arWohinBlatt", `<h3 style="margin-top:0">🗄️ „${esc(x.titel)}“ ablegen</h3>
     <p class="hinweis" style="margin-top:0">Wohin soll das Dokument? 💡 <b>Vorschlag${x.von ? ` von ${esc(String(x.von).split(" ")[0])}` : ""}:</b> Ordner ${esc(arName(o))}${x.register ? `, Register „${esc(x.register)}“` : ""} – einfach übernehmen oder ändern.</p>
     <label class="feld">Ordner<select id="awOrdner">${eigene.map((y) => `<option value="${esc(y.id)}"${y.id === o.id ? " selected" : ""}>${esc(arName(y))}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="awReg">${regOpt(o.id, x.register)}</select></label>
-    <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">✔ Hierhin übernehmen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
+    <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">🗄️ Hier ablegen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
   f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); };
   f.querySelector("#awJa").onclick = async (e) => {
     e.target.disabled = true;
     const ordner_id = f.querySelector("#awOrdner").value, register = f.querySelector("#awReg").value;
     try {
       await api("archiv_pruefung", { id: x.id, annehmen: true, ordner_id, register }); f.remove();
-      melde(`✔ Angenommen – liegt jetzt in ${arName(eigene.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden();
+      melde(`✔ Abgelegt – liegt jetzt in ${arName(eigene.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden(); fertig?.();
     } catch (er) { meldeFehler(er); e.target.disabled = false; }
   };
 }
@@ -44749,6 +44875,7 @@ async function schluesselZurueck() {
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) { EGH.gezeigt = false; setTimeout(() => eingangHinweisPruefen(true), 1500); } }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}
