@@ -3,7 +3,7 @@
 // von GitHub signierte OIDC-Token (kein Geheimnis im Repository). Die Funktion kennt nur den Auftrag aus auftrag.ts, der
 // im Ablauf kurz befüllt und danach wieder geleert wird. Ablauf: erst Probelauf (Transaktion bricht mit TESTBERICHT ab = alles
 // zurückgerollt), nur bei grünem Probelauf einspielen (eine Transaktion) und Nachprüfung. Antworten enthalten keine Daten.
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// 28.10.2026: kein „jsr:@supabase/functions-js/edge-runtime.d.ts“ mehr – nur Typ-Beschreibungen, zur Laufzeit unnötig; jsr.io hing beim Bündeln (Zeitüberschreitung)
 import postgres from "npm:postgres@3.4.5";
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@5.9.6";
 import { AUFTRAG } from "./auftrag.ts";
