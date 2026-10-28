@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.725.0 – 2026-10-27 – 👆 Bedienung: größere Tippflächen, Schrift, Knöpfe beim Scrollen (KC-CLUB-BEDIENUNG-PAKET)
+## 2.725.0 – 2026-10-28 – 👆 Bedienung: größere Tippflächen, Schrift, Knöpfe beim Scrollen (KC-CLUB-BEDIENUNG-PAKET)
 Prüfbericht Etappe 2 (Wunsch #44): Kleine Knöpfe im Kopf (verfügbar, Leuchtpunkte, Herz, Inkognito, QR, Ansicht) haben eine unsichtbar größere Tippfläche. „Wer ist online?“ lässt sich wieder einzeln antippen, auch wenn die Direkte Leitung daneben leuchtet. Leiste unten, Kachel-Unterzeilen und Einstellungen etwas größer. 👆 ? 🔍 🎙️ gleiten beim Runterscrollen weg und kommen beim Hochscrollen und am Seitenende wieder. „Später · Nein, danke“ im Nachtmodus gut lesbar.
 Prüfbericht Etappe 5: In der Tests-Prüfung fehlten anruf-besser, backup-verify-teile und rose (beim Veröffentlichen liefen sie schon) – ergänzt, ein Wächter-Test meldet künftig jeden fehlenden Eintrag. Neu: automatischer Klick-Rundgang im echten Browser (tests/rundgang.browser.mjs) – öffnet die App mit Testdaten am Handy (erweitert/einfach) und am PC, ruft 22 Seiten auf und tippt die Leiste unten durch; rot bei Programmfehlern und Schutzschild-Sperren.
 
