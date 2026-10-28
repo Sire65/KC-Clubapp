@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.739.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.740.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -29012,18 +29012,39 @@ async function buEinladung(id, nurOffen) {
   window.__buSend = { id, nurOffen, wege: [], an: { art: "alle", gruppe: null, name: "", ids: [] }, s }; // KC-CLUB-EINLADUNG-AN (2.739.0)
   blattAuf("buEinladung", `${einwHtml("b-bu-einladung")}<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
     ${schon ? `<p class="hinweis" style="margin:0">ℹ️ Schon einmal gesendet: ${esc(zeitKurz(schon))}</p>` : ""}
-    <div class="karte" style="margin:0;white-space:pre-wrap;font-size:.95rem">${esc(nurOffen ? `Kommst du? ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}\nBitte kurz in der App zu- oder absagen.` : `Einladung: ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}${s.treffen.ort ? "\n" + s.treffen.ort : ""}${top.length ? "\n\nTagesordnung:\n" + top.join("\n") : ""}`)}</div>
-    <label class="feld">Persönliche Zeile (freiwillig)<input id="buZusatz" maxlength="500" placeholder="z. B. Bitte Kassenbuch mitbringen"></label>
+    <p class="hinweis" style="margin:0 0 4px">So sieht der Brief aus – jeder bekommt ihn mit seinem eigenen Vornamen:</p>
+    <div class="karte" id="buBrief" style="margin:0;white-space:pre-wrap;font-size:.95rem"></div>
+    <label class="feld">Persönliche Zeile (freiwillig)<input id="buZusatz" maxlength="500" placeholder="z. B. Bitte Kassenbuch mitbringen" oninput="buBriefZeigen()"></label>
     <div class="hinweis" style="margin:8px 0 4px">An wen?</div><div id="buAn"></div>
     <div class="hinweis" style="margin:8px 0 4px">Wie benachrichtigen?</div>
     <div class="hl-chips" id="buWege">${[["", "⚙️ Wie jeder es eingestellt hat"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"], ["beide", "🔔+✉️ Beides"]].map(([w, t]) => `<button class="chip${w === "" ? " an" : ""}" data-w="${w}" onclick="buWeg('${w}')">${t}</button>`).join("")}</div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" id="buSendKnopf" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this)">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
     <button class="knopf" style="text-align:center" onclick="$('buEinladung').remove()">Abbrechen</button></div>`);
+  window.__buSend.top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`); buBriefZeigen(); // KC-CLUB-EINLADUNG-BRIEF (2.740.0): wie der Server
   buAnZeigen(); mgGruppenLaden().then(() => { if ($("buAn")) buAnZeigen(); }); // eigene Gruppen + Ämter kommen nach
 }
 // KC-CLUB-EINLADUNG-AN (2.739.0, Wunsch Hansi „vor dem Absenden auswählen, an wen die Einladung geht: Alle, Gruppen, Auswahl“):
 // 👥 Alle (wie bisher) · 🧑‍🤝‍🧑 Gruppe (Zugesagt, Noch ohne Antwort, Ämter, eigene Gruppen) · ☑️ Auswahl (gemeinsames Auswahlfenster zielAuswahl).
 // Der Server schickt nur an Mitglieder, die auch sonst die Einladung bekämen (Schnittmenge) – der Knopf zeigt die echte Zahl.
+// KC-CLUB-EINLADUNG-BRIEF (2.740.0, Wunsch Hansi): Vorschau mit denselben Sätzen wie der Server (einladungBrief) – Anrede mit dem ersten Empfänger
+const BRIEF_AMT_RE = /^(clubsprecher|stellv|kassenwart|schriftf|admin)/i;
+function einladungBrief(d) {
+  const tag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(d.beginn)).replace(", ", ", den ");
+  const was = /^clubsitzung\b/i.test(d.titel) ? "Clubsitzung" : `Sitzung „${d.titel}“`, wann = `am ${tag}, um ${fZeit.format(new Date(d.beginn))} Uhr`;
+  const gruss = `Liebe Grüße\n${d.von}${d.amt ? "\n" + d.amt : ""}\nKöcheclub Werne`, kopf = `Hallo${d.vorname ? " " + d.vorname : ""},\n\n`;
+  if (d.erinnerung) return kopf + `kleine Erinnerung: ${wann} ist unsere ${was}${d.ort ? ` – ${d.ort}` : ""}.\n\nBitte sag kurz in der Club-App zu oder ab – das hilft uns bei der Vorbereitung:\n${d.url}`
+    + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\n${gruss}`;
+  return kopf + `hiermit laden wir dich herzlich zu unserer ${was} ein:\n\n📅 ${wann}${d.ort ? `\n📍 ${d.ort}` : ""}`
+    + (d.top.length ? `\n\nFolgende Punkte stehen auf der Tagesordnung:\n${d.top.join("\n")}` : "")
+    + (d.zusatz ? `\n\n${d.zusatz}` : "")
+    + `\n\nWir freuen uns auf eine schöne, konstruktive Sitzung.\nBitte sag kurz in der Club-App zu oder ab:\n${d.url}\n\n${gruss}`;
+}
+function buBriefZeigen() {
+  const x = window.__buSend, z = $("buBrief"); if (!x || !z) return; const t = x.s.treffen;
+  const erst = x.an.art !== "alle" && x.an.ids[0] ? vfName(x.an.ids[0]).split(" ")[0] : "Marianne"; // Beispiel-Anrede
+  z.textContent = einladungBrief({ vorname: erst, titel: t.titel, beginn: t.beginn, ort: t.ort || "", top: x.top || [], zusatz: ($("buZusatz")?.value || "").trim(), url: "(Link zur Club-App)",
+    von: ICH?.vorname || ICH?.name || "", amt: (ICH?.aemter || []).find((a) => BRIEF_AMT_RE.test(a)) || (ICH?.aemter || [])[0] || "", erinnerung: x.nurOffen });
+}
 function buAnGruppen() {
   const s = window.__buSend?.s; if (!s) return [];
   const ich = (id) => id !== ICH?.person_id, mit = (f) => s.mitglieder.filter((m) => ich(m.person_id) && f(m)).map((m) => m.person_id);
@@ -29049,6 +29070,7 @@ function buAnZeigen() {
     : A.ids.length ? `${A.ids.length} ausgewählt – ${A.ids.map(name).join(", ")}` : "noch niemand ausgewählt";
   z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("auswahl", "☑️ Auswahl")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
   const n = A.art === "alle" || A.ids.length ? buAnZahl() : 0, k = $("buSendKnopf");
+  buBriefZeigen();
   if (k) { k.disabled = !n; k.textContent = n ? `📨 Jetzt an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden` : A.art === "alle" ? "Alle haben schon geantwortet 👍" : "Bitte erst auswählen"; }
 }
 function buAnArt(a) { const A = window.__buSend.an; A.art = a; if (a !== "gruppe") A.gruppe = null; if (a === "alle") A.ids = []; if (a === "gruppe" && !A.gruppe) A.ids = []; buAnZeigen(); if (a === "auswahl") buAnAuswahl(); }

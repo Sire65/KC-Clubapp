@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.740.0 – 2026-10-28 – ✉️ Die Einladung ist ein richtiger Brief (KC-CLUB-EINLADUNG-BRIEF)
+Wunsch Hansi („Die Einladung muss auch wirklich wie eine Einladung aufgebaut sein: Hallo Marianne, hiermit laden wir dich herzlich zu unserer Clubsitzung ein am … um … in (Ort) … Folgende Punkte stehen auf der Tagesordnung: 1. 2. 3. … Wir freuen uns auf eine schöne konstruktive Sitzung. Liebe Grüße Klaus, Clubsprecher, Köcheclub Werne“):
+- Jeder Empfänger bekommt **seinen eigenen Brief** (E-Mail): „Hallo Marianne, hiermit laden wir dich herzlich zu unserer Clubsitzung ein: 📅 am Freitag, den 30.10.2026, um 19:00 Uhr · 📍 Gartenhütte bei Anne · Folgende Punkte stehen auf der Tagesordnung: 1. … · Wir freuen uns auf eine schöne, konstruktive Sitzung. · Bitte sag kurz in der Club-App zu oder ab (Link) · Liebe Grüße – Vorname, Amt (z. B. Clubsprecher), Köcheclub Werne“. Die persönliche Zeile steht vor dem Gruß.
+- Erinnerung ebenso als kurzer Brief („Hallo Marianne, kleine Erinnerung: am … ist unsere Clubsitzung …“).
+- Im Büro zeigt die Vorschau genau diesen Brief (mit Beispiel-Anrede bzw. dem ersten ausgewählten Empfänger) und ändert sich beim Tippen der persönlichen Zeile mit.
+- Der Gastgeber-Hinweis steht weiter nach der Anrede. Versand je Empfänger im Hintergrund (je 4 gleichzeitig) – die App wartet nicht auf alle Zustellungen.
+- Test `tests/einladung-brief.test.mjs`.
+
 ## 2.739.0 – 2026-10-28 – 📨 Einladung: an wen? · 🗣️ Sammelnachricht wird angesagt (KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE)
 Wunsch Hansi („Beim Vorbereiten der Clubsitzung kann man absenden, dann werden alle benachrichtigt – da muss vorher noch die Auswahl hin, an wen die Einladung gehen soll: Alle, Gruppen, Auswahl“ und „schreibt jemand an mehrere Empfänger, muss die Stimme sagen: Christina hat dir und 5 anderen Personen eine Sammelnachricht geschickt – nur wenn sie nur mir geschrieben hat: Christina hat dir eine Nachricht geschickt“):
 - 📨 **Einladung / Erinnerung im Büro – neu „An wen?“** vor „Wie benachrichtigen?“: **👥 Alle** (wie bisher, vorgewählt) · **🧑‍🤝‍🧑 Gruppe** (✅ Zugesagt, ❓ Noch ohne Antwort, Ämter wie Kassenwart, eure eigenen Gruppen – mit Anzahl) · **☑️ Auswahl** (Mitglieder ankreuzen, Suche, „Alle an“/„Keiner“ – dasselbe Fenster wie bei Abstimmungen). Darunter steht „An: …“ mit den Vornamen, der Knopf zeigt die echte Zahl („📨 Jetzt an 4 Mitglieder senden“), die Rückfrage nennt die Gruppe. Bei der Erinnerung zählt nur, wer noch nicht geantwortet hat.
