@@ -5770,7 +5770,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!h \|\| h\.erledigt \|\| h\.art !== "ungelesen" \|\| !ICH\) return;/.test(html) && /const n = Number\(INIT\?\.ungelesen\) \|\| 0/.test(html) && /if \(!n\) return erledigt\(\);/.test(html), "nur einmal, echte Zahl, ohne Ungelesenes still erledigt");
   assert.ok(/if \(document\.querySelector\("\.blatt:not\(\.versteckt\), \.dlg, #rgSchicht"\) \|\| aktuelleAnsicht !== "start"\)/.test(html), "erst wenn kein anderes Fenster offen ist");
   assert.ok(/Hallo \$\{esc\(ICH\.vorname\)\},<\/h3><p class="dlg-text">du hast/.test(html) /* 2.268.0: eigenes Fenster */ && /tippe doch \$\{esc\(lage\)\} auf die Nachrichten-Kachel/.test(html) && /const lage = startNachrichtenLage\(\);/.test(html), "Hansis Text mit Vorname, Zahl und echter Lage der Kachel");
-  assert.ok(!/KC-P-M0006|Willfried|Wilfried/.test(html.slice(html.indexOf("// ---------- KC-CLUB-START-HINWEIS"), html.indexOf("// KC-CLUB-VIDEO-GESEHEN"))), "keine Person fest im Programm");
+  assert.ok(!/KC-P-M0006|Willfried|Wilfried/.test(html.slice(html.indexOf("// ---------- KC-CLUB-START-HINWEIS"), html.indexOf("// ---------- KC-CLUB-TIPP (1.6.0")) /* 2.729.0: VIDEO-GESEHEN liegt in teile/videos.js */), "keine Person fest im Programm");
 }
 
 // 2.268.0 KC-CLUB-START-HINWEIS-2 (Wunsch Hansi): drei Knöpfe – Ansehen, Später, Keinen Hinweis mehr auf diese Nachrichten
@@ -9195,7 +9195,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
-  assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"))), "kein altes Logo in Ausdrucken");
+  assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"), programm.indexOf("/* ==== teile/"))), "kein altes Logo in Ausdrucken"); // 2.729.0: bis Ende Hauptprogramm (Teile ab der Trennzeile)
   assert.ok(/#druck \.cd-kopf \{/.test(seite) && /#druck \.cd-logo \{[^}]*background: var\(--cd-rot\)/.test(seite), "CD-Druckstile");
 }
 
@@ -10452,7 +10452,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR (Wunsch Hansi): Videos zur Koch-Figur – nur vorführen, nie speichern, nur wenn freigegeben
 {
-  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"), html.indexOf("const RUNDGAENGE = ["));
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"), html.indexOf("const RG_INST_CODE = ", html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"))); // 2.729.0: Block liegt in teile/videos.js (RUNDGAENGE blieb im Hauptprogramm)
   assert.ok(/\{ id: "figur", [^\n]*st: \(\) => RG_FIGUR, nur: \(\) => frei\("avatar"\) \}/.test(html) && /\{ id: "figurbau", [^\n]*st: \(\) => RG_FIGUR_BAU, nur: \(\) => frei\("avatar"\) && frei\("avatar_baukasten"\) \}/.test(html), "beide Videos registriert, nur mit Freigabe");
   assert.ok(!/avSetzen|avJackeAuto\(|einstellung_setzen|api\(/.test(b), "Videos speichern nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \$\("avBlatt"\)\?\.remove\(\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => \$\("avbBlatt"\)\?\.remove\(\)\)/.test(b) && (b.match(/classList\.add\("rg-zeigen"\)/g) || []).length === 2, "Fenster sichtbar während des Videos, danach zu");

@@ -5,5 +5,7 @@ import fs from "node:fs";
 export function programmText() {
   const u = (p) => new URL("../" + p, import.meta.url);
   const teile = fs.existsSync(u("teile")) ? fs.readdirSync(u("teile")).filter((f) => f.endsWith(".js")).sort() : [];
-  return [fs.readFileSync(u("app.js"), "utf8"), ...teile.map((f) => fs.readFileSync(u("teile/" + f), "utf8"))].join("\n");
+  // Jedes Teil beginnt mit der Trennzeile „/* ==== teile/<datei> ==== */“ – Prüfungen „bis zum Ende des Hauptprogramms“ enden dort (TEILE_GRENZE).
+  return [fs.readFileSync(u("app.js"), "utf8"), ...teile.map((f) => `/* ==== teile/${f} ==== */\n` + fs.readFileSync(u("teile/" + f), "utf8"))].join("\n");
 }
+export const TEILE_GRENZE = "/* ==== teile/";
