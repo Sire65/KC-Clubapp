@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.742.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.743.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1827,6 +1827,7 @@ function einwOffen(v) {
 function einwKarteWeg() { const k = document.querySelectorAll(".einw-karte"); if (k.length) { vorlesenStopp(); k.forEach((x) => x.remove()); } }
 function einwZeigen(v) {
   if (v === "start") rgHinweisZeigen(); // KC-CLUB-RUNDGANG-HINWEIS (2.243.0)
+  if (v !== "dokansicht" && $("egBlatt")?.dataset.pause) { delete $("egBlatt").dataset.pause; $("egBlatt").classList.remove("versteckt"); } // KC-CLUB-EINGANG-WEITER: zurück vom Drucken
   const sek = $("v-" + v);
   if (sek && einwOffen(v) && sek.querySelector(`:scope > .einw-karte[data-v="${v}"]`)) return; // schon da – nicht neu bauen
   einwKarteWeg();
@@ -34826,6 +34827,7 @@ async function ablkZeigen(fokus) {
         <button class="knopf klein" onclick="ablkOrdner('${x.id}')">🗄️ In Ordner</button>
         <button class="knopf klein" onclick="ablkChat('${x.id}')">💬 In Chat</button>
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'weiter')">👤 Weitergeben</button>
+        ${x.anlagen.some((f) => ARCHIV_TYP_OK(String(f.mime || "").split(";")[0])) ? `<button class="knopf klein" onclick="ablkEingang('${x.id}')">📥 In Eingangskörbe</button>` : ""}
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'aufgabe')">✅ Als Aufgabe</button>
         <button class="knopf klein" onclick="ablkVorschlag('${x.id}')">🗳️ Vorschlag Sitzung</button>
         ${x.anlagen.length ? `<button class="knopf klein" onclick="ablkDublettenPruefen('${x.id}')">🔍 Dubletten prüfen</button>` : ""}
@@ -34888,6 +34890,50 @@ async function ablkAuswahlAlbum(id) {
 }
 async function ablkDublettenPruefen(id) {
   try { melde("🔍 Suche nach Dubletten …"); const r = await api("ablagekorb_dubletten", { id }, { warten: true }); melde(r.dubletten ? `⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon – markiert` : "✅ Keine Dubletten gefunden"); ablkZeigen(id); } catch (e) { meldeFehler(e); }
+}
+// ---------- 2.743.0 KC-CLUB-ABLAGEKORB-EINGANG (Wunsch Hansi „ein Dokument, das ich außerhalb der Club-App an die Club-App teile, liegt im
+// Ablagekorb – von dort muss auch ein Weiterteilen in die Eingangskörbe der Mitglieder möglich sein, wieder nach Alle, Amt, Gruppe usw. Dann haben
+// es alle sofort und können es ansehen, drucken, ablegen“) ----------
+// Gleicher Weg wie Aktentasche → Freigeben (archiv_eingang_verteilen, „An wen?“ = KC-CLUB-ZIELWAHL) – nur liegt die Datei schon auf dem Server.
+function ablkEingang(id) {
+  const x = ablkEintrag(id); if (!x) return;
+  const passt = x.anlagen.filter((f) => ARCHIV_TYP_OK(String(f.mime || "").split(";")[0])), w = ablkGewaehlt(id);
+  blattAuf("ablkEgBlatt", `<h3 style="margin:0">📥 In die Eingangskörbe der Mitglieder</h3><p class="hinweis" style="margin:2px 0 6px">Jedes Mitglied bekommt die Datei in seinen 📥 Eingangskorb – mit Hinweis (bei offener App sofort). Dort ansehen, drucken, weiterschicken und im Archiv ablegen oder löschen.</p>
+    ${passt.map((f) => `<label class="at-wahl"><input type="checkbox" data-ef="${esc(f.id)}" ${!w.size || w.has(f.id) ? "checked" : ""} onchange="ablkEgKnopf()"><span><b>${ablkSym(f)} ${esc(f.name)}</b></span></label>`).join("")}
+    ${passt.length < x.anlagen.length ? `<p class="hinweis" style="margin:4px 0">${x.anlagen.length - passt.length} Datei(en) passen nicht ins Archiv (nur PDF, Bild, Word, Excel, Text) und bleiben im Ablagekorb.</p>` : ""}
+    <label class="feld" style="margin-top:8px">Titel <small class="hinweis">(leer = Dateiname)</small><input id="ablkEgTitel" maxlength="120" value="${esc(x.titel || "")}"></label>
+    <div class="at-reg-kopf">👥 An wen?</div><div id="ablkEgAn"></div>
+    <label class="feld" style="margin-top:8px">Ablage-Vorschlag (Register im Archiv der Mitglieder)<select id="ablkEgReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
+    <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="ablkEgNotiz" rows="2" maxlength="500">${esc((x.text || "").slice(0, 500))}</textarea></label>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="ablkEgLos" onclick="ablkEgSenden(this, '${esc(id)}')" disabled>📤 Senden</button><button class="knopf" onclick="$('ablkEgBlatt').remove()">Abbrechen</button></div>`);
+  $("ablkEgBlatt").style.zIndex = "2050";
+  zwStart("ablkEgAn", { titel: "👤 Wer bekommt die Datei?", alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: ablkEgKnopf });
+}
+const ablkEgDateien = () => [...document.querySelectorAll("#ablkEgBlatt [data-ef]:checked")].map((c) => c.dataset.ef);
+function ablkEgKnopf() {
+  const k = $("ablkEgLos"); if (!k || !ZWAHL.ablkEgAn) return;
+  const t = ablkEgDateien().length, n = zwBereit("ablkEgAn") ? zwIds("ablkEgAn").length : 0;
+  k.disabled = !t || !n; k.textContent = !t ? "Bitte eine Datei anhaken" : !n ? "Bitte Empfänger wählen" : `📤 ${t === 1 ? "1 Datei" : t + " Dateien"} an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden`;
+}
+async function ablkEgSenden(knopf, id) {
+  const x = ablkEintrag(id), dateien = ablkEgDateien(), ids = zwBereit("ablkEgAn") ? zwIds("ablkEgAn") : [];
+  if (!x || !dateien.length || !ids.length) return ablkEgKnopf();
+  const Z = ZWAHL.ablkEgAn, wer = Z.art === "alle" ? "alle Mitglieder" : Z.art === "einzeln" ? `${ids.length} ausgewählte Mitglieder` : Z.name.replace(/^\S+ /, "");
+  if (!(await frage(`📥 ${dateien.length === 1 ? "Die Datei" : dateien.length + " Dateien"} in den Eingangskorb legen – an ${wer} (${ids.length})?\n\nJeder bekommt einen Hinweis und entscheidet selbst: ablegen oder löschen.`, { ja: "📤 Senden", nein: "Zurück" }))) return;
+  const titel = $("ablkEgTitel").value.trim(), reg = $("ablkEgReg").value, notiz = $("ablkEgNotiz").value.trim();
+  await einmal(knopf, async () => {
+    let r = null;
+    try {
+      for (let n = 0; n < dateien.length; n++) {
+        const f = x.anlagen.find((a) => a.id === dateien[n]); knopf.textContent = `⏳ ${n + 1} von ${dateien.length} …`;
+        r = await api("archiv_eingang_verteilen", { personen: ids, ablk: id, anlage: f.id, titel: dateien.length === 1 && titel ? titel : String(f.name || "").replace(/\.[^.]+$/, ""), register: reg, notiz, letzte: n === dateien.length - 1, anzahl: dateien.length }, { warten: true });
+      }
+      $("ablkEgBlatt")?.remove();
+      const weg = r?.uebersprungen || [];
+      await ablkFertig(id, `📥 In die Eingangskörbe: ${wer} (${r?.empfaenger ?? ids.length})`, true); ablkZeigen(id);
+      melde(`📥 Liegt jetzt im Eingangskorb von ${r?.empfaenger ?? ids.length} ${(r?.empfaenger ?? ids.length) === 1 ? "Mitglied" : "Mitgliedern"} – sie bekommen Bescheid${weg.length ? ` · nicht möglich bei: ${weg.map((y) => `${y.name} (${y.grund})`).join(", ")}` : ""}`);
+    } catch (e) { meldeFehler(e); ablkEgKnopf(); }
+  });
 }
 async function ablkFertig(id, ergebnis, still) {
   try { await api("ablagekorb_erledigt", { id, ergebnis }); if (INIT?.ablagekorb) INIT.ablagekorb--; if (!still) { melde("✔ " + ergebnis); ablkZeigen(); } ilZeigen?.(); } catch (e) { meldeFehler(e); }
@@ -42009,6 +42055,7 @@ function egZeigen(liste, i, eigen) {
   const f = blattAuf("egBlatt", `<h3 style="margin:0">📥 Eingangskorb${liste.length > 1 ? ` · ${i + 1} von ${liste.length}` : ""}</h3>
     <p class="hinweis" style="margin:2px 0 6px"><b>${esc(x.titel)}</b>${x.von ? ` · von ${esc(x.von)}` : ""}</p>${x.beschreibung ? `<div class="karte" style="margin:0 0 8px;white-space:pre-wrap">${esc(x.beschreibung)}</div>` : ""}
     <div id="egVorschau" class="eg-vorschau"><p class="hinweis">⏳ Wird geladen …</p></div>
+    <div class="knoepfe" style="margin:8px 0 0"><button class="knopf klein" data-w="druck">🖨️ Drucken</button><button class="knopf klein" data-w="mail">✉️ Per E-Mail</button><button class="knopf klein" data-w="teilen">📤 Teilen</button></div>
     <p style="margin:10px 0 4px;font-weight:700">Möchtest du das Dokument ablegen oder löschen?</p>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" data-w="ab">🗄️ Ablegen</button><button class="knopf" data-w="weg">🗑️ Löschen</button><button class="knopf" data-w="spaeter">⏰ Später</button></div>`);
   f.querySelector('[data-w="ab"]').onclick = () => { f.remove(); arWohin(x, o, weiter); }; // Ordner + Register sind vorgeschlagen (Absender/aktuelles Jahr)
@@ -42018,6 +42065,11 @@ function egZeigen(liste, i, eigen) {
     try { await api("archiv_pruefung", { id: x.id, annehmen: false }); f.remove(); melde("🗑️ Gelöscht"); weiter(); } catch (er) { meldeFehler(er); e.target.disabled = false; }
   };
   f.querySelector('[data-w="spaeter"]').onclick = () => { f.remove(); melde("📥 Bleibt im Eingangskorb – unter „Heute wichtig“."); };
+  // 2.743.0 KC-CLUB-EINGANG-WEITER (Wunsch Hansi „ansehen, drucken, weiterschicken – z. B. per E-Mail an Ruth – und dann ablegen“): vorhandene Wege
+  // des Archivs; das Fenster bleibt (beim Drucken kurz ausgeblendet, zurück aus der Druckansicht ist es wieder da)
+  f.querySelector('[data-w="druck"]').onclick = () => { f.classList.add("versteckt"); f.dataset.pause = "1"; arDrucken(x); };
+  f.querySelector('[data-w="mail"]').onclick = () => arVersenden(x, "mail");
+  f.querySelector('[data-w="teilen"]').onclick = () => { arDateiVorladen(x); anlageTeilen(false); };
   egVorschau(x);
 }
 async function egVorschau(x) { // PDF-Seiten als Bilder, Bilder direkt, sonst „Öffnen“ – mit dem vorhandenen Datei-Laden (arDateiVorladen)

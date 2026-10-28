@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.741.0";
+const SERVER_VERSION = "2.743.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1317,7 +1317,8 @@ async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenR
   return { id: att.id as string, name, groesse: bytes.length };
 }
 // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): vorhandene Datei als eigene, neue Datei ablegen (Kopie im Speicher, eigener Anlagen-Eintrag)
-async function dateiDuplizieren(ich: Ich, attId: unknown) {
+// 2.743.0: Lesen als eigener Schritt (anlageLesen) – auch für „Ablagekorb → Eingangskörbe“ (KC-CLUB-ABLAGEKORB-EINGANG)
+async function anlageLesen(attId: unknown) {
   const { data: a } = await db.from("kc_communication_attachments").select("bucket,object_path,file_name,mime_type").eq("id", String(attId || "")).maybeSingle();
   if (!a) throw new Fehler("Die Datei ist nicht mehr vorhanden.", 404);
   if ((await einmalFotos([String(attId || "")])).size) throw new Fehler("👁️ Ein Einmal-Foto kann nicht kopiert oder abgelegt werden.", 403); // KC-CLUB-EINMAL-FOTO
@@ -1325,7 +1326,11 @@ async function dateiDuplizieren(ich: Ich, attId: unknown) {
   if (error || !blob) throw new Fehler("Die Datei konnte gerade nicht gelesen werden – bitte gleich noch einmal.", 500);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   let b = ""; for (let i = 0; i < bytes.length; i += 0x8000) b += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return await dateiAblegen(ich, a.file_name, a.mime_type, btoa(b));
+  return { name: a.file_name as string, mime: a.mime_type as string, b64: btoa(b) };
+}
+async function dateiDuplizieren(ich: Ich, attId: unknown) {
+  const a = await anlageLesen(attId);
+  return await dateiAblegen(ich, a.name, a.mime, a.b64);
 }
 // Dateien endgültig entfernen (Speicher wird frei) – nur für Dateien, die sonst nirgends verknüpft sind
 async function dateienEntfernen(ids: (string | null | undefined)[]) {
@@ -17263,6 +17268,15 @@ Köcheclub-App`,
         nurLeitung(ich);
         const ids = [...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => id !== ich.person_id).slice(0, 200);
         if (!ids.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.");
+        // 2.743.0 KC-CLUB-ABLAGEKORB-EINGANG (Wunsch Hansi „was ich von außen in die Club-App teile, liegt im Ablagekorb – von dort weiter an die
+        // Eingangskörbe der Mitglieder, nach Alle, Amt, Gruppe …“): statt hochgeladener Daten eine Datei aus einem Ablagekorb-Eintrag (nur Admin, nur Dateien dieses Eintrags)
+        if (p.anlage) {
+          nurAdmin(ich);
+          const z = await ablkHolen(p.ablk);
+          if (!ablkIds(z).includes(String(p.anlage))) throw new Fehler("Diese Datei gehört nicht zu diesem Eintrag.", 404);
+          const a = await anlageLesen(p.anlage);
+          Object.assign(p, { name: a.name, mime: (a.mime || "").split(";")[0].trim(), daten: a.b64 });
+        }
         const mime = txt(p.mime, 100);
         if (!ARCHIV_DATEITYPEN.test(mime)) throw new Fehler("Diese Datei passt nicht ins Archiv – bitte PDF, Bild, Word, Excel oder Text.");
         const sp = await speicherStand();

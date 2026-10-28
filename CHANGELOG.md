@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.743.0 – 2026-10-28 – 📥 Ablagekorb → Eingangskörbe · Eingangskorb: drucken, per E-Mail, teilen (KC-CLUB-ABLAGEKORB-EINGANG, KC-CLUB-EINGANG-WEITER)
+Wunsch Hansi („Wenn ich ein Dokument außerhalb der Club-App an die Club-App teile, liegt es im Ablagekorb. Von dort muss auch ein Weiterteilen in die Eingangskörbe der Mitglieder möglich sein – wieder nach Alle, Amt, Gruppe usw. Dann haben es alle sofort und können es ansehen, drucken, ablegen“ und „ansehen, drucken, weiterschicken z. B. per E-Mail an Ruth und dann in einem Archiv-Ordner ablegen“):
+- 📥 **Ablagekorb → „📥 In Eingangskörbe“** (nur Admin): Dateien anhaken, Titel, **An wen?** (Alle · Einzeln · Gruppe · Amt), Ablage-Vorschlag, Nachricht → 📤 Senden. Gleicher Weg wie Aktentasche → Freigeben: jeder bekommt eine eigene Kopie, eine Mitteilung, bei offener App sofort das Fenster. Danach ist der Eintrag im Ablagekorb erledigt („📥 In die Eingangskörbe: …“).
+- 📥 **Eingangskorb beim Mitglied:** im Fenster jetzt auch **🖨️ Drucken**, **✉️ Per E-Mail** (an Mitglieder oder eine fremde Adresse) und **📤 Teilen** (WhatsApp, Mail-Programm …) – danach wie bisher ablegen oder löschen.
+- Server: `archiv_eingang_verteilen` nimmt statt hochgeladener Daten auch eine Datei aus einem Ablagekorb-Eintrag (nur Admin, nur Dateien dieses Eintrags); `anlageLesen` als gemeinsamer Schritt mit `dateiDuplizieren`.
+- Test `tests/ablagekorb-eingang.test.mjs`. **Erst Server, dann App.**
+
 ## 2.742.0 – 2026-10-28 – 🎬 Neue Fassung des Anleitungsfilms für den Clubsprecher (KC-CLUB-FILM-HINWEIS)
 - Film `film/clubsitzung-anleitung.mp4` neu (10:52 Min.): zeigt jetzt die Einladung als Brief, „An wen?“ (Alle · Einzeln · Gruppe · Amt), Aktentasche → 📤 Freigeben in den Eingangskorb und wie es beim Mitglied ankommt (ansehen, ablegen oder löschen).
 - Eigene Kennung `clubsitzungneu` – der Clubsprecher bekommt beim Öffnen den Hinweis „Hallo …, für dich gibt es einen Anleitungsfilm“ auch dann noch einmal, wenn er die erste Fassung schon gesehen hat. Büro → 🎬 Anleitung zeigt die neue Fassung. Nur App, kein Server.
