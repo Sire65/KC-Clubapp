@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.747.0 – 2026-10-28 – Programmteile werden vorgeladen · Fotos laden von selbst nach
+- Selten gebrauchte Programmteile werden still im Voraus geladen, wenn die App nichts zu tun hat – beim ersten Öffnen wartet man nicht mehr (KC-CLUB-TEILE-VORLADEN). Bleibt im Fotoalbum ein Vorschaubild leer, versucht die App es einmal neu und holt sonst frische Bild-Links (KC-CLUB-FOTO-NOCHMAL).
+
 ## 2.744.0 – 2026-10-28 – 🍽️ Clubabend: Anwesende aus dem Büro bleiben erhalten · Einladung ohne Vorbereitung leert nichts mehr
 Prüfung des Clubabend-Ablaufs (Wunsch Hansi 28.10.), zwei Fehler behoben:
 - 🍽️ Clubabend Live beginnt jetzt mit den Anwesenden, die im Büro angehakt wurden (aus dem Protokoll-Entwurf, sonst aus der Vorbereitung). Bisher war die Liste am Abend leer, und das erste Antippen schrieb nur diese eine Person ins Protokoll – die übrigen Anwesenden waren weg. Antippen ergänzt bzw. streicht jetzt nur (KC-CLUB-CLUBABEND-ANWESEND).

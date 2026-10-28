@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.744.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.747.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35,6 +35,16 @@ for (const [name, t] of Object.entries(TEILE_LISTE)) for (const f of t.einstieg)
   const platzhalter = (...a) => teilLaden(name).then(() => window[f](...a), (e) => { try { meldeFehler(e); } catch {} });
   platzhalter._teil = name; window[f] = platzhalter;
 }
+// 2.747.0 KC-CLUB-TEILE-VORLADEN (Wunsch Hansi 28.10. „Vorhin stockte das Programm“): Teile nicht erst beim ersten Antippen holen, sondern still im
+// Voraus, wenn die App nichts zu tun hat (20 s nach dem Start, je Teil eine Ruhepause, eins nach dem anderen). Nicht bei „Daten sparen“ oder ohne Netz.
+// Scheitert ein Teil, bleibt alles wie bisher: der Platzhalter lädt es beim ersten Gebrauch nach.
+const TEILE_VORLADEN_MS = 20000;
+function teileVorladen() {
+  if (navigator.onLine === false || navigator.connection?.saveData) return;
+  const ruhe = () => new Promise((ok) => (window.requestIdleCallback ? requestIdleCallback(() => ok(), { timeout: 5000 }) : setTimeout(ok, 300)));
+  Object.keys(TEILE_LISTE).reduce((kette, name) => kette.then(ruhe).then(() => (TEILE_STAND[name] || document.hidden ? null : teilLaden(name).catch(() => {}))), Promise.resolve());
+}
+setTimeout(teileVorladen, TEILE_VORLADEN_MS);
 // ---------- 2.364.0 KC-CLUB-SCHRIFT-ZOOM (Wunsch Hansi „Texte und Nachrichten auf dem Handy zoomen“): mit zwei Fingern auseinanderziehen = Schrift
 // größer, zusammenschieben = kleiner (wie in vielen Nachrichten-Apps). 2.365.0 (Wunsch Hansi „nur bei Text, nicht die komplette Oberfläche“): es wachsen nur
 // die Lese-Texte (Nachrichten, Zettel, Protokolle, Fenstertexte – CSS „zoom“ auf genau diesen Blöcken), Knöpfe und Leisten bleiben gleich. Gilt zusätzlich zu „🔠 Große Schrift“, bleibt auf diesem Gerät gemerkt (70–200 %). Fotos, Videos, Spielbretter und Malflächen
@@ -33737,6 +33747,17 @@ async function bildLaden(img, frisch = false) {
     img.src = bildCache[id].url;
   } catch {}
 }
+// 2.747.0 KC-CLUB-FOTO-NOCHMAL (Fund 28.10.: im Fotoalbum blieben bei Hansi zwei Vorschaubilder leer): Bild-Links der Fotos gelten 1 Stunde.
+// Bleibt ein Bild im Fotoalbum, bei Videos, im Quiz oder auf der Infoseite leer: nach 1,5 s einmal neu versuchen (kurzer Netz-Wackler). Klappt das
+// auch nicht, holt das Fotoalbum still frische Links (höchstens einmal pro Minute) – das Album zeigt dann wieder alle Bilder, ohne dass man etwas tun muss.
+const FOTO_NOCHMAL = { zuletzt: 0 };
+document.addEventListener("error", (ev) => {
+  const img = ev.target;
+  if (!(img instanceof HTMLImageElement) || img.dataset.anlage || !img.closest(".fotoraster, .fa-album, .ifotos, .qz-album") || !img.getAttribute("src")) return;
+  if (!img.dataset.nochmal) { img.dataset.nochmal = "1"; const src = img.getAttribute("src"); setTimeout(() => { if (img.isConnected && img.getAttribute("src") === src) { img.removeAttribute("src"); img.src = src; } }, 1500); return; }
+  if (aktuelleAnsicht !== "fotos" || Date.now() - FOTO_NOCHMAL.zuletzt < 60000) return;
+  FOTO_NOCHMAL.zuletzt = Date.now(); fotosLaden(true);
+}, true);
 // 2.165.0 KC-CLUB-ANLAGE-OEFFNEN (Fund Hansi: „Liste angeklickt – öffnet sich nicht“): das Fenster muss beim Antippen selbst aufgehen –
 // erst nach dem Laden (await) blockt Android es stillschweigend. Also sofort ein leeres Fenster, dann die Adresse hinein;
 // ist es trotzdem gesperrt, kommt ein Knopf „↗ Jetzt öffnen“ (ein echter Link, den man selbst antippt).
