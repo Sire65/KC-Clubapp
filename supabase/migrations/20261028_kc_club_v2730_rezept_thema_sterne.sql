@@ -1,4 +1,4 @@
--- 2.729.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45, Wunsch Hansi „vorsichtig mit Weihnachtsbäckerei anfangen: im Info-Laufband antippen,
+-- 2.730.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45, Wunsch Hansi „vorsichtig mit Weihnachtsbäckerei anfangen: im Info-Laufband antippen,
 -- Rezepte mit leckerem Foto als Kacheln, darunter Zutaten, Herstellung und Sternebewertung; Aufruf ‚Hast du auch ein leckeres Rezept? Her damit!‘“):
 -- 1. Rezepte bekommen ein Thema (zuerst nur „weihnachtsbaeckerei“) – setzen darf es nur der Admin (prüft der Club-Server).
 -- 2. Je Mitglied und Rezept eine Bewertung: 1–5 Sterne (freiwillig) und „Hab ich nachgebacken“. Ändern jederzeit, eine Zeile je Mitglied.
@@ -23,6 +23,6 @@ grant select, insert, update, delete on public.kc_club_rezept_bewertung to servi
 comment on table public.kc_club_rezept_bewertung is 'KC-CLUB-REZEPT-WEIHNACHT: Sterne (1–5) und „nachgebacken“ je Mitglied und Rezept – nur Club-Server.';
 
 insert into public.kc_db_mirror_table_rules (table_name, area, sensitivity, realtime_allowed, mirror_enabled, backup_enabled, note)
-values ('kc_club_rezept_bewertung', 'Club-App', 'normal', false, true, true, 'KC-CLUB-REZEPT-WEIHNACHT (2.729.0): Sterne und „nachgebacken“ je Rezept')
+values ('kc_club_rezept_bewertung', 'Club-App', 'normal', false, true, true, 'KC-CLUB-REZEPT-WEIHNACHT (2.730.0): Sterne und „nachgebacken“ je Rezept')
 on conflict (table_name) do nothing;
 insert into public.kc_neon_resume_tables (table_name) values ('kc_club_rezept_bewertung') on conflict (table_name) do nothing;

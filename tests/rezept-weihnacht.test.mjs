@@ -1,4 +1,4 @@
-// KC-CLUB-REZEPT-WEIHNACHT (2.729.0, 28.10.2026, Wunschliste #45): Weihnachtsbäckerei im Rezeptbuch – Saison, Sterne, „nachgebacken“,
+// KC-CLUB-REZEPT-WEIHNACHT (2.730.0, 28.10.2026, Wunschliste #45): Weihnachtsbäckerei im Rezeptbuch – Saison, Sterne, „nachgebacken“,
 // Thema nur durch den Admin, Hinweis im Info-Laufband nur mit Freigabe. Aufruf: node tests/rezept-weihnacht.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";
@@ -40,7 +40,7 @@ assert.match(rzBewertungPruefen(6, false), /1 bis 5/);
 assert.match(rzBewertungPruefen(3, true), /eigene Rezept/);
 
 // Migration: Thema-Spalte, Bewertungstabelle mit RLS, Rechten nur für den Club-Server, gespiegelt und gesichert
-const mig = lies("supabase/migrations/20261028_kc_club_v2729_rezept_thema_sterne.sql");
+const mig = lies("supabase/migrations/20261028_kc_club_v2730_rezept_thema_sterne.sql");
 assert.match(mig, /add column if not exists thema text check \(thema is null or thema in \('weihnachtsbaeckerei'\)\)/);
 assert.match(mig, /primary key \(rezept_id, person_id\)/, "eine Bewertung je Mitglied und Rezept");
 assert.match(mig, /sterne between 1 and 5/);
@@ -63,7 +63,7 @@ assert.match(srv, /rezeptThema: await pRzThema/);
 
 // App: Laufband „Weihnachtsbäckerei?“ öffnet das Thema; Mitglieder sehen es nur mit Rezepten; Kacheln/Liste; Sterne; zwei Wege beim Aufruf
 const app = programmText();
-const il = app.slice(app.indexOf("2.729.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45): in der Adventszeit"), app.indexOf("for (const lt of (INIT?.laufbandTermine"));
+const il = app.slice(app.indexOf("2.730.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45): in der Adventszeit"), app.indexOf("for (const lt of (INIT?.laufbandTermine"));
 assert.match(il, /rt && \(rt\.anzahl > 0 \|\| ICH\?\.admin\)/);
 assert.match(il, /t: "Weihnachtsbäckerei\?"/);
 assert.match(il, /rzStart\('\$\{esc\(rt\.thema\)\}'\)/);

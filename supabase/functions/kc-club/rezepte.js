@@ -1,4 +1,4 @@
-// KC-CLUB-REZEPT-WEIHNACHT (2.729.0, 28.10.2026, Wunschliste #45, Wunsch Hansi „vorsichtig mit Weihnachtsbäckerei anfangen“):
+// KC-CLUB-REZEPT-WEIHNACHT (2.730.0, 28.10.2026, Wunschliste #45, Wunsch Hansi „vorsichtig mit Weihnachtsbäckerei anfangen“):
 // Themen im Rezeptbuch (Saison je Thema) und Sterne/„nachgebacken“ je Rezept.
 // Rein (ohne Datenbank/Netz) – tests/rezept-weihnacht.test.mjs.
 

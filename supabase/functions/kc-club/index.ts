@@ -32,7 +32,7 @@ import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherhei
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
-import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.729.0)
+import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.730.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.729.0";
+const SERVER_VERSION = "2.730.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4859,7 +4859,7 @@ async function nurWennFrei(id: string, ich: Ich, was: string) {
 const VF_EV_MAX = 40; // KC-CLUB-VORFUEHREN: so viele Ereignisse merkt sich der Server je Vorführung
 const FIT_MAX = 1500; // KC-CLUB-FITNESS: so viele Einheiten je Mitglied (gut 4 Jahre täglich)
 const REZEPT_KATEGORIEN = ["vorspeise", "suppe", "hauptgericht", "beilage", "dessert", "gebaeck", "getraenk", "sonstiges"]; // KC-CLUB-REZEPTBUCH (2.23.83)
-// ---------- 2.729.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45): Themen im Rezeptbuch, Sterne, „nachgebacken“, Hinweis im Info-Laufband ----------
+// ---------- 2.730.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45): Themen im Rezeptbuch, Sterne, „nachgebacken“, Hinweis im Info-Laufband ----------
 // Thema setzt nur der Admin (Mitglieder tragen weiter frei ein, Hansi wählt aus, was ins Thema kommt). Regeln rein in rezepte.js.
 const rzThemaSaison = (thema: string, d = new Date()) => rzSaisonTag(thema, berlinTag(d));
 const RZ_LAGE: { bis: number; wert: any } = { bis: 0, wert: null };
@@ -8837,7 +8837,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         });
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname(), pThema = konfigZeile("thema").then((r) => { const w: any = r.data?.wert; return w?.id ? w : null; }).catch(() => null); // 2.323.0 KC-CLUB-THEMEN
         const pGedenken = gedenkenListe().catch(() => [] as any[]); // KC-CLUB-GEDENKEN (2.204.0)
-        const pRzThema = rzThemaLage(ich).catch(() => null); // 2.729.0 KC-CLUB-REZEPT-WEIHNACHT: Hinweis fürs Info-Laufband (gemerkt, keine Abfrage je Start)
+        const pRzThema = rzThemaLage(ich).catch(() => null); // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Hinweis fürs Info-Laufband (gemerkt, keine Abfrage je Start)
         // KC-CLUB-START-PARALLEL-2 (2.155.0, Wunsch Hansi „heute öfter langsam“): auch die übrigen Ketten (stumme Chats, Aufgaben/Protokolle,
         // Terminumfragen, Einstellungen & Co.) sofort mitstarten – vorher liefen sie erst nacheinander nach dem Zählen. Inhalt bleibt gleich.
         // KC-CLUB-START-SPARSAM (2.489.0): meine Einstellungen EINMAL holen – „stumm“ (für die Zähler) und alle übrigen (pRest) daraus
@@ -10692,7 +10692,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
         const felder = "id,von,titel,kategorie,portionen,zutaten,zubereitung,dauer,foto,stichworte,erstellt_am,geaendert_am";
         let { data, error } = await db.from("kc_club_rezepte").select(felder + ",thema").is("geloescht_am", null).order("titel").limit(1000);
-        if (error) ({ data } = await db.from("kc_club_rezepte").select(felder).is("geloescht_am", null).order("titel").limit(1000)); // 2.729.0: ohne Spalte thema (Migration noch nicht eingespielt) wie bisher
+        if (error) ({ data } = await db.from("kc_club_rezepte").select(felder).is("geloescht_am", null).order("titel").limit(1000)); // 2.730.0: ohne Spalte thema (Migration noch nicht eingespielt) wie bisher
         const ids = (data ?? []).map((x: any) => x.id);
         const [leute, bew, redaktion] = await Promise.all([personen([...new Set<string>((data ?? []).map((x: any) => String(x.von)))]),
           ids.length ? db.from("kc_club_rezept_bewertung").select("rezept_id,person_id,sterne,nachgebacken").limit(20000).then((r: any) => r.data ?? [], () => []) : Promise.resolve([]), // alle auf einmal (kleine Tabelle) – keine lange ID-Liste in der Adresse
@@ -10701,7 +10701,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ rezepte: (data ?? []).map((x: any) => ({ ...x, thema: x.thema ?? null, ...bw(x.id), vonName: leute.get(x.von)?.display_name || "Mitglied", eigen: x.von === ich.person_id, darf: x.von === ich.person_id || ich.admin })),
           themen: Object.keys(REZEPT_THEMEN).filter((t) => rzThemaSaison(t)), redaktion, sterneAb: REZEPT_STERNE_AB });
       }
-      case "rezept_bewerten": { // 2.729.0 KC-CLUB-REZEPT-WEIHNACHT: Sterne 1–5 (oder keine) und „nachgebacken“ – eine Zeile je Mitglied und Rezept
+      case "rezept_bewerten": { // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Sterne 1–5 (oder keine) und „nachgebacken“ – eine Zeile je Mitglied und Rezept
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
         const { data: r } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id || "")).is("geloescht_am", null).maybeSingle();
         if (!r) throw new Fehler("Rezept nicht gefunden.", 404);
@@ -10729,7 +10729,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (foto !== vorher && !(att && String(att.object_path).startsWith(`club/${ich.person_id}/`) && /^image\//.test(String(att.mime_type)))) foto = null;
         }
         const zeile: Record<string, unknown> = { titel, kategorie, portionen, zutaten, zubereitung: txt(p.zubereitung, 6000) || null, dauer, foto, stichworte: txt(p.stichworte, 200) || null, geaendert_am: jetzt() };
-        if (ich.admin && "thema" in p) { zeile.thema = (REZEPT_THEMEN as Record<string, unknown>)[String(p.thema)] ? String(p.thema) : null; RZ_LAGE.bis = 0; } // 2.729.0: Thema nur durch den Admin, sonst bleibt es wie es ist
+        if (ich.admin && "thema" in p) { zeile.thema = (REZEPT_THEMEN as Record<string, unknown>)[String(p.thema)] ? String(p.thema) : null; RZ_LAGE.bis = 0; } // 2.730.0: Thema nur durch den Admin, sonst bleibt es wie es ist
         let id: string;
         if (p.id) {
           const { data: alt } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id)).is("geloescht_am", null).maybeSingle();
