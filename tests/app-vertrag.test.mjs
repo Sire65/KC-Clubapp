@@ -7639,7 +7639,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function hsGrund\(\)/.test(html) && /return "klicks"/.test(html) && /return "suche"/.test(html) && /return "zurueck"/.test(html) && /return "pendeln"/.test(html) && /return "lange"/.test(html), "fünf Anzeichen: Rumklicken, Suche ohne Treffer, Zurück, Hin und her, lange ohne Erfolg");
   assert.ok(/sehr gerne gebe ich dir hier Hilfestellung/.test(html) && /data-hs="video">🎬 Video ansehen/.test(html) && /data-hs="hilfe">📖 Hilfe lesen/.test(html) && /data-hs="nie">Hier nicht mehr anbieten/.test(html), "Twinkeys Angebot mit Video, Hilfe, Nein, Nie");
-  assert.ok(/proTag: 2/.test(html) && /!\(t\.sichten \|\| \[\]\)\.includes\(v\)/.test(html) && /Date\.now\(\) - HS\.start < 20000/.test(html) && /input:not\(\[type=checkbox\]\)/.test(html), "Bremsen: 2× am Tag, 1× je Bereich, nicht gleich nach Start, nie beim Tippen");
+  assert.ok(/proTag: 2/.test(html) && /!\(t\.sichten \|\| \[\]\)\.includes\(K\.key\)/.test(html) && /Date\.now\(\) - HS\.start < 20000/.test(html) && /input:not\(\[type=checkbox\]\)/.test(html), "Bremsen: 2× am Tag, 1× je Bereich, nicht gleich nach Start, nie beim Tippen");
   assert.ok(/const hsListePaar = /.test(html) && /!hsListePaar\(a, b\)/.test(html), "normales Liste↔Eintrag (Chats lesen) zählt nicht");
   assert.ok(/try \{ hsSicht\(v, ausHistorie\); \} catch \{\}/.test(html) && /if \(!fehler\) try \{ hsErfolg\(\); \} catch \{\}/.test(html), "Hook in zeige und melde");
   assert.ok(/id="setHsE" checked onchange="hsSchalter\(this\.checked\)"/.test(seite) && /id="setHs" checked/.test(seite), "Schalter in den Einstellungen (Standard an)");
@@ -9614,7 +9614,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 31000); // 2.726.0: +neues Gerät; 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 31000); // 2.729.0: +neues Gerät; 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
@@ -9805,7 +9805,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/function rkEinrichten\(wurzelId, schluessel\)/.test(html) && /rkEinrichten\("v-einstellungen", "einst"\)/.test(html), "wiederverwendbarer Kern, Einstellungen eingebunden");
-  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /const tx = an \? \(z\.schluessel === "einst" \? "Übersicht" : "Liste"\) : "Kartei";/.test(html) /* 2.727.0 KC-CLUB-KOM-SYMBOLE */, "je Gerät zurück zur gewohnten Liste");
+  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /const tx = an \? \(z\.schluessel === "einst" \? "Übersicht" : "Liste"\) : "Kartei";/.test(html) /* 2.729.0 KC-CLUB-KOM-SYMBOLE */, "je Gerät zurück zur gewohnten Liste");
   assert.ok(/if \(z\.an && e\.target\.parentElement === w && e\.target\.classList\.contains\("rk-karte"\)\) e\.stopPropagation\(\);/.test(html) && /d\.open = d\.dataset\.rkVorher === "1"/.test(html), "gemerkte Auf/Zu-Stände der Liste bleiben unverändert");
   assert.ok(/m\.target\.classList\?\.contains\("hervor"\)\) \{ rkZu\(z, m\.target\)/.test(html), "Suche/Tipps/„zeig mir wo“ blättern zur richtigen Karte");
   assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.728.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.729.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1067,7 +1067,7 @@ function anwendenDesign() {
   if (window.KCFP?.schlaeft) return; // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG: geleertes Fenster (App woanders offen)
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
-  w.classList.toggle("kom-sym", einst("komSym", true)); // 2.727.0 KC-CLUB-KOM-SYMBOLE: Knöpfe oben in Nachrichten als Symbol mit Wort
+  w.classList.toggle("kom-sym", einst("komSym", true)); // 2.729.0 KC-CLUB-KOM-SYMBOLE: Knöpfe oben in Nachrichten als Symbol mit Wort
   w.classList.toggle("gross", einst("gross", false) || w.dataset.rgGross === "1"); // KC-CLUB-ERKLAERVIDEOS: Vorführung „Große Schrift“
   w.classList.toggle("ohne-anim", !einst("animiert", true)); // 2.24.1: „✨ Animierte Knöpfe“ (Standard an)
   // eigener Kopf-Verlauf (Disko, Regenbogen) – sonst der Standard-Verlauf aus hero1/rot/rot2/hero4
@@ -1793,6 +1793,10 @@ const EINWEISUNG = [
   { id: "b-teilen", blatt: true, sym: "📥", t: "Mit Köcheclub geteilt", x: "Du hast etwas aus einer anderen App mit dem Köcheclub geteilt. Wähle, wohin es soll: in einen <b>💬 Club-Chat</b>, bei Fotos ins <b>📷 Fotoalbum</b> oder in <b>🗄️ dein Archiv</b>." },
   { id: "b-bu-sitzung", blatt: true, sym: "📝", t: "Sitzung auswählen", x: "Tippe die <b>Sitzung</b> an, um die es gehen soll. Dahinter steht, ob sie schon vorbereitet ist bzw. ob es schon ein Protokoll gibt.", nur: () => !!ICH?.buero },
   { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Tippe <b>👁️ Zur Kenntnis genommen</b>; Clubsprecher oder Admin <b>✅ geben frei</b> – dann trägt die KC-Verwaltung die Änderung ein und das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen. Zu finden im Büro im <b>📥 Eingangskorb</b> und im Ordner <b>📇 Mitglieder</b>; abgelegt wird alles im Archiv-Ordner <b>Personal</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
+  // 2.729.0 KC-CLUB-HILFE-PASSEND (Fund Hansi 28.10.2026): Erklärtexte für die Admin-Fenster – dorthin führt Twinkeys Hilfe, wenn jemand im Fenster nicht weiterkommt
+  { id: "b-notfall-fahrplan", blatt: true, sym: "🧯", t: "Notfall-Fahrplan (Admin)", nur: () => !!ICH?.admin, x: "Wenn der Club-Server oder Supabase streikt: <b>Ruhe bewahren</b> – die App schaltet selbst in den Notbetrieb, Eingaben gehen nicht verloren. Dann von oben nach unten: <b>🩺 Server-Diagnose</b> sagt in einem Satz, wo es hakt · die <b>Störungsseite</b> von Supabase zeigt, ob es beim Anbieter klemmt · ist die Datenbank <b>länger als 30 Minuten rot</b>, <b>🔄 Supabase neu starten</b> (schadet den Daten nicht, 3–5 Minuten offline) und die Diagnose wiederholen · hilft nichts, das Diagnose-Ergebnis an Claude schicken. <b>🚨 Alarm an alle</b> schickt sofort eine Meldung an alle Mitglieder. <b>Weitere Notfall-Werkzeuge:</b> 🪞 <b>Spiegel jetzt anstoßen</b> (kopiert sofort nach Neon, kostet Rechenzeit – nur im Notfall) · 🧪 <b>Notbetrieb-Probe</b> (nur auf diesem Gerät läuft alles über den Ersatz-Server, die anderen merken nichts) · 🧯 <b>Ernstfall simulieren</b> (nur auf diesem Gerät ist der Server „weg“ – die App erkennt, schaltet um und trägt nach wie im echten Fall). <b>💾 Daten zurückholen:</b> grüne Punkte bei Wochenprobe, Zweitkopie und Umleitung für Anrufe heißen „bereit“. Ist Supabase nur kurz weg: abwarten. Länger weg: im Neon SQL-Editor den Spiegel lesen. Ganz verloren: den Ablauf „wiederherstellen“ starten – die Schritte stehen unten im Fenster." },
+  { id: "b-leitstand", blatt: true, sym: "🛠️", t: "Kacheln im Admin-Register (Admin)", nur: () => !!ICH?.admin, x: "Jede Kachel im Admin-Register öffnet ein Fenster mit Einzelheiten und Werkzeugen. <b>🚨 Notfall:</b> Alarm an alle und der Notfall-Fahrplan. <b>📊 Überwachung:</b> Lage auf einen Blick, Verlauf, Club-Server, Supabase (mit Neustart-Knopf), Neon-Spiegel, Backups, B2-Backup und Notbetrieb. <b>📨 Dienste:</b> Communicator, Mail, Push, Kasse mit Gateway und die KC-Programme. <b>📱 App:</b> Versionen der Mitglieder, Fehler, Nutzung, Zugänge, Wartung, Freigaben, Inkognito und Stadt-Termine. Farben: 🟢 alles gut · 🟡 ansehen · 🔴 handeln. <b>↻ Aktualisieren</b> holt den neuesten Stand. Das Video „🛠️ Für Admins: Leitstand“ zeigt das Register Schritt für Schritt." },
+  { id: "b-admin-zentrale", blatt: true, sym: "🛡️", t: "Admin-Zentrale – Einzelheiten (Admin)", nur: () => !!ICH?.admin, x: "Die Rückseite der Admin-Zentrale-Karte: ob es eine <b>Admin-Vertretung</b> gibt, wie viele Mitglieder ihre <b>Einweisungen</b> gesehen haben (ohne Namen), <b>🩺 Fehlerprotokoll &amp; Startprobleme</b> und <b>📊 Nutzung der App</b> (ohne Namen), <b>👥 Zuletzt in der App</b> mit Version, dazu Kommunikation, KC-Programme, <b>🪞 Neon-Spiegel &amp; Backup</b> (mit „Jetzt spiegeln – nur im Notfall“) und die <b>Datenbank</b>. Nur ansehen schadet nie – Knöpfe mit „nur im Notfall“ kosten Rechenzeit." },
   { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
   { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
   { id: "b-notfall", blatt: true, sym: "🚨", t: "SOS-Nachricht an alle", x: "Nur für echte Notfälle: Dein Text geht sofort an <b>alle</b> Mitglieder – als Push und E-Mail, auch in der Ruhezeit – und wird bei ihnen laut vorgelesen. Danach kannst du ihn noch per WhatsApp oder SMS schicken. Zum Ausprobieren: <b>🧪 Probe nur an mich</b>. 112 und 110 rufen direkt an." },
@@ -8297,7 +8301,7 @@ function abStandZeigen(st) {
   ansageMelden({ art: "anklopfen", text: `Du hast ${n === 1 ? "eine neue Nachricht" : n + " neue Nachrichten"} auf dem Anrufbeantworter` });
 }
 function abMerkerZeigen(n) { const m = $("abMerker"); if (m) { klSetzen(m, "📼", n ? `Anrufbeantworter · ${n} neu` : "Mein Anrufbeantworter", n ? `${n} neu` : "Anrufb."); m.classList.toggle("neu", !!n); } }
-// 2.727.0 KC-CLUB-KOM-SYMBOLE: Knopf mit Symbol, langem Text (daneben) und kurzem Wort (darunter) – textContent beginnt weiter mit „Symbol Text“ (Videos finden ihn)
+// 2.729.0 KC-CLUB-KOM-SYMBOLE: Knopf mit Symbol, langem Text (daneben) und kurzem Wort (darunter) – textContent beginnt weiter mit „Symbol Text“ (Videos finden ihn)
 function klSetzen(b, sym, lang, kurz) { b.innerHTML = `<span class="kl-i">${sym}</span><span class="kl-t"> ${esc(lang)}</span><span class="kl-k">${esc(kurz)}</span>`; }
 // Abhören: neueste zuerst, blättern, löschen, zurückrufen/anklopfen/schreiben
 let ABBOX = { liste: [], i: 0 };
@@ -29352,7 +29356,7 @@ function rkSchalten(k, an) {
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  if (z.knopf) { const tx = an ? (z.schluessel === "einst" ? "Übersicht" : "Liste") : "Kartei"; if (z.knopf.querySelector(".kl-i")) klSetzen(z.knopf, an ? "☰" : "🗂️", tx, tx); else z.knopf.textContent = (an ? "☰ " : "🗂️ ") + tx; /* 2.727.0 */ z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
+  if (z.knopf) { const tx = an ? (z.schluessel === "einst" ? "Übersicht" : "Liste") : "Kartei"; if (z.knopf.querySelector(".kl-i")) klSetzen(z.knopf, an ? "☰" : "🗂️", tx, tx); else z.knopf.textContent = (an ? "☰ " : "🗂️ ") + tx; /* 2.729.0 */ z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
   if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
   if (!z.an) {
@@ -34136,7 +34140,7 @@ const UHK = { vs: new Map() }; // chat-id → { stand, html }
 function uhKarteiKnopf() {
   let b = $("uhKarteiKnopf"); const an = rkAn("chats");
   if (!b) { const l = document.querySelector("#v-nachrichten .kom-leiste"); if (!l) return; l.insertAdjacentHTML("afterbegin", '<button type="button" class="knopf klein" id="uhKarteiKnopf"></button>'); b = $("uhKarteiKnopf"); b.onclick = () => rkSchalten("chats", !rkAn("chats")); }
-  klSetzen(b, an ? "☰" : "🗂️", an ? "Liste" : "Kartei", an ? "Liste" : "Kartei"); b.title = an ? "Chats als gewohnte Liste" : "Chats als Rollkartei"; // 2.727.0
+  klSetzen(b, an ? "☰" : "🗂️", an ? "Liste" : "Kartei", an ? "Liste" : "Kartei"); b.title = an ? "Chats als gewohnte Liste" : "Chats als Rollkartei"; // 2.729.0
   if ($("setRkChats")) $("setRkChats").checked = an;
 }
 function uhKarteiHtml(liste) {
@@ -47212,13 +47216,41 @@ const HS_GRENZE = { lange: 90000, klicks: 8, pendeln: 4, zurueck: 6, leer: 2, to
 // normales Hin und Her zwischen Liste und Eintrag (Chats lesen, Mitglied ansehen, Protokoll öffnen) ist kein „nicht klarkommen“
 const hsListePaar = (a, b) => (a === "chat" && b === "nachrichten") || (b === "chat" && a === "nachrichten") || a.startsWith(b) || b.startsWith(a) || a === "start" || b === "start";
 const HS = { start: Date.now(), v: null, seit: 0, klicks: 0, erfolg: false, verlauf: [], zurueck: [], leer: [], tot: [], uhr: null, sucheUhr: null };
-const HS_VIDEO_SICHT = { vorschlaege: "vorschlag", termine: "termin", nachrichten: "nachricht", chat: "chatprofi", start: "ueberblick" };
+// 2.729.0 KC-CLUB-HILFE-PASSEND (Fund Hansi 28.10.2026: im Fenster „Admin-Zentrale – Einzelheiten“ bot Twinkey das Start-Video an, „das passt gar nicht“):
+// Video nur, wenn es wirklich zum Bereich gehört – feste Zuordnung (sonst gleich lautende Video-ID), keine Umwege über verwandte Hilfen mehr
+// (daher kamen Protokolle → To-do-Video, Dokumente → Überblick). Kein passendes Video → nur der passende Hilfe-Text.
+const HS_VIDEO_SICHT = { vorschlaege: "vorschlag", termine: "termin", nachrichten: "nachricht", neu: "nachricht", chat: "chatprofi", start: "ueberblick", gruppe: "gruppen",
+  dienste: "dienst", mitglied: "mitglieder", aktion: "aktionen", protokolle: "lesen", protokoll: "lesen", dokumente: "lesen", dokansicht: "lesen", standort: "sos",
+  sicherheit: "probleme", programme: "technik" };
 const hsAn = () => { try { return localStorage.getItem(HS_AUS) !== "1"; } catch { return true; } };
 const hsLies = (k, leer) => { try { return JSON.parse(localStorage.getItem(k) || "null") || leer; } catch { return leer; } };
 const hsSchreib = (k, w) => { try { localStorage.setItem(k, JSON.stringify(w)); } catch {} };
-function hsVideo(v) { // passendes Erklär-Video zum Bereich (nur die für das Mitglied sichtbaren)
-  const ids = [HS_VIDEO_SICHT[v], v, ...(HZ_SICHT_HILFEN[v] || []).flatMap((id) => TW_VIDEOS[id] || [])].filter(Boolean);
-  for (const id of ids) { const r = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())); if (r) return r; }
+function hsVideo(v) { // passendes Erklär-Video zum Bereich (nur die für das Mitglied sichtbaren) – 2.729.0: nur feste Zuordnung oder gleiche ID
+  const id = HS_VIDEO_SICHT[v] || v;
+  return RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || null;
+}
+// 2.729.0 KC-CLUB-HILFE-PASSEND: liegt ein Fenster über dem Bereich, gilt das Fenster (nicht der Bereich darunter)
+function hsBlatt() {
+  return [...document.querySelectorAll(".blatt:not(.versteckt):not(.dlg-blatt)")].filter((b) => b.id !== "hsBlase" && getComputedStyle(b).display !== "none").pop() || null;
+}
+const hsBlattTitel = (b) => String(b?.querySelector("h2, h3")?.textContent || "").replace(/[^\p{L}\p{N}\s–-]/gu, " ").replace(/\s+/g, " ").trim();
+// Fenster mit eigenem Erklärtext (und, wenn es eins gibt, dem passenden Video) – sonst Suche nach dem Fenstertitel
+const HS_BLATT_HILFE = {
+  adBlatt: () => (AD.offen === "notfall" ? { hilfe: "e:b-notfall-fahrplan", video: "admin" } : { hilfe: "e:b-leitstand", video: "admin" }),
+  adminBlatt: () => ({ hilfe: "e:b-admin-zentrale" }),
+};
+function hsKontext() {
+  const b = hsBlatt(); if (!b) return { key: HS.v, v: HS.v };
+  const titel = hsBlattTitel(b), m = HS_BLATT_HILFE[b.id]?.() || {};
+  const hilfe = m.hilfe && hzEintraege().some((e) => e.id === m.hilfe) ? m.hilfe : null;
+  return { key: "b:" + (b.id || titel) + (b.id === "adBlatt" ? ":" + (AD.offen || "") : ""), blatt: b, titel, hilfe, videoId: m.video || null };
+}
+function hsHilfeTreffer(q) { // Hilfe-Texte, deren Titel oder Text alle Wörter des Fenstertitels enthalten (genau, ohne Unschärfe – lieber nichts als Falsches)
+  const w = suNorm(q).split(/\s+/).filter((x) => x.length >= 3); if (!w.length) return [];
+  return hzEintraege().filter((e) => { const s = suNorm(`${e.t} ${e.x.replace(/<[^>]+>/g, " ")}`); return w.every((x) => s.includes(x)); });
+}
+function hsBlattSuche(titel) { // erst der ganze Titel, dann der Teil vor „–“ (z. B. „Admin-Zentrale – Einzelheiten“ → „Admin-Zentrale“)
+  for (const q of [titel, titel.split(/\s[–-]\s/)[0]]) if (q && hsHilfeTreffer(q).length) return q;
   return null;
 }
 function hsSicht(v, zurueck) {
@@ -47245,15 +47277,16 @@ function hsGrund() { // → "lange" | "pendeln" | "zurueck" | "suche" | "klicks"
   if (!HS.erfolg && HS.klicks >= HS_GRENZE.klicks && jetzt - HS.seit > HS_GRENZE.lange) return "lange";
   return null;
 }
-function hsDarf(v) {
-  if (!ICH || !hsAn() || !v || !HZ_SICHT_HILFEN[v] || v === "hilfezentrum" || Date.now() - HS.start < 20000 || $("hsBlase")) return false;
+function hsDarf(v, K = { key: v, v }) {
+  if (!ICH || !hsAn() || !v || v === "hilfezentrum" || Date.now() - HS.start < 20000 || $("hsBlase")) return false;
+  if (K.blatt ? !(K.hilfe || hsBlattSuche(K.titel)) : !HZ_SICHT_HILFEN[v]) return false; // 2.729.0: im Fenster nur, wenn es passende Hilfe gibt
   if (typeof RG !== "undefined" && RG.an) return false; // Erklär-Video läuft
   if (hsZuschauen()) return false; // 2.719.0: Diashow, Vollbild, Video oder Musik – nur Zusehen
   if (document.querySelector(".dlg-blatt, #druckVorschau:not(.versteckt)")) return false;
   const a = document.activeElement; if (a && a.matches?.("input:not([type=checkbox]):not([type=radio]), textarea, [contenteditable='true']")) return false;
-  if (hsLies(HS_NIE, []).includes(v)) return false;
+  if (hsLies(HS_NIE, []).includes(K.key)) return false;
   const t = hsLies(HS_TAG, {}); if (t.tag !== heuteIso()) return true;
-  return (t.n || 0) < HS_GRENZE.proTag && !(t.sichten || []).includes(v);
+  return (t.n || 0) < HS_GRENZE.proTag && !(t.sichten || []).includes(K.key);
 }
 // 2.719.0 KC-CLUB-HILFE-NICHT-BEIM-ZUSEHEN (Hansi: „Foto-Diashow angesehen – sofort kam der Hilfehinweis, dort überflüssig“):
 // Wer nur zusieht (Kopf-Rückseite mit Diashow/Uhr/Bühne/Spiegel/Rätsel, Vollbild, laufendes Video oder Musik), bekommt keine Blase.
@@ -47267,31 +47300,37 @@ function hsZuschauen() {
 function hsNeuAnfangen() { HS.zurueck = []; HS.leer = []; HS.tot = []; HS.klicks = 0; HS.seit = Date.now(); }
 function hsPruefen() {
   if (hsZuschauen()) return hsNeuAnfangen();
-  const v = HS.v, grund = hsGrund(); if (!grund || !hsDarf(v)) return;
+  const K = hsKontext(); if (K.key !== HS.kKey) { const neu = HS.kKey !== undefined; HS.kKey = K.key; if (neu) hsNeuAnfangen(); } // 2.729.0: Fenster auf/zu → frisch zählen
+  const v = HS.v, grund = hsGrund(); if (!grund || !hsDarf(v, K)) return;
   HS.zurueck = []; HS.leer = []; HS.tot = []; HS.verlauf = []; HS.klicks = 0; HS.seit = Date.now();
   const t = hsLies(HS_TAG, {}), heute = heuteIso(), neu = t.tag === heute ? t : { tag: heute, n: 0, sichten: [] };
-  neu.n = (neu.n || 0) + 1; neu.sichten = [...new Set([...(neu.sichten || []), v])]; hsSchreib(HS_TAG, neu);
-  hsZeigen(v, grund);
+  neu.n = (neu.n || 0) + 1; neu.sichten = [...new Set([...(neu.sichten || []), K.key])]; hsSchreib(HS_TAG, neu);
+  hsZeigen(v, grund, K);
 }
-function hsZeigen(v, grund) {
-  const vid = hsVideo(v), name = ICH?.vorname || (ICH?.name || "").split(" ")[0] || "";
-  if (/^[a-z_]{2,25}$/.test(v)) nzZaehlen("hs_a_" + v); // anonym: Bereich + Art, nie wer
+function hsZeigen(v, grund, K = { key: v, v }) {
+  const vid = K.blatt ? (K.videoId ? RUNDGAENGE.find((x) => x.id === K.videoId && (!x.nur || x.nur())) || null : null) : hsVideo(v), name = ICH?.vorname || (ICH?.name || "").split(" ")[0] || "";
+  const angebot = K.blatt ? (vid ? `Möchtest du dir das Video „${esc(vid.t)}“ ansehen oder lieber nachlesen, wie „${esc(K.titel)}“ funktioniert?` : `Möchtest du nachlesen, wie „${esc(K.titel)}“ funktioniert?`)
+    : vid ? "Möchtest du dir das Video ansehen oder lieber in der Hilfe nachlesen?" : "Möchtest du in der Hilfe nachlesen, wie es hier geht?";
+  const zv = K.blatt ? "fenster" : v; if (/^[a-z_]{2,25}$/.test(zv)) nzZaehlen("hs_a_" + zv); // anonym: Bereich + Art, nie wer
   $("hsBlase")?.remove();
   const b = document.createElement("div"); b.id = "hsBlase"; b.className = "hs-blase"; b.setAttribute("role", "dialog"); b.setAttribute("aria-label", "Twinkey bietet Hilfe an"); b.dataset.grund = grund;
   b.innerHTML = `<span class="hs-kopf" aria-hidden="true">🧑‍🍳</span><div class="hs-text"><b>Hallo ${esc(name)}, sehr gerne gebe ich dir hier Hilfestellung.</b>
-    <span>${vid ? "Möchtest du dir das Video ansehen oder lieber in der Hilfe nachlesen?" : "Möchtest du in der Hilfe nachlesen, wie es hier geht?"}</span>
+    <span>${angebot}</span>
     <div class="hs-knoepfe">${vid ? `<button type="button" class="knopf haupt klein" data-hs="video">🎬 Video ansehen</button>` : ""}<button type="button" class="knopf${vid ? "" : " haupt"} klein" data-hs="hilfe">📖 Hilfe lesen</button>
       <button type="button" class="knopf klein" data-hs="nein">Nein danke</button><button type="button" class="hs-nie" data-hs="nie">Hier nicht mehr anbieten</button></div></div>`;
   document.body.appendChild(b);
-  b.querySelectorAll("[data-hs]").forEach((k) => (k.onclick = () => hsWahl(k.dataset.hs, v, vid)));
+  b.querySelectorAll("[data-hs]").forEach((k) => (k.onclick = () => hsWahl(k.dataset.hs, v, vid, K)));
   clearTimeout(HS.uhr); HS.uhr = setTimeout(() => $("hsBlase")?.remove(), 45000);
 }
-function hsWahl(w, v, vid) {
+function hsWahl(w, v, vid, K = { key: v, v }) {
   $("hsBlase")?.remove(); clearTimeout(HS.uhr);
-  if (/^[a-z_]{2,25}$/.test(v)) nzZaehlen({ video: "hs_v_", hilfe: "hs_l_", nein: "hs_n_", nie: "hs_x_" }[w] + v);
-  if (w === "video" && vid) return rundgangStart(false, vid.id);
+  const zv = K.blatt ? "fenster" : v; if (/^[a-z_]{2,25}$/.test(zv)) nzZaehlen({ video: "hs_v_", hilfe: "hs_l_", nein: "hs_n_", nie: "hs_x_" }[w] + zv);
+  const zu = () => { if (!K.blatt) return; if (K.blatt.dataset.dyn) K.blatt.remove(); else K.blatt.classList.add("versteckt"); if (K.blatt.id === "adBlatt") AD.offen = null; };
+  if (w === "video" && vid) { zu(); return rundgangStart(false, vid.id); }
+  if (w === "hilfe" && K.blatt) { const q = K.hilfe ? hzEintraege().find((e) => e.id === K.hilfe)?.t : hsBlattSuche(K.titel); zu(); // 2.729.0: Hilfe zum Fenster
+    HZ.herkunft = { v, chat: v === "chat" ? chatId : null }; HZ.sicht = null; HZ.thema = null; zeige("hilfezentrum"); if ($("hzSuche")) $("hzSuche").value = q || K.titel; return hzSuchen(q || K.titel); }
   if (w === "hilfe") return hzFrage(v);
-  if (w === "nie") { hsSchreib(HS_NIE, [...new Set([...hsLies(HS_NIE, []), v])]); melde("👍 Hier biete ich keine Hilfe mehr von selbst an – zurückholen unter ⚙️ Einstellungen"); }
+  if (w === "nie") { hsSchreib(HS_NIE, [...new Set([...hsLies(HS_NIE, []), K.key])]); melde("👍 Hier biete ich keine Hilfe mehr von selbst an – zurückholen unter ⚙️ Einstellungen"); }
 }
 function hsSchalter(an) { try { localStorage.setItem(HS_AUS, an ? "0" : "1"); } catch {} hsEinstZeigen(); melde(an ? "🧑‍🍳 Twinkey hilft wieder von selbst" : "🧑‍🍳 Twinkey bietet keine Hilfe mehr von selbst an"); }
 function hsNieZurueck() { hsSchreib(HS_NIE, []); hsEinstZeigen(); melde("🧑‍🍳 Twinkey darf wieder überall Hilfe anbieten"); }
