@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.729.0 – 2026-10-28 – 🎄 Weihnachtsbäckerei im Rezeptbuch: Kacheln, Sterne, Aufruf, Laufband (KC-CLUB-REZEPT-WEIHNACHT)
+Wunschliste #45, Wunsch Hansi („vorsichtig mit Weihnachtsbäckerei anfangen: in der Info-Laufschrift das Wort mit Fragezeichen antippen, dann Rezepte mit leckerem Foto als Kacheln oder Liste, darunter Zutaten, Herstellung und Sternebewertung; Aufruf ‚Hast du auch ein leckeres Rezept? Her damit!‘ – Hansi stellt es ein und alle können es ausprobieren“). Baut auf dem vorhandenen Club-Rezeptbuch auf; alles hängt an dessen Freigabe (⚙️ Funktionen freigeben → 📖 Rezeptbuch) – **bis Hansi „für alle“ wählt, sieht es nur der Admin**.
+- **Thema „🎄 Weihnachtsbäckerei“**: setzt nur der Admin im Rezept-Formular (Mitglieder tragen weiter frei ein, Hansi wählt aus, was ins Thema kommt). Knopf oben bei den Kategorien, sobald Rezepte im Thema sind (Admin in der Saison auch leer).
+- **Kacheln mit großem Foto** (zwei nebeneinander, in der einfachen Ansicht untereinander) oder **Liste** – umschaltbar, je Gerät gemerkt. Ohne Foto steht das Themen- bzw. Kategorie-Symbol.
+- **⭐ Wie hat’s dir geschmeckt?** 1–5 Sterne je Mitglied (gleichen Stern nochmal = zurücknehmen), **👩‍🍳 Hab ich nachgebacken**. Schnitt erst ab 3 Stimmen; das eigene Rezept bekommt keine eigenen Sterne.
+- **📣 Hast du auch ein leckeres Rezept? Her damit!** im Thema – zwei Wege: ✍️ selbst eintragen (Stichwort „Weihnachtsbäckerei“ vorbelegt, Kategorie Gebäck) oder 📷 Foto an Hansi (öffnet den Chat mit Hansi, Text vorbelegt, Foto vom Rezeptzettel und vom Gebäck mit 📎 anhängen).
+- **Info-Laufband** vom 1.11. bis 26.12.: „🎄 Weihnachtsbäckerei?“ – Antippen öffnet das Rezeptbuch beim Thema; zweite Zeile täglich abwechselnd „Neu: … von …“ / „Dein Rezept? Her damit!“. Mitglieder sehen es nur mit Rezepten im Thema (keine leere Seite).
+- Sparsam: Die Laufband-Lage merkt sich der Server 10 Min. (höchstens eine Abfrage je Server-Instanz, keine je App-Start); Sterne kommen mit der Rezeptliste (eine Abfrage beim Öffnen).
+- Datenbank: Migration `20261028_kc_club_v2729_rezept_thema_sterne.sql` (Spalte `kc_club_rezepte.thema`, Tabelle `kc_club_rezept_bewertung` mit RLS, Rechten nur für den Club-Server, gespiegelt und gesichert). **Erst die Migration einspielen, dann den Server** – ohne Migration läuft das Rezeptbuch wie bisher (ohne Thema/Sterne).
+- Regeln rein in `supabase/functions/kc-club/rezepte.js`; Test `tests/rezept-weihnacht.test.mjs`.
+
 ## 2.728.0 – 2026-10-28 – 🛡️ GitHub-Wächter nicht mehr fälschlich rot (KC-CLUB-WAECHTER-GH-SPAET)
 Fund Hansi (Bild 07:17: 🔭 Spiegel-Wächter außen und 🐕 Schnittstellen-Wächter „überfällig“): GitHub startet geplante Abläufe im kostenlosen Tarif nur, wenn Platz ist – der Schnittstellen-Wächter (Plan alle 5 Min.) lief heute Nacht nur alle 3–5 Std., der äußere Spiegel-Wächter (stündlich) alle 4–6 Std., Wochenläufe kommen 5–6 Std. später; alle Läufe waren grün. Die Regel „überfällig nach 90 Min.“ war dafür zu streng: GitHub-Wächter werden jetzt erst gelb, wenn 6 Std. nach dem geplanten Lauf nichts kam, rot nach 12 Std. Im Info-Fenster steht der echte Takt („laut Plan alle 5 Min. – GitHub startet ihn aber nur etwa alle 3–5 Std.“).
 

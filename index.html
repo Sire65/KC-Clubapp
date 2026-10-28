@@ -2327,6 +2327,20 @@
   .rz-foto { width: 100%; max-height: 240px; object-fit: cover; border-radius: 14px; }
   .rz-zutat { display: flex; align-items: center; gap: 10px; padding: 6px 2px; border-bottom: 1px solid var(--linie); cursor: pointer; } .rz-zutat input { width: 22px; height: 22px; }
   .rz-zutat.weg { color: var(--grau); text-decoration: line-through; }
+  /* 2.729.0 KC-CLUB-REZEPT-WEIHNACHT: Kacheln mit großem Foto, Themen-Knopf, Aufruf, Sterne */
+  .rz-ansicht { display: flex; gap: 6px; justify-content: flex-end; margin: 4px 0 0; }
+  .rz-kacheln { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .rz-kacheln .rz-karte { flex-direction: column; align-items: stretch; padding: 0; overflow: hidden; gap: 0; }
+  .rz-kacheln .rz-karte img, .rz-kacheln .rz-sym { width: 100%; height: auto; aspect-ratio: 4 / 3; border-radius: 0; font-size: 3rem; }
+  .rz-kacheln .rz-text { padding: 8px 10px 10px; }
+  .rz-sterne { color: var(--text, inherit) !important; font-weight: 600; }
+  body.einfach .rz-kacheln { grid-template-columns: 1fr; } /* einfache Ansicht / große Schrift: Kacheln untereinander */
+  .chip.rz-thema { border-color: var(--gold, #c9a46a); }
+  .rz-thema-kopf { margin: 8px 0 4px; }
+  .rz-aufruf { display: grid; gap: 6px; margin: 4px 0 6px; border: 2px dashed var(--gold, #c9a46a); } .rz-aufruf small { color: var(--grau); } .rz-aufruf .na-pfeil-knoepfe { margin: 0; } .rz-aufruf .na-pfeil-knoepfe .knopf { white-space: normal; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
+  .rz-sterne-wahl { display: flex; gap: 4px; margin: 6px 0 0; }
+  .rz-stern { width: 48px; height: 48px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); font-size: 1.7rem; line-height: 1; color: var(--gold, #c9a46a); cursor: pointer; }
+  .rz-stern.an { background: var(--karte2, #fff6e5); border-color: var(--gold, #c9a46a); }
   .vb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .vb-knoepfe .knopf { margin: 0; } /* KC-CLUB-VERBINDUNG-MELDEN 2.23.76 */
   .dw-tipp { margin: 0; padding: 4px 10px; border-radius: 10px; background: #fff3d6; color: #4a3a12; border: 1px solid var(--gold); font-size: .8rem; line-height: 1.3; } .dw-tipp summary { cursor: pointer; font-weight: 600; min-height: 28px; display: flex; align-items: center; } .dw-tipp[open] summary { margin-bottom: 4px; } /* KC-CLUB-SPERRZEIT-PRUEFUNG 2.23.75 */
   .wb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .wb-knoepfe .knopf { margin: 0; }
@@ -6171,7 +6185,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.728.0" data-v="2.728.0"></script>
+<script src="app.js?v=2.729.0" data-v="2.729.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
