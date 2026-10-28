@@ -47,6 +47,9 @@ jobs:
       - run: node tests/neu-entwurf.test.mjs
       - run: node tests/vm-stier.test.mjs
       - run: node tests/fee-blase.test.mjs
+      - run: node tests/kom-symbole.test.mjs
+      - run: node tests/hilfe-passend.test.mjs
+      - run: node tests/spur-wieder.test.mjs
       - run: node tests/ungelesen-admin.test.mjs
       # 2.725.0 KC-CLUB-TESTS-ALLE (Prüfbericht Etappe 5): fehlten in dieser Liste (beim Veröffentlichen liefen sie schon) – ein Wächter in
       # app-vertrag.test.mjs meldet künftig jeden tests/*.test.mjs, der hier nicht steht
