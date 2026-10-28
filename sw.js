@@ -1,11 +1,11 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.730.0";
+const VERSION = "2.731.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
 // dieser Version liefern (schnell, vom Handy fertig übersetzt); fehlt es dort, aus dem Netz holen und merken.
-// 2.730.0 KC-CLUB-TEILE (Prüfbericht C): nachladbare Programmteile teile/<name>.js?v=<Version> – gleiche Namen wie TEILE_LISTE in app.js.
+// 2.731.0 KC-CLUB-TEILE (Prüfbericht C): nachladbare Programmteile teile/<name>.js?v=<Version> – gleiche Namen wie TEILE_LISTE in app.js.
 // Sie gehören zum Programm dieser Version: beim Einrichten mit in den Speicher (alles oder nichts), danach aus dem Speicher wie app.js.
 const TEILE = ["probe"];
 DATEIEN.push(...TEILE.map((t) => `teile/${t}.js?v=${VERSION}`));
@@ -68,7 +68,7 @@ self.addEventListener("fetch", (e) => {
   if (url.pathname.includes("/stimmen/")) return; // 2.348.0 KC-CLUB-VIDEO-STIMMEN-DOWNLOAD: große Stimm-Dateien nicht doppelt merken – die Stimme hat ihren eigenen Speicher
   // KC-CLUB-UPDATE-SICHER (1.97.0): Seitenaufrufe immer frisch beim Server nachfragen (no-cache); nichts mit persönlichem Schlüssel
   // (?k=…) oder Notbetrieb-Schalter speichern; Speichern im waitUntil; offline nur bei Seitenaufrufen die Startseite liefern
-  if (istProgramm(url) || istTeil(url)) { // 2.730.0 KC-CLUB-TEILE: Teile wie das Programm aus dem Speicher dieser Version
+  if (istProgramm(url) || istTeil(url)) { // 2.731.0 KC-CLUB-TEILE: Teile wie das Programm aus dem Speicher dieser Version
     e.respondWith(caches.open(CACHE).then((c) => c.match(e.request).then((r) => r || fetch(e.request).then((n) => { if (n.ok) e.waitUntil(c.put(e.request, n.clone()).catch(() => {})); return n; }))));
     return;
   }

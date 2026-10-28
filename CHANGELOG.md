@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.731.0 – 2026-10-28 – 🟢 Wer online ist, steht mit Namen im Kopf – antippen = Chat (KC-CLUB-ONLINE-NAMEN)
+Wunschliste #46, Wunsch Hansi („im mittleren Feld im Kopf steht die 18/1 – der Eintrag könnte etwas höher und darunter den Namen anzeigen, wer gerade online ist; sind es mehrere, als Laufschrift; wenn ich z. B. bei Klaus antippe, bin ich sofort im Chat mit ihm“):
+- Feld „Mitglieder“ oben: Zahl rückt etwas höher, darunter die Vornamen der gerade Online-Mitglieder als grüne Namensschilder (alphabetisch). Ein Name steht still, mehrere laufen als Laufschrift durch (nahtlos; Berühren hält an).
+- **Antippen eines Namens öffnet sofort den Chat** mit dieser Person (wie „💬 Nachricht“). Das Feld selbst öffnet wie bisher „Wer ist online?“ – der Zoom beim Antippen lässt Tipps auf Namen durch.
+- Gleiche Regeln wie die Zahl: nur mit frischem Online-Stand, nicht wenn ich selbst unsichtbar bin, ich selbst stehe nie drin. Sparmodus/„Bewegung reduzieren“: keine Bewegung, Namen seitlich wischbar.
+- Keine zusätzliche Server-Abfrage (Namen kommen schon mit dem Online-Abgleich); das Info-Feld zeichnet nur bei geänderter Liste neu.
+- Test `tests/online-namen.test.mjs`.
+
 ## 2.730.0 – 2026-10-28 – 🎄 Weihnachtsbäckerei im Rezeptbuch: Kacheln, Sterne, Aufruf, Laufband (KC-CLUB-REZEPT-WEIHNACHT)
 Wunschliste #45, Wunsch Hansi („vorsichtig mit Weihnachtsbäckerei anfangen: in der Info-Laufschrift das Wort mit Fragezeichen antippen, dann Rezepte mit leckerem Foto als Kacheln oder Liste, darunter Zutaten, Herstellung und Sternebewertung; Aufruf ‚Hast du auch ein leckeres Rezept? Her damit!‘ – Hansi stellt es ein und alle können es ausprobieren“). Baut auf dem vorhandenen Club-Rezeptbuch auf; alles hängt an dessen Freigabe (⚙️ Funktionen freigeben → 📖 Rezeptbuch) – **bis Hansi „für alle“ wählt, sieht es nur der Admin**.
 - **Thema „🎄 Weihnachtsbäckerei“**: setzt nur der Admin im Rezept-Formular (Mitglieder tragen weiter frei ein, Hansi wählt aus, was ins Thema kommt). Knopf oben bei den Kategorien, sobald Rezepte im Thema sind (Admin in der Saison auch leer).

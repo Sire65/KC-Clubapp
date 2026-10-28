@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.730.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.731.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -24450,7 +24450,7 @@ const ZOOM_ZIELE = ".kachel, .mini-kachel, .bu-ordner, .bu-ding, .kacheln3 .mini
 document.addEventListener("click", (e) => {
   const el = e.target.closest?.(ZOOM_ZIELE);
   if (!el || el.dataset.zoomLos || e.defaultPrevented || el.disabled || kaBearb || ZIEHEN || zogGerade || !einst("animiert", true)) return; // 2.24.1: ohne Animation sofort öffnen
-  const innen = e.target.closest("button, a, input, select, textarea, label, summary"); if (innen && innen !== el && el.contains(innen)) return;
+  const innen = e.target.closest("button, a, input, select, textarea, label, summary, .on-name"); if (innen && innen !== el && el.contains(innen)) return; // 2.731.0: Online-Namen öffnen den Chat, nicht das Feld
   e.preventDefault(); e.stopImmediatePropagation();
   el.classList.add("zoomt");
   setTimeout(() => { el.classList.remove("zoomt"); el.dataset.zoomLos = "1"; try { el.click(); } finally { delete el.dataset.zoomLos; } }, 180);
@@ -28593,7 +28593,7 @@ function infoTreffen() {
       ${(() => { const m = n ? nachrichtMahnung() : null; /* KC-CLUB-NACHRICHT-MAHNUNG (2.223.0) */
         return `<button class="mini${n ? " mini-neu" : ""}${m ? " " + m.klasse : ""}"${m ? ` title="${esc(m.titel)}"` : ""} onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${m?.wichtig ? "❗" : ""}${n}</b><span>${m?.wichtig ? "Wichtig!" : m ? "Lange offen" : "Neue Nachr."}</span>`; })()}${mpfeil("nachrichten", n > 0, n)}</button>
       ${(() => { const on = ONL.zeigen && mpOnline() > 0; /* 2.207.0 KC-CLUB-MINI-ONLINE-AMEISEN (Wunsch Hansi): ist jemand online, läuft um die ganze Kachel ein Ameisenlauf – wie bei neuen Nachrichten, in Online-Grün */
-        return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
+        return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b>${onlineNamenHtml()}<span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
 }
@@ -29297,6 +29297,19 @@ function mpfeil(art, an, stand, stufe = "") {
 }
 // KC-CLUB-FRIST-AMEISEN (1.53.6): Stufe der Ameisenstraße am Feld „Nächster Termin“ (Wunsch Hansi)
 const fristStufe = (tage) => tage <= 1 ? "rot" : tage <= 3 ? "orange" : tage <= 5 ? "gruen" : "";
+// ---------- 2.731.0 KC-CLUB-ONLINE-NAMEN (Wunschliste #46, Wunsch Hansi „im mittleren Feld unter der Zahl die Namen, wer gerade online ist –
+// sind es mehrere, als Laufschrift; antippen, z. B. bei Klaus, und ich bin sofort im Chat mit ihm“) ----------
+// Nur mit frischem Online-Stand und wenn ich selbst online sichtbar bin (wie die Zahl). Das Feld ist selbst ein Knopf – darum die Namen als
+// role="button" (kein Knopf im Knopf). Laufschrift: Namen zweimal hintereinander, das Band läuft um die halbe Breite (nahtlos); Berühren hält an.
+// Sparmodus/„Bewegung reduzieren“: steht still und lässt sich seitlich wischen. Das Info-Feld zeichnet nur bei geänderter Liste neu (kein Neustart je Takt).
+function onlineNamenHtml() {
+  if (!ONL.zeigen || !mpOnline()) return "";
+  const l = [...ONL.liste].sort((a, b) => String(a.vorname || "").localeCompare(String(b.vorname || ""), "de"));
+  const namen = (kopie) => l.map((x) => `<span class="on-name"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="Chat mit ${esc(x.vorname || "Mitglied")}"`}
+    onclick="event.stopPropagation();direkt('${esc(x.person_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();direkt('${esc(x.person_id)}')}">${esc(x.vorname || "?")}</span>`).join("");
+  if (l.length === 1) return `<span class="on-namen">${namen(false)}</span>`;
+  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, l.length * 3)}s"><span class="on-band">${namen(false)}${namen(true)}</span></span>`;
+}
 // KC-CLUB-ONLINE-ZAHL (1.47.0): statt Text nur LED + Zahl – grün = jemand online, grau = niemand oder Stand unbekannt (dann „?“)
 function onlineZahlHtml() {
   const frisch = ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000, n = ONL.liste.length, an = frisch && n > 0;
