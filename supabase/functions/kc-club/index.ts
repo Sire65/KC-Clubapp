@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.741.0";
+const SERVER_VERSION = "2.743.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1317,7 +1317,8 @@ async function dateiAblegen(ich: Ich, nameRoh: unknown, mimeRoh: unknown, datenR
   return { id: att.id as string, name, groesse: bytes.length };
 }
 // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): vorhandene Datei als eigene, neue Datei ablegen (Kopie im Speicher, eigener Anlagen-Eintrag)
-async function dateiDuplizieren(ich: Ich, attId: unknown) {
+// 2.743.0: Lesen als eigener Schritt (anlageLesen) – auch für „Ablagekorb → Eingangskörbe“ (KC-CLUB-ABLAGEKORB-EINGANG)
+async function anlageLesen(attId: unknown) {
   const { data: a } = await db.from("kc_communication_attachments").select("bucket,object_path,file_name,mime_type").eq("id", String(attId || "")).maybeSingle();
   if (!a) throw new Fehler("Die Datei ist nicht mehr vorhanden.", 404);
   if ((await einmalFotos([String(attId || "")])).size) throw new Fehler("👁️ Ein Einmal-Foto kann nicht kopiert oder abgelegt werden.", 403); // KC-CLUB-EINMAL-FOTO
@@ -1325,7 +1326,11 @@ async function dateiDuplizieren(ich: Ich, attId: unknown) {
   if (error || !blob) throw new Fehler("Die Datei konnte gerade nicht gelesen werden – bitte gleich noch einmal.", 500);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   let b = ""; for (let i = 0; i < bytes.length; i += 0x8000) b += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return await dateiAblegen(ich, a.file_name, a.mime_type, btoa(b));
+  return { name: a.file_name as string, mime: a.mime_type as string, b64: btoa(b) };
+}
+async function dateiDuplizieren(ich: Ich, attId: unknown) {
+  const a = await anlageLesen(attId);
+  return await dateiAblegen(ich, a.name, a.mime, a.b64);
 }
 // Dateien endgültig entfernen (Speicher wird frei) – nur für Dateien, die sonst nirgends verknüpft sind
 async function dateienEntfernen(ids: (string | null | undefined)[]) {
@@ -6042,7 +6047,7 @@ async function atVorschlag(ich: Ich, t: any) {
   const L: any[] = [];
   const top = ((b.vorbereitung?.tagesordnung?.length ? b.vorbereitung.tagesordnung : b.standard.tagesordnung) as any[]).map((x: any) => String(x.t || "")).filter(Boolean);
   L.push({ k: "tagesordnung", reg: "einladung", art: "tagesordnung", ref: t.id, titel: "Tagesordnung & Einladung", vor: sitzung,
-    grund: b.vorbereitung?.einladung_am ? `Einladung verschickt am ${wann(b.vorbereitung.einladung_am)}` : b.vorbereitung ? "Tagesordnung ist vorbereitet" : "noch nicht vorbereitet – Stand aus den Vorschlägen" });
+    grund: b.vorbereitung?.einladung_am ? `Einladung verschickt am ${wann(b.vorbereitung.einladung_am)}` : b.vorbereitung?.tagesordnung?.length ? "Tagesordnung ist vorbereitet" : "noch nicht vorbereitet – Stand aus den Vorschlägen" });
   for (const a of tAnl.get(t.id) ?? []) L.push({ k: "anlage:" + a.id, reg: "einladung", art: "anlage", ref: a.id, name: a.name, mime: a.mime, titel: a.name, grund: "Anlage am Termin", vor: true });
   if (b.protokoll) L.push({ k: "protokoll:" + b.protokoll.id, reg: "protokolle", art: "protokoll", ref: b.protokoll.id, titel: b.protokoll.status === "entwurf" ? "Protokollentwurf für diesen Abend" : "Protokoll dieses Abends", grund: "wird an diesem Abend geschrieben", vor: true });
   if (letzt && letzt.id !== b.protokoll?.id) L.push({ k: "protokoll:" + letzt.id, reg: "protokolle", art: "protokoll", ref: letzt.id, titel: `Letztes Protokoll vom ${deDatum(letzt.datum)}`, grund: letzt.status === "entwurf" ? "noch Entwurf – fertigstellen" : "zum Nachlesen und Genehmigen", vor: sitzung });
@@ -6119,10 +6124,20 @@ async function atTermin(tid: string) {
   if (!t) throw new Fehler("Termin nicht gefunden.", 404);
   return t as any;
 }
+// 2.744.0 KC-CLUB-CLUBABEND-ANWESEND (Prüfung Hansi 28.10.: das erste Antippen am Abend schrieb nur diese eine Person ins Protokoll –
+// die im Büro angehakten Anwesenden waren weg): Solange am Abend noch niemand eingetragen ist, gilt die Liste aus dem Protokoll-Entwurf
+// (sonst aus der Büro-Vorbereitung). Antippen ergänzt bzw. streicht dann nur; Protokoll und Clubabend bleiben gleich.
+async function caAnwesendStart(tid: string, ca: any): Promise<string[]> {
+  if (ca?.anwesend?.length) return ca.anwesend;
+  const { data: pr } = await db.from("kc_club_sitzungsprotokolle").select("anwesend").eq("treffen_id", tid).eq("status", "entwurf").limit(1).maybeSingle();
+  if (pr?.anwesend?.length) return pr.anwesend;
+  const { data: prep } = await db.from("kc_club_buero_sitzung").select("anwesend").eq("treffen_id", tid).maybeSingle();
+  return prep?.anwesend ?? [];
+}
 async function clubabendStand(ich: Ich, t: any) {
   const b = await bueroSitzung(ich, t.id);
   const { data: ca } = await db.from("kc_club_clubabend").select("*").eq("treffen_id", t.id).maybeSingle();
-  const erledigt = new Set<string>(ca?.erledigt ?? []), anwesend: string[] = ca?.anwesend ?? [];
+  const erledigt = new Set<string>(ca?.erledigt ?? []), anwesend: string[] = await caAnwesendStart(t.id, ca);
   const stimmen = new Map(b.vorschlaege.map((v: any) => [v.id, v.unterstuetzt])), vonV = new Map(b.vorschlaege.map((v: any) => [v.id, v.von]));
   const top = ((b.vorbereitung?.tagesordnung?.length ? b.vorbereitung.tagesordnung : b.standard.tagesordnung) as any[])
     .map((x: any) => ({ k: caSchluessel(x), t: String(x.t || ""), vorschlag: !!x.id, stimmen: x.id ? stimmen.get(x.id) ?? 0 : null, von: x.id ? vonV.get(x.id) ?? null : null, erledigt: erledigt.has(caSchluessel(x)) }));
@@ -10018,14 +10033,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const [sitzungen, eingang] = await Promise.all([bueroNaechste(), bueroEingang(ich)]);
         const ids = sitzungen.map((t: any) => t.id);
         const [{ data: prep }, { data: teil }] = ids.length ? await Promise.all([
-          db.from("kc_club_buero_sitzung").select("treffen_id,einladung_am,erinnerung_am,geaendert_am").in("treffen_id", ids),
+          db.from("kc_club_buero_sitzung").select("treffen_id,tagesordnung,einladung_am,erinnerung_am,geaendert_am").in("treffen_id", ids),
           db.from("kc_club_teilnahme").select("treffen_id,antwort").in("treffen_id", ids),
         ]) : [{ data: [] as any[] }, { data: [] as any[] }];
         const anzahl = (await aktiveMitglieder()).length;
         return json({
           sitzungen: sitzungen.map((t: any) => {
             const p = (prep ?? []).find((x: any) => x.treffen_id === t.id), a = (teil ?? []).filter((x: any) => x.treffen_id === t.id);
-            return { ...t, vorbereitet: !!p, einladung_am: p?.einladung_am ?? null, erinnerung_am: p?.erinnerung_am ?? null,
+            // 2.744.0 KC-CLUB-SITZUNG-LEER: die Einladung legt eine Zeile nur mit Datum an – vorbereitet ist erst eine gespeicherte Tagesordnung
+            return { ...t, vorbereitet: !!p && Array.isArray(p.tagesordnung) && p.tagesordnung.length > 0, einladung_am: p?.einladung_am ?? null, erinnerung_am: p?.erinnerung_am ?? null,
               ja: a.filter((x: any) => x.antwort === "ja").length, nein: a.filter((x: any) => x.antwort === "nein").length, ohne: Math.max(0, anzahl - a.filter((x: any) => x.antwort && x.antwort !== "keine").length) };
           }),
           eingang,
@@ -16205,7 +16221,7 @@ Köcheclub Werne`,
         const { data: t } = await db.from("kc_club_treffen").select("id,titel,beginn,ende,ort").eq("id", tid).eq("art", "treffen").maybeSingle();
         if (!t) throw new Fehler("Clubabend nicht gefunden.", 404);
         const { data: alt } = await db.from("kc_club_clubabend").select("*").eq("treffen_id", tid).maybeSingle();
-        const erledigt = new Set<string>(alt?.erledigt ?? []), anwesend = new Set<string>(alt?.anwesend ?? []);
+        const erledigt = new Set<string>(alt?.erledigt ?? []), anwesend = new Set<string>(await caAnwesendStart(tid, alt)); // 2.744.0 KC-CLUB-CLUBABEND-ANWESEND
         if (typeof p.erledigt === "string") { const k = txt(p.erledigt, 100); if (k) p.an === false ? erledigt.delete(k) : erledigt.add(k); }
         if (typeof p.anwesend === "string") {
           const id = String(p.anwesend); if (!(await aktiveMitglieder()).some((m) => m.person_id === id)) throw new Fehler("Mitglied nicht gefunden.", 404);
@@ -17263,6 +17279,15 @@ Köcheclub-App`,
         nurLeitung(ich);
         const ids = [...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => id !== ich.person_id).slice(0, 200);
         if (!ids.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.");
+        // 2.743.0 KC-CLUB-ABLAGEKORB-EINGANG (Wunsch Hansi „was ich von außen in die Club-App teile, liegt im Ablagekorb – von dort weiter an die
+        // Eingangskörbe der Mitglieder, nach Alle, Amt, Gruppe …“): statt hochgeladener Daten eine Datei aus einem Ablagekorb-Eintrag (nur Admin, nur Dateien dieses Eintrags)
+        if (p.anlage) {
+          nurAdmin(ich);
+          const z = await ablkHolen(p.ablk);
+          if (!ablkIds(z).includes(String(p.anlage))) throw new Fehler("Diese Datei gehört nicht zu diesem Eintrag.", 404);
+          const a = await anlageLesen(p.anlage);
+          Object.assign(p, { name: a.name, mime: (a.mime || "").split(";")[0].trim(), daten: a.b64 });
+        }
         const mime = txt(p.mime, 100);
         if (!ARCHIV_DATEITYPEN.test(mime)) throw new Fehler("Diese Datei passt nicht ins Archiv – bitte PDF, Bild, Word, Excel oder Text.");
         const sp = await speicherStand();

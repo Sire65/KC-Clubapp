@@ -1,4 +1,4 @@
-// // KC-CLUB-TEILE Stufe 5 (2.746.0): Hilfe-Werkzeuge – Frag Twinkey, Ein Mitglied fragen, Lupe/Suche (Fenster, Treffer).
+// KC-CLUB-TEILE Stufe 5 (2.752.0): Hilfe-Werkzeuge – Frag Twinkey, Ein Mitglied fragen, Lupe/Suche (Fenster, Treffer).
 // // Wird beim ersten Antippen von Twinkey oder der Lupe nachgeladen (Platzhalter in app.js, TEILE_LISTE). Zustand TW/SU, Antwort-Prüfung beim Start und die Such-Grundbausteine (suNorm, suFiltern …) bleiben im Hauptprogramm.
 // ---------- KC-CLUB-TWINKEY (2.23.49, Wunsch Hansi): „🧑‍🍳 Frag Twinkey“ – Fragen in eigenen Worten (tippen oder 🎤 sprechen) ----------
 // Früher „Frag den Küchenchef“ (2.23.48) – Twinkey, weil auch viele Twinkeys früher Küchenchefs waren.

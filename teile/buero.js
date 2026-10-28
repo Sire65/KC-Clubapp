@@ -1,4 +1,4 @@
-// // KC-CLUB-TEILE Stufe 4 (2.745.0): Büro-Werkzeuge der Clubleitung (Büro, Eingang, Briefe, Termine, Kontakte, Nachher, Feste, Mitgliederliste, Freud & Leid, Sprache→Brief).
+// KC-CLUB-TEILE Stufe 4 (2.751.0): Büro-Werkzeuge der Clubleitung (Büro, Eingang, Briefe, Termine, Kontakte, Nachher, Feste, Mitgliederliste, Freud & Leid, Sprache→Brief).
 // // Wird beim ersten Öffnen des Büros nachgeladen (Platzhalter in app.js, TEILE_LISTE). Zustand BU/BNN/BRIEF, Tagesinfo, Hinweise und die Empfänger-Wahl (ZWAHL) bleiben im Hauptprogramm.
 // ---------- KC-CLUB-SPRACHE-BRIEF (2.137.0, Wunsch Hansi „Neuen Brief diktieren“): Büro + Briefbogen öffnen, dann Schritt für Schritt fragen ----------
 // Art (Vorlage) → An wen? (Mitglied oder Adressbuch) → Anrede → Betreff → Text (Vorlage oder diktieren) → Gruß → Vorschau.
@@ -620,7 +620,8 @@ const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?
 const buEinladungWahl = (nurOffen) => buSitzungWaehlen(nurOffen ? "🔔 Für welche Sitzung erinnern?" : "📨 Einladung für welche Sitzung?", (id) => buEinladung(id, nurOffen));
 async function buSitzungLaden(id) {
   BU.s = await api("buero_sitzung", { treffen_id: id }, { warten: true });
-  const v = BU.s.vorbereitung, st = BU.s.standard;
+  // 2.744.0 KC-CLUB-SITZUNG-LEER: nach einer Einladung ohne Vorbereitung gibt es eine Zeile ohne Tagesordnung – dann der übliche Vorschlag
+  const v = BU.s.vorbereitung?.tagesordnung?.length ? BU.s.vorbereitung : null, st = BU.s.standard;
   BU.f = { anwesend: new Set(v ? v.anwesend : st.anwesend), anmerkung: v ? v.anmerkung || "" : BU.s.anmerkungVorschlag, tagesordnung: (v ? v.tagesordnung : st.tagesordnung).map((x) => ({ ...x })), zeilen: v ? v.zeilen : st.zeilen, neu: "" };
 }
 async function buSitzungOeffnen(id) {
