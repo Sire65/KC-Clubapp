@@ -746,7 +746,7 @@ function schZugAnsage(m, ch, ich) {
 // Gegen den Computer nur auf dem Gerät (Stärke: Suchtiefe 1/2/3 mit Alpha-Beta + Figurenwerte/Lagetabellen), mit „Zug zurück“.
 // Gegen Mitglieder über den Server (prüft jeden Zug ebenfalls mit chess.js).
 let CHESS = null;
-async function chessLaden() { if (!CHESS) CHESS = (await import(new URL("lib/chess/chess.js?v=1.4.0", location.href).href)).Chess /* 2.745.0 KC-CLUB-TEILE: Adresse zur Seite, nicht zum Teil */; return CHESS; }
+async function chessLaden() { if (!CHESS) CHESS = (await import(new URL("lib/chess/chess.js?v=1.4.0", location.href).href)).Chess /* 2.748.0 KC-CLUB-TEILE: Adresse zur Seite, nicht zum Teil */; return CHESS; }
 const SCH_FIG = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" }, SCH_NAME = { k: "König", q: "Dame", r: "Turm", b: "Läufer", n: "Springer", p: "Bauer" };
 const SCH_KEY = "kc_club_schach_pc", SCH_WERT = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
 // Lagetabellen (aus Sicht von Weiß, Feld a8 = Index 0) – klassische einfache Werte
@@ -2843,7 +2843,7 @@ const KT_MS = 10000, KT_KEY = "kc_club_kuechenterror_pc";
 const KT_ZEIT = { leicht: 20000, mittel: 15000, schwer: KT_MS };
 const ktpLimit = () => KT_ZEIT[KTP.staerke] || KT_MS;
 let KT_FRAGEN_L = null;
-async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import(new URL("lib/kuechenterror/fragen.js?v=3", location.href).href)).KT_FRAGEN /* 2.745.0 KC-CLUB-TEILE: Adresse zur Seite, nicht zum Teil */; return KT_FRAGEN_L; }
+async function ktFragenLaden() { if (!KT_FRAGEN_L) KT_FRAGEN_L = (await import(new URL("lib/kuechenterror/fragen.js?v=3", location.href).href)).KT_FRAGEN /* 2.748.0 KC-CLUB-TEILE: Adresse zur Seite, nicht zum Teil */; return KT_FRAGEN_L; }
 const ktMischen = (l) => { const a = [...l]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 // KC-CLUB-KUECHENTERROR-ABWECHSLUNG (2.25.0): Liste der zuletzt gespielten Frage-ids (neueste zuerst), nur auf diesem Gerät
 const KT_ZULETZT_MAX = 150;

@@ -1,7 +1,10 @@
 # Änderungen
 
-## 2.745.0 – 2026-10-28 – 🎲 Spiele werden erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 2)
-Prüfbericht C (Wunsch #44), Stufe 2 – für Mitglieder unsichtbar: Tic-Tac-Toe, Schach, Doppelkopf, Bauernskat, Mensch ärgere dich nicht, Fang den Koch und Küchenterror (rund 300 KB) liegen jetzt in teile/spiele.js und werden erst geladen, wenn jemand ein Spiel öffnet. Im Hauptprogramm bleiben die Spiel-Einladung beim Start, die Live-Anfragen, die Spiele-Einstellungen und der Zustand SP. Beim Vergleich gefunden und behoben: Schachregeln und Küchenterror-Fragen wurden aus einem Teil heraus im falschen Ordner gesucht – jetzt immer von der Seite aus; ein Test verhindert das künftig. Geprüft: alle 7 Spiele am Handy und PC wie vorher; Start-Rechenzeit gegenüber 2.728.0 insgesamt −13 %.
+## 2.748.0 – 2026-10-28 – 🎲 Spiele werden erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 2)
+Prüfbericht C (Wunsch #44), Stufe 2 – für Mitglieder unsichtbar: Tic-Tac-Toe, Schach, Doppelkopf, Bauernskat, Mensch ärgere dich nicht, Fang den Koch und Küchenterror (rund 300 KB) liegen jetzt in teile/spiele.js und werden erst geladen, wenn jemand ein Spiel öffnet. Im Hauptprogramm bleiben die Spiel-Einladung beim Start, die Live-Anfragen, die Spiele-Einstellungen und der Zustand SP. Beim Vergleich gefunden und behoben: Schachregeln und Küchenterror-Fragen wurden aus einem Teil heraus im falschen Ordner gesucht – jetzt immer von der Seite aus; ein Test verhindert das künftig. Geprüft: alle 7 Spiele am Handy und PC wie vorher; Start-Rechenzeit gegenüber 2.728.0 insgesamt −13 %. Seit 2.747.0 (KC-CLUB-TEILE-VORLADEN) holt die App das Teil außerdem still im Voraus, etwa 20 Sekunden nach dem Start in einer Ruhepause – der Start selbst bleibt schlank.
+
+## 2.747.0 – 2026-10-28 – Programmteile werden vorgeladen · Fotos laden von selbst nach
+- Selten gebrauchte Programmteile werden still im Voraus geladen, wenn die App nichts zu tun hat – beim ersten Öffnen wartet man nicht mehr (KC-CLUB-TEILE-VORLADEN). Bleibt im Fotoalbum ein Vorschaubild leer, versucht die App es einmal neu und holt sonst frische Bild-Links (KC-CLUB-FOTO-NOCHMAL).
 
 ## 2.744.0 – 2026-10-28 – 🍽️ Clubabend: Anwesende aus dem Büro bleiben erhalten · Einladung ohne Vorbereitung leert nichts mehr
 Prüfung des Clubabend-Ablaufs (Wunsch Hansi 28.10.), zwei Fehler behoben:
