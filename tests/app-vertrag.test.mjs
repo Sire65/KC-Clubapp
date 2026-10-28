@@ -7819,6 +7819,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.match(lies("teile/probe.js"), /function teilProbe\(\) \{ return "ok " \+ APP_VERSION; \}/, "Probe-Teil für Rundgang und Sicherheits-Check");
 }
+// 2.729.0 KC-CLUB-TEILE Stufe 1: Erklär-Videos liegen in teile/videos.js – Einstiege über Platzhalter, Katalog und Zustand im Hauptprogramm
+{
+  const app = lies("app.js"), vid = lies("teile/videos.js");
+  assert.match(app, /videos: \{ einstieg: \["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"\], sri: "sha384-/, "Video-Teil mit seinen 4 Einstiegen registriert");
+  for (const n of ["const RG = {", "const RUNDGAENGE = [", "const RG_INST_BROWSER = ", "function rgInstErkannt(", "const rgSichtbar = ", "function rgHinweisZeigen(", "function rgHinweisLos("])
+    assert.ok(app.includes(n) && !vid.includes(n), `${n.slice(0, 28)} bleibt im Hauptprogramm (wird beim Start oder ohne Video gebraucht)`);
+  for (const n of ["function rundgangSchritt(", "function rundgangEnde(", "const RG_WARUM = [", "function rgSprechen(", "function rgsZeigen("])
+    assert.ok(vid.includes(n) && !app.includes(n), `${n.slice(0, 28)} liegt im Video-Teil`);
+  assert.match(app, /if \(RG\.an\) rundgangEnde\(true\);/, "Zurück beendet ein laufendes Video – nur wenn es läuft (dann ist das Teil geladen)");
+  assert.ok(!/st: (?!\(\) => )RG_/.test(app.slice(app.indexOf("const RUNDGAENGE = ["), app.indexOf("];", app.indexOf("const RUNDGAENGE = [")))), "Katalog verweist nur bei Bedarf auf die Drehbücher (st: () => …)");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

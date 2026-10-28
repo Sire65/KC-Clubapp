@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.729.0 – 2026-10-28 – 🎬 Erklär-Videos werden erst beim Abspielen geladen (KC-CLUB-TEILE, Stufe 1)
+Prüfbericht C (Wunsch #44), Stufe 1 – für Mitglieder unsichtbar: Abspieler, Drehbücher, Stimmen-Wahl und Bewertung der Erklär-Videos (rund 420 KB, ein Zehntel des Programms) liegen jetzt in teile/videos.js und werden erst geladen, wenn ein Video startet. Im Hauptprogramm bleiben der Video-Katalog (Hilfe, Twinkey, Lupe), der Hinweis „Warum diese App?“ und der Zustand „Video läuft“. Geprüft: alle 57 Videos Schritt für Schritt wie vorher, Start-Rechenzeit auf handy-ähnlichem Gerät −12 %.
+
 ## 2.728.0 – 2026-10-28 – 🛡️ GitHub-Wächter nicht mehr fälschlich rot (KC-CLUB-WAECHTER-GH-SPAET)
 Fund Hansi (Bild 07:17: 🔭 Spiegel-Wächter außen und 🐕 Schnittstellen-Wächter „überfällig“): GitHub startet geplante Abläufe im kostenlosen Tarif nur, wenn Platz ist – der Schnittstellen-Wächter (Plan alle 5 Min.) lief heute Nacht nur alle 3–5 Std., der äußere Spiegel-Wächter (stündlich) alle 4–6 Std., Wochenläufe kommen 5–6 Std. später; alle Läufe waren grün. Die Regel „überfällig nach 90 Min.“ war dafür zu streng: GitHub-Wächter werden jetzt erst gelb, wenn 6 Std. nach dem geplanten Lauf nichts kam, rot nach 12 Std. Im Info-Fenster steht der echte Takt („laut Plan alle 5 Min. – GitHub startet ihn aber nur etwa alle 3–5 Std.“).
 
