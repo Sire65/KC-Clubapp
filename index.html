@@ -1044,6 +1044,17 @@
   .hs-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .hs-nie { all: unset; cursor: pointer; font-size: .85rem; text-decoration: underline; opacity: .75; padding: 6px 2px; }
   .nz-hs { width: 100%; border-collapse: collapse; } .nz-hs th, .nz-hs td { padding: 4px 6px; border-bottom: 1px solid var(--rand, #e5d9c8); text-align: center; } .nz-hs td:first-child, .nz-hs th:first-child { text-align: left; }
   @keyframes hsRein { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } } @media (prefers-reduced-motion: reduce) { .hs-blase { animation: none; } }
+  /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ: Sichtschutz / PIN über allem */
+  #lsSperre { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(20,14,15,.55); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .ls-karte { width: min(360px, 100%); background: var(--karte); color: var(--text); border-radius: 18px; padding: 22px 18px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+  .ls-karte h3 { margin: 6px 0; } .ls-sym { font-size: 2.6rem; }
+  .ls-punkte { display: flex; justify-content: center; gap: 14px; margin: 12px 0 4px; } .ls-punkte i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--text); } .ls-punkte i.an { background: var(--text); }
+  .ls-fehler { min-height: 1.3em; color: var(--textRot); font-weight: 700; margin: 4px 0; }
+  .ls-tasten { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; justify-content: center; margin: 8px 0 12px; }
+  .ls-tasten button { height: 60px; border-radius: 50%; border: 1px solid var(--linie); background: var(--karte2); color: var(--text); font: inherit; font-size: 1.5rem; font-weight: 700; cursor: pointer; }
+  .ls-feld { width: 100%; font-size: 1.6rem; letter-spacing: .6em; text-align: center; padding: 8px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); }
+  /* 2.726.0 KC-CLUB-LINK-PRUEFER: Warnung direkt hinter einem verdächtigen Link */
+  .link-warn { display: inline-block; margin: 2px 0 0 4px; padding: 0 6px; border-radius: 6px; background: #ffe600; color: #000; font-size: .78rem; font-weight: 800; line-height: 1.5; vertical-align: baseline; }
   /* 2.726.0 KC-CLUB-WAECHTER: Wächter-Übersicht – gleich hohe Karten im Raster, Symbol links in festem Kreis, Text links bündig */
   .wch-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; } .wch-kopf h3 { margin: 0; }
   .wch-summe { font-weight: 800; font-size: .95rem; } .wch-hinweis { margin: 2px 0 6px; }
@@ -5634,6 +5645,7 @@
     </details>
     <details class="karte" data-klappe="privat" data-einfach>
       <summary>🔒 Privatsphäre</summary>
+      <div class="schalter"><div><b>🔢 App-PIN (freiwillig)</b><div class="hinweis">Liegt die App 15 Min. unbenutzt, wird sie verdeckt. Mit PIN öffnen sich Büro, Mitglieder und Admin nach 10 Min. nur mit deiner 4-stelligen PIN. Die PIN bleibt nur auf diesem Gerät. Vergessen? Die App über deinen persönlichen Link neu öffnen. · <span id="pinStand">nicht eingerichtet</span></div></div><button type="button" class="knopf klein" id="pinKnopf" onclick="pinEinstellen()">Einrichten</button></div> <!-- 2.726.0 KC-CLUB-LIEGEN-SCHUTZ -->
       <div id="elternMeine"></div><!-- 2.431.0 KC-CLUB-ELTERN: wer Hinweise bekommt (nur wenn ein Eltern-Handy eingetragen ist) -->
       <div class="schalter"><div><b>🎂 Meinen Geburtstag anzeigen (ohne Jahr)</b><div class="hinweis" id="gebHinweis">Andere sehen dann nur Tag und Monat – im Kalender, in der Terminliste und unter „Heute wichtig“.</div></div><input type="checkbox" id="setGeburtstag" onchange="geburtstagFreigabe(this.checked)"></div>
       <!-- KC-CLUB-RUNDER-GEBURTSTAG (1.30.0): freiwillig, nur für die Clubleitung -->

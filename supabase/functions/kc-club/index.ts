@@ -27,6 +27,7 @@ import { klopfVerpasst, klopfVerpasstOhneKontakt, klopfPushStand } from "./anklo
 import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-CLUB-ANRUFBEANTWORTER (2.568.0)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "./fremdzugriff.js"; // KC-CLUB-FREMDZUGRIFF (2.579.0)
+import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherheit.js"; // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER
 // @ts-ignore: reine JS-Datei ohne Typen
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
@@ -3835,7 +3836,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
-    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test"],
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
@@ -6943,6 +6944,63 @@ async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
   }
   return [...ids];
 }
+// ---------- 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER: Zählen im Speicher (je Server-Instanz), Ereignisse ins Protokoll (gedrosselt) ----------
+// Gespeichert werden nur Zählungen, Befehlsnamen, Domains und Geräteklassen – nie Inhalte. Bremsen erst ab SI.bremsenAb (vorher „hätte gebremst“).
+const SI_MIN = new Map<string, { m: number; n: number }>(), SI_STD = new Map<string, { h: number; z: Record<string, number> }>(), SI_GEMELDET = new Map<string, number>();
+const SI_BREMSE = new Map<string, number>(); // person_id → bis (ms), in dieser Instanz; andere Instanzen lesen „sicherheit_bremse“ (siBremsenLaden)
+let SI_BREMSE_GELADEN = 0;
+const siEinmal = (k: string, ms: number) => { const t = SI_GEMELDET.get(k) ?? 0; if (Date.now() - t < ms) return false; SI_GEMELDET.set(k, Date.now()); if (SI_GEMELDET.size > 2000) SI_GEMELDET.clear(); return true; };
+const siBremsenAktiv = () => Date.now() >= Date.parse(SI.bremsenAb);
+async function siBremsenLaden() { // höchstens 1× je Minute und Instanz – und nur, wenn gerade ein „schwerer“ Abruf kommt
+  if (Date.now() - SI_BREMSE_GELADEN < 60000) return; SI_BREMSE_GELADEN = Date.now();
+  const { data } = await db.from("kc_club_protokoll").select("person_id,details").eq("aktion", "sicherheit_bremse").gte("zeit", new Date(Date.now() - SI.bremseMin * 60000).toISOString()).limit(50);
+  for (const x of data ?? []) { const bis = Date.parse((x as any).details?.bis); if ((x as any).person_id && bis > Date.now() && !(x as any).details?.frei) SI_BREMSE.set((x as any).person_id, bis); }
+  const { data: frei } = await db.from("kc_club_protokoll").select("details").eq("aktion", "sicherheit_bremse_frei").gte("zeit", new Date(Date.now() - SI.bremseMin * 60000).toISOString()).limit(50);
+  for (const x of frei ?? []) SI_BREMSE.delete(String((x as any).details?.person || ""));
+}
+function siZaehlen(a: string, ich: Ich) {
+  const pid = ich.person_id, min = Math.floor(Date.now() / 60000), std = Math.floor(Date.now() / 3600000);
+  const m = SI_MIN.get(pid); if (!m || m.m !== min) SI_MIN.set(pid, { m: min, n: 1 }); else if (++m.n === SI.anfragenProMin && siEinmal("viel:" + pid, 600000))
+    nebenbei(protokoll(pid, "sicherheit_viel", { proMin: m.n }).catch(() => {}));
+  if (SI_MIN.size > 3000) SI_MIN.clear();
+  const grenze = (SI.absaug as Record<string, number>)[a]; if (!grenze) return;
+  const s0 = SI_STD.get(pid); const s = s0 && s0.h === std ? s0 : { h: std, z: {} as Record<string, number> }; SI_STD.set(pid, s); if (SI_STD.size > 3000) SI_STD.clear();
+  s.z[a] = (s.z[a] ?? 0) + 1;
+  const bis = SI_BREMSE.get(pid); if (bis && bis > Date.now()) { if (siBremsenAktiv() && !ich.admin) throw new Fehler("Zu viele Abrufe in kurzer Zeit – bitte in einer Stunde noch einmal versuchen. (Sicherheits-Bremse)", 429); }
+  else nebenbei(siBremsenLaden().catch(() => {}));
+  if (s.z[a] === grenze && siEinmal("absaug:" + pid + ":" + a, 3600000)) {
+    const bremsen = siBremsenAktiv() && !ich.admin, bisIso = new Date(Date.now() + SI.bremseMin * 60000).toISOString();
+    if (bremsen) SI_BREMSE.set(pid, Date.parse(bisIso));
+    nebenbei(protokoll(pid, bremsen ? "sicherheit_bremse" : "sicherheit_absaug", { aktion: a, anzahl: s.z[a], grenze, bis: bremsen ? bisIso : null, beobachten: !bremsen }).catch(() => {}));
+  }
+}
+function siUnbekannt(a: string, ich: Ich | null) {
+  const k = ich?.person_id ?? "anonym", std = Math.floor(Date.now() / 3600000), s0 = SI_STD.get("u:" + k), s = s0 && s0.h === std ? s0 : { h: std, z: {} as Record<string, number> };
+  SI_STD.set("u:" + k, s); s.z.u = (s.z.u ?? 0) + 1;
+  if ((s.z.u === 1 || s.z.u === SI.unbekanntProStd) && siEinmal(`unb:${k}:${s.z.u}`, 3600000)) nebenbei(protokoll(ich?.person_id ?? null, "sicherheit_unbekannt", { aktion: txt(a, 40), anzahl: s.z.u }).catch(() => {}));
+}
+function siLinkMerken(ich: Ich, text: string) {
+  const v = siLinksVerdacht(text); if (!v.length) return;
+  let host = ""; try { host = new URL(v[0].url).hostname.slice(0, 80); } catch { /* egal */ }
+  if (siEinmal(`link:${ich.person_id}:${host}`, 3600000)) nebenbei(protokoll(ich.person_id, "sicherheit_link", { domain: host, gruende: v[0].gruende.slice(0, 3), anzahl: v.length }).catch(() => {}));
+}
+// Neues Gerät (beim App-Start): bekannte Geräteklassen je Mitglied in kc_club_person_einstellung „sicherheit_geraete“ (nur der Server schreibt sie).
+async function siGeraetPruefen(ich: Ich, req: Request): Promise<{ k: string; am: string } | null> {
+  const klasse = siGeraetKlasse(req.headers.get("user-agent")), jetztIso = new Date().toISOString();
+  const { data: e0 } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sicherheit_geraete").maybeSingle();
+  const w: any = e0?.wert ?? {}, r = siGeraetMerken(w.bekannt, klasse, jetztIso);
+  const altZuletzt = (w.bekannt ?? []).find((x: any) => x.k === klasse)?.zuletzt;
+  if (!r.neu && altZuletzt && Date.now() - Date.parse(altZuletzt) < 86400000) return w.frage ?? null; // höchstens 1× am Tag schreiben
+  const frage = r.frage ? { k: klasse, am: jetztIso } : (w.frage ?? null);
+  await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "sicherheit_geraete", wert: { bekannt: r.liste, frage }, geaendert_am: jetzt() });
+  if (r.frage) {
+    await protokoll(ich.person_id, "sicherheit_neues_geraet", { geraet: klasse });
+    nebenbei(routerSenden("club_fehler", [ich.person_id], { titel: "📱 Neues Gerät für deinen Club-Zugang", kurz: `Gerade wurde die Club-App auf „${klasse}“ mit deinem Zugang geöffnet. Warst du das? Bitte in der App bestätigen.`,
+      betreff: "Köcheclub-App – neues Gerät", text: `Hallo ${ich.vorname},\n\ngerade wurde die Köcheclub-App auf einem neuen Gerät („${klasse}“) mit deinem persönlichen Zugang geöffnet.\n\nWarst du das? Dann ist alles gut – bitte in der App kurz auf „Ja, das war ich“ tippen.\nWarst du es NICHT, öffne die App auf deinem gewohnten Handy und tippe „Nein“ – dann werden alle anderen Geräte abgemeldet.\n\n${APP_URL}\n\nViele Grüße\nKöcheclub Werne`, url: APP_URL },
+      `club-neues-geraet:${ich.person_id}:${jetztIso.slice(0, 13)}`).catch(() => {}));
+  }
+  return frage;
+}
 // 2.726.0 KC-CLUB-WAECHTER-MELDEN (Wunsch Hansi „alle Wächter sollen sich bei Gelb oder Rot melden und im Wochenbericht drinstehen“):
 // Bewertung EINMAL hier (die App zeigt sie nur an). Zeitpläne in UTC wie pg_cron/GitHub. Die App-Wächter (🐌 Schnecke) bewertet jedes Gerät selbst.
 const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: string; plan?: string; befund?: (d: any) => [string, string, string] | null; app?: (d: any) => [string, string, string] }[] = [
@@ -6959,6 +7017,25 @@ const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: stri
   { id: "systemcheck", sym: "🚨", name: "System-Check", job: "kc-system-check-auto-15m" },
   { id: "messung", sym: "⚖️", name: "Mess-Stationen", job: "kc-club-messung-30min", befund: (d) => (d.mess?.api?.db_ms > 300 ? ["gelb", "Datenbank langsam", `Antwortzeit ${d.mess.api.db_ms} ms`] : null) },
   { id: "zugang", sym: "🛂", name: "Zugangs-Wächter", job: "kicc-access-watch-minute" },
+  // 🔒 Sicherheits-Wächter (2.726.0 KC-CLUB-SICHERHEIT-WAECHTER) – bewertet aus Zählungen (d.sicherheit) und dem Datenleck-Check (d.leck)
+  { id: "falschlink", sym: "🔑", name: "Falsche-Link-Wächter", app: (d) => { const f = d.sicherheit?.fremd ?? {};
+      return Number(f.n15) >= FZ.alarmAnzahl || Number(f.programm24) > 0 ? ["rot", Number(f.programm24) > 0 ? "Programm versucht sich anzumelden" : `${f.n15} Versuche in 15 Min.`, "Details unter Admin → 🔒 Sicherheit → Fremdzugriffe."]
+        : Number(f.n24) > 0 ? ["gelb", `${f.n24} falsche${Number(f.n24) === 1 ? "r" : ""} Link${Number(f.n24) === 1 ? "" : "s"} in 24 Std.`, "Meist ein altes Lesezeichen eines Mitglieds – die Vermutung steht unter Fremdzugriffe."] : ["gruen", "keine Versuche", ""]; } },
+  { id: "angriff", sym: "🤖", name: "Angriffs-Wächter", app: (d) => { const e = d.sicherheit?.ereignisse ?? {}, viel = Number(e.sicherheit_viel?.n24 ?? 0), unb = Number(e.sicherheit_unbekannt?.n24 ?? 0);
+      return viel ? ["rot", "sehr viele Anfragen von einem Zugang", `${viel}× in 24 Std. mehr als ${SI.anfragenProMin} Anfragen pro Minute.`] : unb >= 3 ? ["gelb", "unbekannte Befehle", `${unb}× in 24 Std. – jemand probiert Befehle aus, die es nicht gibt (oder eine sehr alte App).`] : ["gruen", "keine Muster", ""]; } },
+  { id: "leck", sym: "🔓", name: "Datenleck-Wächter", app: (d) => { const l = d.leck ?? {}, funde = [...(l.ohne_rls ?? []).map((x: string) => `ohne Schutz: ${x}`), ...(l.weit_offen ?? []).map((x: string) => `für jeden offen: ${x}`),
+      ...(l.club_direkt ?? []).map((x: string) => `Club-Daten direkt lesbar: ${x}`), ...(l.speicher_oeffentlich ?? []).map((x: string) => `öffentlicher Speicher: ${x}`), ...(l.funktionen_offen ?? []).map((x: string) => `Funktion für jeden: ${x}`)];
+      return !d.leck ? ["grau", "unbekannt", ""] : funde.length ? ["rot", `${funde.length} Lücke${funde.length === 1 ? "" : "n"}`, funde.slice(0, 5).join(" · ")] : ["gruen", "keine Lücke", ""]; } },
+  { id: "absaug", sym: "📤", name: "Absaug-Wächter", app: (d) => { const e = d.sicherheit?.ereignisse ?? {}, br = Number(e.sicherheit_bremse?.n24 ?? 0), ab = Number(e.sicherheit_absaug?.n24 ?? 0);
+      return br ? ["rot", `${br}× gebremst`, "Ein Zugang hat ungewöhnlich viel abgerufen und wurde 1 Std. gebremst – freigeben unter Wächter → Absaug-Wächter."]
+        : ab ? ["gelb", `${ab}× auffällig viel abgerufen`, Date.now() < Date.parse(SI.bremsenAb) ? `Noch Beobachtung – gebremst wird erst ab ${new Date(SI.bremsenAb).toLocaleDateString("de-DE")}.` : ""] : ["gruen", "unauffällig", ""]; } },
+  { id: "geraet", sym: "📱", name: "Neues-Gerät-Wächter", app: (d) => { const e = d.sicherheit?.ereignisse ?? {}, fremd = Number(e.sicherheit_geraet_fremd?.n7 ?? 0), offen = Number(d.sicherheit?.fragen_offen ?? 0);
+      return fremd ? ["rot", `${fremd}× „war ich nicht“`, "Ein Mitglied hat ein fremdes Gerät gemeldet – die anderen Geräte wurden abgemeldet."] : offen ? ["gelb", `${offen} Frage${offen === 1 ? "" : "n"} offen`, "Mitglieder haben ein neues Gerät noch nicht bestätigt."] : ["gruen", "alle Geräte bestätigt", ""]; } },
+  { id: "linkpruefer", sym: "🔗", name: "Link-Prüfer", app: (d) => { const n = Number(d.sicherheit?.ereignisse?.sicherheit_link?.n24 ?? 0);
+      return n >= SI.linkTagRot ? ["rot", `${n} verdächtige Links in 24 Std.`, "Gehäuft – bitte die Nachrichten ansehen."] : n >= SI.linkTagGelb ? ["gelb", `${n} verdächtige${n === 1 ? "r" : ""} Link${n === 1 ? "" : "s"}`, "Die App zeigt am Link „⚠️ Vorsicht“."] : ["gruen", "keine verdächtigen Links", ""]; } },
+  { id: "gesperrt", sym: "🚫", name: "Gesperrte-Versuche", app: (d) => { const n = Number(d.sicherheit?.ereignisse?.gesperrt_versuch?.n24 ?? 0);
+      return n >= SI.gesperrtTagRot ? ["rot", `${n} Versuche in 24 Std.`, ""] : n ? ["gelb", `${n} Versuch${n === 1 ? "" : "e"} in 24 Std.`, ""] : ["gruen", "keine Versuche", ""]; } },
+  { id: "geheimnis", sym: "🗝️", name: "Geheimnis-Wächter", gh: "tests.yml" },
   { id: "versionen", sym: "🧭", name: "Versions-Wächter", app: (d) => { // gelb nur, wenn eine GERADE OFFENE App (letzte 30 Min.) noch alt ist – ältere Apps von Leuten, die länger nicht drin waren, sind normal
       const zahl = (v: any) => Object.entries(v || {}).filter(([k]) => k !== SERVER_VERSION).reduce((n, [, x]) => n + Number(x), 0), jetzt = zahl(d.versionen_jetzt), woche = zahl(d.versionen);
       return jetzt ? ["gelb", `${jetzt} offene App${jetzt === 1 ? "" : "s"} mit alter Version`, "Diese App hat das Update nicht geholt – einmal schließen und neu öffnen hilft."]
@@ -6983,10 +7060,10 @@ function waechterBewerten(d: any): Record<string, [string, string, string]> {
     if (w.app) { out[w.id] = w.app(d); continue; }
     const j = w.job ? d.jobs?.[w.job] : null, g = w.gh ? d.github?.[w.gh] : null;
     const l = j ? { letzt: j.letzt, ok: j.status === "succeeded", aktiv: j.aktiv, plan: j.plan, ok24: Number(j.ok24 || 0), fehler24: Number(j.fehler24 || 0), msg: j.msg || "" }
-      : g ? { letzt: g.letzt, ok: g.ergebnis === "success", aktiv: true, plan: w.plan!, ok24: Number(g.ok24 || 0), fehler24: Number(g.fehler24 || 0), msg: "" } : null;
+      : g ? { letzt: g.letzt, ok: g.ergebnis === "success", aktiv: true, plan: w.plan ?? "", ok24: Number(g.ok24 || 0), fehler24: Number(g.fehler24 || 0), msg: "" } : null;
     if (!l) { out[w.id] = ["grau", "unbekannt", w.gh ? "GitHub hat gerade nicht geantwortet." : "Zeitplan nicht gefunden."]; continue; }
     if (!l.aktiv) { out[w.id] = ["gelb", "abgeschaltet", "Der Zeitplan ist ausgeschaltet."]; continue; }
-    const soll = wCronLetzter(l.plan, Date.now() - (w.gh ? 90 : 5) * 60000); // GitHub startet geplante Läufe oft verspätet
+    const soll = l.plan ? wCronLetzter(l.plan, Date.now() - (w.gh ? 90 : 5) * 60000) : null; // GitHub startet geplante Läufe oft verspätet; ohne Plan (läuft bei jedem Hochladen) kein „überfällig“
     if (!l.letzt || (soll && Date.parse(l.letzt) < soll - 60000)) { out[w.id] = ["rot", "überfällig", soll ? `Der geplante Lauf von ${fZeit.format(new Date(soll))} Uhr fehlt.` : "Noch nie gelaufen."]; continue; }
     if (!l.ok) { out[w.id] = ["rot", "letzter Lauf fehlgeschlagen", l.msg]; continue; }
     const b = w.befund?.(d); if (b) { out[w.id] = b; continue; }
@@ -7045,14 +7122,14 @@ async function waechterWochenAbschnitt(): Promise<{ zeilen: [string, string][]; 
 }
 // 2.726.0 KC-CLUB-WAECHTER: letzte Läufe der GitHub-Wächter (öffentliches Repository, ohne Schlüssel) – 10 Min. gemerkt, damit das Öffnen
 // der Kachel GitHub nicht jedes Mal fragt (öffentliche Grenze 60 Anfragen/Std.). Fehler → leer, die Kachel zeigt dann „unbekannt“.
-const WAECHTER_GH = ["schnittstellen-waechter.yml", "spiegel-waechter.yml", "notfall-sicherung-lesen.yml", "notfall-zweitkopie.yml"];
+const WAECHTER_GH = ["schnittstellen-waechter.yml", "spiegel-waechter.yml", "notfall-sicherung-lesen.yml", "notfall-zweitkopie.yml", "tests.yml"]; // tests.yml: Geheimnis-Wächter (läuft bei jedem Hochladen)
 let WAECHTER_GH_MERK: { t: number; v: Record<string, any> } | null = null;
 async function waechterGithub(): Promise<Record<string, any>> {
   if (WAECHTER_GH_MERK && Date.now() - WAECHTER_GH_MERK.t < 600000) return WAECHTER_GH_MERK.v;
   const v: Record<string, any> = {};
   await Promise.all(WAECHTER_GH.map(async (f) => {
     try {
-      const r = await fetch(`https://api.github.com/repos/Sire65/KC-Clubapp/actions/workflows/${f}/runs?per_page=30&exclude_pull_requests=true`,
+      const r = await fetch(`https://api.github.com/repos/Sire65/KC-Clubapp/actions/workflows/${f}/runs?per_page=30&branch=main&exclude_pull_requests=true`,
         { headers: { "User-Agent": "KC-Clubapp-Waechter", Accept: "application/vnd.github+json" }, signal: AbortSignal.timeout(6000) });
       if (!r.ok) return;
       const l = ((await r.json())?.workflow_runs ?? []).filter((x: any) => x.status === "completed");
@@ -8642,6 +8719,7 @@ async function ungelesenJeChat(ich: Ich, kern?: Promise<any | null>): Promise<{ 
 }
 async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number): Promise<Response> {
     zugangPruefen(a, ich); // 2.422.0 KC-CLUB-ZUGANG: Gäste/Aushilfen nur freigegebene Aktionen – hier, damit es für alle vier Aufrufwege gilt
+    siZaehlen(a, ich); // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER: Angriffs- und Absaug-Wächter (nur zählen im Speicher; Bremse ab SI.bremsenAb)
     switch (a) {
       // ----- KC-CLUB-KURZCODE (1.87.0): Code für ein weiteres Gerät / die installierte App erzeugen -----
       case "kurzcode_erzeugen": {
@@ -8926,7 +9004,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const studio = ich.admin ? { stufe: "alles", zeigen: true, allesBis: null } : studioAusWert(einstellungen.studio_recht); // KC-CLUB-STUDIO (2.136.0)
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
+        const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -12409,6 +12488,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       case "nachricht_senden": {
         let text = txt(p.text, 4000);
+        siLinkMerken(ich, text); // 2.726.0 KC-CLUB-LINK-PRUEFER: verdächtige Links zählen (nur Domain + Grund, kein Text)
         const anlagen = (Array.isArray(p.anlagen) ? p.anlagen : []).map(String).slice(0, 10);
         // KC-CLUB-CHATUMFRAGE / KC-CLUB-KONTAKT (1.10.0): Abstimmung bzw. Kontaktkarte als Nachricht (Text = Kurzform für
         // Vorschau, Push, Mail und Suche). Die Kontaktkarte speichert nur die Person – keine Telefonnummer, keine Mail.
@@ -17321,6 +17401,11 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      case "sicherheit_freigeben": { // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER: Bremse eines Zugangs sofort lösen (nur Admin)
+        nurAdmin(ich); const pid = txt(p.person_id, 40); if (!pid) throw new Fehler("Wen freigeben?");
+        SI_BREMSE.delete(pid); await protokoll(ich.person_id, "sicherheit_bremse_frei", { person: pid });
+        return json({ ok: true });
+      }
       case "waechter_lage": { // 2.726.0 KC-CLUB-WAECHTER: alle Wächter auf einen Blick (nur Admin, nur beim Öffnen der Kachel)
         nurAdmin(ich);
         return json(await waechterLage());
@@ -18019,6 +18104,18 @@ Köcheclub-App`,
       // 2.352.0 KC-CLUB-GERAETE-ABMELDEN (Sicherheits-Abgleich, Wunsch Hansi): Handy verloren/gestohlen? Neuer persönlicher Schlüssel nur für
       // DIESES Gerät – alle anderen Geräte sind sofort abgemeldet (alter Schlüssel ungültig, offene Kurzcodes und vorgemerkte Mail-Links verfallen,
       // Benachrichtigungen an andere Geräte aus). Wieder anmelden dort: neuer Code oder Link. Admin kann dasselbe mit „neuer Link“ (link_erzeugen).
+      case "neues_geraet_antwort": { // 2.726.0 KC-CLUB-NEUES-GERAET: „Warst du das?“ – Nein → Admin rot; das Gerät meldet danach die anderen ab (andere_geraete_abmelden)
+        const { data: e0 } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "sicherheit_geraete").maybeSingle();
+        const w: any = e0?.wert ?? {}, offen = w.frage; if (!offen) return json({ ok: true });
+        const ja = p.antwort === "ja";
+        await db.from("kc_club_person_einstellung").upsert({ person_id: ich.person_id, schluessel: "sicherheit_geraete", wert: { ...w, frage: null }, geaendert_am: jetzt() });
+        await protokoll(ich.person_id, ja ? "sicherheit_geraet_bestaetigt" : "sicherheit_geraet_fremd", { geraet: txt(offen.k, 60) });
+        if (!ja) { const an = await adminIds();
+          await routerSenden("club_fehler", an, { titel: `🔴 Fremdes Gerät bei ${ich.vorname}`, kurz: `${ich.name}: „${offen.k}“ war nicht ${ich.vorname} – die anderen Geräte werden abgemeldet.`,
+            betreff: "Köcheclub-App – fremdes Gerät", text: `${ich.name} hat gemeldet: Die Anmeldung mit „${offen.k}“ am ${fZeit.format(new Date(offen.am))} Uhr war nicht ${ich.vorname}.\n\nDie App meldet jetzt alle anderen Geräte ab (neuer Schlüssel nur für das Gerät von ${ich.vorname}).\nEinzelheiten: Admin → 🛡️ Wächter → 📱 Neues-Gerät-Wächter\n${APP_URL}`, url: APP_URL },
+            `club-geraet-fremd:${ich.person_id}:${offen.am}`); }
+        return json({ ok: true });
+      }
       case "andere_geraete_abmelden": {
         const token = zufall(), endpunkt = txt(p.endpoint, 800);
         const { data: z, error: ze } = await db.from("kc_club_zugang").update({ token_hash: await sha256(token), neu_token_hash: null, neu_bis: null }).eq("person_id", ich.person_id).eq("aktiv", true).select("person_id");
@@ -18259,7 +18356,7 @@ Köcheclub-App`,
 
       // KC-CLUB-RC-PRUEFUNG (20.10.2026): „notbetrieb_info“ entfernt – wurde von keiner App und keinem Werkzeug aufgerufen
 
-      default: return json({ error: "Unbekannte Aktion" }, 400);
+      default: siUnbekannt(a, ich); return json({ error: "Unbekannte Aktion" }, 400); // 2.726.0: Abtasten fremder Befehle fällt dem Angriffs-Wächter auf
     }
 }
 

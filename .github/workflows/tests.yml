@@ -29,6 +29,7 @@ jobs:
       - run: node tests/anrufbeantworter.test.mjs
       # KC-CLUB-FREMDZUGRIFF (2.579.0)
       - run: node tests/fremdzugriff.test.mjs
+      - run: node tests/sicherheit.test.mjs
       # KC-CLUB-DIENST-STEMPEL (2.590.0)
       - run: node tests/dienst-stempel.test.mjs
       - run: node tests/dienst-tausch.test.mjs

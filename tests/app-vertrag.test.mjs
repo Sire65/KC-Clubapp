@@ -3532,7 +3532,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\} else if \(NOTFALL_RE\.test\(text\)\) text = text\.replace\(NOTFALL_RE, ""\)/.test(ns), "Marke bei anderen entfernt");
   assert.ok(/if \(notfall( \|\| express)?\) stumm\.clear\(\);/.test(ns) && /const wege = notfall (?:\|\| wichtig )?(?:\|\| express )?(?:\|\| \(wichtig && !nurMail\) )?\? \["push", "email"\]/.test(ns) && /\{ notfall(: notfall \|\| express)? \}\);/.test(ns), "an alle, Push + Mail, auch stumm");
   assert.ok(/if \(w\.includes\("push"\) && !opt\.notfall\)/.test(server), "auch in der Ruhezeit");
-  assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:gedenken: await pGedenken, )?(?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
+  assert.ok(/async function notfallUnterhaltung\(ich: Ich\)/.test(server) && /return json\(\{ (?:neuesGeraet, meinGeraet: siGeraetKlasse\(req\.headers\.get\("user-agent"\)\), )?(?:gedenken: await pGedenken, )?(?:meinGeburtstag, )?alarm, /.test(server), "eine Notfall-Unterhaltung, Alarm beim Start");
   assert.ok(/function notfallSenden\(\)[\s\S]{0,400}await frage\(/.test(html) && /api\("nachricht_senden", \{ notfall: true, text, empfaenger: \{ alle: true \} \}/.test(html), "einmal bestätigen, dann senden");
   assert.ok(/\.blase\.notfall \{ border: 4px solid #d50000/.test(html) && /istNotfall\(m\) \? " notfall" : ""/.test(html), "roter Rand im Chat");
   assert.ok(/alarmPruefen\(\); \/\* KC-CLUB-NOTFALL-MELDUNG \*\//.test(html) && /localStorage\.setItem\("kc_club_alarm_gesehen", a\.id\)/.test(html), "Alarm-Fenster einmal je Meldung");
@@ -7486,7 +7486,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal(nf(esc0("Morgen *18 Uhr* am _Clubheim_ – ~Freitag~ Samstag!")), "Morgen <b>18 Uhr</b> am <i>Clubheim</i> – <s>Freitag</s> Samstag!");
   assert.equal(nf(esc0("Link https://x.de/a_b_c und 5*3*2")), "Link https://x.de/a_b_c und 5*3*2", "Links und Rechnungen bleiben");
   assert.equal(nf(esc0("*<script>*")), "<b>&lt;script&gt;</b>", "bleibt sicher (erst esc, dann nur b/i/s)");
-  assert.match(programm, /return naFormat\((naFarbe\()?esc\(t\)\)\)?\.replace\(/, "in jeder Nachricht");
+  assert.match(programm, /return (naLinkWarnung\()?naFormat\((naFarbe\()?esc\(t\)\)\)?\)?\.replace\(/, "in jeder Nachricht");
   assert.match(html, /id="formatLeiste"[^\n]*onclick="naFormatSetzen\('\*'\)"[^\n]*onclick="naFormatSetzen\('_'\)"[^\n]*onclick="naFormatSetzen\('~'\)"/, "Knöpfe F K D");
   assert.match(html, /id="fettKnopf"/, "F in der kleinen Zeile");
   assert.match(programm, /document\.addEventListener\("selectionchange", \(\) => \{ if \(document\.activeElement\?\.id === "text"\) naFormatLeiste\(\); \}\);/, "erscheint beim Markieren");
@@ -7703,7 +7703,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.722.0 KC-CLUB-CHAT-FARBE: [rot]…[/rot] usw. – Knöpfe neben F/K/D, Vorschau/Push/E-Mail ohne Farbzeichen
 {
   assert.match(programm, /const NA_FARB_RE = \/\\\[\(rot\|blau\|grün\|gelb\)\\\]/, "nur vier feste Farben");
-  assert.match(programm, /return naFormat\(naFarbe\(esc\(t\)\)\)/, "Farbe nach esc (sicher), vor fett");
+  assert.match(programm, /return (naLinkWarnung\()?naFormat\(naFarbe\(esc\(t\)\)\)/, "Farbe nach esc (sicher), vor fett");
   assert.match(programm, /<span class="nf nf-\$\{f === "grün" \? "gruen" : f\}">\$\{w\}<\/span>/, "nur Klasse, keine freie Farbe");
   assert.equal((html.match(/onclick="naFarbeSetzen\('(rot|blau|grün|gelb)'\)"/g) || []).length, 4, "vier Farbknöpfe");
   assert.match(programm, /naOhneFarbe\(t\)\); \/\/ 2\.722\.0: Vorschau/, "Vorschau ohne Farbzeichen");
@@ -7753,6 +7753,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.726.0 KC-CLUB-WAECHTER: Admin-Kachel Wächter – nur Admin, nur beim Öffnen, eine Lese-Funktion
 {
+  const ZA_server_hat = (a) => new RegExp(`"${a}"`).test(server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT")));
   assert.match(server, /case "waechter_lage": \{[^\n]*\n\s*nurAdmin\(ich\);/, "Wächter nur für den Admin");
   assert.ok(aufrufe.has("waechter_lage") && aktionen.has("waechter_lage"), "Aufruf und Server-Fall");
   const sql = fs.readFileSync(new URL("../supabase/migrations/20261028_kc_club_waechter_lage.sql", import.meta.url), "utf8");
@@ -7760,7 +7761,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(sql, /revoke all on function public\.kc_club_waechter_lage\(\) from public, anon, authenticated;/, "nicht öffentlich");
   assert.match(sql, /grant execute on function public\.kc_club_waechter_lage\(\) to service_role;/, "nur Club-Server");
   assert.ok(!/create table/i.test(sql), "keine neue Tabelle");
-  assert.equal((programm.match(/^\s*\{ id: "[a-z]+", gruppe: "(sicherung|betrieb|schutz|app)", sym: /gm) || []).length, 15, "15 Wächter");
+  assert.equal((programm.match(/^\s*\{ id: "[a-z]+", gruppe: "(sicherung|betrieb|schutz|app)", sym: /gm) || []).length, 24, "24 Wächter (15 + 9 Sicherheits-Wächter)");
   assert.ok(/\["waechter", "🛡️", "Wächter", "ueb"\]/.test(programm) && /if \(id === "waechter"\) return wchStart\(\);/.test(programm), "Kachel im Admin");
   assert.match(programm, /\/\^https:\\\/\\\/github\\\.com\\\/\/\.test\(g\.link/, "nur GitHub-Links");
   // Melden + Wochenbericht
@@ -7769,7 +7770,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(server, /if \(f === "grau"\) \{ if \(a\) neu\[w\.id\] = a; continue; \}/, "unbekannt meldet nichts");
   assert.match(server, /routerSenden\("club_fehler", an, \{ titel,/, "Push + Mail an die Admins");
   assert.match(server, /abschnitte\.splice\(3, 0, \["🛡️ Wächter"/, "Wächter im Wochenbericht");
-  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 14, "14 Wächter auf dem Server (🐌 nur im Gerät)");
+  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 22, "22 Wächter auf dem Server (🐌 und 💤 nur im Gerät)");
+  // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER
+  assert.match(server, /siZaehlen\(a, ich\); \/\/ 2\.726\.0/, "jede Aktion wird gezählt");
+  assert.match(server, /default: siUnbekannt\(a, ich\); return json/, "unbekannte Befehle fallen auf");
+  assert.match(server, /if \(siBremsenAktiv\(\) && !ich\.admin\) throw new Fehler\("Zu viele Abrufe/, "Bremse erst ab Stichtag, nie für den Admin");
+  assert.match(server, /case "sicherheit_freigeben": \{[^\n]*\n\s*nurAdmin\(ich\);/, "Freigeben nur Admin");
+  assert.match(server, /siLinkMerken\(ich, text\);/, "Links werden beim Senden geprüft");
+  assert.ok(!/protokoll\([^;]*sicherheit_link[^;]*text[,:}]/.test(server), "kein Nachrichtentext im Protokoll");
+  assert.match(programm, /f0\.k === INIT\?\.meinGeraet\) return;/, "„Warst du das?“ nie auf dem neuen Gerät selbst");
+  assert.match(programm, /if \(k\) try \{ localStorage\.removeItem\("kc_club_pin"\);/, "persönlicher Link setzt die PIN zurück");
+  assert.match(programm, /iterations: 150000/, "PIN nur als PBKDF2-Prüfwert");
+  assert.ok(!/localStorage\.setItem\("kc_club_pin", (n1|pin)\)/.test(programm), "PIN nie im Klartext gespeichert");
+  assert.match(html, /onclick="pinEinstellen\(\)"/, "PIN in den Einstellungen");
+  assert.ok(ZA_server_hat("neues_geraet_antwort"), "Antwort auch für Gäste/Aushilfen");
   assert.match(programm, /return d\.bewertung\?\.\[w\.id\] \|\| \["grau", "unbekannt", ""\];/, "App zeigt die Server-Bewertung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
@@ -7891,7 +7905,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/nachrichtMenue\('\$\{m\.id\}'\)/.test(html) && /const NA_SCHNELL = \["👍", "❤️", "😂", "😮", "😢", "🙏"\]/.test(html), "Menü mit Schnell-Reaktionen fehlt");
   assert.ok(/function naAntworten\(/.test(html) && /id="antwortLeiste"/.test(html) && /antwort_auf: NA\.antwort\.id/.test(html), "Antworten fehlt");
   assert.ok(/function naErwPruefen\(/.test(html) && /id="erwVorschlag"/.test(html) && /erwaehnt: naErwaehnteIds\(text\)/.test(html), "@Erwähnen fehlt");
-  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return (naFormat\()?(naFarbe\()?esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
+  assert.ok(/function naText\(t\) \{[^\n]*\n(\s*if \(vnIst\(t\)\) return vnHtml\(t\);[^\n]*\n)?\s*return (naLinkWarnung\()?(naFormat\()?(naFarbe\()?esc\(t\)/.test(html) && /function vnHtml\(t\) \{\n[^\n]*naText\(VN\.klar\.get\(t\)\)[^\n]*\n\s*return `<button[^\n]*data-vn="\$\{esc\(t\)\}"/.test(html), "Nachrichtentext muss weiter sicher (esc) ausgegeben werden (2.517.0: auch verschlüsselte)");
 }
 
 // 122. 0.98.0: Weiterleiten, Nicht stören, Meine Geräte
@@ -9567,7 +9581,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 30000); // 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 31000); // 2.726.0: +neues Gerät; 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
