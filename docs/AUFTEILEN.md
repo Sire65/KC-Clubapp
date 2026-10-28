@@ -49,7 +49,7 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 | Stufe | Inhalt | Version | Stand |
 |---|---|---|---|
 | 0 | Nachlade-Weg, Probe-Teil, Tests, Rundgang, diese Anleitung | 2.727.0 | eingespielt 28.10. |
-| 1 | Erklär-Videos (`teile/videos.js`, ~420 KB; Katalog, Zustand RG und Startseiten-Hinweis bleiben im Hauptprogramm) | 2.729.0 | gebaut, alle 57 Videos geprüft, Start-Rechenzeit −12 % |
+| 1 | Erklär-Videos (`teile/videos.js`, ~420 KB; Katalog, Zustand RG und Startseiten-Hinweis bleiben im Hauptprogramm) | 2.730.0 | gebaut, alle 57 Videos geprüft, Start-Rechenzeit −12 % |
 | 2 | Spiele | | geplant |
 | 3 | Sim-Jü, Rückseite, Bühne, Effekte | | geplant |
 | 4 | Büro-Werkzeuge der Clubleitung | | geplant |

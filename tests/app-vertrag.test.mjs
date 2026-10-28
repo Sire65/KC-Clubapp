@@ -2118,7 +2118,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 182. 1.32.1: „＋ Neu“ immer sichtbar, Kopfzeilen brechen um (KC-CLUB-KOPFZEILE)
 {
   assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2>(<button[^>]*id="naSosKnopf"[^>]*>🚨 SOS<\/button>)?<button class="knopf haupt klein" onclick="(neueNachricht|uhNeu)\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile"); // 2.57.0: uhNeu = mit Markierung Mehrfach-Nachricht, sonst neueNachricht // 2.22.0: davor nur beim Admin 🚨 SOS
-  assert.ok(/⭐ Gemerkt<\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
+  assert.ok(/<span class="kl-i">🔖<\/span><span class="kl-t"> Gemerkt<\/span><span class="kl-k">Gemerkt<\/span><\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
 }
 
 // 183. 1.32.2: Bildschirmfoto-Knopf im Chat (KC-CLUB-BILDSCHIRMFOTO)
@@ -4933,7 +4933,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/ONL\.wartet \? 4000 : sparTakt\(/.test(html) && /neuLaden\(\); \}, sparTakt\(60000\)\)/.test(html) && /setInterval\(nzSenden, sparTakt\(NZ_TAKT_MS\)\)/.test(html), "Hintergrund seltener");
   assert.ok(!/sparTakt\(CHAT_TAKT_MS|sparTakt\(SP_TAKT_MS|anrufPruefen, sparTakt/.test(html), "Chat, Spiele, Anrufe unverändert");
   // KC-CLUB-SPUR-OEFFNEN: auch ein kurzer Besuch nur auf der Startseite erscheint im Weg
-  assert.ok(/spur\("geoeffnet"\); setTimeout\(spurSenden, 3000\);/.test(html) && /geoeffnet: "📲 App geöffnet"/.test(html) && /const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server), "Öffnen zählt als Schritt");
+  assert.ok(/spur\(window\.KCFP\?\.ausHinter \? spurWieder\(KCFP\.ausHinter\) : "geoeffnet"\); setTimeout\(spurSenden, 3000\);/.test(html) /* 2.729.0 KC-CLUB-SPUR-WIEDER */ && /geoeffnet: "📲 App geöffnet"/.test(html) && /const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server), "Öffnen zählt als Schritt");
   assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s !important;/.test(seite) && /id="sparWahl"/.test(seite) && /id="sparZeichen"/.test(seite), "Bewegungen aus, Wahl in Darstellung, 🐢 im Kopf");
 }
 // 2.30.1 KC-CLUB-SCHULUNG-ABGESAGT-KALENDER + KC-CLUB-WILLKOMMEN-BEGRUESSEN
@@ -5770,7 +5770,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(!h \|\| h\.erledigt \|\| h\.art !== "ungelesen" \|\| !ICH\) return;/.test(html) && /const n = Number\(INIT\?\.ungelesen\) \|\| 0/.test(html) && /if \(!n\) return erledigt\(\);/.test(html), "nur einmal, echte Zahl, ohne Ungelesenes still erledigt");
   assert.ok(/if \(document\.querySelector\("\.blatt:not\(\.versteckt\), \.dlg, #rgSchicht"\) \|\| aktuelleAnsicht !== "start"\)/.test(html), "erst wenn kein anderes Fenster offen ist");
   assert.ok(/Hallo \$\{esc\(ICH\.vorname\)\},<\/h3><p class="dlg-text">du hast/.test(html) /* 2.268.0: eigenes Fenster */ && /tippe doch \$\{esc\(lage\)\} auf die Nachrichten-Kachel/.test(html) && /const lage = startNachrichtenLage\(\);/.test(html), "Hansis Text mit Vorname, Zahl und echter Lage der Kachel");
-  assert.ok(!/KC-P-M0006|Willfried|Wilfried/.test(html.slice(html.indexOf("// ---------- KC-CLUB-START-HINWEIS"), html.indexOf("// ---------- KC-CLUB-TIPP (1.6.0")) /* 2.729.0: VIDEO-GESEHEN liegt in teile/videos.js */), "keine Person fest im Programm");
+  assert.ok(!/KC-P-M0006|Willfried|Wilfried/.test(html.slice(html.indexOf("// ---------- KC-CLUB-START-HINWEIS"), html.indexOf("// ---------- KC-CLUB-TIPP (1.6.0")) /* 2.730.0: VIDEO-GESEHEN liegt in teile/videos.js */), "keine Person fest im Programm");
 }
 
 // 2.268.0 KC-CLUB-START-HINWEIS-2 (Wunsch Hansi): drei Knöpfe – Ansehen, Später, Keinen Hinweis mehr auf diese Nachrichten
@@ -7639,7 +7639,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function hsGrund\(\)/.test(html) && /return "klicks"/.test(html) && /return "suche"/.test(html) && /return "zurueck"/.test(html) && /return "pendeln"/.test(html) && /return "lange"/.test(html), "fünf Anzeichen: Rumklicken, Suche ohne Treffer, Zurück, Hin und her, lange ohne Erfolg");
   assert.ok(/sehr gerne gebe ich dir hier Hilfestellung/.test(html) && /data-hs="video">🎬 Video ansehen/.test(html) && /data-hs="hilfe">📖 Hilfe lesen/.test(html) && /data-hs="nie">Hier nicht mehr anbieten/.test(html), "Twinkeys Angebot mit Video, Hilfe, Nein, Nie");
-  assert.ok(/proTag: 2/.test(html) && /!\(t\.sichten \|\| \[\]\)\.includes\(v\)/.test(html) && /Date\.now\(\) - HS\.start < 20000/.test(html) && /input:not\(\[type=checkbox\]\)/.test(html), "Bremsen: 2× am Tag, 1× je Bereich, nicht gleich nach Start, nie beim Tippen");
+  assert.ok(/proTag: 2/.test(html) && /!\(t\.sichten \|\| \[\]\)\.includes\(K\.key\)/.test(html) && /Date\.now\(\) - HS\.start < 20000/.test(html) && /input:not\(\[type=checkbox\]\)/.test(html), "Bremsen: 2× am Tag, 1× je Bereich, nicht gleich nach Start, nie beim Tippen");
   assert.ok(/const hsListePaar = /.test(html) && /!hsListePaar\(a, b\)/.test(html), "normales Liste↔Eintrag (Chats lesen) zählt nicht");
   assert.ok(/try \{ hsSicht\(v, ausHistorie\); \} catch \{\}/.test(html) && /if \(!fehler\) try \{ hsErfolg\(\); \} catch \{\}/.test(html), "Hook in zeige und melde");
   assert.ok(/id="setHsE" checked onchange="hsSchalter\(this\.checked\)"/.test(seite) && /id="setHs" checked/.test(seite), "Schalter in den Einstellungen (Standard an)");
@@ -7819,7 +7819,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.match(lies("teile/probe.js"), /function teilProbe\(\) \{ return "ok " \+ APP_VERSION; \}/, "Probe-Teil für Rundgang und Sicherheits-Check");
 }
-// 2.729.0 KC-CLUB-TEILE Stufe 1: Erklär-Videos liegen in teile/videos.js – Einstiege über Platzhalter, Katalog und Zustand im Hauptprogramm
+// 2.730.0 KC-CLUB-TEILE Stufe 1: Erklär-Videos liegen in teile/videos.js – Einstiege über Platzhalter, Katalog und Zustand im Hauptprogramm
 {
   const app = lies("app.js"), vid = lies("teile/videos.js");
   assert.match(app, /videos: \{ einstieg: \["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"\], sri: "sha384-/, "Video-Teil mit seinen 4 Einstiegen registriert");
@@ -9206,7 +9206,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
-  assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"), programm.indexOf("/* ==== teile/"))), "kein altes Logo in Ausdrucken"); // 2.729.0: bis Ende Hauptprogramm (Teile ab der Trennzeile)
+  assert.ok(!/icon-192\.png/.test(programm.slice(programm.indexOf("const DRUCKARTEN"), programm.indexOf("/* ==== teile/"))), "kein altes Logo in Ausdrucken"); // 2.730.0: bis Ende Hauptprogramm (Teile ab der Trennzeile)
   assert.ok(/#druck \.cd-kopf \{/.test(seite) && /#druck \.cd-logo \{[^}]*background: var\(--cd-rot\)/.test(seite), "CD-Druckstile");
 }
 
@@ -9625,7 +9625,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 31000); // 2.726.0: +neues Gerät; 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 31000); // 2.729.0: +neues Gerät; 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
@@ -9816,7 +9816,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/function rkEinrichten\(wurzelId, schluessel\)/.test(html) && /rkEinrichten\("v-einstellungen", "einst"\)/.test(html), "wiederverwendbarer Kern, Einstellungen eingebunden");
-  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /z\.knopf\.textContent = an \? \(z\.schluessel === "einst" \? "☰ Übersicht" : "☰ Liste"\) : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
+  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /const tx = an \? \(z\.schluessel === "einst" \? "Übersicht" : "Liste"\) : "Kartei";/.test(html) /* 2.729.0 KC-CLUB-KOM-SYMBOLE */, "je Gerät zurück zur gewohnten Liste");
   assert.ok(/if \(z\.an && e\.target\.parentElement === w && e\.target\.classList\.contains\("rk-karte"\)\) e\.stopPropagation\(\);/.test(html) && /d\.open = d\.dataset\.rkVorher === "1"/.test(html), "gemerkte Auf/Zu-Stände der Liste bleiben unverändert");
   assert.ok(/m\.target\.classList\?\.contains\("hervor"\)\) \{ rkZu\(z, m\.target\)/.test(html), "Suche/Tipps/„zeig mir wo“ blättern zur richtigen Karte");
   assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");
@@ -10463,7 +10463,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR (Wunsch Hansi): Videos zur Koch-Figur – nur vorführen, nie speichern, nur wenn freigegeben
 {
-  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"), html.indexOf("const RG_INST_CODE = ", html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"))); // 2.729.0: Block liegt in teile/videos.js (RUNDGAENGE blieb im Hauptprogramm)
+  const b = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"), html.indexOf("const RG_INST_CODE = ", html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"))); // 2.730.0: Block liegt in teile/videos.js (RUNDGAENGE blieb im Hauptprogramm)
   assert.ok(/\{ id: "figur", [^\n]*st: \(\) => RG_FIGUR, nur: \(\) => frei\("avatar"\) \}/.test(html) && /\{ id: "figurbau", [^\n]*st: \(\) => RG_FIGUR_BAU, nur: \(\) => frei\("avatar"\) && frei\("avatar_baukasten"\) \}/.test(html), "beide Videos registriert, nur mit Freigabe");
   assert.ok(!/avSetzen|avJackeAuto\(|einstellung_setzen|api\(/.test(b), "Videos speichern nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \$\("avBlatt"\)\?\.remove\(\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => \$\("avbBlatt"\)\?\.remove\(\)\)/.test(b) && (b.match(/classList\.add\("rg-zeigen"\)/g) || []).length === 2, "Fenster sichtbar während des Videos, danach zu");

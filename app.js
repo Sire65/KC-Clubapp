@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.729.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.730.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-CO737ObZuA8WZu7S/9HQSu308Z5LKMJDi27DF+xJO2uiYxl1zWnP5CksZ6tc1sGB" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-vQYpHJcMvGzwwT46KQqwR5HjoLe7QIpB563TpHqYeCZ5Wlvje///r0wsOR7zSKVM" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -1068,6 +1068,7 @@ function anwendenDesign() {
   if (window.KCFP?.schlaeft) return; // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG: geleertes Fenster (App woanders offen)
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
+  w.classList.toggle("kom-sym", einst("komSym", true)); // 2.729.0 KC-CLUB-KOM-SYMBOLE: Knöpfe oben in Nachrichten als Symbol mit Wort
   w.classList.toggle("gross", einst("gross", false) || w.dataset.rgGross === "1"); // KC-CLUB-ERKLAERVIDEOS: Vorführung „Große Schrift“
   w.classList.toggle("ohne-anim", !einst("animiert", true)); // 2.24.1: „✨ Animierte Knöpfe“ (Standard an)
   // eigener Kopf-Verlauf (Disko, Regenbogen) – sonst der Standard-Verlauf aus hero1/rot/rot2/hero4
@@ -1082,7 +1083,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -1793,6 +1794,10 @@ const EINWEISUNG = [
   { id: "b-teilen", blatt: true, sym: "📥", t: "Mit Köcheclub geteilt", x: "Du hast etwas aus einer anderen App mit dem Köcheclub geteilt. Wähle, wohin es soll: in einen <b>💬 Club-Chat</b>, bei Fotos ins <b>📷 Fotoalbum</b> oder in <b>🗄️ dein Archiv</b>." },
   { id: "b-bu-sitzung", blatt: true, sym: "📝", t: "Sitzung auswählen", x: "Tippe die <b>Sitzung</b> an, um die es gehen soll. Dahinter steht, ob sie schon vorbereitet ist bzw. ob es schon ein Protokoll gibt.", nur: () => !!ICH?.buero },
   { id: "b-aenderungen", blatt: true, sym: "📬", t: "Änderungen der Mitglieder", x: "Hier landen die Änderungen, die Mitglieder melden – nur die, die an dich gehen. Links steht <b>bisher</b>, rechts <b>neu</b> (grün). Tippe <b>👁️ Zur Kenntnis genommen</b>; Clubsprecher oder Admin <b>✅ geben frei</b> – dann trägt die KC-Verwaltung die Änderung ein und das Mitglied bekommt Bescheid. Unten die <b>👕 Größen-Übersicht</b> für Bestellungen. Zu finden im Büro im <b>📥 Eingangskorb</b> und im Ordner <b>📇 Mitglieder</b>; abgelegt wird alles im Archiv-Ordner <b>Personal</b>.", nur: () => !!(ICH?.vorstand || ICH?.admin) },
+  // 2.729.0 KC-CLUB-HILFE-PASSEND (Fund Hansi 28.10.2026): Erklärtexte für die Admin-Fenster – dorthin führt Twinkeys Hilfe, wenn jemand im Fenster nicht weiterkommt
+  { id: "b-notfall-fahrplan", blatt: true, sym: "🧯", t: "Notfall-Fahrplan (Admin)", nur: () => !!ICH?.admin, x: "Wenn der Club-Server oder Supabase streikt: <b>Ruhe bewahren</b> – die App schaltet selbst in den Notbetrieb, Eingaben gehen nicht verloren. Dann von oben nach unten: <b>🩺 Server-Diagnose</b> sagt in einem Satz, wo es hakt · die <b>Störungsseite</b> von Supabase zeigt, ob es beim Anbieter klemmt · ist die Datenbank <b>länger als 30 Minuten rot</b>, <b>🔄 Supabase neu starten</b> (schadet den Daten nicht, 3–5 Minuten offline) und die Diagnose wiederholen · hilft nichts, das Diagnose-Ergebnis an Claude schicken. <b>🚨 Alarm an alle</b> schickt sofort eine Meldung an alle Mitglieder. <b>Weitere Notfall-Werkzeuge:</b> 🪞 <b>Spiegel jetzt anstoßen</b> (kopiert sofort nach Neon, kostet Rechenzeit – nur im Notfall) · 🧪 <b>Notbetrieb-Probe</b> (nur auf diesem Gerät läuft alles über den Ersatz-Server, die anderen merken nichts) · 🧯 <b>Ernstfall simulieren</b> (nur auf diesem Gerät ist der Server „weg“ – die App erkennt, schaltet um und trägt nach wie im echten Fall). <b>💾 Daten zurückholen:</b> grüne Punkte bei Wochenprobe, Zweitkopie und Umleitung für Anrufe heißen „bereit“. Ist Supabase nur kurz weg: abwarten. Länger weg: im Neon SQL-Editor den Spiegel lesen. Ganz verloren: den Ablauf „wiederherstellen“ starten – die Schritte stehen unten im Fenster." },
+  { id: "b-leitstand", blatt: true, sym: "🛠️", t: "Kacheln im Admin-Register (Admin)", nur: () => !!ICH?.admin, x: "Jede Kachel im Admin-Register öffnet ein Fenster mit Einzelheiten und Werkzeugen. <b>🚨 Notfall:</b> Alarm an alle und der Notfall-Fahrplan. <b>📊 Überwachung:</b> Lage auf einen Blick, Verlauf, Club-Server, Supabase (mit Neustart-Knopf), Neon-Spiegel, Backups, B2-Backup und Notbetrieb. <b>📨 Dienste:</b> Communicator, Mail, Push, Kasse mit Gateway und die KC-Programme. <b>📱 App:</b> Versionen der Mitglieder, Fehler, Nutzung, Zugänge, Wartung, Freigaben, Inkognito und Stadt-Termine. Farben: 🟢 alles gut · 🟡 ansehen · 🔴 handeln. <b>↻ Aktualisieren</b> holt den neuesten Stand. Das Video „🛠️ Für Admins: Leitstand“ zeigt das Register Schritt für Schritt." },
+  { id: "b-admin-zentrale", blatt: true, sym: "🛡️", t: "Admin-Zentrale – Einzelheiten (Admin)", nur: () => !!ICH?.admin, x: "Die Rückseite der Admin-Zentrale-Karte: ob es eine <b>Admin-Vertretung</b> gibt, wie viele Mitglieder ihre <b>Einweisungen</b> gesehen haben (ohne Namen), <b>🩺 Fehlerprotokoll &amp; Startprobleme</b> und <b>📊 Nutzung der App</b> (ohne Namen), <b>👥 Zuletzt in der App</b> mit Version, dazu Kommunikation, KC-Programme, <b>🪞 Neon-Spiegel &amp; Backup</b> (mit „Jetzt spiegeln – nur im Notfall“) und die <b>Datenbank</b>. Nur ansehen schadet nie – Knöpfe mit „nur im Notfall“ kosten Rechenzeit." },
   { id: "b-stadt", blatt: true, sym: "🏙️", t: "Termine der Stadt Werne", x: "Die Termine aus dem Veranstaltungskalender der Stadt Werne. Ankreuzen, was in unseren Clubkalender soll – die Mitglieder bekommen dabei keine Nachricht. Unter <b>🔁 Automatisch</b> holt die App neue Stadt-Termine einmal pro Woche selbst.", nur: () => !!ICH?.admin },
   { id: "b-admin", blatt: true, sym: "🛠️", t: "Admin-Register", x: "Dein Leitstand: Das Lämpchen jeder Kachel zeigt, ob alles läuft – 🟢 gut, 🟡 aufpassen, 🔴 Problem, ⚪ unbekannt. Antippen öffnet Einzelheiten und die passenden Werkzeuge. Im Ernstfall zuerst <b>🧯 Notfall</b> öffnen.", nur: () => !!ICH?.admin },
   { id: "b-notfall", blatt: true, sym: "🚨", t: "SOS-Nachricht an alle", x: "Nur für echte Notfälle: Dein Text geht sofort an <b>alle</b> Mitglieder – als Push und E-Mail, auch in der Ruhezeit – und wird bei ihnen laut vorgelesen. Danach kannst du ihn noch per WhatsApp oder SMS schicken. Zum Ausprobieren: <b>🧪 Probe nur an mich</b>. 112 und 110 rufen direkt an." },
@@ -5155,7 +5160,9 @@ function abStandZeigen(st) {
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "ja") abOeffnen(); }));
   ansageMelden({ art: "anklopfen", text: `Du hast ${n === 1 ? "eine neue Nachricht" : n + " neue Nachrichten"} auf dem Anrufbeantworter` });
 }
-function abMerkerZeigen(n) { const m = $("abMerker"); if (m) { m.textContent = n ? `📼 Anrufbeantworter · ${n} neu` : "📼 Mein Anrufbeantworter"; m.classList.toggle("neu", !!n); } }
+function abMerkerZeigen(n) { const m = $("abMerker"); if (m) { klSetzen(m, "📼", n ? `Anrufbeantworter · ${n} neu` : "Mein Anrufbeantworter", n ? `${n} neu` : "Anrufb."); m.classList.toggle("neu", !!n); } }
+// 2.729.0 KC-CLUB-KOM-SYMBOLE: Knopf mit Symbol, langem Text (daneben) und kurzem Wort (darunter) – textContent beginnt weiter mit „Symbol Text“ (Videos finden ihn)
+function klSetzen(b, sym, lang, kurz) { b.innerHTML = `<span class="kl-i">${sym}</span><span class="kl-t"> ${esc(lang)}</span><span class="kl-k">${esc(kurz)}</span>`; }
 // Abhören: neueste zuerst, blättern, löschen, zurückrufen/anklopfen/schreiben
 let ABBOX = { liste: [], i: 0 };
 async function abOeffnen() {
@@ -26209,7 +26216,7 @@ function rkSchalten(k, an) {
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  if (z.knopf) { z.knopf.textContent = an ? (z.schluessel === "einst" ? "☰ Übersicht" : "☰ Liste") : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
+  if (z.knopf) { const tx = an ? (z.schluessel === "einst" ? "Übersicht" : "Liste") : "Kartei"; if (z.knopf.querySelector(".kl-i")) klSetzen(z.knopf, an ? "☰" : "🗂️", tx, tx); else z.knopf.textContent = (an ? "☰ " : "🗂️ ") + tx; /* 2.729.0 */ z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
   if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
   if (!z.an) {
@@ -30993,7 +31000,7 @@ const UHK = { vs: new Map() }; // chat-id → { stand, html }
 function uhKarteiKnopf() {
   let b = $("uhKarteiKnopf"); const an = rkAn("chats");
   if (!b) { const l = document.querySelector("#v-nachrichten .kom-leiste"); if (!l) return; l.insertAdjacentHTML("afterbegin", '<button type="button" class="knopf klein" id="uhKarteiKnopf"></button>'); b = $("uhKarteiKnopf"); b.onclick = () => rkSchalten("chats", !rkAn("chats")); }
-  b.textContent = an ? "☰ Liste" : "🗂️ Kartei"; b.title = an ? "Chats als gewohnte Liste" : "Chats als Rollkartei";
+  klSetzen(b, an ? "☰" : "🗂️", an ? "Liste" : "Kartei", an ? "Liste" : "Kartei"); b.title = an ? "Chats als gewohnte Liste" : "Chats als Rollkartei"; // 2.729.0
   if ($("setRkChats")) $("setRkChats").checked = an;
 }
 function uhKarteiHtml(liste) {
@@ -41154,7 +41161,7 @@ function startMessFertig() {
   if ($("appInfo")?.offsetParent) appInfoZeigen();
   // KC-CLUB-SPUR-OEFFNEN (2.30.0, Fall Reinhilde: nur kurz auf der Startseite → im Weg stand nichts): jedes Öffnen zählt als Schritt
   // und geht nach 3 s gleich los (nicht erst nach 2 Min.), damit auch ganz kurze Besuche sichtbar sind
-  spur("geoeffnet"); setTimeout(spurSenden, 3000);
+  spur(window.KCFP?.ausHinter ? spurWieder(KCFP.ausHinter) : "geoeffnet"); setTimeout(spurSenden, 3000); // 2.729.0 KC-CLUB-SPUR-WIEDER
   // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeden Start mit Dauer, Gerät und Browser melden (für die Startstatistik des Admins)
   setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an, hinter: !!START_MESS.hinter,
     app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).then((r) => { if (r?.keks) setTimeout(() => keksZeigen(r.keks), 1500); else if (r?.fee) setTimeout(feeKommt, 1500); }).catch(() => {}), 1500); // 2.372.0 KC-CLUB-FEE: jede 20. Anmeldung
@@ -43270,6 +43277,16 @@ function spurBaldSenden() { if (SPAR.an || document.hidden) return; clearTimeout
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(true); }); // KC-CLUB-SPUR-KEEPALIVE
 window.addEventListener("pagehide", () => spurSenden(true));
+// 2.729.0 KC-CLUB-SPUR-WIEDER: App kommt nach ≥ 5 Min. im Hintergrund wieder nach vorn → Schritt „wieder_<Minuten>“ („📲 wieder geöffnet (war 33 Min. im Hintergrund)“)
+const SPUR_WIEDER_MS = 5 * 60000, SPUR_WIEDER_START_MS = 2 * 60000;
+const spurWieder = (ms) => "wieder_" + Math.min(9999, Math.max(1, Math.round(ms / 60000)));
+const spurWas = (w) => { const m = /^wieder_(\d+)$/.exec(w || ""); if (m) { const n = Number(m[1]); return `📲 wieder geöffnet (war ${n >= 120 ? Math.round(n / 60) + " Std." : n + " Min."} im Hintergrund)`; } return SPUR_WAS[w] || NZ_NAMEN[w] || w; };
+let SPUR_HINTER_AB = document.hidden ? Date.now() : 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { SPUR_HINTER_AB = Date.now(); return; }
+  const weg = SPUR_HINTER_AB ? Date.now() - SPUR_HINTER_AB : 0; SPUR_HINTER_AB = 0;
+  if (weg >= SPUR_WIEDER_MS && ICH && INIT) spur(spurWieder(weg));
+});
 const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
@@ -43292,7 +43309,7 @@ async function spurAdmin(tag, person) {
     const on = (id) => heuteDa && ONL.stand && Date.now() - ONL.stand < 3 * 60000 && ONL.ids.has(id);
     const liste = [...r.personen].sort((a, b) => on(b.person_id) - on(a.person_id));
     // KC-CLUB-SPUR-JETZT (2.81.0): je Person, was sie zuletzt aufgerufen hat – bei 🟢 „ist gerade bei …“
-    const was = (w) => w ? SPUR_WAS[w] || NZ_NAMEN[w] || w : "";
+    const was = (w) => w ? spurWas(w) : ""; // 2.729.0 KC-CLUB-SPUR-WIEDER
     const vor = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); return m < 1 ? "gerade eben" : m === 1 ? "vor 1 Min." : m < 60 ? `vor ${m} Min.` : `um ${zeitKurz(iso)} Uhr`; };
     const jetzt = liste.filter((x) => on(x.person_id));
     inhalt = (heuteDa ? `<div class="karte spur-jetzt-box"><b>🟢 Gerade in der App${jetzt.length ? ` (${jetzt.length})` : ""}</b>${jetzt.length ? jetzt.map((x) => `<div class="spur-jetzt-zeile" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> ist bei <b>${esc(was(x.zuletzt) || "?")}</b> <small class="hinweis">· ${esc(vor(x.letzte))}</small></div>`).join("") : '<div class="hinweis">Gerade ist niemand in der App (oder hat die Online-Anzeige verborgen).</div>'}</div>` : "")
@@ -43300,7 +43317,7 @@ async function spurAdmin(tag, person) {
       + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => x.stoerung && !on(x.person_id) ? `<button class="knopf spur-stoerung" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">⚠️ <b>${esc(x.name)}</b> <small class="hinweis">· war kurz da · ${esc(zeitKurz(x.erste))}${x.erste !== x.letzte ? "–" + esc(zeitKurz(x.letzte)) : ""} Uhr</small><br><small>${x.stoerung === "netz" ? "📶 Verbindung gestört – die Wege kommen nach, sobald die App wieder Netz hat" : "⚠️ Störung in der App – weitere Wege sind nicht angekommen"}</small></button>` : `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
@@ -44069,13 +44086,41 @@ const HS_GRENZE = { lange: 90000, klicks: 8, pendeln: 4, zurueck: 6, leer: 2, to
 // normales Hin und Her zwischen Liste und Eintrag (Chats lesen, Mitglied ansehen, Protokoll öffnen) ist kein „nicht klarkommen“
 const hsListePaar = (a, b) => (a === "chat" && b === "nachrichten") || (b === "chat" && a === "nachrichten") || a.startsWith(b) || b.startsWith(a) || a === "start" || b === "start";
 const HS = { start: Date.now(), v: null, seit: 0, klicks: 0, erfolg: false, verlauf: [], zurueck: [], leer: [], tot: [], uhr: null, sucheUhr: null };
-const HS_VIDEO_SICHT = { vorschlaege: "vorschlag", termine: "termin", nachrichten: "nachricht", chat: "chatprofi", start: "ueberblick" };
+// 2.729.0 KC-CLUB-HILFE-PASSEND (Fund Hansi 28.10.2026: im Fenster „Admin-Zentrale – Einzelheiten“ bot Twinkey das Start-Video an, „das passt gar nicht“):
+// Video nur, wenn es wirklich zum Bereich gehört – feste Zuordnung (sonst gleich lautende Video-ID), keine Umwege über verwandte Hilfen mehr
+// (daher kamen Protokolle → To-do-Video, Dokumente → Überblick). Kein passendes Video → nur der passende Hilfe-Text.
+const HS_VIDEO_SICHT = { vorschlaege: "vorschlag", termine: "termin", nachrichten: "nachricht", neu: "nachricht", chat: "chatprofi", start: "ueberblick", gruppe: "gruppen",
+  dienste: "dienst", mitglied: "mitglieder", aktion: "aktionen", protokolle: "lesen", protokoll: "lesen", dokumente: "lesen", dokansicht: "lesen", standort: "sos",
+  sicherheit: "probleme", programme: "technik" };
 const hsAn = () => { try { return localStorage.getItem(HS_AUS) !== "1"; } catch { return true; } };
 const hsLies = (k, leer) => { try { return JSON.parse(localStorage.getItem(k) || "null") || leer; } catch { return leer; } };
 const hsSchreib = (k, w) => { try { localStorage.setItem(k, JSON.stringify(w)); } catch {} };
-function hsVideo(v) { // passendes Erklär-Video zum Bereich (nur die für das Mitglied sichtbaren)
-  const ids = [HS_VIDEO_SICHT[v], v, ...(HZ_SICHT_HILFEN[v] || []).flatMap((id) => TW_VIDEOS[id] || [])].filter(Boolean);
-  for (const id of ids) { const r = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())); if (r) return r; }
+function hsVideo(v) { // passendes Erklär-Video zum Bereich (nur die für das Mitglied sichtbaren) – 2.729.0: nur feste Zuordnung oder gleiche ID
+  const id = HS_VIDEO_SICHT[v] || v;
+  return RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || null;
+}
+// 2.729.0 KC-CLUB-HILFE-PASSEND: liegt ein Fenster über dem Bereich, gilt das Fenster (nicht der Bereich darunter)
+function hsBlatt() {
+  return [...document.querySelectorAll(".blatt:not(.versteckt):not(.dlg-blatt)")].filter((b) => b.id !== "hsBlase" && getComputedStyle(b).display !== "none").pop() || null;
+}
+const hsBlattTitel = (b) => String(b?.querySelector("h2, h3")?.textContent || "").replace(/[^\p{L}\p{N}\s–-]/gu, " ").replace(/\s+/g, " ").trim();
+// Fenster mit eigenem Erklärtext (und, wenn es eins gibt, dem passenden Video) – sonst Suche nach dem Fenstertitel
+const HS_BLATT_HILFE = {
+  adBlatt: () => (AD.offen === "notfall" ? { hilfe: "e:b-notfall-fahrplan", video: "admin" } : { hilfe: "e:b-leitstand", video: "admin" }),
+  adminBlatt: () => ({ hilfe: "e:b-admin-zentrale" }),
+};
+function hsKontext() {
+  const b = hsBlatt(); if (!b) return { key: HS.v, v: HS.v };
+  const titel = hsBlattTitel(b), m = HS_BLATT_HILFE[b.id]?.() || {};
+  const hilfe = m.hilfe && hzEintraege().some((e) => e.id === m.hilfe) ? m.hilfe : null;
+  return { key: "b:" + (b.id || titel) + (b.id === "adBlatt" ? ":" + (AD.offen || "") : ""), blatt: b, titel, hilfe, videoId: m.video || null };
+}
+function hsHilfeTreffer(q) { // Hilfe-Texte, deren Titel oder Text alle Wörter des Fenstertitels enthalten (genau, ohne Unschärfe – lieber nichts als Falsches)
+  const w = suNorm(q).split(/\s+/).filter((x) => x.length >= 3); if (!w.length) return [];
+  return hzEintraege().filter((e) => { const s = suNorm(`${e.t} ${e.x.replace(/<[^>]+>/g, " ")}`); return w.every((x) => s.includes(x)); });
+}
+function hsBlattSuche(titel) { // erst der ganze Titel, dann der Teil vor „–“ (z. B. „Admin-Zentrale – Einzelheiten“ → „Admin-Zentrale“)
+  for (const q of [titel, titel.split(/\s[–-]\s/)[0]]) if (q && hsHilfeTreffer(q).length) return q;
   return null;
 }
 function hsSicht(v, zurueck) {
@@ -44102,15 +44147,16 @@ function hsGrund() { // → "lange" | "pendeln" | "zurueck" | "suche" | "klicks"
   if (!HS.erfolg && HS.klicks >= HS_GRENZE.klicks && jetzt - HS.seit > HS_GRENZE.lange) return "lange";
   return null;
 }
-function hsDarf(v) {
-  if (!ICH || !hsAn() || !v || !HZ_SICHT_HILFEN[v] || v === "hilfezentrum" || Date.now() - HS.start < 20000 || $("hsBlase")) return false;
+function hsDarf(v, K = { key: v, v }) {
+  if (!ICH || !hsAn() || !v || v === "hilfezentrum" || Date.now() - HS.start < 20000 || $("hsBlase")) return false;
+  if (K.blatt ? !(K.hilfe || hsBlattSuche(K.titel)) : !HZ_SICHT_HILFEN[v]) return false; // 2.729.0: im Fenster nur, wenn es passende Hilfe gibt
   if (typeof RG !== "undefined" && RG.an) return false; // Erklär-Video läuft
   if (hsZuschauen()) return false; // 2.719.0: Diashow, Vollbild, Video oder Musik – nur Zusehen
   if (document.querySelector(".dlg-blatt, #druckVorschau:not(.versteckt)")) return false;
   const a = document.activeElement; if (a && a.matches?.("input:not([type=checkbox]):not([type=radio]), textarea, [contenteditable='true']")) return false;
-  if (hsLies(HS_NIE, []).includes(v)) return false;
+  if (hsLies(HS_NIE, []).includes(K.key)) return false;
   const t = hsLies(HS_TAG, {}); if (t.tag !== heuteIso()) return true;
-  return (t.n || 0) < HS_GRENZE.proTag && !(t.sichten || []).includes(v);
+  return (t.n || 0) < HS_GRENZE.proTag && !(t.sichten || []).includes(K.key);
 }
 // 2.719.0 KC-CLUB-HILFE-NICHT-BEIM-ZUSEHEN (Hansi: „Foto-Diashow angesehen – sofort kam der Hilfehinweis, dort überflüssig“):
 // Wer nur zusieht (Kopf-Rückseite mit Diashow/Uhr/Bühne/Spiegel/Rätsel, Vollbild, laufendes Video oder Musik), bekommt keine Blase.
@@ -44124,31 +44170,37 @@ function hsZuschauen() {
 function hsNeuAnfangen() { HS.zurueck = []; HS.leer = []; HS.tot = []; HS.klicks = 0; HS.seit = Date.now(); }
 function hsPruefen() {
   if (hsZuschauen()) return hsNeuAnfangen();
-  const v = HS.v, grund = hsGrund(); if (!grund || !hsDarf(v)) return;
+  const K = hsKontext(); if (K.key !== HS.kKey) { const neu = HS.kKey !== undefined; HS.kKey = K.key; if (neu) hsNeuAnfangen(); } // 2.729.0: Fenster auf/zu → frisch zählen
+  const v = HS.v, grund = hsGrund(); if (!grund || !hsDarf(v, K)) return;
   HS.zurueck = []; HS.leer = []; HS.tot = []; HS.verlauf = []; HS.klicks = 0; HS.seit = Date.now();
   const t = hsLies(HS_TAG, {}), heute = heuteIso(), neu = t.tag === heute ? t : { tag: heute, n: 0, sichten: [] };
-  neu.n = (neu.n || 0) + 1; neu.sichten = [...new Set([...(neu.sichten || []), v])]; hsSchreib(HS_TAG, neu);
-  hsZeigen(v, grund);
+  neu.n = (neu.n || 0) + 1; neu.sichten = [...new Set([...(neu.sichten || []), K.key])]; hsSchreib(HS_TAG, neu);
+  hsZeigen(v, grund, K);
 }
-function hsZeigen(v, grund) {
-  const vid = hsVideo(v), name = ICH?.vorname || (ICH?.name || "").split(" ")[0] || "";
-  if (/^[a-z_]{2,25}$/.test(v)) nzZaehlen("hs_a_" + v); // anonym: Bereich + Art, nie wer
+function hsZeigen(v, grund, K = { key: v, v }) {
+  const vid = K.blatt ? (K.videoId ? RUNDGAENGE.find((x) => x.id === K.videoId && (!x.nur || x.nur())) || null : null) : hsVideo(v), name = ICH?.vorname || (ICH?.name || "").split(" ")[0] || "";
+  const angebot = K.blatt ? (vid ? `Möchtest du dir das Video „${esc(vid.t)}“ ansehen oder lieber nachlesen, wie „${esc(K.titel)}“ funktioniert?` : `Möchtest du nachlesen, wie „${esc(K.titel)}“ funktioniert?`)
+    : vid ? "Möchtest du dir das Video ansehen oder lieber in der Hilfe nachlesen?" : "Möchtest du in der Hilfe nachlesen, wie es hier geht?";
+  const zv = K.blatt ? "fenster" : v; if (/^[a-z_]{2,25}$/.test(zv)) nzZaehlen("hs_a_" + zv); // anonym: Bereich + Art, nie wer
   $("hsBlase")?.remove();
   const b = document.createElement("div"); b.id = "hsBlase"; b.className = "hs-blase"; b.setAttribute("role", "dialog"); b.setAttribute("aria-label", "Twinkey bietet Hilfe an"); b.dataset.grund = grund;
   b.innerHTML = `<span class="hs-kopf" aria-hidden="true">🧑‍🍳</span><div class="hs-text"><b>Hallo ${esc(name)}, sehr gerne gebe ich dir hier Hilfestellung.</b>
-    <span>${vid ? "Möchtest du dir das Video ansehen oder lieber in der Hilfe nachlesen?" : "Möchtest du in der Hilfe nachlesen, wie es hier geht?"}</span>
+    <span>${angebot}</span>
     <div class="hs-knoepfe">${vid ? `<button type="button" class="knopf haupt klein" data-hs="video">🎬 Video ansehen</button>` : ""}<button type="button" class="knopf${vid ? "" : " haupt"} klein" data-hs="hilfe">📖 Hilfe lesen</button>
       <button type="button" class="knopf klein" data-hs="nein">Nein danke</button><button type="button" class="hs-nie" data-hs="nie">Hier nicht mehr anbieten</button></div></div>`;
   document.body.appendChild(b);
-  b.querySelectorAll("[data-hs]").forEach((k) => (k.onclick = () => hsWahl(k.dataset.hs, v, vid)));
+  b.querySelectorAll("[data-hs]").forEach((k) => (k.onclick = () => hsWahl(k.dataset.hs, v, vid, K)));
   clearTimeout(HS.uhr); HS.uhr = setTimeout(() => $("hsBlase")?.remove(), 45000);
 }
-function hsWahl(w, v, vid) {
+function hsWahl(w, v, vid, K = { key: v, v }) {
   $("hsBlase")?.remove(); clearTimeout(HS.uhr);
-  if (/^[a-z_]{2,25}$/.test(v)) nzZaehlen({ video: "hs_v_", hilfe: "hs_l_", nein: "hs_n_", nie: "hs_x_" }[w] + v);
-  if (w === "video" && vid) return rundgangStart(false, vid.id);
+  const zv = K.blatt ? "fenster" : v; if (/^[a-z_]{2,25}$/.test(zv)) nzZaehlen({ video: "hs_v_", hilfe: "hs_l_", nein: "hs_n_", nie: "hs_x_" }[w] + zv);
+  const zu = () => { if (!K.blatt) return; if (K.blatt.dataset.dyn) K.blatt.remove(); else K.blatt.classList.add("versteckt"); if (K.blatt.id === "adBlatt") AD.offen = null; };
+  if (w === "video" && vid) { zu(); return rundgangStart(false, vid.id); }
+  if (w === "hilfe" && K.blatt) { const q = K.hilfe ? hzEintraege().find((e) => e.id === K.hilfe)?.t : hsBlattSuche(K.titel); zu(); // 2.729.0: Hilfe zum Fenster
+    HZ.herkunft = { v, chat: v === "chat" ? chatId : null }; HZ.sicht = null; HZ.thema = null; zeige("hilfezentrum"); if ($("hzSuche")) $("hzSuche").value = q || K.titel; return hzSuchen(q || K.titel); }
   if (w === "hilfe") return hzFrage(v);
-  if (w === "nie") { hsSchreib(HS_NIE, [...new Set([...hsLies(HS_NIE, []), v])]); melde("👍 Hier biete ich keine Hilfe mehr von selbst an – zurückholen unter ⚙️ Einstellungen"); }
+  if (w === "nie") { hsSchreib(HS_NIE, [...new Set([...hsLies(HS_NIE, []), K.key])]); melde("👍 Hier biete ich keine Hilfe mehr von selbst an – zurückholen unter ⚙️ Einstellungen"); }
 }
 function hsSchalter(an) { try { localStorage.setItem(HS_AUS, an ? "0" : "1"); } catch {} hsEinstZeigen(); melde(an ? "🧑‍🍳 Twinkey hilft wieder von selbst" : "🧑‍🍳 Twinkey bietet keine Hilfe mehr von selbst an"); }
 function hsNieZurueck() { hsSchreib(HS_NIE, []); hsEinstZeigen(); melde("🧑‍🍳 Twinkey darf wieder überall Hilfe anbieten"); }
@@ -44201,7 +44253,10 @@ function fpNachAnmeldung() {
   fpAngemeldet = true; KCFP.angemeldet = true; KCFP.startOk = true; KCFP.version = APP_VERSION;
   const dauer = Date.now() - KCFP.start;
   requestAnimationFrame(() => setTimeout(startMessFertig, 0)); // KC-CLUB-STARTZEIT: fertig = erstes Bild nach der Anmeldung
-  if (dauer > 6000) fpNeu("start_langsam", { ms: dauer, text: `Start dauerte ${Math.round(dauer / 1000)} s` });
+  // 2.729.0 KC-CLUB-SPUR-WIEDER (Fund Hansi 28.10.: Marianne „online“, aber keine Wege – Safari hatte die Seite 33 Min. im Hintergrund eingefroren):
+  // dauert der Start über 2 Min., lag die Seite im Hintergrund – kein „Start langsam“ (die Zeit war nicht das Netz), im Weg „wieder geöffnet“
+  const ausHinter = dauer > SPUR_WIEDER_START_MS; KCFP.ausHinter = ausHinter ? dauer : 0;
+  if (dauer > 6000 && !ausHinter) fpNeu("start_langsam", { ms: dauer, text: `Start dauerte ${Math.round(dauer / 1000)} s` });
   try { if (!sessionStorage.getItem("kc_club_fp_umgebung")) { sessionStorage.setItem("kc_club_fp_umgebung", "1");
     fpNeu("umgebung", { system: fpSystem(), browser: fpBrowser(), start: START_ART, standalone: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true,
       push: "Notification" in window ? Notification.permission : "nicht_moeglich", speicher: KCFP.speicherOk, sw: "serviceWorker" in navigator,

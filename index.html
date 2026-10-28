@@ -3187,6 +3187,14 @@
   .kopf2 > .knopf.haupt:last-child { margin-left: auto; } /* Hauptknopf bleibt rechts – auch nach dem Umbruch */
   .kom-leiste { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
   .kom-leiste .knopf { flex: 1 1 auto; text-align: center; }
+  /* 2.729.0 KC-CLUB-KOM-SYMBOLE: Symbol mit kleinem Wort darunter – alle Knöpfe in einer Reihe (⚙️ Darstellung → „Knöpfe oben in Nachrichten“) */
+  .kom-leiste .kl-k { display: none; } .kom-leiste .ab-merker { margin: 0; }
+  html.kom-sym .kom-leiste { flex-wrap: nowrap; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  html.kom-sym .kom-leiste::-webkit-scrollbar { display: none; }
+  html.kom-sym .kom-leiste .knopf:not(.versteckt) { flex: 1 0 44px; min-width: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 5px 2px 4px; line-height: 1.1; min-height: 0; }
+  html.kom-sym .kom-leiste .kl-i { font-size: 1.3rem; line-height: 1; }
+  html.kom-sym .kom-leiste .kl-t { display: none; }
+  html.kom-sym .kom-leiste .kl-k { display: block; font-size: .64rem; letter-spacing: -.02em; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .kopf2 h2 { margin: 0; font-size: 1.35rem; flex: 1; }
   /* KC-CLUB-CHAT-KOPF (1.20.1): Chat-Kopf klebt oben (wie WhatsApp); Nachrichten, zu denen gesprungen wird, nicht darunter verstecken */
   /* KC-CLUB-CHAT-KOPF-BILD (2.24.19, Wunsch Hansi): oben zuerst Bild (Avatar bzw. Gruppensymbol), dann der Name in einer Zeile; Knöpfe ganz rechts */
@@ -5356,9 +5364,10 @@
   <section id="v-nachrichten" class="versteckt">
     <!-- 1.32.1 (Hinweis Hansi): „＋ Neu“ immer sichtbar in der Kopfzeile, die übrigen Knöpfe beschriftet in einer eigenen Reihe -->
     <div class="kopf2"><button class="zurueck" onclick="zurueck('start')" aria-label="Zurück">‹</button><button type="button" class="na-netz" id="naNetz" onclick="netzBlatt()" aria-label="Verbindung"></button><h2>💬 Nachrichten</h2><button class="knopf klein alarm-knopf" id="naSosKnopf" onclick="notfallMeldung()" title="Notfall-Meldung sofort an alle – Push, E-Mail, WhatsApp, SMS">🚨 SOS</button><button class="knopf haupt klein" onclick="uhNeu()">＋ Neu</button></div>
-    <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()">👥 Gruppe</button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst">⭐ Favoriten</button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „⭐ merken“ markiert hast">⭐ Gemerkt</button><button class="knopf klein versteckt" id="ugKnopf" onclick="ugStart()" title="Clubleitung: welche deiner Nachrichten noch nicht gelesen wurden">📭 Ungelesen</button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail">🧪 Test</button></div>
+    <!-- 2.729.0 KC-CLUB-KOM-SYMBOLE (Wunsch Hansi „der obere Bereich ist zu unruhig und übervoll“ → „Symbol mit kleinem Wort darunter, unter ⚙️ einstellbar“):
+         alle Knöpfe in EINER Reihe (html.kom-sym), sonst wie bisher mit Text daneben; der Anrufbeantworter steht mit in der Reihe -->
+    <div class="kom-leiste"><button class="knopf klein" onclick="gruppeForm()" title="Neue Gruppe anlegen"><span class="kl-i">👥</span><span class="kl-t"> Gruppe</span><span class="kl-k">Gruppe</span></button><button class="knopf klein" id="uhFavKnopf" onclick="uhFavAnsicht(!UH.favAnsicht)" title="Deine Favoriten: Chats mit ⭐ und die, in denen du am meisten schreibst"><span class="kl-i">⭐</span><span class="kl-t"> Favoriten</span><span class="kl-k">Favoriten</span></button><button class="knopf klein" onclick="gemerktZeigen()" title="Nachrichten, die du mit „merken“ markiert hast"><span class="kl-i">🔖</span><span class="kl-t"> Gemerkt</span><span class="kl-k">Gemerkt</span></button><button class="knopf klein versteckt" id="ugKnopf" onclick="ugStart()" title="Clubleitung: welche deiner Nachrichten noch nicht gelesen wurden"><span class="kl-i">📭</span><span class="kl-t"> Ungelesen</span><span class="kl-k">Ungelesen</span></button><button class="knopf klein" onclick="testAnMichStarten()" title="Nachricht an dich selbst – prüft Push und Mail"><span class="kl-i">🧪</span><span class="kl-t"> Test</span><span class="kl-k">Test</span></button><button type="button" class="knopf klein ab-merker" id="abMerker" onclick="abOeffnen()" title="Mein Anrufbeantworter"><span class="kl-i">📼</span><span class="kl-t"> Mein Anrufbeantworter</span><span class="kl-k">Anrufb.</span></button><!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER --></div>
     <div id="onlineLeiste"></div>
-    <button type="button" class="knopf klein ab-merker" id="abMerker" onclick="abOeffnen()">📼 Mein Anrufbeantworter</button><!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER -->
     <div id="uhMarkLeiste"></div>
     <div class="karte" id="unterhListe"><span class="hinweis">Wird geladen …</span></div>
   </section>
@@ -5767,6 +5776,7 @@
     <details class="karte" data-klappe="startseite">
       <summary>🧩 Startseite &amp; Ansicht</summary>
       <div class="schalter"><div><b>📂 Vergangene Tage im Chat einklappen</b><div class="hinweis">Nur heute, der Tag der letzten Nachricht und Ungelesenes offen – frühere Tage als eine Zeile, rechts das Datum (z. B. „Mo, 11.11.26“). Antippen klappt auf. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setChatEinklappen" onchange="einstellung('chatEinklappen', this.checked)"></div> <!-- KC-CLUB-TAGE-EINKLAPPEN 2.429.0 -->
+      <div class="schalter"><div><b>🔣 Knöpfe oben in Nachrichten</b><div class="hinweis">An: Symbol mit kleinem Wort darunter – alle Knöpfe in einer Reihe, mehr Platz für die Chats. Aus: Knöpfe mit Text daneben wie bisher. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKomSym" onchange="einstellung('komSym', this.checked)"></div><!-- 2.729.0 KC-CLUB-KOM-SYMBOLE -->
       <div class="schalter"><div><b>📅 Ältere Wochen als Kalenderwoche</b><div class="hinweis">Nachrichten, die älter als 7 Tage sind, als eine Zeile je Woche („KW 45/26“).</div></div><input type="checkbox" id="setChatKW" onchange="einstellung('chatKW', this.checked)"></div>
       <div class="schalter"><div><b>🗂️ Gliederung der Nachrichten-Übersicht</b><div class="hinweis">Chats in Abschnitten zum Auf- und Zuklappen: nach Zeit (Heute, Gestern, Diese Woche, Letzte Woche, Monate), nach Art (Gruppen, Runden, Einzelchats) oder nach Name A–Z. Chats mit ungelesenen Nachrichten stehen immer ganz oben. Gilt für dieses Gerät.</div></div>
         <select id="setUhGlied" onchange="uhGliedSetzen(this.value)" aria-label="Gliederung der Nachrichten-Übersicht"><option value="zeit">🕒 nach Zeit</option><option value="art">👥 nach Art</option><option value="name">🔤 nach Name</option><option value="aus">Aus – eine lange Liste</option></select></div> <!-- 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG -->
@@ -6171,7 +6181,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.729.0" data-v="2.729.0"></script>
+<script src="app.js?v=2.730.0" data-v="2.730.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
