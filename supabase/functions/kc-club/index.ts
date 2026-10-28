@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.731.0";
+const SERVER_VERSION = "2.736.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4005,6 +4005,57 @@ async function neustartProtokoll(person: string | null, details: Record<string, 
   try { await direktSql()`insert into public.kc_club_protokoll (person_id, aktion, details) values (${person}, 'notfall_neustart', ${direktSql().json(details as any)})`; }
   catch (e) { console.error("neustart protokoll", String(e)); }
 }
+// ---------- 2.736.0 KC-CLUB-EINSPIELEN-FENSTER (Wunsch Hansi 28.10.2026 „wenn sich genau im Moment des Einspielens ein Mitglied anmelden will:
+// kurz ein blaues Wartungsfenster – Hey, wir führen gerade eine kurze Wartung durch …“) ----------
+// Die Abläufe „Seite veröffentlichen“ und „Server hochladen“ melden sich mit einem von GitHub signierten Token (kein Geheimnis) vor dem
+// Hochladen an und danach ab. Solange (höchstens EINSPIEL_MAX_MIN, dann erlischt es von selbst) bekommt ein Mitglied beim App-START (init) 423
+// „kurze Wartung“ – wer schon in der App ist, merkt nichts; der Admin nie. Gespeichert in kc_club_konfig „einspielen“ { seite, server } (je Ablauf).
+const EINSPIEL_ABLAEUFE: Record<string, string> = {
+  "Sire65/KC-Clubapp/.github/workflows/seite-veroeffentlichen.yml@refs/heads/main": "seite",
+  "Sire65/KC-Clubapp/.github/workflows/server-hochladen.yml@refs/heads/main": "server",
+};
+const EINSPIEL_MAX_MIN = 10;
+// geschätzte Dauer je Ablauf ab „an“ (gemessen 28.10.2026: Seite ~50 s inkl. 20 s Nachlauf, Server ~40 s) – für „dauert voraussichtlich noch …“
+const EINSPIEL_DAUER_S: Record<string, number> = { seite: 60, server: 60 };
+let EINSPIEL_MERK: { t: number; bis: string | null; fertig: string | null } | null = null;
+async function einspielenQuelle(req: Request) {
+  const t = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!t.startsWith("ey")) return null;
+  try {
+    const { payload: p } = await jwtVerify(t, GH_JWKS, { issuer: GH_OIDC, audience: "kc-einspielen", maxTokenAge: "10m" });
+    if (p.repository !== "Sire65/KC-Clubapp" || p.repository_id !== "1392489961" || p.repository_owner_id !== "297908448" || p.ref !== "refs/heads/main") return null;
+    return EINSPIEL_ABLAEUFE[String(p.workflow_ref)] || null;
+  } catch { return null; }
+}
+async function einspielenMelden(req: Request, p: any) {
+  const quelle = await einspielenQuelle(req);
+  if (!quelle) return json({ error: "nicht berechtigt" }, 401);
+  const an = !!p?.an, min = Math.min(EINSPIEL_MAX_MIN, Math.max(1, Number(p?.minuten) || 5));
+  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "einspielen").maybeSingle();
+  const w: Record<string, string | null> = { ...((data?.wert as any) || {}) }; w[quelle] = an ? new Date(Date.now() + min * 60000).toISOString() : null;
+  w[quelle + "_fertig"] = an ? new Date(Date.now() + (EINSPIEL_DAUER_S[quelle] || 60) * 1000).toISOString() : null; // Schätzung
+  const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "einspielen", wert: w, geaendert_von: "github:" + quelle, geaendert_am: jetzt() }, { onConflict: "schluessel" });
+  if (error) return json({ error: "nicht gespeichert" }, 500);
+  EINSPIEL_MERK = null;
+  return json({ ok: true, quelle, an });
+}
+async function einspielenLage() { // aktiv bis … (spätestes Ende der Abläufe) oder null + geschätztes Fertig; 15 s gemerkt je Server-Instanz
+  if (EINSPIEL_MERK && Date.now() - EINSPIEL_MERK.t < 15000) return EINSPIEL_MERK;
+  let bis: string | null = null, fertig: string | null = null;
+  try {
+    const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "einspielen").maybeSingle();
+    const w = (data?.wert as any) || {}, j = Date.now();
+    const aktiv = Object.keys(EINSPIEL_DAUER_S).filter((q) => { const x = Date.parse(String(w[q])); return x > j && x < j + (EINSPIEL_MAX_MIN + 1) * 60000; });
+    if (aktiv.length) {
+      bis = new Date(Math.max(...aktiv.map((q) => Date.parse(String(w[q]))))).toISOString();
+      const f = aktiv.map((q) => Date.parse(String(w[q + "_fertig"]))).filter(Number.isFinite);
+      fertig = f.length ? new Date(Math.max(...f)).toISOString() : null;
+    }
+  } catch { /* im Zweifel nie aussperren */ }
+  EINSPIEL_MERK = { t: Date.now(), bis, fertig };
+  return EINSPIEL_MERK;
+}
+const einspielenBis = async () => (await einspielenLage()).bis;
 async function notfallNeustart(req: Request, p: any) {
   const waechter = await neustartWaechter(req), admin = waechter ? null : await neustartAdmin(req).catch(() => null);
   if (!waechter && !admin) return json({ error: "Nur für den Admin." }, 403);
@@ -8147,6 +8198,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       return json(await fraSchritt(p.erzwingen === true).catch((e) => ({ ok: false, fehler: txt(String((e as any)?.message || e), 200) })));
     }
     if (a === "notfall_neustart") return await notfallNeustart(req, p); // KC-CLUB-NOTFALL-NEUSTART (2.235.0): vor der normalen Anmeldung
+    if (a === "einspielen_melden") return await einspielenMelden(req, p); // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: nur die beiden Einspiel-Abläufe (GitHub-Token)
     if (a === "notpaket") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
@@ -8680,6 +8732,10 @@ Köcheclub Werne`,
     if (gesperrt) {
       await sperreVersuchMerken(ich.person_id, gesperrt.art, a).catch(() => {}); // 2.539.0 KC-CLUB-SPERRE-VERSUCHE
       return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
+    }
+    if (a === "init" && !ich.admin) { // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: App-Start genau beim Einspielen → kurzes Wartungsfenster
+      const { bis, fertig } = await einspielenLage();
+      if (bis) return json({ error: "Wir führen gerade eine kurze Wartung durch.", einspielen: true, vorname: ich.vorname, bis, fertig }, 423);
     }
     const anmeldungMs = Date.now() - tAnm;
     // KC-CLUB-VERTRETUNG: „fuer“ = für ein anderes Mitglied handeln (nur erlaubte Aktionen, Erlaubnis jedes Mal neu geprüft)
@@ -17436,7 +17492,8 @@ Köcheclub-App`,
         const groesse = Math.min(MAX_TESTDATEN, Math.max(0, Math.round(Number(p.groesse) || 0)));
         const last = typeof p.last === "string" ? p.last.length : 0;
         if (last > MAX_TESTDATEN * 1.1) throw new Fehler("Testdaten zu groß.");
-        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, anmeldungMs, serverMs: Date.now() - t0Anfrage, instanz: INSTANZ, speicher: ANMELDUNG_TREFFER, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
+        const el = p.einspielen ? await einspielenLage() : null, einspielen = el ? !!el.bis : undefined, einspielenFertig = el?.fertig ?? undefined; // 2.736.0: das Wartungsfenster fragt nach, ob es fertig ist
+        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, anmeldungMs, serverMs: Date.now() - t0Anfrage, instanz: INSTANZ, speicher: ANMELDUNG_TREFFER, wartung, empfangen: last, einspielen, einspielenFertig, ...(groesse ? { daten: testDaten(groesse) } : {}) });
       }
 
       // Fehlersuche (KC-CLUB-EXTERN-DIAGNOSE): was beim Öffnen anderer Apps auf dem Handy passiert – nur technische Angaben, ins Änderungsprotokoll

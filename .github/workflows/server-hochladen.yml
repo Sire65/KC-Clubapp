@@ -9,6 +9,10 @@ on:
     paths:
       - "supabase/functions/kc-club/**"
   workflow_dispatch:
+# 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: id-token für die Meldung „wird gerade eingespielt“ (GitHub-signiert, kein Geheimnis)
+permissions:
+  contents: read
+  id-token: write
 concurrency:
   group: server-hochladen
   cancel-in-progress: false
@@ -28,6 +32,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+      - name: Wartungsfenster an
+        run: tools/einspielen-melden.sh an 5
       - name: Edge Function hochladen
         run: supabase functions deploy kc-club --project-ref "$PROJEKT" --no-verify-jwt --use-api
       - name: Prüfen, ob die neue Server-Version antwortet
@@ -41,3 +47,6 @@ jobs:
             sleep 10
           done
           echo "Server antwortet nicht"; exit 1
+      - name: Wartungsfenster aus
+        if: always()
+        run: tools/einspielen-melden.sh aus

@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.736.0 – 2026-10-28 – 🔧 Kurzes Wartungsfenster beim Einspielen
+- 🔧 Startet jemand die App genau in den Minuten, in denen eine neue Version eingespielt wird, erscheint ein blaues Fenster: „Hey <Vorname>, wir führen gerade eine kurze Wartung durch. Versuche es in ein paar Minuten erneut. Danke für dein Verständnis.“ – mit „↻ Jetzt nochmal“; die App fragt alle 20 Sekunden nach und öffnet sich von selbst, sobald alles fertig ist. Oben die Kochmütze, darunter die Schätzung „⏱️ Dauert voraussichtlich noch etwa 1 Minute“. Wer schon in der App ist, merkt nichts (KC-CLUB-EINSPIELEN-FENSTER).
+- 📅 Nachricht als Termin übernehmen: Begrüßungen wie „Hallo zusammen“, „Hallo Klaus und Dieter“, „Moin“ oder „Liebe Köche“ werden nicht mehr zum Titel – es zählt der erste richtige Satz (KC-CLUB-NT-GRUSS).
+
 ## 2.731.0 – 2026-10-28 – 🟢 Wer online ist, steht mit Namen im Kopf – antippen = Chat (KC-CLUB-ONLINE-NAMEN)
 Wunschliste #46, Wunsch Hansi („im mittleren Feld im Kopf steht die 18/1 – der Eintrag könnte etwas höher und darunter den Namen anzeigen, wer gerade online ist; sind es mehrere, als Laufschrift; wenn ich z. B. bei Klaus antippe, bin ich sofort im Chat mit ihm“):
 - Feld „Mitglieder“ oben: Zahl rückt etwas höher, darunter die Vornamen der gerade Online-Mitglieder als grüne Namensschilder (alphabetisch). Ein Name steht still, mehrere laufen als Laufschrift durch (nahtlos; Berühren hält an).

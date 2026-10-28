@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.731.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.736.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14906,6 +14906,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
+  if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
@@ -26939,6 +26940,40 @@ function sperreZeigen(art, text, bis) {
     <button class="knopf" style="background:#fff;color:#1d2b44;min-height:48px" onclick="location.reload()">↻ Später nochmal versuchen</button></div>`;
   document.body.appendChild(f); document.body.style.overflow = "hidden";
 }
+// ---------- 2.736.0 KC-CLUB-EINSPIELEN-FENSTER (Wunsch Hansi „Hey, wir führen gerade eine kurze Wartung durch. Versuche es in ein paar Minuten
+// erneut. Danke für dein Verständnis.“ – mit Vornamen und Knopf „↻ Jetzt nochmal“): App-Start genau beim Einspielen. Fragt alle 20 s sparsam
+// (ping, kein Start) nach, ob es fertig ist, und lädt dann von selbst neu. Spätestens nach 12 Min. neu laden (der Server gibt nach 10 Min. ohnehin frei).
+const EINSPIEL_TAKT_S = 20, EINSPIEL_SPAETESTENS_MS = 12 * 60000;
+// Kochmütze oben (Wunsch Hansi) und „Dauert voraussichtlich noch etwa …“ aus der Schätzung des Servers (fertig); vorbei → „gleich fertig“.
+const einspielenNoch = (fertig) => { const ms = Date.parse(fertig || "") - Date.now(); if (!Number.isFinite(ms)) return "Das dauert meist nur 1–2 Minuten.";
+  if (ms <= 15000) return "Gleich fertig – nur noch einen Moment."; const m = Math.ceil(ms / 60000); return m <= 1 ? "Dauert voraussichtlich noch etwa 1 Minute." : `Dauert voraussichtlich noch etwa ${m} Minuten.`; };
+function einspielenZeigen(vorname, fertig) {
+  if (document.getElementById("einspielFenster")) return;
+  const f = document.createElement("div"); f.id = "einspielFenster"; f.setAttribute("role", "alertdialog"); f.setAttribute("aria-modal", "true");
+  f.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:linear-gradient(160deg,#1d4f91,#2f6fc1);color:#fff;text-align:center";
+  const anrede = String(vorname || "").trim() ? `Hey ${esc(String(vorname).trim())}, wir` : "Hey, wir";
+  f.innerHTML = `<div style="max-width:420px"><img src="kc-kochmuetze-weiss.webp" alt="" style="width:86px;height:86px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))">
+    <h2 style="margin:6px 0 12px;color:#fff">🔧 Kurze Wartung</h2>
+    <p style="font-size:1.15rem;line-height:1.45;margin:0 0 12px">${anrede} führen gerade eine kurze Wartung durch. Versuche es in ein paar Minuten erneut. Danke für dein Verständnis.</p>
+    <p id="einspielDauer" style="font-size:1.05rem;font-weight:700;margin:0 0 8px">⏱️ ${esc(einspielenNoch(fertig))}</p>
+    <p id="einspielUhr" style="font-size:1rem;margin:0 0 20px;opacity:.9">⏳ Ich versuche es gleich von selbst wieder …</p>
+    <button type="button" id="einspielNochmal" class="knopf" style="background:#fff;color:#1d2b44;min-height:48px">↻ Jetzt nochmal</button></div>`;
+  document.body.appendChild(f); document.body.style.overflow = "hidden";
+  const ab = Date.now(); let rest = EINSPIEL_TAKT_S, laeuft = false, schaetzung = fertig || null;
+  const dauerZeigen = () => { const d = $("einspielDauer"); if (d) d.textContent = "⏱️ " + einspielenNoch(schaetzung); };
+  const pruefen = async (vonHand) => {
+    if (laeuft) return; laeuft = true; const u = $("einspielUhr");
+    if (u) u.textContent = "⏳ Ich schaue nach …";
+    try { const r = await api("ping", { einspielen: true }); if (r && r.einspielen === false) return location.reload(); if (r?.einspielenFertig) schaetzung = r.einspielenFertig; } catch {} // Server gerade im Neustart → weiter warten
+    finally { laeuft = false; }
+    if (Date.now() - ab > EINSPIEL_SPAETESTENS_MS) return location.reload();
+    rest = EINSPIEL_TAKT_S; dauerZeigen(); if (u) u.textContent = vonHand ? "⏳ Noch einen kleinen Moment – ich versuche es gleich wieder …" : "⏳ Ich versuche es gleich von selbst wieder …";
+  };
+  $("einspielNochmal").onclick = () => pruefen(true);
+  setInterval(() => { if (document.hidden || laeuft) return; rest--; const u = $("einspielUhr"); if (rest % 5 === 0) dauerZeigen();
+    if (u && rest > 0 && !/Moment/.test(u.textContent)) u.textContent = `⏳ Ich versuche es gleich von selbst wieder … 0:${String(rest).padStart(2, "0")}`;
+    if (rest <= 0) pruefen(false); }, 1000);
+}
 // 2.23.79 (Hansi: „neben jeder Person ein Icon“): 🔔 = Push/E-Mail laufen weiter · 📵 = keine Push, keine E-Mail
 const sperreSymbol = (stumm) => (stumm ? "📵" : "🔔");
 const sperreSymbolTitel = (stumm) => (stumm ? "Keine Push, keine E-Mail – antippen zum Einschalten" : "Push/E-Mail laufen weiter – antippen zum Abschalten");
@@ -35083,12 +35118,17 @@ function ntErkennen(text, bezug) {
   for (let [a, b] of raus) { const f = /(?:^|\s)(am|um|ab|gegen|von|vom|bis|den|ca\.?)\s+$/i.exec(t.slice(0, a)); if (f) a = f.index; t = t.slice(0, a) + " " + t.slice(b); } // „am“/„um“ vor dem Datum mit weg
   t = t.replace(/\b(am|um|ab|gegen|von|bis|den|dem|uhr|ist|wir)\s+(?=[,.!?;:]|$)/gi, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/\s{2,}/g, " ")
     .replace(/^[\s,.;:–-]+|[\s,;:–-]+$/g, "").replace(/^(am|um|ab|und|also|ok|okay|ja)\s+/i, "").trim();
+  // 2.736.0 KC-CLUB-NT-GRUSS (Fund Hansi 28.10.2026: Erinnerung „⏰ Hallo zusammen.“ – der Titel war die Begrüßung der Nachricht):
+  // Begrüßung vorn weg („Hallo zusammen,“, „Hallo Klaus und Dieter!“, „Moin,“, „Liebe Köche,“, „Guten Morgen“) – nur, wenn danach noch Inhalt bleibt
+  for (let i = 0; i < 2; i++) { const g = NT_GRUSS.exec(t); if (!g) break; if (t.length - g[0].length < 3) { t = ""; break; } t = t.slice(g[0].length).replace(/^[\s,.;:!–-]+/, ""); } // nur Gruß → kein Titel (selbst eintragen)
   if (t.length > 70) { const i = t.search(/[.!?]\s/), satz = i > 0 ? t.slice(0, i + 1) : t; t = satz.length <= 70 && satz.length >= 8 ? satz : t.slice(0, 70).replace(/\s+\S*$/, "") + " …"; }
   // 2.612.0: bei unklarer Tageszeit die andere Möglichkeit mitgeben (10:00 ↔ 22:00) – das Fenster fragt nach, statt zu raten
   const anders = (z) => { if (!z) return null; const h = +z.slice(0, 2); return h >= 1 && h <= 23 && h !== 12 ? `${String(h < 12 ? h + 12 : h - 12).padStart(2, "0")}${z.slice(2)}` : null; };
   const alt = unklar && zeit ? anders(zeit) : null;
   return { datum, zeit, bis, alt, altBis: alt && bis ? anders(bis) : null, titel: t ? t.charAt(0).toUpperCase() + t.slice(1) : "", ort, sicher };
 }
+// 2.736.0 KC-CLUB-NT-GRUSS: Begrüßung am Anfang (Groß-/Kleinschreibung nur beim Gruß egal; Namen danach müssen groß geschrieben sein)
+const NT_GRUSS = /^(?:[Hh]allo|[Hh]allöchen|[Hh]i|[Hh]ey|[Mm]oin(?: [Mm]oin)?|[Ss]ervus|[Gg]rüß (?:euch|dich)(?: [Gg]ott)?|[Gg]uten (?:[Mm]orgen|[Tt]ag|[Aa]bend)|[Ll]iebe[rn]?|[Ii]hr [Ll]ieben)(?=[\s,.!:;–-]|$)(?:\s+(?:zusammen|alle(?: zusammen)?|ihr [Ll]ieben|[Ll]eute|[Ff]reunde|Köche|Köchinnen|[A-ZÄÖÜ][a-zäöüß-]+(?:\s+und\s+[A-ZÄÖÜ][a-zäöüß-]+)?))?\s*[,.!:;–-]*(?:\s+|$)/;
 const NT_CACHE = new Map();
 function ntAusText(m) { // je Nachricht nur einmal rechnen (Bezug: der Tag, an dem sie geschrieben wurde – „morgen“ von vorgestern ist gestern)
   const k = m.id + "|" + (m.text || "").length + "|" + (m.zeit || ""); if (NT_CACHE.has(k)) return NT_CACHE.get(k);
