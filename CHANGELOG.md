@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.742.0 – 2026-10-28 – 🎬 Neue Fassung des Anleitungsfilms für den Clubsprecher (KC-CLUB-FILM-HINWEIS)
+- Film `film/clubsitzung-anleitung.mp4` neu (10:52 Min.): zeigt jetzt die Einladung als Brief, „An wen?“ (Alle · Einzeln · Gruppe · Amt), Aktentasche → 📤 Freigeben in den Eingangskorb und wie es beim Mitglied ankommt (ansehen, ablegen oder löschen).
+- Eigene Kennung `clubsitzungneu` – der Clubsprecher bekommt beim Öffnen den Hinweis „Hallo …, für dich gibt es einen Anleitungsfilm“ auch dann noch einmal, wenn er die erste Fassung schon gesehen hat. Büro → 🎬 Anleitung zeigt die neue Fassung. Nur App, kein Server.
+
 ## 2.741.0 – 2026-10-28 – 📤 Aktentasche freigeben → Eingangskorb der Mitglieder · 👥 „An wen?“ mit Einzeln und Amt (KC-CLUB-AKTENTASCHE-FREIGEBEN, KC-CLUB-EINGANG-DURCHGEHEN, KC-CLUB-ZIELWAHL)
 Wunsch Hansi („Clubsprecher, Admin oder Kassenwart öffnet die Aktentasche, hakt ein oder mehrere Sachen an und unten auf Freigeben. Dann Auswahl der Empfänger wie alle, einzeln, Gruppe, Amt usw. Dann senden – aber in den Eingangskorb der Mitglieder. Die erhalten einen Hinweis ‚Neu in deinem Eingangskorb‘ und sofort einen Knopf ‚Ansehen?‘. Wenn ja, anzeigen. Danach die Frage: Möchtest du das Dokument ablegen oder löschen? Bei Ablegen den Ordner im Archiv vorschlagen und dort ablegen“):
 - 💼 **Aktentasche → 📤 Freigeben:** Teile anhaken, **An wen?** wählen, Ablage-Vorschlag (Register) und kurze Nachricht dazu, **📤 Senden**. Jedes Teil wird zur Datei – Anlagen so, wie sie sind, Tagesordnung, Zusagen, Aufgaben, Vorschläge, Abstimmungsbogen und Protokolle als PDF aus der Druckansicht (wie „🖨️ Drucken“).

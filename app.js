@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.741.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.742.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1973,8 +1973,9 @@ function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ER
 // „▶ Film jetzt ansehen“ (spielt sofort in der App), „⏰ Später“ (beim nächsten Öffnen wieder), „Nein, danke“. Angesehen/„Nein, danke“ merkt der
 // Server geräteübergreifend (Einstellung „filme“). Jederzeit wieder: Büro → 🎬 Anleitung. Der Service Worker lässt film/ aus (kein 30-MB-Offline-Speicher).
 const FILME = [
-  { id: "clubsitzung", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "9 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4", bild: "film/clubsitzung-vorschau.jpg",
-    u: "Büro, Tagesordnung, Einladung, Drucken, Aktentasche – und am Abend Clubabend Live mit Live-Abstimmung über den nächsten Termin", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+  // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
+  { id: "clubsitzungneu", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "11 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=2", bild: "film/clubsitzung-vorschau.jpg",
+    u: "Neue Fassung: Büro, Tagesordnung, Einladung als Brief an Alle, Einzelne, Gruppe oder Amt, Drucken, Aktentasche mit Freigeben in den Eingangskorb – und am Abend Clubabend Live mit Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
