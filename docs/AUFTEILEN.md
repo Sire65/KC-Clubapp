@@ -55,7 +55,7 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 | 2 | Spiele (`teile/spiele.js`, ~300 KB; Spiel-Einladung, Live-Anfragen, Einstellungen, Zustand SP bleiben) | 2.742.0 | gebaut, 7 Spiele Handy+PC geprüft, Start-Rechenzeit gesamt −13 % |
 | 3a | Rückseite: Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne (`teile/rueckseite.js`, ~175 KB; Eselsohr, Uhr+Wecker, Bewegungs-Einladung bleiben; Videos brauchen die Rückseite) | 2.743.0 | gebaut, alle Reiter + Videos geprüft |
 | 3b | Kopf-Szenen (`teile/szenen.js`, ~490 KB) – kurz nach dem Start geladen (szenenSpaeter, Wunsch Hansi „ruhig etwas später starten“); Deko/Eiszapfen sofort | 2.744.0 | gebaut, 19 Szenen + 57 Videos geprüft |
-| 4 | Büro-Werkzeuge der Clubleitung | | geplant |
+| 4 | Büro-Werkzeuge der Clubleitung (`teile/buero.js`, ~200 KB; Zustand BU/BNN, Tages-Übersicht und Hinweise bleiben; Ausdrucke laden über die `druck…`-Platzhalter, `druckSeiteBauen` wartet mit `await`) | 2.745.0 | gebaut, 12 Ansichten + 5 Ausdrucke Handy+PC geprüft, Start-Rechenzeit −5 % |
 | 5 | Hilfe-Texte | | geplant |
 
 Nach jeder Stufe: alle Tests, Klick-Rundgang, echte Startzeit messen (Fehlerprotokoll `startzeit`), erst dann die nächste Stufe.

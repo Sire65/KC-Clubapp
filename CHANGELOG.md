@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.745.0 – 2026-10-28 – 🗂️ Büro der Clubleitung wird erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 4)
+Prüfbericht C (Wunsch #44), Stufe 4 – für Mitglieder unsichtbar: Büro, Eingangskorb, Briefbogen und Sprach-Brief, Termine, Kontakt, Nachher, Feste, Mitgliederliste, Freud & Leid, Dienstzeiten-Übersicht und Geburtstagsgruß-Wahl (rund 200 KB) liegen jetzt in teile/buero.js und werden erst geladen, wenn jemand aus der Clubleitung das Büro (oder einen Büro-Ausdruck) öffnet. Tages-Übersicht, Eingangskorb-Hinweis und „Neue Nachricht“-Hinweis bleiben im Hauptprogramm. Ausdrucke (Sitzung, Brief, Feste, Mitgliederliste, Dienstzeiten) laden das Teil über ihre Platzhalter – die Druckvorschau wartet darauf. Geprüft: 12 Büro-Ansichten und 5 Ausdrucke (Handy + PC) gleich wie vorher, 15 Einstiege auf frischer Seite, Klick-Rundgang; Start-Rechenzeit 625 → 592 ms.
+
+
 ## 2.744.0 – 2026-10-28 – 🎡 Kopf-Szenen starten kurz nach der App (KC-CLUB-SZENEN-SPAETER, Stufe 3b)
 Wunsch Hansi „lass die Szenen ruhig etwas später starten“ (Prüfbericht C, Stufe 3b): Jahreszeiten-Bühne und alle Themen-Szenen – Sim-Jü mit Karussell, Viehmarkt und Stier, Oktoberfest, Karibik, Karneval, Halloween, Unterwasser, Weltraum, Bauernhof, Kegeln, Wildwest, Wüste, Seifenblasen, Baustelle – samt Winter- und Herbst-Extras (rund 490 KB) liegen jetzt in teile/szenen.js. Die Startseite ist sofort bedienbar; die Szene erscheint etwa eine Sekunde später, sobald die App gerade nichts anderes zu tun hat. Deko und Eiszapfen sind sofort da. Die Vorschau in den Einstellungen und die Erklär-Videos laden die Szenen direkt. Geprüft: alle 19 Szenen und alle 57 Videos wie vorher, auch ein Video direkt nach dem Öffnen.
 

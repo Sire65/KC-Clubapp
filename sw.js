@@ -1,13 +1,13 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.744.0";
+const VERSION = "2.745.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
 // dieser Version liefern (schnell, vom Handy fertig übersetzt); fehlt es dort, aus dem Netz holen und merken.
 // 2.731.0 KC-CLUB-TEILE (Prüfbericht C): nachladbare Programmteile teile/<name>.js?v=<Version> – gleiche Namen wie TEILE_LISTE in app.js.
 // Sie gehören zum Programm dieser Version: beim Einrichten mit in den Speicher (alles oder nichts), danach aus dem Speicher wie app.js.
-const TEILE = ["probe", "rueckseite", "spiele", "szenen", "videos"];
+const TEILE = ["buero", "probe", "rueckseite", "spiele", "szenen", "videos"];
 DATEIEN.push(...TEILE.map((t) => `teile/${t}.js?v=${VERSION}`));
 const istProgramm = (url) => url.pathname.endsWith("/app.js") && url.searchParams.get("v") === VERSION;
 const istTeil = (url) => /\/teile\/[a-z0-9-]+\.js$/.test(url.pathname) && url.searchParams.get("v") === VERSION;

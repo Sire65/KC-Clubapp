@@ -14,7 +14,7 @@ assert.ok(/function zwStart\(feld, opt\) \{ ZWAHL\[feld\] = \{ art: "alle"/.test
 assert.ok(/zwStart\("buAn", \{ titel: "👤 Wer bekommt die Einladung\?"/.test(bl) && /✅ Zugesagt/.test(bl) && /❓ Noch ohne Antwort/.test(bl), "Einladung: Zugesagt, ohne Antwort");
 assert.ok(/AEMTER/.test(app.slice(app.indexOf("const zwAemter"), app.indexOf("const zwIds"))) && /MG_GRUPPEN/.test(app.slice(app.indexOf("function zwGruppen"), app.indexOf("const zwAemter"))), "Ämter, eigene Gruppen");
 assert.ok(/zielAuswahl\(Z\.titel \|\| "👤 Wer soll es bekommen\?"/.test(app), "Einzeln über das gemeinsame Fenster");
-const se = app.slice(app.indexOf("async function buSenden(knopf)"), app.indexOf("// ---------- KC-CLUB-BUERO-EINGANG"));
+const se = app.slice(app.indexOf("async function buSenden(knopf)"), app.indexOf("function buEingang() {", app.indexOf("async function buSenden(knopf)"))); // 2.745.0 KC-CLUB-TEILE Stufe 4: Büro in teile/buero.js
 assert.ok(/A\.art === "alle" \? \{\} : \{ ziel: \{ art: A\.art, name: A\.name \|\| "", ids: A\.ids \} \}/.test(se), "Ziel geht an den Server, „Alle“ unverändert");
 assert.ok(/if \(!zwBereit\("buAn"\)\) return melde/.test(se) && /Bitte Mitglieder auswählen\./.test(se), "ohne Auswahl wird nichts gesendet");
 // Abstimmung nutzt weiter dasselbe Fenster

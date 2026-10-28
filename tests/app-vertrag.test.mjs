@@ -7872,6 +7872,24 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const n of ["function jzbStart(", "function jzbStop(", "function jahreszeitVorschau(", "function jzbKirmesMalen(", "function jzbEisTropfen("])
     assert.ok(sz.includes(n) && !app.includes(n), `${n.slice(0, 24)} liegt im Szenen-Teil`);
 }
+// 2.745.0 KC-CLUB-TEILE Stufe 4: Büro-Werkzeuge der Clubleitung in teile/buero.js – beim ersten Öffnen des Büros geladen
+{
+  const app = lies("app.js"), bu = lies("teile/buero.js");
+  const ein = (app.match(/\n  buero: \{ einstieg: \[([^\]]*)\], sri: "sha384-/) || [])[1];
+  assert.ok(ein, "Büro-Teil registriert");
+  for (const f of ["buStart", "buZeigen", "buLaden", "buEingang", "buZurueck", "sbBrief", "ggWahl", "dvStart"])
+    assert.ok(ein.includes(`"${f}"`), `${f} hat einen Platzhalter`);
+  // Ausdrucke: DRUCKARTEN ruft druck…() auf; der Platzhalter lädt das Teil und gibt das Blatt zurück (druckSeiteBauen wartet mit await)
+  for (const [art, f] of [["sitzung", "druckSitzung"], ["brief", "druckBrief"], ["feste", "druckFeste"], ["mitgliederliste", "druckMitgliederliste"], ["dienstuebersicht", "druckDienstUebersicht"]]) {
+    assert.ok(ein.includes(`"${f}"`) && bu.includes(`function ${f}(`) && new RegExp(`\\n  ${art}: \\{ bauen: \\(\\) => ${f}\\(\\) \\}`).test(app), `Ausdruck ${art} lädt das Büro-Teil`);
+  }
+  assert.match(app, /const s = await d\.bauen\(o, DRUCK\.param\); if \(!s\) return false;/, "Druck wartet auf das Blatt (Platzhalter gibt ein Versprechen)");
+  assert.match(app, /const platzhalter = \(\.\.\.a\) => teilLaden\(name\)\.then\(\(\) => window\[f\]\(\.\.\.a\)/, "Platzhalter gibt das Ergebnis der echten Funktion weiter");
+  for (const n of ["let BU = {", "const BNN = {", "function tagesinfoZeigen(", "function buNeuPruefen(", "function ekHinweisPruefen(", "const buDarf = "])
+    assert.ok(app.includes(n) && !bu.includes(n), `${n.slice(0, 26)} bleibt im Hauptprogramm (Startseite, Hinweise)`);
+  for (const n of ["function buStart(", "function buZeigen(", "function buEingang(", "function druckBrief(", "function sbBrief("])
+    assert.ok(bu.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Büro-Teil`);
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -9337,7 +9355,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.deepEqual(erk("Brief an Klaus"), { art: "brief", an: "klaus" }, "Brief an …");
   assert.equal(erk("Schreib Klaus komm vorbei", [{ person_id: "P9", name: "Klaus Zander" }])?.art, "nachricht", "Nachricht bleibt Nachricht");
   assert.ok(/if \(b\.art === "brief"\) return sbBrief\(b\);/.test(programm) && /\{ id: "brief_neu", sym: "✉️", t: "Neuer Brief"/.test(programm) && /"brief_neu"(, "[a-z_]+")*\]; \/\/ 2\.137\.0/.test(server), "Ausführen + lernbares Ziel (App und Server gleich)");
-  const f = programm.slice(programm.indexOf("// ---------- KC-CLUB-SPRACHE-BRIEF"), programm.indexOf("// ---------- KC-CLUB-SCHRITT-HILFE (2.63.0"));
+  const f = programm.slice(programm.indexOf("// ---------- KC-CLUB-SPRACHE-BRIEF"), programm.indexOf("// ---------- KC-CLUB-LIVE-VORSCHAU (1.67.0")); // 2.745.0 Stufe 4: steht jetzt in teile/buero.js
   assert.ok(/if \(!buSchreiben\(\)\)/.test(f) && /zeige\("buero"\)/.test(f) && /buBrief\(\);/.test(f), "nur Büro mit Schreibrecht; öffnet Büro + Briefbogen");
   const reihe = ["Was für ein Brief?", "An wen geht der Brief?", "Welche Anrede?", "Wie lautet der Betreff?", "Soll ich den Text der Vorlage nehmen", "Welcher Gruß zum Schluss?"].map((x) => f.indexOf(x));
   assert.ok(reihe.every((i, k) => i > 0 && (k === 0 || i > reihe[k - 1])), "Reihenfolge der Fragen: Art → an wen → Anrede → Betreff → Text → Gruß");
