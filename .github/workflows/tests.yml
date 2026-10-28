@@ -45,6 +45,9 @@ jobs:
       - run: node tests/einladung-brief.test.mjs
       # KC-CLUB-AKTENTASCHE-FREIGEBEN, KC-CLUB-EINGANG-DURCHGEHEN, KC-CLUB-ZIELWAHL (2.741.0)
       - run: node tests/aktentasche-freigeben.test.mjs
+      # KC-CLUB-ABLAGEKORB-EINGANG, KC-CLUB-EINGANG-WEITER (2.743.0)
+      - run: node tests/ablagekorb-eingang.test.mjs
+      - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/zugang-pruefen.test.mjs
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs
@@ -65,6 +68,7 @@ jobs:
       - run: node tests/einspielen-fenster.test.mjs
       - run: node tests/nt-gruss.test.mjs
       - run: node tests/ungelesen-admin.test.mjs
+      - run: node tests/vorladen-foto.test.mjs
       # 2.725.0 KC-CLUB-TESTS-ALLE (Prüfbericht Etappe 5): fehlten in dieser Liste (beim Veröffentlichen liefen sie schon) – ein Wächter in
       # app-vertrag.test.mjs meldet künftig jeden tests/*.test.mjs, der hier nicht steht
       - run: node tests/anruf-besser.test.mjs

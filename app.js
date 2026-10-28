@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.744.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.750.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15,11 +15,11 @@ const TEILE_LISTE = {
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-vQYpHJcMvGzwwT46KQqwR5HjoLe7QIpB563TpHqYeCZ5Wlvje///r0wsOR7zSKVM" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
-  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-bz8fp1VoAEWeJ4/U26dThg40mEJJlB1fLE4VrWj7SfJVXzfwSDRm+tMPD88LotWg" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
-// 2.743.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
+// 2.749.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
 // teilDa(name) sagt ohne Laden, ob ein Teil schon da ist (für „aufräumen, falls offen“).
 const TEILE_BRAUCHT = { videos: ["rueckseite", "szenen"] };
 const TEILE_DA = {};
@@ -44,6 +44,16 @@ for (const [name, t] of Object.entries(TEILE_LISTE)) for (const f of t.einstieg)
   const platzhalter = (...a) => teilLaden(name).then(() => window[f](...a), (e) => { try { meldeFehler(e); } catch {} });
   platzhalter._teil = name; window[f] = platzhalter;
 }
+// 2.747.0 KC-CLUB-TEILE-VORLADEN (Wunsch Hansi 28.10. „Vorhin stockte das Programm“): Teile nicht erst beim ersten Antippen holen, sondern still im
+// Voraus, wenn die App nichts zu tun hat (20 s nach dem Start, je Teil eine Ruhepause, eins nach dem anderen). Nicht bei „Daten sparen“ oder ohne Netz.
+// Scheitert ein Teil, bleibt alles wie bisher: der Platzhalter lädt es beim ersten Gebrauch nach.
+const TEILE_VORLADEN_MS = 20000;
+function teileVorladen() {
+  if (navigator.onLine === false || navigator.connection?.saveData) return;
+  const ruhe = () => new Promise((ok) => (window.requestIdleCallback ? requestIdleCallback(() => ok(), { timeout: 5000 }) : setTimeout(ok, 300)));
+  Object.keys(TEILE_LISTE).reduce((kette, name) => kette.then(ruhe).then(() => (TEILE_STAND[name] || document.hidden ? null : teilLaden(name).catch(() => {}))), Promise.resolve());
+}
+setTimeout(teileVorladen, TEILE_VORLADEN_MS);
 // ---------- 2.364.0 KC-CLUB-SCHRIFT-ZOOM (Wunsch Hansi „Texte und Nachrichten auf dem Handy zoomen“): mit zwei Fingern auseinanderziehen = Schrift
 // größer, zusammenschieben = kleiner (wie in vielen Nachrichten-Apps). 2.365.0 (Wunsch Hansi „nur bei Text, nicht die komplette Oberfläche“): es wachsen nur
 // die Lese-Texte (Nachrichten, Zettel, Protokolle, Fenstertexte – CSS „zoom“ auf genau diesen Blöcken), Knöpfe und Leisten bleiben gleich. Gilt zusätzlich zu „🔠 Große Schrift“, bleibt auf diesem Gerät gemerkt (70–200 %). Fotos, Videos, Spielbretter und Malflächen
@@ -1836,6 +1846,7 @@ function einwOffen(v) {
 function einwKarteWeg() { const k = document.querySelectorAll(".einw-karte"); if (k.length) { vorlesenStopp(); k.forEach((x) => x.remove()); } }
 function einwZeigen(v) {
   if (v === "start") rgHinweisZeigen(); // KC-CLUB-RUNDGANG-HINWEIS (2.243.0)
+  if (v !== "dokansicht" && $("egBlatt")?.dataset.pause) { delete $("egBlatt").dataset.pause; $("egBlatt").classList.remove("versteckt"); } // KC-CLUB-EINGANG-WEITER: zurück vom Drucken
   const sek = $("v-" + v);
   if (sek && einwOffen(v) && sek.querySelector(`:scope > .einw-karte[data-v="${v}"]`)) return; // schon da – nicht neu bauen
   einwKarteWeg();
@@ -1982,8 +1993,9 @@ function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ER
 // „▶ Film jetzt ansehen“ (spielt sofort in der App), „⏰ Später“ (beim nächsten Öffnen wieder), „Nein, danke“. Angesehen/„Nein, danke“ merkt der
 // Server geräteübergreifend (Einstellung „filme“). Jederzeit wieder: Büro → 🎬 Anleitung. Der Service Worker lässt film/ aus (kein 30-MB-Offline-Speicher).
 const FILME = [
-  { id: "clubsitzung", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "9 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4", bild: "film/clubsitzung-vorschau.jpg",
-    u: "Büro, Tagesordnung, Einladung, Drucken, Aktentasche – und am Abend Clubabend Live mit Live-Abstimmung über den nächsten Termin", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+  // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
+  { id: "clubsitzungneu", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "11 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=2", bild: "film/clubsitzung-vorschau.jpg",
+    u: "Neue Fassung: Büro, Tagesordnung, Einladung als Brief an Alle, Einzelne, Gruppe oder Amt, Drucken, Aktentasche mit Freigeben in den Eingangskorb – und am Abend Clubabend Live mit Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
@@ -4624,7 +4636,7 @@ function fensterSchlafen(selbst) { // dieses Fenster legt sich schlafen: alle Ab
   // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG (Fund Hansi: Alarm-Push „1 schwerwiegendes Problem … setting 'checked'“): App zweimal offen → dieses
   // Fenster wird geleert. Noch laufende Ladevorgänge/Tag-Nacht-Prüfung fanden dann die Elemente nicht mehr. Ab jetzt: hier nichts mehr tun und nichts melden.
   if (window.KCFP) window.KCFP.schlaeft = true;
-  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.743.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
+  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.749.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
   const hoechste = setTimeout(() => {}, 0); for (let i = 1; i <= hoechste; i++) { clearTimeout(i); clearInterval(i); } // alle Takte (Chat, Online, Vorführung …) anhalten
   try { FENSTER.kanal?.close(); } catch (e) { /* schon zu */ }
   document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font:18px/1.45 system-ui,sans-serif;background:#f5eee3;color:#2b1d22">
@@ -11186,7 +11198,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
         t.style.transformBox = "fill-box"; t.style.transformOrigin = "50% 0";
         const a = t.animate([{ transform: "scale(.25)", opacity: 0 }, { transform: "scale(1)", opacity: .95, offset: .6 }, { transform: "translateY(1px) scale(1,1.08)", opacity: .95 }], { duration: 1500, easing: "ease-out" });
         a.onfinish = () => { // gelöst: in der Jahreszeiten-Bühne bis zum Boden fallen (dort wächst die Pfütze) – ohne Bühne nur ein kurzes Stück
-          const r = t.getBoundingClientRect(); if (teilDa("szenen") && (eis ? jzbEisStueck : jzbEisTropfen)(r.left + r.width / 2, r.top + r.height / 2)) return t.remove(); // 2.744.0: Boden nur mit geladener Szene
+          const r = t.getBoundingClientRect(); if (teilDa("szenen") && (eis ? jzbEisStueck : jzbEisTropfen)(r.left + r.width / 2, r.top + r.height / 2)) return t.remove(); // 2.750.0: Boden nur mit geladener Szene
           const b = t.animate([{ transform: "translateY(1px)", opacity: .95 }, { transform: "translateY(40px)", opacity: 0 }], { duration: 900, easing: "ease-in" });
           b.onfinish = b.oncancel = () => t.remove();
         };
@@ -11197,7 +11209,7 @@ addEventListener("resize", () => requestAnimationFrame(() => { jzEisLaenge(); jz
   }, 3500 + Math.random() * 4500); // 2.283.0: etwas öfter (alle 3½–8 s)
 })();
 const JZ_TEILE = { herbst: ["🍂", "🍁", "🍂", "🍃"], advent: ["❄", "✦", "❄", "•"], winter: ["❄", "•", "❄"], silvester: ["✨", "🎆", "✨", "🎇"], fruehling: ["🌸", "🌼", "🌸"], sommer: ["🦋", "✨"], unterwasser: ["🐠", "🫧", "🐟", "🐚"], weltraum: ["⭐", "✨", "🚀", "🪐"], bauernhof: ["🐄", "🐖", "🐓", "🌾"], kegeln: ["🎳", "✨", "🎉"], wildwest: ["🤠", "🐃", "🌵", "🔥"], wueste: ["🐪", "🌴", "🪔", "✨"], baustelle: ["🚧", "👷", "🧱", "💥"], seifenblasen: ["🫧", "✨", "🫧"] };
-// 2.744.0 KC-CLUB-SZENEN-SPAETER (Wunsch Hansi 28.10.2026 „lass die Szenen ruhig etwas später starten“, Prüfbericht C Stufe 3b): die Kopf-Szenen
+// 2.750.0 KC-CLUB-SZENEN-SPAETER (Wunsch Hansi 28.10.2026 „lass die Szenen ruhig etwas später starten“, Prüfbericht C Stufe 3b): die Kopf-Szenen
 // (teile/szenen.js) werden erst kurz nach dem Start geladen – die Startseite ist sofort bedienbar, die Szene erscheint einen Augenblick später.
 // Einmal anstoßen genügt; klappt das Laden nicht (kein Netz), bleibt der Kopf ruhig mit Deko, der nächste Aufruf versucht es wieder.
 const SZN_SPAETER_MS = 1200;
@@ -11220,7 +11232,7 @@ function jahreszeitKopf() {
   const jetzt = JZB.vorschau || jahreszeitAktuell(); JZ_LETZTE.art = jetzt;
   jzEiszapfen(h, jetzt); // KC-CLUB-JAHRESZEIT-AUTOMATIK (2.273.0)
   jzDeko(h, jetzt); // 2.335.0 KC-CLUB-DEKO
-  if (JZB_ARTEN.includes(jetzt)) { if (!teilDa("szenen")) return szenenSpaeter(); if (jzbStart(h, jetzt)) return; } // 2.744.0 KC-CLUB-SZENEN-SPAETER: Szene kommt kurz nach dem Start
+  if (JZB_ARTEN.includes(jetzt)) { if (!teilDa("szenen")) return szenenSpaeter(); if (jzbStart(h, jetzt)) return; } // 2.750.0 KC-CLUB-SZENEN-SPAETER: Szene kommt kurz nach dem Start
   const art = jetzt, teile = JZ_TEILE[art], n = art === "sommer" ? 3 : art === "silvester" ? 9 : 11;
   const s = document.createElement("div"); s.className = `jz-schicht jz-${art}`; s.setAttribute("aria-hidden", "true");
   s.innerHTML = Array.from({ length: n }, (_, i) => `<i style="--x:${(i * 97 + 13) % 100};--v:${(i * 37) % 11};--d:${(art === "silvester" ? 2.4 : 7) + ((i * 53) % 9) * 0.7}s;--s:${0.6 + ((i * 29) % 7) / 10}">${teile[i % teile.length]}</i>`).join("");
@@ -11465,10 +11477,10 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.743.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.749.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
-  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.743.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
+  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.749.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
   esSchreib("tab", k); esStop();
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
@@ -19477,7 +19489,8 @@ const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?
 const buEinladungWahl = (nurOffen) => buSitzungWaehlen(nurOffen ? "🔔 Für welche Sitzung erinnern?" : "📨 Einladung für welche Sitzung?", (id) => buEinladung(id, nurOffen));
 async function buSitzungLaden(id) {
   BU.s = await api("buero_sitzung", { treffen_id: id }, { warten: true });
-  const v = BU.s.vorbereitung, st = BU.s.standard;
+  // 2.744.0 KC-CLUB-SITZUNG-LEER: nach einer Einladung ohne Vorbereitung gibt es eine Zeile ohne Tagesordnung – dann der übliche Vorschlag
+  const v = BU.s.vorbereitung?.tagesordnung?.length ? BU.s.vorbereitung : null, st = BU.s.standard;
   BU.f = { anwesend: new Set(v ? v.anwesend : st.anwesend), anmerkung: v ? v.anmerkung || "" : BU.s.anmerkungVorschlag, tagesordnung: (v ? v.tagesordnung : st.tagesordnung).map((x) => ({ ...x })), zeilen: v ? v.zeilen : st.zeilen, neu: "" };
 }
 async function buSitzungOeffnen(id) {
@@ -24296,6 +24309,17 @@ async function bildLaden(img, frisch = false) {
     img.src = bildCache[id].url;
   } catch {}
 }
+// 2.747.0 KC-CLUB-FOTO-NOCHMAL (Fund 28.10.: im Fotoalbum blieben bei Hansi zwei Vorschaubilder leer): Bild-Links der Fotos gelten 1 Stunde.
+// Bleibt ein Bild im Fotoalbum, bei Videos, im Quiz oder auf der Infoseite leer: nach 1,5 s einmal neu versuchen (kurzer Netz-Wackler). Klappt das
+// auch nicht, holt das Fotoalbum still frische Links (höchstens einmal pro Minute) – das Album zeigt dann wieder alle Bilder, ohne dass man etwas tun muss.
+const FOTO_NOCHMAL = { zuletzt: 0 };
+document.addEventListener("error", (ev) => {
+  const img = ev.target;
+  if (!(img instanceof HTMLImageElement) || img.dataset.anlage || !img.closest(".fotoraster, .fa-album, .ifotos, .qz-album") || !img.getAttribute("src")) return;
+  if (!img.dataset.nochmal) { img.dataset.nochmal = "1"; const src = img.getAttribute("src"); setTimeout(() => { if (img.isConnected && img.getAttribute("src") === src) { img.removeAttribute("src"); img.src = src; } }, 1500); return; }
+  if (aktuelleAnsicht !== "fotos" || Date.now() - FOTO_NOCHMAL.zuletzt < 60000) return;
+  FOTO_NOCHMAL.zuletzt = Date.now(); fotosLaden(true);
+}, true);
 // 2.165.0 KC-CLUB-ANLAGE-OEFFNEN (Fund Hansi: „Liste angeklickt – öffnet sich nicht“): das Fenster muss beim Antippen selbst aufgehen –
 // erst nach dem Laden (await) blockt Android es stillschweigend. Also sofort ein leeres Fenster, dann die Adresse hinein;
 // ist es trotzdem gesperrt, kommt ein Knopf „↗ Jetzt öffnen“ (ein echter Link, den man selbst antippt).
@@ -25387,6 +25411,7 @@ async function ablkZeigen(fokus) {
         <button class="knopf klein" onclick="ablkOrdner('${x.id}')">🗄️ In Ordner</button>
         <button class="knopf klein" onclick="ablkChat('${x.id}')">💬 In Chat</button>
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'weiter')">👤 Weitergeben</button>
+        ${x.anlagen.some((f) => ARCHIV_TYP_OK(String(f.mime || "").split(";")[0])) ? `<button class="knopf klein" onclick="ablkEingang('${x.id}')">📥 In Eingangskörbe</button>` : ""}
         <button class="knopf klein" onclick="ablkPerson('${x.id}', 'aufgabe')">✅ Als Aufgabe</button>
         <button class="knopf klein" onclick="ablkVorschlag('${x.id}')">🗳️ Vorschlag Sitzung</button>
         ${x.anlagen.length ? `<button class="knopf klein" onclick="ablkDublettenPruefen('${x.id}')">🔍 Dubletten prüfen</button>` : ""}
@@ -25449,6 +25474,50 @@ async function ablkAuswahlAlbum(id) {
 }
 async function ablkDublettenPruefen(id) {
   try { melde("🔍 Suche nach Dubletten …"); const r = await api("ablagekorb_dubletten", { id }, { warten: true }); melde(r.dubletten ? `⚠️ ${r.dubletten === 1 ? "1 Datei gibt" : r.dubletten + " Dateien gibt"} es schon – markiert` : "✅ Keine Dubletten gefunden"); ablkZeigen(id); } catch (e) { meldeFehler(e); }
+}
+// ---------- 2.743.0 KC-CLUB-ABLAGEKORB-EINGANG (Wunsch Hansi „ein Dokument, das ich außerhalb der Club-App an die Club-App teile, liegt im
+// Ablagekorb – von dort muss auch ein Weiterteilen in die Eingangskörbe der Mitglieder möglich sein, wieder nach Alle, Amt, Gruppe usw. Dann haben
+// es alle sofort und können es ansehen, drucken, ablegen“) ----------
+// Gleicher Weg wie Aktentasche → Freigeben (archiv_eingang_verteilen, „An wen?“ = KC-CLUB-ZIELWAHL) – nur liegt die Datei schon auf dem Server.
+function ablkEingang(id) {
+  const x = ablkEintrag(id); if (!x) return;
+  const passt = x.anlagen.filter((f) => ARCHIV_TYP_OK(String(f.mime || "").split(";")[0])), w = ablkGewaehlt(id);
+  blattAuf("ablkEgBlatt", `<h3 style="margin:0">📥 In die Eingangskörbe der Mitglieder</h3><p class="hinweis" style="margin:2px 0 6px">Jedes Mitglied bekommt die Datei in seinen 📥 Eingangskorb – mit Hinweis (bei offener App sofort). Dort ansehen, drucken, weiterschicken und im Archiv ablegen oder löschen.</p>
+    ${passt.map((f) => `<label class="at-wahl"><input type="checkbox" data-ef="${esc(f.id)}" ${!w.size || w.has(f.id) ? "checked" : ""} onchange="ablkEgKnopf()"><span><b>${ablkSym(f)} ${esc(f.name)}</b></span></label>`).join("")}
+    ${passt.length < x.anlagen.length ? `<p class="hinweis" style="margin:4px 0">${x.anlagen.length - passt.length} Datei(en) passen nicht ins Archiv (nur PDF, Bild, Word, Excel, Text) und bleiben im Ablagekorb.</p>` : ""}
+    <label class="feld" style="margin-top:8px">Titel <small class="hinweis">(leer = Dateiname)</small><input id="ablkEgTitel" maxlength="120" value="${esc(x.titel || "")}"></label>
+    <div class="at-reg-kopf">👥 An wen?</div><div id="ablkEgAn"></div>
+    <label class="feld" style="margin-top:8px">Ablage-Vorschlag (Register im Archiv der Mitglieder)<select id="ablkEgReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
+    <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="ablkEgNotiz" rows="2" maxlength="500">${esc((x.text || "").slice(0, 500))}</textarea></label>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="ablkEgLos" onclick="ablkEgSenden(this, '${esc(id)}')" disabled>📤 Senden</button><button class="knopf" onclick="$('ablkEgBlatt').remove()">Abbrechen</button></div>`);
+  $("ablkEgBlatt").style.zIndex = "2050";
+  zwStart("ablkEgAn", { titel: "👤 Wer bekommt die Datei?", alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: ablkEgKnopf });
+}
+const ablkEgDateien = () => [...document.querySelectorAll("#ablkEgBlatt [data-ef]:checked")].map((c) => c.dataset.ef);
+function ablkEgKnopf() {
+  const k = $("ablkEgLos"); if (!k || !ZWAHL.ablkEgAn) return;
+  const t = ablkEgDateien().length, n = zwBereit("ablkEgAn") ? zwIds("ablkEgAn").length : 0;
+  k.disabled = !t || !n; k.textContent = !t ? "Bitte eine Datei anhaken" : !n ? "Bitte Empfänger wählen" : `📤 ${t === 1 ? "1 Datei" : t + " Dateien"} an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden`;
+}
+async function ablkEgSenden(knopf, id) {
+  const x = ablkEintrag(id), dateien = ablkEgDateien(), ids = zwBereit("ablkEgAn") ? zwIds("ablkEgAn") : [];
+  if (!x || !dateien.length || !ids.length) return ablkEgKnopf();
+  const Z = ZWAHL.ablkEgAn, wer = Z.art === "alle" ? "alle Mitglieder" : Z.art === "einzeln" ? `${ids.length} ausgewählte Mitglieder` : Z.name.replace(/^\S+ /, "");
+  if (!(await frage(`📥 ${dateien.length === 1 ? "Die Datei" : dateien.length + " Dateien"} in den Eingangskorb legen – an ${wer} (${ids.length})?\n\nJeder bekommt einen Hinweis und entscheidet selbst: ablegen oder löschen.`, { ja: "📤 Senden", nein: "Zurück" }))) return;
+  const titel = $("ablkEgTitel").value.trim(), reg = $("ablkEgReg").value, notiz = $("ablkEgNotiz").value.trim();
+  await einmal(knopf, async () => {
+    let r = null;
+    try {
+      for (let n = 0; n < dateien.length; n++) {
+        const f = x.anlagen.find((a) => a.id === dateien[n]); knopf.textContent = `⏳ ${n + 1} von ${dateien.length} …`;
+        r = await api("archiv_eingang_verteilen", { personen: ids, ablk: id, anlage: f.id, titel: dateien.length === 1 && titel ? titel : String(f.name || "").replace(/\.[^.]+$/, ""), register: reg, notiz, letzte: n === dateien.length - 1, anzahl: dateien.length }, { warten: true });
+      }
+      $("ablkEgBlatt")?.remove();
+      const weg = r?.uebersprungen || [];
+      await ablkFertig(id, `📥 In die Eingangskörbe: ${wer} (${r?.empfaenger ?? ids.length})`, true); ablkZeigen(id);
+      melde(`📥 Liegt jetzt im Eingangskorb von ${r?.empfaenger ?? ids.length} ${(r?.empfaenger ?? ids.length) === 1 ? "Mitglied" : "Mitgliedern"} – sie bekommen Bescheid${weg.length ? ` · nicht möglich bei: ${weg.map((y) => `${y.name} (${y.grund})`).join(", ")}` : ""}`);
+    } catch (e) { meldeFehler(e); ablkEgKnopf(); }
+  });
 }
 async function ablkFertig(id, ergebnis, still) {
   try { await api("ablagekorb_erledigt", { id, ergebnis }); if (INIT?.ablagekorb) INIT.ablagekorb--; if (!still) { melde("✔ " + ergebnis); ablkZeigen(); } ilZeigen?.(); } catch (e) { meldeFehler(e); }
@@ -32570,6 +32639,7 @@ function egZeigen(liste, i, eigen) {
   const f = blattAuf("egBlatt", `<h3 style="margin:0">📥 Eingangskorb${liste.length > 1 ? ` · ${i + 1} von ${liste.length}` : ""}</h3>
     <p class="hinweis" style="margin:2px 0 6px"><b>${esc(x.titel)}</b>${x.von ? ` · von ${esc(x.von)}` : ""}</p>${x.beschreibung ? `<div class="karte" style="margin:0 0 8px;white-space:pre-wrap">${esc(x.beschreibung)}</div>` : ""}
     <div id="egVorschau" class="eg-vorschau"><p class="hinweis">⏳ Wird geladen …</p></div>
+    <div class="knoepfe" style="margin:8px 0 0"><button class="knopf klein" data-w="druck">🖨️ Drucken</button><button class="knopf klein" data-w="mail">✉️ Per E-Mail</button><button class="knopf klein" data-w="teilen">📤 Teilen</button></div>
     <p style="margin:10px 0 4px;font-weight:700">Möchtest du das Dokument ablegen oder löschen?</p>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" data-w="ab">🗄️ Ablegen</button><button class="knopf" data-w="weg">🗑️ Löschen</button><button class="knopf" data-w="spaeter">⏰ Später</button></div>`);
   f.querySelector('[data-w="ab"]').onclick = () => { f.remove(); arWohin(x, o, weiter); }; // Ordner + Register sind vorgeschlagen (Absender/aktuelles Jahr)
@@ -32579,6 +32649,11 @@ function egZeigen(liste, i, eigen) {
     try { await api("archiv_pruefung", { id: x.id, annehmen: false }); f.remove(); melde("🗑️ Gelöscht"); weiter(); } catch (er) { meldeFehler(er); e.target.disabled = false; }
   };
   f.querySelector('[data-w="spaeter"]').onclick = () => { f.remove(); melde("📥 Bleibt im Eingangskorb – unter „Heute wichtig“."); };
+  // 2.743.0 KC-CLUB-EINGANG-WEITER (Wunsch Hansi „ansehen, drucken, weiterschicken – z. B. per E-Mail an Ruth – und dann ablegen“): vorhandene Wege
+  // des Archivs; das Fenster bleibt (beim Drucken kurz ausgeblendet, zurück aus der Druckansicht ist es wieder da)
+  f.querySelector('[data-w="druck"]').onclick = () => { f.classList.add("versteckt"); f.dataset.pause = "1"; arDrucken(x); };
+  f.querySelector('[data-w="mail"]').onclick = () => arVersenden(x, "mail");
+  f.querySelector('[data-w="teilen"]').onclick = () => { arDateiVorladen(x); anlageTeilen(false); };
   egVorschau(x);
 }
 async function egVorschau(x) { // PDF-Seiten als Bilder, Bilder direkt, sonst „Öffnen“ – mit dem vorhandenen Datei-Laden (arDateiVorladen)
