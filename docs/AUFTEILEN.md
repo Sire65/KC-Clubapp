@@ -41,7 +41,8 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 2. Neues Teil: Datei `teile/<name>.js`, Eintrag in `TEILE_LISTE` (app.js) und `TEILE` (sw.js), Fingerabdruck eintragen.
 3. Ein Teil darf nur Funktionen enthalten, die **nicht beim Start** gebraucht werden. Was das Hauptprogramm von einem Teil braucht, geht nur
    über Einstiegs-Funktionen (Platzhalter). Kein `const`/`let` mit gleichem Namen wie im Hauptprogramm (der Vertragstest übersetzt alles zusammen).
-4. Einstiegs-Funktionen geben beim ersten Aufruf ein Versprechen (Promise) zurück – nur Funktionen auslagern, deren Rückgabewert der Aufrufer
+4. `import()` in einem Teil löst sich vom Teil aus auf (teile/…) – nur `import(new URL("lib/…", location.href).href)` benutzen (Test prüft das).
+5. Einstiegs-Funktionen geben beim ersten Aufruf ein Versprechen (Promise) zurück – nur Funktionen auslagern, deren Rückgabewert der Aufrufer
    nicht sofort braucht (Knöpfe, „öffnen“, „starten“).
 
 ## Stufen
@@ -50,7 +51,7 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 |---|---|---|---|
 | 0 | Nachlade-Weg, Probe-Teil, Tests, Rundgang, diese Anleitung | 2.727.0 | eingespielt 28.10. |
 | 1 | Erklär-Videos (`teile/videos.js`, ~420 KB; Katalog, Zustand RG und Startseiten-Hinweis bleiben im Hauptprogramm) | 2.729.0 | gebaut, alle 57 Videos geprüft, Start-Rechenzeit −12 % |
-| 2 | Spiele | | geplant |
+| 2 | Spiele (`teile/spiele.js`, ~300 KB; Spiel-Einladung, Live-Anfragen, Einstellungen, Zustand SP bleiben) | 2.730.0 | gebaut, 7 Spiele Handy+PC geprüft, Start-Rechenzeit gesamt −13 % |
 | 3 | Sim-Jü, Rückseite, Bühne, Effekte | | geplant |
 | 4 | Büro-Werkzeuge der Clubleitung | | geplant |
 | 5 | Hilfe-Texte | | geplant |

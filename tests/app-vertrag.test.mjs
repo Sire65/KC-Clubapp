@@ -3316,7 +3316,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/import \{ Chess \} from "\.\/chess\.js";/.test(server) && fs.existsSync(new URL("../supabase/functions/kc-club/chess.js", import.meta.url)) && fs.existsSync(new URL("../lib/chess/chess.js", import.meta.url)) && /BSD|Redistribution/.test(lies("lib/chess/LICENSE")), "chess.js lokal mit Lizenz");
   const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
   assert.ok(/if \(ch\.turn\(\) !== farbe\) throw/.test(zug) && /try \{ m = ch\.move\(\{ from: von, to: nach, promotion: umw \}\); \} catch \{ m = null; \}/.test(zug) && /sieg = ch\.isCheckmate\(\); remis = !sieg && ch\.isDraw\(\);/.test(zug), "Server prüft Schachzüge");
-  assert.ok(/import\("\.\/lib\/chess\/chess\.js\?v=1\.4\.0"\)/.test(html) && /function schComputerZug\(ch, staerke\)/.test(html) && /onclick="spArtWahl\('schach'\)"/.test(html) && /function schUmwandlung\(farbe\)/.test(html), "Schach in der App");
+  assert.ok(/import\(new URL\("lib\/chess\/chess\.js\?v=1\.4\.0", location\.href\)\.href\)/.test(html) /* 2.730.0: Adresse zur Seite (liegt in teile/spiele.js) */ && /function schComputerZug\(ch, staerke\)/.test(html) && /onclick="spArtWahl\('schach'\)"/.test(html) && /function schUmwandlung\(farbe\)/.test(html), "Schach in der App");
   // Computer findet Matt in 1 (Stichprobe mit der echten Bibliothek)
   const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
   const code = html.slice(html.indexOf("const SCH_FIG"), html.indexOf("// ----- Brett -----"));
@@ -7814,6 +7814,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(sw, /if \(istProgramm\(url\) \|\| istTeil\(url\)\) \{/, "Teile aus dem Speicher dieser Version");
   assert.match(sw, /ignoreSearch: !url\.pathname\.endsWith\("\/app\.js"\) && !url\.pathname\.includes\("\/teile\/"\)/, "offline nie ein Teil einer anderen Version");
   assert.match(lies("docs/AUFTEILEN.md"), /sicherung\/vor-aufteilen-2\.725\.0/, "Rückweg-Anleitung mit Sicherungs-Zweig");
+  // 2.730.0 (Fund beim Vergleich Stufe 2): import() mit „./…“ löst sich vom Teil aus auf (teile/lib/…) statt von der Seite – in Teilen nur new URL(…, location.href)
+  for (const f of fs.readdirSync(new URL("../teile/", import.meta.url)).filter((x) => x.endsWith(".js")))
+    assert.ok(!/import\(\s*["'`](?!https?:)/.test(lies("teile/" + f)), `teile/${f}: import() nur mit new URL(…, location.href) – sonst sucht der Browser im Ordner teile/`);
 }
 // 2.727.0 KC-CLUB-TEILE: siehe Block „Nachlade-Weg“ oben; Probe-Teil antwortet mit der Version
 {
@@ -7829,6 +7832,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
     assert.ok(vid.includes(n) && !app.includes(n), `${n.slice(0, 28)} liegt im Video-Teil`);
   assert.match(app, /if \(RG\.an\) rundgangEnde\(true\);/, "Zurück beendet ein laufendes Video – nur wenn es läuft (dann ist das Teil geladen)");
   assert.ok(!/st: (?!\(\) => )RG_/.test(app.slice(app.indexOf("const RUNDGAENGE = ["), app.indexOf("];", app.indexOf("const RUNDGAENGE = [")))), "Katalog verweist nur bei Bedarf auf die Drehbücher (st: () => …)");
+}
+// 2.730.0 KC-CLUB-TEILE Stufe 2: Spiele liegen in teile/spiele.js – Einstiege über Platzhalter; Start-Einladung, Live-Anfragen, Einstellungen bleiben im Hauptprogramm
+{
+  const app = lies("app.js"), sp = lies("teile/spiele.js");
+  assert.match(app, /spiele: \{ einstieg: \["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"\], sri: "sha384-/, "Spiele-Teil mit seinen Einstiegen registriert");
+  for (const n of ["let SP = {", "function spEinladung(", "function spielLive(", "function spEinstZeigen(", "function mdKachelnOrdnen(", "const SP_ALLE_ARTEN = "])
+    assert.ok(app.includes(n) && !sp.includes(n), `${n.slice(0, 26)} bleibt im Hauptprogramm (Start, Online-Takt, Einstellungen, Mitglieder-Seite)`);
+  for (const n of ["function chessLaden(", "function bskNeu(", "function maeNeu(", "function ktFragenLaden(", "function fdkNeu("])
+    assert.ok(sp.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Spiele-Teil`);
+  assert.match(sp, /import\(new URL\("lib\/chess\/chess\.js\?v=1\.4\.0", location\.href\)\.href\)/, "Schachregeln von der Seite aus geladen");
+  assert.match(sp, /import\(new URL\("lib\/kuechenterror\/fragen\.js\?v=3", location\.href\)\.href\)/, "Küchenterror-Fragen von der Seite aus geladen");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

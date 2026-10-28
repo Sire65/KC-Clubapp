@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.730.0 – 2026-10-28 – 🎲 Spiele werden erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 2)
+Prüfbericht C (Wunsch #44), Stufe 2 – für Mitglieder unsichtbar: Tic-Tac-Toe, Schach, Doppelkopf, Bauernskat, Mensch ärgere dich nicht, Fang den Koch und Küchenterror (rund 300 KB) liegen jetzt in teile/spiele.js und werden erst geladen, wenn jemand ein Spiel öffnet. Im Hauptprogramm bleiben die Spiel-Einladung beim Start, die Live-Anfragen, die Spiele-Einstellungen und der Zustand SP. Beim Vergleich gefunden und behoben: Schachregeln und Küchenterror-Fragen wurden aus einem Teil heraus im falschen Ordner gesucht – jetzt immer von der Seite aus; ein Test verhindert das künftig. Geprüft: alle 7 Spiele am Handy und PC wie vorher; Start-Rechenzeit gegenüber 2.728.0 insgesamt −13 %.
+
 ## 2.729.0 – 2026-10-28 – 🎬 Erklär-Videos werden erst beim Abspielen geladen (KC-CLUB-TEILE, Stufe 1)
 Prüfbericht C (Wunsch #44), Stufe 1 – für Mitglieder unsichtbar: Abspieler, Drehbücher, Stimmen-Wahl und Bewertung der Erklär-Videos (rund 420 KB, ein Zehntel des Programms) liegen jetzt in teile/videos.js und werden erst geladen, wenn ein Video startet. Im Hauptprogramm bleiben der Video-Katalog (Hilfe, Twinkey, Lupe), der Hinweis „Warum diese App?“ und der Zustand „Video läuft“. Geprüft: alle 57 Videos Schritt für Schritt wie vorher, Start-Rechenzeit auf handy-ähnlichem Gerät −12 %.
 
