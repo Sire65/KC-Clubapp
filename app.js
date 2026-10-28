@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.732.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.739.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14,11 +14,11 @@ const APP_STUFE = "RC";
 const TEILE_LISTE = {
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-vQYpHJcMvGzwwT46KQqwR5HjoLe7QIpB563TpHqYeCZ5Wlvje///r0wsOR7zSKVM" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
-  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-sXOMmarpE20pyGiOgVqRkT/hpEbZ6MPsImHtvoxv/rBKwxrG2DGNu6aNHfSo2YzP" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-2m0P+bAaOtf8o8px7Fv6x1XutVQMUEF/V1RJT5LGMsIpS4CyDs+6CGONStC0r3AY" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
-// 2.732.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
+// 2.739.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
 // teilDa(name) sagt ohne Laden, ob ein Teil schon da ist (für „aufräumen, falls offen“).
 const TEILE_BRAUCHT = { videos: ["rueckseite"] };
 const TEILE_DA = {};
@@ -4564,7 +4564,7 @@ function fensterSchlafen(selbst) { // dieses Fenster legt sich schlafen: alle Ab
   // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG (Fund Hansi: Alarm-Push „1 schwerwiegendes Problem … setting 'checked'“): App zweimal offen → dieses
   // Fenster wird geleert. Noch laufende Ladevorgänge/Tag-Nacht-Prüfung fanden dann die Elemente nicht mehr. Ab jetzt: hier nichts mehr tun und nichts melden.
   if (window.KCFP) window.KCFP.schlaeft = true;
-  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.732.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
+  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.739.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
   const hoechste = setTimeout(() => {}, 0); for (let i = 1; i <= hoechste; i++) { clearTimeout(i); clearInterval(i); } // alle Takte (Chat, Online, Vorführung …) anhalten
   try { FENSTER.kanal?.close(); } catch (e) { /* schon zu */ }
   document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font:18px/1.45 system-ui,sans-serif;background:#f5eee3;color:#2b1d22">
@@ -8644,6 +8644,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   const leitungKaputt = (r.status >= 502 && r.status <= 504) || (r.status >= 500 && !j);
   vbEnde(!leitungKaputt, performance.now() - t0, leitungKaputt ? "Serverfehler " + r.status : "");
   if (!j && !leitungKaputt && r.ok) throw new Error("Unerwartete Antwort vom Server.");
+  if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
   if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
@@ -11391,10 +11392,10 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.732.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.739.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
-  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.732.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
+  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.739.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
   esSchreib("tab", k); esStop();
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
@@ -16750,7 +16751,7 @@ const ZOOM_ZIELE = ".kachel, .mini-kachel, .bu-ordner, .bu-ding, .kacheln3 .mini
 document.addEventListener("click", (e) => {
   const el = e.target.closest?.(ZOOM_ZIELE);
   if (!el || el.dataset.zoomLos || e.defaultPrevented || el.disabled || kaBearb || ZIEHEN || zogGerade || !einst("animiert", true)) return; // 2.24.1: ohne Animation sofort öffnen
-  const innen = e.target.closest("button, a, input, select, textarea, label, summary"); if (innen && innen !== el && el.contains(innen)) return;
+  const innen = e.target.closest("button, a, input, select, textarea, label, summary, .on-name"); if (innen && innen !== el && el.contains(innen)) return; // 2.731.0: Online-Namen öffnen den Chat, nicht das Feld
   e.preventDefault(); e.stopImmediatePropagation();
   el.classList.add("zoomt");
   setTimeout(() => { el.classList.remove("zoomt"); el.dataset.zoomLos = "1"; try { el.click(); } finally { delete el.dataset.zoomLos; } }, 180);
@@ -19239,6 +19240,40 @@ function sperreZeigen(art, text, bis) {
     <button class="knopf" style="background:#fff;color:#1d2b44;min-height:48px" onclick="location.reload()">↻ Später nochmal versuchen</button></div>`;
   document.body.appendChild(f); document.body.style.overflow = "hidden";
 }
+// ---------- 2.736.0 KC-CLUB-EINSPIELEN-FENSTER (Wunsch Hansi „Hey, wir führen gerade eine kurze Wartung durch. Versuche es in ein paar Minuten
+// erneut. Danke für dein Verständnis.“ – mit Vornamen und Knopf „↻ Jetzt nochmal“): App-Start genau beim Einspielen. Fragt alle 20 s sparsam
+// (ping, kein Start) nach, ob es fertig ist, und lädt dann von selbst neu. Spätestens nach 12 Min. neu laden (der Server gibt nach 10 Min. ohnehin frei).
+const EINSPIEL_TAKT_S = 20, EINSPIEL_SPAETESTENS_MS = 12 * 60000;
+// Kochmütze oben (Wunsch Hansi) und „Dauert voraussichtlich noch etwa …“ aus der Schätzung des Servers (fertig); vorbei → „gleich fertig“.
+const einspielenNoch = (fertig) => { const ms = Date.parse(fertig || "") - Date.now(); if (!Number.isFinite(ms)) return "Das dauert meist nur 1–2 Minuten.";
+  if (ms <= 15000) return "Gleich fertig – nur noch einen Moment."; const m = Math.ceil(ms / 60000); return m <= 1 ? "Dauert voraussichtlich noch etwa 1 Minute." : `Dauert voraussichtlich noch etwa ${m} Minuten.`; };
+function einspielenZeigen(vorname, fertig) {
+  if (document.getElementById("einspielFenster")) return;
+  const f = document.createElement("div"); f.id = "einspielFenster"; f.setAttribute("role", "alertdialog"); f.setAttribute("aria-modal", "true");
+  f.style.cssText = "position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:linear-gradient(160deg,#1d4f91,#2f6fc1);color:#fff;text-align:center";
+  const anrede = String(vorname || "").trim() ? `Hey ${esc(String(vorname).trim())}, wir` : "Hey, wir";
+  f.innerHTML = `<div style="max-width:420px"><img src="kc-kochmuetze-weiss.webp" alt="" style="width:86px;height:86px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))">
+    <h2 style="margin:6px 0 12px;color:#fff">🔧 Kurze Wartung</h2>
+    <p style="font-size:1.15rem;line-height:1.45;margin:0 0 12px">${anrede} führen gerade eine kurze Wartung durch. Versuche es in ein paar Minuten erneut. Danke für dein Verständnis.</p>
+    <p id="einspielDauer" style="font-size:1.05rem;font-weight:700;margin:0 0 8px">⏱️ ${esc(einspielenNoch(fertig))}</p>
+    <p id="einspielUhr" style="font-size:1rem;margin:0 0 20px;opacity:.9">⏳ Ich versuche es gleich von selbst wieder …</p>
+    <button type="button" id="einspielNochmal" class="knopf" style="background:#fff;color:#1d2b44;min-height:48px">↻ Jetzt nochmal</button></div>`;
+  document.body.appendChild(f); document.body.style.overflow = "hidden";
+  const ab = Date.now(); let rest = EINSPIEL_TAKT_S, laeuft = false, schaetzung = fertig || null;
+  const dauerZeigen = () => { const d = $("einspielDauer"); if (d) d.textContent = "⏱️ " + einspielenNoch(schaetzung); };
+  const pruefen = async (vonHand) => {
+    if (laeuft) return; laeuft = true; const u = $("einspielUhr");
+    if (u) u.textContent = "⏳ Ich schaue nach …";
+    try { const r = await api("ping", { einspielen: true }); if (r && r.einspielen === false) return location.reload(); if (r?.einspielenFertig) schaetzung = r.einspielenFertig; } catch {} // Server gerade im Neustart → weiter warten
+    finally { laeuft = false; }
+    if (Date.now() - ab > EINSPIEL_SPAETESTENS_MS) return location.reload();
+    rest = EINSPIEL_TAKT_S; dauerZeigen(); if (u) u.textContent = vonHand ? "⏳ Noch einen kleinen Moment – ich versuche es gleich wieder …" : "⏳ Ich versuche es gleich von selbst wieder …";
+  };
+  $("einspielNochmal").onclick = () => pruefen(true);
+  setInterval(() => { if (document.hidden || laeuft) return; rest--; const u = $("einspielUhr"); if (rest % 5 === 0) dauerZeigen();
+    if (u && rest > 0 && !/Moment/.test(u.textContent)) u.textContent = `⏳ Ich versuche es gleich von selbst wieder … 0:${String(rest).padStart(2, "0")}`;
+    if (rest <= 0) pruefen(false); }, 1000);
+}
 // 2.23.79 (Hansi: „neben jeder Person ein Icon“): 🔔 = Push/E-Mail laufen weiter · 📵 = keine Push, keine E-Mail
 const sperreSymbol = (stumm) => (stumm ? "📵" : "🔔");
 const sperreSymbolTitel = (stumm) => (stumm ? "Keine Push, keine E-Mail – antippen zum Einschalten" : "Push/E-Mail laufen weiter – antippen zum Abschalten");
@@ -20035,7 +20070,7 @@ function fiDruck() {
 // ---------- KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch ----------
 // Liste (Suche, Kategorie) → Rezept (Foto, Portionen −/＋ rechnet alle Mengen um, Zutaten abhaken, Einkaufsliste kopieren/teilen, Drucken)
 // → eigenes Rezept anlegen/ändern/löschen. Zutaten als Zeilen „500 g Mehl“ – Menge und Einheit werden erkannt, damit das Umrechnen geht.
-var RZ = { liste: null, kat: "", q: "", offen: null, port: 4, haken: new Set(), form: null }; // var: die Kachel fragt RZ schon beim ersten Zeichnen ab
+var RZ = { liste: null, kat: "", q: "", offen: null, port: 4, haken: new Set(), form: null, thema: "", themen: [], redaktion: null, sterneAb: 3 }; // var: die Kachel fragt RZ schon beim ersten Zeichnen ab
 const RZ_KAT = { vorspeise: "🥗 Vorspeise", suppe: "🍲 Suppe", hauptgericht: "🍖 Hauptgericht", beilage: "🥔 Beilage", dessert: "🍰 Dessert", gebaeck: "🥨 Gebäck", getraenk: "🍹 Getränk", sonstiges: "🍴 Sonstiges" };
 const RZ_EINHEIT = /^(kg|g|mg|l|ml|cl|dl|el|tl|msp|prise[n]?|stk|stück|st\.?|bund|dose[n]?|becher|pck|pkt|päckchen|tasse[n]?|zehe[n]?|scheibe[n]?|blatt|blätter|zweig[e]?|glas|gläser|handvoll|schuss|würfel|kopf|köpfe|stange[n]?)\.?$/i;
 function rzZahl(t) { t = String(t).trim().replace(",", "."); const b = { "½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3 };
@@ -20059,25 +20094,50 @@ function rzZutatText(z, f) {
   if (m != null && (!e || /^(el|tl|stk|stück|st\.?|zehe[n]?|prise[n]?|dose[n]?|becher|bund|scheibe[n]?|tasse[n]?)$/i.test(e))) m = Math.max(0.5, Math.round(m * 2) / 2);
   return [rzMenge(m, 1), e, z.n].filter(Boolean).join(" ");
 }
-async function rzStart() {
+// 2.730.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45): Themen (Hansi wählt aus, was hineinkommt), Kacheln mit großem Foto oder Liste,
+// Sterne 1–5 und „Hab ich nachgebacken“ (Schnitt erst ab 3 Stimmen), Aufruf „Hast du auch ein leckeres Rezept? Her damit!“ mit zwei Wegen.
+const RZ_THEMEN = { weihnachtsbaeckerei: { sym: "🎄", t: "Weihnachtsbäckerei", stich: "Weihnachtsbäckerei" } };
+const RZ_ANSICHT = "kc_club_rz_ansicht";
+const rzAnsicht = () => { try { return localStorage.getItem(RZ_ANSICHT) === "liste" ? "liste" : "kacheln"; } catch { return "kacheln"; } };
+function rzAnsichtSetzen(a) { try { localStorage.setItem(RZ_ANSICHT, a); } catch {} rzListeZeigen(); }
+const rzZahlDe = (x) => Number(x).toLocaleString("de-DE", { maximumFractionDigits: 1 });
+function rzSterneKurz(r) { // „⭐ 4,5 · 👩‍🍳 7×“ – leer, solange es nichts zu zeigen gibt
+  return [r.sterne ? `⭐ ${rzZahlDe(r.sterne)}` : "", r.nachgebacken ? `👩‍🍳 ${r.nachgebacken}×` : ""].filter(Boolean).join(" · ");
+}
+async function rzStart(thema) {
+  RZ.thema = RZ_THEMEN[thema] ? thema : ""; if (RZ.thema) { RZ.kat = ""; RZ.q = ""; }
   const f = blattAuf("rzBlatt", `<h3 style="margin:0">📖 Club-Rezeptbuch</h3><div id="rzInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   f.classList.add("sc-blatt");
   await rzLaden();
 }
 async function rzLaden() {
-  try { RZ.liste = (await api("rezepte_liste")).rezepte; } catch (e) { if ($("rzInhalt")) $("rzInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(fehlerText(e))}</div>`; return; }
+  try { const r = await api("rezepte_liste"); RZ.liste = r.rezepte; RZ.themen = r.themen || []; RZ.redaktion = r.redaktion || null; RZ.sterneAb = r.sterneAb || 3; }
+  catch (e) { if ($("rzInhalt")) $("rzInhalt").innerHTML = `<div class="karte ta-st-nein">⚠️ ${esc(fehlerText(e))}</div>`; return; }
   rzListeZeigen();
+}
+function rzAufrufHtml(th) { // „Hast du auch ein leckeres Rezept? Her damit!“ – selbst eintragen oder Hansi schicken
+  return `<div class="karte rz-aufruf"><b>📣 Hast du auch ein leckeres Rezept? Her damit!</b>
+    <small>${ICH?.admin ? "So sehen es die Mitglieder. Ins Thema kommt nur, was du auswählst." : `Trag es selbst ein – oder schick ${esc(adminName())} ein Foto vom Rezeptzettel, ${esc(adminName())} stellt es ein. Dann können es alle ausprobieren.`}</small>
+    <div class="na-pfeil-knoepfe"><button class="knopf haupt klein" onclick="rzForm(null,'${th}')">✍️ Selbst eintragen</button>${!ICH?.admin && RZ.redaktion ? `<button class="knopf klein" onclick="rzAnHansi('${th}')">📷 Foto an ${esc(RZ.redaktion.name)}</button>` : ""}</div></div>`;
 }
 function rzListeZeigen() {
   const z = $("rzInhalt"); if (!z) return; RZ.offen = null; RZ.form = null;
-  const q = RZ.q.toLowerCase(), treffer = (RZ.liste || []).filter((r) => (!RZ.kat || r.kategorie === RZ.kat) && (!q || [r.titel, r.stichworte, r.vonName, ...(r.zutaten || []).map((x) => x.n)].join(" ").toLowerCase().includes(q)));
-  const zaehl = (k) => (RZ.liste || []).filter((r) => r.kategorie === k).length;
-  z.innerHTML = `<div class="na-pfeil-knoepfe" style="margin:6px 0"><button class="knopf haupt" onclick="rzForm()">＋ Neues Rezept</button><button class="knopf" onclick="fensterZu($('rzBlatt'))">Schließen</button></div>
+  const alle = RZ.liste || [], th = RZ_THEMEN[RZ.thema] ? RZ.thema : "", kacheln = rzAnsicht() === "kacheln";
+  const q = RZ.q.toLowerCase(), treffer = alle.filter((r) => (!th || r.thema === th) && (!RZ.kat || r.kategorie === RZ.kat) && (!q || [r.titel, r.stichworte, r.vonName, ...(r.zutaten || []).map((x) => x.n)].join(" ").toLowerCase().includes(q)));
+  const zaehl = (k) => alle.filter((r) => r.kategorie === k).length;
+  // Themen-Knopf: in der Saison oder sobald Rezepte darin sind (Admin sieht ihn in der Saison auch leer – zum Befüllen)
+  const themenKn = Object.entries(RZ_THEMEN).filter(([k]) => alle.some((r) => r.thema === k) || (RZ.themen.includes(k) && ICH?.admin)).map(([k, t]) =>
+    `<button type="button" class="chip rz-thema${th === k ? " an" : ""}" onclick="RZ.thema=RZ.thema==='${k}'?'':'${k}';RZ.kat='';rzListeZeigen()">${t.sym} ${t.t} (${alle.filter((r) => r.thema === k).length})</button>`).join("");
+  z.innerHTML = `<div class="na-pfeil-knoepfe" style="margin:6px 0"><button class="knopf haupt" onclick="rzForm(null,RZ.thema)">＋ Neues Rezept</button><button class="knopf" onclick="fensterZu($('rzBlatt'))">Schließen</button></div>
     <input type="search" id="rzSuche" placeholder="🔍 Rezept oder Zutat suchen …" value="${esc(RZ.q)}" style="width:100%;box-sizing:border-box;margin:0 0 6px">
-    <div class="hl-chips"><button type="button" class="chip${RZ.kat ? "" : " an"}" onclick="RZ.kat='';rzListeZeigen()">Alle (${(RZ.liste || []).length})</button>${Object.entries(RZ_KAT).filter(([k]) => zaehl(k)).map(([k, t]) => `<button type="button" class="chip${RZ.kat === k ? " an" : ""}" onclick="RZ.kat='${k}';rzListeZeigen()">${t} (${zaehl(k)})</button>`).join("")}</div>
-    <div class="rz-liste">${treffer.map((r) => `<button type="button" class="rz-karte" onclick="rzZeigen('${r.id}')">${r.foto ? `<img data-anlage="${esc(r.foto)}" alt="">` : `<span class="rz-sym">${(RZ_KAT[r.kategorie] || "🍴").split(" ")[0]}</span>`}
-        <span class="rz-text"><b>${esc(r.titel)}</b><small>${esc((RZ_KAT[r.kategorie] || "").replace(/^\S+ /, ""))} · ${r.portionen} Port.${r.dauer ? ` · ${r.dauer} Min.` : ""} · von ${esc(r.vonName.split(" ")[0])}</small></span></button>`).join("")
-      || `<p class="hinweis">${(RZ.liste || []).length ? "Nichts gefunden." : "Noch keine Rezepte – leg das erste an: „＋ Neues Rezept“."}</p>`}</div>`;
+    <div class="hl-chips">${themenKn}<button type="button" class="chip${RZ.kat || th ? "" : " an"}" onclick="RZ.kat='';RZ.thema='';rzListeZeigen()">Alle (${alle.length})</button>${Object.entries(RZ_KAT).filter(([k]) => zaehl(k)).map(([k, t]) => `<button type="button" class="chip${RZ.kat === k ? " an" : ""}" onclick="RZ.kat='${k}';rzListeZeigen()">${t} (${zaehl(k)})</button>`).join("")}</div>
+    ${th ? `<h3 class="rz-thema-kopf">${RZ_THEMEN[th].sym} ${esc(RZ_THEMEN[th].t)}</h3>${rzAufrufHtml(th)}` : ""}
+    <div class="rz-ansicht" role="group" aria-label="Ansicht"><button type="button" class="chip${kacheln ? " an" : ""}" onclick="rzAnsichtSetzen('kacheln')">▦ Kacheln</button><button type="button" class="chip${kacheln ? "" : " an"}" onclick="rzAnsichtSetzen('liste')">☰ Liste</button></div>
+    <div class="rz-liste${kacheln ? " rz-kacheln" : ""}">${treffer.map((r) => { const st = rzSterneKurz(r);
+      return `<button type="button" class="rz-karte" onclick="rzZeigen('${r.id}')">${r.foto ? `<img data-anlage="${esc(r.foto)}" alt="">` : `<span class="rz-sym">${r.thema && RZ_THEMEN[r.thema] ? RZ_THEMEN[r.thema].sym : (RZ_KAT[r.kategorie] || "🍴").split(" ")[0]}</span>`}
+        <span class="rz-text"><b>${esc(r.titel)}</b>${kacheln ? `${st ? `<small class="rz-sterne">${st}</small>` : ""}<small>von ${esc(r.vonName.split(" ")[0])}</small>`
+          : `<small>${esc((RZ_KAT[r.kategorie] || "").replace(/^\S+ /, ""))} · ${r.portionen} Port.${r.dauer ? ` · ${r.dauer} Min.` : ""} · von ${esc(r.vonName.split(" ")[0])}${st ? " · " + st : ""}</small>`}</span></button>`; }).join("")
+      || `<p class="hinweis">${th ? "Noch keine Rezepte in diesem Thema – mach den Anfang!" : alle.length ? "Nichts gefunden." : "Noch keine Rezepte – leg das erste an: „＋ Neues Rezept“."}</p>`}</div>`;
   $("rzSuche").oninput = (e) => { RZ.q = e.target.value; const pos = e.target.selectionStart; rzListeZeigen(); const s = $("rzSuche"); s.focus(); try { s.setSelectionRange(pos, pos); } catch {} };
   z.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i));
 }
@@ -20088,7 +20148,7 @@ function rzZeigen(id) {
   z.innerHTML = `<div class="na-pfeil-knoepfe" style="margin:6px 0"><button class="knopf" onclick="rzListeZeigen()">← Alle Rezepte</button><button class="knopf" onclick="fensterZu($('rzBlatt'))">Schließen</button></div>
     ${r.foto ? `<img class="rz-foto" data-anlage="${esc(r.foto)}" alt="Foto: ${esc(r.titel)}">` : ""}
     <h3 style="margin:6px 0 2px">${esc(r.titel)}</h3>
-    <p class="hinweis" style="margin:0 0 6px">${esc(RZ_KAT[r.kategorie] || "")}${r.dauer ? ` · ⏱️ ${r.dauer} Min.` : ""} · von ${esc(r.vonName)}${r.stichworte ? ` · ${esc(r.stichworte)}` : ""}</p>
+    <p class="hinweis" style="margin:0 0 6px">${r.thema && RZ_THEMEN[r.thema] ? `${RZ_THEMEN[r.thema].sym} ${esc(RZ_THEMEN[r.thema].t)} · ` : ""}${esc(RZ_KAT[r.kategorie] || "")}${r.dauer ? ` · ⏱️ ${r.dauer} Min.` : ""} · von ${esc(r.vonName)}${r.stichworte ? ` · ${esc(r.stichworte)}` : ""}</p>
     <div class="ps-schritt"><div style="display:flex;align-items:center;gap:10px"><b style="flex:1">🍽️ Portionen</b>
       <button class="ps-symbol" aria-label="weniger Portionen" onclick="RZ.port=Math.max(1,RZ.port-1);rzZeigen('${r.id}')">−</button><b style="min-width:2.5em;text-align:center;font-size:1.2rem">${RZ.port}</b>
       <button class="ps-symbol" aria-label="mehr Portionen" onclick="RZ.port=Math.min(500,RZ.port+1);rzZeigen('${r.id}')">＋</button></div>
@@ -20097,6 +20157,7 @@ function rzZeigen(id) {
     <div class="ps-schritt"><b>🧺 Zutaten</b> <small class="hinweis">antippen = abhaken</small>
       ${(r.zutaten || []).map((x, i) => `<label class="rz-zutat${RZ.haken.has(i) ? " weg" : ""}"><input type="checkbox" ${RZ.haken.has(i) ? "checked" : ""} onchange="RZ.haken[this.checked?'add':'delete'](${i});rzZeigen('${r.id}')"> ${esc(rzZutatText(x, f))}</label>`).join("") || '<p class="hinweis" style="margin:0">Keine Zutaten eingetragen.</p>'}</div>
     ${r.zubereitung ? `<div class="ps-schritt"><b>👨‍🍳 Zubereitung</b><div style="white-space:pre-wrap;line-height:1.45">${esc(r.zubereitung)}</div></div>` : ""}
+    ${rzBewertungHtml(r)}
     <div class="na-pfeil-knoepfe"><button class="knopf haupt" onclick="rzEinkauf('${r.id}')">🛒 Einkaufsliste</button><button class="knopf" onclick="druckStarten('rezept','${r.id}')">🖨️ Drucken</button>
       <button class="knopf" onclick="rzTeilen('${r.id}')">📤 Teilen</button>${r.darf ? `<button class="knopf" onclick="rzForm('${r.id}')">✏️ Ändern</button><button class="knopf" onclick="rzLoeschen('${r.id}')">🗑️ Löschen</button>` : ""}</div>`;
   z.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i));
@@ -20129,10 +20190,11 @@ function druckRezept(id) {
       <h3 style="margin:0 0 2mm;font-size:4.2mm">Zutaten</h3><ul style="margin:0 0 4mm;padding-left:5mm;font-size:3.8mm;line-height:1.5">${(r.zutaten || []).map((x) => `<li>${esc(rzZutatText(x, f))}</li>`).join("")}</ul>
       ${r.zubereitung ? `<h3 style="margin:0 0 2mm;font-size:4.2mm;clear:both">Zubereitung</h3><div style="white-space:pre-wrap;font-size:3.8mm;line-height:1.5">${esc(r.zubereitung)}</div>` : ""}` };
 }
-function rzForm(id) {
-  const r = id ? (RZ.liste || []).find((x) => x.id === id) : null;
+function rzForm(id, thema) {
+  const r = id ? (RZ.liste || []).find((x) => x.id === id) : null, th = RZ_THEMEN[thema] ? thema : "";
   RZ.form = r ? { id: r.id, titel: r.titel, kategorie: r.kategorie, portionen: r.portionen, zutaten: (r.zutaten || []).map((x) => rzZutatText(x, 1)).join("\n"), zubereitung: r.zubereitung || "", dauer: r.dauer || "", foto: r.foto || null, stichworte: r.stichworte || "", laedt: 0 }
-    : { titel: "", kategorie: "hauptgericht", portionen: 4, zutaten: "", zubereitung: "", dauer: "", foto: null, stichworte: "", laedt: 0 };
+    : { titel: "", kategorie: th ? "gebaeck" : "hauptgericht", portionen: 4, zutaten: "", zubereitung: "", dauer: "", foto: null, stichworte: th && !ICH?.admin ? RZ_THEMEN[th].stich : "", laedt: 0 };
+  RZ.form.thema = r ? r.thema || "" : ICH?.admin ? th : ""; RZ.form.themaVorher = r?.thema || ""; // 2.730.0: Thema setzt nur der Admin; Mitglieder bekommen das Stichwort, Hansi wählt aus
   rzFormZeigen();
 }
 function rzFormZeigen() {
@@ -20144,6 +20206,7 @@ function rzFormZeigen() {
       <label class="feld">Dauer (Min.)<input id="rzfDauer" type="number" min="1" max="2880" inputmode="numeric" value="${esc(String(F.dauer))}"></label></div>
     <label class="feld">Zutaten – eine pro Zeile, z. B. „500 g Mehl“, „2 EL Öl“, „1 Prise Salz“<textarea id="rzfZutaten" rows="7" placeholder="500 g Mehl&#10;2 Eier&#10;250 ml Milch&#10;1 Prise Salz">${esc(F.zutaten)}</textarea></label>
     <label class="feld">Zubereitung<textarea id="rzfZub" rows="7" maxlength="6000" placeholder="1. Mehl und Eier verrühren …">${esc(F.zubereitung)}</textarea></label>
+    ${ICH?.admin ? `<div class="feld"><b>Thema (nur du siehst diese Auswahl)</b><div class="hl-chips"><button type="button" class="chip${F.thema ? "" : " an"}" onclick="rzfMerken();RZ.form.thema='';rzFormZeigen()">Kein Thema</button>${Object.entries(RZ_THEMEN).map(([k, t]) => `<button type="button" class="chip${F.thema === k ? " an" : ""}" onclick="rzfMerken();RZ.form.thema='${k}';rzFormZeigen()">${t.sym} ${esc(t.t)}</button>`).join("")}</div></div>` : ""}
     <label class="feld">Stichworte (freiwillig)<input id="rzfStich" maxlength="200" value="${esc(F.stichworte)}" placeholder="z. B. vegetarisch, Weihnachtsmarkt"></label>
     <div class="feld"><b>Foto (freiwillig)</b><div class="bo-fotos">${F.foto ? `<span class="bo-mini"><img data-anlage="${esc(F.foto)}" alt=""><button onclick="rzfMerken();RZ.form.foto=null;rzFormZeigen()" aria-label="Foto entfernen">✕</button></span>`
       : `<label class="bo-plus">${F.laedt ? "⏳" : "📷 ＋"}<input type="file" accept="image/*" hidden onchange="rzfFoto(this)"></label>`}</div></div>
@@ -20166,7 +20229,7 @@ async function rzSpeichern() {
   if (F.titel.trim().length < 2) return melde("Bitte einen Namen für das Rezept eintragen.", true);
   const zutaten = F.zutaten.split("\n").map(rzZeileLesen).filter(Boolean);
   try {
-    const r = await api("rezept_speichern", { id: F.id, titel: F.titel.trim(), kategorie: F.kategorie, portionen: Number(F.portionen) || 4, zutaten, zubereitung: F.zubereitung.trim(), dauer: Number(F.dauer) || null, foto: F.foto, stichworte: F.stichworte.trim() }, { warten: true });
+    const r = await api("rezept_speichern", { id: F.id, titel: F.titel.trim(), kategorie: F.kategorie, portionen: Number(F.portionen) || 4, zutaten, zubereitung: F.zubereitung.trim(), dauer: Number(F.dauer) || null, foto: F.foto, stichworte: F.stichworte.trim(), ...(ICH?.admin && (F.thema || F.themaVorher) ? { thema: F.thema || null } : {}) }, { warten: true });
     melde(F.id ? "💾 Rezept gespeichert" : "📖 Rezept ist im Rezeptbuch");
     RZ.form = null; await rzLaden(); RZ.offen = null; rzZeigen(r.id);
   } catch (e) { meldeFehler(e); }
@@ -20175,6 +20238,29 @@ async function rzLoeschen(id) {
   const r = (RZ.liste || []).find((x) => x.id === id); if (!r) return;
   if (!(await frage(`Rezept „${r.titel}“ löschen?\n\nEs verschwindet für alle aus dem Rezeptbuch.`))) return;
   try { await api("rezept_loeschen", { id }, { warten: true }); melde("🗑️ Rezept gelöscht"); await rzLaden(); } catch (e) { meldeFehler(e); }
+}
+// 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: „Wie hat’s dir geschmeckt?“ – Sterne antippen (gleicher Stern nochmal = zurücknehmen), „Hab ich nachgebacken“
+function rzBewertungHtml(r) {
+  const m = r.meine || {}, schnitt = r.sterne ? `⭐ ${rzZahlDe(r.sterne)} von 5 · ${r.stimmen} ${r.stimmen === 1 ? "Stimme" : "Stimmen"}`
+    : r.stimmen ? `${r.stimmen} ${r.stimmen === 1 ? "Stimme" : "Stimmen"} – den Schnitt zeigen wir ab ${RZ.sterneAb}` : "Noch keine Sterne";
+  return `<div class="ps-schritt rz-bewertung"><b>⭐ Wie hat’s dir geschmeckt?</b>
+    ${r.eigen ? '<p class="hinweis" style="margin:0">Dein eigenes Rezept – hier bewerten die anderen.</p>'
+      : `<div class="rz-sterne-wahl" role="group" aria-label="Sterne vergeben">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="rz-stern${(m.sterne || 0) >= n ? " an" : ""}" aria-label="${n} ${n === 1 ? "Stern" : "Sterne"}" aria-pressed="${m.sterne === n}" onclick="rzBewerten('${r.id}',${m.sterne === n ? "null" : n},${!!m.nachgebacken})">${(m.sterne || 0) >= n ? "★" : "☆"}</button>`).join("")}</div>`}
+    <p class="hinweis" style="margin:2px 0 6px">${schnitt}${r.nachgebacken ? ` · 👩‍🍳 ${r.nachgebacken}× nachgebacken` : ""}</p>
+    <button type="button" class="knopf klein${m.nachgebacken ? " haupt" : ""}" aria-pressed="${!!m.nachgebacken}" onclick="rzBewerten('${r.id}',${m.sterne ?? "null"},${!m.nachgebacken})">${m.nachgebacken ? "✔ Hab ich nachgebacken" : "👩‍🍳 Hab ich nachgebacken"}</button></div>`;
+}
+async function rzBewerten(id, sterne, nachgebacken) {
+  const r = (RZ.liste || []).find((x) => x.id === id); if (!r) return; const vorher = r.meine || {};
+  try { const b = await api("rezept_bewerten", { id, sterne, nachgebacken }, { warten: true });
+    Object.assign(r, { sterne: b.sterne, stimmen: b.stimmen, nachgebacken: b.nachgebacken, meine: b.meine }); rzZeigen(id);
+    melde(sterne && sterne !== vorher.sterne ? "⭐ Danke für deine Sterne!" : nachgebacken && !vorher.nachgebacken ? "👩‍🍳 Schön, dass du es nachgebacken hast!" : "Gespeichert"); }
+  catch (e) { meldeFehler(e); }
+}
+async function rzAnHansi(th) { // Weg 2 für alle, denen das Eintippen schwerfällt: Fotos vom Rezeptzettel und vom Gebäck im Chat an Hansi
+  const red = RZ.redaktion; if (!red?.id) return melde("Das klappt gerade nicht – bitte später nochmal.", true);
+  fensterZu($("rzBlatt")); await direkt(red.id);
+  textVorbelegen(`Hallo ${red.name}, hier ist mein Rezept${RZ_THEMEN[th] ? " für die " + RZ_THEMEN[th].t : ""}: \n\n📷 Ein Foto vom Rezeptzettel und eins vom fertigen Gebäck hänge ich an.`);
+  melde("📷 Häng mit 📎 unter dem Schreibfeld ein Foto vom Rezept und vom Gebäck an");
 }
 // ---------- KC-CLUB-MEINE-DATEN (2.23.82, Wunsch Hansi): was über mich gespeichert ist – ansehen, drucken, als Datei sichern ----------
 let MDAT = null;
@@ -20842,7 +20928,7 @@ function infoTreffen() {
       ${(() => { const m = n ? nachrichtMahnung() : null; /* KC-CLUB-NACHRICHT-MAHNUNG (2.223.0) */
         return `<button class="mini${n ? " mini-neu" : ""}${m ? " " + m.klasse : ""}"${m ? ` title="${esc(m.titel)}"` : ""} onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${m?.wichtig ? "❗" : ""}${n}</b><span>${m?.wichtig ? "Wichtig!" : m ? "Lange offen" : "Neue Nachr."}</span>`; })()}${mpfeil("nachrichten", n > 0, n)}</button>
       ${(() => { const on = ONL.zeigen && mpOnline() > 0; /* 2.207.0 KC-CLUB-MINI-ONLINE-AMEISEN (Wunsch Hansi): ist jemand online, läuft um die ganze Kachel ein Ameisenlauf – wie bei neuen Nachrichten, in Online-Grün */
-        return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b><span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
+        return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b>${onlineNamenHtml()}<span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
     </div>`;
 }
@@ -21106,6 +21192,11 @@ function ilMeldungen() {
       u: aus ? "Kinderkarussell, Naschbude und Feuerwerk wieder anzeigen?" : "Gefällt dir nicht? Hier kannst du es ausschalten", knoepfe: [[aus ? "🎡 Einschalten" : "🚫 Sim-Jü aus", "jzSimJueSchalten()"]] }); }
   // 2.461.0 KC-CLUB-TERMIN-LINK-PROSPEKT (Wunschliste #20): angekündigte Termine (z. B. Adventsmarkt der Freilichtbühne) – mit 🌐 Webseite
   { const ah = akHeute(); if (ah && akAn() && !akOffen().includes(ah)) add({ id: "advent:" + ah, stufe: "gold", sym: "🎄", t: `Adventskalender: Türchen ${ah} wartet auf dich`, u: "Antippen und öffnen", auf: "akZeigen()" }); } // 2.468.0 KC-CLUB-ADVENTSKALENDER
+  // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45): in der Adventszeit „Weihnachtsbäckerei?“ – Antippen öffnet das Rezeptbuch beim Thema.
+  // Mitglieder sehen es erst, wenn Rezepte im Thema sind (keine leere Seite); der Admin auch vorher, zum Befüllen. Täglich abwechselnd Neuheit / Aufruf.
+  { const rt = INIT?.rezeptThema; if (rt && (rt.anzahl > 0 || ICH?.admin)) { const aufruf = !rt.neu || new Date().getDate() % 2 === 0;
+    add({ id: "rezept:" + rt.thema, stufe: "gold", sym: "🎄", t: "Weihnachtsbäckerei?", auf: `rzStart('${esc(rt.thema)}')`,
+      u: !rt.anzahl ? "Noch keine Rezepte im Thema – im Rezeptbuch auswählen oder anlegen" : aufruf ? "Dein Rezept? Her damit!" : `Neu: ${rt.neu.titel}${rt.neu.von ? " von " + rt.neu.von : ""}` }); } } // ohne Knopf: so bleibt Platz für die zweite Zeile, das ganze Feld ist antippbar
   for (const lt of (INIT?.laufbandTermine || []).filter((x) => x.id !== t?.id)) add({ id: "lauf:" + lt.id, stufe: "gold", sym: lt.art === "veranstaltung" ? "🎪" : "📅", t: lt.titel,
     u: wann(lt.beginn) + (lt.ort ? " · " + lt.ort : ""), auf: `ilTerminOeffnen('${esc(lt.id)}')`, knoepfe: /^https:\/\//.test(lt.link || "") ? [["🌐 Webseite", `ilTerminLink('${esc(lt.id)}')`]] : null,
     stand: /^https:\/\//.test(lt.link || "") ? `📅 ${esc(wann(lt.beginn))}` : "" }); // mit Knopf: Datum daneben (sonst fehlt der Platz)
@@ -21541,6 +21632,19 @@ function mpfeil(art, an, stand, stufe = "") {
 }
 // KC-CLUB-FRIST-AMEISEN (1.53.6): Stufe der Ameisenstraße am Feld „Nächster Termin“ (Wunsch Hansi)
 const fristStufe = (tage) => tage <= 1 ? "rot" : tage <= 3 ? "orange" : tage <= 5 ? "gruen" : "";
+// ---------- 2.731.0 KC-CLUB-ONLINE-NAMEN (Wunschliste #46, Wunsch Hansi „im mittleren Feld unter der Zahl die Namen, wer gerade online ist –
+// sind es mehrere, als Laufschrift; antippen, z. B. bei Klaus, und ich bin sofort im Chat mit ihm“) ----------
+// Nur mit frischem Online-Stand und wenn ich selbst online sichtbar bin (wie die Zahl). Das Feld ist selbst ein Knopf – darum die Namen als
+// role="button" (kein Knopf im Knopf). Laufschrift: Namen zweimal hintereinander, das Band läuft um die halbe Breite (nahtlos); Berühren hält an.
+// Sparmodus/„Bewegung reduzieren“: steht still und lässt sich seitlich wischen. Das Info-Feld zeichnet nur bei geänderter Liste neu (kein Neustart je Takt).
+function onlineNamenHtml() {
+  if (!ONL.zeigen || !mpOnline()) return "";
+  const l = [...ONL.liste].sort((a, b) => String(a.vorname || "").localeCompare(String(b.vorname || ""), "de"));
+  const namen = (kopie) => l.map((x) => `<span class="on-name"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="Chat mit ${esc(x.vorname || "Mitglied")}"`}
+    onclick="event.stopPropagation();direkt('${esc(x.person_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();direkt('${esc(x.person_id)}')}">${esc(x.vorname || "?")}</span>`).join("");
+  if (l.length === 1) return `<span class="on-namen">${namen(false)}</span>`;
+  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, l.length * 3)}s"><span class="on-band">${namen(false)}${namen(true)}</span></span>`;
+}
 // KC-CLUB-ONLINE-ZAHL (1.47.0): statt Text nur LED + Zahl – grün = jemand online, grau = niemand oder Stand unbekannt (dann „?“)
 function onlineZahlHtml() {
   const frisch = ONL.stand && Date.now() - ONL.stand < 3 * 60 * 1000, n = ONL.liste.length, an = frisch && n > 0;
@@ -27314,12 +27418,17 @@ function ntErkennen(text, bezug) {
   for (let [a, b] of raus) { const f = /(?:^|\s)(am|um|ab|gegen|von|vom|bis|den|ca\.?)\s+$/i.exec(t.slice(0, a)); if (f) a = f.index; t = t.slice(0, a) + " " + t.slice(b); } // „am“/„um“ vor dem Datum mit weg
   t = t.replace(/\b(am|um|ab|gegen|von|bis|den|dem|uhr|ist|wir)\s+(?=[,.!?;:]|$)/gi, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/\s{2,}/g, " ")
     .replace(/^[\s,.;:–-]+|[\s,;:–-]+$/g, "").replace(/^(am|um|ab|und|also|ok|okay|ja)\s+/i, "").trim();
+  // 2.736.0 KC-CLUB-NT-GRUSS (Fund Hansi 28.10.2026: Erinnerung „⏰ Hallo zusammen.“ – der Titel war die Begrüßung der Nachricht):
+  // Begrüßung vorn weg („Hallo zusammen,“, „Hallo Klaus und Dieter!“, „Moin,“, „Liebe Köche,“, „Guten Morgen“) – nur, wenn danach noch Inhalt bleibt
+  for (let i = 0; i < 2; i++) { const g = NT_GRUSS.exec(t); if (!g) break; if (t.length - g[0].length < 3) { t = ""; break; } t = t.slice(g[0].length).replace(/^[\s,.;:!–-]+/, ""); } // nur Gruß → kein Titel (selbst eintragen)
   if (t.length > 70) { const i = t.search(/[.!?]\s/), satz = i > 0 ? t.slice(0, i + 1) : t; t = satz.length <= 70 && satz.length >= 8 ? satz : t.slice(0, 70).replace(/\s+\S*$/, "") + " …"; }
   // 2.612.0: bei unklarer Tageszeit die andere Möglichkeit mitgeben (10:00 ↔ 22:00) – das Fenster fragt nach, statt zu raten
   const anders = (z) => { if (!z) return null; const h = +z.slice(0, 2); return h >= 1 && h <= 23 && h !== 12 ? `${String(h < 12 ? h + 12 : h - 12).padStart(2, "0")}${z.slice(2)}` : null; };
   const alt = unklar && zeit ? anders(zeit) : null;
   return { datum, zeit, bis, alt, altBis: alt && bis ? anders(bis) : null, titel: t ? t.charAt(0).toUpperCase() + t.slice(1) : "", ort, sicher };
 }
+// 2.736.0 KC-CLUB-NT-GRUSS: Begrüßung am Anfang (Groß-/Kleinschreibung nur beim Gruß egal; Namen danach müssen groß geschrieben sein)
+const NT_GRUSS = /^(?:[Hh]allo|[Hh]allöchen|[Hh]i|[Hh]ey|[Mm]oin(?: [Mm]oin)?|[Ss]ervus|[Gg]rüß (?:euch|dich)(?: [Gg]ott)?|[Gg]uten (?:[Mm]orgen|[Tt]ag|[Aa]bend)|[Ll]iebe[rn]?|[Ii]hr [Ll]ieben)(?=[\s,.!:;–-]|$)(?:\s+(?:zusammen|alle(?: zusammen)?|ihr [Ll]ieben|[Ll]eute|[Ff]reunde|Köche|Köchinnen|[A-ZÄÖÜ][a-zäöüß-]+(?:\s+und\s+[A-ZÄÖÜ][a-zäöüß-]+)?))?\s*[,.!:;–-]*(?:\s+|$)/;
 const NT_CACHE = new Map();
 function ntAusText(m) { // je Nachricht nur einmal rechnen (Bezug: der Tag, an dem sie geschrieben wurde – „morgen“ von vorgestern ist gestern)
   const k = m.id + "|" + (m.text || "").length + "|" + (m.zeit || ""); if (NT_CACHE.has(k)) return NT_CACHE.get(k);

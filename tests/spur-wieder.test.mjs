@@ -2,7 +2,7 @@
 // Aufruf: node tests/spur-wieder.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.730.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.737.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 const server = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
 assert.ok(/const SPUR_WIEDER_MS = 5 \* 60000, SPUR_WIEDER_START_MS = 2 \* 60000;/.test(app), "ab 5 Min. Hintergrund, Start über 2 Min. = eingefroren");

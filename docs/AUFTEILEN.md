@@ -51,9 +51,9 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 | Stufe | Inhalt | Version | Stand |
 |---|---|---|---|
 | 0 | Nachlade-Weg, Probe-Teil, Tests, Rundgang, diese Anleitung | 2.727.0 | eingespielt 28.10. |
-| 1 | Erklär-Videos (`teile/videos.js`, ~420 KB; Katalog, Zustand RG und Startseiten-Hinweis bleiben im Hauptprogramm) | 2.730.0 | gebaut, alle 57 Videos geprüft, Start-Rechenzeit −12 % |
-| 2 | Spiele (`teile/spiele.js`, ~300 KB; Spiel-Einladung, Live-Anfragen, Einstellungen, Zustand SP bleiben) | 2.731.0 | gebaut, 7 Spiele Handy+PC geprüft, Start-Rechenzeit gesamt −13 % |
-| 3a | Rückseite: Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne (`teile/rueckseite.js`, ~175 KB; Eselsohr, Uhr+Wecker, Bewegungs-Einladung bleiben; Videos brauchen die Rückseite) | 2.732.0 | gebaut, alle Reiter + Videos geprüft |
+| 1 | Erklär-Videos (`teile/videos.js`, ~420 KB; Katalog, Zustand RG und Startseiten-Hinweis bleiben im Hauptprogramm) | 2.737.0 | gebaut, alle 57 Videos geprüft, Start-Rechenzeit −12 % |
+| 2 | Spiele (`teile/spiele.js`, ~300 KB; Spiel-Einladung, Live-Anfragen, Einstellungen, Zustand SP bleiben) | 2.738.0 | gebaut, 7 Spiele Handy+PC geprüft, Start-Rechenzeit gesamt −13 % |
+| 3a | Rückseite: Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne (`teile/rueckseite.js`, ~175 KB; Eselsohr, Uhr+Wecker, Bewegungs-Einladung bleiben; Videos brauchen die Rückseite) | 2.739.0 | gebaut, alle Reiter + Videos geprüft |
 | 3b | Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – beim Start sichtbar, nur „kurz nach dem Start nachladen“ möglich | | Entscheidung Hansi |
 | 4 | Büro-Werkzeuge der Clubleitung | | geplant |
 | 5 | Hilfe-Texte | | geplant |

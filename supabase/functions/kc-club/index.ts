@@ -32,6 +32,7 @@ import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherhei
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
+import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.730.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
 // @ts-ignore: chess.js bringt keine Typdatei mit (in Deno ohne Bedeutung)
@@ -136,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.728.0";
+const SERVER_VERSION = "2.736.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4004,6 +4005,57 @@ async function neustartProtokoll(person: string | null, details: Record<string, 
   try { await direktSql()`insert into public.kc_club_protokoll (person_id, aktion, details) values (${person}, 'notfall_neustart', ${direktSql().json(details as any)})`; }
   catch (e) { console.error("neustart protokoll", String(e)); }
 }
+// ---------- 2.736.0 KC-CLUB-EINSPIELEN-FENSTER (Wunsch Hansi 28.10.2026 „wenn sich genau im Moment des Einspielens ein Mitglied anmelden will:
+// kurz ein blaues Wartungsfenster – Hey, wir führen gerade eine kurze Wartung durch …“) ----------
+// Die Abläufe „Seite veröffentlichen“ und „Server hochladen“ melden sich mit einem von GitHub signierten Token (kein Geheimnis) vor dem
+// Hochladen an und danach ab. Solange (höchstens EINSPIEL_MAX_MIN, dann erlischt es von selbst) bekommt ein Mitglied beim App-START (init) 423
+// „kurze Wartung“ – wer schon in der App ist, merkt nichts; der Admin nie. Gespeichert in kc_club_konfig „einspielen“ { seite, server } (je Ablauf).
+const EINSPIEL_ABLAEUFE: Record<string, string> = {
+  "Sire65/KC-Clubapp/.github/workflows/seite-veroeffentlichen.yml@refs/heads/main": "seite",
+  "Sire65/KC-Clubapp/.github/workflows/server-hochladen.yml@refs/heads/main": "server",
+};
+const EINSPIEL_MAX_MIN = 10;
+// geschätzte Dauer je Ablauf ab „an“ (gemessen 28.10.2026: Seite ~50 s inkl. 20 s Nachlauf, Server ~40 s) – für „dauert voraussichtlich noch …“
+const EINSPIEL_DAUER_S: Record<string, number> = { seite: 60, server: 60 };
+let EINSPIEL_MERK: { t: number; bis: string | null; fertig: string | null } | null = null;
+async function einspielenQuelle(req: Request) {
+  const t = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!t.startsWith("ey")) return null;
+  try {
+    const { payload: p } = await jwtVerify(t, GH_JWKS, { issuer: GH_OIDC, audience: "kc-einspielen", maxTokenAge: "10m" });
+    if (p.repository !== "Sire65/KC-Clubapp" || p.repository_id !== "1392489961" || p.repository_owner_id !== "297908448" || p.ref !== "refs/heads/main") return null;
+    return EINSPIEL_ABLAEUFE[String(p.workflow_ref)] || null;
+  } catch { return null; }
+}
+async function einspielenMelden(req: Request, p: any) {
+  const quelle = await einspielenQuelle(req);
+  if (!quelle) return json({ error: "nicht berechtigt" }, 401);
+  const an = !!p?.an, min = Math.min(EINSPIEL_MAX_MIN, Math.max(1, Number(p?.minuten) || 5));
+  const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "einspielen").maybeSingle();
+  const w: Record<string, string | null> = { ...((data?.wert as any) || {}) }; w[quelle] = an ? new Date(Date.now() + min * 60000).toISOString() : null;
+  w[quelle + "_fertig"] = an ? new Date(Date.now() + (EINSPIEL_DAUER_S[quelle] || 60) * 1000).toISOString() : null; // Schätzung
+  const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "einspielen", wert: w, geaendert_von: "github:" + quelle, geaendert_am: jetzt() }, { onConflict: "schluessel" });
+  if (error) return json({ error: "nicht gespeichert" }, 500);
+  EINSPIEL_MERK = null;
+  return json({ ok: true, quelle, an });
+}
+async function einspielenLage() { // aktiv bis … (spätestes Ende der Abläufe) oder null + geschätztes Fertig; 15 s gemerkt je Server-Instanz
+  if (EINSPIEL_MERK && Date.now() - EINSPIEL_MERK.t < 15000) return EINSPIEL_MERK;
+  let bis: string | null = null, fertig: string | null = null;
+  try {
+    const { data } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "einspielen").maybeSingle();
+    const w = (data?.wert as any) || {}, j = Date.now();
+    const aktiv = Object.keys(EINSPIEL_DAUER_S).filter((q) => { const x = Date.parse(String(w[q])); return x > j && x < j + (EINSPIEL_MAX_MIN + 1) * 60000; });
+    if (aktiv.length) {
+      bis = new Date(Math.max(...aktiv.map((q) => Date.parse(String(w[q]))))).toISOString();
+      const f = aktiv.map((q) => Date.parse(String(w[q + "_fertig"]))).filter(Number.isFinite);
+      fertig = f.length ? new Date(Math.max(...f)).toISOString() : null;
+    }
+  } catch { /* im Zweifel nie aussperren */ }
+  EINSPIEL_MERK = { t: Date.now(), bis, fertig };
+  return EINSPIEL_MERK;
+}
+const einspielenBis = async () => (await einspielenLage()).bis;
 async function notfallNeustart(req: Request, p: any) {
   const waechter = await neustartWaechter(req), admin = waechter ? null : await neustartAdmin(req).catch(() => null);
   if (!waechter && !admin) return json({ error: "Nur für den Admin." }, 403);
@@ -4858,6 +4910,31 @@ async function nurWennFrei(id: string, ich: Ich, was: string) {
 const VF_EV_MAX = 40; // KC-CLUB-VORFUEHREN: so viele Ereignisse merkt sich der Server je Vorführung
 const FIT_MAX = 1500; // KC-CLUB-FITNESS: so viele Einheiten je Mitglied (gut 4 Jahre täglich)
 const REZEPT_KATEGORIEN = ["vorspeise", "suppe", "hauptgericht", "beilage", "dessert", "gebaeck", "getraenk", "sonstiges"]; // KC-CLUB-REZEPTBUCH (2.23.83)
+// ---------- 2.730.0 KC-CLUB-REZEPT-WEIHNACHT (Wunschliste #45): Themen im Rezeptbuch, Sterne, „nachgebacken“, Hinweis im Info-Laufband ----------
+// Thema setzt nur der Admin (Mitglieder tragen weiter frei ein, Hansi wählt aus, was ins Thema kommt). Regeln rein in rezepte.js.
+const rzThemaSaison = (thema: string, d = new Date()) => rzSaisonTag(thema, berlinTag(d));
+const RZ_LAGE: { bis: number; wert: any } = { bis: 0, wert: null };
+async function rzThemaLage(ich: Ich) { // fürs Laufband: nur in der Saison und nur, wenn das Rezeptbuch frei ist – 10 Min. gemerkt (höchstens eine Abfrage je Server-Instanz)
+  if (!rzThemaSaison("weihnachtsbaeckerei")) return null;
+  if (!ich.admin && (await freigaben()).rezepte !== "alle") return null;
+  if (Date.now() > RZ_LAGE.bis) {
+    const { data, error } = await db.from("kc_club_rezepte").select("id,titel,von").eq("thema", "weihnachtsbaeckerei").is("geloescht_am", null).order("erstellt_am", { ascending: false }).limit(200);
+    if (error) return null; // Spalte noch nicht da (Migration nicht eingespielt) → kein Hinweis, nichts kaputt
+    const n: any = data?.[0], p = n ? (await personen([n.von])).get(n.von) : null;
+    RZ_LAGE.wert = { thema: "weihnachtsbaeckerei", anzahl: data?.length ?? 0, neu: n ? { id: n.id, titel: n.titel, von: vorname(p ?? null) || "" } : null };
+    RZ_LAGE.bis = Date.now() + 600000;
+  }
+  return RZ_LAGE.wert;
+}
+let RZ_REDAKTION: { id: string; name: string; bis: number } | null = null;
+async function rzRedaktion() { // an wen „Ich schicke es Hansi“ geht: der Admin (wie adminVorname)
+  if (RZ_REDAKTION && RZ_REDAKTION.bis > Date.now()) return { id: RZ_REDAKTION.id, name: RZ_REDAKTION.name };
+  const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).not("person_id", "like", "KC-P-TEST%").order("person_id").limit(1);
+  if (!ad?.[0]) return null;
+  const p = (await personen([ad[0].person_id])).get(ad[0].person_id);
+  RZ_REDAKTION = { id: ad[0].person_id, name: vorname(p ?? null) || "Hansi", bis: Date.now() + 600000 };
+  return { id: RZ_REDAKTION.id, name: RZ_REDAKTION.name };
+}
 const SPERRE_TEXT: Record<string, string> = {
   wartung: "Zur Zeit führen wir für Sie Wartungsarbeiten durch. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
   stoerung: "Unser Server ist zurzeit nicht erreichbar. Bitte versuchen Sie es später nochmals. Wir bitten um Verständnis.",
@@ -8121,6 +8198,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       return json(await fraSchritt(p.erzwingen === true).catch((e) => ({ ok: false, fehler: txt(String((e as any)?.message || e), 200) })));
     }
     if (a === "notfall_neustart") return await notfallNeustart(req, p); // KC-CLUB-NOTFALL-NEUSTART (2.235.0): vor der normalen Anmeldung
+    if (a === "einspielen_melden") return await einspielenMelden(req, p); // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: nur die beiden Einspiel-Abläufe (GitHub-Token)
     if (a === "notpaket") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });
       if (!geheim || !gleichZeit(p.cronSecret, geheim)) return json({ error: "Kein Zugang" }, 401);
@@ -8655,6 +8733,10 @@ Köcheclub Werne`,
       await sperreVersuchMerken(ich.person_id, gesperrt.art, a).catch(() => {}); // 2.539.0 KC-CLUB-SPERRE-VERSUCHE
       return json({ error: SPERRE_TEXT[gesperrt.art] || SPERRE_TEXT.wartung, gesperrt: gesperrt.art, bis: gesperrt.bis }, 423);
     }
+    if (a === "init" && !ich.admin) { // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: App-Start genau beim Einspielen → kurzes Wartungsfenster
+      const { bis, fertig } = await einspielenLage();
+      if (bis) return json({ error: "Wir führen gerade eine kurze Wartung durch.", einspielen: true, vorname: ich.vorname, bis, fertig }, 423);
+    }
     const anmeldungMs = Date.now() - tAnm;
     // KC-CLUB-VERTRETUNG: „fuer“ = für ein anderes Mitglied handeln (nur erlaubte Aktionen, Erlaubnis jedes Mal neu geprüft)
     // 2.677.0 KC-CLUB-VERTRETUNG-NUR-ERLAUBT (Fall Klaus 26.10.): „fuer“ heißt nur bei den Vertretungs-Aktionen „für ein Mitglied handeln“. Andere
@@ -8811,6 +8893,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         });
         const pComm = communicatorStatus(ich).catch(() => null), pSos = sosFuerAlle(), pAdmin = adminVorname(), pThema = konfigZeile("thema").then((r) => { const w: any = r.data?.wert; return w?.id ? w : null; }).catch(() => null); // 2.323.0 KC-CLUB-THEMEN
         const pGedenken = gedenkenListe().catch(() => [] as any[]); // KC-CLUB-GEDENKEN (2.204.0)
+        const pRzThema = rzThemaLage(ich).catch(() => null); // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Hinweis fürs Info-Laufband (gemerkt, keine Abfrage je Start)
         // KC-CLUB-START-PARALLEL-2 (2.155.0, Wunsch Hansi „heute öfter langsam“): auch die übrigen Ketten (stumme Chats, Aufgaben/Protokolle,
         // Terminumfragen, Einstellungen & Co.) sofort mitstarten – vorher liefen sie erst nacheinander nach dem Zählen. Inhalt bleibt gleich.
         // KC-CLUB-START-SPARSAM (2.489.0): meine Einstellungen EINMAL holen – „stumm“ (für die Zähler) und alle übrigen (pRest) daraus
@@ -9008,7 +9091,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -10663,10 +10746,27 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
 
       case "rezepte_liste": {
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
-        const { data } = await db.from("kc_club_rezepte").select("id,von,titel,kategorie,portionen,zutaten,zubereitung,dauer,foto,stichworte,erstellt_am,geaendert_am")
-          .is("geloescht_am", null).order("titel").limit(1000);
-        const leute = await personen([...new Set<string>((data ?? []).map((x: any) => String(x.von)))]);
-        return json({ rezepte: (data ?? []).map((x: any) => ({ ...x, vonName: leute.get(x.von)?.display_name || "Mitglied", eigen: x.von === ich.person_id, darf: x.von === ich.person_id || ich.admin })) });
+        const felder = "id,von,titel,kategorie,portionen,zutaten,zubereitung,dauer,foto,stichworte,erstellt_am,geaendert_am";
+        let { data, error } = await db.from("kc_club_rezepte").select(felder + ",thema").is("geloescht_am", null).order("titel").limit(1000);
+        if (error) ({ data } = await db.from("kc_club_rezepte").select(felder).is("geloescht_am", null).order("titel").limit(1000)); // 2.730.0: ohne Spalte thema (Migration noch nicht eingespielt) wie bisher
+        const ids = (data ?? []).map((x: any) => x.id);
+        const [leute, bew, redaktion] = await Promise.all([personen([...new Set<string>((data ?? []).map((x: any) => String(x.von)))]),
+          ids.length ? db.from("kc_club_rezept_bewertung").select("rezept_id,person_id,sterne,nachgebacken").limit(20000).then((r: any) => r.data ?? [], () => []) : Promise.resolve([]), // alle auf einmal (kleine Tabelle) – keine lange ID-Liste in der Adresse
+          rzRedaktion().catch(() => null)]);
+        const bw = rzBewertungen(bew, ich.person_id);
+        return json({ rezepte: (data ?? []).map((x: any) => ({ ...x, thema: x.thema ?? null, ...bw(x.id), vonName: leute.get(x.von)?.display_name || "Mitglied", eigen: x.von === ich.person_id, darf: x.von === ich.person_id || ich.admin })),
+          themen: Object.keys(REZEPT_THEMEN).filter((t) => rzThemaSaison(t)), redaktion, sterneAb: REZEPT_STERNE_AB });
+      }
+      case "rezept_bewerten": { // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Sterne 1–5 (oder keine) und „nachgebacken“ – eine Zeile je Mitglied und Rezept
+        await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
+        const { data: r } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id || "")).is("geloescht_am", null).maybeSingle();
+        if (!r) throw new Fehler("Rezept nicht gefunden.", 404);
+        const sterne = p.sterne === null || p.sterne === undefined || p.sterne === "" ? null : Math.round(Number(p.sterne));
+        const falsch = rzBewertungPruefen(sterne, r.von === ich.person_id); if (falsch) throw new Fehler(falsch);
+        const { error } = await db.from("kc_club_rezept_bewertung").upsert({ rezept_id: r.id, person_id: ich.person_id, sterne, nachgebacken: p.nachgebacken === true, geaendert_am: jetzt() }, { onConflict: "rezept_id,person_id" });
+        if (error) throw new Fehler("Bewertung konnte nicht gespeichert werden.", 500);
+        const { data: alle } = await db.from("kc_club_rezept_bewertung").select("rezept_id,person_id,sterne,nachgebacken").eq("rezept_id", r.id).limit(1000);
+        return json({ ok: true, ...rzBewertungen(alle ?? [], ich.person_id)(r.id) });
       }
       case "rezept_speichern": {
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
@@ -10684,7 +10784,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const vorher = p.id ? (await db.from("kc_club_rezepte").select("foto").eq("id", String(p.id)).maybeSingle()).data?.foto : null;
           if (foto !== vorher && !(att && String(att.object_path).startsWith(`club/${ich.person_id}/`) && /^image\//.test(String(att.mime_type)))) foto = null;
         }
-        const zeile = { titel, kategorie, portionen, zutaten, zubereitung: txt(p.zubereitung, 6000) || null, dauer, foto, stichworte: txt(p.stichworte, 200) || null, geaendert_am: jetzt() };
+        const zeile: Record<string, unknown> = { titel, kategorie, portionen, zutaten, zubereitung: txt(p.zubereitung, 6000) || null, dauer, foto, stichworte: txt(p.stichworte, 200) || null, geaendert_am: jetzt() };
+        if (ich.admin && "thema" in p) { zeile.thema = (REZEPT_THEMEN as Record<string, unknown>)[String(p.thema)] ? String(p.thema) : null; RZ_LAGE.bis = 0; } // 2.730.0: Thema nur durch den Admin, sonst bleibt es wie es ist
         let id: string;
         if (p.id) {
           const { data: alt } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id)).is("geloescht_am", null).maybeSingle();
@@ -10707,7 +10808,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: alt } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id || "")).is("geloescht_am", null).maybeSingle();
         if (!alt) throw new Fehler("Rezept nicht gefunden.", 404);
         if (alt.von !== ich.person_id && !ich.admin) throw new Fehler("Löschen darf nur, wer das Rezept eingestellt hat.", 403);
-        await db.from("kc_club_rezepte").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", alt.id);
+        await db.from("kc_club_rezepte").update({ geloescht_am: jetzt(), geloescht_von: ich.person_id }).eq("id", alt.id); RZ_LAGE.bis = 0;
         await protokoll(ich.person_id, "rezept_geloescht", { rezept: alt.id });
         return json({ ok: true });
       }
@@ -17391,7 +17492,8 @@ Köcheclub-App`,
         const groesse = Math.min(MAX_TESTDATEN, Math.max(0, Math.round(Number(p.groesse) || 0)));
         const last = typeof p.last === "string" ? p.last.length : 0;
         if (last > MAX_TESTDATEN * 1.1) throw new Fehler("Testdaten zu groß.");
-        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, anmeldungMs, serverMs: Date.now() - t0Anfrage, instanz: INSTANZ, speicher: ANMELDUNG_TREFFER, wartung, empfangen: last, ...(groesse ? { daten: testDaten(groesse) } : {}) });
+        const el = p.einspielen ? await einspielenLage() : null, einspielen = el ? !!el.bis : undefined, einspielenFertig = el?.fertig ?? undefined; // 2.736.0: das Wartungsfenster fragt nach, ob es fertig ist
+        return json({ ok: true, server: SERVER_VERSION, zeit: jetzt(), dbMs, anmeldungMs, serverMs: Date.now() - t0Anfrage, instanz: INSTANZ, speicher: ANMELDUNG_TREFFER, wartung, empfangen: last, einspielen, einspielenFertig, ...(groesse ? { daten: testDaten(groesse) } : {}) });
       }
 
       // Fehlersuche (KC-CLUB-EXTERN-DIAGNOSE): was beim Öffnen anderer Apps auf dem Handy passiert – nur technische Angaben, ins Änderungsprotokoll
