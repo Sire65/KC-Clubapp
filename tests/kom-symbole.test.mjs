@@ -2,7 +2,7 @@
 // Aufruf: node tests/kom-symbole.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.730.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.737.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const leiste = html.slice(html.indexOf('<div class="kom-leiste">'), html.indexOf('<div id="onlineLeiste">'));
