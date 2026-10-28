@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.737.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.738.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1966,6 +1966,63 @@ async function rgHinweisErledigt(wie) {
 }
 function rgHinweisSpaeter() { try { localStorage.setItem(RG_SPAETER, heuteIso()); } catch {} rgHinweisZeigen(); melde("🎬 Ich frage morgen nochmal – oder jederzeit in ❓ Hilfe & Tipps"); }
 function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: zuerst die Einleitung
+// ---------- KC-CLUB-FILM-HINWEIS (2.738.0, Wunsch Hansi 28.10.2026 „Film für Klaus einbauen: wenn er die App öffnet, soll er einen Hinweis
+// bekommen und mit einem direkten Link den Film starten“) ----------
+// Registry FILME: fertige Anleitungsfilme (MP4 in film/, Quellen und Bauanleitung: KC-Infrastructure-Control-Center). „fuer“ sagt, wem der Film
+// beim Start angeboten wird – nach Amt, nie fest auf eine Person. Beim Start einmal ein Fenster (nach den anderen Start-Fenstern):
+// „▶ Film jetzt ansehen“ (spielt sofort in der App), „⏰ Später“ (beim nächsten Öffnen wieder), „Nein, danke“. Angesehen/„Nein, danke“ merkt der
+// Server geräteübergreifend (Einstellung „filme“). Jederzeit wieder: Büro → 🎬 Anleitung. Der Service Worker lässt film/ aus (kein 30-MB-Offline-Speicher).
+const FILME = [
+  { id: "clubsitzung", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "9 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4", bild: "film/clubsitzung-vorschau.jpg",
+    u: "Büro, Tagesordnung, Einladung, Drucken, Aktentasche – und am Abend Clubabend Live mit Live-Abstimmung über den nächsten Termin", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+];
+const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
+const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
+const filmErledigt = (id) => !!INIT?.einstellungen?.filme?.[id]?.z;
+const FILM_START = { versuche: 0 };
+async function filmMerken(id, wie) {
+  if (!INIT || INIT.einstellungen?.filme?.[id]?.wie === wie) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
+  const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString() } };
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), filme: neu };
+  try { await einstSpeichern("filme", neu); } catch (e) { console.warn("filme", e); } // Regel 11: bei Fehler fragt die App beim nächsten Start einfach noch einmal
+}
+async function filmHinweisPruefen() {
+  const f = filmeFuerMich().find((x) => !filmErledigt(x.id)); if (!f) return;
+  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht") || aktuelleAnsicht !== "start") { if (++FILM_START.versuche < 20) setTimeout(filmHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
+  const wahl = await new Promise((fertig) => {
+    let d; const zu = (w) => { d?.remove(); fertig(w); };
+    d = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname || ICH.name)},</h3><p class="dlg-text">für dich gibt es einen Anleitungsfilm:</p>
+      <button type="button" class="film-karte" data-w="an"><img src="${esc(f.bild)}" alt=""><span><b>${f.sym} ${esc(f.t)}</b><small>${esc(f.u)}</small><small>⏱️ ${esc(f.dauer)}</small></span></button>
+      <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">▶ Film jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nein">Nein, danke</button></div>`, () => zu("spaeter"));
+    d.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
+  });
+  if (wahl === "an") return filmZeigen(f.id);
+  if (wahl === "nein") { filmMerken(f.id, "nein"); return melde("🎬 Alles klar – den Film findest du jederzeit im Büro unter 🎬 Anleitung."); }
+  melde("🎬 Ich erinnere dich beim nächsten Öffnen – oder jederzeit im Büro unter 🎬 Anleitung.");
+}
+// Film abspielen: eigene Schicht über allem, echtes Video mit Bedienleiste; Ton an, weil der Start ein Tipp ist
+function filmZeigen(id) {
+  const f = FILME.find((x) => x.id === id); if (!f) return;
+  $("filmSchicht")?.remove();
+  const s = document.createElement("div"); s.id = "filmSchicht"; s.setAttribute("role", "dialog"); s.setAttribute("aria-modal", "true"); s.setAttribute("aria-label", f.t);
+  s.innerHTML = `<div class="film-kopf"><b>${f.sym} ${esc(f.t)}</b><button type="button" class="knopf klein" data-zu>✕ Schließen</button></div>
+    <video src="${esc(f.datei)}" poster="${esc(f.bild)}" controls autoplay playsinline preload="auto"></video>`;
+  document.body.appendChild(s); document.body.style.overflow = "hidden";
+  const v = s.querySelector("video"), zu = () => { v.pause(); s.remove(); document.body.style.overflow = ""; };
+  s.querySelector("[data-zu]").onclick = zu;
+  v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
+  v.onended = () => { zu(); melde("🎬 Film zu Ende – du findest ihn jederzeit im Büro unter 🎬 Anleitung."); };
+  v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
+  v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
+}
+function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere → auswählen
+  const l = filmeImBuero(); if (l.length === 1) return filmZeigen(l[0].id);
+  const d = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎬 Anleitungsfilme</h3>
+    <div class="ca-wahl">${l.map((f) => `<button type="button" class="knopf" data-id="${esc(f.id)}" style="text-align:left">${f.sym} ${esc(f.t)}<br><small>${esc(f.dauer)}</small></button>`).join("")}</div>`, () => d.remove());
+  d.querySelector('[data-a="zu"]').onclick = () => d.remove();
+  d.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { d.remove(); filmZeigen(b.dataset.id); }));
+}
+const buFilmKnopf = () => (filmeImBuero().length ? '<button class="knopf klein" onclick="filmWahl()">🎬 Anleitung</button>' : "");
 // ---------- KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi: ein Mitglied beim nächsten Start auf ungelesene Nachrichten hinweisen) ----------
 // Allgemein, nichts fest verdrahtet: Der Admin setzt beim Mitglied die Einstellung „start_hinweis“ = { art: "ungelesen" }. Beim nächsten Start
 // (nach den anderen Start-Fenstern) kommt einmal: „Hallo <Vorname>, du hast <n> ungelesene Nachrichten …“ – mit der echten Zahl und der echten
@@ -26618,7 +26675,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -28476,7 +28533,7 @@ function buStartListeHtml() {
     ["💶", "Erstattungen", e.erstattungen || 0, "buEingang()"], ["📅", "Dienstzeiten", e.dienstzeiten || 0, "buEingang()"]]; // KC-CLUB-EINGANGSKORB (2.23.6)
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
-  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
@@ -28644,7 +28701,7 @@ function buRaumHtml() {
   const kal = naechst ? new Date(naechst.beginn) : null;
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">
-      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
+      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
       ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>

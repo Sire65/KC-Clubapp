@@ -37,6 +37,8 @@ jobs:
       - run: node tests/rezept-weihnacht.test.mjs
       # KC-CLUB-ONLINE-NAMEN (2.731.0)
       - run: node tests/online-namen.test.mjs
+      # KC-CLUB-FILM-HINWEIS (2.738.0)
+      - run: node tests/film-hinweis.test.mjs
       - run: node tests/zugang-pruefen.test.mjs
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs

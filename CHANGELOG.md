@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.738.0 – 2026-10-28 – 🎬 Anleitungsfilm „Clubsitzung vorbereiten und leiten“ für den Clubsprecher (KC-CLUB-FILM-HINWEIS)
+Wunsch Hansi („Baue den Film für Klaus ein. Wenn er die App öffnet, soll er einen Hinweis bekommen und mit einem direkten Link den Film starten“):
+- **Hinweis beim Öffnen:** Wer das Amt **Clubsprecher** hat, bekommt beim Start (nach den anderen Start-Fenstern) einmal ein Fenster „Hallo <Vorname>, für dich gibt es einen Anleitungsfilm“ mit Vorschaubild und **▶ Film jetzt ansehen** – der Film spielt sofort in der App (Vollbild, Ton, Bedienleiste, ✕ Schließen). **⏰ Später** fragt beim nächsten Öffnen wieder, **Nein, danke** nie mehr. Einmal gestartet = erledigt; gemerkt geräteübergreifend (neue Server-Einstellung `filme`).
+- **Jederzeit wieder:** Büro → **🎬 Anleitung** (Raum- und Listenansicht; Admin sieht den Knopf zum Prüfen auch).
+- Film (9 Min., 1080×1920, 30 MB) in `film/clubsitzung-anleitung.mp4` – echte Club-App mit **Beispieldaten**, keine echten Mitgliederdaten. Quellen/Neubau: KC-Infrastructure-Control-Center, Ordner `anleitung-clubsitzung/`. Der Service Worker lässt `film/` wie beim Werbefilm aus (kein Offline-Speicher, Abspielen direkt übers Netz).
+- Registry `FILME` (app.js): neuer Film = neuer Eintrag mit `fuer` (Amt/Rolle, nie eine feste Person).
+- Server: nur die neue Einstellung `filme` (je Film `wie` angesehen/nein + Zeit) – **erst Server, dann App** einspielen; ohne neuen Server wird „erledigt“ nicht gespeichert und der Hinweis kommt bei jedem Start wieder.
+- Test `tests/film-hinweis.test.mjs`.
+
 ## 2.737.0 – 2026-10-28 – 🎬 Erklär-Videos werden erst beim Abspielen geladen (KC-CLUB-TEILE, Stufe 1)
 Prüfbericht C (Wunsch #44), Stufe 1 – für Mitglieder unsichtbar: Abspieler, Drehbücher, Stimmen-Wahl und Bewertung der Erklär-Videos (rund 420 KB, ein Zehntel des Programms) liegen jetzt in teile/videos.js und werden erst geladen, wenn ein Video startet. Im Hauptprogramm bleiben der Video-Katalog (Hilfe, Twinkey, Lupe), der Hinweis „Warum diese App?“ und der Zustand „Video läuft“. Geprüft: alle 57 Videos Schritt für Schritt wie vorher, Start-Rechenzeit auf handy-ähnlichem Gerät −12 %.
 
