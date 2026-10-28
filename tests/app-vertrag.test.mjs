@@ -4933,7 +4933,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/ONL\.wartet \? 4000 : sparTakt\(/.test(html) && /neuLaden\(\); \}, sparTakt\(60000\)\)/.test(html) && /setInterval\(nzSenden, sparTakt\(NZ_TAKT_MS\)\)/.test(html), "Hintergrund seltener");
   assert.ok(!/sparTakt\(CHAT_TAKT_MS|sparTakt\(SP_TAKT_MS|anrufPruefen, sparTakt/.test(html), "Chat, Spiele, Anrufe unverändert");
   // KC-CLUB-SPUR-OEFFNEN: auch ein kurzer Besuch nur auf der Startseite erscheint im Weg
-  assert.ok(/spur\("geoeffnet"\); setTimeout\(spurSenden, 3000\);/.test(html) && /geoeffnet: "📲 App geöffnet"/.test(html) && /const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server), "Öffnen zählt als Schritt");
+  assert.ok(/spur\(window\.KCFP\?\.ausHinter \? spurWieder\(KCFP\.ausHinter\) : "geoeffnet"\); setTimeout\(spurSenden, 3000\);/.test(html) /* 2.729.0 KC-CLUB-SPUR-WIEDER */ && /geoeffnet: "📲 App geöffnet"/.test(html) && /const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server), "Öffnen zählt als Schritt");
   assert.ok(/html\.spar \*, html\.spar \*::before, html\.spar \*::after \{ animation-duration: \.001s !important;/.test(seite) && /id="sparWahl"/.test(seite) && /id="sparZeichen"/.test(seite), "Bewegungen aus, Wahl in Darstellung, 🐢 im Kopf");
 }
 // 2.30.1 KC-CLUB-SCHULUNG-ABGESAGT-KALENDER + KC-CLUB-WILLKOMMEN-BEGRUESSEN

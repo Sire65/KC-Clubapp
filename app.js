@@ -44301,7 +44301,7 @@ function startMessFertig() {
   if ($("appInfo")?.offsetParent) appInfoZeigen();
   // KC-CLUB-SPUR-OEFFNEN (2.30.0, Fall Reinhilde: nur kurz auf der Startseite → im Weg stand nichts): jedes Öffnen zählt als Schritt
   // und geht nach 3 s gleich los (nicht erst nach 2 Min.), damit auch ganz kurze Besuche sichtbar sind
-  spur("geoeffnet"); setTimeout(spurSenden, 3000);
+  spur(window.KCFP?.ausHinter ? spurWieder(KCFP.ausHinter) : "geoeffnet"); setTimeout(spurSenden, 3000); // 2.729.0 KC-CLUB-SPUR-WIEDER
   // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeden Start mit Dauer, Gerät und Browser melden (für die Startstatistik des Admins)
   setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an, hinter: !!START_MESS.hinter,
     app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).then((r) => { if (r?.keks) setTimeout(() => keksZeigen(r.keks), 1500); else if (r?.fee) setTimeout(feeKommt, 1500); }).catch(() => {}), 1500); // 2.372.0 KC-CLUB-FEE: jede 20. Anmeldung
@@ -46417,6 +46417,16 @@ function spurBaldSenden() { if (SPAR.an || document.hidden) return; clearTimeout
 setInterval(spurSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) spurSenden(true); }); // KC-CLUB-SPUR-KEEPALIVE
 window.addEventListener("pagehide", () => spurSenden(true));
+// 2.729.0 KC-CLUB-SPUR-WIEDER: App kommt nach ≥ 5 Min. im Hintergrund wieder nach vorn → Schritt „wieder_<Minuten>“ („📲 wieder geöffnet (war 33 Min. im Hintergrund)“)
+const SPUR_WIEDER_MS = 5 * 60000, SPUR_WIEDER_START_MS = 2 * 60000;
+const spurWieder = (ms) => "wieder_" + Math.min(9999, Math.max(1, Math.round(ms / 60000)));
+const spurWas = (w) => { const m = /^wieder_(\d+)$/.exec(w || ""); if (m) { const n = Number(m[1]); return `📲 wieder geöffnet (war ${n >= 120 ? Math.round(n / 60) + " Std." : n + " Min."} im Hintergrund)`; } return SPUR_WAS[w] || NZ_NAMEN[w] || w; };
+let SPUR_HINTER_AB = document.hidden ? Date.now() : 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { SPUR_HINTER_AB = Date.now(); return; }
+  const weg = SPUR_HINTER_AB ? Date.now() - SPUR_HINTER_AB : 0; SPUR_HINTER_AB = 0;
+  if (weg >= SPUR_WIEDER_MS && ICH && INIT) spur(spurWieder(weg));
+});
 const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", vorfuehren: "📺 Live zeigen gestartet", vorfuehren_zuschauen: "📺 Bei Live zeigen zugeschaut", fitness: "🏋️ Fit bleiben geöffnet", probe_gesetzt: "🧪 Probephase gestartet/verlängert", probe_uebernommen: "✅ Probephase übernommen", probe_beendet: "🚪 Probephase beendet", geoeffnet: "📲 App geöffnet", mitglied: "👤 Mitglied angesehen", chat: "💬 Unterhaltung geöffnet", gesendet: "✉️ Nachricht gesendet", gesendet_anlage: "📎 Nachricht mit Anhang gesendet",
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
@@ -46439,7 +46449,7 @@ async function spurAdmin(tag, person) {
     const on = (id) => heuteDa && ONL.stand && Date.now() - ONL.stand < 3 * 60000 && ONL.ids.has(id);
     const liste = [...r.personen].sort((a, b) => on(b.person_id) - on(a.person_id));
     // KC-CLUB-SPUR-JETZT (2.81.0): je Person, was sie zuletzt aufgerufen hat – bei 🟢 „ist gerade bei …“
-    const was = (w) => w ? SPUR_WAS[w] || NZ_NAMEN[w] || w : "";
+    const was = (w) => w ? spurWas(w) : ""; // 2.729.0 KC-CLUB-SPUR-WIEDER
     const vor = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); return m < 1 ? "gerade eben" : m === 1 ? "vor 1 Min." : m < 60 ? `vor ${m} Min.` : `um ${zeitKurz(iso)} Uhr`; };
     const jetzt = liste.filter((x) => on(x.person_id));
     inhalt = (heuteDa ? `<div class="karte spur-jetzt-box"><b>🟢 Gerade in der App${jetzt.length ? ` (${jetzt.length})` : ""}</b>${jetzt.length ? jetzt.map((x) => `<div class="spur-jetzt-zeile" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> ist bei <b>${esc(was(x.zuletzt) || "?")}</b> <small class="hinweis">· ${esc(vor(x.letzte))}</small></div>`).join("") : '<div class="hinweis">Gerade ist niemand in der App (oder hat die Online-Anzeige verborgen).</div>'}</div>` : "")
@@ -46447,7 +46457,7 @@ async function spurAdmin(tag, person) {
       + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => x.stoerung && !on(x.person_id) ? `<button class="knopf spur-stoerung" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">⚠️ <b>${esc(x.name)}</b> <small class="hinweis">· war kurz da · ${esc(zeitKurz(x.erste))}${x.erste !== x.letzte ? "–" + esc(zeitKurz(x.letzte)) : ""} Uhr</small><br><small>${x.stoerung === "netz" ? "📶 Verbindung gestört – die Wege kommen nach, sobald die App wieder Netz hat" : "⚠️ Störung in der App – weitere Wege sind nicht angekommen"}</small></button>` : `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(SPUR_WAS[x.w] || NZ_NAMEN[x.w] || x.w)}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
@@ -47383,7 +47393,10 @@ function fpNachAnmeldung() {
   fpAngemeldet = true; KCFP.angemeldet = true; KCFP.startOk = true; KCFP.version = APP_VERSION;
   const dauer = Date.now() - KCFP.start;
   requestAnimationFrame(() => setTimeout(startMessFertig, 0)); // KC-CLUB-STARTZEIT: fertig = erstes Bild nach der Anmeldung
-  if (dauer > 6000) fpNeu("start_langsam", { ms: dauer, text: `Start dauerte ${Math.round(dauer / 1000)} s` });
+  // 2.729.0 KC-CLUB-SPUR-WIEDER (Fund Hansi 28.10.: Marianne „online“, aber keine Wege – Safari hatte die Seite 33 Min. im Hintergrund eingefroren):
+  // dauert der Start über 2 Min., lag die Seite im Hintergrund – kein „Start langsam“ (die Zeit war nicht das Netz), im Weg „wieder geöffnet“
+  const ausHinter = dauer > SPUR_WIEDER_START_MS; KCFP.ausHinter = ausHinter ? dauer : 0;
+  if (dauer > 6000 && !ausHinter) fpNeu("start_langsam", { ms: dauer, text: `Start dauerte ${Math.round(dauer / 1000)} s` });
   try { if (!sessionStorage.getItem("kc_club_fp_umgebung")) { sessionStorage.setItem("kc_club_fp_umgebung", "1");
     fpNeu("umgebung", { system: fpSystem(), browser: fpBrowser(), start: START_ART, standalone: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true,
       push: "Notification" in window ? Notification.permission : "nicht_moeglich", speicher: KCFP.speicherOk, sw: "serviceWorker" in navigator,
