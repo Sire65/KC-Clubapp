@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.725.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.726.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26210,6 +26210,8 @@ function adZustand(id) {
       return gemessen([f, `${fs.filter((x) => x === "gruen").length} von ${fs.length} melden sich`]); }
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
+    case "waechter": { if (!WCH.daten) return ["keine", `${WCH_LISTE.length} Wächter · antippen`]; const z = wchZaehlen(); // 2.726.0 KC-CLUB-WAECHTER (Stand vom letzten Öffnen)
+      return [z.rot ? "rot" : z.gelb ? "gelb" : "gruen", `${WCH_LISTE.length} Wächter · ${z.gruen} ✅${z.gelb ? ` · ${z.gelb} 🟡` : ""}${z.rot ? ` · ${z.rot} 🔴` : ""}`]; }
     case "stumm": return ["keine", "Mitglieder ganz ohne Push/E-Mail"]; // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
     case "wartung": return gemessen(!r ? null : r.wartung?.an ? ["gelb", "AN – Mitglieder sehen Blau"] : ["gruen", "aus"]);
     case "freigaben": { const f = INIT?.freigaben || {}, n = Object.values(f).filter((x) => x !== "alle").length; return ["keine", n ? `${n} nur für dich (Test)` : "alles freigegeben"]; } // KC-CLUB-FREIGABE (2.23.86)
@@ -26227,7 +26229,7 @@ function adZustand(id) {
 const AD_UEBERWACHT = ["verlauf", "server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme", "rt"];
 // Kacheln: Gruppe (Farbstreifen oben) + Lämpchen rechts oben; Dienste-Kacheln öffnen ihre Direktsprünge
 const AD_KACHELN = [
-  ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["verlauf", "📈", "Verlauf", "ueb"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
+  ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["waechter", "🛡️", "Wächter", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["verlauf", "📈", "Verlauf", "ueb"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
@@ -26237,6 +26239,156 @@ const AD_KACHELN = [
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
   u: () => (gr === "link" ? "Direkt zur Verwaltung" : adZustand(id)[1]),
   klasse: () => `ad ad-${gr}${gr === "link" ? "" : " l-" + adZustand(id)[0]}` }));
+// ---------- 2.726.0 KC-CLUB-WAECHTER (Wunsch Hansi „Admin-Kachel Wächter: alle Wächter als Kacheln mit den wichtigsten Infos; antippen =
+// Info-Fenster: beobachtet was, meldet sich bei wem, letzter Lauf OK …; ordentlich angeordnet, ausgerichtet, gut lesbar“) ----------
+// Daten nur beim Öffnen (eine Server-Anfrage „waechter_lage“, GitHub-Läufe dort 10 Min. gemerkt) – keine Abfrage im Hintergrund.
+// Zeitpläne in UTC wie bei pg_cron/GitHub; angezeigt wird deutsche Zeit.
+const WCH = { daten: null, zeit: 0, laedt: false };
+const WCH_GRUPPEN = [["sicherung", "🗄️ Datensicherung"], ["betrieb", "⚡ Betrieb"], ["schutz", "🔒 Sicherheit"], ["app", "📱 In der App"]];
+const WCH_LISTE = [
+  // 🗄️ Datensicherung
+  { id: "spiegel", gruppe: "sicherung", sym: "🦉", name: "Spiegel-Wächter", kurz: "Kopie auf Neon frisch?", job: "kc-db-mirror-watchdog",
+    beobachtet: "ob jede gespiegelte Tabelle auf Neon frisch und fehlerfrei ist", grenze: "höchstens 6 Std. 30 Min. alt, keine Abweichung", wo: "Datenbank (Zeitplan)",
+    befund: (d) => { const s = d.spiegel?.watchdog; return s && s.status !== "ok" ? ["rot", "Kopie nicht frisch", s.msg || ""] : null; }, ergebnis: (d) => d.spiegel?.watchdog?.msg,
+    meldet: "niemandem von selbst – schreibt ins Spiegel-Protokoll (hier und unter 📊 Lage zu sehen). Einen ausgefallenen Lauf holt der Spiegel-Wächter von außen (🔭) nach.",
+    tun: "„🪞 Spiegel jetzt anstoßen“ (Knopf unten)", seit: "September 2026", knopf: () => '<button class="knopf" onclick="adminSpiegeln()">🪞 Spiegel jetzt anstoßen</button>' },
+  { id: "abdeckung", gruppe: "sicherung", sym: "🗺️", name: "Abdeckungs-Prüfer", kurz: "Jede Tabelle gesichert?", job: "kc-db-mirror-watchdog",
+    beobachtet: "ob jede Tabelle eine Spiegel-Regel hat; neue Tabellen nimmt er selbst auf", grenze: "keine Tabelle ohne Regel", wo: "Datenbank (läuft mit dem Spiegel-Wächter)",
+    befund: (d) => { const s = d.spiegel?.coverage; return s && s.status !== "ok" ? ["gelb", "Tabelle ohne Regel", s.msg || ""] : null; }, ergebnis: (d) => d.spiegel?.coverage?.msg,
+    meldet: "niemandem von selbst – verdächtige neue Tabellen (z. B. mit Geheimnis- oder Standort-Spalten) hält er an und vermerkt „Admin-Freigabe nötig“ im Protokoll.",
+    tun: "Claude bitten, die angehaltene Tabelle zu prüfen und freizugeben", seit: "01.10.2026" },
+  { id: "quellen", gruppe: "sicherung", sym: "🩺", name: "Quellen-Prüfer", kurz: "Spiegel-Regeln eingehalten?", job: "kc-db-mirror-source-health",
+    beobachtet: "ob alle Tabellen nach den Datenschutz-Regeln gespiegelt werden (keine Roh-Kopie)", grenze: "alle Tabellen frisch", wo: "Datenbank (Zeitplan)",
+    befund: (d) => { const s = d.spiegel?.source_health; return s && s.status !== "ok" ? ["gelb", "Regel verletzt", s.msg || ""] : null; }, ergebnis: (d) => d.spiegel?.source_health?.msg,
+    meldet: "niemandem von selbst – schreibt ins Spiegel-Protokoll.", tun: "Claude bitten nachzusehen" },
+  { id: "leseprobe", gruppe: "sicherung", sym: "🔐", name: "Sicherungs-Prüfer", kurz: "Nachtsicherung lesbar?", job: "kc-neon-backup-verify",
+    beobachtet: "ob die neueste Sicherung auf Neon entschlüsselt werden kann und vollständig ist (Zeilen, Prüfsummen)", grenze: "Lese-Probe bestanden", wo: "Datenbank → Prüf-Funktion auf Neon",
+    befund: (d) => { const s = d.spiegel?.restore_test; return s && s.status !== "ok" ? ["rot", "Lese-Probe fehlgeschlagen", s.msg || ""] : null; },
+    ergebnis: (d) => [d.spiegel?.restore_test && `Lese-Probe ${wchUhr(d.spiegel.restore_test.zeit)}: ${d.spiegel.restore_test.status === "ok" ? "bestanden" : "fehlgeschlagen"}`, d.spiegel?.backup && `letzte Sicherung ${wchUhr(d.spiegel.backup.zeit)}`].filter(Boolean).join(" · "),
+    meldet: "niemandem von selbst – schreibt das Ergebnis ins Protokoll.", tun: "Claude bitten, die Sicherung neu zu prüfen" },
+  { id: "aussen", gruppe: "sicherung", sym: "🔭", name: "Spiegel-Wächter (außen)", kurz: "Prüft von GitHub aus", gh: "spiegel-waechter.yml", plan: "41 * * * *",
+    beobachtet: "von außen, ob die Spiegelung pünktlich gelaufen ist – auch wenn Supabase selbst nichts mehr anstößt", grenze: "letzter Lauf höchstens 6 Std. 30 Min. alt", wo: "GitHub (Ablauf „Spiegel-Wächter“)",
+    meldet: "niemandem per Nachricht – stößt eine überfällige Spiegelung selbst an. Hinweis: ein Fehler beim Fragen lässt den Lauf grün (keine Mail).", tun: "„🪞 Spiegel jetzt anstoßen“ beim Spiegel-Wächter", seit: "04.10.2026" },
+  { id: "wochenprobe", gruppe: "sicherung", sym: "🗝️", name: "Wochenprobe", kurz: "Ohne Supabase lesbar?", gh: "notfall-sicherung-lesen.yml", plan: "17 4 * * 0",
+    beobachtet: "ob eine Sicherung mit der hinterlegten Schlüssel-Kopie (Cloudflare-Tresor) entschlüsselt werden kann – also auch, wenn Supabase ganz ausfällt", grenze: "Prüfsumme bestätigt", wo: "GitHub (Ablauf „Notfall-Sicherung lesen“)",
+    meldet: "dir per E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
+  { id: "zweitkopie", gruppe: "sicherung", sym: "📦", name: "Zweitkopie", kurz: "Kopie bei Cloudflare da?", gh: "notfall-zweitkopie.yml", plan: "41 5 * * 1",
+    beobachtet: "ob die verschlüsselte Zweitkopie bei Cloudflare abgelegt, zurückgelesen und lesbar ist (5 Wochen aufbewahrt)", grenze: "Prüfsumme gleich, Probe-Tabelle lesbar", wo: "GitHub (Ablauf „Notfall-Zweitkopie“)",
+    meldet: "dir per E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
+  // ⚡ Betrieb
+  { id: "schnittstelle", gruppe: "betrieb", sym: "🐕", name: "Schnittstellen-Wächter", kurz: "Antwortet die Datenbank?", gh: "schnittstellen-waechter.yml", plan: "*/5 * * * *",
+    beobachtet: "von außen, ob Supabase und die Datenbank-Schnittstelle antworten (unter 10 Sekunden, 3 Versuche)", grenze: "Antwort unter 10 Sekunden", wo: "GitHub (Ablauf „Schnittstellen-Wächter“)",
+    meldet: "startet Supabase bei einem Hänger selbst neu (höchstens 2× pro Stunde); bei rotem Lauf E-Mail von GitHub an dich.", tun: "Admin → 🗄️ Supabase → Neustart-Knopf", seit: "11.10.2026 (nach dem Ausfall 04:21–04:46 Uhr)" },
+  { id: "last", gruppe: "betrieb", sym: "🚦", name: "Last-Wächter", kurz: "Zu viele Abfragen?", job: "kc-traffic-guard-15m",
+    beobachtet: "wie viele Datenbank-Abfragen in 15 Minuten kommen – und was vermutlich dahintersteckt", grenze: "deutlich über dem Üblichen = Warnung", wo: "Datenbank (Zeitplan) → Server-Funktion",
+    befund: (d) => { const s = d.last; return !s || s.stufe === "normal" ? null : [s.stufe === "critical" ? "rot" : "gelb", s.stufe === "critical" ? "sehr hohe Last" : "erhöhte Last", s.ursache || ""]; },
+    ergebnis: (d) => d.last ? `${wchUhr(d.last.zeit)}: ${Number(d.last.abfragen).toLocaleString("de-DE")} Abfragen in 15 Min. (üblich ${Number(d.last.ueblich).toLocaleString("de-DE")}) · ${d.last_warn24 || 0}× erhöht in 24 Std.` : "",
+    meldet: "zeigt bei hoher Last eine gelbe Hinweis-Box auf der Startseite und im Admin-Bereich; keine Push oder E-Mail.", tun: "Neues nur um 12 und 20 Uhr einspielen; Ursache steht oben" },
+  { id: "betriebw", gruppe: "betrieb", sym: "👁️", name: "Betriebs-Wächter", kurz: "Dienste lebendig?", job: "kc-live-operations-watch-minute",
+    beobachtet: "ob die Programme sich melden (Kasse, PC-Manager …), Warteschlangen, Push- und Mail-Wege, Versionen", grenze: "jede Änderung des Zustands", wo: "Datenbank (Zeitplan) → System-Check",
+    meldet: "dir per Push und/oder E-Mail über den Communicator – nur wenn sich der Zustand ändert (Wege: Einstellungen des System-Checks).", tun: "unter 📊 Lage nachsehen, welcher Dienst betroffen ist" },
+  { id: "systemcheck", gruppe: "betrieb", sym: "🚨", name: "System-Check", kurz: "Gesamtprüfung", job: "kc-system-check-auto-15m",
+    beobachtet: "die ganze Technik in einer Prüfung (Datenbank, Server, Dienste); doppelte Alarme werden unterdrückt", grenze: "Fehler oder Warnung", wo: "Datenbank (Zeitplan) → System-Check",
+    meldet: "dir per Push und/oder E-Mail über den Communicator bei Fehler, Warnung und Entwarnung.", tun: "Meldung lesen, dann unter 📊 Lage nachsehen" },
+  { id: "messung", gruppe: "betrieb", sym: "⚖️", name: "Mess-Stationen", kurz: "Tempo und Größe", job: "kc-club-messung-30min",
+    beobachtet: "Antwortzeit, Verbindungen, Netzfehler und Größe der Datenbank (dazu alle 30 Min. die Last je Bereich)", grenze: "Antwortzeit über 300 ms = auffällig", wo: "Datenbank (2 Zeitpläne)",
+    befund: (d) => (d.mess?.api?.db_ms > 300 ? ["gelb", "Datenbank langsam", `Antwortzeit ${d.mess.api.db_ms} ms`] : null),
+    ergebnis: (d) => { const a = d.mess?.api, b = d.mess?.db; return [a && `Antwortzeit ${a.db_ms} ms`, b && `${b.verbindungen} Verbindungen`, b && `${b.net_fehler} Netzfehler`, b?.bytes && `Datenbank ${Math.round(b.bytes / 1048576)} MB`].filter(Boolean).join(" · "); },
+    meldet: "niemandem – misst nur; die Werte stehen unter 📊 Lage und 📈 Verlauf.", tun: "–" },
+  // 🔒 Sicherheit
+  { id: "zugang", gruppe: "schutz", sym: "🛂", name: "Zugangs-Wächter", kurz: "Fremde Anmeldung?", job: "kicc-access-watch-minute",
+    beobachtet: "neue Geräte, neue Konten und viele Anmeldungen kurz hintereinander", grenze: "jedes neue Gerät oder Konto", wo: "Datenbank (Zeitplan)",
+    meldet: "dir per Push und E-Mail (an die eingetragenen Betreuer des System-Checks).", tun: "Meldung prüfen: warst du es selbst? Sonst Zugang sperren" },
+  // 📱 In der App
+  { id: "schnecke", gruppe: "app", sym: "🐌", name: "Schnecken-Wächter", kurz: "Netz am Handy langsam?",
+    app: () => (typeof SCHNECKE !== "undefined" && SCHNECKE.an ? ["gelb", "Netz gerade langsam", SCHNECKE.grund || ""] : ["gruen", "Netz schnell", ""]),
+    beobachtet: "die letzten Antwortzeiten auf diesem Handy und die Netz-Angabe des Handys", grenze: "2 von 3 Anfragen langsam", takt: "laufend bei jeder Anfrage", wo: "in der App (jedes Gerät für sich)",
+    meldet: "zeigt oben in der App die kleine Schnecke – nur auf diesem Gerät.", tun: "Geduld, nicht mehrfach tippen; WLAN/Mobilfunk prüfen" },
+  { id: "versionen", gruppe: "app", sym: "🧭", name: "Versions-Wächter", kurz: "Alle auf neuem Stand?",
+    app: (d) => { if (!d) return ["grau", "noch nicht geladen", ""]; const v = d.versionen || {}, alt = Object.entries(v).filter(([k]) => k !== APP_VERSION).reduce((n, [, x]) => n + x, 0);
+      return alt ? ["gelb", `${alt} mit älterer Version`, "Die App holt die neue Version beim nächsten Öffnen selbst."] : ["gruen", "alle aktuell", ""]; },
+    ergebnis: (d) => Object.entries(d?.versionen || {}).sort((a, b) => b[0].localeCompare(a[0], "de", { numeric: true })).map(([k, n]) => `${k}: ${n}`).join(" · "),
+    beobachtet: "welche App-Version die Mitglieder der letzten 7 Tage haben", grenze: `aktuell ist ${APP_VERSION}`, takt: "beim Start jeder App", wo: "in der App + Zugangsliste",
+    meldet: "niemandem – jede App zeigt „Update“ und holt die neue Version selbst.", tun: "bei Bedarf eine Startnachricht „App einmal neu öffnen“" },
+];
+function wchCronFeld(f, w, min, max) { // passt Wert w zum Feld f? („*“, „4,10,16“, „11-22“, „*/15“, „2-59/5“)
+  return f.split(",").some((t) => { const [b, st] = t.split("/"), s = Number(st || 1); let a = min, e = max;
+    if (b !== "*") { const [x, y] = b.split("-").map(Number); a = x; e = y ?? (st ? max : x); }
+    return w >= a && w <= e && (w - a) % s === 0; });
+}
+function wchCronPasst(plan, d) { const [mi, st, tg, mo, wt] = plan.split(/\s+/);
+  return wchCronFeld(mi, d.getUTCMinutes(), 0, 59) && wchCronFeld(st, d.getUTCHours(), 0, 23) && wchCronFeld(tg, d.getUTCDate(), 1, 31) && wchCronFeld(mo, d.getUTCMonth() + 1, 1, 12) && wchCronFeld(wt, d.getUTCDay(), 0, 6); }
+function wchCronSuche(plan, ab, richtung) { // nächster (1) bzw. letzter (-1) geplanter Zeitpunkt, höchstens 8 Tage weit
+  if (!plan) return null; const d = new Date(ab); d.setUTCSeconds(0, 0); if (richtung > 0) d.setUTCMinutes(d.getUTCMinutes() + 1);
+  for (let i = 0; i < 11520; i++) { if (wchCronPasst(plan, d)) return d; d.setUTCMinutes(d.getUTCMinutes() + richtung); }
+  return null;
+}
+function wchTaktText(plan) { // „alle 30 Min.“, „täglich 07:30“ … aus dem Zeitplan (deutsche Zeit)
+  if (!plan) return "laufend"; const a = wchCronSuche(plan, Date.now(), 1), b = a && wchCronSuche(plan, a, 1), c = b && wchCronSuche(plan, b, 1); if (!a || !b) return plan;
+  const min = Math.round((b - a) / 60000), gleich = c && Math.round((c - b) / 60000) === min, uhr = (d) => fZeit.format(d);
+  if (gleich && min < 60) return `alle ${min} Min.`; if (gleich && min === 60) return "stündlich"; if (gleich && min < 1440 && min % 60 === 0) return `alle ${min / 60} Std.`;
+  if (gleich && min === 1440) return `täglich ${uhr(a)} Uhr`; if (gleich && min === 10080) return `${new Intl.DateTimeFormat("de-DE", { weekday: "long" }).format(a)}s ${uhr(a)} Uhr`;
+  return `mehrmals täglich (nächster ${uhr(a)} Uhr)`;
+}
+const wchUhr = (iso) => { if (!iso) return "–"; const d = new Date(iso), h = new Date(); return (d.toDateString() === h.toDateString() ? "heute " : new Date(h - 86400000).toDateString() === d.toDateString() ? "gestern " : tagKurz(d.toISOString().slice(0, 10)) + " ") + fZeit.format(d) + " Uhr"; };
+function wchLauf(w, d) { // einheitlich: { letzt, ok, plan, verlauf, ok24, fehler24, msg, link }
+  if (w.job) { const j = d?.jobs?.[w.job]; if (!j) return null; return { letzt: j.letzt, ok: j.status === "succeeded", aktiv: j.aktiv, plan: j.plan, verlauf: j.verlauf || "", ok24: j.ok24, fehler24: j.fehler24, msg: j.msg }; }
+  if (w.gh) { const g = d?.github?.[w.gh]; if (!g) return null; return { letzt: g.letzt, ok: g.ergebnis === "success", aktiv: true, plan: w.plan, verlauf: g.verlauf || "", ok24: g.ok24, fehler24: g.fehler24, link: /^https:\/\/github\.com\//.test(g.link || "") ? g.link : null }; }
+  return null;
+}
+function wchStatus(w, d) { // [farbe, kurzer Zustand, ausführlicher Befund]
+  if (w.app) return w.app(d);
+  if (!d) return ["grau", "noch nicht geladen", ""];
+  const l = wchLauf(w, d); if (!l) return ["grau", "unbekannt", w.gh ? "GitHub hat gerade nicht geantwortet." : "Zeitplan nicht gefunden."];
+  if (!l.aktiv) return ["gelb", "abgeschaltet", "Der Zeitplan ist ausgeschaltet."];
+  const soll = wchCronSuche(l.plan, Date.now() - (w.gh ? 90 : 5) * 60000, -1); // GitHub startet geplante Läufe oft verspätet
+  if (!l.letzt || (soll && Date.parse(l.letzt) < soll - 60000)) return ["rot", "überfällig", `Der Lauf für ${wchUhr(soll?.toISOString())} fehlt.`];
+  if (!l.ok) return ["rot", "letzter Lauf fehlgeschlagen", l.msg || ""];
+  const befund = w.befund ? w.befund(d) : null; if (befund) return befund;
+  if (l.fehler24 && l.fehler24 * 20 >= (l.ok24 || 0)) return ["gelb", `${l.fehler24} Aussetzer in 24 Std.`, "Der letzte Lauf war wieder in Ordnung."];
+  if (l.fehler24) return ["gruen", `in Ordnung (${l.fehler24} Aussetzer)`, `${l.fehler24} von ${l.fehler24 + (l.ok24 || 0)} Läufen in 24 Std. hatten einen Aussetzer – der letzte war in Ordnung.`]; // einzelner Aussetzer bei vielen Läufen: kein Gelb
+  return ["gruen", "in Ordnung", ""];
+}
+async function wchStart(neu) {
+  if (!WCH.daten || neu || Date.now() - WCH.zeit > 120000) {
+    if (!WCH.daten) wchZeigen(true);
+    try { WCH.laedt = true; WCH.daten = await api("waechter_lage", {}, { warten: true }); WCH.zeit = Date.now(); } catch (e) { WCH.laedt = false; if (!WCH.daten) $("wchBlatt")?.remove(); return meldeFehler(e); }
+    WCH.laedt = false;
+  }
+  wchZeigen(); if (aktuelleAnsicht === "start") kachelnZeigen(); // Lämpchen der Kachel nachziehen
+}
+function wchZaehlen() { const z = { gruen: 0, gelb: 0, rot: 0, grau: 0 }; for (const w of WCH_LISTE) z[wchStatus(w, WCH.daten)[0]]++; return z; }
+function wchZeigen(laden) {
+  const d = WCH.daten, z = wchZaehlen();
+  const karte = (w) => { const [f, t] = wchStatus(w, d), l = wchLauf(w, d);
+    return `<button type="button" class="wch-karte f-${f}" onclick="wchInfo('${w.id}')" aria-label="${esc(w.name)}: ${esc(t)}">
+      <span class="wch-sym" aria-hidden="true">${w.sym}</span>
+      <span class="wch-text"><b class="wch-name">${esc(w.name)}</b><span class="wch-kurz">${esc(w.kurz)}</span>
+        <span class="wch-stand"><i class="wch-punkt" aria-hidden="true"></i>${esc(t)}${l?.letzt ? ` · ${esc(wchUhr(l.letzt))}` : ""}</span></span></button>`; };
+  const html = `<div class="wch-kopf"><h3>🛡️ Wächter</h3><span class="wch-summe">${WCH_LISTE.length} Wächter · ${z.gruen} ✅${z.gelb ? ` · ${z.gelb} 🟡` : ""}${z.rot ? ` · ${z.rot} 🔴` : ""}${z.grau ? ` · ${z.grau} ⚪` : ""}</span></div>
+    <p class="hinweis wch-hinweis">${laden ? "Wird geladen …" : `Stand ${esc(fZeit.format(new Date(WCH.zeit)))} Uhr · antippen = alles über den Wächter`}</p>
+    ${WCH_GRUPPEN.map(([g, t]) => { const l = WCH_LISTE.filter((w) => w.gruppe === g); return l.length ? `<h4 class="wch-gruppe">${t}</h4><div class="wch-raster">${l.map(karte).join("")}</div>` : ""; }).join("")}
+    <div class="knoepfe wch-knoepfe"><button class="knopf" onclick="wchStart(true)">↻ Aktualisieren</button><button class="knopf" onclick="$('wchBlatt').remove();adBlatt('lage')">📊 zur Lage</button><button class="knopf haupt" onclick="$('wchBlatt').remove()">Schließen</button></div>`;
+  const f = $("wchBlatt"); if (f) f.querySelector(".blatt-innen").innerHTML = html; else blattAuf("wchBlatt", html).classList.add("wch-blatt");
+}
+function wchInfo(id) {
+  const w = WCH_LISTE.find((x) => x.id === id), d = WCH.daten; if (!w) return;
+  const [f, t, befund] = wchStatus(w, d), l = wchLauf(w, d), naechst = l?.plan ? wchCronSuche(l.plan, Date.now(), 1) : null;
+  const zeile = (k, v) => (v ? `<dt>${k}</dt><dd>${v}</dd>` : "");
+  const balken = l?.verlauf ? `<div class="wch-balken" aria-label="letzte ${l.verlauf.length} Läufe">${[...l.verlauf].map((c) => `<i class="${c === "1" ? "ok" : c === "0" ? "nein" : "laeuft"}"></i>`).join("")}</div>` : "";
+  const html = `<div class="wch-info-kopf f-${f}"><span class="wch-sym gross" aria-hidden="true">${w.sym}</span><div><h3>${esc(w.name)}</h3><span class="wch-stand"><i class="wch-punkt"></i>${esc(t)}</span></div></div>
+    ${befund ? `<p class="wch-befund">${esc(befund)}</p>` : ""}
+    <dl class="wch-dl">
+      ${zeile("Beobachtet", esc(w.beobachtet))}${zeile("Grenze", esc(w.grenze || ""))}${zeile("Läuft", esc(w.takt || wchTaktText(l?.plan)))}
+      ${zeile("Wo", esc(w.wo))}${zeile("Letzter Lauf", l?.letzt ? `${esc(wchUhr(l.letzt))} ${l.ok ? "✅" : "❌"}` : w.app ? "" : "–")}
+      ${zeile("Nächster Lauf", naechst ? esc(wchUhr(naechst.toISOString())) : "")}
+      ${zeile("Letzte 24 Std.", l && l.ok24 != null ? `${l.ok24} Läufe in Ordnung${l.fehler24 ? `, <b>${l.fehler24} fehlgeschlagen</b>` : ", keiner fehlgeschlagen"}` : "")}
+      ${zeile("Ergebnis", w.ergebnis ? esc(String(w.ergebnis(d) || "").replace(/^(Mirror-Watchdog|Privacy-Spiegelung|Spiegel-Abdeckung) OK: /, "")) : "")}
+      ${zeile("Meldet sich bei", esc(w.meldet))}${zeile("Bei Rot", esc(w.tun || ""))}${zeile("Seit", esc(w.seit || ""))}
+    </dl>${balken ? `<p class="hinweis wch-balken-titel">Letzte Läufe (links alt, rechts neu): ▮ grün = in Ordnung, ▮ rot = Fehler</p>${balken}` : ""}
+    <div class="knoepfe wch-knoepfe">${w.knopf ? w.knopf(d) : ""}${l?.link ? `<a class="knopf" href="${esc(l.link)}" target="_blank" rel="noopener">Lauf auf GitHub ↗</a>` : ""}<button class="knopf haupt" onclick="$('wchInfoBlatt').remove()">Zurück</button></div>`;
+  blattAuf("wchInfoBlatt", html).classList.add("wch-blatt");
+}
 // ---------- 2.440.0 KC-CLUB-WUNSCHLISTE (Wunsch Hansi „Baue mir eine Liste ins Programm, wo ich dir Vorschläge reinschreibe – du schaust immer
 // da rein und arbeitest Punkt für Punkt ab“): nur Admin. Hansi schreibt (auch per 🎤), Claude liest die Liste direkt in der Datenbank, setzt
 // „in Arbeit“ / „Rückfrage“ / „erledigt (Version)“ und schreibt die Antwort hinein. Rückfragen stehen ganz oben; die Antwort darauf gibt den
@@ -26426,6 +26578,7 @@ function adBlatt(id) {
   if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
   if (id === "stadt") return stadtTermine(); // KC-CLUB-STADT-TERMINE
   if (id === "rt") return rtBlatt(); // KC-CLUB-RT-SPARBREMSE (2.230.0)
+  if (id === "waechter") return wchStart(); // 2.726.0 KC-CLUB-WAECHTER
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
   const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;

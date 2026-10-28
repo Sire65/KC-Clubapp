@@ -1044,6 +1044,31 @@
   .hs-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .hs-nie { all: unset; cursor: pointer; font-size: .85rem; text-decoration: underline; opacity: .75; padding: 6px 2px; }
   .nz-hs { width: 100%; border-collapse: collapse; } .nz-hs th, .nz-hs td { padding: 4px 6px; border-bottom: 1px solid var(--rand, #e5d9c8); text-align: center; } .nz-hs td:first-child, .nz-hs th:first-child { text-align: left; }
   @keyframes hsRein { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } } @media (prefers-reduced-motion: reduce) { .hs-blase { animation: none; } }
+  /* 2.726.0 KC-CLUB-WAECHTER: Wächter-Übersicht – gleich hohe Karten im Raster, Symbol links in festem Kreis, Text links bündig */
+  .wch-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; } .wch-kopf h3 { margin: 0; }
+  .wch-summe { font-weight: 800; font-size: .95rem; } .wch-hinweis { margin: 2px 0 6px; }
+  .wch-gruppe { margin: 14px 0 6px; font-size: .95rem; color: var(--grau); text-transform: none; border-bottom: 1px solid var(--linie); padding-bottom: 3px; }
+  .wch-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+  .wch-karte { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 78px; padding: 10px 12px; text-align: left; font: inherit; color: var(--text);
+    background: var(--karte); border: 1px solid var(--linie); border-left: 6px solid var(--wf, #9aa0a6); border-radius: 12px; cursor: pointer; box-shadow: var(--schatten); }
+  .wch-karte.f-gruen, .wch-info-kopf.f-gruen { --wf: #1e9e4a; } .wch-karte.f-gelb, .wch-info-kopf.f-gelb { --wf: #e0a800; } .wch-karte.f-rot, .wch-info-kopf.f-rot { --wf: #d61f1f; } .wch-karte.f-grau, .wch-info-kopf.f-grau { --wf: #9aa0a6; }
+  .wch-sym { flex: none; width: 46px; height: 46px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; line-height: 1;
+    border-radius: 50%; background: var(--karte2); box-shadow: inset 0 0 0 3px var(--wf, #9aa0a6); }
+  .wch-sym.gross { width: 60px; height: 60px; font-size: 2.1rem; }
+  .wch-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .wch-name { font-size: 1rem; line-height: 1.2; } .wch-kurz { font-size: .85rem; color: var(--grau); line-height: 1.25; }
+  .wch-stand { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; margin-top: 2px; }
+  .wch-punkt { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--wf, #9aa0a6); }
+  .wch-info-kopf { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; } .wch-info-kopf h3 { margin: 0 0 2px; }
+  .wch-befund { margin: 4px 0 8px; padding: 8px 10px; border-radius: 10px; background: var(--karte2); border-left: 4px solid var(--wf, #9aa0a6); }
+  .wch-info-kopf.f-gruen + .wch-befund { --wf: #1e9e4a; } .wch-info-kopf.f-gelb + .wch-befund { --wf: #e0a800; } .wch-info-kopf.f-rot + .wch-befund { --wf: #d61f1f; }
+  .wch-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 8px 0; align-items: baseline; }
+  .wch-dl dt { font-weight: 800; font-size: .88rem; color: var(--grau); white-space: nowrap; } .wch-dl dd { margin: 0; line-height: 1.35; overflow-wrap: anywhere; }
+  @media (max-width: 380px) { .wch-dl { grid-template-columns: 1fr; gap: 0 0; } .wch-dl dd { margin-bottom: 6px; } }
+  .wch-balken-titel { margin: 10px 0 4px; font-size: .8rem; }
+  .wch-balken { display: flex; gap: 2px; flex-wrap: wrap; } .wch-balken i { width: 9px; height: 16px; border-radius: 2px; background: #1e9e4a; }
+  .wch-balken i.nein { background: #d61f1f; } .wch-balken i.laeuft { background: #9aa0a6; }
+  .wch-knoepfe { margin-top: 12px; }
   /* 2.722.0 KC-CLUB-CHAT-FARBE (Wunsch Hansi „wie ein Textmarker“): kräftiger Marker-Strich mit schrägen, ausfransenden Enden – kein Pastell;
      Rot/Blau mit weißer, Grün/Gelb mit schwarzer Schrift; gleich in fremden und eigenen Blasen, Tag und Nacht */
   .nf { font-weight: 700; padding: .05em .45em; margin: 0 -.1em; border-radius: .8em .3em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
@@ -6134,7 +6159,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.725.0" data-v="2.725.0"></script>
+<script src="app.js?v=2.726.0" data-v="2.726.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

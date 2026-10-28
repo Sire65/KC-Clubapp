@@ -135,7 +135,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.724.0";
+const SERVER_VERSION = "2.726.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6940,6 +6940,27 @@ async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
     (tn ?? []).forEach((x: any) => { if (x.person_id !== ich.person_id && aktiv.has(x.person_id)) ids.add(String(x.person_id)); });
   }
   return [...ids];
+}
+// 2.726.0 KC-CLUB-WAECHTER: letzte Läufe der GitHub-Wächter (öffentliches Repository, ohne Schlüssel) – 10 Min. gemerkt, damit das Öffnen
+// der Kachel GitHub nicht jedes Mal fragt (öffentliche Grenze 60 Anfragen/Std.). Fehler → leer, die Kachel zeigt dann „unbekannt“.
+const WAECHTER_GH = ["schnittstellen-waechter.yml", "spiegel-waechter.yml", "notfall-sicherung-lesen.yml", "notfall-zweitkopie.yml"];
+let WAECHTER_GH_MERK: { t: number; v: Record<string, any> } | null = null;
+async function waechterGithub(): Promise<Record<string, any>> {
+  if (WAECHTER_GH_MERK && Date.now() - WAECHTER_GH_MERK.t < 600000) return WAECHTER_GH_MERK.v;
+  const v: Record<string, any> = {};
+  await Promise.all(WAECHTER_GH.map(async (f) => {
+    try {
+      const r = await fetch(`https://api.github.com/repos/Sire65/KC-Clubapp/actions/workflows/${f}/runs?per_page=30&exclude_pull_requests=true`,
+        { headers: { "User-Agent": "KC-Clubapp-Waechter", Accept: "application/vnd.github+json" }, signal: AbortSignal.timeout(6000) });
+      if (!r.ok) return;
+      const l = ((await r.json())?.workflow_runs ?? []).filter((x: any) => x.status === "completed");
+      const tag = Date.now() - 86400000, jung = l.filter((x: any) => Date.parse(x.created_at) > tag);
+      v[f] = { letzt: l[0]?.created_at ?? null, ergebnis: l[0]?.conclusion ?? null, link: l[0]?.html_url ?? null,
+        ok24: jung.filter((x: any) => x.conclusion === "success").length, fehler24: jung.filter((x: any) => x.conclusion === "failure").length,
+        verlauf: l.slice(0, 30).reverse().map((x: any) => (x.conclusion === "success" ? "1" : x.conclusion === "failure" ? "0" : "2")).join("") };
+    } catch { /* GitHub nicht erreichbar → „unbekannt“ */ }
+  }));
+  WAECHTER_GH_MERK = { t: Date.now(), v }; return v;
 }
 // 2.722.0 KC-CLUB-CHAT-FARBE: [rot]Wort[/rot] färbt in der App – Push und E-Mail bekommen nur das Wort
 const FARB_RE = /\[(rot|blau|grün|gelb)\]([\s\S]+?)\[\/\1\]/g;
@@ -17197,6 +17218,12 @@ Köcheclub-App`,
         return json({ ok: true });
       }
 
+      case "waechter_lage": { // 2.726.0 KC-CLUB-WAECHTER: alle Wächter auf einen Blick (nur Admin, nur beim Öffnen der Kachel)
+        nurAdmin(ich);
+        const { data, error } = await db.rpc("kc_club_waechter_lage");
+        if (error) throw new Fehler("Wächter-Lage nicht lesbar.", 500);
+        return json({ ...(data as any), github: await waechterGithub() });
+      }
       case "admin_lage": {
         nurAdmin(ich);
         const t0 = Date.now();
