@@ -7780,6 +7780,10 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(sw, /ignoreSearch: !url\.pathname\.endsWith\("\/app\.js"\) && !url\.pathname\.includes\("\/teile\/"\)/, "offline nie ein Teil einer anderen Version");
   assert.match(lies("docs/AUFTEILEN.md"), /sicherung\/vor-aufteilen-2\.725\.0/, "Rückweg-Anleitung mit Sicherungs-Zweig");
 }
+// 2.726.0 KC-CLUB-TEILE: siehe Block „Nachlade-Weg“ oben; Probe-Teil antwortet mit der Version
+{
+  assert.match(lies("teile/probe.js"), /function teilProbe\(\) \{ return "ok " \+ APP_VERSION; \}/, "Probe-Teil für Rundgang und Sicherheits-Check");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
