@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.739.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.743.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -14,11 +14,11 @@ const APP_STUFE = "RC";
 const TEILE_LISTE = {
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-vQYpHJcMvGzwwT46KQqwR5HjoLe7QIpB563TpHqYeCZ5Wlvje///r0wsOR7zSKVM" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
-  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-2m0P+bAaOtf8o8px7Fv6x1XutVQMUEF/V1RJT5LGMsIpS4CyDs+6CGONStC0r3AY" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-bz8fp1VoAEWeJ4/U26dThg40mEJJlB1fLE4VrWj7SfJVXzfwSDRm+tMPD88LotWg" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
-// 2.739.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
+// 2.743.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
 // teilDa(name) sagt ohne Laden, ob ein Teil schon da ist (für „aufräumen, falls offen“).
 const TEILE_BRAUCHT = { videos: ["rueckseite"] };
 const TEILE_DA = {};
@@ -1974,6 +1974,63 @@ async function rgHinweisErledigt(wie) {
 }
 function rgHinweisSpaeter() { try { localStorage.setItem(RG_SPAETER, heuteIso()); } catch {} rgHinweisZeigen(); melde("🎬 Ich frage morgen nochmal – oder jederzeit in ❓ Hilfe & Tipps"); }
 function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: zuerst die Einleitung
+// ---------- KC-CLUB-FILM-HINWEIS (2.738.0, Wunsch Hansi 28.10.2026 „Film für Klaus einbauen: wenn er die App öffnet, soll er einen Hinweis
+// bekommen und mit einem direkten Link den Film starten“) ----------
+// Registry FILME: fertige Anleitungsfilme (MP4 in film/, Quellen und Bauanleitung: KC-Infrastructure-Control-Center). „fuer“ sagt, wem der Film
+// beim Start angeboten wird – nach Amt, nie fest auf eine Person. Beim Start einmal ein Fenster (nach den anderen Start-Fenstern):
+// „▶ Film jetzt ansehen“ (spielt sofort in der App), „⏰ Später“ (beim nächsten Öffnen wieder), „Nein, danke“. Angesehen/„Nein, danke“ merkt der
+// Server geräteübergreifend (Einstellung „filme“). Jederzeit wieder: Büro → 🎬 Anleitung. Der Service Worker lässt film/ aus (kein 30-MB-Offline-Speicher).
+const FILME = [
+  { id: "clubsitzung", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "9 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4", bild: "film/clubsitzung-vorschau.jpg",
+    u: "Büro, Tagesordnung, Einladung, Drucken, Aktentasche – und am Abend Clubabend Live mit Live-Abstimmung über den nächsten Termin", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+];
+const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
+const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
+const filmErledigt = (id) => !!INIT?.einstellungen?.filme?.[id]?.z;
+const FILM_START = { versuche: 0 };
+async function filmMerken(id, wie) {
+  if (!INIT || INIT.einstellungen?.filme?.[id]?.wie === wie) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
+  const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString() } };
+  INIT.einstellungen = { ...(INIT.einstellungen || {}), filme: neu };
+  try { await einstSpeichern("filme", neu); } catch (e) { console.warn("filme", e); } // Regel 11: bei Fehler fragt die App beim nächsten Start einfach noch einmal
+}
+async function filmHinweisPruefen() {
+  const f = filmeFuerMich().find((x) => !filmErledigt(x.id)); if (!f) return;
+  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht") || aktuelleAnsicht !== "start") { if (++FILM_START.versuche < 20) setTimeout(filmHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
+  const wahl = await new Promise((fertig) => {
+    let d; const zu = (w) => { d?.remove(); fertig(w); };
+    d = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname || ICH.name)},</h3><p class="dlg-text">für dich gibt es einen Anleitungsfilm:</p>
+      <button type="button" class="film-karte" data-w="an"><img src="${esc(f.bild)}" alt=""><span><b>${f.sym} ${esc(f.t)}</b><small>${esc(f.u)}</small><small>⏱️ ${esc(f.dauer)}</small></span></button>
+      <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">▶ Film jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nein">Nein, danke</button></div>`, () => zu("spaeter"));
+    d.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
+  });
+  if (wahl === "an") return filmZeigen(f.id);
+  if (wahl === "nein") { filmMerken(f.id, "nein"); return melde("🎬 Alles klar – den Film findest du jederzeit im Büro unter 🎬 Anleitung."); }
+  melde("🎬 Ich erinnere dich beim nächsten Öffnen – oder jederzeit im Büro unter 🎬 Anleitung.");
+}
+// Film abspielen: eigene Schicht über allem, echtes Video mit Bedienleiste; Ton an, weil der Start ein Tipp ist
+function filmZeigen(id) {
+  const f = FILME.find((x) => x.id === id); if (!f) return;
+  $("filmSchicht")?.remove();
+  const s = document.createElement("div"); s.id = "filmSchicht"; s.setAttribute("role", "dialog"); s.setAttribute("aria-modal", "true"); s.setAttribute("aria-label", f.t);
+  s.innerHTML = `<div class="film-kopf"><b>${f.sym} ${esc(f.t)}</b><button type="button" class="knopf klein" data-zu>✕ Schließen</button></div>
+    <video src="${esc(f.datei)}" poster="${esc(f.bild)}" controls autoplay playsinline preload="auto"></video>`;
+  document.body.appendChild(s); document.body.style.overflow = "hidden";
+  const v = s.querySelector("video"), zu = () => { v.pause(); s.remove(); document.body.style.overflow = ""; };
+  s.querySelector("[data-zu]").onclick = zu;
+  v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
+  v.onended = () => { zu(); melde("🎬 Film zu Ende – du findest ihn jederzeit im Büro unter 🎬 Anleitung."); };
+  v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
+  v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
+}
+function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere → auswählen
+  const l = filmeImBuero(); if (l.length === 1) return filmZeigen(l[0].id);
+  const d = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎬 Anleitungsfilme</h3>
+    <div class="ca-wahl">${l.map((f) => `<button type="button" class="knopf" data-id="${esc(f.id)}" style="text-align:left">${f.sym} ${esc(f.t)}<br><small>${esc(f.dauer)}</small></button>`).join("")}</div>`, () => d.remove());
+  d.querySelector('[data-a="zu"]').onclick = () => d.remove();
+  d.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { d.remove(); filmZeigen(b.dataset.id); }));
+}
+const buFilmKnopf = () => (filmeImBuero().length ? '<button class="knopf klein" onclick="filmWahl()">🎬 Anleitung</button>' : "");
 // ---------- KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi: ein Mitglied beim nächsten Start auf ungelesene Nachrichten hinweisen) ----------
 // Allgemein, nichts fest verdrahtet: Der Admin setzt beim Mitglied die Einstellung „start_hinweis“ = { art: "ungelesen" }. Beim nächsten Start
 // (nach den anderen Start-Fenstern) kommt einmal: „Hallo <Vorname>, du hast <n> ungelesene Nachrichten …“ – mit der echten Zahl und der echten
@@ -4328,7 +4385,7 @@ const ANS_ARTEN = [
   { id: "online", sym: "🟢", t: "Jemand kommt online", k: "Online", u: "„Steven ist jetzt online“", bsp: "Steven ist jetzt online." },
   // 2.454.0 KC-CLUB-WER-IST-DA (Wunschliste #13): beim Öffnen der App einmal sagen, wer gerade da ist – Standard an
   { id: "beim_start", sym: "👋", t: "Beim Öffnen: wer gerade da ist", k: "Beim Öffnen", u: "„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder“ – mit kurzer Meldung", bsp: "Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.", an: true },
-  { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt.", an: true },
+  { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt. Und an mehrere: Christina hat dir und 5 anderen Personen eine Sammelnachricht geschickt.", an: true },
   { id: "anklopfen", sym: "👋", t: "Anklopfen", bsp: "Christina klopft gerade bei dir an.", an: true },
   { id: "pinnwand", sym: "📌", t: "Pinnwand", bsp: "Christina hat dir ein Post-it an die Pinnwand gehängt." },
   { id: "helfen", sym: "🤝", t: "Helfen, Leihen & Börse", bsp: "Klaus hat auf deine Hilfeanfrage reagiert und kommt." },
@@ -4392,6 +4449,8 @@ function ansageDeuten(titel, text, url) {
     if (h.slice(11) === String(chatId) && aktuelleAnsicht === "chat" && !document.hidden) return null; // Chat ist offen
     if ((m = /^📣 (.+?) hat dich erwähnt(?: – \S+ (.+))?$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dich erwähnt${m[2] ? " – in der Gruppe " + m[2] : ""}.` };
     if ((m = /^\S+ (.+?) hat reagiert$/.exec(t))) return { art: "nachricht", text: `${m[1]} hat auf deine Nachricht reagiert.` };
+    // 2.739.0 KC-CLUB-SAMMEL-ANSAGE (Wunsch Hansi): an mehrere → „… hat dir und 5 anderen Personen eine Sammelnachricht geschickt“; nur an mich → wie bisher
+    if ((m = /^💬 (.+?) · an dich \+ (\d+) andere(?: Person)?$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dir und ${m[2] === "1" ? "einer anderen Person" : `${m[2]} anderen Personen`} eine Sammelnachricht geschickt.` };
     if ((m = /^💬 (.+)$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dir eine Nachricht geschickt.` };
     if ((m = /^\S+ (.+): (.+)$/.exec(t))) return { art: "nachricht", text: `${w}${m[2]} hat in der Gruppe ${m[1]} geschrieben.` };
     return { art: "nachricht", text: w + ansSatz(t) };
@@ -4564,7 +4623,7 @@ function fensterSchlafen(selbst) { // dieses Fenster legt sich schlafen: alle Ab
   // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG (Fund Hansi: Alarm-Push „1 schwerwiegendes Problem … setting 'checked'“): App zweimal offen → dieses
   // Fenster wird geleert. Noch laufende Ladevorgänge/Tag-Nacht-Prüfung fanden dann die Elemente nicht mehr. Ab jetzt: hier nichts mehr tun und nichts melden.
   if (window.KCFP) window.KCFP.schlaeft = true;
-  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.739.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
+  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.743.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
   const hoechste = setTimeout(() => {}, 0); for (let i = 1; i <= hoechste; i++) { clearTimeout(i); clearInterval(i); } // alle Takte (Chat, Online, Vorführung …) anhalten
   try { FENSTER.kanal?.close(); } catch (e) { /* schon zu */ }
   document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font:18px/1.45 system-ui,sans-serif;background:#f5eee3;color:#2b1d22">
@@ -4816,6 +4875,7 @@ function rtSignal(s) {
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); return; } // 2.596.0: gebündelt
   if (s.art === "online") { onlinePing(); return; }
   if (s.art === "livetermin") { ltHolen(); return; } // KC-CLUB-LIVE-TERMIN (2.231.0)
+  if (s.art === "eingang") { eingangNeu(); return; } // KC-CLUB-EINGANG-SOFORT (2.741.0): Unterlagen im Eingangskorb – sofort fragen
   if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
   if (s.art === "termin" || s.art === "abstimmung") {
     clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
@@ -11392,10 +11452,10 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.739.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.743.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
-  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.739.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
+  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.743.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
   esSchreib("tab", k); esStop();
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
@@ -22058,7 +22118,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -23593,11 +23653,12 @@ function vfZielZeigen() {
     : Z.ids.length ? `${Z.ids.length} ausgewählt – ${Z.ids.map(vfName).map((n) => n.split(" ")[0]).join(", ")}` : "noch niemand ausgewählt";
   z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("auswahl", "☑️ Auswahl")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
 }
-async function vfAuswahl() {
-  VF_ZIEL.art = "auswahl"; vfZielZeigen();
+async function vfAuswahl() { VF_ZIEL.art = "auswahl"; vfZielZeigen(); zielAuswahl("☑️ Wer soll abstimmen?", VF_ZIEL.ids, (ids) => { VF_ZIEL.ids = ids; vfZielZeigen(); }); }
+// Auswahlfenster „Mitglieder ankreuzen“ – gemeinsam für Abstimmung (KC-CLUB-ABSTIMMUNG-ZIEL) und Einladung (KC-CLUB-EINLADUNG-AN, 2.739.0)
+async function zielAuswahl(titel, ids, fertig) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  const gew = new Set(VF_ZIEL.ids), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
-  const f = blattAuf("vfAuswahlBlatt", `<h3 style="margin:0">☑️ Wer soll abstimmen?</h3>
+  const gew = new Set(ids), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  const f = blattAuf("vfAuswahlBlatt", `<h3 style="margin:0">${esc(titel)}</h3>
     <input id="vfaSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
     <div class="knoepfe" style="margin:0 0 6px"><button type="button" class="knopf klein" id="vfaAlle">Alle an</button><button type="button" class="knopf klein" id="vfaKeiner">Keiner</button></div>
     <div id="vfaListe" class="ta-liste wahlliste" style="max-height:52vh;overflow:auto"></div>
@@ -23610,7 +23671,7 @@ async function vfAuswahl() {
   $("vfaSuche").oninput = zeichnen;
   $("vfaAlle").onclick = () => { alle.filter((m) => sammelOk(m) && okFrei(m)).forEach((m) => gew.add(m.person_id)); zeichnen(); }; // 2.538.0: ohne „keine Benachrichtigungen“ · 2.614.0: ohne Aushilfen
   $("vfaKeiner").onclick = () => { gew.clear(); zeichnen(); };
-  $("vfaOk").onclick = () => { VF_ZIEL.ids = [...gew]; f.remove(); vfZielZeigen(); };
+  $("vfaOk").onclick = () => { f.remove(); fertig([...gew]); };
   zeichnen();
 }
 async function vorschlagSpeichern(knopf) {
@@ -23916,7 +23977,7 @@ function buStartListeHtml() {
     ["💶", "Erstattungen", e.erstattungen || 0, "buEingang()"], ["📅", "Dienstzeiten", e.dienstzeiten || 0, "buEingang()"]]; // KC-CLUB-EINGANGSKORB (2.23.6)
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
-  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
@@ -24084,7 +24145,7 @@ function buRaumHtml() {
   const kal = naechst ? new Date(naechst.beginn) : null;
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">
-      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
+      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
       ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>
@@ -24389,23 +24450,92 @@ async function buEinladung(id, nurOffen) {
   const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
   const anzahl = nurOffen ? ohne : s.mitglieder.length;
   const schon = nurOffen ? s.vorbereitung?.erinnerung_am : s.vorbereitung?.einladung_am;
-  window.__buSend = { id, nurOffen, wege: [] };
+  window.__buSend = { id, nurOffen, wege: [], s }; // KC-CLUB-EINLADUNG-AN (2.739.0) · Empfänger: ZWAHL.buAn (KC-CLUB-ZIELWAHL)
   blattAuf("buEinladung", `${einwHtml("b-bu-einladung")}<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
     ${schon ? `<p class="hinweis" style="margin:0">ℹ️ Schon einmal gesendet: ${esc(zeitKurz(schon))}</p>` : ""}
-    <div class="karte" style="margin:0;white-space:pre-wrap;font-size:.95rem">${esc(nurOffen ? `Kommst du? ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}\nBitte kurz in der App zu- oder absagen.` : `Einladung: ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}${s.treffen.ort ? "\n" + s.treffen.ort : ""}${top.length ? "\n\nTagesordnung:\n" + top.join("\n") : ""}`)}</div>
-    <label class="feld">Persönliche Zeile (freiwillig)<input id="buZusatz" maxlength="500" placeholder="z. B. Bitte Kassenbuch mitbringen"></label>
-    <div class="hinweis" style="margin:4px 0">Wie benachrichtigen?</div>
+    <p class="hinweis" style="margin:0 0 4px">So sieht der Brief aus – jeder bekommt ihn mit seinem eigenen Vornamen:</p>
+    <div class="karte" id="buBrief" style="margin:0;white-space:pre-wrap;font-size:.95rem"></div>
+    <label class="feld">Persönliche Zeile (freiwillig)<input id="buZusatz" maxlength="500" placeholder="z. B. Bitte Kassenbuch mitbringen" oninput="buBriefZeigen()"></label>
+    <div class="hinweis" style="margin:8px 0 4px">An wen?</div><div id="buAn"></div>
+    <div class="hinweis" style="margin:8px 0 4px">Wie benachrichtigen?</div>
     <div class="hl-chips" id="buWege">${[["", "⚙️ Wie jeder es eingestellt hat"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"], ["beide", "🔔+✉️ Beides"]].map(([w, t]) => `<button class="chip${w === "" ? " an" : ""}" data-w="${w}" onclick="buWeg('${w}')">${t}</button>`).join("")}</div>
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this, ${anzahl})">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" id="buSendKnopf" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this)">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
     <button class="knopf" style="text-align:center" onclick="$('buEinladung').remove()">Abbrechen</button></div>`);
+  window.__buSend.top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`); buBriefZeigen(); // KC-CLUB-EINLADUNG-BRIEF (2.740.0): wie der Server
+  zwStart("buAn", { titel: "👤 Wer bekommt die Einladung?", alleText: nurOffen ? "alle, die noch nicht geantwortet haben" : "alle Mitglieder", alle: buBerechtigt, nachher: buAnNachher,
+    extra: () => [["ja", "✅ Zugesagt", s.mitglieder.filter((m) => zwIch(m.person_id) && m.antwort === "ja").map((m) => m.person_id)], ["ohne", "❓ Noch ohne Antwort", s.mitglieder.filter((m) => zwIch(m.person_id) && (!m.antwort || m.antwort === "keine")).map((m) => m.person_id)]] });
+}
+// KC-CLUB-EINLADUNG-AN (2.739.0, Wunsch Hansi „vor dem Absenden auswählen, an wen die Einladung geht: Alle, Gruppen, Auswahl“):
+// 👥 Alle (wie bisher) · 🧑‍🤝‍🧑 Gruppe (Zugesagt, Noch ohne Antwort, Ämter, eigene Gruppen) · ☑️ Auswahl (gemeinsames Auswahlfenster zielAuswahl).
+// Der Server schickt nur an Mitglieder, die auch sonst die Einladung bekämen (Schnittmenge) – der Knopf zeigt die echte Zahl.
+// KC-CLUB-EINLADUNG-BRIEF (2.740.0, Wunsch Hansi): Vorschau mit denselben Sätzen wie der Server (einladungBrief) – Anrede mit dem ersten Empfänger
+const BRIEF_AMT_RE = /^(clubsprecher|stellv|kassenwart|schriftf|admin)/i;
+function einladungBrief(d) {
+  const tag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(d.beginn)).replace(", ", ", den ");
+  const was = /^clubsitzung\b/i.test(d.titel) ? "Clubsitzung" : `Sitzung „${d.titel}“`, wann = `am ${tag}, um ${fZeit.format(new Date(d.beginn))} Uhr`;
+  const gruss = `Liebe Grüße\n${d.von}${d.amt ? "\n" + d.amt : ""}\nKöcheclub Werne`, kopf = `Hallo${d.vorname ? " " + d.vorname : ""},\n\n`;
+  if (d.erinnerung) return kopf + `kleine Erinnerung: ${wann} ist unsere ${was}${d.ort ? ` – ${d.ort}` : ""}.\n\nBitte sag kurz in der Club-App zu oder ab – das hilft uns bei der Vorbereitung:\n${d.url}`
+    + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\n${gruss}`;
+  return kopf + `hiermit laden wir dich herzlich zu unserer ${was} ein:\n\n📅 ${wann}${d.ort ? `\n📍 ${d.ort}` : ""}`
+    + (d.top.length ? `\n\nFolgende Punkte stehen auf der Tagesordnung:\n${d.top.join("\n")}` : "")
+    + (d.zusatz ? `\n\n${d.zusatz}` : "")
+    + `\n\nWir freuen uns auf eine schöne, konstruktive Sitzung.\nBitte sag kurz in der Club-App zu oder ab:\n${d.url}\n\n${gruss}`;
+}
+function buBriefZeigen() {
+  const x = window.__buSend, z = $("buBrief"); if (!x || !z) return; const t = x.s.treffen;
+  const Z = ZWAHL.buAn, erst = Z && Z.art !== "alle" && Z.ids[0] ? vfName(Z.ids[0]).split(" ")[0] : "Marianne"; // Beispiel-Anrede
+  z.textContent = einladungBrief({ vorname: erst, titel: t.titel, beginn: t.beginn, ort: t.ort || "", top: x.top || [], zusatz: ($("buZusatz")?.value || "").trim(), url: "(Link zur Club-App)",
+    von: ICH?.vorname || ICH?.name || "", amt: (ICH?.aemter || []).find((a) => BRIEF_AMT_RE.test(a)) || (ICH?.aemter || [])[0] || "", erinnerung: x.nurOffen });
+}
+// KC-CLUB-ZIELWAHL (2.741.0, Wunsch Hansi „Auswahl der Empfänger wie alle, Einzel, Gruppe, Amt usw.“): ein Baustein „An wen?“ für Einladung
+// und Aktentasche-Freigabe. 👥 Alle · 👤 Einzeln (gemeinsames Auswahlfenster zielAuswahl) · 🧑‍🤝‍🧑 Gruppe (eigene Gruppen + was der Aufrufer
+// dazugibt, z. B. „Zugesagt“) · 🎖️ Amt. Zustand je Feld in ZWAHL; der Aufrufer gibt alle() (wer „Alle“ ist) und nachher() (Knopf, Vorschau) mit.
+const ZWAHL = {};
+const zwIch = (id) => id !== ICH?.person_id;
+function zwStart(feld, opt) { ZWAHL[feld] = { art: "alle", gruppe: null, name: "", ids: [], ...opt }; zwZeigen(feld); mgGruppenLaden().then(() => { if ($(feld)) zwZeigen(feld); }); }
+function zwGruppen(feld) {
+  const l = [...(ZWAHL[feld].extra?.() || [])];
+  for (const g of MG_GRUPPEN) l.push(["g:" + g.id, `${g.gruppe.symbol || "👥"} ${g.gruppe.name}`, g.personen.filter(zwIch)]);
+  return l.filter(([, , ids]) => ids.length);
+}
+const zwAemter = () => (AEMTER || []).map((amt) => ["amt:" + amt, "🎖️ " + amt, (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && (m.aemter || []).includes(amt)).map((m) => m.person_id)]).filter(([, , ids]) => ids.length);
+const zwIds = (feld) => { const Z = ZWAHL[feld]; return Z.art === "alle" ? Z.alle() : Z.ids.filter(zwIch); };
+const zwBereit = (feld) => ZWAHL[feld].art === "alle" || ZWAHL[feld].ids.length > 0;
+function zwZeigen(feld) {
+  const Z = ZWAHL[feld], z = $(feld); if (!Z || !z) return;
+  const chip = (a, t) => `<button type="button" class="chip${Z.art === a ? " an" : ""}" onclick='zwArt(${hlJs(feld)}, "${a}")'>${t}</button>`;
+  const liste = Z.art === "gruppe" ? zwGruppen(feld) : Z.art === "amt" ? zwAemter() : [], name = (pid) => vfName(pid).split(" ")[0];
+  let unten = "";
+  if (Z.art === "gruppe" || Z.art === "amt") unten = liste.length ? `<div class="hl-chips" style="margin-top:6px">${liste.map(([k, t, ids]) => `<button type="button" class="chip${Z.gruppe === k ? " an" : ""}" onclick='zwGruppe(${hlJs(feld)}, ${hlJs(k)})'>${esc(t)} <small>(${ids.length})</small></button>`).join("")}</div>`
+    : `<p class="hinweis" style="margin:6px 0">${Z.art === "amt" ? "Keine Ämter vergeben" : "Noch keine Gruppen"} – oder 👤 Einzeln nehmen.</p>`;
+  if (Z.art === "einzeln") unten = `<div class="knoepfe" style="margin-top:6px"><button type="button" class="knopf klein" onclick='zwEinzeln(${hlJs(feld)})'>👤 Mitglieder auswählen${Z.ids.length ? ` (${Z.ids.length})` : ""}</button></div>`;
+  const g = liste.find(([k]) => k === Z.gruppe);
+  const an = Z.art === "alle" ? Z.alleText || "alle Mitglieder" : Z.art === "einzeln" ? (Z.ids.length ? `${Z.ids.length} ausgewählt – ${Z.ids.map(name).join(", ")}` : "noch niemand ausgewählt")
+    : g ? `${g[1]} – ${g[2].map(name).join(", ")}` : Z.art === "amt" ? "bitte ein Amt antippen" : "bitte eine Gruppe antippen";
+  z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("einzeln", "👤 Einzeln")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("amt", "🎖️ Amt")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
+  Z.nachher?.();
+}
+function zwArt(feld, a) { const Z = ZWAHL[feld]; if (Z.art !== a) { Z.gruppe = null; Z.name = ""; if (a !== "einzeln") Z.ids = []; } Z.art = a; zwZeigen(feld); if (a === "einzeln") zwEinzeln(feld); } // Einzeln: angetippte Gruppe bleibt vorgewählt
+function zwGruppe(feld, k) { const Z = ZWAHL[feld], g = [...zwGruppen(feld), ...zwAemter()].find(([x]) => x === k); if (!g) return; Object.assign(Z, { gruppe: k, name: g[1], ids: g[2].slice() }); zwZeigen(feld); }
+function zwEinzeln(feld) { const Z = ZWAHL[feld]; zielAuswahl(Z.titel || "👤 Wer soll es bekommen?", Z.ids, (ids) => { Object.assign(Z, { art: "einzeln", gruppe: null, name: "", ids }); zwZeigen(feld); }); }
+// Einladung: wer sie überhaupt bekäme (wie der Server rechnet – ohne mich, bei der Erinnerung nur ohne Antwort)
+function buBerechtigt() { const x = window.__buSend; return x.s.mitglieder.filter((m) => zwIch(m.person_id) && (!x.nurOffen || !m.antwort || m.antwort === "keine")).map((m) => m.person_id); }
+function buAnZahl() { const Z = ZWAHL.buAn, b = buBerechtigt(); return Z.art === "alle" ? b.length : b.filter((id) => Z.ids.includes(id)).length; }
+function buAnNachher() {
+  buBriefZeigen();
+  const n = zwBereit("buAn") ? buAnZahl() : 0, k = $("buSendKnopf");
+  if (k) { k.disabled = !n; k.textContent = n ? `📨 Jetzt an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden` : ZWAHL.buAn.art === "alle" ? "Alle haben schon geantwortet 👍" : "Bitte erst auswählen"; }
 }
 function buWeg(w) { window.__buSend.wege = w === "beide" ? ["push", "email"] : w ? [w] : []; document.querySelectorAll("#buWege .chip").forEach((b) => b.classList.toggle("an", b.dataset.w === w)); }
-async function buSenden(knopf, anzahl) {
-  const x = window.__buSend;
-  if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} Mitglieder senden?`))) return;
+async function buSenden(knopf) {
+  const x = window.__buSend, A = ZWAHL.buAn;
+  if (!zwBereit("buAn")) return melde(A.art === "gruppe" ? "Bitte eine Gruppe antippen." : A.art === "amt" ? "Bitte ein Amt antippen." : "Bitte Mitglieder auswählen.", true);
+  const anzahl = buAnZahl();
+  if (!anzahl) return melde("An diese Auswahl geht nichts – alle haben schon geantwortet oder niemand passt.", true);
+  if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} ${anzahl === 1 ? "Mitglied" : "Mitglieder"} senden?${A.art === "gruppe" || A.art === "amt" ? `\n\n${A.art === "amt" ? "Amt" : "Gruppe"}: ${A.name.replace(/^\S+ /, "")}` : A.art === "einzeln" ? "\n\nNur an deine Auswahl." : ""}`))) return;
   await einmal(knopf, async () => {
     try {
-      const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "" });
+      const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "", ...(A.art === "alle" ? {} : { ziel: { art: A.art, name: A.name || "", ids: A.ids } }) });
       $("buEinladung")?.remove();
       if (x.nurOffen) { melde(`🔔 Erinnerung an ${r.empfaenger} Mitglieder gesendet`); return buStart(); }
       buWeiterFragen("✅ Einladung gesendet!", `${r.empfaenger} Mitglieder haben die Einladung bekommen. Ein paar Tage vor der Sitzung kannst du alle erinnern, die noch nicht geantwortet haben.`,
@@ -31388,7 +31518,7 @@ function atZeichnen() {
       + d.register.filter((r) => zahl(r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => teil(i, true)).join("")}`).join("")
       + `<label class="feld" style="margin-top:12px">📝 Notizen <small class="hinweis" id="atNotizStand">${x.geaendert ? `zuletzt geändert von ${esc(x.geaendert)}` : ""}</small>
         <textarea id="atNotiz" rows="8" placeholder="Eigene Notizen für diesen Termin – speichert sich von selbst. Alle drei sehen dieselben Notizen." oninput="atNotizTippen()" onblur="atNotizJetzt()">${esc(x.notiz || "")}</textarea></label>`
-      + `<div class="knoepfe"><button class="knopf haupt" onclick="atDruckWahl()">🖨️ Drucken – auswählen</button>${fehlt ? `<button class="knopf" onclick="atPackenZeigen()">💡 Vorschläge nachpacken (${fehlt})</button>` : ""}</div>`;
+      + `<div class="knoepfe"><button class="knopf haupt" onclick="atDruckWahl()">🖨️ Drucken – auswählen</button><button class="knopf haupt" onclick="atFreigabeWahl()">📤 Freigeben</button>${fehlt ? `<button class="knopf" onclick="atPackenZeigen()">💡 Vorschläge nachpacken (${fehlt})</button>` : ""}</div>`;
   } else {
     const l = inh.filter((i) => i.reg === AT.reg);
     inhalt = (l.length ? l.map((i) => teil(i, false)).join("") : `<p class="hinweis">Noch nichts in diesem Register.</p>`)
@@ -31510,6 +31640,64 @@ function atDruckWahl() {
     ${zeile(AT_PACKLISTE, true)}${AT.d.register.filter((r) => inh.some((i) => i.reg === r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => zeile(i, false)).join("")}`).join("")}
     <p class="hinweis" style="margin:10px 0 0">Danach geht es Schritt für Schritt: Teil für Teil öffnet sich die Druckansicht – drucken oder überspringen.</p>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="atDruckLos()">🖨️ Ausgewählte drucken</button><button class="knopf" onclick="$('atDruckBlatt').remove()">Abbrechen</button></div>`);
+}
+// ---------- KC-CLUB-AKTENTASCHE-FREIGEBEN (2.741.0, Wunsch Hansi „Clubsprecher, Admin oder Kassenwart öffnet die Aktentasche, hakt ein oder mehrere
+// Sachen an und unten auf Freigeben; dann Auswahl der Empfänger wie alle, einzeln, Gruppe, Amt; dann senden – aber in den Eingangskorb der Mitglieder“) ----------
+// Jedes Teil wird zur Datei: Anlagen so, wie sie sind, alles andere als PDF aus der Druckansicht (vorhandener Druck-Kern). Je Teil ein Aufruf
+// archiv_eingang_verteilen – der Server legt es jedem in den Eingangskorb (vorhandener Kern KC-CLUB-EINGANGSKORB) und sagt beim letzten Teil einmal Bescheid.
+function atFreigabeWahl() {
+  atNotizJetzt();
+  const inh = AT.d.tasche?.inhalt || [];
+  if (!inh.length) return melde("Die Tasche ist noch leer.", true);
+  const zeile = (i) => `<label class="at-wahl"><input type="checkbox" data-fk="${esc(i.k)}" onchange="atFreiKnopf()"><span><b>${atSym(i)} ${esc(i.titel)}</b>${i.unter ? `<br><small>${esc(i.unter)}</small>` : ""}</span></label>`;
+  blattAuf("atFreiBlatt", `<h3 style="margin:0">📤 Freigeben – in den Eingangskorb</h3><p class="hinweis" style="margin:2px 0 6px">${esc(atKopf())}<br>Anhaken, was die Mitglieder bekommen sollen. Es kommt als PDF (Dateien so, wie sie sind) in ihren 📥 Eingangskorb – sie sehen es an und legen es in ihrem Archiv ab oder löschen es.</p>
+    ${AT.d.register.filter((r) => inh.some((i) => i.reg === r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map(zeile).join("")}`).join("")}
+    <div class="at-reg-kopf">👥 An wen?</div><div id="atFreiAn"></div>
+    <label class="feld" style="margin-top:8px">Ablage-Vorschlag (Register im Archiv der Mitglieder)<select id="atFreiReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
+    <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="atFreiNotiz" rows="2" maxlength="500" placeholder="z. B. Unterlagen zur Clubsitzung – bitte vorher durchlesen."></textarea></label>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="atFreiLos" onclick="atFreigeben(this)" disabled>📤 Senden</button><button class="knopf" onclick="$('atFreiBlatt').remove()">Abbrechen</button></div>`);
+  zwStart("atFreiAn", { titel: "👤 Wer bekommt die Unterlagen?", alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: atFreiKnopf });
+}
+const atFreiTeile = () => [...document.querySelectorAll("#atFreiBlatt [data-fk]:checked")].map((c) => atTeil(c.dataset.fk)).filter(Boolean);
+function atFreiKnopf() {
+  const k = $("atFreiLos"); if (!k || !ZWAHL.atFreiAn) return;
+  const t = atFreiTeile().length, n = zwBereit("atFreiAn") ? zwIds("atFreiAn").length : 0;
+  k.disabled = !t || !n; k.textContent = !t ? "Bitte erst etwas anhaken" : !n ? "Bitte Empfänger wählen" : `📤 ${t === 1 ? "1 Teil" : t + " Teile"} an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden`;
+}
+// ein Teil der Tasche als Datei (für den Eingangskorb): Anlage unverändert, sonst PDF aus derselben Druckansicht wie „🖨️ Drucken“
+async function atTeilDatei(i) {
+  if (i.art === "anlage") { const d = await anlageAlsDatei({ id: i.ref, name: i.name || i.titel, mime: i.mime }); return new File([d.blob], d.name, { type: d.mime || i.mime || "application/octet-stream" }); }
+  const alt = DRUCK;
+  try {
+    if (["tagesordnung", "teilnehmer", "aufgaben"].includes(i.art)) DRUCK = { art: "aktentasche", param: { teil: i.art } };
+    else if (i.art === "vorschlag") { await vorschlaegeLaden(); if (!VORSCHLAG_MAP.has(i.ref)) throw new Error(`„${i.titel}“ gibt es nicht mehr.`); DRUCK = { art: "aktentasche", param: { teil: "vorschlag", ref: i.ref } }; }
+    else if (i.art === "abstimmung") { await vorschlaegeLaden(); await Promise.all([MITGLIEDER ? null : mitgliederHolen(), qrLaden().catch(() => {})]); DRUCK = { art: "abstimmung", param: { pid: i.ref } }; }
+    else if (i.art === "protokoll") { if (!MITGLIEDER) await mitgliederHolen(); PR = await api("protokoll_laden", { id: i.ref }); DRUCK = { art: "protokoll" }; }
+    else throw new Error(`„${i.titel}“ lässt sich nicht freigeben.`);
+    if (!(await druckSeiteBauen())) throw new Error(`„${i.titel}“ konnte nicht vorbereitet werden.`);
+    const pdf = await druckPdfBlob();
+    return new File([pdf], (i.titel || "Unterlage").replace(/[^\wäöüÄÖÜß.-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) + ".pdf", { type: "application/pdf" });
+  } finally { DRUCK = alt; }
+}
+async function atFreigeben(knopf) {
+  const teile = atFreiTeile(), ids = zwBereit("atFreiAn") ? zwIds("atFreiAn") : [], reg = $("atFreiReg").value, notiz = $("atFreiNotiz").value.trim();
+  if (!teile.length || !ids.length) return atFreiKnopf();
+  const Z = ZWAHL.atFreiAn, wer = Z.art === "alle" ? "alle Mitglieder" : Z.art === "einzeln" ? `${ids.length} ausgewählte Mitglieder` : Z.name.replace(/^\S+ /, "");
+  if (!(await frage(`📤 ${teile.length === 1 ? `„${teile[0].titel}“` : `${teile.length} Teile`} in den Eingangskorb legen – an ${wer} (${ids.length})?\n\nJeder bekommt einen Hinweis und entscheidet selbst: ablegen oder löschen.`, { ja: "📤 Senden", nein: "Zurück" }))) return;
+  await einmal(knopf, async () => {
+    let r = null;
+    try {
+      for (let n = 0; n < teile.length; n++) {
+        const i = teile[n]; knopf.textContent = `⏳ ${n + 1} von ${teile.length}: ${i.titel.slice(0, 30)} …`;
+        const f = await atTeilDatei(i);
+        if (!ARCHIV_TYP_OK(f.type)) throw new Error(`„${i.titel}“ passt nicht ins Archiv (nur PDF, Bild, Word, Excel, Text).`);
+        r = await api("archiv_eingang_verteilen", { personen: ids, name: f.name, mime: f.type, daten: base64(await f.arrayBuffer()), titel: i.titel, register: reg, notiz, letzte: n === teile.length - 1, anzahl: teile.length }, { warten: true });
+      }
+      $("atFreiBlatt")?.remove();
+      const weg = r?.uebersprungen || [];
+      melde(`📤 ${teile.length === 1 ? "Liegt" : "Liegen"} jetzt im Eingangskorb von ${r?.empfaenger ?? ids.length} ${(r?.empfaenger ?? ids.length) === 1 ? "Mitglied" : "Mitgliedern"} – sie bekommen Bescheid${weg.length ? ` · nicht möglich bei: ${weg.map((x) => `${x.name} (${x.grund})`).join(", ")}` : ""}`);
+    } catch (e) { meldeFehler(e); atFreiKnopf(); }
+  });
 }
 function atDruckLos() {
   const keys = [...document.querySelectorAll("#atDruckBlatt [data-dk]:checked")].map((c) => c.dataset.dk);
@@ -37224,6 +37412,67 @@ const arFilterMerken = () => { try { localStorage.setItem("kc_club_archiv_filter
 function arStart() { AR.ordner = null; AR.korb = false; AR.suche = ""; AR.spruch = false; zeige("archiv"); }
 // 1.65.0: direkt einen Ordner einer Art öffnen (z. B. die Chronik aus dem Büro-Regal); fehlt er, bleibt das Regal offen
 function arStartArt(art) { AR.zielArt = art; arStart(); }
+// ---------- KC-CLUB-EINGANG-DURCHGEHEN (2.741.0, Wunsch Hansi „die Mitglieder erhalten einen Hinweis: Neu in deinem Eingangskorb – und sofort
+// einen Knopf ‚Ansehen?‘; wenn ja, anzeigen; danach die Frage: Möchtest du das Dokument ablegen oder löschen? Bei Ablegen den Ordner im Archiv
+// vorschlagen und dort ablegen“) ----------
+// Nutzt den vorhandenen Eingangskorb (archiv_liste, archiv_pruefung, arWohin mit Ordner- und Register-Vorschlag) – nur der Weg ist geführt:
+// Hinweis beim Öffnen (und wenn die Mitteilung bei offener App kommt) → Dokument im Fenster → 🗄️ Ablegen / 🗑️ Löschen / ⏰ Später → nächstes.
+const EGH = { gezeigt: false, versuche: 0, t: 0 };
+// KC-CLUB-EINGANG-SOFORT (2.741.0, Wunsch Hansi „das Dokument kann auch während der Clubsitzung verteilt werden – dann müssen die Mitglieder sofort
+// Bescheid bekommen, nicht erst nach Neustart“): Signal der direkten Leitung (art „eingang“) oder Push bei offener App → nach 1,5 s (gebündelt) das Fenster
+function eingangNeu() { EGH.gezeigt = false; clearTimeout(EGH.t); EGH.t = setTimeout(() => { try { navigator.vibrate?.([120, 80, 120]); } catch {} eingangHinweisPruefen(true); }, 1500); }
+async function eingangHinweisPruefen(neu = false) {
+  if (!ICH || (!neu && !(INIT?.eingangskorb > 0)) || (EGH.gezeigt && !neu)) return;
+  if (document.querySelector(neu ? ".dlg, #rgSchicht, #filmSchicht, #egBlatt" : ".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht, #egBlatt") || aktuelleAnsicht === "dokansicht") { if (++EGH.versuche < 30) setTimeout(() => eingangHinweisPruefen(neu), 3000); return; } // neu: auch über offenen Fenstern (z. B. Clubabend Live)
+  EGH.gezeigt = true; EGH.versuche = 0;
+  const n = neu ? 0 : INIT.eingangskorb;
+  const wahl = await new Promise((fertig) => {
+    let d; const zu = (w) => { d?.remove(); fertig(w); };
+    d = dlgOeffnen(`<h3 class="dlg-kopf">📥 Neu in deinem Eingangskorb</h3><p class="dlg-text">${n > 1 ? `${n} Dokumente warten auf dich.` : n === 1 ? "Ein Dokument wartet auf dich." : "Es ist etwas Neues für dich da."} Möchtest du ${n > 1 ? "sie" : "es"} jetzt ansehen?</p>
+      <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">👀 Ja, ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button></div>`, () => zu("spaeter"));
+    d.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
+  });
+  if (wahl === "an") return eingangDurchgehen();
+  melde("📥 Gut – du findest es unter „Heute wichtig“ → Eingangskorb.");
+}
+async function eingangDurchgehen(nachsehen = false) {
+  let d; try { d = AR.daten = await api("archiv_liste", {}, nachsehen ? {} : { warten: true }); } catch (e) { return nachsehen ? melde("✅ Erledigt") : meldeFehler(e); }
+  const eigen = new Map((d.ordner || []).filter((o) => o.eigen).map((o) => [o.id, o]));
+  const liste = (d.dokumente || []).filter((x) => x.status === "pruefung" && eigen.has(x.ordner_id));
+  if (INIT) { INIT.eingangskorb = liste.length; try { wichtigZeigen(); } catch {} }
+  if (!liste.length) return melde(nachsehen ? "✅ Eingangskorb erledigt" : "📥 Dein Eingangskorb ist leer.");
+  egZeigen(liste, 0, eigen);
+}
+function egZeigen(liste, i, eigen) {
+  const x = liste[i], o = eigen.get(x.ordner_id), weiter = () => (i + 1 < liste.length ? egZeigen(liste, i + 1, eigen) : eingangDurchgehen(true)); // am Ende neu nachsehen – inzwischen Angekommenes folgt
+  const f = blattAuf("egBlatt", `<h3 style="margin:0">📥 Eingangskorb${liste.length > 1 ? ` · ${i + 1} von ${liste.length}` : ""}</h3>
+    <p class="hinweis" style="margin:2px 0 6px"><b>${esc(x.titel)}</b>${x.von ? ` · von ${esc(x.von)}` : ""}</p>${x.beschreibung ? `<div class="karte" style="margin:0 0 8px;white-space:pre-wrap">${esc(x.beschreibung)}</div>` : ""}
+    <div id="egVorschau" class="eg-vorschau"><p class="hinweis">⏳ Wird geladen …</p></div>
+    <p style="margin:10px 0 4px;font-weight:700">Möchtest du das Dokument ablegen oder löschen?</p>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" data-w="ab">🗄️ Ablegen</button><button class="knopf" data-w="weg">🗑️ Löschen</button><button class="knopf" data-w="spaeter">⏰ Später</button></div>`);
+  f.querySelector('[data-w="ab"]').onclick = () => { f.remove(); arWohin(x, o, weiter); }; // Ordner + Register sind vorgeschlagen (Absender/aktuelles Jahr)
+  f.querySelector('[data-w="weg"]').onclick = async (e) => {
+    if (!(await frage(`„${x.titel}“ löschen? Es wird nicht abgelegt, und ${x.von ? String(x.von).split(" ")[0] : "der Absender"} bekommt Bescheid.`, { ja: "🗑️ Löschen", nein: "Zurück" }))) return;
+    e.target.disabled = true;
+    try { await api("archiv_pruefung", { id: x.id, annehmen: false }); f.remove(); melde("🗑️ Gelöscht"); weiter(); } catch (er) { meldeFehler(er); e.target.disabled = false; }
+  };
+  f.querySelector('[data-w="spaeter"]').onclick = () => { f.remove(); melde("📥 Bleibt im Eingangskorb – unter „Heute wichtig“."); };
+  egVorschau(x);
+}
+async function egVorschau(x) { // PDF-Seiten als Bilder, Bilder direkt, sonst „Öffnen“ – mit dem vorhandenen Datei-Laden (arDateiVorladen)
+  const z = () => $("egVorschau"), t = arDateiVorladen(x); await t.warten;
+  if (!z()) return;
+  if (!t.datei) { z().innerHTML = `<p class="hinweis">Die Datei lässt sich gerade nicht laden. <button class="knopf klein" onclick="arDateiVorladen(${hlJs(x)});anlageDateiZeigen()">↗ Öffnen</button></p>`; return; }
+  if (istPdf(t.datei.name, t.datei.type)) {
+    try { const pdfjs = await pdfjsHolen(), pdf = await pdfjs.getDocument({ data: new Uint8Array(await t.datei.arrayBuffer()), isEvalSupported: false }).promise;
+      if (!z()) return pdf.destroy(); z().innerHTML = "";
+      for (let n = 1; n <= Math.min(pdf.numPages, 12); n++) { const img = new Image(); img.src = await pdfSeiteAlsBild(pdf, n, 900); img.alt = `Seite ${n}`; if (!z()) break; z().appendChild(img); }
+      if (pdf.numPages > 12 && z()) z().insertAdjacentHTML("beforeend", `<p class="hinweis">… und ${pdf.numPages - 12} weitere Seiten – nach dem Ablegen im Archiv.</p>`);
+      pdf.destroy();
+    } catch { if (z()) z().innerHTML = `<p class="hinweis">Die Vorschau klappt hier nicht. <button class="knopf klein" onclick="anlageDateiZeigen()">↗ Öffnen</button></p>`; }
+  } else if (/^image\//.test(t.datei.type)) { const img = new Image(); img.src = URL.createObjectURL(t.datei); img.alt = x.titel; z().innerHTML = ""; z().appendChild(img); }
+  else z().innerHTML = `<p>📄 ${esc(t.datei.name)}</p><button class="knopf klein" onclick="anlageDateiZeigen()">↗ Öffnen</button>`;
+}
 function eingangOeffnen() { AR.zielEingang = true; arStart(); } // 2.432.0 KC-CLUB-EINGANGSKORB: direkt in den Ordner mit den wartenden Dokumenten
 function arStartTitel(titel) { AR.zielTitel = titel; arStart(); } // Club-Ordner nach Beschriftung öffnen (neuester Jahrgang)
 async function arLaden() {
@@ -38347,21 +38596,21 @@ async function arPruefung(id, annehmen) {
 }
 // 2.433.0 KC-CLUB-EINGANG-WOHIN (Wunsch Hansi „fragen, in welchen Ordner und welches Register – aber schon mit Vorschlag“):
 // Beim Annehmen wählt das Mitglied Ordner (eigene Jahrgänge) und Register; vorausgewählt ist der Vorschlag des Absenders.
-function arWohin(x, o) {
+function arWohin(x, o, fertig) { // fertig: KC-CLUB-EINGANG-DURCHGEHEN (2.741.0) – danach das nächste Dokument
   const eigene = (AR.daten.ordner || []).filter((y) => y.eigen && !y.geloescht_am).sort((a, b) => b.jahr - a.jahr);
   const regOpt = (oid, wahl) => ((eigene.find((y) => y.id === oid) || o).register || []).map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
-  const f = blattAuf("arWohinBlatt", `<h3 style="margin-top:0">✔ „${esc(x.titel)}“ annehmen</h3>
+  const f = blattAuf("arWohinBlatt", `<h3 style="margin-top:0">🗄️ „${esc(x.titel)}“ ablegen</h3>
     <p class="hinweis" style="margin-top:0">Wohin soll das Dokument? 💡 <b>Vorschlag${x.von ? ` von ${esc(String(x.von).split(" ")[0])}` : ""}:</b> Ordner ${esc(arName(o))}${x.register ? `, Register „${esc(x.register)}“` : ""} – einfach übernehmen oder ändern.</p>
     <label class="feld">Ordner<select id="awOrdner">${eigene.map((y) => `<option value="${esc(y.id)}"${y.id === o.id ? " selected" : ""}>${esc(arName(y))}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="awReg">${regOpt(o.id, x.register)}</select></label>
-    <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">✔ Hierhin übernehmen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
+    <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">🗄️ Hier ablegen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
   f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); };
   f.querySelector("#awJa").onclick = async (e) => {
     e.target.disabled = true;
     const ordner_id = f.querySelector("#awOrdner").value, register = f.querySelector("#awReg").value;
     try {
       await api("archiv_pruefung", { id: x.id, annehmen: true, ordner_id, register }); f.remove();
-      melde(`✔ Angenommen – liegt jetzt in ${arName(eigene.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden();
+      melde(`✔ Abgelegt – liegt jetzt in ${arName(eigene.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden(); fertig?.();
     } catch (er) { meldeFehler(er); e.target.disabled = false; }
   };
 }
@@ -40070,6 +40319,7 @@ async function schluesselZurueck() {
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) eingangNeu(); }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}
