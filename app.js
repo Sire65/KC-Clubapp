@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.743.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.744.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -28917,7 +28917,8 @@ const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?
 const buEinladungWahl = (nurOffen) => buSitzungWaehlen(nurOffen ? "🔔 Für welche Sitzung erinnern?" : "📨 Einladung für welche Sitzung?", (id) => buEinladung(id, nurOffen));
 async function buSitzungLaden(id) {
   BU.s = await api("buero_sitzung", { treffen_id: id }, { warten: true });
-  const v = BU.s.vorbereitung, st = BU.s.standard;
+  // 2.744.0 KC-CLUB-SITZUNG-LEER: nach einer Einladung ohne Vorbereitung gibt es eine Zeile ohne Tagesordnung – dann der übliche Vorschlag
+  const v = BU.s.vorbereitung?.tagesordnung?.length ? BU.s.vorbereitung : null, st = BU.s.standard;
   BU.f = { anwesend: new Set(v ? v.anwesend : st.anwesend), anmerkung: v ? v.anmerkung || "" : BU.s.anmerkungVorschlag, tagesordnung: (v ? v.tagesordnung : st.tagesordnung).map((x) => ({ ...x })), zeilen: v ? v.zeilen : st.zeilen, neu: "" };
 }
 async function buSitzungOeffnen(id) {

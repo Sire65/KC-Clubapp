@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.744.0 – 2026-10-28 – 🍽️ Clubabend: Anwesende aus dem Büro bleiben erhalten · Einladung ohne Vorbereitung leert nichts mehr
+Prüfung des Clubabend-Ablaufs (Wunsch Hansi 28.10.), zwei Fehler behoben:
+- 🍽️ Clubabend Live beginnt jetzt mit den Anwesenden, die im Büro angehakt wurden (aus dem Protokoll-Entwurf, sonst aus der Vorbereitung). Bisher war die Liste am Abend leer, und das erste Antippen schrieb nur diese eine Person ins Protokoll – die übrigen Anwesenden waren weg. Antippen ergänzt bzw. streicht jetzt nur (KC-CLUB-CLUBABEND-ANWESEND).
+- 🗂️ Wird eine Einladung verschickt, bevor die Sitzung vorbereitet ist, gilt die Sitzung nicht mehr als „vorbereitet“, und „Sitzung vorbereiten“ zeigt wieder den üblichen Vorschlag (Zusagen, feste Punkte, Vorschläge) statt einer leeren Tagesordnung (KC-CLUB-SITZUNG-LEER).
+- Neuer Verhaltenstest tests/clubabend-anwesend.test.mjs stellt beide Fälle nach.
+
 ## 2.743.0 – 2026-10-28 – 📥 Ablagekorb → Eingangskörbe · Eingangskorb: drucken, per E-Mail, teilen (KC-CLUB-ABLAGEKORB-EINGANG, KC-CLUB-EINGANG-WEITER)
 Wunsch Hansi („Wenn ich ein Dokument außerhalb der Club-App an die Club-App teile, liegt es im Ablagekorb. Von dort muss auch ein Weiterteilen in die Eingangskörbe der Mitglieder möglich sein – wieder nach Alle, Amt, Gruppe usw. Dann haben es alle sofort und können es ansehen, drucken, ablegen“ und „ansehen, drucken, weiterschicken z. B. per E-Mail an Ruth und dann in einem Archiv-Ordner ablegen“):
 - 📥 **Ablagekorb → „📥 In Eingangskörbe“** (nur Admin): Dateien anhaken, Titel, **An wen?** (Alle · Einzeln · Gruppe · Amt), Ablage-Vorschlag, Nachricht → 📤 Senden. Gleicher Weg wie Aktentasche → Freigeben: jeder bekommt eine eigene Kopie, eine Mitteilung, bei offener App sofort das Fenster. Danach ist der Eintrag im Ablagekorb erledigt („📥 In die Eingangskörbe: …“).
