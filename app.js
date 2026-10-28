@@ -1067,6 +1067,7 @@ function anwendenDesign() {
   if (window.KCFP?.schlaeft) return; // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG: geleertes Fenster (App woanders offen)
   const nacht = istNacht(), f = designAktuell()[nacht ? "nacht" : "tag"], w = document.documentElement;
   w.classList.toggle("dunkel", nacht);
+  w.classList.toggle("kom-sym", einst("komSym", true)); // 2.727.0 KC-CLUB-KOM-SYMBOLE: Knöpfe oben in Nachrichten als Symbol mit Wort
   w.classList.toggle("gross", einst("gross", false) || w.dataset.rgGross === "1"); // KC-CLUB-ERKLAERVIDEOS: Vorführung „Große Schrift“
   w.classList.toggle("ohne-anim", !einst("animiert", true)); // 2.24.1: „✨ Animierte Knöpfe“ (Standard an)
   // eigener Kopf-Verlauf (Disko, Regenbogen) – sonst der Standard-Verlauf aus hero1/rot/rot2/hero4
@@ -1081,7 +1082,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -3449,7 +3450,7 @@ const RG_CHATPROFI = [
     t: "🖨️ Den ganzen Chat", x: "Unter den drei Punkten steht auch Ganzer Chat: Kopieren, zum Beispiel für eine E-Mail, Ausdrucken und Chat in mein Archiv legen." },
   { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), sel: ["#chatArchivKnopf"], puls: ["#chatArchivKnopf", "#chatKomplettKnopf"], t: "📦 Chat archivieren",
     x: "Chat archivieren räumt ihn aus deiner Liste. Er bleibt dort, auch wenn jemand schreibt, und du kannst ihn jederzeit wieder aktivieren. Bei mir komplett löschen entfernt den Chat nur bei dir – die anderen behalten ihn." },
-  { v: "nachrichten", sel: [rgChatprofiKnopf("#v-nachrichten .kom-leiste", "⭐ Gemerkt")], t: "⭐ Alles Gemerkte", x: "Zurück in der Übersicht der Nachrichten: Unter Gemerkt findest du alle Nachrichten, die du dir gemerkt hast. Diese Liste siehst nur du." },
+  { v: "nachrichten", sel: [rgChatprofiKnopf("#v-nachrichten .kom-leiste", "🔖 Gemerkt")], t: "⭐ Alles Gemerkte", x: "Zurück in der Übersicht der Nachrichten: Unter Gemerkt findest du alle Nachrichten, die du dir gemerkt hast. Diese Liste siehst nur du." },
   { v: "nachrichten", mussSel: true, sel: [".uh-archiv-zeile", ".uh-archiv-kopf"], t: "📦 Archivierte Chats", x: "Archivierte Chats stehen oben unter Archiviert. Dort tippst du einen Chat an und holst ihn mit Wieder aktivieren zurück." },
   // 2.533.0 KC-CLUB-HILFE-NACHTRAG-4: „… schreibt dir gerade“ außerhalb des Chats – nur ein Bild des Hinweises (Antippen öffnet nichts)
   { v: "nachrichten", vor: () => { if ($("schreibtHinweis")) return; const el = document.createElement("div"); el.id = "schreibtHinweis"; el.className = "schreibt-hinweis"; el.innerHTML = '<span class="punkte3"><i></i><i></i><i></i></span> ✍️ <b>Anne</b> schreibt dir gerade …'; document.body.appendChild(el); },
@@ -8295,7 +8296,9 @@ function abStandZeigen(st) {
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "ja") abOeffnen(); }));
   ansageMelden({ art: "anklopfen", text: `Du hast ${n === 1 ? "eine neue Nachricht" : n + " neue Nachrichten"} auf dem Anrufbeantworter` });
 }
-function abMerkerZeigen(n) { const m = $("abMerker"); if (m) { m.textContent = n ? `📼 Anrufbeantworter · ${n} neu` : "📼 Mein Anrufbeantworter"; m.classList.toggle("neu", !!n); } }
+function abMerkerZeigen(n) { const m = $("abMerker"); if (m) { klSetzen(m, "📼", n ? `Anrufbeantworter · ${n} neu` : "Mein Anrufbeantworter", n ? `${n} neu` : "Anrufb."); m.classList.toggle("neu", !!n); } }
+// 2.727.0 KC-CLUB-KOM-SYMBOLE: Knopf mit Symbol, langem Text (daneben) und kurzem Wort (darunter) – textContent beginnt weiter mit „Symbol Text“ (Videos finden ihn)
+function klSetzen(b, sym, lang, kurz) { b.innerHTML = `<span class="kl-i">${sym}</span><span class="kl-t"> ${esc(lang)}</span><span class="kl-k">${esc(kurz)}</span>`; }
 // Abhören: neueste zuerst, blättern, löschen, zurückrufen/anklopfen/schreiben
 let ABBOX = { liste: [], i: 0 };
 async function abOeffnen() {
@@ -29349,7 +29352,7 @@ function rkSchalten(k, an) {
 function rkAufbauen(z) {
   const w = z.w, an = z.immer || rkAn(z.schluessel);
   const sch = $("setRk" + z.schluessel[0].toUpperCase() + z.schluessel.slice(1)); if (sch) sch.checked = an; // Schalter unter 🧩 Startseite & Ansicht
-  if (z.knopf) { z.knopf.textContent = an ? (z.schluessel === "einst" ? "☰ Übersicht" : "☰ Liste") : "🗂️ Kartei"; z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
+  if (z.knopf) { const tx = an ? (z.schluessel === "einst" ? "Übersicht" : "Liste") : "Kartei"; if (z.knopf.querySelector(".kl-i")) klSetzen(z.knopf, an ? "☰" : "🗂️", tx, tx); else z.knopf.textContent = (an ? "☰ " : "🗂️ ") + tx; /* 2.727.0 */ z.knopf.title = an ? "Als gewohnte Liste zeigen" : "Als Rollkartei zeigen"; }
   if (z.schluessel === "einst") setTimeout(() => { try { euModus(); } catch {} }, 0); // 2.552.0 KC-CLUB-EINST-UEBERSICHT: Übersicht ↔ Kartei
   if (!an) { if (z.an) rkAbbauen(z); return; }
   if (!z.an) {
@@ -34133,7 +34136,7 @@ const UHK = { vs: new Map() }; // chat-id → { stand, html }
 function uhKarteiKnopf() {
   let b = $("uhKarteiKnopf"); const an = rkAn("chats");
   if (!b) { const l = document.querySelector("#v-nachrichten .kom-leiste"); if (!l) return; l.insertAdjacentHTML("afterbegin", '<button type="button" class="knopf klein" id="uhKarteiKnopf"></button>'); b = $("uhKarteiKnopf"); b.onclick = () => rkSchalten("chats", !rkAn("chats")); }
-  b.textContent = an ? "☰ Liste" : "🗂️ Kartei"; b.title = an ? "Chats als gewohnte Liste" : "Chats als Rollkartei";
+  klSetzen(b, an ? "☰" : "🗂️", an ? "Liste" : "Kartei", an ? "Liste" : "Kartei"); b.title = an ? "Chats als gewohnte Liste" : "Chats als Rollkartei"; // 2.727.0
   if ($("setRkChats")) $("setRkChats").checked = an;
 }
 function uhKarteiHtml(liste) {

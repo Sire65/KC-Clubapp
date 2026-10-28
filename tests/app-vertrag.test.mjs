@@ -2118,7 +2118,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 182. 1.32.1: „＋ Neu“ immer sichtbar, Kopfzeilen brechen um (KC-CLUB-KOPFZEILE)
 {
   assert.ok(/<h2>💬 (Kommunikation|Nachrichten)<\/h2>(<button[^>]*id="naSosKnopf"[^>]*>🚨 SOS<\/button>)?<button class="knopf haupt klein" onclick="(neueNachricht|uhNeu)\(\)">＋ Neu<\/button><\/div>/.test(html), "＋ Neu direkt in der Kopfzeile"); // 2.57.0: uhNeu = mit Markierung Mehrfach-Nachricht, sonst neueNachricht // 2.22.0: davor nur beim Admin 🚨 SOS
-  assert.ok(/⭐ Gemerkt<\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
+  assert.ok(/<span class="kl-i">🔖<\/span><span class="kl-t"> Gemerkt<\/span><span class="kl-k">Gemerkt<\/span><\/button>/.test(html) && /\.kopf2 \{ display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; flex-wrap: wrap; \}/.test(html), "Stern beschriftet, Kopfzeile bricht um");
 }
 
 // 183. 1.32.2: Bildschirmfoto-Knopf im Chat (KC-CLUB-BILDSCHIRMFOTO)
@@ -9805,7 +9805,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const idx = lies("index.html");
   assert.ok(/function rkEinrichten\(wurzelId, schluessel\)/.test(html) && /rkEinrichten\("v-einstellungen", "einst"\)/.test(html), "wiederverwendbarer Kern, Einstellungen eingebunden");
-  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /z\.knopf\.textContent = an \? \(z\.schluessel === "einst" \? "☰ Übersicht" : "☰ Liste"\) : "🗂️ Kartei"/.test(html), "je Gerät zurück zur gewohnten Liste");
+  assert.ok(/localStorage\.getItem\("kc_club_rk_" \+ k\)/.test(html) && /w !== "aus"/.test(html) && /const tx = an \? \(z\.schluessel === "einst" \? "Übersicht" : "Liste"\) : "Kartei";/.test(html) /* 2.727.0 KC-CLUB-KOM-SYMBOLE */, "je Gerät zurück zur gewohnten Liste");
   assert.ok(/if \(z\.an && e\.target\.parentElement === w && e\.target\.classList\.contains\("rk-karte"\)\) e\.stopPropagation\(\);/.test(html) && /d\.open = d\.dataset\.rkVorher === "1"/.test(html), "gemerkte Auf/Zu-Stände der Liste bleiben unverändert");
   assert.ok(/m\.target\.classList\?\.contains\("hervor"\)\) \{ rkZu\(z, m\.target\)/.test(html), "Suche/Tipps/„zeig mir wo“ blättern zur richtigen Karte");
   assert.ok(/d\.inert = k !== 0;/.test(html), "nur die vordere Karte ist bedienbar");
