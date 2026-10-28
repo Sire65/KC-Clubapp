@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.731.0 – 2026-10-28 – 🪞 Rückseite des Kopfs wird erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 3)
+Prüfbericht C (Wunsch #44), Stufe 3 – für Mitglieder unsichtbar: Rätsel, Spiegel, Diashow, Tafel, Flipchart und die Bühne mit Musik und Club-Song (rund 175 KB) liegen jetzt in teile/rueckseite.js und werden geladen, wenn auf der Rückseite ein Reiter aufgeht oder ein Erklär-Video sie vorführt (Videos laden die Rückseite automatisch mit). Im Hauptprogramm bleiben Eselsohr, Umdrehen und Aufrollen, die große Uhr mit Wecker (klingelt immer) und die Bewegungs-Einladung mit Twinkeys Figur. Neu im Fundament: abhängige Teile und teilDa(). Geprüft: alle 7 Reiter, Club-Song, die Videos zu Rückseite/Rätsel/Bühne – auch auf frisch geöffnetem Handy –, beim Start wird kein Teil geladen.
+
 ## 2.730.0 – 2026-10-28 – 🎲 Spiele werden erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 2)
 Prüfbericht C (Wunsch #44), Stufe 2 – für Mitglieder unsichtbar: Tic-Tac-Toe, Schach, Doppelkopf, Bauernskat, Mensch ärgere dich nicht, Fang den Koch und Küchenterror (rund 300 KB) liegen jetzt in teile/spiele.js und werden erst geladen, wenn jemand ein Spiel öffnet. Im Hauptprogramm bleiben die Spiel-Einladung beim Start, die Live-Anfragen, die Spiele-Einstellungen und der Zustand SP. Beim Vergleich gefunden und behoben: Schachregeln und Küchenterror-Fragen wurden aus einem Teil heraus im falschen Ordner gesucht – jetzt immer von der Seite aus; ein Test verhindert das künftig. Geprüft: alle 7 Spiele am Handy und PC wie vorher; Start-Rechenzeit gegenüber 2.728.0 insgesamt −13 %.
 
