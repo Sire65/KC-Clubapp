@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.728.0 – 2026-10-28 – 🛡️ GitHub-Wächter nicht mehr fälschlich rot (KC-CLUB-WAECHTER-GH-SPAET)
+Fund Hansi (Bild 07:17: 🔭 Spiegel-Wächter außen und 🐕 Schnittstellen-Wächter „überfällig“): GitHub startet geplante Abläufe im kostenlosen Tarif nur, wenn Platz ist – der Schnittstellen-Wächter (Plan alle 5 Min.) lief heute Nacht nur alle 3–5 Std., der äußere Spiegel-Wächter (stündlich) alle 4–6 Std., Wochenläufe kommen 5–6 Std. später; alle Läufe waren grün. Die Regel „überfällig nach 90 Min.“ war dafür zu streng: GitHub-Wächter werden jetzt erst gelb, wenn 6 Std. nach dem geplanten Lauf nichts kam, rot nach 12 Std. Im Info-Fenster steht der echte Takt („laut Plan alle 5 Min. – GitHub startet ihn aber nur etwa alle 3–5 Std.“).
+
 ## 2.727.0 – 2026-10-28 – 🧩 Fundament fürs Aufteilen: Programmteile nachladen (KC-CLUB-TEILE, Stufe 0)
 Prüfbericht C (Wunsch #44), Stufe 0 – für Mitglieder unsichtbar: Selten gebrauchte Programmteile können ab jetzt in teile/ liegen und werden erst beim ersten Gebrauch geladen. Jedes Teil hat einen Fingerabdruck – der Browser führt es nur aus, wenn er exakt zu dieser Version passt (nie alt/neu gemischt); passt er nicht, sucht die App nach einem Update. Beim Update kommen alle Teile mit dem Programm in den Handy-Speicher (alles oder nichts), auch ohne Netz da. Vorerst nur ein Probe-Teil. Tests lesen Programm + Teile, der Klick-Rundgang lädt jedes Teil. Sicherung vor dem Umbau: Zweig sicherung/vor-aufteilen-2.725.0; Rückweg: docs/AUFTEILEN.md.
 ## 2.726.0 – 2026-10-28 – 🛡️ Admin-Kachel „Wächter“ (KC-CLUB-WAECHTER)

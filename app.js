@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.727.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.728.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26294,7 +26294,8 @@ const WCH_LISTE = [
     ergebnis: (d) => [d.spiegel?.restore_test && `Lese-Probe ${wchUhr(d.spiegel.restore_test.zeit)}: ${d.spiegel.restore_test.status === "ok" ? "bestanden" : "fehlgeschlagen"}`, d.spiegel?.backup && `letzte Sicherung ${wchUhr(d.spiegel.backup.zeit)}`].filter(Boolean).join(" · "),
     meldet: "Schreibt das Ergebnis der Lese-Probe ins Protokoll.", tun: "Claude bitten, die Sicherung neu zu prüfen" },
   { id: "aussen", gruppe: "sicherung", sym: "🔭", name: "Spiegel-Wächter (außen)", kurz: "Prüft von GitHub aus", gh: "spiegel-waechter.yml", plan: "41 * * * *",
-    beobachtet: "von außen, ob die Spiegelung pünktlich gelaufen ist – auch wenn Supabase selbst nichts mehr anstößt", grenze: "letzter Lauf höchstens 6 Std. 30 Min. alt", wo: "GitHub (Ablauf „Spiegel-Wächter“)",
+    beobachtet: "von außen, ob die Spiegelung pünktlich gelaufen ist – auch wenn Supabase selbst nichts mehr anstößt", grenze: "letzter Lauf höchstens 6 Std. 30 Min. alt · gelb, wenn GitHub 6 Std. keinen Lauf gestartet hat, rot nach 12 Std.",
+    takt: "laut Plan stündlich – GitHub startet ihn aber nur etwa alle 4–6 Std.", wo: "GitHub (Ablauf „Spiegel-Wächter“)",
     meldet: "Stößt eine überfällige Spiegelung selbst an. Hinweis: ein Fehler beim Fragen lässt den GitHub-Lauf grün.", tun: "„🪞 Spiegel jetzt anstoßen“ beim Spiegel-Wächter", seit: "04.10.2026" },
   { id: "wochenprobe", gruppe: "sicherung", sym: "🗝️", name: "Wochenprobe", kurz: "Ohne Supabase lesbar?", gh: "notfall-sicherung-lesen.yml", plan: "17 4 * * 0",
     beobachtet: "ob eine Sicherung mit der hinterlegten Schlüssel-Kopie (Cloudflare-Tresor) entschlüsselt werden kann – also auch, wenn Supabase ganz ausfällt", grenze: "Prüfsumme bestätigt", wo: "GitHub (Ablauf „Notfall-Sicherung lesen“)",
@@ -26304,7 +26305,8 @@ const WCH_LISTE = [
     meldet: "Zusätzlich E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
   // ⚡ Betrieb
   { id: "schnittstelle", gruppe: "betrieb", sym: "🐕", name: "Schnittstellen-Wächter", kurz: "Antwortet die Datenbank?", gh: "schnittstellen-waechter.yml", plan: "*/5 * * * *",
-    beobachtet: "von außen, ob Supabase und die Datenbank-Schnittstelle antworten (unter 10 Sekunden, 3 Versuche)", grenze: "Antwort unter 10 Sekunden", wo: "GitHub (Ablauf „Schnittstellen-Wächter“)",
+    beobachtet: "von außen, ob Supabase und die Datenbank-Schnittstelle antworten (unter 10 Sekunden, 3 Versuche)", grenze: "Antwort unter 10 Sekunden · gelb, wenn GitHub 6 Std. keinen Lauf gestartet hat, rot nach 12 Std.",
+    takt: "laut Plan alle 5 Min. – GitHub startet ihn im kostenlosen Tarif aber nur etwa alle 3–5 Std.", wo: "GitHub (Ablauf „Schnittstellen-Wächter“)",
     meldet: "Startet Supabase bei einem Hänger selbst neu (höchstens 2× pro Stunde); zusätzlich E-Mail von GitHub bei rotem Lauf.", tun: "Admin → 🗄️ Supabase → Neustart-Knopf", seit: "11.10.2026 (nach dem Ausfall 04:21–04:46 Uhr)" },
   { id: "last", gruppe: "betrieb", sym: "🚦", name: "Last-Wächter", kurz: "Zu viele Abfragen?", job: "kc-traffic-guard-15m",
     beobachtet: "wie viele Datenbank-Abfragen in 15 Minuten kommen – und was vermutlich dahintersteckt", grenze: "deutlich über dem Üblichen = Warnung", wo: "Datenbank (Zeitplan) → Server-Funktion",

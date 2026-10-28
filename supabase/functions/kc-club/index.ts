@@ -136,7 +136,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.726.0";
+const SERVER_VERSION = "2.728.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7063,8 +7063,11 @@ function waechterBewerten(d: any): Record<string, [string, string, string]> {
       : g ? { letzt: g.letzt, ok: g.ergebnis === "success", aktiv: true, plan: w.plan ?? "", ok24: Number(g.ok24 || 0), fehler24: Number(g.fehler24 || 0), msg: "" } : null;
     if (!l) { out[w.id] = ["grau", "unbekannt", w.gh ? "GitHub hat gerade nicht geantwortet." : "Zeitplan nicht gefunden."]; continue; }
     if (!l.aktiv) { out[w.id] = ["gelb", "abgeschaltet", "Der Zeitplan ist ausgeschaltet."]; continue; }
-    const soll = l.plan ? wCronLetzter(l.plan, Date.now() - (w.gh ? 90 : 5) * 60000) : null; // GitHub startet geplante Läufe oft verspätet; ohne Plan (läuft bei jedem Hochladen) kein „überfällig“
-    if (!l.letzt || (soll && Date.parse(l.letzt) < soll - 60000)) { out[w.id] = ["rot", "überfällig", soll ? `Der geplante Lauf von ${fZeit.format(new Date(soll))} Uhr fehlt.` : "Noch nie gelaufen."]; continue; }
+    // 2.728.0 KC-CLUB-WAECHTER-GH-SPAET (Fund Hansi 28.10.: 🐕/🔭 rot „überfällig“): GitHub startet geplante Läufe im kostenlosen Tarif oft nur alle 3–6 Std.
+    // (Plan „alle 5 Min.“ bzw. „stündlich“) und Wochenläufe 5–6 Std. später → GitHub-Wächter erst 6 Std. nach dem geplanten Lauf gelb, nach 12 Std. rot.
+    const soll = l.plan ? wCronLetzter(l.plan, Date.now() - (w.gh ? 12 * 60 : 5) * 60000) : null, sollGelb = w.gh && l.plan ? wCronLetzter(l.plan, Date.now() - 6 * 3600000) : null;
+    if (!l.letzt || (soll && Date.parse(l.letzt) < soll - 60000)) { out[w.id] = ["rot", "überfällig", soll ? `Der geplante Lauf von ${fZeit.format(new Date(soll))} Uhr fehlt${w.gh ? " – auch mit 12 Std. GitHub-Verspätung" : ""}.` : "Noch nie gelaufen."]; continue; }
+    if (sollGelb && Date.parse(l.letzt) < sollGelb - 60000) { out[w.id] = ["gelb", "GitHub stark verspätet", `Seit ${fZeit.format(new Date(l.letzt))} Uhr kein Lauf – GitHub startet geplante Läufe oft verspätet, nach 12 Std. wird es rot.`]; continue; }
     if (!l.ok) { out[w.id] = ["rot", "letzter Lauf fehlgeschlagen", l.msg]; continue; }
     const b = w.befund?.(d); if (b) { out[w.id] = b; continue; }
     if (l.fehler24 && l.fehler24 * 20 >= l.ok24) { out[w.id] = ["gelb", `${l.fehler24} Aussetzer in 24 Std.`, "Der letzte Lauf war wieder in Ordnung."]; continue; }
