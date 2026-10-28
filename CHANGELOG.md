@@ -1,7 +1,31 @@
 # Änderungen
 
-## 2.730.0 – 2026-10-28 – 🎬 Erklär-Videos werden erst beim Abspielen geladen (KC-CLUB-TEILE, Stufe 1)
+## 2.737.0 – 2026-10-28 – 🎬 Erklär-Videos werden erst beim Abspielen geladen (KC-CLUB-TEILE, Stufe 1)
 Prüfbericht C (Wunsch #44), Stufe 1 – für Mitglieder unsichtbar: Abspieler, Drehbücher, Stimmen-Wahl und Bewertung der Erklär-Videos (rund 420 KB, ein Zehntel des Programms) liegen jetzt in teile/videos.js und werden erst geladen, wenn ein Video startet. Im Hauptprogramm bleiben der Video-Katalog (Hilfe, Twinkey, Lupe), der Hinweis „Warum diese App?“ und der Zustand „Video läuft“. Geprüft: alle 57 Videos Schritt für Schritt wie vorher, Start-Rechenzeit auf handy-ähnlichem Gerät −12 %.
+
+## 2.736.0 – 2026-10-28 – 🔧 Kurzes Wartungsfenster beim Einspielen
+- 🔧 Startet jemand die App genau in den Minuten, in denen eine neue Version eingespielt wird, erscheint ein blaues Fenster: „Hey <Vorname>, wir führen gerade eine kurze Wartung durch. Versuche es in ein paar Minuten erneut. Danke für dein Verständnis.“ – mit „↻ Jetzt nochmal“; die App fragt alle 20 Sekunden nach und öffnet sich von selbst, sobald alles fertig ist. Oben die Kochmütze, darunter die Schätzung „⏱️ Dauert voraussichtlich noch etwa 1 Minute“. Wer schon in der App ist, merkt nichts (KC-CLUB-EINSPIELEN-FENSTER).
+- 📅 Nachricht als Termin übernehmen: Begrüßungen wie „Hallo zusammen“, „Hallo Klaus und Dieter“, „Moin“ oder „Liebe Köche“ werden nicht mehr zum Titel – es zählt der erste richtige Satz (KC-CLUB-NT-GRUSS).
+
+## 2.731.0 – 2026-10-28 – 🟢 Wer online ist, steht mit Namen im Kopf – antippen = Chat (KC-CLUB-ONLINE-NAMEN)
+Wunschliste #46, Wunsch Hansi („im mittleren Feld im Kopf steht die 18/1 – der Eintrag könnte etwas höher und darunter den Namen anzeigen, wer gerade online ist; sind es mehrere, als Laufschrift; wenn ich z. B. bei Klaus antippe, bin ich sofort im Chat mit ihm“):
+- Feld „Mitglieder“ oben: Zahl rückt etwas höher, darunter die Vornamen der gerade Online-Mitglieder als grüne Namensschilder (alphabetisch). Ein Name steht still, mehrere laufen als Laufschrift durch (nahtlos; Berühren hält an).
+- **Antippen eines Namens öffnet sofort den Chat** mit dieser Person (wie „💬 Nachricht“). Das Feld selbst öffnet wie bisher „Wer ist online?“ – der Zoom beim Antippen lässt Tipps auf Namen durch.
+- Gleiche Regeln wie die Zahl: nur mit frischem Online-Stand, nicht wenn ich selbst unsichtbar bin, ich selbst stehe nie drin. Sparmodus/„Bewegung reduzieren“: keine Bewegung, Namen seitlich wischbar.
+- Keine zusätzliche Server-Abfrage (Namen kommen schon mit dem Online-Abgleich); das Info-Feld zeichnet nur bei geänderter Liste neu.
+- Test `tests/online-namen.test.mjs`.
+
+## 2.730.0 – 2026-10-28 – 🎄 Weihnachtsbäckerei im Rezeptbuch: Kacheln, Sterne, Aufruf, Laufband (KC-CLUB-REZEPT-WEIHNACHT)
+Wunschliste #45, Wunsch Hansi („vorsichtig mit Weihnachtsbäckerei anfangen: in der Info-Laufschrift das Wort mit Fragezeichen antippen, dann Rezepte mit leckerem Foto als Kacheln oder Liste, darunter Zutaten, Herstellung und Sternebewertung; Aufruf ‚Hast du auch ein leckeres Rezept? Her damit!‘ – Hansi stellt es ein und alle können es ausprobieren“). Baut auf dem vorhandenen Club-Rezeptbuch auf; alles hängt an dessen Freigabe (⚙️ Funktionen freigeben → 📖 Rezeptbuch) – **bis Hansi „für alle“ wählt, sieht es nur der Admin**.
+- **Thema „🎄 Weihnachtsbäckerei“**: setzt nur der Admin im Rezept-Formular (Mitglieder tragen weiter frei ein, Hansi wählt aus, was ins Thema kommt). Knopf oben bei den Kategorien, sobald Rezepte im Thema sind (Admin in der Saison auch leer).
+- **Kacheln mit großem Foto** (zwei nebeneinander, in der einfachen Ansicht untereinander) oder **Liste** – umschaltbar, je Gerät gemerkt. Ohne Foto steht das Themen- bzw. Kategorie-Symbol.
+- **⭐ Wie hat’s dir geschmeckt?** 1–5 Sterne je Mitglied (gleichen Stern nochmal = zurücknehmen), **👩‍🍳 Hab ich nachgebacken**. Schnitt erst ab 3 Stimmen; das eigene Rezept bekommt keine eigenen Sterne.
+- **📣 Hast du auch ein leckeres Rezept? Her damit!** im Thema – zwei Wege: ✍️ selbst eintragen (Stichwort „Weihnachtsbäckerei“ vorbelegt, Kategorie Gebäck) oder 📷 Foto an Hansi (öffnet den Chat mit Hansi, Text vorbelegt, Foto vom Rezeptzettel und vom Gebäck mit 📎 anhängen).
+- **Info-Laufband** vom 1.11. bis 26.12.: „🎄 Weihnachtsbäckerei?“ – Antippen öffnet das Rezeptbuch beim Thema; zweite Zeile täglich abwechselnd „Neu: … von …“ / „Dein Rezept? Her damit!“. Mitglieder sehen es nur mit Rezepten im Thema (keine leere Seite).
+- Sparsam: Die Laufband-Lage merkt sich der Server 10 Min. (höchstens eine Abfrage je Server-Instanz, keine je App-Start); Sterne kommen mit der Rezeptliste (eine Abfrage beim Öffnen).
+- Datenbank: Migration `20261028_kc_club_v2730_rezept_thema_sterne.sql` (Spalte `kc_club_rezepte.thema`, Tabelle `kc_club_rezept_bewertung` mit RLS, Rechten nur für den Club-Server, gespiegelt und gesichert). **Erst die Migration einspielen, dann den Server** – ohne Migration läuft das Rezeptbuch wie bisher (ohne Thema/Sterne).
+- Regeln rein in `supabase/functions/kc-club/rezepte.js`; Test `tests/rezept-weihnacht.test.mjs`.
+
 ## 2.729.0 – 2026-10-28 – 🧑‍🍳 Twinkey hilft passend · 🔣 ruhigere Knopfreihe in Nachrichten
 - 🧑‍🍳 Twinkeys Hilfe passt jetzt zum Bildschirm: Ist ein Fenster offen, bezieht sich die Hilfe auf dieses Fenster statt auf den Bereich darunter. Videos nur, wenn sie wirklich passen; sonst der richtige Erklärtext – gibt es keinen, bietet Twinkey dort nichts an. Neue Erklärtexte für Notfall-Fahrplan, Admin-Register-Kacheln und Admin-Zentrale (KC-CLUB-HILFE-PASSEND).
 - 🔣 Nachrichten: Die Knöpfe oben (Kartei, Gruppe, Favoriten, Gemerkt, Ungelesen, Test, Anrufbeantworter) stehen als Symbol mit kleinem Wort darunter in einer Reihe – viel mehr Platz für die Chats. Umschaltbar unter ⚙️ → Darstellung „Knöpfe oben in Nachrichten“. „Gemerkt“ hat jetzt das Lesezeichen 🔖 (⭐ = Favoriten) (KC-CLUB-KOM-SYMBOLE).
