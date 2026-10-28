@@ -4522,7 +4522,9 @@ async function wochenberichtBauen() {
       ["Abstimmungen / Vorschläge", `${abst} / ${vors}`], ["Dienstwünsche (noch nicht übernommen)", zahl(dw)],
       ["Besuchstermine ohne Protokoll", schulung ? String(schulung.length) : "unbekannt"], ["Gesperrte Personen", zahl(sperren)]]],
   ];
-  const probleme = stufen.schwer + sicher.filter(([, v]) => v === false).length + (fehlg > 0 ? 1 : 0);
+  const wa = await waechterWochenAbschnitt().catch(() => null); // 2.726.0 KC-CLUB-WAECHTER-MELDEN: alle Wächter im Wochenbericht
+  abschnitte.splice(3, 0, ["🛡️ Wächter", wa ? wa.zeilen : [["Wächter", "❔ unbekannt"]]]);
+  const probleme = stufen.schwer + sicher.filter(([, v]) => v === false).length + (fehlg > 0 ? 1 : 0) + (wa?.probleme ?? 0);
   return { abschnitte, probleme, version: SERVER_VERSION };
 }
 async function wochenberichtSenden(erzwungen: string | null) {
@@ -6941,6 +6943,106 @@ async function snEmpfaenger(ich: Ich, an: any): Promise<string[]> {
   }
   return [...ids];
 }
+// 2.726.0 KC-CLUB-WAECHTER-MELDEN (Wunsch Hansi „alle Wächter sollen sich bei Gelb oder Rot melden und im Wochenbericht drinstehen“):
+// Bewertung EINMAL hier (die App zeigt sie nur an). Zeitpläne in UTC wie pg_cron/GitHub. Die App-Wächter (🐌 Schnecke) bewertet jedes Gerät selbst.
+const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: string; plan?: string; befund?: (d: any) => [string, string, string] | null; app?: (d: any) => [string, string, string] }[] = [
+  { id: "spiegel", sym: "🦉", name: "Spiegel-Wächter", job: "kc-db-mirror-watchdog", befund: (d) => { const x = d.spiegel?.watchdog; return x && x.status !== "ok" ? ["rot", "Kopie nicht frisch", x.msg || ""] : null; } },
+  { id: "abdeckung", sym: "🗺️", name: "Abdeckungs-Prüfer", job: "kc-db-mirror-watchdog", befund: (d) => { const x = d.spiegel?.coverage; return x && x.status !== "ok" ? ["gelb", "Tabelle ohne Regel", x.msg || ""] : null; } },
+  { id: "quellen", sym: "🩺", name: "Quellen-Prüfer", job: "kc-db-mirror-source-health", befund: (d) => { const x = d.spiegel?.source_health; return x && x.status !== "ok" ? ["gelb", "Regel verletzt", x.msg || ""] : null; } },
+  { id: "leseprobe", sym: "🔐", name: "Sicherungs-Prüfer", job: "kc-neon-backup-verify", befund: (d) => { const x = d.spiegel?.restore_test; return x && x.status !== "ok" ? ["rot", "Lese-Probe fehlgeschlagen", x.msg || ""] : null; } },
+  { id: "aussen", sym: "🔭", name: "Spiegel-Wächter (außen)", gh: "spiegel-waechter.yml", plan: "41 * * * *" },
+  { id: "wochenprobe", sym: "🗝️", name: "Wochenprobe", gh: "notfall-sicherung-lesen.yml", plan: "17 4 * * 0" },
+  { id: "zweitkopie", sym: "📦", name: "Zweitkopie", gh: "notfall-zweitkopie.yml", plan: "41 5 * * 1" },
+  { id: "schnittstelle", sym: "🐕", name: "Schnittstellen-Wächter", gh: "schnittstellen-waechter.yml", plan: "*/5 * * * *" },
+  { id: "last", sym: "🚦", name: "Last-Wächter", job: "kc-traffic-guard-15m", befund: (d) => { const x = d.last; return !x || x.stufe === "normal" ? null : [x.stufe === "critical" ? "rot" : "gelb", x.stufe === "critical" ? "sehr hohe Last" : "erhöhte Last", x.ursache || ""]; } },
+  { id: "betriebw", sym: "👁️", name: "Betriebs-Wächter", job: "kc-live-operations-watch-minute" },
+  { id: "systemcheck", sym: "🚨", name: "System-Check", job: "kc-system-check-auto-15m" },
+  { id: "messung", sym: "⚖️", name: "Mess-Stationen", job: "kc-club-messung-30min", befund: (d) => (d.mess?.api?.db_ms > 300 ? ["gelb", "Datenbank langsam", `Antwortzeit ${d.mess.api.db_ms} ms`] : null) },
+  { id: "zugang", sym: "🛂", name: "Zugangs-Wächter", job: "kicc-access-watch-minute" },
+  { id: "versionen", sym: "🧭", name: "Versions-Wächter", app: (d) => { // gelb nur, wenn eine GERADE OFFENE App (letzte 30 Min.) noch alt ist – ältere Apps von Leuten, die länger nicht drin waren, sind normal
+      const zahl = (v: any) => Object.entries(v || {}).filter(([k]) => k !== SERVER_VERSION).reduce((n, [, x]) => n + Number(x), 0), jetzt = zahl(d.versionen_jetzt), woche = zahl(d.versionen);
+      return jetzt ? ["gelb", `${jetzt} offene App${jetzt === 1 ? "" : "s"} mit alter Version`, "Diese App hat das Update nicht geholt – einmal schließen und neu öffnen hilft."]
+        : ["gruen", woche ? `aktuell (${woche} noch nicht wieder geöffnet)` : "alle aktuell", woche ? `${woche} Mitglieder waren seit dem Update nicht in der App – sie bekommen die neue Version beim nächsten Öffnen.` : ""]; } },
+];
+function wCronFeld(f: string, w: number, min: number, max: number) {
+  return f.split(",").some((t) => { const [b, st] = t.split("/"), sch = Number(st || 1); let a = min, e = max;
+    if (b !== "*") { const [x, y] = b.split("-").map(Number); a = x; e = y ?? (st ? max : x); }
+    return w >= a && w <= e && (w - a) % sch === 0; });
+}
+function wCronLetzter(plan: string, vor: number): number | null { // letzter geplanter Zeitpunkt ≤ vor (höchstens 8 Tage zurück)
+  const [mi, st, tg, mo, wt] = plan.split(/\s+/), d = new Date(vor); d.setUTCSeconds(0, 0);
+  for (let i = 0; i < 11520; i++) {
+    if (wCronFeld(mi, d.getUTCMinutes(), 0, 59) && wCronFeld(st, d.getUTCHours(), 0, 23) && wCronFeld(tg, d.getUTCDate(), 1, 31) && wCronFeld(mo, d.getUTCMonth() + 1, 1, 12) && wCronFeld(wt, d.getUTCDay(), 0, 6)) return d.getTime();
+    d.setUTCMinutes(d.getUTCMinutes() - 1);
+  }
+  return null;
+}
+function waechterBewerten(d: any): Record<string, [string, string, string]> {
+  const out: Record<string, [string, string, string]> = {};
+  for (const w of WAECHTER) {
+    if (w.app) { out[w.id] = w.app(d); continue; }
+    const j = w.job ? d.jobs?.[w.job] : null, g = w.gh ? d.github?.[w.gh] : null;
+    const l = j ? { letzt: j.letzt, ok: j.status === "succeeded", aktiv: j.aktiv, plan: j.plan, ok24: Number(j.ok24 || 0), fehler24: Number(j.fehler24 || 0), msg: j.msg || "" }
+      : g ? { letzt: g.letzt, ok: g.ergebnis === "success", aktiv: true, plan: w.plan!, ok24: Number(g.ok24 || 0), fehler24: Number(g.fehler24 || 0), msg: "" } : null;
+    if (!l) { out[w.id] = ["grau", "unbekannt", w.gh ? "GitHub hat gerade nicht geantwortet." : "Zeitplan nicht gefunden."]; continue; }
+    if (!l.aktiv) { out[w.id] = ["gelb", "abgeschaltet", "Der Zeitplan ist ausgeschaltet."]; continue; }
+    const soll = wCronLetzter(l.plan, Date.now() - (w.gh ? 90 : 5) * 60000); // GitHub startet geplante Läufe oft verspätet
+    if (!l.letzt || (soll && Date.parse(l.letzt) < soll - 60000)) { out[w.id] = ["rot", "überfällig", soll ? `Der geplante Lauf von ${fZeit.format(new Date(soll))} Uhr fehlt.` : "Noch nie gelaufen."]; continue; }
+    if (!l.ok) { out[w.id] = ["rot", "letzter Lauf fehlgeschlagen", l.msg]; continue; }
+    const b = w.befund?.(d); if (b) { out[w.id] = b; continue; }
+    if (l.fehler24 && l.fehler24 * 20 >= l.ok24) { out[w.id] = ["gelb", `${l.fehler24} Aussetzer in 24 Std.`, "Der letzte Lauf war wieder in Ordnung."]; continue; }
+    out[w.id] = l.fehler24 ? ["gruen", `in Ordnung (${l.fehler24} Aussetzer)`, `${l.fehler24} von ${l.fehler24 + l.ok24} Läufen in 24 Std. hatten einen Aussetzer – der letzte war in Ordnung.`] : ["gruen", "in Ordnung", ""];
+  }
+  return out;
+}
+async function waechterLage(): Promise<any> {
+  const { data, error } = await db.rpc("kc_club_waechter_lage");
+  if (error || !data) throw new Fehler("Wächter-Lage nicht lesbar.", 500);
+  const d: any = { ...(data as any), github: await waechterGithub() };
+  d.bewertung = waechterBewerten(d); return d;
+}
+// Alle 15 Min. (Wartung): meldet sich ein Wächter neu mit Gelb/Rot (oder steigt von Gelb auf Rot) → Push + Mail an die Admins (Weg „club_fehler“);
+// wird er wieder grün → eine Entwarnung. Gleicher Zustand meldet sich nach 12 Std. noch einmal (Erinnerung). Stand im Protokoll „waechter_stand“.
+// Grau (unbekannt, z. B. GitHub antwortet nicht) meldet nichts – sonst gäbe es bei jedem GitHub-Schluckauf Alarm.
+async function waechterMeldenLauf() {
+  const d = await waechterLage(), bew = d.bewertung as Record<string, [string, string, string]>;
+  const { data: alt0 } = await db.from("kc_club_protokoll").select("details").eq("aktion", "waechter_stand").order("zeit", { ascending: false }).limit(1);
+  const alt: Record<string, { f: string; seit: string; gemeldet: string | null; gf?: string | null }> = (alt0?.[0]?.details as any)?.stand ?? {};
+  const jetztIso = new Date().toISOString(), neu: typeof alt = {}, melden: string[] = [], wieder: string[] = [];
+  const rang = (f?: string | null) => (f === "rot" ? 2 : f === "gelb" ? 1 : 0);
+  for (const w of WAECHTER) {
+    const [f, t, b] = bew[w.id] ?? ["grau", "", ""], a = alt[w.id];
+    if (f === "grau") { if (a) neu[w.id] = a; continue; } // unbekannt: alten Stand behalten
+    // gf = zuletzt GEMELDETE Stufe. Gemeldet wird erst, wenn Gelb/Rot bei zwei Prüfungen hintereinander gilt (≥ 14 Min.) – kein Alarm bei kurzem Flackern.
+    const seit = a?.f === f ? a.seit : jetztIso, bestaetigt = Date.now() - Date.parse(seit) >= 14 * 60000;
+    const erinnern = rang(f) > 0 && rang(f) === rang(a?.gf) && a?.gemeldet && Date.now() - Date.parse(a.gemeldet) > 12 * 3600000;
+    neu[w.id] = { f, seit, gemeldet: a?.gemeldet ?? null, gf: a?.gf ?? null };
+    if (rang(f) > 0 && bestaetigt && (rang(f) > rang(a?.gf) || erinnern)) { melden.push(`${f === "rot" ? "🔴" : "🟡"} ${w.sym} ${w.name}: ${t}${b ? ` – ${b.slice(0, 120)}` : ""}`); neu[w.id].gemeldet = jetztIso; neu[w.id].gf = f; }
+    else if (rang(f) === 0 && rang(a?.gf) > 0) { wieder.push(`✅ ${w.sym} ${w.name}: wieder in Ordnung`); neu[w.id].gemeldet = null; neu[w.id].gf = null; }
+  }
+  const geaendert = JSON.stringify(neu) !== JSON.stringify(alt);
+  if (melden.length || wieder.length) {
+    const ids = await adminIds(), ruhe = await ruhendePersonen(ids), an = ids.filter((id) => !ruhe.has(id)), rot = melden.some((x) => x.startsWith("🔴"));
+    if (!an.length) return { wartet: "Ruhezeit" }; // Stand NICHT speichern → nach der Ruhezeit wird gemeldet (wie das Fehlerprotokoll)
+    const titel = melden.length ? `${rot ? "🔴" : "🟡"} Wächter: ${melden.length} ${melden.length === 1 ? "meldet sich" : "melden sich"}` : `✅ Wächter: ${wieder.length === 1 ? "wieder alles in Ordnung" : `${wieder.length} wieder in Ordnung`}`;
+    const zeilen = [...melden, ...wieder];
+    await routerSenden("club_fehler", an, { titel, kurz: zeilen.join(" · ").slice(0, 180), betreff: `Köcheclub-App – ${titel.replace(/^\S+ /, "")}`,
+      text: `Die Wächter melden:\n\n${zeilen.join("\n")}\n\nEinzelheiten: Admin → 🛡️ Wächter\n${APP_URL}`, url: APP_URL }, `club-waechter:${jetztIso.slice(0, 16)}`);
+  }
+  if (geaendert || melden.length || wieder.length) await protokoll(null, "waechter_stand", { stand: neu, gemeldet: melden.length, entwarnt: wieder.length });
+  return { gemeldet: melden.length, entwarnt: wieder.length };
+}
+// Wochenbericht: Zustand jedes Wächters jetzt + wie oft er sich in der Woche gemeldet hat
+async function waechterWochenAbschnitt(): Promise<{ zeilen: [string, string][]; probleme: number }> {
+  const d = await waechterLage(), bew = d.bewertung as Record<string, [string, string, string]>;
+  const { data: st } = await db.from("kc_club_protokoll").select("details").eq("aktion", "waechter_stand").gte("zeit", new Date(Date.now() - 7 * 86400000).toISOString()).limit(700);
+  const gemeldet = new Map<string, Set<string>>(); // je Wächter: verschiedene Meldezeitpunkte der Woche = wie oft er sich gemeldet hat
+  for (const x of st ?? []) for (const [id, v] of Object.entries(((x as any).details?.stand ?? {}) as Record<string, any>)) if (v?.gemeldet && Date.parse(v.gemeldet) > Date.now() - 7 * 86400000) (gemeldet.get(id) ?? gemeldet.set(id, new Set()).get(id)!).add(v.gemeldet);
+  const zeichen = { gruen: "✅", gelb: "🟡", rot: "🔴", grau: "❔" } as Record<string, string>;
+  const zeilen: [string, string][] = WAECHTER.map((w) => { const [f, t] = bew[w.id] ?? ["grau", "unbekannt"], n = gemeldet.get(w.id)?.size ?? 0;
+    return [`${w.sym} ${w.name}`, `${zeichen[f] ?? "❔"} ${t}${n ? ` · ${n}× gemeldet` : ""}`]; });
+  return { zeilen, probleme: Object.values(bew).filter(([f]) => f === "rot").length };
+}
 // 2.726.0 KC-CLUB-WAECHTER: letzte Läufe der GitHub-Wächter (öffentliches Repository, ohne Schlüssel) – 10 Min. gemerkt, damit das Öffnen
 // der Kachel GitHub nicht jedes Mal fragt (öffentliche Grenze 60 Anfragen/Std.). Fehler → leer, die Kachel zeigt dann „unbekannt“.
 const WAECHTER_GH = ["schnittstellen-waechter.yml", "spiegel-waechter.yml", "notfall-sicherung-lesen.yml", "notfall-zweitkopie.yml"];
@@ -7994,6 +8096,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (stuendlich) await cjWartung().catch((e) => console.error("clubjahr", String(e))); // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE
       await aeUebernahmeMelden().catch((e) => console.error("aenderung uebernahme", String(e)));
       await aeFreigabeMelden().catch((e) => console.error("aenderung freigabe", String(e))); // KC-CLUB-AE-FREIGABE-PUSH (2.88.0)
+      await waechterMeldenLauf().catch((e) => console.error("waechter melden", String(e))); // 2.726.0 KC-CLUB-WAECHTER-MELDEN (alle 15 Min.)
       if (stuendlich) await wochenberichtLauf().catch((e) => console.error("wochenbericht", String(e))); // KC-CLUB-WOCHENBERICHT (2.23.81)
       if (stuendlich) await dbWarnungLauf().catch((e) => console.error("db warnung", String(e))); // KC-CLUB-DB-AUFRAEUMEN (2.24.7)
       if (stuendlich) await ablagekorbAufraeumen().catch((e) => console.error("ablagekorb aufraeumen", String(e))); // 2.511.0 KC-CLUB-ABLAGEKORB
@@ -17220,9 +17323,7 @@ Köcheclub-App`,
 
       case "waechter_lage": { // 2.726.0 KC-CLUB-WAECHTER: alle Wächter auf einen Blick (nur Admin, nur beim Öffnen der Kachel)
         nurAdmin(ich);
-        const { data, error } = await db.rpc("kc_club_waechter_lage");
-        if (error) throw new Fehler("Wächter-Lage nicht lesbar.", 500);
-        return json({ ...(data as any), github: await waechterGithub() });
+        return json(await waechterLage());
       }
       case "admin_lage": {
         nurAdmin(ich);

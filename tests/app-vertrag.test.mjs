@@ -7763,6 +7763,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.equal((programm.match(/^\s*\{ id: "[a-z]+", gruppe: "(sicherung|betrieb|schutz|app)", sym: /gm) || []).length, 15, "15 Wächter");
   assert.ok(/\["waechter", "🛡️", "Wächter", "ueb"\]/.test(programm) && /if \(id === "waechter"\) return wchStart\(\);/.test(programm), "Kachel im Admin");
   assert.match(programm, /\/\^https:\\\/\\\/github\\\.com\\\/\/\.test\(g\.link/, "nur GitHub-Links");
+  // Melden + Wochenbericht
+  assert.match(server, /await waechterMeldenLauf\(\)\.catch\(/, "Wartung prüft die Wächter");
+  assert.match(server, /bestaetigt = Date\.now\(\) - Date\.parse\(seit\) >= 14 \* 60000/, "erst nach zwei Prüfungen melden");
+  assert.match(server, /if \(f === "grau"\) \{ if \(a\) neu\[w\.id\] = a; continue; \}/, "unbekannt meldet nichts");
+  assert.match(server, /routerSenden\("club_fehler", an, \{ titel,/, "Push + Mail an die Admins");
+  assert.match(server, /abschnitte\.splice\(3, 0, \["🛡️ Wächter"/, "Wächter im Wochenbericht");
+  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 14, "14 Wächter auf dem Server (🐌 nur im Gerät)");
+  assert.match(programm, /return d\.bewertung\?\.\[w\.id\] \|\| \["grau", "unbekannt", ""\];/, "App zeigt die Server-Bewertung");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 

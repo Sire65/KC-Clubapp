@@ -26249,67 +26249,59 @@ const WCH_LISTE = [
   // 🗄️ Datensicherung
   { id: "spiegel", gruppe: "sicherung", sym: "🦉", name: "Spiegel-Wächter", kurz: "Kopie auf Neon frisch?", job: "kc-db-mirror-watchdog",
     beobachtet: "ob jede gespiegelte Tabelle auf Neon frisch und fehlerfrei ist", grenze: "höchstens 6 Std. 30 Min. alt, keine Abweichung", wo: "Datenbank (Zeitplan)",
-    befund: (d) => { const s = d.spiegel?.watchdog; return s && s.status !== "ok" ? ["rot", "Kopie nicht frisch", s.msg || ""] : null; }, ergebnis: (d) => d.spiegel?.watchdog?.msg,
-    meldet: "niemandem von selbst – schreibt ins Spiegel-Protokoll (hier und unter 📊 Lage zu sehen). Einen ausgefallenen Lauf holt der Spiegel-Wächter von außen (🔭) nach.",
+    meldet: "Schreibt ins Spiegel-Protokoll; einen ausgefallenen Lauf holt der Spiegel-Wächter von außen (🔭) nach.",
     tun: "„🪞 Spiegel jetzt anstoßen“ (Knopf unten)", seit: "September 2026", knopf: () => '<button class="knopf" onclick="adminSpiegeln()">🪞 Spiegel jetzt anstoßen</button>' },
   { id: "abdeckung", gruppe: "sicherung", sym: "🗺️", name: "Abdeckungs-Prüfer", kurz: "Jede Tabelle gesichert?", job: "kc-db-mirror-watchdog",
     beobachtet: "ob jede Tabelle eine Spiegel-Regel hat; neue Tabellen nimmt er selbst auf", grenze: "keine Tabelle ohne Regel", wo: "Datenbank (läuft mit dem Spiegel-Wächter)",
-    befund: (d) => { const s = d.spiegel?.coverage; return s && s.status !== "ok" ? ["gelb", "Tabelle ohne Regel", s.msg || ""] : null; }, ergebnis: (d) => d.spiegel?.coverage?.msg,
-    meldet: "niemandem von selbst – verdächtige neue Tabellen (z. B. mit Geheimnis- oder Standort-Spalten) hält er an und vermerkt „Admin-Freigabe nötig“ im Protokoll.",
+    meldet: "Nimmt neue Tabellen selbst auf; verdächtige (z. B. mit Geheimnis- oder Standort-Spalten) hält er an und vermerkt „Admin-Freigabe nötig“.",
     tun: "Claude bitten, die angehaltene Tabelle zu prüfen und freizugeben", seit: "01.10.2026" },
   { id: "quellen", gruppe: "sicherung", sym: "🩺", name: "Quellen-Prüfer", kurz: "Spiegel-Regeln eingehalten?", job: "kc-db-mirror-source-health",
     beobachtet: "ob alle Tabellen nach den Datenschutz-Regeln gespiegelt werden (keine Roh-Kopie)", grenze: "alle Tabellen frisch", wo: "Datenbank (Zeitplan)",
-    befund: (d) => { const s = d.spiegel?.source_health; return s && s.status !== "ok" ? ["gelb", "Regel verletzt", s.msg || ""] : null; }, ergebnis: (d) => d.spiegel?.source_health?.msg,
-    meldet: "niemandem von selbst – schreibt ins Spiegel-Protokoll.", tun: "Claude bitten nachzusehen" },
+    meldet: "Schreibt ins Spiegel-Protokoll.", tun: "Claude bitten nachzusehen" },
   { id: "leseprobe", gruppe: "sicherung", sym: "🔐", name: "Sicherungs-Prüfer", kurz: "Nachtsicherung lesbar?", job: "kc-neon-backup-verify",
     beobachtet: "ob die neueste Sicherung auf Neon entschlüsselt werden kann und vollständig ist (Zeilen, Prüfsummen)", grenze: "Lese-Probe bestanden", wo: "Datenbank → Prüf-Funktion auf Neon",
-    befund: (d) => { const s = d.spiegel?.restore_test; return s && s.status !== "ok" ? ["rot", "Lese-Probe fehlgeschlagen", s.msg || ""] : null; },
     ergebnis: (d) => [d.spiegel?.restore_test && `Lese-Probe ${wchUhr(d.spiegel.restore_test.zeit)}: ${d.spiegel.restore_test.status === "ok" ? "bestanden" : "fehlgeschlagen"}`, d.spiegel?.backup && `letzte Sicherung ${wchUhr(d.spiegel.backup.zeit)}`].filter(Boolean).join(" · "),
-    meldet: "niemandem von selbst – schreibt das Ergebnis ins Protokoll.", tun: "Claude bitten, die Sicherung neu zu prüfen" },
+    meldet: "Schreibt das Ergebnis der Lese-Probe ins Protokoll.", tun: "Claude bitten, die Sicherung neu zu prüfen" },
   { id: "aussen", gruppe: "sicherung", sym: "🔭", name: "Spiegel-Wächter (außen)", kurz: "Prüft von GitHub aus", gh: "spiegel-waechter.yml", plan: "41 * * * *",
     beobachtet: "von außen, ob die Spiegelung pünktlich gelaufen ist – auch wenn Supabase selbst nichts mehr anstößt", grenze: "letzter Lauf höchstens 6 Std. 30 Min. alt", wo: "GitHub (Ablauf „Spiegel-Wächter“)",
-    meldet: "niemandem per Nachricht – stößt eine überfällige Spiegelung selbst an. Hinweis: ein Fehler beim Fragen lässt den Lauf grün (keine Mail).", tun: "„🪞 Spiegel jetzt anstoßen“ beim Spiegel-Wächter", seit: "04.10.2026" },
+    meldet: "Stößt eine überfällige Spiegelung selbst an. Hinweis: ein Fehler beim Fragen lässt den GitHub-Lauf grün.", tun: "„🪞 Spiegel jetzt anstoßen“ beim Spiegel-Wächter", seit: "04.10.2026" },
   { id: "wochenprobe", gruppe: "sicherung", sym: "🗝️", name: "Wochenprobe", kurz: "Ohne Supabase lesbar?", gh: "notfall-sicherung-lesen.yml", plan: "17 4 * * 0",
     beobachtet: "ob eine Sicherung mit der hinterlegten Schlüssel-Kopie (Cloudflare-Tresor) entschlüsselt werden kann – also auch, wenn Supabase ganz ausfällt", grenze: "Prüfsumme bestätigt", wo: "GitHub (Ablauf „Notfall-Sicherung lesen“)",
-    meldet: "dir per E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
+    meldet: "Zusätzlich E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
   { id: "zweitkopie", gruppe: "sicherung", sym: "📦", name: "Zweitkopie", kurz: "Kopie bei Cloudflare da?", gh: "notfall-zweitkopie.yml", plan: "41 5 * * 1",
     beobachtet: "ob die verschlüsselte Zweitkopie bei Cloudflare abgelegt, zurückgelesen und lesbar ist (5 Wochen aufbewahrt)", grenze: "Prüfsumme gleich, Probe-Tabelle lesbar", wo: "GitHub (Ablauf „Notfall-Zweitkopie“)",
-    meldet: "dir per E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
+    meldet: "Zusätzlich E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
   // ⚡ Betrieb
   { id: "schnittstelle", gruppe: "betrieb", sym: "🐕", name: "Schnittstellen-Wächter", kurz: "Antwortet die Datenbank?", gh: "schnittstellen-waechter.yml", plan: "*/5 * * * *",
     beobachtet: "von außen, ob Supabase und die Datenbank-Schnittstelle antworten (unter 10 Sekunden, 3 Versuche)", grenze: "Antwort unter 10 Sekunden", wo: "GitHub (Ablauf „Schnittstellen-Wächter“)",
-    meldet: "startet Supabase bei einem Hänger selbst neu (höchstens 2× pro Stunde); bei rotem Lauf E-Mail von GitHub an dich.", tun: "Admin → 🗄️ Supabase → Neustart-Knopf", seit: "11.10.2026 (nach dem Ausfall 04:21–04:46 Uhr)" },
+    meldet: "Startet Supabase bei einem Hänger selbst neu (höchstens 2× pro Stunde); zusätzlich E-Mail von GitHub bei rotem Lauf.", tun: "Admin → 🗄️ Supabase → Neustart-Knopf", seit: "11.10.2026 (nach dem Ausfall 04:21–04:46 Uhr)" },
   { id: "last", gruppe: "betrieb", sym: "🚦", name: "Last-Wächter", kurz: "Zu viele Abfragen?", job: "kc-traffic-guard-15m",
     beobachtet: "wie viele Datenbank-Abfragen in 15 Minuten kommen – und was vermutlich dahintersteckt", grenze: "deutlich über dem Üblichen = Warnung", wo: "Datenbank (Zeitplan) → Server-Funktion",
-    befund: (d) => { const s = d.last; return !s || s.stufe === "normal" ? null : [s.stufe === "critical" ? "rot" : "gelb", s.stufe === "critical" ? "sehr hohe Last" : "erhöhte Last", s.ursache || ""]; },
     ergebnis: (d) => d.last ? `${wchUhr(d.last.zeit)}: ${Number(d.last.abfragen).toLocaleString("de-DE")} Abfragen in 15 Min. (üblich ${Number(d.last.ueblich).toLocaleString("de-DE")}) · ${d.last_warn24 || 0}× erhöht in 24 Std.` : "",
-    meldet: "zeigt bei hoher Last eine gelbe Hinweis-Box auf der Startseite und im Admin-Bereich; keine Push oder E-Mail.", tun: "Neues nur um 12 und 20 Uhr einspielen; Ursache steht oben" },
+    meldet: "Zeigt bei hoher Last eine gelbe Hinweis-Box auf der Startseite und im Admin-Bereich.", tun: "Neues nur um 12 und 20 Uhr einspielen; Ursache steht oben" },
   { id: "betriebw", gruppe: "betrieb", sym: "👁️", name: "Betriebs-Wächter", kurz: "Dienste lebendig?", job: "kc-live-operations-watch-minute",
     beobachtet: "ob die Programme sich melden (Kasse, PC-Manager …), Warteschlangen, Push- und Mail-Wege, Versionen", grenze: "jede Änderung des Zustands", wo: "Datenbank (Zeitplan) → System-Check",
-    meldet: "dir per Push und/oder E-Mail über den Communicator – nur wenn sich der Zustand ändert (Wege: Einstellungen des System-Checks).", tun: "unter 📊 Lage nachsehen, welcher Dienst betroffen ist" },
+    meldet: "Zusätzlich eigene Push/E-Mail über den Communicator, wenn sich der Zustand eines Dienstes ändert.", tun: "unter 📊 Lage nachsehen, welcher Dienst betroffen ist" },
   { id: "systemcheck", gruppe: "betrieb", sym: "🚨", name: "System-Check", kurz: "Gesamtprüfung", job: "kc-system-check-auto-15m",
     beobachtet: "die ganze Technik in einer Prüfung (Datenbank, Server, Dienste); doppelte Alarme werden unterdrückt", grenze: "Fehler oder Warnung", wo: "Datenbank (Zeitplan) → System-Check",
-    meldet: "dir per Push und/oder E-Mail über den Communicator bei Fehler, Warnung und Entwarnung.", tun: "Meldung lesen, dann unter 📊 Lage nachsehen" },
+    meldet: "Zusätzlich eigene Push/E-Mail über den Communicator bei Fehler, Warnung und Entwarnung.", tun: "Meldung lesen, dann unter 📊 Lage nachsehen" },
   { id: "messung", gruppe: "betrieb", sym: "⚖️", name: "Mess-Stationen", kurz: "Tempo und Größe", job: "kc-club-messung-30min",
     beobachtet: "Antwortzeit, Verbindungen, Netzfehler und Größe der Datenbank (dazu alle 30 Min. die Last je Bereich)", grenze: "Antwortzeit über 300 ms = auffällig", wo: "Datenbank (2 Zeitpläne)",
-    befund: (d) => (d.mess?.api?.db_ms > 300 ? ["gelb", "Datenbank langsam", `Antwortzeit ${d.mess.api.db_ms} ms`] : null),
     ergebnis: (d) => { const a = d.mess?.api, b = d.mess?.db; return [a && `Antwortzeit ${a.db_ms} ms`, b && `${b.verbindungen} Verbindungen`, b && `${b.net_fehler} Netzfehler`, b?.bytes && `Datenbank ${Math.round(b.bytes / 1048576)} MB`].filter(Boolean).join(" · "); },
-    meldet: "niemandem – misst nur; die Werte stehen unter 📊 Lage und 📈 Verlauf.", tun: "–" },
+    meldet: "Die Werte stehen auch unter 📊 Lage und 📈 Verlauf.", tun: "–" },
   // 🔒 Sicherheit
   { id: "zugang", gruppe: "schutz", sym: "🛂", name: "Zugangs-Wächter", kurz: "Fremde Anmeldung?", job: "kicc-access-watch-minute",
     beobachtet: "neue Geräte, neue Konten und viele Anmeldungen kurz hintereinander", grenze: "jedes neue Gerät oder Konto", wo: "Datenbank (Zeitplan)",
-    meldet: "dir per Push und E-Mail (an die eingetragenen Betreuer des System-Checks).", tun: "Meldung prüfen: warst du es selbst? Sonst Zugang sperren" },
+    meldet: "Zusätzlich eigene Push/E-Mail an die Betreuer bei neuem Gerät, neuem Konto oder vielen Anmeldungen.", tun: "Meldung prüfen: warst du es selbst? Sonst Zugang sperren" },
   // 📱 In der App
   { id: "schnecke", gruppe: "app", sym: "🐌", name: "Schnecken-Wächter", kurz: "Netz am Handy langsam?",
     app: () => (typeof SCHNECKE !== "undefined" && SCHNECKE.an ? ["gelb", "Netz gerade langsam", SCHNECKE.grund || ""] : ["gruen", "Netz schnell", ""]),
     beobachtet: "die letzten Antwortzeiten auf diesem Handy und die Netz-Angabe des Handys", grenze: "2 von 3 Anfragen langsam", takt: "laufend bei jeder Anfrage", wo: "in der App (jedes Gerät für sich)",
     meldet: "zeigt oben in der App die kleine Schnecke – nur auf diesem Gerät.", tun: "Geduld, nicht mehrfach tippen; WLAN/Mobilfunk prüfen" },
   { id: "versionen", gruppe: "app", sym: "🧭", name: "Versions-Wächter", kurz: "Alle auf neuem Stand?",
-    app: (d) => { if (!d) return ["grau", "noch nicht geladen", ""]; const v = d.versionen || {}, alt = Object.entries(v).filter(([k]) => k !== APP_VERSION).reduce((n, [, x]) => n + x, 0);
-      return alt ? ["gelb", `${alt} mit älterer Version`, "Die App holt die neue Version beim nächsten Öffnen selbst."] : ["gruen", "alle aktuell", ""]; },
     ergebnis: (d) => Object.entries(d?.versionen || {}).sort((a, b) => b[0].localeCompare(a[0], "de", { numeric: true })).map(([k, n]) => `${k}: ${n}`).join(" · "),
-    beobachtet: "welche App-Version die Mitglieder der letzten 7 Tage haben", grenze: `aktuell ist ${APP_VERSION}`, takt: "beim Start jeder App", wo: "in der App + Zugangsliste",
-    meldet: "niemandem – jede App zeigt „Update“ und holt die neue Version selbst.", tun: "bei Bedarf eine Startnachricht „App einmal neu öffnen“" },
+    beobachtet: "ob eine gerade offene App (letzte 30 Min.) noch eine alte Version hat – und wer seit dem Update nicht in der App war (7 Tage)", grenze: `offene Apps auf ${APP_VERSION}`, takt: "beim Start jeder App", wo: "in der App + Zugangsliste",
+    meldet: "Jede App zeigt „Update“ und holt die neue Version selbst.", tun: "bei Bedarf eine Startnachricht „App einmal neu öffnen“" },
 ];
 function wchCronFeld(f, w, min, max) { // passt Wert w zum Feld f? („*“, „4,10,16“, „11-22“, „*/15“, „2-59/5“)
   return f.split(",").some((t) => { const [b, st] = t.split("/"), s = Number(st || 1); let a = min, e = max;
@@ -26336,18 +26328,10 @@ function wchLauf(w, d) { // einheitlich: { letzt, ok, plan, verlauf, ok24, fehle
   if (w.gh) { const g = d?.github?.[w.gh]; if (!g) return null; return { letzt: g.letzt, ok: g.ergebnis === "success", aktiv: true, plan: w.plan, verlauf: g.verlauf || "", ok24: g.ok24, fehler24: g.fehler24, link: /^https:\/\/github\.com\//.test(g.link || "") ? g.link : null }; }
   return null;
 }
-function wchStatus(w, d) { // [farbe, kurzer Zustand, ausführlicher Befund]
-  if (w.app) return w.app(d);
+function wchStatus(w, d) { // [farbe, kurzer Zustand, ausführlicher Befund] – bewertet wird auf dem Server (gleiche Regeln wie die Meldungen), nur 🐌 im Gerät
+  if (w.app && w.id === "schnecke") return w.app(d);
   if (!d) return ["grau", "noch nicht geladen", ""];
-  const l = wchLauf(w, d); if (!l) return ["grau", "unbekannt", w.gh ? "GitHub hat gerade nicht geantwortet." : "Zeitplan nicht gefunden."];
-  if (!l.aktiv) return ["gelb", "abgeschaltet", "Der Zeitplan ist ausgeschaltet."];
-  const soll = wchCronSuche(l.plan, Date.now() - (w.gh ? 90 : 5) * 60000, -1); // GitHub startet geplante Läufe oft verspätet
-  if (!l.letzt || (soll && Date.parse(l.letzt) < soll - 60000)) return ["rot", "überfällig", `Der Lauf für ${wchUhr(soll?.toISOString())} fehlt.`];
-  if (!l.ok) return ["rot", "letzter Lauf fehlgeschlagen", l.msg || ""];
-  const befund = w.befund ? w.befund(d) : null; if (befund) return befund;
-  if (l.fehler24 && l.fehler24 * 20 >= (l.ok24 || 0)) return ["gelb", `${l.fehler24} Aussetzer in 24 Std.`, "Der letzte Lauf war wieder in Ordnung."];
-  if (l.fehler24) return ["gruen", `in Ordnung (${l.fehler24} Aussetzer)`, `${l.fehler24} von ${l.fehler24 + (l.ok24 || 0)} Läufen in 24 Std. hatten einen Aussetzer – der letzte war in Ordnung.`]; // einzelner Aussetzer bei vielen Läufen: kein Gelb
-  return ["gruen", "in Ordnung", ""];
+  return d.bewertung?.[w.id] || ["grau", "unbekannt", ""];
 }
 async function wchStart(neu) {
   if (!WCH.daten || neu || Date.now() - WCH.zeit > 120000) {
@@ -26380,11 +26364,11 @@ function wchInfo(id) {
     ${befund ? `<p class="wch-befund">${esc(befund)}</p>` : ""}
     <dl class="wch-dl">
       ${zeile("Beobachtet", esc(w.beobachtet))}${zeile("Grenze", esc(w.grenze || ""))}${zeile("Läuft", esc(w.takt || wchTaktText(l?.plan)))}
-      ${zeile("Wo", esc(w.wo))}${zeile("Letzter Lauf", l?.letzt ? `${esc(wchUhr(l.letzt))} ${l.ok ? "✅" : "❌"}` : w.app ? "" : "–")}
+      ${zeile("Wo", esc(w.wo))}${zeile("Letzter Lauf", l?.letzt ? `${esc(wchUhr(l.letzt))} ${l.ok ? "✅" : "❌"}` : w.app || w.takt ? "" : "–")}
       ${zeile("Nächster Lauf", naechst ? esc(wchUhr(naechst.toISOString())) : "")}
       ${zeile("Letzte 24 Std.", l && l.ok24 != null ? `${l.ok24} Läufe in Ordnung${l.fehler24 ? `, <b>${l.fehler24} fehlgeschlagen</b>` : ", keiner fehlgeschlagen"}` : "")}
       ${zeile("Ergebnis", w.ergebnis ? esc(String(w.ergebnis(d) || "").replace(/^(Mirror-Watchdog|Privacy-Spiegelung|Spiegel-Abdeckung) OK: /, "")) : "")}
-      ${zeile("Meldet sich bei", esc(w.meldet))}${zeile("Bei Rot", esc(w.tun || ""))}${zeile("Seit", esc(w.seit || ""))}
+      ${zeile("Meldet sich bei", w.id === "schnecke" ? esc(w.meldet) : `<b>dir per Push und E-Mail</b>, sobald er gelb oder rot wird (geprüft alle 15 Min., Erinnerung nach 12 Std.), und noch einmal, wenn er wieder grün ist.${w.meldet ? `<br><span class="hinweis">${esc(w.meldet)}</span>` : ""}`)}${zeile("Bei Rot", esc(w.tun || ""))}${zeile("Seit", esc(w.seit || ""))}
     </dl>${balken ? `<p class="hinweis wch-balken-titel">Letzte Läufe (links alt, rechts neu): ▮ grün = in Ordnung, ▮ rot = Fehler</p>${balken}` : ""}
     <div class="knoepfe wch-knoepfe">${w.knopf ? w.knopf(d) : ""}${l?.link ? `<a class="knopf" href="${esc(l.link)}" target="_blank" rel="noopener">Lauf auf GitHub ↗</a>` : ""}<button class="knopf haupt" onclick="$('wchInfoBlatt').remove()">Zurück</button></div>`;
   blattAuf("wchInfoBlatt", html).classList.add("wch-blatt");

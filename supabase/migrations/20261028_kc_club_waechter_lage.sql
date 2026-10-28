@@ -40,7 +40,10 @@ select jsonb_build_object(
      'api', (select jsonb_build_object('zeit', m.zeit, 'db_ms', m.db_ms) from public.kc_club_messwerte m where m.quelle = 'api' order by m.zeit desc limit 1),
      'db', (select jsonb_build_object('zeit', m.zeit, 'verbindungen', m.verbindungen, 'net_ok', m.net_ok, 'net_fehler', m.net_fehler, 'bytes', m.db_bytes) from public.kc_club_messwerte m where m.quelle = 'db' order by m.zeit desc limit 1)),
   'versionen', (select coalesce(jsonb_object_agg(v.app_version, v.n), '{}'::jsonb) from (select coalesce(z.app_version, '?') as app_version, count(*) as n
-     from public.kc_club_zugang z where z.aktiv and z.zuletzt_gesehen > now() - interval '7 days' group by 1) v)
+     from public.kc_club_zugang z where z.aktiv and z.zuletzt_gesehen > now() - interval '7 days' group by 1) v),
+  -- gerade offen (letzte 30 Min.): hat hier jemand noch eine alte Version, hat seine App das Update nicht geholt
+  'versionen_jetzt', (select coalesce(jsonb_object_agg(v.app_version, v.n), '{}'::jsonb) from (select coalesce(z.app_version, '?') as app_version, count(*) as n
+     from public.kc_club_zugang z where z.aktiv and z.zuletzt_gesehen > now() - interval '30 minutes' group by 1) v)
 );
 $function$;
 revoke all on function public.kc_club_waechter_lage() from public, anon, authenticated;
