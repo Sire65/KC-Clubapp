@@ -4867,6 +4867,7 @@ function rtSignal(s) {
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); return; } // 2.596.0: gebündelt
   if (s.art === "online") { onlinePing(); return; }
   if (s.art === "livetermin") { ltHolen(); return; } // KC-CLUB-LIVE-TERMIN (2.231.0)
+  if (s.art === "eingang") { eingangNeu(); return; } // KC-CLUB-EINGANG-SOFORT (2.741.0): Unterlagen im Eingangskorb – sofort fragen
   if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
   if (s.art === "termin" || s.art === "abstimmung") {
     clearTimeout(RT.zaehlen); RT.zaehlen = setTimeout(() => { if (!document.hidden) neuLaden(); }, 1500); // Zusagen/offene Abstimmungen auf der Startseite
@@ -41976,10 +41977,13 @@ function arStartArt(art) { AR.zielArt = art; arStart(); }
 // vorschlagen und dort ablegen“) ----------
 // Nutzt den vorhandenen Eingangskorb (archiv_liste, archiv_pruefung, arWohin mit Ordner- und Register-Vorschlag) – nur der Weg ist geführt:
 // Hinweis beim Öffnen (und wenn die Mitteilung bei offener App kommt) → Dokument im Fenster → 🗄️ Ablegen / 🗑️ Löschen / ⏰ Später → nächstes.
-const EGH = { gezeigt: false, versuche: 0 };
+const EGH = { gezeigt: false, versuche: 0, t: 0 };
+// KC-CLUB-EINGANG-SOFORT (2.741.0, Wunsch Hansi „das Dokument kann auch während der Clubsitzung verteilt werden – dann müssen die Mitglieder sofort
+// Bescheid bekommen, nicht erst nach Neustart“): Signal der direkten Leitung (art „eingang“) oder Push bei offener App → nach 1,5 s (gebündelt) das Fenster
+function eingangNeu() { EGH.gezeigt = false; clearTimeout(EGH.t); EGH.t = setTimeout(() => { try { navigator.vibrate?.([120, 80, 120]); } catch {} eingangHinweisPruefen(true); }, 1500); }
 async function eingangHinweisPruefen(neu = false) {
   if (!ICH || (!neu && !(INIT?.eingangskorb > 0)) || (EGH.gezeigt && !neu)) return;
-  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht, #egBlatt") || aktuelleAnsicht === "dokansicht") { if (++EGH.versuche < 30) setTimeout(() => eingangHinweisPruefen(neu), 3000); return; }
+  if (document.querySelector(neu ? ".dlg, #rgSchicht, #filmSchicht, #egBlatt" : ".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht, #egBlatt") || aktuelleAnsicht === "dokansicht") { if (++EGH.versuche < 30) setTimeout(() => eingangHinweisPruefen(neu), 3000); return; } // neu: auch über offenen Fenstern (z. B. Clubabend Live)
   EGH.gezeigt = true; EGH.versuche = 0;
   const n = neu ? 0 : INIT.eingangskorb;
   const wahl = await new Promise((fertig) => {
@@ -41991,16 +41995,16 @@ async function eingangHinweisPruefen(neu = false) {
   if (wahl === "an") return eingangDurchgehen();
   melde("📥 Gut – du findest es unter „Heute wichtig“ → Eingangskorb.");
 }
-async function eingangDurchgehen() {
-  let d; try { d = AR.daten = await api("archiv_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+async function eingangDurchgehen(nachsehen = false) {
+  let d; try { d = AR.daten = await api("archiv_liste", {}, nachsehen ? {} : { warten: true }); } catch (e) { return nachsehen ? melde("✅ Erledigt") : meldeFehler(e); }
   const eigen = new Map((d.ordner || []).filter((o) => o.eigen).map((o) => [o.id, o]));
   const liste = (d.dokumente || []).filter((x) => x.status === "pruefung" && eigen.has(x.ordner_id));
   if (INIT) { INIT.eingangskorb = liste.length; try { wichtigZeigen(); } catch {} }
-  if (!liste.length) return melde("📥 Dein Eingangskorb ist leer.");
+  if (!liste.length) return melde(nachsehen ? "✅ Eingangskorb erledigt" : "📥 Dein Eingangskorb ist leer.");
   egZeigen(liste, 0, eigen);
 }
 function egZeigen(liste, i, eigen) {
-  const x = liste[i], o = eigen.get(x.ordner_id), weiter = () => (i + 1 < liste.length ? egZeigen(liste, i + 1, eigen) : (melde("✅ Eingangskorb erledigt"), INIT && (INIT.eingangskorb = 0), wichtigZeigen?.()));
+  const x = liste[i], o = eigen.get(x.ordner_id), weiter = () => (i + 1 < liste.length ? egZeigen(liste, i + 1, eigen) : eingangDurchgehen(true)); // am Ende neu nachsehen – inzwischen Angekommenes folgt
   const f = blattAuf("egBlatt", `<h3 style="margin:0">📥 Eingangskorb${liste.length > 1 ? ` · ${i + 1} von ${liste.length}` : ""}</h3>
     <p class="hinweis" style="margin:2px 0 6px"><b>${esc(x.titel)}</b>${x.von ? ` · von ${esc(x.von)}` : ""}</p>${x.beschreibung ? `<div class="karte" style="margin:0 0 8px;white-space:pre-wrap">${esc(x.beschreibung)}</div>` : ""}
     <div id="egVorschau" class="eg-vorschau"><p class="hinweis">⏳ Wird geladen …</p></div>
@@ -44875,7 +44879,7 @@ async function schluesselZurueck() {
     navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push") { onlinePushGezeigt(e.data.titel); /* 2.383.0 */ pushNeuLaden(); onlinePing(); setTimeout(() => taHinweisPruefen(9), 1500); if (chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); else if (chatId) chatLaden(false); ansageAusPush(e.data); if (aktuelleAnsicht === "spiele" && SP.tab === "mg") SP.offen ? spNachsehen() : spLaden(true); }
       if (e.data?.typ === "online-ansage") { onlineAnsageSprechen([e.data.name]); onlinePing(); }
       if (e.data?.typ === "oeffnen") pushOeffnen(e.data.url); }); // 2.209.0 KC-CLUB-PUSH-SPRUNG // KC-CLUB-ONLINE-ANSAGE-PUSH; 2.24.18: LED/Zahl/Ring sofort mitziehen (Hinweis Hansi: Ansage kam immer zuerst)
-    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) { EGH.gezeigt = false; setTimeout(() => eingangHinweisPruefen(true), 1500); } }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
+    navigator.serviceWorker.addEventListener("message", (e) => { if (e.data?.typ === "push" && /^📥 Neu in deinem Eingangskorb/.test(e.data.titel || "")) eingangNeu(); }); // KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Hinweis sofort bei offener App
   }
   // Messung: wie wurde die App gestartet (einmal je Sitzung) – zeigt, ob die Installation geklappt hat
   try { if (!sessionStorage.getItem("kc_club_start_gemeldet")) { sessionStorage.setItem("kc_club_start_gemeldet", "1"); setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500); } } catch {}

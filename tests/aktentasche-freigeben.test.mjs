@@ -29,8 +29,13 @@ assert.ok(/nebenbei\(verteilen\(\)/.test(sv) && /if \(letzte\) await senden\("cl
 
 // --- Mitglied: Hinweis beim Öffnen → ansehen → ablegen oder löschen
 assert.ok(/setTimeout\(filmHinweisPruefen, 4000\); setTimeout\(eingangHinweisPruefen, 5000\);/.test(app), "Hinweis beim Start");
-assert.ok(/if \(e\.data\?\.typ === "push" && \/\^📥 Neu in deinem Eingangskorb\/\.test\(e\.data\.titel \|\| ""\)\) \{ EGH\.gezeigt = false; setTimeout\(\(\) => eingangHinweisPruefen\(true\), 1500\); \}/.test(app), "Hinweis sofort bei offener App");
-const eh = teil("async function eingangHinweisPruefen(", "async function eingangDurchgehen()");
+assert.ok(/if \(e\.data\?\.typ === "push" && \/\^📥 Neu in deinem Eingangskorb\/\.test\(e\.data\.titel \|\| ""\)\) eingangNeu\(\);/.test(app), "Hinweis sofort bei offener App (Push)");
+// KC-CLUB-EINGANG-SOFORT: direkte Leitung – ohne Neustart, auch über offenen Fenstern (Clubabend Live)
+assert.ok(/if \(s\.art === "eingang"\) \{ eingangNeu\(\); return; \}/.test(app), "Signal „eingang“ der direkten Leitung");
+assert.ok(/if \(letzte\) await db\.rpc\("kc_club_rt_klingeln", \{ p_personen: \[x\.person_id\], p_art: "eingang" \}\)/.test(server), "Server klingelt beim Empfänger an");
+assert.ok(/document\.querySelector\(neu \? "\.dlg, #rgSchicht, #filmSchicht, #egBlatt" :/.test(app), "neu: auch über offenen Fenstern");
+assert.ok(/: eingangDurchgehen\(true\)\);/.test(app), "am Ende neu nachsehen");
+const eh = teil("async function eingangHinweisPruefen(", "async function eingangDurchgehen(");
 assert.ok(/📥 Neu in deinem Eingangskorb/.test(eh) && /👀 Ja, ansehen/.test(eh) && /⏰ Später/.test(eh) && /if \(wahl === "an"\) return eingangDurchgehen\(\);/.test(eh), "Hinweis mit Knopf Ansehen");
 const eg = teil("function egZeigen(", "async function egVorschau(");
 assert.ok(/Möchtest du das Dokument ablegen oder löschen\?/.test(eg) && /🗄️ Ablegen/.test(eg) && /🗑️ Löschen/.test(eg), "Frage nach dem Ansehen");

@@ -17292,6 +17292,8 @@ Köcheclub-App`,
                 attachment_id: datei.id, datei_name: datei.name, mime, groesse: datei.groesse, hochgeladen_von: ich.person_id, status: "pruefung" });
               if (error) { await dateienEntfernen([datei.id]); continue; }
               abgelegt++;
+              // KC-CLUB-EINGANG-SOFORT (2.741.0, Wunsch Hansi „auch während der Clubsitzung – sofort Bescheid, nicht erst nach Neustart“): offene Apps über die direkte Leitung
+              if (letzte) await db.rpc("kc_club_rt_klingeln", { p_personen: [x.person_id], p_art: "eingang" }).then(() => {}, () => {});
               if (letzte) await senden("club_nachricht", [x.person_id], {
                 titel: "📥 Neu in deinem Eingangskorb", kurz: `${ich.name}: ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} – ansehen, dann ablegen oder löschen`,
                 betreff: "Köcheclub Werne – neu in deinem Eingangskorb",
