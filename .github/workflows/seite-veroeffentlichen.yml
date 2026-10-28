@@ -42,5 +42,12 @@ jobs:
       name: github-pages
       url: ${{ steps.seite.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+      # 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: wer die App genau jetzt startet, sieht „Kurze Wartung“ (nie ein Abbruch des Ablaufs)
+      - name: Wartungsfenster an
+        run: tools/einspielen-melden.sh an 5
       - id: seite
         uses: actions/deploy-pages@v4
+      - name: Wartungsfenster aus
+        if: always()
+        run: sleep 20; tools/einspielen-melden.sh aus
