@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { TURN, turnPlan, turnZeile, turnIce, turnAppBis } from "../supabase/functions/kc-club/turn-vorrat.js";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const app = programmText(), server = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261021_kc_club_v2563_anruf_turn.sql");

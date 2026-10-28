@@ -88,7 +88,7 @@ try {
       if (!r.da) melde(`${v}: Seite erscheint nicht`);
       if (r.quer) melde(`${v}: ragt seitlich über den Rand`);
     }
-    // 2.726.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version
+    // 2.727.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version
     const teile = await seite.evaluate(async () => { const out = [];
       for (const [n, t] of Object.entries(TEILE_LISTE)) { try { await teilLaden(n); const offen = t.einstieg.filter((f) => typeof window[f] !== "function" || window[f]._teil); if (offen.length) out.push(`${n}: Platzhalter bleibt (${offen.join(", ")})`); } catch (e) { out.push(`${n}: ${e.message}`); } }
       const pr = await teilProbe(); if (pr !== "ok " + APP_VERSION) out.push("probe: Antwort " + pr); return out; });

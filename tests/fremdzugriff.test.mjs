@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "../supabase/functions/kc-club/fremdzugriff.js";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 // Gerät in Worten
 assert.equal(fzGeraet("Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36"), "Android 10 · Chrome 155");

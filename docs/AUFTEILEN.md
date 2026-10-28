@@ -48,7 +48,7 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 
 | Stufe | Inhalt | Version | Stand |
 |---|---|---|---|
-| 0 | Nachlade-Weg, Probe-Teil, Tests, Rundgang, diese Anleitung | 2.726.0 | gebaut |
+| 0 | Nachlade-Weg, Probe-Teil, Tests, Rundgang, diese Anleitung | 2.727.0 | eingespielt 28.10. |
 | 1 | Erklär-Videos | | geplant |
 | 2 | Spiele | | geplant |
 | 3 | Sim-Jü, Rückseite, Bühne, Effekte | | geplant |

@@ -2,7 +2,7 @@
 // Aufruf: node tests/spur-keepalive.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const app = programmText(), server = lies("supabase/functions/kc-club/index.ts");
 const f = app.slice(app.indexOf("async function spurSenden("), app.indexOf("function spurBaldSenden("));

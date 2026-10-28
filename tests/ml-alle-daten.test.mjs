@@ -2,7 +2,7 @@
 // Aufruf: node tests/ml-alle-daten.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 assert.ok(/alle: \{ sym: "📋", t: "Alle Daten", u: "[^"]+", spalten: \["nr", "name", "handy", "festnetz", "mail", "adresse"\], quer: true \}/.test(app), "Art „Alle Daten“ mit allen Kontaktspalten, quer");
 assert.ok(/\["telefon", "adressen", "alle"\]\.includes\(ML\.art\) \? `<p class="hinweis">🔒/.test(app), "Hinweis auf nicht freigegebene Angaben auch bei „Alle Daten“");

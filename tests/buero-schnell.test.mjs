@@ -2,7 +2,7 @@
 // Aufruf: node tests/buero-schnell.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 const f = app.slice(app.indexOf("async function buLaden("), app.indexOf("function buZurueck("));
 assert.ok(/const BU_STILL = \{ still: true \};/.test(app) && /api\("buero_start", \{\}, BU_STILL\)/.test(f), "Büro-Start ohne Sanduhr");

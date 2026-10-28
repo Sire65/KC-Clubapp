@@ -43,7 +43,38 @@ select jsonb_build_object(
      from public.kc_club_zugang z where z.aktiv and z.zuletzt_gesehen > now() - interval '7 days' group by 1) v),
   -- gerade offen (letzte 30 Min.): hat hier jemand noch eine alte Version, hat seine App das Update nicht geholt
   'versionen_jetzt', (select coalesce(jsonb_object_agg(v.app_version, v.n), '{}'::jsonb) from (select coalesce(z.app_version, '?') as app_version, count(*) as n
-     from public.kc_club_zugang z where z.aktiv and z.zuletzt_gesehen > now() - interval '30 minutes' group by 1) v)
+     from public.kc_club_zugang z where z.aktiv and z.zuletzt_gesehen > now() - interval '30 minutes' group by 1) v),
+  -- KC-CLUB-SICHERHEIT-WAECHTER: nur Zählungen (24 Std. / 7 Tage) aus dem eigenen Protokoll und dem Fremdzugriff-Protokoll
+  'sicherheit', (select jsonb_build_object(
+     'ereignisse', (select coalesce(jsonb_object_agg(e.aktion, jsonb_build_object('n24', e.n24, 'n7', e.n7, 'wer24', e.wer24)), '{}'::jsonb) from (
+         select k.aktion, count(*) filter (where k.zeit > now() - interval '24 hours') as n24, count(*) as n7,
+                count(distinct k.person_id) filter (where k.zeit > now() - interval '24 hours') as wer24
+         from public.kc_club_protokoll k
+         where k.zeit > now() - interval '7 days' and k.aktion in ('sicherheit_viel', 'sicherheit_unbekannt', 'sicherheit_absaug', 'sicherheit_bremse', 'sicherheit_link',
+           'sicherheit_neues_geraet', 'sicherheit_geraet_fremd', 'sicherheit_geraet_bestaetigt', 'gesperrt_versuch')
+         group by k.aktion) e),
+     'fremd', (select jsonb_build_object('n24', count(*) filter (where f.zeit > now() - interval '24 hours'), 'n7', count(*),
+         'n15', count(*) filter (where f.zeit > now() - interval '15 minutes'), 'programm24', count(*) filter (where f.zeit > now() - interval '24 hours' and f.geraet like 'Programm%'),
+         'zuletzt', max(f.zeit)) from public.kc_club_fremdzugriff f where f.zeit > now() - interval '7 days'),
+     'gebremst', (select coalesce(jsonb_agg(jsonb_build_object('person_id', k.person_id, 'bis', k.details ->> 'bis', 'aktion', k.details ->> 'aktion')), '[]'::jsonb)
+        from public.kc_club_protokoll k where k.aktion = 'sicherheit_bremse' and k.zeit > now() - interval '60 minutes'
+          and not exists (select 1 from public.kc_club_protokoll fr where fr.aktion = 'sicherheit_bremse_frei' and fr.zeit > k.zeit and fr.details ->> 'person' = k.person_id)),
+     'fragen_offen', (select count(*) from public.kc_club_person_einstellung pe where pe.schluessel = 'sicherheit_geraete' and pe.wert -> 'frage' is not null and jsonb_typeof(pe.wert -> 'frage') = 'object'))),
+  -- KC-CLUB-SICHERHEIT-WAECHTER (Datenleck): was gegenüber dem geprüften Stand vom 28.10.2026 NEU offen wäre
+  'leck', jsonb_build_object(
+     'ohne_rls', (select coalesce(jsonb_agg(c.relname order by c.relname), '[]'::jsonb) from pg_class c join pg_namespace n on n.oid = c.relnamespace
+        where n.nspname = 'public' and c.relkind in ('r', 'p') and not c.relrowsecurity),
+     'weit_offen', (select coalesce(jsonb_agg(pp.tablename || ' · ' || pp.policyname order by 1), '[]'::jsonb) from pg_policies pp
+        where pp.schemaname in ('public', 'storage') and pp.roles && array['anon', 'public', 'authenticated']::name[]
+          and (btrim(coalesce(pp.qual, '')) = 'true' or btrim(coalesce(pp.with_check, '')) = 'true')),
+     'club_direkt', (select coalesce(jsonb_agg(distinct pp.tablename), '[]'::jsonb) from pg_policies pp
+        where pp.schemaname = 'public' and pp.tablename like 'kc\_club\_%' and pp.roles && array['anon', 'public', 'authenticated']::name[]
+          and coalesce(btrim(pp.qual), '') not in ('false', '') ),
+     'speicher_oeffentlich', (select coalesce(jsonb_agg(b.name), '[]'::jsonb) from storage.buckets b where b.public),
+     'funktionen_offen', (select coalesce(jsonb_agg(pr.proname order by pr.proname), '[]'::jsonb) from pg_proc pr join pg_namespace n on n.oid = pr.pronamespace
+        where n.nspname = 'public' and pr.prosecdef and has_function_privilege('anon', pr.oid, 'execute')
+          and pr.proname <> all (array['kc_communication_push_erneuern', 'kc_dp_report_error', 'kc_wm_danke_mail_erledigt', 'kc_wm_danke_mail_offen',
+                                      'kc_wm_spruch_liste', 'kc_wm_spruch_waehlen', 'kc_wm_umfrage_absenden'])))
 );
 $function$;
 revoke all on function public.kc_club_waechter_lage() from public, anon, authenticated;

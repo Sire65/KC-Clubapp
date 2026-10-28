@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsVorschlag, dsPause, dsMinuten, dsGrundNoetig, dsPruefen, dsKorrekturErlaubt, dsMeter, dsVorOrt, dsPaare, dsRund } from "../supabase/functions/kc-club/dienst-stempel.js";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const M = 60000, H = 3600000, T0 = Date.parse("2026-12-05T13:00:00Z"); // 14:00 Uhr Berlin
 const dienst = { ref: "s1", startMs: T0, endeMs: T0 + 8 * H, pause: 30 };

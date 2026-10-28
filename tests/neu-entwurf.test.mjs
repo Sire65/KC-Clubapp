@@ -2,7 +2,7 @@
 // Aufruf: node tests/neu-entwurf.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 assert.ok(/if \(!chatId\) return neuEntwurfMerken\(\);/.test(app), "neue Nachricht (noch ohne Chat) wird gemerkt");
 const f = app.slice(app.indexOf("function neuEntwurfMerken("), app.indexOf("function neuEntwurfHolen("));

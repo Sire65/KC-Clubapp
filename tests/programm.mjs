@@ -1,4 +1,4 @@
-// KC-CLUB-TEILE (2.726.0): das ganze Programm für die Prüfungen – app.js plus alle nachladbaren Teile (teile/*.js, alphabetisch).
+// KC-CLUB-TEILE (2.727.0): das ganze Programm für die Prüfungen – app.js plus alle nachladbaren Teile (teile/*.js, alphabetisch).
 // So finden die Tests eine Stelle, egal ob sie im Hauptprogramm oder in einem Teil steht.
 import fs from "node:fs";
 

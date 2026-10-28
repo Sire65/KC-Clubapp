@@ -2,7 +2,7 @@
 // Aufruf: node tests/druck-seitenwechsel.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 const f = app.slice(app.indexOf("function druckSeitenBilden("), app.indexOf("async function druckPdfBlob("));
 assert.ok(/const DS_ATOM = "tr, li, p, h1, h2, h3/.test(app) && /\[style\*='break-inside:avoid'\]/.test(app), "nie in Zeilen/Absätzen/Blöcken schneiden");

@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { AB, abSekOk, abStand, abAnlageOk } from "../supabase/functions/kc-club/anrufbeantworter.js";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 // Länge: 2 Min. (Admin 15 Min.), kleine Toleranz
 assert.equal(AB.maxSek, 120); assert.equal(AB.maxSekAdmin, 900);

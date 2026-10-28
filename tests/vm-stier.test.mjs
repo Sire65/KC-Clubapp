@@ -2,7 +2,7 @@
 // Aufruf: node tests/vm-stier.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 assert.ok(/const JZB_VM_DAUER = 115;/.test(app) && /const JZB_VM_STIER = 87,/.test(app), "Stier nach Feierabend, Lauf 115 s");
 const m = app.slice(app.indexOf("function jzbVmStierMalen("), app.indexOf("function jzbVmStierNameMalen("));

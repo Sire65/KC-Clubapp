@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { KV, klopfVerpasst, klopfVerpasstOhneKontakt, klopfPushStand } from "../supabase/functions/kc-club/anklopfen-verpasst.js";
-import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.727.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const T = Date.parse("2026-10-21T15:10:00Z"), iso = (minVorher) => new Date(T - minVorher * 60000).toISOString(), ICH = "KC-P-M0008";
 const z = (id, von, min, status, antwort = null) => ({ id, von, an: ICH, status, erstellt_am: iso(min), antwort });

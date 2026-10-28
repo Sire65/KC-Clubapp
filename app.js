@@ -1,9 +1,9 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.726.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.727.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
-// ---------- 2.726.0 KC-CLUB-TEILE (Prüfbericht C Stufe 0, Wunsch Hansi 28.10.2026 „gut aufteilen, damit später alles besser, schneller, sicherer läuft“) ----------
+// ---------- 2.727.0 KC-CLUB-TEILE (Prüfbericht C Stufe 0, Wunsch Hansi 28.10.2026 „gut aufteilen, damit später alles besser, schneller, sicherer läuft“) ----------
 // Selten gebrauchte Programmteile liegen in teile/<name>.js und werden erst beim ersten Gebrauch geladen – als normales Skript dieser Seite,
 // Adresse mit ?v=APP_VERSION. Registry TEILE_LISTE: je Teil die Einstiegs-Funktionen und der Fingerabdruck (sri). Für jede Einstiegs-Funktion steht ein
 // Platzhalter bereit, der das Teil lädt und dann die echte Funktion aufruft (das Teil ersetzt den Platzhalter). Der Browser führt ein Teil nur aus,
@@ -1081,7 +1081,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu", true); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -16015,7 +16015,7 @@ const ZUGANG_AKTIONEN = {
     "sprache_lernen", "sprache_training", "sprache_training_reset", "sprache_vergessen", "sprache_unbekannt", "twinkey_daten", "twinkey_frage",
     "twinkey_gelesen", "fehler_melden", "hilfe_anfordern", "feedback_meins", "feedback_senden", "feedback_neu", "vorfuehren_antwort", "vorfuehren_holen",
     "vorfuehren_senden", "vorfuehren_ende", "vorfuehren_bild", "schnappschuss_antwort", "schnappschuss_bild", "schnappschuss_ende", "fernbedienung_melden", "push_anmelden",
-    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test"],
+    "push_pruefen", "geraete_liste", "geraet_entfernen", "andere_geraete_abmelden", "push_abmelden", "push_test", "neues_geraet_antwort"],
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
@@ -26241,6 +26241,8 @@ function adZustand(id) {
       return gemessen([f, `${fs.filter((x) => x === "gruen").length} von ${fs.length} melden sich`]); }
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
+    case "waechter": { if (!WCH.daten) return ["keine", `${WCH_LISTE.length} Wächter · antippen`]; const z = wchZaehlen(); // 2.726.0 KC-CLUB-WAECHTER (Stand vom letzten Öffnen)
+      return [z.rot ? "rot" : z.gelb ? "gelb" : "gruen", `${WCH_LISTE.length} Wächter · ${z.gruen} ✅${z.gelb ? ` · ${z.gelb} 🟡` : ""}${z.rot ? ` · ${z.rot} 🔴` : ""}`]; }
     case "stumm": return ["keine", "Mitglieder ganz ohne Push/E-Mail"]; // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
     case "wartung": return gemessen(!r ? null : r.wartung?.an ? ["gelb", "AN – Mitglieder sehen Blau"] : ["gruen", "aus"]);
     case "freigaben": { const f = INIT?.freigaben || {}, n = Object.values(f).filter((x) => x !== "alle").length; return ["keine", n ? `${n} nur für dich (Test)` : "alles freigegeben"]; } // KC-CLUB-FREIGABE (2.23.86)
@@ -26258,7 +26260,7 @@ function adZustand(id) {
 const AD_UEBERWACHT = ["verlauf", "server", "supabase", "neon", "backup", "b2", "not", "comm", "mail", "push", "kasse", "programme", "rt"];
 // Kacheln: Gruppe (Farbstreifen oben) + Lämpchen rechts oben; Dienste-Kacheln öffnen ihre Direktsprünge
 const AD_KACHELN = [
-  ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["verlauf", "📈", "Verlauf", "ueb"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
+  ["alarm", "🚨", "Alarm an alle", "not"], ["lage", "📊", "Lage", "ueb"], ["waechter", "🛡️", "Wächter", "ueb"], ["notfall", "🧯", "Notfall", "not"], ["verlauf", "📈", "Verlauf", "ueb"], ["server", "🖥️", "Server", "ueb"], ["supabase", "🗄️", "Supabase", "ueb"],
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
@@ -26268,6 +26270,291 @@ const AD_KACHELN = [
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
   u: () => (gr === "link" ? "Direkt zur Verwaltung" : adZustand(id)[1]),
   klasse: () => `ad ad-${gr}${gr === "link" ? "" : " l-" + adZustand(id)[0]}` }));
+// ---------- 2.726.0 KC-CLUB-WAECHTER (Wunsch Hansi „Admin-Kachel Wächter: alle Wächter als Kacheln mit den wichtigsten Infos; antippen =
+// Info-Fenster: beobachtet was, meldet sich bei wem, letzter Lauf OK …; ordentlich angeordnet, ausgerichtet, gut lesbar“) ----------
+// Daten nur beim Öffnen (eine Server-Anfrage „waechter_lage“, GitHub-Läufe dort 10 Min. gemerkt) – keine Abfrage im Hintergrund.
+// Zeitpläne in UTC wie bei pg_cron/GitHub; angezeigt wird deutsche Zeit.
+const WCH = { daten: null, zeit: 0, laedt: false };
+const WCH_GRUPPEN = [["sicherung", "🗄️ Datensicherung"], ["betrieb", "⚡ Betrieb"], ["schutz", "🔒 Sicherheit"], ["app", "📱 In der App"]];
+const WCH_LISTE = [
+  // 🗄️ Datensicherung
+  { id: "spiegel", gruppe: "sicherung", sym: "🦉", name: "Spiegel-Wächter", kurz: "Kopie auf Neon frisch?", job: "kc-db-mirror-watchdog",
+    beobachtet: "ob jede gespiegelte Tabelle auf Neon frisch und fehlerfrei ist", grenze: "höchstens 6 Std. 30 Min. alt, keine Abweichung", wo: "Datenbank (Zeitplan)",
+    meldet: "Schreibt ins Spiegel-Protokoll; einen ausgefallenen Lauf holt der Spiegel-Wächter von außen (🔭) nach.",
+    tun: "„🪞 Spiegel jetzt anstoßen“ (Knopf unten)", seit: "September 2026", knopf: () => '<button class="knopf" onclick="adminSpiegeln()">🪞 Spiegel jetzt anstoßen</button>' },
+  { id: "abdeckung", gruppe: "sicherung", sym: "🗺️", name: "Abdeckungs-Prüfer", kurz: "Jede Tabelle gesichert?", job: "kc-db-mirror-watchdog",
+    beobachtet: "ob jede Tabelle eine Spiegel-Regel hat; neue Tabellen nimmt er selbst auf", grenze: "keine Tabelle ohne Regel", wo: "Datenbank (läuft mit dem Spiegel-Wächter)",
+    meldet: "Nimmt neue Tabellen selbst auf; verdächtige (z. B. mit Geheimnis- oder Standort-Spalten) hält er an und vermerkt „Admin-Freigabe nötig“.",
+    tun: "Claude bitten, die angehaltene Tabelle zu prüfen und freizugeben", seit: "01.10.2026" },
+  { id: "quellen", gruppe: "sicherung", sym: "🩺", name: "Quellen-Prüfer", kurz: "Spiegel-Regeln eingehalten?", job: "kc-db-mirror-source-health",
+    beobachtet: "ob alle Tabellen nach den Datenschutz-Regeln gespiegelt werden (keine Roh-Kopie)", grenze: "alle Tabellen frisch", wo: "Datenbank (Zeitplan)",
+    meldet: "Schreibt ins Spiegel-Protokoll.", tun: "Claude bitten nachzusehen" },
+  { id: "leseprobe", gruppe: "sicherung", sym: "🔐", name: "Sicherungs-Prüfer", kurz: "Nachtsicherung lesbar?", job: "kc-neon-backup-verify",
+    beobachtet: "ob die neueste Sicherung auf Neon entschlüsselt werden kann und vollständig ist (Zeilen, Prüfsummen)", grenze: "Lese-Probe bestanden", wo: "Datenbank → Prüf-Funktion auf Neon",
+    ergebnis: (d) => [d.spiegel?.restore_test && `Lese-Probe ${wchUhr(d.spiegel.restore_test.zeit)}: ${d.spiegel.restore_test.status === "ok" ? "bestanden" : "fehlgeschlagen"}`, d.spiegel?.backup && `letzte Sicherung ${wchUhr(d.spiegel.backup.zeit)}`].filter(Boolean).join(" · "),
+    meldet: "Schreibt das Ergebnis der Lese-Probe ins Protokoll.", tun: "Claude bitten, die Sicherung neu zu prüfen" },
+  { id: "aussen", gruppe: "sicherung", sym: "🔭", name: "Spiegel-Wächter (außen)", kurz: "Prüft von GitHub aus", gh: "spiegel-waechter.yml", plan: "41 * * * *",
+    beobachtet: "von außen, ob die Spiegelung pünktlich gelaufen ist – auch wenn Supabase selbst nichts mehr anstößt", grenze: "letzter Lauf höchstens 6 Std. 30 Min. alt", wo: "GitHub (Ablauf „Spiegel-Wächter“)",
+    meldet: "Stößt eine überfällige Spiegelung selbst an. Hinweis: ein Fehler beim Fragen lässt den GitHub-Lauf grün.", tun: "„🪞 Spiegel jetzt anstoßen“ beim Spiegel-Wächter", seit: "04.10.2026" },
+  { id: "wochenprobe", gruppe: "sicherung", sym: "🗝️", name: "Wochenprobe", kurz: "Ohne Supabase lesbar?", gh: "notfall-sicherung-lesen.yml", plan: "17 4 * * 0",
+    beobachtet: "ob eine Sicherung mit der hinterlegten Schlüssel-Kopie (Cloudflare-Tresor) entschlüsselt werden kann – also auch, wenn Supabase ganz ausfällt", grenze: "Prüfsumme bestätigt", wo: "GitHub (Ablauf „Notfall-Sicherung lesen“)",
+    meldet: "Zusätzlich E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
+  { id: "zweitkopie", gruppe: "sicherung", sym: "📦", name: "Zweitkopie", kurz: "Kopie bei Cloudflare da?", gh: "notfall-zweitkopie.yml", plan: "41 5 * * 1",
+    beobachtet: "ob die verschlüsselte Zweitkopie bei Cloudflare abgelegt, zurückgelesen und lesbar ist (5 Wochen aufbewahrt)", grenze: "Prüfsumme gleich, Probe-Tabelle lesbar", wo: "GitHub (Ablauf „Notfall-Zweitkopie“)",
+    meldet: "Zusätzlich E-Mail von GitHub, wenn der Lauf fehlschlägt.", tun: "Claude bitten, den Ablauf von Hand zu starten", seit: "13.10.2026" },
+  // ⚡ Betrieb
+  { id: "schnittstelle", gruppe: "betrieb", sym: "🐕", name: "Schnittstellen-Wächter", kurz: "Antwortet die Datenbank?", gh: "schnittstellen-waechter.yml", plan: "*/5 * * * *",
+    beobachtet: "von außen, ob Supabase und die Datenbank-Schnittstelle antworten (unter 10 Sekunden, 3 Versuche)", grenze: "Antwort unter 10 Sekunden", wo: "GitHub (Ablauf „Schnittstellen-Wächter“)",
+    meldet: "Startet Supabase bei einem Hänger selbst neu (höchstens 2× pro Stunde); zusätzlich E-Mail von GitHub bei rotem Lauf.", tun: "Admin → 🗄️ Supabase → Neustart-Knopf", seit: "11.10.2026 (nach dem Ausfall 04:21–04:46 Uhr)" },
+  { id: "last", gruppe: "betrieb", sym: "🚦", name: "Last-Wächter", kurz: "Zu viele Abfragen?", job: "kc-traffic-guard-15m",
+    beobachtet: "wie viele Datenbank-Abfragen in 15 Minuten kommen – und was vermutlich dahintersteckt", grenze: "deutlich über dem Üblichen = Warnung", wo: "Datenbank (Zeitplan) → Server-Funktion",
+    ergebnis: (d) => d.last ? `${wchUhr(d.last.zeit)}: ${Number(d.last.abfragen).toLocaleString("de-DE")} Abfragen in 15 Min. (üblich ${Number(d.last.ueblich).toLocaleString("de-DE")}) · ${d.last_warn24 || 0}× erhöht in 24 Std.` : "",
+    meldet: "Zeigt bei hoher Last eine gelbe Hinweis-Box auf der Startseite und im Admin-Bereich.", tun: "Neues nur um 12 und 20 Uhr einspielen; Ursache steht oben" },
+  { id: "betriebw", gruppe: "betrieb", sym: "👁️", name: "Betriebs-Wächter", kurz: "Dienste lebendig?", job: "kc-live-operations-watch-minute",
+    beobachtet: "ob die Programme sich melden (Kasse, PC-Manager …), Warteschlangen, Push- und Mail-Wege, Versionen", grenze: "jede Änderung des Zustands", wo: "Datenbank (Zeitplan) → System-Check",
+    meldet: "Zusätzlich eigene Push/E-Mail über den Communicator, wenn sich der Zustand eines Dienstes ändert.", tun: "unter 📊 Lage nachsehen, welcher Dienst betroffen ist" },
+  { id: "systemcheck", gruppe: "betrieb", sym: "🚨", name: "System-Check", kurz: "Gesamtprüfung", job: "kc-system-check-auto-15m",
+    beobachtet: "die ganze Technik in einer Prüfung (Datenbank, Server, Dienste); doppelte Alarme werden unterdrückt", grenze: "Fehler oder Warnung", wo: "Datenbank (Zeitplan) → System-Check",
+    meldet: "Zusätzlich eigene Push/E-Mail über den Communicator bei Fehler, Warnung und Entwarnung.", tun: "Meldung lesen, dann unter 📊 Lage nachsehen" },
+  { id: "messung", gruppe: "betrieb", sym: "⚖️", name: "Mess-Stationen", kurz: "Tempo und Größe", job: "kc-club-messung-30min",
+    beobachtet: "Antwortzeit, Verbindungen, Netzfehler und Größe der Datenbank (dazu alle 30 Min. die Last je Bereich)", grenze: "Antwortzeit über 300 ms = auffällig", wo: "Datenbank (2 Zeitpläne)",
+    ergebnis: (d) => { const a = d.mess?.api, b = d.mess?.db; return [a && `Antwortzeit ${a.db_ms} ms`, b && `${b.verbindungen} Verbindungen`, b && `${b.net_fehler} Netzfehler`, b?.bytes && `Datenbank ${Math.round(b.bytes / 1048576)} MB`].filter(Boolean).join(" · "); },
+    meldet: "Die Werte stehen auch unter 📊 Lage und 📈 Verlauf.", tun: "–" },
+  // 🔒 Sicherheit
+  { id: "zugang", gruppe: "schutz", sym: "🛂", name: "Zugangs-Wächter", kurz: "Fremde Anmeldung?", job: "kicc-access-watch-minute",
+    beobachtet: "neue Geräte, neue Konten und viele Anmeldungen kurz hintereinander", grenze: "jedes neue Gerät oder Konto", wo: "Datenbank (Zeitplan)",
+    meldet: "Zusätzlich eigene Push/E-Mail an die Betreuer bei neuem Gerät, neuem Konto oder vielen Anmeldungen.", tun: "Meldung prüfen: warst du es selbst? Sonst Zugang sperren" },
+  { id: "falschlink", gruppe: "schutz", sym: "🔑", name: "Falsche-Link-Wächter", kurz: "Anmeldung mit falschem Link?",
+    beobachtet: "jede Anmeldung mit einem falschen, alten, abgeschalteten oder abgeschnittenen Link – mit Gerät und Vermutung, wer es war", grenze: "gelb ab 1 Versuch am Tag, rot ab 5 in 15 Min. oder bei einem Programm statt eines Handys", takt: "bei jeder Anmeldung", wo: "Server → Fremdzugriff-Protokoll (90 Tage)",
+    ergebnis: (d) => { const f = d?.sicherheit?.fremd; return f ? `24 Std.: ${f.n24} · 7 Tage: ${f.n7}${f.zuletzt ? ` · zuletzt ${wchUhr(f.zuletzt)}` : ""}` : ""; },
+    meldet: "Zusätzlich die bisherige Sofort-Push bei 5 Versuchen in 15 Min.", tun: "Admin → 🔒 Sicherheit → Fremdzugriffe ansehen; alten Link abschalten", seit: "22.10.2026",
+    knopf: () => '<button class="knopf" onclick="$(\'wchInfoBlatt\').remove();$(\'wchBlatt\').remove();zeige(\'sicherheit\');setTimeout(fremdZeigen,300)">🔑 Fremdzugriffe ansehen</button>' },
+  { id: "angriff", gruppe: "schutz", sym: "🤖", name: "Angriffs-Wächter", kurz: "Jemand probiert herum?",
+    beobachtet: "ungewöhnlich viele Anfragen von einem Zugang (mehr als 240 pro Minute) und Befehle, die es gar nicht gibt (Abtasten)", grenze: "gelb ab 3 unbekannten Befehlen am Tag, rot bei Anfrage-Flut", takt: "bei jeder Anfrage", wo: "Server (zählt nur, speichert keine Inhalte)",
+    ergebnis: (d) => { const e = d?.sicherheit?.ereignisse || {}; return `24 Std.: ${e.sicherheit_viel?.n24 || 0}× Anfrage-Flut · ${e.sicherheit_unbekannt?.n24 || 0}× unbekannte Befehle`; },
+    meldet: "Bei einem Programm statt eines Handys meldet sich zusätzlich der Falsche-Link-Wächter.", tun: "Claude bitten nachzusehen; notfalls den betroffenen Zugang abschalten", seit: "28.10.2026" },
+  { id: "leck", gruppe: "schutz", sym: "🔓", name: "Datenleck-Wächter", kurz: "Daten für Fremde offen?",
+    beobachtet: "ob eine Tabelle ohne Schutz ist, eine Zugriffsregel „für jeden“ gilt, Club-Daten ohne Server lesbar sind, ein Speicher-Ordner öffentlich ist oder eine Funktion für jeden offen steht", grenze: "jeder Fund ist rot (Stand 28.10.2026: 0 Funde)", takt: "alle 15 Min. mit den Wächtern", wo: "Datenbank (Prüfung der Schutzregeln)",
+    ergebnis: (d) => { const l = d?.leck; if (!l) return ""; const n = ["ohne_rls", "weit_offen", "club_direkt", "speicher_oeffentlich", "funktionen_offen"].reduce((s, k) => s + (l[k]?.length || 0), 0); return n ? `${n} Fund${n === 1 ? "" : "e"}` : "alles geschützt"; },
+    meldet: "Zusätzlich prüft der Test vor jedem Einspielen, dass neue Tabellen geschützt sind.", tun: "Sofort Claude Bescheid geben – Lücke schließen", seit: "28.10.2026" },
+  { id: "absaug", gruppe: "schutz", sym: "📤", name: "Absaug-Wächter", kurz: "Jemand lädt alles herunter?",
+    beobachtet: "ob ein Zugang in einer Stunde ungewöhnlich viel abruft: Mitgliederdaten, Fotos, Dateien, Adresslisten", grenze: "z. B. mehr als 60 Mitglieder-Karten oder 400 Fotos pro Stunde", takt: "bei jedem Abruf", wo: "Server (zählt nur)",
+    ergebnis: (d) => { const g = d?.sicherheit?.gebremst || []; return g.length ? `gerade gebremst: ${g.map((x) => (MITGLIEDER || []).find((m) => m.person_id === x.person_id)?.name || x.person_id).join(", ")}` : `bis ${new Date("2026-11-04").toLocaleDateString("de-DE")} nur Beobachtung, danach Bremse 1 Std.`; },
+    meldet: "Gebremst wird höchstens 1 Std.; der Admin wird nie gebremst.", tun: "Prüfen, ob das jemand absichtlich war – sonst „Freigeben“",
+    knopf: (d) => (d?.sicherheit?.gebremst || []).map((x) => `<button class="knopf" onclick="wchFreigeben('${esc(x.person_id)}')">🔓 ${esc((MITGLIEDER || []).find((m) => m.person_id === x.person_id)?.name || x.person_id)} freigeben</button>`).join("") },
+  { id: "geraet", gruppe: "schutz", sym: "📱", name: "Neues-Gerät-Wächter", kurz: "Link auf fremdem Gerät?",
+    beobachtet: "ob ein persönlicher Link plötzlich auf einer ganz anderen Geräteart benutzt wird (z. B. bisher Android, jetzt Windows-PC)", grenze: "Mitglied fragt „Warst du das?“; „Nein“ = rot", takt: "beim App-Start", wo: "Server + Frage beim Mitglied",
+    ergebnis: (d) => { const e = d?.sicherheit?.ereignisse || {}; return `7 Tage: ${e.sicherheit_neues_geraet?.n7 || 0} neue Geräte · ${e.sicherheit_geraet_bestaetigt?.n7 || 0} bestätigt · ${e.sicherheit_geraet_fremd?.n7 || 0} „war ich nicht“ · offen: ${d?.sicherheit?.fragen_offen || 0}`; },
+    meldet: "Das Mitglied selbst bekommt Push und E-Mail „Neues Gerät – warst du das?“; bei „Nein“ werden alle anderen Geräte abgemeldet.", tun: "Mit dem Mitglied sprechen, neuen Link schicken", seit: "28.10.2026" },
+  { id: "linkpruefer", gruppe: "schutz", sym: "🔗", name: "Link-Prüfer", kurz: "Gefährliche Links im Chat?",
+    beobachtet: "Links in Nachrichten mit Tricks: falsche Schreibweise (k0echeclub, paypa1), Zahlen-Adressen, Kurz-Links, Passwort-Seiten, ohne https, versteckte Sonderzeichen", grenze: "gelb ab 1, rot ab 3 am Tag", takt: "beim Senden jeder Nachricht", wo: "App (⚠️ am Link) + Server (zählt)",
+    ergebnis: (d) => `24 Std.: ${d?.sicherheit?.ereignisse?.sicherheit_link?.n24 || 0} verdächtige Links`,
+    meldet: "Alle Mitglieder sehen direkt am Link „⚠️ Vorsicht: …“ mit dem Grund.", tun: "Nachricht ansehen; Absender fragen, woher der Link stammt", seit: "28.10.2026" },
+  { id: "gesperrt", gruppe: "schutz", sym: "🚫", name: "Gesperrte-Versuche", kurz: "Gesperrte versucht es?",
+    beobachtet: "ob eine gesperrte Person die App öffnen will", grenze: "gelb ab 1, rot ab 3 Versuchen am Tag", takt: "bei jedem Versuch", wo: "Server",
+    ergebnis: (d) => `24 Std.: ${d?.sicherheit?.ereignisse?.gesperrt_versuch?.n24 || 0} · 7 Tage: ${d?.sicherheit?.ereignisse?.gesperrt_versuch?.n7 || 0}`,
+    meldet: "Zusätzlich wie bisher eine Push je Versuch (höchstens alle 10 Min.).", tun: "Admin → Sperren ansehen", seit: "Oktober 2026" },
+  { id: "geheimnis", gruppe: "schutz", sym: "🗝️", name: "Geheimnis-Wächter", kurz: "Schlüssel im Programm?", gh: "tests.yml",
+    beobachtet: "dass kein Passwort und kein geheimer Schlüssel im (öffentlichen) Programmcode steht", grenze: "jeder Fund verhindert das Einspielen", takt: "bei jedem Hochladen", wo: "GitHub (Test vor jedem Einspielen)",
+    meldet: "Zusätzlich E-Mail von GitHub, wenn der Test rot ist – dann wird nichts eingespielt.", tun: "Schlüssel sofort austauschen lassen", seit: "23.10.2026" },
+  { id: "liegen", gruppe: "schutz", sym: "💤", name: "Liegen-gelassen-Schutz", kurz: "Offene App ohne dich?",
+    app: () => (lsLiegenPin() ? ["gruen", "aktiv mit PIN", ""] : ["gruen", "aktiv (Sichtschutz)", ""]),
+    beobachtet: "ob die App offen liegt, ohne dass jemand sie benutzt", grenze: "15 Min. → Sichtschutz; mit App-PIN: Büro, Mitglieder, Admin nach 10 Min. nur mit PIN", takt: "laufend auf diesem Gerät", wo: "nur auf diesem Gerät",
+    meldet: "niemandem – reiner Schutz, keine Kontrolle.", tun: "⚙️ → 🔒 Privatsphäre → „🔢 App-PIN“ (freiwillig)",
+    knopf: () => '<button class="knopf" onclick="$(\'wchInfoBlatt\').remove();pinEinstellen()">🔢 App-PIN einrichten / ändern</button>' },
+  // 📱 In der App
+  { id: "schnecke", gruppe: "app", sym: "🐌", name: "Schnecken-Wächter", kurz: "Netz am Handy langsam?",
+    app: () => (typeof SCHNECKE !== "undefined" && SCHNECKE.an ? ["gelb", "Netz gerade langsam", SCHNECKE.grund || ""] : ["gruen", "Netz schnell", ""]),
+    beobachtet: "die letzten Antwortzeiten auf diesem Handy und die Netz-Angabe des Handys", grenze: "2 von 3 Anfragen langsam", takt: "laufend bei jeder Anfrage", wo: "in der App (jedes Gerät für sich)",
+    meldet: "zeigt oben in der App die kleine Schnecke – nur auf diesem Gerät.", tun: "Geduld, nicht mehrfach tippen; WLAN/Mobilfunk prüfen" },
+  { id: "versionen", gruppe: "app", sym: "🧭", name: "Versions-Wächter", kurz: "Alle auf neuem Stand?",
+    ergebnis: (d) => Object.entries(d?.versionen || {}).sort((a, b) => b[0].localeCompare(a[0], "de", { numeric: true })).map(([k, n]) => `${k}: ${n}`).join(" · "),
+    beobachtet: "ob eine gerade offene App (letzte 30 Min.) noch eine alte Version hat – und wer seit dem Update nicht in der App war (7 Tage)", grenze: `offene Apps auf ${APP_VERSION}`, takt: "beim Start jeder App", wo: "in der App + Zugangsliste",
+    meldet: "Jede App zeigt „Update“ und holt die neue Version selbst.", tun: "bei Bedarf eine Startnachricht „App einmal neu öffnen“" },
+];
+function wchCronFeld(f, w, min, max) { // passt Wert w zum Feld f? („*“, „4,10,16“, „11-22“, „*/15“, „2-59/5“)
+  return f.split(",").some((t) => { const [b, st] = t.split("/"), s = Number(st || 1); let a = min, e = max;
+    if (b !== "*") { const [x, y] = b.split("-").map(Number); a = x; e = y ?? (st ? max : x); }
+    return w >= a && w <= e && (w - a) % s === 0; });
+}
+function wchCronPasst(plan, d) { const [mi, st, tg, mo, wt] = plan.split(/\s+/);
+  return wchCronFeld(mi, d.getUTCMinutes(), 0, 59) && wchCronFeld(st, d.getUTCHours(), 0, 23) && wchCronFeld(tg, d.getUTCDate(), 1, 31) && wchCronFeld(mo, d.getUTCMonth() + 1, 1, 12) && wchCronFeld(wt, d.getUTCDay(), 0, 6); }
+function wchCronSuche(plan, ab, richtung) { // nächster (1) bzw. letzter (-1) geplanter Zeitpunkt, höchstens 8 Tage weit
+  if (!plan) return null; const d = new Date(ab); d.setUTCSeconds(0, 0); if (richtung > 0) d.setUTCMinutes(d.getUTCMinutes() + 1);
+  for (let i = 0; i < 11520; i++) { if (wchCronPasst(plan, d)) return d; d.setUTCMinutes(d.getUTCMinutes() + richtung); }
+  return null;
+}
+function wchTaktText(plan) { // „alle 30 Min.“, „täglich 07:30“ … aus dem Zeitplan (deutsche Zeit)
+  if (!plan) return "laufend"; const a = wchCronSuche(plan, Date.now(), 1), b = a && wchCronSuche(plan, a, 1), c = b && wchCronSuche(plan, b, 1); if (!a || !b) return plan;
+  const min = Math.round((b - a) / 60000), gleich = c && Math.round((c - b) / 60000) === min, uhr = (d) => fZeit.format(d);
+  if (gleich && min < 60) return `alle ${min} Min.`; if (gleich && min === 60) return "stündlich"; if (gleich && min < 1440 && min % 60 === 0) return `alle ${min / 60} Std.`;
+  if (gleich && min === 1440) return `täglich ${uhr(a)} Uhr`; if (gleich && min === 10080) return `${new Intl.DateTimeFormat("de-DE", { weekday: "long" }).format(a)}s ${uhr(a)} Uhr`;
+  return `mehrmals täglich (nächster ${uhr(a)} Uhr)`;
+}
+const wchUhr = (iso) => { if (!iso) return "–"; const d = new Date(iso), h = new Date(); return (d.toDateString() === h.toDateString() ? "heute " : new Date(h - 86400000).toDateString() === d.toDateString() ? "gestern " : tagKurz(d.toISOString().slice(0, 10)) + " ") + fZeit.format(d) + " Uhr"; };
+function wchLauf(w, d) { // einheitlich: { letzt, ok, plan, verlauf, ok24, fehler24, msg, link }
+  if (w.job) { const j = d?.jobs?.[w.job]; if (!j) return null; return { letzt: j.letzt, ok: j.status === "succeeded", aktiv: j.aktiv, plan: j.plan, verlauf: j.verlauf || "", ok24: j.ok24, fehler24: j.fehler24, msg: j.msg }; }
+  if (w.gh) { const g = d?.github?.[w.gh]; if (!g) return null; return { letzt: g.letzt, ok: g.ergebnis === "success", aktiv: true, plan: w.plan, verlauf: g.verlauf || "", ok24: g.ok24, fehler24: g.fehler24, link: /^https:\/\/github\.com\//.test(g.link || "") ? g.link : null }; }
+  return null;
+}
+function wchStatus(w, d) { // [farbe, kurzer Zustand, ausführlicher Befund] – bewertet wird auf dem Server (gleiche Regeln wie die Meldungen), nur 🐌 im Gerät
+  if (w.app && (w.id === "schnecke" || w.id === "liegen")) return w.app(d);
+  if (!d) return ["grau", "noch nicht geladen", ""];
+  return d.bewertung?.[w.id] || ["grau", "unbekannt", ""];
+}
+async function wchStart(neu) {
+  if (!WCH.daten || neu || Date.now() - WCH.zeit > 120000) {
+    if (!WCH.daten) wchZeigen(true);
+    try { WCH.laedt = true; WCH.daten = await api("waechter_lage", {}, { warten: true }); WCH.zeit = Date.now(); } catch (e) { WCH.laedt = false; if (!WCH.daten) $("wchBlatt")?.remove(); return meldeFehler(e); }
+    WCH.laedt = false;
+  }
+  wchZeigen(); if (aktuelleAnsicht === "start") kachelnZeigen(); // Lämpchen der Kachel nachziehen
+}
+async function wchFreigeben(pid) { // Bremse eines Zugangs lösen (Absaug-Wächter)
+  try { await api("sicherheit_freigeben", { person_id: pid }); melde("🔓 Freigegeben."); $("wchInfoBlatt")?.remove(); await wchStart(true); } catch (e) { meldeFehler(e); }
+}
+function wchZaehlen() { const z = { gruen: 0, gelb: 0, rot: 0, grau: 0 }; for (const w of WCH_LISTE) z[wchStatus(w, WCH.daten)[0]]++; return z; }
+function wchZeigen(laden) {
+  const d = WCH.daten, z = wchZaehlen();
+  const karte = (w) => { const [f, t] = wchStatus(w, d), l = wchLauf(w, d);
+    return `<button type="button" class="wch-karte f-${f}" onclick="wchInfo('${w.id}')" aria-label="${esc(w.name)}: ${esc(t)}">
+      <span class="wch-sym" aria-hidden="true">${w.sym}</span>
+      <span class="wch-text"><b class="wch-name">${esc(w.name)}</b><span class="wch-kurz">${esc(w.kurz)}</span>
+        <span class="wch-stand"><i class="wch-punkt" aria-hidden="true"></i>${esc(t)}${l?.letzt ? ` · ${esc(wchUhr(l.letzt))}` : ""}</span></span></button>`; };
+  const html = `<div class="wch-kopf"><h3>🛡️ Wächter</h3><span class="wch-summe">${WCH_LISTE.length} Wächter · ${z.gruen} ✅${z.gelb ? ` · ${z.gelb} 🟡` : ""}${z.rot ? ` · ${z.rot} 🔴` : ""}${z.grau ? ` · ${z.grau} ⚪` : ""}</span></div>
+    <p class="hinweis wch-hinweis">${laden ? "Wird geladen …" : `Stand ${esc(fZeit.format(new Date(WCH.zeit)))} Uhr · antippen = alles über den Wächter`}</p>
+    ${WCH_GRUPPEN.map(([g, t]) => { const l = WCH_LISTE.filter((w) => w.gruppe === g); return l.length ? `<h4 class="wch-gruppe">${t}</h4><div class="wch-raster">${l.map(karte).join("")}</div>` : ""; }).join("")}
+    <div class="knoepfe wch-knoepfe"><button class="knopf" onclick="wchStart(true)">↻ Aktualisieren</button><button class="knopf" onclick="$('wchBlatt').remove();adBlatt('lage')">📊 zur Lage</button><button class="knopf haupt" onclick="$('wchBlatt').remove()">Schließen</button></div>`;
+  const f = $("wchBlatt"); if (f) f.querySelector(".blatt-innen").innerHTML = html; else blattAuf("wchBlatt", html).classList.add("wch-blatt");
+}
+function wchInfo(id) {
+  const w = WCH_LISTE.find((x) => x.id === id), d = WCH.daten; if (!w) return;
+  const [f, t, befund] = wchStatus(w, d), l = wchLauf(w, d), naechst = l?.plan ? wchCronSuche(l.plan, Date.now(), 1) : null;
+  const zeile = (k, v) => (v ? `<dt>${k}</dt><dd>${v}</dd>` : "");
+  const balken = l?.verlauf ? `<div class="wch-balken" aria-label="letzte ${l.verlauf.length} Läufe">${[...l.verlauf].map((c) => `<i class="${c === "1" ? "ok" : c === "0" ? "nein" : "laeuft"}"></i>`).join("")}</div>` : "";
+  const html = `<div class="wch-info-kopf f-${f}"><span class="wch-sym gross" aria-hidden="true">${w.sym}</span><div><h3>${esc(w.name)}</h3><span class="wch-stand"><i class="wch-punkt"></i>${esc(t)}</span></div></div>
+    ${befund ? `<p class="wch-befund">${esc(befund)}</p>` : ""}
+    <dl class="wch-dl">
+      ${zeile("Beobachtet", esc(w.beobachtet))}${zeile("Grenze", esc(w.grenze || ""))}${zeile("Läuft", esc(w.takt || wchTaktText(l?.plan)))}
+      ${zeile("Wo", esc(w.wo))}${zeile("Letzter Lauf", l?.letzt ? `${esc(wchUhr(l.letzt))} ${l.ok ? "✅" : "❌"}` : w.app || w.takt ? "" : "–")}
+      ${zeile("Nächster Lauf", naechst ? esc(wchUhr(naechst.toISOString())) : "")}
+      ${zeile("Letzte 24 Std.", l && l.ok24 != null ? `${l.ok24} Läufe in Ordnung${l.fehler24 ? `, <b>${l.fehler24} fehlgeschlagen</b>` : ", keiner fehlgeschlagen"}` : "")}
+      ${zeile("Ergebnis", w.ergebnis ? esc(String(w.ergebnis(d) || "").replace(/^(Mirror-Watchdog|Privacy-Spiegelung|Spiegel-Abdeckung) OK: /, "")) : "")}
+      ${zeile("Meldet sich bei", w.id === "schnecke" || w.id === "liegen" ? esc(w.meldet) : `<b>dir per Push und E-Mail</b>, sobald er gelb oder rot wird (geprüft alle 15 Min., Erinnerung nach 12 Std.), und noch einmal, wenn er wieder grün ist.${w.meldet ? `<br><span class="hinweis">${esc(w.meldet)}</span>` : ""}`)}${zeile("Bei Rot", esc(w.tun || ""))}${zeile("Seit", esc(w.seit || ""))}
+    </dl>${balken ? `<p class="hinweis wch-balken-titel">Letzte Läufe (links alt, rechts neu): ▮ grün = in Ordnung, ▮ rot = Fehler</p>${balken}` : ""}
+    <div class="knoepfe wch-knoepfe">${w.knopf ? w.knopf(d) : ""}${l?.link ? `<a class="knopf" href="${esc(l.link)}" target="_blank" rel="noopener">Lauf auf GitHub ↗</a>` : ""}<button class="knopf haupt" onclick="$('wchInfoBlatt').remove()">Zurück</button></div>`;
+  blattAuf("wchInfoBlatt", html).classList.add("wch-blatt");
+}
+// ---------- 2.726.0 KC-CLUB-LIEGEN-SCHUTZ (Sicherheits-Wächter, Wunsch Hansi „wenn jemand die App zu lange ungenutzt offen hat“ – „mit freiwilliger PIN“) ----------
+// 15 Min. ohne Berührung → Sichtschutz (verschwommen, Antippen öffnet). Mit App-PIN (freiwillig, ⚙️ → 🔒 Privatsphäre): Büro, Mitglieder, Sicherheit,
+// Admin schon nach 10 Min., und dann nur mit PIN. Die PIN liegt NUR auf diesem Gerät (PBKDF2-Prüfwert, nie die PIN selbst) – der Server kennt sie nicht.
+// PIN vergessen: die App über den persönlichen Link neu öffnen (Mail-Knopf im Sperrbild) → die PIN auf diesem Gerät ist weg. 5× falsch → nur noch der Link.
+// Schutz gegen neugierige Blicke auf ein liegen gelassenes Handy – kein Ersatz für die Bildschirmsperre des Handys. Meldet niemandem etwas.
+const LS = { letzte: Date.now(), offen: false, gemerkt: 0, MIN_SICHT: 15, MIN_PIN: 10, FEHL_MAX: 5 };
+const lsLiegenPin = () => { try { return JSON.parse(localStorage.getItem("kc_club_pin") || "null"); } catch { return null; } };
+function lsAktiv() { // Berührung, Tippen, Scrollen = „jemand ist da“
+  LS.letzte = Date.now();
+  if (Date.now() - LS.gemerkt > 30000) { LS.gemerkt = Date.now(); try { localStorage.setItem("kc_club_ls_letzt", String(LS.letzte)); } catch {} }
+}
+["pointerdown", "keydown", "touchstart", "wheel"].forEach((ev) => document.addEventListener(ev, () => { if (!LS.offen) lsAktiv(); }, { passive: true, capture: true }));
+function lsHeikel() { // Ansichten mit fremden Daten
+  return ["buero", "mitglieder", "sicherheit"].includes(aktuelleAnsicht) || (aktuelleAnsicht === "start" && typeof reg !== "undefined" && reg === "admin")
+    || !!document.querySelector("#mgBlatt:not(.versteckt), #mitgliedBlatt, #wchBlatt, #adBlatt");
+}
+function lsNichtSperren() { // Anruf, Video, Rundgang, Diashow/Bühne: dann liegt niemand „herum“
+  return !!(typeof RG !== "undefined" && RG.an) || !!document.querySelector("#anrufSchirm:not(.versteckt), video:not([paused])")
+    || document.fullscreenElement || document.documentElement.classList.contains("kopf-um");
+}
+function lsPruefen(beimZurueckkommen) {
+  if (LS.offen || !KEY || lsNichtSperren()) return;
+  const pin = lsLiegenPin(), min = (Date.now() - (beimZurueckkommen ? Math.max(LS.letzte, Number(localStorage.getItem("kc_club_ls_letzt") || 0) || LS.letzte) : LS.letzte)) / 60000;
+  if (pin && min >= LS.MIN_PIN && lsHeikel()) return lsSperren(true);
+  if (min >= LS.MIN_SICHT) lsSperren(!!pin);
+}
+setInterval(() => lsPruefen(false), 20000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") lsPruefen(true); else { try { localStorage.setItem("kc_club_ls_letzt", String(LS.letzte)); } catch {} } });
+function lsSperren(mitPin) {
+  LS.offen = true; document.getElementById("lsSperre")?.remove();
+  const d = document.createElement("div"); d.id = "lsSperre"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true");
+  d.innerHTML = `<div class="ls-karte"><div class="ls-sym" aria-hidden="true">🔒</div><h3>${mitPin ? "App-PIN eingeben" : "Sichtschutz"}</h3>
+    <p class="hinweis">${mitPin ? "Die App lag eine Weile unbenutzt. Bitte deine 4-stellige App-PIN eingeben." : "Die App lag eine Weile unbenutzt – die Inhalte sind verdeckt."}</p>
+    ${mitPin ? `<div class="ls-punkte" aria-live="polite"><i></i><i></i><i></i><i></i></div><p class="ls-fehler" id="lsFehler"></p>
+      <div class="ls-tasten">${[1, 2, 3, 4, 5, 6, 7, 8, 9, "", 0, "⌫"].map((z) => (z === "" ? "<span></span>" : `<button type="button" data-z="${z}">${z}</button>`)).join("")}</div>
+      <button type="button" class="knopf klein ls-vergessen" onclick="lsVergessen()">PIN vergessen?</button>`
+      : `<button type="button" class="knopf haupt" onclick="lsEntsperren()">👆 Weiter</button>`}</div>`;
+  document.body.appendChild(d);
+  if (mitPin) { let ein = ""; const punkte = d.querySelectorAll(".ls-punkte i");
+    const zeig = () => punkte.forEach((p, i) => p.classList.toggle("an", i < ein.length));
+    d.querySelectorAll("[data-z]").forEach((b) => (b.onclick = async () => {
+      if (b.dataset.z === "⌫") { ein = ein.slice(0, -1); return zeig(); }
+      if (ein.length >= 4) return; ein += b.dataset.z; zeig();
+      if (ein.length === 4) { const ok = await pinPruefen(ein); ein = ""; zeig(); if (ok) lsEntsperren(); }
+    }));
+  }
+}
+function lsEntsperren() { document.getElementById("lsSperre")?.remove(); LS.offen = false; lsAktiv(); try { localStorage.setItem("kc_club_pin_fehl", "0"); } catch {} }
+async function pinWert(pin, salz) { // PBKDF2-SHA256, 150 000 Runden → Prüfwert (die PIN selbst wird nie gespeichert)
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const b = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode(salz), iterations: 150000 }, k, 256);
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function pinPruefen(pin) {
+  const p = lsLiegenPin(); if (!p) return true;
+  let fehl = Number(localStorage.getItem("kc_club_pin_fehl") || 0);
+  if (fehl >= LS.FEHL_MAX) { $("lsFehler").textContent = "Zu oft falsch. Bitte „PIN vergessen?“ antippen."; return false; }
+  if ((await pinWert(pin, p.salz)) === p.wert) return true;
+  fehl++; try { localStorage.setItem("kc_club_pin_fehl", String(fehl)); } catch {}
+  $("lsFehler").textContent = fehl >= LS.FEHL_MAX ? "Zu oft falsch. Bitte „PIN vergessen?“ antippen." : `Falsche PIN – noch ${LS.FEHL_MAX - fehl} Versuch${LS.FEHL_MAX - fehl === 1 ? "" : "e"}.`;
+  navigator.vibrate?.(120); return false;
+}
+async function lsVergessen() { // Weg zurück: persönlicher Link (per Mail) – beim Öffnen des Links ist die PIN auf diesem Gerät weg
+  const k = document.querySelector("#lsSperre .ls-karte"); if (!k) return;
+  k.innerHTML = `<div class="ls-sym" aria-hidden="true">🔑</div><h3>PIN vergessen?</h3>
+    <p>Kein Problem: Öffne die App einfach noch einmal über deinen <b>persönlichen Link</b> (aus der Mail oder WhatsApp von Hansi). Dann ist die PIN auf diesem Gerät gelöscht und du kannst eine neue einrichten.</p>
+    <p class="hinweis">Link nicht zur Hand? Wir schicken ihn dir an deine hinterlegte E-Mail-Adresse.</p>
+    <div class="knoepfe" style="display:grid;gap:8px"><button type="button" class="knopf haupt" id="lsMail">📧 Link per E-Mail schicken</button><button type="button" class="knopf" onclick="lsSperren(true)">← Zurück zur PIN</button></div>`;
+  $("lsMail").onclick = () => zugangMailen(); // derselbe Weg wie „Per E-Mail an mich“ (nur eigener Link an eigene Adresse)
+}
+async function pinEinstellen() { // ⚙️ → 🔒 Privatsphäre: einrichten, ändern, entfernen
+  const alt = lsLiegenPin();
+  if (alt && !(await frage("App-PIN ändern oder entfernen?\n\nZum Ändern bzw. Entfernen bitte zuerst die bisherige PIN eingeben."))) return;
+  if (alt) { const a = await pinFragen("Bisherige App-PIN"); if (a == null) return; if ((await pinWert(a, alt.salz)) !== alt.wert) return melde("Die bisherige PIN stimmt nicht.", true); }
+  if (alt && await frage("App-PIN entfernen?\n\nDann gibt es nur noch den Sichtschutz nach 15 Minuten.")) { try { localStorage.removeItem("kc_club_pin"); } catch {} pinAnzeige(); return melde("App-PIN entfernt."); }
+  const n1 = await pinFragen("Neue App-PIN (4 Ziffern)"); if (n1 == null) return;
+  const n2 = await pinFragen("Neue App-PIN wiederholen"); if (n2 == null) return;
+  if (n1 !== n2) return melde("Die beiden PINs waren nicht gleich – bitte noch einmal.", true);
+  const salz = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, "0")).join("");
+  try { localStorage.setItem("kc_club_pin", JSON.stringify({ salz, wert: await pinWert(n1, salz), seit: new Date().toISOString() })); localStorage.setItem("kc_club_pin_fehl", "0"); } catch {}
+  pinAnzeige(); melde("🔢 App-PIN eingerichtet. Vergessen? Einfach die App über deinen persönlichen Link neu öffnen.");
+}
+function pinFragen(titel) {
+  return new Promise((fertig) => { let f; const zu = (v) => { f?.remove(); fertig(v); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">${esc(titel)}</h3><input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" id="pinFeld" class="ls-feld" aria-label="${esc(titel)}">
+      <div class="dlg-knoepfe"><button class="knopf" data-w="ab">Abbrechen</button><button class="knopf haupt" data-w="ok">OK</button></div>`, () => zu(null));
+    const feld = f.querySelector("#pinFeld"); setTimeout(() => feld.focus(), 50);
+    const ok = () => (/^\d{4}$/.test(feld.value) ? zu(feld.value) : melde("Bitte genau 4 Ziffern.", true));
+    feld.onkeydown = (e) => { if (e.key === "Enter") ok(); };
+    f.querySelector('[data-w="ok"]').onclick = ok; f.querySelector('[data-w="ab"]').onclick = () => zu(null); });
+}
+function pinAnzeige() { const p = lsLiegenPin(), el = $("pinStand"); if (el) el.textContent = p ? `eingerichtet seit ${tagKurz(String(p.seit).slice(0, 10))}` : "nicht eingerichtet"; if ($("pinKnopf")) $("pinKnopf").textContent = p ? "Ändern / entfernen" : "Einrichten"; }
+// 2.726.0 KC-CLUB-NEUES-GERAET: „Warst du das?“ – nur auf einem ANDEREN Gerät als dem neuen (sonst könnte ein Fremder selbst „Ja“ sagen)
+async function neuesGeraetFragen() {
+  const f0 = INIT?.neuesGeraet; if (!f0?.k || f0.k === INIT?.meinGeraet) return;
+  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht, #lsSperre") || aktuelleAnsicht !== "start") return setTimeout(neuesGeraetFragen, 4000);
+  const wahl = await new Promise((fertig) => { let f; const zu = (w) => { f?.remove(); fertig(w); };
+    f = dlgOeffnen(`<h3 class="dlg-kopf">📱 Neues Gerät – warst du das?</h3><p class="dlg-text">Am ${esc(wann(f0.am))} wurde die Club-App mit deinem persönlichen Zugang auf einem neuen Gerät geöffnet: <b>${esc(f0.k)}</b>.</p>
+      <div class="dlg-knoepfe" style="display:grid;gap:8px"><button class="knopf haupt" data-w="ja">✅ Ja, das war ich</button><button class="knopf gefahr" data-w="nein">⛔ Nein, das war ich nicht</button><button class="knopf" data-w="spaeter">Später</button></div>`, () => zu("spaeter"));
+    f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w))); });
+  if (wahl === "spaeter") return;
+  try {
+    await api("neues_geraet_antwort", { antwort: wahl }, { warten: true }); INIT.neuesGeraet = null;
+    if (wahl === "nein") { let endpoint = ""; try { const r = await navigator.serviceWorker?.getRegistration?.(); endpoint = (await r?.pushManager?.getSubscription())?.endpoint || ""; } catch {}
+      const r = await api("andere_geraete_abmelden", { endpoint }, { warten: true });
+      if (r?.k) { KEY = r.k; try { localStorage.setItem("kc_club_key", r.k); } catch {} if (r.rtKanal && INIT) { INIT.rtKanal = r.rtKanal; try { rtVerbinden(); } catch {} } }
+      melde("🔒 Danke! Alle anderen Geräte sind abgemeldet – nur dieses bleibt. Hansi weiß Bescheid."); }
+    else melde("✅ Danke – alles in Ordnung.");
+  } catch (e) { meldeFehler(e); }
+}
 // ---------- 2.440.0 KC-CLUB-WUNSCHLISTE (Wunsch Hansi „Baue mir eine Liste ins Programm, wo ich dir Vorschläge reinschreibe – du schaust immer
 // da rein und arbeitest Punkt für Punkt ab“): nur Admin. Hansi schreibt (auch per 🎤), Claude liest die Liste direkt in der Datenbank, setzt
 // „in Arbeit“ / „Rückfrage“ / „erledigt (Version)“ und schreibt die Antwort hinein. Rückfragen stehen ganz oben; die Antwort darauf gibt den
@@ -26457,6 +26744,7 @@ function adBlatt(id) {
   if (id === "alarm") return notfallMeldung(); // KC-CLUB-NOTFALL-MELDUNG
   if (id === "stadt") return stadtTermine(); // KC-CLUB-STADT-TERMINE
   if (id === "rt") return rtBlatt(); // KC-CLUB-RT-SPARBREMSE (2.230.0)
+  if (id === "waechter") return wchStart(); // 2.726.0 KC-CLUB-WAECHTER
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
   const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;
@@ -29357,7 +29645,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); } // KC-CLUB-START-HINWEIS
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -34453,9 +34741,44 @@ const NA_FARBEN = { rot: "Rot", blau: "Blau", grün: "Grün", gelb: "Gelb" };
 const NA_FARB_RE = /\[(rot|blau|grün|gelb)\]([\s\S]+?)\[\/\1\]/g;
 const naOhneFarbe = (t) => String(t ?? "").replace(NA_FARB_RE, "$2");
 const naFarbe = (h) => h.replace(NA_FARB_RE, (x, f, w) => `<span class="nf nf-${f === "grün" ? "gruen" : f}">${w}</span>`); // h ist schon sicher (esc)
+// 2.726.0 KC-CLUB-LINK-PRUEFER (Sicherheits-Wächter): verdächtige Links in Nachrichten bekommen ein ⚠️ – dieselben Regeln wie auf dem Server
+// (supabase/functions/kc-club/sicherheit.js, der Test vergleicht beide). Nur Regeln, kein fremder Dienst.
+// >>> SI-LINK-REGELN
+const KURZ = /^(bit\.ly|tinyurl\.com|t\.co|goo\.gl|is\.gd|ow\.ly|buff\.ly|cutt\.ly|rebrand\.ly|shorturl\.at|tiny\.cc|rb\.gy|s\.id|v\.gd)$/i;
+const ECHT = ["koecheclub", "sire65", "supabase", "github", "paypal", "google", "microsoft", "amazon", "whatsapp"]; // „apple“/„dhl“ zu kurz; Sparkasse/Volksbank haben echte Regional-Adressen (sparkasse-werne.de)
+function naLinkGruende(url) {
+  let u; try { u = new URL(String(url)); } catch { return []; }
+  const g = [], host = u.hostname.toLowerCase();
+  if (u.protocol === "http:") g.push("ohne Verschlüsselung (http)");
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(":")) g.push("Zahlen-Adresse statt Name");
+  if (host.split(".").some((t) => t.startsWith("xn--"))) g.push("versteckte Sonderzeichen im Namen");
+  if (KURZ.test(host)) g.push("Kurz-Link – Ziel unsichtbar");
+  if (u.username || u.password || /@/.test(u.href.split("//")[1]?.split("/")[0] || "")) g.push("Adresse mit @ – führt woanders hin");
+  // Doppelgänger: Name enthält eine bekannte Marke (auch mit 0 statt o / 1 statt l), ist aber nicht deren echte Adresse – oder ist nur 1 Buchstabe daneben
+  const teile = host.replace(/^www\./, "").split("."), name = (teile.length > 1 ? teile[teile.length - 2] : teile[0]), norm = name.replace(/0/g, "o").replace(/1/g, "l");
+  if (!naEchteDomain(host)) for (const e of ECHT) if (norm.includes(e) || (norm.length >= 5 && naAbstand(norm, e) === 1)) { g.push(`sieht aus wie „${e}“, ist es aber nicht`); break; }
+  if (/(passwort|password|login|anmelden|konto-?bestaetig|verify|bestaetigen|pin|tan)\b/i.test(u.pathname + u.search) && !naEchteDomain(host)) g.push("fragt vermutlich nach Passwort/Daten");
+  // wichtigster Grund zuerst (er steht sichtbar am Link): Doppelgänger, @-Trick, Passwort-Seite, Zahlen-Adresse, Sonderzeichen, Kurz-Link, http
+  const rang = (x) => ["sieht aus", "Adresse mit @", "Passwort", "Zahlen", "Sonderzeichen", "Kurz-Link", "ohne Verschl"].findIndex((w) => x.includes(w));
+  return g.sort((a, b) => rang(a) - rang(b));
+}
+const ECHTE_DOMAINS = ["sire65.github.io", "github.com", "githubusercontent.com", "supabase.co", "supabase.com", "paypal.com", "paypal.de", "paypal.me", "sparkasse.de",
+  "volksbank.de", "google.com", "google.de", "googleusercontent.com", "googleapis.com", "apple.com", "apple.de", "icloud.com", "microsoft.com", "microsoftonline.com", "office.com",
+  "live.com", "amazon.de", "amazon.com", "dhl.de", "dhl.com", "whatsapp.com", "wa.me", "koecheclub-werne.de"];
+function naEchteDomain(host) { return ECHTE_DOMAINS.some((d) => host === d || host.endsWith("." + d)); }
+function naAbstand(a, b) { // Levenshtein, klein gehalten
+  const m = a.length, n = b.length; if (Math.abs(m - n) > 3) return 9;
+  let v = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) { const w = [i]; for (let j = 1; j <= n; j++) w[j] = Math.min(v[j] + 1, w[j - 1] + 1, v[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); v = w; }
+  return v[n];
+}
+// <<< SI-LINK-REGELN
+const naLinkWarnung = (h) => h.replace(/(href="|>)?(https?:\/\/[^\s<>"'„“]+)/gi, (x, vor, url) => { // h ist schon sicher (esc); nur hinter sichtbaren Link-Text
+  if (vor === 'href="') return x; const u = url.replace(/[.,;:!?)]+$/, "").replace(/&amp;/g, "&"), g = naLinkGruende(u);
+  return g.length ? `${vor || ""}${url}<span class="link-warn" role="note" title="${esc(g.join(" · "))}">⚠️ Vorsicht: ${esc(g[0])}</span>` : x; });
 function naText(t) { // Text sicher ausgeben, @Namen hervorheben, App-Sprünge als Knopf (KC-CLUB-SPRUNGKNOPF 2.23.97)
   if (vnIst(t)) return vnHtml(t); // 2.517.0 KC-CLUB-VERSCHLUESSELT
-  return naFormat(naFarbe(esc(t))).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
+  return naLinkWarnung(naFormat(naFarbe(esc(t)))).replace(/(^|\s)@([A-Za-zÄÖÜäöüß][\wÄÖÜäöüß-]*)/g, (x, v, n) => `${v}<span class="erw">@${n}</span>`).replace(SPRUNG_RE, (x, id) => sprungKnopf(id));
 }
 // Knöpfe F · K · D über dem Schreibfeld: erscheinen, sobald man im Text etwas markiert (Wort lange drücken / doppelt tippen), und über 𝐅 in der
 // kleinen Zeile. Markiertes wird eingerahmt (*Wort*); ohne Markierung kommen zwei Zeichen, der Strich steht dazwischen – einfach weiterschreiben.
@@ -37680,7 +38003,7 @@ function erkQrDeuten(roh) { // Profil-QR wie auf Wunschbogen, Bestätigung und S
 }
 const OCR_PFAD = "lib/ocr/", OCR_OK = "kc_club_ocr_ok", ERKD = { lauf: 0, merk: new WeakMap(), r: null };
 let ocrLaden = null, jsqrLaden = null;
-function skriptLaden(src, integrity) { return new Promise((ok, nein) => { const x = document.createElement("script"); x.src = src; if (integrity) x.integrity = integrity; /* 2.726.0 KC-CLUB-TEILE: Fingerabdruck */ x.onload = ok; x.onerror = () => nein(new Error("Baustein konnte nicht geladen werden.")); document.head.appendChild(x); }); }
+function skriptLaden(src, integrity) { return new Promise((ok, nein) => { const x = document.createElement("script"); x.src = src; if (integrity) x.integrity = integrity; /* 2.727.0 KC-CLUB-TEILE: Fingerabdruck */ x.onload = ok; x.onerror = () => nein(new Error("Baustein konnte nicht geladen werden.")); document.head.appendChild(x); }); }
 async function ocrText(bild) {
   if (!ocrLaden) ocrLaden = (window.Tesseract ? Promise.resolve() : skriptLaden(OCR_PFAD + "tesseract.min.js?v=7.0.0")).catch((e) => { ocrLaden = null; throw e; });
   await ocrLaden;
@@ -47255,6 +47578,7 @@ async function schluesselZurueck() {
   versionAnzeigen(); $("appVersion").textContent = APP_VERSION; oaBilderBeobachten(); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN
   const url = new URL(location.href), k = url.searchParams.get("k");
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
+  if (k) try { localStorage.removeItem("kc_club_pin"); localStorage.setItem("kc_club_pin_fehl", "0"); } catch {} // 2.726.0 KC-CLUB-LIEGEN-SCHUTZ: persönlicher Link = „PIN vergessen“ gelöst
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }
   if (window.KCFP) KCFP.version = APP_VERSION;
   // 2.0.0 (Gesamtprüfung): Service Worker zuerst – geht danach beim Aufbau etwas schief, kommt das nächste Update trotzdem an

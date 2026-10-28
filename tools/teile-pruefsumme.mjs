@@ -1,4 +1,4 @@
-// KC-CLUB-TEILE (2.726.0): Fingerabdrücke (SRI, sha384) der Programmteile in app.js (TEILE_LISTE) eintragen.
+// KC-CLUB-TEILE (2.727.0): Fingerabdrücke (SRI, sha384) der Programmteile in app.js (TEILE_LISTE) eintragen.
 // Aufruf nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs   (der Vertragstest meldet, wenn es vergessen wurde)
 import fs from "node:fs";
 import { createHash } from "node:crypto";
