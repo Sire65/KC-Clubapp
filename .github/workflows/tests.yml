@@ -37,6 +37,14 @@ jobs:
       - run: node tests/rezept-weihnacht.test.mjs
       # KC-CLUB-ONLINE-NAMEN (2.731.0)
       - run: node tests/online-namen.test.mjs
+      # KC-CLUB-FILM-HINWEIS (2.738.0)
+      - run: node tests/film-hinweis.test.mjs
+      # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
+      - run: node tests/einladung-an.test.mjs
+      # KC-CLUB-EINLADUNG-BRIEF (2.740.0)
+      - run: node tests/einladung-brief.test.mjs
+      # KC-CLUB-AKTENTASCHE-FREIGEBEN, KC-CLUB-EINGANG-DURCHGEHEN, KC-CLUB-ZIELWAHL (2.741.0)
+      - run: node tests/aktentasche-freigeben.test.mjs
       - run: node tests/zugang-pruefen.test.mjs
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs

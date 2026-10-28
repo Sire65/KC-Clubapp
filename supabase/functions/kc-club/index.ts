@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.736.0";
+const SERVER_VERSION = "2.741.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -775,6 +775,33 @@ async function sendenGewaehlt(eventKey: string, personIds: string[], wege: strin
   return { gesendet, fehler, wege: w };
 }
 const zustellwege = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((x) => ZUSTELLWEGE.includes(x));
+// KC-CLUB-SAMMEL-ANSAGE (2.739.0, Wunsch Hansi „schreibt jemand an mehrere Empfänger, muss die Stimme sagen: Christina hat dir und 5 anderen Personen
+// eine Sammelnachricht geschickt – nur wenn sie nur mir geschrieben hat: Christina hat dir eine Nachricht geschickt“): Nachricht ohne Gruppe an mehrere →
+// Push-Titel „💬 Name · an dich + 5 andere“ (steht auch in der Mitteilung); die App sagt daraus die Sammelnachricht an. Gruppen sagen weiter „in der Gruppe …“.
+const sammelTitel = (empfaenger: number) => (empfaenger > 1 ? ` · an dich + ${empfaenger - 1} ${empfaenger === 2 ? "andere Person" : "andere"}` : "");
+// KC-CLUB-EINLADUNG-AN (2.739.0, Wunsch Hansi „vor dem Absenden der Einladung auswählen, an wen: Alle, Gruppen, Auswahl“): Ziel der Einladung/Erinnerung.
+// Ohne Angabe oder „alle“ → wie bisher alle; sonst nur die übergebenen Mitglieder – immer geschnitten mit den echten Empfängern (nie Fremde).
+// KC-CLUB-EINLADUNG-BRIEF (2.740.0, Wunsch Hansi „die Einladung muss wirklich wie eine Einladung aufgebaut sein: Hallo Marianne, hiermit laden wir dich
+// herzlich zu unserer Clubsitzung ein am … um … in (Ort) … Folgende Punkte stehen auf der Tagesordnung: 1. 2. 3. … Wir freuen uns auf eine schöne
+// konstruktive Sitzung. Liebe Grüße Klaus, Clubsprecher, Köcheclub Werne“): ein Brief je Empfänger (eigener Vorname), Gruß mit Name und Amt.
+// Rein (ohne Datenbank) – die App baut die Vorschau mit denselben Sätzen (Test tests/einladung-brief.test.mjs).
+const BRIEF_AMT_RE = /^(clubsprecher|stellv|kassenwart|schriftf|admin)/i;
+const briefTag = (iso: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(iso)).replace(", ", ", den ");
+const briefZeit = (iso: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+function einladungBrief(d: { vorname: string; titel: string; beginn: string; ort: string; top: string[]; zusatz: string; url: string; von: string; amt: string; erinnerung: boolean }) {
+  const was = /^clubsitzung\b/i.test(d.titel) ? "Clubsitzung" : `Sitzung „${d.titel}“`;
+  const wann = `am ${briefTag(d.beginn)}, um ${briefZeit(d.beginn)} Uhr`;
+  const gruss = `Liebe Grüße\n${d.von}${d.amt ? "\n" + d.amt : ""}\nKöcheclub Werne`;
+  const kopf = `Hallo${d.vorname ? " " + d.vorname : ""},\n\n`;
+  if (d.erinnerung) return kopf + `kleine Erinnerung: ${wann} ist unsere ${was}${d.ort ? ` – ${d.ort}` : ""}.\n\nBitte sag kurz in der Club-App zu oder ab – das hilft uns bei der Vorbereitung:\n${d.url}`
+    + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\n${gruss}`;
+  return kopf + `hiermit laden wir dich herzlich zu unserer ${was} ein:\n\n📅 ${wann}${d.ort ? `\n📍 ${d.ort}` : ""}`
+    + (d.top.length ? `\n\nFolgende Punkte stehen auf der Tagesordnung:\n${d.top.join("\n")}` : "")
+    + (d.zusatz ? `\n\n${d.zusatz}` : "")
+    + `\n\nWir freuen uns auf eine schöne, konstruktive Sitzung.\nBitte sag kurz in der Club-App zu oder ab:\n${d.url}\n\n${gruss}`;
+}
+const einladungZiel = (z: any) => (z && ["gruppe", "auswahl", "einzeln", "amt"].includes(z.art) && Array.isArray(z.ids) // 2.741.0 KC-CLUB-ZIELWAHL: + einzeln, amt
+  ? { art: String(z.art), name: txt(z.name, 80), ids: new Set<string>(z.ids.map(String).slice(0, 500)) } : null);
 // 2.403.0 KC-CLUB-EXPRESS-PRIO1 (Wunsch Hansi „Express so schnell wie möglich raus, in der Warteschlange bevorzugt – Priorität 1“):
 // Express geht nicht als ein Sammelauftrag (der Versanddienst arbeitet die Empfänger darin nacheinander ab), sondern je Empfänger
 // ein eigener Auftrag – alle gleichzeitig (höchstens EXPRESS_PARALLEL auf einmal), mit Priorität „critical“ (= Priorität 1: der
@@ -1876,6 +1903,9 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-VIDEO-GESEHEN (2.266.0, Wunsch Hansi): je Erklär-Video, wie oft bis zum Ende angesehen und wann zuletzt – nur Zahlen, höchstens 80 Videos
   videos: (w) => Object.fromEntries(Object.entries(w && typeof w === "object" && !Array.isArray(w) ? w : {}).filter(([id]) => /^[a-z]{2,24}$/.test(id)).slice(0, 80)
     .map(([id, v]: [string, any]) => [id, { n: Math.max(0, Math.min(9999, Math.floor(Number(v?.n) || 0))), z: v?.z && !isNaN(Date.parse(String(v.z))) ? new Date(String(v.z)).toISOString() : null }])),
+  // KC-CLUB-FILM-HINWEIS (2.738.0, Wunsch Hansi): Anleitungsfilme beim Start – je Film angesehen/„Nein, danke“ und wann (höchstens 30 Filme)
+  filme: (w) => Object.fromEntries(Object.entries(w && typeof w === "object" && !Array.isArray(w) ? w : {}).filter(([id]) => /^[a-z]{2,24}$/.test(id)).slice(0, 30)
+    .map(([id, v]: [string, any]) => [id, { wie: ["angesehen", "nein"].includes(String(v?.wie)) ? String(v.wie) : null, z: v?.z && !isNaN(Date.parse(String(v.z))) ? new Date(String(v.z)).toISOString() : null }])),
   rundgang: (w) => ({ erledigt: w?.erledigt && !isNaN(Date.parse(String(w.erledigt))) ? new Date(String(w.erledigt)).toISOString() : null, wie: ["angesehen", "nein"].includes(String(w?.wie)) ? String(w.wie) : null }),
   einweisung: (w) => ({ an: w?.an !== false, gesehen: Object.fromEntries(Object.entries(w?.gesehen && typeof w.gesehen === "object" ? w.gesehen : {})
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),
@@ -6990,7 +7020,7 @@ async function gastgeberMitteilen(t: any, ich: string, art: "einladung" | "geaen
   const { count } = await db.from("kc_club_teilnahme").select("person_id", { count: "exact", head: true }).eq("treffen_id", t.id).eq("antwort", "ja");
   const vorn = art === "abgesagt" ? "Du warst als Gastgeberin/Gastgeber eingetragen – das Treffen fällt aus." : `Du bist Gastgeberin/Gastgeber – aktuell ${count ?? 0} Zusage${count === 1 ? "" : "n"}. Am Vorabend bekommst du den genauen Stand, danach jede Änderung.`;
   await sendenGewaehlt("club_erinnerung", [t.gastgeber_person_id], ["push", "email"], { ...vars, titel: `🏠 ${vars.titel}`, kurz: `${vars.kurz}`,
-    text: String(vars.text).replace(/^Hallo,\n\n/, `Hallo,\n\n${vorn}\n\n`) }, `club-gastgeber-${art}:${t.id}:${Date.now()}`).catch((e) => console.error("gastgeber mitteilen", String(e)));
+    text: String(vars.text).replace(/^(Hallo[^\n]*,)\n\n/, (_, h) => `${h}\n\n${vorn}\n\n`) }, `club-gastgeber-${art}:${t.id}:${Date.now()}`).catch((e) => console.error("gastgeber mitteilen", String(e)));
   await protokoll(ich, "gastgeber_mitgeteilt", { treffen: t.id, art });
   return true;
 }
@@ -10050,29 +10080,40 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const alle = (await sammelEmpfaenger()).map((m) => m.person_id);
         const { data: teil } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid);
         const geantwortet = new Set((teil ?? []).filter((x: any) => x.antwort && x.antwort !== "keine").map((x: any) => x.person_id));
-        const ziel = (nurOffen ? alle.filter((id) => !geantwortet.has(id)) : alle).filter((id) => id !== ich.person_id);
+        const an = einladungZiel(p.ziel); // KC-CLUB-EINLADUNG-AN
+        if (an && !an.ids.size) throw new Fehler("Bitte mindestens ein Mitglied auswählen.", 400);
+        const ziel = (nurOffen ? alle.filter((id) => !geantwortet.has(id)) : alle).filter((id) => id !== ich.person_id && (!an || an.ids.has(id)));
         if (!ziel.length) return json({ ok: true, versand: { gesendet: 0 }, empfaenger: 0 });
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ort = t.ort || (g ? `bei ${g.display_name}` : "");
         const zusatz = txt(p.text, 500);
         const url = APP_URL + "#termine";
+        // KC-CLUB-EINLADUNG-BRIEF (2.740.0): jeder bekommt seinen eigenen Brief (Hallo <Vorname>), Gruß mit Name und Amt des Absenders
+        const amt = (ich.aemter || []).find((x) => BRIEF_AMT_RE.test(x)) || (ich.aemter || [])[0] || "";
+        const brief = (vn: string) => einladungBrief({ vorname: vn, titel: t.titel, beginn: t.beginn, ort, top, zusatz, url, von: ich.vorname || ich.name, amt, erinnerung: nurOffen });
         const vars = nurOffen ? {
           titel: `🔔 Kommst du? ${t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""} – bitte kurz zu- oder absagen.`,
-          betreff: `Köcheclub Werne – Erinnerung: ${t.titel} am ${wann(t.beginn)}`,
-          text: `Hallo,\n\nkleine Erinnerung an unsere Sitzung:\n\n${t.titel}\n${wann(t.beginn, true)}${ort ? `\n${ort}` : ""}\n\nBitte sag kurz in der App zu oder ab – das hilft bei der Vorbereitung.${zusatz ? `\n\n${zusatz}` : ""}\n\n${url}\n\nViele Grüße\n${ich.name}\nKöcheclub Werne`,
-          url,
+          betreff: `Köcheclub Werne – Erinnerung: ${t.titel} am ${wann(t.beginn)}`, text: brief(""), url,
         } : {
           titel: `📨 Einladung: ${t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""}${top.length ? ` · ${top.length} Tagesordnungspunkte` : ""}`,
-          betreff: `Köcheclub Werne – Einladung: ${t.titel} am ${wann(t.beginn)}`,
-          text: `Hallo,\n\nhiermit lade ich herzlich ein zu unserer Sitzung:\n\n${t.titel}\n${wann(t.beginn, true)}${ort ? `\n${ort}` : ""}${top.length ? `\n\nTagesordnung:\n${top.join("\n")}` : ""}${zusatz ? `\n\n${zusatz}` : ""}\n\nBitte in der App kurz zu- oder absagen. Themen kannst du jederzeit unter „Vorschläge“ einreichen.\n${url}\n\nViele Grüße\n${ich.name}\nKöcheclub Werne`,
-          url,
+          betreff: `Köcheclub Werne – Einladung: ${t.titel} am ${wann(t.beginn)}`, text: brief(""), url,
         };
         const wege = zustellwege(p.wege);
-        const gast = !nurOffen && await gastgeberMitteilen(t, ich.person_id, "einladung", vars); // 2.481.0: Gastgeberin immer per Push + E-Mail, mit Gastgeber-Hinweis
-        const versand = await sendenGewaehlt("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, wege, vars, `club-buero-${nurOffen ? "erinnerung" : "einladung"}:${tid}:${Date.now()}`);
+        const leute = await personen(ziel);
+        const gast = !nurOffen && await gastgeberMitteilen(t, ich.person_id, "einladung", { ...vars, text: brief(vorname(leute.get(t.gastgeber_person_id) ?? g ?? null)) }); // 2.481.0: Gastgeberin immer per Push + E-Mail, mit Gastgeber-Hinweis
+        const an_ = gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, korr = `club-buero-${nurOffen ? "erinnerung" : "einladung"}:${tid}:${Date.now()}`;
+        // je Empfänger ein eigener Brief – im Hintergrund, je 4 gleichzeitig (die App wartet nicht auf alle Zustellungen)
+        const versenden = async () => {
+          let gesendet = 0, fehler = 0;
+          for (let k = 0; k < an_.length; k += 4) {
+            const r = await Promise.all(an_.slice(k, k + 4).map((id) => sendenGewaehlt("club_treffen", [id], wege, { ...vars, text: brief(vorname(leute.get(id) ?? null)) }, `${korr}:${id}`).catch(() => ({ gesendet: 0, fehler: 1 }))));
+            for (const x of r as any[]) { gesendet += x.gesendet || 0; fehler += x.fehler || 0; }
+          }
+          await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, an: an ? an.art : "alle", wege, versand: { gesendet, fehler } });
+        };
+        nebenbei(versenden().catch((e) => console.error("einladung versand", String(e))));
         await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt() }, { onConflict: "treffen_id" });
-        await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, wege, versand });
-        return json({ ok: true, versand, empfaenger: ziel.length });
+        return json({ ok: true, versand: { hintergrund: true }, empfaenger: ziel.length });
       }
 
       // ----- KC-CLUB-BUERO-NACHHER (1.28.0): nach der Sitzung – Foto der Mitschrift, Aufgaben verteilen, veröffentlichen -----
@@ -12801,7 +12842,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Einmal-Fotos und Nachrichten, die sich selbst löschen. Grenzen wie beim Versanddienst (je Datei 10 MB, zusammen 15 MB) – sonst wie bisher nur der Hinweis.
         const mailAnl = anlagen.length && wege.includes("email") && !einmal && !slHinweis ? await mailAnlagen(anlagen) : [];
         const nachrichtVars = {
-          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(ohneFarbe(text), 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
+          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}${sammelTitel((tn ?? []).length)}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(ohneFarbe(text), 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || ohneFarbe(text)}${mailAnl.length ? `\n\n📎 Im Anhang: ${mailAnl.map((x) => x.name).join(", ")}` : anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`, ...(mailAnl.length ? { attachmentIds: mailAnl.map((x) => x.id) } : {}), ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT
@@ -17214,6 +17255,59 @@ Köcheclub-App`,
       // 2.432.0 KC-CLUB-EINGANGSKORB (Wunsch Hansi: „Steven ein Dokument in seinen Archiv-Ordner legen“ – „Eingangskorb für Mitglieder“):
       // Admin/Clubleitung legt ein Dokument in den persönlichen Ordner eines Mitglieds – ohne Freigabe, aber nur „zur Prüfung“: sichtbar und
       // im Ordner erst, wenn das Mitglied es annimmt; ablehnen löscht es. Der Ordner bleibt privat (die Leitung sieht danach nichts darin).
+      // ---------- KC-CLUB-AKTENTASCHE-FREIGEBEN (2.741.0, Wunsch Hansi „Aktentasche → anhaken → Freigeben → an alle/einzeln/Gruppe/Amt → in den
+      // Eingangskorb der Mitglieder“): eine Datei an viele Eingangskörbe (vorhandener Kern KC-CLUB-EINGANGSKORB: Dokument im persönlichen Ordner,
+      // Status „pruefung“ → das Mitglied legt ab oder löscht). Die Datei kommt einmal an (zählt einmal fürs Tageskontingent); jeder Empfänger bekommt
+      // eine eigene Kopie (Löschen bei einem trifft nie die anderen). Verteilen im Hintergrund; Bescheid einmal je Empfänger beim letzten Teil.
+      case "archiv_eingang_verteilen": {
+        nurLeitung(ich);
+        const ids = [...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => id !== ich.person_id).slice(0, 200);
+        if (!ids.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.");
+        const mime = txt(p.mime, 100);
+        if (!ARCHIV_DATEITYPEN.test(mime)) throw new Fehler("Diese Datei passt nicht ins Archiv – bitte PDF, Bild, Word, Excel oder Text.");
+        const sp = await speicherStand();
+        if (sp.belegt >= SPEICHER_GRENZE * ARCHIV_STOPP) throw new Fehler("Der kostenlose Speicher ist voll – bitte zuerst Altes löschen.", 507);
+        const [{ data: pe }, { data: ro }] = await Promise.all([
+          db.from("kc_core_people").select("person_id,display_name,given_name,preferred_name").in("person_id", ids).eq("active", true),
+          db.from("kc_club_rollen").select("*").in("person_id", ids)]);
+        const rolle = new Map((ro ?? []).map((r: any) => [r.person_id, r]));
+        const ok: any[] = [], weg: { name: string; grund: string }[] = [];
+        for (const x of pe ?? []) { if (zugangAus(rolle.get(x.person_id)) === "mitglied") ok.push(x); else weg.push({ name: vorname(x), grund: "Gast/Aushilfe – kein Archiv" }); }
+        if (!ok.length) return json({ ok: true, empfaenger: 0, uebersprungen: weg });
+        let frei: any = await dateiAblegen(ich, p.name, mime, p.daten, ARCHIV_DATEITYPEN); // prüft Typ und Größe, zählt einmal
+        const sys = { ...ich, zugang: undefined } as any; // Kopien für die weiteren Empfänger zählen nicht noch einmal (wie Systemablagen)
+        const titel = txt(p.titel, 120) || frei.name, notiz = txt(p.notiz, 500), reg = String(p.register || ""), letzte = p.letzte !== false;
+        const anzahl = Math.max(1, Math.min(20, Math.floor(Number(p.anzahl)) || 1)), erstId = frei.id;
+        const verteilen = async () => {
+          let abgelegt = 0;
+          for (const x of ok) {
+            try {
+              if ((await archivBelegtVon(x.person_id)) >= PERSOENLICH_GRENZE) continue;
+              const oid = await archivOrdnerVon(x.person_id, x.display_name || vorname(x), new Date().getFullYear(), ich.person_id);
+              const { data: o } = oid ? await db.from("kc_club_archiv_ordner").select("id,register,geloescht_am").eq("id", oid).single() : { data: null as any };
+              if (!o || o.geloescht_am) continue;
+              const datei = frei ?? await dateiAblegen(sys, p.name, mime, p.daten, ARCHIV_DATEITYPEN); frei = null;
+              const regs: string[] = o.register ?? PERSOENLICH_REGISTER, register = regs.includes(reg) ? reg : regs.includes("Sonstiges") ? "Sonstiges" : regs[0] ?? null;
+              const { error } = await db.from("kc_club_archiv_dokumente").insert({ ordner_id: oid, register, titel, datum: archivDatum(null), stichworte: archivStichworte(null), beschreibung: notiz,
+                attachment_id: datei.id, datei_name: datei.name, mime, groesse: datei.groesse, hochgeladen_von: ich.person_id, status: "pruefung" });
+              if (error) { await dateienEntfernen([datei.id]); continue; }
+              abgelegt++;
+              // KC-CLUB-EINGANG-SOFORT (2.741.0, Wunsch Hansi „auch während der Clubsitzung – sofort Bescheid, nicht erst nach Neustart“): offene Apps über die direkte Leitung
+              if (letzte) await db.rpc("kc_club_rt_klingeln", { p_personen: [x.person_id], p_art: "eingang" }).then(() => {}, () => {});
+              if (letzte) await senden("club_nachricht", [x.person_id], {
+                titel: "📥 Neu in deinem Eingangskorb", kurz: `${ich.name}: ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} – ansehen, dann ablegen oder löschen`,
+                betreff: "Köcheclub Werne – neu in deinem Eingangskorb",
+                text: `Hallo ${vorname(x)},\n\n${ich.name} hat dir ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} in deinen Eingangskorb gelegt.${notiz ? `\n\n${notiz}` : ""}\n\nIn der Club-App siehst du ${anzahl === 1 ? "es" : "sie"} dir an und entscheidest: in deinem Archiv ablegen oder löschen.\n\n${APP_URL}#archiv\n\nViele Grüße\nKöcheclub Werne`,
+                url: `${APP_URL}#archiv`,
+              }, `club-eingang-verteilt:${erstId}:${x.person_id}`).catch(() => null);
+            } catch (e) { console.error("eingang verteilen", String(e)); }
+          }
+          if (frei) await dateienEntfernen([frei.id]); // niemand hat die erste Datei bekommen
+          await protokoll(ich.person_id, "archiv_eingang_verteilt", { titel: txt(titel, 60), empfaenger: ok.length, abgelegt, uebersprungen: weg.length });
+        };
+        nebenbei(verteilen().catch((e) => console.error("eingang verteilen", String(e))));
+        return json({ ok: true, empfaenger: ok.length, uebersprungen: weg });
+      }
       case "archiv_eingang_senden": {
         nurLeitung(ich);
         const pid = String(p.person_id || "");

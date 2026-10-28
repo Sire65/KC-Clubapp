@@ -2017,8 +2017,8 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const sp = server.slice(server.indexOf('case "buero_speichern"'), server.indexOf('case "buero_einladung"'));
   assert.ok(/pr\.status === "entwurf" && pr\.version === 1 && new Date\(t\.beginn\)\.getTime\(\) > Date\.now\(\)/.test(sp), "veröffentlichte Protokolle / Entwürfe nach Sitzungsbeginn unberührt");
   const ei = server.slice(server.indexOf('case "buero_einladung"'), server.indexOf('case "leihen_liste"'));
-  assert.ok(/nurOffen \? alle\.filter\(\(id\) => !geantwortet\.has\(id\)\) : alle\)\.filter\(\(id\) => id !== ich\.person_id\)/.test(ei), "Erinnerung nur an Mitglieder ohne Antwort");
-  assert.ok(/if \(!\(await frage\(`\$\{x\.nurOffen \? "Erinnerung" : "Einladung"\} jetzt an \$\{anzahl\} Mitglieder senden\?`\)\)\) return;/.test(html), "Senden erst nach Bestätigung");
+  assert.ok(/nurOffen \? alle\.filter\(\(id\) => !geantwortet\.has\(id\)\) : alle\)\.filter\(\(id\) => id !== ich\.person_id( && \(!an \|\| an\.ids\.has\(id\)\))?\)/.test(ei), "Erinnerung nur an Mitglieder ohne Antwort"); // 2.739.0: + Auswahl (KC-CLUB-EINLADUNG-AN)
+  assert.ok(/if \(!\(await frage\(`\$\{x\.nurOffen \? "Erinnerung" : "Einladung"\} jetzt an \$\{anzahl\} \$\{anzahl === 1 \? "Mitglied" : "Mitglieder"\} senden\?[^\n]*\)\)\) return;\n  await einmal\(knopf/.test(html), "Senden erst nach Bestätigung"); // 2.739.0: + Gruppe/Auswahl in der Rückfrage
   assert.ok(/\{ id: "buero", sym: "🗂️", t: "Büro",[^\n]*nur: \(\) => !!ICH\?\.buero \}/.test(html), "Kachel nur mit Büro-Freigabe (1.37.0)");
   assert.ok(/if \(!ICH\?\.vorstand \|\| !buDarf\(\)\) return;/.test(html) && /sessionStorage\.getItem\("kc_buero_gefragt"\)/.test(html) && /if \(!h \|\| h === "#"\) setTimeout\(\(\) => buGrussFragen\(\), 1500\)/.test(html), "Begrüßung einmal je Start, nur Clubleitung, nicht nach Sprung");
   assert.ok(/sitzung: \{ bauen: \(\) => druckSitzung\(\) \}/.test(html) && /Anmerkung zum letzten Protokoll/.test(html) && /TOP \$\{i \+ 1\}/.test(html), "Druckvorlage");
@@ -3316,7 +3316,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/import \{ Chess \} from "\.\/chess\.js";/.test(server) && fs.existsSync(new URL("../supabase/functions/kc-club/chess.js", import.meta.url)) && fs.existsSync(new URL("../lib/chess/chess.js", import.meta.url)) && /BSD|Redistribution/.test(lies("lib/chess/LICENSE")), "chess.js lokal mit Lizenz");
   const zug = server.slice(server.indexOf('case "spiel_zug": {'), server.indexOf('case "spiel_aufgeben": {'));
   assert.ok(/if \(ch\.turn\(\) !== farbe\) throw/.test(zug) && /try \{ m = ch\.move\(\{ from: von, to: nach, promotion: umw \}\); \} catch \{ m = null; \}/.test(zug) && /sieg = ch\.isCheckmate\(\); remis = !sieg && ch\.isDraw\(\);/.test(zug), "Server prüft Schachzüge");
-  assert.ok(/import\(new URL\("lib\/chess\/chess\.js\?v=1\.4\.0", location\.href\)\.href\)/.test(html) /* 2.738.0: Adresse zur Seite (liegt in teile/spiele.js) */ && /function schComputerZug\(ch, staerke\)/.test(html) && /onclick="spArtWahl\('schach'\)"/.test(html) && /function schUmwandlung\(farbe\)/.test(html), "Schach in der App");
+  assert.ok(/import\(new URL\("lib\/chess\/chess\.js\?v=1\.4\.0", location\.href\)\.href\)/.test(html) /* 2.742.0: Adresse zur Seite (liegt in teile/spiele.js) */ && /function schComputerZug\(ch, staerke\)/.test(html) && /onclick="spArtWahl\('schach'\)"/.test(html) && /function schUmwandlung\(farbe\)/.test(html), "Schach in der App");
   // Computer findet Matt in 1 (Stichprobe mit der echten Bibliothek)
   const { Chess } = await import(new URL("../lib/chess/chess.js", import.meta.url));
   const code = html.slice(html.indexOf("const SCH_FIG"), html.indexOf("// ----- Brett -----"));
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7814,7 +7814,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(sw, /if \(istProgramm\(url\) \|\| istTeil\(url\)\) \{/, "Teile aus dem Speicher dieser Version");
   assert.match(sw, /ignoreSearch: !url\.pathname\.endsWith\("\/app\.js"\) && !url\.pathname\.includes\("\/teile\/"\)/, "offline nie ein Teil einer anderen Version");
   assert.match(lies("docs/AUFTEILEN.md"), /sicherung\/vor-aufteilen-2\.725\.0/, "Rückweg-Anleitung mit Sicherungs-Zweig");
-  // 2.738.0 (Fund beim Vergleich Stufe 2): import() mit „./…“ löst sich vom Teil aus auf (teile/lib/…) statt von der Seite – in Teilen nur new URL(…, location.href)
+  // 2.742.0 (Fund beim Vergleich Stufe 2): import() mit „./…“ löst sich vom Teil aus auf (teile/lib/…) statt von der Seite – in Teilen nur new URL(…, location.href)
   for (const f of fs.readdirSync(new URL("../teile/", import.meta.url)).filter((x) => x.endsWith(".js")))
     assert.ok(!/import\(\s*["'`](?!https?:)/.test(lies("teile/" + f)), `teile/${f}: import() nur mit new URL(…, location.href) – sonst sucht der Browser im Ordner teile/`);
 }
@@ -7833,7 +7833,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(app, /if \(RG\.an\) rundgangEnde\(true\);/, "Zurück beendet ein laufendes Video – nur wenn es läuft (dann ist das Teil geladen)");
   assert.ok(!/st: (?!\(\) => )RG_/.test(app.slice(app.indexOf("const RUNDGAENGE = ["), app.indexOf("];", app.indexOf("const RUNDGAENGE = [")))), "Katalog verweist nur bei Bedarf auf die Drehbücher (st: () => …)");
 }
-// 2.738.0 KC-CLUB-TEILE Stufe 2: Spiele liegen in teile/spiele.js – Einstiege über Platzhalter; Start-Einladung, Live-Anfragen, Einstellungen bleiben im Hauptprogramm
+// 2.742.0 KC-CLUB-TEILE Stufe 2: Spiele liegen in teile/spiele.js – Einstiege über Platzhalter; Start-Einladung, Live-Anfragen, Einstellungen bleiben im Hauptprogramm
 {
   const app = lies("app.js"), sp = lies("teile/spiele.js");
   assert.match(app, /spiele: \{ einstieg: \["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"\], sri: "sha384-/, "Spiele-Teil mit seinen Einstiegen registriert");
@@ -11953,9 +11953,9 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   const m = server.slice(server.indexOf("async function gastgeberMitteilen("), server.indexOf("// KC-CLUB-ANTWORT-ERINNERUNG-2T"));
   assert.ok(/if \(!t\.gastgeber_person_id \|\| t\.gastgeber_person_id === ich\) return false;/.test(m) && /\["push", "email"\]/.test(m) && /Du bist Gastgeberin\/Gastgeber – aktuell/.test(m), "Gastgeber-Hinweis, Push + E-Mail");
-  assert.ok(/const gast = !nurOffen && await gastgeberMitteilen\(t, ich\.person_id, "einladung", vars\);/.test(server) && /gast \? ziel\.filter\(\(id\) => id !== t\.gastgeber_person_id\) : ziel, wege, vars/.test(server), "Einladung: Gastgeberin extra, nicht doppelt");
+  assert.ok(/const gast = !nurOffen && await gastgeberMitteilen\(t, ich\.person_id, "einladung", \{ \.\.\.vars, text: brief\(/.test(server) && /const an_ = gast \? ziel\.filter\(\(id\) => id !== t\.gastgeber_person_id\) : ziel,/.test(server), "Einladung: Gastgeberin extra, nicht doppelt"); // 2.740.0: Brief je Empfänger (KC-CLUB-EINLADUNG-BRIEF)
   assert.ok(/await gastgeberMitteilen\(t, ich\.person_id, "geaendert", treffenText/.test(server) && /await gastgeberMitteilen\(t, ich\.person_id, "abgesagt", treffenText/.test(server), "Änderung und Absage");
-  assert.ok(/Tagesordnung:\\n\$\{top\.join\("\\n"\)\}/.test(server), "Einladung enthält die Tagesordnung");
+  assert.ok(/Tagesordnung:\\n\$\{(d\.)?top\.join\("\\n"\)\}/.test(server), "Einladung enthält die Tagesordnung"); // 2.740.0: im Brief (einladungBrief)
 }
 // 2.481.0 KC-CLUB-PUSH-ERLAUBNIS-WEG (Fall Dieter): Erlaubnis im Handy weg, altes Abo stand noch aktiv → abmelden, ehrlich warnen
 {
