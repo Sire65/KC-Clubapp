@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.732.0 – 2026-10-28 – 🎡 Kopf-Szenen starten kurz nach der App (KC-CLUB-SZENEN-SPAETER, Stufe 3b)
+Wunsch Hansi „lass die Szenen ruhig etwas später starten“ (Prüfbericht C, Stufe 3b): Jahreszeiten-Bühne und alle Themen-Szenen – Sim-Jü mit Karussell, Viehmarkt und Stier, Oktoberfest, Karibik, Karneval, Halloween, Unterwasser, Weltraum, Bauernhof, Kegeln, Wildwest, Wüste, Seifenblasen, Baustelle – samt Winter- und Herbst-Extras (rund 490 KB) liegen jetzt in teile/szenen.js. Die Startseite ist sofort bedienbar; die Szene erscheint etwa eine Sekunde später, sobald die App gerade nichts anderes zu tun hat. Deko und Eiszapfen sind sofort da. Die Vorschau in den Einstellungen und die Erklär-Videos laden die Szenen direkt. Geprüft: alle 19 Szenen und alle 57 Videos wie vorher, auch ein Video direkt nach dem Öffnen.
+
 ## 2.731.0 – 2026-10-28 – 🪞 Rückseite des Kopfs wird erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 3)
 Prüfbericht C (Wunsch #44), Stufe 3 – für Mitglieder unsichtbar: Rätsel, Spiegel, Diashow, Tafel, Flipchart und die Bühne mit Musik und Club-Song (rund 175 KB) liegen jetzt in teile/rueckseite.js und werden geladen, wenn auf der Rückseite ein Reiter aufgeht oder ein Erklär-Video sie vorführt (Videos laden die Rückseite automatisch mit). Im Hauptprogramm bleiben Eselsohr, Umdrehen und Aufrollen, die große Uhr mit Wecker (klingelt immer) und die Bewegungs-Einladung mit Twinkeys Figur. Neu im Fundament: abhängige Teile und teilDa(). Geprüft: alle 7 Reiter, Club-Song, die Videos zu Rückseite/Rätsel/Bühne – auch auf frisch geöffnetem Handy –, beim Start wird kein Teil geladen.
 

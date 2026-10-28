@@ -5868,7 +5868,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.282.0 KC-CLUB-WINTER-KINDER (Wunsch Hansi): Eistropfen deutlicher + Pfütze, Schlitten-Kinder abwechselnd von links/rechts, Schneeballschlacht
 {
-  assert.ok(/function jzbEisTropfen\(sx, sy\)/.test(html) && /if \((jzbEisTropfen|\(eis \? jzbEisStueck : jzbEisTropfen\))\(r\.left \+ r\.width \/ 2, r\.top \+ r\.height \/ 2\)\) return t\.remove\(\);/.test(html), "Tropfen fällt in der Bühne bis zum Boden");
+  assert.ok(/function jzbEisTropfen\(sx, sy\)/.test(html) && /if \((teilDa\("szenen"\) && )?(jzbEisTropfen|\(eis \? jzbEisStueck : jzbEisTropfen\))\(r\.left \+ r\.width \/ 2, r\.top \+ r\.height \/ 2\)\) return t\.remove\(\);/.test(html) /* 2.732.0 */, "Tropfen fällt in der Bühne bis zum Boden");
   assert.ok(/p\.r = Math\.min\(22 \* k, p\.r \+ 1\.6 \* k\)/.test(html) && /p\.r -= dt \* \.04 \* k;/.test(html), "Pfütze wächst langsam (begrenzt) und trocknet sehr langsam");
   assert.ok(/const dir = J\.schlittenDir = J\.schlittenDir === 1 \? -1 : 1;/.test(html), "Schlitten abwechselnd von links und von rechts");
   assert.ok(/function jzbKind\(c, f, sitzt, opt = \{\}\)/.test(html) && /\/\/ Bommelmütze/.test(html) && /\/\/ Schal: um den Hals, zwei Enden flattern nach hinten/.test(html), "Kinder mit Bommelmütze und wehendem Schal");
@@ -7848,7 +7848,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const app = lies("app.js"), rs = lies("teile/rueckseite.js");
   assert.match(app, /rueckseite: \{ einstieg: \["bwClubSong"\], sri: "sha384-/, "Rückseiten-Teil registriert");
-  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite"\] \};/, "Videos laden die Rückseite mit (sie führen Rätsel und Bühne vor)");
+  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite", "szenen"\] \};/, "Videos laden Rückseite und Szenen mit (sie führen Rätsel, Bühne und Jahreszeiten vor)"); // 2.732.0: + szenen
   assert.match(app, /Promise\.all\(\(TEILE_BRAUCHT\[name\] \|\| \[\]\)\.map\(teilLaden\)\)\.then\(\(\) => versuch\(1\)\)/, "abhängige Teile zuerst");
   assert.match(app, /TEILE_DA\[name\] = true;/, "teilDa() weiß, was geladen ist");
   assert.match(app, /if \(k !== "uhr" && !teilDa\("rueckseite"\)\) return teilLaden\("rueckseite"\)\.then\(\(\) => esTab\(k\), \(e\) => \{ meldeFehler\(e\); esTab\("uhr"\); \}\);/, "Reiter laden die Rückseite nach; geht das nicht, bleibt die Uhr");
@@ -7857,6 +7857,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
     assert.ok(app.includes(n) && !rs.includes(n), `${n.slice(0, 26)} bleibt im Hauptprogramm (Start, Wecker, Uhr, Einladung)`);
   for (const n of ["function esRaetselZeigen(", "function esSpiegelZeigen(", "function esDiaZeigen(", "function esBuehneZeigen(", "function bwClubSong(", "function qzStop("])
     assert.ok(rs.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Rückseiten-Teil`);
+}
+// 2.732.0 KC-CLUB-SZENEN-SPAETER (Stufe 3b, Wunsch Hansi „lass die Szenen ruhig etwas später starten“): Kopf-Szenen in teile/szenen.js, kurz nach dem Start geladen
+{
+  const app = lies("app.js"), sz = lies("teile/szenen.js");
+  assert.match(app, /szenen: \{ einstieg: \["jahreszeitVorschau"\], sri: "sha384-/, "Szenen-Teil registriert (Vorschau aus den Einstellungen lädt es sofort)");
+  assert.match(app, /const SZN_SPAETER_MS = 1200;/, "Szene etwa 1 Sekunde nach dem Start");
+  assert.match(app, /\.then\(\(\) => teilLaden\("szenen"\)\)\s*\.then\(\(\) => \{ szenenWartet = null; jahreszeitKopf\(\); \}, \(\) => \{ szenenWartet = null; \}\);/, "nach dem Laden wird der Kopf neu gezeichnet; ohne Netz bleibt er ruhig");
+  assert.match(app, /requestIdleCallback\(\(\) => ok\(\), \{ timeout: 2000 \}\)/, "erst wenn die App gerade nichts anderes zu tun hat");
+  assert.match(app, /if \(teilDa\("szenen"\)\) jzbStop\(\);/, "nichts anhalten, was nie gestartet wurde");
+  assert.match(app, /const eis = teilDa\("szenen"\) && jzbEisNameWill\(\);/, "Eiszapfen-Tropfen auch ohne geladene Szene");
+  for (const n of ["function jahreszeitKopf(", "const JZB = {", "const JZB_ARTEN = ", "function jzDeko(", "function jzEiszapfen("])
+    assert.ok(app.includes(n) && !sz.includes(n), `${n.slice(0, 24)} bleibt im Hauptprogramm (Deko und Eiszapfen sofort)`);
+  for (const n of ["function jzbStart(", "function jzbStop(", "function jahreszeitVorschau(", "function jzbKirmesMalen(", "function jzbEisTropfen("])
+    assert.ok(sz.includes(n) && !app.includes(n), `${n.slice(0, 24)} liegt im Szenen-Teil`);
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -10480,9 +10494,9 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.247.0 KC-CLUB-JAHRESZEIT-BUEHNE (Wunsch Hansi): Laub/Schnee bleibt liegen, Windstoß abwechselnd, jeder 3. Lauf Schneemann, Gras/Blumen, Sonnenblume
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)")) + lies("teile/szenen.js"); // 2.732.0: Szenen in teile/szenen.js
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(html) && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\)\) \{ if \(!teilDa\("szenen"\)\) return szenenSpaeter\(\); if \(jzbStart\(h, jetzt\)\) return; \}/.test(html) /* 2.732.0 */ && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
@@ -10552,7 +10566,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.263.0 Fund Hansi „Blätter bleiben immer noch nicht liegen“: sein Handy meldet „Bewegung reduzieren“ – die Bühne läuft trotzdem
 {
   const k = html.slice(html.indexOf("function jahreszeitKopf()"), html.indexOf("function jahreszeitUmschalten("));
-  assert.ok(!/prefers-reduced-motion/.test(k) && /if \(JZB_ARTEN\.includes\(jetzt\) && jzbStart\(h, jetzt\)\) return;/.test(k), "Bühne auch bei „Bewegung reduzieren“");
+  assert.ok(!/prefers-reduced-motion/.test(k) && /if \(JZB_ARTEN\.includes\(jetzt\)\) \{ if \(!teilDa\("szenen"\)\) return szenenSpaeter\(\); if \(jzbStart\(h, jetzt\)\) return; \}/ /* 2.732.0 */.test(k), "Bühne auch bei „Bewegung reduzieren“");
 }
 
 // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE (Wunsch Hansi): Effekte & Wetter – nur vorgeführt, jederzeit abschaltbar
