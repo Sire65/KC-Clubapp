@@ -4050,7 +4050,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 397. 2.23.48 → 2.23.49: „🧑‍🍳 Frag Twinkey“ (früher „Frag den Küchenchef“) – Fragen in eigenen Worten (KC-CLUB-TWINKEY)
 {
-  const k = html.slice(html.indexOf("// ---------- KC-CLUB-TWINKEY (2.23.49"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
+  const k = html.slice(html.indexOf("// → ausgelagert nach teile/hilfe.js"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD")) + lies("teile/hilfe.js"); // 2.746.0 Stufe 5: Zustand + Laden im Hauptprogramm, Fenster in teile/hilfe.js
   assert.ok(k.length > 1000 && /twIndex\(\)/.test(k) && /hzEintraege\(\)/.test(k) && !/fetch\(/.test(k), "Hilfen als Grundlage, keine fremde KI, keine Kosten");
   assert.ok(/const TW_SYN = \[/.test(k) && /function twAbstand\(a, b\)/.test(k) && /zusammengesetzte Wörter/.test(k), "Synonyme, Tippfehler, zusammengesetzte Wörter");
   assert.ok((k.match(/^  \{ id: "[a-z-]+", sym: /gm) || []).length >= 30, "mindestens 30 eigene Fragen + Antworten (TW_FAQ)");
@@ -4060,7 +4060,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 398. 2.23.49: Unbekannte Fragen gehen an den Admin, Antwort per Push/E-Mail/Club-App, Twinkey lernt (KC-CLUB-TWINKEY-FRAGEN)
 {
-  const k = html.slice(html.indexOf("// ---------- KC-CLUB-TWINKEY (2.23.49"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
+  const k = html.slice(html.indexOf("// → ausgelagert nach teile/hilfe.js"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD")) + lies("teile/hilfe.js"); // 2.746.0 Stufe 5: Zustand + Laden im Hauptprogramm, Fenster in teile/hilfe.js
   assert.ok(/Das ist eine gute Frage\./.test(k) && /Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen\./.test(k), "Twinkeys Antwort auf unbekannte Fragen");
   const aw = k.slice(k.indexOf("function twAntworten("), k.indexOf("function twNichtGefunden"));
   assert.ok(/if \(gefragt\) twWeitergeben\(fr\)/.test(aw) && /TW_TAKT=setTimeout\(twAntworten,450\)/.test(k), "weitergegeben wird nur nach ausdrücklichem „Fragen“, nicht beim Tippen");
@@ -7848,7 +7848,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const app = lies("app.js"), rs = lies("teile/rueckseite.js");
   assert.match(app, /rueckseite: \{ einstieg: \["bwClubSong"\], sri: "sha384-/, "Rückseiten-Teil registriert");
-  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite", "szenen"\] \};/, "Videos laden Rückseite und Szenen mit (sie führen Rätsel, Bühne und Jahreszeiten vor)"); // 2.744.0: + szenen
+  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite", "szenen", "hilfe"\] \};/, "Videos laden Rückseite, Szenen und Hilfe mit (sie führen Rätsel, Bühne, Jahreszeiten und die Lupe vor)"); // 2.744.0: + szenen; 2.746.0: + hilfe (rgHilfeLupe öffnet die Suche direkt)
   assert.match(app, /Promise\.all\(\(TEILE_BRAUCHT\[name\] \|\| \[\]\)\.map\(teilLaden\)\)\.then\(\(\) => versuch\(1\)\)/, "abhängige Teile zuerst");
   assert.match(app, /TEILE_DA\[name\] = true;/, "teilDa() weiß, was geladen ist");
   assert.match(app, /if \(k !== "uhr" && !teilDa\("rueckseite"\)\) return teilLaden\("rueckseite"\)\.then\(\(\) => esTab\(k\), \(e\) => \{ meldeFehler\(e\); esTab\("uhr"\); \}\);/, "Reiter laden die Rückseite nach; geht das nicht, bleibt die Uhr");
@@ -7889,6 +7889,21 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
     assert.ok(app.includes(n) && !bu.includes(n), `${n.slice(0, 26)} bleibt im Hauptprogramm (Startseite, Hinweise)`);
   for (const n of ["function buStart(", "function buZeigen(", "function buEingang(", "function druckBrief(", "function sbBrief("])
     assert.ok(bu.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Büro-Teil`);
+}
+// 2.746.0 KC-CLUB-TEILE Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Ein Mitglied fragen, Lupe/Suche) in teile/hilfe.js – beim ersten Antippen geladen
+{
+  const app = lies("app.js"), hi = lies("teile/hilfe.js");
+  assert.match(app, /\n  hilfe: \{ einstieg: \["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"\], sri: "sha384-/, "Hilfe-Teil registriert");
+  // Hilfetexte (HILFE, TIPPS, EINWEISUNG) braucht schon der Start (Laufband-Tipp, Tipp des Tages, Einweisung) – sie bleiben im Hauptprogramm
+  for (const n of ["const HILFE = [", "const TIPPS = [", "const EINWEISUNG = [", "function shBereich(", "let TW = {", "async function twLaden(", "async function twAntwortPruefen(",
+    "function sucheZu(", "function suLupenEinbauen(", "const suNorm = ", "function suEinstellung(", "function hzSucheKnopf("])
+    assert.ok(app.includes(n) && !hi.includes(n), `${n.slice(0, 28)} bleibt im Hauptprogramm`);
+  for (const n of ["function twFrageStart(", "function twOffenStart(", "function sucheAuf(", "function suSucheKnopf(", "function suZeigen("])
+    assert.ok(hi.includes(n) && !app.includes(n), `${n.slice(0, 28)} liegt im Hilfe-Teil`);
+  // Antwort-Prüfung 6 s nach dem Start lädt das Teil nur, wenn wirklich eine Antwort wartet (twFrageStart = Platzhalter)
+  assert.match(app, /if \(\(!neu\.length && !mfNeu\.length\) \|\| document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;\n  twFrageStart\(\);/, "Start lädt das Hilfe-Teil nicht ohne Grund");
+  // Sprachbefehl „Suche …“: Fenster öffnen, dann suchen – beide Platzhalter warten auf dasselbe Laden, die Reihenfolge bleibt
+  assert.match(app, /if \(b\.art === "suche"\) \{ sucheAuf\(b\.q\); setTimeout\(\(\) => \{ try \{ suSucheKnopf\(\); \} catch \{\} \}, 100\); \}/, "Sprach-Suche");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -10358,7 +10373,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function suchAbstand\(/.test(server) && /const suchPasstUnscharf = /.test(server) && /extra: \{ aehnlich: true \}, rang: 1/.test(server) && /return json\(\{ bereiche: gruppen, vorschlag \}\)/.test(server), "Server: ähnliche Namen + „Meintest du“");
   assert.ok(/function suUnscharf\(q, text\)/.test(html) && /const suFiltern = /.test(html) && /Meintest du „\$\{esc\(SU\.vorschlag\)\}“\?/.test(html), "App: gleiche Regel, Vorschlag-Knopf");
   // Verhalten der App-Regel
-  const i = html.indexOf("const suNorm = "), code = html.slice(i, html.indexOf("\nfunction suWoerter", i));
+  const i = html.indexOf("const suNorm = "), code = html.slice(i, html.indexOf("\nfunction suMusterFuer", i)); // 2.746.0 Stufe 5: suWoerter liegt jetzt in teile/hilfe.js, die Bausteine bleiben
   const f = new Function(code + "; return { suUnscharf, suFiltern };")();
   for (const [q, t, soll] of [["Würdemann", "Peter Wördemann", true], ["Wilfried", "Willfried Wittwer", true], ["Würd", "Wördemann", true], ["Hans", "Klaus Zander", false], ["Koch", "Kurt Bach", false]])
     assert.strictEqual(f.suUnscharf(q, t), soll, `${q} → ${t}`);

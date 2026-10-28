@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.746.0 – 2026-10-28 – 🧑‍🍳 Twinkey und Lupe werden erst beim Antippen geladen (KC-CLUB-TEILE, Stufe 5)
+Prüfbericht C (Wunsch #44), Stufe 5 – für Mitglieder unsichtbar: „Frag Twinkey“, „Ein Mitglied fragen“ und das Such-Fenster der Lupe (rund 110 KB) liegen jetzt in teile/hilfe.js und werden geladen, wenn jemand Twinkey oder die Lupe antippt (auch über Push-Link, Sprachbefehl „Suche …“ oder Tipp des Tages). Die Hilfetexte selbst (Hilfe-Zentrum, Tipps, Einweisungen) bleiben im Hauptprogramm – das Laufband und der Tipp des Tages brauchen sie schon beim Start; ebenso die Schritt-Hilfe, die Antwort-Prüfung beim Start und die Such-Grundbausteine (Tippfehler-Toleranz, Markieren), die auch Chat-, Kontakt- und Archiv-Suche benutzen. Erklär-Videos laden das Hilfe-Teil mit (das Video „Hilfe, Suche & Twinkey“ öffnet die Lupe selbst).
+
+
 ## 2.745.0 – 2026-10-28 – 🗂️ Büro der Clubleitung wird erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 4)
 Prüfbericht C (Wunsch #44), Stufe 4 – für Mitglieder unsichtbar: Büro, Eingangskorb, Briefbogen und Sprach-Brief, Termine, Kontakt, Nachher, Feste, Mitgliederliste, Freud & Leid, Dienstzeiten-Übersicht und Geburtstagsgruß-Wahl (rund 200 KB) liegen jetzt in teile/buero.js und werden erst geladen, wenn jemand aus der Clubleitung das Büro (oder einen Büro-Ausdruck) öffnet. Tages-Übersicht, Eingangskorb-Hinweis und „Neue Nachricht“-Hinweis bleiben im Hauptprogramm. Ausdrucke (Sitzung, Brief, Feste, Mitgliederliste, Dienstzeiten) laden das Teil über ihre Platzhalter – die Druckvorschau wartet darauf. Geprüft: 12 Büro-Ansichten und 5 Ausdrucke (Handy + PC) gleich wie vorher, 15 Einstiege auf frischer Seite, Klick-Rundgang; Start-Rechenzeit 625 → 592 ms.
 
