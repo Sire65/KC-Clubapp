@@ -7638,7 +7638,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/function hsGrund\(\)/.test(html) && /return "klicks"/.test(html) && /return "suche"/.test(html) && /return "zurueck"/.test(html) && /return "pendeln"/.test(html) && /return "lange"/.test(html), "fünf Anzeichen: Rumklicken, Suche ohne Treffer, Zurück, Hin und her, lange ohne Erfolg");
   assert.ok(/sehr gerne gebe ich dir hier Hilfestellung/.test(html) && /data-hs="video">🎬 Video ansehen/.test(html) && /data-hs="hilfe">📖 Hilfe lesen/.test(html) && /data-hs="nie">Hier nicht mehr anbieten/.test(html), "Twinkeys Angebot mit Video, Hilfe, Nein, Nie");
-  assert.ok(/proTag: 2/.test(html) && /!\(t\.sichten \|\| \[\]\)\.includes\(v\)/.test(html) && /Date\.now\(\) - HS\.start < 20000/.test(html) && /input:not\(\[type=checkbox\]\)/.test(html), "Bremsen: 2× am Tag, 1× je Bereich, nicht gleich nach Start, nie beim Tippen");
+  assert.ok(/proTag: 2/.test(html) && /!\(t\.sichten \|\| \[\]\)\.includes\(K\.key\)/.test(html) && /Date\.now\(\) - HS\.start < 20000/.test(html) && /input:not\(\[type=checkbox\]\)/.test(html), "Bremsen: 2× am Tag, 1× je Bereich, nicht gleich nach Start, nie beim Tippen");
   assert.ok(/const hsListePaar = /.test(html) && /!hsListePaar\(a, b\)/.test(html), "normales Liste↔Eintrag (Chats lesen) zählt nicht");
   assert.ok(/try \{ hsSicht\(v, ausHistorie\); \} catch \{\}/.test(html) && /if \(!fehler\) try \{ hsErfolg\(\); \} catch \{\}/.test(html), "Hook in zeige und melde");
   assert.ok(/id="setHsE" checked onchange="hsSchalter\(this\.checked\)"/.test(seite) && /id="setHs" checked/.test(seite), "Schalter in den Einstellungen (Standard an)");

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.726.0 – 2026-10-28 – 🧑‍🍳 Twinkey hilft passend
+- 🧑‍🍳 Twinkeys Hilfe passt jetzt zum Bildschirm: Ist ein Fenster offen, bezieht sich die Hilfe auf dieses Fenster statt auf den Bereich darunter. Videos gibt es nur, wenn sie wirklich passen; sonst kommt der richtige Erklärtext – gibt es keinen, bietet Twinkey dort nichts an. Neue Erklärtexte für den Notfall-Fahrplan, die Admin-Register-Kacheln und die Admin-Zentrale (KC-CLUB-HILFE-PASSEND).
+
 ## 2.725.0 – 2026-10-28 – 👆 Bedienung: größere Tippflächen, Schrift, Knöpfe beim Scrollen (KC-CLUB-BEDIENUNG-PAKET)
 Prüfbericht Etappe 2 (Wunsch #44): Kleine Knöpfe im Kopf (verfügbar, Leuchtpunkte, Herz, Inkognito, QR, Ansicht) haben eine unsichtbar größere Tippfläche. „Wer ist online?“ lässt sich wieder einzeln antippen, auch wenn die Direkte Leitung daneben leuchtet. Leiste unten, Kachel-Unterzeilen und Einstellungen etwas größer. 👆 ? 🔍 🎙️ gleiten beim Runterscrollen weg und kommen beim Hochscrollen und am Seitenende wieder. „Später · Nein, danke“ im Nachtmodus gut lesbar.
 Prüfbericht Etappe 5: In der Tests-Prüfung fehlten anruf-besser, backup-verify-teile und rose (beim Veröffentlichen liefen sie schon) – ergänzt, ein Wächter-Test meldet künftig jeden fehlenden Eintrag. Neu: automatischer Klick-Rundgang im echten Browser (tests/rundgang.browser.mjs) – öffnet die App mit Testdaten am Handy (erweitert/einfach) und am PC, ruft 22 Seiten auf und tippt die Leiste unten durch; rot bei Programmfehlern und Schutzschild-Sperren.
