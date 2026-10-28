@@ -1,10 +1,30 @@
 # Änderungen
 
-## 2.743.0 – 2026-10-28 – 🪞 Rückseite des Kopfs wird erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 3)
+## 2.749.0 – 2026-10-28 – 🪞 Rückseite des Kopfs wird erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 3)
 Prüfbericht C (Wunsch #44), Stufe 3 – für Mitglieder unsichtbar: Rätsel, Spiegel, Diashow, Tafel, Flipchart und die Bühne mit Musik und Club-Song (rund 175 KB) liegen jetzt in teile/rueckseite.js und werden geladen, wenn auf der Rückseite ein Reiter aufgeht oder ein Erklär-Video sie vorführt (Videos laden die Rückseite automatisch mit). Im Hauptprogramm bleiben Eselsohr, Umdrehen und Aufrollen, die große Uhr mit Wecker (klingelt immer) und die Bewegungs-Einladung mit Twinkeys Figur. Neu im Fundament: abhängige Teile und teilDa(). Geprüft: alle 7 Reiter, Club-Song, die Videos zu Rückseite/Rätsel/Bühne – auch auf frisch geöffnetem Handy –, beim Start wird kein Teil geladen.
 
-## 2.742.0 – 2026-10-28 – 🎲 Spiele werden erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 2)
-Prüfbericht C (Wunsch #44), Stufe 2 – für Mitglieder unsichtbar: Tic-Tac-Toe, Schach, Doppelkopf, Bauernskat, Mensch ärgere dich nicht, Fang den Koch und Küchenterror (rund 300 KB) liegen jetzt in teile/spiele.js und werden erst geladen, wenn jemand ein Spiel öffnet. Im Hauptprogramm bleiben die Spiel-Einladung beim Start, die Live-Anfragen, die Spiele-Einstellungen und der Zustand SP. Beim Vergleich gefunden und behoben: Schachregeln und Küchenterror-Fragen wurden aus einem Teil heraus im falschen Ordner gesucht – jetzt immer von der Seite aus; ein Test verhindert das künftig. Geprüft: alle 7 Spiele am Handy und PC wie vorher; Start-Rechenzeit gegenüber 2.728.0 insgesamt −13 %.
+## 2.748.0 – 2026-10-28 – 🎲 Spiele werden erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 2)
+Prüfbericht C (Wunsch #44), Stufe 2 – für Mitglieder unsichtbar: Tic-Tac-Toe, Schach, Doppelkopf, Bauernskat, Mensch ärgere dich nicht, Fang den Koch und Küchenterror (rund 300 KB) liegen jetzt in teile/spiele.js und werden erst geladen, wenn jemand ein Spiel öffnet. Im Hauptprogramm bleiben die Spiel-Einladung beim Start, die Live-Anfragen, die Spiele-Einstellungen und der Zustand SP. Beim Vergleich gefunden und behoben: Schachregeln und Küchenterror-Fragen wurden aus einem Teil heraus im falschen Ordner gesucht – jetzt immer von der Seite aus; ein Test verhindert das künftig. Geprüft: alle 7 Spiele am Handy und PC wie vorher; Start-Rechenzeit gegenüber 2.728.0 insgesamt −13 %. Seit 2.747.0 (KC-CLUB-TEILE-VORLADEN) holt die App das Teil außerdem still im Voraus, etwa 20 Sekunden nach dem Start in einer Ruhepause – der Start selbst bleibt schlank.
+
+## 2.747.0 – 2026-10-28 – Programmteile werden vorgeladen · Fotos laden von selbst nach
+- Selten gebrauchte Programmteile werden still im Voraus geladen, wenn die App nichts zu tun hat – beim ersten Öffnen wartet man nicht mehr (KC-CLUB-TEILE-VORLADEN). Bleibt im Fotoalbum ein Vorschaubild leer, versucht die App es einmal neu und holt sonst frische Bild-Links (KC-CLUB-FOTO-NOCHMAL).
+
+## 2.744.0 – 2026-10-28 – 🍽️ Clubabend: Anwesende aus dem Büro bleiben erhalten · Einladung ohne Vorbereitung leert nichts mehr
+Prüfung des Clubabend-Ablaufs (Wunsch Hansi 28.10.), zwei Fehler behoben:
+- 🍽️ Clubabend Live beginnt jetzt mit den Anwesenden, die im Büro angehakt wurden (aus dem Protokoll-Entwurf, sonst aus der Vorbereitung). Bisher war die Liste am Abend leer, und das erste Antippen schrieb nur diese eine Person ins Protokoll – die übrigen Anwesenden waren weg. Antippen ergänzt bzw. streicht jetzt nur (KC-CLUB-CLUBABEND-ANWESEND).
+- 🗂️ Wird eine Einladung verschickt, bevor die Sitzung vorbereitet ist, gilt die Sitzung nicht mehr als „vorbereitet“, und „Sitzung vorbereiten“ zeigt wieder den üblichen Vorschlag (Zusagen, feste Punkte, Vorschläge) statt einer leeren Tagesordnung (KC-CLUB-SITZUNG-LEER).
+- Neuer Verhaltenstest tests/clubabend-anwesend.test.mjs stellt beide Fälle nach.
+
+## 2.743.0 – 2026-10-28 – 📥 Ablagekorb → Eingangskörbe · Eingangskorb: drucken, per E-Mail, teilen (KC-CLUB-ABLAGEKORB-EINGANG, KC-CLUB-EINGANG-WEITER)
+Wunsch Hansi („Wenn ich ein Dokument außerhalb der Club-App an die Club-App teile, liegt es im Ablagekorb. Von dort muss auch ein Weiterteilen in die Eingangskörbe der Mitglieder möglich sein – wieder nach Alle, Amt, Gruppe usw. Dann haben es alle sofort und können es ansehen, drucken, ablegen“ und „ansehen, drucken, weiterschicken z. B. per E-Mail an Ruth und dann in einem Archiv-Ordner ablegen“):
+- 📥 **Ablagekorb → „📥 In Eingangskörbe“** (nur Admin): Dateien anhaken, Titel, **An wen?** (Alle · Einzeln · Gruppe · Amt), Ablage-Vorschlag, Nachricht → 📤 Senden. Gleicher Weg wie Aktentasche → Freigeben: jeder bekommt eine eigene Kopie, eine Mitteilung, bei offener App sofort das Fenster. Danach ist der Eintrag im Ablagekorb erledigt („📥 In die Eingangskörbe: …“).
+- 📥 **Eingangskorb beim Mitglied:** im Fenster jetzt auch **🖨️ Drucken**, **✉️ Per E-Mail** (an Mitglieder oder eine fremde Adresse) und **📤 Teilen** (WhatsApp, Mail-Programm …) – danach wie bisher ablegen oder löschen.
+- Server: `archiv_eingang_verteilen` nimmt statt hochgeladener Daten auch eine Datei aus einem Ablagekorb-Eintrag (nur Admin, nur Dateien dieses Eintrags); `anlageLesen` als gemeinsamer Schritt mit `dateiDuplizieren`.
+- Test `tests/ablagekorb-eingang.test.mjs`. **Erst Server, dann App.**
+
+## 2.742.0 – 2026-10-28 – 🎬 Neue Fassung des Anleitungsfilms für den Clubsprecher (KC-CLUB-FILM-HINWEIS)
+- Film `film/clubsitzung-anleitung.mp4` neu (10:52 Min.): zeigt jetzt die Einladung als Brief, „An wen?“ (Alle · Einzeln · Gruppe · Amt), Aktentasche → 📤 Freigeben in den Eingangskorb und wie es beim Mitglied ankommt (ansehen, ablegen oder löschen).
+- Eigene Kennung `clubsitzungneu` – der Clubsprecher bekommt beim Öffnen den Hinweis „Hallo …, für dich gibt es einen Anleitungsfilm“ auch dann noch einmal, wenn er die erste Fassung schon gesehen hat. Büro → 🎬 Anleitung zeigt die neue Fassung. Nur App, kein Server.
 
 ## 2.741.0 – 2026-10-28 – 📤 Aktentasche freigeben → Eingangskorb der Mitglieder · 👥 „An wen?“ mit Einzeln und Amt (KC-CLUB-AKTENTASCHE-FREIGEBEN, KC-CLUB-EINGANG-DURCHGEHEN, KC-CLUB-ZIELWAHL)
 Wunsch Hansi („Clubsprecher, Admin oder Kassenwart öffnet die Aktentasche, hakt ein oder mehrere Sachen an und unten auf Freigeben. Dann Auswahl der Empfänger wie alle, einzeln, Gruppe, Amt usw. Dann senden – aber in den Eingangskorb der Mitglieder. Die erhalten einen Hinweis ‚Neu in deinem Eingangskorb‘ und sofort einen Knopf ‚Ansehen?‘. Wenn ja, anzeigen. Danach die Frage: Möchtest du das Dokument ablegen oder löschen? Bei Ablegen den Ordner im Archiv vorschlagen und dort ablegen“):
