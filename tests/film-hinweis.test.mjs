@@ -10,7 +10,8 @@ const reg = app.slice(app.indexOf("const FILME = ["), app.indexOf("const filmeFu
 const filme = [...reg.matchAll(/id: "([a-z]{2,24})"[^]*?datei: "([^"]+)", bild: "([^"]+)"[^]*?fuer: \(\) => ([^\n]+)/g)];
 assert.ok(filme.length >= 1, "Registry FILME leer");
 for (const [, id, datei, bild, fuer] of filme) {
-  assert.ok(fs.existsSync(datei) && fs.statSync(datei).size > 1e6, `Film fehlt: ${datei}`);
+  const pfad = datei.split("?")[0]; // ?v=… nur gegen alte Fassungen im Zwischenspeicher des Browsers (2.742.0)
+  assert.ok(fs.existsSync(pfad) && fs.statSync(pfad).size > 1e6, `Film fehlt: ${datei}`);
   assert.ok(fs.existsSync(bild), `Vorschaubild fehlt: ${bild}`);
   assert.ok(datei.startsWith("film/") && bild.startsWith("film/"), `${id}: Film gehört nach film/ (Service Worker lässt film/ aus)`);
   assert.ok(/aemter/.test(fuer) && !/person_id|vorname|name ===/.test(fuer), `${id}: Zielgruppe nach Amt, nicht nach Person`);
