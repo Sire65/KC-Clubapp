@@ -972,6 +972,17 @@
   .rg-ausw-kopf { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .rg-ausw-zahlen { display: flex; gap: 12px; flex-wrap: wrap; font-size: .92em; margin-top: 4px; }
   .rg-hinweis { border: 2px solid var(--gold); margin: 10px 0 4px; }
+  /* KC-CLUB-EINGANG-DURCHGEHEN (2.741.0): Vorschau des Dokuments im Eingangskorb-Fenster */
+  .eg-vorschau { max-height: 52vh; overflow: auto; border: 1px solid var(--rand, #ddd); border-radius: 10px; background: #fff; padding: 6px; }
+  .eg-vorschau img { display: block; width: 100%; height: auto; margin: 0 0 6px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+  /* KC-CLUB-FILM-HINWEIS (2.738.0): Anleitungsfilm – Karte im Start-Fenster und Abspiel-Schicht */
+  .film-karte { display: flex; gap: 12px; align-items: center; width: 100%; margin: 4px 0 12px; padding: 8px; border: 2px solid var(--gold); border-radius: 14px; background: var(--karte, #fff); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .film-karte img { width: 84px; height: 84px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
+  .film-karte b { display: block; } .film-karte small { display: block; margin-top: 3px; opacity: .8; }
+  #filmSchicht { position: fixed; inset: 0; z-index: 2200; background: #000; display: flex; flex-direction: column; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  #filmSchicht .film-kopf { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; color: #fff; }
+  #filmSchicht .film-kopf .knopf { background: #fff; color: #741521; flex-shrink: 0; }
+  #filmSchicht video { flex: 1; min-height: 0; width: 100%; background: #000; object-fit: contain; }
   .rg-h-kopf { display: flex; gap: 10px; align-items: center; }
   .rg-h-sym { font-size: 2rem; line-height: 1; }
   .rg-hinweis .knoepfe { margin-top: 10px; flex-wrap: wrap; }
@@ -6205,7 +6216,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.740.0" data-v="2.740.0"></script>
+<script src="app.js?v=2.744.0" data-v="2.744.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
