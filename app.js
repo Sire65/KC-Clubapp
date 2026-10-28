@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.738.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.739.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4377,7 +4377,7 @@ const ANS_ARTEN = [
   { id: "online", sym: "🟢", t: "Jemand kommt online", k: "Online", u: "„Steven ist jetzt online“", bsp: "Steven ist jetzt online." },
   // 2.454.0 KC-CLUB-WER-IST-DA (Wunschliste #13): beim Öffnen der App einmal sagen, wer gerade da ist – Standard an
   { id: "beim_start", sym: "👋", t: "Beim Öffnen: wer gerade da ist", k: "Beim Öffnen", u: "„Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder“ – mit kurzer Meldung", bsp: "Im Moment sind Hansi, Klaus und Anne online und 2 weitere Mitglieder.", an: true },
-  { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt.", an: true },
+  { id: "nachricht", sym: "💬", t: "Nachrichten", u: "auch @Erwähnungen und Reaktionen", bsp: "Christina hat dir eine Nachricht geschickt. Und an mehrere: Christina hat dir und 5 anderen Personen eine Sammelnachricht geschickt.", an: true },
   { id: "anklopfen", sym: "👋", t: "Anklopfen", bsp: "Christina klopft gerade bei dir an.", an: true },
   { id: "pinnwand", sym: "📌", t: "Pinnwand", bsp: "Christina hat dir ein Post-it an die Pinnwand gehängt." },
   { id: "helfen", sym: "🤝", t: "Helfen, Leihen & Börse", bsp: "Klaus hat auf deine Hilfeanfrage reagiert und kommt." },
@@ -4441,6 +4441,8 @@ function ansageDeuten(titel, text, url) {
     if (h.slice(11) === String(chatId) && aktuelleAnsicht === "chat" && !document.hidden) return null; // Chat ist offen
     if ((m = /^📣 (.+?) hat dich erwähnt(?: – \S+ (.+))?$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dich erwähnt${m[2] ? " – in der Gruppe " + m[2] : ""}.` };
     if ((m = /^\S+ (.+?) hat reagiert$/.exec(t))) return { art: "nachricht", text: `${m[1]} hat auf deine Nachricht reagiert.` };
+    // 2.739.0 KC-CLUB-SAMMEL-ANSAGE (Wunsch Hansi): an mehrere → „… hat dir und 5 anderen Personen eine Sammelnachricht geschickt“; nur an mich → wie bisher
+    if ((m = /^💬 (.+?) · an dich \+ (\d+) andere(?: Person)?$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dir und ${m[2] === "1" ? "einer anderen Person" : `${m[2]} anderen Personen`} eine Sammelnachricht geschickt.` };
     if ((m = /^💬 (.+)$/.exec(t))) return { art: "nachricht", text: `${w}${m[1]} hat dir eine Nachricht geschickt.` };
     if ((m = /^\S+ (.+): (.+)$/.exec(t))) return { art: "nachricht", text: `${w}${m[2]} hat in der Gruppe ${m[1]} geschrieben.` };
     return { art: "nachricht", text: w + ansSatz(t) };
@@ -28210,11 +28212,12 @@ function vfZielZeigen() {
     : Z.ids.length ? `${Z.ids.length} ausgewählt – ${Z.ids.map(vfName).map((n) => n.split(" ")[0]).join(", ")}` : "noch niemand ausgewählt";
   z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("auswahl", "☑️ Auswahl")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
 }
-async function vfAuswahl() {
-  VF_ZIEL.art = "auswahl"; vfZielZeigen();
+async function vfAuswahl() { VF_ZIEL.art = "auswahl"; vfZielZeigen(); zielAuswahl("☑️ Wer soll abstimmen?", VF_ZIEL.ids, (ids) => { VF_ZIEL.ids = ids; vfZielZeigen(); }); }
+// Auswahlfenster „Mitglieder ankreuzen“ – gemeinsam für Abstimmung (KC-CLUB-ABSTIMMUNG-ZIEL) und Einladung (KC-CLUB-EINLADUNG-AN, 2.739.0)
+async function zielAuswahl(titel, ids, fertig) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
-  const gew = new Set(VF_ZIEL.ids), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
-  const f = blattAuf("vfAuswahlBlatt", `<h3 style="margin:0">☑️ Wer soll abstimmen?</h3>
+  const gew = new Set(ids), alle = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id);
+  const f = blattAuf("vfAuswahlBlatt", `<h3 style="margin:0">${esc(titel)}</h3>
     <input id="vfaSuche" type="search" placeholder="🔍 Name suchen …" style="width:100%;box-sizing:border-box;margin:6px 0">
     <div class="knoepfe" style="margin:0 0 6px"><button type="button" class="knopf klein" id="vfaAlle">Alle an</button><button type="button" class="knopf klein" id="vfaKeiner">Keiner</button></div>
     <div id="vfaListe" class="ta-liste wahlliste" style="max-height:52vh;overflow:auto"></div>
@@ -28227,7 +28230,7 @@ async function vfAuswahl() {
   $("vfaSuche").oninput = zeichnen;
   $("vfaAlle").onclick = () => { alle.filter((m) => sammelOk(m) && okFrei(m)).forEach((m) => gew.add(m.person_id)); zeichnen(); }; // 2.538.0: ohne „keine Benachrichtigungen“ · 2.614.0: ohne Aushilfen
   $("vfaKeiner").onclick = () => { gew.clear(); zeichnen(); };
-  $("vfaOk").onclick = () => { VF_ZIEL.ids = [...gew]; f.remove(); vfZielZeigen(); };
+  $("vfaOk").onclick = () => { f.remove(); fertig([...gew]); };
   zeichnen();
 }
 async function vorschlagSpeichern(knopf) {
@@ -29006,23 +29009,60 @@ async function buEinladung(id, nurOffen) {
   const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
   const anzahl = nurOffen ? ohne : s.mitglieder.length;
   const schon = nurOffen ? s.vorbereitung?.erinnerung_am : s.vorbereitung?.einladung_am;
-  window.__buSend = { id, nurOffen, wege: [] };
+  window.__buSend = { id, nurOffen, wege: [], an: { art: "alle", gruppe: null, name: "", ids: [] }, s }; // KC-CLUB-EINLADUNG-AN (2.739.0)
   blattAuf("buEinladung", `${einwHtml("b-bu-einladung")}<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
     ${schon ? `<p class="hinweis" style="margin:0">ℹ️ Schon einmal gesendet: ${esc(zeitKurz(schon))}</p>` : ""}
     <div class="karte" style="margin:0;white-space:pre-wrap;font-size:.95rem">${esc(nurOffen ? `Kommst du? ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}\nBitte kurz in der App zu- oder absagen.` : `Einladung: ${s.treffen.titel}\n${wann(s.treffen.beginn, true)}${s.treffen.ort ? "\n" + s.treffen.ort : ""}${top.length ? "\n\nTagesordnung:\n" + top.join("\n") : ""}`)}</div>
     <label class="feld">Persönliche Zeile (freiwillig)<input id="buZusatz" maxlength="500" placeholder="z. B. Bitte Kassenbuch mitbringen"></label>
-    <div class="hinweis" style="margin:4px 0">Wie benachrichtigen?</div>
+    <div class="hinweis" style="margin:8px 0 4px">An wen?</div><div id="buAn"></div>
+    <div class="hinweis" style="margin:8px 0 4px">Wie benachrichtigen?</div>
     <div class="hl-chips" id="buWege">${[["", "⚙️ Wie jeder es eingestellt hat"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"], ["beide", "🔔+✉️ Beides"]].map(([w, t]) => `<button class="chip${w === "" ? " an" : ""}" data-w="${w}" onclick="buWeg('${w}')">${t}</button>`).join("")}</div>
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this, ${anzahl})">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" id="buSendKnopf" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this)">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
     <button class="knopf" style="text-align:center" onclick="$('buEinladung').remove()">Abbrechen</button></div>`);
+  buAnZeigen(); mgGruppenLaden().then(() => { if ($("buAn")) buAnZeigen(); }); // eigene Gruppen + Ämter kommen nach
 }
+// KC-CLUB-EINLADUNG-AN (2.739.0, Wunsch Hansi „vor dem Absenden auswählen, an wen die Einladung geht: Alle, Gruppen, Auswahl“):
+// 👥 Alle (wie bisher) · 🧑‍🤝‍🧑 Gruppe (Zugesagt, Noch ohne Antwort, Ämter, eigene Gruppen) · ☑️ Auswahl (gemeinsames Auswahlfenster zielAuswahl).
+// Der Server schickt nur an Mitglieder, die auch sonst die Einladung bekämen (Schnittmenge) – der Knopf zeigt die echte Zahl.
+function buAnGruppen() {
+  const s = window.__buSend?.s; if (!s) return [];
+  const ich = (id) => id !== ICH?.person_id, mit = (f) => s.mitglieder.filter((m) => ich(m.person_id) && f(m)).map((m) => m.person_id);
+  const l = [["ja", "✅ Zugesagt", mit((m) => m.antwort === "ja")], ["ohne", "❓ Noch ohne Antwort", mit((m) => !m.antwort || m.antwort === "keine")]];
+  for (const amt of AEMTER || []) { const ids = (MITGLIEDER || []).filter((m) => ich(m.person_id) && (m.aemter || []).includes(amt)).map((m) => m.person_id); if (ids.length) l.push(["amt:" + amt, "🎖️ " + amt, ids]); }
+  for (const g of MG_GRUPPEN) l.push(["g:" + g.id, `${g.gruppe.symbol || "👥"} ${g.gruppe.name}`, g.personen.filter(ich)]);
+  return l.filter(([, , ids]) => ids.length);
+}
+function buAnZahl() { // so viele bekommen sie wirklich (wie der Server rechnet)
+  const x = window.__buSend, s = x.s, alle = s.mitglieder.filter((m) => m.person_id !== ICH?.person_id && (!x.nurOffen || !m.antwort || m.antwort === "keine")).map((m) => m.person_id);
+  return x.an.art === "alle" ? alle.length : alle.filter((id) => x.an.ids.includes(id)).length; // ohne mich selbst – wie der Server
+}
+function buAnZeigen() {
+  const x = window.__buSend, z = $("buAn"); if (!x || !z) return; const A = x.an;
+  const chip = (a, t) => `<button type="button" class="chip${A.art === a ? " an" : ""}" onclick="buAnArt('${a}')">${t}</button>`;
+  const gr = buAnGruppen(), name = (pid) => vfName(pid).split(" ")[0];
+  let unten = "";
+  if (A.art === "gruppe") unten = gr.length ? `<div class="hl-chips" style="margin-top:6px">${gr.map(([k, t, ids]) => `<button type="button" class="chip${A.gruppe === k ? " an" : ""}" onclick='buAnGruppe(${hlJs(k)})'>${esc(t)} <small>(${ids.length})</small></button>`).join("")}</div>`
+    : '<p class="hinweis" style="margin:6px 0">Noch keine Gruppen – oder ☑️ Auswahl nehmen.</p>';
+  if (A.art === "auswahl") unten = `<div class="knoepfe" style="margin-top:6px"><button type="button" class="knopf klein" onclick="buAnAuswahl()">☑️ Mitglieder auswählen${A.ids.length ? ` (${A.ids.length})` : ""}</button></div>`;
+  const g = gr.find(([k]) => k === A.gruppe);
+  const an = A.art === "alle" ? (x.nurOffen ? "alle, die noch nicht geantwortet haben" : "alle Mitglieder") : A.art === "gruppe" ? (g ? `${g[1]} – ${g[2].map(name).join(", ")}` : "bitte eine Gruppe antippen")
+    : A.ids.length ? `${A.ids.length} ausgewählt – ${A.ids.map(name).join(", ")}` : "noch niemand ausgewählt";
+  z.innerHTML = `<div class="hl-chips">${chip("alle", "👥 Alle")}${chip("gruppe", "🧑‍🤝‍🧑 Gruppe")}${chip("auswahl", "☑️ Auswahl")}</div>${unten}<p class="hinweis" style="margin:4px 0 0">An: <b>${esc(an)}</b></p>`;
+  const n = A.art === "alle" || A.ids.length ? buAnZahl() : 0, k = $("buSendKnopf");
+  if (k) { k.disabled = !n; k.textContent = n ? `📨 Jetzt an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden` : A.art === "alle" ? "Alle haben schon geantwortet 👍" : "Bitte erst auswählen"; }
+}
+function buAnArt(a) { const A = window.__buSend.an; A.art = a; if (a !== "gruppe") A.gruppe = null; if (a === "alle") A.ids = []; if (a === "gruppe" && !A.gruppe) A.ids = []; buAnZeigen(); if (a === "auswahl") buAnAuswahl(); }
+function buAnGruppe(k) { const g = buAnGruppen().find(([x]) => x === k); if (!g) return; Object.assign(window.__buSend.an, { art: "gruppe", gruppe: k, name: g[1], ids: g[2].slice() }); buAnZeigen(); }
+function buAnAuswahl() { const A = window.__buSend.an; zielAuswahl("☑️ Wer bekommt die Einladung?", A.ids, (ids) => { A.ids = ids; A.art = "auswahl"; A.gruppe = null; A.name = ""; buAnZeigen(); }); }
 function buWeg(w) { window.__buSend.wege = w === "beide" ? ["push", "email"] : w ? [w] : []; document.querySelectorAll("#buWege .chip").forEach((b) => b.classList.toggle("an", b.dataset.w === w)); }
-async function buSenden(knopf, anzahl) {
-  const x = window.__buSend;
-  if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} Mitglieder senden?`))) return;
+async function buSenden(knopf) {
+  const x = window.__buSend, anzahl = buAnZahl(), A = x.an;
+  if (A.art !== "alle" && !A.ids.length) return melde(A.art === "gruppe" ? "Bitte eine Gruppe antippen." : "Bitte Mitglieder auswählen.", true);
+  if (!anzahl) return melde("An diese Auswahl geht nichts – alle haben schon geantwortet oder niemand passt.", true);
+  if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} ${anzahl === 1 ? "Mitglied" : "Mitglieder"} senden?${A.art === "gruppe" ? `\n\nGruppe: ${A.name}` : A.art === "auswahl" ? "\n\nNur an deine Auswahl." : ""}`))) return;
   await einmal(knopf, async () => {
     try {
-      const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "" });
+      const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "", ...(A.art === "alle" ? {} : { ziel: { art: A.art, name: A.name || "", ids: A.ids } }) });
       $("buEinladung")?.remove();
       if (x.nurOffen) { melde(`🔔 Erinnerung an ${r.empfaenger} Mitglieder gesendet`); return buStart(); }
       buWeiterFragen("✅ Einladung gesendet!", `${r.empfaenger} Mitglieder haben die Einladung bekommen. Ein paar Tage vor der Sitzung kannst du alle erinnern, die noch nicht geantwortet haben.`,

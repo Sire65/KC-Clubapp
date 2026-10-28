@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.738.0";
+const SERVER_VERSION = "2.739.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -775,6 +775,14 @@ async function sendenGewaehlt(eventKey: string, personIds: string[], wege: strin
   return { gesendet, fehler, wege: w };
 }
 const zustellwege = (v: unknown) => (Array.isArray(v) ? v : []).map(String).filter((x) => ZUSTELLWEGE.includes(x));
+// KC-CLUB-SAMMEL-ANSAGE (2.739.0, Wunsch Hansi „schreibt jemand an mehrere Empfänger, muss die Stimme sagen: Christina hat dir und 5 anderen Personen
+// eine Sammelnachricht geschickt – nur wenn sie nur mir geschrieben hat: Christina hat dir eine Nachricht geschickt“): Nachricht ohne Gruppe an mehrere →
+// Push-Titel „💬 Name · an dich + 5 andere“ (steht auch in der Mitteilung); die App sagt daraus die Sammelnachricht an. Gruppen sagen weiter „in der Gruppe …“.
+const sammelTitel = (empfaenger: number) => (empfaenger > 1 ? ` · an dich + ${empfaenger - 1} ${empfaenger === 2 ? "andere Person" : "andere"}` : "");
+// KC-CLUB-EINLADUNG-AN (2.739.0, Wunsch Hansi „vor dem Absenden der Einladung auswählen, an wen: Alle, Gruppen, Auswahl“): Ziel der Einladung/Erinnerung.
+// Ohne Angabe oder „alle“ → wie bisher alle; sonst nur die übergebenen Mitglieder – immer geschnitten mit den echten Empfängern (nie Fremde).
+const einladungZiel = (z: any) => (z && (z.art === "gruppe" || z.art === "auswahl") && Array.isArray(z.ids)
+  ? { art: String(z.art), name: txt(z.name, 80), ids: new Set<string>(z.ids.map(String).slice(0, 500)) } : null);
 // 2.403.0 KC-CLUB-EXPRESS-PRIO1 (Wunsch Hansi „Express so schnell wie möglich raus, in der Warteschlange bevorzugt – Priorität 1“):
 // Express geht nicht als ein Sammelauftrag (der Versanddienst arbeitet die Empfänger darin nacheinander ab), sondern je Empfänger
 // ein eigener Auftrag – alle gleichzeitig (höchstens EXPRESS_PARALLEL auf einmal), mit Priorität „critical“ (= Priorität 1: der
@@ -10053,7 +10061,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const alle = (await sammelEmpfaenger()).map((m) => m.person_id);
         const { data: teil } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid);
         const geantwortet = new Set((teil ?? []).filter((x: any) => x.antwort && x.antwort !== "keine").map((x: any) => x.person_id));
-        const ziel = (nurOffen ? alle.filter((id) => !geantwortet.has(id)) : alle).filter((id) => id !== ich.person_id);
+        const an = einladungZiel(p.ziel); // KC-CLUB-EINLADUNG-AN
+        if (an && !an.ids.size) throw new Fehler("Bitte mindestens ein Mitglied auswählen.", 400);
+        const ziel = (nurOffen ? alle.filter((id) => !geantwortet.has(id)) : alle).filter((id) => id !== ich.person_id && (!an || an.ids.has(id)));
         if (!ziel.length) return json({ ok: true, versand: { gesendet: 0 }, empfaenger: 0 });
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ort = t.ort || (g ? `bei ${g.display_name}` : "");
@@ -10074,7 +10084,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const gast = !nurOffen && await gastgeberMitteilen(t, ich.person_id, "einladung", vars); // 2.481.0: Gastgeberin immer per Push + E-Mail, mit Gastgeber-Hinweis
         const versand = await sendenGewaehlt("club_treffen", gast ? ziel.filter((id) => id !== t.gastgeber_person_id) : ziel, wege, vars, `club-buero-${nurOffen ? "erinnerung" : "einladung"}:${tid}:${Date.now()}`);
         await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt() }, { onConflict: "treffen_id" });
-        await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, wege, versand });
+        await protokoll(ich.person_id, nurOffen ? "buero_erinnerung" : "buero_einladung", { treffen: tid, empfaenger: ziel.length, an: an ? an.art : "alle", wege, versand });
         return json({ ok: true, versand, empfaenger: ziel.length });
       }
 
@@ -12804,7 +12814,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // Einmal-Fotos und Nachrichten, die sich selbst löschen. Grenzen wie beim Versanddienst (je Datei 10 MB, zusammen 15 MB) – sonst wie bisher nur der Hinweis.
         const mailAnl = anlagen.length && wege.includes("email") && !einmal && !slHinweis ? await mailAnlagen(anlagen) : [];
         const nachrichtVars = {
-          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(ohneFarbe(text), 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
+          titel: notfall ? `🚨 NOTFALL${probe ? "-PROBE" : ""} – ${ich.vorname}` : express ? `🏎️ EXPRESS – ${grp ? `${grp.symbol} ${grp.name}: ` : ""}${ich.vorname}` : wMarke + (grp ? `${grp.symbol} ${grp.name}: ${ich.vorname}` : `💬 ${ich.name}${sammelTitel((tn ?? []).length)}`), kurz: notfall ? txt(text.replace(NOTFALL_RE, ""), 140) : slHinweis ? slHinweis : wichtig ? txt(ohneFarbe(text), 140) || "Wichtige Nachricht im Köcheclub" : nachrichtKurz(ich.vorname, { grp, andere: tnIds.size - 1, betreff: th?.subject, nurAnlage: !text && anlagen.length > 0, umfrage: !!umfrage, kontakt: !!kontaktPid }),
           betreff: `${wMarke}Köcheclub Werne – ${wichtig ? "wichtige" : "neue"} Nachricht von ${ich.name}${th?.subject ? ": " + th.subject : ""}`,
           text: `Hallo,\n\n${ich.name} hat dir im Köcheclub geschrieben${th?.subject ? ` („${th.subject}“)` : ""}:\n\n${slHinweis || ohneFarbe(text)}${mailAnl.length ? `\n\n📎 Im Anhang: ${mailAnl.map((x) => x.name).join(", ")}` : anlagen.length ? `\n\n📎 ${anlagen.length} Anlage(n) – in der App ansehen.` : ""}\n\nAntworten in der Köcheclub-App: ${APP_URL}#nachricht=${threadId}\n\nViele Grüße\nKöcheclub Werne`,
           url: `${APP_URL}#nachricht=${threadId}`, ...(mailAnl.length ? { attachmentIds: mailAnl.map((x) => x.id) } : {}), ...(notfall ? { wichtigkeit: "notfall" } : wichtig || express ? { wichtigkeit: "hoch" } : {}), ...(express ? { eilig: true } : {}), // 2.384.0 KC-CLUB-EXPRESS-SOFORT

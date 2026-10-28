@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.739.0 – 2026-10-28 – 📨 Einladung: an wen? · 🗣️ Sammelnachricht wird angesagt (KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE)
+Wunsch Hansi („Beim Vorbereiten der Clubsitzung kann man absenden, dann werden alle benachrichtigt – da muss vorher noch die Auswahl hin, an wen die Einladung gehen soll: Alle, Gruppen, Auswahl“ und „schreibt jemand an mehrere Empfänger, muss die Stimme sagen: Christina hat dir und 5 anderen Personen eine Sammelnachricht geschickt – nur wenn sie nur mir geschrieben hat: Christina hat dir eine Nachricht geschickt“):
+- 📨 **Einladung / Erinnerung im Büro – neu „An wen?“** vor „Wie benachrichtigen?“: **👥 Alle** (wie bisher, vorgewählt) · **🧑‍🤝‍🧑 Gruppe** (✅ Zugesagt, ❓ Noch ohne Antwort, Ämter wie Kassenwart, eure eigenen Gruppen – mit Anzahl) · **☑️ Auswahl** (Mitglieder ankreuzen, Suche, „Alle an“/„Keiner“ – dasselbe Fenster wie bei Abstimmungen). Darunter steht „An: …“ mit den Vornamen, der Knopf zeigt die echte Zahl („📨 Jetzt an 4 Mitglieder senden“), die Rückfrage nennt die Gruppe. Bei der Erinnerung zählt nur, wer noch nicht geantwortet hat.
+- Server: `buero_einladung` nimmt `ziel` (Gruppe/Auswahl) und schickt nur an diese Mitglieder – immer geschnitten mit den sonst berechtigten Empfängern (nie Fremde); Protokoll merkt die Art.
+- 🗣️ **Sammelnachricht:** Schreibt jemand ohne Gruppe an mehrere, heißt die Mitteilung „💬 Christina · an dich + 5 andere“, und die Stimme sagt „Christina hat dir und 5 anderen Personen eine Sammelnachricht geschickt“ (bei einer weiteren Person: „… dir und einer anderen Person …“). Nur an mich: wie bisher „Christina hat dir eine Nachricht geschickt“. Gruppen-Nachrichten bleiben „… hat in der Gruppe … geschrieben“. Beispiel (▶) in ⚙️ → Sprachansagen ergänzt.
+- Das Auswahlfenster der Abstimmung ist jetzt allgemein (`zielAuswahl`) – Abstimmung unverändert.
+- Test `tests/einladung-an.test.mjs`. **Erst Server, dann App** (die App schickt `ziel` nur bei Gruppe/Auswahl; „Alle“ geht auch mit dem alten Server).
+
 ## 2.738.0 – 2026-10-28 – 🎬 Anleitungsfilm „Clubsitzung vorbereiten und leiten“ für den Clubsprecher (KC-CLUB-FILM-HINWEIS)
 Wunsch Hansi („Baue den Film für Klaus ein. Wenn er die App öffnet, soll er einen Hinweis bekommen und mit einem direkten Link den Film starten“):
 - **Hinweis beim Öffnen:** Wer das Amt **Clubsprecher** hat, bekommt beim Start (nach den anderen Start-Fenstern) einmal ein Fenster „Hallo <Vorname>, für dich gibt es einen Anleitungsfilm“ mit Vorschaubild und **▶ Film jetzt ansehen** – der Film spielt sofort in der App (Vollbild, Ton, Bedienleiste, ✕ Schließen). **⏰ Später** fragt beim nächsten Öffnen wieder, **Nein, danke** nie mehr. Einmal gestartet = erledigt; gemerkt geräteübergreifend (neue Server-Einstellung `filme`).
