@@ -2,7 +2,7 @@
 // Aufruf: node tests/hilfe-passend.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-import { programmText } from "./programm.mjs"; // 2.730.0 KC-CLUB-TEILE: app.js + teile/*.js
+import { programmText } from "./programm.mjs"; // 2.737.0 KC-CLUB-TEILE: app.js + teile/*.js
 const app = programmText();
 const v = app.slice(app.indexOf("function hsVideo("), app.indexOf("function hsBlatt("));
 assert.ok(/const id = HS_VIDEO_SICHT\[v\] \|\| v;/.test(v) && !/TW_VIDEOS/.test(v), "Video nur feste Zuordnung oder gleiche ID – keine Umwege über verwandte Hilfen");
