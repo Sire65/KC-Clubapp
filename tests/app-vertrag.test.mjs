@@ -2,13 +2,14 @@
 // Aufruf: node tests/app-vertrag.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
 // Fester Zufall für die Spiel-Simulationen (Mulberry32): gleiche Prüfung, aber jedes Mal dasselbe Ergebnis – vorher wurde der Test selten
 // zufällig rot (Fairness-Grenze ±40 bei 150 Partien), obwohl das Spiel fair ist
 const mitFestemZufall = (start, f) => { const echt = Math.random; let x = start >>> 0; Math.random = () => { x = (x + 0x6d2b79f5) >>> 0; let t = x; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; try { f(); } finally { Math.random = echt; } };
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm steht in app.js – für die Prüfungen wieder an seine Stelle in der Seite setzen
-const seite = lies("index.html"), programm = lies("app.js");
+const seite = lies("index.html"), programm = programmText();
 const html = seite.replace(/<script src="app\.js\?v=([^"]+)" data-v="\1"><\/script>/, () => "<script>" + programm.replace(/^\/\/[^\n]*/, "") + "</script>");
 assert.notEqual(html, seite, "index.html lädt app.js nicht (mit gleicher Version in v= und data-v)");
 // 242. 1.66.0: Das App-Skript muss sich übersetzen lassen (z. B. kein doppelt vergebener Name wie „const SPR“) – sonst startet die App nicht
@@ -7100,7 +7101,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.524.0 KC-CLUB-VERSANDART (Wunsch Hansi): ❗ und 🏎️ raus aus der Knopfreihe – Versand-Leiste über dem Schreibfeld:
 // 📝 Normal vorgewählt; Wichtig oder Express nimmt den Haken bei Normal raus; Wichtig + Express zusammen; nach dem Senden wieder Normal
 {
-  const vm = await import("node:vm"), ix = lies("index.html"), js = lies("app.js");
+  const vm = await import("node:vm"), ix = lies("index.html"), js = programmText();
   const innen = ix.slice(ix.indexOf('<div class="innen">'), ix.indexOf("</div>", ix.indexOf('id="bfChatKnopf"')));
   assert.ok(!/id="wichtigKnopf"|id="expressKnopf"/.test(innen), "❗ und 🏎️ nicht mehr in der Knopfreihe");
   assert.ok(/id="waKnopf" onclick="waSenden\(\)">WA<\/button>/.test(innen), "WA bleibt am bisherigen Platz (Variante A)");
@@ -7750,6 +7751,34 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const rg = fs.readFileSync(new URL("./rundgang.browser.mjs", import.meta.url), "utf8");
   assert.match(rg, /\/\^\(skript\|versprechen\|gefangen\|instabil\|schutz\|start_kaputt\)\$\//, "Rundgang: Programmfehler und Schutzschild-Sperren machen rot");
   assert.match(rg, /return r\.abort\(\); \/\/ nichts nach draußen/, "Rundgang: keine echten Server");
+}
+// 2.726.0 KC-CLUB-TEILE (Prüfbericht C Stufe 0): Nachlade-Weg – Registry, Fingerabdruck, Service Worker, Rückweg-Anleitung
+{
+  const { createHash } = await import("node:crypto");
+  const app = lies("app.js"), sw = lies("sw.js");
+  const liste = app.slice(app.indexOf("const TEILE_LISTE = {"), app.indexOf("const TEILE_STAND = {};"));
+  const reg = [...liste.matchAll(/\n  ([a-z0-9-]+): \{ einstieg: \[([^\]]*)\], sri: "([^"]*)" \}/g)].map((m) => ({ name: m[1], einstieg: [...m[2].matchAll(/"([^"]+)"/g)].map((x) => x[1]), sri: m[3] }));
+  const dateien = fs.readdirSync(new URL("../teile/", import.meta.url)).filter((f) => f.endsWith(".js")).map((f) => f.slice(0, -3)).sort();
+  assert.deepEqual(reg.map((t) => t.name).sort(), dateien, "TEILE_LISTE in app.js = Dateien in teile/");
+  const swTeile = JSON.parse(sw.match(/const TEILE = (\[[^\]]*\]);/)[1]);
+  assert.deepEqual([...swTeile].sort(), dateien, "TEILE in sw.js = Dateien in teile/ (sonst fehlt ein Teil offline / beim Update)");
+  for (const t of reg) {
+    const inhalt = fs.readFileSync(new URL(`../teile/${t.name}.js`, import.meta.url));
+    assert.equal(t.sri, "sha384-" + createHash("sha384").update(inhalt).digest("base64"), `Fingerabdruck von teile/${t.name}.js veraltet – node tools/teile-pruefsumme.mjs`);
+    assert.ok(t.einstieg.length > 0, `${t.name}: mindestens eine Einstiegs-Funktion`);
+    for (const f of t.einstieg) {
+      assert.ok(new RegExp(`(^|\\n)(async )?function ${f}\\(`).test(inhalt.toString()), `teile/${t.name}.js definiert ${f}()`);
+      assert.ok(!new RegExp(`(^|\\n)(async )?function ${f}\\(`).test(app), `${f}() steht nicht zusätzlich in app.js (sonst greift der Platzhalter nicht)`);
+    }
+  }
+  assert.ok(app.indexOf("const TEILE_LISTE = {") < app.indexOf("const API ="), "Platzhalter stehen bereit, bevor das Programm loslegt");
+  assert.match(app, /function skriptLaden\(src, integrity\) \{[^\n]*if \(integrity\) x\.integrity = integrity;/, "Teile nur mit passendem Fingerabdruck (nie Mischstand, Regel 16)");
+  assert.match(app, /skriptLaden\(`teile\/\$\{name\}\.js\?v=\$\{APP_VERSION\}`, t\.sri\)/, "Teil-Adresse mit Version und Fingerabdruck");
+  assert.match(app, /try \{ updatePruefen\(false\); \} catch \{\}/, "passt ein Teil nicht: nach Update suchen");
+  assert.match(sw, /DATEIEN\.push\(\.\.\.TEILE\.map\(\(t\) => `teile\/\$\{t\}\.js\?v=\$\{VERSION\}`\)\);/, "Teile beim Update mit in den Speicher (alles oder nichts)");
+  assert.match(sw, /if \(istProgramm\(url\) \|\| istTeil\(url\)\) \{/, "Teile aus dem Speicher dieser Version");
+  assert.match(sw, /ignoreSearch: !url\.pathname\.endsWith\("\/app\.js"\) && !url\.pathname\.includes\("\/teile\/"\)/, "offline nie ein Teil einer anderen Version");
+  assert.match(lies("docs/AUFTEILEN.md"), /sicherung\/vor-aufteilen-2\.725\.0/, "Rückweg-Anleitung mit Sicherungs-Zweig");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -9236,12 +9265,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/const IN_APP_SEK = 75;/.test(server) && /\.gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/.test(server), "nur wer die App gerade sichtbar offen hat");
   assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
 }
-{ const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), mein = p.slice(p.indexOf("  mein: ["), p.indexOf("  programme: [")), verein = p.slice(p.indexOf("  verein: ["), p.indexOf("  mein: ["));
+{ const p = programmText(), mein = p.slice(p.indexOf("  mein: ["), p.indexOf("  programme: [")), verein = p.slice(p.indexOf("  verein: ["), p.indexOf("  mein: ["));
   assert.ok(!/id: "studio"/.test(verein) && /\{ id: "studio", sym: "🎬", t: "Studio",[^\n]*nur: \(\) => !ICH\?\.admin && !!studioStufe\(\) \}/.test(mein), "2.143.0: Studio-Kachel nicht unter Club – nur unter Meins und nur für freigeschaltete Mitglieder"); }
 
 // 2.139.0 KC-CLUB-STUDIO-KARTE (Wunsch Hansi „Studio wie die Admin-Zentrale“): Karte im Kopf, nur mit Recht
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.ok(/\{ id: "studio", t: "Studio", html: \(\) => infoStudio\(\), laden: \(\) => \(ICH\?\.admin \? api\("studio_rechte"\) : Promise\.resolve\(\{ liste: \[\] \}\)\), neuMin: 2, nur: \(\) => !!studioStufe\(\) \}/.test(p), "Karte nur mit Studio-Recht; Rechte-Liste nur Admin");
   const f = p.slice(p.indexOf("function infoStudio()"), p.indexOf("function stKarteWahl("));
   assert.ok(/<div class="adisplay">/.test(f) && /<span>🎬 STUDIO<\/span>/.test(f) && /lampe\(/.test(f), "Anzeige wie die Admin-Zentrale");
@@ -9252,7 +9281,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.140.0 KC-CLUB-ON-AIR (Wunsch Hansi): rotes „ON AIR“-Schild nur während einer Live-Verbindung
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.ok(/const stdOnAirAn = \(\) => \(STD\.modus === "mitschauen" && STD\.status === "live"\) \|\| \(VF\.rolle && VF\.status === "laeuft"\) \|\| !!MSCH\.id;/.test(p), "nur wenn wirklich live");
   assert.ok(/<span id="stdOnAir">/.test(p) && /<span>🎬 STUDIO<\/span>\$\{stdOnAirAn\(\) \? onAirSchild\(true\) : ""\}/.test(p) && /\$\{laeuft \? onAirSchild\(true\) : ""\}/.test(p) && /id="ssLiveLeiste" class="ss-live-leiste" role="status">\$\{onAirSchild\(true\)\}/.test(p), "Studio-Fenster, Karte, Leiste beim Zeigen/Zuschauen, Balken beim Mitglied");
   assert.ok(/\.onair \{ display: inline-flex;/.test(h) && /@media \(prefers-reduced-motion: reduce\) \{ \.onair \{ animation: none; \} \}/.test(h), "Leuchtschild, ruhig bei „weniger Bewegung“");
@@ -9267,7 +9296,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.144.0 KC-CLUB-INHALTSVERZEICHNIS-ANTIPPEN (Wunsch Hansi): Ordner/Register/Dokument antippen öffnet genau das; füllt sich selbst
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), f = p.slice(p.indexOf("const IVA = {"), p.indexOf("async function ivDrucken("));
+  const p = programmText(), f = p.slice(p.indexOf("const IVA = {"), p.indexOf("async function ivDrucken("));
   assert.ok(/AR\.daten = await api\("archiv_liste", \{\}, \{ warten: true \}\);/.test(f) && /const teile = ivGliedern\(AR\.daten,/.test(f), "bei jedem Öffnen frisch aus dem Archiv, gleiche Gliederung wie der Ausdruck");
   assert.ok(/onclick="event\.preventDefault\(\);ivOeffne\('\$\{esc\(o\.id\)\}'\)"/.test(f) && /ivOeffne\(\$\{hlJs\(o\.id\)\}, \$\{hlJs\(r\.name\)\}\)/.test(f) && /onclick='ivDok\(/.test(f), "Ordner, Register, Dokument antippbar");
   assert.ok(/AR\.ziel = oid; AR\.zielRegister = register;/.test(f) && /if \(zr\) \{ AR\.register = zr; arZeigen\(\); \}/.test(p), "Register wird nach dem Öffnen gewählt");
@@ -9276,7 +9305,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.145.0 KC-CLUB-CHAT-FARBEN (Wunsch Hansi): Blasenfarben + Hintergrund mit Motiv, eine Wahl für alle Chats, nur für mich
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
   assert.ok(/chat_farben: \(w\) => \{ const id = \(x: unknown\) => \(typeof x === "string" && \/\^\[a-z0-9_\]\{1,24\}\$\/\.test\(x\) \? x : "standard"\);/.test(sv), "Server speichert nur Kennungen");
   const f = p.slice(p.indexOf("const CF_EIGEN = ["), p.indexOf("function chatMenue() {"));
   for (const id of ["wolken", "sonnenuntergang", "schneeberge", "meer", "wald", "sterne"]) assert.ok(f.includes(`{ id: "${id}",`), "Hintergrund " + id);
@@ -9287,12 +9316,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/\.chat-hg \{ position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: \.5; \}/.test(h) && /:root\.dunkel \.chat-hg \{ filter: brightness\(\.38\)/.test(h), "Hintergrund blass, nachts abgedunkelt");
   assert.ok(/\.cf-hgs \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(h), "Auswahl gleich groß");
 }
-{ const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), f = p.slice(p.indexOf("async function briefVerwerfen()"), p.indexOf("async function briefNeu()"));
+{ const p = programmText(), f = p.slice(p.indexOf("async function briefVerwerfen()"), p.indexOf("async function briefNeu()"));
   assert.ok(/onclick="briefVerwerfen\(\)">🗑️ Verwerfen<\/button>/.test(p) && /await frage\(/.test(f) && /clearTimeout\(briefTimer\); try \{ localStorage\.removeItem\("kc_club_brief_entwurf"\); \} catch \{\}/.test(f) && !/api\(|druckStarten/.test(f), "2.146.0: Verwerfen fragt, löscht den Entwurf (auch ein noch wartendes Speichern), sendet/druckt nichts"); }
 
 // 2.147.0 KC-CLUB-ARCHIV-UNTERREGISTER (Wunsch Hansi): Ordner mit Jahren und Unterregistern
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const p = programmText(), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
   const a = p.indexOf("const AR_TRENN = "), b = p.indexOf("const AR_FARBEN = [");
   const F = new Function(p.slice(a, b) + "\nreturn { arMehrjahr, arName, arJahrSpanne, arImRegister };")();
   const o = { titel: "Weihnachtsmarkt", jahr: 2026, register: ["2026 › Checklisten", "2026 › Verträge", "2027 › Checklisten"] };
@@ -9308,7 +9337,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.148.0 KC-CLUB-EINGABE-LEEREN (Wunsch Hansi): rotes ✕ im Schreibfeld löscht nur den ungesendeten Text
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const f = p.slice(p.indexOf("function textLeeren()"), p.indexOf("// 2.23.99: steht ein App-Sprung"));
   assert.ok(/id="textLeerenKnopf" onclick="textLeeren\(\)">✕<\/button>/.test(h) && /\.text-leeren \{[^}]*background: #d50000/.test(h), "rotes ✕ im Schreibfeld");
   assert.ok(/\$\("textLeerenKnopf"\)\?\.classList\.toggle\("versteckt", !t\?\.value\)/.test(p), "nur sichtbar, wenn Text drinsteht");
@@ -9317,7 +9346,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.148.0 KC-CLUB-SELBSTLOESCHEN (Wunsch Hansi): Nachrichten löschen sich nach 1 Std / 24 Std / 7 Tagen – je Chat oder je Nachricht, alle dürfen
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
   const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_v2148_selbstloeschen.sql", import.meta.url), "utf8");
   assert.ok(/const SELBSTLOESCHEN_STD = \[1, 24, 168\];/.test(sv) && /check \(stunden in \(1, 24, 168\)\)/.test(m), "nur 1 Std / 24 Std / 7 Tage – Server und Datenbank gleich");
   const c = sv.slice(sv.indexOf('case "chat_selbstloeschen"'), sv.indexOf('case "nachricht_bearbeiten"'));
@@ -9334,7 +9363,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.149.0 KC-CLUB-CD-SPRUCH (Hansi 09.10.2026): Spruch unter dem Schriftzug – zentral im CD, überall gleich
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), d = fs.readFileSync(new URL("../docs/CORPORATE_DESIGN.md", import.meta.url), "utf8");
+  const p = programmText(), d = fs.readFileSync(new URL("../docs/CORPORATE_DESIGN.md", import.meta.url), "utf8");
   assert.ok(/zeile: "Gemeinsam kochen, gemeinsam helfen"/.test(p) && /„Gemeinsam kochen, gemeinsam helfen“/.test(d), "Spruch im CD und in der Beschreibung");
   assert.ok(!/feiern · helfen/.test(p + d), "alter Spruch nirgends mehr");
   assert.equal((p.match(/Gemeinsam kochen, gemeinsam helfen/g) || []).length, 1, "nur an einer Stelle (KC_CD.zeile) – alle Ausdrucke nutzen cdKopf()");
@@ -9342,7 +9371,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.150.0 KC-CLUB-SCHILDER (Wunsch Hansi): Schilder-Druckerei im Büro – nur Clubleitung, Vorlagen nach Anlass, PDF selbst gebaut, Senden/Ablegen über den Einlese-Weg
 {
-  const p = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
   const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_v2150_schilder.sql", import.meta.url), "utf8");
   const mod = p.slice(p.indexOf("// ---------- KC-CLUB-SCHILDER (2.150.0"), p.indexOf("const DRUCKARTEN = {"));
   assert.ok(/\{ id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#[0-9a-f]{6}", fn: "schStart\(\)", recht: "L" \}/.test(p) && /\[L, "🪧", "Schild drucken",/.test(p), "im Büro-Regal und unter Schreiben – nur Clubleitung");

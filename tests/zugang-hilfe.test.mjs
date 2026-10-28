@@ -2,9 +2,10 @@
 // Aufruf: node tests/zugang-hilfe.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const app = lies("app.js"), seite = lies("index.html"), server = lies("supabase/functions/kc-club/index.ts");
+const app = programmText(), seite = lies("index.html"), server = lies("supabase/functions/kc-club/index.ts");
 const block = (von, bis) => { const i = server.indexOf(von); assert.ok(i > 0, von); return server.slice(i, server.indexOf(bis, i + 10)); };
 
 // 1. Server: Grund bei „Kein Zugang“, Name nur bei Links, die die Person wirklich hatte

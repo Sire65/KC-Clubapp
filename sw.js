@@ -5,7 +5,12 @@ const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
 // dieser Version liefern (schnell, vom Handy fertig übersetzt); fehlt es dort, aus dem Netz holen und merken.
+// 2.726.0 KC-CLUB-TEILE (Prüfbericht C): nachladbare Programmteile teile/<name>.js?v=<Version> – gleiche Namen wie TEILE_LISTE in app.js.
+// Sie gehören zum Programm dieser Version: beim Einrichten mit in den Speicher (alles oder nichts), danach aus dem Speicher wie app.js.
+const TEILE = ["probe"];
+DATEIEN.push(...TEILE.map((t) => `teile/${t}.js?v=${VERSION}`));
 const istProgramm = (url) => url.pathname.endsWith("/app.js") && url.searchParams.get("v") === VERSION;
+const istTeil = (url) => /\/teile\/[a-z0-9-]+\.js$/.test(url.pathname) && url.searchParams.get("v") === VERSION;
 
 // KC-CLUB-UPDATE-SICHER (1.97.0): beim Einrichten die Dateien am Browser-Zwischenspeicher VORBEI holen (cache: "reload") –
 // sonst kann ein neuer Speicher noch die alte Seite enthalten (Mischstand alt/neu, AGENTS Regel 16)
@@ -15,7 +20,7 @@ const istProgramm = (url) => url.pathname.endsWith("/app.js") && url.searchParam
 // Alles-oder-nichts wie addAll: fehlt eine Datei, bricht die Einrichtung ab (kein halber Speicher).
 // Beim allerersten Start liegt es noch in keinem Speicher, aber im Browser-Zwischenspeicher (eben geladen) – „default“ nimmt es von dort.
 // „./“ und „index.html“ sind dieselbe Seite: einmal holen, unter beiden Namen merken.
-const einrichtenHolen = (u) => u === "app.js?v=" + VERSION
+const einrichtenHolen = (u) => u === "app.js?v=" + VERSION || u.startsWith("teile/")
   ? caches.match(u).then((r) => r || fetch(new Request(u, { cache: "default" })))
   : fetch(new Request(u, { cache: "no-cache" }));
 self.addEventListener("install", (e) => {
@@ -63,7 +68,7 @@ self.addEventListener("fetch", (e) => {
   if (url.pathname.includes("/stimmen/")) return; // 2.348.0 KC-CLUB-VIDEO-STIMMEN-DOWNLOAD: große Stimm-Dateien nicht doppelt merken – die Stimme hat ihren eigenen Speicher
   // KC-CLUB-UPDATE-SICHER (1.97.0): Seitenaufrufe immer frisch beim Server nachfragen (no-cache); nichts mit persönlichem Schlüssel
   // (?k=…) oder Notbetrieb-Schalter speichern; Speichern im waitUntil; offline nur bei Seitenaufrufen die Startseite liefern
-  if (istProgramm(url)) {
+  if (istProgramm(url) || istTeil(url)) { // 2.726.0 KC-CLUB-TEILE: Teile wie das Programm aus dem Speicher dieser Version
     e.respondWith(caches.open(CACHE).then((c) => c.match(e.request).then((r) => r || fetch(e.request).then((n) => { if (n.ok) e.waitUntil(c.put(e.request, n.clone()).catch(() => {})); return n; }))));
     return;
   }
@@ -73,7 +78,7 @@ self.addEventListener("fetch", (e) => {
     if (r.ok && merken) { const k = r.clone(); e.waitUntil(caches.open(CACHE).then((c) => c.put(e.request, k)).catch(() => {})); }
     return r; })
     // 2.209.0 (Gesamtprüfung 5): das Programm nie „ungefähr“ liefern – app.js?v=NEU darf offline nicht mit app.js?v=ALT beantwortet werden
-    .catch(() => caches.match(e.request, { ignoreSearch: !url.pathname.endsWith("/app.js") }).then((r) => r || Response.error())));
+    .catch(() => caches.match(e.request, { ignoreSearch: !url.pathname.endsWith("/app.js") && !url.pathname.includes("/teile/") }).then((r) => r || Response.error())));
 });
 // 2.209.0 KC-CLUB-SW-SEITE (Gesamtprüfung 5): Seitenaufruf frisch aus dem Netz; antwortet das Netz nicht binnen NAVI_WARTEN_MS,
 // die gemerkte Seite DIESER Version (schneller Start bei schwachem Netz). Gemerkt wird eine Seite nur, wenn sie zu dieser Version

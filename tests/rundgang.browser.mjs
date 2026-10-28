@@ -88,6 +88,11 @@ try {
       if (!r.da) melde(`${v}: Seite erscheint nicht`);
       if (r.quer) melde(`${v}: ragt seitlich über den Rand`);
     }
+    // 2.726.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version
+    const teile = await seite.evaluate(async () => { const out = [];
+      for (const [n, t] of Object.entries(TEILE_LISTE)) { try { await teilLaden(n); const offen = t.einstieg.filter((f) => typeof window[f] !== "function" || window[f]._teil); if (offen.length) out.push(`${n}: Platzhalter bleibt (${offen.join(", ")})`); } catch (e) { out.push(`${n}: ${e.message}`); } }
+      const pr = await teilProbe(); if (pr !== "ok " + APP_VERSION) out.push("probe: Antwort " + pr); return out; });
+    for (const t of teile) melde("Programmteil " + t);
     if (g.touch) for (const b of await seite.$$(".fuss-leiste button")) { await b.click().catch((e) => melde("Leiste unten: " + String(e).slice(0, 100))); await seite.waitForTimeout(700); }
     const fp = await seite.evaluate(() => (window.KCFP?.lies() || []).filter((e) => /^(skript|versprechen|gefangen|instabil|schutz|start_kaputt)$/.test(e.art)));
     for (const e of fp) melde(`Fehlerprotokoll „${e.art}“: ${String(e.text || "").slice(0, 160)} ${String(e.stack || "").slice(0, 160)}`);

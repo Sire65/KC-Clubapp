@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { AB, abSekOk, abStand, abAnlageOk } from "../supabase/functions/kc-club/anrufbeantworter.js";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 // Länge: 2 Min. (Admin 15 Min.), kleine Toleranz
 assert.equal(AB.maxSek, 120); assert.equal(AB.maxSekAdmin, 900);
@@ -39,7 +40,7 @@ assert.ok(!abAnlageOk(null, "KC-P-002"));
 // Migration, Server, App
 {
   const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-  const mig = lies("supabase/migrations/20261021_kc_club_v2568_anrufbeantworter.sql"), server = lies("supabase/functions/kc-club/index.ts"), app = lies("app.js"), html = lies("index.html");
+  const mig = lies("supabase/migrations/20261021_kc_club_v2568_anrufbeantworter.sql"), server = lies("supabase/functions/kc-club/index.ts"), app = programmText(), html = lies("index.html");
   assert.ok(/'abgebrochen', 'anrufbeantworter'/.test(mig) && /grant select, insert, update, delete on public\.kc_club_anrufbeantworter to service_role/.test(mig)
     && /revoke all on public\.kc_club_anrufbeantworter from public, anon, authenticated/.test(mig) && /enable row level security/.test(mig), "Migration: Status, Rechte, RLS");
   assert.ok(/kc_club_rt_klingeln\(array\[new\.an\], 'ab'\)/.test(mig) && /kc_club_rt_klingeln\(array\[new\.von\], 'ab'\)/.test(mig) && !/drop table|truncate|delete from/i.test(mig.replace(/--[^\n]*/g, "")), "Signal an Empfänger/Absender, nichts gelöscht");

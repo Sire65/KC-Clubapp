@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsVorschlag, dsPause, dsMinuten, dsGrundNoetig, dsPruefen, dsKorrekturErlaubt, dsMeter, dsVorOrt, dsPaare, dsRund } from "../supabase/functions/kc-club/dienst-stempel.js";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const M = 60000, H = 3600000, T0 = Date.parse("2026-12-05T13:00:00Z"); // 14:00 Uhr Berlin
 const dienst = { ref: "s1", startMs: T0, endeMs: T0 + 8 * H, pause: 30 };
@@ -65,7 +66,7 @@ assert.equal(dsVorOrt(null, [heim]), null); assert.equal(dsVorOrt({ lat: 1, lon:
 // Einbau: Migration, Server, App
 {
   const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-  const mig = lies("supabase/migrations/20261022_kc_club_v2590_dienst_stempel.sql"), server = lies("supabase/functions/kc-club/index.ts"), app = lies("app.js"), html = lies("index.html");
+  const mig = lies("supabase/migrations/20261022_kc_club_v2590_dienst_stempel.sql"), server = lies("supabase/functions/kc-club/index.ts"), app = programmText(), html = lies("index.html");
   assert.ok(/grant select, insert, update, delete on public\.kc_dp_stempel to service_role/.test(mig) && /revoke all on public\.kc_dp_stempel from public, anon, authenticated/.test(mig) && /alter table public\.kc_dp_stempel enable row level security/.test(mig), "Rechte + RLS");
   assert.ok(/kc_dp_stempel_paare with \(security_invoker = true\)/.test(mig) && /grant select on public\.kc_dp_stempel_paare to service_role/.test(mig) && !/kc_dp_timeclock_actuals/.test(mig.replace(/--[^\n]*/g, "")), "Paare zum Lesen; schreibt NICHT in die Ist-Tabelle des Dienstplans");
   assert.ok(/kasse_event_id text unique/.test(mig) && /schema text not null default 'KC_TIME_CLOCK_V1'/.test(mig), "vorbereitet für die Kasse (Stufe 2)");

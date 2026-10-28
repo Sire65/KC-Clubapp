@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { FZ, fzGeraet, fzVermutung, fzAlarm, fzKennung } from "../supabase/functions/kc-club/fremdzugriff.js";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 // Gerät in Worten
 assert.equal(fzGeraet("Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36"), "Android 10 · Chrome 155");
@@ -40,7 +41,7 @@ assert.equal(fzKennung("a".repeat(64)), "aaaaaaaaaaaa"); assert.equal(fzKennung(
 // Migration, Server, App
 {
   const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-  const mig = lies("supabase/migrations/20261022_kc_club_v2579_fremdzugriff.sql"), server = lies("supabase/functions/kc-club/index.ts"), app = lies("app.js");
+  const mig = lies("supabase/migrations/20261022_kc_club_v2579_fremdzugriff.sql"), server = lies("supabase/functions/kc-club/index.ts"), app = programmText();
   for (const t of ["kc_club_fremdzugriff", "kc_club_zugang_alt"]) {
     assert.ok(new RegExp(`grant select, insert, update, delete on public\\.${t} to service_role`).test(mig) && new RegExp(`revoke all on public\\.${t} from public, anon, authenticated`).test(mig)
       && new RegExp(`alter table public\\.${t} enable row level security`).test(mig), "Rechte + RLS: " + t);

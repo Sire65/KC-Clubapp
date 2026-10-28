@@ -2,9 +2,10 @@
 // Aufruf: node tests/tempo-versand.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const app = lies("app.js"), server = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261026_kc_club_tempo_hintergrund.sql");
+const app = programmText(), server = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261026_kc_club_tempo_hintergrund.sql");
 const fn = (kopf) => { const i = server.indexOf(kopf); assert.ok(i > 0, kopf); let d = 0; for (let k = server.indexOf("{", server.indexOf(")", i)); ; k++) { if (server[k] === "{") d++; if (server[k] === "}" && !--d) return server.slice(i, k + 1); } };
 
 // 1. ❗ wichtig und @Erwähnung benachrichtigen im Hintergrund; Notfall, Express und Probe warten (die App zeigt dort das Ergebnis)

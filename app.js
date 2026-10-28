@@ -3,6 +3,37 @@ const APP_VERSION = "2.725.0"; // gleich halten mit sw.js, version.json und app.
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
+// ---------- 2.726.0 KC-CLUB-TEILE (Prüfbericht C Stufe 0, Wunsch Hansi 28.10.2026 „gut aufteilen, damit später alles besser, schneller, sicherer läuft“) ----------
+// Selten gebrauchte Programmteile liegen in teile/<name>.js und werden erst beim ersten Gebrauch geladen – als normales Skript dieser Seite,
+// Adresse mit ?v=APP_VERSION. Registry TEILE_LISTE: je Teil die Einstiegs-Funktionen und der Fingerabdruck (sri). Für jede Einstiegs-Funktion steht ein
+// Platzhalter bereit, der das Teil lädt und dann die echte Funktion aufruft (das Teil ersetzt den Platzhalter). Der Browser führt ein Teil nur aus,
+// wenn sein Fingerabdruck passt – nie ein Teil aus einer anderen Version (kein Mischstand, Regel 16); passt er nicht, wird nach einem Update gesucht.
+// Der Service Worker legt alle Teile beim Update zusammen mit app.js in den Speicher dieser Version (alles oder nichts) – auch ohne Netz da.
+// Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
+// Rückweg: docs/AUFTEILEN.md.
+const TEILE_LISTE = {
+  probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
+};
+const TEILE_STAND = {};
+function teilLaden(name) {
+  const t = TEILE_LISTE[name]; if (!t) return Promise.reject(new Error("Unbekannter Programmteil: " + name));
+  if (TEILE_STAND[name]) return TEILE_STAND[name];
+  const versuch = (rest) => skriptLaden(`teile/${name}.js?v=${APP_VERSION}`, t.sri)
+    .catch((e) => (rest > 0 && navigator.onLine !== false ? new Promise((ok) => setTimeout(ok, 1500)).then(() => versuch(rest - 1)) : Promise.reject(e)));
+  return (TEILE_STAND[name] = versuch(1).then(() => {
+    if (t.einstieg.some((f) => typeof window[f] !== "function" || window[f]._teil)) throw new Error("Programmteil " + name + " unvollständig");
+  }).catch((e) => {
+    delete TEILE_STAND[name];
+    try { window.KCFP?.neu("laden", { text: "Programmteil nicht geladen: " + name + " – " + String(e?.message || e).slice(0, 80) }); } catch {}
+    try { updatePruefen(false); } catch {} // passt der Fingerabdruck nicht, ist meist schon eine neue Version da
+    throw new Error("Dieser Teil der App konnte gerade nicht geladen werden – bitte Internet prüfen und gleich noch einmal tippen.");
+  }));
+}
+for (const [name, t] of Object.entries(TEILE_LISTE)) for (const f of t.einstieg) {
+  if (typeof window[f] === "function") continue; // steht (noch) im Hauptprogramm – dann gilt das
+  const platzhalter = (...a) => teilLaden(name).then(() => window[f](...a), (e) => { try { meldeFehler(e); } catch {} });
+  platzhalter._teil = name; window[f] = platzhalter;
+}
 // ---------- 2.364.0 KC-CLUB-SCHRIFT-ZOOM (Wunsch Hansi „Texte und Nachrichten auf dem Handy zoomen“): mit zwei Fingern auseinanderziehen = Schrift
 // größer, zusammenschieben = kleiner (wie in vielen Nachrichten-Apps). 2.365.0 (Wunsch Hansi „nur bei Text, nicht die komplette Oberfläche“): es wachsen nur
 // die Lese-Texte (Nachrichten, Zettel, Protokolle, Fenstertexte – CSS „zoom“ auf genau diesen Blöcken), Knöpfe und Leisten bleiben gleich. Gilt zusätzlich zu „🔠 Große Schrift“, bleibt auf diesem Gerät gemerkt (70–200 %). Fotos, Videos, Spielbretter und Malflächen
@@ -37649,7 +37680,7 @@ function erkQrDeuten(roh) { // Profil-QR wie auf Wunschbogen, Bestätigung und S
 }
 const OCR_PFAD = "lib/ocr/", OCR_OK = "kc_club_ocr_ok", ERKD = { lauf: 0, merk: new WeakMap(), r: null };
 let ocrLaden = null, jsqrLaden = null;
-function skriptLaden(src) { return new Promise((ok, nein) => { const x = document.createElement("script"); x.src = src; x.onload = ok; x.onerror = () => nein(new Error("Baustein konnte nicht geladen werden.")); document.head.appendChild(x); }); }
+function skriptLaden(src, integrity) { return new Promise((ok, nein) => { const x = document.createElement("script"); x.src = src; if (integrity) x.integrity = integrity; /* 2.726.0 KC-CLUB-TEILE: Fingerabdruck */ x.onload = ok; x.onerror = () => nein(new Error("Baustein konnte nicht geladen werden.")); document.head.appendChild(x); }); }
 async function ocrText(bild) {
   if (!ocrLaden) ocrLaden = (window.Tesseract ? Promise.resolve() : skriptLaden(OCR_PFAD + "tesseract.min.js?v=7.0.0")).catch((e) => { ocrLaden = null; throw e; });
   await ocrLaden;

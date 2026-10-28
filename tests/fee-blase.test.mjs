@@ -2,7 +2,8 @@
 // Aufruf: node tests/fee-blase.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+const app = programmText();
 const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 assert.ok(/<div class="fee-blase" aria-hidden="true">Tipp mich an!<\/div>/.test(app), "Sprechblase an der Fee");
 assert.ok(/getippt = true; f\.classList\.remove\("blase"\);/.test(app) && /if \(!getippt\) \{ f\.classList\.toggle\("blase-unten", hy < 40\); f\.classList\.add\("blase"\); \}/.test(app), "erscheint beim Stehen, weg nach dem Antippen");

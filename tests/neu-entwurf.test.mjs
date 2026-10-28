@@ -2,7 +2,8 @@
 // Aufruf: node tests/neu-entwurf.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+const app = programmText();
 assert.ok(/if \(!chatId\) return neuEntwurfMerken\(\);/.test(app), "neue Nachricht (noch ohne Chat) wird gemerkt");
 const f = app.slice(app.indexOf("function neuEntwurfMerken("), app.indexOf("function neuEntwurfHolen("));
 assert.ok(/if \(!e \|\| empfTest\(\)\) return;/.test(f) && /localStorage\.setItem\(neuEntwurfSchluessel\(\), JSON\.stringify\(\{ e, b: neuEntwurf\?\.betreff \|\| "", t: t\.slice\(0, 4000\), am: Date\.now\(\) \}\)\)/.test(f), "Empfänger, Betreff, Text auf dem Gerät – nie der Test an mich");

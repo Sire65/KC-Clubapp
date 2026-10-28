@@ -53,3 +53,12 @@ Gilt für jedes Einspielen (12-/20-Uhr-Bündel und „sofort“), keine technisc
    alle 10 Minuten neu prüfen, höchstens 60 Minuten; danach Hansi fragen (nicht ungefragt trotzdem einspielen).
 3. Echte Notfälle (Sicherheit, Fehler, der Mitglieder behindert, Datensicherung kaputt) dürfen nach kurzer Rückmeldung an Hansi trotzdem sofort.
 4. Die Prüfung nutzt nur die eigene Tabelle `kc_club_zugang` – keine Supabase-Protokolle durchsuchen (KC-SPARSAM-PROTOKOLLE).
+
+## Programmteile nachladen (KC-CLUB-TEILE, 28.10.2026, Wunsch Hansi „Programm gut aufteilen“)
+
+Selten gebrauchte Programmteile liegen in `teile/<name>.js` und werden erst beim ersten Gebrauch geladen (Anleitung und Rückweg: `docs/AUFTEILEN.md`).
+
+1. Nach jeder Änderung an `teile/*.js`: `node tools/teile-pruefsumme.mjs` – sonst passt der Fingerabdruck nicht, der Vertragstest wird rot
+   (und in der App würde das Teil nicht geladen).
+2. Neues Teil: Datei + Eintrag in `TEILE_LISTE` (app.js) + `TEILE` (sw.js). Tests lesen app.js und alle Teile über `tests/programm.mjs`.
+3. Nur auslagern, was nicht beim Start gebraucht wird; Einstiegs-Funktionen liefern beim ersten Aufruf ein Promise.

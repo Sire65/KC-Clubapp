@@ -2,8 +2,9 @@
 // Aufruf: node tests/verlassen-erinnern.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const app = lies("app.js"), server = lies("supabase/functions/kc-club/index.ts");
+const app = programmText(), server = lies("supabase/functions/kc-club/index.ts");
 assert.ok(/function appSchliessen\(\) \{ verlassenFragen\(appSchliessenJetzt\); \}/.test(app) && /verlassenFragen\(\(\) => \{ if \(Date\.now\(\) - letztesZurueck > 3000\)/.test(app), "App schließen und Zurück fragen vorher");
 assert.ok(/if \(!t\.length \|\| Date\.now\(\) - VLF\.gefragt < 10 \* 60000\) \{ weiter\(\); return false; \}/.test(app) && /!INIT\._offline && !VT\?\.fuer/.test(app), "nur wenn etwas offen, höchstens alle 10 Min., nicht offline/vertretend");
 assert.ok(/data-w="nein">👀 Nein, jetzt ansehen/.test(app) && /data-w="spaeter">⏰ Später nochmal erinnern/.test(app) && /data-w="ja">🚪 Ja, verlassen/.test(app), "drei Knöpfe");

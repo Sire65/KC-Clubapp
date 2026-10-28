@@ -2,9 +2,10 @@
 // Aufruf: node tests/rc-app.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const app = lies("app.js"), seite = lies("index.html");
+const app = programmText(), seite = lies("index.html");
 
 // 1. KOCH/KOCH_EMO stehen vor dem Start-Block (sonst Zugriff vor der Zuweisung, wenn der Start schon Twinkey malt)
 {
@@ -66,7 +67,7 @@ console.log("rc-app: alle Prüfungen bestanden");
 {
   const vj = JSON.parse(lies("version.json"));
   const srvM = lies("supabase/functions/kc-club/index.ts");
-  const appM = lies("app.js");
+  const appM = programmText();
   assert.ok(/^\d+\.\d+\.\d+$/.test(vj.mindest || ""), "version.json hat mindest");
   assert.ok(srvM.includes(`const MINDEST_APP_VERSION = "${vj.mindest}";`), "Server und version.json gleich");
   assert.ok(/versionAelter\(v, MINDEST_APP_VERSION\) && !ich\.admin\)\s*throw new Fehler\(`Deine Club-App ist veraltet/.test(srvM), "init bittet alte Apps um ein Update");
@@ -82,7 +83,7 @@ console.log("rc-app: alle Prüfungen bestanden");
 
 // KC-CLUB-VB-AUFTEILUNG (24.10.2026): Antwortzeit im Verbindungstest als „Netz · Server“ aus derselben Messung
 {
-  const a = lies("app.js");
+  const a = programmText();
   assert.ok(/const iBest = zeiten\.indexOf\(Math\.min\(\.\.\.zeiten\)\), sBest = srv\[iBest\];/.test(a) && /db: VB\.test\.db, srv: VB\.test\.srv \}\);/.test(a), "Server-Anteil aus der besten Messung, im Verlauf gemerkt");
   assert.ok(/const vbAufteilung = \(t\) =>/.test(a) && /\$\{z\(t\.ping, " ms"\)\}\$\{vbAufteilung\(t\)\}/.test(a), "Tabelle zeigt Netz · Server");
 }

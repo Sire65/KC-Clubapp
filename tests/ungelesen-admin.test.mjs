@@ -2,7 +2,8 @@
 // Aufruf: node tests/ungelesen-admin.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
-const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
+const app = programmText();
 const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const server = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
 const s = server.slice(server.indexOf('case "ungelesen_uebersicht": {'), server.indexOf('case "gemerkte_nachrichten": {'));

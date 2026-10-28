@@ -2,9 +2,10 @@
 // Aufruf: node tests/anruf-besser.test.mjs  ·  Browser-Test mit zwei echten WebRTC-Seiten: node tools/anruf/anruf-browser.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";
+import { programmText } from "./programm.mjs"; // 2.726.0 KC-CLUB-TEILE: app.js + teile/*.js
 
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const app = lies("app.js"), seite = lies("index.html"), server = lies("supabase/functions/kc-club/index.ts");
+const app = programmText(), seite = lies("index.html"), server = lies("supabase/functions/kc-club/index.ts");
 const fall = (name) => { const i = server.indexOf(`case "${name}": {`); assert.ok(i > 0, `Server-Aktion ${name} fehlt`); return server.slice(i, server.indexOf("\n      }\n", i)); };
 
 // 2. ICE-Neustart: Server-Aktionen nur für die beiden Beteiligten, nur laufende Einzelgespräche, SDP-Grenze wie beim Anrufen
