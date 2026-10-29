@@ -42,7 +42,8 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 3. Ein Teil darf nur Funktionen enthalten, die **nicht beim Start** gebraucht werden. Was das Hauptprogramm von einem Teil braucht, geht nur
    über Einstiegs-Funktionen (Platzhalter). Kein `const`/`let` mit gleichem Namen wie im Hauptprogramm (der Vertragstest übersetzt alles zusammen).
 4. `import()` in einem Teil löst sich vom Teil aus auf (teile/…) – nur `import(new URL("lib/…", location.href).href)` benutzen (Test prüft das).
-5. Einstiegs-Funktionen geben beim ersten Aufruf ein Versprechen (Promise) zurück – nur Funktionen auslagern, deren Rückgabewert der Aufrufer
+5. Braucht ein Teil ein anderes (z. B. Videos → Rückseite): `TEILE_BRAUCHT` in app.js. Aufräum-Code im Hauptprogramm fragt `teilDa(name)` statt ein Teil zu laden.
+6. Einstiegs-Funktionen geben beim ersten Aufruf ein Versprechen (Promise) zurück – nur Funktionen auslagern, deren Rückgabewert der Aufrufer
    nicht sofort braucht (Knöpfe, „öffnen“, „starten“).
 
 ## Stufen
@@ -52,7 +53,8 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 | 0 | Nachlade-Weg, Probe-Teil, Tests, Rundgang, diese Anleitung | 2.727.0 | eingespielt 28.10. |
 | 1 | Erklär-Videos (`teile/videos.js`, ~420 KB; Katalog, Zustand RG und Startseiten-Hinweis bleiben im Hauptprogramm) | 2.737.0 | gebaut, alle 57 Videos geprüft, Start-Rechenzeit −12 % |
 | 2 | Spiele (`teile/spiele.js`, ~300 KB; Spiel-Einladung, Live-Anfragen, Einstellungen, Zustand SP bleiben) | 2.748.0 | gebaut, 7 Spiele Handy+PC geprüft, Start-Rechenzeit gesamt −13 % |
-| 3 | Sim-Jü, Rückseite, Bühne, Effekte | | geplant |
+| 3a | Rückseite: Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne (`teile/rueckseite.js`, ~175 KB; Eselsohr, Uhr+Wecker, Bewegungs-Einladung bleiben; Videos brauchen die Rückseite) | 2.749.0 | gebaut, alle Reiter + Videos geprüft |
+| 3b | Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – beim Start sichtbar, nur „kurz nach dem Start nachladen“ möglich | | Entscheidung Hansi |
 | 4 | Büro-Werkzeuge der Clubleitung | | geplant |
 | 5 | Hilfe-Texte | | geplant |
 

@@ -1,11 +1,14 @@
 # Änderungen
 
-## 2.752.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
+## 2.753.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
 Wunsch Hansi (29.10.): „Video auch anpassen, im Video die Vertretung anzeigen – nicht mich, sondern eher den Kassenwart.“
 - 🎬 **Anleitungsfilm neu** (KC-CLUB-FILM-HINWEIS, Kennung `clubsitzungablauf`): Teil 1 Tagesordnung & Einladung (3 Tage vorher, Sitzungs-Vorgaben) · Teil 2 Bis zur Sitzung (erinnern, „Mitglieder informieren?“ mit Änderungsmeldung, „⚠️ Knapp“, **Vertretung durch Kassenwart Paul**) · Teil 3 einen Tag vorher Sitzung vorbereiten und zuletzt die Aktentasche mit Mitnehm-Liste · Teil 4 Clubabend Live mit 📤 Freigeben, „✅ Zum Schluss“ und als Letztes der nächste Termin (18 Uhr, Hütte Anne). Klaus bekommt den Hinweis beim Start noch einmal.
 - ↕️ **Nachrichten: Abschnitte verschieben** (KC-CLUB-NACHRICHTEN-REIHE, Wunsch Hansi 29.10. „in den Balken rechts Pfeil hoch und runter – damit ich z. B. die Einzelchats oben als erstes habe“): Ist die Übersicht nach 👥 Art oder 🕒 Zeit gegliedert, hat jeder Balken rechts ▲ ▼. Die Reihenfolge merkt sich die App je Gerät; „🔴 Ungelesen“ bleibt immer oben; ein neuer Abschnitt (z. B. neuer Monat) erscheint an seinem üblichen Platz. Test: tests/nachrichten-reihe.test.mjs.
 - 🐞 Kontroll-Hinweis: Der Knopf „Clubsprecher anschreiben“ fehlte, wenn die Mitgliederliste noch nicht geladen war – jetzt lädt der Hinweis sie selbst (ebenso die Ämter-Auswahl in den Sitzungs-Vorgaben).
 - 🗓️ Live-Abstimmung: Der Hinweis nennt jetzt die Sitzungs-Vorgaben („letzter Freitag im Folgemonat, 18:00 Uhr, Hütte Anne (ohne Dez)“) statt „Uhrzeit und Ort wie beim letzten Treffen“.
+
+## 2.752.0 – 2026-10-29 – 🪞 Rückseite des Kopfs wird erst beim Öffnen geladen (KC-CLUB-TEILE, Stufe 3)
+Prüfbericht C (Wunsch #44), Stufe 3 – für Mitglieder unsichtbar: Rätsel, Spiegel, Diashow, Tafel, Flipchart und die Bühne mit Musik und Club-Song (rund 175 KB) liegen jetzt in teile/rueckseite.js und werden geladen, wenn auf der Rückseite ein Reiter aufgeht oder ein Erklär-Video sie vorführt (Videos laden die Rückseite automatisch mit). Im Hauptprogramm bleiben Eselsohr, Umdrehen und Aufrollen, die große Uhr mit Wecker (klingelt immer) und die Bewegungs-Einladung mit Twinkeys Figur. Neu im Fundament: abhängige Teile und teilDa(). Geprüft: alle 7 Reiter, Club-Song, die Videos zu Rückseite/Rätsel/Bühne – auch auf frisch geöffnetem Handy –, beim Start wird kein Teil geladen.
 
 ## 2.751.0 – 2026-10-29 – 🧭 Clubsitzung wie im richtigen Leben · Fristen · Änderungsmeldung · Sitzungs-Vorgaben
 Wunsch Hansi (29.10.): „Tagesordnung erstellen, Vorschläge aufnehmen, 3 Tage vorher einladen, dann die Sitzung vorbereiten, als letztes die Aktentasche … auf dem gelben Zettel immer die nächsten Schritte, bei Fristen beim Programmstart erinnern, auch Kassenwart und Admin zur Kontrolle.“ Ausführlich: docs/SITZUNG_ABLAUF.md.

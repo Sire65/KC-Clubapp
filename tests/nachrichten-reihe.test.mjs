@@ -1,4 +1,4 @@
-// KC-CLUB-NACHRICHTEN-REIHE (2.752.0, Wunsch Hansi 29.10.2026: „in den Balken rechts einen Pfeil nach oben und einen nach unten, um die Chats zu
+// KC-CLUB-NACHRICHTEN-REIHE (2.753.0, Wunsch Hansi 29.10.2026: „in den Balken rechts einen Pfeil nach oben und einen nach unten, um die Chats zu
 // verschieben – damit ich z. B. die Einzelchats oben als erstes habe“). Verhaltensprüfung (offline). Aufruf: node tests/nachrichten-reihe.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";

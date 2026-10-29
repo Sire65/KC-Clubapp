@@ -5930,7 +5930,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/onclick="bwHoeren\(\)">🎶 Nur Musik hören<\/button>/.test(html), "Knopf auf der Bühne");
   assert.ok(/if \(BWM\.stueck\?\.spiel\) BWM\.stueck\.spiel\(BWM\.gesamt, BWM\.zeit\); else bwMusikSchritt\(BWM\.schritt, BWM\.zeit\);/.test(html), "Trainingsmusik unverändert, Stücke über eigene Spielfunktion");
   assert.ok(/if \(BW\.hoeren\) bwStopp\(false\); BWM\.stueck = bwTrainingsStueck\(w\.modus\); BWM\.gesamt = 0;/.test(html), "Training: Disco-Stück im Tempo der Übungen (2.303.0)");
-  assert.ok(/BW\.lauf = null; BW\.hoeren = null; (BW\.vorher = null; )?BWM\.stueck = null;/.test(html) && /if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Ende/Ansicht verlassen stoppt auch die Musik");
+  assert.ok(/BW\.lauf = null; BW\.hoeren = null; (BW\.vorher = null; )?BWM\.stueck = null;/.test(html) && /if \(teilDa\("rueckseite"\) && \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\)\) bwStopp\(\); \}/.test(html) /* 2.752.0: nur wenn die Rückseite geladen ist */, "Ende/Ansicht verlassen stoppt auch die Musik");
   assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!H\.pause\) \{ H\.pause = true; bwMusik\(false\);/.test(html), "nicht zu sehen → Pause");
   assert.ok(/if \(takt >= ges\) \{ bwmStueck\((H\.i \+ 1|bwmNachbar\(H\.i, 1\))\);/.test(html) && /const bwmTakte = \(s\) => (s\.takte \|\| )?Math\.max\(32,/.test(html), "nach ca. 2½ Min. das nächste Stück");
   assert.ok(/\{ id: "es_musik", thema: "toene", sym: "🎶"/.test(html), "Hilfe-Eintrag");
@@ -5965,7 +5965,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const b = html.slice(html.indexOf("async function startKnopf()"), html.indexOf("function sbSchalter("));
   assert.ok(/try \{ if \(ES\.offen\) await esDrehen\(false\); \} catch \{\}/.test(b), "Start → Vorderseite");
-  assert.ok(/\} else esStop\(\);\n\}/.test(html) && /function esStop\(\) \{[^\n]*if \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\) bwStopp\(\); \}/.test(html), "Zurückdrehen stoppt Training und Musik");
+  assert.ok(/\} else esStop\(\);\n\}/.test(html) && /function esStop\(\) \{[^\n]*if \(teilDa\("rueckseite"\) && \(BW\.lauf \|\| BW\.hoeren \|\| BWM\.laeuft\)\) bwStopp\(\); \}/.test(html) /* 2.752.0 */, "Zurückdrehen stoppt Training und Musik");
 }
 
 // 2.306.0 KC-CLUB-SPRACHE-HAENGT (Fund Hansi „ich kann das Reden nicht mehr hören, obwohl Ansage an ist“): hängende/angehaltene Sprachausgabe wieder in Gang setzen
@@ -6383,7 +6383,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   // jedes Kommando ist in unter 2 s gesprochen (ca. 14 Zeichen/s) – auch mit „Von vorn – …“ und „… – noch 10!“
   for (const s of K.BW_KETTE_SCHRITTE) { assert.ok(s.k && `Von vorn – ${s.k}!`.length <= 26 && `${s.k} – noch 10!`.length <= 26, "kurzer Name " + s.a); for (const t of s.s) assert.ok(t.length <= 21, "Kommando kurz: " + t); }
   assert.ok(K.BW_KETTE_START.length <= 260, "Begrüßung der Kette ca. 15 s (vorher ~32 s)");
-  const t = html.slice(html.indexOf("function bwKetteTick("), html.indexOf("// ----- 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT"));
+  const t = html.slice(html.indexOf("function bwKetteTick("), html.indexOf("const BW_DAUER = [", html.indexOf("function bwKetteTick("))); // 2.752.0: Block liegt in teile/rueckseite.js (Marke KETTE-ECHT blieb mit der Figur im Hauptprogramm)
   assert.ok(/if \(!s \|\| k % BW_KETTE_TAKT !== 0 \|\| e === 0 \|\| L\.rest <= 0\) return;/.test(t) && !/, false, "", true\)/.test(t), "nur beim Wechsel, nie „nebenbei“ (verspätet)");
   assert.ok(/bwSag\(`\$\{s\.k\} – noch 10!`, true\)/.test(t) && /bwSag\("Letzter Sprung – hopp!", true\)/.test(t), "Endspurt ersetzt kein Kommando mehr");
   assert.ok(/bwSag\(u\.kette \? BW_KETTE_SCHRITTE\[0\]\.s\[0\] : "Los geht’s!", !!u\.kette\);/.test(html) && /const extra = n\.kette \? `\$\{BW_KETTE_RUNDE\[n\.runde\]\?\.start \|\| ""\} `/.test(html), "Start direkt mit dem ersten Kommando; Durchgangs-Ansage vor dem Einzählen");
@@ -6662,7 +6662,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/\$\{esDiaMusikKnopf\(\)\}/.test(html) && /function esDiaMusikSchalten\(\) \{\n  const an = !esDiaMusikGewuenscht\(\); esSchreib\("diaMusik"/.test(html), "🎵-Knopf in der Diashow-Leiste, Wahl wird gemerkt");
   assert.ok(/BW_STUECKE\.find\(\(x\) => x\.id === "clubsong"\)/.test(html.slice(html.indexOf("function esDiaMusikStart()"))), "es spielt der Club-Song");
-  assert.ok(/function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\); esDiaMusikAus\(\);/.test(html) && /if \(!BW\.lauf && !BW\.hoeren\) \{ bwMusik\(false\); BWM\.stueck = null; \}/.test(html), "Musik aus beim Verlassen, Bühne bleibt unberührt");
+  assert.ok(/function esStop\(\) \{ if \(teilDa\("rueckseite"\)\) \{ esSpiegelAus\(\); qzStop\(\); esDiaMusikAus\(\); \}/.test(html) /* 2.752.0 */ && /if \(!BW\.lauf && !BW\.hoeren\) \{ bwMusik\(false\); BWM\.stueck = null; \}/.test(html), "Musik aus beim Verlassen, Bühne bleibt unberührt");
   assert.ok(/function esDiaTakt\(\) \{ clearInterval\(ES\.timer\); ES\.timer = 0;/.test(html), "Blättern stoppt die Musik nicht");
   assert.ok(/if \(!esSichtbar\(\) \|\| !d\.laeuft\) \{ if \(BWM\.laeuft\) bwMusik\(false\); return; \}/.test(html), "⏸ und App im Hintergrund = Musik Pause");
   assert.ok(/\.es-dia \.es-leiste \{ gap: 5px; bottom: 58px; \}/.test(lies("index.html")), "Leiste über den Hilfe-Knöpfen");
@@ -7844,6 +7844,20 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
     assert.ok(sp.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Spiele-Teil`);
   assert.match(sp, /import\(new URL\("lib\/chess\/chess\.js\?v=1\.4\.0", location\.href\)\.href\)/, "Schachregeln von der Seite aus geladen");
   assert.match(sp, /import\(new URL\("lib\/kuechenterror\/fragen\.js\?v=3", location\.href\)\.href\)/, "Küchenterror-Fragen von der Seite aus geladen");
+}
+// 2.752.0 KC-CLUB-TEILE Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) in teile/rueckseite.js; Videos brauchen die Rückseite
+{
+  const app = lies("app.js"), rs = lies("teile/rueckseite.js");
+  assert.match(app, /rueckseite: \{ einstieg: \["bwClubSong"\], sri: "sha384-/, "Rückseiten-Teil registriert");
+  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite"\] \};/, "Videos laden die Rückseite mit (sie führen Rätsel und Bühne vor)");
+  assert.match(app, /Promise\.all\(\(TEILE_BRAUCHT\[name\] \|\| \[\]\)\.map\(teilLaden\)\)\.then\(\(\) => versuch\(1\)\)/, "abhängige Teile zuerst");
+  assert.match(app, /TEILE_DA\[name\] = true;/, "teilDa() weiß, was geladen ist");
+  assert.match(app, /if \(k !== "uhr" && !teilDa\("rueckseite"\)\) return teilLaden\("rueckseite"\)\.then\(\(\) => esTab\(k\), \(e\) => \{ meldeFehler\(e\); esTab\("uhr"\); \}\);/, "Reiter laden die Rückseite nach; geht das nicht, bleibt die Uhr");
+  assert.match(app, /try \{ esStop\(\); if \(teilDa\("rueckseite"\)\) bwStopp\(\); \} catch/, "Fenster-Schlaf stoppt die Bühne nur, wenn geladen");
+  for (const n of ["const ES = {", "function esOeffnen(", "function esTab(", "function esStop(", "const BW = {", "function bwFigur(", "function bwEinladungPruefen(", "function wkWache(", "function esUhrTick("])
+    assert.ok(app.includes(n) && !rs.includes(n), `${n.slice(0, 26)} bleibt im Hauptprogramm (Start, Wecker, Uhr, Einladung)`);
+  for (const n of ["function esRaetselZeigen(", "function esSpiegelZeigen(", "function esDiaZeigen(", "function esBuehneZeigen(", "function bwClubSong(", "function qzStop("])
+    assert.ok(rs.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Rückseiten-Teil`);
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
@@ -10616,7 +10630,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.292.0 KC-CLUB-ESELSOHR (Wunsch Hansi): Eselsohr am Kopf – Rückseite mit Diashow, Tafel, großer Uhr; Doppeltipp dreht zurück
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Inhalte der Rückseite in teile/rueckseite.js
   assert.ok(b.length > 5000, "Baustein vorhanden");
   assert.ok(/if \(!hinten && d < -35\) return esDrehen\(true\);/.test(b) && /if \(t - ES\.tipp < 450\) \{ ES\.tipp = 0; esDrehen\(!hinten\); return; \}/.test(b), "nach links ziehen dreht um, Doppeltipp öffnet und schließt (2.295.0)");
   assert.ok(/const ES_TABS = \[\["dia", "🖼️", "Diashow"\], \["tafel", "🖍️", "Tafel"\], \["uhr", "🕰️", "Uhr"\](, \["buehne", "🎭", "Bühne"\])?\];/.test(b) || /\["flip", "📋", "Flipchart"\]/.test(b), "Rückseiten (2.293.0: + Bühne, 2.295.0: + Flipchart)");
@@ -10632,13 +10646,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.293.0 KC-CLUB-BEWEGUNGSBUEHNE (Wunsch Hansi): 🎭 Bühne auf der Rückseite – Twinkey mit Schweißstirnband, Übungen mit Musik und Trainer-Ansagen
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = lies("teile/rueckseite.js").slice(lies("teile/rueckseite.js").indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0")) + html.slice(html.indexOf("// ----- 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")); // 2.752.0: Bühne in teile/rueckseite.js, Twinkeys Figur (bwFigur) im Hauptprogramm
   assert.ok(b.length > 4000 && /\["buehne", "🎭", "Bühne"\]/.test(html) && /else if \(k === "buehne"\) esBuehneZeigen\(f\);/.test(html), "vierter Reiter Bühne");
   assert.ok(/fill="#e03131"\/>\s*<rect x="\$\{x - 9\.2\}"/.test(b) && /class="bw-schweiss"/.test(b) && !/fi-muetze/.test(b), "Schweißstirnband statt Kochmütze, rote Turnschuhe (2.294.0)");
   for (const g of ["sitzen", "stehen", "kueche"]) assert.ok(new RegExp(`g: "${g}"`).test(b), "Übungen " + g);
   for (const h of ["schneebesen", "loeffel", "nudelholz", "flasche", "deckel", "tuch"]) assert.ok(new RegExp(`\\b${h}: \\(x, y\\) =>`).test(b), "Küchenhelfer " + h);
   assert.ok(/L\.rest === 3 \? "Noch 3 Sekunden" : L\.rest === 2 \? "zwei" : "eins"/.test(b) && /"Und jetzt ausschütteln!"/.test(b) && /bwSag\(u\.w \|\| (u\.c\?\.\[1\] \|\| )?(BW_LOB|bwNimm\(BW_LOB)/.test(b), "Trainer-Ansagen: Seitenwechsel/Lob, noch 3-2-1, ausschütteln");
-  assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \(BW\.lauf (\|\| BW\.hoeren )?\|\| BWM\.laeuft\) bwStopp\(\);/.test(html), "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
+  assert.ok(/if \(!esSichtbar\(\)\) \{ if \(!L\.pause\) \{ L\.pause = true; bwMusik\(false\);/.test(b) && /if \((teilDa\("rueckseite"\) && \()?BW\.lauf (\|\| BW\.hoeren )?\|\| BWM\.laeuft\)\)? bwStopp\(\);/.test(html) /* 2.752.0 */, "nur sichtbar – sonst Pause; Umdrehen/Reiterwechsel stoppt Musik und Ansage");
   assert.ok(/window\.AudioContext \|\| window\.webkitAudioContext/.test(b) && !/new Audio\(|\.mp3|https?:\/\//.test(b), "Musik im Handy erzeugt – keine Datei, kein Internet");
   assert.ok(!/\bapi\(/.test(b), "nichts wird gespeichert oder gesendet");
   assert.ok(/fiLs\(FI_HINWEIS_KEY, false\)/.test(b), "Gesundheitshinweis wie bei Fit bleiben");
@@ -10647,7 +10661,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 
 // 2.294.0 KC-CLUB-BEWEGUNGSBUEHNE-2 (Wunsch Hansi): natürlichere Bewegungen (Gelenke, im Takt), rote Turnschuhe mit Streifen, bessere Musik, mehr Sprüche
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = lies("teile/rueckseite.js").slice(lies("teile/rueckseite.js").indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0")) + html.slice(html.indexOf("// ----- 2.399.0 KC-CLUB-BUEHNE-KETTE-ECHT"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")); // 2.752.0: Bühne in teile/rueckseite.js, Twinkeys Figur (bwFigur) im Hauptprogramm
   assert.ok(/class="bw-oa\$\{s\}"[\s\S]{0,200}class="bw-ua\$\{s\}"/.test(b) && /class="bw-ob\$\{s\}"[\s\S]{0,200}class="bw-ub\$\{s\}"/.test(b), "Gliederpuppe: Schulter→Ellbogen, Hüfte→Knie");
   assert.ok(/const bwSchuh = /.test(b) && /stroke="#fff" stroke-width="1\.15"/.test(b), "rote Turnschuhe mit drei weißen Streifen");
   for (const a of ["armkreis", "schulter", "marsch", "kneten", "bein", "seitheben", "hochdruecken", "klatschen", "trommeln", "ruehren", "seitbeuge", "rollen", "hochhalten", "strecken", "seit", "knie", "zehen", "rumpf", "nacken", "schuetteln", "jubel", "winken", "ruhe"])
@@ -10662,7 +10676,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.295.0 KC-CLUB-FLIPCHART + KC-CLUB-ESELSOHR-2 (Wunsch Hansi): Eselsohr kleiner, Doppeltipp öffnet/schließt; Flipchart mit Umblättern; Rückseite bis zur Fußleiste
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js").slice(0, lies("teile/rueckseite.js").indexOf("// ---------- KC-CLUB-BEWEGUNGSBUEHNE (2.293.0")); // 2.752.0: Rückseite ohne Bühne (Inhalte in teile/rueckseite.js)
   assert.ok(/\.eselsohr \{ position: absolute; right: 0; bottom: 0; width: calc\(28px/.test(html) && /\.eselsohr::after \{ content: ""; position: absolute; inset: -8px; \}/.test(html), "Eselsohr kleiner, Tippfläche bleibt groß");
   assert.ok(/\["flip", "📋", "Flipchart"\]/.test(b) && /else if \(k === "flip"\) esFlipZeigen\(f\);/.test(b), "Reiter Flipchart");
   assert.ok(/async function esFlipBlaettern\(r\)/.test(b) && /f\.i\+\+; if \(f\.i >= f\.blaetter\.length\) f\.blaetter\.push\(\[\]\);/.test(b) && /async function esFlipAbreissen\(\)/.test(b) && /@keyframes esKlappWeg/.test(html), "Umblättern nach hinten, zurück, abreißen");
@@ -10675,7 +10689,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.296.0 KC-CLUB-FLIPCHART-MUSTER + KC-CLUB-BUEHNE-80ER (Wunsch Hansi): Papier blanko/kariert/liniert; Musik lauter und beim Sprechen leiser;
 // Ansagen schneiden sich nicht mehr ab; Sprüche gleichmäßig verteilt; 80er-Kleidung mit wechselnden Farben
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Rückseiten-Inhalte in teile/rueckseite.js
   assert.ok(/const ES_FLIP_MUSTER = \[\["blanko", "▢ Blanko"\], \["kariert", "▦ Kariert"\], \["liniert", "☰ Liniert"\]\];/.test(b) && /onclick="esFlipMusterWeiter\(\)"/.test(b), "ein Knopf schaltet blanko → kariert → liniert");
   assert.ok(/globalCompositeOperation = "destination-out"/.test(b), "Radierer nimmt nur Striche weg – Linien bleiben");
   assert.ok(/const BWM_LAUT = \.\d+, BWM_LEISE = \.\d+;/.test(b) && /createDynamicsCompressor\(\)/.test(b), "Musik lauter (mit Kompressor), beim Sprechen deutlich leiser");
@@ -10687,7 +10701,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.297.0 KC-CLUB-BUEHNE-KUECHE-2 (Wunsch Hansi): Kochjacke mit 10 Knöpfen; neue Küchen-Übungen (Suppe rühren, Treppe aus dem Lager,
 // Kopf zur Seite, Nacken stärken, Hula-Hoop, Pfanne schwenken …); Musik lauter, Stimme leiser
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Rückseiten-Inhalte in teile/rueckseite.js
   assert.ok(/\[6, 14, 22, 30, 38\]\.flatMap\(\(y\) => \[\[55\.5, y\], \[64\.5, y\]\]\)/.test(b) && /class="bw-knopf"/.test(b), "Kochjacke: zwei Reihen à 5 = 10 Knöpfe");
   for (const id of ["suppe", "kniehoch", "kopfneigen", "nackenstark", "abwischen", "treppe", "hula", "suppest", "pfanne"]) {
     assert.ok(new RegExp(`\\{ id: "${id}", t: "`).test(b), `Übung ${id} vorhanden`);
@@ -10701,7 +10715,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.298.0 KC-CLUB-BUEHNE-LAUTSTAERKE (Wunsch Hansi „Musik immer noch zu leise“): Regler rechts auf der Bühne – Keil unten dünn, oben dick;
 // Lautstärke hinter dem Kompressor bis gut 4-fach, Begrenzer gegen Übersteuern; Einstellung wird gemerkt
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Rückseiten-Inhalte in teile/rueckseite.js
   assert.ok(/\$\{bwLautRegler\("musik"\)\}/.test(b) && /role="slider"/.test(b) && /aria-orientation="vertical"/.test(b), "Regler steht auf der laufenden Bühne");
   assert.ok(/points="13,100 17,100 30,0 0,0"/.test(b), "Keil: unten dünn, oben dick");
   assert.ok(/komp\.connect\(BWM\.voll\); BWM\.voll\.connect\(grenze\); grenze\.connect\(BWM\.ctx\.destination\);/.test(b) && /grenze\.ratio\.value = 20;/.test(b), "Lautstärke nach dem Kompressor, Begrenzer davor schützt");
@@ -10712,7 +10726,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.299.0 KC-CLUB-BUEHNE-STIMME (Wunsch Hansi): Regler links für die Stimme, unten tippen = stumm; seltener „Klasse“; Sprüche mit Augenzwinkern
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Rückseiten-Inhalte in teile/rueckseite.js
   assert.ok(/\$\{bwLautRegler\("musik"\)\}\$\{bwLautRegler\("stimme"\)\}/.test(b) && /\.bw-laut\.stimme \{ right: auto; left: 8px; \}/.test(html), "Stimm-Regler links, Musik rechts");
   assert.ok(/if \(!\("speechSynthesis" in window\) \|\| bwStimmeStumm\(\)\) return;/.test(b) && /function bwLautStumm\(art\)/.test(b) && /closest\?\.\("\.bw-laut-sym\.unten"\)\) return bwLautStumm\(art\);/.test(b), "unten tippen: stumm, nochmal: wieder an");
   assert.ok(/else if \(!p\) \{ try \{ speechSynthesis\.cancel\(\); \}/.test(b), "beim Stummschalten verstummt Twinkey sofort");
@@ -10724,14 +10738,14 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.299.2 KC-CLUB-BUEHNE-BEGRUESSUNG (Wunsch Hansi): kurze Anfangsrede
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Rückseiten-Inhalte in teile/rueckseite.js
   assert.ok(/const BW_BEGRUESSUNG = "Hallo! Lass uns ein bisschen Bewegung in den Alltag einbauen\. Mach nur so viel, wie dir guttut\. Los geht’s!";/.test(b), "Begrüßungstext");
   assert.ok(/bwSag\(`\$\{BW_BEGRUESSUNG\} Als Erstes: /.test(b) && /BW\.lauf\.rest = BW_BEREIT \+ 6;/.test(b), "Begrüßung zum Start, erste Vorbereitung länger");
 }
 
 // 2.299.3 KC-CLUB-BUEHNE-GERAEUSCHE (Wunsch Hansi): Topf-Trommeln und Deckel-Becken klingen im Takt
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Rückseiten-Inhalte in teile/rueckseite.js
   assert.ok(/if \(u\?\.a === "trommeln" && im % 2 === 0\) bwTopf\(t, im % 4 === 0\);/.test(b) && /function bwTopf\(t, betont\)/.test(b), "Topf klingt auf jede Achtel");
   assert.ok(/if \(u\?\.a === "becken" && \(im === 4 \|\| im === 12\)\) bwBecken\(t\);/.test(b) && /function bwBecken\(t\)/.test(b), "Deckel wie Becken auf 2 und 4");
   assert.ok(/L\.phase === "uebung" && !L\.pause/.test(b), "nur während der Übung");
@@ -10739,7 +10753,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 
 // 2.299.4 KC-CLUB-BUEHNE-LOB (Wunsch Hansi): Lobwörter wechseln sich ab; Klasse, Super, Tip top, „nicht aufgeben – die neue Kochjacke soll doch passen“
 {
-  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0"));
+  const b = html.slice(html.indexOf("// ---------- KC-CLUB-ESELSOHR (2.292.0"), html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE (2.247.0")) + lies("teile/rueckseite.js"); // 2.752.0: Rückseiten-Inhalte in teile/rueckseite.js
   assert.ok(/const BW_LOBWORTE = \["Prima", "Klasse", "Super", "Spitze", "Tip top"/.test(b) && /function bwNimm\(liste, L, zaehler\)/.test(b), "Lobwörter im Wechsel");
   assert.ok(/L\.lobZuletzt = \[\.\.\.bwLobWorte\(t\), \.\.\.\(L\.lobZuletzt \|\| \[\]\)\]\.slice\(0, 5\);/.test(b), "die letzten 5 Lobwörter werden gemerkt");
   assert.ok(/bwNimm\(BW_LOB, L, "lob"\)/.test(b) && /const bwZufall = \(liste, L\) => bwNimm\(liste, L, "sprueche"\);/.test(b), "alle Sprüche laufen über die Auswahl");
@@ -10820,7 +10834,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 {
   assert.ok(/function bwEinladungPruefen\(versuch = 0\)/.test(html) && /st\.aus \|\| !esAn\(\)/.test(html) && /st\.tag === heuteIso\(\)/.test(html) && /setTimeout\(\(\) => bwEinladungPruefen\(\), 15000\)/.test(html), "Einladung beim Start, höchstens einmal am Tag");
   assert.ok(/data-w="ja"[\s\S]{0,200}data-w="spaeter"[\s\S]{0,200}data-w="nein"[\s\S]{0,200}data-w="aus"/.test(html) && /if \(w === "ja"\) \{ bwEinSetzen\(\{ tag: heuteIso\(\) \}\); esOeffnen\("buehne"\); \}/.test(html) && /id="setBwEinladung"/.test(html), "Ja / Später / Heute nicht / Nicht mehr fragen – Ja führt zur Bühne");
-  assert.ok(/\["spiegel", "🪞", "Spiegel"\](\]|, \["raetsel")/.test(html) /* 2.339.0: + Rätsel */ && /onclick="esSpiegelAn\(\)"/.test(html) && /function esSpiegelAus\(zeigen\)/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\);/.test(html), "Spiegel: Kamera nur nach Antippen, aus beim Verlassen");
+  assert.ok(/\["spiegel", "🪞", "Spiegel"\](\]|, \["raetsel")/.test(html) /* 2.339.0: + Rätsel */ && /onclick="esSpiegelAn\(\)"/.test(html) && /function esSpiegelAus\(zeigen\)/.test(html) && /function esStop\(\) \{ if \(teilDa\("rueckseite"\)\) \{ esSpiegelAus\(\);/.test(html) /* 2.752.0 */, "Spiegel: Kamera nur nach Antippen, aus beim Verlassen");
   assert.ok(/if \(document\.hidden && ES_SPIEGEL\.stream\) esSpiegelAus\(true\)/.test(html) && !/esSpiegel[\s\S]{0,4000}\bapi\(/.test(html.slice(html.indexOf("const ES_SPIEGEL"), html.indexOf("// ----- 🖼️ Diashow"))), "Spiegel: nichts gesendet, im Hintergrund aus");
   assert.ok(/\{ id: "wandstuetz", t: "Liegestütz an der Arbeitsplatte"/.test(html) && /\.bw-profil\.bw-p-liegestuetz \.p-ganz \{ animation: bwPLiegeGanz/.test(html) && /"Schweiß ist nur Fett, das weint!"/.test(html), "neue Übungen und Sprüche");
 }
@@ -10950,7 +10964,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
 // 2.339.0 KC-CLUB-RAETSEL: Bilderrätsel auf der Rückseite mit Club-Bestenliste
 {
   const srv = lies("supabase/functions/kc-club/index.ts");
-  assert.ok(/\["raetsel", "🧩", "Rätsel"\]/.test(html) && /else if \(k === "raetsel"\) esRaetselZeigen\(f\);/.test(html) && /function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\);/.test(html), "Reiter auf der Rückseite");
+  assert.ok(/\["raetsel", "🧩", "Rätsel"\]/.test(html) && /else if \(k === "raetsel"\) esRaetselZeigen\(f\);/.test(html) && /function esStop\(\) \{ if \(teilDa\("rueckseite"\)\) \{ esSpiegelAus\(\); qzStop\(\);/.test(html) /* 2.752.0 */, "Reiter auf der Rückseite");
   assert.ok(/const QZ_SEK = 30, QZ_STUFEN = \[26, 18, 12, 8, 5, 3, 2, 1\], QZ_START = 1000, QZ_FALSCH = 150, QZ_RUNDE = 5;/.test(html) && /const QZ_ZEITEN = \[0, 2, 4\.5, 7, 10, 13, 17, 22\], QZ_ENDE = 250;/.test(html), "30 s, 8 Stufen (2.340.0: früher kenntlich), 1000 → 250 Punkte, −150");
   const motive = html.slice(html.indexOf("const QZ_MOTIVE = ["), html.indexOf("// Zusätzliche, gut klingende falsche"));
   assert.ok((motive.match(/", "werne", "/g) || []).length >= 20, "mind. 20 Werne-Motive"); assert.ok((motive.match(/", "kueche", "/g) || []).length >= 15, "mind. 15 Küchen-Motive"); // 2.641.0: mehr Motive
@@ -13079,7 +13093,7 @@ function idx0() { return lies("index.html"); }
   assert.ok(/bwSag\(L\.rest === 3 \? "Noch 3 Sekunden" : L\.rest === 2 \? "zwei" : "eins", true\)/.test(programm), "3-2-1 als Sekunden-Countdown");
   assert.ok(/<div class="bw-unten"><div class="bw-tipp">/.test(programm) && /\.bw-unten \{ position: absolute;[^}]*flex-direction: column/.test(html), "Erklärung und Knöpfe untereinander");
   assert.ok(/class="bw-schritt">① Wie möchtest du üben\?/.test(programm) && /class="bw-reihe bw-start"><button type="button" class="es-k es-haupt bw-los"/.test(programm) && /class="bw-reihe bw-neben"><span>Außerdem:<\/span>/.test(programm), "Schritte, ein großer Start, Nebensachen klein");
-  assert.ok(/function esStop\(\) \{ esSpiegelAus\(\); qzStop\(\); esDiaMusikAus\(\); bwTrainingKnoepfe\(false\);/.test(programm) && /if \(v !== "start" && !BW\.lauf\) bwTrainingKnoepfe\(false\);/.test(programm), "Hilfe-Knöpfe kommen beim Verlassen der Bühne zurück");
+  assert.ok(/function esStop\(\) \{ if \(teilDa\("rueckseite"\)\) \{ esSpiegelAus\(\); qzStop\(\); esDiaMusikAus\(\); \} \/\* [^*]*\*\/ bwTrainingKnoepfe\(false\);/.test(programm) /* 2.752.0 */ && /if \(v !== "start" && !BW\.lauf\) bwTrainingKnoepfe\(false\);/.test(programm), "Hilfe-Knöpfe kommen beim Verlassen der Bühne zurück");
 }
 // 2.629.0 KC-CLUB-VERTRETUNG (Wunschliste #35): Admin erlaubt „Karla darf für Ruth“ – nur Termine, Terminumfragen, Dienstwünsche, Abstimmungen
 {
