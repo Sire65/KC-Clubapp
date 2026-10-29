@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.754.0 – 2026-10-29 – ✅ Wünsche an Claude selbst abhaken (KC-CLUB-WUNSCH-ABHAKEN)
+Wunsch Hansi (29.10.): „Wenn die Wünsche abgearbeitet wurden, muss das in der Wunschliste bestätigt werden – aber ich selber kann die Wünsche nicht als erledigt abhaken.“
+- **✅ Erledigt** bei jedem offenen Punkt und bei Rückfragen in „📝 Wünsche an Claude“ – mit Nachfrage „Punkt #… als erledigt abhaken?“. Der Punkt wandert zu „✅ Erledigt“ (mit Datum); „↩️ Nochmal öffnen“ holt ihn zurück.
+- Kein Server-Update nötig: Der Club-Server kannte „erledigt“ schon seit 2.440.0 (`wl_status`, nur Admin), es fehlte nur der Knopf. Keine Datenbank-Änderung.
+- Hinweistext oben in der Liste nennt den Knopf. Test `tests/wunsch-abhaken.test.mjs`.
+
 ## 2.753.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
 Wunsch Hansi (29.10.): „Video auch anpassen, im Video die Vertretung anzeigen – nicht mich, sondern eher den Kassenwart.“
 - 🎬 **Anleitungsfilm neu** (KC-CLUB-FILM-HINWEIS, Kennung `clubsitzungablauf`): Teil 1 Tagesordnung & Einladung (3 Tage vorher, Sitzungs-Vorgaben) · Teil 2 Bis zur Sitzung (erinnern, „Mitglieder informieren?“ mit Änderungsmeldung, „⚠️ Knapp“, **Vertretung durch Kassenwart Paul**) · Teil 3 einen Tag vorher Sitzung vorbereiten und zuletzt die Aktentasche mit Mitnehm-Liste · Teil 4 Clubabend Live mit 📤 Freigeben, „✅ Zum Schluss“ und als Letztes der nächste Termin (18 Uhr, Hütte Anne). Klaus bekommt den Hinweis beim Start noch einmal.

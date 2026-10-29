@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.753.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.754.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18969,10 +18969,10 @@ function wuZeile(x, art) {
   const antwort = x.antwort ? `<div class="wu-antwort"><b>🤖 Claude${x.version ? ` · v${esc(x.version)}` : ""}:</b> ${esc(x.antwort).replace(/\n/g, "<br>")}</div>` : "";
   const rm = x.rueckmeldung ? `<div class="wu-rm"><b>🧑‍🍳 Deine Antwort:</b> ${esc(x.rueckmeldung).replace(/\n/g, "<br>")}</div>` : "";
   if (art === "rueckfrage") return `<div class="karte wu-z wu-frage">${kopf}${text}${antwort}${rm}<textarea id="wuRm_${x.id}" rows="3" maxlength="4000" placeholder="Deine Antwort an Claude …" data-diktat></textarea>${oaFeld("wuRm" + x.id.replace(/\W/g, ""))}
-    <div class="knoepfe"><button class="knopf haupt klein" onclick="wuAntworten('${x.id}')">↩️ Antworten</button></div></div>`;
+    <div class="knoepfe"><button class="knopf haupt klein" onclick="wuAntworten('${x.id}')">↩️ Antworten</button><button class="knopf klein" onclick="wuErledigt('${x.id}')">✅ Erledigt</button></div></div>`;
   const knoepfe = art === "offen" ? `<div class="knoepfe"><button class="knopf klein" title="früher" onclick="wuSchieben('${x.id}', -1)">▲</button><button class="knopf klein" title="später" onclick="wuSchieben('${x.id}', 1)">▼</button>
       <button class="knopf klein" onclick="wuBearbeiten('${x.id}')">✏️ Ändern</button><button class="knopf klein" onclick="wuWichtig('${x.id}')">${x.wichtig ? "☆ nicht wichtig" : "⭐ wichtig"}</button>
-      <button class="knopf klein" onclick="wuStatus('${x.id}', 'zurueckgestellt')">⏸ Später</button>${x.status === "offen" && !x.antwort ? `<button class="knopf klein" onclick="wuLoeschen('${x.id}')" aria-label="Löschen" title="Löschen">🗑️</button>` : ""}</div>`
+      <button class="knopf klein" onclick="wuStatus('${x.id}', 'zurueckgestellt')">⏸ Später</button><button class="knopf klein" onclick="wuErledigt('${x.id}')">✅ Erledigt</button>${x.status === "offen" && !x.antwort ? `<button class="knopf klein" onclick="wuLoeschen('${x.id}')" aria-label="Löschen" title="Löschen">🗑️</button>` : ""}</div>`
     : art === "zurueck" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">▶️ Wieder aufnehmen</button></div>`
     : art === "erledigt" ? `<div class="knoepfe"><button class="knopf klein" onclick="wuStatus('${x.id}', 'offen')">↩️ Nochmal öffnen</button></div>` : "";
   return `<div class="karte wu-z">${kopf}${text}${antwort}${rm}${knoepfe}</div>`;
@@ -18982,7 +18982,7 @@ function wuZeigen() {
   const l = WU.liste || [], frage = l.filter((x) => x.status === "rueckfrage"), offen = wuOffen(l), erl = l.filter((x) => x.status === "erledigt").sort((a, b) => String(b.erledigt_am || "").localeCompare(String(a.erledigt_am || ""))), zur = l.filter((x) => x.status === "zurueckgestellt");
   const entwurf = $("wuText")?.value || "";
   f.innerHTML = `<div class="kopf2" style="margin:0 0 6px"><h3 style="margin:0;flex:1">📝 Wünsche an Claude</h3><button class="knopf klein" onclick="$('wuBlatt').remove()" aria-label="Schließen" title="Schließen">✕</button></div>
-    <p class="hinweis" style="margin:0 0 8px">Schreib hier hinein, was geändert, gebaut oder repariert werden soll – gern mit 🎤. Claude schaut regelmäßig hinein, arbeitet die Punkte <b>der Reihe nach</b> ab (⭐ wichtig zuerst) und schreibt dir hier, was gemacht wurde und in welcher Version. Hat Claude eine Frage, steht sie ganz oben.</p>
+    <p class="hinweis" style="margin:0 0 8px">Schreib hier hinein, was geändert, gebaut oder repariert werden soll – gern mit 🎤. Claude schaut regelmäßig hinein, arbeitet die Punkte <b>der Reihe nach</b> ab (⭐ wichtig zuerst) und schreibt dir hier, was gemacht wurde und in welcher Version. Hat Claude eine Frage, steht sie ganz oben. Ist ein Punkt fertig, hakst du ihn mit ✅ Erledigt ab.</p>
     <div class="karte" style="margin:0 0 10px"><textarea id="wuText" rows="3" maxlength="4000" placeholder="Was soll Claude machen? Zum Beispiel: Im Kalender die Feiertage fetter schreiben" data-diktat>${esc(entwurf)}</textarea>${oaFeld("wu")}
       <div class="knoepfe" style="align-items:center"><select id="wuBereich" aria-label="Bereich">${WU_BEREICHE.map((b) => `<option>${b}</option>`).join("")}</select>
         <label class="wu-wichtig"><input type="checkbox" id="wuWichtig"> ⭐ wichtig</label><button class="knopf haupt" onclick="wuNeu()">➕ Eintragen</button></div></div>
@@ -19011,6 +19011,13 @@ async function wuAntworten(id) {
 function wuBearbeiten(id) { const x = (WU.liste || []).find((y) => y.id === id); OBJA.wuEd = (x?.anlagen || []).map((a) => ({ ...a })); WU.bearbeiten = id; wuZeigen(); } // 2.634.0: vorhandene Anlagen zum Ändern
 async function wuWichtig(id) { const x = (WU.liste || []).find((y) => y.id === id); if (!x) return; try { await api("wl_speichern", { id, text: x.text, bereich: x.bereich, wichtig: !x.wichtig }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
 async function wuStatus(id, status) { try { await api("wl_status", { id, status }); await wuLaden(); wuZeigen(); } catch (e) { meldeFehler(e); } }
+// 2.754.0 KC-CLUB-WUNSCH-ABHAKEN (Wunsch Hansi 29.10. „ich selber kann die Wünsche nicht als erledigt abhaken“): ✅ bei offenen Punkten und Rückfragen –
+// mit Nachfrage; der Server setzte „erledigt“ schon seit 2.440.0 (wl_status), es fehlte nur der Knopf. „↩️ Nochmal öffnen“ holt den Punkt zurück.
+async function wuErledigt(id) {
+  const x = (WU.liste || []).find((y) => y.id === id); if (!x) return;
+  if (!(await frage(`Punkt #${x.nr} als erledigt abhaken?`, { ja: "✅ Erledigt" }))) return;
+  try { await api("wl_status", { id, status: "erledigt" }); await wuLaden(); wuZeigen(); melde(`✅ #${x.nr} ist abgehakt`); } catch (e) { meldeFehler(e); }
+}
 async function wuSchieben(id, richtung) { // ▲▼ innerhalb der offenen Punkte gleicher Wichtigkeit: Reihenfolge-Wert zwischen die Nachbarn legen
   const l = wuOffen(WU.liste || []), i = l.findIndex((x) => x.id === id), x = l[i]; if (!x) return;
   const gl = l.filter((y) => y.wichtig === x.wichtig), k = gl.indexOf(x), ziel = k + richtung; if (ziel < 0 || ziel >= gl.length) return;
