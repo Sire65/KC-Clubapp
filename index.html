@@ -4660,6 +4660,9 @@
   .i-wert { font-weight: 800; font-size: 1.05rem; margin-top: -6px; }
   .i-titel { font-size: .78rem; color: var(--grau); }
   .vb-tabelle { width: 100%; font-size: .9rem; border-collapse: collapse; }
+  /* 2.755.0 KC-CLUB-SPUR-VOLL: Zeilen in „📊 Was nutzt jeder?“ – brechen um, nie breiter als das Handy */
+  .spu-zeile { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--linie); font-size: .92rem; }
+  .spu-zeile > span { min-width: 0; overflow-wrap: anywhere; } .spu-zeile > b { white-space: nowrap; } .spu-zeile.spu-video { display: grid; gap: 2px; } .spu-zeile.spu-video small { color: var(--grau); }
   /* 2.592.0 KC-CLUB-NETZ-TIEFENTEST: Verlaufsband des Dauertests (je Messung ein Strich) */
   .tt-band { display: flex; gap: 1px; height: 26px; align-items: stretch; background: #eee; border-radius: 6px; overflow: hidden; padding: 2px; margin-top: 4px; }
   .tt-band i { flex: 1 1 0; min-width: 1px; border-radius: 1px; }
@@ -6238,7 +6241,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.754.0" data-v="2.754.0"></script>
+<script src="app.js?v=2.757.0" data-v="2.757.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

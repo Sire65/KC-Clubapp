@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.743.0";
+const SERVER_VERSION = "2.755.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4678,6 +4678,24 @@ const SPUR_WAS = /^[a-z][a-z0-9_]{0,29}$/;
 const SPRACHE_ZIELE = ["start", "termine", "termin_neu", "naechster", "nachrichten", "nachricht_neu", "pinnwand", "pinnwand_neu", "mitglieder", "fotos", "foto_neu", "archiv", "erstattung", "helfen", "boerse", "protokolle", "vorschlaege", "einstellungen", "hilfe", "dienste", "brief_neu", "schilder", "studio"]; // 2.137.0: brief_neu (KC-CLUB-SPRACHE-BRIEF); 2.152.0: schilder, studio
 const sprachSatz = (t: unknown) => { const s = String(t ?? "").toLowerCase().replace(/[.,!?;:„“"]/g, " ").replace(/\s+/g, " ").trim(); return s.length >= 2 && s.length <= 60 && s.split(" ").length <= 8 ? s : ""; };
 const SPUR_MIT = /^(KC-P-[A-Z0-9-]{1,30}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+// 2.755.0 KC-CLUB-SPUR-VOLL: „mit“ darf auch eine Kennung aus den Registern der App sein (Fenster-ID, Hilfe-ID wie „h:uhr_wecker“, Video-/Film-ID) –
+// nur Buchstaben, Ziffern, _ : . - (kein Leerzeichen, also nie freier Text). Die App des Admins übersetzt sie in Namen.
+const SPUR_KENNUNG = /^[A-Za-z][A-Za-z0-9_:.-]{0,59}$/;
+const spurMitOk = (m: string) => SPUR_MIT.test(m) || SPUR_KENNUNG.test(m);
+const spurUuid = (m: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(m);
+// Wege seitenweise holen (die Datenschnittstelle liefert je Abruf höchstens 1000 Zeilen – vorher fehlten an vollen Tagen Schritte)
+async function spurZeilen(von: number, bis: number, pid: string | null, felder = "person_id,details") {
+  const alle: any[] = [];
+  for (let seite = 0; seite < 50; seite++) {
+    let q = db.from("kc_club_protokoll").select(felder).eq("aktion", "spur").gte("zeit", new Date(von).toISOString()).lt("zeit", new Date(bis).toISOString())
+      .order("zeit").order("id").range(seite * 1000, seite * 1000 + 999);
+    if (pid) q = q.eq("person_id", pid);
+    const { data, error } = await q;
+    if (error) throw new Fehler("Die Wege sind gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
+    alle.push(...(data ?? [])); if ((data ?? []).length < 1000) break;
+  }
+  return alle;
+}
 const SPUR_TAGE = 30;
 // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeder App-Start mit Dauer, Gerät und Browser (Name nur für den Admin sichtbar), 180 Tage
 const START_TAGE = 180;
@@ -13144,9 +13162,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const jetztMs = Date.now();
         const s = (Array.isArray(p.s) ? p.s : []).slice(0, 200).filter((x: any) => Array.isArray(x)
           && Number.isFinite(Number(x[0])) && Number(x[0]) > jetztMs - 3 * 86400000 && Number(x[0]) < jetztMs + 300000
-          && SPUR_WAS.test(String(x[1] ?? "")) && (x[2] == null || SPUR_MIT.test(String(x[2]))))
-          .map((x: any) => (x[2] == null ? [Math.round(Number(x[0])), String(x[1])] : [Math.round(Number(x[0])), String(x[1]), String(x[2])]));
-        if (s.length && await protokollPlatz(ich.person_id, "spur", 120)) await protokoll(ich.person_id, "spur", { s });
+          && SPUR_WAS.test(String(x[1] ?? "")))
+          // 2.755.0 KC-CLUB-SPUR-VOLL: unbekanntes „mit“ → Schritt bleibt, nur ohne „mit“ (vorher fiel der ganze Schritt still weg, z. B. „Anklopfen verpasst“)
+          .map((x: any) => (x[2] == null || !spurMitOk(String(x[2])) ? [Math.round(Number(x[0])), String(x[1])] : [Math.round(Number(x[0])), String(x[1]), String(x[2])]));
+        if (s.length && await protokollPlatz(ich.person_id, "spur", 240)) await protokoll(ich.person_id, "spur", { s }); // 2.755.0: mehr Schritte (Fenster, Hilfe, Videos) → 240 Sendungen je Stunde
         return json({ ok: true, n: s.length });
       }
       // KC-CLUB-STARTSTATISTIK (2.31.0): App meldet nach jedem Start die Messung (Zeiten in ms, Gerät/Browser als grobe Namen, nie Inhalte)
@@ -13339,18 +13358,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const t0 = Date.parse(tag + "T00:00:00Z");
         if (!Number.isFinite(t0)) throw new Fehler("Ungültiger Tag.", 400);
         // gesendet wird in Paketen (alle 2 Min. bzw. beim Schließen) – deshalb einen Tag Rand und dann genau nach Berliner Tag filtern
-        let q = db.from("kc_club_protokoll").select("person_id,details").eq("aktion", "spur")
-          .gte("zeit", new Date(t0 - 86400000).toISOString()).lt("zeit", new Date(t0 + 3 * 86400000).toISOString()).order("zeit").limit(5000);
-        if (pid) q = q.eq("person_id", pid);
-        const { data, error } = await q;
-        if (error) throw new Fehler("Die Wege sind gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
-        const schritte = (data ?? []).flatMap((z: any) => (Array.isArray(z.details?.s) ? z.details.s : []).map((x: any) => ({ p: z.person_id as string, t: Number(x[0]), w: String(x[1]), mit: x[2] == null ? null : String(x[2]) })))
+        const data = await spurZeilen(t0 - 86400000, t0 + 3 * 86400000, pid); // 2.755.0 KC-CLUB-SPUR-VOLL: seitenweise (vorher höchstens 1000 Zeilen)
+        const schritte = data.flatMap((z: any) => (Array.isArray(z.details?.s) ? z.details.s : []).map((x: any) => ({ p: z.person_id as string, t: Number(x[0]), w: String(x[1]), mit: x[2] == null ? null : String(x[2]) })))
           .filter((x: any) => berlinTag(new Date(x.t)) === tag).sort((a: any, b: any) => a.t - b.t)
           .filter(function (this: Set<string>, x: any) { const k = `${x.p}|${x.t}|${x.w}|${x.mit ?? ""}`; if (this.has(k)) return false; this.add(k); return true; }, new Set<string>()); // KC-CLUB-SPUR-KEEPALIVE: doppelt gesendete Schritte nur einmal
         if (!pid) {
           // KC-CLUB-SPUR-JETZT (2.81.0, Wunsch Hansi „was macht jeder gerade, was ruft er auf“): letzter Schritt je Person (nur die Art, nie Inhalte)
-          const je = new Map<string, { anzahl: number; erste: number; letzte: number; w: string }>();
-          for (const x of schritte) { const e = je.get(x.p) ?? { anzahl: 0, erste: x.t, letzte: x.t, w: x.w }; e.anzahl++; e.letzte = x.t; e.w = x.w; je.set(x.p, e); }
+          const je = new Map<string, { anzahl: number; erste: number; letzte: number; w: string; k: string | null }>();
+          for (const x of schritte) { const e = je.get(x.p) ?? { anzahl: 0, erste: x.t, letzte: x.t, w: x.w, k: null }; e.anzahl++; e.letzte = x.t; e.w = x.w; e.k = x.mit && !SPUR_MIT.test(x.mit) ? x.mit : null; je.set(x.p, e); }
           // KC-CLUB-SPUR-STOERUNG (Wunsch Hansi „Klaus war drin, taucht aber nicht auf“): Mitglieder, von denen an diesem Tag nur eine Störung ankam
           // (z. B. keine Verbindung beim Aktualisieren) – erscheinen mit „war kurz da“ statt gar nicht. Nur Art und Uhrzeit, nie Inhalte.
           const { data: fe } = await db.from("kc_club_protokoll").select("person_id,aktion,zeit").like("aktion", "fehler_%").not("person_id", "is", null)
@@ -13361,7 +13376,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             const e = stoer.get(id) ?? { erste: t, letzte: t, netz: false }; e.erste = Math.min(e.erste, t); e.letzte = Math.max(e.letzte, t); e.netz ||= (z as any).aktion === "fehler_api"; stoer.set(id, e); }
           const leute = await personen([...je.keys(), ...stoer.keys()]);
           return json({ tag, personen: [...[...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
-            erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString(), zuletzt: e.w })),
+            erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString(), zuletzt: e.w, zk: e.k })),
             ...[...stoer.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: 0, erste: new Date(e.erste).toISOString(),
               letzte: new Date(e.letzte).toISOString(), zuletzt: null, stoerung: e.netz ? "netz" : "app" }))].sort((a, b) => b.letzte.localeCompare(a.letzte)) });
         }
@@ -13389,7 +13404,35 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (tl.length === 1) return `🧪 Unterhaltung nur mit sich selbst${betreff}`;
           return `💬 Runde${betreff} ${von} mit ${andere.slice(0, 5).join(", ")}${andere.length > 5 ? ` +${andere.length - 5}` : ""} (mit dabei)`.replace(/\s+/g, " ");
         };
-        return json({ tag, name: name(pid!), schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w, mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : chatName(x.mit) })) });
+        return json({ tag, name: name(pid!), schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w,
+          mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : spurUuid(x.mit) ? chatName(x.mit) : null, k: x.mit && !SPUR_MIT.test(x.mit) ? x.mit : null })) }); // k: Kennung (Fenster, Hilfe, Video) – Name macht die App
+      }
+      // 2.755.0 KC-CLUB-SPUR-VOLL (Wunsch Hansi „damit ich sehen kann, was jeder in der App nutzt“): 📊 Was nutzt jeder? – je Mitglied über die letzten
+      // Tage (höchstens SPUR_TAGE): wie oft welcher Bereich, welches Fenster, Hilfe, Erklär-Videos/Filme (gestartet, bis zum Ende, abgebrochen) und Handlungen.
+      // Nur Art + Kennung + Anzahl, nie Inhalte; Unterhaltungen/Mitglieder zählen nur als Art (ohne mit wem). Nur der Admin.
+      case "spur_uebersicht": {
+        nurAdmin(ich);
+        const tage = Math.min(SPUR_TAGE, Math.max(1, Math.round(Number(p.tage) || SPUR_TAGE)));
+        const bis = Date.now(), von = bis - tage * 86400000, pid = p.person_id ? String(p.person_id) : null;
+        const zeilen = await spurZeilen(von, bis + 300000, pid);
+        const je = new Map<string, { z: Record<string, number>; tage: Set<string>; letzte: number; weit: Record<string, string> }>(), doppelt = new Set<string>();
+        for (const r of zeilen) for (const x of Array.isArray(r.details?.s) ? r.details.s : []) {
+          const t = Number(x[0]); if (!(t >= von && t <= bis + 300000)) continue;
+          const w = String(x[1] ?? ""), k = x[2] == null || SPUR_MIT.test(String(x[2])) ? "" : String(x[2]);
+          if (!SPUR_WAS.test(w) || (k && !SPUR_KENNUNG.test(k))) continue;
+          const d = `${r.person_id}|${t}|${w}|${x[2] ?? ""}`; if (doppelt.has(d)) continue; doppelt.add(d); // keepalive: doppelt gesendete Schritte nur einmal
+          const e = je.get(r.person_id) ?? { z: {}, tage: new Set<string>(), letzte: 0, weit: {} }; je.set(r.person_id, e);
+          e.tage.add(berlinTag(new Date(t))); e.letzte = Math.max(e.letzte, t);
+          const ab = /^(rg|film)_ab_(\d+)_(\d+)$/.exec(w), art = ab ? ab[1] + "_ab" : /^wieder_\d+$/.test(w) ? "wieder" : w, key = k ? `${art}|${k}` : art;
+          e.z[key] = (e.z[key] || 0) + 1;
+          if (ab && k) { const alt = (e.weit[key] || "0/1").split("/").map(Number); if (Number(ab[2]) / Number(ab[3]) >= alt[0] / alt[1]) e.weit[key] = `${ab[2]}/${ab[3]}`; } // am weitesten gekommen
+        }
+        const aktive = pid ? [] : await aktiveMitglieder().catch(() => [] as any[]);
+        const ids = [...new Set([...je.keys(), ...aktive.map((m: any) => String(m.person_id)), ...(pid ? [pid] : [])])].filter((id) => id.startsWith("KC-P-"));
+        const leute = await personen(ids);
+        return json({ tage, personen: ids.map((id) => { const e = je.get(id);
+          return { person_id: id, name: leute.get(id)?.display_name || id, tage: e?.tage.size ?? 0, letzte: e?.letzte ? new Date(e.letzte).toISOString() : null, z: e?.z ?? {}, weit: e?.weit ?? {} }; })
+          .sort((a, b) => String(b.letzte || "").localeCompare(String(a.letzte || "")) || a.name.localeCompare(b.name, "de")) });
       }
       // ----- KC-CLUB-NUTZUNG (0.99.0): Statistik OHNE Namen – nur Tag + Bereich + Anzahl. Wer meldet, wird NICHT gespeichert
       // (kein protokoll(), keine Person, kein Gerät). Nur bekannte Bereiche, gedeckelt gegen Ausreißer.
@@ -18659,8 +18702,24 @@ Köcheclub-App`,
         if (jahr < 2024 || jahr > 2100 || bis < von || bis - von >= 120) throw new Fehler("Bitte Jahr und Nummern prüfen (höchstens 120 Ausweise auf einmal).");
         const liste = [];
         for (let n = von; n <= bis; n++) liste.push({ nr: String(n).padStart(3, "0"), code: await haendlerCode(jahr, n) });
+        // 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: jede gedruckte/gelistete Nummer landet in kc_club_haendlerausweise (für die Kasse über den PC-Manager).
+        // ignoreDuplicates: vorhandene Zeilen bleiben unberührt – ein gesperrter Ausweis wird durch erneutes Drucken nie wieder entsperrt.
+        const { error: hf } = await db.from("kc_club_haendlerausweise").upsert(liste.map((x) => ({ jahr, nr: x.nr, code: x.code })), { onConflict: "jahr,nr", ignoreDuplicates: true });
+        if (hf) throw new Fehler("Die Ausweisliste konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+        const { data: hs } = await db.from("kc_club_haendlerausweise").select("nr,gesperrt").eq("jahr", jahr).in("nr", liste.map((x) => x.nr));
+        const gesperrt = new Set((hs ?? []).filter((h: any) => h.gesperrt).map((h: any) => h.nr));
         await protokoll(ich.person_id, "haendlerausweis_gedruckt", { jahr, von, bis });
-        return json({ ok: true, jahr, liste });
+        return json({ ok: true, jahr, liste: liste.map((x) => ({ ...x, gesperrt: gesperrt.has(x.nr) })) });
+      }
+      case "haendlerausweis_sperren": { // 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: verlorener/missbrauchter Ausweis – Kasse lehnt ihn nach dem nächsten Abgleich ab
+        nurLeitung(ich);
+        const jahr = Math.trunc(Number(p.jahr)), nr = String(Math.trunc(Number(p.nr)) || "").padStart(3, "0"), gesperrt = p.gesperrt !== false;
+        if (jahr < 2024 || jahr > 2100 || !/^[0-9]{3}$/.test(nr) || nr === "000") throw new Fehler("Bitte Jahr und Nummer prüfen.");
+        const { data: hz, error: he } = await db.from("kc_club_haendlerausweise").update({ gesperrt, gesperrt_am: gesperrt ? jetzt() : null, geaendert_am: jetzt() }).eq("jahr", jahr).eq("nr", nr).select("nr");
+        if (he) throw new Fehler("Die Sperre konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+        if (!hz?.length) throw new Fehler(`Ausweis Nr. ${nr} (${jahr}) wurde noch nicht gedruckt.`, 404);
+        await protokoll(ich.person_id, gesperrt ? "haendlerausweis_gesperrt" : "haendlerausweis_entsperrt", { jahr, nr });
+        return json({ ok: true, jahr, nr, gesperrt });
       }
       case "link_erzeugen": {
         nurAdmin(ich);

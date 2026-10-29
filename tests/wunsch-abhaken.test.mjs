@@ -1,4 +1,4 @@
-// KC-CLUB-WUNSCH-ABHAKEN (2.754.0, 29.10.2026, Wunsch Hansi „ich selber kann die Wünsche nicht als erledigt abhaken“):
+// KC-CLUB-WUNSCH-ABHAKEN (2.757.0, 29.10.2026, Wunsch Hansi „ich selber kann die Wünsche nicht als erledigt abhaken“):
 // ✅ Erledigt bei offenen Punkten und Rückfragen, mit Nachfrage; der Server nimmt „erledigt“ nur vom Admin an. Aufruf: node tests/wunsch-abhaken.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";

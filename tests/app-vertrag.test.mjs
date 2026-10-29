@@ -4483,7 +4483,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 439. 2.23.88: Wege der Mitglieder – was geöffnet, mit wem, Uhrzeit; nie Inhalte; 30 Tage; nur Admin (KC-CLUB-SPUR)
 {
   const f = server.slice(server.indexOf('case "spur_melden"'), server.indexOf('case "spur_liste"'));
-  assert.ok(/SPUR_WAS\.test\(String\(x\[1\]/.test(f) && /SPUR_MIT\.test\(String\(x\[2\]\)\)/.test(f) && /\.slice\(0, 200\)/.test(f) && /protokoll\(ich\.person_id, "spur", \{ s \}\)/.test(f), "nur Kürzel + Kennungen, gedeckelt, je Person");
+  assert.ok(/SPUR_WAS\.test\(String\(x\[1\]/.test(f) && /spurMitOk\(String\(x\[2\]\)\)/.test(f) /* 2.755.0 KC-CLUB-SPUR-VOLL: Kennung oder Registry-Kennung, sonst ohne „mit“ */ && /\.slice\(0, 200\)/.test(f) && /protokoll\(ich\.person_id, "spur", \{ s \}\)/.test(f), "nur Kürzel + Kennungen, gedeckelt, je Person");
   assert.ok(/const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server) && /const SPUR_MIT = \/\^\(KC-P-/.test(server), "kein freier Text möglich");
   const l = server.slice(server.indexOf('case "spur_liste"'), server.indexOf("// ----- KC-CLUB-NUTZUNG (0.99.0)"));
   assert.ok(/^case "spur_liste": \{\s+nurAdmin\(ich\);/.test(l), "lesen nur der Admin");
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7859,6 +7859,17 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const n of ["function esRaetselZeigen(", "function esSpiegelZeigen(", "function esDiaZeigen(", "function esBuehneZeigen(", "function bwClubSong(", "function qzStop("])
     assert.ok(rs.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Rückseiten-Teil`);
 }
+// 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: Ausweisliste für die Kasse, nie durch Drucken entsperrt, Sperren nur Clubleitung
+{
+  assert.match(server, /from\("kc_club_haendlerausweise"\)\.upsert\(liste\.map\(\(x\) => \(\{ jahr, nr: x\.nr, code: x\.code \}\)\), \{ onConflict: "jahr,nr", ignoreDuplicates: true \}\)/, "Drucken trägt ein, überschreibt nie (gesperrt bleibt gesperrt)");
+  assert.match(server, /case "haendlerausweis_sperren": \{[^\n]*\n\s*nurLeitung\(ich\);/, "Sperren nur Clubleitung");
+  assert.match(programm, /api\("haendlerausweis_sperren", \{ jahr: HA\.jahr, nr, gesperrt \}\)/, "App sperrt über den Server");
+  assert.match(programm, /const HA = \{ jahr: new Date\(\)\.getFullYear\(\), von: 1, bis: 10, rabatt: "10",/, "Rabatt 10 % vorbelegt");
+  const mig = lies("supabase/migrations/20261029_kc_club_haendlerausweise.sql");
+  assert.match(mig, /primary key\s*\(jahr, nr\)/, "Jahr + Nr eindeutig");
+  assert.match(mig, /nr\s+text\s+not null check \(nr ~ '\^\[0-9\]\{3\}\$'/, "Nr als Text mit 3 Ziffern (führende Nullen)");
+  assert.ok(!/grant (insert|update|delete)[^;]*to authenticated/.test(mig), "PC-Manager darf nur lesen");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)
@@ -8570,8 +8581,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.81.0: Wege der Mitglieder – „was macht jeder gerade, was ruft er auf“ (KC-CLUB-SPUR-JETZT, Wunsch Hansi)
 {
-  assert.ok(/e\.w = x\.w; je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w \}\)\)/.test(server), "Server liefert den letzten Schritt je Person (nur die Art)");
-  assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
+  assert.ok(/e\.w = x\.w;[^\n]*je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w(, zk: e\.k)? \}\)\)/.test(server) /* 2.755.0 KC-CLUB-SPUR-VOLL: + Kennung */, "Server liefert den letzten Schritt je Person (nur die Art)");
+  assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt(, x\.zk)?\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
   assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d|[1-9]\d\d)\.0"/.test(server));
 }
 
@@ -9103,7 +9114,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(bm.indexOf('protokoll(ich.person_id, "buero_mail_versuch"') > 0 && bm.indexOf('protokoll(ich.person_id, "buero_mail_versuch"') < bm.indexOf('.eq("aktion", "buero_mail_versuch")') && bm.indexOf('.eq("aktion", "buero_mail_versuch")') < bm.indexOf("routerSenden(") && /if \(\(count \?\? 0\) > 3\)/.test(bm), "Mail-Bremse vor dem Senden");
   // KC-CLUB-PROTOKOLL-BREMSE
   assert.ok(/async function protokollPlatz\(person: string, aktion: string, proStunde: number\)/.test(server)
-    && /await protokollPlatz\(ich\.person_id, "spur", 120\)/.test(server) && /await protokollPlatz\(ich\.person_id, "app_start", 60\)/.test(server)
+    && /await protokollPlatz\(ich\.person_id, "spur", 240\)/ /* 2.755.0 KC-CLUB-SPUR-VOLL: mehr Schritte */.test(server) && /await protokollPlatz\(ich\.person_id, "app_start", 60\)/.test(server)
     && /await protokollPlatz\(ich\.person_id, "sprache_unbekannt", 60\)/.test(server) && /await protokollPlatz\(ich\.person_id, "diagnose_%", 120\)/.test(server), "Protokoll-Flut gebremst");
 }
 

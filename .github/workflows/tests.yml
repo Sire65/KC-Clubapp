@@ -37,7 +37,7 @@ jobs:
       - run: node tests/rezept-weihnacht.test.mjs
       # KC-CLUB-ONLINE-NAMEN (2.731.0)
       - run: node tests/online-namen.test.mjs
-      # KC-CLUB-WUNSCH-ABHAKEN (2.754.0)
+      # KC-CLUB-WUNSCH-ABHAKEN (2.757.0)
       - run: node tests/wunsch-abhaken.test.mjs
       # KICC-F-110 Spiegel-Zeitblöcke
       - run: node tests/spiegel-zeitbloecke.test.mjs
@@ -55,6 +55,7 @@ jobs:
       - run: node tests/sitzung-schritte.test.mjs
       - run: node tests/sitzung-aufgaben.test.mjs
       - run: node tests/nachrichten-reihe.test.mjs
+      - run: node tests/spur-voll.test.mjs
       - run: node tests/zugang-pruefen.test.mjs
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs
