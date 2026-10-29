@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.754.0 – 2026-10-29 – 🪪 Händler-Ausweise: Liste für die Kasse · Sperren · 10 % Rabatt
+Absprache Hansi/Codex (29.10.): „keine Händlerpflege, automatische Ausweisliste und zentral 10 % Gesamtrabatt“ (KC-CLUB-HAENDLERAUSWEIS-LISTE).
+- 📋 Jeder gedruckte Ausweis (und jede geöffnete Ausgabeliste) wird automatisch in der neuen Tabelle `kc_club_haendlerausweise` (Jahr, Nr, Prüfcode, gesperrt) eingetragen – ohne Namen. Die Kasse bekommt sie über den PC-Manager (nur lesen); schreiben darf nur der Club-Server. Erneutes Drucken entsperrt nie.
+- 🚫 Büro → Drucker → 🪪 Händler-Ausweis → „Sperren / Entsperren“: verlorener oder missbrauchter Ausweis; die Kasse lehnt ihn nach dem nächsten Abgleich ab. In der Ausgabeliste stehen gesperrte Ausweise rot.
+- 💶 Rabatt steht jetzt schon auf 10 % (änderbar).
+
 ## 2.753.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
 Wunsch Hansi (29.10.): „Video auch anpassen, im Video die Vertretung anzeigen – nicht mich, sondern eher den Kassenwart.“
 - 🎬 **Anleitungsfilm neu** (KC-CLUB-FILM-HINWEIS, Kennung `clubsitzungablauf`): Teil 1 Tagesordnung & Einladung (3 Tage vorher, Sitzungs-Vorgaben) · Teil 2 Bis zur Sitzung (erinnern, „Mitglieder informieren?“ mit Änderungsmeldung, „⚠️ Knapp“, **Vertretung durch Kassenwart Paul**) · Teil 3 einen Tag vorher Sitzung vorbereiten und zuletzt die Aktentasche mit Mitnehm-Liste · Teil 4 Clubabend Live mit 📤 Freigeben, „✅ Zum Schluss“ und als Letztes der nächste Termin (18 Uhr, Hütte Anne). Klaus bekommt den Hinweis beim Start noch einmal.

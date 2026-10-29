@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.753.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.754.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -36868,7 +36868,7 @@ async function ausweisZeigen() {
 // Scheckkarte 85 × 54 mm, 10 je A4 mit Schnittmarken an jeder Ecke; Blatt 1 Vorderseiten (fortlaufend nummeriert), Blatt 2 Rückseiten (gespiegelt für
 // beidseitigen Druck, lange Kante). QR-Code mit Nummer + Prüfcode (vom Server, nicht fälschbar). Gezeichnet in Druckauflösung (300 dpi) – Druck,
 // Vorschau und PDF sind dadurch millimetergenau gleich. Dazu eine Ausgabeliste (Nr, Prüfcode, Stand/Firma, Name, ausgegeben). Nur Clubleitung.
-const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "", datum: "" };
+const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "10", datum: "" }; // 2.754.0: Rabatt zentral 10 % (Absprache mit der Kasse)
 // 2.704.0 KC-CLUB-HAENDLERAUSWEIS-SCHNITT (Wunsch Hansi „Standardmaß behalten, zwischen den Karten nur EIN Schnitt – erst die 4 Ränder weg, dann je ein
 // Schnitt zwischen den Karten; sorgfältige Schneidemarken, die nicht zu stark auffallen“): Scheckkarte 85,6 × 54 mm, Karte an Karte (keine Lücken),
 // eckig; Marken nur im weißen Rand außen (fein, hellgrau), Kontrollmaß 50 mm; unten ein 1,5-mm-Streifen in Weinrot, damit ein knapper Schnitt nicht blitzt.
@@ -36879,18 +36879,32 @@ function haStart() {
     <div class="zwei"><label class="feld">Jahr<input id="haJahr" type="number" min="2024" max="2100" value="${HA.jahr}"></label><label class="feld">Rabatt in % (leer = zum Eintragen)<input id="haRabatt" type="number" min="1" max="100" value="${esc(HA.rabatt)}" placeholder="z. B. 10"></label></div>
     <div class="zwei"><label class="feld">Nummer von<input id="haVon" type="number" min="1" max="999" value="${HA.von}"></label><label class="feld">bis<input id="haBis" type="number" min="1" max="999" value="${HA.bis}"></label></div>
     <label class="feld">Gültig (leer = „Gültig nur zum Weihnachtsmarkt Werne ${HA.jahr}“)<input id="haDatum" type="text" maxlength="60" value="${esc(HA.datum)}" placeholder="z. B. Gültig vom 04.12. bis 23.12.2026"></label>
-    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="probe">🎯 Probeblatt (Duplex prüfen)</button><button class="knopf" data-a="zu">Abbrechen</button></div>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="probe">🎯 Probeblatt (Duplex prüfen)</button><button class="knopf" data-a="sperren">🚫 Sperren / Entsperren</button><button class="knopf" data-a="zu">Abbrechen</button></div>
     <p class="hinweis" style="margin:6px 0 0">Schneiden: erst die 4 Ränder, dann 1 Schnitt senkrecht in der Mitte und 4 waagerecht – die feinen grauen Marken im Rand zeigen, wo.</p>`, () => {});
   const lesen = () => { HA.jahr = Math.trunc(+$("haJahr").value) || new Date().getFullYear(); HA.von = Math.max(1, Math.trunc(+$("haVon").value) || 1); HA.bis = Math.max(HA.von, Math.trunc(+$("haBis").value) || HA.von);
     HA.rabatt = String($("haRabatt").value || "").trim(); HA.datum = String($("haDatum").value || "").trim(); };
   f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = async () => { const a = b.dataset.a; if (a === "zu") return f.remove(); lesen();
     if (a === "probe") { f.remove(); return druckStarten("haendlerausweis", { jahr: HA.jahr, bilder: [haProbe(false), haProbe(true)], n: 0, probe: true }); } // 2.704.0
+    if (a === "sperren") return haSperren(); // 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE
     if (HA.bis - HA.von >= 120) return melde("Höchstens 120 Ausweise auf einmal.", true);
     b.disabled = true; const alt = b.textContent; b.textContent = "⏳ Einen Moment …";
     try { const r = await api("haendlerausweis_codes", { jahr: HA.jahr, von: HA.von, bis: HA.bis });
       if (a === "liste") { f.remove(); return druckStarten("haendlerausweis_liste", { jahr: r.jahr, liste: r.liste }); }
       await qrLaden(); const bilder = await haBilder(r.jahr, r.liste); f.remove(); druckStarten("haendlerausweis", { jahr: r.jahr, bilder, n: r.liste.length });
     } catch (e) { b.disabled = false; b.textContent = alt; meldeFehler(e); } }));
+}
+// 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: verlorenen oder missbrauchten Ausweis sperren – die Kasse lehnt ihn nach dem nächsten Abgleich ab
+async function haSperren() {
+  const ein = await eingabe(`Ausweis sperren oder freigeben\nWelche Nummer (Jahr ${HA.jahr})?`, "", { zahl: true }); if (ein == null) return;
+  const nr = Math.trunc(+ein), n3 = String(nr).padStart(3, "0"); if (!(nr >= 1 && nr <= 999)) return melde("Bitte eine Nummer von 1 bis 999 eingeben.", true);
+  // zwei getrennte Fragen: Abbrechen/Escape ändert nie etwas
+  let gesperrt = null;
+  if (await frage(`Ausweis Nr. ${n3} sperren?\nDie Kasse gibt darauf keinen Rabatt mehr (nach dem nächsten Abgleich).`, { ja: "🚫 Sperren", gefahr: true })) gesperrt = true;
+  else if (await frage(`Ausweis Nr. ${n3} wieder freigeben?\nNur wenn er versehentlich gesperrt wurde.`, { ja: "✅ Freigeben" })) gesperrt = false;
+  if (gesperrt == null) return;
+  try { const r = await api("haendlerausweis_sperren", { jahr: HA.jahr, nr, gesperrt });
+    melde(r.gesperrt ? `🚫 Ausweis Nr. ${r.nr} gesperrt – wirkt an der Kasse nach dem nächsten Abgleich.` : `✅ Ausweis Nr. ${r.nr} wieder freigegeben.`);
+  } catch (e) { meldeFehler(e); }
 }
 async function haBild(src) { return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; }); }
 async function haBilder(jahr, liste) { // je 10 Karten: Vorderseiten-Blatt + Rückseiten-Blatt (als Bilder in 300 dpi)
@@ -36987,7 +37001,7 @@ function haHinten(g, x, jahr) {
   g.fillStyle = "#741521"; g.fillRect(0, (H - HA_K.streifen) * M, W * M + 1, HA_K.streifen * M + 2); // 2.704.0: Streifen unten (wie vorne)
 }
 function druckHaendlerListe(p) {
-  const zeilen = (p?.liste || []).map((x) => `<tr><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td></td><td></td><td></td><td></td></tr>`).join("");
+  const zeilen = (p?.liste || []).map((x) => `<tr${x.gesperrt ? ' style="color:#c1121f"' : ""}><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td>${x.gesperrt ? "<b>🚫 GESPERRT</b>" : ""}</td><td></td><td></td><td></td></tr>`).join(""); // 2.754.0: gesperrte Ausweise rot
   return { titel: `Händler-Ausweise Weihnachtsmarkt ${p.jahr} – Ausgabeliste`, unter: "Wer hat welchen Ausweis? Am Stand: QR-Code scannen und Prüfcode vergleichen.", fuss: "Ausgabeliste Händler-Ausweise",
     html: `<table class="dtab" style="width:100%;border-collapse:collapse"><thead><tr><th style="width:11mm">Nr.</th><th style="width:20mm">Prüfcode</th><th>Stand / Firma</th><th>Name</th><th style="width:24mm">ausgegeben am</th><th style="width:28mm">Unterschrift</th></tr></thead>
       <tbody>${zeilen}</tbody></table><style>#druck .dtab td,#druck .dtab th{border:.3mm solid #999;padding:2.2mm 2mm;text-align:left;font-size:3.4mm}#druck .dtab tr{height:9mm}</style>` };
