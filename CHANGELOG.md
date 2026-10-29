@@ -1,12 +1,22 @@
 # Änderungen
 
-## 2.755.0 – 2026-10-29 – 🔐 Sicherheit & Datenschutz: eigene Kachel unter Technik mit Film und PDF
+## 2.756.0 – 2026-10-29 – 🔐 Sicherheit & Datenschutz: eigene Kachel unter Technik mit Film und PDF
 Wunsch Hansi (29.10.): „Sicherheitskonzept in die Club-App unter Technik mit eigener Kachel. Und mache den Videofilm … erkläre, dass der Admin regelmäßig die gesamte App durch KI – Claude Code und ChatGPT – auf Sicherheit, Bedienkonzept, Logik und Sicherheitslücken überprüfen lässt.“
 - 🔐 **Neue Kachel** (KC-CLUB-SICHERHEITSKONZEPT): Technik → „🔐 Sicherheit & Datenschutz“ öffnet ein Fenster mit ▶ Film und 📄 PDF zum Nachlesen. Neuer Hilfe-Eintrag „Wie sicher sind meine Daten?“.
 - 📣 **Hinweis im Info-Laufband** (KC-CLUB-SICHERHEITSKONZEPT-INFO, Wunsch Hansi): „🔐 Deine Daten ??? – Infos gefällig?“ bis 31.12.2026. Antippen wechselt ins Register Technik und hebt die Kachel hervor; danach ist der Hinweis auf dem Gerät weg. In der einfachen Ansicht öffnet sich gleich das Fenster mit Film und PDF.
 - 🎬 **Film** „Wie sicher sind deine Daten?“ (film/sicherheit-datenschutz.mp4, 2¾ Min., Hochformat, Sprecher Thorsten wie in den Erklär-Videos, mit Untertiteln): Zugang, Türsteher, Verschlüsselung, Privatsphäre-Schalter, Chat und geheime Abstimmung, Notfallpass, Handy weitergeben, 5 Orte der Sicherung, täglicher Wiederherstellungs-Test, Notbetrieb, Wächter, regelmäßige Prüfung durch KI, DSGVO-Rechte, Tipps. Kein Hinweis beim Start (FILME `fuer: false`); der Film zeigt nur den Mitgliederbereich.
 - 📄 **PDF** dokumente/Sicherheit_und_Datenschutz_V1.pdf (10 Seiten mit Schaubild der Datenwege, Rund-, Balken-, Säulen- und Liniendiagrammen); steht nicht in „Meine Dokumente“, ‹ Zurück führt zur Startseite.
 - Quellen und Bauanleitung für Film und PDF: KC-Infrastructure-Control-Center (`sicherheitsfilm/`, `docs/club-app-sicherheit/`). Test: tests/film-hinweis.test.mjs erweitert.
+
+## 2.755.0 – 2026-10-29 – 👣 Wege der Mitglieder vollständig: Fenster, Hilfe, Erklär-Videos, Filme, Handlungen · 📊 Was nutzt jeder?
+Wunsch Hansi (29.10.): „Prüfe nochmal die Wege der Mitglieder – einige Schritte werden mir nicht angezeigt. Wichtig ist auch, ob sie die Hilfetexte lesen oder Erklär-Videos ansehen. Alles soll aufgezeichnet werden, damit ich sehe, was jeder in der App nutzt.“ (KC-CLUB-SPUR-VOLL)
+- 🪟 **Fenster**: Jedes geöffnete Fenster steht jetzt in den Wegen (z. B. „🪟 Fenster: 💼 Aktentasche packen“) – zentral über einen Beobachter, neue Fenster sind von selbst dabei. Namen aus der Registry `FENSTER_NAMEN`; nur neu gezeichnete Fenster zählen nicht doppelt.
+- ❓ **Hilfe**: Kapitel geöffnet, Hilfetext aufgerufen, „👉 Zeig mir wo“, 🔊 vorgelesen, „?“ auf welcher Seite, in der Hilfe gesucht (nie das Suchwort), 👍/👎.
+- 🎬 **Erklär-Videos und 🎞️ Anleitungsfilme**: gestartet, ✅ bis zum Ende gesehen oder ⏹️ abgebrochen (bei Schritt x von y bzw. nach x von y Minuten); beim Film auch die Antwort auf das Angebot beim Start. Was ein Video selbst vorführt, zählt nicht als Weg des Mitglieds.
+- ✅ **Handlungen** (Registry `SPUR_TATEN`): z. B. Termin zugesagt/abgesagt, Einladung/Erinnerung/Änderungsmeldung verschickt, Sitzung gespeichert, Vorbereitung übernommen, Aktentasche gepackt, Unterlagen verteilt, Zettel, Vorschlag, Foto, Erstattung.
+- 📊 **Was nutzt jeder?** (👥 Nutzung bzw. 👣 Wege): je Mitglied für 7 oder 30 Tage – Seiten, Hilfe, Erklär-Videos und Filme (wie weit), Fenster, Handlungen und „🚫 nie benutzt“.
+- 🐞 **Fehlende Schritte behoben**: Die Tagesansicht holte höchstens 1000 Einträge – jetzt seitenweise alles. Schritte mit unbekannter Zusatzangabe (z. B. „Anklopfen verpasst“) fielen ganz weg – jetzt bleibt der Schritt.
+- Wie bisher: nie Inhalte, nur der Admin sieht es, nach 30 Tagen gelöscht.
 
 ## 2.754.0 – 2026-10-29 – 🪪 Händler-Ausweise: Liste für die Kasse · Sperren · 10 % Rabatt
 Absprache Hansi/Codex (29.10.): „keine Händlerpflege, automatische Ausweisliste und zentral 10 % Gesamtrabatt“ (KC-CLUB-HAENDLERAUSWEIS-LISTE).

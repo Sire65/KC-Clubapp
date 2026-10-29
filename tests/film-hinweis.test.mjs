@@ -14,7 +14,7 @@ for (const [, id, datei, bild, fuer] of filme) {
   assert.ok(fs.existsSync(pfad) && fs.statSync(pfad).size > 1e6, `Film fehlt: ${datei}`);
   assert.ok(fs.existsSync(bild), `Vorschaubild fehlt: ${bild}`);
   assert.ok(datei.startsWith("film/") && bild.startsWith("film/"), `${id}: Film gehört nach film/ (Service Worker lässt film/ aus)`);
-  assert.ok((/aemter/.test(fuer) || /^false \}/.test(fuer)) && !/person_id|vorname|name ===/.test(fuer), `${id}: Zielgruppe nach Amt (oder false = kein Start-Hinweis), nicht nach Person`); // 2.755.0
+  assert.ok((/aemter/.test(fuer) || /^false \}/.test(fuer)) && !/person_id|vorname|name ===/.test(fuer), `${id}: Zielgruppe nach Amt (oder false = kein Start-Hinweis), nicht nach Person`); // 2.756.0
 }
 assert.ok(sw.includes('url.pathname.includes("/film/")) return;'), "Service Worker muss film/ auslassen");
 // Start-Fenster: nach den anderen Start-Fenstern, drei Wahlmöglichkeiten, direkter Start des Films
@@ -33,7 +33,7 @@ assert.equal((app.match(/onclick="atStart\(\)">💼 Aktentasche<\/button>' : ""\
 // Server: Einstellung „filme“ nur mit geprüften Werten
 const e = server.slice(server.indexOf("  filme: (w) =>"), server.indexOf("  rundgang: (w) =>"));
 assert.ok(/\^\[a-z\]\{2,24\}\$/.test(e) && /\["angesehen", "nein"\]/.test(e) && /slice\(0, 30\)/.test(e), "Server-Einstellung filme geprüft");
-// 2.755.0 KC-CLUB-SICHERHEITSKONZEPT: Kachel unter Technik öffnet Film + PDF; das PDF liegt im Repo und steht nicht in „Meine Dokumente“
+// 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: Kachel unter Technik öffnet Film + PDF; das PDF liegt im Repo und steht nicht in „Meine Dokumente“
 const technik = app.slice(app.indexOf("  programme: ["), app.indexOf("  admin: [],"));
 assert.ok(/\{ id: "datenschutz", sym: "🔐", t: "Sicherheit & Datenschutz",[^\n]*aktion: "sdStart\(\)" \}/.test(technik), "Kachel 🔐 Sicherheit & Datenschutz unter Technik");
 const sd = app.slice(app.indexOf("function sdStart()"), app.indexOf("const buFilmKnopf"));
