@@ -1986,8 +1986,9 @@ function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ER
 // Server geräteübergreifend (Einstellung „filme“). Jederzeit wieder: Büro → 🎬 Anleitung. Der Service Worker lässt film/ aus (kein 30-MB-Offline-Speicher).
 const FILME = [
   // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
-  { id: "clubsitzungneu", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "11 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=2", bild: "film/clubsitzung-vorschau.jpg",
-    u: "Neue Fassung: Büro, Tagesordnung, Einladung als Brief an Alle, Einzelne, Gruppe oder Amt, Drucken, Aktentasche mit Freigeben in den Eingangskorb – und am Abend Clubabend Live mit Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+  // 2.750.0 (Wunsch Hansi 29.10. „Film für Klaus neu anpassen“): Fassung mit Frage beim Start, Schritt für Schritt und Frist 3 Tage vorher – wieder eigene Kennung
+  { id: "clubsitzungfrist", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "12½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=3", bild: "film/clubsitzung-vorschau.jpg",
+    u: "Neue Fassung: Die App fragt beim Start, was dran ist – Tagesordnung festlegen, spätestens 3 Tage vorher einladen, Aktentasche packen, erinnern, Änderungen mitteilen – und am Abend Clubabend Live mit Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
