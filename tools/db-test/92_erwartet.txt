@@ -1,0 +1,4 @@
+fuenf_minuten=t
+aktiv=t
+ziel_gleich=t
+einmal=t
