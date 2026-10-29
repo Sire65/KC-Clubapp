@@ -1,0 +1,9 @@
+ganzzahl_unveraendert=t
+db_last_zeit=t
+requests_zeit=t
+breite_tag=t
+bloecke_da=t
+zeilen_passen=t
+personen_ganz=t
+anon_kein_recht=t
+auth_kein_recht=t
