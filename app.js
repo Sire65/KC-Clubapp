@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.758.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.759.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -34816,7 +34816,7 @@ const SPUR_TATEN = {
   buero_einladung: (d) => [d.nur_offen ? "tat_bu_erinnerung" : d.aenderung ? "tat_bu_aenderung" : "tat_bu_einladung"], buero_speichern: () => ["tat_bu_gespeichert"],
   buero_vertretung: (d) => [d.an ? "tat_bu_vertretung" : "tat_bu_vertretung_ab"], buero_informieren_nein: () => ["tat_bu_info_nein"], sitzung_vorgaben_speichern: () => ["tat_bu_vorgaben"],
   aktentasche_aendern: (d) => [SPUR_WAS["tat_tasche_" + d.op] ? "tat_tasche_" + d.op : "tat_tasche"], archiv_eingang_verteilen: () => ["tat_verteilt"], archiv_eingang_senden: () => ["tat_eingang_senden"],
-  pinnwand_neu: () => ["tat_pinnwand"], vorschlag_speichern: () => ["tat_vorschlag"], vorschlag_stimme: () => ["tat_vorschlag_stimme"], foto_hochladen: () => ["tat_foto"],
+  pinnwand_anheften: () => ["tat_pinnwand"], vorschlag_speichern: () => ["tat_vorschlag"], vorschlag_stimme: () => ["tat_vorschlag_stimme"], foto_hochladen: () => ["tat_foto"], // 2.759.0: pinnwand_anheften statt „pinnwand_neu“ (liest beim Start nur neue Zettel – Fund Hansi 29.10. „Karla soll einen Zettel aufgehängt haben“)
   erstattung_senden: () => ["tat_erstattung"], feedback_senden: () => ["tat_feedback"], hilfe_aufruf: () => ["tat_hilfe_aufruf"], hilfe_antwort: () => ["tat_hilfe_antwort"],
   treffen_speichern: () => ["tat_termin_neu"], aufgabe_speichern: () => ["tat_aufgabe"], todo_anlegen: () => ["tat_todo"], chat_umfrage_stimmen: () => ["tat_umfrage_stimme"],
   rezept_speichern: () => ["tat_rezept"], video_bewerten: (d) => ["tat_video_bewertet", d.video],

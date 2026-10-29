@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.759.0 – 2026-10-29 – 🐞 Wege: „Zettel aufgehängt“ stimmte nicht
+Fund Hansi (29.10.): „Karla soll angeblich einen Zettel an die Pinnwand gehängt haben.“ – Hatte sie nicht: Beim Start schaut die App still nach neuen Zetteln (`pinnwand_neu`), und das wurde in 2.755.0 fälschlich als Handlung „📌 Zettel an die Pinnwand gehängt“ gezählt (KC-CLUB-SPUR-VOLL).
+- Jetzt zählt nur das echte Aufhängen (`pinnwand_anheften`). Die 35 falschen Einträge seit 2.755.0 sind aus den Wegen entfernt.
+- Neue Prüfung: Keine Lese- oder Hintergrund-Aktion darf als Handlung zählen (tests/spur-voll.test.mjs).
+
 ## 2.758.0 – 2026-10-29 – 🎡 Kopf-Szenen starten kurz nach der App (KC-CLUB-SZENEN-SPAETER, Stufe 3b)
 Wunsch Hansi „lass die Szenen ruhig etwas später starten“ (Prüfbericht C, Stufe 3b): Jahreszeiten-Bühne und alle Themen-Szenen – Sim-Jü mit Karussell, Viehmarkt und Stier, Oktoberfest, Karibik, Karneval, Halloween, Unterwasser, Weltraum, Bauernhof, Kegeln, Wildwest, Wüste, Seifenblasen, Baustelle – samt Winter- und Herbst-Extras (rund 490 KB) liegen jetzt in teile/szenen.js. Die Startseite ist sofort bedienbar; die Szene erscheint etwa eine Sekunde später, sobald die App gerade nichts anderes zu tun hat. Deko und Eiszapfen sind sofort da. Die Vorschau in den Einstellungen und die Erklär-Videos laden die Szenen direkt. Geprüft: alle 19 Szenen und alle 57 Videos wie vorher, auch ein Video direkt nach dem Öffnen.
 

@@ -51,6 +51,15 @@ for (const [a, f] of Object.entries(SPUR_TATEN)) {
 }
 for (const w of Object.keys(SPUR_WAS_APP)) assert.ok(SPUR_WAS.test(w), "Server nimmt an: " + w);
 assert.match(app, /NOT\.fehler = 0; spurTat\(action, daten\); return r;/, "zentral in api(), nur nach Erfolg");
+// 2.759.0 (Fund Hansi 29.10. „Karla soll einen Zettel aufgehängt haben“ – es war nur das stille Nachsehen beim Start): nur Aktionen, die wirklich etwas tun.
+// Keine Lese-Aktion (API_LESEN, still im Hintergrund, nie Ladeanzeige) darf als Handlung zählen.
+{
+  const lesen = eval(app.slice(app.indexOf("const API_LESEN = ") + 18, app.indexOf(";", app.indexOf("const API_LESEN = "))));
+  const still = (name) => new RegExp(`(WARTEN_STILL|LADE_NIE) = new Set\\(\\[[^\\]]*"${name}"`).test(app);
+  for (const a of Object.keys(SPUR_TATEN)) assert.ok(!lesen.test(a) && !still(a), "Handlung ist eine reine Lese-/Hintergrund-Aktion: " + a);
+  assert.ok(SPUR_TATEN.pinnwand_anheften && !SPUR_TATEN.pinnwand_neu, "Zettel aufhängen = pinnwand_anheften");
+  assert.ok(lesen.test("pinnwand_neu") && !lesen.test("pinnwand_anheften"), "Gegenprobe: die Prüfung erkennt Lese-Aktionen");
+}
 
 // 5) Hilfe, Filme, Videos
 assert.ok(app.includes('spur("hz_kapitel", t)') && app.includes('spur("hz_zeig", id)') && app.includes('spur("hz_eintrag", id)') && app.includes('spur("hz_frage", v)')
