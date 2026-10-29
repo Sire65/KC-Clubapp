@@ -26023,7 +26023,7 @@ async function buSitzungLaden(id) {
       else if (m.antwort === "ja" && !BU.f.anwesend.has(m.person_id) && Date.parse(m.antwort_am || 0) > seit) { BU.f.anwesend.add(m.person_id); BU.hinweise.push(`✅ ${m.name} hat zugesagt – jetzt angehakt`); }
     }
     const neu = (BU.s.vorschlaege || []).filter((x) => x.fuerDiese && !BU.f.tagesordnung.some((t) => t.id === x.id)).length;
-    if (neu) BU.hinweise.push(`💡 ${neu} ${neu === 1 ? "neuer Vorschlag" : "neue Vorschläge"} für diese Sitzung – unten bei „Weitere Vorschläge“ antippen zum Aufnehmen`);
+    if (neu) BU.hinweise.push(`💡 ${neu} ${neu === 1 ? "neuer Vorschlag" : "neue Vorschläge"} für diese Sitzung – bei „📝 Tagesordnung festlegen“ unter „Weitere Vorschläge“ antippen zum Aufnehmen`); // 2.751.0: zwei Seiten
   }
   BU.stand = v?.geaendert_am || null; BU.urfassung = buFassung();
 }
