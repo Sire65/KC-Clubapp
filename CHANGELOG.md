@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.754.0 – 2026-10-29 – 👣 Wege der Mitglieder vollständig: Fenster, Hilfe, Erklär-Videos, Filme, Handlungen · 📊 Was nutzt jeder?
+## 2.755.0 – 2026-10-29 – 👣 Wege der Mitglieder vollständig: Fenster, Hilfe, Erklär-Videos, Filme, Handlungen · 📊 Was nutzt jeder?
 Wunsch Hansi (29.10.): „Prüfe nochmal die Wege der Mitglieder – einige Schritte werden mir nicht angezeigt. Wichtig ist auch, ob sie die Hilfetexte lesen oder Erklär-Videos ansehen. Alles soll aufgezeichnet werden, damit ich sehe, was jeder in der App nutzt.“ (KC-CLUB-SPUR-VOLL)
 - 🪟 **Fenster**: Jedes geöffnete Fenster steht jetzt in den Wegen (z. B. „🪟 Fenster: 💼 Aktentasche packen“) – zentral über einen Beobachter, neue Fenster sind von selbst dabei. Namen aus der Registry `FENSTER_NAMEN`; nur neu gezeichnete Fenster zählen nicht doppelt.
 - ❓ **Hilfe**: Kapitel geöffnet, Hilfetext aufgerufen, „👉 Zeig mir wo“, 🔊 vorgelesen, „?“ auf welcher Seite, in der Hilfe gesucht (nie das Suchwort), 👍/👎.
@@ -9,6 +9,12 @@ Wunsch Hansi (29.10.): „Prüfe nochmal die Wege der Mitglieder – einige Schr
 - 📊 **Was nutzt jeder?** (👥 Nutzung bzw. 👣 Wege): je Mitglied für 7 oder 30 Tage – Seiten, Hilfe, Erklär-Videos und Filme (wie weit), Fenster, Handlungen und „🚫 nie benutzt“.
 - 🐞 **Fehlende Schritte behoben**: Die Tagesansicht holte höchstens 1000 Einträge – jetzt seitenweise alles. Schritte mit unbekannter Zusatzangabe (z. B. „Anklopfen verpasst“) fielen ganz weg – jetzt bleibt der Schritt.
 - Wie bisher: nie Inhalte, nur der Admin sieht es, nach 30 Tagen gelöscht.
+
+## 2.754.0 – 2026-10-29 – 🪪 Händler-Ausweise: Liste für die Kasse · Sperren · 10 % Rabatt
+Absprache Hansi/Codex (29.10.): „keine Händlerpflege, automatische Ausweisliste und zentral 10 % Gesamtrabatt“ (KC-CLUB-HAENDLERAUSWEIS-LISTE).
+- 📋 Jeder gedruckte Ausweis (und jede geöffnete Ausgabeliste) wird automatisch in der neuen Tabelle `kc_club_haendlerausweise` (Jahr, Nr, Prüfcode, gesperrt) eingetragen – ohne Namen. Die Kasse bekommt sie über den PC-Manager (nur lesen); schreiben darf nur der Club-Server. Erneutes Drucken entsperrt nie.
+- 🚫 Büro → Drucker → 🪪 Händler-Ausweis → „Sperren / Entsperren“: verlorener oder missbrauchter Ausweis; die Kasse lehnt ihn nach dem nächsten Abgleich ab. In der Ausgabeliste stehen gesperrte Ausweise rot.
+- 💶 Rabatt steht jetzt schon auf 10 % (änderbar).
 
 ## 2.753.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
 Wunsch Hansi (29.10.): „Video auch anpassen, im Video die Vertretung anzeigen – nicht mich, sondern eher den Kassenwart.“

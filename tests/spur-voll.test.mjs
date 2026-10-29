@@ -1,4 +1,4 @@
-// 2.754.0 KC-CLUB-SPUR-VOLL (Wunsch Hansi 29.10.2026 „einige Schritte werden mir nicht angezeigt; wichtig, ob sie Hilfetexte lesen oder Erklär-Videos ansehen;
+// 2.755.0 KC-CLUB-SPUR-VOLL (Wunsch Hansi 29.10.2026 „einige Schritte werden mir nicht angezeigt; wichtig, ob sie Hilfetexte lesen oder Erklär-Videos ansehen;
 // alles soll aufgezeichnet werden, damit ich sehe, was jeder nutzt“): Fenster, Hilfe, Videos/Filme, Handlungen, Übersicht, fehlende Schritte behoben.
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -7,7 +7,7 @@ const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const videos = fs.readFileSync(new URL("../teile/videos.js", import.meta.url), "utf8");
 const server = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
 const teile = fs.readdirSync(new URL("../teile/", import.meta.url)).filter((f) => f.endsWith(".js")).map((f) => fs.readFileSync(new URL("../teile/" + f, import.meta.url), "utf8")).join("\n");
-const block = app.slice(app.indexOf("// ---------- 2.754.0 KC-CLUB-SPUR-VOLL"), app.indexOf("const SPW = {"));
+const block = app.slice(app.indexOf("// ---------- 2.755.0 KC-CLUB-SPUR-VOLL"), app.indexOf("const SPW = {"));
 assert.ok(block.length > 2000, "Baustein gefunden");
 
 // 1) Registry FENSTER_NAMEN: jedes Fenster (blattAuf in app.js und teile/, feste Fenster in index.html) hat einen Namen
@@ -85,4 +85,4 @@ assert.ok(app.includes('onclick="spurUebersicht(30, null)">📊 Was nutzt jeder?
   const ohne = fest.filter((n) => !new RegExp(`[\\s,{]${n}:`).test(alt) && !new RegExp(`[\\s,{]${n}:`).test(nz));
   assert.deepEqual(ohne, [], "Schritte ohne Namen: " + ohne.join(", "));
 }
-console.log("OK – KC-CLUB-SPUR-VOLL (2.754.0)");
+console.log("OK – KC-CLUB-SPUR-VOLL (2.755.0)");

@@ -1,4 +1,4 @@
-# Wege der Mitglieder (KC-CLUB-SPUR, vollständig ab 2.754.0)
+# Wege der Mitglieder (KC-CLUB-SPUR, vollständig ab 2.755.0)
 
 Wunsch Hansi 29.10.2026: „Prüfe nochmal die Wege der Mitglieder – einige Schritte werden mir nicht angezeigt. Wichtig ist auch, ob sie die Hilfetexte
 lesen oder Erklär-Videos ansehen. Alles soll aufgezeichnet werden, damit ich sehe, was jeder in der App nutzt.“

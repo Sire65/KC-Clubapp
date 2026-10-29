@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.754.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.755.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-XHpakL6dVFkJCsEVMS8Wl0kpfJfo7Jb+o2BrKJzHvhn4FykICqGPKSkC3YmbpaRc" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-VFL8tiqXeiJAAgY+P+ze389JufvaA/fgYajQZj1WxUwh+D2GZn67y7C/k69nw2Oi" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
@@ -36877,7 +36877,7 @@ async function ausweisZeigen() {
 // Scheckkarte 85 × 54 mm, 10 je A4 mit Schnittmarken an jeder Ecke; Blatt 1 Vorderseiten (fortlaufend nummeriert), Blatt 2 Rückseiten (gespiegelt für
 // beidseitigen Druck, lange Kante). QR-Code mit Nummer + Prüfcode (vom Server, nicht fälschbar). Gezeichnet in Druckauflösung (300 dpi) – Druck,
 // Vorschau und PDF sind dadurch millimetergenau gleich. Dazu eine Ausgabeliste (Nr, Prüfcode, Stand/Firma, Name, ausgegeben). Nur Clubleitung.
-const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "", datum: "" };
+const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "10", datum: "" }; // 2.754.0: Rabatt zentral 10 % (Absprache mit der Kasse)
 // 2.704.0 KC-CLUB-HAENDLERAUSWEIS-SCHNITT (Wunsch Hansi „Standardmaß behalten, zwischen den Karten nur EIN Schnitt – erst die 4 Ränder weg, dann je ein
 // Schnitt zwischen den Karten; sorgfältige Schneidemarken, die nicht zu stark auffallen“): Scheckkarte 85,6 × 54 mm, Karte an Karte (keine Lücken),
 // eckig; Marken nur im weißen Rand außen (fein, hellgrau), Kontrollmaß 50 mm; unten ein 1,5-mm-Streifen in Weinrot, damit ein knapper Schnitt nicht blitzt.
@@ -36888,18 +36888,32 @@ function haStart() {
     <div class="zwei"><label class="feld">Jahr<input id="haJahr" type="number" min="2024" max="2100" value="${HA.jahr}"></label><label class="feld">Rabatt in % (leer = zum Eintragen)<input id="haRabatt" type="number" min="1" max="100" value="${esc(HA.rabatt)}" placeholder="z. B. 10"></label></div>
     <div class="zwei"><label class="feld">Nummer von<input id="haVon" type="number" min="1" max="999" value="${HA.von}"></label><label class="feld">bis<input id="haBis" type="number" min="1" max="999" value="${HA.bis}"></label></div>
     <label class="feld">Gültig (leer = „Gültig nur zum Weihnachtsmarkt Werne ${HA.jahr}“)<input id="haDatum" type="text" maxlength="60" value="${esc(HA.datum)}" placeholder="z. B. Gültig vom 04.12. bis 23.12.2026"></label>
-    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="probe">🎯 Probeblatt (Duplex prüfen)</button><button class="knopf" data-a="zu">Abbrechen</button></div>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="probe">🎯 Probeblatt (Duplex prüfen)</button><button class="knopf" data-a="sperren">🚫 Sperren / Entsperren</button><button class="knopf" data-a="zu">Abbrechen</button></div>
     <p class="hinweis" style="margin:6px 0 0">Schneiden: erst die 4 Ränder, dann 1 Schnitt senkrecht in der Mitte und 4 waagerecht – die feinen grauen Marken im Rand zeigen, wo.</p>`, () => {});
   const lesen = () => { HA.jahr = Math.trunc(+$("haJahr").value) || new Date().getFullYear(); HA.von = Math.max(1, Math.trunc(+$("haVon").value) || 1); HA.bis = Math.max(HA.von, Math.trunc(+$("haBis").value) || HA.von);
     HA.rabatt = String($("haRabatt").value || "").trim(); HA.datum = String($("haDatum").value || "").trim(); };
   f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = async () => { const a = b.dataset.a; if (a === "zu") return f.remove(); lesen();
     if (a === "probe") { f.remove(); return druckStarten("haendlerausweis", { jahr: HA.jahr, bilder: [haProbe(false), haProbe(true)], n: 0, probe: true }); } // 2.704.0
+    if (a === "sperren") return haSperren(); // 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE
     if (HA.bis - HA.von >= 120) return melde("Höchstens 120 Ausweise auf einmal.", true);
     b.disabled = true; const alt = b.textContent; b.textContent = "⏳ Einen Moment …";
     try { const r = await api("haendlerausweis_codes", { jahr: HA.jahr, von: HA.von, bis: HA.bis });
       if (a === "liste") { f.remove(); return druckStarten("haendlerausweis_liste", { jahr: r.jahr, liste: r.liste }); }
       await qrLaden(); const bilder = await haBilder(r.jahr, r.liste); f.remove(); druckStarten("haendlerausweis", { jahr: r.jahr, bilder, n: r.liste.length });
     } catch (e) { b.disabled = false; b.textContent = alt; meldeFehler(e); } }));
+}
+// 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: verlorenen oder missbrauchten Ausweis sperren – die Kasse lehnt ihn nach dem nächsten Abgleich ab
+async function haSperren() {
+  const ein = await eingabe(`Ausweis sperren oder freigeben\nWelche Nummer (Jahr ${HA.jahr})?`, "", { zahl: true }); if (ein == null) return;
+  const nr = Math.trunc(+ein), n3 = String(nr).padStart(3, "0"); if (!(nr >= 1 && nr <= 999)) return melde("Bitte eine Nummer von 1 bis 999 eingeben.", true);
+  // zwei getrennte Fragen: Abbrechen/Escape ändert nie etwas
+  let gesperrt = null;
+  if (await frage(`Ausweis Nr. ${n3} sperren?\nDie Kasse gibt darauf keinen Rabatt mehr (nach dem nächsten Abgleich).`, { ja: "🚫 Sperren", gefahr: true })) gesperrt = true;
+  else if (await frage(`Ausweis Nr. ${n3} wieder freigeben?\nNur wenn er versehentlich gesperrt wurde.`, { ja: "✅ Freigeben" })) gesperrt = false;
+  if (gesperrt == null) return;
+  try { const r = await api("haendlerausweis_sperren", { jahr: HA.jahr, nr, gesperrt });
+    melde(r.gesperrt ? `🚫 Ausweis Nr. ${r.nr} gesperrt – wirkt an der Kasse nach dem nächsten Abgleich.` : `✅ Ausweis Nr. ${r.nr} wieder freigegeben.`);
+  } catch (e) { meldeFehler(e); }
 }
 async function haBild(src) { return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; }); }
 async function haBilder(jahr, liste) { // je 10 Karten: Vorderseiten-Blatt + Rückseiten-Blatt (als Bilder in 300 dpi)
@@ -36996,7 +37010,7 @@ function haHinten(g, x, jahr) {
   g.fillStyle = "#741521"; g.fillRect(0, (H - HA_K.streifen) * M, W * M + 1, HA_K.streifen * M + 2); // 2.704.0: Streifen unten (wie vorne)
 }
 function druckHaendlerListe(p) {
-  const zeilen = (p?.liste || []).map((x) => `<tr><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td></td><td></td><td></td><td></td></tr>`).join("");
+  const zeilen = (p?.liste || []).map((x) => `<tr${x.gesperrt ? ' style="color:#c1121f"' : ""}><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td>${x.gesperrt ? "<b>🚫 GESPERRT</b>" : ""}</td><td></td><td></td><td></td></tr>`).join(""); // 2.754.0: gesperrte Ausweise rot
   return { titel: `Händler-Ausweise Weihnachtsmarkt ${p.jahr} – Ausgabeliste`, unter: "Wer hat welchen Ausweis? Am Stand: QR-Code scannen und Prüfcode vergleichen.", fuss: "Ausgabeliste Händler-Ausweise",
     html: `<table class="dtab" style="width:100%;border-collapse:collapse"><thead><tr><th style="width:11mm">Nr.</th><th style="width:20mm">Prüfcode</th><th>Stand / Firma</th><th>Name</th><th style="width:24mm">ausgegeben am</th><th style="width:28mm">Unterschrift</th></tr></thead>
       <tbody>${zeilen}</tbody></table><style>#druck .dtab td,#druck .dtab th{border:.3mm solid #999;padding:2.2mm 2mm;text-align:left;font-size:3.4mm}#druck .dtab tr{height:9mm}</style>` };
@@ -39553,7 +39567,7 @@ const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", vorfuehren: "📺 
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
-// ---------- 2.754.0 KC-CLUB-SPUR-VOLL (Wunsch Hansi 29.10.2026 „Prüfe nochmal die Wege der Mitglieder – einige Schritte werden mir nicht angezeigt.
+// ---------- 2.755.0 KC-CLUB-SPUR-VOLL (Wunsch Hansi 29.10.2026 „Prüfe nochmal die Wege der Mitglieder – einige Schritte werden mir nicht angezeigt.
 // Wichtig ist auch, ob sie die Hilfetexte lesen oder Erklär-Videos ansehen. Alles soll aufgezeichnet werden, damit ich sehe, was jeder in der App nutzt“) ----------
 // Zusätzlich zu den Seiten: jedes geöffnete Fenster (zentral über einen Beobachter – neue Fenster sind von selbst dabei), Hilfe (Kapitel, Hilfetext, „Zeig mir wo“,
 // Vorlesen, „?“, Suche ohne Suchwort, 👍/👎), Erklär-Videos und Anleitungsfilme (gestartet, bis zum Ende, abgebrochen bei …) und wichtige Handlungen
@@ -39692,7 +39706,7 @@ async function spurAdmin(tag, person) {
     const on = (id) => heuteDa && ONL.stand && Date.now() - ONL.stand < 3 * 60000 && ONL.ids.has(id);
     const liste = [...r.personen].sort((a, b) => on(b.person_id) - on(a.person_id));
     // KC-CLUB-SPUR-JETZT (2.81.0): je Person, was sie zuletzt aufgerufen hat – bei 🟢 „ist gerade bei …“
-    const was = (w, k) => w ? (k ? spurZeile({ w, k }) : spurWas(w)) : ""; // 2.729.0 KC-CLUB-SPUR-WIEDER; 2.754.0 KC-CLUB-SPUR-VOLL: mit Kennung (Fenster, Hilfe, Video)
+    const was = (w, k) => w ? (k ? spurZeile({ w, k }) : spurWas(w)) : ""; // 2.729.0 KC-CLUB-SPUR-WIEDER; 2.755.0 KC-CLUB-SPUR-VOLL: mit Kennung (Fenster, Hilfe, Video)
     const vor = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); return m < 1 ? "gerade eben" : m === 1 ? "vor 1 Min." : m < 60 ? `vor ${m} Min.` : `um ${zeitKurz(iso)} Uhr`; };
     const jetzt = liste.filter((x) => on(x.person_id));
     inhalt = (heuteDa ? `<div class="karte spur-jetzt-box"><b>🟢 Gerade in der App${jetzt.length ? ` (${jetzt.length})` : ""}</b>${jetzt.length ? jetzt.map((x) => `<div class="spur-jetzt-zeile" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> ist bei <b>${esc(was(x.zuletzt, x.zk) || "?")}</b> <small class="hinweis">· ${esc(vor(x.letzte))}</small></div>`).join("") : '<div class="hinweis">Gerade ist niemand in der App (oder hat die Online-Anzeige verborgen).</div>'}</div>` : "")
@@ -39708,7 +39722,7 @@ async function spurAdmin(tag, person) {
   clearTimeout(SPW.uhr);
   if (heuteDa) SPW.uhr = setTimeout(() => { if (!$("adminBlatt").classList.contains("versteckt") && $("adminBlattInhalt").querySelector(".spur-neu[aria-label='Wege aktualisieren']") && !document.hidden) { onlinePing().catch(() => {}).finally(() => spurAdmin(SPW.tag, SPW.person)); } }, 20000);
 }
-// 2.754.0 KC-CLUB-SPUR-VOLL: 📊 Was nutzt jeder? – Liste aller Mitglieder (aktive Tage, zuletzt, Seiten/Fenster/Hilfe/Videos/Handlungen) und je Mitglied
+// 2.755.0 KC-CLUB-SPUR-VOLL: 📊 Was nutzt jeder? – Liste aller Mitglieder (aktive Tage, zuletzt, Seiten/Fenster/Hilfe/Videos/Handlungen) und je Mitglied
 // die Einzelheiten: Bereiche, Fenster, Hilfe, Erklär-Videos und Filme (✅ bis zum Ende / ⏹️ abgebrochen, wie weit), Handlungen und „nie benutzt“.
 const SPU = { tage: 30, person: null };
 function spuGruppen(z, weit) {
@@ -39731,7 +39745,7 @@ async function spurUebersicht(tage, person) {
   let r; try { r = await api("spur_uebersicht", { tage: SPU.tage, ...(SPU.person ? { person_id: SPU.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const summe = (l) => l.reduce((a, x) => a + x[1], 0), vid = (o) => Object.values(o);
   const kopf = `<h3 style="margin:0">📊 Was nutzt ${SPU.person ? esc(r.personen[0]?.name || "") : "jeder"}?</h3>
-    <p class="hinweis" style="margin:0">Letzte ${r.tage} Tage · gezählt ab 2.754.0 auch Fenster, Hilfe, Erklär-Videos, Filme und Handlungen (davor nur Seiten) · <b>ohne Inhalte</b>, nur du siehst das.</p>
+    <p class="hinweis" style="margin:0">Letzte ${r.tage} Tage · gezählt ab 2.755.0 auch Fenster, Hilfe, Erklär-Videos, Filme und Handlungen (davor nur Seiten) · <b>ohne Inhalte</b>, nur du siehst das.</p>
     <div class="knoepfe">${[7, 30].map((t) => `<button class="knopf klein${SPU.tage === t ? " haupt" : ""}" onclick="spurUebersicht(${t})">${t} Tage</button>`).join("")}</div>`;
   let inhalt;
   if (!SPU.person) {
