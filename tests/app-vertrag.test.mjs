@@ -11953,7 +11953,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   const m = server.slice(server.indexOf("async function gastgeberMitteilen("), server.indexOf("// KC-CLUB-ANTWORT-ERINNERUNG-2T"));
   assert.ok(/if \(!t\.gastgeber_person_id \|\| t\.gastgeber_person_id === ich\) return false;/.test(m) && /\["push", "email"\]/.test(m) && /Du bist Gastgeberin\/Gastgeber – aktuell/.test(m), "Gastgeber-Hinweis, Push + E-Mail");
-  assert.ok(/const gast = !nurOffen && await gastgeberMitteilen\(t, ich\.person_id, "einladung", \{ \.\.\.vars, text: brief\(/.test(server) && /const an_ = gast \? ziel\.filter\(\(id\) => id !== t\.gastgeber_person_id\) : ziel,/.test(server), "Einladung: Gastgeberin extra, nicht doppelt"); // 2.740.0: Brief je Empfänger (KC-CLUB-EINLADUNG-BRIEF)
+  assert.ok(/const gast = !nurOffen && !aenderung && \(!t\.gastgeber_person_id \|\| ziel\.includes\(t\.gastgeber_person_id\)\) && await gastgeberMitteilen\(t, ich\.person_id, "einladung", \{ \.\.\.vars, text: brief\(/.test(server) /* 2.749.0: Gastgeber nur, wenn ausgewählt; nicht bei „Änderung mitteilen“ */ && /const an_ = gast \? ziel\.filter\(\(id\) => id !== t\.gastgeber_person_id\) : ziel,/.test(server), "Einladung: Gastgeberin extra, nicht doppelt"); // 2.740.0: Brief je Empfänger (KC-CLUB-EINLADUNG-BRIEF)
   assert.ok(/await gastgeberMitteilen\(t, ich\.person_id, "geaendert", treffenText/.test(server) && /await gastgeberMitteilen\(t, ich\.person_id, "abgesagt", treffenText/.test(server), "Änderung und Absage");
   assert.ok(/Tagesordnung:\\n\$\{(d\.)?top\.join\("\\n"\)\}/.test(server), "Einladung enthält die Tagesordnung"); // 2.740.0: im Brief (einladungBrief)
 }
@@ -12499,7 +12499,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/^case "clubabend_setzen": \{\s*nurVorstand\(ich\);/.test(cs), "abhaken/Anwesenheit/Album nur Clubleitung (Server prüft)");
   assert.ok(/\.update\(\{ anwesend: \[\.\.\.anwesend\] \}\)\.eq\("treffen_id", tid\)\.eq\("status", "entwurf"\)/.test(cs) && /anwesend: ca\?\.anwesend\?\.length \? ca\.anwesend :/.test(server), "vor Ort eingetragene Anwesenheit geht ins Protokoll");
   assert.ok(/const CA_VORHER_MIN = 120, CA_DAUER_STD = 6;/.test(server) && /p\.vorschau === true && ich\.vorstand/.test(server), "nur am Abend (2 Std. vorher bis Ende); Vorschau nur Clubleitung");
-  assert.ok(/b\.vorbereitung\?\.tagesordnung\?\.length \? b\.vorbereitung\.tagesordnung : b\.standard\.tagesordnung/.test(server), "Tagesordnung aus der Büro-Vorbereitung (sonst Standard)");
+  assert.ok(/x\.vorbereitung\?\.tagesordnung\?\.length \? x\.vorbereitung\.tagesordnung : x\.standard\.tagesordnung/.test(server) && /const top = \(await sitzungTagesordnung\(t\.id, b\)\)/.test(server), "Tagesordnung aus der Büro-Vorbereitung (sonst Standard)"); // 2.749.0: eine Quelle sitzungTagesordnung
   assert.ok(/\.\.\.\(ich\.vorstand \? \{ mitglieder:/.test(server), "Mitgliederliste zum Abhaken nur für die Clubleitung");
   assert.ok(/\{ id: "clubabend", sym: "🍽️", t: "Clubabend Live",[^\n]*nur: \(\) => caHeute\(\) \|\| !!ICH\?\.admin/.test(html) && /function caHeute\(\)/.test(html) && /\$\{L \? `<button type="button" class="ca-haken"/.test(html), "Kachel am Abend (2.571.0: Admin immer, sonst Vorschau); Haken-Knöpfe nur für die Clubleitung");
   assert.ok(/\[50, 400\]\.forEach\(\(ms\) => setTimeout\(\(\) => window\.scrollTo\(0, document\.body\.scrollHeight\), ms\)\)/.test(html), "2.571.0: Chat öffnet immer bei der neuesten Nachricht");

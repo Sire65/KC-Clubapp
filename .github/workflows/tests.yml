@@ -48,6 +48,7 @@ jobs:
       # KC-CLUB-ABLAGEKORB-EINGANG, KC-CLUB-EINGANG-WEITER (2.743.0)
       - run: node tests/ablagekorb-eingang.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
+      - run: node tests/sitzung-schritte.test.mjs
       - run: node tests/zugang-pruefen.test.mjs
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs
