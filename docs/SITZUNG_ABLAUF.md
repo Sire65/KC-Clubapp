@@ -20,6 +20,10 @@ bei Fristen automatisch erinnern beim Programmstart. Auch Kassenwart und Admin z
 - **Frage beim Start** (`buAufgabePruefen`, ab `vorlauf_tage` vorher): nur wer die Sitzung vorbereitet (Amt `vorbereiter_amt`, Standard Clubsprecher;
   hat niemand das Amt: wer im Büro schreiben darf). Ja = gewohntes Fenster, Nein, ⏰ Später = 3 Std. Ruhe (je Gerät).
 - **Kontrolle** (`buKontrolleZeigen`): übrige Clubleitung (Kassenwart, Admin) nur bei überschrittener Frist – „Clubsprecher anschreiben“ oder selbst ins Büro.
+- **Vertretung** (KC-CLUB-SITZUNG-VERTRETUNG, `buero_vertretung`, Spalte `vertretung`): ist der Clubsprecher verhindert, übernimmt jemand aus der Clubleitung
+  mit Büro-Schreibrecht (Admin, Kassenwart) die Vorbereitung dieser einen Sitzung – „🙋 Vorbereitung übernehmen“ im Büro (Raum, Liste, Schritt-Karte) oder im
+  Kontroll-Hinweis. Dann steht nur er in `vorbereiter` (Fragen beim Start, gelber Zettel); Clubsprecher und Leitung bekommen Bescheid. „↩️ Zurückgeben“: die
+  Vertretung, der Clubsprecher oder der Admin. Die bestehende KC-CLUB-VERTRETUNG (für ein Mitglied handeln, z. B. Karla für Ruth) ist etwas anderes.
 
 ## Änderung nach der Einladung (KC-CLUB-AENDERUNG-MELDUNG)
 

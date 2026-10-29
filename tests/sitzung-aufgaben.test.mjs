@@ -89,6 +89,23 @@ assert.match(kz, /anschreiben<\/button>/); assert.match(kz, /if \(w === "schreib
 assert.match(app, /if \(!buIchBereite\(r\)\) return \(ICH\?\.vorstand \|\| ICH\?\.admin\) && buKontrolleZeigen\(t, r, besetzt, versuch\);/, "Start: Kontrolle statt Aufgaben");
 assert.match(server, /const \{ data: vbr \} = await db\.from\("kc_club_rollen"\)\.select\("person_id"\)\.contains\("aemter", \[SV\.vorbereiter_amt\]\);/, "Server: wer vorbereitet (Amt aus den Vorgaben)");
 
+// --- 5b) Vertretung (KC-CLUB-SITZUNG-VERTRETUNG, Wunsch Hansi „wenn der Clubsprecher krank ist, muss es ja einer übernehmen“)
+assert.equal(A.buIchBereite({ vorbereiter: ["P9"], sitzungen: [{ vorbereiter: ["P1"] }] }), true, "Vertretung übernommen → ich bereite vor (Fragen beim Start)");
+assert.equal(A.buIchBereite({ vorbereiter: ["P1"], sitzungen: [{ vorbereiter: ["P9"] }] }), false, "Clubsprecher bei Vertretung → nur Kontrolle");
+const VU = sitzungsUmgebung(app, { ich: { person_id: "P9", admin: true } });
+const vt = (x) => VU.buSchritteHtml(sitzung({ vorbereiter: ["P1"], ...x }));
+assert.match(vt({}), /🙋 Vorbereitung übernehmen<\/button>/, "Admin sieht „Vorbereitung übernehmen“");
+assert.match(vt({ vertretung: { person_id: "P9", name: "Hansi" }, vorbereiter: ["P9"] }), /Vertretung: <b>du<\/b> bereitest diese Sitzung vor.*↩️ Zurückgeben/s, "… und kann zurückgeben");
+assert.doesNotMatch(A.buSchritteHtml(sitzung({ vorbereiter: ["P1"] })), /übernehmen/, "Clubsprecher selbst sieht keinen Übernehmen-Knopf");
+assert.match(sitzungsUmgebung(app, { schreiben: false }).buSchritteHtml(sitzung({ vertretung: { person_id: "P9", name: "Hansi" } })), /🙋 Vertretung: <b>Hansi<\/b> bereitet diese Sitzung vor/, "andere sehen, wer vertritt");
+const sv = server.slice(server.indexOf('case "buero_vertretung"'), server.indexOf('case "buero_informieren_nein"'));
+assert.match(sv, /nurBueroSchreiben\(ich\); nurLeitung\(ich\);/, "nur Clubleitung mit Büro-Schreibrecht");
+assert.match(sv, /Zurückgeben kann nur, wer die Vertretung übernommen hat, der Clubsprecher oder der Admin\./);
+assert.match(sv, /senden\("club_nachricht", an_,/, "Clubsprecher und Clubleitung bekommen Bescheid");
+assert.match(server, /vorbereiter: p\?\.vertretung\?\.person_id \? \[p\.vertretung\.person_id\] : vorbereiter,/, "Server: Vertretung bereitet diese Sitzung vor");
+assert.match(fs.readFileSync("supabase/migrations/20261029_kc_club_sitzung_ablauf.sql", "utf8"), /add column if not exists vertretung jsonb/);
+assert.match(app, /data-w="uebernehmen">🙋 Ich übernehme die Vorbereitung \(Vertretung\)<\/button>/, "Kontroll-Hinweis: selbst übernehmen");
+
 // --- 6) Änderung nach der Einladung: Server merkt die verschickte Tagesordnung, „Nein“ gilt für genau diesen Stand
 const tg = server.slice(server.indexOf("const topStand = "), server.indexOf("function bueroTopListe(")).replace(/\(l: any\[\] \| null \| undefined\)/, "(l)").replace(/\(p: any\): boolean/, "(p)").replace(/\(x: any\)/g, "(x)");
 const topGeaendert = new Function(tg + "; return topGeaendert;")();

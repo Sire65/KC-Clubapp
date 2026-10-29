@@ -18,3 +18,7 @@ comment on column public.kc_club_buero_sitzung.unterlagen_am is 'KC-CLUB-SITZUNG
 insert into public.kc_club_konfig (schluessel, wert, geaendert_von, geaendert_am)
 values ('sitzung_vorgaben', '{"vorschlag_tage": 4, "vorschlag_stunde": 17, "einladung_tage": 3, "erinnerung_tage": 2, "unterlagen_tage": 1, "tasche_stunde": 14, "vorlauf_tage": 7, "vorbereiter_amt": "Clubsprecher", "wochentag": 5, "uhrzeit": "18:00", "ort": "Hütte Anne", "ohne_monate": [12]}'::jsonb, 'einrichtung:2.751.0', now())
 on conflict (schluessel) do nothing;
+-- KC-CLUB-SITZUNG-VERTRETUNG (Wunsch Hansi 29.10.2026 „bei Bedarf kann Admin oder Kassenwart den Ablauf machen – wenn der Clubsprecher krank ist,
+-- muss es ja einer übernehmen“): wer die Vorbereitung dieser einen Sitzung übernommen hat. Rückweg: alter table … drop column vertretung;
+alter table public.kc_club_buero_sitzung add column if not exists vertretung jsonb;
+comment on column public.kc_club_buero_sitzung.vertretung is 'KC-CLUB-SITZUNG-VERTRETUNG (2.751.0): wer die Vorbereitung dieser Sitzung übernommen hat {person_id, am, von} – z. B. Admin oder Kassenwart, wenn der Clubsprecher krank ist';

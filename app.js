@@ -2413,7 +2413,7 @@ const HILFE = [
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "aktentasche", thema: "club", sym: "💼", t: "Aktentasche packen (Clubleitung)", nur: () => !!ICH?.vorstand, x: "Für Clubsprecher, Kassenwart und Admin: Im <b>Büro → 💼 Aktentasche</b> den Anlass wählen – die App schlägt vor, was hinein gehört (Einladung, Tagesordnung, Protokollentwurf, Vorschläge mit Zeichnungen, Zusagen, Aufgaben). In jedem Register kannst du 📷 Fotos, 🖼️ Bilder, 📄 PDFs, Dateien oder 🗄️ Archiv-Dokumente dazulegen. Vorn liegt die Packliste mit Notizen. Eine gemeinsame Tasche – jeder von euch kann dazupacken. <b>✔ Tasche gepackt</b> → am Abend liegt sie in der Kachel 🍽️ Clubabend.", seit: "2.695.0" },
   { id: "anmeldeschluss", thema: "club", sym: "⏰", t: "Anmeldeschluss für Themen: 4 Tage vor der Sitzung", x: "Themen und Spenden für eine Sitzung bitte bis <b>4 Tage vorher, 17:00 Uhr</b> einreichen (die Clubleitung kann das unter ⚙️ Sitzungs-Vorgaben ändern) – die Frist steht im Info-Feld und beim Vorschlag. So kommen sie noch in die Einladung. Danach fragt die App: <b>„❗ Dringend“</b> – dann entscheidet Clubsprecher, Kassenwart oder Admin (wer zuerst tippt), ob er noch als dringender TOP drankommt – oder <b>„📅 Auf die nächste Sitzung“</b>. Du bekommst Bescheid, wie entschieden wurde.", zeig: () => zeige("vorschlaege"), seit: "2.751.0" }, // 2.694.0 KC-CLUB-ANMELDESCHLUSS, 2.751.0 KC-CLUB-SITZUNG-VORGABEN
-  { id: "sitzung_aufgaben", thema: "club", sym: "🧭", t: "Clubsitzung Schritt für Schritt: Ablauf, Fristen, Erinnerung beim Start (Clubleitung)", x: "Der Ablauf wie im richtigen Leben: <b>1.</b> Die Mitglieder reichen Vorschläge ein (bis 4 Tage vorher, 17 Uhr). <b>2.</b> 📝 Tagesordnung festlegen – Vorschläge aufnehmen, Reihenfolge. <b>3.</b> 📨 Einladung an alle oder ausgewählte – <b>spätestens 3 Tage vorher</b>. <b>4.</b> 🔔 An die Antwort erinnern. <b>5.</b> 🖨️ Sitzung vorbereiten – Anwesende ankreuzen, Anmerkung, Mitschreibbogen drucken. <b>6.</b> 💼 Zuletzt die Aktentasche packen – fertige Unterlagen und die 🧳 Mitnehm-Liste (Muster, Getränkeproben …). <b>7.</b> 🍽️ Clubabend Live – Tasche öffnen, vorlesen oder 📤 freigeben, Anwesende, Tagesordnung, ✅ Zum Schluss (Aufgaben, Fotos) und als Letztes der nächste Termin. Der <b>gelbe Zettel</b> im Büro zeigt immer den nächsten Schritt; beim Öffnen der App fragt sie (ab einer Woche vorher), was dran ist – <b>Ja</b>, <b>Nein</b> oder <b>⏰ Später</b>. Ist eine Frist vorbei, steht der Schritt rot („⚠️ Knapp“), und Kassenwart und Admin bekommen zur Kontrolle einen Hinweis. Ändert sich die Tagesordnung nach der Einladung (z. B. ein dringender Vorschlag), fragt die App: <b>„Mitglieder informieren?“</b> – Ja öffnet die Änderungsmeldung mit „Neu / Entfällt“, Nein sendet nichts. Fristen, Uhrzeit, Ort und Monate ohne Sitzung: Büro → <b>⚙️ Sitzungs-Vorgaben</b>.", nur: () => buSchreiben() || !!ICH?.vorstand, zeig: () => buStart(), seit: "2.751.0" }, // KC-CLUB-SITZUNG-AUFGABE-START (2.750.0), KC-CLUB-SITZUNG-ABLAUF (2.751.0)
+  { id: "sitzung_aufgaben", thema: "club", sym: "🧭", t: "Clubsitzung Schritt für Schritt: Ablauf, Fristen, Erinnerung beim Start (Clubleitung)", x: "Der Ablauf wie im richtigen Leben: <b>1.</b> Die Mitglieder reichen Vorschläge ein (bis 4 Tage vorher, 17 Uhr). <b>2.</b> 📝 Tagesordnung festlegen – Vorschläge aufnehmen, Reihenfolge. <b>3.</b> 📨 Einladung an alle oder ausgewählte – <b>spätestens 3 Tage vorher</b>. <b>4.</b> 🔔 An die Antwort erinnern. <b>5.</b> 🖨️ Sitzung vorbereiten – Anwesende ankreuzen, Anmerkung, Mitschreibbogen drucken. <b>6.</b> 💼 Zuletzt die Aktentasche packen – fertige Unterlagen und die 🧳 Mitnehm-Liste (Muster, Getränkeproben …). <b>7.</b> 🍽️ Clubabend Live – Tasche öffnen, vorlesen oder 📤 freigeben, Anwesende, Tagesordnung, ✅ Zum Schluss (Aufgaben, Fotos) und als Letztes der nächste Termin. Der <b>gelbe Zettel</b> im Büro zeigt immer den nächsten Schritt; beim Öffnen der App fragt sie (ab einer Woche vorher), was dran ist – <b>Ja</b>, <b>Nein</b> oder <b>⏰ Später</b>. Ist eine Frist vorbei, steht der Schritt rot („⚠️ Knapp“), und Kassenwart und Admin bekommen zur Kontrolle einen Hinweis. Ist der Clubsprecher verhindert (z. B. krank), tippt Admin oder Kassenwart bei den Schritten auf <b>„🙋 Vorbereitung übernehmen“</b> – dann bekommt er die Erinnerungen bis zur Sitzung; <b>„↩️ Zurückgeben“</b> geht jederzeit. Ändert sich die Tagesordnung nach der Einladung (z. B. ein dringender Vorschlag), fragt die App: <b>„Mitglieder informieren?“</b> – Ja öffnet die Änderungsmeldung mit „Neu / Entfällt“, Nein sendet nichts. Fristen, Uhrzeit, Ort und Monate ohne Sitzung: Büro → <b>⚙️ Sitzungs-Vorgaben</b>.", nur: () => buSchreiben() || !!ICH?.vorstand, zeig: () => buStart(), seit: "2.751.0" }, // KC-CLUB-SITZUNG-AUFGABE-START (2.750.0), KC-CLUB-SITZUNG-ABLAUF (2.751.0)
   { id: "vorschlag_spaeter", thema: "club", sym: "📅", t: "Vorschlag für eine spätere Sitzung", x: "Steht die übernächste Sitzung noch nicht im Kalender? Beim Vorschlag unter „Für welchen Termin?“ einfach <b>„📅 Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung angelegt ist, ordnet die App den Vorschlag ihr automatisch zu – bis dahin steht „(Datum folgt)“ dabei.", seit: "2.527.0" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
@@ -25473,7 +25473,7 @@ function buNaechster(t) { return buSchritteFuer(t).find((x) => x.st === "jetzt")
 function buSchritteHtml(t, klein = false) {
   const l = buSchritteFuer(t); if (!l.length) return "";
   const dran = l.find((x) => x.st === "jetzt");
-  return `<div class="karte bu-schritte${klein ? " klein" : ""}"><div class="bu-schritte-kopf">🧭 Schritt für Schritt: <b>${esc(t.titel)}</b> <small>${esc(wann(t.beginn))}</small></div>
+  return `<div class="karte bu-schritte${klein ? " klein" : ""}"><div class="bu-schritte-kopf">🧭 Schritt für Schritt: <b>${esc(t.titel)}</b> <small>${esc(wann(t.beginn))}</small></div>${buVertretungHtml(t)}
     <ol>${l.map((x) => `<li class="bu-schritt ${x.st}${x.knapp ? " knapp" : ""}"><span class="bu-schritt-sym">${x.st === "fertig" ? "✅" : x.st === "jetzt" ? "👉" : "⏳"}</span><span><b>${esc(x.t)}</b><small>${esc(x.u)}</small>${x.knapp ? `<small class="bu-knapp">${x.id === "aktentasche" || x.id === "unterlagen" ? "⚠️ Knapp – die Sitzung ist bald" : BU_KNAPP_TEXT}</small>` : ""}</span></li>`).join("")}</ol>
     ${dran && !klein ? `<button class="knopf haupt" style="width:100%;text-align:center" onclick="${dran.los}">${esc(dran.knopf)}</button>` : ""}</div>`;
 }
@@ -25486,6 +25486,23 @@ function buDran(t) {
   if (sch && (!nt || nah)) return { text: sch.knopf, fn: sch.los };
   if (nt) return { text: nt.text, fn: `buNachherWahl(${esc(JSON.stringify(nt.text))})` };
   return naechst && nah ? { text: `${naechst.sym} ${naechst.t} · ${naechst.u.split(" – ")[0]}`, fn: naechst.los, spaeter: true } : null;
+}
+// 2.751.0 KC-CLUB-SITZUNG-VERTRETUNG (Wunsch Hansi 29.10. „bei Bedarf kann Admin oder Kassenwart den Ablauf machen – wenn der Clubsprecher krank ist,
+// muss es ja einer übernehmen“): je Sitzung „🙋 Vorbereitung übernehmen“ / „↩️ Zurückgeben“ – nur Clubleitung mit Büro-Schreibrecht. Danach bekommt die
+// Vertretung die Fragen beim Start und den gelben Zettel; nach der Sitzung ist es vorbei (gilt nur für diese Sitzung).
+function buVertretungHtml(t) {
+  if (!t || !buSchreiben() || !(ICH?.vorstand || ICH?.admin)) return t?.vertretung ? `<p class="hinweis bu-vertretung">🙋 Vertretung: <b>${esc(t.vertretung.name || "")}</b> bereitet diese Sitzung vor</p>` : "";
+  const v = t.vertretung, ich = v?.person_id === ICH?.person_id, darf = ich || ICH?.admin || (ICH?.aemter || []).includes(svWerte().vorbereiter_amt);
+  if (v) return `<p class="hinweis bu-vertretung">🙋 Vertretung: <b>${ich ? "du" : esc(v.name || "")}</b> ${ich ? "bereitest" : "bereitet"} diese Sitzung vor${darf ? ` <button class="knopf klein" onclick="buVertretung('${t.id}', false)">↩️ Zurückgeben</button>` : ""}</p>`;
+  return (t.vorbereiter || []).includes(ICH?.person_id) ? "" : `<p class="hinweis bu-vertretung">Ist der Clubsprecher verhindert (z. B. krank)? <button class="knopf klein" onclick="buVertretung('${t.id}', true)">🙋 Vorbereitung übernehmen</button></p>`;
+}
+async function buVertretung(id, an, sofort = false) {
+  if (!sofort && !(await frage(an ? "🙋 Vorbereitung übernehmen?\n\nDu bekommst bis zur Sitzung die Erinnerungen und Fragen beim Start. Clubsprecher und Clubleitung bekommen Bescheid." : "↩️ Vertretung zurückgeben?\n\nDann bekommt wieder der Clubsprecher die Erinnerungen.", { ja: an ? "🙋 Übernehmen" : "↩️ Zurückgeben", nein: "Abbrechen" }))) return;
+  let r; try { r = await api("buero_vertretung", { treffen_id: id, an }); } catch (e) { return meldeFehler(e); }
+  const ts = (BU.start?.sitzungen || []).find((x) => x.id === id);
+  if (ts) { ts.vertretung = r.vertretung; ts.vorbereiter = r.vertretung ? [ICH.person_id] : BU.start?.vorbereiter || []; }
+  melde(an ? "🙋 Du bereitest diese Sitzung vor – Clubsprecher und Clubleitung wissen Bescheid." : "↩️ Zurückgegeben – der Clubsprecher bekommt wieder die Erinnerungen.");
+  if (aktuelleAnsicht === "buero") buZeigen(); else if (an) buStart();
 }
 // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: „Nein, Mitglieder nicht informieren“ – gilt für diesen Stand der Tagesordnung (Server merkt ihn)
 async function buInformierenNein(id) {
@@ -25559,7 +25576,8 @@ function buAufgabeFuer(t, merker = buAufgabeMerker(), jetzt = Date.now()) {
 // 2.751.0 KC-CLUB-SITZUNG-KONTROLLE (Wunsch Hansi 29.10. „auch Kassenwart und Admin zur Kontrolle“): die Aufgaben fragt die App nur, wer die Sitzung
 // vorbereitet (Amt aus den Sitzungs-Vorgaben; hat niemand das Amt: wer im Büro schreiben darf). Die übrige Clubleitung bekommt beim Start nur dann
 // einen Hinweis, wenn eine Frist überschritten ist – mit „Anschreiben“ oder selbst ins Büro.
-const buIchBereite = (r = BU.start) => { const v = r?.vorbereiter || []; return v.length ? v.includes(ICH?.person_id) : buSchreiben(); };
+// 2.751.0 KC-CLUB-SITZUNG-VERTRETUNG: hat jemand die Vorbereitung dieser Sitzung übernommen, steht nur er in t.vorbereiter
+const buIchBereite = (r = BU.start) => { const v = r?.sitzungen?.[0]?.vorbereiter || r?.vorbereiter || []; return v.length ? v.includes(ICH?.person_id) : buSchreiben(); };
 function buKontrolleFuer(t, merker = buAufgabeMerker(), jetzt = Date.now()) {
   if (!t || new Date(t.beginn) - jetzt > svWerte().vorlauf_tage * BU_TAG) return null;
   const l = buSchritteFuer(t).filter((x) => x.knapp), k = `${t.id}:kontrolle:${l.map((x) => x.id).join(",")}`, r = merker[k];
@@ -25595,17 +25613,19 @@ function buKontrolleZeigen(t, r, besetzt, versuch) {
   const kk = buKontrolleFuer(t); if (!kk) return;
   if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; }
   try { sessionStorage.setItem("kc_bu_aufgabe_gezeigt", "1"); } catch {}
-  const wer = (r?.vorbereiter || []).map((id) => (MITGLIEDER || []).find((m) => m.person_id === id)).filter(Boolean)[0], amt = svWerte().vorbereiter_amt;
+  const wer = (t?.vorbereiter || r?.vorbereiter || []).map((id) => (MITGLIEDER || []).find((m) => m.person_id === id)).filter(Boolean)[0], amt = t?.vertretung ? "Vertretung" : svWerte().vorbereiter_amt;
   const f = blattAuf("buAufgabeBlatt", `<h3 style="margin:0">⚠️ Zur Kontrolle: ${esc(t.titel)} · ${esc(wann(t.beginn))}</h3>
     <p class="hinweis" style="margin:0">Für die Clubleitung – hier ist eine Frist überschritten:</p>
     <ul class="bu-hinweise">${kk.l.map((x) => `<li><b>${esc(x.sym)} ${esc(x.t)}</b> – Frist war ${esc(fTag.format(x.fristAm))}${x.id === "aktentasche" ? ` ${esc(fZeit.format(x.fristAm))} Uhr` : ""}</li>`).join("")}</ul>
     ${buSchritteHtml(t, true)}
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">${wer ? `<button class="knopf haupt" style="text-align:center" data-w="schreiben">💬 ${esc(wer.vorname || wer.name)} (${esc(amt)}) anschreiben</button>` : ""}
+    ${buSchreiben() ? `<button class="knopf" style="text-align:center" data-w="uebernehmen">🙋 Ich übernehme die Vorbereitung (Vertretung)</button>` : ""}
     <button class="knopf${wer ? "" : " haupt"}" style="text-align:center" data-w="buero">🗂️ Ins Büro – selbst erledigen</button>
     <button class="knopf" style="text-align:center" data-w="spaeter">⏰ Später nochmal</button><button class="knopf" style="text-align:center" data-w="nie">🙅 Für diese Frist nicht mehr</button></div>`);
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
     f.remove(); const w = b.dataset.w;
     if (w === "schreiben") return direkt(wer.person_id);
+    if (w === "uebernehmen") return buVertretung(t.id, true, true);
     if (w === "buero") return buStart();
     buAufgabeMerken(kk.k, w === "nie" ? "nie" : Date.now() + BU_AUFGABE_RUHE_MS);
     melde(w === "nie" ? "👍 Gut – für diese Frist kommt kein Hinweis mehr." : "⏰ Gut – ich sage beim nächsten Start in ein paar Stunden wieder Bescheid.");
@@ -25803,7 +25823,7 @@ function buRaumHtml() {
       ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
       ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
-      ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>
+      ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}${naechst ? buVertretungHtml(naechst) : ""}</div>
     <div class="bu-raum">
       <div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>
       <div class="bu-tisch">

@@ -10152,6 +10152,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.751.0 KC-CLUB-SITZUNG-KONTROLLE: wer die Sitzung vorbereitet (Amt aus den Sitzungs-Vorgaben); die übrige Clubleitung sieht die Schritte zur Kontrolle
         const { data: vbr } = await db.from("kc_club_rollen").select("person_id").contains("aemter", [SV.vorbereiter_amt]);
         const vorbereiter = (vbr ?? []).map((x: any) => x.person_id as string).filter((id) => !id.startsWith("KC-P-TEST"));
+        const vids = (prep ?? []).map((x: any) => x.vertretung?.person_id).filter(Boolean), vleute = vids.length ? await personen(vids) : new Map();
         return json({
           sitzungen: sitzungen.map((t: any) => {
             const p = (prep ?? []).find((x: any) => x.treffen_id === t.id), a = (teil ?? []).filter((x: any) => x.treffen_id === t.id);
@@ -10163,11 +10164,37 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
               // ältere Einladungen ohne gemerkte Tagesordnung wie bisher über die Zeit; „Nein, nicht informieren“ gilt für genau diesen Stand)
               geaendert_nach_einladung: vb && !!p.einladung_am && topGeaendert(p),
               unterlagen_am: p?.unterlagen_am ?? null,
+              // 2.751.0 KC-CLUB-SITZUNG-VERTRETUNG: hat jemand aus der Clubleitung die Vorbereitung übernommen, bereitet er diese Sitzung vor
+              vertretung: p?.vertretung?.person_id ? { person_id: p.vertretung.person_id, am: p.vertretung.am ?? null, name: vleute.get(p.vertretung.person_id)?.display_name ?? null } : null,
+              vorbereiter: p?.vertretung?.person_id ? [p.vertretung.person_id] : vorbereiter,
               aktentasche: tasche ? { status: tasche.status, gepackt_am: tasche.gepackt_am ?? null } : null,
               ja: a.filter((x: any) => x.antwort === "ja").length, nein: a.filter((x: any) => x.antwort === "nein").length, ohne: empf.filter((id) => !geantwortet.has(id)).length };
           }),
           eingang, vorgaben: SV, vorbereiter, // 2.751.0 KC-CLUB-SITZUNG-VORGABEN / -KONTROLLE
         });
+      }
+
+      // 2.751.0 KC-CLUB-SITZUNG-VERTRETUNG (Wunsch Hansi 29.10. „bei Bedarf kann Admin oder Kassenwart den Ablauf machen, wenn der Clubsprecher krank ist“):
+      // jemand aus der Clubleitung (mit Büro-Schreibrecht) übernimmt die Vorbereitung DIESER Sitzung – oder gibt sie zurück. Clubsprecher und Leitung bekommen Bescheid.
+      case "buero_vertretung": {
+        nurBueroSchreiben(ich); nurLeitung(ich);
+        const tid = String(p.treffen_id || ""), an = p.an !== false;
+        const { data: t } = await db.from("kc_club_treffen").select("id,titel,beginn,status").eq("id", tid).maybeSingle();
+        if (!t || t.status !== "geplant") throw new Fehler("Sitzung nicht gefunden oder abgesagt.", 404);
+        const { data: alt } = await db.from("kc_club_buero_sitzung").select("vertretung").eq("treffen_id", tid).maybeSingle();
+        if (!an && alt?.vertretung?.person_id && alt.vertretung.person_id !== ich.person_id && !ich.admin && !(ich.aemter || []).includes(SV.vorbereiter_amt))
+          throw new Fehler("Zurückgeben kann nur, wer die Vertretung übernommen hat, der Clubsprecher oder der Admin.", 403);
+        const vertretung = an ? { person_id: ich.person_id, am: jetzt(), von: ich.person_id } : null;
+        const { error } = await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, vertretung }, { onConflict: "treffen_id" });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
+        const { data: vbr } = await db.from("kc_club_rollen").select("person_id").contains("aemter", [SV.vorbereiter_amt]);
+        const an_ = [...new Set([...(vbr ?? []).map((x: any) => String(x.person_id)), ...await leitungIds()])].filter((id) => id !== ich.person_id && !id.startsWith("KC-P-TEST"));
+        const was = an ? `${ich.name} übernimmt die Vorbereitung der Sitzung „${t.titel}“ am ${wann(t.beginn)}` : `${ich.name} gibt die Vorbereitung der Sitzung „${t.titel}“ am ${wann(t.beginn)} zurück`;
+        if (an_.length) nebenbei(senden("club_nachricht", an_, { titel: an ? "🙋 Vertretung Sitzungsvorbereitung" : "↩️ Vertretung beendet", kurz: was + ".",
+          betreff: `Köcheclub Werne – ${an ? "Vertretung" : "Vertretung beendet"}: ${t.titel}`, text: `Hallo,\n\n${was}.${an ? " Die Erinnerungen und Fragen beim Start bekommt bis zur Sitzung die Vertretung." : ""}\n\nViele Grüße\nKöcheclub-App`,
+          url: APP_URL + "#buero" }, `club-buero-vertretung:${tid}:${Date.now()}`).catch(() => null));
+        await protokoll(ich.person_id, an ? "buero_vertretung" : "buero_vertretung_ende", { treffen: tid });
+        return json({ ok: true, vertretung: vertretung ? { ...vertretung, name: ich.name } : null });
       }
 
       // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: Clubleitung entscheidet „Nein, Mitglieder nicht informieren“ – für genau diesen Stand der Tagesordnung
