@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.759.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.760.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1159,7 +1159,7 @@ setInterval(() => { if (DS.modus === "auto") anwendenDesign(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && DS.modus === "auto") anwendenDesign(); });
 
 // ---------- KC-CLUB-PINNWAND: Post-its (max. PW.max je Person vom Server, max. 200 Zeichen) ----------
-let PW = { zettel: [], offen: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false };
+let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false };
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): Farbe 1–4 kommt fest vom Server (gelb, rosé, hellgrün, hellblau)
 // Kopfzeile jedes Zettels: wer und wann (für eigene Zettel der eigene Vorname)
 const pwAngepinnt = (iso) => { const d = new Date(iso); return `angepinnt am ${fKurz.format(d)} ${fZeit.format(d)}`; };
@@ -1172,8 +1172,22 @@ const pwOffen = (z) => z.wichtig && !z.erledigt && (!z.vonMir || z.fuer === "ich
 function pwUebernehmen(r) {
   PW.zettel = r.zettel || []; PW.meine = r.meine || 0; PW.max = r.max || 4; PW.zeichen = r.zeichen || 200; PW.geladen = true; // 2.23.71: Anzahl auf der Kachel
   PW.hilfe = r.hilfe || null; // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als Aushang
-  PW.offen = PW.zettel.filter((z) => !z.vonMir && !z.erledigt).length + pwHilfeNeu().length;
+  if (r.markiert) PW.neu = 0; // 2.760.0 KC-CLUB-PINNWAND-NEU-PULS: Pinnwand wirklich geöffnet → alles gesehen
+  pwZahl();
+}
+// ---------- 2.760.0 KC-CLUB-PINNWAND-NEU-PULS (Wunsch Hansi 29.10.2026 „nur wenn seit letzter Anmeldung ein neues Post-it an der Pinnwand ist,
+// lass den Button auffällig pulsieren und zeige die Anzahl an“ – und „ja“ zu offenen Hilfe-Aufrufen) ----------
+// Zahl auf der Kachel = Zettel anderer, die ich noch nicht angesehen habe (Server: kc_club_pinnwand_gelesen, für alle Geräte gleich) + offene
+// Hilfe-Aufrufe, auf die ich noch nicht geantwortet habe. Vorher zählten alle nicht erledigten Zettel – die Zahl stand fast immer da.
+// Gesehen = Pinnwand geöffnet oder „✓ Gelesen“ im Hinweis-Fenster; das stille Laden beim Start (markieren: false) zählt nicht.
+// Ist etwas neu, pulsiert die Kachel rot (Effekte aus / Ruhezeit: fester roter Rand). Keine zusätzliche Abfrage.
+function pwZahl() {
+  PW.offen = PW.neu + pwHilfeNeu().length;
   if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
+}
+function pwGesehenMelden(ids) { // Hinweis-Fenster: diese Zettel sind gesehen → Zahl sofort runter, Server merkt es
+  PW.neu = Math.max(0, PW.neu - ids.length); pwZahl();
+  api("pinnwand_gesehen", { ids }).catch(() => {});
 }
 // Aufrufe, auf die ich noch nicht geantwortet habe (eigene zählen nicht)
 const pwAufrufAnPinnwand = (a) => !a.kanaele || a.kanaele.includes("pinnwand"); // KC-CLUB-HILFE-KANAELE (2.23.44)
@@ -1206,11 +1220,11 @@ function wasNeuZeigen(pw) {
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
   let gezeigt = false;
-  if (!nurZaehlen) try { const n = (await api("pinnwand_neu")).neu || [];
-    if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
+  try { const rn = await api("pinnwand_neu"), n = rn.neu || []; PW.neu = rn.anzahl ?? n.length; // 2.760.0 KC-CLUB-PINNWAND-NEU-PULS: Zahl immer (auch bei offener Begrüßung)
+    if (nurZaehlen) { /* nur zählen, nichts einblenden */ } else if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
     else if (n.length && ruheInfo()) { /* KC-CLUB-RUHE */ n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
-  try { const r = await api("pinnwand"); pwUebernehmen(r);
+  try { const r = await api("pinnwand", { markieren: false }); pwUebernehmen(r); // 2.760.0: still laden zählt nicht als gesehen
     if (!gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
     // KC-CLUB-HILFE-PINNWAND (1.90.0): neuer Hilfe-Aufruf → beim Start einmal (je Aufruf und Gerät) die Pinnwand mit dem Aushang zeigen
     const hNeu = pwHilfeNeu().filter((a) => !PW_GEMELDET.has("hilfe:" + a.id));
@@ -1232,13 +1246,13 @@ async function pwLive(takt) {
   PW_ZULETZT = Date.now();
   let r; try { r = await api("pinnwand_neu"); } catch { return; }
   const neu = (r.neu || []).filter((z) => !PW_GEMELDET.has(z.id));
+  const alt = PW.neu; PW.neu = r.anzahl ?? (r.neu || []).length; if (PW.neu !== alt) pwZahl(); // 2.760.0 KC-CLUB-PINNWAND-NEU-PULS
   if (!neu.length) return;
   neu.forEach((z) => PW_GEMELDET.add(z.id));
   try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
   pwFenster(neu);
   if (einst("ton", true)) ton();
-  PW.offen = Math.max(PW.offen, (r.neu || []).length);
-  if (aktuelleAnsicht === "pinnwand") pwLaden(); else if (aktuelleAnsicht === "start" && !kaBearb) kachelnZeigen();
+  if (aktuelleAnsicht === "pinnwand") pwLaden(); else pwZahl();
 }
 // KC-CLUB-PINNWAND-DIREKT (0.58.0): der neue Zettel selbst geht in der App auf (Absender, Text, wichtig) – „✓ Gelesen“ meldet
 // dem Absender „gesehen“, „Zur Pinnwand“ öffnet die Wand (auch das zählt als gesehen).
@@ -1256,13 +1270,13 @@ function pwFenster(neu) {
     <button class="knopf haupt" style="text-align:center" data-k="gelesen">✓ Gelesen</button>
     <button class="knopf" style="text-align:center" data-k="wand">📌 Zur Pinnwand</button></div>`;
   const zu = () => f.remove();
-  f.querySelector('[data-k="gelesen"]').onclick = () => { zu(); api("pinnwand_gesehen", { ids: liste.map((z) => z.id) }).catch(() => {}); };
+  f.querySelector('[data-k="gelesen"]').onclick = () => { zu(); pwGesehenMelden(liste.map((z) => z.id)); };
   f.querySelector('[data-k="wand"]').onclick = () => { zu(); zeige("pinnwand"); };
   // KC-CLUB-PINNWAND-ANTWORT (0.60.0): gelesen melden und sofort ein Gegen-Post-it schreiben (Empfänger vorausgewählt, änderbar)
   f.querySelectorAll("[data-antw]").forEach((b) => b.onclick = () => { const z = liste[Number(b.dataset.antw)]; zu();
-    api("pinnwand_gesehen", { ids: liste.map((x) => x.id) }).catch(() => {}); pwAntworten(z.id, z.vonId, z.von); });
+    pwGesehenMelden(liste.map((x) => x.id)); pwAntworten(z.id, z.vonId, z.von); });
   f.querySelectorAll("[data-willk]").forEach((b) => b.onclick = () => { const z = liste[Number(b.dataset.willk)]; zu();
-    api("pinnwand_gesehen", { ids: liste.map((x) => x.id) }).catch(() => {}); pwBegruessen(z.willkommen); });
+    pwGesehenMelden(liste.map((x) => x.id)); pwBegruessen(z.willkommen); });
   f.onclick = (e) => { if (e.target === f) zu(); };
   document.body.appendChild(f);
 }
@@ -2437,6 +2451,7 @@ const HILFE = [
   { id: "gratulieren", thema: "club", sym: "🎂", t: "Geburtstagsgrüße mit einem Tipp", x: "Hat jemand Geburtstag, zeigt es dir die App – antippen und gratulieren. Deinen eigenen Geburtstag (ohne Jahr) sehen die anderen nur, wenn du es unter ⚙️ → „🔒 Privatsphäre“ erlaubst.", seit: "2.23.1" },
   { id: "pinnwand_antwort", thema: "club", sym: "✍️", t: "Auf einen Zettel an der Pinnwand antworten", x: "An fremden Zetteln findest du <b>„✍️ Antworten“</b> – so reagierst du direkt auf genau diesen Zettel. Für einen kurzen Gruß reicht auch ein Emoji.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_wichtig", thema: "club", sym: "❗", t: "Einen eigenen Zettel hervorheben", x: "Ist dir ein Zettel besonders wichtig, kannst du ihn nachträglich mit <b>„❗ wichtig machen“</b> markieren – dann sieht ihn jeder beim Öffnen der App. Genauso leicht nimmst du die Markierung wieder weg.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
+  { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.760.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
@@ -9799,7 +9814,7 @@ const KACHELN = {
     { id: "aktionen", sym: "🧳", t: "Aktionen", u: "Ausflüge & Reisen", v: "aktionen" },
     { id: "fotos", sym: "📷", t: "Fotoalbum", u: "Nach Thema & Datum", aktion: "faFilter={};faPapierkorb=false;zeige('fotos')" },
     { id: "feedback", sym: "💭", t: "Feedback", u: "Deine Meinung zur App", v: "feedback" },
-    { id: "pinnwand", sym: "📌", t: "Pinnwand", u: () => PW.geladen ? `📌 ${PW.zettel.length} Zettel · ${PW.meine} von dir` : "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: () => PW.offen || 0 }, // 2.23.71 KC-CLUB-PINNWAND-ANZAHL
+    { id: "pinnwand", sym: "📌", t: "Pinnwand", u: () => PW.geladen ? `📌 ${PW.zettel.length} Zettel · ${PW.meine} von dir` : "Kurze Zettel · wichtig & erledigt", v: "pinnwand", zahl: () => PW.offen || 0, klasse: () => (PW.offen ? "pw-neu" : "") }, // 2.23.71 KC-CLUB-PINNWAND-ANZAHL
     // KC-CLUB-HELFEN / KC-CLUB-LEIHEN (1.23.0, Wunsch Hansi): eine Kachel für „Wer kann helfen?“ und „Ausleihen“
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)

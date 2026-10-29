@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.755.0";
+const SERVER_VERSION = "2.760.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -15824,7 +15824,10 @@ Köcheclub Werne`,
         const zettel = await pinnwandSichtbar(ich);
         // „gesehen“ beim ersten Anzeigen erfassen (erste Zeit bleibt stehen); eigene Zettel zählen nicht
         const fremd = zettel.filter((z: any) => z.person_id !== ich.person_id);
-        if (fremd.length && !ich.nurLesen) await db.from("kc_club_pinnwand_gelesen").upsert(fremd.map((z: any) => ({ zettel_id: z.id, person_id: ich.person_id })), { onConflict: "zettel_id,person_id", ignoreDuplicates: true });
+        // 2.760.0 KC-CLUB-PINNWAND-NEU-PULS: das stille Laden beim App-Start (markieren: false) zählt nicht als gesehen – sonst wäre jeder Zettel
+        // schon beim Öffnen der App „gelesen“ und die Kachel könnte nie zeigen, was neu ist. Gesehen = Pinnwand geöffnet oder „✓ Gelesen“ im Hinweis.
+        const markiert = p.markieren !== false;
+        if (fremd.length && !ich.nurLesen && markiert) await db.from("kc_club_pinnwand_gelesen").upsert(fremd.map((z: any) => ({ zettel_id: z.id, person_id: ich.person_id })), { onConflict: "zettel_id,person_id", ignoreDuplicates: true });
         const ids = zettel.map((z: any) => z.id);
         // 2.593.0 KC-CLUB-GLEICHZEITIG: „gelesen“ (nach dem Eintragen oben), aktive Mitglieder und Willkommens-Zettel gleichzeitig
         const [{ data: gl }, aktiv, wk] = await Promise.all([
@@ -15842,7 +15845,7 @@ Köcheclub Werne`,
             if (w?.length) await protokoll(null, "pinnwand_teil_ab_fertig", { zettel: z.id, empfaenger: empf.length });
           }
         }
-        return json({ max: PINNWAND_MAX, zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
+        return json({ markiert, max: PINNWAND_MAX, zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
           const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
           const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
@@ -15899,13 +15902,13 @@ Köcheclub Werne`,
       // „gesehen“ setzt weiterhin nur das Öffnen der Pinnwand). Für die Einblendung „Du hast ein neues … Post-it von … bekommen“.
       case "pinnwand_neu": {
         const fremd = (await pinnwandSichtbar(ich)).filter((z: any) => z.person_id !== ich.person_id);
-        if (!fremd.length) return json({ neu: [] });
+        if (!fremd.length) return json({ neu: [], anzahl: 0 });
         const { data: gl } = await db.from("kc_club_pinnwand_gelesen").select("zettel_id").eq("person_id", ich.person_id).in("zettel_id", fremd.map((z: any) => z.id));
         const gesehen = new Set((gl ?? []).map((g: any) => g.zettel_id));
-        const neu = fremd.filter((z: any) => !gesehen.has(z.id)).slice(0, 10);
+        const alleNeu = fremd.filter((z: any) => !gesehen.has(z.id)), neu = alleNeu.slice(0, 10); // 2.760.0: anzahl = alle ungelesenen (Kachel)
         const leute = await personen(neu.map((z: any) => z.person_id));
         const wk = await willkommenFuer(neu.filter((z: any) => z.fuer === "alle").map((z: any) => z.id)).catch(() => new Map());
-        return json({ neu: neu.map((z: any) => { const von = vorname(leute.get(z.person_id)) || "jemandem";
+        return json({ anzahl: alleNeu.length, neu: neu.map((z: any) => { const von = vorname(leute.get(z.person_id)) || "jemandem";
           return { id: z.id, willkommen: wk.get(z.id) ?? null, von, vonId: z.person_id, farbe: z.farbe ?? 1, wichtig: !!z.wichtig, privat: pinnwandPrivat(z), hinweis: pinnwandHinweis(von, pinnwandPrivat(z), !!z.wichtig), text: z.text, zeit: z.erstellt_am, antworten: z.antworten !== false }; }) });
       }
       // KC-CLUB-PINNWAND-DIREKT (0.58.0): der Zettel wurde im Post-it-Fenster angezeigt → als gesehen erfassen (nur sichtbare fremde Zettel)

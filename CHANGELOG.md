@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.760.0 – 2026-10-29 – 📌 Pinnwand-Kachel pulsiert nur bei Neuem – mit Anzahl
+Wunsch Hansi (29.10.): „Nur wenn seit letzter Anmeldung ein neues Post-it an der Pinnwand ist, lass den Button auffällig pulsieren und zeige die Anzahl an“ – und „ja“ zu Hilfe-Aufrufen (KC-CLUB-PINNWAND-NEU-PULS).
+- Die Zahl auf der Kachel 📌 Pinnwand zählt jetzt nur **neue** Zettel (von anderen, noch nicht angesehen – gilt für alle Geräte) und offene Hilfe-Aufrufe, auf die man noch nicht geantwortet hat. Vorher zählten alle nicht erledigten Zettel, die Zahl stand fast immer da.
+- Ist etwas neu, **pulsiert die Kachel rot**; ohne Effekte bzw. in der Ruhezeit fester roter Rand. Öffnen der Pinnwand oder „✓ Gelesen“ im Hinweis beendet es.
+- Geändert: Das stille Laden der Pinnwand beim App-Start zählt nicht mehr als „gesehen“ (vorher war jeder Zettel schon beim Öffnen der App gelesen). „Gesehen“ beim Verfasser erscheint jetzt erst, wenn die Pinnwand wirklich geöffnet oder der Zettel im Hinweis bestätigt wurde.
+- Hilfe-Zentrum: „📌 Die Pinnwand pulsiert bei neuen Zetteln“.
+
 ## 2.759.0 – 2026-10-29 – 🐞 Wege: „Zettel aufgehängt“ stimmte nicht
 Fund Hansi (29.10.): „Karla soll angeblich einen Zettel an die Pinnwand gehängt haben.“ – Hatte sie nicht: Beim Start schaut die App still nach neuen Zetteln (`pinnwand_neu`), und das wurde in 2.755.0 fälschlich als Handlung „📌 Zettel an die Pinnwand gehängt“ gezählt (KC-CLUB-SPUR-VOLL).
 - Jetzt zählt nur das echte Aufhängen (`pinnwand_anheften`). Die 35 falschen Einträge seit 2.755.0 sind aus den Wegen entfernt.
