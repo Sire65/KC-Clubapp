@@ -1,10 +1,12 @@
 # Änderungen
 
-## 2.754.0 – 2026-10-29 – ✅ Wünsche an Claude selbst abhaken (KC-CLUB-WUNSCH-ABHAKEN)
+## 2.754.0 – 2026-10-29 – ✅ Wünsche an Claude selbst abhaken (KC-CLUB-WUNSCH-ABHAKEN) · 🪞 Spiegel überträgt weniger (KICC-F-110)
 Wunsch Hansi (29.10.): „Wenn die Wünsche abgearbeitet wurden, muss das in der Wunschliste bestätigt werden – aber ich selber kann die Wünsche nicht als erledigt abhaken.“
 - **✅ Erledigt** bei jedem offenen Punkt und bei Rückfragen in „📝 Wünsche an Claude“ – mit Nachfrage „Punkt #… als erledigt abhaken?“. Der Punkt wandert zu „✅ Erledigt“ (mit Datum); „↩️ Nochmal öffnen“ holt ihn zurück.
 - Kein Server-Update nötig: Der Club-Server kannte „erledigt“ schon seit 2.440.0 (`wl_status`, nur Admin), es fehlte nur der Knopf. Keine Datenbank-Änderung.
 - Hinweistext oben in der Liste nennt den Knopf. Test `tests/wunsch-abhaken.test.mjs`.
+- 🪞 **Spiegel überträgt weniger** (KICC-F-110, Wunsch Hansi 29.10. „schau, was die Werte hochtreibt“): Supabase-Egress lag hochgerechnet bei 5,6 von 5 GB, drei Viertel über die Datenschnittstelle. Tabellen ohne einfachen Ganzzahl-Schlüssel gingen bei jeder Änderung komplett nach Neon – v. a. `kc_communication_requests` (≈ 5 MB × 4 täglich) und `kc_club_db_last` (≈ 1,8 MB × 4). Jetzt werden auch sie in **Tagesblöcke** geteilt (Zeitspalte im Schlüssel oder `created_at`/`erstellt_am`, nicht geschwärzt); übertragen werden nur abweichende Tage. Danach Prüfung der ganzen Tabelle wie bisher – passt etwas nicht, ganze Tabelle wie früher. Betrifft rund 125 Tabellen; erwartete Ersparnis ≈ 30 MB/Tag (≈ 0,9 GB/Monat). Mit Echtdaten gegengeprüft: abgeschlossene Tage haben in Supabase und Neon dieselbe Prüfsumme.
+  - Datenbank: Migration `20261029_kicc_f110_spiegel_zeitbloecke.sql` (nur Lesefunktionen, nur service_role; Reihenfolge Migration/Spiegel-Arbeiter egal – ein alter Arbeiter überträgt Zeit-Tabellen weiter ganz). Spiegel-Arbeiter `kc-db-mirror-worker`. Tests `tests/spiegel-zeitbloecke.test.mjs`, `tools/db-test/90_spiegel_zeitbloecke_test.py` (zwei Datenbanken: Supabase/Neon).
 
 ## 2.753.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
 Wunsch Hansi (29.10.): „Video auch anpassen, im Video die Vertretung anzeigen – nicht mich, sondern eher den Kassenwart.“
