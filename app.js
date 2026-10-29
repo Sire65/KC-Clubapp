@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.753.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.754.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1997,6 +1997,9 @@ const FILME = [
   // 2.753.0 (Wunsch Hansi 29.10. „Video auch anpassen, die Vertretung zeigen – mit dem Kassenwart“): Ablauf wie im Leben (2.751.0) – wieder eigene Kennung
   { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "14½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.jpg",
     u: "Neue Fassung: Tagesordnung und Einladung (3 Tage vorher), bis zur Sitzung erinnern, Änderungen, Vertretung durch den Kassenwart, einen Tag vorher vorbereiten, zuletzt die Aktentasche mit Mitnehm-Liste – am Abend Clubabend Live mit Freigeben, „Zum Schluss“ und Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+  // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT: für alle Mitglieder über Technik → 🔐 Sicherheit & Datenschutz – kein Hinweis beim Start (fuer: false)
+  { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "2¾ Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=1", bild: "film/sicherheit-vorschau.jpg",
+    u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
@@ -2033,7 +2036,7 @@ function filmZeigen(id) {
   const v = s.querySelector("video"), zu = () => { v.pause(); s.remove(); document.body.style.overflow = ""; };
   s.querySelector("[data-zu]").onclick = zu;
   v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
-  v.onended = () => { zu(); melde("🎬 Film zu Ende – du findest ihn jederzeit im Büro unter 🎬 Anleitung."); };
+  v.onended = () => { zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`); };
   v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
   v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
 }
@@ -2043,6 +2046,17 @@ function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere 
     <div class="ca-wahl">${l.map((f) => `<button type="button" class="knopf" data-id="${esc(f.id)}" style="text-align:left">${f.sym} ${esc(f.t)}<br><small>${esc(f.dauer)}</small></button>`).join("")}</div>`, () => d.remove());
   d.querySelector('[data-a="zu"]').onclick = () => d.remove();
   d.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { d.remove(); filmZeigen(b.dataset.id); }));
+}
+// ---------- KC-CLUB-SICHERHEITSKONZEPT (2.754.0, Wunsch Hansi 29.10.2026 „Sicherheitskonzept in die Club-App unter Technik mit eigener Kachel – und den Videofilm“) ----------
+// Kachel Technik → 🔐 Sicherheit & Datenschutz: ein Fenster mit dem Film (FILME „sicherheitsfilm“) und dem PDF zum Nachlesen (DOKUMENTE „sicherheitskonzept“, ort "sicherheit").
+// Quellen und Bauanleitung: KC-Infrastructure-Control-Center, docs/club-app-sicherheit (PDF) und sicherheitsfilm/ (Film).
+function sdStart() {
+  const f = FILME.find((x) => x.id === "sicherheitsfilm");
+  const d = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🔐 Sicherheit &amp; Datenschutz</h3>
+    <p class="dlg-text">Wie sicher sind deine Daten in der App, in der Datenbank und auf deinem Handy? Hier ist alles einfach erklärt – als Film und zum Nachlesen.</p>
+    <button type="button" class="film-karte" data-a="film"><img src="${esc(f.bild)}" alt=""><span><b>${f.sym} ${esc(f.t)}</b><small>${esc(f.u)}</small><small>⏱️ ${esc(f.dauer)}</small></span></button>
+    <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-a="film">▶ Film ansehen</button><button class="knopf" data-a="pdf">📄 Zum Nachlesen (PDF)</button></div>`, () => d.remove());
+  d.querySelectorAll("[data-a]").forEach((b) => (b.onclick = () => { d.remove(); if (b.dataset.a === "film") filmZeigen(f.id); else if (b.dataset.a === "pdf") dokOeffnen("sicherheitskonzept"); }));
 }
 const buFilmKnopf = () => (filmeImBuero().length ? '<button class="knopf klein" onclick="filmWahl()">🎬 Anleitung</button>' : "");
 // ---------- KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi: ein Mitglied beim nächsten Start auf ungelesene Nachrichten hinweisen) ----------
@@ -2290,6 +2304,7 @@ const HILFE = [
   // 🛠️ Technik & Probleme lösen
   { id: "update", thema: "technik", sym: "🔄", t: "Neue Version holen", x: "Register <b>Technik</b> → „🔄 Update prüfen“. Steht dort „Neu“, einfach antippen – die App lädt die neue Version komplett und startet neu. Meist macht sie das auch von selbst.", zeig: hzTechnik },
   { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b>.", zeig: () => einstiegHin("install") },
+  { id: "sicherheitskonzept", thema: "technik", sym: "🔐", t: "Wie sicher sind meine Daten?", x: "Ganz einfach erklärt – im Register <b>Technik</b> unter <b>„🔐 Sicherheit &amp; Datenschutz“</b>: ein kurzer Film und ein PDF zum Nachlesen – Zugang, Verschlüsselung, wer was sieht, Handy, Sicherungen, Prüfung durch KI und deine Rechte nach der DSGVO.", zeig: () => sdStart(), seit: "2.754.0" },
   { id: "sicherheitscheck", thema: "technik", sym: "🛡️", t: "Läuft alles sicher?", x: "Ein gutes Gefühl mit einem Tipp: Register Technik → „🛡️ Sicherheits-Check“ prüft, ob die App auf deinem Gerät sicher und richtig läuft. Grüne Haken = alles gut; sonst steht dabei, was zu tun ist.", zeig: () => sicherheitStart() },
   { id: "haengt", thema: "technik", sym: "🧯", t: "Die App hängt oder zeigt Altes", x: "Zuerst die App ganz schließen und neu öffnen. Hilft das nicht: Register Technik → „🔄 Update prüfen“. Bleibt das Problem, schreib kurz über <b>💭 Feedback</b>, was passiert ist. Fehler beim Starten meldet die App außerdem von selbst an Hansi – nur Technik, keine Inhalte.", zeig: () => zeige("feedback") },
   { id: "mikrofon", thema: "technik", sym: "🎤", t: "Diktieren oder Sprachnachricht klappt nicht", x: "Fragt das Handy nach dem Mikrofon, tippe <b>„Zulassen“</b>. Wurde es einmal abgelehnt, zeigt die App beim nächsten Versuch eine Anleitung, wie du das Mikrofon in den Handy-Einstellungen wieder erlaubst. Am einfachsten: <b>🧭 Mikrofon-Assistent</b> – er prüft selbst, woran es liegt, und führt dich Schritt für Schritt (WhatsApp-Test, Handy-Einstellung, Browser-Einstellung – für Chrome, Samsung, Firefox, Opera, Edge und Safari).", zeig: () => mikroAssistent() },
@@ -9565,6 +9580,8 @@ const DOKUMENTE = [
   // ort: "technik" = steht nicht in „Meine Dokumente“, sondern als Kachel unter Technik → 💻 Freigegebene Programme (PROGRAMME, dok:);
   // Anzeige, Drucken, Teilen und ‹ Zurück wie bei allen Dokumenten. PDF exakt A4 für den Duplexdruck (Kasse, Karteikarten 4.4).
   { id: "kasse-karteikarten", sym: "🗂️", t: "Bilderrechner-Training Karteikarten", u: "Version 4.6 · 74 Karten · beidseitig drucken", datei: "dokumente/Bilderrechner-Training_Karteikarten_V4.6.pdf", ort: "technik" }, // 2.705.0: V4.6 – Name Bilderrechner-Training (Wunsch Hansi „nicht Kasse“), Fußzeile auf Seite 1; V4.5/V4.4 bleiben als Datei · // 2.703.0: V4.5 – Seite 1 (Anleitung) passt wieder auf eine Seite; V4.4 bleibt als Datei
+  // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT: ort "sicherheit" = nicht in „Meine Dokumente“, sondern über Technik → 🔐 Sicherheit & Datenschutz (‹ Zurück → Startseite)
+  { id: "sicherheitskonzept", sym: "🔐", t: "Sicherheit & Datenschutz", u: "So sicher sind deine Daten · 10 Seiten", datei: "dokumente/Sicherheit_und_Datenschutz_V1.pdf", ort: "sicherheit" },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.3 · 33 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf" }, // 2.233.1: ersetzt V4.2 (Kombi-Bilder halb Getränk/halb Essen, jede Kombi nur einmal, Sammelbestellung neu fotografiert) – V4.2 bleibt als Datei · 2.154.1: ersetzt V4.1 (Reklamation mit Bildern, Parken verbinden, halbe Portion, Gutschein-Teilzahlung)
 ];
 // Gesamtprüfung 3 (2.23.84): lange zusammengesetzte Wörter auf schmalen Kacheln an der richtigen Stelle trennen (weiches Trennzeichen)
@@ -9608,7 +9625,7 @@ function pdfjsHolen() {
 const dokUrl = (d) => d.url ? d.url : d.datei instanceof Blob ? URL.createObjectURL(d.datei) : new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
 const dokAktuell = () => (DOKA.anl && DOKA.anl.id === DOKA.id ? DOKA.anl : DOKUMENTE.find((x) => x.id === DOKA.id) || null); // 2.165.0: auch Chat-Anlagen
 // 2.704.0: ‹ Zurück führt dorthin, wo das Dokument steht (Chat-Anlage → Chat, ort "technik" → Freigegebene Programme, sonst Meine Dokumente)
-const dokZurueckZiel = () => (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : "dokumente");
+const dokZurueckZiel = () => (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : dokAktuell()?.ort === "sicherheit" ? "start" : "dokumente"); // 2.754.0
 async function dokAnzeigen(d, ausHistorie) {
   DOKA.id = d.id; DOKA.bilder = []; DOKA.fehler = ""; DOKA.anl = d.datei instanceof Blob || d.url ? d : null; const lauf = ++DOKA.lauf;
   $("dokaTitel").textContent = d.t; $("dokaSeiten").innerHTML = ""; $("dokaDrucken").disabled = true;
@@ -9801,7 +9818,8 @@ const KACHELN = {
     { id: "update", sym: "🔄", t: "Update prüfen", u: () => NEUE_VERSION ? `Neu: v${NEUE_VERSION} – antippen` : `Installiert: v${APP_VERSION}`, aktion: "updateKachel()", zahl: () => NEUE_VERSION ? "neu" : 0 },
     { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kassen-Schulung · Karteikarten", v: "programme" },
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
-    { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
+    { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },
+    { id: "datenschutz", sym: "🔐", t: "Sicherheit & Datenschutz", u: "So sicher sind deine Daten · Film & PDF", aktion: "sdStart()" }, // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
     { id: "einstwegweiser", sym: "🧭", t: "Einstellungen erklärt", u: "Alle Einstellungen – was sie bewirken", aktion: "ewStart()" }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
     { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
