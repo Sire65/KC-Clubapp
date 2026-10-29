@@ -137,7 +137,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.743.0";
+const SERVER_VERSION = "2.754.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -18659,8 +18659,24 @@ Köcheclub-App`,
         if (jahr < 2024 || jahr > 2100 || bis < von || bis - von >= 120) throw new Fehler("Bitte Jahr und Nummern prüfen (höchstens 120 Ausweise auf einmal).");
         const liste = [];
         for (let n = von; n <= bis; n++) liste.push({ nr: String(n).padStart(3, "0"), code: await haendlerCode(jahr, n) });
+        // 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: jede gedruckte/gelistete Nummer landet in kc_club_haendlerausweise (für die Kasse über den PC-Manager).
+        // ignoreDuplicates: vorhandene Zeilen bleiben unberührt – ein gesperrter Ausweis wird durch erneutes Drucken nie wieder entsperrt.
+        const { error: hf } = await db.from("kc_club_haendlerausweise").upsert(liste.map((x) => ({ jahr, nr: x.nr, code: x.code })), { onConflict: "jahr,nr", ignoreDuplicates: true });
+        if (hf) throw new Fehler("Die Ausweisliste konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+        const { data: hs } = await db.from("kc_club_haendlerausweise").select("nr,gesperrt").eq("jahr", jahr).in("nr", liste.map((x) => x.nr));
+        const gesperrt = new Set((hs ?? []).filter((h: any) => h.gesperrt).map((h: any) => h.nr));
         await protokoll(ich.person_id, "haendlerausweis_gedruckt", { jahr, von, bis });
-        return json({ ok: true, jahr, liste });
+        return json({ ok: true, jahr, liste: liste.map((x) => ({ ...x, gesperrt: gesperrt.has(x.nr) })) });
+      }
+      case "haendlerausweis_sperren": { // 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: verlorener/missbrauchter Ausweis – Kasse lehnt ihn nach dem nächsten Abgleich ab
+        nurLeitung(ich);
+        const jahr = Math.trunc(Number(p.jahr)), nr = String(Math.trunc(Number(p.nr)) || "").padStart(3, "0"), gesperrt = p.gesperrt !== false;
+        if (jahr < 2024 || jahr > 2100 || !/^[0-9]{3}$/.test(nr) || nr === "000") throw new Fehler("Bitte Jahr und Nummer prüfen.");
+        const { data: hz, error: he } = await db.from("kc_club_haendlerausweise").update({ gesperrt, gesperrt_am: gesperrt ? jetzt() : null, geaendert_am: jetzt() }).eq("jahr", jahr).eq("nr", nr).select("nr");
+        if (he) throw new Fehler("Die Sperre konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
+        if (!hz?.length) throw new Fehler(`Ausweis Nr. ${nr} (${jahr}) wurde noch nicht gedruckt.`, 404);
+        await protokoll(ich.person_id, gesperrt ? "haendlerausweis_gesperrt" : "haendlerausweis_entsperrt", { jahr, nr });
+        return json({ ok: true, jahr, nr, gesperrt });
       }
       case "link_erzeugen": {
         nurAdmin(ich);

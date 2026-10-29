@@ -1,12 +1,18 @@
 # Änderungen
 
-## 2.754.0 – 2026-10-29 – 🔐 Sicherheit & Datenschutz: eigene Kachel unter Technik mit Film und PDF
+## 2.755.0 – 2026-10-29 – 🔐 Sicherheit & Datenschutz: eigene Kachel unter Technik mit Film und PDF
 Wunsch Hansi (29.10.): „Sicherheitskonzept in die Club-App unter Technik mit eigener Kachel. Und mache den Videofilm … erkläre, dass der Admin regelmäßig die gesamte App durch KI – Claude Code und ChatGPT – auf Sicherheit, Bedienkonzept, Logik und Sicherheitslücken überprüfen lässt.“
 - 🔐 **Neue Kachel** (KC-CLUB-SICHERHEITSKONZEPT): Technik → „🔐 Sicherheit & Datenschutz“ öffnet ein Fenster mit ▶ Film und 📄 PDF zum Nachlesen. Neuer Hilfe-Eintrag „Wie sicher sind meine Daten?“.
 - 📣 **Hinweis im Info-Laufband** (KC-CLUB-SICHERHEITSKONZEPT-INFO, Wunsch Hansi): „🔐 Deine Daten ??? – Infos gefällig?“ bis 31.12.2026. Antippen wechselt ins Register Technik und hebt die Kachel hervor; danach ist der Hinweis auf dem Gerät weg. In der einfachen Ansicht öffnet sich gleich das Fenster mit Film und PDF.
 - 🎬 **Film** „Wie sicher sind deine Daten?“ (film/sicherheit-datenschutz.mp4, 2¾ Min., Hochformat, Sprecher Thorsten wie in den Erklär-Videos, mit Untertiteln): Zugang, Türsteher, Verschlüsselung, Privatsphäre-Schalter, Chat und geheime Abstimmung, Notfallpass, Handy weitergeben, 5 Orte der Sicherung, täglicher Wiederherstellungs-Test, Notbetrieb, Wächter, regelmäßige Prüfung durch KI, DSGVO-Rechte, Tipps. Kein Hinweis beim Start (FILME `fuer: false`); der Film zeigt nur den Mitgliederbereich.
 - 📄 **PDF** dokumente/Sicherheit_und_Datenschutz_V1.pdf (10 Seiten mit Schaubild der Datenwege, Rund-, Balken-, Säulen- und Liniendiagrammen); steht nicht in „Meine Dokumente“, ‹ Zurück führt zur Startseite.
 - Quellen und Bauanleitung für Film und PDF: KC-Infrastructure-Control-Center (`sicherheitsfilm/`, `docs/club-app-sicherheit/`). Test: tests/film-hinweis.test.mjs erweitert.
+
+## 2.754.0 – 2026-10-29 – 🪪 Händler-Ausweise: Liste für die Kasse · Sperren · 10 % Rabatt
+Absprache Hansi/Codex (29.10.): „keine Händlerpflege, automatische Ausweisliste und zentral 10 % Gesamtrabatt“ (KC-CLUB-HAENDLERAUSWEIS-LISTE).
+- 📋 Jeder gedruckte Ausweis (und jede geöffnete Ausgabeliste) wird automatisch in der neuen Tabelle `kc_club_haendlerausweise` (Jahr, Nr, Prüfcode, gesperrt) eingetragen – ohne Namen. Die Kasse bekommt sie über den PC-Manager (nur lesen); schreiben darf nur der Club-Server. Erneutes Drucken entsperrt nie.
+- 🚫 Büro → Drucker → 🪪 Händler-Ausweis → „Sperren / Entsperren“: verlorener oder missbrauchter Ausweis; die Kasse lehnt ihn nach dem nächsten Abgleich ab. In der Ausgabeliste stehen gesperrte Ausweise rot.
+- 💶 Rabatt steht jetzt schon auf 10 % (änderbar).
 
 ## 2.753.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
 Wunsch Hansi (29.10.): „Video auch anpassen, im Video die Vertretung anzeigen – nicht mich, sondern eher den Kassenwart.“

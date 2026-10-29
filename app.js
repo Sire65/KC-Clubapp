@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.754.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.755.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1997,7 +1997,7 @@ const FILME = [
   // 2.753.0 (Wunsch Hansi 29.10. „Video auch anpassen, die Vertretung zeigen – mit dem Kassenwart“): Ablauf wie im Leben (2.751.0) – wieder eigene Kennung
   { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "14½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.jpg",
     u: "Neue Fassung: Tagesordnung und Einladung (3 Tage vorher), bis zur Sitzung erinnern, Änderungen, Vertretung durch den Kassenwart, einen Tag vorher vorbereiten, zuletzt die Aktentasche mit Mitnehm-Liste – am Abend Clubabend Live mit Freigeben, „Zum Schluss“ und Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
-  // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT: für alle Mitglieder über Technik → 🔐 Sicherheit & Datenschutz – kein Hinweis beim Start (fuer: false)
+  // 2.755.0 KC-CLUB-SICHERHEITSKONZEPT: für alle Mitglieder über Technik → 🔐 Sicherheit & Datenschutz – kein Hinweis beim Start (fuer: false)
   { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "2¾ Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=1", bild: "film/sicherheit-vorschau.jpg",
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
 ];
@@ -2047,7 +2047,7 @@ function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere 
   d.querySelector('[data-a="zu"]').onclick = () => d.remove();
   d.querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { d.remove(); filmZeigen(b.dataset.id); }));
 }
-// ---------- KC-CLUB-SICHERHEITSKONZEPT (2.754.0, Wunsch Hansi 29.10.2026 „Sicherheitskonzept in die Club-App unter Technik mit eigener Kachel – und den Videofilm“) ----------
+// ---------- KC-CLUB-SICHERHEITSKONZEPT (2.755.0, Wunsch Hansi 29.10.2026 „Sicherheitskonzept in die Club-App unter Technik mit eigener Kachel – und den Videofilm“) ----------
 // Kachel Technik → 🔐 Sicherheit & Datenschutz: ein Fenster mit dem Film (FILME „sicherheitsfilm“) und dem PDF zum Nachlesen (DOKUMENTE „sicherheitskonzept“, ort "sicherheit").
 // Quellen und Bauanleitung: KC-Infrastructure-Control-Center, docs/club-app-sicherheit (PDF) und sicherheitsfilm/ (Film).
 function sdStart() {
@@ -2058,7 +2058,7 @@ function sdStart() {
     <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-a="film">▶ Film ansehen</button><button class="knopf" data-a="pdf">📄 Zum Nachlesen (PDF)</button></div>`, () => d.remove());
   d.querySelectorAll("[data-a]").forEach((b) => (b.onclick = () => { d.remove(); if (b.dataset.a === "film") filmZeigen(f.id); else if (b.dataset.a === "pdf") dokOeffnen("sicherheitskonzept"); }));
 }
-// KC-CLUB-SICHERHEITSKONZEPT-INFO (2.754.0, Wunsch Hansi 29.10. „in der Infozeile darauf hinweisen: Deine Daten ???, Infos gefällig? – wenn jemand klickt,
+// KC-CLUB-SICHERHEITSKONZEPT-INFO (2.755.0, Wunsch Hansi 29.10. „in der Infozeile darauf hinweisen: Deine Daten ???, Infos gefällig? – wenn jemand klickt,
 // in die Technik-Gruppe gehen und ihm den Button zeigen, wo er das PDF sehen und den Film abrufen kann“): Meldung im Info-Laufband bis SD_LB_BIS;
 // nach dem ersten Antippen ist sie auf diesem Gerät weg (✕ blendet sie wie jede Meldung aus). Antippen: Register Technik, Kachel 🔐 hervorgehoben.
 // Einfache Ansicht (kein Register) oder Kachel ausgeblendet → gleich das Fenster mit Film und PDF.
@@ -2320,7 +2320,7 @@ const HILFE = [
   // 🛠️ Technik & Probleme lösen
   { id: "update", thema: "technik", sym: "🔄", t: "Neue Version holen", x: "Register <b>Technik</b> → „🔄 Update prüfen“. Steht dort „Neu“, einfach antippen – die App lädt die neue Version komplett und startet neu. Meist macht sie das auch von selbst.", zeig: hzTechnik },
   { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b>.", zeig: () => einstiegHin("install") },
-  { id: "sicherheitskonzept", thema: "technik", sym: "🔐", t: "Wie sicher sind meine Daten?", x: "Ganz einfach erklärt – im Register <b>Technik</b> unter <b>„🔐 Sicherheit &amp; Datenschutz“</b>: ein kurzer Film und ein PDF zum Nachlesen – Zugang, Verschlüsselung, wer was sieht, Handy, Sicherungen, Prüfung durch KI und deine Rechte nach der DSGVO.", zeig: () => sdStart(), seit: "2.754.0" },
+  { id: "sicherheitskonzept", thema: "technik", sym: "🔐", t: "Wie sicher sind meine Daten?", x: "Ganz einfach erklärt – im Register <b>Technik</b> unter <b>„🔐 Sicherheit &amp; Datenschutz“</b>: ein kurzer Film und ein PDF zum Nachlesen – Zugang, Verschlüsselung, wer was sieht, Handy, Sicherungen, Prüfung durch KI und deine Rechte nach der DSGVO.", zeig: () => sdStart(), seit: "2.755.0" },
   { id: "sicherheitscheck", thema: "technik", sym: "🛡️", t: "Läuft alles sicher?", x: "Ein gutes Gefühl mit einem Tipp: Register Technik → „🛡️ Sicherheits-Check“ prüft, ob die App auf deinem Gerät sicher und richtig läuft. Grüne Haken = alles gut; sonst steht dabei, was zu tun ist.", zeig: () => sicherheitStart() },
   { id: "haengt", thema: "technik", sym: "🧯", t: "Die App hängt oder zeigt Altes", x: "Zuerst die App ganz schließen und neu öffnen. Hilft das nicht: Register Technik → „🔄 Update prüfen“. Bleibt das Problem, schreib kurz über <b>💭 Feedback</b>, was passiert ist. Fehler beim Starten meldet die App außerdem von selbst an Hansi – nur Technik, keine Inhalte.", zeig: () => zeige("feedback") },
   { id: "mikrofon", thema: "technik", sym: "🎤", t: "Diktieren oder Sprachnachricht klappt nicht", x: "Fragt das Handy nach dem Mikrofon, tippe <b>„Zulassen“</b>. Wurde es einmal abgelehnt, zeigt die App beim nächsten Versuch eine Anleitung, wie du das Mikrofon in den Handy-Einstellungen wieder erlaubst. Am einfachsten: <b>🧭 Mikrofon-Assistent</b> – er prüft selbst, woran es liegt, und führt dich Schritt für Schritt (WhatsApp-Test, Handy-Einstellung, Browser-Einstellung – für Chrome, Samsung, Firefox, Opera, Edge und Safari).", zeig: () => mikroAssistent() },
@@ -9596,7 +9596,7 @@ const DOKUMENTE = [
   // ort: "technik" = steht nicht in „Meine Dokumente“, sondern als Kachel unter Technik → 💻 Freigegebene Programme (PROGRAMME, dok:);
   // Anzeige, Drucken, Teilen und ‹ Zurück wie bei allen Dokumenten. PDF exakt A4 für den Duplexdruck (Kasse, Karteikarten 4.4).
   { id: "kasse-karteikarten", sym: "🗂️", t: "Bilderrechner-Training Karteikarten", u: "Version 4.6 · 74 Karten · beidseitig drucken", datei: "dokumente/Bilderrechner-Training_Karteikarten_V4.6.pdf", ort: "technik" }, // 2.705.0: V4.6 – Name Bilderrechner-Training (Wunsch Hansi „nicht Kasse“), Fußzeile auf Seite 1; V4.5/V4.4 bleiben als Datei · // 2.703.0: V4.5 – Seite 1 (Anleitung) passt wieder auf eine Seite; V4.4 bleibt als Datei
-  // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT: ort "sicherheit" = nicht in „Meine Dokumente“, sondern über Technik → 🔐 Sicherheit & Datenschutz (‹ Zurück → Startseite)
+  // 2.755.0 KC-CLUB-SICHERHEITSKONZEPT: ort "sicherheit" = nicht in „Meine Dokumente“, sondern über Technik → 🔐 Sicherheit & Datenschutz (‹ Zurück → Startseite)
   { id: "sicherheitskonzept", sym: "🔐", t: "Sicherheit & Datenschutz", u: "So sicher sind deine Daten · 10 Seiten", datei: "dokumente/Sicherheit_und_Datenschutz_V1.pdf", ort: "sicherheit" },
   { id: "bilderrechner", sym: "🧮", t: "Schnellanleitung Bilderrechner", u: "Kurzanleitung V4.3 · 33 Seiten", datei: "dokumente/Kurzanleitung_Bilderrechner_V4.3.pdf" }, // 2.233.1: ersetzt V4.2 (Kombi-Bilder halb Getränk/halb Essen, jede Kombi nur einmal, Sammelbestellung neu fotografiert) – V4.2 bleibt als Datei · 2.154.1: ersetzt V4.1 (Reklamation mit Bildern, Parken verbinden, halbe Portion, Gutschein-Teilzahlung)
 ];
@@ -9641,7 +9641,7 @@ function pdfjsHolen() {
 const dokUrl = (d) => d.url ? d.url : d.datei instanceof Blob ? URL.createObjectURL(d.datei) : new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
 const dokAktuell = () => (DOKA.anl && DOKA.anl.id === DOKA.id ? DOKA.anl : DOKUMENTE.find((x) => x.id === DOKA.id) || null); // 2.165.0: auch Chat-Anlagen
 // 2.704.0: ‹ Zurück führt dorthin, wo das Dokument steht (Chat-Anlage → Chat, ort "technik" → Freigegebene Programme, sonst Meine Dokumente)
-const dokZurueckZiel = () => (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : dokAktuell()?.ort === "sicherheit" ? "start" : "dokumente"); // 2.754.0
+const dokZurueckZiel = () => (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : dokAktuell()?.ort === "sicherheit" ? "start" : "dokumente"); // 2.755.0
 async function dokAnzeigen(d, ausHistorie) {
   DOKA.id = d.id; DOKA.bilder = []; DOKA.fehler = ""; DOKA.anl = d.datei instanceof Blob || d.url ? d : null; const lauf = ++DOKA.lauf;
   $("dokaTitel").textContent = d.t; $("dokaSeiten").innerHTML = ""; $("dokaDrucken").disabled = true;
@@ -9835,7 +9835,7 @@ const KACHELN = {
     { id: "programme", sym: "💻", t: "Freigegebene Programme", u: "Kassen-Schulung · Karteikarten", v: "programme" },
     // KC-CLUB-SICHERHEIT (1.14.0, Wunsch Hansi): Prüfreihe „ist alles sicher und läuft?“ für alle Mitglieder
     { id: "sicherheit", sym: "🛡️", t: "Sicherheits-Check", u: "Läuft alles sicher? Jetzt prüfen", aktion: "sicherheitStart()" },
-    { id: "datenschutz", sym: "🔐", t: "Sicherheit & Datenschutz", u: "So sicher sind deine Daten · Film & PDF", aktion: "sdStart()" }, // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
+    { id: "datenschutz", sym: "🔐", t: "Sicherheit & Datenschutz", u: "So sicher sind deine Daten · Film & PDF", aktion: "sdStart()" }, // 2.755.0 KC-CLUB-SICHERHEITSKONZEPT    // KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen (Zahl = neue Hilfen seit dem letzten Besuch)
     { id: "hilfezentrum", sym: "❓", t: "Hilfe & Tipps", u: () => `${hzAnzahl()} Hilfen nach Themen`, aktion: "hzStart()", zahl: () => hzNeuZahl() },
     { id: "einstwegweiser", sym: "🧭", t: "Einstellungen erklärt", u: "Alle Einstellungen – was sie bewirken", aktion: "ewStart()" }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
     { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
@@ -21334,7 +21334,7 @@ function ilMeldungen() {
   // 2.441.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)
   // 2.498.0 KC-CLUB-FOTOS-NEU-INFO (Wunsch Hansi „x neue Fotos hochgeladen – bei Klick direkt dorthin“): führt zu den neuen Fotos oben im Album
   if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "1 neues Foto hochgeladen" : `${kz.fotos} neue Fotos hochgeladen`, u: "Antippen – direkt zu den neuen Fotos", auf: "fotosNeuZeigen()", knoepfe: [["📸 Ansehen", "fotosNeuZeigen()"]] });
-  if (sdLaufbandOffen()) add({ id: "sicherheitskonzept", stufe: "gold", sym: "🔐", t: "Deine Daten ???", u: "Infos gefällig? Film & PDF zur Sicherheit in der App", auf: "sdLaufbandAuf()", knoepfe: [["🔐 Infos ansehen", "sdLaufbandAuf()"]] }); // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT-INFO
+  if (sdLaufbandOffen()) add({ id: "sicherheitskonzept", stufe: "gold", sym: "🔐", t: "Deine Daten ???", u: "Infos gefällig? Film & PDF zur Sicherheit in der App", auf: "sdLaufbandAuf()", knoepfe: [["🔐 Infos ansehen", "sdLaufbandAuf()"]] }); // 2.755.0 KC-CLUB-SICHERHEITSKONZEPT-INFO
   const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
   if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
   const aus = new Set(ilAusgeblendet()), sichtbar = L.filter((m) => !aus.has(m.id));
@@ -36903,7 +36903,7 @@ async function ausweisZeigen() {
 // Scheckkarte 85 × 54 mm, 10 je A4 mit Schnittmarken an jeder Ecke; Blatt 1 Vorderseiten (fortlaufend nummeriert), Blatt 2 Rückseiten (gespiegelt für
 // beidseitigen Druck, lange Kante). QR-Code mit Nummer + Prüfcode (vom Server, nicht fälschbar). Gezeichnet in Druckauflösung (300 dpi) – Druck,
 // Vorschau und PDF sind dadurch millimetergenau gleich. Dazu eine Ausgabeliste (Nr, Prüfcode, Stand/Firma, Name, ausgegeben). Nur Clubleitung.
-const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "", datum: "" };
+const HA = { jahr: new Date().getFullYear(), von: 1, bis: 10, rabatt: "10", datum: "" }; // 2.754.0: Rabatt zentral 10 % (Absprache mit der Kasse)
 // 2.704.0 KC-CLUB-HAENDLERAUSWEIS-SCHNITT (Wunsch Hansi „Standardmaß behalten, zwischen den Karten nur EIN Schnitt – erst die 4 Ränder weg, dann je ein
 // Schnitt zwischen den Karten; sorgfältige Schneidemarken, die nicht zu stark auffallen“): Scheckkarte 85,6 × 54 mm, Karte an Karte (keine Lücken),
 // eckig; Marken nur im weißen Rand außen (fein, hellgrau), Kontrollmaß 50 mm; unten ein 1,5-mm-Streifen in Weinrot, damit ein knapper Schnitt nicht blitzt.
@@ -36914,18 +36914,32 @@ function haStart() {
     <div class="zwei"><label class="feld">Jahr<input id="haJahr" type="number" min="2024" max="2100" value="${HA.jahr}"></label><label class="feld">Rabatt in % (leer = zum Eintragen)<input id="haRabatt" type="number" min="1" max="100" value="${esc(HA.rabatt)}" placeholder="z. B. 10"></label></div>
     <div class="zwei"><label class="feld">Nummer von<input id="haVon" type="number" min="1" max="999" value="${HA.von}"></label><label class="feld">bis<input id="haBis" type="number" min="1" max="999" value="${HA.bis}"></label></div>
     <label class="feld">Gültig (leer = „Gültig nur zum Weihnachtsmarkt Werne ${HA.jahr}“)<input id="haDatum" type="text" maxlength="60" value="${esc(HA.datum)}" placeholder="z. B. Gültig vom 04.12. bis 23.12.2026"></label>
-    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="probe">🎯 Probeblatt (Duplex prüfen)</button><button class="knopf" data-a="zu">Abbrechen</button></div>
+    <div class="dlg-knoepfe"><button class="knopf haupt" data-a="druck">🖨️ Ausweise drucken</button><button class="knopf" data-a="liste">📋 Ausgabeliste</button><button class="knopf" data-a="probe">🎯 Probeblatt (Duplex prüfen)</button><button class="knopf" data-a="sperren">🚫 Sperren / Entsperren</button><button class="knopf" data-a="zu">Abbrechen</button></div>
     <p class="hinweis" style="margin:6px 0 0">Schneiden: erst die 4 Ränder, dann 1 Schnitt senkrecht in der Mitte und 4 waagerecht – die feinen grauen Marken im Rand zeigen, wo.</p>`, () => {});
   const lesen = () => { HA.jahr = Math.trunc(+$("haJahr").value) || new Date().getFullYear(); HA.von = Math.max(1, Math.trunc(+$("haVon").value) || 1); HA.bis = Math.max(HA.von, Math.trunc(+$("haBis").value) || HA.von);
     HA.rabatt = String($("haRabatt").value || "").trim(); HA.datum = String($("haDatum").value || "").trim(); };
   f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = async () => { const a = b.dataset.a; if (a === "zu") return f.remove(); lesen();
     if (a === "probe") { f.remove(); return druckStarten("haendlerausweis", { jahr: HA.jahr, bilder: [haProbe(false), haProbe(true)], n: 0, probe: true }); } // 2.704.0
+    if (a === "sperren") return haSperren(); // 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE
     if (HA.bis - HA.von >= 120) return melde("Höchstens 120 Ausweise auf einmal.", true);
     b.disabled = true; const alt = b.textContent; b.textContent = "⏳ Einen Moment …";
     try { const r = await api("haendlerausweis_codes", { jahr: HA.jahr, von: HA.von, bis: HA.bis });
       if (a === "liste") { f.remove(); return druckStarten("haendlerausweis_liste", { jahr: r.jahr, liste: r.liste }); }
       await qrLaden(); const bilder = await haBilder(r.jahr, r.liste); f.remove(); druckStarten("haendlerausweis", { jahr: r.jahr, bilder, n: r.liste.length });
     } catch (e) { b.disabled = false; b.textContent = alt; meldeFehler(e); } }));
+}
+// 2.754.0 KC-CLUB-HAENDLERAUSWEIS-LISTE: verlorenen oder missbrauchten Ausweis sperren – die Kasse lehnt ihn nach dem nächsten Abgleich ab
+async function haSperren() {
+  const ein = await eingabe(`Ausweis sperren oder freigeben\nWelche Nummer (Jahr ${HA.jahr})?`, "", { zahl: true }); if (ein == null) return;
+  const nr = Math.trunc(+ein), n3 = String(nr).padStart(3, "0"); if (!(nr >= 1 && nr <= 999)) return melde("Bitte eine Nummer von 1 bis 999 eingeben.", true);
+  // zwei getrennte Fragen: Abbrechen/Escape ändert nie etwas
+  let gesperrt = null;
+  if (await frage(`Ausweis Nr. ${n3} sperren?\nDie Kasse gibt darauf keinen Rabatt mehr (nach dem nächsten Abgleich).`, { ja: "🚫 Sperren", gefahr: true })) gesperrt = true;
+  else if (await frage(`Ausweis Nr. ${n3} wieder freigeben?\nNur wenn er versehentlich gesperrt wurde.`, { ja: "✅ Freigeben" })) gesperrt = false;
+  if (gesperrt == null) return;
+  try { const r = await api("haendlerausweis_sperren", { jahr: HA.jahr, nr, gesperrt });
+    melde(r.gesperrt ? `🚫 Ausweis Nr. ${r.nr} gesperrt – wirkt an der Kasse nach dem nächsten Abgleich.` : `✅ Ausweis Nr. ${r.nr} wieder freigegeben.`);
+  } catch (e) { meldeFehler(e); }
 }
 async function haBild(src) { return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; }); }
 async function haBilder(jahr, liste) { // je 10 Karten: Vorderseiten-Blatt + Rückseiten-Blatt (als Bilder in 300 dpi)
@@ -37022,7 +37036,7 @@ function haHinten(g, x, jahr) {
   g.fillStyle = "#741521"; g.fillRect(0, (H - HA_K.streifen) * M, W * M + 1, HA_K.streifen * M + 2); // 2.704.0: Streifen unten (wie vorne)
 }
 function druckHaendlerListe(p) {
-  const zeilen = (p?.liste || []).map((x) => `<tr><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td></td><td></td><td></td><td></td></tr>`).join("");
+  const zeilen = (p?.liste || []).map((x) => `<tr${x.gesperrt ? ' style="color:#c1121f"' : ""}><td style="font-weight:700">${esc(x.nr)}</td><td style="font-family:monospace;font-size:4mm;letter-spacing:.4mm">${esc(x.code)}</td><td>${x.gesperrt ? "<b>🚫 GESPERRT</b>" : ""}</td><td></td><td></td><td></td></tr>`).join(""); // 2.754.0: gesperrte Ausweise rot
   return { titel: `Händler-Ausweise Weihnachtsmarkt ${p.jahr} – Ausgabeliste`, unter: "Wer hat welchen Ausweis? Am Stand: QR-Code scannen und Prüfcode vergleichen.", fuss: "Ausgabeliste Händler-Ausweise",
     html: `<table class="dtab" style="width:100%;border-collapse:collapse"><thead><tr><th style="width:11mm">Nr.</th><th style="width:20mm">Prüfcode</th><th>Stand / Firma</th><th>Name</th><th style="width:24mm">ausgegeben am</th><th style="width:28mm">Unterschrift</th></tr></thead>
       <tbody>${zeilen}</tbody></table><style>#druck .dtab td,#druck .dtab th{border:.3mm solid #999;padding:2.2mm 2mm;text-align:left;font-size:3.4mm}#druck .dtab tr{height:9mm}</style>` };
