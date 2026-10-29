@@ -4425,6 +4425,23 @@
   .bu-top-knoepfe button { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); font-weight: 800; cursor: pointer; }
   .bu-top-knoepfe button:disabled { opacity: .3; }
   .bu-leiste { position: sticky; bottom: calc(80px + env(safe-area-inset-bottom)); padding: 8px 0; z-index: 5; }
+  /* 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: Schritt für Schritt zur Sitzung; „Fertig – speichern“ am Handy über den runden Hilfe-Knöpfen (die verdeckten ihn) */
+  @media (max-width: 1023px) { .bu-leiste { bottom: calc(136px + env(safe-area-inset-bottom)); } }
+  .bu-schritte { border: 2px solid var(--rot, #741521); }
+  .bu-schritte.klein { border-width: 1px; padding: 8px 12px; }
+  .bu-schritte-kopf { margin-bottom: 6px; } .bu-schritte-kopf small { color: var(--text2, inherit); opacity: .8; }
+  .bu-schritte ol { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+  .bu-schritte.klein ol { margin: 0; }
+  .bu-schritt { display: flex; gap: 8px; align-items: flex-start; padding: 4px 6px; border-radius: 8px; }
+  .bu-schritt small { display: block; opacity: .85; font-size: .9em; }
+  .bu-schritt.jetzt { background: color-mix(in srgb, var(--gelb, #d19a22) 22%, transparent); }
+  .bu-schritt.spaeter { opacity: .65; }
+  .bu-schritt-sym { font-size: 1.15em; line-height: 1.3; }
+  .bu-schritt.knapp { background: color-mix(in srgb, #c62828 20%, transparent); } .bu-knapp { color: var(--textRot, #c62828); font-weight: 700; } /* 2.750.0 KC-CLUB-SITZUNG-FRIST */
+  .bu-vertretung { margin: 0 0 6px; } .bu-vertretung .knopf { margin-left: 4px; } /* 2.751.0 KC-CLUB-SITZUNG-VERTRETUNG */
+  .bu-stand.vorschlag { border-left: 4px solid var(--gelb, #d19a22); } .bu-stand.gespeichert { border-left: 4px solid #2e7d32; }
+  .bu-hinweise { margin: 6px 0 0; padding-left: 20px; }
+  .bu-top li.bu-top-bewegt { background: color-mix(in srgb, var(--gelb, #d19a22) 30%, transparent); transition: background .3s; }
   .ml-tab { width: 100%; border-collapse: collapse; font-size: .9rem; }
   .ml-tab th { text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--rot); white-space: nowrap; }
   .ml-tab td { padding: 6px 8px; border-bottom: 1px solid var(--linie); }
@@ -6216,7 +6233,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.749.0" data-v="2.749.0"></script>
+<script src="app.js?v=2.752.0" data-v="2.752.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

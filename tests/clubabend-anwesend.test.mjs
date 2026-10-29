@@ -25,8 +25,8 @@ assert.match(server, /anwesend = new Set<string>\(await caAnwesendStart\(tid, al
 assert.match(server, /if \(typeof p\.anwesend === "string"\) await db\.from\("kc_club_sitzungsprotokolle"\)\.update\(\{ anwesend: \[\.\.\.anwesend\] \}\)\.eq\("treffen_id", tid\)\.eq\("status", "entwurf"\);/, "nur Entwurf");
 
 // --- 2) Server: „vorbereitet“ nur mit gespeicherter Tagesordnung
-assert.match(server, /select\("treffen_id,tagesordnung,einladung_am,erinnerung_am,geaendert_am"\)/, "Büro-Start liest die Tagesordnung mit");
-assert.match(server, /vorbereitet: !!p && Array\.isArray\(p\.tagesordnung\) && p\.tagesordnung\.length > 0,/, "Zeile nur mit Einladungsdatum ist nicht „vorbereitet“");
+assert.match(server, /db\.from\("kc_club_buero_sitzung"\)\.select\("\*"\)\.in\("treffen_id", ids\)/, "Büro-Start liest die Tagesordnung mit"); // 2.751.0: alle Felder (versandt_top, unterlagen_am …)
+assert.match(server, /const vb = !!p && Array\.isArray\(p\.tagesordnung\) && p\.tagesordnung\.length > 0,/, "Zeile nur mit Einladungsdatum ist nicht „vorbereitet“"); // 2.749.0: jetzt als vb (Schrittfolge)
 assert.match(server, /: b\.vorbereitung\?\.tagesordnung\?\.length \? "Tagesordnung ist vorbereitet" :/, "Aktentasche-Begründung ebenso");
 
 // --- 2) App: „Sitzung vorbereiten“ nach einer Einladung ohne Vorbereitung (mit nachgebautem Server)

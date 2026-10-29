@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.749.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.752.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18,7 +18,7 @@ const TEILE_LISTE = {
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
-// 2.749.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
+// 2.752.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
 // teilDa(name) sagt ohne Laden, ob ein Teil schon da ist (für „aufräumen, falls offen“).
 const TEILE_BRAUCHT = { videos: ["rueckseite"] };
 const TEILE_DA = {};
@@ -1993,8 +1993,9 @@ function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ER
 // Server geräteübergreifend (Einstellung „filme“). Jederzeit wieder: Büro → 🎬 Anleitung. Der Service Worker lässt film/ aus (kein 30-MB-Offline-Speicher).
 const FILME = [
   // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
-  { id: "clubsitzungneu", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "11 Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=2", bild: "film/clubsitzung-vorschau.jpg",
-    u: "Neue Fassung: Büro, Tagesordnung, Einladung als Brief an Alle, Einzelne, Gruppe oder Amt, Drucken, Aktentasche mit Freigeben in den Eingangskorb – und am Abend Clubabend Live mit Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+  // 2.750.0 (Wunsch Hansi 29.10. „Film für Klaus neu anpassen“): Fassung mit Frage beim Start, Schritt für Schritt und Frist 3 Tage vorher – wieder eigene Kennung
+  { id: "clubsitzungfrist", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "12½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=3", bild: "film/clubsitzung-vorschau.jpg",
+    u: "Neue Fassung: Die App fragt beim Start, was dran ist – Tagesordnung festlegen, spätestens 3 Tage vorher einladen, Aktentasche packen, erinnern, Änderungen mitteilen – und am Abend Clubabend Live mit Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
@@ -2418,7 +2419,8 @@ const HILFE = [
   { id: "hilfe_absprache", thema: "club", sym: "🙋", t: "Hilfe gesucht, aber noch ohne festen Tag", x: "Beim Hilfe-Aufruf musst du dich nicht auf ein Datum festlegen – „nach Absprache“ geht auch. Und wenn jede helfende Hand willkommen ist, wähle bei der Anzahl <b>„♾️ Egal wie viele“</b>.", zeig: () => hlStart(), seit: "2.23.1" },
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "aktentasche", thema: "club", sym: "💼", t: "Aktentasche packen (Clubleitung)", nur: () => !!ICH?.vorstand, x: "Für Clubsprecher, Kassenwart und Admin: Im <b>Büro → 💼 Aktentasche</b> den Anlass wählen – die App schlägt vor, was hinein gehört (Einladung, Tagesordnung, Protokollentwurf, Vorschläge mit Zeichnungen, Zusagen, Aufgaben). In jedem Register kannst du 📷 Fotos, 🖼️ Bilder, 📄 PDFs, Dateien oder 🗄️ Archiv-Dokumente dazulegen. Vorn liegt die Packliste mit Notizen. Eine gemeinsame Tasche – jeder von euch kann dazupacken. <b>✔ Tasche gepackt</b> → am Abend liegt sie in der Kachel 🍽️ Clubabend.", seit: "2.695.0" },
-  { id: "anmeldeschluss", thema: "club", sym: "⏰", t: "Anmeldeschluss für Themen: 17 Uhr am Vorabend", x: "Themen und Spenden für eine Sitzung bitte bis <b>17:00 Uhr am Vorabend</b> einreichen – die Frist steht im Info-Feld und beim Vorschlag. Danach fragt die App: <b>„❗ Dringend“</b> – dann entscheidet Clubsprecher, Kassenwart oder Admin (wer zuerst tippt), ob er noch als dringender TOP drankommt – oder <b>„📅 Auf die nächste Sitzung“</b>.", zeig: () => zeige("vorschlaege"), seit: "2.694.0" },
+  { id: "anmeldeschluss", thema: "club", sym: "⏰", t: "Anmeldeschluss für Themen: 4 Tage vor der Sitzung", x: "Themen und Spenden für eine Sitzung bitte bis <b>4 Tage vorher, 17:00 Uhr</b> einreichen (die Clubleitung kann das unter ⚙️ Sitzungs-Vorgaben ändern) – die Frist steht im Info-Feld und beim Vorschlag. So kommen sie noch in die Einladung. Danach fragt die App: <b>„❗ Dringend“</b> – dann entscheidet Clubsprecher, Kassenwart oder Admin (wer zuerst tippt), ob er noch als dringender TOP drankommt – oder <b>„📅 Auf die nächste Sitzung“</b>. Du bekommst Bescheid, wie entschieden wurde.", zeig: () => zeige("vorschlaege"), seit: "2.751.0" }, // 2.694.0 KC-CLUB-ANMELDESCHLUSS, 2.751.0 KC-CLUB-SITZUNG-VORGABEN
+  { id: "sitzung_aufgaben", thema: "club", sym: "🧭", t: "Clubsitzung Schritt für Schritt: Ablauf, Fristen, Erinnerung beim Start (Clubleitung)", x: "Der Ablauf wie im richtigen Leben: <b>1.</b> Die Mitglieder reichen Vorschläge ein (bis 4 Tage vorher, 17 Uhr). <b>2.</b> 📝 Tagesordnung festlegen – Vorschläge aufnehmen, Reihenfolge. <b>3.</b> 📨 Einladung an alle oder ausgewählte – <b>spätestens 3 Tage vorher</b>. <b>4.</b> 🔔 An die Antwort erinnern. <b>5.</b> 🖨️ Sitzung vorbereiten – Anwesende ankreuzen, Anmerkung, Mitschreibbogen drucken. <b>6.</b> 💼 Zuletzt die Aktentasche packen – fertige Unterlagen und die 🧳 Mitnehm-Liste (Muster, Getränkeproben …). <b>7.</b> 🍽️ Clubabend Live – Tasche öffnen, vorlesen oder 📤 freigeben, Anwesende, Tagesordnung, ✅ Zum Schluss (Aufgaben, Fotos) und als Letztes der nächste Termin. Der <b>gelbe Zettel</b> im Büro zeigt immer den nächsten Schritt; beim Öffnen der App fragt sie (ab einer Woche vorher), was dran ist – <b>Ja</b>, <b>Nein</b> oder <b>⏰ Später</b>. Ist eine Frist vorbei, steht der Schritt rot („⚠️ Knapp“), und Kassenwart und Admin bekommen zur Kontrolle einen Hinweis. Ist der Clubsprecher verhindert (z. B. krank), tippt Admin oder Kassenwart bei den Schritten auf <b>„🙋 Vorbereitung übernehmen“</b> – dann bekommt er die Erinnerungen bis zur Sitzung; <b>„↩️ Zurückgeben“</b> geht jederzeit. Ändert sich die Tagesordnung nach der Einladung (z. B. ein dringender Vorschlag), fragt die App: <b>„Mitglieder informieren?“</b> – Ja öffnet die Änderungsmeldung mit „Neu / Entfällt“, Nein sendet nichts. Fristen, Uhrzeit, Ort und Monate ohne Sitzung: Büro → <b>⚙️ Sitzungs-Vorgaben</b>.", nur: () => buSchreiben() || !!ICH?.vorstand, zeig: () => buStart(), seit: "2.751.0" }, // KC-CLUB-SITZUNG-AUFGABE-START (2.750.0), KC-CLUB-SITZUNG-ABLAUF (2.751.0)
   { id: "vorschlag_spaeter", thema: "club", sym: "📅", t: "Vorschlag für eine spätere Sitzung", x: "Steht die übernächste Sitzung noch nicht im Kalender? Beim Vorschlag unter „Für welchen Termin?“ einfach <b>„📅 Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung angelegt ist, ordnet die App den Vorschlag ihr automatisch zu – bis dahin steht „(Datum folgt)“ dabei.", seit: "2.527.0" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
@@ -4635,7 +4637,7 @@ function fensterSchlafen(selbst) { // dieses Fenster legt sich schlafen: alle Ab
   // 2.394.0 KC-CLUB-FENSTER-SCHLAF-RUHIG (Fund Hansi: Alarm-Push „1 schwerwiegendes Problem … setting 'checked'“): App zweimal offen → dieses
   // Fenster wird geleert. Noch laufende Ladevorgänge/Tag-Nacht-Prüfung fanden dann die Elemente nicht mehr. Ab jetzt: hier nichts mehr tun und nichts melden.
   if (window.KCFP) window.KCFP.schlaeft = true;
-  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.749.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
+  try { esStop(); if (teilDa("rueckseite")) bwStopp(); } catch (e) { /* nichts offen */ } // 2.752.0 KC-CLUB-TEILE: Bühne nur, wenn geladen
   const hoechste = setTimeout(() => {}, 0); for (let i = 1; i <= hoechste; i++) { clearTimeout(i); clearInterval(i); } // alle Takte (Chat, Online, Vorführung …) anhalten
   try { FENSTER.kanal?.close(); } catch (e) { /* schon zu */ }
   document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font:18px/1.45 system-ui,sans-serif;background:#f5eee3;color:#2b1d22">
@@ -11464,10 +11466,10 @@ function esHoehe(scrollen) {
   r.style.height = Math.max(360, Math.round(innerHeight - Math.max(6, r.getBoundingClientRect().top) - fh - 10)) + "px";
 }
 addEventListener("resize", () => { if (ES.offen) esHoehe(false); });
-function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.749.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
+function esStop() { if (teilDa("rueckseite")) { esSpiegelAus(); qzStop(); esDiaMusikAus(); } /* 2.752.0 KC-CLUB-TEILE: Inhalte nur, wenn die Rückseite geladen ist */ bwTrainingKnoepfe(false); /* 2.628.0: Hilfe-Knöpfe beim Verlassen der Bühne wieder da */ clearInterval(ES.timer); ES.timer = 0; ES.uhr.letzte = ""; if (teilDa("rueckseite") && (BW.lauf || BW.hoeren || BWM.laeuft)) bwStopp(); } // 2.293.0: auch die Bewegungsbühne (Musik, Ansage)
 function esTab(k) {
   if (!ES_TABS.some(([x]) => x === k)) k = "uhr";
-  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.749.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
+  if (k !== "uhr" && !teilDa("rueckseite")) return teilLaden("rueckseite").then(() => esTab(k), (e) => { meldeFehler(e); esTab("uhr"); }); // 2.752.0 KC-CLUB-TEILE: Reiter-Inhalte nachladen (Uhr ist immer da)
   esSchreib("tab", k); esStop();
   document.querySelectorAll("#heroRueck .hr-tab").forEach((b) => { b.classList.toggle("an", b.dataset.tab === k); b.setAttribute("aria-selected", String(b.dataset.tab === k)); });
   const f = $("hrFlaeche"); if (!f) return;
@@ -21384,6 +21386,7 @@ function hashSprung(h) {
     else if (h === "#geteilt") geteiltEmpfangen();
     else if (h === "#ablagekorb") ablkZeigen(); // 2.511.0 KC-CLUB-ABLAGEKORB: aus der Push an den Admin
     else if (h === "#todo") { termineArt = "todo"; zeige("termine"); }
+    else if (/^#tag=\d{4}-\d{2}-\d{2}$/.test(h)) zumTag(h.slice(5)); // 2.751.0 KC-CLUB-SITZUNG-ABLAUF: Einladung/Änderungsmeldung öffnen direkt den Tag der Sitzung mit der Tagesordnung
     else if (h === "#pinnwand") zeige("pinnwand");
     else if (h === "#clubjahr") cjOeffnen(); // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: aus der Push
     else if (h === "#standort") zeige("standort");
@@ -22855,7 +22858,8 @@ function kalTagZeigen() {
   }).join("");
   // Treffen als volle Karte (mit Zu-/Absage), darunter die Tagesordnung
   const treffen = e.filter((x) => x.art === "treffen" || x.art === "veranst").map((x) => treffenKarte(x.t, new Date(x.t.ende || x.t.beginn) < Date.now() - 3 * 3600000)
-    + (x.t.themen?.length ? `<div class="karte" style="margin-top:6px"><b>📋 Tagesordnung</b><div class="hinweis">${x.t.themen.map((th) => "• " + esc(th)).join("<br>")}</div></div>` : "")).join("");
+    + (x.t.tagesordnung?.length ? `<div class="karte" style="margin-top:6px"><b>📋 Tagesordnung</b>${x.t.tagesordnungFest ? "" : ' <small class="hinweis">(Vorschlag – kann sich noch ändern)</small>'}<ol class="hinweis" style="margin:4px 0 0;padding-left:22px">${x.t.tagesordnung.map((th) => `<li>${esc(th)}</li>`).join("")}</ol></div>` // 2.749.0 KC-CLUB-EINE-TAGESORDNUNG
+      : x.t.themen?.length ? `<div class="karte" style="margin-top:6px"><b>💡 Eingereichte Themen</b><div class="hinweis">${x.t.themen.map((th) => "• " + esc(th)).join("<br>")}</div></div>` : "")).join("");
   $("kalTag").innerHTML = (zeilen ? `<div class="karte">${kopf}${zeilen}</div>` : `<div class="karte" style="padding-bottom:4px">${kopf}</div>`) + treffen;
 }
 
@@ -23119,8 +23123,8 @@ function vsTerminOptionen(termine, gewaehlt, spaeter) {
 }
 // 2.694.0 KC-CLUB-ANMELDESCHLUSS (Wunsch Hansi 27.10.2026): Themen und Spenden für eine Sitzung bis 17:00 Uhr am Vorabend. Danach fragt die App:
 // ❗ dringend (Clubsprecher, Kassenwart oder Admin entscheiden – wer zuerst tippt) oder 📅 auf die nächste Sitzung. Der Server prüft dasselbe.
-const ANMELDESCHLUSS_STUNDE = 17;
-const vsSchluss = (t) => (t?.beginn && (!t.art || t.art === "treffen") ? new Date(taZeitpunkt(tagPlus(isoBerlin(new Date(t.beginn)), -1), `${ANMELDESCHLUSS_STUNDE}:00`)) : null);
+// 2.751.0 KC-CLUB-SITZUNG-VORGABEN: Anmeldeschluss aus den Sitzungs-Vorgaben (Standard 4 Tage vorher, 17 Uhr) – wie der Server
+const vsSchluss = (t) => { const v = svWerte(); return t?.beginn && (!t.art || t.art === "treffen") ? new Date(taZeitpunkt(tagPlus(isoBerlin(new Date(t.beginn)), -v.vorschlag_tage), `${String(v.vorschlag_stunde).padStart(2, "0")}:00`)) : null; };
 const vsSchlussVorbei = (t, jetzt = Date.now()) => { const d = vsSchluss(t); return !!d && jetzt >= d.getTime() && jetzt < Date.parse(t.beginn); };
 function vfSchlussZeigen() {
   const el = $("vfSchluss"); if (!el) return;
@@ -23131,7 +23135,9 @@ function vfSchlussZeigen() {
 async function vsDringend(id, entscheidung) {
   let r; try { r = await api("vorschlag_dringend", { id, entscheidung }); } catch (e) { return meldeFehler(e); }
   const ziel = (st) => (st === "aufgenommen" ? "kommt als dringender TOP dran" : "kommt auf die nächste Sitzung");
-  melde(!r.ok ? `Schon entschieden${r.von ? " von " + r.von : ""}: ${ziel(r.stand)}.` : r.stand === "aufgenommen" ? "❗ Als dringender TOP aufgenommen – alle sind informiert" : `📅 Abgelehnt – kommt auf ${r.naechste || "die nächste Sitzung"}`);
+  melde(!r.ok ? `Schon entschieden${r.von ? " von " + r.von : ""}: ${ziel(r.stand)}.` : r.stand === "aufgenommen" ? "❗ Als dringender TOP aufgenommen – Einreicher und Clubleitung wissen Bescheid" : `📅 Abgelehnt – kommt auf ${r.naechste || "die nächste Sitzung"}`);
+  // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG (Wunsch Hansi 29.10.): Einladung schon raus → Clubleitung entscheidet, ob die übrigen Mitglieder eine Änderungsmeldung bekommen
+  if (r.ok && r.informieren && r.treffen_id && buSchreiben()) setTimeout(() => buInformierenFragen(r.treffen_id), 400);
   if (INIT?.themenNaechste?.dringend) INIT.themenNaechste.dringend = INIT.themenNaechste.dringend.filter((x) => x.id !== id);
   document.getElementById("vorschlagInfo")?.remove(); ilZeigen(); if (aktuelleAnsicht === "vorschlaege") vorschlaegeLaden();
 }
@@ -23931,7 +23937,11 @@ async function buLaden() {
   try { BU.start = await api("buero_start", {}, BU_STILL); } catch (e) { if (BU.start) return; $("buInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; return; }
   buZeigen();
 }
-function buZurueck() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
+function buZurueck() {
+  if (buGeaendert()) return buWeiterFragen("💾 Änderungen speichern?", "Du hast die Tagesordnung geändert, aber noch nicht gespeichert.", [["💾 Speichern", "buSpeichern()", true], ["Ohne Speichern zurück", "buZurueckOhne()"], ["Weiter bearbeiten", ""]]); // 2.749.0
+  buZurueckOhne();
+}
+function buZurueckOhne() { if (BU.sicht !== "start") { BU.sicht = "start"; buLaden(); window.scrollTo(0, 0); } else zeige("start"); }
 function buZeigen() { buZeigenRoh(); klappenMerken($("buInhalt")); }
 // KC-CLUB-NUTZUNG-BEREICHE (1.89.0): Büro-Fächer einmal je Öffnen zählen (nicht bei jedem Neuzeichnen); Fall/Neu zählen als Freud & Leid
 function buNzZaehlen() { const k = { fall: "fl", flneu: "fl" }[BU.sicht] || BU.sicht; if (!k || k === "start" || k === BU.nzSicht) return; BU.nzSicht = k; nzZaehlen("buero_" + k); }
@@ -23962,12 +23972,233 @@ const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" da
 function buZeigenRoh() { buNzZaehlen(); if ($("buKopfGruss") && ICH) $("buKopfGruss").textContent = `${buTageszeit()}, ${ICH.vorname || ICH.name}!`; // 1.83.0: Begrüßung in der Kopfzeile
   $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); lvNachZeigen(); }
 // Nächster sinnvoller Schritt für eine Sitzung
-function buNaechster(t) {
-  if (!t) return null;
-  if (!t.vorbereitet) return "vorbereiten";
-  if (!t.einladung_am) return "einladung";
-  if (t.ohne && !t.erinnerung_am && new Date(t.beginn) - Date.now() < 7 * 86400000) return "erinnerung";
+// 2.749.0 KC-CLUB-SITZUNG-SCHRITTE (Wunsch Hansi 29.10. „Schritt für Schritt, damit der Clubsprecher durchgeführt wird“): eine Reihenfolge für
+// Büro-Liste, Büro-Raum, Sitzung und die Weiter-Fenster. Erinnern erst ab 3 Tage vorher und frühestens einen Tag nach der Einladung;
+// der Clubabend am Abend selbst. Registry – neuer Schritt = ein Eintrag.
+// KC-CLUB-SITZUNG-FRIST (2.750.0, Wunsch Hansi 29.10. „3 Tage vorher“): die Einladung mit Tagesordnung soll spätestens 3 Tage vor der Sitzung
+// bei allen sein, damit sie sich damit beschäftigen können. Ist die Frist vorbei, bleibt der Schritt machbar, aber rot markiert („⚠️ Knapp“).
+// KC-CLUB-SITZUNG-ABLAUF (2.751.0, Wunsch Hansi 29.10. „im richtigen Leben: Tagesordnung erstellen, Vorschläge aufnehmen, 3 Tage vorher einladen,
+// dann die Sitzung vorbereiten – Vorlagen ausfüllen, ankreuzen, drucken – und als letztes die Aktentasche packen“): Reihenfolge wie im Leben;
+// alle Fristen aus den Sitzungs-Vorgaben (Büro → ⚙️ Sitzungs-Vorgaben, Server: kc_club_konfig „sitzung_vorgaben“), nicht im Programm.
+const SV_STANDARD = { vorschlag_tage: 4, vorschlag_stunde: 17, einladung_tage: 3, erinnerung_tage: 2, unterlagen_tage: 1, tasche_stunde: 14, vorlauf_tage: 7,
+  vorbereiter_amt: "Clubsprecher", wochentag: 5, uhrzeit: null, ort: null, ohne_monate: [] };
+const svWerte = () => ({ ...SV_STANDARD, ...(BU.start?.vorgaben || INIT?.sitzungVorgaben || {}) });
+const BU_TAG = 86400000;
+const buVorher = (t, tage) => new Date(new Date(t.beginn).getTime() - tage * BU_TAG);
+const buAmTag = (t, tage, stunde) => new Date(taZeitpunkt(isoBerlin(buVorher(t, tage)), `${String(stunde).padStart(2, "0")}:00`)); // Ortszeit, Sommer-/Winterzeit richtig
+const buFrist = (t) => buVorher(t, svWerte().einladung_tage); // Einladung mit Tagesordnung
+const buBis = (d, uhr = false) => `bis spätestens ${fTag.format(d)}${uhr ? ` ${fZeit.format(d)} Uhr` : ""}`;
+const buFristText = (t) => buBis(buFrist(t));
+const buKnapp = (t) => Date.now() > buFrist(t).getTime();
+const BU_KNAPP_TEXT = "⚠️ Knapp – die Mitglieder haben nur noch wenig Zeit";
+const buUnterlagenFrist = (t) => buVorher(t, svWerte().unterlagen_tage), buTaschenFrist = (t) => buAmTag(t, 0, svWerte().tasche_stunde);
+const BU_SCHRITTE = [
+  // 1. Die Mitglieder reichen Themen ein – Info, keine Aufgabe (Anmeldeschluss wie beim Vorschlag: vsSchluss)
+  { id: "vorschlaege", sym: "💡", t: "Vorschläge der Mitglieder", fn: () => "zeige('vorschlaege')",
+    stand: (t) => { const d = vsSchluss({ ...t, art: "treffen" }); return !d ? ["fertig", "ohne Anmeldeschluss"] : Date.now() >= d.getTime() ? ["fertig", `Anmeldeschluss war ${wann(d.toISOString())} – danach nur noch ❗ dringend`]
+      : ["spaeter", `Die Mitglieder reichen Themen ein – ${buBis(d, true)}`]; } },
+  { id: "vorbereiten", sym: "📝", t: "Tagesordnung festlegen", fn: (t) => `buSitzungOeffnen('${t.id}', 'to')`,
+    stand: (t) => (t.vorbereitet ? ["fertig", "festgelegt und gespeichert"] : ["jetzt", `Vorschläge aufnehmen, Reihenfolge – ${buFristText(t)}`]), frist: (t) => (t.einladung_am ? null : buFrist(t)),
+    frage: () => ({ q: "Die Tagesordnung ist noch nicht festgelegt. Jetzt die Tagesordnung festlegen und die Vorschläge der Mitglieder aufnehmen?", ja: "📝 Ja, jetzt festlegen" }) },
+  { id: "einladung", sym: "📨", t: "Mitglieder einladen", fn: (t) => `buEinladung('${t.id}', false${t.geaendert_nach_einladung ? ", true" : ""})`,
+    stand: (t) => (!t.vorbereitet ? ["spaeter", `nach dem Festlegen der Tagesordnung – ${buFristText(t)}`] : t.geaendert_nach_einladung ? ["jetzt", "Tagesordnung nach der Einladung geändert – Mitglieder informieren?", "📣 Mitglieder informieren?"]
+      : t.einladung_am ? ["fertig", `gesendet ${zeitKurz(t.einladung_am)}`] : ["jetzt", `Brief mit Tagesordnung an alle oder ausgewählte – ${buFristText(t)}`]), frist: (t) => (t.einladung_am ? null : buFrist(t)),
+    // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG (Wunsch Hansi 29.10. „Clubleitung fragen, ob die Mitglieder informiert werden – ja: Sende-Menü, nein: nicht senden“)
+    frage: (t) => (t.geaendert_nach_einladung ? { q: "Die Tagesordnung hat sich nach der Einladung geändert (z. B. ein dringender Vorschlag). Sollen die Mitglieder informiert werden?", ja: "📣 Ja – Änderungsmeldung senden", nein: ["🙅 Nein, nicht informieren", `buInformierenNein('${t.id}')`], art: "aenderung" }
+      : { q: "Die Tagesordnung ist fertig. Sollen alle Mitglieder jetzt die Einladung bekommen?", ja: "✅ Ja, jetzt einladen", nein: ["✏️ Nein, erst die Tagesordnung ändern", `buSitzungOeffnen('${t.id}', 'to')`] }) },
+  { id: "erinnerung", sym: "🔔", t: "An die Antwort erinnern", fn: (t) => `buEinladung('${t.id}', true)`,
+    stand: (t) => { const ab = buVorher(t, svWerte().erinnerung_tage).getTime(), seit = t.einladung_am ? Date.now() - new Date(t.einladung_am) : 0;
+      if (t.erinnerung_am) return ["fertig", `erinnert ${zeitKurz(t.erinnerung_am)}`];
+      if (t.einladung_am && !t.ohne) return ["fertig", "alle haben geantwortet 👍"];
+      if (!t.einladung_am || Date.now() < ab || seit < BU_TAG) return ["spaeter", `ab ${fTag.format(new Date(Math.max(ab, t.einladung_am ? Date.parse(t.einladung_am) + BU_TAG : 0)))} – nur an die ohne Antwort`];
+      return ["jetzt", `${t.ohne} ${t.ohne === 1 ? "hat" : "haben"} noch nicht geantwortet`]; },
+    frage: (t) => ({ q: `${t.ohne} ${t.ohne === 1 ? "Mitglied hat" : "Mitglieder haben"} noch nicht geantwortet. Erinnerung senden?`, ja: "🔔 Ja, jetzt erinnern", nein: ["🙅 Nein, nicht nötig", ""] }) },
+  { id: "unterlagen", sym: "🖨️", t: "Sitzung vorbereiten", fn: (t) => `buSitzungOeffnen('${t.id}', 'vor')`,
+    stand: (t) => { const f = buUnterlagenFrist(t);
+      if (t.unterlagen_am) return ["fertig", `vorbereitet ${zeitKurz(t.unterlagen_am)}`];
+      if (!t.einladung_am) return ["spaeter", "nach der Einladung – Anwesende ankreuzen, Anmerkung, Mitschreibbogen drucken"];
+      return Date.now() < f.getTime() - BU_TAG ? ["spaeter", `ab ${fTag.format(new Date(f.getTime() - BU_TAG))} – Anwesende ankreuzen, Anmerkung, Mitschreibbogen drucken`]
+        : ["jetzt", `Anwesende ankreuzen, Anmerkung, Mitschreibbogen drucken – ${buBis(f)}`]; },
+    frist: (t) => (t.unterlagen_am ? null : buUnterlagenFrist(t)),
+    frage: () => ({ q: "Die Einladung ist raus. Jetzt die Sitzung vorbereiten – Anwesende ankreuzen, Anmerkung zum Protokoll, Mitschreibbogen drucken?", ja: "🖨️ Ja, jetzt vorbereiten" }) },
+  { id: "aktentasche", sym: "💼", t: "Aktentasche packen", nur: () => !!ICH?.vorstand, fn: (t) => `atOeffnen('${t.id}')`,
+    stand: (t) => { const f = buTaschenFrist(t);
+      if (t.aktentasche && t.aktentasche.status === "gepackt") return ["fertig", "gepackt – liegt im Clubabend Live"];
+      if (!t.einladung_am) return ["spaeter", "zuletzt – fertige Unterlagen und die Mitnehm-Liste"];
+      return !t.unterlagen_am && Date.now() < f.getTime() - BU_TAG ? ["spaeter", `nach dem Vorbereiten – ${buBis(f, true)}`]
+        : ["jetzt", `${t.aktentasche?.status === "vorlaeufig" ? "vorläufig gepackt – " : ""}fertige Unterlagen und Mitnehm-Liste – ${buBis(f, true)}`]; },
+    frist: (t) => (t.aktentasche?.status === "gepackt" ? null : buTaschenFrist(t)),
+    frage: () => ({ q: "Die Sitzung ist vorbereitet. Jetzt die Aktentasche packen – fertige Unterlagen und was du sonst noch mitnehmen musst?", ja: "💼 Ja, jetzt packen" }) },
+  { id: "clubabend", sym: "🍽️", t: "Clubabend Live", fn: (t) => `caOeffnen(false, '${t.id}')`,
+    stand: (t) => { const b = new Date(t.beginn).getTime(), j = Date.now(); return j >= b - CA_VORHER_MIN * 60000 && j <= b + CA_DAUER_STD * 3600000 ? ["jetzt", "heute – Aktentasche, Anwesende, Tagesordnung, zum Schluss der nächste Termin"] : ["spaeter", "am Abend selbst"]; },
+    frage: () => ({ q: "Heute ist Clubsitzung. Jetzt den Clubabend öffnen – Aktentasche, Anwesende, Tagesordnung abhaken, zum Schluss der nächste Termin?", ja: "🍽️ Ja, Clubabend öffnen" }) },
+];
+function buSchritteFuer(t) {
+  return t ? BU_SCHRITTE.filter((x) => !x.nur || x.nur()).map((x) => { const [st, u, knopf] = x.stand(t), fr = x.frist?.(t) || null;
+    return { ...x, st, u, knopf: knopf || `${x.sym} ${x.t}`, los: x.fn(t), fristAm: fr, knapp: st === "jetzt" && !!fr && Date.now() > fr.getTime() }; }) : [];
+}
+function buNaechster(t) { return buSchritteFuer(t).find((x) => x.st === "jetzt")?.id ?? null; }
+// Karte „Schritt für Schritt“: erledigt ✅ · jetzt dran 👉 (mit Knopf) · später ⏳
+function buSchritteHtml(t, klein = false) {
+  const l = buSchritteFuer(t); if (!l.length) return "";
+  const dran = l.find((x) => x.st === "jetzt");
+  return `<div class="karte bu-schritte${klein ? " klein" : ""}"><div class="bu-schritte-kopf">🧭 Schritt für Schritt: <b>${esc(t.titel)}</b> <small>${esc(wann(t.beginn))}</small></div>${buVertretungHtml(t)}
+    <ol>${l.map((x) => `<li class="bu-schritt ${x.st}${x.knapp ? " knapp" : ""}"><span class="bu-schritt-sym">${x.st === "fertig" ? "✅" : x.st === "jetzt" ? "👉" : "⏳"}</span><span><b>${esc(x.t)}</b><small>${esc(x.u)}</small>${x.knapp ? `<small class="bu-knapp">${x.id === "aktentasche" || x.id === "unterlagen" ? "⚠️ Knapp – die Sitzung ist bald" : BU_KNAPP_TEXT}</small>` : ""}</span></li>`).join("")}</ol>
+    ${dran && !klein ? `<button class="knopf haupt" style="width:100%;text-align:center" onclick="${dran.los}">${esc(dran.knopf)}</button>` : ""}</div>`;
+}
+// nächster Schritt fürs Büro (gelber Zettel): Nachbereitung der letzten Sitzung nur, solange die nächste nicht dran ist (≤ 14 Tage und ein Schritt offen).
+// 2.751.0 KC-CLUB-SITZUNG-ABLAUF (Wunsch Hansi „auf dem gelben Zettel müssen immer die nächsten Schritte erscheinen“): ist gerade nichts fällig,
+// steht dort der nächste anstehende Schritt mit „ab …“ – nie ein leerer Zettel, solange eine Sitzung ansteht.
+function buDran(t) {
+  const nt = buNachherTipp(), l = buSchritteFuer(t), sch = l.find((x) => x.st === "jetzt"), naechst = l.find((x) => x.st === "spaeter" && x.id !== "vorschlaege");
+  const nah = t && new Date(t.beginn) - Date.now() < 14 * BU_TAG;
+  if (sch && (!nt || nah)) return { text: sch.knopf, fn: sch.los };
+  if (nt) return { text: nt.text, fn: `buNachherWahl(${esc(JSON.stringify(nt.text))})` };
+  return naechst && nah ? { text: `${naechst.sym} ${naechst.t} · ${naechst.u.split(" – ")[0]}`, fn: naechst.los, spaeter: true } : null;
+}
+// 2.751.0 KC-CLUB-SITZUNG-VERTRETUNG (Wunsch Hansi 29.10. „bei Bedarf kann Admin oder Kassenwart den Ablauf machen – wenn der Clubsprecher krank ist,
+// muss es ja einer übernehmen“): je Sitzung „🙋 Vorbereitung übernehmen“ / „↩️ Zurückgeben“ – nur Clubleitung mit Büro-Schreibrecht. Danach bekommt die
+// Vertretung die Fragen beim Start und den gelben Zettel; nach der Sitzung ist es vorbei (gilt nur für diese Sitzung).
+function buVertretungHtml(t) {
+  if (!t || !buSchreiben() || !(ICH?.vorstand || ICH?.admin)) return t?.vertretung ? `<p class="hinweis bu-vertretung">🙋 Vertretung: <b>${esc(t.vertretung.name || "")}</b> bereitet diese Sitzung vor</p>` : "";
+  const v = t.vertretung, ich = v?.person_id === ICH?.person_id, darf = ich || ICH?.admin || (ICH?.aemter || []).includes(svWerte().vorbereiter_amt);
+  if (v) return `<p class="hinweis bu-vertretung">🙋 Vertretung: <b>${ich ? "du" : esc(v.name || "")}</b> ${ich ? "bereitest" : "bereitet"} diese Sitzung vor${darf ? ` <button class="knopf klein" onclick="buVertretung('${t.id}', false)">↩️ Zurückgeben</button>` : ""}</p>`;
+  return (t.vorbereiter || []).includes(ICH?.person_id) ? "" : `<p class="hinweis bu-vertretung">Ist der Clubsprecher verhindert (z. B. krank)? <button class="knopf klein" onclick="buVertretung('${t.id}', true)">🙋 Vorbereitung übernehmen</button></p>`;
+}
+async function buVertretung(id, an, sofort = false) {
+  if (!sofort && !(await frage(an ? "🙋 Vorbereitung übernehmen?\n\nDu bekommst bis zur Sitzung die Erinnerungen und Fragen beim Start. Clubsprecher und Clubleitung bekommen Bescheid." : "↩️ Vertretung zurückgeben?\n\nDann bekommt wieder der Clubsprecher die Erinnerungen.", { ja: an ? "🙋 Übernehmen" : "↩️ Zurückgeben", nein: "Abbrechen" }))) return;
+  let r; try { r = await api("buero_vertretung", { treffen_id: id, an }); } catch (e) { return meldeFehler(e); }
+  const ts = (BU.start?.sitzungen || []).find((x) => x.id === id);
+  if (ts) { ts.vertretung = r.vertretung; ts.vorbereiter = r.vertretung ? [ICH.person_id] : BU.start?.vorbereiter || []; }
+  melde(an ? "🙋 Du bereitest diese Sitzung vor – Clubsprecher und Clubleitung wissen Bescheid." : "↩️ Zurückgegeben – der Clubsprecher bekommt wieder die Erinnerungen.");
+  if (aktuelleAnsicht === "buero") buZeigen(); else if (an) buStart();
+}
+// 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: „Nein, Mitglieder nicht informieren“ – gilt für diesen Stand der Tagesordnung (Server merkt ihn)
+async function buInformierenNein(id) {
+  try { await api("buero_informieren_nein", { treffen_id: id }); } catch (e) { return meldeFehler(e); }
+  const ts = (BU.start?.sitzungen || []).find((x) => x.id === id); if (ts) ts.geaendert_nach_einladung = false;
+  melde("👍 Gut – die Mitglieder werden nicht informiert. Die Änderung steht in der App, die Einreicher wissen Bescheid."); if (aktuelleAnsicht === "buero") buZeigen();
+}
+// 2.751.0 KC-CLUB-SITZUNG-VORGABEN (Wunsch Hansi 29.10. „das lässt sich dann ja einstellen“): Fristen und Vorgaben für den Ablauf – Clubleitung, Auswahl statt Freitext
+const SV_WTAGE = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"], SV_MONATE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+async function svOeffnen() {
+  let r; try { r = await api("sitzung_vorgaben", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const v = { ...SV_STANDARD, ...r.vorgaben }, zahlen = (id, von, bis, w, einh) => `<select id="${id}">${Array.from({ length: bis - von + 1 }, (_, i) => von + i).map((n) => `<option value="${n}"${n === w ? " selected" : ""}>${n} ${einh(n)}</option>`).join("")}</select>`;
+  const tage = (n) => (n === 1 ? "Tag vorher" : n === 0 ? "Tage vorher (am Sitzungstag)" : "Tage vorher"), uhr = () => "Uhr";
+  const aemter = [...new Set([v.vorbereiter_amt, ...(MITGLIEDER || []).flatMap((m) => m.aemter || [])].filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
+  blattAuf("svBlatt", `<h3 style="margin:0">⚙️ Sitzungs-Vorgaben</h3><p class="hinweis" style="margin:2px 0 8px">Gilt für alle ordentlichen Sitzungen. Daran richten sich der gelbe Zettel, die Fragen beim Start und der Vorschlag für den nächsten Termin.</p>
+    <div class="karte"><b>⏰ Fristen vor der Sitzung</b>
+      <label class="feld">💡 Vorschläge der Mitglieder bis<span class="zwei">${zahlen("svVt", 1, 14, v.vorschlag_tage, tage)}${zahlen("svVs", 6, 22, v.vorschlag_stunde, uhr)}</span></label>
+      <label class="feld">📨 Einladung spätestens${zahlen("svEt", 1, 14, v.einladung_tage, tage)}</label>
+      <label class="feld">🔔 An die Antwort erinnern ab${zahlen("svRt", 1, 7, v.erinnerung_tage, tage)}</label>
+      <label class="feld">🖨️ Sitzung vorbereiten bis${zahlen("svUt", 0, 7, v.unterlagen_tage, tage)}</label>
+      <label class="feld">💼 Aktentasche gepackt am Sitzungstag bis${zahlen("svTs", 6, 22, v.tasche_stunde, uhr)}</label>
+      <label class="feld">🧭 Beim Start fragen ab${zahlen("svLt", 3, 21, v.vorlauf_tage, tage)}</label>
+      <label class="feld">👤 Wer bereitet die Sitzung vor (Amt)<select id="svAmt">${aemter.map((a) => `<option${a === v.vorbereiter_amt ? " selected" : ""}>${esc(a)}</option>`).join("")}</select></label>
+      <p class="hinweis" style="margin:4px 0 0">Die übrige Clubleitung bekommt nur bei überschrittener Frist einen Hinweis.</p></div>
+    <div class="karte"><b>🗓️ Vorschlag für den nächsten Termin</b>
+      <label class="feld">Letzter … im Folgemonat<select id="svWt">${SV_WTAGE.map((w, i) => `<option value="${i}"${i === v.wochentag ? " selected" : ""}>${w}</option>`).join("")}</select></label>
+      <div class="zwei"><label class="feld">Uhrzeit<input id="svUhr" type="time" value="${esc(v.uhrzeit || "")}"></label><label class="feld">Ort<input id="svOrt" maxlength="120" value="${esc(v.ort || "")}" placeholder="wie beim letzten Treffen"></label></div>
+      <p style="margin:6px 0 2px">Monate ohne ordentliche Sitzung (werden übersprungen):</p>
+      <div class="hl-chips" id="svOhne">${SV_MONATE.map((m, i) => `<button type="button" class="chip${v.ohne_monate.includes(i + 1) ? " an" : ""}" data-m="${i + 1}" onclick="this.classList.toggle('an')">${m}</button>`).join("")}</div>
+      <p class="hinweis" style="margin:4px 0 0">Eine Zusatzsitzung legst du wie gewohnt unter 📅 Termine an.</p></div>
+    <div class="knoepfe"><button class="knopf haupt" onclick="svSpeichern(this)">💾 Speichern</button><button class="knopf" onclick="$('svBlatt').remove()">Abbrechen</button></div>`);
+}
+async function svSpeichern(knopf) {
+  const n = (id) => Number($(id).value), vorgaben = { vorschlag_tage: n("svVt"), vorschlag_stunde: n("svVs"), einladung_tage: n("svEt"), erinnerung_tage: n("svRt"), unterlagen_tage: n("svUt"),
+    tasche_stunde: n("svTs"), vorlauf_tage: n("svLt"), vorbereiter_amt: $("svAmt").value, wochentag: n("svWt"), uhrzeit: $("svUhr").value || null, ort: $("svOrt").value.trim() || null,
+    ohne_monate: [...document.querySelectorAll("#svOhne .chip.an")].map((b) => Number(b.dataset.m)) };
+  if (vorgaben.vorschlag_tage <= vorgaben.einladung_tage && !(await frage("Der Vorschlagsschluss liegt nicht vor der Einladung – dann fehlen späte Vorschläge in der Einladung. Trotzdem speichern?"))) return;
+  await einmal(knopf, async () => {
+    try { const r = await api("sitzung_vorgaben_speichern", { vorgaben }); if (INIT) INIT.sitzungVorgaben = r.vorgaben; if (BU.start) BU.start.vorgaben = r.vorgaben;
+      $("svBlatt")?.remove(); melde("💾 Sitzungs-Vorgaben gespeichert"); if (aktuelleAnsicht === "buero") buZeigen(); } catch (e) { meldeFehler(e); }
+  });
+}
+function buInformierenFragen(id) {
+  buWeiterFragen("📣 Mitglieder informieren?", "Die Tagesordnung hat sich nach der Einladung geändert. Sollen die Mitglieder eine Änderungsmeldung bekommen (mit „Neu / Entfällt“)? Ohne Meldung steht die Änderung trotzdem in der App.", [
+    ["📣 Ja – Änderungsmeldung senden (Vorschau)", `buEinladung('${id}', false, true)`, true], ["🙅 Nein, nicht informieren", `buInformierenNein('${id}')`], ["⏰ Später entscheiden", ""]]);
+}
+// KC-CLUB-SITZUNG-AUFGABE-START (2.750.0, Wunsch Hansi 29.10. „beim Programmstart erinnern, welche Aufgabe zu erledigen ist – mit Abhaken,
+// Ja, Nein oder später nochmal erinnern“): wer die Sitzung im Büro vorbereiten darf, bekommt beim Start (ab 7 Tage vorher, nach den anderen
+// Start-Fenstern) genau eine Frage: die nächste offene Aufgabe aus BU_SCHRITTE, darüber die Schritte mit ✅ abgehakt.
+// „Später“ = 3 Stunden Ruhe für diese Aufgabe, „Nein“ bei der Erinnerung = für diese Sitzung nicht mehr fragen (je Gerät).
+// Liest nur (buero_start), sendet nichts – gesendet wird erst im gewohnten Fenster nach „Ja“.
+const BU_AUFGABE_MERK = "kc_club_bu_aufgabe", BU_AUFGABE_RUHE_MS = 3 * 3600000;
+const buAufgabeMerker = () => { try { return JSON.parse(localStorage.getItem(BU_AUFGABE_MERK) || "{}") || {}; } catch { return {}; } };
+function buAufgabeMerken(schluessel, bis) {
+  const m = buAufgabeMerker(), jetzt = Date.now();
+  for (const k of Object.keys(m)) if (m[k] !== "nie" && m[k] < jetzt) delete m[k]; // abgelaufene „Später“ wegräumen
+  m[schluessel] = bis; if (Object.keys(m).length > 40) delete m[Object.keys(m)[0]];
+  try { localStorage.setItem(BU_AUFGABE_MERK, JSON.stringify(m)); } catch {}
+}
+// nächste Aufgabe zum Fragen: Schritt ist dran, hat eine Frage und ruht nicht (Später/Nein)
+function buAufgabeFuer(t, merker = buAufgabeMerker(), jetzt = Date.now()) {
+  if (!t || new Date(t.beginn) - jetzt > svWerte().vorlauf_tage * BU_TAG) return null;
+  for (const x of buSchritteFuer(t)) {
+    if (x.st !== "jetzt" || !x.frage) continue;
+    const f = x.frage(t), k = `${t.id}:${x.id}${f.art ? ":" + f.art : ""}`, r = merker[k];
+    if (r === "nie" || (r && r > jetzt)) continue;
+    return { ...x, f, k };
+  }
   return null;
+}
+// 2.751.0 KC-CLUB-SITZUNG-KONTROLLE (Wunsch Hansi 29.10. „auch Kassenwart und Admin zur Kontrolle“): die Aufgaben fragt die App nur, wer die Sitzung
+// vorbereitet (Amt aus den Sitzungs-Vorgaben; hat niemand das Amt: wer im Büro schreiben darf). Die übrige Clubleitung bekommt beim Start nur dann
+// einen Hinweis, wenn eine Frist überschritten ist – mit „Anschreiben“ oder selbst ins Büro.
+// 2.751.0 KC-CLUB-SITZUNG-VERTRETUNG: hat jemand die Vorbereitung dieser Sitzung übernommen, steht nur er in t.vorbereiter
+const buIchBereite = (r = BU.start) => { const v = r?.sitzungen?.[0]?.vorbereiter || r?.vorbereiter || []; return v.length ? v.includes(ICH?.person_id) : buSchreiben(); };
+function buKontrolleFuer(t, merker = buAufgabeMerker(), jetzt = Date.now()) {
+  if (!t || new Date(t.beginn) - jetzt > svWerte().vorlauf_tage * BU_TAG) return null;
+  const l = buSchritteFuer(t).filter((x) => x.knapp), k = `${t.id}:kontrolle:${l.map((x) => x.id).join(",")}`, r = merker[k];
+  return l.length && r !== "nie" && !(r && r > jetzt) ? { l, k } : null;
+}
+async function buAufgabePruefen(versuch = 0) {
+  if (!buSchreiben() && !(buDarf() && (ICH?.vorstand || ICH?.admin))) return;
+  try { if (sessionStorage.getItem("kc_bu_aufgabe_gezeigt")) return; } catch {}
+  const besetzt = () => document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht") || aktuelleAnsicht !== "start";
+  if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; } // erst wenn Tages-Übersicht & Co. zu sind
+  let r; try { r = await api("buero_start", {}, { still: true }); } catch { return; } // ohne Verbindung keine Frage (nie raten)
+  BU.start = r; const t = r?.sitzungen?.[0];
+  if (!buIchBereite(r)) return (ICH?.vorstand || ICH?.admin) && buKontrolleZeigen(t, r, besetzt, versuch);
+  const a = buSchreiben() ? buAufgabeFuer(t) : null; if (!a) return;
+  if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; }
+  try { sessionStorage.setItem("kc_bu_aufgabe_gezeigt", "1"); } catch {}
+  const f = blattAuf("buAufgabeBlatt", `<h3 style="margin:0">🗓️ ${esc(t.titel)} · ${esc(wann(t.beginn))}</h3>
+    <p class="hinweis" style="margin:0">Deine Aufgaben für diese Sitzung – erledigte sind abgehakt.</p>
+    ${buSchritteHtml(t, true)}
+    <p style="margin:6px 0"><b>${esc(a.f.q)}</b></p>${a.knapp ? `<p class="bu-knapp" style="margin:0 0 6px">${BU_KNAPP_TEXT}</p>` : ""}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" data-w="ja">${esc(a.f.ja)}</button>
+    ${a.f.nein ? `<button class="knopf" style="text-align:center" data-w="nein">${esc(a.f.nein[0])}</button>` : ""}
+    <button class="knopf" style="text-align:center" data-w="spaeter">⏰ Später nochmal erinnern${a.frist?.(t) ? " – Änderungen bleiben möglich" : ""}</button></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
+    f.remove(); const w = b.dataset.w;
+    if (w === "spaeter") { buAufgabeMerken(a.k, Date.now() + BU_AUFGABE_RUHE_MS); return melde("⏰ Gut – ich erinnere dich beim nächsten Start in ein paar Stunden wieder."); }
+    const fn = w === "ja" ? a.los : a.f.nein[1];
+    if (!fn) { buAufgabeMerken(a.k, "nie"); return melde("👍 Gut – für diese Sitzung frage ich nicht mehr danach."); }
+    buStart(); new Function(fn)();
+  }));
+}
+function buKontrolleZeigen(t, r, besetzt, versuch) {
+  const kk = buKontrolleFuer(t); if (!kk) return;
+  if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; }
+  try { sessionStorage.setItem("kc_bu_aufgabe_gezeigt", "1"); } catch {}
+  const wer = (t?.vorbereiter || r?.vorbereiter || []).map((id) => (MITGLIEDER || []).find((m) => m.person_id === id)).filter(Boolean)[0], amt = t?.vertretung ? "Vertretung" : svWerte().vorbereiter_amt;
+  const f = blattAuf("buAufgabeBlatt", `<h3 style="margin:0">⚠️ Zur Kontrolle: ${esc(t.titel)} · ${esc(wann(t.beginn))}</h3>
+    <p class="hinweis" style="margin:0">Für die Clubleitung – hier ist eine Frist überschritten:</p>
+    <ul class="bu-hinweise">${kk.l.map((x) => `<li><b>${esc(x.sym)} ${esc(x.t)}</b> – Frist war ${esc(fTag.format(x.fristAm))}${x.id === "aktentasche" ? ` ${esc(fZeit.format(x.fristAm))} Uhr` : ""}</li>`).join("")}</ul>
+    ${buSchritteHtml(t, true)}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${wer ? `<button class="knopf haupt" style="text-align:center" data-w="schreiben">💬 ${esc(wer.vorname || wer.name)} (${esc(amt)}) anschreiben</button>` : ""}
+    ${buSchreiben() ? `<button class="knopf" style="text-align:center" data-w="uebernehmen">🙋 Ich übernehme die Vorbereitung (Vertretung)</button>` : ""}
+    <button class="knopf${wer ? "" : " haupt"}" style="text-align:center" data-w="buero">🗂️ Ins Büro – selbst erledigen</button>
+    <button class="knopf" style="text-align:center" data-w="spaeter">⏰ Später nochmal</button><button class="knopf" style="text-align:center" data-w="nie">🙅 Für diese Frist nicht mehr</button></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
+    f.remove(); const w = b.dataset.w;
+    if (w === "schreiben") return direkt(wer.person_id);
+    if (w === "uebernehmen") return buVertretung(t.id, true, true);
+    if (w === "buero") return buStart();
+    buAufgabeMerken(kk.k, w === "nie" ? "nie" : Date.now() + BU_AUFGABE_RUHE_MS);
+    melde(w === "nie" ? "👍 Gut – für diese Frist kommt kein Hinweis mehr." : "⏰ Gut – ich sage beim nächsten Start in ein paar Stunden wieder Bescheid.");
+  }));
 }
 // KC-CLUB-BUERO-RAUM (1.65.0, Wunsch Hansi): Büro als Raum – oben ein Regal mit schmalen Ordnern (nachschlagen), unten der
 // Schreibtisch mit Gegenständen (erledigen). Nur eine neue Oberfläche über den vorhandenen Büro-Funktionen; „☰ Liste“ bleibt.
@@ -23980,8 +24211,7 @@ function buStartListeHtml() {
   const S = buSchreiben(), L = !!ICH?.vorstand; // 1.37.0: S = Büro schreiben, L = Clubleitung (Kontakte, Freud & Leid, Eingang)
   const t = r.sitzungen[0], n = S ? buNaechster(t) : null, e = r.eingang;
   const k = (id, sym, titel, unter, fn, extra = "") => `<button class="mini-kachel${n === id ? " bu-dran" : ""}" onclick="${fn}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(titel)}</span><span class="mk-unter">${unter}</span>${extra}</button>`;
-  const nt = S ? buNachherTipp() : null;
-  const dran = nt ? nt.text : { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung mit Tagesordnung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder an die Antwort erinnern` }[n];
+  const nt = S ? buNachherTipp() : null, dr = S ? buDran(t) : null, dran = dr?.text; // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE
   const summe = Object.values(e).reduce((a, b) => a + b, 0);
   const eingang = [["📦", "Ausleih-Anfragen", e.ausleihen, "buEingang()"], ["🗳️", "Offene Vorschläge", e.vorschlaege, "buEingang()"], ["🙋", "Hilfe-Aufrufe", e.hilfe, "buEingang()"],
     ["🗄️", "Archiv: zu prüfen", e.archiv, "arStart()"], ["✔️", "Offene Aufgaben", e.aufgaben, "zeige('protokolle')"], ["📄", "Protokoll-Entwürfe", e.entwuerfe, "zeige('protokolle')"],
@@ -23990,13 +24220,16 @@ function buStartListeHtml() {
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
-    ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${dran}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
+    ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${esc(dran)}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
-      ${S ? k("vorbereiten", "📝", "Sitzung vorbereiten", t ? (t.vorbereitet ? "✅ vorbereitet – ändern" : "Anwesenheit, Tagesordnung, Vorlage") : "keine Sitzung geplant", "buSitzungWahl()") : k("ansehen", "👁️", "Sitzung ansehen", t ? "Anwesenheit, Tagesordnung" : "keine Sitzung geplant", "buSitzungWahl()")}
-      ${k("drucken", "🖨️", "Vorlage drucken", t?.vorbereitet ? "Protokoll-Vorlage mit Schreiblinien" : "erst vorbereiten", "buDruckWahl()")}
-      ${S ? k("einladung", "📨", "Einladung senden", t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "mit Tagesordnung an alle", "buEinladungWahl(false)") : ""}
+      ${S && t ? `<div style="grid-column:1/-1">${buSchritteHtml(t)}</div>` : ""}
+      ${S ? k("vorbereiten", "📝", "Tagesordnung festlegen", t ? (t.vorbereitet ? "✅ festgelegt – ändern" : "Vorschläge aufnehmen, Reihenfolge") : "keine Sitzung geplant", "buSitzungWahl()") : k("ansehen", "👁️", "Sitzung ansehen", t ? "Anwesenheit, Tagesordnung" : "keine Sitzung geplant", "buSitzungWahl()")}
+      ${S ? k("einladung", "📨", "Mitglieder einladen", t?.geaendert_nach_einladung ? "⚠️ geändert – Mitglieder informieren?" : t?.einladung_am ? `✅ gesendet ${esc(zeitKurz(t.einladung_am))}` : "Brief mit Tagesordnung an alle", t?.geaendert_nach_einladung ? `buInformierenFragen('${t.id}')` : "buEinladungWahl(false)") : ""}
       ${S ? k("erinnerung", "🔔", "Erinnern", t ? `${t.ohne} ohne Antwort${t.erinnerung_am ? ` · zuletzt ${esc(zeitKurz(t.erinnerung_am))}` : ""}` : "–", "buEinladungWahl(true)") : ""}
+      ${S ? k("unterlagen", "🖨️", "Sitzung vorbereiten", t?.unterlagen_am ? `✅ vorbereitet ${esc(zeitKurz(t.unterlagen_am))}` : "Anwesende, Anmerkung, Mitschreibbogen", "buVorbereitenWahl()") : ""}
+      ${k("drucken", "🖨️", "Mitschreibbogen drucken", t?.vorbereitet ? "Tagesordnung mit Schreiblinien" : "erst Tagesordnung festlegen", "buDruckWahl()")}
+      ${L ? k("vorgaben", "⚙️", "Sitzungs-Vorgaben", "Fristen, Uhrzeit, Ort, Monate ohne Sitzung", "svOeffnen()") : ""}
       ${k("protokolle", "📄", "Protokolle", "schreiben · veröffentlichen", "zeige('protokolle')")}
       ${S ? k("termine", "📅", "Termine bearbeiten", "anlegen · ändern · absagen", "buTermine()") : ""}
     </div>`)}
@@ -24146,8 +24379,7 @@ function buRaumHtml() {
   if (!Array.isArray(r.sitzungen) || !r.eingang) return '<div class="karte hinweis">⚠️ Das Büro ist gerade nicht abrufbar – bitte gleich noch einmal öffnen.</div>'; // 2.24.15: unvollständige Antwort nie als leer/OK zeigen
   const S = buSchreiben(), L = !!ICH?.vorstand, t = r.sitzungen[0], n = S ? buNaechster(t) : null, e = r.eingang;
   const summe = Object.values(e).reduce((a, b) => a + b, 0), nt = S ? buNachherTipp() : null;
-  const dran = nt ? nt.text : { vorbereiten: "📝 Sitzung vorbereiten", einladung: "📨 Einladung senden", erinnerung: `🔔 ${t?.ohne} Mitglieder erinnern` }[n];
-  const dranFn = nt ? `buNachherWahl(${esc(JSON.stringify(nt.text))})` : { vorbereiten: "buSitzungWahl()", einladung: "buEinladungWahl(false)", erinnerung: "buEinladungWahl(true)" }[n];
+  const dr = S ? buDran(t) : null, dran = dr?.text, dranFn = dr?.fn; // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE
   const fest = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7) : [], festHeute = fest.filter((f) => f.tage === 0);
   const flOffen = FL.d ? FL.d.faelle.filter((f) => f.status === "offen").length : 0;
   const zahl = { fl: flOffen + (L ? fest.length : 0), feste: fest.length, nachher: nt ? 1 : 0, liste: AE.offen }; // 2.22.10: Änderungsmeldungen im Ordner „Mitglieder“
@@ -24160,12 +24392,12 @@ function buRaumHtml() {
       ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
       ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
-      ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}</div>
+      ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}${naechst ? buVertretungHtml(naechst) : ""}</div>
     <div class="bu-raum">
       <div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>
       <div class="bu-tisch">
         <div class="bu-zettelreihe">
-          ${dran ? `<button class="bu-zettel" onclick="${dranFn}"><b>Nächster Schritt</b>${esc(dran.replace(/^\S+\s/, ""))}</button>` : `<div class="bu-zettel ruhig"><b>Nächster Schritt</b>${naechst ? "Sitzung ist vorbereitet 👍" : "Keine Sitzung geplant"}</div>`}
+          ${dran ? `<button class="bu-zettel" onclick="${dranFn}"><b>Nächster Schritt</b>${esc(dran.replace(/^\S+\s/, ""))}</button>` : `<div class="bu-zettel ruhig"><b>Nächster Schritt</b>${!naechst ? "Keine Sitzung geplant" : !t ? "Sitzung ist vorbereitet 👍" : !t.vorbereitet ? "Tagesordnung noch nicht festgelegt" : t.einladung_am ? "Eingeladen ✅" : "Tagesordnung festgelegt ✅"}</div>`}
           ${L ? `<button class="bu-zettel blau" onclick="buEingang()"><b>Eingang</b>${summe ? `${summe} ${summe === 1 ? "Sache wartet" : "Sachen warten"} auf dich` : "Alles erledigt 👍"}</button>`
             : `<button class="bu-zettel blau" onclick="zeige('termine')"><b>Nächster Termin</b>${naechst ? esc(naechst.titel || "Sitzung") + " · " + esc(fTagDp.format(new Date(naechst.beginn))) : "Keiner geplant"}</button>`}
         </div>
@@ -24362,65 +24594,118 @@ function buSitzungWaehlen(titel, weiter) {
   blattAuf("buWahl", `${einwHtml("b-bu-sitzung")}<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();window.__buWeiter('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))}${t.vorbereitet ? " · ✅ vorbereitet" : ""}</small></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" onclick="$('buWahl').remove()">Abbrechen</button></div>`);
 }
-const buSitzungWahl = () => buSitzungWaehlen("📝 Welche Sitzung vorbereiten?", buSitzungOeffnen);
-const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?", async (id) => { const t = BU.start.sitzungen.find((x) => x.id === id); if (!t?.vorbereitet) { if ((await frage("Diese Sitzung ist noch nicht vorbereitet.\n\nJetzt vorbereiten?"))) buSitzungOeffnen(id); return; } await buSitzungLaden(id); druckStarten("sitzung"); });
+const buSitzungWahl = () => buSitzungWaehlen("📝 Tagesordnung für welche Sitzung?", (id) => buSitzungOeffnen(id, "to"));
+const buVorbereitenWahl = () => buSitzungWaehlen("🖨️ Welche Sitzung vorbereiten?", (id) => buSitzungOeffnen(id, "vor")); // 2.751.0 KC-CLUB-SITZUNG-ABLAUF
+const buDruckWahl = () => buSitzungWaehlen("🖨️ Vorlage für welche Sitzung?", async (id) => { const t = BU.start.sitzungen.find((x) => x.id === id); if (!t?.vorbereitet) { if ((await frage("Für diese Sitzung ist noch keine Tagesordnung festgelegt.\n\nJetzt festlegen?"))) buSitzungOeffnen(id, "to"); return; } await buSitzungLaden(id); druckStarten("sitzung"); });
 const buEinladungWahl = (nurOffen) => buSitzungWaehlen(nurOffen ? "🔔 Für welche Sitzung erinnern?" : "📨 Einladung für welche Sitzung?", (id) => buEinladung(id, nurOffen));
 async function buSitzungLaden(id) {
   BU.s = await api("buero_sitzung", { treffen_id: id }, { warten: true });
   // 2.744.0 KC-CLUB-SITZUNG-LEER: nach einer Einladung ohne Vorbereitung gibt es eine Zeile ohne Tagesordnung – dann der übliche Vorschlag
   const v = BU.s.vorbereitung?.tagesordnung?.length ? BU.s.vorbereitung : null, st = BU.s.standard;
   BU.f = { anwesend: new Set(v ? v.anwesend : st.anwesend), anmerkung: v ? v.anmerkung || "" : BU.s.anmerkungVorschlag, tagesordnung: (v ? v.tagesordnung : st.tagesordnung).map((x) => ({ ...x })), zeilen: v ? v.zeilen : st.zeilen, neu: "" };
+  // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: Antworten nach dem Speichern übernehmen (Absage → nicht mehr angehakt, neue Zusage → angehakt) und sagen
+  BU.hinweise = [];
+  if (v) {
+    const seit = Date.parse(v.geaendert_am || 0) || 0;
+    for (const m of BU.s.mitglieder || []) {
+      if (m.antwort === "nein" && BU.f.anwesend.has(m.person_id)) { BU.f.anwesend.delete(m.person_id); BU.hinweise.push(`❌ ${m.name} hat abgesagt – nicht mehr angehakt`); }
+      else if (m.antwort === "ja" && !BU.f.anwesend.has(m.person_id) && Date.parse(m.antwort_am || 0) > seit) { BU.f.anwesend.add(m.person_id); BU.hinweise.push(`✅ ${m.name} hat zugesagt – jetzt angehakt`); }
+    }
+    const neu = (BU.s.vorschlaege || []).filter((x) => x.fuerDiese && !BU.f.tagesordnung.some((t) => t.id === x.id)).length;
+    if (neu) BU.hinweise.push(`💡 ${neu} ${neu === 1 ? "neuer Vorschlag" : "neue Vorschläge"} für diese Sitzung – bei „📝 Tagesordnung festlegen“ unter „Weitere Vorschläge“ antippen zum Aufnehmen`); // 2.751.0: zwei Seiten
+  }
+  BU.stand = v?.geaendert_am || null; BU.urfassung = buFassung();
 }
-async function buSitzungOeffnen(id) {
+// gespeicherter Stand zum Vergleichen („Änderungen speichern?“ beim Verlassen)
+function buFassung() { const f = BU.f; return f ? JSON.stringify([[...f.anwesend].sort(), f.anmerkung || "", f.tagesordnung.map((x) => [x.t, x.art, x.id || ""]), f.zeilen]) : ""; }
+const buGeaendert = () => BU.sicht === "sitzung" && !!BU.f && buSchreiben() && (buFassung() !== BU.urfassung || !!(BU.f.neu || "").trim());
+// 2.751.0 KC-CLUB-SITZUNG-ABLAUF: zwei Seiten – „to“ = Tagesordnung festlegen (vor der Einladung), „vor“ = Sitzung vorbereiten (danach: Anwesende,
+// Anmerkung, Schreiblinien, Mitschreibbogen). Ohne Angabe: noch keine Tagesordnung → „to“, sonst „vor“. Beide speichern dasselbe (ein Stand).
+async function buSitzungOeffnen(id, teil) {
   try { await buSitzungLaden(id); } catch (e) { return meldeFehler(e); }
+  BU.teil = teil === "to" || teil === "vor" ? teil : BU.s.vorbereitung?.tagesordnung?.length ? "vor" : "to";
   BU.sicht = "sitzung"; buZeigen(); window.scrollTo(0, 0);
 }
+function buTeil(teil) { BU.teil = teil; buZeigen(); window.scrollTo(0, 0); } // ohne Neuladen – Eingaben bleiben, gespeichert wird beides zusammen
 function buSitzungHtml() {
   const s = BU.s, f = BU.f; if (!s) return "";
   const m = s.mitglieder.slice().sort((a, b) => a.name.localeCompare(b.name));
   const nein = m.filter((x) => x.antwort === "nein"), rest = m.filter((x) => x.antwort !== "nein");
   const haken = (x) => `<label class="bu-haken${f.anwesend.has(x.person_id) ? " an" : ""}"><input type="checkbox" ${f.anwesend.has(x.person_id) ? "checked" : ""} onchange="buAnw('${x.person_id}', this.checked)"> ${esc(x.name)} <small>${x.antwort === "ja" ? "✅" : x.antwort === "vielleicht" ? "❓" : ""}</small></label>`;
   const verfuegbar = s.vorschlaege.filter((v) => !f.tagesordnung.some((t) => t.id === v.id));
+  // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: oben sichtbar, ob gespeichert oder nur Vorschlag, was sich seitdem geändert hat und wo man im Ablauf steht
+  const v = s.vorbereitung?.tagesordnung?.length ? s.vorbereitung : null, ts = (BU.start?.sitzungen || []).find((x) => x.id === s.treffen?.id);
+  const stand = `<div class="karte bu-stand ${v ? "gespeichert" : "vorschlag"}">${v ? `✅ <b>Gespeichert</b> ${esc(zeitKurz(v.geaendert_am))}${v.geaendert_von ? ` von ${esc(v.geaendert_von)}` : ""}` : "📝 <b>Vorschlag der App</b> – noch nicht gespeichert. Prüfen, anpassen, dann unten speichern."}
+    ${(BU.hinweise || []).length ? `<ul class="bu-hinweise">${BU.hinweise.map((h) => `<li>${esc(h)}</li>`).join("")}</ul><p class="hinweis" style="margin:4px 0 0">Bitte unten speichern, damit es überall gilt.</p>` : ""}
+    ${v && v.anmerkung && s.anmerkungVorschlag && v.anmerkung !== s.anmerkungVorschlag && f.anmerkung === v.anmerkung ? `<p class="hinweis" style="margin:6px 0 0">ℹ️ Neuer Stand zum letzten Protokoll: „${esc(s.anmerkungVorschlag)}“ <button class="knopf klein" onclick="BU.f.anmerkung=BU.s.anmerkungVorschlag;buZeigen()">Übernehmen</button></p>` : ""}</div>`;
+  // 2.751.0 KC-CLUB-SITZUNG-ABLAUF: Seite „to“ (Tagesordnung festlegen) oder „vor“ (Sitzung vorbereiten); oben ein Umschalter
+  const VOR = BU.teil === "vor", TO = !VOR;
+  const umschalter = `<div class="hl-chips bu-teil"><button class="chip${TO ? " an" : ""}" onclick="buTeil('to')">📝 Tagesordnung festlegen</button><button class="chip${VOR ? " an" : ""}" onclick="buTeil('vor')">🖨️ Sitzung vorbereiten</button></div>`;
+  const topKurz = `<div class="karte"><h3 style="margin-top:0">📋 Tagesordnung <small class="hinweis">(${f.tagesordnung.length} Punkte)</small></h3><ol class="bu-top-kurz">${f.tagesordnung.map((t) => `<li>${esc(t.t)}</li>`).join("")}</ol>
+    ${buSchreiben() ? `<button class="knopf klein" onclick="buTeil('to')">✏️ Tagesordnung ändern</button>` : ""}</div>`;
   // 1.37.0: nur Leserecht → alles sichtbar, aber gesperrt (fieldset disabled); Drucken bleibt
-  return `${ICH?.vorstand && s.treffen?.id ? `<button class="knopf at-sitzung" onclick="atOeffnen('${esc(s.treffen.id)}')">💼 Aktentasche für diese Sitzung</button>` : ""}${buSchreiben() ? "" : '<p class="bu-tipp">👁️ Nur ansehen – Ändern schaltet der Admin frei.</p>'}<fieldset class="bu-fs"${buSchreiben() ? "" : " disabled"}><div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>Köcheclub Werne</b><br><span style="font-size:1.15rem;font-weight:800">${esc(s.treffen.titel)}</span><br>${esc(wann(s.treffen.beginn, true))}${s.treffen.ort ? " · 📍 " + esc(s.treffen.ort) : ""}</div></div>
-    <div class="karte"><h3 style="margin-top:0">1️⃣ Wer ist dabei?</h3><p class="hinweis" style="margin:0 0 6px">Angehakt sind alle, die zugesagt haben. Antippen ändert es.</p>
+  return `${buSchreiben() && ts ? buSchritteHtml(ts, true) : ""}${umschalter}${stand}${ICH?.vorstand && s.treffen?.id ? `<button class="knopf at-sitzung" onclick="atOeffnen('${esc(s.treffen.id)}')">💼 Aktentasche für diese Sitzung</button>` : ""}${buSchreiben() ? "" : '<p class="bu-tipp">👁️ Nur ansehen – Ändern schaltet der Admin frei.</p>'}<fieldset class="bu-fs"${buSchreiben() ? "" : " disabled"}><div class="karte bu-kopf"><img src="kc-kochmuetze-weiss.webp" alt="" class="bu-logo"><div><b>Köcheclub Werne</b><br><span style="font-size:1.15rem;font-weight:800">${esc(s.treffen.titel)}</span><br>${esc(wann(s.treffen.beginn, true))}${s.treffen.ort ? " · 📍 " + esc(s.treffen.ort) : ""}</div></div>
+    ${VOR ? `<div class="karte"><h3 style="margin-top:0">1️⃣ Wer ist dabei?</h3><p class="hinweis" style="margin:0 0 6px">Angehakt sind alle, die zugesagt haben. Antippen ändert es.</p>
       <div class="bu-haken-liste">${rest.map(haken).join("")}</div>
       <p style="margin:10px 0 0"><b>Entschuldigt:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` <small class="hinweis">(${esc(x.notiz)})</small>` : "")).join(", ") : "–"}</p></div>
     <div class="karte"><h3 style="margin-top:0">2️⃣ Anmerkung zum letzten Protokoll</h3>
       <label class="feld" style="margin:0"><textarea id="buAnmerkung" rows="3" maxlength="1000" oninput="BU.f.anmerkung=this.value;lvAuffrischen()">${esc(f.anmerkung)}</textarea></label>
       ${s.aufgaben.filter((a) => !a.erledigt).length ? `<p style="margin:8px 0 2px"><b>Offene Aufgaben aus dem letzten Protokoll:</b></p><ul style="margin:0;padding-left:20px">${s.aufgaben.filter((a) => !a.erledigt).map((a) => `<li>${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}</div>
-    <div class="karte"><h3 style="margin-top:0">3️⃣ Tagesordnung</h3>
-      <ol class="bu-top">${f.tagesordnung.map((t, i) => `<li class="bu-top-${t.art}"><span>${esc(t.t)}${t.art === "vorschlag" ? ` <small class="hinweis">· ${buVon(s, t) ? `Vorschlag von ${esc(buVon(s, t))}` : "Vorschlag"}</small>` : ""}</span>
-        <span class="bu-top-knoepfe"><button ${i ? "" : "disabled"} onclick="buTop(${i},-1)" aria-label="nach oben">▲</button><button ${i < f.tagesordnung.length - 1 ? "" : "disabled"} onclick="buTop(${i},1)" aria-label="nach unten">▼</button><button onclick="buTopWeg(${i})" aria-label="streichen">✕</button></span></li>`).join("")}</ol>
+` : ""}
+    ${TO ? `<div class="karte"><h3 style="margin-top:0">📋 Tagesordnung</h3><p class="hinweis" style="margin:0 0 6px">Vorschläge der Mitglieder aufnehmen, Reihenfolge festlegen, eigene Punkte dazu. Einladung ${esc(ts ? buFristText(ts) : "spätestens 3 Tage vorher")}.</p>
+      <ol class="bu-top">${f.tagesordnung.map((t, i) => `<li class="bu-top-${t.art}"><span>${esc(t.t)}${t.art === "vorschlag" ? ` <small class="hinweis">· ${t.id && !s.vorschlaege.some((x) => x.id === t.id) ? "⚠️ Vorschlag wurde zurückgezogen" : buVon(s, t) ? `Vorschlag von ${esc(buVon(s, t))}` : "Vorschlag"}</small>` : ""}</span>
+        <span class="bu-top-knoepfe"><button ${i ? "" : "disabled"} onclick="buTop(${i},-1,this)" aria-label="nach oben">▲</button><button ${i < f.tagesordnung.length - 1 ? "" : "disabled"} onclick="buTop(${i},1,this)" aria-label="nach unten">▼</button><button onclick="buTopWeg(${i})" aria-label="streichen">✕</button></span></li>`).join("")}</ol>
       ${verfuegbar.length ? `<p class="hinweis" style="margin:8px 0 4px">Weitere Vorschläge – antippen zum Aufnehmen:</p><div class="hl-chips">${verfuegbar.map((v) => `<button class="chip" onclick="buTopVorschlag('${v.id}')">＋ ${esc(v.text)}${v.unterstuetzt ? ` · 👍${v.unterstuetzt}` : ""}</button>`).join("")}</div>` : ""}
-      <div class="zwei" style="align-items:end"><label class="feld">Eigener Punkt<input id="buNeu" maxlength="200" placeholder="z. B. Planung Weihnachtsmarkt" value="${esc(f.neu)}" oninput="BU.f.neu=this.value"></label><button class="knopf" onclick="buTopNeu()">＋ Dazu</button></div></div>
-    <div class="karte"><h3 style="margin-top:0">4️⃣ Schreiblinien je Punkt</h3><div class="hl-chips">${s.zeilenWahl.map((z) => `<button class="chip${f.zeilen === z ? " an" : ""}" onclick="BU.f.zeilen=${z};buZeigen()">${z ? z + " Zeilen" : "keine"}</button>`).join("")}</div></div>
+      <div class="zwei" style="align-items:end"><label class="feld">Eigener Punkt<input id="buNeu" maxlength="200" placeholder="z. B. Planung Weihnachtsmarkt" enterkeyhint="done" value="${esc(f.neu)}" oninput="BU.f.neu=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();buTopNeu()}"></label><button class="knopf" onclick="buTopNeu()">＋ Dazu</button></div></div>` : topKurz}
+    ${VOR ? `<div class="karte"><h3 style="margin-top:0">3️⃣ Schreiblinien je Punkt</h3><div class="hl-chips">${s.zeilenWahl.map((z) => `<button class="chip${f.zeilen === z ? " an" : ""}" onclick="BU.f.zeilen=${z};buZeigen()">${z ? z + " Zeilen" : "keine"}</button>`).join("")}</div></div>
     ${s.protokoll && s.protokoll.status !== "entwurf" ? '<p class="hinweis">ℹ️ Das Protokoll dieser Sitzung ist schon veröffentlicht – es wird nicht verändert.</p>' : ""}
-    ${lvKasten()}
-    ${buSchreiben() ? '<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buSpeichern(this)">✅ Fertig – speichern</button></div>' : ""}</fieldset>
+    ${lvKasten()}` : ""}
+    ${buSchreiben() ? `<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buSpeichern(this)">${VOR ? "✅ Fertig – vorbereitet" : "✅ Tagesordnung speichern"}</button></div>` : ""}</fieldset>
     ${buSchreiben() ? "" : '<div class="bu-leiste"><button class="knopf haupt" style="width:100%;text-align:center" onclick="buDruckWahl()">🖨️ Vorlage drucken</button></div>'}`;
 }
 function buAnw(id, an) { an ? BU.f.anwesend.add(id) : BU.f.anwesend.delete(id); lvAuffrischen(); }
 // 2.692.0 KC-CLUB-VORSCHLAG-VON: Name des Einreichers bei Tagesordnungspunkten (Büro, Vorlage, Einladung, Protokoll)
 const buVon = (s, t) => (t?.id ? (s?.vorschlaege || []).find((v) => v.id === t.id)?.von : null) || null;
 const topVon = (von, i) => (von?.[i] ? ` <small class="hinweis" style="font-style:italic">– Vorschlag von ${esc(von[i])}</small>` : "");
-function buTop(i, d) { const l = BU.f.tagesordnung, j = i + d; [l[i], l[j]] = [l[j], l[i]]; buZeigen(); }
-function buTopWeg(i) { BU.f.tagesordnung.splice(i, 1); buZeigen(); }
+// 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: der verschobene Punkt bleibt unter dem Finger und leuchtet kurz auf (sonst tauscht weiteres Tippen nur hin und her)
+function buTop(i, d, knopf) {
+  const l = BU.f.tagesordnung, j = i + d, y = knopf?.getBoundingClientRect().top; [l[i], l[j]] = [l[j], l[i]]; buZeigen();
+  const li = document.querySelectorAll("#buInhalt .bu-top li")[j], b = li?.querySelectorAll(".bu-top-knoepfe button")[d < 0 ? 0 : 1];
+  if (b && y != null) window.scrollBy(0, b.getBoundingClientRect().top - y);
+  if (li) { li.classList.add("bu-top-bewegt"); setTimeout(() => li.classList.remove("bu-top-bewegt"), 1400); }
+}
+async function buTopWeg(i) { const t = BU.f.tagesordnung[i]; if (!t || !(await frage(`„${t.t}“ von der Tagesordnung streichen?`, { ja: "✕ Streichen", nein: "Behalten" }))) return; BU.f.tagesordnung.splice(i, 1); buZeigen(); }
 // neue Punkte vor „Verschiedenes“ einreihen
 function buTopEinfuegen(p) { const l = BU.f.tagesordnung, v = l.findIndex((x) => x.art === "fest" && /^Verschiedenes$/i.test(x.t)); l.splice(v < 0 ? l.length : v, 0, p); buZeigen(); }
 function buTopVorschlag(id) { const v = BU.s.vorschlaege.find((x) => x.id === id); if (v) buTopEinfuegen({ t: v.text, art: "vorschlag", id: v.id }); }
 function buTopNeu() { const t = (BU.f.neu || "").trim(); if (!t) return melde("Bitte kurz eingeben, worum es geht.", true); BU.f.neu = ""; buTopEinfuegen({ t, art: "eigen" }); }
-async function buSpeichern(knopf) {
+async function buSpeichern(knopf, ueberschreiben = false) {
   const f = BU.f, s = BU.s;
+  // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: eingetippter, aber nicht hinzugefügter eigener Punkt geht nicht verloren
+  const offen = (f.neu || "").trim(); if (offen) { f.neu = ""; buTopEinfuegen({ t: offen, art: "eigen" }); melde(`➕ „${offen}“ mit aufgenommen`); }
   if (!f.tagesordnung.length) return melde("Die Tagesordnung ist leer.", true);
   await einmal(knopf, async () => {
     try {
-      const r = await api("buero_speichern", { treffen_id: s.treffen.id, anwesend: [...f.anwesend], anmerkung: f.anmerkung, tagesordnung: f.tagesordnung, zeilen: f.zeilen });
+      const r = await api("buero_speichern", { treffen_id: s.treffen.id, anwesend: [...f.anwesend], anmerkung: f.anmerkung, tagesordnung: f.tagesordnung, zeilen: f.zeilen, stand: BU.stand, ueberschreiben, teil: BU.teil });
+      if (r.zusammenstoss) return buWeiterFragen("⚠️ Inzwischen geändert", `${esc(r.von || "Jemand anderes")} hat die Tagesordnung ${esc(zeitKurz(r.am))} gespeichert – während du sie bearbeitet hast. Was soll gelten?`, [
+        ["🔄 Neu laden und ansehen (deine Änderungen verwerfen)", `buSitzungOeffnen('${s.treffen.id}')`, true], ["💾 Meine Fassung speichern (die andere überschreiben)", "buSpeichern(null, true)"], ["Abbrechen", ""]]);
       s.protokoll = r.protokoll_id ? { id: r.protokoll_id, status: s.protokoll?.status || "entwurf" } : s.protokoll;
-      s.vorbereitung = { anwesend: [...f.anwesend], anmerkung: f.anmerkung, tagesordnung: f.tagesordnung, zeilen: f.zeilen };
-      buWeiterFragen("✅ Gespeichert!", `Die Vorlage ist fertig${r.protokollStand === "angelegt" ? " und als Protokoll-Entwurf angelegt" : r.protokollStand === "aktualisiert" ? ", der Protokoll-Entwurf ist aktualisiert" : ""}. Was möchtest du als Nächstes tun?`, [
-        ["🖨️ Vorlage ansehen & drucken", "buDruckJetzt()", true], ["📨 Tagesordnung an die Mitglieder senden", `buEinladung('${s.treffen.id}', false)`],
-        ...(r.protokoll_id ? [["📄 Protokoll-Entwurf öffnen", `protokollOeffnen('${r.protokoll_id}')`]] : []), ["🗂️ Zurück ins Büro", "buStart()"]]);
+      s.vorbereitung = { ...(s.vorbereitung || {}), anwesend: [...f.anwesend], anmerkung: f.anmerkung, tagesordnung: f.tagesordnung, zeilen: f.zeilen, geaendert_am: r.stand, geaendert_von: ICH?.name || null };
+      BU.stand = r.stand; BU.urfassung = buFassung(); BU.hinweise = [];
+      const ts = (BU.start?.sitzungen || []).find((x) => x.id === s.treffen.id);
+      if (ts) Object.assign(ts, { vorbereitet: true, geaendert_nach_einladung: !!r.informieren, unterlagen_am: r.unterlagen_am ?? null });
+      const prot = { angelegt: " Der Protokoll-Entwurf ist angelegt.", aktualisiert: " Der Protokoll-Entwurf ist angepasst.", fehler: " ⚠️ Der Protokoll-Entwurf konnte nicht angelegt werden – bitte später noch einmal speichern." }[r.protokollStand]
+        || (s.protokoll && s.protokoll.status !== "entwurf" ? " Das Protokoll ist schon veröffentlicht und bleibt unverändert." : s.protokoll ? " ℹ️ Den Protokoll-Entwurf bearbeitet jetzt der Schriftführer – er wurde nicht verändert." : "");
+      buZeigen();
+      const id = s.treffen.id, tasche = ICH?.vorstand ? [["💼 Weiter: Aktentasche packen", `atOeffnen('${id}')`, BU.teil === "vor"]] : [];
+      // 2.751.0 KC-CLUB-SITZUNG-ABLAUF / KC-CLUB-AENDERUNG-MELDUNG: Tagesordnung nach der Einladung geändert → Clubleitung entscheidet „Mitglieder informieren?“
+      if (r.informieren) return buWeiterFragen("✅ Gespeichert – Mitglieder informieren?", `Die Einladung ist schon raus, die Tagesordnung hat sich seitdem geändert. Sollen die Mitglieder eine Änderungsmeldung bekommen (mit „Neu / Entfällt“)? Ohne Meldung steht die Änderung trotzdem in der App.${prot}`, [
+        ["📣 Ja – Änderungsmeldung senden (Vorschau)", `buEinladung('${id}', false, true)`, true], ["🙅 Nein, nicht informieren", `buInformierenNein('${id}')`], ["⏰ Später entscheiden", ""]]);
+      if (BU.teil === "vor") return buWeiterFragen("✅ Sitzung vorbereitet", `Anwesende, Anmerkung und Mitschreibbogen sind gespeichert.${prot} Jetzt den Mitschreibbogen drucken – und zuletzt die Aktentasche packen.`, [
+        ["🖨️ Mitschreibbogen drucken", "buDruckJetzt()", !tasche.length], ...tasche, ["🗂️ Zurück ins Büro", "buStart()"]]);
+      buWeiterFragen(r.einladung_am ? "✅ Tagesordnung gespeichert" : "✅ Schritt erledigt: Tagesordnung gespeichert",
+        `${r.einladung_am ? "Die Mitglieder kennen diesen Stand schon." : `Als Nächstes lädst du die Mitglieder mit dieser Tagesordnung ein – ${esc(ts ? buFristText(ts) : "spätestens 3 Tage vorher")}`}${prot}`, [
+        r.einladung_am ? ["🖨️ Weiter: Sitzung vorbereiten", `buTeil('vor')`, true] : ["📨 Weiter: Mitglieder einladen", `buEinladung('${id}', false)`, true], ["🗂️ Zurück ins Büro", "buStart()"]]);
     } catch (e) { meldeFehler(e); }
   });
 }
@@ -24456,15 +24741,18 @@ function druckSitzung() {
   return { titel: s.treffen.titel, unter: `${wann(s.treffen.beginn, true)}${s.treffen.ort ? " · " + s.treffen.ort : ""}`, html, fuss: "Protokoll-Vorlage aus dem Büro" };
 }
 // Einladung / Erinnerung: Vorschau, Weg wählen, erst nach Bestätigung senden
-async function buEinladung(id, nurOffen) {
+async function buEinladung(id, nurOffen, aenderung = false) {
   let s; try { s = await api("buero_sitzung", { treffen_id: id }, { warten: true }); } catch (e) { return meldeFehler(e); }
   const top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}${buVon(s, t) ? ` – Vorschlag von ${buVon(s, t)}` : ""}`);
-  if (!nurOffen && !top.length && !(await frage("Die Sitzung ist noch nicht vorbereitet – die Einladung geht dann ohne Tagesordnung.\n\nTrotzdem weiter?"))) return buSitzungOeffnen(id);
-  const ohne = s.mitglieder.filter((m) => !m.antwort || m.antwort === "keine").length;
-  const anzahl = nurOffen ? ohne : s.mitglieder.length;
+  // 2.749.0 KC-CLUB-EINE-TAGESORDNUNG: eingeladen wird nur mit der festgelegten Tagesordnung – sonst stünde überall etwas anderes
+  if (!nurOffen && !top.length) return buWeiterFragen("📝 Zuerst die Tagesordnung festlegen", "Die Einladung enthält die Tagesordnung. Bitte lege sie zuerst fest und speichere sie – danach geht es hier weiter.", [["📝 Tagesordnung festlegen", `buSitzungOeffnen('${id}')`, true], ["Abbrechen", ""]]);
+  const ohneKomm = new Set((MITGLIEDER || []).filter(okAus).map((m) => m.person_id)); // 2.538.0: 📵 bekommt keine Benachrichtigungen
+  const empf = new Set((s.empfaenger || s.mitglieder.map((m) => m.person_id)).filter((id) => zwIch(id) && !ohneKomm.has(id))); // wie der Server: ohne mich, ohne Aushilfen, ohne 📵
+  const ohne = s.mitglieder.filter((m) => empf.has(m.person_id) && (!m.antwort || m.antwort === "keine")).length;
+  const anzahl = nurOffen ? ohne : empf.size;
   const schon = nurOffen ? s.vorbereitung?.erinnerung_am : s.vorbereitung?.einladung_am;
-  window.__buSend = { id, nurOffen, wege: [], s }; // KC-CLUB-EINLADUNG-AN (2.739.0) · Empfänger: ZWAHL.buAn (KC-CLUB-ZIELWAHL)
-  blattAuf("buEinladung", `${einwHtml("b-bu-einladung")}<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
+  window.__buSend = { id, nurOffen, aenderung: !nurOffen && aenderung, wege: [], s, empf }; // KC-CLUB-EINLADUNG-AN (2.739.0) · Empfänger: ZWAHL.buAn (KC-CLUB-ZIELWAHL)
+  blattAuf("buEinladung", `${einwHtml("b-bu-einladung")}<h3 style="margin-top:0">${nurOffen ? "🔔 Erinnerung" : aenderung ? "📣 Änderungsmeldung" : "📨 Einladung"}: ${esc(s.treffen.titel)}</h3>
     ${schon ? `<p class="hinweis" style="margin:0">ℹ️ Schon einmal gesendet: ${esc(zeitKurz(schon))}</p>` : ""}
     <p class="hinweis" style="margin:0 0 4px">So sieht der Brief aus – jeder bekommt ihn mit seinem eigenen Vornamen:</p>
     <div class="karte" id="buBrief" style="margin:0;white-space:pre-wrap;font-size:.95rem"></div>
@@ -24472,10 +24760,10 @@ async function buEinladung(id, nurOffen) {
     <div class="hinweis" style="margin:8px 0 4px">An wen?</div><div id="buAn"></div>
     <div class="hinweis" style="margin:8px 0 4px">Wie benachrichtigen?</div>
     <div class="hl-chips" id="buWege">${[["", "⚙️ Wie jeder es eingestellt hat"], ["push", "🔔 Push"], ["email", "✉️ E-Mail"], ["beide", "🔔+✉️ Beides"]].map(([w, t]) => `<button class="chip${w === "" ? " an" : ""}" data-w="${w}" onclick="buWeg('${w}')">${t}</button>`).join("")}</div>
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" id="buSendKnopf" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this)">${anzahl ? `📨 Jetzt an ${anzahl} Mitglieder senden` : "Alle haben schon geantwortet 👍"}</button>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" id="buSendKnopf" style="text-align:center" ${anzahl ? "" : "disabled"} onclick="buSenden(this)">${anzahl ? `📨 Jetzt an ${anzahl} ${anzahl === 1 ? "Mitglied" : "Mitglieder"} senden` : "Alle haben schon geantwortet 👍"}</button>
     <button class="knopf" style="text-align:center" onclick="$('buEinladung').remove()">Abbrechen</button></div>`);
   window.__buSend.top = (s.vorbereitung?.tagesordnung || []).map((t, i) => `${i + 1}. ${t.t}`); buBriefZeigen(); // KC-CLUB-EINLADUNG-BRIEF (2.740.0): wie der Server
-  zwStart("buAn", { titel: "👤 Wer bekommt die Einladung?", alleText: nurOffen ? "alle, die noch nicht geantwortet haben" : "alle Mitglieder", alle: buBerechtigt, nachher: buAnNachher,
+  zwStart("buAn", { titel: "👤 Wer bekommt die Einladung?", alleText: nurOffen ? "alle, die noch nicht geantwortet haben" : BU_ALLE_TEXT, alle: buBerechtigt, nachher: buAnNachher,
     extra: () => [["ja", "✅ Zugesagt", s.mitglieder.filter((m) => zwIch(m.person_id) && m.antwort === "ja").map((m) => m.person_id)], ["ohne", "❓ Noch ohne Antwort", s.mitglieder.filter((m) => zwIch(m.person_id) && (!m.antwort || m.antwort === "keine")).map((m) => m.person_id)]] });
 }
 // KC-CLUB-EINLADUNG-AN (2.739.0, Wunsch Hansi „vor dem Absenden auswählen, an wen die Einladung geht: Alle, Gruppen, Auswahl“):
@@ -24483,14 +24771,37 @@ async function buEinladung(id, nurOffen) {
 // Der Server schickt nur an Mitglieder, die auch sonst die Einladung bekämen (Schnittmenge) – der Knopf zeigt die echte Zahl.
 // KC-CLUB-EINLADUNG-BRIEF (2.740.0, Wunsch Hansi): Vorschau mit denselben Sätzen wie der Server (einladungBrief) – Anrede mit dem ersten Empfänger
 const BRIEF_AMT_RE = /^(clubsprecher|stellv|kassenwart|schriftf|admin)/i;
+// 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: wie der Server (topDiff) – neu dazu, entfällt, Reihenfolge
+function topDiff(alt, neu) {
+  if (!Array.isArray(alt) || !alt.length) return null;
+  const k = (x) => (x?.id ? "v:" + x.id : "t:" + String(x?.t || "").trim().toLowerCase());
+  const ka = alt.map(k), kn = neu.map(k);
+  const dazu = neu.map((x, i) => ({ nr: i + 1, t: String(x.t), dringend: /^❗/.test(String(x.t)) })).filter((_, i) => !ka.includes(kn[i]));
+  const weg = alt.filter((_, i) => !kn.includes(ka[i])).map((x) => String(x.t));
+  const bleibt = kn.filter((x) => ka.includes(x)), vorher = ka.filter((x) => kn.includes(x));
+  return { dazu, weg, reihenfolge: bleibt.join("|") !== vorher.join("|") };
+}
 function einladungBrief(d) {
   const tag = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(d.beginn)).replace(", ", ", den ");
   const was = /^clubsitzung\b/i.test(d.titel) ? "Clubsitzung" : `Sitzung „${d.titel}“`, wann = `am ${tag}, um ${fZeit.format(new Date(d.beginn))} Uhr`;
   const gruss = `Liebe Grüße\n${d.von}${d.amt ? "\n" + d.amt : ""}\nKöcheclub Werne`, kopf = `Hallo${d.vorname ? " " + d.vorname : ""},\n\n`;
   if (d.erinnerung) return kopf + `kleine Erinnerung: ${wann} ist unsere ${was}${d.ort ? ` – ${d.ort}` : ""}.\n\nBitte sag kurz in der Club-App zu oder ab – das hilft uns bei der Vorbereitung:\n${d.url}`
     + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\n${gruss}`;
+  // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: nach der Einladung geänderte Tagesordnung mitteilen (gleicher Text in App-Vorschau und Versand)
+  // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: mit „Neu / Entfällt“ und 🆕 an den neuen Punkten (Vergleich mit der zuletzt an alle verschickten Tagesordnung)
+  if (d.aenderung) {
+    const df = d.diff, nurDazu = !!df && df.dazu.length > 0 && !df.weg.length, nurWeg = !!df && df.weg.length > 0 && !df.dazu.length, nurFolge = !!df && !df.dazu.length && !df.weg.length && df.reihenfolge;
+    const satz = nurDazu ? (df.dazu.length === 1 ? "ist noch ein Punkt dazugekommen" : "sind noch Punkte dazugekommen") : nurWeg ? `${df.weg.length === 1 ? "entfällt ein Punkt" : "entfallen Punkte"}`
+      : nurFolge ? "hat sich die Reihenfolge der Tagesordnung geändert" : "hat sich die Tagesordnung geändert";
+    const neuNr = new Set((df?.dazu ?? []).map((x) => x.nr));
+    const teile = df ? [df.dazu.length ? `Neu:\n${df.dazu.map((x) => `${x.nr}. ${x.t}`).join("\n")}` : "", df.weg.length ? `Entfällt:\n${df.weg.map((t) => `– ${t}`).join("\n")}` : ""].filter(Boolean) : [];
+    return kopf + `zu unserer ${was} ${wann}${d.ort ? ` – ${d.ort}` : ""} ${satz}.` + (teile.length ? `\n\n${teile.join("\n\n")}` : "")
+      + `\n\n${df ? "Die vollständige Tagesordnung" : "So sieht die Tagesordnung jetzt aus"}:\n${d.top.map((x, i) => (neuNr.has(i + 1) ? `${x} 🆕` : x)).join("\n")}`
+      + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\nFalls du noch nicht zu- oder abgesagt hast, bitte kurz in der Club-App:\n${d.url}\n\n${gruss}`;
+  }
   return kopf + `hiermit laden wir dich herzlich zu unserer ${was} ein:\n\n📅 ${wann}${d.ort ? `\n📍 ${d.ort}` : ""}`
     + (d.top.length ? `\n\nFolgende Punkte stehen auf der Tagesordnung:\n${d.top.join("\n")}` : "")
+    + (d.top.length ? "\n\nDringende Vorschläge oder Änderungen können bis zur Sitzung noch dazukommen." : "") // 2.751.0 KC-CLUB-SITZUNG-ABLAUF (Wunsch Hansi 29.10.)
     + (d.zusatz ? `\n\n${d.zusatz}` : "")
     + `\n\nWir freuen uns auf eine schöne, konstruktive Sitzung.\nBitte sag kurz in der Club-App zu oder ab:\n${d.url}\n\n${gruss}`;
 }
@@ -24498,7 +24809,8 @@ function buBriefZeigen() {
   const x = window.__buSend, z = $("buBrief"); if (!x || !z) return; const t = x.s.treffen;
   const Z = ZWAHL.buAn, erst = Z && Z.art !== "alle" && Z.ids[0] ? vfName(Z.ids[0]).split(" ")[0] : "Marianne"; // Beispiel-Anrede
   z.textContent = einladungBrief({ vorname: erst, titel: t.titel, beginn: t.beginn, ort: t.ort || "", top: x.top || [], zusatz: ($("buZusatz")?.value || "").trim(), url: "(Link zur Club-App)",
-    von: ICH?.vorname || ICH?.name || "", amt: (ICH?.aemter || []).find((a) => BRIEF_AMT_RE.test(a)) || (ICH?.aemter || [])[0] || "", erinnerung: x.nurOffen });
+    von: ICH?.vorname || ICH?.name || "", amt: (ICH?.aemter || []).find((a) => BRIEF_AMT_RE.test(a)) || (ICH?.aemter || [])[0] || "", erinnerung: x.nurOffen, aenderung: x.aenderung,
+    diff: x.aenderung ? topDiff(x.s.vorbereitung?.versandt_top, x.s.vorbereitung?.tagesordnung || []) : null });
 }
 // KC-CLUB-ZIELWAHL (2.741.0, Wunsch Hansi „Auswahl der Empfänger wie alle, Einzel, Gruppe, Amt usw.“): ein Baustein „An wen?“ für Einladung
 // und Aktentasche-Freigabe. 👥 Alle · 👤 Einzeln (gemeinsames Auswahlfenster zielAuswahl) · 🧑‍🤝‍🧑 Gruppe (eigene Gruppen + was der Aufrufer
@@ -24532,7 +24844,9 @@ function zwArt(feld, a) { const Z = ZWAHL[feld]; if (Z.art !== a) { Z.gruppe = n
 function zwGruppe(feld, k) { const Z = ZWAHL[feld], g = [...zwGruppen(feld), ...zwAemter()].find(([x]) => x === k); if (!g) return; Object.assign(Z, { gruppe: k, name: g[1], ids: g[2].slice() }); zwZeigen(feld); }
 function zwEinzeln(feld) { const Z = ZWAHL[feld]; zielAuswahl(Z.titel || "👤 Wer soll es bekommen?", Z.ids, (ids) => { Object.assign(Z, { art: "einzeln", gruppe: null, name: "", ids }); zwZeigen(feld); }); }
 // Einladung: wer sie überhaupt bekäme (wie der Server rechnet – ohne mich, bei der Erinnerung nur ohne Antwort)
-function buBerechtigt() { const x = window.__buSend; return x.s.mitglieder.filter((m) => zwIch(m.person_id) && (!x.nurOffen || !m.antwort || m.antwort === "keine")).map((m) => m.person_id); }
+// 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: „Alle“ heißt bei Einladung, Aktentasche und Ablagekorb dasselbe – und wird dazugesagt
+const BU_ALLE_TEXT = "alle Mitglieder (ohne Aushilfen/Gäste und ohne 📵 „keine Benachrichtigungen“)";
+function buBerechtigt() { const x = window.__buSend; return x.s.mitglieder.filter((m) => zwIch(m.person_id) && (!x.empf || x.empf.has(m.person_id)) && (!x.nurOffen || !m.antwort || m.antwort === "keine")).map((m) => m.person_id); } // 2.749.0: dieselben Empfänger wie der Server
 function buAnZahl() { const Z = ZWAHL.buAn, b = buBerechtigt(); return Z.art === "alle" ? b.length : b.filter((id) => Z.ids.includes(id)).length; }
 function buAnNachher() {
   buBriefZeigen();
@@ -24548,11 +24862,18 @@ async function buSenden(knopf) {
   if (!(await frage(`${x.nurOffen ? "Erinnerung" : "Einladung"} jetzt an ${anzahl} ${anzahl === 1 ? "Mitglied" : "Mitglieder"} senden?${A.art === "gruppe" || A.art === "amt" ? `\n\n${A.art === "amt" ? "Amt" : "Gruppe"}: ${A.name.replace(/^\S+ /, "")}` : A.art === "einzeln" ? "\n\nNur an deine Auswahl." : ""}`))) return;
   await einmal(knopf, async () => {
     try {
-      const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, wege: x.wege, text: $("buZusatz")?.value || "", ...(A.art === "alle" ? {} : { ziel: { art: A.art, name: A.name || "", ids: A.ids } }) });
+      const r = await api("buero_einladung", { treffen_id: x.id, nur_offen: x.nurOffen, aenderung: !!x.aenderung, wege: x.wege, text: $("buZusatz")?.value || "", ...(A.art === "alle" ? {} : { ziel: { art: A.art, name: A.name || "", ids: A.ids } }) });
       $("buEinladung")?.remove();
-      if (x.nurOffen) { melde(`🔔 Erinnerung an ${r.empfaenger} Mitglieder gesendet`); return buStart(); }
-      buWeiterFragen("✅ Einladung gesendet!", `${r.empfaenger} Mitglieder haben die Einladung bekommen. Ein paar Tage vor der Sitzung kannst du alle erinnern, die noch nicht geantwortet haben.`,
-        [["🗂️ Zurück ins Büro", "buStart()", true], ["🏠 Zur Club-App", "zeige('start')"]]);
+      // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: ehrliche Meldung (0 Empfänger, nur Auswahl) und gleich der nächste Schritt
+      if (!r.empfaenger) return melde("⚠️ Es ging nichts raus – die Auswahl passt auf niemanden.", true);
+      const ts = (BU.start?.sitzungen || []).find((y) => y.id === x.id), jetzt = new Date().toISOString();
+      if (ts && r.alle) Object.assign(ts, x.nurOffen ? { erinnerung_am: jetzt } : { einladung_am: jetzt, geaendert_nach_einladung: false });
+      const nurAuswahl = r.alle ? "" : ` Das war nur deine Auswahl – ${x.nurOffen ? "die Erinnerung" : "die Einladung"} an alle steht noch aus.`;
+      if (x.nurOffen) { melde(`🔔 Erinnerung an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet.${nurAuswahl}`); return buStart(); }
+      // 2.751.0 KC-CLUB-SITZUNG-ABLAUF: nach der Einladung kommt (ein paar Tage später) „Sitzung vorbereiten“, zuletzt die Aktentasche – das Büro erinnert daran
+      buWeiterFragen(x.aenderung ? "✅ Die Mitglieder wissen Bescheid" : "✅ Einladung gesendet",
+        `${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied hat" : "Mitglieder haben"} ${x.aenderung ? "die Änderungsmeldung" : "die Einladung"} bekommen.${nurAuswahl}${x.aenderung ? "" : " Als Nächstes erinnert dich das Büro an alle, die noch nicht geantwortet haben, dann kommt „Sitzung vorbereiten“ (Anwesende, Anmerkung, Mitschreibbogen) und zuletzt die Aktentasche."}`,
+        [["🗂️ Zurück ins Büro", "buStart()", true], ...(x.aenderung ? [] : [["🖨️ Sitzung jetzt schon vorbereiten", `buSitzungOeffnen('${x.id}', 'vor')`]]), ["🏠 Zur Club-App", "zeige('start')"]]);
     } catch (e) { meldeFehler(e); }
   });
 }
@@ -25184,18 +25505,18 @@ function buKBrief() {
 // Nutzt das vorhandene Protokoll (Anlagen, Aufgaben, Veröffentlichen mit Einspruchsfrist): die Büro-Seite rendert #prAnlagen/#prAufgaben,
 // damit die bekannten Funktionen (protokollDateien, prNeuLaden, aufgabeZeile) hier genauso arbeiten.
 let BU_N = { liste: null, t: null, wer: new Set(), was: "", bis: "" };
-async function buNachherListe(opt = {}) { try { const r = await api("buero_nachher", {}, opt); BU_N.liste = Array.isArray(r?.sitzungen) ? r.sitzungen : []; } catch { BU_N.liste = []; } return BU_N.liste; }
+async function buNachherListe(opt = {}) { try { const r = await api("buero_nachher", {}, opt); BU_N.liste = Array.isArray(r?.sitzungen) ? r.sitzungen : []; BU_N.fehler = false; } catch { BU_N.liste = []; BU_N.fehler = true; } return BU_N.liste; } // 2.749.0: Fehler merken
 // Hinweis auf der Büro-Startseite: was nach der letzten Sitzung noch fehlt
 function buNachherTipp() {
   const t = (BU_N.liste || []).find((x) => new Date(x.beginn) < Date.now() && Date.now() - new Date(x.beginn) < 21 * 86400000); if (!t) return null;
-  if (!t.protokoll || !t.fotos) return { t, text: `📸 Foto der Mitschrift von „${t.titel}“ anhängen` };
+  if (!t.protokoll || (!t.fotos && t.protokoll.status !== "veroeffentlicht")) return { t, text: `📸 Foto der Mitschrift von „${t.titel}“ anhängen` }; // 2.749.0: veröffentlicht → kein Foto mehr verlangen
   if (t.nichtMitgeteilt && t.protokoll.status === "veroeffentlicht") return { t, text: "✔️ Aufgaben mitteilen" };
   if (t.protokoll.status === "entwurf") return { t, text: `📢 Protokoll „${t.titel}“ veröffentlichen` };
   return null;
 }
 function buNachherWahl(titel) {
   const l = (BU_N.liste || []).filter((x) => new Date(x.beginn) < Date.now() + 6 * 3600000);
-  if (!l.length) return melde("Es gab in den letzten Wochen keine Sitzung.", true);
+  if (!l.length) return melde(BU_N.fehler ? "⚠️ Die letzten Sitzungen konnten gerade nicht geladen werden – bitte gleich noch einmal versuchen." : "Es gab in den letzten Wochen keine Sitzung.", true); // 2.749.0: unbekannt ≠ leer
   if (l.length === 1) return buNachher(l[0].id);
   blattAuf("buWahl", `${einwHtml("b-bu-sitzung")}<h3 style="margin-top:0">${titel}</h3><div class="wahl">${l.map((t) => `<button onclick="$('buWahl').remove();buNachher('${t.id}')">${esc(t.titel)}<br><small>${esc(wann(t.beginn))} · ${t.protokoll ? (t.protokoll.status === "entwurf" ? "📝 Entwurf" : "✅ veröffentlicht") : "noch kein Protokoll"}${t.fotos ? ` · 📸 ${t.fotos}` : ""}${t.aufgaben ? ` · ✔️ ${t.aufgaben}` : ""}</small></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" onclick="$('buWahl').remove()">Abbrechen</button></div>`);
@@ -30369,7 +30690,7 @@ function ablkEingang(id) {
     <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="ablkEgNotiz" rows="2" maxlength="500">${esc((x.text || "").slice(0, 500))}</textarea></label>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="ablkEgLos" onclick="ablkEgSenden(this, '${esc(id)}')" disabled>📤 Senden</button><button class="knopf" onclick="$('ablkEgBlatt').remove()">Abbrechen</button></div>`);
   $("ablkEgBlatt").style.zIndex = "2050";
-  zwStart("ablkEgAn", { titel: "👤 Wer bekommt die Datei?", alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: ablkEgKnopf });
+  zwStart("ablkEgAn", { titel: "👤 Wer bekommt die Datei?", alleText: BU_ALLE_TEXT, alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: ablkEgKnopf });
 }
 const ablkEgDateien = () => [...document.querySelectorAll("#ablkEgBlatt [data-ef]:checked")].map((c) => c.dataset.ef);
 function ablkEgKnopf() {
@@ -31507,8 +31828,8 @@ function caAuswahl(vorschau, liste) {
 // „gemeinsame Tasche, aber jeden was dazu packen lassen“). In der Tasche liegen Verweise auf die Originale (immer der aktuelle Stand) – geöffnet wird
 // mit den vorhandenen Wegen (Protokoll, Vorschlag, Ankreuzbogen, Anlagen-Ansicht); Tagesordnung, Zusagen und Aufgaben druckt die Tasche selbst (CD).
 const AT_REG = { packliste: ["📋", "Packliste"], einladung: ["🗓️", "Einladung & Tagesordnung"], protokolle: ["📝", "Protokolle"], vorschlaege: ["💡", "Vorschläge & Abstimmungen"],
-  mitglieder: ["👥", "Mitglieder"], aufgaben: ["📌", "Aufgaben"], sonstiges: ["📎", "Sonstiges"] };
-const AT_ART_SYM = { tagesordnung: "🗓️", teilnehmer: "👥", protokoll: "📝", vorschlag: "💡", abstimmung: "🗳️", aufgaben: "📌" };
+  mitglieder: ["👥", "Mitglieder"], aufgaben: ["📌", "Aufgaben"], sonstiges: ["📎", "Sonstiges"], mitnehmen: ["🧳", "Mitnehmen"] };
+const AT_ART_SYM = { tagesordnung: "🗓️", teilnehmer: "👥", protokoll: "📝", vorschlag: "💡", abstimmung: "🗳️", aufgaben: "📌", mitnehmen: "🧳" };
 const AT = { tid: null, d: null, reg: "packliste", notizUhr: null };
 const AT_STAND = { offen: "💼 wird gepackt", vorlaeufig: "🟠 vorläufig gepackt", gepackt: "✅ gepackt" }; // 2.699.0 KC-CLUB-AKTENTASCHE-STUFEN
 
@@ -31582,9 +31903,14 @@ function atZeichnen() {
   if (AT.reg === "packliste") {
     const dabei = inh.filter((i) => i.dabei).length, fehlt = d.vorschlag.filter((v) => !inh.some((i) => i.k === v.k)).length;
     const neu = inh.filter((i) => i.neu).length;
-    inhalt = (neu ? `<div class="karte at-neu">🆕 <b>${neu} ${neu === 1 ? "Unterlage ist" : "Unterlagen sind"} von selbst nachgekommen</b> – unten mit 🆕 markiert. Was nicht gebraucht wird: ⋮ → aus der Tasche nehmen.<br><button class="knopf" style="margin-top:6px" onclick="atAendern({ op: 'gesehen' })">✓ Gesehen</button></div>` : "")
+    // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: Tagesordnung nach dem Packen geändert → gedruckte Tagesordnung ist veraltet
+    const toAlt = x.gepackt_am && d.blatt?.tagesordnung_am && Date.parse(d.blatt.tagesordnung_am) > Date.parse(x.gepackt_am) + 60000;
+    inhalt = (toAlt ? `<div class="karte at-neu">✏️ <b>Die Tagesordnung wurde nach dem Packen geändert</b> (${esc(zeitKurz(d.blatt.tagesordnung_am))}). Eine schon gedruckte Tagesordnung bitte neu drucken – in der Tasche liegt immer der aktuelle Stand.</div>` : "") + (neu ? `<div class="karte at-neu">🆕 <b>${neu} ${neu === 1 ? "Unterlage ist" : "Unterlagen sind"} von selbst nachgekommen</b> – unten mit 🆕 markiert. Was nicht gebraucht wird: ⋮ → aus der Tasche nehmen.<br><button class="knopf" style="margin-top:6px" onclick="atAendern({ op: 'gesehen' })">✓ Gesehen</button></div>` : "")
       + `<p class="hinweis" style="margin:4px 0">Alles, was in der Tasche ist. ⬜ antippen, wenn es eingepackt bzw. dabei ist – <b>${dabei} von ${inh.length}</b>.</p>`
       + d.register.filter((r) => zahl(r)).map((r) => `<div class="at-reg-kopf">${AT_REG[r][0]} ${AT_REG[r][1]}</div>${inh.filter((i) => i.reg === r).map((i) => teil(i, true)).join("")}`).join("")
+      // 2.751.0 KC-CLUB-AKTENTASCHE-MITNEHMEN (Wunsch Hansi 29.10. „Checkliste, was man noch mitnehmen muss – Muster der Schilder, Getränkeproben, alles Externe“)
+      + `<div class="at-reg-kopf">🧳 Mitnehmen – was nicht in der App liegt</div>${inh.filter((i) => i.art === "mitnehmen").map((i) => teil(i, true)).join("")}
+        ${atVorbei() ? "" : `<div class="zwei" style="align-items:end"><label class="feld" style="margin:0">Was noch mit muss<input id="atMit" maxlength="120" placeholder="z. B. Muster der Schilder, Getränkeproben" enterkeyhint="done" onkeydown="if(event.key==='Enter'){event.preventDefault();atMitnehmen()}"></label><button class="knopf" onclick="atMitnehmen(this)">＋ Dazu</button></div>`}`
       + `<label class="feld" style="margin-top:12px">📝 Notizen <small class="hinweis" id="atNotizStand">${x.geaendert ? `zuletzt geändert von ${esc(x.geaendert)}` : ""}</small>
         <textarea id="atNotiz" rows="8" placeholder="Eigene Notizen für diesen Termin – speichert sich von selbst. Alle drei sehen dieselben Notizen." oninput="atNotizTippen()" onblur="atNotizJetzt()">${esc(x.notiz || "")}</textarea></label>`
       + `<div class="knoepfe"><button class="knopf haupt" onclick="atDruckWahl()">🖨️ Drucken – auswählen</button><button class="knopf haupt" onclick="atFreigabeWahl()">📤 Freigeben</button>${fehlt ? `<button class="knopf" onclick="atPackenZeigen()">💡 Vorschläge nachpacken (${fehlt})</button>` : ""}</div>`;
@@ -31604,6 +31930,10 @@ function atZeichnen() {
       <button class="knopf" onclick="atNotizJetzt();$('atBlatt').remove()">Schließen</button></div>`);
   f.querySelector(".blatt-innen").scrollTop = alt;
 }
+async function atMitnehmen(knopf) {
+  const e = $("atMit"), titel = (e?.value || "").trim(); if (!titel) return melde("Bitte kurz eingeben, was mitkommen soll – z. B. „Getränkeproben“.", true);
+  const r = await atAendern({ op: "mitnehmen", titel }, knopf); if (r) { melde(`🧳 „${titel}“ steht auf der Mitnehm-Liste`); setTimeout(() => $("atMit")?.focus(), 50); }
+}
 function atRegister(r) { atNotizJetzt(); AT.reg = r; atZeichnen(); $("atBlatt")?.querySelector(".blatt-innen")?.scrollTo(0, 0); }
 async function atAendern(daten, knopf) { // ein Schritt an der gemeinsamen Tasche → frischer Stand vom Server
   let r = null; const los = async () => { r = await api("aktentasche_aendern", { treffen_id: AT.tid, ...daten }); AT.d.tasche = r.tasche; if ($("atBlatt")) atZeichnen(); };
@@ -31616,6 +31946,8 @@ async function atStatus(st, knopf) {
     if (offen && !(await frage(`✔ Fertig gepackt?\n\n${offen} ${offen === 1 ? "Teil ist" : "Teile sind"} noch nicht abgehakt. Trotzdem als gepackt melden? Dann liegt die Tasche am Abend in der Kachel 🍽️ Clubabend – nur bei Clubsprecher, Kassenwart und Admin.`, { ja: "✔ Ja, gepackt", nein: "Noch nicht", gefahr: false }))) return; }
   const r = await atAendern({ op: "status", status: st }, knopf);
   if (r) melde(st === "gepackt" ? "✅ Tasche fertig gepackt – sie liegt am Abend in der Kachel 🍽️ Clubabend" : st === "vorlaeufig" ? "🟠 Vorläufig gepackt – liegt schon in der Kachel 🍽️ Clubabend, Neues kommt von selbst dazu" : "💼 Tasche ist wieder offen zum Packen");
+  // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: Schrittfolge im Büro auf dem Laufenden halten
+  const ts = r && (BU.start?.sitzungen || []).find((x) => x.id === AT.tid); if (ts) ts.aktentasche = { status: st, gepackt_am: new Date().toISOString() };
 }
 function atNotizTippen() {
   clearTimeout(AT.notizUhr); const s = $("atNotizStand"); if (s) s.textContent = "✏️ …";
@@ -31629,10 +31961,10 @@ async function atNotizJetzt() {
 }
 function atTeilMenue(k) {
   const i = atTeil(k); if (!i) return;
-  const druck = true; // 2.696.0: jedes Teil lässt sich drucken (Vorschlag mit Beschreibung im CD)
+  const druck = i.art !== "mitnehmen"; // 2.696.0: jedes Teil lässt sich drucken (Vorschlag mit Beschreibung im CD) – 2.751.0: außer der Mitnehm-Liste (nichts zum Drucken)
   const knopf = (sym, t, js, kl = "") => `<button class="knopf${kl}" style="text-align:left" onclick="$('atMenue').remove();${js}">${sym} ${t}</button>`;
   blattAuf("atMenue", `<h3 style="margin:0 0 2px">${atSym(i)} ${esc(i.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(AT_REG[i.reg]?.[1] || "")}${i.vonName ? " · eingepackt von " + esc(i.vonName) : ""}</p>
-    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${knopf("👁️", "Öffnen", `atTeilOeffnen('${esc(k)}')`, " haupt")}${druck ? knopf("🖨️", "Drucken", `atTeilDrucken('${esc(k)}')`) : ""}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">${druck ? knopf("👁️", "Öffnen", `atTeilOeffnen('${esc(k)}')`, " haupt") : ""}${druck ? knopf("🖨️", "Drucken", `atTeilDrucken('${esc(k)}')`) : ""}
     ${i.art === "anlage" ? knopf("📤", "Teilen / Weiterleiten", `atAnlage('${esc(k)}', 'teilen')`) : ""}${knopf(i.dabei ? "⬜" : "☑️", i.dabei ? "Doch nicht dabei" : "Liegt dabei", `atDabei('${esc(k)}', ${!i.dabei})`)}
     ${knopf("🗑️", "Aus der Tasche nehmen", `atWeg('${esc(k)}')`)}<button class="knopf" onclick="$('atMenue').remove()">Schließen</button></div>`);
 }
@@ -31644,6 +31976,7 @@ async function atWeg(k) {
 function atAnlage(k, was) { const i = atTeil(k); if (!i) return; AR_M = { datei: i.ref, name: i.name || i.titel, titel: i.titel, mime: i.mime, datum: i.am }; arDateiAktion(was); }
 async function atTeilOeffnen(k) {
   const i = atTeil(k); if (!i) return;
+  if (i.art === "mitnehmen") return atDabei(k, !i.dabei); // 2.751.0: Mitnehm-Liste – antippen = abhaken
   if (i.art === "anlage") return atAnlage(k, "oeffnen");
   if (["tagesordnung", "teilnehmer", "aufgaben"].includes(i.art)) return atListeZeigen(i.art);
   if (i.art === "protokoll") { atNotizJetzt(); $("atBlatt")?.remove(); return protokollOeffnen(i.ref); }
@@ -31665,7 +31998,7 @@ function atListeZeigen(art) {
     : (b.aufgaben.length ? `<div class="at-liste">${b.aufgaben.map((a) => `<div>📌 <b>${esc(String(a.wer).split(" ")[0])}</b>: ${esc(a.text)}${a.faellig ? ` <small class="hinweis">(bis ${esc(fTag.format(new Date(a.faellig + "T12:00:00")))})</small>` : ""}</div>`).join("")}</div>` : '<p class="hinweis">Keine offenen Aufgaben.</p>');
   blattAuf("atListe", `<h3 style="margin:0 0 6px">${kopf}</h3><p class="hinweis" style="margin:0 0 8px">${esc(atKopf())}</p>${inhalt}
     <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="druckStarten('aktentasche', { teil: '${art}' })">🖨️ Drucken</button>
-    ${art === "tagesordnung" && ICH?.buero ? `<button class="knopf" onclick="$('atListe').remove();$('atBlatt')?.remove();buSitzungOeffnen('${esc(AT.tid)}')">📝 Im Büro bearbeiten</button>` : ""}<button class="knopf" onclick="$('atListe').remove()">Schließen</button></div>`);
+    ${art === "tagesordnung" && ICH?.buero ? `<button class="knopf" onclick="$('atListe').remove();$('atBlatt')?.remove();buSitzungOeffnen('${esc(AT.tid)}', 'to')">📝 Im Büro bearbeiten</button>` : ""}<button class="knopf" onclick="$('atListe').remove()">Schließen</button></div>`);
 }
 // Dazulegen: Foto (Kamera), Bild aus der Galerie, PDF, beliebige Datei – hochladen, dann in das gewählte Register der gemeinsamen Tasche
 function atDatei(art) {
@@ -31725,7 +32058,7 @@ function atFreigabeWahl() {
     <label class="feld" style="margin-top:8px">Ablage-Vorschlag (Register im Archiv der Mitglieder)<select id="atFreiReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
     <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="atFreiNotiz" rows="2" maxlength="500" placeholder="z. B. Unterlagen zur Clubsitzung – bitte vorher durchlesen."></textarea></label>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="atFreiLos" onclick="atFreigeben(this)" disabled>📤 Senden</button><button class="knopf" onclick="$('atFreiBlatt').remove()">Abbrechen</button></div>`);
-  zwStart("atFreiAn", { titel: "👤 Wer bekommt die Unterlagen?", alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: atFreiKnopf });
+  zwStart("atFreiAn", { titel: "👤 Wer bekommt die Unterlagen?", alleText: BU_ALLE_TEXT, alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: atFreiKnopf });
 }
 const atFreiTeile = () => [...document.querySelectorAll("#atFreiBlatt [data-fk]:checked")].map((c) => atTeil(c.dataset.fk)).filter(Boolean);
 function atFreiKnopf() {
@@ -31805,7 +32138,7 @@ function atDruck(teil) {
   if (teil === "teilnehmer") { const antw = { ja: "kommt", vielleicht: "vielleicht", nein: "kann nicht" };
     return { titel: "Zusagen & Absagen", unter, fuss: "Aktentasche",
       html: `<table style="width:100%;border-collapse:collapse;font-size:3.6mm"><thead><tr style="text-align:left;border-bottom:.5mm solid #741521"><th style="padding:1.4mm 2mm">Name</th><th style="padding:1.4mm 2mm;width:32mm">Antwort</th><th style="padding:1.4mm 2mm;width:14mm">da</th></tr></thead>
-        <tbody>${b.mitglieder.map((m) => `<tr style="break-inside:avoid"><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999;font-weight:700">${esc(m.name)}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${esc(antw[m.antwort] || "–")}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${box(false)}</td></tr>`).join("")}</tbody></table>` }; }
+        <tbody>${b.mitglieder.map((m) => `<tr style="break-inside:avoid"><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999;font-weight:700">${esc(m.name)}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${esc(antw[m.antwort] || "–")}${m.erwartet ? " · erwartet" : ""}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${box(false)}</td></tr>`).join("")}</tbody></table>` }; } // 2.749.0: „erwartet“ = im Büro angehakt
   if (teil === "aufgaben") return { titel: "Offene Aufgaben", unter, fuss: "Aktentasche",
     html: b.aufgaben.length ? `<table style="width:100%;border-collapse:collapse;font-size:3.6mm"><tbody>${b.aufgaben.map((a) => `<tr style="break-inside:avoid"><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999;width:8mm">${box(false)}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999;width:30mm;font-weight:700">${esc(a.wer)}</td><td style="padding:1.6mm 2mm;border-bottom:.2mm solid #999">${esc(a.text)}${a.faellig ? ` <small>(bis ${esc(a.faellig.split("-").reverse().join("."))})</small>` : ""}</td></tr>`).join("")}</tbody></table>` : "<p>Keine offenen Aufgaben.</p>" };
   if (teil === "vorschlag") { const v = VORSCHLAG_MAP.get(DRUCK?.param?.ref); if (!v) throw new Error("Vorschlag nicht gefunden.");
@@ -31840,12 +32173,14 @@ function caZeichnen() {
   const f = blattAuf("caBlatt", `<h3 style="margin:0">🍽️ ${/clubabend/i.test(tr.titel || "") ? esc(tr.titel) : `Clubabend – ${esc(tr.titel || "Köcheclub")}`}</h3>
     <p class="hinweis" style="margin:2px 0 8px">${esc(wann(tr.beginn))}${tr.ort ? " · " + esc(tr.ort) : ""}${L ? "" : " · nur ansehen – abhaken macht die Clubleitung"}</p>
     ${L && r.aktentasche ? `<button type="button" class="knopf haupt ca-tasche" onclick="atOeffnen('${esc(tr.id)}')">💼 Aktentasche öffnen <small>(${r.aktentasche.anzahl} ${r.aktentasche.anzahl === 1 ? "Teil" : "Teile"}${r.aktentasche.vorlaeufig ? " · vorläufig" : ""})</small></button>` : ""}
+    ${L && r.aktentasche ? `<button type="button" class="knopf ca-frei" data-k="frei">📤 Unterlagen freigeben <small>(in die Eingangskörbe der Mitglieder)</small></button>` : ""}
     ${klappe("top", `📋 Tagesordnung <small>(${fertig} von ${r.tagesordnung.length} erledigt)</small>`, `<div class="ca-liste">${top || '<p class="hinweis">Noch keine Tagesordnung.</p>'}</div>`)}
     ${klappe("da", `✅ Anwesend <small>(${r.anwesend.length})</small>`, anw)}
     ${L ? `<div class="knoepfe ca-leitung"><button type="button" class="knopf" data-k="protokoll">📝 Protokoll ${r.protokoll ? "öffnen" : "anlegen"}</button><button type="button" class="knopf" data-k="termin">🗓️ Nächsten Termin abstimmen</button></div>` : ""}
     ${klappe("fotos", "📸 Fotos vom Abend", fotos)}
     ${klappe("gb", `🎂 Geburtstage seit dem letzten Treffen <small>(${r.geburtstage.length})</small>`, gb)}
     ${klappe("auf", `📌 Offene Aufgaben <small>(${r.aufgaben.length})</small>`, auf)}
+    ${L ? klappe("ab", `✅ Zum Schluss <small>(${caAbschluss(r).filter((x) => x.ok).length} von ${caAbschluss(r).length})</small>`, caAbschlussHtml(r)) : ""}
     <button type="button" class="knopf" onclick="$('caBlatt').remove()">Schließen</button>`);
   f.querySelector(".blatt-innen").scrollTop = alt;
   f.querySelectorAll("details[data-ca]").forEach((d) => d.addEventListener("toggle", () => (d.open ? CA.offen.add(d.dataset.ca) : CA.offen.delete(d.dataset.ca))));
@@ -31854,6 +32189,25 @@ function caZeichnen() {
   f.querySelector('[data-k="protokoll"]')?.addEventListener("click", () => { f.remove(); r.protokoll ? protokollOeffnen(r.protokoll.id) : protokollAnlegen(tr.id); });
   f.querySelector('[data-k="termin"]')?.addEventListener("click", () => { f.remove(); ltStartForm(); });
   f.querySelector('[data-k="album"]')?.addEventListener("click", caAlbum);
+  f.querySelector('[data-k="frei"]')?.addEventListener("click", async () => { await atOeffnen(tr.id); if ($("atBlatt")) atFreigabeWahl(); }); // 2.751.0: während der Sitzung freigeben
+  f.querySelectorAll("[data-ab]").forEach((b) => (b.onclick = () => caSetzen({ erledigt: "ab:" + b.dataset.ab, an: !(r.abschluss || []).includes("ab:" + b.dataset.ab) }, b)));
+  f.querySelectorAll("[data-abk]").forEach((b) => (b.onclick = () => { const k = b.dataset.abk; if (k !== "album") f.remove(); k === "protokoll" ? (r.protokoll ? protokollOeffnen(r.protokoll.id) : protokollAnlegen(tr.id)) : k === "termin" ? ltStartForm() : caAlbum(); }));
+}
+// 2.751.0 KC-CLUB-CLUBABEND-ABSCHLUSS (Wunsch Hansi 29.10. „zum Schluss alles an dem Abend checken – Aufgaben verteilen, evtl. Fotos machen usw. –
+// und als letztes auf den nächsten Termin hinweisen, dann die Live-Abstimmung“): Abhak-Liste am Ende des Clubabends. Tagesordnung zählt von selbst,
+// der Rest wird abgehakt (gespeichert wie die Tagesordnung: kc_club_clubabend.erledigt, Schlüssel „ab:…“). Registry – neuer Punkt = ein Eintrag.
+const CA_ABSCHLUSS = [
+  { id: "top", t: "Alle Tagesordnungspunkte besprochen", auto: (r) => r.tagesordnung.length > 0 && r.tagesordnung.every((x) => x.erledigt) },
+  { id: "anwesend", t: "Anwesende vollständig eingetragen" },
+  { id: "aufgaben", t: "Aufgaben verteilt (im Protokoll)", knopf: ["protokoll", "📝 Protokoll"] },
+  { id: "fotos", t: "Fotos gemacht", knopf: ["album", "📸 Album"] },
+  { id: "termin", t: "Nächster Termin abgestimmt – als Letztes", knopf: ["termin", "🗓️ Live-Abstimmung"] },
+];
+const caAbschluss = (r) => CA_ABSCHLUSS.map((x) => ({ ...x, ok: x.auto ? x.auto(r) : (r.abschluss || []).includes("ab:" + x.id) }));
+function caAbschlussHtml(r) {
+  return `<div class="ca-liste">${caAbschluss(r).map((x) => `<div class="ca-top${x.ok ? " fertig" : ""}">${x.auto ? `<span class="ca-haken" aria-hidden="true">${x.ok ? "☑️" : "⬜"}</span>`
+    : `<button type="button" class="ca-haken" data-ab="${x.id}" aria-label="${x.ok ? "Wieder offen" : "Abhaken"}">${x.ok ? "☑️" : "⬜"}</button>`}<span class="ca-tx">${esc(x.t)}${x.auto ? ' <small class="hinweis">(zählt von selbst)</small>' : ""}</span>
+    ${x.knopf && !(x.knopf[0] === "album" && r.album) ? `<button type="button" class="knopf klein" data-abk="${x.knopf[0]}">${x.knopf[1]}</button>` : ""}</div>`).join("")}</div>`;
 }
 async function caSetzen(was, knopf) {
   if (knopf) knopf.disabled = true;
@@ -40404,6 +40758,7 @@ async function schluesselZurueck() {
     setTimeout(() => kopfGlanzStarten(), 400); // 2.407.0 KC-CLUB-KOPF-GLANZ-SICHTBAR: erst nach dem Laden
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
+    if (!h || h === "#") setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)
