@@ -15,6 +15,7 @@ const appBrief = new Function("TZ", "fZeit", app.slice(aStart, aEnde) + "; retur
 
 const d = { vorname: "Marianne", titel: "Clubsitzung November", beginn: "2026-10-30T18:00:00Z", ort: "Gartenhütte bei Anne",
   top: ["1. Begrüßung", "2. Bericht des Kassenwarts", "3. Verschiedenes"], zusatz: "Bitte Kassenbuch mitbringen", url: "https://x/#termine", von: "Klaus", amt: "Clubsprecher", erinnerung: false };
+// 2.751.0 KC-CLUB-SITZUNG-ABLAUF: neuer Satz „Dringende Vorschläge oder Änderungen können bis zur Sitzung noch dazukommen.“ (Wunsch Hansi 29.10.)
 const brief = serverBrief(d);
 assert.equal(brief, `Hallo Marianne,
 
@@ -27,6 +28,8 @@ Folgende Punkte stehen auf der Tagesordnung:
 1. Begrüßung
 2. Bericht des Kassenwarts
 3. Verschiedenes
+
+Dringende Vorschläge oder Änderungen können bis zur Sitzung noch dazukommen.
 
 Bitte Kassenbuch mitbringen
 

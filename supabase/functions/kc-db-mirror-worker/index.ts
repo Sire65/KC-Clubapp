@@ -67,12 +67,14 @@ Deno.serve(async(req)=>{
   const BLOCK=500;
   const blockAbgleich=async(table:string,i:number,sc:string,sh:string,hashMode:string,started:string,startMs:number)=>{
     const {data:bh,error:be}=await sb.rpc("kc_db_mirror_block_hashes",{p_table_name:table,p_width:BLOCK});
-    if(be||!bh?.pk||!Array.isArray(bh.blocks))return null;
+    if(be||!(bh?.pk||bh?.zeit)||!Array.isArray(bh.blocks))return null; // KICC-F-110: pk = Ganzzahl-Schlüssel, sonst zeit = Tagesblöcke
     const schema=await schemaAbgleich(table);
     if(schema.created||schema.type_mismatch.length||schema.not_added_privacy.length)return null;
-    const q=`"public".${qi(table)}`,pk=qi(String(bh.pk)),w=Number(bh.width);
+    const q=`"public".${qi(table)}`,w=Number(bh.width);
     if(!Number.isInteger(w)||w<10)return null;
-    const ziel=await getNeon().unsafe(`select (${pk}/${w})::bigint::text b,count(*)::bigint::text n,md5(string_agg(row_to_json(t)::text,'' order by ${pk})) h from ${q} t group by 1`);
+    // Block-Nummer und Reihenfolge exakt wie kc_db_mirror_block_hashes in Supabase
+    const sp=qi(String(bh.pk||bh.zeit)),blk=bh.pk?`(${sp}/${w})::bigint`:`floor(extract(epoch from ${sp})/${w})::bigint`,ord=bh.pk?sp:`${sp}, row_to_json(t)::text collate "C"`;
+    const ziel=await getNeon().unsafe(`select ${blk}::text b,count(*)::bigint::text n,md5(string_agg(row_to_json(t)::text,'' order by ${ord})) h from ${q} t group by 1`);
     const zielMap=new Map<string,string>(ziel.map((z:any)=>[String(z.b),`${z.n}|${z.h}`]));
     const quelle=new Set<string>();const anders:string[]=[];
     for(const [b,n,h] of bh.blocks as [number,number,string][]){const k=String(b);quelle.add(k);if(zielMap.get(k)!==`${n}|${h}`)anders.push(k)}
@@ -85,14 +87,14 @@ Deno.serve(async(req)=>{
       const p=String(rows.payload_text??"[]");teile.push(p);bytes+=new TextEncoder().encode(p).byteLength;
     }
     if(anders.length)await getNeon().begin(async(tx:any)=>{
-      await tx.unsafe(`delete from ${q} where (${pk}/${w})::bigint = any($1::bigint[])`,[anders]);
+      await tx.unsafe(`delete from ${q} where ${blk} = any($1::bigint[])`,[anders]);
       for(const p of teile)await tx.unsafe(`insert into ${q} overriding system value select x.* from jsonb_populate_recordset(null::${q},(($1::jsonb #>> '{}')::jsonb)) x`,[p]);
     });
     const v=await getNeon().unsafe(verifySqlFor(table,q));const tc=String(v[0]?.row_count??"0"),th=String(v[0]?.content_hash??"");
     if(tc!==sc||th!==sh)return null;
     const endMs=Date.now(),durationMs=Math.max(1,endMs-startMs);
     const metrics={table,batch_id:batchId,batch_index:i+1,batch_total:batchTotal,payload_bytes:bytes,source_hash:sh,target_hash:th,hash_mode:hashMode,
-      transfer_mode:"block_delta",block_width:w,blocks_total:bh.blocks.length,blocks_changed:anders.length,duration_ms:durationMs,
+      transfer_mode:"block_delta",block_mode:bh.pk?"schluessel":"zeit",block_width:w,blocks_total:bh.blocks.length,blocks_changed:anders.length,duration_ms:durationMs,
       ...(schema.columns_added.length?{schema_sync:schema}:{})};
     const {error:ie}=await sb.from("kc_db_mirror_runs").insert({run_type:"snapshot",status:"ok",started_at:started,finished_at:new Date(endMs).toISOString(),source_rows:Number(sc),target_rows:Number(tc),mismatch_count:0,message:`${table}: ${anders.length} of ${bh.blocks.length} blocks transferred; source and target identical`,metrics});
     if(ie)return null;
