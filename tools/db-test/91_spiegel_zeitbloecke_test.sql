@@ -7,7 +7,7 @@ begin
   vi := public.kc_db_mirror_block_hashes('kc_club_protokoll', 500);
   vz := public.kc_db_mirror_block_hashes('kc_club_db_last', 500);
   vc := public.kc_db_mirror_block_hashes('kc_communication_requests', 500);
-  vp := public.kc_db_mirror_block_hashes('kc_core_people', 500);
+  vp := public.kc_db_mirror_block_hashes('kng_keys', 500);
   b := vz->'blocks'->0;
   rz := public.kc_db_mirror_block_rows('kc_club_db_last', 86400, array[(b->>0)::bigint]);
   raise exception 'TESTBERICHT ganzzahl_unveraendert=% | db_last_zeit=% | requests_zeit=% | breite_tag=% | bloecke_da=% | zeilen_passen=% | personen_ganz=% | anon_kein_recht=% | auth_kein_recht=%',
