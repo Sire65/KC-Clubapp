@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.751.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.752.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1987,8 +1987,9 @@ function rgHinweisLos() { rundgangStart(false, "warum"); } // 2.254.0 KC-CLUB-ER
 const FILME = [
   // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
   // 2.750.0 (Wunsch Hansi 29.10. „Film für Klaus neu anpassen“): Fassung mit Frage beim Start, Schritt für Schritt und Frist 3 Tage vorher – wieder eigene Kennung
-  { id: "clubsitzungfrist", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "12½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=3", bild: "film/clubsitzung-vorschau.jpg",
-    u: "Neue Fassung: Die App fragt beim Start, was dran ist – Tagesordnung festlegen, spätestens 3 Tage vorher einladen, Aktentasche packen, erinnern, Änderungen mitteilen – und am Abend Clubabend Live mit Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
+  // 2.752.0 (Wunsch Hansi 29.10. „Video auch anpassen, die Vertretung zeigen – mit dem Kassenwart“): Ablauf wie im Leben (2.751.0) – wieder eigene Kennung
+  { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "DAUER Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.jpg",
+    u: "Neue Fassung: Tagesordnung und Einladung (3 Tage vorher), bis zur Sitzung erinnern, Änderungen, Vertretung durch den Kassenwart, einen Tag vorher vorbereiten, zuletzt die Aktentasche mit Mitnehm-Liste – am Abend Clubabend Live mit Freigeben, „Zum Schluss“ und Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
@@ -2322,6 +2323,7 @@ const HILFE = [
   { id: "express_zaehler", thema: "nachrichten", sym: "🏎️", t: "Express: höchstens 5 am Tag – daneben steht „2/5“", x: "Express ist für wirklich Eiliges. Jedes Mitglied kann <b>5 Express-Sendungen pro Tag</b> verschicken (gezählt werden die letzten 24 Stunden). Hakst du <b>🏎️ Express</b> an, steht daneben, wie viele du heute schon hattest – z. B. <b>2/5</b>. Nach dem Senden steht in der Meldung „heute 3/5“. Sind alle 5 verbraucht, geht Express nicht an – die App sagt dir, <b>ab wann</b> es wieder geht. Dann einfach normal senden.", seit: "2.391.0" },
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
   { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
+  { id: "nachrichten_reihe", thema: "nachrichten", sym: "↕️", t: "Abschnitte in der Chat-Liste verschieben – z. B. Einzelchats nach oben", x: "Ist die Übersicht nach <b>👥 Art</b> oder <b>🕒 Zeit</b> gegliedert, steht rechts in jedem Balken <b>▲</b> und <b>▼</b>. Damit verschiebst du den ganzen Abschnitt – zum Beispiel die <b>🙋 Einzelchats</b> ganz nach oben. Die App merkt sich die Reihenfolge auf diesem Gerät. <b>🔴 Ungelesen</b> bleibt immer ganz oben.", zeig: () => zeige("nachrichten"), seit: "2.752.0" }, // KC-CLUB-NACHRICHTEN-REIHE
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
   { id: "online_uhrzeit", thema: "nachrichten", sym: "🟢", t: "„… ist jetzt online“ – jetzt mit Uhrzeit", x: "Hast du die Mitteilung <b>„🟢 Klaus ist jetzt online“</b> eingeschaltet, steht jetzt die <b>Uhrzeit</b> dabei – z. B. „(19:05 Uhr)“ – und darunter der Tag. Kommt die Mitteilung erst später an (z. B. weil dein PC aus war), heißt sie <b>„🟢 Klaus war um 19:05 Uhr online“</b>. So weißt du, ob er wirklich gerade da ist.", seit: "2.390.0" },
   { id: "terminanfrage_oben", thema: "termine", sym: "📨", t: "Offene Terminanfragen stehen ganz oben", x: "Hat dich jemand per <b>Terminanfrage</b> gefragt und du hast noch nicht geantwortet, steht sie jetzt <b>ganz oben unter „Heute wichtig“</b> – rot umrandet. Die Kachel <b>📅 Termine</b> zeigt die Zahl. Antippen und mit <b>Ja</b>, <b>Vielleicht</b> oder <b>Nein</b> antworten.", seit: "2.389.0" },
@@ -25514,6 +25516,7 @@ async function buInformierenNein(id) {
 const SV_WTAGE = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"], SV_MONATE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 async function svOeffnen() {
   let r; try { r = await api("sitzung_vorgaben", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch {} // 2.752.0: für die Auswahl der Ämter
   const v = { ...SV_STANDARD, ...r.vorgaben }, zahlen = (id, von, bis, w, einh) => `<select id="${id}">${Array.from({ length: bis - von + 1 }, (_, i) => von + i).map((n) => `<option value="${n}"${n === w ? " selected" : ""}>${n} ${einh(n)}</option>`).join("")}</select>`;
   const tage = (n) => (n === 1 ? "Tag vorher" : n === 0 ? "Tage vorher (am Sitzungstag)" : "Tage vorher"), uhr = () => "Uhr";
   const aemter = [...new Set([v.vorbereiter_amt, ...(MITGLIEDER || []).flatMap((m) => m.aemter || [])].filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
@@ -25609,8 +25612,10 @@ async function buAufgabePruefen(versuch = 0) {
     buStart(); new Function(fn)();
   }));
 }
-function buKontrolleZeigen(t, r, besetzt, versuch) {
+async function buKontrolleZeigen(t, r, besetzt, versuch) {
   const kk = buKontrolleFuer(t); if (!kk) return;
+  // 2.752.0: die Mitgliederliste lädt die App erst bei Bedarf – ohne sie fehlte der Knopf „Clubsprecher anschreiben“ (Fund beim Film 29.10.)
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch {}
   if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; }
   try { sessionStorage.setItem("kc_bu_aufgabe_gezeigt", "1"); } catch {}
   const wer = (t?.vorbereiter || r?.vorbereiter || []).map((id) => (MITGLIEDER || []).find((m) => m.person_id === id)).filter(Boolean)[0], amt = t?.vertretung ? "Vertretung" : svWerte().vorbereiter_amt;
@@ -28380,6 +28385,24 @@ function uhGliedAlle(auf) { // „Alle auf-/zuklappen“: merkt jeden sichtbaren
   const o = {}; document.querySelectorAll("#unterhListe .uhg-kopf[data-k]").forEach((b) => (o[b.dataset.k] = auf));
   try { localStorage.setItem("kc_club_uhGliedOffen", JSON.stringify(o)); } catch {} unterhLaden();
 }
+// 2.752.0 KC-CLUB-NACHRICHTEN-REIHE (Wunsch Hansi 29.10. „in den Balken rechts einen Pfeil nach oben und unten, um die Chats zu verschieben –
+// damit ich z. B. die Einzelchats oben als erstes habe“): Reihenfolge der Abschnitte je Gliederung (Zeit/Art) mit ▲▼, je Gerät gemerkt wie die
+// Gliederung selbst. Gemerkt wird nur die Reihenfolge untereinander: ein neuer Abschnitt (z. B. ein neuer Monat) erscheint an seinem üblichen Platz.
+// „🔴 Ungelesen“ bleibt immer ganz oben. Rein (Test): uhgReihenfolge.
+const UHG_REIHE = "kc_club_uhGliedReihe";
+function uhgReihe() { try { return JSON.parse(localStorage.getItem(UHG_REIHE) || "{}") || {}; } catch { return {}; } }
+function uhgReihenfolge(liste, reihe) { // liste: Abschnitte in üblicher Reihenfolge (nach rang) · reihe: gemerkte Schlüssel
+  const pos = (k) => reihe.indexOf(k), bekannt = liste.filter((g) => pos(g.k) >= 0).sort((x, y) => pos(x.k) - pos(y.k));
+  let i = 0; return liste.map((g) => (pos(g.k) >= 0 ? bekannt[i++] : g));
+}
+function uhgVerschieben(k, d) {
+  const art = uhGlied(), keys = [...document.querySelectorAll("#unterhListe .uhg-kopf[data-k]")].map((b) => b.dataset.k), i = keys.indexOf(k), j = i + d;
+  if (i < 0 || j < 0 || j >= keys.length) return;
+  [keys[i], keys[j]] = [keys[j], keys[i]];
+  const r = uhgReihe(); r[art] = [...keys, ...(r[art] || []).filter((x) => !keys.includes(x))].slice(0, 60);
+  try { localStorage.setItem(UHG_REIHE, JSON.stringify(r)); } catch {}
+  unterhLaden().then(() => document.getElementById("uhg-" + k)?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+}
 const uhgMonat = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" });
 const uhgKurz = (d) => `${ntZwei(d.getDate())}.${ntZwei(d.getMonth() + 1)}.`;
 function uhgZeitAbschnitt(u) {
@@ -28406,16 +28429,17 @@ function uhGliedHtml(zeigen) {
   const ab = art === "art" ? uhgArtAbschnitt : art === "name" ? uhgNameAbschnitt : uhgZeitAbschnitt;
   const neu = zeigen.filter(oben), gruppen = new Map();
   for (const u of zeigen) { if (oben(u)) continue; const a = ab(u); if (!gruppen.has(a.k)) gruppen.set(a.k, { ...a, liste: [] }); gruppen.get(a.k).liste.push(u); }
-  const liste = [...gruppen.values()].sort((x, y) => x.rang - y.rang);
+  const liste = uhgReihenfolge([...gruppen.values()].sort((x, y) => x.rang - y.rang), art === "name" ? [] : uhgReihe()[art] || []); // 2.752.0 KC-CLUB-NACHRICHTEN-REIHE
   if (art === "name") liste.forEach((g) => g.liste.sort((x, y) => unterhName(x).localeCompare(unterhName(y), "de")));
   const wer = (l) => { const n = [...new Set(l.map((u) => (u.gruppe?.name || u.betreff || u.teilnehmer[0] || "").split(" ")[0]).filter(Boolean))]; return n.slice(0, 3).join(", ") + (n.length > 3 ? " …" : ""); };
   if (art === "name") { // A–Z: eine Liste mit schlanken Buchstaben-Trennern (Kästen je Buchstabe wären unruhig)
     const alle = liste.flatMap((g) => g.liste); let b = "";
     return wahl() + neuTeil() + `<div class="uhg-inhalt uhg-az">${alle.map((u) => { const x = uhgNameAbschnitt(u).t, kopf = x !== b ? `<div class="uhg-buchstabe">${esc(x)}</div>` : ""; b = x; return kopf + uhZeile(u); }).join("")}</div>`;
   }
-  const abschnitt = (g) => {
+  const abschnitt = (g, i) => {
     const auf = g.k in merk ? merk[g.k] : g.offen, rest = g.liste.reduce((n, u) => n + (u.ungelesen || 0), 0); // rest: nur stummgeschaltete (der Rest steht oben)
-    return `<section class="uhg${auf ? " auf" : ""}"><button type="button" class="uhg-kopf" id="uhg-${g.k}" data-k="${g.k}" aria-expanded="${auf}" onclick="uhGliedUm('${g.k}', ${g.offen})">
+    const pfeile = liste.length > 1 ? `<span class="uhg-pfeile"><button type="button" ${i ? "" : "disabled"} onclick="uhgVerschieben('${g.k}', -1)" aria-label="${esc(g.t)} nach oben" title="nach oben">▲</button><button type="button" ${i < liste.length - 1 ? "" : "disabled"} onclick="uhgVerschieben('${g.k}', 1)" aria-label="${esc(g.t)} nach unten" title="nach unten">▼</button></span>` : "";
+    return `<section class="uhg${auf ? " auf" : ""}${pfeile ? " mit-pfeilen" : ""}">${pfeile}<button type="button" class="uhg-kopf" id="uhg-${g.k}" data-k="${g.k}" aria-expanded="${auf}" onclick="uhGliedUm('${g.k}', ${g.offen})">
       <span class="tz-pfeil" aria-hidden="true">${auf ? "▾" : "▸"}</span><span class="uhg-titel">${esc(g.t)}</span><span class="uhg-zahl">${g.liste.length}</span>
       ${auf || g.rechts ? "" : `<span class="uhg-wer">${esc(wer(g.liste))}</span>`}${rest ? `<span class="punkt stumm" title="ungelesen in stummgeschalteten Chats">${rest}</span>` : ""}${g.rechts ? `<span class="uhg-rechts">${esc(g.rechts)}</span>` : ""}</button>
       ${auf ? `<div class="uhg-inhalt">${g.liste.map(uhZeile).join("")}</div>` : ""}</section>`;
@@ -35637,7 +35661,7 @@ async function umfrageLoeschen(id) {
 }
 // ---------- KC-CLUB-LIVE-TERMIN (2.231.0, Wunsch Hansi): Live-Abstimmung über den nächsten Sitzungstermin ----------
 // Clubsprecher (bzw. Kassenwart/Admin) startet am Ende der Sitzung („＋ Neu“ bei Termine oder Knopf über der Terminfindung). Vorschlag aus dem
-// Kalender (Server: letzter Freitag im nächsten Monat, Zeit/Ort wie zuletzt). Alle mit offener App bekommen sofort ein Fenster (direkte
+// Kalender (Server: letzter Freitag im nächsten Monat, Zeit/Ort wie zuletzt; 2.752.0: laut Sitzungs-Vorgaben). Alle mit offener App bekommen sofort ein Fenster (direkte
 // Leitung, sonst beim nächsten Online-Abgleich): Termin, Blick in den eigenen Club-App-Kalender, ✅ Ich kann · ❔ Unter Vorbehalt ·
 // ❌ Ich kann nicht. Der Sprecher sieht das Ergebnis live, legt fest (vorhandener Kern: Termin + Zusagen) oder schlägt eine Alternative
 // vor. Nach dem Festlegen fragt jede App einmal: „In deinen Kalender eintragen?“ (Handy-Kalender, Google, Outlook – vorhandene Wege).
@@ -35647,7 +35671,7 @@ const ltWann = (iso) => `${new Intl.DateTimeFormat("de-DE", { timeZone: TZ, week
 async function ltStartForm() {
   let v; try { v = await api("live_termin_vorschlag", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
   blattAuf("ltStartBlatt", `<h3 style="margin-top:0">🔴 Live-Abstimmung: nächster Termin</h3>
-    <p class="hinweis" style="margin-top:0">Alle, die gerade die Club-App offen haben, bekommen sofort ein Fenster und stimmen ab. Vorschlag aus dem Kalender: <b>letzter Freitag im nächsten Monat</b>, Uhrzeit und Ort wie beim letzten Treffen.</p>
+    <p class="hinweis" style="margin-top:0">Alle, die gerade die Club-App offen haben, bekommen sofort ein Fenster und stimmen ab. ${(() => { const v = svWerte(); return `Vorschlag laut ⚙️ Sitzungs-Vorgaben: <b>letzter ${esc(SV_WTAGE[v.wochentag] || "Freitag")} im Folgemonat</b>${v.uhrzeit ? `, ${esc(v.uhrzeit)} Uhr` : ""}${v.ort ? `, ${esc(v.ort)}` : ""}${v.ohne_monate.length ? ` (ohne ${v.ohne_monate.map((m) => SV_MONATE[m - 1]).join(", ")})` : ""}${!v.uhrzeit || !v.ort ? " – sonst wie beim letzten Treffen" : ""}.`; })()}</p>
     <label class="feld">Titel<input id="ltTitel" maxlength="120" value="${esc(v.titel || "Köcheclub-Treffen")}"></label>
     <div class="zwei"><label class="feld">Datum<input type="date" id="ltDatum" value="${esc(berlinIso(v.beginn))}"></label><label class="feld">Uhrzeit<input type="time" id="ltZeit" value="${esc(fZeit.format(new Date(v.beginn)))}"></label></div>
     <label class="feld">Ort<input id="ltOrt" maxlength="200" value="${esc(v.ort || "")}" placeholder="z. B. Vereinsheim"></label>

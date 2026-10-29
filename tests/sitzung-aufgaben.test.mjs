@@ -86,6 +86,8 @@ assert.deepEqual(k.l.map((x) => x.id), ["einladung"], "Hinweis: Einladung überf
 assert.equal(A.buKontrolleFuer(sitzung({ beginn: iso(2 * T), vorbereitet: true }), { "S1:kontrolle:einladung": "nie" }), null, "„für diese Frist nicht mehr“");
 const kz = app.slice(app.indexOf("function buKontrolleZeigen("), app.indexOf("// KC-CLUB-BUERO-RAUM (1.65.0"));
 assert.match(kz, /anschreiben<\/button>/); assert.match(kz, /if \(w === "schreiben"\) return direkt\(wer\.person_id\);/, "Clubsprecher anschreiben");
+assert.match(kz, /if \(!MITGLIEDER\) try \{ await mitgliederHolen\(\); \} catch \{\}/, "2.752.0: Mitgliederliste laden – sonst fehlt „anschreiben“ (Fund beim Film)");
+assert.match(app, /Vorschlag laut ⚙️ Sitzungs-Vorgaben: <b>letzter \$\{esc\(SV_WTAGE\[v\.wochentag\]/, "2.752.0: Live-Abstimmung nennt die Vorgaben");
 assert.match(app, /if \(!buIchBereite\(r\)\) return \(ICH\?\.vorstand \|\| ICH\?\.admin\) && buKontrolleZeigen\(t, r, besetzt, versuch\);/, "Start: Kontrolle statt Aufgaben");
 assert.match(server, /const \{ data: vbr \} = await db\.from\("kc_club_rollen"\)\.select\("person_id"\)\.contains\("aemter", \[SV\.vorbereiter_amt\]\);/, "Server: wer vorbereitet (Amt aus den Vorgaben)");
 

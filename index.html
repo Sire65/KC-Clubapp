@@ -2414,6 +2414,11 @@
   .uhg-alle { margin-left: auto; display: inline-flex; gap: 4px; }
   .uhg-alle button { border: 1px solid var(--linie); background: var(--karte); color: var(--grau); border-radius: 8px; width: 34px; height: 30px; font: inherit; font-weight: 800; cursor: pointer; }
   .uhg { margin: 0 0 8px; }
+  /* 2.752.0 KC-CLUB-NACHRICHTEN-REIHE: ▲▼ rechts im Balken (eigene Knöpfe, nicht im Klapp-Knopf) */
+  .uhg.mit-pfeilen { position: relative; } .uhg.mit-pfeilen > .uhg-kopf { padding-right: 84px; }
+  .uhg-pfeile { position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; z-index: 1; }
+  .uhg-pfeile button { border: 1px solid var(--linie); background: var(--karte); color: var(--text); border-radius: 8px; width: 34px; height: 30px; font: inherit; font-weight: 800; cursor: pointer; }
+  .uhg-pfeile button:disabled { opacity: .35; cursor: default; }
   .uhg-kopf { display: flex; align-items: center; gap: 8px; width: 100%; border: 1px solid var(--linie); background: var(--karte2); color: var(--text); border-radius: 12px; padding: 7px 10px; font: inherit; cursor: pointer; text-align: left; }
   .uhg-kopf.fest { cursor: default; padding-left: 14px; }
   .uhg.auf > .uhg-kopf { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
@@ -6233,7 +6238,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.751.0" data-v="2.751.0"></script>
+<script src="app.js?v=2.752.0" data-v="2.752.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
