@@ -1995,7 +1995,7 @@ const FILME = [
   // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
   // 2.750.0 (Wunsch Hansi 29.10. „Film für Klaus neu anpassen“): Fassung mit Frage beim Start, Schritt für Schritt und Frist 3 Tage vorher – wieder eigene Kennung
   // 2.753.0 (Wunsch Hansi 29.10. „Video auch anpassen, die Vertretung zeigen – mit dem Kassenwart“): Ablauf wie im Leben (2.751.0) – wieder eigene Kennung
-  { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "DAUER Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.jpg",
+  { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "14½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.jpg",
     u: "Neue Fassung: Tagesordnung und Einladung (3 Tage vorher), bis zur Sitzung erinnern, Änderungen, Vertretung durch den Kassenwart, einen Tag vorher vorbereiten, zuletzt die Aktentasche mit Mitnehm-Liste – am Abend Clubabend Live mit Freigeben, „Zum Schluss“ und Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
