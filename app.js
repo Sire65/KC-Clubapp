@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.753.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.754.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-vQYpHJcMvGzwwT46KQqwR5HjoLe7QIpB563TpHqYeCZ5Wlvje///r0wsOR7zSKVM" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-XHpakL6dVFkJCsEVMS8Wl0kpfJfo7Jb+o2BrKJzHvhn4FykICqGPKSkC3YmbpaRc" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
@@ -2018,6 +2018,7 @@ async function filmHinweisPruefen() {
       <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">▶ Film jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nein">Nein, danke</button></div>`, () => zu("spaeter"));
     d.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
   });
+  spur("film_frage_" + (["an", "nein"].includes(wahl) ? wahl : "spaeter"), f.id); // KC-CLUB-SPUR-VOLL
   if (wahl === "an") return filmZeigen(f.id);
   if (wahl === "nein") { filmMerken(f.id, "nein"); return melde("🎬 Alles klar – den Film findest du jederzeit im Büro unter 🎬 Anleitung."); }
   melde("🎬 Ich erinnere dich beim nächsten Öffnen – oder jederzeit im Büro unter 🎬 Anleitung.");
@@ -2031,9 +2032,13 @@ function filmZeigen(id) {
     <video src="${esc(f.datei)}" poster="${esc(f.bild)}" controls autoplay playsinline preload="auto"></video>`;
   document.body.appendChild(s); document.body.style.overflow = "hidden";
   const v = s.querySelector("video"), zu = () => { v.pause(); s.remove(); document.body.style.overflow = ""; };
-  s.querySelector("[data-zu]").onclick = zu;
+  // KC-CLUB-SPUR-VOLL: gestartet / bis zum Ende / geschlossen nach x von y Minuten
+  let gemeldet = false; const ende = (bis) => { if (gemeldet) return; gemeldet = true; const d = Math.max(1, Math.round((v.duration || 0) / 60)), m = Math.min(d, Math.round((v.currentTime || 0) / 60));
+    spur(bis ? "film_ende" : `film_ab_${m}_${d}`, f.id); };
+  spur("film_start", f.id);
+  s.querySelector("[data-zu]").onclick = () => { ende(false); zu(); };
   v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
-  v.onended = () => { zu(); melde("🎬 Film zu Ende – du findest ihn jederzeit im Büro unter 🎬 Anleitung."); };
+  v.onended = () => { ende(true); zu(); melde("🎬 Film zu Ende – du findest ihn jederzeit im Büro unter 🎬 Anleitung."); };
   v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
   v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
 }
@@ -2198,6 +2203,7 @@ function tippWaehlen(st) {
 // aus dem Tipp des Tages: Hilfe-Zentrum genau bei dieser Hilfe öffnen (Kapitel, hinscrollen, kurz hervorheben)
 function hzZuEintrag(id) {
   const e = hzEintraege().find((x) => x.id === id); if (!e) return hzStart();
+  spur("hz_eintrag", id); // KC-CLUB-SPUR-VOLL
   HZ.herkunft = null; HZ.sicht = null; HZ.q = ""; if ($("hzSuche")) $("hzSuche").value = ""; HZ.thema = e.thema;
   zeige("hilfezentrum");
   setTimeout(() => { const k = document.querySelector(`#hzInhalt [data-hz="${id}"]`); if (k) { k.scrollIntoView({ block: "center" }); k.classList.add("hervor"); setTimeout(() => k.classList.remove("hervor"), 2200); } }, 120);
@@ -2286,7 +2292,7 @@ const HILFE = [
   // 🔒 Privatsphäre & Zugang
   { id: "privatsphaere", thema: "privat", sym: "🔒", t: "Wer sieht was von mir?", x: "Du entscheidest selbst: Unter ⚙️ → <b>„🔒 Privatsphäre“</b> legst du z. B. fest, ob andere sehen, dass du online bist oder wann du zuletzt da warst, ob dein Geburtstag angezeigt wird, ob man bei dir anklopfen darf und ob andere dich zu Spielen herausfordern dürfen. Bekommen deine Eltern kurze Hinweise (nur Termine und Nachrichten der Clubleitung, nie Chat-Texte), steht dort auch <b>„👪 Hinweise an Eltern“</b> mit ihren Namen.", zeig: () => einstiegHin("privat") },
   { id: "zugangslink", thema: "privat", sym: "🔗", t: "Dein persönlicher Zugangslink", x: () => `Die App öffnest du über deinen persönlichen Link. Gib ihn bitte <b>nicht weiter</b> – wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? ${esc(adminName())} erzeugt dir einen neuen.` },
-  { id: "was_gespeichert", thema: "privat", sym: "🗂️", nur: () => !!ICH?.admin, t: "Was speichert die App über mich?", x: "Zur Fehlersuche und Unterstützung speichert die App 30 Tage lang, welche Bereiche geöffnet und mit wem Nachrichten oder Anrufe ausgetauscht wurden – <b>ohne Inhalte</b>. Außerdem 180 Tage lang jeden App-Start: Zeitpunkt, Dauer, Gerät und Browser – damit die App schneller werden kann. Einsicht hat nur der Admin." },
+  { id: "was_gespeichert", thema: "privat", sym: "🗂️", nur: () => !!ICH?.admin, t: "Was speichert die App über mich?", x: "Zur Fehlersuche und Unterstützung speichert die App 30 Tage lang, welche Bereiche und Fenster geöffnet, welche Hilfetexte, Erklär-Videos und Anleitungsfilme angesehen (bis zum Ende oder abgebrochen), welche Handlungen gemacht (z. B. zugesagt) und mit wem Nachrichten oder Anrufe ausgetauscht wurden – <b>ohne Inhalte</b>. Außerdem 180 Tage lang jeden App-Start: Zeitpunkt, Dauer, Gerät und Browser – damit die App schneller werden kann. Einsicht hat nur der Admin." },
   // 🛠️ Technik & Probleme lösen
   { id: "update", thema: "technik", sym: "🔄", t: "Neue Version holen", x: "Register <b>Technik</b> → „🔄 Update prüfen“. Steht dort „Neu“, einfach antippen – die App lädt die neue Version komplett und startet neu. Meist macht sie das auch von selbst.", zeig: hzTechnik },
   { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b>.", zeig: () => einstiegHin("install") },
@@ -3985,14 +3991,15 @@ const HZ_SICHT_HILFEN = {
 };
 const hzSichtName = (v) => { const e = EINWEISUNG.find((x) => x.id === v) || EINWEISUNG.find((x) => HZ_SICHT_HILFEN[v]?.[0] === "e:" + x.id); return e ? `${e.sym} ${e.t}` : ($("v-" + v)?.querySelector("h2")?.textContent || "diesem Bereich").trim(); };
 function hzFrage(v) {
+  spur("hz_frage", v); // KC-CLUB-SPUR-VOLL: „?“ auf welcher Seite
   HZ.herkunft = { v, chat: v === "chat" ? chatId : null };
   HZ.q = ""; if ($("hzSuche")) $("hzSuche").value = "";
   HZ.sicht = HZ_SICHT_HILFEN[v] ? v : null; HZ.thema = HZ.sicht ? null : HZ_SICHT_THEMA[v] || null; zeige("hilfezentrum");
 }
 function hzStart(thema) { HZ.herkunft = null; HZ.sicht = null; HZ.thema = thema && HILFE_THEMEN.some((x) => x.id === thema) ? thema : null; HZ.q = ""; if ($("hzSuche")) $("hzSuche").value = ""; zeige("hilfezentrum"); }
-function hzOeffnen() { $("hzLeiste")?.remove(); HZ.unterwegs = null; hzNeuerGruss(); HZ.vorher = hzGesehen(); lsSetzen(HZ_GESEHEN, APP_VERSION); hzZeigen(); } // aus zeige(): „neu“ gilt bis zum nächsten Besuch
-function hzThema(t) { if (t !== HZ.thema || HZ.sicht) hzNeuerGruss(); HZ.sicht = null; HZ.thema = t; HZ.q = ""; $("hzSuche").value = ""; hzZeigen(); window.scrollTo(0, 0); }
-function hzSuchen(q) { HZ.q = q; hzZeigen(); }
+function hzOeffnen() { $("hzLeiste")?.remove(); HZ.gesucht = false; HZ.unterwegs = null; hzNeuerGruss(); HZ.vorher = hzGesehen(); lsSetzen(HZ_GESEHEN, APP_VERSION); hzZeigen(); } // aus zeige(): „neu“ gilt bis zum nächsten Besuch
+function hzThema(t) { if (t) spur("hz_kapitel", t); /* KC-CLUB-SPUR-VOLL */ if (t !== HZ.thema || HZ.sicht) hzNeuerGruss(); HZ.sicht = null; HZ.thema = t; HZ.q = ""; $("hzSuche").value = ""; hzZeigen(); window.scrollTo(0, 0); }
+function hzSuchen(q) { HZ.q = q; if (String(q || "").trim().length >= 3 && !HZ.gesucht) { HZ.gesucht = true; spur("hz_suche"); } hzZeigen(); } // KC-CLUB-SPUR-VOLL: einmal je Besuch, nie das Suchwort
 function hzZurueck() { if (HZ.q) { HZ.q = ""; $("hzSuche").value = ""; hzZeigen(); } else if (HZ.thema && !HZ.herkunft) hzThema(null); else if (HZ.herkunft?.chat) { const c = HZ.herkunft.chat; HZ.herkunft = null; chatOeffnen(c); } else { HZ.herkunft = null; zurueck("start"); } }
 // 2.23.2 (Wunsch Hansi): Kapitel 1, 2 … (nur Themen mit Inhalt, in der Reihenfolge von HILFE_THEMEN), Einträge 1.1, 1.2 …
 function hzGliederung(alle) {
@@ -4003,6 +4010,7 @@ function hzGliederung(alle) {
 // 2.23.2 (Wunsch Hansi): „Zeig mir wo“ → oben rechts „↩️ Zurück zur Hilfe“ (genau an diese Stelle) oder „✕ Abbrechen“ (Leiste weg, hier bleiben und gleich einstellen)
 function hzLos(id) {
   const e = hzEintraege().find((x) => x.id === id); if (!e?.los) return;
+  spur("hz_zeig", id); // KC-CLUB-SPUR-VOLL
   HZ.unterwegs = { id, thema: HZ.q ? null : HZ.thema, sicht: HZ.q ? null : HZ.sicht, q: HZ.q, y: window.scrollY };
   e.los(); hzLeiste();
 }
@@ -4377,6 +4385,7 @@ function vorlesenKarte(knopf) {
     if (VORLESE?.knopf === knopf) return vorlesenStopp();
     vorlesenStopp();
     const k = knopf?.closest(".vorlese-karte"), d = document.createElement("div");
+    spur(k?.dataset?.hz ? "hz_vorlesen" : "vorlesen", k?.dataset?.hz || null); // KC-CLUB-SPUR-VOLL
     d.innerHTML = [...(k?.querySelectorAll("h3, p") || [])].map((x) => x.innerHTML).join(". ");
     const t = d.textContent.replace(/[\p{Extended_Pictographic}\uFE0F‹›«»＋☰🔲]/gu, " ").replace(/\s+/g, " ").replace(/\.\s*\./g, ".").trim();
     if (!t) return;
@@ -8341,7 +8350,7 @@ async function api(action, daten = {}, opt = {}) {
   const lauf = sichtbar ? ladeBeginn(action) : null;
   try {
     if (NOT.an) return await notApi(action, daten); // KC-CLUB-NOTBETRIEB
-    const r = await apiRoh(action, daten, false, lauf?.ab.signal); NOT.fehler = 0; return r;
+    const r = await apiRoh(action, daten, false, lauf?.ab.signal); NOT.fehler = 0; spurTat(action, daten); return r; // KC-CLUB-SPUR-VOLL
   }
   catch (e) {
     if (lauf?.wunsch === "nochmal") continue; // KC-CLUB-LADE-SICHERHEIT: Mitglied hat „Nochmal versuchen“ gewählt
@@ -39497,6 +39506,7 @@ let SPUR = (() => { try { const s = JSON.parse(localStorage.getItem("kc_club_spu
 const spurSchreiben = () => { try { localStorage.setItem("kc_club_spur", JSON.stringify(SPUR)); } catch {} };
 function spur(w, mit) {
   if (!w || !ICH) return;
+  if (!/^(rg|tat)_/.test(w) && document.body?.classList.contains("rg-an")) return; // KC-CLUB-SPUR-VOLL: im Erklär-Video öffnet das Video selbst Seiten/Fenster – keine Wege des Mitglieds
   try { // nie die Bedienung stören (auch nicht, wenn sehr früh beim Start aufgerufen)
     const l = SPUR[SPUR.length - 1];
     if (l && l[1] === w && (l[2] || null) === (mit || null) && Date.now() - l[0] < 3000) return; // doppelt angetippt
@@ -39531,7 +39541,8 @@ window.addEventListener("pagehide", () => spurSenden(true));
 // 2.729.0 KC-CLUB-SPUR-WIEDER: App kommt nach ≥ 5 Min. im Hintergrund wieder nach vorn → Schritt „wieder_<Minuten>“ („📲 wieder geöffnet (war 33 Min. im Hintergrund)“)
 const SPUR_WIEDER_MS = 5 * 60000, SPUR_WIEDER_START_MS = 2 * 60000;
 const spurWieder = (ms) => "wieder_" + Math.min(9999, Math.max(1, Math.round(ms / 60000)));
-const spurWas = (w) => { const m = /^wieder_(\d+)$/.exec(w || ""); if (m) { const n = Number(m[1]); return `📲 wieder geöffnet (war ${n >= 120 ? Math.round(n / 60) + " Std." : n + " Min."} im Hintergrund)`; } return SPUR_WAS[w] || NZ_NAMEN[w] || w; };
+const spurWas = (w) => { const m = /^wieder_(\d+)$/.exec(w || ""); if (m) { const n = Number(m[1]); return `📲 wieder geöffnet (war ${n >= 120 ? Math.round(n / 60) + " Std." : n + " Min."} im Hintergrund)`; } const v = /^(rg|film)_ab_(\d+)_(\d+)$/.exec(w || ""); if (v) return v[1] === "rg" ? `⏹️ Erklär-Video abgebrochen bei Schritt ${v[2]} von ${v[3]}:` : `⏹️ Anleitungsfilm geschlossen nach ${v[2]} von ${v[3]} Min.:`; // KC-CLUB-SPUR-VOLL
+  return SPUR_WAS[w] || NZ_NAMEN[w] || w; };
 let SPUR_HINTER_AB = document.hidden ? Date.now() : 0;
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) { SPUR_HINTER_AB = Date.now(); return; }
@@ -39542,6 +39553,127 @@ const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", vorfuehren: "📺 
   anruf: "📞 Anruf (App) an", video: "🎥 Videoanruf an", anklopfen: "👋 Angeklopft bei", telefon: "☎️ Telefonnummer angetippt", whatsapp: "🟢 WhatsApp geöffnet", mail: "✉️ E-Mail-Adresse angetippt", meine_statistik: "📊 Eigene Nachrichten-Statistik angesehen",
   geplant: "⏰ Nachricht für später geplant", zurueckgeholt: "↩️ Nachricht zurückgeholt", mein_bild: "🧑‍🍳 „Mein Bild“ geöffnet", bild_gewaehlt: "🧑‍🍳 Koch-Figur als Bild gewählt", bild_gebaut: "🧩 Eigene Figur gespeichert", bild_foto: "📷 Eigenes Foto als Bild gesetzt", bild_entfernt: "🧑‍🍳 Bild entfernt (Buchstaben)", avatar_kombi: "ⓘ Figuren-Möglichkeiten angesehen", jacke_auto_an: "🔄 Kochjacke täglich wechselnd eingeschaltet", jacke_auto_aus: "🔄 Kochjacke täglich wechselnd ausgeschaltet",
   sprache_start: "🎙️ Sprache: Startseite", sprache_zurueck: "🎙️ Sprache: zurück", sprache_pinnwand: "🎙️ Sprache: neuer Zettel", sprache_nachricht: "🎙️ Sprache: neue Nachricht", sprache_termine: "🎙️ Sprache: Termine", sprache_naechster: "🎙️ Sprache: nächster Termin", sprache_suche: "🎙️ Sprache: Suche", sprache_hilfe: "🎙️ Sprache: Hilfe", sprache_unklar: "🎙️ Sprache: nicht verstanden", sensibel_gaeste_frage: "⚠️ Vertrauliches an Nicht-Mitglieder: nachgefragt", sprache_ziel: "🎙️ Sprache: Seite geöffnet", sprache_gelernt: "🎙️ Sprache: neuen Befehl gelernt", sprache_liste: "📋 Liste der Sprachbefehle geöffnet", sprache_training: "🎓 Sprach-Training gestartet", unterstuetzung_viel: "🙋 Unterstützung: viel Hilfe gewählt", unterstuetzung_etwas: "👌 Unterstützung: ein bisschen Hilfe", unterstuetzung_keine: "😎 Unterstützung: keine", inhaltsverzeichnis: "🗂️ Inhaltsverzeichnis gedruckt" }; // KC-CLUB-SPRACHSTEUERUNG (2.75.0)
+// ---------- 2.754.0 KC-CLUB-SPUR-VOLL (Wunsch Hansi 29.10.2026 „Prüfe nochmal die Wege der Mitglieder – einige Schritte werden mir nicht angezeigt.
+// Wichtig ist auch, ob sie die Hilfetexte lesen oder Erklär-Videos ansehen. Alles soll aufgezeichnet werden, damit ich sehe, was jeder in der App nutzt“) ----------
+// Zusätzlich zu den Seiten: jedes geöffnete Fenster (zentral über einen Beobachter – neue Fenster sind von selbst dabei), Hilfe (Kapitel, Hilfetext, „Zeig mir wo“,
+// Vorlesen, „?“, Suche ohne Suchwort, 👍/👎), Erklär-Videos und Anleitungsfilme (gestartet, bis zum Ende, abgebrochen bei …) und wichtige Handlungen
+// (Registry SPUR_TATEN, zentral in api()). Wie immer nur Art + Kennung, nie Inhalte. „mit“ ist hier eine Kennung aus den Registern der App
+// (Fenster-ID, Hilfe-ID, Video-/Film-ID) – erst der Admin-Bildschirm übersetzt sie in Namen (spurMitName). Übersicht je Mitglied: spurUebersicht().
+// Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
+const FENSTER_NAMEN = {
+  abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
+  stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
+  ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", adBlatt: "🛠️ Verwaltung",
+  adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
+  alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
+  anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
+  arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
+  bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
+  buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",
+  buGruss: "🏢 Büro: Tagesinfo", buSprachBlatt: "🏢 Büro: Sprechen", buTelBlatt: "🏢 Büro: Person wählen", buTermin: "🍽️ Büro: Termin ansehen", buWahl: "🏢 Büro: Sitzung wählen",
+  buWeiter: "🏢 Büro: Wie weiter?", bwEinBlatt: "👋 Bühne: Einladung", caBlatt: "🍽️ Clubabend Live", cfBlatt: "🎨 Chat-Farben", chatBlatt: "💬 Unterhaltung (Fenster)",
+  chatMitgliederBlatt: "👥 Teilnehmer der Unterhaltung", cjBlatt: "📅 Clubjahr", cuFenster: "📊 Kurze Abstimmung", dgBlatt: "👨‍🍳 Dienst-Gruß", diagBlatt: "🩺 Server-Diagnose",
+  diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
+  dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
+  einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
+  ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", erinBlatt: "🔔 Erinnerung für dich",
+  erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
+  expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
+  fdkFrageBlatt: "🧪 Hygienekontrolle", fdkKarteBlatt: "🃏 Fang den Koch: Karte", fdkRegelBlatt: "📖 So geht Fang den Koch", feeBlatt: "🧚 Die Fee", fiBlatt: "🏋️ Fit bleiben",
+  flAng: "✏️ Angaben ändern", flInfo: "📣 Mitglieder informieren", ggBlatt: "🎂 Meine Geburtstagsgrüße", ggWahlBlatt: "🎂 Geburtstagsgruß wählen", gmFenster: "⭐ Gemerkte Nachrichten",
+  gpBlatt: "⏰ Geplante Nachricht", gpMenue: "⏰ Geplante Nachricht", hbBlatt: "🎂 Geburtstagsgruß", herzBlatt: "❤️ Lebenszeichen", hilfeInfo: "🙋 Hilfe-Aufruf ansehen",
+  hzBewBlatt: "📊 Bewertungen der Hilfen", ilLesenBlatt: "📰 Info-Feld: Meldung gelesen", ivBlatt: "🗂️ Inhaltsverzeichnis", kaBlatt: "📵 Wen herausnehmen?", kalWahlBlatt: "📅 Kalender wählen",
+  karteBlatt: "🗺️ Karte", kcCodeBlatt: "🔢 Code für ein anderes Gerät", kcIosBlatt: "📲 iPhone: Kochmütze auf den Home-Bildschirm", keksBlatt: "🥠 Glückskeks", klopfBlatt: "👋 Es klopft",
+  klopfWarten: "👋 Anklopfen – warten", konfWahlBlatt: "📞 Konferenz: wen dazu", kwFenster: "👤 Kontakt teilen", leihInfo: "🔧 Leihen: ansehen", leihNein: "❌ Ablehnen – warum?",
+  linkBlatt: "🔗 App-Link erzeugt", ltStartBlatt: "🔴 Live-Abstimmung: nächster Termin", maBlatt: "🧭 Mikrofon-Assistent", mdBlatt: "🗓️ Mein Dienst", mdatBlatt: "🔐 Meine Daten",
+  mfAnbieten: "🚗 Mitfahrgelegenheit anbieten", mfBescheid: "🚗 Noch keine Mitfahrgelegenheit", mfBlatt: "👥 Ein Mitglied fragen", mgGrBlatt: "📋 Meine Gruppen", mikroHilfe: "🎙️ Mikrofon ist gesperrt",
+  mikroWahlBlatt: "🎤 Was möchtest du?", mindestBlatt: "🆕 Bitte die App aktualisieren", neuBlatt: "🆕 Neuigkeiten", neuWahlBlatt: "➕ Neu: Auswahl", neustartBlatt: "🔄 Supabase neu starten",
+  nfpBlatt: "📌 Pinnwand-Zettel", notInfoBlatt: "ℹ️ Was ist los?", notfallBlatt: "🚨 SOS an alle", ntBlatt: "📅 Als Termin übernehmen", nuBlatt: "💡 Vorschlag der Bühne",
+  onlineBlatt: "🟢 Gerade online", personenBlatt: "👉 Wer?", prBlatt: "🧪 Probephase", pwTeilBlatt: "📌 Zettel abnehmen", rcAngebotBlatt: "🧳 Reise-Checkliste angeboten",
+  rcBlatt: "🧳 Meine Reise-Checkliste", rgAuswBlatt: "📊 Auswertung der Erklär-Videos", rgListeBlatt: "🎬 Erklär-Videos (Liste)", rgsBlatt: "🗣️ Stimme für Videos wählen", rolleBlatt: "🎖️ Rolle/Amt",
+  rundeBlatt: "🔗 Feste Gruppe bilden", rzBlatt: "📖 Club-Rezeptbuch", sbBlatt: "🤔 Das kenne ich noch nicht", sbListeBlatt: "📋 Das kannst du sagen", sbPersonBlatt: "🎙️ Sprache: mit wem?",
+  sbtBlatt: "🎓 Sprach-Training", scAbBlatt: "🚫 Schulung absagen", scBlatt: "🎓 Schulungen", scChronikBlatt: "📜 Schulung: Ablauf", scFestBlatt: "📅 Festen Termin geben",
+  scHinweisBlatt: "🎓 Hinweis: Schulungen", scNfBlatt: "📨 Nachfrage nach der Schulung", scSchrittBlatt: "🎓 Schulung: Schritt", scVerBlatt: "🔁 Termin verschieben", scWerBlatt: "🚫 Schulungstermin absagen",
+  schBlatt: "🪧 Schilder-Druckerei", schUmwBlatt: "♟️ Schach", sjBlatt: "🎡 Sim-Jü in Werne", slBlatt: "⏳ Was bedeutet das?", smBlatt: "🎓 Meine Schulung",
+  smHinweisBlatt: "🎓 Du bist zur Schulung eingeladen", smVBlatt: "💬 Kein Termin passt", snBlatt: "📣 Startnachricht", sosInfo: "🆘 Meine SOS-Angaben", spAn: "💬 An wen?",
+  spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
+  sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
+  svBlatt: "⚙️ Sitzungs-Vorgaben", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
+  teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", tippBlatt: "💡 Tipp des Tages", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
+  uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
+  versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",
+  vwMenueBlatt: "📤 Wie verschicken – nur diese Nachricht", vwSicherBlatt: "⚠️ Versand: Rückfrage", waEinfBlatt: "📋 Aus WhatsApp einfügen", wasNeuBlatt: "🆕 Was ist neu", wbBerichtBlatt: "📊 Wochenbericht",
+  wbBlatt: "🖨️ Dein leerer Wunschbogen", wetterBlatt: "🌦️ Wetter", wkKlingel: "⏰ Wecker klingelt", zeBlatt: "👥 An wen?",
+};
+Object.assign(SPUR_WAS, {
+  fenster: "🪟", vorlesen: "🔊 Text vorgelesen",
+  klopf_verpasst: "👋 Verpasstes Anklopfen angezeigt", dw_laufband: "🗓️ Dienstwunsch aus dem Info-Feld geöffnet", eselsohr: "📄 Eselsohr: Rückseite des Kopfs geöffnet", kachel_rueck: "🔄 Kachel umgedreht (Rückseite)",
+  vorfuehren_ton: "📺 Live zeigen mit Ton gestartet", mail_rund: "✉️ Rundmail verschickt", gesendet_mehrfach: "✉️ Nachricht an mehrere einzeln verschickt", buero_einlesen: "📥 Büro: Dokument eingelesen",
+  einmal_foto: "📸 Einmal-Foto angesehen", mitschauen_laeuft: "🔴 Mitschauen läuft", fernhilfe_ton: "🛟 Fernhilfe mit Ton gestartet",
+  unterstuetzung_keine: "🤝 Unterstützung gewählt: keine", unterstuetzung_etwas: "🤝 Unterstützung gewählt: etwas", unterstuetzung_viel: "🤝 Unterstützung gewählt: viel",
+  hz_kapitel: "❓ Hilfe-Kapitel geöffnet:", hz_eintrag: "❓ Hilfetext aufgerufen:", hz_zeig: "👉 Hilfe „Zeig mir wo“:", hz_vorlesen: "🔊 Hilfetext vorgelesen:",
+  hz_frage: "❔ „?“ angetippt auf der Seite", hz_suche: "🔍 In der Hilfe gesucht (Suchwort wird nicht gespeichert)", hz_gut: "👍 Hilfe war hilfreich:", hz_schlecht: "👎 Hilfe war nicht hilfreich:", hz_bew_weg: "↩️ Hilfe-Bewertung zurückgenommen:",
+  rg_start: "🎬 Erklär-Video gestartet:", rg_ende: "✅ Erklär-Video bis zum Ende gesehen:",
+  film_start: "🎞️ Anleitungsfilm gestartet:", film_ende: "✅ Anleitungsfilm bis zum Ende gesehen:",
+  film_frage_an: "🎞️ Film-Angebot beim Start: ▶ jetzt ansehen –", film_frage_spaeter: "🎞️ Film-Angebot beim Start: ⏰ später –", film_frage_nein: "🎞️ Film-Angebot beim Start: 🙅 nein danke –",
+  tat_termin_ja: "✅ Termin zugesagt", tat_termin_nein: "❌ Termin abgesagt", tat_termin_vl: "❔ Termin: vielleicht", tat_termin_antwort: "📅 Termin beantwortet",
+  tat_anfrage_antwort: "📨 Terminanfrage beantwortet", tat_umfrage_antwort: "🗳️ Terminumfrage beantwortet", tat_schulung_antwort: "🎓 Schulung beantwortet",
+  tat_bu_einladung: "📨 Büro: Einladung verschickt", tat_bu_erinnerung: "🔔 Büro: Erinnerung verschickt", tat_bu_aenderung: "📣 Büro: Änderungsmeldung verschickt",
+  tat_bu_gespeichert: "💾 Büro: Sitzung gespeichert (Tagesordnung/Anwesende/Anmerkung)", tat_bu_vertretung: "🙋 Büro: Vorbereitung übernommen", tat_bu_vertretung_ab: "↩️ Büro: Vorbereitung zurückgegeben",
+  tat_bu_info_nein: "🙅 Büro: Mitglieder nicht informieren", tat_bu_vorgaben: "⚙️ Büro: Sitzungs-Vorgaben gespeichert",
+  tat_tasche_packen: "💼 Aktentasche gepackt", tat_tasche_status: "💼 Aktentasche: Stand gesetzt", tat_tasche_dazu: "💼 Aktentasche: Unterlage dazugelegt", tat_tasche_weg: "💼 Aktentasche: Unterlage herausgenommen",
+  tat_tasche_notiz: "💼 Aktentasche: Notiz", tat_tasche_mitnehmen: "🧳 Aktentasche: Mitnehm-Liste", tat_tasche_dabei: "💼 Aktentasche: abgehakt", tat_tasche_uebernehmen: "💼 Aktentasche übernommen", tat_tasche: "💼 Aktentasche geändert",
+  tat_verteilt: "📤 Unterlagen in die Eingangskörbe gelegt", tat_eingang_senden: "📥 Dokument in einen Eingangskorb gelegt", tat_pinnwand: "📌 Zettel an die Pinnwand gehängt",
+  tat_vorschlag: "💡 Vorschlag gespeichert", tat_vorschlag_stimme: "🗳️ Über einen Vorschlag abgestimmt", tat_foto: "📸 Foto hochgeladen", tat_erstattung: "💶 Erstattung eingereicht",
+  tat_feedback: "💬 Feedback gesendet", tat_hilfe_aufruf: "🙋 Hilfe-Aufruf gestartet", tat_hilfe_antwort: "🙋 Auf einen Hilfe-Aufruf geantwortet", tat_termin_neu: "📅 Termin angelegt/geändert",
+  tat_aufgabe: "✅ Aufgabe gespeichert", tat_todo: "📝 To-do angelegt", tat_umfrage_stimme: "📊 Bei einer Abstimmung im Chat abgestimmt", tat_rezept: "📖 Rezept gespeichert", tat_video_bewertet: "🎬 Erklär-Video bewertet",
+});
+// Registry SPUR_TATEN: Server-Aktion → Schritt [art, kennung?] – nur nach erfolgreicher Antwort (api), nie mit Inhalten. Neue Handlung = ein Eintrag hier + Name oben.
+const SPUR_TATEN = {
+  treffen_antwort: (d) => ["tat_termin_" + ({ ja: "ja", nein: "nein", vielleicht: "vl" }[d.antwort] || "antwort")],
+  terminanfrage_antwort: () => ["tat_anfrage_antwort"], terminumfrage_antwort: () => ["tat_umfrage_antwort"], schulung_antwort: () => ["tat_schulung_antwort"],
+  buero_einladung: (d) => [d.nur_offen ? "tat_bu_erinnerung" : d.aenderung ? "tat_bu_aenderung" : "tat_bu_einladung"], buero_speichern: () => ["tat_bu_gespeichert"],
+  buero_vertretung: (d) => [d.an ? "tat_bu_vertretung" : "tat_bu_vertretung_ab"], buero_informieren_nein: () => ["tat_bu_info_nein"], sitzung_vorgaben_speichern: () => ["tat_bu_vorgaben"],
+  aktentasche_aendern: (d) => [SPUR_WAS["tat_tasche_" + d.op] ? "tat_tasche_" + d.op : "tat_tasche"], archiv_eingang_verteilen: () => ["tat_verteilt"], archiv_eingang_senden: () => ["tat_eingang_senden"],
+  pinnwand_neu: () => ["tat_pinnwand"], vorschlag_speichern: () => ["tat_vorschlag"], vorschlag_stimme: () => ["tat_vorschlag_stimme"], foto_hochladen: () => ["tat_foto"],
+  erstattung_senden: () => ["tat_erstattung"], feedback_senden: () => ["tat_feedback"], hilfe_aufruf: () => ["tat_hilfe_aufruf"], hilfe_antwort: () => ["tat_hilfe_antwort"],
+  treffen_speichern: () => ["tat_termin_neu"], aufgabe_speichern: () => ["tat_aufgabe"], todo_anlegen: () => ["tat_todo"], chat_umfrage_stimmen: () => ["tat_umfrage_stimme"],
+  rezept_speichern: () => ["tat_rezept"], video_bewerten: (d) => ["tat_video_bewertet", d.video],
+  hilfe_bewerten: (d) => [d.wert > 0 ? "hz_gut" : d.wert < 0 ? "hz_schlecht" : "hz_bew_weg", d.id],
+};
+function spurTat(action, d) { try { const f = SPUR_TATEN[action]; if (!f) return; const [w, mit] = f(d || {}) || []; if (w) spur(w, mit || null); } catch {} } // aus api() nach jeder erfolgreichen Antwort
+// Fenster: ein Beobachter für alle – neue Fenster (blattAuf hängt sie an body) und feste Fenster aus index.html (Klasse „versteckt“ fällt weg).
+// Wird ein Fenster nur neu gezeichnet (gleiche ID binnen 1,5 s entfernt und wieder angehängt), zählt das nicht als neuer Schritt.
+const SPUR_FZU = new Map();
+function spurFenster(el) { if (el?.nodeType === 1 && el.id && el.classList.contains("blatt") && !el.classList.contains("versteckt")) spur("fenster", el.id); }
+try {
+  const beob = new MutationObserver((liste) => {
+    const jetzt = Date.now();
+    for (const m of liste) { // der Reihe nach: erst angehängt (zählt), dann entfernt und gleich wieder angehängt (= neu gezeichnet, zählt nicht)
+      if (m.type !== "childList") { if ((m.oldValue || "").split(/\s+/).includes("versteckt")) spurFenster(m.target); continue; }
+      m.addedNodes.forEach((n) => { if (n.nodeType === 1 && n.id && !(jetzt - (SPUR_FZU.get(n.id) || 0) < 1500)) spurFenster(n); });
+      m.removedNodes.forEach((n) => { if (n.nodeType === 1 && n.id && n.classList?.contains("blatt")) SPUR_FZU.set(n.id, jetzt); });
+    }
+  });
+  beob.observe(document.body, { childList: true });
+  document.querySelectorAll(".blatt[id]").forEach((b) => beob.observe(b, { attributes: true, attributeFilter: ["class"], attributeOldValue: true }));
+} catch {}
+// Kennung → Name (nur für den Admin-Bildschirm): Fenster, Hilfe, Videos, Filme
+function spurMitName(w, k) {
+  try {
+    if (w === "fenster") return FENSTER_NAMEN[k] || `„${k}“`; // ohne Namen: die Kennung (der Vertragstest meldet das)
+    if (w === "hz_kapitel") { const t = HILFE_THEMEN.find((x) => x.id === k); return t ? `${t.sym} ${t.t}` : k; }
+    if (w === "hz_frage") return NZ_NAMEN[k] || k;
+    if (/^hz_/.test(w)) { const e = hzEintraege().find((x) => x.id === k); return e ? `${e.sym} ${e.t}` : k; }
+    if (/^rg_|^tat_video/.test(w)) { const r = RUNDGAENGE.find((x) => x.id === k); return r ? `${r.sym} ${r.t}` : k; }
+    if (/^film_/.test(w)) { const f = FILME.find((x) => x.id === k); return f ? `${f.sym} ${f.t}` : k; }
+  } catch {}
+  return k;
+}
+const spurZeile = (x) => { const was = spurWas(x.w), mit = x.mit || (x.k ? spurMitName(x.w, x.k) : ""); return x.w === "fenster" ? `🪟 Fenster: ${mit}` : mit ? `${was} ${mit}` : was; };
 const SPW = { tag: null, person: null, uhr: null };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
@@ -39553,28 +39685,76 @@ async function spurAdmin(tag, person) {
     <p class="hinweis" style="margin:0">Was geöffnet wurde und mit wem – mit Uhrzeit, <b>ohne Inhalte</b>. Nur du siehst das; nach 30 Tagen wird es gelöscht.</p>
     <select onchange="spurAdmin(this.value, null)" aria-label="Tag">${tage.map((t) => `<option value="${t}"${t === SPW.tag ? " selected" : ""}>${tagText(t)}</option>`).join("")}</select>`;
   const heuteDa = SPW.tag === tage[0];
-  const fuss = `${heuteDa ? `<p class="hinweis" style="margin:8px 0 0">⚡ Stand ${esc(new Date().toLocaleTimeString("de-DE"))} · aktualisiert sich alle 20 Sekunden von selbst, solange dieses Fenster offen ist</p>` : ""}<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button>${heuteDa && !SPW.person ? spurFrageKnopf() : ""}</div>`;
+  const fuss = `${heuteDa ? `<p class="hinweis" style="margin:8px 0 0">⚡ Stand ${esc(new Date().toLocaleTimeString("de-DE"))} · aktualisiert sich alle 20 Sekunden von selbst, solange dieses Fenster offen ist</p>` : ""}<div class="knoepfe">${SPW.person ? `<button class="knopf" onclick="spurAdmin(null, null)">‹ Alle an diesem Tag</button>` : ""}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button><button class="knopf" onclick="spurUebersicht(30, ${SPW.person ? `'${esc(SPW.person)}'` : "null"})">📊 Was nutzt ${SPW.person ? "sie/er" : "jeder"}? (30 Tage)</button>${heuteDa && !SPW.person ? spurFrageKnopf() : ""}</div>`;
   let inhalt;
   if (!SPW.person) {
     // KC-CLUB-SPUR-LIVE (2.81.0): wer gerade in der App ist, steht oben mit 🟢 (Quelle: Online-Takt – Verborgene erscheinen nie als online)
     const on = (id) => heuteDa && ONL.stand && Date.now() - ONL.stand < 3 * 60000 && ONL.ids.has(id);
     const liste = [...r.personen].sort((a, b) => on(b.person_id) - on(a.person_id));
     // KC-CLUB-SPUR-JETZT (2.81.0): je Person, was sie zuletzt aufgerufen hat – bei 🟢 „ist gerade bei …“
-    const was = (w) => w ? spurWas(w) : ""; // 2.729.0 KC-CLUB-SPUR-WIEDER
+    const was = (w, k) => w ? (k ? spurZeile({ w, k }) : spurWas(w)) : ""; // 2.729.0 KC-CLUB-SPUR-WIEDER; 2.754.0 KC-CLUB-SPUR-VOLL: mit Kennung (Fenster, Hilfe, Video)
     const vor = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000)); return m < 1 ? "gerade eben" : m === 1 ? "vor 1 Min." : m < 60 ? `vor ${m} Min.` : `um ${zeitKurz(iso)} Uhr`; };
     const jetzt = liste.filter((x) => on(x.person_id));
-    inhalt = (heuteDa ? `<div class="karte spur-jetzt-box"><b>🟢 Gerade in der App${jetzt.length ? ` (${jetzt.length})` : ""}</b>${jetzt.length ? jetzt.map((x) => `<div class="spur-jetzt-zeile" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> ist bei <b>${esc(was(x.zuletzt) || "?")}</b> <small class="hinweis">· ${esc(vor(x.letzte))}</small></div>`).join("") : '<div class="hinweis">Gerade ist niemand in der App (oder hat die Online-Anzeige verborgen).</div>'}</div>` : "")
+    inhalt = (heuteDa ? `<div class="karte spur-jetzt-box"><b>🟢 Gerade in der App${jetzt.length ? ` (${jetzt.length})` : ""}</b>${jetzt.length ? jetzt.map((x) => `<div class="spur-jetzt-zeile" onclick="spurAdmin(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> ist bei <b>${esc(was(x.zuletzt, x.zk) || "?")}</b> <small class="hinweis">· ${esc(vor(x.letzte))}</small></div>`).join("") : '<div class="hinweis">Gerade ist niemand in der App (oder hat die Online-Anzeige verborgen).</div>'}</div>` : "")
       // KC-CLUB-SPUR-STOERUNG: nur eine Störung angekommen (z. B. keine Verbindung beim Aktualisieren) → „war kurz da“ statt gar nicht
-      + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => x.stoerung && !on(x.person_id) ? `<button class="knopf spur-stoerung" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">⚠️ <b>${esc(x.name)}</b> <small class="hinweis">· war kurz da · ${esc(zeitKurz(x.erste))}${x.erste !== x.letzte ? "–" + esc(zeitKurz(x.letzte)) : ""} Uhr</small><br><small>${x.stoerung === "netz" ? "📶 Verbindung gestört – die Wege kommen nach, sobald die App wieder Netz hat" : "⚠️ Störung in der App – weitere Wege sind nicht angekommen"}</small></button>` : `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
+      + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => x.stoerung && !on(x.person_id) ? `<button class="knopf spur-stoerung" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">⚠️ <b>${esc(x.name)}</b> <small class="hinweis">· war kurz da · ${esc(zeitKurz(x.erste))}${x.erste !== x.letzte ? "–" + esc(zeitKurz(x.letzte)) : ""} Uhr</small><br><small>${x.stoerung === "netz" ? "📶 Verbindung gestört – die Wege kommen nach, sobald die App wieder Netz hat" : "⚠️ Störung in der App – weitere Wege sind nicht angekommen"}</small></button>` : `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt, x.zk))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${x.w === "fenster" || x.k ? esc(spurZeile(x)) : `${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}`}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");
   // KC-CLUB-SPUR-LIVE (2.81.0): heute → alle 20 s still neu laden, solange das Fenster die Wege zeigt
   clearTimeout(SPW.uhr);
   if (heuteDa) SPW.uhr = setTimeout(() => { if (!$("adminBlatt").classList.contains("versteckt") && $("adminBlattInhalt").querySelector(".spur-neu[aria-label='Wege aktualisieren']") && !document.hidden) { onlinePing().catch(() => {}).finally(() => spurAdmin(SPW.tag, SPW.person)); } }, 20000);
+}
+// 2.754.0 KC-CLUB-SPUR-VOLL: 📊 Was nutzt jeder? – Liste aller Mitglieder (aktive Tage, zuletzt, Seiten/Fenster/Hilfe/Videos/Handlungen) und je Mitglied
+// die Einzelheiten: Bereiche, Fenster, Hilfe, Erklär-Videos und Filme (✅ bis zum Ende / ⏹️ abgebrochen, wie weit), Handlungen und „nie benutzt“.
+const SPU = { tage: 30, person: null };
+function spuGruppen(z, weit) {
+  const g = { seiten: [], fenster: [], hilfe: [], videos: {}, filme: {}, taten: [], sonst: [] };
+  for (const [key, n] of Object.entries(z || {})) {
+    const [w, k] = key.split("|");
+    if (w === "fenster") g.fenster.push([spurMitName(w, k), n]);
+    else if (/^hz_/.test(w)) g.hilfe.push([spurZeile({ w, k }), n]);
+    else if (/^(rg|film)_(start|ende|ab)$/.test(w) && k) { const ziel = w.startsWith("rg") ? g.videos : g.filme, v = (ziel[k] = ziel[k] || { name: spurMitName(w, k), start: 0, ende: 0, ab: 0, weit: "" });
+      if (/_start$/.test(w)) v.start += n; else if (/_ende$/.test(w)) v.ende += n; else { v.ab += n; v.weit = weit?.[key] || v.weit; } }
+    else if (/^tat_|^film_frage_/.test(w)) g.taten.push([spurZeile({ w, k }), n]);
+    else if ($("v-" + w) && NZ_NAMEN[w]) g.seiten.push([NZ_NAMEN[w], n, w]);
+    else if (w !== "wieder" && w !== "geoeffnet") g.sonst.push([spurZeile({ w, k }), n]);
+  }
+  for (const l of [g.seiten, g.fenster, g.hilfe, g.taten, g.sonst]) l.sort((a, b) => b[1] - a[1]);
+  return g;
+}
+async function spurUebersicht(tage, person) {
+  if (tage) SPU.tage = tage; SPU.person = person === undefined ? SPU.person : person;
+  let r; try { r = await api("spur_uebersicht", { tage: SPU.tage, ...(SPU.person ? { person_id: SPU.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const summe = (l) => l.reduce((a, x) => a + x[1], 0), vid = (o) => Object.values(o);
+  const kopf = `<h3 style="margin:0">📊 Was nutzt ${SPU.person ? esc(r.personen[0]?.name || "") : "jeder"}?</h3>
+    <p class="hinweis" style="margin:0">Letzte ${r.tage} Tage · gezählt ab 2.754.0 auch Fenster, Hilfe, Erklär-Videos, Filme und Handlungen (davor nur Seiten) · <b>ohne Inhalte</b>, nur du siehst das.</p>
+    <div class="knoepfe">${[7, 30].map((t) => `<button class="knopf klein${SPU.tage === t ? " haupt" : ""}" onclick="spurUebersicht(${t})">${t} Tage</button>`).join("")}</div>`;
+  let inhalt;
+  if (!SPU.person) {
+    inhalt = `<div style="display:grid;gap:6px">${r.personen.map((x) => { const g = spuGruppen(x.z, x.weit), v = vid(g.videos), f = vid(g.filme);
+      return `<button class="knopf" style="text-align:left" onclick="spurUebersicht(null, '${esc(x.person_id)}')"><b>${esc(x.name)}</b> <small class="hinweis">· ${x.tage ? `${x.tage} Tag${x.tage === 1 ? "" : "e"} in der App · zuletzt ${esc(zeitKurz(x.letzte))}` : `⚪ in ${r.tage} Tagen nicht in der App`}</small>`
+        + (x.tage ? `<br><small>📱 ${summe(g.seiten)} Seiten · 🪟 ${summe(g.fenster)} Fenster · ❓ ${summe(g.hilfe)} Hilfe · 🎬 ${v.reduce((a, y) => a + y.start, 0)} Videos (✅ ${v.reduce((a, y) => a + y.ende, 0)})${f.length ? ` · 🎞️ ${f.reduce((a, y) => a + y.start, 0)} Filme` : ""} · ✅ ${summe(g.taten)} Handlungen</small>` : "") + `</button>`; }).join("")}</div>`;
+  } else {
+    const x = r.personen[0] || { z: {}, weit: {}, tage: 0 }, g = spuGruppen(x.z, x.weit);
+    const liste = (titel, l, leer) => `<details class="ds-mehr" open><summary><b>${titel}</b> (${summe(l)})</summary>${l.length ? l.map((y) => `<div class="spu-zeile"><span>${esc(y[0])}</span><b>${y[1]}×</b></div>`).join("") : `<p class="hinweis">${leer}</p>`}</details>`;
+    const vliste = (titel, o, leer) => { const l = vid(o).sort((a, b) => b.start - a.start);
+      return `<details class="ds-mehr" open><summary><b>${titel}</b> (${l.length})</summary>${l.length ? l.map((y) => `<div class="spu-zeile spu-video"><span>${esc(y.name)}</span><small>▶ ${y.start}× gestartet${y.ende ? ` · ✅ ${y.ende}× bis zum Ende` : ""}${y.ab ? ` · ⏹️ ${y.ab}× abgebrochen${y.weit ? ` (am weitesten: ${esc(y.weit.replace("/", " von "))})` : ""}` : ""}</small></div>`).join("") : `<p class="hinweis">${leer}</p>`}</details>`; };
+    const genutzt = new Set(g.seiten.map((y) => y[2]));
+    const nie = Object.keys(NZ_NAMEN).filter((k) => $("v-" + k) && !genutzt.has(k) && !["chat", "mitglied", "dokansicht", "protokoll", "aktion", "gruppe"].includes(k)).map((k) => NZ_NAMEN[k]);
+    inhalt = `<p style="margin:4px 0">${x.tage ? `${x.tage} Tag${x.tage === 1 ? "" : "e"} in der App · zuletzt ${esc(zeitKurz(x.letzte))}` : `⚪ in ${r.tage} Tagen nicht in der App`}</p>`
+      + liste("📱 Seiten", g.seiten, "Keine Seite geöffnet.") + liste("❓ Hilfe", g.hilfe, "Keine Hilfe benutzt.") + vliste("🎬 Erklär-Videos", g.videos, "Kein Erklär-Video angesehen.")
+      + vliste("🎞️ Anleitungsfilme", g.filme, "Keinen Anleitungsfilm angesehen.") + liste("🪟 Fenster", g.fenster, "Kein Fenster geöffnet.") + liste("✅ Handlungen", g.taten, "Keine Handlung aufgezeichnet.")
+      + (g.sonst.length ? liste("➕ Weiteres", g.sonst, "") : "")
+      + `<details class="ds-mehr"><summary><b>🚫 Nie benutzt</b> (${nie.length})</summary>${nie.length ? `<p>${nie.map(esc).join(" · ")}</p>` : `<p class="hinweis">Alle Seiten wurden schon benutzt.</p>`}</details>`;
+  }
+  const fuss = `<div class="knoepfe">${SPU.person ? `<button class="knopf" onclick="spurUebersicht(null, null)">‹ Alle Mitglieder</button><button class="knopf" onclick="spurAdmin(heuteIso(), '${esc(SPU.person)}')">👣 Wege heute</button>` : `<button class="knopf" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button>`}<button class="knopf" onclick="nzAdmin()">‹ Nutzung</button></div>`;
+  clearTimeout(SPW.uhr); // Live-Aktualisierung der Wege hier aus
+  $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
+  $("adminBlatt").classList.remove("versteckt"); $("adminBlatt").querySelector(".blatt-innen")?.scrollTo(0, 0);
 }
 // ---------- KC-CLUB-SCHNAPPSCHUSS (2.102.0, Wunsch Hansi „Bildschirm des Mitglieds ansehen – Schnappschuss“) ----------
 // ---------- KC-CLUB-STUDIO (2.136.0, Wunsch Hansi „mein TV- und Fotostudio – alles an einem Platz“) ----------
@@ -40315,7 +40495,7 @@ async function nzAdmin(tage) {
   const zeilen = [...haupt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).flatMap(([o, n]) => [[o, n, false], ...liste.filter(([b]) => nzOber(b) === o).map(([b, m]) => [b, m, true])]);
   $("adminBlattInhalt").innerHTML = `<h3 style="margin:0">📊 Nutzung – ohne Namen</h3>
     <p class="hinweis" style="margin:0">Wie oft die Bereiche geöffnet wurden und <b>👤 von wie vielen verschiedenen Mitgliedern</b>. Es wird nie gespeichert, wer – nur Tag, Bereich, Anzahl und eine zufällige Geräte-Kennung; die Uhrzeit nur als Stunde, getrennt vom Bereich.</p>
-    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button><button class="knopf klein" onclick="wannStatistik()">📅 Wer kommt wann?</button><button class="knopf klein" onclick="sbAdmin()">🎙️ Sprachbefehle</button><button class="knopf klein" onclick="nachrichtenStatistik()">📨 Nachrichten</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
+    <div class="knoepfe">${[7, 30, 90].map((t) => `<button class="knopf klein${r.tage === t ? " haupt" : ""}" onclick="nzAdmin(${t})">${t} Tage</button>`).join("")}<button class="knopf klein" onclick="spurAdmin(heuteIso(), null)">👣 Wege der Mitglieder</button><button class="knopf klein" onclick="spurUebersicht(30, null)">📊 Was nutzt jeder?</button><button class="knopf klein" onclick="startStatistik(30)">⏱️ Startstatistik</button><button class="knopf klein" onclick="wannStatistik()">📅 Wer kommt wann?</button><button class="knopf klein" onclick="sbAdmin()">🎙️ Sprachbefehle</button><button class="knopf klein" onclick="nachrichtenStatistik()">📨 Nachrichten</button>${INFO_DATEN.admin?.r ? `<button class="knopf klein" onclick="adminBlatt()">‹ Admin-Zentrale</button>` : ""}</div>
     <b>Insgesamt ${gesamt} Öffnungen in ${r.tage} Tagen${r.geraeteGesamt == null ? " · 👤 unbekannt" : r.geraeteGesamt ? ` · 👤 ${r.geraeteGesamt} verschiedene Geräte (≈ Mitglieder${r.mitglieder ? `, ${r.mitglieder} im Club` : ""})` : ""}</b>
     <span class="hinweis" style="margin:0">👤 = verschiedene Mitglieder (genau: Geräte – wer Handy und Tablet nutzt, zählt doppelt). Gezählt ab Version 2.6.0. <span class="nz-wer nur1">👤 1</span> = nur ein einziges Mitglied. Bei 30/90 Tagen zählen die Öffnungen auch aus der Zeit davor.</span><span class="hinweis" style="margin:0">↳ = Teilbereich (z. B. Büro → Eingang). Die Zahl beim Hauptbereich zählt nur das Öffnen selbst.</span>
     <div class="nz-tage" title="Öffnungen je Tag">${tagListe.map(([t, n]) => `<div title="${esc(t.slice(8) + "." + t.slice(5, 7) + ".: " + n)}"><i style="height:${Math.round(n / tmax * 100)}%"></i></div>`).join("")}</div>

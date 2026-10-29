@@ -4483,7 +4483,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 439. 2.23.88: Wege der Mitglieder – was geöffnet, mit wem, Uhrzeit; nie Inhalte; 30 Tage; nur Admin (KC-CLUB-SPUR)
 {
   const f = server.slice(server.indexOf('case "spur_melden"'), server.indexOf('case "spur_liste"'));
-  assert.ok(/SPUR_WAS\.test\(String\(x\[1\]/.test(f) && /SPUR_MIT\.test\(String\(x\[2\]\)\)/.test(f) && /\.slice\(0, 200\)/.test(f) && /protokoll\(ich\.person_id, "spur", \{ s \}\)/.test(f), "nur Kürzel + Kennungen, gedeckelt, je Person");
+  assert.ok(/SPUR_WAS\.test\(String\(x\[1\]/.test(f) && /spurMitOk\(String\(x\[2\]\)\)/.test(f) /* 2.754.0 KC-CLUB-SPUR-VOLL: Kennung oder Registry-Kennung, sonst ohne „mit“ */ && /\.slice\(0, 200\)/.test(f) && /protokoll\(ich\.person_id, "spur", \{ s \}\)/.test(f), "nur Kürzel + Kennungen, gedeckelt, je Person");
   assert.ok(/const SPUR_WAS = \/\^\[a-z\]\[a-z0-9_\]\{0,29\}\$\/;/.test(server) && /const SPUR_MIT = \/\^\(KC-P-/.test(server), "kein freier Text möglich");
   const l = server.slice(server.indexOf('case "spur_liste"'), server.indexOf("// ----- KC-CLUB-NUTZUNG (0.99.0)"));
   assert.ok(/^case "spur_liste": \{\s+nurAdmin\(ich\);/.test(l), "lesen nur der Admin");
@@ -8570,8 +8570,8 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.81.0: Wege der Mitglieder – „was macht jeder gerade, was ruft er auf“ (KC-CLUB-SPUR-JETZT, Wunsch Hansi)
 {
-  assert.ok(/e\.w = x\.w; je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w \}\)\)/.test(server), "Server liefert den letzten Schritt je Person (nur die Art)");
-  assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
+  assert.ok(/e\.w = x\.w;[^\n]*je\.set\(x\.p, e\);/.test(server) && /zuletzt: e\.w(, zk: e\.k)? \}\)\)/.test(server) /* 2.754.0 KC-CLUB-SPUR-VOLL: + Kennung */, "Server liefert den letzten Schritt je Person (nur die Art)");
+  assert.ok(/🟢 Gerade in der App/.test(programm) && /ist bei <b>\$\{esc\(was\(x\.zuletzt(, x\.zk)?\) \|\| "\?"\)\}<\/b>/.test(programm) && /"👉 jetzt" : "zuletzt"/.test(programm), "Übersicht: wer ist gerade wo");
   assert.ok(/const SERVER_VERSION = "2\.(8[1-9]|9\d|[1-9]\d\d)\.0"/.test(server));
 }
 
@@ -9103,7 +9103,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(bm.indexOf('protokoll(ich.person_id, "buero_mail_versuch"') > 0 && bm.indexOf('protokoll(ich.person_id, "buero_mail_versuch"') < bm.indexOf('.eq("aktion", "buero_mail_versuch")') && bm.indexOf('.eq("aktion", "buero_mail_versuch")') < bm.indexOf("routerSenden(") && /if \(\(count \?\? 0\) > 3\)/.test(bm), "Mail-Bremse vor dem Senden");
   // KC-CLUB-PROTOKOLL-BREMSE
   assert.ok(/async function protokollPlatz\(person: string, aktion: string, proStunde: number\)/.test(server)
-    && /await protokollPlatz\(ich\.person_id, "spur", 120\)/.test(server) && /await protokollPlatz\(ich\.person_id, "app_start", 60\)/.test(server)
+    && /await protokollPlatz\(ich\.person_id, "spur", 240\)/ /* 2.754.0 KC-CLUB-SPUR-VOLL: mehr Schritte */.test(server) && /await protokollPlatz\(ich\.person_id, "app_start", 60\)/.test(server)
     && /await protokollPlatz\(ich\.person_id, "sprache_unbekannt", 60\)/.test(server) && /await protokollPlatz\(ich\.person_id, "diagnose_%", 120\)/.test(server), "Protokoll-Flut gebremst");
 }
 

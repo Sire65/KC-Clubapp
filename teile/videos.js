@@ -2716,6 +2716,7 @@ function rundgangStart(mitKnopf, id = "ueberblick", liste = [], startI = 0) {
   if (tour.id === "ueberblick" && !rgErledigt()) rgHinweisErledigt("angesehen"); // KC-CLUB-RUNDGANG-HINWEIS: wer ihn einmal gestartet hat, wird nicht mehr gefragt
   if (tour.id === "warum" && !rgErledigt()) rgHinweisErledigt("angesehen"); // 2.254.0: die Einleitung zählt genauso
   RG.i = Math.max(0, Math.min(RG.st.length - 1, startI | 0)); RG.pause = !!mitKnopf; RG.ton = "speechSynthesis" in window; document.body.classList.add("rg-an");
+  spur("rg_start", tour.id); // 2.754.0 KC-CLUB-SPUR-VOLL: Erklär-Video in den Wegen (Ende/Abbruch in rundgangEnde)
   document.body.insertAdjacentHTML("beforeend", `<div class="rg-schicht" id="rgSchicht" role="dialog" aria-modal="true" aria-label="${esc(tour.t)}"><div class="rg-loch" id="rgLoch"></div>
     <div class="rg-tafel" id="rgTafel"><div class="rg-oben"><b id="rgTitel"></b><span class="rg-oben-r"><button type="button" class="rg-stimme" onclick="stimmenWahl()" aria-label="Stimme und Tempo der Videos wählen" title="Stimme &amp; Tempo">🗣️</button><span class="rg-nr" id="rgNr"></span></span></div><p id="rgText"></p><div class="rg-balken"><i id="rgBalken"></i></div>
     <div class="rg-knoepfe"><button type="button" class="knopf klein" onclick="rundgangSchritt(-1)" aria-label="Zurück">◀</button><button type="button" class="knopf haupt klein" id="rgPause" onclick="rundgangPause()"></button><button type="button" class="knopf klein" onclick="rundgangSchritt(1)" aria-label="Weiter">▶</button><button type="button" class="knopf klein" onclick="rundgangEnde()">✕ Beenden</button></div></div></div>`);
@@ -3125,6 +3126,7 @@ function rundgangEnde(still) {
   const rest = naechst ? RG.liste.slice(RG.liste.indexOf(naechst) + 1) : [], von = RG.von; if (!bisEnde) RG.liste = []; // ✕ Beenden stoppt auch die Reihe
   const weiter = bisEnde && !naechst && RG.tour === "warum"; // 2.254.0: nach der Einleitung bis zum Ende → Rundgang anbieten
   const browserWahl = bisEnde && !naechst && RG.tour === "installieren"; // 2.276.0 KC-CLUB-VIDEO-INSTALL: danach den eigenen Browser wählen
+  if (RG.an && RG.tour) spur(RG.frage ? "rg_ende" : `rg_ab_${(RG.i | 0) + 1}_${RG.st?.length || 1}`, RG.tour); // 2.754.0 KC-CLUB-SPUR-VOLL: Schlussfrage erreicht = bis zum Ende
   RG.frage = false; rgStille(); try { RG.st[RG.vorI]?.nach?.(); } catch {} // offene Beispiele schließen, Aufgeklapptes zuklappen, Vorführung zurück
   for (const f of RG.zurueck.splice(0).reverse()) try { f(); } catch {}
   if (RG.an) rgDemo({}); RG.vorI = -1;

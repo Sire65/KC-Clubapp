@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.754.0 – 2026-10-29 – 👣 Wege der Mitglieder vollständig: Fenster, Hilfe, Erklär-Videos, Filme, Handlungen · 📊 Was nutzt jeder?
+Wunsch Hansi (29.10.): „Prüfe nochmal die Wege der Mitglieder – einige Schritte werden mir nicht angezeigt. Wichtig ist auch, ob sie die Hilfetexte lesen oder Erklär-Videos ansehen. Alles soll aufgezeichnet werden, damit ich sehe, was jeder in der App nutzt.“ (KC-CLUB-SPUR-VOLL)
+- 🪟 **Fenster**: Jedes geöffnete Fenster steht jetzt in den Wegen (z. B. „🪟 Fenster: 💼 Aktentasche packen“) – zentral über einen Beobachter, neue Fenster sind von selbst dabei. Namen aus der Registry `FENSTER_NAMEN`; nur neu gezeichnete Fenster zählen nicht doppelt.
+- ❓ **Hilfe**: Kapitel geöffnet, Hilfetext aufgerufen, „👉 Zeig mir wo“, 🔊 vorgelesen, „?“ auf welcher Seite, in der Hilfe gesucht (nie das Suchwort), 👍/👎.
+- 🎬 **Erklär-Videos und 🎞️ Anleitungsfilme**: gestartet, ✅ bis zum Ende gesehen oder ⏹️ abgebrochen (bei Schritt x von y bzw. nach x von y Minuten); beim Film auch die Antwort auf das Angebot beim Start. Was ein Video selbst vorführt, zählt nicht als Weg des Mitglieds.
+- ✅ **Handlungen** (Registry `SPUR_TATEN`): z. B. Termin zugesagt/abgesagt, Einladung/Erinnerung/Änderungsmeldung verschickt, Sitzung gespeichert, Vorbereitung übernommen, Aktentasche gepackt, Unterlagen verteilt, Zettel, Vorschlag, Foto, Erstattung.
+- 📊 **Was nutzt jeder?** (👥 Nutzung bzw. 👣 Wege): je Mitglied für 7 oder 30 Tage – Seiten, Hilfe, Erklär-Videos und Filme (wie weit), Fenster, Handlungen und „🚫 nie benutzt“.
+- 🐞 **Fehlende Schritte behoben**: Die Tagesansicht holte höchstens 1000 Einträge – jetzt seitenweise alles. Schritte mit unbekannter Zusatzangabe (z. B. „Anklopfen verpasst“) fielen ganz weg – jetzt bleibt der Schritt.
+- Wie bisher: nie Inhalte, nur der Admin sieht es, nach 30 Tagen gelöscht.
+
 ## 2.753.0 – 2026-10-29 – 🎬 Anleitungsfilm in der neuen Reihenfolge · Vertretung im Film · Chat-Abschnitte verschieben · zwei Korrekturen
 Wunsch Hansi (29.10.): „Video auch anpassen, im Video die Vertretung anzeigen – nicht mich, sondern eher den Kassenwart.“
 - 🎬 **Anleitungsfilm neu** (KC-CLUB-FILM-HINWEIS, Kennung `clubsitzungablauf`): Teil 1 Tagesordnung & Einladung (3 Tage vorher, Sitzungs-Vorgaben) · Teil 2 Bis zur Sitzung (erinnern, „Mitglieder informieren?“ mit Änderungsmeldung, „⚠️ Knapp“, **Vertretung durch Kassenwart Paul**) · Teil 3 einen Tag vorher Sitzung vorbereiten und zuletzt die Aktentasche mit Mitnehm-Liste · Teil 4 Clubabend Live mit 📤 Freigeben, „✅ Zum Schluss“ und als Letztes der nächste Termin (18 Uhr, Hütte Anne). Klaus bekommt den Hinweis beim Start noch einmal.
