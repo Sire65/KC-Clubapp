@@ -785,10 +785,29 @@ const sammelTitel = (empfaenger: number) => (empfaenger > 1 ? ` · an dich + ${e
 // herzlich zu unserer Clubsitzung ein am … um … in (Ort) … Folgende Punkte stehen auf der Tagesordnung: 1. 2. 3. … Wir freuen uns auf eine schöne
 // konstruktive Sitzung. Liebe Grüße Klaus, Clubsprecher, Köcheclub Werne“): ein Brief je Empfänger (eigener Vorname), Gruß mit Name und Amt.
 // Rein (ohne Datenbank) – die App baut die Vorschau mit denselben Sätzen (Test tests/einladung-brief.test.mjs).
+// 2.751.0 KC-CLUB-AENDERUNG-MELDUNG (Wunsch Hansi 29.10.2026 „Änderungsmeldung, dass weitere Punkte bzw. dringende Vorschläge dazugekommen sind“):
+// Vergleich der zuletzt an alle verschickten Tagesordnung (alt) mit der jetzigen – neu dazu, entfällt, Reihenfolge. Rein, gleiche Sätze in der App.
+function topDiff(alt: any[] | null, neu: any[]) {
+  if (!Array.isArray(alt) || !alt.length) return null;
+  const k = (x: any) => (x?.id ? "v:" + x.id : "t:" + String(x?.t || "").trim().toLowerCase());
+  const ka = alt.map(k), kn = neu.map(k);
+  const dazu = neu.map((x, i) => ({ nr: i + 1, t: String(x.t), dringend: /^❗/.test(String(x.t)) })).filter((_, i) => !ka.includes(kn[i]));
+  const weg = alt.filter((_, i) => !kn.includes(ka[i])).map((x) => String(x.t));
+  const bleibt = kn.filter((x) => ka.includes(x)), vorher = ka.filter((x) => kn.includes(x));
+  return { dazu, weg, reihenfolge: bleibt.join("|") !== vorher.join("|") };
+}
+function aenderungKurz(df: ReturnType<typeof topDiff>): string {
+  if (!df) return "";
+  const dr = df.dazu.filter((x) => x.dringend).length, t: string[] = [];
+  if (df.dazu.length) t.push(`${df.dazu.length} ${df.dazu.length === 1 ? "Punkt" : "Punkte"} dazugekommen${dr ? ` (${dr} dringend)` : ""}`);
+  if (df.weg.length) t.push(`${df.weg.length} ${df.weg.length === 1 ? "Punkt entfällt" : "Punkte entfallen"}`);
+  if (df.reihenfolge && !t.length) t.push("neue Reihenfolge");
+  return t.join(" · ");
+}
 const BRIEF_AMT_RE = /^(clubsprecher|stellv|kassenwart|schriftf|admin)/i;
 const briefTag = (iso: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(iso)).replace(", ", ", den ");
 const briefZeit = (iso: string) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
-function einladungBrief(d: { vorname: string; titel: string; beginn: string; ort: string; top: string[]; zusatz: string; url: string; von: string; amt: string; erinnerung: boolean; aenderung?: boolean }) {
+function einladungBrief(d: { vorname: string; titel: string; beginn: string; ort: string; top: string[]; zusatz: string; url: string; von: string; amt: string; erinnerung: boolean; aenderung?: boolean; diff?: ReturnType<typeof topDiff> }) {
   const was = /^clubsitzung\b/i.test(d.titel) ? "Clubsitzung" : `Sitzung „${d.titel}“`;
   const wann = `am ${briefTag(d.beginn)}, um ${briefZeit(d.beginn)} Uhr`;
   const gruss = `Liebe Grüße\n${d.von}${d.amt ? "\n" + d.amt : ""}\nKöcheclub Werne`;
@@ -796,10 +815,19 @@ function einladungBrief(d: { vorname: string; titel: string; beginn: string; ort
   if (d.erinnerung) return kopf + `kleine Erinnerung: ${wann} ist unsere ${was}${d.ort ? ` – ${d.ort}` : ""}.\n\nBitte sag kurz in der Club-App zu oder ab – das hilft uns bei der Vorbereitung:\n${d.url}`
     + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\n${gruss}`;
   // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: nach der Einladung geänderte Tagesordnung mitteilen (gleicher Text in App-Vorschau und Versand)
-  if (d.aenderung) return kopf + `für unsere ${was} ${wann}${d.ort ? ` – ${d.ort}` : ""} hat sich die Tagesordnung geändert. So sieht sie jetzt aus:\n${d.top.join("\n")}`
-    + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\nFalls du noch nicht zu- oder abgesagt hast, bitte kurz in der Club-App:\n${d.url}\n\n${gruss}`;
+  if (d.aenderung) {
+    const df = d.diff, nurDazu = !!df && df.dazu.length > 0 && !df.weg.length, nurWeg = !!df && df.weg.length > 0 && !df.dazu.length, nurFolge = !!df && !df.dazu.length && !df.weg.length && df.reihenfolge;
+    const satz = nurDazu ? (df?.dazu.length === 1 ? "ist noch ein Punkt dazugekommen" : "sind noch Punkte dazugekommen") : nurWeg ? `${df?.weg.length === 1 ? "entfällt ein Punkt" : "entfallen Punkte"}`
+      : nurFolge ? "hat sich die Reihenfolge der Tagesordnung geändert" : "hat sich die Tagesordnung geändert";
+    const neuNr = new Set((df?.dazu ?? []).map((x) => x.nr));
+    const teile = df ? [df.dazu.length ? `Neu:\n${df.dazu.map((x) => `${x.nr}. ${x.t}`).join("\n")}` : "", df.weg.length ? `Entfällt:\n${df.weg.map((t) => `– ${t}`).join("\n")}` : ""].filter(Boolean) : [];
+    return kopf + `zu unserer ${was} ${wann}${d.ort ? ` – ${d.ort}` : ""} ${satz}.` + (teile.length ? `\n\n${teile.join("\n\n")}` : "")
+      + `\n\n${df ? "Die vollständige Tagesordnung" : "So sieht die Tagesordnung jetzt aus"}:\n${d.top.map((x, i) => (neuNr.has(i + 1) ? `${x} 🆕` : x)).join("\n")}`
+      + (d.zusatz ? `\n\n${d.zusatz}` : "") + `\n\nFalls du noch nicht zu- oder abgesagt hast, bitte kurz in der Club-App:\n${d.url}\n\n${gruss}`;
+  }
   return kopf + `hiermit laden wir dich herzlich zu unserer ${was} ein:\n\n📅 ${wann}${d.ort ? `\n📍 ${d.ort}` : ""}`
     + (d.top.length ? `\n\nFolgende Punkte stehen auf der Tagesordnung:\n${d.top.join("\n")}` : "")
+    + (d.top.length ? "\n\nDringende Vorschläge oder Änderungen können bis zur Sitzung noch dazukommen." : "") // 2.751.0 KC-CLUB-SITZUNG-ABLAUF (Wunsch Hansi 29.10.)
     + (d.zusatz ? `\n\n${d.zusatz}` : "")
     + `\n\nWir freuen uns auf eine schöne, konstruktive Sitzung.\nBitte sag kurz in der Club-App zu oder ab:\n${d.url}\n\n${gruss}`;
 }
@@ -5283,10 +5311,32 @@ const sitzungNrPruefen = (x: unknown) => ([1, 2, 3].includes(Number(x)) ? Number
 // 2.694.0 KC-CLUB-ANMELDESCHLUSS (Wunsch Hansi 27.10.2026 „Anmeldeschluss für Vorschläge bis 17 Uhr am Vorabend, in der Info anzeigen; danach auf die
 // nächste Sitzung oder Häkchen dringend – Clubsprecher, Admin und Kassenwart entscheiden: dringender TOP oder ablehnen und auf die nächste Sitzung“).
 // Gilt für Themen und Spenden zu einer Sitzung (Termin der Art „Treffen“). Entscheiden darf jeder aus der Leitung – wer zuerst tippt.
-const ANMELDESCHLUSS_STUNDE = 17;
+// 2.751.0 KC-CLUB-SITZUNG-VORGABEN (Wunsch Hansi 29.10.2026 „Vorschläge 4 Tage vorher, Einladung 3 Tage vorher … das lässt sich dann ja einstellen“):
+// Fristen und Vorgaben des Sitzungsablaufs stehen in kc_club_konfig „sitzung_vorgaben“ (Clubleitung: Büro → ⚙️ Sitzungs-Vorgaben), nicht im Programm.
+// Fehlt die Einstellung, gelten diese Werte; Uhrzeit/Ort ohne Einstellung = wie beim letzten Treffen. Die App bekommt dieselben Werte (init, buero_start).
+const SITZUNG_VORGABEN_STANDARD = { vorschlag_tage: 4, vorschlag_stunde: 17, einladung_tage: 3, erinnerung_tage: 2, unterlagen_tage: 1, tasche_stunde: 14, vorlauf_tage: 7,
+  vorbereiter_amt: "Clubsprecher", wochentag: 5, uhrzeit: null as string | null, ort: null as string | null, ohne_monate: [] as number[] };
+type SitzungVorgaben = typeof SITZUNG_VORGABEN_STANDARD;
+function svPruefen(w: any): SitzungVorgaben {
+  const d = SITZUNG_VORGABEN_STANDARD, x = w && typeof w === "object" ? w : {};
+  const zahl = (k: keyof SitzungVorgaben, min: number, max: number) => { const n = Number(x[k]); return Number.isInteger(n) && n >= min && n <= max ? n : d[k] as number; };
+  return { vorschlag_tage: zahl("vorschlag_tage", 1, 14), vorschlag_stunde: zahl("vorschlag_stunde", 0, 23), einladung_tage: zahl("einladung_tage", 1, 14),
+    erinnerung_tage: zahl("erinnerung_tage", 1, 7), unterlagen_tage: zahl("unterlagen_tage", 0, 7), tasche_stunde: zahl("tasche_stunde", 0, 23), vorlauf_tage: zahl("vorlauf_tage", 3, 21),
+    vorbereiter_amt: txt(x.vorbereiter_amt, 60) || d.vorbereiter_amt, wochentag: zahl("wochentag", 0, 6),
+    uhrzeit: /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x.uhrzeit || "")) ? String(x.uhrzeit) : null, ort: txt(x.ort, 120) || null,
+    ohne_monate: [...new Set<number>((Array.isArray(x.ohne_monate) ? x.ohne_monate : []).map(Number).filter((m: number) => Number.isInteger(m) && m >= 1 && m <= 12))].sort((a, b) => a - b).slice(0, 11) };
+}
+let SV: SitzungVorgaben = svPruefen(null), SV_AM = 0;
+async function sitzungVorgaben(frisch = false): Promise<SitzungVorgaben> {
+  if (!frisch && Date.now() - SV_AM < 300000) return SV; // je Server-Instanz höchstens alle 5 Minuten lesen
+  try { const { data, error } = await db.from("kc_club_konfig").select("wert").eq("schluessel", "sitzung_vorgaben").maybeSingle(); if (!error) { SV = svPruefen(data?.wert); SV_AM = Date.now(); } }
+  catch (e) { console.error("sitzung_vorgaben", String(e)); }
+  return SV;
+}
+// 2.751.0: Anmeldeschluss = vorschlag_tage vor der Sitzung um vorschlag_stunde (vorher fest: Vorabend 17 Uhr)
 function anmeldeschluss(beginnIso: string): Date {
-  const t = berlinTeile(new Date(beginnIso)), v = new Date(Date.UTC(t.y, t.m - 1, t.d) - 86400000);
-  return berlinZuUtc(v.getUTCFullYear(), v.getUTCMonth() + 1, v.getUTCDate(), ANMELDESCHLUSS_STUNDE, 0);
+  const t = berlinTeile(new Date(beginnIso)), v = new Date(Date.UTC(t.y, t.m - 1, t.d) - SV.vorschlag_tage * 86400000);
+  return berlinZuUtc(v.getUTCFullYear(), v.getUTCMonth() + 1, v.getUTCDate(), SV.vorschlag_stunde, 0);
 }
 const schlussVorbei = (beginnIso: string, jetztMs = Date.now()) => jetztMs >= anmeldeschluss(beginnIso).getTime() && jetztMs < Date.parse(beginnIso);
 // die Sitzung danach: fest, wenn schon im Kalender – sonst „nächste Sitzung ab Beginn dieser“ (ordnet sich selbst zu, 2.527.0)
@@ -6161,7 +6211,8 @@ async function clubabendStand(ich: Ich, t: any) {
     aktentasche: at && at.status !== "offen" ? { anzahl: (at.inhalt ?? []).length, vorlaeufig: at.status === "vorlaeufig" } : null, // 2.699.0: auch vorläufig gepackt
     tagesordnung: top, anwesend: anwesend.map((id) => ({ person_id: id, name: namen.get(id) || id })),
     ...(ich.vorstand ? { mitglieder: b.mitglieder.map((m: any) => ({ person_id: m.person_id, name: m.name, zusage: m.antwort })), protokoll: b.protokoll } : {}),
-    geburtstage: gb, aufgaben: b.aufgaben.filter((a: any) => !a.erledigt), letztesProtokoll: b.letztes, album, seit: von };
+    geburtstage: gb, aufgaben: b.aufgaben.filter((a: any) => !a.erledigt), letztesProtokoll: b.letztes, album, seit: von,
+    abschluss: [...erledigt].filter((k) => k.startsWith("ab:")) }; // 2.751.0 KC-CLUB-CLUBABEND-ABSCHLUSS: was am Ende des Abends abgehakt ist
 }
 // 2.749.0 KC-CLUB-EINE-TAGESORDNUNG (Wunsch Hansi 29.10. „nur eine Tagesordnung, die in allen Benachrichtigungen gleich ist“): die Tagesordnung
 // einer Sitzung ist überall dieselbe – die im Büro gespeicherte, sonst der Vorschlag der App (feste Punkte + Vorschläge für diese Sitzung).
@@ -6225,7 +6276,8 @@ async function bueroSitzung(ich: Ich, tid: string) {
     letztes: letzt ? { titel: letzt.titel, datum: letzt.datum, status: letzt.status } : null,
     aufgaben: (auf ?? []).map((a: any) => ({ wer: leute.get(a.person_id)?.display_name || a.person_id, text: a.text, faellig: a.faellig, erledigt: !!a.erledigt_am })),
     vorbereitung: prep ? { anwesend: prep.anwesend, anmerkung: prep.anmerkung, tagesordnung: prep.tagesordnung, zeilen: prep.zeilen, einladung_am: prep.einladung_am, erinnerung_am: prep.erinnerung_am,
-      geaendert_am: prep.geaendert_am, geaendert_von: prep.geaendert_von ? (await personen([prep.geaendert_von])).get(prep.geaendert_von)?.display_name ?? null : null } : null, // 2.749.0: Stand für „gespeichert am … von …“ und Zusammenstoß-Schutz
+      geaendert_am: prep.geaendert_am, geaendert_von: prep.geaendert_von ? (await personen([prep.geaendert_von])).get(prep.geaendert_von)?.display_name ?? null : null, // 2.749.0: Stand für „gespeichert am … von …“ und Zusammenstoß-Schutz
+      versandt_top: prep.versandt_top ?? null, unterlagen_am: prep.unterlagen_am ?? null } : null, // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG (Vorschau „Neu / Entfällt“), KC-CLUB-SITZUNG-ABLAUF
     standard: { anwesend: mitglieder.filter((m) => ant.get(m.person_id)?.antwort === "ja").map((m) => m.person_id), tagesordnung: standardTop, zeilen: 5 },
     protokoll: pr ? { id: pr.id, status: pr.status } : null,
     zeilenWahl: BUERO_ZEILEN,
@@ -6301,6 +6353,13 @@ async function bueroEingangEinzeln(ich?: Ich) {
   ]);
   void leer;
   return { ausleihen, vorschlaege, hilfe, archiv, aufgaben, entwuerfe, aenderungen, erstattungen: ek.erst, dienstzeiten: ek.dw };
+}
+// 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: gleiche Tagesordnung = gleiche Punkte in gleicher Reihenfolge
+const topStand = (l: any[] | null | undefined) => JSON.stringify((Array.isArray(l) ? l : []).map((x: any) => [String(x?.t || ""), x?.id ?? null]));
+function topGeaendert(p: any): boolean {
+  const jetzt_ = topStand(p.tagesordnung);
+  if (p.informieren_nein_top && topStand(p.informieren_nein_top) === jetzt_) return false; // Clubleitung hat für diesen Stand „nicht informieren“ gewählt
+  return p.versandt_top ? topStand(p.versandt_top) !== jetzt_ : Date.parse(p.geaendert_am) > Date.parse(p.einladung_am) + 60000;
 }
 function bueroTopListe(roh: unknown) {
   const l = (Array.isArray(roh) ? roh : []).map((x: any) => ({ t: txt(x?.t, 200), art: ["fest", "vorschlag", "eigen"].includes(x?.art) ? x.art : "eigen", ...(x?.id ? { id: String(x.id).slice(0, 40) } : {}) }))
@@ -6615,12 +6674,19 @@ async function liveTerminKalender(ich: Ich, beginn: string) {
 async function liveTerminVorschlag() {
   const { data: letzt } = await db.from("kc_club_treffen").select("beginn,ort,titel").eq("art", "treffen").lte("beginn", new Date(Date.now() + 60 * 86400000).toISOString())
     .order("beginn", { ascending: false }).limit(1).maybeSingle();
-  const hm = letzt ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(letzt.beginn)) : "19:00";
-  const h = berlinTag(new Date()), j = +h.slice(0, 4), mo = +h.slice(5, 7);
-  const ny = mo === 12 ? j + 1 : j, nm = mo === 12 ? 1 : mo + 1; // nächster Monat
-  let tag = new Date(Date.UTC(ny, nm, 0)).getUTCDate(); while (new Date(Date.UTC(ny, nm - 1, tag)).getUTCDay() !== 5) tag--;
+  // 2.751.0 KC-CLUB-SITZUNG-VORGABEN (Wunsch Hansi 29.10.): letzter <Wochentag> im Folgemonat, Monate ohne ordentliche Sitzung überspringen (Dezember → Januar),
+  // Uhrzeit und Ort aus den Sitzungs-Vorgaben – ohne Einstellung wie beim letzten Treffen
+  const hm = SV.uhrzeit || (letzt ? new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(letzt.beginn)) : "19:00");
+  const h = berlinTag(new Date());
+  return { beginn: sitzungNaechsterMonat(+h.slice(0, 4), +h.slice(5, 7), hm).toISOString(), ort: SV.ort || letzt?.ort || null, titel: "Köcheclub-Treffen" };
+}
+// rein (Test tests/sitzung-ablauf.test.mjs): vom Monat (j, mo) aus der nächste Monat mit ordentlicher Sitzung, dort der letzte Wochentag laut Vorgaben
+function sitzungNaechsterMonat(j: number, mo: number, hm: string, v: SitzungVorgaben = SV): Date {
+  let ny = j, nm = mo;
+  for (let n = 0; n < 12; n++) { nm++; if (nm > 12) { nm = 1; ny++; } if (!v.ohne_monate.includes(nm)) break; }
+  let tag = new Date(Date.UTC(ny, nm, 0)).getUTCDate(); while (new Date(Date.UTC(ny, nm - 1, tag)).getUTCDay() !== v.wochentag) tag--;
   const [hh, mm] = hm.split(":").map(Number);
-  return { beginn: berlinZuUtc(ny, nm, tag, hh, mm).toISOString(), ort: letzt?.ort ?? null, titel: "Köcheclub-Treffen" };
+  return berlinZuUtc(ny, nm, tag, hh, mm);
 }
 async function liveTerminStand(ich: Ich, u: any) {
   const { data: opt } = await db.from("kc_club_terminumfrage_optionen").select("id,beginn").eq("umfrage_id", u.id).order("reihenfolge");
@@ -8880,6 +8946,7 @@ async function ungelesenJeChat(ich: Ich, kern?: Promise<any | null>): Promise<{ 
 }
 async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anfrage: number, anmeldungMs: number): Promise<Response> {
     zugangPruefen(a, ich); // 2.422.0 KC-CLUB-ZUGANG: Gäste/Aushilfen nur freigegebene Aktionen – hier, damit es für alle vier Aufrufwege gilt
+    await sitzungVorgaben(); // 2.751.0 KC-CLUB-SITZUNG-VORGABEN: gemerkt, höchstens alle 5 Minuten neu gelesen
     siZaehlen(a, ich); // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER: Angriffs- und Absaug-Wächter (nur zählen im Speicher; Bremse ab SI.bremsenAb)
     switch (a) {
       // ----- KC-CLUB-KURZCODE (1.87.0): Code für ein weiteres Gerät / die installierte App erzeugen -----
@@ -9167,7 +9234,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs,
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -9778,7 +9845,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         const frist = abstimmungFrist(p.frist);
         const { zielIds, zielText } = art === "abstimmung" ? await abstimmungZiel(p, ich) : { zielIds: null, zielText: null };
-        // 2.694.0 KC-CLUB-ANMELDESCHLUSS: nach 17 Uhr am Vorabend → ❗ dringend (Leitung entscheidet) oder auf die Sitzung danach
+        // 2.694.0 KC-CLUB-ANMELDESCHLUSS: nach dem Anmeldeschluss (2.751.0: Sitzungs-Vorgaben, Standard 4 Tage vorher 17 Uhr) → ❗ dringend (Leitung entscheidet) oder auf die Sitzung danach
         let schluss: { dringend: any; danach: { felder: any; text: string } | null; sitzung: any } = { dringend: null, danach: null, sitzung: null };
         if (art !== "abstimmung" && p.treffen_id) {
           const { data: ts } = await db.from("kc_club_treffen").select("id,titel,beginn,art").eq("id", String(p.treffen_id)).maybeSingle();
@@ -9803,7 +9870,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           versand = await senden("club_vorschlag", ziel.filter((id: string) => id !== ich.person_id), schluss.dringend ? {
             titel: "❗ Dringender Vorschlag – bitte entscheiden", kurz: `${ich.name}: ${titel} (nach Anmeldeschluss)`,
             betreff: `Köcheclub Werne – dringender Vorschlag nach Anmeldeschluss: ${titel}`,
-            text: `Hallo,\n\n${ich.name} hat nach dem Anmeldeschluss (17 Uhr am Vorabend) einen dringenden Vorschlag für die Sitzung ${schluss.sitzung.titel} am ${wann(schluss.sitzung.beginn)} eingereicht:\n\n❗ ${titel}${spText}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nBitte in der App entscheiden: als dringenden TOP aufnehmen oder ablehnen (dann kommt er auf die nächste Sitzung). Es reicht, wenn einer von euch entscheidet.\n\nKöcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub-App`,
+            text: `Hallo,\n\n${ich.name} hat nach dem Anmeldeschluss (${wann(anmeldeschluss(schluss.sitzung.beginn).toISOString())}) einen dringenden Vorschlag für die Sitzung ${schluss.sitzung.titel} am ${wann(schluss.sitzung.beginn)} eingereicht:\n\n❗ ${titel}${spText}${v.beschreibung ? "\n\n" + v.beschreibung : ""}\n\nBitte in der App entscheiden: als dringenden TOP aufnehmen oder ablehnen (dann kommt er auf die nächste Sitzung). Es reicht, wenn einer von euch entscheidet.\n\nKöcheclub-App: ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub-App`,
             url: APP_URL + "#vorschlaege",
           } : art === "abstimmung" ? {
             titel: "🗳️ Abstimmung: " + titel, kurz: `Bitte in der App abstimmen.${fristText}`,
@@ -9837,13 +9904,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!hit?.length) { const { data: n } = await db.from("kc_club_vorschlaege").select("dringend").eq("id", v.id).maybeSingle(); v.dringend = n?.dringend ?? v.dringend;
           return json({ ok: false, stand: v.dringend.stand, von: await schonVon() }); } // ein anderer war schneller
         // schon vorbereitete Tagesordnung: dringenden TOP vor „Verschiedenes“ einfügen
+        let informieren = false; // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: Einladung schon raus → die App fragt gleich „Mitglieder informieren?“
         if (aufnehmen && t) {
-          const { data: prep } = await db.from("kc_club_buero_sitzung").select("tagesordnung").eq("treffen_id", t.id).maybeSingle();
+          const { data: prep } = await db.from("kc_club_buero_sitzung").select("*").eq("treffen_id", t.id).maybeSingle();
           const l: any[] = Array.isArray(prep?.tagesordnung) ? [...prep.tagesordnung] : [];
           if (l.length && !l.some((x: any) => x.id === v.id)) {
+            const alt = [...l];
             let i = l.findIndex((x: any) => x.art === "fest" && BUERO_TOP_HINTEN.includes(x.t)); if (i < 0) i = l.length;
             l.splice(i, 0, { t: topVorschlag({ ...v, dringend: dr }), art: "vorschlag", id: v.id });
-            await db.from("kc_club_buero_sitzung").update({ tagesordnung: l, geaendert_am: jetzt(), geaendert_von: ich.person_id }).eq("treffen_id", t.id); // 2.749.0: zählt als Änderung (Schutz + „Änderung mitteilen“)
+            // 2.749.0: zählt als Änderung (Schutz); 2.751.0: Mitschreibbogen neu („Sitzung vorbereiten“ wieder offen), Einladung von vor 2.751.0 ohne gemerkte Tagesordnung nachtragen
+            const nachtragen = prep?.einladung_am && !prep.versandt_top && Date.parse(prep.geaendert_am) <= Date.parse(prep.einladung_am) + 60000 ? { versandt_top: alt } : {};
+            await db.from("kc_club_buero_sitzung").update({ tagesordnung: l, geaendert_am: jetzt(), geaendert_von: ich.person_id, unterlagen_am: null, ...nachtragen }).eq("treffen_id", t.id);
+            informieren = !!prep?.einladung_am;
           }
         }
         const sitz = t ? `${t.titel} am ${wann(t.beginn)}` : "diese Sitzung";
@@ -9859,7 +9931,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             `club-vorschlag-dringend:${v.id}:leitung`).catch(() => null) : null,
         ]);
         await protokoll(ich.person_id, "vorschlag_dringend_entschieden", { vorschlag: v.id, stand: dr.stand, treffen: t?.id ?? null });
-        return json({ ok: true, stand: dr.stand, naechste: danach?.text ?? null });
+        return json({ ok: true, stand: dr.stand, naechste: danach?.text ?? null, informieren, treffen_id: t?.id ?? null });
       }
 
       // 2.555.0 KC-CLUB-ABSTIMMUNG-PAKET (Wunsch Hansi „Abstimmung mit Überschrift – Technik, Bilderrechner, Abrechnung – und mehreren Fragen“):
@@ -10072,11 +10144,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const [sitzungen, eingang] = await Promise.all([bueroNaechste(), bueroEingang(ich)]);
         const ids = sitzungen.map((t: any) => t.id);
         const [{ data: prep }, { data: teil }, { data: taschen }] = ids.length ? await Promise.all([
-          db.from("kc_club_buero_sitzung").select("treffen_id,tagesordnung,einladung_am,erinnerung_am,geaendert_am").in("treffen_id", ids),
+          db.from("kc_club_buero_sitzung").select("*").in("treffen_id", ids), // 2.751.0: alle Felder (versandt_top, informieren_nein_top, unterlagen_am)
           db.from("kc_club_teilnahme").select("treffen_id,person_id,antwort").in("treffen_id", ids),
           db.from("kc_club_aktentasche").select("treffen_id,status,gepackt_am").in("treffen_id", ids), // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE
         ]) : [{ data: [] as any[] }, { data: [] as any[] }, { data: [] as any[] }];
         const empf = (await sammelEmpfaenger()).map((m) => m.person_id).filter((id) => id !== ich.person_id); // wie beim Versand: ohne mich, ohne Aushilfen
+        // 2.751.0 KC-CLUB-SITZUNG-KONTROLLE: wer die Sitzung vorbereitet (Amt aus den Sitzungs-Vorgaben); die übrige Clubleitung sieht die Schritte zur Kontrolle
+        const { data: vbr } = await db.from("kc_club_rollen").select("person_id").contains("aemter", [SV.vorbereiter_amt]);
+        const vorbereiter = (vbr ?? []).map((x: any) => x.person_id as string).filter((id) => !id.startsWith("KC-P-TEST"));
         return json({
           sitzungen: sitzungen.map((t: any) => {
             const p = (prep ?? []).find((x: any) => x.treffen_id === t.id), a = (teil ?? []).filter((x: any) => x.treffen_id === t.id);
@@ -10084,13 +10159,38 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             const vb = !!p && Array.isArray(p.tagesordnung) && p.tagesordnung.length > 0, tasche = (taschen ?? []).find((x: any) => x.treffen_id === t.id);
             const geantwortet = new Set(a.filter((x: any) => x.antwort && x.antwort !== "keine").map((x: any) => x.person_id));
             return { ...t, vorbereitet: vb, einladung_am: p?.einladung_am ?? null, erinnerung_am: p?.erinnerung_am ?? null,
-              // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: nach der Einladung noch geändert (eine Minute Spielraum) → „Änderung mitteilen“
-              geaendert_nach_einladung: vb && !!p.einladung_am && Date.parse(p.geaendert_am) > Date.parse(p.einladung_am) + 60000,
+              // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: nach der Einladung geändert → „Mitglieder informieren?“ (2.751.0: Vergleich mit der verschickten Tagesordnung;
+              // ältere Einladungen ohne gemerkte Tagesordnung wie bisher über die Zeit; „Nein, nicht informieren“ gilt für genau diesen Stand)
+              geaendert_nach_einladung: vb && !!p.einladung_am && topGeaendert(p),
+              unterlagen_am: p?.unterlagen_am ?? null,
               aktentasche: tasche ? { status: tasche.status, gepackt_am: tasche.gepackt_am ?? null } : null,
               ja: a.filter((x: any) => x.antwort === "ja").length, nein: a.filter((x: any) => x.antwort === "nein").length, ohne: empf.filter((id) => !geantwortet.has(id)).length };
           }),
-          eingang,
+          eingang, vorgaben: SV, vorbereiter, // 2.751.0 KC-CLUB-SITZUNG-VORGABEN / -KONTROLLE
         });
+      }
+
+      // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: Clubleitung entscheidet „Nein, Mitglieder nicht informieren“ – für genau diesen Stand der Tagesordnung
+      case "buero_informieren_nein": {
+        nurBueroSchreiben(ich);
+        const tid = String(p.treffen_id || "");
+        const { data: prep } = await db.from("kc_club_buero_sitzung").select("tagesordnung").eq("treffen_id", tid).maybeSingle();
+        if (!prep) throw new Fehler("Sitzung nicht gefunden.", 404);
+        await db.from("kc_club_buero_sitzung").update({ informieren_nein_top: prep.tagesordnung ?? [] }).eq("treffen_id", tid);
+        await protokoll(ich.person_id, "buero_informieren_nein", { treffen: tid, punkte: (prep.tagesordnung ?? []).length });
+        return json({ ok: true });
+      }
+
+      // 2.751.0 KC-CLUB-SITZUNG-VORGABEN: Fristen und Vorgaben für den Sitzungsablauf lesen/ändern (Clubleitung)
+      case "sitzung_vorgaben": nurLeitung(ich); return json({ vorgaben: await sitzungVorgaben(true), standard: SITZUNG_VORGABEN_STANDARD });
+      case "sitzung_vorgaben_speichern": {
+        nurLeitung(ich);
+        const w = svPruefen(p.vorgaben);
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "sitzung_vorgaben", wert: w, geaendert_von: ich.person_id, geaendert_am: jetzt() });
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        SV = w; SV_AM = Date.now();
+        await protokoll(ich.person_id, "sitzung_vorgaben_geaendert", { vorgaben: w });
+        return json({ ok: true, vorgaben: w });
       }
 
       // KC-CLUB-EINGANG-HINWEIS (2.23.43, Wunsch Hansi): nur Zahlen je Art für den Start-Hinweis der Clubleitung (liest nur)
@@ -10109,13 +10209,18 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const zeilen = BUERO_ZEILEN.includes(Number(p.zeilen)) ? Number(p.zeilen) : 5;
         const anmerkung = txt(p.anmerkung, 1000) || null;
         // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE: hat inzwischen jemand anderes gespeichert (auch ein dringender Punkt), nicht still überschreiben
-        const { data: vorher } = await db.from("kc_club_buero_sitzung").select("geaendert_am,geaendert_von,tagesordnung").eq("treffen_id", tid).maybeSingle();
+        const { data: vorher } = await db.from("kc_club_buero_sitzung").select("geaendert_am,geaendert_von,tagesordnung,unterlagen_am,einladung_am,versandt_top").eq("treffen_id", tid).maybeSingle();
         if (vorher && (vorher.tagesordnung ?? []).length && !p.ueberschreiben && Date.parse(String(p.stand || "")) !== Date.parse(vorher.geaendert_am)) {
           const wer = vorher.geaendert_von ? (await personen([vorher.geaendert_von])).get(vorher.geaendert_von) : null;
           return json({ ok: false, zusammenstoss: true, von: wer?.display_name ?? null, am: vorher.geaendert_am });
         }
         const stand = jetzt();
-        const { error } = await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, anwesend, anmerkung, tagesordnung, zeilen, geaendert_von: ich.person_id, geaendert_am: stand });
+        // 2.751.0 KC-CLUB-SITZUNG-ABLAUF: „Sitzung vorbereiten“ (teil = "vor") ist ein eigener Schritt; ändert sich danach die Tagesordnung, ist er wieder offen (neu drucken)
+        const topNeu = topStand(tagesordnung) !== topStand(vorher?.tagesordnung ?? []);
+        const unterlagen_am = p.teil === "vor" ? stand : topNeu ? null : vorher?.unterlagen_am ?? null;
+        // Einladungen von vor 2.751.0 haben keine gemerkte Tagesordnung: war sie seit der Einladung unverändert, ist die bisherige genau die verschickte
+        const nachtragen = vorher?.einladung_am && !vorher.versandt_top && Date.parse(vorher.geaendert_am) <= Date.parse(vorher.einladung_am) + 60000 ? { versandt_top: vorher.tagesordnung ?? [] } : {};
+        const { error } = await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, anwesend, anmerkung, tagesordnung, zeilen, geaendert_von: ich.person_id, geaendert_am: stand, unterlagen_am, ...nachtragen });
         if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
         // Protokoll-Entwurf anlegen bzw. (solange nie veröffentlicht) mitführen – veröffentlichte Protokolle bleiben unberührt
         const { data: teil } = await db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid);
@@ -10134,8 +10239,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           protokollStand = "aktualisiert";
         }
         await protokoll(ich.person_id, "buero_sitzung_vorbereitet", { treffen: tid, punkte: tagesordnung.length, anwesend: anwesend.length, protokoll: protokollStand });
-        const { data: inf } = await db.from("kc_club_buero_sitzung").select("einladung_am").eq("treffen_id", tid).maybeSingle();
-        return json({ ok: true, protokoll_id: protokollId, protokollStand, stand, einladung_am: inf?.einladung_am ?? null });
+        const { data: inf } = await db.from("kc_club_buero_sitzung").select("*").eq("treffen_id", tid).maybeSingle();
+        return json({ ok: true, protokoll_id: protokollId, protokollStand, stand, einladung_am: inf?.einladung_am ?? null, unterlagen_am,
+          informieren: !!inf?.einladung_am && topGeaendert({ ...inf, tagesordnung }) }); // 2.751.0: nach der Einladung geändert → App fragt „Mitglieder informieren?“
       }
 
       case "buero_einladung": {
@@ -10158,15 +10264,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
         const ort = t.ort || (g ? `bei ${g.display_name}` : "");
         const zusatz = txt(p.text, 500);
-        const url = APP_URL + "#termine";
+        const url = APP_URL + "#tag=" + berlinTag(new Date(t.beginn)); // 2.751.0 KC-CLUB-SITZUNG-ABLAUF: Push/Mail öffnen direkt den Tag der Sitzung mit der Tagesordnung
+        const diff = aenderung ? topDiff(prep?.versandt_top ?? null, prep?.tagesordnung ?? []) : null; // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG
         // KC-CLUB-EINLADUNG-BRIEF (2.740.0): jeder bekommt seinen eigenen Brief (Hallo <Vorname>), Gruß mit Name und Amt des Absenders
         const amt = (ich.aemter || []).find((x) => BRIEF_AMT_RE.test(x)) || (ich.aemter || [])[0] || "";
-        const brief = (vn: string) => einladungBrief({ vorname: vn, titel: t.titel, beginn: t.beginn, ort, top, zusatz, url, von: ich.vorname || ich.name, amt, erinnerung: nurOffen, aenderung });
+        const brief = (vn: string) => einladungBrief({ vorname: vn, titel: t.titel, beginn: t.beginn, ort, top, zusatz, url, von: ich.vorname || ich.name, amt, erinnerung: nurOffen, aenderung, diff });
         const vars = nurOffen ? {
           titel: `🔔 Kommst du? ${t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""} – bitte kurz zu- oder absagen.`,
           betreff: `Köcheclub Werne – Erinnerung: ${t.titel} am ${wann(t.beginn)}`, text: brief(""), url,
         } : aenderung ? {
-          titel: `📋 Geänderte Tagesordnung: ${t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""} · jetzt ${top.length} Tagesordnungspunkte`,
+          titel: `📋 Änderung zur ${/^clubsitzung\b/i.test(t.titel) ? t.titel : "Sitzung " + t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""} · ${aenderungKurz(diff) || `jetzt ${top.length} Tagesordnungspunkte`}`,
           betreff: `Köcheclub Werne – geänderte Tagesordnung: ${t.titel} am ${wann(t.beginn)}`, text: brief(""), url,
         } : {
           titel: `📨 Einladung: ${t.titel}`, kurz: `${wann(t.beginn)}${ort ? " · " + ort : ""}${top.length ? ` · ${top.length} Tagesordnungspunkte` : ""}`,
@@ -10187,7 +10294,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         };
         nebenbei(versenden().catch((e) => console.error("einladung versand", String(e))));
         // 2.749.0: „eingeladen“/„erinnert“ gilt erst, wenn es an alle ging; eine Änderung zählt als neuer Stand der Information (einladung_am)
-        if (!an) await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt() }, { onConflict: "treffen_id" });
+        // 2.751.0 KC-CLUB-AENDERUNG-MELDUNG: die an alle verschickte Tagesordnung merken – Grundlage für „Neu / Entfällt“ und „Mitglieder informieren?“
+        if (!an) await db.from("kc_club_buero_sitzung").upsert({ treffen_id: tid, ...(prep ? {} : { geaendert_von: ich.person_id }), [nurOffen ? "erinnerung_am" : "einladung_am"]: jetzt(),
+          ...(nurOffen ? {} : { versandt_top: prep?.tagesordnung ?? [], informieren_nein_top: null }) }, { onConflict: "treffen_id" });
         return json({ ok: true, versand: { hintergrund: true }, empfaenger: ziel.length, alle: !an });
       }
 
@@ -16266,6 +16375,10 @@ Köcheclub Werne`,
           if (neu.length) { const { error: oe } = await db.from("kc_club_objekt_anlagen").upsert(neu.map((i: any) => ({ art: "aktentasche", objekt_id: x.id, attachment_id: i.ref, reihenfolge: 0 })), { onConflict: "art,objekt_id,attachment_id" });
             if (oe) throw new Fehler("Übernommen – aber die Dateien sind für die anderen noch nicht freigegeben. Bitte noch einmal versuchen.", 500); }
           await protokoll(ich.person_id, "aktentasche_uebernommen", { von: von.id, nach: t.id, dateien: dateien.length });
+        } else if (op === "mitnehmen") { // 2.751.0 KC-CLUB-AKTENTASCHE-MITNEHMEN (Wunsch Hansi 29.10.: „Checkliste, was man noch mitnehmen muss – Muster der Schilder, Getränkeproben“)
+          const titel = txt(p.titel, 120); if (!titel) throw new Fehler("Bitte kurz eingeben, was mitkommen soll.");
+          x = await atAendern(ich, t.id, (k) => { if (k.inhalt.filter((y: any) => y.art === "mitnehmen").length >= 40) throw new Fehler("Höchstens 40 Dinge zum Mitnehmen.");
+            k.inhalt.push(neuTeil({ k: "mit:" + crypto.randomUUID().slice(0, 8), reg: "mitnehmen", art: "mitnehmen", titel })); });
         } else if (op === "weg") {
           const k0 = String(p.k || ""); x = await atAendern(ich, t.id, (k) => { k.inhalt = k.inhalt.filter((y: any) => y.k !== k0); if (!k0.startsWith("datei:") && !k.entfernt.includes(k0)) k.entfernt.push(k0); });
         } else if (op === "dabei") {
@@ -17385,11 +17498,16 @@ Köcheclub-App`,
               abgelegt++;
               // KC-CLUB-EINGANG-SOFORT (2.741.0, Wunsch Hansi „auch während der Clubsitzung – sofort Bescheid, nicht erst nach Neustart“): offene Apps über die direkte Leitung
               if (letzte) await db.rpc("kc_club_rt_klingeln", { p_personen: [x.person_id], p_art: "eingang" }).then(() => {}, () => {});
+              // 2.751.0 KC-CLUB-EINGANG-MAILANHANG (Wunsch Hansi 29.10.: „zusätzlich per E-Mail-Anhang“): wer per E-Mail benachrichtigt wird, bekommt die Dokumente
+              // dieser Freigabe (seine Kopien, höchstens „anzahl“, letzte 30 Min.) als Anhang – Push trägt nie Anhänge; Grenzen wie beim Versanddienst
+              const { data: diese } = letzte ? await db.from("kc_club_archiv_dokumente").select("attachment_id").eq("ordner_id", oid).eq("hochgeladen_von", ich.person_id).eq("status", "pruefung")
+                .is("geloescht_am", null).gte("hochgeladen_am", new Date(Date.now() - 1800000).toISOString()).order("hochgeladen_am", { ascending: false }).limit(anzahl) : { data: [] as any[] };
+              const mAnl = (diese ?? []).length ? await mailAnlagen((diese ?? []).map((d: any) => String(d.attachment_id)).reverse()) : [];
               if (letzte) await senden("club_nachricht", [x.person_id], {
                 titel: "📥 Neu in deinem Eingangskorb", kurz: `${ich.name}: ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} – ansehen, dann ablegen oder löschen`,
                 betreff: "Köcheclub Werne – neu in deinem Eingangskorb",
                 text: `Hallo ${vorname(x)},\n\n${ich.name} hat dir ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} in deinen Eingangskorb gelegt.${notiz ? `\n\n${notiz}` : ""}\n\nIn der Club-App siehst du ${anzahl === 1 ? "es" : "sie"} dir an und entscheidest: in deinem Archiv ablegen oder löschen.\n\n${APP_URL}#archiv\n\nViele Grüße\nKöcheclub Werne`,
-                url: `${APP_URL}#archiv`,
+                url: `${APP_URL}#archiv`, ...(mAnl.length ? { attachmentIds: mAnl.map((a) => a.id) } : {}),
               }, `club-eingang-verteilt:${erstId}:${x.person_id}`).catch(() => null);
             } catch (e) { console.error("eingang verteilen", String(e)); }
           }

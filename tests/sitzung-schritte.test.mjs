@@ -4,33 +4,29 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { programmText } from "./programm.mjs";
+import { sitzungsUmgebung } from "./sitzung-umgebung.mjs";
 const app = programmText(), server = fs.readFileSync("supabase/functions/kc-club/index.ts", "utf8"), html = fs.readFileSync("index.html", "utf8");
 const ts = (code) => code.replace(/\): Promise<[^>]+> \{/g, ") {").replace(/(\w+)\??: (string\[\] \| null|string|any|boolean|number)\b/g, "$1").replace(/ as unknown as Ich/g, "").replace(/new Set<string>/g, "new Set").replace(/ as any\[\]/g, "");
 
 // --- 1) Schrittfolge: immer genau ein nächster Schritt, in der richtigen Reihenfolge
-const sQ = app.slice(app.indexOf("// KC-CLUB-SITZUNG-FRIST ("), app.indexOf("// nächster Schritt fürs Büro")); // 2.750.0: ab der Frist (BU_SCHRITTE benutzt buFristText)
+// 2.751.0 KC-CLUB-SITZUNG-ABLAUF: Reihenfolge wie im Leben (Einladung → Erinnern → Sitzung vorbereiten → Aktentasche) – ausführlich in tests/sitzung-aufgaben.test.mjs
 const H = 3600000, T = 86400000, jetzt = Date.now(), iso = (ms) => new Date(jetzt + ms).toISOString();
-const fTag = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "2-digit" });
-const mach = (vorstand) => new Function("ICH", "zeitKurz", "wann", "esc", "CA_VORHER_MIN", "CA_DAUER_STD", "fTag", sQ + "\nreturn { buSchritteFuer, buNaechster, buSchritteHtml };")(
-  { vorstand }, (x) => "am " + x.slice(0, 10), (x) => x, (x) => String(x), 120, 6, fTag);
-const { buNaechster, buSchritteFuer, buSchritteHtml } = mach(true);
+const U = sitzungsUmgebung(app), { buNaechster, buSchritteFuer, buSchritteHtml } = U;
 const sitzung = (x) => ({ id: "S1", titel: "Clubsitzung", beginn: iso(5 * T), vorbereitet: false, einladung_am: null, erinnerung_am: null, geaendert_nach_einladung: false, aktentasche: null, ohne: 3, ...x });
 assert.equal(buNaechster(sitzung()), "vorbereiten", "1. Tagesordnung festlegen");
 assert.equal(buNaechster(sitzung({ vorbereitet: true })), "einladung", "2. einladen");
 const geaendert = sitzung({ vorbereitet: true, einladung_am: iso(-2 * T), geaendert_nach_einladung: true });
-assert.equal(buNaechster(geaendert), "einladung", "geändert nach der Einladung → wieder Schritt 2");
-assert.match(buSchritteFuer(geaendert)[1].knopf, /Geänderte Tagesordnung mitteilen/, "… als „Änderung mitteilen“");
-assert.match(buSchritteFuer(geaendert)[1].los, /buEinladung\('S1', false, true\)/, "… öffnet die Änderungs-Nachricht");
-assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-1 * H) })), "aktentasche", "3. Aktentasche (Clubleitung)");
-assert.equal(mach(false).buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-1 * H) })), null, "ohne Clubleitung keine Aktentasche – und noch nichts fällig");
-const gepackt = { status: "gepackt", gepackt_am: iso(-1 * H) };
-assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-1 * H), aktentasche: gepackt, beginn: iso(2 * T) })), null, "direkt nach der Einladung noch NICHT erinnern (Fund Hansi 28.10.)");
-assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-3 * T), aktentasche: gepackt, beginn: iso(6 * T) })), null, "eine Woche vorher noch nicht erinnern");
-assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-3 * T), aktentasche: gepackt, beginn: iso(2 * T) })), "erinnerung", "4. erinnern: 2 Tage vorher, Einladung älter als 1 Tag");
-assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-3 * T), aktentasche: gepackt, beginn: iso(2 * T), ohne: 0 })), null, "alle haben geantwortet → nichts zu erinnern");
-assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-3 * T), erinnerung_am: iso(-T), aktentasche: gepackt, beginn: iso(1 * H) })), "clubabend", "5. am Abend selbst: Clubabend");
+assert.equal(buNaechster(geaendert), "einladung", "geändert nach der Einladung → wieder Schritt Einladung");
+assert.match(buSchritteFuer(geaendert).find((x) => x.id === "einladung").knopf, /Mitglieder informieren\?/, "… als „Mitglieder informieren?“ (2.751.0)");
+assert.match(buSchritteFuer(geaendert).find((x) => x.id === "einladung").los, /buEinladung\('S1', false, true\)/, "… öffnet die Änderungsmeldung");
+const erinn = (x) => buSchritteFuer(sitzung(x)).find((y) => y.id === "erinnerung").st;
+assert.equal(erinn({ vorbereitet: true, einladung_am: iso(-1 * H), beginn: iso(2 * T) }), "spaeter", "direkt nach der Einladung noch NICHT erinnern (Fund Hansi 28.10.)");
+assert.equal(erinn({ vorbereitet: true, einladung_am: iso(-3 * T), beginn: iso(6 * T) }), "spaeter", "eine Woche vorher noch nicht erinnern");
+assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-3 * T), beginn: iso(1.9 * T) })), "erinnerung", "erinnern: 2 Tage vorher, Einladung älter als 1 Tag");
+assert.equal(buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-3 * T), erinnerung_am: iso(-T), unterlagen_am: iso(-T), aktentasche: { status: "gepackt" }, beginn: iso(1 * H) })), "clubabend", "am Abend selbst: Clubabend");
+assert.equal(sitzungsUmgebung(app, { vorstand: false }).buNaechster(sitzung({ vorbereitet: true, einladung_am: iso(-3 * T), erinnerung_am: iso(-T), unterlagen_am: iso(-T), beginn: iso(1.5 * T) })), null, "ohne Clubleitung keine Aktentasche");
 const karte = buSchritteHtml(sitzung({ vorbereitet: true }));
-assert.match(karte, /✅<\/span><span><b>Tagesordnung festlegen/, "erledigt mit ✅") && assert.match(karte, /👉<\/span><span><b>Mitglieder einladen/, "jetzt dran mit 👉");
+assert.match(karte, /✅<\/span><span><b>Tagesordnung festlegen/, "erledigt mit ✅"); assert.match(karte, /👉<\/span><span><b>Mitglieder einladen/, "jetzt dran mit 👉");
 assert.match(karte, /onclick="buEinladung\('S1', false\)"/, "großer Knopf für den nächsten Schritt");
 // Büro-Liste und Büro-Raum benutzen dieselbe Quelle
 assert.ok(/const nt = S \? buNachherTipp\(\) : null, dr = S \? buDran\(t\) : null, dran = dr\?\.text;/.test(app) && /const dr = S \? buDran\(t\) : null, dran = dr\?\.text, dranFn = dr\?\.fn;/.test(app), "Liste und Raum: ein nächster Schritt");
@@ -57,7 +53,7 @@ const fZeit = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour
 const appBrief = new Function("TZ", "fZeit", app.slice(app.indexOf("const BRIEF_AMT_RE"), app.indexOf("function buBriefZeigen()")) + "; return einladungBrief;")("Europe/Berlin", fZeit);
 const d = { vorname: "Klaus", titel: "Clubsitzung November", beginn: "2026-11-12T18:00:00Z", ort: "Kolpinghaus", top: ["1. Begrüßung", "2. Grillfest", "3. Verschiedenes"], zusatz: "", url: "https://x", von: "Hansi", amt: "Clubsprecher", erinnerung: false, aenderung: true };
 assert.equal(appBrief(d), serverBrief(d), "Vorschau und Versand gleich");
-assert.match(serverBrief(d), /hat sich die Tagesordnung geändert\. So sieht sie jetzt aus:\n1\. Begrüßung\n2\. Grillfest\n3\. Verschiedenes/);
+assert.match(serverBrief(d), /hat sich die Tagesordnung geändert\.\n\nSo sieht die Tagesordnung jetzt aus:\n1\. Begrüßung\n2\. Grillfest\n3\. Verschiedenes/); // 2.751.0: ohne gemerkte Tagesordnung (ältere Einladung) – mit „Neu / Entfällt“ siehe sitzung-aufgaben
 assert.match(server, /if \(!an\) await db\.from\("kc_club_buero_sitzung"\)\.upsert/, "„eingeladen“ zählt nur, wenn es an alle ging");
 assert.match(server, /const gast = !nurOffen && !aenderung && \(!t\.gastgeber_person_id \|\| ziel\.includes\(t\.gastgeber_person_id\)\)/, "Gastgeber nur, wenn ausgewählt");
 
@@ -86,7 +82,7 @@ assert.equal(BU.stand, iso(-T), "Stand für den Zusammenstoß-Schutz");
 
 // --- 5) Zwei Leute gleichzeitig: nicht still überschreiben
 assert.match(server, /if \(vorher && \(vorher\.tagesordnung \?\? \[\]\)\.length && !p\.ueberschreiben && Date\.parse\(String\(p\.stand \|\| ""\)\) !== Date\.parse\(vorher\.geaendert_am\)\)/, "Server erkennt den Zusammenstoß");
-assert.match(server, /update\(\{ tagesordnung: l, geaendert_am: jetzt\(\), geaendert_von: ich\.person_id \}\)/, "dringender Punkt zählt als Änderung");
+assert.match(server, /update\(\{ tagesordnung: l, geaendert_am: jetzt\(\), geaendert_von: ich\.person_id, unterlagen_am: null, \.\.\.nachtragen \}\)/, "dringender Punkt zählt als Änderung (2.751.0: Mitschreibbogen neu)");
 assert.match(app, /if \(r\.zusammenstoss\) return buWeiterFragen\("⚠️ Inzwischen geändert"/, "App fragt: neu laden oder eigene Fassung");
 
 // --- 6) Bedienung

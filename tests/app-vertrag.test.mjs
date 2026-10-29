@@ -7550,7 +7550,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const mig = lies("supabase/migrations/20261027_kc_club_vorschlag_dringend.sql");
   assert.ok(/add column if not exists dringend jsonb/.test(mig), "DB: Feld dringend");
-  assert.ok(/const ANMELDESCHLUSS_STUNDE = 17;/.test(server) && /function anmeldeschluss\(beginnIso: string\): Date \{/.test(server) && /Date\.UTC\(t\.y, t\.m - 1, t\.d\) - 86400000/.test(server), "Server: 17 Uhr am Vorabend (Berliner Zeit)");
+  // 2.751.0 KC-CLUB-SITZUNG-VORGABEN (Wunsch Hansi 29.10.): Schluss jetzt aus den Sitzungs-Vorgaben (Standard 4 Tage vorher, 17 Uhr) statt fest Vorabend 17 Uhr
+  assert.ok(/vorschlag_tage: 4, vorschlag_stunde: 17,/.test(server) && /function anmeldeschluss\(beginnIso: string\): Date \{/.test(server) && /Date\.UTC\(t\.y, t\.m - 1, t\.d\) - SV\.vorschlag_tage \* 86400000/.test(server), "Server: Anmeldeschluss aus den Sitzungs-Vorgaben (Berliner Zeit)");
   const sp = server.slice(server.indexOf('case "vorschlag_speichern"'), server.indexOf('case "vorschlag_dringend"'));
   assert.ok(/if \(art !== "abstimmung" && p\.treffen_id\)/.test(sp) && /ts\.art === "treffen" && schlussVorbei\(ts\.beginn\)/.test(sp) && /p\.dringend === true \? \{ dringend: \{ stand: "offen"/.test(sp) && /danach: await sitzungDanach\(ts\)/.test(sp), "Server: nach Schluss dringend oder auf die Sitzung danach");
   assert.ok(/schluss\.dringend \? \{\s*titel: "❗ Dringender Vorschlag – bitte entscheiden"/.test(sp) && /await leitungIds\(\)/.test(sp), "Leitung bekommt Bescheid");
@@ -10369,7 +10370,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const m = lies("supabase/migrations/20261011_kc_club_v2231_live_termin.sql");
   assert.ok(/add column if not exists live boolean not null default false/.test(m) && /'livetermin'/.test(m) && /after insert or update or delete on public\.kc_club_terminumfrage_antworten/.test(m), "Live-Modus + Signal");
-  assert.ok(/case "live_termin_start": \{\s+nurVorstand\(ich\);/.test(server) && /while \(new Date\(Date\.UTC\(ny, nm - 1, tag\)\)\.getUTCDay\(\) !== 5\) tag--;/.test(server), "Clubsprecher startet, Vorschlag letzter Freitag");
+  assert.ok(/case "live_termin_start": \{\s+nurVorstand\(ich\);/.test(server) && /while \(new Date\(Date\.UTC\(ny, nm - 1, tag\)\)\.getUTCDay\(\) !== v\.wochentag\) tag--;/.test(server), "Clubsprecher startet, Vorschlag letzter Freitag (2.751.0: Wochentag aus den Sitzungs-Vorgaben, Standard Freitag)");
   assert.ok(/async function liveTerminKalender\(ich: Ich, beginn: string\)/.test(server) && /kc_club_privattermine|privatListe\(ich, von, bis\)/.test(server) && /eq\("person_id", ich\.person_id\)\.eq\("work_date", tag\)/.test(server), "Blick nur in den eigenen Kalender");
   assert.ok(/namen: leiter \?/.test(server), "Namen nur für die Leitung");
   assert.ok(/api\("terminumfrage_festlegen", \{ id: d\.id, option_id: d\.option\.id \}/.test(html) && /api\("terminumfrage_antwort", \{ option_id: d\.option\.id/.test(html), "vorhandene Kerne für Antwort und Festlegen");
