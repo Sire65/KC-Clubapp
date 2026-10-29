@@ -41,4 +41,8 @@ assert.ok(/filmZeigen\(f\.id\)/.test(sd) && /dokOeffnen\("sicherheitskonzept"\)/
 const dok = /\{ id: "sicherheitskonzept", [^\n]*datei: "([^"]+)", ort: "sicherheit" \}/.exec(app);
 assert.ok(dok && fs.existsSync(dok[1]) && fs.statSync(dok[1]).size > 1e5, "PDF Sicherheitskonzept fehlt");
 assert.ok(/ort === "sicherheit" \? "start"/.test(app), "‹ Zurück vom PDF führt zur Startseite");
+// Info-Laufband: „Deine Daten ???“ führt ins Register Technik zur Kachel (einfache Ansicht → Fenster direkt)
+assert.ok(/if \(sdLaufbandOffen\(\)\) add\(\{ id: "sicherheitskonzept", [^\n]*t: "Deine Daten \?\?\?", u: "Infos gefällig\?[^\n]*auf: "sdLaufbandAuf\(\)"/.test(app), "Hinweis im Info-Laufband");
+const lb = app.slice(app.indexOf("function sdLaufbandAuf()"), app.indexOf("const buFilmKnopf"));
+assert.ok(/register\("programme"\)/.test(lb) && /data-id="datenschutz"/.test(lb) && /classList\.add\("hervor"\)/.test(lb) && /einfach\(\)[^\n]*return sdStart\(\)/.test(lb) && /localStorage\.setItem\(SD_LB/.test(lb), "Antippen: Technik + Kachel zeigen, danach weg");
 console.log("film-hinweis: alle Prüfungen bestanden");

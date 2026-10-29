@@ -2058,6 +2058,22 @@ function sdStart() {
     <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-a="film">▶ Film ansehen</button><button class="knopf" data-a="pdf">📄 Zum Nachlesen (PDF)</button></div>`, () => d.remove());
   d.querySelectorAll("[data-a]").forEach((b) => (b.onclick = () => { d.remove(); if (b.dataset.a === "film") filmZeigen(f.id); else if (b.dataset.a === "pdf") dokOeffnen("sicherheitskonzept"); }));
 }
+// KC-CLUB-SICHERHEITSKONZEPT-INFO (2.754.0, Wunsch Hansi 29.10. „in der Infozeile darauf hinweisen: Deine Daten ???, Infos gefällig? – wenn jemand klickt,
+// in die Technik-Gruppe gehen und ihm den Button zeigen, wo er das PDF sehen und den Film abrufen kann“): Meldung im Info-Laufband bis SD_LB_BIS;
+// nach dem ersten Antippen ist sie auf diesem Gerät weg (✕ blendet sie wie jede Meldung aus). Antippen: Register Technik, Kachel 🔐 hervorgehoben.
+// Einfache Ansicht (kein Register) oder Kachel ausgeblendet → gleich das Fenster mit Film und PDF.
+const SD_LB = "kc_club_sd_gesehen", SD_LB_BIS = "2026-12-31";
+const sdLaufbandOffen = () => heuteIso() <= SD_LB_BIS && !lsLesen(SD_LB);
+function sdLaufbandAuf() {
+  try { localStorage.setItem(SD_LB, heuteIso()); } catch {}
+  if (einfach() || !zugangKachel("datenschutz")) return sdStart();
+  zeige("start"); register("programme");
+  setTimeout(() => {
+    const k = document.querySelector('#raster .kachel[data-id="datenschutz"]'); if (!k) return sdStart();
+    k.scrollIntoView({ behavior: "smooth", block: "center" }); k.classList.add("hervor"); setTimeout(() => k.classList.remove("hervor"), 4000);
+    melde("🔐 Hier findest du Film und PDF – einfach antippen");
+  }, 700);
+}
 const buFilmKnopf = () => (filmeImBuero().length ? '<button class="knopf klein" onclick="filmWahl()">🎬 Anleitung</button>' : "");
 // ---------- KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi: ein Mitglied beim nächsten Start auf ungelesene Nachrichten hinweisen) ----------
 // Allgemein, nichts fest verdrahtet: Der Admin setzt beim Mitglied die Einstellung „start_hinweis“ = { art: "ungelesen" }. Beim nächsten Start
@@ -21318,6 +21334,7 @@ function ilMeldungen() {
   // 2.441.0: „x Mitglieder online“ nicht hier – das zeigt schon das Feld „Mitglieder“ darunter (nichts doppelt)
   // 2.498.0 KC-CLUB-FOTOS-NEU-INFO (Wunsch Hansi „x neue Fotos hochgeladen – bei Klick direkt dorthin“): führt zu den neuen Fotos oben im Album
   if (kz.fotos > 0) add({ id: "fotos", stufe: "weiss", sym: "📸", t: kz.fotos === 1 ? "1 neues Foto hochgeladen" : `${kz.fotos} neue Fotos hochgeladen`, u: "Antippen – direkt zu den neuen Fotos", auf: "fotosNeuZeigen()", knoepfe: [["📸 Ansehen", "fotosNeuZeigen()"]] });
+  if (sdLaufbandOffen()) add({ id: "sicherheitskonzept", stufe: "gold", sym: "🔐", t: "Deine Daten ???", u: "Infos gefällig? Film & PDF zur Sicherheit in der App", auf: "sdLaufbandAuf()", knoepfe: [["🔐 Infos ansehen", "sdLaufbandAuf()"]] }); // 2.754.0 KC-CLUB-SICHERHEITSKONZEPT-INFO
   const dn = typeof dokHinweis === "function" ? dokHinweis() : null;
   if (dn) add({ id: "dok:" + dn.id, stufe: "weiss", sym: dn.sym || "🆕", t: `Neu: ${dn.t}`, u: "Antippen zum Lesen", auf: `dokOeffnen('${esc(dn.id)}')` });
   const aus = new Set(ilAusgeblendet()), sichtbar = L.filter((m) => !aus.has(m.id));
