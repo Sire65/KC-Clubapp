@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.750.0 – 2026-10-29 – ⏰ Sitzung: Frist 3 Tage vorher · Aufgaben beim Start
+Wunsch Hansi (29.10.): „3 Tage vorher. Und der Clubsprecher muss beim Programmstart erinnert werden, welche Aufgabe zu erledigen ist – mit Abhaken. Ja, nein oder später nochmal erinnern und Änderungen noch zulassen. Dann nächste Aufgaben auch so handhaben.“
+- ⏰ **Frist** (KC-CLUB-SITZUNG-FRIST): Die Einladung mit Tagesordnung soll spätestens 3 Tage vor der Sitzung bei allen sein. „Tagesordnung festlegen“ und „Mitglieder einladen“ zeigen „bis spätestens …“; ist die Frist vorbei, steht der Schritt rot: „⚠️ Knapp – die Mitglieder haben nur noch wenig Zeit“ (einladen geht weiterhin).
+- 🧭 **Aufgabe beim Start** (KC-CLUB-SITZUNG-AUFGABE-START): Wer im Büro die Sitzung vorbereiten darf, bekommt ab einer Woche vorher beim Start (nach Tages-Übersicht & Co.) genau eine Frage – die nächste offene Aufgabe, darüber die Schritte mit ✅ abgehakt. Z. B. „Die Tagesordnung ist fertig. Sollen alle Mitglieder jetzt die Einladung bekommen?“ → ✅ Ja, jetzt einladen · ✏️ Nein, erst die Tagesordnung ändern · ⏰ Später nochmal erinnern (in 3 Stunden wieder, Änderungen bleiben möglich). Genauso: Tagesordnung festlegen, Aktentasche packen, an die Antwort erinnern (Nein = für diese Sitzung nicht mehr fragen), geänderte Tagesordnung mitteilen, am Abend Clubabend öffnen.
+- Die Frage sendet nichts selbst – „Ja“ öffnet das gewohnte Fenster mit Vorschau. Ohne Verbindung keine Frage (nichts geraten). Neuer Hilfe-Eintrag „🧭 Sitzung: Aufgaben beim Start“.
+- Test: tests/sitzung-aufgaben.test.mjs.
+
 ## 2.749.0 – 2026-10-29 – 🧭 Sitzung Schritt für Schritt · eine Tagesordnung für alles
 Wunsch Hansi (29.10.): „Sitzung vorbereiten, Aktentasche und Informationen an die Mitglieder logisch, Schritt für Schritt – und nur eine Tagesordnung, die in allen Benachrichtigungen gleich ist.“
 - 🧭 **Schritt für Schritt** (KC-CLUB-SITZUNG-SCHRITTE): Im Büro und in „Sitzung vorbereiten“ steht der Ablauf mit Häkchen – 1. Tagesordnung festlegen · 2. Mitglieder einladen · 3. Aktentasche packen · 4. an die Antwort erinnern (erst ein paar Tage vorher, nicht gleich nach der Einladung) · 5. Clubabend. Ein großer Knopf führt zum nächsten Schritt; nach jedem Schritt fragt die App „Weiter: …“.

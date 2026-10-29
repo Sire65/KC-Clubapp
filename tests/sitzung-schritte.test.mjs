@@ -8,10 +8,11 @@ const app = programmText(), server = fs.readFileSync("supabase/functions/kc-club
 const ts = (code) => code.replace(/\): Promise<[^>]+> \{/g, ") {").replace(/(\w+)\??: (string\[\] \| null|string|any|boolean|number)\b/g, "$1").replace(/ as unknown as Ich/g, "").replace(/new Set<string>/g, "new Set").replace(/ as any\[\]/g, "");
 
 // --- 1) Schrittfolge: immer genau ein nächster Schritt, in der richtigen Reihenfolge
-const sQ = app.slice(app.indexOf("const BU_SCHRITTE = ["), app.indexOf("// nächster Schritt fürs Büro"));
+const sQ = app.slice(app.indexOf("// KC-CLUB-SITZUNG-FRIST ("), app.indexOf("// nächster Schritt fürs Büro")); // 2.750.0: ab der Frist (BU_SCHRITTE benutzt buFristText)
 const H = 3600000, T = 86400000, jetzt = Date.now(), iso = (ms) => new Date(jetzt + ms).toISOString();
-const mach = (vorstand) => new Function("ICH", "zeitKurz", "wann", "esc", "CA_VORHER_MIN", "CA_DAUER_STD", sQ + "\nreturn { buSchritteFuer, buNaechster, buSchritteHtml };")(
-  { vorstand }, (x) => "am " + x.slice(0, 10), (x) => x, (x) => String(x), 120, 6);
+const fTag = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "2-digit" });
+const mach = (vorstand) => new Function("ICH", "zeitKurz", "wann", "esc", "CA_VORHER_MIN", "CA_DAUER_STD", "fTag", sQ + "\nreturn { buSchritteFuer, buNaechster, buSchritteHtml };")(
+  { vorstand }, (x) => "am " + x.slice(0, 10), (x) => x, (x) => String(x), 120, 6, fTag);
 const { buNaechster, buSchritteFuer, buSchritteHtml } = mach(true);
 const sitzung = (x) => ({ id: "S1", titel: "Clubsitzung", beginn: iso(5 * T), vorbereitet: false, einladung_am: null, erinnerung_am: null, geaendert_nach_einladung: false, aktentasche: null, ohne: 3, ...x });
 assert.equal(buNaechster(sitzung()), "vorbereiten", "1. Tagesordnung festlegen");

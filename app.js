@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.749.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.750.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2412,6 +2412,7 @@ const HILFE = [
   { id: "vorschlag_unterstuetzen", thema: "club", sym: "👍", t: "Gute Ideen unterstützen", x: "Bei den <b>🗳️ Vorschlägen</b> kannst du Themen anderer mit 👍 unterstützen. So sieht die Clubleitung schnell, was vielen am Herzen liegt.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "aktentasche", thema: "club", sym: "💼", t: "Aktentasche packen (Clubleitung)", nur: () => !!ICH?.vorstand, x: "Für Clubsprecher, Kassenwart und Admin: Im <b>Büro → 💼 Aktentasche</b> den Anlass wählen – die App schlägt vor, was hinein gehört (Einladung, Tagesordnung, Protokollentwurf, Vorschläge mit Zeichnungen, Zusagen, Aufgaben). In jedem Register kannst du 📷 Fotos, 🖼️ Bilder, 📄 PDFs, Dateien oder 🗄️ Archiv-Dokumente dazulegen. Vorn liegt die Packliste mit Notizen. Eine gemeinsame Tasche – jeder von euch kann dazupacken. <b>✔ Tasche gepackt</b> → am Abend liegt sie in der Kachel 🍽️ Clubabend.", seit: "2.695.0" },
   { id: "anmeldeschluss", thema: "club", sym: "⏰", t: "Anmeldeschluss für Themen: 17 Uhr am Vorabend", x: "Themen und Spenden für eine Sitzung bitte bis <b>17:00 Uhr am Vorabend</b> einreichen – die Frist steht im Info-Feld und beim Vorschlag. Danach fragt die App: <b>„❗ Dringend“</b> – dann entscheidet Clubsprecher, Kassenwart oder Admin (wer zuerst tippt), ob er noch als dringender TOP drankommt – oder <b>„📅 Auf die nächste Sitzung“</b>.", zeig: () => zeige("vorschlaege"), seit: "2.694.0" },
+  { id: "sitzung_aufgaben", thema: "club", sym: "🧭", t: "Sitzung: Aufgaben beim Start und Frist für die Einladung (Clubleitung)", x: "Die Einladung mit Tagesordnung soll <b>spätestens 3 Tage vor der Sitzung</b> bei allen sein. Ab einer Woche vorher fragt die App beim Start, was als Nächstes dran ist – darüber die Schritte, erledigte mit ✅ abgehakt. Zum Beispiel: <b>„Die Tagesordnung ist fertig. Sollen alle Mitglieder jetzt die Einladung bekommen?“</b> mit <b>✅ Ja, jetzt einladen</b>, <b>✏️ Nein, erst die Tagesordnung ändern</b> oder <b>⏰ Später nochmal erinnern</b> (in ein paar Stunden wieder). Genauso danach: Aktentasche packen, an die Antwort erinnern, geänderte Tagesordnung mitteilen und am Abend den Clubabend öffnen. Ist die Frist vorbei, steht der Schritt rot: <b>„⚠️ Knapp“</b>.", nur: () => buSchreiben(), zeig: () => buStart(), seit: "2.750.0" }, // KC-CLUB-SITZUNG-AUFGABE-START
   { id: "vorschlag_spaeter", thema: "club", sym: "📅", t: "Vorschlag für eine spätere Sitzung", x: "Steht die übernächste Sitzung noch nicht im Kalender? Beim Vorschlag unter „Für welchen Termin?“ einfach <b>„📅 Übernächste Sitzung – Datum noch offen“</b> wählen. Sobald die Sitzung angelegt ist, ordnet die App den Vorschlag ihr automatisch zu – bis dahin steht „(Datum folgt)“ dabei.", seit: "2.527.0" },
   { id: "spende", thema: "club", sym: "💝", t: "Ein Spendenprojekt vorschlagen", x: "Kennst du ein Projekt, das der Club unterstützen könnte? Bei den Vorschlägen gibt es dafür die Art <b>„💝 Spende“</b> – die Projekte kommen dann in die nächste Sitzung.", zeig: () => zeige("vorschlaege"), seit: "2.23.1" },
   { id: "spiel_mitglieder", thema: "club", sym: "🎲", t: "Gegen andere Mitglieder spielen", x: "In den Spielen unter <b>„👥 Gegen Mitglieder“</b> forderst du jemanden heraus – ihr zieht abwechselnd, und du bekommst Bescheid, wenn du dran bist. An offenen Partien lässt sich sogar <b>„📅 Termin vereinbaren“</b>. Oben steht der 🏆 Pokal des Monats.", zeig: () => spStart(), seit: "2.23.1" },
@@ -25401,32 +25402,45 @@ function buZeigenRoh() { buNzZaehlen(); if ($("buKopfGruss") && ICH) $("buKopfGr
 // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE (Wunsch Hansi 29.10. „Schritt für Schritt, damit der Clubsprecher durchgeführt wird“): eine Reihenfolge für
 // Büro-Liste, Büro-Raum, Sitzung und die Weiter-Fenster. Erinnern erst ab 3 Tage vorher und frühestens einen Tag nach der Einladung;
 // der Clubabend am Abend selbst. Registry – neuer Schritt = ein Eintrag.
+// KC-CLUB-SITZUNG-FRIST (2.750.0, Wunsch Hansi 29.10. „3 Tage vorher“): die Einladung mit Tagesordnung soll spätestens 3 Tage vor der Sitzung
+// bei allen sein, damit sie sich damit beschäftigen können. Ist die Frist vorbei, bleibt der Schritt machbar, aber rot markiert („⚠️ Knapp“).
+const BU_FRIST_TAGE = 3, BU_VORLAUF_TAGE = 7; // Frist für die Einladung · ab wann die App beim Start fragt
+const buFrist = (t) => new Date(new Date(t.beginn).getTime() - BU_FRIST_TAGE * 86400000);
+const buFristText = (t) => `bis spätestens ${fTag.format(buFrist(t))}`;
+const buKnapp = (t) => Date.now() > buFrist(t).getTime();
+const BU_KNAPP_TEXT = "⚠️ Knapp – die Mitglieder haben nur noch wenig Zeit";
 const BU_SCHRITTE = [
   { id: "vorbereiten", sym: "📝", t: "Tagesordnung festlegen", fn: (t) => `buSitzungOeffnen('${t.id}')`,
-    stand: (t) => (t.vorbereitet ? ["fertig", "festgelegt und gespeichert"] : ["jetzt", "Anwesenheit und Tagesordnung – dann speichern"]) },
+    stand: (t) => (t.vorbereitet ? ["fertig", "festgelegt und gespeichert"] : ["jetzt", `Anwesenheit und Tagesordnung – ${buFristText(t)}`]), frist: (t) => !t.einladung_am,
+    frage: () => ({ q: "Die Tagesordnung ist noch nicht festgelegt. Jetzt Anwesenheit und Tagesordnung festlegen?", ja: "📝 Ja, jetzt festlegen" }) },
   { id: "einladung", sym: "📨", t: "Mitglieder einladen", fn: (t) => `buEinladung('${t.id}', false${t.geaendert_nach_einladung ? ", true" : ""})`,
     stand: (t) => (!t.vorbereitet ? ["spaeter", "nach dem Festlegen der Tagesordnung"] : t.geaendert_nach_einladung ? ["jetzt", "Tagesordnung geändert – Änderung mitteilen", "📣 Geänderte Tagesordnung mitteilen"]
-      : t.einladung_am ? ["fertig", `gesendet ${zeitKurz(t.einladung_am)}`] : ["jetzt", "Brief mit Tagesordnung an alle"]) },
+      : t.einladung_am ? ["fertig", `gesendet ${zeitKurz(t.einladung_am)}`] : ["jetzt", `Brief mit Tagesordnung an alle – ${buFristText(t)}`]), frist: (t) => !t.einladung_am,
+    frage: (t) => (t.geaendert_nach_einladung ? { q: "Die Tagesordnung wurde nach der Einladung geändert. Sollen alle Mitglieder die geänderte Tagesordnung bekommen?", ja: "📣 Ja, Änderung jetzt senden", nein: ["✏️ Nein, erst weiter ändern", `buSitzungOeffnen('${t.id}')`], art: "aenderung" }
+      : { q: "Die Tagesordnung ist fertig. Sollen alle Mitglieder jetzt die Einladung bekommen?", ja: "✅ Ja, jetzt einladen", nein: ["✏️ Nein, erst die Tagesordnung ändern", `buSitzungOeffnen('${t.id}')`] }) },
   { id: "aktentasche", sym: "💼", t: "Aktentasche packen", nur: () => !!ICH?.vorstand, fn: (t) => `atOeffnen('${t.id}')`,
     stand: (t) => (t.aktentasche && t.aktentasche.status !== "offen" ? ["fertig", t.aktentasche.status === "vorlaeufig" ? "vorläufig gepackt" : "gepackt"]
-      : !t.einladung_am ? ["spaeter", "nach der Einladung"] : ["jetzt", "Unterlagen für den Abend zusammenstellen"]) },
+      : !t.einladung_am ? ["spaeter", "nach der Einladung"] : ["jetzt", "Unterlagen für den Abend zusammenstellen"]),
+    frage: () => ({ q: "Die Einladung ist raus. Jetzt die Aktentasche für den Abend packen?", ja: "💼 Ja, jetzt packen" }) },
   { id: "erinnerung", sym: "🔔", t: "An die Antwort erinnern", fn: (t) => `buEinladung('${t.id}', true)`,
     stand: (t) => { const vor = new Date(t.beginn) - Date.now(), seit = t.einladung_am ? Date.now() - new Date(t.einladung_am) : 0;
       if (t.erinnerung_am) return ["fertig", `erinnert ${zeitKurz(t.erinnerung_am)}`];
       if (t.einladung_am && !t.ohne) return ["fertig", "alle haben geantwortet 👍"];
       if (!t.einladung_am || vor > 3 * 86400000 || seit < 86400000) return ["spaeter", "ein paar Tage vor der Sitzung"];
-      return ["jetzt", `${t.ohne} ${t.ohne === 1 ? "hat" : "haben"} noch nicht geantwortet`]; } },
+      return ["jetzt", `${t.ohne} ${t.ohne === 1 ? "hat" : "haben"} noch nicht geantwortet`]; },
+    frage: (t) => ({ q: `${t.ohne} ${t.ohne === 1 ? "Mitglied hat" : "Mitglieder haben"} noch nicht geantwortet. Erinnerung senden?`, ja: "🔔 Ja, jetzt erinnern", nein: ["🙅 Nein, nicht nötig", ""] }) },
   { id: "clubabend", sym: "🍽️", t: "Clubabend: Tagesordnung abhaken", fn: (t) => `caOeffnen(false, '${t.id}')`,
-    stand: (t) => { const b = new Date(t.beginn).getTime(), j = Date.now(); return j >= b - CA_VORHER_MIN * 60000 && j <= b + CA_DAUER_STD * 3600000 ? ["jetzt", "heute – live abhaken, Anwesende eintragen"] : ["spaeter", "am Abend selbst"]; } },
+    stand: (t) => { const b = new Date(t.beginn).getTime(), j = Date.now(); return j >= b - CA_VORHER_MIN * 60000 && j <= b + CA_DAUER_STD * 3600000 ? ["jetzt", "heute – live abhaken, Anwesende eintragen"] : ["spaeter", "am Abend selbst"]; },
+    frage: () => ({ q: "Heute ist Clubsitzung. Jetzt den Clubabend öffnen – Tagesordnung abhaken, Anwesende eintragen?", ja: "🍽️ Ja, Clubabend öffnen" }) },
 ];
-function buSchritteFuer(t) { return t ? BU_SCHRITTE.filter((x) => !x.nur || x.nur()).map((x) => { const [st, u, knopf] = x.stand(t); return { ...x, st, u, knopf: knopf || `${x.sym} ${x.t}`, los: x.fn(t) }; }) : []; }
+function buSchritteFuer(t) { return t ? BU_SCHRITTE.filter((x) => !x.nur || x.nur()).map((x) => { const [st, u, knopf] = x.stand(t); return { ...x, st, u, knopf: knopf || `${x.sym} ${x.t}`, los: x.fn(t), knapp: st === "jetzt" && !!x.frist?.(t) && buKnapp(t) }; }) : []; }
 function buNaechster(t) { return buSchritteFuer(t).find((x) => x.st === "jetzt")?.id ?? null; }
 // Karte „Schritt für Schritt“: erledigt ✅ · jetzt dran 👉 (mit Knopf) · später ⏳
 function buSchritteHtml(t, klein = false) {
   const l = buSchritteFuer(t); if (!l.length) return "";
   const dran = l.find((x) => x.st === "jetzt");
   return `<div class="karte bu-schritte${klein ? " klein" : ""}"><div class="bu-schritte-kopf">🧭 Schritt für Schritt: <b>${esc(t.titel)}</b> <small>${esc(wann(t.beginn))}</small></div>
-    <ol>${l.map((x) => `<li class="bu-schritt ${x.st}"><span class="bu-schritt-sym">${x.st === "fertig" ? "✅" : x.st === "jetzt" ? "👉" : "⏳"}</span><span><b>${esc(x.t)}</b><small>${esc(x.u)}</small></span></li>`).join("")}</ol>
+    <ol>${l.map((x) => `<li class="bu-schritt ${x.st}${x.knapp ? " knapp" : ""}"><span class="bu-schritt-sym">${x.st === "fertig" ? "✅" : x.st === "jetzt" ? "👉" : "⏳"}</span><span><b>${esc(x.t)}</b><small>${esc(x.u)}</small>${x.knapp ? `<small class="bu-knapp">${BU_KNAPP_TEXT}</small>` : ""}</span></li>`).join("")}</ol>
     ${dran && !klein ? `<button class="knopf haupt" style="width:100%;text-align:center" onclick="${dran.los}">${esc(dran.knopf)}</button>` : ""}</div>`;
 }
 // nächster Schritt fürs Büro: Nachbereitung der letzten Sitzung nur, solange die nächste nicht dran ist (≤ 14 Tage und ein Schritt offen)
@@ -25434,6 +25448,54 @@ function buDran(t) {
   const nt = buNachherTipp(), sch = buSchritteFuer(t).find((x) => x.st === "jetzt");
   if (sch && (!nt || new Date(t.beginn) - Date.now() < 14 * 86400000)) return { text: sch.knopf, fn: sch.los };
   return nt ? { text: nt.text, fn: `buNachherWahl(${esc(JSON.stringify(nt.text))})` } : null;
+}
+// KC-CLUB-SITZUNG-AUFGABE-START (2.750.0, Wunsch Hansi 29.10. „beim Programmstart erinnern, welche Aufgabe zu erledigen ist – mit Abhaken,
+// Ja, Nein oder später nochmal erinnern“): wer die Sitzung im Büro vorbereiten darf, bekommt beim Start (ab 7 Tage vorher, nach den anderen
+// Start-Fenstern) genau eine Frage: die nächste offene Aufgabe aus BU_SCHRITTE, darüber die Schritte mit ✅ abgehakt.
+// „Später“ = 3 Stunden Ruhe für diese Aufgabe, „Nein“ bei der Erinnerung = für diese Sitzung nicht mehr fragen (je Gerät).
+// Liest nur (buero_start), sendet nichts – gesendet wird erst im gewohnten Fenster nach „Ja“.
+const BU_AUFGABE_MERK = "kc_club_bu_aufgabe", BU_AUFGABE_RUHE_MS = 3 * 3600000;
+const buAufgabeMerker = () => { try { return JSON.parse(localStorage.getItem(BU_AUFGABE_MERK) || "{}") || {}; } catch { return {}; } };
+function buAufgabeMerken(schluessel, bis) {
+  const m = buAufgabeMerker(), jetzt = Date.now();
+  for (const k of Object.keys(m)) if (m[k] !== "nie" && m[k] < jetzt) delete m[k]; // abgelaufene „Später“ wegräumen
+  m[schluessel] = bis; if (Object.keys(m).length > 40) delete m[Object.keys(m)[0]];
+  try { localStorage.setItem(BU_AUFGABE_MERK, JSON.stringify(m)); } catch {}
+}
+// nächste Aufgabe zum Fragen: Schritt ist dran, hat eine Frage und ruht nicht (Später/Nein)
+function buAufgabeFuer(t, merker = buAufgabeMerker(), jetzt = Date.now()) {
+  if (!t || new Date(t.beginn) - jetzt > BU_VORLAUF_TAGE * 86400000) return null;
+  for (const x of buSchritteFuer(t)) {
+    if (x.st !== "jetzt" || !x.frage) continue;
+    const f = x.frage(t), k = `${t.id}:${x.id}${f.art ? ":" + f.art : ""}`, r = merker[k];
+    if (r === "nie" || (r && r > jetzt)) continue;
+    return { ...x, f, k };
+  }
+  return null;
+}
+async function buAufgabePruefen(versuch = 0) {
+  if (!buSchreiben()) return;
+  try { if (sessionStorage.getItem("kc_bu_aufgabe_gezeigt")) return; } catch {}
+  const besetzt = () => document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht") || aktuelleAnsicht !== "start";
+  if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; } // erst wenn Tages-Übersicht & Co. zu sind
+  let r; try { r = await api("buero_start", {}, { still: true }); } catch { return; } // ohne Verbindung keine Frage (nie raten)
+  BU.start = r; const t = r?.sitzungen?.[0], a = buAufgabeFuer(t); if (!a) return;
+  if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; }
+  try { sessionStorage.setItem("kc_bu_aufgabe_gezeigt", "1"); } catch {}
+  const f = blattAuf("buAufgabeBlatt", `<h3 style="margin:0">🗓️ ${esc(t.titel)} · ${esc(wann(t.beginn))}</h3>
+    <p class="hinweis" style="margin:0">Deine Aufgaben für diese Sitzung – erledigte sind abgehakt.</p>
+    ${buSchritteHtml(t, true)}
+    <p style="margin:6px 0"><b>${esc(a.f.q)}</b></p>${a.knapp ? `<p class="bu-knapp" style="margin:0 0 6px">${BU_KNAPP_TEXT}</p>` : ""}
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="text-align:center" data-w="ja">${esc(a.f.ja)}</button>
+    ${a.f.nein ? `<button class="knopf" style="text-align:center" data-w="nein">${esc(a.f.nein[0])}</button>` : ""}
+    <button class="knopf" style="text-align:center" data-w="spaeter">⏰ Später nochmal erinnern${a.frist?.(t) ? " – Änderungen bleiben möglich" : ""}</button></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => {
+    f.remove(); const w = b.dataset.w;
+    if (w === "spaeter") { buAufgabeMerken(a.k, Date.now() + BU_AUFGABE_RUHE_MS); return melde("⏰ Gut – ich erinnere dich beim nächsten Start in ein paar Stunden wieder."); }
+    const fn = w === "ja" ? a.los : a.f.nein[1];
+    if (!fn) { buAufgabeMerken(a.k, "nie"); return melde("👍 Gut – für diese Sitzung frage ich nicht mehr danach."); }
+    buStart(); new Function(fn)();
+  }));
 }
 // KC-CLUB-BUERO-RAUM (1.65.0, Wunsch Hansi): Büro als Raum – oben ein Regal mit schmalen Ordnern (nachschlagen), unten der
 // Schreibtisch mit Gegenständen (erledigen). Nur eine neue Oberfläche über den vorhandenen Büro-Funktionen; „☰ Liste“ bleibt.
@@ -41925,6 +41987,7 @@ async function schluesselZurueck() {
     setTimeout(() => kopfGlanzStarten(), 400); // 2.407.0 KC-CLUB-KOPF-GLANZ-SICHTBAR: erst nach dem Laden
     if (!h || h === "#") setTimeout(() => buGrussFragen(), 1500); // KC-CLUB-BUERO: Begrüßung der Clubleitung
     if (!h || h === "#") setTimeout(() => ekHinweisPruefen(), 3000); // KC-CLUB-EINGANG-HINWEIS: viel im Eingangskorb?
+    if (!h || h === "#") setTimeout(() => buAufgabePruefen(), 4000); // 2.750.0 KC-CLUB-SITZUNG-AUFGABE-START: nächste Aufgabe für die Sitzung
     if (!h || h === "#") setTimeout(() => taHinweisPruefen(), 5000);
     if (!h || h === "#") setTimeout(() => bwEinladungPruefen(), 15000); // 2.314.0 KC-CLUB-BEWEGUNG-EINLADUNG
     if (!h || h === "#") setTimeout(() => nuVorschlagPruefen(), 25000); // 2.418.0 KC-CLUB-KACHEL-VORSCHLAG (nach der Einladung, nie darüber)
