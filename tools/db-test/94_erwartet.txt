@@ -1,0 +1,7 @@
+seminar_ohne_anmeldung=anmeldung
+seminar_angemeldet=ok
+referent=ok
+runder_tisch_spontan=ok
+standard_art=runder_tisch
+falsche_art_verboten=t
+to_hoechstens_12=t

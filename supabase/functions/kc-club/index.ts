@@ -32,7 +32,7 @@ import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherhei
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
-import { RT, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.760.0)
+import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.760.0), -ARTEN (2.761.0)
 import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.730.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
@@ -138,7 +138,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.760.0";
+const SERVER_VERSION = "2.761.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4945,7 +4945,8 @@ async function dtSenden(ids: string[], probe: boolean, vars: { titel: string; ku
 // (kc_club_tisch_beitreten, Platzgrenze unter Sperre); kein Abfragen im Sekundentakt (KC-DB-SPARSAM). Regeln: runder-tisch.js.
 // Gäste und Aushilfen: nicht in ZUGANG_AKTIONEN → 403 (externe Tischgäste erst in RT4). Bis zur Freigabe sieht es nur der Admin (🔒 Test).
 const rtDarf = async (ich: Ich) => ich.zugang === "mitglied" && (ich.admin || (await freigaben()).runder_tisch === "alle");
-const RT_SPALTEN = "id,thema,beschreibung,beginn,dauer_min,verlaengert_min,ende,plaetze,gastgeber,thread_id,status,geschlossen_am,erinnert_am,medien_geloescht_am,text_geloescht_am,teilnehmer_anzahl";
+const RT_SPALTEN = "id,art,tagesordnung,thema,beschreibung,beginn,dauer_min,verlaengert_min,ende,plaetze,gastgeber,thread_id,status,geschlossen_am,erinnert_am,medien_geloescht_am,text_geloescht_am,teilnehmer_anzahl";
+const rtBestaetigungAus = (b: any) => (b ? { von: new Date(b.vonMs).toISOString(), bis: new Date(b.bisMs).toISOString(), min: b.min } : null);
 async function rtTischHolen(id: unknown) {
   const { data } = await db.from("kc_club_tisch").select(RT_SPALTEN).eq("id", String(id || "")).eq("org_id", ORG).maybeSingle();
   if (!data) throw new Fehler("Den Tisch gibt es nicht mehr.", 404);
@@ -4964,25 +4965,27 @@ async function rtLage(ich: Ich, nurId?: string) {
   const nm = (id: string) => pm.get(id)?.display_name || id;
   const tische = (ts ?? []).map((x: any) => {
     const z = (tn ?? []).filter((r: any) => r.tisch_id === x.id), ph = rtPhase(x, t), mein = z.find((r: any) => r.person_id === ich.person_id);
-    return { id: x.id, thema: x.thema, beschreibung: x.beschreibung, beginn: x.beginn, ende: new Date(rtEndeMs(x)).toISOString(), dauer: x.dauer_min, verlaengert: x.verlaengert_min,
+    return { id: x.id, art: x.art || "runder_tisch", tagesordnung: Array.isArray(x.tagesordnung) ? x.tagesordnung : [], thema: x.thema, beschreibung: x.beschreibung, beginn: x.beginn, ende: new Date(rtEndeMs(x)).toISOString(), dauer: x.dauer_min, verlaengert: x.verlaengert_min,
       plaetze: x.plaetze, text: rtText(x, TZ), phase: ph, gastgeber: x.gastgeber, gastgeberName: nm(x.gastgeber), darfLeiten: x.gastgeber === ich.person_id || ich.admin,
       chat: x.text_geloescht_am ? null : x.thread_id, medienWeg: !!x.medien_geloescht_am, imChat: x.gastgeber === ich.person_id || !!mein?.dabei_seit, meineZusage: mein?.zusage || null, ichSitze: !!mein && rtSitzt(mein, t),
       zusagen: z.filter((r: any) => r.zusage === "ja").map((r: any) => ({ id: r.person_id, name: nm(r.person_id) })),
       amTisch: ph === "offen" || ph === "gleich" ? z.filter((r: any) => rtSitzt(r, t)).sort((a: any, b: any) => Date.parse(a.dabei_seit) - Date.parse(b.dabei_seit))
         .map((r: any) => ({ id: r.person_id, name: nm(r.person_id), sicher: rtSicher(r, t) })) : [],
-      warenDa: x.teilnehmer_anzahl ?? z.filter((r: any) => r.dabei_seit).length };
+      warenDa: x.teilnehmer_anzahl ?? z.filter((r: any) => r.dabei_seit).length,
+      bestaetigung: ph === "vorbei" ? rtBestaetigungAus(rtBestaetigung(mein, x)) : null }; // 2.761.0: Seminar – Teilnahmebestätigung, wenn ich lange genug dabei war
   });
   return { aktiv: true, ...(nurId ? { nur: nurId } : {}), jetzt: new Date(t).toISOString(), regeln: { plaetzeMin: RT.plaetzeMin, plaetzeMax: RT.plaetzeMax, dauern: RT.dauern, vorlaufMin: RT.vorlaufMin, herzSek: RT.herzSek,
-    vorausTage: RT.vorausTage, themaMax: RT.themaMax, beschreibungMax: RT.beschreibungMax, medienTage: RT.medienTage, textTage: RT.textTage }, tische };
+    vorausTage: RT.vorausTage, themaMax: RT.themaMax, beschreibungMax: RT.beschreibungMax, medienTage: RT.medienTage, textTage: RT.textTage, toMax: RT.toMax, toPunktMax: RT.toPunktMax,
+    bestaetigungAnteil: RT.bestaetigungAnteil, arten: RT_ARTEN }, tische };
 }
 // Kurzfassung für den Start (Karte „Gleich: Runder Tisch …“): kommende Tische der nächsten 24 Std. + meine Zusage – nur wenn freigegeben
 async function rtKurz(ich: Ich) {
   const t = Date.now();
-  const { data: ts } = await db.from("kc_club_tisch").select("id,thema,beginn,ende,status").eq("org_id", ORG).eq("status", "geplant").gt("ende", new Date(t).toISOString())
+  const { data: ts } = await db.from("kc_club_tisch").select("id,art,thema,beginn,ende,status").eq("org_id", ORG).eq("status", "geplant").gt("ende", new Date(t).toISOString())
     .lte("beginn", new Date(t + 86400000).toISOString()).order("beginn").limit(10);
   if (!(ts ?? []).length) return { tische: [] };
   const { data: tn } = await db.from("kc_club_tisch_teilnahme").select("tisch_id,zusage").eq("person_id", ich.person_id).in("tisch_id", (ts ?? []).map((x: any) => x.id));
-  return { tische: (ts ?? []).map((x: any) => ({ id: x.id, thema: x.thema, beginn: x.beginn, ende: x.ende, zusage: (tn ?? []).find((r: any) => r.tisch_id === x.id)?.zusage || null })) };
+  return { tische: (ts ?? []).map((x: any) => ({ id: x.id, art: x.art || "runder_tisch", thema: x.thema, beginn: x.beginn, ende: x.ende, zusage: (tn ?? []).find((r: any) => r.tisch_id === x.id)?.zusage || null })) };
 }
 // Benachrichtigen wie eine Nachricht (Standard: nur Push, keine Mail – ein Tisch ist kein Clubtermin); bis zur Freigabe nur Admins (wie bei der
 // Tauschbörse); Gäste/Aushilfen nie (sie können keinen Tisch öffnen)
@@ -5010,13 +5013,13 @@ async function rtMedienWeg(threadId: string) {
 // Wartung (alle 15 Min.): Erinnerung kurz vor Beginn an Zusagen + Gastgeber; stündlich aufräumen (Dateien 7 Tage, Chat 30 Tage nach Ende)
 async function tischWartung(stuendlich: boolean) {
   const t = Date.now();
-  const { data: bald } = await db.from("kc_club_tisch").select("id,thema,beginn,dauer_min,verlaengert_min,gastgeber").eq("org_id", ORG).eq("status", "geplant").is("erinnert_am", null)
+  const { data: bald } = await db.from("kc_club_tisch").select("id,art,thema,beginn,dauer_min,verlaengert_min,gastgeber").eq("org_id", ORG).eq("status", "geplant").is("erinnert_am", null)
     .gt("beginn", new Date(t).toISOString()).lte("beginn", new Date(t + (RT.vorlaufMin + 7) * 60000).toISOString()).limit(20);
   for (const x of bald ?? []) {
     const { data: ok } = await db.from("kc_club_tisch").update({ erinnert_am: jetzt() }).eq("id", x.id).is("erinnert_am", null).select("id");
     if (!ok?.length) continue;
     const { data: ja } = await db.from("kc_club_tisch_teilnahme").select("person_id").eq("tisch_id", x.id).eq("zusage", "ja");
-    await rtSenden([x.gastgeber, ...(ja ?? []).map((r: any) => r.person_id)], { titel: `🪑 Gleich: Runder Tisch „${x.thema}“`,
+    await rtSenden([x.gastgeber, ...(ja ?? []).map((r: any) => r.person_id)], { titel: `${rtArt(x).sym} Gleich: ${rtArt(x).t} „${x.thema}“`,
       kurz: `Um ${fZeit.format(new Date(x.beginn))} Uhr geht es los – jetzt Platz nehmen.`, tischId: x.id }, `${x.id}:gleich`);
   }
   if (!stuendlich) return;
@@ -5035,7 +5038,9 @@ async function tischWartung(stuendlich: boolean) {
         if (de) { console.error("tisch chat loeschen", de.message); continue; } // nicht als aufgeräumt markieren – nächste Stunde neu
       }
       await db.from("kc_club_tisch").update({ text_geloescht_am: jetzt(), thread_id: null, teilnehmer_anzahl: count ?? 0 }).eq("id", x.id);
-      await db.from("kc_club_tisch_teilnahme").delete().eq("tisch_id", x.id);
+      // 2.761.0: beim Seminar bleiben die Anwesenden (Teilnahmebestätigung in „Meine Schulung“) – nur Zeit und Person, keine Inhalte
+      if (rtArt(x).bestaetigung) await db.from("kc_club_tisch_teilnahme").delete().eq("tisch_id", x.id).is("dabei_seit", null);
+      else await db.from("kc_club_tisch_teilnahme").delete().eq("tisch_id", x.id);
       await protokoll(null, "tisch_beendet", { tisch: x.id, thema: x.thema, beginn: x.beginn, gastgeber: x.gastgeber, teilnehmer: count ?? 0 }); // Kurzprotokoll
     }
   }
@@ -12096,30 +12101,48 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
         const t = Date.now(), tag = String(p.datum || ""), uhr = String(p.uhr || "");
         const beginnMs = /^\d{4}-\d{2}-\d{2}$/.test(tag) && /^\d{1,2}:\d{2}$/.test(uhr) ? dsMs(tag, uhr) : NaN;
-        const e = { thema: txt(p.thema, 200), beschreibung: txt(p.beschreibung, 1000), beginnMs, dauer: Number(p.dauer), plaetze: Number(p.plaetze ?? RT.plaetzeStandard) };
+        const art = String(p.art || "runder_tisch"), to = Array.isArray(p.tagesordnung) ? p.tagesordnung.slice(0, 50).map((x: unknown) => txt(x, 500)).filter(Boolean) : null;
+        const e = { art, tagesordnung: to, thema: txt(p.thema, 200), beschreibung: txt(p.beschreibung, 1000), beginnMs, dauer: Number(p.dauer), plaetze: Number(p.plaetze ?? RT.plaetzeStandard) };
         const { count: meine } = await db.from("kc_club_tisch").select("id", { count: "exact", head: true }).eq("org_id", ORG).eq("gastgeber", ich.person_id).eq("status", "geplant").gt("ende", new Date(t).toISOString());
         const f = rtAnlegenPruefen(e, t, meine ?? 0);
         if (f) throw new Fehler(f, 400);
-        const { data: th, error: te } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: `🪑 ${e.thema}`, created_by_person_id: ich.person_id }).select("id").single();
+        const { data: th, error: te } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: `${RT_ARTEN[art].sym} ${e.thema}`, created_by_person_id: ich.person_id }).select("id").single();
         if (te || !th) throw new Fehler("Der Tisch konnte nicht angelegt werden.", 503);
         await db.from("kc_communication_thread_participants").insert({ thread_id: th.id, person_id: ich.person_id });
-        const { data: neu, error } = await db.from("kc_club_tisch").insert({ org_id: ORG, thema: e.thema, beschreibung: e.beschreibung || null, beginn: new Date(beginnMs).toISOString(),
+        const { data: neu, error } = await db.from("kc_club_tisch").insert({ org_id: ORG, art, tagesordnung: art === "besprechung" && to?.length ? to : null, thema: e.thema, beschreibung: e.beschreibung || null, beginn: new Date(beginnMs).toISOString(),
           dauer_min: e.dauer, ende: new Date(beginnMs + e.dauer * 60000).toISOString(), plaetze: e.plaetze, gastgeber: ich.person_id, thread_id: th.id }).select(RT_SPALTEN).single();
         if (error || !neu) { await db.from("kc_communication_threads").delete().eq("id", th.id); throw new Fehler("Der Tisch konnte nicht angelegt werden.", 503); }
         await db.from("kc_club_tisch_teilnahme").insert({ tisch_id: neu.id, person_id: ich.person_id, zusage: "ja", zusage_am: jetzt() });
-        await protokoll(ich.person_id, "tisch_anlegen", { tisch: neu.id, beginn: neu.beginn, dauer: neu.dauer_min, plaetze: neu.plaetze });
+        await protokoll(ich.person_id, "tisch_anlegen", { tisch: neu.id, art, beginn: neu.beginn, dauer: neu.dauer_min, plaetze: neu.plaetze });
         const versand = p.bescheid === false ? null : await rtSenden((await sammelEmpfaenger()).map((m) => m.person_id).filter((x) => x !== ich.person_id),
-          { titel: `🪑 Runder Tisch: ${neu.thema}`, kurz: `${ich.vorname} lädt ein – ${rtText(neu, TZ)}. Wer mag, setzt sich dazu.`, tischId: neu.id }, `${neu.id}:neu`);
+          { titel: `${RT_ARTEN[art].sym} ${RT_ARTEN[art].t}: ${neu.thema}`, kurz: `${ich.vorname} lädt ein – ${rtText(neu, TZ)}. ${RT_ARTEN[art].anmeldung ? `Bitte in der App anmelden (${neu.plaetze} Plätze).` : "Wer mag, setzt sich dazu."}`, tischId: neu.id }, `${neu.id}:neu`);
         return json({ ok: true, id: neu.id, versand: !!versand, lage: await rtLage(ich) });
       }
-      case "tisch_zusage": {
+      case "tisch_zusage": { // beim Seminar = anmelden (Plätze begrenzt)
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
-        const x = await rtTischHolen(p.id), zusage = p.zusage === "ja" ? "ja" : p.zusage === "nein" ? "nein" : null;
-        if (rtPhase(x, Date.now()) === "vorbei" || x.status === "abgesagt") throw new Fehler("Der Tisch ist schon vorbei.", 409);
+        const x = await rtTischHolen(p.id), zusage = p.zusage === "ja" ? "ja" : p.zusage === "nein" ? "nein" : null, sem = rtArt(x).anmeldung;
+        const angemeldet = async () => ((await db.from("kc_club_tisch_teilnahme").select("person_id").eq("tisch_id", x.id).eq("zusage", "ja")).data ?? []).map((r: any) => r.person_id as string);
+        const f = rtZusagePruefen(x, zusage, sem && zusage === "ja" ? await angemeldet() : [], ich.person_id, Date.now());
+        if (f) throw new Fehler(f, 409);
         const { error } = await db.from("kc_club_tisch_teilnahme").upsert({ tisch_id: x.id, person_id: ich.person_id, zusage, zusage_am: jetzt() }, { onConflict: "tisch_id,person_id" });
         if (error) throw new Fehler("Die Zusage konnte nicht gespeichert werden.", 503);
+        // 2.761.0: zwei melden sich gleichzeitig für den letzten Platz an → nachzählen; wer zu viel ist, wird zurückgenommen (nie überbucht)
+        if (sem && zusage === "ja" && rtZusagePruefen(x, "ja", (await angemeldet()).filter((id) => id !== ich.person_id), ich.person_id, Date.now())) {
+          await db.from("kc_club_tisch_teilnahme").update({ zusage: null }).eq("tisch_id", x.id).eq("person_id", ich.person_id);
+          throw new Fehler("Das Seminar ist gerade ausgebucht.", 409);
+        }
         await protokoll(ich.person_id, "tisch_zusage", { tisch: x.id, zusage });
         return json({ ok: true, lage: await rtLage(ich) });
+      }
+      case "tisch_seminare_meine": { // 2.761.0: besuchte Seminare mit Teilnahmebestätigung („Meine Schulung“) – auch nach dem Aufräumen
+        if (!(await rtDarf(ich))) return json({ aktiv: false, seminare: [] });
+        const { data: z } = await db.from("kc_club_tisch_teilnahme").select("tisch_id,dabei_seit,zuletzt_da").eq("person_id", ich.person_id).not("dabei_seit", "is", null).limit(300);
+        const ids = (z ?? []).map((r: any) => r.tisch_id);
+        const { data: ts } = ids.length ? await db.from("kc_club_tisch").select(RT_SPALTEN).eq("org_id", ORG).eq("art", "seminar").in("id", ids).lt("ende", jetzt()).order("beginn", { ascending: false }) : { data: [] as any[] };
+        const pm = await personen((ts ?? []).map((x: any) => x.gastgeber));
+        return json({ aktiv: true, seminare: (ts ?? []).map((x: any) => { const b = rtBestaetigung((z ?? []).find((r: any) => r.tisch_id === x.id), x);
+          return { id: x.id, thema: x.thema, beschreibung: x.beschreibung, beginn: x.beginn, ende: new Date(rtEndeMs(x)).toISOString(), referent: pm.get(x.gastgeber)?.display_name || "",
+            ichReferent: x.gastgeber === ich.person_id, bestaetigung: rtBestaetigungAus(b) }; }) });
       }
       case "tisch_platz": { // Platz nehmen und Herzschlag (die App ruft das alle RT.herzSek, solange sie sitzt oder wartet) – 3 Abfragen
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
@@ -12133,7 +12156,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const lage = await rtLage(ich, id);
         if (ergebnis === "ok" || ergebnis === "da") return json({ ok: true, ergebnis, lage });
         return json({ ok: false, ergebnis, lage, meldung: { voll: "Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.", zu_frueh: `Platz nehmen geht ab ${RT.vorlaufMin} Minuten vor Beginn.`,
-          vorbei: "Der Tisch ist schon vorbei.", abgesagt: "Der Tisch wurde abgesagt." }[ergebnis] || "Platz nehmen geht gerade nicht." });
+          vorbei: "Der Tisch ist schon vorbei.", abgesagt: "Der Tisch wurde abgesagt.", anmeldung: "Für dieses Seminar bitte erst anmelden (📝 Anmelden)." }[ergebnis] || "Platz nehmen geht gerade nicht." });
       }
       case "tisch_verlassen": {
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
@@ -12159,7 +12182,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data: ja } = await db.from("kc_club_tisch_teilnahme").select("person_id").eq("tisch_id", x.id).eq("zusage", "ja");
           const grund = txt(p.grund, 200);
           await rtSenden((ja ?? []).map((r: any) => r.person_id).filter((id: string) => id !== ich.person_id),
-            { titel: `🚫 Abgesagt: Runder Tisch „${x.thema}“`, kurz: `${ich.vorname} hat den Tisch am ${rtText(x, TZ).split(" · ")[0]} abgesagt${grund ? " – " + grund : ""}.`, tischId: x.id }, `${x.id}:abgesagt`);
+            { titel: `🚫 Abgesagt: ${rtArt(x).t} „${x.thema}“`, kurz: `${ich.vorname} hat den Tisch am ${rtText(x, TZ).split(" · ")[0]} abgesagt${grund ? " – " + grund : ""}.`, tischId: x.id }, `${x.id}:abgesagt`);
         }
         return json({ ok: true, lage: await rtLage(ich) });
       }

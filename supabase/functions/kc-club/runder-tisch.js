@@ -15,7 +15,17 @@ export const RT = {
   unsicherSek: 90,          // danach grau („unbekannt“)
   frischSek: 150,           // danach ist der Platz wieder frei
   medienTage: 7, textTage: 30, // Aufräumen nach Tischende (Wahl Hansi 30.10.2026)
+  toMax: 12, toPunktMax: 120,  // Tagesordnung der Besprechung
+  bestaetigungAnteil: 0.5,     // Teilnahmebestätigung ab der Hälfte der Seminarzeit
 };
+// 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN (Stufe RT1b, Wunsch Hansi „Unterscheidung Runder Tisch, Seminar bzw. Fortbildung, Besprechung – alle dürfen,
+// Seminar mit Teilnahmebestätigung“): eine Technik, drei Arten. Jedes Mitglied darf jede Art ansetzen.
+export const RT_ARTEN = {
+  runder_tisch: { sym: "🪑", t: "Runder Tisch", leiter: "lädt ein", anmeldung: false, tagesordnung: false, bestaetigung: false },
+  seminar: { sym: "🎓", t: "Seminar / Fortbildung", leiter: "Referent", anmeldung: true, tagesordnung: false, bestaetigung: true },
+  besprechung: { sym: "🗂️", t: "Besprechung", leiter: "Moderation", anmeldung: false, tagesordnung: true, bestaetigung: false },
+};
+export const rtArt = (t) => RT_ARTEN[t?.art] || RT_ARTEN.runder_tisch;
 const MIN = 60000, TAG = 86400000;
 
 export const rtEndeMs = (t) => {
@@ -35,6 +45,14 @@ export function rtPhase(t, jetzt) {
 
 // Einladung prüfen: e = { thema, beschreibung, beginnMs, dauer, plaetze }, meineKommenden = Anzahl eigener kommender Tische
 export function rtAnlegenPruefen(e, jetzt, meineKommenden) {
+  if (e?.art !== undefined && !Object.hasOwn(RT_ARTEN, e.art)) return "Bitte die Art wählen (Runder Tisch, Seminar oder Besprechung).";
+  const to = e?.tagesordnung;
+  if (to !== undefined && to !== null) {
+    if (!Array.isArray(to) || to.some((x) => typeof x !== "string" || !x.trim())) return "Die Tagesordnung ist unvollständig.";
+    if (to.length > RT.toMax) return `Höchstens ${RT.toMax} Punkte auf der Tagesordnung.`;
+    if (to.some((x) => x.trim().length > RT.toPunktMax)) return `Ein Tagesordnungspunkt ist zu lang (höchstens ${RT.toPunktMax} Zeichen).`;
+    if (e.art !== "besprechung" && to.length) return "Eine Tagesordnung gibt es nur bei der Besprechung.";
+  }
   const thema = String(e?.thema ?? "").trim();
   if (!thema) return "Bitte ein Thema eingeben.";
   if (thema.length > RT.themaMax) return `Das Thema ist zu lang (höchstens ${RT.themaMax} Zeichen).`;
@@ -65,6 +83,27 @@ export function rtBeitretenPruefen(t, jetzt, zeilen, ich) {
   return null;
 }
 
+// Seminar: anmelden geht nur, solange Plätze frei sind (angemeldet = Zusage „ja“; der Referent zählt nicht mit)
+export function rtZusagePruefen(t, zusage, angemeldet, ich, jetzt) {
+  const ph = rtPhase(t, jetzt);
+  if (ph === "vorbei" || ph === "abgesagt") return ph === "abgesagt" ? "Der Tisch wurde abgesagt." : "Der Tisch ist schon vorbei.";
+  if (zusage !== "ja" || !rtArt(t).anmeldung) return null;
+  const andere = (angemeldet || []).filter((p) => p !== ich && p !== t.gastgeber);
+  return andere.length >= Number(t.plaetze) ? "Das Seminar ist ausgebucht." : null;
+}
+
+// Teilnahmebestätigung (Seminar): anwesend von … bis …, mindestens die Hälfte der Seminarzeit
+export function rtAnwesend(z, t) {
+  if (!z?.dabei_seit || !z.zuletzt_da) return null;
+  const b = Date.parse(t.beginn), e = rtEndeMs(t), von = Math.max(Date.parse(z.dabei_seit), b), bis = Math.min(Date.parse(z.zuletzt_da) + RT.herzSek * 1000, e);
+  return bis > von ? { vonMs: von, bisMs: bis, min: Math.round((bis - von) / 60000) } : null;
+}
+export function rtBestaetigung(z, t) {
+  if (!rtArt(t).bestaetigung || t.status === "abgesagt") return null;
+  const a = rtAnwesend(z, t), dauer = (rtEndeMs(t) - Date.parse(t.beginn)) / 60000;
+  return a && a.min >= Math.ceil(dauer * RT.bestaetigungAnteil) ? a : null;
+}
+
 // Gastgeber-Aktionen: absagen (vor Beginn), verlaengern (offen, höchstens verlaengernMax), schliessen (offen)
 export function rtGastgeberPruefen(t, aktion, jetzt, darf) {
   if (!darf) return "Das darf nur, wer eingeladen hat.";
@@ -86,7 +125,7 @@ export function rtAufraeumen(t, jetzt) {
 }
 
 // kurzer Text für Liste/Push: „Do 05.11. 20:00 Uhr · 60 Min.“
-export function rtText(t, tz = "Europe/Berlin") {
+export function rtText(t, tz = "Europe/Berlin") { // (Art steht nicht im Text – die Anzeige setzt das Symbol davor)
   const ms = Date.parse(t.beginn), f = (o) => new Intl.DateTimeFormat("de-DE", { timeZone: tz, ...o }).format(new Date(ms));
   return `${f({ weekday: "short" })} ${f({ day: "2-digit", month: "2-digit" })} ${f({ hour: "2-digit", minute: "2-digit", hourCycle: "h23" })} Uhr · ${Number(t.dauer_min) + (Number(t.verlaengert_min) || 0)} Min.`;
 }

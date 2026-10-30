@@ -2,7 +2,7 @@
 // Aufruf: node tests/runder-tisch.test.mjs (offline)
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { RT, rtEndeMs, rtPhase, rtAnlegenPruefen, rtSitzt, rtSicher, rtBeitretenPruefen, rtGastgeberPruefen, rtAufraeumen, rtText } from "../supabase/functions/kc-club/runder-tisch.js";
+import { RT, RT_ARTEN, rtArt, rtEndeMs, rtPhase, rtAnlegenPruefen, rtSitzt, rtSicher, rtBeitretenPruefen, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtAnwesend, rtBestaetigung } from "../supabase/functions/kc-club/runder-tisch.js";
 
 const M = 60000, T = 86400000, B = Date.parse("2026-11-05T19:00:00Z"); // Do 20:00 Berlin
 const tisch = { beginn: new Date(B).toISOString(), dauer_min: 60, verlaengert_min: 0, plaetze: 18, status: "geplant" };
@@ -83,11 +83,47 @@ assert.match(sql, /set search_path = public/);
 const server = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
 assert.match(server, /runder_tisch: \{ t: "🪑 Runder Tisch", [^}]*standard: "admin" \}/, "erst Hansi testet");
-for (const a of ["tisch_liste", "tisch_anlegen", "tisch_zusage", "tisch_platz", "tisch_verlassen", "tisch_gastgeber"]) {
+for (const a of ["tisch_liste", "tisch_anlegen", "tisch_zusage", "tisch_platz", "tisch_verlassen", "tisch_gastgeber", "tisch_seminare_meine"]) {
   assert.ok(server.includes(`case "${a}":`), "Server-Aktion fehlt: " + a);
   assert.ok(app.includes(`"${a}"`), "App ruft nicht: " + a);
   assert.ok(!server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT")).includes(`"${a}"`), "Gäste/Aushilfen dürfen nicht: " + a);
 }
 assert.match(app, /const RT_HERZ_TISCH_MS = 60000;/, "Herzschlag alle 60 s (KC-DB-SPARSAM)");
 assert.match(server, /tischWartung\(stuendlich\)/, "Erinnerung und Aufräumen in der Wartung");
+
+// 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN (RT1b): drei Arten, Seminar mit Anmeldung und Teilnahmebestätigung, Besprechung mit Tagesordnung
+assert.deepEqual(Object.keys(RT_ARTEN), ["runder_tisch", "seminar", "besprechung"]);
+assert.equal(rtArt({}).t, "Runder Tisch", "alte Tische ohne Art = Runder Tisch");
+assert.match(rtAnlegenPruefen({ ...e, art: "konferenz" }, B - T, 0), /Art/);
+assert.equal(rtAnlegenPruefen({ ...e, art: "besprechung", tagesordnung: ["Begrüßung", "Weihnachtsmarkt"] }, B - T, 0), null);
+assert.match(rtAnlegenPruefen({ ...e, art: "besprechung", tagesordnung: Array(13).fill("x") }, B - T, 0), /12 Punkte/);
+assert.match(rtAnlegenPruefen({ ...e, art: "besprechung", tagesordnung: ["x".repeat(121)] }, B - T, 0), /zu lang/);
+assert.match(rtAnlegenPruefen({ ...e, art: "seminar", tagesordnung: ["x"] }, B - T, 0), /nur bei der Besprechung/);
+assert.equal(rtAnlegenPruefen({ ...e, art: "seminar", tagesordnung: [] }, B - T, 0), null);
+const sem = { ...tisch, art: "seminar", plaetze: 4, gastgeber: "REF" };
+assert.equal(rtZusagePruefen(sem, "ja", ["REF", "a", "b", "c"], "d", B - T), null, "Referent zählt nicht mit");
+assert.match(rtZusagePruefen(sem, "ja", ["REF", "a", "b", "c", "d"], "e", B - T), /ausgebucht/);
+assert.equal(rtZusagePruefen(sem, "ja", ["a", "b", "c", "d"], "d", B - T), null, "schon angemeldet");
+assert.equal(rtZusagePruefen(sem, null, ["a", "b", "c", "d"], "e", B - T), null, "abmelden geht immer");
+assert.equal(rtZusagePruefen({ ...tisch, plaetze: 4 }, "ja", ["a", "b", "c", "d"], "e", B - T), null, "Runder Tisch: Zusage unbegrenzt (Plätze zählen erst am Tisch)");
+assert.match(rtZusagePruefen(sem, "ja", [], "e", B + 61 * M), /vorbei/);
+// Teilnahmebestätigung: mindestens die Hälfte der Zeit (60 Min. → 30 Min.)
+const da = (von, bis) => ({ dabei_seit: new Date(B + von * M).toISOString(), zuletzt_da: new Date(B + bis * M).toISOString() });
+assert.ok(rtBestaetigung(da(0, 59), sem), "ganz dabei");
+assert.equal(rtBestaetigung(da(0, 59), sem).min, 60, "letzter Herzschlag zählt bis zur nächsten Minute, höchstens bis zum Ende");
+assert.ok(rtBestaetigung(da(-10, 29), sem), "vorher Platz genommen zählt ab Beginn: 30 Min.");
+assert.equal(rtBestaetigung(da(0, 20), sem), null, "zu kurz");
+assert.equal(rtBestaetigung(da(0, 59), tisch), null, "nur beim Seminar");
+assert.equal(rtBestaetigung(da(0, 59), { ...sem, status: "abgesagt" }), null);
+assert.equal(rtBestaetigung({ dabei_seit: null }, sem), null);
+assert.equal(rtAnwesend(da(70, 80), sem), null, "nach dem Ende zählt nicht");
+// App und Server: dieselben Arten; Migration nur additiv, Seminar nur mit Anmeldung
+const appArten = new Function(app.slice(app.indexOf("const RUND_ARTEN = {"), app.indexOf("const RUND_ART_TEXT")) + "\nreturn RUND_ARTEN;")();
+assert.deepEqual(appArten, RT_ARTEN, "RUND_ARTEN (App) = RT_ARTEN (Server)");
+const sql2 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2761_tisch_arten.sql", import.meta.url), "utf8");
+assert.ok(!/drop\s+table|drop\s+column/i.test(sql2.replace(/--[^\n]*/g, "")), "nur additiv");
+assert.match(sql2, /if v_t\.art = 'seminar' and p_person <> v_t\.gastgeber and \(not found or coalesce\(v_z\.zusage, ''\) <> 'ja'\) then return 'anmeldung'; end if;/);
+assert.match(server, /if \(rtArt\(x\)\.bestaetigung\) await db\.from\("kc_club_tisch_teilnahme"\)\.delete\(\)\.eq\("tisch_id", x\.id\)\.is\("dabei_seit", null\);/, "Seminar: Anwesende bleiben für die Bestätigung");
+assert.match(app, /tischbestaetigung: \{ bauen: \(o, p\) => druckTischBestaetigung\(p\) \}/, "Bestätigung über den Druck (Briefbogen, PDF)");
+assert.match(app, /<div id="smSeminare"><\/div>/, "in „Meine Schulung“");
 console.log("OK – Runder Tisch: Regeln geprüft");

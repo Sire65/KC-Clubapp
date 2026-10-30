@@ -1,6 +1,6 @@
 # 🪑 Runder Tisch – Spezifikation (KC-CLUB-RUNDER-TISCH)
 
-**Stand:** 30.10.2026 · **Status:** RT1 gebaut (2.760.0, 🔒 erst nur Admin zum Testen), RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
+**Stand:** 30.10.2026 · **Status:** RT1 (2.760.0) und RT1b Arten (2.761.0) gebaut, 🔒 erst nur Admin zum Testen; RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
 **Entwurf zum Anklicken:** https://claude.ai/artifact/5WfwmnFKfEm5nj8FmK2qFL (Tisch mit 2–18 Plätzen, Chat-Ansicht; Namen sind Beispiele)
 
 ## 1. Ziel
@@ -200,3 +200,25 @@ Entschieden am 30.10.2026: jedes Mitglied darf Tischgäste einladen (RT4); Frist
 - **Aufräumen (stündlich):** Dateien 7 Tage nach Ende (nur Dateien, die nicht auch in anderen Chats hängen), Chat 30 Tage nach Ende;
   danach bleibt der Tisch als Kurzprotokoll (Thema, Datum, Gastgeber, Anzahl) und ein Eintrag `tisch_beendet` im Protokoll.
 - **Noch nicht in RT1:** Hilfe-Eintrag, Twinkey, Suchbegriff und Erklär-Video kommen mit der Freigabe für alle (solange sieht es nur der Admin).
+
+## 13. Arten: Runder Tisch, Seminar, Besprechung (RT1b, 2.761.0)
+
+Entscheidungen Hansi (30.10.2026): „Besprechung“ statt „Konferenz“ (Konferenz heißt in der App schon die Telefonkonferenz, KC-CLUB-KONFERENZ);
+**alle Mitglieder dürfen jede Art ansetzen**; das Seminar bekommt eine **Teilnahmebestätigung**. Eine Technik, drei Arten (`RT_ARTEN` in
+`runder-tisch.js`, gleich `RUND_ARTEN` in app.js – der Test prüft das).
+
+| | 🪑 Runder Tisch | 🎓 Seminar / Fortbildung | 🗂️ Besprechung |
+|---|---|---|---|
+| Wer leitet | lädt ein | Referent | Moderation |
+| Teilnahme | spontan, Zusage freiwillig | **Anmeldung nötig**, höchstens so viele wie Plätze | spontan, Zusage freiwillig |
+| Ansicht | Plätze im Kreis | Hörsaal: Referent am Pult, Teilnehmer in Reihen | Plätze im Kreis + Tagesordnung |
+| Vorher | Thema | Thema, „Was lernt man?“ | Tagesordnung (höchstens 12 Punkte) |
+| Danach | Chat zum Nachlesen | Chat + **📄 Teilnahmebestätigung** | Chat zum Nachlesen |
+
+- **Teilnahmebestätigung:** ab der Hälfte der Seminarzeit (Platz genommen bis letzter Herzschlag, höchstens Beginn bis Ende). Druck über den vorhandenen
+  Briefbogen-Druck (KC-CLUB-DRUCK-PDF: Drucken, PDF, in der Club-App senden). Dauerhaft unter „🎓 Meine Schulung → Besuchte Seminare“
+  (Aktion `tisch_seminare_meine`) – darum bleiben beim Aufräumen eines Seminars Person und Anwesenheitszeit der Teilnehmer stehen (keine Inhalte).
+  Wer zwischendurch geht und wiederkommt, wird ab dem ersten Platznehmen gerechnet.
+- **Anmeldung:** zwei gleichzeitige Anmeldungen für den letzten Platz → der Server zählt nach und nimmt die überzählige zurück (nie überbucht).
+  Platz nehmen ohne Anmeldung lehnt `kc_club_tisch_beitreten` ab („anmeldung“); der Referent darf immer.
+- **Später:** Besprechung mit 🔴 Live-Abstimmung und Protokoll aus Clubabend Live; Seminar-Unterlagen vorab; Anbindung an „🎓 Schulungen verwalten“.

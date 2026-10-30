@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.761.0 – 2026-10-30 – 🎓 Runder Tisch, Seminar oder Besprechung – Stufe RT1b, nur Admin zum Testen (KC-CLUB-RUNDER-TISCH-ARTEN) · Server 2.761.0 · DB
+Wunsch Hansi (30.10.): „Unterscheidung zwischen Konferenz, Seminar bzw. Fortbildung und Runder Tisch“; Entscheidungen: „Besprechung“ statt „Konferenz“ (Konferenz heißt in der App schon die Telefonkonferenz), alle dürfen alles ansetzen, Seminar mit Teilnahmebestätigung. Eine Technik, drei Arten (docs/RUNDER_TISCH.md, Abschnitt 13).
+- **Einladen:** oben die Art wählen – 🪑 **Runder Tisch** (spontan dazukommen, wie bisher), 🎓 **Seminar / Fortbildung**, 🗂️ **Besprechung** (Tagesordnung, ein Punkt je Zeile, höchstens 12). Die Tagesordnung sehen alle schon vorher.
+- **Seminar:** wer einlädt, ist Referent. **📝 Anmelden** statt Zusage, höchstens so viele wie Plätze („🈵 ausgebucht“; melden sich zwei gleichzeitig für den letzten Platz, wird nachgezählt – nie überbucht). Platz nehmen nur mit Anmeldung. Ansicht wie im Hörsaal: Referent am Pult mit Tafel, Teilnehmer in Reihen, freie Plätze gestrichelt.
+- **📄 Teilnahmebestätigung** (Seminar): wer mindestens die Hälfte der Zeit dabei war, bekommt sie – auf dem Club-Briefbogen mit Drucken, PDF und „In der Club-App senden“ (vorhandener Druck), mit Thema, Inhalt, Datum, Referent und „anwesend von … bis …“. Zu finden beim vergangenen Seminar und dauerhaft unter **🎓 Meine Schulung → Besuchte Seminare**.
+- Aufräumen wie bisher (Dateien 7, Chat 30 Tage); beim Seminar bleiben nur Person und Anwesenheitszeit der Teilnehmer für die Bestätigung.
+- Datenbank: Migration `20261030_kc_club_v2761_tisch_arten.sql` (Spalten `art`, `tagesordnung`; `kc_club_tisch_beitreten` prüft beim Seminar die Anmeldung; nur additiv) – **nach 2.760.0 und vor dem Server einspielen**. Bisherige Tische = Runder Tisch.
+- Tests: `tests/runder-tisch.test.mjs` (Arten gleich in App und Server, Anmeldung, Bestätigung ab der Hälfte), Probelauf `tools/db-test/94_tisch_arten_test.sql`, Klick-Rundgang mit Hörsaal, Tagesordnung und Bestätigung. Rückweg: App/Server 2.760.0 (Spalten können bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.760.0 – 2026-10-30 – 🪑 Runder Tisch, Stufe RT1 – nur Admin zum Testen (KC-CLUB-RUNDER-TISCH) · Server 2.760.0 · DB
 Wunsch Hansi (30.10.): „Ein runder Tisch – um gewisse Uhrzeit eingeblendet, Teilnehmer setzen sich dazu und diskutieren mit“; Entscheidungen: jedes Mitglied darf einladen, jeder darf spontan dazukommen, höchstens 18, nicht zu lange speichern. Spezifikation docs/RUNDER_TISCH.md. Noch nicht freigegeben: bis Hansi freigibt, sieht es nur der Admin (🔒 Test).
 - **Club → 🪑 Runder Tisch:** „➕ Zu einem Runden Tisch einladen“ – Thema (mit Vorschlägen), freiwillig „Worum geht's?“, Tag, Uhrzeit, Dauer 30/60/90 Min., 4–18 Plätze; alle Mitglieder bekommen Bescheid (abwählbar, im Test nur Admins). Höchstens 3 kommende eigene Tische, höchstens 60 Tage im Voraus.
