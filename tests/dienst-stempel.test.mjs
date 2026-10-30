@@ -73,7 +73,7 @@ assert.equal(dsVorOrt(null, [heim]), null); assert.equal(dsVorOrt({ lat: 1, lon:
   assert.ok(/dienst_stempel: \{ t: "🟢 Dienst anmelden\/abmelden"[^}]*standard: "admin" \}/.test(server), "bis zur Freigabe nur Admin");
   for (const a of ["dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_heute", "dienst_nachtragen", "dienst_orte"]) assert.ok(server.includes(`case "${a}"`), "Aktion " + a);
   assert.ok(/case "dienst_heute": \{\s*nurAdmin\(ich\);/.test(server) && /case "dienst_nachtragen": \{\s*nurAdmin\(ich\);/.test(server) && /case "dienst_orte": \{\s*nurAdmin\(ich\);/.test(server), "Admin-Aktionen nur Admin");
-  assert.ok(/"mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion")?\]/.test(server), "Aushilfen dürfen buchen");
+  assert.ok(/"mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion")?(, "dp_einzelplan")?\]/.test(server), "Aushilfen dürfen buchen");
   assert.ok(/const pDs = dsDarf\(ich\)\.then\(\(ok\) => \(ok \? dsLage\(ich\) : null\)\)/.test(server) && /dienstStempel: await pDs/.test(server), "init: nur wenn freigegeben (keine Abfragen sonst)");
   assert.ok(/const ziel = alle \? null : await adminIds\(\);/.test(server), "Erinnerungen vor der Freigabe nur an Admins");
   assert.ok(/id="dsKarte"/.test(html) && /dsLageSetzen\(INIT\?\.dienstStempel\)/.test(app) && /h === "#dienststempel"/.test(app) && /if \(!frei\("dienst_stempel"\)\) return/.test(app), "App: Karte, Start, Link, Freigabe");

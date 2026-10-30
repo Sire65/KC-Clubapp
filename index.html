@@ -3088,6 +3088,28 @@
     #druck .dpd-sum tr.alle td { border-top: .6mm solid var(--ink); font-weight: 800; } #druck .dpd-sum tr.bed td { color: var(--mut); }
     #druck .dpd-sum td.rot { background: var(--fehltbg); color: var(--fehlt); font-weight: 800; } #druck .dpd-sum td.gruen { background: #d4ecd9; color: #1f5a3e; font-weight: 700; } #druck .dpd-sum td.gelb { background: #fde7b0; color: #8a5a00; }
     #druck .dpd-sum td.leer { color: #c9c2b8; }
+    /* KC-CLUB-DP-EINZELPLAN: Einzelplan je Person, A4 quer – Farben wie in Twinkey/DP2 (Wunsch blau, Kann grün, Nur wenn nötig gelb, Sperrzeit rot, Dienst bordeaux, Bereitschaft schiefergrau) */
+    #druck .ep { color: #222; font: 9pt/1.25 Arial, "Segoe UI", sans-serif; }
+    #druck .ep-kopf { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: .8mm solid #7d1727; padding-bottom: 1mm; margin-bottom: 1.5mm; }
+    #druck .ep-kopf h1 { margin: 0; font-size: 20pt; color: #7d1727; } #druck .ep-kopf .t { font-size: 10pt; color: #555; } #druck .ep-kopf .r { text-align: right; font-size: 9pt; }
+    #druck .ep-regel { display: flex; gap: 3mm; flex-wrap: wrap; margin: 1mm 0 2mm; font-size: 9pt; } #druck .ep-regel span { background: #f6efe6; border-radius: 1mm; padding: .7mm 2mm; }
+    #druck .ep-tab { border-collapse: collapse; width: 100%; table-layout: fixed; }
+    #druck .ep-tab th { font-weight: 400; color: #555; font-size: 7.5pt; text-align: left; padding: 0 0 .5mm .3mm; }
+    #druck .ep-tab td { font-size: 9pt; padding: 0 1mm; height: 8.4mm; white-space: nowrap; overflow: hidden; }
+    #druck .ep-tab td.tag { width: 17mm; font-weight: 700; } #druck .ep-tab tr.we td.tag { color: #7d1727; }
+    #druck .ep-tab td.rz { width: 19mm; font-weight: 700; color: #7d1727; } #druck .ep-tab td.art { width: 22mm; color: #666; font-size: 7.5pt; }
+    #druck .ep-tab td.z { padding: 0; border-top: .2mm solid #ddd; border-bottom: .2mm solid #ddd; background: #fff; }
+    #druck .ep-tab td.z.h { border-left: .2mm solid #bbb; }
+    #druck .ep-tab td.z.w { background: #dbe6f8; } #druck .ep-tab td.z.k { background: #e2f1e6; } #druck .ep-tab td.z.n { background: #fdeec4; }
+    #druck .ep-tab td.z.s { background: repeating-linear-gradient(135deg, #f7d9d6 0 .8mm, #fceeed .8mm 1.6mm); }
+    #druck .ep-tab td.z.zu { background: #e4e1dc; }
+    #druck .ep-tab td.z.dienst { background: #7d1727; } #druck .ep-tab td.z.ber { background: repeating-linear-gradient(45deg, #425b6e 0 1mm, #dfe5ea 1mm 2mm); }
+    #druck .ep-tab td.zeit { width: 30mm; padding-left: 2mm; } #druck .ep-tab td.std { width: 9mm; text-align: center; font-weight: 700; } #druck .ep-tab td.bem { width: 30mm; color: #555; font-size: 7.5pt; }
+    #druck .ep-leg { display: flex; flex-wrap: wrap; gap: 1mm 4mm; margin-top: 2mm; font-size: 8pt; }
+    #druck .ep-leg i { display: inline-block; width: 5mm; height: 3.2mm; margin-right: 1mm; vertical-align: -.5mm; border: .3mm solid #bbb; }
+    #druck .ep-fuss { display: flex; justify-content: space-between; margin-top: 2mm; padding-top: 1.2mm; border-top: .2mm solid #ccc; font-size: 9pt; }
+    #druck .ep-tausch { margin-top: 2mm; padding: 1.5mm 3mm; border: .5mm solid #7d1727; border-radius: 1.5mm; background: #fbf4f1; font-size: 9.5pt; }
+    #druck .ep-tausch small { display: block; color: #555; font-size: 8pt; margin-top: .5mm; }
     /* 2.676.0 KC-CLUB-DP-LUECKEN: Blatt „Hier fehlen noch Helfer“ – CD-Kopf, Tabelle mit Längs- und Querlinien */
     #druck .dpl { display: flex; flex-direction: column; padding: 7mm 10mm 5mm; } #druck .dpl .cd-kopf { margin-bottom: 3mm; } #druck .dpl .cd-fuss { padding-top: 1.5mm; } #druck .dpl .cd-fuss { margin-top: auto; }
     #druck .dpl-tab { border-collapse: collapse; width: 100%; font-size: 9pt; font-variant-numeric: tabular-nums; }

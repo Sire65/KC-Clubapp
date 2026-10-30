@@ -6555,7 +6555,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const c = server.slice(server.indexOf('case "mein_ausweis": {'), server.indexOf('case "wl_liste": {'));
   assert.ok(/\.eq\("person_id", ich\.person_id\)/.test(c) && /\/\^KC-\\d\{3,5\}\$\/\.test\(nr\) \? nr : null/.test(c), "nur die eigene Nummer, ungültig → null");
-  assert.ok(/"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion")?)?\]/.test(server) && /"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion")?)?\]/.test(html), "auch für Aushilfen (Stechuhr)");
+  assert.ok(/"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"(, "dp_einzelplan")?)?)?\]/.test(server) && /"stunden_melden", "mein_ausweis"(, "dienst_stand", "dienst_buchen", "dienst_korrigieren"(, "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"(, "dp_einzelplan")?)?)?\]/.test(html), "auch für Aushilfen (Stechuhr)");
   assert.ok(/function ausweisSvg\(nummer\) \{ const q = qrcode\(0, "M"\); q\.addData\(nummer\);/.test(html), "QR enthält nur die Nummer");
   assert.ok(/function versionMarkeTipp\(\) \{ if \(NEUE_VERSION\) updateKachel\(\); else ausweisZeigen\(\); \}/.test(html) && /onclick="versionMarkeTipp\(\)"/.test(html), "QR-Knopf, Update-Hinweis bleibt");
   assert.ok(/id="kopfVersion"[^>]*onclick="updateKachel\(\)"/.test(html), "Versionsnummer unter der Kochmütze bleibt anklickbar");

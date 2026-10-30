@@ -3979,7 +3979,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
@@ -4957,6 +4957,7 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   avatar_premium: { t: "👑 Hochwertige Avatare", u: "36 neue Koch-Figuren mit Licht und Schatten, Schmuck, Piercings – im Baukasten anpassbar", standard: "admin" }, // 2.414.0 KC-CLUB-AVATAR-PREMIUM
   dienst_stempel: { t: "🟢 Dienst anmelden/abmelden", u: "Kommen und Gehen in der App, mit Vorschlag aus dem Dienstplan", standard: "admin" }, // 2.590.0 KC-CLUB-DIENST-STEMPEL (erst Hansi testet)
   dienst_tausch: { t: "🔁 Dienst-Tausch-Börse", u: "Dienst anbieten, ein anderes Mitglied übernimmt, der Planer bestätigt", standard: "admin" }, // 2.606.0 KC-CLUB-DIENST-TAUSCH (erst Hansi testet)
+  dp_einzelplan: { t: "📄 Mein Einzelplan (Dienstplan)", u: "Eigener Dienstplan auf einem Blatt: Regelzeit, Dienste, Bereitschaft, Wünsche – unter 🗓️ Mein Dienst", standard: "admin" }, // KC-CLUB-DP-EINZELPLAN
   runder_tisch: { t: "🪑 Runder Tisch", u: "Zu einem Thema einladen, Platz nehmen, gemeinsam schreiben und zeigen (höchstens 18)", standard: "admin" }, // 2.762.0 KC-CLUB-RUNDER-TISCH (erst Hansi testet)
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
@@ -10801,6 +10802,34 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const stand = w && Array.isArray(w.tage) ? w.stand || zeile!.geaendert_am : null;
         const neu = await dpDruckNeueWuensche(stand).catch(() => [] as string[]); // 2.650.0: neue/geänderte Wunschpläne seit dem Stand (nur lesen)
         return json(w && Array.isArray(w.tage) ? { ...w, stand, neu } : { tage: [], neu });
+      }
+      // KC-CLUB-DP-EINZELPLAN (Wunsch Hansi 30.10.2026 „für jede Person eine Einzelübersicht, Querformat … erst mal nur unter Mein Dienst“): nur die eigene Zeile
+      // aus dem Dienstplan-Entwurf des Admins (dp_druck) – Regelzeit je Tag (Bedarf, eine Stunde vor Öffnung), eigene Dienste, Bereitschaft, eigene Wünsche.
+      // Andere Personen sieht nur der Admin (p.fuer). Kein neues Rechnen hier – das macht dp_druck beim Admin.
+      case "dp_einzelplan": {
+        await nurWennFrei("dp_einzelplan", ich, "Der Einzelplan");
+        const pid = ich.admin && typeof p.fuer === "string" && /^KC-P-[A-Z0-9-]{1,30}$/.test(p.fuer) ? p.fuer : ich.person_id;
+        const adm = await adminIds();
+        const { data: zeilen } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert,geaendert_am").in("schluessel", ["dp_druck", "dp_druck_konfig"]).in("person_id", adm).limit(20);
+        const plan = (zeilen ?? []).filter((z: any) => z.schluessel === "dp_druck" && Array.isArray(z.wert?.tage)).sort((x: any, y: any) => String(y.geaendert_am).localeCompare(String(x.geaendert_am)))[0];
+        if (!plan) return json({ leer: true });
+        const w: any = plan.wert, konf: any = (zeilen ?? []).find((z: any) => z.schluessel === "dp_druck_konfig" && z.person_id === plan.person_id)?.wert || {};
+        const [{ data: pe }, { data: wi }] = await Promise.all([
+          db.from("kc_core_people").select("display_name,postal_code,city").eq("person_id", pid).maybeSingle(),
+          db.from("kc_dp_wish_inbox").select("standby_general").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", pid).maybeSingle()]);
+        const name = String(pe?.display_name || ""), pk = konf.personen?.[pid] || {}, von = Number(w.von) || 8;
+        const km = Number.isFinite(Number(pk.anfahrtKm)) ? Number(pk.anfahrtKm) : (anfahrt(pe?.postal_code, pe?.city)?.fahrt ?? null);
+        const tage = (w.tage as any[]).map((t: any) => {
+          const b: number[] = Array.isArray(t.bedarf) ? t.bedarf : [], an = b.findIndex((x) => x > 0), ab = b.length - 1 - [...b].reverse().findIndex((x) => x > 0);
+          const ich2 = (t.leute || []).find((l: any) => l.n === name), ber = (t.ber || []).find((x: any) => x.n === name);
+          return { d: t.d, art: t.art, rz: an >= 0 ? [von + an / 2, von + (ab + 1) / 2] : null, w: ich2?.w || "", s: ich2?.s || null, z: ich2?.z || "", ber: ber?.s || null };
+        });
+        return json({ name, titel: w.titel || "Dienstplan", stand: w.stand || plan.geaendert_am, von, bis: Number(w.bis) || 23, tage, stunden: w.stunden?.[name] ?? 0,
+          maxDienst: Number.isFinite(Number(pk.maxDienst)) ? Number(pk.maxDienst) : null, maxGesamt: Number.isFinite(Number(pk.maxGesamt)) ? Number(pk.maxGesamt) : null,
+          km: km == null ? null : Math.round(km), bereitschaft: wi?.standby_general === true && pk.keineBereitschaft !== true && pk.aus !== true,
+          personen: ich.admin ? await (async () => { const n = Object.keys(w.stunden || {}); if (!n.length) return [];
+            const { data: pp } = await db.from("kc_core_people").select("person_id,display_name").in("display_name", n.slice(0, 60));
+            return (pp ?? []).map((x: any) => ({ id: x.person_id, name: x.display_name })).sort((a: any, b: any) => a.name.localeCompare(b.name, "de")); })() : undefined });
       }
       case "dp_druck_rechnen": { // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: nur Admin – Entwurf neu rechnen und als neuen Druck-Stand ablegen
         nurAdmin(ich);
