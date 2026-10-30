@@ -11777,7 +11777,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.433.0 KC-CLUB-EINGANG-WOHIN: beim Annehmen Ordner und Register wählen, Vorschlag vorausgewählt
 {
   const p = server.slice(server.indexOf('case "archiv_pruefung"'), server.indexOf('case "archiv_freigeben"'));
-  assert.ok(/zo\.besitzer !== ich\.person_id \|\| zo\.geloescht_am/.test(p) && /if \(ja && o\.besitzer && o\._eigen && \(p\.ordner_id \|\| p\.register\)\)/.test(p), "nur in eigene Ordner verschieben");
+  assert.ok(/\(zo\.besitzer !== ich\.person_id && !buero\) \|\| zo\.geloescht_am/.test(p) && /const buero = !!zo && !zo\.besitzer && darfArchivPflegen\(ich\) && darfOrdnerSehen\(ich, zo\);/.test(p) && /if \(ja && o\.besitzer && o\._eigen && \(p\.ordner_id \|\| p\.register\)\)/.test(p), "nur in eigene Ordner – oder (KC-CLUB-EINGANG-BUERO) in Büro-Ordner mit Archiv-Pflege");
   assert.ok(/update\(\{ status: "ok", ordner_id: ziel\.ordner_id, register: ziel\.register/.test(p), "Ordner und Register übernommen");
   assert.ok(/if \(annehmen && x && o\?\.eigen\) return arWohin\(x, o\);/.test(programm) && /💡 <b>Vorschlag/.test(programm) && /api\("archiv_pruefung", \{ id: x\.id, annehmen: true, ordner_id, register \}\)/.test(programm), "Wohin-Fenster mit Vorschlag");
 }

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.777.0 – 2026-10-30 – 📥 Eingangskorb: auch in einen Büro-Ordner ablegen (KC-CLUB-EINGANG-BUERO) · Server
+Wunsch Hansi (30.10.): „Wenn ich im Eingangskorb z. B. eine Preisliste habe, muss ich als Ablageort auch einen Ordner aus dem Büro anwählen können, z. B. Weihnachtsmarkt oder Schilder.“
+- Beim **✔ Annehmen** eines Dokuments aus dem Eingangskorb zeigt „🗄️ … ablegen“ jetzt zwei Gruppen: **👤 Meine Ordner** (wie bisher) und **🏢 Büro** (Vereinsordner wie Weihnachtsmarkt, Verträge, Besprechungen …) – mit den Registern des gewählten Ordners (z. B. „2026 › Einkauf & Kasse“). Darunter steht, dass es dann im Büro liegt (bei 🔒-Ordnern nur für die Clubleitung).
+- Büro-Ordner gibt es nur für die Archiv-Pflege (Admin, Clubsprecher); Ordner „nur Vorstand“ nur für den Vorstand. Der Server prüft das selbst. Vorgeschlagen bleibt, was der Absender gewählt hat.
+- Unverändert: Liegt ein Dokument einmal im persönlichen Ordner, wird es weiterhin nicht zwischen persönlichem Ordner und Vereinsarchiv verschoben – die Wahl gibt es beim Annehmen.
+- Test `tests/eingang-buero.test.mjs`. Keine Datenbank-Änderung.
+
 ## 2.776.0 – 2026-10-30 – 🙋 Runder Tisch: externe Tischgäste mit eigenem Link (KC-CLUB-RUNDER-TISCH-GAST, Stufe RT4) · Server 2.776.0 · DB
 Wunsch Hansi (30.10.): „Weiter bauen“ – nach Live, Musik und Videos jetzt die externen Gäste (Spezifikation Abschnitte 4 und 18; Entscheidung: jedes Mitglied darf Gäste einladen).
 - **🙋 Gast von außen einladen** (am Tisch, jedes Mitglied, das den Tisch sieht): Name und Rolle eingeben → **persönlicher Link** zum Teilen/Kopieren. Er wird nur dieses eine Mal angezeigt – der Server speichert nur seinen Fingerabdruck und verschickt ihn nie selbst. Höchstens **2 Gäste** je Tisch (zählen zu den Plätzen). **✕ Zurückziehen**: wer eingeladen hat, wer leitet, Admin – auch mitten im Tisch.

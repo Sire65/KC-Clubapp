@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.776.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.777.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35095,19 +35095,25 @@ async function arPruefung(id, annehmen) {
 // Beim Annehmen wählt das Mitglied Ordner (eigene Jahrgänge) und Register; vorausgewählt ist der Vorschlag des Absenders.
 function arWohin(x, o, fertig) { // fertig: KC-CLUB-EINGANG-DURCHGEHEN (2.741.0) – danach das nächste Dokument
   const eigene = (AR.daten.ordner || []).filter((y) => y.eigen && !y.geloescht_am).sort((a, b) => b.jahr - a.jahr);
-  const regOpt = (oid, wahl) => ((eigene.find((y) => y.id === oid) || o).register || []).map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
+  // KC-CLUB-EINGANG-BUERO (Wunsch Hansi 30.10.2026): auch Ordner aus dem Büro (Club-Ordner, z. B. Weihnachtsmarkt) – nur für die Archiv-Pflege
+  const buero = AR.daten.darf ? (AR.daten.ordner || []).filter((y) => !y.besitzer && !y.geloescht_am && (!y.nur_vorstand || AR.daten.vorstand))
+    .sort((a, b) => String(a.titel).localeCompare(String(b.titel), "de") || b.jahr - a.jahr) : [];
+  const alle = [...eigene, ...buero], opt = (y) => `<option value="${esc(y.id)}"${y.id === o.id ? " selected" : ""}>${esc(arName(y))}</option>`;
+  const regOpt = (oid, wahl) => ((alle.find((y) => y.id === oid) || o).register || []).map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
+  const bueroHinweis = (oid) => buero.some((y) => y.id === oid) ? `🏢 Liegt dann im Büro – sichtbar für alle, die diesen Ordner sehen${buero.find((y) => y.id === oid)?.nur_vorstand ? " 🔒 nur Clubleitung" : ""}.` : "";
   const f = blattAuf("arWohinBlatt", `<h3 style="margin-top:0">🗄️ „${esc(x.titel)}“ ablegen</h3>
     <p class="hinweis" style="margin-top:0">Wohin soll das Dokument? 💡 <b>Vorschlag${x.von ? ` von ${esc(String(x.von).split(" ")[0])}` : ""}:</b> Ordner ${esc(arName(o))}${x.register ? `, Register „${esc(x.register)}“` : ""} – einfach übernehmen oder ändern.</p>
-    <label class="feld">Ordner<select id="awOrdner">${eigene.map((y) => `<option value="${esc(y.id)}"${y.id === o.id ? " selected" : ""}>${esc(arName(y))}</option>`).join("")}</select></label>
+    <label class="feld">Ordner<select id="awOrdner">${buero.length ? `<optgroup label="👤 Meine Ordner">${eigene.map(opt).join("")}</optgroup><optgroup label="🏢 Büro">${buero.map(opt).join("")}</optgroup>` : eigene.map(opt).join("")}</select></label>
     <label class="feld">Register<select id="awReg">${regOpt(o.id, x.register)}</select></label>
+    <p class="hinweis" id="awBuero" style="margin:0">${bueroHinweis(o.id)}</p>
     <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">🗄️ Hier ablegen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
-  f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); };
+  f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); f.querySelector("#awBuero").textContent = bueroHinweis(e.target.value); };
   f.querySelector("#awJa").onclick = async (e) => {
     e.target.disabled = true;
     const ordner_id = f.querySelector("#awOrdner").value, register = f.querySelector("#awReg").value;
     try {
       await api("archiv_pruefung", { id: x.id, annehmen: true, ordner_id, register }); f.remove();
-      melde(`✔ Abgelegt – liegt jetzt in ${arName(eigene.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden(); fertig?.();
+      melde(`✔ Abgelegt – liegt jetzt in ${buero.some((y) => y.id === ordner_id) ? "🏢 " : ""}${arName(alle.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden(); fertig?.();
     } catch (er) { meldeFehler(er); e.target.disabled = false; }
   };
 }

@@ -49,6 +49,8 @@ jobs:
       - run: node tests/treffen-tag.test.mjs
       # KC-CLUB-SPUR-PINNWAND-ECHT (2.775.0)
       - run: node tests/spur-pinnwand-echt.test.mjs
+      # KC-CLUB-EINGANG-BUERO
+      - run: node tests/eingang-buero.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
