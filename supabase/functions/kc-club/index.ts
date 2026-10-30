@@ -13467,6 +13467,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           && SPUR_WAS.test(String(x[1] ?? "")))
           // 2.755.0 KC-CLUB-SPUR-VOLL: unbekanntes „mit“ → Schritt bleibt, nur ohne „mit“ (vorher fiel der ganze Schritt still weg, z. B. „Anklopfen verpasst“)
           .map((x: any) => (x[2] == null || !spurMitOk(String(x[2])) ? [Math.round(Number(x[0])), String(x[1])] : [Math.round(Number(x[0])), String(x[1]), String(x[2])]));
+        // KC-CLUB-SPUR-PINNWAND-ECHT (Fund Hansi 30.10.: Karla „Zettel aufgehängt“, aber kein Zettel): eine App vor 2.759.0, die lange im Hintergrund
+        // lag, meldet beim Aufwachen das stille Nachsehen noch als Handlung – erst danach lädt sie die neue Version. „Zettel aufgehängt“ zählt
+        // darum nur, wenn es von dieser Person wirklich einen Zettel ±10 Min. um den Schritt gibt (eine Abfrage, nur wenn der Schritt vorkommt).
+        const pwT = s.filter((x: any) => x[1] === "tat_pinnwand").map((x: any) => x[0] as number);
+        if (pwT.length) {
+          const { data: pz } = await db.from("kc_club_pinnwand").select("erstellt_am").eq("person_id", ich.person_id)
+            .gte("erstellt_am", new Date(Math.min(...pwT) - 600000).toISOString()).lte("erstellt_am", new Date(Math.max(...pwT) + 600000).toISOString()).limit(20);
+          const echt = (pz ?? []).map((z: any) => Date.parse(z.erstellt_am));
+          for (let i = s.length - 1; i >= 0; i--) if (s[i][1] === "tat_pinnwand" && !echt.some((t: number) => Math.abs(t - (s[i][0] as number)) <= 600000)) s.splice(i, 1);
+        }
         if (s.length && await protokollPlatz(ich.person_id, "spur", 240)) await protokoll(ich.person_id, "spur", { s }); // 2.755.0: mehr Schritte (Fenster, Hilfe, Videos) → 240 Sendungen je Stunde
         return json({ ok: true, n: s.length });
       }
