@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.765.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.766.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16,6 +16,7 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-5U1ydltLMQj7pxZjQpByS1+SD1i9AuLc0lZjHEGzgZuptruLnEte2YH6Uk4DxzVI" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -21976,7 +21977,9 @@ const RUND_ARTEN = {
 const RUND_ART_TEXT = { runder_tisch: "Locker diskutieren – jeder darf spontan dazukommen.", seminar: "Einer erklärt, die anderen lernen – Anmeldung nötig, danach gibt es eine Teilnahmebestätigung.",
   besprechung: "Gemeinsam beraten – mit Tagesordnung, Punkt für Punkt." };
 const rundArt = (t) => RUND_ARTEN[t?.art] || RUND_ARTEN.runder_tisch;
-const RUND = { lage: null, sitze: null, warte: null, herz: null };
+const RUND = { lage: null, sitze: null, warte: null, herz: null, live: null };
+// 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: läuft Live (Teil teile/tischlive.js) gerade an diesem Tisch?
+const rundLiveAn = (id) => teilDa("tischlive") && typeof TL !== "undefined" && TL.live && (!id || TL.id === id);
 const rundTische = () => RUND.lage?.tische || [];
 const rundTisch = (id) => rundTische().find((t) => t.id === id) || null;
 const rundUhr = (iso) => fZeit.format(new Date(iso));
@@ -22127,7 +22130,8 @@ async function rundTischZeigen(id) {
 async function rundPlatz(id, laut) {
   try {
     const r = await api("tisch_platz", { id }, laut ? { warten: true } : { still: true });
-    if (r.ok) { if (RUND.sitze !== id) { if (laut) melde(rundArt(rundTisch(id)).anmeldung ? "🎓 Du bist dabei" : `${rundArt(rundTisch(id)).sym} Du sitzt am Tisch`); else if (RUND.warte === id) { melde("🪑 Ein Platz ist frei geworden – du sitzt jetzt am Tisch"); try { navigator.vibrate?.(60); } catch {} } } RUND.sitze = id; RUND.warte = null; }
+    if (r.ok) { if (r.live) { RUND.live = r.live; if (!teilDa("tischlive")) teilLaden("tischlive").catch(() => {}); } // 2.766.0: Live-Leitung + Teil schon bereitlegen
+      if (RUND.sitze !== id) { if (laut) melde(rundArt(rundTisch(id)).anmeldung ? "🎓 Du bist dabei" : `${rundArt(rundTisch(id)).sym} Du sitzt am Tisch`); else if (RUND.warte === id) { melde("🪑 Ein Platz ist frei geworden – du sitzt jetzt am Tisch"); try { navigator.vibrate?.(60); } catch {} } } RUND.sitze = id; RUND.warte = null; }
     else { if (RUND.sitze === id) RUND.sitze = null; RUND.warte = r.ergebnis === "voll" ? id : null; if (laut) melde(r.meldung, r.ergebnis !== "voll" && r.ergebnis !== "anmeldung"); }
     rundHerzPlanen(); rundLageSetzen(r.lage);
   } catch (e) { if (laut) meldeFehler(e); rundTischZeichnen(); }
@@ -22138,14 +22142,14 @@ function rundHerzPlanen() {
   const id = RUND.sitze || RUND.warte; if (!id) return;
   RUND.herz = setTimeout(() => {
     const t = rundTisch(id);
-    if (!t || t.phase === "vorbei" || t.phase === "abgesagt") { RUND.sitze = RUND.warte = null; rundKarteZeichnen(); rundTischZeichnen(); return; }
+    if (!t || t.phase === "vorbei" || t.phase === "abgesagt") { if (rundLiveAn(id)) tlStopp(true); RUND.sitze = RUND.warte = null; rundKarteZeichnen(); rundTischZeichnen(); return; }
     if (document.hidden) return rundHerzPlanen();
     rundPlatz(id, false);
   }, RT_HERZ_TISCH_MS);
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && (RUND.sitze || RUND.warte)) rundPlatz(RUND.sitze || RUND.warte, false); });
 async function rundVerlassen(id) {
-  try { const r = await api("tisch_verlassen", { id }); RUND.sitze = RUND.warte = null; clearTimeout(RUND.herz); fensterZu($("rundTischBlatt")); rundLageSetzen(r.lage); melde("🚪 Tisch verlassen – du kannst jederzeit wieder Platz nehmen"); }
+  try { if (rundLiveAn(id)) tlStopp(true); const r = await api("tisch_verlassen", { id }); RUND.sitze = RUND.warte = null; clearTimeout(RUND.herz); fensterZu($("rundTischBlatt")); rundLageSetzen(r.lage); melde("🚪 Tisch verlassen – du kannst jederzeit wieder Platz nehmen"); }
   catch (e) { meldeFehler(e); }
 }
 // Plätze im Kreis: Gastgeber oben (12 Uhr), dann in Reihenfolge des Platznehmens; freie Plätze gestrichelt
@@ -22153,7 +22157,8 @@ function rundPersonHtml(p, t, gr, stil = "", g = { figur: true, namen: true }) {
   if (!p) return `<div class="rund-platz frei" style="${stil}"><div class="rund-av" style="width:${gr}px;height:${gr}px" aria-label="freier Platz"></div></div>`;
   const fig = avFigurVon({ person_id: p.id }), vn = p.name.split(" ")[0], leiter = p.id === t.gastgeber;
   const titel = p.sicher ? `${p.name} ist dabei` : `${p.name} – Verbindung unbekannt`;
-  return `<div class="rund-platz${p.sicher ? "" : " unsicher"}${p.id === ICH?.person_id ? " ich" : ""}${leiter ? " gastgeber" : ""}" style="${stil}" title="${esc(titel)}">
+  const live = rundLiveAn(RUND.offen) ? tlPlatz(p.id) : ""; // 2.766.0: spricht (grün) · ✋ · 🥄 · live
+  return `<div class="rund-platz${p.sicher ? "" : " unsicher"}${p.id === ICH?.person_id ? " ich" : ""}${leiter ? " gastgeber" : ""}${live ? " " + live : ""}" data-pid="${esc(p.id)}" style="${stil}" title="${esc(titel)}">
       <div class="rund-av" style="width:${gr}px;height:${gr}px;font-size:${Math.round(gr * 0.38)}px" aria-label="${esc(titel)}">${g.figur && avGueltig(fig) ? avatarSvg(fig, gr - 6, initialen(p.name)) : esc(initialen(p.name))}</div>
       ${g.namen ? `<div class="rund-name">${esc(leiter ? `${t.art === "seminar" ? "🎤" : "👑"} ${vn}` : vn)}</div>` : leiter ? `<div class="rund-name">${t.art === "seminar" ? "🎤" : "👑"}</div>` : ""}</div>`;
 }
@@ -22192,6 +22197,8 @@ function rundTischZeichnen() {
   const unsicher = t.amTisch.filter((p) => !p.sicher).length;
   el.innerHTML = `<h3 style="margin:0">${A.sym} ${esc(t.thema)}${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h3>
     <div class="hinweis">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""} · ${esc(A.leiter)}: ${esc(t.gastgeberName)} · ${esc(zeit)}</div>
+    <div id="tlBereich" class="tl-bereich"></div>
+    ${sitze && t.phase === "offen" && !rundLiveAn(t.id) ? `<button class="knopf haupt tl-start" onclick="tlStart(${jsArg(t.id)})">🔴 Live dazuschalten <small>Ton · Kamera · Bildschirm · Unterlagen zeigen</small></button>` : ""}
     ${t.art === "seminar" ? rundHoersaalHtml(t) : `<div class="rund-buehne" role="img" aria-label="${esc(`${A.t}: ${t.amTisch.length} von ${t.plaetze} Plätzen besetzt`)}">
       <div class="rund-holz"><div><small>${esc(t.text.split(" · ")[0])}</small><strong>${esc(t.thema)}</strong><span>${A.sym} ${t.amTisch.length} / ${t.plaetze}</span></div></div>
       ${rundPlaetzeHtml(t)}
@@ -22209,6 +22216,7 @@ function rundTischZeichnen() {
       ${sitze || warte ? `<button class="knopf klein" onclick="rundVerlassen(${jsArg(t.id)})">🚪 Verlassen</button>` : ""}
       <button class="knopf klein" onclick="fensterZu($('rundTischBlatt'))">Zurück</button>
     </div>`;
+  if (teilDa("tischlive")) tlZeichnen(); // 2.766.0: Live-Bereich (Leute, Bühne, Knöpfe) neu einhängen
 }
 // Karte auf der Startseite: ab 15 Min. vor Beginn bis zum Ende (bzw. solange ich sitze)
 function rundKarteZeichnen() {
@@ -30999,6 +31007,7 @@ const DRUCK_INHALTE = [["treffen", "🍽️ Sitzungen & Veranstaltungen"], ["akt
 const KC_CD = {
   name: "Köcheclub Werne", zeile: "Gemeinsam kochen, gemeinsam helfen", // 2.149.0: Spruch festgelegt von Hansi (09.10.2026)
   weinrot: "#741521", beige: "#f3e9dc", beigeRand: "#e0cfb9", text: "#1d1a17", grau: "#5b544d",
+  gold: "#c9a227", // 2.766.0 KC-CLUB-SCHILDER-CD: Gold als dritte CD-Farbe (Wunsch Hansi „CD ist Weinrot, Beige und Gold“)
   logo: "kc-kochmuetze-weiss.webp", schrift: "Georgia,'Times New Roman',serif",
   briefAmt: "Clubsprecher", briefAmtVorgabe: "Klaus Zander", // Fußzeile Briefbogen: aktueller Clubsprecher laut Ämtern, sonst diese Vorgabe
 };
@@ -31040,6 +31049,7 @@ const SCH_FARBEN = [
 const SCH_RAHMEN = [
   { id: "keiner", t: "Ohne" }, { id: "schlicht", t: "Schlicht" }, { id: "doppelt", t: "Doppelt" },
   { id: "band", t: "Breit" }, { id: "gestrichelt", t: "Gestrichelt" }, { id: "fest", t: "Festlich" },
+  { id: "cd", t: "Club-CD" }, // 2.766.0: Beige Fläche, weinroter Rahmen mit Goldlinie, weinrotes Fußband – Schilderfamilie aus einem Guss
 ];
 // e = Zeichen (Emoji); ohne e wird das Symbol selbst gezeichnet (schSymbolMalen)
 const SCH_SYMBOLE = [
@@ -31049,7 +31059,14 @@ const SCH_SYMBOLE = [
   { id: "rolli", t: "Barrierefrei", e: "♿" }, { id: "rechts", t: "Pfeil rechts", e: "➡️" }, { id: "links", t: "Pfeil links", e: "⬅️" }, { id: "oben", t: "Pfeil geradeaus", e: "⬆️" },
   { id: "baum", t: "Tannenbaum", e: "🎄" }, { id: "stern", t: "Stern", e: "⭐" }, { id: "glocke", t: "Glocke", e: "🔔" }, { id: "koch", t: "Koch", e: "🧑‍🍳" },
   { id: "suppe", t: "Suppe", e: "🍲" }, { id: "gluehwein", t: "Glühwein", e: "🍷" }, { id: "kaffee", t: "Kaffee", e: "☕" }, { id: "herz", t: "Herz", e: "❤️" },
+  // 2.766.0 KC-CLUB-SCHILDER-CD: selbst gezeichnet nach Art der Sicherheitszeichen (druckt auf jedem Gerät gleich, ohne Emoji-Schrift)
+  { id: "nurbar", t: "Nur Bargeld" }, { id: "stufe", t: "Vorsicht Stufe" }, { id: "keindurchgang", t: "Kein Durchgang" }, { id: "besteck", t: "Besteck" },
+  { id: "jugendschutz", t: "Ab 16 / ab 18" },
 ];
+const SCH_JAHR = String(new Date().getFullYear()); // Fußzeile der Weihnachtsmarkt-Schilder: „Weihnachtsmarkt <Jahr>“ – im Editor änderbar
+// 2.766.0: Aushang nach § 3 Abs. 1 JuSchG – Wortlaut § 9 Abs. 1 und 2 (Stand 30.10.2026; Abschaffung des „begleiteten Trinkens“ ist nur im
+// Gesetzgebungsverfahren – vor dem Druck auf gesetze-im-internet.de/juschg/__9.html prüfen und hier anpassen).
+const SCH_JUSCHG9 = "§ 9 Jugendschutzgesetz – Alkoholische Getränke\n(1) In Gaststätten, Verkaufsstellen oder sonst in der Öffentlichkeit dürfen 1. Bier, Wein, weinähnliche Getränke oder Schaumwein oder Mischungen von Bier, Wein, weinähnlichen Getränken oder Schaumwein mit nichtalkoholischen Getränken an Kinder und Jugendliche unter 16 Jahren, 2. andere alkoholische Getränke oder Lebensmittel, die andere alkoholische Getränke in nicht nur geringfügiger Menge enthalten, an Kinder und Jugendliche weder abgegeben noch darf ihnen der Verzehr gestattet werden.\n(2) Absatz 1 Nummer 1 gilt nicht, wenn Jugendliche von einer personensorgeberechtigten Person begleitet werden.\nAushang nach § 3 Abs. 1 Jugendschutzgesetz · Stand 30.10.2026";
 // Vorlagen: fuer = Anlässe, in denen sie erscheinen ("alle" = überall). Preise bleiben leer (… €) – die trägt man selbst ein, nichts wird erfunden.
 const SCH_VORLAGEN = [
   { id: "willkommen_wm", fuer: ["weihnachtsmarkt"], d: { symbol: "baum", titel: "Herzlich willkommen", text: `am Stand vom Köcheclub Werne\n${KC_CD.zeile}`, farbe: "gruen", rahmen: "fest", schrift: "fest" } },
@@ -31075,10 +31092,19 @@ const SCH_VORLAGEN = [
   { id: "weg", fuer: "alle", d: { symbol: "rechts", titel: "Hier entlang", text: "", farbe: "weinrot", rahmen: "schlicht", schrift: "klar" } },
   { id: "geschlossen", fuer: ["kochen", "verein", "allgemein"], d: { symbol: "", titel: "Heute geschlossen", text: "", farbe: "weinrot", rahmen: "doppelt", schrift: "club" } },
   { id: "frei", fuer: "alle", d: { symbol: "", titel: "", text: "", farbe: "weinrot", rahmen: "schlicht", schrift: "club" } },
+  // 2.766.0 KC-CLUB-SCHILDER-CD (Wunsch Hansi 30.10.2026): Stand-Schilder Weihnachtsmarkt aus einem Guss – Club-CD, Fußzeile mit Jahr
+  { id: "wm_bar", fuer: ["weihnachtsmarkt"], d: { symbol: "nurbar", titel: "Nur Barzahlung", text: "Kartenzahlung ist leider nicht möglich.\nVielen Dank für Ihr Verständnis!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_stufe", fuer: ["weihnachtsmarkt"], d: { symbol: "stufe", titel: "Vorsicht Stufe!", text: "Bitte achten Sie auf Ihre Schritte.", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_kein_durchgang", fuer: ["weihnachtsmarkt"], d: { symbol: "keindurchgang", titel: "Hier kein Durchgang", text: "Bitte benutzen Sie den Weg vor dem Stand.\nVielen Dank!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_jugendschutz", fuer: ["weihnachtsmarkt", "fest"], d: { symbol: "jugendschutz", titel: "Jugendschutz", text: "Glühwein, Wein, Bier: erst ab 16 Jahren.\nMit Schuss, Eierlikör, Feuerzangenbowle, Rum und Likör: erst ab 18 Jahren.\nIm Zweifel fragen wir nach dem Ausweis.", klein: SCH_JUSCHG9, farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  // Standschild: Pflichtangaben laut Vertrag mit Werne Marketing (Name/Anschrift) – Anschrift, Verantwortliche und Stand-Nr. trägt man selbst ein, nichts wird erfunden
+  { id: "wm_standschild", fuer: ["weihnachtsmarkt", "fest"], d: { symbol: "", titel: KC_CD.name, text: "Anschrift: …\nVerantwortlich: …\nStand-Nr.: …", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_besteck", fuer: ["weihnachtsmarkt"], d: { symbol: "besteck", titel: "Gebrauchtes Besteck", text: "bitte hier ablegen.\nDanke schön!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
 ];
-const SCH_LEER = { vorlage: "frei", format: "hoch", schrift: "club", rahmen: "schlicht", farbe: "weinrot", symbol: "", titel: "", text: "", preise: [], titelStil: { f: true, k: false, u: false }, textStil: { f: false, k: false, u: false } };
+const SCH_LEER = { vorlage: "frei", format: "hoch", schrift: "club", rahmen: "schlicht", farbe: "weinrot", symbol: "", titel: "", text: "", preise: [], fuss: "", klein: "", titelStil: { f: true, k: false, u: false }, textStil: { f: false, k: false, u: false } };
 const schNeu = (v) => ({ ...JSON.parse(JSON.stringify(SCH_LEER)), ...JSON.parse(JSON.stringify(v?.d || {})), vorlage: v?.id || "frei" });
-const schVorlagenFuer = (anlass) => SCH_VORLAGEN.filter((v) => v.fuer === "alle" || v.fuer.includes(anlass));
+// 2.766.0: Vorlagen im Club-CD zuerst (Schilderfamilie), danach die übrigen in bisheriger Reihenfolge
+const schVorlagenFuer = (anlass) => SCH_VORLAGEN.filter((v) => v.fuer === "alle" || v.fuer.includes(anlass)).sort((a, b) => (b.d.rahmen === "cd") - (a.d.rahmen === "cd"));
 const schName = (v) => v.d.titel || (v.id === "frei" ? "Leeres Schild" : v.id);
 let SDR = { anlass: "weihnachtsmarkt", d: null, id: null, name: "", liste: null, sicht: "start" };
 const SCH_LOGO = new Image(); SCH_LOGO.src = KC_CD.logo; // CD-Kochmütze unten auf jedem Schild
@@ -31094,7 +31120,8 @@ async function schListeLaden() {
 }
 function schZeigen() {
   if (SDR.sicht === "edit") return schEditor();
-  const vor = schVorlagenFuer(SDR.anlass), gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass);
+  if (SDR.sicht === "paket") return schPaketZeigen();
+  const vor = schVorlagenFuer(SDR.anlass), gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && !schIstPaket(x)), pakete = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && schIstPaket(x));
   const f = blattAuf("schBlatt", `<h3 style="margin:0 0 2px">🪧 Schilder-Druckerei</h3>
     <p class="hinweis" style="margin:0 0 10px">1. Anlass und Vorlage wählen · 2. Text ändern · 3. Aussehen · 4. 🖨️ Drucken oder 📤 an Mitglieder senden (die drucken zuhause)</p>
     <div class="sdr-anlaesse">${SCH_ANLAESSE.map((a) => `<button class="knopf${a.id === SDR.anlass ? " haupt" : ""}" onclick="SDR.anlass='${a.id}';schZeigen()"><span>${a.sym}</span>${esc(a.t)}</button>`).join("")}</div>
@@ -31104,6 +31131,10 @@ function schZeigen() {
     ${SDR.liste === null ? '<p class="hinweis">Wird geladen …</p>' : SDR.fehler && !SDR.liste.length ? `<p class="hinweis">⚠️ Gespeicherte Schilder gerade nicht erreichbar – Vorlagen gehen trotzdem.</p>`
       : gesp.length ? `<div class="sdr-gespeichert">${gesp.map((x) => `<div><button class="knopf" onclick="schOeffnen('${x.id}')">🪧 ${esc(x.titel)}<small>${esc([x.von, x.geaendert_am ? zeitKurz(x.geaendert_am) : ""].filter(Boolean).join(" · "))}</small></button><button class="knopf" title="Löschen" aria-label="Löschen" onclick="schLoeschen('${x.id}')">🗑️</button></div>`).join("")}</div>`
       : '<p class="hinweis">Für diesen Anlass ist noch nichts gespeichert. Fertige Schilder mit „💾 Speichern“ aufheben – nächstes Jahr wieder öffnen.</p>'}
+    <h4 style="margin:14px 0 6px">🖨️ Druckpakete${pakete.length ? ` (${pakete.length})` : ""}</h4>
+    ${pakete.length ? `<div class="sdr-gespeichert">${pakete.map((x) => `<div><button class="knopf" onclick="schPaketOeffnen('${x.id}')">🖨️ ${esc(x.titel)}<small>${esc(schPaketZahl(x.daten.paket))} · ${esc(zeitKurz(x.geaendert_am))}</small></button><button class="knopf" title="Löschen" aria-label="Löschen" onclick="schLoeschen('${x.id}')">🗑️</button></div>`).join("")}</div>` : ""}
+    <button class="knopf${pakete.length ? "" : " haupt"}" style="width:100%" onclick="schPaketNeu()">＋ Druckpaket zusammenstellen</button>
+    <p class="hinweis" style="margin:4px 0 0">Schilder, Vorlagen und Formulare aus dem Archiv ankreuzen, Anzahl wählen, alles in einem Rutsch drucken – und als Paket für nächstes Jahr aufheben.</p>
     <div class="knoepfe" style="margin-top:12px"><button class="knopf" onclick="$('schBlatt').remove()">Schließen</button></div>`);
   f.querySelectorAll("[data-schmini]").forEach((c) => { const v = SCH_VORLAGEN.find((x) => x.id === c.dataset.schmini); if (v) schZeichnen(c, schNeu(v), 150); });
 }
@@ -31114,7 +31145,7 @@ function schOeffnen(id) {
 }
 async function schLoeschen(id) {
   const x = (SDR.liste || []).find((s) => s.id === id); if (!x) return;
-  if (!(await frage(`🗑️ Gespeichertes Schild „${x.titel}“ löschen?\n\nAbgelegte PDFs im Büro-Ordner bleiben erhalten.`, { ja: "🗑️ Löschen", nein: "Behalten" }))) return;
+  if (!(await frage(`🗑️ ${schIstPaket(x) ? "Druckpaket" : "Gespeichertes Schild"} „${x.titel}“ löschen?\n\nAbgelegte PDFs im Büro-Ordner bleiben erhalten.`, { ja: "🗑️ Löschen", nein: "Behalten" }))) return;
   try { await api("schild_loeschen", { id }); melde("🗑️ Gelöscht"); await schListeLaden(); } catch (e) { meldeFehler(e); }
 }
 const schWahlKnopf = (feld, w, inhalt, an, extra = "") => `<button class="knopf${an ? " haupt" : ""}" data-schf="${feld}" data-schw="${esc(w)}" onclick="schWahl('${feld}', '${esc(w)}')" ${extra}>${inhalt}</button>`;
@@ -31126,6 +31157,8 @@ function schEditor() {
     <div class="sdr-feld"><label>Überschrift</label><div class="sdr-zeile"><input id="schTitel" value="${esc(d.titel)}" placeholder="z. B. Nur Barzahlung" oninput="SDR.d.titel=this.value;schVorschau()">${schStilKnoepfe("titelStil")}</div></div>
     <div class="sdr-feld"><label>Text <small>(neue Zeile = Enter)</small></label><div class="sdr-zeile"><textarea id="schText" rows="3" placeholder="freiwillig" oninput="SDR.d.text=this.value;schVorschau()">${esc(d.text)}</textarea>${schStilKnoepfe("textStil")}</div></div>
     <div class="sdr-feld"><label>Preisliste <small>(freiwillig)</small></label><div id="schPreise"></div></div>
+    <div class="sdr-feld"><label>Kleingedrucktes <small>(freiwillig, z. B. Gesetzestext – klein über der Fußzeile)</small></label><textarea id="schKlein" rows="3" maxlength="1200" placeholder="freiwillig" oninput="SDR.d.klein=this.value;schVorschau()">${esc(d.klein || "")}</textarea></div>
+    <div class="sdr-feld"><label>Fußzeile <small>(neben „Köcheclub Werne“, z. B. Weihnachtsmarkt ${SCH_JAHR})</small></label><input id="schFuss" value="${esc(d.fuss || "")}" maxlength="40" placeholder="freiwillig" oninput="SDR.d.fuss=this.value;schVorschau()"></div>
     <details class="sdr-aussehen" open><summary>🎨 Aussehen</summary>
       <label>Format</label><div class="sdr-wahl2">${schWahlKnopf("format", "hoch", "Hochformat", d.format === "hoch")}${schWahlKnopf("format", "quer", "Querformat", d.format === "quer")}</div>
       <label>Schrift</label><div class="sdr-wahl4">${SCH_SCHRIFTEN.map((s) => schWahlKnopf("schrift", s.id, esc(s.t), d.schrift === s.id, `style="font-family:${esc(s.css)}"`)).join("")}</div>
@@ -31192,9 +31225,56 @@ function schSymbolMalen(ctx, id, cx, cy, s) {
     ctx.beginPath(); ctx.moveTo(cx, cy - h / 2); ctx.lineTo(cx + w / 2, cy + h / 2); ctx.lineTo(cx - w / 2, cy + h / 2); ctx.closePath();
     ctx.fillStyle = "#fff"; ctx.fill(); ctx.lineJoin = "round"; ctx.lineWidth = s * 0.09; ctx.strokeStyle = "#c62828"; ctx.stroke();
     ctx.fillStyle = "#111"; ctx.font = `bold ${Math.round(s * 0.5)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("!", cx, cy + s * 0.12);
+  } else if (id === "stufe") { // Warnzeichen: gelbes Dreieck, schwarzer Rand, Person stolpert über eine Stufe
+    const h = s * 0.86, w = s * 0.98;
+    ctx.beginPath(); ctx.moveTo(cx, cy - h / 2); ctx.lineTo(cx + w / 2, cy + h / 2); ctx.lineTo(cx - w / 2, cy + h / 2); ctx.closePath();
+    ctx.fillStyle = "#f6c400"; ctx.fill(); ctx.lineJoin = "round"; ctx.lineWidth = s * 0.07; ctx.strokeStyle = "#111"; ctx.stroke();
+    ctx.fillStyle = "#111"; const b = cy + h / 2 - s * 0.09; // Stufe
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.36, b); ctx.lineTo(cx + s * 0.36, b); ctx.lineTo(cx + s * 0.36, b - s * 0.08); ctx.lineTo(cx + s * 0.06, b - s * 0.08); ctx.lineTo(cx + s * 0.06, b - s * 0.16); ctx.lineTo(cx - s * 0.36, b - s * 0.16); ctx.closePath(); ctx.fill();
+    schPerson(ctx, cx - s * 0.06, b - s * 0.17, s * 0.42, "#111", 0.55);
+  } else if (id === "keindurchgang") { // Verbotszeichen: roter Ring + Balken über gehender Person
+    ctx.beginPath(); ctx.arc(cx, cy, s * 0.46, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
+    schPerson(ctx, cx, cy + s * 0.3, s * 0.6, "#111", 0);
+    ctx.lineWidth = s * 0.09; ctx.strokeStyle = "#c62828"; ctx.beginPath(); ctx.arc(cx, cy, s * 0.42, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.3, cy - s * 0.3); ctx.lineTo(cx + s * 0.3, cy + s * 0.3); ctx.stroke();
+  } else if (id === "besteck") { // Hinweis im Club-CD: weinrotes Feld mit Goldrand, Gabel und Messer in Beige
+    const a = s * 0.9, r = s * 0.12; ctx.beginPath(); ctx.roundRect(cx - a / 2, cy - a / 2, a, a, r); ctx.fillStyle = KC_CD.weinrot; ctx.fill(); ctx.lineWidth = s * 0.035; ctx.strokeStyle = KC_CD.gold; ctx.stroke();
+    ctx.fillStyle = KC_CD.beige; ctx.strokeStyle = KC_CD.beige; ctx.lineCap = "round";
+    const gx = cx - s * 0.13, top = cy - s * 0.3, unten = cy + s * 0.32; // Gabel: drei Zinken, Bogen, Stiel
+    ctx.lineWidth = s * 0.035; for (const dx of [-0.07, 0, 0.07]) { ctx.beginPath(); ctx.moveTo(gx + dx * s, top); ctx.lineTo(gx + dx * s, top + s * 0.15); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(gx - s * 0.07, top + s * 0.15); ctx.quadraticCurveTo(gx - s * 0.07, top + s * 0.24, gx, top + s * 0.25); ctx.quadraticCurveTo(gx + s * 0.07, top + s * 0.24, gx + s * 0.07, top + s * 0.15); ctx.stroke();
+    ctx.lineWidth = s * 0.055; ctx.beginPath(); ctx.moveTo(gx, top + s * 0.25); ctx.lineTo(gx, unten); ctx.stroke();
+    const mx = cx + s * 0.13; // Messer: Klinge (rund), Griff
+    ctx.beginPath(); ctx.moveTo(mx - s * 0.025, top); ctx.quadraticCurveTo(mx + s * 0.09, top + s * 0.08, mx + s * 0.035, top + s * 0.32); ctx.lineTo(mx - s * 0.025, top + s * 0.32); ctx.closePath(); ctx.fill();
+    ctx.lineWidth = s * 0.06; ctx.beginPath(); ctx.moveTo(mx + s * 0.005, top + s * 0.32); ctx.lineTo(mx + s * 0.005, unten); ctx.stroke();
+  } else if (id === "jugendschutz") { // zwei Altersplaketten „16“ und „18“ (roter Ring)
+    for (const [dx, z] of [[-0.24, "16"], [0.24, "18"]]) {
+      const x = cx + dx * s; ctx.beginPath(); ctx.arc(x, cy, s * 0.22, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill(); ctx.lineWidth = s * 0.045; ctx.strokeStyle = "#c62828"; ctx.stroke();
+      ctx.fillStyle = "#111"; ctx.font = `bold ${Math.round(s * 0.2)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(z, x, cy + s * 0.01);
+    }
+  } else if (id === "nurbar") { // Geldschein (grün) vorn, dahinter Karte durchgestrichen
+    const kx = cx + s * 0.12, ky = cy - s * 0.14, kw = s * 0.5, kh = s * 0.32;
+    ctx.beginPath(); ctx.roundRect(kx - kw / 2, ky - kh / 2, kw, kh, s * 0.04); ctx.fillStyle = "#cfd4da"; ctx.fill(); ctx.lineWidth = s * 0.02; ctx.strokeStyle = "#5b6572"; ctx.stroke();
+    ctx.fillStyle = "#5b6572"; ctx.fillRect(kx - kw / 2, ky - kh / 2 + kh * 0.2, kw, kh * 0.18); ctx.fillStyle = KC_CD.gold; ctx.fillRect(kx - kw / 2 + kw * 0.1, ky + kh * 0.05, kw * 0.18, kh * 0.22);
+    ctx.lineWidth = s * 0.06; ctx.strokeStyle = "#c62828"; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(kx - kw * 0.55, ky - kh * 0.75); ctx.lineTo(kx + kw * 0.55, ky + kh * 0.75); ctx.stroke();
+    const nx = cx - s * 0.06, ny = cy + s * 0.16, nw = s * 0.7, nh = s * 0.36;
+    ctx.beginPath(); ctx.roundRect(nx - nw / 2, ny - nh / 2, nw, nh, s * 0.03); ctx.fillStyle = "#2e7d32"; ctx.fill(); ctx.lineWidth = s * 0.025; ctx.strokeStyle = "#1b4d1f"; ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(nx - nw / 2 + s * 0.04, ny - nh / 2 + s * 0.04, nw - s * 0.08, nh - s * 0.08, s * 0.02); ctx.strokeStyle = "#a5d6a7"; ctx.lineWidth = s * 0.012; ctx.stroke();
+    ctx.beginPath(); ctx.arc(nx, ny, nh * 0.28, 0, Math.PI * 2); ctx.strokeStyle = "#fff"; ctx.lineWidth = s * 0.03; ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.round(nh * 0.36)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("€", nx, ny + nh * 0.02);
   } else {
     ctx.font = `${Math.round(s * 0.86)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(sym.e, cx, cy + s * 0.04);
   }
+  ctx.restore();
+}
+// Gehende Person (Piktogramm) – Füße auf (cx, fuss), Höhe h; kipp > 0 = nach vorn gekippt (stolpert)
+function schPerson(ctx, cx, fuss, h, c, kipp) {
+  ctx.save(); ctx.translate(cx, fuss); ctx.rotate(kipp || 0); ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = h * 0.13;
+  const L = (pts) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * h, -y * h) : ctx.moveTo(x * h, -y * h))); ctx.stroke(); };
+  ctx.beginPath(); ctx.arc(0.04 * h, -0.9 * h, h * 0.1, 0, Math.PI * 2); ctx.fill(); // Kopf
+  L([[0.02, 0.74], [-0.02, 0.42]]); // Rumpf
+  L([[-0.02, 0.42], [0.16, 0.22], [0.2, 0.02]]); L([[-0.02, 0.42], [-0.12, 0.2], [-0.24, 0.04]]); // Beine
+  L([[0.02, 0.68], [0.2, 0.52], [0.28, 0.6]]); L([[0.02, 0.68], [-0.14, 0.5], [-0.2, 0.36]]); // Arme
   ctx.restore();
 }
 function schStern(ctx, cx, cy, r) {
@@ -31209,6 +31289,7 @@ function schRahmenMalen(ctx, art, W, H, u, c) {
   else if (art === "doppelt") { rect(3.5 * u, 1.4 * u); rect(6 * u, 0.5 * u); }
   else if (art === "band") rect(5 * u, 3.6 * u);
   else if (art === "gestrichelt") { ctx.setLineDash([3 * u, 2 * u]); rect(4 * u, 1 * u); }
+  else if (art === "cd") { rect(4 * u, 2.4 * u); ctx.strokeStyle = KC_CD.gold; rect(6.3 * u, 0.5 * u); } // Fußband zeichnet schZeichnen
   else if (art === "fest") {
     rect(3.5 * u, 0.9 * u); rect(5.5 * u, 0.35 * u);
     for (const [x, y] of [[5.5, 5.5], [W / u - 5.5, 5.5], [5.5, H / u - 5.5], [W / u - 5.5, H / u - 5.5]]) schStern(ctx, x * u, y * u, 2.6 * u);
@@ -31221,16 +31302,30 @@ function schZeichnen(cv, d, breite) {
   cv.width = W; cv.height = H;
   const ctx = cv.getContext("2d"), u = Math.min(W, H) / 100;
   const farbe = (SCH_FARBEN.find((x) => x.id === d.farbe) || SCH_FARBEN[0]).c, css = (SCH_SCHRIFTEN.find((x) => x.id === d.schrift) || SCH_SCHRIFTEN[0]).css;
-  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
-  schRahmenMalen(ctx, d.rahmen, W, H, u, farbe);
-  // CD unten: Kochmütze im weinroten Kreis + „Köcheclub Werne“
-  const fussY = H - 7.5 * u, r = 2.4 * u;
-  ctx.font = `bold ${Math.round(2.6 * u)}px ${KC_CD.schrift}`; const nw = ctx.measureText(KC_CD.name).width, fx = W / 2 - (nw + 2 * r + 1.2 * u) / 2;
+  const cd = d.rahmen === "cd"; // 2.766.0 KC-CLUB-SCHILDER-CD: beige Fläche + weinrotes Fußband mit Goldlinie
+  ctx.fillStyle = cd ? KC_CD.beige : "#fff"; ctx.fillRect(0, 0, W, H);
+  schRahmenMalen(ctx, d.rahmen, W, H, u, cd ? KC_CD.weinrot : farbe);
+  if (cd) { ctx.fillStyle = KC_CD.weinrot; ctx.fillRect(4 * u, H - 15 * u, W - 8 * u, 11 * u); ctx.fillStyle = KC_CD.gold; ctx.fillRect(4 * u, H - 15 * u, W - 8 * u, 0.6 * u); }
+  // CD unten: Kochmütze im weinroten Kreis + „Köcheclub Werne“ (+ Fußzeile, z. B. „Weihnachtsmarkt 2026“)
+  const fussY = H - (cd ? 9.2 : 7.5) * u, r = (cd ? 3 : 2.4) * u, zusatz = String(d.fuss || "").trim() ? " · " + String(d.fuss).trim() : "";
+  ctx.font = `bold ${Math.round((cd ? 3.2 : 2.6) * u)}px ${KC_CD.schrift}`; const nw = ctx.measureText(KC_CD.name).width, zw = ctx.measureText(zusatz).width, fx = W / 2 - (nw + zw + 2 * r + 1.2 * u) / 2;
   ctx.fillStyle = KC_CD.weinrot; ctx.beginPath(); ctx.arc(fx + r, fussY, r, 0, Math.PI * 2); ctx.fill();
+  if (cd) { ctx.lineWidth = 0.35 * u; ctx.strokeStyle = KC_CD.gold; ctx.stroke(); }
   if (SCH_LOGO.complete && SCH_LOGO.naturalWidth) ctx.drawImage(SCH_LOGO, fx + r * 0.35, fussY - r * 0.65, r * 1.3, r * 1.3);
-  ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(KC_CD.name, fx + 2 * r + 1.2 * u, fussY);
+  ctx.fillStyle = cd ? KC_CD.beige : KC_CD.weinrot; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(KC_CD.name, fx + 2 * r + 1.2 * u, fussY);
+  if (zusatz) { ctx.fillStyle = cd ? KC_CD.gold : KC_CD.grau; ctx.fillText(zusatz, fx + 2 * r + 1.2 * u + nw, fussY); }
   // Inhalt: Symbol, Überschrift, Text, Preisliste – zusammen senkrecht mittig
-  const x0 = 11 * u, bw = W - 22 * u, oben = 10 * u, unten = fussY - 4 * u, h = unten - oben;
+  let x0 = 11 * u, bw = W - 22 * u, oben = 10 * u, unten = (cd ? H - 15 * u : fussY) - 4 * u;
+  // 2.766.0: Kleingedrucktes (z. B. Gesetzestext) unten über dem Fuß – höchstens ein Viertel der Fläche, Schrift passt sich an
+  const klein = String(d.klein || "").trim();
+  if (klein) {
+    const K = schPassend(ctx, klein, { f: false, k: false, u: false }, css, bw, (unten - oben) * 0.27, 2.6 * u), kh = K.zeilen.length * K.px * 1.2;
+    ctx.font = schFont({}, K.px, css); ctx.fillStyle = KC_CD.text; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    let ky = unten - kh; for (const z of K.zeilen) { ky += K.px; ctx.fillText(z, x0, ky); ky += K.px * 0.2; }
+    ctx.fillStyle = cd ? KC_CD.gold : farbe; ctx.fillRect(x0, unten - kh - 2 * u, bw, Math.max(1, 0.3 * u));
+    unten -= kh + 4 * u;
+  }
+  const h = unten - oben;
   const preise = (d.preise || []).filter((p) => p.a || p.p), hatText = !!String(d.text || "").trim(), hatTitel = !!String(d.titel || "").trim();
   const symH = d.symbol ? Math.min(30 * u, h * (hatTitel || hatText || preise.length ? 0.26 : 0.6)) : 0;
   const rest = h - symH - (symH ? 3 * u : 0);
@@ -31319,6 +31414,122 @@ async function schSpeichern() {
     melde(`💾 Gespeichert unter „${SDR.anlass ? (SCH_ANLAESSE.find((a) => a.id === SDR.anlass)?.t || "") : ""}“ – nächstes Mal unter „Gespeicherte Schilder“`);
     const h = document.querySelector("#schBlatt h3"); if (h) h.textContent = "🪧 " + SDR.name;
   } catch (e) { meldeFehler(e); }
+}
+// ---------- 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET (Wunsch Hansi 30.10.2026 „Druckauftrag zusammenpacken wie Aktentasche packen: Schilder und
+// Formulare anklicken, sie erscheinen in einer Liste, dahinter die Anzahl der Ausdrucke, Haken kann ich wegnehmen; als Druckpaket Weihnachtsmarkt
+// speichern, jedes Jahr wieder ausdrucken“). Im Paket liegen nur Verweise (Vorlage, gespeichertes Schild, Archiv-Datei) – gedruckt wird immer der
+// aktuelle Stand (Vorlagen mit dem aktuellen Jahr). Gespeichert wie ein Schild (kc_club_schilder, daten.vorlage = "druckpaket"), keine neue Tabelle.
+// Drucken: jedes Teil als A4-Hochformat-Bild (Querformat gedreht), so oft wie gewählt, alles zusammen über den zentralen Druck (randlos).
+const SCH_PAKET_SYM = { schild: "🪧", vorlage: "📋", archiv: "📄" };
+const schIstPaket = (x) => x?.daten?.vorlage === "druckpaket";
+const schPaketZahl = (teile) => { const l = (teile || []).filter((t) => t.an !== false), n = l.reduce((a, t) => a + (t.n || 1), 0); return `${l.length} ${l.length === 1 ? "Teil" : "Teile"} · ${n} ${n === 1 ? "Ausdruck" : "Ausdrucke"}`; };
+function schPaketNeu() { SDR.paket = { id: null, name: "", teile: [] }; SDR.sicht = "paket"; schPaketZeigen(); }
+function schPaketOeffnen(id) {
+  const x = (SDR.liste || []).find((s) => s.id === id); if (!x) return;
+  SDR.paket = { id: x.id, name: x.titel, teile: JSON.parse(JSON.stringify(x.daten.paket || [])) }; SDR.anlass = x.anlass; SDR.sicht = "paket"; schPaketZeigen();
+}
+function schPaketDazu(typ, ref, titel) {
+  const T = SDR.paket.teile, i = T.findIndex((t) => t.typ === typ && t.ref === ref);
+  if (i >= 0) T.splice(i, 1); else if (T.length >= 40) return melde("Mehr als 40 Teile passen nicht in ein Druckpaket.", true); else T.push({ typ, ref, titel: String(titel).slice(0, 120), n: 1, an: true });
+  schPaketZeigen();
+}
+function schPaketAnzahl(i, d) { const t = SDR.paket.teile[i]; if (!t) return; t.n = Math.min(50, Math.max(1, (t.n || 1) + d)); schPaketZeigen(); }
+function schPaketZeigen() {
+  const P = SDR.paket, drin = (typ, ref) => P.teile.some((t) => t.typ === typ && t.ref === ref);
+  const gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && !schIstPaket(x)), vor = schVorlagenFuer(SDR.anlass).filter((v) => v.id !== "frei");
+  const wahl = (typ, ref, titel) => `<button type="button" class="knopf sdr-paket-wahl${drin(typ, ref) ? " haupt" : ""}" data-pt="${typ}" data-pr="${esc(ref)}" data-pn="${esc(titel)}">${drin(typ, ref) ? "☑️" : "⬜"} ${SCH_PAKET_SYM[typ]} ${esc(titel)}</button>`;
+  const alt = $("schBlatt")?.querySelector(".blatt-innen")?.scrollTop || 0;
+  const f = blattAuf("schBlatt", `<h3 style="margin:0 0 2px">🖨️ ${P.name ? esc(P.name) : "Neues Druckpaket"}</h3>
+    <p class="hinweis" style="margin:0 0 8px">Unten antippen, was gedruckt werden soll – es erscheint hier in der Liste. Dahinter die Anzahl. Haken weg = diesmal nicht drucken.</p>
+    <div class="sdr-paket-liste">${P.teile.length ? P.teile.map((t, i) => `<div class="sdr-paket-zeile${t.an ? "" : " aus"}">
+      <label><input type="checkbox" ${t.an ? "checked" : ""} onchange="SDR.paket.teile[${i}].an=this.checked;schPaketZeigen()"><span>${SCH_PAKET_SYM[t.typ] || "📄"} ${esc(t.titel)}</span></label>
+      <button class="knopf" aria-label="Einmal weniger" onclick="schPaketAnzahl(${i}, -1)">−</button><b>${t.n} ×</b><button class="knopf" aria-label="Einmal mehr" onclick="schPaketAnzahl(${i}, 1)">＋</button>
+      <button class="knopf" aria-label="Aus dem Paket nehmen" title="Aus dem Paket nehmen" onclick="SDR.paket.teile.splice(${i}, 1);schPaketZeigen()">✕</button></div>`).join("")
+      : '<p class="hinweis">Noch leer – unten Schilder, Vorlagen oder Formulare antippen.</p>'}</div>
+    ${P.teile.length ? `<p style="margin:6px 0 0"><b>🖨️ ${esc(schPaketZahl(P.teile))}</b> <small class="hinweis">(PDFs mit mehreren Seiten zählen hier als ein Ausdruck)</small></p>` : ""}
+    <h4 style="margin:14px 0 6px">💾 Gespeicherte Schilder</h4>${gesp.length ? `<div class="sdr-paket-wahlen">${gesp.map((x) => wahl("schild", x.id, x.titel)).join("")}</div>` : '<p class="hinweis">Keine für diesen Anlass.</p>'}
+    <h4 style="margin:14px 0 6px">📋 Vorlagen</h4><div class="sdr-paket-wahlen">${vor.map((v) => wahl("vorlage", v.id, schName(v))).join("")}</div>
+    <h4 style="margin:14px 0 6px">📄 Formulare & PDFs aus dem Archiv</h4>
+    ${P.teile.filter((t) => t.typ === "archiv").length ? `<div class="sdr-paket-wahlen">${P.teile.filter((t) => t.typ === "archiv").map((t) => wahl("archiv", t.ref, t.titel)).join("")}</div>` : ""}
+    <button class="knopf" style="width:100%" onclick="schPaketArchiv()">🗄️ Aus dem Archiv wählen … <small>(z. B. Preisliste, Checkliste, Händler-Ausweise)</small></button>
+    <div class="sdr-leiste"><button class="knopf" onclick="SDR.sicht='start';schZeigen()"><span>⬅️</span>Zurück</button><button class="knopf" onclick="einmal(this, schPaketSpeichern)"><span>💾</span>Speichern</button><button class="knopf haupt" onclick="schPaketDrucken(this)"><span>🖨️</span>Drucken</button><button class="knopf" onclick="$('schBlatt').remove()"><span>✕</span>Schließen</button></div>`);
+  f.querySelectorAll("[data-pt]").forEach((b) => (b.onclick = () => schPaketDazu(b.dataset.pt, b.dataset.pr, b.dataset.pn)));
+  const innen = f.querySelector(".blatt-innen"); if (innen) innen.scrollTop = alt;
+}
+async function schPaketArchiv() {
+  melde("⏳ Archiv wird geladen …");
+  let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
+  const ordner = new Map((r.ordner || []).map((o) => [o.id, o])), docs = (r.dokumente || []).filter((d) => d.status === "ok" && d.datei && (istPdf(d.name, d.mime) || /^image\//.test(d.mime || "")));
+  if (!docs.length) return melde("Im Archiv liegen noch keine PDFs oder Bilder.", true);
+  const f = blattAuf("schArchivBlatt", `<h3 style="margin:0 0 6px">🗄️ Formulare & PDFs aus dem Archiv</h3><input id="schArchivSuche" placeholder="🔍 Suchen – Titel, Ordner, Stichwort …" autocomplete="off" style="width:100%">
+    <div id="schArchivListe" style="margin-top:8px"></div><div class="knoepfe bs-fuss"><button class="knopf" onclick="$('schArchivBlatt').remove()">Fertig</button></div>`);
+  const zeichnen = () => { const q = $("schArchivSuche").value.trim().toLowerCase();
+    const l = docs.filter((d) => !q || `${d.titel} ${d.name} ${ordner.get(d.ordner_id)?.titel || ""} ${d.stichworte || ""}`.toLowerCase().includes(q)).slice(0, 60);
+    $("schArchivListe").innerHTML = l.length ? l.map((d) => { const an = SDR.paket.teile.some((t) => t.typ === "archiv" && t.ref === d.datei);
+      return `<button type="button" class="knopf${an ? " haupt" : ""}" style="text-align:left;width:100%;margin:3px 0" data-id="${esc(d.id)}">${an ? "☑️" : "⬜"} ${arDateiSym(d.mime)} <b>${esc(d.titel || d.name)}</b><br><small class="hinweis">${esc(ordner.get(d.ordner_id)?.titel || "")}</small></button>`; }).join("") : '<p class="hinweis">Nichts gefunden.</p>';
+    $("schArchivListe").querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { const d = docs.find((x) => x.id === b.dataset.id); schPaketDazu("archiv", d.datei, d.titel || d.name); zeichnen(); })); };
+  $("schArchivSuche").oninput = zeichnen; zeichnen();
+}
+async function schPaketSpeichern() {
+  const P = SDR.paket; if (!P.teile.length) return melde("Das Druckpaket ist noch leer.", true);
+  const anl = (SCH_ANLAESSE.find((a) => a.id === SDR.anlass)?.t || "").replace(/­/g, "");
+  const name = await eingabe("Name für das Druckpaket:", P.name || `Druckpaket ${anl}`.trim(), { ja: "💾 Speichern" });
+  if (name === null || !name.trim()) return;
+  try {
+    const r = await api("schild_speichern", { id: P.id, titel: name.trim(), anlass: SDR.anlass, daten: { vorlage: "druckpaket", paket: P.teile } });
+    P.id = r.id; P.name = name.trim(); SDR.liste = null; schListeLaden(); schPaketZeigen();
+    melde(`💾 Druckpaket „${P.name}“ gespeichert – nächstes Jahr unter „Druckpakete“ wieder öffnen`);
+  } catch (e) { meldeFehler(e); }
+}
+// ein Blatt als A4-Hochformat-Bild (JPEG); Querformat wird gedreht, damit alles in einem Druckauftrag randlos auf A4 passt
+function schHochkant(c) {
+  if (c.width <= c.height) return c.toDataURL("image/jpeg", 0.9);
+  const r = document.createElement("canvas"); r.width = c.height; r.height = c.width;
+  const x = r.getContext("2d"); x.translate(0, r.height); x.rotate(-Math.PI / 2); x.drawImage(c, 0, 0);
+  const src = r.toDataURL("image/jpeg", 0.9); r.width = r.height = 0; return src;
+}
+async function schPaketBilder(t) {
+  if (t.typ === "vorlage" || t.typ === "schild") {
+    const v = t.typ === "vorlage" ? SCH_VORLAGEN.find((x) => x.id === t.ref) : null, x = t.typ === "schild" ? (SDR.liste || []).find((s) => s.id === t.ref && !schIstPaket(s)) : null;
+    if (!v && !x) throw new Error("nicht mehr vorhanden");
+    const d = v ? schNeu(v) : { ...JSON.parse(JSON.stringify(SCH_LEER)), ...JSON.parse(JSON.stringify(x.daten || {})) };
+    const c = document.createElement("canvas"); schZeichnen(c, d, d.format === "quer" ? 2339 : 1654); // 200 dpi wie beim Einzeldruck
+    const src = schHochkant(c); c.width = c.height = 0; return [src];
+  }
+  const { blob, mime } = await anlageAlsDatei({ id: t.ref, name: t.titel }); // vorhandener Weg: eigener Speicher-Link, Zeitgrenze, Fehlermeldung
+  if (/^image\//.test(mime || blob.type)) {
+    const img = new Image(), u = URL.createObjectURL(blob); img.src = u; await img.decode(); URL.revokeObjectURL(u);
+    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext("2d").drawImage(img, 0, 0); return [schHochkant(c)];
+  }
+  const pdfjs = await pdfjsHolen(), pdf = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise, aus = [];
+  try {
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const src = await pdfSeiteAlsBild(pdf, n, 2339), img = new Image(); img.src = src; await img.decode();
+      const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext("2d").drawImage(img, 0, 0); aus.push(schHochkant(c)); c.width = c.height = 0;
+    }
+  } finally { pdf.destroy(); }
+  return aus;
+}
+async function schPaketDrucken(knopf) {
+  const L = SDR.paket.teile.filter((t) => t.an);
+  if (!L.length) return melde("Bitte mindestens ein Teil ankreuzen.", true);
+  await einmal(knopf, async () => {
+    const seiten = [], fehlt = [];
+    for (const [k, t] of L.entries()) {
+      melde(`⏳ ${k + 1} von ${L.length}: ${t.titel} …`);
+      try { const b = await schPaketBilder(t); for (let i = 0; i < t.n; i++) seiten.push(...b); } catch (e) { fehlt.push(`${t.titel} (${e?.message || e})`); }
+    }
+    // nie stillschweigend weglassen: was fehlt, wird genannt
+    if (fehlt.length) {
+      if (!seiten.length) return melde("⚠️ Nichts druckbar: " + fehlt.join(", "), true);
+      if (!(await frage(`⚠️ Nicht druckbar:\n${fehlt.join("\n")}\n\nDen Rest trotzdem drucken?`, { ja: "🖨️ Rest drucken", nein: "Abbrechen" }))) return;
+    }
+    SDR.paketSeiten = seiten; melde(`🖨️ ${seiten.length} ${seiten.length === 1 ? "Seite" : "Seiten"} bereit`); druckStarten("druckpaket");
+  });
+}
+function schPaketDruckSeite() {
+  const s = SDR.paketSeiten || []; if (!s.length) return null;
+  return { ohneRahmen: true, randlos: true, titel: SDR.paket?.name || "Druckpaket", html: s.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") };
 }
 // ---------- KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi „persönliche Checkliste für die Kreuzfahrt – 2 Wochen vorher anbieten,
 // ausdrucken (mehrspaltig, Blöcke mit Überschriften, auch Hilfsmittel wie Brille, Hörgeräte; unten ein leerer Block mit Linien) oder am
@@ -31529,6 +31740,7 @@ const DRUCKARTEN = {
   reisecheckliste: { bauen: (o, p) => druckReiseCheckliste(p) }, // KC-CLUB-REISE-CHECKLISTE (2.223.0)
   tischbestaetigung: { bauen: (o, p) => druckTischBestaetigung(p) }, // 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: Teilnahmebestätigung Seminar
   schild: { bauen: () => druckSchild() }, // KC-CLUB-SCHILDER (2.150.0)
+  druckpaket: { bauen: () => schPaketDruckSeite() }, // 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
   protokoll: { bauen: () => druckProtokoll() },
@@ -35199,7 +35411,7 @@ const FENSTER_NAMEN = {
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
-  arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
+  arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
   atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",

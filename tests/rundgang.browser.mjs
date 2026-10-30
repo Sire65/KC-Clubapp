@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -69,6 +70,11 @@ const server = http.createServer((req, res) => {
 });
 await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 const BASIS = `http://127.0.0.1:${server.address().port}`;
+// 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: ein gespeichertes Druckpaket (Vorlage 2×, Vorlage ohne Haken, PDF aus dem Archiv) – das PDF ist eine echte Datei aus dem Repo
+const DP_PAKET = { id: "77777777-2222-3333-4444-555555555555", titel: "Druckpaket Weihnachtsmarkt", anlass: "weihnachtsmarkt", geaendert_am: new Date().toISOString(), von: "Test",
+  daten: { vorlage: "druckpaket", paket: [{ typ: "vorlage", ref: "wm_bar", titel: "Nur Barzahlung", n: 2, an: true }, { typ: "vorlage", ref: "wm_stufe", titel: "Vorsicht Stufe!", n: 3, an: false },
+    { typ: "archiv", ref: "88888888-2222-3333-4444-555555555555", titel: "Kurzanleitung", n: 1, an: true }] } };
+Object.assign(ANTWORTEN, { schild_liste: { schilder: [DP_PAKET] }, anlage_url: { url: `${BASIS}/dokumente/Koecheclub-App_Kurzanleitung.pdf` } });
 
 const fehler = [];
 const browser = await chromium.launch();
@@ -133,6 +139,22 @@ try {
       if (!/Clubabend/.test(rt.check?.text || "") || !rt.check?.gesperrt) melde("Zeitprüfung: Clubabend nicht gemeldet oder „Einladen“ nicht gesperrt " + JSON.stringify(rt.check)); // 2.764.0
       if (!rt.gruppe || !/Alle Mitglieder\|💡 nur Gruppe „Innovation“/.test(rt.fuerWen || "")) melde("Gruppe: Hinweis oder „Für wen?“ fehlt " + (rt.fuerWen || "")); // 2.762.0
     }
+    // 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: Paket öffnen, Anzahl ändern, drucken (Haken weg = nicht gedruckt), alles auf A4 hoch, nichts ragt über den Rand
+    if (g.touch) {
+      // der Rundgang dauert dadurch länger – die zeitgesteuerte Bühnen-Einladung (bwEinBlatt) würde sonst die Leiste unten verdecken
+      const dp = await seite.evaluate(async () => { bwEinSetzen({ spaeter: Date.now() + 3600000 }); schStart(); await new Promise((r) => setTimeout(r, 800));
+        const start = /Druckpaket Weihnachtsmarkt/.test($("schBlatt")?.textContent || "");
+        schPaketOeffnen("77777777-2222-3333-4444-555555555555"); const zeilen = document.querySelectorAll("#schBlatt .sdr-paket-zeile").length, aus = document.querySelectorAll("#schBlatt .sdr-paket-zeile.aus").length;
+        const quer = document.documentElement.scrollWidth > innerWidth + 2; schPaketAnzahl(0, 1);
+        let gedruckt = null; const alt = window.druckStarten; window.druckStarten = (a) => { gedruckt = a; };
+        try { await schPaketDrucken(null); } finally { window.druckStarten = alt; }
+        const pdf = await (await pdfjsHolen()).getDocument({ url: "dokumente/Koecheclub-App_Kurzanleitung.pdf", isEvalSupported: false }).promise, seitenPdf = pdf.numPages; pdf.destroy();
+        const s = SDR.paketSeiten || [], hoch = await Promise.all(s.slice(0, 4).map((b) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i.naturalHeight > i.naturalWidth); i.onerror = () => ok(false); i.src = b; })));
+        const html = schPaketDruckSeite()?.html || ""; $("schBlatt")?.remove();
+        return { start, zeilen, aus, quer, gedruckt, seiten: s.length, soll: 3 + seitenPdf, hoch: hoch.every(Boolean), dseite: (html.match(/class="dseite"/g) || []).length }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
+      if (!dp.start || dp.zeilen !== 3 || dp.aus !== 1 || dp.quer) melde("Druckpaket: Liste falsch " + JSON.stringify(dp));
+      if (dp.gedruckt !== "druckpaket" || dp.seiten !== dp.soll || !dp.hoch || dp.dseite !== dp.seiten) melde("Druckpaket: Druck falsch " + JSON.stringify(dp)); // 3× Barzahlung + PDF, ohne „Vorsicht Stufe“
+    }
     // 2.727.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version
     const teile = await seite.evaluate(async () => { const out = [];
       for (const [n, t] of Object.entries(TEILE_LISTE)) { try { await teilLaden(n); const offen = t.einstieg.filter((f) => typeof window[f] !== "function" || window[f]._teil); if (offen.length) out.push(`${n}: Platzhalter bleibt (${offen.join(", ")})`); } catch (e) { out.push(`${n}: ${e.message}`); } }
@@ -145,5 +167,8 @@ try {
   }
 } finally { await browser.close(); server.close(); }
 
+// 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: der Live-Test (3 Fenster, echte Verbindungen) läuft im selben Schritt mit – ohne die Arbeitsabläufe anzufassen
+try { execFileSync(process.execPath, [fileURLToPath(new URL("./tisch-live.browser.mjs", import.meta.url))], { stdio: "inherit", timeout: 600000 }); }
+catch { fehler.push("Tisch-Live: Test rot (Ausgabe oben)"); }
 if (fehler.length) { console.error("❌ Rundgang: " + fehler.length + " Fund(e)\n" + fehler.join("\n")); process.exit(1); }
 console.log(`OK – Rundgang: ${GERAETE.map((g) => `${g.name} ${g.seiten.length} Seiten`).join(", ")} ohne Fehler`);

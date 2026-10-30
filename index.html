@@ -2632,6 +2632,11 @@
   .sdr-vorlagen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } @media (min-width: 640px) { .sdr-vorlagen { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   .sdr-vorlage { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-size: .78rem; font-weight: 700; line-height: 1.15; cursor: pointer; min-width: 0; }
   .sdr-vorlage canvas { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.25); background: #fff; } .sdr-vorlage span { overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
+  /* 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: Liste mit Haken und Anzahl, darunter Auswahl */
+  .sdr-paket-liste { display: grid; gap: 6px; } .sdr-paket-zeile { display: grid; grid-template-columns: 1fr 40px 46px 40px 40px; gap: 4px; align-items: center; border: 1px solid var(--rand, #ddd); border-radius: 10px; padding: 4px 6px; }
+  .sdr-paket-zeile.aus { opacity: .5; } .sdr-paket-zeile label { display: flex; gap: 8px; align-items: center; min-width: 0; font-weight: 700; } .sdr-paket-zeile label span { overflow-wrap: anywhere; }
+  #schBlatt .sdr-paket-zeile .knopf { margin: 0; padding: 6px 0; min-height: 40px; text-align: center; } .sdr-paket-zeile b { text-align: center; white-space: nowrap; }
+  .sdr-paket-wahlen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; } #schBlatt .sdr-paket-wahl { margin: 0; text-align: left; padding: 8px 10px; font-size: .85rem; }
   .sdr-gespeichert { display: grid; gap: 6px; } .sdr-gespeichert > div { display: grid; grid-template-columns: 1fr 52px; gap: 6px; } #schBlatt .sdr-gespeichert .knopf { margin: 0; text-align: left; padding: 10px 12px; } .sdr-gespeichert .knopf small { display: block; opacity: .7; font-weight: 600; }
   .sdr-vorschau { background: #8a8580; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 10px; } .sdr-vorschau canvas { max-width: 100%; max-height: 42vh; width: auto; height: auto; box-shadow: 0 3px 12px rgba(0,0,0,.35); background: #fff; }
   .sdr-feld { margin: 0 0 8px; } .sdr-feld > label, .sdr-aussehen > label { display: block; font-weight: 800; font-size: .85rem; margin: 6px 0 3px; }
@@ -4530,6 +4535,35 @@
   .rund-name { font-size: .7rem; line-height: 1; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--grau); }
   .rund-platz.gastgeber .rund-name { color: var(--text); font-weight: 700; }
   .rund-warte { background: var(--gelbbg); color: var(--gelb); padding: 8px 12px; border-radius: 12px; }
+  /* 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: am Platz grün pulsierend = spricht, ✋ gemeldet, 🥄 Redestab; Live-Bereich mit Bühne und Knopfleiste */
+  .rund-platz.spricht .rund-av { box-shadow: 0 0 0 3px #2fb344, 0 0 14px 4px rgba(47,179,68,.55); animation: tlPuls 1s ease-in-out infinite; }
+  .rund-platz.hand::after { content: "✋"; position: absolute; top: -6px; right: -8px; font-size: 1.1rem; }
+  .rund-platz.stab::before { content: "🥄"; position: absolute; top: -6px; left: -8px; font-size: 1.05rem; }
+  @keyframes tlPuls { 50% { box-shadow: 0 0 0 4px #2fb344, 0 0 20px 6px rgba(47,179,68,.35); } }
+  @media (prefers-reduced-motion: reduce) { .rund-platz.spricht .rund-av, .tl-person.spricht { animation: none; } }
+  .tl-start { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 6px 0 10px; } .tl-start small { font-weight: 600; opacity: .85; }
+  .tl-bereich:empty { display: none; }
+  .tl-bereich { border: 2px solid #c62828; border-radius: 16px; padding: 10px; margin: 8px 0 12px; background: var(--karte); }
+  .tl-kopf { font-size: .85rem; margin-bottom: 8px; } .tl-rot { color: #fff; background: #c62828; border-radius: 6px; padding: 1px 7px; font-weight: 800; }
+  .tl-warn { color: var(--gelb); } .tl-hand { background: var(--gelbbg); color: var(--gelb); border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; font-weight: 700; }
+  .tl-buehne { margin: 0 0 10px; border-radius: 12px; overflow: hidden; background: #2b2622; color: #fff; }
+  .tl-buehne-kopf { padding: 6px 10px; font-size: .85rem; display: flex; align-items: center; gap: 6px; } .tl-buehne-kopf small { opacity: .8; }
+  .tl-voll { margin: 0 0 0 auto; min-width: 40px; } .tl-buehne:fullscreen { display: flex; flex-direction: column; } .tl-buehne:fullscreen .tl-seite, .tl-buehne:fullscreen .tl-gross { flex: 1; max-height: none; height: 100%; }
+  .tl-seite, .tl-gross { display: block; width: 100%; max-height: 62vh; object-fit: contain; background: #fff; }
+  .tl-gross { background: #000; }
+  .tl-buehne-leiste { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 6px; }
+  .tl-buehne-leiste .knopf { margin: 0; min-width: 44px; }
+  .tl-leute { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; margin-bottom: 10px; }
+  .tl-person { position: relative; border: 2px solid var(--linie); border-radius: 12px; padding: 6px 4px; display: grid; justify-items: center; gap: 2px; text-align: center; min-width: 0; }
+  .tl-person.spricht { border-color: #2fb344; box-shadow: 0 0 10px rgba(47,179,68,.5); animation: tlPuls2 1s ease-in-out infinite; }
+  @keyframes tlPuls2 { 50% { box-shadow: 0 0 16px rgba(47,179,68,.35); } }
+  .tl-person.unsicher { opacity: .5; filter: grayscale(1); } .tl-person[role="button"] { cursor: pointer; }
+  .tl-ini { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--gruenbg); color: var(--gruen); }
+  .tl-kamera { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; background: #000; }
+  .tl-pname { font-weight: 700; font-size: .8rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .tl-zeichen { font-size: .8rem; min-height: 1em; }
+  .tl-leiste { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; }
+  .tl-leiste .knopf { margin: 0; padding: 6px 2px; min-height: 56px; font-size: .76rem; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .tl-leiste .knopf span { font-size: 1.2rem; } .tl-tipp { margin: 6px 0 0; font-size: .75rem; }
   .rund-leiste { flex-wrap: wrap; }
   /* 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: Art-Auswahl, Tagesordnung, Seminar als Hörsaal (Referent am Pult, Teilnehmer in Reihen) */
   .rund-art { font-size: .8rem; font-weight: 700; color: var(--grau); letter-spacing: .02em; }
@@ -6310,7 +6344,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.765.0" data-v="2.765.0"></script>
+<script src="app.js?v=2.766.0" data-v="2.766.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

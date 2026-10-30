@@ -1,5 +1,48 @@
 # Änderungen
 
+## 2.766.0 – 2026-10-30 – 🪧 Weihnachtsmarkt-Schilder im Club-CD + 🖨️ Druckpaket · 🔴 Runder Tisch live: Ton, Kamera, Bildschirm, Unterlagen zeigen, Redestab (KC-CLUB-SCHILDER-CD, KC-CLUB-SCHILDER-DRUCKPAKET, KC-CLUB-RUNDER-TISCH-LIVE) · Server 2.766.0
+Ein Bündel aus zwei Arbeiten derselben Sitzung (auf dem Arbeitszweig als 2.765.0 und 2.766.0 gebaut; 2.765.0 hatte inzwischen eine andere Sitzung vergeben). Hansi: „Einspielen noch heute morgen, damit ich heute noch eine Besprechung machen kann.“
+
+### A) Schilder und Druckpaket
+Wunsch Hansi (30.10.): „Vernünftige Schilder für den Weihnachtsmarkt, alles aus einem Guss mit unserem Corporate Design – CD ist Weinrot, Beige und Gold. Unten jeweils Fußzeile mit Jahr und Köcheclub Werne.“ – „Jugendschutz-Schild auch, am besten mit dem amtlichen Text. Im Vertrag mit Werne Marketing steht, was man am Stand anbringen muss (Name, verantwortlich, evtl. Standnummer). Dann einen Druckauftrag zusammenpacken wie Aktentasche packen: Schilder und Formulare anklicken, Liste mit Anzahl der Ausdrucke, Haken wegnehmbar, als Druckpaket Weihnachtsmarkt speichern – jedes Jahr wieder ausdrucken.“
+
+### Schilder im Club-CD
+- **Sechs neue Vorlagen** unter Büro → 🪧 Schilder-Druckerei → Anlass 🎄 Weihnachtsmarkt (Club-CD-Vorlagen stehen jetzt vorn): **Nur Barzahlung**, **Vorsicht Stufe!**, **Hier kein Durchgang**, **Gebrauchtes Besteck**, **Jugendschutz**, **Standschild**. Texte im Editor wie gewohnt änderbar.
+- **Neuer Rahmen „Club-CD“**: beige Fläche, weinroter Rahmen mit Goldlinie, unten ein weinrotes Fußband mit Kochmütze, „Köcheclub Werne“ und – in Gold – der Fußzeile.
+- **Fußzeile** (neues Feld, freiwillig, bis 40 Zeichen): bei den neuen Vorlagen „Weihnachtsmarkt <aktuelles Jahr>“. Bei anderen Rahmen grau neben „Köcheclub Werne“. Gespeicherte Schilder ohne Fußzeile sehen aus wie bisher.
+- **Kleingedrucktes** (neues Feld, freiwillig, bis 1200 Zeichen): klein über dem Fuß, mit Goldlinie abgesetzt – z. B. Gesetzestext.
+- **Jugendschutz**: Kurzfassung („Glühwein, Wein, Bier: erst ab 16 · mit Schuss, Eierlikör, Feuerzangenbowle, Rum, Likör: erst ab 18 · Ausweis“) und als Kleingedrucktes der Wortlaut **§ 9 Abs. 1 und 2 JuSchG** mit „Aushang nach § 3 Abs. 1 JuSchG · Stand 30.10.2026“ (`SCH_JUSCHG9`). Hinweis: Die Abschaffung des „begleiteten Trinkens“ (Abs. 2) hat das Kabinett am 12.08.2026 beschlossen, sie ist aber noch nicht in Kraft – vor dem Druck prüfen, ggf. Text und Stand anpassen.
+- **Standschild**: „Köcheclub Werne“ mit Anschrift, Verantwortlich, Stand-Nr. als Platzhalter (…) – Pflicht laut Vertrag Werne Marketing (To-do „Standschild (Name/Anschrift)“); nichts wird erfunden, die Angaben trägt man selbst ein.
+- **Fünf neue Symbole, selbst gezeichnet** (druckt auf jedem Gerät gleich): Nur Bargeld, Vorsicht Stufe (gelbes Warndreieck), Kein Durchgang (Verbotszeichen), Besteck, Ab 16 / ab 18.
+- CD: `KC_CD.gold` als dritte Farbe.
+
+### 🖨️ Druckpaket
+- In der Schilder-Druckerei: **＋ Druckpaket zusammenstellen** – gespeicherte Schilder, Vorlagen und **Formulare/PDFs/Bilder aus dem Archiv** (z. B. Preisliste, Checkliste, Händler-Ausweise) antippen; sie erscheinen oben in der Liste mit **Haken** und **Anzahl** (− / ＋, 1–50), ✕ nimmt sie heraus. Haken weg = diesmal nicht drucken, bleibt aber im Paket.
+- **💾 Speichern** als „Druckpaket Weihnachtsmarkt“ (Name änderbar) – nächstes Jahr unter „🖨️ Druckpakete“ wieder öffnen. Im Paket liegen nur Verweise: gedruckt wird immer der aktuelle Stand, Vorlagen mit dem aktuellen Jahr.
+- **🖨️ Drucken**: alles in einem Druckauftrag – jedes Teil so oft wie gewählt, mehrseitige PDFs vollständig, Querformat (z. B. Preisliste) auf A4 gedreht. Was nicht geladen werden kann (gelöscht, kein Netz), wird genannt – nie stillschweigend weggelassen.
+- Gespeichert wie ein Schild (`kc_club_schilder`, `daten.vorlage = "druckpaket"`) – keine neue Tabelle, keine Migration. Server prüft das Paket (`schildDaten`: Typen schild/vorlage/archiv, höchstens 40 Teile, 1–50 Stück).
+
+### Technik
+- Server: `schildDaten` speichert `fuss` (40), `klein` (1200) und Druckpakete. Ohne neuen Server gehen beim Speichern Fußzeile und Kleingedrucktes verloren und Druckpakete lassen sich nicht speichern (Drucken geht).
+- Bisherige Vorlagen (z. B. „Nur Barzahlung“ für alle Anlässe, „Durchgang bitte freihalten“) bleiben unverändert.
+- Tests: `tests/app-vertrag.test.mjs` Abschnitt 2.766.0; Klick-Rundgang: Druckpaket öffnen, Anzahl ändern, drucken (Haken weg = nicht gedruckt, echtes PDF aus dem Archiv, alle Seiten hoch). Rückweg siehe unten.
+
+### B) Runder Tisch live (🔒 nur Admin zum Testen, wie der ganze Tisch)
+Wunsch Hansi (30.10.): „Bau den Runden Tisch weiter mit allen Möglichkeiten wie besprochen – Ton, Video, Bildschirm zeigen, Unterlagen senden usw. Das muss super werden.“ Spezifikation docs/RUNDER_TISCH.md, Abschnitt 17 (Stufen RT2/RT3 zusammen, dazu Video und Bildschirm). Wie der ganze Tisch: 🔒 erst nur Admin, bis Hansi freigibt.
+- **🔴 Live dazuschalten** (am Tisch, sobald er läuft): alle, die live sind, hören sich – bis **6 Personen offenes Gespräch** (alle reden), ab 7 gilt der **🥄 Redestab**: es spricht die Leitung und wem sie den Stab gibt. **✋ Melden** – die Leitung sieht „Gemeldet: …“ und gibt mit einem Tipp auf die Person den Stab (nochmal tippen = zurück).
+- **🎙️ Mikro an/aus**, **📷 Kamera** (Bild erscheint bei der Person), **🖥️ Bildschirm zeigen** (vom PC/Laptop; erscheint bei allen groß auf der Bühne), **⛶ Vollbild**.
+- **📎 Unterlagen zeigen**: PDF oder Foto vom Gerät oder aus dem Archiv – kommt in den Tisch-Chat (alle haben die Datei danach) und erscheint bei allen groß. Blättert, wer zeigt, folgen alle; wer selbst blättert, kommt mit **↩︎ Folgen** zurück.
+- Wer spricht, leuchtet **grün** (am Platz und in der Liste). Zustand unbekannt (45 s kein Lebenszeichen) = **grau ⚪**, nie „da“. Noch nicht verbunden = ⏳.
+- **Technik ohne neue Kosten und ohne Datenbank-Last:** Signale über eine verschlüsselte Live-Leitung je Tisch (gleiche Technik wie die Fernhilfe, Supabase Realtime Broadcast, AES-GCM; Kanal + Schlüssel nur für Sitzende, vom Server aus der Tisch-Kennung abgeleitet – keine neue Tabelle). Ton/Bild direkt von Gerät zu Gerät (WebRTC, wie der App-Anruf, inkl. Umleitungs-Server). Nur wer sendet, baut Verbindungen auf; Bild-Datenrate passt sich der Zahl der Empfänger an (1000 → 150 kbit/s). Keine Aufzeichnung. Messwerte (Dauer, Verbindungen, Umleitungen, Fehler, höchste Teilnehmerzahl) beim Beenden als Diagnose-Protokoll – Grundlage für die Messung aus RT3.
+- Neuer Programmteil `teile/tischlive.js` (wird erst am Tisch geladen). Server: `tisch_platz` liefert `live` (nur bei Erfolg).
+- Tests: `tests/tisch-live.browser.mjs` – **3 Browserfenster mit echten Verbindungen**: alle hören sich (Ton fließt), Kamerabild kommt an, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm teilen, Redestab mit ✋. Läuft im Klick-Rundgang mit. `tests/runder-tisch.test.mjs`: Regeln (6 frei, Redestab, Datenrate), Leitung nur für Sitzende, keine Aufzeichnung.
+- **Noch offen** (nächste Stufen): 🎵 Club-Song für alle, Videos zeigen, ins Album übernehmen, externe Tischgäste (RT4). **Messung auf echten Handys** (wie viele Live-Zuhörer über Mobilfunk) – beim ersten Test mit Hansi.
+- Rückweg siehe unten.
+
+### Rückweg und Hinweis
+- Rückweg: App/Server 2.765.0 (Schilder-Vorlagen, Druckpakete und Live verschwinden; gespeicherte Schilder/Pakete bleiben in kc_club_schilder, Tisch und Chat bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.765.0 – 2026-10-30 – 👀 Büro für alle zur Ansicht – mit Zeitknöpfen
 Wunsch Hansi (30.10.): „Einen Schalter, dass ich heute Abend während der Clubsitzung das Büro für alle zur Ansicht freischalte – allen nur read only: ansehen alles, aber nix auslösen und verändern. Und fertige Zeitknöpfe: 12, 24, 48 Std., ganze Woche, ganzer Monat, bis auf Widerruf.“ (KC-CLUB-BUERO-ANSICHT)
 - Büro → 🔐 Verwaltung → **👀 Für alle zur Ansicht** (nur Admin): Knöpfe ⏱️ 12 Std. · 24 Std. · 48 Std. · 1 Woche · 1 Monat · Bis auf Widerruf, dazu „⛔ Jetzt wieder schließen“. Zeigt, ob und bis wann es offen ist.
