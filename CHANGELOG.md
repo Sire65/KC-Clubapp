@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.777.0 – 2026-10-30 – 📥 Eingangskorb: auch in einen Büro-Ordner ablegen (KC-CLUB-EINGANG-BUERO) · 🪧 Ordner „Schilder“ in der Druckerei (KC-CLUB-SCHILDER-ABLAGE) · Server · DB
+## 2.779.0 – 2026-10-30 – 📥 Eingangskorb: auch in einen Büro-Ordner ablegen (KC-CLUB-EINGANG-BUERO) · 🪧 Ordner „Schilder“ in der Druckerei (KC-CLUB-SCHILDER-ABLAGE) · Server · DB
 Wunsch Hansi (30.10.): „Wenn ich im Eingangskorb z. B. eine Preisliste habe, muss ich als Ablageort auch einen Ordner aus dem Büro anwählen können, z. B. Weihnachtsmarkt oder Schilder.“
 - Beim **✔ Annehmen** eines Dokuments aus dem Eingangskorb zeigt „🗄️ … ablegen“ jetzt zwei Gruppen: **👤 Meine Ordner** (wie bisher) und **🏢 Büro** (Vereinsordner wie Weihnachtsmarkt, Verträge, Besprechungen …) – mit den Registern des gewählten Ordners (z. B. „2026 › Einkauf & Kasse“). Darunter steht, dass es dann im Büro liegt (bei 🔒-Ordnern nur für die Clubleitung).
 - Büro-Ordner gibt es nur für die Archiv-Pflege (Admin, Clubsprecher); Ordner „nur Vorstand“ nur für den Vorstand. Der Server prüft das selbst. Vorgeschlagen bleibt, was der Absender gewählt hat.
@@ -8,6 +8,15 @@ Wunsch Hansi (30.10.): „Wenn ich im Eingangskorb z. B. eine Preisliste habe, m
 - Test `tests/eingang-buero.test.mjs`.
 - 🪧 **Neuer Ordner „Schilder“** (Wunsch Hansi: „in den Ordner Schilder dazu“, Wahl „Ablage in der Druckerei“): 🔒 Club-Ordner nur für die Clubleitung mit den Registern Preislisten, Hinweise, Öffnungszeiten, Sonstiges – steht im Eingangskorb unter 🏢 Büro zur Wahl. Alles darin zeigt die **Schilder-Druckerei** im neuen Abschnitt **„📎 Abgelegte Dateien“**: antippen = ansehen, 🖨️ drucken, ➕ ins Druckpaket (Anzahl wählen, mit Schildern zusammen drucken, als Paket aufheben). Solange nichts da ist, steht dort der Weg dahin.
 - Datenbank: Migration `20261030_kc_club_ordner_schilder.sql` (nur eine Ordner-Zeile, legt nichts doppelt an). Tests `tests/schilder-ablage.test.mjs`, `tools/db-test/95_ordner_schilder_test.sql`.
+
+## 2.778.0 – 2026-10-30 – ⏳ Runder Tisch: Countdown bis zum Beginn und Restzeit-Uhr (KC-CLUB-RUNDER-TISCH-UHR) · nur App
+Wunsch Hansi (30.10.): „Einen Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine Runterzähl-Uhr, wie lange der Tisch noch laufen wird.“ Noch nur Admin zum Testen.
+- **Vor Beginn:** „⏳ beginnt in 12:34“ (ab 1 Std. „2 Std. 05 Min.“, ab 1 Tag „3 Tagen“) – am Tisch groß oben, in der Tischmitte, auf der Startseiten-Karte und in der Liste (ab 24 Std. vorher).
+- **Während des Tisches:** „⏱️ noch 42:10“ bis zum Ende; die letzten 5 Minuten gelb, die letzte Minute rot. Verlängert die Leitung um 30 Min., zählt die Uhr weiter.
+- Ist die Zeit um, wechselt die Anzeige von selbst (Tisch beginnt bzw. ist vorbei).
+- Sparsam: die Uhr zählt nur auf dem Gerät, jede Sekunde und nur, solange die App sichtbar ist – keine Datenbank-Abfrage.
+- Tests: `tests/runder-tisch.test.mjs` (Formate), Klick-Rundgang (Restzeit zählt sichtbar herunter). Rückweg: App 2.776.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.776.0 – 2026-10-30 – 🙋 Runder Tisch: externe Tischgäste mit eigenem Link (KC-CLUB-RUNDER-TISCH-GAST, Stufe RT4) · Server 2.776.0 · DB
 Wunsch Hansi (30.10.): „Weiter bauen“ – nach Live, Musik und Videos jetzt die externen Gäste (Spezifikation Abschnitte 4 und 18; Entscheidung: jedes Mitglied darf Gäste einladen).

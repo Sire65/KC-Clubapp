@@ -278,4 +278,12 @@ assert.match(server, /await db\.from\("kc_club_tisch_tasche"\)\.delete\(\)\.eq\(
   assert.ok(!/kc_club_key/.test(gs) && /sessionStorage\.setItem\("kc_tischgast", token\)/.test(gs), "Gast-Link nur in der Sitzung, nie als Mitglieder-Link");
   assert.match(app, /\.\.\.\(TG_GERAET \? \{ "x-tg-geraet": TG_GERAET \} : \{\}\)/, "Geräte-Kennung geht mit");
 }
+
+// 2.778.0 KC-CLUB-RUNDER-TISCH-UHR: Countdown bis Beginn und Restzeit – Anzeige-Formate (zählt nur auf dem Gerät, keine Abfrage)
+const rundUhrText = new Function(app.slice(app.indexOf("function rundUhrText(rest) {"), app.indexOf("function rundUhrHtml(")) + "\nreturn rundUhrText;")();
+assert.equal(rundUhrText(754000), "12:34"); assert.equal(rundUhrText(59000), "0:59"); assert.equal(rundUhrText(1), "0:01", "angefangene Sekunde zählt mit");
+assert.equal(rundUhrText(0), "0:00"); assert.equal(rundUhrText(-5000), "0:00", "nie negativ");
+assert.equal(rundUhrText(3600000), "1 Std. 00 Min."); assert.equal(rundUhrText(2 * 3600000 + 5 * 60000), "2 Std. 05 Min.");
+assert.equal(rundUhrText(86400000), "1 Tag"); assert.equal(rundUhrText(3 * 86400000 + 5000), "3 Tagen");
+assert.match(app, /setInterval\(\(\) => \{\n  if \(document\.hidden\) return;\n  let um = false;/, "Uhr tickt nur, wenn die App sichtbar ist");
 console.log("OK – Runder Tisch: Regeln geprüft");

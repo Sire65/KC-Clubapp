@@ -4560,6 +4560,14 @@
   .rund-name { font-size: .7rem; line-height: 1; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--grau); }
   .rund-platz.gastgeber .rund-name { color: var(--text); font-weight: 700; }
   .rund-warte { background: var(--gelbbg); color: var(--gelb); padding: 8px 12px; border-radius: 12px; }
+  /* 2.778.0 KC-CLUB-RUNDER-TISCH-UHR: Countdown bis Beginn, Restzeit (letzte 5 Min. gelb, letzte Minute rot) */
+  .rund-uhr { font-variant-numeric: tabular-nums; white-space: nowrap; } .rund-uhr b { font-weight: 800; }
+  .rund-uhr.bald { color: var(--gelb); } .rund-uhr.knapp { color: var(--rot3); }
+  .rund-uhr-leiste { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 8px 0; padding: 10px 14px; border-radius: 14px; background: var(--karte2); }
+  .rund-uhr.gross { font-size: 1.25rem; } .rund-uhr.gross b { font-size: 1.6rem; } .rund-uhr-leiste small { color: var(--grau); }
+  .rund-uhr-leiste:has(.rund-uhr.bald) { background: var(--gelbbg); } .rund-uhr-leiste:has(.rund-uhr.knapp) { background: var(--rotbg); }
+  .rund-holz .rund-uhr { display: block; margin-top: 4px; font-size: .85rem; color: #fff8ee; } .rund-holz .rund-uhr.bald, .rund-holz .rund-uhr.knapp { color: #ffe08a; }
+  .rund-uhr-zeile { margin: 2px 0; }
   /* 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: am Platz grün pulsierend = spricht, ✋ gemeldet, 🥄 Redestab; Live-Bereich mit Bühne und Knopfleiste */
   .rund-platz.spricht .rund-av { box-shadow: 0 0 0 3px #2fb344, 0 0 14px 4px rgba(47,179,68,.55); animation: tlPuls 1s ease-in-out infinite; }
   .rund-platz.hand::after { content: "✋"; position: absolute; top: -6px; right: -8px; font-size: 1.1rem; }
@@ -6390,7 +6398,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.777.0" data-v="2.777.0"></script>
+<script src="app.js?v=2.779.0" data-v="2.779.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
