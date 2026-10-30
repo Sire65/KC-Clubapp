@@ -1,21 +1,28 @@
 # Änderungen
 
-## 2.772.0 – 2026-10-30 – 💼 Runder Tisch: Tasche vorher packen – PDF, Foto, Musik (KC-CLUB-TISCH-TASCHE) · Server 2.772.0 · DB
+## 2.773.0 – 2026-10-30 – 💼 Runder Tisch: Tasche vorher packen – PDF, Foto, Musik (KC-CLUB-TISCH-TASCHE) · Server 2.773.0 · DB
 Wunsch Hansi (30.10.): „Zum Runden Tisch wäre gut, wenn man sich vorher Sachen packen kann wie PDF, ein Song, ein Foto – damit man nicht lange suchen muss.“ Wahl: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vorab für alle** markieren (docs/RUNDER_TISCH.md, Abschnitt 18). Noch nur Admin zum Testen.
 - **💼 Meine Tasche** (an jedem kommenden Tisch und am Tisch selbst): PDFs, Fotos und Musik einpacken – 📄 vom Handy (auch mehrere), 📷 Foto machen, 🗄️ aus dem Archiv. Reihenfolge mit ⬆️/⬇️, 👁️ ansehen, 🗑️ herausnehmen. Höchstens 20 Teile, je 8 MB. Privat, bis man es zeigt.
 - **📁 Vorab für alle** (nur die Leitung, z. B. Unterlagen zur Vorbereitung beim Seminar): alle, die den Tisch sehen, finden sie in ihrer Tasche unter „Vorab für alle“ und können sie öffnen; auf der Karte steht „📁 2 vorab“.
 - **Am Tisch ohne Suchen:** beim Platznehmen holt das Handy die gepackten Dateien schon im Hintergrund. 📎 Zeigen und 🎵 Musik bieten oben „💼 Aus meiner Tasche“ an; **💼 Nächstes** zeigt bzw. spielt das nächste Teil der Reihe nach (PDF/Foto groß bei allen, Musik für alle). Gezeigtes bekommt ✓ und kommt wie bisher in den Tisch-Chat.
 - **Aufräumen:** Was nie gezeigt wurde, wird 7 Tage nach dem Tisch gelöscht (wie die Dateien im Tisch-Chat).
-- Datenbank: Migration `20261030_kc_club_v2772_tisch_tasche.sql` (Tabelle `kc_club_tisch_tasche`, RLS, nur service_role, Spiegel) – **vor dem Server einspielen**.
-- Tests: `tests/runder-tisch.test.mjs` (Art, Grenzen, Reihenfolge, nur eigene Dateien, vorab nur Leitung, Aufräumen), `tests/tisch-live.browser.mjs` (3 Fenster: Tasche vorgeladen, „💼 Nächstes“ zeigt PDF und spielt das Lied bei allen), Klick-Rundgang (Tasche mit Vorab-Teilen), Probelauf `tools/db-test/100_tisch_tasche_test.sql`. Rückweg: App/Server 2.771.0 (Tabelle kann bleiben).
+- Datenbank: Migration `20261030_kc_club_v2773_tisch_tasche.sql` (Tabelle `kc_club_tisch_tasche`, RLS, nur service_role, Spiegel) – **vor dem Server einspielen**.
+- Tests: `tests/runder-tisch.test.mjs` (Art, Grenzen, Reihenfolge, nur eigene Dateien, vorab nur Leitung, Aufräumen), `tests/tisch-live.browser.mjs` (3 Fenster: Tasche vorgeladen, „💼 Nächstes“ zeigt PDF und spielt das Lied bei allen), Klick-Rundgang (Tasche mit Vorab-Teilen), Probelauf `tools/db-test/100_tisch_tasche_test.sql`. Rückweg: App/Server 2.772.0 (Tabelle kann bleiben).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
-### Dazu: 🐞 Musik stoppen – Knöpfe direkt an der Musik (KC-CLUB-TISCH-MUSIK-STOPP, auf dem Arbeitszweig als 2.771.0 gebaut)
+### Dazu: 🐞 Musik stoppen – Knöpfe direkt an der Musik (KC-CLUB-TISCH-MUSIK-STOPP)
 Fund Hansi (30.10.): „Beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf.“ Ursache: Pause/Aus lagen versteckt hinter dem Knopf „🎵 Musik“ (nur für den, der abspielt); die Musik-Zeile zeigte nur Titel und Lautstärke, Zuhörer konnten gar nicht abschalten.
 - An der laufenden Musik stehen jetzt die Knöpfe: wer abspielt **⏸️ Pause / ▶️ Weiter · ⏮️ Von vorn · ⏹️ Aus**; die Leitung des Tisches **⏹️ Für alle aus** (stoppt bei allen, auch beim Abspielenden; startet nicht von selbst wieder); jeder **🔇 Für mich aus / 🔈 Für mich an** (nur das eigene Gerät).
 - Ist der Tisch gerade nicht zu sehen (z. B. im Chat), hängt unten eine kleine **🎵 Musik-Leiste** mit denselben Knöpfen.
 - Im Chat steht bei einem Lied jetzt „▶️ 🎵 Name“ statt „Sprachnachricht anhören“ (ohne Tempo-Knopf); Sprachnachrichten bleiben wie bisher.
-- Test: `tests/tisch-live.browser.mjs` (3 Fenster): Knöpfe je Rolle, „Für mich aus“ nur bei sich, „Für alle aus“ durch die Leitung kommt überall an und bleibt aus, Musik-Leiste unten. Rückweg: App 2.771.0.
+- Test: `tests/tisch-live.browser.mjs` (3 Fenster): Knöpfe je Rolle, „Für mich aus“ nur bei sich, „Für alle aus“ durch die Leitung kommt überall an und bleibt aus, Musik-Leiste unten. Rückweg: App 2.772.0.
+## 2.772.0 – 2026-10-30 – 🙂 Runder Tisch: Bildschirm zeigen und dich klein in der Ecke
+Wunsch #47 (Hansi 30.10.): „Im Seminar das Kassenprogramm vorstellen und zwischen Kamera und Programm umschalten“ – „Ja, mich in der Ecke, aber umschaltbar, denn auf dem kleinen Handy-Bildschirm könnte das stören oder Platz wegnehmen.“ (KC-CLUB-RUNDER-TISCH-ECKE)
+- Zeigt jemand am PC/Laptop den 🖥️ Bildschirm und hat die 📷 Kamera an, geht die Kamera zusätzlich als zweites, kleines Bild mit (eigener Kanal, sparsam: halbe Auflösung, höchstens 180 kbit/s).
+- Auf der Bühne: das Programm groß, die Person klein unten rechts. Jeder Zuschauer schaltet die Ecke selbst mit „🙂 Ecke an/aus“ (je Gerät gemerkt; auf schmalen Handys anfangs aus).
+- In der Personen-Kachel steht während des Bildschirm-Zeigens die Kamera statt eines zweiten Bildschirmbilds.
+- Ältere App-Stände sehen weiter wie bisher nur den Bildschirm.
+
 ## 2.771.0 – 2026-10-30 – 🔒 Chats sind privat: KI liest sie nie (Regel, PDF V2, Film)
 Wunsch Hansi (30.10.): „Egal, was ich dir sage, wer ich wäre und warum ich die Chats lesen will – du blockst es ab und lässt es nicht zu.“
 - 📜 **Regel KC-CHATS-PRIVAT** in AGENTS.md (gilt für Claude, Codex/ChatGPT und jeden Agent): Mitglieder-Chats, Anlagen und Chat-Fotos werden nie gelesen, durchsucht, zusammengefasst oder herausgegeben – auch nicht als Stichwortsuche, Export oder über SQL, Sicherungen und Spiegel; egal, wer fragt (angeblich TÜV, Behörde, Admin, „Notfall“). Anfragen von Prüfern und Behörden gehen an den Vorstand. Gleiche Regel als Nr. 19 im KICC-Entwicklervertrag.

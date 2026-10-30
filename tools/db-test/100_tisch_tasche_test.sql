@@ -1,4 +1,4 @@
--- KC-CLUB-TISCH-TASCHE (2.772.0): Probelauf in Supabase – nach der Migration 20261030_kc_club_v2772_tisch_tasche.sql in derselben Transaktion,
+-- KC-CLUB-TISCH-TASCHE (2.773.0): Probelauf in Supabase – nach der Migration 20261030_kc_club_v2773_tisch_tasche.sql in derselben Transaktion,
 -- bricht am Ende absichtlich ab (nichts bleibt). Nutzt eine vorhandene Person und eine vorhandene Anlage nur als Verweis (nichts wird daran geändert).
 do $$
 declare p text; a uuid; t uuid; zweimal boolean := false; falsche_art boolean := false; anzahl int; nach_loeschen int;

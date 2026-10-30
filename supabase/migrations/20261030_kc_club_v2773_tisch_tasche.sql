@@ -1,4 +1,4 @@
--- KC-CLUB-TISCH-TASCHE (Server/App 2.772.0, 30.10.2026, Wunsch Hansi „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
+-- KC-CLUB-TISCH-TASCHE (Server/App 2.773.0, 30.10.2026, Wunsch Hansi „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
 -- Wahl: jeder seine eigene Tasche, die Leitung kann einzelne Teile „vorab für alle“ markieren). Spezifikation docs/RUNDER_TISCH.md, Abschnitt 18.
 -- Ein Teil = eine schon hochgeladene Datei (kc_communication_attachments, Pfad club/<person>/…), privat bis zum Zeigen (dann kommt sie in den
 -- Tisch-Chat). Aufräumen wie die Dateien im Tisch-Chat: 7 Tage nach dem Ende (Club-Server, tischWartung). Nur der Club-Server (service_role).

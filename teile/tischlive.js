@@ -89,7 +89,7 @@ async function tlEmpfang(d) {
   if (d.typ === "da") {
     const war = TL.peers.get(d.von), neu = !war || Date.now() - war.zeit > TL_WEG_MS;
     tlUhr(d.von, d.t);
-    if (d.musik && (!TL.musik || TL.musik.von === d.von) && !(TL.musikAus?.a === d.musik.a && Date.now() < TL.musikAus.bis)) tlMusikEmpfangen(d.musik, d.von); // 2.772.0: gerade ausgeschaltet → nicht wieder starten
+    if (d.musik && (!TL.musik || TL.musik.von === d.von) && !(TL.musikAus?.a === d.musik.a && Date.now() < TL.musikAus.bis)) tlMusikEmpfangen(d.musik, d.von); // 2.773.0: gerade ausgeschaltet → nicht wieder starten
     TL.peers.set(d.von, { ...(war || {}), zeit: Date.now(), name: String(d.name || "").slice(0, 30), mic: !!d.mic, cam: !!d.cam, schirm: !!d.schirm, hand: !!d.hand });
     if (vomLeiter && "stab" in d) tlStabSetzen(d.stab || null);
     if (d.zeige && (!TL.zeige || TL.zeige.von === d.von)) tlZeigeEmpfangen(d.zeige, d.von);
@@ -147,15 +147,25 @@ async function tlSchirm() {
   tlVideoTauschen(); tlSendenAbgleichen(); tlDa(false); tlZeichnen();
 }
 const tlVideoSpur = () => TL.schirm?.getVideoTracks()[0] || TL.cam?.getVideoTracks()[0] || null;
+// 2.772.0 KC-CLUB-RUNDER-TISCH-ECKE (Wunsch #47, Hansi 30.10.2026 „im Seminar das Kassenprogramm vorstellen und zwischen Kamera und Programm
+// umschalten – ja, mich in der Ecke, aber umschaltbar, denn auf dem kleinen Handy-Bildschirm könnte das stören“): Zeige ich den Bildschirm UND die
+// Kamera ist an, geht die Kamera zusätzlich als zweites, kleines Bild mit (eigener Kanal, wenig Datenrate). Jeder Zuschauer entscheidet selbst,
+// ob er mich klein in der Ecke der Bühne sieht (Knopf „🙂 Ecke“, je Gerät gemerkt; Standard an, auf schmalen Handys aus).
+const tlEckSpur = () => (TL.schirm && TL.cam ? TL.cam.getVideoTracks()[0] || null : null);
+const TL_ECK = "kc_club_tl_ecke";
+const tlEckAn = () => { const w = lsLesen(TL_ECK); return w ? w === "an" : (window.innerWidth || 400) >= 600; };
+function tlEckUmschalten() { lsSetzen(TL_ECK, tlEckAn() ? "aus" : "an"); TL.buehneStand = ""; tlBuehneZeichnen(); }
 function tlVideoTauschen() {
-  const spur = tlVideoSpur();
-  for (const v of TL.pcs.values()) if (v.raus && v.video) v.video.sender.replaceTrack(spur).then(() => tlRate(v)).catch(() => {});
+  const spur = tlVideoSpur(), eck = tlEckSpur();
+  for (const v of TL.pcs.values()) if (v.raus && v.video) { v.video.sender.replaceTrack(spur).then(() => tlRate(v)).catch(() => {}); v.eck?.sender.replaceTrack(eck).catch(() => {}); }
 }
 function tlRate(v) {
   try {
     const raus = [...TL.pcs.values()].filter((x) => x.raus).length, p = v.video.sender.getParameters(); p.encodings = p.encodings?.length ? p.encodings : [{}];
     p.encodings[0].maxBitrate = tlKbit(raus) * 1000; if (TL.schirm) p.degradationPreference = "maintain-resolution";
     v.video.sender.setParameters(p).catch(() => {});
+    if (v.eck) { const e = v.eck.sender.getParameters(); e.encodings = e.encodings?.length ? e.encodings : [{}]; // Ecke: klein und sparsam
+      e.encodings[0].maxBitrate = Math.min(180, tlKbit(raus)) * 1000; e.encodings[0].scaleResolutionDownBy = 2; v.eck.sender.setParameters(e).catch(() => {}); }
   } catch {}
 }
 // Ich sende → zu jedem, der live ist, eine Verbindung (raus). Sende ich nicht mehr → alle meine raus-Verbindungen zu.
@@ -173,6 +183,7 @@ async function tlRausAufbauen(an) {
   const mic = TL.mic?.getAudioTracks()[0] || null;
   v.audio = pc.addTransceiver(mic || "audio", { direction: "sendonly", streams: TL.mic ? [TL.mic] : [] });
   v.video = pc.addTransceiver(tlVideoSpur() || "video", { direction: "sendonly" });
+  v.eck = pc.addTransceiver(tlEckSpur() || "video", { direction: "sendonly" }); // 2.772.0: Kamera klein, während ich den Bildschirm zeige
   pc.onicecandidate = (e) => { if (e.candidate) tlSende({ typ: "ice", an, pc: k, c: e.candidate.toJSON() }); };
   pc.onconnectionstatechange = () => tlPcZustand(k);
   try { await pc.setLocalDescription(await pc.createOffer()); tlSende({ typ: "sdp", an, pc: k, sdp: pc.localDescription.toJSON() }); tlRate(v); }
@@ -188,7 +199,11 @@ async function tlSignal(d) {
     v = { pc, an: d.von, raus: false, strom: null, ice: [] }; TL.pcs.set(k, v); TL.mess.pcs++;
     pc.onicecandidate = (e) => { if (e.candidate) tlSende({ typ: "ice", an: d.von, pc: k, c: e.candidate.toJSON() }); };
     pc.onconnectionstatechange = () => tlPcZustand(k);
-    pc.ontrack = (e) => { v.strom = v.strom || new MediaStream(); v.strom.addTrack(e.track); e.track.onunmute = () => tlZeichnen(); if (e.track.kind === "audio") { tlTonSpielen(k, v.strom); tlPegelQuelle(d.von, v.strom); } tlZeichnen(); };
+    pc.ontrack = (e) => {
+      // 2.772.0 KC-CLUB-RUNDER-TISCH-ECKE: zweiter Video-Kanal = Kamera klein (nur solange der andere den Bildschirm zeigt)
+      if (e.track.kind === "video" && pc.getTransceivers().filter((x) => x.receiver.track?.kind === "video").indexOf(e.transceiver) === 1) {
+        v.eckStrom = new MediaStream([e.track]); e.track.onunmute = e.track.onmute = () => { TL.buehneStand = ""; tlZeichnen(); }; return; }
+      v.strom = v.strom || new MediaStream(); v.strom.addTrack(e.track); e.track.onunmute = () => tlZeichnen(); if (e.track.kind === "audio") { tlTonSpielen(k, v.strom); tlPegelQuelle(d.von, v.strom); } tlZeichnen(); };
     try { await pc.setRemoteDescription(d.sdp); await pc.setLocalDescription(await pc.createAnswer()); tlSende({ typ: "sdp", an: d.von, pc: k, sdp: pc.localDescription.toJSON() });
       for (const c of v.ice.splice(0)) pc.addIceCandidate(c).catch(() => {}); } catch { tlPcZu(k); TL.mess.fehl++; }
     return;
@@ -321,7 +336,7 @@ let tlBuehneLauf = 0;
 function tlBuehneEl() { if (!TL.root) { TL.root = document.createElement("div"); TL.root.id = "tlBuehne"; TL.root.className = "tl-buehne"; TL.root.hidden = true; } return TL.root; }
 async function tlBuehneZeichnen() {
   const el = tlBuehneEl(), z = TL.zeige, video = tlGrossVideo();
-  const stand = video ? "v:" + video.pid + ":" + video.strom.id : z ? `z:${z.a}:${TL.seite}:${TL.folgen}:${z.von === TL.ich}` : "";
+  const stand = video ? "v:" + video.pid + ":" + video.strom.id + ":" + (video.eck?.id || "") + ":" + tlEckAn() : z ? `z:${z.a}:${TL.seite}:${TL.folgen}:${z.von === TL.ich}` : "";
   if (stand === TL.buehneStand) return;
   TL.buehneStand = stand; const lauf = ++tlBuehneLauf;
   if (video) { tlVideoAnzeigen(el, video); return; }
@@ -358,16 +373,24 @@ function tlVollbild() {
 }
 // Großes Bild: geteilter Bildschirm geht vor; sonst nichts (Kameras stehen klein bei den Leuten)
 function tlGrossVideo() {
-  for (const [, v] of TL.pcs) if (!v.raus && v.strom && TL.peers.get(v.an)?.schirm && v.strom.getVideoTracks().some((x) => !x.muted)) return { strom: v.strom, pid: v.an };
-  if (TL.schirm) return { strom: TL.schirm, pid: TL.ich, selbst: true };
+  // nur, solange er laut Leitung die Kamera an hat (der Browser meldet ein abgeschaltetes Bild erst spät als stumm)
+  const eckVon = (v) => (v.eckStrom && TL.peers.get(v.an)?.cam && v.eckStrom.getVideoTracks().some((x) => x.readyState === "live" && !x.muted) ? v.eckStrom : null);
+  for (const [, v] of TL.pcs) if (!v.raus && v.strom && TL.peers.get(v.an)?.schirm && v.strom.getVideoTracks().some((x) => !x.muted)) return { strom: v.strom, pid: v.an, eck: eckVon(v) };
+  if (TL.schirm) return { strom: TL.schirm, pid: TL.ich, selbst: true, eck: TL.cam || null };
   return null;
 }
 function tlVideoAnzeigen(el, g) {
   el.hidden = false;
   let v = el.querySelector("video.tl-gross");
-  if (!v) { el.innerHTML = `<div class="tl-buehne-kopf">🖥️ <b id="tlGrossName"></b>${tlVollKnopf()}</div><video class="tl-gross" autoplay playsinline muted></video>`; v = el.querySelector("video.tl-gross"); }
+  if (!v) { el.innerHTML = `<div class="tl-buehne-kopf">🖥️ <b id="tlGrossName"></b><span id="tlEckKnopf"></span>${tlVollKnopf()}</div><div class="tl-gross-rahmen"><video class="tl-gross" autoplay playsinline muted></video><video class="tl-eck" autoplay playsinline muted hidden></video></div>`; v = el.querySelector("video.tl-gross"); }
   el.querySelector("#tlGrossName").textContent = g.selbst ? "Du zeigst deinen Bildschirm" : `${tlName(g.pid)} zeigt den Bildschirm`;
   if (v.srcObject !== g.strom) { v.srcObject = g.strom; v.play?.().catch(() => {}); }
+  // 2.772.0 KC-CLUB-RUNDER-TISCH-ECKE: Kamera klein in der Ecke – jeder schaltet selbst (Knopf nur, wenn es eine Kamera gibt)
+  const eck = el.querySelector("video.tl-eck"), an = tlEckAn();
+  el.querySelector("#tlEckKnopf").innerHTML = g.eck ? `<button class="knopf klein tl-eck-knopf${an ? " haupt" : ""}" onclick="tlEckUmschalten()" aria-pressed="${an}" title="${g.selbst ? "Dich" : tlName(g.pid)} klein in der Ecke zeigen oder ausblenden">🙂 Ecke ${an ? "an" : "aus"}</button>` : "";
+  eck.hidden = !(g.eck && an);
+  if (!eck.hidden && eck.srcObject !== g.eck) { eck.srcObject = g.eck; eck.play?.().catch(() => {}); }
+  if (eck.hidden && eck.srcObject) eck.srcObject = null;
 }
 
 // ---- Anzeige im Tisch-Fenster (#tlBereich, vom Hauptprogramm angelegt) ----
@@ -403,10 +426,11 @@ function tlZeichnen() {
   box.querySelector("#tlBuehneHier").replaceWith(tlBuehneEl());
   // Kamerabilder einhängen (ohne die Verbindung anzufassen)
   box.querySelectorAll("video[data-cam]").forEach((v) => {
-    const pid = v.dataset.cam, s = pid === TL.ich ? TL.cam : [...TL.pcs.values()].find((x) => !x.raus && x.an === pid && x.strom)?.strom;
+    const pid = v.dataset.cam, x = [...TL.pcs.values()].find((y) => !y.raus && y.an === pid && y.strom);
+    const s = pid === TL.ich ? TL.cam : (TL.peers.get(pid)?.schirm && x?.eckStrom?.getVideoTracks().some((t) => !t.muted) ? x.eckStrom : x?.strom); // 2.772.0: zeigt er den Bildschirm, steht in seiner Kachel die Kamera
     if (s) { v.srcObject = s; v.play?.().catch(() => {}); }
   });
-  tlBuehneZeichnen(); tlMusikMini(); // 2.772.0: Musik-Leiste unten nur, wenn der Tisch nicht zu sehen ist
+  tlBuehneZeichnen(); tlMusikMini(); // 2.773.0: Musik-Leiste unten nur, wenn der Tisch nicht zu sehen ist
 }
 
 // ---- 🎵 Musik für alle (z. B. der Club-Song – Hansi: „ein externes Lied, nicht der Platzhalter-Song der Bühne“) ----
@@ -435,7 +459,7 @@ async function tlMusik() {
     ${tlTasche(["musik"]).length ? `<div class="tl-tasche-wahl"><b>💼 Aus meiner Tasche</b>${tlTasche(["musik"]).map((x) => `<button type="button" class="knopf" data-tasche="${esc(x.id)}">🎵 ${esc(x.name)}${x.gezeigt ? " ✓" : ""}</button>`).join("")}</div>` : ""}
     <div class="ca-wahl"><button type="button" class="knopf haupt" data-a="archiv">🗄️ Aus dem Archiv (z. B. Club-Song)</button><button type="button" class="knopf" data-a="geraet">📱 Vom Gerät</button></div>`, () => f.remove());
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
-  f.querySelectorAll("[data-tasche]").forEach((b) => (b.onclick = () => { f.remove(); tlAusTasche(tlTasche().find((x) => x.id === b.dataset.tasche)); })); // 2.772.0
+  f.querySelectorAll("[data-tasche]").forEach((b) => (b.onclick = () => { f.remove(); tlAusTasche(tlTasche().find((x) => x.id === b.dataset.tasche)); })); // 2.773.0
   f.querySelector('[data-a="geraet"]').onclick = () => { f.remove(); const inp = document.createElement("input"); inp.type = "file"; inp.accept = "audio/*,.mp3,.m4a,.ogg,.wav";
     inp.onchange = () => { const d = inp.files?.[0]; if (d) tlMusikTeilen(d); }; inp.click(); };
   f.querySelector('[data-a="archiv"]').onclick = async () => { f.remove(); let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
@@ -470,7 +494,7 @@ function tlMusikPause() {
   else tlMusikSetzen({ ...m, pause: Math.max(0, Date.now() - m.start) });
 }
 function tlMusikEmpfangen(m, von) {
-  // 2.772.0 KC-CLUB-TISCH-MUSIK-STOPP: aus schaltet, wer abspielt – oder die Leitung des Tisches für alle
+  // 2.773.0 KC-CLUB-TISCH-MUSIK-STOPP: aus schaltet, wer abspielt – oder die Leitung des Tisches für alle
   if (!m) { if (TL.musik && (TL.musik.von === von || von === tlTisch()?.gastgeber)) { if (TL.musik.von !== von) melde(`⏹️ ${tlName(von)} hat die Musik ausgeschaltet`); tlMusikAus(); } tlZeichnen(); return; }
   if (typeof m.a !== "string" || !/^[0-9a-f-]{36}$/i.test(m.a) || !Number(m.start)) return;
   const neu = TL.musik?.a !== m.a || TL.musik?.von !== von;
@@ -507,7 +531,7 @@ function tlMusikAus() {
   clearTimeout(TL.musikUhr); tlMusikLauf++; TL.musik = null; TL.musikStumm = false; const el = document.getElementById("tlMusikTon"); if (el) { el.pause(); el.remove(); }
   tlMusikMini();
 }
-// 2.772.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi 30.10.: „beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf“):
+// 2.773.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi 30.10.: „beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf“):
 // Die Knöpfe stehen jetzt direkt an der laufenden Musik – wer abspielt: ⏸️/▶️, ⏮️, ⏹️ Aus (für alle); die Leitung: ⏹️ Für alle aus;
 // jeder: 🔇 Für mich aus (nur das eigene Gerät). Ist der Tisch nicht offen (z. B. im Chat), hängt eine kleine Musik-Leiste unten am Bildschirm.
 function tlMusikKnoepfe(m, klein) {
@@ -536,7 +560,7 @@ function tlMusikZeile() {
     <label class="tl-laut">🔈<input type="range" min="0" max="1" step="0.05" value="${TL.musikLaut ?? 0.8}" oninput="tlMusikLaut(this.value)" aria-label="Lautstärke Musik"></label></div>`;
 }
 
-// ---- 2.772.0 KC-CLUB-TISCH-TASCHE: vorher Gepacktes mit einem Tipp zeigen bzw. abspielen (Datei liegt schon hochgeladen, meist schon auf dem Gerät) ----
+// ---- 2.773.0 KC-CLUB-TISCH-TASCHE: vorher Gepacktes mit einem Tipp zeigen bzw. abspielen (Datei liegt schon hochgeladen, meist schon auf dem Gerät) ----
 // Zeigen = derselbe Weg wie „Vom Gerät“: Anlage in den Tisch-Chat (alle haben sie danach), dann „Zeigen“ bzw. „Musik für alle“.
 function tlTasche(arten) { const T = typeof RUND !== "undefined" ? RUND.tasche?.[TL.id] : null; return (T?.meine || []).filter((x) => !arten || arten.includes(x.art)); }
 function tlTascheNaechstes() { const x = tlTasche().find((y) => !y.gezeigt); if (!x) return melde("💼 In deiner Tasche ist nichts mehr, was noch nicht gezeigt wurde."); tlAusTasche(x); }

@@ -69,7 +69,7 @@ try {
             mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {}, kacheln: null, freigaben: { runder_tisch: "alle" } },
           tisch_liste: lage(p.id), tisch_platz: { ok: true, ergebnis: "da", lage: lage(p.id), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) },
           anlage_url: { url: body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
-          // 2.772.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher ein PDF und ein Lied eingepackt
+          // 2.773.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher ein PDF und ein Lied eingepackt
           tisch_tasche: { tisch: TISCH, darfVorab: true, max: 20, vorab: [], meine: p.id !== LEUTE[0].id ? [] : [
             { id: "t1", a: PDF, name: "Ablauf.pdf", mime: "application/pdf", art: "pdf", pos: 1, vorab: false, gezeigt: false },
             { id: "t2", a: MUSIK, name: "Club-Song.mp3", mime: "audio/mpeg", art: "musik", pos: 2, vorab: false, gezeigt: false }] },
@@ -136,7 +136,7 @@ try {
   for (const s of [B, C]) await warte(s, () => document.getElementById("tlMusikTon")?.paused === true, null, 8000, "🎵 Pause kommt nicht an");
   await A.seite.evaluate(() => tlMusikSetzen(null));
   for (const s of [B, C]) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik, null, 8000, "🎵 Musik aus kommt nicht an");
-  // 7c. 2.772.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi „konnte nicht Stop drücken – es gab keinen Knopf“): Knöpfe direkt an der Musik.
+  // 7c. 2.773.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi „konnte nicht Stop drücken – es gab keinen Knopf“): Knöpfe direkt an der Musik.
   //     Bernd spielt: Bernd sieht ⏸️/⏹️, Carla „🔇 Für mich aus“ (schaltet nur bei ihr ab), Anna (Leitung) „⏹️ Für alle aus“ – das stoppt bei allen,
   //     auch beim Abspielenden, und Lebenszeichen starten es nicht wieder. Ist der Tisch nicht zu sehen, hängt die Musik-Leiste unten.
   await B.seite.evaluate((m) => tlMusikSetzen({ a: m, n: "Club-Song.mp3", start: Date.now() + 1500, pause: null }), MUSIK);
@@ -155,7 +155,7 @@ try {
   for (const s of seiten) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik && !document.getElementById("tlMusikMini"), null, 8000, "⏹️ Für alle aus kommt nicht überall an");
   await A.seite.waitForTimeout(TL_HERZ_PRUEF_MS);
   for (const s of seiten) if (await s.seite.evaluate(() => !!TL.musik)) melde(`[${s.name}] 🎵 Musik startet nach „Für alle aus“ von selbst wieder`);
-  // 7d. 2.772.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher gepackt – die Dateien liegen beim Platznehmen schon auf dem Gerät; „💼 Nächstes“ zeigt der Reihe nach:
+  // 7d. 2.773.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher gepackt – die Dateien liegen beim Platznehmen schon auf dem Gerät; „💼 Nächstes“ zeigt der Reihe nach:
   //     erst das PDF (alle sehen es), dann das Lied (alle hören es) – ohne Suchen. Danach ist nichts Ungezeigtes mehr übrig.
   await warte(A, (ids) => ids.every((x) => RUND_DATEIEN.has(x)), [PDF, MUSIK], 15000, "💼 Tasche wird beim Platznehmen nicht vorgeladen");
   if (!(await A.seite.evaluate(() => !!document.querySelector('#tlBereich button[onclick="tlTascheNaechstes()"]')))) melde("[Anna] Knopf „💼 Nächstes“ fehlt");
