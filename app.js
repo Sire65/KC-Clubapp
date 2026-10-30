@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.785.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.786.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -33865,7 +33865,7 @@ const DPD_WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], DPD_ART = { p: "pref"
 const dpdUhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return m ? `${h}:${String(m).padStart(2, "0")}` : String(h); };
 const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
 // 2.679.0 KC-CLUB-DP-MARKTNAME: Markttag am Di/Fr = „Wochenmarkt“, sonst „WM“ (Weihnachtsmarkt), sonntags dazu „Nikolaus“ – Aufbau/Nachbereitung bleiben
-// 2.786.0 (Wunsch Hansi 30.10.: „Aufbau, WM für Weihnachtsmarkttag, Wochenmarkt (Dienstag und Freitag) und Nikolaus am 06.12.“) – Nikolaus nur am 06.12., nicht jeden Sonntag
+// 2.786.0 KC-CLUB-DP-MARKTNAME (Wunsch Hansi 30.10.: „Aufbau, WM für Weihnachtsmarkttag, Wochenmarkt (Dienstag und Freitag) und Nikolaus am 06.12.“) – Nikolaus nur am 06.12., nicht jeden Sonntag
 const dpdArtName = (art, x) => art !== "Markttag" ? art : x.getMonth() === 11 && x.getDate() === 6 ? "Nikolaus" : [2, 5].includes(x.getDay()) ? "Wochenmarkt" : "WM";
 const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3e" onclick="dpdStart()" title="Dienstplan zum Ausdrucken"><span class="sym">🗓️</span>
     <span class="schild"><span class="jahr">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
