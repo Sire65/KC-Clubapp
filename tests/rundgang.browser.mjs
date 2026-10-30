@@ -47,7 +47,9 @@ const RT_LAGE = { aktiv: true, gruppen: [{ id: "66666666-2222-3333-4444-55555555
     { ...RT_TISCH, id: "44444444-2222-3333-4444-555555555555", art: "besprechung", gruppe: { id: "66666666-2222-3333-4444-555555555555", name: "Innovation", symbol: "💡" }, thema: "Weihnachtsmarkt", tagesordnung: ["Begrüßung", "Stand und Dienste", "Verschiedenes"], phase: "geplant", beginn: rtZeit(600), ende: rtZeit(660), amTisch: [] },
     { ...RT_TISCH, id: "55555555-2222-3333-4444-555555555555", art: "seminar", thema: "Kasse Schulung", phase: "vorbei", beginn: rtZeit(-3000), ende: rtZeit(-2940), amTisch: [],
       bestaetigung: { von: rtZeit(-3000), bis: rtZeit(-2940), min: 60 } }] };
-Object.assign(ANTWORTEN, { tisch_liste: RT_LAGE, tisch_platz: { ok: true, ergebnis: "da", lage: RT_LAGE } });
+Object.assign(ANTWORTEN, { tisch_liste: RT_LAGE, tisch_platz: { ok: true, ergebnis: "da", lage: RT_LAGE },
+  tisch_zeit_pruefen: { ok: true, frei: false, sperre: ["Um diese Zeit ist Clubabend („Clubabend“, 19:00–22:00 Uhr, 12 haben zugesagt) – dann bitte keinen Tisch."], hinweis: [],
+    tag: [{ sym: "🍽️", text: "19:00 Clubabend „Clubabend“ · 12 Zusagen" }] } }); // 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK
 INIT.runderTisch = { tische: [{ id: RT_TISCH.id, thema: RT_TISCH.thema, beginn: RT_TISCH.beginn, ende: RT_TISCH.ende, zusage: "ja" }] };
 const SEITEN = ["termine", "nachrichten", "mitglieder", "einstellungen", "fotos", "pinnwand", "vorschlaege", "dokumente", "archiv", "protokolle", "spiele", "buero",
   "hilfezentrum", "aktionen", "dienste", "erstattung", "helfen", "feedback", "sos", "sicherheit", "programme", "start"];
@@ -117,8 +119,9 @@ try {
         fensterZu($("rundBlatt")); rundNeu();
         const neu = !!$("rundThema") && document.querySelectorAll('input[name="rundArt"]').length === 3 && document.documentElement.scrollWidth <= innerWidth + 2;
         document.querySelector('input[name="rundArt"][value="besprechung"]').click(); const toFeld = !$("rundToFeld").classList.contains("versteckt");
-        const fuerWen = [...($("rundGruppe")?.options || [])].map((o) => o.textContent).join("|"); fensterZu($("rundNeuBlatt"));
-        return { karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld, gruppe, fuerWen }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
+        const fuerWen = [...($("rundGruppe")?.options || [])].map((o) => o.textContent).join("|");
+        await new Promise((r) => setTimeout(r, 900)); const check = { text: $("rundZeitCheck")?.textContent || "", gesperrt: !!$("rundLos")?.disabled }; fensterZu($("rundNeuBlatt"));
+        return { karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld, gruppe, fuerWen, check }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
       if (!rt.karte) melde("Runder Tisch: Karte auf der Startseite fehlt");
       if (!rt.liste) melde("Runder Tisch: Liste erscheint nicht " + (rt.fehler || ""));
       if (rt.plaetze !== 18 || rt.grau !== 1) melde(`Runder Tisch: ${rt.plaetze} Plätze, ${rt.grau} grau (erwartet 18 und 1)`);
@@ -127,6 +130,7 @@ try {
       if (!rt.seminar?.pult || rt.seminar?.reihen !== 12 || rt.seminar?.quer) melde("Seminar: Hörsaal falsch " + JSON.stringify(rt.seminar)); // 9 Teilnehmer + 3 freie Plätze
       if (!rt.to || !rt.toFeld) melde("Besprechung: Tagesordnung fehlt");
       if (!rt.knopf || !rt.tb) melde("Seminar: Teilnahmebestätigung fehlt");
+      if (!/Clubabend/.test(rt.check?.text || "") || !rt.check?.gesperrt) melde("Zeitprüfung: Clubabend nicht gemeldet oder „Einladen“ nicht gesperrt " + JSON.stringify(rt.check)); // 2.763.0
       if (!rt.gruppe || !/Alle Mitglieder\|💡 nur Gruppe „Innovation“/.test(rt.fuerWen || "")) melde("Gruppe: Hinweis oder „Für wen?“ fehlt " + (rt.fuerWen || "")); // 2.762.0
     }
     // 2.727.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version

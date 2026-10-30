@@ -129,3 +129,32 @@ export function rtText(t, tz = "Europe/Berlin") { // (Art steht nicht im Text �
   const ms = Date.parse(t.beginn), f = (o) => new Intl.DateTimeFormat("de-DE", { timeZone: tz, ...o }).format(new Date(ms));
   return `${f({ weekday: "short" })} ${f({ day: "2-digit", month: "2-digit" })} ${f({ hour: "2-digit", minute: "2-digit", hourCycle: "h23" })} Uhr · ${Number(t.dauer_min) + (Number(t.verlaengert_min) || 0)} Min.`;
 }
+
+// 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK (Wunsch Hansi 30.10.2026 „Bevor ein Termin mit Uhrzeit angezeigt wird, prüfen, ob noch andere Termine anstehen.
+// Kein Tisch, wenn gleichzeitig Clubabend ist. Um die Datenbank zu schonen, immer nur EIN Tisch zur selben Zeit – sonst Meldung“).
+// Sperre: ein anderer Tisch/Seminar/Besprechung (egal welche Gruppe) oder ein Clubabend (kc_club_treffen art „treffen“, ohne Ende = 3 Std.) überschneidet sich.
+// Hinweis (mit Rückfrage): eine Veranstaltung (z. B. Weihnachtsmarkt) überschneidet sich. Angrenzend (Ende = Beginn) ist keine Überschneidung.
+export const RT_CLUBABEND_STD = 3;
+export const rtUeberlapp = (a0, a1, b0, b1) => a0 < b1 && b0 < a1;
+export const rtTreffenBis = (tr) => tr.ende ? Date.parse(tr.ende) : Date.parse(tr.beginn) + (tr.ganztaegig ? 24 : RT_CLUBABEND_STD) * 3600000;
+// zeit = { vonMs, bisMs }; tische = [{ id, art, thema, beginn, ende, status, gruppe_id, sichtbar }]; treffen = [{ titel, beginn, ende, art, status, ganztaegig, zusagen }]
+export function rtKonflikte(zeit, tische, treffen, ohneId = null) {
+  const sperre = [], hinweis = [];
+  for (const t of tische || []) {
+    if (t.id === ohneId || t.status === "abgesagt" || !rtUeberlapp(zeit.vonMs, zeit.bisMs, Date.parse(t.beginn), Date.parse(t.ende))) continue;
+    sperre.push({ was: "tisch", art: t.art || "runder_tisch", thema: t.sichtbar === false ? null : t.thema, von: t.beginn, bis: t.ende });
+  }
+  for (const tr of treffen || []) {
+    if (tr.status === "abgesagt" || !rtUeberlapp(zeit.vonMs, zeit.bisMs, Date.parse(tr.beginn), rtTreffenBis(tr))) continue;
+    (tr.art === "treffen" ? sperre : hinweis).push({ was: tr.art === "treffen" ? "clubabend" : "termin", titel: tr.titel, von: tr.beginn, bis: new Date(rtTreffenBis(tr)).toISOString(), zusagen: tr.zusagen ?? null });
+  }
+  return { sperre, hinweis, frei: !sperre.length };
+}
+export function rtKonfliktText(k, tz = "Europe/Berlin") {
+  const u = (iso) => new Intl.DateTimeFormat("de-DE", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+  if (k.was === "tisch") return `Um diese Zeit gibt es schon ${{ seminar: "ein Seminar", besprechung: "eine Besprechung" }[k.art] || "einen Runden Tisch"}${k.thema ? ` („${k.thema}“)` : ""}, ${u(k.von)}–${u(k.bis)} Uhr. Es geht immer nur einer gleichzeitig – bitte eine andere Zeit wählen.`;
+  if (k.was === "clubabend") return `Um diese Zeit ist Clubabend („${k.titel}“, ${u(k.von)}–${u(k.bis)} Uhr${k.zusagen ? `, ${k.zusagen} haben zugesagt` : ""}) – dann bitte keinen Tisch.`;
+  const tag = (iso) => new Intl.DateTimeFormat("de-DE", { timeZone: tz, day: "2-digit", month: "2-digit" }).format(new Date(iso));
+  const lang = Date.parse(k.bis) - Date.parse(k.von) > 20 * 3600000; // mehrtägig (z. B. Weihnachtsmarkt): mit Datum
+  return `Zur selben Zeit: „${k.titel}“ (${lang ? `${tag(k.von)}–${tag(k.bis)}` : `${u(k.von)}–${u(k.bis)} Uhr`}).`;
+}

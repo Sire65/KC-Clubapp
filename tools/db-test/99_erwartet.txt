@@ -1,0 +1,5 @@
+gleichzeitig_gesperrt=t
+angrenzend_erlaubt=t
+verlaengern_in_naechsten_gesperrt=t
+abgesagt_zaehlt_nicht=t
+auch_gruppen_tisch_gesperrt=t

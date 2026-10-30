@@ -255,3 +255,24 @@ Abstand zweier Plätze s = 2 · 0,41 · W · sin(π/n); Kreis d = s − 6, höch
 **Ergebnis:** Koch-Figuren passen bis 18 Personen ab 360 px Handybreite; nur auf sehr kleinen Handys (320 px) zeigt die App bei 17–18 Personen Buchstaben.
 Namen stehen am Platz bis 8 Personen (320 px), 10 (360–390 px) bzw. 12 (ab 412 px). Im Seminar (Hörsaal) passen in jede Reihe so viele 40-px-Plätze,
 wie die Breite erlaubt (Figur und Name immer). Der Test `tests/runder-tisch.test.mjs` hält die Werte fest.
+
+## 16. Zeit prüfen: kein Clubabend, immer nur ein Tisch (2.763.0)
+
+Wunsch Hansi (30.10.2026): „Bevor ein Termin mit Uhrzeit angezeigt wird, prüfen, ob noch andere Termine anstehen. Kein Tisch, wenn gleichzeitig
+Clubabend ist und die Teilnehmer dort zugesagt haben. Um die Datenbank-Ressourcen zu schonen, keine parallelen Runden Tische – immer nur einer.
+Wenn ein weiterer geplant ist, dann Meldung.“
+
+| Zur gewählten Zeit gibt es schon … | Folge |
+|---|---|
+| einen Runden Tisch, ein Seminar oder eine Besprechung (egal welche Gruppe) | **gesperrt** – „Es geht immer nur einer gleichzeitig“ (bei fremden Gruppen ohne Thema) |
+| einen **Clubabend** (Clubtermin Art „Treffen“; ohne Ende gerechnet 3 Std. wie im Kalender-Export) | **gesperrt** – mit Anzahl der Zusagen |
+| eine **Veranstaltung** (z. B. Weihnachtsmarkt, auch mehrtägig) | **Hinweis mit Rückfrage** „Trotzdem einladen?“ |
+
+- **Im Formular:** Sobald Tag, Uhrzeit oder Dauer gewählt sind, prüft die App (`tisch_zeit_pruefen`, nur lesen, 3–4 Abfragen) und zeigt
+  ✅ frei / ⛔ gesperrt / ⚠️ Hinweis und darunter „An diesem Tag: …“ (Tische, Clubabend, Termine mit Uhrzeit). Bei ⛔ bleibt „Einladen“ gesperrt.
+  Kann nicht geprüft werden, steht das so da (nie „frei“); der Server prüft beim Einladen ohnehin noch einmal.
+- **Beim Verlängern** (+30 Min.) muss die halbe Stunde danach frei sein (kein nächster Tisch, kein Clubabend).
+- **Angrenzend geht:** Ein Tisch bis 20:00 und der nächste ab 20:00 überschneiden sich nicht. Abgesagte Tische zählen nicht; ein früher
+  geschlossener Tisch gibt seine Restzeit frei.
+- **Datenbank als letzte Sicherung** (zwei laden gleichzeitig ein): Sperre `kc_club_tisch_nur_einer` (keine zwei geplanten Tische mit
+  überschneidender Zeit) – Migration `20261030_kc_club_v2763_tisch_nur_einer.sql`, Probelauf `tools/db-test/99_tisch_nur_einer_test.sql`.

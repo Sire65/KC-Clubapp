@@ -2,7 +2,7 @@
 // Aufruf: node tests/runder-tisch.test.mjs (offline)
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { RT, RT_ARTEN, rtArt, rtEndeMs, rtPhase, rtAnlegenPruefen, rtSitzt, rtSicher, rtBeitretenPruefen, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtAnwesend, rtBestaetigung } from "../supabase/functions/kc-club/runder-tisch.js";
+import { RT, RT_ARTEN, rtArt, rtEndeMs, rtPhase, rtAnlegenPruefen, rtSitzt, rtSicher, rtBeitretenPruefen, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtAnwesend, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis } from "../supabase/functions/kc-club/runder-tisch.js";
 
 const M = 60000, T = 86400000, B = Date.parse("2026-11-05T19:00:00Z"); // Do 20:00 Berlin
 const tisch = { beginn: new Date(B).toISOString(), dauer_min: 60, verlaengert_min: 0, plaetze: 18, status: "geplant" };
@@ -83,7 +83,7 @@ assert.match(sql, /set search_path = public/);
 const server = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
 assert.match(server, /runder_tisch: \{ t: "🪑 Runder Tisch", [^}]*standard: "admin" \}/, "erst Hansi testet");
-for (const a of ["tisch_liste", "tisch_anlegen", "tisch_zusage", "tisch_platz", "tisch_verlassen", "tisch_gastgeber", "tisch_seminare_meine"]) {
+for (const a of ["tisch_liste", "tisch_anlegen", "tisch_zusage", "tisch_platz", "tisch_verlassen", "tisch_gastgeber", "tisch_seminare_meine", "tisch_zeit_pruefen"]) {
   assert.ok(server.includes(`case "${a}":`), "Server-Aktion fehlt: " + a);
   assert.ok(app.includes(`"${a}"`), "App ruft nicht: " + a);
   assert.ok(!server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT")).includes(`"${a}"`), "Gäste/Aushilfen dürfen nicht: " + a);
@@ -143,4 +143,30 @@ assert.match(sql3, /return 'anmeldung'/, "Seminar-Regel bleibt");
 assert.match(server, /const ts = \(alle \?\? \[\]\)\.filter\(\(x: any\) => rtSichtbar\(x, ich, gr\)\);/, "Liste: Gruppen-Tische nur für Mitglieder");
 assert.match(server, /if \(gruppeId && !gruppe\) throw new Fehler\("Diese Gruppe gibt es nicht oder du bist nicht darin\.", 403\);/, "nur für eigene Gruppe einladen");
 assert.equal((server.match(/rtTischHolen\(p\.id, ich\)/g) || []).length, 3, "Zusage, Verlassen, Leiten prüfen die Gruppe");
+
+// 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: kein Clubabend, immer nur ein Tisch; andere Termine nur mit Rückfrage
+const I = (m) => new Date(B + m * M).toISOString(), Z = (a, b) => ({ vonMs: B + a * M, bisMs: B + b * M });
+const andererTisch = { id: "x", art: "seminar", thema: "Kasse", beginn: I(0), ende: I(60), status: "geplant", sichtbar: true };
+assert.equal(rtKonflikte(Z(30, 90), [andererTisch], []).sperre[0].was, "tisch", "überschneidet sich → gesperrt");
+assert.ok(rtKonflikte(Z(60, 120), [andererTisch], []).frei, "direkt danach geht");
+assert.ok(rtKonflikte(Z(-60, 0), [andererTisch], []).frei, "direkt davor geht");
+assert.ok(rtKonflikte(Z(30, 90), [{ ...andererTisch, status: "abgesagt" }], []).frei, "abgesagt zählt nicht");
+assert.ok(rtKonflikte(Z(30, 90), [andererTisch], [], "x").frei, "beim Verlängern zählt der eigene Tisch nicht");
+assert.equal(rtKonflikte(Z(30, 90), [{ ...andererTisch, sichtbar: false }], []).sperre[0].thema, null, "fremder Gruppen-Tisch: ohne Thema");
+assert.match(rtKonfliktText(rtKonflikte(Z(30, 90), [andererTisch], []).sperre[0]), /schon ein Seminar \(„Kasse“\), 20:00–21:00 Uhr\. Es geht immer nur einer gleichzeitig/);
+const abend = { titel: "Clubabend", beginn: I(0), ende: null, art: "treffen", status: "geplant", zusagen: 12 };
+assert.equal(rtTreffenBis(abend), B + 3 * 60 * M, "Clubabend ohne Ende = 3 Std. (wie Kalender-Export)");
+assert.equal(rtKonflikte(Z(150, 210), [], [abend]).sperre[0].was, "clubabend", "Clubabend gleichzeitig → gesperrt");
+assert.match(rtKonfliktText(rtKonflikte(Z(150, 210), [], [abend]).sperre[0]), /Clubabend \(„Clubabend“, 20:00–23:00 Uhr, 12 haben zugesagt\) – dann bitte keinen Tisch/);
+assert.ok(rtKonflikte(Z(180, 240), [], [abend]).frei, "nach dem Clubabend geht");
+assert.ok(rtKonflikte(Z(150, 210), [], [{ ...abend, status: "abgesagt" }]).frei);
+const markt = { titel: "Weihnachtsmarkt", beginn: I(-2 * 24 * 60), ende: I(2 * 24 * 60), art: "veranstaltung", status: "geplant" };
+const km = rtKonflikte(Z(0, 60), [], [markt]);
+assert.ok(km.frei && km.hinweis.length === 1, "Veranstaltung: nur Hinweis mit Rückfrage");
+assert.match(rtKonfliktText(km.hinweis[0]), /Weihnachtsmarkt“ \(\d\d\.\d\d\.–\d\d\.\d\d\.\)/, "mehrtägig mit Datum");
+const sql4 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2763_tisch_nur_einer.sql", import.meta.url), "utf8");
+assert.match(sql4, /exclude using gist \(tstzrange\(beginn, ende, '\[\)'\) with &&\) where \(status = 'geplant'\)/, "Datenbank: nie zwei Tische gleichzeitig");
+assert.match(server, /if \(zl\.sperre\.length\) throw new Fehler\(zl\.sperre\[0\], 409\);/, "Einladen prüft vorher");
+assert.match(server, /error\?\.code === "23P01" \? new Fehler\(RT_DOPPELT, 409\)/, "gleichzeitig eingeladen → verständliche Meldung");
+assert.match(app, /if \(los\) los\.disabled = !!r\.sperre\.length;/, "Einladen gesperrt, solange die Zeit belegt ist");
 console.log("OK – Runder Tisch: Regeln geprüft");

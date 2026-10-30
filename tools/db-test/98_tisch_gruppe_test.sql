@@ -12,6 +12,7 @@ begin
   leiter := public.kc_club_tisch_beitreten(t, p[1], 150, 15);
   update public.kc_club_tisch set gruppe_id = null where id = t;
   offen := public.kc_club_tisch_beitreten(t, p[4], 150, 15);
+  update public.kc_club_tisch set status = 'abgesagt' where id = t;  -- 2.763.0: immer nur ein Tisch zur selben Zeit
   insert into public.kc_club_tisch (art, thema, beginn, dauer_min, ende, plaetze, gastgeber, gruppe_id) values ('seminar', 'Gruppen-Seminar', now(), 60, now() + interval '1 hour', 4, p[1], g) returning id into s;
   sem_ohne := public.kc_club_tisch_beitreten(s, p[3], 150, 15);
   insert into public.kc_club_tisch_teilnahme (tisch_id, person_id, zusage) values (s, p[3], 'ja');

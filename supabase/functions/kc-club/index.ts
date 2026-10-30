@@ -33,7 +33,7 @@ import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherhei
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
-import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.762.0), -ARTEN (2.762.0)
+import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.762.0), -ARTEN (2.762.0)
 import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.730.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.762.0";
+const SERVER_VERSION = "2.763.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5007,6 +5007,31 @@ async function rtLage(ich: Ich, nurId?: string) {
     vorausTage: RT.vorausTage, themaMax: RT.themaMax, beschreibungMax: RT.beschreibungMax, medienTage: RT.medienTage, textTage: RT.textTage, toMax: RT.toMax, toPunktMax: RT.toPunktMax,
     bestaetigungAnteil: RT.bestaetigungAnteil, arten: RT_ARTEN }, tische };
 }
+// 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: was ist an diesem Tag schon los? (Tische aller Gruppen, Clubtermine) + Konflikte für die gewählte Zeit.
+// Nur beim Einladen/Verlängern bzw. wenn im Formular Tag/Uhrzeit/Dauer geändert wird – 3–4 Abfragen, kein Dauerlauf (KC-DB-SPARSAM).
+async function rtZeitLage(ich: Ich, vonMs: number, bisMs: number, ohneId: string | null = null) {
+  const tag = berlinTag(new Date(vonMs)), [y, m, d] = tag.split("-").map(Number);
+  const t0 = Math.min(vonMs, berlinZuUtc(y, m, d, 0, 0).getTime()), t1 = Math.max(bisMs, berlinZuUtc(y, m, d, 0, 0).getTime() + 86400000);
+  const [{ data: ts, error: e1 }, { data: tr, error: e2 }] = await Promise.all([
+    db.from("kc_club_tisch").select("id,art,thema,beginn,ende,status,gruppe_id,gastgeber").eq("org_id", ORG).eq("status", "geplant").lt("beginn", new Date(t1).toISOString()).gt("ende", new Date(t0).toISOString()).limit(50),
+    db.from("kc_club_treffen").select("id,titel,beginn,ende,art,status,ganztaegig").eq("status", "geplant").lt("beginn", new Date(t1).toISOString()).gt("beginn", new Date(t0 - 7 * 86400000).toISOString()).limit(50)]);
+  if (e1 || e2) throw new Fehler("Die Termine konnten gerade nicht geprüft werden – bitte gleich nochmal.", 503); // nie „frei“ melden, wenn unbekannt (Regel 11)
+  const treffen = (tr ?? []).filter((x: any) => rtTreffenBis(x) > t0);
+  const abende = treffen.filter((x: any) => x.art === "treffen").map((x: any) => x.id);
+  const { data: ja } = abende.length ? await db.from("kc_club_teilnahme").select("treffen_id").in("treffen_id", abende).eq("antwort", "ja") : { data: [] as any[] };
+  for (const x of treffen as any[]) x.zusagen = (ja ?? []).filter((r: any) => r.treffen_id === x.id).length;
+  const gIds = [...new Set((ts ?? []).map((x: any) => x.gruppe_id).filter(Boolean))] as string[], gr = await rtMeineGruppen(ich, gIds);
+  const tische = (ts ?? []).map((x: any) => ({ ...x, sichtbar: rtSichtbar(x, ich, gr) }));
+  const k = rtKonflikte({ vonMs, bisMs }, tische, treffen, ohneId);
+  const uhr = (iso: string) => fZeit.format(new Date(iso));
+  const tagListe = [...tische.filter((x: any) => x.id !== ohneId).map((x: any) => ({ ms: Date.parse(x.beginn), sym: RT_ARTEN[x.art]?.sym || "🪑",
+      text: `${uhr(x.beginn)}–${uhr(x.ende)} ${RT_ARTEN[x.art]?.t || "Runder Tisch"}${x.sichtbar ? ` „${x.thema}“` : " (einer Gruppe)"}` })),
+    ...treffen.map((x: any) => ({ ms: Date.parse(x.beginn), sym: x.art === "treffen" ? "🍽️" : "📅",
+      text: `${x.ganztaegig || berlinTag(new Date(x.beginn)) !== tag ? "ganztägig/mehrtägig" : `${uhr(x.beginn)}${x.ende ? "–" + uhr(x.ende) : ""}`} ${x.art === "treffen" ? "Clubabend" : "Termin"} „${x.titel}“${x.art === "treffen" && x.zusagen ? ` · ${x.zusagen} Zusagen` : ""}` }))]
+    .sort((a, b) => a.ms - b.ms).map(({ sym, text }) => ({ sym, text }));
+  return { frei: k.frei, sperre: k.sperre.map((x) => rtKonfliktText(x, TZ)), hinweis: k.hinweis.map((x) => rtKonfliktText(x, TZ)), tag: tagListe };
+}
+const RT_DOPPELT = "Um diese Zeit gibt es gerade schon einen anderen Tisch – es geht immer nur einer gleichzeitig. Bitte eine andere Zeit wählen.";
 // Kurzfassung für den Start (Karte „Gleich: Runder Tisch …“): kommende Tische der nächsten 24 Std. + meine Zusage – nur wenn freigegeben
 async function rtKurz(ich: Ich) {
   const t = Date.now();
@@ -12140,12 +12165,16 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.762.0 KC-CLUB-RUNDER-TISCH-GRUPPE: nur für eine eigene feste Gruppe (Leitung, Innovation …) – wer einlädt, muss selbst darin sein
         const gruppeId = p.gruppe ? String(p.gruppe) : null, gruppe = gruppeId ? (await rtMeineGruppen(ich, [gruppeId])).get(gruppeId) : null;
         if (gruppeId && !gruppe) throw new Fehler("Diese Gruppe gibt es nicht oder du bist nicht darin.", 403);
+        // 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: kein Clubabend, kein anderer Tisch zur selben Zeit; andere Termine nur mit Rückfrage
+        const zl = await rtZeitLage(ich, beginnMs, beginnMs + e.dauer * 60000);
+        if (zl.sperre.length) throw new Fehler(zl.sperre[0], 409);
+        if (zl.hinweis.length && p.trotzdem !== true) return json({ ok: false, rueckfrage: zl.hinweis, tag: zl.tag });
         const { data: th, error: te } = await db.from("kc_communication_threads").insert({ org_id: ORG, subject: `${RT_ARTEN[art].sym} ${e.thema}`, created_by_person_id: ich.person_id }).select("id").single();
         if (te || !th) throw new Fehler("Der Tisch konnte nicht angelegt werden.", 503);
         await db.from("kc_communication_thread_participants").insert({ thread_id: th.id, person_id: ich.person_id });
         const { data: neu, error } = await db.from("kc_club_tisch").insert({ org_id: ORG, art, gruppe_id: gruppe?.id ?? null, tagesordnung: art === "besprechung" && to?.length ? to : null, thema: e.thema, beschreibung: e.beschreibung || null, beginn: new Date(beginnMs).toISOString(),
           dauer_min: e.dauer, ende: new Date(beginnMs + e.dauer * 60000).toISOString(), plaetze: e.plaetze, gastgeber: ich.person_id, thread_id: th.id }).select(RT_SPALTEN).single();
-        if (error || !neu) { await db.from("kc_communication_threads").delete().eq("id", th.id); throw new Fehler("Der Tisch konnte nicht angelegt werden.", 503); }
+        if (error || !neu) { await db.from("kc_communication_threads").delete().eq("id", th.id); throw error?.code === "23P01" ? new Fehler(RT_DOPPELT, 409) : new Fehler("Der Tisch konnte nicht angelegt werden.", 503); } // 23P01: gleichzeitig eingeladen (Sperre kc_club_tisch_nur_einer)
         await db.from("kc_club_tisch_teilnahme").insert({ tisch_id: neu.id, person_id: ich.person_id, zusage: "ja", zusage_am: jetzt() });
         await protokoll(ich.person_id, "tisch_anlegen", { tisch: neu.id, art, gruppe: gruppe?.id ?? null, beginn: neu.beginn, dauer: neu.dauer_min, plaetze: neu.plaetze });
         const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
@@ -12154,6 +12183,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const versand = p.bescheid === false ? null : await rtSenden(an.filter((x) => x !== ich.person_id),
           { titel: `${RT_ARTEN[art].sym} ${RT_ARTEN[art].t}${gruppe ? ` (${gruppe.symbol} ${gruppe.name})` : ""}: ${neu.thema}`, kurz: `${ich.vorname} lädt ein – ${rtText(neu, TZ)}. ${RT_ARTEN[art].anmeldung ? `Bitte in der App anmelden (${neu.plaetze} Plätze).` : "Wer mag, setzt sich dazu."}`, tischId: neu.id }, `${neu.id}:neu`);
         return json({ ok: true, id: neu.id, versand: !!versand, lage: await rtLage(ich) });
+      }
+      case "tisch_zeit_pruefen": { // 2.763.0: im Einladen-Formular, sobald Tag/Uhrzeit/Dauer gewählt sind – nur lesen
+        await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
+        const tag = String(p.datum || ""), uhr = String(p.uhr || ""), dauer = Number(p.dauer);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(tag) || !/^\d{1,2}:\d{2}$/.test(uhr) || !RT.dauern.includes(dauer)) throw new Fehler("Bitte Tag, Uhrzeit und Dauer wählen.", 400);
+        const von = dsMs(tag, uhr);
+        return json({ ok: true, ...(await rtZeitLage(ich, von, von + dauer * 60000)) });
       }
       case "tisch_zusage": { // beim Seminar = anmelden (Plätze begrenzt)
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
@@ -12209,10 +12245,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (f) throw new Fehler(f, f.startsWith("Das darf") ? 403 : 409);
         const set: Record<string, unknown> = { geaendert_am: jetzt() };
         if (aktion === "absagen") set.status = "abgesagt";
-        else if (aktion === "verlaengern") { set.verlaengert_min = (Number(x.verlaengert_min) || 0) + RT.verlaengernMin; set.ende = new Date(rtEndeMs({ ...x, verlaengert_min: set.verlaengert_min })).toISOString(); }
+        else if (aktion === "verlaengern") {
+          set.verlaengert_min = (Number(x.verlaengert_min) || 0) + RT.verlaengernMin; set.ende = new Date(rtEndeMs({ ...x, verlaengert_min: set.verlaengert_min })).toISOString();
+          const zl = await rtZeitLage(ich, Date.parse(x.ende), Date.parse(set.ende as string), x.id); // 2.763.0: die halbe Stunde danach muss frei sein
+          if (zl.sperre.length) throw new Fehler("Verlängern geht nicht: " + zl.sperre[0].replace(/ – bitte eine andere Zeit wählen\.$| Es geht immer nur einer gleichzeitig – bitte eine andere Zeit wählen\.$/, "."), 409);
+        }
         else { set.geschlossen_am = jetzt(); set.ende = jetzt(); }
         const { data: ok, error } = await db.from("kc_club_tisch").update(set).eq("id", x.id).eq("status", "geplant").eq("verlaengert_min", x.verlaengert_min).select("id");
-        if (error) throw new Fehler("Das hat nicht geklappt – bitte nochmal.", 503);
+        if (error) throw error.code === "23P01" ? new Fehler("Verlängern geht nicht: danach beginnt schon der nächste Tisch.", 409) : new Fehler("Das hat nicht geklappt – bitte nochmal.", 503);
         if (!ok?.length) throw new Fehler("Der Tisch wurde gerade geändert – die Ansicht wird neu geladen.", 409);
         await protokoll(ich.person_id, "tisch_" + aktion, { tisch: x.id });
         if (aktion === "absagen") {

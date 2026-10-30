@@ -9,6 +9,7 @@ begin
   ohne := public.kc_club_tisch_beitreten(s, p[3], 150, 15);
   mit := public.kc_club_tisch_beitreten(s, p[2], 150, 15);
   referent := public.kc_club_tisch_beitreten(s, p[1], 150, 15);
+  update public.kc_club_tisch set status = 'abgesagt' where id = s;  -- 2.763.0: immer nur ein Tisch zur selben Zeit
   insert into public.kc_club_tisch (thema, beginn, dauer_min, ende, plaetze, gastgeber) values ('Probe-Tisch', now(), 60, now() + interval '1 hour', 4, p[1]) returning id into r;
   tisch_frei := public.kc_club_tisch_beitreten(r, p[3], 150, 15);
   select art into alt from public.kc_club_tisch where id = r;

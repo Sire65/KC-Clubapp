@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.762.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.763.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22006,12 +22006,35 @@ function rundNeu() {
     ${(RUND.lage?.gruppen || []).length ? "" : '<p class="hinweis" style="margin-top:-4px">Für eine Gruppe (z. B. Leitung, Innovation) einladen geht, sobald du in einer festen Chat-Gruppe bist.</p>'}
     <div class="rund-zeile"><label class="feld">Tag <input type="date" id="rundTag" value="${heute}" min="${heute}"></label>
       <label class="feld">Uhrzeit <input type="time" id="rundUhr" value="20:00" step="300"></label></div>
+    <div id="rundZeitCheck" class="rund-check" aria-live="polite"></div>
     <div class="rund-zeile"><label class="feld">Dauer <select id="rundDauer">${r.dauern.map((d) => `<option value="${d}"${d === 60 ? " selected" : ""}>${d} Minuten</option>`).join("")}</select></label>
       <label class="feld">Plätze <select id="rundPlaetze">${plaetze}</select></label></div>
     <label class="rund-haken"><input type="checkbox" id="rundBescheid" checked> 📣 Alle Eingeladenen bekommen Bescheid${nurTest("runder_tisch") ? " (im Test nur Admins)" : ""}</label>
     <p class="hinweis" id="rundArtHinweis"></p>
     <div class="knoepfe"><button class="knopf haupt" id="rundLos" onclick="rundAnlegen()">🪑 Einladen</button><button class="knopf" onclick="fensterZu($('rundNeuBlatt'))">Abbrechen</button></div>`);
   rundArtWahl();
+  for (const id of ["rundTag", "rundUhr", "rundDauer"]) $(id)?.addEventListener("change", rundZeitPruefen);
+  rundZeitPruefen();
+}
+// 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: sobald Tag/Uhrzeit/Dauer gewählt sind, fragt die App, was an dem Tag schon los ist – kein Clubabend und
+// immer nur ein Tisch gleichzeitig (sonst bleibt „Einladen“ gesperrt). Ungeprüft heißt nie „frei“ (Vertrag Regel 11).
+const RUND_CHECK = { nr: 0, t: null };
+function rundZeitPruefen() {
+  clearTimeout(RUND_CHECK.t);
+  RUND_CHECK.t = setTimeout(async () => {
+    const el = $("rundZeitCheck"), los = $("rundLos"), nr = ++RUND_CHECK.nr; if (!el) return;
+    const d = { datum: $("rundTag")?.value, uhr: $("rundUhr")?.value, dauer: Number($("rundDauer")?.value) };
+    if (!d.datum || !d.uhr) { el.innerHTML = ""; return; }
+    el.className = "rund-check"; el.innerHTML = '<span class="hinweis">⏳ Prüfe, was um diese Zeit schon ansteht …</span>'; if (los) los.disabled = true;
+    try {
+      const r = await api("tisch_zeit_pruefen", d, { still: true }); if (nr !== RUND_CHECK.nr || !$("rundZeitCheck")) return;
+      RUND_CHECK.letzte = r;
+      el.className = "rund-check " + (r.sperre.length ? "rund-check-nein" : r.hinweis.length ? "rund-check-hinweis" : "rund-check-ja");
+      el.innerHTML = `${r.sperre.length ? r.sperre.map((x) => `<b>⛔ ${esc(x)}</b>`).join("<br>") : r.hinweis.length ? r.hinweis.map((x) => `⚠️ ${esc(x)}`).join("<br>") : "<b>✅ Um diese Zeit ist nichts anderes geplant.</b>"}
+        ${r.tag.length ? `<div class="rund-tag"><small>An diesem Tag:</small><ul>${r.tag.map((x) => `<li>${esc(x.sym)} ${esc(x.text)}</li>`).join("")}</ul></div>` : ""}`;
+      if (los) los.disabled = !!r.sperre.length;
+    } catch (e) { if (nr !== RUND_CHECK.nr || !$("rundZeitCheck")) return; el.className = "rund-check rund-check-hinweis"; el.innerHTML = `⚠️ Konnte nicht prüfen, ob die Zeit frei ist (${esc(fehlerText(e, ""))}). Beim Einladen prüft der Server noch einmal.`; if (los) los.disabled = false; }
+  }, 350);
 }
 function rundArtWahl() {
   const k = document.querySelector('input[name="rundArt"]:checked')?.value || "runder_tisch", a = RUND_ARTEN[k];
@@ -22028,8 +22051,14 @@ async function rundAnlegen() {
   const tagesordnung = RUND_ARTEN[art]?.tagesordnung ? ($("rundTo")?.value || "").split("\n").map((x) => x.trim()).filter(Boolean) : null;
   const d = { art, tagesordnung, gruppe: $("rundGruppe")?.value || null, thema, beschreibung: $("rundBeschr")?.value.trim() || "", datum: $("rundTag")?.value, uhr: $("rundUhr")?.value, dauer: Number($("rundDauer")?.value), plaetze: Number($("rundPlaetze")?.value), bescheid: !!$("rundBescheid")?.checked };
   if (!d.datum || !d.uhr) return melde("Bitte Tag und Uhrzeit wählen.", true);
-  try { const r = await api("tisch_anlegen", d, { warten: true }); fensterZu($("rundNeuBlatt")); rundLageSetzen(r.lage); melde(r.versand ? (d.gruppe ? `🪑 Eingeladen – die Gruppe hat Bescheid bekommen` : "🪑 Eingeladen – alle haben Bescheid bekommen") : "🪑 Eingeladen"); }
-  catch (e) { meldeFehler(e); }
+  try {
+    let r = await api("tisch_anlegen", d, { warten: true });
+    if (r?.rueckfrage) { // 2.763.0: andere Termine zur selben Zeit (z. B. Weihnachtsmarkt) – nur mit Rückfrage
+      if (!(await frage(`Trotzdem einladen?\n\n${r.rueckfrage.join("\n")}`, { ja: "🪑 Trotzdem einladen" }))) return;
+      r = await api("tisch_anlegen", { ...d, trotzdem: true }, { warten: true });
+    }
+    fensterZu($("rundNeuBlatt")); rundLageSetzen(r.lage); melde(r.versand ? (d.gruppe ? `🪑 Eingeladen – die Gruppe hat Bescheid bekommen` : "🪑 Eingeladen – alle haben Bescheid bekommen") : "🪑 Eingeladen"); }
+  catch (e) { meldeFehler(e); rundZeitPruefen(); }
 }
 async function rundZusage(id, zusage) {
   const sem = rundArt(rundTisch(id)).anmeldung;
