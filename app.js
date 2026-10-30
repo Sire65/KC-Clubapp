@@ -21976,14 +21976,14 @@ async function epBauen() {
     else if (t.ber) { bers++; zeit = `Bereitschaft ${epUhr(t.ber[0])}–${epUhr(t.ber[1])}`; std = "–"; bem = "📞 nur auf Anruf"; }
     else if (/^u+$/.test(t.w.slice(Math.round((ra - von) * 2), Math.round((rb - von) * 2)))) bem = "Sperrzeit";
     return `<tr class="${[0, 6].includes(x.getDay()) ? "we" : ""}"><td class="tag">${EP_WT[x.getDay()]} ${String(x.getDate()).padStart(2, "0")}.${String(x.getMonth() + 1).padStart(2, "0")}.</td>
-      <td class="rz">${t.rz ? `${epUhr(ra)}–${epUhr(rb)} Uhr` : "–"}</td><td class="art">${esc(t.art)}</td>${zellen}<td class="zeit">${zeit}</td><td class="std">${std}</td><td class="bem">${bem}</td></tr>`;
+      <td class="rz">${t.rz ? `${epUhr(ra)}–${epUhr(rb)} Uhr` : "–"}</td><td class="art">${esc(dpdArtName(t.art, x))}</td>${zellen}<td class="zeit">${zeit}</td><td class="std">${std}</td><td class="bem">${bem}</td></tr>`;
   }).join("");
   const uhren = Array.from({ length: bis - von }, (_, i) => `<th colspan="2">${von + i}</th>`).join("");
   const regel = [d.maxDienst != null ? `⏱️ Dienste bis ${d.maxDienst} Std.` : "", d.maxGesamt != null ? `Σ höchstens ${d.maxGesamt} Std.` : "", d.km != null ? `🚗 Anfahrt ${d.km} km` : "",
     `📞 Bereitschaft: ${d.bereitschaft ? "ja" : "nein"}`].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
   const leg = [["#7d1727", "<b>Dienst</b>"], ["repeating-linear-gradient(45deg,#425b6e 0 1mm,#dfe5ea 1mm 2mm)", "<b>Bereitschaft</b>"], ["#dbe6f8", "Wunschzeit"], ["#e2f1e6", "Kannzeit"],
     ["#fdeec4", "Nur wenn nötig"], ["repeating-linear-gradient(135deg,#f7d9d6 0 .8mm,#fceeed .8mm 1.6mm)", "Sperrzeit"], ["#fff", "Regelzeit ohne Angabe"], ["#e4e1dc", "außerhalb der Regelzeit"]]
-    .map(([f, t]) => `<span><i style="background:${f}"></i>${t}</span>`).join("");
+    .map(([f, t]) => `<span><i style="background:${f}"></i>${t}</span>`).join("") + "<span>· <b>WM</b> = Weihnachtsmarkt · <b>Wochenmarkt</b> = Di und Fr · <b>Nikolaus</b> = 06.12.</span>";
   const stand = d.stand ? wann(d.stand) : "";
   const html = `<div class="ep"><div class="ep-kopf"><div><h1>${esc(d.name || ICH?.name || "")}</h1><div class="t">Mein Dienstplan · ${esc(d.titel)}</div></div>
       <div class="r">Entwurf · Stand ${esc(stand)}<br>Köcheclub</div></div>
@@ -33865,7 +33865,8 @@ const DPD_WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"], DPD_ART = { p: "pref"
 const dpdUhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return m ? `${h}:${String(m).padStart(2, "0")}` : String(h); };
 const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
 // 2.679.0 KC-CLUB-DP-MARKTNAME: Markttag am Di/Fr = „Wochenmarkt“, sonst „WM“ (Weihnachtsmarkt), sonntags dazu „Nikolaus“ – Aufbau/Nachbereitung bleiben
-const dpdArtName = (art, x) => art !== "Markttag" ? art : [2, 5].includes(x.getDay()) ? "Wochenmarkt" : x.getDay() === 0 ? "WM · Nikolaus" : "WM";
+// 2.786.0 (Wunsch Hansi 30.10.: „Aufbau, WM für Weihnachtsmarkttag, Wochenmarkt (Dienstag und Freitag) und Nikolaus am 06.12.“) – Nikolaus nur am 06.12., nicht jeden Sonntag
+const dpdArtName = (art, x) => art !== "Markttag" ? art : x.getMonth() === 11 && x.getDate() === 6 ? "Nikolaus" : [2, 5].includes(x.getDay()) ? "Wochenmarkt" : "WM";
 const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3e" onclick="dpdStart()" title="Dienstplan zum Ausdrucken"><span class="sym">🗓️</span>
     <span class="schild"><span class="jahr">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
 // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: vor dem Öffnen den Stand holen (Stand, neue Wunschpläne seit dem Rechnen) – „🔄 Jetzt neu rechnen“ rechnet auf dem Club-Server

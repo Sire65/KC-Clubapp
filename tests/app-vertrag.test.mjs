@@ -13593,7 +13593,8 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   assert.equal(dpdArtName("Markttag", tag("2026-12-01")), "Wochenmarkt", "Dienstag");
   assert.equal(dpdArtName("Markttag", tag("2026-12-04")), "Wochenmarkt", "Freitag");
   assert.equal(dpdArtName("Markttag", tag("2026-12-03")), "WM", "Donnerstag");
-  assert.equal(dpdArtName("Markttag", tag("2026-12-06")), "WM · Nikolaus", "Sonntag");
+  assert.equal(dpdArtName("Markttag", tag("2026-12-06")), "Nikolaus", "Nikolaus am 06.12.");
+  assert.equal(dpdArtName("Markttag", tag("2026-12-13")), "WM", "anderer Sonntag: WM");
   assert.equal(dpdArtName("Aufbau", tag("2026-12-06")), "Aufbau", "Aufbau bleibt");
   assert.equal(dpdArtName("Nachbereitung", tag("2026-12-01")), "Nachbereitung", "Nachbereitung bleibt");
   assert.ok(/name: dpdArtName\(t\.art, x\), wt: DPD_WD/.test(programm) && /<span class="kind">\$\{esc\(t\.name\)\}<\/span>/.test(programm) && (programm.match(/<small>\$\{esc\(t\.name\)\}<\/small><\/th>/g) || []).length === 2 && /art: dpdArtName\(t\.art, x\), zellen/.test(programm), "Matrix, Tagesblätter und Lückenliste zeigen den Namen");
