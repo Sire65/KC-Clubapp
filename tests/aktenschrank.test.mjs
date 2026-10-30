@@ -31,7 +31,8 @@ assert.match(app, /\$\{buSchrankHtml\(`<div class="bu-wand"><div class="bu-regal
 assert.ok(!/buSchrankHtml/.test(app.slice(app.indexOf("function buStartListeHtml()"), app.indexOf("function buStartListeHtml()") + 3000)), "Liste ohne Schrank");
 // Bewegung: Lamellen klappen, Jalousie schiebt nach links, Pfeil fährt mit; ohne Effekte / reduzierte Bewegung sofort
 assert.match(block, /rotateY\(68deg\)/); assert.match(block, /j\.animate\(\[\{ width: "100%" \}, \{ width: "0%" \}\], fahrt\)/); assert.match(block, /g\.animate\(\[\{ left: rechts\(\) \}, \{ left: "6px" \}\], fahrt\)/);
-assert.match(block, /const buSchrankRuhig = \(\) => !einst\("animiert", true\) \|\| matchMedia\?\.\("\(prefers-reduced-motion: reduce\)"\)\?\.matches;/);
+assert.match(block, /const buSchrankRuhig = \(\) => !einst\("animiert", true\);/, "2.770.0: nur der App-Schalter zählt (wie alle Effekte seit 2.409.0)");
+assert.ok(!/prefers-reduced-motion/.test(block), "Handy-Einstellung „Bewegung reduzieren“ hält die Jalousie nicht an (Fund Hansi 30.10.)");
 assert.match(block, /if \(buSchrankRuhig\(\) \|\| !j\.animate\) \{ BU_SCHRANK_LAEUFT = true; return fertig\(\); \}/);
 // Aussehen (CD: Weinrot/Beige), Pfeil rechts mittig ↔ ganz links
 assert.match(html, /\.bu-jal-griff \{ position: absolute; top: 50%; right: 8px;/); assert.match(html, /\.bu-schrank\.auf \.bu-jal-griff \{ right: auto; left: 6px; \}/);

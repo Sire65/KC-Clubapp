@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.769.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.770.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19711,11 +19711,13 @@ const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.rech
 // since 1991 – dann kann der Schrank zubleiben, wenn man nur am Schreibtisch etwas machen möchte“; Vorbild: Jalousie im Kopf) ----------
 // Zu = nur die Zeile „🗄️ Aktenschrank · n Ordner ⌄“. Öffnen: Bereich klappt auf, die geschlossene Jalousie (Lamellen, Kochmütze + „since 1991“) klappt
 // ihre Lamellen auf und schiebt sich nach links zusammen; der runde Pfeil wandert mit (rechts mittig ◀ → ganz links ▶). Schließen umgekehrt, danach
-// wieder nur die Zeile. Gemerkt je Gerät (Bequemlichkeit); erstes Mal offen. Ohne Effekte / „Bewegung reduzieren“: sofort. Während eines Erklär-Videos
+// wieder nur die Zeile. Gemerkt je Gerät (Bequemlichkeit); erstes Mal offen. Ohne Effekte (App-Schalter „✨ Animierte Knöpfe“): sofort. Während eines Erklär-Videos
 // steht der Schrank immer offen (das Video zeigt das Regal). Ordner über Sprache, Suche oder Film öffnen eigene Ansichten – dafür muss der Schrank nicht auf sein.
 const BU_SCHRANK = "kc_club_bu_schrank", BU_SCHRANK_KLAPP_MS = 320, BU_SCHRANK_FAHRT_MS = 1100, BU_SCHRANK_TUER_MS = 500, BU_SCHRANK_LAMELLEN = 28;
 const buSchrankOffen = () => lsLesen(BU_SCHRANK) !== "zu" || document.body.classList.contains("rg-an");
-const buSchrankRuhig = () => !einst("animiert", true) || matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+// 2.770.0 (Fund Hansi „Jalousie-Effekt sieht man nicht“ – sein Handy meldet „Bewegung reduzieren“, wie 2.161.0 beim Kopf): wie bei allen Effekten seit
+// 2.409.0 zählt nur der App-Schalter „✨ Animierte Knöpfe“, nicht die Handy-Einstellung
+const buSchrankRuhig = () => !einst("animiert", true);
 function buSchrankHtml(regal, anzahl) {
   const auf = buSchrankOffen();
   return `<div class="bu-schrank${auf ? " auf" : ""}" id="buSchrank">

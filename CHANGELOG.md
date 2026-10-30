@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.770.0 – 2026-10-30 – 🐞 Aktenschrank: Jalousie auch bei „Bewegung reduzieren“
+Fund Hansi (30.10.): „Jalousie-Effekt sieht man nicht. Aufklappen geht, aber keine Jalousien.“ – Sein Handy meldet „Bewegung reduzieren“; der Aktenschrank sprang dann ohne Jalousie auf und zu. Wie bei allen Effekten seit 2.409.0 zählt jetzt nur der App-Schalter „✨ Animierte Knöpfe“ (KC-CLUB-AKTENSCHRANK-JALOUSIE).
+
 ## 2.769.0 – 2026-10-30 – 🗄️ Büro: Aktenschrank mit Jalousie
 Wunsch Hansi (30.10.): „Jalousie-Funktion ins Ordnerregal, von rechts nach links, rechts mittig ein Pfeilschalter – dann ändert sich der Pfeil und ist ganz links. Geschlossen komplett ein Einklapp-Bereich: nur eine Zeile ‚Aktenschrank‘ mit Anzahl Ordner, ganz rechts der Einklapp-Pfeil; öffnet man ihn, geht der Aktenschrank von alleine auf. Vorne auf die Tür das Logo und since 1991.“ (KC-CLUB-AKTENSCHRANK-JALOUSIE)
 - Büro-Raum: Die Ordner stehen in einem Aktenschrank. Zu = nur die Zeile „🗄️ Aktenschrank · n Ordner ⌄“, der Schreibtisch rückt direkt darunter.
