@@ -47,7 +47,7 @@ jobs:
       - run: node tests/gespraeche.test.mjs
       # KC-CLUB-TREFFEN-KALENDERTAG (2.761.0)
       - run: node tests/treffen-tag.test.mjs
-      # KC-CLUB-SPUR-PINNWAND-ECHT (2.766.0)
+      # KC-CLUB-SPUR-PINNWAND-ECHT (2.767.0)
       - run: node tests/spur-pinnwand-echt.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs

@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.767.0 – 2026-10-30 – 🐞 Wege: „Zettel aufgehängt“ nur mit echtem Zettel (KC-CLUB-SPUR-PINNWAND-ECHT)
+Fund Hansi (30.10., 9:57): „Karla war eben drin und hat in Wege wieder ‚Zettel aufgehängt‘. Aber ich sehe keinen Zettel.“ – Karla hatte keinen aufgehängt: Ihre App lag 13 Std. im Hintergrund, noch mit einer Version vor dem Fix 2.759.0. Beim Aufwachen meldete der alte Code das stille Nachsehen nach neuen Zetteln noch als Handlung; 7 Sekunden später lief die neue Version (die den Schritt aus ihrem Zwischenspeicher noch einmal nachschickte).
+- Der Server prüft jetzt selbst: „📌 Zettel an die Pinnwand gehängt“ wird nur gespeichert, wenn es von dieser Person wirklich einen Zettel ±10 Min. um den Schritt gibt – egal, wie alt die App ist (eine Abfrage, nur wenn der Schritt vorkommt).
+- Bereinigung: Migration `20261030_kc_club_spur_pinnwand_echt.sql` entfernt die falschen Schritte seit dem Fix (2 Einträge, beide Karla 9:44); andere Schritte derselben Zeilen bleiben. Tests `tests/spur-pinnwand-echt.test.mjs`, `tools/db-test/94_spur_pinnwand_echt_test.sql`.
+
 ## 2.766.0 – 2026-10-30 – 🪧 Weihnachtsmarkt-Schilder im Club-CD + 🖨️ Druckpaket · 🔴 Runder Tisch live: Ton, Kamera, Bildschirm, Unterlagen zeigen, Redestab (KC-CLUB-SCHILDER-CD, KC-CLUB-SCHILDER-DRUCKPAKET, KC-CLUB-RUNDER-TISCH-LIVE) · Server 2.766.0
 Ein Bündel aus zwei Arbeiten derselben Sitzung (auf dem Arbeitszweig als 2.765.0 und 2.766.0 gebaut; 2.765.0 hatte inzwischen eine andere Sitzung vergeben). Hansi: „Einspielen noch heute morgen, damit ich heute noch eine Besprechung machen kann.“
 

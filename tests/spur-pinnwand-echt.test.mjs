@@ -1,4 +1,4 @@
-// KC-CLUB-SPUR-PINNWAND-ECHT (2.766.0, Fund Hansi 30.10.2026: Karla „Zettel aufgehängt“, aber kein Zettel – alte App aus dem Hintergrund).
+// KC-CLUB-SPUR-PINNWAND-ECHT (2.767.0, Fund Hansi 30.10.2026: Karla „Zettel aufgehängt“, aber kein Zettel – alte App aus dem Hintergrund).
 // Aufruf: node tests/spur-pinnwand-echt.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";
