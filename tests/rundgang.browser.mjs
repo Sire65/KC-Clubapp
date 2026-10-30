@@ -40,11 +40,11 @@ const RT_LEUTE = Array.from({ length: 18 }, (_, i) => ({ id: i ? "KC-P-RT" + i :
 const RT_TISCH = { id: "11111111-2222-3333-4444-555555555555", thema: "Club-Song", beschreibung: "Probe", beginn: rtZeit(-10), ende: rtZeit(50), dauer: 60, verlaengert: 0, plaetze: 18,
   text: "Do 05.11. 20:00 Uhr · 60 Min.", phase: "offen", gastgeber: "KC-P-RT3", gastgeberName: "Probe3 Mitglied", darfLeiten: true, chat: null, imChat: true, medienWeg: false,
   meineZusage: "ja", ichSitze: true, zusagen: RT_LEUTE.slice(0, 9), amTisch: RT_LEUTE, warenDa: 0 };
-const RT_LAGE = { aktiv: true, regeln: { plaetzeMin: 4, plaetzeMax: 18, dauern: [30, 60, 90], vorlaufMin: 15, herzSek: 60, vorausTage: 60, themaMax: 80, beschreibungMax: 300, medienTage: 7, textTage: 30 },
+const RT_LAGE = { aktiv: true, gruppen: [{ id: "66666666-2222-3333-4444-555555555555", name: "Innovation", symbol: "💡" }], regeln: { plaetzeMin: 4, plaetzeMax: 18, dauern: [30, 60, 90], vorlaufMin: 15, herzSek: 60, vorausTage: 60, themaMax: 80, beschreibungMax: 300, medienTage: 7, textTage: 30 },
   tische: [RT_TISCH, { ...RT_TISCH, id: "22222222-2222-3333-4444-555555555555", beginn: rtZeit(2880), ende: rtZeit(2940), phase: "geplant", meineZusage: null, ichSitze: false, amTisch: [], zusagen: [] },
     // 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN: laufendes Seminar (Hörsaal), Besprechung mit Tagesordnung, vorbei: Seminar mit Teilnahmebestätigung
     { ...RT_TISCH, id: "33333333-2222-3333-4444-555555555555", art: "seminar", thema: "Bilderrechner für Einsteiger", plaetze: 12, gastgeber: "KC-P-RT3", amTisch: RT_LEUTE.slice(0, 10) },
-    { ...RT_TISCH, id: "44444444-2222-3333-4444-555555555555", art: "besprechung", thema: "Weihnachtsmarkt", tagesordnung: ["Begrüßung", "Stand und Dienste", "Verschiedenes"], phase: "geplant", beginn: rtZeit(600), ende: rtZeit(660), amTisch: [] },
+    { ...RT_TISCH, id: "44444444-2222-3333-4444-555555555555", art: "besprechung", gruppe: { id: "66666666-2222-3333-4444-555555555555", name: "Innovation", symbol: "💡" }, thema: "Weihnachtsmarkt", tagesordnung: ["Begrüßung", "Stand und Dienste", "Verschiedenes"], phase: "geplant", beginn: rtZeit(600), ende: rtZeit(660), amTisch: [] },
     { ...RT_TISCH, id: "55555555-2222-3333-4444-555555555555", art: "seminar", thema: "Kasse Schulung", phase: "vorbei", beginn: rtZeit(-3000), ende: rtZeit(-2940), amTisch: [],
       bestaetigung: { von: rtZeit(-3000), bis: rtZeit(-2940), min: 60 } }] };
 Object.assign(ANTWORTEN, { tisch_liste: RT_LAGE, tisch_platz: { ok: true, ergebnis: "da", lage: RT_LAGE } });
@@ -112,12 +112,13 @@ try {
         await rundTischZeigen("33333333-2222-3333-4444-555555555555");
         const seminar = { pult: !!document.querySelector("#rundTischBlatt .rund-pult .rund-platz.gastgeber"), reihen: document.querySelectorAll("#rundTischBlatt .rund-reihen .rund-platz").length, quer: document.documentElement.scrollWidth > innerWidth + 2 };
         RUND.sitze = RUND.warte = null; clearTimeout(RUND.herz); fensterZu($("rundTischBlatt"));
-        const inhalt = $("rundInhalt")?.textContent || "", to = /Stand und Dienste/.test(inhalt), knopf = /Teilnahmebestätigung/.test(inhalt);
+        const inhalt = $("rundInhalt")?.textContent || "", to = /Stand und Dienste/.test(inhalt), knopf = /Teilnahmebestätigung/.test(inhalt), gruppe = /nur 💡 Innovation/.test(inhalt);
         const tb = druckTischBestaetigung({ thema: "Kasse Schulung", beginn: new Date().toISOString(), ende: new Date().toISOString(), referent: "R", name: "Test", b: { von: new Date().toISOString(), bis: new Date().toISOString(), min: 60 } });
         fensterZu($("rundBlatt")); rundNeu();
         const neu = !!$("rundThema") && document.querySelectorAll('input[name="rundArt"]').length === 3 && document.documentElement.scrollWidth <= innerWidth + 2;
-        document.querySelector('input[name="rundArt"][value="besprechung"]').click(); const toFeld = !$("rundToFeld").classList.contains("versteckt"); fensterZu($("rundNeuBlatt"));
-        return { karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
+        document.querySelector('input[name="rundArt"][value="besprechung"]').click(); const toFeld = !$("rundToFeld").classList.contains("versteckt");
+        const fuerWen = [...($("rundGruppe")?.options || [])].map((o) => o.textContent).join("|"); fensterZu($("rundNeuBlatt"));
+        return { karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld, gruppe, fuerWen }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
       if (!rt.karte) melde("Runder Tisch: Karte auf der Startseite fehlt");
       if (!rt.liste) melde("Runder Tisch: Liste erscheint nicht " + (rt.fehler || ""));
       if (rt.plaetze !== 18 || rt.grau !== 1) melde(`Runder Tisch: ${rt.plaetze} Plätze, ${rt.grau} grau (erwartet 18 und 1)`);
@@ -126,6 +127,7 @@ try {
       if (!rt.seminar?.pult || rt.seminar?.reihen !== 12 || rt.seminar?.quer) melde("Seminar: Hörsaal falsch " + JSON.stringify(rt.seminar)); // 9 Teilnehmer + 3 freie Plätze
       if (!rt.to || !rt.toFeld) melde("Besprechung: Tagesordnung fehlt");
       if (!rt.knopf || !rt.tb) melde("Seminar: Teilnahmebestätigung fehlt");
+      if (!rt.gruppe || !/Alle Mitglieder\|💡 nur Gruppe „Innovation“/.test(rt.fuerWen || "")) melde("Gruppe: Hinweis oder „Für wen?“ fehlt " + (rt.fuerWen || "")); // 2.762.0
     }
     // 2.727.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version
     const teile = await seite.evaluate(async () => { const out = [];

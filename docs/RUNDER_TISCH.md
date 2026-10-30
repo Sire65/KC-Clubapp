@@ -1,6 +1,6 @@
 # 🪑 Runder Tisch – Spezifikation (KC-CLUB-RUNDER-TISCH)
 
-**Stand:** 30.10.2026 · **Status:** RT1 (2.760.0) und RT1b Arten (2.761.0) gebaut, 🔒 erst nur Admin zum Testen; RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
+**Stand:** 30.10.2026 · **Status:** RT1 (2.760.0), RT1b Arten (2.761.0), Gruppen + Platzmessung (2.762.0) gebaut, 🔒 erst nur Admin zum Testen; RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
 **Entwurf zum Anklicken:** https://claude.ai/artifact/5WfwmnFKfEm5nj8FmK2qFL (Tisch mit 2–18 Plätzen, Chat-Ansicht; Namen sind Beispiele)
 
 ## 1. Ziel
@@ -173,8 +173,8 @@ Link vor Beginn −30 Min. und nach Ende ungültig; zweites Gerät abgelehnt; ke
 
 Entschieden am 30.10.2026: jedes Mitglied darf Tischgäste einladen (RT4); Fristen 7/30 Tage bleiben.
 
-1. Sollen **Gäste auch live sprechen** dürfen, oder nur schreiben und Sprachnachrichten senden? *Vorschlag:* ja, wenn der Gastgeber ihnen den Redestab gibt.
-2. Soll ein Tisch auch **nur für eine Gruppe** (z. B. Vorstand) einladbar sein, oder immer für alle Mitglieder? (RT1: immer für alle Mitglieder)
+Entschieden am 30.10.2026 (später): **Gäste dürfen auch reden** (RT3/RT4: wie Mitglieder mit dem 🥄 Redestab); Tische, Seminare und Besprechungen
+können **auch nur für eine Gruppe** angesetzt werden (Abschnitt 14, gebaut in 2.762.0). Zurzeit nichts offen.
 
 ## 12. Umsetzung RT1 (2.760.0) – was gebaut ist und wo es von oben abweicht
 
@@ -222,3 +222,36 @@ Entscheidungen Hansi (30.10.2026): „Besprechung“ statt „Konferenz“ (Konf
 - **Anmeldung:** zwei gleichzeitige Anmeldungen für den letzten Platz → der Server zählt nach und nimmt die überzählige zurück (nie überbucht).
   Platz nehmen ohne Anmeldung lehnt `kc_club_tisch_beitreten` ab („anmeldung“); der Referent darf immer.
 - **Später:** Besprechung mit 🔴 Live-Abstimmung und Protokoll aus Clubabend Live; Seminar-Unterlagen vorab; Anbindung an „🎓 Schulungen verwalten“.
+
+## 14. Nur für eine Gruppe (2.762.0)
+
+Wunsch Hansi (30.10.2026): „Auch für Gruppen wie Leitung, Innovation usw. können Tische, Seminare und Besprechungen anberaumt werden.“
+- Beim Einladen **„Für wen?“**: 👥 Alle Mitglieder oder eine **feste Chat-Gruppe**, in der man selbst ist (KC-CLUB-GRUPPEN, `kc_club_gruppen`).
+  Kein zweites Gruppen-System (Vertrag Regel 3): wer in der Gruppe ist, bestimmt allein die Chat-Gruppe – auch später hinzugekommene Mitglieder.
+- Einen Gruppen-Tisch **sehen, zusagen und betreten nur die Mitglieder der Gruppe** und wer ihn leitet; Bescheid bekommen nur sie.
+  Die Datenbank prüft das beim Platznehmen selbst (`kc_club_tisch_beitreten` → „gruppe“), der Server bei Liste, Zusage, Verlassen und Leiten.
+- Wird die Gruppe gelöscht, bleibt der Tisch für alle anderen unsichtbar (kein Fremdschlüssel, der ihn sonst „für alle“ öffnen würde).
+- Migration `20261030_kc_club_v2762_tisch_gruppe.sql` (Spalte `gruppe_id`), Probelauf `tools/db-test/95_tisch_gruppe_test.sql`.
+
+## 15. Platz am Tisch: bis wann Koch-Figuren, ab wann Buchstaben (Messung 30.10.2026, 2.762.0)
+
+Gemessen im Browser (Klick-Rundgang, Chromium) mit dem echten Fenster: Tischbreite **W = 288 px** bei 320 px Handy, 328 (360), 358 (390), 380 (412),
+398 (430), höchstens 420 px (Tablet/PC). Mit den festen Größen aus 2.760.0 (52/44/36 px) überlappten ab **16 Personen die Namen**
+(320–430 px Handy) und bei **18 Personen auf 320 px die Kreise**; Koch-Figuren in 36-px-Kreisen sind kaum zu erkennen.
+
+Seit 2.762.0 rechnet die App aus dem echten Platz (`rundGroesse` in app.js, Werte in `RUND_PLATZ`):
+Abstand zweier Plätze s = 2 · 0,41 · W · sin(π/n); Kreis d = s − 6, höchstens 56 px und 16 % von W. **Koch-Figur ab 40 px**, darunter **Anfangsbuchstaben**;
+**Namen unter dem Platz ab s ≥ 78 px**, sonst als Liste „Dabei: …“ unter dem Tisch (grau markiert ⚪ = unbekannt). Dreht man das Handy, wird neu gemessen.
+
+| Handy | 4–8 | 10 | 12 | 14 | 16 | 18 Personen |
+|---|---|---|---|---|---|---|
+| 320 px | 46 Figur + Name | 46 Figur | 46 Figur | 46 Figur | 40 Figur | **35 Buchstaben** |
+| 360 px | 52 Figur + Name | 52 Figur + Name | 52 Figur | 52 Figur | 46 Figur | 40 Figur |
+| 390 px | 56 Figur + Name | 56 Figur + Name | 56 Figur | 56 Figur | 51 Figur | 44 Figur |
+| 412–430 px | 56 Figur + Name | 56 Figur + Name | 56 Figur + Name | 56 Figur | 54–56 Figur | 48–50 Figur |
+| Tablet/PC | 56 Figur + Name | 56 Figur + Name | 56 Figur + Name | 56 Figur | 56 Figur | 53 Figur |
+
+(Zahl = Kreis in px.) Nachgemessen: auf allen Breiten und für 4–18 Personen keine Überlappung von Kreisen oder Namen und nichts außerhalb der Fläche.
+**Ergebnis:** Koch-Figuren passen bis 18 Personen ab 360 px Handybreite; nur auf sehr kleinen Handys (320 px) zeigt die App bei 17–18 Personen Buchstaben.
+Namen stehen am Platz bis 8 Personen (320 px), 10 (360–390 px) bzw. 12 (ab 412 px). Im Seminar (Hörsaal) passen in jede Reihe so viele 40-px-Plätze,
+wie die Breite erlaubt (Figur und Name immer). Der Test `tests/runder-tisch.test.mjs` hält die Werte fest.

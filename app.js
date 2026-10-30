@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.761.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.762.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -21854,7 +21854,7 @@ function rundKarteHtml(t) {
   const zus = t.phase === "vorbei" ? "" : A.anmeldung ? `📝 ${angemeldet} von ${t.plaetze} Plätzen angemeldet${t.meineZusage === "ja" && !t.darfLeiten ? " – du bist dabei" : ""}`
     : t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
   const am = t.phase === "offen" || t.phase === "gleich" ? ` · 🪑 ${t.amTisch.length} von ${t.plaetze} am Tisch` : t.phase === "vorbei" ? ` · ${t.warenDa} waren dabei` : "";
-  return `<div class="karte rund-karte rund-${esc(t.phase)}"><div class="rund-art">${A.sym} ${esc(A.t)}</div><div><b>${esc(t.thema)}</b> <small class="rund-phase">${RUND_PHASE[t.phase] || ""}</small></div>
+  return `<div class="karte rund-karte rund-${esc(t.phase)}"><div class="rund-art">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 nur ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""}</div><div><b>${esc(t.thema)}</b> <small class="rund-phase">${RUND_PHASE[t.phase] || ""}</small></div>
     <div class="hinweis">${esc(t.text)} · ${esc(A.leiter)}: ${esc(t.gastgeberName)}</div>
     ${t.beschreibung ? `<div class="rund-beschreibung">${esc(t.beschreibung)}</div>` : ""}
     ${t.tagesordnung?.length && t.phase !== "vorbei" ? `<ol class="rund-to">${t.tagesordnung.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
@@ -21889,11 +21889,13 @@ function rundNeu() {
     <div class="rund-vorschlaege">${["🎤 Club-Song", "🎄 Weihnachtsmarkt", "📖 Rezepte", "🧳 Ausflug", "💡 Ideen für den Club"].map((v) => `<button type="button" class="knopf klein" onclick="$('rundThema').value=${jsArg(v.replace(/^\S+ /, ""))}">${v}</button>`).join("")}</div>
     <label class="feld"><span id="rundBeschrT">Worum geht's? (freiwillig)</span> <textarea id="rundBeschr" maxlength="${r.beschreibungMax}" rows="2"></textarea></label>
     <label class="feld versteckt" id="rundToFeld">Tagesordnung – ein Punkt je Zeile (höchstens ${r.toMax || 12}) <textarea id="rundTo" rows="4" placeholder="Begrüßung&#10;Weihnachtsmarkt: Stand und Dienste&#10;Verschiedenes"></textarea></label>
+    <label class="feld">Für wen? <select id="rundGruppe"><option value="">👥 Alle Mitglieder</option>${(RUND.lage?.gruppen || []).map((g) => `<option value="${esc(g.id)}">${esc(g.symbol)} nur Gruppe „${esc(g.name)}“</option>`).join("")}</select></label>
+    ${(RUND.lage?.gruppen || []).length ? "" : '<p class="hinweis" style="margin-top:-4px">Für eine Gruppe (z. B. Leitung, Innovation) einladen geht, sobald du in einer festen Chat-Gruppe bist.</p>'}
     <div class="rund-zeile"><label class="feld">Tag <input type="date" id="rundTag" value="${heute}" min="${heute}"></label>
       <label class="feld">Uhrzeit <input type="time" id="rundUhr" value="20:00" step="300"></label></div>
     <div class="rund-zeile"><label class="feld">Dauer <select id="rundDauer">${r.dauern.map((d) => `<option value="${d}"${d === 60 ? " selected" : ""}>${d} Minuten</option>`).join("")}</select></label>
       <label class="feld">Plätze <select id="rundPlaetze">${plaetze}</select></label></div>
-    <label class="rund-haken"><input type="checkbox" id="rundBescheid" checked> 📣 Alle Mitglieder bekommen Bescheid${nurTest("runder_tisch") ? " (im Test nur Admins)" : ""}</label>
+    <label class="rund-haken"><input type="checkbox" id="rundBescheid" checked> 📣 Alle Eingeladenen bekommen Bescheid${nurTest("runder_tisch") ? " (im Test nur Admins)" : ""}</label>
     <p class="hinweis" id="rundArtHinweis"></p>
     <div class="knoepfe"><button class="knopf haupt" id="rundLos" onclick="rundAnlegen()">🪑 Einladen</button><button class="knopf" onclick="fensterZu($('rundNeuBlatt'))">Abbrechen</button></div>`);
   rundArtWahl();
@@ -21911,9 +21913,9 @@ async function rundAnlegen() {
   if (!thema) return melde("Bitte ein Thema eingeben.", true);
   const art = document.querySelector('input[name="rundArt"]:checked')?.value || "runder_tisch";
   const tagesordnung = RUND_ARTEN[art]?.tagesordnung ? ($("rundTo")?.value || "").split("\n").map((x) => x.trim()).filter(Boolean) : null;
-  const d = { art, tagesordnung, thema, beschreibung: $("rundBeschr")?.value.trim() || "", datum: $("rundTag")?.value, uhr: $("rundUhr")?.value, dauer: Number($("rundDauer")?.value), plaetze: Number($("rundPlaetze")?.value), bescheid: !!$("rundBescheid")?.checked };
+  const d = { art, tagesordnung, gruppe: $("rundGruppe")?.value || null, thema, beschreibung: $("rundBeschr")?.value.trim() || "", datum: $("rundTag")?.value, uhr: $("rundUhr")?.value, dauer: Number($("rundDauer")?.value), plaetze: Number($("rundPlaetze")?.value), bescheid: !!$("rundBescheid")?.checked };
   if (!d.datum || !d.uhr) return melde("Bitte Tag und Uhrzeit wählen.", true);
-  try { const r = await api("tisch_anlegen", d, { warten: true }); fensterZu($("rundNeuBlatt")); rundLageSetzen(r.lage); melde(r.versand ? "🪑 Eingeladen – alle haben Bescheid bekommen" : "🪑 Eingeladen"); }
+  try { const r = await api("tisch_anlegen", d, { warten: true }); fensterZu($("rundNeuBlatt")); rundLageSetzen(r.lage); melde(r.versand ? (d.gruppe ? `🪑 Eingeladen – die Gruppe hat Bescheid bekommen` : "🪑 Eingeladen – alle haben Bescheid bekommen") : "🪑 Eingeladen"); }
   catch (e) { meldeFehler(e); }
 }
 async function rundZusage(id, zusage) {
@@ -21965,21 +21967,31 @@ async function rundVerlassen(id) {
   catch (e) { meldeFehler(e); }
 }
 // Plätze im Kreis: Gastgeber oben (12 Uhr), dann in Reihenfolge des Platznehmens; freie Plätze gestrichelt
-function rundPersonHtml(p, t, gr, stil = "") {
+function rundPersonHtml(p, t, gr, stil = "", g = { figur: true, namen: true }) {
   if (!p) return `<div class="rund-platz frei" style="${stil}"><div class="rund-av" style="width:${gr}px;height:${gr}px" aria-label="freier Platz"></div></div>`;
   const fig = avFigurVon({ person_id: p.id }), vn = p.name.split(" ")[0], leiter = p.id === t.gastgeber;
   const titel = p.sicher ? `${p.name} ist dabei` : `${p.name} – Verbindung unbekannt`;
   return `<div class="rund-platz${p.sicher ? "" : " unsicher"}${p.id === ICH?.person_id ? " ich" : ""}${leiter ? " gastgeber" : ""}" style="${stil}" title="${esc(titel)}">
-      <div class="rund-av" style="width:${gr}px;height:${gr}px;font-size:${Math.round(gr * 0.36)}px" aria-label="${esc(titel)}">${avGueltig(fig) ? avatarSvg(fig, gr - 6, initialen(p.name)) : esc(initialen(p.name))}</div>
-      <div class="rund-name">${esc(leiter ? `${t.art === "seminar" ? "🎤" : "👑"} ${vn}` : vn)}</div></div>`;
+      <div class="rund-av" style="width:${gr}px;height:${gr}px;font-size:${Math.round(gr * 0.38)}px" aria-label="${esc(titel)}">${g.figur && avGueltig(fig) ? avatarSvg(fig, gr - 6, initialen(p.name)) : esc(initialen(p.name))}</div>
+      ${g.namen ? `<div class="rund-name">${esc(leiter ? `${t.art === "seminar" ? "🎤" : "👑"} ${vn}` : vn)}</div>` : leiter ? `<div class="rund-name">${t.art === "seminar" ? "🎤" : "👑"}</div>` : ""}</div>`;
 }
-function rundPlaetzeHtml(t) {
-  const n = t.plaetze, gr = n <= 8 ? 52 : n <= 12 ? 44 : 36, r = n <= 8 ? 39 : 42;
+// 2.762.0 KC-CLUB-RUNDER-TISCH-PLATZ (Wunsch Hansi „messe, bis zu wie vielen Personen Avatare passen – sonst nur Kreise mit Buchstaben“):
+// Größe aus dem echten Platz statt fester Stufen. Abstand zweier Plätze s = 2·R·sin(π/n) (R = 41 % der Tischbreite W); Kreis d = s − 6, höchstens 56 px
+// und höchstens 16 % von W (bleibt in der Fläche). Koch-Figur ab 40 px (darunter ist sie nicht mehr zu erkennen → Anfangsbuchstaben);
+// Namen unter dem Platz nur bei s ≥ 78 px (sonst überlappen sie – dann als Liste unter dem Tisch). Messung 30.10.2026 siehe docs/RUNDER_TISCH.md.
+const RUND_PLATZ = { r: 0.41, dMax: 56, rand: 0.16, luft: 6, figurAb: 40, nameAb: 78 };
+function rundGroesse(W, n) {
+  const s = 2 * RUND_PLATZ.r * W * Math.sin(Math.PI / Math.max(n, 2)), d = Math.floor(Math.min(RUND_PLATZ.dMax, s - RUND_PLATZ.luft, RUND_PLATZ.rand * W));
+  return { d, figur: d >= RUND_PLATZ.figurAb, namen: s >= RUND_PLATZ.nameAb };
+}
+const rundBreite = () => Math.min(420, $("rundTischInhalt")?.clientWidth || innerWidth - 32);
+function rundPlaetzeHtml(t, W = rundBreite()) {
+  const n = t.plaetze, g = rundGroesse(W, n), r = RUND_PLATZ.r * 100;
   const leute = [...t.amTisch].sort((a, b) => (b.id === t.gastgeber) - (a.id === t.gastgeber));
   let html = "";
   for (let i = 0; i < n; i++) {
     const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-    html += rundPersonHtml(leute[i], t, gr, `left:${(50 + r * Math.cos(a)).toFixed(2)}%;top:${(50 + r * Math.sin(a)).toFixed(2)}%`);
+    html += rundPersonHtml(leute[i], t, g.d, `left:${(50 + r * Math.cos(a)).toFixed(2)}%;top:${(50 + r * Math.sin(a)).toFixed(2)}%`, g);
   }
   return html;
 }
@@ -21997,11 +22009,12 @@ function rundTischZeichnen() {
   const zeit = t.phase === "gleich" ? `beginnt um ${rundUhr(t.beginn)} Uhr` : t.phase === "offen" ? `noch ${restMin} Min. (bis ${rundUhr(t.ende)} Uhr)` : RUND_PHASE[t.phase] || "";
   const unsicher = t.amTisch.filter((p) => !p.sicher).length;
   el.innerHTML = `<h3 style="margin:0">${A.sym} ${esc(t.thema)}${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h3>
-    <div class="hinweis">${A.sym} ${esc(A.t)} · ${esc(A.leiter)}: ${esc(t.gastgeberName)} · ${esc(zeit)}</div>
+    <div class="hinweis">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""} · ${esc(A.leiter)}: ${esc(t.gastgeberName)} · ${esc(zeit)}</div>
     ${t.art === "seminar" ? rundHoersaalHtml(t) : `<div class="rund-buehne" role="img" aria-label="${esc(`${A.t}: ${t.amTisch.length} von ${t.plaetze} Plätzen besetzt`)}">
       <div class="rund-holz"><div><small>${esc(t.text.split(" · ")[0])}</small><strong>${esc(t.thema)}</strong><span>${A.sym} ${t.amTisch.length} / ${t.plaetze}</span></div></div>
       ${rundPlaetzeHtml(t)}
     </div>`}
+    ${t.art !== "seminar" && t.amTisch.length && !rundGroesse(rundBreite(), t.plaetze).namen ? `<p class="hinweis rund-namen">${A.sym} Dabei: ${t.amTisch.map((p) => `${p.id === t.gastgeber ? (t.art === "seminar" ? "🎤 " : "👑 ") : ""}${esc(p.name.split(" ")[0])}${p.sicher ? "" : " ⚪"}`).join(", ")}</p>` : ""}
     ${t.tagesordnung?.length ? `<details class="karte rund-to-karte" open><summary><b>📋 Tagesordnung</b></summary><ol class="rund-to">${t.tagesordnung.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details>` : ""}
     ${unsicher ? `<p class="hinweis">⚪ ${unsicher === 1 ? "Bei 1 Person" : `Bei ${unsicher} Personen`} ist gerade unklar, ob sie noch da ${unsicher === 1 ? "ist" : "sind"} (grau).</p>` : ""}
     ${warte ? `<p class="rund-warte">⏳ Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.</p>` : ""}
@@ -22059,6 +22072,7 @@ async function rundSeminareZeigen() {
 }
 async function rundStartKarte(id) { if (!RUND.lage) await rundOeffnen(id); else rundTischZeigen(id); }
 setInterval(() => { try { rundKarteZeichnen(); if (RUND.offen) rundTischZeichnen(); } catch {} }, 60000);
+addEventListener("resize", () => { if (RUND.offen) { clearTimeout(RUND.gross); RUND.gross = setTimeout(rundTischZeichnen, 200); } }); // Handy gedreht → Plätze neu ausmessen
 // ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Wunsch Hansi, Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
 // Kommen/Gehen in der App: Karte auf der Startseite (ab 30 Min. vor Dienstbeginn bzw. solange angemeldet), Blatt mit Vorschlag aus dem
 // Dienstplan (nahe am Plan = geplante Zeit, sonst jetzt, 5-Min.-Schritte), Grund ab 15 Min. Abweichung, Pause beim Gehen, Standort nur als

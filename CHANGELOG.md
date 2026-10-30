@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.762.0 – 2026-10-30 – 🔒 Runder Tisch, Seminar, Besprechung auch nur für eine Gruppe · 📏 Plätze passen sich dem Handy an (KC-CLUB-RUNDER-TISCH-GRUPPE, -PLATZ) · Server 2.762.0 · DB
+Wunsch Hansi (30.10.): „Auch für Gruppen wie Leitung, Innovation usw. können Tische, Seminare und Besprechungen anberaumt werden. Messe mal den Platz, bis zu wie vielen Personen die Avatare angezeigt werden können – wenn zu wenig Platz, dann nur Kreise mit Buchstaben.“ Außerdem entschieden: Gäste dürfen auch reden (kommt mit RT3/RT4). Noch nur Admin zum Testen.
+- **Für wen?** beim Einladen: 👥 Alle Mitglieder oder eine eigene feste Chat-Gruppe (z. B. 💡 Innovation, Leitung). Dann sehen, sagen zu und nehmen Platz nur deren Mitglieder (und wer leitet); Bescheid bekommt nur die Gruppe. Auf der Karte: „🔒 nur 💡 Innovation“.
+- **Gemessen** (docs/RUNDER_TISCH.md, Abschnitt 15): Mit den festen Größen überlappten ab 16 Personen die Namen, bei 18 auf kleinen Handys die Kreise. Jetzt rechnet die App den Platz aus: Kreise so groß wie möglich (bis 56 px), **Koch-Figur ab 40 px, darunter Anfangsbuchstaben**, Namen am Platz nur wenn Platz ist – sonst „Dabei: …“ unter dem Tisch. Ergebnis: Figuren für 18 Personen ab 360 px Handybreite, auf 320 px bei 17–18 Personen Buchstaben. Beim Drehen des Handys wird neu gemessen.
+- Datenbank: Migration `20261030_kc_club_v2762_tisch_gruppe.sql` (Spalte `gruppe_id`, `kc_club_tisch_beitreten` prüft die Gruppe; nur additiv) – **nach 2.761.0 und vor dem Server einspielen**.
+- Tests: `tests/runder-tisch.test.mjs` (Gruppen-Regeln, gemessene Größen für alle Breiten ohne Überlappung), Probelauf `tools/db-test/95_tisch_gruppe_test.sql`, Klick-Rundgang mit Gruppen-Besprechung und „Für wen?“. Rückweg: App/Server 2.761.0 (Spalte kann bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.761.0 – 2026-10-30 – 🎓 Runder Tisch, Seminar oder Besprechung – Stufe RT1b, nur Admin zum Testen (KC-CLUB-RUNDER-TISCH-ARTEN) · Server 2.761.0 · DB
 Wunsch Hansi (30.10.): „Unterscheidung zwischen Konferenz, Seminar bzw. Fortbildung und Runder Tisch“; Entscheidungen: „Besprechung“ statt „Konferenz“ (Konferenz heißt in der App schon die Telefonkonferenz), alle dürfen alles ansetzen, Seminar mit Teilnahmebestätigung. Eine Technik, drei Arten (docs/RUNDER_TISCH.md, Abschnitt 13).
 - **Einladen:** oben die Art wählen – 🪑 **Runder Tisch** (spontan dazukommen, wie bisher), 🎓 **Seminar / Fortbildung**, 🗂️ **Besprechung** (Tagesordnung, ein Punkt je Zeile, höchstens 12). Die Tagesordnung sehen alle schon vorher.

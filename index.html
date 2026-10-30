@@ -4508,7 +4508,7 @@
   .rund-karte .rund-phase { color: var(--grau); font-weight: 600; } .rund-karte.rund-offen, .rund-karte.rund-gleich { border: 2px solid var(--gruen); }
   .rund-beschreibung { margin: 4px 0; white-space: pre-wrap; } .rund-vorschlaege { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
   .rund-zeile { display: flex; flex-wrap: wrap; gap: 10px; } .rund-zeile .feld { flex: 1 1 140px; min-width: 0; } .rund-haken { display: flex; gap: 10px; align-items: center; margin: 10px 0; font-weight: 600; } .rund-haken input { width: 22px; height: 22px; flex: none; }
-  .rund-buehne { position: relative; width: min(100%, 420px); aspect-ratio: 1; margin: 10px auto; }
+  .rund-buehne { position: relative; width: min(100%, 420px); aspect-ratio: 1; margin: 10px auto 22px; } /* 2.762.0: unten Platz für den Namen des untersten Platzes */
   .rund-holz { position: absolute; inset: 23%; border-radius: 50%; display: grid; place-items: center; text-align: center; padding: 6px; color: #fff8ee;
     background: radial-gradient(circle at 35% 30%, #c08b56, #7d5230); box-shadow: inset 0 -6px 14px rgba(0,0,0,.28), var(--schatten); }
   .rund-holz small { display: block; font-size: .75rem; opacity: .9; } .rund-holz strong { display: block; font-size: 1.05rem; line-height: 1.15; overflow-wrap: anywhere; } .rund-holz span { font-size: .8rem; }
@@ -6276,7 +6276,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.761.0" data-v="2.761.0"></script>
+<script src="app.js?v=2.762.0" data-v="2.762.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

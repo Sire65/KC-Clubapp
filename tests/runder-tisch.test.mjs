@@ -126,4 +126,21 @@ assert.match(sql2, /if v_t\.art = 'seminar' and p_person <> v_t\.gastgeber and \
 assert.match(server, /if \(rtArt\(x\)\.bestaetigung\) await db\.from\("kc_club_tisch_teilnahme"\)\.delete\(\)\.eq\("tisch_id", x\.id\)\.is\("dabei_seit", null\);/, "Seminar: Anwesende bleiben für die Bestätigung");
 assert.match(app, /tischbestaetigung: \{ bauen: \(o, p\) => druckTischBestaetigung\(p\) \}/, "Bestätigung über den Druck (Briefbogen, PDF)");
 assert.match(app, /<div id="smSeminare"><\/div>/, "in „Meine Schulung“");
+
+// 2.762.0 KC-CLUB-RUNDER-TISCH-PLATZ: Größe aus dem echten Platz (Messung 30.10.2026, Tischbreite W = 288 px bei 320 px Handy … 420 px)
+const rundGroesse = new Function(app.slice(app.indexOf("const RUND_PLATZ = {"), app.indexOf("const rundBreite")) + "\nreturn rundGroesse;")();
+const G = (W, n) => { const g = rundGroesse(W, n); return `${g.d}${g.figur ? "F" : "B"}${g.namen ? "N" : ""}`; };
+assert.equal(G(288, 8), "46FN"); assert.equal(G(288, 10), "46F"); assert.equal(G(288, 16), "40F"); assert.equal(G(288, 18), "35B", "kleinstes Handy, 18 Personen: nur Buchstaben");
+assert.equal(G(328, 18), "40F", "ab 360 px Handy passen 18 Koch-Figuren"); assert.equal(G(358, 10), "56FN"); assert.equal(G(358, 12), "56F"); assert.equal(G(420, 18), "53F");
+for (const W of [288, 328, 358, 380, 398, 420]) for (let n = 2; n <= 18; n++) {
+  const g = rundGroesse(W, n), s2 = 2 * 0.41 * W * Math.sin(Math.PI / n);
+  assert.ok(g.d <= s2 - 6 && g.d <= 0.16 * W && g.d <= 56, `Kreise überlappen nicht und bleiben in der Fläche (W ${W}, n ${n})`);
+}
+// 2.762.0 KC-CLUB-RUNDER-TISCH-GRUPPE: Tische einer Gruppe nur für ihre Mitglieder
+const sql3 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2762_tisch_gruppe.sql", import.meta.url), "utf8");
+assert.match(sql3, /if v_t\.gruppe_id is not null and p_person <> v_t\.gastgeber\s+and not exists \(select 1 from public\.kc_communication_thread_participants where thread_id = v_t\.gruppe_id and person_id = p_person\) then return 'gruppe'; end if;/);
+assert.match(sql3, /return 'anmeldung'/, "Seminar-Regel bleibt");
+assert.match(server, /const ts = \(alle \?\? \[\]\)\.filter\(\(x: any\) => rtSichtbar\(x, ich, gr\)\);/, "Liste: Gruppen-Tische nur für Mitglieder");
+assert.match(server, /if \(gruppeId && !gruppe\) throw new Fehler\("Diese Gruppe gibt es nicht oder du bist nicht darin\.", 403\);/, "nur für eigene Gruppe einladen");
+assert.equal((server.match(/rtTischHolen\(p\.id, ich\)/g) || []).length, 3, "Zusage, Verlassen, Leiten prüfen die Gruppe");
 console.log("OK – Runder Tisch: Regeln geprüft");
