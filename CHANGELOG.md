@@ -1,12 +1,21 @@
 # Änderungen
 
-## 2.779.0 – 2026-10-30 – 👥 Büro: Eingelesenes in die Eingangskörbe der Mitglieder legen (KC-CLUB-EINLESEN-EINGANG) · nur App
+## 2.780.0 – 2026-10-30 – 👥 Büro: Eingelesenes in die Eingangskörbe der Mitglieder legen (KC-CLUB-EINLESEN-EINGANG) · nur App
 Wunsch Hansi (30.10.): „Wenn ich im Büro einlese, z. B. ein PDF, möchte ich es in die Eingangskörbe von Mitgliedern legen können – wieder mit der bekannten Wahl Alle, Gruppe, bestimmte. Die können es dann bei sich in die Ordner legen.“
 - **Büro → 📥 Einlesen → „Wohin damit?“** hat für die Clubleitung den neuen Knopf **„👥 In die Eingangskörbe von Mitgliedern“**. Dateien anhaken, „An wen?“ (Alle, Gruppe, Amt, bestimmte – dieselbe Wahl wie bei Aktentasche und Ablagekorb), Ablage-Vorschlag und kurze Nachricht – senden. Jeder bekommt einen Hinweis und legt die Datei in seinem Archiv-Ordner ab.
 - **Für jeden eine eigene Datei** (z. B. je Person eine Versicherung): nur die eine Datei anhaken, die Person wählen, senden – danach kommt „Wohin damit?“ mit den übrigen Dateien zurück.
 - Vorhandener Server-Kern `archiv_eingang_verteilen` (nur Clubleitung, prüft Dateiart und Größe) – Server unverändert. Die bisherigen Wege (Ordner, Eingangskorb, Nachricht, E-Mail) bleiben.
-- Neuer Hilfe-Eintrag „Eingelesenes in die Eingangskörbe der Mitglieder legen“. Tests: `tests/einlesen-eingang.test.mjs`, Klick-Rundgang. Rückweg: App 2.778.0.
+- Neuer Hilfe-Eintrag „Eingelesenes in die Eingangskörbe der Mitglieder legen“. Tests: `tests/einlesen-eingang.test.mjs`, Klick-Rundgang. Rückweg: App 2.779.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.779.0 – 2026-10-30 – 📥 Eingangskorb: auch in einen Büro-Ordner ablegen (KC-CLUB-EINGANG-BUERO) · 🪧 Ordner „Schilder“ in der Druckerei (KC-CLUB-SCHILDER-ABLAGE) · Server · DB
+Wunsch Hansi (30.10.): „Wenn ich im Eingangskorb z. B. eine Preisliste habe, muss ich als Ablageort auch einen Ordner aus dem Büro anwählen können, z. B. Weihnachtsmarkt oder Schilder.“
+- Beim **✔ Annehmen** eines Dokuments aus dem Eingangskorb zeigt „🗄️ … ablegen“ jetzt zwei Gruppen: **👤 Meine Ordner** (wie bisher) und **🏢 Büro** (Vereinsordner wie Weihnachtsmarkt, Verträge, Besprechungen …) – mit den Registern des gewählten Ordners (z. B. „2026 › Einkauf & Kasse“). Darunter steht, dass es dann im Büro liegt (bei 🔒-Ordnern nur für die Clubleitung).
+- Büro-Ordner gibt es nur für die Archiv-Pflege (Admin, Clubsprecher); Ordner „nur Vorstand“ nur für den Vorstand. Der Server prüft das selbst. Vorgeschlagen bleibt, was der Absender gewählt hat.
+- Unverändert: Liegt ein Dokument einmal im persönlichen Ordner, wird es weiterhin nicht zwischen persönlichem Ordner und Vereinsarchiv verschoben – die Wahl gibt es beim Annehmen.
+- Test `tests/eingang-buero.test.mjs`.
+- 🪧 **Neuer Ordner „Schilder“** (Wunsch Hansi: „in den Ordner Schilder dazu“, Wahl „Ablage in der Druckerei“): 🔒 Club-Ordner nur für die Clubleitung mit den Registern Preislisten, Hinweise, Öffnungszeiten, Sonstiges – steht im Eingangskorb unter 🏢 Büro zur Wahl. Alles darin zeigt die **Schilder-Druckerei** im neuen Abschnitt **„📎 Abgelegte Dateien“**: antippen = ansehen, 🖨️ drucken, ➕ ins Druckpaket (Anzahl wählen, mit Schildern zusammen drucken, als Paket aufheben). Solange nichts da ist, steht dort der Weg dahin.
+- Datenbank: Migration `20261030_kc_club_ordner_schilder.sql` (nur eine Ordner-Zeile, legt nichts doppelt an). Tests `tests/schilder-ablage.test.mjs`, `tools/db-test/95_ordner_schilder_test.sql`.
 
 ## 2.778.0 – 2026-10-30 – ⏳ Runder Tisch: Countdown bis zum Beginn und Restzeit-Uhr (KC-CLUB-RUNDER-TISCH-UHR) · nur App
 Wunsch Hansi (30.10.): „Einen Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine Runterzähl-Uhr, wie lange der Tisch noch laufen wird.“ Noch nur Admin zum Testen.

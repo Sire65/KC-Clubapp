@@ -1,0 +1,4 @@
+genau_einer=t
+nur_clubleitung=t
+register_da=t
+club_ordner=t

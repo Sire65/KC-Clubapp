@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.779.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.780.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2603,7 +2603,7 @@ const HILFE = [
   { id: "aenderung_rueckfrage", thema: "club", sym: "💬", t: "Rückfrage zu deiner Änderungsmeldung", x: "Hast du eine Änderung deiner Daten gemeldet und dazu noch eine Frage? Solange sie noch nicht eingetragen ist, steht bei der Meldung der Knopf <b>„💬 Rückfragen?“</b> – er öffnet direkt einen Chat mit der Clubleitung, der Bezug ist schon eingetragen.", zeig: () => aeStart(), seit: "2.91.0" },
   { id: "schritt_hilfe_ueberall", thema: "start", sym: "🤝", t: "Schritt-für-Schritt-Hilfe – jetzt überall", x: "Mit eingeschalteter Unterstützung zeigt ein <b>roter Rahmen</b> auf jeder Seite (außer SOS) und in den wichtigen Fenstern den nächsten sinnvollen Schritt – auf Wunsch mit Vorlesen. Einschalten oder ändern: ⚙️ → <b>„🤝 Unterstützung“</b>.", zeig: () => zeige("einstellungen"), seit: "2.105.0" },
   { id: "code_ipad", thema: "privat", sym: "📲", t: "iPad/iPhone: erst installieren, dann den Code", x: "Auf iPad und iPhone zuerst die App auf den Home-Bildschirm legen (Teilen ⬆️ → „Zum Home-Bildschirm“) und <b>dann</b> in der installierten App den 6-stelligen Code eintippen. Sonst fragt die App nach dem Öffnen vom Home-Bildschirm noch einmal nach einem Code. Während die Anmeldung läuft, dreht sich die Kochmütze.", zeig: () => einstiegHin("install"), seit: "2.91.0" },
-  { id: "buero_einlesen_eingang", thema: "club", sym: "👥", t: "Eingelesenes in die Eingangskörbe der Mitglieder legen", x: "Ein PDF oder Foto für mehrere Mitglieder? Im Büro <b>„📥 Einlesen“</b> antippen, Datei wählen – dann bei „Wohin damit?“ <b>„👥 In die Eingangskörbe von Mitgliedern“</b>. Dateien anhaken, bei <b>„An wen?“</b> Alle, eine Gruppe, ein Amt oder bestimmte Mitglieder wählen und senden. Jeder bekommt einen Hinweis, sieht die Datei in seinem 📥 Eingangskorb und legt sie in seinem Archiv-Ordner ab. <b>Für jeden eine eigene Datei</b> (z. B. je Person eine Versicherung): nur die eine Datei anhaken, die Person wählen, senden – danach geht es mit den übrigen Dateien weiter.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => zeige("buero"), seit: "2.779.0" },
+  { id: "buero_einlesen_eingang", thema: "club", sym: "👥", t: "Eingelesenes in die Eingangskörbe der Mitglieder legen", x: "Ein PDF oder Foto für mehrere Mitglieder? Im Büro <b>„📥 Einlesen“</b> antippen, Datei wählen – dann bei „Wohin damit?“ <b>„👥 In die Eingangskörbe von Mitgliedern“</b>. Dateien anhaken, bei <b>„An wen?“</b> Alle, eine Gruppe, ein Amt oder bestimmte Mitglieder wählen und senden. Jeder bekommt einen Hinweis, sieht die Datei in seinem 📥 Eingangskorb und legt sie in seinem Archiv-Ordner ab. <b>Für jeden eine eigene Datei</b> (z. B. je Person eine Versicherung): nur die eine Datei anhaken, die Person wählen, senden – danach geht es mit den übrigen Dateien weiter.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => zeige("buero"), seit: "2.780.0" },
   { id: "buero_einlesen", thema: "club", sym: "📥", t: "Dokumente ins Büro einlesen", x: "Im Büro auf <b>„📥 Einlesen“</b>: 📷 Foto machen, 📁 Datei wählen, am PC einfach hineinziehen – oder unter <b>„📥 Aus Eingangskorb oder Eingang“</b> etwas nehmen, z. B. eine Erstattung, Dienstzeiten oder eine Änderungsmeldung. Danach fragt die App, <b>wohin</b>: in einen Ordner (mit Vorschlag), in den 📥 Eingangskorb (später erledigen), als 💬 Nachricht oder 📧 per E-Mail.", nur: () => !!ICH?.buero, zeig: () => zeige("buero"), seit: "2.101.0" },
   { id: "buero_mail", thema: "club", sym: "📧", t: "Per E-Mail mit Anhang – direkt aus der App", x: "Nach dem Einlesen <b>„📧 Per E-Mail mit Anhang“</b> wählen. Bei jedem Namen <b>An</b>, <b>CC</b> (Kopie – alle sehen es) oder <b>BCC</b> (Blindkopie – unsichtbar für die anderen) antippen; oben den Namen eintippen geht schneller. Betreff prüfen, Text dazu (kann leer bleiben), „Kopie an mich“ – dann <b>„📧 Jetzt senden“</b>. Für Adressen außerhalb des Clubs: „📤 Anderes Mail-Programm“ (Teilen).", nur: () => !!ICH?.buero, zeig: () => zeige("buero"), seit: "2.109.0" },
   { id: "mitschauen", thema: "technik", sym: "🔴", t: "Bildschirm ansehen und live mitschauen (Admin)", x: "Admin → Nutzung → ein Mitglied → <b>„📸 Bild“</b> oder <b>„🔴 Live mitschauen“</b>. Das Mitglied wird immer <b>gefragt</b> und muss zustimmen; beim Live-Mitschauen sieht es oben ein rotes Band „schaut zu“ und kann jederzeit beenden. Live endet nach 10 Minuten von selbst.", nur: () => !!ICH?.admin, seit: "2.103.0" },
@@ -26783,14 +26783,14 @@ function einlZiel(dateien, { korbId = null, titel = "" } = {}) {
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" onclick="einlAblegen()">🗄️ In einen Ordner ablegen <small>(mit Vorschlag)</small></button>
       ${L && !korbId ? '<button class="knopf" onclick="einmal(this, einlInKorb)">📥 In den Eingangskorb – später erledigen</button>' : ""}
-      ${L ? '<button class="knopf" onclick="einlEingang()">👥 In die Eingangskörbe von Mitgliedern <small>(Alle, Gruppe, Amt, bestimmte)</small></button>' : ""}<!-- 2.779.0 KC-CLUB-EINLESEN-EINGANG -->
+      ${L ? '<button class="knopf" onclick="einlEingang()">👥 In die Eingangskörbe von Mitgliedern <small>(Alle, Gruppe, Amt, bestimmte)</small></button>' : ""}<!-- 2.780.0 KC-CLUB-EINLESEN-EINGANG -->
       <button class="knopf" onclick="einlNachricht()">💬 Als Nachricht in der App</button>
       <button class="knopf" onclick="einlPerMail()">📧 Per E-Mail mit Anhang</button>
       <button class="knopf" onclick="fensterZu($('einlBlatt'));EINL=null">Abbrechen</button></div>
     <p class="hinweis" style="margin:8px 0 0">💬 Bei „Als Nachricht“ wählst du im Chat wie gewohnt, ob zusätzlich Push oder E-Mail-Hinweis rausgeht. 📧 „Per E-Mail“ schickt die Datei direkt aus der App an Mitglieder (An, CC, BCC) – für andere Adressen gibt es dort „📤 Anderes Mail-Programm“.</p>`);
   erkDateiStart(dateien); // 2.669.0 KC-CLUB-ERKENNUNG-DATEI: nebenbei – das Fenster ist sofort bedienbar
 }
-// ---------- 2.779.0 KC-CLUB-EINLESEN-EINGANG (Wunsch Hansi 30.10.: „Wenn ich im Büro einlese, z. B. ein PDF, möchte ich es in die Eingangskörbe
+// ---------- 2.780.0 KC-CLUB-EINLESEN-EINGANG (Wunsch Hansi 30.10.: „Wenn ich im Büro einlese, z. B. ein PDF, möchte ich es in die Eingangskörbe
 // von Mitgliedern legen können – wieder mit der bekannten Wahl Alle, Gruppe, bestimmte. Die können es dann bei sich in die Ordner legen.“) ----------
 // Gleicher Weg wie Aktentasche → Freigeben (archiv_eingang_verteilen mit hochgeladener Datei, „An wen?“ = KC-CLUB-ZIELWAHL). Nach dem Senden
 // kommt „Wohin damit?“ mit den übrigen Dateien zurück – so geht z. B. je Versicherung eine Datei an genau die Person, für die sie ist.
@@ -31393,6 +31393,41 @@ function schStart() {
 async function schListeLaden() {
   try { SDR.liste = (await api("schild_liste")).schilder || []; } catch (e) { SDR.liste = SDR.liste || []; SDR.fehler = e.message || "nicht erreichbar"; }
   if (SDR.sicht === "start" && $("schBlatt")) schZeigen();
+  schDateienLaden();
+}
+// KC-CLUB-SCHILDER-ABLAGE (Wunsch Hansi 30.10.2026, Wahl „Ablage in der Druckerei“): Dateien aus dem Club-Ordner „Schilder“ (z. B. die Preisliste
+// aus dem Eingangskorb → 🏢 Büro → Schilder) stehen hier unter „📎 Abgelegte Dateien“ – ansehen, drucken, ins Druckpaket. Vorhandene Wege:
+// archiv_liste (Rechte prüft der Server), arDateiVorladen/dokAnzeigen, arDrucken, schPaketDazu. Ohne Verbindung: Hinweis, nie geraten.
+const SCH_ORDNER = "Schilder";
+async function schDateienLaden() {
+  try {
+    const r = await api("archiv_liste", {}, { still: true });
+    const ord = new Set((r.ordner || []).filter((o) => !o.besitzer && !o.geloescht_am && o.titel === SCH_ORDNER).map((o) => o.id));
+    SDR.dateien = (r.dokumente || []).filter((d) => ord.has(d.ordner_id) && d.status === "ok" && d.datei)
+      .sort((a, b) => String(a.register || "").localeCompare(String(b.register || ""), "de") || String(a.titel).localeCompare(String(b.titel), "de"));
+    SDR.dateienFehler = null;
+  } catch (e) { SDR.dateien = SDR.dateien || []; SDR.dateienFehler = e.message || "nicht erreichbar"; }
+  if (SDR.sicht === "start" && $("schBlatt")) schZeigen();
+}
+function schDateienHtml() {
+  if (SDR.dateien == null) return '<p class="hinweis">Wird geladen …</p>';
+  if (!SDR.dateien.length) return `<p class="hinweis">${SDR.dateienFehler ? "⚠️ Abgelegte Dateien gerade nicht erreichbar." : "Noch nichts abgelegt."} Ablegen: 📥 Eingangskorb → ✔ Annehmen → 🏢 Büro → <b>Schilder</b>.</p>`;
+  return `<div class="sdr-gespeichert">${SDR.dateien.map((d) => `<div><button class="knopf" onclick="schDateiAnsehen('${esc(d.id)}')">${arDateiSym(d.mime)} ${esc(d.titel || d.name)}<small>${esc([d.register, d.am ? zeitKurz(d.am) : ""].filter(Boolean).join(" · "))}</small></button>
+    <button class="knopf klein" title="Drucken" aria-label="Drucken" onclick="schDateiDrucken('${esc(d.id)}')">🖨️</button><button class="knopf klein" title="Ins Druckpaket" aria-label="Ins Druckpaket" onclick="schDateiPaket('${esc(d.id)}')">➕</button></div>`).join("")}</div>`;
+}
+const schDatei = (id) => (SDR.dateien || []).find((d) => d.id === id);
+async function schDateiAnsehen(id) {
+  const x = schDatei(id); if (!x) return;
+  if (!istPdf(x.name, x.mime)) return arDrucken(x); // Bilder: Druckansicht zeigt sie groß
+  const t = arDateiVorladen(x); melde("⏳ Datei wird geladen …"); await t.warten;
+  if (!t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
+  try { await dokAnzeigen({ id: "anl:" + x.datei, t: x.titel || x.name || "Dokument", datei: t.datei }); } catch (e) { meldeFehler(e); }
+}
+function schDateiDrucken(id) { const x = schDatei(id); if (x) arDrucken(x); }
+function schDateiPaket(id) { // nur dazulegen (schPaketDazu schaltet um – ein zweiter Tipp nähme es sonst wieder heraus)
+  const x = schDatei(id); if (!x) return; if (!SDR.paket || SDR.sicht !== "paket") schPaketNeu();
+  if (!SDR.paket.teile.some((t) => t.typ === "archiv" && t.ref === x.datei)) schPaketDazu("archiv", x.datei, x.titel || x.name); else schPaketZeigen();
+  melde("➕ Im Druckpaket – Anzahl wählen, drucken oder als Paket aufheben");
 }
 function schZeigen() {
   if (SDR.sicht === "edit") return schEditor();
@@ -31411,6 +31446,7 @@ function schZeigen() {
     ${pakete.length ? `<div class="sdr-gespeichert">${pakete.map((x) => `<div><button class="knopf" onclick="schPaketOeffnen('${x.id}')">🖨️ ${esc(x.titel)}<small>${esc(schPaketZahl(x.daten.paket))} · ${esc(zeitKurz(x.geaendert_am))}</small></button><button class="knopf" title="Löschen" aria-label="Löschen" onclick="schLoeschen('${x.id}')">🗑️</button></div>`).join("")}</div>` : ""}
     <button class="knopf${pakete.length ? "" : " haupt"}" style="width:100%" onclick="schPaketNeu()">＋ Druckpaket zusammenstellen</button>
     <p class="hinweis" style="margin:4px 0 0">Schilder, Vorlagen und Formulare aus dem Archiv ankreuzen, Anzahl wählen, alles in einem Rutsch drucken – und als Paket für nächstes Jahr aufheben.</p>
+    <h4 style="margin:14px 0 6px">📎 Abgelegte Dateien${SDR.dateien?.length ? ` (${SDR.dateien.length})` : ""}</h4>${schDateienHtml()}<!-- KC-CLUB-SCHILDER-ABLAGE -->
     <div class="knoepfe" style="margin-top:12px"><button class="knopf" onclick="$('schBlatt').remove()">Schließen</button></div>`);
   f.querySelectorAll("[data-schmini]").forEach((c) => { const v = SCH_VORLAGEN.find((x) => x.id === c.dataset.schmini); if (v) schZeichnen(c, schNeu(v), 150); });
 }
@@ -35180,19 +35216,25 @@ async function arPruefung(id, annehmen) {
 // Beim Annehmen wählt das Mitglied Ordner (eigene Jahrgänge) und Register; vorausgewählt ist der Vorschlag des Absenders.
 function arWohin(x, o, fertig) { // fertig: KC-CLUB-EINGANG-DURCHGEHEN (2.741.0) – danach das nächste Dokument
   const eigene = (AR.daten.ordner || []).filter((y) => y.eigen && !y.geloescht_am).sort((a, b) => b.jahr - a.jahr);
-  const regOpt = (oid, wahl) => ((eigene.find((y) => y.id === oid) || o).register || []).map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
+  // KC-CLUB-EINGANG-BUERO (Wunsch Hansi 30.10.2026): auch Ordner aus dem Büro (Club-Ordner, z. B. Weihnachtsmarkt) – nur für die Archiv-Pflege
+  const buero = AR.daten.darf ? (AR.daten.ordner || []).filter((y) => !y.besitzer && !y.geloescht_am && (!y.nur_vorstand || AR.daten.vorstand))
+    .sort((a, b) => String(a.titel).localeCompare(String(b.titel), "de") || b.jahr - a.jahr) : [];
+  const alle = [...eigene, ...buero], opt = (y) => `<option value="${esc(y.id)}"${y.id === o.id ? " selected" : ""}>${esc(arName(y))}</option>`;
+  const regOpt = (oid, wahl) => ((alle.find((y) => y.id === oid) || o).register || []).map((r) => `<option${r === wahl ? " selected" : ""}>${esc(r)}</option>`).join("");
+  const bueroHinweis = (oid) => buero.some((y) => y.id === oid) ? `🏢 Liegt dann im Büro – sichtbar für alle, die diesen Ordner sehen${buero.find((y) => y.id === oid)?.nur_vorstand ? " 🔒 nur Clubleitung" : ""}.` : "";
   const f = blattAuf("arWohinBlatt", `<h3 style="margin-top:0">🗄️ „${esc(x.titel)}“ ablegen</h3>
     <p class="hinweis" style="margin-top:0">Wohin soll das Dokument? 💡 <b>Vorschlag${x.von ? ` von ${esc(String(x.von).split(" ")[0])}` : ""}:</b> Ordner ${esc(arName(o))}${x.register ? `, Register „${esc(x.register)}“` : ""} – einfach übernehmen oder ändern.</p>
-    <label class="feld">Ordner<select id="awOrdner">${eigene.map((y) => `<option value="${esc(y.id)}"${y.id === o.id ? " selected" : ""}>${esc(arName(y))}</option>`).join("")}</select></label>
+    <label class="feld">Ordner<select id="awOrdner">${buero.length ? `<optgroup label="👤 Meine Ordner">${eigene.map(opt).join("")}</optgroup><optgroup label="🏢 Büro">${buero.map(opt).join("")}</optgroup>` : eigene.map(opt).join("")}</select></label>
     <label class="feld">Register<select id="awReg">${regOpt(o.id, x.register)}</select></label>
+    <p class="hinweis" id="awBuero" style="margin:0">${bueroHinweis(o.id)}</p>
     <div class="dlg-knoepfe"><button class="knopf haupt" id="awJa">🗄️ Hier ablegen</button><button class="knopf" onclick="$('arWohinBlatt').remove()">Abbrechen</button></div>`);
-  f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); };
+  f.querySelector("#awOrdner").onchange = (e) => { f.querySelector("#awReg").innerHTML = regOpt(e.target.value, f.querySelector("#awReg").value || x.register); f.querySelector("#awBuero").textContent = bueroHinweis(e.target.value); };
   f.querySelector("#awJa").onclick = async (e) => {
     e.target.disabled = true;
     const ordner_id = f.querySelector("#awOrdner").value, register = f.querySelector("#awReg").value;
     try {
       await api("archiv_pruefung", { id: x.id, annehmen: true, ordner_id, register }); f.remove();
-      melde(`✔ Abgelegt – liegt jetzt in ${arName(eigene.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden(); fertig?.();
+      melde(`✔ Abgelegt – liegt jetzt in ${buero.some((y) => y.id === ordner_id) ? "🏢 " : ""}${arName(alle.find((y) => y.id === ordner_id) || o)}${register ? `, Register „${register}“` : ""}`); await arLaden(); fertig?.();
     } catch (er) { meldeFehler(er); e.target.disabled = false; }
   };
 }

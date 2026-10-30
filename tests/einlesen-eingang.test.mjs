@@ -1,4 +1,4 @@
-// KC-CLUB-EINLESEN-EINGANG (2.779.0, Wunsch Hansi 30.10.): statische Prüfung (offline).
+// KC-CLUB-EINLESEN-EINGANG (2.780.0, Wunsch Hansi 30.10.): statische Prüfung (offline).
 // Aufruf: node tests/einlesen-eingang.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";

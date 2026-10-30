@@ -18225,8 +18225,12 @@ Köcheclub-App`,
         let ziel = { ordner_id: d.ordner_id as string, register: d.register as string | null };
         if (ja && o.besitzer && o._eigen && (p.ordner_id || p.register)) {
           const { data: zo } = p.ordner_id && p.ordner_id !== d.ordner_id
-            ? await db.from("kc_club_archiv_ordner").select("id,register,besitzer,geloescht_am").eq("id", String(p.ordner_id)).maybeSingle() : { data: o };
-          if (!zo || zo.besitzer !== ich.person_id || zo.geloescht_am) throw new Fehler("Diesen Ordner gibt es nicht (mehr) – bitte einen anderen wählen.", 404);
+            ? await db.from("kc_club_archiv_ordner").select("id,register,besitzer,geloescht_am,nur_vorstand").eq("id", String(p.ordner_id)).maybeSingle() : { data: o };
+          // KC-CLUB-EINGANG-BUERO (Wunsch Hansi 30.10.2026 „wenn ich im Eingangskorb z. B. eine Preisliste habe, muss ich als Ablageort auch einen Ordner
+          // aus dem Büro wählen können, z. B. Weihnachtsmarkt“): beim Annehmen auch ein Vereinsordner – nur wer das Archiv pflegt (Admin/Clubsprecher)
+          // und den Ordner sehen darf („nur Vorstand“). Das spätere Verschieben zwischen persönlichem Ordner und Verein bleibt verboten (archiv_aendern).
+          const buero = !!zo && !zo.besitzer && darfArchivPflegen(ich) && darfOrdnerSehen(ich, zo);
+          if (!zo || (zo.besitzer !== ich.person_id && !buero) || zo.geloescht_am) throw new Fehler("Diesen Ordner gibt es nicht (mehr) – bitte einen anderen wählen.", 404);
           const regs: string[] = zo.register ?? [];
           ziel = { ordner_id: zo.id, register: regs.includes(String(p.register)) ? String(p.register) : regs.includes(String(d.register)) ? d.register : regs[0] ?? null };
         }
