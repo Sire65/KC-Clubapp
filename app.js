@@ -31308,6 +31308,41 @@ function schStart() {
 async function schListeLaden() {
   try { SDR.liste = (await api("schild_liste")).schilder || []; } catch (e) { SDR.liste = SDR.liste || []; SDR.fehler = e.message || "nicht erreichbar"; }
   if (SDR.sicht === "start" && $("schBlatt")) schZeigen();
+  schDateienLaden();
+}
+// KC-CLUB-SCHILDER-ABLAGE (Wunsch Hansi 30.10.2026, Wahl „Ablage in der Druckerei“): Dateien aus dem Club-Ordner „Schilder“ (z. B. die Preisliste
+// aus dem Eingangskorb → 🏢 Büro → Schilder) stehen hier unter „📎 Abgelegte Dateien“ – ansehen, drucken, ins Druckpaket. Vorhandene Wege:
+// archiv_liste (Rechte prüft der Server), arDateiVorladen/dokAnzeigen, arDrucken, schPaketDazu. Ohne Verbindung: Hinweis, nie geraten.
+const SCH_ORDNER = "Schilder";
+async function schDateienLaden() {
+  try {
+    const r = await api("archiv_liste", {}, { still: true });
+    const ord = new Set((r.ordner || []).filter((o) => !o.besitzer && !o.geloescht_am && o.titel === SCH_ORDNER).map((o) => o.id));
+    SDR.dateien = (r.dokumente || []).filter((d) => ord.has(d.ordner_id) && d.status === "ok" && d.datei)
+      .sort((a, b) => String(a.register || "").localeCompare(String(b.register || ""), "de") || String(a.titel).localeCompare(String(b.titel), "de"));
+    SDR.dateienFehler = null;
+  } catch (e) { SDR.dateien = SDR.dateien || []; SDR.dateienFehler = e.message || "nicht erreichbar"; }
+  if (SDR.sicht === "start" && $("schBlatt")) schZeigen();
+}
+function schDateienHtml() {
+  if (SDR.dateien == null) return '<p class="hinweis">Wird geladen …</p>';
+  if (!SDR.dateien.length) return `<p class="hinweis">${SDR.dateienFehler ? "⚠️ Abgelegte Dateien gerade nicht erreichbar." : "Noch nichts abgelegt."} Ablegen: 📥 Eingangskorb → ✔ Annehmen → 🏢 Büro → <b>Schilder</b>.</p>`;
+  return `<div class="sdr-gespeichert">${SDR.dateien.map((d) => `<div><button class="knopf" onclick="schDateiAnsehen('${esc(d.id)}')">${arDateiSym(d.mime)} ${esc(d.titel || d.name)}<small>${esc([d.register, d.am ? zeitKurz(d.am) : ""].filter(Boolean).join(" · "))}</small></button>
+    <button class="knopf klein" title="Drucken" aria-label="Drucken" onclick="schDateiDrucken('${esc(d.id)}')">🖨️</button><button class="knopf klein" title="Ins Druckpaket" aria-label="Ins Druckpaket" onclick="schDateiPaket('${esc(d.id)}')">➕</button></div>`).join("")}</div>`;
+}
+const schDatei = (id) => (SDR.dateien || []).find((d) => d.id === id);
+async function schDateiAnsehen(id) {
+  const x = schDatei(id); if (!x) return;
+  if (!istPdf(x.name, x.mime)) return arDrucken(x); // Bilder: Druckansicht zeigt sie groß
+  const t = arDateiVorladen(x); melde("⏳ Datei wird geladen …"); await t.warten;
+  if (!t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
+  try { await dokAnzeigen({ id: "anl:" + x.datei, t: x.titel || x.name || "Dokument", datei: t.datei }); } catch (e) { meldeFehler(e); }
+}
+function schDateiDrucken(id) { const x = schDatei(id); if (x) arDrucken(x); }
+function schDateiPaket(id) { // nur dazulegen (schPaketDazu schaltet um – ein zweiter Tipp nähme es sonst wieder heraus)
+  const x = schDatei(id); if (!x) return; if (!SDR.paket || SDR.sicht !== "paket") schPaketNeu();
+  if (!SDR.paket.teile.some((t) => t.typ === "archiv" && t.ref === x.datei)) schPaketDazu("archiv", x.datei, x.titel || x.name); else schPaketZeigen();
+  melde("➕ Im Druckpaket – Anzahl wählen, drucken oder als Paket aufheben");
 }
 function schZeigen() {
   if (SDR.sicht === "edit") return schEditor();
@@ -31326,6 +31361,7 @@ function schZeigen() {
     ${pakete.length ? `<div class="sdr-gespeichert">${pakete.map((x) => `<div><button class="knopf" onclick="schPaketOeffnen('${x.id}')">🖨️ ${esc(x.titel)}<small>${esc(schPaketZahl(x.daten.paket))} · ${esc(zeitKurz(x.geaendert_am))}</small></button><button class="knopf" title="Löschen" aria-label="Löschen" onclick="schLoeschen('${x.id}')">🗑️</button></div>`).join("")}</div>` : ""}
     <button class="knopf${pakete.length ? "" : " haupt"}" style="width:100%" onclick="schPaketNeu()">＋ Druckpaket zusammenstellen</button>
     <p class="hinweis" style="margin:4px 0 0">Schilder, Vorlagen und Formulare aus dem Archiv ankreuzen, Anzahl wählen, alles in einem Rutsch drucken – und als Paket für nächstes Jahr aufheben.</p>
+    <h4 style="margin:14px 0 6px">📎 Abgelegte Dateien${SDR.dateien?.length ? ` (${SDR.dateien.length})` : ""}</h4>${schDateienHtml()}<!-- KC-CLUB-SCHILDER-ABLAGE -->
     <div class="knoepfe" style="margin-top:12px"><button class="knopf" onclick="$('schBlatt').remove()">Schließen</button></div>`);
   f.querySelectorAll("[data-schmini]").forEach((c) => { const v = SCH_VORLAGEN.find((x) => x.id === c.dataset.schmini); if (v) schZeichnen(c, schNeu(v), 150); });
 }

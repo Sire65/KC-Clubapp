@@ -1,11 +1,13 @@
 # Änderungen
 
-## 2.777.0 – 2026-10-30 – 📥 Eingangskorb: auch in einen Büro-Ordner ablegen (KC-CLUB-EINGANG-BUERO) · Server
+## 2.777.0 – 2026-10-30 – 📥 Eingangskorb: auch in einen Büro-Ordner ablegen (KC-CLUB-EINGANG-BUERO) · 🪧 Ordner „Schilder“ in der Druckerei (KC-CLUB-SCHILDER-ABLAGE) · Server · DB
 Wunsch Hansi (30.10.): „Wenn ich im Eingangskorb z. B. eine Preisliste habe, muss ich als Ablageort auch einen Ordner aus dem Büro anwählen können, z. B. Weihnachtsmarkt oder Schilder.“
 - Beim **✔ Annehmen** eines Dokuments aus dem Eingangskorb zeigt „🗄️ … ablegen“ jetzt zwei Gruppen: **👤 Meine Ordner** (wie bisher) und **🏢 Büro** (Vereinsordner wie Weihnachtsmarkt, Verträge, Besprechungen …) – mit den Registern des gewählten Ordners (z. B. „2026 › Einkauf & Kasse“). Darunter steht, dass es dann im Büro liegt (bei 🔒-Ordnern nur für die Clubleitung).
 - Büro-Ordner gibt es nur für die Archiv-Pflege (Admin, Clubsprecher); Ordner „nur Vorstand“ nur für den Vorstand. Der Server prüft das selbst. Vorgeschlagen bleibt, was der Absender gewählt hat.
 - Unverändert: Liegt ein Dokument einmal im persönlichen Ordner, wird es weiterhin nicht zwischen persönlichem Ordner und Vereinsarchiv verschoben – die Wahl gibt es beim Annehmen.
-- Test `tests/eingang-buero.test.mjs`. Keine Datenbank-Änderung.
+- Test `tests/eingang-buero.test.mjs`.
+- 🪧 **Neuer Ordner „Schilder“** (Wunsch Hansi: „in den Ordner Schilder dazu“, Wahl „Ablage in der Druckerei“): 🔒 Club-Ordner nur für die Clubleitung mit den Registern Preislisten, Hinweise, Öffnungszeiten, Sonstiges – steht im Eingangskorb unter 🏢 Büro zur Wahl. Alles darin zeigt die **Schilder-Druckerei** im neuen Abschnitt **„📎 Abgelegte Dateien“**: antippen = ansehen, 🖨️ drucken, ➕ ins Druckpaket (Anzahl wählen, mit Schildern zusammen drucken, als Paket aufheben). Solange nichts da ist, steht dort der Weg dahin.
+- Datenbank: Migration `20261030_kc_club_ordner_schilder.sql` (nur eine Ordner-Zeile, legt nichts doppelt an). Tests `tests/schilder-ablage.test.mjs`, `tools/db-test/95_ordner_schilder_test.sql`.
 
 ## 2.776.0 – 2026-10-30 – 🙋 Runder Tisch: externe Tischgäste mit eigenem Link (KC-CLUB-RUNDER-TISCH-GAST, Stufe RT4) · Server 2.776.0 · DB
 Wunsch Hansi (30.10.): „Weiter bauen“ – nach Live, Musik und Videos jetzt die externen Gäste (Spezifikation Abschnitte 4 und 18; Entscheidung: jedes Mitglied darf Gäste einladen).
