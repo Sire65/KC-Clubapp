@@ -3592,9 +3592,15 @@
   .bu-telliste { max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .bu-telzeile { display: flex; align-items: center; gap: 10px; border: none; background: var(--karte2); color: var(--text); border-radius: 10px; padding: 10px 12px; font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
   .bu-telzeile b { flex: 1; }
-  .bu-mikro { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; width: 100%; margin-top: 8px; border: 1px dashed var(--linie); border-radius: 14px; background: var(--karte2); color: var(--text); padding: 8px 12px; font: inherit; text-align: left; cursor: pointer; }
-  .bu-mikro span { font-size: 1.6rem; width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #a65a4a; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
-  .bu-mikro b { flex: 1; } .bu-mikro small { flex-basis: 100%; color: var(--grau); padding-left: 56px; margin-top: -8px; }
+  /* 2.768.0 KC-CLUB-BUERO-KNOEPFE-KLEIN: kleine Icon-Knöpfe im Büro-Kopf (bis zu 6 nebeneinander, Wort darunter) */
+  .bu-knopfreihe.bu-ikonreihe { grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); gap: 6px; }
+  .bu-ikon { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 54px; padding: 5px 2px; border: 0; border-radius: 12px;
+    background: var(--karte2); color: inherit; font: inherit; cursor: pointer; box-shadow: 0 2px 6px rgba(0, 0, 0, .12); }
+  .bu-ikon span { font-size: 1.45rem; line-height: 1.1; } .bu-ikon small { font-size: .68rem; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .bu-ikon:active { transform: scale(.95); }
+  .bu-mikro:not(.bu-ikon) { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; width: 100%; margin-top: 8px; border: 1px dashed var(--linie); border-radius: 14px; background: var(--karte2); color: var(--text); padding: 8px 12px; font: inherit; text-align: left; cursor: pointer; }
+  .bu-mikro:not(.bu-ikon) span { font-size: 1.6rem; width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #a65a4a; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .bu-mikro:not(.bu-ikon) b { flex: 1; } .bu-mikro:not(.bu-ikon) small { flex-basis: 100%; color: var(--grau); padding-left: 56px; margin-top: -8px; }
   .mikro-wahl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .mikro-wahl button { display: flex !important; flex-direction: column; align-items: center; justify-content: center; min-height: 130px; gap: 4px; text-align: center; padding: 10px 8px; min-width: 0; }
   .mikro-wahl span { font-size: 2.2rem; line-height: 1; } .mikro-wahl b { display: block; font-size: 1.02rem; } .mikro-wahl small { display: block; font-weight: 400; font-size: .8rem; opacity: .92; line-height: 1.25; }
@@ -6346,7 +6352,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.767.0" data-v="2.767.0"></script>
+<script src="app.js?v=2.768.0" data-v="2.768.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

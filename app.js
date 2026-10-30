@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.767.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.768.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2095,7 +2095,7 @@ function sdLaufbandAuf() {
     melde("🔐 Hier findest du Film und PDF – einfach antippen");
   }, 700);
 }
-const buFilmKnopf = () => (filmeImBuero().length ? '<button class="knopf klein" onclick="filmWahl()">🎬 Anleitung</button>' : "");
+const buFilmKnopf = () => (filmeImBuero().length ? buIkon("🎬", "Film", "filmWahl()", "Anleitungsfilm ansehen") : "");
 // ---------- KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi: ein Mitglied beim nächsten Start auf ungelesene Nachrichten hinweisen) ----------
 // Allgemein, nichts fest verdrahtet: Der Admin setzt beim Mitglied die Einstellung „start_hinweis“ = { art: "ungelesen" }. Beim nächsten Start
 // (nach den anderen Start-Fenstern) kommt einmal: „Hallo <Vorname>, du hast <n> ungelesene Nachrichten …“ – mit der echten Zahl und der echten
@@ -19372,7 +19372,25 @@ function buVertretungHtml(t) {
   if (!t || !buSchreiben() || !(ICH?.vorstand || ICH?.admin)) return t?.vertretung ? `<p class="hinweis bu-vertretung">🙋 Vertretung: <b>${esc(t.vertretung.name || "")}</b> bereitet diese Sitzung vor</p>` : "";
   const v = t.vertretung, ich = v?.person_id === ICH?.person_id, darf = ich || ICH?.admin || (ICH?.aemter || []).includes(svWerte().vorbereiter_amt);
   if (v) return `<p class="hinweis bu-vertretung">🙋 Vertretung: <b>${ich ? "du" : esc(v.name || "")}</b> ${ich ? "bereitest" : "bereitet"} diese Sitzung vor${darf ? ` <button class="knopf klein" onclick="buVertretung('${t.id}', false)">↩️ Zurückgeben</button>` : ""}</p>`;
-  return (t.vorbereiter || []).includes(ICH?.person_id) ? "" : `<p class="hinweis bu-vertretung">Ist der Clubsprecher verhindert (z. B. krank)? <button class="knopf klein" onclick="buVertretung('${t.id}', true)">🙋 Vorbereitung übernehmen</button></p>`;
+  return buVertretungAngebot(t) ? `<p class="hinweis bu-vertretung">Ist der Clubsprecher verhindert (z. B. krank)? <button class="knopf klein" onclick="buVertretung('${t.id}', true)">🙋 Vorbereitung übernehmen</button></p>` : "";
+}
+// „Vorbereitung übernehmen“ anbieten? (Clubleitung mit Schreibrecht, noch keine Vertretung, ich bereite nicht schon selbst vor)
+const buVertretungAngebot = (t) => !!t && buSchreiben() && !!(ICH?.vorstand || ICH?.admin) && !t.vertretung && !(t.vorbereiter || []).includes(ICH?.person_id);
+// ---------- 2.768.0 KC-CLUB-BUERO-KNOEPFE-KLEIN (Wunsch Hansi 30.10.2026 „Oben ist zu viel Platz verschwendet. Baue die Buttons kleiner, nur mit
+// aussagekräftigem Icon, dann passen mehr nebeneinander und es werden wieder Zeilen frei“) ----------
+// Büro-Kopf (Raum und Liste): eine Reihe kleiner Icon-Knöpfe mit kurzem Wort darunter (Name auch als title/aria-label). Gleiche Funktionen wie vorher –
+// im Raum zusätzlich 🎙️ Sprechen (vorher eigene große Karte) und 🙋 Vertreten (vorher eigene Zeile). Läuft eine Vertretung, bleibt deren Hinweiszeile.
+const buIkon = (sym, wort, fn, titel, extra = "") => `<button class="bu-ikon${extra}" onclick="${fn}" title="${titel}" aria-label="${titel}"><span aria-hidden="true">${sym}</span><small>${wort}</small></button>`;
+function buKopfKnoepfe(raum, t) {
+  return `<div class="bu-knopfreihe bu-ikonreihe">${[
+    ICH?.vorstand ? buIkon("📋", "Übersicht", "tagesinfoZeigen(true)", "Übersicht für heute") : "",
+    raum ? buIkon("☰", "Liste", "buAnsichtWechseln()", "Büro als Liste zeigen") : buIkon("🗄️", "Raum", "buAnsichtWechseln()", "Büro-Raum mit Regal zeigen"),
+    ICH?.vorstand ? buIkon("💼", "Tasche", "atStart()", "Aktentasche") : "",
+    buFilmKnopf(),
+    buSchreiben() ? buIkon("📥", "Einlesen", "buEinlesen()", "Einlesen: Foto oder Datei") : "",
+    raum && BSPR.geht ? buIkon("🎙️", "Sprechen", "buSprechen()", "Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“", " bu-mikro") : "",
+    raum && buVertretungAngebot(t) ? buIkon("🙋", "Vertreten", `buVertretung('${t.id}', true)`, "Ist der Clubsprecher verhindert (z. B. krank)? Vorbereitung übernehmen") : "",
+  ].join("")}</div>`;
 }
 async function buVertretung(id, an, sofort = false) {
   if (!sofort && !(await frage(an ? "🙋 Vorbereitung übernehmen?\n\nDu bekommst bis zur Sitzung die Erinnerungen und Fragen beim Start. Clubsprecher und Clubleitung bekommen Bescheid." : "↩️ Vertretung zurückgeben?\n\nDann bekommt wieder der Clubsprecher die Erinnerungen.", { ja: an ? "🙋 Übernehmen" : "↩️ Zurückgeben", nein: "Abbrechen" }))) return;
@@ -19531,7 +19549,7 @@ function buStartListeHtml() {
     ["💶", "Erstattungen", e.erstattungen || 0, "buEingang()"], ["📅", "Dienstzeiten", e.dienstzeiten || 0, "buEingang()"]]; // KC-CLUB-EINGANGSKORB (2.23.6)
   const festHeute = BU_F ? [...BU_F.geburtstage.filter((f) => f.tage === 0).map((f) => f.alter ? `🎉 ${esc(f.vorname)} wird ${f.alter}` : `🎂 ${esc(f.vorname)} hat Geburtstag`), ...BU_F.jubilaeen.filter((f) => f.tage === 0).map((f) => `🏅 ${esc(f.vorname)}: ${f.jahre} Jahre im Club`)] : [];
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
-  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
+  return `<div class="karte bu-gruss">${buKopfKnoepfe(false, null)}${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${esc(dran)}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
     ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">👀</span><span class="mk-titel">Für alle zur Ansicht</span><span class="mk-unter">das Büro für alle Mitglieder öffnen – nur ansehen, z. B. während der Clubsitzung</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
@@ -19700,11 +19718,9 @@ function buRaumHtml() {
   const naechst = (r.sitzungen || []).find((x) => new Date(x.beginn) >= Date.now() - 6 * 3600000) || t;
   const kal = naechst ? new Date(naechst.beginn) : null;
   const ding = (cls, inhalt, label, fn, extra = "") => `<button class="bu-ding ${cls}" onclick="${fn}">${inhalt}<span class="bu-dlabel">${label}</span>${extra}</button>`;
-  return `<div class="karte bu-gruss"><div class="bu-knopfreihe">
-      ${L ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">☰ Liste</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>
-      ${BSPR.geht ? '<button class="bu-mikro" onclick="buSprechen()" aria-label="Sprachsteuerung: sag z. B. „Öffne Ordner Protokolle“"><span>🎙️</span><b>Sag mir, was du brauchst</b><small>z. B. „Öffne Ordner Protokolle“ oder „Anrufen Erika“</small></button>' : ""}
+  return `<div class="karte bu-gruss">${buKopfKnoepfe(true, naechst)}
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
-      ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}${naechst ? buVertretungHtml(naechst) : ""}</div>
+      ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}${naechst && !buVertretungAngebot(naechst) ? buVertretungHtml(naechst) : ""}</div>
     <div class="bu-raum">
       <div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>
       <div class="bu-tisch">

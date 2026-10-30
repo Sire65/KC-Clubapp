@@ -29,7 +29,7 @@ assert.ok(/<video src=/.test(zg) && /controls autoplay playsinline/.test(zg) && 
 assert.ok(/✕ Schließen/.test(zg) && /v\.onerror/.test(zg), "Schließen und Fehlermeldung");
 assert.ok(/#filmSchicht \{ position: fixed/.test(html), "Abspiel-Schicht gestaltet");
 // Büro: Knopf in Raum- und Listenansicht
-assert.equal((app.match(/onclick="atStart\(\)">💼 Aktentasche<\/button>' : ""\}\$\{buFilmKnopf\(\)\}/g) || []).length, 2, "🎬 Anleitung im Büro (Raum + Liste)");
+assert.ok(/buIkon\("💼", "Tasche", "atStart\(\)", "Aktentasche"\) : "",\s+buFilmKnopf\(\),/.test(app) && /buKopfKnoepfe\(true, naechst\)/.test(app) && /buKopfKnoepfe\(false, null\)/.test(app), "🎬 Anleitung im Büro (Raum + Liste) – 2.768.0 als Icon-Knopf im gemeinsamen Kopf");
 // Server: Einstellung „filme“ nur mit geprüften Werten
 const e = server.slice(server.indexOf("  filme: (w) =>"), server.indexOf("  rundgang: (w) =>"));
 assert.ok(/\^\[a-z\]\{2,24\}\$/.test(e) && /\["angesehen", "nein"\]/.test(e) && /slice\(0, 30\)/.test(e), "Server-Einstellung filme geprüft");

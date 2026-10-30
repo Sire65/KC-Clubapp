@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.768.0 – 2026-10-30 – 🗂️ Büro: kleine Icon-Knöpfe oben – mehr Platz
+Wunsch Hansi (30.10.): „Oben ist zu viel Platz verschwendet. Baue die Buttons kleiner, nur mit aussagekräftigem Icon, dann passen mehr nebeneinander und es werden wieder Zeilen frei.“ (KC-CLUB-BUERO-KNOEPFE-KLEIN)
+- Büro-Kopf (Raum und Liste): eine Reihe kleiner Icon-Knöpfe mit kurzem Wort darunter – 📋 Übersicht · ☰ Liste / 🗄️ Raum · 💼 Tasche · 🎬 Film · 📥 Einlesen · 🎙️ Sprechen · 🙋 Vertreten. Bis zu 6 nebeneinander.
+- Die große Karte „Sag mir, was du brauchst“ und die Zeile „Ist der Clubsprecher verhindert? 🙋 Vorbereitung übernehmen“ sind jetzt Knöpfe in dieser Reihe (gleiche Funktion, Erklärung beim Gedrückthalten bzw. als Beschriftung für Vorlese-Programme). Läuft eine Vertretung, bleibt deren Hinweiszeile.
+
 ## 2.767.0 – 2026-10-30 – 🎵 Runder Tisch: Musik für alle – z. B. der Club-Song (KC-CLUB-RUNDER-TISCH-MUSIK) · nur App · nur Admin zum Testen
 Wunsch Hansi (30.10.): „Als Club-Song soll ein externes Lied reinkommen – nicht der Platzhalter-Song in der Bühne.“
 - Am Tisch (Live) neuer Knopf **🎵 Musik**: ein Lied (MP3/M4A/OGG/WAV, höchstens 8 MB) **aus dem Archiv** (z. B. Ordner „Club-Song“) oder vom Gerät. Es kommt in den Tisch-Chat, und **alle hören es gleichzeitig**.
