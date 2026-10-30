@@ -16,11 +16,17 @@ assert.ok(/zwStart\("einlEgAn", \{[^}]*alleText: BU_ALLE_TEXT, alle: \(\) => \(M
 assert.ok(/EINGANG_REGISTER/.test(eg) && /id="einlEgNotiz"/.test(eg), "Register und Nachricht");
 // Senden: Rückfrage, je Datei ein Aufruf mit Datei-Inhalt, Bescheid beim letzten; danach die übrigen Dateien zurück in „Wohin damit?“
 assert.ok(/await frage\(/.test(eg), "Rückfrage vor dem Senden");
-assert.ok(/api\("archiv_eingang_verteilen", \{ personen: ids, name: f\.name, mime: einlMime\(f\), daten: base64\(await f\.arrayBuffer\(\)\),/.test(eg) && /letzte: n === dateien\.length - 1, anzahl: dateien\.length/.test(eg), "vorhandener Server-Kern");
+assert.ok(/api\("archiv_eingang_verteilen", \{ personen: ids, mich, name: f\.name, mime: einlMime\(f\), daten: base64\(await f\.arrayBuffer\(\)\),/.test(eg) && /letzte: n === dateien\.length - 1, anzahl: dateien\.length/.test(eg), "vorhandener Server-Kern");
 assert.ok(/rest = E\.dateien\.filter\(\(d\) => !dateien\.includes\(d\)\)/.test(eg) && /if \(rest\.length\) einlZiel\(rest, \{ korbId: E\.korbId \}\)/.test(eg), "übrige Dateien – je Person eine eigene Datei möglich");
 // Server: unverändert – nur Clubleitung, prüft Typ und Größe
 const sv = server.slice(server.indexOf('case "archiv_eingang_verteilen"'), server.indexOf('case "archiv_eingang_senden"'));
 assert.ok(/nurLeitung\(ich\);/.test(sv) && /ARCHIV_DATEITYPEN\.test\(mime\)/.test(sv) && /dateiAblegen\(ich, p\.name, mime, p\.daten, ARCHIV_DATEITYPEN\)/.test(sv), "Server prüft Rechte, Typ und Größe");
+// 2.781.0 KC-CLUB-EINLESEN-EINGANG-MICH: „🙋 Auch in meinen Eingangskorb“ (vorbelegt) – Server nimmt den Absender nur mit mich: true, ohne Push/Mail an sich selbst
+assert.ok(/id="einlEgMich" checked/.test(eg) && /\{ personen: ids, mich, name: f\.name/.test(eg), "Häkchen geht mit");
+assert.ok(/const mich = p\.mich === true;\s*if \(mich\) ids\.push\(ich\.person_id\);/.test(sv), "Server: nur auf Wunsch auch der Absender");
+assert.ok(/\.filter\(\(id\) => id !== ich\.person_id\)/.test(sv), "ohne mich bleibt es wie bisher");
+assert.ok(/if \(letzte && x\.person_id !== ich\.person_id\) await senden\("club_nachricht"/.test(sv), "kein Push/keine Mail an sich selbst");
+assert.ok(!/mich/.test(teil("function ablkEingang(id)", "async function ablkFertig(")) && !/mich/.test(teil("async function atFreigeben(", "function atDruckLos(")), "Ablagekorb und Aktentasche unverändert");
 // Hilfe, Fenstername, Spur
 assert.ok(/id: "buero_einlesen_eingang"/.test(app) && /"h:buero_einlesen_eingang": \["buero"\]/.test(app), "Hilfe-Eintrag");
 assert.ok(/einlEgBlatt: "👥 Einlesen: in die Eingangskörbe"/.test(app), "Fenstername für die Wege der Mitglieder");

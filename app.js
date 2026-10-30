@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.780.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.781.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2603,7 +2603,7 @@ const HILFE = [
   { id: "aenderung_rueckfrage", thema: "club", sym: "💬", t: "Rückfrage zu deiner Änderungsmeldung", x: "Hast du eine Änderung deiner Daten gemeldet und dazu noch eine Frage? Solange sie noch nicht eingetragen ist, steht bei der Meldung der Knopf <b>„💬 Rückfragen?“</b> – er öffnet direkt einen Chat mit der Clubleitung, der Bezug ist schon eingetragen.", zeig: () => aeStart(), seit: "2.91.0" },
   { id: "schritt_hilfe_ueberall", thema: "start", sym: "🤝", t: "Schritt-für-Schritt-Hilfe – jetzt überall", x: "Mit eingeschalteter Unterstützung zeigt ein <b>roter Rahmen</b> auf jeder Seite (außer SOS) und in den wichtigen Fenstern den nächsten sinnvollen Schritt – auf Wunsch mit Vorlesen. Einschalten oder ändern: ⚙️ → <b>„🤝 Unterstützung“</b>.", zeig: () => zeige("einstellungen"), seit: "2.105.0" },
   { id: "code_ipad", thema: "privat", sym: "📲", t: "iPad/iPhone: erst installieren, dann den Code", x: "Auf iPad und iPhone zuerst die App auf den Home-Bildschirm legen (Teilen ⬆️ → „Zum Home-Bildschirm“) und <b>dann</b> in der installierten App den 6-stelligen Code eintippen. Sonst fragt die App nach dem Öffnen vom Home-Bildschirm noch einmal nach einem Code. Während die Anmeldung läuft, dreht sich die Kochmütze.", zeig: () => einstiegHin("install"), seit: "2.91.0" },
-  { id: "buero_einlesen_eingang", thema: "club", sym: "👥", t: "Eingelesenes in die Eingangskörbe der Mitglieder legen", x: "Ein PDF oder Foto für mehrere Mitglieder? Im Büro <b>„📥 Einlesen“</b> antippen, Datei wählen – dann bei „Wohin damit?“ <b>„👥 In die Eingangskörbe von Mitgliedern“</b>. Dateien anhaken, bei <b>„An wen?“</b> Alle, eine Gruppe, ein Amt oder bestimmte Mitglieder wählen und senden. Jeder bekommt einen Hinweis, sieht die Datei in seinem 📥 Eingangskorb und legt sie in seinem Archiv-Ordner ab. <b>Für jeden eine eigene Datei</b> (z. B. je Person eine Versicherung): nur die eine Datei anhaken, die Person wählen, senden – danach geht es mit den übrigen Dateien weiter.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => zeige("buero"), seit: "2.780.0" },
+  { id: "buero_einlesen_eingang", thema: "club", sym: "👥", t: "Eingelesenes in die Eingangskörbe der Mitglieder legen", x: "Ein PDF oder Foto für mehrere Mitglieder? Im Büro <b>„📥 Einlesen“</b> antippen, Datei wählen – dann bei „Wohin damit?“ <b>„👥 In die Eingangskörbe von Mitgliedern“</b>. Dateien anhaken, bei <b>„An wen?“</b> Alle, eine Gruppe, ein Amt oder bestimmte Mitglieder wählen und senden. Jeder bekommt einen Hinweis, sieht die Datei in seinem 📥 Eingangskorb und legt sie in seinem Archiv-Ordner ab. <b>Für jeden eine eigene Datei</b> (z. B. je Person eine Versicherung): nur die eine Datei anhaken, die Person wählen, senden – danach geht es mit den übrigen Dateien weiter. Mit <b>„🙋 Auch in meinen Eingangskorb“</b> (vorbelegt) bekommst du es selbst auch.", nur: () => !!(ICH?.vorstand || ICH?.admin), zeig: () => zeige("buero"), seit: "2.780.0" },
   { id: "buero_einlesen", thema: "club", sym: "📥", t: "Dokumente ins Büro einlesen", x: "Im Büro auf <b>„📥 Einlesen“</b>: 📷 Foto machen, 📁 Datei wählen, am PC einfach hineinziehen – oder unter <b>„📥 Aus Eingangskorb oder Eingang“</b> etwas nehmen, z. B. eine Erstattung, Dienstzeiten oder eine Änderungsmeldung. Danach fragt die App, <b>wohin</b>: in einen Ordner (mit Vorschlag), in den 📥 Eingangskorb (später erledigen), als 💬 Nachricht oder 📧 per E-Mail.", nur: () => !!ICH?.buero, zeig: () => zeige("buero"), seit: "2.101.0" },
   { id: "buero_mail", thema: "club", sym: "📧", t: "Per E-Mail mit Anhang – direkt aus der App", x: "Nach dem Einlesen <b>„📧 Per E-Mail mit Anhang“</b> wählen. Bei jedem Namen <b>An</b>, <b>CC</b> (Kopie – alle sehen es) oder <b>BCC</b> (Blindkopie – unsichtbar für die anderen) antippen; oben den Namen eintippen geht schneller. Betreff prüfen, Text dazu (kann leer bleiben), „Kopie an mich“ – dann <b>„📧 Jetzt senden“</b>. Für Adressen außerhalb des Clubs: „📤 Anderes Mail-Programm“ (Teilen).", nur: () => !!ICH?.buero, zeig: () => zeige("buero"), seit: "2.109.0" },
   { id: "mitschauen", thema: "technik", sym: "🔴", t: "Bildschirm ansehen und live mitschauen (Admin)", x: "Admin → Nutzung → ein Mitglied → <b>„📸 Bild“</b> oder <b>„🔴 Live mitschauen“</b>. Das Mitglied wird immer <b>gefragt</b> und muss zustimmen; beim Live-Mitschauen sieht es oben ein rotes Band „schaut zu“ und kann jederzeit beenden. Live endet nach 10 Minuten von selbst.", nur: () => !!ICH?.admin, seit: "2.103.0" },
@@ -26806,6 +26806,7 @@ function einlEingang() {
     <label class="feld" style="margin-top:8px">Titel <small class="hinweis">(leer = Dateiname)</small><input id="einlEgTitel" maxlength="120" value="${passt.length === 1 ? esc(E.titel || "") : ""}"></label>
     <div class="at-reg-kopf">👥 An wen?</div><div id="einlEgAn"></div>
     <label class="feld" style="margin-top:8px">Ablage-Vorschlag (Register im Archiv der Mitglieder)<select id="einlEgReg">${EINGANG_REGISTER.map((r) => `<option>${esc(r)}</option>`).join("")}</select></label>
+    <label class="at-wahl"><input type="checkbox" id="einlEgMich" checked onchange="einlEgKnopf()"><span><b>🙋 Auch in meinen Eingangskorb</b><br><small>dann kannst du es selbst auch gleich ablegen</small></span></label><!-- 2.781.0 KC-CLUB-EINLESEN-EINGANG-MICH -->
     <label class="feld">Kurze Nachricht dazu (freiwillig)<textarea id="einlEgNotiz" rows="2" maxlength="500" placeholder="z. B. Eure Reiseversicherung für die Kreuzfahrt – bitte gut aufbewahren."></textarea></label>
     <div class="knoepfe bs-fuss"><button class="knopf haupt" id="einlEgLos" onclick="einlEgSenden(this)" disabled>📤 Senden</button><button class="knopf" onclick="$('einlEgBlatt').remove();einlZiel(EINL.dateien, EINL)">‹ Zurück</button></div>`);
   zwStart("einlEgAn", { titel: "👤 Wer bekommt die Datei?", alleText: BU_ALLE_TEXT, alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: einlEgKnopf });
@@ -26813,25 +26814,26 @@ function einlEingang() {
 const einlEgDateien = () => [...document.querySelectorAll("#einlEgBlatt [data-ei]:checked")].map((c) => EINL?.dateien[+c.dataset.ei]).filter(Boolean);
 function einlEgKnopf() {
   const k = $("einlEgLos"); if (!k || !ZWAHL.einlEgAn) return;
-  const t = einlEgDateien().length, n = zwBereit("einlEgAn") ? zwIds("einlEgAn").length : 0;
-  k.disabled = !t || !n; k.textContent = !t ? "Bitte eine Datei anhaken" : !n ? "Bitte Empfänger wählen" : `📤 ${t === 1 ? "1 Datei" : t + " Dateien"} an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden`;
+  const t = einlEgDateien().length, n = zwBereit("einlEgAn") ? zwIds("einlEgAn").length : 0, mich = !!$("einlEgMich")?.checked;
+  k.disabled = !t || !n; k.textContent = !t ? "Bitte eine Datei anhaken" : !n ? "Bitte Empfänger wählen" : `📤 ${t === 1 ? "1 Datei" : t + " Dateien"} an ${n} ${n === 1 ? "Mitglied" : "Mitglieder"}${mich ? " + dich" : ""} senden`;
 }
 async function einlEgSenden(knopf) {
   const E = EINL, dateien = einlEgDateien(), ids = zwBereit("einlEgAn") ? zwIds("einlEgAn") : [];
   if (!E || !dateien.length || !ids.length) return einlEgKnopf();
+  const mich = !!$("einlEgMich")?.checked; // 2.781.0 KC-CLUB-EINLESEN-EINGANG-MICH
   const Z = ZWAHL.einlEgAn, wer = Z.art === "alle" ? "alle Mitglieder" : Z.art === "einzeln" ? (ids.length === 1 ? (MITGLIEDER?.find((m) => m.person_id === ids[0])?.name || "1 Mitglied") : `${ids.length} ausgewählte Mitglieder`) : Z.name.replace(/^\S+ /, "");
-  if (!(await frage(`📥 ${dateien.length === 1 ? `„${dateien[0].name}“` : dateien.length + " Dateien"} in den Eingangskorb legen – an ${wer} (${ids.length})?\n\nJeder bekommt einen Hinweis und entscheidet selbst: ablegen oder löschen.`, { ja: "📤 Senden", nein: "Zurück" }))) return;
+  if (!(await frage(`📥 ${dateien.length === 1 ? `„${dateien[0].name}“` : dateien.length + " Dateien"} in den Eingangskorb legen – an ${wer} (${ids.length})${mich ? " und in deinen eigenen" : ""}?\n\nJeder bekommt einen Hinweis und entscheidet selbst: ablegen oder löschen.`, { ja: "📤 Senden", nein: "Zurück" }))) return;
   const titel = $("einlEgTitel").value.trim(), reg = $("einlEgReg").value, notiz = $("einlEgNotiz").value.trim();
   await einmal(knopf, async () => {
     let r = null;
     try {
       for (let n = 0; n < dateien.length; n++) {
         const f = dateien[n]; knopf.textContent = `⏳ ${n + 1} von ${dateien.length} …`;
-        r = await api("archiv_eingang_verteilen", { personen: ids, name: f.name, mime: einlMime(f), daten: base64(await f.arrayBuffer()), titel: dateien.length === 1 && titel ? titel : einlTitel(f), register: reg, notiz, letzte: n === dateien.length - 1, anzahl: dateien.length }, { warten: true });
+        r = await api("archiv_eingang_verteilen", { personen: ids, mich, name: f.name, mime: einlMime(f), daten: base64(await f.arrayBuffer()), titel: dateien.length === 1 && titel ? titel : einlTitel(f), register: reg, notiz, letzte: n === dateien.length - 1, anzahl: dateien.length }, { warten: true });
       }
       $("einlEgBlatt")?.remove();
-      const weg = r?.uebersprungen || [], rest = E.dateien.filter((d) => !dateien.includes(d));
-      melde(`📥 Liegt jetzt im Eingangskorb von ${r?.empfaenger ?? ids.length} ${(r?.empfaenger ?? ids.length) === 1 ? "Mitglied" : "Mitgliedern"} – sie bekommen Bescheid${weg.length ? ` · nicht möglich bei: ${weg.map((y) => `${y.name} (${y.grund})`).join(", ")}` : ""}`);
+      const weg = r?.uebersprungen || [], rest = E.dateien.filter((d) => !dateien.includes(d)), zahl = (r?.empfaenger ?? ids.length + (mich ? 1 : 0)) - (mich ? 1 : 0);
+      melde(`📥 Liegt jetzt im Eingangskorb von ${zahl} ${zahl === 1 ? "Mitglied" : "Mitgliedern"}${mich ? " und in deinem" : ""} – sie bekommen Bescheid${weg.length ? ` · nicht möglich bei: ${weg.map((y) => `${y.name} (${y.grund})`).join(", ")}` : ""}`);
       if (rest.length) einlZiel(rest, { korbId: E.korbId }); // die übrigen Dateien: weiter an andere oder woandershin
       else EINL = null;
     } catch (e) { meldeFehler(e); einlEgKnopf(); }

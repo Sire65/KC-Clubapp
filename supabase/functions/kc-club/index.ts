@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.776.0";
+const SERVER_VERSION = "2.781.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -18085,6 +18085,10 @@ Köcheclub-App`,
       case "archiv_eingang_verteilen": {
         nurLeitung(ich);
         const ids = [...new Set((Array.isArray(p.personen) ? p.personen : []).map(String))].filter((id) => id !== ich.person_id).slice(0, 200);
+        // 2.781.0 KC-CLUB-EINLESEN-EINGANG-MICH (Wunsch Hansi „aber bei mir muss es auch rein!“): auf Wunsch (mich: true) auch in den eigenen Eingangskorb –
+        // ohne Push/Mail an sich selbst; ohne mich bleibt es wie bisher (der Absender bekommt nichts)
+        const mich = p.mich === true;
+        if (mich) ids.push(ich.person_id);
         if (!ids.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.");
         // 2.743.0 KC-CLUB-ABLAGEKORB-EINGANG (Wunsch Hansi „was ich von außen in die Club-App teile, liegt im Ablagekorb – von dort weiter an die
         // Eingangskörbe der Mitglieder, nach Alle, Amt, Gruppe …“): statt hochgeladener Daten eine Datei aus einem Ablagekorb-Eintrag (nur Admin, nur Dateien dieses Eintrags)
@@ -18131,7 +18135,7 @@ Köcheclub-App`,
               const { data: diese } = letzte ? await db.from("kc_club_archiv_dokumente").select("attachment_id").eq("ordner_id", oid).eq("hochgeladen_von", ich.person_id).eq("status", "pruefung")
                 .is("geloescht_am", null).gte("hochgeladen_am", new Date(Date.now() - 1800000).toISOString()).order("hochgeladen_am", { ascending: false }).limit(anzahl) : { data: [] as any[] };
               const mAnl = (diese ?? []).length ? await mailAnlagen((diese ?? []).map((d: any) => String(d.attachment_id)).reverse()) : [];
-              if (letzte) await senden("club_nachricht", [x.person_id], {
+              if (letzte && x.person_id !== ich.person_id) await senden("club_nachricht", [x.person_id], {
                 titel: "📥 Neu in deinem Eingangskorb", kurz: `${ich.name}: ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} – ansehen, dann ablegen oder löschen`,
                 betreff: "Köcheclub Werne – neu in deinem Eingangskorb",
                 text: `Hallo ${vorname(x)},\n\n${ich.name} hat dir ${anzahl === 1 ? `„${titel}“` : `${anzahl} Dokumente`} in deinen Eingangskorb gelegt.${notiz ? `\n\n${notiz}` : ""}\n\nIn der Club-App siehst du ${anzahl === 1 ? "es" : "sie"} dir an und entscheidest: in deinem Archiv ablegen oder löschen.\n\n${APP_URL}#archiv\n\nViele Grüße\nKöcheclub Werne`,

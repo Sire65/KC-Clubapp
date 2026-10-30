@@ -25,7 +25,7 @@ assert.ok(/filter\(\(id\) => id !== ich\.person_id\)\.slice\(0, 200\)/.test(sv) 
 assert.ok(/zugangAus\(rolle\.get\(x\.person_id\)\) === "mitglied"/.test(sv) && /Gast\/Aushilfe – kein Archiv/.test(sv), "Gäste/Aushilfen übersprungen und genannt");
 assert.ok(/status: "pruefung"/.test(sv) && /archivOrdnerVon\(/.test(sv) && /PERSOENLICH_GRENZE/.test(sv), "Eingangskorb = persönlicher Ordner, zur Prüfung, Speichergrenze");
 assert.ok(/frei \?\? await dateiAblegen\(sys,/.test(sv) && /if \(frei\) await dateienEntfernen\(\[frei\.id\]\)/.test(sv), "eigene Kopie je Empfänger, ungenutzte Datei wird entfernt");
-assert.ok(/nebenbei\(verteilen\(\)/.test(sv) && /if \(letzte\) await senden\("club_nachricht", \[x\.person_id\], \{\s*titel: "📥 Neu in deinem Eingangskorb"/.test(sv), "im Hintergrund, eine Mitteilung je Empfänger");
+assert.ok(/nebenbei\(verteilen\(\)/.test(sv) && /if \(letzte && x\.person_id !== ich\.person_id\) await senden\("club_nachricht", \[x\.person_id\], \{\s*titel: "📥 Neu in deinem Eingangskorb"/.test(sv), "im Hintergrund, eine Mitteilung je Empfänger");
 
 // --- Mitglied: Hinweis beim Öffnen → ansehen → ablegen oder löschen
 assert.ok(/setTimeout\(filmHinweisPruefen, 4000\); setTimeout\(eingangHinweisPruefen, 5000\);/.test(app), "Hinweis beim Start");

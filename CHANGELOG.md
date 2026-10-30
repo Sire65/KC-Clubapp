@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.781.0 – 2026-10-30 – 🙋 Einlesen → Eingangskörbe: auch in den eigenen Eingangskorb (KC-CLUB-EINLESEN-EINGANG-MICH) · Server 2.781.0
+Wunsch Hansi (30.10.): „Aber bei mir muss es auch rein!“
+- Im Fenster „👥 In die Eingangskörbe der Mitglieder“ (Büro → Einlesen) gibt es das Häkchen **„🙋 Auch in meinen Eingangskorb“** – vorbelegt. Dann landet die Datei auch im eigenen 📥 Eingangskorb und man legt sie selbst ab. Der Senden-Knopf zeigt „… + dich“.
+- Server: `archiv_eingang_verteilen` nimmt den Absender nur mit `mich: true` dazu (ohne Push/E-Mail an sich selbst). Ohne das Häkchen und bei Aktentasche/Ablagekorb bleibt alles wie bisher.
+- Tests: `tests/einlesen-eingang.test.mjs` erweitert, Klick-Rundgang. Rückweg: App und Server 2.780.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.780.0 – 2026-10-30 – 👥 Büro: Eingelesenes in die Eingangskörbe der Mitglieder legen (KC-CLUB-EINLESEN-EINGANG) · nur App
 Wunsch Hansi (30.10.): „Wenn ich im Büro einlese, z. B. ein PDF, möchte ich es in die Eingangskörbe von Mitgliedern legen können – wieder mit der bekannten Wahl Alle, Gruppe, bestimmte. Die können es dann bei sich in die Ordner legen.“
 - **Büro → 📥 Einlesen → „Wohin damit?“** hat für die Clubleitung den neuen Knopf **„👥 In die Eingangskörbe von Mitgliedern“**. Dateien anhaken, „An wen?“ (Alle, Gruppe, Amt, bestimmte – dieselbe Wahl wie bei Aktentasche und Ablagekorb), Ablage-Vorschlag und kurze Nachricht – senden. Jeder bekommt einen Hinweis und legt die Datei in seinem Archiv-Ordner ab.
