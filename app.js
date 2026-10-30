@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.788.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.789.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1048,7 +1048,10 @@ const clubThemaId = () => { const w = INIT ? INIT.clubThema : (() => { try { ret
 // am 31.10. (deutsche Zeit, 0–24 Uhr) gilt auf jedem Gerät 🎃 Halloween – vor Club-Thema und eigener Wahl. Gespeichert wird nichts:
 // ab 1.11. 0 Uhr gilt wieder, was jeder eingestellt hatte. Der Wechsel um Mitternacht kommt über THEMA_UHR (unten, jede Minute).
 const HW_TAG = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ });
-const halloweenFuerAlle = (d = new Date()) => HW_TAG.format(d).slice(5) === "10-31";
+// 2.789.0 KC-CLUB-RUHIG (Clubsitzung 30.10.: „zu viele Einblendungen – keine Halloween erzwingen“): Halloween für alle ist aus.
+// Die Regel bleibt erhalten und lässt sich mit HALLOWEEN_FUER_ALLE = true wieder einschalten; wer 🎃 möchte, wählt es unter ⚙️ → 🎭 Themen.
+const HALLOWEEN_FUER_ALLE = false;
+const halloweenFuerAlle = (d = new Date()) => HALLOWEEN_FUER_ALLE && HW_TAG.format(d).slice(5) === "10-31";
 function aktivesThema() {
   if (halloweenFuerAlle()) { const t = THEMEN.find((x) => x.id === "halloween"); if (t) return { ...t, quelle: "halloween" }; } // 2.787.0
   const c = clubThemaId(); if (c && themaClubFolgen()) { const t = THEMEN.find((x) => x.id === (c === "auto" ? THEMA_KAL() : c)); if (t) return { ...t, quelle: "club" }; }

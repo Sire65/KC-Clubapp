@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.789.0 – 2026-10-31 – 🤫 Kein Halloween für alle · Konzept „Ruhige App“ (KC-CLUB-RUHIG) · nur App
+Clubsitzung 30.10.: „zu kompliziert, zu viele Einblendungen“. Vorgabe Hansi: „keine Einblendungen, keine Tipps, keine Hinweise, kein Halloween erzwingen, nicht zwischendurch fragen“.
+- **Halloween wird nicht mehr erzwungen:** `HALLOWEEN_FUER_ALLE = false` – am 31.10. gilt wieder die eigene Wahl bzw. das Club-Thema. Die Regel aus 2.787.0 bleibt im Code und ist mit `true` wieder einschaltbar; wer 🎃 möchte, wählt es unter ⚙️ → 🎭 Themen.
+- **Konzept** `docs/KONZEPT_RUHIGE_APP.md`: Inventar aller 64 Stellen, an denen die App von selbst etwas zeigt, fragt oder abspielt; Stufen Ruhemodus für alle, 7 Kacheln in der einfachen Ansicht, eine Mitglieder-Version pro Woche, Dienstwünsche direkt.
+- Test: `tests/halloween-fuer-alle.test.mjs` (Standard aus; eigene Wahl gilt; Regel selbst weiter geprüft). Rückweg: App 2.788.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.788.0 – 2026-10-30 – 🛡️ Dienstwünsche: kein Selbst-Update mehr mitten in der Eingabe (KC-CLUB-UPDATE-DW-SCHUTZ) · nur App
 Fund Hansi (30.10.): „Ein Kollege ist beim Eintragen seiner Zeiten ohne Assistent mehrmals rausgeflogen – scheinbar kamen gleichzeitig Nachrichten oder Updates.“
 - **Ursache:** Die App aktualisiert sich alle 10 Min. von selbst, wenn sie glaubt, dass gerade nichts eingegeben wird. Die Dienstwünsche (Twinkey) laufen aber in einem eigenen Vollbild-Fenster mit eingebetteter Seite – die Prüfung sah dort weder das Fenster noch die Eingaben. An Tagen mit mehreren neuen Versionen lud die App deshalb mitten in der Eingabe neu.

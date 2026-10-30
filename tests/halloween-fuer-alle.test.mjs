@@ -1,5 +1,6 @@
 // 2.787.0 KC-CLUB-HALLOWEEN-FUER-ALLE (Wunsch Hansi 30.10.2026): am 31.10. von 0 bis 24 Uhr deutscher Zeit bei allen 🎃 Halloween,
 // ab 1.11. 0 Uhr wieder die eigene Wahl. Aufruf: node tests/halloween-fuer-alle.test.mjs (offline)
+// 2.789.0 KC-CLUB-RUHIG (Clubsitzung 30.10.): standardmäßig aus (HALLOWEEN_FUER_ALLE = false) – die Regel selbst wird weiter geprüft.
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { programmText } from "./programm.mjs";
@@ -7,13 +8,18 @@ const app = programmText();
 const stueck = (anfang, ende) => { const a = app.indexOf(anfang); assert.ok(a >= 0, `${anfang} fehlt`); return app.slice(a, app.indexOf(ende, a) + ende.length); };
 const quelle = stueck("const THEMEN = [", "\n];") + "\n" + stueck("const HW_TAG = ", "\n") + stueck("const halloweenFuerAlle = ", "\n") + stueck("function aktivesThema() {", "\n}");
 // Uhr, Club-Thema und eigene Wahl von außen vorgeben
-const thema = ({ jetzt, club = null, folgen = true, wahl = "aus", kal = "herbst" }) => {
+const thema = ({ jetzt, club = null, folgen = true, wahl = "aus", kal = "herbst", hwAn = true }) => {
   class Uhr extends Date { constructor(...a) { super(...(a.length ? a : [jetzt])); } }
-  return new Function("Date", "TZ", "clubThemaId", "themaClubFolgen", "themaWahl", "THEMA_KAL", quelle + "; return aktivesThema();")(
-    Uhr, "Europe/Berlin", () => club, () => folgen, () => wahl, () => kal);
+  return new Function("Date", "TZ", "clubThemaId", "themaClubFolgen", "themaWahl", "THEMA_KAL", "HALLOWEEN_FUER_ALLE", quelle + "; return aktivesThema();")(
+    Uhr, "Europe/Berlin", () => club, () => folgen, () => wahl, () => kal, hwAn);
 };
 const id = (o) => thema(o)?.id ?? null;
-// Mitternacht deutsche Zeit (Winterzeit seit 25.10.2026: UTC+1)
+// KC-CLUB-RUHIG: im Programm ausgeschaltet – am 31.10. gilt die eigene Wahl
+assert.match(app, /\nconst HALLOWEEN_FUER_ALLE = false;\n/, "Halloween für alle muss aus sein (KC-CLUB-RUHIG)");
+assert.equal(id({ jetzt: "2026-10-31T10:00:00Z", hwAn: false }), null, "aus: 31.10. kein erzwungenes Halloween");
+assert.equal(id({ jetzt: "2026-10-31T10:00:00Z", hwAn: false, wahl: "weihnachten" }), "weihnachten", "aus: eigene Wahl gilt");
+assert.equal(id({ jetzt: "2026-10-31T10:00:00Z", hwAn: false, wahl: "halloween" }), "halloween", "aus: wer 🎃 wählt, bekommt es");
+// Regel selbst (falls wieder eingeschaltet) – Mitternacht deutsche Zeit (Winterzeit seit 25.10.2026: UTC+1)
 assert.equal(id({ jetzt: "2026-10-30T22:59:00Z" }), null, "30.10. 23:59 – noch kein Halloween");
 assert.equal(id({ jetzt: "2026-10-30T23:00:00Z" }), "halloween", "31.10. 0:00 – Halloween an");
 assert.equal(thema({ jetzt: "2026-10-31T12:00:00Z" }).quelle, "halloween");
