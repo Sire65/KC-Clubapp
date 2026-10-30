@@ -136,7 +136,7 @@ try {
   for (const s of [B, C]) await warte(s, () => document.getElementById("tlMusikTon")?.paused === true, null, 8000, "🎵 Pause kommt nicht an");
   await A.seite.evaluate(() => tlMusikSetzen(null));
   for (const s of [B, C]) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik, null, 8000, "🎵 Musik aus kommt nicht an");
-  // 7c. 2.771.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi „konnte nicht Stop drücken – es gab keinen Knopf“): Knöpfe direkt an der Musik.
+  // 7c. 2.772.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi „konnte nicht Stop drücken – es gab keinen Knopf“): Knöpfe direkt an der Musik.
   //     Bernd spielt: Bernd sieht ⏸️/⏹️, Carla „🔇 Für mich aus“ (schaltet nur bei ihr ab), Anna (Leitung) „⏹️ Für alle aus“ – das stoppt bei allen,
   //     auch beim Abspielenden, und Lebenszeichen starten es nicht wieder. Ist der Tisch nicht zu sehen, hängt die Musik-Leiste unten.
   await B.seite.evaluate((m) => tlMusikSetzen({ a: m, n: "Club-Song.mp3", start: Date.now() + 1500, pause: null }), MUSIK);

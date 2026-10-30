@@ -300,7 +300,7 @@ Ab wie vielen Zuhörern es über Mobilfunk stockt, zeigt erst die Messung auf ec
 
 **Tests:** `tests/tisch-live.browser.mjs` (3 Fenster, echte Verbindungen, nachgebaute Leitung), `tests/runder-tisch.test.mjs` (Regeln, Sicherungen).
 
-## 18. 💼 Tasche vorher packen (2.772.0) · Musik stoppen (2.771.0)
+## 18. 💼 Tasche vorher packen · Musik stoppen (2.772.0)
 
 Wunsch Hansi (30.10.2026): „Gut wäre, wenn man sich vorher Sachen packen kann wie PDF, ein Song, ein Foto – damit man nicht lange suchen muss.“
 Wahl Hansi: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vorab für alle** markieren.
@@ -314,5 +314,5 @@ Wahl Hansi: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vor
   dann Live „Zeigen“ bzw. „Musik für alle“). Gezeigtes bekommt ✓.
 - **Aufräumen:** 7 Tage nach dem Tisch werden die Taschen geleert; nie gezeigte Dateien werden gelöscht (gezeigte hängen am Chat, gelten dort).
 - **Datenbank:** `kc_club_tisch_tasche` (Migration `20261030_kc_club_v2772_tisch_tasche.sql`, Probelauf `tools/db-test/100_tisch_tasche_test.sql`).
-- **Musik stoppen (2.771.0, Fund Hansi „kein Stopp-Knopf“):** Knöpfe direkt an der laufenden Musik – wer abspielt ⏸️/⏮️/⏹️, die Leitung
+- **Musik stoppen (2.772.0, Fund Hansi „kein Stopp-Knopf“):** Knöpfe direkt an der laufenden Musik – wer abspielt ⏸️/⏮️/⏹️, die Leitung
   „⏹️ Für alle aus“, jeder „🔇 Für mich aus“; ist der Tisch nicht zu sehen, hängt eine Musik-Leiste unten.

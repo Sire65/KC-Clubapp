@@ -89,7 +89,7 @@ async function tlEmpfang(d) {
   if (d.typ === "da") {
     const war = TL.peers.get(d.von), neu = !war || Date.now() - war.zeit > TL_WEG_MS;
     tlUhr(d.von, d.t);
-    if (d.musik && (!TL.musik || TL.musik.von === d.von) && !(TL.musikAus?.a === d.musik.a && Date.now() < TL.musikAus.bis)) tlMusikEmpfangen(d.musik, d.von); // 2.771.0: gerade ausgeschaltet → nicht wieder starten
+    if (d.musik && (!TL.musik || TL.musik.von === d.von) && !(TL.musikAus?.a === d.musik.a && Date.now() < TL.musikAus.bis)) tlMusikEmpfangen(d.musik, d.von); // 2.772.0: gerade ausgeschaltet → nicht wieder starten
     TL.peers.set(d.von, { ...(war || {}), zeit: Date.now(), name: String(d.name || "").slice(0, 30), mic: !!d.mic, cam: !!d.cam, schirm: !!d.schirm, hand: !!d.hand });
     if (vomLeiter && "stab" in d) tlStabSetzen(d.stab || null);
     if (d.zeige && (!TL.zeige || TL.zeige.von === d.von)) tlZeigeEmpfangen(d.zeige, d.von);
@@ -406,7 +406,7 @@ function tlZeichnen() {
     const pid = v.dataset.cam, s = pid === TL.ich ? TL.cam : [...TL.pcs.values()].find((x) => !x.raus && x.an === pid && x.strom)?.strom;
     if (s) { v.srcObject = s; v.play?.().catch(() => {}); }
   });
-  tlBuehneZeichnen(); tlMusikMini(); // 2.771.0: Musik-Leiste unten nur, wenn der Tisch nicht zu sehen ist
+  tlBuehneZeichnen(); tlMusikMini(); // 2.772.0: Musik-Leiste unten nur, wenn der Tisch nicht zu sehen ist
 }
 
 // ---- 🎵 Musik für alle (z. B. der Club-Song – Hansi: „ein externes Lied, nicht der Platzhalter-Song der Bühne“) ----
@@ -470,7 +470,7 @@ function tlMusikPause() {
   else tlMusikSetzen({ ...m, pause: Math.max(0, Date.now() - m.start) });
 }
 function tlMusikEmpfangen(m, von) {
-  // 2.771.0 KC-CLUB-TISCH-MUSIK-STOPP: aus schaltet, wer abspielt – oder die Leitung des Tisches für alle
+  // 2.772.0 KC-CLUB-TISCH-MUSIK-STOPP: aus schaltet, wer abspielt – oder die Leitung des Tisches für alle
   if (!m) { if (TL.musik && (TL.musik.von === von || von === tlTisch()?.gastgeber)) { if (TL.musik.von !== von) melde(`⏹️ ${tlName(von)} hat die Musik ausgeschaltet`); tlMusikAus(); } tlZeichnen(); return; }
   if (typeof m.a !== "string" || !/^[0-9a-f-]{36}$/i.test(m.a) || !Number(m.start)) return;
   const neu = TL.musik?.a !== m.a || TL.musik?.von !== von;
@@ -507,7 +507,7 @@ function tlMusikAus() {
   clearTimeout(TL.musikUhr); tlMusikLauf++; TL.musik = null; TL.musikStumm = false; const el = document.getElementById("tlMusikTon"); if (el) { el.pause(); el.remove(); }
   tlMusikMini();
 }
-// 2.771.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi 30.10.: „beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf“):
+// 2.772.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi 30.10.: „beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf“):
 // Die Knöpfe stehen jetzt direkt an der laufenden Musik – wer abspielt: ⏸️/▶️, ⏮️, ⏹️ Aus (für alle); die Leitung: ⏹️ Für alle aus;
 // jeder: 🔇 Für mich aus (nur das eigene Gerät). Ist der Tisch nicht offen (z. B. im Chat), hängt eine kleine Musik-Leiste unten am Bildschirm.
 function tlMusikKnoepfe(m, klein) {
