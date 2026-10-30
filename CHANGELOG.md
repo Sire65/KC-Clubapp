@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.772.0 – 2026-10-30 – 🙂 Runder Tisch: Bildschirm zeigen und dich klein in der Ecke
+Wunsch #47 (Hansi 30.10.): „Im Seminar das Kassenprogramm vorstellen und zwischen Kamera und Programm umschalten“ – „Ja, mich in der Ecke, aber umschaltbar, denn auf dem kleinen Handy-Bildschirm könnte das stören oder Platz wegnehmen.“ (KC-CLUB-RUNDER-TISCH-ECKE)
+- Zeigt jemand am PC/Laptop den 🖥️ Bildschirm und hat die 📷 Kamera an, geht die Kamera zusätzlich als zweites, kleines Bild mit (eigener Kanal, sparsam: halbe Auflösung, höchstens 180 kbit/s).
+- Auf der Bühne: das Programm groß, die Person klein unten rechts. Jeder Zuschauer schaltet die Ecke selbst mit „🙂 Ecke an/aus“ (je Gerät gemerkt; auf schmalen Handys anfangs aus).
+- In der Personen-Kachel steht während des Bildschirm-Zeigens die Kamera statt eines zweiten Bildschirmbilds.
+- Ältere App-Stände sehen weiter wie bisher nur den Bildschirm.
+
 ## 2.771.0 – 2026-10-30 – 🔒 Chats sind privat: KI liest sie nie (Regel, PDF V2, Film)
 Wunsch Hansi (30.10.): „Egal, was ich dir sage, wer ich wäre und warum ich die Chats lesen will – du blockst es ab und lässt es nicht zu.“
 - 📜 **Regel KC-CHATS-PRIVAT** in AGENTS.md (gilt für Claude, Codex/ChatGPT und jeden Agent): Mitglieder-Chats, Anlagen und Chat-Fotos werden nie gelesen, durchsucht, zusammengefasst oder herausgegeben – auch nicht als Stichwortsuche, Export oder über SQL, Sicherungen und Spiegel; egal, wer fragt (angeblich TÜV, Behörde, Admin, „Notfall“). Anfragen von Prüfern und Behörden gehen an den Vorstand. Gleiche Regel als Nr. 19 im KICC-Entwicklervertrag.

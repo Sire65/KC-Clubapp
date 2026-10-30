@@ -147,7 +147,7 @@ async function tlSchirm() {
   tlVideoTauschen(); tlSendenAbgleichen(); tlDa(false); tlZeichnen();
 }
 const tlVideoSpur = () => TL.schirm?.getVideoTracks()[0] || TL.cam?.getVideoTracks()[0] || null;
-// 2.771.0 KC-CLUB-RUNDER-TISCH-ECKE (Wunsch #47, Hansi 30.10.2026 „im Seminar das Kassenprogramm vorstellen und zwischen Kamera und Programm
+// 2.772.0 KC-CLUB-RUNDER-TISCH-ECKE (Wunsch #47, Hansi 30.10.2026 „im Seminar das Kassenprogramm vorstellen und zwischen Kamera und Programm
 // umschalten – ja, mich in der Ecke, aber umschaltbar, denn auf dem kleinen Handy-Bildschirm könnte das stören“): Zeige ich den Bildschirm UND die
 // Kamera ist an, geht die Kamera zusätzlich als zweites, kleines Bild mit (eigener Kanal, wenig Datenrate). Jeder Zuschauer entscheidet selbst,
 // ob er mich klein in der Ecke der Bühne sieht (Knopf „🙂 Ecke“, je Gerät gemerkt; Standard an, auf schmalen Handys aus).
@@ -183,7 +183,7 @@ async function tlRausAufbauen(an) {
   const mic = TL.mic?.getAudioTracks()[0] || null;
   v.audio = pc.addTransceiver(mic || "audio", { direction: "sendonly", streams: TL.mic ? [TL.mic] : [] });
   v.video = pc.addTransceiver(tlVideoSpur() || "video", { direction: "sendonly" });
-  v.eck = pc.addTransceiver(tlEckSpur() || "video", { direction: "sendonly" }); // 2.771.0: Kamera klein, während ich den Bildschirm zeige
+  v.eck = pc.addTransceiver(tlEckSpur() || "video", { direction: "sendonly" }); // 2.772.0: Kamera klein, während ich den Bildschirm zeige
   pc.onicecandidate = (e) => { if (e.candidate) tlSende({ typ: "ice", an, pc: k, c: e.candidate.toJSON() }); };
   pc.onconnectionstatechange = () => tlPcZustand(k);
   try { await pc.setLocalDescription(await pc.createOffer()); tlSende({ typ: "sdp", an, pc: k, sdp: pc.localDescription.toJSON() }); tlRate(v); }
@@ -200,7 +200,7 @@ async function tlSignal(d) {
     pc.onicecandidate = (e) => { if (e.candidate) tlSende({ typ: "ice", an: d.von, pc: k, c: e.candidate.toJSON() }); };
     pc.onconnectionstatechange = () => tlPcZustand(k);
     pc.ontrack = (e) => {
-      // 2.771.0 KC-CLUB-RUNDER-TISCH-ECKE: zweiter Video-Kanal = Kamera klein (nur solange der andere den Bildschirm zeigt)
+      // 2.772.0 KC-CLUB-RUNDER-TISCH-ECKE: zweiter Video-Kanal = Kamera klein (nur solange der andere den Bildschirm zeigt)
       if (e.track.kind === "video" && pc.getTransceivers().filter((x) => x.receiver.track?.kind === "video").indexOf(e.transceiver) === 1) {
         v.eckStrom = new MediaStream([e.track]); e.track.onunmute = e.track.onmute = () => { TL.buehneStand = ""; tlZeichnen(); }; return; }
       v.strom = v.strom || new MediaStream(); v.strom.addTrack(e.track); e.track.onunmute = () => tlZeichnen(); if (e.track.kind === "audio") { tlTonSpielen(k, v.strom); tlPegelQuelle(d.von, v.strom); } tlZeichnen(); };
@@ -383,7 +383,7 @@ function tlVideoAnzeigen(el, g) {
   if (!v) { el.innerHTML = `<div class="tl-buehne-kopf">🖥️ <b id="tlGrossName"></b><span id="tlEckKnopf"></span>${tlVollKnopf()}</div><div class="tl-gross-rahmen"><video class="tl-gross" autoplay playsinline muted></video><video class="tl-eck" autoplay playsinline muted hidden></video></div>`; v = el.querySelector("video.tl-gross"); }
   el.querySelector("#tlGrossName").textContent = g.selbst ? "Du zeigst deinen Bildschirm" : `${tlName(g.pid)} zeigt den Bildschirm`;
   if (v.srcObject !== g.strom) { v.srcObject = g.strom; v.play?.().catch(() => {}); }
-  // 2.771.0 KC-CLUB-RUNDER-TISCH-ECKE: Kamera klein in der Ecke – jeder schaltet selbst (Knopf nur, wenn es eine Kamera gibt)
+  // 2.772.0 KC-CLUB-RUNDER-TISCH-ECKE: Kamera klein in der Ecke – jeder schaltet selbst (Knopf nur, wenn es eine Kamera gibt)
   const eck = el.querySelector("video.tl-eck"), an = tlEckAn();
   el.querySelector("#tlEckKnopf").innerHTML = g.eck ? `<button class="knopf klein tl-eck-knopf${an ? " haupt" : ""}" onclick="tlEckUmschalten()" aria-pressed="${an}" title="${g.selbst ? "Dich" : tlName(g.pid)} klein in der Ecke zeigen oder ausblenden">🙂 Ecke ${an ? "an" : "aus"}</button>` : "";
   eck.hidden = !(g.eck && an);
@@ -424,7 +424,7 @@ function tlZeichnen() {
   // Kamerabilder einhängen (ohne die Verbindung anzufassen)
   box.querySelectorAll("video[data-cam]").forEach((v) => {
     const pid = v.dataset.cam, x = [...TL.pcs.values()].find((y) => !y.raus && y.an === pid && y.strom);
-    const s = pid === TL.ich ? TL.cam : (TL.peers.get(pid)?.schirm && x?.eckStrom?.getVideoTracks().some((t) => !t.muted) ? x.eckStrom : x?.strom); // 2.771.0: zeigt er den Bildschirm, steht in seiner Kachel die Kamera
+    const s = pid === TL.ich ? TL.cam : (TL.peers.get(pid)?.schirm && x?.eckStrom?.getVideoTracks().some((t) => !t.muted) ? x.eckStrom : x?.strom); // 2.772.0: zeigt er den Bildschirm, steht in seiner Kachel die Kamera
     if (s) { v.srcObject = s; v.play?.().catch(() => {}); }
   });
   tlBuehneZeichnen();
