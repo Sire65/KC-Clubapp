@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.786.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.787.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1044,7 +1044,13 @@ const THEMA_KAL = (d = new Date()) => { const f = themaFestZeit(d); if (f) retur
 const themaWahl = () => { try { const w = localStorage.getItem("kc_club_thema"); return w === "auto" || THEMEN.some((t) => t.id === w) ? w : "aus"; } catch { return "aus"; } };
 const themaClubFolgen = () => { try { return localStorage.getItem("kc_club_thema_club") !== "0"; } catch { return true; } };
 const clubThemaId = () => { const w = INIT ? INIT.clubThema : (() => { try { return JSON.parse(localStorage.getItem("kc_club_clubThema") || "null"); } catch { return null; } })(); return w?.id || null; };
+// 2.787.0 KC-CLUB-HALLOWEEN-FUER-ALLE (Wunsch Hansi 30.10.: „am Halloween-Tag bei allen um 0 Uhr einschalten, um die nächste 0 Uhr wieder aus“):
+// am 31.10. (deutsche Zeit, 0–24 Uhr) gilt auf jedem Gerät 🎃 Halloween – vor Club-Thema und eigener Wahl. Gespeichert wird nichts:
+// ab 1.11. 0 Uhr gilt wieder, was jeder eingestellt hatte. Der Wechsel um Mitternacht kommt über THEMA_UHR (unten, jede Minute).
+const HW_TAG = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ });
+const halloweenFuerAlle = (d = new Date()) => HW_TAG.format(d).slice(5) === "10-31";
 function aktivesThema() {
+  if (halloweenFuerAlle()) { const t = THEMEN.find((x) => x.id === "halloween"); if (t) return { ...t, quelle: "halloween" }; } // 2.787.0
   const c = clubThemaId(); if (c && themaClubFolgen()) { const t = THEMEN.find((x) => x.id === (c === "auto" ? THEMA_KAL() : c)); if (t) return { ...t, quelle: "club" }; }
   const w = themaWahl(); if (w === "aus") return null;
   const t = THEMEN.find((x) => x.id === (w === "auto" ? THEMA_KAL() : w)); return t ? { ...t, quelle: w === "auto" ? "kalender" : "fest" } : null;
@@ -1056,6 +1062,9 @@ function themaAnwenden() { // alles neu zeichnen, was vom Thema abhängt
   try { anwendenDesign(); } catch {} try { designWahlZeigen(); } catch {} try { jzWahlZeigen(); } catch {} try { sendeEffektZeigen(); } catch {}
   try { if (!JZB.vorschau) jahreszeitKopf(); } catch {}
 }
+// 2.787.0: jede Minute prüfen, ob ein anderes Thema dran ist (Mitternacht: Halloween an/aus, „Nach Kalender“) – dann Farben, Kopf und Effekt neu
+const THEMA_UHR = { id: "?" };
+setInterval(() => { try { const id = aktivesThema()?.id || null; if (THEMA_UHR.id !== "?" && id !== THEMA_UHR.id) themaAnwenden(); THEMA_UHR.id = id; } catch {} }, 60000);
 function themaSetzen(w) {
   try { localStorage.setItem("kc_club_thema", w); localStorage.removeItem("kc_club_thema_eigen"); } catch {}
   themaAnwenden(); const t = THEMEN.find((x) => x.id === w);
@@ -1078,7 +1087,7 @@ function themaWahlZeigen() {
     + THEMEN.map((t) => knopf(t.id, t.sym, t.name, farbe(t), t)).join("");
   const sw = $("themaSchriftAn"); if (sw) sw.checked = themaSchriftAn();
   const c = clubThemaId(), ct = c && (c === "auto" ? { sym: "🔄", name: "nach Kalender" } : THEMEN.find((t) => t.id === c));
-  $("themaInfo").innerHTML = akt ? `Gerade: <b>${akt.sym} ${esc(akt.name)}</b>${akt.quelle === "club" ? " – Club-Thema" : akt.quelle === "kalender" ? " – nach Kalender" : ""}. Farbe, Jahreszeit und Sende-Effekt kannst du trotzdem einzeln ändern.` : "Kein Thema – es gelten deine eigenen Einstellungen.";
+  $("themaInfo").innerHTML = akt ? `Gerade: <b>${akt.sym} ${esc(akt.name)}</b>${akt.quelle === "halloween" ? " – heute für alle bis Mitternacht, danach wieder deine Wahl" : akt.quelle === "club" ? " – Club-Thema" : akt.quelle === "kalender" ? " – nach Kalender" : ""}. Farbe, Jahreszeit und Sende-Effekt kannst du trotzdem einzeln ändern.` : "Kein Thema – es gelten deine eigenen Einstellungen.";
   $("themaClub").innerHTML = (ct ? `<div class="schalter"><div><b>🏛️ Club-Thema übernehmen</b><div class="hinweis">${esc(INIT?.clubThema?.von || "Der Admin")} hat für alle <b>${ct.sym} ${esc(ct.name)}</b> eingestellt.</div></div><input type="checkbox" ${themaClubFolgen() ? "checked" : ""} onchange="themaClubSetzen(this.checked)"></div>` : "")
     + (ICH?.admin ? `<details class="ds-mehr"><summary>🏛️ Club-Thema für alle festlegen (Admin)</summary><div class="reg-effekt-wahl" style="margin-top:6px">${[["auto", "🔄 Nach Kalender"], ...THEMEN.map((t) => [t.id, `${t.sym} ${t.name}`])].map(([id, t]) => `<button type="button" class="chip${c === id ? " an" : ""}" onclick="themaFuerAlle('${id}')">${esc(t)}</button>`).join("")}</div>${c ? '<button type="button" class="knopf klein" style="margin-top:6px" onclick="themaFuerAlle(null)">✖ Club-Thema aufheben</button>' : ""}<div class="hinweis" style="margin-top:4px">Gilt sofort für alle, die „Club-Thema übernehmen“ nicht abgeschaltet haben.</div></details>` : "");
 }

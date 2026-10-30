@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.787.0 – 2026-10-30 – 🎃 Halloween-Tag: bei allen von 0 bis 24 Uhr (KC-CLUB-HALLOWEEN-FUER-ALLE)
+Wunsch Hansi (30.10.): „Am Halloween-Tag bei allen das Thema Halloween einschalten, nachts um 0 Uhr – und um die nächste 0 Uhr wieder ausschalten.“ Eingespielt zum 20-Uhr-Termin (auf dem Arbeitszweig als 2.765.0 gebaut; die Nummern 2.765.0 und 2.786.0 hatten inzwischen andere Sitzungen vergeben).
+- Am **31.10. von 0:00 bis 24:00 Uhr (deutsche Zeit)** gilt auf jedem Gerät das vorhandene Thema 🎃 Halloween (Farben, Grusel-Schrift, Szene im Kopf, Sende-Effekt) – vor Club-Thema, „Nach Kalender“ und eigener Wahl, auch bei „Kein Thema“.
+- **Nichts wird überschrieben:** Die eigene Themen-Wahl und das Club-Thema bleiben gespeichert; ab **1.11. 0:00 Uhr** gilt wieder genau das, was vorher eingestellt war.
+- Der Wechsel kommt **von selbst um Mitternacht**, auch bei offener App (Prüfung jede Minute, nur auf dem Gerät – keine Datenbank-Abfrage). Wechselt dabei das Thema, werden Farben, Kopf und Effekt neu gezeichnet; das gilt jetzt auch für „Nach Kalender“ und das Club-Thema „nach Kalender“.
+- ⚙️ → 🎭 Themen zeigt am 31.10. „Gerade: 🎃 Halloween – heute für alle bis Mitternacht, danach wieder deine Wahl“.
+- Test: `tests/halloween-fuer-alle.test.mjs` (30.10. 23:59 / 31.10. 0:00 / 31.10. 23:59 / 1.11. 0:00 deutsche Zeit, Vorrang vor Club-Thema und eigener Wahl, Wahl danach unverändert, Minuten-Prüfung).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.785.0 – 2026-10-30 – 📄 Einzelplan je Person · Dienstplan-Farben wie Twinkey · keine kurze Bereitschaft für Weitfahrer
+
 ## 2.786.0 – 2026-10-30 – 📅 Tagesnamen im Dienstplan · 🔒 GitHub-Bausteine festgeschrieben
 - 📅 Dienstplan und Einzelplan nennen die Tage Aufbau · WM (Weihnachtsmarkt) · Wochenmarkt (Di und Fr) · Nikolaus (nur 06.12.) · Nachbereitung (KC-CLUB-DP-MARKTNAME). 🔒 Jeder fremde Baustein in den GitHub-Abläufen läuft mit einer festen, geprüften Fassung – ein Anbieter kann ihn nicht mehr heimlich ändern (KC-CLUB-ACTIONS-FEST).
 
