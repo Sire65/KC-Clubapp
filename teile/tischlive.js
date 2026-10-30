@@ -265,10 +265,12 @@ async function tlUnterlagen() {
   if (!tlRegel().darfZeigen) return melde("📎 Zeigen geht im Redestab-Modus mit dem Redestab – oder schick die Datei im Tisch-Chat.", true);
   const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">📎 Unterlagen zeigen</h3>
     <p class="dlg-text">Die Datei kommt in den Tisch-Chat (alle haben sie danach) und erscheint bei allen groß – ihr seht dieselbe Seite.</p>
+    ${tlTasche(["pdf", "foto"]).length ? `<div class="tl-tasche-wahl"><b>💼 Aus meiner Tasche</b>${tlTasche(["pdf", "foto"]).map((x) => `<button type="button" class="knopf" data-tasche="${esc(x.id)}">${x.art === "pdf" ? "📄" : "🖼️"} ${esc(x.name)}${x.gezeigt ? " ✓" : ""}</button>`).join("")}</div>` : ""}
     <div class="ca-wahl"><button type="button" class="knopf haupt" data-a="geraet">📄 PDF oder Foto vom Gerät</button><button type="button" class="knopf" data-a="archiv">🗄️ Aus dem Archiv</button>
     ${TL.zeige?.von === TL.ich ? '<button type="button" class="knopf" data-a="aus">⏹️ Zeigen beenden</button>' : ""}</div>`, () => f.remove());
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
   f.querySelector('[data-a="aus"]')?.addEventListener("click", () => { f.remove(); tlZeigeSetzen(null); });
+  f.querySelectorAll("[data-tasche]").forEach((b) => (b.onclick = () => { f.remove(); tlAusTasche(tlTasche().find((x) => x.id === b.dataset.tasche)); }));
   f.querySelector('[data-a="geraet"]').onclick = () => { f.remove(); const inp = document.createElement("input"); inp.type = "file"; inp.accept = "application/pdf,.pdf,image/*";
     inp.onchange = () => { const d = inp.files?.[0]; if (d) tlTeilen(d); }; inp.click(); };
   f.querySelector('[data-a="archiv"]').onclick = async () => { f.remove(); let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
@@ -393,6 +395,7 @@ function tlZeichnen() {
       ${tlSchirmGeht() ? `<button class="knopf${TL.schirm ? " haupt" : ""}" onclick="tlSchirm()" ${r.darfSprechen ? "" : "disabled"}><span>🖥️</span>Bildschirm</button>` : ""}
       <button class="knopf${TL.zeige?.von === TL.ich ? " haupt" : ""}" onclick="tlUnterlagen()"><span>📎</span>Zeigen</button>
       <button class="knopf${TL.musik ? " haupt" : ""}" onclick="tlMusik()"><span>🎵</span>Musik</button>
+      ${tlTasche().some((x) => !x.gezeigt) ? `<button class="knopf" onclick="tlTascheNaechstes()"><span>💼</span>Nächstes</button>` : ""}
       ${r.darfSprechen ? "" : `<button class="knopf${TL.hand ? " haupt" : ""}" onclick="tlHand()"><span>✋</span>${TL.hand ? "Gemeldet" : "Melden"}</button>`}
       <button class="knopf" onclick="tlStopp()"><span>⏹️</span>Live aus</button>
     </div>
@@ -429,8 +432,10 @@ async function tlMusik() {
   if (!tlRegel().darfZeigen) return melde("🎵 Musik für alle startet im Redestab-Modus die Leitung oder wer den Redestab hat.", true);
   const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎵 Musik für alle</h3>
     <p class="dlg-text">Ein Lied (MP3, höchstens 8 MB) – alle hören es gleichzeitig. Es kommt in den Tisch-Chat.${TL.musik ? `<br>Gerade läuft: „${esc(TL.musik.n)}“ von ${esc(tlName(TL.musik.von))} – deins ersetzt es.` : ""}</p>
+    ${tlTasche(["musik"]).length ? `<div class="tl-tasche-wahl"><b>💼 Aus meiner Tasche</b>${tlTasche(["musik"]).map((x) => `<button type="button" class="knopf" data-tasche="${esc(x.id)}">🎵 ${esc(x.name)}${x.gezeigt ? " ✓" : ""}</button>`).join("")}</div>` : ""}
     <div class="ca-wahl"><button type="button" class="knopf haupt" data-a="archiv">🗄️ Aus dem Archiv (z. B. Club-Song)</button><button type="button" class="knopf" data-a="geraet">📱 Vom Gerät</button></div>`, () => f.remove());
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
+  f.querySelectorAll("[data-tasche]").forEach((b) => (b.onclick = () => { f.remove(); tlAusTasche(tlTasche().find((x) => x.id === b.dataset.tasche)); })); // 2.772.0
   f.querySelector('[data-a="geraet"]').onclick = () => { f.remove(); const inp = document.createElement("input"); inp.type = "file"; inp.accept = "audio/*,.mp3,.m4a,.ogg,.wav";
     inp.onchange = () => { const d = inp.files?.[0]; if (d) tlMusikTeilen(d); }; inp.click(); };
   f.querySelector('[data-a="archiv"]').onclick = async () => { f.remove(); let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
@@ -529,4 +534,22 @@ function tlMusikZeile() {
   return `<div class="tl-musik">🎵 <b>${esc(m.n)}</b> <small>· ${esc(m.von === TL.ich ? "du spielst" : tlName(m.von) + " spielt")}${m.pause != null ? " · ⏸️ Pause" : ""}${TL.musikStumm ? " · 🔇 bei dir aus" : ""}</small>
     <div class="tl-musik-knoepfe">${tlMusikKnoepfe(m)}</div>
     <label class="tl-laut">🔈<input type="range" min="0" max="1" step="0.05" value="${TL.musikLaut ?? 0.8}" oninput="tlMusikLaut(this.value)" aria-label="Lautstärke Musik"></label></div>`;
+}
+
+// ---- 2.772.0 KC-CLUB-TISCH-TASCHE: vorher Gepacktes mit einem Tipp zeigen bzw. abspielen (Datei liegt schon hochgeladen, meist schon auf dem Gerät) ----
+// Zeigen = derselbe Weg wie „Vom Gerät“: Anlage in den Tisch-Chat (alle haben sie danach), dann „Zeigen“ bzw. „Musik für alle“.
+function tlTasche(arten) { const T = typeof RUND !== "undefined" ? RUND.tasche?.[TL.id] : null; return (T?.meine || []).filter((x) => !arten || arten.includes(x.art)); }
+function tlTascheNaechstes() { const x = tlTasche().find((y) => !y.gezeigt); if (!x) return melde("💼 In deiner Tasche ist nichts mehr, was noch nicht gezeigt wurde."); tlAusTasche(x); }
+async function tlAusTasche(x) {
+  const t = tlTisch(); if (!x || !t?.chat) return;
+  if (!tlRegel().darfZeigen) return melde("💼 Zeigen geht im Redestab-Modus mit dem Redestab – frag die Leitung.", true);
+  try {
+    const musik = x.art === "musik";
+    await api("nachricht_senden", { id: t.chat, text: musik ? `🎵 Musik für alle: ${x.name}` : `📎 Unterlage: ${x.name}`, anlagen: [x.a], wege: [] });
+    if (musik) {
+      const c = RUND_DATEIEN.get(x.a); if (c) { if (TL.musikDatei?.url) URL.revokeObjectURL(TL.musikDatei.url); TL.musikDatei = { a: x.a, url: URL.createObjectURL(c.blob) }; }
+      tlMusikSetzen({ a: x.a, n: String(x.name).slice(0, 80), start: Date.now() + TL_MUSIK_VORLAUF, pause: null });
+    } else { tlZeigeSetzen({ a: x.a, n: String(x.name).slice(0, 80), m: x.mime || "", s: 1 }); melde("📎 Alle sehen jetzt: " + x.name); }
+    x.gezeigt = true; rundTascheTun(TL.id, x.id, "gezeigt"); tlZeichnen();
+  } catch (e) { meldeFehler(e); }
 }

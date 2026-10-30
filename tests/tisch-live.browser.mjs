@@ -69,6 +69,10 @@ try {
             mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {}, kacheln: null, freigaben: { runder_tisch: "alle" } },
           tisch_liste: lage(p.id), tisch_platz: { ok: true, ergebnis: "da", lage: lage(p.id), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) },
           anlage_url: { url: body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
+          // 2.772.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher ein PDF und ein Lied eingepackt
+          tisch_tasche: { tisch: TISCH, darfVorab: true, max: 20, vorab: [], meine: p.id !== LEUTE[0].id ? [] : [
+            { id: "t1", a: PDF, name: "Ablauf.pdf", mime: "application/pdf", art: "pdf", pos: 1, vorab: false, gezeigt: false },
+            { id: "t2", a: MUSIK, name: "Club-Song.mp3", mime: "audio/mpeg", art: "musik", pos: 2, vorab: false, gezeigt: false }] },
         }[a] ?? { ok: true };
         return r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(ant) });
       }
@@ -151,6 +155,17 @@ try {
   for (const s of seiten) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik && !document.getElementById("tlMusikMini"), null, 8000, "⏹️ Für alle aus kommt nicht überall an");
   await A.seite.waitForTimeout(TL_HERZ_PRUEF_MS);
   for (const s of seiten) if (await s.seite.evaluate(() => !!TL.musik)) melde(`[${s.name}] 🎵 Musik startet nach „Für alle aus“ von selbst wieder`);
+  // 7d. 2.772.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher gepackt – die Dateien liegen beim Platznehmen schon auf dem Gerät; „💼 Nächstes“ zeigt der Reihe nach:
+  //     erst das PDF (alle sehen es), dann das Lied (alle hören es) – ohne Suchen. Danach ist nichts Ungezeigtes mehr übrig.
+  await warte(A, (ids) => ids.every((x) => RUND_DATEIEN.has(x)), [PDF, MUSIK], 15000, "💼 Tasche wird beim Platznehmen nicht vorgeladen");
+  if (!(await A.seite.evaluate(() => !!document.querySelector('#tlBereich button[onclick="tlTascheNaechstes()"]')))) melde("[Anna] Knopf „💼 Nächstes“ fehlt");
+  await A.seite.evaluate(() => tlTascheNaechstes());
+  for (const s of [B, C]) await warte(s, (pdf) => TL.zeige?.a === pdf && !!document.querySelector("#tlBuehne img.tl-seite"), PDF, 20000, "💼 PDF aus der Tasche erscheint nicht");
+  await A.seite.evaluate(() => tlTascheNaechstes());
+  for (const s of seiten) await warte(s, (m) => TL.musik?.a === m && !document.getElementById("tlMusikTon")?.paused, MUSIK, 20000, "💼 Lied aus der Tasche spielt nicht");
+  if (await A.seite.evaluate(() => tlTasche().some((x) => !x.gezeigt) || !!document.querySelector('#tlBereich button[onclick="tlTascheNaechstes()"]'))) melde("[Anna] 💼 nach dem letzten Teil steht noch „Nächstes“ da");
+  await A.seite.evaluate(() => { tlMusikSetzen(null); tlZeigeSetzen(null); });
+  for (const s of [B, C]) await warte(s, () => !TL.musik && !TL.zeige, null, 8000, "💼 Aus/Zeigen beenden kommt nicht an");
   // 8. Redestab (Grenze im Test auf 2 gesetzt → bei 3 Personen gilt der Redestab): nur Anna (Leitung) spricht, Bernd meldet sich ✋,
   //    Anna gibt ihm den Stab → Bernd spricht, Anna hört ihn; Anna nimmt den Stab zurück → Bernd ist wieder stumm und sendet nicht mehr
   for (const s of seiten) await s.seite.evaluate(() => { TL.freiBis = 2; tlAufraeumen(); });

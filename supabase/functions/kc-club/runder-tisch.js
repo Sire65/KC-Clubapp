@@ -158,3 +158,27 @@ export function rtKonfliktText(k, tz = "Europe/Berlin") {
   const lang = Date.parse(k.bis) - Date.parse(k.von) > 20 * 3600000; // mehrtägig (z. B. Weihnachtsmarkt): mit Datum
   return `Zur selben Zeit: „${k.titel}“ (${lang ? `${tag(k.von)}–${tag(k.bis)}` : `${u(k.von)}–${u(k.bis)} Uhr`}).`;
 }
+
+// 2.772.0 KC-CLUB-TISCH-TASCHE (Wunsch Hansi 30.10.2026 „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
+// Wahl: jeder packt seine eigene Tasche, die Leitung kann einzelne Teile „vorab für alle“ markieren). Privat, bis man es zeigt.
+export const RT_TASCHE = { max: 20, nameMax: 120 };
+export function rtTascheArt(name, mime) {
+  const n = String(name || "").toLowerCase(), m = String(mime || "").toLowerCase();
+  if (m === "application/pdf" || n.endsWith(".pdf")) return "pdf";
+  if (m.startsWith("image/") || /\.(jpe?g|png|webp|gif|heic)$/.test(n)) return "foto";
+  if (m.startsWith("audio/") || /\.(mp3|m4a|aac|ogg|oga|opus|wav)$/.test(n)) return "musik";
+  return null;
+}
+export function rtTascheLegenPruefen(t, jetzt, meineAnzahl, art) {
+  const ph = rtPhase(t, jetzt);
+  if (ph === "vorbei" || ph === "abgesagt") return ph === "abgesagt" ? "Der Tisch wurde abgesagt." : "Der Tisch ist schon vorbei.";
+  if (!art) return "In die Tasche passen PDFs, Fotos und Musik (MP3, M4A, OGG, WAV).";
+  if ((meineAnzahl || 0) >= RT_TASCHE.max) return `Höchstens ${RT_TASCHE.max} Teile je Tasche.`;
+  return null;
+}
+// Reihenfolge: hoch/runter tauscht mit dem Nachbarn → neue Positionen [{ id, pos }]
+export function rtTascheSchieben(teile, id, richtung) {
+  const l = [...(teile || [])].sort((a, b) => a.pos - b.pos), i = l.findIndex((x) => x.id === id), j = i + (richtung === "hoch" ? -1 : 1);
+  if (i < 0 || j < 0 || j >= l.length) return [];
+  return [{ id: l[i].id, pos: l[j].pos }, { id: l[j].id, pos: l[i].pos }];
+}

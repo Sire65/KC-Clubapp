@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.771.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.772.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16,7 +16,7 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
-  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-fZRJAQf09fYCy0IP/ZgnugR6GlwdsR7tHlSwhsdAGPdG7hom6RyYnh2VJtsXyJD+" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
+  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-bYqbkfg/2gDNDSaXNA9dI7E6b39X8o9lebsPtj9ilNj/oTVqPR2Ys/P2XNzGkEFE" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -22079,6 +22079,7 @@ function rundKarteHtml(t) {
     : voll ? '<span class="hinweis">🈵 ausgebucht</span>' : k(`rundZusage(${id}, 'ja')`, A.anmeldung ? "📝 Anmelden" : "✋ Ich setz mich dazu", t.phase === "geplant" || !darfSitzen));
   if (t.chat && t.imChat && t.phase === "vorbei") knoepfe.push(k(`rundChat(${id})`, "💬 Chat nachlesen"));
   if (t.bestaetigung) knoepfe.push(k(`rundBestaetigung(${id})`, "📄 Teilnahmebestätigung", true));
+  if (t.phase !== "vorbei" && t.phase !== "abgesagt") knoepfe.push(k(`rundTascheOeffnen(${id})`, `💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}${t.tasche?.vorab ? ` · 📁 ${t.tasche.vorab} vorab` : ""}`)); // 2.772.0 KC-CLUB-TISCH-TASCHE
   if (t.darfLeiten && (t.phase === "geplant" || t.phase === "gleich")) knoepfe.push(k(`rundLeiten(${id}, 'absagen')`, "🚫 Absagen"));
   const zus = t.phase === "vorbei" ? "" : A.anmeldung ? `📝 ${angemeldet} von ${t.plaetze} Plätzen angemeldet${t.meineZusage === "ja" && !t.darfLeiten ? " – du bist dabei" : ""}`
     : t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
@@ -22204,6 +22205,7 @@ async function rundPlatz(id, laut) {
   try {
     const r = await api("tisch_platz", { id }, laut ? { warten: true } : { still: true });
     if (r.ok) { if (r.live) { RUND.live = r.live; if (!teilDa("tischlive")) teilLaden("tischlive").catch(() => {}); } // 2.766.0: Live-Leitung + Teil schon bereitlegen
+      if (RUND.sitze !== id) rundTascheVorladen(id); // 2.772.0 KC-CLUB-TISCH-TASCHE: gepackte Dateien schon aufs Gerät holen
       if (RUND.sitze !== id) { if (laut) melde(rundArt(rundTisch(id)).anmeldung ? "🎓 Du bist dabei" : `${rundArt(rundTisch(id)).sym} Du sitzt am Tisch`); else if (RUND.warte === id) { melde("🪑 Ein Platz ist frei geworden – du sitzt jetzt am Tisch"); try { navigator.vibrate?.(60); } catch {} } } RUND.sitze = id; RUND.warte = null; }
     else { if (RUND.sitze === id) RUND.sitze = null; RUND.warte = r.ergebnis === "voll" ? id : null; if (laut) melde(r.meldung, r.ergebnis !== "voll" && r.ergebnis !== "anmeldung"); }
     rundHerzPlanen(); rundLageSetzen(r.lage);
@@ -22282,6 +22284,7 @@ function rundTischZeichnen() {
     ${warte ? `<p class="rund-warte">⏳ Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.</p>` : ""}
     ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<p class="hinweis">Du sitzt gerade nicht am Tisch.</p>` : ""}
     <div class="knoepfe rund-leiste">
+      ${t.phase !== "vorbei" ? `<button class="knopf klein" onclick="rundTascheOeffnen(${jsArg(t.id)})">💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}</button>` : ""}
       ${sitze && t.chat ? `<button class="knopf haupt" onclick="rundChat(${jsArg(t.id)})">💬 ${t.art === "seminar" ? "Seminar-Chat: Fragen · 🎤 · 📎 Unterlagen" : "Chat: schreiben · 🎤 sprechen · 📎 zeigen"}</button>` : ""}
       ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<button class="knopf haupt" onclick="rundPlatz(${jsArg(t.id)}, true)">🪑 Platz nehmen</button>` : ""}
       ${t.darfLeiten && t.phase === "offen" && (t.verlaengert || 0) < 60 ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'verlaengern')">⏱️ +30 Min.</button>` : ""}
@@ -22331,6 +22334,75 @@ async function rundSeminareZeigen() {
     el.innerHTML = RUND.seminare.length ? `<h4>🎓 Besuchte Seminare${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h4>${RUND.seminare.map((x, i) => `<div class="karte"><b>${esc(x.thema)}</b>
       <div class="hinweis">${esc(fRundDatum.format(new Date(x.beginn)))} · ${x.ichReferent ? "🎤 du warst Referent" : `Referent: ${esc(x.referent)}`}</div>
       ${x.bestaetigung ? `<div class="knoepfe"><button class="knopf klein haupt" onclick="rundBestaetigung(null, RUND.seminare[${i}])">📄 Teilnahmebestätigung</button></div>` : x.ichReferent ? "" : '<div class="hinweis">Keine Bestätigung – weniger als die Hälfte der Zeit dabei.</div>'}</div>`).join("")}` : "";
+  } catch {}
+}
+// ---- 2.772.0 KC-CLUB-TISCH-TASCHE (Wunsch Hansi 30.10.2026 „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
+// Wahl: jeder seine eigene Tasche, die Leitung markiert einzelne Teile „vorab für alle“). Gepackt wird über den vorhandenen Weg (anlageHochladen,
+// Archiv); privat bis zum Zeigen. Am Tisch: 📎 Zeigen / 🎵 Musik bieten die Tasche zuerst an, „💼 Nächstes“ zeigt das nächste Teil der Reihe nach.
+// Beim Platznehmen holt das Handy die Dateien schon (RUND_DATEIEN, höchstens 60 MB im Speicher) – Zeigen geht dann ohne Warten.
+const RUND_DATEIEN = new Map(), RUND_TASCHE_ART = { pdf: "📄", foto: "🖼️", musik: "🎵" }, RUND_VORLADEN_MAX = 60 * 1024 * 1024;
+RUND.tasche = {};
+async function rundTascheHolen(id) { const r = await api("tisch_tasche", { id }, { still: true }); RUND.tasche[id] = r; return r; }
+async function rundTascheOeffnen(id) {
+  const t = rundTisch(id); if (!t) return;
+  const f = blattAuf("rundTascheBlatt", `<div id="rundTascheInhalt"><p class="hinweis">Wird geladen …</p></div>`); f.classList.add("rund-blatt");
+  try { await rundTascheHolen(id); rundTascheZeichnen(id); } catch (e) { const el = $("rundTascheInhalt"); if (el) el.innerHTML = `<p>⚠️ ${esc(fehlerText(e, ""))}</p><button class="knopf" onclick="fensterZu($('rundTascheBlatt'))">Schließen</button>`; }
+}
+function rundTascheZeichnen(id) {
+  const el = $("rundTascheInhalt"), T = RUND.tasche[id], t = rundTisch(id); if (!el || !T || !t) return;
+  const k = (fn, txt, extra = "") => `<button type="button" class="knopf klein" onclick="${fn}" ${extra}>${txt}</button>`, tid = jsArg(id);
+  const teil = (x, i, n) => `<div class="karte rund-teil${x.gezeigt ? " gezeigt" : ""}"><div class="rund-teil-kopf"><span class="rund-teil-nr">${i + 1}.</span> ${RUND_TASCHE_ART[x.art] || "📎"} <b>${esc(x.name)}</b>${x.gezeigt ? ' <small class="hinweis">✓ gezeigt</small>' : ""}${x.vorab ? ' <small class="rund-vorab">📁 vorab für alle</small>' : ""}</div>
+    <div class="knoepfe">${k(`anlageAktion(${jsArg(x.a)}, ${jsArg(x.name)}, ${jsArg(x.mime || "")})`, "👁️ Ansehen")}${i > 0 ? k(`rundTascheTun(${tid}, ${jsArg(x.id)}, 'hoch')`, "⬆️", 'aria-label="nach oben"') : ""}${i < n - 1 ? k(`rundTascheTun(${tid}, ${jsArg(x.id)}, 'runter')`, "⬇️", 'aria-label="nach unten"') : ""}
+      ${T.darfVorab ? k(`rundTascheTun(${tid}, ${jsArg(x.id)}, 'vorab')`, x.vorab ? "🔒 Nicht mehr vorab" : "📁 Vorab für alle") : ""}${k(`rundTascheTun(${tid}, ${jsArg(x.id)}, 'weg')`, "🗑️", 'aria-label="aus der Tasche nehmen"')}</div></div>`;
+  el.innerHTML = `<h3 style="margin-top:0">💼 Meine Tasche · ${esc(t.thema)}${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h3>
+    <p class="hinweis" style="margin-top:0">Pack vorher ein, was du zeigen oder abspielen möchtest – PDFs, Fotos und Musik. Nur du siehst es, bis du es am Tisch zeigst. Am Tisch tippst du einfach auf <b>💼 Nächstes</b> oder wählst es bei 📎 Zeigen bzw. 🎵 Musik aus.${T.darfVorab ? " Als Leitung kannst du einzelne Teile <b>📁 vorab für alle</b> freigeben – z. B. Unterlagen zur Vorbereitung." : ""}</p>
+    <div class="knoepfe"><button class="knopf haupt" onclick="rundTascheDatei(${tid}, false)">📄 Vom Handy</button><button class="knopf" onclick="rundTascheDatei(${tid}, true)">📷 Foto machen</button><button class="knopf" onclick="rundTascheArchiv(${tid})">🗄️ Aus dem Archiv</button></div>
+    <h4>In meiner Tasche (${T.meine.length} von ${T.max})</h4>${T.meine.map((x, i) => teil(x, i, T.meine.length)).join("") || '<p class="hinweis">Noch leer.</p>'}
+    ${T.vorab.length ? `<h4>📁 Vorab für alle</h4>${T.vorab.map((x) => `<div class="karte rund-teil"><div class="rund-teil-kopf">${RUND_TASCHE_ART[x.art] || "📎"} <b>${esc(x.name)}</b> <small class="hinweis">von ${esc(x.vonName)}</small></div>
+      <div class="knoepfe">${k(`anlageAktion(${jsArg(x.a)}, ${jsArg(x.name)}, ${jsArg(x.mime || "")})`, "👁️ Ansehen")}</div></div>`).join("")}` : ""}
+    <p class="hinweis">Höchstens 8 MB je Datei. Was nicht gezeigt wurde, wird 7 Tage nach dem Tisch gelöscht.</p>
+    <button class="knopf" onclick="fensterZu($('rundTascheBlatt'))">Schließen</button>`;
+}
+function rundTascheDatei(id, kamera) {
+  const inp = document.createElement("input"); inp.type = "file"; inp.accept = kamera ? "image/*" : "application/pdf,.pdf,image/*,audio/*,.mp3,.m4a,.ogg,.wav"; if (kamera) inp.capture = "environment";
+  inp.multiple = !kamera; inp.onchange = () => rundTascheLegen(id, [...(inp.files || [])]); inp.click();
+}
+async function rundTascheLegen(id, dateien) {
+  for (const d of dateien) {
+    try { melde(`⏳ ${d.name} wird eingepackt …`); const a = await anlageHochladen(d); const r = await api("tisch_tasche_legen", { id, anlage: a.id, name: d.name }); RUND.tasche[id] = r.tasche;
+      RUND_DATEIEN.set(a.id, { blob: d, mime: d.type, name: d.name }); melde(`💼 Eingepackt: ${d.name}`); }
+    catch (e) { meldeFehler(e); }
+  }
+  rundTascheZeichnen(id); rundTascheZahl(id);
+}
+async function rundTascheArchiv(id) {
+  let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
+  const docs = (r.dokumente || []).filter((d) => d.status === "ok" && d.datei && (istPdf(d.name, d.mime) || /^image\/|^audio\//.test(d.mime || "") || /\.(mp3|m4a|ogg|wav)$/i.test(d.name || "")));
+  if (!docs.length) return melde("Im Archiv liegen keine PDFs, Fotos oder Musik.", true);
+  const b = blattAuf("rundArchivBlatt", `<h3 style="margin:0 0 6px">🗄️ Aus dem Archiv einpacken</h3><input id="rundArchivSuche" placeholder="🔍 Suchen …" autocomplete="off" style="width:100%"><div id="rundArchivListe" style="margin-top:8px"></div>
+    <div class="knoepfe bs-fuss"><button class="knopf" onclick="$('rundArchivBlatt').remove()">Fertig</button></div>`);
+  const zeichnen = () => { const q = $("rundArchivSuche").value.trim().toLowerCase(), l = docs.filter((d) => !q || `${d.titel} ${d.name}`.toLowerCase().includes(q)).slice(0, 50);
+    $("rundArchivListe").innerHTML = l.map((d) => `<button type="button" class="knopf" style="text-align:left;width:100%;margin:3px 0" data-id="${esc(d.id)}">${arDateiSym(d.mime)} <b>${esc(d.titel || d.name)}</b></button>`).join("") || '<p class="hinweis">Nichts gefunden.</p>';
+    $("rundArchivListe").querySelectorAll("[data-id]").forEach((x) => (x.onclick = async () => { const d = docs.find((y) => y.id === x.dataset.id); x.disabled = true;
+      try { melde("⏳ Wird geholt …"); const { blob, mime } = await anlageAlsDatei({ id: d.datei, name: d.name, mime: d.mime }); await rundTascheLegen(id, [new File([blob], d.name || "Datei", { type: mime || blob.type })]); x.textContent = "✓ " + x.textContent; }
+      catch (e) { meldeFehler(e); x.disabled = false; } })); };
+  $("rundArchivSuche").oninput = zeichnen; zeichnen();
+}
+async function rundTascheTun(id, teil, aktion) {
+  if (aktion === "weg" && !(await frage("Aus der Tasche nehmen?", { ja: "🗑️ Herausnehmen" }))) return;
+  try { const r = await api("tisch_tasche_aendern", { id, teil, aktion }, { still: aktion === "gezeigt" }); if (r?.tasche) RUND.tasche[id] = r.tasche; rundTascheZeichnen(id); rundTascheZahl(id); }
+  catch (e) { meldeFehler(e); }
+}
+function rundTascheZahl(id) { const t = rundTisch(id), T = RUND.tasche[id]; if (t && T) { t.tasche = { meine: T.meine.length, vorab: T.vorab.length }; rundZeichnen(); rundTischZeichnen(); } }
+// beim Platznehmen: eigene Teile (und Vorab-Teile) schon holen – der Reihe nach, im Hintergrund, nie mehr als RUND_VORLADEN_MAX
+async function rundTascheVorladen(id) {
+  try {
+    const T = await rundTascheHolen(id); let summe = [...RUND_DATEIEN.values()].reduce((n, x) => n + (x.blob?.size || 0), 0);
+    for (const x of [...T.meine.filter((y) => !y.gezeigt), ...T.vorab]) {
+      if (RUND_DATEIEN.has(x.a) || summe > RUND_VORLADEN_MAX) continue;
+      const r = await api("anlage_url", { id: x.a }, { still: true }); const d = await urlAlsDatei(r.url, x.name, x.mime);
+      RUND_DATEIEN.set(x.a, { blob: d.blob, mime: d.mime, name: x.name }); summe += d.blob.size;
+    }
   } catch {}
 }
 async function rundStartKarte(id) { if (!RUND.lage) await rundOeffnen(id); else rundTischZeigen(id); }
@@ -34735,6 +34807,7 @@ const ARCHIV_ABLAGE_ARTEN = {
 const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));
 // Datei einer Nachricht/eines Protokolls holen (nur was man ohnehin öffnen darf – der Server prüft bei anlage_url)
 async function anlageAlsDatei(a) {
+  const c = RUND_DATEIEN.get(a.id); if (c) return { blob: c.blob, mime: a.mime || c.mime, name: a.name || c.name }; // 2.772.0: aus der Tasche vorgeladen
   const r = await api("anlage_url", { id: a.id });
   return urlAlsDatei(r.url, a.name, a.mime);
 }
@@ -35493,7 +35566,7 @@ const FENSTER_NAMEN = {
   buWeiter: "🏢 Büro: Wie weiter?", bwEinBlatt: "👋 Bühne: Einladung", caBlatt: "🍽️ Clubabend Live", cfBlatt: "🎨 Chat-Farben", chatBlatt: "💬 Unterhaltung (Fenster)",
   chatMitgliederBlatt: "👥 Teilnehmer der Unterhaltung", cjBlatt: "📅 Clubjahr", cuFenster: "📊 Kurze Abstimmung", dgBlatt: "👨‍🍳 Dienst-Gruß", diagBlatt: "🩺 Server-Diagnose",
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
-  rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", // 2.762.0 KC-CLUB-RUNDER-TISCH
+  rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", rundTascheBlatt: "💼 Tasche für den Runden Tisch", rundArchivBlatt: "🗄️ Tasche: aus dem Archiv", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", erinBlatt: "🔔 Erinnerung für dich",

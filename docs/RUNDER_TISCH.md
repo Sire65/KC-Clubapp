@@ -299,3 +299,20 @@ Für Mitglieder untereinander akzeptiert; für externe Gäste (RT4) bekommt der 
 Ab wie vielen Zuhörern es über Mobilfunk stockt, zeigt erst die Messung auf echten Handys (Diagnose-Protokoll).
 
 **Tests:** `tests/tisch-live.browser.mjs` (3 Fenster, echte Verbindungen, nachgebaute Leitung), `tests/runder-tisch.test.mjs` (Regeln, Sicherungen).
+
+## 18. 💼 Tasche vorher packen (2.772.0) · Musik stoppen (2.771.0)
+
+Wunsch Hansi (30.10.2026): „Gut wäre, wenn man sich vorher Sachen packen kann wie PDF, ein Song, ein Foto – damit man nicht lange suchen muss.“
+Wahl Hansi: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vorab für alle** markieren.
+
+- **Packen** (an jedem kommenden Tisch, auch während er läuft): PDFs, Fotos, Musik – vom Handy, mit der Kamera oder aus dem Archiv
+  (vorhandene Wege: `anlageHochladen`, Archiv-Auswahl). Höchstens 20 Teile je Person und Tisch, je 8 MB. Reihenfolge ⬆️/⬇️. Privat bis zum Zeigen.
+- **Vorab für alle:** nur die Leitung, nur eigene Teile. Alle, die den Tisch sehen, finden sie in ihrer Tasche und dürfen sie öffnen
+  (`anlage_url` erlaubt Vorab-Teile sichtbarer Tische; Gruppen-Tische nur der Gruppe).
+- **Am Tisch:** beim Platznehmen holt das Handy die gepackten Dateien im Hintergrund (höchstens 60 MB im Speicher). 📎 Zeigen und 🎵 Musik bieten
+  „💼 Aus meiner Tasche“ zuerst an; **💼 Nächstes** zeigt/spielt das nächste ungezeigte Teil. Zeigen = vorhandener Weg (Anlage in den Tisch-Chat,
+  dann Live „Zeigen“ bzw. „Musik für alle“). Gezeigtes bekommt ✓.
+- **Aufräumen:** 7 Tage nach dem Tisch werden die Taschen geleert; nie gezeigte Dateien werden gelöscht (gezeigte hängen am Chat, gelten dort).
+- **Datenbank:** `kc_club_tisch_tasche` (Migration `20261030_kc_club_v2772_tisch_tasche.sql`, Probelauf `tools/db-test/100_tisch_tasche_test.sql`).
+- **Musik stoppen (2.771.0, Fund Hansi „kein Stopp-Knopf“):** Knöpfe direkt an der laufenden Musik – wer abspielt ⏸️/⏮️/⏹️, die Leitung
+  „⏹️ Für alle aus“, jeder „🔇 Für mich aus“; ist der Tisch nicht zu sehen, hängt eine Musik-Leiste unten.

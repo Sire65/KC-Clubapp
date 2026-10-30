@@ -4592,6 +4592,10 @@
   .tl-musik { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--gelbbg); border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; font-size: .85rem; }
   /* 2.771.0 KC-CLUB-TISCH-MUSIK-STOPP: Knöpfe direkt an der Musik + kleine Leiste unten, wenn der Tisch nicht zu sehen ist */
   .tl-musik-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; } .tl-musik-knoepfe .knopf { margin: 0; }
+  /* 2.772.0 KC-CLUB-TISCH-TASCHE: Tasche packen, Auswahl am Tisch */
+  .rund-teil { padding: 10px 12px; } .rund-teil.gezeigt { opacity: .75; } .rund-teil-kopf { overflow-wrap: anywhere; } .rund-teil-nr { color: var(--grau); font-variant-numeric: tabular-nums; }
+  .rund-teil .knoepfe { margin-top: 6px; } .rund-vorab { background: var(--gruenbg); color: var(--textGruen, var(--gruen)); border-radius: 8px; padding: 1px 6px; }
+  .tl-tasche-wahl { display: grid; gap: 6px; margin: 6px 0 10px; padding: 8px; border-radius: 12px; background: var(--karte2); } .tl-tasche-wahl .knopf { text-align: left; margin: 0; }
   .tl-musik-mini { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); width: min(560px, calc(100% - 24px)); z-index: 8900;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-radius: 14px; background: var(--gelbbg); color: var(--text); box-shadow: var(--schatten); font-size: .9rem; }
   .tl-musik-mini .tl-musik-titel { flex: 1 1 140px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -6376,7 +6380,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.771.0" data-v="2.771.0"></script>
+<script src="app.js?v=2.772.0" data-v="2.772.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
