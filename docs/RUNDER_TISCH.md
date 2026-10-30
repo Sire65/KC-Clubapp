@@ -1,6 +1,6 @@
 # 🪑 Runder Tisch – Spezifikation (KC-CLUB-RUNDER-TISCH)
 
-**Stand:** 30.10.2026 · **Status:** RT1, RT1b Arten, Gruppen + Platzmessung gebaut und eingespielt als 2.762.0, 🔒 erst nur Admin zum Testen; RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
+**Stand:** 30.10.2026 · **Status:** RT1, RT1b Arten, Gruppen + Platzmessung gebaut und eingespielt als 2.762.0; **Live (Ton, Kamera, Bildschirm, Unterlagen zeigen, Redestab) gebaut als 2.766.0** (Abschnitt 17); 🔒 erst nur Admin zum Testen; Club-Song, Videos, Album, Gäste (RT4) offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
 **Entwurf zum Anklicken:** https://claude.ai/artifact/5WfwmnFKfEm5nj8FmK2qFL (Tisch mit 2–18 Plätzen, Chat-Ansicht; Namen sind Beispiele)
 
 ## 1. Ziel
@@ -276,3 +276,25 @@ Wenn ein weiterer geplant ist, dann Meldung.“
   geschlossener Tisch gibt seine Restzeit frei.
 - **Datenbank als letzte Sicherung** (zwei laden gleichzeitig ein): Sperre `kc_club_tisch_nur_einer` (keine zwei geplanten Tische mit
   überschneidender Zeit) – Migration `20261030_kc_club_v2764_tisch_nur_einer.sql`, Probelauf `tools/db-test/99_tisch_nur_einer_test.sql`.
+
+## 17. Live am Tisch (2.766.0, KC-CLUB-RUNDER-TISCH-LIVE)
+
+Wunsch Hansi (30.10.2026): „Bau den Runden Tisch weiter mit allen Möglichkeiten wie besprochen – Ton, Video, Bildschirm zeigen, Unterlagen senden. Das muss super werden.“
+Umgesetzt aus RT2 und RT3 zusammen, dazu Kamera und Bildschirm (vorher nicht in der Spezifikation).
+
+| Teil | Umsetzung |
+|---|---|
+| Live-Leitung | `fhLeitung` (Fernhilfe-Technik): Realtime-Broadcast, jede Nachricht AES-GCM. Kanal/Schlüssel = HMAC(Server-Geheimnis, Tisch-Kennung) in `rtLiveLeitung`; nur `tisch_platz` mit Ergebnis ok/da liefert sie. Keine Tabelle, keine DB-Abfrage für Live. |
+| Lebenszeichen | `da` alle 15 s und bei jeder Änderung (Mikro, Kamera, Bildschirm, ✋, Stab, Unterlage); ein Neuer schickt `neu`, alle antworten sofort. Nach 45 s grau, nach 135 s weg. |
+| Wer spricht | bis 6 live: alle (offenes Gespräch). Ab 7: Leitung + Redestab (`tlRegeln`). Wechselt es, schaltet die App das Mikro selbst aus und sagt warum. |
+| Ton/Bild | WebRTC wie App-Anruf (`rufIce` inkl. Umleitung). Je Sender eine Verbindung zu jedem Live-Teilnehmer (nur senden), Empfänger antworten (nur empfangen). Kamera/Bildschirm teilen sich den Bild-Kanal (Bildschirm geht vor); Datenrate je Empfänger `tlKbit` = 2400/n kbit/s, 150–1000. |
+| Bildschirm | `getDisplayMedia` – PC/Laptop (Chrome, Edge, Firefox). Handys können es nicht (Hinweis „📎 Unterlagen zeigen“). Erscheint bei allen groß, ⛶ Vollbild. |
+| Unterlagen | PDF/Foto vom Gerät oder aus dem Archiv → Upload + Nachricht im Tisch-Chat (Zugriff prüft der Server über die Chat-Teilnahme) → `zeige` mit Kennung und Seite. Empfänger laden selbst (`anlage_url`, pdf.js), folgen der Seite; eigenes Blättern → „↩︎ Folgen“. |
+| Messung | beim Beenden `diagnose` „tisch_live“: Sekunden, Verbindungen, Umleitungen, Fehler, höchste Zahl live. |
+| Grenzen | höchstens 10 MB je Unterlage; keine Aufzeichnung; wer den Tisch verlässt, beendet Live. |
+
+**Bekannt / bewusst:** Alle am Tisch teilen einen Schlüssel – ein Mitglied könnte technisch Signale „im Namen“ eines anderen senden (z. B. Redestab).
+Für Mitglieder untereinander akzeptiert; für externe Gäste (RT4) bekommt der Gast keine Leitungs-Signale der Leitung, sondern nur Ton/Bild (kommt mit RT4).
+Ab wie vielen Zuhörern es über Mobilfunk stockt, zeigt erst die Messung auf echten Handys (Diagnose-Protokoll).
+
+**Tests:** `tests/tisch-live.browser.mjs` (3 Fenster, echte Verbindungen, nachgebaute Leitung), `tests/runder-tisch.test.mjs` (Regeln, Sicherungen).

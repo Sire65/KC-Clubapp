@@ -169,4 +169,28 @@ assert.match(sql4, /exclude using gist \(tstzrange\(beginn, ende, '\[\)'\) with 
 assert.match(server, /if \(zl\.sperre\.length\) throw new Fehler\(zl\.sperre\[0\], 409\);/, "Einladen prüft vorher");
 assert.match(server, /error\?\.code === "23P01" \? new Fehler\(RT_DOPPELT, 409\)/, "gleichzeitig eingeladen → verständliche Meldung");
 assert.match(app, /if \(los\) los\.disabled = !!r\.sperre\.length;/, "Einladen gesperrt, solange die Zeit belegt ist");
+
+// 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen (teile/tischlive.js) – Regeln und Sicherungen
+const tl = fs.readFileSync(new URL("../teile/tischlive.js", import.meta.url), "utf8");
+const L = new Function(tl.slice(0, tl.indexOf("const tlTisch")) + "\nreturn { tlRegeln, tlKbit, TL_FREI, TL_WEG_MS };")();
+assert.equal(L.TL_FREI, 6, "offenes Gespräch bis 6 Personen");
+assert.ok(L.tlRegeln({ liveAnzahl: 6, ich: "b", gastgeber: "a", stab: null }).darfSprechen, "bis 6 reden alle");
+assert.ok(!L.tlRegeln({ liveAnzahl: 7, ich: "b", gastgeber: "a", stab: null }).darfSprechen, "ab 7: nur mit Redestab");
+assert.ok(L.tlRegeln({ liveAnzahl: 18, ich: "a", gastgeber: "a", stab: null }).darfSprechen, "die Leitung spricht immer");
+assert.ok(L.tlRegeln({ liveAnzahl: 18, ich: "b", gastgeber: "a", stab: "b" }).darfSprechen, "mit Redestab");
+assert.equal(L.tlRegeln({ liveAnzahl: 18, ich: "b", gastgeber: "a", stab: "c" }).modus, "stab");
+assert.equal(L.tlKbit(1), 1000, "ein Empfänger: höchstens 1000 kbit/s Bild");
+assert.equal(L.tlKbit(17), 150, "17 Empfänger: 150 kbit/s je Empfänger (Handy schafft das)");
+assert.ok(L.TL_WEG_MS <= 45000, "nach 45 s ohne Lebenszeichen: grau (unbekannt)");
+assert.match(server, /if \(ergebnis === "ok" \|\| ergebnis === "da"\) return json\(\{ ok: true, ergebnis, lage, live: await rtLiveLeitung\(id\) \}\);/, "Live-Leitung nur für Sitzende");
+assert.match(server, /async function rtLiveLeitung\(tischId: string\)[\s\S]{0,400}HMAC[\s\S]{0,600}kc-fh-/, "Kanal/Schlüssel abgeleitet (HMAC), Format wie Fernhilfe");
+assert.ok(!/rtLiveLeitung/.test(server.slice(server.indexOf('case "tisch_liste"'), server.indexOf('case "tisch_platz"'))), "Liste verrät die Leitung nicht");
+assert.match(tl, /TL\.L = fhLeitung\(RUND\.live, tlEmpfang/, "Leitung = Fernhilfe-Technik (verschlüsselt)");
+assert.match(tl, /new RTCPeerConnection\(\{ iceServers: await rufIce\(\) \}\)/, "Wege wie beim App-Anruf (inkl. Umleitung)");
+assert.match(tl, /if \(d\.an && d\.an !== TL\.ich\) return;/, "Nachrichten an andere werden ignoriert");
+assert.match(tl, /if \(d\.typ === "stab" && vomLeiter\)/, "Redestab nur von der Leitung");
+assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `📎 Unterlage: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "Unterlagen gehen in den Tisch-Chat (Zugriff prüft der Server)");
+assert.match(tl, /if \(typeof z\.a !== "string" \|\| !\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(z\.a\)\) return;/, "gezeigte Unterlage nur als Kennung");
+assert.ok(!/MediaRecorder/.test(tl), "keine Aufzeichnung");
+assert.match(app, /if \(rundLiveAn\(id\)\) tlStopp\(true\); const r = await api\("tisch_verlassen"/, "Verlassen beendet Live");
 console.log("OK – Runder Tisch: Regeln geprüft");

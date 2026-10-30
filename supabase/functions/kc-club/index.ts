@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.765.0";
+const SERVER_VERSION = "2.766.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -152,6 +152,17 @@ const STUDIO_MS = 30 * 60000, STUDIO_ALLES_MIN = [30, 60, 120, 480];
 const FH_BROADCAST = true;
 const fhNeu = () => { const b = crypto.getRandomValues(new Uint8Array(48)); let s = ""; for (const x of b.subarray(16)) s += String.fromCharCode(x);
   return { kanal: "kc-fh-" + [...b.subarray(0, 16)].map((x) => x.toString(16).padStart(2, "0")).join(""), schluessel: btoa(s) }; };
+// 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Live-Leitung je Tisch (Ton, Video, Bildschirm, Unterlagen-Signale) – gleiche Technik wie die Fernhilfe
+// (Broadcast, AES-GCM). Kanal und Schlüssel werden aus dem Server-Geheimnis und der Tisch-Kennung abgeleitet (HMAC) – keine neue Tabelle,
+// nichts gespeichert. Nur wer gerade am Tisch sitzt, bekommt sie (tisch_platz). Wer den Tisch verlässt, bekommt beim nächsten Mal nichts mehr;
+// der Tisch-Schlüssel gilt nur für diesen einen Tisch.
+async function rtLiveLeitung(tischId: string) {
+  const geheim = new TextEncoder().encode("kc-tisch-live:" + (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""));
+  const k = await crypto.subtle.importKey("raw", geheim, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = async (t: string) => new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(t + ":" + tischId)));
+  const a = await mac("kanal"), b = await mac("schluessel"); let s = ""; for (const x of b) s += String.fromCharCode(x);
+  return { kanal: "kc-fh-" + [...a.subarray(0, 16)].map((x) => x.toString(16).padStart(2, "0")).join(""), schluessel: btoa(s) };
+}
 // Messwerte einer Sitzung (nur Zahlen) fürs Protokoll – Grundlage für die Grenzen der Fernhilfe
 const fhMess = (m: any) => { const z = (v: any) => Math.max(0, Math.min(1e9, Math.round(Number(v) || 0))); return m && typeof m === "object" ? { n: z(m.n), kb: z(m.kb), max_kb: z(m.max_kb), befehle: z(m.befehle), voll: z(m.voll), aend: z(m.aend), weg: m.weg === "broadcast" ? "broadcast" : "server" } : null; };
 type StudioStufe = "zeigen" | "alles" | null;
@@ -919,14 +930,23 @@ async function chatArchivSetzen(pid: string, threads: Record<string, string>) {
 const BEARBEITEN_MIN = 52_560_000; // 2.635.0 KC-CLUB-BEARBEITEN-JEDERZEIT (Wunschliste #36, Hansi „auch für normale Texte jederzeit“): 100 Jahre = jederzeit (vorher 15 Min.)
 // KC-CLUB-SCHILDER (2.150.0): nur bekannte Felder, kurze Texte, Auswahl-Kennungen als Kurzwörter – Gestaltung kommt aus den Listen der App
 const SCHILD_ID = /^[a-z0-9_-]{0,30}$/;
+// 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: gespeichertes Druckpaket = Liste von Verweisen (Schild, Vorlage, Archiv-Datei) mit Anzahl und Haken
+const SCHILD_PAKET_TYP = ["schild", "vorlage", "archiv"];
 function schildDaten(d: any) {
   if (!d || typeof d !== "object" || Array.isArray(d)) throw new Fehler("Ungültiges Schild.");
+  if (d.vorlage === "druckpaket") {
+    const paket = (Array.isArray(d.paket) ? d.paket : []).slice(0, 40).map((x: any) => ({
+      typ: SCHILD_PAKET_TYP.includes(String(x?.typ)) ? String(x.typ) : "", ref: /^[A-Za-z0-9_-]{1,60}$/.test(String(x?.ref ?? "")) ? String(x.ref) : "",
+      titel: txt(x?.titel, 120), n: Math.min(50, Math.max(1, Math.round(Number(x?.n) || 1))), an: x?.an !== false })).filter((x: any) => x.typ && x.ref);
+    if (!paket.length) throw new Fehler("Das Druckpaket ist noch leer.");
+    return { vorlage: "druckpaket", paket };
+  }
   const id = (v: unknown, std: string) => SCHILD_ID.test(String(v ?? "")) && String(v ?? "") ? String(v) : std;
   const stil = (v: any) => ({ f: !!v?.f, k: !!v?.k, u: !!v?.u });
   const preise = (Array.isArray(d.preise) ? d.preise : []).slice(0, 20).map((x: any) => ({ a: txt(x?.a, 60), p: txt(x?.p, 14) })).filter((x: any) => x.a || x.p);
   const r = { vorlage: id(d.vorlage, "frei"), format: d.format === "quer" ? "quer" : "hoch", schrift: id(d.schrift, "club"), rahmen: id(d.rahmen, "schlicht"), farbe: id(d.farbe, "weinrot"),
-    symbol: id(d.symbol, ""), titel: txt(d.titel, 120), text: txt(d.text, 700), preise, titelStil: stil(d.titelStil), textStil: stil(d.textStil) };
-  if (!r.titel && !r.text && !preise.length) throw new Fehler("Das Schild ist noch leer.");
+    symbol: id(d.symbol, ""), titel: txt(d.titel, 120), text: txt(d.text, 700), preise, fuss: txt(d.fuss, 40), klein: txt(d.klein, 1200), titelStil: stil(d.titelStil), textStil: stil(d.textStil) };
+  if (!r.titel && !r.text && !preise.length && !r.klein) throw new Fehler("Das Schild ist noch leer.");
   return r;
 }
 // KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): Nachrichten löschen sich nach dieser Zeit selbst (Stunden) – je Chat oder je Nachricht, jedes Mitglied darf
@@ -12248,7 +12268,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (ergebnis === "fehlt") throw new Fehler("Den Tisch gibt es nicht mehr.", 404);
         if (ergebnis === "ok") await protokoll(ich.person_id, "tisch_platz", { tisch: id });
         const lage = await rtLage(ich, id);
-        if (ergebnis === "ok" || ergebnis === "da") return json({ ok: true, ergebnis, lage });
+        // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: wer sitzt, bekommt die Live-Leitung des Tisches (Ton, Video, Bildschirm, Unterlagen)
+        if (ergebnis === "ok" || ergebnis === "da") return json({ ok: true, ergebnis, lage, live: await rtLiveLeitung(id) });
         return json({ ok: false, ergebnis, lage, meldung: { voll: "Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.", zu_frueh: `Platz nehmen geht ab ${RT.vorlaufMin} Minuten vor Beginn.`,
           vorbei: "Der Tisch ist schon vorbei.", abgesagt: "Der Tisch wurde abgesagt.", anmeldung: "Für dieses Seminar bitte erst anmelden (📝 Anmelden).", gruppe: "Das ist nur für die Mitglieder einer Gruppe." }[ergebnis] || "Platz nehmen geht gerade nicht." });
       }

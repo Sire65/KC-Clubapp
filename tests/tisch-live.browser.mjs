@@ -1,0 +1,142 @@
+// 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: echter Live-Test im Browser – drei Fenster (A leitet, B, C) sitzen am selben Tisch und schalten Live dazu.
+// Ton und Bild laufen wirklich (WebRTC zwischen den Fenstern, Kamera/Mikrofon künstlich von Chromium), die Live-Leitung (Supabase Realtime)
+// ist im Test nachgebaut: ein kleiner Verteiler reicht jede Broadcast-Nachricht an alle anderen Fenster weiter. Kein echter Server, keine echten Daten.
+// Geprüft: alle sehen sich; offenes Gespräch – jeder hört die beiden anderen (Ton kommt an); Kamera von A kommt bei B als Bild an;
+// A zeigt ein PDF – B sieht es und folgt beim Blättern; B schaltet Live aus – A und C sehen es und bauen ab; A teilt den Bildschirm;
+// Redestab (✋ melden, Stab geben und zurücknehmen). Rot bei Programmfehlern.
+// Braucht Playwright mit Chromium. Läuft eigenständig: node tests/tisch-live.browser.mjs
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+
+const { chromium } = createRequire(import.meta.url)("playwright");
+const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const TISCH = "aaaaaaaa-2222-3333-4444-555555555555", CHAT = "bbbbbbbb-2222-3333-4444-555555555555", PDF = "cccccccc-2222-3333-4444-555555555555";
+const LIVE = { kanal: "kc-fh-" + "ab".repeat(16), schluessel: Buffer.alloc(32, 7).toString("base64") };
+const LEUTE = [{ id: "KC-P-LIVE-A", name: "Anna Probe" }, { id: "KC-P-LIVE-B", name: "Bernd Probe" }, { id: "KC-P-LIVE-C", name: "Carla Probe" }];
+const jetzt = Date.now(), iso = (m) => new Date(jetzt + m * 60000).toISOString();
+const tisch = { id: TISCH, art: "besprechung", thema: "Weihnachtsmarkt", beschreibung: "", beginn: iso(-5), ende: iso(55), dauer: 60, verlaengert: 0, plaetze: 4, text: "Heute · 60 Min.", phase: "offen",
+  gastgeber: LEUTE[0].id, gastgeberName: LEUTE[0].name, darfLeiten: false, chat: CHAT, imChat: true, tagesordnung: ["Schilder"], meineZusage: "ja", ichSitze: true,
+  zusagen: [], amTisch: LEUTE.map((p) => ({ ...p, sicher: true })), warenDa: 0 };
+const lage = (ich) => ({ aktiv: true, gruppen: [], regeln: { plaetzeMin: 4, plaetzeMax: 18, dauern: [30, 60, 90], vorlaufMin: 15, herzSek: 60 }, tische: [{ ...tisch, darfLeiten: ich === LEUTE[0].id }] });
+
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css", ".json": "application/json",
+  ".webmanifest": "application/manifest+json", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".mp3": "audio/mpeg", ".wasm": "application/wasm", ".woff2": "font/woff2", ".pdf": "application/pdf" };
+const server = http.createServer((req, res) => {
+  const p = path.normalize(decodeURIComponent(new URL(req.url, "http://x").pathname)).replace(/^([/\\])+/, "");
+  const datei = path.join(WURZEL, p || "index.html");
+  if (!datei.startsWith(WURZEL) || !fs.existsSync(datei) || fs.statSync(datei).isDirectory()) { res.writeHead(404); return res.end(); }
+  res.writeHead(200, { "Content-Type": MIME[path.extname(datei)] || "application/octet-stream" }); fs.createReadStream(datei).pipe(res);
+});
+await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
+const BASIS = `http://127.0.0.1:${server.address().port}`;
+
+// Nachgebaute Live-Leitung: wer einem Kanal beitritt, bekommt jede Broadcast-Nachricht der anderen (wie Supabase Realtime, self: false)
+const verteiler = new Set();
+function leitung(ws) {
+  const s = { ws, topics: new Set() }; verteiler.add(s);
+  ws.onMessage((roh) => {
+    let m; try { m = JSON.parse(String(roh)); } catch { return; }
+    if (m.event === "phx_join") { s.topics.add(m.topic); ws.send(JSON.stringify({ topic: m.topic, event: "phx_reply", ref: m.ref, payload: { status: "ok", response: {} } })); }
+    else if (m.event === "heartbeat") ws.send(JSON.stringify({ topic: "phoenix", event: "phx_reply", ref: m.ref, payload: { status: "ok", response: {} } }));
+    else if (m.event === "broadcast") for (const x of verteiler) if (x !== s && x.topics.has(m.topic)) x.ws.send(JSON.stringify({ topic: m.topic, event: "broadcast", payload: m.payload }));
+  });
+  ws.onClose(() => verteiler.delete(s));
+}
+
+const fehler = [], melde = (t) => fehler.push(t);
+const browser = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--autoplay-policy=no-user-gesture-required"] });
+const seiten = [];
+try {
+  for (const p of LEUTE) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: "block", locale: "de-DE", timezoneId: "Europe/Berlin", permissions: ["microphone", "camera"],
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36" });
+    const seite = await ctx.newPage(), name = p.name.split(" ")[0];
+    seite.on("pageerror", (e) => melde(`[${name}] Programmfehler: ${String(e.message || e).slice(0, 200)}`));
+    await seite.routeWebSocket(/realtime\/v1\/websocket/, leitung);
+    await seite.route("**/*", (r) => {
+      const u = new URL(r.request().url());
+      if (u.origin === BASIS || u.protocol === "data:" || u.protocol === "blob:") return r.continue();
+      if (/\/functions\/v1\/kc-club$/.test(u.pathname)) {
+        let a = "", body = {}; try { body = JSON.parse(r.request().postData() || "{}"); a = body.action; } catch {}
+        const ant = {
+          init: { ok: true, ich: { person_id: p.id, vorname: name, name: p.name, admin: true, vorstand: true, aemter: [], rollen: [] }, rtKanal: "kc-rt-" + p.id.toLowerCase(),
+            einstellungen: { begruessung: { gesehen: true }, unterstuetzung: "normal", einweisung: { an: false, gesehen: {} }, spiel_einladung: { an: false }, ansicht: { art: "erweitert", gewaehlt: true }, einladung: { aus: true } },
+            mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {}, kacheln: null, freigaben: { runder_tisch: "alle" } },
+          tisch_liste: lage(p.id), tisch_platz: { ok: true, ergebnis: "da", lage: lage(p.id), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) },
+          anlage_url: { url: `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
+        }[a] ?? { ok: true };
+        return r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(ant) });
+      }
+      if (/\/functions\/v1\//.test(u.pathname)) return r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: "{}" });
+      return r.abort();
+    });
+    await seite.goto(`${BASIS}/index.html?k=0123456789abcdef0123456789abcdef`);
+    await seite.waitForFunction(() => typeof ICH !== "undefined" && !!ICH, null, { timeout: 30000 }).catch(() => melde(`[${name}] Start: nicht angemeldet`));
+    await seite.waitForTimeout(1500);
+    await seite.evaluate(() => { try { bwEinSetzen({ spaeter: Date.now() + 3600000 }); } catch {} document.querySelectorAll("button.blatt-x").forEach((b) => b.click()); });
+    seiten.push({ seite, name, id: p.id });
+  }
+  const [A, B, C] = seiten;
+  // alle setzen sich an den Tisch und schalten Live dazu
+  for (const s of seiten) await s.seite.evaluate(async (id) => { await rundOeffnen(); await rundTischZeigen(id); }, TISCH).catch((e) => melde(`[${s.name}] Tisch: ${e}`));
+  for (const s of seiten) {
+    const knopf = await s.seite.$(".tl-start"); if (!knopf) { melde(`[${s.name}] Knopf „🔴 Live dazuschalten“ fehlt`); continue; }
+    await knopf.click(); await s.seite.waitForTimeout(300);
+  }
+  const warte = async (s, fn, arg, ms, was) => { try { await s.seite.waitForFunction(fn, arg, { timeout: ms, polling: 250 }); return true; } catch { melde(`[${s.name}] ${was}`); return false; } };
+  // 1. alle sehen sich, offenes Gespräch, Mikro an
+  for (const s of seiten) await warte(s, () => TL.live && TL.L?.ok && tlLiveIds().length === 2 && TL.micAn && tlRegel().frei, null, 15000, "sieht nicht beide anderen live / Mikro nicht an");
+  // 2. Ton kommt an: jeder empfängt von beiden anderen (verbunden, Bytes fließen)
+  for (const s of seiten) await warte(s, () => [...TL.pcs.values()].filter((v) => !v.raus && v.ok).length === 2 && [...TL.pcs.values()].filter((v) => v.raus && v.ok).length === 2, null, 20000, "Ton-Verbindungen nicht alle verbunden (je 2 rein, 2 raus)");
+  for (const s of seiten) { // Ton fließt: empfangene Bytes wachsen (bis zu 10 s Zeit)
+    let bytes = 0;
+    for (let i = 0; i < 20 && bytes <= 4000; i++) { await s.seite.waitForTimeout(500);
+      bytes = await s.seite.evaluate(async () => { let n = 0; for (const v of TL.pcs.values()) if (!v.raus) (await v.pc.getStats()).forEach((x) => { if (x.type === "inbound-rtp" && x.kind === "audio") n += x.bytesReceived || 0; }); return n; }); }
+    if (!(bytes > 4000)) melde(`[${s.name}] es kommt kein Ton an (${bytes} Bytes)`);
+  }
+  // 3. Kamera von A kommt bei B als Bild an
+  await A.seite.evaluate(() => tlKamera());
+  await warte(B, (a) => { const v = document.querySelector(`#tlLeute video[data-cam="${a}"]`); return !!v && v.videoWidth > 0; }, A.id, 20000, "Kamerabild von Anna kommt nicht an");
+  // 4. A zeigt ein PDF – B und C sehen Seite 1, A blättert → B folgt auf Seite 2; B blättert selbst zurück → „Folgen“
+  await A.seite.evaluate((a) => tlZeigeSetzen({ a, n: "Kurzanleitung.pdf", m: "application/pdf", s: 1 }), PDF);
+  for (const s of [B, C]) await warte(s, () => !!document.querySelector("#tlBuehne img.tl-seite") && TL.seite === 1, null, 20000, "gezeigtes PDF erscheint nicht");
+  await A.seite.evaluate(() => tlBlaettern(1));
+  await warte(B, () => TL.seite === 2 && /Seite 2/.test(document.querySelector("#tlBuehne")?.textContent || ""), null, 15000, "folgt beim Blättern nicht auf Seite 2");
+  await B.seite.evaluate(() => tlBlaettern(-1));
+  await warte(B, () => TL.seite === 1 && !TL.folgen && !!document.querySelector('#tlBuehne button[onclick="tlFolgen()"]'), null, 8000, "selbst blättern / „Folgen“-Knopf fehlt");
+  // 5. Mikro aus bei C → A sieht 🔇; 6. B schaltet Live aus → A und C sehen nur noch einen
+  await C.seite.evaluate(() => tlMikro(false));
+  await warte(A, (c) => TL.peers.get(c)?.mic === false, C.id, 8000, "sieht nicht, dass Carla stumm ist");
+  await B.seite.evaluate(() => tlStopp(true));
+  for (const s of [A, C]) await warte(s, (b) => !TL.peers.has(b) && ![...TL.pcs.values()].some((v) => v.an === b), B.id, 8000, "baut nach „Live aus“ von Bernd nicht ab");
+  // 7. Bildschirm zeigen (PC): A teilt den Bildschirm → B sieht ihn groß auf der Bühne
+  await B.seite.evaluate(async (id) => { await tlStart(id); }, TISCH);
+  await warte(B, () => TL.live && tlLiveIds().length === 2, null, 15000, "kommt nach „Live aus“ nicht wieder rein");
+  const schirm = await A.seite.evaluate(async () => { await tlSchirm(); return !!TL.schirm; });
+  if (!schirm) melde("[Anna] Bildschirm zeigen hat nicht gestartet (getDisplayMedia)");
+  else await warte(B, () => { const v = document.querySelector("#tlBuehne video.tl-gross"); return !!v && v.videoWidth > 0 && /Anna zeigt den Bildschirm/.test(document.querySelector("#tlBuehne")?.textContent || ""); }, null, 20000, "geteilter Bildschirm von Anna erscheint nicht groß");
+  if (schirm) await A.seite.evaluate(() => tlSchirm());
+  // 8. Redestab (Grenze im Test auf 2 gesetzt → bei 3 Personen gilt der Redestab): nur Anna (Leitung) spricht, Bernd meldet sich ✋,
+  //    Anna gibt ihm den Stab → Bernd spricht, Anna hört ihn; Anna nimmt den Stab zurück → Bernd ist wieder stumm und sendet nicht mehr
+  for (const s of seiten) await s.seite.evaluate(() => { TL.freiBis = 2; tlAufraeumen(); });
+  await warte(B, () => !tlRegel().darfSprechen && !TL.micAn && ![...TL.pcs.values()].some((v) => v.raus), null, 10000, "Redestab-Modus: Bernd sendet noch");
+  await warte(A, () => tlRegel().darfSprechen && TL.micAn, null, 10000, "Redestab-Modus: Anna (Leitung) darf nicht sprechen");
+  await B.seite.evaluate(() => tlHand());
+  await warte(A, (b) => TL.peers.get(b)?.hand === true && /Gemeldet: Bernd/.test(document.querySelector("#tlBereich")?.textContent || ""), B.id, 8000, "sieht Bernds ✋ nicht");
+  await A.seite.evaluate((b) => tlStab(b), B.id);
+  await warte(B, () => TL.stab === TL.ich && TL.micAn && !TL.hand, null, 8000, "bekommt den Redestab nicht / Mikro geht nicht an");
+  await warte(A, (b) => [...TL.pcs.values()].some((v) => !v.raus && v.an === b && v.ok), B.id, 15000, "hört Bernd mit dem Redestab nicht");
+  await A.seite.evaluate((b) => tlStab(b), B.id);
+  await warte(B, () => TL.stab !== TL.ich && !TL.micAn && ![...TL.pcs.values()].some((v) => v.raus), null, 10000, "Redestab zurück: Bernd sendet weiter");
+  // Anzeige: nichts ragt über den Rand, Live-Bereich da
+  for (const s of seiten) { const r = await s.seite.evaluate(() => ({ quer: document.documentElement.scrollWidth > innerWidth + 2, da: !!document.querySelector("#tlBereich .tl-leiste") }));
+    if (!r.da) melde(`[${s.name}] Live-Bereich fehlt`); if (r.quer) melde(`[${s.name}] ragt seitlich über den Rand`); }
+  for (const s of seiten) { const fp = await s.seite.evaluate(() => (window.KCFP?.lies() || []).filter((e) => /^(skript|versprechen|gefangen|instabil|schutz)$/.test(e.art)).map((e) => e.art + ": " + String(e.text || "").slice(0, 120)));
+    for (const e of fp) melde(`[${s.name}] Fehlerprotokoll ${e}`); }
+} finally { await browser.close(); server.close(); }
+
+if (fehler.length) { console.error("❌ Tisch-Live: " + fehler.length + " Fund(e)\n" + fehler.join("\n")); process.exit(1); }
+console.log("OK – Tisch-Live: 3 Fenster, Ton in alle Richtungen, Kamera, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm, Redestab + ✋");
