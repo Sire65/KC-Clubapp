@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.789.0 – 2026-10-31 – 🛎️ Dienstplan: feste Bereitschaft (KC-CLUB-DP-NACHBESSERN)
+Wunsch Hansi („Willfried Bereitschaft 06.12. 14–19 Uhr, 08.12. 20–23 Uhr, 09.12. 20–23 Uhr“) – Dienstplan-Rechnung Regel 7 (rechnet sich beim Öffnen von selbst neu):
+- **Feste Bereitschaft** (`dp_druck_konfig.bereitschaftFest`, je Eintrag Tag, Person, von, bis) steht fest im Plan und auf dem Lückenblatt; die automatische Bereitschaft kommt wie bisher dazu, aber nicht für dieselbe Person am selben Tag. Die alte feste Liste `bereitschaft` bleibt bei automatischer Bereitschaft weiter unbeachtet.
+
 ## 2.788.0 – 2026-10-30 – 🛡️ Dienstwünsche: kein Selbst-Update mehr mitten in der Eingabe (KC-CLUB-UPDATE-DW-SCHUTZ) · nur App
 Fund Hansi (30.10.): „Ein Kollege ist beim Eintragen seiner Zeiten ohne Assistent mehrmals rausgeflogen – scheinbar kamen gleichzeitig Nachrichten oder Updates.“
 - **Ursache:** Die App aktualisiert sich alle 10 Min. von selbst, wenn sie glaubt, dass gerade nichts eingegeben wird. Die Dienstwünsche (Twinkey) laufen aber in einem eigenen Vollbild-Fenster mit eingebetteter Seite – die Prüfung sah dort weder das Fenster noch die Eingaben. An Tagen mit mehreren neuen Versionen lud die App deshalb mitten in der Eingabe neu.
