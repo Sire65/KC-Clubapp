@@ -10043,7 +10043,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/const CD_ARTEN = \[/.test(html) && ["reise", "weihnachten", "silvester", "meingeb", "mggeb"].every((k) => new RegExp(`\\["${k}", "`).test(html)), "Countdown-Registry fehlt");
   assert.ok(/if \(cdNur\(\) \|\| \(t && /.test(html) && /return l;\n  \}\n  for \(const \[k, , f\] of CD_ARTEN\)/.test(html) && /<b>📌 Standard: nur nächstes Clubtreffen<\/b>/.test(html), "Standard = nur nächstes Clubtreffen");
-  assert.ok(/Math\.ceil\(\(new Date\(t\.beginn\) - Date\.now\(\)\) \/ 86400000\) <= 2\)\) \{ \/\/ nur Treffen[^\n]*\n    if \(cdArtAn\("privat"\)\) try \{ l\.push\(\.\.\.cdPrivat\(\)\); \} catch \{\}[^\n]*\n    return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen (2.242.0: nur angehakte private Termine dazu)");
+  assert.ok(/cdTageBis\(berlinIso\(t\.beginn\)\) <= 2\)\) \{ \/\/ KC-CLUB-TREFFEN-KALENDERTAG: Kalendertage wie oben \/\/ nur Treffen[^\n]*\n    if \(cdArtAn\("privat"\)\) try \{ l\.push\(\.\.\.cdPrivat\(\)\); \} catch \{\}[^\n]*\n    return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen (2.242.0: nur angehakte private Termine dazu)");
   assert.ok(/id="cdKachel"/.test(html) && /id="cdWahl"/.test(html) && /cdEinstellungenZeigen\(\);(?: try \{ schalterZeilen\(\$\("v-einstellungen"\)\); \} catch \{\})? tippSchalterZeigen\(\)/.test(html), "Kachel/Einstellungen fehlen");
   assert.ok(/case "countdowns": \{/.test(server) && /a\.dabei && String\(a\.bis \|\| a\.von\) >= heute/.test(server), "Server: nur eigene Reisen");
 }

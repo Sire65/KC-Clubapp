@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.760.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.761.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16172,8 +16172,10 @@ function infoTreffen() {
   const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
   let bisTreffen = "—", frist = "";
   if (t) { // 2.441.0: Titel, Datum und Zu-/Absage stehen jetzt als erster Punkt im Info-Laufband (ilTreffen) – die Kopfzeile darüber ist weg
-    const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
-    bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
+    // KC-CLUB-TREFFEN-KALENDERTAG (Fund Hansi 30.10. 7:22 „Clubtreffen zeigt Morgen statt Heute 18 Uhr“): Kalendertage in deutscher Zeit zählen
+    // statt Stunden aufzurunden (10,6 Std. bis 18 Uhr ergaben „1 Tag“); heute mit Uhrzeit
+    const tage = cdTageBis(berlinIso(t.beginn));
+    bisTreffen = tage <= 0 ? `Heute ${new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(t.beginn))}` : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
     frist = fristStufe(tage);
   }
   return `<div class="il" id="infoLaufband"></div><!-- 2.439.0 KC-CLUB-INFO-LAUFBAND -->
@@ -16768,7 +16770,7 @@ const cdNur = () => einst("cd_nur", false);
 const cdArtAn = (k) => einst("cd_" + k, true);
 function cdListe(bisTreffen) {
   const t = INIT?.naechstesTreffen, l = [{ id: "t", zahl: String(bisTreffen).replace(/^in (\d+) Tagen$/, "$1 Tage"), text: "📅 Club\u00ADtreffen", los: () => zumTreffen() }]; // 2.203.0: kurz „Clubtreffen · 23 Tage“
-  if (cdNur() || (t && Math.ceil((new Date(t.beginn) - Date.now()) / 86400000) <= 2)) { // nur Treffen (bzw. Treffen steht kurz bevor) …
+  if (cdNur() || (t && cdTageBis(berlinIso(t.beginn)) <= 2)) { // KC-CLUB-TREFFEN-KALENDERTAG: Kalendertage wie oben // nur Treffen (bzw. Treffen steht kurz bevor) …
     if (cdArtAn("privat")) try { l.push(...cdPrivat()); } catch {} // … aber selbst angehakte private Termine laufen immer mit
     return l;
   }

@@ -43,6 +43,8 @@ jobs:
       - run: node tests/spiegel-zeitbloecke.test.mjs
       # KC-CLUB-GESPRAECHE (Stufe 1)
       - run: node tests/gespraeche.test.mjs
+      # KC-CLUB-TREFFEN-KALENDERTAG (2.761.0)
+      - run: node tests/treffen-tag.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)

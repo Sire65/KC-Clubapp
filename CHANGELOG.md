@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.761.0 – 2026-10-30 – 🐞 Clubtreffen: „Heute 18:00“ statt „Morgen“ (KC-CLUB-TREFFEN-KALENDERTAG)
+Fund Hansi (30.10., 7:22 Uhr): „Köcheclub-Termin zeigt nicht Heute 18 Uhr an, sondern Morgen – rechts im Termin-Feld im Kopf.“
+- Ursache: Das Feld zählte die Stunden bis zum Beginn und rundete auf ganze Tage auf (10,6 Std. bis 18 Uhr → „1 Tag“ → „Morgen“). Jetzt zählt es Kalendertage in deutscher Zeit (wie der Countdown daneben) und zeigt am Tag selbst die Uhrzeit: **„Heute 18:00“**.
+- Dieselbe Rechnung für „Treffen steht kurz bevor“ (Countdown zeigt dann nur das Treffen). Test `tests/treffen-tag.test.mjs` (auch über die Zeitumstellung und um Mitternacht).
+- Sofort eingespielt (Fehler, der Mitglieder behindert – Treffen ist heute).
+
 ## 2.760.0 – 2026-10-30 – 📞 Sehen, wer telefoniert – und anklopfen, um dazuzukommen (KC-CLUB-GESPRAECHE, Stufe 1)
 Wunsch Hansi (30.10.): „Anzeigen, wer gerade mit wem kommuniziert – z. B. Klaus und Hansi sprechen, dann eine grüne Linie mit Hörer … um in eine laufende Kommunikation zu sehen und dann anzuklopfen. Dann können mich die anderen in das Gespräch aufnehmen.“ Vorschau „Club-Netz“ abgenommen; Schalter vorbelegt an (Wahl Hansi).
 - 📞 **Im Kopf** (Feld Mitglieder): laufende Telefonate als grüne Schilder vor den Online-Namen, z. B. „Klaus 📞 Hansi“, bei Konferenzen „👥📞 Anne, Christina, Ruth“. Auch in der Online-Leiste unter Mitglieder.
