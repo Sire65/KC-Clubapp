@@ -192,7 +192,11 @@ assert.match(tl, /if \(d\.typ === "stab" && vomLeiter\)/, "Redestab nur von der 
 assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `📎 Unterlage: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "Unterlagen gehen in den Tisch-Chat (Zugriff prüft der Server)");
 assert.match(tl, /if \(typeof z\.a !== "string" \|\| !\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(z\.a\)\) return;/, "gezeigte Unterlage nur als Kennung");
 assert.ok(!/MediaRecorder/.test(tl), "keine Aufzeichnung");
-assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `🎵 Musik für alle: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "🎵 Lied geht in den Tisch-Chat (2.767.0)");
+assert.match(tl, /const k = TL\.iceVorab\.get|TL\.iceVorab\.get\(k\)/, "früh ankommende Wege werden gesammelt (2.773.0)");
+assert.match(tl, /TL\.baue\.add\(an\)/, "nie zwei Verbindungen gleichzeitig für dieselbe Person");
+assert.match(tl, /if \(von !== TL\.ich && t\?\.gastgeber !== TL\.ich\) return "";/, "📸 Ins Album nur Zeigender oder Leitung");
+assert.match(tl, /if \(datei\.size > 8 \* 1024 \* 1024\) return melde\(art === "video"/, "🎬 Video höchstens 8 MB");
+assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `\$\{art === "video" \? "🎬 Video" : "🎵 Musik"\} für alle: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "🎵/🎬 Lied und Video gehen in den Tisch-Chat (2.767.0/2.773.0)");
 assert.match(tl, /if \(typeof m\.a !== "string" \|\| !\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(m\.a\)/, "🎵 nur Kennung über die Leitung");
 assert.ok(!/["'`][\w./-]*\/[\w.-]+\.(mp3|m4a|ogg|wav)["'`]/.test(tl) && !/new Audio\(/.test(tl), "🎵 kein Lied fest eingebaut (keine Datei-Pfade)");
 assert.match(app, /if \(rundLiveAn\(id\)\) tlStopp\(true\); const r = await api\("tisch_verlassen"/, "Verlassen beendet Live");

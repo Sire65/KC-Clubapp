@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.773.0 – 2026-10-30 – 🎬 Runder Tisch: Videos für alle, 📸 ins Album übernehmen, stabilerer Verbindungsaufbau (KC-CLUB-RUNDER-TISCH-VIDEO, -ALBUM) · nur App · nur Admin zum Testen
+Wunsch Hansi (30.10.): „Weiter bauen“ – nach Ton, Bild, Bildschirm, Unterlagen und Musik jetzt Videos und Album (Spezifikation Abschnitte 6 und 17).
+- **🎬 Videos für alle:** Der Knopf heißt jetzt **🎵 Lied/Video**. Ein kurzes Video (MP4/WEBM/MOV, höchstens 8 MB ≈ 60 Sekunden) aus dem Archiv, vom Gerät oder **gleich aufnehmen** – es kommt in den Tisch-Chat und läuft **bei allen gleichzeitig groß auf der Bühne** (⛶ Vollbild). Pause/Weiter/Von vorn/Aus wie bei der Musik.
+- **📸 Ins Album:** Gezeigte Fotos und Videos kann übernehmen, wer sie zeigt oder den Tisch leitet – über den vorhandenen Weg (Hochlade-Formular des Albums, Thema wählen, „Hochladen“). Dann gehören sie zum Album und werden mit dem Tisch nicht gelöscht. Live läuft dabei weiter.
+- **Fehlerkorrektur Live-Ton:** Verbindungsdaten, die vor dem Verbindungsangebot ankamen, gingen verloren – dann blieb eine Verbindung manchmal hängen (⏳). Jetzt werden sie gesammelt und nachgereicht; außerdem entsteht für dieselbe Person nie doppelt eine Verbindung.
+- Tests: `tests/tisch-live.browser.mjs` – Video läuft in drei Fenstern gleichzeitig (≤ 0,4 s), „Ins Album“ nur bei Zeigendem/Leitung, öffnet das Album-Hochladen; dreimal hintereinander grün.
+- Rückweg: App 2.772.0. Auf dem Arbeitszweig als 2.768.0 gebaut; 2.768.0–2.772.0 hatten inzwischen andere Sitzungen vergeben – mit 2.772.0 (Kamera in der Ecke) zusammengeführt, beides bleibt. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.772.0 – 2026-10-30 – 🙂 Runder Tisch: Bildschirm zeigen und dich klein in der Ecke
 Wunsch #47 (Hansi 30.10.): „Im Seminar das Kassenprogramm vorstellen und zwischen Kamera und Programm umschalten“ – „Ja, mich in der Ecke, aber umschaltbar, denn auf dem kleinen Handy-Bildschirm könnte das stören oder Platz wegnehmen.“ (KC-CLUB-RUNDER-TISCH-ECKE)
 - Zeigt jemand am PC/Laptop den 🖥️ Bildschirm und hat die 📷 Kamera an, geht die Kamera zusätzlich als zweites, kleines Bild mit (eigener Kanal, sparsam: halbe Auflösung, höchstens 180 kbit/s).

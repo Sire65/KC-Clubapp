@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 const { chromium } = createRequire(import.meta.url)("playwright");
 const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MUSIK = "dddddddd-2222-3333-4444-555555555555"; // 🎵 Testlied = simjue-orgel.mp3 aus dem Repo
+const VIDEO = "eeeeeeee-2222-3333-4444-555555555555"; // 🎬 Testvideo = film/sicherheit-datenschutz.mp4 aus dem Repo
 const TISCH = "aaaaaaaa-2222-3333-4444-555555555555", CHAT = "bbbbbbbb-2222-3333-4444-555555555555", PDF = "cccccccc-2222-3333-4444-555555555555";
 const LIVE = { kanal: "kc-fh-" + "ab".repeat(16), schluessel: Buffer.alloc(32, 7).toString("base64") };
 const LEUTE = [{ id: "KC-P-LIVE-A", name: "Anna Probe" }, { id: "KC-P-LIVE-B", name: "Bernd Probe" }, { id: "KC-P-LIVE-C", name: "Carla Probe" }];
@@ -66,8 +67,9 @@ try {
           init: { ok: true, ich: { person_id: p.id, vorname: name, name: p.name, admin: true, vorstand: true, aemter: [], rollen: [] }, rtKanal: "kc-rt-" + p.id.toLowerCase(),
             einstellungen: { begruessung: { gesehen: true }, unterstuetzung: "normal", einweisung: { an: false, gesehen: {} }, spiel_einladung: { an: false }, ansicht: { art: "erweitert", gewaehlt: true }, einladung: { aus: true } },
             mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {}, kacheln: null, freigaben: { runder_tisch: "alle" } },
+          fotos_liste: { fotos: [], themen: [], jahre: [], anlaesse: [], speicher: { prozent: 0, belegt: 0, grenze: 1 }, papierkorb: 0, alben: [], albenKorb: 0, album: null },
           tisch_liste: lage(p.id), tisch_platz: { ok: true, ergebnis: "da", lage: lage(p.id), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) },
-          anlage_url: { url: body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
+          anlage_url: { url: body.id === VIDEO ? `${BASIS}/film/sicherheit-datenschutz.mp4` : body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
         }[a] ?? { ok: true };
         return r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(ant) });
       }
@@ -131,6 +133,16 @@ try {
   for (const s of [B, C]) await warte(s, () => document.getElementById("tlMusikTon")?.paused === true, null, 8000, "🎵 Pause kommt nicht an");
   await A.seite.evaluate(() => tlMusikSetzen(null));
   for (const s of [B, C]) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik, null, 8000, "🎵 Musik aus kommt nicht an");
+  // 7c. 🎬 Video für alle: Anna spielt ein kurzes Video – bei allen groß auf der Bühne, gleichzeitig; 📸 „Ins Album“ nur bei Anna (zeigt) – nicht bei Bernd
+  await A.seite.evaluate((v) => tlMusikSetzen({ a: v, n: "Probe.mp4", art: "video", start: Date.now() + 3000, pause: null }), VIDEO);
+  for (const s of seiten) await warte(s, () => { const v = document.querySelector("#tlBuehne video#tlMusikTon"); return !!v && !v.paused && v.currentTime > 1 && v.videoWidth > 0; }, null, 25000, "🎬 Video läuft nicht auf der Bühne");
+  const vpos = await Promise.all(seiten.map((s) => s.seite.evaluate(() => ({ pos: document.getElementById("tlMusikTon").currentTime, jetzt: Date.now() }))));
+  const vt = vpos.map((p) => p.pos - (p.jetzt - vpos[0].jetzt) / 1000), vsp = Math.max(...vt) - Math.min(...vt);
+  if (!(vsp <= 0.4)) melde(`🎬 Video läuft nicht gleichzeitig (Abstand ${vsp.toFixed(2)} s)`);
+  if (!(await A.seite.evaluate(() => /Ins Album/.test(document.querySelector("#tlBuehne")?.textContent || "")))) melde("[Anna] 📸 „Ins Album“ fehlt");
+  if (await B.seite.evaluate(() => /Ins Album/.test(document.querySelector("#tlBuehne")?.textContent || ""))) melde("[Bernd] 📸 „Ins Album“ darf nur, wer zeigt oder leitet");
+  await A.seite.evaluate(() => tlMusikSetzen(null));
+  for (const s of [B, C]) await warte(s, () => !document.querySelector("#tlBuehne video#tlMusikTon") && !TL.musik, null, 8000, "🎬 Video aus kommt nicht an");
   // 8. Redestab (Grenze im Test auf 2 gesetzt → bei 3 Personen gilt der Redestab): nur Anna (Leitung) spricht, Bernd meldet sich ✋,
   //    Anna gibt ihm den Stab → Bernd spricht, Anna hört ihn; Anna nimmt den Stab zurück → Bernd ist wieder stumm und sendet nicht mehr
   for (const s of seiten) await s.seite.evaluate(() => { TL.freiBis = 2; tlAufraeumen(); });
@@ -146,9 +158,13 @@ try {
   // Anzeige: nichts ragt über den Rand, Live-Bereich da
   for (const s of seiten) { const r = await s.seite.evaluate(() => ({ quer: document.documentElement.scrollWidth > innerWidth + 2, da: !!document.querySelector("#tlBereich .tl-leiste") }));
     if (!r.da) melde(`[${s.name}] Live-Bereich fehlt`); if (r.quer) melde(`[${s.name}] ragt seitlich über den Rand`); }
+  // 9. 📸 Ins Album: Anna übernimmt ein Foto aus dem Tisch → Album-Hochladeformular mit genau dieser Datei (erst „Hochladen“ legt es ab)
+  const album = await A.seite.evaluate(async (v) => { await tlInsAlbum(v, "Probe.mp4", "video/mp4"); await new Promise((r) => setTimeout(r, 1500));
+    return { ansicht: aktuelleAnsicht, offen: faGeteilt === null, datei: document.querySelector("#v-fotos")?.textContent.includes("Probe.mp4") || [...document.querySelectorAll("input[type=file]")].some((i) => i.files?.length) }; }, VIDEO).catch((e) => ({ fehler: String(e).slice(0, 120) }));
+  if (album.ansicht !== "fotos" || !album.offen) melde("[Anna] 📸 Ins Album öffnet das Hochladen nicht " + JSON.stringify(album));
   for (const s of seiten) { const fp = await s.seite.evaluate(() => (window.KCFP?.lies() || []).filter((e) => /^(skript|versprechen|gefangen|instabil|schutz)$/.test(e.art)).map((e) => e.art + ": " + String(e.text || "").slice(0, 120)));
     for (const e of fp) melde(`[${s.name}] Fehlerprotokoll ${e}`); }
 } finally { await browser.close(); server.close(); }
 
 if (fehler.length) { console.error("❌ Tisch-Live: " + fehler.length + " Fund(e)\n" + fehler.join("\n")); process.exit(1); }
-console.log("OK – Tisch-Live: 3 Fenster, Ton in alle Richtungen, Kamera, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm, 🎵 Musik gleichzeitig + Pause, Redestab + ✋");
+console.log("OK – Tisch-Live: 3 Fenster, Ton in alle Richtungen, Kamera, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm, 🎵 Musik gleichzeitig + Pause, 🎬 Video gleichzeitig + Album-Knopf, Redestab + ✋");

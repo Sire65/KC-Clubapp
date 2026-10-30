@@ -292,7 +292,10 @@ Umgesetzt aus RT2 und RT3 zusammen, dazu Kamera und Bildschirm (vorher nicht in 
 | Unterlagen | PDF/Foto vom Gerät oder aus dem Archiv → Upload + Nachricht im Tisch-Chat (Zugriff prüft der Server über die Chat-Teilnahme) → `zeige` mit Kennung und Seite. Empfänger laden selbst (`anlage_url`, pdf.js), folgen der Seite; eigenes Blättern → „↩︎ Folgen“. |
 | Messung | beim Beenden `diagnose` „tisch_live“: Sekunden, Verbindungen, Umleitungen, Fehler, höchste Zahl live. |
 | 🎵 Musik (2.767.0) | Lied (Audio, ≤ 8 MB) aus Archiv/Gerät → Tisch-Chat → `musik` mit Startzeit in der Uhr des Abspielenden. Uhrenabstand je Person = kleinster Wert (Empfang − Zeitstempel) aus den Lebenszeichen. Jedes Gerät lädt und spielt selbst (kein Ton-Strom). Pause/Weiter/Von vorn/Aus, eigene Lautstärke. Spätkommer steigen an der richtigen Stelle ein. |
-| Grenzen | höchstens 8 MB je Unterlage/Lied (wie alle Anlagen); keine Aufzeichnung; wer den Tisch verlässt, beendet Live. |
+| 🎬 Video (2.773.0) | wie Musik, aber groß auf der Bühne (Reihenfolge: geteilter Bildschirm → Video → Unterlage). Aufnehmen direkt aus der Kamera-App; ≤ 8 MB ≈ 60 s. |
+| 📸 Album (2.773.0) | wer zeigt oder leitet: „Ins Album“ → vorhandenes Hochlade-Formular (wie Ablagekorb). Danach gehört die Datei dem Album (nicht vom Tisch-Aufräumen betroffen). |
+| Verbindungsaufbau | Angebot belegt den Platz sofort, früh ankommende Wege (ICE) werden gesammelt und nachgereicht; je Person höchstens ein Aufbau gleichzeitig (`TL.baue`). |
+| Grenzen | höchstens 8 MB je Unterlage/Lied/Video (wie alle Anlagen); keine Aufzeichnung; wer den Tisch verlässt, beendet Live. |
 
 **Bekannt / bewusst:** Alle am Tisch teilen einen Schlüssel – ein Mitglied könnte technisch Signale „im Namen“ eines anderen senden (z. B. Redestab).
 Für Mitglieder untereinander akzeptiert; für externe Gäste (RT4) bekommt der Gast keine Leitungs-Signale der Leitung, sondern nur Ton/Bild (kommt mit RT4).

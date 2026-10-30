@@ -11,7 +11,7 @@
 // Zustand unbekannt (kein Lebenszeichen seit TL_WEG_MS) wird grau gezeigt, nie als „da“ (Vertrag Regel 11). Keine Aufzeichnung.
 const TL_FREI = 6, TL_HERZ_MS = 15000, TL_WEG_MS = 45000, TL_VIDEO_KBIT = 2400, TL_MIN_KBIT = 150, TL_MAX_KBIT = 1000;
 const TL = { freiBis: TL_FREI, id: null, L: null, ich: null, live: false, mic: null, micAn: false, cam: null, schirm: null, hand: false, stab: null, peers: new Map(),
-  pcs: new Map(), musik: null, uhr: new Map(), zeige: null, folgen: true, seite: 1, pdf: null, pdfFuer: null, herz: null, ctx: null, pegel: new Map(), takt: null, mess: { pcs: 0, fehl: 0, relay: 0 }, root: null };
+  pcs: new Map(), baue: new Set(), iceVorab: new Map(), musik: null, uhr: new Map(), zeige: null, folgen: true, seite: 1, pdf: null, pdfFuer: null, herz: null, ctx: null, pegel: new Map(), takt: null, mess: { pcs: 0, fehl: 0, relay: 0 }, root: null };
 // Reine Regeln (Test: tests/runder-tisch.test.mjs) – wer darf senden, welche Datenrate je Empfänger
 function tlRegeln(o) {
   const n = o.liveAnzahl, frei = n <= (o.freiBis ?? TL_FREI), leiter = o.ich === o.gastgeber, stab = o.stab === o.ich;
@@ -35,7 +35,7 @@ async function tlStart(id) {
   if (TL.live) await tlStopp(true);
   if (!window.RTCPeerConnection) return melde("Dieses Gerät kann kein Live – du kannst im Tisch-Chat schreiben und 🎤 Sprachnachrichten schicken.", true);
   Object.assign(TL, { id, ich: ICH.person_id, live: true, stab: null, hand: false, zeige: null, folgen: true, seite: 1, mess: { pcs: 0, fehl: 0, relay: 0, start: Date.now() } });
-  TL.peers.clear(); TL.pcs.clear();
+  TL.peers.clear(); TL.pcs.clear(); TL.iceVorab.clear();
   try { TL.ctx = new (window.AudioContext || window.webkitAudioContext)(); TL.ctx.resume?.(); } catch { TL.ctx = null; } // nach dem Antippen: Ton darf spielen
   rufIce().catch(() => {}); // Wege (inkl. Umleitung) schon holen
   TL.L = fhLeitung(RUND.live, tlEmpfang, () => { tlDa(true); tlZeichnen(); });
@@ -173,11 +173,13 @@ function tlSendenAbgleichen() {
   if (!TL.live) return;
   const soll = new Set(tlSender() ? tlLiveIds() : []);
   for (const [k, v] of TL.pcs) if (v.raus && !soll.has(v.an)) { tlSende({ typ: "zu", an: v.an, pc: k }); tlPcZu(k); }
-  for (const pid of soll) if (![...TL.pcs.values()].some((v) => v.raus && v.an === pid)) tlRausAufbauen(pid);
+  for (const pid of soll) if (!TL.baue.has(pid) && ![...TL.pcs.values()].some((v) => v.raus && v.an === pid)) tlRausAufbauen(pid);
 }
 async function tlRausAufbauen(an) {
   const k = `${TL.ich}>${an}#${Date.now().toString(36)}`;
-  const pc = new RTCPeerConnection({ iceServers: await rufIce() });
+  TL.baue.add(an); let ice; try { ice = await rufIce(); } finally { TL.baue.delete(an); } // nie zweimal gleichzeitig für dieselbe Person
+  if (!TL.live || [...TL.pcs.values()].some((v) => v.raus && v.an === an)) return;
+  const pc = new RTCPeerConnection({ iceServers: ice });
   const v = { pc, an, raus: true, audio: null, video: null };
   TL.pcs.set(k, v); TL.mess.pcs++;
   const mic = TL.mic?.getAudioTracks()[0] || null;
@@ -195,8 +197,11 @@ async function tlSignal(d) {
   if (d.typ === "zu") return tlPcZu(k);
   let v = TL.pcs.get(k);
   if (d.typ === "sdp" && d.sdp?.type === "offer" && !v) {
+    // Platz sofort belegen (vor dem Warten auf die Wege) – Verbindungsdaten, die gleich danach kommen, werden gesammelt statt verworfen
+    v = { pc: null, an: d.von, raus: false, strom: null, ice: TL.iceVorab.get(k) || [] }; TL.iceVorab.delete(k); TL.pcs.set(k, v); TL.mess.pcs++;
     const pc = new RTCPeerConnection({ iceServers: await rufIce() });
-    v = { pc, an: d.von, raus: false, strom: null, ice: [] }; TL.pcs.set(k, v); TL.mess.pcs++;
+    if (TL.pcs.get(k) !== v) { pc.close(); return; } // inzwischen beendet
+    v.pc = pc;
     pc.onicecandidate = (e) => { if (e.candidate) tlSende({ typ: "ice", an: d.von, pc: k, c: e.candidate.toJSON() }); };
     pc.onconnectionstatechange = () => tlPcZustand(k);
     pc.ontrack = (e) => {
@@ -208,12 +213,13 @@ async function tlSignal(d) {
       for (const c of v.ice.splice(0)) pc.addIceCandidate(c).catch(() => {}); } catch { tlPcZu(k); TL.mess.fehl++; }
     return;
   }
-  if (!v) return;
-  if (d.typ === "sdp" && d.sdp?.type === "answer" && v.raus && v.pc.signalingState === "have-local-offer") { try { await v.pc.setRemoteDescription(d.sdp); } catch { TL.mess.fehl++; } return; }
+  if (!v) { if (d.typ === "ice" && d.c) { const l = TL.iceVorab.get(k) || []; if (l.length < 50) l.push(d.c); TL.iceVorab.set(k, l); if (TL.iceVorab.size > 60) TL.iceVorab.delete(TL.iceVorab.keys().next().value); } return; }
+  if (!v.pc) { if (d.typ === "ice" && d.c) v.ice.push(d.c); return; } // Verbindung wird gerade angelegt
+  if (d.typ === "sdp" && d.sdp?.type === "answer" && v.raus && v.pc.signalingState === "have-local-offer") { try { await v.pc.setRemoteDescription(d.sdp); for (const c of (v.ice || []).splice(0)) v.pc.addIceCandidate(c).catch(() => {}); } catch { TL.mess.fehl++; } return; }
   if (d.typ === "ice" && d.c) { if (!v.pc.remoteDescription) (v.ice = v.ice || []).push(d.c); else v.pc.addIceCandidate(d.c).catch(() => {}); }
 }
 function tlPcZustand(k) {
-  const v = TL.pcs.get(k); if (!v) return;
+  const v = TL.pcs.get(k); if (!v?.pc) return;
   const s = v.pc.connectionState;
   if (s === "connected") { v.ok = true; v.pc.getStats?.().then((st) => st.forEach((x) => { if (x.type === "candidate-pair" && x.state === "succeeded" && x.nominated) { const l = st.get(x.localCandidateId); if (l?.candidateType === "relay") TL.mess.relay++; } })).catch(() => {}); }
   if (s === "failed" || s === "closed") {
@@ -224,7 +230,7 @@ function tlPcZustand(k) {
 }
 function tlPcZu(k) {
   const v = TL.pcs.get(k); if (!v) return;
-  TL.pcs.delete(k); try { v.pc.close(); } catch {}
+  TL.pcs.delete(k); try { v.pc?.close(); } catch {}
   document.getElementById("tlTon_" + tlSicher(k))?.remove();
   tlZeichnen();
 }
@@ -333,11 +339,13 @@ let tlBuehneLauf = 0;
 // Die Bühne bleibt dasselbe Element (wird beim Neuzeichnen nur umgehängt) – gezeichnet wird nur, wenn sich Unterlage, Seite oder Bild ändern
 function tlBuehneEl() { if (!TL.root) { TL.root = document.createElement("div"); TL.root.id = "tlBuehne"; TL.root.className = "tl-buehne"; TL.root.hidden = true; } return TL.root; }
 async function tlBuehneZeichnen() {
-  const el = tlBuehneEl(), z = TL.zeige, video = tlGrossVideo();
-  const stand = video ? "v:" + video.pid + ":" + video.strom.id + ":" + (video.eck?.id || "") + ":" + tlEckAn() : z ? `z:${z.a}:${TL.seite}:${TL.folgen}:${z.von === TL.ich}` : "";
+  const el = tlBuehneEl(), z = TL.zeige, video = tlGrossVideo(), medien = !video && TL.musik?.art === "video" && TL.medienEl;
+  const stand = video ? "v:" + video.pid + ":" + video.strom.id + ":" + (video.eck?.id || "") + ":" + tlEckAn() : medien ? "m:" + TL.musik.a : z ? `z:${z.a}:${TL.seite}:${TL.folgen}:${z.von === TL.ich}` : "";
   if (stand === TL.buehneStand) return;
   TL.buehneStand = stand; const lauf = ++tlBuehneLauf;
   if (video) { tlVideoAnzeigen(el, video); return; }
+  if (medien) { el.hidden = false; el.innerHTML = `<div class="tl-buehne-kopf">🎬 <b>${esc(TL.musik.n)}</b> <small>· ${esc(TL.musik.von === TL.ich ? "du spielst" : tlName(TL.musik.von) + " spielt")}</small>${tlVollKnopf()}</div>`;
+    el.appendChild(TL.medienEl); const al = tlAlbumKnopf(TL.musik.von, TL.musik.a, TL.musik.n, "video/mp4"); if (al) el.insertAdjacentHTML("beforeend", `<div class="tl-buehne-leiste">${al}</div>`); return; }
   if (!z) { el.innerHTML = ""; el.hidden = true; return; }
   el.hidden = false;
   const kopf = `<div class="tl-buehne-kopf">📎 <b>${esc(z.n)}</b> <small>· zeigt ${esc(z.von === TL.ich ? "du" : tlName(z.von))}</small>${tlVollKnopf()}</div>`;
@@ -347,7 +355,7 @@ async function tlBuehneZeichnen() {
   try {
     if (/^image\//.test(z.m)) {
       if (TL.pdfFuer !== z.a) { el.innerHTML = kopf + '<p class="hinweis">Wird geladen …</p>'; const r = await api("anlage_url", { id: z.a }, { still: true }); if (lauf !== tlBuehneLauf) return; TL.pdfFuer = z.a; TL.bildUrl = r.url; }
-      el.innerHTML = kopf + `<img class="tl-seite" src="${esc(TL.bildUrl)}" alt="${esc(z.n)}">` + (z.von === TL.ich ? '<div class="tl-buehne-leiste"><button class="knopf klein" onclick="tlZeigeSetzen(null)">⏹️ Beenden</button></div>' : "");
+      el.innerHTML = kopf + `<img class="tl-seite" src="${esc(TL.bildUrl)}" alt="${esc(z.n)}">` + `<div class="tl-buehne-leiste">${tlAlbumKnopf(z.von, z.a, z.n, z.m)}${z.von === TL.ich ? '<button class="knopf klein" onclick="tlZeigeSetzen(null)">⏹️ Beenden</button>' : ""}</div>`;
       return;
     }
     if (TL.pdfFuer !== z.a) {
@@ -415,7 +423,7 @@ function tlZeichnen() {
       <button class="knopf${TL.cam ? " haupt" : ""}" onclick="tlKamera()" ${r.darfSprechen ? "" : "disabled"}><span>📷</span>Kamera</button>
       ${tlSchirmGeht() ? `<button class="knopf${TL.schirm ? " haupt" : ""}" onclick="tlSchirm()" ${r.darfSprechen ? "" : "disabled"}><span>🖥️</span>Bildschirm</button>` : ""}
       <button class="knopf${TL.zeige?.von === TL.ich ? " haupt" : ""}" onclick="tlUnterlagen()"><span>📎</span>Zeigen</button>
-      <button class="knopf${TL.musik ? " haupt" : ""}" onclick="tlMusik()"><span>🎵</span>Musik</button>
+      <button class="knopf${TL.musik ? " haupt" : ""}" onclick="tlMusik()"><span>🎵</span>Lied/Video</button>
       ${r.darfSprechen ? "" : `<button class="knopf${TL.hand ? " haupt" : ""}" onclick="tlHand()"><span>✋</span>${TL.hand ? "Gemeldet" : "Melden"}</button>`}
       <button class="knopf" onclick="tlStopp()"><span>⏹️</span>Live aus</button>
     </div>
@@ -436,9 +444,12 @@ function tlZeichnen() {
 // Gleichzeitig: Startzeit in der Uhr dessen, der abspielt; jedes Gerät rechnet sie mit dem gemessenen Uhrenabstand um (kleinster Wert aus den
 // Lebenszeichen = Uhrenabstand + kürzeste Laufzeit). Wer später kommt, steigt an der richtigen Stelle ein. Lautstärke stellt jeder selbst.
 const TL_MUSIK_VORLAUF = 3000, tlIstAudio = (name, mime) => /^audio\//.test(mime || "") || /\.(mp3|m4a|aac|ogg|oga|opus|wav)$/i.test(name || "");
+// 2.773.0 KC-CLUB-RUNDER-TISCH-VIDEO: kurze Videos (≤ 8 MB, wie alle Anlagen) laufen genauso – gleichzeitig, aber groß auf der Bühne
+const tlIstVideo = (name, mime) => /^video\//.test(mime || "") || /\.(mp4|m4v|webm|mov)$/i.test(name || "");
+const tlMedienArt = (name, mime) => (tlIstVideo(name, mime) ? "video" : tlIstAudio(name, mime) ? "audio" : null);
 function tlUhr(pid, t) { const x = Number(t); if (!x) return; const d = Date.now() - x, alt = TL.uhr.get(pid); if (alt === undefined || d < alt) TL.uhr.set(pid, d); }
 const tlInMeinerZeit = (pid, t) => t + (TL.uhr.get(pid) ?? 0);
-const tlMusikStand = () => { const m = TL.musik; return m ? { a: m.a, n: m.n, start: m.start, pause: m.pause ?? null } : null; };
+const tlMusikStand = () => { const m = TL.musik; return m ? { a: m.a, n: m.n, art: m.art || "audio", start: m.start, pause: m.pause ?? null } : null; };
 async function tlMusik() {
   const t = tlTisch(); if (!t?.chat) return;
   if (TL.musik?.von === TL.ich) { // läuft von mir: Pause / weiter / aus
@@ -452,30 +463,33 @@ async function tlMusik() {
   }
   if (!tlRegel().darfZeigen) return melde("🎵 Musik für alle startet im Redestab-Modus die Leitung oder wer den Redestab hat.", true);
   const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎵 Musik für alle</h3>
-    <p class="dlg-text">Ein Lied (MP3, höchstens 8 MB) – alle hören es gleichzeitig. Es kommt in den Tisch-Chat.${TL.musik ? `<br>Gerade läuft: „${esc(TL.musik.n)}“ von ${esc(tlName(TL.musik.von))} – deins ersetzt es.` : ""}</p>
-    <div class="ca-wahl"><button type="button" class="knopf haupt" data-a="archiv">🗄️ Aus dem Archiv (z. B. Club-Song)</button><button type="button" class="knopf" data-a="geraet">📱 Vom Gerät</button></div>`, () => f.remove());
+    <p class="dlg-text">Ein Lied (MP3) oder ein kurzes Video (MP4), höchstens 8 MB – alle hören bzw. sehen es gleichzeitig. Es kommt in den Tisch-Chat.${TL.musik ? `<br>Gerade läuft: „${esc(TL.musik.n)}“ von ${esc(tlName(TL.musik.von))} – deins ersetzt es.` : ""}</p>
+    <div class="ca-wahl"><button type="button" class="knopf haupt" data-a="archiv">🗄️ Aus dem Archiv (z. B. Club-Song)</button><button type="button" class="knopf" data-a="kamera">🎬 Video aufnehmen</button><button type="button" class="knopf" data-a="geraet">📱 Vom Gerät</button></div>`, () => f.remove());
   f.querySelector('[data-a="zu"]').onclick = () => f.remove();
-  f.querySelector('[data-a="geraet"]').onclick = () => { f.remove(); const inp = document.createElement("input"); inp.type = "file"; inp.accept = "audio/*,.mp3,.m4a,.ogg,.wav";
+  f.querySelector('[data-a="geraet"]').onclick = () => { f.remove(); const inp = document.createElement("input"); inp.type = "file"; inp.accept = "audio/*,video/*,.mp3,.m4a,.ogg,.wav,.mp4,.webm,.mov";
+    inp.onchange = () => { const d = inp.files?.[0]; if (d) tlMusikTeilen(d); }; inp.click(); };
+  f.querySelector('[data-a="kamera"]').onclick = () => { f.remove(); const inp = document.createElement("input"); inp.type = "file"; inp.accept = "video/*"; inp.setAttribute("capture", "environment");
     inp.onchange = () => { const d = inp.files?.[0]; if (d) tlMusikTeilen(d); }; inp.click(); };
   f.querySelector('[data-a="archiv"]').onclick = async () => { f.remove(); let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
-    const docs = (r.dokumente || []).filter((d) => d.status === "ok" && d.datei && tlIstAudio(d.name, d.mime));
-    if (!docs.length) return melde("Im Archiv liegt noch kein Lied. Einmal ins Archiv legen (z. B. Ordner „Club-Song“), dann geht es mit einem Tipp.", true);
+    const docs = (r.dokumente || []).filter((d) => d.status === "ok" && d.datei && tlMedienArt(d.name, d.mime));
+    if (!docs.length) return melde("Im Archiv liegt noch kein Lied und kein Video. Einmal ins Archiv legen (z. B. Ordner „Club-Song“), dann geht es mit einem Tipp.", true);
     const b = blattAuf("tlArchivBlatt", `<h3 style="margin:0 0 6px">🎵 Welches Lied?</h3><div id="tlArchivListe"></div><div class="knoepfe bs-fuss"><button class="knopf" onclick="$('tlArchivBlatt').remove()">Abbrechen</button></div>`);
-    $("tlArchivListe").innerHTML = docs.slice(0, 60).map((d) => `<button type="button" class="knopf" style="text-align:left;width:100%;margin:3px 0" data-id="${esc(d.id)}">🎵 <b>${esc(d.titel || d.name)}</b></button>`).join("");
+    $("tlArchivListe").innerHTML = docs.slice(0, 60).map((d) => `<button type="button" class="knopf" style="text-align:left;width:100%;margin:3px 0" data-id="${esc(d.id)}">${tlMedienArt(d.name, d.mime) === "video" ? "🎬" : "🎵"} <b>${esc(d.titel || d.name)}</b></button>`).join("");
     $("tlArchivListe").querySelectorAll("[data-id]").forEach((x) => (x.onclick = async () => { const d = docs.find((y) => y.id === x.dataset.id); b.remove();
       try { melde("⏳ Lied wird geholt …"); const { blob, mime } = await anlageAlsDatei({ id: d.datei, name: d.name, mime: d.mime }); await tlMusikTeilen(new File([blob], d.name || "Lied.mp3", { type: mime || blob.type || "audio/mpeg" })); }
       catch (e) { meldeFehler(e); } })); };
 }
 async function tlMusikTeilen(datei) {
   const t = tlTisch(); if (!t?.chat) return;
-  if (!tlIstAudio(datei.name, datei.type)) return melde("🎵 Bitte eine Musikdatei wählen (MP3, M4A, OGG, WAV).", true);
-  if (datei.size > 8 * 1024 * 1024) return melde("🎵 Höchstens 8 MB je Lied.", true);
+  const art = tlMedienArt(datei.name, datei.type);
+  if (!art) return melde("🎵 Bitte ein Lied (MP3, M4A, OGG, WAV) oder ein Video (MP4, WEBM, MOV) wählen.", true);
+  if (datei.size > 8 * 1024 * 1024) return melde(art === "video" ? "🎬 Höchstens 8 MB je Video – das sind etwa 60 Sekunden. Bitte kürzer aufnehmen." : "🎵 Höchstens 8 MB je Lied.", true);
   try {
     melde(`⏳ ${datei.name} wird hochgeladen …`);
     const a = await anlageHochladen(datei);
-    await api("nachricht_senden", { id: t.chat, text: `🎵 Musik für alle: ${datei.name}`, anlagen: [a.id], wege: [] });
+    await api("nachricht_senden", { id: t.chat, text: `${art === "video" ? "🎬 Video" : "🎵 Musik"} für alle: ${datei.name}`, anlagen: [a.id], wege: [] });
     TL.musikDatei = { a: a.id, url: URL.createObjectURL(datei) }; // ich habe die Datei schon
-    tlMusikSetzen({ a: a.id, n: String(datei.name).slice(0, 80), start: Date.now() + TL_MUSIK_VORLAUF, pause: null });
+    tlMusikSetzen({ a: a.id, n: String(datei.name).slice(0, 80), art, start: Date.now() + TL_MUSIK_VORLAUF, pause: null });
     melde("🎵 Gleich hören alle: " + datei.name);
   } catch (e) { meldeFehler(e); }
 }
@@ -492,16 +506,20 @@ function tlMusikEmpfangen(m, von) {
   if (!m) { if (TL.musik?.von === von) tlMusikAus(); tlZeichnen(); return; }
   if (typeof m.a !== "string" || !/^[0-9a-f-]{36}$/i.test(m.a) || !Number(m.start)) return;
   const neu = TL.musik?.a !== m.a || TL.musik?.von !== von;
-  TL.musik = { a: m.a, n: String(m.n || "Lied").slice(0, 80), start: tlInMeinerZeit(von, Number(m.start)), pause: m.pause == null ? null : Math.max(0, Number(m.pause) || 0), von };
-  if (neu) melde(`🎵 ${tlName(von)} spielt für alle: ${TL.musik.n}`);
+  TL.musik = { a: m.a, n: String(m.n || "Lied").slice(0, 80), art: m.art === "video" ? "video" : "audio", start: tlInMeinerZeit(von, Number(m.start)), pause: m.pause == null ? null : Math.max(0, Number(m.pause) || 0), von };
+  if (neu) melde(`${TL.musik.art === "video" ? "🎬" : "🎵"} ${tlName(von)} spielt für alle: ${TL.musik.n}`);
   tlMusikSpielen(); tlZeichnen();
 }
 let tlMusikLauf = 0;
 async function tlMusikSpielen() {
   const m = TL.musik, lauf = ++tlMusikLauf;
-  let el = document.getElementById("tlMusikTon");
-  if (!m) { if (el) { el.pause(); el.remove(); } return; }
-  if (!el) { el = document.createElement("audio"); el.id = "tlMusikTon"; el.preload = "auto"; el.setAttribute("playsinline", ""); el.hidden = true; document.body.appendChild(el); el.volume = TL.musikLaut ?? 0.8; }
+  let el = TL.medienEl || document.getElementById("tlMusikTon"); // Video hängt an der Bühne (evtl. gerade nicht im Fenster)
+  if (!m) { if (el) { el.pause(); el.remove(); } TL.medienEl = null; tlBuehneZeichnen(); return; }
+  const tag = m.art === "video" ? "VIDEO" : "AUDIO";
+  if (el && el.tagName !== tag) { el.pause(); el.remove(); el = null; }
+  if (!el) { el = document.createElement(tag.toLowerCase()); el.id = "tlMusikTon"; el.preload = "auto"; el.setAttribute("playsinline", ""); el.volume = TL.musikLaut ?? 0.8;
+    if (tag === "VIDEO") { el.className = "tl-gross"; TL.medienEl = el; } else { el.hidden = true; document.body.appendChild(el); } }
+  if (tag === "VIDEO") tlBuehneZeichnen();
   try {
     if (TL.musikDatei?.a !== m.a) { // einmal laden (der Link gilt nur kurz) – dann aus dem Speicher spielen
       const { blob } = await anlageAlsDatei({ id: m.a, name: m.n }); if (lauf !== tlMusikLauf) return;
@@ -519,10 +537,26 @@ async function tlMusikSpielen() {
     if (warten > 0) { el.pause(); el.currentTime = 0; TL.musikUhr = setTimeout(los, warten); } else los();
   } catch (e) { if (lauf === tlMusikLauf) melde("🎵 Das Lied konnte nicht geladen werden – im Tisch-Chat liegt es auch.", true); }
 }
-function tlMusikAus() { clearTimeout(TL.musikUhr); tlMusikLauf++; TL.musik = null; const el = document.getElementById("tlMusikTon"); if (el) { el.pause(); el.remove(); } }
-function tlMusikLaut(v) { TL.musikLaut = Math.max(0, Math.min(1, Number(v))); const el = document.getElementById("tlMusikTon"); if (el) el.volume = TL.musikLaut; }
+function tlMusikAus() { clearTimeout(TL.musikUhr); tlMusikLauf++; TL.musik = null; const el = document.getElementById("tlMusikTon") || TL.medienEl; if (el) { el.pause(); el.remove(); } TL.medienEl = null; tlBuehneZeichnen(); }
+function tlMusikLaut(v) { TL.musikLaut = Math.max(0, Math.min(1, Number(v))); const el = TL.medienEl || document.getElementById("tlMusikTon"); if (el) el.volume = TL.musikLaut; }
 function tlMusikZeile() {
   const m = TL.musik;
-  return `<div class="tl-musik">🎵 <b>${esc(m.n)}</b> <small>· ${esc(m.von === TL.ich ? "du spielst" : tlName(m.von) + " spielt")}${m.pause != null ? " · ⏸️ Pause" : ""}</small>
-    <label class="tl-laut">🔈<input type="range" min="0" max="1" step="0.05" value="${TL.musikLaut ?? 0.8}" oninput="tlMusikLaut(this.value)" aria-label="Lautstärke Musik"></label></div>`;
+  return `<div class="tl-musik">${m.art === "video" ? "🎬" : "🎵"} <b>${esc(m.n)}</b> <small>· ${esc(m.von === TL.ich ? "du spielst" : tlName(m.von) + " spielt")}${m.pause != null ? " · ⏸️ Pause" : ""}</small>
+    ${m.von === TL.ich ? `<button class="knopf klein" onclick="tlMusik()" aria-label="Abspielen steuern">${m.pause != null ? "▶️" : "⏸️"}</button>` : ""}<label class="tl-laut">🔈<input type="range" min="0" max="1" step="0.05" value="${TL.musikLaut ?? 0.8}" oninput="tlMusikLaut(this.value)" aria-label="Lautstärke Musik"></label></div>`;
+}
+
+// ---- 📸 Ins Fotoalbum übernehmen (Spezifikation Abschnitt 6): Fotos und Videos im Tisch-Chat werden nach 7 Tagen gelöscht – was bleiben soll,
+// übernimmt wer es zeigt oder wer den Tisch leitet. Vorhandener Weg wie beim Ablagekorb: Datei holen → Hochlade-Formular des Albums (Thema wählen,
+// „Hochladen“). Erst dann ist es im Album – und gehört dann zum Album, nicht mehr zum Tisch.
+function tlAlbumKnopf(von, a, n, mime) {
+  const t = tlTisch(); if (von !== TL.ich && t?.gastgeber !== TL.ich) return "";
+  return `<button class="knopf klein" onclick="tlInsAlbum(${jsArg(a)}, ${jsArg(n)}, ${jsArg(mime || "")})">📸 Ins Album</button>`;
+}
+async function tlInsAlbum(a, n, mime) {
+  try {
+    melde("⏳ Wird für das Fotoalbum geholt …");
+    const { blob, mime: m } = await anlageAlsDatei({ id: a, name: n, mime });
+    faFilter = {}; faPapierkorb = false; faGeteilt = [new File([blob], n || "Foto", { type: m || mime || blob.type })];
+    zeige("fotos"); melde("📸 Thema wählen und unten „Hochladen“ tippen – erst dann ist es im Album. Live läuft weiter.");
+  } catch (e) { meldeFehler(e); }
 }
