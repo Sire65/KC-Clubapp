@@ -279,7 +279,7 @@ assert.match(server, /await db\.from\("kc_club_tisch_tasche"\)\.delete\(\)\.eq\(
   assert.match(app, /\.\.\.\(TG_GERAET \? \{ "x-tg-geraet": TG_GERAET \} : \{\}\)/, "Geräte-Kennung geht mit");
 }
 
-// 2.777.0 KC-CLUB-RUNDER-TISCH-UHR: Countdown bis Beginn und Restzeit – Anzeige-Formate (zählt nur auf dem Gerät, keine Abfrage)
+// 2.778.0 KC-CLUB-RUNDER-TISCH-UHR: Countdown bis Beginn und Restzeit – Anzeige-Formate (zählt nur auf dem Gerät, keine Abfrage)
 const rundUhrText = new Function(app.slice(app.indexOf("function rundUhrText(rest) {"), app.indexOf("function rundUhrHtml(")) + "\nreturn rundUhrText;")();
 assert.equal(rundUhrText(754000), "12:34"); assert.equal(rundUhrText(59000), "0:59"); assert.equal(rundUhrText(1), "0:01", "angefangene Sekunde zählt mit");
 assert.equal(rundUhrText(0), "0:00"); assert.equal(rundUhrText(-5000), "0:00", "nie negativ");

@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.777.0 – 2026-10-30 – ⏳ Runder Tisch: Countdown bis zum Beginn und Restzeit-Uhr (KC-CLUB-RUNDER-TISCH-UHR) · nur App
+## 2.778.0 – 2026-10-30 – ⏳ Runder Tisch: Countdown bis zum Beginn und Restzeit-Uhr (KC-CLUB-RUNDER-TISCH-UHR) · nur App
 Wunsch Hansi (30.10.): „Einen Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine Runterzähl-Uhr, wie lange der Tisch noch laufen wird.“ Noch nur Admin zum Testen.
 - **Vor Beginn:** „⏳ beginnt in 12:34“ (ab 1 Std. „2 Std. 05 Min.“, ab 1 Tag „3 Tagen“) – am Tisch groß oben, in der Tischmitte, auf der Startseiten-Karte und in der Liste (ab 24 Std. vorher).
 - **Während des Tisches:** „⏱️ noch 42:10“ bis zum Ende; die letzten 5 Minuten gelb, die letzte Minute rot. Verlängert die Leitung um 30 Min., zählt die Uhr weiter.

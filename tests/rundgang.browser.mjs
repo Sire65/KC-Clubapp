@@ -120,7 +120,7 @@ try {
       const rt = await seite.evaluate(async () => { zeige("start"); await new Promise((r) => setTimeout(r, 400)); fensterZu($("rundBlatt")); await new Promise((r) => setTimeout(r, 400)); const karte = $("rundKarte")?.textContent || "";
         await rundOeffnen(); const liste = !!$("rundBlatt") && /Club-Song/.test($("rundInhalt")?.textContent || "");
         await rundTischZeigen("11111111-2222-3333-4444-555555555555"); const b = document.querySelectorAll("#rundTischBlatt .rund-platz");
-        const uhr1 = document.querySelector('#rundTischBlatt .rund-uhr-leiste [data-rund-uhr="ende"]')?.textContent || ""; await new Promise((r) => setTimeout(r, 2200)); // 2.777.0 KC-CLUB-RUNDER-TISCH-UHR
+        const uhr1 = document.querySelector('#rundTischBlatt .rund-uhr-leiste [data-rund-uhr="ende"]')?.textContent || ""; await new Promise((r) => setTimeout(r, 2200)); // 2.778.0 KC-CLUB-RUNDER-TISCH-UHR
         const uhr2 = document.querySelector('#rundTischBlatt .rund-uhr-leiste [data-rund-uhr="ende"]')?.textContent || "";
         const tisch = { uhr: /^\d+:\d\d$/.test(uhr1) && uhr1 !== uhr2, uhrText: `${uhr1} → ${uhr2}`, plaetze: b.length, grau: document.querySelectorAll("#rundTischBlatt .rund-platz.unsicher").length, quer: document.documentElement.scrollWidth > innerWidth + 2 };
         await rundTascheOeffnen("11111111-2222-3333-4444-555555555555"); const tt = $("rundTascheInhalt")?.textContent || ""; // 2.772.0
@@ -140,7 +140,7 @@ try {
       if (!rt.liste) melde("Runder Tisch: Liste erscheint nicht " + (rt.fehler || ""));
       if (rt.plaetze !== 18 || rt.grau !== 1) melde(`Runder Tisch: ${rt.plaetze} Plätze, ${rt.grau} grau (erwartet 18 und 1)`);
       if (rt.quer) melde("Runder Tisch: ragt seitlich über den Rand");
-      if (!rt.uhr) melde("Runder Tisch: Restzeit-Uhr zählt nicht (" + rt.uhrText + ")"); // 2.777.0
+      if (!rt.uhr) melde("Runder Tisch: Restzeit-Uhr zählt nicht (" + rt.uhrText + ")"); // 2.778.0
       if (!rt.neu) melde("Runder Tisch: Einladen-Fenster (mit 3 Arten) fehlt oder ragt über den Rand");
       if (!rt.seminar?.pult || rt.seminar?.reihen !== 12 || rt.seminar?.quer) melde("Seminar: Hörsaal falsch " + JSON.stringify(rt.seminar)); // 9 Teilnehmer + 3 freie Plätze
       if (!rt.to || !rt.toFeld) melde("Besprechung: Tagesordnung fehlt");

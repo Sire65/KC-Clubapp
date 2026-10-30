@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.777.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.778.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22086,7 +22086,7 @@ function rundKarteHtml(t) {
   const zus = t.phase === "vorbei" ? "" : A.anmeldung ? `📝 ${angemeldet} von ${t.plaetze} Plätzen angemeldet${t.meineZusage === "ja" && !t.darfLeiten ? " – du bist dabei" : ""}`
     : t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
   const am = t.phase === "offen" || t.phase === "gleich" ? ` · 🪑 ${t.amTisch.length} von ${t.plaetze} am Tisch` : t.phase === "vorbei" ? ` · ${t.warenDa} waren dabei` : "";
-  const uhr = Date.parse(t.beginn) - Date.now() < 86400000 ? rundUhrHtml(t) : ""; // 2.777.0: Uhr ab 24 Std. vorher
+  const uhr = Date.parse(t.beginn) - Date.now() < 86400000 ? rundUhrHtml(t) : ""; // 2.778.0: Uhr ab 24 Std. vorher
   return `<div class="karte rund-karte rund-${esc(t.phase)}"><div class="rund-art">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 nur ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""}</div><div><b>${esc(t.thema)}</b> <small class="rund-phase">${RUND_PHASE[t.phase] || ""}</small></div>
     <div class="hinweis">${esc(t.text)} · ${esc(A.leiter)}: ${esc(t.gastgeberName)}</div>${uhr ? `<div class="rund-uhr-zeile">${uhr}</div>` : ""}
     ${t.gaeste?.length ? `<div class="rund-gaeste">🙋 Mit Gast: ${esc(t.gaeste.map((x) => x.name + (x.rolle ? ` (${x.rolle})` : "")).join(", "))}</div>` : ""}
@@ -22453,7 +22453,7 @@ async function rundTascheVorladen(id) {
     }
   } catch {}
 }
-// ---- 2.777.0 KC-CLUB-RUNDER-TISCH-UHR (Wunsch Hansi 30.10.2026 „ein Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine
+// ---- 2.778.0 KC-CLUB-RUNDER-TISCH-UHR (Wunsch Hansi 30.10.2026 „ein Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine
 // Runterzähl-Uhr, wie lange der Tisch noch läuft“): zählt nur auf dem Gerät (jede Sekunde, nur wenn die App sichtbar ist) – keine Datenbank-Abfrage.
 // Vor Beginn: „⏳ beginnt in 12:34“ (ab 1 Std. „2 Std. 05 Min.“, ab 1 Tag „3 Tagen“); während: „⏱️ noch 42:10“ – letzte 5 Min. gelb, letzte Minute rot.
 // Ist die Zeit um, wechselt die Anzeige von selbst (Tisch beginnt bzw. ist vorbei) – der Server prüft beim nächsten Herzschlag ohnehin.
