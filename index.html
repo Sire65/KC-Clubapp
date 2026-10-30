@@ -4576,6 +4576,11 @@
   .tl-voll { margin: 0 0 0 auto; min-width: 40px; } .tl-buehne:fullscreen { display: flex; flex-direction: column; } .tl-buehne:fullscreen .tl-seite, .tl-buehne:fullscreen .tl-gross { flex: 1; max-height: none; height: 100%; }
   .tl-seite, .tl-gross { display: block; width: 100%; max-height: 62vh; object-fit: contain; background: #fff; }
   .tl-gross { background: #000; }
+  /* 2.771.0 KC-CLUB-RUNDER-TISCH-ECKE: Kamera des Vortragenden klein in der Ecke (je Zuschauer ein-/ausschaltbar) */
+  .tl-gross-rahmen { position: relative; } .tl-buehne:fullscreen .tl-gross-rahmen { flex: 1; display: flex; } .tl-buehne:fullscreen .tl-gross-rahmen .tl-gross { flex: 1; }
+  .tl-eck { position: absolute; right: 8px; bottom: 8px; width: 26%; max-width: 220px; min-width: 90px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px;
+    border: 2px solid #f3e9dc; box-shadow: 0 3px 10px rgba(0, 0, 0, .5); background: #000; }
+  .tl-eck-knopf { margin: 0 0 0 auto; } .tl-eck-knopf + .tl-voll { margin-left: 6px; }
   .tl-buehne-leiste { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 6px; }
   .tl-buehne-leiste .knopf { margin: 0; min-width: 44px; }
   .tl-leute { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; margin-bottom: 10px; }
