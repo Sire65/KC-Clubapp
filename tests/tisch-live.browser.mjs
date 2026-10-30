@@ -49,6 +49,7 @@ function leitung(ws) {
 
 const fehler = [], melde = (t) => fehler.push(t);
 const browser = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--autoplay-policy=no-user-gesture-required"] });
+const TL_HERZ_PRUEF_MS = 16000; // ein Lebenszeichen-Takt (15 s) – danach darf nichts wieder anspringen
 const seiten = [];
 try {
   for (const p of LEUTE) {
@@ -131,6 +132,25 @@ try {
   for (const s of [B, C]) await warte(s, () => document.getElementById("tlMusikTon")?.paused === true, null, 8000, "🎵 Pause kommt nicht an");
   await A.seite.evaluate(() => tlMusikSetzen(null));
   for (const s of [B, C]) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik, null, 8000, "🎵 Musik aus kommt nicht an");
+  // 7c. 2.771.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi „konnte nicht Stop drücken – es gab keinen Knopf“): Knöpfe direkt an der Musik.
+  //     Bernd spielt: Bernd sieht ⏸️/⏹️, Carla „🔇 Für mich aus“ (schaltet nur bei ihr ab), Anna (Leitung) „⏹️ Für alle aus“ – das stoppt bei allen,
+  //     auch beim Abspielenden, und Lebenszeichen starten es nicht wieder. Ist der Tisch nicht zu sehen, hängt die Musik-Leiste unten.
+  await B.seite.evaluate((m) => tlMusikSetzen({ a: m, n: "Club-Song.mp3", start: Date.now() + 1500, pause: null }), MUSIK);
+  for (const s of seiten) await warte(s, () => { const el = document.getElementById("tlMusikTon"); return !!el && !el.paused; }, null, 20000, "spielt Bernds Lied nicht");
+  const knoepfe = async (s) => s.seite.evaluate(() => [...document.querySelectorAll("#tlBereich .tl-musik button")].map((b) => b.textContent.trim()).join("|"));
+  if (!/⏸️ Pause/.test(await knoepfe(B)) || !/⏹️ Aus/.test(await knoepfe(B))) melde("[Bernd] 🎵 Pause/Aus fehlen an der Musik: " + (await knoepfe(B)));
+  if (!/🔇 Für mich aus/.test(await knoepfe(C)) || /⏹️/.test(await knoepfe(C))) melde("[Carla] 🎵 nur „Für mich aus“ erwartet: " + (await knoepfe(C)));
+  if (!/⏹️ Für alle aus/.test(await knoepfe(A))) melde("[Anna] 🎵 Leitung: „Für alle aus“ fehlt: " + (await knoepfe(A)));
+  await C.seite.evaluate(() => document.querySelector('#tlBereich .tl-musik button[onclick="tlMusikStumm()"]').click());
+  await warte(C, () => document.getElementById("tlMusikTon")?.muted === true && !document.getElementById("tlMusikTon").paused, null, 5000, "🔇 Für mich aus schaltet nicht stumm");
+  if (await B.seite.evaluate(() => document.getElementById("tlMusikTon")?.muted)) melde("[Bernd] 🔇 Carlas „Für mich aus“ wirkt auch bei Bernd");
+  await C.seite.evaluate(() => { const b = document.getElementById("tlBereich"); if (b) b.style.display = "none"; tlMusikMini(); });
+  if (!(await C.seite.evaluate(() => /Club-Song/.test(document.getElementById("tlMusikMini")?.textContent || "") && !!document.querySelector("#tlMusikMini button")))) melde("[Carla] Musik-Leiste unten fehlt, wenn der Tisch nicht zu sehen ist");
+  await C.seite.evaluate(() => { const b = document.getElementById("tlBereich"); if (b) b.style.display = ""; tlMusikMini(); });
+  await A.seite.evaluate(() => document.querySelector('#tlBereich .tl-musik button[onclick="tlMusikFuerAlleAus()"]').click());
+  for (const s of seiten) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik && !document.getElementById("tlMusikMini"), null, 8000, "⏹️ Für alle aus kommt nicht überall an");
+  await A.seite.waitForTimeout(TL_HERZ_PRUEF_MS);
+  for (const s of seiten) if (await s.seite.evaluate(() => !!TL.musik)) melde(`[${s.name}] 🎵 Musik startet nach „Für alle aus“ von selbst wieder`);
   // 8. Redestab (Grenze im Test auf 2 gesetzt → bei 3 Personen gilt der Redestab): nur Anna (Leitung) spricht, Bernd meldet sich ✋,
   //    Anna gibt ihm den Stab → Bernd spricht, Anna hört ihn; Anna nimmt den Stab zurück → Bernd ist wieder stumm und sendet nicht mehr
   for (const s of seiten) await s.seite.evaluate(() => { TL.freiBis = 2; tlAufraeumen(); });

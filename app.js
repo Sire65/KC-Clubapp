@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.770.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.771.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16,7 +16,7 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
-  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-wUZOq2lLm7y0tEKdY4vLo/SIH1JGEiNIhjeG6xRO24q2g7ZBzegV6are64+Nku2t" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
+  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-fZRJAQf09fYCy0IP/ZgnugR6GlwdsR7tHlSwhsdAGPdG7hom6RyYnh2VJtsXyJD+" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -7743,7 +7743,7 @@ async function spracheSenden() {
 }
 const SPRACH_TEMPI = [1, 1.5, 2];
 function sprachTempo() { try { const t = Number(localStorage.getItem("kc_club_sprachtempo")); return SPRACH_TEMPI.includes(t) ? t : 1; } catch { return 1; } }
-async function spracheAbspielen(knopf, id) {
+async function spracheAbspielen(knopf, id, musik) { // 2.771.0: musik = Lied statt Sprachnachricht (anderer Text, kein Tempo-Knopf)
   try {
     knopf.disabled = true; knopf.textContent = "⏳ lädt …";
     const url = (await api("anlage_url", { id })).url;
@@ -7754,8 +7754,8 @@ async function spracheAbspielen(knopf, id) {
     tempo.onclick = () => { const n = SPRACH_TEMPI[(SPRACH_TEMPI.indexOf(a.playbackRate) + 1) % SPRACH_TEMPI.length]; setzen(n); try { localStorage.setItem("kc_club_sprachtempo", String(n)); } catch {} };
     a.addEventListener("play", () => { if (a.playbackRate !== a.defaultPlaybackRate) a.playbackRate = a.defaultPlaybackRate; });
     setzen(sprachTempo());
-    knopf.replaceWith(a); a.after(tempo); a.play().catch(() => {});
-  } catch (e) { knopf.disabled = false; knopf.textContent = "▶️ Sprachnachricht anhören"; meldeFehler(e); }
+    knopf.replaceWith(a); if (!musik) a.after(tempo); a.play().catch(() => {});
+  } catch (e) { knopf.disabled = false; knopf.textContent = musik ? "▶️ 🎵 Abspielen" : "▶️ Sprachnachricht anhören"; meldeFehler(e); }
 }
 
 // → ausgelagert nach teile/spiele.js (KC-CLUB-TEILE): KC-CLUB-TEILE Stufe 2 (Prüfbericht C, Wunsch Hansi 28.10.2026): Spiele – Tic-Tac-Toe, Schach, Doppelkopf, Bauernskat, Mensch ärgere dich nicht, Fang den Koch, Küchenterror, Spiel-Termine.
@@ -23101,7 +23101,7 @@ async function chatLaden(scrollen, merk) {
     NA.nachrichten = new Map(u.nachrichten.map((m) => [m.id, m]));
     const blaseHtml = (m) => `${m.id === NA.trennerVor ? '<div class="neu-trenner" id="neuTrenner">⬇ Neue Nachrichten</div>' : ""}<div data-id="${m.id}" class="blase${m.eigen ? " eigen" : ""}${istNotfall(m) ? " notfall" : ""}${m.erwaehntMich ? " erwaehnt-mich" : ""}${m.wichtig ? " wichtig" : ""}${!m.eigen && andere.length > 1 ? " farbig" : ""}"${!m.eigen && andere.length > 1 ? ` style="${gruppenFarbe(m.von)}"` : ""} id="msg-${m.id}" title="Antippen: reagieren, antworten, Details" onclick="if(!event.target.closest('button,img,a,audio,video,.sprache,.zitat'))nachrichtMenue('${m.id}')" oncontextmenu="if(!event.target.closest('a,img,audio,video,input,textarea')){event.preventDefault();nachrichtMenue('${m.id}')}">
       ${istNotfall(m) ? '<div class="notfall-marke">🚨 NOTFALL</div>' : m.wichtig ? '<div class="wichtig-marke">❗ WICHTIG</div>' : ""}${m.express ? '<div class="express-marke">🏎️ EXPRESS</div>' : ""}${!m.eigen && andere.length > 1 ? `<div class="von">${esc(m.von)}</div>` : ""}${m.antwortAuf ? `<div class="zitat" onclick="zuNachricht('${m.antwortAuf.id}')"><b>${esc(m.antwortAuf.von)}</b><span>${esc(vnKurz(m.antwortAuf.text))}</span></div>` : ""}${m.umfrage ? umfrageHtml(m) : m.kontakt ? kontaktKarteHtml(m) : (m.text === "📎" || (m.text === EINMAL_TEXT && m.anlagen.some((a) => a.einmal))) && m.anlagen.length ? "" : `<div class="txt">${naText(istNotfall(m) ? m.text.replace(NOTFALL_RE, "") : m.text)}</div>`}${m.link ? lvKarteHtml(m.link) : ""}${ntKnopfHtml(m) /* 2.608.0 KC-CLUB-NACHRICHT-TERMIN */}${erkKnopfHtml(m) /* 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT */}
-      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}')">▶️ Sprachnachricht anhören</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
+      ${m.anlagen.map((a) => a.name === VN_ANL_NAME ? vnAnlHtml(a) : a.einmal ? einmalKachel(a) : /^image\//.test(a.mime || "") ? `<img data-anlage="${a.id}" alt="${esc(a.name)}" onclick="event.stopPropagation();anlageOeffnen('${a.id}')">` : /^audio\//.test(a.mime || "") ? `<div class="sprache" data-sprache="${a.id}"><button onclick="spracheAbspielen(this, '${a.id}', ${/^Sprachnachricht/i.test(a.name || "") ? "false" : "true"})">${/^Sprachnachricht/i.test(a.name || "") ? "▶️ Sprachnachricht anhören" : `▶️ 🎵 ${esc(a.name || "Musik")}`}</button></div>` : `<div class="anlage" onclick='event.stopPropagation();anlageAktion(${hlJs(a.id)}, ${hlJs(a.name || "Datei")}, ${hlJs(a.mime || "")})'>📄 ${esc(a.name)}</div>`).join("")}
       <div class="na-seite"><button class="na-pfeil" title="Weiterleiten oder kopieren" aria-label="Weiterleiten oder kopieren" onclick="naPfeilMenue('${m.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5l7.5 7.5-7.5 7.5v-4.3c-5.2 0-8.8 1.7-11.4 5.3 1-5.2 4.1-10.3 11.4-11.3V4.5z"/></svg></button><button class="na-info" title="Info: wer geschrieben, bekommen und gelesen hat" aria-label="Info zur Nachricht" onclick="nachrichtInfo('${m.id}')">i</button></div>
       ${m.eigen && m.express?.empfaenger ? expressStatusHtml(m.express) : m.express?.quittungen?.length ? `<div class="express-quittung">📬 Empfang bestätigt: ${m.express.quittungen.map((q) => `${esc(q.name)} ${esc(zeitKurz(q.am))}`).join(", ")}</div>` : m.eigen && m.express ? '<div class="express-quittung warte">📭 Empfang noch nicht bestätigt</div>' : ""}
       <div class="fuss">${m.loeschtAm ? `<span class="sl-marke" title="Löscht sich selbst – für alle">⏳ noch ${slRest(m.loeschtAm)}</span> ` : ""}${m.angeheftet ? '<span title="oben angeheftet">📌</span> ' : ""}${m.gemerkt ? '<span title="gemerkt">⭐</span> ' : ""}${m.bearbeitet ? '<span class="bearb" title="nachträglich geändert">bearbeitet</span>' : ""}${zeitKurz(m.zeit)}${m.eigen ? " " + hakenHtml(m, andere.length) : ""}${m.eigen || ICH.admin ? ` <button aria-label="Nachricht löschen" class="weg" title="Nachricht löschen" onclick="nachrichtLoeschen('${m.id}')">🗑️</button>` : ""}</div></div>`;

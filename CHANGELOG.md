@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.771.0 – 2026-10-30 – 🐞 Runder Tisch: Musik stoppen – Knöpfe direkt an der Musik (KC-CLUB-TISCH-MUSIK-STOPP) · nur App
+Fund Hansi (30.10.): „Beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf.“ Ursache: Pause/Aus lagen versteckt hinter dem Knopf „🎵 Musik“ (nur für den, der abspielt); die Musik-Zeile zeigte nur Titel und Lautstärke, Zuhörer konnten gar nicht abschalten.
+- An der laufenden Musik stehen jetzt die Knöpfe: wer abspielt **⏸️ Pause / ▶️ Weiter · ⏮️ Von vorn · ⏹️ Aus**; die Leitung des Tisches **⏹️ Für alle aus** (stoppt bei allen, auch beim Abspielenden; startet nicht von selbst wieder); jeder **🔇 Für mich aus / 🔈 Für mich an** (nur das eigene Gerät).
+- Ist der Tisch gerade nicht zu sehen (z. B. im Chat), hängt unten eine kleine **🎵 Musik-Leiste** mit denselben Knöpfen.
+- Im Chat steht bei einem Lied jetzt „▶️ 🎵 Name“ statt „Sprachnachricht anhören“ (ohne Tempo-Knopf); Sprachnachrichten bleiben wie bisher.
+- Test: `tests/tisch-live.browser.mjs` (3 Fenster): Knöpfe je Rolle, „Für mich aus“ nur bei sich, „Für alle aus“ durch die Leitung kommt überall an und bleibt aus, Musik-Leiste unten. Rückweg: App 2.770.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.770.0 – 2026-10-30 – 🐞 Aktenschrank: Jalousie auch bei „Bewegung reduzieren“
 Fund Hansi (30.10.): „Jalousie-Effekt sieht man nicht. Aufklappen geht, aber keine Jalousien.“ – Sein Handy meldet „Bewegung reduzieren“; der Aktenschrank sprang dann ohne Jalousie auf und zu. Wie bei allen Effekten seit 2.409.0 zählt jetzt nur der App-Schalter „✨ Animierte Knöpfe“ (KC-CLUB-AKTENSCHRANK-JALOUSIE).
 

@@ -89,7 +89,7 @@ async function tlEmpfang(d) {
   if (d.typ === "da") {
     const war = TL.peers.get(d.von), neu = !war || Date.now() - war.zeit > TL_WEG_MS;
     tlUhr(d.von, d.t);
-    if (d.musik && (!TL.musik || TL.musik.von === d.von)) tlMusikEmpfangen(d.musik, d.von);
+    if (d.musik && (!TL.musik || TL.musik.von === d.von) && !(TL.musikAus?.a === d.musik.a && Date.now() < TL.musikAus.bis)) tlMusikEmpfangen(d.musik, d.von); // 2.771.0: gerade ausgeschaltet → nicht wieder starten
     TL.peers.set(d.von, { ...(war || {}), zeit: Date.now(), name: String(d.name || "").slice(0, 30), mic: !!d.mic, cam: !!d.cam, schirm: !!d.schirm, hand: !!d.hand });
     if (vomLeiter && "stab" in d) tlStabSetzen(d.stab || null);
     if (d.zeige && (!TL.zeige || TL.zeige.von === d.von)) tlZeigeEmpfangen(d.zeige, d.von);
@@ -403,7 +403,7 @@ function tlZeichnen() {
     const pid = v.dataset.cam, s = pid === TL.ich ? TL.cam : [...TL.pcs.values()].find((x) => !x.raus && x.an === pid && x.strom)?.strom;
     if (s) { v.srcObject = s; v.play?.().catch(() => {}); }
   });
-  tlBuehneZeichnen();
+  tlBuehneZeichnen(); tlMusikMini(); // 2.771.0: Musik-Leiste unten nur, wenn der Tisch nicht zu sehen ist
 }
 
 // ---- 🎵 Musik für alle (z. B. der Club-Song – Hansi: „ein externes Lied, nicht der Platzhalter-Song der Bühne“) ----
@@ -465,7 +465,8 @@ function tlMusikPause() {
   else tlMusikSetzen({ ...m, pause: Math.max(0, Date.now() - m.start) });
 }
 function tlMusikEmpfangen(m, von) {
-  if (!m) { if (TL.musik?.von === von) tlMusikAus(); tlZeichnen(); return; }
+  // 2.771.0 KC-CLUB-TISCH-MUSIK-STOPP: aus schaltet, wer abspielt – oder die Leitung des Tisches für alle
+  if (!m) { if (TL.musik && (TL.musik.von === von || von === tlTisch()?.gastgeber)) { if (TL.musik.von !== von) melde(`⏹️ ${tlName(von)} hat die Musik ausgeschaltet`); tlMusikAus(); } tlZeichnen(); return; }
   if (typeof m.a !== "string" || !/^[0-9a-f-]{36}$/i.test(m.a) || !Number(m.start)) return;
   const neu = TL.musik?.a !== m.a || TL.musik?.von !== von;
   TL.musik = { a: m.a, n: String(m.n || "Lied").slice(0, 80), start: tlInMeinerZeit(von, Number(m.start)), pause: m.pause == null ? null : Math.max(0, Number(m.pause) || 0), von };
@@ -478,6 +479,7 @@ async function tlMusikSpielen() {
   let el = document.getElementById("tlMusikTon");
   if (!m) { if (el) { el.pause(); el.remove(); } return; }
   if (!el) { el = document.createElement("audio"); el.id = "tlMusikTon"; el.preload = "auto"; el.setAttribute("playsinline", ""); el.hidden = true; document.body.appendChild(el); el.volume = TL.musikLaut ?? 0.8; }
+  el.muted = !!TL.musikStumm; tlMusikMini();
   try {
     if (TL.musikDatei?.a !== m.a) { // einmal laden (der Link gilt nur kurz) – dann aus dem Speicher spielen
       const { blob } = await anlageAlsDatei({ id: m.a, name: m.n }); if (lauf !== tlMusikLauf) return;
@@ -495,10 +497,36 @@ async function tlMusikSpielen() {
     if (warten > 0) { el.pause(); el.currentTime = 0; TL.musikUhr = setTimeout(los, warten); } else los();
   } catch (e) { if (lauf === tlMusikLauf) melde("🎵 Das Lied konnte nicht geladen werden – im Tisch-Chat liegt es auch.", true); }
 }
-function tlMusikAus() { clearTimeout(TL.musikUhr); tlMusikLauf++; TL.musik = null; const el = document.getElementById("tlMusikTon"); if (el) { el.pause(); el.remove(); } }
+function tlMusikAus() {
+  if (TL.musik) TL.musikAus = { a: TL.musik.a, bis: Date.now() + 15000 };
+  clearTimeout(TL.musikUhr); tlMusikLauf++; TL.musik = null; TL.musikStumm = false; const el = document.getElementById("tlMusikTon"); if (el) { el.pause(); el.remove(); }
+  tlMusikMini();
+}
+// 2.771.0 KC-CLUB-TISCH-MUSIK-STOPP (Fund Hansi 30.10.: „beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf“):
+// Die Knöpfe stehen jetzt direkt an der laufenden Musik – wer abspielt: ⏸️/▶️, ⏮️, ⏹️ Aus (für alle); die Leitung: ⏹️ Für alle aus;
+// jeder: 🔇 Für mich aus (nur das eigene Gerät). Ist der Tisch nicht offen (z. B. im Chat), hängt eine kleine Musik-Leiste unten am Bildschirm.
+function tlMusikKnoepfe(m, klein) {
+  const k = (fn, t, haupt) => `<button type="button" class="knopf klein${haupt ? " haupt" : ""}" onclick="${fn}">${t}</button>`;
+  const leiter = tlTisch()?.gastgeber === TL.ich, meins = m.von === TL.ich;
+  return [meins ? k("tlMusikPause()", m.pause != null ? "▶️ Weiter" : "⏸️ Pause", true) : "",
+    meins && !klein ? k("tlMusikSetzen({ ...TL.musik, start: Date.now() + TL_MUSIK_VORLAUF, pause: null })", "⏮️ Von vorn") : "",
+    meins ? k("tlMusikSetzen(null)", "⏹️ Aus") : leiter ? k("tlMusikFuerAlleAus()", "⏹️ Für alle aus") : "",
+    meins ? "" : k("tlMusikStumm()", TL.musikStumm ? "🔈 Für mich an" : "🔇 Für mich aus")].join("");
+}
+function tlMusikFuerAlleAus() { if (!TL.musik || tlTisch()?.gastgeber !== TL.ich) return; tlSende({ typ: "musik", musik: null, t: Date.now() }); tlMusikAus(); tlZeichnen(); melde("⏹️ Musik für alle aus"); }
+function tlMusikStumm() { TL.musikStumm = !TL.musikStumm; const el = document.getElementById("tlMusikTon"); if (el) el.muted = TL.musikStumm; tlZeichnen(); tlMusikMini(); }
+function tlMusikMini() {
+  const m = TL.musik, bereich = document.getElementById("tlBereich"), sichtbar = !!bereich && bereich.getClientRects().length > 0;
+  let el = document.getElementById("tlMusikMini");
+  if (!m || sichtbar) { el?.remove(); clearInterval(TL.musikMiniUhr); TL.musikMiniUhr = m ? setInterval(tlMusikMini, 1500) : null; return; }
+  if (!el) { el = document.createElement("div"); el.id = "tlMusikMini"; el.className = "tl-musik-mini"; el.setAttribute("role", "region"); el.setAttribute("aria-label", "Musik am Runden Tisch"); document.body.appendChild(el); }
+  el.innerHTML = `<span class="tl-musik-titel">🎵 <b>${esc(m.n)}</b>${m.pause != null ? " · ⏸️" : TL.musikStumm ? " · 🔇" : ""}</span><span class="tl-musik-knoepfe">${tlMusikKnoepfe(m, true)}</span>`;
+  if (!TL.musikMiniUhr) TL.musikMiniUhr = setInterval(tlMusikMini, 1500);
+}
 function tlMusikLaut(v) { TL.musikLaut = Math.max(0, Math.min(1, Number(v))); const el = document.getElementById("tlMusikTon"); if (el) el.volume = TL.musikLaut; }
 function tlMusikZeile() {
   const m = TL.musik;
-  return `<div class="tl-musik">🎵 <b>${esc(m.n)}</b> <small>· ${esc(m.von === TL.ich ? "du spielst" : tlName(m.von) + " spielt")}${m.pause != null ? " · ⏸️ Pause" : ""}</small>
+  return `<div class="tl-musik">🎵 <b>${esc(m.n)}</b> <small>· ${esc(m.von === TL.ich ? "du spielst" : tlName(m.von) + " spielt")}${m.pause != null ? " · ⏸️ Pause" : ""}${TL.musikStumm ? " · 🔇 bei dir aus" : ""}</small>
+    <div class="tl-musik-knoepfe">${tlMusikKnoepfe(m)}</div>
     <label class="tl-laut">🔈<input type="range" min="0" max="1" step="0.05" value="${TL.musikLaut ?? 0.8}" oninput="tlMusikLaut(this.value)" aria-label="Lautstärke Musik"></label></div>`;
 }
