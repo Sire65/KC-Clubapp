@@ -3031,7 +3031,7 @@
     #druck .anl-tipps { font-size: 11pt; margin: 4pt 0 0; padding-left: 14pt; } #druck .anl-tipps li { margin: 2pt 0; }
     /* 2.642.0 KC-CLUB-DP-DRUCK: Dienstplan-Übersicht, je Blatt A4 quer randlos; Tage als Zeilengruppen, halbe Stunden als Spalten */
     #druck:has(.dpd) { padding: 0 !important; width: 297mm !important; }
-    #druck .dpd { --ink: #1f1b18; --mut: #5d554e; --lin: #bdb5a8; --pref: #7fbf94; --avai: #cfe8d6; --ifn: #f6dc8f; --unav: #d9d4ce; --dienst: #1f5a3e; --ber: #3d5fa8; --berbg: #c9d5ee; --fehlt: #c62a1f; --fehltbg: #fbd0ca; --zu: #ebe8e3; color: var(--ink); font: 7pt/1.2 "Segoe UI", Roboto, Arial, sans-serif; }
+    #druck .dpd { --ink: #1f1b18; --mut: #5d554e; --lin: #bdb5a8; --pref: #dbe6f8; --avai: #e2f1e6; --ifn: #fdeec4; --unav: #f7d9d6; --dienst: #7d1727; --ber: #425b6e; --berbg: #dfe5ea; --fehlt: #c62a1f; --fehltbg: #fbd0ca; --zu: #ebe8e3; color: var(--ink); font: 7pt/1.2 "Segoe UI", Roboto, Arial, sans-serif; }
     #druck .dpd-blatt { box-sizing: border-box; width: 297mm; height: 210mm; padding: 7mm; overflow: hidden; break-after: page; background: #fff; }
     #druck .dpd-blatt:last-child { break-after: auto; }
     #druck .dpd-kopf { display: flex; justify-content: space-between; align-items: flex-end; gap: 4mm; flex-wrap: wrap; margin-bottom: 2mm; }
@@ -3039,7 +3039,7 @@
     #druck .dpd h1 { margin: 0; font: 700 12pt/1.2 Georgia, "Times New Roman", serif; color: #741521; }
     #druck .dpd-leg { display: flex; flex-wrap: wrap; gap: 1mm 3mm; font-size: 6.5pt; color: var(--mut); }
     #druck .dpd-leg i { display: inline-block; min-width: 5mm; height: 3mm; vertical-align: -.4mm; margin-right: 1mm; font: 700 6pt/3mm sans-serif; text-align: center; border: .2mm solid var(--lin); }
-    #druck .dpd-leg i.pref { background: var(--pref); } #druck .dpd-leg i.avai { background: var(--avai); } #druck .dpd-leg i.if_n { background: var(--ifn); } #druck .dpd-leg i.unav { background: var(--unav); }
+    #druck .dpd-leg i.pref { background: var(--pref); } #druck .dpd-leg i.avai { background: var(--avai); } #druck .dpd-leg i.if_n { background: var(--ifn); } #druck .dpd-leg i.unav { background: repeating-linear-gradient(135deg, var(--unav) 0 .8mm, #fceeed .8mm 1.6mm); }
     #druck .dpd-leg i.dienst { background: var(--dienst); } #druck .dpd-leg i.ber { background: repeating-linear-gradient(45deg, var(--ber) 0 .6mm, #fff .6mm 1.4mm); } #druck .dpd-leg i.fehlt { background: var(--fehltbg); color: var(--fehlt); } #druck .dpd-leg i.zu { background: var(--zu); }
     #druck .dpd-raster { border-collapse: collapse; table-layout: fixed; width: 100%; font-size: 6.5pt; }
     #druck .dpd.breit .dpd-raster { font-size: 7.5pt; }
@@ -3059,7 +3059,7 @@
     #druck .dpd-raster td { position: relative; overflow: visible; text-align: center; white-space: nowrap; }
     #druck .dpd-raster td.zu { background: var(--zu); }
     #druck .dpd-raster td.pref { background: var(--pref); } #druck .dpd-raster td.avai { background: var(--avai); } #druck .dpd-raster td.if_n { background: var(--ifn); }
-    #druck .dpd-raster td.unav { background: var(--unav); color: var(--mut); }
+    #druck .dpd-raster td.unav { background: repeating-linear-gradient(135deg, var(--unav) 0 .8mm, #fceeed .8mm 1.6mm); color: var(--mut); } /* KC-CLUB-DP-FARBEN-DP2: Farben wie in Twinkey/DP2 – Wunsch blau, Kann grün, Nur wenn nötig gelb, Sperrzeit rot gestreift, Dienst bordeaux, Bereitschaft schiefergrau */
     #druck .dpd-raster td.dienst { box-shadow: inset 0 1.1mm 0 var(--dienst), inset 0 -1.1mm 0 var(--dienst); }
     #druck .dpd-raster td.dienst.anf { box-shadow: inset 0 1.1mm 0 var(--dienst), inset 0 -1.1mm 0 var(--dienst), inset .8mm 0 0 var(--dienst); }
     #druck .dpd-raster td.dienst.end { box-shadow: inset 0 1.1mm 0 var(--dienst), inset 0 -1.1mm 0 var(--dienst), inset -.8mm 0 0 var(--dienst); }
