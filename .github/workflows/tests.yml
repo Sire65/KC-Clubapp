@@ -59,6 +59,7 @@ jobs:
       - run: node tests/aktentasche-freigeben.test.mjs
       # KC-CLUB-ABLAGEKORB-EINGANG, KC-CLUB-EINGANG-WEITER (2.743.0)
       - run: node tests/ablagekorb-eingang.test.mjs
+      - run: node tests/einlesen-eingang.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs
       - run: node tests/sitzung-aufgaben.test.mjs

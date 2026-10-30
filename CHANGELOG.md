@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.779.0 – 2026-10-30 – 👥 Büro: Eingelesenes in die Eingangskörbe der Mitglieder legen (KC-CLUB-EINLESEN-EINGANG) · nur App
+Wunsch Hansi (30.10.): „Wenn ich im Büro einlese, z. B. ein PDF, möchte ich es in die Eingangskörbe von Mitgliedern legen können – wieder mit der bekannten Wahl Alle, Gruppe, bestimmte. Die können es dann bei sich in die Ordner legen.“
+- **Büro → 📥 Einlesen → „Wohin damit?“** hat für die Clubleitung den neuen Knopf **„👥 In die Eingangskörbe von Mitgliedern“**. Dateien anhaken, „An wen?“ (Alle, Gruppe, Amt, bestimmte – dieselbe Wahl wie bei Aktentasche und Ablagekorb), Ablage-Vorschlag und kurze Nachricht – senden. Jeder bekommt einen Hinweis und legt die Datei in seinem Archiv-Ordner ab.
+- **Für jeden eine eigene Datei** (z. B. je Person eine Versicherung): nur die eine Datei anhaken, die Person wählen, senden – danach kommt „Wohin damit?“ mit den übrigen Dateien zurück.
+- Vorhandener Server-Kern `archiv_eingang_verteilen` (nur Clubleitung, prüft Dateiart und Größe) – Server unverändert. Die bisherigen Wege (Ordner, Eingangskorb, Nachricht, E-Mail) bleiben.
+- Neuer Hilfe-Eintrag „Eingelesenes in die Eingangskörbe der Mitglieder legen“. Tests: `tests/einlesen-eingang.test.mjs`, Klick-Rundgang. Rückweg: App 2.778.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.778.0 – 2026-10-30 – ⏳ Runder Tisch: Countdown bis zum Beginn und Restzeit-Uhr (KC-CLUB-RUNDER-TISCH-UHR) · nur App
 Wunsch Hansi (30.10.): „Einen Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine Runterzähl-Uhr, wie lange der Tisch noch laufen wird.“ Noch nur Admin zum Testen.
 - **Vor Beginn:** „⏳ beginnt in 12:34“ (ab 1 Std. „2 Std. 05 Min.“, ab 1 Tag „3 Tagen“) – am Tisch groß oben, in der Tischmitte, auf der Startseiten-Karte und in der Liste (ab 24 Std. vorher).
