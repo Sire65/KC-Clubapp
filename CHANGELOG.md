@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.788.0 – 2026-10-30 – 🛡️ Dienstwünsche: kein Selbst-Update mehr mitten in der Eingabe (KC-CLUB-UPDATE-DW-SCHUTZ) · nur App
+Fund Hansi (30.10.): „Ein Kollege ist beim Eintragen seiner Zeiten ohne Assistent mehrmals rausgeflogen – scheinbar kamen gleichzeitig Nachrichten oder Updates.“
+- **Ursache:** Die App aktualisiert sich alle 10 Min. von selbst, wenn sie glaubt, dass gerade nichts eingegeben wird. Die Dienstwünsche (Twinkey) laufen aber in einem eigenen Vollbild-Fenster mit eingebetteter Seite – die Prüfung sah dort weder das Fenster noch die Eingaben. An Tagen mit mehreren neuen Versionen lud die App deshalb mitten in der Eingabe neu.
+- **Behoben an der Quelle:** Offene Dienstwünsche und jede Eingabe in einer eingebetteten Seite zählen jetzt als angefangene Arbeit (`arbeitOffen`) – kein Selbst-Update, weder mitten in der Benutzung noch direkt nach dem Öffnen. Nach dem Schließen aktualisiert sich die App wie gewohnt. DP2/Twinkey selbst unverändert.
+- Tests: `tests/update-dw-schutz.test.mjs`, Klick-Rundgang (ohne Korrektur: Update mitten in den Dienstwünschen nachgestellt; mit Korrektur: keins). Rückweg: App 2.787.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.787.0 – 2026-10-30 – 🎃 Halloween-Tag: bei allen von 0 bis 24 Uhr (KC-CLUB-HALLOWEEN-FUER-ALLE)
 Wunsch Hansi (30.10.): „Am Halloween-Tag bei allen das Thema Halloween einschalten, nachts um 0 Uhr – und um die nächste 0 Uhr wieder ausschalten.“ Eingespielt zum 20-Uhr-Termin (auf dem Arbeitszweig als 2.765.0 gebaut; die Nummern 2.765.0 und 2.786.0 hatten inzwischen andere Sitzungen vergeben).
 - Am **31.10. von 0:00 bis 24:00 Uhr (deutsche Zeit)** gilt auf jedem Gerät das vorhandene Thema 🎃 Halloween (Farben, Grusel-Schrift, Szene im Kopf, Sende-Effekt) – vor Club-Thema, „Nach Kalender“ und eigener Wahl, auch bei „Kein Thema“.

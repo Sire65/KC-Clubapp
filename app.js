@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.787.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.788.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -33747,7 +33747,12 @@ function updateRuhig() {
 const etwasGetippt = () => [...document.querySelectorAll("textarea, input[type=text], input:not([type])")].some((el) => el.offsetParent && el.value.trim());
 // 2.425.0 KC-CLUB-GENERALCHECK: auch Gesammeltes zählt als angefangene Arbeit – sonst löschte ein Update beim Zurückkehren (z. B. aus dem Banking)
 // die Positionen eines Erstattungsantrags (die Felder sind nach „Hinzufügen“ leer) und ausgewählte, noch nicht hochgeladene Fotos
-const arbeitOffen = () => { try { return etwasGetippt() || ERS.pos.length > 0 || (faDateien.length > 0 && !$("fotoForm")?.classList.contains("versteckt")); } catch { return true; } };
+// 2.788.0 KC-CLUB-UPDATE-DW-SCHUTZ (Fund Hansi 30.10.: „beim Eintragen der Zeiten ohne Assistent mehrmals rausgeflogen“): die Dienstwünsche (Twinkey)
+// laufen in einem eigenen Vollbild-Fenster mit eingebetteter Seite – die Prüfung oben sieht dort weder Fenster noch Eingaben. Darum zählen
+// offene Dienstwünsche und jede Eingabe in einer eingebetteten Seite (Fokus im iframe) als angefangene Arbeit: kein Selbst-Update, auch nicht direkt nach dem Öffnen.
+const UPDATE_SPERRE_SEL = ["#dwFenster"]; // Vollbild-Fenster ohne .blatt, in denen gearbeitet wird
+const eingebettetOffen = () => UPDATE_SPERRE_SEL.some((s) => document.querySelector(s)) || document.activeElement?.tagName === "IFRAME";
+const arbeitOffen = () => { try { return etwasGetippt() || eingebettetOffen() || ERS.pos.length > 0 || (faDateien.length > 0 && !$("fotoForm")?.classList.contains("versteckt")); } catch { return true; } };
 // KC-CLUB-UPDATE-START (2.24.2, Wunsch Hansi, Fund: Update kam bei kurzen Besuchen erst beim übernächsten Öffnen an):
 // gleich nach dem Öffnen (erste 20 s, auch beim Zurückholen nach ≥ 2 Min.) und solange noch nichts angetippt/getippt wurde,
 // lädt die App ein gefundenes Update SOFORT – auch wenn die App selbst schon ein Fenster/Hinweis geöffnet hat.
