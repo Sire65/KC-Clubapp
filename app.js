@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.783.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.784.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25505,7 +25505,7 @@ const okFrei = (m) => !okAus(m);
 const sammelOk = (m) => !m?.nurGezielt;
 const okAttr = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' disabled title="Möchte keine Benachrichtigungen"' : "");
 const okKl = (m, gewaehlt = false) => (okAus(m) && !gewaehlt ? ' class="ok-grau"' : "");
-const okZusatz = (m) => (okAus(m) ? ' <small class="ok-hinweis">📵 keine Benachrichtigungen</small>' : "");
+const okZusatz = (m) => (okAus(m) ? ' <small class="ok-hinweis">📵 keine Benachrichtigungen</small>' : m?.passiv ? ' <small class="ok-hinweis">💤 passiv</small>' : ""); // 2.784.0 KC-CLUB-PASSIV
 const empfGruppe = (a) => MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && okFrei(m) && ((a !== "*" && a !== "@online") || sammelOk(m)) && (a === "*" || (a === "@online" ? (m.online || ONL.ids.has(m.person_id)) : (m.aemter || []).includes(a)))).map((m) => m.person_id);
 const empfTest = () => empfWahl.personen.length === 1 && empfWahl.personen[0] === ICH.person_id;
 function empfListe() {
@@ -32401,7 +32401,8 @@ async function druckTreffen(id) {
   const ort = t.ort || (t.gastgeber ? "bei " + t.gastgeber.name : ""), va = t.art === "veranstaltung";
   const antwort = { ja: "✅ kommt", vielleicht: "❓ vielleicht", nein: "❌ kann nicht" };
   const tn = new Map(t.teilnahme.map((x) => [x.person_id, x]));
-  const reihen = [...MITGLIEDER].sort((a, b) => { const r = (p) => ({ ja: 0, vielleicht: 1, nein: 3 })[tn.get(p.person_id)?.antwort] ?? 2; return r(a) - r(b) || a.name.localeCompare(b.name); });
+  // KC-CLUB-PASSIV (2.784.0): Passive nur, wenn sie geantwortet haben
+  const reihen = MITGLIEDER.filter((m) => !m.passiv || tn.has(m.person_id)).sort((a, b) => { const r = (p) => ({ ja: 0, vielleicht: 1, nein: 3 })[tn.get(p.person_id)?.antwort] ?? 2; return r(a) - r(b) || a.name.localeCompare(b.name); });
   const mf = t.mitfahrten || [];
   return { titel: va ? t.titel : `Teilnehmerliste – ${t.titel}`, unter: `${zeitText(t)}${ort ? " · " + ort : ""}`,
     html: `${t.beschreibung ? `<p style="white-space:pre-wrap">${esc(t.beschreibung)}</p>` : ""}
@@ -33218,7 +33219,8 @@ function rolleBearbeiten(pid) {
     <div class="hl-frage">Ämter</div><div class="bu-haken-liste">${liste.map((a) => `<label class="bu-haken"><input type="checkbox" class="roAmt" value="${esc(a)}" ${(m.aemter || []).includes(a) ? "checked" : ""}> ${esc(a)}</label>`).join("")}</div>
     <label class="feld">Weiteres Amt (freiwillig)<input id="roNeu" maxlength="40" placeholder="z. B. Beisitzer"></label>
     <div class="hl-frage">Zugang</div>
-    <div class="ro-zugang">${[["mitglied", "👤 Mitglied", "alles wie bisher"], ["aushilfe", "🧑‍🍳 Aushilfe", "Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen · nichts von „an alle“"], ["gast", "🙋 Gast", "Termine, Nachrichten, SOS, Spiele · nichts von „an alle“"]].map(([w, t, h]) =>
+    <div class="ro-zugang">${[["mitglied", "👤 Mitglied", "alles wie bisher"], ["aushilfe", "🧑‍🍳 Aushilfe", "Termine, Nachrichten, SOS, Spiele, Mein Dienst, Fotos ansehen · nichts von „an alle“"], ["gast", "🙋 Gast", "Termine, Nachrichten, SOS, Spiele · nichts von „an alle“"],
+      ["passiv", "💤 Passiv", "bleibt Mitglied, App wie bisher · keine Einladungen, nichts von „an alle“ · zählt bei Treffen nicht als „noch offen“"]].map(([w, t, h]) =>
       `<label class="bu-haken" title="${h}"><input type="radio" name="roZugang" value="${w}" ${(m.zugang || "mitglied") === w ? "checked" : ""}> ${t}<small class="hinweis" style="display:block;margin-left:24px">${h}</small></label>`).join("")}</div>
     <div class="hl-frage">Rechte</div>
     ${schalter("roLeitung", "Termine & Abstimmungen anlegen", "Termine, Veranstaltungen und Abstimmungen anlegen (Clubleitung)", !!m.vorstand)}

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.784.0 – 2026-10-30 – 💤 Passive Mitglieder (KC-CLUB-PASSIV) · Server 2.784.0
+Wunsch Hansi (30.10.): „Fridbert kommt nicht, macht nichts mit, ist aber weiterhin Mitglied – also passiv. Er soll auch keine Einladungen zu Treffen bekommen usw.“
+- Neue Zugangsart **💤 Passiv** (Mitglieder → Rolle bearbeiten → Zugang): bleibt Mitglied, die App funktioniert für ihn wie bisher. Er bekommt aber nichts von „an alle“ – keine Einladungen zu Treffen und Sitzungen, keine Erinnerungen „bitte noch antworten“, keine Rundnachrichten (wie bei Aushilfen). Einzeln angeschrieben bekommt er weiter Nachrichten.
+- Bei Treffen zählt er nicht mehr als „noch offen“ (Meldung an die Gastgeberin, Sitzungs-Zahlen, Teilnehmerliste zum Ausdrucken). Antwortet er doch einmal, steht er ganz normal dabei.
+- In Empfänger-Listen steht „💤 passiv“ hinter dem Namen.
+- **Fridbert Köhling** ist auf passiv gestellt (Migration `20261030_kc_club_passiv.sql`, Test `tools/db-test/102`). Tests: `tests/passiv.test.mjs`. Rückweg: App und Server 2.783.0 (passiv zählt dann wie „Mitglied“).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.783.0 – 2026-10-30 – ✍️ Protokoll: Schriftführer „wird noch geklärt“ (KC-CLUB-PROTOKOLL-SCHREIBER-OFFEN) · Server 2.783.0
 Wunsch Hansi (30.10.): „Wenn das Protokoll geöffnet wird, steht da, dass ich es schreibe – das steht aber nicht fest. Da muss ‚wird noch geklärt‘ hin bzw. die Zeile erst mal leer lassen.“
 - Neue Protokoll-Entwürfe haben keinen Schriftführer mehr vorbelegt: Auswahl **„— wird noch geklärt —“**, im Ausdruck bleibt die Zeile „Schriftführer“ leer, in Liste/Ansicht steht „Schriftführer noch offen“. Sobald jemand gewählt ist, erscheint der Name wie bisher.
