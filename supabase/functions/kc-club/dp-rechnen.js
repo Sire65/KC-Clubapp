@@ -23,7 +23,9 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // eingeplant ist, hat am nächsten Tag frei.
 // 2.722.0 (Wunsch Hansi „Leon als Aushilfe abends mit Anne, aber nicht nur“, „Hinweis im Plan“): personen[].begleitet = so viele andere müssen
 // in jeder halben Stunde seines Dienstes mit da sein; personen[].hinweis erscheint im Plan neben dem Namen (z. B. „nur mit anderen“).
-export const DP_REGEL = 5;
+// 2.7xx KC-CLUB-DP-BEREITSCHAFT-WEIT (Wunsch Hansi 30.10. „Willfried kommt von Hamm nicht für eine Stunde“): wer weit fährt (Mindestdienst, z. B. 3 Std.),
+// bekommt auch keine Bereitschaft, die kürzer ist als sein Mindestdienst – dann ist der/die Nächste in der Reihe dran.
+export const DP_REGEL = 6;
 
 export function dpRechnen(e) {
   const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;
@@ -158,7 +160,8 @@ export function dpRechnen(e) {
     const fenster = best ? [best[0], best[1]] : kind.get(d) === "Markttag" && S.length ? [Math.max(S[0], S[S.length - 1] + H - 6), S[S.length - 1] + H] : null;
     if (!fenster) return [];
     const imDienst = (n) => (plan.get(d) || []).some(([x, a, b]) => x === n && a < fenster[1] && fenster[0] < b), gesperrt = (n) => slots(fenster[0], fenster[1]).some((s) => un.get(k2(n, d))?.has(s));
-    const c = e.bereitschaftAuto.filter((x) => !(x.nein || []).includes(d) && !imDienst(x.key) && !gesperrt(x.key) && !ruhetag(x.key, d)) // am freien Tag auch keine Bereitschaft
+    const lang = fenster[1] - fenster[0], kurzFuer = (x) => lang < Math.max(Number(x.minDienst) || 0, lim(x.key).minDienst) - 1e-9; // KC-CLUB-DP-BEREITSCHAFT-WEIT
+    const c = e.bereitschaftAuto.filter((x) => !(x.nein || []).includes(d) && !imDienst(x.key) && !gesperrt(x.key) && !ruhetag(x.key, d) && !kurzFuer(x)) // am freien Tag auch keine Bereitschaft
       .sort((x, y) => (berZahl.get(x.key) || 0) - (berZahl.get(y.key) || 0) || (hours.get(x.key) || 0) - (hours.get(y.key) || 0) || vgl(x.key, y.key))[0]; // reihum, dann wer weniger Stunden hat
     if (c) berZahl.set(c.key, (berZahl.get(c.key) || 0) + 1);
     return c ? [{ n: full.get(c.key) || c.name || c.key, s: fenster }] : [];

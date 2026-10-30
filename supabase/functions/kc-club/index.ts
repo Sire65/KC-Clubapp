@@ -4889,6 +4889,7 @@ async function dpDruckNeu(adminId: string) {
   const bereitschaftAuto = konf.bereitschaftAuto === false ? undefined : (wRoh ?? []).filter((w: any) => { const pid = String(w.person_id);
       return w.standby_general === true && (pid !== adminId || pk[pid]?.bereitschaft === true) && pk[pid]?.keineBereitschaft !== true && !aus(pid) && !pid.startsWith("KC-P-TEST"); })
     .map((w: any) => ({ key: dpKurzname(name.get(String(w.person_id)) || String(w.person_id)), name: name.get(String(w.person_id)) || String(w.person_id),
+      ...((kmVon.get(String(w.person_id)) ?? 0) >= grenzeKm ? { minDienst: minWeit } : {}), // KC-CLUB-DP-BEREITSCHAFT-WEIT: weite Anfahrt → keine kurze Bereitschaft
       nein: Object.entries(w.standby && typeof w.standby === "object" ? w.standby : {}).filter(([, v]: any) => v?.answer === "no").map(([d]) => d) }));
   const ergebnis = dpRechnen({
     tage: (tageRoh ?? []).map((t: any) => ({ d: String(t.work_date), art: t.day_type === "market" ? "Markttag" : t.day_type === "prep" ? "Aufbau" : String(t.label || "Nachbereitung"),
