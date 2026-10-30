@@ -23,7 +23,7 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // eingeplant ist, hat am nächsten Tag frei.
 // 2.722.0 (Wunsch Hansi „Leon als Aushilfe abends mit Anne, aber nicht nur“, „Hinweis im Plan“): personen[].begleitet = so viele andere müssen
 // in jeder halben Stunde seines Dienstes mit da sein; personen[].hinweis erscheint im Plan neben dem Namen (z. B. „nur mit anderen“).
-// 2.785.0 KC-CLUB-DP-BEREITSCHAFT-WEIT (Wunsch Hansi 30.10. „Willfried kommt von Hamm nicht für eine Stunde“): wer weit fährt (Mindestdienst, z. B. 3 Std.),
+// 2.7xx KC-CLUB-DP-BEREITSCHAFT-WEIT (Wunsch Hansi 30.10. „Willfried kommt von Hamm nicht für eine Stunde“): wer weit fährt (Mindestdienst, z. B. 3 Std.),
 // bekommt auch keine Bereitschaft, die kürzer ist als sein Mindestdienst – dann ist der/die Nächste in der Reihe dran.
 export const DP_REGEL = 6;
 

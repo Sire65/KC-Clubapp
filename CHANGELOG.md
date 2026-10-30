@@ -1,8 +1,5 @@
 # Änderungen
 
-## 2.785.0 – 2026-10-30 – 📄 Einzelplan je Person · Dienstplan-Farben wie Twinkey · keine kurze Bereitschaft für Weitfahrer
-- 📄 Unter 🗓️ Mein Dienst gibt es den eigenen Einzelplan (A4 quer): Regelzeit je Tag, eigene Dienste, Bereitschaft und Wünsche, Summe der Stunden und unten der Hinweis auf die Tauschbörse; der Admin kann jede Person wählen und drucken (KC-CLUB-DP-EINZELPLAN). 🎨 Dienstplan-Druck in denselben Farben wie Twinkey/DP2: Wunsch blau, Kann grün, Nur wenn nötig gelb, Sperrzeit rot, Dienst bordeaux, Bereitschaft schiefergrau (KC-CLUB-DP-FARBEN-DP2). 🚗 Wer weit fährt, bekommt keine Bereitschaft, die kürzer ist als sein Mindestdienst (KC-CLUB-DP-BEREITSCHAFT-WEIT).
-
 ## 2.783.0 – 2026-10-30 – ✍️ Protokoll: Schriftführer „wird noch geklärt“ (KC-CLUB-PROTOKOLL-SCHREIBER-OFFEN) · Server 2.783.0
 Wunsch Hansi (30.10.): „Wenn das Protokoll geöffnet wird, steht da, dass ich es schreibe – das steht aber nicht fest. Da muss ‚wird noch geklärt‘ hin bzw. die Zeile erst mal leer lassen.“
 - Neue Protokoll-Entwürfe haben keinen Schriftführer mehr vorbelegt: Auswahl **„— wird noch geklärt —“**, im Ausdruck bleibt die Zeile „Schriftführer“ leer, in Liste/Ansicht steht „Schriftführer noch offen“. Sobald jemand gewählt ist, erscheint der Name wie bisher.
