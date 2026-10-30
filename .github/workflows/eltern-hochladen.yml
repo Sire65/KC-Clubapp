@@ -16,13 +16,13 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       PROJEKT: ptblnpiroqftcvlsrhac
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       # KC-CLUB-RC-PRUEFUNG (20.10.2026): alle Tests – ein roter Test verhindert das Hochladen
       - run: for t in tests/*.test.mjs; do node "$t" || exit 1; done
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
         with:
           version: 2.118.0
       - name: Edge Function hochladen

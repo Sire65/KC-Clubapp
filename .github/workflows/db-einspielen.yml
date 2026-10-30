@@ -47,8 +47,8 @@ jobs:
       MODUS: ${{ inputs.modus }}
       AUFTRAG: supabase/functions/kc-db-einspielen/auftrag.ts
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       - run: node tests/app-vertrag.test.mjs
@@ -59,7 +59,7 @@ jobs:
           if [ -n "$TESTDATEI" ]; then case "$TESTDATEI" in tools/db-test/*.sql) test -f "$TESTDATEI";; *) echo "Testdatei nur aus tools/db-test"; exit 1;; esac; fi
           if [ -n "$ERWARTET" ]; then case "$ERWARTET" in tools/db-test/*) test -f "$ERWARTET";; *) exit 1;; esac; fi
           case "$MODUS" in pruefen|einspielen) ;; *) echo "modus: pruefen oder einspielen"; exit 1;; esac
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
         with:
           version: 2.118.0
       - name: Auftrag schreiben und Funktion hochladen

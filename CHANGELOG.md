@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.786.0 – 2026-10-30 – 📅 Tagesnamen im Dienstplan · 🔒 GitHub-Bausteine festgeschrieben
+- 📅 Dienstplan und Einzelplan nennen die Tage Aufbau · WM (Weihnachtsmarkt) · Wochenmarkt (Di und Fr) · Nikolaus (nur 06.12.) · Nachbereitung (KC-CLUB-DP-MARKTNAME). 🔒 Jeder fremde Baustein in den GitHub-Abläufen läuft mit einer festen, geprüften Fassung – ein Anbieter kann ihn nicht mehr heimlich ändern (KC-CLUB-ACTIONS-FEST).
+
 ## 2.785.0 – 2026-10-30 – 📄 Einzelplan je Person · Dienstplan-Farben wie Twinkey · keine kurze Bereitschaft für Weitfahrer
 - 📄 Unter 🗓️ Mein Dienst gibt es den eigenen Einzelplan (A4 quer): Regelzeit je Tag, eigene Dienste, Bereitschaft und Wünsche, Summe der Stunden und unten der Hinweis auf die Tauschbörse; der Admin kann jede Person wählen und drucken (KC-CLUB-DP-EINZELPLAN). 🎨 Dienstplan-Druck in denselben Farben wie Twinkey/DP2: Wunsch blau, Kann grün, Nur wenn nötig gelb, Sperrzeit rot, Dienst bordeaux, Bereitschaft schiefergrau (KC-CLUB-DP-FARBEN-DP2). 🚗 Wer weit fährt, bekommt keine Bereitschaft, die kürzer ist als sein Mindestdienst (KC-CLUB-DP-BEREITSCHAFT-WEIT).
 
