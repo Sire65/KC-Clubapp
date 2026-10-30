@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const MUSIK = "dddddddd-2222-3333-4444-555555555555"; // 🎵 Testlied = simjue-orgel.mp3 aus dem Repo
 const TISCH = "aaaaaaaa-2222-3333-4444-555555555555", CHAT = "bbbbbbbb-2222-3333-4444-555555555555", PDF = "cccccccc-2222-3333-4444-555555555555";
 const LIVE = { kanal: "kc-fh-" + "ab".repeat(16), schluessel: Buffer.alloc(32, 7).toString("base64") };
 const LEUTE = [{ id: "KC-P-LIVE-A", name: "Anna Probe" }, { id: "KC-P-LIVE-B", name: "Bernd Probe" }, { id: "KC-P-LIVE-C", name: "Carla Probe" }];
@@ -66,7 +67,7 @@ try {
             einstellungen: { begruessung: { gesehen: true }, unterstuetzung: "normal", einweisung: { an: false, gesehen: {} }, spiel_einladung: { an: false }, ansicht: { art: "erweitert", gewaehlt: true }, einladung: { aus: true } },
             mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {}, kacheln: null, freigaben: { runder_tisch: "alle" } },
           tisch_liste: lage(p.id), tisch_platz: { ok: true, ergebnis: "da", lage: lage(p.id), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) },
-          anlage_url: { url: `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
+          anlage_url: { url: body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
         }[a] ?? { ok: true };
         return r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(ant) });
       }
@@ -119,6 +120,17 @@ try {
   if (!schirm) melde("[Anna] Bildschirm zeigen hat nicht gestartet (getDisplayMedia)");
   else await warte(B, () => { const v = document.querySelector("#tlBuehne video.tl-gross"); return !!v && v.videoWidth > 0 && /Anna zeigt den Bildschirm/.test(document.querySelector("#tlBuehne")?.textContent || ""); }, null, 20000, "geteilter Bildschirm von Anna erscheint nicht groß");
   if (schirm) await A.seite.evaluate(() => tlSchirm());
+  // 7b. 🎵 Musik für alle: Anna spielt ein Lied – alle drei spielen es gleichzeitig (höchstens 0,35 s auseinander); Pause hält alle an
+  await A.seite.evaluate((m) => tlMusikSetzen({ a: m, n: "Club-Song.mp3", start: Date.now() + 3000, pause: null }), MUSIK);
+  for (const s of seiten) await warte(s, () => { const el = document.getElementById("tlMusikTon"); return !!el && !el.paused && el.currentTime > 1; }, null, 20000, "spielt das Lied nicht");
+  const pos = await Promise.all(seiten.map((s) => s.seite.evaluate(() => { const el = document.getElementById("tlMusikTon"); return { pos: el.currentTime, jetzt: Date.now() }; })));
+  const imTakt = pos.map((p) => p.pos - (p.jetzt - pos[0].jetzt) / 1000), spanne = Math.max(...imTakt) - Math.min(...imTakt);
+  if (!(spanne <= 0.35)) melde(`🎵 Lied läuft nicht gleichzeitig (Abstand ${spanne.toFixed(2)} s)`);
+  for (const s of [B, C]) if (!/Anna spielt/.test(await s.seite.evaluate(() => document.querySelector("#tlBereich .tl-musik")?.textContent || ""))) melde(`[${s.name}] 🎵 Anzeige „Anna spielt“ fehlt`);
+  await A.seite.evaluate(() => tlMusikPause());
+  for (const s of [B, C]) await warte(s, () => document.getElementById("tlMusikTon")?.paused === true, null, 8000, "🎵 Pause kommt nicht an");
+  await A.seite.evaluate(() => tlMusikSetzen(null));
+  for (const s of [B, C]) await warte(s, () => !document.getElementById("tlMusikTon") && !TL.musik, null, 8000, "🎵 Musik aus kommt nicht an");
   // 8. Redestab (Grenze im Test auf 2 gesetzt → bei 3 Personen gilt der Redestab): nur Anna (Leitung) spricht, Bernd meldet sich ✋,
   //    Anna gibt ihm den Stab → Bernd spricht, Anna hört ihn; Anna nimmt den Stab zurück → Bernd ist wieder stumm und sendet nicht mehr
   for (const s of seiten) await s.seite.evaluate(() => { TL.freiBis = 2; tlAufraeumen(); });
@@ -139,4 +151,4 @@ try {
 } finally { await browser.close(); server.close(); }
 
 if (fehler.length) { console.error("❌ Tisch-Live: " + fehler.length + " Fund(e)\n" + fehler.join("\n")); process.exit(1); }
-console.log("OK – Tisch-Live: 3 Fenster, Ton in alle Richtungen, Kamera, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm, Redestab + ✋");
+console.log("OK – Tisch-Live: 3 Fenster, Ton in alle Richtungen, Kamera, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm, 🎵 Musik gleichzeitig + Pause, Redestab + ✋");

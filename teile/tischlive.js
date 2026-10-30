@@ -11,7 +11,7 @@
 // Zustand unbekannt (kein Lebenszeichen seit TL_WEG_MS) wird grau gezeigt, nie als „da“ (Vertrag Regel 11). Keine Aufzeichnung.
 const TL_FREI = 6, TL_HERZ_MS = 15000, TL_WEG_MS = 45000, TL_VIDEO_KBIT = 2400, TL_MIN_KBIT = 150, TL_MAX_KBIT = 1000;
 const TL = { freiBis: TL_FREI, id: null, L: null, ich: null, live: false, mic: null, micAn: false, cam: null, schirm: null, hand: false, stab: null, peers: new Map(),
-  pcs: new Map(), zeige: null, folgen: true, seite: 1, pdf: null, pdfFuer: null, herz: null, ctx: null, pegel: new Map(), takt: null, mess: { pcs: 0, fehl: 0, relay: 0 }, root: null };
+  pcs: new Map(), musik: null, uhr: new Map(), zeige: null, folgen: true, seite: 1, pdf: null, pdfFuer: null, herz: null, ctx: null, pegel: new Map(), takt: null, mess: { pcs: 0, fehl: 0, relay: 0 }, root: null };
 // Reine Regeln (Test: tests/runder-tisch.test.mjs) – wer darf senden, welche Datenrate je Empfänger
 function tlRegeln(o) {
   const n = o.liveAnzahl, frei = n <= (o.freiBis ?? TL_FREI), leiter = o.ich === o.gastgeber, stab = o.stab === o.ich;
@@ -54,6 +54,7 @@ async function tlStopp(still) {
   api("diagnose", { art: "tisch_live", daten: { sek: dauer, pcs: TL.mess.pcs, fehl: TL.mess.fehl, relay: TL.mess.relay, max_live: TL.mess.max || 0 } }).catch(() => {}); // Messwerte (nur Zahlen)
   for (const k of [...TL.pcs.keys()]) tlPcZu(k);
   for (const s of [TL.mic, TL.cam, TL.schirm]) s?.getTracks().forEach((x) => x.stop());
+  tlMusikAus();
   clearInterval(TL.herz); clearInterval(TL.takt); TL.L?.schliessen();
   try { TL.ctx?.close(); } catch {}
   TL.pdf?.destroy?.();
@@ -68,7 +69,8 @@ function tlDa(neu) {
   if (!TL.live) return;
   const t = tlTisch();
   tlSende({ typ: "da", neu: neu ? 1 : 0, name: (ICH.vorname || ICH.name || "").split(" ")[0], mic: TL.micAn ? 1 : 0, cam: TL.cam ? 1 : 0, schirm: TL.schirm ? 1 : 0, hand: TL.hand ? 1 : 0,
-    ...(t?.gastgeber === TL.ich ? { stab: TL.stab || "" } : {}), ...(TL.zeige?.von === TL.ich ? { zeige: TL.zeige } : {}) });
+    ...(t?.gastgeber === TL.ich ? { stab: TL.stab || "" } : {}), ...(TL.zeige?.von === TL.ich ? { zeige: TL.zeige } : {}),
+    ...(TL.musik?.von === TL.ich ? { musik: tlMusikStand() } : {}), t: Date.now() });
 }
 function tlAufraeumen() {
   const jetzt = Date.now();
@@ -86,6 +88,8 @@ async function tlEmpfang(d) {
   const t = tlTisch(), vomLeiter = d.von === t?.gastgeber;
   if (d.typ === "da") {
     const war = TL.peers.get(d.von), neu = !war || Date.now() - war.zeit > TL_WEG_MS;
+    tlUhr(d.von, d.t);
+    if (d.musik && (!TL.musik || TL.musik.von === d.von)) tlMusikEmpfangen(d.musik, d.von);
     TL.peers.set(d.von, { ...(war || {}), zeit: Date.now(), name: String(d.name || "").slice(0, 30), mic: !!d.mic, cam: !!d.cam, schirm: !!d.schirm, hand: !!d.hand });
     if (vomLeiter && "stab" in d) tlStabSetzen(d.stab || null);
     if (d.zeige && (!TL.zeige || TL.zeige.von === d.von)) tlZeigeEmpfangen(d.zeige, d.von);
@@ -97,6 +101,7 @@ async function tlEmpfang(d) {
   if (d.typ === "stab" && vomLeiter) { tlStabSetzen(d.stab || null); tlZeichnen(); return; }
   if (d.typ === "zeige") { tlZeigeEmpfangen(d.zeige || null, d.von); return; }
   if (d.typ === "seite" && TL.zeige?.von === d.von) { TL.zeige.s = Math.max(1, Number(d.s) || 1); if (TL.folgen) { TL.seite = TL.zeige.s; tlBuehneZeichnen(); } return; }
+  if (d.typ === "musik") { tlUhr(d.von, d.t); return tlMusikEmpfangen(d.musik || null, d.von); }
   if (d.typ === "sdp" || d.typ === "ice" || d.typ === "zu") return tlSignal(d);
 }
 function tlStabSetzen(pid) {
@@ -208,7 +213,8 @@ function tlPcZu(k) {
   document.getElementById("tlTon_" + tlSicher(k))?.remove();
   tlZeichnen();
 }
-function tlPeerWeg(pid) { for (const [k, v] of TL.pcs) if (v.an === pid) tlPcZu(k); TL.pegel.delete(pid); if (TL.zeige?.von === pid) { TL.zeige = null; tlBuehneZeichnen(); } }
+function tlPeerWeg(pid) { if (TL.musik?.von === pid) tlMusikAus(); tlPeerWegAlt(pid); }
+function tlPeerWegAlt(pid) { for (const [k, v] of TL.pcs) if (v.an === pid) tlPcZu(k); TL.pegel.delete(pid); if (TL.zeige?.von === pid) { TL.zeige = null; tlBuehneZeichnen(); } }
 const tlSicher = (k) => String(k).replace(/[^A-Za-z0-9_-]/g, "_");
 function tlTonSpielen(k, strom) {
   let box = document.getElementById("tlTon"); if (!box) { box = document.createElement("div"); box.id = "tlTon"; box.hidden = true; document.body.appendChild(box); }
@@ -279,7 +285,7 @@ async function tlUnterlagen() {
 }
 async function tlTeilen(datei) {
   const t = tlTisch(); if (!t?.chat) return;
-  if (datei.size > 10 * 1024 * 1024) return melde("📎 Höchstens 10 MB je Datei.", true);
+  if (datei.size > 8 * 1024 * 1024) return melde("📎 Höchstens 8 MB je Datei.", true);
   try {
     melde(`⏳ ${datei.name} wird hochgeladen …`);
     const a = await anlageHochladen(datei);
@@ -378,6 +384,7 @@ function tlZeichnen() {
   box.innerHTML = `<div class="tl-kopf"><span class="tl-rot">🔴 Live</span> ${leute.length + 1} dabei · ${r.frei ? `offenes Gespräch (bis ${TL.freiBis} reden alle)` : `🥄 Redestab: ${esc(TL.stab ? tlName(TL.stab) : "nur die Leitung")}`}
       ${!TL.L?.ok ? ' · <span class="tl-warn">⏳ Leitung wird aufgebaut</span>' : ""}</div>
     ${hand.length && ichLeiter ? `<div class="tl-hand">✋ Gemeldet: ${esc(hand.join(", "))} – auf die Person tippen, um den Redestab zu geben.</div>` : ""}
+    ${TL.musik ? tlMusikZeile() : ""}
     <div id="tlBuehneHier"></div>
     <div id="tlLeute" class="tl-leute">${person(TL.ich, ich, false)}${alle.map(([pid, p]) => person(pid, p, Date.now() - p.zeit > TL_WEG_MS)).join("")}</div>
     <div class="tl-leiste">
@@ -385,6 +392,7 @@ function tlZeichnen() {
       <button class="knopf${TL.cam ? " haupt" : ""}" onclick="tlKamera()" ${r.darfSprechen ? "" : "disabled"}><span>📷</span>Kamera</button>
       ${tlSchirmGeht() ? `<button class="knopf${TL.schirm ? " haupt" : ""}" onclick="tlSchirm()" ${r.darfSprechen ? "" : "disabled"}><span>🖥️</span>Bildschirm</button>` : ""}
       <button class="knopf${TL.zeige?.von === TL.ich ? " haupt" : ""}" onclick="tlUnterlagen()"><span>📎</span>Zeigen</button>
+      <button class="knopf${TL.musik ? " haupt" : ""}" onclick="tlMusik()"><span>🎵</span>Musik</button>
       ${r.darfSprechen ? "" : `<button class="knopf${TL.hand ? " haupt" : ""}" onclick="tlHand()"><span>✋</span>${TL.hand ? "Gemeldet" : "Melden"}</button>`}
       <button class="knopf" onclick="tlStopp()"><span>⏹️</span>Live aus</button>
     </div>
@@ -396,4 +404,101 @@ function tlZeichnen() {
     if (s) { v.srcObject = s; v.play?.().catch(() => {}); }
   });
   tlBuehneZeichnen();
+}
+
+// ---- 🎵 Musik für alle (z. B. der Club-Song – Hansi: „ein externes Lied, nicht der Platzhalter-Song der Bühne“) ----
+// Das Lied ist eine Audiodatei (MP3 o. ä., höchstens 8 MB) vom Gerät oder aus dem Archiv. Sie kommt wie jede Unterlage in den Tisch-Chat
+// (alle dürfen sie laden), jedes Gerät lädt sie vorab und spielt sie selbst – es läuft kein Ton über die Leitung (spart Datenvolumen, klingt gut).
+// Gleichzeitig: Startzeit in der Uhr dessen, der abspielt; jedes Gerät rechnet sie mit dem gemessenen Uhrenabstand um (kleinster Wert aus den
+// Lebenszeichen = Uhrenabstand + kürzeste Laufzeit). Wer später kommt, steigt an der richtigen Stelle ein. Lautstärke stellt jeder selbst.
+const TL_MUSIK_VORLAUF = 3000, tlIstAudio = (name, mime) => /^audio\//.test(mime || "") || /\.(mp3|m4a|aac|ogg|oga|opus|wav)$/i.test(name || "");
+function tlUhr(pid, t) { const x = Number(t); if (!x) return; const d = Date.now() - x, alt = TL.uhr.get(pid); if (alt === undefined || d < alt) TL.uhr.set(pid, d); }
+const tlInMeinerZeit = (pid, t) => t + (TL.uhr.get(pid) ?? 0);
+const tlMusikStand = () => { const m = TL.musik; return m ? { a: m.a, n: m.n, start: m.start, pause: m.pause ?? null } : null; };
+async function tlMusik() {
+  const t = tlTisch(); if (!t?.chat) return;
+  if (TL.musik?.von === TL.ich) { // läuft von mir: Pause / weiter / aus
+    const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎵 ${esc(TL.musik.n)}</h3>
+      <div class="ca-wahl"><button type="button" class="knopf haupt" data-a="pause">${TL.musik.pause != null ? "▶️ Weiter" : "⏸️ Pause"}</button><button type="button" class="knopf" data-a="neu">⏮️ Von vorn</button><button type="button" class="knopf" data-a="aus">⏹️ Aus</button></div>`, () => f.remove());
+    f.querySelector('[data-a="zu"]').onclick = () => f.remove();
+    f.querySelector('[data-a="pause"]').onclick = () => { f.remove(); tlMusikPause(); };
+    f.querySelector('[data-a="neu"]').onclick = () => { f.remove(); tlMusikSetzen({ ...TL.musik, start: Date.now() + TL_MUSIK_VORLAUF, pause: null }); };
+    f.querySelector('[data-a="aus"]').onclick = () => { f.remove(); tlMusikSetzen(null); };
+    return;
+  }
+  if (!tlRegel().darfZeigen) return melde("🎵 Musik für alle startet im Redestab-Modus die Leitung oder wer den Redestab hat.", true);
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🎵 Musik für alle</h3>
+    <p class="dlg-text">Ein Lied (MP3, höchstens 8 MB) – alle hören es gleichzeitig. Es kommt in den Tisch-Chat.${TL.musik ? `<br>Gerade läuft: „${esc(TL.musik.n)}“ von ${esc(tlName(TL.musik.von))} – deins ersetzt es.` : ""}</p>
+    <div class="ca-wahl"><button type="button" class="knopf haupt" data-a="archiv">🗄️ Aus dem Archiv (z. B. Club-Song)</button><button type="button" class="knopf" data-a="geraet">📱 Vom Gerät</button></div>`, () => f.remove());
+  f.querySelector('[data-a="zu"]').onclick = () => f.remove();
+  f.querySelector('[data-a="geraet"]').onclick = () => { f.remove(); const inp = document.createElement("input"); inp.type = "file"; inp.accept = "audio/*,.mp3,.m4a,.ogg,.wav";
+    inp.onchange = () => { const d = inp.files?.[0]; if (d) tlMusikTeilen(d); }; inp.click(); };
+  f.querySelector('[data-a="archiv"]').onclick = async () => { f.remove(); let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
+    const docs = (r.dokumente || []).filter((d) => d.status === "ok" && d.datei && tlIstAudio(d.name, d.mime));
+    if (!docs.length) return melde("Im Archiv liegt noch kein Lied. Einmal ins Archiv legen (z. B. Ordner „Club-Song“), dann geht es mit einem Tipp.", true);
+    const b = blattAuf("tlArchivBlatt", `<h3 style="margin:0 0 6px">🎵 Welches Lied?</h3><div id="tlArchivListe"></div><div class="knoepfe bs-fuss"><button class="knopf" onclick="$('tlArchivBlatt').remove()">Abbrechen</button></div>`);
+    $("tlArchivListe").innerHTML = docs.slice(0, 60).map((d) => `<button type="button" class="knopf" style="text-align:left;width:100%;margin:3px 0" data-id="${esc(d.id)}">🎵 <b>${esc(d.titel || d.name)}</b></button>`).join("");
+    $("tlArchivListe").querySelectorAll("[data-id]").forEach((x) => (x.onclick = async () => { const d = docs.find((y) => y.id === x.dataset.id); b.remove();
+      try { melde("⏳ Lied wird geholt …"); const { blob, mime } = await anlageAlsDatei({ id: d.datei, name: d.name, mime: d.mime }); await tlMusikTeilen(new File([blob], d.name || "Lied.mp3", { type: mime || blob.type || "audio/mpeg" })); }
+      catch (e) { meldeFehler(e); } })); };
+}
+async function tlMusikTeilen(datei) {
+  const t = tlTisch(); if (!t?.chat) return;
+  if (!tlIstAudio(datei.name, datei.type)) return melde("🎵 Bitte eine Musikdatei wählen (MP3, M4A, OGG, WAV).", true);
+  if (datei.size > 8 * 1024 * 1024) return melde("🎵 Höchstens 8 MB je Lied.", true);
+  try {
+    melde(`⏳ ${datei.name} wird hochgeladen …`);
+    const a = await anlageHochladen(datei);
+    await api("nachricht_senden", { id: t.chat, text: `🎵 Musik für alle: ${datei.name}`, anlagen: [a.id], wege: [] });
+    TL.musikDatei = { a: a.id, url: URL.createObjectURL(datei) }; // ich habe die Datei schon
+    tlMusikSetzen({ a: a.id, n: String(datei.name).slice(0, 80), start: Date.now() + TL_MUSIK_VORLAUF, pause: null });
+    melde("🎵 Gleich hören alle: " + datei.name);
+  } catch (e) { meldeFehler(e); }
+}
+function tlMusikSetzen(m) {
+  TL.musik = m ? { ...m, von: TL.ich } : null;
+  tlSende({ typ: "musik", musik: tlMusikStand(), t: Date.now() }); tlMusikSpielen(); tlZeichnen();
+}
+function tlMusikPause() {
+  const m = TL.musik; if (!m || m.von !== TL.ich) return;
+  if (m.pause != null) tlMusikSetzen({ ...m, start: Date.now() + 600 - m.pause, pause: null }); // weiter ab der Pausenstelle
+  else tlMusikSetzen({ ...m, pause: Math.max(0, Date.now() - m.start) });
+}
+function tlMusikEmpfangen(m, von) {
+  if (!m) { if (TL.musik?.von === von) tlMusikAus(); tlZeichnen(); return; }
+  if (typeof m.a !== "string" || !/^[0-9a-f-]{36}$/i.test(m.a) || !Number(m.start)) return;
+  const neu = TL.musik?.a !== m.a || TL.musik?.von !== von;
+  TL.musik = { a: m.a, n: String(m.n || "Lied").slice(0, 80), start: tlInMeinerZeit(von, Number(m.start)), pause: m.pause == null ? null : Math.max(0, Number(m.pause) || 0), von };
+  if (neu) melde(`🎵 ${tlName(von)} spielt für alle: ${TL.musik.n}`);
+  tlMusikSpielen(); tlZeichnen();
+}
+let tlMusikLauf = 0;
+async function tlMusikSpielen() {
+  const m = TL.musik, lauf = ++tlMusikLauf;
+  let el = document.getElementById("tlMusikTon");
+  if (!m) { if (el) { el.pause(); el.remove(); } return; }
+  if (!el) { el = document.createElement("audio"); el.id = "tlMusikTon"; el.preload = "auto"; el.setAttribute("playsinline", ""); el.hidden = true; document.body.appendChild(el); el.volume = TL.musikLaut ?? 0.8; }
+  try {
+    if (TL.musikDatei?.a !== m.a) { // einmal laden (der Link gilt nur kurz) – dann aus dem Speicher spielen
+      const { blob } = await anlageAlsDatei({ id: m.a, name: m.n }); if (lauf !== tlMusikLauf) return;
+      if (TL.musikDatei?.url) URL.revokeObjectURL(TL.musikDatei.url);
+      TL.musikDatei = { a: m.a, url: URL.createObjectURL(blob) };
+    }
+    if (el.dataset.a !== m.a) { el.src = TL.musikDatei.url; el.dataset.a = m.a; await new Promise((ok) => { if (el.readyState >= 1) ok(); else { el.onloadedmetadata = ok; el.onerror = ok; } }); }
+    if (lauf !== tlMusikLauf) return;
+    if (m.pause != null) { el.pause(); el.currentTime = Math.min(m.pause / 1000, el.duration || 1e9); return; }
+    const warten = m.start - Date.now();
+    clearTimeout(TL.musikUhr);
+    const los = () => { if (lauf !== tlMusikLauf) return; const pos = Math.max(0, (Date.now() - m.start) / 1000);
+      if (el.duration && pos >= el.duration) { el.pause(); return; }
+      if (Math.abs(el.currentTime - pos) > 0.25) el.currentTime = pos; el.play?.().catch(() => melde("🔊 Zum Hören bitte einmal auf „🎵 Musik“ tippen.", true)); };
+    if (warten > 0) { el.pause(); el.currentTime = 0; TL.musikUhr = setTimeout(los, warten); } else los();
+  } catch (e) { if (lauf === tlMusikLauf) melde("🎵 Das Lied konnte nicht geladen werden – im Tisch-Chat liegt es auch.", true); }
+}
+function tlMusikAus() { clearTimeout(TL.musikUhr); tlMusikLauf++; TL.musik = null; const el = document.getElementById("tlMusikTon"); if (el) { el.pause(); el.remove(); } }
+function tlMusikLaut(v) { TL.musikLaut = Math.max(0, Math.min(1, Number(v))); const el = document.getElementById("tlMusikTon"); if (el) el.volume = TL.musikLaut; }
+function tlMusikZeile() {
+  const m = TL.musik;
+  return `<div class="tl-musik">🎵 <b>${esc(m.n)}</b> <small>· ${esc(m.von === TL.ich ? "du spielst" : tlName(m.von) + " spielt")}${m.pause != null ? " · ⏸️ Pause" : ""}</small>
+    <label class="tl-laut">🔈<input type="range" min="0" max="1" step="0.05" value="${TL.musikLaut ?? 0.8}" oninput="tlMusikLaut(this.value)" aria-label="Lautstärke Musik"></label></div>`;
 }

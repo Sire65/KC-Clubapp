@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.767.0 – 2026-10-30 – 🎵 Runder Tisch: Musik für alle – z. B. der Club-Song (KC-CLUB-RUNDER-TISCH-MUSIK) · nur App · nur Admin zum Testen
+Wunsch Hansi (30.10.): „Als Club-Song soll ein externes Lied reinkommen – nicht der Platzhalter-Song in der Bühne.“
+- Am Tisch (Live) neuer Knopf **🎵 Musik**: ein Lied (MP3/M4A/OGG/WAV, höchstens 8 MB) **aus dem Archiv** (z. B. Ordner „Club-Song“) oder vom Gerät. Es kommt in den Tisch-Chat, und **alle hören es gleichzeitig**.
+- Jedes Gerät lädt das Lied einmal und spielt es selbst – über die Live-Leitung geht nur der Startzeitpunkt (kein Ton-Datenstrom, klingt gut, spart Volumen). Die Uhren der Geräte werden aus den Lebenszeichen abgeglichen; wer später dazukommt, steigt an der richtigen Stelle ein.
+- Wer abspielt: ⏸️ Pause / ▶️ Weiter, ⏮️ Von vorn, ⏹️ Aus. Jeder: eigene Lautstärke 🔈. Im Redestab-Modus starten Leitung oder Redestab.
+- Kein Lied im Programm fest eingebaut – welches läuft, bestimmt ihr (bitte nur Lieder, die ihr verwenden dürft).
+- Tests: `tests/tisch-live.browser.mjs` – drei Fenster spielen das Lied höchstens 0,35 s auseinander; Pause und Aus kommen bei allen an.
+- Rückweg: App 2.766.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.766.0 – 2026-10-30 – 🪧 Weihnachtsmarkt-Schilder im Club-CD + 🖨️ Druckpaket · 🔴 Runder Tisch live: Ton, Kamera, Bildschirm, Unterlagen zeigen, Redestab (KC-CLUB-SCHILDER-CD, KC-CLUB-SCHILDER-DRUCKPAKET, KC-CLUB-RUNDER-TISCH-LIVE) · Server 2.766.0
 Ein Bündel aus zwei Arbeiten derselben Sitzung (auf dem Arbeitszweig als 2.765.0 und 2.766.0 gebaut; 2.765.0 hatte inzwischen eine andere Sitzung vergeben). Hansi: „Einspielen noch heute morgen, damit ich heute noch eine Besprechung machen kann.“
 
