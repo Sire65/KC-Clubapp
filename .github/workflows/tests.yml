@@ -6,8 +6,8 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       - run: node tests/app-vertrag.test.mjs
@@ -98,6 +98,7 @@ jobs:
       - run: node tests/vorladen-foto.test.mjs
       - run: node tests/dp-bereitschaft-weit.test.mjs
       - run: node tests/dp-einzelplan.test.mjs
+      - run: node tests/actions-fest.test.mjs
       # 2.725.0 KC-CLUB-TESTS-ALLE (Prüfbericht Etappe 5): fehlten in dieser Liste (beim Veröffentlichen liefen sie schon) – ein Wächter in
       # app-vertrag.test.mjs meldet künftig jeden tests/*.test.mjs, der hier nicht steht
       - run: node tests/anruf-besser.test.mjs
@@ -107,8 +108,8 @@ jobs:
   rundgang:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
       - run: npm install --no-save --no-package-lock playwright@1.49.1

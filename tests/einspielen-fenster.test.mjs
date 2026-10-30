@@ -20,7 +20,7 @@ assert.ok(/<img src="kc-kochmuetze-weiss\.webp"[^>]*>\n\s*<h2[^>]*>🔧 Kurze Wa
 assert.ok(/führen gerade eine kurze Wartung durch\. Versuche es in ein paar Minuten erneut\. Danke für dein Verständnis\./.test(app) && /`Hey \$\{esc\(String\(vorname\)\.trim\(\)\)\}, wir`/.test(app), "Text mit Vornamen");
 assert.ok(/↻ Jetzt nochmal/.test(app) && /api\("ping", \{ einspielen: true \}\)/.test(app) && /r\.einspielen === false\) return location\.reload\(\)/.test(app) && /EINSPIEL_TAKT_S = 20/.test(app), "Knopf + alle 20 s nachfragen, dann neu laden");
 // Abläufe: an vor dem Hochladen, aus danach (immer), nie ein Abbruch
-assert.ok(/Wartungsfenster an\n\s+run: tools\/einspielen-melden\.sh an 5\n\s+- id: seite\n\s+uses: actions\/deploy-pages@v4\n\s+- name: Wartungsfenster aus\n\s+if: always\(\)/.test(seite), "Seite: an/aus um das Veröffentlichen");
+assert.ok(/Wartungsfenster an\n\s+run: tools\/einspielen-melden\.sh an 5\n\s+- id: seite\n\s+uses: actions\/deploy-pages@[0-9a-f]{40} # v4\n\s+- name: Wartungsfenster aus\n\s+if: always\(\)/.test(seite), "Seite: an/aus um das Veröffentlichen");
 assert.ok(/id-token: write/.test(srv) && /Wartungsfenster an\n\s+run: tools\/einspielen-melden\.sh an 5\n\s+- name: Edge Function hochladen/.test(srv) && /Wartungsfenster aus\n\s+if: always\(\)/.test(srv), "Server: an/aus um das Hochladen");
 assert.ok(/^set \+e$/m.test(sh) && /exit 0\s*$/.test(sh) && /audience=kc-einspielen/.test(sh), "Meldung bricht den Ablauf nie ab");
 console.log("einspielen-fenster: alle Prüfungen bestanden");

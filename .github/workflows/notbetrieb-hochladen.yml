@@ -22,7 +22,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Eingerichtet?
         id: pruef
         run: |
@@ -31,7 +31,7 @@ jobs:
           elif [ ! -s notbetrieb/pruefschluessel.json ]; then
             echo "::notice::Prüfschlüssel fehlt noch (notbetrieb/pruefschluessel.json) – nichts hochgeladen."; echo "los=nein" >> "$GITHUB_OUTPUT"
           else echo "los=ja" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         if: steps.pruef.outputs.los == 'ja'
         with:
           node-version: 22
