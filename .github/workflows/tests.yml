@@ -33,6 +33,8 @@ jobs:
       # KC-CLUB-DIENST-STEMPEL (2.590.0)
       - run: node tests/dienst-stempel.test.mjs
       - run: node tests/dienst-tausch.test.mjs
+      # KC-CLUB-RUNDER-TISCH (2.760.0)
+      - run: node tests/runder-tisch.test.mjs
       # KC-CLUB-REZEPT-WEIHNACHT (2.729.0)
       - run: node tests/rezept-weihnacht.test.mjs
       # KC-CLUB-ONLINE-NAMEN (2.731.0)
@@ -41,6 +43,10 @@ jobs:
       - run: node tests/wunsch-abhaken.test.mjs
       # KICC-F-110 Spiegel-Zeitblöcke
       - run: node tests/spiegel-zeitbloecke.test.mjs
+      # KC-CLUB-GESPRAECHE (Stufe 1)
+      - run: node tests/gespraeche.test.mjs
+      # KC-CLUB-TREFFEN-KALENDERTAG (2.761.0)
+      - run: node tests/treffen-tag.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)

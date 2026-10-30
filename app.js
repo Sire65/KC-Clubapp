@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.760.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.763.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1172,10 +1172,10 @@ const pwOffen = (z) => z.wichtig && !z.erledigt && (!z.vonMir || z.fuer === "ich
 function pwUebernehmen(r) {
   PW.zettel = r.zettel || []; PW.meine = r.meine || 0; PW.max = r.max || 4; PW.zeichen = r.zeichen || 200; PW.geladen = true; // 2.23.71: Anzahl auf der Kachel
   PW.hilfe = r.hilfe || null; // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als Aushang
-  if (r.markiert) PW.neu = 0; // 2.760.0 KC-CLUB-PINNWAND-NEU-PULS: Pinnwand wirklich geöffnet → alles gesehen
+  if (r.markiert) PW.neu = 0; // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: Pinnwand wirklich geöffnet → alles gesehen
   pwZahl();
 }
-// ---------- 2.760.0 KC-CLUB-PINNWAND-NEU-PULS (Wunsch Hansi 29.10.2026 „nur wenn seit letzter Anmeldung ein neues Post-it an der Pinnwand ist,
+// ---------- 2.763.0 KC-CLUB-PINNWAND-NEU-PULS (Wunsch Hansi 29.10.2026 „nur wenn seit letzter Anmeldung ein neues Post-it an der Pinnwand ist,
 // lass den Button auffällig pulsieren und zeige die Anzahl an“ – und „ja“ zu offenen Hilfe-Aufrufen) ----------
 // Zahl auf der Kachel = Zettel anderer, die ich noch nicht angesehen habe (Server: kc_club_pinnwand_gelesen, für alle Geräte gleich) + offene
 // Hilfe-Aufrufe, auf die ich noch nicht geantwortet habe. Vorher zählten alle nicht erledigten Zettel – die Zahl stand fast immer da.
@@ -1220,11 +1220,11 @@ function wasNeuZeigen(pw) {
 async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pinnwand nicht zusätzlich öffnen
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
   let gezeigt = false;
-  try { const rn = await api("pinnwand_neu"), n = rn.neu || []; PW.neu = rn.anzahl ?? n.length; // 2.760.0 KC-CLUB-PINNWAND-NEU-PULS: Zahl immer (auch bei offener Begrüßung)
+  try { const rn = await api("pinnwand_neu"), n = rn.neu || []; PW.neu = rn.anzahl ?? n.length; // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: Zahl immer (auch bei offener Begrüßung)
     if (nurZaehlen) { /* nur zählen, nichts einblenden */ } else if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
     else if (n.length && ruheInfo()) { /* KC-CLUB-RUHE */ n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
-  try { const r = await api("pinnwand", { markieren: false }); pwUebernehmen(r); // 2.760.0: still laden zählt nicht als gesehen
+  try { const r = await api("pinnwand", { markieren: false }); pwUebernehmen(r); // 2.763.0: still laden zählt nicht als gesehen
     if (!gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
     // KC-CLUB-HILFE-PINNWAND (1.90.0): neuer Hilfe-Aufruf → beim Start einmal (je Aufruf und Gerät) die Pinnwand mit dem Aushang zeigen
     const hNeu = pwHilfeNeu().filter((a) => !PW_GEMELDET.has("hilfe:" + a.id));
@@ -1246,7 +1246,7 @@ async function pwLive(takt) {
   PW_ZULETZT = Date.now();
   let r; try { r = await api("pinnwand_neu"); } catch { return; }
   const neu = (r.neu || []).filter((z) => !PW_GEMELDET.has(z.id));
-  const alt = PW.neu; PW.neu = r.anzahl ?? (r.neu || []).length; if (PW.neu !== alt) pwZahl(); // 2.760.0 KC-CLUB-PINNWAND-NEU-PULS
+  const alt = PW.neu; PW.neu = r.anzahl ?? (r.neu || []).length; if (PW.neu !== alt) pwZahl(); // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS
   if (!neu.length) return;
   neu.forEach((z) => PW_GEMELDET.add(z.id));
   try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
@@ -2383,6 +2383,7 @@ const HILFE = [
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
   { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
   { id: "nachrichten_reihe", thema: "nachrichten", sym: "↕️", t: "Abschnitte in der Chat-Liste verschieben – z. B. Einzelchats nach oben", x: "Ist die Übersicht nach <b>👥 Art</b> oder <b>🕒 Zeit</b> gegliedert, steht rechts in jedem Balken <b>▲</b> und <b>▼</b>. Damit verschiebst du den ganzen Abschnitt – zum Beispiel die <b>🙋 Einzelchats</b> ganz nach oben. Die App merkt sich die Reihenfolge auf diesem Gerät. <b>🔴 Ungelesen</b> bleibt immer ganz oben.", zeig: () => zeige("nachrichten"), seit: "2.753.0" }, // KC-CLUB-NACHRICHTEN-REIHE
+  { id: "gespraeche", thema: "club", sym: "📞", t: "Sehen, wer telefoniert – und anklopfen, um dazuzukommen", x: "Telefonieren zwei Mitglieder miteinander, steht oben im Feld <b>Mitglieder</b> ein grünes Schild, z. B. <b>Klaus 📞 Hansi</b>. Antippen → <b>👋 Anklopfen – darf ich dazukommen?</b> Die beiden hören einen leisen Klopfton; nimmt einer dich auf, bist du gleich in der Runde (Konferenz bis 4 Personen). Sichtbar ist nur, <b>dass</b> telefoniert wird – nie, was. Möchtest du das für dich nicht: ⚙️ → Privatsphäre → <b>📞 Andere dürfen sehen, wenn ich telefoniere</b> ausschalten.", seit: "2.760.0" }, // KC-CLUB-GESPRAECHE
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
   { id: "online_uhrzeit", thema: "nachrichten", sym: "🟢", t: "„… ist jetzt online“ – jetzt mit Uhrzeit", x: "Hast du die Mitteilung <b>„🟢 Klaus ist jetzt online“</b> eingeschaltet, steht jetzt die <b>Uhrzeit</b> dabei – z. B. „(19:05 Uhr)“ – und darunter der Tag. Kommt die Mitteilung erst später an (z. B. weil dein PC aus war), heißt sie <b>„🟢 Klaus war um 19:05 Uhr online“</b>. So weißt du, ob er wirklich gerade da ist.", seit: "2.390.0" },
   { id: "terminanfrage_oben", thema: "termine", sym: "📨", t: "Offene Terminanfragen stehen ganz oben", x: "Hat dich jemand per <b>Terminanfrage</b> gefragt und du hast noch nicht geantwortet, steht sie jetzt <b>ganz oben unter „Heute wichtig“</b> – rot umrandet. Die Kachel <b>📅 Termine</b> zeigt die Zahl. Antippen und mit <b>Ja</b>, <b>Vielleicht</b> oder <b>Nein</b> antworten.", seit: "2.389.0" },
@@ -2451,7 +2452,7 @@ const HILFE = [
   { id: "gratulieren", thema: "club", sym: "🎂", t: "Geburtstagsgrüße mit einem Tipp", x: "Hat jemand Geburtstag, zeigt es dir die App – antippen und gratulieren. Deinen eigenen Geburtstag (ohne Jahr) sehen die anderen nur, wenn du es unter ⚙️ → „🔒 Privatsphäre“ erlaubst.", seit: "2.23.1" },
   { id: "pinnwand_antwort", thema: "club", sym: "✍️", t: "Auf einen Zettel an der Pinnwand antworten", x: "An fremden Zetteln findest du <b>„✍️ Antworten“</b> – so reagierst du direkt auf genau diesen Zettel. Für einen kurzen Gruß reicht auch ein Emoji.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_wichtig", thema: "club", sym: "❗", t: "Einen eigenen Zettel hervorheben", x: "Ist dir ein Zettel besonders wichtig, kannst du ihn nachträglich mit <b>„❗ wichtig machen“</b> markieren – dann sieht ihn jeder beim Öffnen der App. Genauso leicht nimmst du die Markierung wieder weg.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
-  { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.760.0" },
+  { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.763.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
@@ -4720,6 +4721,8 @@ async function onlinePing() {
     if (r.fensterAnders) zweiBrowserMelden(r.fensterAnders); // KC-CLUB-ZWEI-BROWSER
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
+    ONL.gs = r.gespraeche || []; ONL.gsAnonym = r.gespraecheAnonym || 0; // KC-CLUB-GESPRAECHE
+    dazuFrage(r.dazukommen); gsMeineStand(r.dazuMeine);
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
     if (vorher !== [...ONL.ids].sort().join()) grOnlineAuffrischen(); // KC-CLUB-GRUPPE-ALLE-ONLINE
     werIstDa(ONL.liste, r.zeigen); // KC-CLUB-WER-IST-DA (2.454.0) – vor der Online-Ansage, damit niemand doppelt genannt wird
@@ -5007,6 +5010,7 @@ function onlineLeisteZeigen() {
   onlineLedZeigen();
   const el = $("onlineLeiste"); if (!el) return;
   el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen${ONL.liste.length > 1 ? ` · <button class="knopf klein" style="padding:3px 8px" onclick="onlineRunde()">💬 Mit allen ${ONL.liste.length} schreiben</button>` : ""}</div>
+    ${gsKopf().length ? `<div class="onleiste">${gsKopf().map((g) => `<button class="gs-knopf" onclick="gsBlatt('${esc(g.id)}')">📞 ${esc(gsNamen(g))}</button>`).join("")}</div>` : ""}
     <div class="onleiste">${ONL.liste.map((x) => x.klopfbar === false ? `<button title="Anklopfen ausgeschaltet – Nachricht schreiben" onclick="direkt('${x.person_id}')">🔕 ${esc(x.vorname)}</button>` : `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
 }
 // KC-CLUB-ONLINE-RUNDE (1.21.2): neue Nachricht, alle gerade Online sind schon angehakt (danach wie jeder Mehrpersonen-Chat)
@@ -5443,6 +5447,7 @@ async function zuletztZeigen(an) {
 function anklopfenZeigen() {
   const w = klopfStand();
   if ($("setAnklopfen")) $("setAnklopfen").checked = w.erlaubt !== false;
+  if ($("setGespraeche")) $("setGespraeche").checked = w.gespraeche !== false; // KC-CLUB-GESPRAECHE
   if ($("setKlopfAb")) $("setKlopfAb").value = ["spaeter", "sofort"].includes(w.ab) ? w.ab : "knopf"; // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG
   if ($("setKlopfTon")) $("setKlopfTon").innerHTML = KLOPF_TOENE.map((x) => `<option value="${x.id}"${x.id === w.ton ? " selected" : ""}>${esc(x.t)}</option>`).join("");
 }
@@ -5450,7 +5455,7 @@ const AB_MODUS_TEXT = { knopf: "📼 Anrufbeantworter: nur, wenn du ihn beim Ank
 async function anklopfenSetzen(teil) {
   const w = { ...klopfStand(), ...teil };
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), anklopfen: w };
-  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "ab" in teil ? AB_MODUS_TEXT[w.ab] || "📼 Gespeichert" : "🔔 Anklopfton gespeichert"); }
+  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("gespraeche" in teil ? (w.gespraeche ? "📞 Andere sehen, wenn du telefonierst" : "🙈 Deine Telefonate bleiben ohne Namen") : "erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "ab" in teil ? AB_MODUS_TEXT[w.ab] || "📼 Gespeichert" : "🔔 Anklopfton gespeichert"); }
   catch (e) { meldeFehler(e); }
   if ("ton" in teil) klopfTonSpielen(w.ton);
 }
@@ -6456,7 +6461,7 @@ async function anrufEingehend(id) {
       vf: !r.konferenz && VF.status === "laeuft" && !!r.gegenueber?.person_id && r.gegenueber.person_id === vfPartner() }; // KC-CLUB-VORFUEHREN-TON
     RUF.ms = !RUF.vf && !r.konferenz && !!r.gegenueber?.person_id && r.gegenueber.person_id === msPartner(); // KC-CLUB-FERNHILFE F4
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
-    if (klopfSprechenAnnehmen()) return; // 2.647.0 KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
+    if (klopfSprechenAnnehmen() || dazuAnnehmen()) return; // 2.647.0 / KC-CLUB-GESPRAECHE: Rückruf nach „aufgenommen“ KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     rufTaktWahl(true); rufLeisten(); // KC-CLUB-ANRUF-BESSER 3)
   } catch {}
@@ -9800,6 +9805,8 @@ const KACHELN = {
     { id: "clubabend", sym: "🍽️", t: "Clubabend Live", u: () => (!caHeute() ? "Vorschau nächster Clubabend" : ICH?.vorstand ? "Heute · Tagesordnung abhaken" : "Heute · Tagesordnung & mehr"), aktion: "caOeffnen(!caHeute() && !!ICH?.admin)", nur: () => caHeute() || !!ICH?.admin, klasse: "ca-kachel" },
     // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: nur solange die Sammelaktion läuft (Clubleitung immer, solange eingerichtet)
     { id: "clubjahr", sym: "📖", t: "Unser Clubjahr", u: () => cjUnter(), aktion: "cjOeffnen()", nur: () => !!INIT?.clubjahr },
+    // 2.762.0 KC-CLUB-RUNDER-TISCH: zu einem Thema einladen, Platz nehmen (höchstens 18) – nur Mitglieder (nicht in ZUGANG_KACHELN), bis zur Freigabe nur der Admin
+    { id: "runder_tisch", sym: "🪑", t: "Runder Tisch", u: () => (nurTest("runder_tisch") ? "🔒 nur für dich (Test) · " : "") + "Runder Tisch · Seminar · Besprechung", aktion: "rundOeffnen()", nur: () => frei("runder_tisch") },
     { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
@@ -16182,8 +16189,10 @@ function infoTreffen() {
   const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
   let bisTreffen = "—", frist = "";
   if (t) { // 2.441.0: Titel, Datum und Zu-/Absage stehen jetzt als erster Punkt im Info-Laufband (ilTreffen) – die Kopfzeile darüber ist weg
-    const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
-    bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
+    // KC-CLUB-TREFFEN-KALENDERTAG (Fund Hansi 30.10. 7:22 „Clubtreffen zeigt Morgen statt Heute 18 Uhr“): Kalendertage in deutscher Zeit zählen
+    // statt Stunden aufzurunden (10,6 Std. bis 18 Uhr ergaben „1 Tag“); heute mit Uhrzeit
+    const tage = cdTageBis(berlinIso(t.beginn));
+    bisTreffen = tage <= 0 ? `Heute ${new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(t.beginn))}` : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
     frist = fristStufe(tage);
   }
   return `<div class="il" id="infoLaufband"></div><!-- 2.439.0 KC-CLUB-INFO-LAUFBAND -->
@@ -16591,6 +16600,8 @@ function hashSprung(h) {
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
     else if (h === "#diensttausch") dtOeffnen(); // 2.606.0 KC-CLUB-DIENST-TAUSCH (Link aus dem Push)
+    else if (h === "#tisch") rundOeffnen(); // 2.762.0 KC-CLUB-RUNDER-TISCH
+    else if (/^#tisch=[0-9a-f-]{36}$/.test(h)) rundOeffnen(h.slice(7)); // 2.762.0: „Gleich: Runder Tisch …“ aus dem Push
     else if (h === "#fremdzugriffe") { zeige("sicherheit"); if (ICH?.admin) setTimeout(fremdZeigen, 300); } // 2.579.0 KC-CLUB-FREMDZUGRIFF (Link aus dem Push)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
@@ -16778,7 +16789,7 @@ const cdNur = () => einst("cd_nur", false);
 const cdArtAn = (k) => einst("cd_" + k, true);
 function cdListe(bisTreffen) {
   const t = INIT?.naechstesTreffen, l = [{ id: "t", zahl: String(bisTreffen).replace(/^in (\d+) Tagen$/, "$1 Tage"), text: "📅 Club\u00ADtreffen", los: () => zumTreffen() }]; // 2.203.0: kurz „Clubtreffen · 23 Tage“
-  if (cdNur() || (t && Math.ceil((new Date(t.beginn) - Date.now()) / 86400000) <= 2)) { // nur Treffen (bzw. Treffen steht kurz bevor) …
+  if (cdNur() || (t && cdTageBis(berlinIso(t.beginn)) <= 2)) { // KC-CLUB-TREFFEN-KALENDERTAG: Kalendertage wie oben // nur Treffen (bzw. Treffen steht kurz bevor) …
     if (cdArtAn("privat")) try { l.push(...cdPrivat()); } catch {} // … aber selbst angehakte private Termine laufen immer mit
     return l;
   }
@@ -16907,8 +16918,114 @@ function onlineNamenHtml() {
   const l = [...ONL.liste].sort((a, b) => String(a.vorname || "").localeCompare(String(b.vorname || ""), "de"));
   const namen = (kopie) => l.map((x) => `<span class="on-name"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="Chat mit ${esc(x.vorname || "Mitglied")}"`}
     onclick="event.stopPropagation();direkt('${esc(x.person_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();direkt('${esc(x.person_id)}')}">${esc(x.vorname || "?")}</span>`).join("");
-  if (l.length === 1) return `<span class="on-namen">${namen(false)}</span>`;
-  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, l.length * 3)}s"><span class="on-band">${namen(false)}${namen(true)}</span></span>`;
+  const gs = gsKopf(), alle = (kopie) => gs.map((g) => gsSchild(g, kopie)).join("") + namen(kopie); // KC-CLUB-GESPRAECHE: laufende Telefonate vorne
+  if (l.length + gs.length === 1) return `<span class="on-namen">${alle(false)}</span>`;
+  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, (l.length + gs.length * 2) * 3)}s"><span class="on-band">${alle(false)}${alle(true)}</span></span>`;
+}
+// ---------- KC-CLUB-GESPRAECHE (Stufe 1 Telefonate, Wunsch Hansi 30.10.2026 „sehen, wer gerade mit wem spricht – anklopfen – die anderen
+// nehmen mich ins Gespräch auf“; Vorschau „Club-Netz“ abgenommen): Der Online-Abgleich liefert laufende Telefonate (nur DASS, nie was;
+// Namen nur, wenn alle Beteiligten „Gespräche zeigen“ an haben – Standard an). Antippen → Fenster mit „Anklopfen – darf ich dazukommen?“.
+// Nimmt einer auf, holt seine App den Anklopfenden über die vorhandene Konferenz-Einladung dazu; die App des Anklopfenden nimmt von selbst an.
+const GSP = { netzOffen: false };
+let KD = null, KLOPF_DAZU = null, DAZU = null; // KD: mein Anklopfen; KLOPF_DAZU: erwarteter Anruf nach „aufgenommen“; DAZU: Frage an mich im Gespräch
+const gsKopf = () => (ONL.gs || []).filter((g) => !g.ichDrin);
+const gsNamen = (g) => g.teilnehmer.map((t) => t.vorname || t.name).join(g.teilnehmer.length === 2 ? " und " : ", ");
+const gsDauer = (sek) => sek < 90 ? "gerade eben" : sek < 3600 ? `seit ${Math.round(sek / 60)} Min.` : `seit ${Math.floor(sek / 3600)} Std. ${Math.round((sek % 3600) / 60)} Min.`;
+function gsSchild(g, kopie) {
+  const text = g.teilnehmer.length === 2 ? `${esc(g.teilnehmer[0].vorname)} 📞 ${esc(g.teilnehmer[1].vorname)}` : `👥📞 ${g.teilnehmer.map((t) => esc(t.vorname)).join(", ")}`;
+  return `<span class="on-name on-gs"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="${esc(gsNamen(g))} telefonieren – antippen"`}
+    onclick="event.stopPropagation();gsBlatt('${esc(g.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();gsBlatt('${esc(g.id)}')}">${text}</span>`;
+}
+function gsBlatt(id) {
+  const g = (ONL.gs || []).find((x) => x.id === id);
+  if (!g) return melde("Das Gespräch ist schon vorbei.");
+  const grund = g.ichDrin ? "Du bist selbst in diesem Gespräch." : g.voll ? "Die Runde ist voll – höchstens 4 Personen." : g.art === "video" ? "Bei Videoanrufen geht Dazukommen noch nicht." : !g.klopfbar ? "Die beiden haben Anklopfen ausgeschaltet – schreib einfach eine Nachricht." : "";
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">📞 ${esc(gsNamen(g))}</h3><p class="dlg-text">${g.teilnehmer.length > 2 ? "telefonieren zusammen" : "telefonieren"} · ${gsDauer(g.seitSek)}</p>
+    <div class="gs-reihe" aria-hidden="true">${gsReiheHtml(g)}</div>
+    ${grund ? `<p class="hinweis">${esc(grund)}</p>` : '<p class="hinweis">Die anderen bekommen einen leisen Klopfton und können dich ins Gespräch holen. Was gesprochen wird, siehst du vorher nicht.</p>'}
+    <div class="dlg-knoepfe">${grund ? "" : '<button class="knopf haupt" data-w="klopfen">👋 Anklopfen – darf ich dazukommen?</button>'}<button class="knopf" data-w="netz">🕸️ Club-Netz</button><button class="knopf" data-w="zu">Schließen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "klopfen") gsAnklopfen(g.id); else if (b.dataset.w === "netz") gsNetz(); }));
+}
+// Kreise mit grüner Linie und pulsierendem Hörer (zwei Personen) bzw. rund um einen Tisch (Konferenz)
+function gsReiheHtml(g) {
+  const k = (t) => `<span class="gs-person">${kreis({ ...(MITGLIEDER?.find((m) => m.person_id === t.person_id) || {}), person_id: t.person_id, online: true }, t.name || t.vorname, 52)}<small>${esc(t.vorname || t.name)}</small></span>`;
+  const mitte = `<span class="gs-hoerer${g.art === "video" ? " gs-video" : ""}"><i></i><i></i>${g.art === "video" ? "🎥" : "📞"}</span>`;
+  if (g.teilnehmer.length === 2) return `${k(g.teilnehmer[0])}<span class="gs-linie"></span>${mitte}<span class="gs-linie"></span>${k(g.teilnehmer[1])}`;
+  return `<span class="gs-tisch">${mitte}<span class="gs-runde">${g.teilnehmer.map(k).join("")}</span></span>`;
+}
+function gsNetz() {
+  const gs = ONL.gs || [], drin = new Set(gs.flatMap((g) => g.teilnehmer.map((t) => t.person_id))), sonst = (ONL.liste || []).filter((x) => !drin.has(x.person_id));
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🕸️ Club-Netz</h3><p class="dlg-text">${(ONL.liste || []).length} online · antippen, um anzuklopfen</p>
+    ${gs.map((g) => `<button class="gs-netz-zeile" data-g="${esc(g.id)}" aria-label="${esc(gsNamen(g))} telefonieren"><span class="gs-reihe">${gsReiheHtml(g)}</span><span class="hinweis">${esc(gsDauer(g.seitSek))}</span></button>`).join("")
+      || '<p class="hinweis">Gerade telefoniert niemand.</p>'}
+    ${ONL.gsAnonym ? `<p class="hinweis">📞 Außerdem ${ONL.gsAnonym === 1 ? "läuft 1 Telefonat" : `laufen ${ONL.gsAnonym} Telefonate`} (privat, ohne Namen).</p>` : ""}
+    ${sonst.length ? `<p class="hinweis" style="margin-bottom:4px"><b>Außerdem online</b></p><div class="onleiste">${sonst.map((x) => `<button data-p="${esc(x.person_id)}">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : ""}
+    <p class="hinweis" style="font-size:.8rem">Sichtbar ist nur, <b>dass</b> gesprochen wird – nie, was. Einstellen unter ⚙️ → Privatsphäre.</p>
+    <div class="dlg-knoepfe"><button class="knopf" data-w="zu">Schließen</button></div>`, () => { f.remove(); GSP.netzOffen = false; });
+  GSP.netzOffen = true;
+  f.querySelector("[data-w]").onclick = () => { f.remove(); GSP.netzOffen = false; };
+  f.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { f.remove(); GSP.netzOffen = false; gsBlatt(b.dataset.g); }));
+  f.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => { f.remove(); GSP.netzOffen = false; anklopfen(b.dataset.p); }));
+}
+// Anklopfen beim Gespräch: Warte-Anzeige mit Uhr wie beim normalen Anklopfen; Ergebnis kommt mit dem Online-Abgleich (dazuMeine)
+async function gsAnklopfen(id) {
+  if (RUF) return melde("Du telefonierst gerade selbst.", true);
+  try {
+    const r = await api("gespraech_anklopfen", { id });
+    KD = { anruf: r.anruf, namen: r.namen, bis: Date.now() + 180000, timer: null };
+    gsWartenZeichnen(); KD.timer = setInterval(gsWartenZeichnen, 1000);
+  } catch (e) { meldeFehler(e); }
+}
+function gsWartenZeichnen() {
+  if (!KD) return;
+  let el = document.getElementById("gsWarten");
+  if (!el) { el = document.createElement("div"); el.id = "gsWarten"; el.className = "gs-warten"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  const rest = Math.max(0, Math.round((KD.bis - Date.now()) / 1000));
+  el.innerHTML = rest ? `<b>👋 Klopfe an bei ${esc(KD.namen)} …</b><span class="gs-uhr">${Math.floor(rest / 60)}:${String(rest % 60).padStart(2, "0")}</span><button class="knopf klein" onclick="gsWartenAbbrechen()">Auflegen</button>`
+    : `<b>⏳ ${esc(KD.namen)} haben nicht geantwortet.</b><button class="knopf klein" onclick="gsWartenAbbrechen()">OK</button>`;
+}
+function gsWartenEnde() { if (KD?.timer) clearInterval(KD.timer); KD = null; document.getElementById("gsWarten")?.remove(); }
+function gsWartenAbbrechen() { const a = KD?.anruf; gsWartenEnde(); if (a) api("dazukommen_abbrechen", { anruf: a }).catch(() => {}); }
+// Stand meines Anklopfens aus dem Online-Abgleich
+function gsMeineStand(liste) {
+  if (!KD) return;
+  const x = (liste || []).find((y) => y.anruf === KD.anruf); if (!x || x.status === "offen") return;
+  const namen = KD.namen; gsWartenEnde();
+  if (x.status === "angenommen" && x.von) {
+    KLOPF_DAZU = { pid: x.von.person_id, bis: Date.now() + 90000 };
+    melde(`✅ ${x.von.vorname} nimmt dich auf – gleich bist du in der Runde 📞`); try { navigator.vibrate?.(60); } catch {}
+  } else melde(`⏳ Gerade nicht – ${namen} melden sich bei dir.`);
+}
+// Rückruf nach „aufgenommen“ → ohne Klingeln annehmen (wie KC-CLUB-ANKLOPFEN-ART beim Sprechen)
+function dazuAnnehmen() {
+  const w = KLOPF_DAZU;
+  if (!w || Date.now() > w.bis || RUF?.rolle !== "angerufen" || RUF.pc || RUF.art === "video" || RUF.gegen?.person_id !== w.pid) return false;
+  KLOPF_DAZU = null; anrufAnnehmen(false); return true;
+}
+// Im Gespräch: „Paul möchte dazukommen“ oben im Anrufbildschirm
+function dazuFrage(liste) {
+  const l = (liste || []).filter((x) => !ONL.erledigt.has("d" + x.id));
+  if (DAZU && !(liste || []).some((x) => x.id === DAZU.id)) { DAZU = null; dazuMalen(); }
+  if (!RUF || DAZU || !l.length) return;
+  DAZU = l[0]; ONL.erledigt.add("d" + DAZU.id); dazuMalen(); anklopfTon();
+}
+function dazuMalen() {
+  const el = $("anrufDazu"); if (!el) return;
+  if (!DAZU) { el.classList.add("versteckt"); el.innerHTML = ""; return; }
+  el.innerHTML = `<b>👋 ${esc(DAZU.von.vorname || DAZU.von.name)} klopft an – möchte dazukommen</b>
+    <div class="zk"><button class="ja" onclick="dazuAntwort(true)">✅ Aufnehmen</button><button class="nein" onclick="dazuAntwort(false)">Jetzt nicht</button></div>`;
+  el.classList.remove("versteckt");
+}
+async function dazuAntwort(ja) {
+  const d = DAZU; if (!d) return; DAZU = null; dazuMalen();
+  try {
+    const r = await api("dazukommen_antwort", { id: d.id, annehmen: !!ja });
+    if (!ja) return;
+    if (r.status !== "angenommen") return melde("Jemand anderes hat schon geantwortet.");
+    if (!RUF?.verbunden || RUF.art !== "ton" || RUF.strom?.getVideoTracks().length) return melde("Dazuholen geht nur während eines Telefonats mit Ton.", true);
+    if (konfDrin().size >= (RUF.konf?.max || 4)) return melde("Die Runde ist voll – höchstens 4 Personen.", true);
+    await konfEinladen(r.von.person_id);
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ONLINE-ZAHL (1.47.0): statt Text nur LED + Zahl – grün = jemand online, grau = niemand oder Stand unbekannt (dann „?“)
 function onlineZahlHtml() {
@@ -17312,7 +17429,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
@@ -21819,6 +21936,271 @@ async function dtProbe() {
   if (!datum || !start || !ende) return melde("Bitte Tag und Uhrzeit wählen.", true);
   try { const r = await api("dienst_tausch_probe", { datum, start, ende, bereich: $("dtPBer")?.value || "Probe" }); DTL = r.lage; dtZeichnen(); melde("🧪 Probe-Angebot angelegt"); } catch (e) { meldeFehler(e); }
 }
+// ---------- 2.762.0 KC-CLUB-RUNDER-TISCH (Stufe RT1, Wunsch Hansi 30.10.2026, Spezifikation docs/RUNDER_TISCH.md) ----------
+// Jedes Mitglied lädt zu Thema und Uhrzeit ein; ab 15 Min. vor Beginn erscheint der Tisch auf der Startseite und jeder kann Platz nehmen (höchstens 18).
+// Am Tisch: Plätze im Kreis (bis 8 große, bis 18 kleinere), Tisch-Chat = normale Unterhaltung (Text, 🎤 Sprachnachricht, Foto, PDF).
+// Solange man sitzt, meldet sich die App alle 60 s (tisch_platz) – sonst nichts im Sekundentakt (KC-DB-SPARSAM). Wer sich 90 s nicht gemeldet hat,
+// steht grau da (Zustand unbekannt, Vertrag Regel 11), nach 150 s ist der Platz frei. Bis zur Freigabe sieht es nur der Admin (🔒 Test).
+const RT_HERZ_TISCH_MS = 60000;
+// 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN (Stufe RT1b): eine Technik, drei Arten – gleich wie RT_ARTEN im Server (runder-tisch.js, Test prüft das)
+const RUND_ARTEN = {
+  runder_tisch: { sym: "🪑", t: "Runder Tisch", leiter: "lädt ein", anmeldung: false, tagesordnung: false, bestaetigung: false },
+  seminar: { sym: "🎓", t: "Seminar / Fortbildung", leiter: "Referent", anmeldung: true, tagesordnung: false, bestaetigung: true },
+  besprechung: { sym: "🗂️", t: "Besprechung", leiter: "Moderation", anmeldung: false, tagesordnung: true, bestaetigung: false },
+};
+const RUND_ART_TEXT = { runder_tisch: "Locker diskutieren – jeder darf spontan dazukommen.", seminar: "Einer erklärt, die anderen lernen – Anmeldung nötig, danach gibt es eine Teilnahmebestätigung.",
+  besprechung: "Gemeinsam beraten – mit Tagesordnung, Punkt für Punkt." };
+const rundArt = (t) => RUND_ARTEN[t?.art] || RUND_ARTEN.runder_tisch;
+const RUND = { lage: null, sitze: null, warte: null, herz: null };
+const rundTische = () => RUND.lage?.tische || [];
+const rundTisch = (id) => rundTische().find((t) => t.id === id) || null;
+const rundUhr = (iso) => fZeit.format(new Date(iso));
+function rundLageSetzen(l) {
+  if (l?.nur && RUND.lage) { const neu = l.tische || [], alt = RUND.lage.tische || []; RUND.lage = { ...RUND.lage, jetzt: l.jetzt, tische: alt.some((t) => t.id === l.nur) ? alt.flatMap((t) => (t.id === l.nur ? neu : [t])) : [...alt, ...neu] }; } // Herzschlag: nur dieser Tisch
+  else if (l && l.aktiv !== false && !l.nur) RUND.lage = l;
+  else if (l?.nur) RUND.lage = { ...l, nur: undefined };
+  rundZeichnen(); rundTischZeichnen(); rundKarteZeichnen();
+}
+async function rundOeffnen(id) {
+  if (!frei("runder_tisch")) return melde("Der Runde Tisch ist noch nicht freigegeben.");
+  const f = blattAuf("rundBlatt", `<div id="rundInhalt"><p class="hinweis">Wird geladen …</p></div>`); f.classList.add("rund-blatt");
+  try { const l = await api("tisch_liste", {}, { warten: true }); if (!l?.aktiv) { $("rundInhalt").innerHTML = '<p>Der Runde Tisch ist noch nicht freigegeben.</p>'; return; } rundLageSetzen(l); if (id && rundTisch(id)) rundTischZeigen(id); }
+  catch (e) { const el = $("rundInhalt"); if (el) el.innerHTML = `<p>⚠️ ${esc(fehlerText(e, ""))}</p><button class="knopf" onclick="fensterZu($('rundBlatt'))">Schließen</button>`; }
+}
+const RUND_PHASE = { geplant: "📅 geplant", gleich: "⏳ gleich geht's los", offen: "🟢 läuft", vorbei: "✔️ vorbei", abgesagt: "🚫 abgesagt" };
+function rundKarteHtml(t) {
+  const k = (fn, txt, haupt) => `<button class="knopf klein${haupt ? " haupt" : ""}" onclick="${fn}">${txt}</button>`, id = jsArg(t.id);
+  const knoepfe = [];
+  const A = rundArt(t), angemeldet = t.zusagen.filter((z) => z.id !== t.gastgeber).length, voll = A.anmeldung && angemeldet >= t.plaetze;
+  const darfSitzen = !A.anmeldung || t.meineZusage === "ja" || t.darfLeiten;
+  if ((t.phase === "gleich" || t.phase === "offen") && darfSitzen) knoepfe.push(k(`rundTischZeigen(${id})`, t.ichSitze ? `${A.sym} Hinein` : `${A.sym} Jetzt Platz nehmen`, true));
+  if ((t.phase === "geplant" || t.phase === "gleich") && !(A.anmeldung && t.darfLeiten)) knoepfe.push(t.meineZusage === "ja" ? k(`rundZusage(${id}, null)`, A.anmeldung ? "↩️ Abmelden" : "↩️ Doch nicht")
+    : voll ? '<span class="hinweis">🈵 ausgebucht</span>' : k(`rundZusage(${id}, 'ja')`, A.anmeldung ? "📝 Anmelden" : "✋ Ich setz mich dazu", t.phase === "geplant" || !darfSitzen));
+  if (t.chat && t.imChat && t.phase === "vorbei") knoepfe.push(k(`rundChat(${id})`, "💬 Chat nachlesen"));
+  if (t.bestaetigung) knoepfe.push(k(`rundBestaetigung(${id})`, "📄 Teilnahmebestätigung", true));
+  if (t.darfLeiten && (t.phase === "geplant" || t.phase === "gleich")) knoepfe.push(k(`rundLeiten(${id}, 'absagen')`, "🚫 Absagen"));
+  const zus = t.phase === "vorbei" ? "" : A.anmeldung ? `📝 ${angemeldet} von ${t.plaetze} Plätzen angemeldet${t.meineZusage === "ja" && !t.darfLeiten ? " – du bist dabei" : ""}`
+    : t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
+  const am = t.phase === "offen" || t.phase === "gleich" ? ` · 🪑 ${t.amTisch.length} von ${t.plaetze} am Tisch` : t.phase === "vorbei" ? ` · ${t.warenDa} waren dabei` : "";
+  return `<div class="karte rund-karte rund-${esc(t.phase)}"><div class="rund-art">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 nur ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""}</div><div><b>${esc(t.thema)}</b> <small class="rund-phase">${RUND_PHASE[t.phase] || ""}</small></div>
+    <div class="hinweis">${esc(t.text)} · ${esc(A.leiter)}: ${esc(t.gastgeberName)}</div>
+    ${t.beschreibung ? `<div class="rund-beschreibung">${esc(t.beschreibung)}</div>` : ""}
+    ${t.tagesordnung?.length && t.phase !== "vorbei" ? `<ol class="rund-to">${t.tagesordnung.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
+    <div class="hinweis">${zus}${zus ? am : am.replace(/^ · /, "")}</div>
+    ${t.phase === "vorbei" && rundArt(t).bestaetigung && t.imChat && !t.bestaetigung && !t.darfLeiten ? `<div class="hinweis">Für eine Teilnahmebestätigung musst du mindestens die Hälfte der Zeit dabei gewesen sein.</div>` : ""}
+    ${t.phase === "vorbei" && t.chat ? `<div class="hinweis">${t.medienWeg ? "📎 Dateien sind schon gelöscht" : `📎 Dateien werden ${RUND.lage?.regeln?.medienTage || 7} Tage nach dem Ende gelöscht`}, der Chat nach ${RUND.lage?.regeln?.textTage || 30} Tagen.</div>` : ""}
+    ${knoepfe.length ? `<div class="knoepfe">${knoepfe.join("")}</div>` : ""}</div>`;
+}
+function rundZeichnen() {
+  const el = $("rundInhalt"), l = RUND.lage; if (!el || !l) return;
+  const T = rundTische(), jetztMs = Date.now();
+  const jetzt = T.filter((t) => t.phase === "offen" || t.phase === "gleich"), bald = T.filter((t) => t.phase === "geplant");
+  const vorbei = T.filter((t) => t.phase === "vorbei" && ((t.chat && t.imChat) || t.bestaetigung)).reverse(), abgesagt = T.filter((t) => t.phase === "abgesagt" && jetztMs - Date.parse(t.beginn) < 2 * 86400000);
+  el.innerHTML = `<h3 style="margin-top:0">🪑 Runder Tisch${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test – nur für dich</small>' : ""}</h3>
+    <p class="hinweis" style="margin-top:0">Lade zu einem Thema ein: 🪑 Runder Tisch, 🎓 Seminar oder 🗂️ Besprechung. Ab ${l.regeln?.vorlaufMin || 15} Minuten vor Beginn nimmt man Platz – schreiben, 🎤 sprechen, Fotos und PDFs zeigen. Höchstens ${l.regeln?.plaetzeMax || 18} Plätze.</p>
+    <button class="knopf haupt" onclick="rundNeu()">➕ Einladen</button>
+    ${jetzt.length ? `<h4>🟢 Jetzt</h4>${jetzt.map(rundKarteHtml).join("")}` : ""}
+    <h4>📅 Demnächst</h4>${bald.map(rundKarteHtml).join("") || '<p class="hinweis">Gerade ist kein Tisch geplant – lade doch selbst ein!</p>'}
+    ${abgesagt.length ? `<h4>🚫 Abgesagt</h4>${abgesagt.map(rundKarteHtml).join("")}` : ""}
+    ${vorbei.length ? `<h4>✔️ Vorbei – zum Nachlesen</h4>${vorbei.map(rundKarteHtml).join("")}` : ""}
+    <button class="knopf" onclick="fensterZu($('rundBlatt'))">Schließen</button>`;
+}
+// Einladen: Auswahl statt Freitext, wo es geht (Vertrag Regel 13)
+function rundNeu() {
+  const r = RUND.lage?.regeln || { dauern: [30, 60, 90], plaetzeMin: 4, plaetzeMax: 18, themaMax: 80, beschreibungMax: 300 };
+  const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+  const plaetze = Array.from({ length: r.plaetzeMax - r.plaetzeMin + 1 }, (_, i) => r.plaetzeMax - i).map((n) => `<option value="${n}">${n} Plätze</option>`).join("");
+  blattAuf("rundNeuBlatt", `<h3 style="margin-top:0">➕ Einladen</h3>
+    <div class="rund-arten" role="radiogroup" aria-label="Art">${Object.entries(RUND_ARTEN).map(([k, a], i) => `<label class="rund-artwahl"><input type="radio" name="rundArt" value="${k}"${i ? "" : " checked"} onchange="rundArtWahl()">
+      <span><b>${a.sym} ${esc(a.t)}</b><small>${esc(RUND_ART_TEXT[k])}</small></span></label>`).join("")}</div>
+    <label class="feld">Thema <input id="rundThema" maxlength="${r.themaMax}" placeholder="z. B. Club-Song"></label>
+    <div class="rund-vorschlaege">${["🎤 Club-Song", "🎄 Weihnachtsmarkt", "📖 Rezepte", "🧳 Ausflug", "💡 Ideen für den Club"].map((v) => `<button type="button" class="knopf klein" onclick="$('rundThema').value=${jsArg(v.replace(/^\S+ /, ""))}">${v}</button>`).join("")}</div>
+    <label class="feld"><span id="rundBeschrT">Worum geht's? (freiwillig)</span> <textarea id="rundBeschr" maxlength="${r.beschreibungMax}" rows="2"></textarea></label>
+    <label class="feld versteckt" id="rundToFeld">Tagesordnung – ein Punkt je Zeile (höchstens ${r.toMax || 12}) <textarea id="rundTo" rows="4" placeholder="Begrüßung&#10;Weihnachtsmarkt: Stand und Dienste&#10;Verschiedenes"></textarea></label>
+    <label class="feld">Für wen? <select id="rundGruppe"><option value="">👥 Alle Mitglieder</option>${(RUND.lage?.gruppen || []).map((g) => `<option value="${esc(g.id)}">${esc(g.symbol)} nur Gruppe „${esc(g.name)}“</option>`).join("")}</select></label>
+    ${(RUND.lage?.gruppen || []).length ? "" : '<p class="hinweis" style="margin-top:-4px">Für eine Gruppe (z. B. Leitung, Innovation) einladen geht, sobald du in einer festen Chat-Gruppe bist.</p>'}
+    <div class="rund-zeile"><label class="feld">Tag <input type="date" id="rundTag" value="${heute}" min="${heute}"></label>
+      <label class="feld">Uhrzeit <input type="time" id="rundUhr" value="20:00" step="300"></label></div>
+    <div class="rund-zeile"><label class="feld">Dauer <select id="rundDauer">${r.dauern.map((d) => `<option value="${d}"${d === 60 ? " selected" : ""}>${d} Minuten</option>`).join("")}</select></label>
+      <label class="feld">Plätze <select id="rundPlaetze">${plaetze}</select></label></div>
+    <label class="rund-haken"><input type="checkbox" id="rundBescheid" checked> 📣 Alle Eingeladenen bekommen Bescheid${nurTest("runder_tisch") ? " (im Test nur Admins)" : ""}</label>
+    <p class="hinweis" id="rundArtHinweis"></p>
+    <div class="knoepfe"><button class="knopf haupt" id="rundLos" onclick="rundAnlegen()">🪑 Einladen</button><button class="knopf" onclick="fensterZu($('rundNeuBlatt'))">Abbrechen</button></div>`);
+  rundArtWahl();
+}
+function rundArtWahl() {
+  const k = document.querySelector('input[name="rundArt"]:checked')?.value || "runder_tisch", a = RUND_ARTEN[k];
+  $("rundToFeld")?.classList.toggle("versteckt", !a.tagesordnung);
+  if ($("rundBeschrT")) $("rundBeschrT").textContent = k === "seminar" ? "Was lernt man? (freiwillig – steht auch auf der Teilnahmebestätigung)" : "Worum geht's? (freiwillig)";
+  if ($("rundArtHinweis")) $("rundArtHinweis").textContent = k === "seminar" ? "🎓 Du bist der Referent. Teilnehmen kann nur, wer sich angemeldet hat. Wer mindestens die Hälfte der Zeit dabei war, bekommt eine Teilnahmebestätigung (PDF, auch unter „🎓 Meine Schulung“)."
+    : k === "besprechung" ? "🗂️ Du moderierst. Die Tagesordnung sehen alle schon vorher." : "🪑 Wer mag, kommt spontan dazu – auch ohne Zusage.";
+  if ($("rundLos")) $("rundLos").textContent = `${a.sym} Einladen`;
+}
+async function rundAnlegen() {
+  const thema = $("rundThema")?.value.trim();
+  if (!thema) return melde("Bitte ein Thema eingeben.", true);
+  const art = document.querySelector('input[name="rundArt"]:checked')?.value || "runder_tisch";
+  const tagesordnung = RUND_ARTEN[art]?.tagesordnung ? ($("rundTo")?.value || "").split("\n").map((x) => x.trim()).filter(Boolean) : null;
+  const d = { art, tagesordnung, gruppe: $("rundGruppe")?.value || null, thema, beschreibung: $("rundBeschr")?.value.trim() || "", datum: $("rundTag")?.value, uhr: $("rundUhr")?.value, dauer: Number($("rundDauer")?.value), plaetze: Number($("rundPlaetze")?.value), bescheid: !!$("rundBescheid")?.checked };
+  if (!d.datum || !d.uhr) return melde("Bitte Tag und Uhrzeit wählen.", true);
+  try { const r = await api("tisch_anlegen", d, { warten: true }); fensterZu($("rundNeuBlatt")); rundLageSetzen(r.lage); melde(r.versand ? (d.gruppe ? `🪑 Eingeladen – die Gruppe hat Bescheid bekommen` : "🪑 Eingeladen – alle haben Bescheid bekommen") : "🪑 Eingeladen"); }
+  catch (e) { meldeFehler(e); }
+}
+async function rundZusage(id, zusage) {
+  const sem = rundArt(rundTisch(id)).anmeldung;
+  try { const r = await api("tisch_zusage", { id, zusage }); rundLageSetzen(r.lage); melde(zusage === "ja" ? (sem ? "📝 Angemeldet – du bekommst kurz vor Beginn Bescheid" : "✋ Zugesagt – du bekommst kurz vor Beginn Bescheid") : sem ? "↩️ Abgemeldet – dein Platz ist wieder frei" : "↩️ Zusage zurückgenommen"); }
+  catch (e) { meldeFehler(e); }
+}
+async function rundLeiten(id, aktion) {
+  const t = rundTisch(id); if (!t) return;
+  const p = { id, aktion };
+  if (aktion === "absagen") { const g = await eingabe(`🚫 Runden Tisch absagen?\n„${t.thema}“, ${t.text}\n\nAlle mit Zusage bekommen Bescheid. Grund (freiwillig):`, "", { ja: "🚫 Absagen" }); if (g === null) return; p.grund = g.trim(); }
+  else if (aktion === "schliessen" && !(await frage(`⏹️ Tisch jetzt schließen?\n„${t.thema}“\n\nDer Chat bleibt zum Nachlesen.`, { ja: "⏹️ Schließen" }))) return;
+  try { const r = await api("tisch_gastgeber", p, { warten: true }); rundLageSetzen(r.lage); melde({ absagen: "🚫 Abgesagt", verlaengern: "⏱️ 30 Minuten länger", schliessen: "⏹️ Tisch geschlossen" }[aktion]); }
+  catch (e) { meldeFehler(e); }
+}
+function rundChat(id) {
+  const t = rundTisch(id); if (!t?.chat) return melde("Der Tisch-Chat ist schon gelöscht.");
+  fensterZu($("rundTischBlatt")); fensterZu($("rundBlatt")); chatOeffnen(t.chat);
+}
+// ---- Am Tisch: Platz nehmen, Herzschlag alle 60 s, Plätze im Kreis ----
+async function rundTischZeigen(id) {
+  RUND.offen = id;
+  const f = blattAuf("rundTischBlatt", `<div id="rundTischInhalt"><p class="hinweis">Du nimmst Platz …</p></div>`); f.classList.add("rund-blatt");
+  f._zu = () => { RUND.offen = null; f.remove(); };
+  await rundPlatz(id, true);
+}
+async function rundPlatz(id, laut) {
+  try {
+    const r = await api("tisch_platz", { id }, laut ? { warten: true } : { still: true });
+    if (r.ok) { if (RUND.sitze !== id) { if (laut) melde(rundArt(rundTisch(id)).anmeldung ? "🎓 Du bist dabei" : `${rundArt(rundTisch(id)).sym} Du sitzt am Tisch`); else if (RUND.warte === id) { melde("🪑 Ein Platz ist frei geworden – du sitzt jetzt am Tisch"); try { navigator.vibrate?.(60); } catch {} } } RUND.sitze = id; RUND.warte = null; }
+    else { if (RUND.sitze === id) RUND.sitze = null; RUND.warte = r.ergebnis === "voll" ? id : null; if (laut) melde(r.meldung, r.ergebnis !== "voll" && r.ergebnis !== "anmeldung"); }
+    rundHerzPlanen(); rundLageSetzen(r.lage);
+  } catch (e) { if (laut) meldeFehler(e); rundTischZeichnen(); }
+}
+// Herzschlag: solange ich sitze (oder auf einen Platz warte) und die App sichtbar ist; im Hintergrund nicht (der Platz wird nach 150 s frei)
+function rundHerzPlanen() {
+  clearTimeout(RUND.herz);
+  const id = RUND.sitze || RUND.warte; if (!id) return;
+  RUND.herz = setTimeout(() => {
+    const t = rundTisch(id);
+    if (!t || t.phase === "vorbei" || t.phase === "abgesagt") { RUND.sitze = RUND.warte = null; rundKarteZeichnen(); rundTischZeichnen(); return; }
+    if (document.hidden) return rundHerzPlanen();
+    rundPlatz(id, false);
+  }, RT_HERZ_TISCH_MS);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && (RUND.sitze || RUND.warte)) rundPlatz(RUND.sitze || RUND.warte, false); });
+async function rundVerlassen(id) {
+  try { const r = await api("tisch_verlassen", { id }); RUND.sitze = RUND.warte = null; clearTimeout(RUND.herz); fensterZu($("rundTischBlatt")); rundLageSetzen(r.lage); melde("🚪 Tisch verlassen – du kannst jederzeit wieder Platz nehmen"); }
+  catch (e) { meldeFehler(e); }
+}
+// Plätze im Kreis: Gastgeber oben (12 Uhr), dann in Reihenfolge des Platznehmens; freie Plätze gestrichelt
+function rundPersonHtml(p, t, gr, stil = "", g = { figur: true, namen: true }) {
+  if (!p) return `<div class="rund-platz frei" style="${stil}"><div class="rund-av" style="width:${gr}px;height:${gr}px" aria-label="freier Platz"></div></div>`;
+  const fig = avFigurVon({ person_id: p.id }), vn = p.name.split(" ")[0], leiter = p.id === t.gastgeber;
+  const titel = p.sicher ? `${p.name} ist dabei` : `${p.name} – Verbindung unbekannt`;
+  return `<div class="rund-platz${p.sicher ? "" : " unsicher"}${p.id === ICH?.person_id ? " ich" : ""}${leiter ? " gastgeber" : ""}" style="${stil}" title="${esc(titel)}">
+      <div class="rund-av" style="width:${gr}px;height:${gr}px;font-size:${Math.round(gr * 0.38)}px" aria-label="${esc(titel)}">${g.figur && avGueltig(fig) ? avatarSvg(fig, gr - 6, initialen(p.name)) : esc(initialen(p.name))}</div>
+      ${g.namen ? `<div class="rund-name">${esc(leiter ? `${t.art === "seminar" ? "🎤" : "👑"} ${vn}` : vn)}</div>` : leiter ? `<div class="rund-name">${t.art === "seminar" ? "🎤" : "👑"}</div>` : ""}</div>`;
+}
+// 2.762.0 KC-CLUB-RUNDER-TISCH-PLATZ (Wunsch Hansi „messe, bis zu wie vielen Personen Avatare passen – sonst nur Kreise mit Buchstaben“):
+// Größe aus dem echten Platz statt fester Stufen. Abstand zweier Plätze s = 2·R·sin(π/n) (R = 41 % der Tischbreite W); Kreis d = s − 6, höchstens 56 px
+// und höchstens 16 % von W (bleibt in der Fläche). Koch-Figur ab 40 px (darunter ist sie nicht mehr zu erkennen → Anfangsbuchstaben);
+// Namen unter dem Platz nur bei s ≥ 78 px (sonst überlappen sie – dann als Liste unter dem Tisch). Messung 30.10.2026 siehe docs/RUNDER_TISCH.md.
+const RUND_PLATZ = { r: 0.41, dMax: 56, rand: 0.16, luft: 6, figurAb: 40, nameAb: 78 };
+function rundGroesse(W, n) {
+  const s = 2 * RUND_PLATZ.r * W * Math.sin(Math.PI / Math.max(n, 2)), d = Math.floor(Math.min(RUND_PLATZ.dMax, s - RUND_PLATZ.luft, RUND_PLATZ.rand * W));
+  return { d, figur: d >= RUND_PLATZ.figurAb, namen: s >= RUND_PLATZ.nameAb };
+}
+const rundBreite = () => Math.min(420, $("rundTischInhalt")?.clientWidth || innerWidth - 32);
+function rundPlaetzeHtml(t, W = rundBreite()) {
+  const n = t.plaetze, g = rundGroesse(W, n), r = RUND_PLATZ.r * 100;
+  const leute = [...t.amTisch].sort((a, b) => (b.id === t.gastgeber) - (a.id === t.gastgeber));
+  let html = "";
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+    html += rundPersonHtml(leute[i], t, g.d, `left:${(50 + r * Math.cos(a)).toFixed(2)}%;top:${(50 + r * Math.sin(a)).toFixed(2)}%`, g);
+  }
+  return html;
+}
+// 2.762.0 Seminar: Referent vorne am Pult, Teilnehmer in Reihen (wie im Hörsaal); freie Plätze gestrichelt
+function rundHoersaalHtml(t) {
+  const ref = t.amTisch.find((p) => p.id === t.gastgeber), tn = t.amTisch.filter((p) => p.id !== t.gastgeber), n = Math.max(t.plaetze, tn.length);
+  return `<div class="rund-hoersaal" role="img" aria-label="${esc(`Seminar: ${tn.length} von ${t.plaetze} Plätzen besetzt${ref ? "" : ", Referent noch nicht da"}`)}">
+    <div class="rund-pult">${ref ? rundPersonHtml(ref, t, 56) : `<div class="hinweis">🎤 ${esc(t.gastgeberName)} kommt gleich</div>`}<div class="rund-tafel"><strong>${esc(t.thema)}</strong><span>🎓 ${tn.length} / ${t.plaetze}</span></div></div>
+    <div class="rund-reihen">${Array.from({ length: n }, (_, i) => rundPersonHtml(tn[i], t, 40)).join("")}</div></div>`;
+}
+function rundTischZeichnen() {
+  const el = $("rundTischInhalt"), t = RUND.offen && rundTisch(RUND.offen); if (!el) return;
+  if (!t) { el.innerHTML = `<p>Den Tisch gibt es nicht mehr.</p><button class="knopf" onclick="fensterZu($('rundTischBlatt'))">Schließen</button>`; return; }
+  const A = rundArt(t), sitze = RUND.sitze === t.id, warte = RUND.warte === t.id, restMin = Math.max(0, Math.round((Date.parse(t.ende) - Date.now()) / 60000));
+  const zeit = t.phase === "gleich" ? `beginnt um ${rundUhr(t.beginn)} Uhr` : t.phase === "offen" ? `noch ${restMin} Min. (bis ${rundUhr(t.ende)} Uhr)` : RUND_PHASE[t.phase] || "";
+  const unsicher = t.amTisch.filter((p) => !p.sicher).length;
+  el.innerHTML = `<h3 style="margin:0">${A.sym} ${esc(t.thema)}${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h3>
+    <div class="hinweis">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""} · ${esc(A.leiter)}: ${esc(t.gastgeberName)} · ${esc(zeit)}</div>
+    ${t.art === "seminar" ? rundHoersaalHtml(t) : `<div class="rund-buehne" role="img" aria-label="${esc(`${A.t}: ${t.amTisch.length} von ${t.plaetze} Plätzen besetzt`)}">
+      <div class="rund-holz"><div><small>${esc(t.text.split(" · ")[0])}</small><strong>${esc(t.thema)}</strong><span>${A.sym} ${t.amTisch.length} / ${t.plaetze}</span></div></div>
+      ${rundPlaetzeHtml(t)}
+    </div>`}
+    ${t.art !== "seminar" && t.amTisch.length && !rundGroesse(rundBreite(), t.plaetze).namen ? `<p class="hinweis rund-namen">${A.sym} Dabei: ${t.amTisch.map((p) => `${p.id === t.gastgeber ? (t.art === "seminar" ? "🎤 " : "👑 ") : ""}${esc(p.name.split(" ")[0])}${p.sicher ? "" : " ⚪"}`).join(", ")}</p>` : ""}
+    ${t.tagesordnung?.length ? `<details class="karte rund-to-karte" open><summary><b>📋 Tagesordnung</b></summary><ol class="rund-to">${t.tagesordnung.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details>` : ""}
+    ${unsicher ? `<p class="hinweis">⚪ ${unsicher === 1 ? "Bei 1 Person" : `Bei ${unsicher} Personen`} ist gerade unklar, ob sie noch da ${unsicher === 1 ? "ist" : "sind"} (grau).</p>` : ""}
+    ${warte ? `<p class="rund-warte">⏳ Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.</p>` : ""}
+    ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<p class="hinweis">Du sitzt gerade nicht am Tisch.</p>` : ""}
+    <div class="knoepfe rund-leiste">
+      ${sitze && t.chat ? `<button class="knopf haupt" onclick="rundChat(${jsArg(t.id)})">💬 ${t.art === "seminar" ? "Seminar-Chat: Fragen · 🎤 · 📎 Unterlagen" : "Chat: schreiben · 🎤 sprechen · 📎 zeigen"}</button>` : ""}
+      ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<button class="knopf haupt" onclick="rundPlatz(${jsArg(t.id)}, true)">🪑 Platz nehmen</button>` : ""}
+      ${t.darfLeiten && t.phase === "offen" && (t.verlaengert || 0) < 60 ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'verlaengern')">⏱️ +30 Min.</button>` : ""}
+      ${t.darfLeiten && t.phase === "offen" ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'schliessen')">⏹️ Beenden</button>` : ""}
+      ${sitze || warte ? `<button class="knopf klein" onclick="rundVerlassen(${jsArg(t.id)})">🚪 Verlassen</button>` : ""}
+      <button class="knopf klein" onclick="fensterZu($('rundTischBlatt'))">Zurück</button>
+    </div>`;
+}
+// Karte auf der Startseite: ab 15 Min. vor Beginn bis zum Ende (bzw. solange ich sitze)
+function rundKarteZeichnen() {
+  const el = $("rundKarte"); if (!el) return;
+  if (!frei("runder_tisch")) { el.innerHTML = ""; return; }
+  const t0 = Date.now(), vorlauf = (RUND.lage?.regeln?.vorlaufMin || 15) * 60000;
+  const geladen = RUND.lage ? rundTische() : [], ids = new Set(geladen.map((t) => t.id)); // Tischliste (wenn geladen) + neue Tische aus dem letzten Start-Abgleich
+  const quelle = [...geladen.filter((t) => t.phase !== "abgesagt"), ...(INIT?.runderTisch?.tische || []).filter((t) => !ids.has(t.id))];
+  const da = quelle.filter((t) => Date.parse(t.beginn) - vorlauf <= t0 && t0 < Date.parse(t.ende)).sort((a, b) => (b.id === RUND.sitze) - (a.id === RUND.sitze) || ((b.zusage || b.meineZusage) === "ja") - ((a.zusage || a.meineZusage) === "ja"));
+  const t = da[0];
+  if (!t) { el.innerHTML = ""; return; }
+  const sitze = RUND.sitze === t.id, test = nurTest("runder_tisch") ? ' <span class="ds-test">🔒 Test</span>' : "";
+  el.innerHTML = `<button type="button" class="ds-karte rund-start" onclick="rundStartKarte(${jsArg(t.id)})">
+    <span class="ds-sym">${rundArt(t).sym}</span><span class="ds-text"><b>${sitze ? `Du bist dabei: ${esc(rundArt(t).t)}` : `${t0 < Date.parse(t.beginn) ? "Gleich" : "Jetzt"}: ${esc(rundArt(t).t)}`}${test}</b>
+    <small>„${esc(t.thema)}“ · ${t0 < Date.parse(t.beginn) ? `ab ${esc(rundUhr(t.beginn))} Uhr` : `bis ${esc(rundUhr(t.ende))} Uhr`}${da.length > 1 ? ` · und ${da.length - 1} weiterer` : ""} – ${sitze ? "zurück zum Tisch" : "jetzt Platz nehmen"}</small></span><span class="ds-pfeil">›</span></button>`;
+}
+// ---- 2.762.0 Teilnahmebestätigung (Seminar): auf dem Club-Briefbogen als PDF/Drucken (KC-CLUB-DRUCK-PDF), auch unter „🎓 Meine Schulung“ ----
+const fRundDatum = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", weekday: "long", day: "numeric", month: "long", year: "numeric" });
+function rundBestaetigung(id, aus) {
+  const t = aus || rundTisch(id); if (!t?.bestaetigung) return melde("Für dieses Seminar gibt es keine Teilnahmebestätigung.", true);
+  druckStarten("tischbestaetigung", { thema: t.thema, beschreibung: t.beschreibung, beginn: t.beginn, ende: t.ende, referent: t.referent || t.gastgeberName, b: t.bestaetigung, name: ICH?.name || "" });
+}
+function druckTischBestaetigung(p) {
+  const uhr = (iso) => fZeit.format(new Date(iso));
+  return { titel: "Teilnahmebestätigung", rechts: "Seminar / Fortbildung", unter: esc(p.thema),
+    html: `<div style="font-size:1.05em;line-height:1.6;margin-top:16px"><p>Hiermit bestätigen wir, dass</p><p style="font-size:1.5em;font-weight:700;margin:14px 0">${esc(p.name)}</p>
+      <p>am <b>${esc(fRundDatum.format(new Date(p.beginn)))}</b> an unserem Online-Seminar</p><p style="font-size:1.25em;font-weight:700;margin:14px 0">„${esc(p.thema)}“</p>
+      ${p.beschreibung ? `<p><b>Inhalt:</b> ${esc(p.beschreibung)}</p>` : ""}
+      <p>teilgenommen hat (anwesend von ${esc(uhr(p.b.von))} bis ${esc(uhr(p.b.bis))} Uhr, ${p.b.min} Minuten).</p>
+      <p>Referent: <b>${esc(p.referent)}</b><br>Das Seminar fand in der Club-App des Köcheclubs Werne statt (${esc(uhr(p.beginn))}–${esc(uhr(p.ende))} Uhr).</p>
+      <p style="font-size:.85em;color:#555;margin-top:24px">Die Anwesenheit hat die Club-App aufgezeichnet. Diese Bestätigung ist ohne Unterschrift gültig.</p></div>`,
+    fuss: "Teilnahmebestätigung · Köcheclub Werne" };
+}
+async function rundSeminareZeigen() {
+  const el = $("smSeminare"); if (!el || !frei("runder_tisch")) return;
+  try {
+    const r = await api("tisch_seminare_meine", {}, { still: true }); if (!r?.aktiv) return;
+    RUND.seminare = r.seminare || [];
+    el.innerHTML = RUND.seminare.length ? `<h4>🎓 Besuchte Seminare${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h4>${RUND.seminare.map((x, i) => `<div class="karte"><b>${esc(x.thema)}</b>
+      <div class="hinweis">${esc(fRundDatum.format(new Date(x.beginn)))} · ${x.ichReferent ? "🎤 du warst Referent" : `Referent: ${esc(x.referent)}`}</div>
+      ${x.bestaetigung ? `<div class="knoepfe"><button class="knopf klein haupt" onclick="rundBestaetigung(null, RUND.seminare[${i}])">📄 Teilnahmebestätigung</button></div>` : x.ichReferent ? "" : '<div class="hinweis">Keine Bestätigung – weniger als die Hälfte der Zeit dabei.</div>'}</div>`).join("")}` : "";
+  } catch {}
+}
+async function rundStartKarte(id) { if (!RUND.lage) await rundOeffnen(id); else rundTischZeigen(id); }
+setInterval(() => { try { rundKarteZeichnen(); if (RUND.offen) rundTischZeichnen(); } catch {} }, 60000);
+addEventListener("resize", () => { if (RUND.offen) { clearTimeout(RUND.gross); RUND.gross = setTimeout(rundTischZeichnen, 200); } }); // Handy gedreht → Plätze neu ausmessen
 // ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Wunsch Hansi, Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
 // Kommen/Gehen in der App: Karte auf der Startseite (ab 30 Min. vor Dienstbeginn bzw. solange angemeldet), Blatt mit Vorschlag aus dem
 // Dienstplan (nahe am Plan = geplante Zeit, sonst jetzt, 5-Min.-Schritte), Grund ab 15 Min. Abweichung, Pause beim Gehen, Standort nur als
@@ -28952,9 +29334,10 @@ async function smLaden(oeffnen = false, still = false) { // 2.23.63: Fehler sich
 const smOffen = () => (SM.liste || []).filter((e) => e.status === "offen" && (e.frei || []).length); // 2.521.0: nur mit angebotenen freien Terminen
 async function smStart() {
   blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3>${ICH?.admin ? `<button class="knopf haupt" onclick="$('smBlatt').remove();scStart()">🎓 Schulungen verwalten</button>` : ""}<div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
+    <div id="smSeminare"></div><!-- 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: besuchte Seminare mit Teilnahmebestätigung -->
     <button type="button" class="tw-nicht" onclick="$('smBlatt').remove();zeige('archiv')">📄 Meine Zusammenfassungen im Archiv (Register „Schulung“)</button>
     <button class="knopf" onclick="$('smBlatt').remove()">Schließen</button>`).classList.add("sc-blatt");
-  await smLaden(true); smZeigen();
+  await smLaden(true); smZeigen(); rundSeminareZeigen();
 }
 function smZeigen() {
   const z = $("smInhalt"); if (!z) return;
@@ -31090,6 +31473,7 @@ async function rcBild(param) {
 }
 const DRUCKARTEN = {
   reisecheckliste: { bauen: (o, p) => druckReiseCheckliste(p) }, // KC-CLUB-REISE-CHECKLISTE (2.223.0)
+  tischbestaetigung: { bauen: (o, p) => druckTischBestaetigung(p) }, // 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: Teilnahmebestätigung Seminar
   schild: { bauen: () => druckSchild() }, // KC-CLUB-SCHILDER (2.150.0)
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
@@ -34770,6 +35154,7 @@ const FENSTER_NAMEN = {
   buWeiter: "🏢 Büro: Wie weiter?", bwEinBlatt: "👋 Bühne: Einladung", caBlatt: "🍽️ Clubabend Live", cfBlatt: "🎨 Chat-Farben", chatBlatt: "💬 Unterhaltung (Fenster)",
   chatMitgliederBlatt: "👥 Teilnehmer der Unterhaltung", cjBlatt: "📅 Clubjahr", cuFenster: "📊 Kurze Abstimmung", dgBlatt: "👨‍🍳 Dienst-Gruß", diagBlatt: "🩺 Server-Diagnose",
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
+  rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", erinBlatt: "🔔 Erinnerung für dich",
@@ -34805,6 +35190,7 @@ Object.assign(SPUR_WAS, {
   fenster: "🪟", vorlesen: "🔊 Text vorgelesen",
   klopf_verpasst: "👋 Verpasstes Anklopfen angezeigt", dw_laufband: "🗓️ Dienstwunsch aus dem Info-Feld geöffnet", eselsohr: "📄 Eselsohr: Rückseite des Kopfs geöffnet", kachel_rueck: "🔄 Kachel umgedreht (Rückseite)",
   vorfuehren_ton: "📺 Live zeigen mit Ton gestartet", mail_rund: "✉️ Rundmail verschickt", gesendet_mehrfach: "✉️ Nachricht an mehrere einzeln verschickt", buero_einlesen: "📥 Büro: Dokument eingelesen",
+  tat_tisch_neu: "🪑 Zum Runden Tisch eingeladen", tat_tisch_zusage: "🪑 Zum Runden Tisch zugesagt", tat_tisch_zusage_weg: "🪑 Zusage zum Runden Tisch zurückgenommen", tat_tisch_weg: "🪑 Runden Tisch verlassen", // 2.762.0
   einmal_foto: "📸 Einmal-Foto angesehen", mitschauen_laeuft: "🔴 Mitschauen läuft", fernhilfe_ton: "🛟 Fernhilfe mit Ton gestartet",
   unterstuetzung_keine: "🤝 Unterstützung gewählt: keine", unterstuetzung_etwas: "🤝 Unterstützung gewählt: etwas", unterstuetzung_viel: "🤝 Unterstützung gewählt: viel",
   hz_kapitel: "❓ Hilfe-Kapitel geöffnet:", hz_eintrag: "❓ Hilfetext aufgerufen:", hz_zeig: "👉 Hilfe „Zeig mir wo“:", hz_vorlesen: "🔊 Hilfetext vorgelesen:",
@@ -34835,6 +35221,7 @@ const SPUR_TATEN = {
   erstattung_senden: () => ["tat_erstattung"], feedback_senden: () => ["tat_feedback"], hilfe_aufruf: () => ["tat_hilfe_aufruf"], hilfe_antwort: () => ["tat_hilfe_antwort"],
   treffen_speichern: () => ["tat_termin_neu"], aufgabe_speichern: () => ["tat_aufgabe"], todo_anlegen: () => ["tat_todo"], chat_umfrage_stimmen: () => ["tat_umfrage_stimme"],
   rezept_speichern: () => ["tat_rezept"], video_bewerten: (d) => ["tat_video_bewertet", d.video],
+  tisch_anlegen: () => ["tat_tisch_neu"], tisch_zusage: (d) => [d.zusage === "ja" ? "tat_tisch_zusage" : "tat_tisch_zusage_weg"], tisch_verlassen: () => ["tat_tisch_weg"], // 2.762.0 KC-CLUB-RUNDER-TISCH
   hilfe_bewerten: (d) => [d.wert > 0 ? "hz_gut" : d.wert < 0 ? "hz_schlecht" : "hz_bew_weg", d.id],
 };
 function spurTat(action, d) { try { const f = SPUR_TATEN[action]; if (!f) return; const [w, mit] = f(d || {}) || []; if (w) spur(w, mit || null); } catch {} } // aus api() nach jeder erfolgreichen Antwort

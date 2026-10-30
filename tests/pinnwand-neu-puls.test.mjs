@@ -1,4 +1,4 @@
-// 2.760.0 KC-CLUB-PINNWAND-NEU-PULS (Wunsch Hansi 29.10.2026 „nur wenn seit letzter Anmeldung ein neues Post-it an der Pinnwand ist, lass den Button
+// 2.763.0 KC-CLUB-PINNWAND-NEU-PULS (Wunsch Hansi 29.10.2026 „nur wenn seit letzter Anmeldung ein neues Post-it an der Pinnwand ist, lass den Button
 // auffällig pulsieren und zeige die Anzahl an“ + „ja“ zu Hilfe-Aufrufen): Zahl = ungelesene fremde Zettel + offene Hilfe-Aufrufe; pulsiert nur dann.
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -41,4 +41,4 @@ assert.match(html, /:root\.ohne-anim \.kachel\.pw-neu, :root\.ohne-anim \.kachel
 assert.match(html, /@media \(prefers-reduced-motion: reduce\) \{ \.kachel\.pw-neu, \.kachel\.pw-neu \.zahl \{ animation: none; \} \}/);
 assert.match(html, /:root\.kc-ruhe \.pw-neu, :root\.kc-ruhe \.pw-neu \.zahl \{/);
 assert.match(app, /id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln"/, "Hilfe-Zentrum");
-console.log("OK – KC-CLUB-PINNWAND-NEU-PULS (2.760.0)");
+console.log("OK – KC-CLUB-PINNWAND-NEU-PULS (2.763.0)");

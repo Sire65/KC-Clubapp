@@ -1,0 +1,6 @@
+nicht_in_gruppe=gruppe
+gruppenmitglied=ok
+leitung=ok
+ohne_gruppe_offen=ok
+gruppen_seminar_ohne_anmeldung=anmeldung
+gruppen_seminar_angemeldet=ok

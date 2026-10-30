@@ -1126,9 +1126,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/pinnwandSichtbar\(ich\)\)\.filter\(\(x: any\) => ids\.has\(x\.id\) && x\.person_id !== ich\.person_id\)/.test(g) && /\.slice\(0, 20\)/.test(g), "gesehen nur für sichtbare fremde Zettel");
   assert.ok(/text: z\.text, zeit: z\.erstellt_am/.test(server), "pinnwand_neu liefert den Text nicht");
   assert.ok(/function pwFenster\(neu\)/.test(html) && /pwFenster\(neu\);/.test(html) && !/pwBanner/.test(html), "Fenster statt Banner fehlt");
-  assert.ok(/(api\("pinnwand_gesehen", \{ ids: liste\.map\(\(z\) => z\.id\) \}\)|pwGesehenMelden\(liste\.map\(\(z\) => z\.id\)\))/.test(html) /* 2.760.0 KC-CLUB-PINNWAND-NEU-PULS: über pwGesehenMelden (Zahl zieht mit) */ && /\$\{esc\(z\.text \|\| ""\)\}/.test(html), "Gelesen/Text im Fenster fehlt");
+  assert.ok(/(api\("pinnwand_gesehen", \{ ids: liste\.map\(\(z\) => z\.id\) \}\)|pwGesehenMelden\(liste\.map\(\(z\) => z\.id\)\))/.test(html) /* 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: über pwGesehenMelden (Zahl zieht mit) */ && /\$\{esc\(z\.text \|\| ""\)\}/.test(html), "Gelesen/Text im Fenster fehlt");
   const st = html.slice(html.indexOf("async function pwStart("), html.indexOf("async function pwStart(") + 1400);
-  assert.ok(st.indexOf('api("pinnwand_neu")') > 0 && st.indexOf('api("pinnwand_neu")') < st.indexOf('api("pinnwand", { markieren: false })'), "App-Start zeigt neue Zettel nicht vor dem Laden"); // 2.760.0: das Laden beim Start markiert nichts mehr
+  assert.ok(st.indexOf('api("pinnwand_neu")') > 0 && st.indexOf('api("pinnwand_neu")') < st.indexOf('api("pinnwand", { markieren: false })'), "App-Start zeigt neue Zettel nicht vor dem Laden"); // 2.763.0: das Laden beim Start markiert nichts mehr
 }
 
 // 81. 0.59.0: Dienstwünsche mit Twinkey aus DP2 – unverändert (KC-CLUB-DIENSTWUNSCH)
@@ -3047,7 +3047,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok((/hilfe: await hilfeListe\(ich\)/.test(pw) || (/const pHilfe = hilfeListe\(ich\)\.then\(/.test(pw) && /hilfe: await pHilfe/.test(pw))) && /\.catch\(\(\) => null\)/.test(pw), "Pinnwand liefert Aufrufe aus dem vorhandenen Kern, Fehler bricht die Pinnwand nicht");
   assert.ok(/function pwAushangHtml\(\)/.test(html) && /onclick="hilfeVonPinnwand\('\$\{a\.id\}'\)"/.test(html) && /function hilfeVonPinnwand\(id\) \{[^\n]*(HL\.oeffnen = id; (return )?hlStart\("helfen"\)|hilfeDirekt\(id\))/.test(html), "Aushang führt zum Aufruf"); // 1.93.0: Kurzansicht bzw. Formular (Test 274)
   assert.ok(/if \(HL\.tab === "helfen" && HL\.oeffnen\)/.test(html), "Aufruf nach Laden öffnen");
-  assert.ok(/PW\.offen = PW\.neu \+ pwHilfeNeu\(\)\.length/.test(html) /* 2.760.0 KC-CLUB-PINNWAND-NEU-PULS: nur neue Zettel + offene Aufrufe */ && /PW_GEMELDET\.has\("hilfe:" \+ a\.id\)/.test(html), "Zählen + Start-Hinweis einmal je Aufruf");
+  assert.ok(/PW\.offen = PW\.neu \+ pwHilfeNeu\(\)\.length/.test(html) /* 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: nur neue Zettel + offene Aufrufe */ && /PW_GEMELDET\.has\("hilfe:" \+ a\.id\)/.test(html), "Zählen + Start-Hinweis einmal je Aufruf");
   assert.ok(/hlSetze\('absprache', true\)">🤝 Nach Absprache/.test(html) && /absprache: false, datum: hlTag\(0\)/.test(html) && /absprache: !!f\.absprache/.test(html), "Formular Absprache, Standard bestimmter Tag");
   assert.ok(/<textarea id="hfNotiz" data-diktat class="hl-notiz" rows="6" maxlength="900"/.test(html) && /\.slice\(0, 1000\)/.test(html), "großes Textfeld");
   assert.ok(!/🗓️ \$\{esc\(hlTagName\(a\.datum\)\)\}/.test(html) && /hlWann\(a\)/.test(html), "Anzeige überall über hlWann");
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7405,7 +7405,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /setTimeout\(\(\) => \{ try \{ navigator\.vibrate\?\.\(KLOPF_VIBRATION\); \} catch \{\} \}, 700\); \/\/ erst der Ton, dann vibrieren/, "erst Ton, dann vibrieren");
   assert.match(programm, /klopfTonSpielen\(klopfStand\(\)\.ton\); klopfWiederholen\(k\.id\);/, "wiederholt, solange die Frage offen ist");
   assert.match(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8"), /\/\^👋\/\.test\(titel\) \? \[350, 150, 350, 150, 600\]/, "Push vibriert beim Anklopfen kräftig");
-  assert.match(programm, /if \(klopfSprechenAnnehmen\(\)\) return; \/\/ 2\.647\.0/, "Rückruf wird beim Anklopfer von selbst angenommen");
+  assert.match(programm, /if \(klopfSprechenAnnehmen\(\) \|\| dazuAnnehmen\(\)\) return; \/\/ 2\.647\.0/, "Rückruf wird beim Anklopfer von selbst angenommen (auch nach Dazukommen, KC-CLUB-GESPRAECHE)");
   assert.match(programm, /RUF\.art === "video" \|\| RUF\.konferenzId \|\| RUF\.gegen\?\.person_id !== w\.pid\) return false;/, "nur genau diese Person, nur Ton, nur 90 s");
   assert.match(server, /insert\(\{ von: ich\.person_id, an, \.\.\.\(art === "sprechen" \? \{ art \} : \{\}\) \}\)[^\n]*\n\s*if \(error && art === "sprechen"\)/, "Server: art speichern, ohne Spalte weiter");
   assert.match(server, /db\.from\("kc_club_anklopfen"\)\.select\("\*"\) \/\/ 2\.647\.0/, "online liest art mit, ohne Spaltenliste");
@@ -10043,7 +10043,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/const CD_ARTEN = \[/.test(html) && ["reise", "weihnachten", "silvester", "meingeb", "mggeb"].every((k) => new RegExp(`\\["${k}", "`).test(html)), "Countdown-Registry fehlt");
   assert.ok(/if \(cdNur\(\) \|\| \(t && /.test(html) && /return l;\n  \}\n  for \(const \[k, , f\] of CD_ARTEN\)/.test(html) && /<b>📌 Standard: nur nächstes Clubtreffen<\/b>/.test(html), "Standard = nur nächstes Clubtreffen");
-  assert.ok(/Math\.ceil\(\(new Date\(t\.beginn\) - Date\.now\(\)\) \/ 86400000\) <= 2\)\) \{ \/\/ nur Treffen[^\n]*\n    if \(cdArtAn\("privat"\)\) try \{ l\.push\(\.\.\.cdPrivat\(\)\); \} catch \{\}[^\n]*\n    return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen (2.242.0: nur angehakte private Termine dazu)");
+  assert.ok(/cdTageBis\(berlinIso\(t\.beginn\)\) <= 2\)\) \{ \/\/ KC-CLUB-TREFFEN-KALENDERTAG: Kalendertage wie oben \/\/ nur Treffen[^\n]*\n    if \(cdArtAn\("privat"\)\) try \{ l\.push\(\.\.\.cdPrivat\(\)\); \} catch \{\}[^\n]*\n    return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen (2.242.0: nur angehakte private Termine dazu)");
   assert.ok(/id="cdKachel"/.test(html) && /id="cdWahl"/.test(html) && /cdEinstellungenZeigen\(\);(?: try \{ schalterZeilen\(\$\("v-einstellungen"\)\); \} catch \{\})? tippSchalterZeigen\(\)/.test(html), "Kachel/Einstellungen fehlen");
   assert.ok(/case "countdowns": \{/.test(server) && /a\.dabei && String\(a\.bis \|\| a\.von\) >= heute/.test(server), "Server: nur eigene Reisen");
 }

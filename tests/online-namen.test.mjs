@@ -9,7 +9,9 @@ const app = programmText(), html = fs.readFileSync(new URL("../index.html", impo
 const start = app.indexOf("function onlineNamenHtml()"), ende = app.indexOf("\n}\n", start) + 2;
 const quelle = app.slice(start, ende);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-const mach = (ONL, frisch = true) => new Function("ONL", "mpOnline", "esc", quelle + "return onlineNamenHtml();")(ONL, () => (frisch ? ONL.liste.length : 0), esc);
+// KC-CLUB-GESPRAECHE: laufende Telefonate stehen als eigene Schilder vorne (gsKopf/gsSchild hier als einfache Nachbildung)
+const gsKopf = () => [], gsSchild = (g, kopie) => `<span class="on-name on-gs"${kopie ? ' aria-hidden="true"' : ' role="button"'}>${g.id}</span>`;
+const mach = (ONL, frisch = true, gs = gsKopf) => new Function("ONL", "mpOnline", "esc", "gsKopf", "gsSchild", quelle + "return onlineNamenHtml();")(ONL, () => (frisch ? ONL.liste.length : 0), esc, gs, gsSchild);
 
 assert.equal(mach({ zeigen: true, liste: [] }), "", "niemand online → nichts");
 assert.equal(mach({ zeigen: false, liste: [{ person_id: "P1", vorname: "Klaus" }] }), "", "selbst unsichtbar → keine Namen (wie die Zahl)");
@@ -24,6 +26,9 @@ assert.equal((drei.match(/role="button"/g) || []).length, 3, "nur die erste Reih
 assert.ok(drei.indexOf("Anne") < drei.indexOf("Klaus") && drei.indexOf("Klaus") < drei.indexOf("Marianne"), "alphabetisch");
 assert.ok(!/<button/.test(drei), "kein Knopf im Knopf (das Feld ist selbst ein Knopf)");
 assert.match(mach({ zeigen: true, liste: [{ person_id: "P1", vorname: "<b>" }] }), /&lt;b&gt;/, "Namen werden maskiert");
+const mitGs = mach({ zeigen: true, liste: [{ person_id: "P1", vorname: "Klaus" }] }, true, () => [{ id: "G1" }]);
+assert.match(mitGs, /class="on-namen on-lauf"/, "ein Name + ein Gespräch → Laufschrift");
+assert.ok(mitGs.indexOf("G1") < mitGs.indexOf("Klaus"), "Gespräche vorne");
 
 // eingebunden im mittleren Feld; der Zoom des Feldes lässt Tipps auf Namen durch; Laufschrift ruht bei Sparmodus/Bewegung reduzieren
 assert.match(app, /<b class="mini-zeile">\$\{INIT\?\.mitgliederAnzahl \|\| "–"\}\$\{ONL\.zeigen \? onlineZahlHtml\(\) : ""\}<\/b>\$\{onlineNamenHtml\(\)\}<span>Mitglieder/);
