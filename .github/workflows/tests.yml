@@ -33,6 +33,8 @@ jobs:
       # KC-CLUB-DIENST-STEMPEL (2.590.0)
       - run: node tests/dienst-stempel.test.mjs
       - run: node tests/dienst-tausch.test.mjs
+      # KC-CLUB-RUNDER-TISCH (2.760.0)
+      - run: node tests/runder-tisch.test.mjs
       # KC-CLUB-REZEPT-WEIHNACHT (2.729.0)
       - run: node tests/rezept-weihnacht.test.mjs
       # KC-CLUB-ONLINE-NAMEN (2.731.0)

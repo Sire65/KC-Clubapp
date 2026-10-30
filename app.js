@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.759.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.760.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9785,6 +9785,8 @@ const KACHELN = {
     { id: "clubabend", sym: "🍽️", t: "Clubabend Live", u: () => (!caHeute() ? "Vorschau nächster Clubabend" : ICH?.vorstand ? "Heute · Tagesordnung abhaken" : "Heute · Tagesordnung & mehr"), aktion: "caOeffnen(!caHeute() && !!ICH?.admin)", nur: () => caHeute() || !!ICH?.admin, klasse: "ca-kachel" },
     // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: nur solange die Sammelaktion läuft (Clubleitung immer, solange eingerichtet)
     { id: "clubjahr", sym: "📖", t: "Unser Clubjahr", u: () => cjUnter(), aktion: "cjOeffnen()", nur: () => !!INIT?.clubjahr },
+    // 2.760.0 KC-CLUB-RUNDER-TISCH: zu einem Thema einladen, Platz nehmen (höchstens 18) – nur Mitglieder (nicht in ZUGANG_KACHELN), bis zur Freigabe nur der Admin
+    { id: "runder_tisch", sym: "🪑", t: "Runder Tisch", u: () => (nurTest("runder_tisch") ? "🔒 nur für dich (Test) · " : "") + "Thema · Platz nehmen · mitreden", aktion: "rundOeffnen()", nur: () => frei("runder_tisch") },
     { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
     { id: "sos", sym: "🆘", t: "SOS – Notfall", u: "Notruf · Kontakte im Notfall", aktion: "sosStart()", klasse: "sos" },
@@ -16576,6 +16578,8 @@ function hashSprung(h) {
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
     else if (h === "#diensttausch") dtOeffnen(); // 2.606.0 KC-CLUB-DIENST-TAUSCH (Link aus dem Push)
+    else if (h === "#tisch") rundOeffnen(); // 2.760.0 KC-CLUB-RUNDER-TISCH
+    else if (/^#tisch=[0-9a-f-]{36}$/.test(h)) rundOeffnen(h.slice(7)); // 2.760.0: „Gleich: Runder Tisch …“ aus dem Push
     else if (h === "#fremdzugriffe") { zeige("sicherheit"); if (ICH?.admin) setTimeout(fremdZeigen, 300); } // 2.579.0 KC-CLUB-FREMDZUGRIFF (Link aus dem Push)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
@@ -17297,7 +17301,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.760.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
@@ -21804,6 +21808,187 @@ async function dtProbe() {
   if (!datum || !start || !ende) return melde("Bitte Tag und Uhrzeit wählen.", true);
   try { const r = await api("dienst_tausch_probe", { datum, start, ende, bereich: $("dtPBer")?.value || "Probe" }); DTL = r.lage; dtZeichnen(); melde("🧪 Probe-Angebot angelegt"); } catch (e) { meldeFehler(e); }
 }
+// ---------- 2.760.0 KC-CLUB-RUNDER-TISCH (Stufe RT1, Wunsch Hansi 30.10.2026, Spezifikation docs/RUNDER_TISCH.md) ----------
+// Jedes Mitglied lädt zu Thema und Uhrzeit ein; ab 15 Min. vor Beginn erscheint der Tisch auf der Startseite und jeder kann Platz nehmen (höchstens 18).
+// Am Tisch: Plätze im Kreis (bis 8 große, bis 18 kleinere), Tisch-Chat = normale Unterhaltung (Text, 🎤 Sprachnachricht, Foto, PDF).
+// Solange man sitzt, meldet sich die App alle 60 s (tisch_platz) – sonst nichts im Sekundentakt (KC-DB-SPARSAM). Wer sich 90 s nicht gemeldet hat,
+// steht grau da (Zustand unbekannt, Vertrag Regel 11), nach 150 s ist der Platz frei. Bis zur Freigabe sieht es nur der Admin (🔒 Test).
+const RT_HERZ_TISCH_MS = 60000;
+const RUND = { lage: null, sitze: null, warte: null, herz: null };
+const rundTische = () => RUND.lage?.tische || [];
+const rundTisch = (id) => rundTische().find((t) => t.id === id) || null;
+const rundUhr = (iso) => fZeit.format(new Date(iso));
+function rundLageSetzen(l) {
+  if (l?.nur && RUND.lage) { const neu = l.tische || [], alt = RUND.lage.tische || []; RUND.lage = { ...RUND.lage, jetzt: l.jetzt, tische: alt.some((t) => t.id === l.nur) ? alt.flatMap((t) => (t.id === l.nur ? neu : [t])) : [...alt, ...neu] }; } // Herzschlag: nur dieser Tisch
+  else if (l && l.aktiv !== false && !l.nur) RUND.lage = l;
+  else if (l?.nur) RUND.lage = { ...l, nur: undefined };
+  rundZeichnen(); rundTischZeichnen(); rundKarteZeichnen();
+}
+async function rundOeffnen(id) {
+  if (!frei("runder_tisch")) return melde("Der Runde Tisch ist noch nicht freigegeben.");
+  const f = blattAuf("rundBlatt", `<div id="rundInhalt"><p class="hinweis">Wird geladen …</p></div>`); f.classList.add("rund-blatt");
+  try { const l = await api("tisch_liste", {}, { warten: true }); if (!l?.aktiv) { $("rundInhalt").innerHTML = '<p>Der Runde Tisch ist noch nicht freigegeben.</p>'; return; } rundLageSetzen(l); if (id && rundTisch(id)) rundTischZeigen(id); }
+  catch (e) { const el = $("rundInhalt"); if (el) el.innerHTML = `<p>⚠️ ${esc(fehlerText(e, ""))}</p><button class="knopf" onclick="fensterZu($('rundBlatt'))">Schließen</button>`; }
+}
+const RUND_PHASE = { geplant: "📅 geplant", gleich: "⏳ gleich geht's los", offen: "🟢 läuft", vorbei: "✔️ vorbei", abgesagt: "🚫 abgesagt" };
+function rundKarteHtml(t) {
+  const k = (fn, txt, haupt) => `<button class="knopf klein${haupt ? " haupt" : ""}" onclick="${fn}">${txt}</button>`, id = jsArg(t.id);
+  const knoepfe = [];
+  if (t.phase === "gleich" || t.phase === "offen") knoepfe.push(k(`rundTischZeigen(${id})`, t.ichSitze ? "🪑 Zum Tisch" : "🪑 Jetzt Platz nehmen", true));
+  if (t.phase === "geplant" || t.phase === "gleich") knoepfe.push(t.meineZusage === "ja" ? k(`rundZusage(${id}, null)`, "↩️ Doch nicht") : k(`rundZusage(${id}, 'ja')`, "✋ Ich setz mich dazu", t.phase === "geplant"));
+  if (t.chat && t.imChat && t.phase === "vorbei") knoepfe.push(k(`rundChat(${id})`, "💬 Tisch-Chat nachlesen"));
+  if (t.darfLeiten && (t.phase === "geplant" || t.phase === "gleich")) knoepfe.push(k(`rundLeiten(${id}, 'absagen')`, "🚫 Absagen"));
+  const zus = t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
+  const am = t.phase === "offen" || t.phase === "gleich" ? ` · 🪑 ${t.amTisch.length} von ${t.plaetze} am Tisch` : t.phase === "vorbei" ? ` · ${t.warenDa} waren dabei` : "";
+  return `<div class="karte rund-karte rund-${esc(t.phase)}"><div><b>${esc(t.thema)}</b> <small class="rund-phase">${RUND_PHASE[t.phase] || ""}</small></div>
+    <div class="hinweis">${esc(t.text)} · lädt ein: ${esc(t.gastgeberName)}</div>
+    ${t.beschreibung ? `<div class="rund-beschreibung">${esc(t.beschreibung)}</div>` : ""}
+    <div class="hinweis">${zus}${am}</div>
+    ${t.phase === "vorbei" && t.chat ? `<div class="hinweis">${t.medienWeg ? "📎 Dateien sind schon gelöscht" : `📎 Dateien werden ${RUND.lage?.regeln?.medienTage || 7} Tage nach dem Ende gelöscht`}, der Chat nach ${RUND.lage?.regeln?.textTage || 30} Tagen.</div>` : ""}
+    ${knoepfe.length ? `<div class="knoepfe">${knoepfe.join("")}</div>` : ""}</div>`;
+}
+function rundZeichnen() {
+  const el = $("rundInhalt"), l = RUND.lage; if (!el || !l) return;
+  const T = rundTische(), jetztMs = Date.now();
+  const jetzt = T.filter((t) => t.phase === "offen" || t.phase === "gleich"), bald = T.filter((t) => t.phase === "geplant");
+  const vorbei = T.filter((t) => t.phase === "vorbei" && t.chat && t.imChat).reverse(), abgesagt = T.filter((t) => t.phase === "abgesagt" && jetztMs - Date.parse(t.beginn) < 2 * 86400000);
+  el.innerHTML = `<h3 style="margin-top:0">🪑 Runder Tisch${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test – nur für dich</small>' : ""}</h3>
+    <p class="hinweis" style="margin-top:0">Lade zu einem Thema ein – wer Interesse hat, sagt zu und setzt sich ab ${l.regeln?.vorlaufMin || 15} Minuten vor Beginn an den Tisch: schreiben, 🎤 sprechen, Fotos und PDFs zeigen. Höchstens ${l.regeln?.plaetzeMax || 18} Plätze.</p>
+    <button class="knopf haupt" onclick="rundNeu()">➕ Zu einem Runden Tisch einladen</button>
+    ${jetzt.length ? `<h4>🟢 Jetzt</h4>${jetzt.map(rundKarteHtml).join("")}` : ""}
+    <h4>📅 Demnächst</h4>${bald.map(rundKarteHtml).join("") || '<p class="hinweis">Gerade ist kein Tisch geplant – lade doch selbst ein!</p>'}
+    ${abgesagt.length ? `<h4>🚫 Abgesagt</h4>${abgesagt.map(rundKarteHtml).join("")}` : ""}
+    ${vorbei.length ? `<h4>✔️ Vorbei – Chat noch zum Nachlesen</h4>${vorbei.map(rundKarteHtml).join("")}` : ""}
+    <button class="knopf" onclick="fensterZu($('rundBlatt'))">Schließen</button>`;
+}
+// Einladen: Auswahl statt Freitext, wo es geht (Vertrag Regel 13)
+function rundNeu() {
+  const r = RUND.lage?.regeln || { dauern: [30, 60, 90], plaetzeMin: 4, plaetzeMax: 18, themaMax: 80, beschreibungMax: 300 };
+  const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+  const plaetze = Array.from({ length: r.plaetzeMax - r.plaetzeMin + 1 }, (_, i) => r.plaetzeMax - i).map((n) => `<option value="${n}">${n} Plätze</option>`).join("");
+  blattAuf("rundNeuBlatt", `<h3 style="margin-top:0">➕ Zum Runden Tisch einladen</h3>
+    <label class="feld">Thema <input id="rundThema" maxlength="${r.themaMax}" placeholder="z. B. Club-Song"></label>
+    <div class="rund-vorschlaege">${["🎤 Club-Song", "🎄 Weihnachtsmarkt", "📖 Rezepte", "🧳 Ausflug", "💡 Ideen für den Club"].map((v) => `<button type="button" class="knopf klein" onclick="$('rundThema').value=${jsArg(v.replace(/^\S+ /, ""))}">${v}</button>`).join("")}</div>
+    <label class="feld">Worum geht's? (freiwillig) <textarea id="rundBeschr" maxlength="${r.beschreibungMax}" rows="2"></textarea></label>
+    <div class="rund-zeile"><label class="feld">Tag <input type="date" id="rundTag" value="${heute}" min="${heute}"></label>
+      <label class="feld">Uhrzeit <input type="time" id="rundUhr" value="20:00" step="300"></label></div>
+    <div class="rund-zeile"><label class="feld">Dauer <select id="rundDauer">${r.dauern.map((d) => `<option value="${d}"${d === 60 ? " selected" : ""}>${d} Minuten</option>`).join("")}</select></label>
+      <label class="feld">Plätze <select id="rundPlaetze">${plaetze}</select></label></div>
+    <label class="rund-haken"><input type="checkbox" id="rundBescheid" checked> 📣 Alle Mitglieder bekommen Bescheid${nurTest("runder_tisch") ? " (im Test nur Admins)" : ""}</label>
+    <div class="knoepfe"><button class="knopf haupt" onclick="rundAnlegen()">🪑 Einladen</button><button class="knopf" onclick="fensterZu($('rundNeuBlatt'))">Abbrechen</button></div>`);
+}
+async function rundAnlegen() {
+  const thema = $("rundThema")?.value.trim();
+  if (!thema) return melde("Bitte ein Thema eingeben.", true);
+  const d = { thema, beschreibung: $("rundBeschr")?.value.trim() || "", datum: $("rundTag")?.value, uhr: $("rundUhr")?.value, dauer: Number($("rundDauer")?.value), plaetze: Number($("rundPlaetze")?.value), bescheid: !!$("rundBescheid")?.checked };
+  if (!d.datum || !d.uhr) return melde("Bitte Tag und Uhrzeit wählen.", true);
+  try { const r = await api("tisch_anlegen", d, { warten: true }); fensterZu($("rundNeuBlatt")); rundLageSetzen(r.lage); melde(r.versand ? "🪑 Eingeladen – alle haben Bescheid bekommen" : "🪑 Eingeladen"); }
+  catch (e) { meldeFehler(e); }
+}
+async function rundZusage(id, zusage) {
+  try { const r = await api("tisch_zusage", { id, zusage }); rundLageSetzen(r.lage); melde(zusage === "ja" ? "✋ Zugesagt – du bekommst kurz vor Beginn Bescheid" : "↩️ Zusage zurückgenommen"); }
+  catch (e) { meldeFehler(e); }
+}
+async function rundLeiten(id, aktion) {
+  const t = rundTisch(id); if (!t) return;
+  const p = { id, aktion };
+  if (aktion === "absagen") { const g = await eingabe(`🚫 Runden Tisch absagen?\n„${t.thema}“, ${t.text}\n\nAlle mit Zusage bekommen Bescheid. Grund (freiwillig):`, "", { ja: "🚫 Absagen" }); if (g === null) return; p.grund = g.trim(); }
+  else if (aktion === "schliessen" && !(await frage(`⏹️ Tisch jetzt schließen?\n„${t.thema}“\n\nDer Chat bleibt zum Nachlesen.`, { ja: "⏹️ Schließen" }))) return;
+  try { const r = await api("tisch_gastgeber", p, { warten: true }); rundLageSetzen(r.lage); melde({ absagen: "🚫 Abgesagt", verlaengern: "⏱️ 30 Minuten länger", schliessen: "⏹️ Tisch geschlossen" }[aktion]); }
+  catch (e) { meldeFehler(e); }
+}
+function rundChat(id) {
+  const t = rundTisch(id); if (!t?.chat) return melde("Der Tisch-Chat ist schon gelöscht.");
+  fensterZu($("rundTischBlatt")); fensterZu($("rundBlatt")); chatOeffnen(t.chat);
+}
+// ---- Am Tisch: Platz nehmen, Herzschlag alle 60 s, Plätze im Kreis ----
+async function rundTischZeigen(id) {
+  RUND.offen = id;
+  const f = blattAuf("rundTischBlatt", `<div id="rundTischInhalt"><p class="hinweis">Du nimmst Platz …</p></div>`); f.classList.add("rund-blatt");
+  f._zu = () => { RUND.offen = null; f.remove(); };
+  await rundPlatz(id, true);
+}
+async function rundPlatz(id, laut) {
+  try {
+    const r = await api("tisch_platz", { id }, laut ? { warten: true } : { still: true });
+    if (r.ok) { if (RUND.sitze !== id) { if (laut) melde("🪑 Du sitzt am Tisch"); else if (RUND.warte === id) { melde("🪑 Ein Platz ist frei geworden – du sitzt jetzt am Tisch"); try { navigator.vibrate?.(60); } catch {} } } RUND.sitze = id; RUND.warte = null; }
+    else { if (RUND.sitze === id) RUND.sitze = null; RUND.warte = r.ergebnis === "voll" ? id : null; if (laut) melde(r.meldung, r.ergebnis !== "voll"); }
+    rundHerzPlanen(); rundLageSetzen(r.lage);
+  } catch (e) { if (laut) meldeFehler(e); rundTischZeichnen(); }
+}
+// Herzschlag: solange ich sitze (oder auf einen Platz warte) und die App sichtbar ist; im Hintergrund nicht (der Platz wird nach 150 s frei)
+function rundHerzPlanen() {
+  clearTimeout(RUND.herz);
+  const id = RUND.sitze || RUND.warte; if (!id) return;
+  RUND.herz = setTimeout(() => {
+    const t = rundTisch(id);
+    if (!t || t.phase === "vorbei" || t.phase === "abgesagt") { RUND.sitze = RUND.warte = null; rundKarteZeichnen(); rundTischZeichnen(); return; }
+    if (document.hidden) return rundHerzPlanen();
+    rundPlatz(id, false);
+  }, RT_HERZ_TISCH_MS);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && (RUND.sitze || RUND.warte)) rundPlatz(RUND.sitze || RUND.warte, false); });
+async function rundVerlassen(id) {
+  try { const r = await api("tisch_verlassen", { id }); RUND.sitze = RUND.warte = null; clearTimeout(RUND.herz); fensterZu($("rundTischBlatt")); rundLageSetzen(r.lage); melde("🚪 Tisch verlassen – du kannst jederzeit wieder Platz nehmen"); }
+  catch (e) { meldeFehler(e); }
+}
+// Plätze im Kreis: Gastgeber oben (12 Uhr), dann in Reihenfolge des Platznehmens; freie Plätze gestrichelt
+function rundPlaetzeHtml(t) {
+  const n = t.plaetze, gr = n <= 8 ? 52 : n <= 12 ? 44 : 36, r = n <= 8 ? 39 : 42;
+  const leute = [...t.amTisch].sort((a, b) => (b.id === t.gastgeber) - (a.id === t.gastgeber));
+  let html = "";
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n, x = (50 + r * Math.cos(a)).toFixed(2), y = (50 + r * Math.sin(a)).toFixed(2), p = leute[i];
+    if (!p) { html += `<div class="rund-platz frei" style="left:${x}%;top:${y}%"><div class="rund-av" style="width:${gr}px;height:${gr}px" aria-label="freier Platz"></div></div>`; continue; }
+    const fig = avFigurVon({ person_id: p.id }), vn = p.name.split(" ")[0];
+    const titel = p.sicher ? `${p.name} sitzt am Tisch` : `${p.name} – Verbindung unbekannt`;
+    html += `<div class="rund-platz${p.sicher ? "" : " unsicher"}${p.id === ICH?.person_id ? " ich" : ""}${p.id === t.gastgeber ? " gastgeber" : ""}" style="left:${x}%;top:${y}%" title="${esc(titel)}">
+      <div class="rund-av" style="width:${gr}px;height:${gr}px;font-size:${Math.round(gr * 0.36)}px" aria-label="${esc(titel)}">${avGueltig(fig) ? avatarSvg(fig, gr - 6, initialen(p.name)) : esc(initialen(p.name))}</div>
+      <div class="rund-name">${esc(p.id === t.gastgeber ? "👑 " + vn : vn)}</div></div>`;
+  }
+  return html;
+}
+function rundTischZeichnen() {
+  const el = $("rundTischInhalt"), t = RUND.offen && rundTisch(RUND.offen); if (!el) return;
+  if (!t) { el.innerHTML = `<p>Den Tisch gibt es nicht mehr.</p><button class="knopf" onclick="fensterZu($('rundTischBlatt'))">Schließen</button>`; return; }
+  const sitze = RUND.sitze === t.id, warte = RUND.warte === t.id, restMin = Math.max(0, Math.round((Date.parse(t.ende) - Date.now()) / 60000));
+  const zeit = t.phase === "gleich" ? `beginnt um ${rundUhr(t.beginn)} Uhr` : t.phase === "offen" ? `noch ${restMin} Min. (bis ${rundUhr(t.ende)} Uhr)` : RUND_PHASE[t.phase] || "";
+  const unsicher = t.amTisch.filter((p) => !p.sicher).length;
+  el.innerHTML = `<h3 style="margin:0">🪑 ${esc(t.thema)}${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h3>
+    <div class="hinweis">lädt ein: ${esc(t.gastgeberName)} · ${esc(zeit)}</div>
+    <div class="rund-buehne" role="img" aria-label="${esc(`Runder Tisch: ${t.amTisch.length} von ${t.plaetze} Plätzen besetzt`)}">
+      <div class="rund-holz"><div><small>${esc(t.text.split(" · ")[0])}</small><strong>${esc(t.thema)}</strong><span>🪑 ${t.amTisch.length} / ${t.plaetze}</span></div></div>
+      ${rundPlaetzeHtml(t)}
+    </div>
+    ${unsicher ? `<p class="hinweis">⚪ ${unsicher === 1 ? "Bei 1 Person" : `Bei ${unsicher} Personen`} ist gerade unklar, ob sie noch da ${unsicher === 1 ? "ist" : "sind"} (grau).</p>` : ""}
+    ${warte ? `<p class="rund-warte">⏳ Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.</p>` : ""}
+    ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<p class="hinweis">Du sitzt gerade nicht am Tisch.</p>` : ""}
+    <div class="knoepfe rund-leiste">
+      ${sitze && t.chat ? `<button class="knopf haupt" onclick="rundChat(${jsArg(t.id)})">💬 Tisch-Chat: schreiben · 🎤 sprechen · 📎 zeigen</button>` : ""}
+      ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<button class="knopf haupt" onclick="rundPlatz(${jsArg(t.id)}, true)">🪑 Platz nehmen</button>` : ""}
+      ${t.darfLeiten && t.phase === "offen" && (t.verlaengert || 0) < 60 ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'verlaengern')">⏱️ +30 Min.</button>` : ""}
+      ${t.darfLeiten && t.phase === "offen" ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'schliessen')">⏹️ Tisch schließen</button>` : ""}
+      ${sitze || warte ? `<button class="knopf klein" onclick="rundVerlassen(${jsArg(t.id)})">🚪 Tisch verlassen</button>` : ""}
+      <button class="knopf klein" onclick="fensterZu($('rundTischBlatt'))">Zurück</button>
+    </div>`;
+}
+// Karte auf der Startseite: ab 15 Min. vor Beginn bis zum Ende (bzw. solange ich sitze)
+function rundKarteZeichnen() {
+  const el = $("rundKarte"); if (!el) return;
+  if (!frei("runder_tisch")) { el.innerHTML = ""; return; }
+  const t0 = Date.now(), vorlauf = (RUND.lage?.regeln?.vorlaufMin || 15) * 60000;
+  const geladen = RUND.lage ? rundTische() : [], ids = new Set(geladen.map((t) => t.id)); // Tischliste (wenn geladen) + neue Tische aus dem letzten Start-Abgleich
+  const quelle = [...geladen.filter((t) => t.phase !== "abgesagt"), ...(INIT?.runderTisch?.tische || []).filter((t) => !ids.has(t.id))];
+  const da = quelle.filter((t) => Date.parse(t.beginn) - vorlauf <= t0 && t0 < Date.parse(t.ende)).sort((a, b) => (b.id === RUND.sitze) - (a.id === RUND.sitze) || ((b.zusage || b.meineZusage) === "ja") - ((a.zusage || a.meineZusage) === "ja"));
+  const t = da[0];
+  if (!t) { el.innerHTML = ""; return; }
+  const sitze = RUND.sitze === t.id, test = nurTest("runder_tisch") ? ' <span class="ds-test">🔒 Test</span>' : "";
+  el.innerHTML = `<button type="button" class="ds-karte rund-start" onclick="rundStartKarte(${jsArg(t.id)})">
+    <span class="ds-sym">🪑</span><span class="ds-text"><b>${sitze ? "Du sitzt am Runden Tisch" : t0 < Date.parse(t.beginn) ? "Gleich: Runder Tisch" : "Jetzt: Runder Tisch"}${test}</b>
+    <small>„${esc(t.thema)}“ · ${t0 < Date.parse(t.beginn) ? `ab ${esc(rundUhr(t.beginn))} Uhr` : `bis ${esc(rundUhr(t.ende))} Uhr`}${da.length > 1 ? ` · und ${da.length - 1} weiterer` : ""} – ${sitze ? "zurück zum Tisch" : "jetzt Platz nehmen"}</small></span><span class="ds-pfeil">›</span></button>`;
+}
+async function rundStartKarte(id) { if (!RUND.lage) await rundOeffnen(id); else rundTischZeigen(id); }
+setInterval(() => { try { rundKarteZeichnen(); if (RUND.offen) rundTischZeichnen(); } catch {} }, 60000);
 // ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Wunsch Hansi, Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
 // Kommen/Gehen in der App: Karte auf der Startseite (ab 30 Min. vor Dienstbeginn bzw. solange angemeldet), Blatt mit Vorschlag aus dem
 // Dienstplan (nahe am Plan = geplante Zeit, sonst jetzt, 5-Min.-Schritte), Grund ab 15 Min. Abweichung, Pause beim Gehen, Standort nur als
@@ -34755,6 +34940,7 @@ const FENSTER_NAMEN = {
   buWeiter: "🏢 Büro: Wie weiter?", bwEinBlatt: "👋 Bühne: Einladung", caBlatt: "🍽️ Clubabend Live", cfBlatt: "🎨 Chat-Farben", chatBlatt: "💬 Unterhaltung (Fenster)",
   chatMitgliederBlatt: "👥 Teilnehmer der Unterhaltung", cjBlatt: "📅 Clubjahr", cuFenster: "📊 Kurze Abstimmung", dgBlatt: "👨‍🍳 Dienst-Gruß", diagBlatt: "🩺 Server-Diagnose",
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
+  rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", // 2.760.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", erinBlatt: "🔔 Erinnerung für dich",
@@ -34790,6 +34976,7 @@ Object.assign(SPUR_WAS, {
   fenster: "🪟", vorlesen: "🔊 Text vorgelesen",
   klopf_verpasst: "👋 Verpasstes Anklopfen angezeigt", dw_laufband: "🗓️ Dienstwunsch aus dem Info-Feld geöffnet", eselsohr: "📄 Eselsohr: Rückseite des Kopfs geöffnet", kachel_rueck: "🔄 Kachel umgedreht (Rückseite)",
   vorfuehren_ton: "📺 Live zeigen mit Ton gestartet", mail_rund: "✉️ Rundmail verschickt", gesendet_mehrfach: "✉️ Nachricht an mehrere einzeln verschickt", buero_einlesen: "📥 Büro: Dokument eingelesen",
+  tat_tisch_neu: "🪑 Zum Runden Tisch eingeladen", tat_tisch_zusage: "🪑 Zum Runden Tisch zugesagt", tat_tisch_zusage_weg: "🪑 Zusage zum Runden Tisch zurückgenommen", tat_tisch_weg: "🪑 Runden Tisch verlassen", // 2.760.0
   einmal_foto: "📸 Einmal-Foto angesehen", mitschauen_laeuft: "🔴 Mitschauen läuft", fernhilfe_ton: "🛟 Fernhilfe mit Ton gestartet",
   unterstuetzung_keine: "🤝 Unterstützung gewählt: keine", unterstuetzung_etwas: "🤝 Unterstützung gewählt: etwas", unterstuetzung_viel: "🤝 Unterstützung gewählt: viel",
   hz_kapitel: "❓ Hilfe-Kapitel geöffnet:", hz_eintrag: "❓ Hilfetext aufgerufen:", hz_zeig: "👉 Hilfe „Zeig mir wo“:", hz_vorlesen: "🔊 Hilfetext vorgelesen:",
@@ -34820,6 +35007,7 @@ const SPUR_TATEN = {
   erstattung_senden: () => ["tat_erstattung"], feedback_senden: () => ["tat_feedback"], hilfe_aufruf: () => ["tat_hilfe_aufruf"], hilfe_antwort: () => ["tat_hilfe_antwort"],
   treffen_speichern: () => ["tat_termin_neu"], aufgabe_speichern: () => ["tat_aufgabe"], todo_anlegen: () => ["tat_todo"], chat_umfrage_stimmen: () => ["tat_umfrage_stimme"],
   rezept_speichern: () => ["tat_rezept"], video_bewerten: (d) => ["tat_video_bewertet", d.video],
+  tisch_anlegen: () => ["tat_tisch_neu"], tisch_zusage: (d) => [d.zusage === "ja" ? "tat_tisch_zusage" : "tat_tisch_zusage_weg"], tisch_verlassen: () => ["tat_tisch_weg"], // 2.760.0 KC-CLUB-RUNDER-TISCH
   hilfe_bewerten: (d) => [d.wert > 0 ? "hz_gut" : d.wert < 0 ? "hz_schlecht" : "hz_bew_weg", d.id],
 };
 function spurTat(action, d) { try { const f = SPUR_TATEN[action]; if (!f) return; const [w, mit] = f(d || {}) || []; if (w) spur(w, mit || null); } catch {} } // aus api() nach jeder erfolgreichen Antwort

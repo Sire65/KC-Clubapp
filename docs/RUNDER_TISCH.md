@@ -1,6 +1,6 @@
 # 🪑 Runder Tisch – Spezifikation (KC-CLUB-RUNDER-TISCH)
 
-**Stand:** 30.10.2026 · **Status:** Spezifikation, noch nichts gebaut · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“)
+**Stand:** 30.10.2026 · **Status:** RT1 gebaut (2.760.0, 🔒 erst nur Admin zum Testen), RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
 **Entwurf zum Anklicken:** https://claude.ai/artifact/5WfwmnFKfEm5nj8FmK2qFL (Tisch mit 2–18 Plätzen, Chat-Ansicht; Namen sind Beispiele)
 
 ## 1. Ziel
@@ -16,7 +16,8 @@ schreiben, sprechen, Fotos, PDFs, kurze Videos zeigen, gemeinsam den Club-Song h
 | Wer darf beitreten? | **Jeder**, auch ohne Zusage (spontan dazukommen) |
 | Wie viele? | **Höchstens 18 Personen** am Tisch |
 | Speichern | **Nicht lange**, damit die Datenbank nicht vollläuft (Fristen siehe 6.) |
-| Gäste | **Externe Gäste** (z. B. Experten) sollen eingeladen werden können |
+| Gäste | **Externe Gäste** (z. B. Experten) sollen eingeladen werden können – **jedes Mitglied darf Gäste einladen** |
+| Fristen | **7 Tage** (Dateien) und **30 Tage** (Chat) passen |
 
 ## 2. Keine Parallel-Module (KC-Entwicklervertrag Regel 3)
 
@@ -170,7 +171,32 @@ Link vor Beginn −30 Min. und nach Ende ungültig; zweites Gerät abgelehnt; ke
 
 ## 11. Noch offen (Hansi entscheidet)
 
-1. Darf **jedes Mitglied** einen Tischgast einladen, oder braucht der Gast-Link eine Freigabe durch dich oder die Clubleitung? *Vorschlag:* jedes Mitglied darf, du bekommst eine Mitteilung.
-2. Sollen **Gäste auch live sprechen** dürfen, oder nur schreiben und Sprachnachrichten senden? *Vorschlag:* ja, wenn der Gastgeber ihnen den Redestab gibt.
-3. Fristen 7 Tage (Medien) und 30 Tage (Text) so übernehmen?
-4. Soll ein Tisch auch **nur für eine Gruppe** (z. B. Vorstand) einladbar sein, oder immer für alle Mitglieder?
+Entschieden am 30.10.2026: jedes Mitglied darf Tischgäste einladen (RT4); Fristen 7/30 Tage bleiben.
+
+1. Sollen **Gäste auch live sprechen** dürfen, oder nur schreiben und Sprachnachrichten senden? *Vorschlag:* ja, wenn der Gastgeber ihnen den Redestab gibt.
+2. Soll ein Tisch auch **nur für eine Gruppe** (z. B. Vorstand) einladbar sein, oder immer für alle Mitglieder? (RT1: immer für alle Mitglieder)
+
+## 12. Umsetzung RT1 (2.760.0) – was gebaut ist und wo es von oben abweicht
+
+| Teil | Umsetzung |
+|---|---|
+| Datenbank | `supabase/migrations/20261030_kc_club_v2760_runder_tisch.sql`: `kc_club_tisch`, `kc_club_tisch_teilnahme`, Funktion `kc_club_tisch_beitreten` (Platzgrenze unter Zeilensperre). Probelauf `tools/db-test/93_runder_tisch_test.sql`; zusätzlich lokal 30 gleichzeitige Anfragen auf 18 Plätze → genau 18 Plätze, 12 „voll“ |
+| Regeln | `supabase/functions/kc-club/runder-tisch.js` (rein, Test `tests/runder-tisch.test.mjs`) |
+| Server | Aktionen `tisch_liste`, `tisch_anlegen`, `tisch_zusage`, `tisch_platz` (Platz nehmen + Herzschlag), `tisch_verlassen`, `tisch_gastgeber` (absagen/verlängern/schließen); Wartung `tischWartung` |
+| App | Kachel „🪑 Runder Tisch“ (Club), Karte auf der Startseite ab 15 Min. vor Beginn, Tisch mit Plätzen im Kreis, Einladen mit Auswahl, Push-Link `#tisch=<id>` |
+| Freigabe | `runder_tisch` in den Freigaben – bis Hansi „für alle“ wählt, sieht und bekommt es nur der Admin (🔒 Test) |
+| Zugang | Nur Mitglieder. Gäste/Aushilfen: Aktionen nicht in `ZUGANG_AKTIONEN` → 403 (externe Tischgäste kommen mit RT4) |
+
+**Abweichungen von der Spezifikation (bewusst):**
+- **Eigene Liste statt Clubtermin:** Ein Tisch ist kein Eintrag in `kc_club_treffen`. Sonst stünden die Tische aller Mitglieder im offiziellen
+  Terminkalender, in Sitzungs-Abläufen und in den Treffen-Erinnerungen (Mail an alle). Der Tisch hat eigene Zusage und Erinnerung.
+- **Anwesenheit per Herzschlag statt Realtime:** In RT1 meldet sich die App alle 60 s beim Server (`tisch_platz`, 3 Abfragen) – erfüllt das Ziel
+  „höchstens 3 Abfragen je Person und Minute“ und braucht keinen neuen Kanal. Der Realtime-Kanal je Tisch kommt mit RT2/RT3 (Song-Start, Sprechen).
+  Nach 90 s ohne Meldung grau („unbekannt“), nach 150 s ist der Platz frei. Im Hintergrund meldet sich die App nicht.
+- **Benachrichtigung wie eine Nachricht** (Bereich „Nachrichten“: Standard nur Push, keine Mail): neue Einladung an alle Mitglieder (abwählbar),
+  Erinnerung 7–22 Min. vor Beginn an Zusagen und Gastgeber, Absage an die Zusagen. Keine Erinnerung am Vortag.
+- **Tisch-Chat:** wer Platz nimmt, wird Teilnehmer der Unterhaltung „🪑 Thema“. Push für Tisch-Nachrichten wie bei jedem Chat
+  (wer gerade in der App ist, bekommt keinen; stummschalten geht).
+- **Aufräumen (stündlich):** Dateien 7 Tage nach Ende (nur Dateien, die nicht auch in anderen Chats hängen), Chat 30 Tage nach Ende;
+  danach bleibt der Tisch als Kurzprotokoll (Thema, Datum, Gastgeber, Anzahl) und ein Eintrag `tisch_beendet` im Protokoll.
+- **Noch nicht in RT1:** Hilfe-Eintrag, Twinkey, Suchbegriff und Erklär-Video kommen mit der Freigabe für alle (solange sieht es nur der Admin).

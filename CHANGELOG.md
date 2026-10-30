@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.760.0 – 2026-10-30 – 🪑 Runder Tisch, Stufe RT1 – nur Admin zum Testen (KC-CLUB-RUNDER-TISCH) · Server 2.760.0 · DB
+Wunsch Hansi (30.10.): „Ein runder Tisch – um gewisse Uhrzeit eingeblendet, Teilnehmer setzen sich dazu und diskutieren mit“; Entscheidungen: jedes Mitglied darf einladen, jeder darf spontan dazukommen, höchstens 18, nicht zu lange speichern. Spezifikation docs/RUNDER_TISCH.md. Noch nicht freigegeben: bis Hansi freigibt, sieht es nur der Admin (🔒 Test).
+- **Club → 🪑 Runder Tisch:** „➕ Zu einem Runden Tisch einladen“ – Thema (mit Vorschlägen), freiwillig „Worum geht's?“, Tag, Uhrzeit, Dauer 30/60/90 Min., 4–18 Plätze; alle Mitglieder bekommen Bescheid (abwählbar, im Test nur Admins). Höchstens 3 kommende eigene Tische, höchstens 60 Tage im Voraus.
+- **✋ Ich setz mich dazu** (Zusage) – 7–22 Min. vor Beginn kommt „🪑 Gleich: Runder Tisch …“. Ab 15 Min. vor Beginn steht auf der Startseite „Gleich/Jetzt: Runder Tisch“; jedes Mitglied kann Platz nehmen, auch ohne Zusage.
+- **Am Tisch:** Plätze im Kreis um einen Holztisch (bis 8 groß, bis 18 kleiner, freie Plätze gestrichelt, 👑 Gastgeber, eigener Platz gold); grau = seit 90 s keine Meldung (unbekannt, nie als „da“). 💬 Tisch-Chat = normale Unterhaltung: schreiben, 🎤 Sprachnachricht, Fotos, PDFs. Tisch voll → Warteplatz, man rückt von selbst nach. Gastgeber/Admin: ⏱️ +30 Min. (höchstens 60), ⏹️ früher schließen, 🚫 vorher absagen (Zusagen bekommen Bescheid).
+- **Sparsam (KC-DB-SPARSAM):** solange man sitzt, meldet sich die App alle 60 s (3 Abfragen), im Hintergrund gar nicht; nach 150 s ohne Meldung ist der Platz frei.
+- **Aufräumen:** Dateien im Tisch-Chat 7 Tage, der Chat 30 Tage nach dem Ende (Wahl Hansi); danach bleibt nur das Kurzprotokoll (Thema, Datum, Gastgeber, Anzahl).
+- Nur Mitglieder: Gäste und Aushilfen sehen die Kachel nicht, der Server lehnt ab (externe Tischgäste kommen mit Stufe RT4).
+- Datenbank: Migration `20261030_kc_club_v2760_runder_tisch.sql` (Tabellen `kc_club_tisch`, `kc_club_tisch_teilnahme`, Funktion `kc_club_tisch_beitreten` mit Platzgrenze unter Sperre; RLS, nur service_role, Spiegel) – **vor dem Server einspielen**. Ohne Tabellen bleibt die Kachel beim Admin leer mit Fehlerhinweis, sonst ändert sich nichts.
+- Tests: `tests/runder-tisch.test.mjs` (Regeln, Migration, Server/App), Probelauf `tools/db-test/93_runder_tisch_test.sql` (+ lokal 30 gleichzeitige Anfragen auf 18 Plätze → genau 18), Klick-Rundgang mit Tisch (18 Plätze, einer grau, Startseiten-Karte, Einladen; Gegenprobe rot), Vertragstest. Rückweg: App 2.759.0, Server 2.755.0 (Tabellen können bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.759.0 – 2026-10-29 – 🐞 Wege: „Zettel aufgehängt“ stimmte nicht
 Fund Hansi (29.10.): „Karla soll angeblich einen Zettel an die Pinnwand gehängt haben.“ – Hatte sie nicht: Beim Start schaut die App still nach neuen Zetteln (`pinnwand_neu`), und das wurde in 2.755.0 fälschlich als Handlung „📌 Zettel an die Pinnwand gehängt“ gezählt (KC-CLUB-SPUR-VOLL).
 - Jetzt zählt nur das echte Aufhängen (`pinnwand_anheften`). Die 35 falschen Einträge seit 2.755.0 sind aus den Wegen entfernt.

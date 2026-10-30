@@ -34,6 +34,16 @@ const ANTWORTEN = {
   feedback_meins: { bogen: 1, fragen: [], umgesetzt: [], antwort: null },
   mitglieder: { aemter: [], onlineSichtbar: true, mitglieder: [] },
 };
+// 2.760.0 KC-CLUB-RUNDER-TISCH: ein laufender Tisch mit 18 Plätzen (einer grau = unbekannt) – Liste, Tisch und Einladen dürfen nicht über den Rand ragen
+const RT_JETZT = Date.now(), rtZeit = (m) => new Date(RT_JETZT + m * 60000).toISOString();
+const RT_LEUTE = Array.from({ length: 18 }, (_, i) => ({ id: i ? "KC-P-RT" + i : "KC-P-TEST-RUNDGANG", name: i ? `Probe${i} Mitglied` : "Test Rundgang", sicher: i !== 5 }));
+const RT_TISCH = { id: "11111111-2222-3333-4444-555555555555", thema: "Club-Song", beschreibung: "Probe", beginn: rtZeit(-10), ende: rtZeit(50), dauer: 60, verlaengert: 0, plaetze: 18,
+  text: "Do 05.11. 20:00 Uhr · 60 Min.", phase: "offen", gastgeber: "KC-P-RT3", gastgeberName: "Probe3 Mitglied", darfLeiten: true, chat: null, imChat: true, medienWeg: false,
+  meineZusage: "ja", ichSitze: true, zusagen: RT_LEUTE.slice(0, 9), amTisch: RT_LEUTE, warenDa: 0 };
+const RT_LAGE = { aktiv: true, regeln: { plaetzeMin: 4, plaetzeMax: 18, dauern: [30, 60, 90], vorlaufMin: 15, herzSek: 60, vorausTage: 60, themaMax: 80, beschreibungMax: 300, medienTage: 7, textTage: 30 },
+  tische: [RT_TISCH, { ...RT_TISCH, id: "22222222-2222-3333-4444-555555555555", beginn: rtZeit(2880), ende: rtZeit(2940), phase: "geplant", meineZusage: null, ichSitze: false, amTisch: [], zusagen: [] }] };
+Object.assign(ANTWORTEN, { tisch_liste: RT_LAGE, tisch_platz: { ok: true, ergebnis: "da", lage: RT_LAGE } });
+INIT.runderTisch = { tische: [{ id: RT_TISCH.id, thema: RT_TISCH.thema, beginn: RT_TISCH.beginn, ende: RT_TISCH.ende, zusage: "ja" }] };
 const SEITEN = ["termine", "nachrichten", "mitglieder", "einstellungen", "fotos", "pinnwand", "vorschlaege", "dokumente", "archiv", "protokolle", "spiele", "buero",
   "hilfezentrum", "aktionen", "dienste", "erstattung", "helfen", "feedback", "sos", "sicherheit", "programme", "start"];
 const GERAETE = [
@@ -87,6 +97,21 @@ try {
         return { da: !!el && s.display !== "none" && el.getBoundingClientRect().height > 0, quer: document.documentElement.scrollWidth > innerWidth + 2 }; }, v);
       if (!r.da) melde(`${v}: Seite erscheint nicht`);
       if (r.quer) melde(`${v}: ragt seitlich über den Rand`);
+    }
+    // 2.760.0 KC-CLUB-RUNDER-TISCH: Karte auf der Startseite, Liste, Tisch mit 18 Plätzen, Einladen
+    if (g.touch) {
+      const rt = await seite.evaluate(async () => { zeige("start"); await new Promise((r) => setTimeout(r, 400)); const karte = $("rundKarte")?.textContent || "";
+        await rundOeffnen(); const liste = !!$("rundBlatt") && /Club-Song/.test($("rundInhalt")?.textContent || "");
+        await rundTischZeigen("11111111-2222-3333-4444-555555555555"); const b = document.querySelectorAll("#rundTischBlatt .rund-platz");
+        const tisch = { plaetze: b.length, grau: document.querySelectorAll("#rundTischBlatt .rund-platz.unsicher").length, quer: document.documentElement.scrollWidth > innerWidth + 2 };
+        RUND.sitze = RUND.warte = null; clearTimeout(RUND.herz); fensterZu($("rundTischBlatt")); fensterZu($("rundBlatt")); rundNeu();
+        const neu = !!$("rundThema") && document.documentElement.scrollWidth <= innerWidth + 2; fensterZu($("rundNeuBlatt"));
+        return { karte: /Runder Tisch/.test(karte), liste, ...tisch, neu }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
+      if (!rt.karte) melde("Runder Tisch: Karte auf der Startseite fehlt");
+      if (!rt.liste) melde("Runder Tisch: Liste erscheint nicht " + (rt.fehler || ""));
+      if (rt.plaetze !== 18 || rt.grau !== 1) melde(`Runder Tisch: ${rt.plaetze} Plätze, ${rt.grau} grau (erwartet 18 und 1)`);
+      if (rt.quer) melde("Runder Tisch: ragt seitlich über den Rand");
+      if (!rt.neu) melde("Runder Tisch: Einladen-Fenster fehlt oder ragt über den Rand");
     }
     // 2.727.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version
     const teile = await seite.evaluate(async () => { const out = [];
