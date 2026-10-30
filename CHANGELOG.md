@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.765.0 – 2026-10-30 – 👀 Büro für alle zur Ansicht – mit Zeitknöpfen
+Wunsch Hansi (30.10.): „Einen Schalter, dass ich heute Abend während der Clubsitzung das Büro für alle zur Ansicht freischalte – allen nur read only: ansehen alles, aber nix auslösen und verändern. Und fertige Zeitknöpfe: 12, 24, 48 Std., ganze Woche, ganzer Monat, bis auf Widerruf.“ (KC-CLUB-BUERO-ANSICHT)
+- Büro → 🔐 Verwaltung → **👀 Für alle zur Ansicht** (nur Admin): Knöpfe ⏱️ 12 Std. · 24 Std. · 48 Std. · 1 Woche · 1 Monat · Bis auf Widerruf, dazu „⛔ Jetzt wieder schließen“. Zeigt, ob und bis wann es offen ist.
+- Solange offen, bekommt jedes Mitglied ohne eigenes Büro-Recht das vorhandene Recht **„nur lesen“**: ansehen und drucken, nichts speichern, nichts versenden (der Server prüft das bei jeder Aktion). Adressbuch, Aktentasche, Freud & Leid und Eingang bleiben bei der Clubleitung; Gäste und Aushilfen nie; eigene Rechte bleiben unverändert.
+- Mitglieder sehen oben im Büro: „👀 Das Büro ist gerade für alle zur Ansicht geöffnet (bis …)“. Nach Ablauf schließt es von selbst.
+- Gespeichert in kc_club_konfig „buero_ansicht“ (keine neue Tabelle), jede Änderung steht im Protokoll.
+
 ## 2.764.0 – 2026-10-30 – ⛔ Runder Tisch: kein Clubabend und immer nur einer gleichzeitig (KC-CLUB-RUNDER-TISCH-ZEITCHECK) · Server 2.764.0 · DB
 Wunsch Hansi (30.10.): „Bevor ein Termin mit Uhrzeit angezeigt wird, prüfen, ob noch andere Termine anstehen. Kein Tisch, wenn gleichzeitig Clubabend ist. Um die Datenbank zu schonen, keine parallelen Runden Tische – immer nur einer. Wenn ein weiterer geplant ist, dann Meldung.“ (docs/RUNDER_TISCH.md, Abschnitt 16). Noch nur Admin zum Testen.
 - **Im Einladen-Fenster** prüft die App, sobald Tag, Uhrzeit und Dauer gewählt sind: ✅ „Um diese Zeit ist nichts anderes geplant“, ⛔ gesperrt oder ⚠️ Hinweis – darunter „An diesem Tag: …“ mit Tischen, Clubabend und Terminen.

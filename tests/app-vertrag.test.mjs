@@ -1087,11 +1087,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const an = server.slice(server.indexOf("const ANMELDUNG_CACHE_MS"), server.indexOf("// „vorstand“ ist intern"));
   assert.ok(/const ANMELDUNG_CACHE_MS = 60_000, ZULETZT_TAKT_MS = 30_000/.test(an) && /ANMELDUNGEN\.get\(hash\)/.test(an) && !/ANMELDUNGEN\.(get|set)\(token/.test(an), "Speicher nicht über den Token-Hash");
-  assert.ok(/c\.bis > jetztMs/.test(an) && /return \{ \.\.\.c\.ich, aemter: \[\.\.\.c\.ich\.aemter\] \}/.test(an), "abgelaufene Einträge / geteiltes Objekt");
+  assert.ok(/c\.bis > jetztMs/.test(an) && /return (bueroAnsichtAnwenden\()?\{ \.\.\.c\.ich, aemter: \[\.\.\.c\.ich\.aemter\] \}/.test(an) /* 2.765.0 KC-CLUB-BUERO-ANSICHT: Freischaltung je Anfrage obendrauf */, "abgelaufene Einträge / geteiltes Objekt");
   assert.ok(/db\.rpc\("kc_club_anmeldung", \{ p_hash: hash, p_version: version \}\)/.test(an) && /if \(!a\) (throw|\{ if \(req\) fremdMerken\(req, "unbekannt", hash\); throw) new Fehler\("Kein Zugang/.test(an) && /if \(!p\?\.active\) (throw|\{ if \(req\) fremdMerken\(req, "gesperrt")/.test(an), "Datenbank-Prüfung beim Nachladen fehlt");
   const rpc = lies("supabase/migrations/20260929_kc_club_v57_anmeldung_rpc.sql");
   assert.ok(/where token_hash = p_hash and aktiv/.test(rpc) && /revoke all on function public\.kc_club_anmeldung\(text, text\) from public, anon, authenticated;/.test(rpc), "Anmelde-RPC prüft nicht aktiv / ist öffentlich");
-  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 8, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 2.607.0: +1 Link abschalten (Sicherheits-Check); 1.96.0: +1 Übernahme des vorgemerkten Links; 2.51.0: +1 Probephase beenden; 2.352.0: +1 andere Geräte abmelden
+  assert.equal((server.match(/anmeldungenVergessen\(\);/g) || []).length, 9, "Zugang/Rollen/Büro-Rechte ändern leert den Speicher nicht"); // 2.765.0: +1 Büro für alle zur Ansicht; 2.607.0: +1 Link abschalten (Sicherheits-Check); 1.96.0: +1 Übernahme des vorgemerkten Links; 2.51.0: +1 Probephase beenden; 2.352.0: +1 andere Geräte abmelden
   assert.ok(/serverMs: Date\.now\(\) - t0Anfrage/.test(server) && /Server gesamt \$\{t\.srv\} ms/.test(html), "Server-Zeit im Verbindungstest fehlt");
   // Live-Tippen
   assert.ok(/live_tippen: \(w\) => \(\{ an: w\?\.an === true \}\)/.test(server), "Einstellung nicht standardmäßig aus");
@@ -2810,7 +2810,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 243. 1.67.0: mitlaufende A4-Vorschau beim Bearbeiten (Sitzung, Brief, Mitgliederliste) über den Druck-Kern
 {
   assert.ok(/const LV_ARTEN = \{ sitzung: "sitzung", brief: "brief", liste: "mitgliederliste" \};/.test(html), "Registry der Live-Vorschau");
-  assert.ok(/: buStartHtml\(\); lvNachZeigen\(\); \}/.test(html), "nach jedem Zeichnen auffrischen (Ende von buZeigenRoh)");
+  assert.ok(/: buStartHtml\(\)\)?; lvNachZeigen\(\); \}/.test(html) /* 2.765.0: + Hinweis „zur Ansicht“ davor (Klammer) */, "nach jedem Zeichnen auffrischen (Ende von buZeigenRoh)");
   const lv = html.slice(html.indexOf("async function lvJetzt()"), html.indexOf("function lvGross()"));
   assert.ok(/await druckSeiteBauen\(\)/.test(lv) && /druckHtml\(true\)/.test(lv) && /finally \{ DRUCK = alt; \}/.test(lv), "nutzt den Druck-Kern und stellt DRUCK wieder her");
   assert.ok((html.match(/\$\{lvKasten\(\)\}/g) || []).length >= 2 && /\$\{d \? lvKasten\(\) : vorschau\}/.test(html), "in Sitzung, Brief und Mitgliederliste");
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)

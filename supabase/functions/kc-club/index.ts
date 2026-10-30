@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.764.0";
+const SERVER_VERSION = "2.765.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3780,7 +3780,8 @@ const ohneLinks = (t: string) => t.replace(/(https?:\/\/|www\.)\S+/gi, "[Link en
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
   zugang: "mitglied" | "aushilfe" | "gast"; // 2.422.0 KC-CLUB-ZUGANG
   vertreter?: { person_id: string; name: string; vorname: string }; // KC-CLUB-VERTRETUNG: wer gerade für dieses Mitglied handelt
-  nurLesen?: boolean }; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
+  nurLesen?: boolean; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
+  bueroAnsicht?: { bis: string | null } }; // 2.765.0 KC-CLUB-BUERO-ANSICHT: Büro gerade für alle zur Ansicht frei (bis = null: bis auf Widerruf)
 // KC-CLUB-BUERO-RECHTE (1.37.0): Büro je Mitglied vom Admin freigeschaltet – null = kein Büro; Admin immer „schreiben“
 type BueroRecht = "lesen" | "schreiben" | null;
 const BUERO_RECHTE = ["lesen", "schreiben"] as const;
@@ -3859,7 +3860,7 @@ async function anmelden(req: Request): Promise<Ich> {
       db.from("kc_club_zugang").update({ zuletzt_gesehen: jetzt(), app_version: version }).eq("person_id", c.ich.person_id).then(() => {});
     }
     ANMELDUNG_TREFFER = true;
-    return { ...c.ich, aemter: [...c.ich.aemter] };
+    return bueroAnsichtAnwenden({ ...c.ich, aemter: [...c.ich.aemter] }); // 2.765.0 KC-CLUB-BUERO-ANSICHT
   }
   ANMELDUNG_TREFFER = false;
   const ich = await anmeldenDb(hash, version, req.headers.get("user-agent") || "", req).catch((e) => {
@@ -3870,7 +3871,7 @@ async function anmelden(req: Request): Promise<Ich> {
   netzKennung(req).then((n) => { NETZ_ANGEMELDET.set(n, { person: ich.person_id, t: Date.now() }); if (NETZ_ANGEMELDET.size > 400) NETZ_ANGEMELDET.delete(NETZ_ANGEMELDET.keys().next().value!); }).catch(() => {}); // 2.579.0
   if (ANMELDUNGEN.size >= ANMELDUNG_CACHE_MAX) for (const [k, v] of ANMELDUNGEN) if (v.bis <= jetztMs) ANMELDUNGEN.delete(k);
   if (ANMELDUNGEN.size < ANMELDUNG_CACHE_MAX) ANMELDUNGEN.set(hash, { ich: { ...ich, aemter: [...ich.aemter] }, bis: jetztMs + ANMELDUNG_CACHE_MS, gesehen: jetztMs, version });
-  return ich;
+  return bueroAnsichtAnwenden(ich); // 2.765.0 KC-CLUB-BUERO-ANSICHT (der Merker bleibt ohne – Ablauf wird je Anfrage geprüft)
 }
 async function anmeldenDb(hash: string, version: string | null, ua = "", req?: Request): Promise<Ich> {
   // 0.56.1: eine Datenbank-Runde (kc_club_anmeldung: Token-Hash prüfen, „zuletzt gesehen“ setzen, Person + Rollen liefern)
@@ -3942,6 +3943,26 @@ function ichAus(p: any, r: any): Ich {
 }
 // „vorstand“ ist intern das Recht, Treffen/Veranstaltungen/Abstimmungen anzulegen (im Club: Clubsprecher, Kassenwart, Admin)
 const nurVorstand = (ich: Ich) => { if (!ich.vorstand) throw new Fehler("Das dürfen nur Clubsprecher, Kassenwart und Admin.", 403); };
+// ---------- 2.765.0 KC-CLUB-BUERO-ANSICHT (Wunsch Hansi 30.10.2026 „Schalter, dass ich heute Abend während der Clubsitzung das Büro für alle zur
+// Ansicht freischalte – allen nur read only: ansehen alles, aber nix auslösen und verändern. Und fertige Zeitknöpfe: 12, 24, 48 Std., ganze Woche,
+// ganzer Monat, bis auf Widerruf“) ----------
+// kc_club_konfig „buero_ansicht“ = { bis: ISO | null, seit, von }. Solange aktiv, bekommt jedes Mitglied (Zugang „mitglied“) OHNE eigenes Büro-Recht
+// das vorhandene Recht „lesen“ – dieselbe Leseregel wie „nur lesen“ in den Büro-Rechten: alles Ändern/Versenden prüft nurBueroSchreiben, Adressbuch und
+// Aktentasche bleiben der Clubleitung vorbehalten. Gäste/Aushilfen nie. Eigene Rechte („schreiben“) bleiben, wie sie sind. Ablauf: wirkt bei der nächsten
+// Anfrage nach „bis“ (Zeit wird je Anfrage geprüft, die Einstellung höchstens MERK_MS gemerkt). Nur der Admin schaltet (buero_ansicht_setzen).
+const BUERO_ANSICHT_DAUER: Record<string, number | null> = { "12h": 12, "24h": 24, "48h": 48, woche: 7 * 24, monat: 30 * 24, dauernd: null };
+async function bueroAnsichtLesen(): Promise<{ bis: string | null; seit: string; von: string } | null> {
+  const { data } = await konfigZeile("buero_ansicht").catch(() => ({ data: null }));
+  const w: any = data?.wert;
+  if (!w?.an) return null;
+  if (w.bis && Date.parse(w.bis) <= Date.now()) return null;
+  return { bis: w.bis ?? null, seit: w.seit, von: w.von };
+}
+async function bueroAnsichtAnwenden(ich: Ich): Promise<Ich> {
+  if (ich.buero || ich.zugang !== "mitglied") return ich;
+  const a = await bueroAnsichtLesen().catch(() => null);
+  return a ? { ...ich, buero: "lesen", bueroAnsicht: { bis: a.bis } } : ich;
+}
 const nurBueroLesen = (ich: Ich) => { if (!ich.buero) throw new Fehler("Das Büro ist für dich nicht freigeschaltet – bitte beim Admin melden.", 403); };
 const nurBueroSchreiben = (ich: Ich) => { nurBueroLesen(ich); if (ich.buero !== "schreiben") throw new Fehler("Im Büro hast du nur Leserechte – Ändern und Versenden schaltet der Admin frei.", 403); };
 // Termine anlegen/ändern/absagen: Clubleitung wie bisher – oder Büro mit Schreibrecht (endgültig löschen bleibt Clubleitung)
@@ -19134,6 +19155,20 @@ Köcheclub-App`,
           return { person_id: m.person_id, name: m.display_name, admin: !!x?.ist_admin, leitung: !!(x?.ist_vorstand || x?.ist_admin), aemter: x?.aemter ?? [],
             recht: x?.ist_admin ? "schreiben" : (BUERO_RECHTE as readonly string[]).includes(x?.buero_recht) ? x.buero_recht : null }; })
           .sort((a: any, b: any) => a.name.localeCompare(b.name, "de")) });
+      }
+      // 2.765.0 KC-CLUB-BUERO-ANSICHT: Stand lesen / schalten (nur Admin). dauer: 12h, 24h, 48h, woche, monat, dauernd – oder "aus"
+      case "buero_ansicht": nurAdmin(ich); return json({ ansicht: await bueroAnsichtLesen(), dauern: Object.keys(BUERO_ANSICHT_DAUER) });
+      case "buero_ansicht_setzen": {
+        nurAdmin(ich);
+        const dauer = String(p.dauer || "");
+        if (dauer !== "aus" && !(dauer in BUERO_ANSICHT_DAUER)) throw new Fehler("Bitte eine Dauer wählen.");
+        const std = BUERO_ANSICHT_DAUER[dauer], bis = dauer === "aus" || std == null ? null : new Date(Date.now() + std * 3600000).toISOString();
+        const wert = dauer === "aus" ? { an: false, aus_am: jetzt(), von: ich.person_id } : { an: true, bis, seit: jetzt(), von: ich.person_id, dauer };
+        const { error } = await db.from("kc_club_konfig").upsert({ schluessel: "buero_ansicht", wert, geaendert_von: ich.person_id, geaendert_am: jetzt() }, { onConflict: "schluessel" });
+        if (error) throw new Fehler("Speichern fehlgeschlagen – bitte noch einmal versuchen.", 500);
+        anmeldungenVergessen(); // diese Server-Instanz sofort; andere spätestens nach MERK_MS
+        await protokoll(ich.person_id, "buero_ansicht_gesetzt", { dauer, bis });
+        return json({ ok: true, ansicht: await bueroAnsichtLesen() });
       }
       case "buero_rechte_setzen": {
         nurAdmin(ich);

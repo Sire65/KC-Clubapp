@@ -63,6 +63,7 @@ jobs:
       - run: node tests/nachrichten-reihe.test.mjs
       - run: node tests/spur-voll.test.mjs
       - run: node tests/pinnwand-neu-puls.test.mjs
+      - run: node tests/buero-ansicht.test.mjs
       - run: node tests/zugang-pruefen.test.mjs
       - run: node tests/geheimnis-waechter.test.mjs
       - run: node tests/neon-pruefung.test.mjs

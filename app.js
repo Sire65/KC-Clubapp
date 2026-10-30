@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.764.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.765.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2452,6 +2452,7 @@ const HILFE = [
   { id: "gratulieren", thema: "club", sym: "🎂", t: "Geburtstagsgrüße mit einem Tipp", x: "Hat jemand Geburtstag, zeigt es dir die App – antippen und gratulieren. Deinen eigenen Geburtstag (ohne Jahr) sehen die anderen nur, wenn du es unter ⚙️ → „🔒 Privatsphäre“ erlaubst.", seit: "2.23.1" },
   { id: "pinnwand_antwort", thema: "club", sym: "✍️", t: "Auf einen Zettel an der Pinnwand antworten", x: "An fremden Zetteln findest du <b>„✍️ Antworten“</b> – so reagierst du direkt auf genau diesen Zettel. Für einen kurzen Gruß reicht auch ein Emoji.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_wichtig", thema: "club", sym: "❗", t: "Einen eigenen Zettel hervorheben", x: "Ist dir ein Zettel besonders wichtig, kannst du ihn nachträglich mit <b>„❗ wichtig machen“</b> markieren – dann sieht ihn jeder beim Öffnen der App. Genauso leicht nimmst du die Markierung wieder weg.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
+  { id: "buero_ansicht", thema: "club", sym: "👀", nur: () => !!ICH?.admin, t: "Büro für alle zur Ansicht öffnen", x: "Im Büro unter <b>🔐 Verwaltung → 👀 Für alle zur Ansicht</b> öffnest du das Büro für alle Mitglieder – <b>nur zum Ansehen</b>, z. B. während der Clubsitzung. Zeitknöpfe: <b>12, 24, 48 Std., 1 Woche, 1 Monat oder bis auf Widerruf</b>; „⛔ Jetzt wieder schließen“ beendet es sofort. Niemand kann dabei etwas ändern oder versenden; Adressbuch, Aktentasche, Freud &amp; Leid und Eingang bleiben bei der Clubleitung, Gäste und Aushilfen sehen nichts. Die anderen sehen das Büro nach spätestens 1–3 Minuten.", zeig: () => buStart(), seit: "2.765.0" },
   { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.763.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
@@ -19277,7 +19278,7 @@ function lvGross() { if (LV.art) druckStarten(LV.art); }
 // Bereich im Büro: Klappkarte mit Pfeil und Schloss wie in den Einstellungen (Zustand je Gerät gemerkt)
 const buBereich = (name, titel, inhalt) => `<details class="karte bu-bereich" data-klappe="buero_${name}" data-ohne-unten open><summary>${titel}</summary>${inhalt}</details>`;
 function buZeigenRoh() { buNzZaehlen(); if ($("buKopfGruss") && ICH) $("buKopfGruss").textContent = `${buTageszeit()}, ${ICH.vorname || ICH.name}!`; // 1.83.0: Begrüßung in der Kopfzeile
-  $("buInhalt").innerHTML = BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml(); lvNachZeigen(); }
+  $("buInhalt").innerHTML = buAnsichtHinweis() + (BU.sicht === "ordner" ? buOrdnerHtml() : BU.sicht === "sitzung" ? buSitzungHtml() : BU.sicht === "eingang" ? buEingangHtml() : BU.sicht === "brief" ? buBriefHtml() : BU.sicht === "termine" ? buTermineHtml() : BU.sicht === "kontakt" ? buKontaktHtml() : BU.sicht === "nachher" ? buNachherHtml() : BU.sicht === "feste" ? buFesteHtml() : BU.sicht === "liste" ? buListeHtml() : BU.sicht === "fl" ? buFlHtml() : BU.sicht === "flneu" ? buFlNeuHtml() : BU.sicht === "fall" ? buFallHtml() : BU.sicht === "rechte" ? buRechteHtml() : buStartHtml()); lvNachZeigen(); }
 // Nächster sinnvoller Schritt für eine Sitzung
 // 2.749.0 KC-CLUB-SITZUNG-SCHRITTE (Wunsch Hansi 29.10. „Schritt für Schritt, damit der Clubsprecher durchgeführt wird“): eine Reihenfolge für
 // Büro-Liste, Büro-Raum, Sitzung und die Weiter-Fenster. Erinnern erst ab 3 Tage vorher und frühestens einen Tag nach der Einladung;
@@ -19531,7 +19532,7 @@ function buStartListeHtml() {
   const festBald = BU_F ? BU_F.geburtstage.concat(BU_F.jubilaeen).filter((f) => f.tage >= 0 && f.tage <= 7).length : 0;
   return `<div class="karte bu-gruss"><div class="bu-knopfreihe">${ICH?.vorstand ? '<button class="knopf klein" onclick="tagesinfoZeigen(true)">📋 Übersicht</button>' : ""}<button class="knopf klein" onclick="buAnsichtWechseln()">🗄️ Büro-Raum</button>${ICH?.vorstand ? '<button class="knopf klein" onclick="atStart()">💼 Aktentasche</button>' : ""}${buFilmKnopf()}${S ? '<button class="knopf klein" onclick="buEinlesen()">📥 Einlesen</button>' : ""}</div>${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0">🎉 Heute: ${festHeute.join(" · ")} – <button class="knopf klein" onclick="buFeste()">gratulieren</button></div>` : ""}${t ? `Nächste Sitzung: <b>${esc(t.titel)}</b> · ${esc(wann(t.beginn))}<br>✅ ${t.ja} zugesagt · ❌ ${t.nein} abgesagt · ❓ ${t.ohne} ohne Antwort` : "Gerade ist keine Sitzung geplant – lege sie unter 📅 Termine an."}
     ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken. Ändern und Versenden schaltet der Admin frei.</div>' : dran ? `<div class="bu-tipp">👉 Nächster Schritt: <b>${esc(dran)}</b></div>` : t ? '<div class="bu-tipp">✅ Für diese Sitzung ist alles erledigt.</div>' : ""}</div>
-    ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button></div>`) : ""}
+    ${ICH?.admin ? buBereich("verwaltung", "🔐 Verwaltung", `<div class="mini-kacheln"><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">🔐</span><span class="mk-titel">Büro-Freigaben</span><span class="mk-unter">wer darf ins Büro – nur lesen oder lesen &amp; schreiben</span></button><button class="mini-kachel" onclick="buRechte()"><span class="mk-sym">👀</span><span class="mk-titel">Für alle zur Ansicht</span><span class="mk-unter">das Büro für alle Mitglieder öffnen – nur ansehen, z. B. während der Clubsitzung</span></button></div>`) : ""}
     ${buBereich("sitzung", "🗂️ Sitzung", `<div class="mini-kacheln">
       ${S && t ? `<div style="grid-column:1/-1">${buSchritteHtml(t)}</div>` : ""}
       ${S ? k("vorbereiten", "📝", "Tagesordnung festlegen", t ? (t.vorbereitet ? "✅ festgelegt – ändern" : "Vorschläge aufnehmen, Reihenfolge") : "keine Sitzung geplant", "buSitzungWahl()") : k("ansehen", "👁️", "Sitzung ansehen", t ? "Anwesenheit, Tagesordnung" : "keine Sitzung geplant", "buSitzungWahl()")}
@@ -19870,14 +19871,38 @@ const BR_RECHTE = { lesen: ["👁️", "Nur lesen", "ansehen und drucken – nic
 async function buRechte() {
   if (!ICH?.admin) return;
   BR = { liste: null, recht: null, wahl: new Set() }; BU.sicht = "rechte"; buZeigen(); window.scrollTo(0, 0);
-  try { BR.liste = (await api("buero_rechte", {}, { warten: true })).mitglieder || []; } catch (e) { BR.liste = []; meldeFehler(e); }
+  try { const [r, a] = await Promise.all([api("buero_rechte", {}, { warten: true }), api("buero_ansicht").catch(() => null)]); BR.liste = r.mitglieder || []; BR.ansicht = a; } catch (e) { BR.liste = []; meldeFehler(e); }
   buZeigen();
 }
+// ---------- 2.765.0 KC-CLUB-BUERO-ANSICHT (Wunsch Hansi 30.10.2026 „Schalter, dass ich heute Abend während der Clubsitzung das Büro für alle zur
+// Ansicht freischalte – allen nur read only: ansehen alles, aber nix auslösen und verändern; fertige Zeitknöpfe 12, 24, 48 Std., Woche, Monat,
+// bis auf Widerruf“) ----------
+// Server: kc_club_konfig „buero_ansicht“; solange an, bekommt jedes Mitglied ohne eigenes Büro-Recht „nur lesen“ (Gäste/Aushilfen nie). Registry der
+// Knöpfe: BU_ANSICHT_DAUER (gleiche Schlüssel wie BUERO_ANSICHT_DAUER im Server). Andere Mitglieder sehen das Büro nach spätestens 1–3 Minuten.
+const BU_ANSICHT_DAUER = [["12h", "12 Std."], ["24h", "24 Std."], ["48h", "48 Std."], ["woche", "1 Woche"], ["monat", "1 Monat"], ["dauernd", "Bis auf Widerruf"]];
+const buAnsichtBis = (a) => (a?.bis ? `bis ${fTag.format(new Date(a.bis))} ${fZeit.format(new Date(a.bis))} Uhr` : "bis auf Widerruf");
+function buAnsichtKarte() {
+  const a = BR.ansicht?.ansicht || null;
+  return `<div class="karte bu-ansicht${a ? " an" : ""}"><h3 style="margin-top:0">👀 Büro für alle zur Ansicht</h3>
+    <p style="margin:0 0 6px">${a ? `<b>🟢 Freigeschaltet ${esc(buAnsichtBis(a))}</b> – alle Mitglieder können das Büro ansehen, aber nichts ändern oder versenden.` : "⚪ Aus – nur wer oben ein Büro-Recht hat, sieht das Büro."}</p>
+    <p class="hinweis" style="margin:0 0 8px">Nur lesen: Sitzung, Tagesordnung, Anwesende, Termine, Briefe und Ordner ansehen und drucken. Nichts speichern, nichts versenden. Adressbuch, Aktentasche, Freud &amp; Leid und Eingang bleiben bei der Clubleitung. Gäste und Aushilfen nie.</p>
+    <div class="wahl bu-ansicht-zeiten">${BU_ANSICHT_DAUER.map(([k, t]) => `<button onclick="buAnsichtSetzen('${k}', this)">⏱️ ${t}</button>`).join("")}</div>
+    ${a ? `<button class="knopf" style="width:100%;text-align:center;margin-top:8px" onclick="buAnsichtSetzen('aus', this)">⛔ Jetzt wieder schließen</button>` : ""}</div>`;
+}
+async function buAnsichtSetzen(dauer, knopf) {
+  if (knopf) knopf.disabled = true;
+  try { const r = await api("buero_ansicht_setzen", { dauer }, { warten: true }); BR.ansicht = { ...(BR.ansicht || {}), ansicht: r.ansicht };
+    melde(r.ansicht ? `👀 Büro für alle zur Ansicht – ${buAnsichtBis(r.ansicht)}` : "⛔ Büro wieder nur für die Berechtigten"); }
+  catch (e) { meldeFehler(e); }
+  buZeigen();
+}
+// Für Mitglieder, die das Büro nur durch die Freischaltung sehen: Hinweis oben im Büro
+const buAnsichtHinweis = () => ICH?.bueroAnsicht ? `<div class="karte bu-ansicht-hinweis">👀 <b>Das Büro ist gerade für alle zur Ansicht geöffnet</b> (${esc(buAnsichtBis(ICH.bueroAnsicht))}). Du kannst alles ansehen und drucken – ändern und versenden kann nur die Clubleitung.</div>` : "";
 function buRechteHtml() {
   if (!BR.liste) return '<div class="karte hinweis">Wird geladen …</div>';
   const name = (r) => BR.liste.filter((m) => m.recht === r).map((m) => esc(m.name.split(" ")[0]) + (m.admin ? " (Admin)" : "")).join(", ") || "–";
   const marke = (m) => m.recht === "schreiben" ? '<span class="marke gruen br-recht">✏️ schreiben</span>' : m.recht === "lesen" ? '<span class="marke br-recht">👁️ lesen</span>' : '<span class="hinweis br-recht">⛔ kein Zugang</span>';
-  return `<div class="karte"><h3 style="margin-top:0">🔐 Büro-Freigaben</h3>
+  return `${buAnsichtKarte()}<div class="karte"><h3 style="margin-top:0">🔐 Büro-Freigaben</h3>
       <p style="margin:0 0 4px">✏️ <b>Lesen & schreiben:</b> ${name("schreiben")}</p><p style="margin:0">👁️ <b>Nur lesen:</b> ${name("lesen")}</p>
       <p class="hinweis" style="margin:8px 0 0">🔒 Freud & Leid, die Mitgliederliste mit Kontakten, der Eingang und das Alter bei runden Geburtstagen bleiben immer nur für die Clubleitung.</p></div>
     <div class="karte"><h3 style="margin-top:0">1️⃣ Was soll gelten?</h3><div class="wahl">${Object.entries(BR_RECHTE).map(([k, [sym, t, u]]) =>
