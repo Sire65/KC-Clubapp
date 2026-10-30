@@ -3539,6 +3539,25 @@
   .bu-regal { display: grid; grid-template-columns: repeat(auto-fit, 48px); grid-auto-rows: 226px; justify-content: center; column-gap: 6px; margin: 0 -12px; padding: 0 12px;
     background: repeating-linear-gradient(180deg, transparent 0 210px, #b9976d 210px 214px, #a4835b 214px 226px); }
   .bu-brett { display: none; }
+  /* 2.769.0 KC-CLUB-AKTENSCHRANK-JALOUSIE: Einklapp-Zeile, Jalousie (senkrechte Lamellen, schiebt sich nach links zusammen), Emblem, runder Pfeilschalter */
+  .bu-schrank-zeile { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; padding: 12px 14px; font: inherit; color: inherit; cursor: pointer; text-align: left;
+    background: linear-gradient(180deg, #e9dfd1, #ddd0be); border-bottom: 3px solid #a4835b; }
+  :root.dunkel .bu-schrank-zeile { background: linear-gradient(180deg, #3a3230, #2f2725); border-bottom-color: #6b5338; }
+  .bu-schrank-zeile b { font-size: 1.05rem; } .bu-schrank-zeile small { flex: 1; color: var(--grau); font-weight: 700; }
+  .bu-schrank-sym { font-size: 1.3rem; } .bu-schrank-pfeil { font-size: 1.3rem; font-weight: 900; line-height: 1; padding: 0 4px; }
+  .bu-schrank-koerper { position: relative; overflow: hidden; }
+  .bu-jalousie { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; z-index: 2; overflow: hidden; pointer-events: none; perspective: 700px; }
+  .bu-schrank.auf .bu-jalousie { width: 0; }
+  .bu-jal-lamellen { position: absolute; inset: 0; display: flex; gap: 1px; background: rgba(60, 10, 20, .28); }
+  .bu-jal-lamelle { flex: 1; transform-origin: center; background: linear-gradient(to right, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 1px 0 2px rgba(0, 0, 0, .3); }
+  :root.dunkel .bu-jal-lamelle { background: linear-gradient(to right, #6a5a4a 0%, #5a4b3c 45%, #4a3d30 85%, #3a2f25 100%); }
+  .bu-jal-marke { position: absolute; top: 50%; left: calc(var(--sb, 100vw) / 2 - 40px); transform: translateY(-50%); width: 80px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bu-jal-marke img { width: 64px; height: auto; filter: brightness(0) opacity(.42) drop-shadow(0 1px 0 rgba(255, 255, 255, .7)); }
+  .bu-jal-marke small { font: italic 700 .9rem/1 Georgia, "Times New Roman", serif; color: #741521; letter-spacing: .03em; white-space: nowrap; text-shadow: 0 1px 0 rgba(255, 255, 255, .6); }
+  :root.dunkel .bu-jal-marke img { filter: brightness(0) invert(1) opacity(.5); } :root.dunkel .bu-jal-marke small { color: #f3e9dc; text-shadow: none; }
+  .bu-jal-griff { position: absolute; top: 50%; right: 8px; z-index: 3; width: 44px; height: 44px; margin-top: -22px; border-radius: 50%; border: 2px solid #f3e9dc; cursor: pointer;
+    background: radial-gradient(circle at 40% 35%, #a8364a, #741521 70%); color: #fff; font-size: 1.1rem; box-shadow: 0 3px 8px rgba(0, 0, 0, .35); }
+  .bu-schrank.auf .bu-jal-griff { right: auto; left: 6px; }
   .bu-ordner { width: 48px; height: 204px; align-self: end; margin-bottom: 16px; position: relative; border: none; cursor: pointer; padding: 8px 0 10px; border-radius: 5px 5px 2px 2px;
     background: linear-gradient(90deg, rgba(0,0,0,.18), transparent 22%, transparent 78%, rgba(0,0,0,.14)), var(--of); color: #fffdf8;
     display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .18s ease, box-shadow .18s ease; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
@@ -6352,7 +6371,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.768.0" data-v="2.768.0"></script>
+<script src="app.js?v=2.769.0" data-v="2.769.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

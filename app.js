@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.768.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.769.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2453,6 +2453,7 @@ const HILFE = [
   { id: "gratulieren", thema: "club", sym: "🎂", t: "Geburtstagsgrüße mit einem Tipp", x: "Hat jemand Geburtstag, zeigt es dir die App – antippen und gratulieren. Deinen eigenen Geburtstag (ohne Jahr) sehen die anderen nur, wenn du es unter ⚙️ → „🔒 Privatsphäre“ erlaubst.", seit: "2.23.1" },
   { id: "pinnwand_antwort", thema: "club", sym: "✍️", t: "Auf einen Zettel an der Pinnwand antworten", x: "An fremden Zetteln findest du <b>„✍️ Antworten“</b> – so reagierst du direkt auf genau diesen Zettel. Für einen kurzen Gruß reicht auch ein Emoji.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_wichtig", thema: "club", sym: "❗", t: "Einen eigenen Zettel hervorheben", x: "Ist dir ein Zettel besonders wichtig, kannst du ihn nachträglich mit <b>„❗ wichtig machen“</b> markieren – dann sieht ihn jeder beim Öffnen der App. Genauso leicht nimmst du die Markierung wieder weg.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
+  { id: "aktenschrank", thema: "club", sym: "🗄️", nur: () => !!ICH?.buero, t: "Der Aktenschrank im Büro: auf- und zumachen", x: "Die Ordner im Büro stehen in einem <b>Aktenschrank mit Jalousie</b> (vorne Kochmütze und „since 1991“). Ist er zu, siehst du nur die Zeile <b>„🗄️ Aktenschrank · Anzahl Ordner“</b> – tippen öffnet ihn, die Jalousie fährt von selbst nach links auf. Zum Schließen den runden Pfeil <b>▶ ganz links</b> oder die Zeile oben antippen. So bleibt der Schrank zu, wenn du nur am Schreibtisch arbeitest; die App merkt sich das auf diesem Gerät.", zeig: () => buStart(), seit: "2.769.0" },
   { id: "buero_ansicht", thema: "club", sym: "👀", nur: () => !!ICH?.admin, t: "Büro für alle zur Ansicht öffnen", x: "Im Büro unter <b>🔐 Verwaltung → 👀 Für alle zur Ansicht</b> öffnest du das Büro für alle Mitglieder – <b>nur zum Ansehen</b>, z. B. während der Clubsitzung. Zeitknöpfe: <b>12, 24, 48 Std., 1 Woche, 1 Monat oder bis auf Widerruf</b>; „⛔ Jetzt wieder schließen“ beendet es sofort. Niemand kann dabei etwas ändern oder versenden; Adressbuch, Aktentasche, Freud &amp; Leid und Eingang bleiben bei der Clubleitung, Gäste und Aushilfen sehen nichts. Die anderen sehen das Büro nach spätestens 1–3 Minuten.", zeig: () => buStart(), seit: "2.765.0" },
   { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.763.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
@@ -19704,6 +19705,60 @@ async function adbZurueck(id) {
   try { await api("buero_adresse_zurueckziehen", { id }, { warten: true }); melde("↩️ Zurückgezogen"); adbLaden(); } catch (e) { meldeFehler(e); }
 }
 const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.recht === "L" && !!ICH?.vorstand) || (x.recht === "A" && !!ICH?.admin) || (x.recht === "oL" && !ICH?.vorstand);
+// ---------- 2.769.0 KC-CLUB-AKTENSCHRANK-JALOUSIE (Wunsch Hansi 30.10.2026 „Jalousie-Funktion ins Ordnerregal, von rechts nach links; rechts mittig ein
+// Pfeilschalter, der öffnet den Schrank, dann ändert sich der Pfeil und ist ganz links. Geschlossen komplett ein Einklapp-Bereich: nur eine Zeile
+// ‚Aktenschrank‘ mit Anzahl Ordner, ganz rechts der Einklapp-Pfeil; öffnet man ihn, geht der Aktenschrank von alleine auf. Vorne auf die Tür das Logo und
+// since 1991 – dann kann der Schrank zubleiben, wenn man nur am Schreibtisch etwas machen möchte“; Vorbild: Jalousie im Kopf) ----------
+// Zu = nur die Zeile „🗄️ Aktenschrank · n Ordner ⌄“. Öffnen: Bereich klappt auf, die geschlossene Jalousie (Lamellen, Kochmütze + „since 1991“) klappt
+// ihre Lamellen auf und schiebt sich nach links zusammen; der runde Pfeil wandert mit (rechts mittig ◀ → ganz links ▶). Schließen umgekehrt, danach
+// wieder nur die Zeile. Gemerkt je Gerät (Bequemlichkeit); erstes Mal offen. Ohne Effekte / „Bewegung reduzieren“: sofort. Während eines Erklär-Videos
+// steht der Schrank immer offen (das Video zeigt das Regal). Ordner über Sprache, Suche oder Film öffnen eigene Ansichten – dafür muss der Schrank nicht auf sein.
+const BU_SCHRANK = "kc_club_bu_schrank", BU_SCHRANK_KLAPP_MS = 320, BU_SCHRANK_FAHRT_MS = 1100, BU_SCHRANK_TUER_MS = 500, BU_SCHRANK_LAMELLEN = 28;
+const buSchrankOffen = () => lsLesen(BU_SCHRANK) !== "zu" || document.body.classList.contains("rg-an");
+const buSchrankRuhig = () => !einst("animiert", true) || matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+function buSchrankHtml(regal, anzahl) {
+  const auf = buSchrankOffen();
+  return `<div class="bu-schrank${auf ? " auf" : ""}" id="buSchrank">
+      <button type="button" class="bu-schrank-zeile" onclick="buSchrankKlick()" aria-expanded="${auf}" aria-controls="buSchrankKoerper"><span class="bu-schrank-sym" aria-hidden="true">🗄️</span><b>Aktenschrank</b><small>${anzahl} Ordner</small><span class="bu-schrank-pfeil" aria-hidden="true">${auf ? "⌃" : "⌄"}</span></button>
+      <div class="bu-schrank-koerper" id="buSchrankKoerper"${auf ? "" : " hidden"}>${regal}
+        <div class="bu-jalousie" aria-hidden="true"><div class="bu-jal-lamellen">${'<i class="bu-jal-lamelle"></i>'.repeat(BU_SCHRANK_LAMELLEN)}</div>
+          <div class="bu-jal-marke"><img src="kc-kochmuetze-weiss.webp" alt=""><small>since 1991</small></div></div>
+        <button type="button" class="bu-jal-griff" onclick="buSchrankKlick()" aria-label="${auf ? "Aktenschrank schließen" : "Aktenschrank öffnen"}">${auf ? "▶" : "◀"}</button>
+      </div></div>`;
+}
+let BU_SCHRANK_LAEUFT = false;
+async function buSchrankKlick() {
+  const s = $("buSchrank"); if (!s || BU_SCHRANK_LAEUFT) return;
+  const auf = !s.classList.contains("auf"), k = $("buSchrankKoerper"), j = s.querySelector(".bu-jalousie"), g = s.querySelector(".bu-jal-griff");
+  lsSetzen(BU_SCHRANK, auf ? "auf" : "zu");
+  const fertig = () => { s.classList.toggle("auf", auf); k.hidden = !auf; j.style.width = ""; s.querySelectorAll(".bu-jal-lamelle").forEach((l) => (l.style.transform = ""));
+    s.querySelector(".bu-schrank-zeile").setAttribute("aria-expanded", String(auf)); s.querySelector(".bu-schrank-pfeil").textContent = auf ? "⌃" : "⌄";
+    g.textContent = auf ? "▶" : "◀"; g.setAttribute("aria-label", auf ? "Aktenschrank schließen" : "Aktenschrank öffnen"); BU_SCHRANK_LAEUFT = false; };
+  if (buSchrankRuhig() || !j.animate) { BU_SCHRANK_LAEUFT = true; return fertig(); }
+  BU_SCHRANK_LAEUFT = true;
+  const lam = [...s.querySelectorAll(".bu-jal-lamelle")], warte = (a) => a.finished.catch(() => {});
+  const fahrt = { duration: BU_SCHRANK_FAHRT_MS, easing: "cubic-bezier(.45,.05,.3,1)", fill: "forwards" };
+  const rechts = () => Math.max(6, k.clientWidth - 52) + "px"; // Pfeil fährt mit der Jalousie-Kante: rechts mittig ↔ ganz links
+  try {
+    if (auf) { // Bereich aufklappen, Jalousie steht zu (Pfeil rechts mittig) → Lamellen klappen auf → Jalousie fährt nach links zusammen
+      s.classList.remove("auf"); j.style.width = "100%"; k.hidden = false; g.textContent = "◀";
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      j.style.setProperty("--sb", k.clientWidth + "px"); g.style.right = "auto"; g.style.left = rechts();
+      await new Promise((r) => setTimeout(r, BU_SCHRANK_TUER_MS)); // kurz die geschlossene Tür zeigen (Kochmütze, since 1991)
+      await Promise.all(lam.map((l, i) => warte(l.animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(68deg)" }], { duration: BU_SCHRANK_KLAPP_MS, delay: (lam.length - 1 - i) * 12, fill: "forwards" }))));
+      await Promise.all([warte(j.animate([{ width: "100%" }, { width: "0%" }], fahrt)), warte(g.animate([{ left: rechts() }, { left: "6px" }], fahrt))]);
+    } else { // Jalousie fährt von links nach rechts zu → Lamellen klappen zu → Bereich klappt zur Zeile ein
+      j.style.setProperty("--sb", k.clientWidth + "px"); g.style.right = "auto"; g.style.left = "6px";
+      s.classList.remove("auf"); j.style.width = "0%"; lam.forEach((l) => (l.style.transform = "rotateY(68deg)"));
+      await Promise.all([warte(j.animate([{ width: "0%" }, { width: "100%" }], fahrt)), warte(g.animate([{ left: "6px" }, { left: rechts() }], fahrt))]);
+      g.textContent = "◀";
+      await Promise.all(lam.map((l, i) => warte(l.animate([{ transform: "rotateY(68deg)" }, { transform: "rotateY(0deg)" }], { duration: BU_SCHRANK_KLAPP_MS, delay: i * 12, fill: "forwards" }))));
+      await new Promise((r) => setTimeout(r, BU_SCHRANK_TUER_MS));
+    }
+  } catch {}
+  [j, g, ...lam].forEach((x) => x.getAnimations?.().forEach((a) => a.cancel())); g.style.left = g.style.right = "";
+  fertig();
+}
 function buRaumHtml() {
   const r = BU.start; if (!r) return '<div class="karte hinweis">Wird geladen …</div>';
   if (!Array.isArray(r.sitzungen) || !r.eingang) return '<div class="karte hinweis">⚠️ Das Büro ist gerade nicht abrufbar – bitte gleich noch einmal öffnen.</div>'; // 2.24.15: unvollständige Antwort nie als leer/OK zeigen
@@ -19722,7 +19777,7 @@ function buRaumHtml() {
       ${festHeute.length ? `<div class="bu-tipp" style="margin:6px 0 0">🎉 Heute: ${festHeute.map((f) => f.jahre ? `${esc(f.vorname)} – ${f.jahre} Jahre im Club` : `${esc(f.vorname)} hat Geburtstag`).join(" · ")}</div>` : ""}
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}${naechst && !buVertretungAngebot(naechst) ? buVertretungHtml(naechst) : ""}</div>
     <div class="bu-raum">
-      <div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>
+      ${buSchrankHtml(`<div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>`, ordner.length)}
       <div class="bu-tisch">
         <div class="bu-zettelreihe">
           ${dran ? `<button class="bu-zettel" onclick="${dranFn}"><b>Nächster Schritt</b>${esc(dran.replace(/^\S+\s/, ""))}</button>` : `<div class="bu-zettel ruhig"><b>Nächster Schritt</b>${!naechst ? "Keine Sitzung geplant" : !t ? "Sitzung ist vorbereitet 👍" : !t.vorbereitet ? "Tagesordnung noch nicht festgelegt" : t.einladung_am ? "Eingeladen ✅" : "Tagesordnung festgelegt ✅"}</div>`}

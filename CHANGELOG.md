@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.769.0 – 2026-10-30 – 🗄️ Büro: Aktenschrank mit Jalousie
+Wunsch Hansi (30.10.): „Jalousie-Funktion ins Ordnerregal, von rechts nach links, rechts mittig ein Pfeilschalter – dann ändert sich der Pfeil und ist ganz links. Geschlossen komplett ein Einklapp-Bereich: nur eine Zeile ‚Aktenschrank‘ mit Anzahl Ordner, ganz rechts der Einklapp-Pfeil; öffnet man ihn, geht der Aktenschrank von alleine auf. Vorne auf die Tür das Logo und since 1991.“ (KC-CLUB-AKTENSCHRANK-JALOUSIE)
+- Büro-Raum: Die Ordner stehen in einem Aktenschrank. Zu = nur die Zeile „🗄️ Aktenschrank · n Ordner ⌄“, der Schreibtisch rückt direkt darunter.
+- Öffnen (Zeile oder Pfeil): kurz die geschlossene Tür mit Kochmütze und „since 1991“, dann klappen die Lamellen und die Jalousie schiebt sich nach links zusammen – der runde Pfeil fährt mit (rechts mittig ◀ → ganz links ▶). Schließen umgekehrt.
+- Gemerkt je Gerät (erstes Mal offen). Ohne Effekte bzw. „Bewegung reduzieren“ sofort. Im Erklär-Video steht der Schrank immer offen. Listen-Ansicht unverändert.
+
 ## 2.768.0 – 2026-10-30 – 🗂️ Büro: kleine Icon-Knöpfe oben – mehr Platz
 Wunsch Hansi (30.10.): „Oben ist zu viel Platz verschwendet. Baue die Buttons kleiner, nur mit aussagekräftigem Icon, dann passen mehr nebeneinander und es werden wieder Zeilen frei.“ (KC-CLUB-BUERO-KNOEPFE-KLEIN)
 - Büro-Kopf (Raum und Liste): eine Reihe kleiner Icon-Knöpfe mit kurzem Wort darunter – 📋 Übersicht · ☰ Liste / 🗄️ Raum · 💼 Tasche · 🎬 Film · 📥 Einlesen · 🎙️ Sprechen · 🙋 Vertreten. Bis zu 6 nebeneinander.
