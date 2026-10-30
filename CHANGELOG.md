@@ -1,14 +1,20 @@
 # Änderungen
 
-## 2.763.0 – 2026-10-30 – ⛔ Runder Tisch: kein Clubabend und immer nur einer gleichzeitig (KC-CLUB-RUNDER-TISCH-ZEITCHECK) · Server 2.763.0 · DB
+## 2.764.0 – 2026-10-30 – ⛔ Runder Tisch: kein Clubabend und immer nur einer gleichzeitig (KC-CLUB-RUNDER-TISCH-ZEITCHECK) · Server 2.764.0 · DB
 Wunsch Hansi (30.10.): „Bevor ein Termin mit Uhrzeit angezeigt wird, prüfen, ob noch andere Termine anstehen. Kein Tisch, wenn gleichzeitig Clubabend ist. Um die Datenbank zu schonen, keine parallelen Runden Tische – immer nur einer. Wenn ein weiterer geplant ist, dann Meldung.“ (docs/RUNDER_TISCH.md, Abschnitt 16). Noch nur Admin zum Testen.
 - **Im Einladen-Fenster** prüft die App, sobald Tag, Uhrzeit und Dauer gewählt sind: ✅ „Um diese Zeit ist nichts anderes geplant“, ⛔ gesperrt oder ⚠️ Hinweis – darunter „An diesem Tag: …“ mit Tischen, Clubabend und Terminen.
 - **Gesperrt** (Einladen geht nicht): ein anderer Runder Tisch, ein Seminar oder eine Besprechung zur selben Zeit (auch einer anderen Gruppe – dann ohne Thema) oder ein Clubabend (ohne Ende 3 Std.; mit Anzahl der Zusagen).
 - **Hinweis mit Rückfrage:** andere Clubtermine, z. B. der Weihnachtsmarkt – „Trotzdem einladen?“.
 - **Verlängern** (+30 Min.) geht nur, wenn danach kein Tisch und kein Clubabend beginnt. Direkt aneinander (Ende = Beginn) geht.
-- Datenbank: Migration `20261030_kc_club_v2763_tisch_nur_einer.sql` – Sperre, dass sich zwei geplante Tische nie überschneiden (letzte Sicherung, wenn zwei gleichzeitig einladen). **Vor dem Server einspielen.**
-- Tests: `tests/runder-tisch.test.mjs` (Konflikte, Clubabend 3 Std., angrenzend, abgesagt, Veranstaltung mehrtägig), Probelauf `tools/db-test/99_tisch_nur_einer_test.sql` (96–98 angepasst: dort wird der erste Tisch vor dem nächsten abgesagt), Klick-Rundgang: belegte Zeit → Meldung und „Einladen“ gesperrt. Rückweg: App/Server 2.762.0 (Sperre kann bleiben).
+- Datenbank: Migration `20261030_kc_club_v2764_tisch_nur_einer.sql` – Sperre, dass sich zwei geplante Tische nie überschneiden (letzte Sicherung, wenn zwei gleichzeitig einladen). **Vor dem Server einspielen.**
+- Tests: `tests/runder-tisch.test.mjs` (Konflikte, Clubabend 3 Std., angrenzend, abgesagt, Veranstaltung mehrtägig), Probelauf `tools/db-test/99_tisch_nur_einer_test.sql` (96–98 angepasst: dort wird der erste Tisch vor dem nächsten abgesagt), Klick-Rundgang: belegte Zeit → Meldung und „Einladen“ gesperrt. Rückweg: App/Server 2.763.0 (Sperre kann bleiben).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.763.0 – 2026-10-30 – 📌 Pinnwand-Kachel pulsiert nur bei Neuem – mit Anzahl
+Wunsch Hansi (29.10.): „Nur wenn seit letzter Anmeldung ein neues Post-it an der Pinnwand ist, lass den Button auffällig pulsieren und zeige die Anzahl an“ – und „ja“ zu Hilfe-Aufrufen (KC-CLUB-PINNWAND-NEU-PULS).
+- Die Zahl auf der Kachel 📌 Pinnwand zählt jetzt nur **neue** Zettel (von anderen, noch nicht angesehen – gilt für alle Geräte) und offene Hilfe-Aufrufe, auf die man noch nicht geantwortet hat. Vorher zählten alle nicht erledigten Zettel, die Zahl stand fast immer da.
+- Ist etwas neu, **pulsiert die Kachel rot**; ohne Effekte bzw. in der Ruhezeit fester roter Rand. Öffnen der Pinnwand oder „✓ Gelesen“ im Hinweis beendet es.
+- Geändert: Das stille Laden der Pinnwand beim App-Start zählt nicht mehr als „gesehen“ (vorher war jeder Zettel schon beim Öffnen der App gelesen). „Gesehen“ beim Verfasser erscheint jetzt erst, wenn die Pinnwand wirklich geöffnet oder der Zettel im Hinweis bestätigt wurde.
+- Hilfe-Zentrum: „📌 Die Pinnwand pulsiert bei neuen Zetteln“.
 
 ## 2.762.0 – 2026-10-30 – 🪑 Runder Tisch · 🎓 Seminar · 🗂️ Besprechung – auch nur für eine Gruppe, nur Admin zum Testen (KC-CLUB-RUNDER-TISCH, -ARTEN, -GRUPPE, -PLATZ) · Server 2.762.0 · DB
 Ein Bündel aus drei Stufen (auf dem Arbeitszweig als 2.760.0–2.762.0 gebaut; die Nummern 2.760.0/2.761.0 hatte inzwischen eine andere Sitzung vergeben). Spezifikation docs/RUNDER_TISCH.md. Migrationen in dieser Reihenfolge, **vor dem Server**: `20261030_kc_club_v2762_runder_tisch.sql`, `…_v2762_tisch_arten.sql`, `…_v2762_tisch_gruppe.sql`.

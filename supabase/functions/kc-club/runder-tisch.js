@@ -130,7 +130,7 @@ export function rtText(t, tz = "Europe/Berlin") { // (Art steht nicht im Text �
   return `${f({ weekday: "short" })} ${f({ day: "2-digit", month: "2-digit" })} ${f({ hour: "2-digit", minute: "2-digit", hourCycle: "h23" })} Uhr · ${Number(t.dauer_min) + (Number(t.verlaengert_min) || 0)} Min.`;
 }
 
-// 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK (Wunsch Hansi 30.10.2026 „Bevor ein Termin mit Uhrzeit angezeigt wird, prüfen, ob noch andere Termine anstehen.
+// 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK (Wunsch Hansi 30.10.2026 „Bevor ein Termin mit Uhrzeit angezeigt wird, prüfen, ob noch andere Termine anstehen.
 // Kein Tisch, wenn gleichzeitig Clubabend ist. Um die Datenbank zu schonen, immer nur EIN Tisch zur selben Zeit – sonst Meldung“).
 // Sperre: ein anderer Tisch/Seminar/Besprechung (egal welche Gruppe) oder ein Clubabend (kc_club_treffen art „treffen“, ohne Ende = 3 Std.) überschneidet sich.
 // Hinweis (mit Rückfrage): eine Veranstaltung (z. B. Weihnachtsmarkt) überschneidet sich. Angrenzend (Ende = Beginn) ist keine Überschneidung.

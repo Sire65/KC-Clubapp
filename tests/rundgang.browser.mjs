@@ -49,7 +49,7 @@ const RT_LAGE = { aktiv: true, gruppen: [{ id: "66666666-2222-3333-4444-55555555
       bestaetigung: { von: rtZeit(-3000), bis: rtZeit(-2940), min: 60 } }] };
 Object.assign(ANTWORTEN, { tisch_liste: RT_LAGE, tisch_platz: { ok: true, ergebnis: "da", lage: RT_LAGE },
   tisch_zeit_pruefen: { ok: true, frei: false, sperre: ["Um diese Zeit ist Clubabend („Clubabend“, 19:00–22:00 Uhr, 12 haben zugesagt) – dann bitte keinen Tisch."], hinweis: [],
-    tag: [{ sym: "🍽️", text: "19:00 Clubabend „Clubabend“ · 12 Zusagen" }] } }); // 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK
+    tag: [{ sym: "🍽️", text: "19:00 Clubabend „Clubabend“ · 12 Zusagen" }] } }); // 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK
 INIT.runderTisch = { tische: [{ id: RT_TISCH.id, thema: RT_TISCH.thema, beginn: RT_TISCH.beginn, ende: RT_TISCH.ende, zusage: "ja" }] };
 const SEITEN = ["termine", "nachrichten", "mitglieder", "einstellungen", "fotos", "pinnwand", "vorschlaege", "dokumente", "archiv", "protokolle", "spiele", "buero",
   "hilfezentrum", "aktionen", "dienste", "erstattung", "helfen", "feedback", "sos", "sicherheit", "programme", "start"];
@@ -130,7 +130,7 @@ try {
       if (!rt.seminar?.pult || rt.seminar?.reihen !== 12 || rt.seminar?.quer) melde("Seminar: Hörsaal falsch " + JSON.stringify(rt.seminar)); // 9 Teilnehmer + 3 freie Plätze
       if (!rt.to || !rt.toFeld) melde("Besprechung: Tagesordnung fehlt");
       if (!rt.knopf || !rt.tb) melde("Seminar: Teilnahmebestätigung fehlt");
-      if (!/Clubabend/.test(rt.check?.text || "") || !rt.check?.gesperrt) melde("Zeitprüfung: Clubabend nicht gemeldet oder „Einladen“ nicht gesperrt " + JSON.stringify(rt.check)); // 2.763.0
+      if (!/Clubabend/.test(rt.check?.text || "") || !rt.check?.gesperrt) melde("Zeitprüfung: Clubabend nicht gemeldet oder „Einladen“ nicht gesperrt " + JSON.stringify(rt.check)); // 2.764.0
       if (!rt.gruppe || !/Alle Mitglieder\|💡 nur Gruppe „Innovation“/.test(rt.fuerWen || "")) melde("Gruppe: Hinweis oder „Für wen?“ fehlt " + (rt.fuerWen || "")); // 2.762.0
     }
     // 2.727.0 KC-CLUB-TEILE: jedes nachladbare Teil lädt (Fingerabdruck passt) und ersetzt seine Platzhalter; die Probe antwortet mit dieser Version

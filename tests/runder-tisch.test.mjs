@@ -144,7 +144,7 @@ assert.match(server, /const ts = \(alle \?\? \[\]\)\.filter\(\(x: any\) => rtSic
 assert.match(server, /if \(gruppeId && !gruppe\) throw new Fehler\("Diese Gruppe gibt es nicht oder du bist nicht darin\.", 403\);/, "nur für eigene Gruppe einladen");
 assert.equal((server.match(/rtTischHolen\(p\.id, ich\)/g) || []).length, 3, "Zusage, Verlassen, Leiten prüfen die Gruppe");
 
-// 2.763.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: kein Clubabend, immer nur ein Tisch; andere Termine nur mit Rückfrage
+// 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: kein Clubabend, immer nur ein Tisch; andere Termine nur mit Rückfrage
 const I = (m) => new Date(B + m * M).toISOString(), Z = (a, b) => ({ vonMs: B + a * M, bisMs: B + b * M });
 const andererTisch = { id: "x", art: "seminar", thema: "Kasse", beginn: I(0), ende: I(60), status: "geplant", sichtbar: true };
 assert.equal(rtKonflikte(Z(30, 90), [andererTisch], []).sperre[0].was, "tisch", "überschneidet sich → gesperrt");
@@ -164,7 +164,7 @@ const markt = { titel: "Weihnachtsmarkt", beginn: I(-2 * 24 * 60), ende: I(2 * 2
 const km = rtKonflikte(Z(0, 60), [], [markt]);
 assert.ok(km.frei && km.hinweis.length === 1, "Veranstaltung: nur Hinweis mit Rückfrage");
 assert.match(rtKonfliktText(km.hinweis[0]), /Weihnachtsmarkt“ \(\d\d\.\d\d\.–\d\d\.\d\d\.\)/, "mehrtägig mit Datum");
-const sql4 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2763_tisch_nur_einer.sql", import.meta.url), "utf8");
+const sql4 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2764_tisch_nur_einer.sql", import.meta.url), "utf8");
 assert.match(sql4, /exclude using gist \(tstzrange\(beginn, ende, '\[\)'\) with &&\) where \(status = 'geplant'\)/, "Datenbank: nie zwei Tische gleichzeitig");
 assert.match(server, /if \(zl\.sperre\.length\) throw new Fehler\(zl\.sperre\[0\], 409\);/, "Einladen prüft vorher");
 assert.match(server, /error\?\.code === "23P01" \? new Fehler\(RT_DOPPELT, 409\)/, "gleichzeitig eingeladen → verständliche Meldung");

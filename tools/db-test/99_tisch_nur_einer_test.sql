@@ -1,4 +1,4 @@
--- KC-CLUB-RUNDER-TISCH-ZEITCHECK (2.763.0): Probelauf in Supabase – nach der Migration 20261030_kc_club_v2763_tisch_nur_einer.sql in derselben
+-- KC-CLUB-RUNDER-TISCH-ZEITCHECK (2.764.0): Probelauf in Supabase – nach der Migration 20261030_kc_club_v2764_tisch_nur_einer.sql in derselben
 -- Transaktion, bricht am Ende absichtlich ab (nichts bleibt). Gastgeber: erste aktive Person aus kc_core_people (nur gelesen).
 do $$
 declare p text; a uuid; doppelt boolean := false; angrenzend boolean := true; abgesagt_frei boolean := true; verlaengern_gesperrt boolean := false; andere_gruppe boolean := false;
