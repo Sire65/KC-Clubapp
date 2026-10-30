@@ -286,4 +286,10 @@ assert.equal(rundUhrText(0), "0:00"); assert.equal(rundUhrText(-5000), "0:00", "
 assert.equal(rundUhrText(3600000), "1 Std. 00 Min."); assert.equal(rundUhrText(2 * 3600000 + 5 * 60000), "2 Std. 05 Min.");
 assert.equal(rundUhrText(86400000), "1 Tag"); assert.equal(rundUhrText(3 * 86400000 + 5000), "3 Tagen");
 assert.match(app, /setInterval\(\(\) => \{\n  if \(document\.hidden\) return;\n  let um = false;/, "Uhr tickt nur, wenn die App sichtbar ist");
+// 2.779.0 KC-CLUB-RUNDER-TISCH-WIEDERHOLEN: nächster gleicher Wochentag, gleiche Uhrzeit (Berlin, auch über die Zeitumstellung)
+const rundWiederholenTag = new Function(app.slice(app.indexOf("function rundWiederholenTag("), app.indexOf("function rundWiederholen(id)")) + "\nreturn rundWiederholenTag;")();
+assert.deepEqual(rundWiederholenTag("2026-10-29T19:00:00Z", Date.parse("2026-10-30T14:00:00Z")), { datum: "2026-11-05", uhr: "20:00" }, "Do 20 Uhr → nächster Do");
+assert.deepEqual(rundWiederholenTag("2026-10-01T18:00:00Z", Date.parse("2026-10-30T14:00:00Z")), { datum: "2026-11-05", uhr: "20:00" }, "Sommerzeit 20 Uhr bleibt 20 Uhr, mehrere Wochen weiter");
+assert.deepEqual(rundWiederholenTag("2026-11-12T19:00:00Z", Date.parse("2026-10-30T14:00:00Z")), { datum: "2026-11-12", uhr: "20:00" }, "abgesagt, noch nicht dran: gleicher Tag");
+assert.match(app, /t\.phase === "vorbei" \|\| \(t\.phase === "abgesagt" && t\.darfLeiten\)\) knoepfe\.push\(k\(`rundWiederholen/, "Knopf auf der Karte");
 console.log("OK – Runder Tisch: Regeln geprüft");

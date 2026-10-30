@@ -334,3 +334,13 @@ Wahl Hansi: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vor
 | Aufräumen | 7 Tage nach Ende: Gast-Zeilen und `TG-`-Plätze (Wartung). |
 
 **Bewusst noch nicht:** Gäste schreiben im Tisch-Chat / laden eigene Dateien hoch – das würde den Gast zum Chat-Teilnehmer machen (Push, Namen, Lesestand). Erst auf Wunsch, mit eigener Prüfung.
+
+## 19. Wiederholen (2.779.0, KC-CLUB-RUNDER-TISCH-WIEDERHOLEN)
+
+Wunsch Hansi 30.10.2026: „Ein gelaufener Tisch kann wiederholt werden – nochmal antippen und wiederholen.“
+
+- Knopf **🔁 Wiederholen** auf vorbei-Tischen (Liste und Tisch-Ansicht), **🔁 Neu ansetzen** auf abgesagten (nur Leitung).
+- Öffnet das normale Einladen-Formular, vorbelegt mit Art, Thema, Beschreibung, Tagesordnung, Gruppe, Uhrzeit, Dauer, Plätzen; Tag = nächster gleicher Wochentag
+  (Uhrzeit in Berliner Zeit, auch über die Zeitumstellung). Ein abgesagter Tisch, der noch nicht dran war, behält seinen Tag.
+- Kein eigener Server-Weg: es gelten Zeitprüfung, Sperren und Bescheid wie bei `tisch_anlegen`. Wer wiederholt, wird Leitung. Tasche und Zusagen fangen neu an.
+- Später denkbar: „Alle von damals einladen“ (Bescheid nur an die Teilnehmenden) und Vorab-Teile der Tasche mitnehmen – braucht dann den Server.

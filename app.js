@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.778.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.779.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22083,6 +22083,7 @@ function rundKarteHtml(t) {
   if (t.bestaetigung) knoepfe.push(k(`rundBestaetigung(${id})`, "📄 Teilnahmebestätigung", true));
   if (t.phase !== "vorbei" && t.phase !== "abgesagt") knoepfe.push(k(`rundTascheOeffnen(${id})`, `💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}${t.tasche?.vorab ? ` · 📁 ${t.tasche.vorab} vorab` : ""}`)); // 2.774.0 KC-CLUB-TISCH-TASCHE
   if (t.darfLeiten && (t.phase === "geplant" || t.phase === "gleich")) knoepfe.push(k(`rundLeiten(${id}, 'absagen')`, "🚫 Absagen"));
+  if (t.phase === "vorbei" || (t.phase === "abgesagt" && t.darfLeiten)) knoepfe.push(k(`rundWiederholen(${id})`, t.phase === "vorbei" ? "🔁 Wiederholen" : "🔁 Neu ansetzen")); // 2.779.0
   const zus = t.phase === "vorbei" ? "" : A.anmeldung ? `📝 ${angemeldet} von ${t.plaetze} Plätzen angemeldet${t.meineZusage === "ja" && !t.darfLeiten ? " – du bist dabei" : ""}`
     : t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
   const am = t.phase === "offen" || t.phase === "gleich" ? ` · 🪑 ${t.amTisch.length} von ${t.plaetze} am Tisch` : t.phase === "vorbei" ? ` · ${t.warenDa} waren dabei` : "";
@@ -22112,7 +22113,7 @@ function rundZeichnen() {
     <button class="knopf" onclick="fensterZu($('rundBlatt'))">Schließen</button>`;
 }
 // Einladen: Auswahl statt Freitext, wo es geht (Vertrag Regel 13)
-function rundNeu() {
+function rundNeu(v) {
   const r = RUND.lage?.regeln || { dauern: [30, 60, 90], plaetzeMin: 4, plaetzeMax: 18, themaMax: 80, beschreibungMax: 300 };
   const heute = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
   const plaetze = Array.from({ length: r.plaetzeMax - r.plaetzeMin + 1 }, (_, i) => r.plaetzeMax - i).map((n) => `<option value="${n}">${n} Plätze</option>`).join("");
@@ -22133,9 +22134,38 @@ function rundNeu() {
     <label class="rund-haken"><input type="checkbox" id="rundBescheid" checked> 📣 Alle Eingeladenen bekommen Bescheid${nurTest("runder_tisch") ? " (im Test nur Admins)" : ""}</label>
     <p class="hinweis" id="rundArtHinweis"></p>
     <div class="knoepfe"><button class="knopf haupt" id="rundLos" onclick="rundAnlegen()">🪑 Einladen</button><button class="knopf" onclick="fensterZu($('rundNeuBlatt'))">Abbrechen</button></div>`);
+  if (v) rundVorlageSetzen(v);
   rundArtWahl();
   for (const id of ["rundTag", "rundUhr", "rundDauer"]) $(id)?.addEventListener("change", rundZeitPruefen);
   rundZeitPruefen();
+}
+// 2.779.0 KC-CLUB-RUNDER-TISCH-WIEDERHOLEN (Wunsch Hansi 30.10.2026): ein gelaufener (oder abgesagter) Tisch lässt sich mit einem Tipp wiederholen –
+// das Einladen-Formular kommt mit Art, Thema, Beschreibung, Tagesordnung, Gruppe, Uhrzeit, Dauer und Plätzen von damals, als Tag der nächste gleiche
+// Wochentag. Danach läuft alles wie beim normalen Einladen (Zeitprüfung, Rückfrage, Bescheid); wer wiederholt, lädt ein. Die Tasche fängt leer an.
+function rundWiederholenTag(beginn, jetzt = Date.now()) {
+  const tag = (ms) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date(ms));
+  const uhr = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(beginn));
+  let ms = Date.parse(beginn); while (ms <= jetzt) ms += 7 * 86400000; // abgesagt und noch nicht dran: gleicher Tag
+  return { datum: tag(ms), uhr };
+}
+function rundWiederholen(id) {
+  const t = rundTisch(id); if (!t) return melde("Den Tisch gibt es nicht mehr.");
+  fensterZu($("rundTischBlatt"));
+  rundNeu({ ...t, ...rundWiederholenTag(t.beginn) });
+}
+function rundVorlageSetzen(v) {
+  const setze = (id, w) => { const el = $(id); if (el && w != null && w !== "") el.value = w; };
+  const art = document.querySelector(`input[name="rundArt"][value="${RUND_ARTEN[v.art] ? v.art : "runder_tisch"}"]`); if (art) art.checked = true;
+  setze("rundThema", v.thema); setze("rundBeschr", v.beschreibung); setze("rundTo", (v.tagesordnung || []).join("\n"));
+  setze("rundTag", v.datum); setze("rundUhr", v.uhr); setze("rundPlaetze", String(v.plaetze || ""));
+  if ([...($("rundDauer")?.options || [])].some((o) => Number(o.value) === v.dauer)) setze("rundDauer", String(v.dauer));
+  const gr = $("rundGruppe"), gId = v.gruppe?.id;
+  if (gId && gr && [...gr.options].some((o) => o.value === gId)) gr.value = gId;
+  const h = document.querySelector("#rundNeuBlatt h3"); if (h) h.textContent = `🔁 Wiederholen: „${v.thema}“`;
+  const hin = document.createElement("p"); hin.className = "hinweis rund-wieder";
+  hin.textContent = `Alles wie beim letzten Mal – als Tag ist der nächste ${new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", weekday: "long" }).format(new Date(v.beginn))} vorgeschlagen. Bitte Tag und Uhrzeit prüfen.`
+    + (gId && gr?.value !== gId ? ` ⚠️ Die Gruppe „${v.gruppe.name}“ kannst du nicht wählen – bitte „Für wen?“ prüfen.` : "");
+  h?.after(hin);
 }
 // 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: sobald Tag/Uhrzeit/Dauer gewählt sind, fragt die App, was an dem Tag schon los ist – kein Clubabend und
 // immer nur ein Tisch gleichzeitig (sonst bleibt „Einladen“ gesperrt). Ungeprüft heißt nie „frei“ (Vertrag Regel 11).
@@ -22296,6 +22326,7 @@ function rundTischZeichnen() {
       ${t.darfLeiten && t.phase === "offen" && (t.verlaengert || 0) < 60 ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'verlaengern')">⏱️ +30 Min.</button>` : ""}
       ${t.darfLeiten && t.phase === "offen" ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'schliessen')">⏹️ Beenden</button>` : ""}
       ${sitze || warte ? `<button class="knopf klein" onclick="rundVerlassen(${jsArg(t.id)})">🚪 Verlassen</button>` : ""}
+      ${t.phase === "vorbei" && !INIT?.gast ? `<button class="knopf klein" onclick="rundWiederholen(${jsArg(t.id)})">🔁 Wiederholen</button>` : ""}
       <button class="knopf klein" onclick="fensterZu($('rundTischBlatt'))">Zurück</button>
     </div>`;
   if (teilDa("tischlive")) tlZeichnen(); // 2.766.0: Live-Bereich (Leute, Bühne, Knöpfe) neu einhängen

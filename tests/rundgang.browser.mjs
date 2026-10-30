@@ -135,7 +135,11 @@ try {
         document.querySelector('input[name="rundArt"][value="besprechung"]').click(); const toFeld = !$("rundToFeld").classList.contains("versteckt");
         const fuerWen = [...($("rundGruppe")?.options || [])].map((o) => o.textContent).join("|");
         await new Promise((r) => setTimeout(r, 900)); const check = { text: $("rundZeitCheck")?.textContent || "", gesperrt: !!$("rundLos")?.disabled }; fensterZu($("rundNeuBlatt"));
-        return { karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld, gruppe, fuerWen, check, tasche }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
+        rundWiederholen("44444444-2222-3333-4444-555555555555"); // 2.779.0 KC-CLUB-RUNDER-TISCH-WIEDERHOLEN: Formular kommt vorbelegt
+        const wieder = { knopf: /🔁 Wiederholen/.test(inhalt), thema: $("rundThema")?.value, art: document.querySelector('input[name="rundArt"]:checked')?.value, to: $("rundTo")?.value,
+          gruppe: $("rundGruppe")?.value, tag: $("rundTag")?.value, h: document.querySelector("#rundNeuBlatt h3")?.textContent, quer: document.documentElement.scrollWidth > innerWidth + 2 };
+        await new Promise((r) => setTimeout(r, 500)); fensterZu($("rundNeuBlatt"));
+        return { wieder, karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld, gruppe, fuerWen, check, tasche }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
       if (!rt.karte) melde("Runder Tisch: Karte auf der Startseite fehlt");
       if (!rt.liste) melde("Runder Tisch: Liste erscheint nicht " + (rt.fehler || ""));
       if (rt.plaetze !== 18 || rt.grau !== 1) melde(`Runder Tisch: ${rt.plaetze} Plätze, ${rt.grau} grau (erwartet 18 und 1)`);
@@ -146,6 +150,9 @@ try {
       if (!rt.to || !rt.toFeld) melde("Besprechung: Tagesordnung fehlt");
       if (!rt.knopf || !rt.tb) melde("Seminar: Teilnahmebestätigung fehlt");
       if (!/Clubabend/.test(rt.check?.text || "") || !rt.check?.gesperrt) melde("Zeitprüfung: Clubabend nicht gemeldet oder „Einladen“ nicht gesperrt " + JSON.stringify(rt.check)); // 2.764.0
+      const w = rt.wieder || {}; // 2.779.0
+      if (!w.knopf || w.thema !== "Weihnachtsmarkt" || w.art !== "besprechung" || w.to !== "Begrüßung\nStand und Dienste\nVerschiedenes" || w.gruppe !== "66666666-2222-3333-4444-555555555555"
+        || !/^\d{4}-\d\d-\d\d$/.test(w.tag || "") || !/Wiederholen/.test(w.h || "") || w.quer) melde("🔁 Wiederholen: Knopf oder Vorbelegung stimmt nicht " + JSON.stringify(w));
       if (!rt.tasche) melde("💼 Tasche: Teile, Vorab oder Breite stimmen nicht"); // 2.772.0
       if (!rt.gruppe || !/Alle Mitglieder\|💡 nur Gruppe „Innovation“/.test(rt.fuerWen || "")) melde("Gruppe: Hinweis oder „Für wen?“ fehlt " + (rt.fuerWen || "")); // 2.762.0
     }

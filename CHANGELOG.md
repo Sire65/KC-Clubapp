@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.779.0 – 2026-10-30 – 🔁 Runder Tisch: gelaufenen Tisch wiederholen (KC-CLUB-RUNDER-TISCH-WIEDERHOLEN) · nur App
+Wunsch Hansi (30.10.): „Ein gelaufener Tisch kann wiederholt werden – nochmal antippen und wiederholen.“ Noch nur Admin zum Testen.
+- **🔁 Wiederholen** auf jedem vorbei-Tisch (Liste „Vorbei – zum Nachlesen“ und in der Tisch-Ansicht), **🔁 Neu ansetzen** bei abgesagten Tischen (für die Leitung).
+- Das Einladen-Formular kommt **vorbelegt**: Art, Thema, Beschreibung, Tagesordnung, Gruppe, Uhrzeit, Dauer und Plätze wie beim letzten Mal; als Tag der **nächste gleiche Wochentag** (abgesagt und noch nicht dran: derselbe Tag). Alles lässt sich vor dem Einladen ändern.
+- Danach wie beim normalen Einladen: Zeitprüfung (kein Clubabend, nur ein Tisch gleichzeitig), Rückfrage, Bescheid. Wer wiederholt, lädt ein (Leitung/Referent). Die Tasche fängt leer an; Zusagen gibt es neu.
+- Gruppe nicht wählbar (nicht mehr Mitglied)? Dann steht ein Hinweis, „Für wen?“ zu prüfen.
+- Kein Server, keine Datenbank. Tests: `tests/runder-tisch.test.mjs` (Wochentag, Zeitumstellung), Klick-Rundgang (Knopf und Vorbelegung). Rückweg: App 2.778.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.778.0 – 2026-10-30 – ⏳ Runder Tisch: Countdown bis zum Beginn und Restzeit-Uhr (KC-CLUB-RUNDER-TISCH-UHR) · nur App
 Wunsch Hansi (30.10.): „Einen Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine Runterzähl-Uhr, wie lange der Tisch noch laufen wird.“ Noch nur Admin zum Testen.
 - **Vor Beginn:** „⏳ beginnt in 12:34“ (ab 1 Std. „2 Std. 05 Min.“, ab 1 Tag „3 Tagen“) – am Tisch groß oben, in der Tischmitte, auf der Startseiten-Karte und in der Liste (ab 24 Std. vorher).
