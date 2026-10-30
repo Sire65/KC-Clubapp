@@ -424,9 +424,9 @@ function tlZeichnen() {
       <button class="knopf${TL.micAn ? " haupt" : ""}" onclick="tlMikro(${!TL.micAn})" ${r.darfSprechen ? "" : "disabled"}><span>${TL.micAn ? "🎙️" : "🔇"}</span>${TL.micAn ? "Mikro an" : "Mikro aus"}</button>
       <button class="knopf${TL.cam ? " haupt" : ""}" onclick="tlKamera()" ${r.darfSprechen ? "" : "disabled"}><span>📷</span>Kamera</button>
       ${tlSchirmGeht() ? `<button class="knopf${TL.schirm ? " haupt" : ""}" onclick="tlSchirm()" ${r.darfSprechen ? "" : "disabled"}><span>🖥️</span>Bildschirm</button>` : ""}
-      <button class="knopf${TL.zeige?.von === TL.ich ? " haupt" : ""}" onclick="tlUnterlagen()"><span>📎</span>Zeigen</button>
+      ${t.chat ? `<button class="knopf${TL.zeige?.von === TL.ich ? " haupt" : ""}" onclick="tlUnterlagen()"><span>📎</span>Zeigen</button>
       <button class="knopf${TL.musik ? " haupt" : ""}" onclick="tlMusik()"><span>🎵</span>Lied/Video</button>
-      ${tlTasche().some((x) => !x.gezeigt) ? `<button class="knopf" onclick="tlTascheNaechstes()"><span>💼</span>Nächstes</button>` : ""}
+      ${tlTasche().some((x) => !x.gezeigt) ? `<button class="knopf" onclick="tlTascheNaechstes()"><span>💼</span>Nächstes</button>` : ""}` : ""}
       ${r.darfSprechen ? "" : `<button class="knopf${TL.hand ? " haupt" : ""}" onclick="tlHand()"><span>✋</span>${TL.hand ? "Gemeldet" : "Melden"}</button>`}
       <button class="knopf" onclick="tlStopp()"><span>⏹️</span>Live aus</button>
     </div>

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.774.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.775.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16,7 +16,7 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
-  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Mzhesabrtbxdb/E54y1vINL8K5qEvrft7KZYE+fE/9F0lpK+DIdML0oBNL4mChwP" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
+  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -8724,6 +8724,7 @@ function notErnstfallSetzen(an) {
 // KC-CLUB-AUSSETZER (0.76.0): 503 ohne Antwort unseres Programms = Supabase hatte kurz keinen freien Server (die Anfrage
 // hat unseren Code nie erreicht) → einmal still wiederholen. Andere Fehler nicht wiederholen (sonst evtl. doppelt gesendet).
 const AUSSETZER_PAUSE_MS = 800;
+let TG_GERAET = ""; // 2.775.0 KC-CLUB-RUNDER-TISCH-GAST: Geräte-Kennung des Tischgastes (nur im Gast-Modus gesetzt, sonst leer) – geht als x-tg-geraet mit
 // 2.6.1 (Prüfung): Zeitgrenze auch auf älteren iPhones (AbortSignal.timeout fehlt dort)
 // KC-CLUB-LADE-SICHERHEIT: Zeitgrenze + Abbruch durch das Mitglied (ohne AbortSignal.any – ältere iPads)
 function zeitSignalMit(ms, abbruch) {
@@ -8762,7 +8763,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   // sonst drehte sich die Sanduhr bis zu 2½ Minuten und der Notbetrieb sprang nicht an
   // 2.1.1: Lesen 25 s; Schreiben 140 s (der Server speichert zuerst und benachrichtigt dann – das darf dauern, sonst doppelt)
   const zeitMs = API_LESEN.test(action) ? 25000 : 140000;
-  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION }, body: JSON.stringify({ action, ...daten }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
+  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION, ...(TG_GERAET ? { "x-tg-geraet": TG_GERAET } : {}) }, body: JSON.stringify({ action, ...daten }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
   catch (fe) { if (abbruch?.aborted) { VB.laufend = Math.max(0, VB.laufend - 1); vbDatenLed(); throw Object.assign(new Error("Abgebrochen."), { abgebrochen: true }); } // KC-CLUB-LADE-SICHERHEIT
     if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
     // Region weg → Standardweg. 2.425.0 KC-CLUB-GENERALCHECK: nur Lesen still wiederholen – „Failed to fetch“ kann auch NACH dem Absenden kommen
@@ -22087,6 +22088,7 @@ function rundKarteHtml(t) {
   const am = t.phase === "offen" || t.phase === "gleich" ? ` · 🪑 ${t.amTisch.length} von ${t.plaetze} am Tisch` : t.phase === "vorbei" ? ` · ${t.warenDa} waren dabei` : "";
   return `<div class="karte rund-karte rund-${esc(t.phase)}"><div class="rund-art">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 nur ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""}</div><div><b>${esc(t.thema)}</b> <small class="rund-phase">${RUND_PHASE[t.phase] || ""}</small></div>
     <div class="hinweis">${esc(t.text)} · ${esc(A.leiter)}: ${esc(t.gastgeberName)}</div>
+    ${t.gaeste?.length ? `<div class="rund-gaeste">🙋 Mit Gast: ${esc(t.gaeste.map((x) => x.name + (x.rolle ? ` (${x.rolle})` : "")).join(", "))}</div>` : ""}
     ${t.beschreibung ? `<div class="rund-beschreibung">${esc(t.beschreibung)}</div>` : ""}
     ${t.tagesordnung?.length && t.phase !== "vorbei" ? `<ol class="rund-to">${t.tagesordnung.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
     <div class="hinweis">${zus}${zus ? am : am.replace(/^ · /, "")}</div>
@@ -22234,7 +22236,7 @@ function rundPersonHtml(p, t, gr, stil = "", g = { figur: true, namen: true }) {
   const fig = avFigurVon({ person_id: p.id }), vn = p.name.split(" ")[0], leiter = p.id === t.gastgeber;
   const titel = p.sicher ? `${p.name} ist dabei` : `${p.name} – Verbindung unbekannt`;
   const live = rundLiveAn(RUND.offen) ? tlPlatz(p.id) : ""; // 2.766.0: spricht (grün) · ✋ · 🥄 · live
-  return `<div class="rund-platz${p.sicher ? "" : " unsicher"}${p.id === ICH?.person_id ? " ich" : ""}${leiter ? " gastgeber" : ""}${live ? " " + live : ""}" data-pid="${esc(p.id)}" style="${stil}" title="${esc(titel)}">
+  return `<div class="rund-platz${p.sicher ? "" : " unsicher"}${p.id === ICH?.person_id ? " ich" : ""}${leiter ? " gastgeber" : ""}${p.gast ? " gast" : ""}${live ? " " + live : ""}" data-pid="${esc(p.id)}" style="${stil}" title="${esc(titel)}">
       <div class="rund-av" style="width:${gr}px;height:${gr}px;font-size:${Math.round(gr * 0.38)}px" aria-label="${esc(titel)}">${g.figur && avGueltig(fig) ? avatarSvg(fig, gr - 6, initialen(p.name)) : esc(initialen(p.name))}</div>
       ${g.namen ? `<div class="rund-name">${esc(leiter ? `${t.art === "seminar" ? "🎤" : "👑"} ${vn}` : vn)}</div>` : leiter ? `<div class="rund-name">${t.art === "seminar" ? "🎤" : "👑"}</div>` : ""}</div>`;
 }
@@ -22282,10 +22284,11 @@ function rundTischZeichnen() {
     ${t.art !== "seminar" && t.amTisch.length && !rundGroesse(rundBreite(), t.plaetze).namen ? `<p class="hinweis rund-namen">${A.sym} Dabei: ${t.amTisch.map((p) => `${p.id === t.gastgeber ? (t.art === "seminar" ? "🎤 " : "👑 ") : ""}${esc(p.name.split(" ")[0])}${p.sicher ? "" : " ⚪"}`).join(", ")}</p>` : ""}
     ${t.tagesordnung?.length ? `<details class="karte rund-to-karte" open><summary><b>📋 Tagesordnung</b></summary><ol class="rund-to">${t.tagesordnung.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details>` : ""}
     ${unsicher ? `<p class="hinweis">⚪ ${unsicher === 1 ? "Bei 1 Person" : `Bei ${unsicher} Personen`} ist gerade unklar, ob sie noch da ${unsicher === 1 ? "ist" : "sind"} (grau).</p>` : ""}
+    ${rundGaesteHtml(t)}
     ${warte ? `<p class="rund-warte">⏳ Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.</p>` : ""}
     ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<p class="hinweis">Du sitzt gerade nicht am Tisch.</p>` : ""}
     <div class="knoepfe rund-leiste">
-      ${t.phase !== "vorbei" ? `<button class="knopf klein" onclick="rundTascheOeffnen(${jsArg(t.id)})">💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}</button>` : ""}
+      ${t.phase !== "vorbei" && !INIT?.gast ? `<button class="knopf klein" onclick="rundTascheOeffnen(${jsArg(t.id)})">💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}</button>` : ""}
       ${sitze && t.chat ? `<button class="knopf haupt" onclick="rundChat(${jsArg(t.id)})">💬 ${t.art === "seminar" ? "Seminar-Chat: Fragen · 🎤 · 📎 Unterlagen" : "Chat: schreiben · 🎤 sprechen · 📎 zeigen"}</button>` : ""}
       ${!sitze && !warte && (t.phase === "offen" || t.phase === "gleich") ? `<button class="knopf haupt" onclick="rundPlatz(${jsArg(t.id)}, true)">🪑 Platz nehmen</button>` : ""}
       ${t.darfLeiten && t.phase === "offen" && (t.verlaengert || 0) < 60 ? `<button class="knopf klein" onclick="rundLeiten(${jsArg(t.id)}, 'verlaengern')">⏱️ +30 Min.</button>` : ""}
@@ -22294,6 +22297,46 @@ function rundTischZeichnen() {
       <button class="knopf klein" onclick="fensterZu($('rundTischBlatt'))">Zurück</button>
     </div>`;
   if (teilDa("tischlive")) tlZeichnen(); // 2.766.0: Live-Bereich (Leute, Bühne, Knöpfe) neu einhängen
+}
+// 2.775.0 KC-CLUB-RUNDER-TISCH-GAST: Gäste am Tisch – „🙋 Gast einladen“ (jedes Mitglied, höchstens 2), Liste mit Zurückziehen. Gäste selbst sehen das nicht.
+function rundGaesteHtml(t) {
+  if (INIT?.gast || t.phase === "vorbei" || t.phase === "abgesagt") return "";
+  const max = RUND.lage?.regeln?.gastMax || 2, l = t.gaeste || [];
+  return `<div class="rund-gaeste-box">${l.map((g) => `<div class="rund-gast">🙋 <b>${esc(g.name)}</b>${g.rolle ? ` <small>${esc(g.rolle)}</small>` : ""}${g.darfZurueck ? ` <button class="knopf klein" onclick="rundGastZurueck(${jsArg(g.id)})">✕ Zurückziehen</button>` : ""}</div>`).join("")}
+    ${l.length < max ? `<button class="knopf klein" onclick="rundGastEinladen(${jsArg(t.id)})">🙋 Gast von außen einladen</button>` : `<small class="hinweis">Höchstens ${max} Gäste je Tisch.</small>`}</div>`;
+}
+function rundGastEinladen(id) {
+  const t = rundTisch(id); if (!t) return;
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🙋 Gast einladen</h3>
+    <p class="dlg-text">Für Menschen von außen, z. B. einen Experten. Der Gast bekommt einen Link <b>nur für „${esc(t.thema)}“</b>: Er sieht nur diesen Tisch (Vornamen), kann zuhören, mit 🥄 Redestab sprechen, Kamera und Bildschirm zeigen. Keine Chats, keine Mitgliederliste, keine Termine.</p>
+    <label class="feld">Name des Gastes<input id="rgName" maxlength="60" placeholder="z. B. Dr. Weber" autocomplete="off"></label>
+    <label class="feld">Rolle (freiwillig)<input id="rgRolle" maxlength="60" placeholder="z. B. Musiker, Kassen-Experte" autocomplete="off"></label>
+    <div class="knoepfe"><button type="button" class="knopf haupt" data-a="los">🙋 Link erzeugen</button><button type="button" class="knopf" data-a="zu2">Abbrechen</button></div>`, () => f.remove());
+  f.querySelectorAll('[data-a="zu"],[data-a="zu2"]').forEach((b) => (b.onclick = () => f.remove()));
+  setTimeout(() => $("rgName")?.focus(), 50);
+  f.querySelector('[data-a="los"]').onclick = async (e) => {
+    await einmal(e.currentTarget, async () => {
+      let r; try { r = await api("tisch_gast_einladen", { id, name: $("rgName").value, rolle: $("rgRolle").value }); } catch (x) { return meldeFehler(x); }
+      f.remove(); rundLageSetzen(r.lage); rundGastLinkZeigen(r);
+    });
+  };
+}
+// Der Link wird nur jetzt angezeigt (der Server merkt sich nur den Fingerabdruck) – teilen oder kopieren, nur an den Gast
+function rundGastLinkZeigen(r) {
+  const zeit = (iso) => `${fTag.format(new Date(iso))} ${fZeit.format(new Date(iso))} Uhr`;
+  const f = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">🔗 Link für ${esc(r.gast.name)}</h3>
+    <p class="dlg-text">Bitte <b>nur an ${esc(r.gast.name)}</b> schicken. Er gilt von <b>${esc(zeit(r.gueltig.ab))}</b> bis <b>${esc(zeit(r.gueltig.bis))}</b> und nur auf dem Gerät, das ihn zuerst öffnet.
+    Der Link wird nur jetzt angezeigt – geht er verloren: zurückziehen und neu einladen.</p>
+    <input id="rgLink" readonly value="${esc(r.link)}" style="width:100%" onclick="this.select()">
+    <div class="knoepfe"><button type="button" class="knopf haupt" data-a="teilen">📤 Teilen</button><button type="button" class="knopf" data-a="kopie">📋 Kopieren</button><button type="button" class="knopf" data-a="zu2">Fertig</button></div>`, () => f.remove());
+  f.querySelectorAll('[data-a="zu"],[data-a="zu2"]').forEach((b) => (b.onclick = () => f.remove()));
+  const text = `Hallo ${r.gast.name}, du bist zum Runden Tisch beim Köcheclub Werne eingeladen. Dein persönlicher Link (nur für dich, gilt nur an diesem Tag):\n${r.link}`;
+  f.querySelector('[data-a="kopie"]').onclick = async () => { try { await navigator.clipboard.writeText(r.link); melde("📋 Link kopiert"); } catch { $("rgLink").select(); melde("Bitte den markierten Link kopieren.", true); } };
+  f.querySelector('[data-a="teilen"]').onclick = async () => { try { if (navigator.share) await navigator.share({ title: "Einladung Runder Tisch", text }); else { await navigator.clipboard.writeText(text); melde("📋 Einladung kopiert – jetzt z. B. in WhatsApp einfügen"); } } catch {} };
+}
+async function rundGastZurueck(gastId) {
+  if (!(await frage("Gast-Link zurückziehen? Der Gast kommt dann nicht mehr an den Tisch (auch nicht, wenn er gerade da ist).", { ja: "✕ Zurückziehen", nein: "Behalten" }))) return;
+  try { const r = await api("tisch_gast_zurueckziehen", { gast: gastId }); rundLageSetzen(r.lage); melde("✕ Gast-Link zurückgezogen"); } catch (e) { meldeFehler(e); }
 }
 // Karte auf der Startseite: ab 15 Min. vor Beginn bis zum Ende (bzw. solange ich sitze)
 function rundKarteZeichnen() {
@@ -22343,7 +22386,9 @@ async function rundSeminareZeigen() {
 // Beim Platznehmen holt das Handy die Dateien schon (RUND_DATEIEN, höchstens 60 MB im Speicher) – Zeigen geht dann ohne Warten.
 const RUND_DATEIEN = new Map(), RUND_TASCHE_ART = { pdf: "📄", foto: "🖼️", musik: "🎵" }, RUND_VORLADEN_MAX = 60 * 1024 * 1024;
 RUND.tasche = {};
-async function rundTascheHolen(id) { const r = await api("tisch_tasche", { id }, { still: true }); RUND.tasche[id] = r; return r; }
+async function rundTascheHolen(id) {
+  if (INIT?.gast) { const r = { meine: [], vorab: [] }; RUND.tasche[id] = r; return r; } // 2.775.0: Tischgäste haben keine Tasche (Server: nicht erlaubt)
+  const r = await api("tisch_tasche", { id }, { still: true }); RUND.tasche[id] = r; return r; }
 async function rundTascheOeffnen(id) {
   const t = rundTisch(id); if (!t) return;
   const f = blattAuf("rundTascheBlatt", `<div id="rundTascheInhalt"><p class="hinweis">Wird geladen …</p></div>`); f.classList.add("rund-blatt");
@@ -36912,12 +36957,40 @@ async function schluesselZurueck() {
   try { fpNeu("schluessel_zurueck", { text: "Gespeicherter Link fehlte – aus der Zweitablage wiederhergestellt" }); } catch {}
   return k;
 }
+// ---------- 2.775.0 KC-CLUB-RUNDER-TISCH-GAST: Start für externe Tischgäste ----------
+// Der Gast-Link gilt nur für einen Tisch. KEY bleibt nur im Speicher dieser Sitzung (nie als Mitglieder-Link gemerkt); dazu eine zufällige
+// Geräte-Kennung (TG_GERAET), an die der Server den Link beim ersten Öffnen bindet. Es startet nichts vom Mitglieder-Teil der App – nur der Tisch.
+async function gastStart(token) {
+  KEY = token; try { sessionStorage.setItem("kc_tischgast", token); } catch {}
+  try { TG_GERAET = localStorage.getItem("kc_tg_geraet") || ""; if (!/^[0-9a-f]{32}$/.test(TG_GERAET)) { const a = crypto.getRandomValues(new Uint8Array(16)); TG_GERAET = [...a].map((x) => x.toString(16).padStart(2, "0")).join(""); localStorage.setItem("kc_tg_geraet", TG_GERAET); } }
+  catch { const a = crypto.getRandomValues(new Uint8Array(16)); TG_GERAET = [...a].map((x) => x.toString(16).padStart(2, "0")).join(""); }
+  document.body.classList.add("tischgast"); $("appLaedt")?.remove();
+  const seite = document.createElement("div"); seite.id = "gastSeite"; seite.className = "gast-seite";
+  seite.innerHTML = `<div class="gast-kopf"><span class="cd-logo" style="width:46px;height:46px"><img src="${esc(KC_CD.logo)}" alt=""></span><div><b>${esc(KC_CD.name)}</b><small>Runder Tisch · Gast-Zugang</small></div></div><div id="gastInhalt"><p class="hinweis">Wird geladen …</p></div>`;
+  document.body.appendChild(seite);
+  let r; try { r = await api("tischgast_init", {}, { warten: true }); }
+  catch (e) { $("gastInhalt").innerHTML = `<p>⚠️ ${esc(fehlerText(e, "Der Gast-Link geht gerade nicht."))}</p><button class="knopf" onclick="location.reload()">🔄 Nochmal versuchen</button>`; return; }
+  ICH = { ...r.ich, admin: false, vorstand: false, aemter: [] }; INIT = { freigaben: { runder_tisch: "alle" }, gast: true };
+  RUND.lage = r.lage;
+  const t = rundTisch(r.tisch);
+  $("gastInhalt").innerHTML = `<h2 style="margin:8px 0 2px">${t ? `${rundArt(t).sym} ${esc(t.thema)}` : "Runder Tisch"}</h2>
+    <p class="hinweis" style="margin:0 0 10px">Hallo ${esc(r.ich.name)}! ${t ? `${esc(t.text)} · ${esc(rundArt(t).leiter)}: ${esc(t.gastgeberName)}` : ""}</p>
+    <details class="karte"><summary>🔒 Was passiert mit meinen Daten?</summary><p>${esc(r.hinweis)}</p></details>
+    <button class="knopf haupt" style="width:100%;margin-top:10px" onclick="rundTischZeigen(${jsArg(r.tisch)})">🪑 Zum Tisch</button>`;
+  let gesehen = false; try { gesehen = sessionStorage.getItem("kc_tg_ds") === "1"; } catch {}
+  if (!gesehen && !(await frage(`🔒 Hallo ${r.ich.name}!\n\n${r.hinweis}`, { ja: "Verstanden – zum Tisch", nein: "Abbrechen" }))) return;
+  try { sessionStorage.setItem("kc_tg_ds", "1"); } catch {}
+  rundTischZeigen(r.tisch);
+}
 // ---------- Start der App ----------
 (function start() {
   START_MESS.eingerichtet = performance.now(); // KC-CLUB-STARTZEIT
   anwendenDesign(); lichtSensorStarten();
   versionAnzeigen(); $("appVersion").textContent = APP_VERSION; oaBilderBeobachten(); // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN
   const url = new URL(location.href), k = url.searchParams.get("k");
+  // 2.775.0 KC-CLUB-RUNDER-TISCH-GAST: Gast-Link „?g=tg_…“ → eigener, schmaler Start (nichts aus dem Mitglieder-Speicher, kein App-Start, nur der Tisch)
+  let g = url.searchParams.get("g"); try { g = g || sessionStorage.getItem("kc_tischgast"); } catch {}
+  if (g && /^tg_[0-9a-f]{48}$/.test(g)) { url.searchParams.delete("g"); history.replaceState(null, "", url.pathname); return gastStart(g); }
   try { if (k) localStorage.setItem("kc_club_key", k); KEY = k || localStorage.getItem("kc_club_key") || ""; } catch { KEY = k || ""; }
   if (k) try { localStorage.removeItem("kc_club_pin"); localStorage.setItem("kc_club_pin_fehl", "0"); } catch {} // 2.726.0 KC-CLUB-LIEGEN-SCHUTZ: persönlicher Link = „PIN vergessen“ gelöst
   if (k) { url.searchParams.delete("k"); history.replaceState(null, "", url.pathname + url.hash); }

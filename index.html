@@ -4594,6 +4594,11 @@
   .tl-leiste { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; }
   .tl-leiste .knopf { margin: 0; padding: 6px 2px; min-height: 56px; font-size: .76rem; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
   .tl-leiste .knopf span { font-size: 1.2rem; } .tl-tipp { margin: 6px 0 0; font-size: .75rem; }
+  /* 2.775.0 KC-CLUB-RUNDER-TISCH-GAST: Gast am Platz (goldener Ring), Gäste-Liste, Gast-Startseite */
+  .rund-platz.gast .rund-av { box-shadow: 0 0 0 3px var(--gold), 0 0 0 5px #fff8e1; } .rund-platz.gast .rund-name::after { content: " · Gast"; color: var(--gold); font-weight: 700; }
+  .rund-gaeste { font-weight: 700; color: var(--gold); margin: 2px 0; } .rund-gaeste-box { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+  .rund-gast { display: flex; gap: 6px; align-items: center; border: 2px solid var(--gold); border-radius: 12px; padding: 3px 8px; }
+  .gast-seite { max-width: 560px; margin: 0 auto; padding: 16px; } .gast-kopf { display: flex; gap: 10px; align-items: center; } .gast-kopf small { display: block; color: var(--grau); }
   .tl-musik { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--gelbbg); border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; font-size: .85rem; }
   /* 2.774.0 KC-CLUB-TISCH-MUSIK-STOPP: Knöpfe direkt an der Musik + kleine Leiste unten, wenn der Tisch nicht zu sehen ist */
   .tl-musik-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; } .tl-musik-knoepfe .knopf { margin: 0; }
@@ -6385,7 +6390,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.774.0" data-v="2.774.0"></script>
+<script src="app.js?v=2.775.0" data-v="2.775.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

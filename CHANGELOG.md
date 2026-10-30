@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.775.0 – 2026-10-30 – 🙋 Runder Tisch: externe Tischgäste mit eigenem Link (KC-CLUB-RUNDER-TISCH-GAST, Stufe RT4) · Server 2.775.0 · DB
+Wunsch Hansi (30.10.): „Weiter bauen“ – nach Live, Musik und Videos jetzt die externen Gäste (Spezifikation Abschnitte 4 und 18; Entscheidung: jedes Mitglied darf Gäste einladen).
+- **🙋 Gast von außen einladen** (am Tisch, jedes Mitglied, das den Tisch sieht): Name und Rolle eingeben → **persönlicher Link** zum Teilen/Kopieren. Er wird nur dieses eine Mal angezeigt – der Server speichert nur seinen Fingerabdruck und verschickt ihn nie selbst. Höchstens **2 Gäste** je Tisch (zählen zu den Plätzen). **✕ Zurückziehen**: wer eingeladen hat, wer leitet, Admin – auch mitten im Tisch.
+- **Der Gast** öffnet den Link ohne Club-App-Zugang: kurzer Datenschutz-Hinweis, dann **nur dieser Tisch** – mit Vornamen der Teilnehmenden. Er kann **zuhören, sprechen** (bis 6 frei, sonst mit 🥄 Redestab), **Kamera** und **Bildschirm zeigen** und sieht gezeigte Unterlagen, Lieder und Videos. **Keine** Mitgliederliste, Termine, Chats (auch nicht der Tisch-Chat), Kontaktdaten, Büro.
+- **Link gilt** von 30 Minuten vor Beginn bis zum Ende, **nur auf dem Gerät, das ihn zuerst öffnet** (weitergeleitet → abgelehnt), nicht nach dem Zurückziehen. Am Platz: **goldener Ring** und „Gast“; in der Tischliste „🙋 Mit Gast: …“.
+- **Sicherheit:** eigener Anmeldeweg (`anmeldenTischgast`), kein Eintrag bei den Mitgliedern; der Server erlaubt Gästen nur 7 Aktionen (`TISCHGAST_AKTIONEN`) und prüft bei jeder die Tisch-Kennung; Anlagen nur aus dem Tisch-Chat seines Tisches; die Gast-App speichert den Link nie als Mitglieder-Link. Gegenprobe: ohne Sperre wird der Test rot.
+- **Datenbank:** Migration `20261030_kc_club_v2775_tisch_gast.sql` (Tabelle `kc_club_tisch_gast` nur mit Fingerabdrücken, Funktion `kc_club_tisch_gast_beitreten` mit Platzgrenze unter Sperre; Gast wird nie Teilnehmer des Tisch-Chats; RLS, nur service_role). Probelauf `tools/db-test/101_tisch_gast_test.sql`. **Vor dem Einladen einspielen** – ohne Tabelle meldet „Gast einladen“ klar „noch nicht eingerichtet“, sonst ändert sich nichts.
+- **Aufräumen:** Gast-Einträge und ihre Plätze 7 Tage nach Tischende (vorhandene Wartung).
+- **Noch nicht:** Gäste schreiben im Tisch-Chat und laden eigene Dateien hoch (kommt, wenn gewünscht).
+- Tests: `tests/runder-tisch.test.mjs` (Zeitfenster, höchstens 2, Anmeldeweg, Fingerabdruck, ein Gerät, nur 7 Aktionen, nur eigener Tisch, nur Vornamen, kein Chat, Link nie per Mail/Push), `tests/tisch-live.browser.mjs` (Gast öffnet den Link im eigenen Browser, Datenschutz-Hinweis, Platz, Live, hört Anna, keine Datei-Knöpfe, **fragt nur Erlaubtes an**), Server-Typprüfung ohne neue Fehler.
+- Rückweg: App/Server 2.774.0 (Tabelle kann bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.774.0 – 2026-10-30 – 💼 Runder Tisch: Tasche vorher packen – PDF, Foto, Musik (KC-CLUB-TISCH-TASCHE) · Server 2.774.0 · DB
 Wunsch Hansi (30.10.): „Zum Runden Tisch wäre gut, wenn man sich vorher Sachen packen kann wie PDF, ein Song, ein Foto – damit man nicht lange suchen muss.“ Wahl: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vorab für alle** markieren (docs/RUNDER_TISCH.md, Abschnitt 18). Noch nur Admin zum Testen.
 - **💼 Meine Tasche** (an jedem kommenden Tisch und am Tisch selbst): PDFs, Fotos und Musik einpacken – 📄 vom Handy (auch mehrere), 📷 Foto machen, 🗄️ aus dem Archiv. Reihenfolge mit ⬆️/⬇️, 👁️ ansehen, 🗑️ herausnehmen. Höchstens 20 Teile, je 8 MB. Privat, bis man es zeigt.

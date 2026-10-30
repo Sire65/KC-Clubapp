@@ -1,6 +1,6 @@
 # 🪑 Runder Tisch – Spezifikation (KC-CLUB-RUNDER-TISCH)
 
-**Stand:** 30.10.2026 · **Status:** RT1, RT1b Arten, Gruppen + Platzmessung gebaut und eingespielt als 2.762.0; **Live (Ton, Kamera, Bildschirm, Unterlagen zeigen, Redestab) gebaut als 2.766.0** (Abschnitt 17); 🔒 erst nur Admin zum Testen; Club-Song, Videos, Album, Gäste (RT4) offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
+**Stand:** 30.10.2026 · **Status:** RT1, RT1b Arten, Gruppen + Platzmessung gebaut und eingespielt als 2.762.0; **Live (Ton, Kamera, Bildschirm, Unterlagen zeigen, Redestab) gebaut als 2.766.0** (Abschnitt 17); 🔒 erst nur Admin zum Testen; Club-Song, Videos, Album gebaut (2.767.0/2.773.0); **Tischgäste (RT4) gebaut als 2.775.0** (Abschnitt 18) · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
 **Entwurf zum Anklicken:** https://claude.ai/artifact/5WfwmnFKfEm5nj8FmK2qFL (Tisch mit 2–18 Plätzen, Chat-Ansicht; Namen sind Beispiele)
 
 ## 1. Ziel
@@ -319,3 +319,18 @@ Wahl Hansi: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vor
 - **Datenbank:** `kc_club_tisch_tasche` (Migration `20261030_kc_club_v2774_tisch_tasche.sql`, Probelauf `tools/db-test/100_tisch_tasche_test.sql`).
 - **Musik stoppen (2.773.0, Fund Hansi „kein Stopp-Knopf“):** Knöpfe direkt an der laufenden Musik – wer abspielt ⏸️/⏮️/⏹️, die Leitung
   „⏹️ Für alle aus“, jeder „🔇 Für mich aus“; ist der Tisch nicht zu sehen, hängt eine Musik-Leiste unten.
+
+## 18. Externe Tischgäste (2.775.0, KC-CLUB-RUNDER-TISCH-GAST, Stufe RT4)
+
+| Teil | Umsetzung |
+|---|---|
+| Einladen | Jedes Mitglied, das den Tisch sieht (`tisch_gast_einladen`, prüft Gruppe wie Zusage). Höchstens `RT_GAST.max` = 2 aktive Gäste. Link `?g=tg_<48 hex>` wird **nur einmal** angezeigt; gespeichert: `link_hash` (sha256). Der Server verschickt ihn nie selbst. |
+| Zurückziehen | Einladende, Leitung, Admin (`tisch_gast_zurueckziehen`): Link ungültig, Platz frei. |
+| Anmeldung | `anmeldenTischgast` vor der Mitglieder-Anmeldung: Fingerabdruck → Gast; Zeitfenster `rtGastFenster` (30 Min. vor Beginn bis Ende); Gerät: Kennung `x-tg-geraet` (Zufall, im Browser gemerkt), beim ersten Öffnen als Fingerabdruck gebunden (atomar: `geraet_hash is null`) – anderes Gerät → abgelehnt. Kein Eintrag in `kc_core_people`/`kc_club_rollen`/`kc_club_zugang`. |
+| Erlaubt | nur `TISCHGAST_AKTIONEN` (tischgast_init, tisch_platz, tisch_verlassen, anlage_url, anruf_wege, diagnose, ping) – jede prüft die Tisch-Kennung; Anlagen nur aus dem Tisch-Chat seines Tisches (`rtGastAnlageErlaubt`, abschließend). |
+| Sicht | `rtLage` für Gäste: nur sein Tisch, Vornamen, kein Chat, keine Zusagen, keine Gästeliste. Mitglieder sehen „Name (Gast)“ mit goldenem Ring und „🙋 Mit Gast“. |
+| Platz | `kc_club_tisch_gast_beitreten` (Zeilensperre, gleiche Platzgrenze), Person `TG-<id>`; **nie** Teilnehmer des Tisch-Chats. |
+| App | `gastStart`: eigener Start (nichts vom Mitglieder-Teil), Link nur in `sessionStorage`, nie als `kc_club_key`. Live wie Mitglieder; 📎/🎵 nur mit Tisch-Chat (Gäste: nein). |
+| Aufräumen | 7 Tage nach Ende: Gast-Zeilen und `TG-`-Plätze (Wartung). |
+
+**Bewusst noch nicht:** Gäste schreiben im Tisch-Chat / laden eigene Dateien hoch – das würde den Gast zum Chat-Teilnehmer machen (Push, Namen, Lesestand). Erst auf Wunsch, mit eigener Prüfung.

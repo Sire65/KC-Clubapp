@@ -2,6 +2,7 @@
 // Aufruf: node tests/runder-tisch.test.mjs (offline)
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { RT_GAST, rtGastFenster, rtGastEinladenPruefen, rtGastPid, rtIstGast } from "../supabase/functions/kc-club/runder-tisch.js";
 import { RT, RT_ARTEN, rtArt, rtEndeMs, rtPhase, rtAnlegenPruefen, rtSitzt, rtSicher, rtBeitretenPruefen, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtAnwesend, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis, RT_TASCHE, rtTascheArt, rtTascheLegenPruefen, rtTascheSchieben } from "../supabase/functions/kc-club/runder-tisch.js";
 
 const M = 60000, T = 86400000, B = Date.parse("2026-11-05T19:00:00Z"); // Do 20:00 Berlin
@@ -140,9 +141,9 @@ for (const W of [288, 328, 358, 380, 398, 420]) for (let n = 2; n <= 18; n++) {
 const sql3 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2762_tisch_gruppe.sql", import.meta.url), "utf8");
 assert.match(sql3, /if v_t\.gruppe_id is not null and p_person <> v_t\.gastgeber\s+and not exists \(select 1 from public\.kc_communication_thread_participants where thread_id = v_t\.gruppe_id and person_id = p_person\) then return 'gruppe'; end if;/);
 assert.match(sql3, /return 'anmeldung'/, "Seminar-Regel bleibt");
-assert.match(server, /const ts = \(alle \?\? \[\]\)\.filter\(\(x: any\) => rtSichtbar\(x, ich, gr\)\);/, "Liste: Gruppen-Tische nur für Mitglieder");
+assert.match(server, /const ts = \(alle \?\? \[\]\)\.filter\(\(x: any\) => \(gast \? x\.id === ich\.tischgast!\.tisch : rtSichtbar\(x, ich, gr\)\)\);/, "Liste: Gruppen-Tische nur für Mitglieder (2.775.0: Tischgast nur sein Tisch)");
 assert.match(server, /if \(gruppeId && !gruppe\) throw new Fehler\("Diese Gruppe gibt es nicht oder du bist nicht darin\.", 403\);/, "nur für eigene Gruppe einladen");
-assert.equal((server.match(/rtTischHolen\(p\.id, ich\)/g) || []).length, 6, "Zusage, Verlassen, Leiten und die drei Tasche-Aktionen prüfen die Gruppe");
+assert.equal((server.match(/rtTischHolen\(p\.id, ich\)/g) || []).length, 7, "Zusage, Verlassen, Leiten, die drei Tasche-Aktionen und Gast einladen (2.775.0) prüfen die Gruppe");
 
 // 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: kein Clubabend, immer nur ein Tisch; andere Termine nur mit Rückfrage
 const I = (m) => new Date(B + m * M).toISOString(), Z = (a, b) => ({ vonMs: B + a * M, bisMs: B + b * M });
@@ -220,4 +221,61 @@ assert.match(server, /if \(!att \|\| !String\(att\.object_path\)\.startsWith\(`c
 assert.match(server, /\.or\(`person_id\.eq\.\$\{ich\.person_id\},vorab\.eq\.true`\)/, "fremde Taschen nur, was vorab ist");
 assert.match(server, /if \(!erlaubt\) erlaubt = await rtTascheVorabErlaubt\(ich, att\.id\)/, "Vorab-Dateien öffnen dürfen alle, die den Tisch sehen");
 assert.match(server, /await db\.from\("kc_club_tisch_tasche"\)\.delete\(\)\.eq\("tisch_id", x\.id\); await rtTascheDateienWeg/, "Aufräumen nach 7 Tagen");
+// 2.775.0 KC-CLUB-RUNDER-TISCH-GAST (RT4): externe Tischgäste – Regeln und Sicherungen
+{
+  const t0 = { beginn: new Date(B).toISOString(), dauer_min: 60, verlaengert_min: 0, status: "geplant" };
+  assert.match(rtGastFenster(t0, B - 31 * M), /erst ab 30 Minuten vor Beginn/, "Link gilt nicht früher als 30 Min. vorher");
+  assert.equal(rtGastFenster(t0, B - 30 * M), null, "ab 30 Min. vorher");
+  assert.equal(rtGastFenster(t0, B + 59 * M), null, "bis zum Ende");
+  assert.match(rtGastFenster(t0, B + 60 * M), /vorbei/, "nach dem Ende ungültig");
+  assert.match(rtGastFenster({ ...t0, verlaengert_min: 30 }, B + 60 * M) ?? "ok", /ok/, "verlängert → gilt weiter");
+  assert.match(rtGastFenster({ ...t0, status: "abgesagt" }, B), /abgesagt/);
+  assert.match(rtGastFenster(null, B), /gibt es nicht/);
+  assert.equal(rtGastEinladenPruefen(t0, 0, "Dr. Weber", B - 60 * M), null, "einladen geht");
+  assert.match(rtGastEinladenPruefen(t0, RT_GAST.max, "Dr. Weber", B - 60 * M), /höchstens 2 Gäste/, "höchstens 2 Gäste");
+  assert.match(rtGastEinladenPruefen(t0, 0, " ", B - 60 * M), /Namen/, "Name nötig");
+  assert.match(rtGastEinladenPruefen(t0, 0, "Dr. Weber", B + 61 * M), /vorbei/, "nicht für vorbei");
+  assert.ok(rtIstGast(rtGastPid("x")) && !rtIstGast("KC-P-002"), "Gast-Kennung unterscheidbar");
+  // Server: eigener Anmeldeweg, nur der Fingerabdruck des Links, ein Gerät, nur Erlaubtes, nur der eigene Tisch
+  assert.match(server, /if \(\/\^tg_\[0-9a-f\]\{48\}\$\/\.test\(token\)\) return await anmeldenTischgast\(req, token\);/, "Gast-Link eigener Anmeldeweg");
+  assert.ok(server.indexOf("return await anmeldenTischgast(req, token);") < server.indexOf('if (!/^[0-9a-f]{32,96}$/.test(token)) { if (token) fremdMerken(req, "kaputt"'), "vor der Mitglieder-Anmeldung");
+  const ag = server.slice(server.indexOf("async function anmeldenTischgast("), server.indexOf("async function rtGastAnlageErlaubt("));
+  assert.match(ag, /eq\("link_hash", hash\)/, "nur über den Fingerabdruck gesucht");
+  assert.match(ag, /rtGastFenster\(t, Date\.now\(\)\)/, "Zeitfenster geprüft");
+  assert.match(ag, /zurueckgezogen_am/, "zurückgezogen = ungültig");
+  assert.match(ag, /\.is\("geraet_hash", null\)/, "Gerät wird nur beim ersten Öffnen gebunden (atomar)");
+  assert.match(ag, /if \(g\.geraet_hash !== gh\)/, "anderes Gerät abgelehnt");
+  assert.match(ag, /admin: false, vorstand: false, aemter: \[\], protokolle: false, kontakte: false, buero: null/, "Gast hat keine Rechte");
+  assert.ok(!/kc_core_people|kc_club_rollen|kc_club_zugang/.test(ag), "Gast berührt keine Mitglieder-Tabellen");
+  const tga = server.match(/const TISCHGAST_AKTIONEN = \[([^\]]*)\]/)[1].match(/"[a-z_]+"/g).map((x) => x.slice(1, -1)).sort();
+  assert.deepEqual(tga, ["anlage_url", "anruf_wege", "diagnose", "ping", "tisch_platz", "tisch_verlassen", "tischgast_init"], "Gast darf nur diese Aktionen");
+  assert.match(server, /tischgast: new Set<string>\(TISCHGAST_AKTIONEN\)/, "zugangPruefen nutzt die Liste");
+  const tl = fs.readFileSync(new URL("./tisch-live.browser.mjs", import.meta.url), "utf8");
+  assert.deepEqual(tl.match(/const GAST_ERLAUBT = new Set\(\[([^\]]*)\]\)/)[1].match(/"[a-z_]+"/g).map((x) => x.slice(1, -1)).sort(), tga, "Browser-Test prüft dieselbe Liste");
+  assert.match(server, /if \(ich\.zugang === "tischgast" && id !== ich\.tischgast!\.tisch\) throw new Fehler/, "Platz nur am eigenen Tisch");
+  assert.match(server, /if \(ich\.zugang === "tischgast" && String\(p\.id \|\| ""\) !== ich\.tischgast!\.tisch\) throw new Fehler/, "Verlassen nur am eigenen Tisch");
+  assert.match(server, /if \(ich\.zugang === "tischgast"\) \{ erlaubt = await rtGastAnlageErlaubt\(ich, att\.id\); if \(!erlaubt\) throw new Fehler\("Anlage nicht gefunden\.", 404\); \}/, "Anlagen nur aus dem eigenen Tisch-Chat – sonst nichts");
+  assert.match(server, /if \(ich\.zugang !== "tischgast"\) throw new Fehler\("Nur für Tischgäste\.", 403\);/, "tischgast_init nur für Gäste");
+  const lg = server.slice(server.indexOf("async function rtLage("), server.indexOf("// 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: was ist an diesem Tag"));
+  assert.match(lg, /gast \? x\.id === ich\.tischgast!\.tisch : rtSichtbar\(x, ich, gr\)/, "Gast sieht nur seinen Tisch");
+  assert.match(lg, /gast \? vorname\(pm\.get\(id\)\)/, "Gast sieht nur Vornamen");
+  assert.match(lg, /chat: gast \|\| x\.text_geloescht_am \? null/, "Gast bekommt keinen Chat");
+  assert.match(lg, /zusagen: gast \? \[\]/, "Gast bekommt keine Zusagen-Liste");
+  assert.match(lg, /gaeste: gast \? \[\]/, "Gast sieht keine anderen Gast-Einladungen");
+  const ein = server.slice(server.indexOf('case "tisch_gast_einladen"'), server.indexOf('case "tisch_gast_zurueckziehen"'));
+  assert.match(ein, /link_hash: await sha256\(token\)/, "nur der Fingerabdruck wird gespeichert");
+  assert.ok(!/\b(senden|rtSenden|routerSenden|mailSenden)\(/.test(ein.replace(/\/\/[^\n]*/g, "")), "der Link geht nie vom Server per Push/Mail raus");
+  assert.match(ein, /rtTischHolen\(p\.id, ich\)/, "nur wer den Tisch sieht, lädt ein (Gruppen-Tische)");
+  assert.match(server.slice(server.indexOf('case "tisch_gast_zurueckziehen"'), server.indexOf('case "tisch_verlassen"')), /g\.eingeladen_von === ich\.person_id \|\| x\.gastgeber === ich\.person_id \|\| ich\.admin/, "zurückziehen: Einladende, Leitung, Admin");
+  assert.match(server, /await db\.from\("kc_club_tisch_gast"\)\.delete\(\)\.eq\("tisch_id", x\.id\)/, "Gäste 7 Tage nach Ende gelöscht");
+  const sql = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2775_tisch_gast.sql", import.meta.url), "utf8");
+  assert.match(sql, /link_hash text not null unique check \(link_hash ~ '\^\[0-9a-f\]\{64\}\$'\)/, "Datenbank nimmt nur Fingerabdrücke");
+  assert.ok(!/thread_participants\s*\(/.test(sql.slice(sql.indexOf("create or replace function"))), "Gast wird nie Teilnehmer des Tisch-Chats");
+  assert.match(sql, /for update;/, "Platzgrenze unter Zeilensperre");
+  // App: eigener Start, Link nie als Mitglieder-Link gespeichert, Geräte-Kennung mitgeschickt
+  assert.match(app, /if \(g && \/\^tg_\[0-9a-f\]\{48\}\$\/\.test\(g\)\) \{ url\.searchParams\.delete\("g"\); history\.replaceState\(null, "", url\.pathname\); return gastStart\(g\); \}/, "Gast-Start vor allem anderen");
+  const gs = app.slice(app.indexOf("async function gastStart("), app.indexOf("// ---------- Start der App ----------"));
+  assert.ok(!/kc_club_key/.test(gs) && /sessionStorage\.setItem\("kc_tischgast", token\)/.test(gs), "Gast-Link nur in der Sitzung, nie als Mitglieder-Link");
+  assert.match(app, /\.\.\.\(TG_GERAET \? \{ "x-tg-geraet": TG_GERAET \} : \{\}\)/, "Geräte-Kennung geht mit");
+}
 console.log("OK – Runder Tisch: Regeln geprüft");
