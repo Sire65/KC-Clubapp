@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.765.0 – 2026-10-30 – 🪧 Weihnachtsmarkt-Schilder aus einem Guss im Club-CD (KC-CLUB-SCHILDER-CD) · Server 2.765.0
+Wunsch Hansi (30.10.): „Vernünftige Schilder für den Weihnachtsmarkt, alles aus einem Guss mit unserem Corporate Design – CD ist Weinrot, Beige und Gold. Unten jeweils Fußzeile mit Jahr und Köcheclub Werne.“
+- **Vier neue Vorlagen** unter Büro → 🪧 Schilder-Druckerei → Anlass 🎄 Weihnachtsmarkt: **Nur Barzahlung**, **Vorsicht Stufe!**, **Hier kein Durchgang**, **Gebrauchtes Besteck** – Texte im Editor wie gewohnt änderbar.
+- **Neuer Rahmen „Club-CD“**: beige Fläche, weinroter Rahmen mit Goldlinie, unten ein weinrotes Fußband mit Kochmütze, „Köcheclub Werne“ und – in Gold – der Fußzeile.
+- **Fußzeile** (neues Feld im Editor, freiwillig, bis 40 Zeichen): bei den neuen Vorlagen vorbelegt mit „Weihnachtsmarkt <aktuelles Jahr>“. Auch bei allen anderen Rahmen nutzbar (grau neben „Köcheclub Werne“). Gespeicherte Schilder ohne Fußzeile sehen aus wie bisher.
+- **Vier neue Symbole, selbst gezeichnet** nach Art der Sicherheitszeichen (druckt auf jedem Gerät gleich): Nur Bargeld (Schein + durchgestrichene Karte), Vorsicht Stufe (gelbes Warndreieck), Kein Durchgang (Verbotszeichen), Besteck (Gabel + Messer im weinroten Feld mit Goldrand).
+- CD: `KC_CD.gold` als dritte Farbe (eine Quelle für alles Gedruckte).
+- Server: `schildDaten` speichert die Fußzeile (`fuss`, gekürzt auf 40 Zeichen). Ohne neuen Server geht beim Speichern nur die Fußzeile verloren, sonst nichts.
+- Bisherige Vorlagen (z. B. „Nur Barzahlung“ für andere Anlässe, „Durchgang bitte freihalten“) bleiben unverändert.
+- Tests: `tests/app-vertrag.test.mjs` Abschnitt 2.765.0. Rückweg: App/Server 2.764.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.764.0 – 2026-10-30 – ⛔ Runder Tisch: kein Clubabend und immer nur einer gleichzeitig (KC-CLUB-RUNDER-TISCH-ZEITCHECK) · Server 2.764.0 · DB
 Wunsch Hansi (30.10.): „Bevor ein Termin mit Uhrzeit angezeigt wird, prüfen, ob noch andere Termine anstehen. Kein Tisch, wenn gleichzeitig Clubabend ist. Um die Datenbank zu schonen, keine parallelen Runden Tische – immer nur einer. Wenn ein weiterer geplant ist, dann Meldung.“ (docs/RUNDER_TISCH.md, Abschnitt 16). Noch nur Admin zum Testen.
 - **Im Einladen-Fenster** prüft die App, sobald Tag, Uhrzeit und Dauer gewählt sind: ✅ „Um diese Zeit ist nichts anderes geplant“, ⛔ gesperrt oder ⚠️ Hinweis – darunter „An diesem Tag: …“ mit Tischen, Clubabend und Terminen.

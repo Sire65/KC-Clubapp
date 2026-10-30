@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -9500,6 +9500,25 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/schild: \{ bauen: \(\) => druckSchild\(\) \}/.test(p), "Drucken über den zentralen Druck");
   assert.ok(/#schBlatt \.sdr-leiste \.knopf \{[^}]*display: flex;/.test(h) && /\.sdr-leiste \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/.test(h) && /\.sdr-symbole \{ display: grid; grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/.test(h), "Knöpfe gleich groß im Raster");
   assert.ok(!/\.sch-(feld|zeile|preis|leiste|vorschau)\b/.test(mod), "eigene Klassen (sdr-) – keine Überschneidung mit dem Schachbrett (sch-)");
+}
+
+// 2.765.0 KC-CLUB-SCHILDER-CD (Wunsch Hansi 30.10.2026): Weihnachtsmarkt-Schilder aus einem Guss – Weinrot, Beige, Gold, Fußzeile mit Jahr
+{
+  const p = programmText(), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const mod = p.slice(p.indexOf("// ---------- KC-CLUB-SCHILDER (2.150.0"), p.indexOf("const DRUCKARTEN = {"));
+  const F = new Function("KC_CD", mod.slice(0, mod.indexOf("const SCH_LEER")) + "\nreturn { SCH_RAHMEN, SCH_SYMBOLE, SCH_VORLAGEN, SCH_JAHR };")({ weinrot: "#741521", text: "#1d1a17", zeile: "x" });
+  assert.ok(/gold: "#c9a227"/.test(p) && F.SCH_RAHMEN.some((r) => r.id === "cd"), "Gold im CD, Rahmen Club-CD");
+  for (const id of ["nurbar", "stufe", "keindurchgang", "besteck"]) {
+    const s = F.SCH_SYMBOLE.find((x) => x.id === id);
+    assert.ok(s && !s.e && new RegExp(`id === "${id}"`).test(mod), `Symbol ${id} selbst gezeichnet`);
+  }
+  const wm = ["wm_bar", "wm_stufe", "wm_kein_durchgang", "wm_besteck"].map((id) => F.SCH_VORLAGEN.find((v) => v.id === id));
+  assert.ok(wm.every((v) => v && v.fuer.includes("weihnachtsmarkt") && v.d.rahmen === "cd" && v.d.farbe === "weinrot" && v.d.schrift === "club" && v.d.fuss === "Weihnachtsmarkt " + F.SCH_JAHR), "vier WM-Schilder, gleiche Gestaltung, Fußzeile mit Jahr");
+  assert.ok(["bar", "durchgang"].every((id) => F.SCH_VORLAGEN.some((v) => v.id === id && v.d.rahmen !== "cd")), "bisherige Vorlagen unverändert");
+  const z = p.slice(p.indexOf("function schZeichnen("), p.indexOf("function schBild()"));
+  assert.ok(/ctx\.fillStyle = cd \? KC_CD\.beige : "#fff"/.test(z) && /if \(zusatz\) \{ ctx\.fillStyle = cd \? KC_CD\.gold : KC_CD\.grau;/.test(z), "beige Fläche, Fußzeile in Gold");
+  assert.ok(/fuss: "", titelStil/.test(p) && /id="schFuss"/.test(p), "Fußzeile leer bei alten Schildern, im Editor änderbar");
+  assert.ok(/fuss: txt\(d\.fuss, 40\)/.test(sv), "Server speichert die Fußzeile (kurz)");
 }
 
 // 2.151.0 KC-CLUB-SPRACHE-EINSTELLUNG + KC-CLUB-SPRACHE-VERGESSEN (Wunsch Hansi): „Kachelgröße auf 4 x 3 ändern“, Einstellungen genau ansteuern,

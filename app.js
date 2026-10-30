@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.764.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.765.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -30974,6 +30974,7 @@ const DRUCK_INHALTE = [["treffen", "🍽️ Sitzungen & Veranstaltungen"], ["akt
 const KC_CD = {
   name: "Köcheclub Werne", zeile: "Gemeinsam kochen, gemeinsam helfen", // 2.149.0: Spruch festgelegt von Hansi (09.10.2026)
   weinrot: "#741521", beige: "#f3e9dc", beigeRand: "#e0cfb9", text: "#1d1a17", grau: "#5b544d",
+  gold: "#c9a227", // 2.765.0 KC-CLUB-SCHILDER-CD: Gold als dritte CD-Farbe (Wunsch Hansi „CD ist Weinrot, Beige und Gold“)
   logo: "kc-kochmuetze-weiss.webp", schrift: "Georgia,'Times New Roman',serif",
   briefAmt: "Clubsprecher", briefAmtVorgabe: "Klaus Zander", // Fußzeile Briefbogen: aktueller Clubsprecher laut Ämtern, sonst diese Vorgabe
 };
@@ -31015,6 +31016,7 @@ const SCH_FARBEN = [
 const SCH_RAHMEN = [
   { id: "keiner", t: "Ohne" }, { id: "schlicht", t: "Schlicht" }, { id: "doppelt", t: "Doppelt" },
   { id: "band", t: "Breit" }, { id: "gestrichelt", t: "Gestrichelt" }, { id: "fest", t: "Festlich" },
+  { id: "cd", t: "Club-CD" }, // 2.765.0: Beige Fläche, weinroter Rahmen mit Goldlinie, weinrotes Fußband – Schilderfamilie aus einem Guss
 ];
 // e = Zeichen (Emoji); ohne e wird das Symbol selbst gezeichnet (schSymbolMalen)
 const SCH_SYMBOLE = [
@@ -31024,7 +31026,10 @@ const SCH_SYMBOLE = [
   { id: "rolli", t: "Barrierefrei", e: "♿" }, { id: "rechts", t: "Pfeil rechts", e: "➡️" }, { id: "links", t: "Pfeil links", e: "⬅️" }, { id: "oben", t: "Pfeil geradeaus", e: "⬆️" },
   { id: "baum", t: "Tannenbaum", e: "🎄" }, { id: "stern", t: "Stern", e: "⭐" }, { id: "glocke", t: "Glocke", e: "🔔" }, { id: "koch", t: "Koch", e: "🧑‍🍳" },
   { id: "suppe", t: "Suppe", e: "🍲" }, { id: "gluehwein", t: "Glühwein", e: "🍷" }, { id: "kaffee", t: "Kaffee", e: "☕" }, { id: "herz", t: "Herz", e: "❤️" },
+  // 2.765.0 KC-CLUB-SCHILDER-CD: selbst gezeichnet nach Art der Sicherheitszeichen (druckt auf jedem Gerät gleich, ohne Emoji-Schrift)
+  { id: "nurbar", t: "Nur Bargeld" }, { id: "stufe", t: "Vorsicht Stufe" }, { id: "keindurchgang", t: "Kein Durchgang" }, { id: "besteck", t: "Besteck" },
 ];
+const SCH_JAHR = String(new Date().getFullYear()); // Fußzeile der Weihnachtsmarkt-Schilder: „Weihnachtsmarkt <Jahr>“ – im Editor änderbar
 // Vorlagen: fuer = Anlässe, in denen sie erscheinen ("alle" = überall). Preise bleiben leer (… €) – die trägt man selbst ein, nichts wird erfunden.
 const SCH_VORLAGEN = [
   { id: "willkommen_wm", fuer: ["weihnachtsmarkt"], d: { symbol: "baum", titel: "Herzlich willkommen", text: `am Stand vom Köcheclub Werne\n${KC_CD.zeile}`, farbe: "gruen", rahmen: "fest", schrift: "fest" } },
@@ -31050,8 +31055,13 @@ const SCH_VORLAGEN = [
   { id: "weg", fuer: "alle", d: { symbol: "rechts", titel: "Hier entlang", text: "", farbe: "weinrot", rahmen: "schlicht", schrift: "klar" } },
   { id: "geschlossen", fuer: ["kochen", "verein", "allgemein"], d: { symbol: "", titel: "Heute geschlossen", text: "", farbe: "weinrot", rahmen: "doppelt", schrift: "club" } },
   { id: "frei", fuer: "alle", d: { symbol: "", titel: "", text: "", farbe: "weinrot", rahmen: "schlicht", schrift: "club" } },
+  // 2.765.0 KC-CLUB-SCHILDER-CD (Wunsch Hansi 30.10.2026): Stand-Schilder Weihnachtsmarkt aus einem Guss – Club-CD, Fußzeile mit Jahr
+  { id: "wm_bar", fuer: ["weihnachtsmarkt"], d: { symbol: "nurbar", titel: "Nur Barzahlung", text: "Kartenzahlung ist leider nicht möglich.\nVielen Dank für Ihr Verständnis!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_stufe", fuer: ["weihnachtsmarkt"], d: { symbol: "stufe", titel: "Vorsicht Stufe!", text: "Bitte achten Sie auf Ihre Schritte.", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_kein_durchgang", fuer: ["weihnachtsmarkt"], d: { symbol: "keindurchgang", titel: "Hier kein Durchgang", text: "Bitte benutzen Sie den Weg vor dem Stand.\nVielen Dank!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_besteck", fuer: ["weihnachtsmarkt"], d: { symbol: "besteck", titel: "Gebrauchtes Besteck", text: "bitte hier ablegen.\nDanke schön!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
 ];
-const SCH_LEER = { vorlage: "frei", format: "hoch", schrift: "club", rahmen: "schlicht", farbe: "weinrot", symbol: "", titel: "", text: "", preise: [], titelStil: { f: true, k: false, u: false }, textStil: { f: false, k: false, u: false } };
+const SCH_LEER = { vorlage: "frei", format: "hoch", schrift: "club", rahmen: "schlicht", farbe: "weinrot", symbol: "", titel: "", text: "", preise: [], fuss: "", titelStil: { f: true, k: false, u: false }, textStil: { f: false, k: false, u: false } };
 const schNeu = (v) => ({ ...JSON.parse(JSON.stringify(SCH_LEER)), ...JSON.parse(JSON.stringify(v?.d || {})), vorlage: v?.id || "frei" });
 const schVorlagenFuer = (anlass) => SCH_VORLAGEN.filter((v) => v.fuer === "alle" || v.fuer.includes(anlass));
 const schName = (v) => v.d.titel || (v.id === "frei" ? "Leeres Schild" : v.id);
@@ -31101,6 +31111,7 @@ function schEditor() {
     <div class="sdr-feld"><label>Überschrift</label><div class="sdr-zeile"><input id="schTitel" value="${esc(d.titel)}" placeholder="z. B. Nur Barzahlung" oninput="SDR.d.titel=this.value;schVorschau()">${schStilKnoepfe("titelStil")}</div></div>
     <div class="sdr-feld"><label>Text <small>(neue Zeile = Enter)</small></label><div class="sdr-zeile"><textarea id="schText" rows="3" placeholder="freiwillig" oninput="SDR.d.text=this.value;schVorschau()">${esc(d.text)}</textarea>${schStilKnoepfe("textStil")}</div></div>
     <div class="sdr-feld"><label>Preisliste <small>(freiwillig)</small></label><div id="schPreise"></div></div>
+    <div class="sdr-feld"><label>Fußzeile <small>(neben „Köcheclub Werne“, z. B. Weihnachtsmarkt ${SCH_JAHR})</small></label><input id="schFuss" value="${esc(d.fuss || "")}" maxlength="40" placeholder="freiwillig" oninput="SDR.d.fuss=this.value;schVorschau()"></div>
     <details class="sdr-aussehen" open><summary>🎨 Aussehen</summary>
       <label>Format</label><div class="sdr-wahl2">${schWahlKnopf("format", "hoch", "Hochformat", d.format === "hoch")}${schWahlKnopf("format", "quer", "Querformat", d.format === "quer")}</div>
       <label>Schrift</label><div class="sdr-wahl4">${SCH_SCHRIFTEN.map((s) => schWahlKnopf("schrift", s.id, esc(s.t), d.schrift === s.id, `style="font-family:${esc(s.css)}"`)).join("")}</div>
@@ -31167,9 +31178,51 @@ function schSymbolMalen(ctx, id, cx, cy, s) {
     ctx.beginPath(); ctx.moveTo(cx, cy - h / 2); ctx.lineTo(cx + w / 2, cy + h / 2); ctx.lineTo(cx - w / 2, cy + h / 2); ctx.closePath();
     ctx.fillStyle = "#fff"; ctx.fill(); ctx.lineJoin = "round"; ctx.lineWidth = s * 0.09; ctx.strokeStyle = "#c62828"; ctx.stroke();
     ctx.fillStyle = "#111"; ctx.font = `bold ${Math.round(s * 0.5)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("!", cx, cy + s * 0.12);
+  } else if (id === "stufe") { // Warnzeichen: gelbes Dreieck, schwarzer Rand, Person stolpert über eine Stufe
+    const h = s * 0.86, w = s * 0.98;
+    ctx.beginPath(); ctx.moveTo(cx, cy - h / 2); ctx.lineTo(cx + w / 2, cy + h / 2); ctx.lineTo(cx - w / 2, cy + h / 2); ctx.closePath();
+    ctx.fillStyle = "#f6c400"; ctx.fill(); ctx.lineJoin = "round"; ctx.lineWidth = s * 0.07; ctx.strokeStyle = "#111"; ctx.stroke();
+    ctx.fillStyle = "#111"; const b = cy + h / 2 - s * 0.09; // Stufe
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.36, b); ctx.lineTo(cx + s * 0.36, b); ctx.lineTo(cx + s * 0.36, b - s * 0.08); ctx.lineTo(cx + s * 0.06, b - s * 0.08); ctx.lineTo(cx + s * 0.06, b - s * 0.16); ctx.lineTo(cx - s * 0.36, b - s * 0.16); ctx.closePath(); ctx.fill();
+    schPerson(ctx, cx - s * 0.06, b - s * 0.17, s * 0.42, "#111", 0.55);
+  } else if (id === "keindurchgang") { // Verbotszeichen: roter Ring + Balken über gehender Person
+    ctx.beginPath(); ctx.arc(cx, cy, s * 0.46, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
+    schPerson(ctx, cx, cy + s * 0.3, s * 0.6, "#111", 0);
+    ctx.lineWidth = s * 0.09; ctx.strokeStyle = "#c62828"; ctx.beginPath(); ctx.arc(cx, cy, s * 0.42, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.3, cy - s * 0.3); ctx.lineTo(cx + s * 0.3, cy + s * 0.3); ctx.stroke();
+  } else if (id === "besteck") { // Hinweis im Club-CD: weinrotes Feld mit Goldrand, Gabel und Messer in Beige
+    const a = s * 0.9, r = s * 0.12; ctx.beginPath(); ctx.roundRect(cx - a / 2, cy - a / 2, a, a, r); ctx.fillStyle = KC_CD.weinrot; ctx.fill(); ctx.lineWidth = s * 0.035; ctx.strokeStyle = KC_CD.gold; ctx.stroke();
+    ctx.fillStyle = KC_CD.beige; ctx.strokeStyle = KC_CD.beige; ctx.lineCap = "round";
+    const gx = cx - s * 0.13, top = cy - s * 0.3, unten = cy + s * 0.32; // Gabel: drei Zinken, Bogen, Stiel
+    ctx.lineWidth = s * 0.035; for (const dx of [-0.07, 0, 0.07]) { ctx.beginPath(); ctx.moveTo(gx + dx * s, top); ctx.lineTo(gx + dx * s, top + s * 0.15); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(gx - s * 0.07, top + s * 0.15); ctx.quadraticCurveTo(gx - s * 0.07, top + s * 0.24, gx, top + s * 0.25); ctx.quadraticCurveTo(gx + s * 0.07, top + s * 0.24, gx + s * 0.07, top + s * 0.15); ctx.stroke();
+    ctx.lineWidth = s * 0.055; ctx.beginPath(); ctx.moveTo(gx, top + s * 0.25); ctx.lineTo(gx, unten); ctx.stroke();
+    const mx = cx + s * 0.13; // Messer: Klinge (rund), Griff
+    ctx.beginPath(); ctx.moveTo(mx - s * 0.025, top); ctx.quadraticCurveTo(mx + s * 0.09, top + s * 0.08, mx + s * 0.035, top + s * 0.32); ctx.lineTo(mx - s * 0.025, top + s * 0.32); ctx.closePath(); ctx.fill();
+    ctx.lineWidth = s * 0.06; ctx.beginPath(); ctx.moveTo(mx + s * 0.005, top + s * 0.32); ctx.lineTo(mx + s * 0.005, unten); ctx.stroke();
+  } else if (id === "nurbar") { // Geldschein (grün) vorn, dahinter Karte durchgestrichen
+    const kx = cx + s * 0.12, ky = cy - s * 0.14, kw = s * 0.5, kh = s * 0.32;
+    ctx.beginPath(); ctx.roundRect(kx - kw / 2, ky - kh / 2, kw, kh, s * 0.04); ctx.fillStyle = "#cfd4da"; ctx.fill(); ctx.lineWidth = s * 0.02; ctx.strokeStyle = "#5b6572"; ctx.stroke();
+    ctx.fillStyle = "#5b6572"; ctx.fillRect(kx - kw / 2, ky - kh / 2 + kh * 0.2, kw, kh * 0.18); ctx.fillStyle = KC_CD.gold; ctx.fillRect(kx - kw / 2 + kw * 0.1, ky + kh * 0.05, kw * 0.18, kh * 0.22);
+    ctx.lineWidth = s * 0.06; ctx.strokeStyle = "#c62828"; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(kx - kw * 0.55, ky - kh * 0.75); ctx.lineTo(kx + kw * 0.55, ky + kh * 0.75); ctx.stroke();
+    const nx = cx - s * 0.06, ny = cy + s * 0.16, nw = s * 0.7, nh = s * 0.36;
+    ctx.beginPath(); ctx.roundRect(nx - nw / 2, ny - nh / 2, nw, nh, s * 0.03); ctx.fillStyle = "#2e7d32"; ctx.fill(); ctx.lineWidth = s * 0.025; ctx.strokeStyle = "#1b4d1f"; ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(nx - nw / 2 + s * 0.04, ny - nh / 2 + s * 0.04, nw - s * 0.08, nh - s * 0.08, s * 0.02); ctx.strokeStyle = "#a5d6a7"; ctx.lineWidth = s * 0.012; ctx.stroke();
+    ctx.beginPath(); ctx.arc(nx, ny, nh * 0.28, 0, Math.PI * 2); ctx.strokeStyle = "#fff"; ctx.lineWidth = s * 0.03; ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.round(nh * 0.36)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("€", nx, ny + nh * 0.02);
   } else {
     ctx.font = `${Math.round(s * 0.86)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(sym.e, cx, cy + s * 0.04);
   }
+  ctx.restore();
+}
+// Gehende Person (Piktogramm) – Füße auf (cx, fuss), Höhe h; kipp > 0 = nach vorn gekippt (stolpert)
+function schPerson(ctx, cx, fuss, h, c, kipp) {
+  ctx.save(); ctx.translate(cx, fuss); ctx.rotate(kipp || 0); ctx.strokeStyle = c; ctx.fillStyle = c; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = h * 0.13;
+  const L = (pts) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * h, -y * h) : ctx.moveTo(x * h, -y * h))); ctx.stroke(); };
+  ctx.beginPath(); ctx.arc(0.04 * h, -0.9 * h, h * 0.1, 0, Math.PI * 2); ctx.fill(); // Kopf
+  L([[0.02, 0.74], [-0.02, 0.42]]); // Rumpf
+  L([[-0.02, 0.42], [0.16, 0.22], [0.2, 0.02]]); L([[-0.02, 0.42], [-0.12, 0.2], [-0.24, 0.04]]); // Beine
+  L([[0.02, 0.68], [0.2, 0.52], [0.28, 0.6]]); L([[0.02, 0.68], [-0.14, 0.5], [-0.2, 0.36]]); // Arme
   ctx.restore();
 }
 function schStern(ctx, cx, cy, r) {
@@ -31184,6 +31237,7 @@ function schRahmenMalen(ctx, art, W, H, u, c) {
   else if (art === "doppelt") { rect(3.5 * u, 1.4 * u); rect(6 * u, 0.5 * u); }
   else if (art === "band") rect(5 * u, 3.6 * u);
   else if (art === "gestrichelt") { ctx.setLineDash([3 * u, 2 * u]); rect(4 * u, 1 * u); }
+  else if (art === "cd") { rect(4 * u, 2.4 * u); ctx.strokeStyle = KC_CD.gold; rect(6.3 * u, 0.5 * u); } // Fußband zeichnet schZeichnen
   else if (art === "fest") {
     rect(3.5 * u, 0.9 * u); rect(5.5 * u, 0.35 * u);
     for (const [x, y] of [[5.5, 5.5], [W / u - 5.5, 5.5], [5.5, H / u - 5.5], [W / u - 5.5, H / u - 5.5]]) schStern(ctx, x * u, y * u, 2.6 * u);
@@ -31196,16 +31250,20 @@ function schZeichnen(cv, d, breite) {
   cv.width = W; cv.height = H;
   const ctx = cv.getContext("2d"), u = Math.min(W, H) / 100;
   const farbe = (SCH_FARBEN.find((x) => x.id === d.farbe) || SCH_FARBEN[0]).c, css = (SCH_SCHRIFTEN.find((x) => x.id === d.schrift) || SCH_SCHRIFTEN[0]).css;
-  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
-  schRahmenMalen(ctx, d.rahmen, W, H, u, farbe);
-  // CD unten: Kochmütze im weinroten Kreis + „Köcheclub Werne“
-  const fussY = H - 7.5 * u, r = 2.4 * u;
-  ctx.font = `bold ${Math.round(2.6 * u)}px ${KC_CD.schrift}`; const nw = ctx.measureText(KC_CD.name).width, fx = W / 2 - (nw + 2 * r + 1.2 * u) / 2;
+  const cd = d.rahmen === "cd"; // 2.765.0 KC-CLUB-SCHILDER-CD: beige Fläche + weinrotes Fußband mit Goldlinie
+  ctx.fillStyle = cd ? KC_CD.beige : "#fff"; ctx.fillRect(0, 0, W, H);
+  schRahmenMalen(ctx, d.rahmen, W, H, u, cd ? KC_CD.weinrot : farbe);
+  if (cd) { ctx.fillStyle = KC_CD.weinrot; ctx.fillRect(4 * u, H - 15 * u, W - 8 * u, 11 * u); ctx.fillStyle = KC_CD.gold; ctx.fillRect(4 * u, H - 15 * u, W - 8 * u, 0.6 * u); }
+  // CD unten: Kochmütze im weinroten Kreis + „Köcheclub Werne“ (+ Fußzeile, z. B. „Weihnachtsmarkt 2026“)
+  const fussY = H - (cd ? 9.2 : 7.5) * u, r = (cd ? 3 : 2.4) * u, zusatz = String(d.fuss || "").trim() ? " · " + String(d.fuss).trim() : "";
+  ctx.font = `bold ${Math.round((cd ? 3.2 : 2.6) * u)}px ${KC_CD.schrift}`; const nw = ctx.measureText(KC_CD.name).width, zw = ctx.measureText(zusatz).width, fx = W / 2 - (nw + zw + 2 * r + 1.2 * u) / 2;
   ctx.fillStyle = KC_CD.weinrot; ctx.beginPath(); ctx.arc(fx + r, fussY, r, 0, Math.PI * 2); ctx.fill();
+  if (cd) { ctx.lineWidth = 0.35 * u; ctx.strokeStyle = KC_CD.gold; ctx.stroke(); }
   if (SCH_LOGO.complete && SCH_LOGO.naturalWidth) ctx.drawImage(SCH_LOGO, fx + r * 0.35, fussY - r * 0.65, r * 1.3, r * 1.3);
-  ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(KC_CD.name, fx + 2 * r + 1.2 * u, fussY);
+  ctx.fillStyle = cd ? KC_CD.beige : KC_CD.weinrot; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(KC_CD.name, fx + 2 * r + 1.2 * u, fussY);
+  if (zusatz) { ctx.fillStyle = cd ? KC_CD.gold : KC_CD.grau; ctx.fillText(zusatz, fx + 2 * r + 1.2 * u + nw, fussY); }
   // Inhalt: Symbol, Überschrift, Text, Preisliste – zusammen senkrecht mittig
-  const x0 = 11 * u, bw = W - 22 * u, oben = 10 * u, unten = fussY - 4 * u, h = unten - oben;
+  const x0 = 11 * u, bw = W - 22 * u, oben = 10 * u, unten = (cd ? H - 15 * u : fussY) - 4 * u, h = unten - oben;
   const preise = (d.preise || []).filter((p) => p.a || p.p), hatText = !!String(d.text || "").trim(), hatTitel = !!String(d.titel || "").trim();
   const symH = d.symbol ? Math.min(30 * u, h * (hatTitel || hatText || preise.length ? 0.26 : 0.6)) : 0;
   const rest = h - symH - (symH ? 3 * u : 0);

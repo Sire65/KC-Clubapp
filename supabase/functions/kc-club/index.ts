@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.764.0";
+const SERVER_VERSION = "2.765.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -925,7 +925,7 @@ function schildDaten(d: any) {
   const stil = (v: any) => ({ f: !!v?.f, k: !!v?.k, u: !!v?.u });
   const preise = (Array.isArray(d.preise) ? d.preise : []).slice(0, 20).map((x: any) => ({ a: txt(x?.a, 60), p: txt(x?.p, 14) })).filter((x: any) => x.a || x.p);
   const r = { vorlage: id(d.vorlage, "frei"), format: d.format === "quer" ? "quer" : "hoch", schrift: id(d.schrift, "club"), rahmen: id(d.rahmen, "schlicht"), farbe: id(d.farbe, "weinrot"),
-    symbol: id(d.symbol, ""), titel: txt(d.titel, 120), text: txt(d.text, 700), preise, titelStil: stil(d.titelStil), textStil: stil(d.textStil) };
+    symbol: id(d.symbol, ""), titel: txt(d.titel, 120), text: txt(d.text, 700), preise, fuss: txt(d.fuss, 40), titelStil: stil(d.titelStil), textStil: stil(d.textStil) };
   if (!r.titel && !r.text && !preise.length) throw new Fehler("Das Schild ist noch leer.");
   return r;
 }
