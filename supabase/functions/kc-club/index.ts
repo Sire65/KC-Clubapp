@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.781.0";
+const SERVER_VERSION = "2.783.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -10571,7 +10571,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { data: pr } = await db.from("kc_club_sitzungsprotokolle").select("id,status,version").eq("treffen_id", tid).maybeSingle();
         let protokollId = pr?.id ?? null, protokollStand = "unveraendert";
         if (!pr) {
-          const { data: neu } = await db.from("kc_club_sitzungsprotokolle").insert({ ...felder, treffen_id: tid, verfasser: ich.person_id }).select("id").single();
+          const { data: neu } = await db.from("kc_club_sitzungsprotokolle").insert({ ...felder, treffen_id: tid, verfasser: ich.person_id, verfasser_offen: true }).select("id").single();
           protokollId = neu?.id ?? null; protokollStand = neu ? "angelegt" : "fehler";
           if (neu) await protokoll(ich.person_id, "sitzungsprotokoll_angelegt", { protokoll: neu.id, treffen: tid, buero: true });
         } else if (pr.status === "entwurf" && pr.version === 1 && new Date(t.beginn).getTime() > Date.now()) {
@@ -16823,7 +16823,7 @@ Köcheclub Werne`,
       case "protokolle_liste": {
         nurProtokolle(ich);
         const { data: alle } = await db.from("kc_club_sitzungsprotokolle")
-          .select("id,treffen_id,titel,datum,ort,status,version,verfasser,veroeffentlicht_am,einspruch_bis,geaendert_am").order("datum", { ascending: false }).limit(100);
+          .select("id,treffen_id,titel,datum,ort,status,version,verfasser,verfasser_offen,veroeffentlicht_am,einspruch_bis,geaendert_am").order("datum", { ascending: false }).limit(100);
         const ids = (alle ?? []).map((x: any) => x.id);
         const leer = { data: [] as any[] };
         const [{ data: gel }, { data: ew }, { data: an }, { data: auf }, { data: tr }] = await Promise.all([
@@ -16846,7 +16846,7 @@ Köcheclub Werne`,
             const g: any = (gel ?? []).find((x: any) => x.protokoll_id === pr.id);
             return {
               id: pr.id, titel: pr.titel, datum: pr.datum, ort: pr.ort, version: pr.version, status: protokollStatus(pr, zahl(ew, pr.id)), einspruch_bis: pr.einspruch_bis,
-              verfasser: { person_id: pr.verfasser, name: leute.get(pr.verfasser)?.display_name || pr.verfasser }, eigen: pr.verfasser === ich.person_id,
+              verfasser: { person_id: pr.verfasser, name: leute.get(pr.verfasser)?.display_name || pr.verfasser, offen: !!pr.verfasser_offen }, eigen: pr.verfasser === ich.person_id,
               darfBearbeiten: darfBearbeiten(ich, pr), darfLoeschen: darfProtokollLoeschen(ich, pr), gelesen: pr.status === "entwurf" || (!!g && g.version >= pr.version),
               anlagen: zahl(an, pr.id), einwaende: zahl(ew, pr.id), aufgabenOffen: aufgaben.filter((a: any) => a.protokoll_id === pr.id).length,
             };
@@ -17046,7 +17046,7 @@ Köcheclub Werne`,
         // Vorlage automatisch befüllen – getippt wird auf dem Handy fast nichts
         nurProtokolle(ich);
         const tid = p.treffen_id ? String(p.treffen_id) : null;
-        const zeile: any = { titel: txt(p.titel, 120) || "Sitzung des Köcheclubs", datum: berlinTag(new Date()), verfasser: ich.person_id };
+        const zeile: any = { titel: txt(p.titel, 120) || "Sitzung des Köcheclubs", datum: berlinTag(new Date()), verfasser: ich.person_id, verfasser_offen: true };
         if (tid) {
           const { data: vorh } = await db.from("kc_club_sitzungsprotokolle").select("id").eq("treffen_id", tid).maybeSingle();
           if (vorh) return json({ ok: true, id: vorh.id, vorhanden: true });
@@ -17107,7 +17107,7 @@ Köcheclub Werne`,
             id: pr.id, treffen_id: pr.treffen_id, titel: pr.titel, datum: pr.datum, ort: pr.ort, gaeste: pr.gaeste, kurzfassung: pr.kurzfassung, naechster_termin: pr.naechster_termin ?? null,
             tagesordnung: pr.tagesordnung, tagesordnungVon: await tagesordnungVon(pr.treffen_id, pr.tagesordnung).catch(() => []), beschluesse: pr.beschluesse, version: pr.version, veroeffentlicht_am: pr.veroeffentlicht_am, einspruch_bis: pr.einspruch_bis,
             status: protokollStatus(pr, (ew ?? []).filter((x: any) => !x.erledigt_am).length), roh: pr.status,
-            verfasser: { person_id: pr.verfasser, name: name(pr.verfasser) },
+            verfasser: { person_id: pr.verfasser, name: name(pr.verfasser), offen: !!pr.verfasser_offen },
             anwesend: pr.anwesend.map((id: string) => ({ person_id: id, name: name(id) })), entschuldigt: pr.entschuldigt.map((id: string) => ({ person_id: id, name: name(id) })),
           },
           anlagen: aids.map((id: string) => (att ?? []).find((y: any) => y.id === id)).filter(Boolean).map((y: any) => ({ id: y.id, name: y.file_name, mime: y.mime_type, groesse: y.size_bytes })),
@@ -17173,10 +17173,15 @@ Köcheclub Werne`,
           titel: txt(p.titel, 120) || pr.titel, datum, ort: txt(p.ort, 200) || null, anwesend, entschuldigt: ids(p.entschuldigt).filter((id) => !anwesend.includes(id)),
           gaeste: txt(p.gaeste, 300) || null, naechster_termin: txt(p.naechster_termin, 200) || null, tagesordnung: zeilen(p.tagesordnung), beschluesse: zeilen(p.beschluesse), kurzfassung: txt(p.kurzfassung, 4000) || null, geaendert_am: jetzt(),
         };
-        // Schriftführer wechseln (wer das Protokoll schreibt)
-        if (p.verfasser && String(p.verfasser) !== pr.verfasser) {
-          if (!(await protokollLeser()).includes(String(p.verfasser))) throw new Fehler("Diese Person kann keine Protokolle schreiben.");
-          upd.verfasser = String(p.verfasser);
+        // Schriftführer wechseln (wer das Protokoll schreibt). KC-CLUB-PROTOKOLL-SCHREIBER-OFFEN (30.10.2026, Wunsch Hansi „steht noch nicht
+        // fest – Zeile erst mal leer lassen“): "" = wird noch geklärt; Bearbeitungsrecht bleibt beim Anleger (Spalte verfasser).
+        if (p.verfasser === "") upd.verfasser_offen = true;
+        else if (p.verfasser) {
+          if (String(p.verfasser) !== pr.verfasser) {
+            if (!(await protokollLeser()).includes(String(p.verfasser))) throw new Fehler("Diese Person kann keine Protokolle schreiben.");
+            upd.verfasser = String(p.verfasser);
+          }
+          upd.verfasser_offen = false;
         }
         await db.from("kc_club_sitzungsprotokolle").update(upd).eq("id", pr.id);
         await protokoll(ich.person_id, "sitzungsprotokoll_gespeichert", { protokoll: pr.id, verfasser: upd.verfasser ?? pr.verfasser });
@@ -17206,6 +17211,7 @@ Köcheclub Werne`,
         nurProtokolle(ich);
         const pr = await protokollHolen(p.id);
         if (!darfBearbeiten(ich, pr)) throw new Fehler("Veröffentlichen darf nur, wer das Protokoll schreibt.", 403);
+        if (pr.verfasser_offen) throw new Fehler("Bitte vor dem Veröffentlichen eintragen, wer das Protokoll geschrieben hat (Schriftführer).");
         const { count } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id", { count: "exact", head: true }).eq("protokoll_id", pr.id);
         if (!count && !pr.kurzfassung && !pr.beschluesse.length) throw new Fehler("Bitte zuerst ein Foto oder eine Datei vom Protokoll anhängen (oder eine Kurzfassung schreiben).");
         const bis = new Date(Date.now() + EINSPRUCH_TAGE * 86400000).toISOString();

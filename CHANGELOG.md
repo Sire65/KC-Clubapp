@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.783.0 – 2026-10-30 – ✍️ Protokoll: Schriftführer „wird noch geklärt“ (KC-CLUB-PROTOKOLL-SCHREIBER-OFFEN) · Server 2.783.0
+Wunsch Hansi (30.10.): „Wenn das Protokoll geöffnet wird, steht da, dass ich es schreibe – das steht aber nicht fest. Da muss ‚wird noch geklärt‘ hin bzw. die Zeile erst mal leer lassen.“
+- Neue Protokoll-Entwürfe haben keinen Schriftführer mehr vorbelegt: Auswahl **„— wird noch geklärt —“**, im Ausdruck bleibt die Zeile „Schriftführer“ leer, in Liste/Ansicht steht „Schriftführer noch offen“. Sobald jemand gewählt ist, erscheint der Name wie bisher.
+- Bearbeiten darf weiter, wer den Entwurf angelegt hat (und die Clubleitung). Veröffentlichen geht erst, wenn ein Schriftführer eingetragen ist.
+- Datenbank: Spalte `kc_club_sitzungsprotokolle.verfasser_offen` (Migration `20261030_kc_club_protokoll_schreiber_offen.sql`, heutiger Entwurf auf offen gesetzt; veröffentlichte unverändert). Tests: `tests/protokoll-schreiber-offen.test.mjs`, `tools/db-test/96`. Rückweg: App und Server 2.782.0 (Spalte kann bleiben).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.782.0 – 2026-10-30 – 💼 Clubabend: noch nicht fertig gepackte Aktentasche liegt als „vorläufig“ bereit (KC-CLUB-AKTENTASCHE-AUTO-VORLAEUFIG) · Server
 Wunsch Hansi (30.10., kurz vor der Sitzung): „Wenn nicht explizit als fertig getippt wurde, dann als vorläufig gepackt angeben, damit die Inhalte zur Verfügung stehen.“
 - Clubabend Live zeigt „💼 Aktentasche öffnen“ jetzt auch, wenn die Tasche noch auf „offen“ steht, aber schon Inhalt hat – angezeigt als **vorläufig**. Wie bisher nur für die Clubleitung. Der gespeicherte Stand der Tasche bleibt unverändert (Büro → 💼 Aktentasche zeigt weiter „wird gepackt“; ✔ Fertig gepackt geht wie immer).

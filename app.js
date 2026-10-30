@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.782.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.783.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20358,7 +20358,7 @@ function buEingangPosten() {
       schnell: [...(x.kenntnisIch ? [] : [["👁️ Zur Kenntnis genommen", `aeKenntnis('${x.id}', null)`, !x.darfFreigeben]]), ...(x.darfFreigeben ? [["✅ Freigeben", `aeFreigeben('${x.id}', null)`, true]] : []), ["🗄️ Ablegen …", `ekAblage('aenderung','${x.id}')`]] }); // 2.22.19, 2.23.6
   }
   for (const p of (pr?.protokolle || []).filter((x) => x.status === "entwurf" && x.darfBearbeiten))
-    P.push({ wer: p.verfasser?.name, datum: p.datum, sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · von ${p.verfasser?.name || "?"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
+    P.push({ wer: prSchreiber(p), datum: p.datum, sym: "📄", gruppe: "Protokoll-Entwurf", titel: p.titel, unter: `${tagKurz(p.datum)} · ${prSchreiber(p) ? "von " + prSchreiber(p) : "Schriftführer noch offen"}`, auf: `protokollOeffnen('${p.id}')`, ordner: ["📄", "Protokolle", "zeige('protokolle')"] });
   for (const a of (pr?.aufgaben || []))
     P.push({ wer: a.name, datum: a.faellig, sym: "✔️", gruppe: "Offene Aufgabe", titel: a.text, unter: [a.name, faelligText(a.faellig).replace(/<[^>]+>/g, "").trim()].filter(Boolean).join(" · "), auf: "zeige('protokolle')", ordner: ["📄", "Protokolle", "zeige('protokolle')"],
       schnell: a.meine || ICH?.vorstand ? [["✔ Erledigt", `buEinAufgabe('${a.id}')`, true]] : [] });
@@ -27570,7 +27570,7 @@ function prFilterFuellen() {
   opt("prfJahr", PRF.jahr, uniq(L.map((p) => String(p.datum).slice(0, 4))).sort().reverse().map((j) => [j, j]), "Alle Jahre");
   opt("prfMonat", PRF.monat, PR_MONATE.map((m, i) => [String(i + 1).padStart(2, "0"), m]).filter(([v]) => L.some((p) => String(p.datum).slice(5, 7) === v)), "Alle Monate");
   opt("prfOrt", PRF.ort, uniq(L.map((p) => (p.ort || "").trim())).sort((a, b) => a.localeCompare(b, "de")).map((o) => [o, o]), "Alle Orte");
-  opt("prfWer", PRF.wer, uniq(L.map((p) => p.verfasser?.name)).sort((a, b) => a.localeCompare(b, "de")).map((n) => [n, n]), "Alle");
+  opt("prfWer", PRF.wer, uniq(L.map(prSchreiber)).sort((a, b) => a.localeCompare(b, "de")).map((n) => [n, n]), "Alle");
   prFilterAnwenden();
 }
 function prFilterAnwenden() {
@@ -27580,7 +27580,7 @@ function prFilterAnwenden() {
   document.querySelectorAll("#protokollListe .prkarte").forEach((k) => {
     const p = L.find((x) => x.id === k.dataset.id), d = String(p?.datum || "");
     const ok = (!q || k.dataset.suche.includes(q)) && (!PRF.jahr || d.slice(0, 4) === PRF.jahr) && (!PRF.monat || d.slice(5, 7) === PRF.monat)
-      && (!PRF.ort || (p?.ort || "").trim() === PRF.ort) && (!PRF.wer || p?.verfasser?.name === PRF.wer);
+      && (!PRF.ort || (p?.ort || "").trim() === PRF.ort) && (!PRF.wer || p?.verfasser?.name === PRF.wer && !p.verfasser.offen);
     k.classList.toggle("versteckt", !ok); if (ok) n++;
   });
   const aktiv = [PRF.jahr, PRF.monat, PRF.ort, PRF.wer].filter(Boolean).length;
@@ -27596,7 +27596,7 @@ function protokollKarte(p) {
   return `<button class="mini-kachel prkarte${!p.gelesen ? " mk-offen" : ""}" data-id="${p.id}" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `onclick="protokollOeffnen('${p.id}')"` : 'disabled style="opacity:.75;cursor:default"'}>
     <span class="mk-sym">📄</span><span class="mk-titel">${esc(p.titel)}</span><span class="mk-unter">🗓️ ${esc(tagKurz(p.datum))}${p.ort ? " · " + esc(p.ort) : ""}</span>
     <span>${prStatusMarke(p)}${!p.gelesen ? ' <span class="marke rot">🆕 neu</span>' : ""}</span>
-    <span class="mk-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}</span>${info ? `<span class="mk-unter">${info}</span>` : ""}</button>`;
+    <span class="mk-unter">${prSchreiber(p) ? `${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(prSchreiber(p).split(" ")[0])}` : "Schriftführer noch offen"}${p.version > 1 ? ` · Fassung ${p.version}` : ""}</span>${info ? `<span class="mk-unter">${info}</span>` : ""}</button>`;
 }
 // KC-CLUB-PROTOKOLL-LISTE (2.54.0, Wunsch Hansi): als Liste untereinander („📄 Protokoll Sitzung vom 25.09.2026“ · „📍 bei Anne“),
 // oben umschaltbar auf die bisherigen Kacheln (je Gerät gemerkt). Gleiche Daten, gleicher Filter, gleiches Öffnen.
@@ -27617,7 +27617,7 @@ function protokollZeile(p) {
   const ort = String(p.ort || "").trim(); // Ort genau wie eingetragen („In der Gartenhütte bei Anne“, „SPD-Büro am Roggenmarkt“)
   return `<button class="mini-kachel prkarte${!p.gelesen ? " mk-offen" : ""}" data-id="${p.id}" data-suche="${esc((p.titel + " " + (p.ort || "") + " " + p.datum).toLowerCase())}" ${offen ? `onclick="protokollOeffnen('${p.id}')"` : 'disabled style="opacity:.75;cursor:default"'}>
     <span class="mk-sym">📄</span><span class="prl-text"><span class="prl-titel">${esc(prZeilenTitel(p))}</span>${ort ? `<span class="prl-unter">📍 ${esc(ort.charAt(0).toUpperCase() + ort.slice(1))}</span>` : ""}
-    <span class="prl-unter">${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(p.verfasser.name.split(" ")[0])}${p.version > 1 ? ` · Fassung ${p.version}` : ""}${info ? " · " + info : ""}</span></span>
+    <span class="prl-unter">${prSchreiber(p) ? `${p.status === "entwurf" && !p.darfBearbeiten ? "✍️ schreibt " : "von "}${esc(prSchreiber(p).split(" ")[0])}` : "Schriftführer noch offen"}${p.version > 1 ? ` · Fassung ${p.version}` : ""}${info ? " · " + info : ""}</span></span>
     <span class="prl-rechts">${prStatusMarke(p)}${!p.gelesen ? '<span class="marke rot">🆕 neu</span>' : ""}</span></button>`;
 }
 // ---------- 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE (Wunsch Hansi „Unser Clubjahr“ – Teil 1: Sammelaktion; Wahl Hansi: Start November, Freigabe durch die
@@ -28213,7 +28213,7 @@ function protokollFormular() {
     <div class="karte"><h3>1 · Vorlage</h3>
       <label class="feld">Titel<input id="prT" maxlength="120" value="${esc(p.titel)}" oninput="prAendern()"></label>
       <div class="zwei"><label class="feld">Datum<input id="prD" type="date" value="${esc(p.datum)}" onchange="prAendern()"></label><label class="feld">Ort<input id="prO" maxlength="200" value="${esc(p.ort || "")}" oninput="prAendern()"></label></div>
-      <label class="feld">Schriftführer (wer schreibt)<select id="prV" onchange="prAendern()">${PR.schreiber.map((id) => `<option value="${id}" ${id === p.verfasser.person_id ? "selected" : ""}>${esc(nameVon(id))}</option>`).join("")}</select></label>
+      <label class="feld">Schriftführer (wer schreibt)<select id="prV" onchange="prAendern()"><option value="" ${p.verfasser.offen ? "selected" : ""}>— wird noch geklärt —</option>${PR.schreiber.map((id) => `<option value="${id}" ${!p.verfasser.offen && id === p.verfasser.person_id ? "selected" : ""}>${esc(nameVon(id))}</option>`).join("")}</select></label>
       <details class="prda" ${da.size || ent.size ? "" : "open"}><summary><b>👥 Anwesend <span id="prDaZahl">${da.size}</span> · entschuldigt <span id="prEntZahl">${ent.size}</span></b> <small class="hinweis">(antippen zum Ändern)</small></summary>
         <table class="wahltabelle"><thead><tr><th></th><th>✅ da</th><th>🙋 entsch.</th></tr></thead><tbody>
         ${MITGLIEDER.map((m) => `<tr><td>${esc(m.name)}</td><td><input type="checkbox" data-da="${m.person_id}" ${da.has(m.person_id) ? "checked" : ""} onchange="prDa(this, 'ent')"></td><td><input type="checkbox" data-ent="${m.person_id}" ${ent.has(m.person_id) ? "checked" : ""} onchange="prDa(this, 'da')"></td></tr>`).join("")}
@@ -28267,6 +28267,8 @@ async function prDrucken() {
   druckStarten("protokoll");
 }
 function prAendern() { clearTimeout(prTimer); $("prGespeichert").textContent = ""; prTimer = setTimeout(() => prSpeichernJetzt(false), 1200); }
+// KC-CLUB-PROTOKOLL-SCHREIBER-OFFEN (30.10.2026, Wunsch Hansi „steht noch nicht fest – Zeile erst mal leer lassen“): solange offen, kein Name
+function prSchreiber(p) { return p?.verfasser?.offen ? "" : p?.verfasser?.name || ""; }
 async function prSpeichernJetzt(vonHand) {
   clearTimeout(prTimer); prTimer = null;
   if (!PR || !$("prT")) return;
@@ -28279,7 +28281,8 @@ async function prSpeichernJetzt(vonHand) {
     await api("protokoll_speichern", daten);
     if ($("prGespeichert")) $("prGespeichert").textContent = "✔ gespeichert";
     if (vonHand) melde("💾 Gespeichert");
-    if (daten.verfasser !== PR.protokoll.verfasser.person_id) PR.protokoll.verfasser = { person_id: daten.verfasser, name: nameVon(daten.verfasser) };
+    if (daten.verfasser === "") PR.protokoll.verfasser = { ...PR.protokoll.verfasser, offen: true };
+    else if (daten.verfasser !== PR.protokoll.verfasser.person_id || PR.protokoll.verfasser.offen) PR.protokoll.verfasser = { person_id: daten.verfasser, name: nameVon(daten.verfasser), offen: false };
   } catch (e) { meldeFehler(e); throw e; }
 }
 async function prNeuLaden() {
@@ -28374,7 +28377,7 @@ function protokollLesen() {
   $("protokollInhalt").innerHTML = `
     <div class="karte">${prStatusMarke(p)}${p.version > 1 ? ` <span class="marke">Fassung ${p.version} (korrigiert)</span>` : ""}
       <div style="font-size:1.2rem;font-weight:800;margin-top:6px">${esc(p.titel)}</div>
-      <div class="hinweis">${esc(tagKurz(p.datum))}${p.ort ? " · 📍 " + esc(p.ort) : ""} · geschrieben von ${esc(p.verfasser.name)}</div>
+      <div class="hinweis">${esc(tagKurz(p.datum))}${p.ort ? " · 📍 " + esc(p.ort) : ""}${prSchreiber(p) ? " · geschrieben von " + esc(prSchreiber(p)) : " · Schriftführer wird noch geklärt"}</div>
       ${p.roh === "entwurf" ? '<p class="hinweis">✍️ Wird gerade noch geschrieben.</p>' : einspruchOffen ? `<p class="hinweis">Einwände sind bis <b>${esc(wann(p.einspruch_bis))}</b> möglich – danach gilt das Protokoll als genehmigt.</p>` : ""}
       ${p.anwesend.length ? `<p style="margin:10px 0 0"><b>✅ Anwesend (${p.anwesend.length}):</b> ${esc(p.anwesend.map((x) => x.name).join(", "))}</p>` : ""}
       ${p.entschuldigt.length ? `<p style="margin:6px 0 0"><b>🙋 Entschuldigt (${p.entschuldigt.length}):</b> ${esc(p.entschuldigt.map((x) => x.name).join(", "))}</p>` : ""}
@@ -32414,7 +32417,7 @@ function druckProtokoll() {
   const status = p.roh === "entwurf" ? "Entwurf" : p.einspruch_bis && new Date(p.einspruch_bis) > new Date() ? `veröffentlicht – Einwände bis ${wann(p.einspruch_bis)}` : "veröffentlicht und genehmigt";
   return { titel: p.titel, unter: `Sitzungsprotokoll · ${dz(p.datum)}${p.ort ? " · " + p.ort : ""}`, fuss: `Fassung ${p.version} · ${status}`,
     html: `<table class="dinfo"><tbody><tr><th style="width:36mm">Datum</th><td>${esc(fDatumLang.format(new Date(p.datum + "T12:00:00Z")))}</td></tr>${p.ort ? `<tr><th>Ort</th><td>${esc(p.ort)}</td></tr>` : ""}
-        <tr><th>Schriftführer</th><td>${esc(p.verfasser.name)}</td></tr><tr><th>Anwesend (${p.anwesend.length})</th><td>${esc(p.anwesend.map((x) => x.name).join(", ") || "–")}</td></tr>
+        <tr><th>Schriftführer</th><td>${esc(prSchreiber(p))}</td></tr><tr><th>Anwesend (${p.anwesend.length})</th><td>${esc(p.anwesend.map((x) => x.name).join(", ") || "–")}</td></tr>
         ${p.entschuldigt.length ? `<tr><th>Entschuldigt</th><td>${esc(p.entschuldigt.map((x) => x.name).join(", "))}</td></tr>` : ""}${p.gaeste ? `<tr><th>Gäste</th><td>${esc(p.gaeste)}</td></tr>` : ""}
         <tr><th>Stand</th><td>Fassung ${p.version} · ${esc(status)}</td></tr></tbody></table>
       <h2>Tagesordnung</h2>${liste(p.tagesordnung, "ol", p.tagesordnungVon)}<h2>Beschlüsse</h2>${liste(p.beschluesse, "ul")}
@@ -35102,7 +35105,7 @@ function fotoInsArchiv() {
 // ----- 1.19.0: Protokoll (Text als Datei + auf Wunsch die Protokoll-Dateien/Fotos) -----
 function protokollText(p) {
   const l = (t, a, von) => a?.length ? [`${t}:`, ...a.map((x, i) => `  ${i + 1}. ${typeof x === "string" ? x : x.name}${von?.[i] ? ` – Vorschlag von ${von[i]}` : ""}`), ""] : [];
-  return [`Köcheclub Werne – Protokoll`, p.titel, `${tagKurz(p.datum)}${p.ort ? " · " + p.ort : ""} · geschrieben von ${p.verfasser?.name || ""}${p.version > 1 ? ` · Fassung ${p.version}` : ""}`, "────────────────────", "",
+  return [`Köcheclub Werne – Protokoll`, p.titel, `${tagKurz(p.datum)}${p.ort ? " · " + p.ort : ""}${prSchreiber(p) ? " · geschrieben von " + prSchreiber(p) : ""}${p.version > 1 ? ` · Fassung ${p.version}` : ""}`, "────────────────────", "",
     ...(p.anwesend?.length ? [`Anwesend (${p.anwesend.length}): ${p.anwesend.map((x) => x.name).join(", ")}`] : []), ...(p.entschuldigt?.length ? [`Entschuldigt: ${p.entschuldigt.map((x) => x.name).join(", ")}`] : []),
     ...(p.gaeste ? [`Gäste: ${p.gaeste}`] : []), "", ...l("Tagesordnung", p.tagesordnung, p.tagesordnungVon), ...l("Beschlüsse", p.beschluesse), ...(p.kurzfassung ? ["Kurzfassung:", p.kurzfassung, ""] : []), ...(p.naechster_termin ? [`Nächster Termin: ${p.naechster_termin}`, ""] : []),
     ...l("Anlagen", PR.anlagen), `Abgelegt am ${zeitDe(new Date().toISOString())} von ${ICH.name}`, ""].join("\n");
