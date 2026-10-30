@@ -1,0 +1,4 @@
+dazukommen_geht=t
+sprechen_geht=t
+falsche_art_abgelehnt=t
+spalte_da=t

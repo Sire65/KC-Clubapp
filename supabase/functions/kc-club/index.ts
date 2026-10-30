@@ -23,6 +23,7 @@ import { fraTeileStabil } from "./fra-teile.js"; // KICC-F-107 (18.10.2026): sta
 import { TURN, turnPlan, turnZeile, turnIce, turnAppBis, turnGrund } from "./turn-vorrat.js"; // KC-CLUB-ANRUF-TURN (2.563.0): Vorrat Umleitungs-Server
 // @ts-ignore: reine JS-Datei ohne Typen
 import { klopfVerpasst, klopfVerpasstOhneKontakt, klopfPushStand } from "./anklopfen-verpasst.js"; // KC-CLUB-ANKLOPFEN-VERPASST (2.567.0)
+import { GS, gespraecheBilden, gespraecheSichtbar, dazuEmpfaenger, dazuStand } from "./gespraeche.js"; // KC-CLUB-GESPRAECHE (Stufe 1 Telefonate)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-CLUB-ANRUFBEANTWORTER (2.568.0)
 // @ts-ignore: reine JS-Datei ohne Typen
@@ -1195,11 +1196,22 @@ async function onlineJetztMitAlt(weitere: string[], seit: string): Promise<{ on:
   return { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id))), einst };
 }
 // Anklopfen an mich (offen, ANKLOPFEN_SEK, neueste 3) und von mir (10 Min.) aus einer gemeinsamen Abfrage – wie vorher die zwei Abfragen
+const klopfArt = (a: unknown) => (a === "sprechen" || a === "dazukommen" ? a : "schreiben"); // KC-CLUB-GESPRAECHE: + dazukommen
+// KC-CLUB-GESPRAECHE: laufende Telefonate (angenommene Beine der letzten GS.alterMs) – je Server-Instanz GS.cacheMs gemerkt, damit der
+// Online-Abgleich höchstens alle 15 s eine Abfrage mehr macht (KC-DB-SPARSAM). Fehler → keine Gespräche (nie geraten).
+let GS_CACHE: { zeit: number; d: any[] } = { zeit: 0, d: [] };
+async function laufendeGespraeche(): Promise<any[]> {
+  if (Date.now() - GS_CACHE.zeit < GS.cacheMs) return GS_CACHE.d;
+  const { data, error } = await db.from("kc_club_anruf").select("id,von,an,art,konferenz_id,automatisch,angenommen_am").eq("status", "angenommen")
+    .gte("angenommen_am", new Date(Date.now() - GS.alterMs).toISOString()).limit(60);
+  GS_CACHE = { zeit: Date.now(), d: error ? [] : gespraecheBilden(data ?? []) };
+  return GS_CACHE.d;
+}
 function onlineAnklopfenTeilen(rows: any[], ich: string, seit: string, seit10: string) {
   const neu = [...rows].sort((a, b) => String(b.erstellt_am).localeCompare(String(a.erstellt_am)));
   return {
-    anMich: neu.filter((x) => x.an === ich && x.status === "offen" && Date.parse(x.erstellt_am) >= Date.parse(seit)).slice(0, 3).map((x) => ({ id: x.id, von: x.von, erstellt_am: x.erstellt_am, art: x.art === "sprechen" ? "sprechen" : "schreiben" })),
-    vonMir: neu.filter((x) => x.von === ich && Date.parse(x.erstellt_am) >= Date.parse(seit10)).map((x) => ({ id: x.id, an: x.an, status: x.status, thread_id: x.thread_id, beantwortet_am: x.beantwortet_am, antwort: x.antwort, art: x.art === "sprechen" ? "sprechen" : "schreiben" })),
+    anMich: neu.filter((x) => x.an === ich && x.status === "offen" && Date.parse(x.erstellt_am) >= Date.parse(seit)).slice(0, 3).map((x) => ({ id: x.id, von: x.von, erstellt_am: x.erstellt_am, art: klopfArt(x.art), anruf_id: x.anruf_id ?? null })),
+    vonMir: neu.filter((x) => x.von === ich && Date.parse(x.erstellt_am) >= Date.parse(seit10)).map((x) => ({ id: x.id, an: x.an, status: x.status, thread_id: x.thread_id, beantwortet_am: x.beantwortet_am, antwort: x.antwort, art: klopfArt(x.art), anruf_id: x.anruf_id ?? null })),
   };
 }
 // Anrufe an mich der letzten 24 h → klingelt gerade (ANRUF_KLINGEL_SEK, neuester) und verpasst (nicht angenommen, Hinweis nicht gesehen, neueste 5)
@@ -1961,7 +1973,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .slice(0, 200).map(([id, b]) => [id, b === "immer" ? "immer" : new Date(String(b)).toISOString()])) }),
   // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): darf man bei mir anklopfen (Standard: ja) + welcher Anklopfton (Registry in der App)
   // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG: ab = knopf (nur auf Knopfdruck, Standard) · spaeter (nach 1 Min. ohne Antwort) · sofort (gleich, ohne zu stören)
-  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf", ab: ["spaeter", "sofort"].includes(w?.ab) ? w.ab : "knopf" }),
+  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf", ab: ["spaeter", "sofort"].includes(w?.ab) ? w.ab : "knopf",
+    gespraeche: w?.gespraeche !== false }), // KC-CLUB-GESPRAECHE: „Andere dürfen sehen, wenn ich telefoniere“ (Standard an, Wahl Hansi)
   // KC-CLUB-SCHNELLSTART (1.8.0): große Kachel mit Symbolen (nur erweiterte Ansicht) – an/aus und eigene Auswahl (höchstens 8,
   // Reihenfolge = Auswahl; null = Grundeinstellung der App)
   schnellstart: (w) => ({ an: w?.an !== false,
@@ -14138,7 +14151,10 @@ Köcheclub-App`,
           zeigen ? onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : Promise.resolve({ on: new Set<string>(), einst: new Map<string, Map<string, any>>() }),
           liveTerminKurz().catch(() => null), // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
         ]);
-        const { anMich, vonMir } = onlineAnklopfenTeilen(klopf ?? [], ich.person_id, seit, seit10);
+        const { anMich: anMich0, vonMir: vonMir0 } = onlineAnklopfenTeilen(klopf ?? [], ich.person_id, seit, seit10);
+        // KC-CLUB-GESPRAECHE: „dazukommen“ läuft getrennt vom normalen Anklopfen (eigene Frage im Anrufbildschirm, eigener Wartestand)
+        const anMich = anMich0.filter((x: any) => x.art !== "dazukommen"), dazuAnMich = anMich0.filter((x: any) => x.art === "dazukommen");
+        const vonMir = vonMir0.filter((x: any) => x.art !== "dazukommen"), dazuVonMir = vonMir0.filter((x: any) => x.art === "dazukommen");
         const vfW: any = (mein.get("vorfuehren") as any)?.wert, vf = vfW?.status === "angefragt" && Date.now() - new Date(vfW.seit).getTime() < 3 * 60000 ? vfW : null; // KC-CLUB-VORFUEHREN
         // KC-CLUB-SCHNAPPSCHUSS (2.102.0): offene Bitte des Admins um EIN Bild der Club-App – das Mitglied entscheidet selbst
         const ssW: any = (mein.get("schnappschuss") as any)?.wert, ss = ssW?.status === "angefragt" && Date.now() - new Date(ssW.seit).getTime() < SS_FRIST_MS ? ssW : null;
@@ -14152,7 +14168,7 @@ Köcheclub-App`,
         }
         // 2.567.0 KC-CLUB-ANKLOPFEN-VERPASST (Wunsch Hansi nach Fall Dieter): verpasstes Anklopfen (24 h, je Person das neueste) einmal zeigen –
         // nicht, wenn wir danach telefoniert oder im Zweiergespräch geschrieben haben. Zusatzabfragen nur, wenn es überhaupt eins gibt.
-        let kVerp: any[] = klopfVerpasst(klopf ?? [], ich.person_id, t, ANKLOPFEN_SEK, (mein.get("klopf_verpasst") as any)?.wert?.bis);
+        let kVerp: any[] = klopfVerpasst((klopf ?? []).filter((x: any) => x.art !== "dazukommen"), ich.person_id, t, ANKLOPFEN_SEK, (mein.get("klopf_verpasst") as any)?.wert?.bis);
         if (kVerp.length) {
           const ab = kVerp[kVerp.length - 1].zeit, wer2 = kVerp.map((v) => v.von);
           const [{ data: rufeSp }, { data: nachr }] = await Promise.all([
@@ -14173,13 +14189,15 @@ Köcheclub-App`,
             .in("idempotency_key", wartend.map((x: any) => `club-anklopfen:${x.id}`)).limit(10);
           for (const r of req ?? []) pushStand.set(String(r.idempotency_key).slice(15), klopfPushStand(r));
         }
+        const gsAlle = await laufendeGespraeche().catch(() => []); // KC-CLUB-GESPRAECHE (vor dem Entfernen von mir: mein eigenes Gespräch zählt mit)
+        const gs = gespraecheSichtbar(gsAlle, new Set([...on, ...(zeigen ? [ich.person_id] : [])]), einst.get("anklopfen") ?? new Map(), ich.person_id, Date.now());
         on.delete(ich.person_id);
         const klopfbar = new Map([...on].map((id) => [id, einst.get("anklopfen")?.get(id)?.erlaubt !== false || einst.get("anklopfen")?.get(id)?.ab === "sofort"])); // wie anklopfenErlaubtMap; 2.568.0: Anrufbeantworter „sofort“ nimmt auch dann auf
         // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“): seit wann jemand ohne Pause online ist (Sekunden,
         // vom Server gerechnet – keine Uhrenabweichung) – die App sagt beim Zurückkommen an, wer in den letzten 3 Min. dazugekommen ist
         const seitMap = new Map<string, number>();
         for (const id of on) { const ts = Date.parse(einst.get("online_seit")?.get(id)?.seit || ""); if (ts > 0) seitMap.set(id, Math.max(0, Math.round((Date.now() - ts) / 1000))); }
-        const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : []), ...kVerp.map((x: any) => x.von)]);
+        const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : []), ...kVerp.map((x: any) => x.von), ...gs.liste.flatMap((g: any) => g.teilnehmer), ...dazuAnMich.map((x: any) => x.von), ...dazuVonMir.map((x: any) => x.an)]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         // 2.477.0 KC-CLUB-ONLINE-GERAET: nur für den Admin – mit welchem Gerät (neuester Eintrag der letzten 3 Min.) jemand online ist
         const geraetMap = new Map<string, string>();
@@ -14190,6 +14208,13 @@ Köcheclub-App`,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null, art: x.art, ...(pushStand.has(x.id) ? { push: pushStand.get(x.id) } : {}) })),
           ...(kVerp.length ? { klopfVerpasst: kVerp.map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.zeit })) } : {}),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
+          // KC-CLUB-GESPRAECHE (Stufe 1): laufende Telefonate (nur DASS, nie was), Anklopfen „dazukommen“ an mich und der Stand meines Anklopfens
+          gespraeche: gs.liste.map((g: any) => ({ id: g.id, art: g.art, teilnehmer: g.teilnehmer.map(wer), seitSek: g.seitSek, klopfbar: g.klopfbar, voll: g.voll, ichDrin: g.ichDrin })),
+          ...(gs.anonym ? { gespraecheAnonym: gs.anonym } : {}),
+          ...(dazuAnMich.length ? { dazukommen: dazuAnMich.map((x: any) => ({ id: x.id, von: wer(x.von), anruf: x.anruf_id, zeit: x.erstellt_am })) } : {}),
+          ...(dazuVonMir.length ? { dazuMeine: [...new Set(dazuVonMir.map((x: any) => x.anruf_id))].map((a) => {
+            const z = dazuVonMir.filter((x: any) => x.anruf_id === a), st = dazuStand(z);
+            return { anruf: a, status: st.status, ...(st.von ? { von: wer(st.von) } : {}), zeit: z.map((x: any) => x.erstellt_am).sort()[0] }; }) } : {}),
           spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, uhrMin: x.uhr?.min ?? null, zeit: x.erstellt_am })),
           ...(vf ? { vorfuehren: { id: vf.id, von: wer(vf.von) } } : {}), ...(ss ? { schnappschuss: { id: ss.id, von: wer(ss.von), live: !!ss.live } } : {}) });
       }
@@ -14431,6 +14456,56 @@ Köcheclub-App`,
         // 2.567.0 KC-CLUB-ANKLOPFEN-VERPASST: nach dem Auflegen sagen, ob die Mitteilung angekommen ist (angezeigt/geöffnet/nur verschickt)
         const { data: req } = await db.from("kc_communication_requests").select("status,kc_communication_delivery_events(event_type,created_at)").eq("idempotency_key", `club-anklopfen:${k.id}`).limit(1);
         return json({ ok: true, push: klopfPushStand(req?.[0]) });
+      }
+
+      // ----- KC-CLUB-GESPRAECHE (Stufe 1 Telefonate, Wunsch Hansi 30.10.2026): bei einem laufenden Telefonat anklopfen und dazukommen -----
+      // Je Beteiligtem eine Anklopf-Zeile art „dazukommen“ (anruf_id = Bein, an dem man anklopft). Nimmt einer auf, holt seine App den
+      // Anklopfenden über die vorhandene Konferenz-Einladung dazu (anruf_start mit konferenz_mit) – die App des Anklopfenden nimmt von selbst an.
+      case "gespraech_anklopfen": {
+        const { data: a } = await db.from("kc_club_anruf").select("id,von,an,art,status,konferenz_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!a || a.status !== "angenommen") throw new Fehler("Das Gespräch ist schon vorbei.", 409);
+        const teil = a.konferenz_id ? (await konferenzBeine(a.konferenz_id)).teilnehmer : new Set<string>([a.von, a.an]);
+        teil.add(a.von); teil.add(a.an);
+        if (teil.has(ich.person_id)) throw new Fehler("Du bist schon in diesem Gespräch.", 409);
+        if (a.art === "video") throw new Fehler("Bei Videoanrufen geht Dazukommen noch nicht – nur bei Telefonaten.", 409);
+        if (teil.size >= KONFERENZ_MAX) throw new Fehler(`Die Runde ist voll – höchstens ${KONFERENZ_MAX} Personen.`, 409);
+        const ids = [...teil];
+        const { data: es } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("person_id", ids).in("schluessel", ["anklopfen", "inkognito", "online"]);
+        const ein = (k: string) => new Map((es ?? []).filter((x: any) => x.schluessel === k).map((x: any) => [x.person_id, x.wert]));
+        const kE = ein("anklopfen"), inko = ein("inkognito"), onl = ein("online");
+        if (ids.some((id) => kE.get(id)?.gespraeche === false || inko.get(id)?.an === true || onl.get(id)?.zeigen === false)) throw new Fehler("Dieses Gespräch ist privat.", 403);
+        const empf = dazuEmpfaenger(ids, kE, ich.person_id);
+        const leute = await personen(ids), namen = ids.map((id) => vorname(leute.get(id) ?? null) || "?").join(" und ");
+        if (!empf.length) throw new Fehler(`${namen} haben Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`, 409);
+        // Bremse: ein offenes Dazukommen je Gespräch reicht
+        const { data: offen } = await db.from("kc_club_anklopfen").select("id").eq("von", ich.person_id).eq("anruf_id", a.id).eq("status", "offen")
+          .gte("erstellt_am", new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString()).limit(1);
+        if (offen?.length) return json({ ok: true, anruf: a.id, namen, schon: true });
+        const { error } = await db.from("kc_club_anklopfen").insert(empf.map((an) => ({ von: ich.person_id, an, art: "dazukommen", anruf_id: a.id })));
+        if (error) throw new Fehler("Dazukommen geht gerade nicht – bitte später nochmal.", 503);
+        await protokoll(ich.person_id, "gespraech_angeklopft", { anruf: a.id, an: empf });
+        return json({ ok: true, anruf: a.id, namen });
+      }
+      // Beteiligter antwortet: aufnehmen (die anderen Fragen zum selben Anklopfen schließen sich) oder „jetzt nicht“ (nur die eigene Frage)
+      case "dazukommen_antwort": {
+        const { data: k } = await db.from("kc_club_anklopfen").select("id,von,an,status,art,anruf_id").eq("id", String(p.id || "")).eq("an", ich.person_id).maybeSingle();
+        if (!k || k.art !== "dazukommen") throw new Fehler("Anklopfen nicht gefunden.", 404);
+        if (k.status !== "offen") return json({ ok: true, status: k.status });
+        if (!p.annehmen) {
+          await db.from("kc_club_anklopfen").update({ status: "spaeter", beantwortet_am: jetzt() }).eq("id", k.id).eq("status", "offen");
+          return json({ ok: true, status: "spaeter" });
+        }
+        const { data: upd } = await db.from("kc_club_anklopfen").update({ status: "angenommen", beantwortet_am: jetzt() }).eq("id", k.id).eq("status", "offen").select("id");
+        if (!upd?.length) return json({ ok: true, status: "vorbei" });
+        await db.from("kc_club_anklopfen").update({ status: "abgebrochen", beantwortet_am: jetzt() }).eq("von", k.von).eq("anruf_id", k.anruf_id).eq("status", "offen");
+        const leute = await personen([k.von]);
+        await protokoll(ich.person_id, "dazukommen_aufgenommen", { von: k.von, anruf: k.anruf_id });
+        return json({ ok: true, status: "angenommen", von: { person_id: k.von, name: leute.get(k.von)?.display_name || k.von, vorname: vorname(leute.get(k.von) ?? null) || k.von } });
+      }
+      // Anklopfender legt auf → alle offenen Fragen zu diesem Gespräch verschwinden
+      case "dazukommen_abbrechen": {
+        await db.from("kc_club_anklopfen").update({ status: "abgebrochen", beantwortet_am: jetzt() }).eq("von", ich.person_id).eq("anruf_id", String(p.anruf || "")).eq("status", "offen");
+        return json({ ok: true });
       }
 
       // 2.567.0 KC-CLUB-ANKLOPFEN-VERPASST: Hinweis gesehen → bis zu diesem Anklopfen nicht mehr zeigen (eine Zeile, ohne neue Tabelle)

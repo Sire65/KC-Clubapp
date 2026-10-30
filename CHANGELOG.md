@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.760.0 – 2026-10-30 – 📞 Sehen, wer telefoniert – und anklopfen, um dazuzukommen (KC-CLUB-GESPRAECHE, Stufe 1)
+Wunsch Hansi (30.10.): „Anzeigen, wer gerade mit wem kommuniziert – z. B. Klaus und Hansi sprechen, dann eine grüne Linie mit Hörer … um in eine laufende Kommunikation zu sehen und dann anzuklopfen. Dann können mich die anderen in das Gespräch aufnehmen.“ Vorschau „Club-Netz“ abgenommen; Schalter vorbelegt an (Wahl Hansi).
+- 📞 **Im Kopf** (Feld Mitglieder): laufende Telefonate als grüne Schilder vor den Online-Namen, z. B. „Klaus 📞 Hansi“, bei Konferenzen „👥📞 Anne, Christina, Ruth“. Auch in der Online-Leiste unter Mitglieder.
+- 👋 **Antippen** → Fenster mit den Bildchen, grüner Linie und pulsierendem Hörer, „seit 4 Min.“ und **„Anklopfen – darf ich dazukommen?“** (mit Grund, wenn es nicht geht: voll, Video, Anklopfen aus, selbst drin). Warte-Anzeige mit Uhr (3 Min.) und „Auflegen“.
+- ✅ **Im Gespräch** erscheint oben im Anrufbildschirm „Paul klopft an – möchte dazukommen“ mit **Aufnehmen** / **Jetzt nicht** (Klopfton). Es reicht, wenn einer aufnimmt – die Frage bei den anderen verschwindet. Aufnehmen holt den Anklopfenden über die vorhandene Konferenz-Einladung dazu (bis 4 Personen, nur Ton); seine App nimmt den Anruf von selbst an.
+- 🕸️ **Club-Netz**: alle laufenden Telefonate mit Linien/Tisch, private Telefonate nur als Anzahl, darunter „Außerdem online“ zum Anklopfen.
+- 🔒 **Privatsphäre**: sichtbar ist nur, *dass* telefoniert wird, nie was. Neuer Schalter ⚙️ → Privatsphäre „📞 Andere dürfen sehen, wenn ich telefoniere“ (Standard an). Namen erscheinen nur, wenn **alle** Beteiligten ihn an haben und online sichtbar sind (nicht Inkognito/unsichtbar) – sonst „1 Telefonat (privat, ohne Namen)“. Sparmodus/„Bewegung reduzieren“: Hörer pulsiert nicht.
+- Sparsam: Der Online-Abgleich bringt die Telefonate mit; der Server fragt die laufenden Anrufe höchstens alle 15 s je Instanz ab (gemerkt). Neue Fragen kommen über die vorhandene direkte Leitung sofort.
+- Datenbank: Migration `20261030_kc_club_gespraeche_dazukommen.sql` (Spalte `kc_club_anklopfen.anruf_id`, Art „dazukommen“; keine neue Tabelle). Server: Baustein `gespraeche.js`, Aktionen `gespraech_anklopfen`, `dazukommen_antwort`, `dazukommen_abbrechen`. Neuer Hilfe-Eintrag. Tests `tests/gespraeche.test.mjs`, `tools/db-test/93_gespraeche_dazukommen_test.sql`; `online-namen` und `app-vertrag` ergänzt.
+
 ## 2.759.0 – 2026-10-29 – 🐞 Wege: „Zettel aufgehängt“ stimmte nicht
 Fund Hansi (29.10.): „Karla soll angeblich einen Zettel an die Pinnwand gehängt haben.“ – Hatte sie nicht: Beim Start schaut die App still nach neuen Zetteln (`pinnwand_neu`), und das wurde in 2.755.0 fälschlich als Handlung „📌 Zettel an die Pinnwand gehängt“ gezählt (KC-CLUB-SPUR-VOLL).
 - Jetzt zählt nur das echte Aufhängen (`pinnwand_anheften`). Die 35 falschen Einträge seit 2.755.0 sind aus den Wegen entfernt.

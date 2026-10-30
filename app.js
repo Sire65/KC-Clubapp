@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.759.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.760.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2369,6 +2369,7 @@ const HILFE = [
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
   { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
   { id: "nachrichten_reihe", thema: "nachrichten", sym: "↕️", t: "Abschnitte in der Chat-Liste verschieben – z. B. Einzelchats nach oben", x: "Ist die Übersicht nach <b>👥 Art</b> oder <b>🕒 Zeit</b> gegliedert, steht rechts in jedem Balken <b>▲</b> und <b>▼</b>. Damit verschiebst du den ganzen Abschnitt – zum Beispiel die <b>🙋 Einzelchats</b> ganz nach oben. Die App merkt sich die Reihenfolge auf diesem Gerät. <b>🔴 Ungelesen</b> bleibt immer ganz oben.", zeig: () => zeige("nachrichten"), seit: "2.753.0" }, // KC-CLUB-NACHRICHTEN-REIHE
+  { id: "gespraeche", thema: "club", sym: "📞", t: "Sehen, wer telefoniert – und anklopfen, um dazuzukommen", x: "Telefonieren zwei Mitglieder miteinander, steht oben im Feld <b>Mitglieder</b> ein grünes Schild, z. B. <b>Klaus 📞 Hansi</b>. Antippen → <b>👋 Anklopfen – darf ich dazukommen?</b> Die beiden hören einen leisen Klopfton; nimmt einer dich auf, bist du gleich in der Runde (Konferenz bis 4 Personen). Sichtbar ist nur, <b>dass</b> telefoniert wird – nie, was. Möchtest du das für dich nicht: ⚙️ → Privatsphäre → <b>📞 Andere dürfen sehen, wenn ich telefoniere</b> ausschalten.", seit: "2.760.0" }, // KC-CLUB-GESPRAECHE
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
   { id: "online_uhrzeit", thema: "nachrichten", sym: "🟢", t: "„… ist jetzt online“ – jetzt mit Uhrzeit", x: "Hast du die Mitteilung <b>„🟢 Klaus ist jetzt online“</b> eingeschaltet, steht jetzt die <b>Uhrzeit</b> dabei – z. B. „(19:05 Uhr)“ – und darunter der Tag. Kommt die Mitteilung erst später an (z. B. weil dein PC aus war), heißt sie <b>„🟢 Klaus war um 19:05 Uhr online“</b>. So weißt du, ob er wirklich gerade da ist.", seit: "2.390.0" },
   { id: "terminanfrage_oben", thema: "termine", sym: "📨", t: "Offene Terminanfragen stehen ganz oben", x: "Hat dich jemand per <b>Terminanfrage</b> gefragt und du hast noch nicht geantwortet, steht sie jetzt <b>ganz oben unter „Heute wichtig“</b> – rot umrandet. Die Kachel <b>📅 Termine</b> zeigt die Zahl. Antippen und mit <b>Ja</b>, <b>Vielleicht</b> oder <b>Nein</b> antworten.", seit: "2.389.0" },
@@ -4705,6 +4706,8 @@ async function onlinePing() {
     if (r.fensterAnders) zweiBrowserMelden(r.fensterAnders); // KC-CLUB-ZWEI-BROWSER
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
+    ONL.gs = r.gespraeche || []; ONL.gsAnonym = r.gespraecheAnonym || 0; // KC-CLUB-GESPRAECHE
+    dazuFrage(r.dazukommen); gsMeineStand(r.dazuMeine);
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
     if (vorher !== [...ONL.ids].sort().join()) grOnlineAuffrischen(); // KC-CLUB-GRUPPE-ALLE-ONLINE
     werIstDa(ONL.liste, r.zeigen); // KC-CLUB-WER-IST-DA (2.454.0) – vor der Online-Ansage, damit niemand doppelt genannt wird
@@ -4992,6 +4995,7 @@ function onlineLeisteZeigen() {
   onlineLedZeigen();
   const el = $("onlineLeiste"); if (!el) return;
   el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen${ONL.liste.length > 1 ? ` · <button class="knopf klein" style="padding:3px 8px" onclick="onlineRunde()">💬 Mit allen ${ONL.liste.length} schreiben</button>` : ""}</div>
+    ${gsKopf().length ? `<div class="onleiste">${gsKopf().map((g) => `<button class="gs-knopf" onclick="gsBlatt('${esc(g.id)}')">📞 ${esc(gsNamen(g))}</button>`).join("")}</div>` : ""}
     <div class="onleiste">${ONL.liste.map((x) => x.klopfbar === false ? `<button title="Anklopfen ausgeschaltet – Nachricht schreiben" onclick="direkt('${x.person_id}')">🔕 ${esc(x.vorname)}</button>` : `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
 }
 // KC-CLUB-ONLINE-RUNDE (1.21.2): neue Nachricht, alle gerade Online sind schon angehakt (danach wie jeder Mehrpersonen-Chat)
@@ -5428,6 +5432,7 @@ async function zuletztZeigen(an) {
 function anklopfenZeigen() {
   const w = klopfStand();
   if ($("setAnklopfen")) $("setAnklopfen").checked = w.erlaubt !== false;
+  if ($("setGespraeche")) $("setGespraeche").checked = w.gespraeche !== false; // KC-CLUB-GESPRAECHE
   if ($("setKlopfAb")) $("setKlopfAb").value = ["spaeter", "sofort"].includes(w.ab) ? w.ab : "knopf"; // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG
   if ($("setKlopfTon")) $("setKlopfTon").innerHTML = KLOPF_TOENE.map((x) => `<option value="${x.id}"${x.id === w.ton ? " selected" : ""}>${esc(x.t)}</option>`).join("");
 }
@@ -5435,7 +5440,7 @@ const AB_MODUS_TEXT = { knopf: "📼 Anrufbeantworter: nur, wenn du ihn beim Ank
 async function anklopfenSetzen(teil) {
   const w = { ...klopfStand(), ...teil };
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), anklopfen: w };
-  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "ab" in teil ? AB_MODUS_TEXT[w.ab] || "📼 Gespeichert" : "🔔 Anklopfton gespeichert"); }
+  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("gespraeche" in teil ? (w.gespraeche ? "📞 Andere sehen, wenn du telefonierst" : "🙈 Deine Telefonate bleiben ohne Namen") : "erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "ab" in teil ? AB_MODUS_TEXT[w.ab] || "📼 Gespeichert" : "🔔 Anklopfton gespeichert"); }
   catch (e) { meldeFehler(e); }
   if ("ton" in teil) klopfTonSpielen(w.ton);
 }
@@ -6441,7 +6446,7 @@ async function anrufEingehend(id) {
       vf: !r.konferenz && VF.status === "laeuft" && !!r.gegenueber?.person_id && r.gegenueber.person_id === vfPartner() }; // KC-CLUB-VORFUEHREN-TON
     RUF.ms = !RUF.vf && !r.konferenz && !!r.gegenueber?.person_id && r.gegenueber.person_id === msPartner(); // KC-CLUB-FERNHILFE F4
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
-    if (klopfSprechenAnnehmen()) return; // 2.647.0 KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
+    if (klopfSprechenAnnehmen() || dazuAnnehmen()) return; // 2.647.0 / KC-CLUB-GESPRAECHE: Rückruf nach „aufgenommen“ KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     rufTaktWahl(true); rufLeisten(); // KC-CLUB-ANRUF-BESSER 3)
   } catch {}
@@ -16892,8 +16897,114 @@ function onlineNamenHtml() {
   const l = [...ONL.liste].sort((a, b) => String(a.vorname || "").localeCompare(String(b.vorname || ""), "de"));
   const namen = (kopie) => l.map((x) => `<span class="on-name"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="Chat mit ${esc(x.vorname || "Mitglied")}"`}
     onclick="event.stopPropagation();direkt('${esc(x.person_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();direkt('${esc(x.person_id)}')}">${esc(x.vorname || "?")}</span>`).join("");
-  if (l.length === 1) return `<span class="on-namen">${namen(false)}</span>`;
-  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, l.length * 3)}s"><span class="on-band">${namen(false)}${namen(true)}</span></span>`;
+  const gs = gsKopf(), alle = (kopie) => gs.map((g) => gsSchild(g, kopie)).join("") + namen(kopie); // KC-CLUB-GESPRAECHE: laufende Telefonate vorne
+  if (l.length + gs.length === 1) return `<span class="on-namen">${alle(false)}</span>`;
+  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, (l.length + gs.length * 2) * 3)}s"><span class="on-band">${alle(false)}${alle(true)}</span></span>`;
+}
+// ---------- KC-CLUB-GESPRAECHE (Stufe 1 Telefonate, Wunsch Hansi 30.10.2026 „sehen, wer gerade mit wem spricht – anklopfen – die anderen
+// nehmen mich ins Gespräch auf“; Vorschau „Club-Netz“ abgenommen): Der Online-Abgleich liefert laufende Telefonate (nur DASS, nie was;
+// Namen nur, wenn alle Beteiligten „Gespräche zeigen“ an haben – Standard an). Antippen → Fenster mit „Anklopfen – darf ich dazukommen?“.
+// Nimmt einer auf, holt seine App den Anklopfenden über die vorhandene Konferenz-Einladung dazu; die App des Anklopfenden nimmt von selbst an.
+const GSP = { netzOffen: false };
+let KD = null, KLOPF_DAZU = null, DAZU = null; // KD: mein Anklopfen; KLOPF_DAZU: erwarteter Anruf nach „aufgenommen“; DAZU: Frage an mich im Gespräch
+const gsKopf = () => (ONL.gs || []).filter((g) => !g.ichDrin);
+const gsNamen = (g) => g.teilnehmer.map((t) => t.vorname || t.name).join(g.teilnehmer.length === 2 ? " und " : ", ");
+const gsDauer = (sek) => sek < 90 ? "gerade eben" : sek < 3600 ? `seit ${Math.round(sek / 60)} Min.` : `seit ${Math.floor(sek / 3600)} Std. ${Math.round((sek % 3600) / 60)} Min.`;
+function gsSchild(g, kopie) {
+  const text = g.teilnehmer.length === 2 ? `${esc(g.teilnehmer[0].vorname)} 📞 ${esc(g.teilnehmer[1].vorname)}` : `👥📞 ${g.teilnehmer.map((t) => esc(t.vorname)).join(", ")}`;
+  return `<span class="on-name on-gs"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="${esc(gsNamen(g))} telefonieren – antippen"`}
+    onclick="event.stopPropagation();gsBlatt('${esc(g.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();gsBlatt('${esc(g.id)}')}">${text}</span>`;
+}
+function gsBlatt(id) {
+  const g = (ONL.gs || []).find((x) => x.id === id);
+  if (!g) return melde("Das Gespräch ist schon vorbei.");
+  const grund = g.ichDrin ? "Du bist selbst in diesem Gespräch." : g.voll ? "Die Runde ist voll – höchstens 4 Personen." : g.art === "video" ? "Bei Videoanrufen geht Dazukommen noch nicht." : !g.klopfbar ? "Die beiden haben Anklopfen ausgeschaltet – schreib einfach eine Nachricht." : "";
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">📞 ${esc(gsNamen(g))}</h3><p class="dlg-text">${g.teilnehmer.length > 2 ? "telefonieren zusammen" : "telefonieren"} · ${gsDauer(g.seitSek)}</p>
+    <div class="gs-reihe" aria-hidden="true">${gsReiheHtml(g)}</div>
+    ${grund ? `<p class="hinweis">${esc(grund)}</p>` : '<p class="hinweis">Die anderen bekommen einen leisen Klopfton und können dich ins Gespräch holen. Was gesprochen wird, siehst du vorher nicht.</p>'}
+    <div class="dlg-knoepfe">${grund ? "" : '<button class="knopf haupt" data-w="klopfen">👋 Anklopfen – darf ich dazukommen?</button>'}<button class="knopf" data-w="netz">🕸️ Club-Netz</button><button class="knopf" data-w="zu">Schließen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "klopfen") gsAnklopfen(g.id); else if (b.dataset.w === "netz") gsNetz(); }));
+}
+// Kreise mit grüner Linie und pulsierendem Hörer (zwei Personen) bzw. rund um einen Tisch (Konferenz)
+function gsReiheHtml(g) {
+  const k = (t) => `<span class="gs-person">${kreis({ ...(MITGLIEDER?.find((m) => m.person_id === t.person_id) || {}), person_id: t.person_id, online: true }, t.name || t.vorname, 52)}<small>${esc(t.vorname || t.name)}</small></span>`;
+  const mitte = `<span class="gs-hoerer${g.art === "video" ? " gs-video" : ""}"><i></i><i></i>${g.art === "video" ? "🎥" : "📞"}</span>`;
+  if (g.teilnehmer.length === 2) return `${k(g.teilnehmer[0])}<span class="gs-linie"></span>${mitte}<span class="gs-linie"></span>${k(g.teilnehmer[1])}`;
+  return `<span class="gs-tisch">${mitte}<span class="gs-runde">${g.teilnehmer.map(k).join("")}</span></span>`;
+}
+function gsNetz() {
+  const gs = ONL.gs || [], drin = new Set(gs.flatMap((g) => g.teilnehmer.map((t) => t.person_id))), sonst = (ONL.liste || []).filter((x) => !drin.has(x.person_id));
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🕸️ Club-Netz</h3><p class="dlg-text">${(ONL.liste || []).length} online · antippen, um anzuklopfen</p>
+    ${gs.map((g) => `<button class="gs-netz-zeile" data-g="${esc(g.id)}" aria-label="${esc(gsNamen(g))} telefonieren"><span class="gs-reihe">${gsReiheHtml(g)}</span><span class="hinweis">${esc(gsDauer(g.seitSek))}</span></button>`).join("")
+      || '<p class="hinweis">Gerade telefoniert niemand.</p>'}
+    ${ONL.gsAnonym ? `<p class="hinweis">📞 Außerdem ${ONL.gsAnonym === 1 ? "läuft 1 Telefonat" : `laufen ${ONL.gsAnonym} Telefonate`} (privat, ohne Namen).</p>` : ""}
+    ${sonst.length ? `<p class="hinweis" style="margin-bottom:4px"><b>Außerdem online</b></p><div class="onleiste">${sonst.map((x) => `<button data-p="${esc(x.person_id)}">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : ""}
+    <p class="hinweis" style="font-size:.8rem">Sichtbar ist nur, <b>dass</b> gesprochen wird – nie, was. Einstellen unter ⚙️ → Privatsphäre.</p>
+    <div class="dlg-knoepfe"><button class="knopf" data-w="zu">Schließen</button></div>`, () => { f.remove(); GSP.netzOffen = false; });
+  GSP.netzOffen = true;
+  f.querySelector("[data-w]").onclick = () => { f.remove(); GSP.netzOffen = false; };
+  f.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { f.remove(); GSP.netzOffen = false; gsBlatt(b.dataset.g); }));
+  f.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => { f.remove(); GSP.netzOffen = false; anklopfen(b.dataset.p); }));
+}
+// Anklopfen beim Gespräch: Warte-Anzeige mit Uhr wie beim normalen Anklopfen; Ergebnis kommt mit dem Online-Abgleich (dazuMeine)
+async function gsAnklopfen(id) {
+  if (RUF) return melde("Du telefonierst gerade selbst.", true);
+  try {
+    const r = await api("gespraech_anklopfen", { id });
+    KD = { anruf: r.anruf, namen: r.namen, bis: Date.now() + 180000, timer: null };
+    gsWartenZeichnen(); KD.timer = setInterval(gsWartenZeichnen, 1000);
+  } catch (e) { meldeFehler(e); }
+}
+function gsWartenZeichnen() {
+  if (!KD) return;
+  let el = document.getElementById("gsWarten");
+  if (!el) { el = document.createElement("div"); el.id = "gsWarten"; el.className = "gs-warten"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  const rest = Math.max(0, Math.round((KD.bis - Date.now()) / 1000));
+  el.innerHTML = rest ? `<b>👋 Klopfe an bei ${esc(KD.namen)} …</b><span class="gs-uhr">${Math.floor(rest / 60)}:${String(rest % 60).padStart(2, "0")}</span><button class="knopf klein" onclick="gsWartenAbbrechen()">Auflegen</button>`
+    : `<b>⏳ ${esc(KD.namen)} haben nicht geantwortet.</b><button class="knopf klein" onclick="gsWartenAbbrechen()">OK</button>`;
+}
+function gsWartenEnde() { if (KD?.timer) clearInterval(KD.timer); KD = null; document.getElementById("gsWarten")?.remove(); }
+function gsWartenAbbrechen() { const a = KD?.anruf; gsWartenEnde(); if (a) api("dazukommen_abbrechen", { anruf: a }).catch(() => {}); }
+// Stand meines Anklopfens aus dem Online-Abgleich
+function gsMeineStand(liste) {
+  if (!KD) return;
+  const x = (liste || []).find((y) => y.anruf === KD.anruf); if (!x || x.status === "offen") return;
+  const namen = KD.namen; gsWartenEnde();
+  if (x.status === "angenommen" && x.von) {
+    KLOPF_DAZU = { pid: x.von.person_id, bis: Date.now() + 90000 };
+    melde(`✅ ${x.von.vorname} nimmt dich auf – gleich bist du in der Runde 📞`); try { navigator.vibrate?.(60); } catch {}
+  } else melde(`⏳ Gerade nicht – ${namen} melden sich bei dir.`);
+}
+// Rückruf nach „aufgenommen“ → ohne Klingeln annehmen (wie KC-CLUB-ANKLOPFEN-ART beim Sprechen)
+function dazuAnnehmen() {
+  const w = KLOPF_DAZU;
+  if (!w || Date.now() > w.bis || RUF?.rolle !== "angerufen" || RUF.pc || RUF.art === "video" || RUF.gegen?.person_id !== w.pid) return false;
+  KLOPF_DAZU = null; anrufAnnehmen(false); return true;
+}
+// Im Gespräch: „Paul möchte dazukommen“ oben im Anrufbildschirm
+function dazuFrage(liste) {
+  const l = (liste || []).filter((x) => !ONL.erledigt.has("d" + x.id));
+  if (DAZU && !(liste || []).some((x) => x.id === DAZU.id)) { DAZU = null; dazuMalen(); }
+  if (!RUF || DAZU || !l.length) return;
+  DAZU = l[0]; ONL.erledigt.add("d" + DAZU.id); dazuMalen(); anklopfTon();
+}
+function dazuMalen() {
+  const el = $("anrufDazu"); if (!el) return;
+  if (!DAZU) { el.classList.add("versteckt"); el.innerHTML = ""; return; }
+  el.innerHTML = `<b>👋 ${esc(DAZU.von.vorname || DAZU.von.name)} klopft an – möchte dazukommen</b>
+    <div class="zk"><button class="ja" onclick="dazuAntwort(true)">✅ Aufnehmen</button><button class="nein" onclick="dazuAntwort(false)">Jetzt nicht</button></div>`;
+  el.classList.remove("versteckt");
+}
+async function dazuAntwort(ja) {
+  const d = DAZU; if (!d) return; DAZU = null; dazuMalen();
+  try {
+    const r = await api("dazukommen_antwort", { id: d.id, annehmen: !!ja });
+    if (!ja) return;
+    if (r.status !== "angenommen") return melde("Jemand anderes hat schon geantwortet.");
+    if (!RUF?.verbunden || RUF.art !== "ton" || RUF.strom?.getVideoTracks().length) return melde("Dazuholen geht nur während eines Telefonats mit Ton.", true);
+    if (konfDrin().size >= (RUF.konf?.max || 4)) return melde("Die Runde ist voll – höchstens 4 Personen.", true);
+    await konfEinladen(r.von.person_id);
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ONLINE-ZAHL (1.47.0): statt Text nur LED + Zahl – grün = jemand online, grau = niemand oder Stand unbekannt (dann „?“)
 function onlineZahlHtml() {

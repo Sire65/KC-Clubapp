@@ -41,6 +41,8 @@ jobs:
       - run: node tests/wunsch-abhaken.test.mjs
       # KICC-F-110 Spiegel-Zeitblöcke
       - run: node tests/spiegel-zeitbloecke.test.mjs
+      # KC-CLUB-GESPRAECHE (Stufe 1)
+      - run: node tests/gespraeche.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)

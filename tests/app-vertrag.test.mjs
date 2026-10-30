@@ -7405,7 +7405,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /setTimeout\(\(\) => \{ try \{ navigator\.vibrate\?\.\(KLOPF_VIBRATION\); \} catch \{\} \}, 700\); \/\/ erst der Ton, dann vibrieren/, "erst Ton, dann vibrieren");
   assert.match(programm, /klopfTonSpielen\(klopfStand\(\)\.ton\); klopfWiederholen\(k\.id\);/, "wiederholt, solange die Frage offen ist");
   assert.match(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8"), /\/\^👋\/\.test\(titel\) \? \[350, 150, 350, 150, 600\]/, "Push vibriert beim Anklopfen kräftig");
-  assert.match(programm, /if \(klopfSprechenAnnehmen\(\)\) return; \/\/ 2\.647\.0/, "Rückruf wird beim Anklopfer von selbst angenommen");
+  assert.match(programm, /if \(klopfSprechenAnnehmen\(\) \|\| dazuAnnehmen\(\)\) return; \/\/ 2\.647\.0/, "Rückruf wird beim Anklopfer von selbst angenommen (auch nach Dazukommen, KC-CLUB-GESPRAECHE)");
   assert.match(programm, /RUF\.art === "video" \|\| RUF\.konferenzId \|\| RUF\.gegen\?\.person_id !== w\.pid\) return false;/, "nur genau diese Person, nur Ton, nur 90 s");
   assert.match(server, /insert\(\{ von: ich\.person_id, an, \.\.\.\(art === "sprechen" \? \{ art \} : \{\}\) \}\)[^\n]*\n\s*if \(error && art === "sprechen"\)/, "Server: art speichern, ohne Spalte weiter");
   assert.match(server, /db\.from\("kc_club_anklopfen"\)\.select\("\*"\) \/\/ 2\.647\.0/, "online liest art mit, ohne Spaltenliste");
