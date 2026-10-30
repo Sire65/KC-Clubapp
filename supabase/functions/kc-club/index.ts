@@ -23,6 +23,7 @@ import { fraTeileStabil } from "./fra-teile.js"; // KICC-F-107 (18.10.2026): sta
 import { TURN, turnPlan, turnZeile, turnIce, turnAppBis, turnGrund } from "./turn-vorrat.js"; // KC-CLUB-ANRUF-TURN (2.563.0): Vorrat Umleitungs-Server
 // @ts-ignore: reine JS-Datei ohne Typen
 import { klopfVerpasst, klopfVerpasstOhneKontakt, klopfPushStand } from "./anklopfen-verpasst.js"; // KC-CLUB-ANKLOPFEN-VERPASST (2.567.0)
+import { GS, gespraecheBilden, gespraecheSichtbar, dazuEmpfaenger, dazuStand } from "./gespraeche.js"; // KC-CLUB-GESPRAECHE (Stufe 1 Telefonate)
 // @ts-ignore: reine JS-Datei ohne Typen
 import { AB, abSekOk, abStand, abAnlageOk } from "./anrufbeantworter.js"; // KC-CLUB-ANRUFBEANTWORTER (2.568.0)
 // @ts-ignore: reine JS-Datei ohne Typen
@@ -32,7 +33,7 @@ import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherhei
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
-import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.760.0), -ARTEN (2.761.0)
+import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.762.0), -ARTEN (2.762.0)
 import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.730.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
@@ -1196,11 +1197,22 @@ async function onlineJetztMitAlt(weitere: string[], seit: string): Promise<{ on:
   return { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id))), einst };
 }
 // Anklopfen an mich (offen, ANKLOPFEN_SEK, neueste 3) und von mir (10 Min.) aus einer gemeinsamen Abfrage – wie vorher die zwei Abfragen
+const klopfArt = (a: unknown) => (a === "sprechen" || a === "dazukommen" ? a : "schreiben"); // KC-CLUB-GESPRAECHE: + dazukommen
+// KC-CLUB-GESPRAECHE: laufende Telefonate (angenommene Beine der letzten GS.alterMs) – je Server-Instanz GS.cacheMs gemerkt, damit der
+// Online-Abgleich höchstens alle 15 s eine Abfrage mehr macht (KC-DB-SPARSAM). Fehler → keine Gespräche (nie geraten).
+let GS_CACHE: { zeit: number; d: any[] } = { zeit: 0, d: [] };
+async function laufendeGespraeche(): Promise<any[]> {
+  if (Date.now() - GS_CACHE.zeit < GS.cacheMs) return GS_CACHE.d;
+  const { data, error } = await db.from("kc_club_anruf").select("id,von,an,art,konferenz_id,automatisch,angenommen_am").eq("status", "angenommen")
+    .gte("angenommen_am", new Date(Date.now() - GS.alterMs).toISOString()).limit(60);
+  GS_CACHE = { zeit: Date.now(), d: error ? [] : gespraecheBilden(data ?? []) };
+  return GS_CACHE.d;
+}
 function onlineAnklopfenTeilen(rows: any[], ich: string, seit: string, seit10: string) {
   const neu = [...rows].sort((a, b) => String(b.erstellt_am).localeCompare(String(a.erstellt_am)));
   return {
-    anMich: neu.filter((x) => x.an === ich && x.status === "offen" && Date.parse(x.erstellt_am) >= Date.parse(seit)).slice(0, 3).map((x) => ({ id: x.id, von: x.von, erstellt_am: x.erstellt_am, art: x.art === "sprechen" ? "sprechen" : "schreiben" })),
-    vonMir: neu.filter((x) => x.von === ich && Date.parse(x.erstellt_am) >= Date.parse(seit10)).map((x) => ({ id: x.id, an: x.an, status: x.status, thread_id: x.thread_id, beantwortet_am: x.beantwortet_am, antwort: x.antwort, art: x.art === "sprechen" ? "sprechen" : "schreiben" })),
+    anMich: neu.filter((x) => x.an === ich && x.status === "offen" && Date.parse(x.erstellt_am) >= Date.parse(seit)).slice(0, 3).map((x) => ({ id: x.id, von: x.von, erstellt_am: x.erstellt_am, art: klopfArt(x.art), anruf_id: x.anruf_id ?? null })),
+    vonMir: neu.filter((x) => x.von === ich && Date.parse(x.erstellt_am) >= Date.parse(seit10)).map((x) => ({ id: x.id, an: x.an, status: x.status, thread_id: x.thread_id, beantwortet_am: x.beantwortet_am, antwort: x.antwort, art: klopfArt(x.art), anruf_id: x.anruf_id ?? null })),
   };
 }
 // Anrufe an mich der letzten 24 h → klingelt gerade (ANRUF_KLINGEL_SEK, neuester) und verpasst (nicht angenommen, Hinweis nicht gesehen, neueste 5)
@@ -1962,7 +1974,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .slice(0, 200).map(([id, b]) => [id, b === "immer" ? "immer" : new Date(String(b)).toISOString()])) }),
   // KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0): darf man bei mir anklopfen (Standard: ja) + welcher Anklopfton (Registry in der App)
   // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG: ab = knopf (nur auf Knopfdruck, Standard) · spaeter (nach 1 Min. ohne Antwort) · sofort (gleich, ohne zu stören)
-  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf", ab: ["spaeter", "sofort"].includes(w?.ab) ? w.ab : "knopf" }),
+  anklopfen: (w) => ({ erlaubt: w?.erlaubt !== false, ton: typeof w?.ton === "string" && /^[a-z]{1,15}$/.test(w.ton) ? w.ton : "klopf", ab: ["spaeter", "sofort"].includes(w?.ab) ? w.ab : "knopf",
+    gespraeche: w?.gespraeche !== false }), // KC-CLUB-GESPRAECHE: „Andere dürfen sehen, wenn ich telefoniere“ (Standard an, Wahl Hansi)
   // KC-CLUB-SCHNELLSTART (1.8.0): große Kachel mit Symbolen (nur erweiterte Ansicht) – an/aus und eigene Auswahl (höchstens 8,
   // Reihenfolge = Auswahl; null = Grundeinstellung der App)
   schnellstart: (w) => ({ an: w?.an !== false,
@@ -4865,7 +4878,7 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   avatar_premium: { t: "👑 Hochwertige Avatare", u: "36 neue Koch-Figuren mit Licht und Schatten, Schmuck, Piercings – im Baukasten anpassbar", standard: "admin" }, // 2.414.0 KC-CLUB-AVATAR-PREMIUM
   dienst_stempel: { t: "🟢 Dienst anmelden/abmelden", u: "Kommen und Gehen in der App, mit Vorschlag aus dem Dienstplan", standard: "admin" }, // 2.590.0 KC-CLUB-DIENST-STEMPEL (erst Hansi testet)
   dienst_tausch: { t: "🔁 Dienst-Tausch-Börse", u: "Dienst anbieten, ein anderes Mitglied übernimmt, der Planer bestätigt", standard: "admin" }, // 2.606.0 KC-CLUB-DIENST-TAUSCH (erst Hansi testet)
-  runder_tisch: { t: "🪑 Runder Tisch", u: "Zu einem Thema einladen, Platz nehmen, gemeinsam schreiben und zeigen (höchstens 18)", standard: "admin" }, // 2.760.0 KC-CLUB-RUNDER-TISCH (erst Hansi testet)
+  runder_tisch: { t: "🪑 Runder Tisch", u: "Zu einem Thema einladen, Platz nehmen, gemeinsam schreiben und zeigen (höchstens 18)", standard: "admin" }, // 2.762.0 KC-CLUB-RUNDER-TISCH (erst Hansi testet)
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
 async function freigaben(): Promise<Record<string, "alle" | "admin">> {
@@ -4939,7 +4952,7 @@ async function dtSenden(ids: string[], probe: boolean, vars: { titel: string; ku
   if (!ziel.length) return null;
   return await senden("club_dienst", ziel, { ...vars, betreff: vars.titel.replace(/^\S+ /, ""), text: `${vars.kurz}\n\n${APP_URL}#diensttausch`, url: `${APP_URL}#diensttausch` }, `club-dienst-tausch:${schl}`).catch(() => null);
 }
-// ---------- 2.760.0 KC-CLUB-RUNDER-TISCH (Stufe RT1, Spezifikation docs/RUNDER_TISCH.md, Wunsch Hansi 30.10.2026) ----------
+// ---------- 2.762.0 KC-CLUB-RUNDER-TISCH (Stufe RT1, Spezifikation docs/RUNDER_TISCH.md, Wunsch Hansi 30.10.2026) ----------
 // Jedes Mitglied lädt zu Thema und Uhrzeit ein, jedes Mitglied darf zusagen und ab 15 Min. vor Beginn Platz nehmen (höchstens 18).
 // Der Tisch-Chat ist eine normale Unterhaltung (Text, Sprachnachricht, Foto, PDF wie im Clubchat). „Am Tisch“ = Herzschlag der App alle 60 s
 // (kc_club_tisch_beitreten, Platzgrenze unter Sperre); kein Abfragen im Sekundentakt (KC-DB-SPARSAM). Regeln: runder-tisch.js.
@@ -4988,7 +5001,7 @@ async function rtLage(ich: Ich, nurId?: string) {
       amTisch: ph === "offen" || ph === "gleich" ? z.filter((r: any) => rtSitzt(r, t)).sort((a: any, b: any) => Date.parse(a.dabei_seit) - Date.parse(b.dabei_seit))
         .map((r: any) => ({ id: r.person_id, name: nm(r.person_id), sicher: rtSicher(r, t) })) : [],
       warenDa: x.teilnehmer_anzahl ?? z.filter((r: any) => r.dabei_seit).length,
-      bestaetigung: ph === "vorbei" ? rtBestaetigungAus(rtBestaetigung(mein, x)) : null }; // 2.761.0: Seminar – Teilnahmebestätigung, wenn ich lange genug dabei war
+      bestaetigung: ph === "vorbei" ? rtBestaetigungAus(rtBestaetigung(mein, x)) : null }; // 2.762.0: Seminar – Teilnahmebestätigung, wenn ich lange genug dabei war
   });
   return { aktiv: true, ...(nurId ? { nur: nurId } : { gruppen: [...gr.values()].sort((a, b) => a.name.localeCompare(b.name, "de")) }), jetzt: new Date(t).toISOString(), regeln: { plaetzeMin: RT.plaetzeMin, plaetzeMax: RT.plaetzeMax, dauern: RT.dauern, vorlaufMin: RT.vorlaufMin, herzSek: RT.herzSek,
     vorausTage: RT.vorausTage, themaMax: RT.themaMax, beschreibungMax: RT.beschreibungMax, medienTage: RT.medienTage, textTage: RT.textTage, toMax: RT.toMax, toPunktMax: RT.toPunktMax,
@@ -5056,7 +5069,7 @@ async function tischWartung(stuendlich: boolean) {
         if (de) { console.error("tisch chat loeschen", de.message); continue; } // nicht als aufgeräumt markieren – nächste Stunde neu
       }
       await db.from("kc_club_tisch").update({ text_geloescht_am: jetzt(), thread_id: null, teilnehmer_anzahl: count ?? 0 }).eq("id", x.id);
-      // 2.761.0: beim Seminar bleiben die Anwesenden (Teilnahmebestätigung in „Meine Schulung“) – nur Zeit und Person, keine Inhalte
+      // 2.762.0: beim Seminar bleiben die Anwesenden (Teilnahmebestätigung in „Meine Schulung“) – nur Zeit und Person, keine Inhalte
       if (rtArt(x).bestaetigung) await db.from("kc_club_tisch_teilnahme").delete().eq("tisch_id", x.id).is("dabei_seit", null);
       else await db.from("kc_club_tisch_teilnahme").delete().eq("tisch_id", x.id);
       await protokoll(null, "tisch_beendet", { tisch: x.id, thema: x.thema, beginn: x.beginn, gastgeber: x.gastgeber, teilnehmer: count ?? 0 }); // Kurzprotokoll
@@ -8558,7 +8571,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (stuendlich) await gebGrussLauf().catch((e) => console.error("geburtstag gruss lauf", String(e))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: 0 Uhr (00:04) senden, ab 9 Uhr erinnern
       await sonderstundenWartung().catch((e) => console.error("sonderstunden wartung", String(e))); // KICC-F-100 (2.419.0)
       if (stuendlich) await zeitumstellungMelden().catch((e) => console.error("zeitumstellung", String(e))); // 2.442.0 KC-CLUB-ZEITUMSTELLUNG
-      await tischWartung(stuendlich).catch((e) => console.error("runder tisch", String(e))); // 2.760.0 KC-CLUB-RUNDER-TISCH: Erinnerung (alle 15 Min.), Aufräumen (stündlich)
+      await tischWartung(stuendlich).catch((e) => console.error("runder tisch", String(e))); // 2.762.0 KC-CLUB-RUNDER-TISCH: Erinnerung (alle 15 Min.), Aufräumen (stündlich)
       if (stuendlich) await db.from("kc_club_chat_quittung").delete().lt("am", new Date(Date.now() - 400 * 86400000).toISOString()).then(() => {}, () => {}); // 2.447.0: nach 400 Tagen weg
       if (stuendlich) await db.from("kc_club_fremdzugriff").delete().lt("zeit", new Date(Date.now() - FZ.aufbewahrenTage * 86400000).toISOString()).then(() => {}, () => {}); // 2.579.0 KC-CLUB-FREMDZUGRIFF: 90 Tage
       await ekDienstwunschMelden().catch((e) => console.error("eingang dienstwunsch", String(e))); /* KC-CLUB-EINGANGSKORB (2.23.6) */ /* KC-CLUB-AENDERUNG-FREIGABE (2.22.19) */ // KC-CLUB-STADT-TERMINE (2.22.6): wöchentlich, nur wenn eingeschaltet
@@ -9225,7 +9238,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // 2.432.0 KC-CLUB-EINGANGSKORB: Dokumente, die andere in meinen Ordner gelegt haben und die noch auf mich warten
         const pAb = abStandHolen(ich.person_id).catch(() => null); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER
         const pDs = dsDarf(ich).then((ok) => (ok ? dsLage(ich) : null)).catch(() => null); // 2.590.0 KC-CLUB-DIENST-STEMPEL (nur wenn freigegeben)
-        const pTisch = rtDarf(ich).then((ok) => (ok ? rtKurz(ich) : null)).catch(() => null); // 2.760.0 KC-CLUB-RUNDER-TISCH (nur wenn freigegeben)
+        const pTisch = rtDarf(ich).then((ok) => (ok ? rtKurz(ich) : null)).catch(() => null); // 2.762.0 KC-CLUB-RUNDER-TISCH (nur wenn freigegeben)
         const pEingang = (async () => {
           if (ich.zugang !== "mitglied") return 0;
           const pk = await pPaket; if (pk) return pk.eingang ?? 0; // 2.576.0 KC-CLUB-START-PAKET
@@ -9380,7 +9393,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.760.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -12110,7 +12123,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       // Admin: wer ist heute im Dienst (Plan + Buchungen), nachtragen für andere, Dienst-Orte
       // ----- 2.606.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse (anbieten → übernehmen → Planer bestätigt) -----
-      // ---------- 2.760.0 KC-CLUB-RUNDER-TISCH (Stufe RT1) ----------
+      // ---------- 2.762.0 KC-CLUB-RUNDER-TISCH (Stufe RT1) ----------
       case "tisch_liste": {
         if (!(await rtDarf(ich))) return json({ aktiv: false });
         return json(await rtLage(ich));
@@ -12150,7 +12163,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (f) throw new Fehler(f, 409);
         const { error } = await db.from("kc_club_tisch_teilnahme").upsert({ tisch_id: x.id, person_id: ich.person_id, zusage, zusage_am: jetzt() }, { onConflict: "tisch_id,person_id" });
         if (error) throw new Fehler("Die Zusage konnte nicht gespeichert werden.", 503);
-        // 2.761.0: zwei melden sich gleichzeitig für den letzten Platz an → nachzählen; wer zu viel ist, wird zurückgenommen (nie überbucht)
+        // 2.762.0: zwei melden sich gleichzeitig für den letzten Platz an → nachzählen; wer zu viel ist, wird zurückgenommen (nie überbucht)
         if (sem && zusage === "ja" && rtZusagePruefen(x, "ja", (await angemeldet()).filter((id) => id !== ich.person_id), ich.person_id, Date.now())) {
           await db.from("kc_club_tisch_teilnahme").update({ zusage: null }).eq("tisch_id", x.id).eq("person_id", ich.person_id);
           throw new Fehler("Das Seminar ist gerade ausgebucht.", 409);
@@ -12158,7 +12171,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "tisch_zusage", { tisch: x.id, zusage });
         return json({ ok: true, lage: await rtLage(ich) });
       }
-      case "tisch_seminare_meine": { // 2.761.0: besuchte Seminare mit Teilnahmebestätigung („Meine Schulung“) – auch nach dem Aufräumen
+      case "tisch_seminare_meine": { // 2.762.0: besuchte Seminare mit Teilnahmebestätigung („Meine Schulung“) – auch nach dem Aufräumen
         if (!(await rtDarf(ich))) return json({ aktiv: false, seminare: [] });
         const { data: z } = await db.from("kc_club_tisch_teilnahme").select("tisch_id,dabei_seit,zuletzt_da").eq("person_id", ich.person_id).not("dabei_seit", "is", null).limit(300);
         const ids = (z ?? []).map((r: any) => r.tisch_id);
@@ -14366,7 +14379,10 @@ Köcheclub-App`,
           zeigen ? onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : Promise.resolve({ on: new Set<string>(), einst: new Map<string, Map<string, any>>() }),
           liveTerminKurz().catch(() => null), // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
         ]);
-        const { anMich, vonMir } = onlineAnklopfenTeilen(klopf ?? [], ich.person_id, seit, seit10);
+        const { anMich: anMich0, vonMir: vonMir0 } = onlineAnklopfenTeilen(klopf ?? [], ich.person_id, seit, seit10);
+        // KC-CLUB-GESPRAECHE: „dazukommen“ läuft getrennt vom normalen Anklopfen (eigene Frage im Anrufbildschirm, eigener Wartestand)
+        const anMich = anMich0.filter((x: any) => x.art !== "dazukommen"), dazuAnMich = anMich0.filter((x: any) => x.art === "dazukommen");
+        const vonMir = vonMir0.filter((x: any) => x.art !== "dazukommen"), dazuVonMir = vonMir0.filter((x: any) => x.art === "dazukommen");
         const vfW: any = (mein.get("vorfuehren") as any)?.wert, vf = vfW?.status === "angefragt" && Date.now() - new Date(vfW.seit).getTime() < 3 * 60000 ? vfW : null; // KC-CLUB-VORFUEHREN
         // KC-CLUB-SCHNAPPSCHUSS (2.102.0): offene Bitte des Admins um EIN Bild der Club-App – das Mitglied entscheidet selbst
         const ssW: any = (mein.get("schnappschuss") as any)?.wert, ss = ssW?.status === "angefragt" && Date.now() - new Date(ssW.seit).getTime() < SS_FRIST_MS ? ssW : null;
@@ -14380,7 +14396,7 @@ Köcheclub-App`,
         }
         // 2.567.0 KC-CLUB-ANKLOPFEN-VERPASST (Wunsch Hansi nach Fall Dieter): verpasstes Anklopfen (24 h, je Person das neueste) einmal zeigen –
         // nicht, wenn wir danach telefoniert oder im Zweiergespräch geschrieben haben. Zusatzabfragen nur, wenn es überhaupt eins gibt.
-        let kVerp: any[] = klopfVerpasst(klopf ?? [], ich.person_id, t, ANKLOPFEN_SEK, (mein.get("klopf_verpasst") as any)?.wert?.bis);
+        let kVerp: any[] = klopfVerpasst((klopf ?? []).filter((x: any) => x.art !== "dazukommen"), ich.person_id, t, ANKLOPFEN_SEK, (mein.get("klopf_verpasst") as any)?.wert?.bis);
         if (kVerp.length) {
           const ab = kVerp[kVerp.length - 1].zeit, wer2 = kVerp.map((v) => v.von);
           const [{ data: rufeSp }, { data: nachr }] = await Promise.all([
@@ -14401,13 +14417,15 @@ Köcheclub-App`,
             .in("idempotency_key", wartend.map((x: any) => `club-anklopfen:${x.id}`)).limit(10);
           for (const r of req ?? []) pushStand.set(String(r.idempotency_key).slice(15), klopfPushStand(r));
         }
+        const gsAlle = await laufendeGespraeche().catch(() => []); // KC-CLUB-GESPRAECHE (vor dem Entfernen von mir: mein eigenes Gespräch zählt mit)
+        const gs = gespraecheSichtbar(gsAlle, new Set([...on, ...(zeigen ? [ich.person_id] : [])]), einst.get("anklopfen") ?? new Map(), ich.person_id, Date.now());
         on.delete(ich.person_id);
         const klopfbar = new Map([...on].map((id) => [id, einst.get("anklopfen")?.get(id)?.erlaubt !== false || einst.get("anklopfen")?.get(id)?.ab === "sofort"])); // wie anklopfenErlaubtMap; 2.568.0: Anrufbeantworter „sofort“ nimmt auch dann auf
         // 2.319.0 KC-CLUB-ONLINE-ANSAGE-NACHHOLEN (Fund Hansi „Christina online, keine Ansage“): seit wann jemand ohne Pause online ist (Sekunden,
         // vom Server gerechnet – keine Uhrenabweichung) – die App sagt beim Zurückkommen an, wer in den letzten 3 Min. dazugekommen ist
         const seitMap = new Map<string, number>();
         for (const id of on) { const ts = Date.parse(einst.get("online_seit")?.get(id)?.seit || ""); if (ts > 0) seitMap.set(id, Math.max(0, Math.round((Date.now() - ts) / 1000))); }
-        const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : []), ...kVerp.map((x: any) => x.von)]);
+        const leute = await personen([...on, ...(ss ? [ss.von] : []), ...(anMich ?? []).map((x: any) => x.von), ...(vonMir ?? []).map((x: any) => x.an), ...(rufe ?? []).map((x: any) => x.von), ...verp.map((x: any) => x.von), ...(spAn ?? []).map((x: any) => x.von), ...(vf ? [vf.von] : []), ...kVerp.map((x: any) => x.von), ...gs.liste.flatMap((g: any) => g.teilnehmer), ...dazuAnMich.map((x: any) => x.von), ...dazuVonMir.map((x: any) => x.an)]);
         const wer = (id: string) => ({ person_id: id, name: leute.get(id)?.display_name || id, vorname: vorname(leute.get(id) ?? null) || id });
         // 2.477.0 KC-CLUB-ONLINE-GERAET: nur für den Admin – mit welchem Gerät (neuester Eintrag der letzten 3 Min.) jemand online ist
         const geraetMap = new Map<string, string>();
@@ -14418,6 +14436,13 @@ Köcheclub-App`,
           antworten: (vonMir ?? []).map((x: any) => ({ id: x.id, an: wer(x.an), status: x.status, thread: x.thread_id, antwort: x.antwort ?? null, art: x.art, ...(pushStand.has(x.id) ? { push: pushStand.get(x.id) } : {}) })),
           ...(kVerp.length ? { klopfVerpasst: kVerp.map((x: any) => ({ id: x.id, von: wer(x.von), zeit: x.zeit })) } : {}),
           anrufe: (rufe ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), art: x.art, zeit: x.erstellt_am })),
+          // KC-CLUB-GESPRAECHE (Stufe 1): laufende Telefonate (nur DASS, nie was), Anklopfen „dazukommen“ an mich und der Stand meines Anklopfens
+          gespraeche: gs.liste.map((g: any) => ({ id: g.id, art: g.art, teilnehmer: g.teilnehmer.map(wer), seitSek: g.seitSek, klopfbar: g.klopfbar, voll: g.voll, ichDrin: g.ichDrin })),
+          ...(gs.anonym ? { gespraecheAnonym: gs.anonym } : {}),
+          ...(dazuAnMich.length ? { dazukommen: dazuAnMich.map((x: any) => ({ id: x.id, von: wer(x.von), anruf: x.anruf_id, zeit: x.erstellt_am })) } : {}),
+          ...(dazuVonMir.length ? { dazuMeine: [...new Set(dazuVonMir.map((x: any) => x.anruf_id))].map((a) => {
+            const z = dazuVonMir.filter((x: any) => x.anruf_id === a), st = dazuStand(z);
+            return { anruf: a, status: st.status, ...(st.von ? { von: wer(st.von) } : {}), zeit: z.map((x: any) => x.erstellt_am).sort()[0] }; }) } : {}),
           spielAnfragen: (spAn ?? []).map((x: any) => ({ id: x.id, von: wer(x.von), spiel: x.spiel, groesse: x.groesse, uhrMin: x.uhr?.min ?? null, zeit: x.erstellt_am })),
           ...(vf ? { vorfuehren: { id: vf.id, von: wer(vf.von) } } : {}), ...(ss ? { schnappschuss: { id: ss.id, von: wer(ss.von), live: !!ss.live } } : {}) });
       }
@@ -14659,6 +14684,56 @@ Köcheclub-App`,
         // 2.567.0 KC-CLUB-ANKLOPFEN-VERPASST: nach dem Auflegen sagen, ob die Mitteilung angekommen ist (angezeigt/geöffnet/nur verschickt)
         const { data: req } = await db.from("kc_communication_requests").select("status,kc_communication_delivery_events(event_type,created_at)").eq("idempotency_key", `club-anklopfen:${k.id}`).limit(1);
         return json({ ok: true, push: klopfPushStand(req?.[0]) });
+      }
+
+      // ----- KC-CLUB-GESPRAECHE (Stufe 1 Telefonate, Wunsch Hansi 30.10.2026): bei einem laufenden Telefonat anklopfen und dazukommen -----
+      // Je Beteiligtem eine Anklopf-Zeile art „dazukommen“ (anruf_id = Bein, an dem man anklopft). Nimmt einer auf, holt seine App den
+      // Anklopfenden über die vorhandene Konferenz-Einladung dazu (anruf_start mit konferenz_mit) – die App des Anklopfenden nimmt von selbst an.
+      case "gespraech_anklopfen": {
+        const { data: a } = await db.from("kc_club_anruf").select("id,von,an,art,status,konferenz_id").eq("id", String(p.id || "")).maybeSingle();
+        if (!a || a.status !== "angenommen") throw new Fehler("Das Gespräch ist schon vorbei.", 409);
+        const teil = a.konferenz_id ? (await konferenzBeine(a.konferenz_id)).teilnehmer : new Set<string>([a.von, a.an]);
+        teil.add(a.von); teil.add(a.an);
+        if (teil.has(ich.person_id)) throw new Fehler("Du bist schon in diesem Gespräch.", 409);
+        if (a.art === "video") throw new Fehler("Bei Videoanrufen geht Dazukommen noch nicht – nur bei Telefonaten.", 409);
+        if (teil.size >= KONFERENZ_MAX) throw new Fehler(`Die Runde ist voll – höchstens ${KONFERENZ_MAX} Personen.`, 409);
+        const ids = [...teil];
+        const { data: es } = await db.from("kc_club_person_einstellung").select("person_id,schluessel,wert").in("person_id", ids).in("schluessel", ["anklopfen", "inkognito", "online"]);
+        const ein = (k: string) => new Map((es ?? []).filter((x: any) => x.schluessel === k).map((x: any) => [x.person_id, x.wert]));
+        const kE = ein("anklopfen"), inko = ein("inkognito"), onl = ein("online");
+        if (ids.some((id) => kE.get(id)?.gespraeche === false || inko.get(id)?.an === true || onl.get(id)?.zeigen === false)) throw new Fehler("Dieses Gespräch ist privat.", 403);
+        const empf = dazuEmpfaenger(ids, kE, ich.person_id);
+        const leute = await personen(ids), namen = ids.map((id) => vorname(leute.get(id) ?? null) || "?").join(" und ");
+        if (!empf.length) throw new Fehler(`${namen} haben Anklopfen ausgeschaltet – schreib einfach eine Nachricht.`, 409);
+        // Bremse: ein offenes Dazukommen je Gespräch reicht
+        const { data: offen } = await db.from("kc_club_anklopfen").select("id").eq("von", ich.person_id).eq("anruf_id", a.id).eq("status", "offen")
+          .gte("erstellt_am", new Date(Date.now() - ANKLOPFEN_SEK * 1000).toISOString()).limit(1);
+        if (offen?.length) return json({ ok: true, anruf: a.id, namen, schon: true });
+        const { error } = await db.from("kc_club_anklopfen").insert(empf.map((an) => ({ von: ich.person_id, an, art: "dazukommen", anruf_id: a.id })));
+        if (error) throw new Fehler("Dazukommen geht gerade nicht – bitte später nochmal.", 503);
+        await protokoll(ich.person_id, "gespraech_angeklopft", { anruf: a.id, an: empf });
+        return json({ ok: true, anruf: a.id, namen });
+      }
+      // Beteiligter antwortet: aufnehmen (die anderen Fragen zum selben Anklopfen schließen sich) oder „jetzt nicht“ (nur die eigene Frage)
+      case "dazukommen_antwort": {
+        const { data: k } = await db.from("kc_club_anklopfen").select("id,von,an,status,art,anruf_id").eq("id", String(p.id || "")).eq("an", ich.person_id).maybeSingle();
+        if (!k || k.art !== "dazukommen") throw new Fehler("Anklopfen nicht gefunden.", 404);
+        if (k.status !== "offen") return json({ ok: true, status: k.status });
+        if (!p.annehmen) {
+          await db.from("kc_club_anklopfen").update({ status: "spaeter", beantwortet_am: jetzt() }).eq("id", k.id).eq("status", "offen");
+          return json({ ok: true, status: "spaeter" });
+        }
+        const { data: upd } = await db.from("kc_club_anklopfen").update({ status: "angenommen", beantwortet_am: jetzt() }).eq("id", k.id).eq("status", "offen").select("id");
+        if (!upd?.length) return json({ ok: true, status: "vorbei" });
+        await db.from("kc_club_anklopfen").update({ status: "abgebrochen", beantwortet_am: jetzt() }).eq("von", k.von).eq("anruf_id", k.anruf_id).eq("status", "offen");
+        const leute = await personen([k.von]);
+        await protokoll(ich.person_id, "dazukommen_aufgenommen", { von: k.von, anruf: k.anruf_id });
+        return json({ ok: true, status: "angenommen", von: { person_id: k.von, name: leute.get(k.von)?.display_name || k.von, vorname: vorname(leute.get(k.von) ?? null) || k.von } });
+      }
+      // Anklopfender legt auf → alle offenen Fragen zu diesem Gespräch verschwinden
+      case "dazukommen_abbrechen": {
+        await db.from("kc_club_anklopfen").update({ status: "abgebrochen", beantwortet_am: jetzt() }).eq("von", ich.person_id).eq("anruf_id", String(p.anruf || "")).eq("status", "offen");
+        return json({ ok: true });
       }
 
       // 2.567.0 KC-CLUB-ANKLOPFEN-VERPASST: Hinweis gesehen → bis zu diesem Anklopfen nicht mehr zeigen (eine Zeile, ohne neue Tabelle)

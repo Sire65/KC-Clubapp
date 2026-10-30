@@ -1,4 +1,4 @@
-// KC-CLUB-RUNDER-TISCH (2.760.0, Stufe RT1): Regeln des Runden Tisches.
+// KC-CLUB-RUNDER-TISCH (2.762.0, Stufe RT1): Regeln des Runden Tisches.
 // Aufruf: node tests/runder-tisch.test.mjs (offline)
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -72,7 +72,7 @@ assert.deepEqual(rtAufraeumen(tisch, B), { medien: false, text: false }, "laufen
 assert.equal(rtText(tisch), "Do 05.11. 20:00 Uhr · 60 Min.");
 
 // Migration: Tabellen mit Rechten, Platzgrenze unter Sperre, Funktion nur für den Club-Server
-const sql = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2760_runder_tisch.sql", import.meta.url), "utf8");
+const sql = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2762_runder_tisch.sql", import.meta.url), "utf8");
 assert.match(sql, /plaetze integer not null[^,]*check \(plaetze between 4 and 18\)/);
 assert.match(sql, /for update/, "Platzgrenze unter Zeilensperre");
 assert.match(sql, /revoke all on function public\.kc_club_tisch_beitreten\([^)]*\) from public, anon, authenticated;/);
@@ -91,7 +91,7 @@ for (const a of ["tisch_liste", "tisch_anlegen", "tisch_zusage", "tisch_platz", 
 assert.match(app, /const RT_HERZ_TISCH_MS = 60000;/, "Herzschlag alle 60 s (KC-DB-SPARSAM)");
 assert.match(server, /tischWartung\(stuendlich\)/, "Erinnerung und Aufräumen in der Wartung");
 
-// 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN (RT1b): drei Arten, Seminar mit Anmeldung und Teilnahmebestätigung, Besprechung mit Tagesordnung
+// 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN (RT1b): drei Arten, Seminar mit Anmeldung und Teilnahmebestätigung, Besprechung mit Tagesordnung
 assert.deepEqual(Object.keys(RT_ARTEN), ["runder_tisch", "seminar", "besprechung"]);
 assert.equal(rtArt({}).t, "Runder Tisch", "alte Tische ohne Art = Runder Tisch");
 assert.match(rtAnlegenPruefen({ ...e, art: "konferenz" }, B - T, 0), /Art/);
@@ -120,7 +120,7 @@ assert.equal(rtAnwesend(da(70, 80), sem), null, "nach dem Ende zählt nicht");
 // App und Server: dieselben Arten; Migration nur additiv, Seminar nur mit Anmeldung
 const appArten = new Function(app.slice(app.indexOf("const RUND_ARTEN = {"), app.indexOf("const RUND_ART_TEXT")) + "\nreturn RUND_ARTEN;")();
 assert.deepEqual(appArten, RT_ARTEN, "RUND_ARTEN (App) = RT_ARTEN (Server)");
-const sql2 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2761_tisch_arten.sql", import.meta.url), "utf8");
+const sql2 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2762_tisch_arten.sql", import.meta.url), "utf8");
 assert.ok(!/drop\s+table|drop\s+column/i.test(sql2.replace(/--[^\n]*/g, "")), "nur additiv");
 assert.match(sql2, /if v_t\.art = 'seminar' and p_person <> v_t\.gastgeber and \(not found or coalesce\(v_z\.zusage, ''\) <> 'ja'\) then return 'anmeldung'; end if;/);
 assert.match(server, /if \(rtArt\(x\)\.bestaetigung\) await db\.from\("kc_club_tisch_teilnahme"\)\.delete\(\)\.eq\("tisch_id", x\.id\)\.is\("dabei_seit", null\);/, "Seminar: Anwesende bleiben für die Bestätigung");

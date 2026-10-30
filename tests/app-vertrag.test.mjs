@@ -7405,7 +7405,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /setTimeout\(\(\) => \{ try \{ navigator\.vibrate\?\.\(KLOPF_VIBRATION\); \} catch \{\} \}, 700\); \/\/ erst der Ton, dann vibrieren/, "erst Ton, dann vibrieren");
   assert.match(programm, /klopfTonSpielen\(klopfStand\(\)\.ton\); klopfWiederholen\(k\.id\);/, "wiederholt, solange die Frage offen ist");
   assert.match(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8"), /\/\^👋\/\.test\(titel\) \? \[350, 150, 350, 150, 600\]/, "Push vibriert beim Anklopfen kräftig");
-  assert.match(programm, /if \(klopfSprechenAnnehmen\(\)\) return; \/\/ 2\.647\.0/, "Rückruf wird beim Anklopfer von selbst angenommen");
+  assert.match(programm, /if \(klopfSprechenAnnehmen\(\) \|\| dazuAnnehmen\(\)\) return; \/\/ 2\.647\.0/, "Rückruf wird beim Anklopfer von selbst angenommen (auch nach Dazukommen, KC-CLUB-GESPRAECHE)");
   assert.match(programm, /RUF\.art === "video" \|\| RUF\.konferenzId \|\| RUF\.gegen\?\.person_id !== w\.pid\) return false;/, "nur genau diese Person, nur Ton, nur 90 s");
   assert.match(server, /insert\(\{ von: ich\.person_id, an, \.\.\.\(art === "sprechen" \? \{ art \} : \{\}\) \}\)[^\n]*\n\s*if \(error && art === "sprechen"\)/, "Server: art speichern, ohne Spalte weiter");
   assert.match(server, /db\.from\("kc_club_anklopfen"\)\.select\("\*"\) \/\/ 2\.647\.0/, "online liest art mit, ohne Spaltenliste");
@@ -10043,7 +10043,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   assert.ok(/const CD_ARTEN = \[/.test(html) && ["reise", "weihnachten", "silvester", "meingeb", "mggeb"].every((k) => new RegExp(`\\["${k}", "`).test(html)), "Countdown-Registry fehlt");
   assert.ok(/if \(cdNur\(\) \|\| \(t && /.test(html) && /return l;\n  \}\n  for \(const \[k, , f\] of CD_ARTEN\)/.test(html) && /<b>📌 Standard: nur nächstes Clubtreffen<\/b>/.test(html), "Standard = nur nächstes Clubtreffen");
-  assert.ok(/Math\.ceil\(\(new Date\(t\.beginn\) - Date\.now\(\)\) \/ 86400000\) <= 2\)\) \{ \/\/ nur Treffen[^\n]*\n    if \(cdArtAn\("privat"\)\) try \{ l\.push\(\.\.\.cdPrivat\(\)\); \} catch \{\}[^\n]*\n    return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen (2.242.0: nur angehakte private Termine dazu)");
+  assert.ok(/cdTageBis\(berlinIso\(t\.beginn\)\) <= 2\)\) \{ \/\/ KC-CLUB-TREFFEN-KALENDERTAG: Kalendertage wie oben \/\/ nur Treffen[^\n]*\n    if \(cdArtAn\("privat"\)\) try \{ l\.push\(\.\.\.cdPrivat\(\)\); \} catch \{\}[^\n]*\n    return l;/.test(html), "Treffen in ≤ 2 Tagen bleibt stehen (2.242.0: nur angehakte private Termine dazu)");
   assert.ok(/id="cdKachel"/.test(html) && /id="cdWahl"/.test(html) && /cdEinstellungenZeigen\(\);(?: try \{ schalterZeilen\(\$\("v-einstellungen"\)\); \} catch \{\})? tippSchalterZeigen\(\)/.test(html), "Kachel/Einstellungen fehlen");
   assert.ok(/case "countdowns": \{/.test(server) && /a\.dabei && String\(a\.bis \|\| a\.von\) >= heute/.test(server), "Server: nur eigene Reisen");
 }

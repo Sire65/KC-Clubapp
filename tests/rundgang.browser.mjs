@@ -34,7 +34,7 @@ const ANTWORTEN = {
   feedback_meins: { bogen: 1, fragen: [], umgesetzt: [], antwort: null },
   mitglieder: { aemter: [], onlineSichtbar: true, mitglieder: [] },
 };
-// 2.760.0 KC-CLUB-RUNDER-TISCH: ein laufender Tisch mit 18 Plätzen (einer grau = unbekannt) – Liste, Tisch und Einladen dürfen nicht über den Rand ragen
+// 2.762.0 KC-CLUB-RUNDER-TISCH: ein laufender Tisch mit 18 Plätzen (einer grau = unbekannt) – Liste, Tisch und Einladen dürfen nicht über den Rand ragen
 const RT_JETZT = Date.now(), rtZeit = (m) => new Date(RT_JETZT + m * 60000).toISOString();
 const RT_LEUTE = Array.from({ length: 18 }, (_, i) => ({ id: i ? "KC-P-RT" + i : "KC-P-TEST-RUNDGANG", name: i ? `Probe${i} Mitglied` : "Test Rundgang", sicher: i !== 5 }));
 const RT_TISCH = { id: "11111111-2222-3333-4444-555555555555", thema: "Club-Song", beschreibung: "Probe", beginn: rtZeit(-10), ende: rtZeit(50), dauer: 60, verlaengert: 0, plaetze: 18,
@@ -42,7 +42,7 @@ const RT_TISCH = { id: "11111111-2222-3333-4444-555555555555", thema: "Club-Song
   meineZusage: "ja", ichSitze: true, zusagen: RT_LEUTE.slice(0, 9), amTisch: RT_LEUTE, warenDa: 0 };
 const RT_LAGE = { aktiv: true, gruppen: [{ id: "66666666-2222-3333-4444-555555555555", name: "Innovation", symbol: "💡" }], regeln: { plaetzeMin: 4, plaetzeMax: 18, dauern: [30, 60, 90], vorlaufMin: 15, herzSek: 60, vorausTage: 60, themaMax: 80, beschreibungMax: 300, medienTage: 7, textTage: 30 },
   tische: [RT_TISCH, { ...RT_TISCH, id: "22222222-2222-3333-4444-555555555555", beginn: rtZeit(2880), ende: rtZeit(2940), phase: "geplant", meineZusage: null, ichSitze: false, amTisch: [], zusagen: [] },
-    // 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN: laufendes Seminar (Hörsaal), Besprechung mit Tagesordnung, vorbei: Seminar mit Teilnahmebestätigung
+    // 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: laufendes Seminar (Hörsaal), Besprechung mit Tagesordnung, vorbei: Seminar mit Teilnahmebestätigung
     { ...RT_TISCH, id: "33333333-2222-3333-4444-555555555555", art: "seminar", thema: "Bilderrechner für Einsteiger", plaetze: 12, gastgeber: "KC-P-RT3", amTisch: RT_LEUTE.slice(0, 10) },
     { ...RT_TISCH, id: "44444444-2222-3333-4444-555555555555", art: "besprechung", gruppe: { id: "66666666-2222-3333-4444-555555555555", name: "Innovation", symbol: "💡" }, thema: "Weihnachtsmarkt", tagesordnung: ["Begrüßung", "Stand und Dienste", "Verschiedenes"], phase: "geplant", beginn: rtZeit(600), ende: rtZeit(660), amTisch: [] },
     { ...RT_TISCH, id: "55555555-2222-3333-4444-555555555555", art: "seminar", thema: "Kasse Schulung", phase: "vorbei", beginn: rtZeit(-3000), ende: rtZeit(-2940), amTisch: [],
@@ -103,7 +103,7 @@ try {
       if (!r.da) melde(`${v}: Seite erscheint nicht`);
       if (r.quer) melde(`${v}: ragt seitlich über den Rand`);
     }
-    // 2.760.0 KC-CLUB-RUNDER-TISCH: Karte auf der Startseite, Liste, Tisch mit 18 Plätzen, Einladen
+    // 2.762.0 KC-CLUB-RUNDER-TISCH: Karte auf der Startseite, Liste, Tisch mit 18 Plätzen, Einladen
     if (g.touch) {
       const rt = await seite.evaluate(async () => { zeige("start"); await new Promise((r) => setTimeout(r, 400)); fensterZu($("rundBlatt")); await new Promise((r) => setTimeout(r, 400)); const karte = $("rundKarte")?.textContent || "";
         await rundOeffnen(); const liste = !!$("rundBlatt") && /Club-Song/.test($("rundInhalt")?.textContent || "");

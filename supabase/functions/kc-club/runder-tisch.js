@@ -1,4 +1,4 @@
-// KC-CLUB-RUNDER-TISCH (2.760.0, Stufe RT1, 30.10.2026, Wunsch Hansi „Runder Tisch: jeder darf einladen, jeder darf dazukommen, höchstens 18“):
+// KC-CLUB-RUNDER-TISCH (2.762.0, Stufe RT1, 30.10.2026, Wunsch Hansi „Runder Tisch: jeder darf einladen, jeder darf dazukommen, höchstens 18“):
 // Regeln für den Runden Tisch – Einladen, Platz nehmen, Verlängern, Aufräumen. Spezifikation: docs/RUNDER_TISCH.md.
 // Ein Tisch hat Thema, Beginn, Dauer und Plätze; „am Tisch“ ist, wer Platz genommen hat und sich in den letzten frischSek gemeldet hat
 // (Herzschlag der App alle 60 s). Wer länger nichts sagt, gibt den Platz frei; die Anzeige zeigt ihn vorher grau (Vertrag Regel 11).
@@ -18,7 +18,7 @@ export const RT = {
   toMax: 12, toPunktMax: 120,  // Tagesordnung der Besprechung
   bestaetigungAnteil: 0.5,     // Teilnahmebestätigung ab der Hälfte der Seminarzeit
 };
-// 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN (Stufe RT1b, Wunsch Hansi „Unterscheidung Runder Tisch, Seminar bzw. Fortbildung, Besprechung – alle dürfen,
+// 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN (Stufe RT1b, Wunsch Hansi „Unterscheidung Runder Tisch, Seminar bzw. Fortbildung, Besprechung – alle dürfen,
 // Seminar mit Teilnahmebestätigung“): eine Technik, drei Arten. Jedes Mitglied darf jede Art ansetzen.
 export const RT_ARTEN = {
   runder_tisch: { sym: "🪑", t: "Runder Tisch", leiter: "lädt ein", anmeldung: false, tagesordnung: false, bestaetigung: false },

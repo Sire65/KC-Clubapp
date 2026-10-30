@@ -1,6 +1,6 @@
 # 🪑 Runder Tisch – Spezifikation (KC-CLUB-RUNDER-TISCH)
 
-**Stand:** 30.10.2026 · **Status:** RT1 (2.760.0), RT1b Arten (2.761.0), Gruppen + Platzmessung (2.762.0) gebaut, 🔒 erst nur Admin zum Testen; RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
+**Stand:** 30.10.2026 · **Status:** RT1, RT1b Arten, Gruppen + Platzmessung gebaut und eingespielt als 2.762.0, 🔒 erst nur Admin zum Testen; RT2–RT4 offen · **Auftrag:** Hansi („Runder Tisch für die Club-App, Konzept und Spezifikation“, „fang mit RT1 an“)
 **Entwurf zum Anklicken:** https://claude.ai/artifact/5WfwmnFKfEm5nj8FmK2qFL (Tisch mit 2–18 Plätzen, Chat-Ansicht; Namen sind Beispiele)
 
 ## 1. Ziel
@@ -176,11 +176,11 @@ Entschieden am 30.10.2026: jedes Mitglied darf Tischgäste einladen (RT4); Frist
 Entschieden am 30.10.2026 (später): **Gäste dürfen auch reden** (RT3/RT4: wie Mitglieder mit dem 🥄 Redestab); Tische, Seminare und Besprechungen
 können **auch nur für eine Gruppe** angesetzt werden (Abschnitt 14, gebaut in 2.762.0). Zurzeit nichts offen.
 
-## 12. Umsetzung RT1 (2.760.0) – was gebaut ist und wo es von oben abweicht
+## 12. Umsetzung RT1 (2.762.0) – was gebaut ist und wo es von oben abweicht
 
 | Teil | Umsetzung |
 |---|---|
-| Datenbank | `supabase/migrations/20261030_kc_club_v2760_runder_tisch.sql`: `kc_club_tisch`, `kc_club_tisch_teilnahme`, Funktion `kc_club_tisch_beitreten` (Platzgrenze unter Zeilensperre). Probelauf `tools/db-test/93_runder_tisch_test.sql`; zusätzlich lokal 30 gleichzeitige Anfragen auf 18 Plätze → genau 18 Plätze, 12 „voll“ |
+| Datenbank | `supabase/migrations/20261030_kc_club_v2762_runder_tisch.sql`: `kc_club_tisch`, `kc_club_tisch_teilnahme`, Funktion `kc_club_tisch_beitreten` (Platzgrenze unter Zeilensperre). Probelauf `tools/db-test/96_runder_tisch_test.sql`; zusätzlich lokal 30 gleichzeitige Anfragen auf 18 Plätze → genau 18 Plätze, 12 „voll“ |
 | Regeln | `supabase/functions/kc-club/runder-tisch.js` (rein, Test `tests/runder-tisch.test.mjs`) |
 | Server | Aktionen `tisch_liste`, `tisch_anlegen`, `tisch_zusage`, `tisch_platz` (Platz nehmen + Herzschlag), `tisch_verlassen`, `tisch_gastgeber` (absagen/verlängern/schließen); Wartung `tischWartung` |
 | App | Kachel „🪑 Runder Tisch“ (Club), Karte auf der Startseite ab 15 Min. vor Beginn, Tisch mit Plätzen im Kreis, Einladen mit Auswahl, Push-Link `#tisch=<id>` |
@@ -201,7 +201,7 @@ können **auch nur für eine Gruppe** angesetzt werden (Abschnitt 14, gebaut in 
   danach bleibt der Tisch als Kurzprotokoll (Thema, Datum, Gastgeber, Anzahl) und ein Eintrag `tisch_beendet` im Protokoll.
 - **Noch nicht in RT1:** Hilfe-Eintrag, Twinkey, Suchbegriff und Erklär-Video kommen mit der Freigabe für alle (solange sieht es nur der Admin).
 
-## 13. Arten: Runder Tisch, Seminar, Besprechung (RT1b, 2.761.0)
+## 13. Arten: Runder Tisch, Seminar, Besprechung (RT1b, 2.762.0)
 
 Entscheidungen Hansi (30.10.2026): „Besprechung“ statt „Konferenz“ (Konferenz heißt in der App schon die Telefonkonferenz, KC-CLUB-KONFERENZ);
 **alle Mitglieder dürfen jede Art ansetzen**; das Seminar bekommt eine **Teilnahmebestätigung**. Eine Technik, drei Arten (`RT_ARTEN` in
@@ -231,12 +231,12 @@ Wunsch Hansi (30.10.2026): „Auch für Gruppen wie Leitung, Innovation usw. kö
 - Einen Gruppen-Tisch **sehen, zusagen und betreten nur die Mitglieder der Gruppe** und wer ihn leitet; Bescheid bekommen nur sie.
   Die Datenbank prüft das beim Platznehmen selbst (`kc_club_tisch_beitreten` → „gruppe“), der Server bei Liste, Zusage, Verlassen und Leiten.
 - Wird die Gruppe gelöscht, bleibt der Tisch für alle anderen unsichtbar (kein Fremdschlüssel, der ihn sonst „für alle“ öffnen würde).
-- Migration `20261030_kc_club_v2762_tisch_gruppe.sql` (Spalte `gruppe_id`), Probelauf `tools/db-test/95_tisch_gruppe_test.sql`.
+- Migration `20261030_kc_club_v2762_tisch_gruppe.sql` (Spalte `gruppe_id`), Probelauf `tools/db-test/98_tisch_gruppe_test.sql`.
 
 ## 15. Platz am Tisch: bis wann Koch-Figuren, ab wann Buchstaben (Messung 30.10.2026, 2.762.0)
 
 Gemessen im Browser (Klick-Rundgang, Chromium) mit dem echten Fenster: Tischbreite **W = 288 px** bei 320 px Handy, 328 (360), 358 (390), 380 (412),
-398 (430), höchstens 420 px (Tablet/PC). Mit den festen Größen aus 2.760.0 (52/44/36 px) überlappten ab **16 Personen die Namen**
+398 (430), höchstens 420 px (Tablet/PC). Mit den festen Größen aus 2.762.0 (52/44/36 px) überlappten ab **16 Personen die Namen**
 (320–430 px Handy) und bei **18 Personen auf 320 px die Kreise**; Koch-Figuren in 36-px-Kreisen sind kaum zu erkennen.
 
 Seit 2.762.0 rechnet die App aus dem echten Platz (`rundGroesse` in app.js, Werte in `RUND_PLATZ`):

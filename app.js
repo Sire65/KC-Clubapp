@@ -2369,6 +2369,7 @@ const HILFE = [
   { id: "express_status", thema: "nachrichten", sym: "📬", t: "Express: angekommen um … gelesen um …", x: "Unter deiner Express-Sendung siehst du genau, was passiert ist: <b>„🏎️ Per Express versandt um 19:05“</b> und für jeden Empfänger <b>„angekommen um …“</b> und <b>„gelesen um …“</b>. Steht dort „📭 noch nicht angekommen“, ist das Handy des Empfängers vermutlich aus oder offline.", seit: "2.385.0" },
   { id: "chat_favoriten", thema: "nachrichten", sym: "⭐", t: "Favoriten: deine wichtigsten Leute oben", x: "In <b>💬 Nachrichten</b> oben auf <b>⭐ Favoriten</b> tippen – dann siehst du nur deine Lieblings-Chats. <b>Den Stern setzt du an zwei Stellen – es ist immer derselbe:</b> in <b>👥 Mitglieder</b> beim Mitglied auf <b>☆</b> tippen (wird ⭐), oder in der Chat-Liste rechts am Chat auf <b>⋯</b> tippen → <b>„⭐ Als Favorit“</b>. Ein Stern gehört zur <b>Person</b> – er steht dann in der Mitgliederliste <i>und</i> bei ihrem Chat. Gruppenchats bekommen ihren eigenen Stern. Dazu kommen automatisch die <b>5 Chats, in denen du am meisten schreibst</b> („· oft“). In <b>👥 Mitglieder</b> zeigt der Schalter <b>„⭐ Favoriten“</b> nur deine Favoriten. Die Sterne gelten auf all deinen Geräten.", zeig: () => { zeige("nachrichten"); uhFavAnsicht(true); }, seit: "2.387.0" },
   { id: "nachrichten_reihe", thema: "nachrichten", sym: "↕️", t: "Abschnitte in der Chat-Liste verschieben – z. B. Einzelchats nach oben", x: "Ist die Übersicht nach <b>👥 Art</b> oder <b>🕒 Zeit</b> gegliedert, steht rechts in jedem Balken <b>▲</b> und <b>▼</b>. Damit verschiebst du den ganzen Abschnitt – zum Beispiel die <b>🙋 Einzelchats</b> ganz nach oben. Die App merkt sich die Reihenfolge auf diesem Gerät. <b>🔴 Ungelesen</b> bleibt immer ganz oben.", zeig: () => zeige("nachrichten"), seit: "2.753.0" }, // KC-CLUB-NACHRICHTEN-REIHE
+  { id: "gespraeche", thema: "club", sym: "📞", t: "Sehen, wer telefoniert – und anklopfen, um dazuzukommen", x: "Telefonieren zwei Mitglieder miteinander, steht oben im Feld <b>Mitglieder</b> ein grünes Schild, z. B. <b>Klaus 📞 Hansi</b>. Antippen → <b>👋 Anklopfen – darf ich dazukommen?</b> Die beiden hören einen leisen Klopfton; nimmt einer dich auf, bist du gleich in der Runde (Konferenz bis 4 Personen). Sichtbar ist nur, <b>dass</b> telefoniert wird – nie, was. Möchtest du das für dich nicht: ⚙️ → Privatsphäre → <b>📞 Andere dürfen sehen, wenn ich telefoniere</b> ausschalten.", seit: "2.760.0" }, // KC-CLUB-GESPRAECHE
   { id: "zustell_alle", thema: "nachrichten", sym: "✅", t: "Benachrichtigen: alles auf einmal mit „✅ Alle“", x: "Mit der <b>Glocke 🔔</b> unter dem Schreibfeld wählst du, wie benachrichtigt wird – <b>🔔 Push</b>, <b>✉️ E-Mail</b>, <b>WhatsApp</b>. Mit <b>„✅ Alle“</b> sind alle drei mit einem Tipp an – nochmal tippen schaltet alle aus.", seit: "2.386.0" },
   { id: "online_uhrzeit", thema: "nachrichten", sym: "🟢", t: "„… ist jetzt online“ – jetzt mit Uhrzeit", x: "Hast du die Mitteilung <b>„🟢 Klaus ist jetzt online“</b> eingeschaltet, steht jetzt die <b>Uhrzeit</b> dabei – z. B. „(19:05 Uhr)“ – und darunter der Tag. Kommt die Mitteilung erst später an (z. B. weil dein PC aus war), heißt sie <b>„🟢 Klaus war um 19:05 Uhr online“</b>. So weißt du, ob er wirklich gerade da ist.", seit: "2.390.0" },
   { id: "terminanfrage_oben", thema: "termine", sym: "📨", t: "Offene Terminanfragen stehen ganz oben", x: "Hat dich jemand per <b>Terminanfrage</b> gefragt und du hast noch nicht geantwortet, steht sie jetzt <b>ganz oben unter „Heute wichtig“</b> – rot umrandet. Die Kachel <b>📅 Termine</b> zeigt die Zahl. Antippen und mit <b>Ja</b>, <b>Vielleicht</b> oder <b>Nein</b> antworten.", seit: "2.389.0" },
@@ -4705,6 +4706,8 @@ async function onlinePing() {
     if (r.fensterAnders) zweiBrowserMelden(r.fensterAnders); // KC-CLUB-ZWEI-BROWSER
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
+    ONL.gs = r.gespraeche || []; ONL.gsAnonym = r.gespraecheAnonym || 0; // KC-CLUB-GESPRAECHE
+    dazuFrage(r.dazukommen); gsMeineStand(r.dazuMeine);
     if (vorher !== [...ONL.ids].sort().join() && aktuelleAnsicht === "mitglieder" && MITGLIEDER) { try { mitgliederZeichnen(); } catch {} }
     if (vorher !== [...ONL.ids].sort().join()) grOnlineAuffrischen(); // KC-CLUB-GRUPPE-ALLE-ONLINE
     werIstDa(ONL.liste, r.zeigen); // KC-CLUB-WER-IST-DA (2.454.0) – vor der Online-Ansage, damit niemand doppelt genannt wird
@@ -4992,6 +4995,7 @@ function onlineLeisteZeigen() {
   onlineLedZeigen();
   const el = $("onlineLeiste"); if (!el) return;
   el.innerHTML = ONL.zeigen && ONL.liste.length ? `<div class="hinweis" style="margin:0 0 4px"><span class="onpunkt"></span><b>Gerade online</b> – antippen zum Anklopfen${ONL.liste.length > 1 ? ` · <button class="knopf klein" style="padding:3px 8px" onclick="onlineRunde()">💬 Mit allen ${ONL.liste.length} schreiben</button>` : ""}</div>
+    ${gsKopf().length ? `<div class="onleiste">${gsKopf().map((g) => `<button class="gs-knopf" onclick="gsBlatt('${esc(g.id)}')">📞 ${esc(gsNamen(g))}</button>`).join("")}</div>` : ""}
     <div class="onleiste">${ONL.liste.map((x) => x.klopfbar === false ? `<button title="Anklopfen ausgeschaltet – Nachricht schreiben" onclick="direkt('${x.person_id}')">🔕 ${esc(x.vorname)}</button>` : `<button onclick="anklopfen('${x.person_id}')">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : "";
 }
 // KC-CLUB-ONLINE-RUNDE (1.21.2): neue Nachricht, alle gerade Online sind schon angehakt (danach wie jeder Mehrpersonen-Chat)
@@ -5428,6 +5432,7 @@ async function zuletztZeigen(an) {
 function anklopfenZeigen() {
   const w = klopfStand();
   if ($("setAnklopfen")) $("setAnklopfen").checked = w.erlaubt !== false;
+  if ($("setGespraeche")) $("setGespraeche").checked = w.gespraeche !== false; // KC-CLUB-GESPRAECHE
   if ($("setKlopfAb")) $("setKlopfAb").value = ["spaeter", "sofort"].includes(w.ab) ? w.ab : "knopf"; // 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG
   if ($("setKlopfTon")) $("setKlopfTon").innerHTML = KLOPF_TOENE.map((x) => `<option value="${x.id}"${x.id === w.ton ? " selected" : ""}>${esc(x.t)}</option>`).join("");
 }
@@ -5435,7 +5440,7 @@ const AB_MODUS_TEXT = { knopf: "📼 Anrufbeantworter: nur, wenn du ihn beim Ank
 async function anklopfenSetzen(teil) {
   const w = { ...klopfStand(), ...teil };
   if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), anklopfen: w };
-  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "ab" in teil ? AB_MODUS_TEXT[w.ab] || "📼 Gespeichert" : "🔔 Anklopfton gespeichert"); }
+  try { await api("einstellung_setzen", { schluessel: "anklopfen", wert: w }); melde("gespraeche" in teil ? (w.gespraeche ? "📞 Andere sehen, wenn du telefonierst" : "🙈 Deine Telefonate bleiben ohne Namen") : "erlaubt" in teil ? (w.erlaubt ? "👋 Anklopfen ist erlaubt" : "🔕 Anklopfen ausgeschaltet") : "ab" in teil ? AB_MODUS_TEXT[w.ab] || "📼 Gespeichert" : "🔔 Anklopfton gespeichert"); }
   catch (e) { meldeFehler(e); }
   if ("ton" in teil) klopfTonSpielen(w.ton);
 }
@@ -6441,7 +6446,7 @@ async function anrufEingehend(id) {
       vf: !r.konferenz && VF.status === "laeuft" && !!r.gegenueber?.person_id && r.gegenueber.person_id === vfPartner() }; // KC-CLUB-VORFUEHREN-TON
     RUF.ms = !RUF.vf && !r.konferenz && !!r.gegenueber?.person_id && r.gegenueber.person_id === msPartner(); // KC-CLUB-FERNHILFE F4
     anrufSchirm(r.gegenueber); anrufKnoepfe("eingehend");
-    if (klopfSprechenAnnehmen()) return; // 2.647.0 KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
+    if (klopfSprechenAnnehmen() || dazuAnnehmen()) return; // 2.647.0 / KC-CLUB-GESPRAECHE: Rückruf nach „aufgenommen“ KC-CLUB-ANKLOPFEN-ART: Rückruf auf mein „Sprechen“-Anklopfen → gleich verbunden, ohne Klingeln
     anrufZustand(RUF.konferenzId ? `👥 ${r.gegenueber.vorname} holt dich in eine Konferenz …` : RUF.art === "video" ? `🎥 ${r.gegenueber.vorname} ruft per Video an …` : `📞 ${r.gegenueber.vorname} ruft an …`); klang("klingeln");
     rufTaktWahl(true); rufLeisten(); // KC-CLUB-ANRUF-BESSER 3)
   } catch {}
@@ -9785,7 +9790,7 @@ const KACHELN = {
     { id: "clubabend", sym: "🍽️", t: "Clubabend Live", u: () => (!caHeute() ? "Vorschau nächster Clubabend" : ICH?.vorstand ? "Heute · Tagesordnung abhaken" : "Heute · Tagesordnung & mehr"), aktion: "caOeffnen(!caHeute() && !!ICH?.admin)", nur: () => caHeute() || !!ICH?.admin, klasse: "ca-kachel" },
     // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: nur solange die Sammelaktion läuft (Clubleitung immer, solange eingerichtet)
     { id: "clubjahr", sym: "📖", t: "Unser Clubjahr", u: () => cjUnter(), aktion: "cjOeffnen()", nur: () => !!INIT?.clubjahr },
-    // 2.760.0 KC-CLUB-RUNDER-TISCH: zu einem Thema einladen, Platz nehmen (höchstens 18) – nur Mitglieder (nicht in ZUGANG_KACHELN), bis zur Freigabe nur der Admin
+    // 2.762.0 KC-CLUB-RUNDER-TISCH: zu einem Thema einladen, Platz nehmen (höchstens 18) – nur Mitglieder (nicht in ZUGANG_KACHELN), bis zur Freigabe nur der Admin
     { id: "runder_tisch", sym: "🪑", t: "Runder Tisch", u: () => (nurTest("runder_tisch") ? "🔒 nur für dich (Test) · " : "") + "Runder Tisch · Seminar · Besprechung", aktion: "rundOeffnen()", nur: () => frei("runder_tisch") },
     { id: "termine", sym: "📅", t: "Termine", u: "Termine · Zu- & Absagen", v: "termine" },
     // KC-CLUB-SOS (1.6.0, Wunsch Hansi): rote Notfall-Kachel – Notrufnummern + Kontakte der Mitglieder
@@ -16169,8 +16174,10 @@ function infoTreffen() {
   const t = INIT?.naechstesTreffen, n = INIT?.ungelesen || 0;
   let bisTreffen = "—", frist = "";
   if (t) { // 2.441.0: Titel, Datum und Zu-/Absage stehen jetzt als erster Punkt im Info-Laufband (ilTreffen) – die Kopfzeile darüber ist weg
-    const tage = Math.ceil((new Date(t.beginn) - Date.now()) / 86400000);
-    bisTreffen = tage <= 0 ? "Heute" : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
+    // KC-CLUB-TREFFEN-KALENDERTAG (Fund Hansi 30.10. 7:22 „Clubtreffen zeigt Morgen statt Heute 18 Uhr“): Kalendertage in deutscher Zeit zählen
+    // statt Stunden aufzurunden (10,6 Std. bis 18 Uhr ergaben „1 Tag“); heute mit Uhrzeit
+    const tage = cdTageBis(berlinIso(t.beginn));
+    bisTreffen = tage <= 0 ? `Heute ${new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(t.beginn))}` : tage === 1 ? "Morgen" : `in ${tage} Tagen`;
     frist = fristStufe(tage);
   }
   return `<div class="il" id="infoLaufband"></div><!-- 2.439.0 KC-CLUB-INFO-LAUFBAND -->
@@ -16578,8 +16585,8 @@ function hashSprung(h) {
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
     else if (h === "#diensttausch") dtOeffnen(); // 2.606.0 KC-CLUB-DIENST-TAUSCH (Link aus dem Push)
-    else if (h === "#tisch") rundOeffnen(); // 2.760.0 KC-CLUB-RUNDER-TISCH
-    else if (/^#tisch=[0-9a-f-]{36}$/.test(h)) rundOeffnen(h.slice(7)); // 2.760.0: „Gleich: Runder Tisch …“ aus dem Push
+    else if (h === "#tisch") rundOeffnen(); // 2.762.0 KC-CLUB-RUNDER-TISCH
+    else if (/^#tisch=[0-9a-f-]{36}$/.test(h)) rundOeffnen(h.slice(7)); // 2.762.0: „Gleich: Runder Tisch …“ aus dem Push
     else if (h === "#fremdzugriffe") { zeige("sicherheit"); if (ICH?.admin) setTimeout(fremdZeigen, 300); } // 2.579.0 KC-CLUB-FREMDZUGRIFF (Link aus dem Push)
     else if (h.startsWith("#zu=")) sprung(h.slice(4)); // KC-CLUB-SPRUNGKNOPF (2.23.97): Link aus Nachricht, Push oder E-Mail
     else if (h === "#twinkey") ICH?.admin ? twOffenStart() : twFrageStart();
@@ -16767,7 +16774,7 @@ const cdNur = () => einst("cd_nur", false);
 const cdArtAn = (k) => einst("cd_" + k, true);
 function cdListe(bisTreffen) {
   const t = INIT?.naechstesTreffen, l = [{ id: "t", zahl: String(bisTreffen).replace(/^in (\d+) Tagen$/, "$1 Tage"), text: "📅 Club\u00ADtreffen", los: () => zumTreffen() }]; // 2.203.0: kurz „Clubtreffen · 23 Tage“
-  if (cdNur() || (t && Math.ceil((new Date(t.beginn) - Date.now()) / 86400000) <= 2)) { // nur Treffen (bzw. Treffen steht kurz bevor) …
+  if (cdNur() || (t && cdTageBis(berlinIso(t.beginn)) <= 2)) { // KC-CLUB-TREFFEN-KALENDERTAG: Kalendertage wie oben // nur Treffen (bzw. Treffen steht kurz bevor) …
     if (cdArtAn("privat")) try { l.push(...cdPrivat()); } catch {} // … aber selbst angehakte private Termine laufen immer mit
     return l;
   }
@@ -16896,8 +16903,114 @@ function onlineNamenHtml() {
   const l = [...ONL.liste].sort((a, b) => String(a.vorname || "").localeCompare(String(b.vorname || ""), "de"));
   const namen = (kopie) => l.map((x) => `<span class="on-name"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="Chat mit ${esc(x.vorname || "Mitglied")}"`}
     onclick="event.stopPropagation();direkt('${esc(x.person_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();direkt('${esc(x.person_id)}')}">${esc(x.vorname || "?")}</span>`).join("");
-  if (l.length === 1) return `<span class="on-namen">${namen(false)}</span>`;
-  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, l.length * 3)}s"><span class="on-band">${namen(false)}${namen(true)}</span></span>`;
+  const gs = gsKopf(), alle = (kopie) => gs.map((g) => gsSchild(g, kopie)).join("") + namen(kopie); // KC-CLUB-GESPRAECHE: laufende Telefonate vorne
+  if (l.length + gs.length === 1) return `<span class="on-namen">${alle(false)}</span>`;
+  return `<span class="on-namen on-lauf" style="--on-dauer:${Math.max(6, (l.length + gs.length * 2) * 3)}s"><span class="on-band">${alle(false)}${alle(true)}</span></span>`;
+}
+// ---------- KC-CLUB-GESPRAECHE (Stufe 1 Telefonate, Wunsch Hansi 30.10.2026 „sehen, wer gerade mit wem spricht – anklopfen – die anderen
+// nehmen mich ins Gespräch auf“; Vorschau „Club-Netz“ abgenommen): Der Online-Abgleich liefert laufende Telefonate (nur DASS, nie was;
+// Namen nur, wenn alle Beteiligten „Gespräche zeigen“ an haben – Standard an). Antippen → Fenster mit „Anklopfen – darf ich dazukommen?“.
+// Nimmt einer auf, holt seine App den Anklopfenden über die vorhandene Konferenz-Einladung dazu; die App des Anklopfenden nimmt von selbst an.
+const GSP = { netzOffen: false };
+let KD = null, KLOPF_DAZU = null, DAZU = null; // KD: mein Anklopfen; KLOPF_DAZU: erwarteter Anruf nach „aufgenommen“; DAZU: Frage an mich im Gespräch
+const gsKopf = () => (ONL.gs || []).filter((g) => !g.ichDrin);
+const gsNamen = (g) => g.teilnehmer.map((t) => t.vorname || t.name).join(g.teilnehmer.length === 2 ? " und " : ", ");
+const gsDauer = (sek) => sek < 90 ? "gerade eben" : sek < 3600 ? `seit ${Math.round(sek / 60)} Min.` : `seit ${Math.floor(sek / 3600)} Std. ${Math.round((sek % 3600) / 60)} Min.`;
+function gsSchild(g, kopie) {
+  const text = g.teilnehmer.length === 2 ? `${esc(g.teilnehmer[0].vorname)} 📞 ${esc(g.teilnehmer[1].vorname)}` : `👥📞 ${g.teilnehmer.map((t) => esc(t.vorname)).join(", ")}`;
+  return `<span class="on-name on-gs"${kopie ? ' aria-hidden="true"' : ` role="button" tabindex="0" aria-label="${esc(gsNamen(g))} telefonieren – antippen"`}
+    onclick="event.stopPropagation();gsBlatt('${esc(g.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();gsBlatt('${esc(g.id)}')}">${text}</span>`;
+}
+function gsBlatt(id) {
+  const g = (ONL.gs || []).find((x) => x.id === id);
+  if (!g) return melde("Das Gespräch ist schon vorbei.");
+  const grund = g.ichDrin ? "Du bist selbst in diesem Gespräch." : g.voll ? "Die Runde ist voll – höchstens 4 Personen." : g.art === "video" ? "Bei Videoanrufen geht Dazukommen noch nicht." : !g.klopfbar ? "Die beiden haben Anklopfen ausgeschaltet – schreib einfach eine Nachricht." : "";
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">📞 ${esc(gsNamen(g))}</h3><p class="dlg-text">${g.teilnehmer.length > 2 ? "telefonieren zusammen" : "telefonieren"} · ${gsDauer(g.seitSek)}</p>
+    <div class="gs-reihe" aria-hidden="true">${gsReiheHtml(g)}</div>
+    ${grund ? `<p class="hinweis">${esc(grund)}</p>` : '<p class="hinweis">Die anderen bekommen einen leisen Klopfton und können dich ins Gespräch holen. Was gesprochen wird, siehst du vorher nicht.</p>'}
+    <div class="dlg-knoepfe">${grund ? "" : '<button class="knopf haupt" data-w="klopfen">👋 Anklopfen – darf ich dazukommen?</button>'}<button class="knopf" data-w="netz">🕸️ Club-Netz</button><button class="knopf" data-w="zu">Schließen</button></div>`, () => f.remove());
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { f.remove(); if (b.dataset.w === "klopfen") gsAnklopfen(g.id); else if (b.dataset.w === "netz") gsNetz(); }));
+}
+// Kreise mit grüner Linie und pulsierendem Hörer (zwei Personen) bzw. rund um einen Tisch (Konferenz)
+function gsReiheHtml(g) {
+  const k = (t) => `<span class="gs-person">${kreis({ ...(MITGLIEDER?.find((m) => m.person_id === t.person_id) || {}), person_id: t.person_id, online: true }, t.name || t.vorname, 52)}<small>${esc(t.vorname || t.name)}</small></span>`;
+  const mitte = `<span class="gs-hoerer${g.art === "video" ? " gs-video" : ""}"><i></i><i></i>${g.art === "video" ? "🎥" : "📞"}</span>`;
+  if (g.teilnehmer.length === 2) return `${k(g.teilnehmer[0])}<span class="gs-linie"></span>${mitte}<span class="gs-linie"></span>${k(g.teilnehmer[1])}`;
+  return `<span class="gs-tisch">${mitte}<span class="gs-runde">${g.teilnehmer.map(k).join("")}</span></span>`;
+}
+function gsNetz() {
+  const gs = ONL.gs || [], drin = new Set(gs.flatMap((g) => g.teilnehmer.map((t) => t.person_id))), sonst = (ONL.liste || []).filter((x) => !drin.has(x.person_id));
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🕸️ Club-Netz</h3><p class="dlg-text">${(ONL.liste || []).length} online · antippen, um anzuklopfen</p>
+    ${gs.map((g) => `<button class="gs-netz-zeile" data-g="${esc(g.id)}" aria-label="${esc(gsNamen(g))} telefonieren"><span class="gs-reihe">${gsReiheHtml(g)}</span><span class="hinweis">${esc(gsDauer(g.seitSek))}</span></button>`).join("")
+      || '<p class="hinweis">Gerade telefoniert niemand.</p>'}
+    ${ONL.gsAnonym ? `<p class="hinweis">📞 Außerdem ${ONL.gsAnonym === 1 ? "läuft 1 Telefonat" : `laufen ${ONL.gsAnonym} Telefonate`} (privat, ohne Namen).</p>` : ""}
+    ${sonst.length ? `<p class="hinweis" style="margin-bottom:4px"><b>Außerdem online</b></p><div class="onleiste">${sonst.map((x) => `<button data-p="${esc(x.person_id)}">👋 ${esc(x.vorname)}</button>`).join("")}</div>` : ""}
+    <p class="hinweis" style="font-size:.8rem">Sichtbar ist nur, <b>dass</b> gesprochen wird – nie, was. Einstellen unter ⚙️ → Privatsphäre.</p>
+    <div class="dlg-knoepfe"><button class="knopf" data-w="zu">Schließen</button></div>`, () => { f.remove(); GSP.netzOffen = false; });
+  GSP.netzOffen = true;
+  f.querySelector("[data-w]").onclick = () => { f.remove(); GSP.netzOffen = false; };
+  f.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => { f.remove(); GSP.netzOffen = false; gsBlatt(b.dataset.g); }));
+  f.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => { f.remove(); GSP.netzOffen = false; anklopfen(b.dataset.p); }));
+}
+// Anklopfen beim Gespräch: Warte-Anzeige mit Uhr wie beim normalen Anklopfen; Ergebnis kommt mit dem Online-Abgleich (dazuMeine)
+async function gsAnklopfen(id) {
+  if (RUF) return melde("Du telefonierst gerade selbst.", true);
+  try {
+    const r = await api("gespraech_anklopfen", { id });
+    KD = { anruf: r.anruf, namen: r.namen, bis: Date.now() + 180000, timer: null };
+    gsWartenZeichnen(); KD.timer = setInterval(gsWartenZeichnen, 1000);
+  } catch (e) { meldeFehler(e); }
+}
+function gsWartenZeichnen() {
+  if (!KD) return;
+  let el = document.getElementById("gsWarten");
+  if (!el) { el = document.createElement("div"); el.id = "gsWarten"; el.className = "gs-warten"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  const rest = Math.max(0, Math.round((KD.bis - Date.now()) / 1000));
+  el.innerHTML = rest ? `<b>👋 Klopfe an bei ${esc(KD.namen)} …</b><span class="gs-uhr">${Math.floor(rest / 60)}:${String(rest % 60).padStart(2, "0")}</span><button class="knopf klein" onclick="gsWartenAbbrechen()">Auflegen</button>`
+    : `<b>⏳ ${esc(KD.namen)} haben nicht geantwortet.</b><button class="knopf klein" onclick="gsWartenAbbrechen()">OK</button>`;
+}
+function gsWartenEnde() { if (KD?.timer) clearInterval(KD.timer); KD = null; document.getElementById("gsWarten")?.remove(); }
+function gsWartenAbbrechen() { const a = KD?.anruf; gsWartenEnde(); if (a) api("dazukommen_abbrechen", { anruf: a }).catch(() => {}); }
+// Stand meines Anklopfens aus dem Online-Abgleich
+function gsMeineStand(liste) {
+  if (!KD) return;
+  const x = (liste || []).find((y) => y.anruf === KD.anruf); if (!x || x.status === "offen") return;
+  const namen = KD.namen; gsWartenEnde();
+  if (x.status === "angenommen" && x.von) {
+    KLOPF_DAZU = { pid: x.von.person_id, bis: Date.now() + 90000 };
+    melde(`✅ ${x.von.vorname} nimmt dich auf – gleich bist du in der Runde 📞`); try { navigator.vibrate?.(60); } catch {}
+  } else melde(`⏳ Gerade nicht – ${namen} melden sich bei dir.`);
+}
+// Rückruf nach „aufgenommen“ → ohne Klingeln annehmen (wie KC-CLUB-ANKLOPFEN-ART beim Sprechen)
+function dazuAnnehmen() {
+  const w = KLOPF_DAZU;
+  if (!w || Date.now() > w.bis || RUF?.rolle !== "angerufen" || RUF.pc || RUF.art === "video" || RUF.gegen?.person_id !== w.pid) return false;
+  KLOPF_DAZU = null; anrufAnnehmen(false); return true;
+}
+// Im Gespräch: „Paul möchte dazukommen“ oben im Anrufbildschirm
+function dazuFrage(liste) {
+  const l = (liste || []).filter((x) => !ONL.erledigt.has("d" + x.id));
+  if (DAZU && !(liste || []).some((x) => x.id === DAZU.id)) { DAZU = null; dazuMalen(); }
+  if (!RUF || DAZU || !l.length) return;
+  DAZU = l[0]; ONL.erledigt.add("d" + DAZU.id); dazuMalen(); anklopfTon();
+}
+function dazuMalen() {
+  const el = $("anrufDazu"); if (!el) return;
+  if (!DAZU) { el.classList.add("versteckt"); el.innerHTML = ""; return; }
+  el.innerHTML = `<b>👋 ${esc(DAZU.von.vorname || DAZU.von.name)} klopft an – möchte dazukommen</b>
+    <div class="zk"><button class="ja" onclick="dazuAntwort(true)">✅ Aufnehmen</button><button class="nein" onclick="dazuAntwort(false)">Jetzt nicht</button></div>`;
+  el.classList.remove("versteckt");
+}
+async function dazuAntwort(ja) {
+  const d = DAZU; if (!d) return; DAZU = null; dazuMalen();
+  try {
+    const r = await api("dazukommen_antwort", { id: d.id, annehmen: !!ja });
+    if (!ja) return;
+    if (r.status !== "angenommen") return melde("Jemand anderes hat schon geantwortet.");
+    if (!RUF?.verbunden || RUF.art !== "ton" || RUF.strom?.getVideoTracks().length) return melde("Dazuholen geht nur während eines Telefonats mit Ton.", true);
+    if (konfDrin().size >= (RUF.konf?.max || 4)) return melde("Die Runde ist voll – höchstens 4 Personen.", true);
+    await konfEinladen(r.von.person_id);
+  } catch (e) { meldeFehler(e); }
 }
 // KC-CLUB-ONLINE-ZAHL (1.47.0): statt Text nur LED + Zahl – grün = jemand online, grau = niemand oder Stand unbekannt (dann „?“)
 function onlineZahlHtml() {
@@ -17301,7 +17414,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.760.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
@@ -21808,13 +21921,13 @@ async function dtProbe() {
   if (!datum || !start || !ende) return melde("Bitte Tag und Uhrzeit wählen.", true);
   try { const r = await api("dienst_tausch_probe", { datum, start, ende, bereich: $("dtPBer")?.value || "Probe" }); DTL = r.lage; dtZeichnen(); melde("🧪 Probe-Angebot angelegt"); } catch (e) { meldeFehler(e); }
 }
-// ---------- 2.760.0 KC-CLUB-RUNDER-TISCH (Stufe RT1, Wunsch Hansi 30.10.2026, Spezifikation docs/RUNDER_TISCH.md) ----------
+// ---------- 2.762.0 KC-CLUB-RUNDER-TISCH (Stufe RT1, Wunsch Hansi 30.10.2026, Spezifikation docs/RUNDER_TISCH.md) ----------
 // Jedes Mitglied lädt zu Thema und Uhrzeit ein; ab 15 Min. vor Beginn erscheint der Tisch auf der Startseite und jeder kann Platz nehmen (höchstens 18).
 // Am Tisch: Plätze im Kreis (bis 8 große, bis 18 kleinere), Tisch-Chat = normale Unterhaltung (Text, 🎤 Sprachnachricht, Foto, PDF).
 // Solange man sitzt, meldet sich die App alle 60 s (tisch_platz) – sonst nichts im Sekundentakt (KC-DB-SPARSAM). Wer sich 90 s nicht gemeldet hat,
 // steht grau da (Zustand unbekannt, Vertrag Regel 11), nach 150 s ist der Platz frei. Bis zur Freigabe sieht es nur der Admin (🔒 Test).
 const RT_HERZ_TISCH_MS = 60000;
-// 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN (Stufe RT1b): eine Technik, drei Arten – gleich wie RT_ARTEN im Server (runder-tisch.js, Test prüft das)
+// 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN (Stufe RT1b): eine Technik, drei Arten – gleich wie RT_ARTEN im Server (runder-tisch.js, Test prüft das)
 const RUND_ARTEN = {
   runder_tisch: { sym: "🪑", t: "Runder Tisch", leiter: "lädt ein", anmeldung: false, tagesordnung: false, bestaetigung: false },
   seminar: { sym: "🎓", t: "Seminar / Fortbildung", leiter: "Referent", anmeldung: true, tagesordnung: false, bestaetigung: true },
@@ -21995,7 +22108,7 @@ function rundPlaetzeHtml(t, W = rundBreite()) {
   }
   return html;
 }
-// 2.761.0 Seminar: Referent vorne am Pult, Teilnehmer in Reihen (wie im Hörsaal); freie Plätze gestrichelt
+// 2.762.0 Seminar: Referent vorne am Pult, Teilnehmer in Reihen (wie im Hörsaal); freie Plätze gestrichelt
 function rundHoersaalHtml(t) {
   const ref = t.amTisch.find((p) => p.id === t.gastgeber), tn = t.amTisch.filter((p) => p.id !== t.gastgeber), n = Math.max(t.plaetze, tn.length);
   return `<div class="rund-hoersaal" role="img" aria-label="${esc(`Seminar: ${tn.length} von ${t.plaetze} Plätzen besetzt${ref ? "" : ", Referent noch nicht da"}`)}">
@@ -22043,7 +22156,7 @@ function rundKarteZeichnen() {
     <span class="ds-sym">${rundArt(t).sym}</span><span class="ds-text"><b>${sitze ? `Du bist dabei: ${esc(rundArt(t).t)}` : `${t0 < Date.parse(t.beginn) ? "Gleich" : "Jetzt"}: ${esc(rundArt(t).t)}`}${test}</b>
     <small>„${esc(t.thema)}“ · ${t0 < Date.parse(t.beginn) ? `ab ${esc(rundUhr(t.beginn))} Uhr` : `bis ${esc(rundUhr(t.ende))} Uhr`}${da.length > 1 ? ` · und ${da.length - 1} weiterer` : ""} – ${sitze ? "zurück zum Tisch" : "jetzt Platz nehmen"}</small></span><span class="ds-pfeil">›</span></button>`;
 }
-// ---- 2.761.0 Teilnahmebestätigung (Seminar): auf dem Club-Briefbogen als PDF/Drucken (KC-CLUB-DRUCK-PDF), auch unter „🎓 Meine Schulung“ ----
+// ---- 2.762.0 Teilnahmebestätigung (Seminar): auf dem Club-Briefbogen als PDF/Drucken (KC-CLUB-DRUCK-PDF), auch unter „🎓 Meine Schulung“ ----
 const fRundDatum = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", weekday: "long", day: "numeric", month: "long", year: "numeric" });
 function rundBestaetigung(id, aus) {
   const t = aus || rundTisch(id); if (!t?.bestaetigung) return melde("Für dieses Seminar gibt es keine Teilnahmebestätigung.", true);
@@ -29206,7 +29319,7 @@ async function smLaden(oeffnen = false, still = false) { // 2.23.63: Fehler sich
 const smOffen = () => (SM.liste || []).filter((e) => e.status === "offen" && (e.frei || []).length); // 2.521.0: nur mit angebotenen freien Terminen
 async function smStart() {
   blattAuf("smBlatt", `<h3 style="margin:0">🎓 Meine Schulung</h3>${ICH?.admin ? `<button class="knopf haupt" onclick="$('smBlatt').remove();scStart()">🎓 Schulungen verwalten</button>` : ""}<div id="smInhalt"><p class="hinweis">Wird geladen …</p></div>
-    <div id="smSeminare"></div><!-- 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN: besuchte Seminare mit Teilnahmebestätigung -->
+    <div id="smSeminare"></div><!-- 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: besuchte Seminare mit Teilnahmebestätigung -->
     <button type="button" class="tw-nicht" onclick="$('smBlatt').remove();zeige('archiv')">📄 Meine Zusammenfassungen im Archiv (Register „Schulung“)</button>
     <button class="knopf" onclick="$('smBlatt').remove()">Schließen</button>`).classList.add("sc-blatt");
   await smLaden(true); smZeigen(); rundSeminareZeigen();
@@ -31345,7 +31458,7 @@ async function rcBild(param) {
 }
 const DRUCKARTEN = {
   reisecheckliste: { bauen: (o, p) => druckReiseCheckliste(p) }, // KC-CLUB-REISE-CHECKLISTE (2.223.0)
-  tischbestaetigung: { bauen: (o, p) => druckTischBestaetigung(p) }, // 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN: Teilnahmebestätigung Seminar
+  tischbestaetigung: { bauen: (o, p) => druckTischBestaetigung(p) }, // 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: Teilnahmebestätigung Seminar
   schild: { bauen: () => druckSchild() }, // KC-CLUB-SCHILDER (2.150.0)
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
@@ -35026,7 +35139,7 @@ const FENSTER_NAMEN = {
   buWeiter: "🏢 Büro: Wie weiter?", bwEinBlatt: "👋 Bühne: Einladung", caBlatt: "🍽️ Clubabend Live", cfBlatt: "🎨 Chat-Farben", chatBlatt: "💬 Unterhaltung (Fenster)",
   chatMitgliederBlatt: "👥 Teilnehmer der Unterhaltung", cjBlatt: "📅 Clubjahr", cuFenster: "📊 Kurze Abstimmung", dgBlatt: "👨‍🍳 Dienst-Gruß", diagBlatt: "🩺 Server-Diagnose",
   diktatBlatt: "✍️ Diktieren", druckBlatt: "🖨️ Drucken", dsBlatt: "🗓️ Dienstplan", dsOrteBlatt: "📍 Dienst-Orte", dsWerBlatt: "👥 Wer ist heute im Dienst",
-  rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", // 2.760.0 KC-CLUB-RUNDER-TISCH
+  rundBlatt: "🪑 Runder Tisch", rundNeuBlatt: "🪑 Zum Runden Tisch einladen", rundTischBlatt: "🪑 Am Runden Tisch", // 2.762.0 KC-CLUB-RUNDER-TISCH
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", erinBlatt: "🔔 Erinnerung für dich",
@@ -35062,7 +35175,7 @@ Object.assign(SPUR_WAS, {
   fenster: "🪟", vorlesen: "🔊 Text vorgelesen",
   klopf_verpasst: "👋 Verpasstes Anklopfen angezeigt", dw_laufband: "🗓️ Dienstwunsch aus dem Info-Feld geöffnet", eselsohr: "📄 Eselsohr: Rückseite des Kopfs geöffnet", kachel_rueck: "🔄 Kachel umgedreht (Rückseite)",
   vorfuehren_ton: "📺 Live zeigen mit Ton gestartet", mail_rund: "✉️ Rundmail verschickt", gesendet_mehrfach: "✉️ Nachricht an mehrere einzeln verschickt", buero_einlesen: "📥 Büro: Dokument eingelesen",
-  tat_tisch_neu: "🪑 Zum Runden Tisch eingeladen", tat_tisch_zusage: "🪑 Zum Runden Tisch zugesagt", tat_tisch_zusage_weg: "🪑 Zusage zum Runden Tisch zurückgenommen", tat_tisch_weg: "🪑 Runden Tisch verlassen", // 2.760.0
+  tat_tisch_neu: "🪑 Zum Runden Tisch eingeladen", tat_tisch_zusage: "🪑 Zum Runden Tisch zugesagt", tat_tisch_zusage_weg: "🪑 Zusage zum Runden Tisch zurückgenommen", tat_tisch_weg: "🪑 Runden Tisch verlassen", // 2.762.0
   einmal_foto: "📸 Einmal-Foto angesehen", mitschauen_laeuft: "🔴 Mitschauen läuft", fernhilfe_ton: "🛟 Fernhilfe mit Ton gestartet",
   unterstuetzung_keine: "🤝 Unterstützung gewählt: keine", unterstuetzung_etwas: "🤝 Unterstützung gewählt: etwas", unterstuetzung_viel: "🤝 Unterstützung gewählt: viel",
   hz_kapitel: "❓ Hilfe-Kapitel geöffnet:", hz_eintrag: "❓ Hilfetext aufgerufen:", hz_zeig: "👉 Hilfe „Zeig mir wo“:", hz_vorlesen: "🔊 Hilfetext vorgelesen:",
@@ -35093,7 +35206,7 @@ const SPUR_TATEN = {
   erstattung_senden: () => ["tat_erstattung"], feedback_senden: () => ["tat_feedback"], hilfe_aufruf: () => ["tat_hilfe_aufruf"], hilfe_antwort: () => ["tat_hilfe_antwort"],
   treffen_speichern: () => ["tat_termin_neu"], aufgabe_speichern: () => ["tat_aufgabe"], todo_anlegen: () => ["tat_todo"], chat_umfrage_stimmen: () => ["tat_umfrage_stimme"],
   rezept_speichern: () => ["tat_rezept"], video_bewerten: (d) => ["tat_video_bewertet", d.video],
-  tisch_anlegen: () => ["tat_tisch_neu"], tisch_zusage: (d) => [d.zusage === "ja" ? "tat_tisch_zusage" : "tat_tisch_zusage_weg"], tisch_verlassen: () => ["tat_tisch_weg"], // 2.760.0 KC-CLUB-RUNDER-TISCH
+  tisch_anlegen: () => ["tat_tisch_neu"], tisch_zusage: (d) => [d.zusage === "ja" ? "tat_tisch_zusage" : "tat_tisch_zusage_weg"], tisch_verlassen: () => ["tat_tisch_weg"], // 2.762.0 KC-CLUB-RUNDER-TISCH
   hilfe_bewerten: (d) => [d.wert > 0 ? "hz_gut" : d.wert < 0 ? "hz_schlecht" : "hz_bew_weg", d.id],
 };
 function spurTat(action, d) { try { const f = SPUR_TATEN[action]; if (!f) return; const [w, mit] = f(d || {}) || []; if (w) spur(w, mit || null); } catch {} } // aus api() nach jeder erfolgreichen Antwort

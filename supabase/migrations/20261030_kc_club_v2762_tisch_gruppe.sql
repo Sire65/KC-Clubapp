@@ -2,7 +2,7 @@
 -- Besprechungen anberaumt werden“). Spezifikation: docs/RUNDER_TISCH.md (Abschnitt 14). Nur additiv.
 -- gruppe_id: feste Chat-Gruppe (kc_club_gruppen.thread_id). Dann sehen, sagen zu und nehmen Platz nur die Mitglieder dieser Gruppe (+ wer leitet).
 -- Kein Fremdschlüssel: wird die Gruppe gelöscht, bleibt der Tisch geschlossen (niemand mehr außer Gastgeber/Admin sieht ihn) statt für alle offen.
--- Rückweg: alter table public.kc_club_tisch drop column gruppe_id; Funktion aus 20261030_kc_club_v2761_tisch_arten.sql neu einspielen.
+-- Rückweg: alter table public.kc_club_tisch drop column gruppe_id; Funktion aus 20261030_kc_club_v2762_tisch_arten.sql neu einspielen.
 alter table public.kc_club_tisch add column if not exists gruppe_id uuid;
 create index if not exists kc_club_tisch_gruppe on public.kc_club_tisch (gruppe_id) where gruppe_id is not null;
 

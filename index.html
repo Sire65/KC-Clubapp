@@ -4503,7 +4503,7 @@
   .ds-karte { display: flex; align-items: center; gap: 12px; width: 100%; margin: 8px 0; padding: 14px 16px; border-radius: var(--radius); border: 2px solid; background: var(--karte); color: var(--text); text-align: left; cursor: pointer; font: inherit; } /* 2.590.0 KC-CLUB-DIENST-STEMPEL */
   .ds-karte.ds-aus { border-color: #1e8449; } .ds-karte.ds-an { border-color: var(--rot); } .ds-sym { font-size: 1.8rem; } .ds-text { flex: 1; display: flex; flex-direction: column; gap: 2px; } .ds-text b { font-size: 1.15rem; } .ds-text small { color: var(--grau); } .ds-pfeil { font-size: 1.6rem; color: var(--grau); }
   .ds-test { font-size: .75rem; font-weight: 600; color: var(--grau); }
-  /* 2.760.0 KC-CLUB-RUNDER-TISCH: Holztisch mit Plätzen im Kreis (bis 8 groß, bis 18 kleiner), grau = Zustand unbekannt, gestrichelt = frei */
+  /* 2.762.0 KC-CLUB-RUNDER-TISCH: Holztisch mit Plätzen im Kreis (bis 8 groß, bis 18 kleiner), grau = Zustand unbekannt, gestrichelt = frei */
   .rund-start { border-color: #8a5d34; }
   .rund-karte .rund-phase { color: var(--grau); font-weight: 600; } .rund-karte.rund-offen, .rund-karte.rund-gleich { border: 2px solid var(--gruen); }
   .rund-beschreibung { margin: 4px 0; white-space: pre-wrap; } .rund-vorschlaege { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
@@ -4523,7 +4523,7 @@
   .rund-platz.gastgeber .rund-name { color: var(--text); font-weight: 700; }
   .rund-warte { background: var(--gelbbg); color: var(--gelb); padding: 8px 12px; border-radius: 12px; }
   .rund-leiste { flex-wrap: wrap; }
-  /* 2.761.0 KC-CLUB-RUNDER-TISCH-ARTEN: Art-Auswahl, Tagesordnung, Seminar als Hörsaal (Referent am Pult, Teilnehmer in Reihen) */
+  /* 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: Art-Auswahl, Tagesordnung, Seminar als Hörsaal (Referent am Pult, Teilnehmer in Reihen) */
   .rund-art { font-size: .8rem; font-weight: 700; color: var(--grau); letter-spacing: .02em; }
   .rund-to { margin: 6px 0; padding-left: 22px; } .rund-to li { margin: 2px 0; } .rund-to-karte summary { cursor: pointer; }
   .rund-arten { display: grid; gap: 8px; margin: 4px 0 10px; }
@@ -4596,6 +4596,23 @@
   .anruf-zweit b { font-size: 1.1rem; } .anruf-zweit .zk { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
   .anruf-zweit .zk button { border: none; border-radius: 999px; padding: 9px 14px; font: inherit; font-weight: 800; cursor: pointer; background: rgba(255,255,255,.22); color: #fff; }
   .anruf-zweit .zk .ja { background: #27ae60; } .anruf-zweit .zk .nein { background: #d32f2f; }
+  /* KC-CLUB-GESPRAECHE (Stufe 1): Schilder im Kopf, Fenster, Club-Netz, Warte-Anzeige */
+  .mini .on-namen .on-name.on-gs { background: rgba(46,125,79,.9); color: #fff; box-shadow: none; }
+  .gs-reihe { display: flex; align-items: center; justify-content: center; gap: 0; margin: 10px 0; }
+  .gs-person { display: grid; justify-items: center; gap: 2px; flex: 0 0 auto; } .gs-person small { font-weight: 700; }
+  .gs-linie { flex: 1 1 24px; max-width: 60px; height: 4px; background: #2e7d4f; border-radius: 2px; }
+  .gs-hoerer { position: relative; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; background: #2e7d4f; color: #fff; display: grid; place-items: center; font-size: 1.1rem; }
+  .gs-hoerer i { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #2e7d4f; animation: gsWelle 1.8s ease-out infinite; }
+  .gs-hoerer i + i { animation-delay: .9s; }
+  .gs-hoerer.gs-video, .gs-hoerer.gs-video i { background: #2a5d9f; border-color: #2a5d9f; }
+  @keyframes gsWelle { from { transform: scale(1); opacity: .55; } to { transform: scale(2.2); opacity: 0; } }
+  .gs-tisch { display: grid; justify-items: center; gap: 8px; } .gs-runde { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 8px 12px; border-radius: 999px; box-shadow: inset 0 0 0 3px #2e7d4f; }
+  .gs-netz-zeile { display: grid; width: 100%; justify-items: center; gap: 2px; padding: 6px; margin: 0 0 8px; border: none; border-radius: 16px; background: var(--karte, #fff); color: inherit; font: inherit; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .gs-knopf { background: #2e7d4f !important; color: #fff !important; }
+  .gs-warten { position: fixed; left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: 16px; background: var(--karte, #fff); color: var(--text, #2b1a1c); box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+  .gs-warten b { flex: 1 1 160px; } .gs-uhr { font-weight: 800; font-variant-numeric: tabular-nums; color: #741521; }
+  html.spar .gs-hoerer i { animation: none; display: none; }
+  @media (prefers-reduced-motion: reduce) { .gs-hoerer i { animation: none; display: none; } }
   .anruf-konf { display: grid; gap: 4px; font-size: .95rem; } .anruf-konf:empty { display: none; }
   .anruf-schwach { font-size: .9rem; padding: 4px 12px; border-radius: 999px; background: rgba(255, 196, 0, .22); } /* KC-CLUB-ANRUF-BESSER */
   .konf-wahl { display: grid; gap: 8px; margin: 0 0 10px; } .konf-wahl .knopf { text-align: left; }
@@ -5299,7 +5316,7 @@
     </div>
     <div id="updateHinweis"></div>
     <div id="dsKarte"></div><!-- 2.590.0 KC-CLUB-DIENST-STEMPEL: Dienst beginnen/beenden -->
-    <div id="rundKarte"></div><!-- 2.760.0 KC-CLUB-RUNDER-TISCH: „Gleich: Runder Tisch …“ -->
+    <div id="rundKarte"></div><!-- 2.762.0 KC-CLUB-RUNDER-TISCH: „Gleich: Runder Tisch …“ -->
     <div id="rgHinweis"></div><!-- KC-CLUB-RUNDGANG-HINWEIS (2.243.0) -->
     <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Mein Ausweis-QR" onclick="versionMarkeTipp()">v–</button></div>
     <div class="register" id="register"></div>
@@ -5769,6 +5786,7 @@
       </details>
       <!-- KC-CLUB-ANKLOPFEN-ERLAUBEN (1.8.0) -->
       <div class="schalter"><div><b>👋 Anklopfen erlauben</b><div class="hinweis">Andere dürfen bei dir anklopfen, wenn du online bist. Aus: Sie sehen 🔕 und schreiben dir stattdessen eine Nachricht.</div></div><input type="checkbox" id="setAnklopfen" checked onchange="anklopfenSetzen({ erlaubt: this.checked })"></div>
+      <div class="schalter"><div><b>📞 Andere dürfen sehen, wenn ich telefoniere</b><div class="hinweis">Nur <b>dass</b>, nie <b>was</b>. So können andere anklopfen und dazukommen. Aus: Dein Telefonat erscheint ohne Namen.</div></div><input type="checkbox" id="setGespraeche" checked onchange="anklopfenSetzen({ gespraeche: this.checked })"></div>
       <!-- 2.568.0 KC-CLUB-ANRUFBEANTWORTER-EINSTELLUNG (Wunsch Hansi „auch in Voreinstellungen Anrufbeantworterfunktion einschalten“) -->
       <label class="feld" style="margin:6px 0 2px">📼 Anrufbeantworter beim Anklopfen<select id="setKlopfAb" onchange="anklopfenSetzen({ ab: this.value })">
         <option value="knopf">Nur, wenn ich ihn beim Anklopfen einschalte</option><option value="spaeter">Automatisch, wenn ich nicht innerhalb 1 Minute annehme</option><option value="sofort">Immer sofort an – ich möchte nicht gestört werden</option></select></label>
@@ -6095,6 +6113,7 @@
   <!-- KC-CLUB-ANRUF-KURZANTWORT (0.81.0): mit Text ablehnen · KC-CLUB-ANRUF-ZWEIT: zweiter Anruf während eines Gesprächs -->
   <div class="anruf-antworten versteckt" id="anrufAntworten"></div>
   <div class="anruf-zweit versteckt" id="anrufZweit" role="alert"></div>
+  <div class="anruf-zweit versteckt" id="anrufDazu" role="alert"></div><!-- KC-CLUB-GESPRAECHE: „… möchte dazukommen“ -->
   <small>📞 Anruf über die Köcheclub-App (Test) · kostenlos, direkt von Handy zu Handy</small>
   <audio id="anrufTon" autoplay playsinline></audio>
   <video id="anrufVideo" class="fern versteckt" autoplay playsinline muted></video>

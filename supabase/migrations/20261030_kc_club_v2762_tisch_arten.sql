@@ -4,7 +4,7 @@
 -- tagesordnung: Liste kurzer Punkte (nur Besprechung, höchstens 12).
 -- kc_club_tisch_beitreten: beim Seminar nur, wer angemeldet ist (Zusage „ja“) oder den Tisch leitet → sonst „anmeldung“.
 -- Aufräumen (Club-Server): beim Seminar bleiben die Zeilen der Anwesenden (für die Teilnahmebestätigung), alles andere wie beim Runden Tisch.
--- Rückweg: alter table public.kc_club_tisch drop column tagesordnung, drop column art; Funktion aus 20261030_kc_club_v2760_runder_tisch.sql neu einspielen.
+-- Rückweg: alter table public.kc_club_tisch drop column tagesordnung, drop column art; Funktion aus 20261030_kc_club_v2762_runder_tisch.sql neu einspielen.
 alter table public.kc_club_tisch add column if not exists art text not null default 'runder_tisch';
 alter table public.kc_club_tisch drop constraint if exists kc_club_tisch_art_check;
 alter table public.kc_club_tisch add constraint kc_club_tisch_art_check check (art in ('runder_tisch', 'seminar', 'besprechung'));

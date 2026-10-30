@@ -1,10 +1,4 @@
-voll=voll
-herzschlag=da
-platz_frei_nach_ablauf=ok
-eine_zeile=1
-chat_teilnehmer=5
-zu_frueh=zu_frueh
-vorbei=vorbei
-abgesagt=abgesagt
-neunzehn_verboten=t
-nur_server=t
+dazukommen_geht=t
+sprechen_geht=t
+falsche_art_abgelehnt=t
+spalte_da=t
