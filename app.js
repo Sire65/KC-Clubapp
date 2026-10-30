@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.776.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.777.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22086,8 +22086,9 @@ function rundKarteHtml(t) {
   const zus = t.phase === "vorbei" ? "" : A.anmeldung ? `📝 ${angemeldet} von ${t.plaetze} Plätzen angemeldet${t.meineZusage === "ja" && !t.darfLeiten ? " – du bist dabei" : ""}`
     : t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
   const am = t.phase === "offen" || t.phase === "gleich" ? ` · 🪑 ${t.amTisch.length} von ${t.plaetze} am Tisch` : t.phase === "vorbei" ? ` · ${t.warenDa} waren dabei` : "";
+  const uhr = Date.parse(t.beginn) - Date.now() < 86400000 ? rundUhrHtml(t) : ""; // 2.777.0: Uhr ab 24 Std. vorher
   return `<div class="karte rund-karte rund-${esc(t.phase)}"><div class="rund-art">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 nur ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""}</div><div><b>${esc(t.thema)}</b> <small class="rund-phase">${RUND_PHASE[t.phase] || ""}</small></div>
-    <div class="hinweis">${esc(t.text)} · ${esc(A.leiter)}: ${esc(t.gastgeberName)}</div>
+    <div class="hinweis">${esc(t.text)} · ${esc(A.leiter)}: ${esc(t.gastgeberName)}</div>${uhr ? `<div class="rund-uhr-zeile">${uhr}</div>` : ""}
     ${t.gaeste?.length ? `<div class="rund-gaeste">🙋 Mit Gast: ${esc(t.gaeste.map((x) => x.name + (x.rolle ? ` (${x.rolle})` : "")).join(", "))}</div>` : ""}
     ${t.beschreibung ? `<div class="rund-beschreibung">${esc(t.beschreibung)}</div>` : ""}
     ${t.tagesordnung?.length && t.phase !== "vorbei" ? `<ol class="rund-to">${t.tagesordnung.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
@@ -22274,11 +22275,12 @@ function rundTischZeichnen() {
   const zeit = t.phase === "gleich" ? `beginnt um ${rundUhr(t.beginn)} Uhr` : t.phase === "offen" ? `noch ${restMin} Min. (bis ${rundUhr(t.ende)} Uhr)` : RUND_PHASE[t.phase] || "";
   const unsicher = t.amTisch.filter((p) => !p.sicher).length;
   el.innerHTML = `<h3 style="margin:0">${A.sym} ${esc(t.thema)}${nurTest("runder_tisch") ? ' <small class="ds-test">🔒 Test</small>' : ""}</h3>
-    <div class="hinweis">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""} · ${esc(A.leiter)}: ${esc(t.gastgeberName)} · ${esc(zeit)}</div>
+    <div class="hinweis">${A.sym} ${esc(A.t)}${t.gruppe ? ` · 🔒 ${esc(t.gruppe.symbol)} ${esc(t.gruppe.name)}` : ""} · ${esc(A.leiter)}: ${esc(t.gastgeberName)}${rundUhrHtml(t, true) ? "" : ` · ${esc(zeit)}`}</div>
+    ${rundUhrHtml(t, true) ? `<div class="rund-uhr-leiste">${rundUhrHtml(t, true)} <small>${Date.now() < Date.parse(t.beginn) ? `um ${esc(rundUhr(t.beginn))} Uhr` : `bis ${esc(rundUhr(t.ende))} Uhr`}</small></div>` : ""}
     <div id="tlBereich" class="tl-bereich"></div>
     ${sitze && t.phase === "offen" && !rundLiveAn(t.id) ? `<button class="knopf haupt tl-start" onclick="tlStart(${jsArg(t.id)})">🔴 Live dazuschalten <small>Ton · Kamera · Bildschirm · Unterlagen zeigen</small></button>` : ""}
     ${t.art === "seminar" ? rundHoersaalHtml(t) : `<div class="rund-buehne" role="img" aria-label="${esc(`${A.t}: ${t.amTisch.length} von ${t.plaetze} Plätzen besetzt`)}">
-      <div class="rund-holz"><div><small>${esc(t.text.split(" · ")[0])}</small><strong>${esc(t.thema)}</strong><span>${A.sym} ${t.amTisch.length} / ${t.plaetze}</span></div></div>
+      <div class="rund-holz"><div><small>${esc(t.text.split(" · ")[0])}</small><strong>${esc(t.thema)}</strong><span>${A.sym} ${t.amTisch.length} / ${t.plaetze}</span>${rundUhrHtml(t)}</div></div>
       ${rundPlaetzeHtml(t)}
     </div>`}
     ${t.art !== "seminar" && t.amTisch.length && !rundGroesse(rundBreite(), t.plaetze).namen ? `<p class="hinweis rund-namen">${A.sym} Dabei: ${t.amTisch.map((p) => `${p.id === t.gastgeber ? (t.art === "seminar" ? "🎤 " : "👑 ") : ""}${esc(p.name.split(" ")[0])}${p.sicher ? "" : " ⚪"}`).join(", ")}</p>` : ""}
@@ -22351,7 +22353,7 @@ function rundKarteZeichnen() {
   const sitze = RUND.sitze === t.id, test = nurTest("runder_tisch") ? ' <span class="ds-test">🔒 Test</span>' : "";
   el.innerHTML = `<button type="button" class="ds-karte rund-start" onclick="rundStartKarte(${jsArg(t.id)})">
     <span class="ds-sym">${rundArt(t).sym}</span><span class="ds-text"><b>${sitze ? `Du bist dabei: ${esc(rundArt(t).t)}` : `${t0 < Date.parse(t.beginn) ? "Gleich" : "Jetzt"}: ${esc(rundArt(t).t)}`}${test}</b>
-    <small>„${esc(t.thema)}“ · ${t0 < Date.parse(t.beginn) ? `ab ${esc(rundUhr(t.beginn))} Uhr` : `bis ${esc(rundUhr(t.ende))} Uhr`}${da.length > 1 ? ` · und ${da.length - 1} weiterer` : ""} – ${sitze ? "zurück zum Tisch" : "jetzt Platz nehmen"}</small></span><span class="ds-pfeil">›</span></button>`;
+    <small>„${esc(t.thema)}“ · ${t0 < Date.parse(t.beginn) ? `ab ${esc(rundUhr(t.beginn))} Uhr` : `bis ${esc(rundUhr(t.ende))} Uhr`} · ${rundUhrHtml({ ...t, phase: "offen" })}${da.length > 1 ? ` · und ${da.length - 1} weiterer` : ""} – ${sitze ? "zurück zum Tisch" : "jetzt Platz nehmen"}</small></span><span class="ds-pfeil">›</span></button>`;
 }
 // ---- 2.762.0 Teilnahmebestätigung (Seminar): auf dem Club-Briefbogen als PDF/Drucken (KC-CLUB-DRUCK-PDF), auch unter „🎓 Meine Schulung“ ----
 const fRundDatum = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -22451,6 +22453,40 @@ async function rundTascheVorladen(id) {
     }
   } catch {}
 }
+// ---- 2.777.0 KC-CLUB-RUNDER-TISCH-UHR (Wunsch Hansi 30.10.2026 „ein Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine
+// Runterzähl-Uhr, wie lange der Tisch noch läuft“): zählt nur auf dem Gerät (jede Sekunde, nur wenn die App sichtbar ist) – keine Datenbank-Abfrage.
+// Vor Beginn: „⏳ beginnt in 12:34“ (ab 1 Std. „2 Std. 05 Min.“, ab 1 Tag „3 Tagen“); während: „⏱️ noch 42:10“ – letzte 5 Min. gelb, letzte Minute rot.
+// Ist die Zeit um, wechselt die Anzeige von selbst (Tisch beginnt bzw. ist vorbei) – der Server prüft beim nächsten Herzschlag ohnehin.
+function rundUhrText(rest) {
+  if (rest <= 0) return "0:00";
+  const s = Math.ceil(rest / 1000), tage = Math.floor(s / 86400), std = Math.floor(s / 3600), min = Math.floor((s % 3600) / 60), sek = s % 60;
+  if (tage >= 1) return tage === 1 ? "1 Tag" : `${tage} Tagen`;
+  if (std >= 1) return `${std} Std. ${String(min).padStart(2, "0")} Min.`;
+  return `${min}:${String(sek).padStart(2, "0")}`;
+}
+function rundUhrHtml(t, gross) {
+  const jetzt = Date.now(), b = Date.parse(t.beginn), e = Date.parse(t.ende);
+  if (t.phase === "abgesagt" || t.status === "abgesagt" || !(jetzt < e)) return "";
+  const vor = jetzt < b, ms = vor ? b : e;
+  return `<span class="rund-uhr${gross ? " gross" : ""}" role="timer" aria-live="off">${vor ? "⏳ beginnt in" : "⏱️ noch"} <b data-rund-uhr="${vor ? "beginn" : "ende"}" data-ms="${ms}">${rundUhrText(ms - jetzt)}</b></span>`;
+}
+const RUND_UHR = { neu: null };
+setInterval(() => {
+  if (document.hidden) return;
+  let um = false; const jetzt = Date.now();
+  for (const el of document.querySelectorAll("[data-rund-uhr]")) {
+    const rest = Number(el.dataset.ms) - jetzt, ende = el.dataset.rundUhr === "ende";
+    el.textContent = rundUhrText(rest);
+    el.closest(".rund-uhr")?.classList.toggle("bald", ende && rest <= 5 * 60000 && rest > 60000);
+    el.closest(".rund-uhr")?.classList.toggle("knapp", ende && rest <= 60000);
+    if (rest <= 0) um = true;
+  }
+  if (um && !RUND_UHR.neu) RUND_UHR.neu = setTimeout(() => { // Zeit ist um: Phase auf dem Gerät nachziehen und neu zeichnen
+    RUND_UHR.neu = null; const n = Date.now();
+    for (const t of rundTische()) { if (t.phase === "abgesagt") continue; if (n >= Date.parse(t.ende)) t.phase = "vorbei"; else if (n >= Date.parse(t.beginn)) t.phase = "offen"; }
+    rundZeichnen(); rundTischZeichnen(); rundKarteZeichnen();
+  }, 400);
+}, 1000);
 async function rundStartKarte(id) { if (!RUND.lage) await rundOeffnen(id); else rundTischZeigen(id); }
 setInterval(() => { try { rundKarteZeichnen(); if (RUND.offen) rundTischZeichnen(); } catch {} }, 60000);
 addEventListener("resize", () => { if (RUND.offen) { clearTimeout(RUND.gross); RUND.gross = setTimeout(rundTischZeichnen, 200); } }); // Handy gedreht → Plätze neu ausmessen

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.777.0 – 2026-10-30 – ⏳ Runder Tisch: Countdown bis zum Beginn und Restzeit-Uhr (KC-CLUB-RUNDER-TISCH-UHR) · nur App
+Wunsch Hansi (30.10.): „Einen Timer, wie lange es noch dauert, bis der Runde Tisch beginnt, und eine Runterzähl-Uhr, wie lange der Tisch noch laufen wird.“ Noch nur Admin zum Testen.
+- **Vor Beginn:** „⏳ beginnt in 12:34“ (ab 1 Std. „2 Std. 05 Min.“, ab 1 Tag „3 Tagen“) – am Tisch groß oben, in der Tischmitte, auf der Startseiten-Karte und in der Liste (ab 24 Std. vorher).
+- **Während des Tisches:** „⏱️ noch 42:10“ bis zum Ende; die letzten 5 Minuten gelb, die letzte Minute rot. Verlängert die Leitung um 30 Min., zählt die Uhr weiter.
+- Ist die Zeit um, wechselt die Anzeige von selbst (Tisch beginnt bzw. ist vorbei).
+- Sparsam: die Uhr zählt nur auf dem Gerät, jede Sekunde und nur, solange die App sichtbar ist – keine Datenbank-Abfrage.
+- Tests: `tests/runder-tisch.test.mjs` (Formate), Klick-Rundgang (Restzeit zählt sichtbar herunter). Rückweg: App 2.776.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.776.0 – 2026-10-30 – 🙋 Runder Tisch: externe Tischgäste mit eigenem Link (KC-CLUB-RUNDER-TISCH-GAST, Stufe RT4) · Server 2.776.0 · DB
 Wunsch Hansi (30.10.): „Weiter bauen“ – nach Live, Musik und Videos jetzt die externen Gäste (Spezifikation Abschnitte 4 und 18; Entscheidung: jedes Mitglied darf Gäste einladen).
 - **🙋 Gast von außen einladen** (am Tisch, jedes Mitglied, das den Tisch sieht): Name und Rolle eingeben → **persönlicher Link** zum Teilen/Kopieren. Er wird nur dieses eine Mal angezeigt – der Server speichert nur seinen Fingerabdruck und verschickt ihn nie selbst. Höchstens **2 Gäste** je Tisch (zählen zu den Plätzen). **✕ Zurückziehen**: wer eingeladen hat, wer leitet, Admin – auch mitten im Tisch.
