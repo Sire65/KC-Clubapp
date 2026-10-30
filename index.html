@@ -3539,6 +3539,25 @@
   .bu-regal { display: grid; grid-template-columns: repeat(auto-fit, 48px); grid-auto-rows: 226px; justify-content: center; column-gap: 6px; margin: 0 -12px; padding: 0 12px;
     background: repeating-linear-gradient(180deg, transparent 0 210px, #b9976d 210px 214px, #a4835b 214px 226px); }
   .bu-brett { display: none; }
+  /* 2.769.0 KC-CLUB-AKTENSCHRANK-JALOUSIE: Einklapp-Zeile, Jalousie (senkrechte Lamellen, schiebt sich nach links zusammen), Emblem, runder Pfeilschalter */
+  .bu-schrank-zeile { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; padding: 12px 14px; font: inherit; color: inherit; cursor: pointer; text-align: left;
+    background: linear-gradient(180deg, #e9dfd1, #ddd0be); border-bottom: 3px solid #a4835b; }
+  :root.dunkel .bu-schrank-zeile { background: linear-gradient(180deg, #3a3230, #2f2725); border-bottom-color: #6b5338; }
+  .bu-schrank-zeile b { font-size: 1.05rem; } .bu-schrank-zeile small { flex: 1; color: var(--grau); font-weight: 700; }
+  .bu-schrank-sym { font-size: 1.3rem; } .bu-schrank-pfeil { font-size: 1.3rem; font-weight: 900; line-height: 1; padding: 0 4px; }
+  .bu-schrank-koerper { position: relative; overflow: hidden; }
+  .bu-jalousie { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; z-index: 2; overflow: hidden; pointer-events: none; perspective: 700px; }
+  .bu-schrank.auf .bu-jalousie { width: 0; }
+  .bu-jal-lamellen { position: absolute; inset: 0; display: flex; gap: 1px; background: rgba(60, 10, 20, .28); }
+  .bu-jal-lamelle { flex: 1; transform-origin: center; background: linear-gradient(to right, #fbf4ea 0%, #efe3d1 45%, #dccab1 85%, #b9a283 100%); box-shadow: 1px 0 2px rgba(0, 0, 0, .3); }
+  :root.dunkel .bu-jal-lamelle { background: linear-gradient(to right, #6a5a4a 0%, #5a4b3c 45%, #4a3d30 85%, #3a2f25 100%); }
+  .bu-jal-marke { position: absolute; top: 50%; left: calc(var(--sb, 100vw) / 2 - 40px); transform: translateY(-50%); width: 80px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bu-jal-marke img { width: 64px; height: auto; filter: brightness(0) opacity(.42) drop-shadow(0 1px 0 rgba(255, 255, 255, .7)); }
+  .bu-jal-marke small { font: italic 700 .9rem/1 Georgia, "Times New Roman", serif; color: #741521; letter-spacing: .03em; white-space: nowrap; text-shadow: 0 1px 0 rgba(255, 255, 255, .6); }
+  :root.dunkel .bu-jal-marke img { filter: brightness(0) invert(1) opacity(.5); } :root.dunkel .bu-jal-marke small { color: #f3e9dc; text-shadow: none; }
+  .bu-jal-griff { position: absolute; top: 50%; right: 8px; z-index: 3; width: 44px; height: 44px; margin-top: -22px; border-radius: 50%; border: 2px solid #f3e9dc; cursor: pointer;
+    background: radial-gradient(circle at 40% 35%, #a8364a, #741521 70%); color: #fff; font-size: 1.1rem; box-shadow: 0 3px 8px rgba(0, 0, 0, .35); }
+  .bu-schrank.auf .bu-jal-griff { right: auto; left: 6px; }
   .bu-ordner { width: 48px; height: 204px; align-self: end; margin-bottom: 16px; position: relative; border: none; cursor: pointer; padding: 8px 0 10px; border-radius: 5px 5px 2px 2px;
     background: linear-gradient(90deg, rgba(0,0,0,.18), transparent 22%, transparent 78%, rgba(0,0,0,.14)), var(--of); color: #fffdf8;
     display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .18s ease, box-shadow .18s ease; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
@@ -3592,9 +3611,15 @@
   .bu-telliste { max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
   .bu-telzeile { display: flex; align-items: center; gap: 10px; border: none; background: var(--karte2); color: var(--text); border-radius: 10px; padding: 10px 12px; font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
   .bu-telzeile b { flex: 1; }
-  .bu-mikro { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; width: 100%; margin-top: 8px; border: 1px dashed var(--linie); border-radius: 14px; background: var(--karte2); color: var(--text); padding: 8px 12px; font: inherit; text-align: left; cursor: pointer; }
-  .bu-mikro span { font-size: 1.6rem; width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #a65a4a; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
-  .bu-mikro b { flex: 1; } .bu-mikro small { flex-basis: 100%; color: var(--grau); padding-left: 56px; margin-top: -8px; }
+  /* 2.768.0 KC-CLUB-BUERO-KNOEPFE-KLEIN: kleine Icon-Knöpfe im Büro-Kopf (bis zu 6 nebeneinander, Wort darunter) */
+  .bu-knopfreihe.bu-ikonreihe { grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); gap: 6px; }
+  .bu-ikon { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 54px; padding: 5px 2px; border: 0; border-radius: 12px;
+    background: var(--karte2); color: inherit; font: inherit; cursor: pointer; box-shadow: 0 2px 6px rgba(0, 0, 0, .12); }
+  .bu-ikon span { font-size: 1.45rem; line-height: 1.1; } .bu-ikon small { font-size: .68rem; font-weight: 700; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .bu-ikon:active { transform: scale(.95); }
+  .bu-mikro:not(.bu-ikon) { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; width: 100%; margin-top: 8px; border: 1px dashed var(--linie); border-radius: 14px; background: var(--karte2); color: var(--text); padding: 8px 12px; font: inherit; text-align: left; cursor: pointer; }
+  .bu-mikro:not(.bu-ikon) span { font-size: 1.6rem; width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #a65a4a; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .bu-mikro:not(.bu-ikon) b { flex: 1; } .bu-mikro:not(.bu-ikon) small { flex-basis: 100%; color: var(--grau); padding-left: 56px; margin-top: -8px; }
   .mikro-wahl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .mikro-wahl button { display: flex !important; flex-direction: column; align-items: center; justify-content: center; min-height: 130px; gap: 4px; text-align: center; padding: 10px 8px; min-width: 0; }
   .mikro-wahl span { font-size: 2.2rem; line-height: 1; } .mikro-wahl b { display: block; font-size: 1.02rem; } .mikro-wahl small { display: block; font-weight: 400; font-size: .8rem; opacity: .92; line-height: 1.25; }
@@ -4551,6 +4576,11 @@
   .tl-voll { margin: 0 0 0 auto; min-width: 40px; } .tl-buehne:fullscreen { display: flex; flex-direction: column; } .tl-buehne:fullscreen .tl-seite, .tl-buehne:fullscreen .tl-gross { flex: 1; max-height: none; height: 100%; }
   .tl-seite, .tl-gross { display: block; width: 100%; max-height: 62vh; object-fit: contain; background: #fff; }
   .tl-gross { background: #000; }
+  /* 2.772.0 KC-CLUB-RUNDER-TISCH-ECKE: Kamera des Vortragenden klein in der Ecke (je Zuschauer ein-/ausschaltbar) */
+  .tl-gross-rahmen { position: relative; } .tl-buehne:fullscreen .tl-gross-rahmen { flex: 1; display: flex; } .tl-buehne:fullscreen .tl-gross-rahmen .tl-gross { flex: 1; }
+  .tl-eck { position: absolute; right: 8px; bottom: 8px; width: 26%; max-width: 220px; min-width: 90px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px;
+    border: 2px solid #f3e9dc; box-shadow: 0 3px 10px rgba(0, 0, 0, .5); background: #000; }
+  .tl-eck-knopf { margin: 0 0 0 auto; } .tl-eck-knopf + .tl-voll { margin-left: 6px; }
   .tl-buehne-leiste { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 6px; }
   .tl-buehne-leiste .knopf { margin: 0; min-width: 44px; }
   .tl-leute { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; margin-bottom: 10px; }
@@ -4564,6 +4594,17 @@
   .tl-leiste { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; }
   .tl-leiste .knopf { margin: 0; padding: 6px 2px; min-height: 56px; font-size: .76rem; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
   .tl-leiste .knopf span { font-size: 1.2rem; } .tl-tipp { margin: 6px 0 0; font-size: .75rem; }
+  .tl-musik { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--gelbbg); border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; font-size: .85rem; }
+  /* 2.774.0 KC-CLUB-TISCH-MUSIK-STOPP: Knöpfe direkt an der Musik + kleine Leiste unten, wenn der Tisch nicht zu sehen ist */
+  .tl-musik-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; } .tl-musik-knoepfe .knopf { margin: 0; }
+  /* 2.774.0 KC-CLUB-TISCH-TASCHE: Tasche packen, Auswahl am Tisch */
+  .rund-teil { padding: 10px 12px; } .rund-teil.gezeigt { opacity: .75; } .rund-teil-kopf { overflow-wrap: anywhere; } .rund-teil-nr { color: var(--grau); font-variant-numeric: tabular-nums; }
+  .rund-teil .knoepfe { margin-top: 6px; } .rund-vorab { background: var(--gruenbg); color: var(--textGruen, var(--gruen)); border-radius: 8px; padding: 1px 6px; }
+  .tl-tasche-wahl { display: grid; gap: 6px; margin: 6px 0 10px; padding: 8px; border-radius: 12px; background: var(--karte2); } .tl-tasche-wahl .knopf { text-align: left; margin: 0; }
+  .tl-musik-mini { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); width: min(560px, calc(100% - 24px)); z-index: 8900;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-radius: 14px; background: var(--gelbbg); color: var(--text); box-shadow: var(--schatten); font-size: .9rem; }
+  .tl-musik-mini .tl-musik-titel { flex: 1 1 140px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tl-laut { margin-left: auto; display: flex; align-items: center; gap: 4px; } .tl-laut input { width: 110px; }
   .rund-leiste { flex-wrap: wrap; }
   /* 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: Art-Auswahl, Tagesordnung, Seminar als Hörsaal (Referent am Pult, Teilnehmer in Reihen) */
   .rund-art { font-size: .8rem; font-weight: 700; color: var(--grau); letter-spacing: .02em; }
@@ -6344,7 +6385,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.767.0" data-v="2.767.0"></script>
+<script src="app.js?v=2.775.0" data-v="2.775.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

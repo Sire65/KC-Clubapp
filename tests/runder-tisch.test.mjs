@@ -2,7 +2,7 @@
 // Aufruf: node tests/runder-tisch.test.mjs (offline)
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { RT, RT_ARTEN, rtArt, rtEndeMs, rtPhase, rtAnlegenPruefen, rtSitzt, rtSicher, rtBeitretenPruefen, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtAnwesend, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis } from "../supabase/functions/kc-club/runder-tisch.js";
+import { RT, RT_ARTEN, rtArt, rtEndeMs, rtPhase, rtAnlegenPruefen, rtSitzt, rtSicher, rtBeitretenPruefen, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtAnwesend, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis, RT_TASCHE, rtTascheArt, rtTascheLegenPruefen, rtTascheSchieben } from "../supabase/functions/kc-club/runder-tisch.js";
 
 const M = 60000, T = 86400000, B = Date.parse("2026-11-05T19:00:00Z"); // Do 20:00 Berlin
 const tisch = { beginn: new Date(B).toISOString(), dauer_min: 60, verlaengert_min: 0, plaetze: 18, status: "geplant" };
@@ -83,7 +83,7 @@ assert.match(sql, /set search_path = public/);
 const server = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
 assert.match(server, /runder_tisch: \{ t: "🪑 Runder Tisch", [^}]*standard: "admin" \}/, "erst Hansi testet");
-for (const a of ["tisch_liste", "tisch_anlegen", "tisch_zusage", "tisch_platz", "tisch_verlassen", "tisch_gastgeber", "tisch_seminare_meine", "tisch_zeit_pruefen"]) {
+for (const a of ["tisch_liste", "tisch_anlegen", "tisch_zusage", "tisch_platz", "tisch_verlassen", "tisch_gastgeber", "tisch_seminare_meine", "tisch_zeit_pruefen", "tisch_tasche", "tisch_tasche_legen", "tisch_tasche_aendern"]) {
   assert.ok(server.includes(`case "${a}":`), "Server-Aktion fehlt: " + a);
   assert.ok(app.includes(`"${a}"`), "App ruft nicht: " + a);
   assert.ok(!server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT")).includes(`"${a}"`), "Gäste/Aushilfen dürfen nicht: " + a);
@@ -142,7 +142,7 @@ assert.match(sql3, /if v_t\.gruppe_id is not null and p_person <> v_t\.gastgeber
 assert.match(sql3, /return 'anmeldung'/, "Seminar-Regel bleibt");
 assert.match(server, /const ts = \(alle \?\? \[\]\)\.filter\(\(x: any\) => rtSichtbar\(x, ich, gr\)\);/, "Liste: Gruppen-Tische nur für Mitglieder");
 assert.match(server, /if \(gruppeId && !gruppe\) throw new Fehler\("Diese Gruppe gibt es nicht oder du bist nicht darin\.", 403\);/, "nur für eigene Gruppe einladen");
-assert.equal((server.match(/rtTischHolen\(p\.id, ich\)/g) || []).length, 3, "Zusage, Verlassen, Leiten prüfen die Gruppe");
+assert.equal((server.match(/rtTischHolen\(p\.id, ich\)/g) || []).length, 6, "Zusage, Verlassen, Leiten und die drei Tasche-Aktionen prüfen die Gruppe");
 
 // 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK: kein Clubabend, immer nur ein Tisch; andere Termine nur mit Rückfrage
 const I = (m) => new Date(B + m * M).toISOString(), Z = (a, b) => ({ vonMs: B + a * M, bisMs: B + b * M });
@@ -192,5 +192,32 @@ assert.match(tl, /if \(d\.typ === "stab" && vomLeiter\)/, "Redestab nur von der 
 assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `📎 Unterlage: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "Unterlagen gehen in den Tisch-Chat (Zugriff prüft der Server)");
 assert.match(tl, /if \(typeof z\.a !== "string" \|\| !\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(z\.a\)\) return;/, "gezeigte Unterlage nur als Kennung");
 assert.ok(!/MediaRecorder/.test(tl), "keine Aufzeichnung");
+assert.match(tl, /const k = TL\.iceVorab\.get|TL\.iceVorab\.get\(k\)/, "früh ankommende Wege werden gesammelt (2.773.0)");
+assert.match(tl, /TL\.baue\.add\(an\)/, "nie zwei Verbindungen gleichzeitig für dieselbe Person");
+assert.match(tl, /if \(von !== TL\.ich && t\?\.gastgeber !== TL\.ich\) return "";/, "📸 Ins Album nur Zeigender oder Leitung");
+assert.match(tl, /if \(datei\.size > 8 \* 1024 \* 1024\) return melde\(art === "video"/, "🎬 Video höchstens 8 MB");
+assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `\$\{art === "video" \? "🎬 Video" : "🎵 Musik"\} für alle: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "🎵/🎬 Lied und Video gehen in den Tisch-Chat (2.767.0/2.773.0)");
+assert.match(tl, /if \(typeof m\.a !== "string" \|\| !\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(m\.a\)/, "🎵 nur Kennung über die Leitung");
+assert.ok(!/["'`][\w./-]*\/[\w.-]+\.(mp3|m4a|ogg|wav)["'`]/.test(tl) && !/new Audio\(/.test(tl), "🎵 kein Lied fest eingebaut (keine Datei-Pfade)");
 assert.match(app, /if \(rundLiveAn\(id\)\) tlStopp\(true\); const r = await api\("tisch_verlassen"/, "Verlassen beendet Live");
+
+// 2.774.0 KC-CLUB-TISCH-TASCHE: jeder packt seine eigene Tasche (PDF, Foto, Musik), die Leitung markiert „vorab für alle“
+assert.equal(rtTascheArt("Ablauf.PDF", ""), "pdf"); assert.equal(rtTascheArt("x", "image/jpeg"), "foto"); assert.equal(rtTascheArt("Club-Song.mp3", "application/octet-stream"), "musik");
+assert.equal(rtTascheArt("tabelle.xlsx", "application/vnd.ms-excel"), null, "nur PDF, Foto, Musik");
+assert.equal(rtTascheLegenPruefen(tisch, B - T, 0, "pdf"), null, "vorher packen geht");
+assert.equal(rtTascheLegenPruefen(tisch, B + M, 3, "musik"), null, "während des Tisches auch");
+assert.match(rtTascheLegenPruefen(tisch, B + 61 * M, 0, "pdf"), /vorbei/);
+assert.match(rtTascheLegenPruefen(tisch, B - T, RT_TASCHE.max, "pdf"), /Höchstens 20/);
+assert.match(rtTascheLegenPruefen(tisch, B - T, 0, null), /PDFs, Fotos und Musik/);
+const teile = [{ id: "a", pos: 1 }, { id: "b", pos: 2 }, { id: "c", pos: 5 }];
+assert.deepEqual(rtTascheSchieben(teile, "c", "hoch"), [{ id: "c", pos: 2 }, { id: "b", pos: 5 }]);
+assert.deepEqual(rtTascheSchieben(teile, "a", "hoch"), [], "oben bleibt oben");
+assert.deepEqual(rtTascheSchieben(teile, "c", "runter"), []);
+const sql5 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2774_tisch_tasche.sql", import.meta.url), "utf8");
+assert.match(sql5, /references public\.kc_club_tisch\(id\) on delete cascade/); assert.match(sql5, /art in \('pdf', 'foto', 'musik'\)/);
+assert.match(server, /if \(!\(x\.gastgeber === ich\.person_id \|\| ich\.admin\)\) throw new Fehler\("„Vorab für alle“ markiert, wer den Tisch leitet\.", 403\);/, "vorab nur die Leitung");
+assert.match(server, /if \(!att \|\| !String\(att\.object_path\)\.startsWith\(`club\/\$\{ich\.person_id\}\/`\)\)/, "nur eigene Dateien einpacken");
+assert.match(server, /\.or\(`person_id\.eq\.\$\{ich\.person_id\},vorab\.eq\.true`\)/, "fremde Taschen nur, was vorab ist");
+assert.match(server, /if \(!erlaubt\) erlaubt = await rtTascheVorabErlaubt\(ich, att\.id\)/, "Vorab-Dateien öffnen dürfen alle, die den Tisch sehen");
+assert.match(server, /await db\.from\("kc_club_tisch_tasche"\)\.delete\(\)\.eq\("tisch_id", x\.id\); await rtTascheDateienWeg/, "Aufräumen nach 7 Tagen");
 console.log("OK – Runder Tisch: Regeln geprüft");

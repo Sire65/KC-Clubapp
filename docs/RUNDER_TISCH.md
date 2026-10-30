@@ -291,10 +291,31 @@ Umgesetzt aus RT2 und RT3 zusammen, dazu Kamera und Bildschirm (vorher nicht in 
 | Bildschirm | `getDisplayMedia` – PC/Laptop (Chrome, Edge, Firefox). Handys können es nicht (Hinweis „📎 Unterlagen zeigen“). Erscheint bei allen groß, ⛶ Vollbild. |
 | Unterlagen | PDF/Foto vom Gerät oder aus dem Archiv → Upload + Nachricht im Tisch-Chat (Zugriff prüft der Server über die Chat-Teilnahme) → `zeige` mit Kennung und Seite. Empfänger laden selbst (`anlage_url`, pdf.js), folgen der Seite; eigenes Blättern → „↩︎ Folgen“. |
 | Messung | beim Beenden `diagnose` „tisch_live“: Sekunden, Verbindungen, Umleitungen, Fehler, höchste Zahl live. |
-| Grenzen | höchstens 10 MB je Unterlage; keine Aufzeichnung; wer den Tisch verlässt, beendet Live. |
+| 🎵 Musik (2.767.0) | Lied (Audio, ≤ 8 MB) aus Archiv/Gerät → Tisch-Chat → `musik` mit Startzeit in der Uhr des Abspielenden. Uhrenabstand je Person = kleinster Wert (Empfang − Zeitstempel) aus den Lebenszeichen. Jedes Gerät lädt und spielt selbst (kein Ton-Strom). Pause/Weiter/Von vorn/Aus, eigene Lautstärke. Spätkommer steigen an der richtigen Stelle ein. |
+| 🎬 Video (2.773.0) | wie Musik, aber groß auf der Bühne (Reihenfolge: geteilter Bildschirm → Video → Unterlage). Aufnehmen direkt aus der Kamera-App; ≤ 8 MB ≈ 60 s. |
+| 📸 Album (2.773.0) | wer zeigt oder leitet: „Ins Album“ → vorhandenes Hochlade-Formular (wie Ablagekorb). Danach gehört die Datei dem Album (nicht vom Tisch-Aufräumen betroffen). |
+| Verbindungsaufbau | Angebot belegt den Platz sofort, früh ankommende Wege (ICE) werden gesammelt und nachgereicht; je Person höchstens ein Aufbau gleichzeitig (`TL.baue`). |
+| Grenzen | höchstens 8 MB je Unterlage/Lied/Video (wie alle Anlagen); keine Aufzeichnung; wer den Tisch verlässt, beendet Live. |
 
 **Bekannt / bewusst:** Alle am Tisch teilen einen Schlüssel – ein Mitglied könnte technisch Signale „im Namen“ eines anderen senden (z. B. Redestab).
 Für Mitglieder untereinander akzeptiert; für externe Gäste (RT4) bekommt der Gast keine Leitungs-Signale der Leitung, sondern nur Ton/Bild (kommt mit RT4).
 Ab wie vielen Zuhörern es über Mobilfunk stockt, zeigt erst die Messung auf echten Handys (Diagnose-Protokoll).
 
 **Tests:** `tests/tisch-live.browser.mjs` (3 Fenster, echte Verbindungen, nachgebaute Leitung), `tests/runder-tisch.test.mjs` (Regeln, Sicherungen).
+
+## 18. 💼 Tasche vorher packen · Musik stoppen (2.774.0)
+
+Wunsch Hansi (30.10.2026): „Gut wäre, wenn man sich vorher Sachen packen kann wie PDF, ein Song, ein Foto – damit man nicht lange suchen muss.“
+Wahl Hansi: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vorab für alle** markieren.
+
+- **Packen** (an jedem kommenden Tisch, auch während er läuft): PDFs, Fotos, Musik – vom Handy, mit der Kamera oder aus dem Archiv
+  (vorhandene Wege: `anlageHochladen`, Archiv-Auswahl). Höchstens 20 Teile je Person und Tisch, je 8 MB. Reihenfolge ⬆️/⬇️. Privat bis zum Zeigen.
+- **Vorab für alle:** nur die Leitung, nur eigene Teile. Alle, die den Tisch sehen, finden sie in ihrer Tasche und dürfen sie öffnen
+  (`anlage_url` erlaubt Vorab-Teile sichtbarer Tische; Gruppen-Tische nur der Gruppe).
+- **Am Tisch:** beim Platznehmen holt das Handy die gepackten Dateien im Hintergrund (höchstens 60 MB im Speicher). 📎 Zeigen und 🎵 Musik bieten
+  „💼 Aus meiner Tasche“ zuerst an; **💼 Nächstes** zeigt/spielt das nächste ungezeigte Teil. Zeigen = vorhandener Weg (Anlage in den Tisch-Chat,
+  dann Live „Zeigen“ bzw. „Musik für alle“). Gezeigtes bekommt ✓.
+- **Aufräumen:** 7 Tage nach dem Tisch werden die Taschen geleert; nie gezeigte Dateien werden gelöscht (gezeigte hängen am Chat, gelten dort).
+- **Datenbank:** `kc_club_tisch_tasche` (Migration `20261030_kc_club_v2774_tisch_tasche.sql`, Probelauf `tools/db-test/100_tisch_tasche_test.sql`).
+- **Musik stoppen (2.773.0, Fund Hansi „kein Stopp-Knopf“):** Knöpfe direkt an der laufenden Musik – wer abspielt ⏸️/⏮️/⏹️, die Leitung
+  „⏹️ Für alle aus“, jeder „🔇 Für mich aus“; ist der Tisch nicht zu sehen, hängt eine Musik-Leiste unten.

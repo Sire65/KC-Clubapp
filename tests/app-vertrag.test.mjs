@@ -2200,7 +2200,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/id="tiKnopfStart"[^>]*onclick="tagesinfoZeigen\(true\)">📋 Übersicht<\/button>/.test(html) && /\$\("tiKnopfStart"\)\?\.classList\.toggle\("versteckt", !ICH\?\.vorstand\)/.test(html), "Knopf bei „Heute wichtig“ nur Clubleitung");
   // 1.83.0: Knöpfe stehen in der Knopfreihe (ohne margin-left) – Prüfung angepasst
-  assert.ok(/\$\{ICH\?\.vorstand \? '<button class="knopf klein"( style="margin-left:auto")? onclick="tagesinfoZeigen\(true\)">📋 Übersicht<\/button>' : ""\}/.test(html), "Knopf im Büro");
+  assert.ok(/ICH\?\.vorstand \? buIkon\("📋", "Übersicht", "tagesinfoZeigen\(true\)"/.test(html) /* 2.768.0 KC-CLUB-BUERO-KNOEPFE-KLEIN: Icon-Knopf */, "Knopf im Büro");
   assert.ok(/async function tagesinfoZeigen\(manuell = false\) \{\s*if \(!ICH\?\.vorstand\) return;/.test(html) && /if \(!manuell\) try \{ localStorage\.setItem\(TI_SEIT/.test(html), "manuell verschiebt den Merkpunkt nicht");
 }
 
@@ -2783,7 +2783,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/tmp\.querySelector\(`\[data-klappe="buero_\$\{o\.bereich\}"\]`\)/.test(html), "Ordner zeigt den vorhandenen Bereich (keine zweite Oberfläche)");
   assert.ok(/href="tel:\$\{esc\(nurZiffern\(nr\)\)\}"/.test(html) && /async function buTelefon\(\)/.test(html) && /api\("mitglied_details", \{ person_id: pid \}/.test(html), "Telefon wählt wirklich (nur freigegebene Nummer)");
   assert.ok(/function buFueller\(\)/.test(html) && /function buDrucker\(\)/.test(html) && /function arStartArt\(art\)/.test(html), "Füller/Drucker/Chronik");
-  assert.ok(/onclick="buAnsichtWechseln\(\)">☰ Liste/.test(html) && /onclick="buAnsichtWechseln\(\)">🗄️ Büro-Raum/.test(html), "Umschalter in beiden Ansichten");
+  assert.ok(/buIkon\("☰", "Liste", "buAnsichtWechseln\(\)"/.test(html) && /buIkon\("🗄️", "Raum", "buAnsichtWechseln\(\)"/.test(html) /* 2.768.0: Icon-Knöpfe */, "Umschalter in beiden Ansichten");
 }
 
 // 241. 1.66.0: Büro – Nachricht (App/Mail/WhatsApp) + Sprachsteuerung
@@ -2804,7 +2804,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.equal(deuten("Eingang", leute)?.fn, "buEingang()");
   assert.equal(deuten("Wetter morgen", leute), null, "Unbekanntes → nichts tun");
   assert.ok(deuten("Freud und Leid", leute, (x) => x.recht !== "L")?.verboten, "Rechte gelten auch per Sprache");
-  assert.ok(/const BSPR = \{ geht: !!\(window\.SpeechRecognition \|\| window\.webkitSpeechRecognition\)/.test(html) && /\$\{BSPR\.geht \? '<button class="bu-mikro"/.test(html), "Mikrofon nur, wenn das Gerät es kann");
+  assert.ok(/const BSPR = \{ geht: !!\(window\.SpeechRecognition \|\| window\.webkitSpeechRecognition\)/.test(html) && /raum && BSPR\.geht \? buIkon\("🎙️", "Sprechen", "buSprechen\(\)"[^\n]*" bu-mikro"\)/.test(html) /* 2.768.0: Mikrofon als Icon-Knopf (Klasse bu-mikro bleibt fürs Erklär-Video) */, "Mikrofon nur, wenn das Gerät es kann");
 }
 
 // 243. 1.67.0: mitlaufende A4-Vorschau beim Bearbeiten (Sitzung, Brief, Mitgliederliste) über den Druck-Kern
@@ -2979,7 +2979,7 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
 }
 // 263. 1.83.0: Büro – Begrüßung in der Kopfzeile, Knöpfe nebeneinander, Ordner gleich hoch
 assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\/span>/.test(html) && /\$\("buKopfGruss"\)\.textContent = `\$\{buTageszeit\(\)\}, /.test(html)
-  && (html.match(/<div class="bu-knopfreihe">/g) || []).length === 2 && !/\.bu-ordner:nth-child\(3n\) \{ height/.test(html), "Büro-Kopf und gleich hohe Ordner");
+  && /<div class="bu-knopfreihe bu-ikonreihe">/.test(html) && /buKopfKnoepfe\(true, naechst\)/.test(html) && /buKopfKnoepfe\(false, null\)/.test(html) /* 2.768.0: ein Kopf für Raum und Liste */ && !/\.bu-ordner:nth-child\(3n\) \{ height/.test(html), "Büro-Kopf und gleich hohe Ordner");
 // 264. 1.84.0: „Nächster Termin“ im digitalen Protokoll
 {
   assert.ok(/naechster_termin: txt\(p\.naechster_termin, 200\) \|\| null/.test(server) && /naechster_termin: pr\.naechster_termin \?\? null/.test(server) && /async function protokollNaechsterVorschlag\(pr: any\)/.test(server), "Server speichert/liefert, schlägt vor");
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7577,7 +7577,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/aktentasche: at && at\.status !== "offen" \? \{ anzahl:/.test(server) && /const at = ich\.vorstand \? await atTasche/.test(server), "Clubabend: nur Leitung, nur (vorläufig) gepackt");
   assert.ok(/async function atStart\(\)/.test(html) && /function atPackenZeigen\(\)/.test(html) && /function atZeichnen\(\)/.test(html) && /id="atNotiz"/.test(html), "App: Anlass, Vorschlag, Tasche, Notizen");
   assert.ok(/onclick="atDatei\('kamera'\)">📷 Foto/.test(html) && /atDatei\('galerie'\)/.test(html) && /atDatei\('pdf'\)/.test(html) && /atDatei\('datei'\)/.test(html) && /onclick="atArchiv\(\)">🗄️ Archiv/.test(html), "Dazulegen: Foto, Galerie, PDF, Datei, Archiv");
-  assert.ok(/aktentasche: \{ bauen: \(o, p\) => atDruck\(p\?\.teil\) \}/.test(html) && /L && r\.aktentasche \?/.test(html) && /ICH\?\.vorstand \? '<button class="knopf klein" onclick="atStart\(\)">💼 Aktentasche/.test(html), "Drucken (CD), Clubabend-Kachel, Büro");
+  assert.ok(/aktentasche: \{ bauen: \(o, p\) => atDruck\(p\?\.teil\) \}/.test(html) && /L && r\.aktentasche \?/.test(html) && /ICH\?\.vorstand \? buIkon\("💼", "Tasche", "atStart\(\)", "Aktentasche"\)/.test(html), "Drucken (CD), Clubabend-Kachel, Büro"); // 2.768.0: Icon-Knopf
 }
 // 2.696.0 KC-CLUB-AKTENTASCHE-ARCHIV + -DRUCKEN (Wunsch Hansi „gepackte Taschen wieder ansehen und für eine andere Sitzung reaktivieren“;
 // „alles auflisten und Druck per Klickkästchen – dann kann man selber wählen, was gedruckt werden soll“)
@@ -7591,7 +7591,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.698.0 KC-CLUB-AKTENTASCHE-RAUM (Hansi „wo finde ich die Tasche“): 💼 auch in der Büro-Raum-Ansicht, nicht nur in der Liste
 {
-  assert.ok(/onclick="buAnsichtWechseln\(\)">☰ Liste<\/button>\$\{ICH\?\.vorstand \? '<button class="knopf klein" onclick="atStart\(\)">💼 Aktentasche/.test(html), "💼 im Büro-Raum");
+  assert.ok(/ICH\?\.vorstand \? buIkon\("💼", "Tasche", "atStart\(\)", "Aktentasche"\)/.test(html) /* 2.768.0: Icon-Knopf in Raum und Liste */, "💼 im Büro-Raum");
 }
 // 2.699.0 KC-CLUB-AKTENTASCHE-STUFEN (Hansi „Knopf auch bei Nächste Sitzung vorbereiten; erst kommen die Unterlagen, danach in die Tasche – oder
 // vorläufig gepackt“; Antwort „A“: neue Unterlagen automatisch, mit 🆕)
@@ -8804,7 +8804,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/stichworte: `\$\{EINL_MARKE\}, eingelesen`/.test(f) && /api\("archiv_mein_ordner"/.test(f), "Eingangskorb = eigener Ordner + Stichwort, kein neuer Serverweg");
   assert.ok(/for \(const d of einlKorbDoks\(ar\)\)/.test(programm) && /einlKorbErledigt\(/.test(programm), "Eingelesenes erscheint im Eingangskorb");
   assert.ok(/api\("archiv_loeschen", \{ id \}\)/.test(f) && /Papierkorb/.test(f), "nach Ablage keine doppelte Datei (Papierkorb, wiederherstellbar)");
-  assert.ok((programm.match(/onclick="buEinlesen\(\)"/g) || []).length >= 2 && /ding\("bu-scanner"/.test(programm), "Knopf in Liste und Büro-Raum");
+  assert.ok(/buSchreiben\(\) \? buIkon\("📥", "Einlesen", "buEinlesen\(\)"/.test(programm) && /buKopfKnoepfe\(true, naechst\)/.test(programm) && /buKopfKnoepfe\(false, null\)/.test(programm) && /ding\("bu-scanner"/.test(programm), "Knopf in Liste und Büro-Raum"); // 2.768.0: gemeinsamer Icon-Kopf
   assert.ok(!/fetch\(|sendGewaehlt|api\("nachricht_senden"/.test(f), "schickt nie selbst etwas ab");
 }
 

@@ -1,0 +1,5 @@
+eingepackt=1
+doppelt_verboten=t
+nur_pdf_foto_musik=t
+mit_tisch_weg=t
+nur_server=t

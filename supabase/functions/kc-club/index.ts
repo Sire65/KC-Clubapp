@@ -33,7 +33,7 @@ import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherhei
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
-import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.762.0), -ARTEN (2.762.0)
+import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis, RT_TASCHE, rtTascheArt, rtTascheLegenPruefen, rtTascheSchieben } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.762.0), -ARTEN (2.762.0)
 import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.730.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.766.0";
+const SERVER_VERSION = "2.774.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5033,6 +5033,8 @@ async function rtLage(ich: Ich, nurId?: string) {
   const { data: tn } = ids.length ? await db.from("kc_club_tisch_teilnahme").select("tisch_id,person_id,zusage,dabei_seit,zuletzt_da,verlassen_am").in("tisch_id", ids).limit(3000) : { data: [] as any[] };
   const pm = await personen([...(ts ?? []).map((x: any) => x.gastgeber), ...(tn ?? []).map((x: any) => x.person_id)]);
   const nm = (id: string) => pm.get(id)?.display_name || id;
+  // 2.774.0 KC-CLUB-TISCH-TASCHE: wie viele Teile habe ich gepackt, wie viele liegen vorab für alle bereit (fehlt die Tabelle → 0)
+  const { data: ta } = ids.length ? await db.from("kc_club_tisch_tasche").select("tisch_id,person_id,vorab").in("tisch_id", ids).or(`person_id.eq.${ich.person_id},vorab.eq.true`).limit(2000) : { data: [] as any[] };
   const tische = (ts ?? []).map((x: any) => {
     const z = (tn ?? []).filter((r: any) => r.tisch_id === x.id), ph = rtPhase(x, t), mein = z.find((r: any) => r.person_id === ich.person_id);
     return { id: x.id, gruppe: x.gruppe_id ? gr.get(x.gruppe_id) || { id: x.gruppe_id, name: "Gruppe", symbol: "👥" } : null, art: x.art || "runder_tisch", tagesordnung: Array.isArray(x.tagesordnung) ? x.tagesordnung : [], thema: x.thema, beschreibung: x.beschreibung, beginn: x.beginn, ende: new Date(rtEndeMs(x)).toISOString(), dauer: x.dauer_min, verlaengert: x.verlaengert_min,
@@ -5042,7 +5044,8 @@ async function rtLage(ich: Ich, nurId?: string) {
       amTisch: ph === "offen" || ph === "gleich" ? z.filter((r: any) => rtSitzt(r, t)).sort((a: any, b: any) => Date.parse(a.dabei_seit) - Date.parse(b.dabei_seit))
         .map((r: any) => ({ id: r.person_id, name: nm(r.person_id), sicher: rtSicher(r, t) })) : [],
       warenDa: x.teilnehmer_anzahl ?? z.filter((r: any) => r.dabei_seit).length,
-      bestaetigung: ph === "vorbei" ? rtBestaetigungAus(rtBestaetigung(mein, x)) : null }; // 2.762.0: Seminar – Teilnahmebestätigung, wenn ich lange genug dabei war
+      bestaetigung: ph === "vorbei" ? rtBestaetigungAus(rtBestaetigung(mein, x)) : null,
+      tasche: { meine: (ta ?? []).filter((r: any) => r.tisch_id === x.id && r.person_id === ich.person_id).length, vorab: (ta ?? []).filter((r: any) => r.tisch_id === x.id && r.person_id !== ich.person_id && r.vorab).length } }; // 2.762.0: Seminar – Teilnahmebestätigung, wenn ich lange genug dabei war
   });
   return { aktiv: true, ...(nurId ? { nur: nurId } : { gruppen: [...gr.values()].sort((a, b) => a.name.localeCompare(b.name, "de")) }), jetzt: new Date(t).toISOString(), regeln: { plaetzeMin: RT.plaetzeMin, plaetzeMax: RT.plaetzeMax, dauern: RT.dauern, vorlaufMin: RT.vorlaufMin, herzSek: RT.herzSek,
     vorausTage: RT.vorausTage, themaMax: RT.themaMax, beschreibungMax: RT.beschreibungMax, medienTage: RT.medienTage, textTage: RT.textTage, toMax: RT.toMax, toPunktMax: RT.toPunktMax,
@@ -5071,6 +5074,33 @@ async function rtZeitLage(ich: Ich, vonMs: number, bisMs: number, ohneId: string
       text: `${x.ganztaegig || berlinTag(new Date(x.beginn)) !== tag ? "ganztägig/mehrtägig" : `${uhr(x.beginn)}${x.ende ? "–" + uhr(x.ende) : ""}`} ${x.art === "treffen" ? "Clubabend" : "Termin"} „${x.titel}“${x.art === "treffen" && x.zusagen ? ` · ${x.zusagen} Zusagen` : ""}` }))]
     .sort((a, b) => a.ms - b.ms).map(({ sym, text }) => ({ sym, text }));
   return { frei: k.frei, sperre: k.sperre.map((x) => rtKonfliktText(x, TZ)), hinweis: k.hinweis.map((x) => rtKonfliktText(x, TZ)), tag: tagListe };
+}
+// ---------- 2.774.0 KC-CLUB-TISCH-TASCHE: jeder packt vorher seine eigene Tasche (PDF, Foto, Musik) – privat bis zum Zeigen; die Leitung kann
+// einzelne Teile „vorab für alle“ markieren (Unterlagen zur Vorbereitung). Zeigen = vorhandener Weg (Anlage in den Tisch-Chat + Live „Zeigen“/„Musik“).
+const rtTascheAus = (r: any, pm: Map<string, any>) => ({ id: r.id, a: r.attachment_id, name: r.name, mime: r.mime, art: r.art, pos: r.pos, vorab: r.vorab, gezeigt: !!r.gezeigt_am,
+  von: r.person_id, vonName: pm.get(r.person_id)?.display_name || "" });
+async function rtTascheLage(ich: Ich, x: any) {
+  const darfVorab = x.gastgeber === ich.person_id || ich.admin;
+  const { data, error } = await db.from("kc_club_tisch_tasche").select("id,attachment_id,name,mime,art,pos,vorab,gezeigt_am,person_id").eq("tisch_id", x.id)
+    .or(`person_id.eq.${ich.person_id},vorab.eq.true`).order("pos").limit(200);
+  if (error) throw new Fehler("Die Tasche ist gerade nicht erreichbar.", 503);
+  const pm = await personen((data ?? []).map((r: any) => r.person_id));
+  return { tisch: x.id, darfVorab, max: RT_TASCHE.max, meine: (data ?? []).filter((r: any) => r.person_id === ich.person_id).map((r: any) => rtTascheAus(r, pm)),
+    vorab: (data ?? []).filter((r: any) => r.person_id !== ich.person_id && r.vorab).map((r: any) => rtTascheAus(r, pm)) };
+}
+// Dateien, die nur in Taschen lagen (nie gezeigt = an keiner Nachricht), endgültig entfernen
+async function rtTascheDateienWeg(aids: string[]) {
+  const u = [...new Set(aids.filter(Boolean))]; if (!u.length) return 0;
+  const [{ data: ma }, { data: noch }] = await Promise.all([db.from("kc_communication_message_attachments").select("attachment_id").in("attachment_id", u),
+    db.from("kc_club_tisch_tasche").select("attachment_id").in("attachment_id", u)]);
+  const belegt = new Set([...(ma ?? []), ...(noch ?? [])].map((x: any) => x.attachment_id)), frei = u.filter((a) => !belegt.has(a));
+  await dateienEntfernen(frei); return frei.length;
+}
+// darf ich diese Datei als Vorab-Teil einer Tasche sehen? (für anlage_url)
+async function rtTascheVorabErlaubt(ich: Ich, attId: string) {
+  const { data } = await db.from("kc_club_tisch_tasche").select("tisch_id").eq("attachment_id", attId).eq("vorab", true).limit(5);
+  for (const r of data ?? []) { try { await rtTischHolen(r.tisch_id, ich); return true; } catch {} }
+  return false;
 }
 const RT_DOPPELT = "Um diese Zeit gibt es gerade schon einen anderen Tisch – es geht immer nur einer gleichzeitig. Bitte eine andere Zeit wählen.";
 // Kurzfassung für den Start (Karte „Gleich: Runder Tisch …“): kommende Tische der nächsten 24 Std. + meine Zusage – nur wenn freigegeben
@@ -5125,6 +5155,10 @@ async function tischWartung(stuendlich: boolean) {
     .or(`medien_geloescht_am.is.null,ende.lt.${new Date(t - RT.textTage * 86400000).toISOString()}`).order("ende").limit(50);
   for (const x of alt ?? []) {
     const f = rtAufraeumen(x, t);
+    if (f.medien) { // 2.774.0: Taschen gehören zu den Dateien – nach 7 Tagen weg (gezeigte hängen am Chat und gehen mit rtMedienWeg)
+      const { data: tt } = await db.from("kc_club_tisch_tasche").select("attachment_id").eq("tisch_id", x.id).limit(2000);
+      if ((tt ?? []).length) { await db.from("kc_club_tisch_tasche").delete().eq("tisch_id", x.id); await rtTascheDateienWeg((tt ?? []).map((r: any) => r.attachment_id)); }
+    }
     if (f.medien && x.thread_id) { const n = await rtMedienWeg(x.thread_id); await protokoll(null, "tisch_aufgeraeumt", { tisch: x.id, dateien: n }); }
     if (f.medien) await db.from("kc_club_tisch").update({ medien_geloescht_am: jetzt() }).eq("id", x.id);
     if (f.text) {
@@ -12232,6 +12266,40 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const von = dsMs(tag, uhr);
         return json({ ok: true, ...(await rtZeitLage(ich, von, von + dauer * 60000)) });
       }
+      case "tisch_tasche": { // 2.774.0 KC-CLUB-TISCH-TASCHE: meine Teile + Vorab-Teile der Leitung
+        await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
+        return json(await rtTascheLage(ich, await rtTischHolen(p.id, ich)));
+      }
+      case "tisch_tasche_legen": {
+        await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
+        const x = await rtTischHolen(p.id, ich);
+        const { data: att } = await db.from("kc_communication_attachments").select("id,object_path,mime_type,file_name").eq("id", String(p.anlage || "")).maybeSingle();
+        if (!att || !String(att.object_path).startsWith(`club/${ich.person_id}/`)) throw new Fehler("Datei nicht gefunden – bitte nochmal auswählen.", 404);
+        const name = txt(p.name || att.file_name, RT_TASCHE.nameMax) || "Datei", art = rtTascheArt(name, att.mime_type);
+        const { data: meine } = await db.from("kc_club_tisch_tasche").select("pos").eq("tisch_id", x.id).eq("person_id", ich.person_id).order("pos", { ascending: false }).limit(RT_TASCHE.max + 1);
+        const f = rtTascheLegenPruefen(x, Date.now(), (meine ?? []).length, art);
+        if (f) { await rtTascheDateienWeg([att.id]); throw new Fehler(f, 409); }
+        const { error } = await db.from("kc_club_tisch_tasche").insert({ tisch_id: x.id, person_id: ich.person_id, attachment_id: att.id, name, mime: att.mime_type, art, pos: ((meine ?? [])[0]?.pos ?? 0) + 1 });
+        if (error && error.code !== "23505") throw new Fehler("Konnte nicht in die Tasche gelegt werden.", 503);
+        await protokoll(ich.person_id, "tisch_tasche", { tisch: x.id, aktion: "legen", art });
+        return json({ ok: true, tasche: await rtTascheLage(ich, x) });
+      }
+      case "tisch_tasche_aendern": { // hoch · runter · weg · vorab (nur Leitung, eigene Teile) · gezeigt
+        await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
+        const x = await rtTischHolen(p.id, ich), aktion = String(p.aktion || "");
+        const { data: alle } = await db.from("kc_club_tisch_tasche").select("id,pos,vorab,attachment_id").eq("tisch_id", x.id).eq("person_id", ich.person_id).limit(RT_TASCHE.max + 5);
+        const r = (alle ?? []).find((y: any) => y.id === String(p.teil || ""));
+        if (!r) throw new Fehler("Das liegt nicht (mehr) in deiner Tasche.", 404);
+        if (aktion === "hoch" || aktion === "runter") { for (const u of rtTascheSchieben(alle, r.id, aktion)) await db.from("kc_club_tisch_tasche").update({ pos: u.pos }).eq("id", u.id); }
+        else if (aktion === "weg") { await db.from("kc_club_tisch_tasche").delete().eq("id", r.id); await rtTascheDateienWeg([r.attachment_id]); }
+        else if (aktion === "vorab") {
+          if (!(x.gastgeber === ich.person_id || ich.admin)) throw new Fehler("„Vorab für alle“ markiert, wer den Tisch leitet.", 403);
+          await db.from("kc_club_tisch_tasche").update({ vorab: !r.vorab }).eq("id", r.id);
+        } else if (aktion === "gezeigt") await db.from("kc_club_tisch_tasche").update({ gezeigt_am: jetzt() }).eq("id", r.id);
+        else throw new Fehler("Unbekannte Aktion.", 400);
+        if (aktion !== "gezeigt") await protokoll(ich.person_id, "tisch_tasche", { tisch: x.id, aktion });
+        return json({ ok: true, tasche: await rtTascheLage(ich, x) });
+      }
       case "tisch_zusage": { // beim Seminar = anmelden (Plätze begrenzt)
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
         const x = await rtTischHolen(p.id, ich), zusage = p.zusage === "ja" ? "ja" : p.zusage === "nein" ? "nein" : null, sem = rtArt(x).anmeldung;
@@ -17268,6 +17336,7 @@ Köcheclub Werne`,
             if (tp) { erlaubt = true; break; }
           }
         }
+        if (!erlaubt) erlaubt = await rtTascheVorabErlaubt(ich, att.id).catch(() => false); // 2.774.0 KC-CLUB-TISCH-TASCHE: „vorab für alle“
         if (!erlaubt && ich.admin) { // 2.511.0 KC-CLUB-ABLAGEKORB: Admin sieht, was Mitglieder in den Ablagekorb geteilt haben
           const { data: ak } = await db.from("kc_club_ablagekorb").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(1);
           if (ak?.length) erlaubt = true;

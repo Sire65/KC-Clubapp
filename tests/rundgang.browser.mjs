@@ -49,6 +49,10 @@ const RT_LAGE = { aktiv: true, gruppen: [{ id: "66666666-2222-3333-4444-55555555
     { ...RT_TISCH, id: "55555555-2222-3333-4444-555555555555", art: "seminar", thema: "Kasse Schulung", phase: "vorbei", beginn: rtZeit(-3000), ende: rtZeit(-2940), amTisch: [],
       bestaetigung: { von: rtZeit(-3000), bis: rtZeit(-2940), min: 60 } }] };
 Object.assign(ANTWORTEN, { tisch_liste: RT_LAGE, tisch_platz: { ok: true, ergebnis: "da", lage: RT_LAGE },
+  tisch_tasche: { tisch: "11111111-2222-3333-4444-555555555555", darfVorab: true, max: 20, // 2.772.0 KC-CLUB-TISCH-TASCHE
+    meine: [{ id: "t1", a: "77777777-2222-3333-4444-555555555555", name: "Ablauf.pdf", mime: "application/pdf", art: "pdf", pos: 1, vorab: true, gezeigt: false },
+      { id: "t2", a: "88888888-2222-3333-4444-555555555555", name: "Club-Song.mp3", mime: "audio/mpeg", art: "musik", pos: 2, vorab: false, gezeigt: false }],
+    vorab: [{ id: "t3", a: "99999999-2222-3333-4444-555555555555", name: "Rezept.pdf", mime: "application/pdf", art: "pdf", pos: 1, vorab: true, gezeigt: false, vonName: "Probe3 Mitglied" }] },
   tisch_zeit_pruefen: { ok: true, frei: false, sperre: ["Um diese Zeit ist Clubabend („Clubabend“, 19:00–22:00 Uhr, 12 haben zugesagt) – dann bitte keinen Tisch."], hinweis: [],
     tag: [{ sym: "🍽️", text: "19:00 Clubabend „Clubabend“ · 12 Zusagen" }] } }); // 2.764.0 KC-CLUB-RUNDER-TISCH-ZEITCHECK
 INIT.runderTisch = { tische: [{ id: RT_TISCH.id, thema: RT_TISCH.thema, beginn: RT_TISCH.beginn, ende: RT_TISCH.ende, zusage: "ja" }] };
@@ -117,6 +121,8 @@ try {
         await rundOeffnen(); const liste = !!$("rundBlatt") && /Club-Song/.test($("rundInhalt")?.textContent || "");
         await rundTischZeigen("11111111-2222-3333-4444-555555555555"); const b = document.querySelectorAll("#rundTischBlatt .rund-platz");
         const tisch = { plaetze: b.length, grau: document.querySelectorAll("#rundTischBlatt .rund-platz.unsicher").length, quer: document.documentElement.scrollWidth > innerWidth + 2 };
+        await rundTascheOeffnen("11111111-2222-3333-4444-555555555555"); const tt = $("rundTascheInhalt")?.textContent || ""; // 2.772.0
+        const tasche = /Ablauf\.pdf/.test(tt) && /Club-Song\.mp3/.test(tt) && /Vorab für alle/.test(tt) && /Rezept\.pdf/.test(tt) && document.documentElement.scrollWidth <= innerWidth + 2; fensterZu($("rundTascheBlatt"));
         await rundTischZeigen("33333333-2222-3333-4444-555555555555");
         const seminar = { pult: !!document.querySelector("#rundTischBlatt .rund-pult .rund-platz.gastgeber"), reihen: document.querySelectorAll("#rundTischBlatt .rund-reihen .rund-platz").length, quer: document.documentElement.scrollWidth > innerWidth + 2 };
         RUND.sitze = RUND.warte = null; clearTimeout(RUND.herz); fensterZu($("rundTischBlatt"));
@@ -127,7 +133,7 @@ try {
         document.querySelector('input[name="rundArt"][value="besprechung"]').click(); const toFeld = !$("rundToFeld").classList.contains("versteckt");
         const fuerWen = [...($("rundGruppe")?.options || [])].map((o) => o.textContent).join("|");
         await new Promise((r) => setTimeout(r, 900)); const check = { text: $("rundZeitCheck")?.textContent || "", gesperrt: !!$("rundLos")?.disabled }; fensterZu($("rundNeuBlatt"));
-        return { karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld, gruppe, fuerWen, check }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
+        return { karte: /Runder Tisch|Seminar/.test(karte), liste, ...tisch, neu, seminar, to, knopf, tb: /teilgenommen hat/.test(tb.html), toFeld, gruppe, fuerWen, check, tasche }; }).catch((e) => ({ fehler: String(e).slice(0, 160) }));
       if (!rt.karte) melde("Runder Tisch: Karte auf der Startseite fehlt");
       if (!rt.liste) melde("Runder Tisch: Liste erscheint nicht " + (rt.fehler || ""));
       if (rt.plaetze !== 18 || rt.grau !== 1) melde(`Runder Tisch: ${rt.plaetze} Plätze, ${rt.grau} grau (erwartet 18 und 1)`);
@@ -137,6 +143,7 @@ try {
       if (!rt.to || !rt.toFeld) melde("Besprechung: Tagesordnung fehlt");
       if (!rt.knopf || !rt.tb) melde("Seminar: Teilnahmebestätigung fehlt");
       if (!/Clubabend/.test(rt.check?.text || "") || !rt.check?.gesperrt) melde("Zeitprüfung: Clubabend nicht gemeldet oder „Einladen“ nicht gesperrt " + JSON.stringify(rt.check)); // 2.764.0
+      if (!rt.tasche) melde("💼 Tasche: Teile, Vorab oder Breite stimmen nicht"); // 2.772.0
       if (!rt.gruppe || !/Alle Mitglieder\|💡 nur Gruppe „Innovation“/.test(rt.fuerWen || "")) melde("Gruppe: Hinweis oder „Für wen?“ fehlt " + (rt.fuerWen || "")); // 2.762.0
     }
     // 2.766.0 KC-CLUB-SCHILDER-DRUCKPAKET: Paket öffnen, Anzahl ändern, drucken (Haken weg = nicht gedruckt), alles auf A4 hoch, nichts ragt über den Rand

@@ -1,6 +1,6 @@
 -- KC-CLUB-SPUR-PINNWAND-ECHT (Fund Hansi 30.10.2026: „Karla hat in Wege wieder ‚Zettel aufgehängt‘ – ich sehe aber keinen Zettel“):
 -- Eine App vor 2.759.0 (Fix KC-CLUB-SPUR-VOLL) lag 13 Std. im Hintergrund und meldete beim Aufwachen das stille Nachsehen noch als Handlung.
--- Seit 2.767.0 prüft der Server das selbst. Hier: alle „tat_pinnwand“-Schritte seit dem Fix (29.10.) entfernen, zu denen es von dieser Person
+-- Seit 2.775.0 prüft der Server das selbst. Hier: alle „tat_pinnwand“-Schritte seit dem Fix (29.10.) entfernen, zu denen es von dieser Person
 -- keinen Zettel ±10 Min. gibt (Stand 30.10.: 2 Schritte, beide Karla, 09:44). Wird eine Wege-Zeile dadurch leer, fällt sie weg.
 -- Nur Daten der Wege-Aufzeichnung (kc_club_protokoll, aktion 'spur'); keine Struktur, keine Rechte.
 -- Rückweg: nicht nötig (die entfernten Schritte waren falsch); Sicherung der Zeilen vorher in kc_db_mirror (Neon) und der Nachtsicherung.
