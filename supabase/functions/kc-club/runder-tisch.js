@@ -182,3 +182,28 @@ export function rtTascheSchieben(teile, id, richtung) {
   if (i < 0 || j < 0 || j >= l.length) return [];
   return [{ id: l[i].id, pos: l[j].pos }, { id: l[j].id, pos: l[i].pos }];
 }
+
+// ---------- 2.776.0 KC-CLUB-RUNDER-TISCH-GAST (Stufe RT4, Spezifikation Abschnitt 4; Wunsch Hansi „externe Gäste, z. B. Experten – jedes Mitglied
+// darf Gäste einladen“): Tischgast mit eigenem Link nur für einen Tisch. Der Link gilt von RT_GAST.vorlaufMin vor Beginn bis Tischende, nur auf dem
+// ersten Gerät, das ihn öffnet; gespeichert wird nur sein Fingerabdruck. Höchstens RT_GAST.max je Tisch (zählen zu den Plätzen).
+export const RT_GAST = { max: 2, vorlaufMin: 30, nameMin: 2, nameMax: 60, rolleMax: 60, loeschenTage: 7 };
+export const rtGastPid = (gastId) => "TG-" + gastId;
+export const rtIstGast = (pid) => typeof pid === "string" && pid.startsWith("TG-");
+// Gilt der Gast-Link gerade? → null (ja) oder der Grund (wird dem Gast so angezeigt)
+export function rtGastFenster(t, jetzt) {
+  if (!t) return "Den Tisch gibt es nicht mehr.";
+  if (t.status === "abgesagt") return "Der Tisch wurde abgesagt – der Gast-Link gilt nicht mehr.";
+  const ab = Date.parse(t.beginn) - RT_GAST.vorlaufMin * MIN;
+  if (jetzt < ab) return `Der Gast-Link gilt erst ab ${RT_GAST.vorlaufMin} Minuten vor Beginn.`;
+  if (jetzt >= rtEndeMs(t)) return "Der Tisch ist vorbei – der Gast-Link gilt nicht mehr.";
+  return null;
+}
+// Einladen: Name/Rolle prüfen, höchstens RT_GAST.max aktive Gäste, nicht für vorbei/abgesagt
+export function rtGastEinladenPruefen(t, aktive, name, jetzt) {
+  const ph = rtPhase(t, jetzt);
+  if (ph === "vorbei" || ph === "abgesagt") return "Der Tisch ist schon vorbei oder abgesagt.";
+  const n = String(name || "").trim();
+  if (n.length < RT_GAST.nameMin || n.length > RT_GAST.nameMax) return `Bitte den Namen des Gastes eingeben (${RT_GAST.nameMin}–${RT_GAST.nameMax} Zeichen).`;
+  if (aktive >= RT_GAST.max) return `Es können höchstens ${RT_GAST.max} Gäste an einem Tisch sein.`;
+  return null;
+}

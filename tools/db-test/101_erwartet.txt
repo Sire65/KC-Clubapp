@@ -1,0 +1,6 @@
+gast_platz=ok
+gast_herzschlag=da
+zurueckgezogen=fehlt
+tisch_voll=voll
+gaeste_im_chat=0
+zu_frueh=zu_frueh

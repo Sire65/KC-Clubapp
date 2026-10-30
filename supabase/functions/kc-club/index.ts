@@ -33,7 +33,7 @@ import { SI, siGeraetKlasse, siGeraetMerken, siLinksVerdacht } from "./sicherhei
 import { DS, DS_GRUENDE, dsStand, dsDienstJetzt, dsKarteZeigen, dsPruefen, dsGrundNoetig, dsKorrekturErlaubt, dsVorOrt, dsPaare, dsPause, dsMinuten } from "./dienst-stempel.js"; // KC-CLUB-DIENST-STEMPEL (2.590.0)
 import { zgBewerten, zgAuffaellig, ZG, ZG_REIHE } from "./zugang-pruefen.js"; // KC-CLUB-ZUGANG-AUFRAEUMEN (2.607.0)
 import { DT, dtAnbietenPruefen, dtUebernehmenPruefen, dtWechsel, dtRollen, dtText } from "./dienst-tausch.js"; // KC-CLUB-DIENST-TAUSCH (2.606.0)
-import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis, RT_TASCHE, rtTascheArt, rtTascheLegenPruefen, rtTascheSchieben } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.762.0), -ARTEN (2.762.0)
+import { RT, RT_ARTEN, rtArt, rtPhase, rtEndeMs, rtAnlegenPruefen, rtSitzt, rtSicher, rtGastgeberPruefen, rtAufraeumen, rtText, rtZusagePruefen, rtBestaetigung, rtKonflikte, rtKonfliktText, rtTreffenBis, RT_TASCHE, rtTascheArt, rtTascheLegenPruefen, rtTascheSchieben, RT_GAST, rtGastPid, rtIstGast, rtGastFenster, rtGastEinladenPruefen } from "./runder-tisch.js"; // KC-CLUB-RUNDER-TISCH (2.762.0), -ARTEN (2.762.0)
 import { REZEPT_THEMEN, REZEPT_STERNE_AB, rzThemaSaison as rzSaisonTag, rzBewertungen, rzBewertungPruefen } from "./rezepte.js"; // KC-CLUB-REZEPT-WEIHNACHT (2.730.0)
 // @ts-types="./db-puffer.d.ts"
 import { DB_PUFFER } from "./db-puffer.js"; // KC-CLUB-NOTPAKET-PUFFER (2.453.0): Lese-Puffer nur für den eigenen Aufruf
@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.774.0";
+const SERVER_VERSION = "2.776.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -3798,7 +3798,8 @@ const isoZeitOderFehler = (v: unknown, was: string) => { const d = new Date(Stri
 const ohneLinks = (t: string) => t.replace(/(https?:\/\/|www\.)\S+/gi, "[Link entfernt]");
 // ---------- Anmeldung ----------
 type Ich = { person_id: string; name: string; vorname: string; admin: boolean; vorstand: boolean; aemter: string[]; protokolle: boolean; kontakte: boolean; buero: BueroRecht;
-  zugang: "mitglied" | "aushilfe" | "gast"; // 2.422.0 KC-CLUB-ZUGANG
+  zugang: "mitglied" | "aushilfe" | "gast" | "tischgast"; // 2.422.0 KC-CLUB-ZUGANG; 2.776.0 KC-CLUB-RUNDER-TISCH-GAST
+  tischgast?: { id: string; tisch: string; name: string; rolle: string | null }; // 2.776.0: nur für Tischgäste – ihr einziger Tisch
   vertreter?: { person_id: string; name: string; vorname: string }; // KC-CLUB-VERTRETUNG: wer gerade für dieses Mitglied handelt
   nurLesen?: boolean; // KC-CLUB-NOTBETRIEB: true = Antwort nur für das Notfall-Paket berechnen, nichts schreiben
   bueroAnsicht?: { bis: string | null } }; // 2.765.0 KC-CLUB-BUERO-ANSICHT: Büro gerade für alle zur Ansicht frei (bis = null: bis auf Widerruf)
@@ -3871,6 +3872,7 @@ function fremdMerken(req: Request, grund: string, hash: string | null, person: s
 }
 async function anmelden(req: Request): Promise<Ich> {
   const token = req.headers.get("x-club-token") ?? "";
+  if (/^tg_[0-9a-f]{48}$/.test(token)) return await anmeldenTischgast(req, token); // 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: eigener, schmaler Weg
   if (!/^[0-9a-f]{32,96}$/.test(token)) { if (token) fremdMerken(req, "kaputt", null); throw new Fehler("Kein Zugang – bitte den persönlichen Link neu öffnen.", 401, token ? { hilfe: { art: "unvollstaendig" } } : undefined); }
   const hash = await sha256(token), jetztMs = Date.now(), version = txt(req.headers.get("x-club-version"), 20) || null;
   const c = ANMELDUNGEN.get(hash);
@@ -3892,6 +3894,38 @@ async function anmelden(req: Request): Promise<Ich> {
   if (ANMELDUNGEN.size >= ANMELDUNG_CACHE_MAX) for (const [k, v] of ANMELDUNGEN) if (v.bis <= jetztMs) ANMELDUNGEN.delete(k);
   if (ANMELDUNGEN.size < ANMELDUNG_CACHE_MAX) ANMELDUNGEN.set(hash, { ich: { ...ich, aemter: [...ich.aemter] }, bis: jetztMs + ANMELDUNG_CACHE_MS, gesehen: jetztMs, version });
   return bueroAnsichtAnwenden(ich); // 2.765.0 KC-CLUB-BUERO-ANSICHT (der Merker bleibt ohne – Ablauf wird je Anfrage geprüft)
+}
+// ---------- 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: Anmeldung eines Tischgastes ----------
+// Link „?g=tg_…“ (nur der Fingerabdruck liegt in kc_club_tisch_gast). Gilt nur im Zeitfenster (rtGastFenster: 30 Min. vor Beginn bis Ende), nur solange
+// nicht zurückgezogen und nur auf dem ersten Gerät: die App schickt eine zufällige Geräte-Kennung (x-tg-geraet), deren Fingerabdruck beim ersten Öffnen
+// gespeichert wird – ein weitergeleiteter Link geht auf einem anderen Gerät nicht. Kein Eintrag in kc_core_people, keine Rollen, kein Büro.
+async function anmeldenTischgast(req: Request, token: string): Promise<Ich> {
+  const hash = await sha256(token);
+  const { data: g, error } = await db.from("kc_club_tisch_gast").select("id,tisch_id,name,rolle,geraet_hash,zurueckgezogen_am").eq("link_hash", hash).maybeSingle();
+  if (error || !g || g.zurueckgezogen_am) { fremdMerken(req, "unbekannt", hash); throw new Fehler("Dieser Gast-Link gilt nicht (mehr). Bitte bei der Person melden, die dich eingeladen hat.", 401); }
+  const { data: t } = await db.from("kc_club_tisch").select(RT_SPALTEN).eq("id", g.tisch_id).maybeSingle();
+  const f = rtGastFenster(t, Date.now());
+  if (f) throw new Fehler(f, 401, { tischgast: { beginn: t?.beginn || null } });
+  const geraet = String(req.headers.get("x-tg-geraet") || "");
+  if (!/^[0-9a-f]{32,64}$/.test(geraet)) throw new Fehler("Bitte den Gast-Link direkt im Browser öffnen.", 401);
+  const gh = await sha256(geraet);
+  if (!g.geraet_hash) {
+    const { data: u } = await db.from("kc_club_tisch_gast").update({ geraet_hash: gh, erster_zugriff_am: jetzt() }).eq("id", g.id).is("geraet_hash", null).select("geraet_hash");
+    if (!u?.length) { const { data: n } = await db.from("kc_club_tisch_gast").select("geraet_hash").eq("id", g.id).maybeSingle(); if (n?.geraet_hash !== gh) g.geraet_hash = n?.geraet_hash || "x"; else g.geraet_hash = gh; }
+    else { g.geraet_hash = gh; await protokoll(rtGastPid(g.id), "tischgast_erstes_geraet", { tisch: g.tisch_id }); }
+  }
+  if (g.geraet_hash !== gh) { fremdMerken(req, "gesperrt", hash, rtGastPid(g.id)); throw new Fehler("Dieser Gast-Link ist schon auf einem anderen Gerät in Gebrauch – er gilt nur für ein Gerät.", 401); }
+  return { person_id: rtGastPid(g.id), name: g.name, vorname: g.name, admin: false, vorstand: false, aemter: [], protokolle: false, kontakte: false, buero: null,
+    zugang: "tischgast", tischgast: { id: g.id, tisch: g.tisch_id, name: g.name, rolle: g.rolle || null } };
+}
+// Gast darf eine Anlage nur sehen, wenn sie im Chat SEINES Tisches liegt (z. B. eine gezeigte Unterlage) – sonst nichts
+async function rtGastAnlageErlaubt(ich: Ich, attId: string) {
+  const { data: t } = await db.from("kc_club_tisch").select("thread_id").eq("id", ich.tischgast!.tisch).maybeSingle();
+  if (!t?.thread_id) return false;
+  const { data: ma } = await db.from("kc_communication_message_attachments").select("message_id").eq("attachment_id", attId);
+  if (!(ma ?? []).length) return false;
+  const { data: m } = await db.from("kc_communication_messages").select("id").in("id", (ma ?? []).map((x: any) => x.message_id)).eq("thread_id", t.thread_id).limit(1);
+  return !!m?.length;
 }
 async function anmeldenDb(hash: string, version: string | null, ua = "", req?: Request): Promise<Ich> {
   // 0.56.1: eine Datenbank-Runde (kc_club_anmeldung: Token-Hash prüfen, „zuletzt gesehen“ setzen, Person + Rollen liefern)
@@ -3923,6 +3957,9 @@ async function anmeldenDb(hash: string, version: string | null, ua = "", req?: R
 // Aushilfe: dazu Mein Dienst/Dienstwünsche, Fotoalbum nur ansehen, Schulung. Kein Ablaufdatum (Hansi sperrt von Hand).
 // Dieselbe Liste steht in app.js (ZUGANG_AKTIONEN) – der Vertragstest prüft, dass beide gleich sind.
 type Zugang = "mitglied" | "aushilfe" | "gast";
+// 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: externe Tischgäste – NUR ihr eigener Tisch (jede Aktion prüft zusätzlich die Tisch-Kennung). Kein init, keine
+// Mitglieder, keine Termine, keine Chats, keine Kontaktdaten. Absichtlich nicht in ZUGANG_AKTIONEN (die Liste gilt auch für die App-Oberfläche).
+const TISCHGAST_AKTIONEN = ["tischgast_init", "tisch_platz", "tisch_verlassen", "anlage_url", "anruf_wege", "diagnose", "ping"] as const;
 const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
@@ -3944,13 +3981,13 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
     "schulung_meine", "schulung_antwort",
     "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
-const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]) };
+const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
 // 2.422.0 KC-CLUB-ZUGANG: Gäste/Aushilfen nie Protokolle, nie Kontaktdaten anderer (unabhängig von den Schaltern im Rollen-Fenster)
 const zugangAnwenden = (ich: Ich): Ich => (ich.zugang === "mitglied" ? ich : { ...ich, protokolle: false, kontakte: false });
 function zugangPruefen(a: string, ich: Ich) {
   if (ich.zugang === "mitglied" || ZUGANG_ERLAUBT[ich.zugang].has(a)) return;
-  throw new Fehler(ich.zugang === "gast" ? "Das ist für Gäste nicht freigeschaltet." : "Das ist für Aushilfen nicht freigeschaltet.", 403);
+  throw new Fehler(ich.zugang === "tischgast" ? "Als Tischgast geht nur der Tisch, zu dem du eingeladen bist." : ich.zugang === "gast" ? "Das ist für Gäste nicht freigeschaltet." : "Das ist für Aushilfen nicht freigeschaltet.", 403);
 }
 // Person + Rollen → angemeldetes Mitglied (gemeinsam für Anmeldung und Notfall-Paket – eine Regel, nicht zwei)
 function ichAus(p: any, r: any): Ich {
@@ -4999,6 +5036,9 @@ async function dtSenden(ids: string[], probe: boolean, vars: { titel: string; ku
 // (kc_club_tisch_beitreten, Platzgrenze unter Sperre); kein Abfragen im Sekundentakt (KC-DB-SPARSAM). Regeln: runder-tisch.js.
 // Gäste und Aushilfen: nicht in ZUGANG_AKTIONEN → 403 (externe Tischgäste erst in RT4). Bis zur Freigabe sieht es nur der Admin (🔒 Test).
 const rtDarf = async (ich: Ich) => ich.zugang === "mitglied" && (ich.admin || (await freigaben()).runder_tisch === "alle");
+const RT_GAST_HINWEIS = "Du bist als Gast zu genau diesem Tisch eingeladen. Du siehst nur diesen Tisch und von den Teilnehmenden nur den Vornamen. " +
+  "Ton und Bild gehen direkt von Gerät zu Gerät und werden nicht aufgezeichnet. Gespeichert wird nur: dein Name, wann du am Tisch warst und ein Fingerabdruck " +
+  "deines Links und deines Geräts. Das wird 7 Tage nach dem Ende des Tisches gelöscht. Der Link gilt nur auf diesem Gerät und nur bis zum Ende des Tisches."; // 2.774.0
 const RT_SPALTEN = "id,art,tagesordnung,gruppe_id,thema,beschreibung,beginn,dauer_min,verlaengert_min,ende,plaetze,gastgeber,thread_id,status,geschlossen_am,erinnert_am,medien_geloescht_am,text_geloescht_am,teilnehmer_anzahl";
 const rtBestaetigungAus = (b: any) => (b ? { von: new Date(b.vonMs).toISOString(), bis: new Date(b.bisMs).toISOString(), min: b.min } : null);
 // 2.762.0 KC-CLUB-RUNDER-TISCH-GRUPPE: meine festen Chat-Gruppen (Leitung, Innovation …) – Tische einer Gruppe sehen nur ihre Mitglieder und wer leitet
@@ -5028,26 +5068,34 @@ async function rtLage(ich: Ich, nurId?: string) {
   // 2.762.0: Gruppen-Tische nur für ihre Mitglieder; die volle Liste bringt auch meine Gruppen für „Für wen?“ mit
   const gIds = [...new Set((alle ?? []).map((x: any) => x.gruppe_id).filter(Boolean))] as string[];
   const gr = nurId ? await rtMeineGruppen(ich, gIds) : await rtMeineGruppen(ich);
-  const ts = (alle ?? []).filter((x: any) => rtSichtbar(x, ich, gr));
+  const gast = ich.zugang === "tischgast"; // 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: der Gast sieht nur seinen Tisch – nur Vornamen, keinen Chat, keine Zusagen
+  const ts = (alle ?? []).filter((x: any) => (gast ? x.id === ich.tischgast!.tisch : rtSichtbar(x, ich, gr)));
   const ids = (ts ?? []).map((x: any) => x.id);
   const { data: tn } = ids.length ? await db.from("kc_club_tisch_teilnahme").select("tisch_id,person_id,zusage,dabei_seit,zuletzt_da,verlassen_am").in("tisch_id", ids).limit(3000) : { data: [] as any[] };
-  const pm = await personen([...(ts ?? []).map((x: any) => x.gastgeber), ...(tn ?? []).map((x: any) => x.person_id)]);
-  const nm = (id: string) => pm.get(id)?.display_name || id;
+  const pm = await personen([...(ts ?? []).map((x: any) => x.gastgeber), ...(tn ?? []).map((x: any) => x.person_id).filter((x: string) => !rtIstGast(x))]);
+  // Gäste nur nachladen, wenn nötig (Liste, Gast selbst, oder ein Gast sitzt am Tisch) – der Herzschlag der Mitglieder bleibt bei 3 Abfragen
+  const mitGast = ids.length && (!nurId || gast || (tn ?? []).some((r: any) => rtIstGast(r.person_id)));
+  const { data: gs } = mitGast ? await db.from("kc_club_tisch_gast").select("id,tisch_id,name,rolle,eingeladen_von,zurueckgezogen_am").in("tisch_id", ids) : { data: [] as any[] };
+  const gm = new Map((gs ?? []).map((g: any) => [rtGastPid(g.id), g]));
+  const nm = (id: string) => (rtIstGast(id) ? `${gm.get(id)?.name || "Gast"} (Gast)` : gast ? vorname(pm.get(id)) || "Mitglied" : pm.get(id)?.display_name || id);
   // 2.774.0 KC-CLUB-TISCH-TASCHE: wie viele Teile habe ich gepackt, wie viele liegen vorab für alle bereit (fehlt die Tabelle → 0)
   const { data: ta } = ids.length ? await db.from("kc_club_tisch_tasche").select("tisch_id,person_id,vorab").in("tisch_id", ids).or(`person_id.eq.${ich.person_id},vorab.eq.true`).limit(2000) : { data: [] as any[] };
   const tische = (ts ?? []).map((x: any) => {
     const z = (tn ?? []).filter((r: any) => r.tisch_id === x.id), ph = rtPhase(x, t), mein = z.find((r: any) => r.person_id === ich.person_id);
     return { id: x.id, gruppe: x.gruppe_id ? gr.get(x.gruppe_id) || { id: x.gruppe_id, name: "Gruppe", symbol: "👥" } : null, art: x.art || "runder_tisch", tagesordnung: Array.isArray(x.tagesordnung) ? x.tagesordnung : [], thema: x.thema, beschreibung: x.beschreibung, beginn: x.beginn, ende: new Date(rtEndeMs(x)).toISOString(), dauer: x.dauer_min, verlaengert: x.verlaengert_min,
       plaetze: x.plaetze, text: rtText(x, TZ), phase: ph, gastgeber: x.gastgeber, gastgeberName: nm(x.gastgeber), darfLeiten: x.gastgeber === ich.person_id || ich.admin,
-      chat: x.text_geloescht_am ? null : x.thread_id, medienWeg: !!x.medien_geloescht_am, imChat: x.gastgeber === ich.person_id || !!mein?.dabei_seit, meineZusage: mein?.zusage || null, ichSitze: !!mein && rtSitzt(mein, t),
-      zusagen: z.filter((r: any) => r.zusage === "ja").map((r: any) => ({ id: r.person_id, name: nm(r.person_id) })),
+      chat: gast || x.text_geloescht_am ? null : x.thread_id, medienWeg: !!x.medien_geloescht_am, imChat: x.gastgeber === ich.person_id || !!mein?.dabei_seit, meineZusage: mein?.zusage || null, ichSitze: !!mein && rtSitzt(mein, t),
+      zusagen: gast ? [] : z.filter((r: any) => r.zusage === "ja").map((r: any) => ({ id: r.person_id, name: nm(r.person_id) })),
       amTisch: ph === "offen" || ph === "gleich" ? z.filter((r: any) => rtSitzt(r, t)).sort((a: any, b: any) => Date.parse(a.dabei_seit) - Date.parse(b.dabei_seit))
-        .map((r: any) => ({ id: r.person_id, name: nm(r.person_id), sicher: rtSicher(r, t) })) : [],
+        .map((r: any) => ({ id: r.person_id, name: nm(r.person_id), sicher: rtSicher(r, t), ...(rtIstGast(r.person_id) ? { gast: true } : {}) })) : [],
+      // 2.776.0: eingeladene Gäste (für Mitglieder: „Mit Gast“, Zurückziehen) – der Gast selbst sieht diese Liste nicht
+      gaeste: gast ? [] : (gs ?? []).filter((g: any) => g.tisch_id === x.id && !g.zurueckgezogen_am).map((g: any) => ({ id: g.id, name: g.name, rolle: g.rolle || null,
+        darfZurueck: g.eingeladen_von === ich.person_id || x.gastgeber === ich.person_id || ich.admin })),
       warenDa: x.teilnehmer_anzahl ?? z.filter((r: any) => r.dabei_seit).length,
       bestaetigung: ph === "vorbei" ? rtBestaetigungAus(rtBestaetigung(mein, x)) : null,
       tasche: { meine: (ta ?? []).filter((r: any) => r.tisch_id === x.id && r.person_id === ich.person_id).length, vorab: (ta ?? []).filter((r: any) => r.tisch_id === x.id && r.person_id !== ich.person_id && r.vorab).length } }; // 2.762.0: Seminar – Teilnahmebestätigung, wenn ich lange genug dabei war
   });
-  return { aktiv: true, ...(nurId ? { nur: nurId } : { gruppen: [...gr.values()].sort((a, b) => a.name.localeCompare(b.name, "de")) }), jetzt: new Date(t).toISOString(), regeln: { plaetzeMin: RT.plaetzeMin, plaetzeMax: RT.plaetzeMax, dauern: RT.dauern, vorlaufMin: RT.vorlaufMin, herzSek: RT.herzSek,
+  return { aktiv: true, ...(nurId ? { nur: nurId } : { gruppen: [...gr.values()].sort((a, b) => a.name.localeCompare(b.name, "de")) }), jetzt: new Date(t).toISOString(), regeln: { plaetzeMin: RT.plaetzeMin, plaetzeMax: RT.plaetzeMax, dauern: RT.dauern, vorlaufMin: RT.vorlaufMin, herzSek: RT.herzSek, gastMax: RT_GAST.max,
     vorausTage: RT.vorausTage, themaMax: RT.themaMax, beschreibungMax: RT.beschreibungMax, medienTage: RT.medienTage, textTage: RT.textTage, toMax: RT.toMax, toPunktMax: RT.toPunktMax,
     bestaetigungAnteil: RT.bestaetigungAnteil, arten: RT_ARTEN }, tische };
 }
@@ -5160,6 +5208,10 @@ async function tischWartung(stuendlich: boolean) {
       if ((tt ?? []).length) { await db.from("kc_club_tisch_tasche").delete().eq("tisch_id", x.id); await rtTascheDateienWeg((tt ?? []).map((r: any) => r.attachment_id)); }
     }
     if (f.medien && x.thread_id) { const n = await rtMedienWeg(x.thread_id); await protokoll(null, "tisch_aufgeraeumt", { tisch: x.id, dateien: n }); }
+    if (f.medien) { // 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: Gäste (Name, Fingerabdrücke) und ihre Plätze 7 Tage nach Tischende weg – fehlt die Tabelle noch: nichts
+      await db.from("kc_club_tisch_gast").delete().eq("tisch_id", x.id).then(() => {}, () => {});
+      await db.from("kc_club_tisch_teilnahme").delete().eq("tisch_id", x.id).like("person_id", "TG-%");
+    }
     if (f.medien) await db.from("kc_club_tisch").update({ medien_geloescht_am: jetzt() }).eq("id", x.id);
     if (f.text) {
       const { count } = await db.from("kc_club_tisch_teilnahme").select("person_id", { count: "exact", head: true }).eq("tisch_id", x.id).not("dabei_seit", "is", null);
@@ -5228,6 +5280,7 @@ async function dienstStempelErinnern() {
   return n;
 }
 async function nurWennFrei(id: string, ich: Ich, was: string) {
+  if (ich.zugang === "tischgast") return; // 2.776.0: der Gast ist von einem Mitglied zu genau einem Tisch eingeladen (Aktionen prüfen die Tisch-Kennung)
   if (!ich.admin && (await freigaben())[id] !== "alle") throw new Fehler(`${was} ist noch nicht freigegeben.`, 403);
 }
 const VF_EV_MAX = 40; // KC-CLUB-VORFUEHREN: so viele Ereignisse merkt sich der Server je Vorführung
@@ -12330,7 +12383,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
         const id = String(p.id || "");
         if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Fehler("Den Tisch gibt es nicht mehr.", 404);
-        const { data: r, error } = await db.rpc("kc_club_tisch_beitreten", { p_tisch: id, p_person: ich.person_id, p_frisch_sek: RT.frischSek, p_vorlauf_min: RT.vorlaufMin });
+        if (ich.zugang === "tischgast" && id !== ich.tischgast!.tisch) throw new Fehler("Als Tischgast geht nur der Tisch, zu dem du eingeladen bist.", 403); // 2.776.0
+        const { data: r, error } = ich.zugang === "tischgast"
+          ? await db.rpc("kc_club_tisch_gast_beitreten", { p_gast: ich.tischgast!.id, p_frisch_sek: RT.frischSek, p_vorlauf_min: RT_GAST.vorlaufMin })
+          : await db.rpc("kc_club_tisch_beitreten", { p_tisch: id, p_person: ich.person_id, p_frisch_sek: RT.frischSek, p_vorlauf_min: RT.vorlaufMin });
         if (error) throw new Fehler("Platz nehmen hat nicht geklappt – bitte nochmal.", 503);
         const ergebnis = String(r);
         if (ergebnis === "fehlt") throw new Fehler("Den Tisch gibt es nicht mehr.", 404);
@@ -12341,9 +12397,43 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: false, ergebnis, lage, meldung: { voll: "Tisch voll – du hast einen Warteplatz. Wird ein Platz frei, kommst du von selbst dran.", zu_frueh: `Platz nehmen geht ab ${RT.vorlaufMin} Minuten vor Beginn.`,
           vorbei: "Der Tisch ist schon vorbei.", abgesagt: "Der Tisch wurde abgesagt.", anmeldung: "Für dieses Seminar bitte erst anmelden (📝 Anmelden).", gruppe: "Das ist nur für die Mitglieder einer Gruppe." }[ergebnis] || "Platz nehmen geht gerade nicht." });
       }
+      // ---------- 2.776.0 KC-CLUB-RUNDER-TISCH-GAST ----------
+      case "tischgast_init": { // der Gast öffnet seinen Link: nur sein Tisch (Vornamen), Hinweis zum Datenschutz – nichts von den Mitgliedern
+        if (ich.zugang !== "tischgast") throw new Fehler("Nur für Tischgäste.", 403);
+        await protokoll(ich.person_id, "tischgast_init", { tisch: ich.tischgast!.tisch });
+        return json({ ok: true, ich: { person_id: ich.person_id, name: ich.name, vorname: ich.name, gast: true, rolle: ich.tischgast!.rolle }, tisch: ich.tischgast!.tisch,
+          lage: await rtLage(ich, ich.tischgast!.tisch), hinweis: RT_GAST_HINWEIS });
+      }
+      case "tisch_gast_einladen": { // jedes Mitglied, das den Tisch sieht (Entscheidung Hansi 30.10.2026) – höchstens RT_GAST.max aktive Gäste
+        await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
+        const x = await rtTischHolen(p.id, ich), name = txt(p.name, RT_GAST.nameMax), rolle = txt(p.rolle, RT_GAST.rolleMax) || null;
+        const { data: alt, error: ae } = await db.from("kc_club_tisch_gast").select("id").eq("tisch_id", x.id).is("zurueckgezogen_am", null);
+        if (ae) throw new Fehler(ae.code === "42P01" ? "Tischgäste sind noch nicht eingerichtet (die Datenbank-Erweiterung fehlt noch)." : "Gast einladen geht gerade nicht.", 503);
+        const f = rtGastEinladenPruefen(x, (alt ?? []).length, name, Date.now()); if (f) throw new Fehler(f, 409);
+        const token = "tg_" + zufall(24);
+        const { data: g, error } = await db.from("kc_club_tisch_gast").insert({ tisch_id: x.id, name, rolle, link_hash: await sha256(token), eingeladen_von: ich.person_id }).select("id").single();
+        if (error || !g) throw new Fehler("Gast einladen hat nicht geklappt – bitte nochmal.", 503);
+        await protokoll(ich.person_id, "tisch_gast_eingeladen", { tisch: x.id, gast: g.id });
+        // Der Link wird nur dieses eine Mal angezeigt (gespeichert ist nur sein Fingerabdruck) – er geht nie per Mail/Push vom Server raus
+        return json({ ok: true, link: `${APP_URL}?g=${token}`, gast: { id: g.id, name, rolle }, gueltig: { ab: new Date(Date.parse(x.beginn) - RT_GAST.vorlaufMin * 60000).toISOString(), bis: new Date(rtEndeMs(x)).toISOString() }, lage: await rtLage(ich) });
+      }
+      case "tisch_gast_zurueckziehen": { // wer eingeladen hat, wer den Tisch leitet, Admin
+        await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
+        const { data: g } = await db.from("kc_club_tisch_gast").select("id,tisch_id,eingeladen_von,zurueckgezogen_am").eq("id", String(p.gast || "")).maybeSingle();
+        if (!g) throw new Fehler("Diesen Gast gibt es nicht mehr.", 404);
+        const x = await rtTischHolen(g.tisch_id, ich);
+        if (!(g.eingeladen_von === ich.person_id || x.gastgeber === ich.person_id || ich.admin)) throw new Fehler("Zurückziehen darf, wer eingeladen hat oder den Tisch leitet.", 403);
+        if (!g.zurueckgezogen_am) {
+          await db.from("kc_club_tisch_gast").update({ zurueckgezogen_am: jetzt() }).eq("id", g.id);
+          await db.from("kc_club_tisch_teilnahme").update({ verlassen_am: jetzt() }).eq("tisch_id", g.tisch_id).eq("person_id", rtGastPid(g.id));
+          await protokoll(ich.person_id, "tisch_gast_zurueckgezogen", { tisch: g.tisch_id, gast: g.id });
+        }
+        return json({ ok: true, lage: await rtLage(ich) });
+      }
       case "tisch_verlassen": {
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
-        const x = await rtTischHolen(p.id, ich);
+        if (ich.zugang === "tischgast" && String(p.id || "") !== ich.tischgast!.tisch) throw new Fehler("Als Tischgast geht nur der Tisch, zu dem du eingeladen bist.", 403); // 2.776.0
+        const x = ich.zugang === "tischgast" ? await rtTischHolen(p.id) : await rtTischHolen(p.id, ich);
         await db.from("kc_club_tisch_teilnahme").update({ verlassen_am: jetzt() }).eq("tisch_id", x.id).eq("person_id", ich.person_id).not("dabei_seit", "is", null);
         await protokoll(ich.person_id, "tisch_verlassen", { tisch: x.id });
         return json({ ok: true, lage: await rtLage(ich) });
@@ -17328,6 +17418,7 @@ Köcheclub Werne`,
         if (!att) throw new Fehler("Anlage nicht gefunden.", 404);
         if ((await einmalFotos([att.id])).size) throw new Fehler("👁️ Dieses Foto kann nur einmal angesehen werden – bitte im Chat auf die Kachel tippen.", 403); // KC-CLUB-EINMAL-FOTO
         let erlaubt = String(att.object_path).startsWith(`club/${ich.person_id}/`);
+        if (ich.zugang === "tischgast") { erlaubt = await rtGastAnlageErlaubt(ich, att.id); if (!erlaubt) throw new Fehler("Anlage nicht gefunden.", 404); } // 2.776.0: nur Anlagen seines Tisches
         if (!erlaubt) {
           const { data: ma } = await db.from("kc_communication_message_attachments").select("message_id").eq("attachment_id", att.id);
           const { data: msgs } = (ma ?? []).length ? await db.from("kc_communication_messages").select("thread_id").in("id", (ma ?? []).map((x: any) => x.message_id)) : { data: [] as any[] };

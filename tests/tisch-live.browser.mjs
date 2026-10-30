@@ -14,7 +14,10 @@ import { fileURLToPath } from "node:url";
 const { chromium } = createRequire(import.meta.url)("playwright");
 const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MUSIK = "dddddddd-2222-3333-4444-555555555555"; // 🎵 Testlied = simjue-orgel.mp3 aus dem Repo
-const VIDEO = "eeeeeeee-2222-3333-4444-555555555555"; // 🎬 Testvideo = film/sicherheit-datenschutz.mp4 aus dem Repo
+const VIDEO = "eeeeeeee-2222-3333-4444-555555555555";
+// 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: externer Tischgast mit Gast-Link (eigener Start, nur erlaubte Anfragen)
+const GAST_TOKEN = "tg_" + "c0ffee".repeat(8), GAST_ID = "ffffffff-2222-3333-4444-555555555555", GAST_PID = "TG-" + GAST_ID;
+const GAST_ERLAUBT = new Set(["tischgast_init", "tisch_platz", "tisch_verlassen", "anlage_url", "anruf_wege", "diagnose", "ping"]); // = TISCHGAST_AKTIONEN im Server // 🎬 Testvideo = film/sicherheit-datenschutz.mp4 aus dem Repo
 const TISCH = "aaaaaaaa-2222-3333-4444-555555555555", CHAT = "bbbbbbbb-2222-3333-4444-555555555555", PDF = "cccccccc-2222-3333-4444-555555555555";
 const LIVE = { kanal: "kc-fh-" + "ab".repeat(16), schluessel: Buffer.alloc(32, 7).toString("base64") };
 const LEUTE = [{ id: "KC-P-LIVE-A", name: "Anna Probe" }, { id: "KC-P-LIVE-B", name: "Bernd Probe" }, { id: "KC-P-LIVE-C", name: "Carla Probe" }];
@@ -70,6 +73,7 @@ try {
             mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {}, kacheln: null, freigaben: { runder_tisch: "alle" } },
           fotos_liste: { fotos: [], themen: [], jahre: [], anlaesse: [], speicher: { prozent: 0, belegt: 0, grenze: 1 }, papierkorb: 0, alben: [], albenKorb: 0, album: null },
           tisch_liste: lage(p.id), tisch_platz: { ok: true, ergebnis: "da", lage: lage(p.id), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) },
+          tisch_gast_einladen: { ok: true, link: `${BASIS}/index.html?g=${GAST_TOKEN}`, gast: { id: GAST_ID, name: "Dr. Probe", rolle: "Experte" }, gueltig: { ab: iso(-35), bis: iso(55) }, lage: lage(p.id) },
           anlage_url: { url: body.id === VIDEO ? `${BASIS}/film/sicherheit-datenschutz.mp4` : body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
           // 2.774.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher ein PDF und ein Lied eingepackt
           tisch_tasche: { tisch: TISCH, darfVorab: true, max: 20, vorab: [], meine: p.id !== LEUTE[0].id ? [] : [
@@ -193,6 +197,50 @@ try {
   // Anzeige: nichts ragt über den Rand, Live-Bereich da
   for (const s of seiten) { const r = await s.seite.evaluate(() => ({ quer: document.documentElement.scrollWidth > innerWidth + 2, da: !!document.querySelector("#tlBereich .tl-leiste") }));
     if (!r.da) melde(`[${s.name}] Live-Bereich fehlt`); if (r.quer) melde(`[${s.name}] ragt seitlich über den Rand`); }
+  // 8b. 🙋 Tischgast: Anna lädt ein (Link wird angezeigt), der Gast öffnet den Link in einem eigenen Browser, sieht den Datenschutz-Hinweis,
+  //     setzt sich an den Tisch, schaltet Live dazu und hört Anna. Er hat keine Datei-Knöpfe, keine Einladen-Funktion, und seine App fragt nur Erlaubtes an.
+  for (const s of seiten) await s.seite.evaluate(() => { TL.freiBis = 6; tlAufraeumen(); });
+  if (!(await A.seite.evaluate(() => /Gast von außen einladen/.test(document.querySelector("#rundTischInhalt")?.textContent || "")))) melde("[Anna] 🙋 „Gast von außen einladen“ fehlt");
+  await A.seite.evaluate((t) => rundGastEinladen(t), TISCH); await A.seite.fill("#rgName", "Dr. Probe"); await A.seite.click('.dlg [data-a="los"], [data-a="los"]');
+  await warte(A, (tok) => document.getElementById("rgLink")?.value.endsWith(tok), GAST_TOKEN, 8000, "🙋 Gast-Link wird nicht angezeigt");
+  await A.seite.evaluate(() => document.querySelectorAll('[data-a="zu2"]').forEach((b) => b.click()));
+  const gastAnfragen = new Set();
+  const gctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, serviceWorkers: "block", locale: "de-DE", timezoneId: "Europe/Berlin", permissions: ["microphone", "camera"],
+    userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36" });
+  const G = { seite: await gctx.newPage(), name: "Gast", id: GAST_PID };
+  G.seite.on("pageerror", (e) => melde(`[Gast] Programmfehler: ${String(e.message || e).slice(0, 200)}`));
+  await G.seite.routeWebSocket(/realtime\/v1\/websocket/, leitung);
+  const gastLage = () => ({ ...lage(GAST_PID), tische: lage(GAST_PID).tische.map((t) => ({ ...t, chat: null, zusagen: [], gaeste: [], darfLeiten: false, gastgeberName: "Anna", amTisch: t.amTisch.map((x) => ({ ...x, name: x.name.split(" ")[0] })) })) });
+  await G.seite.route("**/*", (r) => {
+    const u = new URL(r.request().url());
+    if (u.origin === BASIS || u.protocol === "data:" || u.protocol === "blob:") return r.continue();
+    if (/\/functions\/v1\/kc-club$/.test(u.pathname)) {
+      let a = "", h = r.request().headers(); try { a = JSON.parse(r.request().postData() || "{}").action; } catch {}
+      gastAnfragen.add(a); if (h["x-club-token"] !== GAST_TOKEN || !/^[0-9a-f]{32}$/.test(h["x-tg-geraet"] || "")) melde(`[Gast] Anfrage „${a}“ ohne Gast-Link/Geräte-Kennung`);
+      const ant = { tischgast_init: { ok: true, ich: { person_id: GAST_PID, name: "Dr. Probe", vorname: "Dr. Probe", gast: true }, tisch: TISCH, lage: gastLage(), hinweis: "Du bist als Gast zu genau diesem Tisch eingeladen." },
+        tisch_platz: { ok: true, ergebnis: "ok", lage: gastLage(), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) } }[a];
+      return r.fulfill({ status: ant ? 200 : 403, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(ant || { error: "Als Tischgast geht nur der Tisch, zu dem du eingeladen bist." }) });
+    }
+    return r.abort();
+  });
+  await G.seite.goto(`${BASIS}/index.html?g=${GAST_TOKEN}`);
+  await warte(G, () => /Verstanden – zum Tisch/.test(document.body.textContent), null, 20000, "Datenschutz-Hinweis für den Gast fehlt");
+  await G.seite.evaluate(() => [...document.querySelectorAll("button")].find((b) => /Verstanden – zum Tisch/.test(b.textContent))?.click());
+  await warte(G, () => !!document.querySelector(".tl-start"), null, 15000, "Gast: Tisch / „Live dazuschalten“ erscheint nicht");
+  await G.seite.click(".tl-start").catch(() => melde("[Gast] „Live dazuschalten“ nicht antippbar"));
+  await warte(G, () => TL.live && tlLiveIds().length === 3, null, 15000, "Gast sieht die drei Mitglieder nicht live");
+  await warte(G, (a) => [...TL.pcs.values()].some((v) => !v.raus && v.an === a && v.ok), A.id, 20000, "Gast hört Anna nicht");
+  await warte(A, (g) => TL.peers.has(g), GAST_PID, 10000, "Anna sieht den Gast nicht live");
+  const gr = await G.seite.evaluate(() => ({ zeigen: !!document.querySelector('[onclick="tlUnterlagen()"]') || !!document.querySelector('[onclick="tlMusik()"]'), einladen: /Gast von außen einladen/.test(document.body.textContent),
+    speicher: (() => { try { return localStorage.getItem("kc_club_key"); } catch { return null; } })(), app: !document.getElementById("app")?.classList.contains("versteckt"), quer: document.documentElement.scrollWidth > innerWidth + 2 }));
+  if (gr.zeigen) melde("[Gast] hat Datei-Knöpfe (📎/🎵) – Gäste haben keinen Tisch-Chat");
+  if (gr.einladen) melde("[Gast] darf keine Gäste einladen");
+  if (gr.speicher) melde("[Gast] Gast-Link wurde als Mitglieder-Link gespeichert");
+  if (gr.app) melde("[Gast] Mitglieder-Oberfläche ist sichtbar");
+  if (gr.quer) melde("[Gast] ragt seitlich über den Rand");
+  const verboten = [...gastAnfragen].filter((a) => !GAST_ERLAUBT.has(a));
+  if (verboten.length) melde("[Gast] App fragt Nicht-Erlaubtes an: " + verboten.join(", "));
+  await G.seite.evaluate(() => tlStopp(true)); await gctx.close();
   // 9. 📸 Ins Album: Anna übernimmt ein Foto aus dem Tisch → Album-Hochladeformular mit genau dieser Datei (erst „Hochladen“ legt es ab)
   const album = await A.seite.evaluate(async (v) => { await tlInsAlbum(v, "Probe.mp4", "video/mp4"); await new Promise((r) => setTimeout(r, 1500));
     return { ansicht: aktuelleAnsicht, offen: faGeteilt === null, datei: document.querySelector("#v-fotos")?.textContent.includes("Probe.mp4") || [...document.querySelectorAll("input[type=file]")].some((i) => i.files?.length) }; }, VIDEO).catch((e) => ({ fehler: String(e).slice(0, 120) }));
@@ -202,4 +250,4 @@ try {
 } finally { await browser.close(); server.close(); }
 
 if (fehler.length) { console.error("❌ Tisch-Live: " + fehler.length + " Fund(e)\n" + fehler.join("\n")); process.exit(1); }
-console.log("OK – Tisch-Live: 3 Fenster, Ton in alle Richtungen, Kamera, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm, 🎵 Musik gleichzeitig + Pause, 🎬 Video gleichzeitig + Album-Knopf, Redestab + ✋");
+console.log("OK – Tisch-Live: 3 Fenster, Ton in alle Richtungen, Kamera, PDF zeigen + Blättern + Folgen, Stumm, Live aus/wieder an, Bildschirm, 🎵 Musik gleichzeitig + Pause, 🎬 Video gleichzeitig + Album-Knopf, Redestab + ✋, 🙋 Tischgast");
