@@ -1,0 +1,4 @@
+fridbert=passiv
+passiv_erlaubt=t
+unsinn_abgelehnt=t
+andere_unveraendert=t
