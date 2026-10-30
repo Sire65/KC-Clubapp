@@ -89,6 +89,7 @@ jobs:
       - run: node tests/anruf-besser.test.mjs
       - run: node tests/backup-verify-teile.test.mjs
       - run: node tests/rose.test.mjs
+      - run: node tests/halloween-fuer-alle.test.mjs
   # 2.725.0 KC-CLUB-RUNDGANG: Klick-Rundgang im echten Browser (Testdaten, nichts nach draußen) – Programmfehler und Schutzschild-Sperren werden rot
   rundgang:
     runs-on: ubuntu-latest
