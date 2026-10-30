@@ -1,15 +1,28 @@
 # Änderungen
 
-## 2.765.0 – 2026-10-30 – 🪧 Weihnachtsmarkt-Schilder aus einem Guss im Club-CD (KC-CLUB-SCHILDER-CD) · Server 2.765.0
-Wunsch Hansi (30.10.): „Vernünftige Schilder für den Weihnachtsmarkt, alles aus einem Guss mit unserem Corporate Design – CD ist Weinrot, Beige und Gold. Unten jeweils Fußzeile mit Jahr und Köcheclub Werne.“
-- **Vier neue Vorlagen** unter Büro → 🪧 Schilder-Druckerei → Anlass 🎄 Weihnachtsmarkt: **Nur Barzahlung**, **Vorsicht Stufe!**, **Hier kein Durchgang**, **Gebrauchtes Besteck** – Texte im Editor wie gewohnt änderbar.
+## 2.765.0 – 2026-10-30 – 🪧 Weihnachtsmarkt-Schilder im Club-CD, Jugendschutz, Standschild und 🖨️ Druckpaket (KC-CLUB-SCHILDER-CD, KC-CLUB-SCHILDER-DRUCKPAKET) · Server 2.765.0
+Wunsch Hansi (30.10.): „Vernünftige Schilder für den Weihnachtsmarkt, alles aus einem Guss mit unserem Corporate Design – CD ist Weinrot, Beige und Gold. Unten jeweils Fußzeile mit Jahr und Köcheclub Werne.“ – „Jugendschutz-Schild auch, am besten mit dem amtlichen Text. Im Vertrag mit Werne Marketing steht, was man am Stand anbringen muss (Name, verantwortlich, evtl. Standnummer). Dann einen Druckauftrag zusammenpacken wie Aktentasche packen: Schilder und Formulare anklicken, Liste mit Anzahl der Ausdrucke, Haken wegnehmbar, als Druckpaket Weihnachtsmarkt speichern – jedes Jahr wieder ausdrucken.“
+
+### Schilder im Club-CD
+- **Sechs neue Vorlagen** unter Büro → 🪧 Schilder-Druckerei → Anlass 🎄 Weihnachtsmarkt (Club-CD-Vorlagen stehen jetzt vorn): **Nur Barzahlung**, **Vorsicht Stufe!**, **Hier kein Durchgang**, **Gebrauchtes Besteck**, **Jugendschutz**, **Standschild**. Texte im Editor wie gewohnt änderbar.
 - **Neuer Rahmen „Club-CD“**: beige Fläche, weinroter Rahmen mit Goldlinie, unten ein weinrotes Fußband mit Kochmütze, „Köcheclub Werne“ und – in Gold – der Fußzeile.
-- **Fußzeile** (neues Feld im Editor, freiwillig, bis 40 Zeichen): bei den neuen Vorlagen vorbelegt mit „Weihnachtsmarkt <aktuelles Jahr>“. Auch bei allen anderen Rahmen nutzbar (grau neben „Köcheclub Werne“). Gespeicherte Schilder ohne Fußzeile sehen aus wie bisher.
-- **Vier neue Symbole, selbst gezeichnet** nach Art der Sicherheitszeichen (druckt auf jedem Gerät gleich): Nur Bargeld (Schein + durchgestrichene Karte), Vorsicht Stufe (gelbes Warndreieck), Kein Durchgang (Verbotszeichen), Besteck (Gabel + Messer im weinroten Feld mit Goldrand).
-- CD: `KC_CD.gold` als dritte Farbe (eine Quelle für alles Gedruckte).
-- Server: `schildDaten` speichert die Fußzeile (`fuss`, gekürzt auf 40 Zeichen). Ohne neuen Server geht beim Speichern nur die Fußzeile verloren, sonst nichts.
-- Bisherige Vorlagen (z. B. „Nur Barzahlung“ für andere Anlässe, „Durchgang bitte freihalten“) bleiben unverändert.
-- Tests: `tests/app-vertrag.test.mjs` Abschnitt 2.765.0. Rückweg: App/Server 2.764.0.
+- **Fußzeile** (neues Feld, freiwillig, bis 40 Zeichen): bei den neuen Vorlagen „Weihnachtsmarkt <aktuelles Jahr>“. Bei anderen Rahmen grau neben „Köcheclub Werne“. Gespeicherte Schilder ohne Fußzeile sehen aus wie bisher.
+- **Kleingedrucktes** (neues Feld, freiwillig, bis 1200 Zeichen): klein über dem Fuß, mit Goldlinie abgesetzt – z. B. Gesetzestext.
+- **Jugendschutz**: Kurzfassung („Glühwein, Wein, Bier: erst ab 16 · mit Schuss, Eierlikör, Feuerzangenbowle, Rum, Likör: erst ab 18 · Ausweis“) und als Kleingedrucktes der Wortlaut **§ 9 Abs. 1 und 2 JuSchG** mit „Aushang nach § 3 Abs. 1 JuSchG · Stand 30.10.2026“ (`SCH_JUSCHG9`). Hinweis: Die Abschaffung des „begleiteten Trinkens“ (Abs. 2) hat das Kabinett am 12.08.2026 beschlossen, sie ist aber noch nicht in Kraft – vor dem Druck prüfen, ggf. Text und Stand anpassen.
+- **Standschild**: „Köcheclub Werne“ mit Anschrift, Verantwortlich, Stand-Nr. als Platzhalter (…) – Pflicht laut Vertrag Werne Marketing (To-do „Standschild (Name/Anschrift)“); nichts wird erfunden, die Angaben trägt man selbst ein.
+- **Fünf neue Symbole, selbst gezeichnet** (druckt auf jedem Gerät gleich): Nur Bargeld, Vorsicht Stufe (gelbes Warndreieck), Kein Durchgang (Verbotszeichen), Besteck, Ab 16 / ab 18.
+- CD: `KC_CD.gold` als dritte Farbe.
+
+### 🖨️ Druckpaket
+- In der Schilder-Druckerei: **＋ Druckpaket zusammenstellen** – gespeicherte Schilder, Vorlagen und **Formulare/PDFs/Bilder aus dem Archiv** (z. B. Preisliste, Checkliste, Händler-Ausweise) antippen; sie erscheinen oben in der Liste mit **Haken** und **Anzahl** (− / ＋, 1–50), ✕ nimmt sie heraus. Haken weg = diesmal nicht drucken, bleibt aber im Paket.
+- **💾 Speichern** als „Druckpaket Weihnachtsmarkt“ (Name änderbar) – nächstes Jahr unter „🖨️ Druckpakete“ wieder öffnen. Im Paket liegen nur Verweise: gedruckt wird immer der aktuelle Stand, Vorlagen mit dem aktuellen Jahr.
+- **🖨️ Drucken**: alles in einem Druckauftrag – jedes Teil so oft wie gewählt, mehrseitige PDFs vollständig, Querformat (z. B. Preisliste) auf A4 gedreht. Was nicht geladen werden kann (gelöscht, kein Netz), wird genannt – nie stillschweigend weggelassen.
+- Gespeichert wie ein Schild (`kc_club_schilder`, `daten.vorlage = "druckpaket"`) – keine neue Tabelle, keine Migration. Server prüft das Paket (`schildDaten`: Typen schild/vorlage/archiv, höchstens 40 Teile, 1–50 Stück).
+
+### Technik
+- Server: `schildDaten` speichert `fuss` (40), `klein` (1200) und Druckpakete. Ohne neuen Server gehen beim Speichern Fußzeile und Kleingedrucktes verloren und Druckpakete lassen sich nicht speichern (Drucken geht).
+- Bisherige Vorlagen (z. B. „Nur Barzahlung“ für alle Anlässe, „Durchgang bitte freihalten“) bleiben unverändert.
+- Tests: `tests/app-vertrag.test.mjs` Abschnitt 2.765.0; Klick-Rundgang: Druckpaket öffnen, Anzahl ändern, drucken (Haken weg = nicht gedruckt, echtes PDF aus dem Archiv, alle Seiten hoch). Rückweg: App/Server 2.764.0 (gespeicherte Pakete bleiben in der Tabelle, werden von 2.764.0 als Schild gelistet).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.764.0 – 2026-10-30 – ⛔ Runder Tisch: kein Clubabend und immer nur einer gleichzeitig (KC-CLUB-RUNDER-TISCH-ZEITCHECK) · Server 2.764.0 · DB

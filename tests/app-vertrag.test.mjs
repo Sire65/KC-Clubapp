@@ -9256,7 +9256,8 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   const ohne = [...programm.matchAll(/return \{[^}]*ohneRahmen: true[^}]*\}/g)].map((m) => m[0]);
   // 2.150.0: Schilder (KC-CLUB-SCHILDER) haben ihr CD im Bild selbst (Kochmütze im weinroten Kreis + „Köcheclub Werne“ unten)
   // 2.526.0 KC-CLUB-ERSTATTUNG-BRIEFBOGEN: Erstattungsantrag als Briefbogen-Blatt (erstBlatt mit cdKopf + cdFuss) – zwei Einstiege
-  assert.ok(ohne.length === 5 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
+  // 2.765.0 KC-CLUB-SCHILDER-DRUCKPAKET: Druckpaket = Seiten als Bild (dseite) wie Originalseiten
+  assert.ok(ohne.length === 6 && ohne.every((x) => /dseite|titel: b\.betreff|SDR\.bildUrl|html: erstBlatt\(/.test(x)), "nur Originalseiten (Bild), Brief und Schild ohne zentralen Rahmen");
   assert.ok(/return `<div class="cd-blatt cd-brief">\$\{cdKopf\("Antrag auf Erstattung"/.test(programm) && /\$\{cdFuss\(`Erstellt mit der Köcheclub-App am/.test(programm), "Erstattungsantrag = Briefbogen-CD");
   const schild = programm.slice(programm.indexOf("function schZeichnen("), programm.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = KC_CD\.weinrot/.test(schild) && /ctx\.drawImage\(SCH_LOGO/.test(schild) && /ctx\.fillText\(KC_CD\.name/.test(schild) && /const SCH_LOGO = new Image\(\); SCH_LOGO\.src = KC_CD\.logo;/.test(programm), "Schild trägt das CD selbst");
@@ -9517,8 +9518,20 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(["bar", "durchgang"].every((id) => F.SCH_VORLAGEN.some((v) => v.id === id && v.d.rahmen !== "cd")), "bisherige Vorlagen unverändert");
   const z = p.slice(p.indexOf("function schZeichnen("), p.indexOf("function schBild()"));
   assert.ok(/ctx\.fillStyle = cd \? KC_CD\.beige : "#fff"/.test(z) && /if \(zusatz\) \{ ctx\.fillStyle = cd \? KC_CD\.gold : KC_CD\.grau;/.test(z), "beige Fläche, Fußzeile in Gold");
-  assert.ok(/fuss: "", titelStil/.test(p) && /id="schFuss"/.test(p), "Fußzeile leer bei alten Schildern, im Editor änderbar");
+  assert.ok(/fuss: "", klein: "", titelStil/.test(p) && /id="schFuss"/.test(p), "Fußzeile leer bei alten Schildern, im Editor änderbar");
   assert.ok(/fuss: txt\(d\.fuss, 40\)/.test(sv), "Server speichert die Fußzeile (kurz)");
+  // Jugendschutz (Aushang § 3 JuSchG, Wortlaut § 9 mit Stand) und Standschild (Pflichtangaben Vertrag Werne Marketing – Platzhalter, nichts erfunden)
+  const F2 = new Function("KC_CD", mod.slice(0, mod.indexOf("const SCH_LEER")) + "\nreturn { SCH_VORLAGEN, SCH_JUSCHG9 };")({ weinrot: "#741521", text: "#1d1a17", zeile: "x", name: "Köcheclub Werne" });
+  const js = F2.SCH_VORLAGEN.find((v) => v.id === "wm_jugendschutz"), st = F2.SCH_VORLAGEN.find((v) => v.id === "wm_standschild");
+  assert.ok(js && js.d.klein === F2.SCH_JUSCHG9 && /unter 16 Jahren/.test(F2.SCH_JUSCHG9) && /§ 3 Abs\. 1/.test(F2.SCH_JUSCHG9) && /Stand \d\d\.\d\d\.\d{4}/.test(F2.SCH_JUSCHG9), "Jugendschutz mit Gesetzestext und Stand");
+  assert.ok(st && st.d.titel === "Köcheclub Werne" && /Anschrift: …/.test(st.d.text) && /Verantwortlich: …/.test(st.d.text) && /Stand-Nr\.: …/.test(st.d.text), "Standschild mit Platzhaltern");
+  assert.ok(/klein: "", titelStil/.test(p) && /id="schKlein"/.test(p) && /klein: txt\(d\.klein, 1200\)/.test(sv), "Kleingedrucktes: App, Editor, Server");
+  // Druckpaket: Verweise mit Anzahl und Haken, gespeichert wie ein Schild, Server prüft; nichts fällt stillschweigend weg
+  assert.ok(/druckpaket: \{ bauen: \(\) => schPaketDruckSeite\(\) \}/.test(p), "Druckpaket über den zentralen Druck");
+  assert.ok(/if \(d\.vorlage === "druckpaket"\)/.test(sv) && /slice\(0, 40\)/.test(sv) && /Math\.min\(50, Math\.max\(1,/.test(sv) && /const SCHILD_PAKET_TYP = \["schild", "vorlage", "archiv"\]/.test(sv), "Server: Paket geprüft (Typen, 40 Teile, 1–50 Stück)");
+  assert.ok(/daten: \{ vorlage: "druckpaket", paket: P\.teile \}/.test(p) && /const L = SDR\.paket\.teile\.filter\(\(t\) => t\.an\)/.test(p) && /for \(let i = 0; i < t\.n; i\+\+\) seiten\.push/.test(p), "nur angehakte Teile, so oft wie gewählt");
+  assert.ok(/⚠️ Nicht druckbar:/.test(p) && /fehlt\.push/.test(p), "Fehlendes wird genannt");
+  assert.ok(/!schIstPaket\(x\)\), pakete =/.test(p), "Pakete getrennt von den Schildern");
 }
 
 // 2.151.0 KC-CLUB-SPRACHE-EINSTELLUNG + KC-CLUB-SPRACHE-VERGESSEN (Wunsch Hansi): „Kachelgröße auf 4 x 3 ändern“, Einstellungen genau ansteuern,

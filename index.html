@@ -2632,6 +2632,11 @@
   .sdr-vorlagen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } @media (min-width: 640px) { .sdr-vorlagen { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   .sdr-vorlage { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte); color: var(--text); font: inherit; font-size: .78rem; font-weight: 700; line-height: 1.15; cursor: pointer; min-width: 0; }
   .sdr-vorlage canvas { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.25); background: #fff; } .sdr-vorlage span { overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
+  /* 2.765.0 KC-CLUB-SCHILDER-DRUCKPAKET: Liste mit Haken und Anzahl, darunter Auswahl */
+  .sdr-paket-liste { display: grid; gap: 6px; } .sdr-paket-zeile { display: grid; grid-template-columns: 1fr 40px 46px 40px 40px; gap: 4px; align-items: center; border: 1px solid var(--rand, #ddd); border-radius: 10px; padding: 4px 6px; }
+  .sdr-paket-zeile.aus { opacity: .5; } .sdr-paket-zeile label { display: flex; gap: 8px; align-items: center; min-width: 0; font-weight: 700; } .sdr-paket-zeile label span { overflow-wrap: anywhere; }
+  #schBlatt .sdr-paket-zeile .knopf { margin: 0; padding: 6px 0; min-height: 40px; text-align: center; } .sdr-paket-zeile b { text-align: center; white-space: nowrap; }
+  .sdr-paket-wahlen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; } #schBlatt .sdr-paket-wahl { margin: 0; text-align: left; padding: 8px 10px; font-size: .85rem; }
   .sdr-gespeichert { display: grid; gap: 6px; } .sdr-gespeichert > div { display: grid; grid-template-columns: 1fr 52px; gap: 6px; } #schBlatt .sdr-gespeichert .knopf { margin: 0; text-align: left; padding: 10px 12px; } .sdr-gespeichert .knopf small { display: block; opacity: .7; font-weight: 600; }
   .sdr-vorschau { background: #8a8580; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 10px; } .sdr-vorschau canvas { max-width: 100%; max-height: 42vh; width: auto; height: auto; box-shadow: 0 3px 12px rgba(0,0,0,.35); background: #fff; }
   .sdr-feld { margin: 0 0 8px; } .sdr-feld > label, .sdr-aussehen > label { display: block; font-weight: 800; font-size: .85rem; margin: 6px 0 3px; }

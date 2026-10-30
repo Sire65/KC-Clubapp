@@ -919,14 +919,23 @@ async function chatArchivSetzen(pid: string, threads: Record<string, string>) {
 const BEARBEITEN_MIN = 52_560_000; // 2.635.0 KC-CLUB-BEARBEITEN-JEDERZEIT (Wunschliste #36, Hansi „auch für normale Texte jederzeit“): 100 Jahre = jederzeit (vorher 15 Min.)
 // KC-CLUB-SCHILDER (2.150.0): nur bekannte Felder, kurze Texte, Auswahl-Kennungen als Kurzwörter – Gestaltung kommt aus den Listen der App
 const SCHILD_ID = /^[a-z0-9_-]{0,30}$/;
+// 2.765.0 KC-CLUB-SCHILDER-DRUCKPAKET: gespeichertes Druckpaket = Liste von Verweisen (Schild, Vorlage, Archiv-Datei) mit Anzahl und Haken
+const SCHILD_PAKET_TYP = ["schild", "vorlage", "archiv"];
 function schildDaten(d: any) {
   if (!d || typeof d !== "object" || Array.isArray(d)) throw new Fehler("Ungültiges Schild.");
+  if (d.vorlage === "druckpaket") {
+    const paket = (Array.isArray(d.paket) ? d.paket : []).slice(0, 40).map((x: any) => ({
+      typ: SCHILD_PAKET_TYP.includes(String(x?.typ)) ? String(x.typ) : "", ref: /^[A-Za-z0-9_-]{1,60}$/.test(String(x?.ref ?? "")) ? String(x.ref) : "",
+      titel: txt(x?.titel, 120), n: Math.min(50, Math.max(1, Math.round(Number(x?.n) || 1))), an: x?.an !== false })).filter((x: any) => x.typ && x.ref);
+    if (!paket.length) throw new Fehler("Das Druckpaket ist noch leer.");
+    return { vorlage: "druckpaket", paket };
+  }
   const id = (v: unknown, std: string) => SCHILD_ID.test(String(v ?? "")) && String(v ?? "") ? String(v) : std;
   const stil = (v: any) => ({ f: !!v?.f, k: !!v?.k, u: !!v?.u });
   const preise = (Array.isArray(d.preise) ? d.preise : []).slice(0, 20).map((x: any) => ({ a: txt(x?.a, 60), p: txt(x?.p, 14) })).filter((x: any) => x.a || x.p);
   const r = { vorlage: id(d.vorlage, "frei"), format: d.format === "quer" ? "quer" : "hoch", schrift: id(d.schrift, "club"), rahmen: id(d.rahmen, "schlicht"), farbe: id(d.farbe, "weinrot"),
-    symbol: id(d.symbol, ""), titel: txt(d.titel, 120), text: txt(d.text, 700), preise, fuss: txt(d.fuss, 40), titelStil: stil(d.titelStil), textStil: stil(d.textStil) };
-  if (!r.titel && !r.text && !preise.length) throw new Fehler("Das Schild ist noch leer.");
+    symbol: id(d.symbol, ""), titel: txt(d.titel, 120), text: txt(d.text, 700), preise, fuss: txt(d.fuss, 40), klein: txt(d.klein, 1200), titelStil: stil(d.titelStil), textStil: stil(d.textStil) };
+  if (!r.titel && !r.text && !preise.length && !r.klein) throw new Fehler("Das Schild ist noch leer.");
   return r;
 }
 // KC-CLUB-SELBSTLOESCHEN (2.148.0, Wunsch Hansi): Nachrichten löschen sich nach dieser Zeit selbst (Stunden) – je Chat oder je Nachricht, jedes Mitglied darf

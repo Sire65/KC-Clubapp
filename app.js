@@ -31028,8 +31028,12 @@ const SCH_SYMBOLE = [
   { id: "suppe", t: "Suppe", e: "🍲" }, { id: "gluehwein", t: "Glühwein", e: "🍷" }, { id: "kaffee", t: "Kaffee", e: "☕" }, { id: "herz", t: "Herz", e: "❤️" },
   // 2.765.0 KC-CLUB-SCHILDER-CD: selbst gezeichnet nach Art der Sicherheitszeichen (druckt auf jedem Gerät gleich, ohne Emoji-Schrift)
   { id: "nurbar", t: "Nur Bargeld" }, { id: "stufe", t: "Vorsicht Stufe" }, { id: "keindurchgang", t: "Kein Durchgang" }, { id: "besteck", t: "Besteck" },
+  { id: "jugendschutz", t: "Ab 16 / ab 18" },
 ];
 const SCH_JAHR = String(new Date().getFullYear()); // Fußzeile der Weihnachtsmarkt-Schilder: „Weihnachtsmarkt <Jahr>“ – im Editor änderbar
+// 2.765.0: Aushang nach § 3 Abs. 1 JuSchG – Wortlaut § 9 Abs. 1 und 2 (Stand 30.10.2026; Abschaffung des „begleiteten Trinkens“ ist nur im
+// Gesetzgebungsverfahren – vor dem Druck auf gesetze-im-internet.de/juschg/__9.html prüfen und hier anpassen).
+const SCH_JUSCHG9 = "§ 9 Jugendschutzgesetz – Alkoholische Getränke\n(1) In Gaststätten, Verkaufsstellen oder sonst in der Öffentlichkeit dürfen 1. Bier, Wein, weinähnliche Getränke oder Schaumwein oder Mischungen von Bier, Wein, weinähnlichen Getränken oder Schaumwein mit nichtalkoholischen Getränken an Kinder und Jugendliche unter 16 Jahren, 2. andere alkoholische Getränke oder Lebensmittel, die andere alkoholische Getränke in nicht nur geringfügiger Menge enthalten, an Kinder und Jugendliche weder abgegeben noch darf ihnen der Verzehr gestattet werden.\n(2) Absatz 1 Nummer 1 gilt nicht, wenn Jugendliche von einer personensorgeberechtigten Person begleitet werden.\nAushang nach § 3 Abs. 1 Jugendschutzgesetz · Stand 30.10.2026";
 // Vorlagen: fuer = Anlässe, in denen sie erscheinen ("alle" = überall). Preise bleiben leer (… €) – die trägt man selbst ein, nichts wird erfunden.
 const SCH_VORLAGEN = [
   { id: "willkommen_wm", fuer: ["weihnachtsmarkt"], d: { symbol: "baum", titel: "Herzlich willkommen", text: `am Stand vom Köcheclub Werne\n${KC_CD.zeile}`, farbe: "gruen", rahmen: "fest", schrift: "fest" } },
@@ -31059,11 +31063,15 @@ const SCH_VORLAGEN = [
   { id: "wm_bar", fuer: ["weihnachtsmarkt"], d: { symbol: "nurbar", titel: "Nur Barzahlung", text: "Kartenzahlung ist leider nicht möglich.\nVielen Dank für Ihr Verständnis!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
   { id: "wm_stufe", fuer: ["weihnachtsmarkt"], d: { symbol: "stufe", titel: "Vorsicht Stufe!", text: "Bitte achten Sie auf Ihre Schritte.", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
   { id: "wm_kein_durchgang", fuer: ["weihnachtsmarkt"], d: { symbol: "keindurchgang", titel: "Hier kein Durchgang", text: "Bitte benutzen Sie den Weg vor dem Stand.\nVielen Dank!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  { id: "wm_jugendschutz", fuer: ["weihnachtsmarkt", "fest"], d: { symbol: "jugendschutz", titel: "Jugendschutz", text: "Glühwein, Wein, Bier: erst ab 16 Jahren.\nMit Schuss, Eierlikör, Feuerzangenbowle, Rum und Likör: erst ab 18 Jahren.\nIm Zweifel fragen wir nach dem Ausweis.", klein: SCH_JUSCHG9, farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
+  // Standschild: Pflichtangaben laut Vertrag mit Werne Marketing (Name/Anschrift) – Anschrift, Verantwortliche und Stand-Nr. trägt man selbst ein, nichts wird erfunden
+  { id: "wm_standschild", fuer: ["weihnachtsmarkt", "fest"], d: { symbol: "", titel: KC_CD.name, text: "Anschrift: …\nVerantwortlich: …\nStand-Nr.: …", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
   { id: "wm_besteck", fuer: ["weihnachtsmarkt"], d: { symbol: "besteck", titel: "Gebrauchtes Besteck", text: "bitte hier ablegen.\nDanke schön!", farbe: "weinrot", rahmen: "cd", schrift: "club", fuss: "Weihnachtsmarkt " + SCH_JAHR } },
 ];
-const SCH_LEER = { vorlage: "frei", format: "hoch", schrift: "club", rahmen: "schlicht", farbe: "weinrot", symbol: "", titel: "", text: "", preise: [], fuss: "", titelStil: { f: true, k: false, u: false }, textStil: { f: false, k: false, u: false } };
+const SCH_LEER = { vorlage: "frei", format: "hoch", schrift: "club", rahmen: "schlicht", farbe: "weinrot", symbol: "", titel: "", text: "", preise: [], fuss: "", klein: "", titelStil: { f: true, k: false, u: false }, textStil: { f: false, k: false, u: false } };
 const schNeu = (v) => ({ ...JSON.parse(JSON.stringify(SCH_LEER)), ...JSON.parse(JSON.stringify(v?.d || {})), vorlage: v?.id || "frei" });
-const schVorlagenFuer = (anlass) => SCH_VORLAGEN.filter((v) => v.fuer === "alle" || v.fuer.includes(anlass));
+// 2.765.0: Vorlagen im Club-CD zuerst (Schilderfamilie), danach die übrigen in bisheriger Reihenfolge
+const schVorlagenFuer = (anlass) => SCH_VORLAGEN.filter((v) => v.fuer === "alle" || v.fuer.includes(anlass)).sort((a, b) => (b.d.rahmen === "cd") - (a.d.rahmen === "cd"));
 const schName = (v) => v.d.titel || (v.id === "frei" ? "Leeres Schild" : v.id);
 let SDR = { anlass: "weihnachtsmarkt", d: null, id: null, name: "", liste: null, sicht: "start" };
 const SCH_LOGO = new Image(); SCH_LOGO.src = KC_CD.logo; // CD-Kochmütze unten auf jedem Schild
@@ -31079,7 +31087,8 @@ async function schListeLaden() {
 }
 function schZeigen() {
   if (SDR.sicht === "edit") return schEditor();
-  const vor = schVorlagenFuer(SDR.anlass), gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass);
+  if (SDR.sicht === "paket") return schPaketZeigen();
+  const vor = schVorlagenFuer(SDR.anlass), gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && !schIstPaket(x)), pakete = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && schIstPaket(x));
   const f = blattAuf("schBlatt", `<h3 style="margin:0 0 2px">🪧 Schilder-Druckerei</h3>
     <p class="hinweis" style="margin:0 0 10px">1. Anlass und Vorlage wählen · 2. Text ändern · 3. Aussehen · 4. 🖨️ Drucken oder 📤 an Mitglieder senden (die drucken zuhause)</p>
     <div class="sdr-anlaesse">${SCH_ANLAESSE.map((a) => `<button class="knopf${a.id === SDR.anlass ? " haupt" : ""}" onclick="SDR.anlass='${a.id}';schZeigen()"><span>${a.sym}</span>${esc(a.t)}</button>`).join("")}</div>
@@ -31089,6 +31098,10 @@ function schZeigen() {
     ${SDR.liste === null ? '<p class="hinweis">Wird geladen …</p>' : SDR.fehler && !SDR.liste.length ? `<p class="hinweis">⚠️ Gespeicherte Schilder gerade nicht erreichbar – Vorlagen gehen trotzdem.</p>`
       : gesp.length ? `<div class="sdr-gespeichert">${gesp.map((x) => `<div><button class="knopf" onclick="schOeffnen('${x.id}')">🪧 ${esc(x.titel)}<small>${esc([x.von, x.geaendert_am ? zeitKurz(x.geaendert_am) : ""].filter(Boolean).join(" · "))}</small></button><button class="knopf" title="Löschen" aria-label="Löschen" onclick="schLoeschen('${x.id}')">🗑️</button></div>`).join("")}</div>`
       : '<p class="hinweis">Für diesen Anlass ist noch nichts gespeichert. Fertige Schilder mit „💾 Speichern“ aufheben – nächstes Jahr wieder öffnen.</p>'}
+    <h4 style="margin:14px 0 6px">🖨️ Druckpakete${pakete.length ? ` (${pakete.length})` : ""}</h4>
+    ${pakete.length ? `<div class="sdr-gespeichert">${pakete.map((x) => `<div><button class="knopf" onclick="schPaketOeffnen('${x.id}')">🖨️ ${esc(x.titel)}<small>${esc(schPaketZahl(x.daten.paket))} · ${esc(zeitKurz(x.geaendert_am))}</small></button><button class="knopf" title="Löschen" aria-label="Löschen" onclick="schLoeschen('${x.id}')">🗑️</button></div>`).join("")}</div>` : ""}
+    <button class="knopf${pakete.length ? "" : " haupt"}" style="width:100%" onclick="schPaketNeu()">＋ Druckpaket zusammenstellen</button>
+    <p class="hinweis" style="margin:4px 0 0">Schilder, Vorlagen und Formulare aus dem Archiv ankreuzen, Anzahl wählen, alles in einem Rutsch drucken – und als Paket für nächstes Jahr aufheben.</p>
     <div class="knoepfe" style="margin-top:12px"><button class="knopf" onclick="$('schBlatt').remove()">Schließen</button></div>`);
   f.querySelectorAll("[data-schmini]").forEach((c) => { const v = SCH_VORLAGEN.find((x) => x.id === c.dataset.schmini); if (v) schZeichnen(c, schNeu(v), 150); });
 }
@@ -31099,7 +31112,7 @@ function schOeffnen(id) {
 }
 async function schLoeschen(id) {
   const x = (SDR.liste || []).find((s) => s.id === id); if (!x) return;
-  if (!(await frage(`🗑️ Gespeichertes Schild „${x.titel}“ löschen?\n\nAbgelegte PDFs im Büro-Ordner bleiben erhalten.`, { ja: "🗑️ Löschen", nein: "Behalten" }))) return;
+  if (!(await frage(`🗑️ ${schIstPaket(x) ? "Druckpaket" : "Gespeichertes Schild"} „${x.titel}“ löschen?\n\nAbgelegte PDFs im Büro-Ordner bleiben erhalten.`, { ja: "🗑️ Löschen", nein: "Behalten" }))) return;
   try { await api("schild_loeschen", { id }); melde("🗑️ Gelöscht"); await schListeLaden(); } catch (e) { meldeFehler(e); }
 }
 const schWahlKnopf = (feld, w, inhalt, an, extra = "") => `<button class="knopf${an ? " haupt" : ""}" data-schf="${feld}" data-schw="${esc(w)}" onclick="schWahl('${feld}', '${esc(w)}')" ${extra}>${inhalt}</button>`;
@@ -31111,6 +31124,7 @@ function schEditor() {
     <div class="sdr-feld"><label>Überschrift</label><div class="sdr-zeile"><input id="schTitel" value="${esc(d.titel)}" placeholder="z. B. Nur Barzahlung" oninput="SDR.d.titel=this.value;schVorschau()">${schStilKnoepfe("titelStil")}</div></div>
     <div class="sdr-feld"><label>Text <small>(neue Zeile = Enter)</small></label><div class="sdr-zeile"><textarea id="schText" rows="3" placeholder="freiwillig" oninput="SDR.d.text=this.value;schVorschau()">${esc(d.text)}</textarea>${schStilKnoepfe("textStil")}</div></div>
     <div class="sdr-feld"><label>Preisliste <small>(freiwillig)</small></label><div id="schPreise"></div></div>
+    <div class="sdr-feld"><label>Kleingedrucktes <small>(freiwillig, z. B. Gesetzestext – klein über der Fußzeile)</small></label><textarea id="schKlein" rows="3" maxlength="1200" placeholder="freiwillig" oninput="SDR.d.klein=this.value;schVorschau()">${esc(d.klein || "")}</textarea></div>
     <div class="sdr-feld"><label>Fußzeile <small>(neben „Köcheclub Werne“, z. B. Weihnachtsmarkt ${SCH_JAHR})</small></label><input id="schFuss" value="${esc(d.fuss || "")}" maxlength="40" placeholder="freiwillig" oninput="SDR.d.fuss=this.value;schVorschau()"></div>
     <details class="sdr-aussehen" open><summary>🎨 Aussehen</summary>
       <label>Format</label><div class="sdr-wahl2">${schWahlKnopf("format", "hoch", "Hochformat", d.format === "hoch")}${schWahlKnopf("format", "quer", "Querformat", d.format === "quer")}</div>
@@ -31200,6 +31214,11 @@ function schSymbolMalen(ctx, id, cx, cy, s) {
     const mx = cx + s * 0.13; // Messer: Klinge (rund), Griff
     ctx.beginPath(); ctx.moveTo(mx - s * 0.025, top); ctx.quadraticCurveTo(mx + s * 0.09, top + s * 0.08, mx + s * 0.035, top + s * 0.32); ctx.lineTo(mx - s * 0.025, top + s * 0.32); ctx.closePath(); ctx.fill();
     ctx.lineWidth = s * 0.06; ctx.beginPath(); ctx.moveTo(mx + s * 0.005, top + s * 0.32); ctx.lineTo(mx + s * 0.005, unten); ctx.stroke();
+  } else if (id === "jugendschutz") { // zwei Altersplaketten „16“ und „18“ (roter Ring)
+    for (const [dx, z] of [[-0.24, "16"], [0.24, "18"]]) {
+      const x = cx + dx * s; ctx.beginPath(); ctx.arc(x, cy, s * 0.22, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill(); ctx.lineWidth = s * 0.045; ctx.strokeStyle = "#c62828"; ctx.stroke();
+      ctx.fillStyle = "#111"; ctx.font = `bold ${Math.round(s * 0.2)}px Arial,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(z, x, cy + s * 0.01);
+    }
   } else if (id === "nurbar") { // Geldschein (grün) vorn, dahinter Karte durchgestrichen
     const kx = cx + s * 0.12, ky = cy - s * 0.14, kw = s * 0.5, kh = s * 0.32;
     ctx.beginPath(); ctx.roundRect(kx - kw / 2, ky - kh / 2, kw, kh, s * 0.04); ctx.fillStyle = "#cfd4da"; ctx.fill(); ctx.lineWidth = s * 0.02; ctx.strokeStyle = "#5b6572"; ctx.stroke();
@@ -31263,7 +31282,17 @@ function schZeichnen(cv, d, breite) {
   ctx.fillStyle = cd ? KC_CD.beige : KC_CD.weinrot; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(KC_CD.name, fx + 2 * r + 1.2 * u, fussY);
   if (zusatz) { ctx.fillStyle = cd ? KC_CD.gold : KC_CD.grau; ctx.fillText(zusatz, fx + 2 * r + 1.2 * u + nw, fussY); }
   // Inhalt: Symbol, Überschrift, Text, Preisliste – zusammen senkrecht mittig
-  const x0 = 11 * u, bw = W - 22 * u, oben = 10 * u, unten = (cd ? H - 15 * u : fussY) - 4 * u, h = unten - oben;
+  let x0 = 11 * u, bw = W - 22 * u, oben = 10 * u, unten = (cd ? H - 15 * u : fussY) - 4 * u;
+  // 2.765.0: Kleingedrucktes (z. B. Gesetzestext) unten über dem Fuß – höchstens ein Viertel der Fläche, Schrift passt sich an
+  const klein = String(d.klein || "").trim();
+  if (klein) {
+    const K = schPassend(ctx, klein, { f: false, k: false, u: false }, css, bw, (unten - oben) * 0.27, 2.6 * u), kh = K.zeilen.length * K.px * 1.2;
+    ctx.font = schFont({}, K.px, css); ctx.fillStyle = KC_CD.text; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    let ky = unten - kh; for (const z of K.zeilen) { ky += K.px; ctx.fillText(z, x0, ky); ky += K.px * 0.2; }
+    ctx.fillStyle = cd ? KC_CD.gold : farbe; ctx.fillRect(x0, unten - kh - 2 * u, bw, Math.max(1, 0.3 * u));
+    unten -= kh + 4 * u;
+  }
+  const h = unten - oben;
   const preise = (d.preise || []).filter((p) => p.a || p.p), hatText = !!String(d.text || "").trim(), hatTitel = !!String(d.titel || "").trim();
   const symH = d.symbol ? Math.min(30 * u, h * (hatTitel || hatText || preise.length ? 0.26 : 0.6)) : 0;
   const rest = h - symH - (symH ? 3 * u : 0);
@@ -31352,6 +31381,122 @@ async function schSpeichern() {
     melde(`💾 Gespeichert unter „${SDR.anlass ? (SCH_ANLAESSE.find((a) => a.id === SDR.anlass)?.t || "") : ""}“ – nächstes Mal unter „Gespeicherte Schilder“`);
     const h = document.querySelector("#schBlatt h3"); if (h) h.textContent = "🪧 " + SDR.name;
   } catch (e) { meldeFehler(e); }
+}
+// ---------- 2.765.0 KC-CLUB-SCHILDER-DRUCKPAKET (Wunsch Hansi 30.10.2026 „Druckauftrag zusammenpacken wie Aktentasche packen: Schilder und
+// Formulare anklicken, sie erscheinen in einer Liste, dahinter die Anzahl der Ausdrucke, Haken kann ich wegnehmen; als Druckpaket Weihnachtsmarkt
+// speichern, jedes Jahr wieder ausdrucken“). Im Paket liegen nur Verweise (Vorlage, gespeichertes Schild, Archiv-Datei) – gedruckt wird immer der
+// aktuelle Stand (Vorlagen mit dem aktuellen Jahr). Gespeichert wie ein Schild (kc_club_schilder, daten.vorlage = "druckpaket"), keine neue Tabelle.
+// Drucken: jedes Teil als A4-Hochformat-Bild (Querformat gedreht), so oft wie gewählt, alles zusammen über den zentralen Druck (randlos).
+const SCH_PAKET_SYM = { schild: "🪧", vorlage: "📋", archiv: "📄" };
+const schIstPaket = (x) => x?.daten?.vorlage === "druckpaket";
+const schPaketZahl = (teile) => { const l = (teile || []).filter((t) => t.an !== false), n = l.reduce((a, t) => a + (t.n || 1), 0); return `${l.length} ${l.length === 1 ? "Teil" : "Teile"} · ${n} ${n === 1 ? "Ausdruck" : "Ausdrucke"}`; };
+function schPaketNeu() { SDR.paket = { id: null, name: "", teile: [] }; SDR.sicht = "paket"; schPaketZeigen(); }
+function schPaketOeffnen(id) {
+  const x = (SDR.liste || []).find((s) => s.id === id); if (!x) return;
+  SDR.paket = { id: x.id, name: x.titel, teile: JSON.parse(JSON.stringify(x.daten.paket || [])) }; SDR.anlass = x.anlass; SDR.sicht = "paket"; schPaketZeigen();
+}
+function schPaketDazu(typ, ref, titel) {
+  const T = SDR.paket.teile, i = T.findIndex((t) => t.typ === typ && t.ref === ref);
+  if (i >= 0) T.splice(i, 1); else if (T.length >= 40) return melde("Mehr als 40 Teile passen nicht in ein Druckpaket.", true); else T.push({ typ, ref, titel: String(titel).slice(0, 120), n: 1, an: true });
+  schPaketZeigen();
+}
+function schPaketAnzahl(i, d) { const t = SDR.paket.teile[i]; if (!t) return; t.n = Math.min(50, Math.max(1, (t.n || 1) + d)); schPaketZeigen(); }
+function schPaketZeigen() {
+  const P = SDR.paket, drin = (typ, ref) => P.teile.some((t) => t.typ === typ && t.ref === ref);
+  const gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && !schIstPaket(x)), vor = schVorlagenFuer(SDR.anlass).filter((v) => v.id !== "frei");
+  const wahl = (typ, ref, titel) => `<button type="button" class="knopf sdr-paket-wahl${drin(typ, ref) ? " haupt" : ""}" data-pt="${typ}" data-pr="${esc(ref)}" data-pn="${esc(titel)}">${drin(typ, ref) ? "☑️" : "⬜"} ${SCH_PAKET_SYM[typ]} ${esc(titel)}</button>`;
+  const alt = $("schBlatt")?.querySelector(".blatt-innen")?.scrollTop || 0;
+  const f = blattAuf("schBlatt", `<h3 style="margin:0 0 2px">🖨️ ${P.name ? esc(P.name) : "Neues Druckpaket"}</h3>
+    <p class="hinweis" style="margin:0 0 8px">Unten antippen, was gedruckt werden soll – es erscheint hier in der Liste. Dahinter die Anzahl. Haken weg = diesmal nicht drucken.</p>
+    <div class="sdr-paket-liste">${P.teile.length ? P.teile.map((t, i) => `<div class="sdr-paket-zeile${t.an ? "" : " aus"}">
+      <label><input type="checkbox" ${t.an ? "checked" : ""} onchange="SDR.paket.teile[${i}].an=this.checked;schPaketZeigen()"><span>${SCH_PAKET_SYM[t.typ] || "📄"} ${esc(t.titel)}</span></label>
+      <button class="knopf" aria-label="Einmal weniger" onclick="schPaketAnzahl(${i}, -1)">−</button><b>${t.n} ×</b><button class="knopf" aria-label="Einmal mehr" onclick="schPaketAnzahl(${i}, 1)">＋</button>
+      <button class="knopf" aria-label="Aus dem Paket nehmen" title="Aus dem Paket nehmen" onclick="SDR.paket.teile.splice(${i}, 1);schPaketZeigen()">✕</button></div>`).join("")
+      : '<p class="hinweis">Noch leer – unten Schilder, Vorlagen oder Formulare antippen.</p>'}</div>
+    ${P.teile.length ? `<p style="margin:6px 0 0"><b>🖨️ ${esc(schPaketZahl(P.teile))}</b> <small class="hinweis">(PDFs mit mehreren Seiten zählen hier als ein Ausdruck)</small></p>` : ""}
+    <h4 style="margin:14px 0 6px">💾 Gespeicherte Schilder</h4>${gesp.length ? `<div class="sdr-paket-wahlen">${gesp.map((x) => wahl("schild", x.id, x.titel)).join("")}</div>` : '<p class="hinweis">Keine für diesen Anlass.</p>'}
+    <h4 style="margin:14px 0 6px">📋 Vorlagen</h4><div class="sdr-paket-wahlen">${vor.map((v) => wahl("vorlage", v.id, schName(v))).join("")}</div>
+    <h4 style="margin:14px 0 6px">📄 Formulare & PDFs aus dem Archiv</h4>
+    ${P.teile.filter((t) => t.typ === "archiv").length ? `<div class="sdr-paket-wahlen">${P.teile.filter((t) => t.typ === "archiv").map((t) => wahl("archiv", t.ref, t.titel)).join("")}</div>` : ""}
+    <button class="knopf" style="width:100%" onclick="schPaketArchiv()">🗄️ Aus dem Archiv wählen … <small>(z. B. Preisliste, Checkliste, Händler-Ausweise)</small></button>
+    <div class="sdr-leiste"><button class="knopf" onclick="SDR.sicht='start';schZeigen()"><span>⬅️</span>Zurück</button><button class="knopf" onclick="einmal(this, schPaketSpeichern)"><span>💾</span>Speichern</button><button class="knopf haupt" onclick="schPaketDrucken(this)"><span>🖨️</span>Drucken</button><button class="knopf" onclick="$('schBlatt').remove()"><span>✕</span>Schließen</button></div>`);
+  f.querySelectorAll("[data-pt]").forEach((b) => (b.onclick = () => schPaketDazu(b.dataset.pt, b.dataset.pr, b.dataset.pn)));
+  const innen = f.querySelector(".blatt-innen"); if (innen) innen.scrollTop = alt;
+}
+async function schPaketArchiv() {
+  melde("⏳ Archiv wird geladen …");
+  let r; try { r = await api("archiv_liste"); } catch (e) { return meldeFehler(e); }
+  const ordner = new Map((r.ordner || []).map((o) => [o.id, o])), docs = (r.dokumente || []).filter((d) => d.status === "ok" && d.datei && (istPdf(d.name, d.mime) || /^image\//.test(d.mime || "")));
+  if (!docs.length) return melde("Im Archiv liegen noch keine PDFs oder Bilder.", true);
+  const f = blattAuf("schArchivBlatt", `<h3 style="margin:0 0 6px">🗄️ Formulare & PDFs aus dem Archiv</h3><input id="schArchivSuche" placeholder="🔍 Suchen – Titel, Ordner, Stichwort …" autocomplete="off" style="width:100%">
+    <div id="schArchivListe" style="margin-top:8px"></div><div class="knoepfe bs-fuss"><button class="knopf" onclick="$('schArchivBlatt').remove()">Fertig</button></div>`);
+  const zeichnen = () => { const q = $("schArchivSuche").value.trim().toLowerCase();
+    const l = docs.filter((d) => !q || `${d.titel} ${d.name} ${ordner.get(d.ordner_id)?.titel || ""} ${d.stichworte || ""}`.toLowerCase().includes(q)).slice(0, 60);
+    $("schArchivListe").innerHTML = l.length ? l.map((d) => { const an = SDR.paket.teile.some((t) => t.typ === "archiv" && t.ref === d.datei);
+      return `<button type="button" class="knopf${an ? " haupt" : ""}" style="text-align:left;width:100%;margin:3px 0" data-id="${esc(d.id)}">${an ? "☑️" : "⬜"} ${arDateiSym(d.mime)} <b>${esc(d.titel || d.name)}</b><br><small class="hinweis">${esc(ordner.get(d.ordner_id)?.titel || "")}</small></button>`; }).join("") : '<p class="hinweis">Nichts gefunden.</p>';
+    $("schArchivListe").querySelectorAll("[data-id]").forEach((b) => (b.onclick = () => { const d = docs.find((x) => x.id === b.dataset.id); schPaketDazu("archiv", d.datei, d.titel || d.name); zeichnen(); })); };
+  $("schArchivSuche").oninput = zeichnen; zeichnen();
+}
+async function schPaketSpeichern() {
+  const P = SDR.paket; if (!P.teile.length) return melde("Das Druckpaket ist noch leer.", true);
+  const anl = (SCH_ANLAESSE.find((a) => a.id === SDR.anlass)?.t || "").replace(/­/g, "");
+  const name = await eingabe("Name für das Druckpaket:", P.name || `Druckpaket ${anl}`.trim(), { ja: "💾 Speichern" });
+  if (name === null || !name.trim()) return;
+  try {
+    const r = await api("schild_speichern", { id: P.id, titel: name.trim(), anlass: SDR.anlass, daten: { vorlage: "druckpaket", paket: P.teile } });
+    P.id = r.id; P.name = name.trim(); SDR.liste = null; schListeLaden(); schPaketZeigen();
+    melde(`💾 Druckpaket „${P.name}“ gespeichert – nächstes Jahr unter „Druckpakete“ wieder öffnen`);
+  } catch (e) { meldeFehler(e); }
+}
+// ein Blatt als A4-Hochformat-Bild (JPEG); Querformat wird gedreht, damit alles in einem Druckauftrag randlos auf A4 passt
+function schHochkant(c) {
+  if (c.width <= c.height) return c.toDataURL("image/jpeg", 0.9);
+  const r = document.createElement("canvas"); r.width = c.height; r.height = c.width;
+  const x = r.getContext("2d"); x.translate(0, r.height); x.rotate(-Math.PI / 2); x.drawImage(c, 0, 0);
+  const src = r.toDataURL("image/jpeg", 0.9); r.width = r.height = 0; return src;
+}
+async function schPaketBilder(t) {
+  if (t.typ === "vorlage" || t.typ === "schild") {
+    const v = t.typ === "vorlage" ? SCH_VORLAGEN.find((x) => x.id === t.ref) : null, x = t.typ === "schild" ? (SDR.liste || []).find((s) => s.id === t.ref && !schIstPaket(s)) : null;
+    if (!v && !x) throw new Error("nicht mehr vorhanden");
+    const d = v ? schNeu(v) : { ...JSON.parse(JSON.stringify(SCH_LEER)), ...JSON.parse(JSON.stringify(x.daten || {})) };
+    const c = document.createElement("canvas"); schZeichnen(c, d, d.format === "quer" ? 2339 : 1654); // 200 dpi wie beim Einzeldruck
+    const src = schHochkant(c); c.width = c.height = 0; return [src];
+  }
+  const { blob, mime } = await anlageAlsDatei({ id: t.ref, name: t.titel }); // vorhandener Weg: eigener Speicher-Link, Zeitgrenze, Fehlermeldung
+  if (/^image\//.test(mime || blob.type)) {
+    const img = new Image(), u = URL.createObjectURL(blob); img.src = u; await img.decode(); URL.revokeObjectURL(u);
+    const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext("2d").drawImage(img, 0, 0); return [schHochkant(c)];
+  }
+  const pdfjs = await pdfjsHolen(), pdf = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise, aus = [];
+  try {
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const src = await pdfSeiteAlsBild(pdf, n, 2339), img = new Image(); img.src = src; await img.decode();
+      const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext("2d").drawImage(img, 0, 0); aus.push(schHochkant(c)); c.width = c.height = 0;
+    }
+  } finally { pdf.destroy(); }
+  return aus;
+}
+async function schPaketDrucken(knopf) {
+  const L = SDR.paket.teile.filter((t) => t.an);
+  if (!L.length) return melde("Bitte mindestens ein Teil ankreuzen.", true);
+  await einmal(knopf, async () => {
+    const seiten = [], fehlt = [];
+    for (const [k, t] of L.entries()) {
+      melde(`⏳ ${k + 1} von ${L.length}: ${t.titel} …`);
+      try { const b = await schPaketBilder(t); for (let i = 0; i < t.n; i++) seiten.push(...b); } catch (e) { fehlt.push(`${t.titel} (${e?.message || e})`); }
+    }
+    // nie stillschweigend weglassen: was fehlt, wird genannt
+    if (fehlt.length) {
+      if (!seiten.length) return melde("⚠️ Nichts druckbar: " + fehlt.join(", "), true);
+      if (!(await frage(`⚠️ Nicht druckbar:\n${fehlt.join("\n")}\n\nDen Rest trotzdem drucken?`, { ja: "🖨️ Rest drucken", nein: "Abbrechen" }))) return;
+    }
+    SDR.paketSeiten = seiten; melde(`🖨️ ${seiten.length} ${seiten.length === 1 ? "Seite" : "Seiten"} bereit`); druckStarten("druckpaket");
+  });
+}
+function schPaketDruckSeite() {
+  const s = SDR.paketSeiten || []; if (!s.length) return null;
+  return { ohneRahmen: true, randlos: true, titel: SDR.paket?.name || "Druckpaket", html: s.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") };
 }
 // ---------- KC-CLUB-REISE-CHECKLISTE (2.223.0, Wunsch Hansi „persönliche Checkliste für die Kreuzfahrt – 2 Wochen vorher anbieten,
 // ausdrucken (mehrspaltig, Blöcke mit Überschriften, auch Hilfsmittel wie Brille, Hörgeräte; unten ein leerer Block mit Linien) oder am
@@ -31562,6 +31707,7 @@ const DRUCKARTEN = {
   reisecheckliste: { bauen: (o, p) => druckReiseCheckliste(p) }, // KC-CLUB-REISE-CHECKLISTE (2.223.0)
   tischbestaetigung: { bauen: (o, p) => druckTischBestaetigung(p) }, // 2.762.0 KC-CLUB-RUNDER-TISCH-ARTEN: Teilnahmebestätigung Seminar
   schild: { bauen: () => druckSchild() }, // KC-CLUB-SCHILDER (2.150.0)
+  druckpaket: { bauen: () => schPaketDruckSeite() }, // 2.765.0 KC-CLUB-SCHILDER-DRUCKPAKET
   termine: { titel: "🖨️ Termine drucken", optionen: () => druckTermineOptionen(), bauen: (o) => (o.art === "todo" ? druckTodo(o) : druckKalender(o)) },
   treffen: { bauen: (o, id) => druckTreffen(id) },
   protokoll: { bauen: () => druckProtokoll() },
@@ -35232,7 +35378,7 @@ const FENSTER_NAMEN = {
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
-  arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
+  arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
   atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",

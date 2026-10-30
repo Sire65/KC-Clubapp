@@ -24,3 +24,14 @@ nächstes Jahr wieder benutzen.
 - DB: `kc_club_schilder` (Migration `20261009_kc_club_v2150_schilder.sql`, Weg B), RLS an, Zugriff nur über den Server.
 - Server: `schild_liste`, `schild_speichern` (Daten geprüft: `schildDaten`), `schild_loeschen`. Protokoll nur Aktion + Kennung.
 - Tests: `tests/app-vertrag.test.mjs` Abschnitt 2.150.0.
+
+## Club-CD, Jugendschutz, Standschild (KC-CLUB-SCHILDER-CD, ab 2.765.0)
+- Rahmen **Club-CD**: beige Fläche, weinroter Rahmen + Goldlinie, weinrotes Fußband (Kochmütze, „Köcheclub Werne“, Fußzeile in Gold). Farben aus `KC_CD` (weinrot, beige, gold).
+- Felder **Fußzeile** (`fuss`, 40 Zeichen, z. B. „Weihnachtsmarkt 2026“) und **Kleingedrucktes** (`klein`, 1200 Zeichen, z. B. Gesetzestext).
+- WM-Vorlagen: `wm_bar`, `wm_stufe`, `wm_kein_durchgang`, `wm_besteck`, `wm_jugendschutz` (Wortlaut § 9 JuSchG in `SCH_JUSCHG9` mit Stand – bei Gesetzesänderung dort anpassen), `wm_standschild` (Pflichtangaben laut Vertrag Werne Marketing, Platzhalter).
+- Symbole selbst gezeichnet: `nurbar`, `stufe`, `keindurchgang`, `besteck`, `jugendschutz`.
+
+## 🖨️ Druckpaket (KC-CLUB-SCHILDER-DRUCKPAKET, ab 2.765.0)
+- Schilder-Druckerei → „＋ Druckpaket zusammenstellen“: gespeicherte Schilder, Vorlagen, PDFs/Bilder aus dem Archiv antippen → Liste mit Haken und Anzahl.
+- Speichern in `kc_club_schilder` mit `daten = { vorlage: "druckpaket", paket: [{ typ: "schild"|"vorlage"|"archiv", ref, titel, n, an }] }` (Server prüft in `schildDaten`).
+- Drucken: `schPaketBilder` (Schild → Canvas 200 dpi, PDF → pdf.js je Seite, Bild), Querformat gedreht (`schHochkant`), alles als `dseite` über den zentralen Druck (`DRUCKARTEN.druckpaket`).
