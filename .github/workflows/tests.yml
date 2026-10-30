@@ -96,6 +96,8 @@ jobs:
       - run: node tests/nt-gruss.test.mjs
       - run: node tests/ungelesen-admin.test.mjs
       - run: node tests/vorladen-foto.test.mjs
+      - run: node tests/dp-bereitschaft-weit.test.mjs
+      - run: node tests/dp-einzelplan.test.mjs
       # 2.725.0 KC-CLUB-TESTS-ALLE (Prüfbericht Etappe 5): fehlten in dieser Liste (beim Veröffentlichen liefen sie schon) – ein Wächter in
       # app-vertrag.test.mjs meldet künftig jeden tests/*.test.mjs, der hier nicht steht
       - run: node tests/anruf-besser.test.mjs

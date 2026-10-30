@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.784.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.785.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9913,7 +9913,7 @@ const ZUGANG_AKTIONEN = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
   aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis"] };
@@ -21938,6 +21938,64 @@ const minuten = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(
 const hhmm = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 let dpStart = null, dpWahl = null, DP = null;
 function dpNurIch() { dpWahl = ICH ? [ICH.person_id] : null; zeige("dienste"); }
+// ---------- KC-CLUB-DP-EINZELPLAN (Wunsch Hansi 30.10.2026 „für jede Person eine Einzelübersicht, Querformat. Vorne Name, Regelzeit … alle Tage untereinander,
+// Zeitbereiche, die Stunden der Person“ · Regelzeit = ab wann Dienst gemacht werden muss (eine Stunde vor Öffnung) bis Schluss · Farben wie in Twinkey/DP2 ·
+// unten der Hinweis auf die Tauschbörse · „erst mal nur unter Mein Dienst“) ----------
+// Quelle: der Dienstplan-Entwurf des Admins (Server dp_einzelplan, nur die eigene Zeile). Der Admin kann jede Person wählen (zum Prüfen).
+const EP = { d: null, fuer: "" };
+const EP_ART = { p: "w", a: "k", i: "n", u: "s" }, EP_WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const epUhr = (v) => { const h = Math.floor(v), m = Math.round((v - h) * 60); return m ? `${h}:${String(m).padStart(2, "0")}` : String(h); };
+async function epStart(fuer = "") {
+  EP.fuer = fuer;
+  try { EP.d = await api("dp_einzelplan", fuer ? { fuer } : {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  if (EP.d?.leer) return melde("Es gibt noch keinen Dienstplan-Entwurf.");
+  druckStarten("einzelplan");
+}
+function epOptionen() {
+  const l = EP.d?.personen || [];
+  return `<label class="feld">Person<select id="epFuer"><option value="">Ich selbst</option>${l.map((x) => `<option value="${esc(x.id)}" ${x.id === EP.fuer ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></label>
+    <p class="hinweis" style="margin:4px 0 0">Nur du als Admin kannst andere Personen wählen – jedes Mitglied sieht unter 🗓️ Mein Dienst nur den eigenen Plan.</p>`;
+}
+async function epBauen() {
+  const fuer = $("epFuer")?.value ?? EP.fuer;
+  if (fuer !== EP.fuer || !EP.d) { EP.fuer = fuer; EP.d = await api("dp_einzelplan", fuer ? { fuer } : {}, { warten: true }); }
+  const d = EP.d; if (!d || d.leer) { melde("Es gibt noch keinen Dienstplan-Entwurf."); return null; }
+  const von = d.von, bis = d.bis, n = Math.round((bis - von) * 2);
+  let tage = 0, bers = 0;
+  const zeilen = d.tage.map((t) => {
+    const x = new Date(t.d + "T12:00:00"), [ra, rb] = t.rz || [bis, bis];
+    const zellen = Array.from({ length: n }, (_, i) => {
+      const u = von + i / 2; let c = EP_ART[t.w[i]] || "";
+      if (t.ber && u >= t.ber[0] && u < t.ber[1]) c = "ber";
+      if (t.s && u >= t.s[0] && u < t.s[1]) c = "dienst";
+      if (u < ra || u >= rb) c = "zu";
+      return `<td class="z ${c}${i % 2 ? "" : " h"}"></td>`;
+    }).join("");
+    let zeit = "frei", std = "", bem = "";
+    if (t.s) { tage++; zeit = `<b>${epUhr(t.s[0])}–${epUhr(t.s[1])} Uhr</b>`; std = String(+(t.s[1] - t.s[0]).toFixed(1)).replace(".", ","); bem = esc(t.z || ""); }
+    else if (t.ber) { bers++; zeit = `Bereitschaft ${epUhr(t.ber[0])}–${epUhr(t.ber[1])}`; std = "–"; bem = "📞 nur auf Anruf"; }
+    else if (/^u+$/.test(t.w.slice(Math.round((ra - von) * 2), Math.round((rb - von) * 2)))) bem = "Sperrzeit";
+    return `<tr class="${[0, 6].includes(x.getDay()) ? "we" : ""}"><td class="tag">${EP_WT[x.getDay()]} ${String(x.getDate()).padStart(2, "0")}.${String(x.getMonth() + 1).padStart(2, "0")}.</td>
+      <td class="rz">${t.rz ? `${epUhr(ra)}–${epUhr(rb)} Uhr` : "–"}</td><td class="art">${esc(t.art)}</td>${zellen}<td class="zeit">${zeit}</td><td class="std">${std}</td><td class="bem">${bem}</td></tr>`;
+  }).join("");
+  const uhren = Array.from({ length: bis - von }, (_, i) => `<th colspan="2">${von + i}</th>`).join("");
+  const regel = [d.maxDienst != null ? `⏱️ Dienste bis ${d.maxDienst} Std.` : "", d.maxGesamt != null ? `Σ höchstens ${d.maxGesamt} Std.` : "", d.km != null ? `🚗 Anfahrt ${d.km} km` : "",
+    `📞 Bereitschaft: ${d.bereitschaft ? "ja" : "nein"}`].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
+  const leg = [["#7d1727", "<b>Dienst</b>"], ["repeating-linear-gradient(45deg,#425b6e 0 1mm,#dfe5ea 1mm 2mm)", "<b>Bereitschaft</b>"], ["#dbe6f8", "Wunschzeit"], ["#e2f1e6", "Kannzeit"],
+    ["#fdeec4", "Nur wenn nötig"], ["repeating-linear-gradient(135deg,#f7d9d6 0 .8mm,#fceeed .8mm 1.6mm)", "Sperrzeit"], ["#fff", "Regelzeit ohne Angabe"], ["#e4e1dc", "außerhalb der Regelzeit"]]
+    .map(([f, t]) => `<span><i style="background:${f}"></i>${t}</span>`).join("");
+  const stand = d.stand ? wann(d.stand) : "";
+  const html = `<div class="ep"><div class="ep-kopf"><div><h1>${esc(d.name || ICH?.name || "")}</h1><div class="t">Mein Dienstplan · ${esc(d.titel)}</div></div>
+      <div class="r">Entwurf · Stand ${esc(stand)}<br>Köcheclub</div></div>
+    <div class="ep-regel">${regel}</div>
+    <table class="ep-tab"><colgroup><col style="width:17mm"><col style="width:19mm"><col style="width:22mm">${"<col>".repeat(n)}<col style="width:30mm"><col style="width:9mm"><col style="width:30mm"></colgroup>
+      <thead><tr><th></th><th>Regelzeit</th><th></th>${uhren}<th style="padding-left:2mm">Dienst</th><th>Std.</th><th>Hinweis</th></tr></thead><tbody>${zeilen}</tbody></table>
+    <div class="ep-leg">${leg}</div>
+    <div class="ep-fuss"><span><b>Summe: ${String(+(+d.stunden || 0).toFixed(1)).replace(".", ",")} Stunden</b> an ${tage} Tag${tage === 1 ? "" : "en"}${bers ? ` · ${bers} Bereitschaft${bers === 1 ? "" : "en"}` : ""}</span><span>Farben wie in Twinkey (Dienstwünsche)</span></div>
+    <div class="ep-tausch">🔁 <b>Dienst tauschen?</b> In der Club-App gibt es eine <b>Tauschbörse</b>: Dienst hineinstellen, ein anderes Mitglied übernimmt – du bekommst Bescheid, sobald jemand zusagt.
+      <small>Zu finden unter <b>🗓️ Mein Dienst → 🔁 Tauschbörse</b> (oder Kachel „Dienst-Tausch-Börse“) · Fragen: ${esc(adminName())}</small></div></div>`;
+  return { titel: `Einzelplan ${d.name || ""}`.trim(), ohneRahmen: true, quer: true, html };
+}
 // ---------- KC-CLUB-MEIN-DIENST (2.23.74, Wunsch Hansi): Wunschplan → Sollplan → Istplan in einem Fenster ----------
 // Nur anzeigen – geplant wird im Dienstplan-Programm (DP2). Ist-Zeiten kommen aus der Stempeluhr; fehlen sie, steht das ehrlich da.
 let MD_D = null;
@@ -21963,7 +22021,7 @@ async function mdStart() {
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("2", so.anzahl > 0)} 📅 Sollplan <small class="hinweis">vom Planer veröffentlicht</small></h4>
       ${so.anzahl ? `<div>${so.anzahl} kommende Dienste · ${so.monat} in diesem Monat</div>${so.naechste.map((d) => `<div>• <b>${esc(mdTag(d.datum))}</b> ${esc(d.start)}–${esc(d.ende)} Uhr${d.bereich ? ` <span class="hinweis">${esc(d.bereich)}</span>` : ""}${d.getauscht ? ' <span class="hinweis">🔁 übernommen</span>' : ""}</div>`).join("")}`
         : "<div>Noch keine Dienste für dich veröffentlicht.</div>"}
-      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button>${frei("dienst_tausch") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();dtOeffnen()">🔁 Tauschbörse${nurTest("dienst_tausch") ? " 🔒" : ""}</button>` : ""}</div></div>
+      <div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dpNurIch()">📅 Meinen Dienstplan ansehen</button>${frei("dp_einzelplan") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();epStart()">📄 Mein Einzelplan${nurTest("dp_einzelplan") ? " 🔒" : ""}</button>` : ""}${frei("dienst_tausch") ? `<button class="knopf klein" onclick="$('mdBlatt').remove();dtOeffnen()">🔁 Tauschbörse${nurTest("dienst_tausch") ? " 🔒" : ""}</button>` : ""}</div></div>
     <div class="karte"><h4 style="margin:0 0 4px">${schritt("3", ist.anzahl > 0)} ⏱️ Istplan <small class="hinweis">gearbeitet (Stempeluhr), letzte 60 Tage</small></h4>
       ${ist.anzahl ? `<div>${ist.anzahl} Einsätze · <b>${mdHm(ist.istMin)} Std.</b> gearbeitet${ist.sollMin ? ` · geplant waren ${mdHm(ist.sollMin)} Std. (${ist.istMin - ist.sollMin >= 0 ? "+" : "–"}${mdHm(Math.abs(ist.istMin - ist.sollMin))})` : ""}</div>
         ${ist.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr</div>`).join("")}`
@@ -32085,6 +32143,7 @@ const DRUCKARTEN = {
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
+  einzelplan: { titel: "📄 Einzelplan", get optionen() { return ICH?.admin ? epOptionen : undefined; }, bauen: (o) => epBauen() }, // KC-CLUB-DP-EINZELPLAN
   dpDruck: { titel: "🗓️ Dienstplan drucken", optionen: () => dpdOptionen(), bauen: () => dpdBauen() }, // 2.642.0 KC-CLUB-DP-DRUCK
   dpVorschlag: { titel: "💡 Vorschläge zu den Lücken", optionen: () => '<p class="hinweis">Nur für dich zur Planung (nicht verteilen): je Lücke, wer früher kommen oder länger bleiben könnte, ob er die Zeit schon angeboten hat, wer Bereitschaft hat – und wo neue Helfer nötig sind.</p>', bauen: () => dpdVorschlagBauen() }, // 2.721.0 KC-CLUB-DP-VORSCHLAG
   dpLuecken: { titel: "🧩 Wo noch Helfer fehlen", optionen: () => '<p class="hinweis">Ein Blatt mit Logo: alle Tage und Stunden, an denen noch Leute fehlen – zum Aushängen oder für die, die noch keine Wünsche abgegeben haben. Rechnet sich von selbst neu, sobald ein Wunschplan dazukommt.</p><p class="hinweis">Beim Drucken „A4 Querformat“ und „Hintergrundgrafiken“ wählen.</p>', bauen: () => dpdLueckenBauen() }, // 2.676.0 KC-CLUB-DP-LUECKEN

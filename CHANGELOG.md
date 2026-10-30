@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.785.0 – 2026-10-30 – 📄 Einzelplan je Person · Dienstplan-Farben wie Twinkey · keine kurze Bereitschaft für Weitfahrer
+- 📄 Unter 🗓️ Mein Dienst gibt es den eigenen Einzelplan (A4 quer): Regelzeit je Tag, eigene Dienste, Bereitschaft und Wünsche, Summe der Stunden und unten der Hinweis auf die Tauschbörse; der Admin kann jede Person wählen und drucken (KC-CLUB-DP-EINZELPLAN). 🎨 Dienstplan-Druck in denselben Farben wie Twinkey/DP2: Wunsch blau, Kann grün, Nur wenn nötig gelb, Sperrzeit rot, Dienst bordeaux, Bereitschaft schiefergrau (KC-CLUB-DP-FARBEN-DP2). 🚗 Wer weit fährt, bekommt keine Bereitschaft, die kürzer ist als sein Mindestdienst (KC-CLUB-DP-BEREITSCHAFT-WEIT).
+
 ## 2.784.0 – 2026-10-30 – 💤 Passive Mitglieder (KC-CLUB-PASSIV) · Server 2.784.0
 Wunsch Hansi (30.10.): „Fridbert kommt nicht, macht nichts mit, ist aber weiterhin Mitglied – also passiv. Er soll auch keine Einladungen zu Treffen bekommen usw.“
 - Neue Zugangsart **💤 Passiv** (Mitglieder → Rolle bearbeiten → Zugang): bleibt Mitglied, die App funktioniert für ihn wie bisher. Er bekommt aber nichts von „an alle“ – keine Einladungen zu Treffen und Sitzungen, keine Erinnerungen „bitte noch antworten“, keine Rundnachrichten (wie bei Aushilfen). Einzeln angeschrieben bekommt er weiter Nachrichten.
