@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.773.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.774.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16,7 +16,7 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
-  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-MgDeZWDidc3nx3X5NSG+p+3LccaHo22Bi2dGq6ZjRGc0pr3QmYrlZ8YLd1h67/6B" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
+  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Mzhesabrtbxdb/E54y1vINL8K5qEvrft7KZYE+fE/9F0lpK+DIdML0oBNL4mChwP" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -7744,7 +7744,7 @@ async function spracheSenden() {
 }
 const SPRACH_TEMPI = [1, 1.5, 2];
 function sprachTempo() { try { const t = Number(localStorage.getItem("kc_club_sprachtempo")); return SPRACH_TEMPI.includes(t) ? t : 1; } catch { return 1; } }
-async function spracheAbspielen(knopf, id, musik) { // 2.773.0: musik = Lied statt Sprachnachricht (anderer Text, kein Tempo-Knopf)
+async function spracheAbspielen(knopf, id, musik) { // 2.774.0: musik = Lied statt Sprachnachricht (anderer Text, kein Tempo-Knopf)
   try {
     knopf.disabled = true; knopf.textContent = "⏳ lädt …";
     const url = (await api("anlage_url", { id })).url;
@@ -22080,7 +22080,7 @@ function rundKarteHtml(t) {
     : voll ? '<span class="hinweis">🈵 ausgebucht</span>' : k(`rundZusage(${id}, 'ja')`, A.anmeldung ? "📝 Anmelden" : "✋ Ich setz mich dazu", t.phase === "geplant" || !darfSitzen));
   if (t.chat && t.imChat && t.phase === "vorbei") knoepfe.push(k(`rundChat(${id})`, "💬 Chat nachlesen"));
   if (t.bestaetigung) knoepfe.push(k(`rundBestaetigung(${id})`, "📄 Teilnahmebestätigung", true));
-  if (t.phase !== "vorbei" && t.phase !== "abgesagt") knoepfe.push(k(`rundTascheOeffnen(${id})`, `💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}${t.tasche?.vorab ? ` · 📁 ${t.tasche.vorab} vorab` : ""}`)); // 2.773.0 KC-CLUB-TISCH-TASCHE
+  if (t.phase !== "vorbei" && t.phase !== "abgesagt") knoepfe.push(k(`rundTascheOeffnen(${id})`, `💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}${t.tasche?.vorab ? ` · 📁 ${t.tasche.vorab} vorab` : ""}`)); // 2.774.0 KC-CLUB-TISCH-TASCHE
   if (t.darfLeiten && (t.phase === "geplant" || t.phase === "gleich")) knoepfe.push(k(`rundLeiten(${id}, 'absagen')`, "🚫 Absagen"));
   const zus = t.phase === "vorbei" ? "" : A.anmeldung ? `📝 ${angemeldet} von ${t.plaetze} Plätzen angemeldet${t.meineZusage === "ja" && !t.darfLeiten ? " – du bist dabei" : ""}`
     : t.zusagen.length ? `✋ ${t.zusagen.length} ${t.zusagen.length === 1 ? "Zusage" : "Zusagen"}: ${esc(t.zusagen.slice(0, 6).map((z) => z.name.split(" ")[0]).join(", "))}${t.zusagen.length > 6 ? " …" : ""}` : "noch keine Zusagen";
@@ -22206,7 +22206,7 @@ async function rundPlatz(id, laut) {
   try {
     const r = await api("tisch_platz", { id }, laut ? { warten: true } : { still: true });
     if (r.ok) { if (r.live) { RUND.live = r.live; if (!teilDa("tischlive")) teilLaden("tischlive").catch(() => {}); } // 2.766.0: Live-Leitung + Teil schon bereitlegen
-      if (RUND.sitze !== id) rundTascheVorladen(id); // 2.773.0 KC-CLUB-TISCH-TASCHE: gepackte Dateien schon aufs Gerät holen
+      if (RUND.sitze !== id) rundTascheVorladen(id); // 2.774.0 KC-CLUB-TISCH-TASCHE: gepackte Dateien schon aufs Gerät holen
       if (RUND.sitze !== id) { if (laut) melde(rundArt(rundTisch(id)).anmeldung ? "🎓 Du bist dabei" : `${rundArt(rundTisch(id)).sym} Du sitzt am Tisch`); else if (RUND.warte === id) { melde("🪑 Ein Platz ist frei geworden – du sitzt jetzt am Tisch"); try { navigator.vibrate?.(60); } catch {} } } RUND.sitze = id; RUND.warte = null; }
     else { if (RUND.sitze === id) RUND.sitze = null; RUND.warte = r.ergebnis === "voll" ? id : null; if (laut) melde(r.meldung, r.ergebnis !== "voll" && r.ergebnis !== "anmeldung"); }
     rundHerzPlanen(); rundLageSetzen(r.lage);
@@ -22337,7 +22337,7 @@ async function rundSeminareZeigen() {
       ${x.bestaetigung ? `<div class="knoepfe"><button class="knopf klein haupt" onclick="rundBestaetigung(null, RUND.seminare[${i}])">📄 Teilnahmebestätigung</button></div>` : x.ichReferent ? "" : '<div class="hinweis">Keine Bestätigung – weniger als die Hälfte der Zeit dabei.</div>'}</div>`).join("")}` : "";
   } catch {}
 }
-// ---- 2.773.0 KC-CLUB-TISCH-TASCHE (Wunsch Hansi 30.10.2026 „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
+// ---- 2.774.0 KC-CLUB-TISCH-TASCHE (Wunsch Hansi 30.10.2026 „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
 // Wahl: jeder seine eigene Tasche, die Leitung markiert einzelne Teile „vorab für alle“). Gepackt wird über den vorhandenen Weg (anlageHochladen,
 // Archiv); privat bis zum Zeigen. Am Tisch: 📎 Zeigen / 🎵 Musik bieten die Tasche zuerst an, „💼 Nächstes“ zeigt das nächste Teil der Reihe nach.
 // Beim Platznehmen holt das Handy die Dateien schon (RUND_DATEIEN, höchstens 60 MB im Speicher) – Zeigen geht dann ohne Warten.
@@ -34808,7 +34808,7 @@ const ARCHIV_ABLAGE_ARTEN = {
 const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));
 // Datei einer Nachricht/eines Protokolls holen (nur was man ohnehin öffnen darf – der Server prüft bei anlage_url)
 async function anlageAlsDatei(a) {
-  const c = RUND_DATEIEN.get(a.id); if (c) return { blob: c.blob, mime: a.mime || c.mime, name: a.name || c.name }; // 2.773.0: aus der Tasche vorgeladen
+  const c = RUND_DATEIEN.get(a.id); if (c) return { blob: c.blob, mime: a.mime || c.mime, name: a.name || c.name }; // 2.774.0: aus der Tasche vorgeladen
   const r = await api("anlage_url", { id: a.id });
   return urlAlsDatei(r.url, a.name, a.mime);
 }

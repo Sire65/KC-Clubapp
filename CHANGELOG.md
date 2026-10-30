@@ -1,21 +1,30 @@
 # Änderungen
 
-## 2.773.0 – 2026-10-30 – 💼 Runder Tisch: Tasche vorher packen – PDF, Foto, Musik (KC-CLUB-TISCH-TASCHE) · Server 2.773.0 · DB
+## 2.774.0 – 2026-10-30 – 💼 Runder Tisch: Tasche vorher packen – PDF, Foto, Musik (KC-CLUB-TISCH-TASCHE) · Server 2.774.0 · DB
 Wunsch Hansi (30.10.): „Zum Runden Tisch wäre gut, wenn man sich vorher Sachen packen kann wie PDF, ein Song, ein Foto – damit man nicht lange suchen muss.“ Wahl: **jeder seine eigene Tasche**, die Leitung kann einzelne Teile **vorab für alle** markieren (docs/RUNDER_TISCH.md, Abschnitt 18). Noch nur Admin zum Testen.
 - **💼 Meine Tasche** (an jedem kommenden Tisch und am Tisch selbst): PDFs, Fotos und Musik einpacken – 📄 vom Handy (auch mehrere), 📷 Foto machen, 🗄️ aus dem Archiv. Reihenfolge mit ⬆️/⬇️, 👁️ ansehen, 🗑️ herausnehmen. Höchstens 20 Teile, je 8 MB. Privat, bis man es zeigt.
 - **📁 Vorab für alle** (nur die Leitung, z. B. Unterlagen zur Vorbereitung beim Seminar): alle, die den Tisch sehen, finden sie in ihrer Tasche unter „Vorab für alle“ und können sie öffnen; auf der Karte steht „📁 2 vorab“.
 - **Am Tisch ohne Suchen:** beim Platznehmen holt das Handy die gepackten Dateien schon im Hintergrund. 📎 Zeigen und 🎵 Musik bieten oben „💼 Aus meiner Tasche“ an; **💼 Nächstes** zeigt bzw. spielt das nächste Teil der Reihe nach (PDF/Foto groß bei allen, Musik für alle). Gezeigtes bekommt ✓ und kommt wie bisher in den Tisch-Chat.
 - **Aufräumen:** Was nie gezeigt wurde, wird 7 Tage nach dem Tisch gelöscht (wie die Dateien im Tisch-Chat).
-- Datenbank: Migration `20261030_kc_club_v2773_tisch_tasche.sql` (Tabelle `kc_club_tisch_tasche`, RLS, nur service_role, Spiegel) – **vor dem Server einspielen**.
-- Tests: `tests/runder-tisch.test.mjs` (Art, Grenzen, Reihenfolge, nur eigene Dateien, vorab nur Leitung, Aufräumen), `tests/tisch-live.browser.mjs` (3 Fenster: Tasche vorgeladen, „💼 Nächstes“ zeigt PDF und spielt das Lied bei allen), Klick-Rundgang (Tasche mit Vorab-Teilen), Probelauf `tools/db-test/100_tisch_tasche_test.sql`. Rückweg: App/Server 2.772.0 (Tabelle kann bleiben).
+- Datenbank: Migration `20261030_kc_club_v2774_tisch_tasche.sql` (Tabelle `kc_club_tisch_tasche`, RLS, nur service_role, Spiegel) – **vor dem Server einspielen**.
+- Tests: `tests/runder-tisch.test.mjs` (Art, Grenzen, Reihenfolge, nur eigene Dateien, vorab nur Leitung, Aufräumen), `tests/tisch-live.browser.mjs` (3 Fenster: Tasche vorgeladen, „💼 Nächstes“ zeigt PDF und spielt das Lied bei allen), Klick-Rundgang (Tasche mit Vorab-Teilen), Probelauf `tools/db-test/100_tisch_tasche_test.sql`. Rückweg: App/Server 2.773.0 (Tabelle kann bleiben).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ### Dazu: 🐞 Musik stoppen – Knöpfe direkt an der Musik (KC-CLUB-TISCH-MUSIK-STOPP)
 Fund Hansi (30.10.): „Beim Musik abspielen konnte ich nicht Stop drücken – es gab keinen Knopf.“ Ursache: Pause/Aus lagen versteckt hinter dem Knopf „🎵 Musik“ (nur für den, der abspielt); die Musik-Zeile zeigte nur Titel und Lautstärke, Zuhörer konnten gar nicht abschalten.
 - An der laufenden Musik stehen jetzt die Knöpfe: wer abspielt **⏸️ Pause / ▶️ Weiter · ⏮️ Von vorn · ⏹️ Aus**; die Leitung des Tisches **⏹️ Für alle aus** (stoppt bei allen, auch beim Abspielenden; startet nicht von selbst wieder); jeder **🔇 Für mich aus / 🔈 Für mich an** (nur das eigene Gerät).
 - Ist der Tisch gerade nicht zu sehen (z. B. im Chat), hängt unten eine kleine **🎵 Musik-Leiste** mit denselben Knöpfen.
+- Gilt auch für Videos (🎬, seit 2.773.0 „Lied/Video für alle“).
 - Im Chat steht bei einem Lied jetzt „▶️ 🎵 Name“ statt „Sprachnachricht anhören“ (ohne Tempo-Knopf); Sprachnachrichten bleiben wie bisher.
-- Test: `tests/tisch-live.browser.mjs` (3 Fenster): Knöpfe je Rolle, „Für mich aus“ nur bei sich, „Für alle aus“ durch die Leitung kommt überall an und bleibt aus, Musik-Leiste unten. Rückweg: App 2.772.0.
+- Test: `tests/tisch-live.browser.mjs` (3 Fenster): Knöpfe je Rolle, „Für mich aus“ nur bei sich, „Für alle aus“ durch die Leitung kommt überall an und bleibt aus, Musik-Leiste unten. Rückweg: App 2.773.0.
+## 2.773.0 – 2026-10-30 – 🎬 Runder Tisch: Videos für alle, 📸 ins Album übernehmen, stabilerer Verbindungsaufbau (KC-CLUB-RUNDER-TISCH-VIDEO, -ALBUM) · nur App · nur Admin zum Testen
+Wunsch Hansi (30.10.): „Weiter bauen“ – nach Ton, Bild, Bildschirm, Unterlagen und Musik jetzt Videos und Album (Spezifikation Abschnitte 6 und 17).
+- **🎬 Videos für alle:** Der Knopf heißt jetzt **🎵 Lied/Video**. Ein kurzes Video (MP4/WEBM/MOV, höchstens 8 MB ≈ 60 Sekunden) aus dem Archiv, vom Gerät oder **gleich aufnehmen** – es kommt in den Tisch-Chat und läuft **bei allen gleichzeitig groß auf der Bühne** (⛶ Vollbild). Pause/Weiter/Von vorn/Aus wie bei der Musik.
+- **📸 Ins Album:** Gezeigte Fotos und Videos kann übernehmen, wer sie zeigt oder den Tisch leitet – über den vorhandenen Weg (Hochlade-Formular des Albums, Thema wählen, „Hochladen“). Dann gehören sie zum Album und werden mit dem Tisch nicht gelöscht. Live läuft dabei weiter.
+- **Fehlerkorrektur Live-Ton:** Verbindungsdaten, die vor dem Verbindungsangebot ankamen, gingen verloren – dann blieb eine Verbindung manchmal hängen (⏳). Jetzt werden sie gesammelt und nachgereicht; außerdem entsteht für dieselbe Person nie doppelt eine Verbindung.
+- Tests: `tests/tisch-live.browser.mjs` – Video läuft in drei Fenstern gleichzeitig (≤ 0,4 s), „Ins Album“ nur bei Zeigendem/Leitung, öffnet das Album-Hochladen; dreimal hintereinander grün.
+- Rückweg: App 2.772.0. Auf dem Arbeitszweig als 2.768.0 gebaut; 2.768.0–2.772.0 hatten inzwischen andere Sitzungen vergeben – mit 2.772.0 (Kamera in der Ecke) zusammengeführt, beides bleibt. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.772.0 – 2026-10-30 – 🙂 Runder Tisch: Bildschirm zeigen und dich klein in der Ecke
 Wunsch #47 (Hansi 30.10.): „Im Seminar das Kassenprogramm vorstellen und zwischen Kamera und Programm umschalten“ – „Ja, mich in der Ecke, aber umschaltbar, denn auf dem kleinen Handy-Bildschirm könnte das stören oder Platz wegnehmen.“ (KC-CLUB-RUNDER-TISCH-ECKE)
 - Zeigt jemand am PC/Laptop den 🖥️ Bildschirm und hat die 📷 Kamera an, geht die Kamera zusätzlich als zweites, kleines Bild mit (eigener Kanal, sparsam: halbe Auflösung, höchstens 180 kbit/s).

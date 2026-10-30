@@ -192,12 +192,16 @@ assert.match(tl, /if \(d\.typ === "stab" && vomLeiter\)/, "Redestab nur von der 
 assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `📎 Unterlage: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "Unterlagen gehen in den Tisch-Chat (Zugriff prüft der Server)");
 assert.match(tl, /if \(typeof z\.a !== "string" \|\| !\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(z\.a\)\) return;/, "gezeigte Unterlage nur als Kennung");
 assert.ok(!/MediaRecorder/.test(tl), "keine Aufzeichnung");
-assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `🎵 Musik für alle: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "🎵 Lied geht in den Tisch-Chat (2.767.0)");
+assert.match(tl, /const k = TL\.iceVorab\.get|TL\.iceVorab\.get\(k\)/, "früh ankommende Wege werden gesammelt (2.773.0)");
+assert.match(tl, /TL\.baue\.add\(an\)/, "nie zwei Verbindungen gleichzeitig für dieselbe Person");
+assert.match(tl, /if \(von !== TL\.ich && t\?\.gastgeber !== TL\.ich\) return "";/, "📸 Ins Album nur Zeigender oder Leitung");
+assert.match(tl, /if \(datei\.size > 8 \* 1024 \* 1024\) return melde\(art === "video"/, "🎬 Video höchstens 8 MB");
+assert.match(tl, /api\("nachricht_senden", \{ id: t\.chat, text: `\$\{art === "video" \? "🎬 Video" : "🎵 Musik"\} für alle: \$\{datei\.name\}`, anlagen: \[a\.id\]/, "🎵/🎬 Lied und Video gehen in den Tisch-Chat (2.767.0/2.773.0)");
 assert.match(tl, /if \(typeof m\.a !== "string" \|\| !\/\^\[0-9a-f-\]\{36\}\$\/i\.test\(m\.a\)/, "🎵 nur Kennung über die Leitung");
 assert.ok(!/["'`][\w./-]*\/[\w.-]+\.(mp3|m4a|ogg|wav)["'`]/.test(tl) && !/new Audio\(/.test(tl), "🎵 kein Lied fest eingebaut (keine Datei-Pfade)");
 assert.match(app, /if \(rundLiveAn\(id\)\) tlStopp\(true\); const r = await api\("tisch_verlassen"/, "Verlassen beendet Live");
 
-// 2.773.0 KC-CLUB-TISCH-TASCHE: jeder packt seine eigene Tasche (PDF, Foto, Musik), die Leitung markiert „vorab für alle“
+// 2.774.0 KC-CLUB-TISCH-TASCHE: jeder packt seine eigene Tasche (PDF, Foto, Musik), die Leitung markiert „vorab für alle“
 assert.equal(rtTascheArt("Ablauf.PDF", ""), "pdf"); assert.equal(rtTascheArt("x", "image/jpeg"), "foto"); assert.equal(rtTascheArt("Club-Song.mp3", "application/octet-stream"), "musik");
 assert.equal(rtTascheArt("tabelle.xlsx", "application/vnd.ms-excel"), null, "nur PDF, Foto, Musik");
 assert.equal(rtTascheLegenPruefen(tisch, B - T, 0, "pdf"), null, "vorher packen geht");
@@ -209,7 +213,7 @@ const teile = [{ id: "a", pos: 1 }, { id: "b", pos: 2 }, { id: "c", pos: 5 }];
 assert.deepEqual(rtTascheSchieben(teile, "c", "hoch"), [{ id: "c", pos: 2 }, { id: "b", pos: 5 }]);
 assert.deepEqual(rtTascheSchieben(teile, "a", "hoch"), [], "oben bleibt oben");
 assert.deepEqual(rtTascheSchieben(teile, "c", "runter"), []);
-const sql5 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2773_tisch_tasche.sql", import.meta.url), "utf8");
+const sql5 = fs.readFileSync(new URL("../supabase/migrations/20261030_kc_club_v2774_tisch_tasche.sql", import.meta.url), "utf8");
 assert.match(sql5, /references public\.kc_club_tisch\(id\) on delete cascade/); assert.match(sql5, /art in \('pdf', 'foto', 'musik'\)/);
 assert.match(server, /if \(!\(x\.gastgeber === ich\.person_id \|\| ich\.admin\)\) throw new Fehler\("„Vorab für alle“ markiert, wer den Tisch leitet\.", 403\);/, "vorab nur die Leitung");
 assert.match(server, /if \(!att \|\| !String\(att\.object_path\)\.startsWith\(`club\/\$\{ich\.person_id\}\/`\)\)/, "nur eigene Dateien einpacken");

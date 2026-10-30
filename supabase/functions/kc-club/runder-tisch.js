@@ -159,7 +159,7 @@ export function rtKonfliktText(k, tz = "Europe/Berlin") {
   return `Zur selben Zeit: „${k.titel}“ (${lang ? `${tag(k.von)}–${tag(k.bis)}` : `${u(k.von)}–${u(k.bis)} Uhr`}).`;
 }
 
-// 2.773.0 KC-CLUB-TISCH-TASCHE (Wunsch Hansi 30.10.2026 „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
+// 2.774.0 KC-CLUB-TISCH-TASCHE (Wunsch Hansi 30.10.2026 „vorher Sachen packen – PDF, Song, Foto –, damit man nicht lange suchen muss“;
 // Wahl: jeder packt seine eigene Tasche, die Leitung kann einzelne Teile „vorab für alle“ markieren). Privat, bis man es zeigt.
 export const RT_TASCHE = { max: 20, nameMax: 120 };
 export function rtTascheArt(name, mime) {

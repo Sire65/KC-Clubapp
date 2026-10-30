@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.773.0";
+const SERVER_VERSION = "2.774.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5033,7 +5033,7 @@ async function rtLage(ich: Ich, nurId?: string) {
   const { data: tn } = ids.length ? await db.from("kc_club_tisch_teilnahme").select("tisch_id,person_id,zusage,dabei_seit,zuletzt_da,verlassen_am").in("tisch_id", ids).limit(3000) : { data: [] as any[] };
   const pm = await personen([...(ts ?? []).map((x: any) => x.gastgeber), ...(tn ?? []).map((x: any) => x.person_id)]);
   const nm = (id: string) => pm.get(id)?.display_name || id;
-  // 2.773.0 KC-CLUB-TISCH-TASCHE: wie viele Teile habe ich gepackt, wie viele liegen vorab für alle bereit (fehlt die Tabelle → 0)
+  // 2.774.0 KC-CLUB-TISCH-TASCHE: wie viele Teile habe ich gepackt, wie viele liegen vorab für alle bereit (fehlt die Tabelle → 0)
   const { data: ta } = ids.length ? await db.from("kc_club_tisch_tasche").select("tisch_id,person_id,vorab").in("tisch_id", ids).or(`person_id.eq.${ich.person_id},vorab.eq.true`).limit(2000) : { data: [] as any[] };
   const tische = (ts ?? []).map((x: any) => {
     const z = (tn ?? []).filter((r: any) => r.tisch_id === x.id), ph = rtPhase(x, t), mein = z.find((r: any) => r.person_id === ich.person_id);
@@ -5075,7 +5075,7 @@ async function rtZeitLage(ich: Ich, vonMs: number, bisMs: number, ohneId: string
     .sort((a, b) => a.ms - b.ms).map(({ sym, text }) => ({ sym, text }));
   return { frei: k.frei, sperre: k.sperre.map((x) => rtKonfliktText(x, TZ)), hinweis: k.hinweis.map((x) => rtKonfliktText(x, TZ)), tag: tagListe };
 }
-// ---------- 2.773.0 KC-CLUB-TISCH-TASCHE: jeder packt vorher seine eigene Tasche (PDF, Foto, Musik) – privat bis zum Zeigen; die Leitung kann
+// ---------- 2.774.0 KC-CLUB-TISCH-TASCHE: jeder packt vorher seine eigene Tasche (PDF, Foto, Musik) – privat bis zum Zeigen; die Leitung kann
 // einzelne Teile „vorab für alle“ markieren (Unterlagen zur Vorbereitung). Zeigen = vorhandener Weg (Anlage in den Tisch-Chat + Live „Zeigen“/„Musik“).
 const rtTascheAus = (r: any, pm: Map<string, any>) => ({ id: r.id, a: r.attachment_id, name: r.name, mime: r.mime, art: r.art, pos: r.pos, vorab: r.vorab, gezeigt: !!r.gezeigt_am,
   von: r.person_id, vonName: pm.get(r.person_id)?.display_name || "" });
@@ -5155,7 +5155,7 @@ async function tischWartung(stuendlich: boolean) {
     .or(`medien_geloescht_am.is.null,ende.lt.${new Date(t - RT.textTage * 86400000).toISOString()}`).order("ende").limit(50);
   for (const x of alt ?? []) {
     const f = rtAufraeumen(x, t);
-    if (f.medien) { // 2.773.0: Taschen gehören zu den Dateien – nach 7 Tagen weg (gezeigte hängen am Chat und gehen mit rtMedienWeg)
+    if (f.medien) { // 2.774.0: Taschen gehören zu den Dateien – nach 7 Tagen weg (gezeigte hängen am Chat und gehen mit rtMedienWeg)
       const { data: tt } = await db.from("kc_club_tisch_tasche").select("attachment_id").eq("tisch_id", x.id).limit(2000);
       if ((tt ?? []).length) { await db.from("kc_club_tisch_tasche").delete().eq("tisch_id", x.id); await rtTascheDateienWeg((tt ?? []).map((r: any) => r.attachment_id)); }
     }
@@ -12266,7 +12266,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const von = dsMs(tag, uhr);
         return json({ ok: true, ...(await rtZeitLage(ich, von, von + dauer * 60000)) });
       }
-      case "tisch_tasche": { // 2.773.0 KC-CLUB-TISCH-TASCHE: meine Teile + Vorab-Teile der Leitung
+      case "tisch_tasche": { // 2.774.0 KC-CLUB-TISCH-TASCHE: meine Teile + Vorab-Teile der Leitung
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
         return json(await rtTascheLage(ich, await rtTischHolen(p.id, ich)));
       }
@@ -17326,7 +17326,7 @@ Köcheclub Werne`,
             if (tp) { erlaubt = true; break; }
           }
         }
-        if (!erlaubt) erlaubt = await rtTascheVorabErlaubt(ich, att.id).catch(() => false); // 2.773.0 KC-CLUB-TISCH-TASCHE: „vorab für alle“
+        if (!erlaubt) erlaubt = await rtTascheVorabErlaubt(ich, att.id).catch(() => false); // 2.774.0 KC-CLUB-TISCH-TASCHE: „vorab für alle“
         if (!erlaubt && ich.admin) { // 2.511.0 KC-CLUB-ABLAGEKORB: Admin sieht, was Mitglieder in den Ablagekorb geteilt haben
           const { data: ak } = await db.from("kc_club_ablagekorb").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(1);
           if (ak?.length) erlaubt = true;
