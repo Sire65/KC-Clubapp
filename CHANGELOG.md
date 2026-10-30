@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.782.0 – 2026-10-30 – 💼 Clubabend: noch nicht fertig gepackte Aktentasche liegt als „vorläufig“ bereit (KC-CLUB-AKTENTASCHE-AUTO-VORLAEUFIG) · Server
+Wunsch Hansi (30.10., kurz vor der Sitzung): „Wenn nicht explizit als fertig getippt wurde, dann als vorläufig gepackt angeben, damit die Inhalte zur Verfügung stehen.“
+- Clubabend Live zeigt „💼 Aktentasche öffnen“ jetzt auch, wenn die Tasche noch auf „offen“ steht, aber schon Inhalt hat – angezeigt als **vorläufig**. Wie bisher nur für die Clubleitung. Der gespeicherte Stand der Tasche bleibt unverändert (Büro → 💼 Aktentasche zeigt weiter „wird gepackt“; ✔ Fertig gepackt geht wie immer).
+- Leere offene Taschen erscheinen weiterhin nicht. Sofort eingespielt (Sitzung heute 18 Uhr). Vertragstest angepasst.
+
 ## 2.781.0 – 2026-10-30 – 🙋 Einlesen → Eingangskörbe: auch in den eigenen Eingangskorb (KC-CLUB-EINLESEN-EINGANG-MICH) · Server 2.781.0
 Wunsch Hansi (30.10.): „Aber bei mir muss es auch rein!“
 - Im Fenster „👥 In die Eingangskörbe der Mitglieder“ (Büro → Einlesen) gibt es das Häkchen **„🙋 Auch in meinen Eingangskorb“** – vorbelegt. Dann landet die Datei auch im eigenen 📥 Eingangskorb und man legt sie selbst ab. Der Senden-Knopf zeigt „… + dich“.

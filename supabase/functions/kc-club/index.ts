@@ -6518,7 +6518,9 @@ async function clubabendStand(ich: Ich, t: any) {
   const namen = new Map(b.mitglieder.map((m: any) => [m.person_id, m.name]));
   const at = ich.vorstand ? await atTasche(t.id).catch(() => null) : null; // 2.695.0 KC-CLUB-AKTENTASCHE: nur die Leitung, nur wenn gepackt
   return { aktiv: true, leitung: ich.vorstand, treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ende: t.ende ?? null, ort: t.ort ?? null },
-    aktentasche: at && at.status !== "offen" ? { anzahl: (at.inhalt ?? []).length, vorlaeufig: at.status === "vorlaeufig" } : null, // 2.699.0: auch vorläufig gepackt
+    // 2.782.0 KC-CLUB-AKTENTASCHE-AUTO-VORLAEUFIG (Wunsch Hansi 30.10. „wenn nicht ausdrücklich als fertig getippt, als vorläufig gepackt angeben,
+    // damit die Inhalte zur Verfügung stehen“): eine noch offene Tasche mit Inhalt liegt am Clubabend als „vorläufig“ bereit (Status bleibt unverändert)
+    aktentasche: at && (at.status !== "offen" || (at.inhalt ?? []).length > 0) ? { anzahl: (at.inhalt ?? []).length, vorlaeufig: at.status !== "gepackt" } : null, // 2.699.0: auch vorläufig gepackt
     tagesordnung: top, anwesend: anwesend.map((id) => ({ person_id: id, name: namen.get(id) || id })),
     ...(ich.vorstand ? { mitglieder: b.mitglieder.map((m: any) => ({ person_id: m.person_id, name: m.name, zusage: m.antwort })), protokoll: b.protokoll } : {}),
     geburtstage: gb, aufgaben: b.aufgaben.filter((a: any) => !a.erledigt), letztesProtokoll: b.letztes, album, seit: von,
