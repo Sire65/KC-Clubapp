@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.783.0";
+const SERVER_VERSION = "2.784.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -396,14 +396,20 @@ async function aktiveMitglieder() {
 // (einzeln gewählt, Gruppe, Dienstplan/Dienst-Tausch, Dienstwunsch-Erinnerung) und den SOS-Notfall. Sichtbar bleibt alles wie bisher.
 // Rollen 60 s im Speicher. Lädt die Liste nicht, gilt der letzte bekannte Stand; gab es noch keinen, geht der Sammelversand an
 // niemanden (Regel 11: unbekannt ≠ leer – lieber keine Rundmail als eine an die Aushilfen).
-let NG_STAND: { t: number; ids: Set<string> } | null = null;
-async function nurGezielt(): Promise<Set<string>> {
-  if (NG_STAND && Date.now() - NG_STAND.t < 60000) return NG_STAND.ids;
-  const { data, error } = await db.from("kc_club_rollen").select("person_id,zugang,ist_admin").in("zugang", ["aushilfe", "gast"]);
-  if (error) { if (NG_STAND) return NG_STAND.ids; throw new Error("Zugangsliste nicht lesbar – kein Sammelversand"); }
-  NG_STAND = { t: Date.now(), ids: new Set((data ?? []).filter((r: any) => zugangAus(r) !== "mitglied").map((r: any) => String(r.person_id))) };
-  return NG_STAND.ids;
+// KC-CLUB-PASSIV (2.784.0, 30.10.2026, Wunsch Hansi „Fridbert kommt nicht, macht nichts mit, ist aber weiterhin Mitglied – also passiv; keine
+// Einladungen zu Treffen usw.“): Zugang „passiv“ = Rechte wie ein Mitglied, aber nichts von „an alle“ (wie Aushilfen) und bei Treffen nicht „noch offen“.
+let NG_STAND: { t: number; ids: Set<string>; passiv: Set<string> } | null = null;
+async function nurGezieltStand() {
+  if (NG_STAND && Date.now() - NG_STAND.t < 60000) return NG_STAND;
+  const { data, error } = await db.from("kc_club_rollen").select("person_id,zugang,ist_admin").in("zugang", ["aushilfe", "gast", "passiv"]);
+  if (error) { if (NG_STAND) return NG_STAND; throw new Error("Zugangsliste nicht lesbar – kein Sammelversand"); }
+  NG_STAND = { t: Date.now(), ids: new Set((data ?? []).filter((r: any) => zugangAus(r) !== "mitglied" || r.zugang === "passiv").map((r: any) => String(r.person_id))),
+    passiv: new Set((data ?? []).filter((r: any) => r.zugang === "passiv").map((r: any) => String(r.person_id))) };
+  return NG_STAND;
 }
+async function nurGezielt(): Promise<Set<string>> { return (await nurGezieltStand()).ids; }
+// Passive zählen bei Treffen nicht als „noch offen“ (Liste nicht lesbar → niemand ausgenommen, gezählt wird wie bisher)
+async function passivIds(): Promise<Set<string>> { return (await nurGezieltStand().catch(() => null))?.passiv ?? new Set<string>(); }
 async function sammelEmpfaenger(): Promise<(Person & { birth_date?: string })[]> {
   const [leute, aus] = await Promise.all([aktiveMitglieder(), nurGezielt().catch((e) => { console.error("sammelEmpfaenger", String(e)); return null; })]);
   return aus ? leute.filter((m) => !aus.has(m.person_id)) : [];
@@ -5169,7 +5175,7 @@ async function rtKurz(ich: Ich) {
 async function rtSenden(ids: string[], vars: { titel: string; kurz: string; tischId: string }, schl: string) {
   let ziel = [...new Set(ids.filter(Boolean))];
   if ((await freigaben()).runder_tisch !== "alle") { const ad = new Set(await adminIds()); ziel = ziel.filter((x) => ad.has(x)); }
-  const { data: ohne } = ziel.length ? await db.from("kc_club_rollen").select("person_id").in("zugang", ["gast", "aushilfe"]).in("person_id", ziel) : { data: [] as any[] };
+  const { data: ohne } = ziel.length ? await db.from("kc_club_rollen").select("person_id").in("zugang", ["gast", "aushilfe", "passiv"]).in("person_id", ziel) : { data: [] as any[] };
   const raus = new Set((ohne ?? []).map((x: any) => x.person_id)); ziel = ziel.filter((x) => !raus.has(x));
   if (!ziel.length) return null;
   const url = `${APP_URL}#tisch=${vars.tischId}`;
@@ -7395,7 +7401,8 @@ async function gastgeberStandLauf() {
     const zweiStd = bis <= 2 * 3600000 && !war("2std");
     const altVorabend = !letzte && war("vorabend"); // Vorabend noch von einer älteren Serverversion (ohne gemerkten Stand) → 2 Std. vorher wie bisher
     if (!vorabendFaellig && !letzte && !(zweiStd && altVorabend)) continue; // vor dem Vorabend nichts – Änderungen davor stehen in der Vorabend-Meldung
-    const [{ data: an }, mitglieder] = await Promise.all([db.from("kc_club_teilnahme").select("person_id,antwort,notiz").eq("treffen_id", t.id), aktiveMitglieder()]);
+    const [{ data: an }, alleMg, passiv] = await Promise.all([db.from("kc_club_teilnahme").select("person_id,antwort,notiz").eq("treffen_id", t.id), aktiveMitglieder(), passivIds()]);
+    const mitglieder = alleMg.filter((m) => !passiv.has(m.person_id)); // KC-CLUB-PASSIV: Passive sind nicht „noch offen“
     const stand = ggStand(an ?? []);
     const pm = await personen([...new Set([...Object.keys(stand), ...Object.keys(letzte?.details?.stand ?? {}), ...(t.gastgeber_person_id ? [t.gastgeber_person_id] : [])])]);
     const name = (id: string) => { const x = pm.get(id); return x ? x.display_name || vorname(x) : id; };
@@ -9628,7 +9635,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             person_id: m.person_id, name: m.display_name, vorname: vorname(m), avatar: avatar.get(m.person_id) ?? null,
             ...(ohneKomm.has(m.person_id) ? { ohne_komm: true } : {}),
             ...(ordentlich.has(m.person_id) ? {} : { nichtMitglied: true }), // KC-CLUB-SENSIBEL-GAESTE (2.78.0)
-            ...(zugangAus(r.get(m.person_id)) !== "mitglied" ? { nurGezielt: true } : {}), // 2.614.0 KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN: fällt bei „Alle“ heraus
+            ...(zugangAus(r.get(m.person_id)) !== "mitglied" || (r.get(m.person_id) as any)?.zugang === "passiv" ? { nurGezielt: true } : {}), // 2.614.0 KC-CLUB-SAMMELVERSAND-OHNE-AUSHILFEN: fällt bei „Alle“ heraus
+            ...((r.get(m.person_id) as any)?.zugang === "passiv" ? { passiv: true } : {}), // 2.784.0 KC-CLUB-PASSIV
             vorstand: !!(r.get(m.person_id) as any)?.ist_vorstand, aemter: (r.get(m.person_id) as any)?.aemter ?? [], admin: !!(r.get(m.person_id) as any)?.ist_admin,
             status: st.get(m.person_id) ?? null, online: on.has(m.person_id) && m.person_id !== ich.person_id, zuletztDa: zd.get(m.person_id) ?? null,
             verborgen: m.person_id !== ich.person_id && (!ichZeige || zeigen.get(m.person_id) === false),
@@ -9636,7 +9644,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             wege: { push: ps.has(m.person_id), mail: !!m.email, whatsapp: hatTel.has(m.person_id) && (ich.admin || m.person_id === ich.person_id || (ich.kontakte && handyFrei.has(m.person_id))) },
             // für alle nur grob: in den letzten 14 Tagen in der App gewesen (genaue Zeit nur für den Admin)
             aktiv: !(inko.has(m.person_id) && m.person_id !== ich.person_id) && !!(z.get(m.person_id) as any)?.zuletzt_gesehen && Date.now() - new Date((z.get(m.person_id) as any).zuletzt_gesehen).getTime() < 14 * 86400000,
-            ...(ich.admin ? { zugang: zugangAus(r.get(m.person_id)), kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
+            ...(ich.admin ? { zugang: (r.get(m.person_id) as any)?.zugang === "passiv" ? "passiv" : zugangAus(r.get(m.person_id)), kontakte: (r.get(m.person_id) as any)?.kontakte_sehen !== false, protokolle: (r.get(m.person_id) as any)?.protokolle_lesen !== false, app: !!(z.get(m.person_id) as any)?.aktiv, zuletzt: inko.has(m.person_id) && m.person_id !== ich.person_id ? null : (z.get(m.person_id) as any)?.zuletzt_gesehen ?? null, push: ps.has(m.person_id), mail: !!m.email, fehler: fehler.get(m.person_id) ?? null,
               unerreichbar: !ps.has(m.person_id) && !m.email, /* kein Push, keine E-Mail: Hinweis statt roter Kreis */ ansicht: ansicht.get(m.person_id) ?? null } : {}),
             ...(ich.admin && probe.has(m.person_id) ? { probe: { seit: probe.get(m.person_id).seit ?? null, bis: probe.get(m.person_id).bis ?? null } } : {}), // KC-CLUB-PROBEPHASE
           })),
@@ -19440,7 +19448,7 @@ Köcheclub-App`,
         const adminAlt = !!vorher?.ist_admin, adminNeu = pid === ich.person_id || typeof p.admin !== "boolean" ? null : p.admin;
         const zeile: any = { person_id: pid, ist_vorstand: !!p.vorstand, ...(adminNeu === null ? {} : { ist_admin: adminNeu }), aemter,
           ...(typeof p.protokolle === "boolean" ? { protokolle_lesen: p.protokolle } : {}), ...(typeof p.kontakte === "boolean" ? { kontakte_sehen: p.kontakte } : {}), geaendert_am: jetzt() };
-        if (["mitglied", "aushilfe", "gast"].includes(p.zugang)) zeile.zugang = p.zugang; // 2.422.0 KC-CLUB-ZUGANG
+        if (["mitglied", "aushilfe", "gast", "passiv"].includes(p.zugang)) zeile.zugang = p.zugang; // 2.422.0 KC-CLUB-ZUGANG · 2.784.0 KC-CLUB-PASSIV
         let { error: re } = await db.from("kc_club_rollen").upsert(zeile), zugangFehlt = false;
         if (re && "zugang" in zeile && /zugang/i.test(String(re.message || ""))) { delete zeile.zugang; zugangFehlt = true; ({ error: re } = await db.from("kc_club_rollen").upsert(zeile)); } // Spalte noch nicht eingespielt
         if (re) throw new Fehler("Die Rolle konnte nicht gespeichert werden – bitte gleich noch einmal versuchen.", 500);
