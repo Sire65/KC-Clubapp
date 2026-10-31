@@ -13705,3 +13705,9 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
   const i = programm.indexOf("function bfVorschau() {"), teil = programm.slice(i, i + 600);
   assert.ok(i > 0 && /document\.querySelectorAll\("body > \.meldung"\)\.forEach\(\(m\) => m\.remove\(\)\);\s*const f = blattAuf\("bfBlatt"/.test(teil), "Vorschau räumt die Meldung weg, bevor gemalt wird");
 }
+// 2.792.0 KC-CLUB-BILDSCHIRMFOTO-FARBEN (Wunsch Hansi „unten einige Farbpunkte, um die Stiftfarbe zu wählen“): jeder Strich behält seine Farbe
+{
+  assert.ok(/const BF_FARBEN = \[\["#e0102a", "Rot"\]/.test(programm) && /id="bfFarben"/.test(programm) && /onclick="bfFarbe\('\$\{f\}'\)"/.test(programm), "Farbpunkte unter dem Bild");
+  assert.ok(/BF\.zug\.f = BF\.farbe;/.test(programm) && /g\.strokeStyle = s\.f \|\| "#e0102a";/.test(programm), "Farbe je Strich, alte Striche bleiben rot");
+  assert.ok(/\.bf-farbe\[aria-pressed="true"\]/.test(html), "gewählte Farbe ist markiert");
+}

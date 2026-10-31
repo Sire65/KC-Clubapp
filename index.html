@@ -2175,6 +2175,9 @@
   .bf-blitz { position: fixed; inset: 0; background: #fff; z-index: 95; pointer-events: none; animation: bfBlitz .45s ease-out forwards; }
   @keyframes bfBlitz { from { opacity: .85; } to { opacity: 0; } }
   .bf-rahmen { border: 2px solid var(--linie); border-radius: 12px; background: var(--karte2); text-align: center; padding: 4px; } /* ohne overflow:hidden – sonst schrumpft die Vorschau im Fenster */
+  .bf-farben { display: flex; justify-content: center; gap: 12px; margin: 8px 0 2px; flex-wrap: wrap; } /* 2.792.0 KC-CLUB-BILDSCHIRMFOTO-FARBEN */
+  .bf-farbe { width: 34px; height: 34px; border-radius: 50%; background: var(--f); border: 2px solid rgba(0,0,0,.35); padding: 0; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .bf-farbe[aria-pressed="true"] { outline: 3px solid var(--text, #222); outline-offset: 3px; transform: scale(1.1); }
   .bf-rahmen canvas { display: block; margin: 0 auto; border-radius: 8px; height: 48vh; width: auto; max-width: 100%; touch-action: none; cursor: crosshair; }
   /* KC-CLUB-MINIKACHELN (1.23.1, Wunsch Hansi): kleine Kacheln nebeneinander, Antippen → großes Info-Fenster */
   /* KC-CLUB-BUERO-KLAPPE (1.35.0): Büro-Bereiche als Klappkarten */
