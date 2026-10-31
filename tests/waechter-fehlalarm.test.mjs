@@ -1,4 +1,4 @@
-// KC-CLUB-WAECHTER-FEHLALARM (2.793.0, 31.10.2026, Fund Hansi): Versions-Wächter gelb bei neuerer App, Geheimnis-Wächter rot wegen des Klick-Rundgangs.
+// KC-CLUB-WAECHTER-FEHLALARM (2.795.0, 31.10.2026, Fund Hansi): Versions-Wächter gelb bei neuerer App, Geheimnis-Wächter rot wegen des Klick-Rundgangs.
 // Aufruf: node tests/waechter-fehlalarm.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";

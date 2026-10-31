@@ -14,7 +14,9 @@ assert.ok(block.length > 2000, "Baustein gefunden");
 const FENSTER_NAMEN = new Function(block.slice(block.indexOf("const FENSTER_NAMEN"), block.indexOf("Object.assign(SPUR_WAS")) + "\nreturn FENSTER_NAMEN;")();
 const dyn = [...(app + "\n" + teile).matchAll(/blattAuf\("([A-Za-z0-9]+)"/g)].map((m) => m[1]);
 const fest = [...html.matchAll(/<div class="blatt[^"]*" id="([A-Za-z0-9]+)"/g)].map((m) => m[1]);
-const fehlt = [...new Set([...dyn, ...fest])].filter((id) => !FENSTER_NAMEN[id]);
+// 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG: auch Fenster, die per createElement als „blatt“/„dlg“ entstehen (z. B. niFenster)
+const eigen = [...(app + "\n" + teile).matchAll(/\b\w+\.id = "([A-Za-z0-9]+)";[^\n]{0,80}className = "(?:blatt|dlg)[^"]*"/g)].map((m) => m[1]);
+const fehlt = [...new Set([...dyn, ...fest, ...eigen])].filter((id) => !FENSTER_NAMEN[id]);
 assert.deepEqual(fehlt, [], "Fenster ohne Namen in FENSTER_NAMEN: " + fehlt.join(", "));
 assert.ok(Object.values(FENSTER_NAMEN).every((n) => n.length >= 4 && !/[…`$]/.test(n)), "Namen ohne Platzhalter");
 
