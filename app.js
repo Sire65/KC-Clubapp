@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.791.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.792.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27259,6 +27259,9 @@ function bfKlonGlaetten(d) {
   }
 }
 function bfVorschau() {
+  // 2.792.0 KC-CLUB-BILDSCHIRMFOTO-MELDUNG (Fund Hansi „wollte den Mond-Knopf rot einkreisen – das geht nicht mehr“): die Meldung vom Auslöser
+  // („Geh in Ruhe dahin …“, bis zu 12 s sichtbar) lag oben über der Vorschau und fing dort das Malen ab – beim Öffnen der Vorschau weg damit
+  document.querySelectorAll("body > .meldung").forEach((m) => m.remove());
   const f = blattAuf("bfBlatt", `${einwHtml("b-bildschirmfoto")}<h3 style="margin-top:0">📸 Dein Bildschirmfoto</h3>
     <p class="hinweis" style="margin:0">✏️ Mit dem Finger rot einkreisen oder Pfeile malen, wo das Problem ist.</p>
     <div class="bf-rahmen"><canvas id="bfLeinwand"></canvas></div>
