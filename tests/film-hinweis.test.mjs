@@ -20,7 +20,7 @@ assert.ok(sw.includes('url.pathname.includes("/film/")) return;'), "Service Work
 // Start-Fenster: nach den anderen Start-Fenstern, drei Wahlmöglichkeiten, direkter Start des Films
 assert.ok(/setTimeout\(startHinweisPruefen, 2500\); setTimeout\(filmHinweisPruefen, 4000\);/.test(app), "Film-Hinweis beim Start");
 const pr = app.slice(app.indexOf("async function filmHinweisPruefen"), app.indexOf("function filmZeigen"));
-assert.ok(/\.blatt:not\(\.versteckt\), \.dlg, #rgSchicht, #filmSchicht/.test(pr) && /aktuelleAnsicht !== "start"/.test(pr), "erst wenn nichts anderes offen ist");
+assert.ok(/FENSTER_OFFEN \+ ", \.dlg, #rgSchicht, #filmSchicht/.test(pr) && /aktuelleAnsicht !== "start"/.test(pr), "erst wenn nichts anderes offen ist"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
 assert.ok(/▶ Film jetzt ansehen/.test(pr) && /⏰ Später/.test(pr) && /Nein, danke/.test(pr), "drei Knöpfe");
 assert.ok(/if \(wahl === "an"\) return filmZeigen\(f\.id\);/.test(pr), "Ansehen startet den Film direkt");
 assert.ok(/filmMerken\(f\.id, "nein"\)/.test(pr) && !/filmMerken\(f\.id, "spaeter"\)/.test(pr), "Später wird nicht gemerkt (fragt wieder)");

@@ -67,6 +67,7 @@ jobs:
       - run: node tests/ablagekorb-eingang.test.mjs
       - run: node tests/einlesen-eingang.test.mjs
       - run: node tests/update-dw-schutz.test.mjs
+      - run: node tests/eingabe-ruhe.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs
       - run: node tests/sitzung-aufgaben.test.mjs

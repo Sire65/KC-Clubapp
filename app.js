@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.788.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.789.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1206,9 +1206,14 @@ const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => pwAufrufAnPinnw
 // ---------- KC-CLUB-WAS-NEU (2.24.12, Wunsch Hansi): beim Öffnen auf einen Blick, was neu ist – mit Knopf direkt dorthin ----------
 // „Du hast 3 neue Nachrichten (davon 1 in Gruppen) und 1 neuen Pinnwand-Eintrag.“ Nur beim Öffnen auf der Startseite, nicht über einen
 // Push-/Sprunglink, nicht bei Notfall-Meldung; abschaltbar (⚙️ → Benachrichtigungen). Unsichere Zahlen werden nie als 0 gezeigt (Regel 11).
+// 2.789.0 KC-CLUB-EINGABE-RUHE (Wunsch Hansi 31.10.: „wenn jemand gerade z. B. Dienstzeiten eingibt, nicht gestört werden durch Nachrichten und Updates“):
+// Was von selbst aufgeht (Hinweise, Einladungen, Tipps, Rückfragen), wartet, solange ein Fenster offen ist – dazu zählen jetzt auch die Dienstwünsche
+// (eigenes Vollbild-Fenster ohne .blatt). Eine Stelle für alle automatischen Hinweise; Anrufe dürfen weiter klingeln.
+const FENSTER_OFFEN = ".blatt:not(.versteckt), #dwFenster";
+const eingabeRuhe = () => !!document.getElementById("dwFenster"); // Sprach-Ansagen schweigen, solange die Dienstwünsche offen sind
 function wasNeuZeigen(pw) {
   const n = INIT?.ungelesen || 0, gr = INIT?.ungelesenGruppen, p = pw?.length || 0, sp = INIT?.spieleDran || 0; // 2.24.13: auch Spiele (Einladung / du bist dran)
-  if (!einst("wasNeu", true) || (!n && !p && !sp) || (START_HASH && START_HASH !== "#") || INIT?.alarm || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)")) return false;
+  if (!einst("wasNeu", true) || (!n && !p && !sp) || (START_HASH && START_HASH !== "#") || INIT?.alarm || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN)) return false;
   const mz = (k, w1, wn) => `<b>${k}</b> ${k === 1 ? w1 : wn}`, einzel = gr == null ? null : n - gr;
   const zeilen = [];
   if (n) zeilen.push(`<div class="wn-zeile">💬 <span>${mz(n, "neue Nachricht", "neue Nachrichten")}${INIT?.ungelesenUnsicher ? " (vielleicht mehr)" : ""}${gr == null ? "" : gr && einzel ? `<br><small>${mz(einzel, "in deinem Chat", "in deinen Chats")} · ${mz(gr, "in einer Gruppe", "in Gruppen")}</small>` : gr ? "<br><small>in deinen Gruppen</small>" : "<br><small>in deinen Chats</small>"}</span></div>`);
@@ -1308,7 +1313,7 @@ async function pwFristenSpeichern() {
 }
 function pwErinnern() {
   const { erinnernTage: PW_ERINNERN_TAGE, pauseTage: PW_ERINNERN_PAUSE_TAGE } = pwFristen();
-  if (document.getElementById("pwFenster") || document.querySelector(".blatt:not(.versteckt)")) return true; // nie über ein anderes Fenster (dann auch kein Tipp)
+  if (document.getElementById("pwFenster") || document.querySelector(FENSTER_OFFEN)) return true; // nie über ein anderes Fenster (dann auch kein Tipp)
   const bis = INIT?.einstellungen?.pinnwand_erinnert?.bis || {}, jetzt = Date.now();
   const alt = PW.zettel.filter((z) => z.vonMir && jetzt - new Date(z.erstellt_am).getTime() >= PW_ERINNERN_TAGE * 86400000 && !(bis[z.id] && new Date(bis[z.id]).getTime() > jetzt))
     .sort((a, b) => String(a.erstellt_am).localeCompare(String(b.erstellt_am)));
@@ -1713,7 +1718,7 @@ const EINSTIEG_SCHRITTE = [
     ja: () => zeige("feedback") },
 ];
 function einstiegPruefen() {
-  if (!INIT?.einstieg || !eiF().aktiv || document.querySelector(".blatt:not(.versteckt)") || document.getElementById("pwFenster")) return false;
+  if (!INIT?.einstieg || !eiF().aktiv || document.querySelector(FENSTER_OFFEN) || document.getElementById("pwFenster")) return false;
   const e = INIT.einstieg, s = INIT.einstellungen?.einstieg?.schritte || {};
   if (Object.values(s).some((x) => tageSeit(x.am) < EINSTIEG_ABSTAND_TAGE)) return false; // höchstens ein Tipp je Tag
   // schon selbst erledigt → nicht mehr fragen (Farbe gewählt bzw. erweiterte Ansicht an)
@@ -2038,7 +2043,7 @@ async function filmMerken(id, wie) {
 }
 async function filmHinweisPruefen() {
   const f = filmeFuerMich().find((x) => !filmErledigt(x.id)); if (!f) return;
-  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht") || aktuelleAnsicht !== "start") { if (++FILM_START.versuche < 20) setTimeout(filmHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
+  if (document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht, #filmSchicht") || aktuelleAnsicht !== "start") { if (++FILM_START.versuche < 20) setTimeout(filmHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
   const wahl = await new Promise((fertig) => {
     let d; const zu = (w) => { d?.remove(); fertig(w); };
     d = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname || ICH.name)},</h3><p class="dlg-text">für dich gibt es einen Anleitungsfilm:</p>
@@ -2119,7 +2124,7 @@ function startNachrichtenLage() {
 }
 async function startHinweisPruefen() {
   const h = INIT?.einstellungen?.start_hinweis; if (!h || h.erledigt || h.art !== "ungelesen" || !ICH) return;
-  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht") || aktuelleAnsicht !== "start") { if (++SH_START.versuche < 20) setTimeout(startHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
+  if (document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht") || aktuelleAnsicht !== "start") { if (++SH_START.versuche < 20) setTimeout(startHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
   const n = Number(INIT?.ungelesen) || 0, erledigt = () => einstSpeichern("start_hinweis", { art: h.art, erledigt: new Date().toISOString() }).then(() => { INIT.einstellungen.start_hinweis = { ...h, erledigt: new Date().toISOString() }; }).catch((e) => console.warn("start_hinweis", e));
   if (!n) return erledigt();
   if (!einfach() && reg !== "verein" && REGISTER.some(([r]) => r === "verein") && kacheln("verein").some((k) => k.id === "kommunikation")) register("verein");
@@ -2210,7 +2215,7 @@ const RUHE_WOCHE_MS = 7 * 86400000;
 const ruheSeit = (iso) => !iso || Date.now() - new Date(iso).getTime() >= RUHE_WOCHE_MS;
 function tippDesTages() {
   const st = tippStand();
-  if (!st.an || !INIT || document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") return false;
+  if (!st.an || !INIT || document.querySelector(FENSTER_OFFEN) || aktuelleAnsicht !== "start") return false;
   if (einwOffen("start")) return false; // KC-CLUB-EINWEISUNG: erst die Startseite erklären, Tipps danach
   const heute = heuteIso();
   if (st.zuletzt && new Date(st.zuletzt).toLocaleDateString("sv-SE", { timeZone: TZ }) === heute) return false; // einer je Tag
@@ -4260,7 +4265,7 @@ function spurFrage(neu) {
   if (!spurFrageAn() || !neu?.length || inRuheJetzt(INIT?.einstellungen?.ruhezeit) || (typeof RUF !== "undefined" && RUF)) return;
   if (!$("adminBlatt")?.classList.contains("versteckt")) return; // Admin-Fenster (z. B. die Wege) ist schon offen
   const alt = $("spurFrageBlatt");
-  if (!alt && document.querySelector(".blatt:not(.versteckt)")) return; // nicht mitten in etwas anderes hinein
+  if (!alt && document.querySelector(FENSTER_OFFEN)) return; // nicht mitten in etwas anderes hinein
   const namen = [...new Set([...(alt ? JSON.parse(alt.dataset.namen || "[]") : []), ...neu.map((x) => x.vorname || x.name)])];
   const wer = namen.length === 1 ? `<b>${esc(namen[0])}</b> hat sich gerade angemeldet` : `<b>${esc(namen.slice(0, -1).join(", "))}</b> und <b>${esc(namen[namen.length - 1])}</b> haben sich gerade angemeldet`;
   const f = blattAuf("spurFrageBlatt", `<h3 style="margin-top:0">🟢 ${wer}</h3>
@@ -4289,7 +4294,7 @@ function onlineAnsageText(n) {
   return n.length === 1 ? `${n[0]} ist jetzt online` : `${n.slice(0, -1).join(", ")} und ${n[n.length - 1]} sind jetzt online`;
 }
 function onlineAnsageSprechen(namen) {
-  if (document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
+  if (document.hidden || inRuheJetzt(INIT?.einstellungen?.ruhezeit) || eingabeRuhe()) return; // 2.789.0 KC-CLUB-EINGABE-RUHE
   const jetzt = Date.now(), n = [...new Set(namen.filter(Boolean))].filter((x) => jetzt - (OA.gesagt.get(x) || 0) >= ANSAGE_PAUSE_MS && !schonPerPush(x));
   if (!n.length) return;
   n.forEach((x) => OA.gesagt.set(x, jetzt));
@@ -4563,7 +4568,7 @@ function ansageDeuten(titel, text, url) {
 }
 function ansageAusPush(d) { const x = ansageDeuten(d?.titel, d?.text, d?.url); if (x) ansageMelden(x); }
 function ansageMelden(x) {
-  if (!x || !ansAn(x.art.split("-")[0]) || inRuheJetzt(INIT?.einstellungen?.ruhezeit)) return;
+  if (!x || !ansAn(x.art.split("-")[0]) || inRuheJetzt(INIT?.einstellungen?.ruhezeit) || (eingabeRuhe() && x.art !== "anklopfen")) return; // 2.789.0 KC-CLUB-EINGABE-RUHE (Anklopfen = Anruf, bleibt)
   const jetzt = Date.now(); if (jetzt - (ANS.gesagt.get(x.text) || 0) < 30000) return; // derselbe Satz nicht doppelt (z. B. zwei Wege)
   ANS.gesagt.set(x.text, jetzt);
   ANS.q.push(x); clearTimeout(ANS.t);
@@ -7486,11 +7491,11 @@ function twMeineZeigen() { // „📬 Deine Fragen“ – offen oder mit Antwort
 }
 // Hinweis beim Start: Admin hat mit „📱 in der Club-App“ geantwortet
 async function twAntwortPruefen() {
-  if (!ICH || document.querySelector(".blatt:not(.versteckt)")) return;
+  if (!ICH || document.querySelector(FENSTER_OFFEN)) return;
   await twLaden(true); // KC-CLUB-START-STILL
   const neu = (TW.meine || []).filter((x) => x.status === "beantwortet" && !x.gelesen);
   const mfNeu = (TW.mf?.anMich || []).filter((x) => x.status === "offen"); // KC-CLUB-MITGLIEDER-FRAGEN: neue Frage an mich
-  if ((!neu.length && !mfNeu.length) || document.querySelector(".blatt:not(.versteckt)")) return;
+  if ((!neu.length && !mfNeu.length) || document.querySelector(FENSTER_OFFEN)) return;
   twFrageStart();
 }
 
@@ -7823,7 +7828,7 @@ function spEinladung(versuch = 0) {
   try { if (localStorage.getItem(SPE_TAG) === heuteIso() || Date.now() < Number(localStorage.getItem(SPE_SPAETER) || 0)) return; } catch { return; }
   try { if (!ICH.admin && !ruheSeit(localStorage.getItem(SPE_GEZEIGT))) return; } catch {} // KC-CLUB-RUHE: höchstens einmal je Woche
   if (RUHE_INFO && !ICH.admin) return; // schon ein Info-Fenster bei diesem Öffnen
-  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => spEinladung(versuch + 1), 5000); return; }
+  if (document.querySelector(FENSTER_OFFEN) || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => spEinladung(versuch + 1), 5000); return; }
   if (!ruheInfo()) return;
   try { localStorage.setItem(SPE_GEZEIGT, new Date().toISOString()); } catch {}
   const dran = INIT.spieleDran || 0;
@@ -8314,7 +8319,7 @@ function einrichtenSchritteRoh(g, S) {
 // einmal je Gerät von selbst: Handy/Tablet nutzt die App noch im Browser → Assistent öffnen (danach nur noch über „Heute wichtig“/⚙️)
 function einrichtenEinmal() {
   const g = einrichtenGeraet();
-  if (START_ART !== "browser" || schonInstalliert || g.pc || lsLesen("kc_club_einrichten_gezeigt") || document.querySelector(".blatt:not(.versteckt)")) return false;
+  if (START_ART !== "browser" || schonInstalliert || g.pc || lsLesen("kc_club_einrichten_gezeigt") || document.querySelector(FENSTER_OFFEN)) return false;
   lsSetzen("kc_club_einrichten_gezeigt", "1"); einrichtenAssistent(); return true;
 }
 async function einrichtenAssistent() {
@@ -11357,7 +11362,7 @@ const bwEinSetzen = (t) => esSchreib("einladung", JSON.stringify({ ...bwEinStand
 function bwEinladungPruefen(versuch = 0) {
   const st = bwEinStand();
   if (!ICH || st.aus || !esAn() || ES.offen || BW.lauf || st.tag === heuteIso() || Date.now() < (st.spaeter || 0) || $("bwEinBlatt")) return;
-  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)") || RG?.an) { if (versuch < 8) setTimeout(() => bwEinladungPruefen(versuch + 1), 12000); return; }
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN) || RG?.an) { if (versuch < 8) setTimeout(() => bwEinladungPruefen(versuch + 1), 12000); return; }
   const name = ICH.vorname || String(ICH.name || "").split(" ")[0] || "";
   const f = blattAuf("bwEinBlatt", `<div class="bw-ein"><div class="bw-ein-figur">${bwFigur("winken", 0, "", 0, .5, 0, new Date().getDate())}</div>
     <h3 style="margin:4px 0">Hallo${name ? " " + esc(name) : ""}! 👋</h3><p style="margin:0 0 10px">Heute Lust auf eine kleine <b>Bewegungseinheit</b> mit mir? Ein paar Minuten mit Musik – im Sitzen, im Stehen oder mit Küchenhelfern.</p>
@@ -11400,7 +11405,7 @@ function nuVorschlagPruefen(versuch = 0) {
   if (!ICH || st.aus || RG?.an) return;
   const h = heuteIso();
   if (nuTageZwischen(st.seit, h) < NU_MIN_TAGE || st.tage.length < NU_MIN_NUTZTAGE || (st.zuletzt && nuTageZwischen(st.zuletzt, h) < NU_ABSTAND_TAGE) || $("nuBlatt")) return;
-  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(".blatt:not(.versteckt)") || kaBearb) { if (versuch < 8) setTimeout(() => nuVorschlagPruefen(versuch + 1), 12000); return; }
+  if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN) || kaBearb) { if (versuch < 8) setTimeout(() => nuVorschlagPruefen(versuch + 1), 12000); return; }
   const frei = nuFreischaltenPasst(st), k = frei ? null : nuVerbergenKandidat(st);
   if (!frei && !k) return;
   st.zuletzt = h; nuSpeichern(st);
@@ -14128,7 +14133,7 @@ function pinAnzeige() { const p = lsLiegenPin(), el = $("pinStand"); if (el) el.
 // 2.726.0 KC-CLUB-NEUES-GERAET: „Warst du das?“ – nur auf einem ANDEREN Gerät als dem neuen (sonst könnte ein Fremder selbst „Ja“ sagen)
 async function neuesGeraetFragen() {
   const f0 = INIT?.neuesGeraet; if (!f0?.k || f0.k === INIT?.meinGeraet) return;
-  if (document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht, #lsSperre") || aktuelleAnsicht !== "start") return setTimeout(neuesGeraetFragen, 4000);
+  if (document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht, #lsSperre") || aktuelleAnsicht !== "start") return setTimeout(neuesGeraetFragen, 4000);
   const wahl = await new Promise((fertig) => { let f; const zu = (w) => { f?.remove(); fertig(w); };
     f = dlgOeffnen(`<h3 class="dlg-kopf">📱 Neues Gerät – warst du das?</h3><p class="dlg-text">Am ${esc(wann(f0.am))} wurde die Club-App mit deinem persönlichen Zugang auf einem neuen Gerät geöffnet: <b>${esc(f0.k)}</b>.</p>
       <div class="dlg-knoepfe" style="display:grid;gap:8px"><button class="knopf haupt" data-w="ja">✅ Ja, das war ich</button><button class="knopf gefahr" data-w="nein">⛔ Nein, das war ich nicht</button><button class="knopf" data-w="spaeter">Später</button></div>`, () => zu("spaeter"));
@@ -16732,7 +16737,7 @@ async function dgPruefen(versuch = 0) {
   if (!ICH || !INIT || document.body.classList.contains("im-notbetrieb")) return;
   if (INIT.naechsterDienst?.datum !== heuteIso()) return;
   try { if (localStorage.getItem(DG_KEY) === heuteIso()) return; } catch {}
-  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => dgPruefen(versuch + 1), 5000); return; }
+  if (document.querySelector(FENSTER_OFFEN) || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => dgPruefen(versuch + 1), 5000); return; }
   RUHE_INFO = true; // wichtiger als Spiel-Einladung & Co. – danach kein weiteres Info-Fenster bei diesem Öffnen
   dgZeigen();
 }
@@ -19066,7 +19071,7 @@ const buSchreiben = () => ICH?.buero === "schreiben";
 function buGrussFragen(nochmal) {
   if (!ICH?.vorstand || !buDarf()) return;
   try { if (sessionStorage.getItem("kc_buero_gefragt") || localStorage.getItem("kc_buero_frage_aus") || localStorage.getItem(TI_HEUTE_AUS) === heuteIso()) return; } catch {}
-  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (!nochmal) setTimeout(() => buGrussFragen(true), 5000); return; }
+  if (document.querySelector(FENSTER_OFFEN) || aktuelleAnsicht !== "start") { if (!nochmal) setTimeout(() => buGrussFragen(true), 5000); return; }
   try { sessionStorage.setItem("kc_buero_gefragt", "1"); } catch {}
   tagesinfoZeigen();
 }
@@ -19085,12 +19090,12 @@ async function ekHinweisPruefen(versuch = 0) {
   if (!(ICH?.vorstand || ICH?.admin) || !buDarf() || ekhLies(EKH_AUS) === "1") return;
   try { if (sessionStorage.getItem("kc_ek_hinweis_gezeigt")) return; } catch {}
   if (ekhLies(EKH_HEUTE) === heuteIso() || Date.now() < Number(ekhLies(EKH_SPAETER) || 0)) return;
-  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
+  if (document.querySelector(FENSTER_OFFEN) || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
   let z; try { z = await api("eingang_zahlen", {}, { still: true }); } catch { return; } // KC-CLUB-START-STILL
   const l = EKH_ARTEN.map(([k, sym, ein, mehr, art]) => ({ n: Number(z?.[k]) || 0, sym, t: (Number(z?.[k]) || 0) === 1 ? ein : mehr, art })).filter((x) => x.n > 0);
   const summe = l.reduce((a, x) => a + x.n, 0);
   if (summe < EKH_AB) return;
-  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
+  if (document.querySelector(FENSTER_OFFEN) || aktuelleAnsicht !== "start") { if (versuch < 15) setTimeout(() => ekHinweisPruefen(versuch + 1), 6000); return; }
   try { sessionStorage.setItem("kc_ek_hinweis_gezeigt", "1"); } catch {}
   const f = blattAuf("ekHinweisBlatt", `<h3 style="margin:0">📥 Im Eingangskorb liegen ${summe} Sachen</h3>
     <p class="hinweis" style="margin:0">Für die Clubleitung. Antippen öffnet den Eingangskorb.</p>
@@ -19496,7 +19501,7 @@ function buKontrolleFuer(t, merker = buAufgabeMerker(), jetzt = Date.now()) {
 async function buAufgabePruefen(versuch = 0) {
   if (!buSchreiben() && !(buDarf() && (ICH?.vorstand || ICH?.admin))) return;
   try { if (sessionStorage.getItem("kc_bu_aufgabe_gezeigt")) return; } catch {}
-  const besetzt = () => document.querySelector(".blatt:not(.versteckt), .dlg, #rgSchicht") || aktuelleAnsicht !== "start";
+  const besetzt = () => document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht") || aktuelleAnsicht !== "start";
   if (besetzt()) { if (versuch < 30) setTimeout(() => buAufgabePruefen(versuch + 1), 5000); return; } // erst wenn Tages-Übersicht & Co. zu sind
   let r; try { r = await api("buero_start", {}, { still: true }); } catch { return; } // ohne Verbindung keine Frage (nie raten)
   BU.start = r; const t = r?.sitzungen?.[0];
@@ -29818,11 +29823,11 @@ function smKalender(id) {
 }
 // Hinweis beim Start, solange eine Einladung offen ist (nicht über offenen Fenstern; später = 4 Std., heute nicht mehr)
 async function smHinweisPruefen() {
-  if (!ICH || document.querySelector(".blatt:not(.versteckt)")) return;
+  if (!ICH || document.querySelector(FENSTER_OFFEN)) return;
   let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SM_KEY) || "{}") || {}; } catch {}
   if (ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0)) return;
   await smLaden(false, true); const offen = smOffen(); // KC-CLUB-START-STILL · 2.521.0: nur, wenn Hansi freie Termine anbietet
-  if (!offen.length || document.querySelector(".blatt:not(.versteckt)")) return;
+  if (!offen.length || document.querySelector(FENSTER_OFFEN)) return;
   const f = blattAuf("smHinweisBlatt", `<h3 style="margin:0">🎓 Du bist zur Schulung eingeladen</h3>
     <p style="margin:6px 0">Hansi zeigt dir die Programme des Clubs. Such dir einfach einen Termin aus – die Antwort ist bis ${esc(zeitKurz(offen[0].gueltig_bis))} möglich.</p>
     <button class="knopf haupt" data-w="jetzt">👀 Ja, Termin aussuchen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="heute">🌙 Heute nicht mehr fragen</button>`);
@@ -29838,11 +29843,11 @@ const SCHU_NEU = { link_geoeffnet: "👀 hat den Link geöffnet", termin_gewaehl
   abgesagt: "✖ möchte zurzeit keinen Termin", antwort_zurueckgenommen: "🔄 wählt neu", frist_abgelaufen: "⌛ hat nicht geantwortet (Frist vorbei)", erinnerung_gesendet: "⏰ wurde an den Termin erinnert" };
 const SCHU_WARTET = { gewaehlt: "⏳ hat gewählt – bitte freigeben", gegenvorschlag: "💬 Gegenvorschlag – bitte entscheiden", abgelaufen: "⌛ keine Antwort – erneut einladen?", protokoll: "📝 Termin war – Protokoll fehlt", nachfrage: "📨 4 Wochen um – Nachfrage senden?" };
 async function scHinweisPruefen() {
-  if (!ICH?.admin || document.querySelector(".blatt:not(.versteckt)")) return;
+  if (!ICH?.admin || document.querySelector(FENSTER_OFFEN)) return;
   let ruhe = {}; try { ruhe = JSON.parse(lsLesen(SCHU_KEY) || "{}") || {}; } catch {}
   if (ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0)) return;
   let r; try { r = await api("schulung_hinweis", { seit: lsLesen(SCHU_SEIT) || null }, { still: true }); } catch { return; } // KC-CLUB-START-STILL
-  if ((!r.wartet?.length && !r.neu?.length && !r.bald?.length) || document.querySelector(".blatt:not(.versteckt)")) return;
+  if ((!r.wartet?.length && !r.neu?.length && !r.bald?.length) || document.querySelector(FENSTER_OFFEN)) return;
   const tag = (iso) => { const t = berlinIso(iso); return t === heuteIso() ? "Heute" : t === tagPlus(heuteIso(), 1) ? "Morgen" : fTag.format(new Date(iso)); };
   const f = blattAuf("scHinweisBlatt", `<h3 style="margin:0">🎓 Schulungen</h3>
     ${r.wartet?.length ? `<div class="karte"><b>Wartet auf dich (${r.wartet.length})</b>${r.wartet.map((w) => `<div>• <b>${esc(w.namen)}</b> ${SCHU_WARTET[w.art] || ""}${w.art === "nachfrage" ? ` <span class="hinweis">(Schulung ${esc(tag(w.beginn))})</span> <button class="knopf klein" style="margin:2px 0" onclick="$('scHinweisBlatt')?.remove();scNachfrage('${esc(w.besuch_id)}')">📨 Ansehen & senden</button>` : w.beginn ? ` <span class="hinweis">(${esc(tag(w.beginn))}, ${esc(fZeit.format(new Date(w.beginn)))})</span>` : ""}</div>`).join("")}</div>` : ""}
@@ -29863,7 +29868,7 @@ const TAH_KEY = "kc_club_ta_hinweis", TAH_SPAETER_MS = 2 * 3600000, TAH_TAKT_MS 
 let TAH_LAEUFT = false, TAH_ZULETZT = 0;
 async function taHinweisPruefen(versuch = 0) {
   if (!ICH || TAH_LAEUFT || document.hidden || $("taHinweisBlatt")) return;
-  if (document.querySelector(".blatt:not(.versteckt)") || !["start", "nachrichten", "pinnwand", "mitglieder", "helfen"].includes(aktuelleAnsicht)) {
+  if (document.querySelector(FENSTER_OFFEN) || !["start", "nachrichten", "pinnwand", "mitglieder", "helfen"].includes(aktuelleAnsicht)) {
     if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
   if (Date.now() - TAH_ZULETZT < 20000) return; TAH_ZULETZT = Date.now();
   TAH_LAEUFT = true; let l = [];
@@ -29875,7 +29880,7 @@ async function taHinweisPruefen(versuch = 0) {
   const neu = offen.filter((a) => !(ruhe.ids || []).includes(a.id));
   const still = ruhe.heute === heuteIso() || Date.now() < Number(ruhe.bis || 0);
   if (still && !neu.length) return;
-  if (document.querySelector(".blatt:not(.versteckt)")) { if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
+  if (document.querySelector(FENSTER_OFFEN)) { if (versuch < 10) setTimeout(() => taHinweisPruefen(versuch + 1), 8000); return; }
   const n = offen.length;
   const f = blattAuf("taHinweisBlatt", `<h3 style="margin:0">📨 Du hast ${n === 1 ? "eine neue Terminanfrage" : n + " neue Terminanfragen"}</h3>
     <div class="ekh-liste">${offen.slice(0, 5).map((a) => `<button type="button" class="ti-zeile" data-id="${esc(a.id)}">📨 <span><b>${esc(a.von.vorname)}</b>: ${esc(a.anlass)}<br><small class="hinweis">${esc(wann(a.beginn))}${a.ort ? " · 📍 " + esc(a.ort) : ""}</small></span><b>›</b></button>`).join("")}</div>
@@ -30417,7 +30422,7 @@ async function mfNaechstesPruefen(id) {
   if (!t || t.status === "abgesagt") return;
   const darf = t.art === "veranstaltung" || t.meine === "ja", mf = t.mitfahrten || [];
   if (!darf || mf.some((m) => m.eigen || m.dabei || m.frei > 0) || (t.mitfahrtSuche || []).some((x) => x.eigen)) return;
-  if (aktuelleAnsicht === "termine" && !document.querySelector(".blatt:not(.versteckt)")) mfBescheidFenster("treffen", t.id, t.titel);
+  if (aktuelleAnsicht === "termine" && !document.querySelector(FENSTER_OFFEN)) mfBescheidFenster("treffen", t.id, t.titel);
 }
 async function mitfahrtSuchen(art, bezugId, an) {
   try { const r = await api("mitfahrt_suchen", { bezug_art: art, bezug_id: bezugId, an }); melde(an ? `🙋 Eingetragen${r.fahrerBenachrichtigt ? ` – ${r.fahrerBenachrichtigt === 1 ? "ein Fahrer weiß" : r.fahrerBenachrichtigt + " Fahrer wissen"} Bescheid` : " – wer eine Fahrt anbietet, bekommt Bescheid"}` : "Suche zurückgenommen"); mitfahrtNeuLaden(art); }
@@ -31967,7 +31972,7 @@ async function rcAngebotPruefen(versuch = 0) {
   const heute = heuteIso();
   const a = reisen.find((x) => { const t = cdTageBis(x.von), st = rcStand(x.id); return t >= 0 && t <= RC_ANGEBOT_TAGE && !st.art && !st.aus && !(st.spaeter && st.spaeter.slice(0, 10) >= heute); });
   if (!a) return;
-  if (document.querySelector(".blatt:not(.versteckt)") || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => rcAngebotPruefen(versuch + 1), 5000); return; }
+  if (document.querySelector(FENSTER_OFFEN) || aktuelleAnsicht !== "start") { if (versuch < 24) setTimeout(() => rcAngebotPruefen(versuch + 1), 5000); return; }
   if (!ruheInfo()) return;
   const t = cdTageBis(a.von);
   const f = blattAuf("rcAngebotBlatt", `<div style="text-align:center"><div style="font-size:2.6rem;line-height:1.2" aria-hidden="true">🚢 🧳</div>
@@ -33740,7 +33745,7 @@ async function jetztAktualisieren() {
 // höchstens einmal je 10 Min. und Version (Schutz vor Endlosschleife, falls der Server kurz noch die alte Seite liefert)
 function updateRuhig() {
   if (RUF || SPR || wartenZahl) return false; // 2.1.1: nie während Anruf, Sprachaufnahme oder laufender Übertragung
-  if (document.querySelector(".blatt:not(.versteckt)")) return false;
+  if (document.querySelector(FENSTER_OFFEN)) return false;
   const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return false;
   return !etwasGetippt();
 }
@@ -34115,7 +34120,7 @@ const EGH = { gezeigt: false, versuche: 0, t: 0 };
 function eingangNeu() { EGH.gezeigt = false; clearTimeout(EGH.t); EGH.t = setTimeout(() => { try { navigator.vibrate?.([120, 80, 120]); } catch {} eingangHinweisPruefen(true); }, 1500); }
 async function eingangHinweisPruefen(neu = false) {
   if (!ICH || (!neu && !(INIT?.eingangskorb > 0)) || (EGH.gezeigt && !neu)) return;
-  if (document.querySelector(neu ? ".dlg, #rgSchicht, #filmSchicht, #egBlatt" : ".blatt:not(.versteckt), .dlg, #rgSchicht, #filmSchicht, #egBlatt") || aktuelleAnsicht === "dokansicht") { if (++EGH.versuche < 30) setTimeout(() => eingangHinweisPruefen(neu), 3000); return; } // neu: auch über offenen Fenstern (z. B. Clubabend Live)
+  if (document.querySelector(neu ? ".dlg, #rgSchicht, #filmSchicht, #egBlatt, #dwFenster" : FENSTER_OFFEN + ", .dlg, #rgSchicht, #filmSchicht, #egBlatt") || aktuelleAnsicht === "dokansicht") { if (eingabeRuhe() || ++EGH.versuche < 30) setTimeout(() => eingangHinweisPruefen(neu), 3000); /* 2.789.0: während der Dienstwünsche zählt das Warten nicht */ return; } // neu: auch über offenen Fenstern (z. B. Clubabend Live)
   EGH.gezeigt = true; EGH.versuche = 0;
   const n = neu ? 0 : INIT.eingangskorb;
   const wahl = await new Promise((fertig) => {
