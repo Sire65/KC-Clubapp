@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.790.0";
+const SERVER_VERSION = "2.793.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -7575,10 +7575,20 @@ const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: stri
       return n >= SI.gesperrtTagRot ? ["rot", `${n} Versuche in 24 Std.`, ""] : n ? ["gelb", `${n} Versuch${n === 1 ? "" : "e"} in 24 Std.`, ""] : ["gruen", "keine Versuche", ""]; } },
   { id: "geheimnis", sym: "🗝️", name: "Geheimnis-Wächter", gh: "tests.yml" },
   { id: "versionen", sym: "🧭", name: "Versions-Wächter", app: (d) => { // gelb nur, wenn eine GERADE OFFENE App (letzte 30 Min.) noch alt ist – ältere Apps von Leuten, die länger nicht drin waren, sind normal
-      const zahl = (v: any) => Object.entries(v || {}).filter(([k]) => k !== SERVER_VERSION).reduce((n, [, x]) => n + Number(x), 0), jetzt = zahl(d.versionen_jetzt), woche = zahl(d.versionen);
+      // KC-CLUB-WAECHTER-FEHLALARM (31.10.2026, Fund Hansi): Versionen nur mit App-Änderung (ohne Server) sind NEUER als der Server – Maßstab ist die
+      // neueste Version im Umlauf (mindestens die des Servers); alt ist, was älter ist
+      const neueste = [...Object.keys(d.versionen || {}), ...Object.keys(d.versionen_jetzt || {})].reduce((m, k) => (vAelter(m, k) ? k : m), SERVER_VERSION);
+      const zahl = (v: any) => Object.entries(v || {}).filter(([k]) => vAelter(k, neueste)).reduce((n, [, x]) => n + Number(x), 0), jetzt = zahl(d.versionen_jetzt), woche = zahl(d.versionen);
       return jetzt ? ["gelb", `${jetzt} offene App${jetzt === 1 ? "" : "s"} mit alter Version`, "Diese App hat das Update nicht geholt – einmal schließen und neu öffnen hilft."]
         : ["gruen", woche ? `aktuell (${woche} noch nicht wieder geöffnet)` : "alle aktuell", woche ? `${woche} Mitglieder waren seit dem Update nicht in der App – sie bekommen die neue Version beim nächsten Öffnen.` : ""]; } },
 ];
+// a älter als b? (1.2.10 > 1.2.9; Unlesbares gilt als alt)
+function vAelter(a: string, b: string) {
+  const x = String(a).split(".").map(Number), y = String(b).split(".").map(Number);
+  if (x.some((n) => !Number.isFinite(n))) return true;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] ?? 0) - (y[i] ?? 0); if (d) return d < 0; }
+  return false;
+}
 function wCronFeld(f: string, w: number, min: number, max: number) {
   return f.split(",").some((t) => { const [b, st] = t.split("/"), sch = Number(st || 1); let a = min, e = max;
     if (b !== "*") { const [x, y] = b.split("-").map(Number); a = x; e = y ?? (st ? max : x); }
@@ -7664,6 +7674,9 @@ async function waechterWochenAbschnitt(): Promise<{ zeilen: [string, string][]; 
 // 2.726.0 KC-CLUB-WAECHTER: letzte Läufe der GitHub-Wächter (öffentliches Repository, ohne Schlüssel) – 10 Min. gemerkt, damit das Öffnen
 // der Kachel GitHub nicht jedes Mal fragt (öffentliche Grenze 60 Anfragen/Std.). Fehler → leer, die Kachel zeigt dann „unbekannt“.
 const WAECHTER_GH = ["schnittstellen-waechter.yml", "spiegel-waechter.yml", "notfall-sicherung-lesen.yml", "notfall-zweitkopie.yml", "tests.yml"]; // tests.yml: Geheimnis-Wächter (läuft bei jedem Hochladen)
+// KC-CLUB-WAECHTER-FEHLALARM (31.10.2026, Fund Hansi „Geheimnis-Wächter rot“): in tests.yml steckt die Schlüssel-Prüfung im Teil „tests“ – der Klick-Rundgang
+// (eigener Teil) sagt darüber nichts. Bewertet wird nur dieser Teil des letzten Laufs (eine Abfrage mehr je 10 Min.).
+const WAECHTER_GH_TEIL: Record<string, string> = { "tests.yml": "tests" };
 let WAECHTER_GH_MERK: { t: number; v: Record<string, any> } | null = null;
 async function waechterGithub(): Promise<Record<string, any>> {
   if (WAECHTER_GH_MERK && Date.now() - WAECHTER_GH_MERK.t < 600000) return WAECHTER_GH_MERK.v;
@@ -7678,6 +7691,14 @@ async function waechterGithub(): Promise<Record<string, any>> {
       v[f] = { letzt: l[0]?.created_at ?? null, ergebnis: l[0]?.conclusion ?? null, link: l[0]?.html_url ?? null,
         ok24: jung.filter((x: any) => x.conclusion === "success").length, fehler24: jung.filter((x: any) => x.conclusion === "failure").length,
         verlauf: l.slice(0, 30).reverse().map((x: any) => (x.conclusion === "success" ? "1" : x.conclusion === "failure" ? "0" : "2")).join("") };
+      const teil = WAECHTER_GH_TEIL[f];
+      if (teil && l[0]?.jobs_url) {
+        const rj = await fetch(l[0].jobs_url, { headers: { "User-Agent": "KC-Clubapp-Waechter", Accept: "application/vnd.github+json" }, signal: AbortSignal.timeout(6000) });
+        const job = rj.ok ? ((await rj.json())?.jobs ?? []).find((x: any) => x.name === teil) : null;
+        if (!job) { delete v[f]; return; } // Teil nicht lesbar → „unbekannt“ statt eines falschen Ergebnisses
+        // Verlauf/Aussetzer gelten für den ganzen Lauf – hier zählt nur der Teil des letzten Laufs
+        v[f] = { ...v[f], ergebnis: job.conclusion, ok24: job.conclusion === "success" ? 1 : 0, fehler24: 0, verlauf: "" };
+      }
     } catch { /* GitHub nicht erreichbar → „unbekannt“ */ }
   }));
   WAECHTER_GH_MERK = { t: Date.now(), v }; return v;

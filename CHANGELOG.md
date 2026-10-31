@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.793.0 – 2026-10-31 – 🛡️ Wächter ohne Fehlalarm (KC-CLUB-WAECHTER-FEHLALARM) · Server 2.793.0
+Fund Hansi (31.10., Lage-Prüfung): Geheimnis-Wächter rot und Versions-Wächter gelb, obwohl alles in Ordnung war.
+- **🗝️ Geheimnis-Wächter:** bewertet nur noch den Teil „tests“ des GitHub-Testlaufs (dort steckt die Schlüssel-Prüfung). Der Klick-Rundgang (bekannter Video-Fund im Testbrowser) färbt ihn nicht mehr rot. Ist der Teil nicht lesbar, steht „unbekannt“.
+- **🧭 Versions-Wächter:** Maßstab ist die neueste Version im Umlauf (mindestens die des Servers). Apps, die neuer sind als der Server (Versionen nur mit App-Änderung), gelten nicht mehr als „alt“.
+- Test: `tests/waechter-fehlalarm.test.mjs`. Rückweg: Server 2.790.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.792.0 – 2026-10-31 – 📸 Bildschirmfoto: Einkreisen geht wieder überall, Stiftfarbe wählbar (KC-CLUB-BILDSCHIRMFOTO-MELDUNG, KC-CLUB-BILDSCHIRMFOTO-FARBEN) · nur App
 Fund Hansi („Foto gemacht und wollte den Mond-Knopf rot einkreisen – das geht nicht mehr“): Die Meldung vom Auslöser („Geh in Ruhe dahin, wo du fotografieren willst …“) bleibt bis zu 12 Sekunden stehen und lag oben über der Foto-Vorschau – genau dort, wo auf dem Foto der Kopf mit 🌙 ist. Finger dort malten nicht, sondern trafen die Meldung. Jetzt verschwindet die Meldung, sobald die Vorschau aufgeht.
 - Wunsch Hansi („unten einige Farbpunkte, um die Stiftfarbe zu wählen“): unter dem Foto sechs Farbpunkte – Rot (Standard), Gelb, Grün, Blau, Schwarz, Weiß. Der gewählte Punkt ist umrandet; jeder Strich behält seine Farbe (↩️ Rückgängig nimmt den letzten Strich weg). Die gewählte Farbe bleibt fürs nächste Foto.
