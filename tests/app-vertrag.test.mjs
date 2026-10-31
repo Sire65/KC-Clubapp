@@ -1218,7 +1218,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
   assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
   assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "(es|ihn)" : "sie"\} abnehmen\?/.test(e) /* 1.98.0: „Zettel“ → ihn */ && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
-  assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return/.test(e), "Erinnerung könnte über anderen Fenstern aufgehen");
+  assert.ok(/document\.querySelector\(FENSTER_OFFEN\)\) return/.test(e), "Erinnerung könnte über anderen Fenstern aufgehen"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
 }
 
 // 87. 0.65.0: Admin-Einstellungen als Klappbereich mit Schloss + Pinnwand-Fristen (KC-CLUB-ADMIN-EINSTELLUNGEN / -PINNWAND-FRISTEN)
@@ -2556,11 +2556,11 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   const code = html.slice(html.indexOf("const ANSAGE = "), html.indexOf("function sprechen("));
   const gesagt = [], toene = [];
-  const run = new Function("ICH", "INIT", "document", "inRuheJetzt", "localStorage", "setTimeout", "sprechen", "anmeldeTon",
+  const run = new Function("ICH", "INIT", "document", "inRuheJetzt", "localStorage", "setTimeout", "sprechen", "anmeldeTon", "eingabeRuhe", // 2.789.0 KC-CLUB-EINGABE-RUHE: eingabeRuhe() (Dienstwünsche offen) – hier zu
     `${code}; return { onlineAnsagen, OA };`);
   const speicher = { kc_club_online_ansage: "1" };
   const ls = { getItem: (k) => speicher[k] ?? null, setItem: (k, v) => { speicher[k] = v; } };
-  const { onlineAnsagen, OA } = run({ person_id: "ICH", admin: true }, {}, { hidden: false }, () => false, ls, (f) => f(), (t) => gesagt.push(t), () => toene.push(1));
+  const { onlineAnsagen, OA } = run({ person_id: "ICH", admin: true }, {}, { hidden: false }, () => false, ls, (f) => f(), (t) => gesagt.push(t), () => toene.push(1), () => false); // 2.789.0 KC-CLUB-EINGABE-RUHE: eingabeRuhe() (Dienstwünsche offen) – hier zu
   onlineAnsagen([{ person_id: "ICH" }, { person_id: "A", vorname: "Klaus" }]);
   assert.equal(gesagt.length, 0, "erste Liste: niemand wird angesagt");
   onlineAnsagen([{ person_id: "ICH" }, { person_id: "A", vorname: "Klaus" }, { person_id: "B", vorname: "Dieter" }]);
@@ -2574,7 +2574,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /id="setAnmeldeTonZeile"[^\n]*id="setAnmeldeTon"/, "Admin-Ton-Schalter");
   // 1.64.0: Prüfung „Hintergrund/Ruhezeit“ sitzt in onlineAnsageSprechen (gemeinsam für Online-Takt und Admin-Push)
   assert.match(code, /if \(!neu\.length \|\| document\.hidden\) return;/, "im Hintergrund nichts");
-  assert.match(code, /function onlineAnsageSprechen\(namen\) \{\n  if \(document\.hidden \|\| inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\)\) return;/, "nicht in Ruhezeit / im Hintergrund");
+  assert.match(code, /function onlineAnsageSprechen\(namen\) \{\n  if \(document\.hidden \|\| inRuheJetzt\(INIT\?\.einstellungen\?\.ruhezeit\) \|\| eingabeRuhe\(\)\) return;/, "nicht in Ruhezeit / im Hintergrund"); // 2.789.0 KC-CLUB-EINGABE-RUHE: zusätzlich eingabeRuhe() (Dienstwünsche offen)
   assert.match(html, /onlineAnsagen\(ONL\.liste\); \/\/ KC-CLUB-ONLINE-ANSAGE/, "an der vorhandenen Online-Liste");
 }
 
@@ -2752,9 +2752,9 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.match(html, /if \(e\.data\?\.typ === "online-ansage"\) \{ onlineAnsageSprechen\(\[e\.data\.name\]\);/, "App sagt an");
   const code = html.slice(html.indexOf("const ANSAGE = "), html.indexOf("function sprechen("));
   const gesagt = [];
-  const run = new Function("ICH", "INIT", "document", "inRuheJetzt", "localStorage", "setTimeout", "sprechen", "anmeldeTon", `${code}; return { onlineAnsagen, onlineAnsageSprechen };`);
+  const run = new Function("ICH", "INIT", "document", "inRuheJetzt", "localStorage", "setTimeout", "sprechen", "anmeldeTon", "eingabeRuhe", `${code}; return { onlineAnsagen, onlineAnsageSprechen };`); // 2.789.0 KC-CLUB-EINGABE-RUHE: zusätzlich eingabeRuhe() (Dienstwünsche offen)
   const ls = { getItem: (k) => ({ kc_club_online_ansage: "1" })[k] ?? null, setItem() {} };
-  const { onlineAnsagen, onlineAnsageSprechen } = run({ person_id: "ICH", admin: true }, {}, { hidden: false }, () => false, ls, (f) => f(), (t) => gesagt.push(t), () => {});
+  const { onlineAnsagen, onlineAnsageSprechen } = run({ person_id: "ICH", admin: true }, {}, { hidden: false }, () => false, ls, (f) => f(), (t) => gesagt.push(t), () => {}, () => false); // 2.789.0 KC-CLUB-EINGABE-RUHE: zusätzlich eingabeRuhe() (Dienstwünsche offen)
   onlineAnsageSprechen(["Steven"]);
   onlineAnsagen([{ person_id: "ICH" }]); onlineAnsagen([{ person_id: "ICH" }, { person_id: "S", vorname: "Steven" }]);
   assert.deepEqual(gesagt, ["Steven ist jetzt online"], "Push und Online-Takt: nur eine Ansage");
@@ -4012,7 +4012,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const f = html.slice(html.indexOf("async function ekHinweisPruefen"), html.indexOf("function ekHinweisOeffnen"));
   assert.ok(/EKH_AB = 6/.test(html) && /if \(summe < EKH_AB\) return;/.test(f) && /catch \{ return; \}/.test(f), "erst ab 6, ohne Verbindung kein Hinweis");
   assert.ok(/✅ Ja, jetzt bearbeiten/.test(f) && /⏰ Später/.test(f) && /🌙 Heute nicht mehr/.test(f) && /localStorage\.setItem\(EKH_HEUTE, heuteIso\(\)\)/.test(f), "Ja / Später / Heute nicht mehr");
-  assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\) \|\| aktuelleAnsicht !== "start"/.test(f) && /setTimeout\(\(\) => ekHinweisPruefen\(\), 3000\)/.test(html), "beim Start, nicht über andere Fenster");
+  assert.ok(/document\.querySelector\(FENSTER_OFFEN\) \|\| aktuelleAnsicht !== "start"/.test(f) && /setTimeout\(\(\) => ekHinweisPruefen\(\), 3000\)/.test(html), "beim Start, nicht über andere Fenster"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
   assert.ok(/\["dienstzeiten", "📅", "Dienstplan", "Dienstpläne", "Dienstzeiten"\]/.test(html) && /ekHinweisOeffnen\(b\.dataset\.art\)/.test(f) && /Object\.assign\(EKF, \{ jahr: "", monat: "", wer: "", art: art \|\| "", offen: !!art \}\); buStart\(\); buEingang\(\);/.test(html), "Zeile öffnet den Eingangskorb mit Filter");
 }
 // 393. 2.23.44: Hilfe-Aufruf/Angebot – „Wie veröffentlichen?“ + Anfrage mit Betreff (KC-CLUB-HILFE-KANAELE)
@@ -4114,7 +4114,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const t of ["👀 Ja, jetzt ansehen", "⏰ Später", "🌙 Heute nicht mehr fragen"]) assert.ok(k.includes(t), "Knopf fehlt: " + t);
   assert.ok(/!a\.vonMir && !a\.spiel && a\.status === "offen" && !a\.meine && !a\.meinVorschlag/.test(k), "nur unbeantwortete Anfragen an mich");
   assert.ok(/setInterval\(\(\) => taHinweisPruefen\(9\), TAH_TAKT_MS\)/.test(k) && /visibilitychange/.test(k) && /taHinweisPruefen\(\), 5000\)/.test(html) && /setTimeout\(\(\) => taHinweisPruefen\(9\), 1500\)/.test(html), "beim Start, zurück in der App, nach Push, alle 5 Min.");
-  assert.ok(/document\.querySelector\("\.blatt:not\(\.versteckt\)"\)/.test(k) && /if \(still && !neu\.length\) return/.test(k), "drängt sich nicht über Fenster, neue Anfrage durchbricht „später“");
+  assert.ok(/document\.querySelector\(FENSTER_OFFEN\)/.test(k) && /if \(still && !neu\.length\) return/.test(k), "drängt sich nicht über Fenster, neue Anfrage durchbricht „später“"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
 }
 // 402. 2.23.53: „Mikrofon ist gesperrt“ – sofort freischalten und weiter diktieren (KC-CLUB-MIKRO-SOFORT)
 {
@@ -4250,7 +4250,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/ich\.admin \? schulungStand\(ich, null\)\.then\(\(x\) => x\.wartet(\.length)?\)\.catch\(\(\) => null\)/.test(server) && /\(kz as any\)\.schulung = (await pSchulungZahl|sw \? sw\.length : null);/.test(server) /* 2.521.0: Liste statt Zahl, Fehler → null */ && /* 2.301.0: parallel gestartet */ /KZ_KACHELN\.schulung_admin = \(\) => kzZahl\("schulung"\)/.test(html), "Zahl auf der Kachel, Fehler → keine Zahl");
   const k = html.slice(html.indexOf("// KC-CLUB-SCHULUNG-HINWEIS (2.23.68, Wunsch Hansi): beim Start"), html.indexOf("// KC-CLUB-TERMINANFRAGE-HINWEIS (2.23.52"));
   for (const x of ["Wartet auf dich", "📅 Steht an", "Neu seit dem letzten Mal", "👀 Jetzt ansehen", "⏰ Später", "🌙 Heute nicht mehr"]) assert.ok(k.includes(x), "Teil fehlt: " + x);
-  assert.ok(/if \(!ICH\?\.admin \|\| document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(k) && /scHinweisPruefen\(\), 9000/.test(html), "nur Admin, nicht über offenen Fenstern");
+  assert.ok(/if \(!ICH\?\.admin \|\| document\.querySelector\(FENSTER_OFFEN\)\) return;/.test(k) && /scHinweisPruefen\(\), 9000/.test(html), "nur Admin, nicht über offenen Fenstern"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
   assert.ok(/^[0-9a-f]{40}$/m.test(lies(".github/deploy/kc-termine.ref").split("\n").filter(Boolean).pop()), "kc-termine-Stand vorgemerkt");
 }
 // 418. 2.23.69: Schulungstermine rund (Protokoll fehlt, Verschieben, Terminauswahl, 1 Platz, Reihenfolge)
@@ -5768,7 +5768,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/start_hinweis: \(w\) => \(\{ art: \["ungelesen"\]\.includes\(String\(w\?\.art\)\)/.test(server), "Server: Einstellung start_hinweis nur mit bekannter Art und Datum");
   assert.ok(/if \(!h \|\| h\.erledigt \|\| h\.art !== "ungelesen" \|\| !ICH\) return;/.test(html) && /const n = Number\(INIT\?\.ungelesen\) \|\| 0/.test(html) && /if \(!n\) return erledigt\(\);/.test(html), "nur einmal, echte Zahl, ohne Ungelesenes still erledigt");
-  assert.ok(/if \(document\.querySelector\("\.blatt:not\(\.versteckt\), \.dlg, #rgSchicht"\) \|\| aktuelleAnsicht !== "start"\)/.test(html), "erst wenn kein anderes Fenster offen ist");
+  assert.ok(/if \(document\.querySelector\(FENSTER_OFFEN \+ ", \.dlg, #rgSchicht"\) \|\| aktuelleAnsicht !== "start"\)/.test(html), "erst wenn kein anderes Fenster offen ist"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
   assert.ok(/Hallo \$\{esc\(ICH\.vorname\)\},<\/h3><p class="dlg-text">du hast/.test(html) /* 2.268.0: eigenes Fenster */ && /tippe doch \$\{esc\(lage\)\} auf die Nachrichten-Kachel/.test(html) && /const lage = startNachrichtenLage\(\);/.test(html), "Hansis Text mit Vorname, Zahl und echter Lage der Kachel");
   assert.ok(!/KC-P-M0006|Willfried|Wilfried/.test(html.slice(html.indexOf("// ---------- KC-CLUB-START-HINWEIS"), html.indexOf("// ---------- KC-CLUB-TIPP (1.6.0")) /* 2.730.0: VIDEO-GESEHEN liegt in teile/videos.js */), "keine Person fest im Programm");
 }
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8715,7 +8715,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/onlineAnsageSprechen\(neu\.map\((?:\(x\) => x\.vorname \|\| x\.name|oaName)\)\);\n  try \{ spurFrage\(neu\); \} catch \{\}/.test(programm), "nur bei echten Neuankömmlingen aus dem Online-Takt");
   const f = programm.slice(programm.indexOf("function spurFrage(neu)"), programm.indexOf("function spurFrageSchalter(an)"));
   assert.ok(/const spurFrageAn = \(\) => !!ICH\?\.admin && lsLesen\(SPUR_FRAGE\) !== "0";/.test(programm) && /if \(!spurFrageAn\(\)/.test(f), "nur Admin, abschaltbar");
-  assert.ok(/inRuheJetzt\(/.test(f) && /document\.querySelector\("\.blatt:not\(\.versteckt\)"\)\) return;/.test(f), "nie in der Ruhezeit, nie über einem anderen Fenster");
+  assert.ok(/inRuheJetzt\(/.test(f) && /document\.querySelector\(FENSTER_OFFEN\)\) return;/.test(f), "nie in der Ruhezeit, nie über einem anderen Fenster"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
   assert.ok(/spurAdmin\(heuteIso\(\), null\)/.test(f) && !/api\(/.test(f), "Ja → Wege mit allen, die gerade da sind; selbst nichts senden");
   assert.ok(/\$\{heuteDa && !SPW\.person \? spurFrageKnopf\(\) : ""\}/.test(programm), "im Wege-Fenster wieder einschaltbar");
 }
@@ -11455,7 +11455,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(!/api\(/.test(p.slice(von, p.indexOf("function eselsohrSchalter", von))), "Kachel-Vorschlag: zählt nur auf dem Gerät (kein Server-Aufruf)");
   assert.ok(/nuKachel\(k\.dataset\.id\); \/\/ 2\.418\.0/.test(p) && /setTimeout\(\(\) => nuVorschlagPruefen\(\), 25000\)/.test(p), "Kachel-Vorschlag: Zählen beim Öffnen, Prüfung beim Start");
   assert.ok(/id="setKachelVorschlag" checked onchange="nuSchalter\(this\.checked\)"/.test(seite) && /onclick="nuLoeschen\(\)"/.test(seite), "Kachel-Vorschlag: Schalter und „Gemerktes löschen“ in den Einstellungen");
-  assert.ok(/data-w="aus">🔕 Keine Vorschläge mehr/.test(p) && /document\.querySelector\("\.blatt:not\(\.versteckt\)"\) \|\| kaBearb\) \{ if \(versuch < 8\)/.test(p), "Kachel-Vorschlag: abschaltbar, nie über offenem Fenster");
+  assert.ok(/data-w="aus">🔕 Keine Vorschläge mehr/.test(p) && /document\.querySelector\(FENSTER_OFFEN\) \|\| kaBearb\) \{ if \(versuch < 8\)/.test(p), "Kachel-Vorschlag: abschaltbar, nie über offenem Fenster"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
   const mach = (heute, ansicht, liste) => { const ls = {};
     const sb = new Function("localStorage", "heuteIso", "einfach", "kacheln", teil + "; return { nuStand, nuSpeichern, nuKachel, nuTag, nuVerbergenKandidat, nuFreischaltenPasst, NU_NIE_VERBERGEN };");
     return sb({ getItem: (k) => ls[k] ?? null, setItem: (k, v) => { ls[k] = String(v); }, removeItem: (k) => { delete ls[k]; } }, () => heute.d, () => ansicht.e, () => liste); };

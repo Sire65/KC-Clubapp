@@ -33,7 +33,7 @@ assert.ok(/if \(e\.data\?\.typ === "push" && \/\^📥 Neu in deinem Eingangskorb
 // KC-CLUB-EINGANG-SOFORT: direkte Leitung – ohne Neustart, auch über offenen Fenstern (Clubabend Live)
 assert.ok(/if \(s\.art === "eingang"\) \{ eingangNeu\(\); return; \}/.test(app), "Signal „eingang“ der direkten Leitung");
 assert.ok(/if \(letzte\) await db\.rpc\("kc_club_rt_klingeln", \{ p_personen: \[x\.person_id\], p_art: "eingang" \}\)/.test(server), "Server klingelt beim Empfänger an");
-assert.ok(/document\.querySelector\(neu \? "\.dlg, #rgSchicht, #filmSchicht, #egBlatt" :/.test(app), "neu: auch über offenen Fenstern");
+assert.ok(/document\.querySelector\(neu \? "\.dlg, #rgSchicht, #filmSchicht, #egBlatt, #dwFenster" :/.test(app), "neu: auch über offenen Fenstern"); // 2.789.0 KC-CLUB-EINGABE-RUHE: FENSTER_OFFEN = .blatt:not(.versteckt) + offene Dienstwünsche
 assert.ok(/: eingangDurchgehen\(true\)\);/.test(app), "am Ende neu nachsehen");
 const eh = teil("async function eingangHinweisPruefen(", "async function eingangDurchgehen(");
 assert.ok(/📥 Neu in deinem Eingangskorb/.test(eh) && /👀 Ja, ansehen/.test(eh) && /⏰ Später/.test(eh) && /if \(wahl === "an"\) return eingangDurchgehen\(\);/.test(eh), "Hinweis mit Knopf Ansehen");

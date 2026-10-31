@@ -1,8 +1,16 @@
 # Änderungen
 
-## 2.789.0 – 2026-10-31 – 🛎️ Dienstplan: feste Bereitschaft (KC-CLUB-DP-NACHBESSERN)
+## 2.790.0 – 2026-10-31 – 🛎️ Dienstplan: feste Bereitschaft (KC-CLUB-DP-NACHBESSERN)
 Wunsch Hansi („Willfried Bereitschaft 06.12. 14–19 Uhr, 08.12. 20–23 Uhr, 09.12. 20–23 Uhr“) – Dienstplan-Rechnung Regel 7 (rechnet sich beim Öffnen von selbst neu):
 - **Feste Bereitschaft** (`dp_druck_konfig.bereitschaftFest`, je Eintrag Tag, Person, von, bis) steht fest im Plan und auf dem Lückenblatt; die automatische Bereitschaft kommt wie bisher dazu, aber nicht für dieselbe Person am selben Tag. Die alte feste Liste `bereitschaft` bleibt bei automatischer Bereitschaft weiter unbeachtet.
+
+## 2.789.0 – 2026-10-31 – 🤫 Ruhe beim Eingeben: keine Hinweis-Fenster und Ansagen über den Dienstwünschen (KC-CLUB-EINGABE-RUHE) · nur App
+Wunsch Hansi (31.10.): „Wir müssen dafür sorgen, dass jemand, der gerade z. B. Dienstzeiten eingibt, nicht gestört wird durch Nachrichten und Updates – sonst sind die gemachten Eingaben nicht gespeichert.“
+- **Updates:** seit 2.788.0 kein Selbst-Update mehr, solange die Dienstwünsche offen sind.
+- **Nachrichten und Hinweise:** Alles, was von selbst aufgeht (z. B. „📥 Neu in deinem Eingangskorb“, Terminanfragen, Spiel-Einladungen, Tipps, Rückfragen – 28 Stellen), wartet jetzt auch, solange die Dienstwünsche offen sind. Vorher legten sich diese Fenster über die Eingabe (im Browser nachgestellt). Eine Stelle für alle: `FENSTER_OFFEN`. Der Eingangskorb-Hinweis kommt nach dem Schließen nach.
+- **Sprach-Ansagen** („… ist online“, vorgelesene Nachrichten) schweigen, solange die Dienstwünsche offen sind. Nachrichten kommen trotzdem an (Zähler, Push). **Anrufe** klingeln weiter.
+- Tests: `tests/eingabe-ruhe.test.mjs`, Klick-Rundgang (vorher Fenster über den Dienstwünschen, jetzt keins; nach dem Schließen kommt der Hinweis). Rückweg: App 2.788.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.788.0 – 2026-10-30 – 🛡️ Dienstwünsche: kein Selbst-Update mehr mitten in der Eingabe (KC-CLUB-UPDATE-DW-SCHUTZ) · nur App
 Fund Hansi (30.10.): „Ein Kollege ist beim Eintragen seiner Zeiten ohne Assistent mehrmals rausgeflogen – scheinbar kamen gleichzeitig Nachrichten oder Updates.“
