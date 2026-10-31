@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.791.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.792.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1815,7 +1815,7 @@ const EINWEISUNG = [
   // 2.23.15 (Wunsch Hansi „alle Unterpunkte mit Karte“): Arbeitsfenster mit eigener „Kurz erklärt“-Karte. Kleine Info-/Rückfrage-
   // fenster und Fenster, die selbst schon erklären (Diktat, Einrichten, Code, Mikrofon-Hilfe, Server-Störung), bleiben ohne.
   { id: "b-ablage", blatt: true, sym: "🗄️", t: "In dein Archiv ablegen", x: "Hier legst du etwas in deinen eigenen <b>Archiv-Ordner</b>: Ordner und, wenn es passt, ein Register antippen. Deinen Ordner siehst nur du – und wem du ihn selbst freigibst." },
-  { id: "b-bildschirmfoto", blatt: true, sym: "📸", t: "Bildschirmfoto", x: "Mit dem Finger <b>rot einkreisen</b> oder Pfeile malen, wo das Problem ist (↩️ Rückgängig, 🧽 Alles weg). Dann <b>🆘 als Problem schicken</b>, <b>🗄️ in dein Archiv</b> legen oder <b>💾 aufs Handy speichern</b>." },
+  { id: "b-bildschirmfoto", blatt: true, sym: "📸", t: "Bildschirmfoto", x: "Mit dem Finger <b>einkreisen</b> oder Pfeile malen, wo das Problem ist – die <b>Stiftfarbe</b> wählst du mit den Farbpunkten unter dem Bild (↩️ Rückgängig, 🧽 Alles weg). Dann <b>🆘 als Problem schicken</b>, <b>🗄️ in dein Archiv</b> legen oder <b>💾 aufs Handy speichern</b>." },
   { id: "b-bu-drucker", blatt: true, sym: "🖨️", t: "Drucken im Büro", x: "Wähle, was gedruckt werden soll – z. B. die <b>Sitzungs-Vorlage</b> mit Schreiblinien, die <b>Mitgliederliste</b> oder die <b>Termine</b>. Es öffnet sich die Druckansicht; dort druckst du oder speicherst als PDF.", nur: () => !!ICH?.buero },
   { id: "b-bu-eingang", blatt: true, sym: "📥", t: "Eintrag im Eingangskorb", x: "Ein Eintrag aus dem Eingang, z. B. eine Erstattung oder gemeldete Dienstzeiten. <b>✏️ Öffnen &amp; bearbeiten</b> zeigt alles; die Knöpfe darunter erledigen es gleich. Er bleibt im Eingang, bis er erledigt ist – alle drei der Clubleitung sehen ihn.", nur: () => !!ICH?.buero },
   { id: "b-bu-einladung", blatt: true, sym: "📨", t: "Einladung zur Sitzung", x: "Der Text ist schon vorbereitet – mit der Bitte um Zu- oder Absage in der App. Du kannst eine <b>persönliche Zeile</b> ergänzen und wählen, <b>wie</b> benachrichtigt wird: wie jeder es eingestellt hat, Push, E-Mail oder beides.", nur: () => !!ICH?.buero },
@@ -27191,7 +27191,10 @@ async function einlKorbWeg(id) { try { await api("archiv_loeschen", { id }); } c
 // ---------- KC-CLUB-BILDSCHIRMFOTO (1.24.0, Wunsch Hansi): Auslöser antippen → in Ruhe hingehen → Foto der App → einzeichnen → senden ----------
 // Am Handy darf eine Web-App nur sich selbst abbilden (kein Fremd-Bildschirm, kein Video). Die App zeichnet sich dafür selbst
 // ab (html2canvas, MIT, liegt in lib/ – nichts wird von fremden Servern geladen). Gespeichert wird nur, was man selbst wählt.
-const BF = { bild: null, striche: [], zug: null, laden: null, chat: null };
+const BF = { bild: null, striche: [], zug: null, laden: null, chat: null, farbe: "#e0102a" };
+// 2.792.0 KC-CLUB-BILDSCHIRMFOTO-FARBEN (Wunsch Hansi „unten einige Farbpunkte, um die Stiftfarbe zu wählen“): jeder Strich behält seine Farbe
+const BF_FARBEN = [["#e0102a", "Rot"], ["#ffd400", "Gelb"], ["#18a33a", "Grün"], ["#1565e0", "Blau"], ["#111111", "Schwarz"], ["#ffffff", "Weiß"]];
+function bfFarbe(f) { BF.farbe = f; document.querySelectorAll("#bfFarben .bf-farbe").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.f === f))); }
 // aus dem Chat gestartet: Ziel-Chat merken, damit das Foto mit einem Tipp wieder dort landet
 function bfAusChat() { BF.chat = chatId ? { id: chatId, name: $("chatTitel")?.textContent?.trim() || "diesem Chat" } : null; bfStart(); }
 const BF_BIB = "lib/html2canvas.min.js?v=1.4.1";
@@ -27259,9 +27262,13 @@ function bfKlonGlaetten(d) {
   }
 }
 function bfVorschau() {
+  // 2.792.0 KC-CLUB-BILDSCHIRMFOTO-MELDUNG (Fund Hansi „wollte den Mond-Knopf rot einkreisen – das geht nicht mehr“): die Meldung vom Auslöser
+  // („Geh in Ruhe dahin …“, bis zu 12 s sichtbar) lag oben über der Vorschau und fing dort das Malen ab – beim Öffnen der Vorschau weg damit
+  document.querySelectorAll("body > .meldung").forEach((m) => m.remove());
   const f = blattAuf("bfBlatt", `${einwHtml("b-bildschirmfoto")}<h3 style="margin-top:0">📸 Dein Bildschirmfoto</h3>
-    <p class="hinweis" style="margin:0">✏️ Mit dem Finger rot einkreisen oder Pfeile malen, wo das Problem ist.</p>
+    <p class="hinweis" style="margin:0">✏️ Mit dem Finger einkreisen oder Pfeile malen, wo das Problem ist – Stiftfarbe unten wählen.</p>
     <div class="bf-rahmen"><canvas id="bfLeinwand"></canvas></div>
+    <div class="bf-farben" id="bfFarben" role="group" aria-label="Stiftfarbe">${BF_FARBEN.map(([f, n]) => `<button type="button" class="bf-farbe" data-f="${f}" style="--f:${f}" aria-label="Stift ${n}" title="${n}" aria-pressed="${f === BF.farbe}" onclick="bfFarbe('${f}')"></button>`).join("")}</div>
     <div class="knoepfe" style="margin:0"><button class="knopf klein" onclick="bfZurueck()">↩️ Rückgängig</button><button class="knopf klein" onclick="BF.striche=[];bfMalen()">🧽 Alles weg</button></div>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       ${BF.chat ? `<button class="knopf haupt" onclick="bfWeiter('zurueck')">💬 In den Chat mit ${esc(BF.chat.name)}</button>` : ""}
@@ -27273,7 +27280,7 @@ function bfVorschau() {
       <button class="knopf" onclick="$('bfBlatt').remove();bfEnde()">✕ Verwerfen und Auslöser schließen</button></div>`);
   const lw = $("bfLeinwand"); lw.width = BF.bild.width; lw.height = BF.bild.height;
   const punkt = (e) => { const r = lw.getBoundingClientRect(); return [(e.clientX - r.left) * lw.width / r.width, (e.clientY - r.top) * lw.height / r.height]; };
-  lw.addEventListener("pointerdown", (e) => { e.preventDefault(); lw.setPointerCapture(e.pointerId); BF.zug = [punkt(e)]; BF.striche.push(BF.zug); bfMalen(); });
+  lw.addEventListener("pointerdown", (e) => { e.preventDefault(); lw.setPointerCapture(e.pointerId); BF.zug = [punkt(e)]; BF.zug.f = BF.farbe; BF.striche.push(BF.zug); bfMalen(); });
   lw.addEventListener("pointermove", (e) => { if (!BF.zug) return; BF.zug.push(punkt(e)); bfMalen(); });
   const ab = () => { BF.zug = null; }; lw.addEventListener("pointerup", ab); lw.addEventListener("pointercancel", ab);
   bfMalen(); return f;
@@ -27281,8 +27288,8 @@ function bfVorschau() {
 function bfMalen() {
   const lw = $("bfLeinwand"); if (!lw || !BF.bild) return; const g = lw.getContext("2d");
   g.drawImage(BF.bild, 0, 0);
-  g.strokeStyle = "#e0102a"; g.lineWidth = Math.max(5, lw.width / 90); g.lineCap = g.lineJoin = "round";
-  for (const s of BF.striche) { g.beginPath(); s.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (s.length === 1) g.lineTo(s[0][0] + 0.1, s[0][1]); g.stroke(); }
+  g.lineWidth = Math.max(5, lw.width / 90); g.lineCap = g.lineJoin = "round";
+  for (const s of BF.striche) { g.strokeStyle = s.f || "#e0102a"; g.beginPath(); s.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (s.length === 1) g.lineTo(s[0][0] + 0.1, s[0][1]); g.stroke(); }
 }
 function bfZurueck() { BF.striche.pop(); bfMalen(); }
 function bfDatei() {
