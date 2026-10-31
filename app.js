@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.792.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.794.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35839,6 +35839,10 @@ const SPUR_WAS = { glueckskeks: "🥠 Glückskeks geöffnet", vorfuehren: "📺 
 // (Fenster-ID, Hilfe-ID, Video-/Film-ID) – erst der Admin-Bildschirm übersetzt sie in Namen (spurMitName). Übersicht je Mitglied: spurUebersicht().
 // Registry FENSTER_NAMEN: Fenster-ID → Name in den Wegen. Fehlt ein Name, steht dort „🪟 Fenster: „ID““ – tests/spur-voll.test.mjs meldet fehlende Namen.
 const FENSTER_NAMEN = {
+  // 2.794.0 KC-CLUB-FENSTER-NAMEN-NACHTRAG (Fund Hansi 31.10.: in den Wegen stand „Fenster: „niFenster““) – Fenster, die nicht über blattAuf entstehen
+  niFenster: "ℹ️ Nachricht-Info: gelesen/zugestellt", naMenue: "💬 Nachricht: Menü", naLoeschen: "🗑️ Nachricht löschen?", wlFenster: "↪️ Nachricht weiterleiten",
+  pwFenster: "📌 Pinnwand-Hinweis", ansFenster: "🗣️ Sprachansagen", geFenster: "📱 Meine Geräte mit Push", rsFenster: "🖍️ Tippfehler rot unterstreichen",
+  ptLoeschFenster: "🗑️ Termin aus einer Reihe löschen", stFenster: "📍 Standort teilen", arFenster: "🗄️ Archiv: Ordner anlegen/ändern", fpFenster: "🩺 Hilfe: die App läuft nicht rund",
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
