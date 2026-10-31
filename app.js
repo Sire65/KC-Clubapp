@@ -35959,7 +35959,34 @@ function spurMitName(w, k) {
   return k;
 }
 const spurZeile = (x) => { const was = spurWas(x.w), mit = x.mit || (x.k ? spurMitName(x.w, x.k) : ""); return x.w === "fenster" ? `🪟 Fenster: ${mit}` : mit ? `${was} ${mit}` : was; };
-const SPW = { tag: null, person: null, uhr: null };
+// ---------- 2.795.0 KC-CLUB-WEGE-LINKS (Wunsch Hansi 31.10.2026 „wenn ich einen Eintrag anklicke, dass der Link direkt ins Programm zu dem Punkt geht“) ----------
+// Jeder Schritt in den Wegen, zu dem es ein Ziel gibt, ist antippbar: Bereich → zeige(), Mitglied → Mitgliedskarte, Hilfetext/-kapitel, Erklär-Video, Film,
+// Fenster (nur die, die sich ohne Kennung gefahrlos öffnen lassen – Registry FENSTER_OEFFNEN). Unterhaltungen nur, wenn der Admin selbst dabei ist
+// (der Server schickt die Kennung sonst gar nicht – fremde Chats bleiben zu, KC-CHATS-PRIVAT). Kein Ziel → Zeile wie bisher, ohne Link.
+const FENSTER_OEFFNEN = { mdBlatt: () => mdStart(), wuBlatt: () => wuStart(), schBlatt: () => schZeigen(), dvBlatt: () => dvStart(), ugBlatt: () => ugStart(),
+  geFenster: () => geraeteBlatt(), rsFenster: () => rsBlatt(), ansFenster: () => ansBlatt(), ausweisBlatt: () => ausweisZeigen(), avBlatt: () => avWahl(), ablkBlatt: () => ablkZeigen(),
+  adbBlatt: () => adbStart(), stadtBlatt: () => stadtTermine(), uaBlatt: () => uaStart(), aeEingBlatt: () => aeEingang(), akBlatt: () => akZeigen(), einlBlatt: () => buEinlesen(),
+  buGruss: () => tagesinfoZeigen(true), wasNeuBlatt: () => wasNeuZeigen(), atBlatt: () => atPackenZeigen(), stFenster: () => stBlatt() };
+const SPUR_OHNE_ZIEL = ["chat", "mitglied", "dokansicht", "protokoll", "gruppe", "geoeffnet", "fenster"]; // Bereiche, die eine Kennung brauchen
+function spurZiel(x) {
+  const w = x.w || "", k = x.k || "";
+  if (w === "chat") return x.c ? () => chatOeffnen(x.c) : null;
+  if (w === "mitglied" || x.p) return x.p ? () => mitgliedOeffnen(x.p) : null;
+  if (w === "fenster") return FENSTER_OEFFNEN[k] || null;
+  if (w === "hz_eintrag" && k) return () => hzZuEintrag(k);
+  if (w === "hz_kapitel" && k) return () => { zeige("hilfezentrum"); hzThema(k); };
+  if (/^rg_|^tat_video/.test(w) && k) return () => rundgangStart(false, k);
+  if (/^film_/.test(w) && k) return () => filmZeigen(k);
+  if (/^(rg|film)_ab_/.test(w) && k) return w.startsWith("rg") ? () => rundgangStart(false, k) : () => filmZeigen(k);
+  if (!SPUR_OHNE_ZIEL.includes(w) && document.getElementById("v-" + w)) return () => zeige(w);
+  return null;
+}
+function spurGehe(i) {
+  const x = SPW.schritte?.[i], f = x && spurZiel(x); if (!f) return;
+  clearTimeout(SPW.uhr); $("adminBlatt").classList.add("versteckt");
+  try { const r = f(); if (r?.catch) r.catch(meldeFehler); } catch (e) { meldeFehler(e); }
+}
+const SPW = { tag: null, person: null, uhr: null, schritte: [] };
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
   let r; try { r = await api("spur_liste", { tag: SPW.tag, ...(SPW.person ? { person_id: SPW.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
@@ -35985,7 +36012,7 @@ async function spurAdmin(tag, person) {
       + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => x.stoerung && !on(x.person_id) ? `<button class="knopf spur-stoerung" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">⚠️ <b>${esc(x.name)}</b> <small class="hinweis">· war kurz da · ${esc(zeitKurz(x.erste))}${x.erste !== x.letzte ? "–" + esc(zeitKurz(x.letzte)) : ""} Uhr</small><br><small>${x.stoerung === "netz" ? "📶 Verbindung gestört – die Wege kommen nach, sobald die App wieder Netz hat" : "⚠️ Störung in der App – weitere Wege sind nicht angekommen"}</small></button>` : `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt, x.zk))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle">${r.schritte.map((x) => `<tr><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${x.w === "fenster" || x.k ? esc(spurZeile(x)) : `${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}`}</td></tr>`).join("")}</table>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle spur-wege">${(SPW.schritte = r.schritte).map((x, i) => { const z = !!spurZiel(x); return `<tr${z ? ` class="spur-link" role="button" tabindex="0" title="Antippen = dorthin" onclick="spurGehe(${i})"` : ""}><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${x.w === "fenster" || x.k ? esc(spurZeile(x)) : `${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}`}${z ? ' <span class="spur-pfeil" aria-hidden="true">›</span>' : ""}</td></tr>`; }).join("")}</table><p class="hinweis" style="margin:6px 0 0">Einträge mit <b>›</b> antippen – dann springt die App genau dorthin. Fremde Unterhaltungen bleiben zu.</p>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");

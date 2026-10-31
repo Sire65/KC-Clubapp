@@ -13958,7 +13958,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           return `💬 Runde${betreff} ${von} mit ${andere.slice(0, 5).join(", ")}${andere.length > 5 ? ` +${andere.length - 5}` : ""} (mit dabei)`.replace(/\s+/g, " ");
         };
         return json({ tag, name: name(pid!), schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w,
-          mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : spurUuid(x.mit) ? chatName(x.mit) : null, k: x.mit && !SPUR_MIT.test(x.mit) ? x.mit : null })) }); // k: Kennung (Fenster, Hilfe, Video) – Name macht die App
+          mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : spurUuid(x.mit) ? chatName(x.mit) : null, k: x.mit && !SPUR_MIT.test(x.mit) ? x.mit : null,
+          // 2.795.0 KC-CLUB-WEGE-LINKS (Wunsch Hansi 31.10. „Eintrag anklicken – der Link geht direkt ins Programm zu dem Punkt“): Mitglied → Kennung;
+          // Unterhaltung → Kennung NUR, wenn der Admin selbst Teilnehmer ist (fremde Chats bleiben zu – KC-CHATS-PRIVAT)
+          ...(x.mit?.startsWith("KC-P-") ? { p: x.mit } : {}), ...(spurUuid(x.mit) && (tn ?? []).some((z: any) => z.thread_id === x.mit && z.person_id === ich.person_id) ? { c: x.mit } : {}) })) }); // k: Kennung (Fenster, Hilfe, Video) – Name macht die App
       }
       // 2.755.0 KC-CLUB-SPUR-VOLL (Wunsch Hansi „damit ich sehen kann, was jeder in der App nutzt“): 📊 Was nutzt jeder? – je Mitglied über die letzten
       // Tage (höchstens SPUR_TAGE): wie oft welcher Bereich, welches Fenster, Hilfe, Erklär-Videos/Filme (gestartet, bis zum Ende, abgebrochen) und Handlungen.

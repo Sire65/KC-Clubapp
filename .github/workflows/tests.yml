@@ -103,6 +103,7 @@ jobs:
       - run: node tests/dp-bereitschaft-weit.test.mjs
       - run: node tests/dp-einzelplan.test.mjs
       - run: node tests/actions-fest.test.mjs
+      - run: node tests/wege-links.test.mjs
       # 2.725.0 KC-CLUB-TESTS-ALLE (Prüfbericht Etappe 5): fehlten in dieser Liste (beim Veröffentlichen liefen sie schon) – ein Wächter in
       # app-vertrag.test.mjs meldet künftig jeden tests/*.test.mjs, der hier nicht steht
       - run: node tests/anruf-besser.test.mjs
