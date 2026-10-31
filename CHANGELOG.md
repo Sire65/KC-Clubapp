@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.791.0 – 2026-10-31 – 📄 Teilen an die eigene Club-App: PDF kommt jetzt an (KC-CLUB-TEILEN-AN-SICH-SELBST) · nur App
+Fund Hansi (31.10.): Protokoll → Druckvorschau → „📄 PDF speichern / teilen“ → im Handy „Köcheclub“ gewählt → App startete neu und meldete „Es ist nichts angekommen“.
+- **Ursache (Diagnose `diagnose_teilen`, 31.10. 11:46):** Android gibt beim Teilen an die eigene App nur den Titel weiter (`titel:text:17`), die PDF-Datei fehlt (`anzahl 0`).
+- **Behoben an der Quelle:** Die Druckvorschau legt das PDF vor dem Teilen kurz auf dem Handy beiseite (eigener Speicher `kcclub-eigen-teilen`, nur dieses eine PDF, höchstens 5 Min., bei Abbruch sofort weg). Kommt beim Teilen nichts an und passt der Titel, nimmt die App das beiseitegelegte PDF und öffnet „Neue Nachricht“ damit – derselbe Weg wie „💬 In der Club-App senden“ (gemeinsame Funktion `anlageInNeueNachricht`). Teilen an WhatsApp, Mail usw. bleibt unverändert; geteilte Dateien aus anderen Apps gehen wie bisher in den Ablagekorb.
+- Test: `tests/teilen-eigen.test.mjs` (Titel muss passen, nur einmal, höchstens 5 Min., Rückfall vor „nichts angekommen“ und Ablagekorb). Rückweg: App 2.790.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.790.0 – 2026-10-31 – 🛎️ Dienstplan: feste Bereitschaft (KC-CLUB-DP-NACHBESSERN)
 Wunsch Hansi („Willfried Bereitschaft 06.12. 14–19 Uhr, 08.12. 20–23 Uhr, 09.12. 20–23 Uhr“) – Dienstplan-Rechnung Regel 7 (rechnet sich beim Öffnen von selbst neu):
 - **Feste Bereitschaft** (`dp_druck_konfig.bereitschaftFest`, je Eintrag Tag, Person, von, bis) steht fest im Plan und auf dem Lückenblatt; die automatische Bereitschaft kommt wie bisher dazu, aber nicht für dieselbe Person am selben Tag. Die alte feste Liste `bereitschaft` bleibt bei automatischer Bereitschaft weiter unbeachtet.

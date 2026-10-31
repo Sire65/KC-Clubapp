@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.790.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.791.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -26512,6 +26512,7 @@ async function geteiltEmpfangen() {
   api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20).join(" | ") : null, typen: dateien.map((d) => d.type || "?").slice(0, 10).join(" | "), fehler: info.fehler ? String(info.fehler).slice(0, 300) : null, groesse: info.groesse ?? null,
     info: Object.keys(info).join(",") || "leer", felderAnzahl: Array.isArray(info.felder) ? info.felder.length : -1, sw: info.sw || "-" } }).catch(() => {}); // 2.525.0: leerer Speicher (info „leer“) ≠ leeres Paket (felderAnzahl 0) // 2.515.0: Felder/Typen zur Fehlersuche · 2.522.0: Fehler
   const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
+  if (!dateien.length && !text) { const eigen = await eigenTeilenHolen(info.titel); if (eigen) return eigenTeilenEmpfangen(eigen); } // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST
   if (!dateien.length && !text && info.fehler) return melde(/Quota/i.test(info.fehler) ? "Die Datei ist zu groß für den Zwischenspeicher dieses Handys – bitte kleiner teilen (z. B. Video kürzen) oder in der Club-App über 📎 anhängen." : "Die Datei konnte beim Teilen nicht übernommen werden – bitte in der Club-App über 📎 anhängen. (Fehler ist für Hansi vermerkt.)", true); // 2.522.0 KC-CLUB-TEILEN-FEHLER
   const leer = Array.isArray(info.felder) && info.felder.some((x) => /:0$/.test(String(x))); // Datei mit 0 Byte: das Handy hat sie nicht hergegeben
   if (!dateien.length && !text && leer) return melde("Das Handy hat die Datei leer übergeben (kommt bei manchen Dateimanagern vor) – bitte aus der Galerie, Google Drive oder „Dateien“ teilen oder in der Club-App über 📎 anhängen.", true); // 2.522.0
@@ -32348,7 +32349,7 @@ async function druckPdf() {
   try {
     const name = druckDateiName();
     const datei = new File([await druckPdfBlob()], name, { type: "application/pdf" });
-    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { if (navigator.canShare?.({ files: [datei] })) { await eigenTeilenMerken(datei, DRUCK.titel); await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { eigenTeilenVergessen(); if (e?.name === "AbortError") return; } // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST
     const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60000); melde("📄 PDF gespeichert (Downloads)");
   } catch (e) { meldeFehler(e); }
@@ -32362,11 +32363,33 @@ async function druckInAppSenden() {
   try {
     const name = druckDateiName(), r = await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" }));
     druckVorschauZu();
-    anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false;
-    await neueNachricht(); chipsZeigen();
-    melde("📎 PDF liegt als Anlage bereit – jetzt Empfänger wählen, „Weiter zum Schreiben“, dann ➤");
+    await anlageInNeueNachricht(r, name);
   } catch (e) { meldeFehler(e); }
   finally { if (k) { k.disabled = false; k.textContent = "💬 In der Club-App senden"; } }
+}
+async function anlageInNeueNachricht(r, name) { // hochgeladene Anlage → „Neue Nachricht“ mit Empfängerwahl (Druckvorschau und Teilen an sich selbst)
+  anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false;
+  await neueNachricht(); chipsZeigen();
+  melde("📎 PDF liegt als Anlage bereit – jetzt Empfänger wählen, „Weiter zum Schreiben“, dann ➤");
+}
+// 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST (Fund Hansi 31.10.: Protokoll → „📄 PDF speichern / teilen“ → im Handy „Köcheclub“ gewählt → App startet neu,
+// „Es ist nichts angekommen“). Diagnose: Android gibt beim Teilen an die eigene App nur den Titel weiter, die PDF-Datei fehlt. Darum legt die App
+// das PDF vor dem Teilen kurz auf dem Handy beiseite (eigener Speicher, höchstens 5 Min., nur dieses eine PDF). Kommt beim Teilen nichts an und
+// passt der Titel, nimmt die App das beiseitegelegte PDF und öffnet „Neue Nachricht“ damit – wie „💬 In der Club-App senden“.
+async function eigenTeilenMerken(datei, titel) {
+  try { await (await caches.open("kcclub-eigen-teilen")).put("datei", new Response(datei, { headers: { "content-type": datei.type || "application/pdf", "x-name": encodeURIComponent(datei.name), "x-titel": encodeURIComponent(String(titel || "").slice(0, 200)), "x-zeit": String(Date.now()) } })); } catch {}
+}
+function eigenTeilenVergessen() { try { caches.delete("kcclub-eigen-teilen").catch(() => {}); } catch {} }
+async function eigenTeilenHolen(titel) {
+  try {
+    const r = await (await caches.open("kcclub-eigen-teilen")).match("datei"); eigenTeilenVergessen();
+    if (!r || Date.now() - Number(r.headers.get("x-zeit") || 0) > 5 * 60000 || decodeURIComponent(r.headers.get("x-titel") || "") !== String(titel || "").slice(0, 200)) return null;
+    return new File([await r.blob()], decodeURIComponent(r.headers.get("x-name") || "Koecheclub.pdf"), { type: r.headers.get("content-type") || "application/pdf" });
+  } catch { return null; }
+}
+async function eigenTeilenEmpfangen(datei) {
+  melde("📄 Das PDF aus der Club-App kommt in eine neue Nachricht …");
+  try { await anlageInNeueNachricht(await anlageHochladen(datei), datei.name); } catch (e) { meldeFehler(e); }
 }
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
