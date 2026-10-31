@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -13687,4 +13687,16 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
   for (let h = leon.s[0]; h < leon.s[1]; h += 0.5) assert.ok(staff(h) >= 2, `um ${h} Uhr mindestens 2 andere mit Leon`);
   assert.ok(/nur mit anderen/.test(leon.z) && /nur vormittags/.test(r.tage[0].leute.find((x) => x.n === "Marianne B").z), "Hinweis steht neben dem Namen");
   assert.ok(/Number\.isFinite\(Number\(pk\[pid\]\?\.begleitet\)\) \? \{ begleitet: Number\(pk\[pid\]\.begleitet\) \}/.test(server) && /pk\[pid\]\?\.hinweis \? \{ hinweis:/.test(server), "Server reicht begleitet und hinweis aus der Konfig durch");
+}
+// 2.789.0 (Wunsch Hansi „Willfried Bereitschaft 06.12. 14–19, 08.12. 20–23, 09.12. 20–23“): feste Bereitschaft steht im Plan, die automatische kommt dazu
+{
+  const { dpRechnen, DP_REGEL } = await import(new URL("../supabase/functions/kc-club/dp-rechnen.js", import.meta.url));
+  assert.ok(DP_REGEL >= 7, "Regel-Stand steigt → gespeicherter Stand wird von selbst neu gerechnet");
+  const tage = ["2026-12-06", "2026-12-07"].map((d) => ({ d, art: "Markttag", baender: [{ start: 17, end: 23, total: 2, front: null, back: null }] }));
+  const r = dpRechnen({ tage, personen: [{ key: "Anne R", name: "Anne R", eintraege: tage.map((t) => ({ d: t.d, t: "avai", z: "B", a: 17, b: 23 })) }],
+    bereitschaftFest: [{ d: "2026-12-06", name: "Willfried W", von: 14, bis: 19 }], bereitschaftAuto: [{ key: "Karla K", name: "Karla K" }, { key: "Willfried W", name: "Willfried W" }] });
+  assert.deepEqual(r.tage[0].ber[0], { n: "Willfried W", s: [14, 19] }, "feste Bereitschaft steht zuerst, mit ihrer Zeit");
+  assert.ok(r.tage[0].ber.filter((x) => x.n === "Willfried W").length === 1, "nicht doppelt am selben Tag");
+  assert.ok(!r.tage[1].ber.some((x) => x.n === "Willfried W" && x.s[0] === 14), "nur an seinem Tag");
+  assert.ok(/bereitschaftFest: \(Array\.isArray\(konf\.bereitschaftFest\)/.test(server), "Server reicht feste Bereitschaft aus der Konfig durch");
 }

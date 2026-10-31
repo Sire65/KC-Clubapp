@@ -25,7 +25,9 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // in jeder halben Stunde seines Dienstes mit da sein; personen[].hinweis erscheint im Plan neben dem Namen (z. B. „nur mit anderen“).
 // 2.785.0 KC-CLUB-DP-BEREITSCHAFT-WEIT (Wunsch Hansi 30.10. „Willfried kommt von Hamm nicht für eine Stunde“): wer weit fährt (Mindestdienst, z. B. 3 Std.),
 // bekommt auch keine Bereitschaft, die kürzer ist als sein Mindestdienst – dann ist der/die Nächste in der Reihe dran.
-export const DP_REGEL = 6;
+// 2.789.0 (Wunsch Hansi „Willfried Bereitschaft 06.12. 14–19, 08.12. 20–23, 09.12. 20–23“): bereitschaftFest [{ d, name, von, bis }] steht fest im Plan,
+// die automatische Bereitschaft kommt dazu (nicht für dieselbe Person am selben Tag).
+export const DP_REGEL = 7;
 
 export function dpRechnen(e) {
   const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;
@@ -153,7 +155,8 @@ export function dpRechnen(e) {
   };
   // 2.721.0: Bereitschaft für die größte Lücke des Tages (sonst abends am Markttag) – generell Bereite, an dem Tag nicht „nein“, nicht selbst im Dienst
   const berZahl = new Map();
-  const berAuto = (d) => {
+  const festAm = (d) => (e.bereitschaftFest || []).filter((x) => x.d === d).map((x) => ({ n: x.name, s: [Number(x.von), Number(x.bis)] }));
+  const berAuto = (d, ohne = []) => {
     const need = dem.get(d), gm = gapsJe.get(d), S = [...need.keys()].sort((a, b) => a - b), bloecke = []; let cur = null;
     for (const s of S) { const f = gm.get(s)[1]; if (!f) { cur = null; continue; } if (cur && Math.abs(cur[1] - s) < 1e-9) { cur[1] = s + H; cur[2] += f; } else bloecke.push(cur = [s, s + H, f]); }
     const best = bloecke.sort((x, y) => y[2] - x[2] || x[0] - y[0])[0] || null; // größte Lücke (Personen × Zeit)
@@ -161,7 +164,7 @@ export function dpRechnen(e) {
     if (!fenster) return [];
     const imDienst = (n) => (plan.get(d) || []).some(([x, a, b]) => x === n && a < fenster[1] && fenster[0] < b), gesperrt = (n) => slots(fenster[0], fenster[1]).some((s) => un.get(k2(n, d))?.has(s));
     const lang = fenster[1] - fenster[0], kurzFuer = (x) => lang < Math.max(Number(x.minDienst) || 0, lim(x.key).minDienst) - 1e-9; // KC-CLUB-DP-BEREITSCHAFT-WEIT
-    const c = e.bereitschaftAuto.filter((x) => !(x.nein || []).includes(d) && !imDienst(x.key) && !gesperrt(x.key) && !ruhetag(x.key, d) && !kurzFuer(x)) // am freien Tag auch keine Bereitschaft
+    const c = e.bereitschaftAuto.filter((x) => !ohne.includes(full.get(x.key) || x.name || x.key) && !(x.nein || []).includes(d) && !imDienst(x.key) && !gesperrt(x.key) && !ruhetag(x.key, d) && !kurzFuer(x)) // am freien Tag auch keine Bereitschaft
       .sort((x, y) => (berZahl.get(x.key) || 0) - (berZahl.get(y.key) || 0) || (hours.get(x.key) || 0) - (hours.get(y.key) || 0) || vgl(x.key, y.key))[0]; // reihum, dann wer weniger Stunden hat
     if (c) berZahl.set(c.key, (berZahl.get(c.key) || 0) + 1);
     return c ? [{ n: full.get(c.key) || c.name || c.key, s: fenster }] : [];
@@ -176,7 +179,7 @@ export function dpRechnen(e) {
       vorne: ALL.map((s) => (need.has(s) ? need.get(s)[1] : null)), hinten: ALL.map((s) => (need.has(s) ? need.get(s)[2] : null)),
       bedarf: ALL.map((s) => (need.has(s) ? need.get(s)[0] : 0)), besetzt: ALL.map((s) => (gm.has(s) ? gm.get(s)[0] : 0)), fehlt: ALL.map((s) => (gm.has(s) ? gm.get(s)[1] : 0)),
       leute: leute.map((n) => ({ n: full.get(n) || n, z: [zonetext(n, d), HINW.get(n)].filter(Boolean).join(" · "), w: ALL.map((s) => WK[wun.get(k2(n, d))?.get(s)] || "-").join(""), s: dienst.has(n) ? dienst.get(n) : null })),
-      ber: e.bereitschaftAuto ? berAuto(d) : (e.bereitschaft || []).filter((x) => x.d === d).map((x) => ({ n: x.name, s: [Number(x.von), Number(x.bis)] })),
+      ber: e.bereitschaftAuto ? [...festAm(d), ...berAuto(d, festAm(d).map((x) => x.n))] : (e.bereitschaft || []).filter((x) => x.d === d).map((x) => ({ n: x.name, s: [Number(x.von), Number(x.bis)] })),
     };
   });
   return { v: 1, regel: DP_REGEL, von: LO, bis: HI, tage, stunden: Object.fromEntries([...hours].map(([n, h]) => [full.get(n) || n, h])) };

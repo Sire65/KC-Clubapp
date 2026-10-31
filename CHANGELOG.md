@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.790.0 – 2026-10-31 – 🛎️ Dienstplan: feste Bereitschaft (KC-CLUB-DP-NACHBESSERN)
+Wunsch Hansi („Willfried Bereitschaft 06.12. 14–19 Uhr, 08.12. 20–23 Uhr, 09.12. 20–23 Uhr“) – Dienstplan-Rechnung Regel 7 (rechnet sich beim Öffnen von selbst neu):
+- **Feste Bereitschaft** (`dp_druck_konfig.bereitschaftFest`, je Eintrag Tag, Person, von, bis) steht fest im Plan und auf dem Lückenblatt; die automatische Bereitschaft kommt wie bisher dazu, aber nicht für dieselbe Person am selben Tag. Die alte feste Liste `bereitschaft` bleibt bei automatischer Bereitschaft weiter unbeachtet.
+
 ## 2.789.0 – 2026-10-31 – 🤫 Ruhe beim Eingeben: keine Hinweis-Fenster und Ansagen über den Dienstwünschen (KC-CLUB-EINGABE-RUHE) · nur App
 Wunsch Hansi (31.10.): „Wir müssen dafür sorgen, dass jemand, der gerade z. B. Dienstzeiten eingibt, nicht gestört wird durch Nachrichten und Updates – sonst sind die gemachten Eingaben nicht gespeichert.“
 - **Updates:** seit 2.788.0 kein Selbst-Update mehr, solange die Dienstwünsche offen sind.

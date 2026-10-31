@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.786.0";
+const SERVER_VERSION = "2.790.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4873,7 +4873,7 @@ async function dpDruckNeu(adminId: string) {
   if (!(tageRoh ?? []).length) throw new Fehler("Für die Veranstaltung ist noch kein Bedarf veröffentlicht.", 409);
   const ersatz: Record<string, any> = konf.ersatz && typeof konf.ersatz === "object" ? konf.ersatz : {};
   const leerIds = (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => String(x.person_id));
-  const ids = [...new Set([...(wRoh ?? []).map((w: any) => String(w.person_id)), ...leerIds, ...Object.keys(ersatz), ...(Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => String(x.person_id))])]
+  const ids = [...new Set([...(wRoh ?? []).map((w: any) => String(w.person_id)), ...leerIds, ...Object.keys(ersatz), ...(Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => String(x.person_id)), ...(Array.isArray(konf.bereitschaftFest) ? konf.bereitschaftFest : []).map((x: any) => String(x.person_id))])]
     .filter((id) => !id.startsWith("KC-P-TEST") && !aus(id));
   const { data: leute } = ids.length ? await db.from("kc_core_people").select("person_id,display_name,postal_code,city").in("person_id", ids) : { data: [] as any[] };
   const kmVon = new Map((leute ?? []).map((p: any) => [String(p.person_id), Number.isFinite(Number(pk[p.person_id]?.anfahrtKm)) ? Number(pk[p.person_id].anfahrtKm) : (anfahrt(p.postal_code, p.city)?.fahrt ?? 0)]));
@@ -4903,6 +4903,7 @@ async function dpDruckNeu(adminId: string) {
     personen,
     leer: (Array.isArray(konf.leerzeilen) ? konf.leerzeilen : []).map((x: any) => ({ key: dpKurzname(name.get(String(x.person_id)) || String(x.person_id)), name: name.get(String(x.person_id)) || String(x.person_id), label: String(x.label || "") })),
     bereitschaft: (Array.isArray(konf.bereitschaft) ? konf.bereitschaft : []).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })),
+    bereitschaftFest: (Array.isArray(konf.bereitschaftFest) ? konf.bereitschaftFest : []).filter((x: any) => !aus(String(x.person_id))).map((x: any) => ({ d: String(x.d), name: name.get(String(x.person_id)) || String(x.person_id), von: Number(x.von), bis: Number(x.bis) })), // 2.789.0 feste Bereitschaft
     max: Number(konf.max) || 8, fair: Number(konf.fair) || 1.5,
     bereitschaftAuto, maxTageAmStueck: Number.isFinite(Number(konf.maxTageAmStueck)) ? Number(konf.maxTageAmStueck) : 5, wunschDeckel: konf.wunschDeckel !== false, wunschAnteil: Number.isFinite(Number(konf.wunschAnteil)) && konf.wunschAnteil !== null && konf.wunschAnteil !== undefined ? Number(konf.wunschAnteil) : 0.5, // 2.675.0
   });
