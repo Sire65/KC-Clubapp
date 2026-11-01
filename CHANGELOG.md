@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.799.0 – 2026-11-01 – 📋 Wunschliste: Grußformel, Video-Hinweis am Ende, Runder Tisch, Aktenschrank-Schrift, Protokoll-Info und -Gruppen · Server 2.799.0
+Wunsch Hansi (01.11.): „Jetzt Wunschliste abarbeiten.“
+- **#52 ✍️ Grußformel** (KC-CLUB-GRUSSFORMEL): In der kleinen Zeile über dem Schreibfeld (▾ ⌨️ 🔊 …) steht ✍️. Antippen zeigt „Danke und Gruß, Hansi“, „Liebe Grüße Hansi“, „Bis bald mal wieder Hansi“, „Freundliche Grüße Hansi“ (jeweils mit dem eigenen Vornamen) – antippen setzt die Formel an der Schreibstelle in einer eigenen Zeile ein, die Tastatur bleibt offen.
+- **#59 🎬 Hinweis aufs andere Video erst am Ende** (KC-CLUB-VIDEO-VERWEIS-ENDE): Das Video hält nicht mehr mittendrin an. Gibt es zum Thema ein eigenes Video, steht es auf der Schlusskarte („Wie war das Video?“) mit ▶ Ansehen, ⏰ Später und 🔕 Nicht mehr fragen.
+- **#56 🔁 Runder Tisch wieder öffnen** (KC-CLUB-TISCH-WIEDER): Wer eingeladen hat (oder der Admin) kann einen vorbei gegangenen Tisch wieder öffnen – derselbe Tisch mit demselben Chat läuft ab jetzt noch einmal für seine Dauer. Wer zugesagt hatte oder dabei war, bekommt Bescheid. Nicht beim Seminar (Teilnahmebestätigung) und nicht, wenn der Chat schon gelöscht ist; die Zeit wird wie beim Einladen geprüft (kein Clubabend, kein anderer Tisch).
+- **#60 🪑 Runder Tisch einklappbar** (KC-CLUB-TISCH-KLAPPEN): „Demnächst“ nach Kalenderwoche (Diese Woche, Nächste Woche, KW …), „Vorbei“ nach Monat – die erste Gruppe offen, die anderen zu.
+- **#53 🗄️ Aktenschrank** (KC-CLUB-SCHRANK-SCHRIFT): „Köcheclub Werne“ steht auf den Lamellen – je Lamelle ein Buchstabe, mittig, unter der Kochmütze; der Buchstabe dreht beim Öffnen mit.
+- **#51 📣 Protokoll: Info an Mitglieder** (KC-CLUB-PROTOKOLL-INFO): Im Entwurf ausgegraut, beim veröffentlichten Protokoll aktiv. Empfänger wie gewohnt (alle, Gruppe, Auswahl), Text vorbelegt („Das Protokoll vom 30.10.2026 ist eingestellt.“), der Link zum Protokoll kommt automatisch dazu; gesendet wird nach Rückfrage. Server: `protokoll_info` (nur veröffentlicht, nur an Mitglieder mit Protokoll-Leserecht, höchstens 3 Infos je Protokoll und Stunde).
+- **#57 (Teil) 📅 Protokoll-Liste nach Jahren und Monaten** (KC-CLUB-PROTOKOLL-GRUPPEN): je Jahr ein Klappbereich (das neueste offen), darin die Monate. Der Freigabe-Weg über den Schriftführer folgt.
+- Tests: `tests/wunschliste-november.test.mjs`. Rückweg: App und Server 2.798.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.798.0 – 2026-11-01 – 🧩 Programm aufteilen, Stufe 5: Frag Twinkey und Lupe werden erst beim Antippen geladen (KC-CLUB-TEILE) · nur App
 Wunsch Hansi (Prüfbericht C, Wunsch #44) – Hansi 1.11.: „Spiel 5 ein“. Letzte Stufe des Umbaus.
 - **Neu ausgeschnitten** auf dem heutigen Stand (2.797.0, mit Stufe 4).
