@@ -636,12 +636,19 @@ const buSchrankOffen = () => lsLesen(BU_SCHRANK) !== "zu" || document.body.class
 // 2.770.0 (Fund Hansi „Jalousie-Effekt sieht man nicht“ – sein Handy meldet „Bewegung reduzieren“, wie 2.161.0 beim Kopf): wie bei allen Effekten seit
 // 2.409.0 zählt nur der App-Schalter „✨ Animierte Knöpfe“, nicht die Handy-Einstellung
 const buSchrankRuhig = () => !einst("animiert", true);
+// 2.799.0 KC-CLUB-SCHRANK-SCHRIFT (Wunsch Hansi „auf die Lamellen ‚Köcheclub Werne‘ – auf jede Lamelle ein Buchstabe, gleichmäßig verteilt und zentriert,
+// die Kochmütze bleibt oben drüber“): 15 Zeichen auf 28 Lamellen, mittig (Lamelle 7–21); der Buchstabe dreht beim Öffnen mit der Lamelle mit.
+const BU_SCHRANK_SCHRIFT = "Köcheclub Werne";
+function buJalLamellen() {
+  const w = [...BU_SCHRANK_SCHRIFT], ab = Math.floor((BU_SCHRANK_LAMELLEN - w.length) / 2);
+  return Array.from({ length: BU_SCHRANK_LAMELLEN }, (_, i) => { const z = w[i - ab]; return `<i class="bu-jal-lamelle">${z && z !== " " ? `<b>${z}</b>` : ""}</i>`; }).join(""); // feste Schrift, kein Fremdtext
+}
 function buSchrankHtml(regal, anzahl) {
   const auf = buSchrankOffen();
   return `<div class="bu-schrank${auf ? " auf" : ""}" id="buSchrank">
       <button type="button" class="bu-schrank-zeile" onclick="buSchrankKlick()" aria-expanded="${auf}" aria-controls="buSchrankKoerper"><span class="bu-schrank-sym" aria-hidden="true">🗄️</span><b>Aktenschrank</b><small>${anzahl} Ordner</small><span class="bu-schrank-pfeil" aria-hidden="true">${auf ? "⌃" : "⌄"}</span></button>
       <div class="bu-schrank-koerper" id="buSchrankKoerper"${auf ? "" : " hidden"}>${regal}
-        <div class="bu-jalousie" aria-hidden="true"><div class="bu-jal-lamellen">${'<i class="bu-jal-lamelle"></i>'.repeat(BU_SCHRANK_LAMELLEN)}</div>
+        <div class="bu-jalousie" aria-hidden="true"><div class="bu-jal-lamellen">${buJalLamellen()}</div>
           <div class="bu-jal-marke"><img src="kc-kochmuetze-weiss.webp" alt=""><small>since 1991</small></div></div>
         <button type="button" class="bu-jal-griff" onclick="buSchrankKlick()" aria-label="${auf ? "Aktenschrank schließen" : "Aktenschrank öffnen"}">${auf ? "▶" : "◀"}</button>
       </div></div>`;

@@ -2549,7 +2549,7 @@ function rgListeZeigen() {
       ${ICH?.admin ? `<button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove();rgAuswertung()">📊 Auswertung der Videos</button>` : ""}
       <button type="button" class="knopf klein" onclick="stimmenWahl()">🗣️ Stimme &amp; Tempo</button>
       <button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove()">Schließen</button></div>
-    <label class="rgl-verweis"><input type="checkbox" ${rgvAus() ? "" : "checked"} onchange="rgvAn(this.checked)"> 🎬 In Videos fragen, wenn es zum Thema ein eigenes Video gibt</label>`;
+    <label class="rgl-verweis"><input type="checkbox" ${rgvAus() ? "" : "checked"} onchange="rgvAn(this.checked)"> 🎬 Am Ende eines Videos fragen, wenn es zum Thema ein eigenes Video gibt</label>`;
 }
 function rgvAn(an) { try { if (an) localStorage.removeItem(RGV.AUS); else localStorage.setItem(RGV.AUS, "1"); } catch {} RGV.gefragt.clear(); melde(an ? "🎬 Ich frage wieder, wenn es ein eigenes Video gibt." : "🔕 Ich frage in den Videos nicht mehr nach."); }
 function rgWahl(id, an) { if (an) RGL.wahl.add(id); else RGL.wahl.delete(id); rgListeZeigen(); }
@@ -2686,7 +2686,22 @@ const RGV = { gefragt: new Set(), AUS: "kc_club_video_verweis_aus", SPAETER: "kc
 const rgvAus = () => { try { return localStorage.getItem(RGV.AUS) === "1"; } catch { return false; } };
 const rgvSpaeter = () => { try { return JSON.parse(localStorage.getItem(RGV.SPAETER) || "[]") || []; } catch { return []; } };
 function rgvSpaeterSetzen(l) { try { localStorage.setItem(RGV.SPAETER, JSON.stringify([...new Set(l)])); } catch {} }
+// 2.799.0 KC-CLUB-VIDEO-VERWEIS-ENDE (Wunsch Hansi „Videoverweis auf nächstes Video soll erst am Ende kommen und nicht mittendrin“): die Station
+// merkt sich den Verweis nur und das Video läuft weiter; gefragt wird auf der Schlusskarte (rgVerweiseHtml). Gibt immer false zurück (kein Halt).
 function rgVerweis(s) {
+  const id = s?.video, v = id && RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur()));
+  if (!v || !RG.an || RG.frage || rgvAus() || id === RG.tour || RGV.gefragt.has(id) || (RG.liste || []).includes(id)) return false;
+  RGV.gefragt.add(id); RG.verweise = [...(RG.verweise || []), id];
+  return false;
+}
+function rgVerweiseHtml() {
+  const l = (RG.verweise || []).map((id) => RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur()))).filter(Boolean);
+  if (!l.length || rgvAus()) return "";
+  return `<div class="rg-verweis" id="rgVerweis"><b>🎬 Dazu gibt es ${l.length === 1 ? "ein eigenes Video" : "eigene Videos"}:</b><span>Möchtest du ${l.length === 1 ? "es" : "eins davon"} jetzt ansehen?</span>
+    <div class="rg-verweis-knoepfe">${l.map((v) => `<button type="button" class="knopf haupt klein" onclick="rgVerweisWahl('ja','${v.id}')">▶ ${v.sym} ${esc(v.t)}</button>`).join("")}
+    <button type="button" class="knopf klein" onclick="rgVerweisWahl('spaeter')">⏰ Später</button><button type="button" class="knopf klein" onclick="rgVerweisWahl('aus')">🔕 Nicht mehr fragen</button></div></div>`;
+}
+function rgVerweisAltFrage(s) { // bis 2.797.0: Frage mitten im Video – nicht mehr aufgerufen, bleibt als Rückweg
   const id = s?.video, v = id && RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur()));
   if (!v || !RG.an || RG.frage || rgvAus() || RG.gefragtStation === RG.i || id === RG.tour || RGV.gefragt.has(id) || (RG.liste || []).includes(id)) return false;
   RGV.gefragt.add(id); RG.gefragtStation = RG.i; RG.pause = true; clearTimeout(RG.uhr); $("rgPause").textContent = "▶ Weiter";
@@ -2698,6 +2713,13 @@ function rgVerweis(s) {
   rgLage(); return true;
 }
 function rgVerweisWahl(w, id) {
+  if (RG.frage) { // 2.799.0: Wahl auf der Schlusskarte – das Video ist zu Ende, die Reihe (RG.liste) läuft nach dem gewählten Video weiter
+    $("rgVerweis")?.remove();
+    if (w === "ja") return rundgangStart(false, id, (RG.liste || []).slice());
+    if (w === "spaeter") { const l = RG.verweise || []; rgvSpaeterSetzen([...rgvSpaeter(), ...l]); l.forEach((x) => RGL.wahl.add(x)); melde("📌 Gemerkt – unter 🎬 Erklär-Videos ist es schon angehakt."); }
+    if (w === "aus") { try { localStorage.setItem(RGV.AUS, "1"); } catch {} melde("🔕 Gut – ich frage nach den Videos nicht mehr nach. Wieder einschalten: unten in der Liste der Erklär-Videos."); }
+    return;
+  }
   $("rgVerweis")?.remove(); try { speechSynthesis.cancel(); } catch {} rgpStopp();
   if (w === "ja") { RG.fortsetzen = { id: RG.tour, i: RG.i + 1, liste: (RG.liste || []).slice(), von: RG.von }; const f = RG.fortsetzen; rundgangStart(false, id, []); RG.fortsetzen = f; return; }
   if (w === "spaeter") { rgvSpaeterSetzen([...rgvSpaeter(), id]); RGL.wahl.add(id); melde("📌 Gemerkt – unter 🎬 Erklär-Videos ist es schon angehakt."); }
@@ -2707,6 +2729,7 @@ function rgVerweisWahl(w, id) {
 function rundgangStart(mitKnopf, id = "ueberblick", liste = [], startI = 0) {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
   RG.liste = Array.isArray(liste) ? liste.slice() : []; // KC-CLUB-VIDEO-THEMEN: danach noch abzuspielen
+  RG.verweise = []; // 2.799.0 KC-CLUB-VIDEO-VERWEIS-ENDE: erst auf der Schlusskarte anbieten
   const tour = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || RUNDGAENGE[0];
   RG.tour = tour.id; RG.st = tour.st(); RG.zurueck = []; RG.vorI = -1; RG.richtung = 1; RG.frage = false;
   RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true;
@@ -3074,7 +3097,7 @@ function rgFrage() {
   try { RG.st[RG.vorI]?.nach?.(); } catch {} RG.vorI = -1; // letzte Station aufräumen, Ansicht bleibt
   const zeile = (k, frage) => `<div class="rg-frage"><span>${frage}</span><span class="rg-daumen" data-k="${k}"><button type="button" data-w="1" onclick="rgDaumen('${k}', true)" aria-label="Daumen hoch">👍</button><button type="button" data-w="0" onclick="rgDaumen('${k}', false)" aria-label="Daumen runter">👎</button></span></div>`;
   $("rgTafel").innerHTML = `<div class="rg-oben"><b>🎬 Wie war das Video?</b></div>${zeile("gefallen", "Hat dir das Video gefallen?")}${zeile("hilft", "Hilft es dir weiter?")}
-    ${rgNaechstesHtml()}<div class="rg-knoepfe rg-knoepfe2"><button type="button" class="knopf haupt klein" id="rgBewSenden" onclick="rgBewertungSenden(this)" disabled>✔ Abschicken</button><button type="button" class="knopf klein" onclick="rundgangEnde()">Überspringen</button></div>`;
+    ${rgVerweiseHtml()}${rgNaechstesHtml()}<div class="rg-knoepfe rg-knoepfe2"><button type="button" class="knopf haupt klein" id="rgBewSenden" onclick="rgBewertungSenden(this)" disabled>✔ Abschicken</button><button type="button" class="knopf klein" onclick="rundgangEnde()">Überspringen</button></div>`;
   $("rgTafel").classList.remove("rg-oben-an");
   if (RG.ton) try { speechSynthesis.speak(sprechAusgabe("Hat dir das Video gefallen? Und hilft es dir weiter? Tippe auf Daumen hoch oder Daumen runter.")); } catch {}
 }

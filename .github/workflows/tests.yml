@@ -56,6 +56,7 @@ jobs:
       - run: node tests/protokoll-schreiber-offen.test.mjs
       - run: node tests/passiv.test.mjs
       - run: node tests/waechter-fehlalarm.test.mjs
+      - run: node tests/wunschliste-november.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)

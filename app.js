@@ -12,12 +12,12 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-VFL8tiqXeiJAAgY+P+ze389JufvaA/fgYajQZj1WxUwh+D2GZn67y7C/k69nw2Oi" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-XorjHZK7uZjRX3TFbmsOoA2aCiSbbZ/PdyMeswtlV68SP4GFKE8RSrzABSZn3G75" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-PgmCCegHZMJvWovj3QyJ2lvNqFvdre3ZkAe+sYTzCuzg1rnny4wFEZvvOodBZU0t" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-fo0GoQQPizYDc0fLSziQq6rxd273upSOYYJh4uBEjMBm+FRjzWlPtglIFFBJvRZQ" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -7126,7 +7126,7 @@ const TW_FAQ = [
   { id: "link-vorschau", sym: "🔗", t: "Warum steht unter meinem Link eine Karte mit Bild?", x: "Das ist die <b>Link-Vorschau</b>: Die App holt zu einem Link Titel, kurzen Text und Bild der Seite – wie bei WhatsApp. Vor dem Senden kannst du sie mit <b>✖</b> an der Karte weglassen. Manche Seiten erlauben keine Vorschau, dann kommt nur der Link." },
   // 2.344.0 KC-CLUB-HILFE-NACHTRAG: häufige Fragen zu den neuen Möglichkeiten
   { id: "video-stimme", sym: "🗣️", t: "Die Stimme in den Videos klingt komisch – kann ich eine andere nehmen?", x: "Ja! Tippe im laufenden Video oben auf <b>🗣️</b> oder unten in der Liste der Erklär-Videos auf <b>🗣️ Stimme &amp; Tempo</b>. Mit <b>▶ Probe</b> hörst du jede Stimme, dann tippst du deine an. Besonders gut klingen die <b>⬇️ Stimmen zum Herunterladen</b> – ein Tipp lädt sie aufs Gerät. Auch das Tempo stellst du dort ein. Ist keine gut, steht dort, wie du eine bessere Stimme ins Handy lädst.", los: () => stimmenWahl() },
-  { id: "video-verweis", sym: "🎬", t: "Das Video fragt nach einem anderen Video – was jetzt?", x: "Zu manchen Themen gibt es ein eigenes Erklär-Video, zum Beispiel zu Farben und Themen oder zum Eselsohr. Dann fragt das Video: <b>▶ Ja</b> spielt es sofort ab, danach geht es an derselben Stelle weiter. <b>Nein</b> läuft einfach weiter. <b>⏰ Später</b> merkt es dir mit 📌 – in der Liste der Erklär-Videos ist es schon angehakt. <b>🔕 Nicht mehr fragen</b> schaltet die Frage ab; wieder an geht es unten in der Liste der Erklär-Videos." },
+  { id: "video-verweis", sym: "🎬", t: "Das Video zeigt am Ende ein anderes Video an – was jetzt?", x: "Zu manchen Themen gibt es ein eigenes Erklär-Video, zum Beispiel zu Farben und Themen oder zum Eselsohr. Das Video läuft dabei ganz normal zu Ende – erst auf der Schlusskarte steht dann <b>🎬 Dazu gibt es ein eigenes Video</b>. <b>▶</b> mit dem Namen spielt es sofort ab. <b>⏰ Später</b> merkt es dir mit 📌 – in der Liste der Erklär-Videos ist es schon angehakt. <b>🔕 Nicht mehr fragen</b> schaltet den Hinweis ab; wieder an geht es unten in der Liste der Erklär-Videos." },
   { id: "aussehen", sym: "🎨", t: "Wie passe ich das Aussehen der App an?", x: "Am schnellsten mit einem <b>🎭 Thema</b>: ⚙️ → „🎨 Darstellung“ → Themen – ein Tipp stellt Farben, Bild im Kopf, Sende-Effekt und Schrift passend ein. Einzeln geht es auch: Farbdesign, Tag/Nacht, große Schrift (Darstellung) sowie Jahreszeiten-Bild, Deko an der Leiste und Effekte (⚙️ → „✨ Effekte“). Das Erklär-Video „🎨 Meine App nach meinem Geschmack“ zeigt alles.", los: () => rgListeAbspielen(["anpassen"]) },
   { id: "kopf-ruhig", sym: "🍂", t: "Warum bewegt sich oben im Kopf nichts?", x: "Dann ist entweder <b>„🍂 Jahreszeiten im Kopf“</b> aus (⚙️ → „✨ Effekte“), <b>„✨ Animierte Knöpfe“</b> aus – oder der <b>🐢 Sparmodus</b> hat sich eingeschaltet (⚙️ → „🎨 Darstellung“). Tippst du in den Effekten eine Vorschau an, sagt die App dir den Grund und schaltet mit einem Tipp wieder ein.", los: () => einstiegHin("effekte", "jzWahl") },
   { id: "raetsel", sym: "🧩", t: "Wie spiele ich das Rätsel?", x: "Eselsohr unten rechts am Kopf doppelt antippen → Reiter <b>🧩 Rätsel</b>. Das Bild wird schärfer – erkannt? <b>Roten Buzzer</b> drücken und einen der 6 Tipps wählen. Das <b>🏆 Wochen-Rätsel</b> zählt für die Club-Bestenliste.", los: () => esOeffnen("raetsel") },
@@ -19956,6 +19956,7 @@ function rundKarteHtml(t) {
   if ((t.phase === "geplant" || t.phase === "gleich") && !(A.anmeldung && t.darfLeiten)) knoepfe.push(t.meineZusage === "ja" ? k(`rundZusage(${id}, null)`, A.anmeldung ? "↩️ Abmelden" : "↩️ Doch nicht")
     : voll ? '<span class="hinweis">🈵 ausgebucht</span>' : k(`rundZusage(${id}, 'ja')`, A.anmeldung ? "📝 Anmelden" : "✋ Ich setz mich dazu", t.phase === "geplant" || !darfSitzen));
   if (t.chat && t.imChat && t.phase === "vorbei") knoepfe.push(k(`rundChat(${id})`, "💬 Chat nachlesen"));
+  if (t.phase === "vorbei" && t.darfLeiten && t.chat && !A.bestaetigung) knoepfe.push(k(`rundLeiten(${id}, 'wieder')`, "🔁 Wieder öffnen")); // 2.799.0 KC-CLUB-TISCH-WIEDER
   if (t.bestaetigung) knoepfe.push(k(`rundBestaetigung(${id})`, "📄 Teilnahmebestätigung", true));
   if (t.phase !== "vorbei" && t.phase !== "abgesagt") knoepfe.push(k(`rundTascheOeffnen(${id})`, `💼 Meine Tasche${t.tasche?.meine ? ` (${t.tasche.meine})` : ""}${t.tasche?.vorab ? ` · 📁 ${t.tasche.vorab} vorab` : ""}`)); // 2.774.0 KC-CLUB-TISCH-TASCHE
   if (t.darfLeiten && (t.phase === "geplant" || t.phase === "gleich")) knoepfe.push(k(`rundLeiten(${id}, 'absagen')`, "🚫 Absagen"));
@@ -19973,6 +19974,20 @@ function rundKarteHtml(t) {
     ${t.phase === "vorbei" && t.chat ? `<div class="hinweis">${t.medienWeg ? "📎 Dateien sind schon gelöscht" : `📎 Dateien werden ${RUND.lage?.regeln?.medienTage || 7} Tage nach dem Ende gelöscht`}, der Chat nach ${RUND.lage?.regeln?.textTage || 30} Tagen.</div>` : ""}
     ${knoepfe.length ? `<div class="knoepfe">${knoepfe.join("")}</div>` : ""}</div>`;
 }
+// 2.799.0 KC-CLUB-TISCH-KLAPPEN (Wunsch Hansi „Runder Tisch einklappbar wie Nachrichten nach Tagen, Monaten oder KW – was am meisten Sinn macht“):
+// Demnächst nach Kalenderwoche (Diese Woche, Nächste Woche, KW …), Vorbei nach Monat. Die erste Gruppe ist offen, die anderen zu; Auf/Zu merkt sich
+// die App, solange sie offen ist (die Liste wird beim Herzschlag neu gezeichnet). Bei höchstens 3 Tischen in einer Gruppe ohne Klappen.
+const RUND_ZU = new Map();
+function rundGruppenHtml(liste, art) {
+  const mo = montag(heuteIso()), schluessel = (t) => { const d = berlinIso(t.beginn); return art === "woche" ? montag(d) : d.slice(0, 7); };
+  const name = (k) => art === "woche" ? (k === mo ? "Diese Woche" : k === tagPlus(mo, 7) ? "Nächste Woche" : `KW ${kwVon(k)} · ab ${tagKurz(k)}`)
+    : new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(k + "-15T12:00:00Z"));
+  const gruppen = [];
+  for (const t of liste) { const k = schluessel(t); let g = gruppen.find((x) => x.k === k); if (!g) gruppen.push(g = { k, l: [] }); g.l.push(t); }
+  if (gruppen.length < 2 && liste.length <= 3) return liste.map(rundKarteHtml).join("");
+  return gruppen.map((g, i) => { const id = art + ":" + g.k, offen = RUND_ZU.has(id) ? !RUND_ZU.get(id) : i === 0;
+    return `<details class="rund-gruppe"${offen ? " open" : ""} ontoggle="RUND_ZU.set(${jsArg(id)}, !this.open)"><summary><b>${esc(name(g.k))}</b> <small class="hinweis">(${g.l.length})</small></summary>${g.l.map(rundKarteHtml).join("")}</details>`; }).join("");
+}
 function rundZeichnen() {
   const el = $("rundInhalt"), l = RUND.lage; if (!el || !l) return;
   const T = rundTische(), jetztMs = Date.now();
@@ -19982,9 +19997,9 @@ function rundZeichnen() {
     <p class="hinweis" style="margin-top:0">Lade zu einem Thema ein: 🪑 Runder Tisch, 🎓 Seminar oder 🗂️ Besprechung. Ab ${l.regeln?.vorlaufMin || 15} Minuten vor Beginn nimmt man Platz – schreiben, 🎤 sprechen, Fotos und PDFs zeigen. Höchstens ${l.regeln?.plaetzeMax || 18} Plätze.</p>
     <button class="knopf haupt" onclick="rundNeu()">➕ Einladen</button>
     ${jetzt.length ? `<h4>🟢 Jetzt</h4>${jetzt.map(rundKarteHtml).join("")}` : ""}
-    <h4>📅 Demnächst</h4>${bald.map(rundKarteHtml).join("") || '<p class="hinweis">Gerade ist kein Tisch geplant – lade doch selbst ein!</p>'}
+    <h4>📅 Demnächst</h4>${rundGruppenHtml(bald, "woche") || '<p class="hinweis">Gerade ist kein Tisch geplant – lade doch selbst ein!</p>'}
     ${abgesagt.length ? `<h4>🚫 Abgesagt</h4>${abgesagt.map(rundKarteHtml).join("")}` : ""}
-    ${vorbei.length ? `<h4>✔️ Vorbei – zum Nachlesen</h4>${vorbei.map(rundKarteHtml).join("")}` : ""}
+    ${vorbei.length ? `<h4>✔️ Vorbei – zum Nachlesen</h4>${rundGruppenHtml(vorbei, "monat")}` : ""}
     <button class="knopf" onclick="fensterZu($('rundBlatt'))">Schließen</button>`;
 }
 // Einladen: Auswahl statt Freitext, wo es geht (Vertrag Regel 13)
@@ -20067,7 +20082,8 @@ async function rundLeiten(id, aktion) {
   const p = { id, aktion };
   if (aktion === "absagen") { const g = await eingabe(`🚫 Runden Tisch absagen?\n„${t.thema}“, ${t.text}\n\nAlle mit Zusage bekommen Bescheid. Grund (freiwillig):`, "", { ja: "🚫 Absagen" }); if (g === null) return; p.grund = g.trim(); }
   else if (aktion === "schliessen" && !(await frage(`⏹️ Tisch jetzt schließen?\n„${t.thema}“\n\nDer Chat bleibt zum Nachlesen.`, { ja: "⏹️ Schließen" }))) return;
-  try { const r = await api("tisch_gastgeber", p, { warten: true }); rundLageSetzen(r.lage); melde({ absagen: "🚫 Abgesagt", verlaengern: "⏱️ 30 Minuten länger", schliessen: "⏹️ Tisch geschlossen" }[aktion]); }
+  else if (aktion === "wieder" && !(await frage(`🔁 Tisch wieder öffnen?\n„${t.thema}“\n\nEr läuft ab jetzt noch einmal ${t.dauer || 60} Minuten – mit demselben Chat. Wer zugesagt hatte oder dabei war, bekommt Bescheid.`, { ja: "🔁 Wieder öffnen" }))) return;
+  try { const r = await api("tisch_gastgeber", p, { warten: true }); rundLageSetzen(r.lage); melde({ absagen: "🚫 Abgesagt", verlaengern: "⏱️ 30 Minuten länger", schliessen: "⏹️ Tisch geschlossen", wieder: "🔁 Der Tisch ist wieder offen" }[aktion]); }
   catch (e) { meldeFehler(e); }
 }
 function rundChat(id) {
@@ -23681,6 +23697,25 @@ function versandZeigen() {
   l?.classList.toggle("versteckt", !(t?.value.trim() || anlagen.length || !normal || versandImmerAn()));
   try { vwKnopfZeigen(); } catch {} // 2.678.0 KC-CLUB-VERSAND-VORWAHL
 }
+// KC-CLUB-GRUSSFORMEL (2.799.0, Wunsch Hansi „in die kleine Zeile mit der Tastatur einen Button Grußformel: Danke und Gruß, Liebe Grüße, Bis bald mal
+// wieder, Freundliche Grüße – auswählen und auf Tipp einsetzen“): mit dem eigenen Vornamen; eingesetzt an der Schreibstelle, eigene Zeile, Tastatur bleibt offen
+const GRUSS_FORMELN = ["Danke und Gruß", "Liebe Grüße", "Bis bald mal wieder", "Freundliche Grüße"];
+const grussText = (i) => `${GRUSS_FORMELN[i]}${i === 0 ? "," : ""}\n${ICH?.vorname || ""}`.trim();
+function grussUmschalten(an) {
+  const l = $("grussListe"); if (!l) return;
+  const offen = an ?? l.classList.contains("versteckt");
+  if (offen) l.innerHTML = GRUSS_FORMELN.map((f, i) => `<button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="grussEinsetzen(${i})">${esc(grussText(i).replace("\n", " "))}</button>`).join("");
+  l.classList.toggle("versteckt", !offen); $("grussKnopf")?.setAttribute("aria-expanded", String(offen));
+}
+function grussEinsetzen(i) {
+  const t = $("text"); if (!t || !GRUSS_FORMELN[i]) return;
+  const a = document.activeElement === t ? t.selectionStart : t.value.length, b = document.activeElement === t ? t.selectionEnd : t.value.length;
+  const vor = t.value.slice(0, a).replace(/[ \t]+$/, ""), rein = (vor && !vor.endsWith("\n") ? "\n" : "") + grussText(i);
+  t.value = vor + rein + t.value.slice(b);
+  const pos = vor.length + rein.length; t.focus(); t.setSelectionRange?.(pos, pos);
+  t.dispatchEvent(new Event("input", { bubbles: true })); // Höhe, Entwurf, ✕ und „schreibt …“ wie beim Tippen
+  grussUmschalten(false);
+}
 function versandNormal() {
   if (!WICHTIG && !EXPRESS) return versandZeigen();
   wichtigUmschalten(false); expressUmschalten(false);
@@ -25431,11 +25466,21 @@ async function protokolleLaden() {
         <button class="knopf haupt klein" onclick="einmal(this, () => protokollAnlegen('${t.id}'))">＋ Anlegen</button></div>`).join("")}</details>` : "";
     const suche = protokolle.length > 5 ? `<label class="feld" style="margin-top:12px"><input id="prSuche" placeholder="🔍 Protokoll suchen …" oninput="protokollFilter()"></label>` : "";
     $("protokollListe").innerHTML = auf + neu + `<div class="abschnitt"><h3>📄 Protokolle</h3></div>` + suche
-      + (protokolle.length ? `<div class="mini-kacheln${prAlsListe() ? " prl-ansicht" : ""}">${protokolle.map(prAlsListe() ? protokollZeile : protokollKarte).join("")}</div>` : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
+      + (protokolle.length ? prGruppenHtml(protokolle) : "") + (protokolle.length ? "" : '<div class="karte hinweis">Noch keine Protokolle. Nach der nächsten Sitzung erscheint sie oben unter „Protokoll schreiben“.</div>');
     prAnsichtKnopf();
     klappenMerken($("protokollListe")); // 1.46.0: Klappbereiche mit Pfeil und Schloss wie überall
     if (!$("prFilterFeld").classList.contains("versteckt")) prFilterFuellen(); else prFilterAnwenden(); // 2.23.36: Filter bleibt nach dem Neuladen
   } catch (e) { meldeFehler(e); ladeFehlerStand("protokollListe", e, "protokolleLaden()"); }
+}
+// 2.799.0 KC-CLUB-PROTOKOLL-GRUPPEN (Wunsch Hansi „in der Listenansicht Gruppen bilden – KW oder Monate und Jahre“): je Jahr ein Klappbereich
+// (das neueste offen, Auf/Zu gemerkt wie überall), darin Monate als Zwischenzeile. Bei höchstens 4 Protokollen ohne Gruppen.
+function prGruppenHtml(liste) {
+  const zeile = prAlsListe() ? protokollZeile : protokollKarte, kl = `mini-kacheln${prAlsListe() ? " prl-ansicht" : ""}`;
+  if (liste.length <= 4) return `<div class="${kl}">${liste.map(zeile).join("")}</div>`;
+  const jahre = [...new Set(liste.map((p) => String(p.datum || "").slice(0, 4)))].sort().reverse();
+  return jahre.map((j, i) => { const imJahr = liste.filter((p) => String(p.datum || "").startsWith(j)), monate = [...new Set(imJahr.map((p) => String(p.datum).slice(5, 7)))].sort().reverse();
+    return `<details class="karte pr-jahr" data-klappe="pr_jahr_${esc(j)}" data-ohne-unten${i === 0 ? " open" : ""}><summary>📅 ${esc(j)} <span class="marke">${imJahr.length}</span></summary>
+      ${monate.map((m) => `<div class="pr-monat"><div class="pr-monat-titel">${esc(CJ_MONATE[Number(m) - 1] || m)}</div><div class="${kl}">${imJahr.filter((p) => String(p.datum).slice(5, 7) === m).map(zeile).join("")}</div></div>`).join("")}</details>`; }).join("");
 }
 function protokollFilter() { prFilterAnwenden(); } // Suchfeld + Filter wirken zusammen (2.23.36)
 // ---------- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): oben „🔽 Filter“ → Jahr, Monat, Ort, Protokollführer (2 × 2 Felder) ----------
@@ -25466,6 +25511,8 @@ function prFilterAnwenden() {
       && (!PRF.ort || (p?.ort || "").trim() === PRF.ort) && (!PRF.wer || p?.verfasser?.name === PRF.wer && !p.verfasser.offen);
     k.classList.toggle("versteckt", !ok); if (ok) n++;
   });
+  // 2.799.0 KC-CLUB-PROTOKOLL-GRUPPEN: Monate und Jahre ohne Treffer ausblenden
+  document.querySelectorAll("#protokollListe .pr-monat, #protokollListe .pr-jahr").forEach((g) => g.classList.toggle("versteckt", !g.querySelector(".prkarte:not(.versteckt)")));
   const aktiv = [PRF.jahr, PRF.monat, PRF.ort, PRF.wer].filter(Boolean).length;
   $("prFilterAnz").textContent = aktiv; $("prFilterAnz").classList.toggle("versteckt", !aktiv);
   if ($("prfTreffer")) $("prfTreffer").textContent = `${n} von ${L.length} Protokoll${L.length === 1 ? "" : "en"}`;
@@ -26130,6 +26177,7 @@ function protokollFormular() {
       <button class="knopf haupt" onclick="einmal(this, protokollVeroeffentlichen)">📢 Veröffentlichen</button>
       <button class="knopf" onclick="einmal(this, () => prSpeichernJetzt(true))">💾 Speichern</button>
       <button class="knopf" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>
+      <button class="knopf" disabled title="Geht erst, wenn das Protokoll veröffentlicht ist">📣 Info an Mitglieder</button>
       ${PR.darfLoeschen ? `<button class="knopf" onclick="protokollLoeschen()">🗑️ ${p.version === 1 ? "Entwurf" : "Protokoll"} löschen</button>` : ""}
     </div>
     <p class="hinweis" style="font-size:.85rem">Nach dem Veröffentlichen bekommen alle Mitglieder (ohne Aushilfen) Bescheid und haben ${7} Tage Zeit für Einwände – danach gilt das Protokoll als genehmigt.</p>`;
@@ -26271,7 +26319,7 @@ function protokollLesen() {
       ${p.naechster_termin ? `<p style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
     </div>
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
-    <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>${p.roh !== "entwurf" ? '<button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button>' : ""}</div>
+    <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>${PR.darfBearbeiten && p.roh !== "entwurf" ? '<button class="knopf klein" onclick="prInfoWahl()">📣 Info an Mitglieder</button>' : ""}${p.roh !== "entwurf" ? '<button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button>' : ""}</div>
     ${PR.aufgaben.length ? `<div class="karte"><h3>📌 Aufgaben</h3>${PR.aufgaben.map((a) => aufgabeZeile(a, a.meine || PR.darfBearbeiten, a.verwalten)).join("")}</div>` : ""}
     ${PR.einwaende.length || einspruchOffen ? `<div class="karte"><h3>⚠️ Einwände</h3>
       ${PR.einwaende.map((e) => `<div class="zeile"><div style="flex:1${e.erledigt_am ? ";opacity:.6" : ""}"><b>${esc(e.name)}:</b> ${esc(e.text)}<div class="hinweis" style="font-size:.85rem">${esc(zeitKurz(e.erstellt_am))}${e.erledigt_am ? " · ✔ erledigt" : ""}</div></div>
@@ -26282,6 +26330,31 @@ function protokollLesen() {
     ${(PR.darfBearbeiten && p.roh === "veroeffentlicht") || PR.darfLoeschen ? `<div class="knoepfe">${PR.darfBearbeiten && p.roh === "veroeffentlicht" ? '<button class="knopf" onclick="protokollKorrigieren()">✏️ Korrigieren (neue Fassung)</button>' : ""}${PR.darfLoeschen ? '<button class="knopf" onclick="protokollLoeschen()">🗑️ Protokoll löschen</button>' : ""}</div>` : ""}
     ${PR.fassungen.length ? `<p class="hinweis" style="font-size:.85rem">Frühere Fassungen: ${PR.fassungen.map((f) => `Fassung ${f.version} (gesichert ${esc(zeitKurz(f.gesichert_am))})`).join(", ")} – bleiben im Archiv erhalten.</p>` : ""}`;
   document.querySelectorAll("#protokollInhalt img[data-anlage]").forEach(bildLaden);
+}
+// 2.799.0 KC-CLUB-PROTOKOLL-INFO (Wunsch Hansi): kurze Info an Mitglieder – Empfänger wie gewohnt (alle, Gruppe, Auswahl), Text vorbelegt,
+// der Link zum Protokoll kommt automatisch dazu; verschickt wird erst nach der Rückfrage. Im Entwurf ist die Taste ausgegraut.
+async function prInfoWahl() {
+  const p = PR?.protokoll; if (!p) return;
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  blattAuf("prInfoBlatt", `<h3 style="margin:0">📣 Info an Mitglieder</h3><p class="hinweis" style="margin:2px 0 6px">${esc(p.titel)} · ${esc(tagKurz(p.datum))}</p>
+    <div id="prInfoAn"></div>
+    <label class="feld" style="margin-top:8px">Text (der Link zum Protokoll kommt automatisch dazu)<textarea id="prInfoText" rows="3" maxlength="500">Das Protokoll vom ${esc(String(p.datum || "").split("-").reverse().join("."))} ist eingestellt.</textarea></label>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="prInfoLos" onclick="prInfoSenden(this)" disabled>📣 Senden</button><button class="knopf" onclick="$('prInfoBlatt').remove()">Abbrechen</button></div>`);
+  zwStart("prInfoAn", { titel: "👤 Wer bekommt die Info?", alleText: BU_ALLE_TEXT, alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: prInfoKnopf });
+  prInfoKnopf();
+}
+function prInfoKnopf() {
+  const k = $("prInfoLos"); if (!k || !ZWAHL.prInfoAn) return;
+  const n = zwBereit("prInfoAn") ? zwIds("prInfoAn").length : 0;
+  k.disabled = !n; k.textContent = n ? `📣 An ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden` : "Bitte Empfänger wählen";
+}
+async function prInfoSenden(knopf) {
+  const an = zwIds("prInfoAn"), text = ($("prInfoText")?.value || "").trim();
+  if (!an.length) return;
+  if (!(await frage(`📣 Info jetzt an ${an.length} ${an.length === 1 ? "Mitglied" : "Mitglieder"} senden?\n\n„${text}“\n+ Link zum Protokoll`, { ja: "📣 Senden" }))) return;
+  knopf.disabled = true;
+  try { const r = await api("protokoll_info", { id: prId, an, text }, { warten: true }); $("prInfoBlatt")?.remove(); melde(`📣 Info an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet`); }
+  catch (e) { meldeFehler(e); knopf.disabled = false; }
 }
 async function einwandSchreiben() {
   const text = (await eingabe("Was stimmt im Protokoll nicht? (Der Schriftführer und Clubsprecher/Kassenwart bekommen Bescheid.)"));
@@ -33654,7 +33727,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",

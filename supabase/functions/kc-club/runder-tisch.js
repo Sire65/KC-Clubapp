@@ -114,6 +114,13 @@ export function rtGastgeberPruefen(t, aktion, jetzt, darf) {
     return (Number(t.verlaengert_min) || 0) + RT.verlaengernMin > RT.verlaengernMax ? `Höchstens ${RT.verlaengernMax} Minuten verlängern.` : null;
   }
   if (aktion === "schliessen") return ph === "offen" ? null : "Schließen geht nur, solange der Tisch läuft.";
+  // 2.799.0 KC-CLUB-TISCH-WIEDER (Wunsch Hansi „Runder Tisch wieder aktivieren, wenn schon mal vorbei“): derselbe Tisch mit demselben Chat startet jetzt
+  // noch einmal für seine Dauer. Nicht beim Seminar (Teilnahmebestätigung hängt an der Zeit) und nicht, wenn der Chat schon gelöscht ist.
+  if (aktion === "wieder") {
+    if (ph !== "vorbei") return ph === "abgesagt" ? "Ein abgesagter Tisch wird neu eingeladen, nicht wieder geöffnet." : "Wieder öffnen geht erst, wenn der Tisch vorbei ist.";
+    if (rtArt(t).bestaetigung) return "Ein Seminar wird neu angesetzt – wegen der Teilnahmebestätigung nicht wieder geöffnet.";
+    return t.text_geloescht_am ? "Der Chat dieses Tisches ist schon gelöscht – bitte neu einladen." : null;
+  }
   return "Unbekannte Aktion.";
 }
 

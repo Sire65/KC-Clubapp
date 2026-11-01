@@ -12512,11 +12512,21 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const zl = await rtZeitLage(ich, Date.parse(x.ende), Date.parse(set.ende as string), x.id); // 2.764.0: die halbe Stunde danach muss frei sein
           if (zl.sperre.length) throw new Fehler("Verlängern geht nicht: " + zl.sperre[0].replace(/ – bitte eine andere Zeit wählen\.$| Es geht immer nur einer gleichzeitig – bitte eine andere Zeit wählen\.$/, "."), 409);
         }
+        else if (aktion === "wieder") { // 2.799.0 KC-CLUB-TISCH-WIEDER: ab jetzt noch einmal für die geplante Dauer, gleicher Chat
+          const von = t, bis = t + (Number(x.dauer_min) || RT.dauern[0]) * 60000, zl = await rtZeitLage(ich, von, bis, x.id);
+          if (zl.sperre.length) throw new Fehler("Wieder öffnen geht gerade nicht: " + zl.sperre[0].replace(/ – bitte eine andere Zeit wählen\.$| Es geht immer nur einer gleichzeitig – bitte eine andere Zeit wählen\.$/, "."), 409);
+          Object.assign(set, { beginn: new Date(von).toISOString(), ende: new Date(bis).toISOString(), verlaengert_min: 0, geschlossen_am: null });
+        }
         else { set.geschlossen_am = jetzt(); set.ende = jetzt(); }
         const { data: ok, error } = await db.from("kc_club_tisch").update(set).eq("id", x.id).eq("status", "geplant").eq("verlaengert_min", x.verlaengert_min).select("id");
         if (error) throw error.code === "23P01" ? new Fehler("Verlängern geht nicht: danach beginnt schon der nächste Tisch.", 409) : new Fehler("Das hat nicht geklappt – bitte nochmal.", 503);
         if (!ok?.length) throw new Fehler("Der Tisch wurde gerade geändert – die Ansicht wird neu geladen.", 409);
         await protokoll(ich.person_id, "tisch_" + aktion, { tisch: x.id });
+        if (aktion === "wieder") { // wer zugesagt hatte oder dabei war, bekommt Bescheid (Weg wie beim Einladen: Push)
+          const { data: alt } = await db.from("kc_club_tisch_teilnahme").select("person_id,zusage,dabei_seit").eq("tisch_id", x.id);
+          const an = [...new Set((alt ?? []).filter((r: any) => r.zusage === "ja" || r.dabei_seit).map((r: any) => r.person_id as string))].filter((id) => id !== ich.person_id && !rtIstGast(id));
+          if (an.length) await rtSenden(an, { titel: `🔁 Wieder geöffnet: ${rtArt(x).sym} „${x.thema}“`, kurz: `${ich.vorname} hat den Tisch wieder geöffnet – wer mag, setzt sich dazu.`, tischId: x.id }, `${x.id}:wieder:${t}`);
+        }
         if (aktion === "absagen") {
           const { data: ja } = await db.from("kc_club_tisch_teilnahme").select("person_id").eq("tisch_id", x.id).eq("zusage", "ja");
           const grund = txt(p.grund, 200);
@@ -17270,6 +17280,27 @@ Köcheclub Werne`,
         return json({ ok: true });
       }
 
+      // 2.799.0 KC-CLUB-PROTOKOLL-INFO (Wunsch Hansi „Taste ‚Info an Mitglieder‘ – ausgegraut, solange Entwurf; dann Empfängerauswahl alle, Gruppe,
+      // Auswahl; kurz vorbelegt mit Link; erst nach Bestätigung verschickt“): nur veröffentlichte Protokolle, nur an Mitglieder mit Protokoll-Leserecht.
+      case "protokoll_info": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Die Info verschickt, wer das Protokoll schreibt (oder Clubsprecher/Kassenwart).", 403);
+        if (pr.status !== "veroeffentlicht") throw new Fehler("Die Info geht erst, wenn das Protokoll veröffentlicht ist.", 409);
+        const leser = new Set(await protokollLeser());
+        const an = [...new Set((Array.isArray(p.an) ? p.an : []).map((x: unknown) => String(x)))].filter((id) => leser.has(id) && id !== ich.person_id).slice(0, 200);
+        if (!an.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.", 400);
+        const text = txt(p.text, 500) || `Das Protokoll vom ${tagText(pr.datum)} ist eingestellt.`;
+        // Bremse wie beim Büro-Mail: erst den Versuch eintragen, dann zählen – höchstens 3 Infos je Protokoll und Stunde
+        await protokoll(ich.person_id, "protokoll_info_versuch", { protokoll: pr.id });
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "protokoll_info_versuch").eq("details->>protokoll", pr.id).gte("zeit", new Date(Date.now() - 3600000).toISOString());
+        if ((count ?? 0) > 3) throw new Fehler("Zu diesem Protokoll gingen gerade schon mehrere Infos raus – bitte später noch einmal.", 429);
+        const url = `${APP_URL}#protokoll=${pr.id}`;
+        const versand = await senden("club_protokoll", an, { titel: `📝 Protokoll: ${pr.titel}`, kurz: text, betreff: `Köcheclub Werne – Protokoll: ${pr.titel} vom ${tagText(pr.datum)}`,
+          text: `Hallo,\n\n${text}\n\nZum Protokoll: ${url}\n\nViele Grüße\n${ich.name}`, url }, `club-protokoll-info:${pr.id}:${Date.now()}`);
+        await protokoll(ich.person_id, "protokoll_info", { protokoll: pr.id, empfaenger: an.length, versand });
+        return json({ ok: true, empfaenger: an.length });
+      }
       case "protokoll_veroeffentlichen": {
         nurProtokolle(ich);
         const pr = await protokollHolen(p.id);
