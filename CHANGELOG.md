@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.798.0 – 2026-11-01 – 🧩 Programm aufteilen, Stufe 5: Frag Twinkey und Lupe werden erst beim Antippen geladen (KC-CLUB-TEILE) · nur App
+Wunsch Hansi (Prüfbericht C, Wunsch #44) – Hansi 1.11.: „Spiel 5 ein“. Letzte Stufe des Umbaus.
+- **Neu ausgeschnitten** auf dem heutigen Stand (2.797.0, mit Stufe 4).
+- `teile/hilfe.js` (~110 KB): Frag Twinkey, Ein Mitglied fragen, Lupe/Schnellsuche. 4 Einstiege: `twFrageStart`, `twOffenStart`, `sucheAuf`, `suSucheKnopf`.
+- Im Hauptprogramm bleiben: Hilfetexte (HILFE, TIPPS, EINWEISUNG – braucht der Start), Zustand TW/SU, Antwort-Prüfung, Such-Bausteine (suNorm … suMusterFuer), Lupen. Die Erklär-Videos laden das Hilfe-Teil mit (TEILE_BRAUCHT).
+- app.js 3,94 MB → 3,83 MB.
+- Tests: Block „Stufe 5“ im Vertragstest, Endmarken (Twinkey 2×, Such-Bausteine, TEILE_BRAUCHT), Klick-Rundgang, Hilfe alt/neu im Browser. Rückweg: App 2.797.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.797.0 – 2026-11-01 – 🧩 Programm aufteilen, Stufe 4: Büro der Clubleitung wird erst beim Öffnen geladen (KC-CLUB-TEILE) · nur App
 Wunsch Hansi (Prüfbericht C, Wunsch #44): „gut aufteilen, damit später alles besser, schneller, sicherer läuft“ – Termin So 1.11. 12 Uhr.
 - **Neu ausgeschnitten** auf dem heutigen Stand (2.796.0), weil sich das Büro seit dem 28.10. stark verändert hat (Aktenschrank, Büro-Ansicht, kleine Knöpfe, Einlesen, Ablage …). Alter Zweig gesichert als `alt-stufe4-2.751.0`.

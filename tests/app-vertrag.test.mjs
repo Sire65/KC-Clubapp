@@ -1214,7 +1214,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 {
   assert.ok(/pinnwand_erinnert: \(w\) => \(\{ bis: Object\.fromEntries/.test(server) && /\/\^\[0-9a-f-\]\{36\}\$\/\.test\(id\)/.test(server), "Server speichert „hängen lassen“ nicht geprüft");
   // 0.65.0: Fristen vom Admin (Server), ohne Wert 3 / 7 Tage
-  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && !pwErinnern\(\)( && !einstiegPruefen\(\)( && !einrichtenEinmal\(\))?\) tippDesTages\(\);|\) einstiegPruefen\(\);)/.test(html), "Erinnerung beim Start fehlt"); // 1.87.0: Einrichtungs-Assistent (einmal je Gerät) vor dem Tipp des Tages
+  assert.ok(/const PW_FRISTEN_STANDARD = \{ erinnernTage: 3, pauseTage: 7 \};/.test(html) && /if \(!gezeigt && !nurZaehlen && (!\(START_HASH && START_HASH !== "#"\) && )?!pwErinnern\(\)( && !einstiegPruefen\(\)( && !einrichtenEinmal\(\))?\) tippDesTages\(\);|\) einstiegPruefen\(\);)/.test(html), "Erinnerung beim Start fehlt"); // 1.87.0: Einrichtungs-Assistent (einmal je Gerät) vor dem Tipp des Tages // 2.798.0: + Direkt-Link-Bedingung
   const e = html.slice(html.indexOf("function pwErinnern()"), html.indexOf("async function pwLaden()"));
   assert.ok(/z\.vonMir && jetzt - new Date\(z\.erstellt_am\)\.getTime\(\) >= PW_ERINNERN_TAGE \* 86400000/.test(e) && /bis\[z\.id\]/.test(e), "nur eigene, alte, nicht zurückgestellte Zettel");
   assert.ok(/hängt noch an der Pinnwand\./.test(e) && /Möchtest du \$\{liste\.length === 1 \? "(es|ihn)" : "sie"\} abnehmen\?/.test(e) /* 1.98.0: „Zettel“ → ihn */ && /api\("pinnwand_abnehmen"/.test(e), "Text/Abnehmen fehlt");
@@ -4050,7 +4050,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 397. 2.23.48 → 2.23.49: „🧑‍🍳 Frag Twinkey“ (früher „Frag den Küchenchef“) – Fragen in eigenen Worten (KC-CLUB-TWINKEY)
 {
-  const k = html.slice(html.indexOf("// ---------- KC-CLUB-TWINKEY (2.23.49"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
+  const k = html.slice(html.indexOf("// → ausgelagert nach teile/hilfe.js"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD")) + lies("teile/hilfe.js"); // 2.798.0 Stufe 5: Zustand + Laden im Hauptprogramm, Fenster in teile/hilfe.js
   assert.ok(k.length > 1000 && /twIndex\(\)/.test(k) && /hzEintraege\(\)/.test(k) && !/fetch\(/.test(k), "Hilfen als Grundlage, keine fremde KI, keine Kosten");
   assert.ok(/const TW_SYN = \[/.test(k) && /function twAbstand\(a, b\)/.test(k) && /zusammengesetzte Wörter/.test(k), "Synonyme, Tippfehler, zusammengesetzte Wörter");
   assert.ok((k.match(/^  \{ id: "[a-z-]+", sym: /gm) || []).length >= 30, "mindestens 30 eigene Fragen + Antworten (TW_FAQ)");
@@ -4060,7 +4060,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 398. 2.23.49: Unbekannte Fragen gehen an den Admin, Antwort per Push/E-Mail/Club-App, Twinkey lernt (KC-CLUB-TWINKEY-FRAGEN)
 {
-  const k = html.slice(html.indexOf("// ---------- KC-CLUB-TWINKEY (2.23.49"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD"));
+  const k = html.slice(html.indexOf("// → ausgelagert nach teile/hilfe.js"), html.indexOf("// ---------- KC-CLUB-DIKTAT-FELD")) + lies("teile/hilfe.js"); // 2.798.0 Stufe 5: Zustand + Laden im Hauptprogramm, Fenster in teile/hilfe.js
   assert.ok(/Das ist eine gute Frage\./.test(k) && /Ich werde recherchieren und dir bei Gelegenheit eine Antwort zukommen lassen\./.test(k), "Twinkeys Antwort auf unbekannte Fragen");
   const aw = k.slice(k.indexOf("function twAntworten("), k.indexOf("function twNichtGefunden"));
   assert.ok(/if \(gefragt\) twWeitergeben\(fr\)/.test(aw) && /TW_TAKT=setTimeout\(twAntworten,450\)/.test(k), "weitergegeben wird nur nach ausdrücklichem „Fragen“, nicht beim Tippen");
@@ -7849,7 +7849,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   const app = lies("app.js"), rs = lies("teile/rueckseite.js");
   assert.match(app, /rueckseite: \{ einstieg: \["bwClubSong"\], sri: "sha384-/, "Rückseiten-Teil registriert");
-  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite", "szenen"\] \};/, "Videos laden Rückseite und Szenen mit (sie führen Rätsel, Bühne und Jahreszeiten vor)"); // 2.758.0: + szenen
+  assert.match(app, /const TEILE_BRAUCHT = \{ videos: \["rueckseite", "szenen", "hilfe"\] \};/, "Videos laden Rückseite, Szenen und Hilfe mit (sie führen Rätsel, Bühne, Jahreszeiten und die Lupe vor)"); // 2.758.0: + szenen; 2.798.0: + hilfe (rgHilfeLupe öffnet die Suche direkt)
   assert.match(app, /Promise\.all\(\(TEILE_BRAUCHT\[name\] \|\| \[\]\)\.map\(teilLaden\)\)\.then\(\(\) => versuch\(1\)\)/, "abhängige Teile zuerst");
   assert.match(app, /TEILE_DA\[name\] = true;/, "teilDa() weiß, was geladen ist");
   assert.match(app, /if \(k !== "uhr" && !teilDa\("rueckseite"\)\) return teilLaden\("rueckseite"\)\.then\(\(\) => esTab\(k\), \(e\) => \{ meldeFehler\(e\); esTab\("uhr"\); \}\);/, "Reiter laden die Rückseite nach; geht das nicht, bleibt die Uhr");
@@ -10384,7 +10384,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(/function suchAbstand\(/.test(server) && /const suchPasstUnscharf = /.test(server) && /extra: \{ aehnlich: true \}, rang: 1/.test(server) && /return json\(\{ bereiche: gruppen, vorschlag \}\)/.test(server), "Server: ähnliche Namen + „Meintest du“");
   assert.ok(/function suUnscharf\(q, text\)/.test(html) && /const suFiltern = /.test(html) && /Meintest du „\$\{esc\(SU\.vorschlag\)\}“\?/.test(html), "App: gleiche Regel, Vorschlag-Knopf");
   // Verhalten der App-Regel
-  const i = html.indexOf("const suNorm = "), code = html.slice(i, html.indexOf("\nfunction suWoerter", i));
+  const i = html.indexOf("const suNorm = "), code = html.slice(i, html.indexOf("\nfunction suMusterFuer", i)); // 2.798.0 Stufe 5: suWoerter liegt jetzt in teile/hilfe.js, die Bausteine bleiben
   const f = new Function(code + "; return { suUnscharf, suFiltern };")();
   for (const [q, t, soll] of [["Würdemann", "Peter Wördemann", true], ["Wilfried", "Willfried Wittwer", true], ["Würd", "Wördemann", true], ["Hans", "Klaus Zander", false], ["Koch", "Kurt Bach", false]])
     assert.strictEqual(f.suUnscharf(q, t), soll, `${q} → ${t}`);
@@ -13730,3 +13730,16 @@ assert.ok(/<th class="std alle">Std\.<small>wenn alle ganz<\/small><\/th>/.test(
     assert.ok(bu.includes(n) && !app.includes(n), `${n.slice(0, 26)} liegt im Büro-Teil`);
 }
 assert.ok(/if \(\(!h \|\| h === "#"\) && \(buSchreiben\(\) \|\| \(buDarf\(\) && \(ICH\?\.vorstand \|\| ICH\?\.admin\)\)\)\) setTimeout\(\(\) => buAufgabePruefen\(\), 4000\);/.test(lies("app.js")), "Sitzungs-Aufgabe beim Start: nur die Clubleitung lädt das Büro-Teil");
+// 2.798.0 KC-CLUB-TEILE Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Ein Mitglied fragen, Lupe/Suche) in teile/hilfe.js – beim ersten Antippen geladen (neu ausgeschnitten, vorher 2.746.0)
+{
+  const app = lies("app.js"), hi = lies("teile/hilfe.js");
+  assert.match(app, /\n  hilfe: \{ einstieg: \["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"\], sri: "sha384-/, "Hilfe-Teil registriert");
+  for (const n of ["const HILFE = [", "const TIPPS = [", "const EINWEISUNG = [", "function shBereich(", "let TW = {", "async function twLaden(", "async function twAntwortPruefen(",
+    "function sucheZu(", "function suLupenEinbauen(", "const suNorm = ", "function suEinstellung(", "function hzSucheKnopf("])
+    assert.ok(app.includes(n) && !hi.includes(n), `${n.slice(0, 28)} bleibt im Hauptprogramm`);
+  for (const n of ["function twFrageStart(", "function twOffenStart(", "function sucheAuf(", "function suSucheKnopf(", "function suZeigen("])
+    assert.ok(hi.includes(n) && !app.includes(n), `${n.slice(0, 28)} liegt im Hilfe-Teil`);
+  assert.match(app, /if \(\(!neu\.length && !mfNeu\.length\) \|\| document\.querySelector\(FENSTER_OFFEN\)\) return;\n  twFrageStart\(\);/, "Start lädt das Hilfe-Teil nicht ohne Grund");
+  assert.match(app, /if \(b\.art === "suche"\) \{ sucheAuf\(b\.q\); setTimeout\(\(\) => \{ try \{ suSucheKnopf\(\); \} catch \{\} \}, 100\); \}/, "Sprach-Suche");
+}
+assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\) && !pwErinnern\(\) && !einstiegPruefen\(\) && !einrichtenEinmal\(\)\) tippDesTages\(\);/.test(lies("app.js")), "2.798.0: Direkt-Link-Start ohne Start-Hinweise dazwischen");
