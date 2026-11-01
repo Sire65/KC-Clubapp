@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.795.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.796.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35959,7 +35959,7 @@ function spurMitName(w, k) {
   return k;
 }
 const spurZeile = (x) => { const was = spurWas(x.w), mit = x.mit || (x.k ? spurMitName(x.w, x.k) : ""); return x.w === "fenster" ? `🪟 Fenster: ${mit}` : mit ? `${was} ${mit}` : was; };
-// ---------- 2.795.0 KC-CLUB-WEGE-LINKS (Wunsch Hansi 31.10.2026 „wenn ich einen Eintrag anklicke, dass der Link direkt ins Programm zu dem Punkt geht“) ----------
+// ---------- 2.796.0 KC-CLUB-WEGE-LINKS (Wunsch Hansi 31.10.2026 „wenn ich einen Eintrag anklicke, dass der Link direkt ins Programm zu dem Punkt geht“) ----------
 // Jeder Schritt in den Wegen, zu dem es ein Ziel gibt, ist antippbar: Bereich → zeige(), Mitglied → Mitgliedskarte, Hilfetext/-kapitel, Erklär-Video, Film,
 // Fenster (nur die, die sich ohne Kennung gefahrlos öffnen lassen – Registry FENSTER_OEFFNEN). Unterhaltungen nur, wenn der Admin selbst dabei ist
 // (der Server schickt die Kennung sonst gar nicht – fremde Chats bleiben zu, KC-CHATS-PRIVAT). Kein Ziel → Zeile wie bisher, ohne Link.

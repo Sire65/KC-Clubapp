@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.796.0 – 2026-11-01 – 👣 Wege: Einträge antippen springt direkt dorthin
+- 👣 In den Wegen der Mitglieder lässt sich jeder Eintrag mit › antippen – die App springt genau dorthin: Bereich, Mitgliedskarte, Hilfetext, Erklär-Video, Film oder Fenster; Unterhaltungen nur, wenn du selbst dabei bist (KC-CLUB-WEGE-LINKS). 🧹 Dienstplan-Arbeitsstände werden jede Nacht aufgeräumt (10 neueste + je Tag die letzte der 30 Tage), Datenbank 202 → 162 MB (KC-DP-REVISIONEN-AUFRAEUMEN).
+
 ## 2.795.0 – 2026-10-31 – 🛡️ Wächter ohne Fehlalarm (KC-CLUB-WAECHTER-FEHLALARM) · Server 2.795.0
 Fund Hansi (31.10., Lage-Prüfung): Geheimnis-Wächter rot und Versions-Wächter gelb, obwohl alles in Ordnung war.
 - **🗝️ Geheimnis-Wächter:** bewertet nur noch den Teil „tests“ des GitHub-Testlaufs (dort steckt die Schlüssel-Prüfung). Der Klick-Rundgang (bekannter Video-Fund im Testbrowser) färbt ihn nicht mehr rot. Ist der Teil nicht lesbar, steht „unbekannt“.

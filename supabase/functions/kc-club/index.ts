@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.795.0";
+const SERVER_VERSION = "2.796.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -13959,7 +13959,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         };
         return json({ tag, name: name(pid!), schritte: schritte.map((x: any) => ({ t: new Date(x.t).toISOString(), w: x.w,
           mit: !x.mit ? null : x.mit.startsWith("KC-P-") ? name(x.mit) : spurUuid(x.mit) ? chatName(x.mit) : null, k: x.mit && !SPUR_MIT.test(x.mit) ? x.mit : null,
-          // 2.795.0 KC-CLUB-WEGE-LINKS (Wunsch Hansi 31.10. „Eintrag anklicken – der Link geht direkt ins Programm zu dem Punkt“): Mitglied → Kennung;
+          // 2.796.0 KC-CLUB-WEGE-LINKS (Wunsch Hansi 31.10. „Eintrag anklicken – der Link geht direkt ins Programm zu dem Punkt“): Mitglied → Kennung;
           // Unterhaltung → Kennung NUR, wenn der Admin selbst Teilnehmer ist (fremde Chats bleiben zu – KC-CHATS-PRIVAT)
           ...(x.mit?.startsWith("KC-P-") ? { p: x.mit } : {}), ...(spurUuid(x.mit) && (tn ?? []).some((z: any) => z.thread_id === x.mit && z.person_id === ich.person_id) ? { c: x.mit } : {}) })) }); // k: Kennung (Fenster, Hilfe, Video) – Name macht die App
       }
