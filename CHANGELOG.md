@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.799.0 – 2026-11-01 – 📋 Wunschliste: Grußformel, Video-Hinweis am Ende, Runder Tisch, Aktenschrank-Schrift, Protokoll-Info und -Gruppen · Server 2.799.0
+## 2.799.0 – 2026-11-01 – 📋 Wunschliste: Grußformel, Video-Hinweis am Ende, Runder Tisch, Aktenschrank-Schrift, Protokoll-Info und -Gruppen, 🔋 Strom sparen · Server 2.799.0
 Wunsch Hansi (01.11.): „Jetzt Wunschliste abarbeiten.“
 - **#52 ✍️ Grußformel** (KC-CLUB-GRUSSFORMEL): In der kleinen Zeile über dem Schreibfeld (▾ ⌨️ 🔊 …) steht ✍️. Antippen zeigt „Danke und Gruß, Hansi“, „Liebe Grüße Hansi“, „Bis bald mal wieder Hansi“, „Freundliche Grüße Hansi“ (jeweils mit dem eigenen Vornamen) – antippen setzt die Formel an der Schreibstelle in einer eigenen Zeile ein, die Tastatur bleibt offen.
 - **#59 🎬 Hinweis aufs andere Video erst am Ende** (KC-CLUB-VIDEO-VERWEIS-ENDE): Das Video hält nicht mehr mittendrin an. Gibt es zum Thema ein eigenes Video, steht es auf der Schlusskarte („Wie war das Video?“) mit ▶ Ansehen, ⏰ Später und 🔕 Nicht mehr fragen.
@@ -8,8 +8,12 @@ Wunsch Hansi (01.11.): „Jetzt Wunschliste abarbeiten.“
 - **#60 🪑 Runder Tisch einklappbar** (KC-CLUB-TISCH-KLAPPEN): „Demnächst“ nach Kalenderwoche (Diese Woche, Nächste Woche, KW …), „Vorbei“ nach Monat – die erste Gruppe offen, die anderen zu.
 - **#53 🗄️ Aktenschrank** (KC-CLUB-SCHRANK-SCHRIFT): „Köcheclub Werne“ steht auf den Lamellen – je Lamelle ein Buchstabe, mittig, unter der Kochmütze; der Buchstabe dreht beim Öffnen mit.
 - **#51 📣 Protokoll: Info an Mitglieder** (KC-CLUB-PROTOKOLL-INFO): Im Entwurf ausgegraut, beim veröffentlichten Protokoll aktiv. Empfänger wie gewohnt (alle, Gruppe, Auswahl), Text vorbelegt („Das Protokoll vom 30.10.2026 ist eingestellt.“), der Link zum Protokoll kommt automatisch dazu; gesendet wird nach Rückfrage. Server: `protokoll_info` (nur veröffentlicht, nur an Mitglieder mit Protokoll-Leserecht, höchstens 3 Infos je Protokoll und Stunde).
+- **#55 🔋 Strom sparen** (KC-CLUB-STROM-RUHE, -UEBERSICHT, -MESSUNG; Wunsch 31.10. „Ich glaube, die App ist ein Stromfresser – alles bauen, aber sparsam“):
+  1. Nach 3 Min. ohne Bedienung und im Hintergrund stehen **alle** Dauer-Animationen still (Funkeln der Lichterkette, Rahmen, Lämpchen …) – wie das Kopfbild. Beim ersten Antippen laufen sie weiter. Nicht, solange man zuschaut (Erklär-Video, Rückseite/Bühne, Video/Ton, Runder Tisch live).
+  2. Admin-Kachel **🔋 Stromverbrauch**: Akkustand und Verbrauch in % je Stunde (iPhone: nicht messbar), was gerade läuft mit Ampel (Animationen, Kopfbild, Deko, Leitung, Ton, Kamera/Mikrofon, Bildschirm-wach, Standort, Anfragen/Min) und je ein Spar-Tipp mit Schalter. Neuer nachgeladener Teil `teile/strom.js` (kein Ballast beim Start).
+  3. Rangliste der Bereiche: Android-Geräte messen nebenbei Minuten und Akku-% je Bereich, nur solange die App sichtbar ist und nicht lädt, und melden einmal am Tag reine Zahlen (`strom_melden`, Tabelle `kc_club_strom`, nicht gespiegelt, nach 30 Tagen gelöscht). Der Admin sieht die 7-Tage-Summe ohne Namen (`strom_uebersicht`).
 - **#57 (Teil) 📅 Protokoll-Liste nach Jahren und Monaten** (KC-CLUB-PROTOKOLL-GRUPPEN): je Jahr ein Klappbereich (das neueste offen), darin die Monate. Der Freigabe-Weg über den Schriftführer folgt.
-- Tests: `tests/wunschliste-november.test.mjs`. Rückweg: App und Server 2.798.0.
+- Tests: `tests/wunschliste-november.test.mjs`, `tests/strom.test.mjs`, `tools/db-test/103`. Rückweg: App und Server 2.798.0 (Tabelle `kc_club_strom` kann bleiben).
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.798.0 – 2026-11-01 – 🧩 Programm aufteilen, Stufe 5: Frag Twinkey und Lupe werden erst beim Antippen geladen (KC-CLUB-TEILE) · nur App

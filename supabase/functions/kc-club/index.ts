@@ -18554,6 +18554,32 @@ Köcheclub-App`,
         SI_BREMSE.delete(pid); await protokoll(ich.person_id, "sicherheit_bremse_frei", { person: pid });
         return json({ ok: true });
       }
+      // 2.799.0 KC-CLUB-STROM-MESSUNG (Wunsch #55): Android-Geräte melden einmal am Tag Minuten und Akku-Prozent je Bereich (nur Zahlen, höchstens 7 Tage,
+      // nie für heute oder die Zukunft); der Admin sieht die Summe der letzten 7 Tage ohne Namen. Zeilen älter als 30 Tage werden beim Melden gelöscht.
+      case "strom_melden": {
+        const heute = berlinTag(new Date()), frueh = tagDazu(heute, -8), zeilen: any[] = [];
+        for (const t of (Array.isArray(p.tage) ? p.tage : []).slice(0, 7)) {
+          const tag = String(t?.tag || ""); if (!/^\d{4}-\d{2}-\d{2}$/.test(tag) || tag >= heute || tag < frueh) continue;
+          for (const [bereich, w] of Object.entries(t?.bereiche || {}).slice(0, 25)) {
+            const min = Number((w as any)?.min), pct = Number((w as any)?.pct);
+            if (!/^[a-z_]{1,30}$/.test(bereich) || !(min > 0 && min <= 1440) || !(pct >= 0 && pct <= 500)) continue;
+            zeilen.push({ tag, person_id: ich.person_id, bereich, minuten: Math.round(min * 10) / 10, prozent: Math.round(pct * 10) / 10, gemeldet_am: jetzt() });
+          }
+        }
+        if (zeilen.length) await db.from("kc_club_strom").upsert(zeilen, { onConflict: "tag,person_id,bereich" });
+        await db.from("kc_club_strom").delete().lt("tag", tagDazu(heute, -30));
+        return json({ ok: true, zeilen: zeilen.length });
+      }
+      case "strom_uebersicht": {
+        nurAdmin(ich);
+        const ab = tagDazu(berlinTag(new Date()), -7);
+        const { data } = await db.from("kc_club_strom").select("person_id,bereich,minuten,prozent").gte("tag", ab).limit(5000);
+        const b = new Map<string, { min: number; pct: number; geraete: Set<string> }>();
+        for (const z of data ?? []) { const x = b.get(z.bereich) ?? { min: 0, pct: 0, geraete: new Set<string>() }; x.min += Number(z.minuten); x.pct += Number(z.prozent); x.geraete.add(z.person_id); b.set(z.bereich, x); }
+        const bereiche = [...b.entries()].map(([bereich, x]) => ({ bereich, stunden: Math.round(x.min / 6) / 10, prozent: Math.round(x.pct * 10) / 10, proStunde: x.min >= 30 ? Math.round(x.pct / (x.min / 60) * 10) / 10 : null, geraete: x.geraete.size }))
+          .sort((x, y) => (y.proStunde ?? -1) - (x.proStunde ?? -1));
+        return json({ ab, bereiche, geraete: new Set((data ?? []).map((z: any) => z.person_id)).size });
+      }
       case "waechter_lage": { // 2.726.0 KC-CLUB-WAECHTER: alle Wächter auf einen Blick (nur Admin, nur beim Öffnen der Kachel)
         nurAdmin(ich);
         return json(await waechterLage());

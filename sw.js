@@ -7,7 +7,7 @@ const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifes
 // dieser Version liefern (schnell, vom Handy fertig übersetzt); fehlt es dort, aus dem Netz holen und merken.
 // 2.731.0 KC-CLUB-TEILE (Prüfbericht C): nachladbare Programmteile teile/<name>.js?v=<Version> – gleiche Namen wie TEILE_LISTE in app.js.
 // Sie gehören zum Programm dieser Version: beim Einrichten mit in den Speicher (alles oder nichts), danach aus dem Speicher wie app.js.
-const TEILE = ["buero", "hilfe", "probe", "rueckseite", "spiele", "szenen", "tischlive", "videos"];
+const TEILE = ["buero", "hilfe", "probe", "rueckseite", "spiele", "strom", "szenen", "tischlive", "videos"];
 DATEIEN.push(...TEILE.map((t) => `teile/${t}.js?v=${VERSION}`));
 const istProgramm = (url) => url.pathname.endsWith("/app.js") && url.searchParams.get("v") === VERSION;
 const istTeil = (url) => /\/teile\/[a-z0-9-]+\.js$/.test(url.pathname) && url.searchParams.get("v") === VERSION;

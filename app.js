@@ -19,6 +19,7 @@ const TEILE_LISTE = {
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-fo0GoQQPizYDc0fLSziQq6rxd273upSOYYJh4uBEjMBm+FRjzWlPtglIFFBJvRZQ" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
+  strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -158,6 +159,7 @@ const sparTakt = (ms) => (SPAR.an ? ms * 3 : ms);
     setInterval(() => { if (alle.size) einschlafen(false); }, 2000);
     document.addEventListener("visibilitychange", () => { if (document.hidden) einschlafen(false); }); // Klingelton im Hintergrund bleibt (Pause < 3 s)
     window.kcTonSchlaf = einschlafen;
+    window.kcTonZahl = () => [...alle].filter((c) => c.state === "running").length; // 2.799.0 KC-CLUB-STROM-UEBERSICHT
   } catch {}
 })();
 try { document.documentElement.classList.toggle("spar", SPAR.an); } catch {}
@@ -4850,6 +4852,61 @@ function rtSignal(s) {
   else if (s.art === "chat") NEU_NACH_CHAT = true;
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && INIT?.rtKanal && !RT.ok) { RT.warte = 1000; rtVerbinden(); } });
+// 2.799.0 KC-CLUB-STROM-RUHE (Wunsch #55 Hansi „Ich glaube, die App ist ein Stromfresser – alles bauen, aber sparsam“; Befund 31.10.: in Ruhe liefen
+// 13 Dauer-Animationen, z. B. das Funkeln der Deko-Lichterkette): nach 3 Min. ohne Bedienung und im Hintergrund stehen ALLE CSS-Animationen still
+// (Klasse kc-strom-ruhe, eine CSS-Regel – auch für später neu gezeichnete Teile), wie das Kopfbild seit 2.361.0. Beim ersten Antippen laufen sie weiter.
+// Nicht, solange ein Erklär-Video, die Rückseite (Bühne, Spiegel …), ein Video/Ton oder der Tisch live läuft – da schaut man zu, ohne zu tippen.
+const STROM_RUHE_MS = 180000, STROM = { bedient: Date.now(), ruhe: false, seit: 0, anfragen: [], wach: new Set(), medien: new Set(), akku: null, erst: null };
+function stromZuschauen() {
+  try { if (RG?.an || ES?.offen || document.body.classList.contains("vf-an") || (typeof TL !== "undefined" && TL?.live)) return true; } catch {}
+  return [...document.querySelectorAll("video, audio")].some((m) => !m.paused && !m.ended);
+}
+function stromRuhePruefen() {
+  const ruhe = document.hidden || (Date.now() - STROM.bedient > STROM_RUHE_MS && !stromZuschauen());
+  if (ruhe === STROM.ruhe) return;
+  STROM.ruhe = ruhe; STROM.seit = Date.now(); document.documentElement.classList.toggle("kc-strom-ruhe", ruhe);
+}
+["pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, () => { STROM.bedient = Date.now(); if (STROM.ruhe) stromRuhePruefen(); }, { passive: true, capture: true }));
+document.addEventListener("visibilitychange", stromRuhePruefen);
+setInterval(stromRuhePruefen, 15000);
+// 2.799.0 KC-CLUB-STROM-UEBERSICHT: was hält das Handy wach? Bildschirm-wach-Sperren und Kamera/Mikrofon zählen (nur im Speicher, keine Abfrage) –
+// angezeigt in der Admin-Übersicht „🔋 Stromverbrauch“ (teile/strom.js)
+try { const f0 = window.fetch; if (f0) window.fetch = function (u, ...r) { // Anfragen an die eigenen Server je Minute zählen
+  try { if (String(u?.url || u).includes("/functions/v1/")) { STROM.anfragen.push(Date.now()); if (STROM.anfragen.length > 200) STROM.anfragen.splice(0, 100); } } catch {}
+  return f0.call(this, u, ...r); }; } catch {}
+try { const wl = navigator.wakeLock, req = wl?.request?.bind(wl);
+  if (req) wl.request = async (...a) => { const s = await req(...a); STROM.wach.add(s); s.addEventListener?.("release", () => STROM.wach.delete(s)); return s; }; } catch {}
+try { const md = navigator.mediaDevices, gum = md?.getUserMedia?.bind(md), gdm = md?.getDisplayMedia?.bind(md);
+  if (gum) md.getUserMedia = async (...a) => { const st = await gum(...a); STROM.medien.add(st); return st; };
+  if (gdm) md.getDisplayMedia = async (...a) => { const st = await gdm(...a); STROM.medien.add(st); return st; }; } catch {}
+// 2.799.0 KC-CLUB-STROM-MESSUNG (Wunsch #55 Teil 3): Android meldet den Akkustand (iPhone nicht). Gemessen wird nur, solange die App sichtbar ist und
+// das Handy nicht lädt: Minuten und verbrauchte Prozent je Bereich (Startseite, Nachrichten, Runder Tisch …), je Tag auf dem Gerät gesammelt und
+// einmal am Tag (frühestens am nächsten Tag) als reine Zahlen an den Server (strom_melden) – keine Inhalte, kein Ort. Kostet eine Anfrage je Tag.
+const STROM_KEY = "kc_club_strom_tage";
+function stromBereich() { if (document.hidden) return null; try { if (RG?.an) return "erklaervideo"; if (ES?.offen) return "rueckseite"; if (typeof TL !== "undefined" && TL?.live) return "tisch_live"; } catch {}
+  return aktuelleAnsicht === "chat" ? "nachrichten" : String(aktuelleAnsicht || "start").replace(/[^a-z_]/g, "").slice(0, 30) || "start"; }
+function stromAbschnitt() {
+  const a = STROM.akku; if (!a) return;
+  const jetzt = Date.now(), lv = Math.round(a.level * 1000) / 10, alt = STROM.abschnitt, b = stromBereich();
+  if (alt && !a.charging && alt.bereich && lv <= alt.lv + .01) {
+    const min = (jetzt - alt.t) / 60000;
+    if (min > 0 && min < 30) { // längere Lücken (Handy schlief) zählen nicht
+      try { const tag = heuteIso(), d = JSON.parse(localStorage.getItem(STROM_KEY) || "{}"); const t = d[tag] || (d[tag] = {}); const x = t[alt.bereich] || (t[alt.bereich] = { min: 0, pct: 0 });
+        x.min = Math.round((x.min + min) * 10) / 10; x.pct = Math.round((x.pct + Math.max(0, alt.lv - lv)) * 10) / 10;
+        for (const k of Object.keys(d).sort().slice(0, -8)) delete d[k]; localStorage.setItem(STROM_KEY, JSON.stringify(d)); } catch {}
+    }
+  }
+  STROM.abschnitt = { t: jetzt, lv, bereich: a.charging ? null : b };
+  if (!STROM.erst || a.charging) STROM.erst = a.charging ? null : { t: jetzt, lv };
+}
+async function stromMelden() { // vergangene Tage einmal melden (danach auf dem Gerät gelöscht)
+  if (!ICH || !STROM.akku) return;
+  let d; try { d = JSON.parse(localStorage.getItem(STROM_KEY) || "{}"); } catch { return; }
+  const tage = Object.keys(d).filter((k) => k < heuteIso()).sort().slice(-7); if (!tage.length) return;
+  try { await api("strom_melden", { tage: tage.map((tag) => ({ tag, bereiche: d[tag] })) }, { still: true }); for (const k of tage) delete d[k]; localStorage.setItem(STROM_KEY, JSON.stringify(d)); } catch {}
+}
+try { navigator.getBattery?.().then((a) => { STROM.akku = a; stromAbschnitt(); for (const e of ["levelchange", "chargingchange"]) a.addEventListener(e, stromAbschnitt);
+  setInterval(stromAbschnitt, 300000); document.addEventListener("visibilitychange", stromAbschnitt); setTimeout(stromMelden, 90000); }).catch(() => {}); } catch {}
 // 2.359.0 KC-CLUB-AKKU-4: im Hintergrund nach 60 s die direkte Leitung schließen – ihr Herzschlag alle 25 s weckt sonst ständig das Funkmodul.
 // Neues kommt im Hintergrund per Push; beim Zurückkommen baut die Zeile darüber die Leitung sofort wieder auf (und die App lädt frisch).
 document.addEventListener("visibilitychange", () => {
@@ -13246,6 +13303,7 @@ function adZustand(id) {
       return gemessen([f, `${fs.filter((x) => x === "gruen").length} von ${fs.length} melden sich`]); }
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
+    case "strom": { const a = STROM.akku; return a ? ["keine", `Akku ${Math.round(a.level * 100)} %${a.charging ? " · lädt" : ""} · antippen`] : ["keine", "antippen"]; } // 2.799.0 KC-CLUB-STROM-UEBERSICHT
     case "waechter": { if (!WCH.daten) return ["keine", `${WCH_LISTE.length} Wächter · antippen`]; const z = wchZaehlen(); // 2.726.0 KC-CLUB-WAECHTER (Stand vom letzten Öffnen)
       return [z.rot ? "rot" : z.gelb ? "gelb" : "gruen", `${WCH_LISTE.length} Wächter · ${z.gruen} ✅${z.gelb ? ` · ${z.gelb} 🟡` : ""}${z.rot ? ` · ${z.rot} 🔴` : ""}`]; }
     case "stumm": return ["keine", "Mitglieder ganz ohne Push/E-Mail"]; // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
@@ -13269,7 +13327,7 @@ const AD_KACHELN = [
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
-  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["strom", "🔋", "Stromverbrauch", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
@@ -13759,6 +13817,7 @@ function adBlatt(id) {
   if (id === "stadt") return stadtTermine(); // KC-CLUB-STADT-TERMINE
   if (id === "rt") return rtBlatt(); // KC-CLUB-RT-SPARBREMSE (2.230.0)
   if (id === "waechter") return wchStart(); // 2.726.0 KC-CLUB-WAECHTER
+  if (id === "strom") return stromBlatt(); // 2.799.0 KC-CLUB-STROM-UEBERSICHT
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
   const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;
@@ -17199,6 +17258,7 @@ function zeige(v, ausHistorie) {
   if (vorher === "fotos" && v !== "fotos" && FAW.an) { FAW.an = false; FAW.ziel = null; FAW.ids.clear(); $("faLeiste").classList.add("versteckt"); document.body.classList.remove("fa-waehlen"); } // KC-CLUB-FOTO-ALBEN
   if (v !== "chat" && typeof CS !== "undefined" && CS.offen) chatSucheZu();
   if (v !== "chat") $("nachUnten")?.classList.add("versteckt");
+  try { stromAbschnitt(); } catch {} // 2.799.0 KC-CLUB-STROM-MESSUNG: Abschnitt dem alten Bereich zurechnen
   aktuelleAnsicht = v; if (window.KCFP) KCFP.sicht = v;
   // 2.192.0 KC-CLUB-NUR-START-AUFFRISCHEN (Fund Hansi): „von oben nach unten ziehen = neu laden“ nur auf der Startseite – sonst lädt die App
   // mitten in Einstellungen o. Ä. neu (und meldet bei mehrfachem Neustart sogar „Startprobleme?“)
@@ -33011,7 +33071,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",

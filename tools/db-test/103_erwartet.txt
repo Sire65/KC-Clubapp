@@ -1,0 +1,4 @@
+upsert=t
+bereich_geprueft=t
+rechte=t
+regel=t

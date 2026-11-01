@@ -1678,6 +1678,8 @@
   .mini.mini-neu .ameisen { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: inherit; }
   .mini.mini-neu .ameisen rect { fill: none; stroke: #ff9800; stroke-width: 6; stroke-dasharray: 9 6; animation: ameisenLauf 1s linear infinite; }
   @keyframes ameisenLauf { to { stroke-dashoffset: -15; } }
+  /* 2.799.0 KC-CLUB-STROM-RUHE (Wunsch #55): nach 3 Min. ohne Bedienung und im Hintergrund stehen ALLE CSS-Animationen (sichtbar, nur still) */
+  :root.kc-strom-ruhe *, :root.kc-strom-ruhe *::before, :root.kc-strom-ruhe *::after { animation-play-state: paused !important; }
   :root.kc-ruhe .ameisen rect, :root.kc-ruhe .inko-ameisen rect, :root.kc-ruhe .reg-rahmen rect, :root.kc-ruhe .uh-rahmen rect, :root.kc-ruhe #ledOnline, :root.kc-ruhe .k-online, :root.kc-ruhe .neu-da, :root.kc-ruhe .neu-puls, :root.kc-ruhe .pw-neu, :root.kc-ruhe .pw-neu .zahl { animation-play-state: paused; } /* 2.337.0 KC-CLUB-AKKU-2: in Ruhe stehen die Endlos-Animationen */
   @media (prefers-reduced-motion: reduce) { .mini.mini-neu .ameisen rect { animation-duration: 3s; } }
   /* KC-CLUB-FRIST-AMEISEN (1.53.6): Feld „Nächster Termin“ – Ameisenstraße je nach Tagen bis zum Termin:
@@ -4578,6 +4580,11 @@
   /* 2.762.0 KC-CLUB-RUNDER-TISCH: Holztisch mit Plätzen im Kreis (bis 8 groß, bis 18 kleiner), grau = Zustand unbekannt, gestrichelt = frei */
   .rund-start { border-color: #8a5d34; }
   /* 2.799.0 KC-CLUB-TISCH-KLAPPEN: Gruppen nach Woche bzw. Monat */
+  /* 2.799.0 KC-CLUB-STROM-UEBERSICHT */
+  .strom-zeile { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--linie); }
+  .strom-rang { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 4px 0; }
+  .strom-rang small { grid-column: 1 / -1; color: var(--grau); font-size: .78rem; }
+  .strom-balken { height: 10px; border-radius: 5px; background: var(--karte2); overflow: hidden; } .strom-balken i { display: block; height: 100%; background: var(--rot); border-radius: 5px; }
   .pr-monat-titel { margin: 10px 2px 4px; font-weight: 700; color: var(--grau); font-size: .9rem; } /* 2.799.0 KC-CLUB-PROTOKOLL-GRUPPEN */
   .rund-gruppe { margin: 6px 0; } .rund-gruppe > summary { cursor: pointer; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte2); list-style-position: inside; min-height: 44px; box-sizing: border-box; }
   .rund-gruppe[open] > summary { margin-bottom: 6px; }
