@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const app = lies("app.js"), html = lies("index.html");
+const app = lies("app.js") + "\n" + lies("teile/buero.js"), html = lies("index.html"); // 2.797.0 KC-CLUB-TEILE Stufe 4: Büro-Code liegt jetzt in teile/buero.js
 const block = app.slice(app.indexOf("// ---------- 2.769.0 KC-CLUB-AKTENSCHRANK-JALOUSIE"), app.indexOf("function buRaumHtml() {"));
 assert.ok(block.length > 1500, "Baustein gefunden");
 

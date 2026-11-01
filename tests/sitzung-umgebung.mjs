@@ -7,7 +7,9 @@ export const fZeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-d
 const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const isoBerlin = (d) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(d);
 export function sitzungsUmgebung(app, { vorstand = true, schreiben = true, vorgaben = null, ich = {}, speicher = {} } = {}) {
-  const q = app.slice(app.indexOf("// KC-CLUB-SITZUNG-FRIST ("), app.indexOf("// KC-CLUB-BUERO-RAUM (1.65.0"));
+  // 2.797.0 KC-CLUB-TEILE Stufe 4: Fristen/Vorgaben (SV_STANDARD, svWerte) bleiben im Hauptprogramm, die Schritte (BU_TAG … vor BUERO-RAUM) liegen in teile/buero.js
+  const qa = app.indexOf("// KC-CLUB-SITZUNG-FRIST ("), qt = app.indexOf("const BU_TAG = 86400000;");
+  const q = app.slice(qa, app.indexOf("// KC-CLUB-ZIELWAHL (2.741.0", qa)) + "\n" + app.slice(qt, app.indexOf("// KC-CLUB-BUERO-RAUM (1.65.0", qt));
   const ta = app.slice(app.indexOf("function taZeitpunkt("), app.indexOf("async function taSenden("));
   const vs = app.slice(app.indexOf("const vsSchluss = "), app.indexOf("const vsSchlussVorbei"));
   if ([q, ta, vs].some((x) => x.length < 40)) throw new Error("Baustein nicht gefunden");

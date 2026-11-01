@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
-const app = lies("app.js"), server = lies("supabase/functions/kc-club/index.ts");
+const app = lies("app.js") + "\n" + lies("teile/buero.js"), server = lies("supabase/functions/kc-club/index.ts"); // 2.797.0 KC-CLUB-TEILE Stufe 4: Büro-Code liegt jetzt in teile/buero.js
 
 // 1) Server-Logik nachgebaut (Typen entfernt) und durchgespielt
 let src = server.slice(server.indexOf("const BUERO_ANSICHT_DAUER"), server.indexOf("const nurBueroLesen = "));

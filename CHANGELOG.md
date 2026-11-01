@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.797.0 – 2026-11-01 – 🧩 Programm aufteilen, Stufe 4: Büro der Clubleitung wird erst beim Öffnen geladen (KC-CLUB-TEILE) · nur App
+Wunsch Hansi (Prüfbericht C, Wunsch #44): „gut aufteilen, damit später alles besser, schneller, sicherer läuft“ – Termin So 1.11. 12 Uhr.
+- **Neu ausgeschnitten** auf dem heutigen Stand (2.796.0), weil sich das Büro seit dem 28.10. stark verändert hat (Aktenschrank, Büro-Ansicht, kleine Knöpfe, Einlesen, Ablage …). Alter Zweig gesichert als `alt-stufe4-2.751.0`.
+- `teile/buero.js` (~250 KB): Büro, Eingang, Briefe, Termine, Kontakte, Nachher, Feste, Mitgliederliste, Freud & Leid, Sprache→Brief, Aktenschrank. 28 Einstiege mit Platzhalter (25 bisher + `adbStart`, `buAufgabePruefen`, `buInformierenFragen`).
+- Im Hauptprogramm bleiben: Zustand BU/BNN, Tages-Übersicht, Hinweise, Empfänger-Wahl (ZWAHL, BU_ALLE_TEXT – auch Aktentasche, Ablagekorb, Einlesen), Sitzungs-Vorgaben (svWerte), `buSchreiben`, `buIkon`.
+- Beim Start lädt nur die Clubleitung das Büro-Teil (Sitzungs-Aufgabe nach 4 s); Mitglieder ohne Büro laden es nie. app.js 4,19 MB → 3,94 MB.
+- Tests: Block „Stufe 4“ im Vertragstest, Endmarken in 5 Tests angepasst (einladung-an, buero-ansicht, aktenschrank, Sitzungs-Umgebung), Klick-Rundgang, Büro-Vergleich alt/neu im Browser. Rückweg: App 2.796.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.796.0 – 2026-11-01 – 👣 Wege: Einträge antippen springt direkt dorthin
 - 👣 In den Wegen der Mitglieder lässt sich jeder Eintrag mit › antippen – die App springt genau dorthin: Bereich, Mitgliedskarte, Hilfetext, Erklär-Video, Film oder Fenster; Unterhaltungen nur, wenn du selbst dabei bist (KC-CLUB-WEGE-LINKS). 🧹 Dienstplan-Arbeitsstände werden jede Nacht aufgeräumt (10 neueste + je Tag die letzte der 30 Tage), Datenbank 202 → 162 MB (KC-DP-REVISIONEN-AUFRAEUMEN).
 
