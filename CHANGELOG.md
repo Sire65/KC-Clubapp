@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.825.0 – 2026-11-02 – 🧮 Rechner zeigt die ganze Aufgabe · 👣 Wege nach Besuchen getrennt (KC-CLUB-RECHNER-AUFGABE #70, KC-CLUB-SPUR-BESUCHE #72) · nur App
+- **#70** Hansi: „Den Rechner im Büro noch besser machen. Im Display die gesamte Aufgabe anzeigen: 3 × 3 − 5 = 4.“ Beim Tippen steht jetzt die ganze Rechnung groß im Display (lange Rechnungen etwas kleiner), nach „=“ oben „3 × 3 − 5 =“ und groß das Ergebnis; beim Weiterrechnen bleibt die letzte Aufgabe oben stehen. Vorher stand groß nur die letzte Zahl.
+- **#72** Hansi: „Wenn sich ein Mitglied mehrmals täglich anmeldet, unter Wege der Mitglieder jeden Block andersfarbig oder mit dickerer Linie trennen.“ Die Wege eines Mitglieds sind in **Besuche** geteilt (neu bei „📲 App geöffnet“ / „wieder in der App“ oder nach 15 Min. Pause): je Besuch eine Kopfzeile „🔹 Besuch 2 · 12:00–12:02 Uhr · 3 Schritte“ mit dicker weinroter Linie, Zeilen abwechselnd getönt. Nur Anzeige.
+- Browser geprüft. Test: `tests/rechner-spur-besuche.test.mjs`.
+- Rückweg: App 2.824.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.824.0 – 2026-11-03 – 🗄️ Feste Ordner mit Kennung, Register umbenennen (KC-CLUB-ORDNER-KENNUNG, KC-CLUB-REGISTER-UMBENENNEN) · App + Server + Datenbank
 Konzeptprüfung Ordner & Register (02.11., Wunsch Hansi „prüfen“ → „umbauen“). Ausführlich: docs/ORDNER_REGISTER.md.
 - Auch der neue Ordner „📚 Anleitungen“ (2.822.0) wird jetzt über die Kennung `anleitungen` gefunden.

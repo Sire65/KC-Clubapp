@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.824.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.825.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -19,7 +19,7 @@ const TEILE_LISTE = {
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-MvmznEfEmchRItm6cEOV6tD4oHhaAtlUpVTF/LKEvwqcUN9f2FkW+i+zCEaWoBec" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
-  rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-u+czHDJGpj7YUQH/alklgYf+VUv1d5L5dVO/awWe2Sb48UD9GjmlgX9WUEWJLnDZ" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
+  rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
@@ -33639,6 +33639,20 @@ function spurGehe(i) {
   try { const r = f(); if (r?.catch) r.catch(meldeFehler); } catch (e) { meldeFehler(e); }
 }
 const SPW = { tag: null, person: null, uhr: null, schritte: [] };
+// 2.825.0 KC-CLUB-SPUR-BESUCHE (Wunsch #72 Hansi „wenn sich ein Mitglied mehrmals täglich anmeldet, unter Wege der Mitglieder jeden Block andersfarbig
+// oder mit dickerer Linie trennen“): ein neuer Besuch beginnt mit „📲 App geöffnet“ / „wieder in der App“ oder nach SPUR_BESUCH_PAUSE_MIN Minuten Pause.
+// Je Besuch eine Kopfzeile (Nr., von–bis, Schritte) mit dicker Linie, Zeilen abwechselnd getönt. Nur Anzeige – gezählt wird wie bisher.
+const SPUR_BESUCH_PAUSE_MIN = 15, SPUR_BESUCH_START = new Set(["geoeffnet", "wieder"]);
+function spurBloecke(l) {
+  if (spurBloecke._l === l) return spurBloecke._r;
+  const nr = [], start = [], von = [], bis = [], anz = []; let b = -1;
+  l.forEach((x, i) => {
+    const neu = i === 0 || SPUR_BESUCH_START.has(x.w) && !SPUR_BESUCH_START.has(l[i - 1].w) || x.t - l[i - 1].t >= SPUR_BESUCH_PAUSE_MIN * 60000;
+    if (neu) { b++; von[b] = x.t; anz[b] = 0; } nr[i] = b; start[i] = neu; bis[b] = x.t; anz[b]++;
+  });
+  return (spurBloecke._l = l, spurBloecke._r = { nr, start, von, bis, anz, zahl: b + 1 });
+}
+const spurBlockKopf = (bl, b) => bl.zahl < 2 ? "" : `<tr class="spur-besuch spur-b${b % 2}"><td colspan="2">🔹 <b>Besuch ${b + 1}</b> · ${esc(zeitKurz(bl.von[b]))}${bl.bis[b] !== bl.von[b] ? `–${esc(zeitKurz(bl.bis[b]).split(" ").pop())}` : ""} Uhr · ${bl.anz[b]} Schritt${bl.anz[b] === 1 ? "" : "e"}</td></tr>`;
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
   let r; try { r = await api("spur_liste", { tag: SPW.tag, ...(SPW.person ? { person_id: SPW.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
@@ -33664,7 +33678,7 @@ async function spurAdmin(tag, person) {
       + (liste.length ? `<div style="display:grid;gap:6px">${liste.map((x) => x.stoerung && !on(x.person_id) ? `<button class="knopf spur-stoerung" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">⚠️ <b>${esc(x.name)}</b> <small class="hinweis">· war kurz da · ${esc(zeitKurz(x.erste))}${x.erste !== x.letzte ? "–" + esc(zeitKurz(x.letzte)) : ""} Uhr</small><br><small>${x.stoerung === "netz" ? "📶 Verbindung gestört – die Wege kommen nach, sobald die App wieder Netz hat" : "⚠️ Störung in der App – weitere Wege sind nicht angekommen"}</small></button>` : `<button class="knopf${on(x.person_id) ? " spur-on" : ""}" style="text-align:left" onclick="spurAdmin(null, '${esc(x.person_id)}')">${on(x.person_id) ? "🟢 " : ""}<b>${esc(x.name)}</b>${on(x.person_id) ? ' <small class="spur-jetzt">gerade in der App</small>' : ""} <small class="hinweis">· ${x.anzahl} Schritte · ${esc(zeitKurz(x.erste))}–${esc(zeitKurz(x.letzte))} Uhr</small>${x.zuletzt ? `<br><small>${on(x.person_id) ? "👉 jetzt" : "zuletzt"}: ${esc(was(x.zuletzt, x.zk))} · ${esc(vor(x.letzte))}</small>` : ""}</button>`).join("")}</div>`
       : `<p class="hinweis">An diesem Tag nichts aufgezeichnet (gezählt ab Version 2.23.88).</p>`);
   } else {
-    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle spur-wege">${(SPW.schritte = r.schritte).map((x, i) => { const z = !!spurZiel(x); return `<tr${z ? ` class="spur-link" role="button" tabindex="0" title="Antippen = dorthin" onclick="spurGehe(${i})"` : ""}><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${x.w === "fenster" || x.k ? esc(spurZeile(x)) : `${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}`}${z ? ' <span class="spur-pfeil" aria-hidden="true">›</span>' : ""}</td></tr>`; }).join("")}</table><p class="hinweis" style="margin:6px 0 0">Einträge mit <b>›</b> antippen – dann springt die App genau dorthin. Fremde Unterhaltungen bleiben zu.</p>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
+    inhalt = `${ICH?.admin && SPW.person !== ICH?.person_id ? `<span style="float:right;display:flex;gap:4px"><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))})">📸 Bild</button><button class="knopf klein" onclick="ssStart('${esc(SPW.person)}', ${esc(JSON.stringify(r.name || ""))}, true)">🔴 Live mitschauen</button></span>` : ""}<b>${esc(r.name || "")}</b>${r.schritte.length ? `<table class="vb-tabelle spur-wege">${(SPW.schritte = r.schritte).map((x, i) => { const z = !!spurZiel(x), bl = spurBloecke(r.schritte), b = bl.nr[i]; return `${bl.start[i] ? spurBlockKopf(bl, b) : ""}<tr class="spur-b${b % 2}${z ? " spur-link" : ""}"${z ? ` role="button" tabindex="0" title="Antippen = dorthin" onclick="spurGehe(${i})"` : ""}><td style="white-space:nowrap;vertical-align:top">${esc(zeitKurz(x.t))}</td><td style="text-align:left">${x.w === "fenster" || x.k ? esc(spurZeile(x)) : `${esc(spurWas(x.w))}${x.mit ? ` <b>${esc(x.mit)}</b>` : ""}`}${z ? ' <span class="spur-pfeil" aria-hidden="true">›</span>' : ""}</td></tr>`; }).join("")}</table><p class="hinweis" style="margin:6px 0 0">Einträge mit <b>›</b> antippen – dann springt die App genau dorthin. Fremde Unterhaltungen bleiben zu.</p>` : `<p class="hinweis">An diesem Tag nichts aufgezeichnet.</p>`}`;
   }
   $("adminBlattInhalt").innerHTML = kopf + inhalt + fuss;
   $("adminBlatt").classList.remove("versteckt");

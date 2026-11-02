@@ -3,7 +3,7 @@
 // vorhandene Spracherkennung (sbZuhoeren); „rechne …“ geht auch über die Sprachsteuerung der App (sbErkennen → rechnerOeffnen). Gerechnet wird nur auf dem
 // Gerät – ohne eval, eigener kleiner Rechenkern (+ − × ÷, Klammern, Prozent). Nichts geht an den Server. Nach jeder Änderung: node tools/teile-pruefsumme.mjs
 const RE_KEY = "kc_club_rechner_streifen", RE_MAX = 20;
-const RE = { eingabe: "", ergebnis: null, ansagen: false };
+const RE = { eingabe: "", ergebnis: null, ansagen: false, letzte: "" };
 const reStreifen = () => { try { const l = JSON.parse(localStorage.getItem(RE_KEY) || "[]"); return Array.isArray(l) ? l.slice(0, RE_MAX) : []; } catch { return []; } };
 function reStreifenDazu(z) { try { localStorage.setItem(RE_KEY, JSON.stringify([z, ...reStreifen()].slice(0, RE_MAX))); } catch {} }
 const reZahl = (x) => (Number.isFinite(x) ? (Math.round(x * 1e10) / 1e10).toLocaleString("de-DE", { maximumFractionDigits: 10 }) : "Fehler");
@@ -45,7 +45,15 @@ function rechnerOeffnen(spruch) {
   reZeigen(); reStreifenZeigen();
   if (spruch) reAusSprache(spruch);
 }
-function reZeigen() { const r = $("reRechnung"), w = $("reWert"); if (!r || !w) return; r.textContent = RE.ergebnis != null && !RE.eingabe ? "" : reHuebsch(RE.eingabe); w.textContent = RE.eingabe ? reHuebsch(RE.eingabe.split(/[-+*/()% ]/).filter(Boolean).pop() || RE.eingabe.slice(-1)) : RE.ergebnis != null ? reZahl(RE.ergebnis) : "0"; }
+// 2.825.0 KC-CLUB-RECHNER-AUFGABE (Wunsch #70 Hansi „Im Display die gesamte Aufgabe anzeigen: 3 × 3 − 5 = 4“): beim Tippen steht die ganze Rechnung groß
+// im Display (lange Rechnungen kleiner), nach „=“ oben die Aufgabe „3 × 3 − 5 =“ und groß das Ergebnis. Vorher stand groß nur die letzte Zahl.
+const reLuft = (t) => t.replace(/\s*([×÷+−])\s*/g, " $1 ").replace(/^ − /, "−").replace(/\( − /g, "(−").trim(); // „3 × 3 − 5“ statt „3×3−5“ (Vorzeichen bleibt dran)
+function reZeigen() {
+  const r = $("reRechnung"), w = $("reWert"); if (!r || !w) return;
+  const zeigt = RE.eingabe ? reLuft(reHuebsch(RE.eingabe)) : RE.ergebnis != null ? reZahl(RE.ergebnis) : "0";
+  r.textContent = RE.eingabe ? (RE.ergebnis != null && RE.letzte ? `${RE.letzte} = ${reZahl(RE.ergebnis)}` : "") : RE.ergebnis != null && RE.letzte ? `${RE.letzte} =` : "";
+  w.textContent = zeigt; w.classList.toggle("lang", zeigt.length > 11); w.classList.toggle("sehr-lang", zeigt.length > 20);
+}
 function reStreifenZeigen() { const o = $("reStreifen"); if (!o) return; const l = reStreifen();
   o.innerHTML = l.length ? l.map((z) => `<li><button type="button" class="re-zeile" data-e="${esc(String(z.e))}" title="Ergebnis übernehmen">${esc(z.r)} = <b>${esc(reZahl(z.e))}</b></button></li>`).join("") : '<li class="hinweis">Noch leer.</li>';
   o.querySelectorAll(".re-zeile").forEach((b) => b.addEventListener("click", () => { RE.eingabe = String(b.dataset.e); RE.ergebnis = null; reZeigen(); })); }
@@ -53,7 +61,7 @@ function reStreifenLeeren() { try { localStorage.removeItem(RE_KEY); } catch {} 
 function reTonUmschalten() { RE.ansagen = !RE.ansagen; const b = $("reTon"); if (b) { b.textContent = RE.ansagen ? "🔊" : "🔈"; b.setAttribute("aria-pressed", String(RE.ansagen)); } melde(RE.ansagen ? "🔊 Ergebnis wird angesagt" : "🔈 Ergebnis ohne Ansage"); }
 function reZurueck() { RE.eingabe = RE.eingabe.slice(0, -1); reZeigen(); }
 function reTaste(w) {
-  if (w === "c") { RE.eingabe = ""; RE.ergebnis = null; return reZeigen(); }
+  if (w === "c") { RE.eingabe = ""; RE.ergebnis = null; RE.letzte = ""; return reZeigen(); }
   if (w === "=") return reAusrechnen(RE.eingabe);
   if (!RE.eingabe && RE.ergebnis != null && /[-+*/%]/.test(w)) RE.eingabe = String(RE.ergebnis); // mit dem Ergebnis weiterrechnen
   RE.eingabe += w; reZeigen();
@@ -62,7 +70,7 @@ function reAusrechnen(a, gesagt) {
   if (!a) return;
   let e; try { e = rechnerRechnen(a); } catch { melde(gesagt ? `🧮 „${gesagt}“ – das konnte ich nicht ausrechnen. Bitte z. B. „5 mal 22“ sagen.` : "🧮 Die Rechnung ist unvollständig.", true); return; }
   if (!Number.isFinite(e)) { melde("🧮 Durch null geht nicht.", true); return; }
-  reStreifenDazu({ r: reHuebsch(a), e }); RE.ergebnis = e; RE.eingabe = ""; reZeigen(); reStreifenZeigen();
+  reStreifenDazu({ r: reHuebsch(a), e }); RE.ergebnis = e; RE.letzte = reLuft(reHuebsch(a)); RE.eingabe = ""; reZeigen(); reStreifenZeigen();
   if (RE.ansagen || gesagt) try { speechSynthesis.cancel(); speechSynthesis.speak(sprechAusgabe(`${reHuebsch(a).replace(/×/g, " mal ").replace(/÷/g, " geteilt durch ").replace(/−/g, " minus ").replace(/\+/g, " plus ")} ist ${reZahl(e)}`)); } catch {}
 }
 function reAusSprache(text) { const a = rechnerAusdruck(text, RE.ergebnis); RE.eingabe = ""; reAusrechnen(a, text); }
