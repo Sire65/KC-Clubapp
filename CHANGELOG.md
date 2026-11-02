@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.812.0 – 2026-11-02 – 🖥️ Büro-Schreibtisch aufgeräumt: nichts überlappt mehr (KC-CLUB-BUERO-SCHREIBTISCH) · nur App
+Wunsch Hansi (02.11.): „Prüfe nochmal den Schreibtisch, dass sich nichts groß überlappt und aufgeräumt aussieht.“ Geprüft mit Messung in 6 Fällen (Handy 360/390/430 px, Mitglied ohne Leitungsrechte, Tablet, PC; Tag und Nacht).
+- Der **Bildschirm** wurde auf Handys von seinen Textzeilen breiter gedrückt und lag über Kalender und Drucker (fing dort Tipps ab) – jetzt bleibt er in seinen zwei Spalten; Schrift passt sich der Breite an, die Glückwunsch-Zeile ist kürzer.
+- **„Einlesen“** steht jetzt auf dem Scanner-Deckel statt lose am Rand. Die **Glückwunschkarte** heißt „Glück-wunsch“ (darf umbrechen) mit Zahl am Rand statt „1 Glück…“.
+- **Nachtmodus:** die Uhr im Bildschirm ist hell statt dunkelrot (war kaum lesbar).
+- **Ohne Leitungsrechte** (weniger Dinge auf dem Tisch) eine kompakte Anordnung ohne Lücken.
+- Rückweg: App 2.811.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.811.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, #58) · 🖥️ Büro-Schreibtisch mit Rechner und Lampe (KC-CLUB-BUERO-SCHREIBTISCH, KC-CLUB-RECHNER, #48) · nur App
 Wunsch Hansi (31.10.): „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine, Szene versinkt im Nebel, fängt wieder von vorne an.“ Entscheidungen 02.11.: 4 Tänzer, zwischendurch legt Twinkey ein Solo hin; auch automatisch am Clubabend und zu Silvester im Wechsel; auch auf der Bühne bei „Nur Musik hören“.
 - Neues Thema **🪩 Disco** (⚙️ → Darstellung → Thema): Ein Lauf ≈ 60 s – Schwarzlicht flackert an, links legt der DJ auf (Plattenteller drehen, er nickt mit Kopfhörer), oben dreht die Diskokugel und wirft Lichtpunkte, 4 Leute tanzen auf der leuchtenden Tanzfläche, dann **Twinkey-Solo** im Spot (die anderen klatschen), danach zischt die Nebelmaschine, alles versinkt im Nebel, der Nebel lichtet sich – von vorn.

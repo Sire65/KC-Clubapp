@@ -713,7 +713,7 @@ function buRaumHtml() {
             : `<button class="bu-zettel blau" onclick="zeige('termine')"><b>Nächster Termin</b>${naechst ? esc(naechst.titel || "Sitzung") + " · " + esc(fTagDp.format(new Date(naechst.beginn))) : "Keiner geplant"}</button>`}
           </div>
         </div>
-        <div class="bu-platte bu-dinge">${buTischDinge({ L, S, summe, kal, naechst, fest })}</div>
+        <div class="bu-platte bu-dinge${L ? "" : " bu-platte-mitglied"}">${buTischDinge({ L, S, summe, kal, naechst, fest })}</div>
       </div>
     </div>`;
 }
@@ -743,11 +743,11 @@ function buMonitorZeilen(naechst, fest) {
   if (naechst) { const tage = Math.round((Date.parse(berlinIso(naechst.beginn) + "T12:00:00Z") - Date.parse(heuteIso() + "T12:00:00Z")) / 86400000);
     z.push(`📅 ${esc(naechst.titel || "Sitzung")} ${tage <= 0 ? "heute" : tage === 1 ? "morgen" : `in ${tage} Tagen`}`); }
   const auf = (INIT?.meineAufgaben || []).length; if (auf) z.push(`📌 ${auf} ${auf === 1 ? "Aufgabe" : "Aufgaben"} für dich`);
-  if (fest.length) z.push(`🎂 ${fest.length} ${fest.length === 1 ? "Glückwunsch" : "Glückwünsche"} diese Woche`);
+  if (fest.length) z.push(`🎂 ${fest.length} ${fest.length === 1 ? "Glückwunsch" : "Glückwünsche"}`);
   return z;
 }
 function buTischDinge({ L, S, summe, kal, naechst, fest }) {
-  const ding = (area, inhalt, label, fn, extra = "") => `<button type="button" class="bu-obj bu-o-${area}" style="grid-area:${area}" onclick="${fn}" aria-label="${esc(label.replace(/&amp;/g, "&"))}">${inhalt}<span class="bu-olabel">${label}</span>${extra}</button>`;
+  const ding = (area, inhalt, label, fn, extra = "") => `<button type="button" class="bu-obj bu-o-${area}" style="grid-area:${area}" onclick="${fn}" aria-label="${esc(label.replace(/&amp;/g, "&").replace(/&shy;/g, ""))}">${inhalt}<span class="bu-olabel">${label}</span>${extra}</button>`;
   const nacht = istNacht(), zeilen = buMonitorZeilen(naechst, fest); setTimeout(buUhrStellen, 0); // Uhr im Bildschirm (stellt sich ab, wenn das Büro zu ist)
   const monitor = `<button type="button" class="bu-obj bu-o-monitor" style="grid-area:monitor" onclick="buAnsichtWechseln()" aria-label="Bildschirm – Büro als Liste öffnen">
       <span class="bu-mon"><span class="bu-mon-schirm"><span class="bu-mon-uhr">${buUhrzeit()}</span>${zeilen.length ? zeilen.map((x) => `<span class="bu-mon-zeile">${x}</span>`).join("")
@@ -758,7 +758,7 @@ function buTischDinge({ L, S, summe, kal, naechst, fest }) {
   return [ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()").replace('aria-label="Lampe"', `aria-label="Lampe – ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`), monitor, kalender,
     L ? ding("korb", BU_SVG.korb, "Eingang", "buEingang()", summe ? `<span class="bu-dzahl">${summe}</span>` : "") : "", geraet,
     L ? ding("handy", BU_SVG.handy, "Handy", "buHandy()") : "",
-    fest.length ? ding("kaffee", BU_SVG.karte, fest.length === 1 ? "1 Glückwunsch" : `${fest.length} Glückwünsche`, "buFeste()") : `<span class="bu-obj bu-o-deko" style="grid-area:kaffee" aria-hidden="true">${BU_SVG.kaffee}</span>`,
+    fest.length ? ding("kaffee", BU_SVG.karte, "Glück&shy;wunsch", "buFeste()", `<span class="bu-dzahl">${fest.length}</span>`) : `<span class="bu-obj bu-o-deko" style="grid-area:kaffee" aria-hidden="true">${BU_SVG.kaffee}</span>`,
     ding("fueller", BU_SVG.fueller, "Füller", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>'),
     L ? ding("telefon", BU_SVG.telefon, "Telefon", "buTelefon()") : "",
     L ? ding("tastatur", BU_SVG.tastatur, "Nachricht &amp; Mail", "buNachricht()") : "",

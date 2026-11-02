@@ -3630,6 +3630,9 @@
     grid-template-areas: "lampe monitor monitor kalender" "korb monitor monitor drucker" "handy kaffee fueller telefon" "tastatur tastatur tastatur rechner"; }
   @media (min-width: 640px) { .bu-platte.bu-dinge { grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 760px; margin: 0 auto;
     grid-template-areas: "lampe korb monitor monitor kalender drucker" "handy kaffee monitor monitor fueller telefon" "handy tastatur tastatur tastatur rechner telefon"; } }
+  /* ohne Leitungsrechte stehen Tastatur, Telefon, Handy und Ablagekorb nicht auf dem Tisch – dann kompakter, ohne Lücken */
+  .bu-platte.bu-platte-mitglied { grid-template-areas: "lampe monitor monitor kalender" "kaffee monitor monitor drucker" "fueller fueller rechner rechner"; }
+  @media (min-width: 640px) { .bu-platte.bu-platte-mitglied { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-areas: "lampe kaffee monitor monitor kalender drucker" "fueller fueller monitor monitor rechner rechner"; } }
   .bu-obj { position: relative; border: 0; background: none; padding: 2px; cursor: pointer; display: grid; justify-items: center; align-content: end; gap: 3px; color: #3b2f2a; min-width: 0; min-height: 44px; }
   .bu-obj svg { width: 100%; max-width: 92px; height: auto; display: block; filter: drop-shadow(0 3px 3px rgba(0,0,0,.28)); transition: transform .15s; }
   .bu-obj:hover svg, .bu-obj:focus-visible svg, .bu-obj:active svg { transform: translateY(-3px) scale(1.04); }
@@ -3638,18 +3641,19 @@
   :root.dunkel .bu-olabel { background: rgba(0,0,0,.45); color: #f4e9e4; }
   .bu-o-tastatur svg { max-width: 260px; } .bu-o-telefon svg { max-width: 96px; } .bu-o-handy svg { max-width: 38px; } .bu-o-kaffee svg, .bu-o-deko svg { max-width: 46px; }
   .bu-o-lampe svg { max-width: 60px; } .bu-o-fueller svg { max-width: 54px; } .bu-o-rechner svg { max-width: 62px; } .bu-o-korb svg { max-width: 84px; }
+  .bu-o-kaffee .bu-olabel { font-size: .7rem; padding: 2px 4px; white-space: normal; hyphens: manual; text-overflow: clip; } /* „Glück-wunsch“ darf umbrechen */
   .bu-o-deko { cursor: default; padding-bottom: 20px; } .bu-o-deko svg { transform: none !important; }
   .bu-o-geraet { display: grid; justify-items: center; align-content: end; min-width: 0; }
   .bu-o-geraet .bu-obj { padding: 0; } .bu-o-scanner svg { max-width: 96px; } .bu-o-drucker svg { max-width: 96px; }
-  .bu-o-scanner .bu-olabel { position: absolute; top: -4px; right: -2px; font-size: .62rem; padding: 1px 4px; }
+  .bu-o-scanner { padding: 0; } .bu-o-scanner .bu-olabel { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -62%); font-size: .62rem; padding: 0 5px; } /* Beschriftung liegt auf dem Scanner-Deckel */
   .bu-obj .bu-dzahl { position: absolute; top: 0; right: 8%; }
   .bu-o-kalender .bu-kal { transform: scale(.9); }
-  .bu-o-monitor { align-content: start; }
-  .bu-mon { display: block; width: 100%; max-width: 240px; aspect-ratio: 16 / 10; padding: 5px; border-radius: 9px; background: #22262b; box-shadow: 0 4px 8px rgba(0,0,0,.3); }
+  .bu-o-monitor { align-content: start; grid-template-columns: minmax(0, 1fr); width: 100%; } /* Textzeilen dürfen den Bildschirm nicht breiter drücken */
+  .bu-mon { display: block; width: 100%; max-width: 240px; justify-self: center; min-width: 0; aspect-ratio: 16 / 10; padding: 5px; border-radius: 9px; background: #22262b; box-shadow: 0 4px 8px rgba(0,0,0,.3); }
   .bu-mon-schirm { display: flex; flex-direction: column; justify-content: center; gap: 2px; width: 100%; height: 100%; border-radius: 4px; padding: 6px 8px; overflow: hidden;
-    background: linear-gradient(160deg, #e6eef5, #cfdce8); color: #22303d; text-align: left; font-size: .72rem; line-height: 1.2; }
+    background: linear-gradient(160deg, #e6eef5, #cfdce8); color: #22303d; text-align: left; font-size: clamp(.62rem, 2.7vw, .74rem); line-height: 1.2; }
   :root.dunkel .bu-mon-schirm { background: linear-gradient(160deg, #24384a, #1a2a39); color: #e6eef5; }
-  .bu-mon-uhr { font-weight: 800; font-size: 1rem; color: var(--rot); font-variant-numeric: tabular-nums; }
+  .bu-mon-uhr { font-weight: 800; font-size: 1rem; color: #741521; font-variant-numeric: tabular-nums; } :root.dunkel .bu-mon-uhr { color: #ffb3bd; }
   .bu-mon-zeile { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
   .bu-mon-logo { display: grid; justify-items: center; gap: 2px; } .bu-mon-logo img { width: 44px; filter: brightness(0) opacity(.55); } :root.dunkel .bu-mon-logo img { filter: none; opacity: .8; }
   .bu-mon-fuss { display: block; width: 26%; height: 9px; margin: -1px auto 0; background: #3a3f45; border-radius: 0 0 6px 6px; }
@@ -6518,7 +6522,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.811.0" data-v="2.811.0"></script>
+<script src="app.js?v=2.812.0" data-v="2.812.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
