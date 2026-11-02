@@ -1,0 +1,5 @@
+keine_doppelten=t
+alle_festen_haben_kennung=t
+schilder_genau_einer=t
+nur_vereinsordner=t
+format_geprueft=t
