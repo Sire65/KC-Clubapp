@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.804.0 – 2026-11-02 – 🧚 Die kleine Fee fragt: „Möchtest du einen Feenkuss probieren?“ (KC-CLUB-FEE-FEENKUSS) · nur App
+Wunsch Hansi 02.11.: „Baue ein, dass die kleine Fee zum Antippen manchmal fragt: Möchtest du einen Feenkuss probieren? Wenn ja, dann das Rezept anzeigen bzw. hin verlinken.“
+- Beim Antippen der Fee kommt etwa jedes 4. Mal statt eines Spruchs die Frage **„Möchtest du einen Feenkuss probieren? 💋“** mit **😋 Ja, gern!** und **Nein, danke**.
+- **Ja** öffnet das Club-Rezeptbuch direkt beim Rezept **Feenküsse** (erkannt am Titel: Feenküsse/Feenkuss/Feenkuesse). Fehlt das Rezept, steht das Rezeptbuch mit der Suche „Feenk“ offen. Vor „Ja“ keine Datenbank-Abfrage.
+- Sonst alles wie bisher: Spruch, Sprechblase „Tipp mich an!“, abschaltbar unter Einstellungen. Erklärung dort ergänzt.
+- Rezept „Feenküsse“ (45 Stück, 99 kcal/Stück, Quelle familienkost.de) am 02.11. ins Club-Rezeptbuch eingetragen.
+- Tests: `tests/fee-feenkuss.test.mjs`, Browser-Probe (Frage → Ja → Rezept offen; sonst Spruch). Rückweg: App 2.803.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (Überraschung).
+
 ## 2.803.0 – 2026-11-02 – 🎬 Erklär-Videos: Bild passt wieder zum Gesagten – Einstellungen und Express (KC-CLUB-VIDEO-ABGLEICH, Wunsch #54) · nur App
 Wunsch #54 Hansi: „Alle Erklärvideos prüfen: Stimmt die gesprochene Erklärung mit dem überein, was im Bild gezeigt wird? Anlass: Im Video zu den Nachrichten passt die Stimme nicht zum gezeigten Bild.“
 - **Prüfung aller 59 Videos (639 Schritte)** mit einem Prüfwerkzeug im Browser: jeder Schritt einzeln abgespielt – ist das, wovon die Stimme spricht, im Bild markiert, stehen die genannten Knöpfe auf dem Schirm, wird ein Schritt still übersprungen?

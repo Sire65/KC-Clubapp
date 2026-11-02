@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.803.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.804.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -10538,7 +10538,25 @@ function feeZauberschnee(sx, sy, top, hoehe) {
       { duration: 2200 + Math.random() * 1400, delay: Math.random() * 220, easing: "ease-in-out", fill: "backwards" }).onfinish = () => s.remove();
   }
 }
+// 2.804.0 KC-CLUB-FEE-FEENKUSS (Wunsch Hansi 02.11.2026 „die kleine Fee fragt beim Antippen manchmal: Möchtest du einen Feenkuss probieren?
+// Wenn ja, das Rezept anzeigen“): etwa jedes 4. Antippen statt Spruch; „Ja“ öffnet im Club-Rezeptbuch das Rezept „Feenküsse“
+// (Suche über den Titel; fehlt es, steht das Rezeptbuch mit der Suche „Feenk“ offen). Keine Abfrage, bevor „Ja“ getippt wird.
+const FEE_FEENKUSS_ANTEIL = 0.25;
+const feeIstFeenkuss = (t) => /^feenk(ü|ue|u)ss/i.test(String(t || "").trim());
+function feeFeenkussFrage() {
+  const b = blattAuf("feeBlatt", `<h3 style="text-align:center">🧚 Die Fee fragt …</h3><div class="fee-spruch">Möchtest du einen Feenkuss probieren? 💋</div><div class="na-pfeil-knoepfe"><button type="button" class="knopf haupt" onclick="feeFeenkussJa()">😋 Ja, gern!</button><button type="button" class="knopf" onclick="document.getElementById('feeBlatt')?.remove()">Nein, danke</button></div>`);
+  b.style.zIndex = "9200";
+}
+async function feeFeenkussJa() {
+  document.getElementById("feeBlatt")?.remove();
+  RZ.q = ""; RZ.kat = "";
+  await rzStart();
+  const r = (RZ.liste || []).find((x) => feeIstFeenkuss(x.titel));
+  if (r) rzZeigen(r.id);
+  else if (RZ.liste) { RZ.q = "Feenk"; rzListeZeigen(); }
+}
 function feeSpruch() {
+  if (Math.random() < FEE_FEENKUSS_ANTEIL) return feeFeenkussFrage();
   const s = FEE_SPRUECHE[Math.floor(Math.random() * FEE_SPRUECHE.length)];
   const b = blattAuf("feeBlatt", `<h3 style="text-align:center">🧚 Die Fee sagt …</h3><div class="fee-spruch">${s}</div><button type="button" class="knopf haupt" style="width:100%" onclick="document.getElementById('feeBlatt')?.remove()">✨ Danke!</button>`);
   b.style.zIndex = "9200";
