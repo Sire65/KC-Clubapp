@@ -30,3 +30,7 @@ assert.equal(jzArt(new Date(2026, 11, 31, 20)), "silvester");
 assert.notEqual(wechsel(new Date(Date.UTC(2026, 11, 31, 19, 0))), wechsel(new Date(Date.UTC(2026, 11, 31, 19, 2))), "wechselt alle 2 Minuten");
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/disco.test.mjs"), "läuft in der CI");
 console.log("disco: ok");
+// KC-CLUB-DISCO-VORSCHAU (Fund Hansi 02.11.2026 „Disco ist nicht dabei“): jede feste Kopf-Szene hat einen Knopf unter „Vorschau im Kopf der Startseite“
+const feste = JSON.parse(app.match(/const JZB_FESTE = (\[[^\]]*\])/)[1]);
+for (const a of feste.filter((x) => x !== "wiesn")) assert.ok(html.includes(`jahreszeitVorschau('${a}')`), `Vorschau-Knopf fehlt: ${a}`);
+assert.ok(html.includes(`jahreszeitVorschau('disco')">🪩 Disco</button>`));

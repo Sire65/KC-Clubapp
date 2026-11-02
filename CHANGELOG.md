@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.823.0 – 2026-11-02 – Disco in der Szenen-Vorschau
+- Einstellungen → Jahreszeiten im Kopf → „Vorschau im Kopf der Startseite“: Knopf 🪩 Disco ergänzt (fehlte seit 2.811.0, Fund Hansi). Test: jede feste Kopf-Szene hat einen Vorschau-Knopf (KC-CLUB-DISCO-VORSCHAU).
+
 ## 2.822.0 – 2026-11-02 – 📚 Ordner „Anleitungen“ im Büro (KC-CLUB-ANLEITUNGEN, Wunschliste #68) · Server 2.822.0
 Wunsch Hansi (02.11.): „Einen Ordner im Admin-Büro mit Anleitungen, mit Register, z. B. wie Push und E-Mail einstellen, wie installieren je Chrome, Samsung, Microsoft, Firefox, Opera … – bei Bedarf den Mitgliedern zur Verfügung stellen, mit Name; Zustellung per E-Mail angehängt, Push usw.“ Entscheidungen: füllen, alle drei aus der Clubleitung, auch drucken.
 - **#68 📚 Anleitungen** (KC-CLUB-ANLEITUNGEN) – neuer Ordner im Aktenschrank (nur Clubleitung) mit Registern 🔔 Push & E-Mail · 📲 Installieren · 🔑 Link & Anmelden · 📝 Sonstiges:
