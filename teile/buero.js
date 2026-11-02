@@ -717,7 +717,7 @@ function buRaumHtml() {
       </div>
     </div>`;
 }
-// ---------- 2.809.0 KC-CLUB-BUERO-SCHREIBTISCH (Wunschliste #48, Wunsch Hansi 30.10./02.11.2026 „Büro bzw. Schreibtisch moderner: im Vordergrund eine
+// ---------- 2.811.0 KC-CLUB-BUERO-SCHREIBTISCH (Wunschliste #48, Wunsch Hansi 30.10./02.11.2026 „Büro bzw. Schreibtisch moderner: im Vordergrund eine
 // Tastatur, rechts ein Telefon und ein Tischrechner, ein Handy zum Anrufen usw.“; Entscheidungen 02.11.: Rechner = echter Rechner mit Sprache, Füller im
 // Tintenfass für das, was man auch im echten Leben mit der Hand schreibt, Tastatur für Nachricht & Mail, die 2 Pins an der Pinnwand links und rechts,
 // Bildschirm wie vorgeschlagen, Lampe zum Umschalten Tag/Nacht) ----------
@@ -810,7 +810,7 @@ function buDrucker() {
     [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"],
     [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"],
     [L, "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()"],
-    [L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"]].filter((x) => x[0]); // 2.809.0: Schild vom Füller zum Drucker // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
+    [L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"]].filter((x) => x[0]); // 2.811.0: Schild vom Füller zum Drucker // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   const f = blattAuf("buDruckerBlatt", `${einwHtml("b-bu-drucker")}<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);

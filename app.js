@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.809.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.811.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13,13 +13,13 @@ const APP_STUFE = "RC";
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-yZtnisbesvyplWgO8s1bLgryJL9L/zhTJHIEPV9oYK1zbcGfeuyjek9/u7lzga+F" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
-  szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-9TyhEPN+zlSRvs8j4dsN0cnGq7rAFlFmvaIbbE1Djrp5Za1uRbK5maWw2+J74Hwn" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
-  rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-lg8HHTPaS2BqMcet4/0dkeVhd3GEkERJ/fLLuRLQYVTeuUACFhFiqha1mcojcaH5" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
+  szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
+  rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-aw03onaW6L0Eav+KYWDlUj88xLgU0OOcUhJhi2V6fs/jHBjbxA7C7lcbIzR54xuf" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-p4orcB6WtHokJk/8ikDGUuzq3hwR0AGhPGmNjoIaVi4UTdw22j9NvsIkycxMYF+w" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
-  rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-lDgU9PRoR3Sp9f1P5P/USJsVpp8Tng9luNpGUSEOU8UzDYIOSJJKQwYcQO4ipEVk" }, // 2.809.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
+  rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-u+czHDJGpj7YUQH/alklgYf+VUv1d5L5dVO/awWe2Sb48UD9GjmlgX9WUEWJLnDZ" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
@@ -1003,7 +1003,7 @@ const THEMEN = [
   { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto", kopf: "bude" },
   { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube", schrift: "weihnacht", kopf: "bude" },
   { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger", schrift: "schwung", kopf: "theater" },
-  { id: "disco", sym: "🪩", name: "Disco", design: "disko", jz: "disco", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.809.0 KC-CLUB-DISCO (Wunschliste #58)
+  { id: "disco", sym: "🪩", name: "Disco", design: "disko", jz: "disco", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.811.0 KC-CLUB-DISCO (Wunschliste #58)
 ];
 // 2.331.0: Feste nach Kalender – Oktoberfest (Samstag nach dem 15.9. bis 1. Oktobersonntag, mindestens bis 3.10.) und Sim-Jü in Werne
 // (Samstag bis Dienstag um Simon und Juda, 28.10. – der Dienstag, der dem 28.10. am nächsten liegt; 2026: 24.–27.10.)
@@ -2565,7 +2565,7 @@ const HILFE = [
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
   { id: "viehmarkt", thema: "darstellung", sym: "🐄", t: "Viehmarkt auf Sim-Jü", x: "Am <b>Sim-Jü-Dienstag</b> (Vieh- und Krammarkt) zeigt der Kopf der Startseite abwechselnd mit der Kirmes-Szene den <b>🐄 Viehmarkt</b>: links Kuh, Schwein und ein Hühnerkäfig, der Händler mit Pfeife feilscht mit zwei Bauern – per <b>Handschlag</b> wird verkauft –, ein Bauer mit Holzschuhen führt seinen Haflinger vorbei, rechts ruft die Händlerin am Kurzwarenstand. Zum Schluss büxt das Ferkel aus, und nach einem „Prost!“ ist Feierabend. Dann trabt ein <b>🐂 Stier</b> mit großen Hörnern und Nasenring herein und schnaubt deinen Namen in den Himmel.", seit: "2.682.0" },
-  { id: "disco", thema: "darstellung", sym: "🪩", t: "Thema Disco", x: "Im Thema <b>🪩 Disco</b> wird es unten im Kopf der Startseite Nacht: Das <b>Schwarzlicht</b> flackert an, links legt der <b>DJ</b> auf, oben dreht sich die <b>Diskokugel</b> und wirft Lichtpunkte, auf der leuchtenden Tanzfläche tanzen <b>vier Leute</b> – zwischendurch legt <b>Twinkey ein Solo</b> im Spot hin. Dann zischt die <b>Nebelmaschine</b>, alles versinkt im Nebel, und es beginnt von vorn. <b>Am Clubabend und zu Silvester</b> wechselt der Kopf von selbst alle 2 Minuten zwischen Disco und deiner Szene. Auf der <b>🎭 Bühne</b> läuft die Disco bei „Nur Musik hören → Disco“ hinter Twinkey. Wählen: ⚙️ → Darstellung → Thema.", seit: "2.809.0" },
+  { id: "disco", thema: "darstellung", sym: "🪩", t: "Thema Disco", x: "Im Thema <b>🪩 Disco</b> wird es unten im Kopf der Startseite Nacht: Das <b>Schwarzlicht</b> flackert an, links legt der <b>DJ</b> auf, oben dreht sich die <b>Diskokugel</b> und wirft Lichtpunkte, auf der leuchtenden Tanzfläche tanzen <b>vier Leute</b> – zwischendurch legt <b>Twinkey ein Solo</b> im Spot hin. Dann zischt die <b>Nebelmaschine</b>, alles versinkt im Nebel, und es beginnt von vorn. <b>Am Clubabend und zu Silvester</b> wechselt der Kopf von selbst alle 2 Minuten zwischen Disco und deiner Szene. Auf der <b>🎭 Bühne</b> läuft die Disco bei „Nur Musik hören → Disco“ hinter Twinkey. Wählen: ⚙️ → Darstellung → Thema.", seit: "2.811.0" },
   { id: "seifenblasen", thema: "darstellung", sym: "🫧", t: "Thema Seifenblasen", x: "Im Thema <b>🫧 Seifenblasen</b> kommt unten im Kopf der Startseite ein <b>Kind</b> auf die Wiese und pustet <b>Seifenblasen</b> – kleine, große, leicht schillernd wie echte. Dann kommen von links und rechts <b>weitere Kinder</b> dazu. Die Blasen steigen, <b>platzen</b> und hinterlassen <b>Schlieren auf der Scheibe</b> – der Kopf wird immer verschmierter. Ab und zu wölbt eine <b>dicke Blase</b> den Kopf kurz wie ein <b>Fischauge</b>. Zum Schluss kommt der <b>Fensterputzer</b> mit Leiter, Eimer und Tuch und wischt die Scheibe wieder sauber – dann beginnt alles von vorn. Tippen geht durch die Schlieren hindurch. Vorschau: ⚙️ → ✨ Effekte → 🫧 Seifenblasen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.633.0" },
   { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
@@ -2807,7 +2807,7 @@ function sbKachelStufe(t) {
 }
 function sbErkennen(roh, mitglieder = [], ich = "") {
   const t = sbNorm(roh); if (!t) return null;
-  // 2.809.0 KC-CLUB-RECHNER: „rechne 5 mal 22“, „was ist 19 Prozent von 240“ → Tischrechner (ungekürzt weitergeben – Kommas gehören zur Zahl)
+  // 2.811.0 KC-CLUB-RECHNER: „rechne 5 mal 22“, „was ist 19 Prozent von 240“ → Tischrechner (ungekürzt weitergeben – Kommas gehören zur Zahl)
   if (/^(bitte )?(rechne|berechne|was (ist|sind|ergibt|macht)) .*\d|^(bitte )?(rechne|berechne) /.test(t)) return { art: "rechnen", was: String(roh || "").trim() };
   if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
   if (/^zurück$/.test(t)) return { art: "zurueck" };
@@ -3352,7 +3352,7 @@ const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.
 async function sbAusfuehren(b) {
   if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
   if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
-  if (b.art === "rechnen") { sbStopp(); return rechnerOeffnen(b.was); } // 2.809.0 KC-CLUB-RECHNER: Sprachfenster zu, Rechner mit Ergebnis auf
+  if (b.art === "rechnen") { sbStopp(); return rechnerOeffnen(b.was); } // 2.811.0 KC-CLUB-RECHNER: Sprachfenster zu, Rechner mit Ergebnis auf
   if (b.art === "wegweiser") return ewStart(); // 2.534.0 KC-CLUB-EINST-WEGWEISER: nur lesen, darum ohne Rückfrage
   if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (z.nur && !z.nur()) return melde("Das ist für dich nicht freigeschaltet.", true); if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
@@ -7865,6 +7865,8 @@ async function zugangAnfordern() {
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }), signal: zeitSignal(30000) });
     const j = await r.json().catch(() => ({}));
+    if (r.ok && j.kommAus) return sperreZeigen("kommaus", `Hallo${j.vorname ? " " + j.vorname : ""}. Du hast einen neuen Link angefordert. Den kann ich dir leider nicht zusenden, weil du selbst darum gebeten hast, dass du keinerlei Kommunikation mit der App wünschst. Somit ist die Kommunikation ausgeschaltet. Sie kann gerne wieder aktiviert werden – wende dich dazu an ${j.admin || "Hansi"}.`); // 2.810.0 KC-CLUB-KOMM-AUS-HINWEIS
+    if (r.ok && j.gesperrt) return sperreZeigen(j.gesperrt, j.sperreText, j.bis); // 2.810.0 KC-CLUB-SPERRE-OHNE-LINK: gesperrt → Wartung o. Ä. statt „Mail kommt“
     $("zaAntwort").innerHTML = r.ok ? "✅ " + esc(j.text || "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem Link.") + "<br>Bitte den Link in der Mail antippen (im Browser Chrome öffnen)." : "⚠️ " + esc(j.error || "Fehler " + r.status);
   } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung oder das Netz ist zu langsam – bitte gleich nochmal versuchen."; }
   setTimeout(() => { $("zaKnopf").disabled = false; }, 20000);
@@ -7907,10 +7909,14 @@ function wartenEnde() {
 const VT_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
 const VT = { fuer: null }; // { person_id, name, vorname }
 const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
+// 2.810.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.: „Datenbank hat nicht geantwortet“): kurzer Aussetzer bei Supabase – reine Abfragen in api()
+// nach 4 bzw. 8 Sek. von selbst noch einmal (höchstens 2-mal), Schreiben nie (sonst evtl. doppelt). Erst danach die Meldung.
+const dbNochmalDarf = (e, action, n) => !!e?.dbWeg && (API_LESEN.test(action) || DB_NOCHMAL_LESEN.test(action)) && n < DB_NOCHMAL_MAX && !document.hidden;
+const DB_NOCHMAL_MAX = 2, DB_NOCHMAL_LESEN = /^(ungelesen_uebersicht|admin_verlauf|db_last|db_belegung|dp_einzelplan|dp_druck|mein_dienst|gemerkte_nachrichten|nachricht_details|spur_uebersicht)$/; // KC-CLUB-DB-AUSSETZER: zusätzlich zu API_LESEN – nur Lesen
 async function api(action, daten = {}, opt = {}) {
   const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
   const warte = wartenStart(action, opt.warten, opt.still);
-  try { for (;;) {
+  try { for (let dbNochmal = 0; ; ) {
   // 2.422.0 KC-CLUB-ZUGANG: für Gäste/Aushilfen nicht freigegebene Aktionen gar nicht erst schicken (der Server lehnt sie ohnehin ab)
   if (!zugangAktion(action)) throw Object.assign(new Error(zugang() === "gast" ? "🔒 Das ist für Gäste nicht freigeschaltet." : "🔒 Das ist für Aushilfen nicht freigeschaltet."), { zugang: true, status: 403 });
   daten = vtDaten(action, daten); // KC-CLUB-VERTRETUNG: im „Für … handeln“-Modus bei den erlaubten Aktionen „fuer“ mitschicken
@@ -7931,6 +7937,7 @@ async function api(action, daten = {}, opt = {}) {
       if (API_LESEN.test(action)) try { return await notApi(action, daten); } catch (e2) { e = e2; }
       else e = Object.assign(new Error("Der Server war gerade nicht erreichbar – bitte prüfen, ob es angekommen ist, und sonst nochmal senden."), { leitung: true });
     }
+    if (dbNochmalDarf(e, action, dbNochmal)) { await new Promise((ok) => setTimeout(ok, 4000 * ++dbNochmal)); continue; } // KC-CLUB-DB-AUSSETZER
     fpApiFehler(action, e); // KC-CLUB-FEHLERPROTOKOLL
     // KC-CLUB-LADE-SICHERHEIT: Laden scheiterte am Netz → fragen „Nochmal versuchen / Abbrechen“ statt nur Fehlertext (nur Lesen – Schreiben nie still doppelt)
     if (sichtbar && e?.leitung && navigator.onLine && !NOT.an && API_LESEN.test(action) && (await ladeFrage())) continue;
@@ -8311,7 +8318,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
-  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? schwerOder("Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen.") : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
+  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? schwerOder("Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen.") : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status, dbWeg: r.status === 503 && j?.db === "weg" }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
 }
 
@@ -10645,7 +10652,7 @@ function jzSimJueSchalten() {
 }
 const jzSimJue = () => jzSimJueZeit();
 const jzbDarf = () => { const sj = jzSimJue(); return (fxAn() || (sj && !SPAR?.an && !!document.body?.animate)) && (einst("jahreszeit", true) || sj); };
-// 2.809.0 KC-CLUB-DISCO-AUTO (Wunsch Hansi „auch automatisch bei Clubabend und Silvester, abwechselnd mit der anderen Szene“): am Tag des Clubabends
+// 2.811.0 KC-CLUB-DISCO-AUTO (Wunsch Hansi „auch automatisch bei Clubabend und Silvester, abwechselnd mit der anderen Szene“): am Tag des Clubabends
 // (deutsche Zeit) und zu Silvester (31.12./1.1.) wechselt der Kopf alle 2 Minuten zwischen Disco und der sonst gewählten Szene. Nur, wo das Bild im Kopf
 // an ist (die eigene Einstellung „🍂 Jahreszeiten im Kopf“ und der Sparmodus gelten wie immer); die Sim-Jü-Szene geht vor. Umschalten: Minuten-Prüfung unten.
 const DISCO_WECHSEL_MIN = 2;
@@ -13806,6 +13813,19 @@ function adZeitSaeulen(werte, farbe) {
   const max = Math.max(1, ...werte.map((v) => v || 0)), w = 200 / werte.length, h = 40;
   return `<svg class="adlinie" viewBox="0 0 200 ${h}" preserveAspectRatio="none" role="img" aria-label="Säulen">${werte.map((v, i) => v ? `<rect x="${(i * w + 0.3).toFixed(2)}" y="${(h - (v / max) * h).toFixed(1)}" width="${Math.max(0.4, w - 0.6).toFixed(2)}" height="${((v / max) * h).toFixed(1)}" fill="${farbe}"/>` : "").join("")}</svg>`;
 }
+// 2.810.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.2026 „Aussetzer mitzählen“): Minuten, in denen die Datenbank keine Verbindungen annahm
+// (Zeitpläne konnten nicht starten / die App bekam „Die Datenbank antwortet gerade nicht“) – nebeneinanderliegende Minuten zählen als ein Aussetzer.
+function adAussetzerHtml(liste, tage) {
+  if (!Array.isArray(liste)) return "";
+  const l = liste.slice().sort((a, b) => String(a.minute).localeCompare(String(b.minute))), faelle = [];
+  for (const x of l) { const t = Date.parse(x.minute), f = faelle[faelle.length - 1];
+    if (f && t - f.bis <= 3 * 60000) { f.bis = t; f.min++; f.app += x.app || 0; } else faelle.push({ von: t, bis: t, min: 1, app: x.app || 0 }); }
+  if (!faelle.length) return `<b>⚡ Kurze Aussetzer der Datenbank</b><p class="hinweis" style="margin:0">Keine in ${tage === 1 ? "den letzten 24 Std." : `den letzten ${tage} Tagen`}. ✅</p>`;
+  const zeile = (f) => `<div>• ${esc(fKurz.format(new Date(f.von)))} ${esc(fZeit.format(new Date(f.von)))} Uhr · ${f.min === 1 ? "ca. 1 Min." : `ca. ${f.min + 1} Min.`}${f.app ? ` · ${f.app}× in der App gemerkt` : ""}</div>`;
+  return `<b>⚡ Kurze Aussetzer der Datenbank</b> <span class="hinweis">(${faelle.length}× in ${tage === 1 ? "24 Std." : `${tage} Tagen`})</span>
+    <div class="hinweis" style="margin:2px 0 6px">${faelle.slice(-5).reverse().map(zeile).join("")}${faelle.length > 5 ? `<div>… und ${faelle.length - 5} weitere</div>` : ""}
+    In diesen Minuten nahm die Datenbank bei Supabase keine Verbindungen an. Die App versucht es dann von selbst noch einmal.</div>`;
+}
 function adVerlaufHtml(tage) {
   const v = AD.verlauf[tage];
   if (!v?.d) return `<p class="hinweis">${v?.fehler ? "⚠️ " + esc(v.fehler) : "Wird geladen …"}</p>`;
@@ -13814,6 +13834,7 @@ function adVerlaufHtml(tage) {
   const schritt = d.schrittMin < 60 ? `${d.schrittMin} Min.` : d.schrittMin < 1440 ? `${d.schrittMin / 60} Std.` : "1 Tag";
   return `<b>🟩 Erreichbarkeit</b> <span class="hinweis">(je Kästchen ${schritt})</span>${adBand(abs)}
     <div class="adachse"><span>${esc(fmt(d.abschnitte[0].von))}</span><span>${gemessen.length ? `${adVerfuegbar(gemessen)} erreichbar${rot ? ` · ${rot}× gestört` : ""}` : "noch keine Messung"}</span><span>jetzt</span></div>
+    ${adAussetzerHtml(d.aussetzer, tage)}
     <b>⏱️ Antwortzeit der Datenbank</b>${adLinie(abs.map((x) => x.ms), "ms")}
     <b>🔴 Fehlgeschlagene Hintergrund-Aufrufe</b>${abs.some((x) => x.netFehler) ? adZeitSaeulen(abs.map((x) => x.netFehler), AD_FARBE.rot) : '<p class="hinweis" style="margin:0">Keine Fehler in diesem Zeitraum. ✅</p>'}
     ${tage > 1 ? `<b>🗄️ Größe der Datenbank</b>${adLinie(abs.map((x) => (x.bytes == null ? null : x.bytes / 1048576)), "MB", AD_FARBE.gelb)}` : ""}
@@ -14045,7 +14066,8 @@ function adBlatt(id) {
 // ---------- KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): eine oder mehrere Personen vorübergehend sperren ----------
 // Der Server antwortet Gesperrten mit 423 + Art; die App zeigt dann nur das Hinweisfenster. Sperren/Freigeben nur Admin (Wartungs-Blatt).
 const SPERRE_ART = { wartung: { sym: "🔧", t: "Wartungsarbeiten", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔵 Wartungsarbeiten" },
-  stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" } };
+  stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" },
+  kommaus: { sym: "🔕", t: "Kommunikation ausgeschaltet", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔕 Kommunikation ausgeschaltet" } }; // 2.810.0 KC-CLUB-KOMM-AUS-HINWEIS
 function sperreZeigen(art, text, bis) {
   if (document.getElementById("sperreFenster")) return;
   const a = SPERRE_ART[art] || SPERRE_ART.wartung, ab = bis && Date.parse(bis) > Date.now() ? wann(bis) : "";

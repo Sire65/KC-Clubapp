@@ -1,4 +1,4 @@
-// KC-CLUB-BUERO-SCHREIBTISCH + KC-CLUB-RECHNER (2.809.0, 02.11.2026, Wunschliste #48). Aufruf: node tests/schreibtisch.test.mjs (offline)
+// KC-CLUB-BUERO-SCHREIBTISCH + KC-CLUB-RECHNER (2.811.0, 02.11.2026, Wunschliste #48). Aufruf: node tests/schreibtisch.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { programmText } from "./programm.mjs";

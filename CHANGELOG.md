@@ -1,12 +1,12 @@
 # Änderungen
 
-## 2.809.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, #58) · 🖥️ Büro-Schreibtisch mit Rechner und Lampe (KC-CLUB-BUERO-SCHREIBTISCH, KC-CLUB-RECHNER, #48) · nur App
+## 2.811.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, #58) · 🖥️ Büro-Schreibtisch mit Rechner und Lampe (KC-CLUB-BUERO-SCHREIBTISCH, KC-CLUB-RECHNER, #48) · nur App
 Wunsch Hansi (31.10.): „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine, Szene versinkt im Nebel, fängt wieder von vorne an.“ Entscheidungen 02.11.: 4 Tänzer, zwischendurch legt Twinkey ein Solo hin; auch automatisch am Clubabend und zu Silvester im Wechsel; auch auf der Bühne bei „Nur Musik hören“.
 - Neues Thema **🪩 Disco** (⚙️ → Darstellung → Thema): Ein Lauf ≈ 60 s – Schwarzlicht flackert an, links legt der DJ auf (Plattenteller drehen, er nickt mit Kopfhörer), oben dreht die Diskokugel und wirft Lichtpunkte, 4 Leute tanzen auf der leuchtenden Tanzfläche, dann **Twinkey-Solo** im Spot (die anderen klatschen), danach zischt die Nebelmaschine, alles versinkt im Nebel, der Nebel lichtet sich – von vorn.
 - **Automatisch am Clubabend-Tag und zu Silvester** (31.12./1.1.): der Kopf wechselt alle 2 Minuten zwischen Disco und der sonst gewählten Szene (Silvester-Feuerwerk, Jahreszeit oder Thema). Nur wo das Bild im Kopf an ist; Sparmodus und „Jahreszeiten im Kopf aus“ gelten wie immer, Sim-Jü geht vor.
 - **Bühne → 🎶 Nur Musik hören → Disco:** die Disco läuft hinter Twinkey (ohne Solo – er tanzt dort vorn), hält bei Pause, im Hintergrund und beim Verlassen an.
 - Sparsam wie alle Szenen: höchstens 20 Bilder/s, in Ruhe 12, nach 3 Min. ohne Tippen steht das Bild; höchstens 24 Lichtpunkte und 12 Nebelwolken, Leuchten ohne Weichzeichner.
-- Hilfe-Eintrag „Thema Disco“. Test: `tests/disco.test.mjs`. Rückweg: App 2.808.0.
+- Hilfe-Eintrag „Thema Disco“. Test: `tests/disco.test.mjs`. Rückweg: App 2.810.0.
 - **#48 Büro: ein Schreibtisch statt Kacheln** (Wunsch 30.10., Entscheidungen 02.11.): Oben die **Pinnwand** mit den 2 Pins (links „Nächster Schritt“, rechts „Eingang“). Darauf gezeichnete Dinge, jedes ein Knopf mit Namen:
   - **🖥️ Bildschirm:** Uhrzeit, nächste Sitzung („in 5 Tagen“), deine offenen Aufgaben, Glückwünsche der Woche – sonst das Logo. Antippen öffnet die Büro-Liste.
   - **⌨️ Tastatur:** Nachricht & Mail (eine Person, mehrere, Gruppe). **✒️ Füller im Tintenfass:** was man mit der Hand schreibt – Brief, Einladung, Protokoll, Grußkarte & Glückwunsch, Pinnwand-Zettel (Schild jetzt beim Drucker).
@@ -16,6 +16,15 @@ Wunsch Hansi (31.10.): „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel,
 - **🧮 Tischrechner** (neuer Teil `teile/rechner.js`): große Tasten, grünes Display, Papierstreifen mit den letzten 20 Rechnungen (nur auf dem Gerät), + − × ÷, Klammern, Prozent. **🎤 Sagen:** „rechne 5 mal 22“, „125 geteilt durch 4“, „19 Prozent von 240“, „das Ergebnis plus 30“ – auf Wunsch mit Ansage. „rechne …“ geht auch über die Sprachsteuerung der App von überall. Gerechnet wird nur auf dem Gerät (ohne eval).
 - Tests: `tests/schreibtisch.test.mjs`.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.810.0 – 2026-11-02 – ⚡ Kurze Datenbank-Aussetzer: App fragt selbst nochmal, Zählung im Verlauf · Zeitpläne entzerrt · Hinweis bei gesperrtem Zugang
+- ⚡ Antwortet die Datenbank für einen Moment nicht, fragt die App bei reinen Abfragen nach 4 bzw. 8 Sekunden selbst nochmal (Speichern nie doppelt); im Admin → Verlauf stehen die kurzen Aussetzer mit Datum und Dauer (KC-CLUB-DB-AUSSETZER). ⏱️ Die 5-Minuten-Zeitpläne starten nicht mehr alle gleichzeitig (KC-CLUB-CRON-ENTZERREN). 🔕 Wer „keine Benachrichtigungen“ gewählt hat und einen neuen Link anfordert, bekommt einen klaren Hinweis statt „Mail kommt gleich“ (KC-CLUB-KOMM-AUS-HINWEIS); wer gesperrt ist, sieht dabei die Sperre, z. B. Wartung (KC-CLUB-SPERRE-OHNE-LINK).
+
+## 2.809.0 – 2026-11-02 – 🔧 Server ließ sich seit 2.804.0 nicht hochladen – korrigiert (KC-CLUB-ANSICHTFILM) · Server 2.809.0
+- Fehler aus 2.804.0: In der Prüfung der Einstellung `filme` stand ein `//`-Kommentar mitten in der Zeile und hat den Rest der Zeile (`z: …`) auskommentiert. Supabase hat das Bündeln abgelehnt („Expected ',', got ';'“) – dadurch scheiterte „Server hochladen“ für 2.804.0 und 2.806.0, es lief weiter Server 2.802.0. Nichts wurde beschädigt. Jetzt `/* … */`.
+- Damit sind ab jetzt auf dem Server aktiv: „bis zum Ende gesehen“ und **👀 Wer hat ihn gesehen?** (2.804.0) sowie die Server-Teile von 2.806.0 (KC-CLUB-DB-VIEL-ZU-TUN).
+- Prüfung vor dem Hochladen: Server-Datei mit dem TypeScript-Parser geprüft (vorher Syntaxfehler, jetzt ok). Rückweg: Server 2.802.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.808.0 – 2026-11-02 – 🔽 Klapp-Pfeile überall gleich (KC-CLUB-KLAPPE-GLEICH, Wunsch #63) · nur App
 Wunsch #63 Hansi: „Alle Listen mit Einklapp-Pfeilen gleich aufbauen. In Protokollen sind die Pfeile viel zu klein und drehen sich nicht.“
 - Ursache: Die Protokoll-Monate (2.802.0) hatten einen eigenen kleinen Pfeil links, der sich nicht drehte; Schloss und Pfeil rutschten darunter in eine eigene Zeile.
