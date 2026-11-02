@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.814.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.815.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15071,7 +15071,7 @@ function rzFormZeigen() {
     ${ICH?.admin ? `<div class="feld"><b>Thema (nur du siehst diese Auswahl)</b><div class="hl-chips"><button type="button" class="chip${F.thema ? "" : " an"}" onclick="rzfMerken();RZ.form.thema='';rzFormZeigen()">Kein Thema</button>${Object.entries(RZ_THEMEN).map(([k, t]) => `<button type="button" class="chip${F.thema === k ? " an" : ""}" onclick="rzfMerken();RZ.form.thema='${k}';rzFormZeigen()">${t.sym} ${esc(t.t)}</button>`).join("")}</div></div>` : ""}
     <label class="feld">Stichworte (freiwillig)<input id="rzfStich" maxlength="200" value="${esc(F.stichworte)}" placeholder="z. B. vegetarisch, Weihnachtsmarkt"></label>
     <div class="feld"><b>Foto (freiwillig)</b><div class="bo-fotos">${F.foto ? `<span class="bo-mini"><img data-anlage="${esc(F.foto)}" alt=""><button onclick="rzfMerken();RZ.form.foto=null;rzFormZeigen()" aria-label="Foto entfernen">✕</button></span>`
-      : `<label class="bo-plus">${F.laedt ? "⏳" : "📷 ＋"}<input type="file" accept="image/*" hidden onchange="rzfFoto(this)"></label>`}</div></div>
+      : F.laedt ? `<span class="bo-plus">⏳</span>` : `<div class="cf-foto-wahl rzf-foto-wahl"><label class="knopf">📷 Kamera<input type="file" accept="image/*" capture="environment" hidden onchange="rzfFoto(this)"></label><label class="knopf">🖼️ Galerie<input type="file" accept="image/*" hidden onchange="rzfFoto(this)"></label><label class="knopf">📁 Datei<input type="file" accept="${CF_FOTO_DATEI}" hidden onchange="rzfFoto(this)"></label></div>`}</div></div>
     <p class="hinweis" style="margin:4px 0 8px">Alle Mitglieder sehen das Rezept im Rezeptbuch. Beim Einstellen wird nichts verschickt.</p>
     <div class="na-pfeil-knoepfe bs-fuss"><button class="knopf haupt" ${F.laedt ? "disabled" : ""} onclick="einmal(this, rzSpeichern)">💾 Speichern</button><button class="knopf" onclick="${F.id ? `rzZeigen('${F.id}')` : "rzListeZeigen()"}">Abbrechen</button></div>`;
   z.querySelectorAll("img[data-anlage]").forEach((i) => bildLaden(i));
@@ -15080,8 +15080,11 @@ function rzfMerken() {
   const F = RZ.form; if (!F || !$("rzfTitel")) return;
   Object.assign(F, { titel: $("rzfTitel").value, portionen: $("rzfPort").value, dauer: $("rzfDauer").value, zutaten: $("rzfZutaten").value, zubereitung: $("rzfZub").value, stichworte: $("rzfStich").value });
 }
+// 2.815.0 KC-CLUB-REZEPT-FOTO-QUELLE (Wunsch #66 Hansi „In Rezepte Foto hinzufügen von Kamera, Bild, Dateimanager usw.“): drei Wege wie beim
+// Chat-Hintergrund (2.582.0) – 📷 Kamera, 🖼️ Galerie, 📁 Datei (Dateimanager). Vorher ein „📷 ＋“, das je nach Handy nur die Galerie öffnete.
 async function rzfFoto(input) {
   const F = RZ.form, roh = input.files?.[0]; if (!F || !roh) return;
+  if (!/^image\//.test(roh.type) && !/\.(jpe?g|png|webp|gif|heic|heif)$/i.test(roh.name || "")) { input.value = ""; return melde("Bitte ein Foto oder Bild wählen.", true); }
   rzfMerken(); F.laedt = 1; rzFormZeigen();
   try { const r = await anlageHochladen(roh); if (r?.id) F.foto = r.id; } catch (e) { meldeFehler(e); }
   F.laedt = 0; if (RZ.form === F) rzFormZeigen();

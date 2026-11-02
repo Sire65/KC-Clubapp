@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.815.0 – 2026-11-02 – 📷 Rezept-Foto von Kamera, Galerie oder Datei (KC-CLUB-REZEPT-FOTO-QUELLE, Wunsch #66) · nur App
+Wunsch #66 Hansi: „In Rezepte Foto hinzufügen von Kamera, Bild, Dateimanager usw.“
+- Im Rezept-Formular statt eines „📷 ＋“ (öffnete je nach Handy nur die Galerie) drei Knöpfe wie beim Chat-Hintergrund: **📷 Kamera** (Foto direkt machen), **🖼️ Galerie**, **📁 Datei** (Dateimanager, JPG/PNG/WEBP/GIF/HEIC).
+- Hochladen wie bisher (verkleinert, ein Foto je Rezept); andere Dateien werden freundlich abgelehnt. Browser geprüft. Test: `tests/rezept-foto-quelle.test.mjs`.
+- Rückweg: App 2.814.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.814.0 – 2026-11-02 – 📌 Admin darf 8 Zettel an die Pinnwand (KC-CLUB-PINNWAND-ADMIN-MEHR) · App + Server + Datenbank
 Wunsch Hansi: „Gib mir als Admin mehr als 4 Zettel an der Pinnwand.“
 - Admin: bis zu **8** Zettel gleichzeitig (Mitglieder weiter 4). Die Zettel 5–8 bekommen eigene Farben: orange, lila, türkis, creme – auch als Nadel im Rahmen.
