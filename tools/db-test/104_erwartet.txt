@@ -1,0 +1,3 @@
+ordner=1
+register=4
+nur_leitung=t
