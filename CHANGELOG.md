@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.818.0 – 2026-11-02 – 🧹 Erklärfilm: Reiter erklärt und anordnen, einfache Ansicht wie echt (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 02.11.: „Nehme noch auf, dass man sich die Reiter Club, Meins, Technik selber anordnen kann und kurz wofür sie sind. Und die einfache Ansicht muss besser zeigen, wie sie wirklich aussieht – mit langen Knöpfen und oben im Kopf nur minimal Ansicht.“
+- Film „Deine App – so, wie du sie willst“ neu (2:47 Min.): **wofür die Reiter sind** (Club – rund um den Verein · Meins – deine eigenen Sachen · Technik – Hilfe, Videos, Sicherheit) und **Reiter anordnen** (festhalten, nach links/rechts ziehen, „💾 Reihenfolge der Register gespeichert“).
+- **Einfache Ansicht wie echt:** lange Knöpfe untereinander mit Unterzeile, schlichter Kopf ohne Tag/Nacht, Aktualisieren und Lämpchen.
+- `film/app-selbst-einrichten.mp4?v=3`, gleiche Kennung `ansichtfilm` (wird nicht erneut beim Start angeboten). Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests unverändert grün. Rückweg: App 2.817.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.817.0 – 2026-11-02 – 🔕 Dienstwünsche: ein Push erst, wenn fertig eingetragen (KC-CLUB-DW-PUSH-FERTIG)
 Wunsch Hansi („ich bekomme scheinbar nach jedem Tag einen Push – besser erst, wenn komplett fertig ist, und dann gesamt“): Beim Eintragen der Dienstwünsche speichert Twinkey nach jedem Tag. Bisher bekam der Admin dabei jedes Mal „🗓️ Geänderter Wunschplan von …“. Jetzt kommt kein Push mehr je Speichern – der Dienstplan-Druck rechnet sich weiter sofort neu. Bescheid gibt es einmal, wenn das Mitglied 10 Minuten nichts mehr geändert hat (Prüfung alle 15 Minuten, also spätestens nach rund 25 Minuten): „📅 Dienstzeiten geändert: Name“. Der Admin landet beim Antippen im Ordner „Dienstplan zum Drucken“, der übrige Vorstand wie bisher im Büro-Eingangskorb.
 
