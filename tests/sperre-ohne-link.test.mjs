@@ -13,3 +13,12 @@ assert.ok(/if \(sp\) \{\s*await sperreVersuchMerken\(pe\.person_id, sp\.art, a\)
 assert.ok(/versand = await neuenLinkMailen\(t\.pid\);/.test(server), "andere Wege (Hilfe) unverändert");
 assert.ok(/if \(r\.ok && j\.gesperrt\) return sperreZeigen\(j\.gesperrt, j\.sperreText, j\.bis\);/.test(app), "App zeigt die Sperre");
 console.log("sperre-ohne-link: ok");
+// KC-CLUB-KOMM-AUS-HINWEIS: „keine Benachrichtigungen“ → ehrlicher Hinweis statt „Mail kommt gleich“ (vor der Sperre geprüft)
+{
+  const iK = za.indexOf("if ((await kommunikationAus()).has(pe.person_id)) {");
+  assert.ok(iK > 0 && iK < iSp, "Kommunikation-aus zuerst");
+  assert.ok(/return json\(\{ ok: true, text, kommAus: true, vorname: [^\n]*admin: await adminVorname\(\) \}\);/.test(za), "Antwort mit Vorname und Admin");
+  assert.ok(/if \(r\.ok && j\.kommAus\) return sperreZeigen\("kommaus", `Hallo\$\{j\.vorname \? " " \+ j\.vorname : ""\}\. Du hast einen neuen Link angefordert\. Den kann ich dir leider nicht zusenden, weil du selbst darum gebeten hast/.test(app), "Text im Fenster");
+  assert.ok(/kommaus: \{ sym: "🔕", t: "Kommunikation ausgeschaltet"/.test(app), "eigenes Fenster");
+  console.log("komm-aus-hinweis: ok");
+}

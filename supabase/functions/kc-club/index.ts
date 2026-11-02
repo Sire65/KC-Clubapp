@@ -9114,6 +9114,12 @@ Köcheclub Werne`,
       if (!pe || String(pe.person_id).startsWith("KC-P-TEST")) { await protokoll(null, "zugang_angefordert", { treffer: false }); return json({ ok: true, text }); }
       // 2.797.0 KC-CLUB-SPERRE-OHNE-LINK (Fund Hansi 02.11.: „Er ist gesperrt und müsste Wartung angezeigt bekommen“ – Thomas am PC ohne Link forderte einen
       // neuen an): gesperrt → KEIN neuer Link, sondern dieselbe Anzeige wie beim Öffnen mit Link (z. B. Wartung). Der Versuch wird gemerkt wie sonst.
+      // 2.797.0 KC-CLUB-KOMM-AUS-HINWEIS (Wunsch Hansi 02.11.: „im Fenster anzeigen: Hallo Thomas, du hast einen neuen Link angefordert …“): steht die Person
+      // auf „keine Benachrichtigungen“ (kc_club_kommunikation_aus), geht ohnehin keine Mail raus – statt „Mail kommt gleich“ sagt die App ehrlich, warum.
+      if ((await kommunikationAus()).has(pe.person_id)) {
+        await protokoll(pe.person_id, "zugang_angefordert", { treffer: true, kommAus: true });
+        return json({ ok: true, text, kommAus: true, vorname: vorname((await personen([pe.person_id])).get(pe.person_id) ?? null) || "", admin: await adminVorname() });
+      }
       const sp = await sperreFuer(pe.person_id);
       if (sp) {
         await sperreVersuchMerken(pe.person_id, sp.art, a).catch(() => {});

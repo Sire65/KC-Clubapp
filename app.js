@@ -7841,6 +7841,7 @@ async function zugangAnfordern() {
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }), signal: zeitSignal(30000) });
     const j = await r.json().catch(() => ({}));
+    if (r.ok && j.kommAus) return sperreZeigen("kommaus", `Hallo${j.vorname ? " " + j.vorname : ""}. Du hast einen neuen Link angefordert. Den kann ich dir leider nicht zusenden, weil du selbst darum gebeten hast, dass du keinerlei Kommunikation mit der App wünschst. Somit ist die Kommunikation ausgeschaltet. Sie kann gerne wieder aktiviert werden – wende dich dazu an ${j.admin || "Hansi"}.`); // 2.797.0 KC-CLUB-KOMM-AUS-HINWEIS
     if (r.ok && j.gesperrt) return sperreZeigen(j.gesperrt, j.sperreText, j.bis); // 2.797.0 KC-CLUB-SPERRE-OHNE-LINK: gesperrt → Wartung o. Ä. statt „Mail kommt“
     $("zaAntwort").innerHTML = r.ok ? "✅ " + esc(j.text || "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem Link.") + "<br>Bitte den Link in der Mail antippen (im Browser Chrome öffnen)." : "⚠️ " + esc(j.error || "Fehler " + r.status);
   } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung oder das Netz ist zu langsam – bitte gleich nochmal versuchen."; }
@@ -14012,7 +14013,8 @@ function adBlatt(id) {
 // ---------- KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): eine oder mehrere Personen vorübergehend sperren ----------
 // Der Server antwortet Gesperrten mit 423 + Art; die App zeigt dann nur das Hinweisfenster. Sperren/Freigeben nur Admin (Wartungs-Blatt).
 const SPERRE_ART = { wartung: { sym: "🔧", t: "Wartungsarbeiten", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔵 Wartungsarbeiten" },
-  stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" } };
+  stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" },
+  kommaus: { sym: "🔕", t: "Kommunikation ausgeschaltet", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔕 Kommunikation ausgeschaltet" } }; // 2.797.0 KC-CLUB-KOMM-AUS-HINWEIS
 function sperreZeigen(art, text, bis) {
   if (document.getElementById("sperreFenster")) return;
   const a = SPERRE_ART[art] || SPERRE_ART.wartung, ab = bis && Date.parse(bis) > Date.now() ? wann(bis) : "";
