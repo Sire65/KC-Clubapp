@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.805.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.806.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -8257,6 +8257,17 @@ const SCHNECKE_NICHT = new Set(["admin_lage", "wetter", "suche", "anlage_url"]);
 const API_LESEN = /^(init|hilfe_bewertungen|ping|lebenszeichen|online|tagesinfo|pinnwand|pinnwand_neu|unterhaltung|unterhaltungen|mitglieder|mitglied_details|kalender|kalender_daten|protokoll_laden|fotos_neueste|anlage_url|suche|buero_start|.*_liste|.*_statistik|.*_holen|.*_info|.*_stand|fitness_daten)$/; // 2.1.1: kein „*_start“ mehr (anruf_start/standort_start schreiben)
 // 2.425.0 KC-CLUB-GENERALCHECK: Antworten ohne Text vom Programm (z. B. vom Netz davor) in Klartext mit Handlungshinweis statt „Fehler 413“
 const FEHLER_KLARTEXT = { 413: "Die Datei ist zu groß – bitte ein kleineres Foto oder eine kleinere Datei nehmen.", 429: "Gerade zu viele Anfragen – bitte in einer Minute nochmal versuchen.", 408: "Der Server hat zu lange gebraucht – bitte gleich nochmal versuchen." };
+// 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN (Wunsch #62 Hansi): antwortet der Server nicht, während planmäßig Notfall-Paket, Spiegelung oder Sicherung laufen,
+// sagt die App ehrlich warum und wie lange es noch dauert. Die Zeiten kommen vom Server (init: schwerZeiten, UTC) – eine Quelle; ohne sie bleibt der bisherige Text.
+function schwerLage(z = INIT?.schwerZeiten, d = new Date()) {
+  if (!Array.isArray(z)) return null; const h = d.getUTCHours(), m = d.getUTCMinutes() + d.getUTCSeconds() / 60;
+  for (const x of z) {
+    if (Array.isArray(x.min)) { const s = x.min.find((v) => m >= v && m < v + x.dauer); if (s !== undefined) return { was: x.was, rest: Math.max(1, Math.ceil(s + x.dauer - m)) }; continue; }
+    if ((x.std || []).includes(h) && m >= x.von && m < x.bis) return { was: x.was, rest: Math.max(1, Math.ceil(x.bis - m)) };
+  }
+  return null;
+}
+const schwerOder = (text) => { let l = null; try { l = schwerLage(); } catch {} /* nur Hinweis, darf die Fehlermeldung nie verhindern */ return l ? `Zurzeit hat die Datenbank viel zu tun: Es wird gerade ${l.was}. Das dauert ca. noch ${l.rest} Minute${l.rest === 1 ? "" : "n"}. Versuche dein Anliegen bitte später noch einmal. Danke für dein Verständnis.` : text; };
 async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null) {
   // KC-CLUB-NOTBETRIEB-ERNSTFALL: simulierter Ausfall – genau der Fehler, den ein unerreichbarer Club-Server liefert
   if (notErnstfall()) { vbStart(); await new Promise((ok) => setTimeout(ok, 300)); vbEnde(false, 0, "Server nicht erreichbar (Simulation)"); throw Object.assign(new Error("Keine Verbindung zum Server – bitte gleich nochmal versuchen."), { leitung: true }); }
@@ -8270,14 +8281,14 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   const zeitMs = API_LESEN.test(action) ? 25000 : 140000;
   try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION, ...(TG_GERAET ? { "x-tg-geraet": TG_GERAET } : {}) }, body: JSON.stringify({ action, ...daten }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
   catch (fe) { if (abbruch?.aborted) { VB.laufend = Math.max(0, VB.laufend - 1); vbDatenLed(); throw Object.assign(new Error("Abgebrochen."), { abgebrochen: true }); } // KC-CLUB-LADE-SICHERHEIT
-    if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest."), { leitung: true, zeit: true }); }
+    if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(schwerOder(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest.")), { leitung: true, zeit: true }); }
     // Region weg → Standardweg. 2.425.0 KC-CLUB-GENERALCHECK: nur Lesen still wiederholen – „Failed to fetch“ kann auch NACH dem Absenden kommen
     // (WLAN↔Mobilnetz), dann ginge eine Nachricht doppelt raus; Schreiben meldet den Fehler, der nächste Versuch nimmt den Standardweg
     if (mitRegion && navigator.onLine) { REGION_AUS_BIS = Date.now() + REGION_PAUSE_MS; if (API_LESEN.test(action)) { vbEnde(true, performance.now() - t0, ""); return apiRoh(action, daten, zweiterVersuch, abbruch); } }
     // KC-CLUB-AUFWACHEN (Fehlerprotokoll 12.10.2026): kommt das Handy aus dem Ruhezustand, ist das Netz oft noch nicht bereit („Failed to fetch“,
     // obwohl online) – Lese-Anfragen nach kurzer Pause einmal still wiederholen, statt einen Fehler zu melden
     if (API_LESEN.test(action) && !zweiterVersuch && navigator.onLine) { vbEnde(true, performance.now() - t0, ""); await new Promise((ok) => setTimeout(ok, AUSSETZER_PAUSE_MS * 2)); return apiRoh(action, daten, true, abbruch); }
-    vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? "Keine Verbindung zum Server – bitte gleich nochmal versuchen." : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
+    vbEnde(false, 0, navigator.onLine ? "Server nicht erreichbar" : "Handy offline"); throw Object.assign(new Error(navigator.onLine ? schwerOder("Keine Verbindung zum Server – bitte gleich nochmal versuchen.") : "Keine Internetverbindung."), { leitung: navigator.onLine }); }
   const j = await r.json().catch(() => null);
   // KC-CLUB-SCHNECKE: nur Lesen (Schreiben darf länger dauern). 2.301.0 KC-CLUB-SCHNECKE-NETZ: meldet der Server seine eigene Rechenzeit (srvMs, z. B. beim Start),
   // zählt nur die Zeit im Netz – die Schnecke heißt „Netz langsam“, nicht „Server rechnet“ (Fall Hansi: Admin-Start 1–2,3 s Serverzeit → Schnecke ohne langsames Netz)
@@ -8294,7 +8305,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
-  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
+  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? schwerOder("Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen.") : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
 }
 
