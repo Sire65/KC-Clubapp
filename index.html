@@ -3600,6 +3600,10 @@
   :root.dunkel .bu-schrank-zeile { background: linear-gradient(180deg, #3a3230, #2f2725); border-bottom-color: #6b5338; }
   .bu-schrank-zeile b { font-size: 1.05rem; } .bu-schrank-zeile small { flex: 1; color: var(--grau); font-weight: 700; }
   .bu-schrank-sym { font-size: 1.3rem; } .bu-schrank-pfeil { font-size: 1.3rem; font-weight: 900; line-height: 1; padding: 0 4px; }
+  /* 2.819.0 KC-CLUB-AKTENSCHRANK-SCHLOSS (Wunsch #67): 🔓/🔒 oben rechts vor dem Klapp-Pfeil, wie bei den Karten (details.karte .schloss) */
+  #buSchrank { position: relative; } #buSchrank .bu-schrank-pfeil { margin-left: 50px; }
+  .bu-schrank-schloss { position: absolute; top: 7px; right: 40px; width: 42px; height: 42px; border: none; border-radius: 12px; background: var(--karte2); font-size: 1.15rem; cursor: pointer; z-index: 2; }
+  .bu-schrank-schloss.zu { background: var(--gelbbg); outline: 2px solid var(--gold); }
   .bu-schrank-koerper { position: relative; overflow: hidden; }
   .bu-jalousie { position: absolute; top: 0; bottom: 0; left: 0; width: 100%; z-index: 2; overflow: hidden; pointer-events: none; perspective: 700px; }
   .bu-schrank.auf .bu-jalousie { width: 0; }
@@ -6539,7 +6543,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.818.0" data-v="2.818.0"></script>
+<script src="app.js?v=2.819.0" data-v="2.819.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

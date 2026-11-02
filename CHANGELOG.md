@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.819.0 – 2026-11-02 – 🔒 Aktenschrank feststellen (KC-CLUB-AKTENSCHRANK-SCHLOSS, Wunsch #67) · nur App
+Wunsch #67 Hansi: „Im Aktenschrank oben rechts in den Klapp-Pfeil ein Schloss einbauen, wenn man ihn dauernd offen haben will.“
+- In der Aktenschrank-Zeile steht vor dem Klapp-Pfeil ein **🔓/🔒-Schloss** – gleiche Größe und Bedienung wie bei allen Klappbereichen. Festgestellt bleibt der Schrank, wie er ist (z. B. dauernd offen); Antippen der Zeile sagt dann „🔒 festgestellt – zum Lösen das Schloss antippen“. Gemerkt je Gerät.
+- Browser geprüft (feststellen, gesperrt, lösen, zuklappen). Test in `tests/aktenschrank.test.mjs`.
+- Rückweg: App 2.818.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.818.0 – 2026-11-02 – 🔎 Protokoll: Prüfung durch den Schriftführer vor dem Veröffentlichen (KC-CLUB-PROTOKOLL-PRUEFUNG, Wunsch #57) · App + Server + Datenbank
 Wunsch #57 Hansi: „Protokollführer bekommt von mir das eingestellte Protokoll. Der hat Button ‚Protokoll freigeben‘ oder ‚folgende Änderungen …‘. Dann zurück zum anderen und wieder freigegeben. Wenn freigegeben, kann es eingestellt werden. Und dann Info an alle.“ Konzept 02.11. – Hansi: „Ja, baue nach deinen Vorschlägen“ (A: immer prüfen, wenn jemand anderes eingetragen hat · B: nur der Eintragende ändert · C: nach 3 Tagen trotzdem veröffentlichen).
 - Im Entwurf neue Karte „🔎 Prüfung durch den Schriftführer“ mit **„📨 Zur Prüfung an …“**. Der Schriftführer bekommt Push/Mail (Bereich Protokolle) und auf der Startseite „🔎 Protokoll … bitte prüfen“.

@@ -633,6 +633,18 @@ const buRecht = (x) => !x.recht || (x.recht === "S" && buSchreiben()) || (x.rech
 // steht der Schrank immer offen (das Video zeigt das Regal). Ordner über Sprache, Suche oder Film öffnen eigene Ansichten – dafür muss der Schrank nicht auf sein.
 const BU_SCHRANK = "kc_club_bu_schrank", BU_SCHRANK_KLAPP_MS = 320, BU_SCHRANK_FAHRT_MS = 1100, BU_SCHRANK_TUER_MS = 500, BU_SCHRANK_LAMELLEN = 28;
 const buSchrankOffen = () => lsLesen(BU_SCHRANK) !== "zu" || document.body.classList.contains("rg-an");
+// 2.819.0 KC-CLUB-AKTENSCHRANK-SCHLOSS (Wunsch #67 Hansi „oben rechts beim Klapp-Pfeil ein Schloss, wenn man den Schrank dauernd offen haben will“):
+// 🔓/🔒 wie bei allen Klappbereichen (klappenMerken) – festgestellt bleibt der Schrank so, wie er ist; gemerkt je Gerät.
+const BU_SCHRANK_FEST = "kc_club_bu_schrank_fest";
+const buSchrankFest = () => lsLesen(BU_SCHRANK_FEST) === "1";
+const buSchlossHtml = (fest, auf) => `<button type="button" class="bu-schrank-schloss${fest ? " zu" : ""}" onclick="buSchrankSchloss()" aria-pressed="${fest}" aria-label="${fest ? "Festgestellt – antippen zum Lösen" : `Aktenschrank ${auf ? "offen" : "zu"} feststellen`}" title="${fest ? "Festgestellt – antippen zum Lösen" : "Antippen, um den Schrank so festzustellen"}">${fest ? "🔒" : "🔓"}</button>`;
+function buSchrankSchloss() {
+  const s = $("buSchrank"); if (!s) return;
+  const fest = !buSchrankFest(), auf = s.classList.contains("auf");
+  lsSetzen(BU_SCHRANK_FEST, fest ? "1" : "0");
+  s.querySelector(".bu-schrank-schloss")?.replaceWith(Object.assign(document.createElement("template"), { innerHTML: buSchlossHtml(fest, auf) }).content.firstChild);
+  melde(fest ? `🔒 Festgestellt – der Aktenschrank bleibt ${auf ? "offen" : "zu"}` : "🔓 Gelöst – wieder auf- und zuklappbar");
+}
 // 2.770.0 (Fund Hansi „Jalousie-Effekt sieht man nicht“ – sein Handy meldet „Bewegung reduzieren“, wie 2.161.0 beim Kopf): wie bei allen Effekten seit
 // 2.409.0 zählt nur der App-Schalter „✨ Animierte Knöpfe“, nicht die Handy-Einstellung
 const buSchrankRuhig = () => !einst("animiert", true);
@@ -646,7 +658,7 @@ function buJalLamellen() {
 function buSchrankHtml(regal, anzahl) {
   const auf = buSchrankOffen();
   return `<div class="bu-schrank${auf ? " auf" : ""}" id="buSchrank">
-      <button type="button" class="bu-schrank-zeile" onclick="buSchrankKlick()" aria-expanded="${auf}" aria-controls="buSchrankKoerper"><span class="bu-schrank-sym" aria-hidden="true">🗄️</span><b>Aktenschrank</b><small>${anzahl} Ordner</small><span class="bu-schrank-pfeil" aria-hidden="true">${auf ? "⌃" : "⌄"}</span></button>
+      <button type="button" class="bu-schrank-zeile" onclick="buSchrankKlick()" aria-expanded="${auf}" aria-controls="buSchrankKoerper"><span class="bu-schrank-sym" aria-hidden="true">🗄️</span><b>Aktenschrank</b><small>${anzahl} Ordner</small><span class="bu-schrank-pfeil" aria-hidden="true">${auf ? "⌃" : "⌄"}</span></button>${buSchlossHtml(buSchrankFest(), auf)}
       <div class="bu-schrank-koerper" id="buSchrankKoerper"${auf ? "" : " hidden"}>${regal}
         <div class="bu-jalousie" aria-hidden="true"><div class="bu-jal-lamellen">${buJalLamellen()}</div>
           <div class="bu-jal-marke"><img src="kc-kochmuetze-weiss.webp" alt=""><small>since 1991</small></div></div>
@@ -656,6 +668,7 @@ function buSchrankHtml(regal, anzahl) {
 let BU_SCHRANK_LAEUFT = false;
 async function buSchrankKlick() {
   const s = $("buSchrank"); if (!s || BU_SCHRANK_LAEUFT) return;
+  if (buSchrankFest()) return melde("🔒 Der Aktenschrank ist festgestellt – zum Lösen das Schloss antippen."); // 2.819.0 KC-CLUB-AKTENSCHRANK-SCHLOSS
   const auf = !s.classList.contains("auf"), k = $("buSchrankKoerper"), j = s.querySelector(".bu-jalousie"), g = s.querySelector(".bu-jal-griff");
   lsSetzen(BU_SCHRANK, auf ? "auf" : "zu");
   const fertig = () => { s.classList.toggle("auf", auf); k.hidden = !auf; j.style.width = ""; s.querySelectorAll(".bu-jal-lamelle").forEach((l) => (l.style.transform = ""));

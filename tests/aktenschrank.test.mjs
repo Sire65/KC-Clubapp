@@ -39,3 +39,13 @@ assert.match(html, /\.bu-jal-griff \{ position: absolute; top: 50%; right: 8px;/
 assert.match(html, /\.bu-schrank\.auf \.bu-jalousie \{ width: 0; \}/); assert.match(html, /:root\.dunkel \.bu-jal-lamelle \{/);
 assert.match(app, /id: "aktenschrank", thema: "club", sym: "🗄️", nur: \(\) => !!ICH\?\.buero/, "Hilfe-Zentrum");
 console.log("OK – KC-CLUB-AKTENSCHRANK-JALOUSIE (2.769.0)");
+// 2.819.0 KC-CLUB-AKTENSCHRANK-SCHLOSS (Wunsch #67 Hansi): 🔓/🔒 vor dem Klapp-Pfeil – festgestellt bleibt der Schrank, wie er ist (je Gerät)
+{
+  speicher = {}; let hs = S.buSchrankHtml("<div>REGAL</div>", 5);
+  assert.match(hs, /<\/button><button type="button" class="bu-schrank-schloss" onclick="buSchrankSchloss\(\)" aria-pressed="false"/, "Schloss offen neben der Zeile (kein Knopf im Knopf)");
+  speicher["kc_club_bu_schrank_fest"] = "1"; hs = S.buSchrankHtml("<div>REGAL</div>", 5);
+  assert.match(hs, /class="bu-schrank-schloss zu"[^>]*aria-pressed="true"[^>]*>🔒<\/button>/, "festgestellt");
+  assert.match(block, /if \(buSchrankFest\(\)\) return melde\("🔒 Der Aktenschrank ist festgestellt – zum Lösen das Schloss antippen\."\);/, "festgestellt: Klappen gesperrt mit Hinweis");
+  assert.match(html, /\.bu-schrank-schloss \{ position: absolute; top: 7px; right: 40px; width: 42px; height: 42px;/, "gleiche Größe wie die Karten-Schlösser");
+  console.log("aktenschrank-schloss: alle Prüfungen bestanden");
+}
