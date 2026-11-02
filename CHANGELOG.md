@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.806.0 – 2026-11-02 – 🔧 Server 2.804.0 ließ sich nicht hochladen – korrigiert (KC-CLUB-ANSICHTFILM) · Server 2.806.0
+- Fehler aus 2.804.0: In der Prüfung der Einstellung `filme` stand ein `//`-Kommentar mitten in der Zeile und hat den Rest der Zeile (`z: …`) auskommentiert. Supabase hat das Bündeln abgelehnt („Expected ',', got ';'“, index.ts:2045) – es lief weiter der alte Server 2.802.0, nichts wurde beschädigt. Jetzt `/* … */`.
+- Damit sind „bis zum Ende gesehen“ (`ende`) und **👀 Wer hat ihn gesehen?** (`film_zuschauer`) aus 2.804.0 erst ab jetzt auf dem Server aktiv.
+- Prüfung vor dem Hochladen: Server-Datei mit dem TypeScript-Parser geprüft (vorher Fehler in Zeile 2045, jetzt ok). Rückweg: Server 2.802.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.805.0 – 2026-11-02 – 📝 Dienstwünsche: Twinkey auf DP2 Build 306 (KC-CLUB-DIENSTWUNSCH) · nur App
 Übergabe von Codex („Übergabe an Claude“, Sire65/dp3 `codex/club-app-interface`, docs/CLAUDE-BUTTON-LOGIK-NACHTRAG.md) – Hansi: „Ja Montag“.
 - Twinkey mit `tools/dp2-twinkey-uebernehmen.mjs` unverändert aus DP2 übernommen: **Build 291 → Build 306 RC** (Commit 776d039). Build 291 ist in 306 enthalten.
