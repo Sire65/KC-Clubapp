@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.808.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.809.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7859,8 +7859,8 @@ async function zugangAnfordern() {
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }), signal: zeitSignal(30000) });
     const j = await r.json().catch(() => ({}));
-    if (r.ok && j.kommAus) return sperreZeigen("kommaus", `Hallo${j.vorname ? " " + j.vorname : ""}. Du hast einen neuen Link angefordert. Den kann ich dir leider nicht zusenden, weil du selbst darum gebeten hast, dass du keinerlei Kommunikation mit der App wünschst. Somit ist die Kommunikation ausgeschaltet. Sie kann gerne wieder aktiviert werden – wende dich dazu an ${j.admin || "Hansi"}.`); // 2.797.0 KC-CLUB-KOMM-AUS-HINWEIS
-    if (r.ok && j.gesperrt) return sperreZeigen(j.gesperrt, j.sperreText, j.bis); // 2.797.0 KC-CLUB-SPERRE-OHNE-LINK: gesperrt → Wartung o. Ä. statt „Mail kommt“
+    if (r.ok && j.kommAus) return sperreZeigen("kommaus", `Hallo${j.vorname ? " " + j.vorname : ""}. Du hast einen neuen Link angefordert. Den kann ich dir leider nicht zusenden, weil du selbst darum gebeten hast, dass du keinerlei Kommunikation mit der App wünschst. Somit ist die Kommunikation ausgeschaltet. Sie kann gerne wieder aktiviert werden – wende dich dazu an ${j.admin || "Hansi"}.`); // 2.809.0 KC-CLUB-KOMM-AUS-HINWEIS
+    if (r.ok && j.gesperrt) return sperreZeigen(j.gesperrt, j.sperreText, j.bis); // 2.809.0 KC-CLUB-SPERRE-OHNE-LINK: gesperrt → Wartung o. Ä. statt „Mail kommt“
     $("zaAntwort").innerHTML = r.ok ? "✅ " + esc(j.text || "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem Link.") + "<br>Bitte den Link in der Mail antippen (im Browser Chrome öffnen)." : "⚠️ " + esc(j.error || "Fehler " + r.status);
   } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung oder das Netz ist zu langsam – bitte gleich nochmal versuchen."; }
   setTimeout(() => { $("zaKnopf").disabled = false; }, 20000);
@@ -7903,7 +7903,7 @@ function wartenEnde() {
 const VT_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
 const VT = { fuer: null }; // { person_id, name, vorname }
 const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
-// 2.797.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.: „Datenbank hat nicht geantwortet“): kurzer Aussetzer bei Supabase – reine Abfragen in api()
+// 2.809.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.: „Datenbank hat nicht geantwortet“): kurzer Aussetzer bei Supabase – reine Abfragen in api()
 // nach 4 bzw. 8 Sek. von selbst noch einmal (höchstens 2-mal), Schreiben nie (sonst evtl. doppelt). Erst danach die Meldung.
 const dbNochmalDarf = (e, action, n) => !!e?.dbWeg && (API_LESEN.test(action) || DB_NOCHMAL_LESEN.test(action)) && n < DB_NOCHMAL_MAX && !document.hidden;
 const DB_NOCHMAL_MAX = 2, DB_NOCHMAL_LESEN = /^(ungelesen_uebersicht|admin_verlauf|db_last|db_belegung|dp_einzelplan|dp_druck|mein_dienst|gemerkte_nachrichten|nachricht_details|spur_uebersicht)$/; // KC-CLUB-DB-AUSSETZER: zusätzlich zu API_LESEN – nur Lesen
@@ -13797,7 +13797,7 @@ function adZeitSaeulen(werte, farbe) {
   const max = Math.max(1, ...werte.map((v) => v || 0)), w = 200 / werte.length, h = 40;
   return `<svg class="adlinie" viewBox="0 0 200 ${h}" preserveAspectRatio="none" role="img" aria-label="Säulen">${werte.map((v, i) => v ? `<rect x="${(i * w + 0.3).toFixed(2)}" y="${(h - (v / max) * h).toFixed(1)}" width="${Math.max(0.4, w - 0.6).toFixed(2)}" height="${((v / max) * h).toFixed(1)}" fill="${farbe}"/>` : "").join("")}</svg>`;
 }
-// 2.797.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.2026 „Aussetzer mitzählen“): Minuten, in denen die Datenbank keine Verbindungen annahm
+// 2.809.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.2026 „Aussetzer mitzählen“): Minuten, in denen die Datenbank keine Verbindungen annahm
 // (Zeitpläne konnten nicht starten / die App bekam „Die Datenbank antwortet gerade nicht“) – nebeneinanderliegende Minuten zählen als ein Aussetzer.
 function adAussetzerHtml(liste, tage) {
   if (!Array.isArray(liste)) return "";
@@ -14051,7 +14051,7 @@ function adBlatt(id) {
 // Der Server antwortet Gesperrten mit 423 + Art; die App zeigt dann nur das Hinweisfenster. Sperren/Freigeben nur Admin (Wartungs-Blatt).
 const SPERRE_ART = { wartung: { sym: "🔧", t: "Wartungsarbeiten", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔵 Wartungsarbeiten" },
   stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" },
-  kommaus: { sym: "🔕", t: "Kommunikation ausgeschaltet", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔕 Kommunikation ausgeschaltet" } }; // 2.797.0 KC-CLUB-KOMM-AUS-HINWEIS
+  kommaus: { sym: "🔕", t: "Kommunikation ausgeschaltet", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔕 Kommunikation ausgeschaltet" } }; // 2.809.0 KC-CLUB-KOMM-AUS-HINWEIS
 function sperreZeigen(art, text, bis) {
   if (document.getElementById("sperreFenster")) return;
   const a = SPERRE_ART[art] || SPERRE_ART.wartung, ab = bis && Date.parse(bis) > Date.now() ? wann(bis) : "";
