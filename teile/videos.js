@@ -2557,7 +2557,10 @@ function rgListeZeigen() {
       ${liste.length > 1 ? `<button type="button" class="knopf klein" onclick="rgWahlAlle(${alleAn ? "false" : "true"})">${alleAn ? "☐ Alle abwählen" : "☑️ Alle anhaken"}</button>` : ""}
       <div class="rgl-liste">${liste.map(zeile).join("")}</div>`;
   }
-  z.innerHTML = `<h3 style="margin-top:0">🎬 Erklär-Videos – mit Ton</h3>${inhalt}
+  // KC-CLUB-ANSICHTFILM: fertige Filme (FILME mit inVideos) stehen oben über den Rundgängen
+  const filme = (typeof FILME !== "undefined" ? FILME : []).filter((f) => f.inVideos).map((f) => `<div class="film-karte" style="cursor:default"><img src="${esc(f.bild)}" alt=""><span><b>${f.sym} ${esc(f.t)}</b><small>${esc(f.u)}</small><small>⏱️ ${esc(f.dauer)}${filmErledigt(f.id) ? " · ✅ schon angesehen" : ""}</small>
+    <span style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" class="knopf klein haupt" onclick="filmZeigen('${esc(f.id)}')">▶ Film ansehen</button>${ICH?.admin ? `<button type="button" class="knopf klein" onclick="filmZuschauer('${esc(f.id)}')">👀 Wer hat ihn gesehen?</button>` : ""}</span></span></div>`).join("");
+  z.innerHTML = `<h3 style="margin-top:0">🎬 Erklär-Videos – mit Ton</h3>${filme}${inhalt}
     <div class="rgl-fuss"><button type="button" class="knopf haupt" ${n ? "" : "disabled"} onclick="rgListeAbspielen()">▶ ${n ? `${n} angehakte${n === 1 ? "s Video" : " Videos"} nacheinander abspielen` : "Erst Videos anhaken"}</button>
       ${n ? `<button type="button" class="knopf klein" onclick="RGL.wahl.clear();rgListeZeigen()">✕ Häkchen weg</button>` : ""}
       ${ICH?.admin ? `<button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove();rgAuswertung()">📊 Auswertung der Videos</button>` : ""}

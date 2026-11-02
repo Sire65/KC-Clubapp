@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.804.0 – 2026-11-02 – 🧹 Erklärfilm „Deine App – so, wie du sie willst“ (KC-CLUB-ANSICHTFILM) · Server 2.804.0
+Anregung Clubsitzung: „Die App ist zu voll – zu viel drin, was man nicht braucht.“ Wunsch Hansi 02.11.: Erklärfilm, wie jeder die App selbst einstellt, anbieten und merken, wer ihn angesehen hat.
+- **Film** (2 Min., Hochformat, Sprecher mit Untertiteln): einfache und erweiterte Ansicht, Kachel lange drücken, verschieben, mit ✕ ausblenden, „Nur ausgeblendete zeigen“, Kopf mit ⌃ / ⌃⌃ einrollen, Startmeldungen unter ⚙️ Mehr → Ansagen, Töne & Tipps ausschalten, Hinweis auf weitere Erklär-Videos. `film/app-selbst-einrichten.mp4`, Quellen, Drehbuch und Vorschläge: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- **Angebot:** jedes Mitglied bekommt den Film einmal beim Start angeboten (▶ ansehen / ⏰ später / Nein, danke – wie KC-CLUB-FILM-HINWEIS). Danach steht er ganz oben in **Technik → 🎬 Erklär-Videos**. Filme mit eigenem Ort stehen nicht zusätzlich im Büro; die Meldungen nennen den richtigen Ort.
+- **Wer hat ihn gesehen:** Einstellung `filme` merkt jetzt auch **„bis zum Ende“** (`ende`, erneutes ▶ überschreibt es nicht). Admin: in der Film-Karte **👀 Wer hat ihn gesehen?** – ✅ bis zum Ende · ▶ angefangen · 🙅 Nein, danke · ⏳ noch nicht. Server-Aktion `film_zuschauer` (nur Admin, liest nur die Einstellung `filme`, keine Inhalte).
+- Tests: `tests/film-hinweis.test.mjs` erweitert. Rückweg: App und Server 2.803.0 (der Wert `ende` wird von 2.803.0 als unbekannt behandelt – der Film wird dann einfach nicht mehr angeboten).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (der Film meldet sich beim Start selbst).
+
 ## 2.803.0 – 2026-11-02 – 🎬 Erklär-Videos: Bild passt wieder zum Gesagten – Einstellungen und Express (KC-CLUB-VIDEO-ABGLEICH, Wunsch #54) · nur App
 Wunsch #54 Hansi: „Alle Erklärvideos prüfen: Stimmt die gesprochene Erklärung mit dem überein, was im Bild gezeigt wird? Anlass: Im Video zu den Nachrichten passt die Stimme nicht zum gezeigten Bild.“
 - **Prüfung aller 59 Videos (639 Schritte)** mit einem Prüfwerkzeug im Browser: jeder Schritt einzeln abgespielt – ist das, wovon die Stimme spricht, im Bild markiert, stehen die genannten Knöpfe auf dem Schirm, wird ein Schritt still übersprungen?
