@@ -81,6 +81,7 @@ jobs:
       - run: node tests/pinnwand-admin-mehr.test.mjs
       - run: node tests/rezept-foto-quelle.test.mjs
       - run: node tests/protokoll-pruefung.test.mjs
+      - run: node tests/vorschlag-ordner.test.mjs
       - run: node tests/protokoll-foto.test.mjs
       - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/video-abgleich.test.mjs

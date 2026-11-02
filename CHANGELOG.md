@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.820.0 – 2026-11-02 – 🗄️ Vorschläge, Spenden, Abstimmungen in einen Ordner ablegen (KC-CLUB-VORSCHLAG-ORDNER, Wunsch #69) · nur App
+Wunsch #69 Hansi: „Bei Vorschläge, Spenden, Abstimmung auch ‚auf Ordner übernehmen‘ einbauen, dann Ordner wählen, Register wählen, Dokument wählen.“
+- Jeder Vorschlag, jedes Spendenprojekt und jede Abstimmung hat **„🗄️ In Ordner“**. Es öffnet die bekannte Ablage (wie Ablagekorb/Protokolle): Vorschlag „Soll ich das in … ablegen?“, sonst **Ordner wählen → Register wählen** (eigener Ordner oder – für die Clubleitung – Club-Ordner).
+- Abgelegt wird ein Dokument mit Thema, Beschreibung, Einreicher, Stand und Ergebnis bzw. Unterstützern (geheime Abstimmungen nur mit Zahlen) und – per Haken – die Anlagen. Neue Ablage-Art `vorschlag` (Register „Vorschläge“, „Abstimmungen“).
+- Browser geprüft (Ordner/Register-Wahl, Text + PDF-Anlage hochgeladen). Test: `tests/vorschlag-ordner.test.mjs`.
+- Rückweg: App 2.819.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.819.0 – 2026-11-02 – 🔒 Aktenschrank feststellen (KC-CLUB-AKTENSCHRANK-SCHLOSS, Wunsch #67) · nur App
 Wunsch #67 Hansi: „Im Aktenschrank oben rechts in den Klapp-Pfeil ein Schloss einbauen, wenn man ihn dauernd offen haben will.“
 - In der Aktenschrank-Zeile steht vor dem Klapp-Pfeil ein **🔓/🔒-Schloss** – gleiche Größe und Bedienung wie bei allen Klappbereichen. Festgestellt bleibt der Schrank, wie er ist (z. B. dauernd offen); Antippen der Zeile sagt dann „🔒 festgestellt – zum Lösen das Schloss antippen“. Gemerkt je Gerät.

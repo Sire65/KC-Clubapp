@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.819.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.820.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18109,9 +18109,38 @@ function vorschlagKarte(v) {
     v.darfBearbeiten ? `<button class="knopf klein" onclick="vorschlagBearbeiten('${v.id}')">✏️ Bearbeiten</button>` : "", // KC-CLUB-VORSCHLAG-BEARBEITEN
     v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
     v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
+    `<button class="knopf klein" onclick="einmal(this, () => vorschlagInOrdner('${esc(v.id)}'))">🗄️ In Ordner</button>`, // 2.820.0 KC-CLUB-VORSCHLAG-ORDNER
   ].join("");
   return `<div class="karte">${kopf}<div class="wann" style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(v.titel)}</div>${unter}
     ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${oaAnzeige(v.anlagen)}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
+}
+// ---------- 2.820.0 KC-CLUB-VORSCHLAG-ORDNER (Wunsch #69 Hansi „Bei Vorschläge, Spenden, Abstimmung auch ‚In Ordner übernehmen‘ einbauen, dann Ordner
+// wählen, Register wählen, Dokument wählen“): gleiche Ablage wie Ablagekorb/Protokolle (archivAblageFragen: Vorschlag + Ordner + Register) – abgelegt
+// wird ein Text mit Thema, Beschreibung und Stand (Stimmen/Unterstützer, geheime ohne Namen) und auf Wunsch die Anlagen. Nur was man ohnehin sieht.
+function vorschlagText(v) {
+  const art = v.art === "abstimmung" ? "Abstimmung" : v.art === "spende" ? "Spendenprojekt" : "Thema / Vorschlag";
+  const z = [`Köcheclub Werne – ${art}`, "", v.titel, "", `Eingereicht von ${v.von?.name || "?"} am ${zeitKurz(v.erstellt_am)} Uhr`];
+  if (v.treffen?.titel) z.push(`Für: ${v.treffen.titel}`);
+  z.push(`Stand: ${v.status === "abgeschlossen" ? "erledigt" : v.status === "zurueckgezogen" ? "zurückgezogen" : "offen"}${v.frist && v.status === "offen" ? ` (bis ${wann(v.frist)})` : ""}`);
+  if (v.beschreibung) z.push("", v.beschreibung);
+  if (v.art === "spende" && (v.spenden || []).length) z.push("", "Spenden:", ...v.spenden.map((x) => `• ${x.empfaenger || "Spende"}${x.betrag ? ": " + spEuro(Number(x.betrag)) : ""}`));
+  if (v.ergebnis) {
+    z.push("", v.art === "abstimmung" ? `Ergebnis (${v.stimmen} von ${v.berechtigt} haben abgestimmt${v.geheim ? ", geheim" : ""}):` : "Unterstützung:");
+    for (const e of v.ergebnis) z.push(`• ${v.art === "abstimmung" ? e.option : "👍"}: ${e.anzahl}${!v.geheim && e.namen?.length ? ` (${e.namen.join(", ")})` : ""}`);
+  } else if (v.art === "abstimmung") z.push("", `Geheime Abstimmung – Ergebnis noch nicht bekannt (${v.stimmen} von ${v.berechtigt} haben abgestimmt).`);
+  if ((v.anlagen || []).length) z.push("", `Anlagen: ${v.anlagen.map((a) => a.name).join(", ")}`);
+  z.push("", `Abgelegt am ${new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: TZ }).format(new Date())} Uhr aus der Club-App.`);
+  return z.join("\n");
+}
+async function vorschlagInOrdner(id) {
+  const v = VORSCHLAG_MAP.get(id); if (!v) return;
+  const anl = (v.anlagen || []).filter((a) => ARCHIV_TYP_OK(a.mime)), datum = String(v.erstellt_am || "").slice(0, 10) || heuteIso();
+  const name = `${v.art === "abstimmung" ? "Abstimmung" : v.art === "spende" ? "Spende" : "Vorschlag"} – ${v.titel}`.slice(0, 120);
+  const ok = await archivAblageFragen("vorschlag", { titel: name, datum, hinweis: `${v.art === "abstimmung" ? "🗳️ Abstimmung" : v.art === "spende" ? "💝 Spende" : "💡 Vorschlag"} von ${v.von?.name || "?"}`,
+    frage: "In welchen Ordner?", ja: "Ablegen", nein: "Abbrechen", wahl: anl.length ? { text: `📎 ${anl.length === 1 ? "Die Anlage" : `Die ${anl.length} Anlagen`} mit ablegen`, an: true } : null,
+    dateien: async (mitAnlagen) => [{ titel: name, name: `${name.replace(/[\\/:*?"<>|]+/g, " ").slice(0, 80).trim()}.txt`, mime: "text/plain", blob: textDatei(vorschlagText(v)), stichworte: v.art === "abstimmung" ? "Abstimmung" : v.art === "spende" ? "Spende" : "Vorschlag" },
+      ...(mitAnlagen !== false ? await Promise.all(anl.map(async (a) => { const d = await anlageAlsDatei(a); return { titel: (a.name || "Anlage").replace(/\.[^.]+$/, "").slice(0, 120), name: a.name || "Anlage", mime: d.mime, blob: d.blob, stichworte: "Anlage" }; })) : [])] });
+  if (!ok) melde("⚠️ Gerade kein Ordner erreichbar – bitte später nochmal.", true);
 }
 async function stimme(id, wahl) {
   try { await api("vorschlag_stimme", { id, wahl }); melde(wahl && wahl.length !== 0 ? "Deine Stimme ist gespeichert 👍" : "Zurückgenommen"); vorschlaegeLaden(); neuLaden(); } // 2.555.0: Mehrfachauswahl leer = zurückgenommen
@@ -32941,6 +32970,7 @@ const ARCHIV_ABLAGE_ARTEN = {
   geteilt: { sym: "📥", register: ["Chats", "Sonstiges"], stichworte: "geteilt" },
   skizze: { sym: "🖍️", register: ["Fotos", "Sonstiges"], stichworte: "Skizze" }, // 2.292.0 KC-CLUB-ESELSOHR: Skizze von der Tafel // 1.22.0: über „Teilen → Köcheclub“ (z. B. WhatsApp-Export)
   eingelesen: { sym: "📄", register: ["Sonstiges"], stichworte: "eingelesen" }, // 2.101.0 KC-CLUB-BUERO-EINLESEN
+  vorschlag: { sym: "💡", register: ["Vorschläge", "Abstimmungen", "Sonstiges"], stichworte: "Vorschlag" }, // 2.820.0 KC-CLUB-VORSCHLAG-ORDNER
 };
 // Dateitypen, die das Archiv annimmt (gleiche Liste wie ARCHIV_DATEITYPEN im Server) – anderes (z. B. Sprachnachrichten) wird übersprungen
 const ARCHIV_TYP_OK = (mime) => /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/.test(String(mime || ""));
