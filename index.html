@@ -1903,6 +1903,9 @@
   .kuckuck { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); z-index: 9500; width: 150px; transform: translate(-50%, -130%); transition: transform .5s cubic-bezier(.3,1.4,.5,1);
     filter: drop-shadow(0 10px 18px rgba(0,0,0,.4)); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .kuckuck.an { transform: translate(-50%, 0); }
+  /* 2.807.0 KC-CLUB-UHR-X (Wunsch #65): rotes X oben rechts an jeder Stunden-Uhr */
+  .kuckuck .kk-x { position: absolute; top: -4px; right: 6px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; background: #c62828; color: #fff;
+    font: 700 18px/1 system-ui, sans-serif; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
   .kuckuck svg { display: block; width: 100%; height: auto; overflow: visible; }
   .kuckuck .kk-tuer { transform-box: fill-box; transform-origin: left center; transition: transform .25s ease-out; }
   .kuckuck.offen .kk-tuer { transform: perspective(60px) rotateY(-80deg); }
@@ -6455,7 +6458,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.806.0" data-v="2.806.0"></script>
+<script src="app.js?v=2.807.0" data-v="2.807.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

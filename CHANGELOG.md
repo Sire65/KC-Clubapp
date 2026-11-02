@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.807.0 – 2026-11-02 – 🕰️ Rotes X an jeder Stunden-Uhr (KC-CLUB-UHR-X, Wunsch #65) · nur App
+Wunsch #65 Hansi: „Bei jeder Uhr oben ein rotes X einblenden, damit die User wissen, dass man die Uhr ausschalten kann. Evtl. Frage stellen, ob Uhr dauernd aus soll.“
+- Die Uhr zur vollen Stunde (Kuckuck, Big Ben, Kölner Dom und alle anderen) hat oben rechts ein rotes ✕. Antippen schließt die Uhr.
+- Danach fragt die App: „Uhr zur vollen Stunde ganz ausschalten?“ – „🔕 Ja, ganz aus“ schaltet denselben Schalter aus wie ⚙️ → „🕰️ Uhr zur vollen Stunde“ (dort wieder einschaltbar); „Nein, nur jetzt“ lässt alles, wie es ist. Bei der Probe in den Einstellungen kommt keine Frage.
+- Antippen der Uhr selbst schließt sie weiter wie bisher. Test: `tests/uhr-x.test.mjs`.
+- Rückweg: App 2.806.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.806.0 – 2026-11-02 – 🗄️ Klarer Hinweis, wenn die Datenbank viel zu tun hat (KC-CLUB-DB-VIEL-ZU-TUN, Wunsch #62) · App + Server
 Wunsch #62 Hansi: Statt „Server antwortet nicht“ soll die App sagen, dass die Datenbank gerade planmäßig arbeitet, was gerade läuft und wie lange es noch dauert.
 - Server: eine Liste der planmäßigen schweren Arbeiten (`SCHWER_ZEITEN`, Uhrzeiten wie die Zeitpläne): Notfall-Paket (alle 15 Min, ca. 2 Min), Spiegelung (4/10/16/22 Uhr UTC, :10–:30), nächtliche Sicherung (1 Uhr UTC, :20–:60), Aufräumen (3 Uhr UTC, :05–:55). Antwortet die Datenbank nicht, nennt die Meldung den Grund und die Restminuten. Keine zusätzliche Datenbank-Abfrage.

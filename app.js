@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.806.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.807.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12737,6 +12737,9 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // ton
     <path d="M30 128 h90" stroke="#3a1f0a" stroke-width="3"/><path d="M40 112 q8 -10 16 0 M94 112 q8 -10 16 0" fill="none" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/>
   </svg><div class="kk-zahl" aria-hidden="true">${h}</div><div class="kk-punkte" aria-hidden="true">${"○".repeat(n)}</div>`; // 2.436.0: jeder Ruf ein Punkt
   const zu = () => { clearTimeout(u._t); u.classList.remove("an"); setTimeout(() => u.remove(), 600); };
+  // 2.807.0 KC-CLUB-UHR-X (Wunsch #65 Hansi): rotes X oben an jeder Stunden-Uhr – zeigt, dass man sie schließen und ganz ausschalten kann
+  u.insertAdjacentHTML("beforeend", `<button type="button" class="kk-x" aria-label="Uhr schließen" title="Uhr schließen">✕</button>`);
+  u.querySelector(".kk-x").onclick = (e) => { e.stopPropagation(); zu(); if (!tonImmer) kkDauerndAusFragen(); };
   u.onclick = zu; document.body.appendChild(u);
   requestAnimationFrame(() => requestAnimationFrame(() => u.classList.add("an")));
   if (mitTon) try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); kkAufnahmeLaden(); } catch {}
@@ -12795,6 +12798,11 @@ function kuckuckZeigen(h = kkJetzt().h, tonImmer = false, uhrId = null) { // ton
   const bereit = mitTon && audio ? Promise.race([Promise.resolve(audio.resume?.()).then(() => true, () => false), new Promise((r) => setTimeout(() => r(false), 1500))]) : Promise.resolve(false);
   u._t = setTimeout(() => { u.classList.add("offen"); bereit.then(() => { if (u.isConnected) u._t = setTimeout(ruf, kkLautsprecherWecken(mitTon)); }); }, 700);
   return n;
+}
+// 2.807.0 KC-CLUB-UHR-X: nach dem X einmal fragen; „Ja“ = derselbe Schalter wie ⚙️ → „🕰️ Uhr zur vollen Stunde“ (dort wieder einschaltbar)
+async function kkDauerndAusFragen() {
+  if (!(await frage("Uhr zur vollen Stunde ganz ausschalten?\n\nDu kannst sie jederzeit unter ⚙️ → „🕰️ Uhr zur vollen Stunde“ wieder einschalten.", { ja: "🔕 Ja, ganz aus", nein: "Nein, nur jetzt" }))) return;
+  einstellung("kuckuck", false); if ($("setKuckuck")) $("setKuckuck").checked = false; melde("🔕 Uhr zur vollen Stunde ist aus.");
 }
 // 2.436.0 KC-CLUB-KUCKUCK-WECKEN (Fund Hansi „hat 18 angezeigt, aber nach 4 Rufen war der Kuckuck weg“ – Diagnose: 6 Rufe, 6 gespielt, Ton „running“):
 // Viele Android-Handys schalten den Lautsprecher nach einer Pause ab; die ersten ~1–1,5 s Ton gehen beim Wiedereinschalten verloren – so
