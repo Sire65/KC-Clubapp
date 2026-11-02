@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.816.0 – 2026-11-02 – 🧹 Erklärfilm ergänzt: Verschiebepfeile und „nur noch 4 Kacheln“ (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 02.11.: „Der Film muss noch zeigen, dass man die Kacheln länger drücken kann und dann auch Verschiebepfeile hat. Und ein Bild, wo z. B. 4 Kacheln übrig sind wie Nachrichten, Termine, Protokoll, Dienstplan.“ – sofort eingespielt (Wunsch Hansi).
+- Film „Deine App – so, wie du sie willst“ neu (2:21 Min.): nach dem langen Drücken zeigt jede Kachel unten **◀ ▲ ▼ ▶**, die gehaltene Kachel rote Pfeile rundum mit ✥; der Finger tippt ▲ bei Nachrichten. Neue Szene: von 12 Kacheln bleiben **Nachrichten, Termine, Protokolle, Dienstpläne**.
+- `film/app-selbst-einrichten.mp4?v=2` (neue Fassung statt der alten aus dem Zwischenspeicher), gleiche Kennung `ansichtfilm` – wer die erste Fassung schon gesehen hat, bekommt sie nicht erneut angeboten. Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests: `tests/film-hinweis.test.mjs` unverändert grün. Rückweg: App 2.815.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.815.0 – 2026-11-02 – 📷 Rezept-Foto von Kamera, Galerie oder Datei (KC-CLUB-REZEPT-FOTO-QUELLE, Wunsch #66) · nur App
 Wunsch #66 Hansi: „In Rezepte Foto hinzufügen von Kamera, Bild, Dateimanager usw.“
 - Im Rezept-Formular statt eines „📷 ＋“ (öffnete je nach Handy nur die Galerie) drei Knöpfe wie beim Chat-Hintergrund: **📷 Kamera** (Foto direkt machen), **🖼️ Galerie**, **📁 Datei** (Dateimanager, JPG/PNG/WEBP/GIF/HEIC).
