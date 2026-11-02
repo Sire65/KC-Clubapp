@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -13448,7 +13448,7 @@ function idx0() { return lies("index.html"); }
   const fall = server.slice(server.indexOf('case "dp_druck_rechnen": {'), server.indexOf('case "dp_druck_rechnen": {') + 300);
   assert.ok(/^\s*nurAdmin\(ich\);/m.test(fall) && /dpDruckNeu\(ich\.person_id\)/.test(fall), "neu rechnen nur Admin");
   assert.ok(/\(e\.revision \?\? null\) === \(w \? w\.revision : null\)/.test(server), "Ersatz gilt nur bis zum nächsten eigenen Wunschplan");
-  assert.ok(/titel: `🗓️ \$\{alt \? "Geänderter" : "Neuer"\} Wunschplan von \$\{ich\.vorname\}`/.test(server) && /url: `\$\{APP_URL\}#dpdruck`/.test(server), "Hinweis an den Admin");
+  assert.ok(!/Wunschplan von \$\{ich\.vorname\}/.test(server) && /url: `\$\{APP_URL\}#dpdruck`/.test(server), "Hinweis an den Admin (2.793.0: erst wenn fertig, siehe KC-CLUB-DW-PUSH-FERTIG)");
   assert.ok(/else if \(h === "#dpdruck" && ICH\?\.admin\) dpdStart\(\);/.test(programm) && /async function dpdNeuRechnen\(k\) \{\s*if \(!ICH\?\.admin\) return;/.test(programm) && /🔄 Jetzt neu rechnen/.test(programm), "App: Stand, Hinweis und Knopf nur Admin");
 }
 // 2.666.0 KC-CLUB-ERKENNUNG-NACHRICHT: Krankmeldung, Tausch, Zu-/Absage in Nachrichten erkennen – nur Admin, nur Vorschlag, Server prüft nochmal
@@ -13563,7 +13563,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   const nurKann = dpRechnen({ tage: [tag], personen: [{ key: "Frank B", name: "Frank B", eintraege: [{ d: "2026-12-04", t: "avai", z: "B", a: 11, b: 23 }] }], max: 8 }).tage[0].leute[0].s;
   assert.equal(nurKann[1] - nurKann[0], 8, "ohne Wunschzeit gilt wie bisher die Kann-Zeit");
   assert.ok(/if \(await dpDruckVeraltet\(ich\.person_id, w\)\.catch\(\(\) => false\)\)/.test(server) && /w\.regel !== DP_REGEL/.test(server), "Stand veraltet (Wunsch, Bedarf, Einstellung, Regel) → von selbst neu");
-  assert.ok(/await dpDruckAlleNeu\(\); \/\/ 2\.676\.0/.test(server), "neuer Wunschplan → gleich neu gerechnet");
+  assert.ok(/nebenbei\(dpDruckAlleNeu\(\)\.catch/.test(server), "neuer Wunschplan → gleich neu gerechnet");
   assert.ok(/dpLuecken: \{ titel: "🧩 Wo noch Helfer fehlen"/.test(programm) && /html = bed \+ dpdLueckenBlatt\(d\) \+/.test(programm), "eigenes Blatt und im Gesamtdruck");
   assert.ok(/cdKopf\("Hier fehlen noch Helfer"/.test(programm) && /\$\{cdFuss\(/.test(programm.slice(programm.indexOf("function dpdLueckenBlatt"))), "Kopf und Fuß nach CD");
   assert.ok(/#druck \.dpl-tab th, #druck \.dpl-tab td \{ border: \.25mm solid/.test(html), "Längs- und Querlinien");
@@ -13743,3 +13743,11 @@ assert.ok(/if \(\(!h \|\| h === "#"\) && \(buSchreiben\(\) \|\| \(buDarf\(\) && 
   assert.match(app, /if \(b\.art === "suche"\) \{ sucheAuf\(b\.q\); setTimeout\(\(\) => \{ try \{ suSucheKnopf\(\); \} catch \{\} \}, 100\); \}/, "Sprach-Suche");
 }
 assert.ok(/if \(!gezeigt && !nurZaehlen && !\(START_HASH && START_HASH !== "#"\) && !pwErinnern\(\) && !einstiegPruefen\(\) && !einrichtenEinmal\(\)\) tippDesTages\(\);/.test(lies("app.js")), "2.798.0: Direkt-Link-Start ohne Start-Hinweise dazwischen");
+// 2.793.0 KC-CLUB-DW-PUSH-FERTIG (Wunsch Hansi „nach jedem Tag ein Push – besser erst, wenn komplett fertig, dann gesamt“)
+{
+  const i = server.indexOf('await protokoll(ich.person_id, "dienstwunsch_gespeichert"'), teil = server.slice(i, i + 900);
+  assert.ok(i > 0 && !/routerSenden|sendenGewaehlt/.test(teil.slice(0, teil.indexOf("return json("))) && /nebenbei\(dpDruckAlleNeu\(\)/.test(teil), "Speichern: neu rechnen, aber kein Push");
+  const m = server.slice(server.indexOf("async function ekDienstwunschMelden()"), server.indexOf("async function ekDienstwunschMelden()") + 2600);
+  assert.ok(/\.lt\("updated_at", new Date\(Date\.now\(\) - 10 \* 60000\)/.test(m) && /gemeldet_rev/.test(m), "ein Push je Wunschplan, erst nach 10 Minuten Ruhe");
+  assert.ok(/anAdm = an\.filter\(\(id\) => adm\.has\(id\)\)/.test(m) && /url: `\$\{APP_URL\}#dpdruck`/.test(m), "Admin: Weg zum Dienstplan-Druck");
+}

@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.817.0 – 2026-11-02 – 🔕 Dienstwünsche: ein Push erst, wenn fertig eingetragen (KC-CLUB-DW-PUSH-FERTIG)
+Wunsch Hansi („ich bekomme scheinbar nach jedem Tag einen Push – besser erst, wenn komplett fertig ist, und dann gesamt“): Beim Eintragen der Dienstwünsche speichert Twinkey nach jedem Tag. Bisher bekam der Admin dabei jedes Mal „🗓️ Geänderter Wunschplan von …“. Jetzt kommt kein Push mehr je Speichern – der Dienstplan-Druck rechnet sich weiter sofort neu. Bescheid gibt es einmal, wenn das Mitglied 10 Minuten nichts mehr geändert hat (Prüfung alle 15 Minuten, also spätestens nach rund 25 Minuten): „📅 Dienstzeiten geändert: Name“. Der Admin landet beim Antippen im Ordner „Dienstplan zum Drucken“, der übrige Vorstand wie bisher im Büro-Eingangskorb.
+
 ## 2.816.0 – 2026-11-02 – 🧹 Erklärfilm ergänzt: Verschiebepfeile und „nur noch 4 Kacheln“ (KC-CLUB-ANSICHTFILM) · nur App
 Wunsch Hansi 02.11.: „Der Film muss noch zeigen, dass man die Kacheln länger drücken kann und dann auch Verschiebepfeile hat. Und ein Bild, wo z. B. 4 Kacheln übrig sind wie Nachrichten, Termine, Protokoll, Dienstplan.“ – sofort eingespielt (Wunsch Hansi).
 - Film „Deine App – so, wie du sie willst“ neu (2:21 Min.): nach dem langen Drücken zeigt jede Kachel unten **◀ ▲ ▼ ▶**, die gehaltene Kachel rote Pfeile rundum mit ✥; der Finger tippt ▲ bei Nachrichten. Neue Szene: von 12 Kacheln bleiben **Nachrichten, Termine, Protokolle, Dienstpläne**.

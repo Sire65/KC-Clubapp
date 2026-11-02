@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.814.0";
+const SERVER_VERSION = "2.817.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2406,9 +2406,15 @@ async function ekDienstwunschMelden() {
   for (const x of neu) {
     const erst = !st.get(x.id)?.gemeldet_rev, wer = leute.get(x.person_id)?.display_name || "Ein Mitglied";
     await ekStandSetzen("dienstwunsch", x.id, (alt) => ({ gemeldet_rev: x.revision, gemeldet_am: jetzt(), kenntnis: alt.kenntnis ?? [], ablagen: alt.ablagen ?? [] }));
-    const an = leitung.filter((id) => id !== x.person_id);
-    if (an.length) await sendenGewaehlt("club_nachricht", an, ["push"], { titel: `📅 Dienstzeiten ${erst ? "eingegangen" : "geändert"}: ${wer}`,
-      kurz: `${DW.name} – liegt im Büro-Eingangskorb`, betreff: `Köcheclub Werne – Dienstzeiten von ${wer}`,
+    const an = leitung.filter((id) => id !== x.person_id), adm = new Set(await adminIds());
+    const titel = `📅 Dienstzeiten ${erst ? "eingegangen" : "geändert"}: ${wer}`, betreff = `Köcheclub Werne – Dienstzeiten von ${wer}`;
+    // 2.793.0 KC-CLUB-DW-PUSH-FERTIG: der Admin bekommt hier seinen einen Push mit dem Weg zum Dienstplan-Druck (vorher kam einer je Speichern)
+    const anAdm = an.filter((id) => adm.has(id)), anLeitung = an.filter((id) => !adm.has(id));
+    if (anAdm.length) await sendenGewaehlt("club_nachricht", anAdm, ["push"], { titel, kurz: `${DW.name} – fertig eingetragen. Dienstplan-Druck und Lücken sind schon neu gerechnet – antippen öffnet den Ordner.`,
+      betreff, text: `${wer} hat Dienstzeiten für den ${DW.name} ${erst ? "eingereicht" : "geändert"}. Dienstplan-Druck und Lücken-Blatt sind schon neu gerechnet: Archiv → Mein Ordner → „Dienstplan zum Drucken“.`, url: `${APP_URL}#dpdruck` },
+      `club-dw-eingang:${x.id}:${x.revision}`).catch(() => null);
+    if (anLeitung.length) await sendenGewaehlt("club_nachricht", anLeitung, ["push"], { titel,
+      kurz: `${DW.name} – liegt im Büro-Eingangskorb`, betreff,
       text: `${wer} hat Dienstzeiten für den ${DW.name} ${erst ? "eingereicht" : "geändert"}. Bitte im Büro → 📥 Eingangskorb ansehen.`, url: APP_URL + "#eingang" },
       `club-dw-eingang:${x.id}:${x.revision}`).catch(() => null);
   }
@@ -12811,14 +12817,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           : await db.from("kc_dp_wish_inbox").insert({ ...zeile, revision: 1 }).select("revision").single();
         if (r.error) throw new Fehler("Wünsche konnten nicht gespeichert werden.", 500);
         await protokoll(ich.person_id, "dienstwunsch_gespeichert", { eintraege: entries.length, bereitschaftTage: Object.keys(standby).length, revision: r.data.revision });
-        // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: Admin bekommt den Hinweis „Dienstplan-Druck neu rechnen?“ (nicht bei eigenen Wünschen, nie Testpersonen)
-        if (!ich.person_id.startsWith("KC-P-TEST")) nebenbei((async () => {
-          await dpDruckAlleNeu(); // 2.676.0 KC-CLUB-DP-AUTO: Dienstplan-Druck und Lücken-Blatt rechnen sich gleich selbst neu
-          const adm = (await adminIds()).filter((id) => id !== ich.person_id);
-          if (adm.length) await routerSenden("club_nachricht_push", adm, { titel: `🗓️ ${alt ? "Geänderter" : "Neuer"} Wunschplan von ${ich.vorname}`, kurz: "Dienstplan-Druck und Lücken sind schon neu gerechnet – antippen öffnet den Ordner.",
-            betreff: `Köcheclub Werne – ${alt ? "geänderter" : "neuer"} Wunschplan von ${ich.name}`, text: `${ich.name} hat den Wunschplan ${alt ? "geändert" : "abgegeben"}. Dienstplan-Druck und Lücken-Blatt sind schon neu gerechnet: Archiv → Mein Ordner → „Dienstplan zum Drucken“.`, url: `${APP_URL}#dpdruck` },
-            `club-dp-wunsch:${ich.person_id}:${r.data.revision}`);
-        })().catch((e) => console.error("dp hinweis", String(e))));
+        // 2.665.0 KC-CLUB-DP-NEU-RECHNEN / 2.676.0 KC-CLUB-DP-AUTO: Dienstplan-Druck und Lücken-Blatt rechnen sich gleich selbst neu (nie Testpersonen)
+        // 2.793.0 KC-CLUB-DW-PUSH-FERTIG (Wunsch Hansi „nach jedem Tag ein Push – besser erst, wenn komplett fertig, dann gesamt“): kein Push mehr je
+        // Speichern; Bescheid gibt ekDienstwunschMelden(), wenn das Mitglied 10 Minuten nichts mehr geändert hat – ein Push je Wunschplan
+        if (!ich.person_id.startsWith("KC-P-TEST")) nebenbei(dpDruckAlleNeu().catch((e) => console.error("dp neu", String(e))));
         return json({ ok: true, revision: r.data.revision, status: "offen" });
       }
 
