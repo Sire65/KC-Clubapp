@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.800.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.801.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2445,6 +2445,7 @@ const HILFE = [
   { id: "dienst_uebersicht", thema: "termine", sym: "📊", t: "Wer kann wann beim Weihnachtsmarkt? – die Übersicht", x: "Mit dem <b>📊</b>-Knopf oben in <b>🗓️ Dienstpläne</b>, in <b>„Mein Dienst“</b> und in den <b>Dienstwünschen</b> öffnest du die <b>Dienstzeiten-Übersicht</b>: vorne die Namen, oben die Tage, farbige Balken für Kann, Wunsch, Wenn nötig und Sperre – und wie viele Stunden. Du siehst deine eigenen Zeiten und die der Mitglieder, die ihre Zeiten freigegeben haben. Deine eigenen gibst du in den Dienstplänen ganz unten frei. Auf dem Handy am besten quer halten; <b>🖨️ Drucken</b> geht auch.", zeig: () => zeige("dienste"), seit: "2.501.0" },
   { id: "dienstwunsch_hinweis", thema: "termine", sym: "📝", t: "„Dienstplan Weihnachtsmarkt: Wünsche eingeben?“", x: "Hast du für den Weihnachtsmarkt noch keine Dienstwünsche abgegeben, erinnert dich das <b>📣 Info-Laufband</b> oben daran. Mit <b>„📝 Mit Twinkey eingeben“</b> geht es direkt los: Twinkey fragt dich Tag für Tag, wann du kannst. Sobald du abgegeben hast, verschwindet der Hinweis.", seit: "2.493.0" },
   { id: "vorschlag_bearbeiten", thema: "club", sym: "✏️", t: "Meinen Vorschlag nachträglich ändern", x: "Bei <b>🗳️ Vorschläge</b> hat dein offener Vorschlag den Knopf <b>„✏️ Bearbeiten“</b>: Thema, Beschreibung, Termin und Anlagen kannst du nachträglich ändern – vorhandene Anlagen bleiben, mit ✕ entfernst du eine, neue kommen dazu. Die anderen werden dafür nicht extra benachrichtigt. Hängen Anlagen an einem Vorschlag, steht auf der Kachel z. B. <b>„📎 2 Anlagen“</b>.", zeig: () => zeige("vorschlaege"), seit: "2.504.0" },
+  { id: "protokoll_foto", thema: "club", sym: "🔎", t: "Handgeschriebenes Protokoll aus Fotos ausfüllen", x: "Im Protokoll-Entwurf unter <b>„2 · Protokoll anhängen“</b> auf <b>„🔎 Fotos lesen und ausfüllen“</b> tippen und alle Seiten der ausgefüllten Büro-Vorlage wählen. Die App liest auf dem Handy (nichts geht an fremde Dienste): <b>Anwesend</b> aus den angekreuzten Kästchen, Schriftführer, Gäste, den Text je <b>TOP</b>, Beschlüsse und den nächsten Termin. Danach zeigt sie alles zum Prüfen – <mark>gelb</mark> bzw. [? …] ist unsicher gelesen. Erst <b>„✅ Übernehmen“</b> trägt es in den Entwurf ein, die Fotos hängen als Anlage dran. Vor dem Veröffentlichen fragt die App nach, falls noch [? …] im Text steht.", zeig: () => zeige("protokolle"), seit: "2.801.0" },
   { id: "protokoll_drucken", thema: "club", sym: "🖨️", t: "Ein Protokoll drucken oder als PDF", x: "Im geöffneten Protokoll tippst du auf <b>„🖨️ Drucken / PDF“</b> – im Corporate Design des Clubs. Über das Teilen-Menü deines Handys kannst du es auch als PDF speichern oder weiterschicken. Ist ein neues Protokoll eingestellt, steht das außerdem im Info-Feld oben – Antippen öffnet es direkt.", zeig: () => zeige("protokolle"), seit: "2.502.0" },
   { id: "kurz_erklaert_zu", thema: "start", sym: "🎓", t: "Die Hinweise „Kurz erklärt“ einklappen", x: "Die kleinen Hinweise <b>„🎓 Kurz erklärt“</b> oben auf vielen Seiten lassen sich mit dem Pfeil <b>einklappen</b> – dann bleibt nur eine schmale Zeile. Ein Tipp auf den Pfeil klappt sie wieder auf. Die App merkt sich das auf deinem Gerät.", seit: "2.502.0" },
   { id: "info_neues", thema: "start", sym: "🪧", t: "Neue Fotos, neues Protokoll, Wusstest du? – im Info-Feld", x: "Was es Neues gibt, steht oben im Info-Feld: <b>„📸 3 neue Fotos hochgeladen“</b> – Antippen bringt dich direkt zu genau diesen Fotos (ganz oben im goldenen Kasten, im Raster mit rotem „NEU“). <b>„📄 Neues Besprechungsprotokoll eingestellt“</b> öffnet das Protokoll. Jeden Tag gibt es außerdem ein <b>„🏛️ Wusstest du? …“</b> über Werne – und vor der Zeitumstellung den Hinweis, die Uhr umzustellen.", seit: "2.498.0" },
@@ -24412,13 +24413,15 @@ function erkQrDeuten(roh) { // Profil-QR wie auf Wunschbogen, Bestätigung und S
 const OCR_PFAD = "lib/ocr/", OCR_OK = "kc_club_ocr_ok", ERKD = { lauf: 0, merk: new WeakMap(), r: null };
 let ocrLaden = null, jsqrLaden = null;
 function skriptLaden(src, integrity) { return new Promise((ok, nein) => { const x = document.createElement("script"); x.src = src; if (integrity) x.integrity = integrity; /* 2.727.0 KC-CLUB-TEILE: Fingerabdruck */ x.onload = ok; x.onerror = () => nein(new Error("Baustein konnte nicht geladen werden.")); document.head.appendChild(x); }); }
-async function ocrText(bild) {
+// 2.801.0 KC-CLUB-PROTOKOLL-FOTO: ein gemeinsamer Weg für alle Texterkennungen – mehrere Bilder mit EINEM Worker, auf Wunsch mit Zeilen/Wörtern samt Lage
+async function ocrLauf(bilder, ausgabe, schritt) {
   if (!ocrLaden) ocrLaden = (window.Tesseract ? Promise.resolve() : skriptLaden(OCR_PFAD + "tesseract.min.js?v=7.0.0")).catch((e) => { ocrLaden = null; throw e; });
   await ocrLaden;
   const u = (x) => new URL(OCR_PFAD + x, location.href).href;
   const w = await window.Tesseract.createWorker("deu", 1, { workerPath: u("worker.min.js?v=7.0.0"), corePath: u("tesseract-core-lstm.wasm.js"), langPath: u("").replace(/\/$/, ""), gzip: true, workerBlobURL: false });
-  try { const t = (await w.recognize(bild)).data.text || ""; lsSetzen(OCR_OK, "1"); return t; } finally { w.terminate(); }
+  try { const aus = []; for (let i = 0; i < bilder.length; i++) { schritt?.(i); aus.push((await w.recognize(bilder[i], {}, ausgabe)).data); } lsSetzen(OCR_OK, "1"); return aus; } finally { w.terminate(); }
 }
+async function ocrText(bild) { return (await ocrLauf([bild]))[0].text || ""; }
 async function erkdBild(d) { // Foto oder 1. PDF-Seite als Bild (höchstens 2000 Pixel)
   const c = document.createElement("canvas");
   if (/pdf/.test(d.type || "") || /\.pdf$/i.test(d.name || "")) {
@@ -25785,8 +25788,9 @@ function protokollFormular() {
         <button class="knopf haupt" onclick="appKamera(protokollDateien)">📷 Foto vom Blatt (Kamera)</button>
         <button class="knopf" onclick="dateiWahl('prBild', protokollDateien)">🖼️ Foto aus der Galerie</button>
         <button class="knopf" onclick="$('prDok').click()">📄 Datei (Word / PDF)</button>
+        <button class="knopf" onclick="$('prFoto').click()">🔎 Fotos lesen und ausfüllen</button><input type="file" id="prFoto" accept="image/*" multiple hidden onchange="prFotoLesen(this)"><!-- 2.801.0 KC-CLUB-PROTOKOLL-FOTO -->
       </div>
-      <p class="hinweis" style="font-size:.85rem">Mehrere Seiten? Einfach nacheinander fotografieren. „Datei“ öffnet den Dateimanager von Handy oder Tablet.</p>
+      <p class="hinweis" style="font-size:.85rem">Mehrere Seiten? Einfach nacheinander fotografieren. „Datei“ öffnet den Dateimanager von Handy oder Tablet. 🔎 „Fotos lesen“: alle Seiten der ausgefüllten Büro-Vorlage wählen – die App kreuzt Anwesende an und schlägt Text je TOP vor (bitte prüfen).</p>
       <div id="prAnlagen">${anlagenListe(true)}</div>
       <details style="margin-top:10px"${p.kurzfassung ? " open" : ""}><summary><b>✏️ Kurzfassung tippen</b> <small class="hinweis">(freiwillig)</small></summary>
         <label class="feld"><textarea id="prK" rows="5" oninput="prAendern()">${esc(p.kurzfassung || "")}</textarea></label></details>
@@ -25855,6 +25859,128 @@ async function protokollDateien(input) {
   }
   try { await prNeuLaden(); } catch (e) { meldeFehler(e); }
 }
+// ---------- 2.801.0 KC-CLUB-PROTOKOLL-FOTO (Wunsch #49 Hansi: „Fotos vom handschriftlichen Protokoll aufnehmen und daraus den Entwurf vorfüllen – Anwesend aus
+// den Kästchen, Text je TOP, Beschlüsse, nächster Termin, Protokollführer“; Stufe A + B) ----------
+// Vorhandene Texterkennung auf dem Gerät (lib/ocr, 2.669.0 – nichts geht an fremde Dienste). Anker sind die GEDRUCKTEN Teile der Büro-Vorlage
+// (druckSitzung): Namen unter „Anwesend“, „Protokollführer:“, „TOP n:“, „Beschlüsse / Sonstiges“, „Nächster Termin:“. Kreuz = dunkle Punkte im
+// Kästchen links neben dem gedruckten Namen (Stufe A). Handschrift (Stufe B) nur als Vorschlag: unsichere Wörter stehen als [?wort] und sind gelb.
+// Übernommen wird erst nach „✅ Übernehmen“; vor dem Veröffentlichen fragt die App nach, solange noch [? …] im Text steht.
+const PFO = { sicher: 70, kreuz: 0.1, rand: 0.22, max: 2400, seiten: 6 };
+const PFO_UNSICHER = /\[\?/;
+const pfoNorm = (t) => String(t || "").toLowerCase().replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9: ]+/g, " ").replace(/\s+/g, " ").trim();
+function pfoAehnlich(a, b) { // 0…1 (Levenshtein), für gedruckte Namen mit kleinen Lesefehlern
+  a = pfoNorm(a); b = pfoNorm(b); if (!a || !b) return 0; if (a === b) return 1;
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]); for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return 1 - d[a.length][b.length] / Math.max(a.length, b.length);
+}
+const pfoWort = (w) => (w.confidence >= PFO.sicher ? w.text : `[?${w.text}]`);
+const pfoZeileText = (z) => z.words.filter((w) => /[a-zäöüß0-9]/i.test(w.text) && !(w.confidence < 45 && w.text.replace(/[^a-zäöüß0-9]/gi, "").length <= 2)).map(pfoWort).join(" "); // Schnipsel der Schreiblinien (kurz + sehr unsicher) weg
+async function pfoBild(datei) { // Foto → Leinwand (höchstens 2400 Pixel), dieselbe Leinwand für Texterkennung und Kästchen-Prüfung
+  const b = await createImageBitmap(datei), sc = Math.min(1, PFO.max / Math.max(b.width, b.height)), c = document.createElement("canvas");
+  c.width = Math.round(b.width * sc); c.height = Math.round(b.height * sc); c.getContext("2d", { willReadFrequently: true }).drawImage(b, 0, 0, c.width, c.height); b.close?.(); return c;
+}
+function pfoKreuz(c, bb) { // Anteil dunkler Punkte im Kästchen links neben dem Namen (Kästchen 4,2 mm, Abstand 2 mm, Schrift 3,6 mm → in Namenshöhen)
+  const h = bb.y1 - bb.y0, x0 = bb.x0 - 2.5 * h, x1 = bb.x0 - 0.8 * h, ym = (bb.y0 + bb.y1) / 2, y0 = ym - 0.84 * h, y1 = ym + 0.84 * h; // Großbuchstabe ≈ 2,5 mm: Kästchen ≈ 1,7 h, Abstand ≈ 0,8 h
+  const ix = (x1 - x0) * PFO.rand, iy = (y1 - y0) * PFO.rand, l = Math.max(0, Math.round(x0 + ix)), t = Math.max(0, Math.round(y0 + iy));
+  const w = Math.round(x1 - ix) - l, hh = Math.round(y1 - iy) - t; if (w < 3 || hh < 3) return null;
+  const d = c.getContext("2d", { willReadFrequently: true }).getImageData(l, t, w, hh).data; let dunkel = 0;
+  for (let i = 0; i < d.length; i += 4) if (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2] < 100) dunkel++;
+  return dunkel / (d.length / 4);
+}
+// Zeilen aller Seiten → Abschnitte der Vorlage. Liefert { anwesend: Map(pid → true/false), gefunden, schreiber, gaeste, tops: [{titel, text}], beschluesse, termin }
+function pfoAuswerten(seiten) {
+  const r = { anwesend: new Map(), schreiber: "", gaeste: "", tops: [], beschluesse: [], termin: "" };
+  const mg = (MITGLIEDER || []).map((m) => ({ id: m.person_id, teile: String(m.name || "").split(/\s+/).filter(Boolean) })).filter((m) => m.teile.length);
+  let ab = null, top = null;
+  for (const { c, daten } of seiten) {
+    const zeilen = (daten.blocks || []).flatMap((b) => (b.paragraphs || []).flatMap((p) => p.lines || []));
+    for (const z of zeilen) {
+      const n = pfoNorm(z.text);
+      if (/^protokollfuhrer/.test(n)) { r.schreiber = z.text.replace(/^[^:]*:?/, "").split(/\bOrt\b/i)[0].trim(); ab = null; continue; }
+      if (/^anwesend$/.test(n)) { ab = "anwesend"; continue; }
+      if (/^entschuldigt bzw/.test(n)) { ab = null; continue; }
+      if (/^gaste\b/.test(n)) { r.gaeste = pfoZeileText({ words: z.words.slice(1) }); ab = null; continue; }
+      if (/^(anmerkung zum letzten|offene aufgaben|tagesordnung$|protokoll name|sitzungsleitung)/.test(n)) { ab = null; continue; }
+      const tm = /^top (\d+)\b/.exec(n);
+      if (tm) { top = { titel: z.text.replace(/^\s*TOP\s*\d+\s*:?\s*/i, "").replace(/–\s*Vorschlag von.*$/, "").trim(), text: [] }; r.tops.push(top); ab = "top"; continue; }
+      if (/^beschlusse/.test(n)) { ab = "beschluss"; continue; }
+      if (/^nachster termin/.test(n)) { r.termin = pfoTermin(z.text.replace(/^[^:]*:\s*/, "")); ab = null; continue; }
+      if (ab === "anwesend") {
+        const w = z.words;
+        for (const m of mg) {
+          if (r.anwesend.has(m.id)) continue;
+          for (let i = 0; i < w.length; i++) {
+            if (pfoAehnlich(w[i].text, m.teile[0]) < 0.75) continue;
+            if (m.teile.length > 1 && !(w[i + 1] && pfoAehnlich(w[i + 1].text, m.teile[m.teile.length - 1]) >= 0.7)) continue;
+            const q = pfoKreuz(c, w[i].bbox); if (q !== null) r.anwesend.set(m.id, q >= PFO.kreuz); break;
+          }
+        }
+      } else if (ab === "top" && top) { const t = pfoZeileText(z); if (t) top.text.push(t); }
+      else if (ab === "beschluss") { const t = pfoZeileText(z); if (t) r.beschluesse.push(t); }
+    }
+  }
+  r.tops.forEach((t) => (t.text = t.text.join(" ")));
+  return r;
+}
+function pfoTermin(t) { // „12.11. 19:30 Vereinsheim“ → „12.11., 19:30 Uhr · Vereinsheim“; nicht lesbar → [?…]
+  const d = /(\d{1,2})\s*[.,]\s*(\d{1,2})\s*[.,]?\s*(\d{2,4})?/.exec(t), u = /(\d{1,2})\s*[:.]\s*(\d{2})\s*(uhr)?/i.exec(t.slice(d ? d.index + d[0].length : 0));
+  if (!d) return t.trim() ? `[?${t.trim()}]` : "";
+  const rest = t.slice(d.index + d[0].length).replace(u?.[0] || "", "").replace(/^[\s·,:-]+|uhr/gi, "").trim();
+  return `${d[1].padStart(2, "0")}.${d[2].padStart(2, "0")}.${d[3] ? (d[3].length === 2 ? "20" + d[3] : d[3]) : ""}${u ? `, ${u[1].padStart(2, "0")}:${u[2]} Uhr` : ""}${rest ? " · " + rest : ""}`;
+}
+async function prFotoLesen(input) {
+  const dateien = [...(input.files || [])].filter((d) => /^image\//.test(d.type)).slice(0, PFO.seiten); input.value = "";
+  if (!dateien.length || !PR || !$("prT")) return;
+  const f = blattAuf("pfoBlatt", `<h3 style="margin-top:0">🔎 Protokoll-Fotos lesen</h3><p id="pfoStand">⏳ Texterkennung wird vorbereitet …</p>
+    <p class="hinweis">Alles läuft auf diesem Gerät – nichts geht an fremde Dienste. Je Seite dauert es etwa 10–30 Sekunden.</p>`);
+  f.style.zIndex = "2050";
+  try {
+    const seiten = [];
+    for (const d of dateien) seiten.push({ c: await pfoBild(d) });
+    const daten = await ocrLauf(seiten.map((s) => s.c), { text: true, blocks: true }, (i) => { if ($("pfoStand")) $("pfoStand").textContent = `⏳ Seite ${i + 1} von ${seiten.length} wird gelesen …`; });
+    daten.forEach((x, i) => (seiten[i].daten = x));
+    pfoPruefen(pfoAuswerten(seiten), dateien);
+  } catch (e) { $("pfoBlatt")?.remove(); meldeFehler(e); }
+}
+const pfoMark = (t) => esc(t).replace(/\[\?([^\]]*)\]/g, '<mark class="pfo-unsicher">$1</mark>');
+function pfoPruefen(r, dateien) {
+  const gef = r.anwesend.size, kreuze = [...r.anwesend.values()].filter(Boolean).length;
+  const schr = PR.schreiber.map((id) => [id, pfoAehnlich(r.schreiber, nameVon(id)), Math.max(...String(nameVon(id)).split(/\s+/).map((t) => Math.max(...r.schreiber.split(/\s+/).map((u) => pfoAehnlich(t, u)), 0)))]).sort((a, b) => b[2] - a[2])[0];
+  const schrId = schr && r.schreiber && schr[2] >= 0.7 ? schr[0] : "";
+  window.__pfo = { r, dateien };
+  blattAuf("pfoBlatt", `<h3 style="margin-top:0">🔎 Erkannt – bitte prüfen</h3>
+    <p class="hinweis" style="margin:0 0 6px"><mark class="pfo-unsicher">Gelb</mark> bzw. [? …] = unsicher gelesen. Ändere, was nicht stimmt – erst „✅ Übernehmen“ trägt es in den Entwurf ein.</p>
+    <div class="karte"><b>✅ Anwesend</b> <small class="hinweis">· ${gef} von ${(MITGLIEDER || []).length} Namen auf den Fotos gefunden, ${kreuze} angekreuzt</small>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 8px;margin-top:4px">${(MITGLIEDER || []).map((m) => `<label class="at-wahl" style="margin:0"><input type="checkbox" data-pfo-da="${esc(m.person_id)}" ${r.anwesend.get(m.person_id) ? "checked" : ""}><span>${esc(m.name)}${r.anwesend.has(m.person_id) ? "" : ' <small class="hinweis">(nicht gefunden – bleibt wie bisher)</small>'}</span></label>`).join("")}</div></div>
+    <label class="feld">Schriftführer${r.schreiber ? ` <small class="hinweis">(gelesen: „${esc(r.schreiber)}“)</small>` : ""}<select id="pfoV"><option value="">— nicht ändern —</option>${PR.schreiber.map((id) => `<option value="${esc(id)}" ${id === schrId ? "selected" : ""}>${esc(nameVon(id))}</option>`).join("")}</select></label>
+    <label class="feld">Gäste<input id="pfoG" maxlength="300" value="${esc(r.gaeste)}"></label>
+    ${r.tops.map((t, i) => `<label class="feld">TOP ${i + 1}: ${esc(t.titel)}<textarea data-pfo-top="${i}" rows="3">${esc(t.text)}</textarea>${PFO_UNSICHER.test(t.text) ? `<small class="pfo-vorschau">${pfoMark(t.text)}</small>` : ""}</label>`).join("") || '<p class="hinweis">Keine „TOP“-Überschrift gefunden – war es die Vorlage aus dem Büro?</p>'}
+    <label class="feld">Beschlüsse (einer pro Zeile)<textarea id="pfoB" rows="3">${esc(r.beschluesse.join("\n"))}</textarea></label>
+    <label class="feld">📅 Nächster Termin<input id="pfoN" maxlength="200" value="${esc(r.termin)}"></label>
+    <label class="at-wahl"><input type="checkbox" id="pfoAnl" checked><span>📎 Fotos als Anlage ans Protokoll hängen</span></label>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="pfoUebernehmen()">✅ Übernehmen</button><button class="knopf" onclick="$('pfoBlatt').remove()">Abbrechen</button></div>`).style.zIndex = "2050";
+}
+async function pfoUebernehmen() {
+  const x = window.__pfo; if (!x || !$("prT")) return $("pfoBlatt")?.remove();
+  for (const b of document.querySelectorAll("#pfoBlatt [data-pfo-da]")) {
+    if (!x.r.anwesend.has(b.dataset.pfoDa) && !b.checked) continue; // nicht gefunden und nicht angehakt → bleibt wie bisher
+    const da = document.querySelector(`[data-da="${b.dataset.pfoDa}"]`), ent = document.querySelector(`[data-ent="${b.dataset.pfoDa}"]`);
+    if (da) da.checked = b.checked; if (b.checked && ent) ent.checked = false;
+  }
+  if ($("prDaZahl")) $("prDaZahl").textContent = document.querySelectorAll("[data-da]:checked").length;
+  if ($("prEntZahl")) $("prEntZahl").textContent = document.querySelectorAll("[data-ent]:checked").length;
+  if ($("pfoV").value) $("prV").value = $("pfoV").value;
+  const dazu = (id, t, trenn = "\n") => { t = t.trim(); if (t) $(id).value = $(id).value.trim() ? $(id).value.trim() + trenn + t : t; };
+  dazu("prG", $("pfoG").value, ", ");
+  dazu("prK", x.r.tops.map((t, i) => { const v = document.querySelector(`[data-pfo-top="${i}"]`)?.value.trim(); return v ? `TOP ${i + 1} – ${t.titel}: ${v}` : ""; }).filter(Boolean).join("\n\n"), "\n\n");
+  dazu("prB", $("pfoB").value);
+  if ($("pfoN").value.trim() && $("prN")) $("prN").value = $("pfoN").value.trim();
+  const anl = $("pfoAnl").checked; $("pfoBlatt").remove(); window.__pfo = null;
+  $("prK").closest("details")?.setAttribute("open", "");
+  try { await prSpeichernJetzt(false); melde("🔎 Übernommen – bitte noch einmal durchlesen, gelbe Stellen [? …] prüfen"); } catch {}
+  if (anl) await protokollDateien({ files: x.dateien, set value(v) {} });
+}
 async function protokollAnlageWeg(aid) {
   if (!(await frage("Diese Anlage aus dem Protokoll entfernen?"))) return;
   try { await api("protokoll_anlage", { id: prId, attachment_id: aid, entfernen: true }); await prNeuLaden(); } catch (e) { meldeFehler(e); }
@@ -25910,6 +26036,7 @@ async function aufgabeLoeschen(id) {
 async function protokollVeroeffentlichen() {
   try { await prSpeichernJetzt(false); } catch { return; }
   if (!PR.anlagen.length && !$("prK").value.trim() && !(await frage("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?"))) return;
+  if (PFO_UNSICHER.test(["prK", "prB", "prN", "prG"].map((k) => $(k)?.value || "").join("\n")) && !(await frage("⚠️ Im Protokoll stehen noch unsichere Stellen [? …] aus der Texterkennung.\n\nBitte vorher prüfen und die Klammern entfernen. Trotzdem veröffentlichen?", { ja: "Trotzdem veröffentlichen", nein: "Erst prüfen" }))) return; // 2.801.0 KC-CLUB-PROTOKOLL-FOTO
   if (!(await frage("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände."))) return;
   try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}${r.versand === "laeuft" ? " · die Mitglieder werden gerade benachrichtigt" : ""}`); protokollOeffnen(prId, true); }
   catch (e) { meldeFehler(e); }
@@ -33072,7 +33199,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",

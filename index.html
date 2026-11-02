@@ -1042,6 +1042,9 @@
   .at-teil-text { all: unset; cursor: pointer; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; } .at-teil-text:focus-visible { outline: 3px solid var(--gold, #c9a227); }
   .at-teil.dabei .at-teil-text b { text-decoration: line-through; opacity: .7; }
   .at-haken { all: unset; cursor: pointer; font-size: 1.6rem; line-height: 1; padding: 2px; } .at-haken:focus-visible { outline: 3px solid var(--gold, #c9a227); }
+  /* 2.801.0 KC-CLUB-PROTOKOLL-FOTO: unsicher gelesene Wörter gelb */
+  mark.pfo-unsicher { background: #ffe066; color: #222; border-radius: 3px; padding: 0 2px; }
+  .pfo-vorschau { display: block; margin-top: 3px; font-size: .85rem; line-height: 1.4; }
   .at-wahl { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; padding: 6px 0; border-bottom: 1px solid var(--rand, #e5d9c8); }
   .at-wahl input { width: 22px; height: 22px; margin-top: 2px; } .at-wahl span { min-width: 0; overflow-wrap: anywhere; }
   .at-dazu .knopf { flex: 1 1 30%; } .at-liste { line-height: 1.6; } .at-liste > div { padding: 3px 0; border-bottom: 1px solid var(--rand, #e5d9c8); }
@@ -6450,7 +6453,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.800.0" data-v="2.800.0"></script>
+<script src="app.js?v=2.801.0" data-v="2.801.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

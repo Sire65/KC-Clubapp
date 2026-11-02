@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.801.0 – 2026-11-02 – 🔎 Protokoll: handgeschriebene Vorlage aus Fotos lesen und ausfüllen (KC-CLUB-PROTOKOLL-FOTO, Wunsch #49) · nur App
+Wunsch #49 Hansi: „Fotos vom handschriftlichen Protokoll (mehrere Seiten) aufnehmen und daraus den Protokoll-Entwurf vorfüllen – Anwesend aus den Ankreuzkästchen, Text je TOP, Beschlüsse, nächster Termin, Protokollführer.“ Antwort Hansi 02.11.: Stufe A und B.
+- Im Protokoll-Entwurf unter „2 · Protokoll anhängen“: **🔎 Fotos lesen und ausfüllen** – alle Seiten der ausgefüllten Büro-Vorlage wählen (bis 6).
+- **Stufe A (sicher):** Anker sind die gedruckten Teile der Vorlage (Namen, „Protokollführer:“, „TOP n:“, „Beschlüsse / Sonstiges“, „Nächster Termin:“). Angekreuzt = dunkle Punkte im Kästchen links neben dem gedruckten Namen. Getestet mit nachgebauter Vorlage, auch schief fotografiert als JPEG: 6 von 6 Kästchen richtig (leer 0 %, angekreuzt über 50 % dunkel).
+- **Stufe B (Vorschlag):** Handschrift je TOP, Beschlüsse, Gäste, Schriftführer (mit Mitgliedernamen abgeglichen) und Termin („12.11.26 19:30“ → „12.11.2026, 19:30 Uhr“). Unsicher gelesene Wörter stehen als [?wort] und sind gelb; Schnipsel der Schreiblinien fallen weg.
+- Erst das Prüf-Fenster, dann **✅ Übernehmen**: Anwesende werden angehakt (nicht gefundene Namen bleiben wie bisher), Text kommt zur Kurzfassung dazu, Fotos hängen als Anlage dran. **Vor dem Veröffentlichen** fragt die App nach, solange noch [? …] im Text steht.
+- Vorhandene Texterkennung auf dem Gerät (lib/ocr, tesseract.js 7, 2.669.0) – jetzt ein gemeinsamer Weg `ocrLauf` (mehrere Seiten mit einem Durchgang, mit Wortlage); „Einlesen“ unverändert. Nichts geht an fremde Dienste, kein Agent liest die Fotos. Hilfe-Eintrag „Handgeschriebenes Protokoll aus Fotos ausfüllen“.
+- DP2 nutzt dieselbe Erkennung plus persönliche Ziffern-Proben (nur Uhrzeiten) – für Freitext bringt das laut DP2 Build 262 keine sichere Verbesserung, darum nicht übernommen.
+- Tests: `tests/protokoll-foto.test.mjs` (Auswertung mit nachgebautem Erkennungsergebnis, Termin, Namensabgleich), Browser-Durchlauf mit Testblatt (sauber und schief/JPEG) und Übernehmen in einen nachgebauten Entwurf. Rückweg: App 2.800.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.800.0 – 2026-11-02 – 💬 Knopf „Nachrichten“ blinkt je nach Alter: grün, orange, rot (KC-CLUB-NACHRICHT-ALTER) · Server 2.800.0
 Wunsch #61 Hansi (02.11.): „Unten in der Zeile steht der Button Nachricht. Der zeigt eine kleine Zahl an. Der soll zusätzlich blinken, wenn man Nachricht hat. Erst 2 Tage grün, 3 und 4 Tage orange, dann rot, wenn man nicht gelesen hat.“
 - Der Knopf **💬 Nachrichten** in der unteren Leiste blinkt, solange etwas ungelesen ist – nach dem Alter der ältesten ungelesenen Nachricht: **bis 2 Tage grün**, **3. und 4. Tag orange**, **danach rot**. Die kleine Zahl hat dieselbe Farbe; ein Hinweistext beim Darauf-Zeigen sagt, wie alt.
