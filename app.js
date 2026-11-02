@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.813.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.814.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1180,7 +1180,7 @@ let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGe
 // Kopfzeile jedes Zettels: wer und wann (für eigene Zettel der eigene Vorname)
 const pwAngepinnt = (iso) => { const d = new Date(iso); return `angepinnt am ${fKurz.format(d)} ${fZeit.format(d)}`; };
 const pwKopf = (name, iso) => `<div class="zkopf">von <b>${esc(name || "?")}</b>${iso ? "<br>" + esc(pwAngepinnt(iso)) : ""}</div>`;
-const pwFarbe = (z) => " f" + ([1, 2, 3, 4].includes(Number(z.farbe)) ? Number(z.farbe) : 1);
+const pwFarbe = (z) => " f" + (Number(z.farbe) >= 1 && Number(z.farbe) <= 8 ? Number(z.farbe) : 1); // 2.814.0 KC-CLUB-PINNWAND-ADMIN-MEHR: Farben 5–8 (Admin)
 const pwFuerText = (z) => z.fuer === "ich" ? "nur für mich" : z.fuer === "alle" ? "für alle" : "für " + z.empfaenger.map((n) => n.split(" ")[0]).join(", ");
 // leicht schräg – je Zettel immer gleich (aus der ID), damit nichts beim Neuladen wackelt
 const pwDreh = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return ((Math.abs(h) % 7) - 3) * 0.8 + (h % 2 ? 0.4 : -0.4); };

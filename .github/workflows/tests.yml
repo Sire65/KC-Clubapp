@@ -78,6 +78,7 @@ jobs:
       - run: node tests/uhr-x.test.mjs
       - run: node tests/klappe-gleich.test.mjs
       - run: node tests/pinnwand-nadeln.test.mjs
+      - run: node tests/pinnwand-admin-mehr.test.mjs
       - run: node tests/protokoll-foto.test.mjs
       - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/video-abgleich.test.mjs

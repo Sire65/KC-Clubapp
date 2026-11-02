@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.813.0";
+const SERVER_VERSION = "2.814.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2744,6 +2744,10 @@ async function erstattungBesucheAbgerechnet(pid: string): Promise<Set<string>> {
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): 4 statt 3; jeder Zettel behält seine Farbe 1–4 (gelb, rosé, hellgrün, hellblau), ein neuer
 // bekommt die kleinste freie – abgenommene Zettel machen ihre Farbe frei, die anderen rücken nicht nach.
 const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;
+// 2.814.0 KC-CLUB-PINNWAND-ADMIN-MEHR (Wunsch Hansi 02.11.2026 „Gib mir als Admin mehr als 4 Zettel an der Pinnwand“): Admin 8 Zettel, Farben 5–8 kommen dazu
+const PINNWAND_MAX_ADMIN = 8;
+const pinnwandMax = (ich: { admin?: boolean }) => (ich.admin ? PINNWAND_MAX_ADMIN : PINNWAND_MAX);
+const pinnwandFarbeFrei = (belegt: Set<unknown>, max: number) => Array.from({ length: max }, (_, i) => i + 1).find((n) => !belegt.has(n)) ?? 1;
 // KC-CLUB-PINNWAND-LIVE (0.57.0): eine Formulierung für Push und Einblendung. „privat“ nur, wenn der Zettel wirklich nur
 // für diese eine Person ist (für bestimmte Personen, genau ein Empfänger) – bei „für alle“ oder mehreren Empfängern ohne „privat“.
 // KC-CLUB-PINNWAND-FRISTEN (0.65.0): Erinnerung an eigene Zettel – vom Admin einstellbar (kc_club_konfig „pinnwand“)
@@ -3217,14 +3221,14 @@ async function clubZettelAushaengen(pid: string, sperreKey: string, text: string
   const von = ad?.[0]?.person_id; if (!von) return false;
   // 2.133.0 (Wunsch Hansi): die meisten sind langjährige Clubmitglieder, nur neu in der App → „unser Clubmitglied“
   let { data: haengt } = await db.from("kc_club_pinnwand").select("id,farbe,erstellt_am").eq("person_id", von).is("entfernt_am", null).order("erstellt_am");
-  if ((haengt ?? []).length >= PINNWAND_MAX) {
+  if ((haengt ?? []).length >= PINNWAND_MAX_ADMIN) /* 2.814.0: Absender ist der Admin */ {
     const { data: fr } = await db.from("kc_club_protokoll").select("details").in("aktion", CLUB_ZETTEL_AKTIONEN).order("zeit", { ascending: false }).limit(50);
     const frueher = new Set((fr ?? []).map((x: any) => x.details?.zettel)), alt = (haengt ?? []).find((z: any) => frueher.has(z.id));
     if (!alt) { await protokoll(pid, aktion + "_voll", {}); return false; }
     await db.from("kc_club_pinnwand").update({ entfernt_am: jetzt(), entfernt_von: von }).eq("id", alt.id);
     haengt = (haengt ?? []).filter((z: any) => z.id !== alt.id);
   }
-  const belegt = new Set((haengt ?? []).map((x: any) => x.farbe)), farbe = [1, 2, 3, 4].find((n) => !belegt.has(n)) ?? 1;
+  const belegt = new Set((haengt ?? []).map((x: any) => x.farbe)), farbe = pinnwandFarbeFrei(belegt, PINNWAND_MAX_ADMIN);
   const { data: z, error } = await db.from("kc_club_pinnwand").insert({ person_id: von, text, wichtig: true, fuer: "alle", personen: [], farbe, antworten: true }).select("id").single();
   if (error || !z) { await protokoll(pid, aktion + "_fehler", {}); return false; }
   await protokoll(von, aktion, { zettel: z.id, fuer: pid, ...extra });
@@ -16534,7 +16538,7 @@ Köcheclub Werne`,
             if (w?.length) await protokoll(null, "pinnwand_teil_ab_fertig", { zettel: z.id, empfaenger: empf.length });
           }
         }
-        return json({ markiert, max: PINNWAND_MAX, zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
+        return json({ markiert, max: pinnwandMax(ich), zeichen: PINNWAND_ZEICHEN, zettel: zettel.map((z: any) => {
           const vonMir = z.person_id === ich.person_id, meine = (gl ?? []).find((g: any) => g.zettel_id === z.id && g.person_id === ich.person_id);
           const empf = z.fuer === "alle" ? aktiv.map((m) => m.person_id).filter((id) => id !== z.person_id) : z.fuer === "personen" ? (z.personen || []) : [];
           const lese = (gl ?? []).filter((g: any) => g.zettel_id === z.id && g.person_id !== z.person_id);
@@ -16565,9 +16569,10 @@ Köcheclub Werne`,
           if (!empf.length) throw new Fehler("Bitte mindestens eine Person auswählen.");
         }
         const { data: haengt } = await db.from("kc_club_pinnwand").select("farbe").eq("person_id", ich.person_id).is("entfernt_am", null);
-        if ((haengt ?? []).length >= PINNWAND_MAX) throw new Fehler(`Du hast schon ${PINNWAND_MAX} Zettel an der Pinnwand – bitte erst einen abnehmen.`, 409);
+        const maxZ = pinnwandMax(ich); // 2.814.0 KC-CLUB-PINNWAND-ADMIN-MEHR
+        if ((haengt ?? []).length >= maxZ) throw new Fehler(`Du hast schon ${maxZ} Zettel an der Pinnwand – bitte erst einen abnehmen.`, 409);
         const belegt = new Set((haengt ?? []).map((x: any) => x.farbe));
-        const farbe = [1, 2, 3, 4].find((n) => !belegt.has(n)) ?? 1;
+        const farbe = pinnwandFarbeFrei(belegt, maxZ);
         const antwortAuf = p.antwort_auf ? String(p.antwort_auf).slice(0, 40) : null; // nur fürs Protokoll
         const { data: z, error } = await db.from("kc_club_pinnwand").insert({ antworten: p.antworten !== false, // KC-CLUB-PINNWAND-ANTWORTKNOPF (2.22.11): Verfasser entscheidet
           person_id: ich.person_id, text, wichtig: !!p.wichtig, fuer, personen: empf, farbe }).select("id").single();

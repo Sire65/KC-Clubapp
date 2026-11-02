@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.814.0 – 2026-11-02 – 📌 Admin darf 8 Zettel an die Pinnwand (KC-CLUB-PINNWAND-ADMIN-MEHR) · App + Server + Datenbank
+Wunsch Hansi: „Gib mir als Admin mehr als 4 Zettel an der Pinnwand.“
+- Admin: bis zu **8** Zettel gleichzeitig (Mitglieder weiter 4). Die Zettel 5–8 bekommen eigene Farben: orange, lila, türkis, creme – auch als Nadel im Rahmen.
+- Datenbank: Farbprüfung 1–8 statt 1–4 (`20261102_kc_club_pinnwand_admin_mehr.sql`); je Person jede Farbe weiter nur einmal. Die Club-Zettel (Willkommen, Geburtstag) nutzen dieselbe Admin-Grenze.
+- Test: `tests/pinnwand-admin-mehr.test.mjs`.
+- Rückweg: App + Server 2.813.0 (Zettel mit Farbe 5–8 vorher abnehmen). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.813.0 – 2026-11-02 – 📍 Pinnwand: gelesene Zettel als Nadel im Rahmen (KC-CLUB-PINNWAND-NADELN, Wunsch #64) · App + Server
 Wunsch #64 Hansi: „Pins nur noch bei den Mitgliedern hängen lassen, die sie noch nicht gesehen haben. Für mich farbige Pinnnadeln oben im Holzrahmen – antippen, dann wird der Zettel wieder groß. So wird die Wand nicht unnötig voll.“ Konzept bestätigt, Antwort auf die Rückfrage: „Am nächsten Tag“.
 - Fremde Zettel hängen nur noch bis zum Tag nach dem ersten Ansehen groß an der Wand („gesehen“ zählt die App schon seit 2.763.0, `kc_club_pinnwand_gelesen`). Wichtige, nicht erledigte Zettel bleiben groß.

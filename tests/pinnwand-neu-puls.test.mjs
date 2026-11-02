@@ -8,7 +8,7 @@ const app = lies("app.js"), html = lies("index.html"), server = lies("supabase/f
 // Server: stilles Laden markiert nichts, Anzahl aller ungelesenen
 const pw = server.slice(server.indexOf('case "pinnwand": {'), server.indexOf('case "pinnwand_anheften"'));
 assert.match(pw, /const markiert = p\.markieren !== false;\s+if \(fremd\.length && !ich\.nurLesen && markiert\) await db\.from\("kc_club_pinnwand_gelesen"\)\.upsert/, "nur echtes Öffnen = gesehen");
-assert.match(pw, /return json\(\{ markiert, max: PINNWAND_MAX/, "App erfährt, ob markiert wurde");
+assert.match(pw, /return json\(\{ markiert, max: (?:PINNWAND_MAX|pinnwandMax\(ich\))/, "App erfährt, ob markiert wurde"); // 2.814.0: Grenze je Rolle
 const neu = server.slice(server.indexOf('case "pinnwand_neu": {'), server.indexOf('case "pinnwand_gesehen"'));
 assert.ok(/return json\(\{ neu: \[\], anzahl: 0 \}\)/.test(neu) && /alleNeu = fremd\.filter\(\(z: any\) => !gesehen\.has\(z\.id\)\), neu = alleNeu\.slice\(0, 10\)/.test(neu) && /anzahl: alleNeu\.length/.test(neu), "Anzahl über alle ungelesenen");
 assert.ok(!/upsert/.test(neu), "Nachsehen markiert nichts");
