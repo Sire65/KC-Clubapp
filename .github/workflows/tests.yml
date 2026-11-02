@@ -73,6 +73,7 @@ jobs:
       - run: node tests/eingabe-ruhe.test.mjs
       - run: node tests/nachricht-alter.test.mjs
       - run: node tests/protokoll-foto.test.mjs
+      - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs

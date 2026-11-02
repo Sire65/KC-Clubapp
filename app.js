@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.801.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.802.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,7 +17,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-fo0GoQQPizYDc0fLSziQq6rxd273upSOYYJh4uBEjMBm+FRjzWlPtglIFFBJvRZQ" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-h1Xv4sj+2UBujbGzZURKMQS3LVvnVzu1xu8V5PAT0vysef5uRqVv40K+PiEYdlnK" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
@@ -25107,8 +25107,41 @@ function prGruppenHtml(liste) {
   if (liste.length <= 4) return `<div class="${kl}">${liste.map(zeile).join("")}</div>`;
   const jahre = [...new Set(liste.map((p) => String(p.datum || "").slice(0, 4)))].sort().reverse();
   return jahre.map((j, i) => { const imJahr = liste.filter((p) => String(p.datum || "").startsWith(j)), monate = [...new Set(imJahr.map((p) => String(p.datum).slice(5, 7)))].sort().reverse();
-    return `<details class="karte pr-jahr" data-klappe="pr_jahr_${esc(j)}" data-ohne-unten${i === 0 ? " open" : ""}><summary>📅 ${esc(j)} <span class="marke">${imJahr.length}</span></summary>
-      ${monate.map((m) => `<div class="pr-monat"><div class="pr-monat-titel">${esc(CJ_MONATE[Number(m) - 1] || m)}</div><div class="${kl}">${imJahr.filter((p) => String(p.datum).slice(5, 7) === m).map(zeile).join("")}</div></div>`).join("")}</details>`; }).join("");
+    return `<details class="karte pr-jahr" data-klappe="pr_jahr_${esc(j)}" data-ohne-unten${i === 0 ? " open" : ""}><summary>📅 ${esc(j)} <span class="marke">${imJahr.length}</span></summary>${prJahrKnopf(j)}
+      ${monate.map((m, k) => `<details class="pr-monat" data-klappe="pr_monat_${esc(j)}_${esc(m)}" data-ohne-unten${i === 0 && k === 0 ? " open" : ""}><summary class="pr-monat-titel">${esc(CJ_MONATE[Number(m) - 1] || m)} <span class="marke">${imJahr.filter((p) => String(p.datum).slice(5, 7) === m).length}</span></summary><div class="${kl}">${imJahr.filter((p) => String(p.datum).slice(5, 7) === m).map(zeile).join("")}</div></details>`).join("")}</details>`; }) /* 2.802.0 Wunsch #50: auch die Monate einklappbar – der neueste offen */.join("");
+}
+// ---------- 2.802.0 KC-CLUB-PROTOKOLL-JAHR (Wunsch #50 Hansi „am Jahresende in die Ordner verschieben im Büro … sonst werden die Übersichten zu voll“) ----------
+// „📦 Jahr abschließen“ (Clubsprecher/Admin tippen selbst, nichts läuft automatisch): jedes veröffentlichte Protokoll des Jahres als PDF (derselbe Druck wie
+// „🖨️ Drucken / PDF“) in den Club-Ordner „Protokolle <Jahr>“ (Archiv-Art Versammlungen, wird bei Bedarf angelegt). Keine Kopien in Mitglieder-Ordner
+// (Entscheidung Hansi 02.11.). Die Protokolle bleiben in der Liste; schon abgelegte (Stichwort p-<id>) werden beim zweiten Mal übersprungen.
+const prJahrKnopf = (j) => (ICH?.admin || ICH?.vorstand) && (prListe?.protokolle || []).some((p) => String(p.datum || "").startsWith(j) && p.status === "veroeffentlicht")
+  ? `<div class="knoepfe" style="margin:4px 0"><button class="knopf klein" onclick="einmal(this, () => prJahrAbschliessen('${esc(j)}'))">📦 Jahr ${esc(j)} abschließen – PDFs ins Büro</button></div>` : "";
+async function prJahrAbschliessen(jahr) {
+  const liste = (prListe?.protokolle || []).filter((p) => String(p.datum || "").startsWith(jahr) && p.status === "veroeffentlicht");
+  if (!liste.length) return melde(`In ${jahr} gibt es noch kein veröffentlichtes Protokoll.`, true);
+  if (!(await frage(`📦 Jahr ${jahr} abschließen?\n\n${liste.length} veröffentlichte${liste.length === 1 ? "s Protokoll kommt" : " Protokolle kommen"} als PDF in den Büro-Ordner „Protokolle ${jahr}“. In der Liste hier bleiben sie trotzdem.`, { ja: "📦 Abschließen", nein: "Abbrechen" }))) return;
+  let a, o; const REG = ["Sitzungsprotokolle", "Sonstiges"];
+  try {
+    a = await api("archiv_liste", {}, { warten: true });
+    o = (a.ordner || []).find((x) => !x.besitzer && x.titel === "Protokolle" && Number(x.jahr) === Number(jahr));
+    if (!o) o = { id: (await api("archiv_ordner_speichern", { art: "versammlung", jahr: Number(jahr), titel: "Protokolle", farbe: 2, register: REG, nur_vorstand: false }, { warten: true })).id };
+  } catch (e) { return meldeFehler(e); }
+  const marke = (id) => "p-" + String(id).slice(0, 24), schon = new Set((a.dokumente || []).filter((d) => d.ordner_id === o.id).flatMap((d) => [].concat(d.stichworte || [])));
+  const alt = { PR, DRUCK }; let n = 0, ueber = 0;
+  try {
+    if (!MITGLIEDER) await mitgliederHolen();
+    for (const p of liste) {
+      if (schon.has(marke(p.id))) { ueber++; continue; }
+      melde(`📦 ${n + ueber + 1} von ${liste.length}: ${p.titel} …`);
+      PR = await api("protokoll_laden", { id: p.id }); DRUCK = { art: "protokoll" };
+      if (!(await druckSeiteBauen())) throw new Error(`„${p.titel}“ konnte nicht vorbereitet werden.`);
+      const pdf = await druckPdfBlob(), tag = String(p.datum).split("-").reverse().join(".");
+      await api("archiv_hochladen", { ordner_id: o.id, register: REG[0], titel: `${p.titel} (${tag})`.slice(0, 120), datum: p.datum, stichworte: `Protokoll, ${jahr}, ${marke(p.id)}`,
+        name: `Protokoll_${p.datum}_${String(p.titel).replace(/[^\wäöüÄÖÜß-]+/g, "_").slice(0, 40)}.pdf`, mime: "application/pdf", daten: base64(await pdf.arrayBuffer()) }, { warten: true });
+      n++;
+    }
+    melde(`📦 ${jahr}: ${n} Protokoll${n === 1 ? "" : "e"} im Büro-Ordner „Protokolle ${jahr}“${ueber ? ` · ${ueber} lag${ueber === 1 ? "" : "en"} schon dort` : ""}`);
+  } catch (e) { meldeFehler(e); } finally { PR = alt.PR; DRUCK = alt.DRUCK; }
 }
 function protokollFilter() { prFilterAnwenden(); } // Suchfeld + Filter wirken zusammen (2.23.36)
 // ---------- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): oben „🔽 Filter“ → Jahr, Monat, Ort, Protokollführer (2 × 2 Felder) ----------
@@ -25777,7 +25810,8 @@ function protokollFormular() {
         ${MITGLIEDER.map((m) => `<tr><td>${esc(m.name)}</td><td><input type="checkbox" data-da="${m.person_id}" ${da.has(m.person_id) ? "checked" : ""} onchange="prDa(this, 'ent')"></td><td><input type="checkbox" data-ent="${m.person_id}" ${ent.has(m.person_id) ? "checked" : ""} onchange="prDa(this, 'da')"></td></tr>`).join("")}
         </tbody></table></details>
       <label class="feld">Gäste (freiwillig)<input id="prG" maxlength="300" value="${esc(p.gaeste || "")}" oninput="prAendern()"></label>
-      <label class="feld">Tagesordnung (ein Punkt pro Zeile)<textarea id="prTO" rows="3" oninput="prAendern()">${esc(p.tagesordnung.join("\n"))}</textarea></label>
+      <label class="feld">Tagesordnung (ein Punkt pro Zeile)<textarea id="prTO" rows="3" oninput="prAendern();prVertagtZeigen()">${esc(p.tagesordnung.join("\n"))}</textarea></label>
+      <div id="prVertagt" class="pr-vertagt"></div><!-- 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT -->
       <label class="feld">Beschlüsse (einer pro Zeile)<textarea id="prB" rows="3" oninput="prAendern()">${esc(p.beschluesse.join("\n"))}</textarea></label>
       <!-- KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0, Wunsch Hansi): unten der nächste Termin – Vorschlag = nächste geplante Sitzung -->
       <label class="feld">📅 Nächster Termin (freiwillig)<input id="prN" maxlength="200" placeholder="z. B. Do., 12.11., 19:30 Uhr · Vereinsheim" value="${esc(p.naechster_termin || "")}" oninput="prAendern()"></label>
@@ -25811,6 +25845,22 @@ function protokollFormular() {
     </div>
     <p class="hinweis" style="font-size:.85rem">Nach dem Veröffentlichen bekommen alle Mitglieder (ohne Aushilfen) Bescheid und haben ${7} Tage Zeit für Einwände – danach gilt das Protokoll als genehmigt.</p>`;
   document.querySelectorAll("#prAnlagen img[data-anlage]").forEach(bildLaden);
+  prVertagtZeigen(); // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT
+}
+// 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT (Wunsch #50 Hansi „beim Protokoll vertagt anhaken, dann kommt es beim nächsten Mal“): je TOP ein Haken „⏭️ vertagt“.
+// Vertagte Punkte stehen in der nächsten Sitzung als „Offen aus dem letzten Protokoll“ auf der Tagesordnung (Server: bueroSitzung).
+const prTops = () => ($("prTO")?.value || "").split("\n").map((x) => x.trim()).filter(Boolean);
+const prVertagtListe = () => [...document.querySelectorAll("#prVertagt [data-vt]:checked")].map((x) => x.dataset.vt);
+function prVertagtZeigen() {
+  const el = $("prVertagt"); if (!el || !PR) return;
+  const an = new Set(el.childElementCount ? prVertagtListe() : PR.protokoll.vertagt || []), tops = prTops();
+  el.innerHTML = tops.length ? `<div class="hinweis" style="margin:0 0 2px">⏭️ Nicht geschafft? Als <b>vertagt</b> anhaken – dann steht der Punkt bei der nächsten Sitzung wieder auf der Tagesordnung.</div>`
+    + tops.map((t, i) => `<label class="at-wahl" style="margin:0"><input type="checkbox" data-vt="${esc(t)}" ${an.has(t) ? "checked" : ""} onchange="prAendern()"><span>TOP ${i + 1}: ${esc(t)}${an.has(t) ? " <small class=\"marke gelb\">vertagt</small>" : ""}</span></label>`).join("") : "";
+}
+// vor dem Veröffentlichen: TOPs ohne Text in der Kurzfassung (und nicht vertagt) → nachfragen
+function prTopsOhneText() {
+  const k = $("prK")?.value || "", v = new Set(prVertagtListe()); if (!k.trim()) return [];
+  return prTops().map((t, i) => [t, i + 1]).filter(([t, n]) => !v.has(t) && !new RegExp(`TOP\\s*${n}\\b`, "i").test(k) && !k.toLowerCase().includes(t.toLowerCase().slice(0, 25)));
 }
 function prDa(box, gegen) {
   const pid = box.dataset.da || box.dataset.ent;
@@ -25836,6 +25886,7 @@ async function prSpeichernJetzt(vonHand) {
     id: prId, titel: $("prT").value, datum: $("prD").value, ort: $("prO").value, verfasser: $("prV").value, gaeste: $("prG").value, naechster_termin: $("prN")?.value ?? "",
     anwesend: [...document.querySelectorAll("[data-da]:checked")].map((x) => x.dataset.da), entschuldigt: [...document.querySelectorAll("[data-ent]:checked")].map((x) => x.dataset.ent),
     tagesordnung: $("prTO").value.split("\n"), beschluesse: $("prB").value.split("\n"), kurzfassung: $("prK").value,
+    vertagt: prVertagtListe(), // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT
   };
   try {
     await api("protokoll_speichern", daten);
@@ -26036,6 +26087,11 @@ async function aufgabeLoeschen(id) {
 async function protokollVeroeffentlichen() {
   try { await prSpeichernJetzt(false); } catch { return; }
   if (!PR.anlagen.length && !$("prK").value.trim() && !(await frage("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?"))) return;
+  const ohne = prTopsOhneText(); // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT: wurden alle Punkte behandelt?
+  if (ohne.length) {
+    const w = await frage(`Zu ${ohne.length === 1 ? "diesem Punkt" : "diesen Punkten"} steht nichts in der Kurzfassung:\n\n${ohne.map(([t, n]) => `TOP ${n}: ${t}`).join("\n")}\n\nWurde${ohne.length === 1 ? "" : "n"} ${ohne.length === 1 ? "er" : "sie"} behandelt – oder vertagt?`, { ja: "⏭️ Als vertagt markieren", nein: "Ja, wurde behandelt" });
+    if (w) { ohne.forEach(([t]) => { const b = document.querySelector(`#prVertagt [data-vt="${CSS.escape(t)}"]`); if (b) b.checked = true; }); prVertagtZeigen(); try { await prSpeichernJetzt(false); } catch { return; } }
+  }
   if (PFO_UNSICHER.test(["prK", "prB", "prN", "prG"].map((k) => $(k)?.value || "").join("\n")) && !(await frage("⚠️ Im Protokoll stehen noch unsichere Stellen [? …] aus der Texterkennung.\n\nBitte vorher prüfen und die Klammern entfernen. Trotzdem veröffentlichen?", { ja: "Trotzdem veröffentlichen", nein: "Erst prüfen" }))) return; // 2.801.0 KC-CLUB-PROTOKOLL-FOTO
   if (!(await frage("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände."))) return;
   try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}${r.versand === "laeuft" ? " · die Mitglieder werden gerade benachrichtigt" : ""}`); protokollOeffnen(prId, true); }

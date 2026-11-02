@@ -1056,6 +1056,7 @@ function druckSitzung() {
   const box = (an) => `<span style="display:inline-block;width:4.2mm;height:4.2mm;border:1.4px solid #222;margin-right:2mm;vertical-align:-0.6mm;text-align:center;line-height:4mm;font-size:3.6mm;font-weight:800">${an ? "✓" : ""}</span>`;
   const h = (t) => `<h2 style="font-size:4.6mm;margin:6mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
   const auf = s.aufgaben.filter((a) => !a.erledigt);
+  const erl = s.aufgaben.filter((a) => a.erledigt); // 2.802.0 KC-CLUB-PROTOKOLL-AUFGABEN-STAND (Wunsch #50): erledigte stehen kurz als erledigt da, offen sind nur die offenen
   // KC-CLUB-VORLAGE-KOPF (1.82.0, Wunsch Hansi): oben Protokollführer, Ort, Entschuldigt bzw. fehlend, Gäste – wenig Platz;
   // unten „Nächster Termin“ (vorbelegt, wenn schon eine weitere Sitzung geplant ist)
   const strich = (mm) => `<span style="display:inline-block;width:${mm}mm;border-bottom:1px solid #555;height:4mm;vertical-align:-1mm"></span>`;
@@ -1066,7 +1067,7 @@ function druckSitzung() {
     <p style="margin:3mm 0 0;font-size:3.6mm"><b>Entschuldigt bzw. fehlend:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` (${esc(x.notiz)})` : "")).join(", ") + " · " : ""}${strich(nein.length ? 50 : 120)}</p>
     <p style="margin:2mm 0 0;font-size:3.6mm"><b>Gäste:</b> ${strich(150)}</p>
     ${h("Anmerkung zum letzten Protokoll")}<div style="font-size:3.6mm;white-space:pre-wrap">${esc(f.anmerkung || "")}</div>
-    ${auf.length ? `<p style="margin:2mm 0 1mm;font-size:3.6mm"><b>Offene Aufgaben:</b></p><ul style="margin:0;padding-left:6mm;font-size:3.5mm">${auf.map((a) => `<li>${box(false)}${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}${linien(2)}
+    ${auf.length ? `<p style="margin:2mm 0 1mm;font-size:3.6mm"><b>Offene Aufgaben:</b></p><ul style="margin:0;padding-left:6mm;font-size:3.5mm">${auf.map((a) => `<li>${box(false)}${esc(a.wer)}: ${esc(a.text)}</li>`).join("")}</ul>` : ""}${erl.length ? `<p style="margin:2mm 0 0;font-size:3.3mm;color:#444"><b>Erledigt seit dem letzten Protokoll:</b> ${erl.map((a) => `✓ ${esc(a.wer)}: ${esc(a.text)}`).join(" · ")}</p>` : ""}${linien(2)}
     ${h("Tagesordnung")}${f.tagesordnung.map((t, i) => `<div style="break-inside:avoid;margin:0 0 3mm"><div style="font-size:4mm;font-weight:800;margin-top:3mm">TOP ${i + 1}: ${esc(t.t)}${buVon(s, t) ? ` <span style="font-weight:400;font-size:3.4mm">(Vorschlag von ${esc(buVon(s, t))})</span>` : ""}</div>${linien(f.zeilen)}</div>`).join("")}
     <div style="break-inside:avoid">${h("Beschlüsse / Sonstiges")}${linien(Math.max(3, f.zeilen))}
     <p style="margin:3mm 0 0;font-size:3.8mm"><b>Nächster Termin:</b> ${weiter ? `${esc(wann(weiter.beginn, true))}${weiter.ort ? " · " + esc(weiter.ort) : ""}` : `Datum ${strich(30)} Uhrzeit ${strich(18)} Ort ${strich(55)}`}</p>

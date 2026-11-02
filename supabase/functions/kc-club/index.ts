@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.800.0";
+const SERVER_VERSION = "2.802.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6129,6 +6129,7 @@ async function mfDaten(ich: Ich) {
 // Feste Tagesordnungspunkte (Freigabe Hansi „passt“); die Vorschläge kommen vor „Verschiedenes“.
 const BUERO_TOP_VORNE = ["Begrüßung", "Genehmigung des letzten Protokolls", "Bericht des Kassenwarts"];
 const BUERO_TOP_HINTEN = ["Verschiedenes"];
+const VERTAGT_VORSATZ = "Offen aus dem letzten Protokoll: "; // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT
 const BUERO_ZEILEN = [0, 3, 5, 8, 12];
 // KC-CLUB-TAGESINFO: Grenze der Datenbank im Supabase-Tarif „Free“ (500 MB) – bei Tarifwechsel hier anpassen
 const DB_GRENZE_BYTES = 500 * 1024 * 1024;
@@ -6564,7 +6565,7 @@ async function bueroSitzung(ich: Ich, tid: string) {
     db.from("kc_club_vorschlaege").select("*").or(`treffen_id.eq.${tid},and(treffen_id.is.null,status.eq.offen)`).neq("status", "zurueckgezogen").order("erstellt_am"),
     db.from("kc_club_buero_sitzung").select("*").eq("treffen_id", tid).maybeSingle(),
     db.from("kc_club_sitzungsprotokolle").select("id,status,version").eq("treffen_id", tid).maybeSingle(),
-    db.from("kc_club_sitzungsprotokolle").select("id,titel,datum,status,einspruch_bis,veroeffentlicht_am").lt("datum", berlinTag(new Date(t.beginn))).order("datum", { ascending: false }).limit(1).maybeSingle(),
+    db.from("kc_club_sitzungsprotokolle").select("id,titel,datum,status,einspruch_bis,veroeffentlicht_am,vertagt").lt("datum", berlinTag(new Date(t.beginn))).order("datum", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const { data: auf } = letzt ? await db.from("kc_club_aufgaben").select("person_id,text,faellig,erledigt_am").eq("protokoll_id", letzt.id) : { data: [] as any[] };
   const leute = await personen([...(auf ?? []).map((a: any) => a.person_id), ...(vs ?? []).map((v: any) => v.erstellt_von)]); // 2.692.0: + Einreicher der Vorschläge
@@ -6588,7 +6589,9 @@ async function bueroSitzung(ich: Ich, tid: string) {
   const { data: tod } = await db.from("kc_club_fl_faelle").select("person_id").eq("art", "tod_mitglied").gte("datum", tagDazu(berlinTag(new Date(t.beginn)), -90)).lte("datum", berlinTag(new Date(t.beginn)));
   const totNamen = [...(await personen((tod ?? []).map((x: any) => x.person_id))).values()].map((x: any) => x.display_name);
   const gedenken = totNamen.length ? [{ t: `Gedenken an ${totNamen.join(", ")} (Schweigeminute)`, art: "fest" }] : [];
-  const standardTop = [{ t: BUERO_TOP_VORNE[0], art: "fest" }, ...gedenken, ...BUERO_TOP_VORNE.slice(1).map((x) => ({ t: x, art: "fest" })), ...vorschlaege.filter((v) => v.fuerDiese).map((v) => ({ t: v.text, art: "vorschlag", id: v.id })), ...BUERO_TOP_HINTEN.map((x) => ({ t: x, art: "fest" }))];
+  // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT: im letzten Protokoll vertagte Punkte stehen als „Offen aus dem letzten Protokoll“ gleich nach den festen Punkten
+  const vertagt = ((letzt as any)?.vertagt ?? []).map((x: string) => ({ t: `${VERTAGT_VORSATZ}${String(x).replace(new RegExp("^" + VERTAGT_VORSATZ), "")}`, art: "fest" }));
+  const standardTop = [{ t: BUERO_TOP_VORNE[0], art: "fest" }, ...gedenken, ...BUERO_TOP_VORNE.slice(1).map((x) => ({ t: x, art: "fest" })), ...vertagt, ...vorschlaege.filter((v) => v.fuerDiese).map((v) => ({ t: v.text, art: "vorschlag", id: v.id })), ...BUERO_TOP_HINTEN.map((x) => ({ t: x, art: "fest" }))];
   return {
     treffen: { id: t.id, titel: t.titel, beginn: t.beginn, ort: t.ort },
     mitglieder: mitglieder.map((m) => ({ person_id: m.person_id, name: m.display_name, antwort: ant.get(m.person_id)?.antwort ?? null, notiz: ant.get(m.person_id)?.notiz ?? null,
@@ -6804,6 +6807,16 @@ async function protokollNaechsterVorschlag(pr: any) {
   const { data } = await db.from("kc_club_treffen").select("titel,beginn,ort").eq("art", "treffen").neq("status", "abgesagt").gt("beginn", ab).order("beginn").limit(1);
   const t: any = data?.[0];
   return t ? txt(`${t.titel} · ${wann(t.beginn)}${t.ort ? " · " + t.ort : ""}`, 200) : null;
+}
+async function vorschlaegeBehandelt(ich: Ich, pr: any) {
+  const { data: prep } = await db.from("kc_club_buero_sitzung").select("tagesordnung").eq("treffen_id", pr.treffen_id).maybeSingle();
+  const norm = (x: unknown) => String(x ?? "").toLowerCase().replace(/\s+/g, " ").trim(), vertagt = (pr.vertagt ?? []).map(norm);
+  const tops = ((prep?.tagesordnung ?? []) as any[]).filter((x: any) => x?.art === "vorschlag" && x?.id);
+  const ist = (x: any) => vertagt.some((v: string) => v === norm(x.t) || v.startsWith(norm(x.t)));
+  const fertig = tops.filter((x) => !ist(x)).map((x) => String(x.id)), weiter = tops.filter(ist).map((x) => String(x.id));
+  if (fertig.length) await db.from("kc_club_vorschlaege").update({ status: "abgeschlossen", abgeschlossen_am: jetzt(), abgeschlossen_von: ich.person_id, behandelt_in: pr.id })
+    .in("id", fertig).eq("art", "thema").eq("status", "offen");
+  if (weiter.length) await db.from("kc_club_vorschlaege").update({ treffen_id: null }).in("id", weiter).eq("art", "thema").eq("status", "offen");
 }
 async function protokollHolen(id: unknown) {
   const { data } = await db.from("kc_club_sitzungsprotokolle").select("*").eq("id", String(id || "")).maybeSingle();
@@ -17132,10 +17145,17 @@ Köcheclub Werne`,
           if (vorh) return json({ ok: true, id: vorh.id, vorhanden: true });
           const { data: t } = await db.from("kc_club_treffen").select("*").eq("id", tid).maybeSingle();
           if (!t) throw new Fehler("Treffen nicht gefunden.", 404);
-          const [{ data: teil }, { data: vs }] = await Promise.all([
+          const [{ data: teil }, { data: vs }, { data: prep }, { data: letzt }] = await Promise.all([
             db.from("kc_club_teilnahme").select("person_id,antwort").eq("treffen_id", tid),
             db.from("kc_club_vorschlaege").select("*").eq("treffen_id", tid).neq("status", "zurueckgezogen").order("erstellt_am"),
+            db.from("kc_club_buero_sitzung").select("tagesordnung").eq("treffen_id", tid).maybeSingle(),
+            db.from("kc_club_sitzungsprotokolle").select("id,datum").lt("datum", berlinTag(new Date(t.beginn))).order("datum", { ascending: false }).limit(1).maybeSingle(),
           ]);
+          // 2.802.0 KC-CLUB-PROTOKOLL-AUFGABEN-STAND (Wunsch #50 Hansi „wenn Aufgaben abgehakt sind, müssen sie im Folgeprotokoll als erledigt drin stehen“)
+          const { data: aufL } = letzt ? await db.from("kc_club_aufgaben").select("person_id,text,erledigt_am").eq("protokoll_id", letzt.id).order("erstellt_am") : { data: [] as any[] };
+          const aufLeute = await personen((aufL ?? []).map((a: any) => a.person_id));
+          const aufZ = (a: any) => `${vorname(aufLeute.get(a.person_id) ?? null) || "?"}: ${a.text}`;
+          const aufStand = (aufL ?? []).length ? `Aufgaben aus dem Protokoll vom ${String(letzt.datum).split("-").reverse().join(".")}:\n${(aufL ?? []).map((a: any) => (a.erledigt_am ? "✓ erledigt – " : "☐ offen – ") + aufZ(a)).join("\n")}` : "";
           const g = t.gastgeber_person_id ? (await personen([t.gastgeber_person_id])).get(t.gastgeber_person_id) : null;
           const { data: ca } = await db.from("kc_club_clubabend").select("anwesend").eq("treffen_id", tid).maybeSingle(); // 2.569.0 KC-CLUB-CLUBABEND: vor Ort eingetragen
           const beschluesse: string[] = [];
@@ -17147,7 +17167,9 @@ Köcheclub Werne`,
             treffen_id: tid, titel: t.titel, datum: berlinTag(new Date(t.beginn)), ort: t.ort || (g ? `bei ${g.display_name}` : null),
             anwesend: ca?.anwesend?.length ? ca.anwesend : (teil ?? []).filter((x: any) => x.antwort === "ja").map((x: any) => x.person_id),
             entschuldigt: (teil ?? []).filter((x: any) => x.antwort === "nein" && !(ca?.anwesend ?? []).includes(x.person_id)).map((x: any) => x.person_id),
-            tagesordnung: (vs ?? []).filter((x: any) => unterstuetzbar(x.art)).map((x: any) => x.titel), beschluesse,
+            // 2.802.0: die im Büro festgelegte Tagesordnung (mit vertagten Punkten), sonst wie bisher die Vorschläge
+            tagesordnung: (prep?.tagesordnung ?? []).length ? (prep.tagesordnung as any[]).map((x: any) => txt(x?.t, 300)).filter(Boolean).slice(0, 40) : (vs ?? []).filter((x: any) => unterstuetzbar(x.art)).map((x: any) => x.titel), beschluesse,
+            ...(aufStand ? { kurzfassung: aufStand } : {}),
           });
         }
         const { data: neu, error } = await db.from("kc_club_sitzungsprotokolle").insert(zeile).select("id").single();
@@ -17185,7 +17207,7 @@ Köcheclub Werne`,
         return json({
           protokoll: {
             id: pr.id, treffen_id: pr.treffen_id, titel: pr.titel, datum: pr.datum, ort: pr.ort, gaeste: pr.gaeste, kurzfassung: pr.kurzfassung, naechster_termin: pr.naechster_termin ?? null,
-            tagesordnung: pr.tagesordnung, tagesordnungVon: await tagesordnungVon(pr.treffen_id, pr.tagesordnung).catch(() => []), beschluesse: pr.beschluesse, version: pr.version, veroeffentlicht_am: pr.veroeffentlicht_am, einspruch_bis: pr.einspruch_bis,
+            tagesordnung: pr.tagesordnung, tagesordnungVon: await tagesordnungVon(pr.treffen_id, pr.tagesordnung).catch(() => []), beschluesse: pr.beschluesse, vertagt: pr.vertagt ?? [], /* 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT */ version: pr.version, veroeffentlicht_am: pr.veroeffentlicht_am, einspruch_bis: pr.einspruch_bis,
             status: protokollStatus(pr, (ew ?? []).filter((x: any) => !x.erledigt_am).length), roh: pr.status,
             verfasser: { person_id: pr.verfasser, name: name(pr.verfasser), offen: !!pr.verfasser_offen },
             anwesend: pr.anwesend.map((id: string) => ({ person_id: id, name: name(id) })), entschuldigt: pr.entschuldigt.map((id: string) => ({ person_id: id, name: name(id) })),
@@ -17253,6 +17275,8 @@ Köcheclub Werne`,
           titel: txt(p.titel, 120) || pr.titel, datum, ort: txt(p.ort, 200) || null, anwesend, entschuldigt: ids(p.entschuldigt).filter((id) => !anwesend.includes(id)),
           gaeste: txt(p.gaeste, 300) || null, naechster_termin: txt(p.naechster_termin, 200) || null, tagesordnung: zeilen(p.tagesordnung), beschluesse: zeilen(p.beschluesse), kurzfassung: txt(p.kurzfassung, 4000) || null, geaendert_am: jetzt(),
         };
+        // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT (Wunsch #50 Hansi „beim Protokoll vertagt anhaken, dann kommt es beim nächsten Mal“): nur Punkte, die auch in der Tagesordnung stehen
+        if (Array.isArray(p.vertagt)) upd.vertagt = zeilen(p.vertagt).filter((x) => upd.tagesordnung.includes(x));
         // Schriftführer wechseln (wer das Protokoll schreibt). KC-CLUB-PROTOKOLL-SCHREIBER-OFFEN (30.10.2026, Wunsch Hansi „steht noch nicht
         // fest – Zeile erst mal leer lassen“): "" = wird noch geklärt; Bearbeitungsrecht bleibt beim Anleger (Spalte verfasser).
         if (p.verfasser === "") upd.verfasser_offen = true;
@@ -17319,6 +17343,10 @@ Köcheclub Werne`,
         const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "veroeffentlicht", veroeffentlicht_am: jetzt(), einspruch_bis: bis, geaendert_am: jetzt() })
           .eq("id", pr.id).eq("status", "entwurf").select("id");
         if (!ok?.length) throw new Fehler("Das Protokoll ist schon veröffentlicht.", 409);
+        // 2.802.0 KC-CLUB-VORSCHLAG-BEHANDELT (Wunsch #50 Hansi „bei den Vorschlägen im Protokoll checken, ob sie abgearbeitet wurden, und mit dem Protokoll ablegen“):
+        // Themen-Vorschläge, die als TOP auf der Büro-Tagesordnung dieser Sitzung standen, gelten als behandelt (abgeschlossen, behandelt_in = Protokoll);
+        // vertagte bleiben offen und lösen sich von dieser Sitzung (kommen beim nächsten Mal wieder). Abstimmungen/Spenden laufen wie bisher.
+        if (pr.treffen_id) await vorschlaegeBehandelt(ich, pr).catch((e) => console.error("vorschlaege behandelt", String(e)));
         // neue Fassung nach Korrektur: bisherige Einwände gelten als bearbeitet
         if (pr.version > 1) await db.from("kc_club_sitzungsprotokoll_einwaende").update({ erledigt_am: jetzt(), erledigt_von: ich.person_id }).eq("protokoll_id", pr.id).is("erledigt_am", null);
         await db.from("kc_club_sitzungsprotokoll_gelesen").upsert({ protokoll_id: pr.id, person_id: ich.person_id, version: pr.version, gelesen_am: jetzt() });
