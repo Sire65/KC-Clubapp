@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.805.0 – 2026-11-02 – 📝 Dienstwünsche: Twinkey auf DP2 Build 306 (KC-CLUB-DIENSTWUNSCH) · nur App
+Übergabe von Codex („Übergabe an Claude“, Sire65/dp3 `codex/club-app-interface`, docs/CLAUDE-BUTTON-LOGIK-NACHTRAG.md) – Hansi: „Ja Montag“.
+- Twinkey mit `tools/dp2-twinkey-uebernehmen.mjs` unverändert aus DP2 übernommen: **Build 291 → Build 306 RC** (Commit 776d039). Build 291 ist in 306 enthalten.
+- Geändert haben sich nur 3 Dateien: `src/core/model.js` (zwei Test-Aushilfen aus den Beispieldaten entfernt, Planbarkeit über Kennungs-Aliase), `src/ui/role-ux.js` (Kollegensuche), `src/adapters/pdf.js`. Gleiche Dateiliste und Reihenfolge; Twinkey-Seite, Beispieldaten und Start in DP2 unverändert – die Club-Anbindung (`dp2-club/daten.js`, `start.js`) passt weiter. Der Hinweis am gesperrten „Weiter“ („Bitte mit oder ohne Twinkey wählen.“ / „Bitte zuerst eine Aufgabe wählen.“) war schon mit Build 291 da.
+- Browser-Vergleich alt/neu (Handy und PC): Begrüßung, gesperrter Weiter-Knopf mit Grund, Aufgabenwahl – identisch, ohne Fehler. Update- und Ruhe-Schutz beim Eingeben (2.788.0/2.789.0) unverändert. Keine Server- oder Datenänderung; gespeicherte Dienstwünsche bleiben.
+- Offen bei Hansi/Codex: Live-Handtest mit echten Eingaben und die zentrale Kollegenfreigabe.
+- Rückweg: App 2.804.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.804.0 – 2026-11-02 – 🧹 Erklärfilm „Deine App – so, wie du sie willst“ (KC-CLUB-ANSICHTFILM) · Server 2.804.0
 Anregung Clubsitzung: „Die App ist zu voll – zu viel drin, was man nicht braucht.“ Wunsch Hansi 02.11.: Erklärfilm, wie jeder die App selbst einstellt, anbieten und merken, wer ihn angesehen hat.
 - **Film** (2 Min., Hochformat, Sprecher mit Untertiteln): einfache und erweiterte Ansicht, Kachel lange drücken, verschieben, mit ✕ ausblenden, „Nur ausgeblendete zeigen“, Kopf mit ⌃ / ⌃⌃ einrollen, Startmeldungen unter ⚙️ Mehr → Ansagen, Töne & Tipps ausschalten, Hinweis auf weitere Erklär-Videos. `film/app-selbst-einrichten.mp4`, Quellen, Drehbuch und Vorschläge: KC-Infrastructure-Control-Center `ansichtfilm/`.
