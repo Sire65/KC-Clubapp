@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.818.0";
+const SERVER_VERSION = "2.822.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -17396,6 +17396,24 @@ Köcheclub Werne`,
 
       // 2.799.0 KC-CLUB-PROTOKOLL-INFO (Wunsch Hansi „Taste ‚Info an Mitglieder‘ – ausgegraut, solange Entwurf; dann Empfängerauswahl alle, Gruppe,
       // Auswahl; kurz vorbelegt mit Link; erst nach Bestätigung verschickt“): nur veröffentlichte Protokolle, nur an Mitglieder mit Protokoll-Leserecht.
+      // 2.822.0 KC-CLUB-ANLEITUNGEN (Wunschliste #68): eingebautes Anleitungs-Blatt als Benachrichtigung mit Link (Push bzw. E-Mail, wie jedes Mitglied es
+      // eingestellt hat). Nur Clubleitung, nur Blätter aus dokumente/anleitungen/ der App, höchstens 3 Sendungen je Minute.
+      case "anleitung_senden": {
+        nurLeitung(ich);
+        const basis = APP_URL + "dokumente/anleitungen/", url = String(p.url || "");
+        if (!url.startsWith(basis) || !/^[a-z0-9-]{1,60}\.pdf$/.test(url.slice(basis.length))) throw new Fehler("Unbekannte Anleitung.", 400);
+        const titel = txt(p.titel, 120) || "Anleitung", aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const an = [...new Set((Array.isArray(p.an) ? p.an : []).map((x: unknown) => String(x)))].filter((id) => aktiv.has(id) && id !== ich.person_id).slice(0, 200);
+        if (!an.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.", 400);
+        await protokoll(ich.person_id, "anleitung_versuch", {});
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "anleitung_versuch").gte("zeit", new Date(Date.now() - 60000).toISOString());
+        if ((count ?? 0) > 3) throw new Fehler("Gerade gingen schon mehrere Anleitungen raus – bitte eine Minute warten.", 429);
+        const text = txt(p.text, 500) || `Hier die Anleitung „${titel}“.`;
+        const versand = await senden("club_nachricht", an, { titel: `📚 ${titel}`, kurz: text, betreff: `Köcheclub Werne – Anleitung: ${titel}`,
+          text: `Hallo,\n\n${text}\n\nZur Anleitung: ${url}\n\nViele Grüße\n${ich.name}`, url }, `club-anleitung:${ich.person_id}:${Date.now()}`);
+        await protokoll(ich.person_id, "anleitung_gesendet", { empfaenger: an.length, blatt: url.slice(basis.length), versand });
+        return json({ ok: true, empfaenger: an.length });
+      }
       case "protokoll_info": {
         nurProtokolle(ich);
         const pr = await protokollHolen(p.id);

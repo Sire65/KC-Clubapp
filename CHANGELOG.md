@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.822.0 – 2026-11-02 – 📚 Ordner „Anleitungen“ im Büro (KC-CLUB-ANLEITUNGEN, Wunschliste #68) · Server 2.822.0
+Wunsch Hansi (02.11.): „Einen Ordner im Admin-Büro mit Anleitungen, mit Register, z. B. wie Push und E-Mail einstellen, wie installieren je Chrome, Samsung, Microsoft, Firefox, Opera … – bei Bedarf den Mitgliedern zur Verfügung stellen, mit Name; Zustellung per E-Mail angehängt, Push usw.“ Entscheidungen: füllen, alle drei aus der Clubleitung, auch drucken.
+- **#68 📚 Anleitungen** (KC-CLUB-ANLEITUNGEN) – neuer Ordner im Aktenschrank (nur Clubleitung) mit Registern 🔔 Push & E-Mail · 📲 Installieren · 🔑 Link & Anmelden · 📝 Sonstiges:
+  - **Einheitliches Design** (Wunsch Hansi 02.11.: „immer das gleiche Design, gleich aufgebaut; Fußzeile links Köcheclub Werne, Mitte Seitenzahl 1/2, Autor: Hans-Joachim Koch“): jedes Blatt hat denselben Kopf (Kochmütze, „Köcheclub Werne · Anleitung · Register“, Titel, Stand und App-Version), darunter „Darum geht's“, nummerierte Schritte in Abschnitten und am Ende „💡 Gut zu wissen“. Auf jeder Seite unten: links **Köcheclub Werne**, Mitte **Seite 1/2**, rechts **Autor: Hans-Joachim Koch**. Video-Begrüßungen („ich erkläre dir …“) stehen nicht auf den Blättern.
+  - **Immer aktuell** (Wunsch Hansi 02.11.: „müssen sich bei Änderungen automatisch anpassen, mit Versionsnummer“): bei jedem Veröffentlichen erzeugt GitHub die Blätter aus den aktuellen Texten der App neu – oben rechts „Version 2.822.0 · Stand 02.11.2026“. Klappt das einmal nicht, gehen die zuletzt gespeicherten Blätter raus (das Einspielen wird nicht aufgehalten).
+  - **Gefüllt mit 8 Blättern (PDF):** Push & E-Mail einstellen; Installieren mit Chrome, Samsung Internet, Microsoft Edge, Firefox, Opera, iPhone/iPad; Link, Code und neues Gerät. Die Blätter entstehen aus den Texten der App selbst (Installations-Assistent, Erklär-Videos, Hilfe) – `tools/anleitungen-pdf.mjs` erzeugt sie neu.
+  - **Eigene Anleitungen** dazulegen: Einlesen/Eingangskorb → 🏢 Büro → Club-Ordner **Anleitungen** (Migration `20261102_kc_club_ordner_anleitungen.sql`) – sie erscheinen im passenden Register.
+  - **👁️ Ansehen** und **📤 Weitergeben:** an wen (alle, Gruppe, Amt, einzeln) und wie – ✉️ E-Mail mit Anhang, 📥 in den Eingangskorb, 🔔 Benachrichtigung mit Link (neue Server-Aktion `anleitung_senden`, nur Clubleitung, nur Blätter der App, höchstens 3 je Minute), 🟢 WhatsApp-Text mit Link, 🖨️ Drucken. Begleittext vorbelegt; bei genau einer Person mit ihrem Vornamen („Hallo Anne, …“). Eigene Dateien: E-Mail, Eingangskorb, Drucken (sie haben keinen festen Link).
+- Tests: `tests/anleitungen.test.mjs`, `tools/db-test/104`. Rückweg: App 2.821.0, Server 2.818.0 (Ordner kann bleiben). #67 (Aktenschrank-Schloss) kam schon mit 2.819.0 aus einer anderen Sitzung.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+
 ## 2.821.0 – 2026-11-02 – 🧹 Erklärfilm: Reiter erklärt und anordnen, einfache Ansicht wie echt (KC-CLUB-ANSICHTFILM) · nur App
 Wunsch Hansi 02.11.: „Nehme noch auf, dass man sich die Reiter Club, Meins, Technik selber anordnen kann und kurz wofür sie sind. Und die einfache Ansicht muss besser zeigen, wie sie wirklich aussieht – mit langen Knöpfen und oben im Kopf nur minimal Ansicht.“ – sofort eingespielt (Wunsch Hansi).
 - Film „Deine App – so, wie du sie willst“ neu (2:47 Min.): **wofür die Reiter sind** (Club – rund um den Verein · Meins – deine eigenen Sachen · Technik – Hilfe, Videos, Sicherheit) und **Reiter anordnen** (festhalten, nach links/rechts ziehen, „💾 Reihenfolge der Register gespeichert“).

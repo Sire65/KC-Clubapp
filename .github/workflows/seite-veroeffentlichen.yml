@@ -30,6 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      # 2.822.0 KC-CLUB-ANLEITUNGEN-AUTO (Wunsch Hansi 02.11.2026 „die Anleitungen müssen sich bei Änderungen automatisch anpassen, mit Versionsnummer“):
+      # bei jedem Veröffentlichen werden die eingebauten Anleitungs-PDFs aus den aktuellen Texten der App neu erzeugt – mit Datum und App-Version im Kopf.
+      # Schlägt das fehl, gehen die zuletzt gespeicherten Blätter aus dem Repository raus (das Veröffentlichen wird nicht aufgehalten).
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Anleitungen neu erzeugen
+        continue-on-error: true
+        run: |
+          npm install --no-save --no-package-lock playwright@1.49.1
+          npx playwright install --with-deps chromium
+          node tools/anleitungen-pdf.mjs
+          rm -rf node_modules
       - uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1
         with:
           source: ./

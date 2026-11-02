@@ -1,0 +1,55 @@
+{
+  "hinweis": "Erzeugt von tools/anleitungen-pdf.mjs – nicht von Hand ändern.",
+  "stand": "02.11.2026",
+  "version": "2.822.0",
+  "blaetter": [
+    {
+      "id": "push-und-email",
+      "register": "Push & E-Mail",
+      "titel": "🔔 Benachrichtigungen (Push) und E-Mail einstellen",
+      "datei": "push-und-email.pdf"
+    },
+    {
+      "id": "installieren-chrome",
+      "register": "Installieren",
+      "titel": "📲 Installieren mit Google Chrome",
+      "datei": "installieren-chrome.pdf"
+    },
+    {
+      "id": "installieren-samsung",
+      "register": "Installieren",
+      "titel": "📲 Installieren mit Samsung Internet",
+      "datei": "installieren-samsung.pdf"
+    },
+    {
+      "id": "installieren-edge",
+      "register": "Installieren",
+      "titel": "📲 Installieren mit Microsoft Edge",
+      "datei": "installieren-edge.pdf"
+    },
+    {
+      "id": "installieren-firefox",
+      "register": "Installieren",
+      "titel": "📲 Installieren mit Firefox",
+      "datei": "installieren-firefox.pdf"
+    },
+    {
+      "id": "installieren-opera",
+      "register": "Installieren",
+      "titel": "📲 Installieren mit Opera",
+      "datei": "installieren-opera.pdf"
+    },
+    {
+      "id": "installieren-iphone",
+      "register": "Installieren",
+      "titel": "📲 Installieren auf iPhone und iPad",
+      "datei": "installieren-iphone.pdf"
+    },
+    {
+      "id": "link-und-code",
+      "register": "Link & Anmelden",
+      "titel": "🔑 Persönlicher Link, Code und neues Gerät",
+      "datei": "link-und-code.pdf"
+    }
+  ]
+}

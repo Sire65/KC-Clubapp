@@ -508,7 +508,8 @@ const BU_REGAL = [
   { id: "adressen", sym: "📒", t: "Adressbuch", farbe: "#6d7468", fn: "adbStart()", recht: "L" }, // KC-CLUB-BUERO-ADRESSEN (2.125.0): Original in KC Verwaltung
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
-  { id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#7a5c3e", fn: "schStart()", recht: "L" }, // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten …
+  { id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#7a5c3e", fn: "schStart()", recht: "L" },
+  { id: "anleitungen", sym: "📚", t: "Anleitungen", farbe: "#4f6d7a", fn: "anlStart()", recht: "L" }, // 2.822.0 KC-CLUB-ANLEITUNGEN (Wunschliste #68) // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten … // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten …
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
   { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartTitel('Weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
   { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartTitel('Besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
@@ -2279,4 +2280,102 @@ async function flAbschliessen(id) {
   if (!(await frage(`Fall abschließen?${offen ? `\n\nNoch ${offen} Schritt(e) offen.` : ""}\n\nEr wird im Archiv abgelegt (Ordner „Admin“, Register „Freud & Leid“).`))) return;
   try { const r = await api("fl_abschliessen", { id }); melde(r.abgelegt ? "✅ Abgeschlossen und im Archiv abgelegt" : "✅ Abgeschlossen (Archiv-Ablage hat nicht geklappt)"); await flLaden(); buFreudLeid(); }
   catch (e) { meldeFehler(e); }
+}
+// ---------- 2.822.0 KC-CLUB-ANLEITUNGEN (Wunschliste #68, Wunsch Hansi 02.11.2026 „Ordner mit Anleitungen im Admin-Büro, mit Register – z. B. Push und E-Mail
+// einstellen, installieren je Chrome, Samsung, Microsoft, Firefox, Opera … – bei Bedarf den Mitgliedern zur Verfügung stellen, mit Name; Zustellung per E-Mail
+// angehängt, Push usw.“; Entscheidungen: füllen, alle drei aus der Clubleitung, auch drucken) ----------
+// Eingebaute Blätter: dokumente/anleitungen/*.pdf (erzeugt von tools/anleitungen-pdf.mjs aus den Texten der App). Eigene Anleitungen: Club-Ordner „Anleitungen“
+// (Eingangskorb/Einlesen → 🏢 Büro → Anleitungen). Weitergeben über vorhandene Wege: E-Mail mit Anhang (buero_mail_senden), Eingangskorb
+// (archiv_eingang_verteilen), Benachrichtigung mit Link (anleitung_senden, nur eingebaute Blätter – die haben einen festen Link), WhatsApp-Text mit Link, Drucken.
+const ANL = { blaetter: null, eigene: null, fehler: null, wahl: null };
+const anlOhneSym = (t) => String(t || "").replace(/^\p{Extended_Pictographic}[\uFE0F\u200D\p{Extended_Pictographic}]*\s+/u, ""); // „📲 Installieren …“ → „Installieren …“ (nur ein Symbol vorn)
+const ANL_REG = [["Push & E-Mail", "🔔"], ["Installieren", "📲"], ["Link & Anmelden", "🔑"], ["Sonstiges", "📝"]];
+const anlUrl = (datei) => APP_URL_CLUB + "dokumente/anleitungen/" + datei;
+async function anlStart() {
+  blattAuf("anlBlatt", `<h3 style="margin:0">📚 Anleitungen</h3><p class="hinweis" style="margin:2px 0 8px">Ansehen, drucken oder an Mitglieder weitergeben. Nur für die Clubleitung.</p><div id="anlInhalt"><p class="hinweis">Wird geladen …</p></div>`);
+  const [l, e] = await Promise.allSettled([fetch(`dokumente/anleitungen/liste.json?v=${APP_VERSION}`, { signal: zeitSignal(15000) }).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Liste fehlt")))), api("archiv_liste", {}, { still: true })]);
+  ANL.blaetter = l.status === "fulfilled" ? (l.value.blaetter || []) : [];
+  if (e.status === "fulfilled") { const r = e.value, ord = new Set((r.ordner || []).filter((o) => !o.besitzer && !o.geloescht_am && o.titel === "Anleitungen").map((o) => o.id));
+    ANL.eigene = (r.dokumente || []).filter((d) => ord.has(d.ordner_id) && d.status === "ok" && d.datei); ANL.fehler = null; }
+  else { ANL.eigene = []; ANL.fehler = "Eigene Anleitungen sind gerade nicht abrufbar."; }
+  anlZeichnen();
+}
+function anlEintraege() {
+  return [...(ANL.blaetter || []).map((b) => ({ art: "blatt", id: b.id, titel: b.titel, register: b.register, datei: b.datei })),
+    ...(ANL.eigene || []).map((d) => ({ art: "eigen", id: d.id, titel: d.titel || d.name, register: ANL_REG.some(([r]) => r === d.register) ? d.register : "Sonstiges", doc: d }))];
+}
+const anlFinden = (art, id) => anlEintraege().find((x) => x.art === art && x.id === id);
+function anlZeichnen() {
+  const el = $("anlInhalt"); if (!el) return; const l = anlEintraege();
+  el.innerHTML = ANL_REG.map(([reg, sym], i) => { const z = l.filter((x) => x.register === reg);
+    return `<details class="karte anl-reg"${i < 2 ? " open" : ""}><summary><b>${sym} ${esc(reg)}</b> <span class="marke">${z.length}</span></summary>
+      ${z.length ? z.map((x) => `<div class="anl-zeile"><span class="anl-titel">${esc(x.titel)}${x.art === "eigen" ? ' <small class="hinweis">· eigene</small>' : ""}</span>
+        <span class="anl-knoepfe"><button class="knopf klein" onclick="anlAnsehen('${x.art}','${esc(x.id)}')" aria-label="Ansehen: ${esc(x.titel)}">👁️</button><button class="knopf klein haupt" onclick="anlWeitergeben('${x.art}','${esc(x.id)}')">📤 Weitergeben</button></span></div>`).join("")
+        : '<p class="hinweis" style="margin:6px 0">Noch nichts in diesem Register.</p>'}</details>`; }).join("")
+    + (ANL.fehler ? `<p class="hinweis">⚠️ ${esc(ANL.fehler)}</p>` : "")
+    + '<p class="hinweis" style="margin:8px 0 0">➕ <b>Eigene Anleitung dazulegen:</b> Büro → 📥 Einlesen (oder Eingangskorb) → Ablage 🏢 Büro → <b>Anleitungen</b> → Register wählen.</p>'
+    + '<div class="knoepfe"><button class="knopf" onclick="$(\'anlBlatt\').remove()">Schließen</button></div>';
+}
+async function anlDatei(x) { // die Anleitung als Datei (für E-Mail-Anhang, Eingangskorb)
+  if (x.art === "blatt") { const r = await fetch(`dokumente/anleitungen/${x.datei}?v=${APP_VERSION}`, { signal: zeitSignal(20000) }); if (!r.ok) throw new Error("Die Anleitung konnte nicht geladen werden."); return new File([await r.blob()], x.datei.replace(/^/, "Koecheclub_Anleitung_"), { type: "application/pdf" }); }
+  const d = await anlageAlsDatei({ id: x.doc.datei, name: x.doc.name, mime: x.doc.mime }); return new File([d.blob], d.name || x.doc.name || "Anleitung", { type: d.mime || x.doc.mime || "application/octet-stream" });
+}
+async function anlAnsehen(art, id, drucken) {
+  const x = anlFinden(art, id); if (!x) return;
+  try {
+    if (x.art === "blatt") await dokAnzeigen({ id: "anleitung:" + x.id, t: x.titel, url: anlUrl(x.datei) });
+    else if (drucken) return arDrucken(x.doc);
+    else { const t = arDateiVorladen(x.doc); melde("⏳ Datei wird geladen …"); await t.warten; if (!t.datei) throw t.fehler || new Error("Die Datei konnte nicht geladen werden.");
+      if (!istPdf(x.doc.name, x.doc.mime)) return arDrucken(x.doc); await dokAnzeigen({ id: "anl:" + x.doc.datei, t: x.titel, datei: t.datei }); }
+    fensterZu($("anlBlatt")); fensterZu($("anlWgBlatt"));
+    if (drucken) { for (let i = 0; i < 60 && $("dokaDrucken")?.disabled; i++) await new Promise((ok) => setTimeout(ok, 250));
+      return $("dokaDrucken") && !$("dokaDrucken").disabled ? dokDrucken() : melde("Die Seiten laden noch – oben auf „🖨️ Drucken“ tippen, sobald sie da sind."); }
+  } catch (e) { meldeFehler(e); }
+}
+const ANL_WEGE = [["mail", "✉️", "E-Mail mit Anhang"], ["eingang", "📥", "In den Eingangskorb"], ["push", "🔔", "Benachrichtigung mit Link"], ["wa", "🟢", "WhatsApp"], ["druck", "🖨️", "Drucken"]];
+async function anlWeitergeben(art, id) {
+  const x = anlFinden(art, id); if (!x) return;
+  if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
+  const wege = ANL_WEGE.filter(([w]) => x.art === "blatt" || !["push", "wa"].includes(w)); // Link-Wege nur für eingebaute Blätter (eigene Dateien haben keinen festen Link)
+  ANL.wahl = { x, weg: "mail" };
+  blattAuf("anlWgBlatt", `<h3 style="margin:0">📤 Weitergeben</h3><p class="hinweis" style="margin:2px 0 8px">${esc(x.titel)}</p>
+    <div class="hl-frage">Wie?</div><div class="anl-wege" role="radiogroup" aria-label="Weg">${wege.map(([w, sym, t]) => `<button type="button" class="chip${w === "mail" ? " an" : ""}" role="radio" aria-checked="${w === "mail"}" data-weg="${w}" onclick="anlWeg('${w}')">${sym} ${esc(t)}</button>`).join("")}</div>
+    <div id="anlWgAnBereich"><div class="hl-frage">An wen?</div><div id="anlWgAn"></div>
+    <label class="feld" style="margin-top:8px">Begleittext <small class="hinweis">(bei einer Person mit ihrem Vornamen)</small><textarea id="anlWgText" rows="3" maxlength="500">Hallo, hier die Anleitung „${esc(anlOhneSym(x.titel))}“. Bei Fragen melde dich gern.</textarea></label></div>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="anlWgLos" onclick="anlWgSenden(this)">📤 Senden</button><button class="knopf" onclick="$('anlWgBlatt').remove()">Abbrechen</button></div>`);
+  zwStart("anlWgAn", { titel: "👤 Wer bekommt die Anleitung?", alleText: BU_ALLE_TEXT, alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: anlWgKnopf });
+  anlWgKnopf();
+}
+function anlWeg(w) {
+  if (!ANL.wahl) return; ANL.wahl.weg = w;
+  document.querySelectorAll("#anlWgBlatt [data-weg]").forEach((b) => { b.classList.toggle("an", b.dataset.weg === w); b.setAttribute("aria-checked", String(b.dataset.weg === w)); });
+  $("anlWgAnBereich").hidden = w === "druck"; anlWgKnopf();
+}
+function anlWgKnopf() {
+  const k = $("anlWgLos"); if (!k || !ANL.wahl) return; const w = ANL.wahl.weg;
+  if (w === "druck") { k.disabled = false; k.textContent = "🖨️ Drucken"; return; }
+  if (w === "wa") { k.disabled = false; k.textContent = "🟢 In WhatsApp öffnen"; return; }
+  const n = ZWAHL.anlWgAn && zwBereit("anlWgAn") ? zwIds("anlWgAn").length : 0;
+  k.disabled = !n; k.textContent = n ? `📤 An ${n} ${n === 1 ? "Mitglied" : "Mitglieder"} senden` : "Bitte Empfänger wählen";
+}
+function anlWgText(ids) { // „Hallo,“ → „Hallo Anne,“ bei genau einer Person
+  const t = ($("anlWgText")?.value || "").trim(); if (ids.length !== 1) return t;
+  const vn = String(MITGLIEDER?.find((m) => m.person_id === ids[0])?.name || "").split(" ")[0];
+  return vn ? t.replace(/^Hallo\s*,/, `Hallo ${vn},`) : t;
+}
+async function anlWgSenden(knopf) {
+  const W = ANL.wahl; if (!W) return; const x = W.x;
+  if (W.weg === "druck") return anlAnsehen(x.art, x.id, true);
+  if (W.weg === "wa") { const t = ($("anlWgText")?.value || "").trim(); return extOeffnen("https://wa.me/?text=" + encodeURIComponent(`${t}\n${anlUrl(x.datei)}`)); }
+  const ids = zwIds("anlWgAn"); if (!ids.length) return;
+  const text = anlWgText(ids), weg = ANL_WEGE.find(([w]) => w === W.weg)[2];
+  if (!(await frage(`📤 „${x.titel}“\n${weg} an ${ids.length} ${ids.length === 1 ? "Mitglied" : "Mitglieder"} senden?`, { ja: "📤 Senden" }))) return;
+  knopf.disabled = true;
+  try {
+    if (W.weg === "push") await api("anleitung_senden", { an: ids, url: anlUrl(x.datei), titel: anlOhneSym(x.titel), text }, { warten: true });
+    else { const f = await anlDatei(x), daten = base64(await f.arrayBuffer());
+      if (W.weg === "mail") await api("buero_mail_senden", { an: ids, cc: [], bcc: [], betreff: anlOhneSym(x.titel), text, kopie: false, dateien: [{ name: f.name, mime: f.type, daten }] }, { warten: true });
+      else await api("archiv_eingang_verteilen", { personen: ids, name: f.name, mime: f.type, daten, titel: anlOhneSym(x.titel), register: "Sonstiges", notiz: text, letzte: true, anzahl: 1 }, { warten: true }); }
+    $("anlWgBlatt")?.remove(); melde(`📤 Anleitung an ${ids.length} ${ids.length === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
+  } catch (e) { meldeFehler(e); knopf.disabled = false; }
 }
