@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.804.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, Wunschliste #58) · nur App
+Wunsch Hansi (31.10.): „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine, Szene versinkt im Nebel, fängt wieder von vorne an.“ Entscheidungen 02.11.: 4 Tänzer, zwischendurch legt Twinkey ein Solo hin; auch automatisch am Clubabend und zu Silvester im Wechsel; auch auf der Bühne bei „Nur Musik hören“.
+- Neues Thema **🪩 Disco** (⚙️ → Darstellung → Thema): Ein Lauf ≈ 60 s – Schwarzlicht flackert an, links legt der DJ auf (Plattenteller drehen, er nickt mit Kopfhörer), oben dreht die Diskokugel und wirft Lichtpunkte, 4 Leute tanzen auf der leuchtenden Tanzfläche, dann **Twinkey-Solo** im Spot (die anderen klatschen), danach zischt die Nebelmaschine, alles versinkt im Nebel, der Nebel lichtet sich – von vorn.
+- **Automatisch am Clubabend-Tag und zu Silvester** (31.12./1.1.): der Kopf wechselt alle 2 Minuten zwischen Disco und der sonst gewählten Szene (Silvester-Feuerwerk, Jahreszeit oder Thema). Nur wo das Bild im Kopf an ist; Sparmodus und „Jahreszeiten im Kopf aus“ gelten wie immer, Sim-Jü geht vor.
+- **Bühne → 🎶 Nur Musik hören → Disco:** die Disco läuft hinter Twinkey (ohne Solo – er tanzt dort vorn), hält bei Pause, im Hintergrund und beim Verlassen an.
+- Sparsam wie alle Szenen: höchstens 20 Bilder/s, in Ruhe 12, nach 3 Min. ohne Tippen steht das Bild; höchstens 24 Lichtpunkte und 12 Nebelwolken, Leuchten ohne Weichzeichner.
+- Hilfe-Eintrag „Thema Disco“. Test: `tests/disco.test.mjs`. Rückweg: App 2.803.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.803.0 – 2026-11-02 – 🎬 Erklär-Videos: Bild passt wieder zum Gesagten – Einstellungen und Express (KC-CLUB-VIDEO-ABGLEICH, Wunsch #54) · nur App
 Wunsch #54 Hansi: „Alle Erklärvideos prüfen: Stimmt die gesprochene Erklärung mit dem überein, was im Bild gezeigt wird? Anlass: Im Video zu den Nachrichten passt die Stimme nicht zum gezeigten Bild.“
 - **Prüfung aller 59 Videos (639 Schritte)** mit einem Prüfwerkzeug im Browser: jeder Schritt einzeln abgespielt – ist das, wovon die Stimme spricht, im Bild markiert, stehen die genannten Knöpfe auf dem Schirm, wird ein Schritt still übersprungen?

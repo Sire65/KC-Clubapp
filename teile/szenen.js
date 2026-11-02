@@ -601,7 +601,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen"]; // 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen", "disco"]; // 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 // 2.617.0 KC-CLUB-SIMJUE-FEUERWERK (Wunsch Hansi „am Montag 21 Uhr Feuerwerk gleichzeitig mit dem echten Feuerwerk“): am Sim-Jü-Montag von 21:00 bis 21:20
 // steigen in der Sim-Jü-Szene ununterbrochen Raketen (mehr, größer, auch Goldregen), der Himmel wird dunkel – und das Bild bleibt in der Zeit nicht stehen.
@@ -619,6 +619,7 @@ function jzbFest(dt) {
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
   if (J.saison === "kirmes" && F.vm) return jzbVmSchritt(F, dt); // 2.682.0 KC-CLUB-VIEHMARKT
+  if (J.saison === "disco") return jzbDsSchritt(F, dt); // 2.804.0 KC-CLUB-DISCO
   if (J.saison === "seifenblasen") return jzbSbSchritt(F, dt); // 2.633.0: Kinder pusten Seifenblasen, die Scheibe verschmiert, der Fensterputzer putzt
   if (J.saison === "baustelle") return jzbBsSchritt(F, dt); // 2.617.0: Radlader, Kipplaster, Abgas-Name, Arbeiter – zum Schluss wird der Kopf gesprengt
   if (J.saison === "wueste") return jzbWuSchritt(F, dt); // 2.548.0: Pyramiden, Karawane, Oase, Pharao, Flaschengeist – Name aus Goldstaub, Sonnenuntergang
@@ -715,7 +716,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "seifenblasen") jzbSeifenblasenMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "disco") jzbDsMalen(c, F); else if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "seifenblasen") jzbSeifenblasenMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---------- KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): einmalig eine rote Baccara-Rose aus der Sim-Jü-Schießbude – „Nur für dich“ ----------
@@ -4894,4 +4895,121 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
   JZB.kuerbis = null; JZB.kuerbisUhr = undefined; JZB.kuerbisZ = null; // 2.434.0: Vorschau „🎃 Kürbis-Hund“ beginnt von vorn
   zeige("start"); setTimeout(jahreszeitKopf, 350);
   jzVorschauLeiste(); // 2.355.0
+}
+// ---------- 2.804.0 KC-CLUB-DISCO (Wunschliste #58, Wunsch Hansi „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine –
+// Szene versinkt im Nebel, fängt wieder von vorne an“; Entscheidungen 02.11.: 4 Tänzer, zwischendurch legt Twinkey ein Solo hin, auch automatisch am
+// Clubabend und zu Silvester im Wechsel, auch auf der Bühne bei „Nur Musik hören → Disco“) ----------
+// Ein Lauf ≈ 60 s: Schwarzlicht flackert an → DJ legt auf, Kugel dreht, 4 Tänzer → Twinkey-Solo im Spot → alle tanzen → Nebelmaschine, alles versinkt
+// im Nebel → Nebel lichtet sich, leer, Licht aus. Ein Zeichen-Baustein für Kopf (JZB, Spar-Regeln von jzbFps/jzbStehen) und Bühne (dsBuehne*).
+// Sparsam: höchstens 24 Lichtpunkte und 12 Nebelwolken, Leuchten ohne shadowBlur (breiter halbdurchsichtiger Strich darunter).
+const DISCO_DAUER = 60, DISCO_SOLO = [16, 28], DISCO_NEBEL = [38, 50], DISCO_NEON = ["#ff3df2", "#39f3ff", "#b6ff3b", "#ffe14d", "#ff7a3d"];
+const DISCO_TAENZER = [{ x: .36, f: "#39f3ff", haut: "#f1c7a3", art: 0, haar: "#3b2416", zopf: false }, { x: .47, f: "#ff3df2", haut: "#c98d63", art: 1, haar: "#1d1d1d", zopf: true },
+  { x: .6, f: "#b6ff3b", haut: "#f5d2b8", art: 2, haar: "#c98b3a", zopf: true }, { x: .71, f: "#ffe14d", haut: "#8d5a3b", art: 3, haar: "#1d1d1d", zopf: false }];
+function discoNeu() {
+  return { t: 0, flecken: Array.from({ length: 24 }, (_, i) => ({ a: i / 24 * Math.PI * 2, d: .2 + ((i * 37) % 100) / 100 * .8, f: DISCO_NEON[i % DISCO_NEON.length] })),
+    nebel: Array.from({ length: 12 }, () => ({ x: 0, y: 0, r: 0, vx: 0, vy: 0, an: false })), nebelUhr: 0 };
+}
+function discoSchritt(D, dt, w, h, k) { // gibt true zurück, wenn der Lauf zu Ende ist
+  D.t += dt; const t = D.t;
+  const dicht = t < DISCO_NEBEL[0] ? 0 : t < DISCO_NEBEL[1] ? (t - DISCO_NEBEL[0]) / (DISCO_NEBEL[1] - DISCO_NEBEL[0]) : Math.max(0, 1 - (t - DISCO_NEBEL[1]) / 5);
+  if (t > DISCO_NEBEL[0] - 1 && t < DISCO_NEBEL[1] && (D.nebelUhr -= dt) <= 0) { // Maschine pustet: eine freie Wolke wird neu geboren
+    D.nebelUhr = .45; const n = D.nebel.find((x) => !x.an); if (n) Object.assign(n, { an: true, x: w - 34 * k, y: h - 10 * k, r: 8 * k, vx: -(22 + Math.random() * 20) * k, vy: -(2 + Math.random() * 5) * k }); }
+  for (const n of D.nebel) { if (!n.an) continue; n.x += n.vx * dt; n.y = Math.max(h * .2, n.y + n.vy * dt * (1 + dicht * 3)); n.r = Math.min(70 * k, n.r + 9 * k * dt); n.vx *= 1 - .25 * dt;
+    if (t > DISCO_NEBEL[1] + 5) n.an = false; }
+  return t >= DISCO_DAUER;
+}
+function discoFigur(c, x, boden, s, f, tz, art, sicht, kochKopf) { // Tänzer (Füße bei boden); tz: Takt-Zeit; kochKopf: Twinkey (🧑‍🍳)
+  const sw = Math.sin(tz * 7 + art), hop = Math.abs(Math.sin(tz * 7 + art)) * 2.2 * s, y = boden - hop, hx = x + (art === 1 ? sw * 3 * s : art === 4 ? Math.sin(tz * 3.5) * 5 * s : 0);
+  const glied = (x1, y1, x2, y2, farbe, breite) => { c.strokeStyle = farbe; c.globalAlpha = sicht * .3; c.lineWidth = breite * 2.6; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    c.globalAlpha = sicht; c.lineWidth = breite; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); };
+  c.lineCap = "round";
+  const sch = [hx, y - 30 * s], hue = [x, y - 15 * s];
+  // Beine
+  const bein = art === 4 ? Math.sin(tz * 7) * 6 * s : sw * 3 * s;
+  glied(hue[0], hue[1], x - 5 * s - bein, y, f, 2.2 * s); glied(hue[0], hue[1], x + 5 * s + bein, y, f, 2.2 * s);
+  // Körper (UV-leuchtendes Oberteil)
+  glied(sch[0], sch[1], hue[0], hue[1], f, 4.6 * s);
+  // Arme je Tanzschritt: 0 Arme hoch im Wechsel, 1 Hüftschwung, 2 Zeigefinger nach oben, 3 Klatschen über dem Kopf, 4 Twinkey: Drehung mit ausgebreiteten Armen
+  const arme = art === 0 ? [-1.9 + sw * .5, -1.2 - sw * .5] : art === 1 ? [-.5 - sw * .5, -2.6 + sw * .5] : art === 2 ? [(sw > 0 ? -2.3 : -1.4), .9] : art === 3 ? [-2 + Math.abs(sw) * .35, -1.15 - Math.abs(sw) * .35] : [Math.PI + Math.sin(tz * 3.5) * .5, Math.sin(tz * 3.5) * .5];
+  for (const a of arme) glied(sch[0], sch[1] + 1 * s, sch[0] + Math.cos(a) * 13 * s, sch[1] + 1 * s + Math.sin(a) * 13 * s, f, 2 * s);
+  c.globalAlpha = sicht;
+  if (kochKopf) { const g = 22 * s; if (!KOCH.ok && KOCH.bild?.complete && KOCH.bild.naturalWidth) c.drawImage(KOCH.bild, hx - g / 2, sch[1] - g * 1.02, g, g);
+    else { c.font = `${g}px ${JZB_EMOJI}`; c.textAlign = "center"; c.textBaseline = "bottom"; c.fillText("🧑‍🍳", hx, sch[1] + 1 * s); } }
+  else { const d = DISCO_TAENZER[art] || DISCO_TAENZER[0]; c.fillStyle = d.haut; c.beginPath(); c.arc(hx, sch[1] - 6 * s, 5 * s, 0, 7); c.fill();
+    c.fillStyle = d.haar; c.beginPath(); c.arc(hx, sch[1] - 7.5 * s, 5.2 * s, Math.PI, 0); c.fill(); if (d.zopf) { c.beginPath(); c.arc(hx + 5 * s, sch[1] - 4 * s, 2.4 * s, 0, 7); c.fill(); } }
+  c.globalAlpha = 1;
+}
+function discoMalen(c, D, w, h, k, T, a = 1) { // ganze Szene; T: laufende Zeit für Drehungen; a: Gesamt-Deckkraft
+  const t = D.t, flacker = t < 4 ? (t < 1 ? 0 : (Math.sin(t * 31) > .2 || t > 3.2 ? 1 : .25) * Math.min(1, (t - 1) / 2)) : t > DISCO_DAUER - 4 ? Math.max(0, (DISCO_DAUER - t) / 4) : 1;
+  const uv = flacker * a, tanz = t > 4 && t < DISCO_NEBEL[1] + 1, solo = t >= DISCO_SOLO[0] && t < DISCO_SOLO[1];
+  const dicht = t < DISCO_NEBEL[0] ? 0 : t < DISCO_NEBEL[1] ? (t - DISCO_NEBEL[0]) / (DISCO_NEBEL[1] - DISCO_NEBEL[0]) : Math.max(0, 1 - (t - DISCO_NEBEL[1]) / 5);
+  const boden = h - 6 * k, s = k * 1.05;
+  c.save();
+  c.globalAlpha = a; c.fillStyle = "rgba(10,4,24,.7)"; c.fillRect(0, 0, w, h); // dunkler Raum über der Kopffarbe
+  const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, `rgba(110,30,190,${.42 * uv})`); g.addColorStop(1, `rgba(30,0,60,${.25 * uv})`); c.fillStyle = g; c.fillRect(0, 0, w, h); // Schwarzlicht
+  // Tanzfläche: leuchtende Kacheln
+  const fl = w * .3, fr = w * .8, n = 10, kw = (fr - fl) / n;
+  for (let i = 0; i < n; i++) { c.globalAlpha = (tanz ? .5 : .14) * uv; c.fillStyle = DISCO_NEON[(i + Math.floor(T * 2.2)) % DISCO_NEON.length]; c.fillRect(fl + i * kw, boden + 1 * k, kw - 1, 5 * k); }
+  // Lichtpunkte der Kugel (wandern über alles)
+  const kx = w * .5, ky = 14 * k;
+  if (tanz) for (const p of D.flecken) { const wi = p.a + T * .5; c.globalAlpha = .5 * uv; c.fillStyle = p.f; c.beginPath(); c.arc(kx + Math.cos(wi) * p.d * w * .55, ky + 24 * k + Math.sin(wi) * p.d * h * .45, 1.8 * k, 0, 7); c.fill(); }
+  // Diskokugel
+  c.globalAlpha = a; c.strokeStyle = "#8a8aa0"; c.lineWidth = 1; c.beginPath(); c.moveTo(kx, 0); c.lineTo(kx, ky - 8 * k); c.stroke();
+  c.save(); c.translate(kx, ky); c.beginPath(); c.arc(0, 0, 8 * k, 0, 7); c.clip(); const q = 3 * k;
+  for (let i = -3; i < 3; i++) for (let j = -3; j < 3; j++) { const v = (i * 3 + j * 5 + Math.floor(T * 5)) % 4; c.fillStyle = v === 0 ? "#ffffff" : v === 1 ? "#d6dcff" : v === 2 ? "#9aa0c0" : "#6c7290"; c.fillRect(i * q, j * q, q - .5, q - .5); }
+  c.restore();
+  // DJ-Pult links mit Plattentellern, DJ mit Kopfhörer nickt im Takt
+  const px = w * .04, pw = Math.min(70 * k, w * .2), ph = 22 * k, py = boden - ph;
+  c.globalAlpha = a; c.fillStyle = "#1b1030"; c.fillRect(px, py, pw, ph); c.globalAlpha = .85 * uv; c.strokeStyle = "#39f3ff"; c.lineWidth = 1.4; c.strokeRect(px, py, pw, ph);
+  for (const tx of [px + pw * .27, px + pw * .73]) { c.save(); c.translate(tx, py); c.globalAlpha = a; c.fillStyle = "#0d0d12"; c.beginPath(); c.ellipse(0, 0, pw * .2, 3 * k, 0, 0, 7); c.fill();
+    c.rotate(tanz ? T * 6 : 0); c.fillStyle = "#ff3df2"; c.fillRect(-1, -1, 2, 2); c.restore(); }
+  const nick = tanz ? Math.sin(T * 7.6) * 1.6 * k : 0, djx = px + pw / 2, djy = py - 2 * k;
+  c.globalAlpha = a; c.fillStyle = "#e9e9ef"; c.fillRect(djx - 5 * k, djy - 14 * k, 10 * k, 14 * k); // Hemd (leuchtet im Schwarzlicht)
+  c.globalAlpha = .35 * uv; c.fillStyle = "#c9b6ff"; c.fillRect(djx - 6.5 * k, djy - 15.5 * k, 13 * k, 17 * k);
+  c.globalAlpha = a; c.fillStyle = "#d7a77f"; c.beginPath(); c.arc(djx, djy - 20 * k + nick, 5 * k, 0, 7); c.fill();
+  c.strokeStyle = "#222"; c.lineWidth = 1.8 * k; c.beginPath(); c.arc(djx, djy - 20 * k + nick, 6 * k, Math.PI * 1.05, Math.PI * 1.95); c.stroke();
+  c.fillStyle = "#222"; for (const sx of [-1, 1]) { c.beginPath(); c.arc(djx + sx * 6 * k, djy - 19 * k + nick, 2 * k, 0, 7); c.fill(); }
+  // Tänzer (beim Solo treten sie zur Seite und klatschen), Twinkey in der Mitte
+  const sicht = Math.max(0, uv * (1 - dicht * .9));
+  DISCO_TAENZER.forEach((d, i) => { const weg = solo ? (i < 2 ? -1 : 1) * Math.min(1, (t - DISCO_SOLO[0]) / 1.5, (DISCO_SOLO[1] - t) / 1.5) * w * .07 : 0;
+    discoFigur(c, w * d.x + weg, boden, s, d.f, tanz ? T : 0, solo ? 3 : d.art, sicht, false); });
+  if (t > DISCO_SOLO[0] - 1 && t < DISCO_SOLO[1] + 1) { const ein = Math.max(0, Math.min(1, (t - DISCO_SOLO[0] + 1) / 1.2, (DISCO_SOLO[1] + 1 - t) / 1.2)), tx = w * .535;
+    c.globalAlpha = .22 * ein * uv; c.fillStyle = "#fff6c8"; c.beginPath(); c.moveTo(kx - 3 * k, ky + 6 * k); c.lineTo(tx - 22 * s, boden + 3 * k); c.lineTo(tx + 22 * s, boden + 3 * k); c.closePath(); c.fill(); // Spot
+    discoFigur(c, tx, boden, s * 1.08, "#ffffff", T, 4, ein * sicht, true); }
+  // Nebelmaschine rechts
+  c.globalAlpha = a; c.fillStyle = "#2a2440"; c.fillRect(w - 30 * k, boden - 9 * k, 22 * k, 9 * k); c.fillStyle = "#4b4560"; c.fillRect(w - 35 * k, boden - 6 * k, 6 * k, 3 * k);
+  // Lichtstrahlen im Nebel
+  if (dicht > .15) { c.save(); c.globalCompositeOperation = "lighter"; for (let i = 0; i < 3; i++) { const wi = Math.sin(T * .7 + i * 2.1) * .55, b = .13;
+    c.globalAlpha = .1 * dicht * uv; c.fillStyle = DISCO_NEON[i]; c.beginPath(); c.moveTo(kx, ky); c.lineTo(kx + Math.sin(wi - b) * h * 2, ky + Math.cos(wi - b) * h * 2); c.lineTo(kx + Math.sin(wi + b) * h * 2, ky + Math.cos(wi + b) * h * 2); c.closePath(); c.fill(); } c.restore(); }
+  // Nebel: wenige weiche Wolken, zum Schluss deckt er alles zu
+  for (const nb of D.nebel) { if (!nb.an) continue; const ng = c.createRadialGradient(nb.x, nb.y, 0, nb.x, nb.y, nb.r); ng.addColorStop(0, `rgba(225,220,245,${.55 * Math.max(.25, dicht)})`); ng.addColorStop(1, "rgba(225,220,245,0)");
+    c.globalAlpha = a; c.fillStyle = ng; c.beginPath(); c.arc(nb.x, nb.y, nb.r, 0, 7); c.fill(); }
+  if (dicht > .55) { c.globalAlpha = a * Math.min(.85, (dicht - .55) * 1.9); c.fillStyle = "#d8d2ea"; c.fillRect(0, 0, w, h); }
+  c.restore();
+}
+// Kopf: Lauf im Rahmen der Themen-Bühne (jzbFest → jzbDsSchritt, jzbFestMalen → jzbDsMalen)
+function jzbDsSchritt(F, dt) { const J = JZB; F.ds = F.ds || discoNeu(); F.a = 1; if (discoSchritt(F.ds, dt, J.w, J.h, J.k)) { J.fest = null; return jzbLaufEnde(); } }
+function jzbDsMalen(c, F) { if (F.ds) discoMalen(c, F.ds, JZB.w, JZB.h, JZB.k, JZB.T); }
+// Bühne „Nur Musik hören → Disco“: dieselbe Szene als Hintergrund hinter Twinkey (ohne Twinkey-Solo – er tanzt dort schon vorne).
+// Eigene Leinwand, höchstens 20 Bilder/s, hält an, sobald die Bühne weg ist, die Musik pausiert oder die App im Hintergrund ist.
+const DISCO_B = { cv: null, D: null, laeuft: false, uhr: 0, letzt: 0, T: 0 };
+function discoBuehneAn(f) {
+  if (!f || !einst("animiert", true) || SPAR?.an) return discoBuehneAus();
+  if (!DISCO_B.cv) { DISCO_B.cv = document.createElement("canvas"); DISCO_B.cv.className = "ds-buehne"; DISCO_B.cv.setAttribute("aria-hidden", "true"); DISCO_B.D = discoNeu(); }
+  if (!f.contains(DISCO_B.cv)) f.prepend(DISCO_B.cv);
+  if (!DISCO_B.laeuft) { DISCO_B.laeuft = true; DISCO_B.letzt = 0; requestAnimationFrame(discoBuehneBild); }
+}
+function discoBuehneAus() { clearTimeout(DISCO_B.uhr); DISCO_B.laeuft = false; DISCO_B.cv?.remove(); DISCO_B.cv = null; DISCO_B.D = null; }
+function discoBuehneBild(ts) {
+  const cv = DISCO_B.cv; if (!DISCO_B.laeuft || !cv?.isConnected || document.hidden || BW?.hoeren?.pause) { DISCO_B.laeuft = false; return; }
+  const dt = DISCO_B.letzt ? Math.min(.1, (ts - DISCO_B.letzt) / 1000) : .05; DISCO_B.letzt = ts; DISCO_B.T += dt;
+  const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(1.5, devicePixelRatio || 1);
+  if (w && h) {
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const c = cv.getContext("2d"), k = Math.max(.7, Math.min(1.6, h / 170)); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+    if (discoSchritt(DISCO_B.D, dt, w, h, k)) DISCO_B.D = discoNeu();
+    if (DISCO_B.D.t >= DISCO_SOLO[0] && DISCO_B.D.t < DISCO_SOLO[1]) DISCO_B.D.t = DISCO_SOLO[1]; // Solo überspringen (Twinkey tanzt vorn)
+    discoMalen(c, DISCO_B.D, w, h, k, DISCO_B.T);
+  }
+  DISCO_B.uhr = setTimeout(() => requestAnimationFrame(discoBuehneBild), 40); // höchstens ≈ 20 Bilder/s
 }
