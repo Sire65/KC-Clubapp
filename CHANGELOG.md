@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.805.0 – 2026-11-02 – ⚡ Kurze Datenbank-Aussetzer: App fragt selbst nochmal, Zählung im Verlauf · Zeitpläne entzerrt · Hinweis bei gesperrtem Zugang
+- ⚡ Antwortet die Datenbank für einen Moment nicht, fragt die App bei reinen Abfragen nach 4 bzw. 8 Sekunden selbst nochmal (Speichern nie doppelt); im Admin → Verlauf stehen die kurzen Aussetzer mit Datum und Dauer (KC-CLUB-DB-AUSSETZER). ⏱️ Die 5-Minuten-Zeitpläne starten nicht mehr alle gleichzeitig (KC-CLUB-CRON-ENTZERREN). 🔕 Wer „keine Benachrichtigungen“ gewählt hat und einen neuen Link anfordert, bekommt einen klaren Hinweis statt „Mail kommt gleich“ (KC-CLUB-KOMM-AUS-HINWEIS); wer gesperrt ist, sieht dabei die Sperre, z. B. Wartung (KC-CLUB-SPERRE-OHNE-LINK).
+
 ## 2.804.0 – 2026-11-02 – 🧹 Erklärfilm „Deine App – so, wie du sie willst“ (KC-CLUB-ANSICHTFILM) · Server 2.804.0
 Anregung Clubsitzung: „Die App ist zu voll – zu viel drin, was man nicht braucht.“ Wunsch Hansi 02.11.: Erklärfilm, wie jeder die App selbst einstellt, anbieten und merken, wer ihn angesehen hat.
 - **Film** (2 Min., Hochformat, Sprecher mit Untertiteln): einfache und erweiterte Ansicht, Kachel lange drücken, verschieben, mit ✕ ausblenden, „Nur ausgeblendete zeigen“, Kopf mit ⌃ / ⌃⌃ einrollen, Startmeldungen unter ⚙️ Mehr → Ansagen, Töne & Tipps ausschalten, Hinweis auf weitere Erklär-Videos. `film/app-selbst-einrichten.mp4`, Quellen, Drehbuch und Vorschläge: KC-Infrastructure-Control-Center `ansichtfilm/`.
