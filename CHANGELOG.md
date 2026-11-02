@@ -1,8 +1,5 @@
 # Änderungen
 
-## 2.809.0 – 2026-11-02 – ⚡ Kurze Datenbank-Aussetzer: App fragt selbst nochmal, Zählung im Verlauf · Zeitpläne entzerrt · Hinweis bei gesperrtem Zugang
-- ⚡ Antwortet die Datenbank für einen Moment nicht, fragt die App bei reinen Abfragen nach 4 bzw. 8 Sekunden selbst nochmal (Speichern nie doppelt); im Admin → Verlauf stehen die kurzen Aussetzer mit Datum und Dauer (KC-CLUB-DB-AUSSETZER). ⏱️ Die 5-Minuten-Zeitpläne starten nicht mehr alle gleichzeitig (KC-CLUB-CRON-ENTZERREN). 🔕 Wer „keine Benachrichtigungen“ gewählt hat und einen neuen Link anfordert, bekommt einen klaren Hinweis statt „Mail kommt gleich“ (KC-CLUB-KOMM-AUS-HINWEIS); wer gesperrt ist, sieht dabei die Sperre, z. B. Wartung (KC-CLUB-SPERRE-OHNE-LINK).
-
 ## 2.808.0 – 2026-11-02 – 🔽 Klapp-Pfeile überall gleich (KC-CLUB-KLAPPE-GLEICH, Wunsch #63) · nur App
 Wunsch #63 Hansi: „Alle Listen mit Einklapp-Pfeilen gleich aufbauen. In Protokollen sind die Pfeile viel zu klein und drehen sich nicht.“
 - Ursache: Die Protokoll-Monate (2.802.0) hatten einen eigenen kleinen Pfeil links, der sich nicht drehte; Schloss und Pfeil rutschten darunter in eine eigene Zeile.
