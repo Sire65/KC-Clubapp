@@ -1,5 +1,27 @@
 # Änderungen
 
+## 2.808.0 – 2026-11-02 – 🔽 Klapp-Pfeile überall gleich (KC-CLUB-KLAPPE-GLEICH, Wunsch #63) · nur App
+Wunsch #63 Hansi: „Alle Listen mit Einklapp-Pfeilen gleich aufbauen. In Protokollen sind die Pfeile viel zu klein und drehen sich nicht.“
+- Ursache: Die Protokoll-Monate (2.802.0) hatten einen eigenen kleinen Pfeil links, der sich nicht drehte; Schloss und Pfeil rutschten darunter in eine eigene Zeile.
+- Jetzt bekommt jeder Klappbereich mit gemerktem Auf/Zu dieselbe Kopfzeile wie die Karten: Titel links, 🔓 Schloss und großer weinroter Pfeil rechts, der sich beim Auf-/Zuklappen dreht. Eine Regel an einer Stelle, auch für künftige Listen. Karten und Avatar-Klappen unverändert.
+- Browser geprüft (Protokolle mit Jahren und Monaten). Test: `tests/klappe-gleich.test.mjs`.
+- Rückweg: App 2.807.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.807.0 – 2026-11-02 – 🕰️ Rotes X an jeder Stunden-Uhr (KC-CLUB-UHR-X, Wunsch #65) · nur App
+Wunsch #65 Hansi: „Bei jeder Uhr oben ein rotes X einblenden, damit die User wissen, dass man die Uhr ausschalten kann. Evtl. Frage stellen, ob Uhr dauernd aus soll.“
+- Die Uhr zur vollen Stunde (Kuckuck, Big Ben, Kölner Dom und alle anderen) hat oben rechts ein rotes ✕. Antippen schließt die Uhr.
+- Danach fragt die App: „Uhr zur vollen Stunde ganz ausschalten?“ – „🔕 Ja, ganz aus“ schaltet denselben Schalter aus wie ⚙️ → „🕰️ Uhr zur vollen Stunde“ (dort wieder einschaltbar); „Nein, nur jetzt“ lässt alles, wie es ist. Bei der Probe in den Einstellungen kommt keine Frage.
+- Antippen der Uhr selbst schließt sie weiter wie bisher. Test: `tests/uhr-x.test.mjs`.
+- Rückweg: App 2.806.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.806.0 – 2026-11-02 – 🗄️ Klarer Hinweis, wenn die Datenbank viel zu tun hat (KC-CLUB-DB-VIEL-ZU-TUN, Wunsch #62) · App + Server
+Wunsch #62 Hansi: Statt „Server antwortet nicht“ soll die App sagen, dass die Datenbank gerade planmäßig arbeitet, was gerade läuft und wie lange es noch dauert.
+- Server: eine Liste der planmäßigen schweren Arbeiten (`SCHWER_ZEITEN`, Uhrzeiten wie die Zeitpläne): Notfall-Paket (alle 15 Min, ca. 2 Min), Spiegelung (4/10/16/22 Uhr UTC, :10–:30), nächtliche Sicherung (1 Uhr UTC, :20–:60), Aufräumen (3 Uhr UTC, :05–:55). Antwortet die Datenbank nicht, nennt die Meldung den Grund und die Restminuten. Keine zusätzliche Datenbank-Abfrage.
+- App: bekommt die Liste beim Start mit (keine zweite Liste). Nur bei Zeitüberschreitung, „Keine Verbindung“ und „kurz nicht erreichbar“ steht dann: „Zurzeit hat die Datenbank viel zu tun: Es wird gerade … Das dauert ca. noch N Minuten. Versuche dein Anliegen bitte später noch einmal. Danke für dein Verständnis.“ Eigene Fehlermeldungen des Servers haben Vorrang; ohne Liste bleibt die alte Meldung (nichts geraten). Offline bleibt „Keine Internetverbindung“.
+- Test: `tests/db-viel-zu-tun.test.mjs` (rechnet die Zeiten echt nach).
+- Rückweg: App + Server 2.805.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+
 ## 2.805.0 – 2026-11-02 – 📝 Dienstwünsche: Twinkey auf DP2 Build 306 (KC-CLUB-DIENSTWUNSCH) · nur App
 Übergabe von Codex („Übergabe an Claude“, Sire65/dp3 `codex/club-app-interface`, docs/CLAUDE-BUTTON-LOGIK-NACHTRAG.md) – Hansi: „Ja Montag“.
 - Twinkey mit `tools/dp2-twinkey-uebernehmen.mjs` unverändert aus DP2 übernommen: **Build 291 → Build 306 RC** (Commit 776d039). Build 291 ist in 306 enthalten.

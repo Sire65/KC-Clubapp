@@ -72,6 +72,9 @@ jobs:
       - run: node tests/update-dw-schutz.test.mjs
       - run: node tests/eingabe-ruhe.test.mjs
       - run: node tests/nachricht-alter.test.mjs
+      - run: node tests/db-viel-zu-tun.test.mjs
+      - run: node tests/uhr-x.test.mjs
+      - run: node tests/klappe-gleich.test.mjs
       - run: node tests/protokoll-foto.test.mjs
       - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/video-abgleich.test.mjs
