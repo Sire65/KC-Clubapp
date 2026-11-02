@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.817.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.818.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2488,6 +2488,7 @@ const HILFE = [
   { id: "dienstwunsch_hinweis", thema: "termine", sym: "📝", t: "„Dienstplan Weihnachtsmarkt: Wünsche eingeben?“", x: "Hast du für den Weihnachtsmarkt noch keine Dienstwünsche abgegeben, erinnert dich das <b>📣 Info-Laufband</b> oben daran. Mit <b>„📝 Mit Twinkey eingeben“</b> geht es direkt los: Twinkey fragt dich Tag für Tag, wann du kannst. Sobald du abgegeben hast, verschwindet der Hinweis.", seit: "2.493.0" },
   { id: "vorschlag_bearbeiten", thema: "club", sym: "✏️", t: "Meinen Vorschlag nachträglich ändern", x: "Bei <b>🗳️ Vorschläge</b> hat dein offener Vorschlag den Knopf <b>„✏️ Bearbeiten“</b>: Thema, Beschreibung, Termin und Anlagen kannst du nachträglich ändern – vorhandene Anlagen bleiben, mit ✕ entfernst du eine, neue kommen dazu. Die anderen werden dafür nicht extra benachrichtigt. Hängen Anlagen an einem Vorschlag, steht auf der Kachel z. B. <b>„📎 2 Anlagen“</b>.", zeig: () => zeige("vorschlaege"), seit: "2.504.0" },
   { id: "protokoll_foto", thema: "club", sym: "🔎", t: "Handgeschriebenes Protokoll aus Fotos ausfüllen", x: "Im Protokoll-Entwurf unter <b>„2 · Protokoll anhängen“</b> auf <b>„🔎 Fotos lesen und ausfüllen“</b> tippen und alle Seiten der ausgefüllten Büro-Vorlage wählen. Die App liest auf dem Handy (nichts geht an fremde Dienste): <b>Anwesend</b> aus den angekreuzten Kästchen, Schriftführer, Gäste, den Text je <b>TOP</b>, Beschlüsse und den nächsten Termin. Danach zeigt sie alles zum Prüfen – <mark>gelb</mark> bzw. [? …] ist unsicher gelesen. Erst <b>„✅ Übernehmen“</b> trägt es in den Entwurf ein, die Fotos hängen als Anlage dran. Vor dem Veröffentlichen fragt die App nach, falls noch [? …] im Text steht.", zeig: () => zeige("protokolle"), seit: "2.801.0" },
+  { id: "protokoll_pruefen", thema: "club", sym: "🔎", t: "Protokoll vom Schriftführer prüfen lassen", x: "Hast du das Protokoll eingetragen, aber jemand anderes ist Schriftführer, tippst du unten auf <b>„📨 Zur Prüfung an …“</b>. Der Schriftführer bekommt Bescheid, liest das Protokoll und tippt <b>„✅ Stimmt so – freigeben“</b> oder <b>„✏️ Änderung wünschen“</b>. Seine Wünsche stehen bei dir als Liste zum Abhaken; nach dem Ändern <b>„📨 Nochmal zur Prüfung“</b> – er sieht Geändertes gelb markiert. Erst nach der Freigabe wird <b>„📢 Veröffentlichen“</b> grün. Antwortet er 3 Tage nicht, kannst du erinnern oder trotzdem veröffentlichen (Vermerk „ohne Freigabe“)." }, // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG
   { id: "protokoll_drucken", thema: "club", sym: "🖨️", t: "Ein Protokoll drucken oder als PDF", x: "Im geöffneten Protokoll tippst du auf <b>„🖨️ Drucken / PDF“</b> – im Corporate Design des Clubs. Über das Teilen-Menü deines Handys kannst du es auch als PDF speichern oder weiterschicken. Ist ein neues Protokoll eingestellt, steht das außerdem im Info-Feld oben – Antippen öffnet es direkt.", zeig: () => zeige("protokolle"), seit: "2.502.0" },
   { id: "kurz_erklaert_zu", thema: "start", sym: "🎓", t: "Die Hinweise „Kurz erklärt“ einklappen", x: "Die kleinen Hinweise <b>„🎓 Kurz erklärt“</b> oben auf vielen Seiten lassen sich mit dem Pfeil <b>einklappen</b> – dann bleibt nur eine schmale Zeile. Ein Tipp auf den Pfeil klappt sie wieder auf. Die App merkt sich das auf deinem Gerät.", seit: "2.502.0" },
   { id: "info_neues", thema: "start", sym: "🪧", t: "Neue Fotos, neues Protokoll, Wusstest du? – im Info-Feld", x: "Was es Neues gibt, steht oben im Info-Feld: <b>„📸 3 neue Fotos hochgeladen“</b> – Antippen bringt dich direkt zu genau diesen Fotos (ganz oben im goldenen Kasten, im Raster mit rotem „NEU“). <b>„📄 Neues Besprechungsprotokoll eingestellt“</b> öffnet das Protokoll. Jeden Tag gibt es außerdem ein <b>„🏛️ Wusstest du? …“</b> über Werne – und vor der Zeitumstellung den Hinweis, die Uhr umzustellen.", seit: "2.498.0" },
@@ -12947,6 +12948,7 @@ function infoFuerDich() {
   if (INIT?.offeneAbstimmungen) z.push(zeile("🗳️", `<b>${INIT.offeneAbstimmungen}</b> Abstimmung${INIT.offeneAbstimmungen > 1 ? "en warten" : " wartet"} auf dich`, "zeige('vorschlaege')"));
   for (const a of INIT?.terminanfragenOffen || []) z.unshift(zeile("📨", `<b>${esc(a.von)}</b> fragt an: ${esc(a.anlass)} – bitte antworten`, `taZeigen('${esc(a.id)}')`)); // 2.389.0
   if ((INIT?.terminfindungOffen || []).length) z.push(zeile("🗓️", "Bitte Termine ankreuzen", "zeige('termine')"));
+  for (const pp of INIT?.protokollPruefen || []) z.unshift(zeile("🔎", `Protokoll <b>${esc(pp.titel)}</b> vom ${esc(tagKurz(pp.datum))} bitte prüfen`, `protokollOeffnen('${esc(pp.id)}')`)); // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG
   if (INIT?.protokolleUngelesen) z.push(INIT.protokollNeu && INIT.protokolleUngelesen === 1 ? zeile("📄", `<b>${esc(protokollNeuText(INIT.protokollNeu))}</b>`, `protokollOeffnen('${esc(INIT.protokollNeu.id)}')`) // KC-CLUB-PROTOKOLL-NEU-INFO
     : zeile("📄", `<b>${INIT.protokolleUngelesen}</b> neue${INIT.protokolleUngelesen > 1 ? "" : "s"} Protokoll${INIT.protokolleUngelesen > 1 ? "e" : ""}`, "zeige('protokolle')"));
   const auf = (INIT?.meineAufgaben || []).length;
@@ -25178,7 +25180,8 @@ const PR_STATUS = {
   einwand: '<span class="marke rot">⚠️ Einwand offen</span>',
   genehmigt: '<span class="marke gruen">✔ genehmigt</span>',
 };
-const prStatusMarke = (p) => { const s = PR_STATUS[p.status]; return typeof s === "function" ? s(p) : s || ""; };
+const prStatusMarke = (p) => { const s = PR_STATUS[p.status]; return (typeof s === "function" ? s(p) : s || "")
+  + (p.pruefIch ? ' <span class="marke rot">🔎 Bitte prüfen</span>' : p.pruefStand ? " " + (PR_PRUEF_MARKE[p.pruefStand] || "") : ""); }; // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG
 function faelligText(f) {
   if (!f) return "";
   const h = heuteIso();
@@ -25859,7 +25862,8 @@ async function protokollOeffnen(id, ausHistorie) {
   try {
     if (!MITGLIEDER) await mitgliederHolen();
     PR = await api("protokoll_laden", { id }); aufgabenMitGruppe(PR.aufgaben || []);
-    if (PR.darfBearbeiten && PR.protokoll.roh === "entwurf") protokollFormular(); else protokollLesen();
+    if (PR.pruefung?.ichPruefe) protokollPruefen(); // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: Schriftführer prüft – nur lesen, freigeben oder Änderung wünschen
+    else if (PR.darfBearbeiten && PR.protokoll.roh === "entwurf") protokollFormular(); else protokollLesen();
     neuLaden();
   } catch (e) { $("protokollInhalt").innerHTML = `<div class="karte hinweis">${esc(fehlerText(e))}</div>`; }
 }
@@ -25937,8 +25941,9 @@ function protokollFormular() {
       <div class="zwei"><label class="feld">Bis wann? (freiwillig)<input id="aufBis" type="date"></label><div style="display:flex;align-items:flex-end"><button class="knopf" style="width:100%" onclick="einmal(this, aufgabeHinzu)">＋ Aufgabe</button></div></div>
       <p class="hinweis" style="font-size:.85rem">Die Aufgaben bekommen die Mitglieder beim Veröffentlichen mitgeteilt und am Tag vor „bis“ eine Erinnerung.</p>
     </div>
+    ${prPruefKarte()}
     <div class="knoepfe">
-      <button class="knopf haupt" onclick="einmal(this, protokollVeroeffentlichen)">📢 Veröffentlichen</button>
+      ${prVeroeffentlichenKnopf()}
       <button class="knopf" onclick="einmal(this, () => prSpeichernJetzt(true))">💾 Speichern</button>
       <button class="knopf" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>
       <button class="knopf" disabled title="Geht erst, wenn das Protokoll veröffentlicht ist">📣 Info an Mitglieder</button>
@@ -26185,7 +26190,70 @@ async function aufgabeLoeschen(id) {
     neuLaden();
   } catch (e) { meldeFehler(e); }
 }
-async function protokollVeroeffentlichen() {
+// ---------- 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG (Wunsch #57 Hansi, Konzept 02.11.2026 – „Ja, baue nach deinen Vorschlägen“) ----------
+// Hat jemand anderes als der Schriftführer das Protokoll eingetragen: „📨 Zur Prüfung an …“ → der Schriftführer liest es und tippt „✅ Stimmt so –
+// freigeben“ oder „✏️ Änderung wünschen“. Wünsche stehen als Abhak-Liste über dem Entwurf; ändern tut nur, wer eingetragen hat. Erst nach der
+// Freigabe wird „📢 Veröffentlichen“ frei; nach 3 Tagen ohne Antwort geht „trotzdem veröffentlichen“ (Vermerk „ohne Freigabe“).
+const PR_PRUEF_MARKE = { bei_pruefer: '<span class="marke gelb">🔎 in Prüfung</span>', aenderung: '<span class="marke rot">↩️ Änderungen gewünscht</span>', freigegeben: '<span class="marke gruen">✅ freigegeben</span>', geaendert: '<span class="marke gelb">✍️ geändert – neu prüfen</span>' };
+function prPruefKarte() {
+  const g = PR?.pruefung; if (!g?.noetig) return "";
+  const wer = esc(g.pruefer || "den Schriftführer"), seit = g.gesendet_am ? esc(zeitKurz(g.gesendet_am)) : "";
+  const offen = (g.wuensche || []).filter((w) => !w.erledigt).length;
+  const wl = (g.wuensche || []).length ? `<div class="pr-wuensche">${g.wuensche.map((w) => `<label class="at-wahl" style="margin:0"><input type="checkbox" ${w.erledigt ? "checked" : ""} onchange="prWunschAbhaken('${esc(w.id)}', this.checked)"><span>${w.top ? `<b>${esc(w.top)}:</b> ` : ""}${esc(w.text)}</span></label>`).join("")}</div>` : "";
+  const text = { bei_pruefer: `🔎 Liegt seit ${seit} bei <b>${wer}</b> zur Prüfung.${g.wartetLange ? " Noch keine Antwort – du kannst erinnern oder trotzdem veröffentlichen." : ""}`,
+    aenderung: `↩️ <b>${wer}</b> wünscht Änderungen. Bitte ändern, abhaken und nochmal zur Prüfung schicken.${offen ? ` Noch offen: <b>${offen}</b>.` : ""}`,
+    freigegeben: `✅ Geprüft und freigegeben von <b>${wer}</b>${g.freigegeben_am ? ` am ${esc(zeitKurz(g.freigegeben_am))}` : ""}. Du kannst jetzt veröffentlichen.`,
+    geaendert: `✍️ Nach der letzten Prüfung geändert – bitte nochmal an <b>${wer}</b> zur Prüfung schicken.` }[g.stand]
+    || `Du hast das Protokoll eingetragen, <b>${wer}</b> ist Schriftführer. Bevor alle es bekommen, prüft ${wer} es kurz.`;
+  const knopf = g.stand === "bei_pruefer" ? (g.erinnern ? `<button class="knopf klein" onclick="einmal(this, prPruefErinnern)">🔔 Erinnern</button>` : "")
+    : g.stand === "freigegeben" ? "" : `<button class="knopf haupt" onclick="einmal(this, prPruefSenden)">📨 ${g.runde ? "Nochmal zur Prüfung" : "Zur Prüfung"} an ${wer}</button>`;
+  return `<div class="karte pr-pruef"><h3 style="margin-top:0">🔎 Prüfung durch den Schriftführer ${PR_PRUEF_MARKE[g.stand] || ""}</h3><p style="margin:0 0 6px">${text}</p>${wl}${knopf ? `<div class="knoepfe">${knopf}</div>` : ""}</div>`;
+}
+function prVeroeffentlichenKnopf() {
+  const g = PR?.pruefung;
+  if (!g?.noetig || g.stand === "freigegeben") return `<button class="knopf haupt${g?.stand === "freigegeben" ? " gruen" : ""}" onclick="einmal(this, protokollVeroeffentlichen)">📢 Veröffentlichen</button>`;
+  if (g.stand === "bei_pruefer" && g.wartetLange) return `<button class="knopf" onclick="einmal(this, () => protokollVeroeffentlichen(true))">📢 Trotzdem veröffentlichen (ohne Freigabe)</button>`;
+  return `<button class="knopf" disabled title="Geht nach der Freigabe durch den Schriftführer">📢 Veröffentlichen (nach Freigabe)</button>`;
+}
+async function prPruefSenden() {
+  try { await prSpeichernJetzt(false); } catch { return; }
+  const offen = (PR?.pruefung?.wuensche || []).filter((w) => !w.erledigt).length;
+  if (offen && !(await frage(`${offen === 1 ? "Ein Änderungswunsch ist" : offen + " Änderungswünsche sind"} noch nicht abgehakt. Trotzdem zur Prüfung schicken?`, { ja: "📨 Trotzdem schicken", nein: "Abbrechen" }))) return;
+  try { const r = await api("protokoll_pruefung_senden", { id: prId }); melde(`📨 Zur Prüfung an ${r.an || "den Schriftführer"} geschickt`); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); }
+}
+async function prPruefErinnern() { try { await api("protokoll_pruefung_erinnern", { id: prId }); melde("🔔 Erinnerung geschickt"); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); } }
+async function prWunschAbhaken(id, an) { try { await api("protokoll_pruefung_wunsch", { id: prId, wunsch: id, erledigt: an }); const w = PR.pruefung.wuensche.find((x) => x.id === id); if (w) w.erledigt = an; } catch (e) { meldeFehler(e); } }
+function protokollPruefen() {
+  PR.darfLoeschen = false; // wer prüft, löscht nicht (Server prüft es ebenso)
+  protokollLesen();
+  const g = PR.pruefung, frueher = g.wuensche || [];
+  $("prTitel").textContent = "🔎 Protokoll prüfen";
+  $("protokollInhalt").insertAdjacentHTML("afterbegin", `<div class="karte pr-pruef"><h3 style="margin-top:0">🔎 Bitte prüfen</h3>
+    <p style="margin:0 0 6px"><b>${esc(g.von || "")}</b> hat das Protokoll eingetragen${g.runde > 1 ? ' und deine Wünsche eingearbeitet – <span class="pr-neu">Geändertes ist gelb markiert</span>' : ""}. Du bist Schriftführer: Stimmt alles so, wie es in der Sitzung war?</p>
+    ${frueher.length ? `<details><summary>Deine bisherigen Wünsche (${frueher.length})</summary>${frueher.map((w) => `<div>${w.erledigt ? "✔" : "•"} ${w.top ? `<b>${esc(w.top)}:</b> ` : ""}${esc(w.text)}</div>`).join("")}</details>` : ""}
+    <div class="knoepfe"><button class="knopf haupt gruen" onclick="einmal(this, prPruefFreigeben)">✅ Stimmt so – freigeben</button><button class="knopf" onclick="prPruefWuensche()">✏️ Änderung wünschen</button></div>
+    <p class="hinweis" style="margin:4px 0 0;font-size:.85rem">Ändern musst du nichts selbst – schreib einfach, was anders sein soll.</p></div>`);
+}
+async function prPruefFreigeben() {
+  if (!(await frage("Protokoll freigeben?\n\nDanach kann es veröffentlicht werden und alle Mitglieder bekommen es.", { ja: "✅ Freigeben", nein: "Abbrechen" }))) return;
+  try { await api("protokoll_pruefung_antwort", { id: prId, freigeben: true }); melde("✅ Freigegeben – danke!"); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); }
+}
+function prPruefWuensche() {
+  const tops = PR.protokoll.tagesordnung || [];
+  const zeile = () => `<div class="pr-wz"><select class="pr-wtop" aria-label="Zu welchem Punkt?"><option value="">Allgemein</option>${tops.map((t, i) => `<option value="TOP ${i + 1}">TOP ${i + 1}: ${esc(t.length > 40 ? t.slice(0, 38) + " …" : t)}</option>`).join("")}</select>
+    <textarea class="pr-wtext" rows="2" maxlength="600" aria-label="Was soll anders sein?" placeholder="Was soll anders sein? z. B. „Klaus war auch da“"></textarea></div>`;
+  const b = blattAuf("prWunschBlatt", `<h3 style="margin:0">✏️ Änderung wünschen</h3><p class="hinweis" style="margin:2px 0 8px">Schreib kurz, was geändert werden soll – bei Bedarf zu welchem TOP.</p>
+    <div id="prWListe">${zeile()}</div><button type="button" class="knopf klein" id="prWPlus">＋ Noch ein Wunsch</button>
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="prWLos">📨 Wünsche schicken</button><button class="knopf" id="prWZu">Abbrechen</button></div>`);
+  b.querySelector("#prWPlus").onclick = () => $("prWListe").insertAdjacentHTML("beforeend", zeile());
+  b.querySelector("#prWZu").onclick = () => fensterZu(b);
+  b.querySelector("#prWLos").onclick = (ev) => einmal(ev.currentTarget, async () => {
+    const wuensche = [...b.querySelectorAll(".pr-wz")].map((z) => ({ top: z.querySelector(".pr-wtop").value, text: z.querySelector(".pr-wtext").value.trim() })).filter((w) => w.text);
+    if (!wuensche.length) return melde("Bitte kurz schreiben, was geändert werden soll.", true);
+    try { await api("protokoll_pruefung_antwort", { id: prId, freigeben: false, wuensche }); fensterZu(b); melde("📨 Wünsche geschickt – danke!"); protokollOeffnen(prId, true); } catch (e) { meldeFehler(e); }
+  });
+}
+async function protokollVeroeffentlichen(ohneFreigabe) {
   try { await prSpeichernJetzt(false); } catch { return; }
   if (!PR.anlagen.length && !$("prK").value.trim() && !(await frage("Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen?"))) return;
   const ohne = prTopsOhneText(); // 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT: wurden alle Punkte behandelt?
@@ -26194,8 +26262,9 @@ async function protokollVeroeffentlichen() {
     if (w) { ohne.forEach(([t]) => { const b = document.querySelector(`#prVertagt [data-vt="${CSS.escape(t)}"]`); if (b) b.checked = true; }); prVertagtZeigen(); try { await prSpeichernJetzt(false); } catch { return; } }
   }
   if (PFO_UNSICHER.test(["prK", "prB", "prN", "prG"].map((k) => $(k)?.value || "").join("\n")) && !(await frage("⚠️ Im Protokoll stehen noch unsichere Stellen [? …] aus der Texterkennung.\n\nBitte vorher prüfen und die Klammern entfernen. Trotzdem veröffentlichen?", { ja: "Trotzdem veröffentlichen", nein: "Erst prüfen" }))) return; // 2.801.0 KC-CLUB-PROTOKOLL-FOTO
+  if (ohneFreigabe === true && !(await frage("Der Schriftführer hat seit 3 Tagen nicht geantwortet.\n\nTrotzdem veröffentlichen? Im Protokoll steht dann „ohne Freigabe“.", { ja: "📢 Ohne Freigabe veröffentlichen", nein: "Abbrechen" }))) return; // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG
   if (!(await frage("Protokoll jetzt veröffentlichen? Alle Mitglieder (ohne Aushilfen) bekommen Bescheid und haben 7 Tage Zeit für Einwände."))) return;
-  try { const r = await api("protokoll_veroeffentlichen", { id: prId }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}${r.versand === "laeuft" ? " · die Mitglieder werden gerade benachrichtigt" : ""}`); protokollOeffnen(prId, true); }
+  try { const r = await api("protokoll_veroeffentlichen", { id: prId, ...(ohneFreigabe === true ? { ohneFreigabe: true } : {}) }); melde(`📢 Veröffentlicht – Einwände bis ${fKurz.format(new Date(r.einspruch_bis))}${r.versand === "laeuft" ? " · die Mitglieder werden gerade benachrichtigt" : ""}`); protokollOeffnen(prId, true); }
   catch (e) { meldeFehler(e); }
 }
 async function protokollLoeschen(id, veroeffentlicht) {
@@ -26212,20 +26281,22 @@ async function protokollLoeschen(id, veroeffentlicht) {
 function protokollLesen() {
   const p = PR.protokoll, einspruchOffen = p.einspruch_bis && new Date(p.einspruch_bis) > new Date() && p.roh === "veroeffentlicht";
   $("prTitel").textContent = "📄 Protokoll";
-  const liste = (a, tag, von) => a.length ? `<${tag} style="margin:4px 0 0;padding-left:22px">${a.map((x, i) => `<li>${esc(x)}${topVon(von, i)}</li>`).join("")}</${tag}>` : "";
+  // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: beim erneuten Prüfen ist gelb markiert, was sich seit der letzten Prüfung geändert hat
+  const vor = PR.pruefung?.vorher, neuZ = (feld, x) => vor && Array.isArray(vor[feld]) && !vor[feld].includes(x) ? ' class="pr-neu"' : "", neuF = (feld, w) => vor && JSON.stringify(vor[feld] ?? null) !== JSON.stringify(w ?? null) ? "pr-neu" : "";
+  const liste = (a, tag, von, feld) => a.length ? `<${tag} style="margin:4px 0 0;padding-left:22px">${a.map((x, i) => `<li${feld ? neuZ(feld, x) : ""}>${esc(x)}${topVon(von, i)}</li>`).join("")}</${tag}>` : "";
   const offeneEw = PR.einwaende.filter((e) => !e.erledigt_am);
   $("protokollInhalt").innerHTML = `
     <div class="karte">${prStatusMarke(p)}${p.version > 1 ? ` <span class="marke">Fassung ${p.version} (korrigiert)</span>` : ""}
       <div style="font-size:1.2rem;font-weight:800;margin-top:6px">${esc(p.titel)}</div>
       <div class="hinweis">${esc(tagKurz(p.datum))}${p.ort ? " · 📍 " + esc(p.ort) : ""}${prSchreiber(p) ? " · geschrieben von " + esc(prSchreiber(p)) : " · Schriftführer wird noch geklärt"}</div>
       ${p.roh === "entwurf" ? '<p class="hinweis">✍️ Wird gerade noch geschrieben.</p>' : einspruchOffen ? `<p class="hinweis">Einwände sind bis <b>${esc(wann(p.einspruch_bis))}</b> möglich – danach gilt das Protokoll als genehmigt.</p>` : ""}
-      ${p.anwesend.length ? `<p style="margin:10px 0 0"><b>✅ Anwesend (${p.anwesend.length}):</b> ${esc(p.anwesend.map((x) => x.name).join(", "))}</p>` : ""}
+      ${p.anwesend.length ? `<p class="${neuF("anwesend", p.anwesend.map((x) => x.person_id))}" style="margin:10px 0 0"><b>✅ Anwesend (${p.anwesend.length}):</b> ${esc(p.anwesend.map((x) => x.name).join(", "))}</p>` : ""}
       ${p.entschuldigt.length ? `<p style="margin:6px 0 0"><b>🙋 Entschuldigt (${p.entschuldigt.length}):</b> ${esc(p.entschuldigt.map((x) => x.name).join(", "))}</p>` : ""}
       ${p.gaeste ? `<p style="margin:6px 0 0"><b>Gäste:</b> ${esc(p.gaeste)}</p>` : ""}
-      ${p.tagesordnung.length ? `<p style="margin:10px 0 0"><b>Tagesordnung</b></p>${liste(p.tagesordnung, "ol", p.tagesordnungVon)}` : ""}
-      ${p.beschluesse.length ? `<p style="margin:10px 0 0"><b>Beschlüsse</b></p>${liste(p.beschluesse, "ul")}` : ""}
-      ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
-      ${p.naechster_termin ? `<p style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
+      ${p.tagesordnung.length ? `<p style="margin:10px 0 0"><b>Tagesordnung</b></p>${liste(p.tagesordnung, "ol", p.tagesordnungVon, "tagesordnung")}` : ""}
+      ${p.beschluesse.length ? `<p style="margin:10px 0 0"><b>Beschlüsse</b></p>${liste(p.beschluesse, "ul", null, "beschluesse")}` : ""}
+      ${p.kurzfassung ? `<p style="margin:10px 0 0"><b>Kurzfassung</b></p><p class="${neuF("kurzfassung", p.kurzfassung)}" style="white-space:pre-wrap;margin:4px 0 0">${esc(p.kurzfassung)}</p>` : ""}
+      ${p.naechster_termin ? `<p class="${neuF("naechster_termin", p.naechster_termin)}" style="margin:10px 0 0"><b>📅 Nächster Termin:</b> ${esc(p.naechster_termin)}</p>` : ""}
     </div>
     ${PR.anlagen.length ? `<div class="karte"><h3>📎 Das Protokoll</h3><p class="hinweis" style="margin-top:0;font-size:.85rem">Antippen zum Vergrößern bzw. Öffnen.</p>${anlagenListe(false)}</div>` : ""}
     <div class="knoepfe" style="margin:0 0 10px"><button class="knopf klein" onclick="einmal(this, prDrucken)">🖨️ Drucken / PDF</button>${PR.darfBearbeiten && p.roh !== "entwurf" ? '<button class="knopf klein" onclick="prInfoWahl()">📣 Info an Mitglieder</button>' : ""}${p.roh !== "entwurf" ? '<button class="knopf klein" onclick="protokollInsArchiv()">🗄️ In mein Archiv legen</button>' : ""}</div>
@@ -33356,7 +33427,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",

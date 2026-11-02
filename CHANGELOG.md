@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.818.0 – 2026-11-02 – 🔎 Protokoll: Prüfung durch den Schriftführer vor dem Veröffentlichen (KC-CLUB-PROTOKOLL-PRUEFUNG, Wunsch #57) · App + Server + Datenbank
+Wunsch #57 Hansi: „Protokollführer bekommt von mir das eingestellte Protokoll. Der hat Button ‚Protokoll freigeben‘ oder ‚folgende Änderungen …‘. Dann zurück zum anderen und wieder freigegeben. Wenn freigegeben, kann es eingestellt werden. Und dann Info an alle.“ Konzept 02.11. – Hansi: „Ja, baue nach deinen Vorschlägen“ (A: immer prüfen, wenn jemand anderes eingetragen hat · B: nur der Eintragende ändert · C: nach 3 Tagen trotzdem veröffentlichen).
+- Im Entwurf neue Karte „🔎 Prüfung durch den Schriftführer“ mit **„📨 Zur Prüfung an …“**. Der Schriftführer bekommt Push/Mail (Bereich Protokolle) und auf der Startseite „🔎 Protokoll … bitte prüfen“.
+- Der Schriftführer sieht das Protokoll nur zum Lesen mit **„✅ Stimmt so – freigeben“** oder **„✏️ Änderung wünschen“** (Text, je TOP wählbar, mehrere Wünsche). Ändern kann er nicht selbst; löschen auch nicht.
+- Wünsche stehen beim Eintragenden als Abhak-Liste; danach **„📨 Nochmal zur Prüfung“** – beim Prüfer ist gelb markiert, was sich seit der letzten Prüfung geändert hat.
+- **„📢 Veröffentlichen“** erst nach der Freigabe (grün). Nach der Freigabe noch geändert → muss neu geprüft werden. Liegt es 3 Tage ohne Antwort: **„🔔 Erinnern“** (höchstens 1× am Tag) oder **„📢 Trotzdem veröffentlichen (ohne Freigabe)“** mit Vermerk. Schreibt der Schriftführer selbst, gibt es keinen Prüfschritt. Info an alle beim Veröffentlichen wie bisher.
+- Protokoll-Liste zeigt den Stand (🔎 in Prüfung · ↩️ Änderungen gewünscht · ✅ freigegeben · 🔎 Bitte prüfen).
+- Datenbank: Spalte `kc_club_sitzungsprotokolle.pruefung` (jsonb). Neue Aktionen `protokoll_pruefung_senden/_antwort/_wunsch/_erinnern`. Hilfe `protokoll_pruefen`. Test: `tests/protokoll-pruefung.test.mjs`. Browser geprüft (5 Zustände, Wunsch-Fenster).
+- Rückweg: App + Server 2.817.0 (Spalte kann bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.817.0 – 2026-11-02 – 🔕 Dienstwünsche: ein Push erst, wenn fertig eingetragen (KC-CLUB-DW-PUSH-FERTIG)
 Wunsch Hansi („ich bekomme scheinbar nach jedem Tag einen Push – besser erst, wenn komplett fertig ist, und dann gesamt“): Beim Eintragen der Dienstwünsche speichert Twinkey nach jedem Tag. Bisher bekam der Admin dabei jedes Mal „🗓️ Geänderter Wunschplan von …“. Jetzt kommt kein Push mehr je Speichern – der Dienstplan-Druck rechnet sich weiter sofort neu. Bescheid gibt es einmal, wenn das Mitglied 10 Minuten nichts mehr geändert hat (Prüfung alle 15 Minuten, also spätestens nach rund 25 Minuten): „📅 Dienstzeiten geändert: Name“. Der Admin landet beim Antippen im Ordner „Dienstplan zum Drucken“, der übrige Vorstand wie bisher im Büro-Eingangskorb.
 

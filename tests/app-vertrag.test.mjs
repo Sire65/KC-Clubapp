@@ -192,14 +192,14 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   // Leserecht aus der Rollen-Registry (Aushilfen nein), nicht hart codiert im Server
   assert.ok(/protokolle: r \? r\.protokolle_lesen !== false : true/.test(server), "Protokoll-Recht aus kc_club_rollen fehlt");
   assert.ok(!/["'`]Aushilfe/.test(server), "Server darf das Amt „Aushilfe“ nicht hart codieren");
-  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 16, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht");
+  assert.equal((server.match(/nurProtokolle\(ich\)/g) || []).length, 20, "jede Protokoll-/Aufgaben-Aktion prüft das Leserecht"); // 2.818.0: +4 Prüf-Aktionen (KC-CLUB-PROTOKOLL-PRUEFUNG)
   // 7 Tage Einspruch; genehmigt erst nach Fristablauf ohne offene Einwände
   assert.ok(/const EINSPRUCH_TAGE = 7;/.test(server), "Einspruchsfrist 7 Tage fehlt");
   assert.ok(/if \(offeneEinwaende > 0\) return "einwand";/.test(server), "offener Einwand darf nicht als genehmigt gelten");
   // Entwürfe nur für Verfasser/Organisation; veröffentlichte Protokolle nicht löschbar; Korrektur sichert alte Fassung
   assert.ok(/pr\.status === "entwurf" && !bearb\) throw/.test(server), "Entwurf für andere sichtbar");
   // ab 0.11.0 (KC-CLUB-LOESCHEN): veröffentlichte Protokolle darf nur die Organisation löschen, Entwürfe auch der Verfasser
-  assert.ok(/const darfProtokollLoeschen = \(ich: Ich, pr: any\) => ich\.vorstand \|\| \(pr\.verfasser === ich\.person_id && pr\.status === "entwurf" && pr\.version === 1\);/.test(server), "Löschrecht Protokolle falsch");
+  assert.ok(/const darfProtokollLoeschen = \(ich: Ich, pr: any\) => ich\.vorstand \|\| \(pr\.verfasser === ich\.person_id && pr\.status === "entwurf" && pr\.version === 1(?: && !\(pr\.pruefung\?\.von && pr\.pruefung\.von !== ich\.person_id\))?\);/.test(server), "Löschrecht Protokolle falsch"); // 2.818.0: Prüfer löscht keinen fremden Entwurf
   assert.ok(/kc_club_sitzungsprotokoll_fassungen"\)\.upsert/.test(server), "alte Fassung wird nicht gesichert");
   // Anlagen: nur eigene Uploads verknüpfen; Leser dürfen Protokoll-Anlagen öffnen
   assert.ok(/kc_club_sitzungsprotokoll_anlagen"\)\.select\("protokoll_id"\)\.eq\("attachment_id", att\.id\)/.test(server), "anlage_url kennt Protokoll-Anlagen nicht");
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7532,7 +7532,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(server, /tagesordnungVon: await tagesordnungVon\(pr\.treffen_id, pr\.tagesordnung\)/, "Protokoll bekommt die Namen");
   assert.match(server, /von: x\.id \? vonV\.get\(x\.id\) \?\? null : null/, "Clubabend bekommt die Namen");
   assert.match(server, /– Vorschlag von \$\{themenVon\[i\]\}/, "Erinnerungs-Mail nennt den Namen");
-  assert.equal((programm.match(/p\.tagesordnungVon\)/g) || []).length, 3, "Protokoll: Ansicht, Druck, Text");
+  assert.equal((programm.match(/p\.tagesordnungVon(?:\)|, "tagesordnung"\))/g) || []).length, 3, "Protokoll: Ansicht, Druck, Text"); // 2.818.0: Ansicht markiert Geändertes für den Prüfer
   assert.match(programm, /const buVon = \(s, t\) =>/, "buVon");
   assert.ok((programm.match(/buVon\(s, t\)/g) || []).length >= 6, "Büro-Liste, Vorlage, Einladung");
   assert.match(programm, /\$\{x\.von \? `💡 \$\{esc\(x\.von\)\} · ` : ""\}/, "Clubabend Live");

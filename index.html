@@ -4661,6 +4661,12 @@
   .strom-rang { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; padding: 4px 0; }
   .strom-rang small { grid-column: 1 / -1; color: var(--grau); font-size: .78rem; }
   .strom-balken { height: 10px; border-radius: 5px; background: var(--karte2); overflow: hidden; } .strom-balken i { display: block; height: 100%; background: var(--rot); border-radius: 5px; }
+  /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: Prüf-Karte, Wunschliste, gelb = seit der letzten Prüfung geändert */
+  .pr-pruef { border: 2px solid var(--gold, #c9a227); }
+  .pr-wuensche { display: grid; gap: 4px; margin: 4px 0 6px; }
+  .pr-neu { background: #fff3a8; color: #2b1a1c; border-radius: 4px; padding: 0 3px; box-shadow: 0 0 0 2px #fff3a8; }
+  .pr-wz { display: grid; gap: 6px; margin: 0 0 10px; padding: 8px; border: 1px solid var(--linie); border-radius: 12px; }
+  .pr-wz select, .pr-wz textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 8px; border-radius: 10px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); }
   .pr-monat-titel { margin: 10px 2px 4px; font-weight: 700; color: var(--grau); font-size: .9rem; } /* 2.799.0 KC-CLUB-PROTOKOLL-GRUPPEN */
   /* 2.808.0 KC-CLUB-KLAPPE-GLEICH (Wunsch #63 Hansi „alle Listen mit Einklapp-Pfeilen gleich … in Protokollen sind die Pfeile viel zu klein und drehen sich nicht“):
      Jeder Klappbereich mit gemerktem Auf/Zu (klappenMerken: Schloss + Pfeil) sieht aus wie die Karten – großer weinroter Pfeil rechts, der sich dreht, Schloss davor.
@@ -6533,7 +6539,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.817.0" data-v="2.817.0"></script>
+<script src="app.js?v=2.818.0" data-v="2.818.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

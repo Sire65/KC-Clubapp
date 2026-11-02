@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.817.0";
+const SERVER_VERSION = "2.818.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -6822,7 +6822,25 @@ const EINSPRUCH_TAGE = 7;
 const nurProtokolle = (ich: Ich) => { if (!ich.protokolle) throw new Fehler("Protokolle sind nur für Mitglieder.", 403); };
 const darfBearbeiten = (ich: Ich, pr: any) => pr.verfasser === ich.person_id || ich.vorstand;
 // Entwurf (nie veröffentlicht): Verfasser oder Organisation; veröffentlicht: nur Organisation (Clubsprecher, Kassenwart, Admin)
-const darfProtokollLoeschen = (ich: Ich, pr: any) => ich.vorstand || (pr.verfasser === ich.person_id && pr.status === "entwurf" && pr.version === 1);
+const darfProtokollLoeschen = (ich: Ich, pr: any) => ich.vorstand || (pr.verfasser === ich.person_id && pr.status === "entwurf" && pr.version === 1 && !(pr.pruefung?.von && pr.pruefung.von !== ich.person_id)); // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: wer nur prüft, löscht nicht den Entwurf eines anderen
+// ---------- 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG (Wunsch #57 Hansi, Konzept 02.11.2026 „Ja, baue nach deinen Vorschlägen“) ----------
+// Trägt jemand anderes als der Schriftführer das Protokoll ein, prüft der Schriftführer es vor dem Veröffentlichen: „✅ freigeben“ oder
+// „✏️ Änderung wünschen“ (nur Wünsche – ändern tut, wer eingetragen hat). Nach 3 Tagen ohne Antwort darf trotzdem veröffentlicht werden
+// (Vermerk „ohne Freigabe“). Alles in einer Spalte kc_club_sitzungsprotokolle.pruefung (jsonb) – keine neue Tabelle.
+const PRUEF_WARTE_TAGE = 3;
+function pruefInfo(pr: any, ich: Ich, name: (id: string) => string) {
+  const pg: any = pr.pruefung, noetig = pruefungNoetig(ich, pr);
+  const ichPruefe = !!pg && pg.stand === "bei_pruefer" && pg.pruefer === ich.person_id && pg.von !== ich.person_id;
+  return { noetig, ichPruefe, stand: pg?.stand ?? null, pruefer: pg?.pruefer ? name(pg.pruefer) : pr.verfasser_offen ? null : name(pr.verfasser), von: pg?.von ? name(pg.von) : null,
+    runde: pg?.runde ?? 0, gesendet_am: pg?.gesendet_am ?? null, freigegeben_am: pg?.freigegeben_am ?? null, wartetLange: pruefWartetLange(pg), wuensche: pg?.wuensche ?? [],
+    vorher: ichPruefe ? pg.vorher ?? null : null, ohne_freigabe: !!pg?.ohne_freigabe, erinnern: pg?.stand === "bei_pruefer" && Date.now() - Date.parse(pg.erinnert_am || pg.gesendet_am || 0) >= 86400000 };
+}
+const PRUEF_FELDER = ["titel", "datum", "ort", "gaeste", "anwesend", "entschuldigt", "tagesordnung", "beschluesse", "kurzfassung", "naechster_termin", "vertagt"];
+const pruefStand = (pr: any) => Object.fromEntries(PRUEF_FELDER.map((k) => [k, pr[k] ?? null]));
+const pruefGleich = (a: any, b: any) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+const pruefungNoetig = (ich: Ich, pr: any) => !!pr.verfasser && !pr.verfasser_offen && pr.verfasser !== ich.person_id;
+const pruefWartetLange = (pg: any) => pg?.stand === "bei_pruefer" && !!pg.gesendet_am && Date.now() - Date.parse(pg.gesendet_am) >= PRUEF_WARTE_TAGE * 86400000;
+function pruefVerlauf(pg: any, was: string, ich: Ich, extra: Record<string, unknown> = {}) { return [...((pg?.verlauf as any[]) || []).slice(-29), { was, von: ich.person_id, am: jetzt(), ...extra }]; }
 async function protokollLeser(): Promise<string[]> {
   const [leute, { data: r }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_rollen").select("person_id").eq("protokolle_lesen", false)]);
   const aus = new Set((r ?? []).map((x: any) => x.person_id));
@@ -9443,8 +9461,11 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const pStumm = pEinst.then((r: any) => ({ data: r.error ? null : (r.data ?? []).find((x: any) => x.schluessel === "stumm") ?? null }));
         const pAufgaben = (async () => {
           // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
-          let meineAufgaben: any[] = [], protokolleUngelesen = 0, protokollNeu: any = null;
-          if (!ich.protokolle) return { meineAufgaben, protokolleUngelesen, protokollNeu };
+          let meineAufgaben: any[] = [], protokolleUngelesen = 0, protokollNeu: any = null, protokollPruefen: any[] = [];
+          if (!ich.protokolle) return { meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen };
+          // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: Protokolle, die auf meine Prüfung warten (Teilindex-frei: nur Entwürfe, meist 0–1 Zeilen)
+          const pPruef = db.from("kc_club_sitzungsprotokolle").select("id,titel,datum").eq("status", "entwurf").eq("pruefung->>stand", "bei_pruefer").eq("pruefung->>pruefer", ich.person_id).limit(5)
+            .then((r: any) => r.data ?? [], () => []);
           const pk = await pPaket; // 2.576.0 KC-CLUB-START-PAKET: Rohdaten aus dem Paket, gerechnet wird wie bisher
           const [{ data: au }, { data: pv }] = pk ? [{ data: pk.au }, { data: pk.pv }] : await Promise.all([
             db.from("kc_club_aufgaben").select("id,text,faellig,protokoll_id").eq("person_id", ich.person_id).is("erledigt_am", null).order("faellig", { nullsFirst: false }).limit(30),
@@ -9463,7 +9484,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           // KC-CLUB-PROTOKOLL-NEU-INFO (Wunsch Hansi 19.10.2026 „In die Info: Neues Besprechungsprotokoll eingestellt“): Titel des neuesten ungelesenen
           const n: any = ungelesen.sort((a: any, b: any) => String(b.veroeffentlicht_am || "").localeCompare(String(a.veroeffentlicht_am || "")))[0];
           protokollNeu = n ? { id: n.id, titel: n.titel, datum: n.datum } : null;
-          return { meineAufgaben, protokolleUngelesen, protokollNeu };
+          protokollPruefen = await pPruef;
+          return { meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen };
         })();
         const pTermin = (async () => {
           // KC-CLUB-TERMINFINDUNG: offene Umfragen, bei denen ich noch nichts angekreuzt habe
@@ -9619,7 +9641,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-GEBURTSTAG-PINNWAND (2.134.0): heute mein (freigegebener) Geburtstag → Ständchen in der App + Zettel für alle
         const meinGeburtstag = geburtstageHeute.some((g) => g.person_id === ich.person_id);
         if (meinGeburtstag) await geburtstagZettel(ich, berlinTag(new Date())).catch((e) => console.error("geburtstag zettel", String(e)));
-        const { meineAufgaben, protokolleUngelesen, protokollNeu } = await pAufgaben; // 2.155.0: früh gestartet
+        const { meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen } = await pAufgaben; // 2.155.0: früh gestartet
         const { data: kf } = await pKf;
         const terminfindungOffen = await pTermin;
         const [{ data: nf }, { data: kab }, wartung, { data: pe }, pwFristen, starts, eiFristen, { count: fbAnzahl }, anrufAntw] = await pRest;
@@ -9640,7 +9662,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -16965,7 +16987,7 @@ Köcheclub Werne`,
       case "protokolle_liste": {
         nurProtokolle(ich);
         const { data: alle } = await db.from("kc_club_sitzungsprotokolle")
-          .select("id,treffen_id,titel,datum,ort,status,version,verfasser,verfasser_offen,veroeffentlicht_am,einspruch_bis,geaendert_am").order("datum", { ascending: false }).limit(100);
+          .select("id,treffen_id,titel,datum,ort,status,version,verfasser,verfasser_offen,veroeffentlicht_am,einspruch_bis,geaendert_am,pruefung").order("datum", { ascending: false }).limit(100);
         const ids = (alle ?? []).map((x: any) => x.id);
         const leer = { data: [] as any[] };
         const [{ data: gel }, { data: ew }, { data: an }, { data: auf }, { data: tr }] = await Promise.all([
@@ -16991,6 +17013,7 @@ Köcheclub Werne`,
               verfasser: { person_id: pr.verfasser, name: leute.get(pr.verfasser)?.display_name || pr.verfasser, offen: !!pr.verfasser_offen }, eigen: pr.verfasser === ich.person_id,
               darfBearbeiten: darfBearbeiten(ich, pr), darfLoeschen: darfProtokollLoeschen(ich, pr), gelesen: pr.status === "entwurf" || (!!g && g.version >= pr.version),
               anlagen: zahl(an, pr.id), einwaende: zahl(ew, pr.id), aufgabenOffen: aufgaben.filter((a: any) => a.protokoll_id === pr.id).length,
+              pruefStand: pr.status === "entwurf" && pr.pruefung?.stand ? pr.pruefung.stand : null, pruefIch: pr.status === "entwurf" && pr.pruefung?.stand === "bei_pruefer" && pr.pruefung.pruefer === ich.person_id, /* 2.818.0 */
             };
           }),
           aufgaben: aufgaben.map((a: any) => ({ id: a.id, text: a.text, faellig: a.faellig, person_id: a.person_id, gruppe: a.gruppe ?? null, name: leute.get(a.person_id)?.display_name || a.person_id,
@@ -17268,6 +17291,8 @@ Köcheclub Werne`,
           // Lesestand nur für Verfasser/Organisation
           gelesen: leser.length ? { von: leser.filter((id) => aktuell.has(id)).map(name).sort(), fehlt: leser.filter((id) => !aktuell.has(id)).map(name).sort() } : null,
           fassungen: fa ?? [], darfBearbeiten: bearb, darfLoeschen: darfProtokollLoeschen(ich, pr), eigen: pr.verfasser === ich.person_id,
+          // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: Stand der Prüfung (nur für wer bearbeitet/prüft – Entwürfe sieht sonst niemand)
+          pruefung: bearb ? pruefInfo(pr, ich, name) : null,
           schreiber: bearb ? (await protokollLeser()) : [],
           naechsterVorschlag: bearb ? await protokollNaechsterVorschlag(pr) : null, // KC-CLUB-PROTOKOLL-NAECHSTER-TERMIN (1.84.0)
           // KC-CLUB-PROTOKOLL-NACHTRAG (2.499.0): abgelegte Texte (z. B. aus Hansis Diktat über Claude) – nur für wer bearbeiten darf, nur im Entwurf
@@ -17315,6 +17340,9 @@ Köcheclub Werne`,
         const pr = await protokollHolen(p.id);
         if (!darfBearbeiten(ich, pr)) throw new Fehler("Ändern darf nur, wer das Protokoll schreibt (oder Clubsprecher/Kassenwart).", 403);
         if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist veröffentlicht – bitte erst „Korrigieren“ tippen.", 409);
+        // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG (Wahl Hansi „nur ich ändere“): wer prüft, schreibt Änderungswünsche statt selbst zu ändern
+        if (pr.pruefung?.von && pr.pruefung.von !== ich.person_id && pr.pruefung.pruefer === ich.person_id)
+          throw new Fehler("Du prüfst dieses Protokoll – bitte „✏️ Änderung wünschen“ tippen. Ändern tut, wer es eingetragen hat.", 403);
         const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
         const ids = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).map(String))].filter((id) => aktiv.has(id)).slice(0, 60);
         const zeilen = (v: unknown) => (Array.isArray(v) ? v : String(v ?? "").split("\n")).map((x: unknown) => txt(x, 300)).filter(Boolean).slice(0, 40);
@@ -17335,6 +17363,12 @@ Köcheclub Werne`,
             upd.verfasser = String(p.verfasser);
           }
           upd.verfasser_offen = false;
+        }
+        // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: nach der Freigabe (oder während der Prüfung) inhaltlich geändert oder anderer Schriftführer → muss neu geprüft werden
+        const pg: any = pr.pruefung;
+        if (pg && ["freigegeben", "bei_pruefer"].includes(pg.stand)) {
+          const neu = pruefStand({ ...pr, ...upd });
+          if (!pruefGleich(neu, pg.gesendet) || (upd.verfasser && upd.verfasser !== pg.pruefer)) upd.pruefung = { ...pg, stand: "geaendert", verlauf: pruefVerlauf(pg, "geaendert", ich) };
         }
         await db.from("kc_club_sitzungsprotokolle").update(upd).eq("id", pr.id);
         await protokoll(ich.person_id, "sitzungsprotokoll_gespeichert", { protokoll: pr.id, verfasser: upd.verfasser ?? pr.verfasser });
@@ -17386,10 +17420,19 @@ Köcheclub Werne`,
         const pr = await protokollHolen(p.id);
         if (!darfBearbeiten(ich, pr)) throw new Fehler("Veröffentlichen darf nur, wer das Protokoll schreibt.", 403);
         if (pr.verfasser_offen) throw new Fehler("Bitte vor dem Veröffentlichen eintragen, wer das Protokoll geschrieben hat (Schriftführer).");
+        // 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: hat jemand anderes eingetragen, muss der Schriftführer freigeben – nach 3 Tagen ohne Antwort „trotzdem“
+        const pg: any = pr.pruefung;
+        let ohneFreigabe = false;
+        if (pruefungNoetig(ich, pr) && pg?.stand !== "freigegeben") {
+          if (p.ohneFreigabe === true && pruefWartetLange(pg)) ohneFreigabe = true;
+          else throw new Fehler(pg?.stand === "bei_pruefer" ? `Das Protokoll liegt noch beim Schriftführer zur Prüfung.${pruefWartetLange(pg) ? "" : ` Nach ${PRUEF_WARTE_TAGE} Tagen ohne Antwort kannst du es trotzdem veröffentlichen.`}`
+            : pg?.stand === "aenderung" ? "Der Schriftführer wünscht Änderungen – bitte ändern und „📨 Nochmal zur Prüfung“ tippen."
+            : "Bitte zuerst „📨 Zur Prüfung“ an den Schriftführer schicken.", 409);
+        }
         const { count } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id", { count: "exact", head: true }).eq("protokoll_id", pr.id);
         if (!count && !pr.kurzfassung && !pr.beschluesse.length) throw new Fehler("Bitte zuerst ein Foto oder eine Datei vom Protokoll anhängen (oder eine Kurzfassung schreiben).");
         const bis = new Date(Date.now() + EINSPRUCH_TAGE * 86400000).toISOString();
-        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "veroeffentlicht", veroeffentlicht_am: jetzt(), einspruch_bis: bis, geaendert_am: jetzt() })
+        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "veroeffentlicht", veroeffentlicht_am: jetzt(), einspruch_bis: bis, geaendert_am: jetzt(), ...(ohneFreigabe ? { pruefung: { ...pg, ohne_freigabe: true, verlauf: pruefVerlauf(pg, "ohne_freigabe", ich) } } : {}) })
           .eq("id", pr.id).eq("status", "entwurf").select("id");
         if (!ok?.length) throw new Fehler("Das Protokoll ist schon veröffentlicht.", 409);
         // 2.802.0 KC-CLUB-VORSCHLAG-BEHANDELT (Wunsch #50 Hansi „bei den Vorschlägen im Protokoll checken, ob sie abgearbeitet wurden, und mit dem Protokoll ablegen“):
@@ -17429,7 +17472,7 @@ Köcheclub Werne`,
         // alte Fassung bleibt erhalten
         const { data: pa } = await db.from("kc_club_sitzungsprotokoll_anlagen").select("attachment_id").eq("protokoll_id", pr.id);
         await db.from("kc_club_sitzungsprotokoll_fassungen").upsert({ protokoll_id: pr.id, version: pr.version, inhalt: { ...pr, anlagen: (pa ?? []).map((x: any) => x.attachment_id) } });
-        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "entwurf", version: pr.version + 1, veroeffentlicht_am: null, einspruch_bis: null, geaendert_am: jetzt() })
+        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ status: "entwurf", version: pr.version + 1, veroeffentlicht_am: null, einspruch_bis: null, geaendert_am: jetzt(), ...(pr.pruefung ? { pruefung: { ...pr.pruefung, stand: "geaendert", ohne_freigabe: false, verlauf: pruefVerlauf(pr.pruefung, "korrektur", ich) } } : {}) /* 2.818.0 */ })
           .eq("id", pr.id).eq("version", pr.version).select("id");
         if (!ok?.length) throw new Fehler("Das Protokoll wurde gerade geändert – bitte neu laden.", 409);
         await protokoll(ich.person_id, "sitzungsprotokoll_korrektur", { protokoll: pr.id, alte_version: pr.version });
@@ -17463,6 +17506,78 @@ Köcheclub Werne`,
         return json({ ok: true });
       }
 
+      // ----- 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG: zur Prüfung schicken · freigeben / Änderung wünschen · Wunsch abhaken · erinnern -----
+      case "protokoll_pruefung_senden": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id);
+        if (!darfBearbeiten(ich, pr)) throw new Fehler("Zur Prüfung schicken darf nur, wer das Protokoll einträgt.", 403);
+        if (pr.status !== "entwurf") throw new Fehler("Das Protokoll ist schon veröffentlicht.", 409);
+        if (pr.verfasser_offen || !pr.verfasser) throw new Fehler("Bitte zuerst oben eintragen, wer Schriftführer ist.");
+        if (pr.verfasser === ich.person_id) throw new Fehler("Du bist selbst Schriftführer – du kannst direkt veröffentlichen.");
+        const alt: any = pr.pruefung;
+        if (alt?.stand === "bei_pruefer" && alt.pruefer === pr.verfasser) throw new Fehler("Das Protokoll liegt schon zur Prüfung beim Schriftführer.", 409);
+        const pg = { stand: "bei_pruefer", pruefer: pr.verfasser, von: ich.person_id, runde: (alt?.runde || 0) + 1, gesendet_am: jetzt(), erinnert_am: null,
+          vorher: alt?.pruefer === pr.verfasser ? alt?.gesendet ?? null : null, gesendet: pruefStand(pr), wuensche: alt?.pruefer === pr.verfasser ? alt?.wuensche ?? [] : [],
+          verlauf: pruefVerlauf(alt, "gesendet", ich, { an: pr.verfasser }) };
+        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ pruefung: pg }).eq("id", pr.id).eq("status", "entwurf").select("id");
+        if (!ok?.length) throw new Fehler("Das Protokoll wurde gerade geändert – bitte neu laden.", 409);
+        const versand = await senden("club_protokoll", [pr.verfasser], {
+          titel: `🔎 Protokoll bitte prüfen: ${pr.titel}`, kurz: `${ich.name} hat das Protokoll vom ${tagText(pr.datum)} eingetragen${pg.runde > 1 ? " und geändert" : ""}. Bitte prüfen und freigeben.`,
+          betreff: `Köcheclub Werne – Protokoll bitte prüfen: ${pr.titel} vom ${tagText(pr.datum)}`,
+          text: `Hallo,\n\n${ich.name} hat das Protokoll „${pr.titel}“ vom ${tagText(pr.datum)} in die App eingetragen${pg.runde > 1 ? " und deine Änderungswünsche eingearbeitet" : ""}. Du bist Schriftführer – bitte lies es in der App und tippe „✅ Stimmt so – freigeben“ oder „✏️ Änderung wünschen“.\n\nErst nach deiner Freigabe wird es für alle veröffentlicht.`,
+          url: `${APP_URL}#protokoll=${pr.id}`,
+        }, `club-protokoll-pruefen:${pr.id}:${pg.runde}`).catch((e) => ({ fehler: String(e).slice(0, 120) }));
+        await protokoll(ich.person_id, "sitzungsprotokoll_pruefung_gesendet", { protokoll: pr.id, an: pr.verfasser, runde: pg.runde, versand });
+        return json({ ok: true, an: (await personen([pr.verfasser])).get(pr.verfasser)?.display_name || "" });
+      }
+      case "protokoll_pruefung_antwort": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id), pg: any = pr.pruefung;
+        if (pr.status !== "entwurf" || pg?.stand !== "bei_pruefer") throw new Fehler("Das Protokoll wartet gerade nicht auf deine Prüfung.", 409);
+        if (pg.pruefer !== ich.person_id) throw new Fehler("Prüfen darf nur der Schriftführer, an den das Protokoll geschickt wurde.", 403);
+        const freigeben = p.freigeben === true;
+        const neueW = freigeben ? [] : (Array.isArray(p.wuensche) ? p.wuensche : []).map((w: any) => ({ id: crypto.randomUUID().slice(0, 8), text: txt(w?.text, 600), top: txt(w?.top, 300) || null, runde: pg.runde, am: jetzt(), erledigt: false }))
+          .filter((w: any) => w.text).slice(0, 20);
+        if (!freigeben && !neueW.length) throw new Fehler("Bitte kurz schreiben, was geändert werden soll.");
+        const neu = { ...pg, stand: freigeben ? "freigegeben" : "aenderung", antwort_am: jetzt(), ...(freigeben ? { freigegeben_am: jetzt(), freigegeben_von: ich.person_id } : {}),
+          wuensche: [...(pg.wuensche || []), ...neueW], verlauf: pruefVerlauf(pg, freigeben ? "freigegeben" : "aenderung", ich, freigeben ? {} : { anzahl: neueW.length }) };
+        const { data: ok } = await db.from("kc_club_sitzungsprotokolle").update({ pruefung: neu }).eq("id", pr.id).eq("status", "entwurf").eq("pruefung->>stand", "bei_pruefer").select("id");
+        if (!ok?.length) throw new Fehler("Das Protokoll wurde gerade geändert – bitte neu laden.", 409);
+        const versand = await senden("club_protokoll", [pg.von], {
+          titel: freigeben ? `✅ Protokoll freigegeben: ${pr.titel}` : `✏️ Änderungswünsche zum Protokoll: ${pr.titel}`,
+          kurz: freigeben ? `${ich.name} hat das Protokoll geprüft und freigegeben – du kannst es jetzt veröffentlichen.` : `${ich.name}: ${neueW.map((w: any) => w.text).join(" · ")}`.slice(0, 150),
+          betreff: `Köcheclub Werne – Protokoll ${freigeben ? "freigegeben" : "– Änderungswünsche"}: ${pr.titel}`,
+          text: freigeben ? `Hallo,\n\n${ich.name} hat das Protokoll „${pr.titel}“ vom ${tagText(pr.datum)} geprüft und freigegeben. Du kannst es jetzt in der App veröffentlichen.`
+            : `Hallo,\n\n${ich.name} wünscht Änderungen am Protokoll „${pr.titel}“ vom ${tagText(pr.datum)}:\n\n${neueW.map((w: any) => `• ${w.top ? w.top + ": " : ""}${w.text}`).join("\n")}\n\nBitte in der App ändern und „📨 Nochmal zur Prüfung“ tippen.`,
+          url: `${APP_URL}#protokoll=${pr.id}`,
+        }, `club-protokoll-pruefung:${pr.id}:${pg.runde}`).catch((e) => ({ fehler: String(e).slice(0, 120) }));
+        await protokoll(ich.person_id, freigeben ? "sitzungsprotokoll_freigegeben" : "sitzungsprotokoll_aenderung_gewuenscht", { protokoll: pr.id, runde: pg.runde, wuensche: neueW.length, versand });
+        return json({ ok: true, stand: neu.stand });
+      }
+      case "protokoll_pruefung_wunsch": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id), pg: any = pr.pruefung;
+        if (!darfBearbeiten(ich, pr) || !pg || pg.pruefer === ich.person_id && pg.von !== ich.person_id) throw new Fehler("Abhaken darf nur, wer das Protokoll einträgt.", 403);
+        const wuensche = (pg.wuensche || []).map((w: any) => w.id === String(p.wunsch) ? { ...w, erledigt: p.erledigt === true } : w);
+        await db.from("kc_club_sitzungsprotokolle").update({ pruefung: { ...pg, wuensche } }).eq("id", pr.id);
+        return json({ ok: true });
+      }
+      case "protokoll_pruefung_erinnern": {
+        nurProtokolle(ich);
+        const pr = await protokollHolen(p.id), pg: any = pr.pruefung;
+        if (!darfBearbeiten(ich, pr) || pg?.stand !== "bei_pruefer") throw new Fehler("Das Protokoll wartet gerade nicht auf eine Prüfung.", 409);
+        const zuletzt = Date.parse(pg.erinnert_am || pg.gesendet_am || "");
+        if (Date.now() - zuletzt < 86400000) throw new Fehler("Erinnern geht höchstens einmal am Tag.", 429);
+        await db.from("kc_club_sitzungsprotokolle").update({ pruefung: { ...pg, erinnert_am: jetzt(), verlauf: pruefVerlauf(pg, "erinnert", ich) } }).eq("id", pr.id);
+        const versand = await senden("club_protokoll", [pg.pruefer], {
+          titel: `🔔 Erinnerung: Protokoll bitte prüfen`, kurz: `Das Protokoll „${pr.titel}“ vom ${tagText(pr.datum)} wartet auf deine Freigabe.`,
+          betreff: `Köcheclub Werne – Erinnerung: Protokoll bitte prüfen (${pr.titel})`,
+          text: `Hallo,\n\ndas Protokoll „${pr.titel}“ vom ${tagText(pr.datum)} wartet noch auf deine Prüfung. Bitte in der App „✅ Stimmt so – freigeben“ oder „✏️ Änderung wünschen“ tippen.`,
+          url: `${APP_URL}#protokoll=${pr.id}`,
+        }, `club-protokoll-erinnern:${pr.id}:${pg.runde}:${berlinTag(new Date())}`).catch((e) => ({ fehler: String(e).slice(0, 120) }));
+        await protokoll(ich.person_id, "sitzungsprotokoll_pruefung_erinnert", { protokoll: pr.id, versand });
+        return json({ ok: true });
+      }
       case "protokoll_einwand": {
         nurProtokolle(ich);
         const pr = await protokollHolen(p.id);
