@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.799.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.800.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17197,10 +17197,16 @@ async function gpLoeschen(id) {
   $("gpMenue")?.remove();
   try { await api("geplant_loeschen", { id }, { warten: true }); melde("🗑️ Geplante Nachricht gelöscht"); chatStand = ""; await chatLaden(false); } catch (e) { meldeFehler(e); }
 }
+const NACHRICHT_STUFEN = ["gruen", "orange", "rot"];
+const NACHRICHT_STUFE_TEXT = { gruen: "Ungelesene Nachrichten (bis 2 Tage alt)", orange: "Ungelesene Nachrichten – schon 3 bis 4 Tage alt", rot: "Ungelesene Nachrichten – älter als 4 Tage" };
 function zaehlerZeigen() {
   const n = INIT?.ungelesen || 0, unsicher = !!INIT?.ungelesenUnsicher; // 2.1.1: einzelne Zahl nicht ladbar → „?“ statt still 0 (Regel 11)
   $("fussZaehler").textContent = unsicher ? (n ? n + "+" : "?") : n; $("fussZaehler").classList.toggle("versteckt", !n && !unsicher);
   $("fussZaehler").title = unsicher ? "Nicht alle Unterhaltungen konnten gezählt werden" : "";
+  // 2.800.0 KC-CLUB-NACHRICHT-ALTER (Wunsch #61 Hansi): der Knopf „Nachrichten“ unten blinkt, solange etwas ungelesen ist – bis 2 Tage grün,
+  // 3. und 4. Tag orange, danach rot (Stufe rechnet der Server, Baustein KC-CLUB-NACHRICHT-MAHNUNG). Stufe unbekannt → nur die Zahl, kein Blinken.
+  const st = n && !unsicher ? INIT?.nachrichtMahnung?.stufe : null, fk = document.querySelector('#fuss [data-v="nachrichten"]');
+  if (fk) { NACHRICHT_STUFEN.forEach((x) => fk.classList.toggle("alt-" + x, st === x)); fk.title = st ? NACHRICHT_STUFE_TEXT[st] : ""; }
   // KC-CLUB-NEU-KACHEL (1.21.4): Farbe und Zahl der Nachrichten-Kachel sofort mitziehen (ohne die Startseite neu zu zeichnen)
   document.querySelectorAll('.kachel[data-id="kommunikation"]:not(.bearb)').forEach((k) => {
     k.classList.toggle("neu-da", n > 0); let z = k.querySelector(".zahl");

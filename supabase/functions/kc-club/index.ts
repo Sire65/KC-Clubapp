@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.799.0";
+const SERVER_VERSION = "2.800.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -1872,6 +1872,7 @@ const KA_ID = /^[a-z0-9_-]{1,30}$/;
 const kaIds = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).filter((x) => typeof x === "string" && KA_ID.test(x)))].slice(0, 50) as string[];
 // KC-CLUB-EMPFANGS-EFFEKT (2.177.0): mit welchem Effekt meine Nachrichten beim Empfänger ankommen (Wahl unter 🎨 Darstellung)
 const SENDE_EFFEKT_ARTEN = ["flieger", "taube", "postauto", "fahrrad", "flasche", "rakete", "ballon", "uhu", "muenchhausen", "wechsel", "aus"]; // 2.362.0: + Fahrrad, Flaschenpost, Rakete, Ballon · 2.363.0: + Münchhausen
+const MAHNUNG_STUFE_TAGE = [2, 4]; // 2.800.0 KC-CLUB-NACHRICHT-ALTER: bis 2 Tage grün, bis 4 Tage orange, danach rot (Knopf „Nachrichten“ unten)
 const MAHNUNG_TAGE = 5; // KC-CLUB-NACHRICHT-MAHNUNG (2.223.0): ab so vielen Tagen ungelesen blinkt die Nachrichten-Kachel
 const RC_EIGENE_MAX = 12; // KC-CLUB-REISE-CHECKLISTE (2.223.0): eigene Punkte je Reise
 // KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): der Admin wählt per Häkchen, wer einmalig eine Rose aus der Sim-Jü-Schießbude bekommt (kein Geschlechtsfeld,
@@ -9515,7 +9516,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             if (Math.random() < 1 / MAHNUNG_PAKET_VERGLEICH) nebenbei(mahnungAlt(ich, offen, grenze).then(async (alt) => {
               if (alt.alt !== pk.alt || alt.wichtig !== pk.wichtig) await protokoll(ich.person_id, "mahnung_paket_abweichung", { alt, neu: pk });
             }).catch((e) => console.error("mahnung paket vergleich", String(e))));
-            return { alt: pk.alt, wichtig: pk.wichtig, tage: MAHNUNG_TAGE };
+            // 2.800.0 KC-CLUB-NACHRICHT-ALTER (Wunsch #61 Hansi: Knopf „Nachrichten“ blinkt – erst 2 Tage grün, 3. und 4. Tag orange, dann rot):
+            // derselbe Baustein mit den Grenzen 2 und 4 Tage; Fehler/Not-Aus → keine Stufe (die App zeigt dann nur die Zahl, nie „grün“ geraten)
+            const thr = offen.map(({ t }) => ({ t: t.thread_id, lr: t.last_read_at ?? null })), vor = (tage: number) => new Date(Date.now() - tage * 86400000).toISOString();
+            const a2 = offen.length ? await mahnungPaket(ich.person_id, thr, vor(MAHNUNG_STUFE_TAGE[0])) : null;
+            const a4 = a2?.alt ? await mahnungPaket(ich.person_id, thr, vor(MAHNUNG_STUFE_TAGE[1])) : null;
+            const stufe = !offen.length || !a2 ? null : !a2.alt ? "gruen" : !a4 ? null : a4.alt ? "rot" : "orange";
+            return { alt: pk.alt, wichtig: pk.wichtig, tage: MAHNUNG_TAGE, stufe };
           }
           return { ...(await mahnungAlt(ich, offen, grenze)), tage: MAHNUNG_TAGE };
         })();

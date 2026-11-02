@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.800.0 – 2026-11-02 – 💬 Knopf „Nachrichten“ blinkt je nach Alter: grün, orange, rot (KC-CLUB-NACHRICHT-ALTER) · Server 2.800.0
+Wunsch #61 Hansi (02.11.): „Unten in der Zeile steht der Button Nachricht. Der zeigt eine kleine Zahl an. Der soll zusätzlich blinken, wenn man Nachricht hat. Erst 2 Tage grün, 3 und 4 Tage orange, dann rot, wenn man nicht gelesen hat.“
+- Der Knopf **💬 Nachrichten** in der unteren Leiste blinkt, solange etwas ungelesen ist – nach dem Alter der ältesten ungelesenen Nachricht: **bis 2 Tage grün**, **3. und 4. Tag orange**, **danach rot**. Die kleine Zahl hat dieselbe Farbe; ein Hinweistext beim Darauf-Zeigen sagt, wie alt.
+- Server: vorhandener Baustein KC-CLUB-NACHRICHT-MAHNUNG (`kc_club_nachricht_mahnung`) mit den Grenzen 2 und 4 Tage (`MAHNUNG_STUFE_TAGE`), höchstens 2 zusätzliche Abfragen und nur bei Ungelesenem. Fehler/Not-Aus → keine Stufe: dann nur die Zahl, nie „grün“ geraten (Regel 11). Die rot blinkende Start-Kachel ab 5 Tagen bleibt unverändert.
+- Strom: „Animierte Knöpfe“ aus → kein Blinken, nur farbiger Rahmen; die Strom-Ruhe (2.799.0) hält das Blinken nach 3 Min. ohne Bedienung an.
+- Tests: `tests/nachricht-alter.test.mjs`, Klick-Rundgang (grün/orange/rot/unbekannt/nichts). Rückweg: App und Server 2.799.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.799.0 – 2026-11-01 – 📋 Wunschliste: Grußformel, Video-Hinweis am Ende, Runder Tisch, Aktenschrank-Schrift, Protokoll-Info und -Gruppen, 🔋 Strom sparen · Server 2.799.0
 Wunsch Hansi (01.11.): „Jetzt Wunschliste abarbeiten.“
 - **#52 ✍️ Grußformel** (KC-CLUB-GRUSSFORMEL): In der kleinen Zeile über dem Schreibfeld (▾ ⌨️ 🔊 …) steht ✍️. Antippen zeigt „Danke und Gruß, Hansi“, „Liebe Grüße Hansi“, „Bis bald mal wieder Hansi“, „Freundliche Grüße Hansi“ (jeweils mit dem eigenen Vornamen) – antippen setzt die Formel an der Schreibstelle in einer eigenen Zeile ein, die Tastatur bleibt offen.
