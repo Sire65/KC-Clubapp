@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.812.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.813.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1175,7 +1175,7 @@ setInterval(() => { if (DS.modus === "auto") anwendenDesign(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && DS.modus === "auto") anwendenDesign(); });
 
 // ---------- KC-CLUB-PINNWAND: Post-its (max. PW.max je Person vom Server, max. 200 Zeichen) ----------
-let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false };
+let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false, auf: new Set(), alteAuf: false }; // 2.813.0 KC-CLUB-PINNWAND-NADELN: groß gemachte Nadeln, „Ältere Zettel“ offen
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): Farbe 1–4 kommt fest vom Server (gelb, rosé, hellgrün, hellblau)
 // Kopfzeile jedes Zettels: wer und wann (für eigene Zettel der eigene Vorname)
 const pwAngepinnt = (iso) => { const d = new Date(iso); return `angepinnt am ${fKurz.format(d)} ${fZeit.format(d)}`; };
@@ -1374,13 +1374,21 @@ function pwZeigen() {
   $("pwMaxText").textContent = PW.max;
   const aushang = pwAushangHtml();
   if (!PW.zettel.length) return ($("pwWand").innerHTML = aushang + (aushang ? "" : `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`));
-  $("pwWand").innerHTML = aushang + PW.zettel.map((z) => {
+  // 2.813.0 KC-CLUB-PINNWAND-NADELN: gelesene Zettel ab dem Folgetag nicht mehr groß an der Wand
+  const alt = PW.zettel.filter((z) => pwAlt(z) && !PW.auf.has(z.id)), wand = PW.zettel.filter((z) => !alt.includes(z));
+  const nadeln = alt.filter(pwNadelFuerMich), archiv = alt.filter((z) => !pwNadelFuerMich(z));
+  const nadelHtml = nadeln.length ? `<div class="pw-nadeln" role="group" aria-label="Abgelegte Zettel – antippen macht sie wieder groß">${nadeln.map((z) => { const wer = z.vonMir ? "dir" : z.von.vorname;
+    return `<button type="button" class="pw-nadel${pwFarbe(z)}${z.wichtig ? " wichtig" : ""}" onclick="pwNadel('${esc(z.id)}')" title="${esc(`Zettel von ${wer}: ${z.text.length > 60 ? z.text.slice(0, 58) + " …" : z.text} – antippen macht ihn groß`)}" aria-label="${esc(`Zettel von ${wer} groß zeigen`)}"></button>`; }).join("")}</div>` : "";
+  const altKnopf = archiv.length ? `<div class="pw-alt-zeile"><button type="button" class="knopf klein" onclick="pwAlteZeigen(${!PW.alteAuf})">${PW.alteAuf ? "🗂️ Ältere Zettel ausblenden" : `🗂️ Ältere Zettel ansehen (${archiv.length})`}</button></div>` : "";
+  const zeigen = [...wand, ...(PW.alteAuf ? archiv : [])];
+  $("pwWand").innerHTML = nadelHtml + aushang + (zeigen.length || aushang ? "" : `<div class="leer">✅ Alles gelesen.${nadeln.length ? "<br>Gelesene Zettel stecken oben als Nadel – antippen macht sie groß." : ""}</div>`) + zeigen.map((z) => {
     const knoepfe = [];
     if (pwWillkommenWer(z)) knoepfe.push(`<button class="antw" onclick="pwBegruessen(PW.zettel.find((x) => x.id === '${z.id}')?.willkommen)">${pwWillkText(z)}</button>`); // 2.30.1
     if (!z.vonMir && z.antworten !== false) knoepfe.push(`<button class="antw" onclick="pwAntworten('${z.id}','${esc(z.von.person_id)}',${jsArg(z.von.vorname)})">✍️ Antworten</button>`);
     if (!z.vonMir) knoepfe.push(z.erledigt ? `<button class="erl" onclick="pwErledigt('${z.id}', true)">✓ erledigt ${zeitKurz(z.erledigt)}</button>` : `<button onclick="pwErledigt('${z.id}')">✓ Erledigt</button>`);
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
     if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ ${z.teilAb ? "ganz abnehmen" : "abnehmen"}</button>`);
+    if (PW.auf.has(z.id)) knoepfe.push(`<button onclick="pwNadel('${z.id}')">📌 wieder als Nadel</button>`); // 2.813.0 KC-CLUB-PINNWAND-NADELN
     // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: für Verfasser/Clubleitung sichtbar, bei wem er noch hängt
     const teil = z.teilAb && z.leser ? `<div class="zteil">🧹 Bei Lesern abgenommen${z.offen?.length ? ` – hängt noch bei ${esc(z.offen.map((n) => n.split(" ")[0]).join(", "))}` : ""}</div>` : "";
     const leser = z.leser && z.fuer !== "ich" ? `<details><summary>👁️ gelesen ${z.leser.length}/${z.anzahl} · ✓ erl. ${z.leser.filter((l) => l.erledigt).length}</summary>`
@@ -1390,8 +1398,22 @@ function pwZeigen() {
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
-      + teil + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("");
+      + teil + leser + (knoepfe.length ? `<div class="zknoepfe">${knoepfe.join("")}</div>` : "") + `</div>`; }).join("") + altKnopf;
 }
+// ---------- 2.813.0 KC-CLUB-PINNWAND-NADELN (Wunsch #64 Hansi „Pins nur noch bei den Mitgliedern hängen lassen, die sie noch nicht gesehen haben.
+// Für mich farbige Pinnnadeln oben im Holzrahmen – antippen, dann wird der Zettel wieder groß. So wird die Wand nicht unnötig voll.“ – „am nächsten Tag“) ----------
+// Fremder Zettel: ab dem Tag nach meinem ersten Ansehen (Server: kc_club_pinnwand_gelesen.gesehen_am) nicht mehr groß. Eigener Zettel: sobald alle
+// Empfänger ihn gesehen haben (ab dem Tag nach dem Anheften). Wichtige, noch nicht erledigte Zettel bleiben immer groß. Nichts wird gelöscht:
+// Verfasser und Clubleitung sehen eine Nadel in der Zettelfarbe oben im Rahmen, alle anderen „🗂️ Ältere Zettel ansehen“.
+const pwAlt = (z) => {
+  if (pwOffen(z)) return false;
+  const heute = heuteIso();
+  if (!z.vonMir) return !!z.gesehen && berlinTagApp(z.gesehen) < heute;
+  return z.fuer !== "ich" && z.anzahl > 0 && Array.isArray(z.offen) && !z.offen.length && berlinTagApp(z.erstellt_am) < heute;
+};
+const pwNadelFuerMich = (z) => !!(z.vonMir || ICH?.admin || ICH?.vorstand);
+function pwNadel(id) { if (PW.auf.has(id)) PW.auf.delete(id); else PW.auf.add(id); pwZeigen(); if (PW.auf.has(id)) document.querySelector(`#pwWand .zettel[data-zid="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }
+function pwAlteZeigen(an) { PW.alteAuf = !!an; pwZeigen(); }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
 function pwAushangHtml() {
   const h = PW.hilfe; if (!h) return "";
@@ -2499,6 +2521,7 @@ const HILFE = [
   { id: "buero_ansicht", thema: "club", sym: "👀", nur: () => !!ICH?.admin, t: "Büro für alle zur Ansicht öffnen", x: "Im Büro unter <b>🔐 Verwaltung → 👀 Für alle zur Ansicht</b> öffnest du das Büro für alle Mitglieder – <b>nur zum Ansehen</b>, z. B. während der Clubsitzung. Zeitknöpfe: <b>12, 24, 48 Std., 1 Woche, 1 Monat oder bis auf Widerruf</b>; „⛔ Jetzt wieder schließen“ beendet es sofort. Niemand kann dabei etwas ändern oder versenden; Adressbuch, Aktentasche, Freud &amp; Leid und Eingang bleiben bei der Clubleitung, Gäste und Aushilfen sehen nichts. Die anderen sehen das Büro nach spätestens 1–3 Minuten.", zeig: () => buStart(), seit: "2.765.0" },
   { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.763.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
+  { id: "pinnwand_nadeln", thema: "club", sym: "📍", t: "Wo sind die Zettel, die ich schon gelesen habe?", x: "Damit die Pinnwand nicht zu voll wird, hängt ein Zettel nur noch <b>bis zum Tag nach dem ersten Ansehen</b> groß an der Wand. Danach findest du ihn unten über <b>„🗂️ Ältere Zettel ansehen“</b>. Deine eigenen Zettel – und für die Clubleitung alle gelesenen – stecken als <b>farbige Nadel oben im Rahmen</b>: antippen macht den Zettel wieder groß, <b>„📌 wieder als Nadel“</b> steckt ihn zurück. <b>Wichtige</b> Zettel bleiben groß, bis du „✓ Erledigt“ tippst. Gelöscht wird nichts." }, // 2.813.0 KC-CLUB-PINNWAND-NADELN
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
   { id: "nachricht_termin", thema: "nachrichten", sym: "📅", t: "Nachricht als Termin übernehmen", x: "Steht in einer Nachricht ein Termin – z. B. <b>„Samstag 18 Uhr Grillen bei Klaus“</b> oder <b>„am 14.11. um 19:30 Sitzung“</b> –, liest die App Tag, Uhrzeit, Ort und Titel selbst heraus. Drei Wege: <b>1.</b> Unter der Nachricht steht ein Knopf <b>„📅 Sa., 24.10., 18:00 Uhr – eintragen“</b>. <b>2.</b> Nachricht antippen → <b>„📅 Als Termin übernehmen“</b>. <b>3.</b> In der kleinen Zeile am Schreibfeld (neben ▾ und ⌨️) das <b>📅</b> – es nimmt, was du gerade schreibst, sonst die neueste Nachricht mit Termin. Im Fenster ist alles vorausgefüllt: kurz prüfen, <b>✅ Eintragen</b> – fertig. Der Termin steht dann in deinem Kalender (nur du siehst ihn), auf Wunsch mit Erinnerung und zusätzlich im Kalender deines Handys. Die App versteht viele Schreibweisen: 14.11. · 14.11.2026 · 14. November · morgen · übermorgen · nächsten Freitag · nächste Woche Dienstag · in 3 Tagen · 19 Uhr · 19:30 · 19.30 Uhr · 18–20 Uhr · halb 8 · viertel nach 7 · „um 7“ (= 19 Uhr).", seit: "2.608.0" },

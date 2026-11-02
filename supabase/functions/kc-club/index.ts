@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.810.0";
+const SERVER_VERSION = "2.813.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -16542,6 +16542,7 @@ Köcheclub Werne`,
             von: { person_id: z.person_id, vorname: vorname(leute.get(z.person_id) ?? null) || nm(z.person_id) },
             empfaenger: z.fuer === "personen" ? empf.map(nm) : [],
             erledigt: z.fuer === "ich" ? null : meine?.erledigt_am ?? null,
+            gesehen: vonMir ? null : meine?.gesehen_am ?? null, // 2.813.0 KC-CLUB-PINNWAND-NADELN: wann ich ihn zuerst gesehen habe (ab dem Folgetag nur noch Nadel/„Ältere Zettel“)
             // wer wann gelesen / erledigt hat: nur für den Verfasser (und Clubsprecher/Kassenwart/Admin)
             ...(vonMir || ich.vorstand ? { leser: lese.map((g: any) => ({ name: nm(g.person_id), gesehen: g.gesehen_am, erledigt: g.erledigt_am })).sort((a: any, b: any) => String(a.gesehen).localeCompare(String(b.gesehen))),
               offen: empf.filter((id: string) => !lese.some((g: any) => g.person_id === id)).map(nm).sort(), anzahl: empf.length } : {}) };

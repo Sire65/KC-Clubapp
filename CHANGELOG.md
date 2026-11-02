@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.813.0 – 2026-11-02 – 📍 Pinnwand: gelesene Zettel als Nadel im Rahmen (KC-CLUB-PINNWAND-NADELN, Wunsch #64) · App + Server
+Wunsch #64 Hansi: „Pins nur noch bei den Mitgliedern hängen lassen, die sie noch nicht gesehen haben. Für mich farbige Pinnnadeln oben im Holzrahmen – antippen, dann wird der Zettel wieder groß. So wird die Wand nicht unnötig voll.“ Konzept bestätigt, Antwort auf die Rückfrage: „Am nächsten Tag“.
+- Fremde Zettel hängen nur noch bis zum Tag nach dem ersten Ansehen groß an der Wand („gesehen“ zählt die App schon seit 2.763.0, `kc_club_pinnwand_gelesen`). Wichtige, nicht erledigte Zettel bleiben groß.
+- Eigene Zettel werden zur Nadel, sobald alle Empfänger sie gesehen haben. Verfasser und Clubleitung (Admin/Vorstand) sehen abgelegte Zettel als farbige Nadel oben im Rahmen – antippen macht ihn groß (mit „👁️ gelesen x/y“), „📌 wieder als Nadel“ steckt ihn zurück. Alle anderen: „🗂️ Ältere Zettel ansehen (n)“. Gelöscht wird nichts.
+- Server: je Zettel nur der eigene Zeitpunkt „zuerst gesehen“ (vorhandene Abfrage, keine neue). Hilfe-Eintrag `pinnwand_nadeln`. Test: `tests/pinnwand-nadeln.test.mjs`. Browser geprüft (Admin und Mitglied).
+- Rückweg: App + Server 2.812.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.812.0 – 2026-11-02 – 🖥️ Büro-Schreibtisch aufgeräumt: nichts überlappt mehr (KC-CLUB-BUERO-SCHREIBTISCH) · nur App
 Wunsch Hansi (02.11.): „Prüfe nochmal den Schreibtisch, dass sich nichts groß überlappt und aufgeräumt aussieht.“ Geprüft mit Messung in 6 Fällen (Handy 360/390/430 px, Mitglied ohne Leitungsrechte, Tablet, PC; Tag und Nacht).
 - Der **Bildschirm** wurde auf Handys von seinen Textzeilen breiter gedrückt und lag über Kalender und Drucker (fing dort Tipps ab) – jetzt bleibt er in seinen zwei Spalten; Schrift passt sich der Breite an, die Glückwunsch-Zeile ist kürzer.
