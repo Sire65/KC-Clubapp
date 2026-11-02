@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.815.0 – 2026-11-02 – 🧹 Erklärfilm ergänzt: Verschiebepfeile und „nur noch 4 Kacheln“ (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 02.11.: „Der Film muss noch zeigen, dass man die Kacheln länger drücken kann und dann auch Verschiebepfeile hat. Und ein Bild, wo z. B. 4 Kacheln übrig sind wie Nachrichten, Termine, Protokoll, Dienstplan.“
+- Film „Deine App – so, wie du sie willst“ neu (2:21 Min.): nach dem langen Drücken zeigt jede Kachel unten **◀ ▲ ▼ ▶**, die gehaltene Kachel rote Pfeile rundum mit ✥; der Finger tippt ▲ bei Nachrichten. Neue Szene: von 12 Kacheln bleiben **Nachrichten, Termine, Protokolle, Dienstpläne**.
+- `film/app-selbst-einrichten.mp4?v=2` (neue Fassung statt der alten aus dem Zwischenspeicher), gleiche Kennung `ansichtfilm` – wer die erste Fassung schon gesehen hat, bekommt sie nicht erneut angeboten. Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests: `tests/film-hinweis.test.mjs` unverändert grün. Rückweg: App 2.814.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.814.0 – 2026-11-02 – 📌 Admin darf 8 Zettel an die Pinnwand (KC-CLUB-PINNWAND-ADMIN-MEHR) · App + Server + Datenbank
 Wunsch Hansi: „Gib mir als Admin mehr als 4 Zettel an der Pinnwand.“
 - Admin: bis zu **8** Zettel gleichzeitig (Mitglieder weiter 4). Die Zettel 5–8 bekommen eigene Farben: orange, lila, türkis, creme – auch als Nadel im Rahmen.
