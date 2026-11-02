@@ -139,7 +139,7 @@ function treffenGemerkt(k: string, lesen: () => PromiseLike<{ data: any; error: 
 const dbWeg = () => json({ error: "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg" }, 503);
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.806.0";
+const SERVER_VERSION = "2.804.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9112,9 +9112,9 @@ Köcheclub Werne`,
       const { data: leute } = await db.from("kc_core_people").select("person_id,email,active,org_id").eq("active", true).eq("org_id", ORG).ilike("email", mail);
       const pe = (leute ?? []).find((x: any) => String(x.email || "").trim().toLowerCase() === mail);
       if (!pe || String(pe.person_id).startsWith("KC-P-TEST")) { await protokoll(null, "zugang_angefordert", { treffer: false }); return json({ ok: true, text }); }
-      // 2.806.0 KC-CLUB-SPERRE-OHNE-LINK (Fund Hansi 02.11.: „Er ist gesperrt und müsste Wartung angezeigt bekommen“ – Thomas am PC ohne Link forderte einen
+      // 2.797.0 KC-CLUB-SPERRE-OHNE-LINK (Fund Hansi 02.11.: „Er ist gesperrt und müsste Wartung angezeigt bekommen“ – Thomas am PC ohne Link forderte einen
       // neuen an): gesperrt → KEIN neuer Link, sondern dieselbe Anzeige wie beim Öffnen mit Link (z. B. Wartung). Der Versuch wird gemerkt wie sonst.
-      // 2.806.0 KC-CLUB-KOMM-AUS-HINWEIS (Wunsch Hansi 02.11.: „im Fenster anzeigen: Hallo Thomas, du hast einen neuen Link angefordert …“): steht die Person
+      // 2.797.0 KC-CLUB-KOMM-AUS-HINWEIS (Wunsch Hansi 02.11.: „im Fenster anzeigen: Hallo Thomas, du hast einen neuen Link angefordert …“): steht die Person
       // auf „keine Benachrichtigungen“ (kc_club_kommunikation_aus), geht ohnehin keine Mail raus – statt „Mail kommt gleich“ sagt die App ehrlich, warum.
       if ((await kommunikationAus()).has(pe.person_id)) {
         await protokoll(pe.person_id, "zugang_angefordert", { treffer: true, kommAus: true });
@@ -18726,7 +18726,7 @@ Köcheclub-App`,
           if (m.quelle === "db") { b.dbN++; b.netOk += m.net_ok ?? 0; b.netFehler += m.net_fehler ?? 0; b.bytes = m.db_bytes ?? b.bytes; b.verb = Math.max(b.verb ?? 0, m.verbindungen ?? 0); }
           else { b.apiN++; b.msSumme += m.db_ms ?? 0; b.msMax = Math.max(b.msMax ?? 0, m.db_ms ?? 0); }
         }
-        // 2.806.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.): kurze Aussetzer (Minuten, in denen die Datenbank keine Verbindungen annahm) im Zeitraum
+        // 2.797.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.): kurze Aussetzer (Minuten, in denen die Datenbank keine Verbindungen annahm) im Zeitraum
         const { data: aus } = await db.from("kc_club_db_aussetzer").select("minute,zeitplaene,app").gte("minute", new Date(start).toISOString()).order("minute", { ascending: false }).limit(200);
         return json({ tage, schrittMin, seit: erster?.zeit ?? null, zeit: jetzt(), aussetzer: aus ?? [],
           abschnitte: ab.map(({ msSumme, ...b }) => ({ ...b, ms: b.apiN ? Math.round(msSumme / b.apiN) : null })) });

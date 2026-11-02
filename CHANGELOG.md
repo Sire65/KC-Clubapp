@@ -1,8 +1,5 @@
 # Änderungen
 
-## 2.806.0 – 2026-11-02 – ⚡ Kurze Datenbank-Aussetzer: App fragt selbst nochmal, Zählung im Verlauf · Zeitpläne entzerrt · Hinweis bei gesperrtem Zugang
-- ⚡ Antwortet die Datenbank für einen Moment nicht, fragt die App bei reinen Abfragen nach 4 bzw. 8 Sekunden selbst nochmal (Speichern nie doppelt); im Admin → Verlauf stehen die kurzen Aussetzer mit Datum und Dauer (KC-CLUB-DB-AUSSETZER). ⏱️ Die 5-Minuten-Zeitpläne starten nicht mehr alle gleichzeitig (KC-CLUB-CRON-ENTZERREN). 🔕 Wer „keine Benachrichtigungen“ gewählt hat und einen neuen Link anfordert, bekommt einen klaren Hinweis statt „Mail kommt gleich“ (KC-CLUB-KOMM-AUS-HINWEIS); wer gesperrt ist, sieht dabei die Sperre, z. B. Wartung (KC-CLUB-SPERRE-OHNE-LINK).
-
 ## 2.805.0 – 2026-11-02 – 📝 Dienstwünsche: Twinkey auf DP2 Build 306 (KC-CLUB-DIENSTWUNSCH) · nur App
 Übergabe von Codex („Übergabe an Claude“, Sire65/dp3 `codex/club-app-interface`, docs/CLAUDE-BUTTON-LOGIK-NACHTRAG.md) – Hansi: „Ja Montag“.
 - Twinkey mit `tools/dp2-twinkey-uebernehmen.mjs` unverändert aus DP2 übernommen: **Build 291 → Build 306 RC** (Commit 776d039). Build 291 ist in 306 enthalten.
