@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.809.0 – 2026-11-02 – 🔧 Server ließ sich seit 2.804.0 nicht hochladen – korrigiert (KC-CLUB-ANSICHTFILM) · Server 2.809.0
+- Fehler aus 2.804.0: In der Prüfung der Einstellung `filme` stand ein `//`-Kommentar mitten in der Zeile und hat den Rest der Zeile (`z: …`) auskommentiert. Supabase hat das Bündeln abgelehnt („Expected ',', got ';'“) – dadurch scheiterte „Server hochladen“ für 2.804.0 und 2.806.0, es lief weiter Server 2.802.0. Nichts wurde beschädigt. Jetzt `/* … */`.
+- Damit sind ab jetzt auf dem Server aktiv: „bis zum Ende gesehen“ und **👀 Wer hat ihn gesehen?** (2.804.0) sowie die Server-Teile von 2.806.0 (KC-CLUB-DB-VIEL-ZU-TUN).
+- Prüfung vor dem Hochladen: Server-Datei mit dem TypeScript-Parser geprüft (vorher Syntaxfehler, jetzt ok). Rückweg: Server 2.802.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.808.0 – 2026-11-02 – 🔽 Klapp-Pfeile überall gleich (KC-CLUB-KLAPPE-GLEICH, Wunsch #63) · nur App
 Wunsch #63 Hansi: „Alle Listen mit Einklapp-Pfeilen gleich aufbauen. In Protokollen sind die Pfeile viel zu klein und drehen sich nicht.“
 - Ursache: Die Protokoll-Monate (2.802.0) hatten einen eigenen kleinen Pfeil links, der sich nicht drehte; Schloss und Pfeil rutschten darunter in eine eigene Zeile.
