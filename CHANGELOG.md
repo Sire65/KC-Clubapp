@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.821.0 – 2026-11-02 – 🧹 Erklärfilm: Reiter erklärt und anordnen, einfache Ansicht wie echt (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 02.11.: „Nehme noch auf, dass man sich die Reiter Club, Meins, Technik selber anordnen kann und kurz wofür sie sind. Und die einfache Ansicht muss besser zeigen, wie sie wirklich aussieht – mit langen Knöpfen und oben im Kopf nur minimal Ansicht.“ – sofort eingespielt (Wunsch Hansi).
+- Film „Deine App – so, wie du sie willst“ neu (2:47 Min.): **wofür die Reiter sind** (Club – rund um den Verein · Meins – deine eigenen Sachen · Technik – Hilfe, Videos, Sicherheit) und **Reiter anordnen** (festhalten, nach links/rechts ziehen, „💾 Reihenfolge der Register gespeichert“).
+- **Einfache Ansicht wie echt:** lange Knöpfe untereinander mit Unterzeile, schlichter Kopf ohne Tag/Nacht, Aktualisieren und Lämpchen.
+- `film/app-selbst-einrichten.mp4?v=3`, gleiche Kennung `ansichtfilm` (wird nicht erneut beim Start angeboten). Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests unverändert grün. Rückweg: App 2.820.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.820.0 – 2026-11-02 – 🗄️ Vorschläge, Spenden, Abstimmungen in einen Ordner ablegen (KC-CLUB-VORSCHLAG-ORDNER, Wunsch #69) · nur App
 Wunsch #69 Hansi: „Bei Vorschläge, Spenden, Abstimmung auch ‚auf Ordner übernehmen‘ einbauen, dann Ordner wählen, Register wählen, Dokument wählen.“
 - Jeder Vorschlag, jedes Spendenprojekt und jede Abstimmung hat **„🗄️ In Ordner“**. Es öffnet die bekannte Ablage (wie Ablagekorb/Protokolle): Vorschlag „Soll ich das in … ablegen?“, sonst **Ordner wählen → Register wählen** (eigener Ordner oder – für die Clubleitung – Club-Ordner).

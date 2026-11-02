@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.820.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.821.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2062,8 +2062,8 @@ const FILME = [
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
   // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
   // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
-  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "2½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=2", bild: "film/app-einrichten-vorschau.jpg",
-    u: "Einfache und erweiterte Ansicht, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "2¾ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=3", bild: "film/app-einrichten-vorschau.jpg",
+    u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
     wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
