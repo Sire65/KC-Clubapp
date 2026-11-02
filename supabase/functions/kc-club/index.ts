@@ -9112,6 +9112,13 @@ Köcheclub Werne`,
       const { data: leute } = await db.from("kc_core_people").select("person_id,email,active,org_id").eq("active", true).eq("org_id", ORG).ilike("email", mail);
       const pe = (leute ?? []).find((x: any) => String(x.email || "").trim().toLowerCase() === mail);
       if (!pe || String(pe.person_id).startsWith("KC-P-TEST")) { await protokoll(null, "zugang_angefordert", { treffer: false }); return json({ ok: true, text }); }
+      // 2.797.0 KC-CLUB-SPERRE-OHNE-LINK (Fund Hansi 02.11.: „Er ist gesperrt und müsste Wartung angezeigt bekommen“ – Thomas am PC ohne Link forderte einen
+      // neuen an): gesperrt → KEIN neuer Link, sondern dieselbe Anzeige wie beim Öffnen mit Link (z. B. Wartung). Der Versuch wird gemerkt wie sonst.
+      const sp = await sperreFuer(pe.person_id);
+      if (sp) {
+        await sperreVersuchMerken(pe.person_id, sp.art, a).catch(() => {});
+        return json({ ok: true, text, gesperrt: sp.art, sperreText: SPERRE_TEXT[sp.art] || SPERRE_TEXT.wartung, bis: sp.bis });
+      }
       const { count: kuerzlich } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "zugang_angefordert").eq("person_id", pe.person_id).gte("zeit", seit15);
       if ((kuerzlich ?? 0) > 0) return json({ ok: true, text });
       const versand = await neuenLinkMailen(pe.person_id);

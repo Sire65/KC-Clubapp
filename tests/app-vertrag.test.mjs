@@ -558,7 +558,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(z.length > 100 && server.indexOf('if (a === "zugang_anfordern")') < server.indexOf("const ich = await anmelden(req);"), "Anfordern fehlt oder braucht Anmeldung");
   // KC-CLUB-ZUGANG-HILFE (26.10.2026): der Mail-Versand steckt jetzt in neuenLinkMailen (gemeinsam mit der Zugangs-Hilfe)
   const nl = server.slice(server.indexOf("async function neuenLinkMailen("), server.indexOf("// ---------- KC-CLUB-KURZCODE (1.87.0"));
-  assert.ok(/const versand = await neuenLinkMailen\(pe\.person_id\);/.test(z) && /routerSenden\("club_nachricht_mail", \[pid\]/.test(nl) && !/json\(\{[^}]*link/.test(z) && !/json\(/.test(nl), "Link würde nicht nur per Mail gehen");
+  assert.ok(/const versand = await neuenLinkMailen\(pe\.person_id(, true)?\);/.test(z) && /routerSenden\("club_nachricht_mail", \[pid\]/.test(nl) && !/json\(\{[^}]*link/.test(z) && !/json\(/.test(nl), "Link würde nicht nur per Mail gehen");
   assert.ok(/gesamt \?\? 0\) >= 20/.test(z) && /kuerzlich \?\? 0\) > 0/.test(z) && /KC-P-TEST/.test(z), "Bremse/Testsperre fehlt");
   assert.ok(/zugangAnfordern\(\)/.test(html) && !/"x-club-token": KEY[^\n]*zugang_anfordern/.test(html), "Anfordern in der App fehlt");
 }
@@ -1367,7 +1367,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/status in \('sent',/.test(mig) && /values \('kc_communication_requests', 'variables'/.test(mig) && /r\.muster is not null/.test(mig), "nur fertige Mails / Spiegel-Muster");
   const za = server.slice(server.indexOf('if (a === "zugang_anfordern")'), server.indexOf("const tAnm = Date.now();"));
   const nlm = server.slice(server.indexOf("async function neuenLinkMailen("), server.indexOf("// ---------- KC-CLUB-KURZCODE (1.87.0")); // KC-CLUB-ZUGANG-HILFE: Versand ausgelagert
-  assert.ok(/neuenLinkMailen\(pe\.person_id\)/.test(za) && /db\.rpc\("kc_club_zugangslinks_schwaerzen"\)/.test(nlm), "„Link verloren?“ schwärzt nicht");
+  assert.ok(/neuenLinkMailen\(pe\.person_id(, true)?\)/.test(za) && /db\.rpc\("kc_club_zugangslinks_schwaerzen"\)/.test(nlm), "„Link verloren?“ schwärzt nicht");
   const lm = server.slice(server.indexOf('case "zugang_link_mailen"'), server.indexOf('case "pinnwand_fristen_setzen"'));
   assert.ok(/req\.headers\.get\("x-club-token"\)/.test(lm) && /eq\("person_id", ich\.person_id\)/.test(lm) && /seit15/.test(lm) && /db\.rpc\("kc_club_zugangslinks_schwaerzen"\)/.test(lm) && !/zufall\(\)/.test(lm), "Link-Mail: nur eigener Link an eigene Adresse, Sperre, Schwärzung, kein neuer Schlüssel");
   assert.ok(!/protokoll\([^;]*schluessel/.test(lm) && !/protokoll\([^;]*[{,]\s*(link|url)\b/.test(lm), "Link darf nicht ins Protokoll");
@@ -3107,7 +3107,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/\^\(\?:\\p\{Extended_Pictographic\}\|\\p\{Emoji_Component\}/.test(server) && /onclick="reagieren\('\$\{m\.id\}',\$\{esc\(JSON\.stringify\(x\.emoji\)\)\}\)">\$\{esc\(x\.emoji\)\}/.test(html), "Reaktion nur Emoji, maskiert");
   const za = server.slice(server.indexOf('if (a === "zugang_anfordern") {'), server.indexOf('if (a === "kurzcode_einloesen") {'));
   const zaf = server.slice(server.indexOf("async function neuenLinkMailen("), server.indexOf("// ---------- KC-CLUB-KURZCODE (1.87.0")); // KC-CLUB-ZUGANG-HILFE: ausgelagert
-  assert.ok(/neuenLinkMailen\(pe\.person_id\)/.test(za) && /neu_token_hash: await sha256\(token\), neu_bis:/.test(zaf) && /bisher\?\.aktiv/.test(zaf), "Link verloren nur vormerken"); // 2.1.1: als Bedingungsausdruck
+  assert.ok(/neuenLinkMailen\(pe\.person_id(, true)?\)/.test(za) && /neu_token_hash: await sha256\(token\), neu_bis:/.test(zaf) && /bisher\?\.aktiv/.test(zaf), "Link verloren nur vormerken"); // 2.1.1: als Bedingungsausdruck
   assert.ok(/\.eq\("neu_token_hash", hash\)\.gt\("neu_bis", jetzt\(\)\)\.eq\("aktiv", true\)/.test(server) && /"zugang_uebernommen"/.test(server), "Übernahme beim ersten Öffnen");
   assert.ok(/aktiv\.has\(id\) && \(id !== ich\.person_id \|\| (g\.erstellt_von === ich\.person_id|gruppenAdmin\(g, ich\.person_id\))\)/.test(server), "kein Selbst-Hinzufügen in fremde Gruppen");
   const mig = lies("supabase/migrations/20261003_kc_club_v1960_zugang_vormerken.sql");

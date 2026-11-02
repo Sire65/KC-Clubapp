@@ -7841,6 +7841,7 @@ async function zugangAnfordern() {
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }), signal: zeitSignal(30000) });
     const j = await r.json().catch(() => ({}));
+    if (r.ok && j.gesperrt) return sperreZeigen(j.gesperrt, j.sperreText, j.bis); // 2.797.0 KC-CLUB-SPERRE-OHNE-LINK: gesperrt → Wartung o. Ä. statt „Mail kommt“
     $("zaAntwort").innerHTML = r.ok ? "✅ " + esc(j.text || "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem Link.") + "<br>Bitte den Link in der Mail antippen (im Browser Chrome öffnen)." : "⚠️ " + esc(j.error || "Fehler " + r.status);
   } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung oder das Netz ist zu langsam – bitte gleich nochmal versuchen."; }
   setTimeout(() => { $("zaKnopf").disabled = false; }, 20000);
