@@ -1,4 +1,4 @@
-// 2.804.0 KC-CLUB-RECHNER (Wunschliste #48, Wunsch Hansi 02.11.2026 „Der Tischrechner soll einen wirklichen Rechner aufmachen zum Rechnen. Mit Sprachsteuerung,
+// 2.805.0 KC-CLUB-RECHNER (Wunschliste #48, Wunsch Hansi 02.11.2026 „Der Tischrechner soll einen wirklichen Rechner aufmachen zum Rechnen. Mit Sprachsteuerung,
 // z. B. rechne 5 x 22“): Tischrechner mit großen Tasten, grünem Display und Papierstreifen (letzte 20 Rechnungen, nur auf diesem Gerät). 🎤 nimmt die
 // vorhandene Spracherkennung (sbZuhoeren); „rechne …“ geht auch über die Sprachsteuerung der App (sbErkennen → rechnerOeffnen). Gerechnet wird nur auf dem
 // Gerät – ohne eval, eigener kleiner Rechenkern (+ − × ÷, Klammern, Prozent). Nichts geht an den Server. Nach jeder Änderung: node tools/teile-pruefsumme.mjs

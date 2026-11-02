@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.804.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.805.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,14 +12,14 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-JV85WynizssiEIJc/uzM2HYkwWgUnQfiP1ALtrhuUYb1LuhsUuN0lktGEL9hnRNW" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
-  szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-Q20OZ6Jcy3I1ZvuAILzJfzw/eIEoFck73IsAsKKJu6ijtWR4ypeCEEXr+UNf6v7E" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
-  rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-XWE2dY95XUlkqI0gnyxnN9Ll6isufr6/9LsUB6L2DrFFzuFIX7YO+a1hcv0bkqJK" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-yZtnisbesvyplWgO8s1bLgryJL9L/zhTJHIEPV9oYK1zbcGfeuyjek9/u7lzga+F" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-z5RYGQxIMetB0IhkmIQbAjPDl0VyMVGtndgsbkUjSRhd5ihOhHZO3duAXVLo8o5t" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
+  rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Uj5QbZuKw/ggaRuivnkaTqtVoSW7UMhAWK+6Ij2t5c8cFAMQoGBGSESpYJbMRWHK" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-FFTyCH5Q5y4PX4AZ90E9iiuSebdITuzOkkciDMimpBh/PsbHF5WWaVNTgQCqZSq1" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-V+9SOLOEXcq9QI6hfVfvGm1i9pEYwl5RsYASFQdbimWJPOH1T4X5PWM0eHeBr245" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
-  rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-t4FYzpsOSdtKZ/OJiTuJ11JRFFFJX2lZ6JqTMGsP3YpVnPYLJqFIh2iFKbuXVwO+" }, // 2.804.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
+  rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-1HVkXUu1VsW/Kw1TKOqrPWUcQqvgjx7zeOfpx9DbSUn+WsZaJ+V0CFzjR400vF7j" }, // 2.805.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
@@ -1003,7 +1003,7 @@ const THEMEN = [
   { id: "winter", sym: "⛄", name: "Winter", design: "nordsee", jz: "winter", effekt: "postauto", kopf: "bude" },
   { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube", schrift: "weihnacht", kopf: "bude" },
   { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger", schrift: "schwung", kopf: "theater" },
-  { id: "disco", sym: "🪩", name: "Disco", design: "disko", jz: "disco", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.804.0 KC-CLUB-DISCO (Wunschliste #58)
+  { id: "disco", sym: "🪩", name: "Disco", design: "disko", jz: "disco", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.805.0 KC-CLUB-DISCO (Wunschliste #58)
 ];
 // 2.331.0: Feste nach Kalender – Oktoberfest (Samstag nach dem 15.9. bis 1. Oktobersonntag, mindestens bis 3.10.) und Sim-Jü in Werne
 // (Samstag bis Dienstag um Simon und Juda, 28.10. – der Dienstag, der dem 28.10. am nächsten liegt; 2026: 24.–27.10.)
@@ -2038,13 +2038,19 @@ const FILME = [
   // 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: für alle Mitglieder über Technik → 🔐 Sicherheit & Datenschutz – kein Hinweis beim Start (fuer: false)
   { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "3 Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=2", bild: "film/sicherheit-vorschau.jpg",
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
+  // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
+  // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "2 Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=1", bild: "film/app-einrichten-vorschau.jpg",
+    u: "Einfache und erweiterte Ansicht, Kacheln verschieben und ausblenden, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
+    wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
-const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
+const filmeImBuero = () => (ICH ? FILME.filter((f) => (f.fuer() && !f.wo) || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
 const filmErledigt = (id) => !!INIT?.einstellungen?.filme?.[id]?.z;
 const FILM_START = { versuche: 0 };
 async function filmMerken(id, wie) {
   if (!INIT || INIT.einstellungen?.filme?.[id]?.wie === wie) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
+  if (wie === "angesehen" && INIT.einstellungen?.filme?.[id]?.wie === "ende") return; // KC-CLUB-ANSICHTFILM: „bis zum Ende“ nicht durch erneutes ▶ überschreiben
   const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString() } };
   INIT.einstellungen = { ...(INIT.einstellungen || {}), filme: neu };
   try { await einstSpeichern("filme", neu); } catch (e) { console.warn("filme", e); } // Regel 11: bei Fehler fragt die App beim nächsten Start einfach noch einmal
@@ -2061,8 +2067,8 @@ async function filmHinweisPruefen() {
   });
   spur("film_frage_" + (["an", "nein"].includes(wahl) ? wahl : "spaeter"), f.id); // KC-CLUB-SPUR-VOLL
   if (wahl === "an") return filmZeigen(f.id);
-  if (wahl === "nein") { filmMerken(f.id, "nein"); return melde("🎬 Alles klar – den Film findest du jederzeit im Büro unter 🎬 Anleitung."); }
-  melde("🎬 Ich erinnere dich beim nächsten Öffnen – oder jederzeit im Büro unter 🎬 Anleitung.");
+  if (wahl === "nein") { filmMerken(f.id, "nein"); return melde(`🎬 Alles klar – den Film findest du jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`); }
+  melde(`🎬 Ich erinnere dich beim nächsten Öffnen – oder jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`);
 }
 // Film abspielen: eigene Schicht über allem, echtes Video mit Bedienleiste; Ton an, weil der Start ein Tipp ist
 function filmZeigen(id) {
@@ -2079,9 +2085,21 @@ function filmZeigen(id) {
   spur("film_start", f.id);
   s.querySelector("[data-zu]").onclick = () => { ende(false); zu(); };
   v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
-  v.onended = () => { ende(true); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`); };
+  v.onended = () => { ende(true); filmMerken(f.id, "ende"); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`); };
   v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
   v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
+}
+// KC-CLUB-ANSICHTFILM-ZUSCHAUER (Wunsch Hansi 02.11.2026 „merken, wer ihn angesehen hat“): nur Admin. Quelle: Einstellung „filme“ je Mitglied
+// (dauerhaft, geräteübergreifend) – ✅ bis zum Ende · ▶ angefangen · 🙅 „Nein, danke“ · ⏳ noch nicht. Regel 11: Fehler → Meldung, keine leere „alle gesehen“-Liste.
+async function filmZuschauer(id) {
+  const f = FILME.find((x) => x.id === id); if (!f || !ICH?.admin) return;
+  let r; try { r = await api("film_zuschauer", { film: id }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const gruppe = (wie) => r.personen.filter((p) => (p.wie || null) === wie);
+  const block = (sym, titel, l) => `<h4 style="margin:12px 0 4px">${sym} ${titel} (${l.length})</h4>${l.length ? `<p class="hinweis" style="margin:0">${l.map((p) => `${esc(p.name)}${p.z ? ` <small>· ${esc(new Date(p.z).toLocaleDateString("de-DE"))}</small>` : ""}`).join(", ")}</p>` : `<p class="hinweis" style="margin:0">–</p>`}`;
+  const d = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">👀 ${f.sym} ${esc(f.t)}</h3>
+    <p class="hinweis" style="margin:0">Wer den Film gesehen hat – ohne Inhalte, nur ob und wann.</p>
+    ${block("✅", "Bis zum Ende", gruppe("ende"))}${block("▶", "Angefangen", gruppe("angesehen"))}${block("🙅", "Nein, danke", gruppe("nein"))}${block("⏳", "Noch nicht", gruppe(null))}`, () => d.remove());
+  d.querySelector('[data-a="zu"]').onclick = () => d.remove();
 }
 function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere → auswählen
   const l = filmeImBuero(); if (l.length === 1) return filmZeigen(l[0].id);
@@ -2547,7 +2565,7 @@ const HILFE = [
   { id: "kegeln", thema: "darstellung", sym: "🎳", t: "Thema Kegelabend", x: "Im Thema <b>🎳 Kegelabend</b> wird unten im Kopf der Startseite gekegelt: Ein <b>Koch mit Kochmütze</b> nimmt Anlauf und rollt die Kugel auf die <b>9 Kegel</b> (der König trägt eine rote Krone) – die Kegel fliegen, „5 Holz!“, dann stellen sie sich wieder auf. Oben rechts zählt die <b>Kreidetafel mit deinem Vornamen</b> die Striche. Der 6. Wurf ist immer <b>„Alle Neune!“</b> mit Konfetti – danach wischt ein Schwamm die Tafel sauber und es geht von vorn los. Vorschau: ⚙️ → ✨ Effekte → 🎳 Kegelabend.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.446.0" },
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
   { id: "viehmarkt", thema: "darstellung", sym: "🐄", t: "Viehmarkt auf Sim-Jü", x: "Am <b>Sim-Jü-Dienstag</b> (Vieh- und Krammarkt) zeigt der Kopf der Startseite abwechselnd mit der Kirmes-Szene den <b>🐄 Viehmarkt</b>: links Kuh, Schwein und ein Hühnerkäfig, der Händler mit Pfeife feilscht mit zwei Bauern – per <b>Handschlag</b> wird verkauft –, ein Bauer mit Holzschuhen führt seinen Haflinger vorbei, rechts ruft die Händlerin am Kurzwarenstand. Zum Schluss büxt das Ferkel aus, und nach einem „Prost!“ ist Feierabend. Dann trabt ein <b>🐂 Stier</b> mit großen Hörnern und Nasenring herein und schnaubt deinen Namen in den Himmel.", seit: "2.682.0" },
-  { id: "disco", thema: "darstellung", sym: "🪩", t: "Thema Disco", x: "Im Thema <b>🪩 Disco</b> wird es unten im Kopf der Startseite Nacht: Das <b>Schwarzlicht</b> flackert an, links legt der <b>DJ</b> auf, oben dreht sich die <b>Diskokugel</b> und wirft Lichtpunkte, auf der leuchtenden Tanzfläche tanzen <b>vier Leute</b> – zwischendurch legt <b>Twinkey ein Solo</b> im Spot hin. Dann zischt die <b>Nebelmaschine</b>, alles versinkt im Nebel, und es beginnt von vorn. <b>Am Clubabend und zu Silvester</b> wechselt der Kopf von selbst alle 2 Minuten zwischen Disco und deiner Szene. Auf der <b>🎭 Bühne</b> läuft die Disco bei „Nur Musik hören → Disco“ hinter Twinkey. Wählen: ⚙️ → Darstellung → Thema.", seit: "2.804.0" },
+  { id: "disco", thema: "darstellung", sym: "🪩", t: "Thema Disco", x: "Im Thema <b>🪩 Disco</b> wird es unten im Kopf der Startseite Nacht: Das <b>Schwarzlicht</b> flackert an, links legt der <b>DJ</b> auf, oben dreht sich die <b>Diskokugel</b> und wirft Lichtpunkte, auf der leuchtenden Tanzfläche tanzen <b>vier Leute</b> – zwischendurch legt <b>Twinkey ein Solo</b> im Spot hin. Dann zischt die <b>Nebelmaschine</b>, alles versinkt im Nebel, und es beginnt von vorn. <b>Am Clubabend und zu Silvester</b> wechselt der Kopf von selbst alle 2 Minuten zwischen Disco und deiner Szene. Auf der <b>🎭 Bühne</b> läuft die Disco bei „Nur Musik hören → Disco“ hinter Twinkey. Wählen: ⚙️ → Darstellung → Thema.", seit: "2.805.0" },
   { id: "seifenblasen", thema: "darstellung", sym: "🫧", t: "Thema Seifenblasen", x: "Im Thema <b>🫧 Seifenblasen</b> kommt unten im Kopf der Startseite ein <b>Kind</b> auf die Wiese und pustet <b>Seifenblasen</b> – kleine, große, leicht schillernd wie echte. Dann kommen von links und rechts <b>weitere Kinder</b> dazu. Die Blasen steigen, <b>platzen</b> und hinterlassen <b>Schlieren auf der Scheibe</b> – der Kopf wird immer verschmierter. Ab und zu wölbt eine <b>dicke Blase</b> den Kopf kurz wie ein <b>Fischauge</b>. Zum Schluss kommt der <b>Fensterputzer</b> mit Leiter, Eimer und Tuch und wischt die Scheibe wieder sauber – dann beginnt alles von vorn. Tippen geht durch die Schlieren hindurch. Vorschau: ⚙️ → ✨ Effekte → 🫧 Seifenblasen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.633.0" },
   { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
@@ -2789,7 +2807,7 @@ function sbKachelStufe(t) {
 }
 function sbErkennen(roh, mitglieder = [], ich = "") {
   const t = sbNorm(roh); if (!t) return null;
-  // 2.804.0 KC-CLUB-RECHNER: „rechne 5 mal 22“, „was ist 19 Prozent von 240“ → Tischrechner (ungekürzt weitergeben – Kommas gehören zur Zahl)
+  // 2.805.0 KC-CLUB-RECHNER: „rechne 5 mal 22“, „was ist 19 Prozent von 240“ → Tischrechner (ungekürzt weitergeben – Kommas gehören zur Zahl)
   if (/^(bitte )?(rechne|berechne|was (ist|sind|ergibt|macht)) .*\d|^(bitte )?(rechne|berechne) /.test(t)) return { art: "rechnen", was: String(roh || "").trim() };
   if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
   if (/^zurück$/.test(t)) return { art: "zurueck" };
@@ -3334,7 +3352,7 @@ const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.
 async function sbAusfuehren(b) {
   if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
   if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
-  if (b.art === "rechnen") { sbStopp(); return rechnerOeffnen(b.was); } // 2.804.0 KC-CLUB-RECHNER: Sprachfenster zu, Rechner mit Ergebnis auf
+  if (b.art === "rechnen") { sbStopp(); return rechnerOeffnen(b.was); } // 2.805.0 KC-CLUB-RECHNER: Sprachfenster zu, Rechner mit Ergebnis auf
   if (b.art === "wegweiser") return ewStart(); // 2.534.0 KC-CLUB-EINST-WEGWEISER: nur lesen, darum ohne Rückfrage
   if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (z.nur && !z.nur()) return melde("Das ist für dich nicht freigeschaltet.", true); if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
@@ -10616,7 +10634,7 @@ function jzSimJueSchalten() {
 }
 const jzSimJue = () => jzSimJueZeit();
 const jzbDarf = () => { const sj = jzSimJue(); return (fxAn() || (sj && !SPAR?.an && !!document.body?.animate)) && (einst("jahreszeit", true) || sj); };
-// 2.804.0 KC-CLUB-DISCO-AUTO (Wunsch Hansi „auch automatisch bei Clubabend und Silvester, abwechselnd mit der anderen Szene“): am Tag des Clubabends
+// 2.805.0 KC-CLUB-DISCO-AUTO (Wunsch Hansi „auch automatisch bei Clubabend und Silvester, abwechselnd mit der anderen Szene“): am Tag des Clubabends
 // (deutsche Zeit) und zu Silvester (31.12./1.1.) wechselt der Kopf alle 2 Minuten zwischen Disco und der sonst gewählten Szene. Nur, wo das Bild im Kopf
 // an ist (die eigene Einstellung „🍂 Jahreszeiten im Kopf“ und der Sparmodus gelten wie immer); die Sim-Jü-Szene geht vor. Umschalten: Minuten-Prüfung unten.
 const DISCO_WECHSEL_MIN = 2;
