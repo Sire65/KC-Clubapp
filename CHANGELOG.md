@@ -1,12 +1,12 @@
 # Änderungen
 
-## 2.805.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, #58) · 🖥️ Büro-Schreibtisch mit Rechner und Lampe (KC-CLUB-BUERO-SCHREIBTISCH, KC-CLUB-RECHNER, #48) · nur App
+## 2.809.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, #58) · 🖥️ Büro-Schreibtisch mit Rechner und Lampe (KC-CLUB-BUERO-SCHREIBTISCH, KC-CLUB-RECHNER, #48) · nur App
 Wunsch Hansi (31.10.): „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine, Szene versinkt im Nebel, fängt wieder von vorne an.“ Entscheidungen 02.11.: 4 Tänzer, zwischendurch legt Twinkey ein Solo hin; auch automatisch am Clubabend und zu Silvester im Wechsel; auch auf der Bühne bei „Nur Musik hören“.
 - Neues Thema **🪩 Disco** (⚙️ → Darstellung → Thema): Ein Lauf ≈ 60 s – Schwarzlicht flackert an, links legt der DJ auf (Plattenteller drehen, er nickt mit Kopfhörer), oben dreht die Diskokugel und wirft Lichtpunkte, 4 Leute tanzen auf der leuchtenden Tanzfläche, dann **Twinkey-Solo** im Spot (die anderen klatschen), danach zischt die Nebelmaschine, alles versinkt im Nebel, der Nebel lichtet sich – von vorn.
 - **Automatisch am Clubabend-Tag und zu Silvester** (31.12./1.1.): der Kopf wechselt alle 2 Minuten zwischen Disco und der sonst gewählten Szene (Silvester-Feuerwerk, Jahreszeit oder Thema). Nur wo das Bild im Kopf an ist; Sparmodus und „Jahreszeiten im Kopf aus“ gelten wie immer, Sim-Jü geht vor.
 - **Bühne → 🎶 Nur Musik hören → Disco:** die Disco läuft hinter Twinkey (ohne Solo – er tanzt dort vorn), hält bei Pause, im Hintergrund und beim Verlassen an.
 - Sparsam wie alle Szenen: höchstens 20 Bilder/s, in Ruhe 12, nach 3 Min. ohne Tippen steht das Bild; höchstens 24 Lichtpunkte und 12 Nebelwolken, Leuchten ohne Weichzeichner.
-- Hilfe-Eintrag „Thema Disco“. Test: `tests/disco.test.mjs`. Rückweg: App 2.804.0.
+- Hilfe-Eintrag „Thema Disco“. Test: `tests/disco.test.mjs`. Rückweg: App 2.808.0.
 - **#48 Büro: ein Schreibtisch statt Kacheln** (Wunsch 30.10., Entscheidungen 02.11.): Oben die **Pinnwand** mit den 2 Pins (links „Nächster Schritt“, rechts „Eingang“). Darauf gezeichnete Dinge, jedes ein Knopf mit Namen:
   - **🖥️ Bildschirm:** Uhrzeit, nächste Sitzung („in 5 Tagen“), deine offenen Aufgaben, Glückwünsche der Woche – sonst das Logo. Antippen öffnet die Büro-Liste.
   - **⌨️ Tastatur:** Nachricht & Mail (eine Person, mehrere, Gruppe). **✒️ Füller im Tintenfass:** was man mit der Hand schreibt – Brief, Einladung, Protokoll, Grußkarte & Glückwunsch, Pinnwand-Zettel (Schild jetzt beim Drucker).
@@ -16,6 +16,36 @@ Wunsch Hansi (31.10.): „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel,
 - **🧮 Tischrechner** (neuer Teil `teile/rechner.js`): große Tasten, grünes Display, Papierstreifen mit den letzten 20 Rechnungen (nur auf dem Gerät), + − × ÷, Klammern, Prozent. **🎤 Sagen:** „rechne 5 mal 22“, „125 geteilt durch 4“, „19 Prozent von 240“, „das Ergebnis plus 30“ – auf Wunsch mit Ansage. „rechne …“ geht auch über die Sprachsteuerung der App von überall. Gerechnet wird nur auf dem Gerät (ohne eval).
 - Tests: `tests/schreibtisch.test.mjs`.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.808.0 – 2026-11-02 – 🔽 Klapp-Pfeile überall gleich (KC-CLUB-KLAPPE-GLEICH, Wunsch #63) · nur App
+Wunsch #63 Hansi: „Alle Listen mit Einklapp-Pfeilen gleich aufbauen. In Protokollen sind die Pfeile viel zu klein und drehen sich nicht.“
+- Ursache: Die Protokoll-Monate (2.802.0) hatten einen eigenen kleinen Pfeil links, der sich nicht drehte; Schloss und Pfeil rutschten darunter in eine eigene Zeile.
+- Jetzt bekommt jeder Klappbereich mit gemerktem Auf/Zu dieselbe Kopfzeile wie die Karten: Titel links, 🔓 Schloss und großer weinroter Pfeil rechts, der sich beim Auf-/Zuklappen dreht. Eine Regel an einer Stelle, auch für künftige Listen. Karten und Avatar-Klappen unverändert.
+- Browser geprüft (Protokolle mit Jahren und Monaten). Test: `tests/klappe-gleich.test.mjs`.
+- Rückweg: App 2.807.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.807.0 – 2026-11-02 – 🕰️ Rotes X an jeder Stunden-Uhr (KC-CLUB-UHR-X, Wunsch #65) · nur App
+Wunsch #65 Hansi: „Bei jeder Uhr oben ein rotes X einblenden, damit die User wissen, dass man die Uhr ausschalten kann. Evtl. Frage stellen, ob Uhr dauernd aus soll.“
+- Die Uhr zur vollen Stunde (Kuckuck, Big Ben, Kölner Dom und alle anderen) hat oben rechts ein rotes ✕. Antippen schließt die Uhr.
+- Danach fragt die App: „Uhr zur vollen Stunde ganz ausschalten?“ – „🔕 Ja, ganz aus“ schaltet denselben Schalter aus wie ⚙️ → „🕰️ Uhr zur vollen Stunde“ (dort wieder einschaltbar); „Nein, nur jetzt“ lässt alles, wie es ist. Bei der Probe in den Einstellungen kommt keine Frage.
+- Antippen der Uhr selbst schließt sie weiter wie bisher. Test: `tests/uhr-x.test.mjs`.
+- Rückweg: App 2.806.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.806.0 – 2026-11-02 – 🗄️ Klarer Hinweis, wenn die Datenbank viel zu tun hat (KC-CLUB-DB-VIEL-ZU-TUN, Wunsch #62) · App + Server
+Wunsch #62 Hansi: Statt „Server antwortet nicht“ soll die App sagen, dass die Datenbank gerade planmäßig arbeitet, was gerade läuft und wie lange es noch dauert.
+- Server: eine Liste der planmäßigen schweren Arbeiten (`SCHWER_ZEITEN`, Uhrzeiten wie die Zeitpläne): Notfall-Paket (alle 15 Min, ca. 2 Min), Spiegelung (4/10/16/22 Uhr UTC, :10–:30), nächtliche Sicherung (1 Uhr UTC, :20–:60), Aufräumen (3 Uhr UTC, :05–:55). Antwortet die Datenbank nicht, nennt die Meldung den Grund und die Restminuten. Keine zusätzliche Datenbank-Abfrage.
+- App: bekommt die Liste beim Start mit (keine zweite Liste). Nur bei Zeitüberschreitung, „Keine Verbindung“ und „kurz nicht erreichbar“ steht dann: „Zurzeit hat die Datenbank viel zu tun: Es wird gerade … Das dauert ca. noch N Minuten. Versuche dein Anliegen bitte später noch einmal. Danke für dein Verständnis.“ Eigene Fehlermeldungen des Servers haben Vorrang; ohne Liste bleibt die alte Meldung (nichts geraten). Offline bleibt „Keine Internetverbindung“.
+- Test: `tests/db-viel-zu-tun.test.mjs` (rechnet die Zeiten echt nach).
+- Rückweg: App + Server 2.805.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+
+## 2.805.0 – 2026-11-02 – 📝 Dienstwünsche: Twinkey auf DP2 Build 306 (KC-CLUB-DIENSTWUNSCH) · nur App
+Übergabe von Codex („Übergabe an Claude“, Sire65/dp3 `codex/club-app-interface`, docs/CLAUDE-BUTTON-LOGIK-NACHTRAG.md) – Hansi: „Ja Montag“.
+- Twinkey mit `tools/dp2-twinkey-uebernehmen.mjs` unverändert aus DP2 übernommen: **Build 291 → Build 306 RC** (Commit 776d039). Build 291 ist in 306 enthalten.
+- Geändert haben sich nur 3 Dateien: `src/core/model.js` (zwei Test-Aushilfen aus den Beispieldaten entfernt, Planbarkeit über Kennungs-Aliase), `src/ui/role-ux.js` (Kollegensuche), `src/adapters/pdf.js`. Gleiche Dateiliste und Reihenfolge; Twinkey-Seite, Beispieldaten und Start in DP2 unverändert – die Club-Anbindung (`dp2-club/daten.js`, `start.js`) passt weiter. Der Hinweis am gesperrten „Weiter“ („Bitte mit oder ohne Twinkey wählen.“ / „Bitte zuerst eine Aufgabe wählen.“) war schon mit Build 291 da.
+- Browser-Vergleich alt/neu (Handy und PC): Begrüßung, gesperrter Weiter-Knopf mit Grund, Aufgabenwahl – identisch, ohne Fehler. Update- und Ruhe-Schutz beim Eingeben (2.788.0/2.789.0) unverändert. Keine Server- oder Datenänderung; gespeicherte Dienstwünsche bleiben.
+- Offen bei Hansi/Codex: Live-Handtest mit echten Eingaben und die zentrale Kollegenfreigabe.
+- Rückweg: App 2.804.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.804.0 – 2026-11-02 – 🧹 Erklärfilm „Deine App – so, wie du sie willst“ (KC-CLUB-ANSICHTFILM) · Server 2.804.0
 Anregung Clubsitzung: „Die App ist zu voll – zu viel drin, was man nicht braucht.“ Wunsch Hansi 02.11.: Erklärfilm, wie jeder die App selbst einstellt, anbieten und merken, wer ihn angesehen hat.
 - **Film** (2 Min., Hochformat, Sprecher mit Untertiteln): einfache und erweiterte Ansicht, Kachel lange drücken, verschieben, mit ✕ ausblenden, „Nur ausgeblendete zeigen“, Kopf mit ⌃ / ⌃⌃ einrollen, Startmeldungen unter ⚙️ Mehr → Ansagen, Töne & Tipps ausschalten, Hinweis auf weitere Erklär-Videos. `film/app-selbst-einrichten.mp4`, Quellen, Drehbuch und Vorschläge: KC-Infrastructure-Control-Center `ansichtfilm/`.

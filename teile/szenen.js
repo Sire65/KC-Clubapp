@@ -619,7 +619,7 @@ function jzbFest(dt) {
   if (J.phase === "anfang" || !J.fest) { jzbFestStart(); jzbPhase("fest"); }
   const F = J.fest; F.t += dt;
   if (J.saison === "kirmes" && F.vm) return jzbVmSchritt(F, dt); // 2.682.0 KC-CLUB-VIEHMARKT
-  if (J.saison === "disco") return jzbDsSchritt(F, dt); // 2.805.0 KC-CLUB-DISCO
+  if (J.saison === "disco") return jzbDsSchritt(F, dt); // 2.809.0 KC-CLUB-DISCO
   if (J.saison === "seifenblasen") return jzbSbSchritt(F, dt); // 2.633.0: Kinder pusten Seifenblasen, die Scheibe verschmiert, der Fensterputzer putzt
   if (J.saison === "baustelle") return jzbBsSchritt(F, dt); // 2.617.0: Radlader, Kipplaster, Abgas-Name, Arbeiter – zum Schluss wird der Kopf gesprengt
   if (J.saison === "wueste") return jzbWuSchritt(F, dt); // 2.548.0: Pyramiden, Karawane, Oase, Pharao, Flaschengeist – Name aus Goldstaub, Sonnenuntergang
@@ -4896,7 +4896,7 @@ function jahreszeitVorschau(art, extra) { // extra (2.249.0): nikolaus, regen, t
   zeige("start"); setTimeout(jahreszeitKopf, 350);
   jzVorschauLeiste(); // 2.355.0
 }
-// ---------- 2.805.0 KC-CLUB-DISCO (Wunschliste #58, Wunsch Hansi „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine –
+// ---------- 2.809.0 KC-CLUB-DISCO (Wunschliste #58, Wunsch Hansi „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine –
 // Szene versinkt im Nebel, fängt wieder von vorne an“; Entscheidungen 02.11.: 4 Tänzer, zwischendurch legt Twinkey ein Solo hin, auch automatisch am
 // Clubabend und zu Silvester im Wechsel, auch auf der Bühne bei „Nur Musik hören → Disco“) ----------
 // Ein Lauf ≈ 60 s: Schwarzlicht flackert an → DJ legt auf, Kugel dreht, 4 Tänzer → Twinkey-Solo im Spot → alle tanzen → Nebelmaschine, alles versinkt

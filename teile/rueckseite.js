@@ -978,7 +978,7 @@ function bwAnsageSchalten() { const L = BW.lauf; if (!L) return; L.ansage = !L.a
 function bwStopp(zeigen) {
   clearInterval(BW.takt); BW.takt = 0; bwMusik(false); try { BW.wach?.release(); } catch (e) { /* ohne Wachhalten */ } BW.wach = null;
   if (BW.lauf) { try { speechSynthesis.cancel(); } catch (e) { /* ohne Sprache */ } }
-  if (typeof discoBuehneAus === "function") discoBuehneAus(); // 2.805.0 KC-CLUB-DISCO
+  if (typeof discoBuehneAus === "function") discoBuehneAus(); // 2.809.0 KC-CLUB-DISCO
   BW.lauf = null; BW.hoeren = null; BW.vorher = null; BWM.stueck = null; BW.blase = ""; bwTrainingKnoepfe(false); if (zeigen && $("hrFlaeche")?.classList.contains("hr-buehne")) esBuehneZeigen($("hrFlaeche")); // 2.302.0: auch „Nur Musik“
 }
 // 2.313.0 (Wunsch Hansi): Twinkeys Schlusswort nach dem Sport
@@ -1438,7 +1438,7 @@ function bwHoerZeigen(vorhangAuf) {
     <div class="es-leiste"><button type="button" class="es-k" onclick="bwHoerWahl(bwmNachbar(${H.i}, -1))" aria-label="Voriges Lied">⏮</button><button type="button" class="es-k es-haupt" onclick="bwHoerPause()">${H.pause ? "▶︎ Weiter" : "⏸ Pause"}</button><button type="button" class="es-k" onclick="bwHoerWahl(bwmNachbar(${H.i}, 1))" aria-label="Nächstes Lied">⏭</button>
       <button type="button" class="es-k" onclick="bwStopp(true)">✖ Ende</button></div></div>`;
   ksKaraokeStart(); // 2.316.0 KC-CLUB-SONG
-  // 2.805.0 KC-CLUB-DISCO (Wunsch Hansi „kann auch auf der Bühne laufen bei Nur Musik“): bei Disco-Liedern läuft die Disco-Szene hinter Twinkey
+  // 2.809.0 KC-CLUB-DISCO (Wunsch Hansi „kann auch auf der Bühne laufen bei Nur Musik“): bei Disco-Liedern läuft die Disco-Szene hinter Twinkey
   const bh = $("bwHoer");
   if (s.stil === "Disco" && !H.pause) teilLaden("szenen").then(() => { if ($("bwHoer") === bh) discoBuehneAn(bh); }).catch(() => {});
   else if (typeof discoBuehneAus === "function") discoBuehneAus();

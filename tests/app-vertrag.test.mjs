@@ -1667,7 +1667,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[134567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen");
+  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[134567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen"); // 2.804.0: DP2 Build 306 RC (Commit 776d039, Übergabe von Codex)
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1702,7 +1702,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
 {
-  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
+  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
@@ -1732,7 +1732,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 149. 1.17.2: DP2 Build 253 RC (dp3 d50ed58) – gemeinsamer Stand aus Club-App-Schnittstelle und PDF-/QR-Korrekturen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[34567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
+  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[34567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
   for (const f of ["src/core/document-identity.js", "src/vendor/qrcode-generator.js", "src/core/personalized-forms.js", "src/adapters/pdf.js", "src/ui/member-button-logic.js"])
     assert.ok(q.reihenfolge.includes(f), `${f} fehlt in der DP2-Übernahme`);
   assert.ok(q.reihenfolge.indexOf("src/adapters/pdf.js") < q.reihenfolge.indexOf("src/ui/original-brand.js") || !q.reihenfolge.includes("src/ui/original-brand.js"), "PDF-Baustein vor dem Abschluss geladen");
@@ -1792,7 +1792,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 151. 1.18.1: DP2 Build 254 RC (dp3 3945960) – Meine Angaben ausdrucken (PDF mit QR, Abfrage, Vorschau) + Sperrtag ohne V/H/B
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[4567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
+  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[4567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/wish-print.css"), "Ausdruck-Baustein fehlt in der Übernahme");
   assert.ok(/frame-src blob:/.test(lies("dienstwunsch.html")) && !/frame-src 'none'/.test(lies("dienstwunsch.html")), "PDF-Vorschau braucht frame-src blob: (nur selbst erzeugte PDFs)");
   assert.ok(/window\.confirm\(FRAGE\)/.test(lies("dp2/src/ui/wish-print.js")) && /filledPdf/.test(lies("dp2/src/core/personalized-forms.js")), "Sicherheitsabfrage/ausgefüllter Bogen fehlt");
@@ -2282,7 +2282,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 199. 1.44.1: DP2 Build 255 RC (dp3 ae349c0) – Reservierung je PC beim Club-App-Wunscheingang (KC-DP-WUNSCH-SPERRE)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[567]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
+  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/member-button-logic.js"), "Build-254-Bausteine (Ausdruck, Button-Logik) bleiben enthalten");
   assert.ok(/kc_dp_wish_inbox_claim/.test(lies("supabase/migrations/20261001_kc_dp_wunsch_eingang_sperre.sql")), "Datenbankseite der Reservierung vorhanden");
 }
@@ -2297,7 +2297,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 201. 1.45.1: DP2 Build 256 RC (dp3 51518cc) – Twinkey einfacher und fehlersicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(5[67]|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
+  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[67]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
   assert.ok(/id="swProgress"/.test(sw) && /id="swNextOpen"/.test(sw) && /id="swNextDay"/.test(sw), "Fortschritt und nächster offener Tag");
   assert.ok(/function confirmOpenDays\(\)/.test(sw) && /if\(confirmOpenDays\(\)\)finishOverview\(false\)/.test(sw), "Rückfrage vor „Fertig“ bei offenen Tagen");
   assert.ok(/if\(!can\.length\)can=\[\{start:null,end:null,wishZone:'B'\}\];/.test(sw) && /id="swWholeDay"/.test(sw), "Kann-Zeit nicht vorausgefüllt, ganze Zeit nur per Knopf");
@@ -2333,7 +2333,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 205. 1.47.1: DP2 Build 257 RC (dp3 37bd067) – Twinkey übersichtlicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js"), tw = lies("dp2/src/ui/twinkey.js");
-  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(57|6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
+  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(57|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
   assert.ok(/id="swNoBlock"/.test(sw) && /!blockChosen&&blockMode==='none'\?\['Bitte zuerst wählen/.test(sw), "Sperren als klare Antwort, Weiter ohne Antwort gesperrt");
   assert.ok(!/id="swBackTop"/.test(sw) && /\(step==='wish'\?teamButton\(\):''\)/.test(sw), "ein Zurück je Schritt, Besetzung nur bei der Wunschzeit");
   assert.ok(/<details[^>]*class="sw-more"/.test(sw) && /sw-day-tile/.test(sw) && /\(Kann-Zeit\)/.test(sw) && /\(Wunschzeit\)/.test(sw), "kurze Zusammenfassung, Kacheln, Begriffe in Klammern wie Papier/Excel");
@@ -3779,7 +3779,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const DB_ZEIT_MS = 15000;/.test(server) && /if \(!url\.includes\("\/rest\/v1\/"\)\) return fetch\(input, init\);/.test(server), "nur Datenbank-Abfragen, Dateien unverändert");
   assert.ok(/global: \{ fetch: dbFetch \}/.test(server) && /if \(zeit\.aborted\) \{ DB_AUS\.n\+\+;/.test(server), "Client nutzt Zeitgrenze, Abbruch wird gezählt");
   assert.ok(/return DB_AUS\.n !== dbAusVorher \? dbWeg\(\) : antwort;/.test(server) && /if \(DB_AUS\.n !== dbAusVorher\) return dbWeg\(\);/.test(server), "nie halbes Ergebnis");
-  assert.ok(/json\(\{ error: "Die Datenbank antwortet gerade nicht[^"]*", db: "weg" \}, 503\)/.test(server) && /const leitungKaputt = \(r\.status >= 502 && r\.status <= 504\)/.test(html), "503 → App wertet als Leitung gestört (Notbetrieb)");
+  assert.ok(/json\(\{ error: (?:l \? schwerText\(l\) : )?"Die Datenbank antwortet gerade nicht[^"]*", db: "weg"(?:, \.\.\.\(l \? \{ schwer: l \} : \{\}\))? \}, 503\)/.test(server) /* 2.806.0: mit Grund, wenn planmäßig viel zu tun */ && /const leitungKaputt = \(r\.status >= 502 && r\.status <= 504\)/.test(html), "503 → App wertet als Leitung gestört (Notbetrieb)");
   assert.ok(/if \(DB_AUS\.n !== dbVorher\) throw new Error\("Datenbank antwortet nicht – Notfall-Paket bleibt/.test(server), "Notfall-Paket wird nicht durch lückenhaftes ersetzt");
 }
 // 361. 2.23.11: gelber Inkognito-Rahmen blinkt im Takt der Brille
@@ -5099,7 +5099,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.41.0 KC-CLUB-DIENSTWUNSCH: DP2 Build 262 RC (dp3 d8976b9) – Builds 258–260 betreffen die Mitglieder-Eingabe (Twinkey)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(6[2345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
+  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
   assert.ok(/Deine Dienstzeiten wurden erfolgreich verschickt\./.test(sw) && /if\(saved!==true\)throw Error\('Versand nicht bestätigt\.'\)/.test(sw), "Build 258: Bestätigung nur nach bestätigtem Speichern");
   assert.ok(/laeuft = \(async \(\) => \{ do \{ nochmal = false; await senden\(\); \} while \(nochmal\); return true; \}\)\(\)/.test(lies("dp2-club/daten.js")), "Club-App meldet erfolgreiches Speichern mit true (Fehler werfen)");
   assert.ok(/sw-helper-fold/.test(sw) && /sw-fold sw-days/.test(sw), "Build 260: kompakte Tagesauswahl");
@@ -5146,7 +5146,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.44.0 KC-CLUB-DIENSTWUNSCH / KC-DP-KLAPPBEREICH: DP2 Build 263 RC (dp3 ceefe07) – Klappbereiche wie in der Club-App
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), fs = lies("dp2/src/ui/fold-sections.js");
-  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit) && /^0\.20\.0-build2(6[345678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
+  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(6[345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
   assert.ok(q.reihenfolge.includes("src/ui/fold-sections.js") && q.reihenfolge.includes("src/ui/fold-sections.css"), "Klappbaustein wird geladen");
   assert.ok(/kc_dp_klappe_/.test(fs) && /kc_dp_fest_/.test(fs) && /Zuklappen/.test(fs), "Schloss, gemerkter Zustand, unten Zuklappen (eigener DP2-Speicherschlüssel)");
   assert.ok(/data-klappe="tw-more"/.test(lies("dp2/src/ui/simple-wish-assistant.js")), "Mitgliederbereiche mit festen Schlüsseln");
@@ -5885,19 +5885,19 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.284.0 KC-CLUB-DP2-264 (Wunsch Hansi): Regelzeit erster Markt-Freitag 10:00–23:00 – aus DP2 Build 264 übernommen (nicht hier geändert)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[45678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 264 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build(2(6[45678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 264 oder neuer übernommen");
   assert.ok(/add\('2026-12-04','market',10,23,12,null\)/.test(lies("dp2/src/core/model.js")), "erster Freitag ab 10:00");
 }
 // 2.285.0 KC-CLUB-DP2-265 (Wunsch Hansi): Verfügbarkeitsmatrix lesbarer – aus DP2 Build 265 übernommen (nicht hier geändert)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[5678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 265 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build(2(6[5678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 265 oder neuer übernommen");
   assert.ok(/tag=!c\.header&&\(matrix\|\|wahl\|\|bereit\)/.test(lies("dp2/src/adapters/pdf.js")) && /kasten=\(matrix\|\|wahl\)&&!c\.header/.test(lies("dp2/src/adapters/pdf.js")), "Tageszellen größer, Kästchen mittig");
 }
 // 2.286.0 KC-DP-FORMULARE-EINHEITLICH (Wunsch Hansi): alle Wunsch-Formulare personalisiert mit DP2-lesbarem QR – DP2 Build 266 übernommen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[678]|8[56789]|9[01])$/.test(q.dp2Version), "DP2 Build 266 oder neuer übernommen");
+  assert.ok(/^0\.20\.0-build(2(6[678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 266 oder neuer übernommen");
   const pf = lies("dp2/src/core/personalized-forms.js");
   assert.ok(/const FORM_KINDS=\{matrix:'wish-matrix-v12',filled:'wish-filled-v12'/.test(pf) && /kind:FORM_KINDS\[kind\]\|\|String\(kind\)\}\)\}/.test(pf), "QR trägt die Dokumentart");
   assert.ok(/class="matrix-choice-table"/.test(pf) && /matrix-standby-table/.test(pf), "Bereitschaft mit mittigen Kästchen und großen Zellen");
@@ -5909,7 +5909,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.289.0 KC-DP-PLANERPAPIERE-QR (Wunsch Hansi, Paket 2): Leerplan, Papierplanung, Dienstplan mit QR – DP2 Build 267 übernommen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build2(6[78]|8[56789]|9[01])$/.test(q.dp2Version) && /^(c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
+  assert.ok(/^0\.20\.0-build(2(6[78]|8[56789]|9[01])|306)$/.test(q.dp2Version) && /^(c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
   assert.ok(/if\(meta\.personId\)x\.personId=String\(meta\.personId\);if\(meta\.date\)x\.date=String\(meta\.date\)/.test(lies("dp2/src/core/document-identity.js")), "Dokument-QR mit Person und Tag");
   assert.ok(/\.doc-qr\[data-kc-qr\]/.test(lies("dp2/src/adapters/pdf.js")), "PDF zeichnet den Papier-QR je Seite");
 }
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
