@@ -52,7 +52,18 @@ function rgPulsStart(s) {
 function rgPulsStop() { clearTimeout(RG.pulsUhr); document.querySelectorAll(".rg-puls").forEach((e) => e.classList.remove("rg-puls")); }
 const rgKlappe = (name) => `#v-einstellungen details[data-klappe="${name}"]`;
 // Bereich aufklappen und beim Ende wieder in den alten Zustand bringen (auch das gemerkte Auf/Zu)
-function rgAuf(...namen) { for (const n of namen) { const d = document.querySelector(rgKlappe(n)); for (let x = d; x; x = x.parentElement?.closest("details")) if (!x.open) { const y = x; y.open = true; RG.zurueck.push(() => { y.open = false; }); } } } // 2.469.0: auch den Hauptbereich (KC-CLUB-EINST-GRUPPEN)
+function rgAuf(...namen) { for (const n of namen) { const d = document.querySelector(rgKlappe(n)); for (let x = d; x; x = x.parentElement?.closest("details")) if (!x.open) { const y = x; y.open = true; RG.zurueck.push(() => { y.open = false; }); } rgEuSeite(d); } } // 2.469.0: auch den Hauptbereich (KC-CLUB-EINST-GRUPPEN)
+// 2.803.0 KC-CLUB-VIDEO-ABGLEICH (Wunsch #54): seit 2.552.0 zeigen die Einstellungen erst eine Übersicht, ein Bereich ist eine eigene Seite. Nur Aufklappen
+// reichte nicht mehr – der Bereich blieb unsichtbar, und alle Schritte mit „mussSel“ wurden still übersprungen (Einstellungen-Video: 12 von 18).
+// Darum die passende Seite gleich öffnen (sofort, nicht erst über das Aufklapp-Ereignis); am Ende des Videos wieder die Übersicht.
+function rgEuSeite(d) {
+  try {
+    if (!d || typeof euAn !== "function" || !euAn()) return;
+    let k = d; while (k.parentElement?.closest("details") && k.parentElement.closest("#v-einstellungen")) k = k.parentElement.closest("details");
+    const z = euZeilen().flatMap(([, l]) => l).find((x) => x.karten.includes(k.dataset.klappe)); if (!z || EU.bereich === z.id) return;
+    const vorher = EU.bereich; euOeffnen(z.id, true); RG.zurueck.push(() => { try { vorher ? euOeffnen(vorher, true) : euUebersicht(); } catch {} });
+  } catch (e) { console.warn("rundgang einstellungen", e); }
+}
 const rgDatum = (n) => tagPlus(heuteIso(), n);
 const RG_EINSTELLUNGEN = [
   { v: "einstellungen", sel: ["#v-einstellungen .kopf2"], t: "⚙️ Alle Einstellungen", x: "In diesem Video zeige ich dir alle Einstellungen und was sie bedeuten. Du findest sie unten unter Mehr. Ein Tipp auf eine Überschrift klappt den Bereich auf und zu. Keine Sorge: Ich verstelle nichts – alles bleibt, wie du es eingestellt hast." },
@@ -83,7 +94,10 @@ const RG_NACHRICHT = [
   { v: "neu", tippVor: rgOn("neuWeiter()"), vor: () => { $("eingabe").classList.remove("versteckt"); RG.zurueck.push(() => { if (aktuelleAnsicht !== "chat") $("eingabe").classList.add("versteckt"); }); },
     sel: ["#eingabe"], puls: ["#eingabe textarea", '#eingabe [title="Senden"]', '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]', '#eingabe [title^="Wie benachrichtigen"]', "#versandLeiste", '#eingabe [title^="Nachricht löscht"]', '#eingabe [title="Mit WhatsApp senden"]', "#spaeterKnopf"], t: "⌨️ Schreiben und senden", x: "Unten schreibst du deine Nachricht, der Pfeil sendet sie. Sobald du schreibst, steht darüber der Versand: Normal ist schon angehakt – du kannst stattdessen Wichtig oder Express anhaken, auch beides. Unter dem Feld: die Büroklammer für Fotos und Dateien, das Mikrofon für eine Sprachnachricht oder zum Diktieren, Emojis, die Glocke – wie benachrichtigt wird, zum Beispiel per Push oder E-Mail – und die Sanduhr für eine Nachricht, die sich selbst löscht. Mit WA geht sie auch über WhatsApp." },
   // 2.396.0 KC-CLUB-HILFE-NEUHEITEN: Express mit Zähler, Später senden, Zurückholen, Favoriten
-  { v: "neu", sel: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann hakst du über dem Schreibfeld Express an: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Neben Express steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
+  // 2.803.0 KC-CLUB-VIDEO-ABGLEICH (Wunsch #54, Fund Hansi „im Video zu den Nachrichten passt die Stimme nicht zum Bild“): die Versand-Leiste erscheint erst,
+  // wenn etwas im Feld steht – im Video war darum nichts zu sehen. Jetzt wird sie für diesen Schritt eingeblendet (danach wie vorher).
+  { v: "neu", vor: () => { const l = $("versandLeiste"); if (l?.classList.contains("versteckt")) { l.classList.remove("versteckt"); RG.zurueck.push(() => { if (!$("text")?.value.trim()) l.classList.add("versteckt"); }); } },
+    sel: ["#versandLeiste"], mussSel: true, puls: ["#expressKnopf"], t: "🏎️ Express", x: "Eilt es wirklich? Dann hakst du über dem Schreibfeld Express an: Die Nachricht kommt sofort an – auch nachts. Unter deiner Nachricht siehst du später, wann sie angekommen ist und wann sie gelesen wurde. Pro Tag gehen fünf Express-Sendungen. Neben Express steht, wie viele du heute schon hattest – zum Beispiel zwei von fünf." },
   { v: "neu", sel: ["#spaeterKnopf"], t: "⏰ Später senden", x: "Mit dem Wecker schickst du die Nachricht später – zum Beispiel morgen früh um acht, oder jeden Montag. Und hast du dich vertippt: Solange noch niemand die Nachricht gelesen hat, tippst du sie an und holst sie mit Zurückholen und ändern wieder in dein Schreibfeld." },
   { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], puls: ["#v-nachrichten .kom-leiste .knopf"], t: "👥 Gruppe & mehr", x: "Mit Gruppe legst du eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Gemerkt zeigt Nachrichten, die du dir mit dem Stern gemerkt hast. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats: In Mitglieder beim Mitglied auf den Stern tippen – oder hier rechts am Chat auf die drei Punkte tippen und Als Favorit wählen. Es ist derselbe Stern. Dazu kommen automatisch die fünf Chats, in denen du am meisten schreibst. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
   // 2.671.0 KC-CLUB-HILFE-NACHTRAG-5: „Wie verschicken?“ – nur ein Beispielbild, es wird nichts gesendet

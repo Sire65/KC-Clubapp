@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.803.0 – 2026-11-02 – 🎬 Erklär-Videos: Bild passt wieder zum Gesagten – Einstellungen und Express (KC-CLUB-VIDEO-ABGLEICH, Wunsch #54) · nur App
+Wunsch #54 Hansi: „Alle Erklärvideos prüfen: Stimmt die gesprochene Erklärung mit dem überein, was im Bild gezeigt wird? Anlass: Im Video zu den Nachrichten passt die Stimme nicht zum gezeigten Bild.“
+- **Prüfung aller 59 Videos (639 Schritte)** mit einem Prüfwerkzeug im Browser: jeder Schritt einzeln abgespielt – ist das, wovon die Stimme spricht, im Bild markiert, stehen die genannten Knöpfe auf dem Schirm, wird ein Schritt still übersprungen?
+- **Fund 1 – Einstellungen (größter Fehler):** Seit 2.552.0 zeigen die Einstellungen erst eine Übersicht, ein Bereich ist eine eigene Seite. Die Videos klappten den Bereich nur auf – er blieb unsichtbar, und alle Schritte dazu wurden still übersprungen (Einstellungen-Video: 12 von 18 Schritten; dazu Schritte in Sprache, Push, Leitung, Admin, Probleme, Einfache Ansicht, Bühne u. a.). Jetzt öffnet das Video die passende Seite gleich mit (`rgEuSeite` in `rgAuf`, danach wieder wie vorher).
+- **Fund 2 – Nachrichten (Hansis Fund):** Schritt „🏎️ Express“ sagte „über dem Schreibfeld Express anhaken“ – die Versand-Leiste erscheint aber erst, wenn etwas im Feld steht; im Bild war nichts. Jetzt wird sie für diesen Schritt eingeblendet und Express markiert.
+- Übrig sind 14 Schritte, die nur bei fehlenden Beispieldaten wegfallen (keine Geburtstage, Gruppen, Wetter, Archiv-Ordner im Test) – mit echten Daten erscheinen sie. Keine Stelle mehr, an der die Stimme einen Knopf nennt, der nicht zu sehen ist.
+- Tests: `tests/video-abgleich.test.mjs`, Prüfwerkzeug vorher/nachher (übersprungen: deutlich weniger, nur noch datenabhängige). Rückweg: App 2.802.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.802.0 – 2026-11-02 – 🗄️ Protokolle: vertagt, Vorschläge behandelt, Aufgaben-Stand, Monate einklappbar, Jahr abschließen (Wunsch #50) · Server 2.802.0 · DB
 Wunsch #50 Hansi: „Archiv in Protokolle bzw. am Jahresende in die Ordner im Büro … Vorschläge im Protokoll checken, ob sie abgearbeitet wurden … sonst werden die Übersichten zu voll.“ Antwort 02.11.: „Alle drei, Kopien in Mitglieder-Ordner nein, Monate auch einklappen. Erledigte Aufgaben im Folgeprotokoll als erledigt, nur offene Punkte als offen. Bei der Tagesordnung prüfen, ob alle TOPs behandelt wurden, sonst als offene Punkte wieder anzeigen. Beim Protokoll ‚vertagt‘ anhaken, dann kommt es beim nächsten Mal.“
 - **⏭️ Vertagt** (KC-CLUB-PROTOKOLL-VERTAGT): Im Protokoll-Entwurf steht unter der Tagesordnung je TOP ein Haken „vertagt“. Vertagte Punkte stehen bei der nächsten Sitzung im Büro als **„Offen aus dem letzten Protokoll: …“** gleich nach den festen Punkten. Vor dem Veröffentlichen fragt die App bei TOPs ohne Text in der Kurzfassung: „⏭️ Als vertagt markieren“ oder „Ja, wurde behandelt“.

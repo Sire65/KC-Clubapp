@@ -6363,7 +6363,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const id of ["express", "zurueckholen", "favoriten", "spaeter"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?"`).test(html), `Twinkey-Frage ${id}`);
   assert.ok(/\["express", "eilig", "eilt", "dringend"/.test(html) && /\["favorit", "favoriten", "stern"/.test(html), "Twinkey versteht neue Wörter");
   assert.ok(/\["⭐", "Favoriten \(Lieblings-Chats\)"/.test(html) && /\["🏎️", "Express-Nachricht \(5 am Tag\)"/.test(html) && /\["↩️", "Nachricht zurückholen"/.test(html), "Lupe findet die neuen Funktionen");
-  assert.ok(/id: "nachricht", stand: "\d+"/.test(html) && /\{ v: "neu", sel: \["#expressKnopf"\], t: "🏎️ Express"/.test(html) && /Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats/.test(html), "Video Nachricht: Express, Später, Favoriten");
+  assert.ok(/id: "nachricht", stand: "\d+"/.test(html) && /sel: \["#versandLeiste"\], mussSel: true, puls: \["#expressKnopf"\], t: "🏎️ Express"/.test(html) && /Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats/.test(html), "Video Nachricht: Express, Später, Favoriten"); // 2.803.0 KC-CLUB-VIDEO-ABGLEICH: Versand-Leiste wird eingeblendet, Express markiert
 }
 // 2.397.0 KC-CLUB-FAV-PERSONEN (Wunsch Hansi „Stern auch in der Mitgliederliste – wo wird er definitiv gesetzt?“): ein Stern je Person
 {
