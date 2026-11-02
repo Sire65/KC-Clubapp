@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.802.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.804.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-XorjHZK7uZjRX3TFbmsOoA2aCiSbbZ/PdyMeswtlV68SP4GFKE8RSrzABSZn3G75" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"], sri: "sha384-yZtnisbesvyplWgO8s1bLgryJL9L/zhTJHIEPV9oYK1zbcGfeuyjek9/u7lzga+F" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-VKuDWTsCn3BMKjQ1KkkZLGV5KseFaFgxiNyzWuoAB7+CwyVIabdRa3yEIe8TldAD" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-Hm4cr/B9rAqMppnCi0+/cg+1BmNcORoo1PjJIKYFHb0ZBry9W4Fsnx8+oyMkayNT" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
@@ -2036,13 +2036,19 @@ const FILME = [
   // 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: für alle Mitglieder über Technik → 🔐 Sicherheit & Datenschutz – kein Hinweis beim Start (fuer: false)
   { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "3 Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=2", bild: "film/sicherheit-vorschau.jpg",
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
+  // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
+  // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "2 Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=1", bild: "film/app-einrichten-vorschau.jpg",
+    u: "Einfache und erweiterte Ansicht, Kacheln verschieben und ausblenden, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
+    wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
-const filmeImBuero = () => (ICH ? FILME.filter((f) => f.fuer() || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
+const filmeImBuero = () => (ICH ? FILME.filter((f) => (f.fuer() && !f.wo) || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
 const filmErledigt = (id) => !!INIT?.einstellungen?.filme?.[id]?.z;
 const FILM_START = { versuche: 0 };
 async function filmMerken(id, wie) {
   if (!INIT || INIT.einstellungen?.filme?.[id]?.wie === wie) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
+  if (wie === "angesehen" && INIT.einstellungen?.filme?.[id]?.wie === "ende") return; // KC-CLUB-ANSICHTFILM: „bis zum Ende“ nicht durch erneutes ▶ überschreiben
   const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString() } };
   INIT.einstellungen = { ...(INIT.einstellungen || {}), filme: neu };
   try { await einstSpeichern("filme", neu); } catch (e) { console.warn("filme", e); } // Regel 11: bei Fehler fragt die App beim nächsten Start einfach noch einmal
@@ -2059,8 +2065,8 @@ async function filmHinweisPruefen() {
   });
   spur("film_frage_" + (["an", "nein"].includes(wahl) ? wahl : "spaeter"), f.id); // KC-CLUB-SPUR-VOLL
   if (wahl === "an") return filmZeigen(f.id);
-  if (wahl === "nein") { filmMerken(f.id, "nein"); return melde("🎬 Alles klar – den Film findest du jederzeit im Büro unter 🎬 Anleitung."); }
-  melde("🎬 Ich erinnere dich beim nächsten Öffnen – oder jederzeit im Büro unter 🎬 Anleitung.");
+  if (wahl === "nein") { filmMerken(f.id, "nein"); return melde(`🎬 Alles klar – den Film findest du jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`); }
+  melde(`🎬 Ich erinnere dich beim nächsten Öffnen – oder jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`);
 }
 // Film abspielen: eigene Schicht über allem, echtes Video mit Bedienleiste; Ton an, weil der Start ein Tipp ist
 function filmZeigen(id) {
@@ -2077,9 +2083,21 @@ function filmZeigen(id) {
   spur("film_start", f.id);
   s.querySelector("[data-zu]").onclick = () => { ende(false); zu(); };
   v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
-  v.onended = () => { ende(true); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`); };
+  v.onended = () => { ende(true); filmMerken(f.id, "ende"); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro unter 🎬 Anleitung"}.`); };
   v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
   v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
+}
+// KC-CLUB-ANSICHTFILM-ZUSCHAUER (Wunsch Hansi 02.11.2026 „merken, wer ihn angesehen hat“): nur Admin. Quelle: Einstellung „filme“ je Mitglied
+// (dauerhaft, geräteübergreifend) – ✅ bis zum Ende · ▶ angefangen · 🙅 „Nein, danke“ · ⏳ noch nicht. Regel 11: Fehler → Meldung, keine leere „alle gesehen“-Liste.
+async function filmZuschauer(id) {
+  const f = FILME.find((x) => x.id === id); if (!f || !ICH?.admin) return;
+  let r; try { r = await api("film_zuschauer", { film: id }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const gruppe = (wie) => r.personen.filter((p) => (p.wie || null) === wie);
+  const block = (sym, titel, l) => `<h4 style="margin:12px 0 4px">${sym} ${titel} (${l.length})</h4>${l.length ? `<p class="hinweis" style="margin:0">${l.map((p) => `${esc(p.name)}${p.z ? ` <small>· ${esc(new Date(p.z).toLocaleDateString("de-DE"))}</small>` : ""}`).join(", ")}</p>` : `<p class="hinweis" style="margin:0">–</p>`}`;
+  const d = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">👀 ${f.sym} ${esc(f.t)}</h3>
+    <p class="hinweis" style="margin:0">Wer den Film gesehen hat – ohne Inhalte, nur ob und wann.</p>
+    ${block("✅", "Bis zum Ende", gruppe("ende"))}${block("▶", "Angefangen", gruppe("angesehen"))}${block("🙅", "Nein, danke", gruppe("nein"))}${block("⏳", "Noch nicht", gruppe(null))}`, () => d.remove());
+  d.querySelector('[data-a="zu"]').onclick = () => d.remove();
 }
 function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere → auswählen
   const l = filmeImBuero(); if (l.length === 1) return filmZeigen(l[0].id);

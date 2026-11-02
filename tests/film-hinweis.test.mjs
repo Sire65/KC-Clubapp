@@ -14,7 +14,7 @@ for (const [, id, datei, bild, fuer] of filme) {
   assert.ok(fs.existsSync(pfad) && fs.statSync(pfad).size > 1e6, `Film fehlt: ${datei}`);
   assert.ok(fs.existsSync(bild), `Vorschaubild fehlt: ${bild}`);
   assert.ok(datei.startsWith("film/") && bild.startsWith("film/"), `${id}: Film gehört nach film/ (Service Worker lässt film/ aus)`);
-  assert.ok((/aemter/.test(fuer) || /^false \}/.test(fuer)) && !/person_id|vorname|name ===/.test(fuer), `${id}: Zielgruppe nach Amt (oder false = kein Start-Hinweis), nicht nach Person`); // 2.756.0
+  assert.ok((/aemter/.test(fuer) || /^(false|true) \}/.test(fuer)) && !/person_id|vorname|name ===/.test(fuer), `${id}: Zielgruppe nach Amt (oder false = kein Start-Hinweis, true = alle Mitglieder), nicht nach Person`); // 2.756.0; KC-CLUB-ANSICHTFILM: true = alle
 }
 assert.ok(sw.includes('url.pathname.includes("/film/")) return;'), "Service Worker muss film/ auslassen");
 // Start-Fenster: nach den anderen Start-Fenstern, drei Wahlmöglichkeiten, direkter Start des Films
@@ -32,7 +32,7 @@ assert.ok(/#filmSchicht \{ position: fixed/.test(html), "Abspiel-Schicht gestalt
 assert.ok(/buIkon\("💼", "Tasche", "atStart\(\)", "Aktentasche"\) : "",\s+buFilmKnopf\(\),/.test(app) && /buKopfKnoepfe\(true, naechst\)/.test(app) && /buKopfKnoepfe\(false, null\)/.test(app), "🎬 Anleitung im Büro (Raum + Liste) – 2.768.0 als Icon-Knopf im gemeinsamen Kopf");
 // Server: Einstellung „filme“ nur mit geprüften Werten
 const e = server.slice(server.indexOf("  filme: (w) =>"), server.indexOf("  rundgang: (w) =>"));
-assert.ok(/\^\[a-z\]\{2,24\}\$/.test(e) && /\["angesehen", "nein"\]/.test(e) && /slice\(0, 30\)/.test(e), "Server-Einstellung filme geprüft");
+assert.ok(/\^\[a-z\]\{2,24\}\$/.test(e) && /\["angesehen", "ende", "nein"\]/.test(e) && /slice\(0, 30\)/.test(e), "Server-Einstellung filme geprüft");
 // 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: Kachel unter Technik öffnet Film + PDF; das PDF liegt im Repo und steht nicht in „Meine Dokumente“
 const technik = app.slice(app.indexOf("  programme: ["), app.indexOf("  admin: [],"));
 assert.ok(/\{ id: "datenschutz", sym: "🔐", t: "Sicherheit & Datenschutz",[^\n]*aktion: "sdStart\(\)" \}/.test(technik), "Kachel 🔐 Sicherheit & Datenschutz unter Technik");
@@ -47,4 +47,16 @@ const lb = app.slice(app.indexOf("function sdLaufbandAuf()"), app.indexOf("const
 assert.ok(/register\("programme"\)/.test(lb) && /data-id="datenschutz"/.test(lb) && /classList\.add\("hervor"\)/.test(lb) && /einfach\(\)[^\n]*return sdStart\(\)/.test(lb) && /localStorage\.setItem\(SD_LB/.test(lb), "Antippen: Technik + Kachel zeigen, danach weg");
 // KC-CHATS-PRIVAT (30.10.2026): die Regel steht in AGENTS.md und im Sicherheitskonzept
 assert.ok(/## Chats sind privat – Agents lesen sie nie \(KC-CHATS-PRIVAT/.test(fs.readFileSync("AGENTS.md", "utf8")), "AGENTS.md: Regel KC-CHATS-PRIVAT fehlt");
+// KC-CLUB-ANSICHTFILM (02.11.2026, Anregung Clubsitzung „die App ist zu voll“): für alle beim Start, oben in den Erklär-Videos, Zuschauer nur für den Admin
+assert.ok(/\{ id: "ansichtfilm", sym: "🧹", [^\n]*datei: "film\/app-selbst-einrichten\.mp4/.test(reg) && /wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: \(\) => true \}/.test(reg), "Ansichtfilm in FILME (alle, in den Erklär-Videos)");
+assert.ok(/\(f\.fuer\(\) && !f\.wo\) \|\| ICH\.admin/.test(app), "Filme mit eigenem Ort stehen nicht im Büro");
+assert.ok(/\$\{f\.wo \|\| "im Büro unter 🎬 Anleitung"\}/.test(pr), "Meldung nennt den richtigen Ort des Films");
+assert.ok(/v\.onended = \(\) => \{ ende\(true\); filmMerken\(f\.id, "ende"\);/.test(zg), "bis zum Ende dauerhaft gemerkt");
+assert.ok(/wie === "angesehen" && INIT\.einstellungen\?\.filme\?\.\[id\]\?\.wie === "ende"\) return;/.test(app), "„ende“ wird durch erneutes ▶ nicht überschrieben");
+const zu = app.slice(app.indexOf("async function filmZuschauer"), app.indexOf("function filmWahl"));
+assert.ok(/!ICH\?\.admin\) return/.test(zu) && /api\("film_zuschauer"/.test(zu) && /meldeFehler\(e\)/.test(zu), "Zuschauer-Liste nur Admin, Fehler sichtbar (Regel 11)");
+const vi = fs.readFileSync("teile/videos.js", "utf8");
+assert.ok(/FILME : \[\]\)\.filter\(\(f\) => f\.inVideos\)/.test(vi) && /filmZeigen\(/.test(vi) && /ICH\?\.admin \? `<button[^`]*filmZuschauer\(/.test(vi), "Film oben in den Erklär-Videos, 👀 nur Admin");
+const fz = server.slice(server.indexOf('case "film_zuschauer"'), server.indexOf('case "spur_liste"'));
+assert.ok(/nurAdmin\(ich\)/.test(fz) && /\^\[a-z\]\{2,24\}\$/.test(fz) && /eq\("schluessel", "filme"\)/.test(fz) && !/nachricht|chat|inhalt/i.test(fz.replace(/keine Inhalte/, "")), "Server film_zuschauer: nur Admin, nur Einstellung „filme“ (Regel 19)");
 console.log("film-hinweis: alle Prüfungen bestanden");
