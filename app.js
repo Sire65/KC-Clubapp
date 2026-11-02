@@ -17,7 +17,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-GT0vExmFZ33D/ChkNyCLSLcoppPT6mRBTWbQ/f/cZj9GonUEMj/BLU7FPSv4J/AA" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-2ooVW564xXyRKfYodAzJ1Bwamd3L47DyMkW26F11W4FWGBiMk/cM5n/dJut/1BPL" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-u+czHDJGpj7YUQH/alklgYf+VUv1d5L5dVO/awWe2Sb48UD9GjmlgX9WUEWJLnDZ" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
@@ -9229,12 +9229,20 @@ function pdfjsHolen() {
 const dokUrl = (d) => d.url ? d.url : d.datei instanceof Blob ? URL.createObjectURL(d.datei) : new URL(d.datei + "?v=" + APP_VERSION, location.href).href;
 const dokAktuell = () => (DOKA.anl && DOKA.anl.id === DOKA.id ? DOKA.anl : DOKUMENTE.find((x) => x.id === DOKA.id) || null); // 2.165.0: auch Chat-Anlagen
 // 2.704.0: ‹ Zurück führt dorthin, wo das Dokument steht (Chat-Anlage → Chat, ort "technik" → Freigegebene Programme, sonst Meine Dokumente)
-const dokZurueckZiel = () => (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : dokAktuell()?.ort === "sicherheit" ? "start" : "dokumente"); // 2.756.0
+// 2.822.0 KC-CLUB-ANLAGE-UEBER-FENSTER (Fund Hansi 02.11.2026 „Vorschlag von Thomas ansehen: das Abstimmfenster liegt noch im Vordergrund, man kann das PDF
+// nicht sehen“): wird eine Anlage aus einem offenen Fenster heraus angezeigt, tritt das Fenster beiseite; „‹ Zurück“ führt genau dorthin zurück und zeigt es wieder
+// (zeige() holt die Fenster zurück, sobald die Dokument-Ansicht verlassen wird – auch über die Zurück-Taste des Handys).
+function dokFensterZurueck() { const z = DOKA.zurueck; DOKA.zurueck = null; for (const b of z?.blaetter || []) if (b.isConnected) b.classList.remove("versteckt"); }
+const dokZurueckZiel = () => DOKA.zurueck?.ansicht || (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : dokAktuell()?.ort === "sicherheit" ? "start" : "dokumente"); // 2.756.0
 async function dokAnzeigen(d, ausHistorie) {
   DOKA.id = d.id; DOKA.bilder = []; DOKA.fehler = ""; DOKA.anl = d.datei instanceof Blob || d.url ? d : null; const lauf = ++DOKA.lauf;
+  if (DOKA.anl && !ausHistorie && aktuelleAnsicht !== "dokansicht") { // Anlage aus einem offenen Fenster: Fenster beiseite, Rückweg merken (KC-CLUB-ANLAGE-UEBER-FENSTER)
+    const offen = [...document.querySelectorAll(".blatt:not(.versteckt)")]; offen.forEach((b) => b.classList.add("versteckt"));
+    DOKA.zurueck = { ansicht: aktuelleAnsicht, blaetter: offen };
+  } else if (!DOKA.anl) dokFensterZurueck();
   $("dokaTitel").textContent = d.t; $("dokaSeiten").innerHTML = ""; $("dokaDrucken").disabled = true;
   $("dokaStand").textContent = "Wird geladen …";
-  $("dokaZurueck").textContent = dokZurueckZiel() === "programme" ? "‹ Zurück zu „Freigegebene Programme“" : "‹ Zurück zu „Meine Dokumente“";
+  $("dokaZurueck").textContent = DOKA.zurueck ? "‹ Zurück" : dokZurueckZiel() === "programme" ? "‹ Zurück zu „Freigegebene Programme“" : "‹ Zurück zu „Meine Dokumente“";
   zeige("dokansicht", ausHistorie);
   try {
     const pdfjs = await pdfjsHolen();
@@ -17341,6 +17349,7 @@ const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
+  if (v !== "dokansicht" && DOKA.zurueck) dokFensterZurueck(); // 2.822.0 KC-CLUB-ANLAGE-UEBER-FENSTER
   try { hsSicht(v, ausHistorie); } catch {} // 2.710.0 KC-CLUB-HILFE-VON-SELBST
   document.body.classList.remove("knoepfe-weg"); KNW.y = 0; // 2.725.0 KC-CLUB-KNOEPFE-WEG: neue Seite → Knöpfe wieder da
   setTimeout(() => document.querySelectorAll(".klappen-alle").forEach(klappenAlleZeigen), 50); // KC-CLUB-KLAPPEN-ALLE: Beschriftung passend zum Stand
@@ -33462,7 +33471,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", anlBlatt: "📚 Anleitungen", anlWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",

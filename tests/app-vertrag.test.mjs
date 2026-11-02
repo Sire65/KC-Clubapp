@@ -9776,7 +9776,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
   assert.ok(o.indexOf('window.open("", "_blank")') < o.indexOf('await api("anlage_url"') && /anlageLinkZeigen\(r\.url, "Datei"\)/.test(o), "Fenster sofort beim Antippen, sonst Link-Knopf");
   assert.ok(/d\.datei instanceof Blob \? \{ data: new Uint8Array\(await d\.datei\.arrayBuffer\(\)\), isEvalSupported: false \}/.test(html) && /function dokAufraeumen\(\) \{[^}]*DOKA\.anl = null;/.test(html), "Dokument-Anzeige kann Anlagen, räumt auf");
   // 2.702.0: Ziel steht jetzt in dokZurueckZiel() (Chat-Anlage → Chat bleibt; dazu Technik-Dokumente → Freigegebene Programme)
-  assert.ok(/onclick="zurueck\(dokZurueckZiel\(\)\)"/.test(html) && /const dokZurueckZiel = \(\) => \(DOKA\.anl \? "chat" :/.test(html), "Zurück führt in den Chat");
+  assert.ok(/onclick="zurueck\(dokZurueckZiel\(\)\)"/.test(html) && /const dokZurueckZiel = \(\) => DOKA\.zurueck\?\.ansicht \|\| \(DOKA\.anl \? "chat" :/.test(html), "Zurück führt in den Chat");
 }
 // 2.166.0 KC-CLUB-ANLAGE-OEFFNEN (Hansi: „PDF öffnen sich nicht“): Diagnose je Schritt + zweiter Weg (Betrachter holt die Datei selbst)
 {

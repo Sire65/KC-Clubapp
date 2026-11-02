@@ -2292,7 +2292,7 @@ const anlOhneSym = (t) => String(t || "").replace(/^\p{Extended_Pictographic}[\u
 const ANL_REG = [["Push & E-Mail", "🔔"], ["Installieren", "📲"], ["Link & Anmelden", "🔑"], ["Sonstiges", "📝"]];
 const anlUrl = (datei) => APP_URL_CLUB + "dokumente/anleitungen/" + datei;
 async function anlStart() {
-  blattAuf("anlBlatt", `<h3 style="margin:0">📚 Anleitungen</h3><p class="hinweis" style="margin:2px 0 8px">Ansehen, drucken oder an Mitglieder weitergeben. Nur für die Clubleitung.</p><div id="anlInhalt"><p class="hinweis">Wird geladen …</p></div>`);
+  blattAuf("anleitungBlatt", `<h3 style="margin:0">📚 Anleitungen</h3><p class="hinweis" style="margin:2px 0 8px">Ansehen, drucken oder an Mitglieder weitergeben. Nur für die Clubleitung.</p><div id="anlInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   const [l, e] = await Promise.allSettled([fetch(`dokumente/anleitungen/liste.json?v=${APP_VERSION}`, { signal: zeitSignal(15000) }).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Liste fehlt")))), api("archiv_liste", {}, { still: true })]);
   ANL.blaetter = l.status === "fulfilled" ? (l.value.blaetter || []) : [];
   if (e.status === "fulfilled") { const r = e.value, ord = new Set((r.ordner || []).filter((o) => !o.besitzer && !o.geloescht_am && o.titel === "Anleitungen").map((o) => o.id));
@@ -2314,7 +2314,7 @@ function anlZeichnen() {
         : '<p class="hinweis" style="margin:6px 0">Noch nichts in diesem Register.</p>'}</details>`; }).join("")
     + (ANL.fehler ? `<p class="hinweis">⚠️ ${esc(ANL.fehler)}</p>` : "")
     + '<p class="hinweis" style="margin:8px 0 0">➕ <b>Eigene Anleitung dazulegen:</b> Büro → 📥 Einlesen (oder Eingangskorb) → Ablage 🏢 Büro → <b>Anleitungen</b> → Register wählen.</p>'
-    + '<div class="knoepfe"><button class="knopf" onclick="$(\'anlBlatt\').remove()">Schließen</button></div>';
+    + '<div class="knoepfe"><button class="knopf" onclick="$(\'anleitungBlatt\').remove()">Schließen</button></div>';
 }
 async function anlDatei(x) { // die Anleitung als Datei (für E-Mail-Anhang, Eingangskorb)
   if (x.art === "blatt") { const r = await fetch(`dokumente/anleitungen/${x.datei}?v=${APP_VERSION}`, { signal: zeitSignal(20000) }); if (!r.ok) throw new Error("Die Anleitung konnte nicht geladen werden."); return new File([await r.blob()], x.datei.replace(/^/, "Koecheclub_Anleitung_"), { type: "application/pdf" }); }
@@ -2327,7 +2327,7 @@ async function anlAnsehen(art, id, drucken) {
     else if (drucken) return arDrucken(x.doc);
     else { const t = arDateiVorladen(x.doc); melde("⏳ Datei wird geladen …"); await t.warten; if (!t.datei) throw t.fehler || new Error("Die Datei konnte nicht geladen werden.");
       if (!istPdf(x.doc.name, x.doc.mime)) return arDrucken(x.doc); await dokAnzeigen({ id: "anl:" + x.doc.datei, t: x.titel, datei: t.datei }); }
-    fensterZu($("anlBlatt")); fensterZu($("anlWgBlatt"));
+    fensterZu($("anleitungBlatt")); fensterZu($("anleitungWgBlatt"));
     if (drucken) { for (let i = 0; i < 60 && $("dokaDrucken")?.disabled; i++) await new Promise((ok) => setTimeout(ok, 250));
       return $("dokaDrucken") && !$("dokaDrucken").disabled ? dokDrucken() : melde("Die Seiten laden noch – oben auf „🖨️ Drucken“ tippen, sobald sie da sind."); }
   } catch (e) { meldeFehler(e); }
@@ -2338,17 +2338,17 @@ async function anlWeitergeben(art, id) {
   if (!MITGLIEDER) try { await mitgliederHolen(); } catch (e) { return meldeFehler(e); }
   const wege = ANL_WEGE.filter(([w]) => x.art === "blatt" || !["push", "wa"].includes(w)); // Link-Wege nur für eingebaute Blätter (eigene Dateien haben keinen festen Link)
   ANL.wahl = { x, weg: "mail" };
-  blattAuf("anlWgBlatt", `<h3 style="margin:0">📤 Weitergeben</h3><p class="hinweis" style="margin:2px 0 8px">${esc(x.titel)}</p>
+  blattAuf("anleitungWgBlatt", `<h3 style="margin:0">📤 Weitergeben</h3><p class="hinweis" style="margin:2px 0 8px">${esc(x.titel)}</p>
     <div class="hl-frage">Wie?</div><div class="anl-wege" role="radiogroup" aria-label="Weg">${wege.map(([w, sym, t]) => `<button type="button" class="chip${w === "mail" ? " an" : ""}" role="radio" aria-checked="${w === "mail"}" data-weg="${w}" onclick="anlWeg('${w}')">${sym} ${esc(t)}</button>`).join("")}</div>
     <div id="anlWgAnBereich"><div class="hl-frage">An wen?</div><div id="anlWgAn"></div>
     <label class="feld" style="margin-top:8px">Begleittext <small class="hinweis">(bei einer Person mit ihrem Vornamen)</small><textarea id="anlWgText" rows="3" maxlength="500">Hallo, hier die Anleitung „${esc(anlOhneSym(x.titel))}“. Bei Fragen melde dich gern.</textarea></label></div>
-    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="anlWgLos" onclick="anlWgSenden(this)">📤 Senden</button><button class="knopf" onclick="$('anlWgBlatt').remove()">Abbrechen</button></div>`);
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" id="anlWgLos" onclick="anlWgSenden(this)">📤 Senden</button><button class="knopf" onclick="$('anleitungWgBlatt').remove()">Abbrechen</button></div>`);
   zwStart("anlWgAn", { titel: "👤 Wer bekommt die Anleitung?", alleText: BU_ALLE_TEXT, alle: () => (MITGLIEDER || []).filter((m) => zwIch(m.person_id) && sammelOk(m) && okFrei(m)).map((m) => m.person_id), nachher: anlWgKnopf });
   anlWgKnopf();
 }
 function anlWeg(w) {
   if (!ANL.wahl) return; ANL.wahl.weg = w;
-  document.querySelectorAll("#anlWgBlatt [data-weg]").forEach((b) => { b.classList.toggle("an", b.dataset.weg === w); b.setAttribute("aria-checked", String(b.dataset.weg === w)); });
+  document.querySelectorAll("#anleitungWgBlatt [data-weg]").forEach((b) => { b.classList.toggle("an", b.dataset.weg === w); b.setAttribute("aria-checked", String(b.dataset.weg === w)); });
   $("anlWgAnBereich").hidden = w === "druck"; anlWgKnopf();
 }
 function anlWgKnopf() {
@@ -2376,6 +2376,6 @@ async function anlWgSenden(knopf) {
     else { const f = await anlDatei(x), daten = base64(await f.arrayBuffer());
       if (W.weg === "mail") await api("buero_mail_senden", { an: ids, cc: [], bcc: [], betreff: anlOhneSym(x.titel), text, kopie: false, dateien: [{ name: f.name, mime: f.type, daten }] }, { warten: true });
       else await api("archiv_eingang_verteilen", { personen: ids, name: f.name, mime: f.type, daten, titel: anlOhneSym(x.titel), register: "Sonstiges", notiz: text, letzte: true, anzahl: 1 }, { warten: true }); }
-    $("anlWgBlatt")?.remove(); melde(`📤 Anleitung an ${ids.length} ${ids.length === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
+    $("anleitungWgBlatt")?.remove(); melde(`📤 Anleitung an ${ids.length} ${ids.length === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
   } catch (e) { meldeFehler(e); knopf.disabled = false; }
 }

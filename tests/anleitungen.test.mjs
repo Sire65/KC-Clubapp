@@ -32,3 +32,8 @@ assert.ok(sv.includes("nurLeitung(ich);") && sv.includes('const basis = APP_URL 
 assert.match(lies("supabase/migrations/20261102_kc_club_ordner_anleitungen.sql"), /'Anleitungen', 3, array\['Push & E-Mail', 'Installieren', 'Link & Anmelden', 'Sonstiges'\], true/);
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/anleitungen.test.mjs"), "läuft in der CI");
 console.log("anleitungen: ok");
+
+// KC-CLUB-ANLAGE-UEBER-FENSTER (Fund Hansi 02.11.2026): Anlage aus offenem Fenster (z. B. Abstimmung) liegt nicht dahinter, Zurück holt das Fenster wieder
+assert.ok(/\.blatt:not\(\.versteckt\)"\)\]; offen\.forEach\(\(b\) => b\.classList\.add\("versteckt"\)\)/.test(app), "offene Fenster treten beiseite");
+assert.ok(/function zeige\(v, ausHistorie\) \{\n  if \(v !== "dokansicht" && DOKA\.zurueck\) dokFensterZurueck\(\);/.test(app), "zeige() holt die Fenster zurück");
+assert.equal((app.match(/blattAuf\("anlBlatt"/g) || []).length, 1, "anlBlatt nur einmal vergeben");
