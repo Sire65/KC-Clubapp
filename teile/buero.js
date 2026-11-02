@@ -511,8 +511,8 @@ const BU_REGAL = [
   { id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#7a5c3e", fn: "schStart()", recht: "L" },
   { id: "anleitungen", sym: "📚", t: "Anleitungen", farbe: "#4f6d7a", fn: "anlStart()", recht: "L" }, // 2.822.0 KC-CLUB-ANLEITUNGEN (Wunschliste #68) // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten … // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten …
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
-  { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartTitel('Weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
-  { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartTitel('Besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
+  { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartFest('weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
+  { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartFest('besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
   { id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivAnsicht()" }, // 2.144.0: erst auf dem Bildschirm (antippbar), Drucken darin // KC-CLUB-INHALTSVERZEICHNIS (2.79.0): alle Ordner als PDF/Ausdruck
@@ -2295,7 +2295,7 @@ async function anlStart() {
   blattAuf("anleitungBlatt", `<h3 style="margin:0">📚 Anleitungen</h3><p class="hinweis" style="margin:2px 0 8px">Ansehen, drucken oder an Mitglieder weitergeben. Nur für die Clubleitung.</p><div id="anlInhalt"><p class="hinweis">Wird geladen …</p></div>`);
   const [l, e] = await Promise.allSettled([fetch(`dokumente/anleitungen/liste.json?v=${APP_VERSION}`, { signal: zeitSignal(15000) }).then((r) => (r.ok ? r.json() : Promise.reject(new Error("Liste fehlt")))), api("archiv_liste", {}, { still: true })]);
   ANL.blaetter = l.status === "fulfilled" ? (l.value.blaetter || []) : [];
-  if (e.status === "fulfilled") { const r = e.value, ord = new Set((r.ordner || []).filter((o) => !o.besitzer && !o.geloescht_am && o.titel === "Anleitungen").map((o) => o.id));
+  if (e.status === "fulfilled") { const r = e.value, ord = new Set((r.ordner || []).filter((o) => !o.geloescht_am && arIstFest(o, "anleitungen")) /* KC-CLUB-ORDNER-KENNUNG */.map((o) => o.id));
     ANL.eigene = (r.dokumente || []).filter((d) => ord.has(d.ordner_id) && d.status === "ok" && d.datei); ANL.fehler = null; }
   else { ANL.eigene = []; ANL.fehler = "Eigene Anleitungen sind gerade nicht abrufbar."; }
   anlZeichnen();

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.823.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.824.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,7 +17,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-2ooVW564xXyRKfYodAzJ1Bwamd3L47DyMkW26F11W4FWGBiMk/cM5n/dJut/1BPL" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-MvmznEfEmchRItm6cEOV6tD4oHhaAtlUpVTF/LKEvwqcUN9f2FkW+i+zCEaWoBec" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-u+czHDJGpj7YUQH/alklgYf+VUv1d5L5dVO/awWe2Sb48UD9GjmlgX9WUEWJLnDZ" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
@@ -25265,8 +25265,8 @@ async function prJahrAbschliessen(jahr) {
   let a, o; const REG = ["Sitzungsprotokolle", "Sonstiges"];
   try {
     a = await api("archiv_liste", {}, { warten: true });
-    o = (a.ordner || []).find((x) => !x.besitzer && x.titel === "Protokolle" && Number(x.jahr) === Number(jahr));
-    if (!o) o = { id: (await api("archiv_ordner_speichern", { art: "versammlung", jahr: Number(jahr), titel: "Protokolle", farbe: 2, register: REG, nur_vorstand: false }, { warten: true })).id };
+    o = (a.ordner || []).find((x) => arIstFest(x, "protokolle") && Number(x.jahr) === Number(jahr)); // KC-CLUB-ORDNER-KENNUNG
+    if (!o) o = { id: (await api("archiv_ordner_speichern", { art: "versammlung", jahr: Number(jahr), titel: "Protokolle", farbe: 2, register: REG, nur_vorstand: false, kennung: "protokolle" }, { warten: true })).id, register: REG };
   } catch (e) { return meldeFehler(e); }
   const marke = (id) => "p-" + String(id).slice(0, 24), schon = new Set((a.dokumente || []).filter((d) => d.ordner_id === o.id).flatMap((d) => [].concat(d.stichworte || [])));
   const alt = { PR, DRUCK }; let n = 0, ueber = 0;
@@ -25278,11 +25278,11 @@ async function prJahrAbschliessen(jahr) {
       PR = await api("protokoll_laden", { id: p.id }); DRUCK = { art: "protokoll" };
       if (!(await druckSeiteBauen())) throw new Error(`„${p.titel}“ konnte nicht vorbereitet werden.`);
       const pdf = await druckPdfBlob(), tag = String(p.datum).split("-").reverse().join(".");
-      await api("archiv_hochladen", { ordner_id: o.id, register: REG[0], titel: `${p.titel} (${tag})`.slice(0, 120), datum: p.datum, stichworte: `Protokoll, ${jahr}, ${marke(p.id)}`,
+      await api("archiv_hochladen", { ordner_id: o.id, register: o.register?.includes(REG[0]) ? REG[0] : (o.register?.[0] || REG[0]), titel: `${p.titel} (${tag})`.slice(0, 120), datum: p.datum, stichworte: `Protokoll, ${jahr}, ${marke(p.id)}`,
         name: `Protokoll_${p.datum}_${String(p.titel).replace(/[^\wäöüÄÖÜß-]+/g, "_").slice(0, 40)}.pdf`, mime: "application/pdf", daten: base64(await pdf.arrayBuffer()) }, { warten: true });
       n++;
     }
-    melde(`📦 ${jahr}: ${n} Protokoll${n === 1 ? "" : "e"} im Büro-Ordner „Protokolle ${jahr}“${ueber ? ` · ${ueber} lag${ueber === 1 ? "" : "en"} schon dort` : ""}`);
+    melde(`📦 ${jahr}: ${n} Protokoll${n === 1 ? "" : "e"} im Büro-Ordner „${o.titel || "Protokolle"} ${jahr}“${ueber ? ` · ${ueber} lag${ueber === 1 ? "" : "en"} schon dort` : ""}`);
   } catch (e) { meldeFehler(e); } finally { PR = alt.PR; DRUCK = alt.DRUCK; }
 }
 function protokollFilter() { prFilterAnwenden(); } // Suchfeld + Filter wirken zusammen (2.23.36)
@@ -29377,11 +29377,11 @@ async function schListeLaden() {
 // KC-CLUB-SCHILDER-ABLAGE (Wunsch Hansi 30.10.2026, Wahl „Ablage in der Druckerei“): Dateien aus dem Club-Ordner „Schilder“ (z. B. die Preisliste
 // aus dem Eingangskorb → 🏢 Büro → Schilder) stehen hier unter „📎 Abgelegte Dateien“ – ansehen, drucken, ins Druckpaket. Vorhandene Wege:
 // archiv_liste (Rechte prüft der Server), arDateiVorladen/dokAnzeigen, arDrucken, schPaketDazu. Ohne Verbindung: Hinweis, nie geraten.
-const SCH_ORDNER = "Schilder";
+const SCH_ORDNER = "schilder"; // KC-CLUB-ORDNER-KENNUNG: Kennung, nicht Beschriftung – Umbenennen im Büro trennt die Druckerei nicht mehr
 async function schDateienLaden() {
   try {
     const r = await api("archiv_liste", {}, { still: true });
-    const ord = new Set((r.ordner || []).filter((o) => !o.besitzer && !o.geloescht_am && o.titel === SCH_ORDNER).map((o) => o.id));
+    const ord = new Set((r.ordner || []).filter((o) => !o.geloescht_am && arIstFest(o, SCH_ORDNER)).map((o) => o.id));
     SDR.dateien = (r.dokumente || []).filter((d) => ord.has(d.ordner_id) && d.status === "ok" && d.datei)
       .sort((a, b) => String(a.register || "").localeCompare(String(b.register || ""), "de") || String(a.titel).localeCompare(String(b.titel), "de"));
     SDR.dateienFehler = null;
@@ -32022,7 +32022,7 @@ async function dpdLueckenBauen() {
 // Ein Ordner mit solchen Registern gilt als mehrjährig – sein Name kommt ohne Jahreszahl (das Jahr steckt im Register).
 const AR_TRENN = " › ";
 const arMehrjahr = (o) => (o?.register || []).some((r) => String(r).includes(AR_TRENN));
-const arName = (o) => (arMehrjahr(o) || o?.art === "chronik" ? o.titel : `${o.titel} ${o.jahr}`);
+const arName = (o) => (arMehrjahr(o) || o?.art === "chronik" || o?.dauerhaft ? o.titel : `${o.titel} ${o.jahr}`); // KC-CLUB-ORDNER-KENNUNG: Dauerordner ohne Jahr
 const arJahrSpanne = (o) => { const j = [...new Set((o.register || []).map((r) => String(r).split(AR_TRENN)[0]).filter((x) => /^\d{4}$/.test(x)))].sort(); return j.length ? (j.length > 1 ? `${j[0]}–${j[j.length - 1]}` : j[0]) : String(o.jahr); };
 const arImRegister = (x, reg) => !reg || x.register === reg || String(x.register || "").startsWith(reg + AR_TRENN);
 const AR_FARBEN = ["#8b1e2d", "#1f5f99", "#2e7d4f", "#b36b00", "#5b3f8c", "#3f4a54", "#0f7c80", "#a33b6b"];
@@ -32102,12 +32102,21 @@ async function egVorschau(x) { // PDF-Seiten als Bilder, Bilder direkt, sonst �
 }
 function eingangOeffnen() { AR.zielEingang = true; arStart(); } // 2.432.0 KC-CLUB-EINGANGSKORB: direkt in den Ordner mit den wartenden Dokumenten
 function arStartTitel(titel) { AR.zielTitel = titel; arStart(); } // Club-Ordner nach Beschriftung öffnen (neuester Jahrgang)
+// ----- KC-CLUB-ORDNER-KENNUNG (03.11.2026, Konzeptprüfung Ordner & Register): feste Club-Ordner über ihre Kennung finden -----
+// Registry im Server (FESTE_ORDNER); archiv_liste liefert je Ordner kennung + dauerhaft. AR_FEST_TITEL nur als Rückfall, falls ein
+// älterer Server noch keine Kennung schickt (Schlüssel fehlt) – dann wie bisher nach der ursprünglichen Beschriftung.
+const AR_FEST_TITEL = { schilder: "Schilder", anleitungen: "Anleitungen", weihnachtsmarkt: "Weihnachtsmarkt", besprechungen: "Besprechungen", vertraege: "Verträge",
+  admin: "Admin", personal: "Personal", dienstplaene: "Dienstpläne", protokolle: "Protokolle" };
+const arIstFest = (o, kennung) => !!o && !o.besitzer && ("kennung" in o ? o.kennung === kennung : o.titel === AR_FEST_TITEL[kennung]);
+function arStartFest(kennung) { AR.zielFest = kennung; arStart(); } // fester Club-Ordner (neuester Jahrgang), egal wie er gerade beschriftet ist
 async function arLaden() {
   if (!AR.daten) $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>';
   try { AR.daten = await api("archiv_liste");
     if (INIT) { const n = AR.daten.ordner.filter((o) => o.eigen).reduce((x, o) => x + (o.pruefung || 0), 0); if ((INIT.eingangskorb || 0) !== n) { INIT.eingangskorb = n; try { wichtigZeigen(); } catch {} } } // 2.432.0 KC-CLUB-EINGANGSKORB
     if (AR.zielEingang) { AR.zielEingang = false; const ze = AR.daten.ordner.find((o) => o.eigen && o.pruefung); if (ze) return arOrdnerOeffnen(ze.id); }
     if (AR.zielArt) { const za = AR.daten.ordner.find((o) => !o.besitzer && o.art === AR.zielArt); AR.zielArt = null; if (za) return arOrdnerOeffnen(za.id); }
+    if (AR.zielFest) { const k = AR.zielFest; AR.zielFest = null; const zf = AR.daten.ordner.filter((o) => arIstFest(o, k)).sort((a, b) => b.jahr - a.jahr)[0];
+      if (zf) return arOrdnerOeffnen(zf.id); melde(`Den Ordner „${AR_FEST_TITEL[k] || k}“ gibt es noch nicht – im Archiv mit „＋“ anlegen.`, true); }
     if (AR.zielTitel) { const zt = AR.daten.ordner.filter((o) => !o.besitzer && o.titel === AR.zielTitel).sort((a, b) => b.jahr - a.jahr)[0]; const t = AR.zielTitel; AR.zielTitel = null; if (zt) return arOrdnerOeffnen(zt.id); melde(`Den Ordner „${t}“ gibt es noch nicht – im Archiv mit „＋“ anlegen.`, true); }
     if (AR.ziel) { const z = AR.ziel, zr = AR.zielRegister; AR.ziel = null; AR.zielRegister = "";
       if (AR.daten.ordner.some((o) => o.id === z) || (String(z).startsWith("auto:") && arAlleOrdner().some((o) => o.id === z))) { arOrdnerOeffnen(z); if (zr) { AR.register = zr; arZeigen(); } return; } } arZeigen(); } catch (e) { $("arInhalt").innerHTML = `<div class="karte hinweis">⚠️ ${esc(fehlerText(e))}</div>`; }
@@ -32601,11 +32610,30 @@ function arBlatt(html) {
 }
 const arBlattZu = () => document.getElementById("arFenster")?.remove();
 let arReg = [];
+// KC-CLUB-REGISTER-UMBENENNEN (03.11.2026, Konzeptprüfung Ordner & Register): Register antippen = umbenennen, ✕ = entfernen.
+// arRegUm = [{ alt, neu }] für Register, die es beim Öffnen schon gab – der Server nimmt Dokumente und Freigaben mit.
+let arRegUm = [], arRegVorher = [];
+const arRegStart = (liste) => { arReg = [...liste]; arRegVorher = [...liste]; arRegUm = []; };
+const arRegUrsprung = (r) => arRegUm.find((x) => x.neu === r)?.alt ?? (arRegVorher.includes(r) ? r : null);
+async function arRegUmbenennen(i) {
+  const alt = arReg[i]; if (alt === undefined) return;
+  const v = await eingabe(`✏️ Register „${alt}“ umbenennen\n\nDokumente darin bleiben in diesem Register.`, alt, { ja: "✏️ Umbenennen" });
+  const neu = String(v ?? "").trim().slice(0, 30);
+  if (!neu || neu === alt) return;
+  if (arReg.includes(neu)) return melde(`Das Register „${neu}“ gibt es schon.`, true);
+  const ursprung = arRegUrsprung(alt);
+  arRegUm = arRegUm.filter((x) => x.neu !== alt);
+  if (ursprung && ursprung !== neu) arRegUm.push({ alt: ursprung, neu });
+  arReg[i] = neu; arRegZeigen();
+}
+function arRegEntfernen(i) { const r = arReg[i]; arRegUm = arRegUm.filter((x) => x.neu !== r); arReg.splice(i, 1); arRegZeigen(); }
+// Dokumente in Registern, die wirklich wegfallen (umbenannte zählen nicht)
+const arRegWegZahl = (id) => AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register) && !arRegUm.some((u) => u.alt === x.register)).length;
 function arOrdnerForm(id) {
   const d = AR.daten, o = id ? d.ordner.find((x) => x.id === id) : null, jahrJetzt = new Date().getFullYear();
   if (o?.besitzer) return arEigenForm(o);
   const art = o?.art || "versammlung";
-  arReg = o ? [...o.register] : [...d.arten[art].register];
+  arRegStart(o ? o.register : d.arten[art].register);
   arBlatt(`<h3>${o ? "✏️ Ordner ändern" : "🗄️ Neuer Ordner"}</h3>
     <label class="feld">Was kommt rein?<select id="arArt" onchange="arArtGewaehlt(this.value)">${Object.entries(d.arten).map(([k, a]) => `<option value="${k}" ${k === art ? "selected" : ""}>${a.sym} ${esc(a.t)}</option>`).join("")}</select></label>
     <div class="zwei"><label class="feld">Jahr<select id="arJahrWahl">${Array.from({ length: jahrJetzt + 2 - 1950 }, (_, i) => jahrJetzt + 1 - i).map((j) => `<option ${j === (o?.jahr || jahrJetzt) ? "selected" : ""}>${j}</option>`).join("")}</select></label>
@@ -32620,18 +32648,21 @@ function arOrdnerForm(id) {
   arRegZeigen();
 }
 function arArtGewaehlt(art) {
-  const a = AR.daten.arten[art]; arReg = [...a.register]; arRegZeigen();
+  const a = AR.daten.arten[art]; arReg = [...a.register]; arRegUm = []; arRegZeigen();
   $("arTitel").placeholder = a.t; $("arLeitung").checked = !!a.vorstand; if ($("arEinreichen")) $("arEinreichen").checked = art === "chronik";
 }
-function arRegZeigen() { $("arRegChips").innerHTML = arReg.map((r, i) => `<button class="chip" onclick="arReg.splice(${i},1);arRegZeigen()">${esc(r)} ✕</button>`).join("") || '<span class="hinweis">Ohne Register landet alles unter „Allgemein“.</span>'; }
+function arRegZeigen() {
+  $("arRegChips").innerHTML = arReg.map((r, i) => `<span class="chip ar-reg-chip"><button type="button" class="ar-reg-name" aria-label="Register ${esc(r)} umbenennen" onclick="arRegUmbenennen(${i})">${esc(r)} ✏️</button><button type="button" class="ar-reg-weg" aria-label="Register ${esc(r)} entfernen" onclick="arRegEntfernen(${i})">✕</button></span>`).join("")
+    + (arReg.length ? '<div class="hinweis" style="flex-basis:100%;margin-top:2px">Antippen = umbenennen (Inhalt bleibt drin) · ✕ = entfernen</div>' : '<span class="hinweis">Ohne Register landet alles unter „Allgemein“.</span>');
+}
 function arRegDazu() { const v = $("arRegNeu").value.trim().slice(0, 30); if (v && !arReg.includes(v) && arReg.length < 12) arReg.push(v); $("arRegNeu").value = ""; arRegZeigen(); }
 async function arOrdnerSpeichern(id) {
   const f = document.querySelector(".ar-farben button.an");
   const alt = id ? AR.daten.ordner.find((x) => x.id === id) : null;
-  const weg = alt ? AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length : 0;
+  const weg = alt ? arRegWegZahl(id) : 0;
   if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Allgemein"}“. Weiter?`))) return;
   try {
-    const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, nur_vorstand: $("arLeitung").checked, einleitung: $("arEinleitung")?.value ?? undefined, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
+    const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, umbenennen: arRegUm, nur_vorstand: $("arLeitung").checked, einleitung: $("arEinleitung")?.value ?? undefined, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
     arBlattZu(); melde(id ? "✔ Ordner geändert" : "✔ Ordner angelegt");
     await arLaden(); if (!id) arOrdnerOeffnen(r.id);
   } catch (e) { meldeFehler(e); }
@@ -32954,10 +32985,11 @@ async function arDokSpeichern(id) {
       if (!AR.datei) return melde("Bitte zuerst eine Datei wählen oder ein Foto machen.", true);
       const d = AR.datei;
       const r = await api("archiv_hochladen", { ordner_id: AR.ordner, ...werte, name: d.name, mime: d.type || "application/octet-stream", daten: base64(await d.arrayBuffer()) }, { warten: true });
-      AR.datei = null;
+      AR.datei = null; AR.registerErsetzt = r.registerErsetzt ? r.register : null; // KC-CLUB-REGISTER-UMBENENNEN: Register gab es nicht mehr
       if (r.pruefung) { arBlattZu(); melde(arOrdnerAktuell()?.besitzer ? "📥 Hineingelegt – wartet auf Prüfung durch den Besitzer" : "📥 Eingereicht – die Clubleitung prüft und gibt frei"); return await arLaden(); }
     }
-    arBlattZu(); melde(id ? "✔ Gespeichert" : "📥 Abgelegt"); await arLaden();
+    const ersetzt = AR.registerErsetzt; AR.registerErsetzt = null;
+    arBlattZu(); melde(id ? "✔ Gespeichert" : ersetzt ? `📥 Abgelegt – im Register „${ersetzt}“ (das gewählte gibt es nicht mehr)` : "📥 Abgelegt"); await arLaden();
   } catch (e) { meldeFehler(e); }
 }
 async function arDokLoeschen(id) {
@@ -33157,7 +33189,7 @@ function ablageBild({ kopf, zeilen, fuss }) {
 }
 // ----- KC-CLUB-ARCHIV-PERSOENLICH (1.5.0): eigener Ordner, Freigaben auf Zeit, Prüfung von Einreichungen -----
 function arEigenForm(o) {
-  arReg = [...o.register];
+  arRegStart(o.register);
   arBlatt(`<h3>✏️ Mein Ordner ${o.jahr}</h3><p class="hinweis" style="margin:0 0 6px">Jahr und Name auf dem Rücken bleiben fest.</p>
     <div class="feld">Farbe des Ordners<div class="ar-farben">${AR_FARBEN.map((c, i) => `<button type="button" class="${(o.farbe || 6) === i + 1 ? "an" : ""}" style="background:${c}" data-f="${i + 1}" onclick="document.querySelectorAll('.ar-farben button').forEach((b)=>b.classList.toggle('an',b===this))" aria-label="Farbe ${i + 1}"></button>`).join("")}</div></div>
     <div class="feld">Register (Reiter im Ordner)<div class="chips" id="arRegChips"></div>
@@ -33167,9 +33199,9 @@ function arEigenForm(o) {
 }
 async function arEigenSpeichern(id) {
   const f = document.querySelector(".ar-farben button.an");
-  const weg = AR.daten.dokumente.filter((x) => x.ordner_id === id && !arReg.includes(x.register)).length;
+  const weg = arRegWegZahl(id);
   if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Urkunden"}“. Weiter?`))) return;
-  try { await api("archiv_ordner_speichern", { id, register: arReg, farbe: Number(f?.dataset.f || 6) }); arBlattZu(); melde("✔ Ordner geändert"); await arLaden(); } catch (e) { meldeFehler(e); }
+  try { await api("archiv_ordner_speichern", { id, register: arReg, umbenennen: arRegUm, farbe: Number(f?.dataset.f || 6) }); arBlattZu(); melde("✔ Ordner geändert"); await arLaden(); } catch (e) { meldeFehler(e); }
 }
 async function arNeuesJahr() {
   const j = (await eingabe("Für welches Jahr soll ein weiterer eigener Ordner angelegt werden?", String(new Date().getFullYear() - 1)));

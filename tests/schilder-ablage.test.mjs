@@ -10,7 +10,7 @@ assert.match(mig, /'sonstiges', 2026, 'Schilder', 6, array\['Preislisten', 'Hinw
 assert.match(mig, /where not exists \(select 1 from public\.kc_club_archiv_ordner where titel = 'Schilder' and besitzer is null and geloescht_am is null\)/);
 // Druckerei: Abschnitt, Dateien nur aus dem Club-Ordner „Schilder“, nur angenommene mit Datei; vorhandene Wege zum Ansehen/Drucken/Druckpaket
 assert.match(app, /<h4 style="margin:14px 0 6px">📎 Abgelegte Dateien\$\{SDR\.dateien\?\.length \? ` \(\$\{SDR\.dateien\.length\}\)` : ""\}<\/h4>\$\{schDateienHtml\(\)\}/);
-assert.match(app, /const ord = new Set\(\(r\.ordner \|\| \[\]\)\.filter\(\(o\) => !o\.besitzer && !o\.geloescht_am && o\.titel === SCH_ORDNER\)/);
+assert.match(app, /const ord = new Set\(\(r\.ordner \|\| \[\]\)\.filter\(\(o\) => !o\.geloescht_am && arIstFest\(o, SCH_ORDNER\)\)/); // KC-CLUB-ORDNER-KENNUNG
 assert.match(app, /\.filter\(\(d\) => ord\.has\(d\.ordner_id\) && d\.status === "ok" && d\.datei\)/);
 assert.match(app, /function schDateiDrucken\(id\) \{ const x = schDatei\(id\); if \(x\) arDrucken\(x\); \}/);
 assert.match(app, /if \(!SDR\.paket\.teile\.some\(\(t\) => t\.typ === "archiv" && t\.ref === x\.datei\)\) schPaketDazu\("archiv", x\.datei/, "➕ legt nur dazu");

@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.824.0 – 2026-11-03 – 🗄️ Feste Ordner mit Kennung, Register umbenennen (KC-CLUB-ORDNER-KENNUNG, KC-CLUB-REGISTER-UMBENENNEN) · App + Server + Datenbank
+Konzeptprüfung Ordner & Register (02.11., Wunsch Hansi „prüfen“ → „umbauen“). Ausführlich: docs/ORDNER_REGISTER.md.
+- Auch der neue Ordner „📚 Anleitungen“ (2.822.0) wird jetzt über die Kennung `anleitungen` gefunden.
+- **Feste Ordner über eine Kennung statt über die Beschriftung:** Schilder, Anleitungen, Weihnachtsmarkt, Besprechungen, Verträge, Admin, Personal, Dienstpläne und Protokolle. Benennt jemand einen davon im Büro um, finden Schilder-Druckerei, „📦 Jahr abschließen“, die Büro-Kacheln und die automatischen Ablagen des Servers ihn weiter. Vorher verloren sie die Verbindung, und der Server legte einen zweiten Ordner an. Registry: `FESTE_ORDNER` im Club-Server.
+- **✏️ Register umbenennen:** Im Ordner-Formular (Vereinsordner und eigener Ordner) öffnet Antippen eines Registers „umbenennen“, ✕ entfernt es. Beim Umbenennen bleiben die Dokumente drin, und Freigaben auf dieses Register gelten weiter. Vorher war Umbenennen „entfernen + neu“, und alles rutschte ohne Hinweis ins erste Register.
+- **Dauerordner ohne Jahr:** Schilder, Anleitungen, Weihnachtsmarkt, Besprechungen und Verträge heißen ohne Jahreszahl und fallen ab 2028 nicht mehr aus der Ordner-Wahl im Büro-Eingang (dort galt „nur dieses und letztes Jahr“).
+- **Ehrliche Rückmeldung beim Ablegen:** Gibt es das gewählte Register nicht mehr, sagt die App, wo das Dokument jetzt liegt.
+- Datenbank: Migration `20261103_kc_club_ordner_kennung.sql` (eine neue, leere Spalte `kennung` + Kennung für die vorhandenen festen Ordner, je Kennung und Jahr höchstens einer; nichts wird verschoben oder gelöscht). Probelauf `tools/db-test/105_ordner_kennung_test.sql` (Erwartung `105_erwartet.txt`), lokal auf PostgreSQL 16 grün, auch zweimal eingespielt.
+- Server läuft auch, solange die Migration noch fehlt (Rückfall auf die Beschriftung wie bisher). Reihenfolge trotzdem: **erst Datenbank, dann Server, dann App.**
+- Tests: neu `tests/ordner-kennung.test.mjs`; angepasst `schilder-ablage`, `app-vertrag` (Weihnachtsmarkt-Kachel). Browser geprüft: umbenannte Ordner „Schilder & Preise“/„WM Werne“ werden gefunden, Register „Preislisten“ → „Preise“ ohne Umzugs-Warnung. Rückweg: App 2.823.0, Server 2.822.0; die Spalte darf bleiben.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 ## 2.823.0 – 2026-11-02 – Disco in der Szenen-Vorschau
 - Einstellungen → Jahreszeiten im Kopf → „Vorschau im Kopf der Startseite“: Knopf 🪩 Disco ergänzt (fehlte seit 2.811.0, Fund Hansi). Test: jede feste Kopf-Szene hat einen Vorschau-Knopf (KC-CLUB-DISCO-VORSCHAU).
 

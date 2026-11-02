@@ -5116,6 +5116,10 @@
   .ar-farben { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
   .ar-farben button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
   .ar-farben button.an { border-color: var(--text); box-shadow: 0 0 0 2px var(--karte) inset; }
+  /* KC-CLUB-REGISTER-UMBENENNEN: Register-Chip = Name (umbenennen) + ✕ (entfernen) */
+  .ar-reg-chip { display: inline-flex; align-items: stretch; padding: 0; overflow: hidden; }
+  .ar-reg-chip button { background: none; border: 0; font: inherit; color: inherit; min-height: 40px; padding: 4px 8px; cursor: pointer; }
+  .ar-reg-chip .ar-reg-weg { border-left: 1px solid var(--rand, rgba(0,0,0,.15)); min-width: 40px; }
   .fotofilter { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
   .fotofilter .feld { margin: 0; }
   .fotoraster { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 4px; }
@@ -6547,7 +6551,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.823.0" data-v="2.823.0"></script>
+<script src="app.js?v=2.824.0" data-v="2.824.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

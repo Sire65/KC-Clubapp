@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.822.0";
+const SERVER_VERSION = "2.824.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -4693,19 +4693,79 @@ const adminOrdner = (jahr: number, register: string) => vereinsOrdner(ADMIN_ORDN
 const DIENSTPLAN_ORDNER = { art: "sonstiges", titel: "Dienstpläne", farbe: 5, register: ["Wünsche", "Gesamtplan", "Sonstiges"] };
 const DIENST_REG = { wunsch: "Wünsche", gesamt: "Gesamtplan", persoenlich: "Dienstpläne" };
 const dwJahr = () => Number(DW.veranstaltung.match(/\d{4}/)?.[0]) || Number(berlinTag(new Date()).slice(0, 4));
+// ---------- KC-CLUB-ORDNER-KENNUNG (03.11.2026, Konzeptprüfung Ordner & Register, Wunsch Hansi „umbauen“) ----------
+// Registry der festen Club-Ordner: App und Server finden sie über die Kennung, nicht mehr über die Beschriftung – Umbenennen im Büro
+// trennt keine Verbindung mehr. jahrweise = je Jahr ein eigener Ordner; sonst Dauerordner (das Jahr ist nur das Anlagejahr und zählt
+// nirgends als Filter). titel = ursprüngliche Beschriftung (Rückfall für Ordner ohne Kennung, z. B. bevor die Migration lief).
+// Neue feste Ordner = Eintrag hier (+ Migration mit kennung). Migration: supabase/migrations/20261103_kc_club_ordner_kennung.sql
+const FESTE_ORDNER: Record<string, { art: string; titel: string; jahrweise: boolean }> = {
+  admin: { art: ADMIN_ORDNER.art, titel: ADMIN_ORDNER.titel, jahrweise: true },
+  personal: { art: MITGLIEDER_ORDNER.art, titel: MITGLIEDER_ORDNER.titel, jahrweise: true },
+  dienstplaene: { art: DIENSTPLAN_ORDNER.art, titel: DIENSTPLAN_ORDNER.titel, jahrweise: true },
+  protokolle: { art: "versammlung", titel: "Protokolle", jahrweise: true }, // KC-CLUB-PROTOKOLL-JAHR (App legt an)
+  weihnachtsmarkt: { art: "sonstiges", titel: "Weihnachtsmarkt", jahrweise: false },
+  besprechungen: { art: "sonstiges", titel: "Besprechungen", jahrweise: false },
+  vertraege: { art: "sonstiges", titel: "Verträge", jahrweise: false },
+  schilder: { art: "sonstiges", titel: "Schilder", jahrweise: false },
+  anleitungen: { art: "sonstiges", titel: "Anleitungen", jahrweise: false },
+};
+const ORDNER_KENNUNG_VON = new Map([[ADMIN_ORDNER, "admin"], [MITGLIEDER_ORDNER, "personal"], [DIENSTPLAN_ORDNER, "dienstplaene"]] as [typeof ADMIN_ORDNER, string][]);
+// Kennung eines Ordners: die gespeicherte; nur solange die Spalte noch fehlt (Migration nicht eingespielt) nach ursprünglicher
+// Beschriftung + Art. Nie für persönliche Ordner.
+const ordnerKennung = (o: any): string | null => !o || o.besitzer ? null
+  : "kennung" in o ? (o.kennung && FESTE_ORDNER[o.kennung] ? o.kennung : null)
+  : Object.entries(FESTE_ORDNER).find(([, f]) => f.titel === o.titel && f.art === o.art)?.[0] ?? null;
+const ordnerDauerhaft = (o: any) => { const k = ordnerKennung(o); return !!k && !FESTE_ORDNER[k].jahrweise; };
+let KENNUNG_SPALTE = true; // false, solange die Migration noch nicht eingespielt ist (Spalte fehlt → Rückfall auf die Beschriftung)
+const spalteFehlt = (e: any) => !!e && (e.code === "42703" || /kennung/.test(String(e.message || "")) && /column|spalte/i.test(String(e.message || "")));
 async function vereinsOrdner(def: typeof ADMIN_ORDNER, jahr: number, register: string) {
-  const { data: da } = await db.from("kc_club_archiv_ordner").select("id,register").is("besitzer", null).eq("art", def.art).eq("titel", def.titel)
-    .eq("jahr", jahr).is("geloescht_am", null).order("erstellt_am").limit(1).maybeSingle();
+  const kennung = ORDNER_KENNUNG_VON.get(def) ?? null;
+  let da: any = null;
+  if (kennung && KENNUNG_SPALTE) {
+    const r = await db.from("kc_club_archiv_ordner").select("id,register").is("besitzer", null).eq("kennung", kennung)
+      .eq("jahr", jahr).is("geloescht_am", null).limit(1).maybeSingle();
+    if (spalteFehlt(r.error)) KENNUNG_SPALTE = false; else da = r.data;
+  }
+  if (!da) { // Rückfall: Ordner ohne Kennung (alt) nach der Beschriftung – bekommt dabei seine Kennung
+    const { data: alt } = await db.from("kc_club_archiv_ordner").select("id,register" + (KENNUNG_SPALTE ? ",kennung" : "")).is("besitzer", null).eq("art", def.art).eq("titel", def.titel)
+      .eq("jahr", jahr).is("geloescht_am", null).order("erstellt_am").limit(1).maybeSingle();
+    if (alt && (!KENNUNG_SPALTE || !(alt as any).kennung || (alt as any).kennung === kennung)) {
+      da = alt;
+      if (kennung && KENNUNG_SPALTE && !(alt as any).kennung) await db.from("kc_club_archiv_ordner").update({ kennung }).eq("id", (alt as any).id).then(() => null, () => null);
+    }
+  }
   if (da) {
     if (!(da.register || []).includes(register)) await db.from("kc_club_archiv_ordner").update({ register: [register, ...(da.register || [])], geaendert_am: jetzt() }).eq("id", da.id);
     return da.id as string;
   }
   const [admin] = await adminIds();
-  const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ art: def.art, jahr, titel: def.titel, farbe: def.farbe,
-    register: [...new Set([register, ...def.register])], nur_vorstand: true, erstellt_von: admin }).select("id").single();
+  const werte: any = { art: def.art, jahr, titel: def.titel, farbe: def.farbe, register: [...new Set([register, ...def.register])], nur_vorstand: true, erstellt_von: admin };
+  if (kennung && KENNUNG_SPALTE) werte.kennung = kennung;
+  let { data: neu, error } = await db.from("kc_club_archiv_ordner").insert(werte).select("id").single();
+  if (spalteFehlt(error)) { KENNUNG_SPALTE = false; delete werte.kennung; ({ data: neu, error } = await db.from("kc_club_archiv_ordner").insert(werte).select("id").single()); }
   if (error || !neu) throw new Error(`${def.titel}-Ordner konnte nicht angelegt werden`);
-  await protokoll(null, "archiv_ordner_angelegt", { ordner: neu.id, art: def.art, jahr, titel: def.titel, nur_vorstand: true, automatisch: true });
+  await protokoll(null, "archiv_ordner_angelegt", { ordner: neu.id, art: def.art, jahr, titel: def.titel, kennung, nur_vorstand: true, automatisch: true });
   return neu.id as string;
+}
+// Register umbenennen statt „entfernen + neu“: Dokumente und Freigaben ziehen mit (vorher landeten sie still im ersten Register).
+// paare = [{ alt, neu }] – nur alt ∈ vorher, neu ∈ nachher, alt ∉ nachher; doppelte/kreuzende Paare werden verworfen.
+function registerUmbenennenPaare(roh: unknown, vorher: string[], nachher: string[]) {
+  const paare: { alt: string; neu: string }[] = [], alte = new Set<string>(), neue = new Set<string>();
+  for (const x of Array.isArray(roh) ? roh.slice(0, 80) : []) {
+    const alt = txt((x as any)?.alt, 30), neu = txt((x as any)?.neu, 30);
+    if (!alt || !neu || alt === neu || !vorher.includes(alt) || !nachher.includes(neu) || nachher.includes(alt) || alte.has(alt) || neue.has(neu)) continue;
+    alte.add(alt); neue.add(neu); paare.push({ alt, neu });
+  }
+  return paare;
+}
+async function registerUmbenennen(ordnerId: string, paare: { alt: string; neu: string }[]) {
+  let dokumente = 0;
+  for (const { alt, neu } of paare) {
+    const { data } = await db.from("kc_club_archiv_dokumente").update({ register: neu, geaendert_am: jetzt() }).eq("ordner_id", ordnerId).eq("register", alt).select("id");
+    dokumente += (data ?? []).length;
+    await db.from("kc_club_archiv_freigaben").update({ register: neu }).eq("ordner_id", ordnerId).eq("register", alt);
+  }
+  return dokumente;
 }
 async function sicherheitAblegen(ich: Ich, zeilen: string[], probleme: number, ms: number | null, notiz: string, version: string) {
   const heute = berlinTag(new Date()), zeit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date());
@@ -16470,12 +16530,12 @@ Köcheclub Werne`,
         await ekPruefen(ich, art, id);
         const doku = await ekDoku(art, id); if (!doku) throw new Fehler("Vorgang nicht gefunden.", 404);
         const [{ data: ordner }, st] = await Promise.all([
-          db.from("kc_club_archiv_ordner").select("id,art,jahr,titel,register,nur_vorstand").is("besitzer", null).is("geloescht_am", null).order("jahr", { ascending: false }).order("titel").limit(200),
+          db.from("kc_club_archiv_ordner").select("*").is("besitzer", null).is("geloescht_am", null).order("jahr", { ascending: false }).order("titel").limit(200), // * statt Spaltenliste: kennung fehlt evtl. noch (KC-CLUB-ORDNER-KENNUNG)
           ekStaende(art, [id])]);
         const def = EK_ARTEN[art], jahr = Number(berlinTag(new Date()).slice(0, 4));
-        const liste = (ordner ?? []).filter((o: any) => darfOrdnerSehen(ich, o) && o.art !== "chronik" && o.jahr >= jahr - 1)
+        const liste = (ordner ?? []).filter((o: any) => darfOrdnerSehen(ich, o) && o.art !== "chronik" && (o.jahr >= jahr - 1 || ordnerDauerhaft(o))) // KC-CLUB-ORDNER-KENNUNG: Dauerordner (z. B. Schilder) fallen nie aus der Wahl
           .map((o: any) => ({ id: o.id, titel: o.titel || ARCHIV_ARTEN[o.art]?.t || "Ordner", sym: ARCHIV_ARTEN[o.art]?.sym || "🗂️", jahr: o.jahr, register: ekRegister(o),
-            vorschlag: (def.ordnerArt ? o.art === def.ordnerArt : false) || (art === "aenderung" && o.titel === MITGLIEDER_ORDNER.titel) || (art === "dienstwunsch" && o.titel === DIENSTPLAN_ORDNER.titel) }))
+            vorschlag: (def.ordnerArt ? o.art === def.ordnerArt : false) || (art === "aenderung" && ordnerKennung(o) === "personal") || (art === "dienstwunsch" && ordnerKennung(o) === "dienstplaene") }))
           .map((o: any) => ({ ...o, registerVor: def.register.find((r) => o.register.includes(r)) || o.register[0] }));
         const abl = (st.get(id)?.ablagen ?? []) as any[];
         return json({ titel: doku.titel, mitglied: doku.person_id && doku.person_id !== ich.person_id ? { name: doku.wer } : null, ordner: liste,
@@ -18274,6 +18334,7 @@ Köcheclub Werne`,
           ordner: ordner.map((o: any) => {
             const eigen = o.besitzer === ich.person_id, inhalt = dk.filter((d: any) => d.ordner_id === o.id);
             return { id: o.id, art: o.art, jahr: o.jahr, titel: o.besitzer ? (leute.get(o.besitzer)?.display_name || o.titel) : o.titel, farbe: o.farbe, register: o.register, nur_vorstand: o.nur_vorstand, einreichen: !!o.einreichen,
+              kennung: ordnerKennung(o), dauerhaft: ordnerDauerhaft(o), // KC-CLUB-ORDNER-KENNUNG: feste Ordner über die Kennung finden, nicht über die Beschriftung
               einleitung: o.besitzer ? null : o.einleitung ?? null, // KC-CLUB-ORDNER-EINLEITUNG (1.86.0)
               besitzer: o.besitzer || null, eigen, anzahl: inhalt.filter((d: any) => d.status === "ok").length, pruefung: inhalt.filter((d: any) => d.status === "pruefung").length,
               freigaben: eigen ? (meineFr ?? []).filter((f: any) => f.ordner_id === o.id).map(fAnzeige) : undefined,
@@ -18303,10 +18364,11 @@ Köcheclub Werne`,
             // eigener Ordner: Jahr und Beschriftung (Name) bleiben fest – Register und Farbe frei
             const register = archivRegister(p.register, "sonstiges"), farbe = Math.min(8, Math.max(1, Math.round(Number(p.farbe)) || 6));
             await db.from("kc_club_archiv_ordner").update({ register: register.length ? register : PERSOENLICH_REGISTER, farbe, geaendert_am: jetzt() }).eq("id", o.id);
+            const umbenannt = await registerUmbenennen(o.id, registerUmbenennenPaare(p.umbenennen, o.register || [], register)); // KC-CLUB-REGISTER-UMBENENNEN
             const { data: weg } = await db.from("kc_club_archiv_dokumente").select("id,register").eq("ordner_id", o.id);
             const fehlt = (weg ?? []).filter((d: any) => !register.includes(d.register)).map((d: any) => d.id);
             if (fehlt.length) await db.from("kc_club_archiv_dokumente").update({ register: register[0] }).in("id", fehlt);
-            await protokoll(ich.person_id, "archiv_eigener_ordner_geaendert", { ordner: o.id, umgehaengt: fehlt.length });
+            await protokoll(ich.person_id, "archiv_eigener_ordner_geaendert", { ordner: o.id, umgehaengt: fehlt.length, umbenannt });
             return json({ ok: true, id: o.id });
           }
         }
@@ -18318,20 +18380,28 @@ Köcheclub Werne`,
         const werte = { art, jahr, titel: txt(p.titel, 60) || ARCHIV_ARTEN[art].t, farbe: Math.min(8, Math.max(1, Math.round(Number(p.farbe)) || 1)),
           register: archivRegister(p.register, art), nur_vorstand: !!p.nur_vorstand, geaendert_am: jetzt(),
           einreichen: p.einreichen === undefined ? art === "chronik" : !!p.einreichen && !p.nur_vorstand }; // KC-CLUB-CHRONIK: Chronik standardmäßig „alle dürfen einreichen“
+        // KC-CLUB-ORDNER-KENNUNG: feste Kennung nur beim Anlegen und nur aus der Registry (kein Freitext), nie doppelt
+        const kennungNeu = !p.id && p.kennung && FESTE_ORDNER[String(p.kennung)] ? String(p.kennung) : null;
         if (p.einleitung !== undefined) (werte as any).einleitung = String(p.einleitung ?? "").replace(/\r/g, "").trim().slice(0, 4000) || null; // KC-CLUB-ORDNER-EINLEITUNG (1.86.0)
         if (p.id) {
           const o = await archivOrdnerHolen(ich, p.id, false, "pflegen");
           await db.from("kc_club_archiv_ordner").update(werte).eq("id", o.id);
+          // KC-CLUB-REGISTER-UMBENENNEN: umbenannte Register nehmen Dokumente und Freigaben mit
+          const umbenannt = await registerUmbenennen(o.id, registerUmbenennenPaare(p.umbenennen, o.register || [], werte.register));
           // Dokumente in einem entfernten Register → ins erste Register (nichts geht verloren)
           const { data: weg } = await db.from("kc_club_archiv_dokumente").select("id,register").eq("ordner_id", o.id);
           const fehlt = (weg ?? []).filter((d: any) => !werte.register.includes(d.register)).map((d: any) => d.id);
           if (fehlt.length) await db.from("kc_club_archiv_dokumente").update({ register: werte.register[0] }).in("id", fehlt);
-          await protokoll(ich.person_id, "archiv_ordner_geaendert", { ordner: o.id, vorher: { art: o.art, jahr: o.jahr, titel: o.titel, register: o.register, nur_vorstand: o.nur_vorstand, einreichen: o.einreichen }, umgehaengt: fehlt.length });
+          await protokoll(ich.person_id, "archiv_ordner_geaendert", { ordner: o.id, vorher: { art: o.art, jahr: o.jahr, titel: o.titel, register: o.register, nur_vorstand: o.nur_vorstand, einreichen: o.einreichen }, umgehaengt: fehlt.length, umbenannt });
           return json({ ok: true, id: o.id });
         }
-        const { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ ...werte, erstellt_von: ich.person_id }).select("id").single();
+        let { data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ ...werte, erstellt_von: ich.person_id, ...(kennungNeu && KENNUNG_SPALTE ? { kennung: kennungNeu } : {}) }).select("id").single();
+        if (kennungNeu && error) { // Spalte fehlt noch oder es gibt schon einen (Kennung + Jahr) → ohne Kennung anlegen (wie bisher)
+          if (spalteFehlt(error)) KENNUNG_SPALTE = false;
+          ({ data: neu, error } = await db.from("kc_club_archiv_ordner").insert({ ...werte, erstellt_von: ich.person_id }).select("id").single());
+        }
         if (error || !neu) throw new Fehler("Ordner konnte nicht angelegt werden.", 500);
-        await protokoll(ich.person_id, "archiv_ordner_angelegt", { ordner: neu.id, art, jahr, titel: werte.titel, nur_vorstand: werte.nur_vorstand });
+        await protokoll(ich.person_id, "archiv_ordner_angelegt", { ordner: neu.id, art, jahr, titel: werte.titel, nur_vorstand: werte.nur_vorstand, kennung: kennungNeu });
         return json({ ok: true, id: neu.id });
       }
 
@@ -18390,7 +18460,8 @@ Köcheclub-App`,
               url,
             }, `club-archiv-pruefung:${d.id}`).catch(() => null);
           }
-          return json({ ok: true, id: d.id, pruefung: einreichung });
+          // KC-CLUB-REGISTER-UMBENENNEN: gab es das gewählte Register nicht (mehr), sagt die Antwort, wo es jetzt liegt
+          return json({ ok: true, id: d.id, pruefung: einreichung, register, registerErsetzt: !!p.register && String(p.register) !== register });
         } catch (e) { await dateienEntfernen([datei.id]); throw e; }
       }
 
@@ -18708,7 +18779,10 @@ Köcheclub-App`,
       case "archiv_wiederherstellen": {
         if (p.ordner) {
           const o = await archivOrdnerHolen(ich, p.ordner, true, "pflegen");
-          await db.from("kc_club_archiv_ordner").update({ geloescht_am: null, geloescht_von: null }).eq("id", o.id);
+          const { error: wErr } = await db.from("kc_club_archiv_ordner").update({ geloescht_am: null, geloescht_von: null }).eq("id", o.id);
+          // KC-CLUB-ORDNER-KENNUNG: gibt es inzwischen einen neuen festen Ordner mit derselben Kennung, kommt dieser als normaler Ordner zurück
+          if (wErr && o.kennung) await db.from("kc_club_archiv_ordner").update({ geloescht_am: null, geloescht_von: null, kennung: null }).eq("id", o.id);
+          else if (wErr) throw new Fehler("Ordner konnte nicht wiederhergestellt werden.", 500);
           await protokoll(ich.person_id, "archiv_ordner_wiederhergestellt", { ordner: o.id });
         } else {
           const { d, o } = await archivDokHolen(ich, p.id, "pflegen");
