@@ -4598,7 +4598,18 @@
   .strom-rang small { grid-column: 1 / -1; color: var(--grau); font-size: .78rem; }
   .strom-balken { height: 10px; border-radius: 5px; background: var(--karte2); overflow: hidden; } .strom-balken i { display: block; height: 100%; background: var(--rot); border-radius: 5px; }
   .pr-monat-titel { margin: 10px 2px 4px; font-weight: 700; color: var(--grau); font-size: .9rem; } /* 2.799.0 KC-CLUB-PROTOKOLL-GRUPPEN */
-  details.pr-monat > summary.pr-monat-titel { cursor: pointer; list-style: none; } details.pr-monat > summary.pr-monat-titel::before { content: "▸ "; } details.pr-monat[open] > summary.pr-monat-titel::before { content: "▾ "; } /* 2.802.0 Monate einklappbar */
+  /* 2.808.0 KC-CLUB-KLAPPE-GLEICH (Wunsch #63 Hansi „alle Listen mit Einklapp-Pfeilen gleich … in Protokollen sind die Pfeile viel zu klein und drehen sich nicht“):
+     Jeder Klappbereich mit gemerktem Auf/Zu (klappenMerken: Schloss + Pfeil) sieht aus wie die Karten – großer weinroter Pfeil rechts, der sich dreht, Schloss davor.
+     Vorher bekamen die Protokoll-Monate (2.802.0) einen kleinen festen Pfeil links und Schloss/Pfeil rutschten in eine eigene Zeile. Karten und Avatar-Klappen unverändert. */
+  details[data-klappe-an]:not(.karte):not(.av-klappe) > summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; }
+  details[data-klappe-an]:not(.karte):not(.av-klappe) > summary::before { display: none; }
+  details[data-klappe-an]:not(.karte):not(.av-klappe) > summary .schloss { margin-left: auto; width: 42px; height: 42px; border: none; border-radius: 12px; background: var(--karte2); font-size: 1.15rem; cursor: pointer; flex: none; }
+  details[data-klappe-an]:not(.karte):not(.av-klappe) > summary .schloss.zu { background: var(--gelbbg); outline: 2px solid var(--gold); }
+  details[data-klappe-an]:not(.karte):not(.av-klappe) > summary .pfeil { width: 42px; height: 42px; display: grid; place-items: center; font-size: 1.7rem; line-height: 1; color: var(--rot); transition: transform .2s; flex: none; }
+  details[data-klappe-an]:not(.karte):not(.av-klappe):not([open]) > summary .pfeil { transform: rotate(-90deg); }
+  details[data-klappe-an].fest:not(.karte):not(.av-klappe) > summary .pfeil { opacity: .35; }
+  :root.dunkel details[data-klappe-an]:not(.karte):not(.av-klappe) > summary .pfeil { color: var(--textRot); }
+  details.pr-monat > summary.pr-monat-titel { font-size: 1.05rem; color: var(--text); border-bottom: 1px solid var(--linie); padding-bottom: 2px; }
   .pr-vertagt { display: grid; gap: 2px; margin: -4px 0 8px; } /* 2.802.0 KC-CLUB-PROTOKOLL-VERTAGT */
   .rund-gruppe { margin: 6px 0; } .rund-gruppe > summary { cursor: pointer; padding: 10px 12px; border: 1px solid var(--linie); border-radius: 12px; background: var(--karte2); list-style-position: inside; min-height: 44px; box-sizing: border-box; }
   .rund-gruppe[open] > summary { margin-bottom: 6px; }
@@ -6458,7 +6469,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.807.0" data-v="2.807.0"></script>
+<script src="app.js?v=2.808.0" data-v="2.808.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

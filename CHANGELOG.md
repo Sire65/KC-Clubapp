@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.808.0 – 2026-11-02 – 🔽 Klapp-Pfeile überall gleich (KC-CLUB-KLAPPE-GLEICH, Wunsch #63) · nur App
+Wunsch #63 Hansi: „Alle Listen mit Einklapp-Pfeilen gleich aufbauen. In Protokollen sind die Pfeile viel zu klein und drehen sich nicht.“
+- Ursache: Die Protokoll-Monate (2.802.0) hatten einen eigenen kleinen Pfeil links, der sich nicht drehte; Schloss und Pfeil rutschten darunter in eine eigene Zeile.
+- Jetzt bekommt jeder Klappbereich mit gemerktem Auf/Zu dieselbe Kopfzeile wie die Karten: Titel links, 🔓 Schloss und großer weinroter Pfeil rechts, der sich beim Auf-/Zuklappen dreht. Eine Regel an einer Stelle, auch für künftige Listen. Karten und Avatar-Klappen unverändert.
+- Browser geprüft (Protokolle mit Jahren und Monaten). Test: `tests/klappe-gleich.test.mjs`.
+- Rückweg: App 2.807.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.807.0 – 2026-11-02 – 🕰️ Rotes X an jeder Stunden-Uhr (KC-CLUB-UHR-X, Wunsch #65) · nur App
 Wunsch #65 Hansi: „Bei jeder Uhr oben ein rotes X einblenden, damit die User wissen, dass man die Uhr ausschalten kann. Evtl. Frage stellen, ob Uhr dauernd aus soll.“
 - Die Uhr zur vollen Stunde (Kuckuck, Big Ben, Kölner Dom und alle anderen) hat oben rechts ein rotes ✕. Antippen schließt die Uhr.
