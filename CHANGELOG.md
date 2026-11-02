@@ -1,12 +1,20 @@
 # Änderungen
 
-## 2.804.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, Wunschliste #58) · nur App
+## 2.804.0 – 2026-11-02 – 🪩 Disco im Kopf und auf der Bühne (KC-CLUB-DISCO, #58) · 🖥️ Büro-Schreibtisch mit Rechner und Lampe (KC-CLUB-BUERO-SCHREIBTISCH, KC-CLUB-RECHNER, #48) · nur App
 Wunsch Hansi (31.10.): „Neue Szene Disco mit Tänzern, Discjockey, Diskokugel, Schwarzlicht, Nebelmaschine, Szene versinkt im Nebel, fängt wieder von vorne an.“ Entscheidungen 02.11.: 4 Tänzer, zwischendurch legt Twinkey ein Solo hin; auch automatisch am Clubabend und zu Silvester im Wechsel; auch auf der Bühne bei „Nur Musik hören“.
 - Neues Thema **🪩 Disco** (⚙️ → Darstellung → Thema): Ein Lauf ≈ 60 s – Schwarzlicht flackert an, links legt der DJ auf (Plattenteller drehen, er nickt mit Kopfhörer), oben dreht die Diskokugel und wirft Lichtpunkte, 4 Leute tanzen auf der leuchtenden Tanzfläche, dann **Twinkey-Solo** im Spot (die anderen klatschen), danach zischt die Nebelmaschine, alles versinkt im Nebel, der Nebel lichtet sich – von vorn.
 - **Automatisch am Clubabend-Tag und zu Silvester** (31.12./1.1.): der Kopf wechselt alle 2 Minuten zwischen Disco und der sonst gewählten Szene (Silvester-Feuerwerk, Jahreszeit oder Thema). Nur wo das Bild im Kopf an ist; Sparmodus und „Jahreszeiten im Kopf aus“ gelten wie immer, Sim-Jü geht vor.
 - **Bühne → 🎶 Nur Musik hören → Disco:** die Disco läuft hinter Twinkey (ohne Solo – er tanzt dort vorn), hält bei Pause, im Hintergrund und beim Verlassen an.
 - Sparsam wie alle Szenen: höchstens 20 Bilder/s, in Ruhe 12, nach 3 Min. ohne Tippen steht das Bild; höchstens 24 Lichtpunkte und 12 Nebelwolken, Leuchten ohne Weichzeichner.
 - Hilfe-Eintrag „Thema Disco“. Test: `tests/disco.test.mjs`. Rückweg: App 2.803.0.
+- **#48 Büro: ein Schreibtisch statt Kacheln** (Wunsch 30.10., Entscheidungen 02.11.): Oben die **Pinnwand** mit den 2 Pins (links „Nächster Schritt“, rechts „Eingang“). Darauf gezeichnete Dinge, jedes ein Knopf mit Namen:
+  - **🖥️ Bildschirm:** Uhrzeit, nächste Sitzung („in 5 Tagen“), deine offenen Aufgaben, Glückwünsche der Woche – sonst das Logo. Antippen öffnet die Büro-Liste.
+  - **⌨️ Tastatur:** Nachricht & Mail (eine Person, mehrere, Gruppe). **✒️ Füller im Tintenfass:** was man mit der Hand schreibt – Brief, Einladung, Protokoll, Grußkarte & Glückwunsch, Pinnwand-Zettel (Schild jetzt beim Drucker).
+  - **☎️ Telefon:** Telefonnummer wählen. **📱 Handy:** in der App anrufen (📞/🎥) oder WhatsApp. **📥 Ablagekorb** (Eingang), **🗓️ Kalender**, **🖨️ Drucker** mit Scanner-Deckel (Einlesen), **☕ Kaffee** (Deko; wenn Glückwünsche anstehen: die Glückwunschkarte).
+  - **💡 Lampe:** schaltet von Hand Tag/Nacht um (Automatik wieder über den Mond-Knopf).
+  - Rechte wie bisher; nichts bewegt sich dauerhaft (nur die Uhr jede Minute).
+- **🧮 Tischrechner** (neuer Teil `teile/rechner.js`): große Tasten, grünes Display, Papierstreifen mit den letzten 20 Rechnungen (nur auf dem Gerät), + − × ÷, Klammern, Prozent. **🎤 Sagen:** „rechne 5 mal 22“, „125 geteilt durch 4“, „19 Prozent von 240“, „das Ergebnis plus 30“ – auf Wunsch mit Ansage. „rechne …“ geht auch über die Sprachsteuerung der App von überall. Gerechnet wird nur auf dem Gerät (ohne eval).
+- Tests: `tests/schreibtisch.test.mjs`.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.803.0 – 2026-11-02 – 🎬 Erklär-Videos: Bild passt wieder zum Gesagten – Einstellungen und Express (KC-CLUB-VIDEO-ABGLEICH, Wunsch #54) · nur App

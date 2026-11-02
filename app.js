@@ -17,8 +17,9 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-XWE2dY95XUlkqI0gnyxnN9Ll6isufr6/9LsUB6L2DrFFzuFIX7YO+a1hcv0bkqJK" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-h1Xv4sj+2UBujbGzZURKMQS3LVvnVzu1xu8V5PAT0vysef5uRqVv40K+PiEYdlnK" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-FFTyCH5Q5y4PX4AZ90E9iiuSebdITuzOkkciDMimpBh/PsbHF5WWaVNTgQCqZSq1" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
+  rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-t4FYzpsOSdtKZ/OJiTuJ11JRFFFJX2lZ6JqTMGsP3YpVnPYLJqFIh2iFKbuXVwO+" }, // 2.804.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
@@ -2788,6 +2789,8 @@ function sbKachelStufe(t) {
 }
 function sbErkennen(roh, mitglieder = [], ich = "") {
   const t = sbNorm(roh); if (!t) return null;
+  // 2.804.0 KC-CLUB-RECHNER: „rechne 5 mal 22“, „was ist 19 Prozent von 240“ → Tischrechner (ungekürzt weitergeben – Kommas gehören zur Zahl)
+  if (/^(bitte )?(rechne|berechne|was (ist|sind|ergibt|macht)) .*\d|^(bitte )?(rechne|berechne) /.test(t)) return { art: "rechnen", was: String(roh || "").trim() };
   if (/^(zur |zu der |auf die |die )?(start ?seite|haupt ?seite|startbildschirm|anfang)$|^(zurück )?(zum|zur) (start|anfang|start ?seite|haupt ?seite)$|^nach hause$|^ich weiß nicht weiter$/.test(t)) return { art: "start" };
   if (/^zurück$/.test(t)) return { art: "zurueck" };
   if (/^(hilfe|was kann ich sagen)$/.test(t)) return { art: "hilfe" };
@@ -3331,6 +3334,7 @@ const sbVorname = (pid) => String(MITGLIEDER?.find((m) => m.person_id === pid)?.
 async function sbAusfuehren(b) {
   if (["antwort", "lies_nachrichten", "lies_pinnwand", "anruf", "ordner"].includes(b.art)) return sbStufe3(b); // 2.87.0
   if (b.art === "brief") return sbBrief(b); // 2.137.0 KC-CLUB-SPRACHE-BRIEF
+  if (b.art === "rechnen") { sbStopp(); return rechnerOeffnen(b.was); } // 2.804.0 KC-CLUB-RECHNER: Sprachfenster zu, Rechner mit Ergebnis auf
   if (b.art === "wegweiser") return ewStart(); // 2.534.0 KC-CLUB-EINST-WEGWEISER: nur lesen, darum ohne Rückfrage
   if (b.art === "ziel") { const z = SB_ZIELE.find((x) => x.id === b.ziel); if (!z) return; if (z.nur && !z.nur()) return melde("Das ist für dich nicht freigeschaltet.", true); if (["start", "naechster", "nachricht_neu", "pinnwand_neu", "brief_neu"].includes(z.id)) return z.los(); if (!(await sbEingabenOk())) return melde("✋ Alles bleibt, wie es ist"); return z.los(); }
   if (b.art === "start") return sbStartseite();
@@ -33272,7 +33276,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",

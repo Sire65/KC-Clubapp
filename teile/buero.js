@@ -705,25 +705,83 @@ function buRaumHtml() {
       ${!S ? '<div class="bu-tipp">👁️ Du hast im Büro <b>Leserechte</b>: ansehen und drucken.</div>' : ""}${naechst && !buVertretungAngebot(naechst) ? buVertretungHtml(naechst) : ""}</div>
     <div class="bu-raum">
       ${buSchrankHtml(`<div class="bu-wand"><div class="bu-regal">${ordner.map(ruecken).join("")}</div><div class="bu-brett"></div></div>`, ordner.length)}
-      <div class="bu-tisch">
-        <div class="bu-zettelreihe">
+      <div class="bu-tisch bu-tisch-neu">
+        <div class="bu-pinnwand" aria-label="Pinnwand">
+          <div class="bu-zettelreihe">
           ${dran ? `<button class="bu-zettel" onclick="${dranFn}"><b>Nächster Schritt</b>${esc(dran.replace(/^\S+\s/, ""))}</button>` : `<div class="bu-zettel ruhig"><b>Nächster Schritt</b>${!naechst ? "Keine Sitzung geplant" : !t ? "Sitzung ist vorbereitet 👍" : !t.vorbereitet ? "Tagesordnung noch nicht festgelegt" : t.einladung_am ? "Eingeladen ✅" : "Tagesordnung festgelegt ✅"}</div>`}
           ${L ? `<button class="bu-zettel blau" onclick="buEingang()"><b>Eingang</b>${summe ? `${summe} ${summe === 1 ? "Sache wartet" : "Sachen warten"} auf dich` : "Alles erledigt 👍"}</button>`
             : `<button class="bu-zettel blau" onclick="zeige('termine')"><b>Nächster Termin</b>${naechst ? esc(naechst.titel || "Sitzung") + " · " + esc(fTagDp.format(new Date(naechst.beginn))) : "Keiner geplant"}</button>`}
+          </div>
         </div>
-        <div class="bu-dinge">
-          ${L ? ding("bu-korb", `<span class="bu-dsym">📥</span>${summe ? `<span class="bu-dzahl">${summe}</span>` : ""}`, "Eingang", "buEingang()") : ""}
-          ${ding("bu-fueller", '<span class="bu-dsym">✒️</span>', "Schreiben", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>')}
-          ${L ? ding("bu-telefon", '<span class="bu-dsym">☎️</span>', "Anrufen", "buTelefon()") : ""}
-          ${L ? ding("bu-post", '<span class="bu-dsym">📨</span>', "Nachricht &amp; Mail", "buNachricht()") : ""}
-          ${ding("bu-kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-dsym">📅</span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')")}
-          ${ding("bu-drucker", '<span class="bu-dsym">🖨️</span>', "Drucken", "buDrucker()")}
-          ${S ? ding("bu-scanner", '<span class="bu-dsym">📠</span>', "Einlesen", "buEinlesen()") : ""}
-          ${fest.length ? ding("bu-karte", '<span class="bu-dsym">🎂</span>', fest.length === 1 ? "1 Glückwunsch" : `${fest.length} Glückwünsche`, "buFeste()") : ""}
-        </div>
+        <div class="bu-platte bu-dinge">${buTischDinge({ L, S, summe, kal, naechst, fest })}</div>
       </div>
     </div>`;
 }
+// ---------- 2.804.0 KC-CLUB-BUERO-SCHREIBTISCH (Wunschliste #48, Wunsch Hansi 30.10./02.11.2026 „Büro bzw. Schreibtisch moderner: im Vordergrund eine
+// Tastatur, rechts ein Telefon und ein Tischrechner, ein Handy zum Anrufen usw.“; Entscheidungen 02.11.: Rechner = echter Rechner mit Sprache, Füller im
+// Tintenfass für das, was man auch im echten Leben mit der Hand schreibt, Tastatur für Nachricht & Mail, die 2 Pins an der Pinnwand links und rechts,
+// Bildschirm wie vorgeschlagen, Lampe zum Umschalten Tag/Nacht) ----------
+// Jedes Ding ist selbst gezeichnet (SVG, keine Bilder) und ein echter Knopf mit Namen. Rechte wie bisher: was man nicht darf, steht nicht auf dem Tisch.
+// Strom: nichts bewegt sich dauerhaft – nur die Uhr im Bildschirm springt jede Minute (eine Zeile Text).
+const BU_SVG = {
+  lampe: (an) => `<svg viewBox="0 0 70 90" aria-hidden="true">${an ? '<path d="M14 34 L56 34 L70 90 L0 90 Z" fill="rgba(255,231,150,.45)"/>' : ""}<path d="M10 8 L40 4 L50 30 L20 34 Z" fill="${an ? "#f2c14e" : "#2f3b4a"}"/><circle cx="35" cy="34" r="${an ? 4 : 0}" fill="#fff6c8"/>
+    <path d="M38 8 L54 46 L36 80" fill="none" stroke="#3a3f45" stroke-width="4" stroke-linecap="round"/><ellipse cx="36" cy="84" rx="18" ry="5" fill="#3a3f45"/></svg>`,
+  korb: '<svg viewBox="0 0 100 70" aria-hidden="true"><rect x="10" y="18" width="80" height="10" fill="#fff" transform="rotate(-3 50 23)"/><rect x="12" y="12" width="76" height="10" fill="#f4f4f4" transform="rotate(2 50 17)"/><path d="M4 26 H96 L88 62 H12 Z" fill="#5b6770"/><path d="M4 26 H96" stroke="#3c454c" stroke-width="4"/><rect x="38" y="40" width="24" height="6" rx="3" fill="#3c454c"/></svg>',
+  handy: '<svg viewBox="0 0 50 90" aria-hidden="true"><rect x="5" y="3" width="40" height="84" rx="8" fill="#1d1f22"/><rect x="9" y="11" width="32" height="64" rx="3" fill="#2e7d4f"/><rect x="13" y="18" width="20" height="9" rx="4" fill="#e7f5ec"/><rect x="17" y="32" width="20" height="9" rx="4" fill="#fff"/><rect x="13" y="46" width="16" height="9" rx="4" fill="#e7f5ec"/><circle cx="25" cy="81" r="3" fill="#3a3d42"/></svg>',
+  kaffee: '<svg viewBox="0 0 50 50" aria-hidden="true"><ellipse cx="22" cy="44" rx="20" ry="5" fill="#e6ddd3"/><path d="M8 18 H36 V34 A10 10 0 0 1 26 44 H18 A10 10 0 0 1 8 34 Z" fill="#fff"/><path d="M36 22 A6 6 0 0 1 36 34" fill="none" stroke="#fff" stroke-width="4"/><ellipse cx="22" cy="18" rx="14" ry="3" fill="#6b4226"/></svg>',
+  karte: '<svg viewBox="0 0 60 50" aria-hidden="true"><path d="M6 46 L30 40 L54 46 L54 10 L30 4 L6 10 Z" fill="#fff6e8" stroke="#e3c9a3"/><path d="M30 4 V40" stroke="#e3c9a3"/><text x="18" y="30" font-size="16" text-anchor="middle">🎂</text><text x="42" y="22" font-size="6" fill="#741521" text-anchor="middle">Alles</text><text x="42" y="30" font-size="6" fill="#741521" text-anchor="middle">Gute!</text></svg>',
+  fueller: '<svg viewBox="0 0 60 70" aria-hidden="true"><path d="M14 44 H46 L50 66 H10 Z" fill="#23304a"/><rect x="18" y="38" width="24" height="8" rx="2" fill="#3a4a6a"/><ellipse cx="30" cy="40" rx="10" ry="2.5" fill="#0b1630"/><path d="M33 40 L48 4 L53 6 L38 42 Z" fill="#741521"/><path d="M33 40 L36 42 L34 46 Z" fill="#d4af37"/><rect x="44" y="6" width="7" height="3" fill="#d4af37" transform="rotate(22 47 7)"/></svg>',
+  telefon: '<svg viewBox="0 0 110 80" aria-hidden="true"><path d="M10 70 L22 34 H88 L100 70 Z" fill="#2b2f34"/><rect x="34" y="40" width="42" height="24" rx="3" fill="#3d434a"/><g fill="#cfd6dc"><rect x="38" y="44" width="9" height="5" rx="1"/><rect x="51" y="44" width="9" height="5" rx="1"/><rect x="64" y="44" width="9" height="5" rx="1"/><rect x="38" y="52" width="9" height="5" rx="1"/><rect x="51" y="52" width="9" height="5" rx="1"/><rect x="64" y="52" width="9" height="5" rx="1"/></g><path d="M8 30 Q55 8 102 30 L96 40 Q55 22 14 40 Z" fill="#b3261e"/><rect x="82" y="44" width="12" height="16" rx="2" fill="#9fd8b3"/></svg>',
+  scanner: '<svg viewBox="0 0 110 30" aria-hidden="true"><rect x="6" y="10" width="98" height="16" rx="4" fill="#cdd3d8"/><rect x="20" y="3" width="70" height="9" rx="2" fill="#fff"/><path d="M14 18 H96" stroke="#aeb6bd" stroke-width="2"/></svg>',
+  drucker: '<svg viewBox="0 0 110 56" aria-hidden="true"><rect x="6" y="0" width="98" height="40" rx="6" fill="#e9ecef"/><rect x="22" y="22" width="66" height="8" rx="2" fill="#9aa4ad"/><rect x="28" y="28" width="54" height="26" fill="#fff" stroke="#d8dde1"/><circle cx="92" cy="12" r="3" fill="#2e7d4f"/></svg>',
+  rechner: '<svg viewBox="0 0 80 100" aria-hidden="true"><rect x="6" y="4" width="68" height="92" rx="8" fill="#3a3f45"/><rect x="14" y="12" width="52" height="18" rx="3" fill="#b9d3a8"/><text x="62" y="26" font-size="12" text-anchor="end" fill="#22301a" font-family="monospace">5×22</text><g fill="#e8ebee"><rect x="14" y="38" width="10" height="9" rx="2"/><rect x="28" y="38" width="10" height="9" rx="2"/><rect x="42" y="38" width="10" height="9" rx="2"/><rect x="56" y="38" width="10" height="9" rx="2" fill="#f2a23a"/><rect x="14" y="52" width="10" height="9" rx="2"/><rect x="28" y="52" width="10" height="9" rx="2"/><rect x="42" y="52" width="10" height="9" rx="2"/><rect x="56" y="52" width="10" height="9" rx="2" fill="#f2a23a"/><rect x="14" y="66" width="10" height="9" rx="2"/><rect x="28" y="66" width="10" height="9" rx="2"/><rect x="42" y="66" width="10" height="9" rx="2"/><rect x="56" y="66" width="10" height="23" rx="2" fill="#f2a23a"/><rect x="14" y="80" width="24" height="9" rx="2"/><rect x="42" y="80" width="10" height="9" rx="2"/></g></svg>',
+  tastatur: '<svg viewBox="0 0 220 70" aria-hidden="true"><rect x="4" y="6" width="212" height="58" rx="8" fill="#f2f2f2" stroke="#c9c9c9"/><g fill="#fff" stroke="#d2d2d2">' + [0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => `<rect x="${12 + i * 19}" y="14" width="16" height="12" rx="2"/>`).join("") + '<rect x="183" y="14" width="25" height="12" rx="2"/>' + [0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="${12 + i * 19}" y="30" width="16" height="12" rx="2"/>`).join("") + '<rect x="164" y="30" width="44" height="12" rx="2"/><rect x="12" y="46" width="30" height="12" rx="2"/><rect x="45" y="46" width="118" height="12" rx="2"/><rect x="166" y="46" width="42" height="12" rx="2"/></g></svg>',
+};
+const buUhrzeit = () => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date());
+function buMonitorZeilen(naechst, fest) {
+  const z = [];
+  if (naechst) { const tage = Math.round((Date.parse(berlinIso(naechst.beginn) + "T12:00:00Z") - Date.parse(heuteIso() + "T12:00:00Z")) / 86400000);
+    z.push(`📅 ${esc(naechst.titel || "Sitzung")} ${tage <= 0 ? "heute" : tage === 1 ? "morgen" : `in ${tage} Tagen`}`); }
+  const auf = (INIT?.meineAufgaben || []).length; if (auf) z.push(`📌 ${auf} ${auf === 1 ? "Aufgabe" : "Aufgaben"} für dich`);
+  if (fest.length) z.push(`🎂 ${fest.length} ${fest.length === 1 ? "Glückwunsch" : "Glückwünsche"} diese Woche`);
+  return z;
+}
+function buTischDinge({ L, S, summe, kal, naechst, fest }) {
+  const ding = (area, inhalt, label, fn, extra = "") => `<button type="button" class="bu-obj bu-o-${area}" style="grid-area:${area}" onclick="${fn}" aria-label="${esc(label.replace(/&amp;/g, "&"))}">${inhalt}<span class="bu-olabel">${label}</span>${extra}</button>`;
+  const nacht = istNacht(), zeilen = buMonitorZeilen(naechst, fest); setTimeout(buUhrStellen, 0); // Uhr im Bildschirm (stellt sich ab, wenn das Büro zu ist)
+  const monitor = `<button type="button" class="bu-obj bu-o-monitor" style="grid-area:monitor" onclick="buAnsichtWechseln()" aria-label="Bildschirm – Büro als Liste öffnen">
+      <span class="bu-mon"><span class="bu-mon-schirm"><span class="bu-mon-uhr">${buUhrzeit()}</span>${zeilen.length ? zeilen.map((x) => `<span class="bu-mon-zeile">${x}</span>`).join("")
+        : '<span class="bu-mon-logo"><img src="kc-kochmuetze-weiss.webp" alt=""><small>Köcheclub Werne</small></span>'}</span></span><span class="bu-mon-fuss"></span><span class="bu-olabel">Bildschirm</span></button>`;
+  const kalender = ding("kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-kal"><span class="bu-kmon">–</span><span class="bu-ktag">?</span></span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')"); // wie bisher
+  const geraet = `<span class="bu-o-geraet" style="grid-area:drucker">${S ? `<button type="button" class="bu-obj bu-o-scanner" onclick="buEinlesen()" aria-label="Einlesen (Scanner)">${BU_SVG.scanner}<span class="bu-olabel">Einlesen</span></button>` : ""}
+      <button type="button" class="bu-obj bu-o-drucker" onclick="buDrucker()" aria-label="Drucken">${BU_SVG.drucker}<span class="bu-olabel">Drucken</span></button></span>`;
+  return [ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()").replace('aria-label="Lampe"', `aria-label="Lampe – ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`), monitor, kalender,
+    L ? ding("korb", BU_SVG.korb, "Eingang", "buEingang()", summe ? `<span class="bu-dzahl">${summe}</span>` : "") : "", geraet,
+    L ? ding("handy", BU_SVG.handy, "Handy", "buHandy()") : "",
+    fest.length ? ding("kaffee", BU_SVG.karte, fest.length === 1 ? "1 Glückwunsch" : `${fest.length} Glückwünsche`, "buFeste()") : `<span class="bu-obj bu-o-deko" style="grid-area:kaffee" aria-hidden="true">${BU_SVG.kaffee}</span>`,
+    ding("fueller", BU_SVG.fueller, "Füller", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>'),
+    L ? ding("telefon", BU_SVG.telefon, "Telefon", "buTelefon()") : "",
+    L ? ding("tastatur", BU_SVG.tastatur, "Nachricht &amp; Mail", "buNachricht()") : "",
+    ding("rechner", BU_SVG.rechner, "Rechner", "rechnerOeffnen()")].join("");
+}
+// 💡 Lampe: schaltet von Hand zwischen Tag und Nacht (wie „T“/„N“ am Mond-Knopf; Automatik wieder über den Mond-Knopf oder ⚙️ → Darstellung)
+function buLampe() { const n = !istNacht(); modusWaehlen(n ? "nacht" : "tag"); melde(n ? "💡 Licht an – Nachtmodus (zurück zur Automatik: Mond-Knopf oben)" : "☀️ Licht aus – Tagmodus (zurück zur Automatik: Mond-Knopf oben)"); buZeigen(); }
+// 📱 Handy: Mitglied wählen → in der App anrufen (📞 / 🎥) oder WhatsApp. Das Tischtelefon (buTelefon) wählt weiter die Telefonnummer.
+async function buHandy() { return buPersonWahl("📱 Wen möchtest du erreichen?", "📱", buHandyPerson); }
+async function buHandyPerson(pid) {
+  const m = MITGLIEDER.find((x) => x.person_id === pid), name = m?.name || "";
+  let handy = null; try { handy = (await api("mitglied_details", { person_id: pid }, { warten: true })).kontakt?.handy || null; } catch (e) { return meldeFehler(e); }
+  const f = blattAuf("buTelBlatt", `<h3 style="margin-top:0">📱 ${esc(name)}</h3>
+    <div class="knoepfe" style="flex-direction:column;align-items:stretch">
+      <button class="knopf haupt" style="min-height:52px" data-w="ton">📞 Anrufen in der App</button><button class="knopf" style="min-height:52px" data-w="video">🎥 Videoanruf in der App</button>
+      ${handy ? '<button class="knopf" style="min-height:52px" data-w="wa">🟢 WhatsApp</button>' : ""}</div>
+    ${handy ? "" : `<p class="hinweis">${esc(name.split(" ")[0])} hat keine Handynummer freigegeben – WhatsApp geht deshalb nicht.</p>`}
+    <div class="knoepfe"><button class="knopf" data-w="zurueck">‹ Andere Person</button><button class="knopf" data-w="zu">Schließen</button></div>`);
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { const w = b.dataset.w; f.remove();
+    if (w === "ton") anrufen(pid, false); else if (w === "video") anrufen(pid, true); else if (w === "wa") extern("whatsapp", handy); else if (w === "zurueck") buHandy(); }));
+}
+let BU_UHR = 0; // Uhr im Bildschirm: jede Minute eine Zeile Text, nur solange das Büro offen ist
+function buUhrStellen() { if (BU_UHR) return; BU_UHR = setInterval(() => { const u = document.querySelector("#v-buero .bu-mon-uhr"); if (!u || document.hidden) { if (!u) { clearInterval(BU_UHR); BU_UHR = 0; } return; } u.textContent = buUhrzeit(); }, 60000); }
 // Ordner aus dem Regal „aufschlagen“: zeigt genau den Bereich der Listenansicht (eine Oberfläche, nicht zwei)
 function buOrdner(id) { BU.sicht = "ordner"; BU.ordner = id; buZeigen(); window.scrollTo(0, 0); }
 function buOrdnerHtml() {
@@ -737,9 +795,9 @@ function buOrdnerHtml() {
 function buFueller() {
   const S = buSchreiben(), L = !!ICH?.vorstand;
   const w = [[S, "✉️", "Brief", "mit Briefkopf – Dank, Spende, Einladung", "buBrief()"], [S, "📨", "Einladung zur Sitzung", "mit Tagesordnung an alle", "buEinladungWahl(false)"],
-    [true, "📄", "Protokoll", "schreiben · veröffentlichen", "zeige('protokolle')"], [L, "👥", "Nachricht an Mitglieder", "Gruppe wählen · schreiben", "buKontakt()"], [L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"],
-    [true, "🎂", "Glückwunsch", "Geburtstag oder Jubiläum", "buFeste()"], [true, "📌", "Zettel an die Pinnwand", "für alle oder einzelne", "zeige('pinnwand')"]].filter((x) => x[0]);
-  const f = blattAuf("buFuellerBlatt", `${einwHtml("b-bu-schreiben")}<h3 style="margin-top:0">✒️ Was möchtest du schreiben?</h3>${S ? "" : '<p class="hinweis">👁️ Mit Leserechten kannst du Briefe und Einladungen nicht verschicken.</p>'}
+    [true, "📄", "Protokoll", "schreiben · veröffentlichen", "zeige('protokolle')"],
+    [true, "🎂", "Grußkarte & Glückwunsch", "Geburtstag, Jubiläum, Gruß", "buFeste()"], [true, "📌", "Zettel an die Pinnwand", "für alle oder einzelne", "zeige('pinnwand')"]].filter((x) => x[0]);
+  const f = blattAuf("buFuellerBlatt", `${einwHtml("b-bu-schreiben")}<h3 style="margin-top:0">✒️ Mit dem Füller schreiben</h3><p class="hinweis" style="margin-top:0">Was man auch im echten Leben mit der Hand schreibt.${L ? " Nachrichten und Mails: ⌨️ Tastatur." : ""}</p>${S ? "" : '<p class="hinweis">👁️ Mit Leserechten kannst du Briefe und Einladungen nicht verschicken.</p>'}
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);
   f.querySelectorAll("[data-fn]").forEach((b) => (b.onclick = () => { f.remove(); new Function(b.dataset.fn)(); }));
@@ -751,7 +809,8 @@ function buDrucker() {
   const w = [[true, "📝", "Sitzungs-Vorlage", "mit Schreiblinien", "buDruckWahl()"], [L, "📇", "Mitgliederliste", "Telefon · Adressen · Unterschriften", "buListe()"],
     [true, "📅", "Termine", "Kalender oder To-do-Liste", "druckStarten('termine')"], [true, "🎂", "Geburtstage & Jubiläen", "Liste", "druckStarten('feste')"], [S, "✉️", "Briefbogen", "Brief mit Logo", "buBrief()"],
     [!!ICH?.admin, "📲", "Einrichtungskarte", "QR-Code + Schritte für ein Mitglied", "buPersonWahl('🖨️ Einrichtungskarte für wen?', '📲', einrichtungskarte)"],
-    [L, "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()"]].filter((x) => x[0]); // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
+    [L, "🪪", "Händler-Ausweis", "Weihnachtsmarkt · Rabatt · QR-Code", "haStart()"],
+    [L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"]].filter((x) => x[0]); // 2.804.0: Schild vom Füller zum Drucker // 2.690.0 KC-CLUB-HAENDLERAUSWEIS
   const f = blattAuf("buDruckerBlatt", `${einwHtml("b-bu-drucker")}<h3 style="margin-top:0">🖨️ Was möchtest du drucken?</h3>
     <div class="bu-wahl">${w.map(([, sym, t2, u, fn]) => `<button class="mini-kachel" data-fn="${esc(fn)}"><span class="mk-sym">${sym}</span><span class="mk-titel">${esc(t2)}</span><span class="mk-unter">${esc(u)}</span></button>`).join("")}</div>
     <div class="knoepfe"><button class="knopf" data-zu="1">Abbrechen</button></div>`);

@@ -8804,7 +8804,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/stichworte: `\$\{EINL_MARKE\}, eingelesen`/.test(f) && /api\("archiv_mein_ordner"/.test(f), "Eingangskorb = eigener Ordner + Stichwort, kein neuer Serverweg");
   assert.ok(/for \(const d of einlKorbDoks\(ar\)\)/.test(programm) && /einlKorbErledigt\(/.test(programm), "Eingelesenes erscheint im Eingangskorb");
   assert.ok(/api\("archiv_loeschen", \{ id \}\)/.test(f) && /Papierkorb/.test(f), "nach Ablage keine doppelte Datei (Papierkorb, wiederherstellbar)");
-  assert.ok(/buSchreiben\(\) \? buIkon\("📥", "Einlesen", "buEinlesen\(\)"/.test(programm) && /buKopfKnoepfe\(true, naechst\)/.test(programm) && /buKopfKnoepfe\(false, null\)/.test(programm) && /ding\("bu-scanner"/.test(programm), "Knopf in Liste und Büro-Raum"); // 2.768.0: gemeinsamer Icon-Kopf
+  assert.ok(/buSchreiben\(\) \? buIkon\("📥", "Einlesen", "buEinlesen\(\)"/.test(programm) && /buKopfKnoepfe\(true, naechst\)/.test(programm) && /buKopfKnoepfe\(false, null\)/.test(programm) && /class="bu-obj bu-o-scanner" onclick="buEinlesen\(\)"/.test(programm), "Knopf in Liste und Büro-Raum"); // 2.768.0: gemeinsamer Icon-Kopf
   assert.ok(!/fetch\(|sendGewaehlt|api\("nachricht_senden"/.test(f), "schickt nie selbst etwas ab");
 }
 
