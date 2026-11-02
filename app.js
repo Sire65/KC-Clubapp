@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.809.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.810.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -7859,6 +7859,8 @@ async function zugangAnfordern() {
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json", "x-club-version": APP_VERSION }, body: JSON.stringify({ action: "zugang_anfordern", email: mail }), signal: zeitSignal(30000) });
     const j = await r.json().catch(() => ({}));
+    if (r.ok && j.kommAus) return sperreZeigen("kommaus", `Hallo${j.vorname ? " " + j.vorname : ""}. Du hast einen neuen Link angefordert. Den kann ich dir leider nicht zusenden, weil du selbst darum gebeten hast, dass du keinerlei Kommunikation mit der App wünschst. Somit ist die Kommunikation ausgeschaltet. Sie kann gerne wieder aktiviert werden – wende dich dazu an ${j.admin || "Hansi"}.`); // 2.810.0 KC-CLUB-KOMM-AUS-HINWEIS
+    if (r.ok && j.gesperrt) return sperreZeigen(j.gesperrt, j.sperreText, j.bis); // 2.810.0 KC-CLUB-SPERRE-OHNE-LINK: gesperrt → Wartung o. Ä. statt „Mail kommt“
     $("zaAntwort").innerHTML = r.ok ? "✅ " + esc(j.text || "Wenn die Adresse bei uns hinterlegt ist, kommt gleich eine Mail mit deinem Link.") + "<br>Bitte den Link in der Mail antippen (im Browser Chrome öffnen)." : "⚠️ " + esc(j.error || "Fehler " + r.status);
   } catch { $("zaAntwort").textContent = "⚠️ Keine Verbindung oder das Netz ist zu langsam – bitte gleich nochmal versuchen."; }
   setTimeout(() => { $("zaKnopf").disabled = false; }, 20000);
@@ -7901,10 +7903,14 @@ function wartenEnde() {
 const VT_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
 const VT = { fuer: null }; // { person_id, name, vorname }
 const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
+// 2.810.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.: „Datenbank hat nicht geantwortet“): kurzer Aussetzer bei Supabase – reine Abfragen in api()
+// nach 4 bzw. 8 Sek. von selbst noch einmal (höchstens 2-mal), Schreiben nie (sonst evtl. doppelt). Erst danach die Meldung.
+const dbNochmalDarf = (e, action, n) => !!e?.dbWeg && (API_LESEN.test(action) || DB_NOCHMAL_LESEN.test(action)) && n < DB_NOCHMAL_MAX && !document.hidden;
+const DB_NOCHMAL_MAX = 2, DB_NOCHMAL_LESEN = /^(ungelesen_uebersicht|admin_verlauf|db_last|db_belegung|dp_einzelplan|dp_druck|mein_dienst|gemerkte_nachrichten|nachricht_details|spur_uebersicht)$/; // KC-CLUB-DB-AUSSETZER: zusätzlich zu API_LESEN – nur Lesen
 async function api(action, daten = {}, opt = {}) {
   const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
   const warte = wartenStart(action, opt.warten, opt.still);
-  try { for (;;) {
+  try { for (let dbNochmal = 0; ; ) {
   // 2.422.0 KC-CLUB-ZUGANG: für Gäste/Aushilfen nicht freigegebene Aktionen gar nicht erst schicken (der Server lehnt sie ohnehin ab)
   if (!zugangAktion(action)) throw Object.assign(new Error(zugang() === "gast" ? "🔒 Das ist für Gäste nicht freigeschaltet." : "🔒 Das ist für Aushilfen nicht freigeschaltet."), { zugang: true, status: 403 });
   daten = vtDaten(action, daten); // KC-CLUB-VERTRETUNG: im „Für … handeln“-Modus bei den erlaubten Aktionen „fuer“ mitschicken
@@ -7925,6 +7931,7 @@ async function api(action, daten = {}, opt = {}) {
       if (API_LESEN.test(action)) try { return await notApi(action, daten); } catch (e2) { e = e2; }
       else e = Object.assign(new Error("Der Server war gerade nicht erreichbar – bitte prüfen, ob es angekommen ist, und sonst nochmal senden."), { leitung: true });
     }
+    if (dbNochmalDarf(e, action, dbNochmal)) { await new Promise((ok) => setTimeout(ok, 4000 * ++dbNochmal)); continue; } // KC-CLUB-DB-AUSSETZER
     fpApiFehler(action, e); // KC-CLUB-FEHLERPROTOKOLL
     // KC-CLUB-LADE-SICHERHEIT: Laden scheiterte am Netz → fragen „Nochmal versuchen / Abbrechen“ statt nur Fehlertext (nur Lesen – Schreiben nie still doppelt)
     if (sichtbar && e?.leitung && navigator.onLine && !NOT.an && API_LESEN.test(action) && (await ladeFrage())) continue;
@@ -8305,7 +8312,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
-  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? schwerOder("Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen.") : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
+  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? schwerOder("Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen.") : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status, dbWeg: r.status === 503 && j?.db === "weg" }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
 }
 
@@ -13790,6 +13797,19 @@ function adZeitSaeulen(werte, farbe) {
   const max = Math.max(1, ...werte.map((v) => v || 0)), w = 200 / werte.length, h = 40;
   return `<svg class="adlinie" viewBox="0 0 200 ${h}" preserveAspectRatio="none" role="img" aria-label="Säulen">${werte.map((v, i) => v ? `<rect x="${(i * w + 0.3).toFixed(2)}" y="${(h - (v / max) * h).toFixed(1)}" width="${Math.max(0.4, w - 0.6).toFixed(2)}" height="${((v / max) * h).toFixed(1)}" fill="${farbe}"/>` : "").join("")}</svg>`;
 }
+// 2.810.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.2026 „Aussetzer mitzählen“): Minuten, in denen die Datenbank keine Verbindungen annahm
+// (Zeitpläne konnten nicht starten / die App bekam „Die Datenbank antwortet gerade nicht“) – nebeneinanderliegende Minuten zählen als ein Aussetzer.
+function adAussetzerHtml(liste, tage) {
+  if (!Array.isArray(liste)) return "";
+  const l = liste.slice().sort((a, b) => String(a.minute).localeCompare(String(b.minute))), faelle = [];
+  for (const x of l) { const t = Date.parse(x.minute), f = faelle[faelle.length - 1];
+    if (f && t - f.bis <= 3 * 60000) { f.bis = t; f.min++; f.app += x.app || 0; } else faelle.push({ von: t, bis: t, min: 1, app: x.app || 0 }); }
+  if (!faelle.length) return `<b>⚡ Kurze Aussetzer der Datenbank</b><p class="hinweis" style="margin:0">Keine in ${tage === 1 ? "den letzten 24 Std." : `den letzten ${tage} Tagen`}. ✅</p>`;
+  const zeile = (f) => `<div>• ${esc(fKurz.format(new Date(f.von)))} ${esc(fZeit.format(new Date(f.von)))} Uhr · ${f.min === 1 ? "ca. 1 Min." : `ca. ${f.min + 1} Min.`}${f.app ? ` · ${f.app}× in der App gemerkt` : ""}</div>`;
+  return `<b>⚡ Kurze Aussetzer der Datenbank</b> <span class="hinweis">(${faelle.length}× in ${tage === 1 ? "24 Std." : `${tage} Tagen`})</span>
+    <div class="hinweis" style="margin:2px 0 6px">${faelle.slice(-5).reverse().map(zeile).join("")}${faelle.length > 5 ? `<div>… und ${faelle.length - 5} weitere</div>` : ""}
+    In diesen Minuten nahm die Datenbank bei Supabase keine Verbindungen an. Die App versucht es dann von selbst noch einmal.</div>`;
+}
 function adVerlaufHtml(tage) {
   const v = AD.verlauf[tage];
   if (!v?.d) return `<p class="hinweis">${v?.fehler ? "⚠️ " + esc(v.fehler) : "Wird geladen …"}</p>`;
@@ -13798,6 +13818,7 @@ function adVerlaufHtml(tage) {
   const schritt = d.schrittMin < 60 ? `${d.schrittMin} Min.` : d.schrittMin < 1440 ? `${d.schrittMin / 60} Std.` : "1 Tag";
   return `<b>🟩 Erreichbarkeit</b> <span class="hinweis">(je Kästchen ${schritt})</span>${adBand(abs)}
     <div class="adachse"><span>${esc(fmt(d.abschnitte[0].von))}</span><span>${gemessen.length ? `${adVerfuegbar(gemessen)} erreichbar${rot ? ` · ${rot}× gestört` : ""}` : "noch keine Messung"}</span><span>jetzt</span></div>
+    ${adAussetzerHtml(d.aussetzer, tage)}
     <b>⏱️ Antwortzeit der Datenbank</b>${adLinie(abs.map((x) => x.ms), "ms")}
     <b>🔴 Fehlgeschlagene Hintergrund-Aufrufe</b>${abs.some((x) => x.netFehler) ? adZeitSaeulen(abs.map((x) => x.netFehler), AD_FARBE.rot) : '<p class="hinweis" style="margin:0">Keine Fehler in diesem Zeitraum. ✅</p>'}
     ${tage > 1 ? `<b>🗄️ Größe der Datenbank</b>${adLinie(abs.map((x) => (x.bytes == null ? null : x.bytes / 1048576)), "MB", AD_FARBE.gelb)}` : ""}
@@ -14029,7 +14050,8 @@ function adBlatt(id) {
 // ---------- KC-CLUB-PERSON-SPERRE (2.23.77, Wunsch Hansi): eine oder mehrere Personen vorübergehend sperren ----------
 // Der Server antwortet Gesperrten mit 423 + Art; die App zeigt dann nur das Hinweisfenster. Sperren/Freigeben nur Admin (Wartungs-Blatt).
 const SPERRE_ART = { wartung: { sym: "🔧", t: "Wartungsarbeiten", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔵 Wartungsarbeiten" },
-  stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" } };
+  stoerung: { sym: "📡", t: "Server nicht erreichbar", farbe: "linear-gradient(160deg,#4a5563,#6b7685)", kurz: "⚪ Server nicht erreichbar" },
+  kommaus: { sym: "🔕", t: "Kommunikation ausgeschaltet", farbe: "linear-gradient(160deg,#1d4f91,#2f6fc1)", kurz: "🔕 Kommunikation ausgeschaltet" } }; // 2.810.0 KC-CLUB-KOMM-AUS-HINWEIS
 function sperreZeigen(art, text, bis) {
   if (document.getElementById("sperreFenster")) return;
   const a = SPERRE_ART[art] || SPERRE_ART.wartung, ab = bis && Date.parse(bis) > Date.now() ? wann(bis) : "";

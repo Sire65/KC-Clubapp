@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.810.0 – 2026-11-02 – ⚡ Kurze Datenbank-Aussetzer: App fragt selbst nochmal, Zählung im Verlauf · Zeitpläne entzerrt · Hinweis bei gesperrtem Zugang
+- ⚡ Antwortet die Datenbank für einen Moment nicht, fragt die App bei reinen Abfragen nach 4 bzw. 8 Sekunden selbst nochmal (Speichern nie doppelt); im Admin → Verlauf stehen die kurzen Aussetzer mit Datum und Dauer (KC-CLUB-DB-AUSSETZER). ⏱️ Die 5-Minuten-Zeitpläne starten nicht mehr alle gleichzeitig (KC-CLUB-CRON-ENTZERREN). 🔕 Wer „keine Benachrichtigungen“ gewählt hat und einen neuen Link anfordert, bekommt einen klaren Hinweis statt „Mail kommt gleich“ (KC-CLUB-KOMM-AUS-HINWEIS); wer gesperrt ist, sieht dabei die Sperre, z. B. Wartung (KC-CLUB-SPERRE-OHNE-LINK).
+
 ## 2.809.0 – 2026-11-02 – 🔧 Server ließ sich seit 2.804.0 nicht hochladen – korrigiert (KC-CLUB-ANSICHTFILM) · Server 2.809.0
 - Fehler aus 2.804.0: In der Prüfung der Einstellung `filme` stand ein `//`-Kommentar mitten in der Zeile und hat den Rest der Zeile (`z: …`) auskommentiert. Supabase hat das Bündeln abgelehnt („Expected ',', got ';'“) – dadurch scheiterte „Server hochladen“ für 2.804.0 und 2.806.0, es lief weiter Server 2.802.0. Nichts wurde beschädigt. Jetzt `/* … */`.
 - Damit sind ab jetzt auf dem Server aktiv: „bis zum Ende gesehen“ und **👀 Wer hat ihn gesehen?** (2.804.0) sowie die Server-Teile von 2.806.0 (KC-CLUB-DB-VIEL-ZU-TUN).
