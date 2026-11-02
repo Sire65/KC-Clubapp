@@ -732,7 +732,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 55. 0.33.0: drehende Kochmütze bei längeren Anfragen – nicht bei Hintergrund-Abfragen, immer wieder ausgeblendet
 {
   assert.ok(/id="warten"/.test(html) && /kc-kochmuetze-weiss\.webp" alt=""><\/div><b id="wartenText">/.test(html), "Kochmütze fehlt");
-  assert.ok(/const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);\s*try \{[^]{0,2600}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 2.0.0: api() etwas länger (Notbetrieb nur Lesen) */ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */ /* 2.107.0: Lade-Sicherheit (Nochmal/Abbrechen) in api() */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
+  assert.ok(/const warte = wartenStart\(action, opt\.warten(, opt\.still)?\);\s*try \{[^]{0,2900}\n  finally \{ if \(warte\) wartenEnde\(\); \}/ /* 2.0.0: api() etwas länger (Notbetrieb nur Lesen) */ /* 0.93.0: catch nur zum Protokollieren, wirft weiter */ /* 2.107.0: Lade-Sicherheit (Nochmal/Abbrechen) in api() */ /* 2.797.0: stille Wiederholung bei DB-Aussetzer */.test(html), "Kochmütze wird bei Fehlern nicht ausgeblendet");
   for (const a of ["online", "anruf_status", "unterhaltung", "protokoll_speichern", "init"]) assert.ok(new RegExp(`WARTEN_STILL = new Set\\([^)]*"${a}"`).test(html), `Hintergrund-Abfrage ${a} ließe die Mütze flackern`);
   assert.ok(/nachricht_senden: "Nachricht wird gesendet …"/.test(html), "Text beim Senden fehlt");
 }
@@ -7948,7 +7948,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/FP_ANONYM_JE_STUNDE/.test(server) && /FP_GERAET_JE_STUNDE/.test(server), "Grenzen gegen Missbrauch fehlen");
   assert.ok(/token\|key\|schluessel\|passwort/.test(server) && /\[\?&\]k=/.test(server), "Zugangsdaten müssen herausgefiltert werden");
   assert.ok(/case "hilfe_anfordern"/.test(server) && /case "fehlerprotokoll": \{\s*nurAdmin\(ich\)/.test(server), "Hilfe/Adminansicht auf dem Server fehlt");
-  assert.ok(/catch \(e\) \{[^]{0,1400}fpApiFehler\(action, e\);( throw e;)? \/\/ KC-CLUB-FEHLERPROTOKOLL\n[^]{0,300}throw e;\n  \}/ /* 2.107.0: dazwischen Frage Nochmal\/Abbrechen */ /* 2.0.0: länger */.test(html), "Serverfehler werden nicht protokolliert");
+  assert.ok(/catch \(e\) \{[^]{0,1600}fpApiFehler\(action, e\);( throw e;)? \/\/ KC-CLUB-FEHLERPROTOKOLL\n[^]{0,300}throw e;\n  \}/ /* 2.107.0: dazwischen Frage Nochmal\/Abbrechen */ /* 2.0.0: länger */ /* 2.797.0: stille Wiederholung bei DB-Aussetzer */.test(html), "Serverfehler werden nicht protokolliert");
   assert.ok(/id: "ios_fremd"/.test(html) && /id: "ios_chrome"/.test(html) && !/nur in <b>Safari<\/b> richtig/.test(html) && /Teilen □↑/.test(html) && /id: "inapp"/.test(html) && /id: "privat"/.test(html) && /id: "mehrfach"/.test(html), "Hilfe-Schritte fehlen");
   assert.ok(/fpProblemMelden\(\)/.test(html) && /onclick="fpAdmin\(\)"/.test(html), "Problem melden / Admin-Knopf fehlt");
   assert.ok(/fpNeu\("alte_version"/.test(html) && /Jetzt aktualisieren<\/button>/.test(html), "alte Version: protokollieren + direkt aktualisieren");
@@ -11421,7 +11421,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/leute\.filter\(\(m\) => !eingeschraenkt \|\| m\.person_id === ich\.person_id \|\| istLeitung\(m\.person_id\)\)/.test(server), "Zugang: SOS zeigt Gästen nur Clubleitung und sich selbst");
   assert.ok(/if \(\["mitglied", "aushilfe", "gast", "passiv"\]\.includes\(p\.zugang\)\) zeile\.zugang = p\.zugang;/.test(server) && /delete zeile\.zugang; zugangFehlt = true;/.test(server), "Zugang: Rollen-Fenster speichert den Zugang (auch vor dem Datenbank-Update ohne Fehler)");
   assert.ok(/name="roZugang" value="\$\{w\}"/.test(programm) && /zugang: zugangWahl \}\);/.test(programm), "Zugang: Auswahl im Rollen-Fenster");
-  assert.ok(/try \{ for \(;;\) \{\s*\/\/ 2\.422\.0 KC-CLUB-ZUGANG[^\n]*\s*if \(!zugangAktion\(action\)\) throw/.test(programm), "Zugang: App schickt Verbotenes gar nicht erst");
+  assert.ok(/try \{ for \((?:let dbNochmal = 0; ; )?(?:;;)?\) \{\s*\/\/ 2\.422\.0 KC-CLUB-ZUGANG[^\n]*\s*if \(!zugangAktion\(action\)\) throw/.test(programm), "Zugang: App schickt Verbotenes gar nicht erst");
   assert.ok(/\(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm) && /\(\(k\) => k && \(!k\.nur \|\| k\.nur\(\)\) && zugangKachel\(k\.id\)\)/.test(programm), "Zugang: Kacheln (erweitert + einfach) gefiltert");
   // App-Regeln im Sandkasten
   const von = programm.indexOf("const ZUGANG_AKTIONEN"), bis = programm.indexOf("const zugangAktion"), ende = programm.indexOf("\n", bis);
@@ -12820,7 +12820,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/e\?\.status === 409 \|\| e\?\.leitung \|\| e\?\.zeit \|\| !navigator\.onLine/.test(sq) && /SQ_WARTEN_MS = \[2000, 5000, 10000\]/.test(sq), "nur Netz/409 automatisch neu, höchstens 3×");
   assert.ok(/g\.schluessel === KEY\.slice\(-8\) && g\.person === ICH\.person_id/.test(sq), "gemerkte Schlange nur für dieselbe Person");
   assert.ok(/const sqDarf = \(\) => !!chatId && !anlagen\.length && !neuEntwurf\?\.mehrfach;/.test(sq) && /if \(sqDarf\(\)\) \{/.test(html), "nur Text im bestehenden Chat – sonst wie bisher");
-  assert.ok(/\+ sqBlasenHtml\(chatId\); \/\/ 2\.603\.0/.test(html) && /\{ leitung: leitungKaputt, status: r\.status \}/.test(html), "Anzeige im Chat + Status im Fehler");
+  assert.ok(/\+ sqBlasenHtml\(chatId\); \/\/ 2\.603\.0/.test(html) && /\{ leitung: leitungKaputt, status: r\.status(, dbWeg: [^}]*)? \}/.test(html), "Anzeige im Chat + Status im Fehler");
   const mig = lies("supabase/migrations/20261023_kc_club_sende_kennung.sql");
   assert.ok(/cid uuid primary key/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_sende_kennung from anon, authenticated;/.test(mig), "Kennungs-Tabelle gesperrt");
   const ns = server.slice(server.indexOf('case "nachricht_senden": {'), server.indexOf("// ----- KC-CLUB-PRIVATTERMIN"));

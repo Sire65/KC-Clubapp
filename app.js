@@ -7883,10 +7883,14 @@ function wartenEnde() {
 const VT_AKTIONEN = new Set(["treffen_liste", "treffen_antwort", "terminumfragen_liste", "terminumfrage_antwort", "dienstwunsch_laden", "dienstwunsch_speichern", "vorschlaege_liste", "vorschlag_stimme"]);
 const VT = { fuer: null }; // { person_id, name, vorname }
 const vtListe = () => (Array.isArray(INIT?.vertretung) ? INIT.vertretung : []);
+// 2.797.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.: „Datenbank hat nicht geantwortet“): kurzer Aussetzer bei Supabase – reine Abfragen in api()
+// nach 4 bzw. 8 Sek. von selbst noch einmal (höchstens 2-mal), Schreiben nie (sonst evtl. doppelt). Erst danach die Meldung.
+const dbNochmalDarf = (e, action, n) => !!e?.dbWeg && (API_LESEN.test(action) || DB_NOCHMAL_LESEN.test(action)) && n < DB_NOCHMAL_MAX && !document.hidden;
+const DB_NOCHMAL_MAX = 2, DB_NOCHMAL_LESEN = /^(ungelesen_uebersicht|admin_verlauf|db_last|db_belegung|dp_einzelplan|dp_druck|mein_dienst|gemerkte_nachrichten|nachricht_details|spur_uebersicht)$/; // KC-CLUB-DB-AUSSETZER: zusätzlich zu API_LESEN – nur Lesen
 async function api(action, daten = {}, opt = {}) {
   const sichtbar = ladeSichtbar(action, opt); // KC-CLUB-LADE-SICHERHEIT: vor wartenStart prüfen (Tipp-Zeitpunkt)
   const warte = wartenStart(action, opt.warten, opt.still);
-  try { for (;;) {
+  try { for (let dbNochmal = 0; ; ) {
   // 2.422.0 KC-CLUB-ZUGANG: für Gäste/Aushilfen nicht freigegebene Aktionen gar nicht erst schicken (der Server lehnt sie ohnehin ab)
   if (!zugangAktion(action)) throw Object.assign(new Error(zugang() === "gast" ? "🔒 Das ist für Gäste nicht freigeschaltet." : "🔒 Das ist für Aushilfen nicht freigeschaltet."), { zugang: true, status: 403 });
   daten = vtDaten(action, daten); // KC-CLUB-VERTRETUNG: im „Für … handeln“-Modus bei den erlaubten Aktionen „fuer“ mitschicken
@@ -7907,6 +7911,7 @@ async function api(action, daten = {}, opt = {}) {
       if (API_LESEN.test(action)) try { return await notApi(action, daten); } catch (e2) { e = e2; }
       else e = Object.assign(new Error("Der Server war gerade nicht erreichbar – bitte prüfen, ob es angekommen ist, und sonst nochmal senden."), { leitung: true });
     }
+    if (dbNochmalDarf(e, action, dbNochmal)) { await new Promise((ok) => setTimeout(ok, 4000 * ++dbNochmal)); continue; } // KC-CLUB-DB-AUSSETZER
     fpApiFehler(action, e); // KC-CLUB-FEHLERPROTOKOLL
     // KC-CLUB-LADE-SICHERHEIT: Laden scheiterte am Netz → fragen „Nochmal versuchen / Abbrechen“ statt nur Fehlertext (nur Lesen – Schreiben nie still doppelt)
     if (sichtbar && e?.leitung && navigator.onLine && !NOT.an && API_LESEN.test(action) && (await ladeFrage())) continue;
@@ -8276,7 +8281,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   if (r.status === 423 && j?.einspielen) { einspielenZeigen(j.vorname, j.fertig); throw Object.assign(new Error(j.error || "Kurze Wartung – gleich wieder da."), { einspielen: true }); } // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER
   if (r.status === 423 && j?.gesperrt) { try { localStorage.removeItem(STAND_KEY); localStorage.removeItem("kc_club_chat_merk"); } catch {} /* 2.540.0 KC-CLUB-SPERRE-OFFLINE: kein alter Stand für den Offline-Start */ sperreZeigen(j.gesperrt, j.error, j.bis); throw Object.assign(new Error(j.error || "Zurzeit nicht verfügbar."), { gesperrt: true }); } // KC-CLUB-PERSON-SPERRE (2.23.77)
   if (r.status === 401) { $("app").classList.add("versteckt"); $("gesperrt").classList.remove("versteckt"); $("linkUngueltig").classList.remove("versteckt"); try { if (window.KCFP) window.KCFP.ohneLink = true; zugangHilfeZeigen(j?.hilfe); } catch {} throw new Error(j?.error || "Kein Zugang"); } // KC-CLUB-ZUGANG-HILFE
-  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status }); // 2.603.0: status (Sende-Schlange erkennt 409)
+  if (!r.ok) throw Object.assign(new Error(j?.error || (leitungKaputt ? "Der Server ist gerade kurz nicht erreichbar – bitte gleich nochmal versuchen." : FEHLER_KLARTEXT[r.status] || "Fehler " + r.status)), { leitung: leitungKaputt, status: r.status, dbWeg: r.status === 503 && j?.db === "weg" }); // 2.603.0: status (Sende-Schlange erkennt 409)
   return j;
 }
 
@@ -13753,6 +13758,19 @@ function adZeitSaeulen(werte, farbe) {
   const max = Math.max(1, ...werte.map((v) => v || 0)), w = 200 / werte.length, h = 40;
   return `<svg class="adlinie" viewBox="0 0 200 ${h}" preserveAspectRatio="none" role="img" aria-label="Säulen">${werte.map((v, i) => v ? `<rect x="${(i * w + 0.3).toFixed(2)}" y="${(h - (v / max) * h).toFixed(1)}" width="${Math.max(0.4, w - 0.6).toFixed(2)}" height="${((v / max) * h).toFixed(1)}" fill="${farbe}"/>` : "").join("")}</svg>`;
 }
+// 2.797.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.2026 „Aussetzer mitzählen“): Minuten, in denen die Datenbank keine Verbindungen annahm
+// (Zeitpläne konnten nicht starten / die App bekam „Die Datenbank antwortet gerade nicht“) – nebeneinanderliegende Minuten zählen als ein Aussetzer.
+function adAussetzerHtml(liste, tage) {
+  if (!Array.isArray(liste)) return "";
+  const l = liste.slice().sort((a, b) => String(a.minute).localeCompare(String(b.minute))), faelle = [];
+  for (const x of l) { const t = Date.parse(x.minute), f = faelle[faelle.length - 1];
+    if (f && t - f.bis <= 3 * 60000) { f.bis = t; f.min++; f.app += x.app || 0; } else faelle.push({ von: t, bis: t, min: 1, app: x.app || 0 }); }
+  if (!faelle.length) return `<b>⚡ Kurze Aussetzer der Datenbank</b><p class="hinweis" style="margin:0">Keine in ${tage === 1 ? "den letzten 24 Std." : `den letzten ${tage} Tagen`}. ✅</p>`;
+  const zeile = (f) => `<div>• ${esc(fKurz.format(new Date(f.von)))} ${esc(fZeit.format(new Date(f.von)))} Uhr · ${f.min === 1 ? "ca. 1 Min." : `ca. ${f.min + 1} Min.`}${f.app ? ` · ${f.app}× in der App gemerkt` : ""}</div>`;
+  return `<b>⚡ Kurze Aussetzer der Datenbank</b> <span class="hinweis">(${faelle.length}× in ${tage === 1 ? "24 Std." : `${tage} Tagen`})</span>
+    <div class="hinweis" style="margin:2px 0 6px">${faelle.slice(-5).reverse().map(zeile).join("")}${faelle.length > 5 ? `<div>… und ${faelle.length - 5} weitere</div>` : ""}
+    In diesen Minuten nahm die Datenbank bei Supabase keine Verbindungen an. Die App versucht es dann von selbst noch einmal.</div>`;
+}
 function adVerlaufHtml(tage) {
   const v = AD.verlauf[tage];
   if (!v?.d) return `<p class="hinweis">${v?.fehler ? "⚠️ " + esc(v.fehler) : "Wird geladen …"}</p>`;
@@ -13761,6 +13779,7 @@ function adVerlaufHtml(tage) {
   const schritt = d.schrittMin < 60 ? `${d.schrittMin} Min.` : d.schrittMin < 1440 ? `${d.schrittMin / 60} Std.` : "1 Tag";
   return `<b>🟩 Erreichbarkeit</b> <span class="hinweis">(je Kästchen ${schritt})</span>${adBand(abs)}
     <div class="adachse"><span>${esc(fmt(d.abschnitte[0].von))}</span><span>${gemessen.length ? `${adVerfuegbar(gemessen)} erreichbar${rot ? ` · ${rot}× gestört` : ""}` : "noch keine Messung"}</span><span>jetzt</span></div>
+    ${adAussetzerHtml(d.aussetzer, tage)}
     <b>⏱️ Antwortzeit der Datenbank</b>${adLinie(abs.map((x) => x.ms), "ms")}
     <b>🔴 Fehlgeschlagene Hintergrund-Aufrufe</b>${abs.some((x) => x.netFehler) ? adZeitSaeulen(abs.map((x) => x.netFehler), AD_FARBE.rot) : '<p class="hinweis" style="margin:0">Keine Fehler in diesem Zeitraum. ✅</p>'}
     ${tage > 1 ? `<b>🗄️ Größe der Datenbank</b>${adLinie(abs.map((x) => (x.bytes == null ? null : x.bytes / 1048576)), "MB", AD_FARBE.gelb)}` : ""}

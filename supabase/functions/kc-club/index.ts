@@ -18703,7 +18703,9 @@ Köcheclub-App`,
           if (m.quelle === "db") { b.dbN++; b.netOk += m.net_ok ?? 0; b.netFehler += m.net_fehler ?? 0; b.bytes = m.db_bytes ?? b.bytes; b.verb = Math.max(b.verb ?? 0, m.verbindungen ?? 0); }
           else { b.apiN++; b.msSumme += m.db_ms ?? 0; b.msMax = Math.max(b.msMax ?? 0, m.db_ms ?? 0); }
         }
-        return json({ tage, schrittMin, seit: erster?.zeit ?? null, zeit: jetzt(),
+        // 2.797.0 KC-CLUB-DB-AUSSETZER (Wunsch Hansi 02.11.): kurze Aussetzer (Minuten, in denen die Datenbank keine Verbindungen annahm) im Zeitraum
+        const { data: aus } = await db.from("kc_club_db_aussetzer").select("minute,zeitplaene,app").gte("minute", new Date(start).toISOString()).order("minute", { ascending: false }).limit(200);
+        return json({ tage, schrittMin, seit: erster?.zeit ?? null, zeit: jetzt(), aussetzer: aus ?? [],
           abschnitte: ab.map(({ msSumme, ...b }) => ({ ...b, ms: b.apiN ? Math.round(msSumme / b.apiN) : null })) });
       }
 
