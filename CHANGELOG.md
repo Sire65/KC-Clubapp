@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.831.0 – 2026-11-03 – § Impressum mit den Club-Angaben (KC-CLUB-IMPRESSUM) · nur App
+Hansi: „Kein e. V. – nur loser Zusammenschluss von Berufsköchen und Köchinnen. Köcheclub Werne c/o Klaus Zander, An den 12 Bäumen 5, 59368 Werne. Vertreten wie 2. Entwickler ist z. Zt. verantwortlich.“
+- Eingetragen: Rechtsform („Kein eingetragener Verein – loser Zusammenschluss von Berufsköchinnen und Berufsköchen“), Anschrift c/o Klaus Zander, vertreten durch Klaus Zander, inhaltlich verantwortlich Hans-Joachim Koch (Entwickler der App). Registereintrag entfällt (kein e. V.) – wird nicht mehr als fehlend gemeldet.
+- Offen (Rückfrage): Kontakt-E-Mail – kam unvollständig an („-k@web.de“); bis dahin sieht nur der Admin „⚠️ fehlt noch“.
+- Rückweg: App 2.830.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.830.0 – 2026-11-03 – ⏳ Warteliste · 👥 Teilnahme-Übersicht · 🧹 Datenbank klein halten · § Impressum (Gesamtprüfung #44: A, B, E) · App + Server + Datenbank
 Hansi zur Gesamtprüfung: „A, B, E. Das Impressum kannst du angliedern unter App-Info … einen Button neben dem vom Entwickler. Baue erst mal das Standard-Impressum und sag mir, was dir fehlt.“
 - **A Warteliste (KC-CLUB-WARTELISTE):** Seminar am Runden Tisch ausgebucht → „⏳ Auf die Warteliste“. Meldet sich jemand ab, rückt der Erste (nach Zeitpunkt der Vormerkung) automatisch nach und bekommt Push/Mail „🎉 Ein Platz ist frei“. Auf der Liste: „⏳ Warteliste – Platz 2 · ↩️ Von der Warteliste“. Nie überbucht (gleiche Prüfung wie beim Anmelden). Neuer Stand `warte` in `kc_club_tisch_teilnahme`.

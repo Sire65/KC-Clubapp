@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.830.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.831.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -838,12 +838,14 @@ function entwicklerZeigen() {
 // Nichts wird erfunden: Leere Felder (null) sieht der Admin als „⚠️ fehlt noch“, Mitglieder sehen die Zeile nicht. Ausfüllen nur hier (eine Stelle).
 const IMPRESSUM = {
   anbieter: "Köcheclub Werne",
-  rechtsform: null,          // z. B. „eingetragener Verein (e. V.)“ oder „nicht eingetragener Verein“
-  anschrift: null,           // Postanschrift des Clubs (Straße, PLZ Ort)
-  vertreten: null,           // vertretungsberechtigte Clubleitung laut Satzung (Name + Amt)
-  kontakt: null,             // E-Mail (und auf Wunsch Telefon) für Anfragen
-  register: null,            // nur bei e. V.: Registergericht und Registernummer
-  verantwortlich: null,      // inhaltlich verantwortlich (Name, Anschrift)
+  // 2.831.0 Angaben von Hansi (03.11.2026): „Kein e. V. – nur loser Zusammenschluss von Berufsköchen und Köchinnen“, Anschrift c/o Klaus Zander,
+  // vertreten wie Anschrift (Klaus Zander), verantwortlich derzeit der Entwickler. Kontakt-E-Mail kam unvollständig an → bleibt offen (Rückfrage).
+  rechtsform: "Kein eingetragener Verein – loser Zusammenschluss von Berufsköchinnen und Berufsköchen",
+  anschrift: "Köcheclub Werne\nc/o Klaus Zander\nAn den 12 Bäumen 5\n59368 Werne",
+  vertreten: "Klaus Zander",
+  kontakt: null,             // E-Mail (und auf Wunsch Telefon) für Anfragen – Rückfrage an Hansi (Adresse kam als „-k@web.de“ an)
+  register: false,           // false = entfällt (kein eingetragener Verein, daher kein Vereinsregister)
+  verantwortlich: "Hans-Joachim Koch (Entwickler der App)",
 };
 function impressumZeigen() {
   const I = IMPRESSUM, adm = !!ICH?.admin, fehlt = (t) => (adm ? `<span class="imp-fehlt">⚠️ fehlt noch – ${esc(t)}</span>` : "");
@@ -856,7 +858,7 @@ function impressumZeigen() {
     ${zeile("Anschrift", I.anschrift, "Postanschrift des Clubs")}
     ${zeile("Vertreten durch", I.vertreten, "vertretungsberechtigte Clubleitung laut Satzung (Name und Amt)")}
     ${zeile("Kontakt", I.kontakt, "E-Mail-Adresse (Telefon freiwillig)")}
-    ${I.register ? zeile("Registereintrag", I.register, "") : adm ? `<p><b>Registereintrag</b><br>${fehlt("nur bei e. V.: Registergericht und Nummer")}</p>` : ""}
+    ${I.register ? zeile("Registereintrag", I.register, "") : I.register === null && adm ? `<p><b>Registereintrag</b><br>${fehlt("nur bei e. V.: Registergericht und Nummer")}</p>` : ""}
     ${zeile("Inhaltlich verantwortlich", I.verantwortlich, "Name und Anschrift")}
     <p><b>Zweck der App</b><br>Die Köcheclub-App ist ein internes Angebot für die Mitglieder des Köcheclubs Werne: Termine, Nachrichten, Dienstpläne und Club-Unterlagen an einem Ort. Sie ist kostenlos und werbefrei und nur mit persönlichem Zugangslink nutzbar.</p>
     <p><b>Haftung für Inhalte</b><br>Die Inhalte werden mit Sorgfalt erstellt. Für Beiträge, die Mitglieder selbst einstellen (z. B. Nachrichten, Pinnwand, Fotos), sind die jeweiligen Mitglieder verantwortlich. Hinweise auf fehlerhafte Inhalte bitte an die Clubleitung.</p>

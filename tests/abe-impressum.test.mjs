@@ -25,6 +25,9 @@ assert.ok(/end_time < now\(\) - interval '7 days'/.test(e) && /created_at < now\
 // Impressum
 assert.ok(/onclick="entwicklerZeigen\(\)">👨‍🍳 Über den Entwickler<\/button> <button class="knopf klein" style="margin-top:8px" onclick="impressumZeigen\(\)">§ Impressum<\/button>/.test(html), "Knopf neben dem Entwickler");
 const i = app.slice(app.indexOf("const IMPRESSUM = {"), app.indexOf("function impressumZeigen"));
-for (const k of ["rechtsform", "anschrift", "vertreten", "kontakt", "register", "verantwortlich"]) assert.ok(new RegExp(k + ": null").test(i), k + " noch offen (nichts erfunden)");
+// 2.831.0: Angaben von Hansi eingetragen; Kontakt bleibt offen (E-Mail kam unvollständig an), Register entfällt (kein e. V.)
+assert.ok(/rechtsform: "Kein eingetragener Verein/.test(i) && /c\/o Klaus Zander/.test(i) && /vertreten: "Klaus Zander"/.test(i) && /verantwortlich: "Hans-Joachim Koch/.test(i), "Angaben von Hansi");
+assert.ok(/kontakt: null,/.test(i) && /register: false,/.test(i), "Kontakt offen, Register entfällt");
+assert.ok(/I\.register === null && adm/.test(app), "entfallenes Register wird nicht als fehlend gemeldet");
 assert.ok(/fehlt noch/.test(app) && /const I = IMPRESSUM, adm = !!ICH\?\.admin/.test(app), "Lücken nur für den Admin sichtbar");
 console.log("abe-impressum: alle Prüfungen bestanden");
