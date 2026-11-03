@@ -37,7 +37,7 @@ assert.ok(lies(".github/workflows/tests.yml").includes("node tests/anleitungen.t
 assert.ok(/\.blatt:not\(\.versteckt\)"\)\]; offen\.forEach\(\(b\) => b\.classList\.add\("versteckt"\)\)/.test(app), "offene Fenster treten beiseite");
 assert.ok(/function zeige\(v, ausHistorie\) \{\n  if \(v !== "dokansicht" && DOKA\.zurueck\) dokFensterZurueck\(\);/.test(app), "zeige() holt die Fenster zurück");
 assert.equal((app.match(/blattAuf\("anlBlatt"/g) || []).length, 1, "anlBlatt nur einmal vergeben");
-// 2.833.0 KC-CLUB-ANLEITUNG-VERTRETUNG (Wunsch Hansi 03.11.2026): Blatt „Für ein anderes Mitglied handeln“ im Register Sonstiges
+// 2.834.0 KC-CLUB-ANLEITUNG-VERTRETUNG (Wunsch Hansi 03.11.2026): Blatt „Für ein anderes Mitglied handeln“ im Register Sonstiges
 assert.ok(liste.blaetter.some((b) => b.id === "fuer-andere-handeln" && b.register === "Sonstiges"), "Blatt Vertretung");
 assert.ok(gen.includes('hilfeVertretung: ["vertretung"].map(hilfe)') && gen.includes("vtAdminKarte({ person_id:"), "Text aus der App");
 console.log("anleitungen: ok");

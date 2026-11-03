@@ -1,4 +1,4 @@
-// KC-CLUB-PINNWAND-NADEL-DRUECKEN (Wunschliste #74), 2.830.0. Aufruf: node tests/pinnwand-nadel-druecken.test.mjs (offline)
+// KC-CLUB-PINNWAND-NADEL-DRUECKEN (Wunschliste #74), 2.834.0. Aufruf: node tests/pinnwand-nadel-druecken.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";
 const app = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8"), html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");

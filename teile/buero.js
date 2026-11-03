@@ -769,7 +769,7 @@ function buTischDinge({ L, S, summe, kal, naechst, fest }) {
   const kalender = ding("kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-kal"><span class="bu-kmon">–</span><span class="bu-ktag">?</span></span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')"); // wie bisher
   const geraet = `<span class="bu-o-geraet" style="grid-area:drucker">${S ? `<button type="button" class="bu-obj bu-o-scanner" onclick="buEinlesen()" aria-label="Einlesen (Scanner)">${BU_SVG.scanner}<span class="bu-olabel">Einlesen</span></button>` : ""}
       <button type="button" class="bu-obj bu-o-drucker" onclick="buDrucker()" aria-label="Drucken">${BU_SVG.drucker}<span class="bu-olabel">Drucken</span></button></span>`;
-  const lm = BU_LAMPE_MODUS[DS.modus] || BU_LAMPE_MODUS.auto; // 2.830.0 KC-CLUB-BUERO-NAMENSSCHILD: Buchstabe am Lampenfuß (T / N / A)
+  const lm = BU_LAMPE_MODUS[DS.modus] || BU_LAMPE_MODUS.auto; // 2.834.0 KC-CLUB-BUERO-NAMENSSCHILD: Buchstabe am Lampenfuß (T / N / A)
   return [ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()", `<span class="bu-lampe-modus" title="${lm[1]}" aria-hidden="true">${lm[0]}</span>`).replace('aria-label="Lampe"', `aria-label="Lampe – ${lm[1]}, ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`), monitor, kalender,
     L ? ding("korb", BU_SVG.korb, "Eingang", "buEingang()", summe ? `<span class="bu-dzahl">${summe}</span>` : "") : "", geraet,
     L ? ding("handy", BU_SVG.handy, "Handy", "buHandy()") : "",
@@ -779,7 +779,7 @@ function buTischDinge({ L, S, summe, kal, naechst, fest }) {
     L ? ding("tastatur", BU_SVG.tastatur, "Nachricht &amp; Mail", "buNachricht()") : "",
     ding("rechner", BU_SVG.rechner, "Rechner", "rechnerOeffnen()")].join("");
 }
-// ---------- 2.830.0 KC-CLUB-BUERO-NAMENSSCHILD (Wunschliste #75, Wunsch Hansi 03.11.2026 „Im Büro unter dem Monitor ein goldenes Namensschild mit z. B.
+// ---------- 2.834.0 KC-CLUB-BUERO-NAMENSSCHILD (Wunschliste #75, Wunsch Hansi 03.11.2026 „Im Büro unter dem Monitor ein goldenes Namensschild mit z. B.
 // Klaus Zander, drunter etwas kleiner: Clubsprecher. Und an der Lampe ebenfalls den kleinen Buchstaben für Tag, Nacht, Automatik“) ----------
 // Das Schild zeigt, wer gerade am Schreibtisch sitzt (das eigene Konto) und das erste Amt; „Admin“ nur, wenn es kein anderes gibt.
 const BU_LAMPE_MODUS = { tag: ["T", "Tag"], nacht: ["N", "Nacht"], auto: ["A", "Automatik"] };

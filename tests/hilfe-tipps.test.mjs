@@ -1,4 +1,4 @@
-// KC-CLUB-HILFE-TIPPS (Wunschliste #71), 2.830.0. Aufruf: node tests/hilfe-tipps.test.mjs (offline)
+// KC-CLUB-HILFE-TIPPS (Wunschliste #71), 2.834.0. Aufruf: node tests/hilfe-tipps.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import { programmText } from "./programm.mjs";
@@ -21,7 +21,7 @@ assert.ok((sv.match(/nurLeitung\(ich\);/g) || []).length >= 5, "Leitung");
 assert.ok(sv.includes('if (!(antwort in TIPP_ANTWORT))') && sv.includes('if (t && (antwort === "nein" || antwort === "anderes"))') && sv.includes('insert({ person_id: ich.person_id, punkte: [], text: zeile, kontakt: [] })'));
 assert.ok(server.includes('String(att.object_path).startsWith(`club/${ich.person_id}/`)') && server.includes('if (!url.startsWith(basis) || !/^[a-z0-9-]{1,60}\\.pdf$/'), "Anlagen geprüft");
 assert.ok(sv.includes('if ((count ?? 0) > 3) throw new Fehler("Gerade gingen schon mehrere Tipps raus'), "Bremse");
-assert.ok(server.includes('// 2.830.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung'), "anlage_url");
+assert.ok(server.includes('// 2.834.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung'), "anlage_url");
 assert.ok(server.includes("hilfeTipps: await pTipps"), "Startdaten");
 // Datenbank: Rechte nur Server, gespiegelt
 for (const t of ["kc_club_hilfe_tipp", "kc_club_hilfe_tipp_empfang", "kc_club_hilfe_vorlage"]) {

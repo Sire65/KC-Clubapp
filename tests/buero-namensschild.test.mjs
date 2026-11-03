@@ -1,4 +1,4 @@
-// KC-CLUB-BUERO-NAMENSSCHILD (Wunschliste #75), 2.830.0. Aufruf: node tests/buero-namensschild.test.mjs (offline)
+// KC-CLUB-BUERO-NAMENSSCHILD (Wunschliste #75), 2.834.0. Aufruf: node tests/buero-namensschild.test.mjs (offline)
 import fs from "node:fs";
 import assert from "node:assert/strict";
 const bu = fs.readFileSync(new URL("../teile/buero.js", import.meta.url), "utf8"), html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");

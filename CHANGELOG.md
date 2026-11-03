@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.830.0 – 2026-11-03 – 💡 Hilfe-Tipps mit Rückmeldung (KC-CLUB-HILFE-TIPPS, Wunschliste #71) · 📌 Pinnwand: Zettel per Nadel ablegen (KC-CLUB-PINNWAND-NADEL-DRUECKEN, #74) · Server 2.830.0
+## 2.834.0 – 2026-11-03 – 💡 Hilfe-Tipps mit Rückmeldung (KC-CLUB-HILFE-TIPPS, Wunschliste #71) · 📌 Pinnwand: Zettel per Nadel ablegen (KC-CLUB-PINNWAND-NADEL-DRUECKEN, #74) · Server 2.834.0
 Wunsch Hansi (02./03.11.): „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle – z. B. aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung. Wenn mit: das Mitglied muss sagen, ob der Tipp geholfen hat.“ Konzept: https://claude.ai/artifact/Rf1TNBqEbbxz6fQaERpmnM
 - **🙋 Unterstützung → 💡 Lösung schicken** (ganze Clubleitung): Problem, Tipp-Text, An wen (👥 Alle · 👤 Einzeln · 🧑‍🤝‍🧑 Gruppe · 🎖️ Amt), dazu Blätter aus 📚 Anleitungen, PDFs, Fotos und Bildschirmfotos (höchstens 5). Bei einer Anfrage ist die Person schon eingetragen.
 - **✅ Rückmeldung verlangen:** beim Mitglied Karte im Info-Laufband „Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat.“ – am ersten Tag grün, bis zum dritten gelb, danach rot mit „💬 Jetzt antworten“ / „🙅 Möchte nicht antworten“ (dann kein Hinweis mehr). Antworten: ✅ Ja, geholfen · ❌ Nein · 🔀 Problem war ein anderes · 👍 Hat sich erledigt, dazu ein paar Worte (freiwillig).
@@ -16,7 +16,34 @@ Wunsch Hansi (02./03.11.): „Bei Unterstützung Lösungen anbieten für eine Pe
 - **🎄 Weihnachtsmarkt-Prospekt – Gerüst** (KC-CLUB-WM-PROSPEKT): Titelblatt, Speisen, Getränke, Seiten aus dem Club-Ordner „Weihnachtsmarkt“ (Register mit „Prospekt“ im Namen, z. B. die Preisliste von Thomas), „Wer wir sind“. Bis zur Freigabe nur Admin; öffentlicher Link erst nach der Entscheidung. Test: `tests/magazin-geruest.test.mjs`.
 - **📖 Umblättern wie ein Prospekt** (KC-CLUB-UMBLAETTERN, Wunsch Hansi 03.11.: „wie die Blätter-Prospekte der Lebensmittelhändler“): beim Blättern (Archiv-Ordner, Alben, Clubchronik, Clubleben) klappt die Seite jetzt um – am Handy über die linke Kante, quer auf Tablet/PC wie ein Buch über den Falz. Nur mit eingeschalteten Effekten und ohne „Bewegung verringern“; läuft nur während des Umblätterns. Test: `tests/umblaettern.test.mjs`.
 - Technik: Tabellen `kc_club_hilfe_tipp`, `kc_club_hilfe_tipp_empfang`, `kc_club_hilfe_vorlage` (nur Club-Server, gespiegelt, gesichert; Migration `20261103_kc_club_hilfe_tipps.sql`, Probelauf `tools/db-test/106`). Server-Aktionen `tipp_*`. Senden/Übersicht als Programmteil `teile/hilfetipp.js` (lädt erst beim Gebrauch). Test: `tests/hilfe-tipps.test.mjs`.
-- Rückweg: App 2.829.0, Server 2.829.0 (Tabellen können bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.833.0, Server 2.833.0 (Tabellen können bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.833.0 – Erledigte Vorschläge ordentlich ablegen (KC-CLUB-VORSCHLAG-ERLEDIGT, Wunsch #76)
+- Vorschläge: oben nur noch Offenes. Erledigtes liegt eingeklappt unter „🗂️ Erledigt“, darin je Sitzung (sonst je Monat) ein eigener Bereich mit Anzahl. Nichts verschwindet.
+- Behandelte Themen haben den Knopf „📄 Im Protokoll“.
+- „📦 Jahr abschließen“ (Protokolle) legt zusätzlich die Liste der erledigten Vorschläge des Jahres in den Ordner „Protokolle <Jahr>“, Register „Vorschläge“ (nichts doppelt).
+- Nachgeholt: die 7 Themen der Sitzung vom 30.10. sind als behandelt markiert (Migration 20261103, Rückweg in der Datei).
+- Test: tests/vorschlag-erledigt.test.mjs. Rückweg: Version 2.832.0 einspielen.
+
+## 2.832.0 – 2026-11-03 – § Impressum vollständig (KC-CLUB-IMPRESSUM) · nur App
+Hansi: „Suche die richtige E-Mail-Adresse von Klaus raus und trage sie ein. Meine E-Mail bei Entwicklung. Keine Anschrift z. Zt.“
+- Kontakt: E-Mail von Klaus Zander (aus den Mitgliederdaten; passt zu „-k@web.de“). Inhaltlich verantwortlich: Hans-Joachim Koch (Entwickler der App) mit E-Mail, ohne Anschrift. Damit keine offenen Angaben mehr.
+- Rückweg: App 2.831.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.831.0 – 2026-11-03 – § Impressum mit den Club-Angaben (KC-CLUB-IMPRESSUM) · nur App
+Hansi: „Kein e. V. – nur loser Zusammenschluss von Berufsköchen und Köchinnen. Köcheclub Werne c/o Klaus Zander, An den 12 Bäumen 5, 59368 Werne. Vertreten wie 2. Entwickler ist z. Zt. verantwortlich.“
+- Eingetragen: Rechtsform („Kein eingetragener Verein – loser Zusammenschluss von Berufsköchinnen und Berufsköchen“), Anschrift c/o Klaus Zander, vertreten durch Klaus Zander, inhaltlich verantwortlich Hans-Joachim Koch (Entwickler der App). Registereintrag entfällt (kein e. V.) – wird nicht mehr als fehlend gemeldet.
+- Offen (Rückfrage): Kontakt-E-Mail – kam unvollständig an („-k@web.de“); bis dahin sieht nur der Admin „⚠️ fehlt noch“.
+- Rückweg: App 2.830.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.830.0 – 2026-11-03 – ⏳ Warteliste · 👥 Teilnahme-Übersicht · 🧹 Datenbank klein halten · § Impressum (Gesamtprüfung #44: A, B, E) · App + Server + Datenbank
+Hansi zur Gesamtprüfung: „A, B, E. Das Impressum kannst du angliedern unter App-Info … einen Button neben dem vom Entwickler. Baue erst mal das Standard-Impressum und sag mir, was dir fehlt.“
+- **A Warteliste (KC-CLUB-WARTELISTE):** Seminar am Runden Tisch ausgebucht → „⏳ Auf die Warteliste“. Meldet sich jemand ab, rückt der Erste (nach Zeitpunkt der Vormerkung) automatisch nach und bekommt Push/Mail „🎉 Ein Platz ist frei“. Auf der Liste: „⏳ Warteliste – Platz 2 · ↩️ Von der Warteliste“. Nie überbucht (gleiche Prüfung wie beim Anmelden). Neuer Stand `warte` in `kc_club_tisch_teilnahme`.
+- **B Teilnahme (KC-CLUB-TEILNAHME):** Protokolle → im Jahr „👥 Teilnahme 2026“ (nur Clubleitung): je Mitglied da / entschuldigt / nicht da und Quote aus den Anwesenheitslisten der veröffentlichten Protokolle, 🏅 = immer dabei; Drucken/PDF im Corporate Design. Dabei behoben (Fehler aus 2.802.0): die Jahres-Knöpfe („📦 Jahr abschließen“) erschienen nie, weil auf einen Stand geprüft wurde, den die Liste nicht liefert.
+- **E Datenbank klein halten (KC-DB-KLEIN-HALTEN):** nachts 03:45 UTC Zeitplan-Protokoll auf 7 Tage, Kommunikations-Messwerte auf 35 Tage begrenzt (gelesen werden höchstens 26 Std. bzw. der neueste Wert). Die 19 MB stammen fast ganz aus der letzten Woche – die Regel verhindert weiteres Wachsen.
+- **Impressum (KC-CLUB-IMPRESSUM):** App-Info → „§ Impressum“ neben „👨‍🍳 Über den Entwickler“. Standard-Aufbau (Anbieter, Rechtsform, Anschrift, Vertretung, Kontakt, Register, verantwortlich, Zweck, Haftung, Urheberrecht, Technik). Nichts erfunden: offene Angaben sieht nur der Admin als „⚠️ fehlt noch“, Mitglieder sehen die Zeile nicht. Ausfüllen an einer Stelle (Registry `IMPRESSUM`).
+- Browser geprüft (Warteliste 3 Zustände, Teilnahme + Druck, Impressum Admin/Mitglied). Test: `tests/abe-impressum.test.mjs`.
+- Rückweg: App + Server 2.829.0; Warteliste: `update kc_club_tisch_teilnahme set zusage = null where zusage = 'warte'`; Aufräumen: `select cron.unschedule('kc-db-klein-halten')`. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.829.0 – 2026-11-03 – 📈 „So nutzen wir die App“ – Zahlen für alle (KC-CLUB-NUTZUNG-ALLE, Wunsch #73) · App + Server + Datenbank
 Wunsch #73 Hansi: „Im Bereich Technik eine kleine Übersicht mit ein paar Grafiken: wann die App am meisten genutzt wird, an welchen Tagen, um welche Uhrzeit, und wie viel Push, E-Mail und Nachrichten verschickt wurden.“ Nach dem Konzept: „Alle Vorschläge, aber nicht wie viel Platz usw. Das soll allen Mitgliedern zur Verfügung stehen … nicht zu technisch, aber aussagekräftig.“
 - Neue Kachel **Technik → „📈 So nutzen wir die App“** (alle Mitglieder; 7 / 30 / 90 Tage): Auf einen Blick (geöffnet, wie viele Mitglieder dabei, Nachrichten, Benachrichtigungen – mit Pfeil ↑↓ zum Zeitraum davor), **Farbfeld Wochentag × Uhrzeit** mit Satz „Am meisten los: mittwochs gegen 19 Uhr“, Mitglieder pro Tag, Nachrichten/Push/E-Mail pro Tag (gestapelt), **Top 10 Bereiche** und „Noch zu entdecken“ (antippen = hin), Geräte (Android/iPhone/Computer, installiert/Browser). Feld oder Säule antippen = genaue Zahl.

@@ -1,4 +1,4 @@
--- KC-CLUB-HILFE-TIPPS (App/Server 2.830.0, 03.11.2026, Wunschliste #71 Hansi „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle –
+-- KC-CLUB-HILFE-TIPPS (App/Server 2.834.0, 03.11.2026, Wunschliste #71 Hansi „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle –
 -- aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung; mit: das Mitglied sagt, ob der Tipp geholfen hat“).
 -- Die Clubleitung schickt einen Tipp (Problem, Text, Anlagen); je Empfänger eine Zeile mit gelesen/Antwort. Vorlagen zum Wiederverwenden.
 -- Nur der Club-Server (service_role); RLS an, keine Rechte für anon/authenticated (KC-SUPABASE-GRANTS). Gespiegelt und gesichert. Nur additiv.
@@ -52,8 +52,8 @@ revoke all on public.kc_club_hilfe_vorlage from public, anon, authenticated;
 grant select, insert, update, delete on public.kc_club_hilfe_vorlage to service_role;
 
 insert into public.kc_db_mirror_table_rules (table_name, area, sensitivity, realtime_allowed, mirror_enabled, backup_enabled, note) values
-  ('kc_club_hilfe_tipp', 'Club-App', 'sensitive', false, true, true, 'KC-CLUB-HILFE-TIPPS (2.830.0): Hilfe-Tipps der Clubleitung'),
-  ('kc_club_hilfe_tipp_empfang', 'Club-App', 'sensitive', false, true, true, 'KC-CLUB-HILFE-TIPPS (2.830.0): Empfänger und Rückmeldungen'),
-  ('kc_club_hilfe_vorlage', 'Club-App', 'normal', false, true, true, 'KC-CLUB-HILFE-TIPPS (2.830.0): Tipp-Vorlagen')
+  ('kc_club_hilfe_tipp', 'Club-App', 'sensitive', false, true, true, 'KC-CLUB-HILFE-TIPPS (2.834.0): Hilfe-Tipps der Clubleitung'),
+  ('kc_club_hilfe_tipp_empfang', 'Club-App', 'sensitive', false, true, true, 'KC-CLUB-HILFE-TIPPS (2.834.0): Empfänger und Rückmeldungen'),
+  ('kc_club_hilfe_vorlage', 'Club-App', 'normal', false, true, true, 'KC-CLUB-HILFE-TIPPS (2.834.0): Tipp-Vorlagen')
 on conflict (table_name) do nothing;
 insert into public.kc_neon_resume_tables (table_name) values ('kc_club_hilfe_tipp'), ('kc_club_hilfe_tipp_empfang'), ('kc_club_hilfe_vorlage') on conflict (table_name) do nothing;
