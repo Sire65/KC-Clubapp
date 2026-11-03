@@ -337,7 +337,7 @@ async function spNachsehen(sofort) {
   if (!SP.offen || aktuelleAnsicht !== "spiele" || document.hidden || KTM.frage || KTM.aufl) return; // 2.14.0: nie mitten in eine Quizfrage
   if (sofort !== true) { // sofort = Signal über die direkte Leitung (KC-CLUB-REALTIME-SPIELE) – sonst der Takt
     SPT_TAKT.n++; SPT_TAKT.ruhig++;
-    if (rtAn() && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 10) return; // Leitung steht: Züge melden sich selbst – nur alle 30 s zur Sicherheit
+    if (rtAn() && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 40) return; // Leitung steht: Züge melden sich selbst – nur alle 2 Min. zur Sicherheit (bisher 30 s; KC-CLUB-RT-SPIEL-SPARSAM 03.11.2026)
     if (SP.offen.ichDran ? SPT_TAKT.n % 5 : SPT_TAKT.ruhig > 40 && !SP.offen.uhr?.laeuft && SPT_TAKT.n % 3) return; // 2.23.38: läuft eine Schachuhr, bleibt es schnell
   }
   try { const r = await api("spiel_holen", { id: SP.offen.id }); if (r.spiel.zuege !== SP.offen.zuege || r.spiel.status !== SP.offen.status) { SPT_TAKT.ruhig = 0; const warDran = SP.offen.ichDran; SP.offen = r.spiel; spZeigen(); if (!warDran && r.spiel.ichDran) try { navigator.vibrate?.(40); } catch {} } } catch {}

@@ -15,7 +15,7 @@ const TEILE_LISTE = {
   videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-hyTPb3cuDTVKL4ePvgVB8Li4eL7kyLSY4aP3iFg4MrkcRzDcgwfv6eAA2qztXQjl" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
-  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
+  spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-bTEiYXM6UcH05EqAohDWpDoNNWorAyk424xroS5KH5akurfSr8OS0RJ14TSFeLhy" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
@@ -4953,7 +4953,7 @@ function rtBlatt() {
 }
 function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; RT.anw = false; try { ws?.close(); } catch {} }
 // nach dem (Wieder-)Verbinden einmal nachsehen, damit in der Lücke nichts verloren geht
-function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
+function rtNachholen() { onlinePing(); dtSignalLaden(); if (typeof spNachsehen === "function" && typeof SP !== "undefined" && SP?.offen) spNachsehen(true); /* KC-CLUB-RT-DIENST, KC-CLUB-RT-SPIEL-SPARSAM: Lücke nachholen */ if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
   RT.signale++;
   if (s.art === "tippt" || s.art === "spricht" || s.art === "diktiert") tippHinweisSignal(s); // 2.529.0 KC-CLUB-SCHREIBT-HINWEIS
@@ -4972,6 +4972,7 @@ function rtSignal(s) {
     return;
   }
   if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
+  if (s.art === "dienst") { clearTimeout(RT.dt); RT.dt = setTimeout(dtSignalLaden, 600 + Math.random() * 1400); return; } // KC-CLUB-RT-DIENST
   if (s.art === "ab") { abStandHolen(); return; } // 2.568.0 KC-CLUB-ANRUFBEANTWORTER: neue Nachricht bzw. abgehört
   // KC-CLUB-REALTIME-SPIELE (2.228.0): Zug/Herausforderung/Aufgabe – offenes Spiel sofort holen, sonst Einladungen/„du bist dran“ auffrischen
   // KC-CLUB-REALTIME-VORFUEHREN (2.229.0): neues Live-Bild / Status → Zuschauer holt sofort; Zeigender prüft gleich den Stand
@@ -19791,6 +19792,11 @@ async function mdStart() {
 // Erst nach der Bestätigung gilt der Dienst als übergeben (Mein Dienst, Dienst-Anmeldung). Regeln prüft der Server (dienst-tausch.js).
 // Bis zur Freigabe (Admin → Freigaben → „Dienst-Tausch-Börse“) sieht es nur der Admin (🔒 Test); Probe-Angebote sehen nur Admins.
 let DTL = null;
+// KC-CLUB-RT-DIENST (03.11.2026, Wunsch Hansi): Signal „dienst“ → eine offene Tauschbörse lädt sich still neu (sonst nichts, beim Öffnen ist sie ohnehin frisch)
+async function dtSignalLaden() {
+  if (!$("dtBlatt") || document.hidden || !$("dtInhalt")) return;
+  try { DTL = await api("dienst_tausch_liste", {}); dtZeichnen(); } catch { /* beim nächsten Signal oder Öffnen */ }
+}
 const DT_STATUS = { offen: "⏳ sucht Ersatz", uebernommen: "🙋 übernommen – wartet auf den Planer", bestaetigt: "✅ bestätigt", abgelehnt: "✖ abgelehnt", zurueckgezogen: "↩️ zurückgezogen" };
 async function dtOeffnen() {
   if (!frei("dienst_tausch")) return melde("Die Tauschbörse ist noch nicht freigegeben.");

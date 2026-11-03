@@ -473,6 +473,12 @@ async function personen(ids: string[]): Promise<Map<string, Person>> {
 // KC-CLUB-START-PARALLEL-3 (2.162.0): laufen mehrere Aufrufe gleichzeitig (z. B. beim Start), teilen sie sich EINE Abfrage –
 // nichts wird zwischengespeichert, jeder bekommt eine eigene Kopie (spart Datenbank-Verbindungen, Inhalt bleibt gleich)
 let MG_LAUF: Promise<(Person & { birth_date?: string })[]> | null = null;
+async function dtSignal(probe: boolean, ohne: string) { // KC-CLUB-RT-DIENST: Fehler stören die Tauschbörse nie
+  try {
+    const ids = (probe ? await adminIds() : (await aktiveMitglieder()).map((m: any) => m.person_id)).filter((x: string) => x !== ohne && !x.startsWith("KC-P-TEST"));
+    if (ids.length) await db.rpc("kc_club_rt_klingeln", { p_personen: ids, p_art: "dienst" }).then(() => {}, () => {});
+  } catch { /* App fragt beim Öffnen selbst */ }
+}
 async function aktiveMitglieder() {
   if (!MG_LAUF) MG_LAUF = (async () => {
     // birth_date nur für „Geburtstag heute“ – wird nie ungefiltert an die App gegeben
@@ -13008,6 +13014,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         return json({ ok: true, lage: await rtLage(ich) });
       }
+      // KC-CLUB-RT-DIENST (03.11.2026, Wunsch Hansi): jede Änderung an der Tauschbörse als Signal „dienst“ über die direkte Leitung –
+      // offene Tauschbörsen frischen sich sofort auf (nur Signal, Inhalt holt die App). Probe-Angebote nur an Admins.
       case "dienst_tausch_liste": {
         if (!(await dtDarf(ich))) return json({ aktiv: false });
         return json(await dtLage(ich));
@@ -13025,6 +13033,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "dienst_tausch", { id: neu.id, aktion: "anbieten", ref: d!.ref });
         const andere = (await aktiveMitglieder()).map((m) => m.person_id).filter((x) => x !== ich.person_id);
         const versand = await dtSenden(andere, false, { titel: `🔁 ${ich.vorname} sucht Ersatz`, kurz: `${dtText(d!, TZ)}${nachricht ? ` – „${nachricht.slice(0, 80)}“` : ""} · Kannst du übernehmen?` }, `${neu.id}:neu`);
+        await dtSignal(false, ich.person_id); // KC-CLUB-RT-DIENST
         return json({ ok: true, id: neu.id, versand: !!versand, lage: await dtLage(ich) });
       }
       case "dienst_tausch_probe": { // nur Admin: Probe-Angebot ohne Dienstplan, damit Hansi die Börse testen kann (sehen nur Admins)
@@ -13075,6 +13084,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else if (aktion === "ablehnen") {
           await dtSenden([r.von_person, an || ""], r.probe, { titel: "✖ Dienst-Tausch abgelehnt", kurz: `${wann}${set.grund ? ` · ${set.grund}` : ""} · der Dienst bleibt bei ${nm(r.von_person)}` }, `${r.id}:nein`);
         }
+        await dtSignal(!!r.probe, ich.person_id); // KC-CLUB-RT-DIENST
         return json({ ok: true, status: w.nach, lage: await dtLage(ich) });
       }
       case "dienst_heute": {
