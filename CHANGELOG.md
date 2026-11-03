@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.840.0 – Büro selbst einrichten (KC-CLUB-BUERO-EINRICHTEN, Wunschliste #77)
+- Im Büro „✏️ Einrichten“: die Teile wackeln; ziehen oder zwei Teile nacheinander antippen → sie tauschen die Plätze. Unten eine Zusatzreihe mit 4 Plätzen.
+- „🛒 Katalog“: Tischuhr (läuft mit, öffnet die Termine), Dreh-Adressregister (Adressbuch, nur Clubleitung), Kopierer (Einlesen), Pflanze, Bild, Locher – höchstens 4.
+- „✔ Fertig“ speichert als persönliche Einstellung (alle eigenen Geräte), „↩️ Wie vorher“, „🏠 Grundaufstellung“. Ungültige oder doppelte Plätze fallen auf den Grundplatz bzw. einen freien Platz zurück.
+- Server: neue Einstellung buero_einrichtung (nur kurze Kennungen). Hilfe-Eintrag. Test: tests/buero-einrichten.test.mjs. Rückweg: Version 2.839.0 einspielen.
+
 ## 2.839.0 – Start-Abfrage schneller (KC-CLUB-START-VORAB, #44 F)
 - Gemessen auf den Handys: Start im Mittel 2,8 s, davon ~1,0 s Server. Vor der eigentlichen Start-Abfrage las der Server 4-mal nacheinander aus der Datenbank (Anmeldung, Sperrliste, Wartungsfenster, Sitzungs-Vorgaben).
 - Jetzt laufen Sperrliste, Wartungsfenster und Sitzungs-Vorgaben gleichzeitig mit der Anmeldung (nur bei init/online/unterhaltungen/unterhaltung und gültig aussehendem Schlüssel). Prüfungen und Reihenfolge unverändert.

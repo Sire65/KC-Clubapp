@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.839.0";
+const SERVER_VERSION = "2.840.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
@@ -1967,6 +1967,13 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
       }])) };
   },
   sende_effekt: (w) => ({ art: SENDE_EFFEKT_ARTEN.includes(w?.art) ? w.art : "wechsel" }),
+  // 2.840.0 KC-CLUB-BUERO-EINRICHTEN (Wunschliste #77): eigene Anordnung des Schreibtischs (Teil → Platz) und bis zu 4 Teile aus dem Katalog –
+  // nur kurze Kennungen aus der App (die App prüft Plätze und Teile gegen ihre Registry; Unbekanntes fällt dort auf die Grundaufstellung zurück)
+  buero_einrichtung: (w) => ({
+    plaetze: Object.fromEntries(Object.entries(w?.plaetze && typeof w.plaetze === "object" && !Array.isArray(w.plaetze) ? w.plaetze : {})
+      .filter(([k, v]) => /^[a-z0-9]{1,12}$/.test(k) && typeof v === "string" && /^[a-z0-9]{1,12}$/.test(v)).slice(0, 30)),
+    dinge: [...new Set((Array.isArray(w?.dinge) ? w.dinge : []).filter((x: unknown) => typeof x === "string" && /^[a-z0-9]{1,12}$/.test(x)))].slice(0, 4),
+  }),
   // KC-CLUB-CHAT-FARBEN (2.145.0): nur kurze Kennungen aus der Auswahl der App – nie freie Farben/Bilder
   chat_farben: (w) => { const id = (x: unknown) => (typeof x === "string" && /^[a-z0-9_]{1,24}$/.test(x) ? x : "standard"); return { eigen: id(w?.eigen), andere: id(w?.andere), hintergrund: id(w?.hintergrund),
     // 2.582.0 KC-CLUB-CHAT-HG-FOTO: eigenes Foto (nur die Kennung der eigenen Anlage) + Stärke

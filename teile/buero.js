@@ -308,6 +308,7 @@ function buKopfKnoepfe(raum, t) {
   return `<div class="bu-knopfreihe bu-ikonreihe">${[
     ICH?.vorstand ? buIkon("📋", "Übersicht", "tagesinfoZeigen(true)", "Übersicht für heute") : "",
     raum ? buIkon("☰", "Liste", "buAnsichtWechseln()", "Büro als Liste zeigen") : buIkon("🗄️", "Raum", "buAnsichtWechseln()", "Büro-Raum mit Regal zeigen"),
+    raum ? buIkon("✏️", "Einrichten", "bueStart()", "Schreibtisch einrichten: Teile verschieben und aus dem Katalog dazustellen", BUE.an ? " an" : "") : "", // 2.840.0 KC-CLUB-BUERO-EINRICHTEN
     ICH?.vorstand ? buIkon("💼", "Tasche", "atStart()", "Aktentasche") : "",
     buFilmKnopf(),
     buSchreiben() ? buIkon("📥", "Einlesen", "buEinlesen()", "Einlesen: Foto oder Datei") : "",
@@ -727,7 +728,8 @@ function buRaumHtml() {
             : `<button class="bu-zettel blau" onclick="zeige('termine')"><b>Nächster Termin</b>${naechst ? esc(naechst.titel || "Sitzung") + " · " + esc(fTagDp.format(new Date(naechst.beginn))) : "Keiner geplant"}</button>`}
           </div>
         </div>
-        <div class="bu-platte bu-dinge${L ? "" : " bu-platte-mitglied"}">${buTischDinge({ L, S, summe, kal, naechst, fest })}</div>
+        ${(() => { const dinge = buTischDinge({ L, S, summe, kal, naechst, fest }); // 2.840.0 KC-CLUB-BUERO-EINRICHTEN: Zusatzreihe nur, wenn dort etwas steht (oder beim Einrichten)
+          return `${BUE.an ? bueLeisteHtml() : ""}<div class="bu-platte bu-dinge${L ? "" : " bu-platte-mitglied"}${BUE.extra || BUE.an ? " bu-extra" : ""}${BUE.an ? " bu-einrichten" : ""}" id="buPlatte">${dinge}</div>`; })()}
       </div>
     </div>`;
 }
@@ -761,7 +763,7 @@ function buMonitorZeilen(naechst, fest) {
   return z;
 }
 function buTischDinge({ L, S, summe, kal, naechst, fest }) {
-  const ding = (area, inhalt, label, fn, extra = "") => `<button type="button" class="bu-obj bu-o-${area}" style="grid-area:${area}" onclick="${fn}" aria-label="${esc(label.replace(/&amp;/g, "&").replace(/&shy;/g, ""))}">${inhalt}<span class="bu-olabel">${label}</span>${extra}</button>`;
+  const ding = (area, inhalt, label, fn, extra = "", kat = "") => `<button type="button" class="bu-obj bu-o-${area}${kat ? " bu-o-kat" : ""}" style="grid-area:${area}" onclick="${fn}" aria-label="${esc(label.replace(/&amp;/g, "&").replace(/&shy;/g, ""))}">${inhalt}<span class="bu-olabel">${label}</span>${extra}</button>`;
   const nacht = istNacht(), zeilen = buMonitorZeilen(naechst, fest); setTimeout(buUhrStellen, 0); // Uhr im Bildschirm (stellt sich ab, wenn das Büro zu ist)
   const monitor = `<button type="button" class="bu-obj bu-o-monitor" style="grid-area:monitor" onclick="buAnsichtWechseln()" aria-label="Bildschirm – Büro als Liste öffnen">
       <span class="bu-mon"><span class="bu-mon-schirm"><span class="bu-mon-uhr">${buUhrzeit()}</span>${zeilen.length ? zeilen.map((x) => `<span class="bu-mon-zeile">${x}</span>`).join("")
@@ -773,15 +775,115 @@ function buTischDinge({ L, S, summe, kal, naechst, fest }) {
   // Lampe mit drei kleinen Knöpfen am Fuß: T Tag · N Nacht · A Automatik (der gewählte leuchtet) – KC-CLUB-BUERO-PAUSE (Wunsch Hansi 03.11.2026)
   const lampe = `<span class="bu-o-lampe-platz" style="grid-area:lampe">${ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()").replace('style="grid-area:lampe" ', "").replace('aria-label="Lampe"', `aria-label="Lampe – gerade ${lm[1]}, ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`)}
     <span class="bu-lampe-modi" role="group" aria-label="Licht: Tag, Nacht oder Automatik">${Object.entries(BU_LAMPE_MODUS).map(([k, [b, t]]) => `<button type="button" class="${(DS.modus || "auto") === k ? "an" : ""}" aria-pressed="${(DS.modus || "auto") === k}" title="${t}" aria-label="${t}" onclick="buLampeModus('${k}')">${b}</button>`).join("")}</span></span>`;
-  return [lampe, monitor, kalender,
+  const teile = [lampe, monitor, kalender,
     L ? ding("korb", BU_SVG.korb, "Eingang", "buEingang()", summe ? `<span class="bu-dzahl">${summe}</span>` : "") : "", geraet,
     L ? ding("handy", BU_SVG.handy, "Handy", "buHandy()") : "",
     fest.length ? ding("kaffee", BU_SVG.karte, "Glück&shy;wunsch", "buFeste()", `<span class="bu-dzahl">${fest.length}</span>`) : ding("kaffee", BU_SVG.kaffee, "Pause", "buPause()"),
     ding("fueller", BU_SVG.fueller, "Füller", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>'),
     L ? ding("telefon", BU_SVG.telefon, "Telefon", "buTelefon()") : "",
     L ? ding("tastatur", BU_SVG.tastatur, "Nachricht &amp; Mail", "buNachricht()") : "",
-    ding("rechner", BU_SVG.rechner, "Rechner", "rechnerOeffnen()")].join("");
+    ding("rechner", BU_SVG.rechner, "Rechner", "rechnerOeffnen()"),
+    ...bueKatalogDinge(S, L).map((k) => ding(k.id, k.svg(), k.t, k.fn(S), "", k.id))].filter(Boolean); // 2.840.0 KC-CLUB-BUERO-EINRICHTEN
+  return bueVerteilen(teile, L);
 }
+// ---------- 2.840.0 KC-CLUB-BUERO-EINRICHTEN (Wunschliste #77, Wunsch Hansi 03.11.2026 „Im Büro alle Teile per Finger verschieben an eine andere Position,
+// um sich das Büro selber anzuordnen. Und dann einen Zusatzkatalog mit weiteren Büromaschinen bzw. Accessoires: Dreh-Adressregister, Tischuhr, Kopierer“;
+// Entscheidung: gilt für mich auf allen Geräten, Uhr/Register/Kopierer mit Funktion) ----------
+// „✏️ Einrichten“: die Teile wackeln; ein Teil auf einen anderen Platz ziehen ODER zwei Teile nacheinander antippen → sie tauschen die Plätze. Leere Plätze
+// (unten eine Zusatzreihe mit 4 Plätzen) sind gestrichelt zu sehen. „🛒 Katalog“ stellt bis zu 4 weitere Teile dazu. Gespeichert als Einstellung
+// „buero_einrichtung“ { plaetze: {Teil: Platz}, dinge: [Katalog-Kennungen] } – die Plätze werden hier gegen die echten Plätze der Ansicht geprüft
+// (Unbekanntes oder Doppeltes → Grundaufstellung bzw. nächster freier Platz). Rechte wie bisher: was man nicht darf, kommt auch aus dem Katalog nicht.
+const BUE_EXTRA = ["x1", "x2", "x3", "x4"], BUE_MAX = BUE_EXTRA.length;
+const BUE_PLAETZE = { L: ["lampe", "monitor", "kalender", "korb", "drucker", "handy", "kaffee", "fueller", "telefon", "tastatur", "rechner"], M: ["lampe", "monitor", "kalender", "kaffee", "drucker", "fueller", "rechner"] };
+const BUE_KATALOG = [ // Registry: neue Teile nur hier
+  { id: "uhr", t: "Tischuhr", x: "Zeigt die Uhrzeit · antippen öffnet die Termine", fn: () => "zeige('termine')", svg: () => { const d = new Date(), z = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "numeric", minute: "numeric", hourCycle: "h23" }).format(d).split(":").map(Number), h = ((z[0] % 12) + z[1] / 60) * 30, m = z[1] * 6;
+    return `<svg viewBox="0 0 60 64" aria-hidden="true"><rect x="22" y="54" width="16" height="8" rx="2" fill="#8a6d4e"/><circle cx="30" cy="30" r="26" fill="#c9a24a"/><circle cx="30" cy="30" r="21" fill="#fffaf0"/>${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => `<rect x="29.2" y="10.5" width="1.6" height="${i % 3 ? 2.5 : 4}" fill="#3a3f45" transform="rotate(${i * 30} 30 30)"/>`).join("")}<path class="bu-uhr-h" d="M30 30 V18" stroke="#3a3f45" stroke-width="3" stroke-linecap="round" transform="rotate(${h} 30 30)"/><path class="bu-uhr-m" d="M30 30 V13" stroke="#741521" stroke-width="2" stroke-linecap="round" transform="rotate(${m} 30 30)"/><circle cx="30" cy="30" r="2" fill="#3a3f45"/></svg>`; } },
+  { id: "rolodex", t: "Adressen", lang: "Dreh-Adressregister", x: "Öffnet das Adressbuch", recht: "L", fn: () => "adbStart()", svg: () => '<svg viewBox="0 0 70 60" aria-hidden="true"><rect x="8" y="50" width="54" height="7" rx="3" fill="#3a3f45"/><path d="M14 50 L20 30 M56 50 L50 30" stroke="#3a3f45" stroke-width="3"/><g fill="#fff" stroke="#c9c9c9">' + [-30, -15, 0, 15, 30].map((r) => `<rect x="20" y="8" width="30" height="22" rx="2" transform="rotate(${r} 35 34)"/>`).join("") + '</g><rect x="20" y="8" width="30" height="22" rx="2" fill="#fff6e8" stroke="#e3c9a3"/><rect x="24" y="13" width="16" height="2" fill="#741521"/><rect x="24" y="18" width="22" height="1.5" fill="#9aa4ad"/><rect x="24" y="22" width="18" height="1.5" fill="#9aa4ad"/><circle cx="35" cy="34" r="3" fill="#3a3f45"/></svg>' },
+  { id: "kopierer", t: "Kopierer", x: "Einlesen und kopieren (Foto oder Datei) · ohne Schreibrecht: Drucken", fn: (S) => (S ? "buEinlesen()" : "buDrucker()"), svg: () => '<svg viewBox="0 0 90 70" aria-hidden="true"><rect x="6" y="20" width="78" height="46" rx="5" fill="#dfe3e7"/><rect x="10" y="8" width="70" height="14" rx="3" fill="#c3cad1"/><rect x="14" y="12" width="40" height="3" fill="#8a949c"/><rect x="62" y="11" width="14" height="7" rx="2" fill="#2e7d4f"/><rect x="16" y="34" width="58" height="6" rx="2" fill="#9aa4ad"/><rect x="20" y="44" width="50" height="16" fill="#fff" stroke="#d8dde1"/><rect x="26" y="49" width="30" height="2" fill="#c3cad1"/><rect x="26" y="54" width="22" height="2" fill="#c3cad1"/></svg>' },
+  { id: "pflanze", t: "Pflanze", x: "Nur Deko · antippen gießt sie", fn: () => "bueDeko('pflanze')", svg: () => '<svg viewBox="0 0 60 70" aria-hidden="true"><path d="M30 40 C14 34 8 18 12 8 C24 14 30 26 30 40 Z" fill="#4f8a4b"/><path d="M30 40 C46 34 52 20 48 10 C36 16 30 28 30 40 Z" fill="#3f7a3c"/><path d="M30 42 C26 26 30 14 34 6 C38 18 36 30 30 42 Z" fill="#5c9a57"/><path d="M16 40 H44 L40 66 H20 Z" fill="#b5603a"/><rect x="14" y="38" width="32" height="6" rx="2" fill="#9c4f2e"/></svg>' },
+  { id: "foto", t: "Bild", lang: "Bilderrahmen", x: "Nur Deko · mit der Kochmütze", fn: () => "bueDeko('foto')", svg: () => '<svg viewBox="0 0 60 64" aria-hidden="true"><path d="M44 58 L50 64" stroke="#5d4037" stroke-width="3"/><rect x="6" y="4" width="48" height="56" rx="3" fill="#8a6d4e"/><rect x="11" y="9" width="38" height="46" fill="#f3ebdd"/><path d="M20 36 H40 V44 H20 Z" fill="#fff" stroke="#c9b79c"/><circle cx="22" cy="30" r="6" fill="#fff" stroke="#c9b79c"/><circle cx="30" cy="25" r="8" fill="#fff" stroke="#c9b79c"/><circle cx="38" cy="30" r="6" fill="#fff" stroke="#c9b79c"/><rect x="21" y="30" width="18" height="7" fill="#fff"/><text x="30" y="51" font-size="5" text-anchor="middle" fill="#741521">Köcheclub Werne</text></svg>' },
+  { id: "locher", t: "Locher", x: "Nur Deko · antippen macht „klack“", fn: () => "bueDeko('locher')", svg: () => '<svg viewBox="0 0 70 50" aria-hidden="true"><rect x="6" y="36" width="58" height="10" rx="3" fill="#3a3f45"/><path d="M12 36 L16 16 H54 L58 36 Z" fill="#741521"/><rect x="18" y="12" width="34" height="6" rx="3" fill="#5a0f19"/><circle cx="24" cy="42" r="2" fill="#cfd6dc"/><circle cx="46" cy="42" r="2" fill="#cfd6dc"/></svg>' },
+];
+const BUE = { an: false, wahl: null, vorher: null, extra: false, aktuell: {}, ...bueGespeichert() };
+function bueGespeichert() {
+  const w = INIT?.einstellungen?.buero_einrichtung || (() => { try { return JSON.parse(lsLesen("kc_club_buero_einrichtung") || "null"); } catch { return null; } })() || {};
+  return { plaetze: w.plaetze && typeof w.plaetze === "object" ? { ...w.plaetze } : {}, dinge: Array.isArray(w.dinge) ? w.dinge.filter((d) => BUE_KATALOG.some((k) => k.id === d)).slice(0, BUE_MAX) : [] };
+}
+const bueKatalogErlaubt = (L) => BUE_KATALOG.filter((k) => k.recht !== "L" || L);
+const bueKatalogDinge = (S, L) => bueKatalogErlaubt(L).filter((k) => BUE.dinge.includes(k.id));
+// Plätze verteilen: gewünschter Platz (wenn es ihn in dieser Ansicht gibt und er frei ist), sonst der eigene Grundplatz, sonst der nächste freie
+function buePlaetzeRechnen(ids, frei, wunsch) {
+  const res = {}, belegt = new Set();
+  for (const id of ids) { const w = wunsch[id]; if (w && frei.includes(w) && !belegt.has(w)) { res[id] = w; belegt.add(w); } }
+  for (const id of ids) if (!res[id]) { const w = [id, ...BUE_EXTRA, ...frei].find((a) => frei.includes(a) && !belegt.has(a)); if (w) { res[id] = w; belegt.add(w); } }
+  return res;
+}
+function bueVerteilen(teile, L) {
+  const frei = [...BUE_PLAETZE[L ? "L" : "M"], ...BUE_EXTRA], ids = teile.map((h) => (h.match(/style="grid-area:([a-z0-9]+)"/) || [])[1]).filter(Boolean);
+  const platz = buePlaetzeRechnen(ids, frei, BUE.plaetze); BUE.aktuell = platz;
+  BUE.extra = Object.values(platz).some((a) => BUE_EXTRA.includes(a));
+  const html = teile.map((h) => h.replace(/style="grid-area:([a-z0-9]+)"/, (m, id) => platz[id] ? `data-ding="${id}" style="grid-area:${platz[id]}"` : 'hidden style=""')).join("");
+  if (BUE.an) setTimeout(bueZiehenAn, 0);
+  return html + (BUE.an ? frei.filter((a) => !Object.values(platz).includes(a)).map((a) => `<button type="button" class="bu-leer" data-slot="${a}" style="grid-area:${a}" aria-label="Freier Platz"></button>`).join("") : "");
+}
+function bueLeisteHtml() {
+  return `<div class="bu-einr-leiste" role="group" aria-label="Schreibtisch einrichten"><p class="hinweis" style="margin:0 0 6px">✋ <b>Ziehe ein Teil</b> auf einen anderen Platz – oder <b>tippe zwei Teile nacheinander</b> an: sie tauschen die Plätze.</p>
+    <div class="knoepfe" style="margin:0"><button type="button" class="knopf klein" onclick="bueKatalog()">🛒 Katalog</button><button type="button" class="knopf klein" onclick="bueRueckgaengig()">↩️ Wie vorher</button><button type="button" class="knopf klein" onclick="bueGrund()">🏠 Grundaufstellung</button><button type="button" class="knopf klein haupt" onclick="bueFertig()">✔ Fertig</button></div></div>`;
+}
+function bueStart() {
+  if (BUE.an) return bueFertig();
+  if (!buRaumAn()) lsSetzen(BU_ANSICHT, "raum");
+  BUE.an = true; BUE.wahl = null; BUE.vorher = { plaetze: { ...BUE.plaetze }, dinge: [...BUE.dinge] }; buZeigen();
+  setTimeout(() => $("buPlatte")?.scrollIntoView({ block: "center", behavior: "smooth" }), 50);
+}
+function bueRueckgaengig() { if (BUE.vorher) { BUE.plaetze = { ...BUE.vorher.plaetze }; BUE.dinge = [...BUE.vorher.dinge]; } BUE.wahl = null; buZeigen(); }
+async function bueGrund() { if (!(await frage("🏠 Alles wieder an den Grundplatz stellen und die Katalog-Teile wegräumen?", { ja: "Ja, Grundaufstellung", nein: "Abbrechen" }))) return; BUE.plaetze = {}; BUE.dinge = []; BUE.wahl = null; buZeigen(); }
+async function bueFertig() {
+  BUE.an = false; BUE.wahl = null; BUE.plaetze = { ...BUE.aktuell };
+  const wert = { plaetze: BUE.plaetze, dinge: BUE.dinge };
+  lsSetzen("kc_club_buero_einrichtung", JSON.stringify(wert)); if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), buero_einrichtung: wert };
+  buZeigen();
+  try { await einstSpeichern("buero_einrichtung", wert); melde("✔ Dein Schreibtisch ist eingerichtet – gilt auf allen deinen Geräten."); }
+  catch (e) { melde("Gespeichert auf diesem Gerät – auf den anderen später nochmal „Fertig“ tippen: " + (e?.message || e), true); }
+}
+function bueTauschen(a, b, slot) {
+  const p = { ...BUE.aktuell };
+  if (b && p[b]) [p[a], p[b]] = [p[b], p[a]]; else if (slot) p[a] = slot; else return;
+  BUE.plaetze = p; BUE.wahl = null; buZeigen();
+}
+function bueZiehenAn() {
+  const pl = $("buPlatte"); if (!pl || pl.dataset.einr) return; pl.dataset.einr = "1";
+  let z = null;
+  const zuruecksetzen = () => { if (!z) return; z.d.style.transform = ""; z.d.classList.remove("bu-zieht"); z = null; };
+  pl.addEventListener("click", (e) => { // beim Einrichten öffnet nichts – Antippen wählt aus bzw. tauscht
+    if (!BUE.an) return; e.preventDefault(); e.stopPropagation();
+    const leer = e.target.closest("[data-slot]"); if (leer && BUE.wahl) bueTauschen(BUE.wahl, null, leer.dataset.slot);
+  }, true);
+  pl.addEventListener("pointerdown", (e) => { const d = e.target.closest("[data-ding]"); if (!BUE.an || !d) return; z = { d, x: e.clientX, y: e.clientY, weg: false, id: e.pointerId }; try { d.setPointerCapture(e.pointerId); } catch {} });
+  pl.addEventListener("pointermove", (e) => { if (!z || e.pointerId !== z.id) return; const dx = e.clientX - z.x, dy = e.clientY - z.y; if (!z.weg && Math.hypot(dx, dy) > 8) { z.weg = true; z.d.classList.add("bu-zieht"); } if (z.weg) { e.preventDefault(); z.d.style.transform = `translate(${dx}px, ${dy}px) scale(1.06)`; } });
+  pl.addEventListener("pointerup", (e) => {
+    if (!z || e.pointerId !== z.id) return; const { d, weg } = z; zuruecksetzen();
+    if (!weg) { const id = d.dataset.ding; if (!BUE.wahl) { BUE.wahl = id; pl.querySelectorAll(".bu-gewaehlt").forEach((x) => x.classList.remove("bu-gewaehlt")); d.classList.add("bu-gewaehlt"); } else if (BUE.wahl === id) { BUE.wahl = null; d.classList.remove("bu-gewaehlt"); } else bueTauschen(BUE.wahl, id); return; }
+    d.style.visibility = "hidden"; const ziel = document.elementFromPoint(e.clientX, e.clientY)?.closest("#buPlatte [data-ding], #buPlatte [data-slot]"); d.style.visibility = "";
+    if (ziel && ziel !== d) bueTauschen(d.dataset.ding, ziel.dataset.ding || null, ziel.dataset.slot || null);
+  });
+  pl.addEventListener("pointercancel", zuruecksetzen);
+}
+function bueKatalog() {
+  const L = !!ICH?.vorstand, liste = bueKatalogErlaubt(L), voll = BUE.dinge.length >= BUE_MAX;
+  blattAuf("bueKatalogBlatt", `<h3 style="margin:0">🛒 Katalog für deinen Schreibtisch</h3><p class="hinweis" style="margin:4px 0 10px">Bis zu ${BUE_MAX} Teile dazustellen – sie kommen in die untere Reihe und lassen sich dann wie alles andere verschieben.</p>
+    <div class="bue-katalog">${liste.map((k) => { const da = BUE.dinge.includes(k.id); return `<div class="bue-kat-teil${da ? " da" : ""}"><span class="bue-kat-bild">${k.svg()}</span><span class="bue-kat-text"><b>${k.lang || k.t}</b><small>${esc(k.x)}</small></span>
+      <button type="button" class="knopf klein${da ? "" : " haupt"}" onclick="bueKatalogWahl('${k.id}')" ${!da && voll ? `disabled title="Schon ${BUE_MAX} Teile auf dem Tisch"` : ""}>${da ? "➖ Weg" : "➕ Dazu"}</button></div>`; }).join("")}</div>
+    ${voll ? `<p class="hinweis">Der Tisch ist voll (${BUE_MAX} Teile) – erst etwas wegräumen.</p>` : ""}<div class="knoepfe"><button type="button" class="knopf haupt" onclick="fensterZu($('bueKatalogBlatt'))">Fertig</button></div>`);
+}
+function bueKatalogWahl(id) {
+  if (BUE.dinge.includes(id)) { BUE.dinge = BUE.dinge.filter((x) => x !== id); const p = { ...BUE.plaetze }; delete p[id]; BUE.plaetze = p; }
+  else if (BUE.dinge.length < BUE_MAX) BUE.dinge = [...BUE.dinge, id];
+  buZeigen(); bueKatalog();
+}
+// Tischuhr: Zeiger im selben Minutentakt wie die Uhr im Bildschirm (kein eigener Zeitgeber)
+function bueUhrStellen() { const sv = document.querySelector("#v-buero .bu-o-uhr svg"); if (!sv) return; const k = BUE_KATALOG.find((x) => x.id === "uhr"); const t = document.createElement("div"); t.innerHTML = k.svg(); sv.replaceWith(t.firstChild); }
+function bueDeko(id) { melde(id === "pflanze" ? "💧 Gegossen – danke!" : id === "locher" ? "📎 Klack!" : "🖼️ Köcheclub Werne"); }
 // ---------- 2.835.0 KC-CLUB-BUERO-NAMENSSCHILD (Wunschliste #75, Wunsch Hansi 03.11.2026 „Im Büro unter dem Monitor ein goldenes Namensschild mit z. B.
 // Klaus Zander, drunter etwas kleiner: Clubsprecher. Und an der Lampe ebenfalls den kleinen Buchstaben für Tag, Nacht, Automatik“) ----------
 // Das Schild zeigt, wer gerade am Schreibtisch sitzt (das eigene Konto) und das erste Amt; „Admin“ nur, wenn es kein anderes gibt.
@@ -824,7 +926,7 @@ async function buHandyPerson(pid) {
     if (w === "ton") anrufen(pid, false); else if (w === "video") anrufen(pid, true); else if (w === "wa") extern("whatsapp", handy); else if (w === "zurueck") buHandy(); }));
 }
 let BU_UHR = 0; // Uhr im Bildschirm: jede Minute eine Zeile Text, nur solange das Büro offen ist
-function buUhrStellen() { if (BU_UHR) return; BU_UHR = setInterval(() => { const u = document.querySelector("#v-buero .bu-mon-uhr"); if (!u || document.hidden) { if (!u) { clearInterval(BU_UHR); BU_UHR = 0; } return; } u.textContent = buUhrzeit(); }, 60000); }
+function buUhrStellen() { if (BU_UHR) return; BU_UHR = setInterval(() => { const u = document.querySelector("#v-buero .bu-mon-uhr"); if (!u || document.hidden) { if (!u) { clearInterval(BU_UHR); BU_UHR = 0; } return; } u.textContent = buUhrzeit(); bueUhrStellen(); }, 60000); }
 // Ordner aus dem Regal „aufschlagen“: zeigt genau den Bereich der Listenansicht (eine Oberfläche, nicht zwei)
 function buOrdner(id) { BU.sicht = "ordner"; BU.ordner = id; buZeigen(); window.scrollTo(0, 0); }
 function buOrdnerHtml() {
