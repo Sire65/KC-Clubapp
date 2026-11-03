@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.840.0";
+const SERVER_VERSION = "2.841.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
@@ -18087,8 +18087,7 @@ Köcheclub Werne`,
             if (tp) { erlaubt = true; break; }
           }
         }
-        if (!erlaubt) erlaubt = await rtTascheVorabErlaubt(ich, att.id).catch(() => false);
-        } // 2.774.0 KC-CLUB-TISCH-TASCHE: „vorab für alle“
+        if (!erlaubt) erlaubt = await rtTascheVorabErlaubt(ich, att.id).catch(() => false); // 2.774.0 KC-CLUB-TISCH-TASCHE: „vorab für alle“
         if (!erlaubt && ich.admin) { // 2.511.0 KC-CLUB-ABLAGEKORB: Admin sieht, was Mitglieder in den Ablagekorb geteilt haben
           const { data: ak } = await db.from("kc_club_ablagekorb").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(1);
           if (ak?.length) erlaubt = true;
@@ -18143,6 +18142,7 @@ Köcheclub Werne`,
             const { data: he } = await db.from("kc_club_hilfe_tipp_empfang").select("tipp_id").eq("tipp_id", x.id).eq("person_id", ich.person_id).maybeSingle();
             if (he) { erlaubt = true; break; }
           }
+        } // KC-CLUB-ANLAGE-KLAMMER (03.11.2026): fehlte seit 2.826.0 – Anlagen mit früher erteilter Erlaubnis liefen in den nächsten Fall
         if (!erlaubt) { // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: Foto eines Clubmoments – das Mitglied selbst, wer es eingereicht hat, und die Clubleitung
           const { data: cm } = await db.from("kc_club_clubjahr_momente").select("person_id,eingereicht_von").eq("foto", att.id).limit(5);
           if ((cm ?? []).some((x: any) => x.person_id === ich.person_id || x.eingereicht_von === ich.person_id || ich.vorstand)) erlaubt = true;
