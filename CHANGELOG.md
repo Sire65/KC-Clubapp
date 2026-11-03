@@ -5,6 +5,7 @@ Rückmeldung Hansi (03.11., Foto): „Das weiße Schild Bildschirm soll direkt u
 - „Bildschirm“ steht direkt unter dem Monitor, darunter das goldene Namensschild in einem Stück (ohne Mittelkante).
 - Am Lampenfuß drei kleine Knöpfe **T · N · A** (Tag, Nacht, Automatik) – der gewählte leuchtet, antippen stellt um.
 - **☕ Kaffeetasse = Pause:** Bildschirmschoner über der ganzen App mit Logo, „Köcheclub Werne“, „<Name> befindet sich im Büro im Pause-Modus“ und „Pause seit …“; das Logo schwebt langsam (bei „Bewegung verringern“ steht es). Antippen oder eine Taste beendet die Pause.
+- **📌 Pinnwand:** Antippen der Nadel oben am Zettel legt ihn als Nadel ab (Rückmeldung Hansi: „Ein Tipp auf die Nadel bringt den Zettel nicht als Nadel nach oben“ – vorher nur mit langem Drücken). Größere Tippfläche.
 - Rückweg: App 2.837.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.837.0 – Schnellerer Start (KC-CLUB-START-SCHNELLER, Gesamtprüfung #44 F)

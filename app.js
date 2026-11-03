@@ -1441,7 +1441,7 @@ function pwZeigen() {
       + z.leser.map((l) => `<div>${esc(l.name.split(" ")[0])}: gesehen ${zeitKurz(l.gesehen)}${l.erledigt ? ` · ✓ ${zeitKurz(l.erledigt)}` : ""}</div>`).join("")
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
     return `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}${z.erledigt ? " erledigt" : ""}" data-zid="${esc(z.id)}" style="--dreh:${pwDreh(z.id)}deg">`
-      + (ICH?.admin ? `<span class="pw-griff" data-zid="${esc(z.id)}" title="Nadel lange drücken: Zettel als Nadel ablegen" aria-hidden="true"></span>` : "") // 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
+      + (ICH?.admin ? `<span class="pw-griff" data-zid="${esc(z.id)}" title="Nadel antippen: Zettel als Nadel ablegen" role="button" aria-label="Zettel als Nadel ablegen"></span>` : "") // 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
@@ -1464,7 +1464,6 @@ function pwNadel(id) { if (PW.auf.has(id)) PW.auf.delete(id); else PW.auf.add(id
 // die Pinnadel drücke, wird der Zettel ausgeblendet und oben bleibt nur die Nadel in der Farbe, wie teilweise jetzt schon ist“) ----------
 // Nur für den Admin, nur auf diesem Gerät (nichts wird abgenommen oder gelöscht, die Mitglieder sehen den Zettel weiter). Die Nadel steht oben im Rahmen
 // bei den gelesenen (KC-CLUB-PINNWAND-NADELN); antippen macht den Zettel wieder groß, „📌 wieder als Nadel“ legt ihn zurück.
-const PW_DRUECK_MS = 600;
 function pwZuLaden() { try { const l = JSON.parse(localStorage.getItem(PW_ZU_KEY) || "[]"); return new Set(Array.isArray(l) ? l.slice(0, 200).map(String) : []); } catch { return new Set(); } }
 function pwZuMerken() { try { const da = new Set(PW.zettel.map((z) => z.id)); localStorage.setItem(PW_ZU_KEY, JSON.stringify([...PW.zu].filter((id) => !PW.zettel.length || da.has(id)))); } catch {} }
 function pwZuLoesen(id) { PW.zu.delete(id); PW.auf.delete(id); pwZuMerken(); pwZeigen(); }
@@ -1473,14 +1472,9 @@ function pwZuNadel(id) {
   try { navigator.vibrate?.(25); } catch {}
   pwZeigen(); melde("📌 Zettel als Nadel abgelegt – antippen macht ihn wieder groß");
 }
-// langes Drücken auf die Nadel oben am Zettel (Finger oder Maus); Bewegen oder früh loslassen bricht ab
-{ let uhr = 0, x0 = 0, y0 = 0;
-  const weg = () => { clearTimeout(uhr); uhr = 0; document.querySelector(".pw-griff.drueck")?.classList.remove("drueck"); };
-  document.addEventListener("pointerdown", (e) => { const g = e.target.closest?.(".pw-griff"); if (!g || !ICH?.admin) return;
-    weg(); x0 = e.clientX; y0 = e.clientY; g.classList.add("drueck"); uhr = setTimeout(() => { weg(); pwZuNadel(g.dataset.zid); }, PW_DRUECK_MS); });
-  document.addEventListener("pointermove", (e) => { if (uhr && Math.hypot(e.clientX - x0, e.clientY - y0) > 12) weg(); });
-  for (const t of ["pointerup", "pointercancel", "pointerleave"]) document.addEventListener(t, (e) => { if (t !== "pointerleave" || e.target === document) weg(); });
-  document.addEventListener("contextmenu", (e) => { if (e.target.closest?.(".pw-griff")) e.preventDefault(); }); }
+// 2.838.0 (Rückmeldung Hansi 03.11.: „Ein Tipp auf die Pinnwand-Nadel bringt den Zettel nicht als Nadel nach oben“): Antippen genügt – langes Drücken geht weiterhin
+document.addEventListener("click", (e) => { const g = e.target.closest?.(".pw-griff"); if (!g || !ICH?.admin) return; e.preventDefault(); e.stopPropagation(); pwZuNadel(g.dataset.zid); }, true);
+document.addEventListener("contextmenu", (e) => { if (e.target.closest?.(".pw-griff")) { e.preventDefault(); const g = e.target.closest(".pw-griff"); if (ICH?.admin) pwZuNadel(g.dataset.zid); } });
 function pwAlteZeigen(an) { PW.alteAuf = !!an; pwZeigen(); }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
 function pwAushangHtml() {
