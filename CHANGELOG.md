@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.846.0 – 2026-11-03 – 📌 Pinnwand geht nie mehr von selbst auf (KC-CLUB-PINNWAND-NIE-AUTO)
+Hansi (03.11.): „Öffnet bei den Mitgliedern immer automatisch die Pinnwand?“ → Entscheidung „Nie von selbst öffnen“.
+- Beim Start der App öffnen sich weder Zettel-Fenster (neue Zettel) noch die Pinnwand (❗ wichtige, nicht abgehakte Zettel, neue Hilfe-Aufrufe). Seit 2.835.0 („Was ist neu“ aus) kamen neue Zettel direkt als Fenster.
+- Stattdessen: Zahl an der Pinnwand-Kachel (wie bisher) und eine Karte im Info-Laufband „📌 Ein neuer Zettel an der Pinnwand“ – antippen öffnet die Pinnwand.
+- Bei offener App: statt Zettel-Fenster nur eine kurze Meldung „📌 Neuer Zettel an der Pinnwand von …“.
+- Schalter `PW_NIE_AUTO` in app.js (false = wie vorher). Test: `tests/pinnwand-nie-auto.test.mjs`. Rückweg: App 2.845.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+
 ## 2.845.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER) · 🏢 Büro fein einrichten (KC-CLUB-BUERO-FEIN) · Server 2.845.0
 Wunsch Hansi (03.11.): „Bei den Filmen eine Anzeige, wie lange der Film läuft. Sonst sind die Mitglieder abgeschreckt und denken, er läuft zu lange.“
 - Jedes Erklär-Video zeigt ein grünes Schildchen **„⏱️ unter 1 Min.“ / „⏱️ ca. 1½ Min.“** – ausgerechnet wie der Abspieler (Sprechtext, gewähltes Sprechtempo, kurze Pausen). Die alten festen Angaben „(ca. … Min.)“ im Untertitel entfallen.

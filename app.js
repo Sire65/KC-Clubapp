@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.845.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.846.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -1218,6 +1218,7 @@ setInterval(() => { if (DS.modus === "auto") anwendenDesign(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && DS.modus === "auto") anwendenDesign(); });
 
 // ---------- KC-CLUB-PINNWAND: Post-its (max. PW.max je Person vom Server, max. 200 Zeichen) ----------
+const PW_NIE_AUTO = true; // 2.846.0 KC-CLUB-PINNWAND-NIE-AUTO: die Pinnwand und Zettel-Fenster gehen nie von selbst auf (false = wie vorher)
 const PW_ZU_KEY = "kc_club_pw_zu"; // 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN: vom Admin als Nadel abgelegte Zettel (nur dieses Gerät)
 let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false, auf: new Set(), alteAuf: false, zu: pwZuLaden() }; // 2.813.0 KC-CLUB-PINNWAND-NADELN: groß gemachte Nadeln, „Ältere Zettel“ offen
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): Farbe 1–4 kommt fest vom Server (gelb, rosé, hellgrün, hellblau)
@@ -1288,14 +1289,16 @@ async function pwStart(nurZaehlen) { // nurZaehlen: Begrüßung ist offen → Pi
   // 0.58.0: Zettel, die gekommen sind, während die App zu war, gehen direkt als Post-it-Fenster auf
   let gezeigt = false;
   try { const rn = await api("pinnwand_neu"), n = rn.neu || []; PW.neu = rn.anzahl ?? n.length; // 2.763.0 KC-CLUB-PINNWAND-NEU-PULS: Zahl immer (auch bei offener Begrüßung)
-    if (nurZaehlen) { /* nur zählen, nichts einblenden */ } else if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
+    // 2.846.0 KC-CLUB-PINNWAND-NIE-AUTO (Hansi 03.11.2026 auf „Öffnet bei den Mitgliedern immer automatisch die Pinnwand?“ → „Nie von selbst öffnen“):
+    // neue Zettel nur noch als Zahl an der Kachel und Karte im Info-Laufband – kein Zettel-Fenster, keine Pinnwand beim Start (auch nicht bei ❗ wichtig oder Hilfe-Aufruf)
+    if (nurZaehlen || PW_NIE_AUTO) { /* nur zählen, nichts einblenden */ } else if (wasNeuZeigen(n)) { gezeigt = true; n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {} } // KC-CLUB-WAS-NEU
     else if (n.length && ruheInfo()) { /* KC-CLUB-RUHE */ n.forEach((z) => PW_GEMELDET.add(z.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       pwFenster(n); gezeigt = true; } } catch {}
   try { const r = await api("pinnwand", { markieren: false }); pwUebernehmen(r); // 2.763.0: still laden zählt nicht als gesehen
-    if (!gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
+    if (!PW_NIE_AUTO && !gezeigt && !nurZaehlen && (PW.zettel.some(pwOffen) || pwHilfeNeu().some((a) => a.wichtig)) && aktuelleAnsicht === "start") { PW.wichtigStart = true; if (pwHilfeNeu().some((a) => a.wichtig)) PW.hilfeStart = true; /* 2.15.0: wichtiger Hilfe-Aufruf */ zeige("pinnwand"); gezeigt = true; }
     // KC-CLUB-HILFE-PINNWAND (1.90.0): neuer Hilfe-Aufruf → beim Start einmal (je Aufruf und Gerät) die Pinnwand mit dem Aushang zeigen
     const hNeu = pwHilfeNeu().filter((a) => !PW_GEMELDET.has("hilfe:" + a.id));
-    if (!gezeigt && !nurZaehlen && hNeu.length && aktuelleAnsicht === "start") {
+    if (!PW_NIE_AUTO && !gezeigt && !nurZaehlen && hNeu.length && aktuelleAnsicht === "start") {
       hNeu.forEach((a) => PW_GEMELDET.add("hilfe:" + a.id)); try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
       PW.hilfeStart = true; zeige("pinnwand"); gezeigt = true; }
     // 2.798.0 KC-CLUB-TEILE Stufe 5: Start über einen Direkt-Link (#twinkey, #suche …) → keine Start-Hinweise dazwischen (wie wasNeuZeigen) –
@@ -1319,7 +1322,7 @@ async function pwLive(takt) {
   if (!neu.length) return;
   neu.forEach((z) => PW_GEMELDET.add(z.id));
   try { localStorage.setItem("kc_club_pw_gemeldet", JSON.stringify([...PW_GEMELDET].slice(-PW_GEMELDET_MAX))); } catch {}
-  pwFenster(neu);
+  if (PW_NIE_AUTO) melde(neu.length === 1 ? `📌 Neuer Zettel an der Pinnwand${neu[0].von?.vorname ? " von " + neu[0].von.vorname : ""}` : `📌 ${neu.length} neue Zettel an der Pinnwand`); else pwFenster(neu); // KC-CLUB-PINNWAND-NIE-AUTO
   if (einst("ton", true)) ton();
   if (aktuelleAnsicht === "pinnwand") pwLaden(); else pwZahl();
 }
@@ -16216,6 +16219,7 @@ function ilMeldungen() {
   const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
   // 2.493.0 KC-CLUB-DW-LAUFBAND (Wunsch Hansi): Dienstwünsche Weihnachtsmarkt noch nicht abgegeben → Twinkey führt durch (der Server weiß, wer schon abgegeben hat)
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
+  if (PW.neu > 0) add({ id: "pw-neu:" + PW.neu, stufe: "gold", sym: "📌", t: PW.neu === 1 ? "Ein neuer Zettel an der Pinnwand" : `${PW.neu} neue Zettel an der Pinnwand`, u: "Antippen zum Lesen", auf: "zeige('pinnwand')" }); // KC-CLUB-PINNWAND-NIE-AUTO
   tippLaufband(add); // 2.835.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
   if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
