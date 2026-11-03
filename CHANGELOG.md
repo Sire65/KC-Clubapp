@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.843.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER)
+Wunsch Hansi (03.11.): „Bei den Filmen eine Anzeige, wie lange der Film läuft. Sonst sind die Mitglieder abgeschreckt und denken, er läuft zu lange.“
+- Jedes Erklär-Video zeigt ein grünes Schildchen **„⏱️ unter 1 Min.“ / „⏱️ ca. 1½ Min.“** – ausgerechnet wie der Abspieler (Sprechtext, gewähltes Sprechtempo, kurze Pausen). Die alten festen Angaben „(ca. … Min.)“ im Untertitel entfallen.
+- Themen-Kacheln zeigen die Spanne je Video („je ½ bis 2 Min.“) statt einer langen Summe; beim Abspielen mehrerer angehakter Videos steht die Gesamtdauer auf dem Knopf. Fertige Filme hatten ihre Länge schon (⏱️ 3 Min.).
+- Test: `tests/video-dauer.test.mjs`. Rückweg: App 2.842.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.842.0 – Anbieter: Neues, Störungen, Wartungen (KC-CLUB-ANBIETER-NEUES, Wunschliste #78)
 - Neue Admin-Kachel „📰 Anbieter“: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – angekündigte Wartungen, Störungen (14 Tage), Neuerungen (30 Tage). Oben die Lage in einem Satz.
 - Nur öffentliche, kostenlose Seiten (Status-Feeds, Changelogs), abgefragt erst beim Öffnen, 30 Min. gemerkt. Registry ANBIETER_QUELLEN im Server – neuer Anbieter = neuer Eintrag.

@@ -2526,6 +2526,17 @@ function rgThemenListe() {
   themen.push({ id: "weitere", sym: "✨", t: "Weitere", liste: da.filter((r) => !bekannt.has(r.id)) });
   return themen.filter((t) => t.liste.length);
 }
+// ---------- KC-CLUB-VIDEO-DAUER (Wunsch Hansi 03.11.2026 „Bei den Filmen eine Anzeige, wie lange der Film läuft – sonst sind die Mitglieder abgeschreckt und
+// denken, er läuft zu lange“) ----------
+// Geschätzt wie der Abspieler rechnet (rgSprechen): je Schritt die längere von Lesezeit und Sprechzeit (≈ 2,5 Wörter je Sekunde × gewähltes Tempo) plus kurze Pause.
+// Ergebnis auf halbe Minuten gerundet, mindestens „unter 1 Min.“ – die feste Angabe „(ca. … Min.)“ im Untertitel entfällt dafür.
+const rgDauerSek = (r) => { try { const tempo = rgsTempo();
+  return Math.round((r.st?.() || []).reduce((sum, x) => { const w = String(rgText(x) || "").split(/\s+/).filter(Boolean).length; return sum + Math.max(1.875 + 0.315 * w, 0.4 * w / tempo) + 1.2; }, 0)); } catch { return 0; } };
+const rgDauerText = (sek) => !sek ? "" : sek < 50 ? "unter 1 Min." : (() => { const m = Math.round(sek / 30) / 2; return `ca. ${String(m).replace(".5", "½").replace(/^0½$/, "½")} Min.`; })();
+// Themen-Kachel: nicht die Summe (wirkt lang), sondern die Spanne je Video – „je ½ bis 2 Min.“
+const rgHalbe = (sek) => { const m = Math.max(0.5, Math.round(sek / 30) / 2); return String(m).replace(/^0\.5$/, "½").replace(".5", "½"); };
+const rgSpanne = (liste) => { const d = liste.map(rgDauerSek).filter(Boolean); if (!d.length) return ""; const a = rgHalbe(Math.min(...d)), b = rgHalbe(Math.max(...d)); return a === b ? `je ca. ${a} Min.` : `je ${a} bis ${b} Min.`; };
+const rgOhneMin = (u) => String(u || "").replace(/\s*\(ca\.\s*[\d½,.]+\s*Min\.\)/g, "");
 function erklaerVideos(thema) {
   RGL.thema = thema === undefined ? null : thema;
   if (!$("rgListeBlatt")) for (const id of rgvSpaeter()) RGL.wahl.add(id); // 2.346.0: „Später“ gemerkte Videos sind schon angehakt
@@ -2540,7 +2551,7 @@ function rgListeZeigen() {
   if (mitKacheln && RGL.thema && !t) RGL.thema = null;
   const zeile = (r) => { const an = RGL.wahl.has(r.id);
     return `<div class="rgl-zeile${an ? " an" : ""}"><label class="rgl-haken"><input type="checkbox" ${an ? "checked" : ""} onchange="rgWahl('${r.id}', this.checked)" aria-label="${esc(r.t)} anhaken">
-      <span class="rgl-sym" aria-hidden="true">${r.sym}</span><span><b>${rgvSpaeter().includes(r.id) ? `<span title="Später ansehen – gemerkt">📌 </span>` : ""}${esc(r.t)}</b><small>${esc(r.u)}</small></span></label>${rgGesehenHtml(r.id)}
+      <span class="rgl-sym" aria-hidden="true">${r.sym}</span><span><b>${rgvSpaeter().includes(r.id) ? `<span title="Später ansehen – gemerkt">📌 </span>` : ""}${esc(r.t)}</b><small>${esc(rgOhneMin(r.u))}</small>${rgDauerSek(r) ? `<small class="rgl-dauer">⏱️ ${rgDauerText(rgDauerSek(r))}</small>` : ""}</span></label>${rgGesehenHtml(r.id)}
       <button type="button" class="knopf klein" onclick="rgListeAbspielen(['${r.id}'])" aria-label="${esc(r.t)} jetzt abspielen">▶</button></div>`; };
   const n = RGL.wahl.size;
   let inhalt;
@@ -2549,7 +2560,7 @@ function rgListeZeigen() {
       <div class="rgl-kacheln">${themen.map((x) => { const gew = x.liste.filter((r) => RGL.wahl.has(r.id)).length;
         const ges = x.liste.filter((r) => rgGesehen()[r.id]?.n).length;
         return `<button type="button" class="rgl-kachel" onclick="erklaerVideos('${x.id}')"><span class="rgl-ksym" aria-hidden="true">${x.sym}</span><b>${esc(x.t)}</b>
-          <small>${x.liste.length} ${x.liste.length === 1 ? "Video" : "Videos"}</small><small class="rgl-kgesehen${ges === x.liste.length ? " alle" : ""}">${ges ? `✓ ${ges} von ${x.liste.length} angesehen` : "👁 noch nicht angesehen"}</small>${gew ? `<span class="rgl-zahl" aria-label="${gew} angehakt">✓ ${gew}</span>` : ""}</button>`; }).join("")}</div>
+          <small>${x.liste.length} ${x.liste.length === 1 ? "Video" : "Videos"}${rgSpanne(x.liste) ? ` · ⏱️ ${rgSpanne(x.liste)}` : ""}</small><small class="rgl-kgesehen${ges === x.liste.length ? " alle" : ""}">${ges ? `✓ ${ges} von ${x.liste.length} angesehen` : "👁 noch nicht angesehen"}</small>${gew ? `<span class="rgl-zahl" aria-label="${gew} angehakt">✓ ${gew}</span>` : ""}</button>`; }).join("")}</div>
       <button type="button" class="knopf klein" style="margin-top:10px" onclick="rgWahlAlle(${da.every((r) => RGL.wahl.has(r.id)) ? "false" : "true"})">${da.every((r) => RGL.wahl.has(r.id)) ? "☐ Alle abwählen" : `☑️ Alle ${da.length} Videos anhaken`}</button>`;
   } else {
     const liste = t ? t.liste : da, alleAn = liste.every((r) => RGL.wahl.has(r.id));
@@ -2561,7 +2572,7 @@ function rgListeZeigen() {
   const filme = (typeof FILME !== "undefined" ? FILME : []).filter((f) => f.inVideos).map((f) => `<div class="film-karte" style="cursor:default"><img src="${esc(f.bild)}" alt=""><span><b>${f.sym} ${esc(f.t)}</b><small>${esc(f.u)}</small><small>⏱️ ${esc(f.dauer)}${filmErledigt(f.id) ? " · ✅ schon angesehen" : ""}</small>
     <span style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button type="button" class="knopf klein haupt" onclick="filmZeigen('${esc(f.id)}')">▶ Film ansehen</button>${ICH?.admin ? `<button type="button" class="knopf klein" onclick="filmZuschauer('${esc(f.id)}')">👀 Wer hat ihn gesehen?</button>` : ""}</span></span></div>`).join("");
   z.innerHTML = `<h3 style="margin-top:0">🎬 Erklär-Videos – mit Ton</h3>${filme}${inhalt}
-    <div class="rgl-fuss"><button type="button" class="knopf haupt" ${n ? "" : "disabled"} onclick="rgListeAbspielen()">▶ ${n ? `${n} angehakte${n === 1 ? "s Video" : " Videos"} nacheinander abspielen` : "Erst Videos anhaken"}</button>
+    <div class="rgl-fuss"><button type="button" class="knopf haupt" ${n ? "" : "disabled"} onclick="rgListeAbspielen()">▶ ${n ? `${n} angehakte${n === 1 ? "s Video" : " Videos"} nacheinander abspielen · ⏱️ ${rgDauerText(da.filter((r) => RGL.wahl.has(r.id)).reduce((a, r) => a + rgDauerSek(r), 0))}` : "Erst Videos anhaken"}</button>
       ${n ? `<button type="button" class="knopf klein" onclick="RGL.wahl.clear();rgListeZeigen()">✕ Häkchen weg</button>` : ""}
       ${ICH?.admin ? `<button type="button" class="knopf klein" onclick="$('rgListeBlatt').remove();rgAuswertung()">📊 Auswertung der Videos</button>` : ""}
       <button type="button" class="knopf klein" onclick="stimmenWahl()">🗣️ Stimme &amp; Tempo</button>
