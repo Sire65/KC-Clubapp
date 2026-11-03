@@ -3657,6 +3657,19 @@
   /* ohne Leitungsrechte stehen Tastatur, Telefon, Handy und Ablagekorb nicht auf dem Tisch – dann kompakter, ohne Lücken */
   .bu-platte.bu-platte-mitglied { grid-template-areas: "lampe monitor monitor kalender" "kaffee monitor monitor drucker" "fueller fueller rechner rechner"; }
   @media (min-width: 640px) { .bu-platte.bu-platte-mitglied { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-areas: "lampe kaffee monitor monitor kalender drucker" "fueller fueller monitor monitor rechner rechner"; } }
+  /* 2.842.0 KC-CLUB-ANBIETER-NEUES (#78) */
+  .anb-lage { margin: 8px 0 2px; padding: 8px 10px; border-radius: 10px; font-weight: 700; background: var(--karte); border-left: 5px solid #9aa4ad; }
+  .anb-lage.anb-gruen { border-left-color: #2e7d4f; } .anb-lage.anb-gelb { border-left-color: #c58a00; } .anb-lage.anb-grau, .anb-lage.anb-keine { border-left-color: #9aa4ad; }
+  .anb-block > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; cursor: pointer; }
+  .anb-block .anb-wofuer { flex-basis: 100%; color: var(--grau); }
+  .anb-block h4 { margin: 10px 0 4px; font-size: .95rem; }
+  .anb-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .anb-zeile a { display: grid; grid-template-columns: 1.6em 1fr; gap: 0 6px; padding: 6px 4px; border-radius: 8px; color: inherit; text-decoration: none; min-height: 44px; align-content: center; }
+  .anb-zeile a:hover, .anb-zeile a:focus-visible { background: rgba(116,21,33,.06); }
+  .anb-zeile .anb-wann { grid-column: 2; color: var(--grau); }
+  .anb-mit-knopf { display: grid; gap: 2px; } .anb-mit-knopf > .knopf { justify-self: start; margin-left: 2em; }
+  .anb-neu { display: inline-block; padding: 0 6px; border-radius: 8px; background: #741521; color: #fff; font-size: .75rem; font-weight: 800; vertical-align: middle; }
+  .marke.anb-gruen { background: rgba(46,125,79,.14); } .marke.anb-gelb { background: rgba(197,138,0,.18); } .marke.anb-grau { background: rgba(154,164,173,.22); }
   /* 2.840.0 KC-CLUB-BUERO-EINRICHTEN (#77): Zusatzreihe mit 4 Plätzen (nur wenn dort etwas steht oder beim Einrichten), wackelnde Teile, freie Plätze gestrichelt */
   .bu-platte.bu-dinge.bu-extra { grid-template-areas: "lampe monitor monitor kalender" "korb monitor monitor drucker" "handy kaffee fueller telefon" "tastatur tastatur tastatur rechner" "x1 x2 x3 x4"; }
   @media (min-width: 640px) { .bu-platte.bu-dinge.bu-extra { grid-template-areas: "lampe korb monitor monitor kalender drucker" "handy kaffee monitor monitor fueller telefon" "handy tastatur tastatur tastatur rechner telefon" ". x1 x2 x3 x4 ."; } }
@@ -6689,7 +6702,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.841.0" data-v="2.841.0"></script>
+<script src="app.js?v=2.842.0" data-v="2.842.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

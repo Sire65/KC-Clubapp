@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.842.0 – Anbieter: Neues, Störungen, Wartungen (KC-CLUB-ANBIETER-NEUES, Wunschliste #78)
+- Neue Admin-Kachel „📰 Anbieter“: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – angekündigte Wartungen, Störungen (14 Tage), Neuerungen (30 Tage). Oben die Lage in einem Satz.
+- Nur öffentliche, kostenlose Seiten (Status-Feeds, Changelogs), abgefragt erst beim Öffnen, 30 Min. gemerkt. Registry ANBIETER_QUELLEN im Server – neuer Anbieter = neuer Eintrag.
+- Gefiltert auf uns: Supabase-/Neon-Meldungen aus fremden Regionen und Cloudflare-Wartungen ferner Rechenzentren werden nur gezählt. Nicht abrufbar → grau mit Grund (nie „OK“). Alte Meldungen ohne „behoben“ → „Stand unklar“.
+- „💡 Prüfen lassen“ legt eine Neuerung auf die Wunschliste. Neues seit dem letzten Blick hat die Marke „NEU“.
+- Neues Teil teile/anbieter.js (nur beim Öffnen geladen). Hilfe-Eintrag. Test: tests/anbieter-neues.test.mjs. Rückweg: Version 2.841.0 einspielen.
+
 ## 2.841.0 – 2026-11-03 – Anlagen öffnen wieder (Klammerfehler)
 - Fund Hansi 03.11. (Preisliste in der Abstimmung, Fehler-Nr. f02a2f23): Seit 2.826.0 schloss eine verrutschte Klammer den Server-Fall „anlage_url“ zu früh, eine andere fehlte – Anlagen, die schon erlaubt waren (eigene, Chat, Archiv, Vorschlag …), endeten mit „Da ist etwas schiefgelaufen“. Klammern korrigiert; neuer Test prüft die Klammern aller Server-Aktionen (KC-CLUB-ANLAGE-KLAMMER).
 

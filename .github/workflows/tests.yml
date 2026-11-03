@@ -98,6 +98,7 @@ jobs:
       - run: node tests/start-schneller.test.mjs
       - run: node tests/start-vorab.test.mjs
       - run: node tests/buero-einrichten.test.mjs
+      - run: node tests/anbieter-neues.test.mjs
       - run: node tests/rechner-spur-besuche.test.mjs
       - run: node tests/tippflaechen.test.mjs
       - run: node tests/nutzung-alle.test.mjs

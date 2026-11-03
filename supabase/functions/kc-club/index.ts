@@ -157,8 +157,74 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.841.0";
+const SERVER_VERSION = "2.842.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
+// ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
+// Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
+// Registry: je Anbieter die ÖFFENTLICHEN, kostenlosen Seiten (Status-Feed, angekündigte Wartungen, Neuerungen). Kein Schlüssel, kein Konto, keine Kosten.
+// Gefiltert auf das, was uns betrifft: Supabase-Störungen in anderen Regionen und Cloudflare-Wartungen an fernen Rechenzentren werden nur gezählt.
+// Neuer Anbieter = neuer Eintrag hier (ohne Feed: nur „seite“ → die App zeigt den Link).
+const ANBIETER_QUELLEN: { id: string; name: string; wofuer: string; seite: string; status?: string; wartung?: string; neu?: string; nah?: RegExp; fern?: RegExp; ortWartung?: boolean }[] = [
+  { id: "supabase", name: "Supabase", wofuer: "Datenbank und Club-Server", seite: "https://status.supabase.com", status: "https://status.supabase.com/history.rss", neu: "https://supabase.com/changelog/rss.xml",
+    fern: /\b(?:us|eu|ap|sa|ca|me|af)-(?:north|south|east|west|central|northeast|southeast)-\d\b/i, nah: /\beu-west-2\b|london|all regions|multiple regions|global/i },
+  { id: "neon", name: "Neon", wofuer: "Spiegel-Datenbank für den Notfall", seite: "https://neonstatus.com", status: "https://neonstatus.com/pages/6878fc85709daa75be6c7e3c/rss", neu: "https://neon.com/docs/changelog/rss.xml",
+    fern: /\b(?:us|ap|sa|ca|me|af)[- ](?:east|west|south|north|central|southeast|northeast)\b/i, nah: /\beu[- ]|europe|frankfurt|all regions|global/i },
+  { id: "cloudflare", name: "Cloudflare", wofuer: "Notbetrieb-Server und Sicherungs-Tresor", seite: "https://www.cloudflarestatus.com", status: "https://www.cloudflarestatus.com/history.rss",
+    wartung: "https://www.cloudflarestatus.com/api/v2/scheduled-maintenances/upcoming.json", neu: "https://developers.cloudflare.com/workers/platform/changelog/index.xml",
+    ortWartung: true, fern: /^[A-Z]{3} \(|\([A-Z]{3}\) on /, nah: /\b(?:FRA|DUS|HAM|CGN|MUC|STR|BER|AMS|LHR)\b|frankfurt|düsseldorf|hamburg|amsterdam|london/i },
+  { id: "github", name: "GitHub", wofuer: "App-Seite, Prüfungen, Hochladen", seite: "https://www.githubstatus.com", status: "https://www.githubstatus.com/history.rss",
+    wartung: "https://www.githubstatus.com/api/v2/scheduled-maintenances/upcoming.json", neu: "https://github.blog/changelog/feed/" },
+  { id: "deno", name: "Deno", wofuer: "Laufzeit der Server-Funktionen", seite: "https://deno.com/blog", neu: "https://deno.com/feed" },
+  { id: "b2", name: "Backblaze B2", wofuer: "Sicherungen vom Backup-PC", seite: "https://status.backblaze.com" },
+];
+const ANB_MERK_MS = 30 * 60000, ANB_STATUS_TAGE = 14, ANB_NEU_TAGE = 30, ANB_JE = 6, ANB_MAX_BYTES = 800_000;
+let ANB_MERK: { t: number; d: any } | null = null;
+async function anbHolen(url: string): Promise<string> {
+  const r = await fetch(url, { headers: { "user-agent": "KC-Club-App (Status-Abruf)", accept: "application/rss+xml, application/atom+xml, application/json, text/xml, */*" }, signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const t = await r.text(); return t.length > ANB_MAX_BYTES ? t.slice(0, ANB_MAX_BYTES) : t;
+}
+const anbText = (x: string) => x.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+  .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n))).replace(/\s+/g, " ").trim();
+const anbKurz = (x: string, n: number) => (x.length <= n ? x : x.slice(0, n).replace(/\s+\S*$/, "") + " …");
+function anbEintraege(xml: string) {
+  const feld = (it: string, ...n: string[]) => { for (const k of n) { const m = it.match(new RegExp(`<${k}(?:\\s[^>]*)?>([\\s\\S]*?)</${k}>`, "i")); if (m) return m[1]; } return ""; };
+  return (xml.match(/<(item|entry)[\s>][\s\S]*?<\/\1>/gi) ?? []).map((it) => {
+    const link = anbText(feld(it, "link")) || (it.match(/<link[^>]*href="([^"]+)"/i)?.[1] ?? "");
+    const zeit = Date.parse(anbText(feld(it, "pubDate", "published", "updated", "dc:date")));
+    return { t: anbText(feld(it, "title")).slice(0, 200), link: /^https:\/\//.test(link) ? link : "", zeit: Number.isFinite(zeit) ? new Date(zeit).toISOString() : null,
+      text: anbText(feld(it, "description", "summary", "content:encoded", "content")).slice(0, 260) };
+  }).filter((e) => e.t);
+}
+async function anbieterNeues(frisch: boolean) {
+  if (!frisch && ANB_MERK && Date.now() - ANB_MERK.t < ANB_MERK_MS) return ANB_MERK.d;
+  const jetztMs = Date.now(), seit = (tage: number) => jetztMs - tage * 86400000;
+  const anbieter = await Promise.all(ANBIETER_QUELLEN.map(async (q) => {
+    const fehler: string[] = []; let ausgeblendet = 0;
+    const betrifft = (txtx: string) => !q.fern || !q.fern.test(txtx) || (!!q.nah && q.nah.test(txtx));
+    const [st, wa, ne] = await Promise.all([
+      q.status ? anbHolen(q.status).then(anbEintraege).catch((e) => { fehler.push("Status: " + String(e?.message || e).slice(0, 60)); return null; }) : null,
+      q.wartung ? anbHolen(q.wartung).then((t) => JSON.parse(t)?.scheduled_maintenances ?? []).catch((e) => { fehler.push("Wartungen: " + String(e?.message || e).slice(0, 60)); return null; }) : null,
+      q.neu ? anbHolen(q.neu).then(anbEintraege).catch((e) => { fehler.push("Neuerungen: " + String(e?.message || e).slice(0, 60)); return null; }) : null,
+    ]);
+    const wartung = (wa ?? []).filter((m: any) => { const ok = betrifft(String(m?.name || "")); if (!ok) ausgeblendet++; return ok; }).slice(0, ANB_JE)
+      .map((m: any) => ({ t: txt(m.name, 200), von: m.scheduled_for ?? null, bis: m.scheduled_until ?? null, link: /^https:\/\//.test(String(m.shortlink || "")) ? m.shortlink : q.seite }));
+    // Status: nur Fenster ANB_STATUS_TAGE; Titel wie „ES-2331348“ (Neon) → Anfang der Beschreibung ohne Datum; schon als Wartung angekündigt → nicht doppelt
+    const wLinks = new Set(wartung.map((w: any) => w.link));
+    const status = (st ?? []).filter((e) => e.zeit && Date.parse(e.zeit) >= seit(ANB_STATUS_TAGE)).filter((e) => { const ok = betrifft(e.t + " " + e.text); if (!ok) ausgeblendet++; return ok; })
+      .filter((e) => !wLinks.has(e.link)).slice(0, ANB_JE * 2).map((e) => {
+        const text = e.text.replace(/^[A-Z][a-z]+ \d{1,2}, \d{4},? \d{1,2}:\d{2}\s*(?:AM|PM)?\s*(?:UTC)?\s*/, "");
+        const t = /^[A-Z]{1,5}-?\d{3,}$/.test(e.t) && text ? anbKurz(text.replace(/^(resolved|monitoring|identified|investigating|update)\s*-\s*/i, ""), 120) : e.t;
+        return { ...e, t, text, art: /maint|wartung|scheduled/i.test(e.t + " " + text.slice(0, 80)) || (q.ortWartung && !!q.fern?.test(e.t)) ? "wartung" : "stoerung",
+          erledigt: /\b(resolved|completed|behoben|abgeschlossen)\b/i.test(text.slice(0, 120)) };
+      });
+    const neu = (ne ?? []).filter((e) => !e.zeit || Date.parse(e.zeit) >= seit(ANB_NEU_TAGE)).slice(0, ANB_JE);
+    return { id: q.id, name: q.name, wofuer: q.wofuer, seite: q.seite, feeds: !!(q.status || q.neu || q.wartung), fehler, ausgeblendet, wartung, status, neu };
+  }));
+  const d = { zeit: new Date().toISOString(), anbieter };
+  ANB_MERK = { t: Date.now(), d };
+  return d;
+}
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -14449,6 +14515,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       // 2.829.0 KC-CLUB-NUTZUNG-ALLE (Wunsch #73 Hansi „allen Mitgliedern zur Verfügung stellen, damit sie sehen, welche Bereiche der App wann und wie oft
       // genutzt werden – nicht zu technisch, aber aussagekräftig“): nur Summen aus der Datenbank-Funktion kc_club_app_statistik (nie Personen, nie Inhalte).
       // „Von wie vielen“ je Bereich erst ab NUTZUNG_ALLE_MIN Mitgliedern – sonst ließe sich erraten, wer es war.
+      case "anbieter_neues": { // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): nur Admin, nur beim Öffnen, 30 Min. gemerkt
+        nurAdmin(ich);
+        return json(await anbieterNeues(p.frisch === true));
+      }
       case "nutzung_alle": {
         if (ich.zugang !== "mitglied") throw new Fehler("Die Übersicht ist nur für Mitglieder.", 403);
         const tage = [7, 30, 90].includes(Number(p.tage)) ? Number(p.tage) : 30;

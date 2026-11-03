@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.841.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.842.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -23,6 +23,7 @@ const TEILE_LISTE = {
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
   magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine"], sri: "sha384-Cw5edAdzYjNjuxiW2gHIQYlIESZp2I0Y93SIDgS2AE1mrdRact6S1p4+fbFlKsrG" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
+  anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
@@ -2586,6 +2587,7 @@ const HILFE = [
   { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.763.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_nadeln", thema: "club", sym: "📍", t: "Wo sind die Zettel, die ich schon gelesen habe?", x: "Damit die Pinnwand nicht zu voll wird, hängt ein Zettel nur noch <b>bis zum Tag nach dem ersten Ansehen</b> groß an der Wand. Danach findest du ihn unten über <b>„🗂️ Ältere Zettel ansehen“</b>. Deine eigenen Zettel – und für die Clubleitung alle gelesenen – stecken als <b>farbige Nadel oben im Rahmen</b>: antippen macht den Zettel wieder groß, <b>„📌 wieder als Nadel“</b> steckt ihn zurück. <b>Wichtige</b> Zettel bleiben groß, bis du „✓ Erledigt“ tippst. Gelöscht wird nichts." }, // 2.813.0 KC-CLUB-PINNWAND-NADELN
+  { id: "anbieter_neues", thema: "technik", sym: "📰", nur: () => !!ICH?.admin, t: "Anbieter: Neues, Störungen, Wartungen", x: "Admin-Bereich → Kachel <b>„📰 Anbieter“</b>: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – <b>angekündigte Wartungen</b>, <b>Störungen</b> der letzten 14 Tage und <b>Neuerungen</b> der letzten 30 Tage. Oben steht die Lage in einem Satz. Meldungen aus anderen Regionen oder fernen Rechenzentren werden ausgeblendet (nur gezählt). Die Anbieter schreiben englisch – antippen öffnet die Original-Seite. <b>„💡 Prüfen lassen“</b> setzt eine Neuerung auf die Wunschliste, dann prüft Claude, ob wir sie übernehmen können. Kostet nichts: nur öffentliche Seiten, abgefragt erst beim Öffnen." }, // 2.842.0 KC-CLUB-ANBIETER-NEUES
   { id: "nutzung_alle", thema: "technik", sym: "📈", t: "So nutzen wir die App – Zahlen für alle", x: "Wann ist im Club am meisten los? Die Kachel <b>„📈 So nutzen wir die App“</b> (Register Technik) zeigt es als Farbfeld (Wochentag × Uhrzeit) – dazu, wie viele Mitglieder da waren, wie viele Nachrichten, Push und E-Mails verschickt wurden, welche Bereiche am beliebtesten sind und was noch zu entdecken ist. Wähle 7, 30 oder 90 Tage; Pfeile vergleichen mit dem Zeitraum davor. Es sind <b>nur Summen</b> – niemand wird einzeln gezählt, und Inhalte werden nie gezählt. Feld oder Säule antippen zeigt die genaue Zahl." }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
@@ -13466,6 +13468,7 @@ function adZustand(id) {
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
     case "strom": { const a = STROM.akku; return a ? ["keine", `Akku ${Math.round(a.level * 100)} %${a.charging ? " · lädt" : ""} · antippen`] : ["keine", "antippen"]; } // 2.799.0 KC-CLUB-STROM-UEBERSICHT
+    case "anbieter": return typeof anbLage === "function" ? anbLage() : ["keine", "Neues & Wartungen · antippen"]; // 2.842.0 KC-CLUB-ANBIETER-NEUES (Teil erst beim Öffnen geladen)
     case "waechter": { if (!WCH.daten) return ["keine", `${WCH_LISTE.length} Wächter · antippen`]; const z = wchZaehlen(); // 2.726.0 KC-CLUB-WAECHTER (Stand vom letzten Öffnen)
       return [z.rot ? "rot" : z.gelb ? "gelb" : "gruen", `${WCH_LISTE.length} Wächter · ${z.gruen} ✅${z.gelb ? ` · ${z.gelb} 🟡` : ""}${z.rot ? ` · ${z.rot} 🔴` : ""}`]; }
     case "stumm": return ["keine", "Mitglieder ganz ohne Push/E-Mail"]; // 2.537.0 KC-CLUB-KOMMUNIKATION-AUS-SCHALTER
@@ -13489,7 +13492,7 @@ const AD_KACHELN = [
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
-  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["strom", "🔋", "Stromverbrauch", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"],
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["strom", "🔋", "Stromverbrauch", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"], ["anbieter", "📰", "Anbieter", "app"], // 2.842.0 KC-CLUB-ANBIETER-NEUES
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
@@ -13993,6 +13996,7 @@ function adBlatt(id) {
   if (id === "stadt") return stadtTermine(); // KC-CLUB-STADT-TERMINE
   if (id === "rt") return rtBlatt(); // KC-CLUB-RT-SPARBREMSE (2.230.0)
   if (id === "waechter") return wchStart(); // 2.726.0 KC-CLUB-WAECHTER
+  if (id === "anbieter") return anbStart(); // 2.842.0 KC-CLUB-ANBIETER-NEUES
   if (id === "strom") return stromBlatt(); // 2.799.0 KC-CLUB-STROM-UEBERSICHT
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
@@ -33832,6 +33836,7 @@ const FENSTER_NAMEN = {
   nfpBlatt: "📌 Pinnwand-Zettel", notInfoBlatt: "ℹ️ Was ist los?", notfallBlatt: "🚨 SOS an alle", ntBlatt: "📅 Als Termin übernehmen", nuBlatt: "💡 Vorschlag der Bühne",
   onlineBlatt: "🟢 Gerade online", personenBlatt: "👉 Wer?", prBlatt: "🧪 Probephase", pwTeilBlatt: "📌 Zettel abnehmen", rcAngebotBlatt: "🧳 Reise-Checkliste angeboten",
   rcBlatt: "🧳 Meine Reise-Checkliste", rgAuswBlatt: "📊 Auswertung der Erklär-Videos", rgListeBlatt: "🎬 Erklär-Videos (Liste)", rgsBlatt: "🗣️ Stimme für Videos wählen", rolleBlatt: "🎖️ Rolle/Amt",
+  anbBlatt: "📰 Anbieter – Neues & Wartungen", // 2.842.0 KC-CLUB-ANBIETER-NEUES
   bueKatalogBlatt: "🛒 Büro-Katalog", // 2.840.0 KC-CLUB-BUERO-EINRICHTEN
   rundeBlatt: "🔗 Feste Gruppe bilden", rzBlatt: "📖 Club-Rezeptbuch", sbBlatt: "🤔 Das kenne ich noch nicht", sbListeBlatt: "📋 Das kannst du sagen", sbPersonBlatt: "🎙️ Sprache: mit wem?",
   sbtBlatt: "🎓 Sprach-Training", scAbBlatt: "🚫 Schulung absagen", scBlatt: "🎓 Schulungen", scChronikBlatt: "📜 Schulung: Ablauf", scFestBlatt: "📅 Festen Termin geben",
