@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.826.0 – 2026-11-03 – 👆 Größere Tippflächen, lesbarere Kleinschrift (KC-CLUB-TIPPFLAECHEN, KC-CLUB-SCHRIFT-MIN, Wunsch #44 Etappe 2) · nur App
+Gesamtprüfung Etappe 2 (Bedienung & Design), Hansi: „1 und 2 umsetzen“.
+- **Tippflächen** (echt gemessen, wo ein Finger trifft): Herz im Kopf 33 × 43 statt 26 × 21, Info-Punkte nach unten 44 hoch, „Für heute ausblenden“ ✕ 34 × 34, im Chat Vorlesen/Suchen/Mehr 40 × 40 statt 34 × 34. Unsichtbar vergrößert – das Aussehen bleibt gleich.
+- **Schrift mindestens 13 Punkt**: Überschriften in den Einstellungen („FÜR MICH“ …), „Ansicht/Zeigen“-Titel, „Mein Status“, Wisch-Hinweis, Pinnwand-Zähler, Foto-Album.
+- Bewusst unverändert (im Browser verglichen – größer passte der Text nicht mehr): Start-Kacheln („Dienstag“ wurde abgeschnitten), Nachrichten-Reiter („Gru…“), „Tippen: ☰ Liste“, Ordnerrücken; dekorative Kleinstschrift (since 1991, Versionsnummer, Zahlen-Abzeichen).
+- Alles als ein Block am Ende der Gestaltungsregeln. Test: `tests/tippflaechen.test.mjs`.
+- Rückweg: App 2.825.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.825.0 – 2026-11-02 – 🧮 Rechner zeigt die ganze Aufgabe · 👣 Wege nach Besuchen getrennt (KC-CLUB-RECHNER-AUFGABE #70, KC-CLUB-SPUR-BESUCHE #72) · nur App
 - **#70** Hansi: „Den Rechner im Büro noch besser machen. Im Display die gesamte Aufgabe anzeigen: 3 × 3 − 5 = 4.“ Beim Tippen steht jetzt die ganze Rechnung groß im Display (lange Rechnungen etwas kleiner), nach „=“ oben „3 × 3 − 5 =“ und groß das Ergebnis; beim Weiterrechnen bleibt die letzte Aufgabe oben stehen. Vorher stand groß nur die letzte Zahl.
 - **#72** Hansi: „Wenn sich ein Mitglied mehrmals täglich anmeldet, unter Wege der Mitglieder jeden Block andersfarbig oder mit dickerer Linie trennen.“ Die Wege eines Mitglieds sind in **Besuche** geteilt (neu bei „📲 App geöffnet“ / „wieder in der App“ oder nach 15 Min. Pause): je Besuch eine Kopfzeile „🔹 Besuch 2 · 12:00–12:02 Uhr · 3 Schritte“ mit dicker weinroter Linie, Zeilen abwechselnd getönt. Nur Anzeige.
