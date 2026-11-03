@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.825.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.826.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,7 +17,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-MvmznEfEmchRItm6cEOV6tD4oHhaAtlUpVTF/LKEvwqcUN9f2FkW+i+zCEaWoBec" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-X/0CEqigQ3/GAQ1FyUYWI5Mp+rEBqCxTZSlqUAzRE11Y+GHj2qu/yHDH0UnlXfj7" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
@@ -9139,7 +9139,7 @@ async function wbDrucken() {
 async function wbTeilen() {
   if (!WB.pdf) return;
   const datei = new File([WB.pdf], WB.name, { type: "application/pdf" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Mein Wunschbogen" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Mein Wunschbogen" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   const url = URL.createObjectURL(WB.pdf), a = document.createElement("a"); a.href = url; a.download = WB.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
@@ -9288,7 +9288,7 @@ async function dokTeilen() {
   const d = dokAktuell(); if (!d) return;
   try {
     const datei = d.datei instanceof Blob ? d.datei : new File([await (await fetch(dokUrl(d), { signal: zeitSignal(60000) })).blob()], d.url ? (d.t || "Dokument.pdf") : d.datei.split("/").pop(), { type: "application/pdf" });
-    if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: d.t }); return; }
+    if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: d.t }); return; }
   } catch (e) { if (e?.name === "AbortError") return; }
   dokExtern(); // Teilen geht hier nicht → PDF-Betrachter (dort drucken/speichern)
 }
@@ -15200,7 +15200,7 @@ async function mdatSichern() {
   if (!MDAT) return;
   const text = [`Köcheclub Werne – Meine gespeicherten Daten`, `Stand: ${zeitDe(MDAT.stand)}`, "", ...mdatAbschnitte(MDAT).flatMap(([t, z]) => [t, ...z.map(([a, v]) => `  ${a}: ${v}`), ""])].join("\n");
   const datei = new File([textDatei(text)], `Meine-Daten-${heuteIso()}.txt`, { type: "text/plain" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Meine Daten" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Meine Daten" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 Datei gespeichert");
 }
@@ -21122,7 +21122,7 @@ async function vbDateiGeben(p, b, sicherung) {
   const inhalt = { typ: VB_TYP, von: ICH?.person_id, vonName: ICH?.name || "", an: p.person_id, anName: p.name || "", erstellt: b.erstellt, schluessel: b.schluessel };
   const datei = new File([JSON.stringify(inhalt, null, 1)], `KC-Schluesselbund_${ich}_${er}.json`, { type: "application/json" });
   if (!sicherung && !(await frage(`📤 Schlüsselbund-Datei an ${vbVorname(p)} schicken\nAm besten per WhatsApp oder Signal – die sind selbst verschlüsselt; nicht per Mail. ${vbVorname(p)} öffnet sie so: Datei antippen → Teilen → „Club-App“ (oder im Chat oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“). Wer die Datei hat, kann eure verschlüsselten Nachrichten lesen – also nicht weitergeben und danach löschen.`, { ja: "📤 Schicken" }))) return;
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Schlüsselbund Club-App" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Schlüsselbund Club-App" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
   melde(sicherung ? "💾 Sicherung gespeichert – gut aufheben (wer sie hat, kann mitlesen)." : `💾 Datei gespeichert – bitte per WhatsApp oder Signal an ${vbVorname(p)} schicken.`);
@@ -23119,7 +23119,7 @@ async function anlageTeilen(speichern) {
   if (t.fehler || !t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
   const datei = t.datei;
   if (!speichern) {
-    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: datei.name }); $("anlBlatt")?.remove(); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: datei.name }); $("anlBlatt")?.remove(); return; } } catch (e) { if (e?.name === "AbortError") return; }
     melde("Teilen geht auf diesem Gerät nicht – die Datei wird stattdessen gespeichert.");
   }
   const a = document.createElement("a"); a.href = URL.createObjectURL(datei); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
@@ -24117,7 +24117,11 @@ async function geteiltEmpfangen() {
   api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20).join(" | ") : null, typen: dateien.map((d) => d.type || "?").slice(0, 10).join(" | "), fehler: info.fehler ? String(info.fehler).slice(0, 300) : null, groesse: info.groesse ?? null,
     info: Object.keys(info).join(",") || "leer", felderAnzahl: Array.isArray(info.felder) ? info.felder.length : -1, sw: info.sw || "-" } }).catch(() => {}); // 2.525.0: leerer Speicher (info „leer“) ≠ leeres Paket (felderAnzahl 0) // 2.515.0: Felder/Typen zur Fehlersuche · 2.522.0: Fehler
   const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
-  if (!dateien.length && !text) { const eigen = await eigenTeilenHolen(info.titel); if (eigen) return eigenTeilenEmpfangen(eigen); } // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST
+  if (!dateien.length) { // 2.791.0/2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST: aus der eigenen App geteilt, Android hat die Datei nicht mitgegeben
+    const eigen = await eigenTeilenHolen(info.titel, info.text);
+    api("diagnose", { art: "teilen_eigen", daten: { grund: eigen.grund, anzahl: eigen.dateien.length } }).catch(() => {});
+    if (eigen.dateien.length) return eigenTeilenEmpfangen(eigen.dateien);
+  }
   if (!dateien.length && !text && info.fehler) return melde(/Quota/i.test(info.fehler) ? "Die Datei ist zu groß für den Zwischenspeicher dieses Handys – bitte kleiner teilen (z. B. Video kürzen) oder in der Club-App über 📎 anhängen." : "Die Datei konnte beim Teilen nicht übernommen werden – bitte in der Club-App über 📎 anhängen. (Fehler ist für Hansi vermerkt.)", true); // 2.522.0 KC-CLUB-TEILEN-FEHLER
   const leer = Array.isArray(info.felder) && info.felder.some((x) => /:0$/.test(String(x))); // Datei mit 0 Byte: das Handy hat sie nicht hergegeben
   if (!dateien.length && !text && leer) return melde("Das Handy hat die Datei leer übergeben (kommt bei manchen Dateimanagern vor) – bitte aus der Galerie, Google Drive oder „Dateien“ teilen oder in der Club-App über 📎 anhängen.", true); // 2.522.0
@@ -24728,7 +24732,7 @@ async function einlPerMailExtern() {
   const E = EINL; if (!E) return;
   const files = E.dateien.map((d) => d instanceof File ? d : new File([d], d.name || "Dokument", { type: d.type }));
   try {
-    if (navigator.canShare?.({ files })) { await navigator.share({ files, title: E.titel }); return melde("📧 Im Teilen-Menü „Mail“ wählen – die Datei hängt schon an"); }
+    if (navigator.canShare?.({ files })) { await teilenMitRueckfall({ files, title: E.titel }); return melde("📧 Im Teilen-Menü „Mail“ wählen – die Datei hängt schon an"); }
   } catch (e) { if (e?.name === "AbortError") return; }
   for (const f of files) { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
   melde("📧 Dieses Gerät kann Dateien nicht direkt ans Mail-Programm geben – sie wurden gespeichert. In der Mail über 📎 anhängen.");
@@ -24908,7 +24912,7 @@ async function bfWeiter(wohin) {
   if (wohin === "nochmal") { $("bfBlatt")?.remove(); BF.bild = null; return melde("📸 Bereit – Auslöser drücken, wenn du so weit bist."); }
   let datei; try { datei = await bfDatei(); } catch (e) { return meldeFehler(e); }
   if (wohin === "speichern") {
-    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: datei.name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: datei.name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
     const a = document.createElement("a"); a.href = URL.createObjectURL(datei); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 30000); return melde("💾 Gespeichert (Ordner „Downloads“)");
   }
@@ -29207,7 +29211,7 @@ async function fotoTeilen() {
     const blob = await (await fetch(faUrl.get(f.id) || (await api("foto_oeffnen", { id: f.id })).url, { signal: zeitSignal(60000) })).blob();
     const datei = new File([blob], `koecheclub-${f.datum}.jpg`, { type: blob.type || "image/jpeg" });
     const text = [f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · ");
-    if (navigator.canShare?.({ files: [datei] })) await navigator.share({ files: [datei], text });
+    if (navigator.canShare?.({ files: [datei] })) await teilenMitRueckfall({ files: [datei], text });
     else await navigator.share({ text, url: location.origin + location.pathname + "#fotos" });
   } catch (e) { if (e.name !== "AbortError") melde("Teilen hat nicht geklappt: " + e.message, true); }
 }
@@ -30250,7 +30254,7 @@ async function druckPdf() {
   try {
     const name = druckDateiName();
     const datei = new File([await druckPdfBlob()], name, { type: "application/pdf" });
-    try { if (navigator.canShare?.({ files: [datei] })) { await eigenTeilenMerken(datei, DRUCK.titel); await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { eigenTeilenVergessen(); if (e?.name === "AbortError") return; } // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; } // 2.791.0/2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST
     const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60000); melde("📄 PDF gespeichert (Downloads)");
   } catch (e) { meldeFehler(e); }
@@ -30264,33 +30268,50 @@ async function druckInAppSenden() {
   try {
     const name = druckDateiName(), r = await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" }));
     druckVorschauZu();
-    await anlageInNeueNachricht(r, name);
+    await anlageInNeueNachricht([{ r, name }]);
   } catch (e) { meldeFehler(e); }
   finally { if (k) { k.disabled = false; k.textContent = "💬 In der Club-App senden"; } }
 }
-async function anlageInNeueNachricht(r, name) { // hochgeladene Anlage → „Neue Nachricht“ mit Empfängerwahl (Druckvorschau und Teilen an sich selbst)
-  anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false;
+async function anlageInNeueNachricht(liste) { // hochgeladene Anlagen [{ r, name }] → „Neue Nachricht“ mit Empfängerwahl (Druckvorschau und Teilen an sich selbst)
+  anlagen = [...anlagen.filter((a) => !a.laedt), ...liste.map(({ r, name }) => ({ id: r.id, name: r.name || name, laedt: false }))]; EINMAL = false;
   await neueNachricht(); chipsZeigen();
-  melde("📎 PDF liegt als Anlage bereit – jetzt Empfänger wählen, „Weiter zum Schreiben“, dann ➤");
+  const pdf = liste.length === 1 && /\.pdf$/i.test(liste[0].r.name || liste[0].name || "");
+  melde(`📎 ${pdf ? "PDF liegt" : liste.length === 1 ? "Die Datei liegt" : liste.length + " Dateien liegen"} als Anlage bereit – jetzt Empfänger wählen, „Weiter zum Schreiben“, dann ➤`);
 }
 // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST (Fund Hansi 31.10.: Protokoll → „📄 PDF speichern / teilen“ → im Handy „Köcheclub“ gewählt → App startet neu,
 // „Es ist nichts angekommen“). Diagnose: Android gibt beim Teilen an die eigene App nur den Titel weiter, die PDF-Datei fehlt. Darum legt die App
 // das PDF vor dem Teilen kurz auf dem Handy beiseite (eigener Speicher, höchstens 5 Min., nur dieses eine PDF). Kommt beim Teilen nichts an und
 // passt der Titel, nimmt die App das beiseitegelegte PDF und öffnet „Neue Nachricht“ damit – wie „💬 In der Club-App senden“.
-async function eigenTeilenMerken(datei, titel) {
-  try { await (await caches.open("kcclub-eigen-teilen")).put("datei", new Response(datei, { headers: { "content-type": datei.type || "application/pdf", "x-name": encodeURIComponent(datei.name), "x-titel": encodeURIComponent(String(titel || "").slice(0, 200)), "x-zeit": String(Date.now()) } })); } catch {}
+// 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL (Fund Hansi 02.11.: „Mein Wunschbogen“ geteilt → wieder „nichts angekommen“): Der Rückfall galt nur
+// für die Druckvorschau. Jetzt gehen alle Stellen, die Dateien teilen, über teilenMitRueckfall(). Und: Bei einem Fehler des Teilens (Android bricht
+// beim Teilen an die eigene App das Warten ab) wurde das Beiseitegelegte sofort gelöscht – jetzt bleibt es bis zum Abholen bzw. höchstens 5 Min.
+function teilenMitRueckfall(daten) { // Beiseitelegen läuft nebenher: Teilen braucht den frischen Tipp (sonst „NotAllowedError“)
+  eigenTeilenMerken(daten.files || [], daten.title, daten.text);
+  return navigator.share(daten);
+}
+async function eigenTeilenMerken(dateien, titel, text) {
+  try {
+    await caches.delete("kcclub-eigen-teilen"); const c = await caches.open("kcclub-eigen-teilen"), liste = dateien.slice(0, 10);
+    for (let i = 0; i < liste.length; i++) await c.put(`datei/${i}`, new Response(liste[i], { headers: { "content-type": liste[i].type || "application/octet-stream", "x-name": encodeURIComponent(liste[i].name || `Datei_${i + 1}`) } }));
+    await c.put("info", new Response(JSON.stringify({ anzahl: liste.length, titel: String(titel || "").slice(0, 200), text: String(text || "").slice(0, 4000), zeit: Date.now() })));
+  } catch {}
 }
 function eigenTeilenVergessen() { try { caches.delete("kcclub-eigen-teilen").catch(() => {}); } catch {} }
-async function eigenTeilenHolen(titel) {
+async function eigenTeilenHolen(titel, text) { // → { dateien, grund }; grund nur für die Diagnose (keine Inhalte)
   try {
-    const r = await (await caches.open("kcclub-eigen-teilen")).match("datei"); eigenTeilenVergessen();
-    if (!r || Date.now() - Number(r.headers.get("x-zeit") || 0) > 5 * 60000 || decodeURIComponent(r.headers.get("x-titel") || "") !== String(titel || "").slice(0, 200)) return null;
-    return new File([await r.blob()], decodeURIComponent(r.headers.get("x-name") || "Koecheclub.pdf"), { type: r.headers.get("content-type") || "application/pdf" });
-  } catch { return null; }
+    const c = await caches.open("kcclub-eigen-teilen"), info = await (await c.match("info"))?.json();
+    if (!info) return { dateien: [], grund: "nichts_gemerkt" };
+    if (Date.now() - Number(info.zeit || 0) > 5 * 60000) { eigenTeilenVergessen(); return { dateien: [], grund: "zu_alt" }; }
+    if (info.titel !== String(titel || "").slice(0, 200) || info.text !== String(text || "").slice(0, 4000)) return { dateien: [], grund: "anderes_teilen" };
+    const dateien = [];
+    for (let i = 0; i < (info.anzahl || 0); i++) { const r = await c.match(`datei/${i}`); if (r) dateien.push(new File([await r.blob()], decodeURIComponent(r.headers.get("x-name") || `Datei_${i + 1}`), { type: r.headers.get("content-type") || "application/octet-stream" })); }
+    eigenTeilenVergessen();
+    return { dateien, grund: dateien.length ? "ok" : "leer" };
+  } catch (e) { return { dateien: [], grund: "fehler:" + (e?.name || "?") }; }
 }
-async function eigenTeilenEmpfangen(datei) {
-  melde("📄 Das PDF aus der Club-App kommt in eine neue Nachricht …");
-  try { await anlageInNeueNachricht(await anlageHochladen(datei), datei.name); } catch (e) { meldeFehler(e); }
+async function eigenTeilenEmpfangen(dateien) {
+  melde(`📎 ${dateien.length === 1 ? "Die Datei" : dateien.length + " Dateien"} aus der Club-App ${dateien.length === 1 ? "kommt" : "kommen"} in eine neue Nachricht …`);
+  try { const liste = []; for (const d of dateien) liste.push({ r: await anlageHochladen(d), name: d.name }); await anlageInNeueNachricht(liste); } catch (e) { meldeFehler(e); }
 }
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
@@ -30299,7 +30320,7 @@ function druckJetzt() { setTimeout(() => window.print(), 60); }
 async function druckTeilen() {
   const html = druckHtml(false);
   const datei = new File([html], (DRUCK.titel || "Druck").replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".html", { type: "text/html" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   melde("Teilen geht auf diesem Gerät nicht – bitte „Drucken“ versuchen.", true);
 }
 // KC-CLUB-PROTOKOLL-NEU-INFO: „Besprechung“ → „Neues Besprechungsprotokoll eingestellt“; längere Titel → „Neues Protokoll eingestellt: …“
@@ -33995,7 +34016,7 @@ async function bildSpeichern(b, wer) {
   try { const [kopf, roh] = b.split(","), typ = /^data:([^;,]+)/.exec(kopf)?.[1] || "image/jpeg", bin = atob(roh); // Bild kommt als data:-Adresse – ohne Netz in eine Datei wandeln
     datei = new File([Uint8Array.from(bin, (z) => z.charCodeAt(0))], name, { type: typ }); } catch {}
   if (datei) {
-    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: name }); melde("💾 Bild gespeichert"); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: name }); melde("💾 Bild gespeichert"); return; } } catch (e) { if (e?.name === "AbortError") return; }
   }
   const a = document.createElement("a"); a.href = datei ? URL.createObjectURL(datei) : b; a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { a.remove(); if (datei) URL.revokeObjectURL(a.href); }, 30000);

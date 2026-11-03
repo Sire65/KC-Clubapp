@@ -8800,7 +8800,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/accept="image\/\*" capture="environment"/.test(f) && /type="file" accept="application\/pdf,image\/\*[^"]*" multiple/.test(f) && /addEventListener\("drop"/.test(f) && /einlAusKorb\(\)/.test(f), "Foto, Dateimanager, Hineinziehen, Eingangskorb");
   assert.ok(/archivAblageFragen\("eingelesen"/.test(f) && /eingelesen: \{ sym: "📄"/.test(programm), "Ablage über den vorhandenen Kern mit Vorschlag");
   assert.ok(/TEILEN = \{ text: "", dateien: E\.dateien \}; teilenChatWahl\(\);/.test(f), "Nachricht über den Teilen-Kern – Senden drückt man selbst");
-  assert.ok(/navigator\.canShare\?\.\(\{ files \}\)/.test(f) && /await navigator\.share\(\{ files/.test(f), "Mail mit Anhang über das Teilen-Menü des Geräts (eigenes Mail-Programm)");
+  assert.ok(/navigator\.canShare\?\.\(\{ files \}\)/.test(f) && /await teilenMitRueckfall\(\{ files/.test(f), "Mail mit Anhang über das Teilen-Menü des Geräts (eigenes Mail-Programm)"); // 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL: navigator.share über teilenMitRueckfall
   assert.ok(/stichworte: `\$\{EINL_MARKE\}, eingelesen`/.test(f) && /api\("archiv_mein_ordner"/.test(f), "Eingangskorb = eigener Ordner + Stichwort, kein neuer Serverweg");
   assert.ok(/for \(const d of einlKorbDoks\(ar\)\)/.test(programm) && /einlKorbErledigt\(/.test(programm), "Eingelesenes erscheint im Eingangskorb");
   assert.ok(/api\("archiv_loeschen", \{ id \}\)/.test(f) && /Papierkorb/.test(f), "nach Ablage keine doppelte Datei (Papierkorb, wiederherstellbar)");
@@ -9302,7 +9302,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 // 2.135.0 KC-CLUB-SS-SPEICHERN: Schnappschuss/Live-Bild beim Admin speichern (Teilen-Menü → Fotos, sonst Download)
 {
   const sp = programm.slice(programm.indexOf("async function bildSpeichern(b, wer)"), programm.indexOf("// ---------- KC-CLUB-STUDIO-SPIEGEL"));
-  assert.ok(/function ssSpeichern\(\) \{ const f = STD\.fotos\[STD\.fotos\.length - 1\]; return bildSpeichern\(/.test(sp) && /new File\(\[Uint8Array\.from\(bin/.test(sp) && /navigator\.share\(\{ files: \[datei\]/.test(sp), "aktuelles Bild wird als Datei geteilt/gesichert");
+  assert.ok(/function ssSpeichern\(\) \{ const f = STD\.fotos\[STD\.fotos\.length - 1\]; return bildSpeichern\(/.test(sp) && /new File\(\[Uint8Array\.from\(bin/.test(sp) && /teilenMitRueckfall\(\{ files: \[datei\]/.test(sp), "aktuelles Bild wird als Datei geteilt/gesichert"); // 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL
   assert.ok(/e\?\.name === "AbortError"\) return;/.test(sp) && /a\.download = name;/.test(sp), "Abbrechen still, sonst Download als Rückfall");
   assert.ok(/k\("💾 Speichern", "ssSpeichern\(\)", !hatFoto\)/.test(programm) && /onclick="stFotoSpeichern\(\$\{i\}\)"/.test(programm), "2.136.0: Speichern im Studio-Pult und bei jedem Foto der Sitzung");
 }
@@ -12724,7 +12724,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/toFixed\(st\)\.replace\("\.", ","\)/.test(server) && /i === 0 \? ersCsvZahl\(a\.summe\) : ""/.test(server), "Dezimalkomma; Antragssumme nur einmal je Antrag");
   assert.ok(/\.update\(\{ exportiert_am: jetzt\(\), exportiert_von: ich\.person_id \}\)\.in\("id", ids\)\.is\("exportiert_am", null\)/.test(server), "markiert nur einmal, nichts überschrieben");
   assert.ok(/onclick="ersCsvOeffnen\(\)">📊 Erstattungen für Excel \(CSV\)<\/button>/.test(html) && /\["neu", "🆕 Nur neue \(noch nicht übernommen\)"\]/.test(html) && /\["position", "Je Position \(ausführlich\)"\], \["antrag", "Je Antrag \(eine Zeile\)"\]/.test(html), "Auswahl statt Freitext");
-  assert.ok(/navigator\.share\(\{ files: \[datei\], title: "Erstattungen \(CSV\)" \}\)/.test(html) && /a\.download = datei\.name/.test(html), "teilen oder speichern");
+  assert.ok(/teilenMitRueckfall\(\{ files: \[datei\], title: "Erstattungen \(CSV\)" \}\)/.test(html) && /a\.download = datei\.name/.test(html), "teilen oder speichern"); // 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL
 }
 // 2.584.0 KC-CLUB-EINGANG-PAKET (Wunsch Hansi „Aufbau des Eingangskorbs dauert lange – optimieren“)
 {

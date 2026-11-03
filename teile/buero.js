@@ -1371,7 +1371,7 @@ async function ersCsvAusgeben(teilen) {
   const e = ERS_CSV.erg; if (!e?.csv) return;
   const datei = new File([e.csv], `Erstattungen_${heuteIso()}.csv`, { type: "text/csv" });
   let ok = false;
-  if (teilen) { try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Erstattungen (CSV)" }); ok = true; } } catch (x) { if (x?.name === "AbortError") return; } }
+  if (teilen) { try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Erstattungen (CSV)" }); ok = true; } } catch (x) { if (x?.name === "AbortError") return; } }
   if (!ok) { const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 CSV gespeichert – in Excel öffnen"); }
   const neu = e.anzahl - (e.schonUebernommen || 0);
   if (neu > 0 && (await frage(`${neu} ${neu === 1 ? "Antrag" : "Anträge"} als „in Excel übernommen“ markieren?\n\nDann kommen sie bei „Nur neue“ nicht noch einmal.`))) {

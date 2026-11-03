@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.826.0 – 2026-11-03 – 📎 Teilen an die eigene Club-App: überall, nicht nur aus der Druckvorschau (KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL) · nur App
+Fund Hansi (02.11.): wieder „Es ist nichts angekommen“. Diagnose `diagnose_teilen` 02.11. 12:52: nur `titel:text:16` – „Mein Wunschbogen“, keine Datei.
+- **Ursache:** Der Rückfall aus 2.791.0 galt nur für „📄 PDF speichern / teilen“ in der Druckvorschau. Die App teilt aber an 12 Stellen Dateien (Wunschbogen, Anlagen, Fotos, Mail-Export, Schlüsselbund, Meine Daten, Erstattungen-CSV …). Außerdem löschte die Druckvorschau das Beiseitegelegte, sobald das Teilen mit einem Fehler endete – Android bricht beim Teilen an die eigene App das Warten ab, das konnte das PDF wegräumen, bevor die App es abholte.
+- **Behoben an der Quelle:** Alle Datei-Teilen-Stellen gehen über `teilenMitRueckfall()`: Die Dateien (bis 10) werden nebenher auf dem Handy beiseitegelegt (Teilen bleibt sofort, der Tipp gilt weiter), bei Fehlern nicht gelöscht, nach dem Abholen oder spätestens 5 Min. weg. Kommt beim Teilen keine Datei an und passen Titel und Text, öffnet die App „Neue Nachricht“ mit den Dateien als Anlage. Ein fremdes Teilen löscht das Beiseitegelegte nicht.
+- **Diagnose:** `diagnose_teilen_eigen` mit Grund (`ok`, `nichts_gemerkt`, `zu_alt`, `anderes_teilen`) und Anzahl – keine Inhalte.
+- Test: `tests/teilen-eigen.test.mjs` (keine Datei-Teilen-Stelle ohne Rückfall, Wunschbogen, mehrere Fotos mit Text, anderer Titel/Text, 5 Min.). Rückweg: App 2.825.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.825.0 – 2026-11-02 – 🧮 Rechner zeigt die ganze Aufgabe · 👣 Wege nach Besuchen getrennt (KC-CLUB-RECHNER-AUFGABE #70, KC-CLUB-SPUR-BESUCHE #72) · nur App
 - **#70** Hansi: „Den Rechner im Büro noch besser machen. Im Display die gesamte Aufgabe anzeigen: 3 × 3 − 5 = 4.“ Beim Tippen steht jetzt die ganze Rechnung groß im Display (lange Rechnungen etwas kleiner), nach „=“ oben „3 × 3 − 5 =“ und groß das Ergebnis; beim Weiterrechnen bleibt die letzte Aufgabe oben stehen. Vorher stand groß nur die letzte Zahl.
 - **#72** Hansi: „Wenn sich ein Mitglied mehrmals täglich anmeldet, unter Wege der Mitglieder jeden Block andersfarbig oder mit dickerer Linie trennen.“ Die Wege eines Mitglieds sind in **Besuche** geteilt (neu bei „📲 App geöffnet“ / „wieder in der App“ oder nach 15 Min. Pause): je Besuch eine Kopfzeile „🔹 Besuch 2 · 12:00–12:02 Uhr · 3 Schritte“ mit dicker weinroter Linie, Zeilen abwechselnd getönt. Nur Anzeige.
