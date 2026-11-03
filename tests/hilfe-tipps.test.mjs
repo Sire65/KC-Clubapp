@@ -29,7 +29,7 @@ for (const t of ["kc_club_hilfe_tipp", "kc_club_hilfe_tipp_empfang", "kc_club_hi
   assert.ok(new RegExp(`\\('${t}', 'Club-App', '(sensitive|normal)', false, true, true`).test(mig), "Spiegel " + t);
 }
 assert.match(mig, /check \(antwort in \('geholfen', 'nein', 'anderes', 'erledigt', 'keine'\)\)/);
-assert.equal(lies("tools/db-test/106_erwartet.txt").trim().split("\n").length, 5);
+assert.equal(lies("tools/db-test/108_erwartet.txt").trim().split("\n").length, 5);
 // Kachel für die ganze Clubleitung, Anfragen nur Admin
 assert.ok(haupt.includes('aktion: "uaAdmin()", nur: () => !!(ICH?.admin || ICH?.vorstand)') && haupt.includes('if (ICH?.admin) try { r = await api("unterstuetzung_liste"'));
 assert.ok(!/\|\|=/.test(teil), "kein ||=");

@@ -16,7 +16,7 @@ assert.ok(/const istMagRedaktion = \(ich: Ich\) => ich\.admin \|\| \(ich\.aemter
 assert.ok(server.includes("// KC-CLUB-MAGAZIN-POSTFACH: eingesandte Fotos/Dateien sieht die Redaktion"), "Anlagen für die Redaktion");
 // Datenbank
 assert.ok(mig.includes("grant select, insert, update, delete on public.kc_club_magazin_beitrag to service_role;") && mig.includes("enable row level security") && mig.includes("'kc_club_magazin_beitrag', 'Club-App', 'sensitive', false, true, true"));
-assert.equal(lies("tools/db-test/107_erwartet.txt").trim().split("\n").length, 4);
+assert.equal(lies("tools/db-test/109_erwartet.txt").trim().split("\n").length, 4);
 // App: Menü, Einsenden-Knopf in den Platzhaltern, Sprung aus der Benachrichtigung, Küchenwitz-Rubrik
 assert.ok(teil.includes('blZu();magEinsenden(${jsArg(MAG_RUBRIK_ART[rubrik])})') && app.includes('else if (h === "#redaktion") magPostfach();') && teil.includes('{ id: "witz", sym: "😄", t: "Küchenwitz des Monats"'));
 console.log("magazin-postfach: ok");
