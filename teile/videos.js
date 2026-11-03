@@ -3280,7 +3280,7 @@ function ibZielZeigen(r, ziel) {
     const hoehe = r.clientHeight, breite = r.clientWidth, unten = b.bottom - y0 > hoehe - 56, f = document.createElement("span");
     f.className = "ib-finger"; f.textContent = unten ? "👇" : "👆";
     f.style.left = Math.min(breite - 22, Math.max(22, b.left - x0 + b.width / 2)) + "px";
-    f.style.top = (unten ? Math.max(0, b.top - y0 - 40) : Math.min(hoehe - 40, b.bottom - y0 + 2)) + "px";
+    f.style.top = (unten ? Math.max(0, b.top - y0 - 24) : Math.min(hoehe - 40, b.bottom - y0 + 2)) + "px"; // von oben: Fingerspitze im Ziel, nicht auf der Zeile darüber
     r.appendChild(f);
   });
 }
