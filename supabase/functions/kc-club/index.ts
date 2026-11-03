@@ -157,7 +157,8 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.835.0";
+const SERVER_VERSION = "2.839.0";
+const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -9407,7 +9408,13 @@ Köcheclub Werne`,
     }
 
     const tAnm = Date.now();
+    // 2.839.0 KC-CLUB-START-VORAB (#44 F, Hansi „Startanfrage schneller, aber Vorsicht“): Sperrliste, Wartungsfenster und Sitzungs-Vorgaben hängen nicht
+    // von der Person ab – sie werden GLEICHZEITIG mit der Anmeldung gelesen statt danach (vorher 4 Datenbank-Runden nacheinander). Danach liegen sie im
+    // Speicher (15 s / 15 s / 5 Min.); die Prüfungen unten laufen unverändert in derselben Reihenfolge. Nur bei gültig aussehendem Schlüssel (keine Last durch Fremde).
+    const vorab = START_VORAB.has(a) && /^[0-9a-f]{32,96}$/.test(req.headers.get("x-club-token") ?? "")
+      ? Promise.all([sperrenAktuell().catch(() => null), a === "init" ? einspielenLage() : null, sitzungVorgaben()]) : null;
     const ich = await anmelden(req);
+    if (vorab) await vorab;
     const gesperrt = ich.admin ? null : await sperreFuer(ich.person_id); // KC-CLUB-PERSON-SPERRE (2.23.77)
     if (gesperrt) {
       await sperreVersuchMerken(ich.person_id, gesperrt.art, a).catch(() => {}); // 2.539.0 KC-CLUB-SPERRE-VERSUCHE

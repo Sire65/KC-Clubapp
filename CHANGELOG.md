@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.839.0 – Start-Abfrage schneller (KC-CLUB-START-VORAB, #44 F)
+- Gemessen auf den Handys: Start im Mittel 2,8 s, davon ~1,0 s Server. Vor der eigentlichen Start-Abfrage las der Server 4-mal nacheinander aus der Datenbank (Anmeldung, Sperrliste, Wartungsfenster, Sitzungs-Vorgaben).
+- Jetzt laufen Sperrliste, Wartungsfenster und Sitzungs-Vorgaben gleichzeitig mit der Anmeldung (nur bei init/online/unterhaltungen/unterhaltung und gültig aussehendem Schlüssel). Prüfungen und Reihenfolge unverändert.
+- Messung vorher/nachher über die vorhandene Startmessung (srvT/anm). Test: tests/start-vorab.test.mjs. Rückweg: Version 2.838.0 einspielen.
+
 ## 2.838.0 – 2026-11-03 – 🏢 Büro: Schild und Lampe nachgebessert, ☕ Pause mit Bildschirmschoner (KC-CLUB-BUERO-PAUSE)
 Rückmeldung Hansi (03.11., Foto): „Das weiße Schild Bildschirm soll direkt unter den Monitor, darunter das Namensschild als ein Schild, nicht in der Mitte unterbrochen. An der Lampe fehlt das A für Automatik. Und mache einen Bildschirmschoner: Wenn man die Kaffeetasse anklickt, ist Pause – im Schoner das Logo, Köcheclub Werne, ‚… befindet sich im Büro im Pause-Modus‘.“
 - „Bildschirm“ steht direkt unter dem Monitor, darunter das goldene Namensschild in einem Stück (ohne Mittelkante).
