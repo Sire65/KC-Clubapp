@@ -1,0 +1,5 @@
+keine_alten_register=t
+keine_alten_dokumente=t
+mitglieder_zusammengelegt=t
+nichts_im_papierkorb_verloren=t
+register_nie_leer=t
