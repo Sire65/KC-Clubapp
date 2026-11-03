@@ -38,7 +38,7 @@ assert.match(srv, /registerErsetzt: !!p\.register && String\(p\.register\) !== r
 
 // Paar-Prüfung wie im Server nachgebaut
 const paareSrc = srv.match(/function registerUmbenennenPaare[\s\S]*?\n\}/)[0].replace(/: unknown|: string\[\]|: \{ alt: string; neu: string \}\[\]/g, "").replace(/new Set<string>\(\)/g, "new Set()").replace(/\(x as any\)/g, "x");
-const paare = Function("txt", `${paareSrc}; return registerUmbenennenPaare;`)((v, n) => String(v ?? "").trim().slice(0, n));
+const paare = Function("txt", "registerEinheitlich", `${paareSrc}; return registerUmbenennenPaare;`)((v, n) => String(v ?? "").trim().slice(0, n), (r) => r);
 assert.deepEqual(paare([{ alt: "Preislisten", neu: "Preise" }], ["Preislisten", "Hinweise"], ["Preise", "Hinweise"]), [{ alt: "Preislisten", neu: "Preise" }]);
 assert.deepEqual(paare([{ alt: "Gibtsnicht", neu: "Preise" }], ["Preislisten"], ["Preise"]), [], "alt muss vorher da sein");
 assert.deepEqual(paare([{ alt: "Preislisten", neu: "Weg" }], ["Preislisten"], ["Preise"]), [], "neu muss nachher da sein");

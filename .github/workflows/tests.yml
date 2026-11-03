@@ -55,6 +55,7 @@ jobs:
       - run: node tests/schilder-ablage.test.mjs
       # KC-CLUB-ORDNER-KENNUNG + KC-CLUB-REGISTER-UMBENENNEN
       - run: node tests/ordner-kennung.test.mjs
+      - run: node tests/register-einheitlich.test.mjs
       - run: node tests/protokoll-schreiber-offen.test.mjs
       - run: node tests/passiv.test.mjs
       - run: node tests/waechter-fehlalarm.test.mjs

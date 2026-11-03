@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.833.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.834.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25353,7 +25353,7 @@ async function prJahrAbschliessen(jahr) {
   const liste = (prListe?.protokolle || []).filter((p) => String(p.datum || "").startsWith(jahr) && prVeroeffentlicht(p));
   if (!liste.length) return melde(`In ${jahr} gibt es noch kein veröffentlichtes Protokoll.`, true);
   if (!(await frage(`📦 Jahr ${jahr} abschließen?\n\n${liste.length} veröffentlichte${liste.length === 1 ? "s Protokoll kommt" : " Protokolle kommen"} als PDF in den Büro-Ordner „Protokolle ${jahr}“. Dazu eine Liste der erledigten Vorschläge (Register „Vorschläge“). In der Liste hier bleibt alles trotzdem.`, { ja: "📦 Abschließen", nein: "Abbrechen" }))) return;
-  let a, o; const REG = ["Sitzungsprotokolle", "Vorschläge", "Sonstiges"]; // 2.833.0: Register „Vorschläge“ für die erledigten Vorschläge
+  let a, o; const REG = ["Protokolle", "Vorschläge", "Sonstiges"]; // 2.833.0: Register „Vorschläge“ für die erledigten Vorschläge · KC-CLUB-REGISTER-EINHEITLICH: „Protokolle“ statt „Sitzungsprotokolle“
   try {
     a = await api("archiv_liste", {}, { warten: true });
     o = (a.ordner || []).find((x) => arIstFest(x, "protokolle") && Number(x.jahr) === Number(jahr)); // KC-CLUB-ORDNER-KENNUNG
@@ -32763,17 +32763,20 @@ let arReg = [];
 // KC-CLUB-REGISTER-UMBENENNEN (03.11.2026, Konzeptprüfung Ordner & Register): Register antippen = umbenennen, ✕ = entfernen.
 // arRegUm = [{ alt, neu }] für Register, die es beim Öffnen schon gab – der Server nimmt Dokumente und Freigaben mit.
 let arRegUm = [], arRegVorher = [];
-const arRegStart = (liste) => { arReg = [...liste]; arRegVorher = [...liste]; arRegUm = []; };
-const arRegUrsprung = (r) => arRegUm.find((x) => x.neu === r)?.alt ?? (arRegVorher.includes(r) ? r : null);
+// KC-CLUB-REGISTER-EINHEITLICH (Wunsch Hansi „alles soll gleich sein“): gleiche Liste wie REGISTER_EINHEITLICH im Server
+const AR_REG_EINHEITLICH = { Allgemein: "Sonstiges", Einladung: "Einladungen", Protokoll: "Protokolle", Sitzungsprotokolle: "Protokolle", Kassenbericht: "Kassenberichte", Kassenprüfung: "Kassenprüfungen" };
+const arRegEinheitlich = (r) => { const i = r.lastIndexOf(" › "), kopf = i >= 0 ? r.slice(0, i + 3) : "", rest = i >= 0 ? r.slice(i + 3) : r; return AR_REG_EINHEITLICH[rest] ? kopf + AR_REG_EINHEITLICH[rest] : r; };
+const arRegStart = (liste) => { arRegVorher = [...liste]; arReg = [...new Set(liste.map(arRegEinheitlich))]; // alte Namen gleich vereinheitlicht anzeigen
+  arRegUm = liste.filter((r) => arRegEinheitlich(r) !== r).map((r) => ({ alt: r, neu: arRegEinheitlich(r) })); };
 async function arRegUmbenennen(i) {
   const alt = arReg[i]; if (alt === undefined) return;
   const v = await eingabe(`✏️ Register „${alt}“ umbenennen\n\nDokumente darin bleiben in diesem Register.`, alt, { ja: "✏️ Umbenennen" });
-  const neu = String(v ?? "").trim().slice(0, 30);
+  const neu = arRegEinheitlich(String(v ?? "").trim().slice(0, 30));
   if (!neu || neu === alt) return;
   if (arReg.includes(neu)) return melde(`Das Register „${neu}“ gibt es schon.`, true);
-  const ursprung = arRegUrsprung(alt);
+  const urspruenge = [...arRegUm.filter((x) => x.neu === alt).map((x) => x.alt), ...(arRegVorher.includes(alt) ? [alt] : [])]; // auch zusammengelegte
   arRegUm = arRegUm.filter((x) => x.neu !== alt);
-  if (ursprung && ursprung !== neu) arRegUm.push({ alt: ursprung, neu });
+  for (const u of urspruenge) if (u !== neu) arRegUm.push({ alt: u, neu });
   arReg[i] = neu; arRegZeigen();
 }
 function arRegEntfernen(i) { const r = arReg[i]; arRegUm = arRegUm.filter((x) => x.neu !== r); arReg.splice(i, 1); arRegZeigen(); }
@@ -32803,14 +32806,14 @@ function arArtGewaehlt(art) {
 }
 function arRegZeigen() {
   $("arRegChips").innerHTML = arReg.map((r, i) => `<span class="chip ar-reg-chip"><button type="button" class="ar-reg-name" aria-label="Register ${esc(r)} umbenennen" onclick="arRegUmbenennen(${i})">${esc(r)} ✏️</button><button type="button" class="ar-reg-weg" aria-label="Register ${esc(r)} entfernen" onclick="arRegEntfernen(${i})">✕</button></span>`).join("")
-    + (arReg.length ? '<div class="hinweis" style="flex-basis:100%;margin-top:2px">Antippen = umbenennen (Inhalt bleibt drin) · ✕ = entfernen</div>' : '<span class="hinweis">Ohne Register landet alles unter „Allgemein“.</span>');
+    + (arReg.length ? '<div class="hinweis" style="flex-basis:100%;margin-top:2px">Antippen = umbenennen (Inhalt bleibt drin) · ✕ = entfernen</div>' : '<span class="hinweis">Ohne Register landet alles unter „Sonstiges“.</span>');
 }
-function arRegDazu() { const v = $("arRegNeu").value.trim().slice(0, 30); if (v && !arReg.includes(v) && arReg.length < 12) arReg.push(v); $("arRegNeu").value = ""; arRegZeigen(); }
+function arRegDazu() { const v = arRegEinheitlich($("arRegNeu").value.trim().slice(0, 30)); /* KC-CLUB-REGISTER-EINHEITLICH */ if (v && !arReg.includes(v) && arReg.length < 12) arReg.push(v); $("arRegNeu").value = ""; arRegZeigen(); }
 async function arOrdnerSpeichern(id) {
   const f = document.querySelector(".ar-farben button.an");
   const alt = id ? AR.daten.ordner.find((x) => x.id === id) : null;
   const weg = alt ? arRegWegZahl(id) : 0;
-  if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Allgemein"}“. Weiter?`))) return;
+  if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Sonstiges"}“. Weiter?`))) return;
   try {
     const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, umbenennen: arRegUm, nur_vorstand: $("arLeitung").checked, einleitung: $("arEinleitung")?.value ?? undefined, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
     arBlattZu(); melde(id ? "✔ Ordner geändert" : "✔ Ordner angelegt");
@@ -32827,7 +32830,7 @@ function arDokForm(id) {
   const d = AR.daten, x = id ? d.dokumente.find((y) => y.id === id) : null, o = d.ordner.find((y) => y.id === (x?.ordner_id || AR.ordner));
   if (!o) return;
   AR.datei = null;
-  const regWahl = (ord, wert) => (ord.register.length ? ord.register : ["Allgemein"]).map((r) => `<option ${r === wert ? "selected" : ""}>${esc(r)}</option>`).join("");
+  const regWahl = (ord, wert) => (ord.register.length ? ord.register : ["Sonstiges"]).map((r) => `<option ${r === wert ? "selected" : ""}>${esc(r)}</option>`).join("");
   const hinein = !x && o.besitzer && !o.eigen, regListe = hinein ? arFreiRegister(o, true) : o.register;
   const einreichen = !x && !o.besitzer && o.einreichen && !d.darf, chronik = o.art === "chronik"; // KC-CLUB-CHRONIK (1.64.0)
   const ordnerWahl = d.ordner.filter((y) => (y.besitzer || null) === (o.besitzer || null) && (!o.besitzer || y.eigen));
@@ -32860,14 +32863,14 @@ const AR_VORSCHLAG = [
   { re: /vertr[aä]g|vereinbarung|kündigung/i, register: ["Verträge", "Sonstiges"] }, // persönlicher Ordner hat kein Register „Verträge“
   { re: /versicherung|police|haftpflicht/i, register: ["Versicherungen"] },
   { re: /satzung|geschäftsordnung|vereinsregister|registergericht/i, register: ["Satzung", "Geschäftsordnung", "Vereinsregister"] },
-  { re: /einladung/i, ordner: /versamml|besprech/i, register: ["Einladung", "Unterlagen"] },
+  { re: /einladung/i, ordner: /versamml|besprech/i, register: ["Einladungen", "Unterlagen"] },
   { re: /anwesenheit|teilnehmerliste/i, register: ["Anwesenheit"] },
   { re: /presse|zeitung|artikel|bericht in/i, register: ["Presse"] },
   { re: /mitglied(?:s|er)?(?:antrag|meldung)|aufnahme|austritt|beitritt|adressänderung|änderungsmeldung/i, ordner: /mitglied/i, register: ["Meldungen"] },
   { re: /ausleih|leihschein|verleih/i, register: ["Ausleihe"] },
   // bisherige Regeln (2.59.0)
   { re: /besprech|tagesordnung|agenda|entwurf/i, ordner: /besprech/i, register: ["Entwürfe", "Unterlagen"] },
-  { re: /protokoll/i, ordner: /besprech|protokoll|versammlung|sitzung/i, register: ["Protokolle", "Protokoll"] },
+  { re: /protokoll/i, ordner: /besprech|protokoll|versammlung|sitzung/i, register: ["Protokolle"] },
   { re: /rechnung|beleg|quittung|erstattung|abrechnung|kassenbon|bon\b/i, register: ["Rechnungen"] },
   { re: /schulung|zertifikat|teilnahmebescheinigung|lehrgang|kurs/i, register: ["Schulungen"] },
   { re: /dienst(zeit|plan|wunsch)|wünsche/i, ordner: /dienstpl/i, register: ["Wünsche", "Gesamtplan"] },
@@ -32916,7 +32919,7 @@ function arDokInfo(id) {
 function arDokMenue(id) {
   const { x, o, darf } = arDokInfo(id); if (!x || !o) return;
   const k = (sym, t, fn, art = "") => `<button class="knopf${art}" style="text-align:left" onclick="$('arMenue')?.remove();${fn}">${sym} ${t}</button>`;
-  blattAuf("arMenue", `<h3 style="margin:0 0 2px">${arDateiSym(x.mime)} ${esc(x.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(arName(o))} › ${esc(x.register || "Allgemein")}</p>
+  blattAuf("arMenue", `<h3 style="margin:0 0 2px">${arDateiSym(x.mime)} ${esc(x.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(arName(o))} › ${esc(x.register || "Sonstiges")}</p>
     <div class="knoepfe ar-menue" style="flex-direction:column;align-items:stretch">
     ${k("👁️", "Öffnen", `arAnlage('${x.id}', true)`, " haupt")}
     ${k("🖨️", "Drucken", `arDrucken(arDokInfo('${x.id}').x)`)}
@@ -32947,7 +32950,7 @@ function arEinfuegenLeiste(o) {
 }
 async function arEinfuegen() {
   const z = AR_ABLAGE, o = arOrdnerAktuell(), q = z && AR.daten?.dokumente.find((y) => y.id === z.id); if (!z || !o || !q) return;
-  const regs = o.register.length ? o.register : ["Allgemein"];
+  const regs = o.register.length ? o.register : ["Sonstiges"];
   const register = AR.register && regs.includes(AR.register) ? AR.register : regs.includes(q.register) ? q.register : regs[0];
   if (z.art === "verschieben" && o.id === q.ordner_id && register === q.register) return melde("Liegt schon hier – bitte einen anderen Ordner oder ein anderes Register öffnen.", true);
   try {
@@ -33070,7 +33073,7 @@ function arZielBlatt(id, art) {
   AR_ZIEL = { id, art, jetzt: { ordner: o.id, register: x.register } };
   const kop = art === "kopieren";
   arBlatt(`<h3>${kop ? "📋 Kopieren nach …" : "➡️ Verschieben nach …"}</h3>
-    <p class="hinweis" style="margin:0 0 8px">${arDateiSym(x.mime)} <b>${esc(x.titel)}</b><br>liegt jetzt in: ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""} › ${esc(x.register || "Allgemein")}</p>
+    <p class="hinweis" style="margin:0 0 8px">${arDateiSym(x.mime)} <b>${esc(x.titel)}</b><br>liegt jetzt in: ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""} › ${esc(x.register || "Sonstiges")}</p>
     ${v ? `<button class="knopf haupt ar-vorschlag" style="width:100%;text-align:left" onclick="arZielSetzen('${v.o.id}', ${esc(JSON.stringify(v.r))})">💡 Vorschlag: <b>${esc(v.o.titel)} ${v.o.jahr} › ${esc(v.r)}</b> <small>(${esc(v.grund)})</small></button>` : ""}
     <label class="feld">Ordner<select id="arZielOrdner" onchange="arZielRegister()">${liste.map((y) => `<option value="${y.id}">${esc(y.titel)} ${y.jahr}${y.nur_vorstand ? " 🔒" : ""}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="arZielReg"></select></label>
@@ -33081,7 +33084,7 @@ function arZielBlatt(id, art) {
 function arZielSetzen(oid, reg) { const s = $("arZielOrdner"); if (!s) return; s.value = oid; arZielRegister(reg); }
 function arZielRegister(reg) {
   const o = AR.daten?.ordner.find((y) => y.id === $("arZielOrdner")?.value); if (!o) return;
-  const liste = o.register.length ? o.register : ["Allgemein"], w = liste.includes(reg) ? reg : liste[0];
+  const liste = o.register.length ? o.register : ["Sonstiges"], w = liste.includes(reg) ? reg : liste[0];
   $("arZielReg").innerHTML = liste.map((r) => `<option${r === w ? " selected" : ""}>${esc(r)}</option>`).join("");
 }
 async function arZielAusfuehren() {
@@ -33098,7 +33101,7 @@ async function arZielAusfuehren() {
 }
 function arDokOrdnerWechsel(oid) {
   const o = AR.daten.ordner.find((y) => y.id === oid); if (!o) return;
-  $("arDokReg").innerHTML = (o.register.length ? o.register : ["Allgemein"]).map((r) => `<option>${esc(r)}</option>`).join("");
+  $("arDokReg").innerHTML = (o.register.length ? o.register : ["Sonstiges"]).map((r) => `<option>${esc(r)}</option>`).join("");
 }
 async function arDateiGewaehlt(input) {
   const roh = input.files?.[0]; input.value = ""; if (!roh) return;

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.834.0 – 2026-11-03 – 🗂️ Register heißen überall gleich (KC-CLUB-REGISTER-EINHEITLICH) · App + Server + Datenbank
+Wunsch Hansi (03.11.): „Ja alles soll gleich sein“ (zur Konzeptprüfung Ordner & Register, docs/ORDNER_REGISTER.md).
+- **Eine Liste für alte → einheitliche Namen** (`REGISTER_EINHEITLICH` im Server, `AR_REG_EINHEITLICH` in der App, gleiche Liste in der Migration): Allgemein → **Sonstiges**, Einladung → **Einladungen**, Protokoll und Sitzungsprotokolle → **Protokolle**, Kassenbericht → **Kassenberichte**, Kassenprüfung → **Kassenprüfungen**. Auch bei „Jahr › Unterregister“.
+- **Vorgaben angeglichen:** Mehrzahl, „Sonstiges“ immer als letztes Register (auch bei Versammlungen), neue Verträge-Ordner haben dieselben Register wie der feste Ordner „Verträge“, „📦 Jahr abschließen“ legt ins Register „Protokolle“.
+- **Beim Speichern und Ablegen** vereinheitlicht der Server alte Namen selbst – Dokumente ziehen mit (wie beim Umbenennen), zwei alte Register mit demselben neuen Namen werden zusammengelegt. Das Formular zeigt alte Namen gleich einheitlich. Persönliche Ordner ändern sich erst, wenn der Besitzer sie speichert.
+- **Datenbank** (`20261103_kc_club_register_einheitlich.sql`): alte Registernamen in Vereinsordnern samt Dokumenten umbenannt; der alte Ordner „Mitglieder 2026“ (so hieß „Personal“ vor 2.22.19) ist mit „Personal 2026“ zusammengelegt (1 Meldung umgezogen), der leere alte Ordner liegt 30 Tage im Papierkorb. Nichts gelöscht. Probelauf `tools/db-test/106_register_einheitlich_test.sql` (Erwartung `106_erwartet.txt`), lokal auf PostgreSQL 16 grün, auch zweimal eingespielt; persönliche Ordner blieben unberührt.
+- Tests: neu `tests/register-einheitlich.test.mjs`; `ordner-kennung` angepasst. Rückweg: App/Server 2.833.0; Namen lassen sich im Büro zurück umbenennen, „Mitglieder“ aus dem Papierkorb holen.
 ## 2.833.0 – Erledigte Vorschläge ordentlich ablegen (KC-CLUB-VORSCHLAG-ERLEDIGT, Wunsch #76)
 - Vorschläge: oben nur noch Offenes. Erledigtes liegt eingeklappt unter „🗂️ Erledigt“, darin je Sitzung (sonst je Monat) ein eigener Bereich mit Anzahl. Nichts verschwindet.
 - Behandelte Themen haben den Knopf „📄 Im Protokoll“.
