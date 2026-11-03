@@ -21,6 +21,7 @@ const TEILE_LISTE = {
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-o9MB97XuckyPjpnEjMBplAvL7UaPrudZ/YwVrVtwWk7uhqwA3+1Q21s6hTfMAPuQ" }, // 2.830.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
+  magazin: { einstieg: ["magStart", "wmProspekt"], sri: "sha384-ct5gHpe+6DbcH2gMpP4S4ETnFOfH7X+AHvicQZNBZLnsgBQuzzHgijqJXUARhwcT" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
@@ -9428,6 +9429,9 @@ const KACHELN = {
     { id: "spiele", sym: "🎲", t: "Spiele", u: "Tic-Tac-Toe · Schach · Bauernskat · Küchenterror · Mensch ärgere dich nicht · Fang den Koch", aktion: "spStart()", zahl: () => INIT?.spieleDran || 0 },
     // KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen
     { id: "rezepte", sym: "📖", t: "Rezeptbuch", u: () => (nurTest("rezepte") ? "🔒 nur für dich (Test) · " : "") + (RZ?.liste ? `${RZ.liste.length} Rezept${RZ.liste.length === 1 ? "" : "e"}` : "Club-Rezepte · Einkaufsliste"), aktion: "rzStart()", nur: () => frei("rezepte") },
+    // KC-CLUB-MAGAZIN-GERUEST / KC-CLUB-WM-PROSPEKT (03.11.2026): Gerüst – bis zur Freigabe nur für den Admin (🔒 Test)
+    { id: "magazin", sym: "📰", t: "Club-Küche", u: () => (nurTest("magazin") ? "🔒 nur für dich (Entwurf) · " : "") + "Das Club-Magazin zum Blättern", aktion: "magStart()", nur: () => frei("magazin") },
+    { id: "wm_prospekt", sym: "🎄", t: "Weihnachtsmarkt-Prospekt", u: () => (nurTest("wm_prospekt") ? "🔒 nur für dich (Entwurf) · " : "") + "Unser Angebot zum Blättern", aktion: "wmProspekt()", nur: () => frei("wm_prospekt") },
   ],
   mein: [
     { id: "status", sym: "🟢", t: "Mein Status", u: "verfügbar, Urlaub …", aktion: "statusBlatt()" },

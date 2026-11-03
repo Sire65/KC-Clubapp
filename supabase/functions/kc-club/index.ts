@@ -5055,6 +5055,8 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   dienst_stempel: { t: "🟢 Dienst anmelden/abmelden", u: "Kommen und Gehen in der App, mit Vorschlag aus dem Dienstplan", standard: "admin" }, // 2.590.0 KC-CLUB-DIENST-STEMPEL (erst Hansi testet)
   dienst_tausch: { t: "🔁 Dienst-Tausch-Börse", u: "Dienst anbieten, ein anderes Mitglied übernimmt, der Planer bestätigt", standard: "admin" }, // 2.606.0 KC-CLUB-DIENST-TAUSCH (erst Hansi testet)
   dp_einzelplan: { t: "📄 Mein Einzelplan (Dienstplan)", u: "Eigener Dienstplan auf einem Blatt: Regelzeit, Dienste, Bereitschaft, Wünsche – unter 🗓️ Mein Dienst", standard: "admin" }, // KC-CLUB-DP-EINZELPLAN
+  magazin: { t: "📰 Club-Küche (Magazin)", u: "Monatliches Club-Magazin zum Blättern – Gerüst, Redaktion wird in der Clubsitzung gefragt", standard: "admin" }, // KC-CLUB-MAGAZIN-GERUEST
+  wm_prospekt: { t: "🎄 Weihnachtsmarkt-Prospekt", u: "Angebot und Preise zum Blättern – Seiten aus dem Club-Ordner Weihnachtsmarkt", standard: "admin" }, // KC-CLUB-WM-PROSPEKT
   runder_tisch: { t: "🪑 Runder Tisch", u: "Zu einem Thema einladen, Platz nehmen, gemeinsam schreiben und zeigen (höchstens 18)", standard: "admin" }, // 2.762.0 KC-CLUB-RUNDER-TISCH (erst Hansi testet)
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
