@@ -765,11 +765,12 @@ function buTischDinge({ L, S, summe, kal, naechst, fest }) {
   const nacht = istNacht(), zeilen = buMonitorZeilen(naechst, fest); setTimeout(buUhrStellen, 0); // Uhr im Bildschirm (stellt sich ab, wenn das Büro zu ist)
   const monitor = `<button type="button" class="bu-obj bu-o-monitor" style="grid-area:monitor" onclick="buAnsichtWechseln()" aria-label="Bildschirm – Büro als Liste öffnen">
       <span class="bu-mon"><span class="bu-mon-schirm"><span class="bu-mon-uhr">${buUhrzeit()}</span>${zeilen.length ? zeilen.map((x) => `<span class="bu-mon-zeile">${x}</span>`).join("")
-        : '<span class="bu-mon-logo"><img src="kc-kochmuetze-weiss.webp" alt=""><small>Köcheclub Werne</small></span>'}</span></span><span class="bu-mon-fuss"></span><span class="bu-olabel">Bildschirm</span></button>`;
+        : '<span class="bu-mon-logo"><img src="kc-kochmuetze-weiss.webp" alt=""><small>Köcheclub Werne</small></span>'}</span></span><span class="bu-mon-fuss"></span>${buNamensschild()}<span class="bu-olabel">Bildschirm</span></button>`;
   const kalender = ding("kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-kal"><span class="bu-kmon">–</span><span class="bu-ktag">?</span></span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')"); // wie bisher
   const geraet = `<span class="bu-o-geraet" style="grid-area:drucker">${S ? `<button type="button" class="bu-obj bu-o-scanner" onclick="buEinlesen()" aria-label="Einlesen (Scanner)">${BU_SVG.scanner}<span class="bu-olabel">Einlesen</span></button>` : ""}
       <button type="button" class="bu-obj bu-o-drucker" onclick="buDrucker()" aria-label="Drucken">${BU_SVG.drucker}<span class="bu-olabel">Drucken</span></button></span>`;
-  return [ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()").replace('aria-label="Lampe"', `aria-label="Lampe – ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`), monitor, kalender,
+  const lm = BU_LAMPE_MODUS[DS.modus] || BU_LAMPE_MODUS.auto; // 2.830.0 KC-CLUB-BUERO-NAMENSSCHILD: Buchstabe am Lampenfuß (T / N / A)
+  return [ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()", `<span class="bu-lampe-modus" title="${lm[1]}" aria-hidden="true">${lm[0]}</span>`).replace('aria-label="Lampe"', `aria-label="Lampe – ${lm[1]}, ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`), monitor, kalender,
     L ? ding("korb", BU_SVG.korb, "Eingang", "buEingang()", summe ? `<span class="bu-dzahl">${summe}</span>` : "") : "", geraet,
     L ? ding("handy", BU_SVG.handy, "Handy", "buHandy()") : "",
     fest.length ? ding("kaffee", BU_SVG.karte, "Glück&shy;wunsch", "buFeste()", `<span class="bu-dzahl">${fest.length}</span>`) : `<span class="bu-obj bu-o-deko" style="grid-area:kaffee" aria-hidden="true">${BU_SVG.kaffee}</span>`,
@@ -777,6 +778,15 @@ function buTischDinge({ L, S, summe, kal, naechst, fest }) {
     L ? ding("telefon", BU_SVG.telefon, "Telefon", "buTelefon()") : "",
     L ? ding("tastatur", BU_SVG.tastatur, "Nachricht &amp; Mail", "buNachricht()") : "",
     ding("rechner", BU_SVG.rechner, "Rechner", "rechnerOeffnen()")].join("");
+}
+// ---------- 2.830.0 KC-CLUB-BUERO-NAMENSSCHILD (Wunschliste #75, Wunsch Hansi 03.11.2026 „Im Büro unter dem Monitor ein goldenes Namensschild mit z. B.
+// Klaus Zander, drunter etwas kleiner: Clubsprecher. Und an der Lampe ebenfalls den kleinen Buchstaben für Tag, Nacht, Automatik“) ----------
+// Das Schild zeigt, wer gerade am Schreibtisch sitzt (das eigene Konto) und das erste Amt; „Admin“ nur, wenn es kein anderes gibt.
+const BU_LAMPE_MODUS = { tag: ["T", "Tag"], nacht: ["N", "Nacht"], auto: ["A", "Automatik"] };
+function buNamensschild() {
+  const name = ICH?.name || [ICH?.vorname, ICH?.nachname].filter(Boolean).join(" "); if (!name) return "";
+  const a = (ICH?.aemter || []).filter(Boolean), amt = a.find((x) => !/^admin$/i.test(x)) || a[0] || "";
+  return `<span class="bu-namensschild" aria-label="${esc(name + (amt ? ", " + amt : ""))}"><b>${esc(name)}</b>${amt ? `<small>${esc(amt)}</small>` : ""}</span>`;
 }
 // 💡 Lampe: schaltet von Hand zwischen Tag und Nacht (wie „T“/„N“ am Mond-Knopf; Automatik wieder über den Mond-Knopf oder ⚙️ → Darstellung)
 function buLampe() { const n = !istNacht(); modusWaehlen(n ? "nacht" : "tag"); melde(n ? "💡 Licht an – Nachtmodus (zurück zur Automatik: Mond-Knopf oben)" : "☀️ Licht aus – Tagmodus (zurück zur Automatik: Mond-Knopf oben)"); buZeigen(); }

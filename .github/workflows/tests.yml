@@ -66,6 +66,7 @@ jobs:
       - run: node tests/anleitungen.test.mjs
       - run: node tests/hilfe-tipps.test.mjs
       - run: node tests/pinnwand-nadel-druecken.test.mjs
+      - run: node tests/buero-namensschild.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
