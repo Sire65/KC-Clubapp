@@ -26170,7 +26170,7 @@ function anlagenListe(bearbeiten) {
 function aufgabeZeile(a, darfAbhaken, darfLoeschen) {
   return `<div class="zeile">${darfAbhaken ? `<button class="knopf klein ${a.erledigt_am ? "gruen" : ""}" title="erledigt" onclick="aufgabeErledigt('${a.id}', ${!a.erledigt_am})">${a.erledigt_am ? "✔" : "☐"}</button>` : `<span>${a.erledigt_am ? "✔" : "📌"}</span>`}
     <div style="flex:1${a.erledigt_am ? ";text-decoration:line-through;opacity:.6" : ""}"><b>${esc(a.text)}</b>
-      <div class="hinweis" style="font-size:.85rem">${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}</div>
+      <div class="hinweis" style="font-size:.85rem">${a.ids?.length > 1 ? '<span title="gemeinsame Aufgabe – erledigt, sobald einer sie abhakt">👥 </span>' : ""}${esc(a.name)}${a.mit?.length ? ` <span title="gemeinsame Aufgabe">· gemeinsam mit ${esc(a.mit.join(", "))}</span>` : ""} ${a.erledigt_am ? "" : faelligText(a.faellig)}${a.protokoll ? " · aus „" + esc(a.protokoll.titel) + "“" : ""}</div>${a.erledigt_am && a.bemerkung ? `<div class="hinweis" style="font-size:.85rem;text-decoration:none;opacity:1">💬 ${esc(a.bemerkung)}</div>` : ""}</div>
     ${darfLoeschen ? `<button class="knopf klein" title="löschen" aria-label="Aufgabe löschen" onclick="aufgabeLoeschen('${a.id}')">🗑️</button>` : ""}</div>`;
 }
 // ---------- 2.499.0 KC-CLUB-PROTOKOLL-NACHTRAG (Wunsch Hansi „Ich will nicht manuell eintragen“): Texte, die Hansi diktiert hat (über Claude abgelegt),
@@ -26448,10 +26448,22 @@ async function aufgabeHinzu() {
     const n = AUF_WER.length; AUF_WER = []; if ($("aufWer")) $("aufWer").textContent = "👉 bitte wählen"; $("aufWas").value = ""; $("aufBis").value = ""; await prNeuLaden(); melde(n > 1 ? `Aufgabe für ${n} Personen eingetragen` : "Aufgabe eingetragen"); }
   catch (e) { meldeFehler(e); }
 }
-// gemeinsame Aufgaben: bei jeder Zeile die anderen Beteiligten nennen
+// gemeinsame Aufgaben: 2.843.0 KC-CLUB-AUFGABE-GEMEINSAM (Wunschliste #79, Wunsch Hansi 03.11.2026 „Bei Aufgaben im Protokoll auch mehrere Personen anhaken,
+// die eine Aufgabe übernehmen können. Nicht doppelt auflisten.“): Zeilen derselben Gruppe (je Person eine Zeile in der Datenbank) werden hier zu EINER Aufgabe
+// mit allen Namen zusammengefasst – für alle Ansichten (Protokoll, Bearbeiten, Büro, Übersicht, Ausdruck). Erledigt, sobald einer sie abhakt (der Server
+// hakt die ganze Gruppe ab). Vorher stand jede Person als eigene Zeile da („… gemeinsam mit …“). Ändert die Liste an Ort und Stelle (alle Aufrufer nutzen sie weiter).
 function aufgabenMitGruppe(liste) {
   const g = new Map(); for (const a of liste) if (a.gruppe) g.set(a.gruppe, [...(g.get(a.gruppe) || []), a]);
-  for (const a of liste) a.mit = a.gruppe ? (g.get(a.gruppe) || []).filter((x) => x.id !== a.id).map((x) => (x.name || "").split(" ")[0]) : [];
+  const neu = [];
+  for (const a of liste) {
+    const alle = a.gruppe ? g.get(a.gruppe) : null;
+    if (!alle || alle.length < 2) { a.mit = []; neu.push(a); continue; }
+    if (alle[0] !== a) continue; // schon mit der ersten Zeile der Gruppe aufgenommen
+    neu.push({ ...a, name: alle.map((x) => x.name || "?").join(", "), namen: alle.map((x) => x.name || "?"), ids: alle.map((x) => x.id), mit: [],
+      meine: alle.some((x) => x.meine), verwalten: alle.some((x) => x.verwalten),
+      erledigt_am: alle.every((x) => x.erledigt_am) ? alle.map((x) => x.erledigt_am).sort().pop() : null, bemerkung: alle.find((x) => x.bemerkung)?.bemerkung ?? null });
+  }
+  liste.splice(0, liste.length, ...neu);
   return liste;
 }
 // 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi): Erledigt nur mit kurzer Bemerkung – „Was ist dabei herausgekommen?“

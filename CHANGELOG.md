@@ -5,6 +5,11 @@ Wunsch Hansi (03.11.): „Bei den Filmen eine Anzeige, wie lange der Film läuft
 - Jedes Erklär-Video zeigt ein grünes Schildchen **„⏱️ unter 1 Min.“ / „⏱️ ca. 1½ Min.“** – ausgerechnet wie der Abspieler (Sprechtext, gewähltes Sprechtempo, kurze Pausen). Die alten festen Angaben „(ca. … Min.)“ im Untertitel entfallen.
 - Themen-Kacheln zeigen die Spanne je Video („je ½ bis 2 Min.“) statt einer langen Summe; beim Abspielen mehrerer angehakter Videos steht die Gesamtdauer auf dem Knopf. Fertige Filme hatten ihre Länge schon (⏱️ 3 Min.).
 - Test: `tests/video-dauer.test.mjs`. Rückweg: App 2.842.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.843.0 – Gemeinsame Aufgaben nur einmal (KC-CLUB-AUFGABE-GEMEINSAM, Wunschliste #79)
+- Eine Aufgabe für mehrere Personen (im Protokoll „Wer? – auch mehrere“ anhaken) steht jetzt als EINE Zeile mit allen Namen und 👥 da – im Protokoll, beim Schreiben, im Büro, in der Übersicht „Offene Aufgaben“ und im Ausdruck. Vorher je Person eine Zeile („… gemeinsam mit …“).
+- Abhaken durch einen der Beteiligten gilt für alle; die anderen Beteiligten und wer sie eingetragen hat bekommen Bescheid. Löschen entfernt die ganze gemeinsame Aufgabe (jede Zeile im Papierkorb).
+- Die Zahl offener Aufgaben je Protokoll zählt eine gemeinsame Aufgabe einmal.
+- Test: tests/aufgabe-gemeinsam.test.mjs. Rückweg: Version 2.842.0 einspielen.
 
 ## 2.842.0 – Anbieter: Neues, Störungen, Wartungen (KC-CLUB-ANBIETER-NEUES, Wunschliste #78)
 - Neue Admin-Kachel „📰 Anbieter“: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – angekündigte Wartungen, Störungen (14 Tage), Neuerungen (30 Tage). Oben die Lage in einem Satz.
