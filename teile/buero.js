@@ -765,15 +765,18 @@ function buTischDinge({ L, S, summe, kal, naechst, fest }) {
   const nacht = istNacht(), zeilen = buMonitorZeilen(naechst, fest); setTimeout(buUhrStellen, 0); // Uhr im Bildschirm (stellt sich ab, wenn das Büro zu ist)
   const monitor = `<button type="button" class="bu-obj bu-o-monitor" style="grid-area:monitor" onclick="buAnsichtWechseln()" aria-label="Bildschirm – Büro als Liste öffnen">
       <span class="bu-mon"><span class="bu-mon-schirm"><span class="bu-mon-uhr">${buUhrzeit()}</span>${zeilen.length ? zeilen.map((x) => `<span class="bu-mon-zeile">${x}</span>`).join("")
-        : '<span class="bu-mon-logo"><img src="kc-kochmuetze-weiss.webp" alt=""><small>Köcheclub Werne</small></span>'}</span></span><span class="bu-mon-fuss"></span>${buNamensschild()}<span class="bu-olabel">Bildschirm</span></button>`;
+        : '<span class="bu-mon-logo"><img src="kc-kochmuetze-weiss.webp" alt=""><small>Köcheclub Werne</small></span>'}</span></span><span class="bu-mon-fuss"></span><span class="bu-olabel">Bildschirm</span>${buNamensschild()}</button>`;
   const kalender = ding("kalender", kal ? `<span class="bu-kal"><span class="bu-kmon">${esc(kal.toLocaleDateString("de-DE", { month: "short" }))}</span><span class="bu-ktag">${kal.getDate()}</span><span class="bu-kwt">${esc(kal.toLocaleDateString("de-DE", { weekday: "short" }))}</span></span>` : '<span class="bu-kal"><span class="bu-kmon">–</span><span class="bu-ktag">?</span></span>', kal ? esc(naechst.titel || "Nächster Termin") : "Termine", S ? "buTermine()" : "zeige('termine')"); // wie bisher
   const geraet = `<span class="bu-o-geraet" style="grid-area:drucker">${S ? `<button type="button" class="bu-obj bu-o-scanner" onclick="buEinlesen()" aria-label="Einlesen (Scanner)">${BU_SVG.scanner}<span class="bu-olabel">Einlesen</span></button>` : ""}
       <button type="button" class="bu-obj bu-o-drucker" onclick="buDrucker()" aria-label="Drucken">${BU_SVG.drucker}<span class="bu-olabel">Drucken</span></button></span>`;
   const lm = BU_LAMPE_MODUS[DS.modus] || BU_LAMPE_MODUS.auto; // 2.835.0 KC-CLUB-BUERO-NAMENSSCHILD: Buchstabe am Lampenfuß (T / N / A)
-  return [ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()", `<span class="bu-lampe-modus" title="${lm[1]}" aria-hidden="true">${lm[0]}</span>`).replace('aria-label="Lampe"', `aria-label="Lampe – ${lm[1]}, ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`), monitor, kalender,
+  // Lampe mit drei kleinen Knöpfen am Fuß: T Tag · N Nacht · A Automatik (der gewählte leuchtet) – KC-CLUB-BUERO-PAUSE (Wunsch Hansi 03.11.2026)
+  const lampe = `<span class="bu-o-lampe-platz" style="grid-area:lampe">${ding("lampe", BU_SVG.lampe(nacht), "Lampe", "buLampe()").replace('style="grid-area:lampe" ', "").replace('aria-label="Lampe"', `aria-label="Lampe – gerade ${lm[1]}, ${nacht ? "ausschalten: Tagmodus" : "einschalten: Nachtmodus"}"`)}
+    <span class="bu-lampe-modi" role="group" aria-label="Licht: Tag, Nacht oder Automatik">${Object.entries(BU_LAMPE_MODUS).map(([k, [b, t]]) => `<button type="button" class="${(DS.modus || "auto") === k ? "an" : ""}" aria-pressed="${(DS.modus || "auto") === k}" title="${t}" aria-label="${t}" onclick="buLampeModus('${k}')">${b}</button>`).join("")}</span></span>`;
+  return [lampe, monitor, kalender,
     L ? ding("korb", BU_SVG.korb, "Eingang", "buEingang()", summe ? `<span class="bu-dzahl">${summe}</span>` : "") : "", geraet,
     L ? ding("handy", BU_SVG.handy, "Handy", "buHandy()") : "",
-    fest.length ? ding("kaffee", BU_SVG.karte, "Glück&shy;wunsch", "buFeste()", `<span class="bu-dzahl">${fest.length}</span>`) : `<span class="bu-obj bu-o-deko" style="grid-area:kaffee" aria-hidden="true">${BU_SVG.kaffee}</span>`,
+    fest.length ? ding("kaffee", BU_SVG.karte, "Glück&shy;wunsch", "buFeste()", `<span class="bu-dzahl">${fest.length}</span>`) : ding("kaffee", BU_SVG.kaffee, "Pause", "buPause()"),
     ding("fueller", BU_SVG.fueller, "Füller", "buFueller()", S ? "" : '<span class="bu-nur">nur lesen</span>'),
     L ? ding("telefon", BU_SVG.telefon, "Telefon", "buTelefon()") : "",
     L ? ding("tastatur", BU_SVG.tastatur, "Nachricht &amp; Mail", "buNachricht()") : "",
@@ -787,6 +790,22 @@ function buNamensschild() {
   const name = ICH?.name || [ICH?.vorname, ICH?.nachname].filter(Boolean).join(" "); if (!name) return "";
   const a = (ICH?.aemter || []).filter(Boolean), amt = a.find((x) => !/^admin$/i.test(x)) || a[0] || "";
   return `<span class="bu-namensschild" aria-label="${esc(name + (amt ? ", " + amt : ""))}"><b>${esc(name)}</b>${amt ? `<small>${esc(amt)}</small>` : ""}</span>`;
+}
+function buLampeModus(k) { modusWaehlen(k); melde(k === "auto" ? "🌗 Automatik – hell am Tag, dunkel am Abend" : k === "nacht" ? "🌙 Nachtmodus" : "☀️ Tagmodus"); buZeigen(); }
+// ---------- KC-CLUB-BUERO-PAUSE (Wunsch Hansi 03.11.2026 „mache sozusagen einen Bildschirmschoner. Wenn man die Kaffeetasse anklickt, ist Pause. Im Schoner anzeigen:
+// das Logo, Köcheclub Werne, ‚… befindet sich im Büro im Pause-Modus‘“) ----------
+// Vollbild über der App; das Logo schwebt langsam (nur solange der Schoner offen ist, bei „Bewegung verringern“ steht es). Antippen, Taste oder Zurück beendet die Pause.
+function buPause() {
+  if ($("buSchoner")) return;
+  const name = ICH?.name || ICH?.vorname || "", seit = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date());
+  const s = document.createElement("div"); s.id = "buSchoner"; s.className = "bu-schoner"; s.setAttribute("role", "dialog"); s.setAttribute("aria-modal", "true"); s.setAttribute("aria-label", "Pause – Bildschirmschoner");
+  s.innerHTML = `<div class="bu-schoner-feld"><div class="bu-schoner-logo"><span class="bu-schoner-muetze"><img src="kc-kochmuetze-weiss.webp" alt=""></span><b>Köcheclub Werne</b>
+      <span>${name ? `<strong>${esc(name)}</strong> befindet sich im Büro im Pause-Modus` : "Das Büro ist im Pause-Modus"}</span><small>☕ Pause seit ${seit} Uhr</small></div></div>
+    <button type="button" class="bu-schoner-weiter">Antippen zum Weiterarbeiten</button>`;
+  const zu = () => { s.remove(); document.removeEventListener("keydown", taste); melde("☕ Pause beendet – weiter geht's"); };
+  const taste = (e) => { if (e.key !== "Tab") zu(); };
+  s.addEventListener("click", zu); document.addEventListener("keydown", taste);
+  document.body.appendChild(s); s.querySelector(".bu-schoner-weiter").focus();
 }
 // 💡 Lampe: schaltet von Hand zwischen Tag und Nacht (wie „T“/„N“ am Mond-Knopf; Automatik wieder über den Mond-Knopf oder ⚙️ → Darstellung)
 function buLampe() { const n = !istNacht(); modusWaehlen(n ? "nacht" : "tag"); melde(n ? "💡 Licht an – Nachtmodus (zurück zur Automatik: Mond-Knopf oben)" : "☀️ Licht aus – Tagmodus (zurück zur Automatik: Mond-Knopf oben)"); buZeigen(); }

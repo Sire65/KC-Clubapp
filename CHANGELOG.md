@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.838.0 – 2026-11-03 – 🏢 Büro: Schild und Lampe nachgebessert, ☕ Pause mit Bildschirmschoner (KC-CLUB-BUERO-PAUSE)
+Rückmeldung Hansi (03.11., Foto): „Das weiße Schild Bildschirm soll direkt unter den Monitor, darunter das Namensschild als ein Schild, nicht in der Mitte unterbrochen. An der Lampe fehlt das A für Automatik. Und mache einen Bildschirmschoner: Wenn man die Kaffeetasse anklickt, ist Pause – im Schoner das Logo, Köcheclub Werne, ‚… befindet sich im Büro im Pause-Modus‘.“
+- „Bildschirm“ steht direkt unter dem Monitor, darunter das goldene Namensschild in einem Stück (ohne Mittelkante).
+- Am Lampenfuß drei kleine Knöpfe **T · N · A** (Tag, Nacht, Automatik) – der gewählte leuchtet, antippen stellt um.
+- **☕ Kaffeetasse = Pause:** Bildschirmschoner über der ganzen App mit Logo, „Köcheclub Werne“, „<Name> befindet sich im Büro im Pause-Modus“ und „Pause seit …“; das Logo schwebt langsam (bei „Bewegung verringern“ steht es). Antippen oder eine Taste beendet die Pause.
+- Rückweg: App 2.837.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.837.0 – Schnellerer Start (KC-CLUB-START-SCHNELLER, Gesamtprüfung #44 F)
 - Messung (Handy-Tempo simuliert): erstes Bild nach ≈ 0,35 s, Server tagsüber ≈ 0,5 s, Server-Neustart nur 20–90 ms. Langsame Ausreißer (5–15 s) kommen gehäuft beim Hochladen einer neuen Server-Version – dafür gilt schon „nur einspielen, wenn höchstens 2 in der App sind“.
 - Größte Einzelbremse im Programm: das Tagesdatum (heuteIso) baute bei jedem Aufruf sein Format neu – beim Start hunderte Male (≈ 0,1 s). Jetzt einmal gebaut, Ergebnis gleich. Ebenso berlinIso, isoBerlin, tagVon, Kuckucksuhr-Zeit.
