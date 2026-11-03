@@ -10,7 +10,8 @@ const pruef = new Function("return {" + ecode.replace(/\(x: unknown\)/g, "(x)") 
 const w = pruef({ plaetze: { rechner: "lampe", "<b>": "x1", uhr: "x1; drop", lampe: 5 }, dinge: ["uhr", "uhr", "rolodex", "a", "b", "c", "<x>"] });
 assert.deepEqual(w.plaetze, { rechner: "lampe" }, "nur gültige Kennungen");
 assert.deepEqual(w.dinge, ["uhr", "rolodex", "a", "b"], "doppelt raus, höchstens 4");
-assert.deepEqual(pruef(null), { plaetze: {}, dinge: [] }, "leer ist erlaubt");
+assert.deepEqual(pruef(null), { plaetze: {}, dinge: [], versatz: {} }, "leer ist erlaubt"); // 2.844.0 KC-CLUB-BUERO-FEIN: + Feinversatz
+assert.deepEqual(pruef({ versatz: { monitor: [12.4, -99], "<b>": [1, 1], lampe: "x" } }).versatz, { monitor: [12, -60] }, "Feinversatz geprüft und begrenzt");
 // App: Plätze verteilen (gewünscht → Grundplatz → freier Zusatzplatz), nie doppelt
 const r0 = b.indexOf("function buePlaetzeRechnen("), rcode = b.slice(r0, b.indexOf("\nfunction bueVerteilen", r0));
 const rechne = new Function("BUE_EXTRA", rcode + "\nreturn buePlaetzeRechnen;")(["x1", "x2", "x3", "x4"]);

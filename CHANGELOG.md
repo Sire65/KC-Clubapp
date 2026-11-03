@@ -1,10 +1,11 @@
 # Änderungen
 
-## 2.843.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER)
+## 2.844.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER) · 🏢 Büro fein einrichten (KC-CLUB-BUERO-FEIN) · Server 2.844.0
 Wunsch Hansi (03.11.): „Bei den Filmen eine Anzeige, wie lange der Film läuft. Sonst sind die Mitglieder abgeschreckt und denken, er läuft zu lange.“
 - Jedes Erklär-Video zeigt ein grünes Schildchen **„⏱️ unter 1 Min.“ / „⏱️ ca. 1½ Min.“** – ausgerechnet wie der Abspieler (Sprechtext, gewähltes Sprechtempo, kurze Pausen). Die alten festen Angaben „(ca. … Min.)“ im Untertitel entfallen.
 - Themen-Kacheln zeigen die Spanne je Video („je ½ bis 2 Min.“) statt einer langen Summe; beim Abspielen mehrerer angehakter Videos steht die Gesamtdauer auf dem Knopf. Fertige Filme hatten ihre Länge schon (⏱️ 3 Min.).
-- Test: `tests/video-dauer.test.mjs`. Rückweg: App 2.842.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- **🏢 Büro fein einrichten** (KC-CLUB-BUERO-FEIN, Wunsch Hansi 03.11.: „Man muss die Objekte auch feiner verschieben können, z. B. Monitor näher an die Pinnwand“): beim „✏️ Einrichten“ ein Teil ziehen und nicht auf einem anderen Teil loslassen → es bleibt genau dort stehen; oder ein Teil antippen und mit **Fein: ◀ ▲ ▼ ▶** in kleinen Schritten schieben, **⊙** stellt es wieder genau auf seinen Platz. Gespeichert in Prozent der Teilgröße (gleich auf jedem Gerät, höchstens ±60 %), „↩️ Wie vorher“ und „🏠 Grundaufstellung“ nehmen es mit. Server speichert den Versatz mit (Einstellung buero_einrichtung). Test: `tests/buero-fein.test.mjs`.
+- Test: `tests/video-dauer.test.mjs`. Rückweg: App 2.843.0, Server wie vorher. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 ## 2.843.0 – Gemeinsame Aufgaben nur einmal (KC-CLUB-AUFGABE-GEMEINSAM, Wunschliste #79)
 - Eine Aufgabe für mehrere Personen (im Protokoll „Wer? – auch mehrere“ anhaken) steht jetzt als EINE Zeile mit allen Namen und 👥 da – im Protokoll, beim Schreiben, im Büro, in der Übersicht „Offene Aufgaben“ und im Ausdruck. Vorher je Person eine Zeile („… gemeinsam mit …“).
 - Abhaken durch einen der Beteiligten gilt für alle; die anderen Beteiligten und wer sie eingetragen hat bekommen Bescheid. Löschen entfernt die ganze gemeinsame Aufgabe (jede Zeile im Papierkorb).

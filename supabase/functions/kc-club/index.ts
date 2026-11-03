@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.843.0";
+const SERVER_VERSION = "2.844.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2039,6 +2039,10 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     plaetze: Object.fromEntries(Object.entries(w?.plaetze && typeof w.plaetze === "object" && !Array.isArray(w.plaetze) ? w.plaetze : {})
       .filter(([k, v]) => /^[a-z0-9]{1,12}$/.test(k) && typeof v === "string" && /^[a-z0-9]{1,12}$/.test(v)).slice(0, 30)),
     dinge: [...new Set((Array.isArray(w?.dinge) ? w.dinge : []).filter((x: unknown) => typeof x === "string" && /^[a-z0-9]{1,12}$/.test(x)))].slice(0, 4),
+    // 2.844.0 KC-CLUB-BUERO-FEIN: Feinversatz je Teil in Prozent seiner Größe, je Richtung höchstens ±60
+    versatz: Object.fromEntries(Object.entries(w?.versatz && typeof w.versatz === "object" && !Array.isArray(w.versatz) ? w.versatz : {})
+      .filter(([k, v]) => /^[a-z0-9]{1,12}$/.test(k) && Array.isArray(v)).slice(0, 30)
+      .map(([k, v]) => [k, [0, 1].map((i) => Math.max(-60, Math.min(60, Math.round(Number(Array.isArray(v) ? v[i] : 0) || 0))))])),
   }),
   // KC-CLUB-CHAT-FARBEN (2.145.0): nur kurze Kennungen aus der Auswahl der App – nie freie Farben/Bilder
   chat_farben: (w) => { const id = (x: unknown) => (typeof x === "string" && /^[a-z0-9_]{1,24}$/.test(x) ? x : "standard"); return { eigen: id(w?.eigen), andere: id(w?.andere), hintergrund: id(w?.hintergrund),

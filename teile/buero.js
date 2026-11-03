@@ -804,10 +804,17 @@ const BUE_KATALOG = [ // Registry: neue Teile nur hier
   { id: "foto", t: "Bild", lang: "Bilderrahmen", x: "Nur Deko · mit der Kochmütze", fn: () => "bueDeko('foto')", svg: () => '<svg viewBox="0 0 60 64" aria-hidden="true"><path d="M44 58 L50 64" stroke="#5d4037" stroke-width="3"/><rect x="6" y="4" width="48" height="56" rx="3" fill="#8a6d4e"/><rect x="11" y="9" width="38" height="46" fill="#f3ebdd"/><path d="M20 36 H40 V44 H20 Z" fill="#fff" stroke="#c9b79c"/><circle cx="22" cy="30" r="6" fill="#fff" stroke="#c9b79c"/><circle cx="30" cy="25" r="8" fill="#fff" stroke="#c9b79c"/><circle cx="38" cy="30" r="6" fill="#fff" stroke="#c9b79c"/><rect x="21" y="30" width="18" height="7" fill="#fff"/><text x="30" y="51" font-size="5" text-anchor="middle" fill="#741521">Köcheclub Werne</text></svg>' },
   { id: "locher", t: "Locher", x: "Nur Deko · antippen macht „klack“", fn: () => "bueDeko('locher')", svg: () => '<svg viewBox="0 0 70 50" aria-hidden="true"><rect x="6" y="36" width="58" height="10" rx="3" fill="#3a3f45"/><path d="M12 36 L16 16 H54 L58 36 Z" fill="#741521"/><rect x="18" y="12" width="34" height="6" rx="3" fill="#5a0f19"/><circle cx="24" cy="42" r="2" fill="#cfd6dc"/><circle cx="46" cy="42" r="2" fill="#cfd6dc"/></svg>' },
 ];
+// 2.844.0 KC-CLUB-BUERO-FEIN (Wunsch Hansi 03.11.2026 „Man muss die Objekte auch feiner verschieben können, z. B. Monitor näher an die Pinnwand“):
+// je Teil ein kleiner Versatz in Prozent seiner eigenen Größe (gleich auf jedem Gerät), höchstens ±BUE_FEIN_MAX. Ziehen und auf keinem anderen Teil loslassen
+// = genau dort stehen lassen; Pfeile ◀ ▲ ▼ ▶ schieben das angetippte Teil in kleinen Schritten.
+const BUE_FEIN_MAX = 60, BUE_FEIN_SCHRITT = 4;
+const bueRund = (x) => Math.max(-BUE_FEIN_MAX, Math.min(BUE_FEIN_MAX, Math.round(Number(x) || 0)));
+function bueVersatzPruefen(v) { const o = {}; if (v && typeof v === "object" && !Array.isArray(v)) for (const [k, p] of Object.entries(v).slice(0, 30)) if (/^[a-z0-9]{1,12}$/.test(k) && Array.isArray(p)) { const [x, y] = [bueRund(p[0]), bueRund(p[1])]; if (x || y) o[k] = [x, y]; } return o; }
+const bueVersatzStil = (id) => { const p = BUE.versatz?.[id]; return p && (p[0] || p[1]) ? `;translate:${p[0]}% ${p[1]}%` : ""; };
 const BUE = { an: false, wahl: null, vorher: null, extra: false, aktuell: {}, ...bueGespeichert() };
 function bueGespeichert() {
   const w = INIT?.einstellungen?.buero_einrichtung || (() => { try { return JSON.parse(lsLesen("kc_club_buero_einrichtung") || "null"); } catch { return null; } })() || {};
-  return { plaetze: w.plaetze && typeof w.plaetze === "object" ? { ...w.plaetze } : {}, dinge: Array.isArray(w.dinge) ? w.dinge.filter((d) => BUE_KATALOG.some((k) => k.id === d)).slice(0, BUE_MAX) : [] };
+  return { versatz: bueVersatzPruefen(w.versatz), plaetze: w.plaetze && typeof w.plaetze === "object" ? { ...w.plaetze } : {}, dinge: Array.isArray(w.dinge) ? w.dinge.filter((d) => BUE_KATALOG.some((k) => k.id === d)).slice(0, BUE_MAX) : [] };
 }
 const bueKatalogErlaubt = (L) => BUE_KATALOG.filter((k) => k.recht !== "L" || L);
 const bueKatalogDinge = (S, L) => bueKatalogErlaubt(L).filter((k) => BUE.dinge.includes(k.id));
@@ -822,29 +829,37 @@ function bueVerteilen(teile, L) {
   const frei = [...BUE_PLAETZE[L ? "L" : "M"], ...BUE_EXTRA], ids = teile.map((h) => (h.match(/style="grid-area:([a-z0-9]+)"/) || [])[1]).filter(Boolean);
   const platz = buePlaetzeRechnen(ids, frei, BUE.plaetze); BUE.aktuell = platz;
   BUE.extra = Object.values(platz).some((a) => BUE_EXTRA.includes(a));
-  const html = teile.map((h) => h.replace(/style="grid-area:([a-z0-9]+)"/, (m, id) => platz[id] ? `data-ding="${id}" style="grid-area:${platz[id]}"` : 'hidden style=""')).join("");
+  const html = teile.map((h) => h.replace(/style="grid-area:([a-z0-9]+)"/, (m, id) => platz[id] ? `data-ding="${id}" style="grid-area:${platz[id]}${bueVersatzStil(id)}"` : 'hidden style=""')).join("");
   if (BUE.an) setTimeout(bueZiehenAn, 0);
   return html + (BUE.an ? frei.filter((a) => !Object.values(platz).includes(a)).map((a) => `<button type="button" class="bu-leer" data-slot="${a}" style="grid-area:${a}" aria-label="Freier Platz"></button>`).join("") : "");
 }
 function bueLeisteHtml() {
-  return `<div class="bu-einr-leiste" role="group" aria-label="Schreibtisch einrichten"><p class="hinweis" style="margin:0 0 6px">✋ <b>Ziehe ein Teil</b> auf einen anderen Platz – oder <b>tippe zwei Teile nacheinander</b> an: sie tauschen die Plätze.</p>
-    <div class="knoepfe" style="margin:0"><button type="button" class="knopf klein" onclick="bueKatalog()">🛒 Katalog</button><button type="button" class="knopf klein" onclick="bueRueckgaengig()">↩️ Wie vorher</button><button type="button" class="knopf klein" onclick="bueGrund()">🏠 Grundaufstellung</button><button type="button" class="knopf klein haupt" onclick="bueFertig()">✔ Fertig</button></div></div>`;
+  return `<div class="bu-einr-leiste" role="group" aria-label="Schreibtisch einrichten"><p class="hinweis" style="margin:0 0 6px">✋ <b>Ziehe ein Teil</b> auf einen anderen Platz – oder <b>tippe zwei Teile nacheinander</b> an: sie tauschen die Plätze.<br>🎯 <b>Feiner:</b> ein Teil ein Stück ziehen und loslassen – oder antippen und mit den Pfeilen schieben.</p>
+    <div class="knoepfe" style="margin:0"><span class="bue-fein" role="group" aria-label="Angetipptes Teil fein verschieben"><span class="hinweis">Fein:</span><button type="button" class="knopf klein" aria-label="nach links" onclick="bueFein(-1,0)">◀</button><button type="button" class="knopf klein" aria-label="nach oben" onclick="bueFein(0,-1)">▲</button><button type="button" class="knopf klein" aria-label="nach unten" onclick="bueFein(0,1)">▼</button><button type="button" class="knopf klein" aria-label="nach rechts" onclick="bueFein(1,0)">▶</button><button type="button" class="knopf klein" aria-label="wieder genau auf den Platz" onclick="bueFein(0,0,true)">⊙</button></span>
+      <button type="button" class="knopf klein" onclick="bueKatalog()">🛒 Katalog</button><button type="button" class="knopf klein" onclick="bueRueckgaengig()">↩️ Wie vorher</button><button type="button" class="knopf klein" onclick="bueGrund()">🏠 Grundaufstellung</button><button type="button" class="knopf klein haupt" onclick="bueFertig()">✔ Fertig</button></div></div>`;
 }
 function bueStart() {
   if (BUE.an) return bueFertig();
   if (!buRaumAn()) lsSetzen(BU_ANSICHT, "raum");
-  BUE.an = true; BUE.wahl = null; BUE.vorher = { plaetze: { ...BUE.plaetze }, dinge: [...BUE.dinge] }; buZeigen();
+  BUE.an = true; BUE.wahl = null; BUE.vorher = { plaetze: { ...BUE.plaetze }, dinge: [...BUE.dinge], versatz: { ...BUE.versatz } }; buZeigen();
   setTimeout(() => $("buPlatte")?.scrollIntoView({ block: "center", behavior: "smooth" }), 50);
 }
-function bueRueckgaengig() { if (BUE.vorher) { BUE.plaetze = { ...BUE.vorher.plaetze }; BUE.dinge = [...BUE.vorher.dinge]; } BUE.wahl = null; buZeigen(); }
-async function bueGrund() { if (!(await frage("🏠 Alles wieder an den Grundplatz stellen und die Katalog-Teile wegräumen?", { ja: "Ja, Grundaufstellung", nein: "Abbrechen" }))) return; BUE.plaetze = {}; BUE.dinge = []; BUE.wahl = null; buZeigen(); }
+function bueRueckgaengig() { if (BUE.vorher) { BUE.plaetze = { ...BUE.vorher.plaetze }; BUE.dinge = [...BUE.vorher.dinge]; BUE.versatz = { ...(BUE.vorher.versatz || {}) }; } BUE.wahl = null; buZeigen(); }
+async function bueGrund() { if (!(await frage("🏠 Alles wieder an den Grundplatz stellen und die Katalog-Teile wegräumen?", { ja: "Ja, Grundaufstellung", nein: "Abbrechen" }))) return; BUE.plaetze = {}; BUE.dinge = []; BUE.versatz = {}; BUE.wahl = null; buZeigen(); }
 async function bueFertig() {
   BUE.an = false; BUE.wahl = null; BUE.plaetze = { ...BUE.aktuell };
-  const wert = { plaetze: BUE.plaetze, dinge: BUE.dinge };
+  const wert = { plaetze: BUE.plaetze, dinge: BUE.dinge, versatz: bueVersatzPruefen(BUE.versatz) };
   lsSetzen("kc_club_buero_einrichtung", JSON.stringify(wert)); if (INIT) INIT.einstellungen = { ...(INIT.einstellungen || {}), buero_einrichtung: wert };
   buZeigen();
   try { await einstSpeichern("buero_einrichtung", wert); melde("✔ Dein Schreibtisch ist eingerichtet – gilt auf allen deinen Geräten."); }
   catch (e) { melde("Gespeichert auf diesem Gerät – auf den anderen später nochmal „Fertig“ tippen: " + (e?.message || e), true); }
+}
+function bueFein(x, y, mitte) {
+  const id = BUE.wahl; if (!id) return melde("Erst das Teil antippen, das du verschieben möchtest – dann die Pfeile.", true);
+  const alt = BUE.versatz[id] || [0, 0], neu = mitte ? [0, 0] : [bueRund(alt[0] + x * BUE_FEIN_SCHRITT), bueRund(alt[1] + y * BUE_FEIN_SCHRITT)];
+  const v = { ...BUE.versatz }; if (neu[0] || neu[1]) v[id] = neu; else delete v[id]; BUE.versatz = v;
+  const d = $("buPlatte")?.querySelector(`[data-ding="${CSS.escape(id)}"]`); if (d) d.style.translate = neu[0] || neu[1] ? `${neu[0]}% ${neu[1]}%` : "";
+  if (!mitte && (Math.abs(neu[0]) === BUE_FEIN_MAX || Math.abs(neu[1]) === BUE_FEIN_MAX)) melde("Weiter geht's nicht – für größere Wege das Teil auf einen anderen Platz ziehen.");
 }
 function bueTauschen(a, b, slot) {
   const p = { ...BUE.aktuell };
@@ -854,7 +869,7 @@ function bueTauschen(a, b, slot) {
 function bueZiehenAn() {
   const pl = $("buPlatte"); if (!pl || pl.dataset.einr) return; pl.dataset.einr = "1";
   let z = null;
-  const zuruecksetzen = () => { if (!z) return; z.d.style.transform = ""; z.d.classList.remove("bu-zieht"); z = null; };
+  const zuruecksetzen = () => { if (!z) return; z.d.style.transform = ""; /* translate (Feinversatz) bleibt */ z.d.classList.remove("bu-zieht"); z = null; };
   pl.addEventListener("click", (e) => { // beim Einrichten öffnet nichts – Antippen wählt aus bzw. tauscht
     if (!BUE.an) return; e.preventDefault(); e.stopPropagation();
     const leer = e.target.closest("[data-slot]"); if (leer && BUE.wahl) bueTauschen(BUE.wahl, null, leer.dataset.slot);
@@ -862,10 +877,14 @@ function bueZiehenAn() {
   pl.addEventListener("pointerdown", (e) => { const d = e.target.closest("[data-ding]"); if (!BUE.an || !d) return; z = { d, x: e.clientX, y: e.clientY, weg: false, id: e.pointerId }; try { d.setPointerCapture(e.pointerId); } catch {} });
   pl.addEventListener("pointermove", (e) => { if (!z || e.pointerId !== z.id) return; const dx = e.clientX - z.x, dy = e.clientY - z.y; if (!z.weg && Math.hypot(dx, dy) > 8) { z.weg = true; z.d.classList.add("bu-zieht"); } if (z.weg) { e.preventDefault(); z.d.style.transform = `translate(${dx}px, ${dy}px) scale(1.06)`; } });
   pl.addEventListener("pointerup", (e) => {
-    if (!z || e.pointerId !== z.id) return; const { d, weg } = z; zuruecksetzen();
+    if (!z || e.pointerId !== z.id) return; const { d, weg, x: x0, y: y0 } = z; zuruecksetzen();
     if (!weg) { const id = d.dataset.ding; if (!BUE.wahl) { BUE.wahl = id; pl.querySelectorAll(".bu-gewaehlt").forEach((x) => x.classList.remove("bu-gewaehlt")); d.classList.add("bu-gewaehlt"); } else if (BUE.wahl === id) { BUE.wahl = null; d.classList.remove("bu-gewaehlt"); } else bueTauschen(BUE.wahl, id); return; }
     d.style.visibility = "hidden"; const ziel = document.elementFromPoint(e.clientX, e.clientY)?.closest("#buPlatte [data-ding], #buPlatte [data-slot]"); d.style.visibility = "";
     if (ziel && ziel !== d) bueTauschen(d.dataset.ding, ziel.dataset.ding || null, ziel.dataset.slot || null);
+    else { // KC-CLUB-BUERO-FEIN: nicht auf einem anderen Teil losgelassen → genau dort stehen lassen (in Prozent der eigenen Größe)
+      const r = d.getBoundingClientRect(), id = d.dataset.ding, alt = BUE.versatz[id] || [0, 0];
+      if (r.width && r.height) { BUE.versatz = { ...BUE.versatz, [id]: [bueRund(alt[0] + (e.clientX - x0) / r.width * 100), bueRund(alt[1] + (e.clientY - y0) / r.height * 100)] }; d.style.translate = `${BUE.versatz[id][0]}% ${BUE.versatz[id][1]}%`; }
+    }
   });
   pl.addEventListener("pointercancel", zuruecksetzen);
 }
