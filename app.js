@@ -32474,9 +32474,11 @@ function blZeigen(richtung) {
   const d = blDoppel(), n = BL.seiten.length;
   BL.i = Math.max(0, Math.min(BL.i, n - 1)); if (d && BL.i % 2) BL.i--; // Doppelseite beginnt immer links
   const b = $("blBuehne");
+  const blatt = richtung ? blUmblattVorher(b, richtung) : null; // KC-CLUB-UMBLAETTERN: alte Seite merken, bevor sie ersetzt wird
   b.className = "bl-buehne" + (d ? " doppel" : "");
   b.innerHTML = blSeiteHtml(BL.seiten[BL.i]) + (d ? blSeiteHtml(BL.seiten[BL.i + 1]) : "");
-  if (richtung) { void b.offsetWidth; b.classList.add(richtung > 0 ? "vor" : "zurueck"); }
+  if (blatt) blUmblattLos(b, blatt, richtung);
+  else if (richtung) { void b.offsetWidth; b.classList.add(richtung > 0 ? "vor" : "zurueck"); }
   $("blTitel").textContent = BL.titel;
   $("blZahl").textContent = `${BL.i + 1}${d && BL.i + 1 < n ? "–" + (BL.i + 2) : ""} / ${n}`;
   $("blRegler").max = Math.max(0, n - 1); $("blRegler").value = BL.i;
@@ -32485,6 +32487,35 @@ function blZeigen(richtung) {
   $("blZeichen").innerHTML = zeichen.map(([r, k]) => `<button class="${akt === r ? "an" : ""}" style="--rf:${BL.farben[r] || "#6b5b53"}" onclick="blGehe(${k})">${esc(r)}</button>`).join("");
   $("blLinks").disabled = BL.i <= 0; $("blRechts").disabled = BL.i + (d ? 2 : 1) >= n;
   blNachladen();
+}
+// ---------- KC-CLUB-UMBLAETTERN (Wunsch Hansi 03.11.2026 „wie bei den Blätter-Prospekten der Lebensmittelhändler – Umblätter-Effekt, auch Weihnachtsmarkt“) ----------
+// Die alte Seite liegt kurz als Blatt über der neuen und klappt um ihre Kante um (vorwärts über die linke Kante nach links, zurück über die rechte nach rechts),
+// mit Schatten auf der Rückseite und auf der Seite darunter. Ein Baustein für alles, was blättert (Archiv, Chronik, Clubleben, Club-Magazin, Weihnachtsmarkt-Prospekt).
+// Nur mit eingeschalteten Effekten und ohne „Bewegung verringern“ – sonst der bisherige kurze Seitenwechsel. Kein Dauerlauf (Strom): nur während des Umblätterns.
+const blUmblattAn = () => { try { return fxAn() && !matchMedia("(prefers-reduced-motion: reduce)").matches && typeof Element.prototype.animate === "function"; } catch { return false; } };
+function blUmblattVorher(b, richtung) {
+  if (!blUmblattAn()) return null;
+  b.querySelector(".bl-umblatt")?.remove();
+  const alt = [...b.querySelectorAll(".bl-seite:not(.leer)")]; if (!alt.length) return null;
+  const q = richtung > 0 ? alt[alt.length - 1] : alt[0], r = q.getBoundingClientRect(), br = b.getBoundingClientRect();
+  if (!r.width || !r.height) return null;
+  return { html: q.outerHTML, links: r.left - br.left, oben: r.top - br.top, breite: r.width, hoehe: r.height };
+}
+function blUmblattLos(b, a, richtung) {
+  const vor = richtung > 0, g = document.createElement("div");
+  g.className = "bl-umblatt" + (vor ? " vor" : " zurueck"); g.setAttribute("aria-hidden", "true");
+  Object.assign(g.style, { left: a.links + "px", top: a.oben + "px", width: a.breite + "px", height: a.hoehe + "px", transformOrigin: vor ? "left center" : "right center" });
+  g.innerHTML = `<div class="bl-umblatt-vorn">${a.html}<i class="bl-umblatt-licht"></i></div><div class="bl-umblatt-hinten"></div>`;
+  b.appendChild(g);
+  const schatten = document.createElement("i"); schatten.className = "bl-umblatt-schatten" + (vor ? " vor" : " zurueck"); b.appendChild(schatten);
+  Object.assign(schatten.style, { left: a.links + "px", top: a.oben + "px", width: a.breite + "px", height: a.hoehe + "px" });
+  const dauer = 620, w = vor ? -1 : 1;
+  const an = g.animate([{ transform: "rotateY(0deg)" }, { transform: `rotateY(${w * 95}deg)`, offset: 0.55 }, { transform: `rotateY(${w * 180}deg)` }], { duration: dauer, easing: "cubic-bezier(.45,.05,.35,1)", fill: "forwards" });
+  g.querySelector(".bl-umblatt-licht").animate([{ opacity: 0 }, { opacity: .55, offset: 0.5 }, { opacity: 0 }], { duration: dauer });
+  schatten.animate([{ opacity: .45 }, { opacity: 0 }], { duration: dauer, easing: "ease-out", fill: "forwards" });
+  const weg = () => { g.remove(); schatten.remove(); };
+  an.onfinish = weg; an.oncancel = weg; setTimeout(weg, dauer + 400); // Sicherheitsnetz
+  try { navigator.vibrate?.(6); } catch {}
 }
 function blGehe(k, richtung) { const alt = BL.i; BL.i = k; blZeigen(richtung ?? Math.sign(k - alt)); }
 function blWeiter(r) { const schritt = blDoppel() ? 2 : 1, ziel = BL.i + r * schritt; if (ziel < 0 || ziel >= BL.seiten.length) return; blGehe(ziel, r); }

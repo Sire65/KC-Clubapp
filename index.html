@@ -5193,6 +5193,17 @@
   .bl-buehne.vor .bl-seite { animation: blVor .38s ease-out; transform-origin: left center; }
   .bl-buehne.zurueck .bl-seite { animation: blZurueck .38s ease-out; transform-origin: right center; }
   @media (prefers-reduced-motion: reduce) { .bl-buehne.vor .bl-seite, .bl-buehne.zurueck .bl-seite { animation-duration: .12s; } }
+  /* KC-CLUB-UMBLAETTERN: die alte Seite klappt wie bei einem Prospekt um (nur beim Blättern, danach entfernt) */
+  .bl-buehne { position: relative; }
+  .bl-umblatt { position: absolute; z-index: 3; transform-style: preserve-3d; pointer-events: none; will-change: transform; }
+  .bl-umblatt-vorn, .bl-umblatt-hinten { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; }
+  .bl-umblatt-vorn > .bl-seite { flex: 1; max-width: none; }
+  .bl-umblatt-hinten { transform: rotateY(180deg); border-radius: 6px; background: linear-gradient(90deg, #efe6d6, #fbf6ea 30%, #fffdf6 70%, #e9dfcc); box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+  .bl-umblatt-licht { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,0) 45%, rgba(255,255,255,.25) 70%, rgba(0,0,0,.1)); border-radius: 6px; }
+  .bl-umblatt.zurueck .bl-umblatt-licht { transform: scaleX(-1); }
+  .bl-umblatt-schatten { position: absolute; z-index: 2; pointer-events: none; border-radius: 6px; }
+  .bl-umblatt-schatten.vor { background: linear-gradient(90deg, rgba(0,0,0,.45), rgba(0,0,0,0) 60%); }
+  .bl-umblatt-schatten.zurueck { background: linear-gradient(270deg, rgba(0,0,0,.45), rgba(0,0,0,0) 60%); }
   .ar-blaettern { width: 100%; margin: 4px 0 8px; min-height: 48px; }
   /* 2.825.0 KC-CLUB-SPUR-BESUCHE (Wunsch #72): jeder Besuch eigene Kopfzeile mit dicker Linie, Zeilen abwechselnd getönt */
   .spur-wege tr.spur-besuch td { border-top: 3px solid var(--rot); background: var(--karte2); font-size: .9rem; padding-top: 6px; text-align: left; }
