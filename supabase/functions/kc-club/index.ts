@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.829.0";
+const SERVER_VERSION = "2.830.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -5158,6 +5158,24 @@ async function rtTischHolen(id: unknown, ich?: Ich) {
   return data;
 }
 // nurId: nur dieser eine Tisch (Herzschlag – 2 Abfragen statt der ganzen Liste; die App setzt ihn in ihre Liste ein)
+// 2.830.0 KC-CLUB-WARTELISTE: freie Seminarplätze der Reihe nach (wer sich zuerst vorgemerkt hat) vergeben und Bescheid geben. Zwei gleichzeitige
+// Abmeldungen: jeder Nachrücker wird nur übernommen, solange noch ein Platz frei ist (nie überbucht – gleiche Prüfung wie beim Anmelden).
+async function rtNachruecken(x: any) {
+  for (let runde = 0; runde < 20; runde++) {
+    const { data: tn } = await db.from("kc_club_tisch_teilnahme").select("person_id,zusage,zusage_am").eq("tisch_id", x.id).in("zusage", ["ja", "warte"]);
+    const ja = (tn ?? []).filter((r: any) => r.zusage === "ja").map((r: any) => r.person_id), erster = (tn ?? []).filter((r: any) => r.zusage === "warte").sort((a: any, b: any) => String(a.zusage_am).localeCompare(String(b.zusage_am)))[0];
+    if (!erster || rtZusagePruefen(x, "ja", ja, erster.person_id, Date.now())) return;
+    const { data: ok } = await db.from("kc_club_tisch_teilnahme").update({ zusage: "ja", zusage_am: jetzt() }).eq("tisch_id", x.id).eq("person_id", erster.person_id).eq("zusage", "warte").select("person_id");
+    if (!ok?.length) continue;
+    await protokoll(erster.person_id, "tisch_nachgerueckt", { tisch: x.id });
+    await senden("club_treffen", [erster.person_id], {
+      titel: `🎉 Ein Platz ist frei: ${x.thema}`, kurz: `Du bist von der Warteliste nachgerückt und jetzt angemeldet – ${rtText(x, TZ)}.`,
+      betreff: `Köcheclub Werne – Platz frei beim Seminar „${x.thema}“`,
+      text: `Hallo,\n\nbeim Seminar „${x.thema}“ (${rtText(x, TZ)}) ist ein Platz frei geworden. Du warst auf der Warteliste und bist jetzt angemeldet.\n\nKannst du doch nicht? Dann bitte in der App „↩️ Abmelden“ tippen – dann rückt der Nächste nach.\n\nViele Grüße\nKöcheclub Werne`,
+      url: APP_URL,
+    }, `club-tisch-nachgerueckt:${x.id}:${erster.person_id}`).catch(() => null);
+  }
+}
 async function rtLage(ich: Ich, nurId?: string) {
   const t = Date.now();
   let q = db.from("kc_club_tisch").select(RT_SPALTEN).eq("org_id", ORG);
@@ -5170,7 +5188,7 @@ async function rtLage(ich: Ich, nurId?: string) {
   const gast = ich.zugang === "tischgast"; // 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: der Gast sieht nur seinen Tisch – nur Vornamen, keinen Chat, keine Zusagen
   const ts = (alle ?? []).filter((x: any) => (gast ? x.id === ich.tischgast!.tisch : rtSichtbar(x, ich, gr)));
   const ids = (ts ?? []).map((x: any) => x.id);
-  const { data: tn } = ids.length ? await db.from("kc_club_tisch_teilnahme").select("tisch_id,person_id,zusage,dabei_seit,zuletzt_da,verlassen_am").in("tisch_id", ids).limit(3000) : { data: [] as any[] };
+  const { data: tn } = ids.length ? await db.from("kc_club_tisch_teilnahme").select("tisch_id,person_id,zusage,zusage_am,dabei_seit,zuletzt_da,verlassen_am").in("tisch_id", ids).limit(3000) : { data: [] as any[] };
   const pm = await personen([...(ts ?? []).map((x: any) => x.gastgeber), ...(tn ?? []).map((x: any) => x.person_id).filter((x: string) => !rtIstGast(x))]);
   // Gäste nur nachladen, wenn nötig (Liste, Gast selbst, oder ein Gast sitzt am Tisch) – der Herzschlag der Mitglieder bleibt bei 3 Abfragen
   const mitGast = ids.length && (!nurId || gast || (tn ?? []).some((r: any) => rtIstGast(r.person_id)));
@@ -5185,6 +5203,8 @@ async function rtLage(ich: Ich, nurId?: string) {
       plaetze: x.plaetze, text: rtText(x, TZ), phase: ph, gastgeber: x.gastgeber, gastgeberName: nm(x.gastgeber), darfLeiten: x.gastgeber === ich.person_id || ich.admin,
       chat: gast || x.text_geloescht_am ? null : x.thread_id, medienWeg: !!x.medien_geloescht_am, imChat: x.gastgeber === ich.person_id || !!mein?.dabei_seit, meineZusage: mein?.zusage || null, ichSitze: !!mein && rtSitzt(mein, t),
       zusagen: gast ? [] : z.filter((r: any) => r.zusage === "ja").map((r: any) => ({ id: r.person_id, name: nm(r.person_id) })),
+      ...(() => { const w = z.filter((r: any) => r.zusage === "warte").sort((a: any, b: any) => String(a.zusage_am).localeCompare(String(b.zusage_am))); // 2.830.0 KC-CLUB-WARTELISTE
+        return { warte: w.length, meinWartePlatz: mein?.zusage === "warte" ? w.findIndex((r: any) => r.person_id === ich.person_id) + 1 : null }; })(),
       amTisch: ph === "offen" || ph === "gleich" ? z.filter((r: any) => rtSitzt(r, t)).sort((a: any, b: any) => Date.parse(a.dabei_seit) - Date.parse(b.dabei_seit))
         .map((r: any) => ({ id: r.person_id, name: nm(r.person_id), sicher: rtSicher(r, t), ...(rtIstGast(r.person_id) ? { gast: true } : {}) })) : [],
       // 2.776.0: eingeladene Gäste (für Mitglieder: „Mit Gast“, Zurückziehen) – der Gast selbst sieht diese Liste nicht
@@ -12561,8 +12581,15 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
       case "tisch_zusage": { // beim Seminar = anmelden (Plätze begrenzt)
         await nurWennFrei("runder_tisch", ich, "Der Runde Tisch");
-        const x = await rtTischHolen(p.id, ich), zusage = p.zusage === "ja" ? "ja" : p.zusage === "nein" ? "nein" : null, sem = rtArt(x).anmeldung;
+        const x = await rtTischHolen(p.id, ich), zusage = p.zusage === "ja" ? "ja" : p.zusage === "nein" ? "nein" : p.zusage === "warte" ? "warte" : null, sem = rtArt(x).anmeldung;
         const angemeldet = async () => ((await db.from("kc_club_tisch_teilnahme").select("person_id").eq("tisch_id", x.id).eq("zusage", "ja")).data ?? []).map((r: any) => r.person_id as string);
+        const { data: vorher } = await db.from("kc_club_tisch_teilnahme").select("zusage").eq("tisch_id", x.id).eq("person_id", ich.person_id).maybeSingle();
+        // 2.830.0 KC-CLUB-WARTELISTE (Gesamtprüfung #44 Vorschlag A): ausgebucht → vormerken; nur beim Seminar und nur, solange wirklich kein Platz frei ist
+        if (zusage === "warte") {
+          if (!sem) throw new Fehler("Eine Warteliste gibt es nur bei Seminaren mit begrenzten Plätzen.", 400);
+          const fw = rtZusagePruefen(x, "warte", [], ich.person_id, Date.now()); if (fw) throw new Fehler(fw, 409);
+          if (!rtZusagePruefen(x, "ja", await angemeldet(), ich.person_id, Date.now())) throw new Fehler("Es ist gerade ein Platz frei – bitte gleich anmelden.", 409);
+        }
         const f = rtZusagePruefen(x, zusage, sem && zusage === "ja" ? await angemeldet() : [], ich.person_id, Date.now());
         if (f) throw new Fehler(f, 409);
         const { error } = await db.from("kc_club_tisch_teilnahme").upsert({ tisch_id: x.id, person_id: ich.person_id, zusage, zusage_am: jetzt() }, { onConflict: "tisch_id,person_id" });
@@ -12573,6 +12600,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           throw new Fehler("Das Seminar ist gerade ausgebucht.", 409);
         }
         await protokoll(ich.person_id, "tisch_zusage", { tisch: x.id, zusage });
+        if (sem && vorher?.zusage === "ja" && zusage !== "ja") await rtNachruecken(x).catch((e) => console.error("warteliste", String(e))); // Platz frei → der Erste rückt nach
         return json({ ok: true, lage: await rtLage(ich) });
       }
       case "tisch_seminare_meine": { // 2.762.0: besuchte Seminare mit Teilnahmebestätigung („Meine Schulung“) – auch nach dem Aufräumen
@@ -17670,6 +17698,22 @@ Köcheclub Werne`,
         }, `club-protokoll-erinnern:${pr.id}:${pg.runde}:${berlinTag(new Date())}`).catch((e) => ({ fehler: String(e).slice(0, 120) }));
         await protokoll(ich.person_id, "sitzungsprotokoll_pruefung_erinnert", { protokoll: pr.id, versand });
         return json({ ok: true });
+      }
+      // 2.830.0 KC-CLUB-TEILNAHME (Gesamtprüfung #44 Vorschlag B, Hansi „A, B, E“): wie oft war wer bei den Sitzungen eines Jahres – aus den Anwesenheits-
+      // listen der veröffentlichten Protokolle (da / entschuldigt / nicht da). Personenbezogen → nur Clubleitung (Vorstand, Admin); nur Zahlen, keine Inhalte.
+      case "teilnahme_jahr": {
+        if (!ich.vorstand && !ich.admin) throw new Fehler("Die Teilnahme-Übersicht ist nur für die Clubleitung.", 403);
+        const jahr = /^\d{4}$/.test(String(p.jahr || "")) ? Number(p.jahr) : new Date().getFullYear();
+        const [{ data: pr, error }, leute] = await Promise.all([
+          db.from("kc_club_sitzungsprotokolle").select("id,titel,datum,anwesend,entschuldigt").eq("status", "veroeffentlicht").gte("datum", `${jahr}-01-01`).lte("datum", `${jahr}-12-31`).order("datum"),
+          aktiveMitglieder()]);
+        if (error) throw new Fehler("Die Protokolle sind gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
+        const sitz = pr ?? [];
+        const zeilen = leute.map((m) => {
+          const da = sitz.filter((x: any) => (x.anwesend || []).includes(m.person_id)).length, ent = sitz.filter((x: any) => (x.entschuldigt || []).includes(m.person_id)).length;
+          return { person_id: m.person_id, name: m.display_name, da, entschuldigt: ent, fehlt: Math.max(0, sitz.length - da - ent) };
+        }).sort((a, b) => b.da - a.da || a.entschuldigt - b.entschuldigt || a.name.localeCompare(b.name, "de"));
+        return json({ jahr, sitzungen: sitz.map((x: any) => ({ id: x.id, titel: x.titel, datum: x.datum, da: (x.anwesend || []).length })), zeilen });
       }
       case "protokoll_einwand": {
         nurProtokolle(ich);

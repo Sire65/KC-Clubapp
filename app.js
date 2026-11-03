@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.829.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.830.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -831,6 +831,40 @@ function entwicklerZeigen() {
     <p class="hinweis" style="margin:0 0 10px">Version ${esc(APP_VERSION)} · © 2026 Köcheclub Werne · kostenlos und werbefrei</p>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">${ich ? "" : `<button class="knopf haupt" onclick="fensterZu($('entwicklerBlatt'));direkt('${ENTWICKLER.person_id}')">💬 Hansi schreiben</button>`}
       <button class="knopf" onclick="fensterZu($('entwicklerBlatt'))">Schließen</button></div>`);
+}
+// ---------- 2.830.0 KC-CLUB-IMPRESSUM (Gesamtprüfung #44, Hansi „Impressum unter App-Info, Button neben dem Entwickler. Baue erst mal das Standard-Impressum
+// und sag mir, was dir fehlt“) ----------
+// Registry IMPRESSUM: die Angaben einer Anbieterkennzeichnung (Name, Rechtsform, Anschrift, Vertretung, Kontakt, Register, inhaltlich verantwortlich).
+// Nichts wird erfunden: Leere Felder (null) sieht der Admin als „⚠️ fehlt noch“, Mitglieder sehen die Zeile nicht. Ausfüllen nur hier (eine Stelle).
+const IMPRESSUM = {
+  anbieter: "Köcheclub Werne",
+  rechtsform: null,          // z. B. „eingetragener Verein (e. V.)“ oder „nicht eingetragener Verein“
+  anschrift: null,           // Postanschrift des Clubs (Straße, PLZ Ort)
+  vertreten: null,           // vertretungsberechtigte Clubleitung laut Satzung (Name + Amt)
+  kontakt: null,             // E-Mail (und auf Wunsch Telefon) für Anfragen
+  register: null,            // nur bei e. V.: Registergericht und Registernummer
+  verantwortlich: null,      // inhaltlich verantwortlich (Name, Anschrift)
+};
+function impressumZeigen() {
+  const I = IMPRESSUM, adm = !!ICH?.admin, fehlt = (t) => (adm ? `<span class="imp-fehlt">⚠️ fehlt noch – ${esc(t)}</span>` : "");
+  const zeile = (titel, wert, wasFehlt) => (wert ? `<p><b>${esc(titel)}</b><br>${esc(wert).replace(/\n/g, "<br>")}</p>` : adm ? `<p><b>${esc(titel)}</b><br>${fehlt(wasFehlt)}</p>` : "");
+  const offen = Object.values(I).filter((x) => x === null).length;
+  blattAuf("impressumBlatt", `<h3 style="margin:0">§ Impressum</h3>
+    ${adm && offen ? `<div class="karte imp-hinweis">🛠️ Nur du siehst diesen Hinweis: <b>${offen} Angaben fehlen noch</b>. Bitte dem Entwickler (Claude) schicken – die Felder werden an einer Stelle eingetragen.</div>` : ""}
+    <p><b>Angaben zum Anbieter dieser App</b><br>${esc(I.anbieter)}${I.rechtsform ? `<br>${esc(I.rechtsform)}` : ""}</p>
+    ${I.rechtsform ? "" : adm ? `<p><b>Rechtsform</b><br>${fehlt("eingetragener Verein (e. V.) oder nicht eingetragen?")}</p>` : ""}
+    ${zeile("Anschrift", I.anschrift, "Postanschrift des Clubs")}
+    ${zeile("Vertreten durch", I.vertreten, "vertretungsberechtigte Clubleitung laut Satzung (Name und Amt)")}
+    ${zeile("Kontakt", I.kontakt, "E-Mail-Adresse (Telefon freiwillig)")}
+    ${I.register ? zeile("Registereintrag", I.register, "") : adm ? `<p><b>Registereintrag</b><br>${fehlt("nur bei e. V.: Registergericht und Nummer")}</p>` : ""}
+    ${zeile("Inhaltlich verantwortlich", I.verantwortlich, "Name und Anschrift")}
+    <p><b>Zweck der App</b><br>Die Köcheclub-App ist ein internes Angebot für die Mitglieder des Köcheclubs Werne: Termine, Nachrichten, Dienstpläne und Club-Unterlagen an einem Ort. Sie ist kostenlos und werbefrei und nur mit persönlichem Zugangslink nutzbar.</p>
+    <p><b>Haftung für Inhalte</b><br>Die Inhalte werden mit Sorgfalt erstellt. Für Beiträge, die Mitglieder selbst einstellen (z. B. Nachrichten, Pinnwand, Fotos), sind die jeweiligen Mitglieder verantwortlich. Hinweise auf fehlerhafte Inhalte bitte an die Clubleitung.</p>
+    <p><b>Haftung für Links</b><br>Die App kann Links zu Seiten anderer Anbieter enthalten. Für deren Inhalte ist der jeweilige Anbieter verantwortlich.</p>
+    <p><b>Urheberrecht</b><br>Texte, Bilder und Programm der App sind urheberrechtlich geschützt. Fotos und Dokumente von Mitgliedern bleiben deren Eigentum und dürfen nur im Club verwendet werden.</p>
+    <p><b>Technik</b><br>Die App läuft als Web-App (Programmdateien über GitHub Pages); die Daten liegen in einer Datenbank bei Supabase. Entwicklung: Hans-Joachim Koch – siehe „👨‍🍳 Über den Entwickler“.</p>
+    <p class="hinweis">Stand: Version ${esc(APP_VERSION)}</p>
+    <div class="knoepfe bs-fuss"><button class="knopf" onclick="fensterZu($('impressumBlatt'))">Schließen</button></div>`);
 }
 // KC-CLUB-ZURUECK-FENSTER (1.98.0): zuletzt gesetzter Verlaufseintrag (für „Zurück schließt nur das Fenster“)
 const VERLAUF = { state: null, url: "" };
@@ -19724,7 +19758,7 @@ function rundKarteHtml(t) {
   const darfSitzen = !A.anmeldung || t.meineZusage === "ja" || t.darfLeiten;
   if ((t.phase === "gleich" || t.phase === "offen") && darfSitzen) knoepfe.push(k(`rundTischZeigen(${id})`, t.ichSitze ? `${A.sym} Hinein` : `${A.sym} Jetzt Platz nehmen`, true));
   if ((t.phase === "geplant" || t.phase === "gleich") && !(A.anmeldung && t.darfLeiten)) knoepfe.push(t.meineZusage === "ja" ? k(`rundZusage(${id}, null)`, A.anmeldung ? "↩️ Abmelden" : "↩️ Doch nicht")
-    : voll ? '<span class="hinweis">🈵 ausgebucht</span>' : k(`rundZusage(${id}, 'ja')`, A.anmeldung ? "📝 Anmelden" : "✋ Ich setz mich dazu", t.phase === "geplant" || !darfSitzen));
+    : voll ? rundWarteHtml(t, id, k) : k(`rundZusage(${id}, 'ja')`, A.anmeldung ? "📝 Anmelden" : "✋ Ich setz mich dazu", t.phase === "geplant" || !darfSitzen));
   if (t.chat && t.imChat && t.phase === "vorbei") knoepfe.push(k(`rundChat(${id})`, "💬 Chat nachlesen"));
   if (t.phase === "vorbei" && t.darfLeiten && t.chat && !A.bestaetigung) knoepfe.push(k(`rundLeiten(${id}, 'wieder')`, "🔁 Wieder öffnen")); // 2.799.0 KC-CLUB-TISCH-WIEDER
   if (t.bestaetigung) knoepfe.push(k(`rundBestaetigung(${id})`, "📄 Teilnahmebestätigung", true));
@@ -19842,9 +19876,16 @@ async function rundAnlegen() {
     fensterZu($("rundNeuBlatt")); rundLageSetzen(r.lage); melde(r.versand ? (d.gruppe ? `🪑 Eingeladen – die Gruppe hat Bescheid bekommen` : "🪑 Eingeladen – alle haben Bescheid bekommen") : "🪑 Eingeladen"); }
   catch (e) { meldeFehler(e); rundZeitPruefen(); }
 }
+// 2.830.0 KC-CLUB-WARTELISTE (Gesamtprüfung #44 Vorschlag A): ausgebucht → „⏳ Auf die Warteliste“; wird ein Platz frei, rückt der Erste automatisch nach
+// (Server rtNachruecken) und bekommt Bescheid. Auf der Liste: „⏳ Warteliste – Platz 2 · ↩️ austragen“.
+function rundWarteHtml(t, id, k) {
+  if (t.meineZusage === "warte") return `<span class="hinweis rund-warte">⏳ Warteliste – du bist auf Platz <b>${t.meinWartePlatz || "?"}</b></span>${k(`rundZusage(${id}, null)`, "↩️ Von der Warteliste")}`;
+  return `<span class="hinweis">🈵 ausgebucht${t.warte ? ` · ${t.warte} auf der Warteliste` : ""}</span>${k(`rundZusage(${id}, 'warte')`, "⏳ Auf die Warteliste")}`;
+}
 async function rundZusage(id, zusage) {
-  const sem = rundArt(rundTisch(id)).anmeldung;
-  try { const r = await api("tisch_zusage", { id, zusage }); rundLageSetzen(r.lage); melde(zusage === "ja" ? (sem ? "📝 Angemeldet – du bekommst kurz vor Beginn Bescheid" : "✋ Zugesagt – du bekommst kurz vor Beginn Bescheid") : sem ? "↩️ Abgemeldet – dein Platz ist wieder frei" : "↩️ Zusage zurückgenommen"); }
+  if (zusage === "warte") { try { const r = await api("tisch_zusage", { id, zusage }); rundLageSetzen(r.lage); melde("⏳ Du stehst auf der Warteliste – wird ein Platz frei, bist du automatisch angemeldet und bekommst Bescheid."); } catch (e) { meldeFehler(e); } return; }
+  const sem = rundArt(rundTisch(id)).anmeldung, warteWeg = !zusage && rundTisch(id)?.meineZusage === "warte";
+  try { const r = await api("tisch_zusage", { id, zusage }); rundLageSetzen(r.lage); melde(warteWeg ? "↩️ Von der Warteliste genommen" : zusage === "ja" ? (sem ? "📝 Angemeldet – du bekommst kurz vor Beginn Bescheid" : "✋ Zugesagt – du bekommst kurz vor Beginn Bescheid") : sem ? "↩️ Abgemeldet – dein Platz ist wieder frei" : "↩️ Zusage zurückgenommen"); }
   catch (e) { meldeFehler(e); }
 }
 async function rundLeiten(id, aktion) {
@@ -25263,10 +25304,29 @@ function prGruppenHtml(liste) {
 // „📦 Jahr abschließen“ (Clubsprecher/Admin tippen selbst, nichts läuft automatisch): jedes veröffentlichte Protokoll des Jahres als PDF (derselbe Druck wie
 // „🖨️ Drucken / PDF“) in den Club-Ordner „Protokolle <Jahr>“ (Archiv-Art Versammlungen, wird bei Bedarf angelegt). Keine Kopien in Mitglieder-Ordner
 // (Entscheidung Hansi 02.11.). Die Protokolle bleiben in der Liste; schon abgelegte (Stichwort p-<id>) werden beim zweiten Mal übersprungen.
-const prJahrKnopf = (j) => (ICH?.admin || ICH?.vorstand) && (prListe?.protokolle || []).some((p) => String(p.datum || "").startsWith(j) && p.status === "veroeffentlicht")
-  ? `<div class="knoepfe" style="margin:4px 0"><button class="knopf klein" onclick="einmal(this, () => prJahrAbschliessen('${esc(j)}'))">📦 Jahr ${esc(j)} abschließen – PDFs ins Büro</button></div>` : "";
+// 2.830.0: veröffentlicht = jeder Stand außer „entwurf“ (die Liste liefert einspruch/einwand/genehmigt – vorher wurde auf „veroeffentlicht“ geprüft, der Knopf kam nie)
+const prVeroeffentlicht = (p) => !!p.status && p.status !== "entwurf";
+const prJahrKnopf = (j) => (ICH?.admin || ICH?.vorstand) && (prListe?.protokolle || []).some((p) => String(p.datum || "").startsWith(j) && prVeroeffentlicht(p))
+  ? `<div class="knoepfe" style="margin:4px 0"><button class="knopf klein" onclick="einmal(this, () => prTeilnahme('${esc(j)}'))">👥 Teilnahme ${esc(j)}</button><button class="knopf klein" onclick="einmal(this, () => prJahrAbschliessen('${esc(j)}'))">📦 Jahr ${esc(j)} abschließen – PDFs ins Büro</button></div>` : "";
+// ---------- 2.830.0 KC-CLUB-TEILNAHME (Gesamtprüfung #44 Vorschlag B): wie oft war wer bei den Sitzungen des Jahres (aus den Anwesenheitslisten der
+// veröffentlichten Protokolle) – für Jahresbericht und Ehrungen. Nur Clubleitung (der Server prüft). Drucken im Corporate Design (druckStarten).
+let PR_TN = null;
+async function prTeilnahme(jahr) {
+  try { PR_TN = await api("teilnahme_jahr", { jahr }, { warten: true }); } catch (e) { return meldeFehler(e); }
+  blattAuf("teilnahmeBlatt", `<h3 style="margin:0">👥 Teilnahme ${esc(String(PR_TN.jahr))}</h3>${prTeilnahmeHtml(PR_TN, false)}
+    <div class="knoepfe bs-fuss"><button class="knopf haupt" onclick="druckStarten('teilnahme')">🖨️ Drucken / PDF</button><button class="knopf" onclick="fensterZu($('teilnahmeBlatt'))">Schließen</button></div>`);
+}
+function prTeilnahmeHtml(d, druck) {
+  const n = d.sitzungen.length;
+  if (!n) return `<p class="hinweis">In ${esc(String(d.jahr))} gibt es noch kein veröffentlichtes Protokoll.</p>`;
+  const quote = (z) => Math.round(z.da / n * 100);
+  return `<p class="${druck ? "" : "hinweis"}" style="margin:4px 0 8px">${n} Sitzung${n === 1 ? "" : "en"} mit veröffentlichtem Protokoll (${d.sitzungen.map((x) => esc(tagKurz(x.datum))).join(", ")}). Gezählt wird, wer laut Protokoll anwesend bzw. entschuldigt war.</p>
+    <table class="vb-tabelle tn-tabelle"><thead><tr><th style="text-align:left">Mitglied</th><th title="anwesend">✅ da</th><th title="entschuldigt">🙋 ent.</th><th title="nicht da, nicht entschuldigt">❌</th><th>Quote</th></tr></thead><tbody>
+    ${d.zeilen.map((z) => `<tr><td style="text-align:left">${esc(z.name)}${!druck && z.da === n ? " 🏅" : ""}</td><td><b>${z.da}</b></td><td>${z.entschuldigt}</td><td>${z.fehlt}</td><td>${druck ? `${quote(z)} %` : `<span class="tn-quote"><i style="width:${quote(z)}%"></i></span> ${quote(z)} %`}</td></tr>`).join("")}
+    </tbody></table>${druck ? "" : '<p class="hinweis" style="margin:6px 0 0">🏅 = bei allen Sitzungen dabei.</p>'}`;
+}
 async function prJahrAbschliessen(jahr) {
-  const liste = (prListe?.protokolle || []).filter((p) => String(p.datum || "").startsWith(jahr) && p.status === "veroeffentlicht");
+  const liste = (prListe?.protokolle || []).filter((p) => String(p.datum || "").startsWith(jahr) && prVeroeffentlicht(p));
   if (!liste.length) return melde(`In ${jahr} gibt es noch kein veröffentlichtes Protokoll.`, true);
   if (!(await frage(`📦 Jahr ${jahr} abschließen?\n\n${liste.length} veröffentlichte${liste.length === 1 ? "s Protokoll kommt" : " Protokolle kommen"} als PDF in den Büro-Ordner „Protokolle ${jahr}“. In der Liste hier bleiben sie trotzdem.`, { ja: "📦 Abschließen", nein: "Abbrechen" }))) return;
   let a, o; const REG = ["Sitzungsprotokolle", "Sonstiges"];
@@ -30053,6 +30113,7 @@ const DRUCKARTEN = {
   anleitung: { bauen: () => druckAnleitung() },
   einstwegweiser: { bauen: () => ewDruck() }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
   ueberblick: { bauen: () => druckUeberblick() },
+  teilnahme: { bauen: () => ({ titel: `Teilnahme an den Sitzungen ${PR_TN?.jahr || ""}`, unter: `Stand: ${new Date().toLocaleDateString("de-DE")}`, html: PR_TN ? prTeilnahmeHtml(PR_TN, true) : "" }) }, // 2.830.0 KC-CLUB-TEILNAHME
   hilfe: { titel: "🖨️ Hilfe drucken / als PDF", optionen: () => hzDruckOptionen(), bauen: (o) => hzDruck(o) }, // KC-CLUB-HILFEZENTRUM (2.23.2)
   aktentasche: { bauen: (o, p) => atDruck(p?.teil) }, // 2.695.0 KC-CLUB-AKTENTASCHE: Packliste, Tagesordnung, Zusagen, Aufgaben
   dokument: { bauen: () => dokDruckSeite() }, // KC-CLUB-DOK-ANZEIGE (1.62.0): PDF-Seiten randlos auf A4
@@ -33522,7 +33583,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",

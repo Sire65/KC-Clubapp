@@ -89,6 +89,7 @@ jobs:
       - run: node tests/rechner-spur-besuche.test.mjs
       - run: node tests/tippflaechen.test.mjs
       - run: node tests/nutzung-alle.test.mjs
+      - run: node tests/abe-impressum.test.mjs
       - run: node tests/protokoll-foto.test.mjs
       - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/video-abgleich.test.mjs
