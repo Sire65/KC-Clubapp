@@ -38,7 +38,7 @@ const daten = await seite.evaluate(async () => {
     android: inst({ android: true, browser: "chrome" }), samsung: inst({ android: true, browser: "samsung" }), pc: inst({ pc: true, browser: "chrome" }),
     pcFirefox, iphone: inst({ ios: true, browser: "safari" }), ipad: inst({ ios: true, ipad: true, browser: "safari" }), iphoneChrome: inst({ ios: true, browser: "chrome_ios" }),
     push: stat(RG_PUSH), code: stat(RG_INST_CODES), hilfeLink: ["zugangslink", "code_geraet", "code_ipad"].map(hilfe).filter(Boolean),
-    hilfeVertretung: ["vertretung"].map(hilfe).filter(Boolean), // 2.834.0 KC-CLUB-ANLEITUNG-VERTRETUNG
+    hilfeVertretung: ["vertretung"].map(hilfe).filter(Boolean), // 2.835.0 KC-CLUB-ANLEITUNG-VERTRETUNG
     vtAdmin: (() => { const d = document.createElement("div"); d.innerHTML = vtAdminKarte({ person_id: "x", vorname: "Karla", vertretung: [] }); return d.querySelector("p.hinweis")?.textContent || ""; })(),
     css: [...document.querySelectorAll("style")].map((s) => s.textContent).join("\n"),
   };
@@ -61,7 +61,7 @@ const BLAETTER = [
     teile: [{ t: "iPhone mit Safari", s: daten.iphone }, { t: "iPad mit Safari", s: daten.ipad }, { t: "iPhone mit Chrome", s: daten.iphoneChrome }], gut: "Auf iPhone und iPad zuerst installieren, dann den Code eingeben. Den Code zeigt die App auf einem Gerät, auf dem du schon angemeldet bist (⚙️ → „📲 Code für ein anderes Gerät“)." },
   { id: "link-und-code", reg: "Link & Anmelden", t: "🔑 Persönlicher Link, Code und neues Gerät", zweck: "Wie du in die App kommst: mit deinem persönlichen Link, mit einem Code auf einem zweiten Gerät – und was zu tun ist, wenn der Link fehlt.",
     teile: [{ t: "Link, Code & Co.", s: daten.code }, { t: "Kurz erklärt", s: daten.hilfeLink }], gut: "Deinen Link bitte nicht weitergeben – wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? Einfach bei der Clubleitung melden." },
-  // 2.834.0 KC-CLUB-ANLEITUNG-VERTRETUNG (Wunsch Hansi 03.11.2026 „Anleitung ‚darf handeln für xy‘ – man handelt im Namen einer anderen Person, die selber keinen
+  // 2.835.0 KC-CLUB-ANLEITUNG-VERTRETUNG (Wunsch Hansi 03.11.2026 „Anleitung ‚darf handeln für xy‘ – man handelt im Namen einer anderen Person, die selber keinen
   // Zugang zur App hat; nach dem Muster der anderen, in den Ordner Anleitungen“). Erklärung aus der App (Hilfe „vertretung“, Text der Mitgliedskarte).
   { id: "fuer-andere-handeln", reg: "Sonstiges", t: "🤝 Für ein anderes Mitglied handeln", zweck: "Manche Mitglieder haben selbst keine Club-App. Ein anderes Mitglied (z. B. der Partner) darf dann in ihrem Namen Termine zu- und absagen, Dienstwünsche eintragen und abstimmen.",
     teile: [

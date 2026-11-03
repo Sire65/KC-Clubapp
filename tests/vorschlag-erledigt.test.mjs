@@ -20,7 +20,7 @@ assert.ok(h.indexOf("Sitzung 30.10.") < h.indexOf("August 2026"), "neueste zuers
 assert.equal(vs([]), "", "nichts Erledigtes → kein Bereich");
 // Jahresabschluss
 const j = app.slice(app.indexOf("async function prJahrAbschliessen(jahr)"), app.indexOf("function protokollFilter()"));
-assert.ok(/const REG = \["Sitzungsprotokolle", "Vorschläge", "Sonstiges"\]/.test(j) && /await prVorschlaegeAblegen\(jahr, o, schon\)/.test(j), "Jahresabschluss legt auch die Vorschläge ab");
+assert.ok(/const REG = \["Protokolle", "Vorschläge", "Sonstiges"\]/.test(j) && /await prVorschlaegeAblegen\(jahr, o, schon\)/.test(j), "Jahresabschluss legt auch die Vorschläge ab");
 assert.ok(/const marke = `vs-\$\{jahr\}-\$\{liste\.length\}`;\s*if \(schon\.has\(marke\)\) return 0;/.test(j), "nichts doppelt ablegen");
 assert.ok(/register: REG, titel, datum: `\$\{jahr\}-12-31`/.test(j), "Register „Vorschläge“");
 const t0 = j.indexOf("function prVorschlaegeJahrText"), tcode = j.slice(t0, j.indexOf("async function prVorschlaegeAblegen"));

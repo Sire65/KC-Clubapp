@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.834.0";
+const SERVER_VERSION = "2.835.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2316,8 +2316,8 @@ const aeKurz = (x: any) => x.art === "bank" && x.status === "erledigt" ? { ...x.
 // und der eigene persönliche Ordner. Registry: neue Arten = Eintrag in EK_ARTEN + ekDoku.
 const EK_ARTEN: Record<string, { sym: string; t: string; register: string[]; persReg: string; ordnerArt?: string }> = { // persReg: Register im persönlichen Ordner
   erstattung: { sym: "💶", t: "Erstattung", register: ["Belege", "Rechnungen", "Sonstiges"], persReg: "Rechnungen", ordnerArt: "finanzen" },
-  dienstwunsch: { sym: "📅", t: "Dienstzeiten", register: ["Wünsche", "Dienste", "Sonstiges", "Allgemein"], persReg: "Dienstpläne" }, // 2.23.39: Register „Dienstpläne“ (Wunsch Hansi)
-  vorschlag: { sym: "💡", t: "Vorschlag", register: ["Vorschläge", "Sonstiges", "Allgemein"], persReg: "Sonstiges" },
+  dienstwunsch: { sym: "📅", t: "Dienstzeiten", register: ["Wünsche", "Dienste", "Sonstiges"], persReg: "Dienstpläne" }, // 2.23.39: Register „Dienstpläne“ (Wunsch Hansi)
+  vorschlag: { sym: "💡", t: "Vorschlag", register: ["Vorschläge", "Sonstiges"], persReg: "Sonstiges" },
   aenderung: { sym: "✏️", t: "Änderungsmeldung", register: ["Meldungen", "Sonstiges"], persReg: "Meldungen" },
 };
 const ERST_STATUS: Record<string, string> = { eingereicht: "eingereicht", erstattet: "erstattet", abgelehnt: "abgelehnt" };
@@ -4633,14 +4633,23 @@ async function archivKopieLauf(erzwingen = false) {
 // Der automatische Teil wird nur gelesen (vergangene Treffen, Protokolle, Abstimmungen, Aktionen, Pinnwand, Anhänge, Dienste).
 const ARCHIV_ARTEN: Record<string, { t: string; sym: string; register: string[]; vorstand?: boolean }> = {
   satzung: { t: "Satzung & Recht", sym: "📜", register: ["Satzung", "Geschäftsordnung", "Vereinsregister", "Sonstiges"] },
-  versammlung: { t: "Versammlungen", sym: "🏛️", register: ["Einladung", "Protokoll", "Anwesenheit", "Anlagen"] },
-  vertraege: { t: "Verträge & Versicherungen", sym: "🤝", register: ["Verträge", "Versicherungen", "Genehmigungen", "Sonstiges"], vorstand: true },
-  finanzen: { t: "Finanzen", sym: "💶", register: ["Kassenbericht", "Kassenprüfung", "Belege", "Sonstiges"], vorstand: true },
+  // KC-CLUB-REGISTER-EINHEITLICH (03.11.2026, Wunsch Hansi „alles soll gleich sein“): Mehrzahl, „Sonstiges“ immer als letztes Register,
+  // Verträge wie der feste Ordner „Verträge“. Alte Namen → REGISTER_EINHEITLICH.
+  versammlung: { t: "Versammlungen", sym: "🏛️", register: ["Einladungen", "Protokolle", "Anwesenheit", "Anlagen", "Sonstiges"] },
+  vertraege: { t: "Verträge & Versicherungen", sym: "🤝", register: ["Vereinsverträge", "Versicherungen", "Miete & Räume", "Lieferanten", "Sonstiges"], vorstand: true },
+  finanzen: { t: "Finanzen", sym: "💶", register: ["Kassenberichte", "Kassenprüfungen", "Belege", "Sonstiges"], vorstand: true },
   presse: { t: "Presse", sym: "📰", register: ["Zeitung", "Internet", "Sonstiges"] },
   // KC-CLUB-CHRONIK (1.64.0, Vorschlag + Freigabe Hansi): Register nach Themen; Einträge tragen das Ereignisdatum
   chronik: { t: "Chronik", sym: "📖", register: ["Gründung", "Presse", "Rekorde & Höhepunkte", "Feste & Jubiläen", "Mitglieder im Wandel", "In Gedenken", "Ehrungen & Urkunden", "Sonstiges"] },
-  sonstiges: { t: "Sonstiges", sym: "🗂️", register: ["Allgemein"] },
+  sonstiges: { t: "Sonstiges", sym: "🗂️", register: ["Sonstiges"] },
 };
+// KC-CLUB-REGISTER-EINHEITLICH: alte Registernamen → einheitlicher Name. Gilt beim Speichern eines Ordners (Dokumente ziehen mit, wie beim
+// Umbenennen) und beim Ablegen. Gleiche Liste in der Migration 20261103_kc_club_register_einheitlich.sql und in der App (AR_REG_EINHEITLICH).
+const REGISTER_EINHEITLICH: Record<string, string> = {
+  Allgemein: "Sonstiges", Einladung: "Einladungen", Protokoll: "Protokolle", Sitzungsprotokolle: "Protokolle", Kassenbericht: "Kassenberichte", Kassenprüfung: "Kassenprüfungen",
+};
+// auch „Jahr › Unterregister“: nur der Teil hinter dem letzten „ › “ wird vereinheitlicht
+const registerEinheitlich = (r: string) => { const i = r.lastIndexOf(" › "), kopf = i >= 0 ? r.slice(0, i + 3) : "", rest = i >= 0 ? r.slice(i + 3) : r; return REGISTER_EINHEITLICH[rest] ? kopf + REGISTER_EINHEITLICH[rest] : r; };
 const ARCHIV_DATEITYPEN = /^(application\/pdf|image\/(jpeg|png|webp)|text\/plain|application\/msword|application\/vnd\.ms-excel|application\/vnd\.openxmlformats-officedocument\.(wordprocessingml\.document|spreadsheetml\.sheet))$/;
 const ARCHIV_STOPP = 0.98; // Speicher: Archiv nimmt bis 98 % an (Fotos stoppen schon bei 95 %)
 const darfArchivPflegen = (ich: Ich) => ich.admin || ich.aemter.includes("Clubsprecher");
@@ -4653,9 +4662,9 @@ async function archivPflegerIds(): Promise<string[]> {
   return (data ?? []).filter((r: any) => r.ist_admin || (r.aemter ?? []).includes("Clubsprecher")).map((r: any) => r.person_id);
 }
 function archivRegister(roh: unknown, art: string): string[] {
-  const liste = (Array.isArray(roh) ? roh : []).map((x) => txt(x, 30)).filter(Boolean);
+  const liste = (Array.isArray(roh) ? roh : []).map((x) => registerEinheitlich(txt(x, 30))).filter(Boolean); // KC-CLUB-REGISTER-EINHEITLICH
   const eindeutig = [...new Set(liste)].slice(0, liste.some((r) => r.includes(" › ")) ? 80 : 12); // 2.147.0 KC-CLUB-ARCHIV-UNTERREGISTER: „Jahr › Unterregister“ – mehrjährige Ordner brauchen mehr
-  return eindeutig.length ? eindeutig : [...(ARCHIV_ARTEN[art]?.register ?? ["Allgemein"])];
+  return eindeutig.length ? eindeutig : [...(ARCHIV_ARTEN[art]?.register ?? ["Sonstiges"])];
 }
 const archivDatum = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) && !isNaN(Date.parse(String(v))) ? String(v) : null;
 const archivStichworte = (v: unknown) => [...new Set((Array.isArray(v) ? v : String(v || "").split(/[,;]/)).map((x) => txt(x, 30)).filter(Boolean))].slice(0, 10);
@@ -4751,11 +4760,13 @@ async function vereinsOrdner(def: typeof ADMIN_ORDNER, jahr: number, register: s
 // Register umbenennen statt „entfernen + neu“: Dokumente und Freigaben ziehen mit (vorher landeten sie still im ersten Register).
 // paare = [{ alt, neu }] – nur alt ∈ vorher, neu ∈ nachher, alt ∉ nachher; doppelte/kreuzende Paare werden verworfen.
 function registerUmbenennenPaare(roh: unknown, vorher: string[], nachher: string[]) {
-  const paare: { alt: string; neu: string }[] = [], alte = new Set<string>(), neue = new Set<string>();
-  for (const x of Array.isArray(roh) ? roh.slice(0, 80) : []) {
+  const paare: { alt: string; neu: string }[] = [], alte = new Set<string>();
+  // KC-CLUB-REGISTER-EINHEITLICH: ein alter Name, der beim Speichern vereinheitlicht wurde, nimmt seine Dokumente mit
+  const auto = vorher.filter((r) => registerEinheitlich(r) !== r).map((r) => ({ alt: r, neu: registerEinheitlich(r) }));
+  for (const x of [...(Array.isArray(roh) ? roh.slice(0, 80) : []), ...auto]) {
     const alt = txt((x as any)?.alt, 30), neu = txt((x as any)?.neu, 30);
-    if (!alt || !neu || alt === neu || !vorher.includes(alt) || !nachher.includes(neu) || nachher.includes(alt) || alte.has(alt) || neue.has(neu)) continue;
-    alte.add(alt); neue.add(neu); paare.push({ alt, neu });
+    if (!alt || !neu || alt === neu || !vorher.includes(alt) || !nachher.includes(neu) || nachher.includes(alt) || alte.has(alt)) continue; // mehrere alte → ein neues Register ist erlaubt (zusammenlegen)
+    alte.add(alt); paare.push({ alt, neu });
   }
   return paare;
 }
@@ -8796,7 +8807,7 @@ async function vapidOeffentlich() {
   return r;
 }
 // KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0): wenige, wichtige Punkte (Wunsch Hansi „sonst wird der User überfordert“) – gleiche Liste in app.js (UA_BEREICHE)
-// 2.834.0 KC-CLUB-HILFE-TIPPS: Antworten auf „Hat dir der Tipp geholfen?“ und Prüfung der Anlagen (eigene hochgeladene Dateien oder Blätter aus dem Ordner Anleitungen)
+// 2.835.0 KC-CLUB-HILFE-TIPPS: Antworten auf „Hat dir der Tipp geholfen?“ und Prüfung der Anlagen (eigene hochgeladene Dateien oder Blätter aus dem Ordner Anleitungen)
 const TIPP_ANTWORT: Record<string, string> = { geholfen: "✅ Ja, hat geholfen", nein: "❌ Nein, hat nicht geholfen", anderes: "🔀 Das Problem war ein anderes", erledigt: "👍 Hat sich erledigt", keine: "🙅 Möchte nicht antworten" };
 async function tippAnlagenPruefen(ich: Ich, roh: unknown) {
   const l = (Array.isArray(roh) ? roh : []).slice(0, 5), aus: any[] = [], basis = APP_URL + "dokumente/anleitungen/";
@@ -9555,7 +9566,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data, error } = await db.from("kc_dp_wish_inbox").select("submitted_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).not("submitted_at", "is", null).limit(1);
           return error ? null : !(data ?? []).length;
         }).catch(() => null);
-        // 2.834.0 KC-CLUB-HILFE-TIPPS: offene Tipps für mich (mit Rückmeldung bis beantwortet, ohne bis gelesen) – meist 1 kurze Abfrage ohne Treffer
+        // 2.835.0 KC-CLUB-HILFE-TIPPS: offene Tipps für mich (mit Rückmeldung bis beantwortet, ohne bis gelesen) – meist 1 kurze Abfrage ohne Treffer
         const pTipps = Promise.resolve(db.from("kc_club_hilfe_tipp_empfang").select("tipp_id,gelesen_am").eq("person_id", ich.person_id).is("antwort", null).limit(10)).then(async (r: any) => {
           const em = r.data ?? []; if (r.error || !em.length) return [];
           const { data: tl } = await db.from("kc_club_hilfe_tipp").select("id,von,problem,rueckmeldung,erstellt_am").in("id", em.map((x: any) => x.tipp_id));
@@ -9780,7 +9791,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.834.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -11859,7 +11870,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Wissen für alle, eigene Fragen mit Antwort, für den Admin die offenen Fragen
-      // ---------- 2.834.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026): die Clubleitung schickt Lösungen an eine Person, Gruppe oder alle –
+      // ---------- 2.835.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026): die Clubleitung schickt Lösungen an eine Person, Gruppe oder alle –
       // Text, Blätter aus dem Ordner Anleitungen, eigene PDFs/Fotos/Bildschirmfotos; mit oder ohne Rückmeldung („Hat dir der Tipp geholfen?“).
       // „Nein“ / „Problem war ein anderes“ → sofort eine offene Unterstützungs-Anfrage und Meldung an Absender und Admin. Vorlagen zum Wiederverwenden.
       case "tipp_vorlagen": {
@@ -18111,7 +18122,7 @@ Köcheclub Werne`,
           const { data: mb } = await db.from("kc_club_magazin_beitrag").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(1);
           if (mb?.length) erlaubt = true;
         }
-        if (!erlaubt) { // 2.834.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung
+        if (!erlaubt) { // 2.835.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung
           const { data: ht } = await db.from("kc_club_hilfe_tipp").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(5);
           for (const x of ht ?? []) {
             if (ich.vorstand || ich.admin) { erlaubt = true; break; }
@@ -18694,7 +18705,8 @@ Köcheclub Werne`,
         try {
           // Einreichung: nur in das freigegebene Register (bei Register-Freigabe), Status „zur Prüfung“
           const erlaubteReg = einreichung ? o._freigaben.filter((f: any) => f.hochladen && !f.dokument_id).map((f: any) => f.register) : [];
-          let register = o.register.includes(String(p.register)) ? String(p.register) : o.register[0] ?? null;
+          const gewuenscht = registerEinheitlich(String(p.register ?? "")); // KC-CLUB-REGISTER-EINHEITLICH: alter Name → einheitlicher
+          let register = o.register.includes(String(p.register)) ? String(p.register) : o.register.includes(gewuenscht) ? gewuenscht : o.register[0] ?? null;
           if (einreichung && !vereinEinreichung && !erlaubteReg.includes(null) && !erlaubteReg.includes(register)) register = erlaubteReg[0];
           const { data: d, error } = await db.from("kc_club_archiv_dokumente").insert({
             ordner_id: o.id, register, titel: txt(p.titel, 120) || datei.name, datum: archivDatum(p.datum), stichworte: archivStichworte(p.stichworte), beschreibung: txt(p.beschreibung, 1000),
@@ -18729,7 +18741,7 @@ Köcheclub-App`,
             }, `club-archiv-pruefung:${d.id}`).catch(() => null);
           }
           // KC-CLUB-REGISTER-UMBENENNEN: gab es das gewählte Register nicht (mehr), sagt die Antwort, wo es jetzt liegt
-          return json({ ok: true, id: d.id, pruefung: einreichung, register, registerErsetzt: !!p.register && String(p.register) !== register });
+          return json({ ok: true, id: d.id, pruefung: einreichung, register, registerErsetzt: !!p.register && String(p.register) !== register && gewuenscht !== register });
         } catch (e) { await dateienEntfernen([datei.id]); throw e; }
       }
 

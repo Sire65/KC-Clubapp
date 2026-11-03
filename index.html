@@ -168,7 +168,7 @@
   .kork .pw-nadel::before { content: ""; position: absolute; left: 3px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff 0 12%, var(--nadel, #f5d90a) 45%, rgba(0,0,0,.35) 100%); box-shadow: 1px 3px 4px rgba(0,0,0,.45); }
   .kork .pw-nadel::after { content: ""; position: absolute; left: 14px; top: 22px; width: 2px; height: 11px; background: linear-gradient(#ddd, #888); border-radius: 1px; }
   .kork .pw-nadel.f1 { --nadel: #f5d90a; } .kork .pw-nadel.f2 { --nadel: #ff6fa3; } .kork .pw-nadel.f3 { --nadel: #6cc93a; } .kork .pw-nadel.f4 { --nadel: #3fa6e6; } .kork .pw-nadel.f5 { --nadel: #ff9a2e; } .kork .pw-nadel.f6 { --nadel: #a46be0; } .kork .pw-nadel.f7 { --nadel: #20b5a5; } .kork .pw-nadel.f8 { --nadel: #d9c7a0; }
-  /* 2.834.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN (#74): Admin – Nadel oben am Zettel lange drücken legt ihn als Nadel ab */
+  /* 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN (#74): Admin – Nadel oben am Zettel lange drücken legt ihn als Nadel ab */
   .zettel .pw-griff { position: absolute; top: -18px; left: 50%; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; z-index: 2; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: pointer; }
   .zettel .pw-griff.drueck { background: radial-gradient(circle, rgba(255,255,255,.55) 0 30%, transparent 65%); animation: pwDrueck .6s linear forwards; }
   @keyframes pwDrueck { from { box-shadow: 0 0 0 0 rgba(255,255,255,.7); } to { box-shadow: 0 0 0 10px rgba(255,255,255,0); } }
@@ -3681,7 +3681,7 @@
   .bu-mon-zeile { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
   .bu-mon-logo { display: grid; justify-items: center; gap: 2px; } .bu-mon-logo img { width: 44px; filter: brightness(0) opacity(.55); } :root.dunkel .bu-mon-logo img { filter: none; opacity: .8; }
   .bu-mon-fuss { display: block; width: 26%; height: 9px; margin: -1px auto 0; background: #3a3f45; border-radius: 0 0 6px 6px; }
-  /* 2.834.0 KC-CLUB-BUERO-NAMENSSCHILD (#75): goldenes Namensschild unter dem Bildschirm, Buchstabe T/N/A am Lampenfuß */
+  /* 2.835.0 KC-CLUB-BUERO-NAMENSSCHILD (#75): goldenes Namensschild unter dem Bildschirm, Buchstabe T/N/A am Lampenfuß */
   .bu-namensschild { display: grid; justify-items: center; gap: 0; justify-self: center; max-width: min(100%, 220px); margin: 4px auto 2px; padding: 3px 12px 4px; border-radius: 4px;
     background: linear-gradient(180deg, #f7e08a 0%, #d4af37 45%, #b8901f 55%, #e8c95a 100%); border: 1px solid #8a6a12; box-shadow: 0 2px 3px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6);
     color: #3b2a05; text-shadow: 0 1px 0 rgba(255,255,255,.45); line-height: 1.15; text-align: center; min-width: 0; }
@@ -4548,7 +4548,7 @@
   .ua-zeile { gap: 10px; padding: 6px 0; min-height: 40px; align-items: center; } .ua-zeile input, .ua-chip input { width: 22px; height: 22px; }
   .ua-kontakt { display: flex; flex-wrap: wrap; gap: 6px; } .ua-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; }
   .ua-karte { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 12px; padding: 8px 10px; margin: 8px 0; }
-  /* 2.834.0 KC-CLUB-HILFE-TIPPS */
+  /* 2.835.0 KC-CLUB-HILFE-TIPPS */
   .tipp-karte { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-left: 5px solid #f5c542; border-radius: 12px; padding: 10px 12px; overflow-wrap: anywhere; }
   .tipp-antworten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
   .tipp-antworten .knopf { margin: 0; min-height: 48px; white-space: normal; }
@@ -6652,7 +6652,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.834.0" data-v="2.834.0"></script>
+<script src="app.js?v=2.835.0" data-v="2.835.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

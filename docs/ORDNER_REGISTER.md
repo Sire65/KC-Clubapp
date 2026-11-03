@@ -1,6 +1,6 @@
 # Ordner & Register – Konzept (KC-CLUB-ORDNER-KENNUNG, KC-CLUB-REGISTER-UMBENENNEN)
 
-Stand 03.11.2026 · Konzeptprüfung auf Wunsch Hansi („prüfen“ → „umbauen“) · App/Server 2.824.0
+Stand 03.11.2026 · Konzeptprüfung auf Wunsch Hansi („prüfen“ → „umbauen“) · App/Server 2.824.0 · Register einheitlich: 2.834.0
 
 ## Bausteine
 
@@ -43,9 +43,16 @@ nur über die Kennung, die Beschriftung darf sich ändern.
 - **Entfernen:** Dokumente wandern ins erste Register (wie bisher), die App fragt vorher.
 - **Ablegen in ein Register, das es nicht mehr gibt:** der Server nimmt das erste Register und meldet `registerErsetzt`; die App sagt es.
 
-## Offen (Entscheidung Hansi)
+## Einheitliche Registernamen (KC-CLUB-REGISTER-EINHEITLICH, 2.834.0, Wunsch Hansi „alles soll gleich sein“)
 
-1. Registernamen vereinheitlichen? Heute gibt es „Protokoll“ (Art Versammlungen), „Protokolle“ und „Sitzungsprotokolle“ nebeneinander.
-   Vorhandene Ablagen werden dafür nicht umbenannt, ohne dass Hansi es will.
-2. Register-Vorgaben stehen zweimal (Server `ARCHIV_ARTEN`, App `ARCHIV_ABLAGE_ARTEN` + Vorschlagsregeln `AR_VORSCHLAG`) – zusammenlegen in einer späteren Etappe.
-3. Fast alle festen Ordner haben die Art „sonstiges“ – die Kennung ersetzt diese Unterscheidung; eine eigene Art ist nicht nötig.
+- Mehrzahl, „Sonstiges“ immer als letztes Register, gleiche Namen für gleiche Sachen.
+- Alte Namen → einheitlich: Allgemein → Sonstiges · Einladung → Einladungen · Protokoll, Sitzungsprotokolle → Protokolle ·
+  Kassenbericht → Kassenberichte · Kassenprüfung → Kassenprüfungen. Liste: `REGISTER_EINHEITLICH` (Server), `AR_REG_EINHEITLICH` (App),
+  Migration `20261103_kc_club_register_einheitlich.sql`; `tests/register-einheitlich.test.mjs` prüft, dass alle drei gleich sind.
+- Der Server vereinheitlicht beim Speichern und Ablegen selbst; Dokumente ziehen mit. Persönliche Ordner erst beim Speichern durch den Besitzer.
+- Neuer alter Name dazu? Eintrag in allen drei Listen + eine Migration für die vorhandenen Vereinsordner.
+
+## Noch offen
+
+1. Register-Vorgaben stehen zweimal (Server `ARCHIV_ARTEN`, App `ARCHIV_ABLAGE_ARTEN` + Vorschlagsregeln `AR_VORSCHLAG`) – zusammenlegen in einer späteren Etappe.
+2. Fast alle festen Ordner haben die Art „sonstiges“ – die Kennung ersetzt diese Unterscheidung; eine eigene Art ist nicht nötig.

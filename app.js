@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.834.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.835.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,10 +17,10 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-qUmyiHANqbganTp+2A8c7Td2zNsP2WZOXgeQJrUWerfvKETcpBAFCJGZxEHs6pAQ" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-5yK4bmL+BPyb0j/lia1uZe+DUD8m2LUnRxeQcDuwHLCafN/HEROtenXaxFJa+HJR" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
-  hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-Aogcf0xwCdgK2Q4azxg4cWT4411Bb0oJehi6VpRC2BzcNLgwxMxCuNNubIpbZwc3" }, // 2.834.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
+  hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
   magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine"], sri: "sha384-Cw5edAdzYjNjuxiW2gHIQYlIESZp2I0Y93SIDgS2AE1mrdRact6S1p4+fbFlKsrG" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
@@ -1214,7 +1214,7 @@ setInterval(() => { if (DS.modus === "auto") anwendenDesign(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && DS.modus === "auto") anwendenDesign(); });
 
 // ---------- KC-CLUB-PINNWAND: Post-its (max. PW.max je Person vom Server, max. 200 Zeichen) ----------
-const PW_ZU_KEY = "kc_club_pw_zu"; // 2.834.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN: vom Admin als Nadel abgelegte Zettel (nur dieses Gerät)
+const PW_ZU_KEY = "kc_club_pw_zu"; // 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN: vom Admin als Nadel abgelegte Zettel (nur dieses Gerät)
 let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false, auf: new Set(), alteAuf: false, zu: pwZuLaden() }; // 2.813.0 KC-CLUB-PINNWAND-NADELN: groß gemachte Nadeln, „Ältere Zettel“ offen
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): Farbe 1–4 kommt fest vom Server (gelb, rosé, hellgrün, hellblau)
 // Kopfzeile jedes Zettels: wer und wann (für eigene Zettel der eigene Vorname)
@@ -1257,7 +1257,7 @@ const pwHilfeNeu = () => (PW.hilfe?.aufrufe || []).filter((a) => pwAufrufAnPinnw
 // (eigenes Vollbild-Fenster ohne .blatt). Eine Stelle für alle automatischen Hinweise; Anrufe dürfen weiter klingeln.
 const FENSTER_OFFEN = ".blatt:not(.versteckt), #dwFenster";
 const eingabeRuhe = () => !!document.getElementById("dwFenster"); // Sprach-Ansagen schweigen, solange die Dienstwünsche offen sind
-// 2.834.0 KC-CLUB-WAS-NEU-AUS (Wunsch Hansi 03.11.2026 „Schalte bei allen ab: Neuigkeiten beim Start“): neuer Schlüssel „wasNeu2“, vorgegeben aus –
+// 2.835.0 KC-CLUB-WAS-NEU-AUS (Wunsch Hansi 03.11.2026 „Schalte bei allen ab: Neuigkeiten beim Start“): neuer Schlüssel „wasNeu2“, vorgegeben aus –
 // gilt für alle Geräte, auch wo es bisher an war. Wer es möchte: ⚙️ Einstellungen → „👋 Beim Öffnen zeigen, was neu ist“.
 function wasNeuZeigen(pw) {
   const n = INIT?.ungelesen || 0, gr = INIT?.ungelesenGruppen, p = pw?.length || 0, sp = INIT?.spieleDran || 0; // 2.24.13: auch Spiele (Einladung / du bist dran)
@@ -1431,14 +1431,14 @@ function pwZeigen() {
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
     if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ ${z.teilAb ? "ganz abnehmen" : "abnehmen"}</button>`);
     if (PW.auf.has(z.id)) knoepfe.push(`<button onclick="pwNadel('${z.id}')">📌 wieder als Nadel</button>`); // 2.813.0 KC-CLUB-PINNWAND-NADELN
-    if (PW.auf.has(z.id) && PW.zu.has(z.id)) knoepfe.push(`<button onclick="pwZuLoesen('${z.id}')">📋 wieder groß an die Wand</button>`); // 2.834.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
+    if (PW.auf.has(z.id) && PW.zu.has(z.id)) knoepfe.push(`<button onclick="pwZuLoesen('${z.id}')">📋 wieder groß an die Wand</button>`); // 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
     // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: für Verfasser/Clubleitung sichtbar, bei wem er noch hängt
     const teil = z.teilAb && z.leser ? `<div class="zteil">🧹 Bei Lesern abgenommen${z.offen?.length ? ` – hängt noch bei ${esc(z.offen.map((n) => n.split(" ")[0]).join(", "))}` : ""}</div>` : "";
     const leser = z.leser && z.fuer !== "ich" ? `<details><summary>👁️ gelesen ${z.leser.length}/${z.anzahl} · ✓ erl. ${z.leser.filter((l) => l.erledigt).length}</summary>`
       + z.leser.map((l) => `<div>${esc(l.name.split(" ")[0])}: gesehen ${zeitKurz(l.gesehen)}${l.erledigt ? ` · ✓ ${zeitKurz(l.erledigt)}` : ""}</div>`).join("")
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
     return `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}${z.erledigt ? " erledigt" : ""}" data-zid="${esc(z.id)}" style="--dreh:${pwDreh(z.id)}deg">`
-      + (ICH?.admin ? `<span class="pw-griff" data-zid="${esc(z.id)}" title="Nadel lange drücken: Zettel als Nadel ablegen" aria-hidden="true"></span>` : "") // 2.834.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
+      + (ICH?.admin ? `<span class="pw-griff" data-zid="${esc(z.id)}" title="Nadel lange drücken: Zettel als Nadel ablegen" aria-hidden="true"></span>` : "") // 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
@@ -1457,7 +1457,7 @@ const pwAlt = (z) => {
 };
 const pwNadelFuerMich = (z) => !!(z.vonMir || ICH?.admin || ICH?.vorstand);
 function pwNadel(id) { if (PW.auf.has(id)) PW.auf.delete(id); else PW.auf.add(id); pwZeigen(); if (PW.auf.has(id)) document.querySelector(`#pwWand .zettel[data-zid="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }
-// ---------- 2.834.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN (Wunschliste #74, Wunsch Hansi 03.11.2026 „Pinnwand – baue für Admin: Wenn ich bei einem Zettel oben länger
+// ---------- 2.835.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN (Wunschliste #74, Wunsch Hansi 03.11.2026 „Pinnwand – baue für Admin: Wenn ich bei einem Zettel oben länger
 // die Pinnadel drücke, wird der Zettel ausgeblendet und oben bleibt nur die Nadel in der Farbe, wie teilweise jetzt schon ist“) ----------
 // Nur für den Admin, nur auf diesem Gerät (nichts wird abgenommen oder gelöscht, die Mitglieder sehen den Zettel weiter). Die Nadel steht oben im Rahmen
 // bei den gelesenen (KC-CLUB-PINNWAND-NADELN); antippen macht den Zettel wieder groß, „📌 wieder als Nadel“ legt ihn zurück.
@@ -2688,7 +2688,7 @@ const HILFE = [
   { id: "mitglieder_fragen", thema: "start", sym: "👥", t: "Andere Mitglieder um Rat fragen", x: "Weiß Twinkey nicht weiter, stellst du die Frage den Mitgliedern: bei <b>„🧑‍🍳 Frag Twinkey“</b> unter dem Fragefeld auf <b>„👥 Lieber ein Mitglied fragen“</b> – an alle oder an ausgewählte, per App, Push oder E-Mail. Die Antworten siehst du dort unter „Deine Fragen an Mitglieder“.", zeig: () => twFrageStart(), seit: "2.23.51" },
   { id: "anfrage_vorbehalt", thema: "termine", sym: "🤔", t: "Gegenvorschlag unter Vorbehalt annehmen", x: "Schlägt dir jemand eine andere Zeit vor, kannst du <b>„✅ Neue Zeit annehmen“</b>, <b>„🤔 Unter Vorbehalt“</b> oder <b>„❌ Passt nicht“</b> wählen. Beim Vorbehalt schreibst du kurz dazu, woran es noch hängt – der andere sieht es sofort.", zeig: () => zeige("termine"), seit: "2.23.57" },
   { id: "sprungknopf", thema: "nachrichten", sym: "🔘", t: "Einen Knopf in die Nachricht setzen", x: "Willst du jemanden direkt an eine Stelle der App schicken? Unter dem Schreibfeld auf <b>📎</b> → <b>„🔘 Knopf zu einer App-Stelle“</b> und das Ziel wählen, z. B. „Mein Bild wählen“. In der Nachricht erscheint ein Knopf – antippen, und man ist dort.", zeig: () => zeige("nachrichten"), seit: "2.23.97" },
-  { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Auf Wunsch zeigt die App beim Öffnen kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Seit 2.834.0 ist das von Haus aus aus. Einschalten: ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
+  { id: "was_neu", thema: "nachrichten", sym: "👋", t: "Was ist neu? Gleich beim Öffnen", x: "Auf Wunsch zeigt die App beim Öffnen kurz, wie viele <b>neue Nachrichten</b> (in deinen Chats und in Gruppen) und <b>Pinnwand-Einträge</b> da sind und ob <b>Spiele</b> auf dich warten – mit Knopf direkt dorthin. Seit 2.835.0 ist das von Haus aus aus. Einschalten: ⚙️ Einstellungen → 🗣️ Ansagen, Töne &amp; Tipps → „👋 Beim Öffnen zeigen, was neu ist“.", zeig: () => einstiegHin("ansagen", "setWasNeu"), seit: "2.24.12" },
   { id: "jahreszeit_kopf", thema: "darstellung", sym: "🍂", t: "Jahreszeiten-Bild und Deko im Kopf", x: "Im Kopf der Startseite wechselt das Bild <b>von selbst nach dem Kalender</b>: Frühling, Sommer, Herbst, Winter, Advent und Silvester – mit Laub, Schnee, Blumen und kleinen Besuchern. An der Leiste mit den Lämpchen kann eine <b>Deko</b> hängen (Wimpel, Lichterkette, Laternen). Fest einstellen oder ganz abschalten unter ⚙️ → <b>„✨ Effekte“</b>. Die Bühne spart Akku: nach einer Weile ohne Bedienung läuft sie langsamer. Eine <b>Vorschau</b> aus den Einstellungen (z. B. Nikolaus-Stiefel) bleibt stehen, bis du unten auf der Startseite <b>„✕ beenden“</b> tippst (oder in den Einstellungen „📅 Heute“).", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.273.0" }, // 2.337.0 KC-CLUB-TUEV-4
   { id: "animiert", thema: "darstellung", sym: "✨", t: "Ruhige oder lebendige Knöpfe", x: "Kacheln zoomen kurz beim Antippen, die Reiter bekommen einen laufenden Rahmen und „＋ Neu“ leuchtet auf. Wer es lieber ruhig mag: ⚙️ → „✨ Effekte“ → <b>„✨ Animierte Knöpfe“</b> ausschalten. Gilt für dieses Gerät.", zeig: () => einstiegHin("effekte", "setAnimiert"), seit: "2.24.1" },
   { id: "eselsohr", thema: "start", sym: "📄", t: "Das Eselsohr: Kopf umdrehen", x: "Unten rechts am grünen Kopf ist eine kleine Ecke umgeknickt. <b>Doppelt tippen</b> (oder nach links ziehen) – der Kopf dreht sich um wie ein Blatt Papier. Auf der Rückseite oben sieben Reiter: <b>🖼️ Diashow</b>, <b>🖍️ Tafel</b>, <b>📋 Flipchart</b>, <b>🕰️ Uhr</b>, <b>🎭 Bühne</b>, <b>🪞 Spiegel</b> und <b>🧩 Rätsel</b>. Damit man das Eselsohr nicht übersieht, blinkt es ab und zu kurz gelb-orange. Sie nutzt den ganzen Bildschirm bis zur Leiste unten. <b>Nochmal doppelt aufs Eselsohr tippen</b> dreht zurück. Ausblenden: ⚙️ → „🧩 Startseite &amp; Ansicht“ → „📄 Eselsohr am Kopf“. Alles zum Ansehen: Erklär-Video <b>„📄 Die Rückseite: Eselsohr“</b>.", zeig: () => esOeffnen(null), seit: "2.292.0" },
@@ -9458,7 +9458,7 @@ const KACHELN = {
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
-    { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe? 💡 Tipps schicken", aktion: "uaAdmin()", nur: () => !!(ICH?.admin || ICH?.vorstand), zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.834.0: auch Clubleitung (Tipps) // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
+    { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe? 💡 Tipps schicken", aktion: "uaAdmin()", nur: () => !!(ICH?.admin || ICH?.vorstand), zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.835.0: auch Clubleitung (Tipps) // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
     { id: "ungelesen_admin", sym: "📭", t: "Ungelesen", u: "Wer hat meine Nachrichten noch nicht gelesen?", aktion: "ugStart()", nur: () => !!ICH?.admin }, // 2.709.0 KC-CLUB-UNGELESEN-ADMIN
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
@@ -15916,7 +15916,7 @@ async function uaSenden() {
   } catch (e) { meldeFehler(e); }
 }
 const UA_STAND = { offen: "🆕 neu", in_arbeit: "🔧 in Arbeit", erledigt: "✅ erledigt" };
-const uaProblem = (x, P) => String((x.punkte || []).map((p) => P[p] || p)[0] || x.text || "").split("\n").pop().slice(0, 120); // 2.834.0: Vorschlag für „Problem“ beim Tipp
+const uaProblem = (x, P) => String((x.punkte || []).map((p) => P[p] || p)[0] || x.text || "").split("\n").pop().slice(0, 120); // 2.835.0: Vorschlag für „Problem“ beim Tipp
 async function uaAdmin() {
   if (!ICH?.admin && !ICH?.vorstand) return uaStart();
   let r = { anfragen: [] }; if (ICH?.admin) try { r = await api("unterstuetzung_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); } // Anfragen sieht nur der Admin; Tipps die ganze Clubleitung
@@ -15937,7 +15937,7 @@ async function uaStand(id, status) {
   try { await api("unterstuetzung_status", { id, status }, { warten: true }); if (INIT?.kz && status !== "offen") INIT.kz.unterstuetzung = Math.max(0, (INIT.kz.unterstuetzung || 1) - 1);
     melde(status === "in_arbeit" ? "🔧 Übernommen – das Mitglied bekommt Bescheid" : status === "erledigt" ? "✅ Erledigt" : "↩️ Wieder offen"); uaAdmin(); } catch (e) { meldeFehler(e); }
 }
-// ---------- 2.834.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026 „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle –
+// ---------- 2.835.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026 „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle –
 // aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung“; „Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat –
 // immer beim Mitglied in grün, gelb, rot; bei rot: jetzt antworten oder ich möchte darauf nicht antworten, dann nicht mehr darauf hinweisen“).
 // Hier nur, was jedes Mitglied braucht (Ansehen, Antworten, Laufband); Senden, Vorlagen und Übersicht der Clubleitung liegen in teile/hilfetipp.js.
@@ -16213,7 +16213,7 @@ function ilMeldungen() {
   const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
   // 2.493.0 KC-CLUB-DW-LAUFBAND (Wunsch Hansi): Dienstwünsche Weihnachtsmarkt noch nicht abgegeben → Twinkey führt durch (der Server weiß, wer schon abgegeben hat)
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
-  tippLaufband(add); // 2.834.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
+  tippLaufband(add); // 2.835.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
   if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
   else if (!ICH?.admin && !uaKuerzlich()) add({ id: "unterstuetzung", stufe: "weiss", sym: "🙋", t: "Unterstützung bei der Club-App?", u: "Anfrage senden – Hansi meldet sich", auf: "uaStart()", knoepfe: [["🙋 Anfrage senden", "uaStart()"]] });
@@ -16302,7 +16302,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gebgruss=")) ggWahl(decodeURIComponent(h.slice(10))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: Push „Gruß auswählen“
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
     else if (h === "#redaktion") magPostfach(); // KC-CLUB-MAGAZIN-POSTFACH: aus der Benachrichtigung „Neuer Beitrag“
-    else if (h.startsWith("#tipp=")) tippZeigen(decodeURIComponent(h.slice(6))); // 2.834.0 KC-CLUB-HILFE-TIPPS: aus der Benachrichtigung
+    else if (h.startsWith("#tipp=")) tippZeigen(decodeURIComponent(h.slice(6))); // 2.835.0 KC-CLUB-HILFE-TIPPS: aus der Benachrichtigung
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
     else if (h === "#wecker") wkChipTippen(); // 2.640.0 KC-CLUB-UHR-WECKER: aus dem Push „Zeit ist um“ / „Wecker“
@@ -25443,7 +25443,7 @@ async function prJahrAbschliessen(jahr) {
   const liste = (prListe?.protokolle || []).filter((p) => String(p.datum || "").startsWith(jahr) && prVeroeffentlicht(p));
   if (!liste.length) return melde(`In ${jahr} gibt es noch kein veröffentlichtes Protokoll.`, true);
   if (!(await frage(`📦 Jahr ${jahr} abschließen?\n\n${liste.length} veröffentlichte${liste.length === 1 ? "s Protokoll kommt" : " Protokolle kommen"} als PDF in den Büro-Ordner „Protokolle ${jahr}“. Dazu eine Liste der erledigten Vorschläge (Register „Vorschläge“). In der Liste hier bleibt alles trotzdem.`, { ja: "📦 Abschließen", nein: "Abbrechen" }))) return;
-  let a, o; const REG = ["Sitzungsprotokolle", "Vorschläge", "Sonstiges"]; // 2.833.0: Register „Vorschläge“ für die erledigten Vorschläge
+  let a, o; const REG = ["Protokolle", "Vorschläge", "Sonstiges"]; // 2.833.0: Register „Vorschläge“ für die erledigten Vorschläge · KC-CLUB-REGISTER-EINHEITLICH: „Protokolle“ statt „Sitzungsprotokolle“
   try {
     a = await api("archiv_liste", {}, { warten: true });
     o = (a.ordner || []).find((x) => arIstFest(x, "protokolle") && Number(x.jahr) === Number(jahr)); // KC-CLUB-ORDNER-KENNUNG
@@ -32884,17 +32884,20 @@ let arReg = [];
 // KC-CLUB-REGISTER-UMBENENNEN (03.11.2026, Konzeptprüfung Ordner & Register): Register antippen = umbenennen, ✕ = entfernen.
 // arRegUm = [{ alt, neu }] für Register, die es beim Öffnen schon gab – der Server nimmt Dokumente und Freigaben mit.
 let arRegUm = [], arRegVorher = [];
-const arRegStart = (liste) => { arReg = [...liste]; arRegVorher = [...liste]; arRegUm = []; };
-const arRegUrsprung = (r) => arRegUm.find((x) => x.neu === r)?.alt ?? (arRegVorher.includes(r) ? r : null);
+// KC-CLUB-REGISTER-EINHEITLICH (Wunsch Hansi „alles soll gleich sein“): gleiche Liste wie REGISTER_EINHEITLICH im Server
+const AR_REG_EINHEITLICH = { Allgemein: "Sonstiges", Einladung: "Einladungen", Protokoll: "Protokolle", Sitzungsprotokolle: "Protokolle", Kassenbericht: "Kassenberichte", Kassenprüfung: "Kassenprüfungen" };
+const arRegEinheitlich = (r) => { const i = r.lastIndexOf(" › "), kopf = i >= 0 ? r.slice(0, i + 3) : "", rest = i >= 0 ? r.slice(i + 3) : r; return AR_REG_EINHEITLICH[rest] ? kopf + AR_REG_EINHEITLICH[rest] : r; };
+const arRegStart = (liste) => { arRegVorher = [...liste]; arReg = [...new Set(liste.map(arRegEinheitlich))]; // alte Namen gleich vereinheitlicht anzeigen
+  arRegUm = liste.filter((r) => arRegEinheitlich(r) !== r).map((r) => ({ alt: r, neu: arRegEinheitlich(r) })); };
 async function arRegUmbenennen(i) {
   const alt = arReg[i]; if (alt === undefined) return;
   const v = await eingabe(`✏️ Register „${alt}“ umbenennen\n\nDokumente darin bleiben in diesem Register.`, alt, { ja: "✏️ Umbenennen" });
-  const neu = String(v ?? "").trim().slice(0, 30);
+  const neu = arRegEinheitlich(String(v ?? "").trim().slice(0, 30));
   if (!neu || neu === alt) return;
   if (arReg.includes(neu)) return melde(`Das Register „${neu}“ gibt es schon.`, true);
-  const ursprung = arRegUrsprung(alt);
+  const urspruenge = [...arRegUm.filter((x) => x.neu === alt).map((x) => x.alt), ...(arRegVorher.includes(alt) ? [alt] : [])]; // auch zusammengelegte
   arRegUm = arRegUm.filter((x) => x.neu !== alt);
-  if (ursprung && ursprung !== neu) arRegUm.push({ alt: ursprung, neu });
+  for (const u of urspruenge) if (u !== neu) arRegUm.push({ alt: u, neu });
   arReg[i] = neu; arRegZeigen();
 }
 function arRegEntfernen(i) { const r = arReg[i]; arRegUm = arRegUm.filter((x) => x.neu !== r); arReg.splice(i, 1); arRegZeigen(); }
@@ -32924,14 +32927,14 @@ function arArtGewaehlt(art) {
 }
 function arRegZeigen() {
   $("arRegChips").innerHTML = arReg.map((r, i) => `<span class="chip ar-reg-chip"><button type="button" class="ar-reg-name" aria-label="Register ${esc(r)} umbenennen" onclick="arRegUmbenennen(${i})">${esc(r)} ✏️</button><button type="button" class="ar-reg-weg" aria-label="Register ${esc(r)} entfernen" onclick="arRegEntfernen(${i})">✕</button></span>`).join("")
-    + (arReg.length ? '<div class="hinweis" style="flex-basis:100%;margin-top:2px">Antippen = umbenennen (Inhalt bleibt drin) · ✕ = entfernen</div>' : '<span class="hinweis">Ohne Register landet alles unter „Allgemein“.</span>');
+    + (arReg.length ? '<div class="hinweis" style="flex-basis:100%;margin-top:2px">Antippen = umbenennen (Inhalt bleibt drin) · ✕ = entfernen</div>' : '<span class="hinweis">Ohne Register landet alles unter „Sonstiges“.</span>');
 }
-function arRegDazu() { const v = $("arRegNeu").value.trim().slice(0, 30); if (v && !arReg.includes(v) && arReg.length < 12) arReg.push(v); $("arRegNeu").value = ""; arRegZeigen(); }
+function arRegDazu() { const v = arRegEinheitlich($("arRegNeu").value.trim().slice(0, 30)); /* KC-CLUB-REGISTER-EINHEITLICH */ if (v && !arReg.includes(v) && arReg.length < 12) arReg.push(v); $("arRegNeu").value = ""; arRegZeigen(); }
 async function arOrdnerSpeichern(id) {
   const f = document.querySelector(".ar-farben button.an");
   const alt = id ? AR.daten.ordner.find((x) => x.id === id) : null;
   const weg = alt ? arRegWegZahl(id) : 0;
-  if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Allgemein"}“. Weiter?`))) return;
+  if (weg && !(await frage(`${weg} Dokument(e) liegen in einem Register, das du entfernt hast. Sie kommen ins Register „${arReg[0] || "Sonstiges"}“. Weiter?`))) return;
   try {
     const r = await api("archiv_ordner_speichern", { id: id || undefined, art: $("arArt").value, jahr: Number($("arJahrWahl").value), titel: $("arTitel").value.trim(), farbe: Number(f?.dataset.f || 1), register: arReg, umbenennen: arRegUm, nur_vorstand: $("arLeitung").checked, einleitung: $("arEinleitung")?.value ?? undefined, einreichen: !!$("arEinreichen")?.checked && !$("arLeitung").checked });
     arBlattZu(); melde(id ? "✔ Ordner geändert" : "✔ Ordner angelegt");
@@ -32948,7 +32951,7 @@ function arDokForm(id) {
   const d = AR.daten, x = id ? d.dokumente.find((y) => y.id === id) : null, o = d.ordner.find((y) => y.id === (x?.ordner_id || AR.ordner));
   if (!o) return;
   AR.datei = null;
-  const regWahl = (ord, wert) => (ord.register.length ? ord.register : ["Allgemein"]).map((r) => `<option ${r === wert ? "selected" : ""}>${esc(r)}</option>`).join("");
+  const regWahl = (ord, wert) => (ord.register.length ? ord.register : ["Sonstiges"]).map((r) => `<option ${r === wert ? "selected" : ""}>${esc(r)}</option>`).join("");
   const hinein = !x && o.besitzer && !o.eigen, regListe = hinein ? arFreiRegister(o, true) : o.register;
   const einreichen = !x && !o.besitzer && o.einreichen && !d.darf, chronik = o.art === "chronik"; // KC-CLUB-CHRONIK (1.64.0)
   const ordnerWahl = d.ordner.filter((y) => (y.besitzer || null) === (o.besitzer || null) && (!o.besitzer || y.eigen));
@@ -32981,14 +32984,14 @@ const AR_VORSCHLAG = [
   { re: /vertr[aä]g|vereinbarung|kündigung/i, register: ["Verträge", "Sonstiges"] }, // persönlicher Ordner hat kein Register „Verträge“
   { re: /versicherung|police|haftpflicht/i, register: ["Versicherungen"] },
   { re: /satzung|geschäftsordnung|vereinsregister|registergericht/i, register: ["Satzung", "Geschäftsordnung", "Vereinsregister"] },
-  { re: /einladung/i, ordner: /versamml|besprech/i, register: ["Einladung", "Unterlagen"] },
+  { re: /einladung/i, ordner: /versamml|besprech/i, register: ["Einladungen", "Unterlagen"] },
   { re: /anwesenheit|teilnehmerliste/i, register: ["Anwesenheit"] },
   { re: /presse|zeitung|artikel|bericht in/i, register: ["Presse"] },
   { re: /mitglied(?:s|er)?(?:antrag|meldung)|aufnahme|austritt|beitritt|adressänderung|änderungsmeldung/i, ordner: /mitglied/i, register: ["Meldungen"] },
   { re: /ausleih|leihschein|verleih/i, register: ["Ausleihe"] },
   // bisherige Regeln (2.59.0)
   { re: /besprech|tagesordnung|agenda|entwurf/i, ordner: /besprech/i, register: ["Entwürfe", "Unterlagen"] },
-  { re: /protokoll/i, ordner: /besprech|protokoll|versammlung|sitzung/i, register: ["Protokolle", "Protokoll"] },
+  { re: /protokoll/i, ordner: /besprech|protokoll|versammlung|sitzung/i, register: ["Protokolle"] },
   { re: /rechnung|beleg|quittung|erstattung|abrechnung|kassenbon|bon\b/i, register: ["Rechnungen"] },
   { re: /schulung|zertifikat|teilnahmebescheinigung|lehrgang|kurs/i, register: ["Schulungen"] },
   { re: /dienst(zeit|plan|wunsch)|wünsche/i, ordner: /dienstpl/i, register: ["Wünsche", "Gesamtplan"] },
@@ -33037,7 +33040,7 @@ function arDokInfo(id) {
 function arDokMenue(id) {
   const { x, o, darf } = arDokInfo(id); if (!x || !o) return;
   const k = (sym, t, fn, art = "") => `<button class="knopf${art}" style="text-align:left" onclick="$('arMenue')?.remove();${fn}">${sym} ${t}</button>`;
-  blattAuf("arMenue", `<h3 style="margin:0 0 2px">${arDateiSym(x.mime)} ${esc(x.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(arName(o))} › ${esc(x.register || "Allgemein")}</p>
+  blattAuf("arMenue", `<h3 style="margin:0 0 2px">${arDateiSym(x.mime)} ${esc(x.titel)}</h3><p class="hinweis" style="margin:0 0 10px">${esc(arName(o))} › ${esc(x.register || "Sonstiges")}</p>
     <div class="knoepfe ar-menue" style="flex-direction:column;align-items:stretch">
     ${k("👁️", "Öffnen", `arAnlage('${x.id}', true)`, " haupt")}
     ${k("🖨️", "Drucken", `arDrucken(arDokInfo('${x.id}').x)`)}
@@ -33068,7 +33071,7 @@ function arEinfuegenLeiste(o) {
 }
 async function arEinfuegen() {
   const z = AR_ABLAGE, o = arOrdnerAktuell(), q = z && AR.daten?.dokumente.find((y) => y.id === z.id); if (!z || !o || !q) return;
-  const regs = o.register.length ? o.register : ["Allgemein"];
+  const regs = o.register.length ? o.register : ["Sonstiges"];
   const register = AR.register && regs.includes(AR.register) ? AR.register : regs.includes(q.register) ? q.register : regs[0];
   if (z.art === "verschieben" && o.id === q.ordner_id && register === q.register) return melde("Liegt schon hier – bitte einen anderen Ordner oder ein anderes Register öffnen.", true);
   try {
@@ -33191,7 +33194,7 @@ function arZielBlatt(id, art) {
   AR_ZIEL = { id, art, jetzt: { ordner: o.id, register: x.register } };
   const kop = art === "kopieren";
   arBlatt(`<h3>${kop ? "📋 Kopieren nach …" : "➡️ Verschieben nach …"}</h3>
-    <p class="hinweis" style="margin:0 0 8px">${arDateiSym(x.mime)} <b>${esc(x.titel)}</b><br>liegt jetzt in: ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""} › ${esc(x.register || "Allgemein")}</p>
+    <p class="hinweis" style="margin:0 0 8px">${arDateiSym(x.mime)} <b>${esc(x.titel)}</b><br>liegt jetzt in: ${esc(arName(o))}${o.nur_vorstand ? " 🔒" : ""} › ${esc(x.register || "Sonstiges")}</p>
     ${v ? `<button class="knopf haupt ar-vorschlag" style="width:100%;text-align:left" onclick="arZielSetzen('${v.o.id}', ${esc(JSON.stringify(v.r))})">💡 Vorschlag: <b>${esc(v.o.titel)} ${v.o.jahr} › ${esc(v.r)}</b> <small>(${esc(v.grund)})</small></button>` : ""}
     <label class="feld">Ordner<select id="arZielOrdner" onchange="arZielRegister()">${liste.map((y) => `<option value="${y.id}">${esc(y.titel)} ${y.jahr}${y.nur_vorstand ? " 🔒" : ""}</option>`).join("")}</select></label>
     <label class="feld">Register<select id="arZielReg"></select></label>
@@ -33202,7 +33205,7 @@ function arZielBlatt(id, art) {
 function arZielSetzen(oid, reg) { const s = $("arZielOrdner"); if (!s) return; s.value = oid; arZielRegister(reg); }
 function arZielRegister(reg) {
   const o = AR.daten?.ordner.find((y) => y.id === $("arZielOrdner")?.value); if (!o) return;
-  const liste = o.register.length ? o.register : ["Allgemein"], w = liste.includes(reg) ? reg : liste[0];
+  const liste = o.register.length ? o.register : ["Sonstiges"], w = liste.includes(reg) ? reg : liste[0];
   $("arZielReg").innerHTML = liste.map((r) => `<option${r === w ? " selected" : ""}>${esc(r)}</option>`).join("");
 }
 async function arZielAusfuehren() {
@@ -33219,7 +33222,7 @@ async function arZielAusfuehren() {
 }
 function arDokOrdnerWechsel(oid) {
   const o = AR.daten.ordner.find((y) => y.id === oid); if (!o) return;
-  $("arDokReg").innerHTML = (o.register.length ? o.register : ["Allgemein"]).map((r) => `<option>${esc(r)}</option>`).join("");
+  $("arDokReg").innerHTML = (o.register.length ? o.register : ["Sonstiges"]).map((r) => `<option>${esc(r)}</option>`).join("");
 }
 async function arDateiGewaehlt(input) {
   const roh = input.files?.[0]; input.value = ""; if (!roh) return;

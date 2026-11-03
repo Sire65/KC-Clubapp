@@ -1,7 +1,7 @@
 {
   "hinweis": "Erzeugt von tools/anleitungen-pdf.mjs – nicht von Hand ändern.",
   "stand": "03.11.2026",
-  "version": "2.834.0",
+  "version": "2.835.0",
   "blaetter": [
     {
       "id": "push-und-email",
