@@ -61,9 +61,11 @@ jobs:
       - run: node tests/wunschliste-november.test.mjs
       - run: node tests/strom.test.mjs
       - run: node tests/disco.test.mjs
+      - run: node tests/systemcheck-gruen.test.mjs
       - run: node tests/schreibtisch.test.mjs
       - run: node tests/anleitungen.test.mjs
       - run: node tests/hilfe-tipps.test.mjs
+      - run: node tests/pinnwand-nadel-druecken.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
@@ -87,6 +89,8 @@ jobs:
       - run: node tests/protokoll-pruefung.test.mjs
       - run: node tests/vorschlag-ordner.test.mjs
       - run: node tests/rechner-spur-besuche.test.mjs
+      - run: node tests/tippflaechen.test.mjs
+      - run: node tests/nutzung-alle.test.mjs
       - run: node tests/protokoll-foto.test.mjs
       - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/video-abgleich.test.mjs

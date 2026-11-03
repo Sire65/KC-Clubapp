@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.826.0";
+const SERVER_VERSION = "2.830.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2750,6 +2750,7 @@ async function erstattungBesucheAbgerechnet(pid: string): Promise<Set<string>> {
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): 4 statt 3; jeder Zettel behält seine Farbe 1–4 (gelb, rosé, hellgrün, hellblau), ein neuer
 // bekommt die kleinste freie – abgenommene Zettel machen ihre Farbe frei, die anderen rücken nicht nach.
 const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;
+const NUTZUNG_ALLE_MIN = 3; // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „von wie vielen Mitgliedern“ erst ab 3 zeigen
 // 2.814.0 KC-CLUB-PINNWAND-ADMIN-MEHR (Wunsch Hansi 02.11.2026 „Gib mir als Admin mehr als 4 Zettel an der Pinnwand“): Admin 8 Zettel, Farben 5–8 kommen dazu
 const PINNWAND_MAX_ADMIN = 8;
 const pinnwandMax = (ich: { admin?: boolean }) => (ich.admin ? PINNWAND_MAX_ADMIN : PINNWAND_MAX);
@@ -8772,7 +8773,7 @@ async function vapidOeffentlich() {
   return r;
 }
 // KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0): wenige, wichtige Punkte (Wunsch Hansi „sonst wird der User überfordert“) – gleiche Liste in app.js (UA_BEREICHE)
-// 2.826.0 KC-CLUB-HILFE-TIPPS: Antworten auf „Hat dir der Tipp geholfen?“ und Prüfung der Anlagen (eigene hochgeladene Dateien oder Blätter aus dem Ordner Anleitungen)
+// 2.830.0 KC-CLUB-HILFE-TIPPS: Antworten auf „Hat dir der Tipp geholfen?“ und Prüfung der Anlagen (eigene hochgeladene Dateien oder Blätter aus dem Ordner Anleitungen)
 const TIPP_ANTWORT: Record<string, string> = { geholfen: "✅ Ja, hat geholfen", nein: "❌ Nein, hat nicht geholfen", anderes: "🔀 Das Problem war ein anderes", erledigt: "👍 Hat sich erledigt", keine: "🙅 Möchte nicht antworten" };
 async function tippAnlagenPruefen(ich: Ich, roh: unknown) {
   const l = (Array.isArray(roh) ? roh : []).slice(0, 5), aus: any[] = [], basis = APP_URL + "dokumente/anleitungen/";
@@ -9522,7 +9523,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data, error } = await db.from("kc_dp_wish_inbox").select("submitted_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).not("submitted_at", "is", null).limit(1);
           return error ? null : !(data ?? []).length;
         }).catch(() => null);
-        // 2.826.0 KC-CLUB-HILFE-TIPPS: offene Tipps für mich (mit Rückmeldung bis beantwortet, ohne bis gelesen) – meist 1 kurze Abfrage ohne Treffer
+        // 2.830.0 KC-CLUB-HILFE-TIPPS: offene Tipps für mich (mit Rückmeldung bis beantwortet, ohne bis gelesen) – meist 1 kurze Abfrage ohne Treffer
         const pTipps = Promise.resolve(db.from("kc_club_hilfe_tipp_empfang").select("tipp_id,gelesen_am").eq("person_id", ich.person_id).is("antwort", null).limit(10)).then(async (r: any) => {
           const em = r.data ?? []; if (r.error || !em.length) return [];
           const { data: tl } = await db.from("kc_club_hilfe_tipp").select("id,von,problem,rueckmeldung,erstellt_am").in("id", em.map((x: any) => x.tipp_id));
@@ -9747,7 +9748,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.826.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.830.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -11826,7 +11827,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Wissen für alle, eigene Fragen mit Antwort, für den Admin die offenen Fragen
-      // ---------- 2.826.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026): die Clubleitung schickt Lösungen an eine Person, Gruppe oder alle –
+      // ---------- 2.830.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026): die Clubleitung schickt Lösungen an eine Person, Gruppe oder alle –
       // Text, Blätter aus dem Ordner Anleitungen, eigene PDFs/Fotos/Bildschirmfotos; mit oder ohne Rückmeldung („Hat dir der Tipp geholfen?“).
       // „Nein“ / „Problem war ein anderes“ → sofort eine offene Unterstützungs-Anfrage und Meldung an Absender und Admin. Vorlagen zum Wiederverwenden.
       case "tipp_vorlagen": {
@@ -14327,6 +14328,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (error) return json({ ok: true, heuteOk: false }); // 2.6.1: Zähler sind gespeichert; nur die Bereiche schickt die App später nochmal
         }
         return json({ ok: true });
+      }
+      // 2.829.0 KC-CLUB-NUTZUNG-ALLE (Wunsch #73 Hansi „allen Mitgliedern zur Verfügung stellen, damit sie sehen, welche Bereiche der App wann und wie oft
+      // genutzt werden – nicht zu technisch, aber aussagekräftig“): nur Summen aus der Datenbank-Funktion kc_club_app_statistik (nie Personen, nie Inhalte).
+      // „Von wie vielen“ je Bereich erst ab NUTZUNG_ALLE_MIN Mitgliedern – sonst ließe sich erraten, wer es war.
+      case "nutzung_alle": {
+        if (ich.zugang !== "mitglied") throw new Fehler("Die Übersicht ist nur für Mitglieder.", 403);
+        const tage = [7, 30, 90].includes(Number(p.tage)) ? Number(p.tage) : 30;
+        const von = berlinTag(new Date(Date.now() - (tage - 1) * 86400000));
+        const [{ data, error }, { data: gz }] = await Promise.all([db.rpc("kc_club_app_statistik", { p_tage: tage, p_version: SERVER_VERSION }),
+          db.rpc("kc_club_nutzung_geraete_zahlen", { p_von: von })]);
+        if (error || !data) throw new Fehler("Die Übersicht ist gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
+        const wer = Object.fromEntries((gz ?? []).filter((x: any) => x.bereich !== "*" && x.geraete >= NUTZUNG_ALLE_MIN).map((x: any) => [x.bereich, x.geraete]));
+        const { version: _v, ...rest } = data as any;
+        return json({ ...rest, wer, mitglieder: (await aktiveMitglieder()).length });
       }
       case "nutzung_statistik": {
         nurAdmin(ich);
@@ -17984,7 +17999,7 @@ Köcheclub Werne`,
           const { data: oa } = await db.from("kc_club_objekt_anlagen").select("art,objekt_id").eq("attachment_id", att.id).limit(5);
           for (const x of oa ?? []) if (await objAnlageSichtbar(ich, x.art, x.objekt_id)) { erlaubt = true; break; }
         }
-        if (!erlaubt) { // 2.826.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung
+        if (!erlaubt) { // 2.830.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung
           const { data: ht } = await db.from("kc_club_hilfe_tipp").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(5);
           for (const x of ht ?? []) {
             if (ich.vorstand || ich.admin) { erlaubt = true; break; }

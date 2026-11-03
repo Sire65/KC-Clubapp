@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|826)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -8800,7 +8800,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
   assert.ok(/accept="image\/\*" capture="environment"/.test(f) && /type="file" accept="application\/pdf,image\/\*[^"]*" multiple/.test(f) && /addEventListener\("drop"/.test(f) && /einlAusKorb\(\)/.test(f), "Foto, Dateimanager, Hineinziehen, Eingangskorb");
   assert.ok(/archivAblageFragen\("eingelesen"/.test(f) && /eingelesen: \{ sym: "📄"/.test(programm), "Ablage über den vorhandenen Kern mit Vorschlag");
   assert.ok(/TEILEN = \{ text: "", dateien: E\.dateien \}; teilenChatWahl\(\);/.test(f), "Nachricht über den Teilen-Kern – Senden drückt man selbst");
-  assert.ok(/navigator\.canShare\?\.\(\{ files \}\)/.test(f) && /await navigator\.share\(\{ files/.test(f), "Mail mit Anhang über das Teilen-Menü des Geräts (eigenes Mail-Programm)");
+  assert.ok(/navigator\.canShare\?\.\(\{ files \}\)/.test(f) && /await teilenMitRueckfall\(\{ files/.test(f), "Mail mit Anhang über das Teilen-Menü des Geräts (eigenes Mail-Programm)"); // 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL: navigator.share über teilenMitRueckfall
   assert.ok(/stichworte: `\$\{EINL_MARKE\}, eingelesen`/.test(f) && /api\("archiv_mein_ordner"/.test(f), "Eingangskorb = eigener Ordner + Stichwort, kein neuer Serverweg");
   assert.ok(/for \(const d of einlKorbDoks\(ar\)\)/.test(programm) && /einlKorbErledigt\(/.test(programm), "Eingelesenes erscheint im Eingangskorb");
   assert.ok(/api\("archiv_loeschen", \{ id \}\)/.test(f) && /Papierkorb/.test(f), "nach Ablage keine doppelte Datei (Papierkorb, wiederherstellbar)");
@@ -9302,7 +9302,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 // 2.135.0 KC-CLUB-SS-SPEICHERN: Schnappschuss/Live-Bild beim Admin speichern (Teilen-Menü → Fotos, sonst Download)
 {
   const sp = programm.slice(programm.indexOf("async function bildSpeichern(b, wer)"), programm.indexOf("// ---------- KC-CLUB-STUDIO-SPIEGEL"));
-  assert.ok(/function ssSpeichern\(\) \{ const f = STD\.fotos\[STD\.fotos\.length - 1\]; return bildSpeichern\(/.test(sp) && /new File\(\[Uint8Array\.from\(bin/.test(sp) && /navigator\.share\(\{ files: \[datei\]/.test(sp), "aktuelles Bild wird als Datei geteilt/gesichert");
+  assert.ok(/function ssSpeichern\(\) \{ const f = STD\.fotos\[STD\.fotos\.length - 1\]; return bildSpeichern\(/.test(sp) && /new File\(\[Uint8Array\.from\(bin/.test(sp) && /teilenMitRueckfall\(\{ files: \[datei\]/.test(sp), "aktuelles Bild wird als Datei geteilt/gesichert"); // 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL
   assert.ok(/e\?\.name === "AbortError"\) return;/.test(sp) && /a\.download = name;/.test(sp), "Abbrechen still, sonst Download als Rückfall");
   assert.ok(/k\("💾 Speichern", "ssSpeichern\(\)", !hatFoto\)/.test(programm) && /onclick="stFotoSpeichern\(\$\{i\}\)"/.test(programm), "2.136.0: Speichern im Studio-Pult und bei jedem Foto der Sitzung");
 }
@@ -9711,7 +9711,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 }
 // 2.157.0 KC-CLUB-START-PARALLEL-3 / KC-CLUB-START-MESSUNG: Server-Teilzeiten in der Startmessung, Kachel-Zahlen-Ketten gleichzeitig
 {
-  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 34000); // 2.826.0: +Hilfe-Tipps; 2.800.0: +Alter ungelesener Nachrichten; 2.729.0: +neues Gerät; 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
+  const ini = server.slice(server.indexOf('case "init": {'), server.indexOf('case "init": {') + 34000); // 2.830.0: +Hilfe-Tipps; 2.800.0: +Alter ungelesener Nachrichten; 2.729.0: +neues Gerät; 2.576.0: +Start-Paket; 2.568.0: +Anrufbeantworter; 2.223.0: +Mahnung; 2.301.0: +Schulungszahl parallel; 2.432.0: +Eingangskorb; 2.458.0: +Vorschläge-Anzahl; 2.492.0: +Unterstützungs-Zahl
   assert.ok(/const mess = <T,>\(n: string, x: PromiseLike<T>\)/.test(ini) && /srvT: zt,/.test(ini), "init misst Teilzeiten und liefert srvT");
   for (const n of ['mess("tr",', 'mess("teil",', 'mess("mg",', "kz: pKz", "comm: pComm", "rest: pRest", "auf: pAufgaben", "tf: pTermin"]) assert.ok(ini.includes(n), `Teilzeit ${n} gemessen`);
   assert.ok(/zt\.zl = Date\.now\(\) - t0Anfrage/.test(ini) && /zt\.ende = Date\.now\(\) - t0Anfrage/.test(ini), "Zählen und Ende gemessen");
@@ -12724,7 +12724,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(/toFixed\(st\)\.replace\("\.", ","\)/.test(server) && /i === 0 \? ersCsvZahl\(a\.summe\) : ""/.test(server), "Dezimalkomma; Antragssumme nur einmal je Antrag");
   assert.ok(/\.update\(\{ exportiert_am: jetzt\(\), exportiert_von: ich\.person_id \}\)\.in\("id", ids\)\.is\("exportiert_am", null\)/.test(server), "markiert nur einmal, nichts überschrieben");
   assert.ok(/onclick="ersCsvOeffnen\(\)">📊 Erstattungen für Excel \(CSV\)<\/button>/.test(html) && /\["neu", "🆕 Nur neue \(noch nicht übernommen\)"\]/.test(html) && /\["position", "Je Position \(ausführlich\)"\], \["antrag", "Je Antrag \(eine Zeile\)"\]/.test(html), "Auswahl statt Freitext");
-  assert.ok(/navigator\.share\(\{ files: \[datei\], title: "Erstattungen \(CSV\)" \}\)/.test(html) && /a\.download = datei\.name/.test(html), "teilen oder speichern");
+  assert.ok(/teilenMitRueckfall\(\{ files: \[datei\], title: "Erstattungen \(CSV\)" \}\)/.test(html) && /a\.download = datei\.name/.test(html), "teilen oder speichern"); // 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL
 }
 // 2.584.0 KC-CLUB-EINGANG-PAKET (Wunsch Hansi „Aufbau des Eingangskorbs dauert lange – optimieren“)
 {

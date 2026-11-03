@@ -168,6 +168,11 @@
   .kork .pw-nadel::before { content: ""; position: absolute; left: 3px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff 0 12%, var(--nadel, #f5d90a) 45%, rgba(0,0,0,.35) 100%); box-shadow: 1px 3px 4px rgba(0,0,0,.45); }
   .kork .pw-nadel::after { content: ""; position: absolute; left: 14px; top: 22px; width: 2px; height: 11px; background: linear-gradient(#ddd, #888); border-radius: 1px; }
   .kork .pw-nadel.f1 { --nadel: #f5d90a; } .kork .pw-nadel.f2 { --nadel: #ff6fa3; } .kork .pw-nadel.f3 { --nadel: #6cc93a; } .kork .pw-nadel.f4 { --nadel: #3fa6e6; } .kork .pw-nadel.f5 { --nadel: #ff9a2e; } .kork .pw-nadel.f6 { --nadel: #a46be0; } .kork .pw-nadel.f7 { --nadel: #20b5a5; } .kork .pw-nadel.f8 { --nadel: #d9c7a0; }
+  /* 2.830.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN (#74): Admin – Nadel oben am Zettel lange drücken legt ihn als Nadel ab */
+  .zettel .pw-griff { position: absolute; top: -18px; left: 50%; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; z-index: 2; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: pointer; }
+  .zettel .pw-griff.drueck { background: radial-gradient(circle, rgba(255,255,255,.55) 0 30%, transparent 65%); animation: pwDrueck .6s linear forwards; }
+  @keyframes pwDrueck { from { box-shadow: 0 0 0 0 rgba(255,255,255,.7); } to { box-shadow: 0 0 0 10px rgba(255,255,255,0); } }
+  @media (prefers-reduced-motion: reduce) { .zettel .pw-griff.drueck { animation: none; } }
   .kork .pw-nadel.wichtig::before { outline: 3px solid #c62828; outline-offset: 1px; }
   .kork .pw-nadel:focus-visible { outline: 3px solid #fff; border-radius: 8px; }
   .kork .pw-alt-zeile { grid-column: 1 / -1; text-align: center; }
@@ -4534,7 +4539,7 @@
   .ua-zeile { gap: 10px; padding: 6px 0; min-height: 40px; align-items: center; } .ua-zeile input, .ua-chip input { width: 22px; height: 22px; }
   .ua-kontakt { display: flex; flex-wrap: wrap; gap: 6px; } .ua-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; }
   .ua-karte { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 12px; padding: 8px 10px; margin: 8px 0; }
-  /* 2.826.0 KC-CLUB-HILFE-TIPPS */
+  /* 2.830.0 KC-CLUB-HILFE-TIPPS */
   .tipp-karte { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-left: 5px solid #f5c542; border-radius: 12px; padding: 10px 12px; overflow-wrap: anywhere; }
   .tipp-antworten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
   .tipp-antworten .knopf { margin: 0; min-height: 48px; white-space: normal; }
@@ -5088,6 +5093,7 @@
   .ordner .sym { font-size: 1.3rem; }
   .ordner .schild { display: flex; flex-direction: column; gap: 3px; background: #fffdf6; color: #2b1a1c; border-radius: 3px; width: 100%; padding: 7px 4px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
   .ordner .jahr { font-size: 1.35rem; font-weight: 900; line-height: 1; }
+  .ordner .jahr.wort { font-size: .8rem; letter-spacing: -.02em; white-space: nowrap; } /* 2.827.0: Wort statt Jahreszahl („Dienstplan“, „Sprüche“) passt aufs Schild */
   .ordner .name { font-size: .72rem; font-weight: 700; line-height: 1.15; overflow-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; }
   .ordner .anz { font-size: .74rem; opacity: .92; }
   /* KC-CLUB-ARCHIV-MUETZE (1.17.1, Wunsch Hansi): originale Köcheclub-Kochmütze als Aufdruck auf jedem Ordnerrücken */
@@ -5523,6 +5529,38 @@
   :root.kr-an .kachel, :root.kr-an #raster .kachel { border-radius: var(--kachel-r); }
   .kr-zeile { flex-wrap: wrap; } .kr-regler { display: flex; align-items: center; gap: 10px; margin-top: 10px; } .kr-regler input { flex: 1; min-width: 0; height: 32px; accent-color: var(--rot); }
   .kr-unten { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
+  /* 2.827.0 KC-CLUB-TIPPFLAECHEN + KC-CLUB-SCHRIFT-MIN (Wunsch #44 Etappe 2, Hansi „1 und 2 umsetzen“): Profi-Norm ~44 Punkte Tippfläche und
+     mindestens 13 Punkt Schrift. Tippflächen werden unsichtbar größer (Polster + Gegenrand) – das Aussehen bleibt gleich. Gemessen mit echter
+     Treffer-Prüfung (elementFromPoint); dekorative Kleinstschrift (since 1991, Versionsnummer, Zahlen-Abzeichen, Technikseite) bleibt; Start-Kacheln, Nachrichten-Reiter und
+     Ordnerrücken bleiben ebenfalls (größer passte der Text dort nicht mehr – im Browser verglichen). */
+  .herz { padding: 11px 6px; margin: -11px -4px; }
+  .ipunkt { height: 44px; margin: -13px 0; }
+  .il-zu { width: 34px; height: 34px; margin: -9px -7px 0 -10px; }
+  #v-chat .kopf2 > .rund { width: 40px; height: 40px; min-width: 40px; }
+  .zk-titel, .wischhinweis, .st-titel, .eu-gruppe, .pwStand, .fa-album small { font-size: .8125rem; }
+  /* 2.829.0 KC-CLUB-NUTZUNG-ALLE (Wunsch #73): „📈 So nutzen wir die App“ – Kacheln, Farbfeld Wochentag × Uhrzeit, Säulen je Tag, gestapelt nach Art */
+  .nu-karte { margin: 8px 0 0; } .nu-karte > b:first-child { font-size: 1.05rem; }
+  .nu-blick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+  .nu-k { background: var(--karte2); border-radius: 12px; padding: 8px 10px; display: grid; gap: 1px; }
+  .nu-k b { font-size: 1.5rem; line-height: 1.1; } .nu-k small { color: var(--grau); line-height: 1.2; } .nu-k-sym { font-size: 1.1rem; }
+  .nu-pf { font-weight: 800; font-size: .85rem; } .nu-pf.hoch { color: var(--textGruen); } .nu-pf.runter { color: var(--textOrange); } .nu-pf.gleich { color: var(--grau); }
+  .nu-feld { display: grid; grid-template-columns: 22px repeat(19, minmax(0, 1fr)); gap: 2px; align-items: center; }
+  .nu-feld i { display: block; aspect-ratio: 1; border-radius: 3px; background: rgba(127, 127, 127, .12); position: relative; cursor: pointer; }
+  .nu-feld i::after { content: ""; position: absolute; inset: 0; border-radius: 3px; background: var(--rot); opacity: var(--a, 0); }
+  :root.dunkel .nu-feld i::after { background: #ff7a8c; }
+  .nu-wt, .nu-ach { font-size: .75rem; color: var(--grau); text-align: center; } .nu-wt { text-align: left; font-weight: 700; }
+  .nu-tage { display: flex; align-items: flex-end; gap: 2px; height: 90px; margin-top: 4px; }
+  .nu-tage > div { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; min-width: 0; }
+  .nu-tage > div > i { display: block; background: var(--rot); border-radius: 3px 3px 0 0; min-height: 0; }
+  :root.dunkel .nu-tage > div > i { background: #ff7a8c; }
+  .nu-stapel > div > i { border-radius: 0; } .nu-stapel > div > i:first-child { border-radius: 3px 3px 0 0; }
+  .nu-tage .nu-n, .nu-leg .nu-n { background: var(--rot); } .nu-tage .nu-p, .nu-leg .nu-p { background: var(--gold, #c9a227); } .nu-tage .nu-m, .nu-leg .nu-m { background: #2e8b57; }
+  :root.dunkel .nu-tage .nu-n, :root.dunkel .nu-leg .nu-n { background: #ff7a8c; }
+  .nu-achse { display: flex; justify-content: space-between; font-size: .75rem; color: var(--grau); margin-top: 2px; }
+  .nu-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 2px; font-size: .9rem; } .nu-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; }
+  .nu-zeile { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; cursor: pointer; }
+  .nu-zeile > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .nu-zeile > b { min-width: 3.2em; text-align: right; }
+  .nu-entdecken { margin: 2px 2px 0 0; cursor: pointer; border: 1px solid var(--linie); }
 </style>
 </head>
 <body>
@@ -6566,7 +6604,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.826.0" data-v="2.826.0"></script>
+<script src="app.js?v=2.830.0" data-v="2.830.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

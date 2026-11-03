@@ -1,4 +1,4 @@
-// 2.826.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026): Clubleitung – „💡 Lösung schicken“ an eine Person, Gruppe, ein Amt oder alle
+// 2.830.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026): Clubleitung – „💡 Lösung schicken“ an eine Person, Gruppe, ein Amt oder alle
 // (Text, Blätter aus dem Ordner 📚 Anleitungen, eigene PDFs, Fotos, Bildschirmfotos), mit oder ohne Rückmeldung; Vorlagen; „📋 Gesendete Tipps“ mit Antworten.
 // Ansehen und Antworten beim Mitglied liegen im Hauptprogramm (tippZeigen, tippAntwort). Nach jeder Änderung: node tools/teile-pruefsumme.mjs
 const TS = { anlagen: [], vorlagen: null, opt: {}, blaetter: null };

@@ -1,14 +1,45 @@
 # Änderungen
 
-## 2.826.0 – 2026-11-03 – 💡 Hilfe-Tipps mit Rückmeldung (KC-CLUB-HILFE-TIPPS, Wunschliste #71) · Server 2.826.0
+## 2.830.0 – 2026-11-03 – 💡 Hilfe-Tipps mit Rückmeldung (KC-CLUB-HILFE-TIPPS, Wunschliste #71) · 📌 Pinnwand: Zettel per Nadel ablegen (KC-CLUB-PINNWAND-NADEL-DRUECKEN, #74) · Server 2.830.0
 Wunsch Hansi (02./03.11.): „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle – z. B. aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung. Wenn mit: das Mitglied muss sagen, ob der Tipp geholfen hat.“ Konzept: https://claude.ai/artifact/Rf1TNBqEbbxz6fQaERpmnM
 - **🙋 Unterstützung → 💡 Lösung schicken** (ganze Clubleitung): Problem, Tipp-Text, An wen (👥 Alle · 👤 Einzeln · 🧑‍🤝‍🧑 Gruppe · 🎖️ Amt), dazu Blätter aus 📚 Anleitungen, PDFs, Fotos und Bildschirmfotos (höchstens 5). Bei einer Anfrage ist die Person schon eingetragen.
 - **✅ Rückmeldung verlangen:** beim Mitglied Karte im Info-Laufband „Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat.“ – am ersten Tag grün, bis zum dritten gelb, danach rot mit „💬 Jetzt antworten“ / „🙅 Möchte nicht antworten“ (dann kein Hinweis mehr). Antworten: ✅ Ja, geholfen · ❌ Nein · 🔀 Problem war ein anderes · 👍 Hat sich erledigt, dazu ein paar Worte (freiwillig).
 - **❌ Nein / 🔀 anderes** → sofort eine offene Unterstützungs-Anfrage; Absender und Admin bekommen eine Benachrichtigung.
 - **📋 Vorlagen:** gesendete Tipps werden als Vorlage gemerkt (gleiches Problem → Vorlage wird aktualisiert) und lassen sich beim nächsten Mal auswählen.
 - **📋 Gesendete Tipps:** je Tipp wer gelesen und wie geantwortet hat (Balken + Namen), „🔔 Offene erinnern“ (höchstens alle 12 Stunden), „💡 Nochmal schicken“. Mitglieder finden ihre Tipps unter „🙋 Unterstützung anfragen → 💡 Meine Tipps“.
+- **#74 📌 Pinnwand – Zettel per Nadel ablegen** (KC-CLUB-PINNWAND-NADEL-DRUECKEN, Wunsch Hansi 03.11.: „Wenn ich bei einem Zettel oben länger die Pinnadel drücke, wird der Zettel ausgeblendet und oben bleibt nur die Nadel in der Farbe“): nur für den Admin – die Nadel oben am Zettel gut eine halbe Sekunde drücken → der Zettel steckt als Nadel in seiner Farbe oben im Rahmen (bei den gelesenen). Antippen macht ihn groß, „📌 wieder als Nadel“ legt ihn zurück, „📋 wieder groß an die Wand“ hebt das Ablegen auf. Gilt nur auf diesem Gerät; bei den Mitgliedern ändert sich nichts. Test: `tests/pinnwand-nadel-druecken.test.mjs`.
 - Technik: Tabellen `kc_club_hilfe_tipp`, `kc_club_hilfe_tipp_empfang`, `kc_club_hilfe_vorlage` (nur Club-Server, gespiegelt, gesichert; Migration `20261103_kc_club_hilfe_tipps.sql`, Probelauf `tools/db-test/106`). Server-Aktionen `tipp_*`. Senden/Übersicht als Programmteil `teile/hilfetipp.js` (lädt erst beim Gebrauch). Test: `tests/hilfe-tipps.test.mjs`.
-- Rückweg: App 2.825.0, Server 2.824.0 (Tabellen können bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.829.0, Server 2.829.0 (Tabellen können bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.829.0 – 2026-11-03 – 📈 „So nutzen wir die App“ – Zahlen für alle (KC-CLUB-NUTZUNG-ALLE, Wunsch #73) · App + Server + Datenbank
+Wunsch #73 Hansi: „Im Bereich Technik eine kleine Übersicht mit ein paar Grafiken: wann die App am meisten genutzt wird, an welchen Tagen, um welche Uhrzeit, und wie viel Push, E-Mail und Nachrichten verschickt wurden.“ Nach dem Konzept: „Alle Vorschläge, aber nicht wie viel Platz usw. Das soll allen Mitgliedern zur Verfügung stehen … nicht zu technisch, aber aussagekräftig.“
+- Neue Kachel **Technik → „📈 So nutzen wir die App“** (alle Mitglieder; 7 / 30 / 90 Tage): Auf einen Blick (geöffnet, wie viele Mitglieder dabei, Nachrichten, Benachrichtigungen – mit Pfeil ↑↓ zum Zeitraum davor), **Farbfeld Wochentag × Uhrzeit** mit Satz „Am meisten los: mittwochs gegen 19 Uhr“, Mitglieder pro Tag, Nachrichten/Push/E-Mail pro Tag (gestapelt), **Top 10 Bereiche** und „Noch zu entdecken“ (antippen = hin), Geräte (Android/iPhone/Computer, installiert/Browser). Feld oder Säule antippen = genaue Zahl.
+- Datenschutz: nur Summen aus der Datenbank-Funktion `kc_club_app_statistik` (nur über den Server aufrufbar) – nie Personen, nie Inhalte (Nachrichten nur gezählt); „von wie vielen Mitgliedern“ erst ab 3. Ohne Vergleichswert (vor dem 7.10. noch nicht gezählt) kein Pfeil. Bewusst weggelassen: Speicherplatz, Startzeit/Fehler und App-Versionen (zu technisch).
+- Als eigenes Nachlade-Teil `teile/nutzung.js` (macht die App nicht größer). Hilfe-Eintrag `nutzung_alle`. Test: `tests/nutzung-alle.test.mjs`. Browser geprüft.
+- Rückweg: App + Server 2.828.0 (Funktion kann bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.828.0 – 2026-11-03 – 🧹 Erklärfilm: Kachelgröße wählen (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 03.11.: „Beim Thema Kacheln noch einbauen, dass man die Größe wählen kann und somit die Anzahl Kacheln neben- und untereinander. Die Einstellungen findest du unter Mehr … Startseite, Kachelgröße.“
+- Film „Deine App – so, wie du sie willst“ neu (2:59 Min.): neue Szene ⚙️ Mehr → 🧩 Startseite & Ansicht → 🔲 Kacheln auf der Startseite (▣ Normal – 2 · ▦ Klein – 3 · ▪ Sehr klein – 4 nebeneinander), danach die Startseite in allen drei Größen.
+- `film/app-selbst-einrichten.mp4?v=4`, gleiche Kennung `ansichtfilm` (wird nicht erneut beim Start angeboten). Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests unverändert grün. Rückweg: App 2.827.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.827.0 – 2026-11-03 – 👆 Größere Tippflächen, lesbarere Kleinschrift (KC-CLUB-TIPPFLAECHEN, KC-CLUB-SCHRIFT-MIN, Wunsch #44 Etappe 2) · nur App
+Gesamtprüfung Etappe 2 (Bedienung & Design), Hansi: „1 und 2 umsetzen“.
+- **Tippflächen** (echt gemessen, wo ein Finger trifft): Herz im Kopf 33 × 43 statt 26 × 21, Info-Punkte nach unten 44 hoch, „Für heute ausblenden“ ✕ 34 × 34, im Chat Vorlesen/Suchen/Mehr 40 × 40 statt 34 × 34. Unsichtbar vergrößert – das Aussehen bleibt gleich.
+- **Schrift mindestens 13 Punkt**: Überschriften in den Einstellungen („FÜR MICH“ …), „Ansicht/Zeigen“-Titel, „Mein Status“, Wisch-Hinweis, Pinnwand-Zähler, Foto-Album.
+- Bewusst unverändert (im Browser verglichen – größer passte der Text nicht mehr): Start-Kacheln („Dienstag“ wurde abgeschnitten), Nachrichten-Reiter („Gru…“), „Tippen: ☰ Liste“, Ordnerrücken; dekorative Kleinstschrift (since 1991, Versionsnummer, Zahlen-Abzeichen).
+- **Archiv:** Die Ordner „Sprüche“ und „Dienstplan“ haben ein Wort statt einer Jahreszahl auf dem Schild – das ragte über den Ordnerrücken hinaus. Jetzt etwas kleinere Schrift (Klasse `jahr wort`), passt aufs Schild.
+- Alles als ein Block am Ende der Gestaltungsregeln. Test: `tests/tippflaechen.test.mjs`.
+- Rückweg: App 2.826.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.826.0 – 2026-11-03 – 📎 Teilen an die eigene Club-App: überall, nicht nur aus der Druckvorschau (KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL) · nur App
+Fund Hansi (02.11.): wieder „Es ist nichts angekommen“. Diagnose `diagnose_teilen` 02.11. 12:52: nur `titel:text:16` – „Mein Wunschbogen“, keine Datei.
+- **Ursache:** Der Rückfall aus 2.791.0 galt nur für „📄 PDF speichern / teilen“ in der Druckvorschau. Die App teilt aber an 12 Stellen Dateien (Wunschbogen, Anlagen, Fotos, Mail-Export, Schlüsselbund, Meine Daten, Erstattungen-CSV …). Außerdem löschte die Druckvorschau das Beiseitegelegte, sobald das Teilen mit einem Fehler endete – Android bricht beim Teilen an die eigene App das Warten ab, das konnte das PDF wegräumen, bevor die App es abholte.
+- **Behoben an der Quelle:** Alle Datei-Teilen-Stellen gehen über `teilenMitRueckfall()`: Die Dateien (bis 10) werden nebenher auf dem Handy beiseitegelegt (Teilen bleibt sofort, der Tipp gilt weiter), bei Fehlern nicht gelöscht, nach dem Abholen oder spätestens 5 Min. weg. Kommt beim Teilen keine Datei an und passen Titel und Text, öffnet die App „Neue Nachricht“ mit den Dateien als Anlage. Ein fremdes Teilen löscht das Beiseitegelegte nicht.
+- **Diagnose:** `diagnose_teilen_eigen` mit Grund (`ok`, `nichts_gemerkt`, `zu_alt`, `anderes_teilen`) und Anzahl – keine Inhalte.
+- Test: `tests/teilen-eigen.test.mjs` (keine Datei-Teilen-Stelle ohne Rückfall, Wunschbogen, mehrere Fotos mit Text, anderer Titel/Text, 5 Min.). Rückweg: App 2.825.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.825.0 – 2026-11-02 – 🧮 Rechner zeigt die ganze Aufgabe · 👣 Wege nach Besuchen getrennt (KC-CLUB-RECHNER-AUFGABE #70, KC-CLUB-SPUR-BESUCHE #72) · nur App
 - **#70** Hansi: „Den Rechner im Büro noch besser machen. Im Display die gesamte Aufgabe anzeigen: 3 × 3 − 5 = 4.“ Beim Tippen steht jetzt die ganze Rechnung groß im Display (lange Rechnungen etwas kleiner), nach „=“ oben „3 × 3 − 5 =“ und groß das Ergebnis; beim Weiterrechnen bleibt die letzte Aufgabe oben stehen. Vorher stand groß nur die letzte Zahl.

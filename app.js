@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.826.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.830.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,11 +17,12 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-5W0kb0UiubeZoFQOe4SvV/MjOowwyI1BEinpC1QJE0z5jC6ZMb2pHa7Fz77Y/b7U" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-MvmznEfEmchRItm6cEOV6tD4oHhaAtlUpVTF/LKEvwqcUN9f2FkW+i+zCEaWoBec" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-X/0CEqigQ3/GAQ1FyUYWI5Mp+rEBqCxTZSlqUAzRE11Y+GHj2qu/yHDH0UnlXfj7" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
-  hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-HXnwUM5yOmJlJRZvF3AHvS30Ii/rsiNvdawks8Hgnd3GBVimUGTYbWynrfbJ+l2O" }, // 2.826.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
+  hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-o9MB97XuckyPjpnEjMBplAvL7UaPrudZ/YwVrVtwWk7uhqwA3+1Q21s6hTfMAPuQ" }, // 2.830.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
+  nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -1176,7 +1177,8 @@ setInterval(() => { if (DS.modus === "auto") anwendenDesign(); }, 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && DS.modus === "auto") anwendenDesign(); });
 
 // ---------- KC-CLUB-PINNWAND: Post-its (max. PW.max je Person vom Server, max. 200 Zeichen) ----------
-let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false, auf: new Set(), alteAuf: false }; // 2.813.0 KC-CLUB-PINNWAND-NADELN: groß gemachte Nadeln, „Ältere Zettel“ offen
+const PW_ZU_KEY = "kc_club_pw_zu"; // 2.830.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN: vom Admin als Nadel abgelegte Zettel (nur dieses Gerät)
+let PW = { zettel: [], offen: 0, neu: 0, meine: 0, max: 4, zeichen: 200, startGeprueft: false, form: { wichtig: false, fuer: "", personen: [] }, wichtigStart: false, auf: new Set(), alteAuf: false, zu: pwZuLaden() }; // 2.813.0 KC-CLUB-PINNWAND-NADELN: groß gemachte Nadeln, „Ältere Zettel“ offen
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): Farbe 1–4 kommt fest vom Server (gelb, rosé, hellgrün, hellblau)
 // Kopfzeile jedes Zettels: wer und wann (für eigene Zettel der eigene Vorname)
 const pwAngepinnt = (iso) => { const d = new Date(iso); return `angepinnt am ${fKurz.format(d)} ${fZeit.format(d)}`; };
@@ -1376,7 +1378,7 @@ function pwZeigen() {
   const aushang = pwAushangHtml();
   if (!PW.zettel.length) return ($("pwWand").innerHTML = aushang + (aushang ? "" : `<div class="leer">Noch keine Zettel an der Pinnwand.<br>Mit „＋ Zettel“ einen anheften.</div>`));
   // 2.813.0 KC-CLUB-PINNWAND-NADELN: gelesene Zettel ab dem Folgetag nicht mehr groß an der Wand
-  const alt = PW.zettel.filter((z) => pwAlt(z) && !PW.auf.has(z.id)), wand = PW.zettel.filter((z) => !alt.includes(z));
+  const alt = PW.zettel.filter((z) => (pwAlt(z) || PW.zu.has(z.id)) && !PW.auf.has(z.id)), wand = PW.zettel.filter((z) => !alt.includes(z));
   const nadeln = alt.filter(pwNadelFuerMich), archiv = alt.filter((z) => !pwNadelFuerMich(z));
   const nadelHtml = nadeln.length ? `<div class="pw-nadeln" role="group" aria-label="Abgelegte Zettel – antippen macht sie wieder groß">${nadeln.map((z) => { const wer = z.vonMir ? "dir" : z.von.vorname;
     return `<button type="button" class="pw-nadel${pwFarbe(z)}${z.wichtig ? " wichtig" : ""}" onclick="pwNadel('${esc(z.id)}')" title="${esc(`Zettel von ${wer}: ${z.text.length > 60 ? z.text.slice(0, 58) + " …" : z.text} – antippen macht ihn groß`)}" aria-label="${esc(`Zettel von ${wer} groß zeigen`)}"></button>`; }).join("")}</div>` : "";
@@ -1390,12 +1392,14 @@ function pwZeigen() {
     if (z.vonMir) knoepfe.push(`<button onclick="pwWichtig('${z.id}', ${!z.wichtig})">${z.wichtig ? "❗ nicht mehr wichtig" : "❗ wichtig machen"}</button>`); // 2.13.0
     if (z.vonMir || ICH?.vorstand) knoepfe.push(`<button onclick="pwAbnehmen('${z.id}')">🗑️ ${z.teilAb ? "ganz abnehmen" : "abnehmen"}</button>`);
     if (PW.auf.has(z.id)) knoepfe.push(`<button onclick="pwNadel('${z.id}')">📌 wieder als Nadel</button>`); // 2.813.0 KC-CLUB-PINNWAND-NADELN
+    if (PW.auf.has(z.id) && PW.zu.has(z.id)) knoepfe.push(`<button onclick="pwZuLoesen('${z.id}')">📋 wieder groß an die Wand</button>`); // 2.830.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
     // 2.554.0 KC-CLUB-PINNWAND-TEIL-AB: für Verfasser/Clubleitung sichtbar, bei wem er noch hängt
     const teil = z.teilAb && z.leser ? `<div class="zteil">🧹 Bei Lesern abgenommen${z.offen?.length ? ` – hängt noch bei ${esc(z.offen.map((n) => n.split(" ")[0]).join(", "))}` : ""}</div>` : "";
     const leser = z.leser && z.fuer !== "ich" ? `<details><summary>👁️ gelesen ${z.leser.length}/${z.anzahl} · ✓ erl. ${z.leser.filter((l) => l.erledigt).length}</summary>`
       + z.leser.map((l) => `<div>${esc(l.name.split(" ")[0])}: gesehen ${zeitKurz(l.gesehen)}${l.erledigt ? ` · ✓ ${zeitKurz(l.erledigt)}` : ""}</div>`).join("")
       + (z.offen?.length ? `<div style="margin-top:4px">Noch nicht gesehen: ${z.offen.map((n) => esc(n.split(" ")[0])).join(", ")}</div>` : "") + `</details>` : "";
     return `<div class="zettel${z.wichtig ? " wichtig" : ""}${pwFarbe(z)}${z.erledigt ? " erledigt" : ""}" data-zid="${esc(z.id)}" style="--dreh:${pwDreh(z.id)}deg">`
+      + (ICH?.admin ? `<span class="pw-griff" data-zid="${esc(z.id)}" title="Nadel lange drücken: Zettel als Nadel ablegen" aria-hidden="true"></span>` : "") // 2.830.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN
       + (z.wichtig ? `<span class="zwichtig">❗ WICHTIG</span>` : "")
       + pwKopf(z.vonMir ? ICH?.vorname || "mir" : z.von.vorname, z.erstellt_am)
       + `<div class="ztext">${esc(z.text)}</div><div class="zfuss">${esc(pwFuerText(z))}</div>`
@@ -1414,6 +1418,27 @@ const pwAlt = (z) => {
 };
 const pwNadelFuerMich = (z) => !!(z.vonMir || ICH?.admin || ICH?.vorstand);
 function pwNadel(id) { if (PW.auf.has(id)) PW.auf.delete(id); else PW.auf.add(id); pwZeigen(); if (PW.auf.has(id)) document.querySelector(`#pwWand .zettel[data-zid="${CSS.escape(id)}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }); }
+// ---------- 2.830.0 KC-CLUB-PINNWAND-NADEL-DRUECKEN (Wunschliste #74, Wunsch Hansi 03.11.2026 „Pinnwand – baue für Admin: Wenn ich bei einem Zettel oben länger
+// die Pinnadel drücke, wird der Zettel ausgeblendet und oben bleibt nur die Nadel in der Farbe, wie teilweise jetzt schon ist“) ----------
+// Nur für den Admin, nur auf diesem Gerät (nichts wird abgenommen oder gelöscht, die Mitglieder sehen den Zettel weiter). Die Nadel steht oben im Rahmen
+// bei den gelesenen (KC-CLUB-PINNWAND-NADELN); antippen macht den Zettel wieder groß, „📌 wieder als Nadel“ legt ihn zurück.
+const PW_DRUECK_MS = 600;
+function pwZuLaden() { try { const l = JSON.parse(localStorage.getItem(PW_ZU_KEY) || "[]"); return new Set(Array.isArray(l) ? l.slice(0, 200).map(String) : []); } catch { return new Set(); } }
+function pwZuMerken() { try { const da = new Set(PW.zettel.map((z) => z.id)); localStorage.setItem(PW_ZU_KEY, JSON.stringify([...PW.zu].filter((id) => !PW.zettel.length || da.has(id)))); } catch {} }
+function pwZuLoesen(id) { PW.zu.delete(id); PW.auf.delete(id); pwZuMerken(); pwZeigen(); }
+function pwZuNadel(id) {
+  PW.auf.delete(id); PW.zu.add(id); pwZuMerken();
+  try { navigator.vibrate?.(25); } catch {}
+  pwZeigen(); melde("📌 Zettel als Nadel abgelegt – antippen macht ihn wieder groß");
+}
+// langes Drücken auf die Nadel oben am Zettel (Finger oder Maus); Bewegen oder früh loslassen bricht ab
+{ let uhr = 0, x0 = 0, y0 = 0;
+  const weg = () => { clearTimeout(uhr); uhr = 0; document.querySelector(".pw-griff.drueck")?.classList.remove("drueck"); };
+  document.addEventListener("pointerdown", (e) => { const g = e.target.closest?.(".pw-griff"); if (!g || !ICH?.admin) return;
+    weg(); x0 = e.clientX; y0 = e.clientY; g.classList.add("drueck"); uhr = setTimeout(() => { weg(); pwZuNadel(g.dataset.zid); }, PW_DRUECK_MS); });
+  document.addEventListener("pointermove", (e) => { if (uhr && Math.hypot(e.clientX - x0, e.clientY - y0) > 12) weg(); });
+  for (const t of ["pointerup", "pointercancel", "pointerleave"]) document.addEventListener(t, (e) => { if (t !== "pointerleave" || e.target === document) weg(); });
+  document.addEventListener("contextmenu", (e) => { if (e.target.closest?.(".pw-griff")) e.preventDefault(); }); }
 function pwAlteZeigen(an) { PW.alteAuf = !!an; pwZeigen(); }
 // KC-CLUB-HILFE-PINNWAND (1.90.0): offene Hilfe-Aufrufe als grüner Aushang (kein Post-it, zählt nicht zu den 4 Zetteln)
 function pwAushangHtml() {
@@ -2063,8 +2088,8 @@ const FILME = [
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
   // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
   // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
-  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "2¾ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=3", bild: "film/app-einrichten-vorschau.jpg",
-    u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3 Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=4", bild: "film/app-einrichten-vorschau.jpg",
+    u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, Kachelgröße (2, 3 oder 4 nebeneinander), nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
     wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
@@ -2524,6 +2549,7 @@ const HILFE = [
   { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Sobald du die Pinnwand öffnest (oder im Hinweis „✓ Gelesen“ tippst), hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.763.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_nadeln", thema: "club", sym: "📍", t: "Wo sind die Zettel, die ich schon gelesen habe?", x: "Damit die Pinnwand nicht zu voll wird, hängt ein Zettel nur noch <b>bis zum Tag nach dem ersten Ansehen</b> groß an der Wand. Danach findest du ihn unten über <b>„🗂️ Ältere Zettel ansehen“</b>. Deine eigenen Zettel – und für die Clubleitung alle gelesenen – stecken als <b>farbige Nadel oben im Rahmen</b>: antippen macht den Zettel wieder groß, <b>„📌 wieder als Nadel“</b> steckt ihn zurück. <b>Wichtige</b> Zettel bleiben groß, bis du „✓ Erledigt“ tippst. Gelöscht wird nichts." }, // 2.813.0 KC-CLUB-PINNWAND-NADELN
+  { id: "nutzung_alle", thema: "technik", sym: "📈", t: "So nutzen wir die App – Zahlen für alle", x: "Wann ist im Club am meisten los? Die Kachel <b>„📈 So nutzen wir die App“</b> (Register Technik) zeigt es als Farbfeld (Wochentag × Uhrzeit) – dazu, wie viele Mitglieder da waren, wie viele Nachrichten, Push und E-Mails verschickt wurden, welche Bereiche am beliebtesten sind und was noch zu entdecken ist. Wähle 7, 30 oder 90 Tage; Pfeile vergleichen mit dem Zeitraum davor. Es sind <b>nur Summen</b> – niemand wird einzeln gezählt, und Inhalte werden nie gezählt. Feld oder Säule antippen zeigt die genaue Zahl." }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
   { id: "nachricht_termin", thema: "nachrichten", sym: "📅", t: "Nachricht als Termin übernehmen", x: "Steht in einer Nachricht ein Termin – z. B. <b>„Samstag 18 Uhr Grillen bei Klaus“</b> oder <b>„am 14.11. um 19:30 Sitzung“</b> –, liest die App Tag, Uhrzeit, Ort und Titel selbst heraus. Drei Wege: <b>1.</b> Unter der Nachricht steht ein Knopf <b>„📅 Sa., 24.10., 18:00 Uhr – eintragen“</b>. <b>2.</b> Nachricht antippen → <b>„📅 Als Termin übernehmen“</b>. <b>3.</b> In der kleinen Zeile am Schreibfeld (neben ▾ und ⌨️) das <b>📅</b> – es nimmt, was du gerade schreibst, sonst die neueste Nachricht mit Termin. Im Fenster ist alles vorausgefüllt: kurz prüfen, <b>✅ Eintragen</b> – fertig. Der Termin steht dann in deinem Kalender (nur du siehst ihn), auf Wunsch mit Erinnerung und zusätzlich im Kalender deines Handys. Die App versteht viele Schreibweisen: 14.11. · 14.11.2026 · 14. November · morgen · übermorgen · nächsten Freitag · nächste Woche Dienstag · in 3 Tagen · 19 Uhr · 19:30 · 19.30 Uhr · 18–20 Uhr · halb 8 · viertel nach 7 · „um 7“ (= 19 Uhr).", seit: "2.608.0" },
@@ -9140,7 +9166,7 @@ async function wbDrucken() {
 async function wbTeilen() {
   if (!WB.pdf) return;
   const datei = new File([WB.pdf], WB.name, { type: "application/pdf" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Mein Wunschbogen" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Mein Wunschbogen" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   const url = URL.createObjectURL(WB.pdf), a = document.createElement("a"); a.href = url; a.download = WB.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
@@ -9289,7 +9315,7 @@ async function dokTeilen() {
   const d = dokAktuell(); if (!d) return;
   try {
     const datei = d.datei instanceof Blob ? d.datei : new File([await (await fetch(dokUrl(d), { signal: zeitSignal(60000) })).blob()], d.url ? (d.t || "Dokument.pdf") : d.datei.split("/").pop(), { type: "application/pdf" });
-    if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: d.t }); return; }
+    if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: d.t }); return; }
   } catch (e) { if (e?.name === "AbortError") return; }
   dokExtern(); // Teilen geht hier nicht → PDF-Betrachter (dort drucken/speichern)
 }
@@ -9393,7 +9419,7 @@ const KACHELN = {
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
-    { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe? 💡 Tipps schicken", aktion: "uaAdmin()", nur: () => !!(ICH?.admin || ICH?.vorstand), zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.826.0: auch Clubleitung (Tipps) // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
+    { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe? 💡 Tipps schicken", aktion: "uaAdmin()", nur: () => !!(ICH?.admin || ICH?.vorstand), zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.830.0: auch Clubleitung (Tipps) // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
     { id: "ungelesen_admin", sym: "📭", t: "Ungelesen", u: "Wer hat meine Nachrichten noch nicht gelesen?", aktion: "ugStart()", nur: () => !!ICH?.admin }, // 2.709.0 KC-CLUB-UNGELESEN-ADMIN
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
@@ -9439,6 +9465,7 @@ const KACHELN = {
     { id: "einstwegweiser", sym: "🧭", t: "Einstellungen erklärt", u: "Alle Einstellungen – was sie bewirken", aktion: "ewStart()" }, // 2.534.0 KC-CLUB-EINST-WEGWEISER
     { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
     { id: "erklaer", sym: "🎬", t: "Erklär-Videos", u: "Rundgänge mit Ton – Schritt für Schritt", aktion: "erklaerVideos()" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
+    { id: "nutzung_alle", sym: "📈", t: "So nutzen wir die App", u: "Wann, wie oft, welche Bereiche", aktion: "nuStart()", nur: () => zugang() === "mitglied" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE (Wunsch #73)
   ],
   // KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – nur Admin/Vertretung; kleine Kacheln (3 je Reihe) mit Lämpchen,
   // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)
@@ -15201,7 +15228,7 @@ async function mdatSichern() {
   if (!MDAT) return;
   const text = [`Köcheclub Werne – Meine gespeicherten Daten`, `Stand: ${zeitDe(MDAT.stand)}`, "", ...mdatAbschnitte(MDAT).flatMap(([t, z]) => [t, ...z.map(([a, v]) => `  ${a}: ${v}`), ""])].join("\n");
   const datei = new File([textDatei(text)], `Meine-Daten-${heuteIso()}.txt`, { type: "text/plain" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Meine Daten" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Meine Daten" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 Datei gespeichert");
 }
@@ -15847,7 +15874,7 @@ async function uaSenden() {
   } catch (e) { meldeFehler(e); }
 }
 const UA_STAND = { offen: "🆕 neu", in_arbeit: "🔧 in Arbeit", erledigt: "✅ erledigt" };
-const uaProblem = (x, P) => String((x.punkte || []).map((p) => P[p] || p)[0] || x.text || "").split("\n").pop().slice(0, 120); // 2.826.0: Vorschlag für „Problem“ beim Tipp
+const uaProblem = (x, P) => String((x.punkte || []).map((p) => P[p] || p)[0] || x.text || "").split("\n").pop().slice(0, 120); // 2.830.0: Vorschlag für „Problem“ beim Tipp
 async function uaAdmin() {
   if (!ICH?.admin && !ICH?.vorstand) return uaStart();
   let r = { anfragen: [] }; if (ICH?.admin) try { r = await api("unterstuetzung_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); } // Anfragen sieht nur der Admin; Tipps die ganze Clubleitung
@@ -15868,7 +15895,7 @@ async function uaStand(id, status) {
   try { await api("unterstuetzung_status", { id, status }, { warten: true }); if (INIT?.kz && status !== "offen") INIT.kz.unterstuetzung = Math.max(0, (INIT.kz.unterstuetzung || 1) - 1);
     melde(status === "in_arbeit" ? "🔧 Übernommen – das Mitglied bekommt Bescheid" : status === "erledigt" ? "✅ Erledigt" : "↩️ Wieder offen"); uaAdmin(); } catch (e) { meldeFehler(e); }
 }
-// ---------- 2.826.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026 „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle –
+// ---------- 2.830.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026 „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle –
 // aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung“; „Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat –
 // immer beim Mitglied in grün, gelb, rot; bei rot: jetzt antworten oder ich möchte darauf nicht antworten, dann nicht mehr darauf hinweisen“).
 // Hier nur, was jedes Mitglied braucht (Ansehen, Antworten, Laufband); Senden, Vorlagen und Übersicht der Clubleitung liegen in teile/hilfetipp.js.
@@ -16144,7 +16171,7 @@ function ilMeldungen() {
   const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
   // 2.493.0 KC-CLUB-DW-LAUFBAND (Wunsch Hansi): Dienstwünsche Weihnachtsmarkt noch nicht abgegeben → Twinkey führt durch (der Server weiß, wer schon abgegeben hat)
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
-  tippLaufband(add); // 2.826.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
+  tippLaufband(add); // 2.830.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
   if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
   else if (!ICH?.admin && !uaKuerzlich()) add({ id: "unterstuetzung", stufe: "weiss", sym: "🙋", t: "Unterstützung bei der Club-App?", u: "Anfrage senden – Hansi meldet sich", auf: "uaStart()", knoepfe: [["🙋 Anfrage senden", "uaStart()"]] });
@@ -16232,7 +16259,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#gebgruss=")) ggWahl(decodeURIComponent(h.slice(10))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: Push „Gruß auswählen“
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
-    else if (h.startsWith("#tipp=")) tippZeigen(decodeURIComponent(h.slice(6))); // 2.826.0 KC-CLUB-HILFE-TIPPS: aus der Benachrichtigung
+    else if (h.startsWith("#tipp=")) tippZeigen(decodeURIComponent(h.slice(6))); // 2.830.0 KC-CLUB-HILFE-TIPPS: aus der Benachrichtigung
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
     else if (h === "#wecker") wkChipTippen(); // 2.640.0 KC-CLUB-UHR-WECKER: aus dem Push „Zeit ist um“ / „Wecker“
@@ -21181,7 +21208,7 @@ async function vbDateiGeben(p, b, sicherung) {
   const inhalt = { typ: VB_TYP, von: ICH?.person_id, vonName: ICH?.name || "", an: p.person_id, anName: p.name || "", erstellt: b.erstellt, schluessel: b.schluessel };
   const datei = new File([JSON.stringify(inhalt, null, 1)], `KC-Schluesselbund_${ich}_${er}.json`, { type: "application/json" });
   if (!sicherung && !(await frage(`📤 Schlüsselbund-Datei an ${vbVorname(p)} schicken\nAm besten per WhatsApp oder Signal – die sind selbst verschlüsselt; nicht per Mail. ${vbVorname(p)} öffnet sie so: Datei antippen → Teilen → „Club-App“ (oder im Chat oben ⋮ → „🔑 Schlüsselbund“ → „Datei einlesen“). Wer die Datei hat, kann eure verschlüsselten Nachrichten lesen – also nicht weitergeben und danach löschen.`, { ja: "📤 Schicken" }))) return;
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: "Schlüsselbund Club-App" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Schlüsselbund Club-App" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
   melde(sicherung ? "💾 Sicherung gespeichert – gut aufheben (wer sie hat, kann mitlesen)." : `💾 Datei gespeichert – bitte per WhatsApp oder Signal an ${vbVorname(p)} schicken.`);
@@ -23178,7 +23205,7 @@ async function anlageTeilen(speichern) {
   if (t.fehler || !t.datei) return meldeFehler(t.fehler || new Error("Die Datei konnte nicht geladen werden."));
   const datei = t.datei;
   if (!speichern) {
-    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: datei.name }); $("anlBlatt")?.remove(); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: datei.name }); $("anlBlatt")?.remove(); return; } } catch (e) { if (e?.name === "AbortError") return; }
     melde("Teilen geht auf diesem Gerät nicht – die Datei wird stattdessen gespeichert.");
   }
   const a = document.createElement("a"); a.href = URL.createObjectURL(datei); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
@@ -24176,7 +24203,11 @@ async function geteiltEmpfangen() {
   api("diagnose", { art: "teilen", daten: { anzahl: dateien.length, text: !!info.text, felder: Array.isArray(info.felder) ? info.felder.slice(0, 20).join(" | ") : null, typen: dateien.map((d) => d.type || "?").slice(0, 10).join(" | "), fehler: info.fehler ? String(info.fehler).slice(0, 300) : null, groesse: info.groesse ?? null,
     info: Object.keys(info).join(",") || "leer", felderAnzahl: Array.isArray(info.felder) ? info.felder.length : -1, sw: info.sw || "-" } }).catch(() => {}); // 2.525.0: leerer Speicher (info „leer“) ≠ leeres Paket (felderAnzahl 0) // 2.515.0: Felder/Typen zur Fehlersuche · 2.522.0: Fehler
   const text = [info.text, info.url && !String(info.text || "").includes(info.url) ? info.url : ""].filter(Boolean).join("\n").trim();
-  if (!dateien.length && !text) { const eigen = await eigenTeilenHolen(info.titel); if (eigen) return eigenTeilenEmpfangen(eigen); } // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST
+  if (!dateien.length) { // 2.791.0/2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST: aus der eigenen App geteilt, Android hat die Datei nicht mitgegeben
+    const eigen = await eigenTeilenHolen(info.titel, info.text);
+    api("diagnose", { art: "teilen_eigen", daten: { grund: eigen.grund, anzahl: eigen.dateien.length } }).catch(() => {});
+    if (eigen.dateien.length) return eigenTeilenEmpfangen(eigen.dateien);
+  }
   if (!dateien.length && !text && info.fehler) return melde(/Quota/i.test(info.fehler) ? "Die Datei ist zu groß für den Zwischenspeicher dieses Handys – bitte kleiner teilen (z. B. Video kürzen) oder in der Club-App über 📎 anhängen." : "Die Datei konnte beim Teilen nicht übernommen werden – bitte in der Club-App über 📎 anhängen. (Fehler ist für Hansi vermerkt.)", true); // 2.522.0 KC-CLUB-TEILEN-FEHLER
   const leer = Array.isArray(info.felder) && info.felder.some((x) => /:0$/.test(String(x))); // Datei mit 0 Byte: das Handy hat sie nicht hergegeben
   if (!dateien.length && !text && leer) return melde("Das Handy hat die Datei leer übergeben (kommt bei manchen Dateimanagern vor) – bitte aus der Galerie, Google Drive oder „Dateien“ teilen oder in der Club-App über 📎 anhängen.", true); // 2.522.0
@@ -24787,7 +24818,7 @@ async function einlPerMailExtern() {
   const E = EINL; if (!E) return;
   const files = E.dateien.map((d) => d instanceof File ? d : new File([d], d.name || "Dokument", { type: d.type }));
   try {
-    if (navigator.canShare?.({ files })) { await navigator.share({ files, title: E.titel }); return melde("📧 Im Teilen-Menü „Mail“ wählen – die Datei hängt schon an"); }
+    if (navigator.canShare?.({ files })) { await teilenMitRueckfall({ files, title: E.titel }); return melde("📧 Im Teilen-Menü „Mail“ wählen – die Datei hängt schon an"); }
   } catch (e) { if (e?.name === "AbortError") return; }
   for (const f of files) { const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
   melde("📧 Dieses Gerät kann Dateien nicht direkt ans Mail-Programm geben – sie wurden gespeichert. In der Mail über 📎 anhängen.");
@@ -24967,7 +24998,7 @@ async function bfWeiter(wohin) {
   if (wohin === "nochmal") { $("bfBlatt")?.remove(); BF.bild = null; return melde("📸 Bereit – Auslöser drücken, wenn du so weit bist."); }
   let datei; try { datei = await bfDatei(); } catch (e) { return meldeFehler(e); }
   if (wohin === "speichern") {
-    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: datei.name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: datei.name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
     const a = document.createElement("a"); a.href = URL.createObjectURL(datei); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 30000); return melde("💾 Gespeichert (Ordner „Downloads“)");
   }
@@ -29266,7 +29297,7 @@ async function fotoTeilen() {
     const blob = await (await fetch(faUrl.get(f.id) || (await api("foto_oeffnen", { id: f.id })).url, { signal: zeitSignal(60000) })).blob();
     const datei = new File([blob], `koecheclub-${f.datum}.jpg`, { type: blob.type || "image/jpeg" });
     const text = [f.thema, fTagDe(f.datum), f.beschreibung].filter(Boolean).join(" · ");
-    if (navigator.canShare?.({ files: [datei] })) await navigator.share({ files: [datei], text });
+    if (navigator.canShare?.({ files: [datei] })) await teilenMitRueckfall({ files: [datei], text });
     else await navigator.share({ text, url: location.origin + location.pathname + "#fotos" });
   } catch (e) { if (e.name !== "AbortError") melde("Teilen hat nicht geklappt: " + e.message, true); }
 }
@@ -30309,7 +30340,7 @@ async function druckPdf() {
   try {
     const name = druckDateiName();
     const datei = new File([await druckPdfBlob()], name, { type: "application/pdf" });
-    try { if (navigator.canShare?.({ files: [datei] })) { await eigenTeilenMerken(datei, DRUCK.titel); await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { eigenTeilenVergessen(); if (e?.name === "AbortError") return; } // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; } // 2.791.0/2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST
     const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60000); melde("📄 PDF gespeichert (Downloads)");
   } catch (e) { meldeFehler(e); }
@@ -30323,33 +30354,50 @@ async function druckInAppSenden() {
   try {
     const name = druckDateiName(), r = await anlageHochladen(new File([await druckPdfBlob()], name, { type: "application/pdf" }));
     druckVorschauZu();
-    await anlageInNeueNachricht(r, name);
+    await anlageInNeueNachricht([{ r, name }]);
   } catch (e) { meldeFehler(e); }
   finally { if (k) { k.disabled = false; k.textContent = "💬 In der Club-App senden"; } }
 }
-async function anlageInNeueNachricht(r, name) { // hochgeladene Anlage → „Neue Nachricht“ mit Empfängerwahl (Druckvorschau und Teilen an sich selbst)
-  anlagen = [...anlagen.filter((a) => !a.laedt), { id: r.id, name: r.name || name, laedt: false }]; EINMAL = false;
+async function anlageInNeueNachricht(liste) { // hochgeladene Anlagen [{ r, name }] → „Neue Nachricht“ mit Empfängerwahl (Druckvorschau und Teilen an sich selbst)
+  anlagen = [...anlagen.filter((a) => !a.laedt), ...liste.map(({ r, name }) => ({ id: r.id, name: r.name || name, laedt: false }))]; EINMAL = false;
   await neueNachricht(); chipsZeigen();
-  melde("📎 PDF liegt als Anlage bereit – jetzt Empfänger wählen, „Weiter zum Schreiben“, dann ➤");
+  const pdf = liste.length === 1 && /\.pdf$/i.test(liste[0].r.name || liste[0].name || "");
+  melde(`📎 ${pdf ? "PDF liegt" : liste.length === 1 ? "Die Datei liegt" : liste.length + " Dateien liegen"} als Anlage bereit – jetzt Empfänger wählen, „Weiter zum Schreiben“, dann ➤`);
 }
 // 2.791.0 KC-CLUB-TEILEN-AN-SICH-SELBST (Fund Hansi 31.10.: Protokoll → „📄 PDF speichern / teilen“ → im Handy „Köcheclub“ gewählt → App startet neu,
 // „Es ist nichts angekommen“). Diagnose: Android gibt beim Teilen an die eigene App nur den Titel weiter, die PDF-Datei fehlt. Darum legt die App
 // das PDF vor dem Teilen kurz auf dem Handy beiseite (eigener Speicher, höchstens 5 Min., nur dieses eine PDF). Kommt beim Teilen nichts an und
 // passt der Titel, nimmt die App das beiseitegelegte PDF und öffnet „Neue Nachricht“ damit – wie „💬 In der Club-App senden“.
-async function eigenTeilenMerken(datei, titel) {
-  try { await (await caches.open("kcclub-eigen-teilen")).put("datei", new Response(datei, { headers: { "content-type": datei.type || "application/pdf", "x-name": encodeURIComponent(datei.name), "x-titel": encodeURIComponent(String(titel || "").slice(0, 200)), "x-zeit": String(Date.now()) } })); } catch {}
+// 2.826.0 KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL (Fund Hansi 02.11.: „Mein Wunschbogen“ geteilt → wieder „nichts angekommen“): Der Rückfall galt nur
+// für die Druckvorschau. Jetzt gehen alle Stellen, die Dateien teilen, über teilenMitRueckfall(). Und: Bei einem Fehler des Teilens (Android bricht
+// beim Teilen an die eigene App das Warten ab) wurde das Beiseitegelegte sofort gelöscht – jetzt bleibt es bis zum Abholen bzw. höchstens 5 Min.
+function teilenMitRueckfall(daten) { // Beiseitelegen läuft nebenher: Teilen braucht den frischen Tipp (sonst „NotAllowedError“)
+  eigenTeilenMerken(daten.files || [], daten.title, daten.text);
+  return navigator.share(daten);
+}
+async function eigenTeilenMerken(dateien, titel, text) {
+  try {
+    await caches.delete("kcclub-eigen-teilen"); const c = await caches.open("kcclub-eigen-teilen"), liste = dateien.slice(0, 10);
+    for (let i = 0; i < liste.length; i++) await c.put(`datei/${i}`, new Response(liste[i], { headers: { "content-type": liste[i].type || "application/octet-stream", "x-name": encodeURIComponent(liste[i].name || `Datei_${i + 1}`) } }));
+    await c.put("info", new Response(JSON.stringify({ anzahl: liste.length, titel: String(titel || "").slice(0, 200), text: String(text || "").slice(0, 4000), zeit: Date.now() })));
+  } catch {}
 }
 function eigenTeilenVergessen() { try { caches.delete("kcclub-eigen-teilen").catch(() => {}); } catch {} }
-async function eigenTeilenHolen(titel) {
+async function eigenTeilenHolen(titel, text) { // → { dateien, grund }; grund nur für die Diagnose (keine Inhalte)
   try {
-    const r = await (await caches.open("kcclub-eigen-teilen")).match("datei"); eigenTeilenVergessen();
-    if (!r || Date.now() - Number(r.headers.get("x-zeit") || 0) > 5 * 60000 || decodeURIComponent(r.headers.get("x-titel") || "") !== String(titel || "").slice(0, 200)) return null;
-    return new File([await r.blob()], decodeURIComponent(r.headers.get("x-name") || "Koecheclub.pdf"), { type: r.headers.get("content-type") || "application/pdf" });
-  } catch { return null; }
+    const c = await caches.open("kcclub-eigen-teilen"), info = await (await c.match("info"))?.json();
+    if (!info) return { dateien: [], grund: "nichts_gemerkt" };
+    if (Date.now() - Number(info.zeit || 0) > 5 * 60000) { eigenTeilenVergessen(); return { dateien: [], grund: "zu_alt" }; }
+    if (info.titel !== String(titel || "").slice(0, 200) || info.text !== String(text || "").slice(0, 4000)) return { dateien: [], grund: "anderes_teilen" };
+    const dateien = [];
+    for (let i = 0; i < (info.anzahl || 0); i++) { const r = await c.match(`datei/${i}`); if (r) dateien.push(new File([await r.blob()], decodeURIComponent(r.headers.get("x-name") || `Datei_${i + 1}`), { type: r.headers.get("content-type") || "application/octet-stream" })); }
+    eigenTeilenVergessen();
+    return { dateien, grund: dateien.length ? "ok" : "leer" };
+  } catch (e) { return { dateien: [], grund: "fehler:" + (e?.name || "?") }; }
 }
-async function eigenTeilenEmpfangen(datei) {
-  melde("📄 Das PDF aus der Club-App kommt in eine neue Nachricht …");
-  try { await anlageInNeueNachricht(await anlageHochladen(datei), datei.name); } catch (e) { meldeFehler(e); }
+async function eigenTeilenEmpfangen(dateien) {
+  melde(`📎 ${dateien.length === 1 ? "Die Datei" : dateien.length + " Dateien"} aus der Club-App ${dateien.length === 1 ? "kommt" : "kommen"} in eine neue Nachricht …`);
+  try { const liste = []; for (const d of dateien) liste.push({ r: await anlageHochladen(d), name: d.name }); await anlageInNeueNachricht(liste); } catch (e) { meldeFehler(e); }
 }
 function druckVorschauAendern() { druckVorschauZu(); druckStarten(DRUCK.art, DRUCK.param); }
 // erst hier wird gedruckt – die Druckseite (#druck) ist schon gebaut und entspricht der Vorschau
@@ -30358,7 +30406,7 @@ function druckJetzt() { setTimeout(() => window.print(), 60); }
 async function druckTeilen() {
   const html = druckHtml(false);
   const datei = new File([html], (DRUCK.titel || "Druck").replace(/[^\wäöüÄÖÜß.-]+/g, "_").slice(0, 60) + ".html", { type: "text/html" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: DRUCK.titel }); return; } } catch (e) { if (e?.name === "AbortError") return; }
   melde("Teilen geht auf diesem Gerät nicht – bitte „Drucken“ versuchen.", true);
 }
 // KC-CLUB-PROTOKOLL-NEU-INFO: „Besprechung“ → „Neues Besprechungsprotokoll eingestellt“; längere Titel → „Neues Protokoll eingestellt: …“
@@ -31775,7 +31823,7 @@ function updateSelbst() {
 const SPA = { daten: null, reg: "", suche: "" };
 const sprOhneMarke = (t) => String(t).replace(/^(?:\d️?⃣)+\s*/u, ""); // „8️⃣0️⃣“ vorn ist nur die Markierung im Archiv
 const sprRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#b36b00" onclick="sprStart()" title="Mein Spruch-Archiv"><span class="sym">📜</span>
-    <span class="schild"><span class="jahr">Sprüche</span><span class="name">nur für mich</span></span><span class="anz">${SPA.daten ? SPA.daten.register.reduce((n, r) => n + r.sprueche.length, 0) + " Sprüche" : "Anlässe"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
+    <span class="schild"><span class="jahr wort">Sprüche</span><span class="name">nur für mich</span></span><span class="anz">${SPA.daten ? SPA.daten.register.reduce((n, r) => n + r.sprueche.length, 0) + " Sprüche" : "Anlässe"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
 async function sprStart(reg) {
   AR.spruch = true; if (reg !== undefined) SPA.reg = reg;
   if (aktuelleAnsicht !== "archiv") { AR.ordner = null; AR.korb = false; zeige("archiv"); }
@@ -31870,7 +31918,7 @@ const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
 // 2.786.0 KC-CLUB-DP-MARKTNAME (Wunsch Hansi 30.10.: „Aufbau, WM für Weihnachtsmarkttag, Wochenmarkt (Dienstag und Freitag) und Nikolaus am 06.12.“) – Nikolaus nur am 06.12., nicht jeden Sonntag
 const dpdArtName = (art, x) => art !== "Markttag" ? art : x.getMonth() === 11 && x.getDate() === 6 ? "Nikolaus" : [2, 5].includes(x.getDay()) ? "Wochenmarkt" : "WM";
 const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3e" onclick="dpdStart()" title="Dienstplan zum Ausdrucken"><span class="sym">🗓️</span>
-    <span class="schild"><span class="jahr">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
+    <span class="schild"><span class="jahr wort">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
 // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: vor dem Öffnen den Stand holen (Stand, neue Wunschpläne seit dem Rechnen) – „🔄 Jetzt neu rechnen“ rechnet auf dem Club-Server
 async function dpdStart() {
   if (!ICH?.admin) return;
@@ -33557,7 +33605,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
@@ -34054,7 +34102,7 @@ async function bildSpeichern(b, wer) {
   try { const [kopf, roh] = b.split(","), typ = /^data:([^;,]+)/.exec(kopf)?.[1] || "image/jpeg", bin = atob(roh); // Bild kommt als data:-Adresse – ohne Netz in eine Datei wandeln
     datei = new File([Uint8Array.from(bin, (z) => z.charCodeAt(0))], name, { type: typ }); } catch {}
   if (datei) {
-    try { if (navigator.canShare?.({ files: [datei] })) { await navigator.share({ files: [datei], title: name }); melde("💾 Bild gespeichert"); return; } } catch (e) { if (e?.name === "AbortError") return; }
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: name }); melde("💾 Bild gespeichert"); return; } } catch (e) { if (e?.name === "AbortError") return; }
   }
   const a = document.createElement("a"); a.href = datei ? URL.createObjectURL(datei) : b; a.download = name; document.body.appendChild(a); a.click();
   setTimeout(() => { a.remove(); if (datei) URL.revokeObjectURL(a.href); }, 30000);
