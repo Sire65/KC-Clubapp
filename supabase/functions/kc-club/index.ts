@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.824.0";
+const SERVER_VERSION = "2.826.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -8772,6 +8772,23 @@ async function vapidOeffentlich() {
   return r;
 }
 // KC-CLUB-UNTERSTUETZUNG-ANFRAGE (2.492.0): wenige, wichtige Punkte (Wunsch Hansi „sonst wird der User überfordert“) – gleiche Liste in app.js (UA_BEREICHE)
+// 2.826.0 KC-CLUB-HILFE-TIPPS: Antworten auf „Hat dir der Tipp geholfen?“ und Prüfung der Anlagen (eigene hochgeladene Dateien oder Blätter aus dem Ordner Anleitungen)
+const TIPP_ANTWORT: Record<string, string> = { geholfen: "✅ Ja, hat geholfen", nein: "❌ Nein, hat nicht geholfen", anderes: "🔀 Das Problem war ein anderes", erledigt: "👍 Hat sich erledigt", keine: "🙅 Möchte nicht antworten" };
+async function tippAnlagenPruefen(ich: Ich, roh: unknown) {
+  const l = (Array.isArray(roh) ? roh : []).slice(0, 5), aus: any[] = [], basis = APP_URL + "dokumente/anleitungen/";
+  for (const a of l as any[]) {
+    if (a?.art === "anleitung") {
+      const url = String(a.url || "");
+      if (!url.startsWith(basis) || !/^[a-z0-9-]{1,60}\.pdf$/.test(url.slice(basis.length))) throw new Fehler("Unbekannte Anleitung.", 400);
+      aus.push({ art: "anleitung", url, titel: txt(a.titel, 120) || "Anleitung" });
+    } else {
+      const { data: att } = await db.from("kc_communication_attachments").select("id,object_path,file_name,mime_type").eq("id", String(a?.id || "")).maybeSingle();
+      if (!att || !String(att.object_path).startsWith(`club/${ich.person_id}/`)) throw new Fehler("Eine Anlage wurde nicht gefunden – bitte noch einmal hinzufügen.", 400);
+      aus.push({ art: "datei", id: att.id, name: att.file_name, mime: att.mime_type });
+    }
+  }
+  return aus;
+}
 const UA_PUNKTE: Record<string, string> = {
   startbild: "App auf den Startbildschirm legen", anmeldung: "Anmeldung oder Link klappt nicht",
   push_keine: "Ich bekomme keine Benachrichtigungen", push_viele: "Ich bekomme zu viele Benachrichtigungen",
@@ -9505,6 +9522,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { data, error } = await db.from("kc_dp_wish_inbox").select("submitted_at").eq("org_id", ORG).eq("event_id", DW.veranstaltung).eq("person_id", ich.person_id).not("submitted_at", "is", null).limit(1);
           return error ? null : !(data ?? []).length;
         }).catch(() => null);
+        // 2.826.0 KC-CLUB-HILFE-TIPPS: offene Tipps für mich (mit Rückmeldung bis beantwortet, ohne bis gelesen) – meist 1 kurze Abfrage ohne Treffer
+        const pTipps = Promise.resolve(db.from("kc_club_hilfe_tipp_empfang").select("tipp_id,gelesen_am").eq("person_id", ich.person_id).is("antwort", null).limit(10)).then(async (r: any) => {
+          const em = r.data ?? []; if (r.error || !em.length) return [];
+          const { data: tl } = await db.from("kc_club_hilfe_tipp").select("id,von,problem,rueckmeldung,erstellt_am").in("id", em.map((x: any) => x.tipp_id));
+          const leute = await personen((tl ?? []).map((x: any) => x.von));
+          return (tl ?? []).map((x: any) => ({ ...x, gelesen: !!em.find((e: any) => e.tipp_id === x.id)?.gelesen_am, vonVorname: vorname(leute.get(x.von) ?? null) || "" }))
+            .filter((x: any) => x.rueckmeldung || !x.gelesen).sort((a: any, b: any) => a.erstellt_am < b.erstellt_am ? -1 : 1);
+        }).catch(() => [] as any[]);
         const pUaZahl = ich.admin ? Promise.resolve(db.from("kc_club_unterstuetzung").select("id", { count: "exact", head: true }).eq("status", "offen")).then((r: any) => r.error ? null : r.count ?? 0, () => null) : Promise.resolve(null);
         const pKz = kachelZahlen(ich, p, pKern).catch(() => null).then(async (kz) => {
           if (kz && ich.admin) { const sw = await pSchulungZahl; (kz as any).schulung = sw ? sw.length : null; (kz as any).unterstuetzung = await pUaZahl;
@@ -9722,7 +9747,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.826.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -11801,6 +11826,114 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // KC-CLUB-TWINKEY-FRAGEN (2.23.49): Wissen für alle, eigene Fragen mit Antwort, für den Admin die offenen Fragen
+      // ---------- 2.826.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026): die Clubleitung schickt Lösungen an eine Person, Gruppe oder alle –
+      // Text, Blätter aus dem Ordner Anleitungen, eigene PDFs/Fotos/Bildschirmfotos; mit oder ohne Rückmeldung („Hat dir der Tipp geholfen?“).
+      // „Nein“ / „Problem war ein anderes“ → sofort eine offene Unterstützungs-Anfrage und Meldung an Absender und Admin. Vorlagen zum Wiederverwenden.
+      case "tipp_vorlagen": {
+        nurLeitung(ich);
+        const { data } = await db.from("kc_club_hilfe_vorlage").select("id,problem,text,anlagen,benutzt,geaendert_am").order("benutzt", { ascending: false }).order("geaendert_am", { ascending: false }).limit(60);
+        return json({ vorlagen: data ?? [] });
+      }
+      case "tipp_vorlage_loeschen": {
+        nurLeitung(ich);
+        await db.from("kc_club_hilfe_vorlage").delete().eq("id", String(p.id || ""));
+        return json({ ok: true });
+      }
+      case "tipp_senden": {
+        nurLeitung(ich);
+        const problem = txt(p.problem, 120), text = txt(p.text, 1500), rueckmeldung = p.rueckmeldung === true;
+        if (!problem) throw new Fehler("Bitte kurz das Problem eintragen (z. B. „Bildschirm zu dunkel“).");
+        if (!text) throw new Fehler("Bitte den Tipp aufschreiben.");
+        const aktiv = new Set((await aktiveMitglieder()).map((m) => m.person_id));
+        const an = [...new Set((Array.isArray(p.an) ? p.an : []).map((x: unknown) => String(x)))].filter((id) => aktiv.has(id) && id !== ich.person_id).slice(0, 200);
+        if (!an.length) throw new Fehler("Bitte mindestens ein Mitglied auswählen.", 400);
+        const anlagen = await tippAnlagenPruefen(ich, p.anlagen);
+        await protokoll(ich.person_id, "tipp_versuch", {});
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "tipp_versuch").gte("zeit", new Date(Date.now() - 60000).toISOString());
+        if ((count ?? 0) > 3) throw new Fehler("Gerade gingen schon mehrere Tipps raus – bitte eine Minute warten.", 429);
+        const anfrage = /^[0-9a-f-]{36}$/i.test(String(p.anfrage || "")) ? String(p.anfrage) : null;
+        const { data: t, error } = await db.from("kc_club_hilfe_tipp").insert({ von: ich.person_id, problem, text, anlagen, rueckmeldung, anfrage_id: anfrage, empfaenger: an.length }).select("id").single();
+        if (error || !t) throw new Fehler("Der Tipp konnte nicht gespeichert werden – bitte gleich noch einmal.", 500);
+        const { error: ee } = await db.from("kc_club_hilfe_tipp_empfang").insert(an.map((person_id) => ({ tipp_id: t.id, person_id })));
+        if (ee) { await db.from("kc_club_hilfe_tipp").delete().eq("id", t.id); throw new Fehler("Der Tipp konnte nicht gespeichert werden – bitte gleich noch einmal.", 500); }
+        if (anfrage) await db.from("kc_club_unterstuetzung").update({ status: "in_arbeit", bearbeitet_von: ich.person_id, bearbeitet_am: jetzt() }).eq("id", anfrage).eq("status", "offen");
+        if (p.vorlage !== false) { // als Vorlage merken (gleiches Problem → Vorlage wird aktualisiert)
+          const { data: v } = await db.from("kc_club_hilfe_vorlage").select("id,benutzt").ilike("problem", problem.replace(/[%_\\]/g, "\\$&")).limit(1);
+          if (v?.[0]) await db.from("kc_club_hilfe_vorlage").update({ text, anlagen, benutzt: (v[0].benutzt || 0) + 1, geaendert_am: jetzt() }).eq("id", v[0].id);
+          else await db.from("kc_club_hilfe_vorlage").insert({ problem, text, anlagen, von: ich.person_id });
+        }
+        const url = `${APP_URL}#tipp=${t.id}`;
+        const versand = await senden("club_nachricht", an, { titel: `💡 Tipp: ${problem}`, kurz: rueckmeldung ? `${text.slice(0, 120)} – Hat dir der Tipp geholfen?` : text.slice(0, 160),
+          betreff: `Köcheclub Werne – ein Tipp von ${ich.vorname}: ${problem}`,
+          text: `Hallo,\n\n${ich.name} schickt dir einen Tipp zu „${problem}“:\n\n${text}${anlagen.length ? `\n\nDazu ${anlagen.length === 1 ? "eine Anlage" : anlagen.length + " Anlagen"} – in der App zu sehen.` : ""}${rueckmeldung ? "\n\nBitte gib in der App kurz Rückmeldung, ob dir der Tipp geholfen hat." : ""}\n\nIn der App: ${url}\n\nViele Grüße\n${ich.name}`, url },
+          `club-tipp:${t.id}`).catch((e) => { console.error("tipp push", String(e)); return null; });
+        await protokoll(ich.person_id, "tipp_gesendet", { tipp: t.id, empfaenger: an.length, anlagen: anlagen.length, rueckmeldung, versand });
+        return json({ ok: true, id: t.id, empfaenger: an.length });
+      }
+      case "tipp_liste": {
+        nurLeitung(ich);
+        const { data: tl } = await db.from("kc_club_hilfe_tipp").select("id,von,problem,text,anlagen,rueckmeldung,anfrage_id,empfaenger,erstellt_am")
+          .gte("erstellt_am", new Date(Date.now() - 120 * 86400000).toISOString()).order("erstellt_am", { ascending: false }).limit(40);
+        const ids = (tl ?? []).map((x: any) => x.id);
+        const { data: em } = ids.length ? await db.from("kc_club_hilfe_tipp_empfang").select("tipp_id,person_id,gelesen_am,antwort,antwort_text,geantwortet_am,erinnert_am").in("tipp_id", ids) : { data: [] as any[] };
+        const leute = await personen([...(tl ?? []).map((x: any) => x.von), ...(em ?? []).map((x: any) => x.person_id)]);
+        const nm = (id: string) => leute.get(id)?.display_name || id;
+        return json({ tipps: (tl ?? []).map((x: any) => ({ ...x, vonName: nm(x.von), empfang: (em ?? []).filter((e: any) => e.tipp_id === x.id).map((e: any) => ({ ...e, name: nm(e.person_id) })) })) });
+      }
+      case "tipp_erinnern": {
+        nurLeitung(ich);
+        const { data: t } = await db.from("kc_club_hilfe_tipp").select("id,problem,rueckmeldung").eq("id", String(p.id || "")).maybeSingle();
+        if (!t) throw new Fehler("Tipp nicht gefunden.", 404);
+        if (!t.rueckmeldung) throw new Fehler("Bei diesem Tipp war keine Rückmeldung verlangt.");
+        const { data: offen } = await db.from("kc_club_hilfe_tipp_empfang").select("person_id,erinnert_am").eq("tipp_id", t.id).is("antwort", null);
+        const ziel = (offen ?? []).filter((e: any) => !e.erinnert_am || Date.now() - Date.parse(e.erinnert_am) > 12 * 3600000).map((e: any) => e.person_id);
+        if (!ziel.length) return json({ ok: true, erinnert: 0 });
+        await db.from("kc_club_hilfe_tipp_empfang").update({ erinnert_am: jetzt() }).eq("tipp_id", t.id).in("person_id", ziel);
+        await senden("club_nachricht", ziel, { titel: `💡 Hat dir der Tipp geholfen?`, kurz: `„${t.problem}“ – bitte kurz Rückmeldung geben.`, betreff: `Köcheclub Werne – hat dir der Tipp geholfen?`,
+          text: `Hallo,\n\n${ich.name} fragt, ob dir der Tipp zu „${t.problem}“ geholfen hat. Ein Tipp in der App genügt.\n\n${APP_URL}#tipp=${t.id}\n\nViele Grüße\nKöcheclub Werne`, url: `${APP_URL}#tipp=${t.id}` },
+          `club-tipp-erinnern:${t.id}:${Date.now()}`).catch(() => null);
+        return json({ ok: true, erinnert: ziel.length });
+      }
+      case "tipp_holen": { // Empfänger (oder Clubleitung): ein Tipp mit meinem Stand; Empfänger → gelesen
+        const id = String(p.id || "");
+        const { data: t } = await db.from("kc_club_hilfe_tipp").select("id,von,problem,text,anlagen,rueckmeldung,erstellt_am").eq("id", id).maybeSingle();
+        if (!t) throw new Fehler("Der Tipp ist nicht mehr da.", 404);
+        const { data: e } = await db.from("kc_club_hilfe_tipp_empfang").select("gelesen_am,antwort,antwort_text,geantwortet_am").eq("tipp_id", id).eq("person_id", ich.person_id).maybeSingle();
+        if (!e && !ich.vorstand && !ich.admin) throw new Fehler("Der Tipp ist nicht mehr da.", 404);
+        if (e && !e.gelesen_am) await db.from("kc_club_hilfe_tipp_empfang").update({ gelesen_am: jetzt() }).eq("tipp_id", id).eq("person_id", ich.person_id);
+        const von = (await personen([t.von])).get(t.von);
+        return json({ tipp: { ...t, vonName: von?.display_name || "", vonVorname: vorname(von ?? null) || "" }, meins: e ?? null });
+      }
+      case "tipp_meine": {
+        const { data: em } = await db.from("kc_club_hilfe_tipp_empfang").select("tipp_id,gelesen_am,antwort,geantwortet_am").eq("person_id", ich.person_id).limit(100);
+        const ids = (em ?? []).map((x: any) => x.tipp_id);
+        const { data: tl } = ids.length ? await db.from("kc_club_hilfe_tipp").select("id,von,problem,rueckmeldung,erstellt_am").in("id", ids).order("erstellt_am", { ascending: false }).limit(40) : { data: [] as any[] };
+        const leute = await personen((tl ?? []).map((x: any) => x.von));
+        return json({ tipps: (tl ?? []).map((x: any) => ({ ...x, vonVorname: vorname(leute.get(x.von) ?? null) || "", ...((em ?? []).find((e: any) => e.tipp_id === x.id) || {}) })) });
+      }
+      case "tipp_antwort": {
+        const id = String(p.id || ""), antwort = String(p.antwort || "");
+        if (!(antwort in TIPP_ANTWORT)) throw new Fehler("Unbekannte Antwort.");
+        const atext = txt(p.text, 500);
+        const { data: e } = await db.from("kc_club_hilfe_tipp_empfang").update({ antwort, antwort_text: atext || null, geantwortet_am: jetzt(), gelesen_am: jetzt() })
+          .eq("tipp_id", id).eq("person_id", ich.person_id).select("tipp_id").maybeSingle();
+        if (!e) throw new Fehler("Der Tipp ist nicht mehr da.", 404);
+        const { data: t } = await db.from("kc_club_hilfe_tipp").select("id,von,problem").eq("id", id).maybeSingle();
+        await protokoll(ich.person_id, "tipp_antwort", { tipp: id, antwort });
+        if (t && (antwort === "nein" || antwort === "anderes")) {
+          // sofort eine offene Unterstützungs-Anfrage (Wunsch Hansi): vorhandene offene ergänzen, sonst neu
+          const zeile = `💡 Tipp „${t.problem}“: ${TIPP_ANTWORT[antwort]}${atext ? ` – ${atext}` : ""}`.slice(0, 500);
+          const { data: alt } = await db.from("kc_club_unterstuetzung").select("id,text").eq("person_id", ich.person_id).neq("status", "erledigt").order("erstellt_am", { ascending: false }).limit(1);
+          if (alt?.[0]) await db.from("kc_club_unterstuetzung").update({ status: "offen", text: [alt[0].text, zeile].filter(Boolean).join("\n").slice(-500), geaendert_am: jetzt() }).eq("id", alt[0].id);
+          else await db.from("kc_club_unterstuetzung").insert({ person_id: ich.person_id, punkte: [], text: zeile, kontakt: [] });
+          const ziel = [...new Set([t.von, ...(await adminIds())])].filter((x) => x !== ich.person_id);
+          if (ziel.length) await senden("club_nachricht", ziel, { titel: `💡 ${ich.vorname}: ${TIPP_ANTWORT[antwort]}`, kurz: `Tipp „${t.problem}“${atext ? ` – ${atext}` : ""}`,
+            betreff: `Köcheclub Werne – ${ich.name}: Tipp „${t.problem}“ ${antwort === "nein" ? "hat nicht geholfen" : "– das Problem war ein anderes"}`,
+            text: `Hallo,\n\n${ich.name} hat zum Tipp „${t.problem}“ geantwortet: ${TIPP_ANTWORT[antwort]}.${atext ? `\n\n„${atext}“` : ""}\n\nDaraus ist eine offene Unterstützungs-Anfrage geworden.\n\nIn der App: ${APP_URL}#unterstuetzung`,
+            url: APP_URL + "#unterstuetzung" }, `club-tipp-antwort:${id}:${ich.person_id}`).catch(() => null);
+        }
+        return json({ ok: true, anfrage: antwort === "nein" || antwort === "anderes" });
+      }
       case "twinkey_daten": {
         const [{ data: w }, { data: m }] = await Promise.all([
           db.from("kc_club_twinkey_fragen").select("id,frage,antwort,beantwortet_am").eq("status", "beantwortet").eq("wissen", true).order("beantwortet_am", { ascending: false }).limit(500),
@@ -17806,7 +17939,8 @@ Köcheclub Werne`,
             if (tp) { erlaubt = true; break; }
           }
         }
-        if (!erlaubt) erlaubt = await rtTascheVorabErlaubt(ich, att.id).catch(() => false); // 2.774.0 KC-CLUB-TISCH-TASCHE: „vorab für alle“
+        if (!erlaubt) erlaubt = await rtTascheVorabErlaubt(ich, att.id).catch(() => false);
+        } // 2.774.0 KC-CLUB-TISCH-TASCHE: „vorab für alle“
         if (!erlaubt && ich.admin) { // 2.511.0 KC-CLUB-ABLAGEKORB: Admin sieht, was Mitglieder in den Ablagekorb geteilt haben
           const { data: ak } = await db.from("kc_club_ablagekorb").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(1);
           if (ak?.length) erlaubt = true;
@@ -17850,6 +17984,13 @@ Köcheclub Werne`,
           const { data: oa } = await db.from("kc_club_objekt_anlagen").select("art,objekt_id").eq("attachment_id", att.id).limit(5);
           for (const x of oa ?? []) if (await objAnlageSichtbar(ich, x.art, x.objekt_id)) { erlaubt = true; break; }
         }
+        if (!erlaubt) { // 2.826.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung
+          const { data: ht } = await db.from("kc_club_hilfe_tipp").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(5);
+          for (const x of ht ?? []) {
+            if (ich.vorstand || ich.admin) { erlaubt = true; break; }
+            const { data: he } = await db.from("kc_club_hilfe_tipp_empfang").select("tipp_id").eq("tipp_id", x.id).eq("person_id", ich.person_id).maybeSingle();
+            if (he) { erlaubt = true; break; }
+          }
         if (!erlaubt) { // 2.581.0 KC-CLUB-CLUBJAHR-MOMENTE: Foto eines Clubmoments – das Mitglied selbst, wer es eingereicht hat, und die Clubleitung
           const { data: cm } = await db.from("kc_club_clubjahr_momente").select("person_id,eingereicht_von").eq("foto", att.id).limit(5);
           if ((cm ?? []).some((x: any) => x.person_id === ich.person_id || x.eingereicht_von === ich.person_id || ich.vorstand)) erlaubt = true;

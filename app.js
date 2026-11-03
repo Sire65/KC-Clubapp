@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.825.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.826.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20,6 +20,7 @@ const TEILE_LISTE = {
   buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-MvmznEfEmchRItm6cEOV6tD4oHhaAtlUpVTF/LKEvwqcUN9f2FkW+i+zCEaWoBec" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
+  hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-HXnwUM5yOmJlJRZvF3AHvS30Ii/rsiNvdawks8Hgnd3GBVimUGTYbWynrfbJ+l2O" }, // 2.826.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
@@ -9392,7 +9393,7 @@ const KACHELN = {
     { id: "helfen", sym: "🤝", t: "Helfen & Leihen", u: "Wer kann helfen? · Ausleihen", aktion: "hlStart()" },
     // KC-CLUB-BUERO (1.25.0): nur für die Clubleitung (Clubsprecher, Kassenwart, Admin)
     { id: "buero", sym: "🗂️", t: "Büro", u: "Sitzung vorbereiten · Einladung · Eingang", aktion: "buStart()", nur: () => !!ICH?.buero },
-    { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe bei der App?", aktion: "uaAdmin()", nur: () => !!ICH?.admin, zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
+    { id: "unterstuetzung_admin", sym: "🙋", t: "Unterstützung", u: "Wer braucht Hilfe? 💡 Tipps schicken", aktion: "uaAdmin()", nur: () => !!(ICH?.admin || ICH?.vorstand), zahl: () => INIT?.kz?.unterstuetzung || 0 }, // 2.826.0: auch Clubleitung (Tipps) // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulung_admin", sym: "🎓", t: "Schulungen", u: "Termine · Einladungen · Freigeben", aktion: "scStart()", nur: () => !!ICH?.admin }, // 2.23.60 KC-CLUB-SCHULUNG-ADMIN (nur Admin)
     { id: "ungelesen_admin", sym: "📭", t: "Ungelesen", u: "Wer hat meine Nachrichten noch nicht gelesen?", aktion: "ugStart()", nur: () => !!ICH?.admin }, // 2.709.0 KC-CLUB-UNGELESEN-ADMIN
     // KC-CLUB-SPIELE (2.7.0, Wunsch Hansi): Spiele – Köcheclub Edition (Zahl = Partien, in denen ich dran bin / Herausforderungen an mich)
@@ -15830,7 +15831,8 @@ async function uaStart() {
     ${UA_BEREICHE.map((b) => `<div class="ua-bereich"><b>${b.sym} ${esc(b.t)}</b>${b.p.map(([id, t]) => `<label class="zeile ua-zeile"><input type="checkbox" data-ua="${id}"${an.has(id) ? " checked" : ""}> <span>${esc(t)}</span></label>`).join("")}</div>`).join("")}
     <div class="ua-bereich"><b>✏️ Etwas anderes</b><textarea id="uaText" rows="2" maxlength="500" placeholder="Wobei brauchst du noch Hilfe?" style="width:100%">${esc(alt?.text || "")}</textarea></div>
     <div class="ua-bereich"><b>Wie möchtest du Hilfe?</b><div class="ua-kontakt">${UA_KONTAKT.map(([id, t]) => `<label class="chip ua-chip"><input type="checkbox" data-uak="${id}"${ko.has(id) ? " checked" : ""}> ${t}</label>`).join("")}</div></div>
-    <div class="knoepfe"><button class="knopf haupt" onclick="uaSenden()">🙋 Anfrage senden</button><button class="knopf" onclick="fensterZu($('uaBlatt'))">Abbrechen</button></div>`;
+    <div class="knoepfe"><button class="knopf haupt" onclick="uaSenden()">🙋 Anfrage senden</button><button class="knopf" onclick="fensterZu($('uaBlatt'))">Abbrechen</button></div>
+    <p class="hinweis" style="margin:6px 0 0"><button type="button" class="knopf klein" onclick="tippMeine()">💡 Meine Tipps</button></p>`;
   blattAuf("uaBlatt", html);
 }
 async function uaSenden() {
@@ -15845,22 +15847,77 @@ async function uaSenden() {
   } catch (e) { meldeFehler(e); }
 }
 const UA_STAND = { offen: "🆕 neu", in_arbeit: "🔧 in Arbeit", erledigt: "✅ erledigt" };
+const uaProblem = (x, P) => String((x.punkte || []).map((p) => P[p] || p)[0] || x.text || "").split("\n").pop().slice(0, 120); // 2.826.0: Vorschlag für „Problem“ beim Tipp
 async function uaAdmin() {
-  if (!ICH?.admin) return uaStart();
-  let r; try { r = await api("unterstuetzung_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  if (!ICH?.admin && !ICH?.vorstand) return uaStart();
+  let r = { anfragen: [] }; if (ICH?.admin) try { r = await api("unterstuetzung_liste", {}, { warten: true }); } catch (e) { return meldeFehler(e); } // Anfragen sieht nur der Admin; Tipps die ganze Clubleitung
   const a = r.anfragen || [], P = r.punkte || {}, K = r.kontakt || {};
   const karte = (x) => `<div class="ua-karte ua-${esc(x.status)}"><div class="ua-kopf"><b>${esc(x.name)}</b><span class="ua-stand">${UA_STAND[x.status] || esc(x.status)}</span></div>
     <small class="hinweis">${esc(wann(x.geaendert_am || x.erstellt_am))}</small>
     <ul class="ua-liste">${(x.punkte || []).map((p) => `<li>${esc(P[p] || p)}</li>`).join("")}${x.text ? `<li>✏️ ${esc(x.text)}</li>` : ""}</ul>
     <div class="hinweis">Kontakt: ${(x.kontakt || []).map((k) => esc(K[k] || k)).join(", ") || "egal"}</div>
     <div class="knoepfe" style="margin-top:6px"><button class="knopf klein" onclick="anrufen('${esc(x.person_id)}', false)">📞 Anrufen</button><button class="knopf klein" onclick="fensterZu($('uaAdminBlatt'));direkt('${esc(x.person_id)}')">💬 Nachricht</button>
+      <button class="knopf klein" onclick="tippSenden({ an: [${jsArg(x.person_id)}], anfrage: ${jsArg(x.id)}, problem: ${jsArg(uaProblem(x, P))} })">💡 Lösung schicken</button>
       ${x.status === "offen" ? `<button class="knopf klein" onclick="uaStand('${esc(x.id)}','in_arbeit')">🔧 Übernehmen</button>` : ""}${x.status !== "erledigt" ? `<button class="knopf klein" onclick="uaStand('${esc(x.id)}','erledigt')">✅ Erledigt</button>` : `<button class="knopf klein" onclick="uaStand('${esc(x.id)}','offen')">↩️ Wieder öffnen</button>`}</div></div>`;
-  blattAuf("uaAdminBlatt", `<h3 style="margin:0 0 4px">🙋 Unterstützungs-Anfragen</h3><p class="hinweis" style="margin:0 0 8px">„🔧 Übernehmen“ sagt dem Mitglied per Push, dass du dich meldest.</p>
-    ${a.length ? a.map(karte).join("") : '<p class="hinweis">Keine Anfragen – alle kommen klar 👍</p>'}<div class="knoepfe"><button class="knopf" onclick="fensterZu($('uaAdminBlatt'))">Schließen</button></div>`);
+  blattAuf("uaAdminBlatt", `<h3 style="margin:0 0 4px">🙋 Unterstützung</h3>
+    <div class="knoepfe" style="margin:0 0 8px"><button class="knopf haupt" onclick="tippSenden()">💡 Lösung schicken</button><button class="knopf" onclick="tippListe()">📋 Gesendete Tipps</button></div>
+    ${ICH?.admin ? `<p class="hinweis" style="margin:0 0 8px">„🔧 Übernehmen“ sagt dem Mitglied per Push, dass du dich meldest. „💡 Lösung schicken“ schickt einen Tipp – auf Wunsch mit Rückmeldung.</p>
+    ${a.length ? a.map(karte).join("") : '<p class="hinweis">Keine Anfragen – alle kommen klar 👍</p>'}` : '<p class="hinweis">Hast du von einem Problem gehört? Mit „💡 Lösung schicken“ bekommt das Mitglied (oder eine Gruppe, oder alle) einen Tipp – auf Wunsch mit Rückmeldung, ob er geholfen hat.</p>'}<div class="knoepfe"><button class="knopf" onclick="fensterZu($('uaAdminBlatt'))">Schließen</button></div>`);
 }
 async function uaStand(id, status) {
   try { await api("unterstuetzung_status", { id, status }, { warten: true }); if (INIT?.kz && status !== "offen") INIT.kz.unterstuetzung = Math.max(0, (INIT.kz.unterstuetzung || 1) - 1);
     melde(status === "in_arbeit" ? "🔧 Übernommen – das Mitglied bekommt Bescheid" : status === "erledigt" ? "✅ Erledigt" : "↩️ Wieder offen"); uaAdmin(); } catch (e) { meldeFehler(e); }
+}
+// ---------- 2.826.0 KC-CLUB-HILFE-TIPPS (Wunschliste #71, Wunsch Hansi 03.11.2026 „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle –
+// aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung“; „Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat –
+// immer beim Mitglied in grün, gelb, rot; bei rot: jetzt antworten oder ich möchte darauf nicht antworten, dann nicht mehr darauf hinweisen“).
+// Hier nur, was jedes Mitglied braucht (Ansehen, Antworten, Laufband); Senden, Vorlagen und Übersicht der Clubleitung liegen in teile/hilfetipp.js.
+const TIPP_ANTW = [["geholfen", "✅ Ja, hat geholfen"], ["nein", "❌ Nein"], ["anderes", "🔀 Problem war ein anderes"], ["erledigt", "👍 Hat sich erledigt"]];
+const TIPP_ANTW_TEXT = { geholfen: "✅ Hat geholfen", nein: "❌ Hat nicht geholfen", anderes: "🔀 Problem war ein anderes", erledigt: "👍 Hat sich erledigt", keine: "🙅 Möchte nicht antworten" };
+// auf läuft über new Function (JSON), knoepfe stehen im onclick-Attribut (jsArg). Grün am ersten Tag, gelb bis zum dritten, danach rot (mit „Jetzt antworten“ / „Möchte nicht antworten“)
+const tippStufe = (t) => { const h = (Date.now() - Date.parse(t.erstellt_am)) / 3600000; return h < 24 ? "gruen" : h < 72 ? "gold" : "rot"; };
+function tippLaufband(add) {
+  for (const t of INIT?.hilfeTipps || []) {
+    const st = t.rueckmeldung ? tippStufe(t) : "gold", von = t.vonVorname ? `Tipp von ${t.vonVorname}` : "Ein Tipp für dich";
+    add({ id: "tipp:" + t.id, stufe: st, sym: "💡", t: `${von}: ${t.problem}`, auf: `tippZeigen(${JSON.stringify(String(t.id))})`, ohneAus: !!t.rueckmeldung,
+      u: t.rueckmeldung ? "Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat." : "Antippen zum Ansehen",
+      knoepfe: t.rueckmeldung && st === "rot" ? [["💬 Jetzt antworten", `tippZeigen(${jsArg(t.id)})`], ["🙅 Möchte nicht antworten", `tippAntwort(${jsArg(t.id)}, 'keine')`]] : [[t.rueckmeldung ? "💬 Rückmeldung geben" : "💡 Ansehen", `tippZeigen(${jsArg(t.id)})`]] });
+  }
+}
+function tippErledigt(id) { if (INIT?.hilfeTipps) INIT.hilfeTipps = INIT.hilfeTipps.filter((x) => x.id !== id); try { ilZeigen(); } catch {} }
+const tippAbsatz = (s) => esc(s).replace(/\n/g, "<br>");
+function tippAnlagenHtml(anl) {
+  const dateien = (anl || []).filter((a) => a.art === "datei"), blaetter = (anl || []).filter((a) => a.art === "anleitung");
+  return (blaetter.length ? `<div class="knoepfe" style="margin:6px 0 0">${blaetter.map((a) => `<button type="button" class="knopf klein" onclick="dokAnzeigen({ id: ${jsArg("tipp:" + a.url)}, t: ${jsArg(a.titel)}, url: ${jsArg(a.url)} })">📚 ${esc(a.titel)}</button>`).join("")}</div>` : "")
+    + oaAnzeige(dateien.map((a) => ({ id: a.id, name: a.name, mime: a.mime })));
+}
+async function tippZeigen(id) {
+  let r; try { r = await api("tipp_holen", { id }, { warten: true }); } catch (e) { if (e?.status === 404) tippErledigt(id); return meldeFehler(e); }
+  const t = r.tipp, m = r.meins;
+  if (m && !t.rueckmeldung) tippErledigt(id); // ohne Rückmeldung: angesehen = erledigt
+  const offen = m && t.rueckmeldung && !m.antwort;
+  blattAuf("tippBlatt", `<h3 style="margin:0 0 2px">💡 ${t.vonVorname ? `Ein Tipp von ${esc(t.vonVorname)}` : "Ein Tipp für dich"}</h3><p class="hinweis" style="margin:0 0 8px">${esc(wann(t.erstellt_am))}</p>
+    <div class="tipp-karte"><b>${esc(t.problem)}</b><div style="margin-top:4px">${tippAbsatz(t.text)}</div>${tippAnlagenHtml(t.anlagen)}</div>
+    ${offen ? `<div class="hl-frage" style="margin-top:12px">Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat.</div>
+      <div class="tipp-antworten">${TIPP_ANTW.map(([a, txt]) => `<button type="button" class="knopf${a === "geholfen" ? " haupt" : ""}" onclick="tippAntwort(${jsArg(id)}, ${jsArg(a)})">${txt}</button>`).join("")}</div>
+      <label class="feld" style="margin-top:8px">Ein paar Worte <small class="hinweis">(freiwillig – hilft bei „Nein“ und „anderes“)</small><textarea id="tippText" rows="2" maxlength="500" placeholder="Was ist das Problem?"></textarea></label>
+      <div class="knoepfe"><button type="button" class="knopf klein" onclick="tippAntwort(${jsArg(id)}, 'keine')">🙅 Ich möchte darauf nicht antworten</button><button class="knopf" onclick="fensterZu($('tippBlatt'))">Später</button></div>`
+    : `${m?.antwort ? `<p class="hinweis" style="margin:10px 0 0">Deine Rückmeldung: <b>${esc(TIPP_ANTW_TEXT[m.antwort] || m.antwort)}</b></p>` : ""}<div class="knoepfe"><button class="knopf" onclick="fensterZu($('tippBlatt'))">Schließen</button></div>`}`);
+}
+async function tippAntwort(id, antwort) {
+  const text = ($("tippText")?.value || "").trim();
+  try {
+    const r = await api("tipp_antwort", { id, antwort, text }, { warten: true });
+    fensterZu($("tippBlatt")); tippErledigt(id);
+    melde(antwort === "keine" ? "🙅 In Ordnung – wir fragen nicht mehr nach." : r?.anfrage ? "🙋 Danke! Hansi weiß Bescheid und meldet sich bei dir." : "💡 Danke für deine Rückmeldung!");
+  } catch (e) { meldeFehler(e); }
+}
+async function tippMeine() {
+  let r; try { r = await api("tipp_meine", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const l = r.tipps || [];
+  blattAuf("tippMeineBlatt", `<h3 style="margin:0 0 6px">💡 Meine Tipps</h3>${l.length ? l.map((t) => `<button type="button" class="tipp-zeile" onclick="tippZeigen(${jsArg(t.id)})"><b>${esc(t.problem)}</b>
+      <small class="hinweis">${esc(t.vonVorname || "")} · ${esc(wann(t.erstellt_am))} · ${t.antwort ? esc(TIPP_ANTW_TEXT[t.antwort] || "") : t.rueckmeldung ? "⏳ Rückmeldung offen" : t.gelesen_am ? "gelesen" : "🆕 neu"}</small></button>`).join("")
+    : '<p class="hinweis">Noch keine Tipps bekommen.</p>'}<div class="knoepfe"><button class="knopf" onclick="fensterZu($('tippMeineBlatt'))">Schließen</button></div>`);
 }
 // ---------- 2.439.0 KC-CLUB-INFO-LAUFBAND (Wunsch Hansi „über den 3 Feldern Nachricht, online, Termine ein großes Info-Feld – komplett gerahmt,
 // so breit wie die 3 zusammen; dort abwechselnd Infos, z. B. 3 Dokumente im Eingangskorb, jetzt noch für die nächste Sitzung anmelden“) ----------
@@ -16087,6 +16144,7 @@ function ilMeldungen() {
   const nh = ilNeuheit(); if (nh) add(nh); // 🆕 eine Neuheit pro Runde
   // 2.493.0 KC-CLUB-DW-LAUFBAND (Wunsch Hansi): Dienstwünsche Weihnachtsmarkt noch nicht abgegeben → Twinkey führt durch (der Server weiß, wer schon abgegeben hat)
   if (INIT?.dienstwunschFehlt === true && !DW_LB.geoeffnet) add({ id: "dw-fehlt", stufe: "rot", sym: "🎄", t: "Dienstplan Weihnachtsmarkt: Wünsche eingeben?", u: "Twinkey führt dich Schritt für Schritt durch", auf: "dwLaufbandAuf()", knoepfe: [["📝 Mit Twinkey eingeben", "dwLaufbandAuf()"]], fertig: "Dienstwünsche Weihnachtsmarkt eingegeben" });
+  tippLaufband(add); // 2.826.0 KC-CLUB-HILFE-TIPPS: grün → gelb → rot, bis geantwortet
   // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE: Admin – offene Anfragen (orange); alle anderen – Angebot „Unterstützung?“ (ausblendbar, 30 Tage Pause nach dem Senden)
   if (ICH?.admin && kz.unterstuetzung > 0) add({ id: "ua-admin", stufe: "orange", sym: "🙋", t: kz.unterstuetzung === 1 ? "Eine Unterstützungs-Anfrage wartet" : `${kz.unterstuetzung} Unterstützungs-Anfragen warten`, u: "Antippen und Kontakt aufnehmen", auf: "uaAdmin()" });
   else if (!ICH?.admin && !uaKuerzlich()) add({ id: "unterstuetzung", stufe: "weiss", sym: "🙋", t: "Unterstützung bei der Club-App?", u: "Anfrage senden – Hansi meldet sich", auf: "uaStart()", knoepfe: [["🙋 Anfrage senden", "uaStart()"]] });
@@ -16174,6 +16232,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#gebgruss=")) ggWahl(decodeURIComponent(h.slice(10))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: Push „Gruß auswählen“
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
+    else if (h.startsWith("#tipp=")) tippZeigen(decodeURIComponent(h.slice(6))); // 2.826.0 KC-CLUB-HILFE-TIPPS: aus der Benachrichtigung
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
     else if (h === "#wecker") wkChipTippen(); // 2.640.0 KC-CLUB-UHR-WECKER: aus dem Push „Zeit ist um“ / „Wecker“
@@ -33503,7 +33562,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",

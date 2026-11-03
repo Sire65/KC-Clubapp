@@ -1,0 +1,5 @@
+empfang_offen=t
+antwort_geprueft=t
+vorlage_einmalig=t
+loeschen_kaskade=t
+rechte_nur_server=t

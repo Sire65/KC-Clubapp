@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.826.0 – 2026-11-03 – 💡 Hilfe-Tipps mit Rückmeldung (KC-CLUB-HILFE-TIPPS, Wunschliste #71) · Server 2.826.0
+Wunsch Hansi (02./03.11.): „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle – z. B. aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung. Wenn mit: das Mitglied muss sagen, ob der Tipp geholfen hat.“ Konzept: https://claude.ai/artifact/Rf1TNBqEbbxz6fQaERpmnM
+- **🙋 Unterstützung → 💡 Lösung schicken** (ganze Clubleitung): Problem, Tipp-Text, An wen (👥 Alle · 👤 Einzeln · 🧑‍🤝‍🧑 Gruppe · 🎖️ Amt), dazu Blätter aus 📚 Anleitungen, PDFs, Fotos und Bildschirmfotos (höchstens 5). Bei einer Anfrage ist die Person schon eingetragen.
+- **✅ Rückmeldung verlangen:** beim Mitglied Karte im Info-Laufband „Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat.“ – am ersten Tag grün, bis zum dritten gelb, danach rot mit „💬 Jetzt antworten“ / „🙅 Möchte nicht antworten“ (dann kein Hinweis mehr). Antworten: ✅ Ja, geholfen · ❌ Nein · 🔀 Problem war ein anderes · 👍 Hat sich erledigt, dazu ein paar Worte (freiwillig).
+- **❌ Nein / 🔀 anderes** → sofort eine offene Unterstützungs-Anfrage; Absender und Admin bekommen eine Benachrichtigung.
+- **📋 Vorlagen:** gesendete Tipps werden als Vorlage gemerkt (gleiches Problem → Vorlage wird aktualisiert) und lassen sich beim nächsten Mal auswählen.
+- **📋 Gesendete Tipps:** je Tipp wer gelesen und wie geantwortet hat (Balken + Namen), „🔔 Offene erinnern“ (höchstens alle 12 Stunden), „💡 Nochmal schicken“. Mitglieder finden ihre Tipps unter „🙋 Unterstützung anfragen → 💡 Meine Tipps“.
+- Technik: Tabellen `kc_club_hilfe_tipp`, `kc_club_hilfe_tipp_empfang`, `kc_club_hilfe_vorlage` (nur Club-Server, gespiegelt, gesichert; Migration `20261103_kc_club_hilfe_tipps.sql`, Probelauf `tools/db-test/106`). Server-Aktionen `tipp_*`. Senden/Übersicht als Programmteil `teile/hilfetipp.js` (lädt erst beim Gebrauch). Test: `tests/hilfe-tipps.test.mjs`.
+- Rückweg: App 2.825.0, Server 2.824.0 (Tabellen können bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.825.0 – 2026-11-02 – 🧮 Rechner zeigt die ganze Aufgabe · 👣 Wege nach Besuchen getrennt (KC-CLUB-RECHNER-AUFGABE #70, KC-CLUB-SPUR-BESUCHE #72) · nur App
 - **#70** Hansi: „Den Rechner im Büro noch besser machen. Im Display die gesamte Aufgabe anzeigen: 3 × 3 − 5 = 4.“ Beim Tippen steht jetzt die ganze Rechnung groß im Display (lange Rechnungen etwas kleiner), nach „=“ oben „3 × 3 − 5 =“ und groß das Ergebnis; beim Weiterrechnen bleibt die letzte Aufgabe oben stehen. Vorher stand groß nur die letzte Zahl.
 - **#72** Hansi: „Wenn sich ein Mitglied mehrmals täglich anmeldet, unter Wege der Mitglieder jeden Block andersfarbig oder mit dickerer Linie trennen.“ Die Wege eines Mitglieds sind in **Besuche** geteilt (neu bei „📲 App geöffnet“ / „wieder in der App“ oder nach 15 Min. Pause): je Besuch eine Kopfzeile „🔹 Besuch 2 · 12:00–12:02 Uhr · 3 Schritte“ mit dicker weinroter Linie, Zeilen abwechselnd getönt. Nur Anzeige.
