@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.843.0 – Gemeinsame Aufgaben nur einmal (KC-CLUB-AUFGABE-GEMEINSAM, Wunschliste #79)
+- Eine Aufgabe für mehrere Personen (im Protokoll „Wer? – auch mehrere“ anhaken) steht jetzt als EINE Zeile mit allen Namen und 👥 da – im Protokoll, beim Schreiben, im Büro, in der Übersicht „Offene Aufgaben“ und im Ausdruck. Vorher je Person eine Zeile („… gemeinsam mit …“).
+- Abhaken durch einen der Beteiligten gilt für alle; die anderen Beteiligten und wer sie eingetragen hat bekommen Bescheid. Löschen entfernt die ganze gemeinsame Aufgabe (jede Zeile im Papierkorb).
+- Die Zahl offener Aufgaben je Protokoll zählt eine gemeinsame Aufgabe einmal.
+- Test: tests/aufgabe-gemeinsam.test.mjs. Rückweg: Version 2.842.0 einspielen.
+
 ## 2.842.0 – Anbieter: Neues, Störungen, Wartungen (KC-CLUB-ANBIETER-NEUES, Wunschliste #78)
 - Neue Admin-Kachel „📰 Anbieter“: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – angekündigte Wartungen, Störungen (14 Tage), Neuerungen (30 Tage). Oben die Lage in einem Satz.
 - Nur öffentliche, kostenlose Seiten (Status-Feeds, Changelogs), abgefragt erst beim Öffnen, 30 Min. gemerkt. Registry ANBIETER_QUELLEN im Server – neuer Anbieter = neuer Eintrag.

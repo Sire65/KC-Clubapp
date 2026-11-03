@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.842.0";
+const SERVER_VERSION = "2.843.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -17407,7 +17407,7 @@ Köcheclub Werne`,
               id: pr.id, titel: pr.titel, datum: pr.datum, ort: pr.ort, version: pr.version, status: protokollStatus(pr, zahl(ew, pr.id)), einspruch_bis: pr.einspruch_bis,
               verfasser: { person_id: pr.verfasser, name: leute.get(pr.verfasser)?.display_name || pr.verfasser, offen: !!pr.verfasser_offen }, eigen: pr.verfasser === ich.person_id,
               darfBearbeiten: darfBearbeiten(ich, pr), darfLoeschen: darfProtokollLoeschen(ich, pr), gelesen: pr.status === "entwurf" || (!!g && g.version >= pr.version),
-              anlagen: zahl(an, pr.id), einwaende: zahl(ew, pr.id), aufgabenOffen: aufgaben.filter((a: any) => a.protokoll_id === pr.id).length,
+              anlagen: zahl(an, pr.id), einwaende: zahl(ew, pr.id), aufgabenOffen: new Set(aufgaben.filter((a: any) => a.protokoll_id === pr.id).map((a: any) => a.gruppe || a.id)).size, /* 2.843.0: gemeinsame Aufgabe zählt einmal */
               pruefStand: pr.status === "entwurf" && pr.pruefung?.stand ? pr.pruefung.stand : null, pruefIch: pr.status === "entwurf" && pr.pruefung?.stand === "bei_pruefer" && pr.pruefung.pruefer === ich.person_id, /* 2.818.0 */
             };
           }),
@@ -18077,15 +18077,20 @@ Köcheclub Werne`,
       case "aufgabe_erledigt": {
         nurProtokolle(ich);
         const x = await aufgabeHolen(ich, p.id);
-        if (!x.verwalten && x.a.person_id !== ich.person_id) throw new Fehler("Abhaken darf, wer die Aufgabe hat oder eingetragen hat.", 403);
+        // 2.843.0 KC-CLUB-AUFGABE-GEMEINSAM (#79): gemeinsame Aufgabe (gleiche Gruppe) – abhaken darf jeder der Beteiligten, und es gilt für alle Zeilen der Gruppe
+        const gruppe = x.a.gruppe ? ((await db.from("kc_club_aufgaben").select("id,person_id").eq("gruppe", x.a.gruppe)).data ?? []) as { id: string; person_id: string }[] : [];
+        const ids = gruppe.length ? gruppe.map((z) => z.id) : [x.a.id], beteiligt = gruppe.length ? gruppe.map((z) => z.person_id) : [x.a.person_id];
+        if (!x.verwalten && !beteiligt.includes(ich.person_id)) throw new Fehler("Abhaken darf, wer die Aufgabe hat oder eingetragen hat.", 403);
         // 2.508.0 KC-CLUB-AUFGABE-BEMERKUNG (Wunsch Hansi „muss er sie bestätigen mit einem Bemerkungstext“): Erledigt nur mit kurzer Bemerkung;
         // wer die Aufgabe eingetragen hat, bekommt Bescheid (Push, ohne App per Mail). Wieder öffnen behält die alte Bemerkung im Protokoll.
         const erledigt = p.erledigt !== false, bemerkung = txt(p.bemerkung, 1000);
         if (erledigt && bemerkung.length < 3) throw new Fehler("Bitte kurz dazuschreiben, was dabei herausgekommen ist.");
-        await db.from("kc_club_aufgaben").update(erledigt ? { erledigt_am: jetzt(), bemerkung } : { erledigt_am: null }).eq("id", x.a.id);
-        await protokoll(ich.person_id, erledigt ? "aufgabe_erledigt" : "aufgabe_wieder_offen", { aufgabe: x.a.id, ...(erledigt ? { bemerkung } : { alte_bemerkung: x.a.bemerkung ?? null }) });
-        if (erledigt && x.a.erstellt_von && x.a.erstellt_von !== ich.person_id) {
-          const info = sendenGewaehlt("club_nachricht", [x.a.erstellt_von], ["push"], {
+        await db.from("kc_club_aufgaben").update(erledigt ? { erledigt_am: jetzt(), bemerkung } : { erledigt_am: null }).in("id", ids);
+        await protokoll(ich.person_id, erledigt ? "aufgabe_erledigt" : "aufgabe_wieder_offen", { aufgabe: x.a.id, ...(ids.length > 1 ? { gruppe: x.a.gruppe, zeilen: ids.length } : {}), ...(erledigt ? { bemerkung } : { alte_bemerkung: x.a.bemerkung ?? null }) });
+        // Bescheid: wer eingetragen hat + (gemeinsame Aufgabe) die anderen Beteiligten – nie an sich selbst
+        const anInfo = [...new Set([x.a.erstellt_von, ...(ids.length > 1 ? beteiligt : [])].filter((id) => id && id !== ich.person_id))] as string[];
+        if (erledigt && anInfo.length) {
+          const info = sendenGewaehlt("club_nachricht", anInfo, ["push"], {
             titel: `✔ ${ich.name.split(" ")[0]} hat eine Aufgabe erledigt`, kurz: `${txt(x.a.text, 80)} – „${txt(bemerkung, 120)}“`,
             betreff: `Köcheclub Werne – Aufgabe erledigt: ${txt(x.a.text, 80)}`,
             text: `Hallo,\n\n${ich.name} hat die Aufgabe „${x.a.text}“ als erledigt abgehakt.\n\nBemerkung: ${bemerkung}\n\nKöcheclub Werne`,
@@ -18100,8 +18105,10 @@ Köcheclub Werne`,
         nurProtokolle(ich);
         const x = await aufgabeHolen(ich, p.id);
         if (!x.verwalten) throw new Fehler("Löschen darf nur, wer die Aufgabe eingetragen hat.", 403);
-        await geloescht(ich, "aufgabe", { aufgabe: x.a });
-        await db.from("kc_club_aufgaben").delete().eq("id", x.a.id);
+        // 2.843.0 KC-CLUB-AUFGABE-GEMEINSAM (#79): gemeinsame Aufgabe → alle Zeilen der Gruppe (jede einzeln in den Papierkorb)
+        const zeilen = x.a.gruppe ? ((await db.from("kc_club_aufgaben").select("*").eq("gruppe", x.a.gruppe)).data ?? [x.a]) : [x.a];
+        for (const z of zeilen) await geloescht(ich, "aufgabe", { aufgabe: z });
+        await db.from("kc_club_aufgaben").delete().in("id", zeilen.map((z: any) => z.id));
         return json({ ok: true });
       }
 
