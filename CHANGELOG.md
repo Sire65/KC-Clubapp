@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.846.0 – 2026-11-03 – Online-Anzeige über die direkte Leitung
+- Wunsch Hansi 03.11.: Jedes Gerät meldet sich anonym (nur Zufallskennung) im gemeinsamen Anwesenheits-Kanal der direkten Leitung (Supabase Presence, monatlich wechselnd). Kommt jemand dazu, fragt die App gleich beim Server nach, wer da ist – höchstens alle 20 s, zufällig versetzt; Sichtbarkeit entscheidet weiter der Server. Der regelmäßige Abgleich läuft dann alle 2 statt jede Minute (weniger Datenbank-Abfragen). Ohne Leitung wie bisher (KC-CLUB-ANWESENHEIT).
+
 ## 2.845.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER) · 🏢 Büro fein einrichten (KC-CLUB-BUERO-FEIN) · Server 2.845.0
 Wunsch Hansi (03.11.): „Bei den Filmen eine Anzeige, wie lange der Film läuft. Sonst sind die Mitglieder abgeschreckt und denken, er läuft zu lange.“
 - Jedes Erklär-Video zeigt ein grünes Schildchen **„⏱️ unter 1 Min.“ / „⏱️ ca. 1½ Min.“** – ausgerechnet wie der Abspieler (Sprechtext, gewähltes Sprechtempo, kurze Pausen). Die alten festen Angaben „(ca. … Min.)“ im Untertitel entfallen.

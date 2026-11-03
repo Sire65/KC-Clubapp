@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.845.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.846.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4769,7 +4769,18 @@ async function onlinePing() {
 // App verbindet sich mit wachsender Pause neu (1 s … 60 s). Der Schlüssel unten ist der öffentliche Browser-Schlüssel (kein Geheimnis).
 const RT_URL = "wss://ptblnpiroqftcvlsrhac.supabase.co/realtime/v1/websocket", RT_KEY = "sb_publishable_SqXIeGN-clcZ4gjmpLdSww_4DLfyy24";
 const RT_HERZ_MS = 25000, RT_WARTE_MAX_MS = 60000;
-const RT = { ws: null, ok: false, ref: 0, herz: null, neu: null, warte: 1000, kanal: null, zu: false, zaehlen: null, signale: 0 };
+const RT = { ws: null, ok: false, ref: 0, herz: null, neu: null, warte: 1000, kanal: null, zu: false, zaehlen: null, signale: 0,
+  anw: false, anwKey: "g" + Math.random().toString(36).slice(2, 12), anwUhr: null, anwLetzt: 0 }; // KC-CLUB-ANWESENHEIT
+// KC-CLUB-ANWESENHEIT (03.11.2026, Wunsch Hansi): jedes Gerät meldet sich zusätzlich anonym im gemeinsamen Anwesenheits-Kanal (init.rtClub,
+// Supabase Presence) – nur Zufallskennung, kein Name. Kommt ein anderes Gerät dazu oder geht, fragt die App gleich beim Server nach, wer da ist
+// (der Server entscheidet die Sichtbarkeit). Darum genügt der regelmäßige Abgleich dann alle 2 statt jede Minute (spart Datenbank-Abfragen).
+// Höchstens ein Extra-Abgleich je 20 s und zufällig 2–6 s versetzt, damit nicht alle Geräte gleichzeitig fragen.
+const ANW_TAKT_MS = 120000, ANW_ABSTAND_MS = 20000;
+function anwAnders() {
+  if (RT.anwUhr) return;
+  const warte = Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now());
+  RT.anwUhr = setTimeout(() => { RT.anwUhr = null; RT.anwLetzt = Date.now(); onlinePing(); }, warte);
+}
 const rtAn = () => RT.ok;
 function rtVerbinden() {
   const kanal = INIT?.rtKanal;
@@ -4781,6 +4792,7 @@ function rtVerbinden() {
   const senden = (o) => { try { ws.send(JSON.stringify({ ...o, ref: String(++RT.ref) })); } catch {} };
   ws.onopen = () => {
     senden({ topic: "realtime:" + kanal, event: "phx_join", payload: { config: { broadcast: { self: false }, presence: { key: "" }, private: false } } });
+    if (INIT?.rtClub) senden({ topic: "realtime:" + INIT.rtClub, event: "phx_join", payload: { config: { broadcast: { self: false }, presence: { key: RT.anwKey }, private: false } } }); // KC-CLUB-ANWESENHEIT
     clearInterval(RT.herz); RT.herz = setInterval(() => senden({ topic: "phoenix", event: "heartbeat", payload: {} }), RT_HERZ_MS);
   };
   ws.onmessage = (e) => {
@@ -4788,8 +4800,16 @@ function rtVerbinden() {
     RT.letzte = Date.now(); // jede Antwort (auch auf den Herzschlag) zeigt: Leitung lebt
     if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
     else if (d.event === "broadcast" && d.payload?.event === "neu") rtSignal(d.payload.payload || {});
+    else if (INIT?.rtClub && d.topic === "realtime:" + INIT.rtClub) { // KC-CLUB-ANWESENHEIT
+      if (d.event === "phx_reply" && d.payload?.status === "ok" && !RT.anw) {
+        RT.anw = true; senden({ topic: d.topic, event: "presence", payload: { type: "presence", event: "track", payload: { t: 1 } } }); onlineTakt();
+      } else if (d.event === "presence_diff") {
+        const keys = [...Object.keys(d.payload?.joins || {}), ...Object.keys(d.payload?.leaves || {})];
+        if (keys.some((k) => k !== RT.anwKey)) anwAnders();
+      }
+    }
   };
-  ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; RT.ok = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
+  ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; RT.ok = false; RT.anw = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
   ws.onerror = () => {};
 }
 function rtSpaeter() { clearTimeout(RT.neu); RT.naechster = Date.now() + RT.warte; RT.neu = setTimeout(rtVerbinden, RT.warte); RT.warte = Math.min(RT.warte * 2, RT_WARTE_MAX_MS); }
@@ -4931,7 +4951,7 @@ function rtBlatt() {
   f.querySelector("[data-zu]").onclick = zu;
   f.querySelector("[data-neu]").onclick = () => { RT.warte = 1000; rtTrennen(); rtVerbinden(); zu(); setTimeout(rtLedZeigen, 1500); };
 }
-function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; try { ws?.close(); } catch {} }
+function rtTrennen() { RT.zu = true; clearTimeout(RT.neu); clearInterval(RT.herz); const ws = RT.ws; RT.ws = null; RT.ok = false; RT.anw = false; try { ws?.close(); } catch {} }
 // nach dem (Wieder-)Verbinden einmal nachsehen, damit in der Lücke nichts verloren geht
 function rtNachholen() { onlinePing(); if (chatId && aktuelleAnsicht === "chat" && !chatTakt.laeuft) { chatTakt.laeuft = true; chatLaden(false).finally(() => { chatTakt.laeuft = false; }); } }
 function rtSignal(s) {
@@ -5033,7 +5053,7 @@ function onlineTakt() {
   clearInterval(ONL.timer);
   // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
-  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : sparTakt(PUSH_AKTIV || rtAn() ? 60000 : 15000)); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : sparTakt(rtAn() && RT.anw ? ANW_TAKT_MS : PUSH_AKTIV || rtAn() ? 60000 : 15000)); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push · KC-CLUB-ANWESENHEIT: Anwesenheit steht → alle 2 Min.
 }
 document.addEventListener("visibilitychange", () => { // KC-CLUB-WER-IST-DA (2.454.0): nach ≥ 10 Min. im Hintergrund wieder „wer ist da“ – vor dem Ping
   if (document.hidden) WER_DA.weg = Date.now(); else if (WER_DA.weg && Date.now() - WER_DA.weg >= ANSAGE_PAUSE_MS) WER_DA.faellig = true;
