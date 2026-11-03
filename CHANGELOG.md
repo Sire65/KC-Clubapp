@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.841.0 – 2026-11-03 – Anlagen öffnen wieder (Klammerfehler)
+- Fund Hansi 03.11. (Preisliste in der Abstimmung, Fehler-Nr. f02a2f23): Seit 2.826.0 schloss eine verrutschte Klammer den Server-Fall „anlage_url“ zu früh, eine andere fehlte – Anlagen, die schon erlaubt waren (eigene, Chat, Archiv, Vorschlag …), endeten mit „Da ist etwas schiefgelaufen“. Klammern korrigiert; neuer Test prüft die Klammern aller Server-Aktionen (KC-CLUB-ANLAGE-KLAMMER).
+
 ## 2.840.0 – Büro selbst einrichten (KC-CLUB-BUERO-EINRICHTEN, Wunschliste #77)
 - Im Büro „✏️ Einrichten“: die Teile wackeln; ziehen oder zwei Teile nacheinander antippen → sie tauschen die Plätze. Unten eine Zusatzreihe mit 4 Plätzen.
 - „🛒 Katalog“: Tischuhr (läuft mit, öffnet die Termine), Dreh-Adressregister (Adressbuch, nur Clubleitung), Kopierer (Einlesen), Pflanze, Bild, Locher – höchstens 4.

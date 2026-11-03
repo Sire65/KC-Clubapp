@@ -63,6 +63,7 @@ jobs:
       - run: node tests/strom.test.mjs
       - run: node tests/disco.test.mjs
       - run: node tests/systemcheck-gruen.test.mjs
+      - run: node tests/server-klammern.test.mjs
       - run: node tests/schreibtisch.test.mjs
       - run: node tests/anleitungen.test.mjs
       - run: node tests/hilfe-tipps.test.mjs
