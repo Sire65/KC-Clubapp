@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.845.0";
+const SERVER_VERSION = "2.846.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -309,6 +309,15 @@ function nebenbei(p: Promise<unknown>) { try { (globalThis as any).EdgeRuntime?.
 async function sha256(s: string) {
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+// KC-CLUB-ANWESENHEIT (03.11.2026, Wunsch Hansi „ja bau das ein“): gemeinsamer, nicht erratbarer Anwesenheits-Kanal (Supabase Realtime Presence)
+// für alle Mitglieder; wechselt jeden Monat. Über ihn geht NUR „ein Gerät ist da/weg“ mit Zufallskennung – nie Name oder Mitgliedsnummer.
+// Wer sichtbar online ist, entscheidet weiter der Server (Online-Anzeige aus, inkognito).
+const RT_CLUB = { monat: "", kanal: "" };
+async function rtClubKanal() {
+  const m = berlinTag(new Date()).slice(0, 7);
+  if (RT_CLUB.monat !== m) { RT_CLUB.kanal = "club-anw-" + (await sha256("kc-club-anwesenheit:" + SERVICE + ":" + m)).slice(0, 32); RT_CLUB.monat = m; }
+  return RT_CLUB.kanal;
 }
 // 2.690.0 KC-CLUB-HAENDLERAUSWEIS (Wunsch Hansi „Händler-Ausweise für den Weihnachtsmarkt ins Büro, zu den Druckvorlagen“): Prüfcode je Ausweis-Nummer
 // aus dem Server-Geheimnis abgeleitet (nicht gespeichert) – 4 Zeichen ohne Verwechsler (kein 0/O, 1/I). Nachgemachte Ausweise haben keinen passenden Code.
@@ -464,6 +473,12 @@ async function personen(ids: string[]): Promise<Map<string, Person>> {
 // KC-CLUB-START-PARALLEL-3 (2.162.0): laufen mehrere Aufrufe gleichzeitig (z. B. beim Start), teilen sie sich EINE Abfrage –
 // nichts wird zwischengespeichert, jeder bekommt eine eigene Kopie (spart Datenbank-Verbindungen, Inhalt bleibt gleich)
 let MG_LAUF: Promise<(Person & { birth_date?: string })[]> | null = null;
+async function dtSignal(probe: boolean, ohne: string) { // KC-CLUB-RT-DIENST: Fehler stören die Tauschbörse nie
+  try {
+    const ids = (probe ? await adminIds() : (await aktiveMitglieder()).map((m: any) => m.person_id)).filter((x: string) => x !== ohne && !x.startsWith("KC-P-TEST"));
+    if (ids.length) await db.rpc("kc_club_rt_klingeln", { p_personen: ids, p_art: "dienst" }).then(() => {}, () => {});
+  } catch { /* App fragt beim Öffnen selbst */ }
+}
 async function aktiveMitglieder() {
   if (!MG_LAUF) MG_LAUF = (async () => {
     // birth_date nur für „Geburtstag heute“ – wird nie ungefiltert an die App gegeben
@@ -9875,7 +9890,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const express = await pExpress;
         const dienstwunschFehlt = await pDwFehlt; // KC-CLUB-DW-LAUFBAND
         const neuesGeraet = await siGeraetPruefen(ich, req).catch(() => null); // 2.726.0 KC-CLUB-NEUES-GERAET
-        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
+        return json({ meinGeburtstag, alarm, express, dienstwunschFehlt, schwerZeiten: SCHWER_ZEITEN, /* 2.806.0 KC-CLUB-DB-VIEL-ZU-TUN */ startnachrichtDarf: await pSnDarf, kz, hilfeTipps: await pTipps, /* 2.835.0 KC-CLUB-HILFE-TIPPS */ studio, sosFuerAlle: await pSos, clubThema: await pThema, /* 2.323.0 KC-CLUB-THEMEN */ spieleDran: spieleDran ?? 0, neuesGeraet, meinGeraet: siGeraetKlasse(req.headers.get("user-agent")), /* 2.726.0 KC-CLUB-NEUES-GERAET */ ich, status: meinStatus, server: SERVER_VERSION, srvMs: Date.now() - t0Anfrage, anmMs: anmeldungMs, srvT: zt, /* 2.155.0/2.157.0: Server-Zeit (gesamt + je Teil) für die Startmessung */ adminName: await pAdmin, ungelesenUnsicher: zaehlUnsicher, ungelesen, ungelesenLaut, ungelesenGruppen, nachrichtMahnung, rtKanal: await pRtKanal, rtClub: ich.zugang === "tischgast" ? null : await rtClubKanal().catch(() => null), /* KC-CLUB-ANWESENHEIT */ rtZaehler: await pRtZaehler, offeneAbstimmungen, vorschlaegeOffen: await pVorAnz.catch(() => null), laufbandTermine: await pLauf, rezeptThema: await pRzThema, themenNaechste: await pThemenN, sitzungVorgaben: SV, /* 2.751.0 KC-CLUB-SITZUNG-VORGABEN */ naechsterDienst, benachrichtigung, hatMail: !!pm?.email, geburtstageHeute, gedenken: await pGedenken, geburtstagFreigabe: !!gf?.erlaubt, runderGeburtstagFreigabe: !!rgf?.erlaubt, hatGeburtstag, kontaktFreigabe, terminfindungOffen, terminanfragenOffen: await pAnfragen, eingangskorb: await pEingang, ablagekorb: await pAblk, clubjahr: await pCj, wartung, communicator, notfall: nf ?? null, einstellungen, rose, /* KC-CLUB-ROSE */ vertretung: await pVertretung, /* KC-CLUB-VERTRETUNG */ freigaben: await freigaben(), kalenderAbo: kab ?? null, meineAufgaben, protokolleUngelesen, protokollNeu, protokollPruefen, /* 2.818.0 KC-CLUB-PROTOKOLL-PRUEFUNG */ naechstesTreffen: naechstes[0] ?? null, mitgliederAnzahl: mitglieder.length, vapidPublicKey: pk || null, pinnwandFristen: pwFristen, anrufAntworten: anrufAntw, ab: await pAb, dienstStempel: await pDs, runderTisch: await pTisch, /* 2.762.0 KC-CLUB-RUNDER-TISCH */
           einstieg: { tage: new Set((starts.data ?? []).map((x: any) => new Date(x.zeit).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))).size,
             ersterStart: starts.data?.[0]?.zeit ?? null, feedbackAbgegeben: (fbAnzahl ?? 0) > 0, fristen: eiFristen,
             // KC-CLUB-GERAETE-TIPP: wohin der Link ginge – nur teilweise (z. B. „h…@web.de“)
@@ -12999,6 +13014,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         return json({ ok: true, lage: await rtLage(ich) });
       }
+      // KC-CLUB-RT-DIENST (03.11.2026, Wunsch Hansi): jede Änderung an der Tauschbörse als Signal „dienst“ über die direkte Leitung –
+      // offene Tauschbörsen frischen sich sofort auf (nur Signal, Inhalt holt die App). Probe-Angebote nur an Admins.
       case "dienst_tausch_liste": {
         if (!(await dtDarf(ich))) return json({ aktiv: false });
         return json(await dtLage(ich));
@@ -13016,6 +13033,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         await protokoll(ich.person_id, "dienst_tausch", { id: neu.id, aktion: "anbieten", ref: d!.ref });
         const andere = (await aktiveMitglieder()).map((m) => m.person_id).filter((x) => x !== ich.person_id);
         const versand = await dtSenden(andere, false, { titel: `🔁 ${ich.vorname} sucht Ersatz`, kurz: `${dtText(d!, TZ)}${nachricht ? ` – „${nachricht.slice(0, 80)}“` : ""} · Kannst du übernehmen?` }, `${neu.id}:neu`);
+        await dtSignal(false, ich.person_id); // KC-CLUB-RT-DIENST
         return json({ ok: true, id: neu.id, versand: !!versand, lage: await dtLage(ich) });
       }
       case "dienst_tausch_probe": { // nur Admin: Probe-Angebot ohne Dienstplan, damit Hansi die Börse testen kann (sehen nur Admins)
@@ -13066,6 +13084,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         } else if (aktion === "ablehnen") {
           await dtSenden([r.von_person, an || ""], r.probe, { titel: "✖ Dienst-Tausch abgelehnt", kurz: `${wann}${set.grund ? ` · ${set.grund}` : ""} · der Dienst bleibt bei ${nm(r.von_person)}` }, `${r.id}:nein`);
         }
+        await dtSignal(!!r.probe, ich.person_id); // KC-CLUB-RT-DIENST
         return json({ ok: true, status: w.nach, lage: await dtLage(ich) });
       }
       case "dienst_heute": {

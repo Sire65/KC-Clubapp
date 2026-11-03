@@ -1,11 +1,15 @@
 # Änderungen
 
-## 2.846.0 – 2026-11-03 – 📌 Pinnwand geht nie mehr von selbst auf (KC-CLUB-PINNWAND-NIE-AUTO)
+## 2.847.0 – 2026-11-03 – 📌 Pinnwand geht nie mehr von selbst auf (KC-CLUB-PINNWAND-NIE-AUTO)
 Hansi (03.11.): „Öffnet bei den Mitgliedern immer automatisch die Pinnwand?“ → Entscheidung „Nie von selbst öffnen“.
 - Beim Start der App öffnen sich weder Zettel-Fenster (neue Zettel) noch die Pinnwand (❗ wichtige, nicht abgehakte Zettel, neue Hilfe-Aufrufe). Seit 2.835.0 („Was ist neu“ aus) kamen neue Zettel direkt als Fenster.
 - Stattdessen: Zahl an der Pinnwand-Kachel (wie bisher) und eine Karte im Info-Laufband „📌 Ein neuer Zettel an der Pinnwand“ – antippen öffnet die Pinnwand.
 - Bei offener App: statt Zettel-Fenster nur eine kurze Meldung „📌 Neuer Zettel an der Pinnwand von …“.
-- Schalter `PW_NIE_AUTO` in app.js (false = wie vorher). Test: `tests/pinnwand-nie-auto.test.mjs`. Rückweg: App 2.845.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+- Schalter `PW_NIE_AUTO` in app.js (false = wie vorher). Test: `tests/pinnwand-nie-auto.test.mjs`. Rückweg: App 2.846.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+## 2.846.0 – 2026-11-03 – Online-Anzeige über die direkte Leitung
+- Wunsch Hansi 03.11.: Jedes Gerät meldet sich anonym (nur Zufallskennung) im gemeinsamen Anwesenheits-Kanal der direkten Leitung (Supabase Presence, monatlich wechselnd). Kommt jemand dazu, fragt die App gleich beim Server nach, wer da ist – höchstens alle 20 s, zufällig versetzt; Sichtbarkeit entscheidet weiter der Server. Der regelmäßige Abgleich läuft dann alle 2 statt jede Minute (weniger Datenbank-Abfragen). Ohne Leitung wie bisher (KC-CLUB-ANWESENHEIT).
+- Dienst-Tauschbörse über die direkte Leitung: neues Angebot, Übernahme, Bestätigung, Ablehnung oder Zurückziehen meldet sich sofort – eine offene Tauschbörse frischt sich selbst auf (KC-CLUB-RT-DIENST).
+- Offenes Spiel: steht die Leitung, fragt die App nur noch alle 2 Min. zur Sicherheit nach (bisher 30 s) – Züge kommen weiter sofort; nach einer Unterbrechung wird nachgeholt (KC-CLUB-RT-SPIEL-SPARSAM).
 
 ## 2.845.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER) · 🏢 Büro fein einrichten (KC-CLUB-BUERO-FEIN) · Server 2.845.0
 Wunsch Hansi (03.11.): „Bei den Filmen eine Anzeige, wie lange der Film läuft. Sonst sind die Mitglieder abgeschreckt und denken, er läuft zu lange.“
