@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.836.0 – 2026-11-03 – 📅 Runder Tisch: gelaufenen Tisch als neuen Termin wiederholen (KC-CLUB-RUNDER-TISCH-WIEDERHOLEN) · nur App
+Wunsch Hansi (30.10.): „Ein gelaufener Tisch kann wiederholt werden – nochmal antippen und wiederholen.“ Eingespielt im 12-Uhr-Bündel (Freigabe Hansi 03.11.). Noch nur Admin zum Testen.
+- **📅 Wiederholen** auf jedem vorbei-Tisch (Liste „Vorbei“ und Tisch-Ansicht), **📅 Neu ansetzen** bei abgesagten Tischen (für die Leitung). Anders als **🔁 Wieder öffnen** (2.799.0, derselbe Tisch läuft sofort noch einmal) entsteht ein **neuer Termin**.
+- Das Einladen-Formular kommt **vorbelegt**: Art, Thema, Beschreibung, Tagesordnung, Gruppe, Uhrzeit, Dauer und Plätze wie beim letzten Mal; als Tag der **nächste gleiche Wochentag** (abgesagt und noch nicht dran: derselbe Tag). Alles lässt sich vor dem Einladen ändern.
+- Danach wie beim normalen Einladen: Zeitprüfung (kein Clubabend, nur ein Tisch gleichzeitig), Rückfrage, Bescheid. Wer wiederholt, lädt ein. Tasche und Zusagen fangen neu an.
+- Gruppe nicht wählbar? Dann steht ein Hinweis, „Für wen?“ zu prüfen.
+- Kein Server, keine Datenbank. Tests: `tests/runder-tisch.test.mjs` (Wochentag, Zeitumstellung), Klick-Rundgang (Knopf und Vorbelegung). Rückweg: App 2.835.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.835.0 – 2026-11-03 – 💡 Hilfe-Tipps mit Rückmeldung (KC-CLUB-HILFE-TIPPS, Wunschliste #71) · 📌 Pinnwand: Zettel per Nadel ablegen (KC-CLUB-PINNWAND-NADEL-DRUECKEN, #74) · Server 2.835.0
 Wunsch Hansi (02./03.11.): „Bei Unterstützung Lösungen anbieten für eine Person, Gruppe oder alle – z. B. aus dem Ordner Anleitungen, ein PDF, Foto oder Bildschirmfoto – mit oder ohne Rückmeldung. Wenn mit: das Mitglied muss sagen, ob der Tipp geholfen hat.“ Konzept: https://claude.ai/artifact/Rf1TNBqEbbxz6fQaERpmnM
 - **🙋 Unterstützung → 💡 Lösung schicken** (ganze Clubleitung): Problem, Tipp-Text, An wen (👥 Alle · 👤 Einzeln · 🧑‍🤝‍🧑 Gruppe · 🎖️ Amt), dazu Blätter aus 📚 Anleitungen, PDFs, Fotos und Bildschirmfotos (höchstens 5). Bei einer Anfrage ist die Person schon eingetragen.
