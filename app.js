@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.832.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.833.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18122,8 +18122,29 @@ async function vorschlaegeLaden() {
       + (spenden.length ? `<div class="abschnitt"><h3>💝 Spendenprojekte für die nächste Sitzung</h3></div><div class="mini-kacheln">${spenden.map(spendeKachel).join("")}</div>` : "")
       + `<div class="abschnitt"><h3>💡 Themen für die nächste Sitzung</h3></div>`
       + (themen.length ? `<div class="mini-kacheln">${themen.map(vorschlagKachel).join("")}</div>` : '<div class="karte hinweis">Noch keine Themen. Tippe oben auf „＋ Neu“, um etwas vorzuschlagen.</div>')
-      + (fertig.length ? `<div class="abschnitt"><h3>Erledigt</h3></div><div class="mini-kacheln">${fertig.map(vorschlagKachel).join("")}</div>` : "");
+      + vsErledigtHtml(fertig);
+    klappenMerken($("vorschlagListe")); // 2.833.0: Auf/Zu der Erledigt-Bereiche wird gemerkt (wie überall)
   } catch (e) { meldeFehler(e); ladeFehlerStand("vorschlagListe", e, "vorschlaegeLaden()"); }
+}
+// 2.833.0 KC-CLUB-VORSCHLAG-ERLEDIGT (Wunsch #76 Hansi „Vorschläge der letzten Sitzung, die laut Protokoll abgearbeitet wurden … weg oder Archiv oder einklappen,
+// nach Monaten oder Sitzungen, am Jahresende ins Archiv“): oben nur Offenes; Erledigtes in einem eingeklappten Bereich „🗂️ Erledigt“, darin je Sitzung
+// (sonst je Monat) ein eigener Klappbereich – nichts verschwindet. Behandelte Themen zeigen „📄 Im Protokoll“.
+function vsErledigtHtml(fertig) {
+  if (!fertig.length) return "";
+  const gruppen = new Map();
+  for (const v of fertig) {
+    const t = v.treffen, k = t ? "t:" + t.id : "m:" + String(v.abgeschlossen_am || v.erstellt_am || "").slice(0, 7);
+    if (!gruppen.has(k)) gruppen.set(k, { titel: t ? `📅 Sitzung ${tagKurz(String(t.beginn).slice(0, 10))}` : `🗓️ ${(() => { const m = k.slice(2); return m.length === 7 ? `${CJ_MONATE[Number(m.slice(5)) - 1] || m.slice(5)} ${m.slice(0, 4)}` : "Ohne Datum"; })()}`,
+      zeit: t ? t.beginn : (v.abgeschlossen_am || v.erstellt_am || ""), liste: [] });
+    gruppen.get(k).liste.push(v);
+  }
+  const g = [...gruppen.entries()].sort((a, b) => String(b[1].zeit).localeCompare(String(a[1].zeit)));
+  const anz = (l) => { const th = l.filter((v) => v.art === "thema").length, ab = l.filter((v) => v.art === "abstimmung").length, sp = l.filter((v) => v.art === "spende").length;
+    return [th && `${th} ${th === 1 ? "Thema" : "Themen"}`, ab && `${ab} Abstimmung${ab === 1 ? "" : "en"}`, sp && `${sp} Spende${sp === 1 ? "" : "n"}`].filter(Boolean).join(" · "); };
+  return `<details class="karte vs-erledigt" data-klappe="vs_erledigt" data-ohne-unten><summary>🗂️ Erledigt <span class="marke">${fertig.length}</span></summary>
+    <p class="hinweis" style="margin:4px 0 6px">Was in einer Sitzung behandelt oder abgeschlossen wurde – nach Sitzung geordnet. Am Jahresende kommt es mit „📦 Jahr abschließen“ (Protokolle) ins Archiv.</p>
+    ${g.map(([k, x]) => `<details class="pr-monat vs-gruppe" data-klappe="vs_g_${esc(k.replace(/[^a-z0-9]/gi, "_"))}" data-ohne-unten><summary class="pr-monat-titel">${esc(x.titel)} <span class="marke">${esc(anz(x.liste))}</span></summary>
+      <div class="mini-kacheln">${x.liste.map(vorschlagKachel).join("")}</div></details>`).join("")}</details>`;
 }
 function balken(v) {
   if (!v.ergebnis) return `<p class="hinweis">🔒 Geheime Abstimmung – das Ergebnis erscheint, wenn sie beendet ist. ${v.stimmen} von ${v.berechtigt} haben abgestimmt.</p>`;
@@ -18158,6 +18179,7 @@ function vorschlagKarte(v) {
     v.darfZurueckziehen ? `<button class="knopf klein" onclick="vorschlagStatus('${v.id}','zurueckgezogen')">Zurückziehen</button>` : "",
     v.darfLoeschen ? `<button class="knopf klein" onclick="vorschlagLoeschen('${v.id}')">🗑️ Löschen</button>` : "",
     `<button class="knopf klein" onclick="einmal(this, () => vorschlagInOrdner('${esc(v.id)}'))">🗄️ In Ordner</button>`, // 2.820.0 KC-CLUB-VORSCHLAG-ORDNER
+    v.behandeltIn ? `<button class="knopf klein" onclick="$('vorschlagInfo')?.remove();protokollOeffnen('${esc(v.behandeltIn)}')">📄 Im Protokoll</button>` : "", // 2.833.0 KC-CLUB-VORSCHLAG-ERLEDIGT
   ].join("");
   return `<div class="karte">${kopf}<div class="wann" style="font-size:1.12rem;font-weight:800;margin-top:6px">${esc(v.titel)}</div>${unter}
     ${v.beschreibung ? `<p style="white-space:pre-wrap;margin:8px 0 0">${esc(v.beschreibung)}</p>` : ""}${oaAnzeige(v.anlagen)}${mitte}${knoepfe ? `<div class="knoepfe">${knoepfe}</div>` : ""}</div>`;
@@ -25330,12 +25352,12 @@ function prTeilnahmeHtml(d, druck) {
 async function prJahrAbschliessen(jahr) {
   const liste = (prListe?.protokolle || []).filter((p) => String(p.datum || "").startsWith(jahr) && prVeroeffentlicht(p));
   if (!liste.length) return melde(`In ${jahr} gibt es noch kein veröffentlichtes Protokoll.`, true);
-  if (!(await frage(`📦 Jahr ${jahr} abschließen?\n\n${liste.length} veröffentlichte${liste.length === 1 ? "s Protokoll kommt" : " Protokolle kommen"} als PDF in den Büro-Ordner „Protokolle ${jahr}“. In der Liste hier bleiben sie trotzdem.`, { ja: "📦 Abschließen", nein: "Abbrechen" }))) return;
-  let a, o; const REG = ["Sitzungsprotokolle", "Sonstiges"];
+  if (!(await frage(`📦 Jahr ${jahr} abschließen?\n\n${liste.length} veröffentlichte${liste.length === 1 ? "s Protokoll kommt" : " Protokolle kommen"} als PDF in den Büro-Ordner „Protokolle ${jahr}“. Dazu eine Liste der erledigten Vorschläge (Register „Vorschläge“). In der Liste hier bleibt alles trotzdem.`, { ja: "📦 Abschließen", nein: "Abbrechen" }))) return;
+  let a, o; const REG = ["Sitzungsprotokolle", "Vorschläge", "Sonstiges"]; // 2.833.0: Register „Vorschläge“ für die erledigten Vorschläge
   try {
     a = await api("archiv_liste", {}, { warten: true });
     o = (a.ordner || []).find((x) => arIstFest(x, "protokolle") && Number(x.jahr) === Number(jahr)); // KC-CLUB-ORDNER-KENNUNG
-    if (!o) o = { id: (await api("archiv_ordner_speichern", { art: "versammlung", jahr: Number(jahr), titel: "Protokolle", farbe: 2, register: REG, nur_vorstand: false, kennung: "protokolle" }, { warten: true })).id, register: REG };
+    if (!o) o = { id: (await api("archiv_ordner_speichern", { art: "versammlung", jahr: Number(jahr), titel: "Protokolle", farbe: 2, register: REG, nur_vorstand: false, kennung: "protokolle" }, { warten: true })).id, art: "versammlung", jahr: Number(jahr), titel: "Protokolle", farbe: 2, register: REG };
   } catch (e) { return meldeFehler(e); }
   const marke = (id) => "p-" + String(id).slice(0, 24), schon = new Set((a.dokumente || []).filter((d) => d.ordner_id === o.id).flatMap((d) => [].concat(d.stichworte || [])));
   const alt = { PR, DRUCK }; let n = 0, ueber = 0;
@@ -25351,8 +25373,49 @@ async function prJahrAbschliessen(jahr) {
         name: `Protokoll_${p.datum}_${String(p.titel).replace(/[^\wäöüÄÖÜß-]+/g, "_").slice(0, 40)}.pdf`, mime: "application/pdf", daten: base64(await pdf.arrayBuffer()) }, { warten: true });
       n++;
     }
-    melde(`📦 ${jahr}: ${n} Protokoll${n === 1 ? "" : "e"} im Büro-Ordner „${o.titel || "Protokolle"} ${jahr}“${ueber ? ` · ${ueber} lag${ueber === 1 ? "" : "en"} schon dort` : ""}`);
+    const vs = await prVorschlaegeAblegen(jahr, o, schon); // 2.833.0 KC-CLUB-VORSCHLAG-ERLEDIGT
+    melde(`📦 ${jahr}: ${n} Protokoll${n === 1 ? "" : "e"} im Büro-Ordner „${o.titel || "Protokolle"} ${jahr}“${ueber ? ` · ${ueber} lag${ueber === 1 ? "" : "en"} schon dort` : ""}${vs ? ` · ${vs} erledigte Vorschläge im Register „Vorschläge“` : ""}`);
   } catch (e) { meldeFehler(e); } finally { PR = alt.PR; DRUCK = alt.DRUCK; }
+}
+// 2.833.0 KC-CLUB-VORSCHLAG-ERLEDIGT (Wunsch #76 „am Jahresende ins Archiv“): „📦 Jahr abschließen“ legt zusätzlich eine Liste aller in dem Jahr
+// erledigten Vorschläge/Abstimmungen/Spenden (nach Sitzung geordnet) in den Ordner „Protokolle <Jahr>“, Register „Vorschläge“ (wird bei Bedarf ergänzt).
+// Nochmal abschließen legt nur eine neue Liste ab, wenn seitdem etwas dazukam (Marke vs-<Jahr>-<Anzahl>). In der App bleibt alles sichtbar.
+function prVorschlaegeJahrText(jahr, liste) {
+  const gruppen = new Map();
+  for (const v of liste) {
+    const k = v.treffen ? `Sitzung ${tagKurz(String(v.treffen.beginn).slice(0, 10))}${v.treffen.titel ? ` – ${v.treffen.titel}` : ""}` : "Ohne Sitzung";
+    if (!gruppen.has(k)) gruppen.set(k, { zeit: v.treffen?.beginn || "9999", liste: [] });
+    gruppen.get(k).liste.push(v);
+  }
+  const art = (v) => v.art === "abstimmung" ? "Abstimmung" : v.art === "spende" ? "Spendenprojekt" : "Thema";
+  const z = [`Köcheclub Werne – Erledigte Vorschläge ${jahr}`, "", `${liste.length} Einträge, nach Sitzung geordnet.`];
+  for (const [k, g] of [...gruppen.entries()].sort((a, b) => String(a[1].zeit).localeCompare(String(b[1].zeit)))) {
+    z.push("", k, "-".repeat(Math.min(60, k.length)));
+    for (const v of g.liste) {
+      z.push(`• ${v.titel} (${art(v)}, von ${v.von?.name || "?"}${v.status === "zurueckgezogen" ? ", zurückgezogen" : ""})`);
+      if (v.ergebnis && v.art === "abstimmung") z.push(`  Ergebnis: ${v.ergebnis.map((e) => `${e.option}: ${e.anzahl}`).join(" · ")}`);
+      if (v.art === "spende" && (v.spenden || []).length) z.push(`  Spenden: ${v.spenden.map((x) => `${x.empfaenger || "Spende"}${x.betrag ? " " + spEuro(Number(x.betrag)) : ""}`).join(" · ")}`);
+    }
+  }
+  z.push("", `Abgelegt am ${new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short", timeZone: TZ }).format(new Date())} Uhr aus der Club-App.`);
+  return z.join("\n");
+}
+async function prVorschlaegeAblegen(jahr, o, schon) {
+  const r = await api("vorschlaege_liste", {}, { warten: true });
+  const liste = (r.vorschlaege || []).filter((v) => v.status !== "offen" && String(v.treffen?.beginn || v.abgeschlossen_am || v.erstellt_am || "").startsWith(String(jahr)));
+  if (!liste.length) return 0;
+  const marke = `vs-${jahr}-${liste.length}`;
+  if (schon.has(marke)) return 0;
+  const REG = "Vorschläge";
+  if (!(o.register || []).includes(REG)) {
+    const reg = [...(o.register || []), REG];
+    await api("archiv_ordner_speichern", { id: o.id, art: o.art || "versammlung", jahr: Number(o.jahr || jahr), titel: o.titel || "Protokolle", farbe: o.farbe || 2, register: reg, nur_vorstand: !!o.nur_vorstand, einreichen: !!o.einreichen }, { warten: true });
+    o.register = reg;
+  }
+  const titel = `Erledigte Vorschläge ${jahr}`;
+  await api("archiv_hochladen", { ordner_id: o.id, register: REG, titel, datum: `${jahr}-12-31`, stichworte: `Vorschläge, ${jahr}, ${marke}`,
+    name: `Vorschlaege_erledigt_${jahr}.txt`, mime: "text/plain", daten: base64(await textDatei(prVorschlaegeJahrText(jahr, liste)).arrayBuffer()) }, { warten: true });
+  return liste.length;
 }
 function protokollFilter() { prFilterAnwenden(); } // Suchfeld + Filter wirken zusammen (2.23.36)
 // ---------- KC-CLUB-PROTOKOLL-FILTER (2.23.36, Wunsch Hansi): oben „🔽 Filter“ → Jahr, Monat, Ort, Protokollführer (2 × 2 Felder) ----------

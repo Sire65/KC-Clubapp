@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.833.0 – Erledigte Vorschläge ordentlich ablegen (KC-CLUB-VORSCHLAG-ERLEDIGT, Wunsch #76)
+- Vorschläge: oben nur noch Offenes. Erledigtes liegt eingeklappt unter „🗂️ Erledigt“, darin je Sitzung (sonst je Monat) ein eigener Bereich mit Anzahl. Nichts verschwindet.
+- Behandelte Themen haben den Knopf „📄 Im Protokoll“.
+- „📦 Jahr abschließen“ (Protokolle) legt zusätzlich die Liste der erledigten Vorschläge des Jahres in den Ordner „Protokolle <Jahr>“, Register „Vorschläge“ (nichts doppelt).
+- Nachgeholt: die 7 Themen der Sitzung vom 30.10. sind als behandelt markiert (Migration 20261103, Rückweg in der Datei).
+- Test: tests/vorschlag-erledigt.test.mjs. Rückweg: Version 2.832.0 einspielen.
+
 ## 2.832.0 – 2026-11-03 – § Impressum vollständig (KC-CLUB-IMPRESSUM) · nur App
 Hansi: „Suche die richtige E-Mail-Adresse von Klaus raus und trage sie ein. Meine E-Mail bei Entwicklung. Keine Anschrift z. Zt.“
 - Kontakt: E-Mail von Klaus Zander (aus den Mitgliederdaten; passt zu „-k@web.de“). Inhaltlich verantwortlich: Hans-Joachim Koch (Entwickler der App) mit E-Mail, ohne Anschrift. Damit keine offenen Angaben mehr.
