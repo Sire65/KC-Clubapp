@@ -17,7 +17,10 @@ const MUSIK = "dddddddd-2222-3333-4444-555555555555"; // 🎵 Testlied = simjue-
 const VIDEO = "eeeeeeee-2222-3333-4444-555555555555";
 // 2.776.0 KC-CLUB-RUNDER-TISCH-GAST: externer Tischgast mit Gast-Link (eigener Start, nur erlaubte Anfragen)
 const GAST_TOKEN = "tg_" + "c0ffee".repeat(8), GAST_ID = "ffffffff-2222-3333-4444-555555555555", GAST_PID = "TG-" + GAST_ID;
-const GAST_ERLAUBT = new Set(["tischgast_init", "tisch_platz", "tisch_verlassen", "anlage_url", "anruf_wege", "diagnose", "ping"]); // = TISCHGAST_AKTIONEN im Server // 🎬 Testvideo = film/sicherheit-datenschutz.mp4 aus dem Repo
+const GAST_ERLAUBT = new Set(["tischgast_init", "tisch_platz", "tisch_verlassen", "anlage_url", "anruf_wege", "diagnose", "ping"]); // = TISCHGAST_AKTIONEN im Server
+// 🎬 Testvideo = tests/probe-video.webm (VP9/Opus, 20 s, 320×240). KC-TEST-VIDEO-VP9 (03.11.2026): Vorher war es film/sicherheit-datenschutz.mp4 (H.264) –
+// der Chromium in den GitHub-Tests (Playwright 1.49.1, Headless Shell 131) spielt kein H.264 ab, der Video-Schritt war dort seit 2.773.0 immer rot.
+// VP9 kann jeder Chromium. Neu erzeugen: ffmpeg -f lavfi -i testsrc2=size=320x240:rate=25 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 20 -c:v libvpx-vp9 -b:v 120k -c:a libopus -b:a 32k tests/probe-video.webm
 const TISCH = "aaaaaaaa-2222-3333-4444-555555555555", CHAT = "bbbbbbbb-2222-3333-4444-555555555555", PDF = "cccccccc-2222-3333-4444-555555555555";
 const LIVE = { kanal: "kc-fh-" + "ab".repeat(16), schluessel: Buffer.alloc(32, 7).toString("base64") };
 const LEUTE = [{ id: "KC-P-LIVE-A", name: "Anna Probe" }, { id: "KC-P-LIVE-B", name: "Bernd Probe" }, { id: "KC-P-LIVE-C", name: "Carla Probe" }];
@@ -74,7 +77,7 @@ try {
           fotos_liste: { fotos: [], themen: [], jahre: [], anlaesse: [], speicher: { prozent: 0, belegt: 0, grenze: 1 }, papierkorb: 0, alben: [], albenKorb: 0, album: null },
           tisch_liste: lage(p.id), tisch_platz: { ok: true, ergebnis: "da", lage: lage(p.id), live: LIVE }, anruf_wege: { ice: [], bis: iso(60) },
           tisch_gast_einladen: { ok: true, link: `${BASIS}/index.html?g=${GAST_TOKEN}`, gast: { id: GAST_ID, name: "Dr. Probe", rolle: "Experte" }, gueltig: { ab: iso(-35), bis: iso(55) }, lage: lage(p.id) },
-          anlage_url: { url: body.id === VIDEO ? `${BASIS}/film/sicherheit-datenschutz.mp4` : body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
+          anlage_url: { url: body.id === VIDEO ? `${BASIS}/tests/probe-video.webm` : body.id === MUSIK ? `${BASIS}/simjue-orgel.mp3` : `${BASIS}/dokumente/Vertretung_Admin_V1.pdf` },
           // 2.774.0 KC-CLUB-TISCH-TASCHE: Anna hat vorher ein PDF und ein Lied eingepackt
           tisch_tasche: { tisch: TISCH, darfVorab: true, max: 20, vorab: [], meine: p.id !== LEUTE[0].id ? [] : [
             { id: "t1", a: PDF, name: "Ablauf.pdf", mime: "application/pdf", art: "pdf", pos: 1, vorab: false, gezeigt: false },
