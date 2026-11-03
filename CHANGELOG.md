@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.828.0 – 2026-11-03 – 🧹 Erklärfilm: Kachelgröße wählen (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 03.11.: „Beim Thema Kacheln noch einbauen, dass man die Größe wählen kann und somit die Anzahl Kacheln neben- und untereinander. Die Einstellungen findest du unter Mehr … Startseite, Kachelgröße.“
+- Film „Deine App – so, wie du sie willst“ neu (2:59 Min.): neue Szene ⚙️ Mehr → 🧩 Startseite & Ansicht → 🔲 Kacheln auf der Startseite (▣ Normal – 2 · ▦ Klein – 3 · ▪ Sehr klein – 4 nebeneinander), danach die Startseite in allen drei Größen.
+- `film/app-selbst-einrichten.mp4?v=4`, gleiche Kennung `ansichtfilm` (wird nicht erneut beim Start angeboten). Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests unverändert grün. Rückweg: App 2.827.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.827.0 – 2026-11-03 – 👆 Größere Tippflächen, lesbarere Kleinschrift (KC-CLUB-TIPPFLAECHEN, KC-CLUB-SCHRIFT-MIN, Wunsch #44 Etappe 2) · nur App
 Gesamtprüfung Etappe 2 (Bedienung & Design), Hansi: „1 und 2 umsetzen“.
 - **Tippflächen** (echt gemessen, wo ein Finger trifft): Herz im Kopf 33 × 43 statt 26 × 21, Info-Punkte nach unten 44 hoch, „Für heute ausblenden“ ✕ 34 × 34, im Chat Vorlesen/Suchen/Mehr 40 × 40 statt 34 × 34. Unsichtbar vergrößert – das Aussehen bleibt gleich.
