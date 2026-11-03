@@ -4719,9 +4719,9 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.12 KC-CLUB-WAS-NEU: beim Öffnen zeigen, was neu ist (Nachrichten Einzel/Gruppe, Pinnwand) – mit Knopf direkt dorthin
 {
   assert.ok(/const ungelesenGruppen = grFehler \? null : /.test(server) && /ungelesen, ungelesenLaut, ungelesenGruppen,/.test(server), "Server: Gruppen getrennt gezählt, Fehler = unbekannt");
-  assert.ok(/function wasNeuZeigen\(pw\)/.test(html) && /!einst\("wasNeu", true\) \|\| \(!n && !p && !sp\) \|\| \(START_HASH && START_HASH !== "#"\) \|\| INIT\?\.alarm \|\| aktuelleAnsicht !== "start"/.test(html), "nur beim Öffnen, nicht über Links, nicht bei Notfall, abschaltbar");
+  assert.ok(/function wasNeuZeigen\(pw\)/.test(html) && /!einst\("wasNeu2", false\) \|\| \(!n && !p && !sp\) \|\| \(START_HASH && START_HASH !== "#"\) \|\| INIT\?\.alarm \|\| aktuelleAnsicht !== "start"/.test(html), "nur beim Öffnen, nicht über Links, nicht bei Notfall, abschaltbar");
   assert.ok(/if \(wasNeuZeigen\(n\)\) \{ gezeigt = true;/.test(html) && /zeige\("nachrichten"\); else if \(w === "p"\) pwFenster\(pw\); else if \(w === "sp"\) spStart\("mg"\);/.test(html) && /🔕 Diese Meldung ausschalten/.test(html) && /In deinen Einstellungen kannst du sie jederzeit wieder aktivieren\./.test(html), "Knöpfe direkt zu Nachrichten / Pinnwand, kein doppeltes Fenster");
-  assert.ok(/id="setWasNeu" onchange="einstellung\('wasNeu', this\.checked\)"/.test(html) && /gr == null \? ""/.test(html), "Schalter in den Einstellungen; unbekannte Gruppen-Zahl nicht als 0");
+  assert.ok(/id="setWasNeu" onchange="einstellung\('wasNeu2', this\.checked\)"/.test(html) && /gr == null \? ""/.test(html), "Schalter in den Einstellungen; unbekannte Gruppen-Zahl nicht als 0");
 }
 // 2.24.13 KC-CLUB-RUHE: je Öffnen höchstens ein Info-Fenster, Tipp + Spiele-Einladung höchstens einmal je Woche, kein Versions-Fenster für Mitglieder
 {
