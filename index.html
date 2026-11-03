@@ -5524,6 +5524,29 @@
   .il-zu { width: 34px; height: 34px; margin: -9px -7px 0 -10px; }
   #v-chat .kopf2 > .rund { width: 40px; height: 40px; min-width: 40px; }
   .zk-titel, .wischhinweis, .st-titel, .eu-gruppe, .pwStand, .fa-album small { font-size: .8125rem; }
+  /* 2.829.0 KC-CLUB-NUTZUNG-ALLE (Wunsch #73): „📈 So nutzen wir die App“ – Kacheln, Farbfeld Wochentag × Uhrzeit, Säulen je Tag, gestapelt nach Art */
+  .nu-karte { margin: 8px 0 0; } .nu-karte > b:first-child { font-size: 1.05rem; }
+  .nu-blick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+  .nu-k { background: var(--karte2); border-radius: 12px; padding: 8px 10px; display: grid; gap: 1px; }
+  .nu-k b { font-size: 1.5rem; line-height: 1.1; } .nu-k small { color: var(--grau); line-height: 1.2; } .nu-k-sym { font-size: 1.1rem; }
+  .nu-pf { font-weight: 800; font-size: .85rem; } .nu-pf.hoch { color: var(--textGruen); } .nu-pf.runter { color: var(--textOrange); } .nu-pf.gleich { color: var(--grau); }
+  .nu-feld { display: grid; grid-template-columns: 22px repeat(19, minmax(0, 1fr)); gap: 2px; align-items: center; }
+  .nu-feld i { display: block; aspect-ratio: 1; border-radius: 3px; background: rgba(127, 127, 127, .12); position: relative; cursor: pointer; }
+  .nu-feld i::after { content: ""; position: absolute; inset: 0; border-radius: 3px; background: var(--rot); opacity: var(--a, 0); }
+  :root.dunkel .nu-feld i::after { background: #ff7a8c; }
+  .nu-wt, .nu-ach { font-size: .75rem; color: var(--grau); text-align: center; } .nu-wt { text-align: left; font-weight: 700; }
+  .nu-tage { display: flex; align-items: flex-end; gap: 2px; height: 90px; margin-top: 4px; }
+  .nu-tage > div { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; min-width: 0; }
+  .nu-tage > div > i { display: block; background: var(--rot); border-radius: 3px 3px 0 0; min-height: 0; }
+  :root.dunkel .nu-tage > div > i { background: #ff7a8c; }
+  .nu-stapel > div > i { border-radius: 0; } .nu-stapel > div > i:first-child { border-radius: 3px 3px 0 0; }
+  .nu-tage .nu-n, .nu-leg .nu-n { background: var(--rot); } .nu-tage .nu-p, .nu-leg .nu-p { background: var(--gold, #c9a227); } .nu-tage .nu-m, .nu-leg .nu-m { background: #2e8b57; }
+  :root.dunkel .nu-tage .nu-n, :root.dunkel .nu-leg .nu-n { background: #ff7a8c; }
+  .nu-achse { display: flex; justify-content: space-between; font-size: .75rem; color: var(--grau); margin-top: 2px; }
+  .nu-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 2px; font-size: .9rem; } .nu-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; }
+  .nu-zeile { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; cursor: pointer; }
+  .nu-zeile > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .nu-zeile > b { min-width: 3.2em; text-align: right; }
+  .nu-entdecken { margin: 2px 2px 0 0; cursor: pointer; border: 1px solid var(--linie); }
 </style>
 </head>
 <body>
@@ -6567,7 +6590,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.828.0" data-v="2.828.0"></script>
+<script src="app.js?v=2.829.0" data-v="2.829.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.824.0";
+const SERVER_VERSION = "2.829.0";
 const TEMPO_LOG_MS = 5000; // KC-CLUB-TEMPO: ab hier landet ein Vorgang im Server-Log · 2.623.0 KC-CLUB-LOG-SPARSAM: 5 s statt 1,5 s (Supabase berechnet ab 2027 auch das Schreiben ins Protokoll)
 const SS_FRIST_MS = 3 * 60000, SS_MAX_ZEICHEN = 2_000_000, SS_LIVE_MS = 30 * 60000; // 2.103.0: Live-Mitschauen; 2.136.0 KC-CLUB-STUDIO (Wunsch Hansi): 30 statt 10 Min.
 // KC-CLUB-STUDIO (2.136.0, Wunsch Hansi): 🎬 Studio – Foto, Mitschauen, Live zeigen an einem Platz.
@@ -2750,6 +2750,7 @@ async function erstattungBesucheAbgerechnet(pid: string): Promise<Set<string>> {
 // KC-CLUB-PINNWAND-FARBEN (0.60.0): 4 statt 3; jeder Zettel behält seine Farbe 1–4 (gelb, rosé, hellgrün, hellblau), ein neuer
 // bekommt die kleinste freie – abgenommene Zettel machen ihre Farbe frei, die anderen rücken nicht nach.
 const PINNWAND_MAX = 4, PINNWAND_ZEICHEN = 200;
+const NUTZUNG_ALLE_MIN = 3; // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „von wie vielen Mitgliedern“ erst ab 3 zeigen
 // 2.814.0 KC-CLUB-PINNWAND-ADMIN-MEHR (Wunsch Hansi 02.11.2026 „Gib mir als Admin mehr als 4 Zettel an der Pinnwand“): Admin 8 Zettel, Farben 5–8 kommen dazu
 const PINNWAND_MAX_ADMIN = 8;
 const pinnwandMax = (ich: { admin?: boolean }) => (ich.admin ? PINNWAND_MAX_ADMIN : PINNWAND_MAX);
@@ -14194,6 +14195,20 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           if (error) return json({ ok: true, heuteOk: false }); // 2.6.1: Zähler sind gespeichert; nur die Bereiche schickt die App später nochmal
         }
         return json({ ok: true });
+      }
+      // 2.829.0 KC-CLUB-NUTZUNG-ALLE (Wunsch #73 Hansi „allen Mitgliedern zur Verfügung stellen, damit sie sehen, welche Bereiche der App wann und wie oft
+      // genutzt werden – nicht zu technisch, aber aussagekräftig“): nur Summen aus der Datenbank-Funktion kc_club_app_statistik (nie Personen, nie Inhalte).
+      // „Von wie vielen“ je Bereich erst ab NUTZUNG_ALLE_MIN Mitgliedern – sonst ließe sich erraten, wer es war.
+      case "nutzung_alle": {
+        if (ich.zugang !== "mitglied") throw new Fehler("Die Übersicht ist nur für Mitglieder.", 403);
+        const tage = [7, 30, 90].includes(Number(p.tage)) ? Number(p.tage) : 30;
+        const von = berlinTag(new Date(Date.now() - (tage - 1) * 86400000));
+        const [{ data, error }, { data: gz }] = await Promise.all([db.rpc("kc_club_app_statistik", { p_tage: tage, p_version: SERVER_VERSION }),
+          db.rpc("kc_club_nutzung_geraete_zahlen", { p_von: von })]);
+        if (error || !data) throw new Fehler("Die Übersicht ist gerade nicht abrufbar – bitte gleich noch einmal versuchen.", 503);
+        const wer = Object.fromEntries((gz ?? []).filter((x: any) => x.bereich !== "*" && x.geraete >= NUTZUNG_ALLE_MIN).map((x: any) => [x.bereich, x.geraete]));
+        const { version: _v, ...rest } = data as any;
+        return json({ ...rest, wer, mitglieder: (await aktiveMitglieder()).length });
       }
       case "nutzung_statistik": {
         nurAdmin(ich);

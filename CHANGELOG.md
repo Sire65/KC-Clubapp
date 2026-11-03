@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.829.0 – 2026-11-03 – 📈 „So nutzen wir die App“ – Zahlen für alle (KC-CLUB-NUTZUNG-ALLE, Wunsch #73) · App + Server + Datenbank
+Wunsch #73 Hansi: „Im Bereich Technik eine kleine Übersicht mit ein paar Grafiken: wann die App am meisten genutzt wird, an welchen Tagen, um welche Uhrzeit, und wie viel Push, E-Mail und Nachrichten verschickt wurden.“ Nach dem Konzept: „Alle Vorschläge, aber nicht wie viel Platz usw. Das soll allen Mitgliedern zur Verfügung stehen … nicht zu technisch, aber aussagekräftig.“
+- Neue Kachel **Technik → „📈 So nutzen wir die App“** (alle Mitglieder; 7 / 30 / 90 Tage): Auf einen Blick (geöffnet, wie viele Mitglieder dabei, Nachrichten, Benachrichtigungen – mit Pfeil ↑↓ zum Zeitraum davor), **Farbfeld Wochentag × Uhrzeit** mit Satz „Am meisten los: mittwochs gegen 19 Uhr“, Mitglieder pro Tag, Nachrichten/Push/E-Mail pro Tag (gestapelt), **Top 10 Bereiche** und „Noch zu entdecken“ (antippen = hin), Geräte (Android/iPhone/Computer, installiert/Browser). Feld oder Säule antippen = genaue Zahl.
+- Datenschutz: nur Summen aus der Datenbank-Funktion `kc_club_app_statistik` (nur über den Server aufrufbar) – nie Personen, nie Inhalte (Nachrichten nur gezählt); „von wie vielen Mitgliedern“ erst ab 3. Ohne Vergleichswert (vor dem 7.10. noch nicht gezählt) kein Pfeil. Bewusst weggelassen: Speicherplatz, Startzeit/Fehler und App-Versionen (zu technisch).
+- Als eigenes Nachlade-Teil `teile/nutzung.js` (macht die App nicht größer). Hilfe-Eintrag `nutzung_alle`. Test: `tests/nutzung-alle.test.mjs`. Browser geprüft.
+- Rückweg: App + Server 2.828.0 (Funktion kann bleiben). Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.828.0 – 2026-11-03 – 🧹 Erklärfilm: Kachelgröße wählen (KC-CLUB-ANSICHTFILM) · nur App
 Wunsch Hansi 03.11.: „Beim Thema Kacheln noch einbauen, dass man die Größe wählen kann und somit die Anzahl Kacheln neben- und untereinander. Die Einstellungen findest du unter Mehr … Startseite, Kachelgröße.“
 - Film „Deine App – so, wie du sie willst“ neu (2:59 Min.): neue Szene ⚙️ Mehr → 🧩 Startseite & Ansicht → 🔲 Kacheln auf der Startseite (▣ Normal – 2 · ▦ Klein – 3 · ▪ Sehr klein – 4 nebeneinander), danach die Startseite in allen drei Größen.
