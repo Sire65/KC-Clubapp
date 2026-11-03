@@ -933,6 +933,25 @@
   .sim-pc-pop { position: absolute; top: 6px; right: 10px; width: min(280px, 85%); background: #fff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, .3); padding: 14px; z-index: 3; }
   .sim-tablet { flex: 1; display: flex; padding: 44px 12px 12px; } .sim-tablet-innen { flex: 1; max-height: 64vh; display: flex; flex-direction: column; border: 12px solid #1d1d1f; border-radius: 26px; overflow: hidden; background: #fff; }
   .sim-gesperrt { padding-bottom: 20px; } .sim-gesperrt .kc-code { pointer-events: none; }
+  /* 2.844.0 KC-CLUB-INST-BILDER: Installieren mit Bildern – stehende Browser-Bilder aus den Videos im Handy-Rahmen, Ziel leuchtet, Finger zeigt darauf */
+  #ibInhalt { min-width: 0; }
+  .ib-wahl { display: flex; gap: 6px; margin: 0 0 8px; padding: 2px 0 6px; overflow-x: auto; scrollbar-width: thin; contain: inline-size; min-width: 0; }
+  .ib-wahl .chip { flex: none; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--linie); background: var(--karte); color: var(--text); font: inherit; font-size: .95rem; cursor: pointer; white-space: nowrap; }
+  .ib-wahl .chip.an { border-color: var(--rot); background: var(--rot); color: #fff; font-weight: 700; } .ib-wahl .chip small { font-weight: 400; opacity: .75; }
+  .ib-schritt { margin: 2px 0 8px; } .ib-nr { color: var(--grau); font-size: .85rem; } .ib-t { display: block; font-size: 1.15rem; margin: 2px 0 4px; } .ib-x { line-height: 1.5; }
+  .ib-rahmen { position: relative; z-index: 0; box-sizing: content-box; margin: 0 auto; border: 8px solid #1d1d1f; border-radius: 26px; overflow: hidden; background: #fff; pointer-events: none; user-select: none; }
+  .ib-rahmen.ib-gross { border-width: 4px; border-radius: 12px; }
+  .ib-bild { position: absolute; left: 0; top: 0; width: 360px; height: 540px; transform-origin: 0 0; display: flex; flex-direction: column; overflow: hidden;
+    background: #fff; color: #202124; font-family: Roboto, "Segoe UI", system-ui, sans-serif; }
+  .ib-gross .ib-bild { width: 480px; }
+  .ib-bild .sim-band { top: 5px; } .ib-bild .sim-leiste.unten { padding-bottom: 8px; } .ib-bild .sim-pc, .ib-bild .sim-tablet { padding-top: 34px; } .ib-bild .sim-fenster, .ib-bild .sim-tablet-innen { max-height: none; }
+  .ib-ziel { outline: 3px solid #f2c94c !important; outline-offset: 1px; border-radius: 10px; animation: ibPuls 1.1s ease-in-out infinite alternate; } .ib-ziel:not(.voll) { background: rgba(242, 201, 76, .3) !important; }
+  @keyframes ibPuls { from { box-shadow: 0 0 0 0 rgba(242, 201, 76, .7); } to { box-shadow: 0 0 0 9px rgba(242, 201, 76, 0); } }
+  .ib-finger { position: absolute; z-index: 7; font-size: 34px; line-height: 1; transform: translateX(-50%); filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45)); }
+  .ib-punkte { display: flex; justify-content: center; gap: 7px; margin: 10px 0 4px; } .ib-punkte i { width: 10px; height: 10px; border-radius: 50%; background: var(--linie); } .ib-punkte i.an { background: var(--rot); }
+  .ib-nav { position: sticky; bottom: -1px; z-index: 2; background: var(--karte, #fff); padding: 8px 0 4px; margin: 0; flex-wrap: nowrap; } /* bleibt beim Blättern immer zu sehen */
+  .ib-nav .knopf { flex: 1; font-size: 1.05rem; }
+  @media (prefers-reduced-motion: reduce) { .ib-ziel { animation: none; } }
   .rg-inst-wahl { display: grid; gap: 8px; margin-bottom: 10px; } .rg-inst-wahl .knopf { text-align: left; } .rg-inst-wahl small { display: block; font-weight: 400; opacity: .8; }
   @media (prefers-reduced-motion: reduce) { .sim-neu { animation: none; } }
   .rg-finger.an { opacity: 1; }
@@ -3678,7 +3697,7 @@
   @media (min-width: 640px) { .bu-platte.bu-platte-mitglied.bu-extra { grid-template-areas: "lampe kaffee monitor monitor kalender drucker" "fueller fueller monitor monitor rechner rechner" ". x1 x2 x3 x4 ."; } }
   .bu-einrichten [data-ding] { animation: bue-wackeln .32s ease-in-out infinite alternate; touch-action: none; cursor: grab; outline: 2px dashed rgba(116,21,33,.45); outline-offset: 1px; border-radius: 10px; user-select: none; -webkit-user-select: none; }
   .bu-einrichten [data-ding]:nth-child(2n) { animation-delay: -.16s; }
-  .bue-fein { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; } .bue-fein .knopf { min-width: 40px; } /* 2.844.0 KC-CLUB-BUERO-FEIN */
+  .bue-fein { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; } .bue-fein .knopf { min-width: 40px; } /* 2.845.0 KC-CLUB-BUERO-FEIN */
   .bu-einrichten [data-ding].bu-zieht { animation: none; z-index: 20; opacity: .9; cursor: grabbing; }
   .bu-einrichten [data-ding].bu-gewaehlt { animation: none; outline: 3px solid #741521; background: rgba(116,21,33,.10); }
   .bu-leer { border: 2px dashed rgba(59,47,42,.35); border-radius: 10px; background: rgba(255,255,255,.18); min-height: 56px; min-width: 0; cursor: pointer; }
@@ -6343,7 +6362,7 @@
       <summary>📲 App-Installation</summary>
       <div id="installStand"></div>
       <!-- KC-CLUB-EINRICHTEN (1.87.0) -->
-      <div class="bu-knopfreihe" style="margin:0 0 10px"><button class="knopf haupt" onclick="einrichtenAssistent()">🧭 Schritt für Schritt einrichten</button><button class="knopf" onclick="kurzcodeBlatt()">🔢 Code für ein anderes Gerät</button><button class="knopf" onclick="erklaerVideos('installieren')">🎬 Videos zum Installieren</button></div> <!-- 2.276.0 KC-CLUB-VIDEO-INSTALL -->
+      <div class="bu-knopfreihe" style="margin:0 0 10px"><button class="knopf haupt" onclick="einrichtenAssistent()">🧭 Schritt für Schritt einrichten</button><button class="knopf" onclick="installAnleitung()">🖼️ Mit Bildern zeigen</button><button class="knopf" onclick="kurzcodeBlatt()">🔢 Code für ein anderes Gerät</button><button class="knopf" onclick="erklaerVideos('installieren')">🎬 Videos zum Installieren</button></div> <!-- 2.276.0 KC-CLUB-VIDEO-INSTALL -->
       <button id="installKnopf" class="knopf haupt versteckt" onclick="installieren()">📲 Jetzt als App installieren</button>
       <button id="zugangKopieren" class="knopf haupt versteckt" onclick="zugangKopieren()">📋 Meinen persönlichen Link kopieren</button>
       <!-- KC-CLUB-PC (0.26.3): denselben Link auf PC/Tablet nutzen – „Link verloren?“ würde den Handy-Link ersetzen -->
@@ -6704,7 +6723,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.844.0" data-v="2.844.0"></script>
+<script src="app.js?v=2.845.0" data-v="2.845.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

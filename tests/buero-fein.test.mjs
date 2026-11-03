@@ -9,5 +9,5 @@ assert.ok(bu.includes('style="grid-area:${platz[id]}${bueVersatzStil(id)}"'), "V
 assert.ok(bu.includes("versatz: bueVersatzPruefen(BUE.versatz)") && bu.includes("BUE.versatz = { ...(BUE.vorher.versatz || {}) }") && bu.includes("BUE.versatz = {}; BUE.wahl = null"), "Speichern, Rückgängig, Grundaufstellung");
 assert.ok(bu.includes('onclick="bueFein(0,-1)">▲</button>') && bu.includes("function bueFein(x, y, mitte)"), "Pfeile");
 assert.ok(bu.includes("// KC-CLUB-BUERO-FEIN: nicht auf einem anderen Teil losgelassen → genau dort stehen lassen"), "Ziehen ohne Ziel = fein");
-assert.ok(server.includes("// 2.844.0 KC-CLUB-BUERO-FEIN: Feinversatz je Teil") && server.includes("Math.max(-60, Math.min(60, Math.round(Number(Array.isArray(v) ? v[i] : 0) || 0)))"), "Server speichert den Versatz geprüft");
+assert.ok(server.includes("// 2.845.0 KC-CLUB-BUERO-FEIN: Feinversatz je Teil") && server.includes("Math.max(-60, Math.min(60, Math.round(Number(Array.isArray(v) ? v[i] : 0) || 0)))"), "Server speichert den Versatz geprüft");
 console.log("buero-fein: ok");

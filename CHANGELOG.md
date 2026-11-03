@@ -1,11 +1,19 @@
 # Änderungen
 
-## 2.844.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER) · 🏢 Büro fein einrichten (KC-CLUB-BUERO-FEIN) · Server 2.844.0
+## 2.845.0 – 2026-11-03 – ⏱️ Erklär-Videos zeigen ihre Dauer (KC-CLUB-VIDEO-DAUER) · 🏢 Büro fein einrichten (KC-CLUB-BUERO-FEIN) · Server 2.845.0
 Wunsch Hansi (03.11.): „Bei den Filmen eine Anzeige, wie lange der Film läuft. Sonst sind die Mitglieder abgeschreckt und denken, er läuft zu lange.“
 - Jedes Erklär-Video zeigt ein grünes Schildchen **„⏱️ unter 1 Min.“ / „⏱️ ca. 1½ Min.“** – ausgerechnet wie der Abspieler (Sprechtext, gewähltes Sprechtempo, kurze Pausen). Die alten festen Angaben „(ca. … Min.)“ im Untertitel entfallen.
 - Themen-Kacheln zeigen die Spanne je Video („je ½ bis 2 Min.“) statt einer langen Summe; beim Abspielen mehrerer angehakter Videos steht die Gesamtdauer auf dem Knopf. Fertige Filme hatten ihre Länge schon (⏱️ 3 Min.).
 - **🏢 Büro fein einrichten** (KC-CLUB-BUERO-FEIN, Wunsch Hansi 03.11.: „Man muss die Objekte auch feiner verschieben können, z. B. Monitor näher an die Pinnwand“): beim „✏️ Einrichten“ ein Teil ziehen und nicht auf einem anderen Teil loslassen → es bleibt genau dort stehen; oder ein Teil antippen und mit **Fein: ◀ ▲ ▼ ▶** in kleinen Schritten schieben, **⊙** stellt es wieder genau auf seinen Platz. Gespeichert in Prozent der Teilgröße (gleich auf jedem Gerät, höchstens ±60 %), „↩️ Wie vorher“ und „🏠 Grundaufstellung“ nehmen es mit. Server speichert den Versatz mit (Einstellung buero_einrichtung). Test: `tests/buero-fein.test.mjs`.
-- Test: `tests/video-dauer.test.mjs`. Rückweg: App 2.843.0, Server wie vorher. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Test: `tests/video-dauer.test.mjs`. Rückweg: App 2.844.0, Server 2.843.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.844.0 – Installieren mit Bildern (KC-CLUB-INST-BILDER)
+Wunsch Hansi 03.11.2026: „Mach lieber die Installations-Anleitung in der App mit Bildern, wie es in den Browsern aussieht, Step für Step. Es gibt schon Anleitungen dafür im Ordner Anleitungen – die kannst du dafür benutzen.“ (statt einer eigenen APK)
+- Neu unter ⚙️ → 📲 App-Installation: **„🖼️ Mit Bildern zeigen“**, ebenso im Fenster „📲 Köcheclub als App einrichten“ (**„🖼️ Mit Bildern“**).
+- Je Gerät/Browser – Chrome, Samsung Internet, Edge, Firefox (Android), iPhone (Safari), iPad (Safari), PC (Chrome/Edge) – Schritt für Schritt zum Blättern: Text wie auf den Anleitungs-Blättern (dokumente/anleitungen), darunter ein Bild des ganzen Bildschirms, wie er im Browser aussieht. Die Stelle zum Antippen leuchtet, ein Finger zeigt darauf. Das eigene Gerät ist vorgewählt.
+- „‹ Zurück“ / „Weiter ›“ bleiben unten stehen, Wischen über dem Bild blättert auch. Dazu „📄 Als Blatt (PDF)“ (passendes Blatt aus dem Ordner Anleitungen) und „🎬 Als Video“.
+- Bilder aus den nachgebauten Browsern der Installations-Videos (simBrowser & Co., 2.276.0) – keine Fotos, nichts wird installiert oder gespeichert. Registry INST_BILDER in teile/videos.js: ein weiterer Browser = ein Eintrag.
+- Hilfe-Eintrag „Die App auf den Startbildschirm legen“ nennt den neuen Knopf. Test: tests/inst-bilder.test.mjs. Rückweg: Version 2.843.0 einspielen.
+
 ## 2.843.0 – Gemeinsame Aufgaben nur einmal (KC-CLUB-AUFGABE-GEMEINSAM, Wunschliste #79)
 - Eine Aufgabe für mehrere Personen (im Protokoll „Wer? – auch mehrere“ anhaken) steht jetzt als EINE Zeile mit allen Namen und 👥 da – im Protokoll, beim Schreiben, im Büro, in der Übersicht „Offene Aufgaben“ und im Ausdruck. Vorher je Person eine Zeile („… gemeinsam mit …“).
 - Abhaken durch einen der Beteiligten gilt für alle; die anderen Beteiligten und wer sie eingetragen hat bekommen Bescheid. Löschen entfernt die ganze gemeinsame Aufgabe (jede Zeile im Papierkorb).
