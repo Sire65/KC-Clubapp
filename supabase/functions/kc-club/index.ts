@@ -8792,6 +8792,15 @@ async function tippAnlagenPruefen(ich: Ich, roh: unknown) {
   }
   return aus;
 }
+// KC-CLUB-MAGAZIN-POSTFACH: was eingesandt werden kann (gleich halten mit MAG_EINSENDEN in teile/magazin.js) und wer die Redaktion ist
+const MAG_ARTEN: Record<string, string> = { rezept: "🍲 Rezept", foto: "📸 Foto", text: "✍️ Text / Bericht", witz: "😄 Küchenwitz des Monats", portraet: "🧑‍🍳 Porträt – ich stelle mich vor",
+  tipp: "💡 Küchentipp", backstube: "🥐 Backstube", rueckblick: "🗓️ Rückblick", hobby: "🧶 Hobbyecke", link: "🔗 Linktipp" };
+const istMagRedaktion = (ich: Ich) => ich.admin || (ich.aemter || []).some((a) => /^redaktion/i.test(a));
+const nurMagRedaktion = (ich: Ich) => { if (!istMagRedaktion(ich)) throw new Fehler("Das Postfach sieht nur die Redaktion.", 403); };
+async function magRedaktionIds(): Promise<string[]> {
+  const { data } = await db.from("kc_club_rollen").select("person_id,ist_admin,aemter");
+  return [...new Set<string>((data ?? []).filter((r: any) => r.ist_admin || (r.aemter ?? []).some((a: string) => /^redaktion/i.test(a))).map((r: any) => r.person_id as string))].filter((id) => !id.startsWith("KC-P-TEST"));
+}
 const UA_PUNKTE: Record<string, string> = {
   startbild: "App auf den Startbildschirm legen", anmeldung: "Anmeldung oder Link klappt nicht",
   push_keine: "Ich bekomme keine Benachrichtigungen", push_viele: "Ich bekomme zu viele Benachrichtigungen",
@@ -11936,6 +11945,58 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             url: APP_URL + "#unterstuetzung" }, `club-tipp-antwort:${id}:${ich.person_id}`).catch(() => null);
         }
         return json({ ok: true, anfrage: antwort === "nein" || antwort === "anderes" });
+      }
+      // ---------- KC-CLUB-MAGAZIN-POSTFACH (03.11.2026, Wunsch Hansi): Beiträge für die „Club-Küche“ einsenden; die Redaktion (Admin, später Amt „Redaktion“)
+      // sieht sie im Postfach und vermerkt angenommen / für Ausgabe Nr. / abgelehnt. Nur wenn das Magazin für einen freigegeben ist (bis dahin nur Admin).
+      case "magazin_einreichen": {
+        await nurWennFrei("magazin", ich, "Das Club-Magazin");
+        if (ich.zugang !== "mitglied") throw new Fehler("Beiträge senden Mitglieder.", 403);
+        const art = String(p.art || "");
+        if (!(art in MAG_ARTEN)) throw new Fehler("Bitte auswählen, was du einsenden möchtest.");
+        const titel = txt(p.titel, 120) || MAG_ARTEN[art], text = txt(p.text, 4000), zustimmung = p.zustimmung === true;
+        const anlagen: any[] = [];
+        for (const id of (Array.isArray(p.anlagen) ? p.anlagen : []).slice(0, 6)) {
+          const { data: att } = await db.from("kc_communication_attachments").select("id,object_path,file_name,mime_type").eq("id", String(id || "")).maybeSingle();
+          if (!att || !String(att.object_path).startsWith(`club/${ich.person_id}/`)) throw new Fehler("Ein Foto oder eine Datei wurde nicht gefunden – bitte noch einmal hinzufügen.", 400);
+          anlagen.push({ id: att.id, name: att.file_name, mime: att.mime_type });
+        }
+        if (!text && !anlagen.length) throw new Fehler("Bitte etwas schreiben oder ein Foto anhängen.");
+        if (art === "portraet" && !zustimmung) throw new Fehler("Für das Porträt bitte zustimmen, dass es im Magazin erscheinen darf.");
+        if (!(await protokollPlatz(ich.person_id, "magazin_eingereicht", 10))) throw new Fehler("Du hast gerade schon mehrere Beiträge geschickt – bitte später weitere.", 429);
+        const { data: b, error } = await db.from("kc_club_magazin_beitrag").insert({ von: ich.person_id, art, titel, text: text || null, anlagen, zustimmung }).select("id").single();
+        if (error || !b) throw new Fehler("Der Beitrag konnte nicht gespeichert werden – bitte gleich noch einmal.", 500);
+        await protokoll(ich.person_id, "magazin_eingereicht", { beitrag: b.id, art, anlagen: anlagen.length });
+        const ziel = (await magRedaktionIds()).filter((x) => x !== ich.person_id);
+        if (ziel.length) await senden("club_nachricht", ziel, { titel: "✉️ Neuer Beitrag für die Club-Küche", kurz: `${ich.vorname}: ${MAG_ARTEN[art]} – ${titel}`,
+          betreff: `Köcheclub Werne – neuer Beitrag für die Club-Küche`, text: `Hallo,\n\n${ich.name} hat einen Beitrag für das Club-Magazin eingesandt: ${MAG_ARTEN[art]} – „${titel}“.\n\nIm Redaktions-Postfach: ${APP_URL}#redaktion`,
+          url: APP_URL + "#redaktion" }, `club-magazin-beitrag:${b.id}`).catch(() => null);
+        return json({ ok: true, id: b.id });
+      }
+      case "magazin_meine": {
+        const { data } = await db.from("kc_club_magazin_beitrag").select("id,art,titel,status,ausgabe,erstellt_am").eq("von", ich.person_id).order("erstellt_am", { ascending: false }).limit(50);
+        return json({ beitraege: data ?? [], arten: MAG_ARTEN });
+      }
+      case "magazin_postfach": {
+        nurMagRedaktion(ich);
+        const { data } = await db.from("kc_club_magazin_beitrag").select("id,von,art,titel,text,anlagen,zustimmung,status,ausgabe,notiz,erstellt_am,bearbeitet_am").order("erstellt_am", { ascending: false }).limit(200);
+        const leute = await personen((data ?? []).map((x: any) => x.von));
+        return json({ beitraege: (data ?? []).map((x: any) => ({ ...x, name: leute.get(x.von)?.display_name || x.von })), arten: MAG_ARTEN });
+      }
+      case "magazin_beitrag_setzen": {
+        nurMagRedaktion(ich);
+        const st = String(p.status || "");
+        if (!["neu", "angenommen", "abgelehnt", "erschienen"].includes(st)) throw new Fehler("Unbekannter Stand.");
+        const ausgabe = Number.isInteger(p.ausgabe) && p.ausgabe >= 1 && p.ausgabe <= 999 ? p.ausgabe : null;
+        const { data: b } = await db.from("kc_club_magazin_beitrag").update({ status: st, ausgabe, notiz: txt(p.notiz, 500) || null, bearbeitet_von: ich.person_id, bearbeitet_am: jetzt() })
+          .eq("id", String(p.id || "")).select("id,von,titel,status").maybeSingle();
+        if (!b) throw new Fehler("Beitrag nicht gefunden.", 404);
+        await protokoll(ich.person_id, "magazin_beitrag_stand", { beitrag: b.id, status: st });
+        if ((st === "angenommen" || st === "abgelehnt") && b.von !== ich.person_id) await senden("club_nachricht", [b.von], {
+          titel: st === "angenommen" ? "📰 Dein Beitrag kommt ins Magazin" : "📰 Danke für deinen Beitrag",
+          kurz: st === "angenommen" ? `„${b.titel}“${ausgabe ? ` – geplant für Ausgabe Nr. ${ausgabe}` : ""}` : `„${b.titel}“ passt diesmal leider nicht ins Heft.`,
+          betreff: "Köcheclub Werne – dein Beitrag für die Club-Küche", text: `Hallo,\n\n${st === "angenommen" ? `dein Beitrag „${b.titel}“ kommt ins Club-Magazin${ausgabe ? ` (Ausgabe Nr. ${ausgabe})` : ""}. Danke!` : `vielen Dank für deinen Beitrag „${b.titel}“ – diesmal passt er leider nicht ins Heft.`}\n\nViele Grüße\nDie Redaktion der Club-Küche`,
+          url: APP_URL }, `club-magazin-stand:${b.id}:${st}`).catch(() => null);
+        return json({ ok: true });
       }
       case "twinkey_daten": {
         const [{ data: w }, { data: m }] = await Promise.all([
@@ -18000,6 +18061,10 @@ Köcheclub Werne`,
         if (!erlaubt) { // 2.448.0 KC-CLUB-OBJEKT-ANLAGEN: Anlage an Vorschlag/Spende, Terminfindung, Terminanfrage – wer den Eintrag sieht
           const { data: oa } = await db.from("kc_club_objekt_anlagen").select("art,objekt_id").eq("attachment_id", att.id).limit(5);
           for (const x of oa ?? []) if (await objAnlageSichtbar(ich, x.art, x.objekt_id)) { erlaubt = true; break; }
+        }
+        if (!erlaubt && istMagRedaktion(ich)) { // KC-CLUB-MAGAZIN-POSTFACH: eingesandte Fotos/Dateien sieht die Redaktion
+          const { data: mb } = await db.from("kc_club_magazin_beitrag").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(1);
+          if (mb?.length) erlaubt = true;
         }
         if (!erlaubt) { // 2.830.0 KC-CLUB-HILFE-TIPPS: Anlage eines Tipps – Empfänger und Clubleitung
           const { data: ht } = await db.from("kc_club_hilfe_tipp").select("id").contains("anlagen", JSON.stringify([{ id: att.id }])).limit(5);

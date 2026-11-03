@@ -1,0 +1,4 @@
+neu_eingang=t
+status_geprueft=t
+art_geprueft=t
+rechte_nur_server=t

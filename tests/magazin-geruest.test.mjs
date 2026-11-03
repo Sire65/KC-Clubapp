@@ -5,7 +5,7 @@ const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8")
 const app = lies("app.js"), teil = lies("teile/magazin.js"), server = lies("supabase/functions/kc-club/index.ts");
 // nur Admin bis zur Freigabe
 assert.ok(/magazin: \{ t: "📰 Club-Küche \(Magazin\)"[^}]*standard: "admin" \}/.test(server) && /wm_prospekt: \{ t: "🎄 Weihnachtsmarkt-Prospekt"[^}]*standard: "admin" \}/.test(server), "Freigabe-Schalter, Standard Admin");
-assert.ok(app.includes('aktion: "magStart()", nur: () => frei("magazin") }') && app.includes('aktion: "wmProspekt()", nur: () => frei("wm_prospekt") }'), "Kacheln nur mit Freigabe");
+assert.ok(app.includes('aktion: "magMenue()", nur: () => frei("magazin") }') && app.includes('aktion: "wmProspekt()", nur: () => frei("wm_prospekt") }'), "Kacheln nur mit Freigabe");
 assert.ok(teil.includes('if (!frei("magazin")) return') && teil.includes('if (!frei("wm_prospekt")) return'));
 // Gerüst: Titel, Kopf mit Ausgabe-Nr., Inhaltsverzeichnis mit Sprung, Rubriken, Impressum, Blättern
 const f = new Function(teil.slice(teil.indexOf("const MAG_START"), teil.indexOf("const MAG_RUBRIKEN")) + "; return magNummer;")();

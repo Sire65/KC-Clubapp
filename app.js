@@ -21,7 +21,7 @@ const TEILE_LISTE = {
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-o9MB97XuckyPjpnEjMBplAvL7UaPrudZ/YwVrVtwWk7uhqwA3+1Q21s6hTfMAPuQ" }, // 2.830.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt"], sri: "sha384-ct5gHpe+6DbcH2gMpP4S4ETnFOfH7X+AHvicQZNBZLnsgBQuzzHgijqJXUARhwcT" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine"], sri: "sha384-Cw5edAdzYjNjuxiW2gHIQYlIESZp2I0Y93SIDgS2AE1mrdRact6S1p4+fbFlKsrG" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
@@ -9430,7 +9430,7 @@ const KACHELN = {
     // KC-CLUB-REZEPTBUCH (2.23.83, Wunsch Hansi): gemeinsames Club-Rezeptbuch – Portionen umrechnen, Einkaufsliste, drucken, teilen
     { id: "rezepte", sym: "📖", t: "Rezeptbuch", u: () => (nurTest("rezepte") ? "🔒 nur für dich (Test) · " : "") + (RZ?.liste ? `${RZ.liste.length} Rezept${RZ.liste.length === 1 ? "" : "e"}` : "Club-Rezepte · Einkaufsliste"), aktion: "rzStart()", nur: () => frei("rezepte") },
     // KC-CLUB-MAGAZIN-GERUEST / KC-CLUB-WM-PROSPEKT (03.11.2026): Gerüst – bis zur Freigabe nur für den Admin (🔒 Test)
-    { id: "magazin", sym: "📰", t: "Club-Küche", u: () => (nurTest("magazin") ? "🔒 nur für dich (Entwurf) · " : "") + "Das Club-Magazin zum Blättern", aktion: "magStart()", nur: () => frei("magazin") },
+    { id: "magazin", sym: "📰", t: "Club-Küche", u: () => (nurTest("magazin") ? "🔒 nur für dich (Entwurf) · " : "") + "Lesen · Beitrag einsenden", aktion: "magMenue()", nur: () => frei("magazin") },
     { id: "wm_prospekt", sym: "🎄", t: "Weihnachtsmarkt-Prospekt", u: () => (nurTest("wm_prospekt") ? "🔒 nur für dich (Entwurf) · " : "") + "Unser Angebot zum Blättern", aktion: "wmProspekt()", nur: () => frei("wm_prospekt") },
   ],
   mein: [
@@ -16265,6 +16265,7 @@ function hashSprung(h) {
     else if (h.startsWith("#gratulieren=")) gratulieren(h.slice(13));
     else if (h.startsWith("#gebgruss=")) ggWahl(decodeURIComponent(h.slice(10))); // 2.617.0 KC-CLUB-GEBURTSTAG-GRUSS: Push „Gruß auswählen“
     else if (h.startsWith("#protokoll=")) protokollOeffnen(h.slice(11));
+    else if (h === "#redaktion") magPostfach(); // KC-CLUB-MAGAZIN-POSTFACH: aus der Benachrichtigung „Neuer Beitrag“
     else if (h.startsWith("#tipp=")) tippZeigen(decodeURIComponent(h.slice(6))); // 2.830.0 KC-CLUB-HILFE-TIPPS: aus der Benachrichtigung
     else if (h.startsWith("#aktion=")) aktionOeffnen(decodeURIComponent(h.slice(8)));
     else if (h === "#rundgang" || h.startsWith("#rundgang=")) rundgangStart(true, h.slice(10) || "ueberblick"); // KC-CLUB-RUNDGANG (2.241.0): Link zum Weitergeben – startet mit „▶ Los geht's“ (Ton braucht einen Tipp)
@@ -33647,7 +33648,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",

@@ -69,6 +69,7 @@ jobs:
       - run: node tests/buero-namensschild.test.mjs
       - run: node tests/umblaettern.test.mjs
       - run: node tests/magazin-geruest.test.mjs
+      - run: node tests/magazin-postfach.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
