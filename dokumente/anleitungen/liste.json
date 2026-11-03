@@ -1,7 +1,7 @@
 {
   "hinweis": "Erzeugt von tools/anleitungen-pdf.mjs – nicht von Hand ändern.",
-  "stand": "02.11.2026",
-  "version": "2.822.0",
+  "stand": "03.11.2026",
+  "version": "2.830.0",
   "blaetter": [
     {
       "id": "push-und-email",
@@ -50,6 +50,12 @@
       "register": "Link & Anmelden",
       "titel": "🔑 Persönlicher Link, Code und neues Gerät",
       "datei": "link-und-code.pdf"
+    },
+    {
+      "id": "fuer-andere-handeln",
+      "register": "Sonstiges",
+      "titel": "🤝 Für ein anderes Mitglied handeln",
+      "datei": "fuer-andere-handeln.pdf"
     }
   ]
 }

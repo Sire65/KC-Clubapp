@@ -31,9 +31,13 @@ const sv = server.slice(server.indexOf('case "anleitung_senden"'), server.indexO
 assert.ok(sv.includes("nurLeitung(ich);") && sv.includes('const basis = APP_URL + "dokumente/anleitungen/"') && sv.includes("if ((count ?? 0) > 3)"));
 assert.match(lies("supabase/migrations/20261102_kc_club_ordner_anleitungen.sql"), /'Anleitungen', 3, array\['Push & E-Mail', 'Installieren', 'Link & Anmelden', 'Sonstiges'\], true/);
 assert.ok(lies(".github/workflows/tests.yml").includes("node tests/anleitungen.test.mjs"), "läuft in der CI");
-console.log("anleitungen: ok");
+
 
 // KC-CLUB-ANLAGE-UEBER-FENSTER (Fund Hansi 02.11.2026): Anlage aus offenem Fenster (z. B. Abstimmung) liegt nicht dahinter, Zurück holt das Fenster wieder
 assert.ok(/\.blatt:not\(\.versteckt\)"\)\]; offen\.forEach\(\(b\) => b\.classList\.add\("versteckt"\)\)/.test(app), "offene Fenster treten beiseite");
 assert.ok(/function zeige\(v, ausHistorie\) \{\n  if \(v !== "dokansicht" && DOKA\.zurueck\) dokFensterZurueck\(\);/.test(app), "zeige() holt die Fenster zurück");
 assert.equal((app.match(/blattAuf\("anlBlatt"/g) || []).length, 1, "anlBlatt nur einmal vergeben");
+// 2.833.0 KC-CLUB-ANLEITUNG-VERTRETUNG (Wunsch Hansi 03.11.2026): Blatt „Für ein anderes Mitglied handeln“ im Register Sonstiges
+assert.ok(liste.blaetter.some((b) => b.id === "fuer-andere-handeln" && b.register === "Sonstiges"), "Blatt Vertretung");
+assert.ok(gen.includes('hilfeVertretung: ["vertretung"].map(hilfe)') && gen.includes("vtAdminKarte({ person_id:"), "Text aus der App");
+console.log("anleitungen: ok");

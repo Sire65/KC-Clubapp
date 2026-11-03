@@ -38,6 +38,8 @@ const daten = await seite.evaluate(async () => {
     android: inst({ android: true, browser: "chrome" }), samsung: inst({ android: true, browser: "samsung" }), pc: inst({ pc: true, browser: "chrome" }),
     pcFirefox, iphone: inst({ ios: true, browser: "safari" }), ipad: inst({ ios: true, ipad: true, browser: "safari" }), iphoneChrome: inst({ ios: true, browser: "chrome_ios" }),
     push: stat(RG_PUSH), code: stat(RG_INST_CODES), hilfeLink: ["zugangslink", "code_geraet", "code_ipad"].map(hilfe).filter(Boolean),
+    hilfeVertretung: ["vertretung"].map(hilfe).filter(Boolean), // 2.833.0 KC-CLUB-ANLEITUNG-VERTRETUNG
+    vtAdmin: (() => { const d = document.createElement("div"); d.innerHTML = vtAdminKarte({ person_id: "x", vorname: "Karla", vertretung: [] }); return d.querySelector("p.hinweis")?.textContent || ""; })(),
     css: [...document.querySelectorAll("style")].map((s) => s.textContent).join("\n"),
   };
 });
@@ -59,6 +61,21 @@ const BLAETTER = [
     teile: [{ t: "iPhone mit Safari", s: daten.iphone }, { t: "iPad mit Safari", s: daten.ipad }, { t: "iPhone mit Chrome", s: daten.iphoneChrome }], gut: "Auf iPhone und iPad zuerst installieren, dann den Code eingeben. Den Code zeigt die App auf einem Gerät, auf dem du schon angemeldet bist (⚙️ → „📲 Code für ein anderes Gerät“)." },
   { id: "link-und-code", reg: "Link & Anmelden", t: "🔑 Persönlicher Link, Code und neues Gerät", zweck: "Wie du in die App kommst: mit deinem persönlichen Link, mit einem Code auf einem zweiten Gerät – und was zu tun ist, wenn der Link fehlt.",
     teile: [{ t: "Link, Code & Co.", s: daten.code }, { t: "Kurz erklärt", s: daten.hilfeLink }], gut: "Deinen Link bitte nicht weitergeben – wer ihn hat, ist in der App als du angemeldet. Neues Handy oder Link verloren? Einfach bei der Clubleitung melden." },
+  // 2.833.0 KC-CLUB-ANLEITUNG-VERTRETUNG (Wunsch Hansi 03.11.2026 „Anleitung ‚darf handeln für xy‘ – man handelt im Namen einer anderen Person, die selber keinen
+  // Zugang zur App hat; nach dem Muster der anderen, in den Ordner Anleitungen“). Erklärung aus der App (Hilfe „vertretung“, Text der Mitgliedskarte).
+  { id: "fuer-andere-handeln", reg: "Sonstiges", t: "🤝 Für ein anderes Mitglied handeln", zweck: "Manche Mitglieder haben selbst keine Club-App. Ein anderes Mitglied (z. B. der Partner) darf dann in ihrem Namen Termine zu- und absagen, Dienstwünsche eintragen und abstimmen.",
+    teile: [
+      { t: "Erlaubnis geben (Admin)", s: [
+        { t: "Mitgliedskarte öffnen", x: "Unten <b>👥 Mitglieder</b> → das Mitglied antippen, das <b>helfen</b> soll (z. B. Karla)." },
+        { t: "„🤝 Darf für … handeln“", x: `In der Karte <b>„🤝 Darf für … handeln“</b> auf <b>„✏️ Auswählen“</b> tippen. ${daten.vtAdmin}` },
+        { t: "Mitglied auswählen und speichern", x: "Das Mitglied ohne App ankreuzen (z. B. Ruth) und speichern. In der Karte steht dann <b>„Ruth“</b> statt „Für niemanden“ (höchstens 5 Mitglieder). Die Erlaubnis gilt, sobald Karla die App das nächste Mal öffnet. Wegnehmen geht genauso – Haken raus." } ] },
+      { t: "Im Namen handeln (Helfer)", s: [
+        { t: "Bereich öffnen", x: "<b>📅 Termine</b>, <b>🗳️ Vorschläge</b> (dort sind die Abstimmungen) oder die <b>Dienstwünsche</b> öffnen." },
+        { t: "„Handeln für“ wählen", x: "Oben steht <b>„Handeln für: 👤 Mich · 🤝 Ruth“</b>. Auf <b>🤝 Ruth</b> tippen. Unten erscheint die Leiste <b>„🤝 Für Ruth – ✖ Beenden“</b>." },
+        { t: "Wie gewohnt antworten", x: "Zu- oder absagen, bei einer Terminumfrage ankreuzen, Dienstwünsche eintragen oder abstimmen – das gilt jetzt <b>für Ruth</b>. Ruth bekommt jedes Mal eine E-Mail darüber." },
+        { t: "Beenden", x: "Unten auf <b>„✖ Beenden“</b> tippen (oder oben <b>👤 Mich</b>) – dann handelst du wieder für dich. Nach dem Schließen der App bist du sowieso wieder du selbst." } ] },
+      { t: "Kurz erklärt", s: daten.hilfeVertretung } ],
+    gut: "Erlaubt sind nur Zu- und Absagen, Terminumfragen, Dienstwünsche und offene Abstimmungen – keine geheimen Abstimmungen, keine Nachrichten, keine Daten und keine Rechte. Alles steht im Protokoll. Die Erlaubnis gibt und nimmt nur der Admin." },
 ];
 fs.mkdirSync(ZIEL, { recursive: true });
 const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
