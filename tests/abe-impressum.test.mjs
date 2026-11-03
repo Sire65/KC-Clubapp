@@ -27,7 +27,7 @@ assert.ok(/onclick="entwicklerZeigen\(\)">👨‍🍳 Über den Entwickler<\/but
 const i = app.slice(app.indexOf("const IMPRESSUM = {"), app.indexOf("function impressumZeigen"));
 // 2.831.0: Angaben von Hansi eingetragen; Kontakt bleibt offen (E-Mail kam unvollständig an), Register entfällt (kein e. V.)
 assert.ok(/rechtsform: "Kein eingetragener Verein/.test(i) && /c\/o Klaus Zander/.test(i) && /vertreten: "Klaus Zander"/.test(i) && /verantwortlich: "Hans-Joachim Koch/.test(i), "Angaben von Hansi");
-assert.ok(/kontakt: null,/.test(i) && /register: false,/.test(i), "Kontakt offen, Register entfällt");
+assert.ok(/kontakt: "E-Mail: zander-k@web\.de"/.test(i) && /E-Mail: ha-joko@web\.de/.test(i) && /register: false,/.test(i), "Kontakt (Klaus) und Entwickler-E-Mail, Register entfällt"); // 2.832.0
 assert.ok(/I\.register === null && adm/.test(app), "entfallenes Register wird nicht als fehlend gemeldet");
 assert.ok(/fehlt noch/.test(app) && /const I = IMPRESSUM, adm = !!ICH\?\.admin/.test(app), "Lücken nur für den Admin sichtbar");
 console.log("abe-impressum: alle Prüfungen bestanden");

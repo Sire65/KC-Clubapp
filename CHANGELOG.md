@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.832.0 – 2026-11-03 – § Impressum vollständig (KC-CLUB-IMPRESSUM) · nur App
+Hansi: „Suche die richtige E-Mail-Adresse von Klaus raus und trage sie ein. Meine E-Mail bei Entwicklung. Keine Anschrift z. Zt.“
+- Kontakt: E-Mail von Klaus Zander (aus den Mitgliederdaten; passt zu „-k@web.de“). Inhaltlich verantwortlich: Hans-Joachim Koch (Entwickler der App) mit E-Mail, ohne Anschrift. Damit keine offenen Angaben mehr.
+- Rückweg: App 2.831.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.831.0 – 2026-11-03 – § Impressum mit den Club-Angaben (KC-CLUB-IMPRESSUM) · nur App
 Hansi: „Kein e. V. – nur loser Zusammenschluss von Berufsköchen und Köchinnen. Köcheclub Werne c/o Klaus Zander, An den 12 Bäumen 5, 59368 Werne. Vertreten wie 2. Entwickler ist z. Zt. verantwortlich.“
 - Eingetragen: Rechtsform („Kein eingetragener Verein – loser Zusammenschluss von Berufsköchinnen und Berufsköchen“), Anschrift c/o Klaus Zander, vertreten durch Klaus Zander, inhaltlich verantwortlich Hans-Joachim Koch (Entwickler der App). Registereintrag entfällt (kein e. V.) – wird nicht mehr als fehlend gemeldet.

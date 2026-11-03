@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.831.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.832.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -839,13 +839,13 @@ function entwicklerZeigen() {
 const IMPRESSUM = {
   anbieter: "Köcheclub Werne",
   // 2.831.0 Angaben von Hansi (03.11.2026): „Kein e. V. – nur loser Zusammenschluss von Berufsköchen und Köchinnen“, Anschrift c/o Klaus Zander,
-  // vertreten wie Anschrift (Klaus Zander), verantwortlich derzeit der Entwickler. Kontakt-E-Mail kam unvollständig an → bleibt offen (Rückfrage).
+  // vertreten wie Anschrift (Klaus Zander), verantwortlich derzeit der Entwickler (ohne Anschrift); Kontakt = E-Mail von Klaus (2.832.0).
   rechtsform: "Kein eingetragener Verein – loser Zusammenschluss von Berufsköchinnen und Berufsköchen",
   anschrift: "Köcheclub Werne\nc/o Klaus Zander\nAn den 12 Bäumen 5\n59368 Werne",
   vertreten: "Klaus Zander",
-  kontakt: null,             // E-Mail (und auf Wunsch Telefon) für Anfragen – Rückfrage an Hansi (Adresse kam als „-k@web.de“ an)
+  kontakt: "E-Mail: zander-k@web.de", // 2.832.0 Hansi: „E-Mail-Adresse von Klaus raussuchen und eintragen“ (aus den Mitgliederdaten)
   register: false,           // false = entfällt (kein eingetragener Verein, daher kein Vereinsregister)
-  verantwortlich: "Hans-Joachim Koch (Entwickler der App)",
+  verantwortlich: "Hans-Joachim Koch (Entwickler der App)\nE-Mail: ha-joko@web.de", // 2.832.0 Hansi: „Meine E-Mail bei Entwicklung. Keine Anschrift z. Zt.“
 };
 function impressumZeigen() {
   const I = IMPRESSUM, adm = !!ICH?.admin, fehlt = (t) => (adm ? `<span class="imp-fehlt">⚠️ fehlt noch – ${esc(t)}</span>` : "");
