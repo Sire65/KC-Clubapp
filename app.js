@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.836.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.837.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -247,6 +247,9 @@ if (typeof history !== "undefined") for (const f of ["pushState", "replaceState"
 try { const u = new URL(location.href); if (u.searchParams.has("neu")) { u.searchParams.delete("neu"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch {}
 const API = "https://ptblnpiroqftcvlsrhac.supabase.co/functions/v1/kc-club";
 const TZ = "Europe/Berlin";
+// 2.837.0 KC-CLUB-START-SCHNELLER (Gesamtprüfung #44 F): Datumsformat einmal bauen statt bei jedem Aufruf (neu bauen kostet je Aufruf spürbar Zeit –
+// heuteIso() lief beim Start hunderte Male). Gleiches Ergebnis, nur schneller.
+const TAG_ISO_FMT = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }), UHR_FMT_23 = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 // 2.209.0 KC-CLUB-JS-ARG (Gesamtprüfung 5): Text als Argument in onclick="f(…)" – sicher auch bei O'Neill oder Anführungszeichen
@@ -12184,7 +12187,7 @@ function kopfGlanzStarten(seit = Date.now()) {
 // Ton selbst erzeugt (zwei Pfeifen-Töne wie bei der echten Kuckucksuhr) – nur mit „Töne“ an und nicht in der eigenen „Nicht stören“-Ruhezeit (2.616.0; vorher fest 22–7 Uhr).
 // Einstellung „🐦 Kuckucksuhr zur vollen Stunde“ (Standard an); antippen schließt die Uhr sofort.
 const KK_FENSTER_MIN = 2, KK_TAKT_MS = 1500; // 2.405.0: Takt wie die echte Uhr (Gong + Ruf)
-const kkJetzt = () => { const [h, m] = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date()).split(":").map(Number); return { h, m }; };
+const kkJetzt = () => { const [h, m] = UHR_FMT_23.format(new Date()).split(":").map(Number); return { h, m }; };
 const kkRufe = (h) => (h % 12) || 12;
 // 2.404.0 KC-CLUB-KUCKUCK-KLANG (Fund Hansi „kein Ton – dafür gibt es den typischen Ton solcher Uhren“): klingt jetzt wie eine echte
 // Kuckucksuhr – zwei kleine Holzpfeifen mit Blasebalg: weicher Anblas-Ansatz, hauchiger Luftanteil, Holz-Obertöne, Ton sackt am Ende
@@ -15671,7 +15674,7 @@ const WETTER_CODES = [
 ];
 const wetterArt = (code, tag = true) => { const x = WETTER_CODES.find(([a, b]) => code >= a && code <= b); return x ? { sym: tag ? x[2] : x[3], text: x[4], szene: x[5] } : { sym: "❔", text: "Wetter unbekannt", szene: "" }; };
 const grad = (n) => Number.isFinite(n) ? `${Math.round(n)}°` : "–";
-const isoBerlin = (d) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(d);
+const isoBerlin = (d) => TAG_ISO_FMT.format(d); // 2.837.0: TZ ist Europe/Berlin
 const fWtag = new Intl.DateTimeFormat("de-DE", { weekday: "short", timeZone: "UTC" });
 async function wetterLaden(sichtbar) {
   WET.laedt = true;
@@ -17760,7 +17763,7 @@ const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "A
 const fTagLang = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "long", day: "2-digit", month: "long" });
 let termineArt = (() => { try { return localStorage.getItem("kc_club_termine_modus") || "liste"; } catch { return "liste"; } })();
 let kalJ = null, kalM = null, kalTagWahl = null, KAL = null;
-const berlinIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
+const berlinIso = (iso) => TAG_ISO_FMT.format(new Date(iso));
 function termineModus(m) {
   termineArt = m; try { localStorage.setItem("kc_club_termine_modus", m); } catch {}
   treffenLaden();
@@ -18081,7 +18084,7 @@ async function treffenForm(t) {
   document.getElementById("treffenInfo")?.remove(); // 1.44.0: aus der Termin-Kachel heraus „Ändern“
   if (!MITGLIEDER) await mitgliederHolen();
   if (!TR_ORTE.length) try { orteMerken((await api("treffen_liste")).treffen); } catch {}
-  const tagIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
+  const tagIso = (iso) => TAG_ISO_FMT.format(new Date(iso));
   const art = t?.art || "treffen", ganz = !!t?.ganztaegig;
   const datum = t?.beginn ? tagIso(t.beginn) : "", zeit = t?.beginn && !ganz ? fZeit.format(new Date(t.beginn)) : "18:00";
   const bisDatum = t?.ende && tagIso(t.ende) !== datum ? tagIso(t.ende) : "", bisZeit = t?.ende && !ganz ? fZeit.format(new Date(t.ende)) : "";
@@ -19666,7 +19669,7 @@ async function leihGegenstandNeu(knopf) {
 // ---------- Dienstpläne (Sollplan aus dem Dienstplan; andere nur mit Freigabe) ----------
 const DP_FARBEN = ["#741521", "#1f5f99", "#2e7d4f", "#b86b00", "#7b3fa0", "#0f7c80", "#5d4037", "#c0485a"];
 const tagPlus = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-const heuteIso = () => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date());
+const heuteIso = () => TAG_ISO_FMT.format(new Date()); // 2.837.0 KC-CLUB-START-SCHNELLER
 const montag = (iso) => { const wt = (new Date(iso + "T12:00:00Z").getUTCDay() + 6) % 7; return tagPlus(iso, -wt); };
 const fTagDp = new Intl.DateTimeFormat("de-DE", { timeZone: "UTC", weekday: "short", day: "2-digit", month: "2-digit" });
 const minuten = (hhmm) => { const [h, m] = String(hhmm || "0:0").split(":").map(Number); return h * 60 + (m || 0); };
@@ -26894,7 +26897,7 @@ function privatForm(x, vorkommen) {
   x = x || {};
   PT.vorkommen = vorkommen || (x.beginn ? berlinIso(x.beginn) : null);
   if (x.serienBeginn) x = { ...x, beginn: x.serienBeginn, ende: x.serienEnde }; // Reihe: Formular zeigt den ersten Termin
-  const tagIso = (iso) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(iso));
+  const tagIso = (iso) => TAG_ISO_FMT.format(new Date(iso));
   const datum = x.beginn ? tagIso(x.beginn) : x._datum || tagPlus(heuteIso(), 1), zeit = x.beginn && !x.ganztaegig ? fZeit.format(new Date(x.beginn)) : x._zeit || "18:00";
   const bis = x.ende && !x.ganztaegig ? fZeit.format(new Date(x.ende)) : "", bisDatum = x.ende && tagIso(x.ende) !== datum ? tagIso(x.ende) : "";
   if (aktuelleAnsicht !== "termine") { termineArt = "liste"; zeige("termine"); }
@@ -29043,7 +29046,7 @@ async function videoAnsehen(i) {
 let FA = null, faFilter = {}, faPapierkorb = false, faDateien = [], faIndex = -1, faZurueck = false;
 const faUrl = new Map(); // Foto-ID → große Ansicht (Link gilt 1 Stunde)
 const fTagDe = (d) => d ? new Date(d + "T12:00:00Z").toLocaleDateString("de-DE", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" }) : "";
-const tagVon = (ms) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(ms));
+const tagVon = (ms) => TAG_ISO_FMT.format(new Date(ms));
 const mb = (b) => (b / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDigits: b < 100 * 1024 * 1024 ? 1 : 0 }) + " MB";
 const anlassText = (x) => x ? `${x.art === "aktion" ? "🧳" : "📅"} ${x.titel}${x.datum ? " · " + fTagDe(x.datum) : ""}` : "";
 const anlassVon = (f) => f.bezug_art ? (FA?.anlaesse || []).find((x) => x.art === f.bezug_art && x.id === f.bezug_id) : null;
@@ -33961,7 +33964,7 @@ const spurBlockKopf = (bl, b) => bl.zahl < 2 ? "" : `<tr class="spur-besuch spur
 async function spurAdmin(tag, person) {
   SPW.tag = tag || SPW.tag || heuteIso(); SPW.person = person === undefined ? SPW.person : person;
   let r; try { r = await api("spur_liste", { tag: SPW.tag, ...(SPW.person ? { person_id: SPW.person } : {}) }, { warten: true }); } catch (e) { return meldeFehler(e); }
-  const tage = Array.from({ length: 30 }, (_, i) => new Intl.DateTimeFormat("sv-SE", { timeZone: TZ }).format(new Date(Date.now() - i * 86400000)));
+  const tage = Array.from({ length: 30 }, (_, i) => TAG_ISO_FMT.format(new Date(Date.now() - i * 86400000)));
   const tagText = (t) => (t === tage[0] ? "Heute" : t === tage[1] ? "Gestern" : t.slice(8) + "." + t.slice(5, 7) + ".");
   // KC-CLUB-SPUR-AKTUALISIEREN (2.25.7, Wunsch Hansi): ↻ oben rechts wie auf der Startseite – gleicher Tag/gleiche Person neu laden
   const kopf = `<div class="spur-kopf"><h3 style="margin:0;flex:1">👣 Wege der Mitglieder</h3><button class="rund spur-neu" title="Aktualisieren" aria-label="Wege aktualisieren" onclick="spurNeu(this)">↻</button></div>

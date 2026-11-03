@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.837.0 – Schnellerer Start (KC-CLUB-START-SCHNELLER, Gesamtprüfung #44 F)
+- Messung (Handy-Tempo simuliert): erstes Bild nach ≈ 0,35 s, Server tagsüber ≈ 0,5 s, Server-Neustart nur 20–90 ms. Langsame Ausreißer (5–15 s) kommen gehäuft beim Hochladen einer neuen Server-Version – dafür gilt schon „nur einspielen, wenn höchstens 2 in der App sind“.
+- Größte Einzelbremse im Programm: das Tagesdatum (heuteIso) baute bei jedem Aufruf sein Format neu – beim Start hunderte Male (≈ 0,1 s). Jetzt einmal gebaut, Ergebnis gleich. Ebenso berlinIso, isoBerlin, tagVon, Kuckucksuhr-Zeit.
+- Test: tests/start-schneller.test.mjs. Rückweg: Version 2.836.0 einspielen.
+
 ## 2.836.0 – 2026-11-03 – 📅 Runder Tisch: gelaufenen Tisch als neuen Termin wiederholen (KC-CLUB-RUNDER-TISCH-WIEDERHOLEN) · nur App
 Wunsch Hansi (30.10.): „Ein gelaufener Tisch kann wiederholt werden – nochmal antippen und wiederholen.“ Eingespielt im 12-Uhr-Bündel (Freigabe Hansi 03.11.). Noch nur Admin zum Testen.
 - **📅 Wiederholen** auf jedem vorbei-Tisch (Liste „Vorbei“ und Tisch-Ansicht), **📅 Neu ansetzen** bei abgesagten Tischen (für die Leitung). Anders als **🔁 Wieder öffnen** (2.799.0, derselbe Tisch läuft sofort noch einmal) entsteht ein **neuer Termin**.
