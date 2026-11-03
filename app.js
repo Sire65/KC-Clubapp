@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.826.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.827.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -31737,7 +31737,7 @@ function updateSelbst() {
 const SPA = { daten: null, reg: "", suche: "" };
 const sprOhneMarke = (t) => String(t).replace(/^(?:\d️?⃣)+\s*/u, ""); // „8️⃣0️⃣“ vorn ist nur die Markierung im Archiv
 const sprRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#b36b00" onclick="sprStart()" title="Mein Spruch-Archiv"><span class="sym">📜</span>
-    <span class="schild"><span class="jahr">Sprüche</span><span class="name">nur für mich</span></span><span class="anz">${SPA.daten ? SPA.daten.register.reduce((n, r) => n + r.sprueche.length, 0) + " Sprüche" : "Anlässe"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
+    <span class="schild"><span class="jahr wort">Sprüche</span><span class="name">nur für mich</span></span><span class="anz">${SPA.daten ? SPA.daten.register.reduce((n, r) => n + r.sprueche.length, 0) + " Sprüche" : "Anlässe"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
 async function sprStart(reg) {
   AR.spruch = true; if (reg !== undefined) SPA.reg = reg;
   if (aktuelleAnsicht !== "archiv") { AR.ordner = null; AR.korb = false; zeige("archiv"); }
@@ -31832,7 +31832,7 @@ const dpdStd = (v) => String(+v.toFixed(1)).replace(".", ",");
 // 2.786.0 KC-CLUB-DP-MARKTNAME (Wunsch Hansi 30.10.: „Aufbau, WM für Weihnachtsmarkttag, Wochenmarkt (Dienstag und Freitag) und Nikolaus am 06.12.“) – Nikolaus nur am 06.12., nicht jeden Sonntag
 const dpdArtName = (art, x) => art !== "Markttag" ? art : x.getMonth() === 11 && x.getDate() === 6 ? "Nikolaus" : [2, 5].includes(x.getDay()) ? "Wochenmarkt" : "WM";
 const dpdRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#1f5a3e" onclick="dpdStart()" title="Dienstplan zum Ausdrucken"><span class="sym">🗓️</span>
-    <span class="schild"><span class="jahr">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
+    <span class="schild"><span class="jahr wort">Dienstplan</span><span class="name">zum Drucken</span></span><span class="anz">Wünsche + Lücken</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
 // 2.665.0 KC-CLUB-DP-NEU-RECHNEN: vor dem Öffnen den Stand holen (Stand, neue Wunschpläne seit dem Rechnen) – „🔄 Jetzt neu rechnen“ rechnet auf dem Club-Server
 async function dpdStart() {
   if (!ICH?.admin) return;

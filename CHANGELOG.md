@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.827.0 – 2026-11-03 – 👆 Größere Tippflächen, lesbarere Kleinschrift (KC-CLUB-TIPPFLAECHEN, KC-CLUB-SCHRIFT-MIN, Wunsch #44 Etappe 2) · nur App
+Gesamtprüfung Etappe 2 (Bedienung & Design), Hansi: „1 und 2 umsetzen“.
+- **Tippflächen** (echt gemessen, wo ein Finger trifft): Herz im Kopf 33 × 43 statt 26 × 21, Info-Punkte nach unten 44 hoch, „Für heute ausblenden“ ✕ 34 × 34, im Chat Vorlesen/Suchen/Mehr 40 × 40 statt 34 × 34. Unsichtbar vergrößert – das Aussehen bleibt gleich.
+- **Schrift mindestens 13 Punkt**: Überschriften in den Einstellungen („FÜR MICH“ …), „Ansicht/Zeigen“-Titel, „Mein Status“, Wisch-Hinweis, Pinnwand-Zähler, Foto-Album.
+- Bewusst unverändert (im Browser verglichen – größer passte der Text nicht mehr): Start-Kacheln („Dienstag“ wurde abgeschnitten), Nachrichten-Reiter („Gru…“), „Tippen: ☰ Liste“, Ordnerrücken; dekorative Kleinstschrift (since 1991, Versionsnummer, Zahlen-Abzeichen).
+- **Archiv:** Die Ordner „Sprüche“ und „Dienstplan“ haben ein Wort statt einer Jahreszahl auf dem Schild – das ragte über den Ordnerrücken hinaus. Jetzt etwas kleinere Schrift (Klasse `jahr wort`), passt aufs Schild.
+- Alles als ein Block am Ende der Gestaltungsregeln. Test: `tests/tippflaechen.test.mjs`.
+- Rückweg: App 2.826.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.826.0 – 2026-11-03 – 📎 Teilen an die eigene Club-App: überall, nicht nur aus der Druckvorschau (KC-CLUB-TEILEN-AN-SICH-SELBST-UEBERALL) · nur App
 Fund Hansi (02.11.): wieder „Es ist nichts angekommen“. Diagnose `diagnose_teilen` 02.11. 12:52: nur `titel:text:16` – „Mein Wunschbogen“, keine Datei.
 - **Ursache:** Der Rückfall aus 2.791.0 galt nur für „📄 PDF speichern / teilen“ in der Druckvorschau. Die App teilt aber an 12 Stellen Dateien (Wunschbogen, Anlagen, Fotos, Mail-Export, Schlüsselbund, Meine Daten, Erstattungen-CSV …). Außerdem löschte die Druckvorschau das Beiseitegelegte, sobald das Teilen mit einem Fehler endete – Android bricht beim Teilen an die eigene App das Warten ab, das konnte das PDF wegräumen, bevor die App es abholte.
