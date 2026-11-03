@@ -3186,3 +3186,107 @@ async function rgUeberblickAnbieten() {
   if (await frage("🗺️ Möchtest du jetzt den Rundgang sehen?\nIn wenigen Minuten zeige ich dir, wie die App aufgebaut ist – mit Ton.", { ja: "▶ Ja, zeigen", nein: "Später" })) rundgangStart(false, "ueberblick");
   else melde("🎬 Den Rundgang findest du jederzeit unter Erklär-Videos");
 }
+
+// ---------- KC-CLUB-INST-BILDER (2.844.0, Wunsch Hansi 03.11.2026 „mach lieber die Installations-Anleitung in der App mit Bildern, wie es in den Browsern
+// aussieht, Schritt für Schritt – es gibt schon Anleitungen dafür im Ordner Anleitungen, die kannst du dafür benutzen“; statt eigener APK) ----------
+// Je Browser die Schritte der Anleitungs-Blätter (dokumente/anleitungen/installieren-*.pdf – gleiche Wörter wie einrichtenSchritteRoh), jedes Bild aus den
+// nachgebauten Browsern der Installations-Videos (simBrowser & Co.). Stehende Bilder zum Blättern, die Stelle zum Antippen leuchtet, ein Finger zeigt darauf.
+// Nichts wird installiert oder gespeichert – nur Bilder. Registry INST_BILDER: ein weiterer Browser = ein Eintrag (Schritte: t, x, bild, ziel = data-s im Bild).
+const CHROME_MENUE = ["Neuer Tab", "Neuer Inkognito-Tab", "Verlauf", "Downloads", "Lesezeichen", "Teilen …", "Auf Seite suchen", "📲 App installieren", "Desktopwebsite", "Einstellungen"];
+const ibDialog = (titel, ok) => simDialog(titel, simKn("ab", "Abbrechen") + simKn("ok", ok));
+const ibIpad = (ueber = "") => simTablet(`<div class="sim-leiste safari">${simKn("zur", "‹")}${simKn("vor", "›")}<span class="sim-adr mitte">${esc(simAdr().split("/")[0])}</span>${simKn("menue", "□↑")}${simKn("neu", "＋")}</div><div class="sim-seite">${simApp()}${ueber}</div>`);
+const IB_ANDROID_FERTIG = { t: "Fertig – über die Kochmütze öffnen", x: "Ab jetzt die App nur noch über die <b>Kochmütze</b> auf dem Startbildschirm öffnen. Steht sie auch in der App-Liste des Handys, ist alles richtig.", bild: () => simHome(), ziel: "icon" };
+const IB_IOS_CODE = (art) => ({ t: "Kochmütze öffnen und Code eingeben", x: "Die neue <b>Köcheclub-Kochmütze</b> auf dem Home-Bildschirm antippen. Die App fragt einmal nach einem <b>6-stelligen Code</b> – den zeigt dir die App vorher in Safari: ⚙️ → <b>📲 App-Installation</b> → <b>„🧭 Schritt für Schritt einrichten“</b>. Code eintippen – fertig.",
+  bild: () => (art === "tablet" ? simTablet(simAnmeldung("tablet")) : simAnmeldung("handy")), ziel: "code" });
+const INST_BILDER = [
+  { id: "chrome", sym: "🔵", n: "Chrome", wo: "Android", blatt: "installieren-chrome", video: "inst_chrome", schritte: () => [
+    { t: "Menü öffnen", x: "Oben rechts auf <b>⋮</b> (drei Punkte) tippen.", bild: () => simBrowser("chrome"), ziel: "menue" },
+    { t: "„App installieren“ wählen", x: "<b>„App installieren“</b> antippen. Steht dort nur <b>„Zum Startbildschirm hinzufügen“</b>: das antippen und dann <b>„Installieren“</b> wählen – <u>nicht</u> „Verknüpfung“.", bild: () => simBrowser("chrome", { ueber: simMenue(CHROME_MENUE, "📲 App installieren") }), ziel: "ziel" },
+    { t: "„Installieren“ bestätigen", x: "Im Fenster auf <b>„Installieren“</b> tippen. Fragt das Handy, ob etwas auf den Startbildschirm darf: <b>„Zulassen“</b>.", bild: () => simBrowser("chrome", { ueber: ibDialog("App installieren", "Installieren") }), ziel: "ok" },
+    IB_ANDROID_FERTIG] },
+  { id: "samsung", sym: "🟣", n: "Samsung Internet", wo: "Samsung-Handy", blatt: "installieren-samsung", video: "inst_samsung", schritte: () => [
+    { t: "Menü öffnen", x: "Unten rechts auf <b>≡</b> (drei Striche) tippen.", bild: () => simBrowser("samsung"), ziel: "menue" },
+    { t: "„Seite hinzufügen zu“", x: "<b>„Seite hinzufügen zu“</b> antippen (manchmal: <b>„Hinzufügen zu“</b>).", bild: () => simBrowser("samsung", { ueber: simGitter(SAMSUNG_MENUE, "Seite hinzufügen zu") }), ziel: "ziel" },
+    { t: "„Startbildschirm“ wählen", x: "<b>„Startbildschirm“</b> antippen.", bild: () => simBrowser("samsung", { ueber: SAMSUNG_ZIEL }), ziel: "ziel" },
+    { t: "Mit „Hinzufügen“ bestätigen", x: "Auf <b>„Hinzufügen“</b> tippen. Fragt das Handy noch einmal nach: nochmals <b>„Hinzufügen“</b>.", bild: () => simBrowser("samsung", { ueber: ibDialog("Zum Startbildschirm hinzufügen", "Hinzufügen") }), ziel: "ok" },
+    IB_ANDROID_FERTIG] },
+  { id: "edge", sym: "🌊", n: "Edge", wo: "Android", blatt: "installieren-edge", video: "inst_edge", schritte: () => [
+    { t: "Menü öffnen", x: "Unten in der Leiste auf <b>≡</b> (drei Striche) tippen.", bild: () => simBrowser("edge"), ziel: "menue" },
+    { t: "„Zum Telefon hinzufügen“ wählen", x: "<b>„Zum Telefon hinzufügen“</b> antippen. Heißt es bei dir <b>„App installieren“</b> oder <b>„Zum Startbildschirm hinzufügen“</b>, das nehmen – manchmal im Feld zur Seite wischen.", bild: () => simBrowser("edge", { ueber: simGitter(EDGE_MENUE, "Zum Telefon hinzufügen") }), ziel: "ziel" },
+    { t: "„Installieren“ bestätigen", x: "Im Fenster auf <b>„Installieren“</b> tippen. Fragt das Handy noch einmal: <b>„Hinzufügen“</b> bzw. <b>„Zulassen“</b>.", bild: () => simBrowser("edge", { ueber: ibDialog("App installieren", "Installieren") }), ziel: "ok" },
+    IB_ANDROID_FERTIG] },
+  { id: "firefox", sym: "🦊", n: "Firefox", wo: "Android", blatt: "installieren-firefox", video: "inst_firefox", schritte: () => [
+    { t: "Menü öffnen", x: "Auf <b>⋮</b> (drei Punkte) tippen – je nach Einstellung oben rechts oder unten rechts.", bild: () => simBrowser("firefox"), ziel: "menue" },
+    { t: "„Zum Startbildschirm hinzufügen“", x: "<b>„Zum Startbildschirm hinzufügen“</b> antippen (bei manchen Versionen: <b>„Installieren“</b>).", bild: () => simBrowser("firefox", { ueber: simMenue(FIREFOX_MENUE, "📲 Zum Startbildschirm hinzufügen") }), ziel: "ziel" },
+    { t: "„Hinzufügen“ bestätigen", x: "Der Name <b>Köcheclub</b> ist schon eingetragen. Auf <b>„Hinzufügen“</b> tippen. Fragt das Handy noch einmal: <b>„Hinzufügen“</b> oder <b>„Automatisch hinzufügen“</b>.", bild: () => simBrowser("firefox", { ueber: ibDialog("Zum Startbildschirm hinzufügen", "Hinzufügen") }), ziel: "ok" },
+    IB_ANDROID_FERTIG] },
+  { id: "safari", sym: "🧭", n: "iPhone", wo: "Safari", blatt: "installieren-iphone", video: "inst_safari", schritte: () => [
+    { t: "Menü öffnen", x: "Den Link in <b>Safari</b> öffnen. Unten rechts auf <b>⋯</b> (drei Punkte) tippen. Steht unten gleich <b>□↑ Teilen</b>, das antippen und den nächsten Schritt überspringen.", bild: () => simBrowser("safari"), ziel: "menue" },
+    { t: "„Teilen“ antippen", x: "Im Menü auf <b>↗ Teilen</b> tippen.", bild: () => simBrowser("safari", { ueber: SAFARI_MENUE }), ziel: "ziel" },
+    { t: "„Zum Home-Bildschirm“ wählen", x: "In der Liste etwas <b>nach unten wischen</b> und <b>„Zum Home-Bildschirm“</b> antippen (manchmal: <b>„Zum Startbildschirm“</b>).", bild: () => simBrowser("safari", { ueber: SAFARI_TEILEN }), ziel: "ziel" },
+    { t: "„Hinzufügen“ tippen", x: "<b>„Als Web-App öffnen“</b> bleibt eingeschaltet. Oben rechts auf <b>„Hinzufügen“</b> tippen. Jetzt ist die Kochmütze auf deinem Home-Bildschirm.", bild: SAFARI_HINZU, ziel: "ok" },
+    IB_IOS_CODE("handy")] },
+  { id: "ipad", sym: "🍎", n: "iPad", wo: "Safari", art: "tablet", blatt: "installieren-iphone", video: "inst_safari", schritte: () => [
+    { t: "Teilen-Zeichen antippen", x: "Den Link in <b>Safari</b> öffnen. Oben rechts neben der Adresse auf <b>□↑ Teilen</b> tippen.", bild: () => ibIpad(), ziel: "menue" },
+    { t: "„Zum Home-Bildschirm“ wählen", x: "In der Liste etwas <b>nach unten wischen</b> und <b>„Zum Home-Bildschirm“</b> antippen (manchmal: <b>„Zum Startbildschirm“</b>).", bild: () => ibIpad(SAFARI_TEILEN), ziel: "ziel" },
+    { t: "„Hinzufügen“ tippen", x: "Oben rechts auf <b>„Hinzufügen“</b> tippen. Jetzt ist die Kochmütze auf dem Home-Bildschirm.", bild: () => simTablet(SAFARI_HINZU()), ziel: "ok" },
+    IB_IOS_CODE("tablet")] },
+  { id: "pc", sym: "💻", n: "PC", wo: "Chrome oder Edge", art: "pc", blatt: "installieren-chrome", video: "inst_geraet", schritte: () => [
+    { t: "Installieren-Zeichen in der Adresszeile", x: "Rechts in der Adresszeile auf <b>⊕</b> bzw. <b>„App installieren“</b> klicken (Chrome oder Edge). Alternativ: Menü <b>⋮</b> → „Streamen, speichern und teilen“ → „Seite als App installieren“.", bild: () => simPc(), ziel: "plus" },
+    { t: "„Installieren“ bestätigen", x: "Im Fenster auf <b>„Installieren“</b> klicken – die App bekommt ein eigenes Fenster und ein Symbol.", bild: () => simPc({ ueber: simPcDialog() }), ziel: "ok" },
+    { t: "Fertig – Kochmütze auf dem Desktop", x: "Die Kochmütze liegt jetzt auf dem Desktop und im Startmenü. <b>Firefox</b> kann am PC keine Apps installieren – dort Chrome oder Edge nehmen.", bild: () => simHome(true, "pc"), ziel: "icon" }] },
+];
+const IB = { id: null, i: 0 };
+function ibErkannt() { const g = einrichtenGeraet(); return g.pc ? "pc" : g.ipad ? "ipad" : g.ios ? "safari" : INST_BILDER.some((b) => b.id === g.browser) ? g.browser : "chrome"; }
+function installAnleitung(id) {
+  IB.id = INST_BILDER.some((b) => b.id === id) ? id : ibErkannt(); IB.i = 0;
+  const f = blattAuf("ibBlatt", '<div id="ibInhalt"></div>'); f.classList.add("ib-blatt"); ibZeigen();
+  // Wischen über dem Bild blättert (wie im Fotoalbum); die Knöpfe gehen immer
+  let x0 = null; f.addEventListener("pointerdown", (e) => { x0 = e.target.closest?.(".ib-rahmen") ? e.clientX : null; });
+  f.addEventListener("pointerup", (e) => { if (x0 !== null && Math.abs(e.clientX - x0) > 50) ibBlaettern(e.clientX < x0 ? 1 : -1); x0 = null; });
+}
+function ibWahl(id) { IB.id = id; IB.i = 0; ibZeigen(); }
+function ibBlaettern(d) { IB.i += d; ibZeigen(); }
+function ibZeigen() {
+  const el = $("ibInhalt"); if (!el) return;
+  const e = ibErkannt(), b = INST_BILDER.find((x) => x.id === IB.id) || INST_BILDER[0], s = b.schritte(), n = s.length;
+  IB.i = Math.max(0, Math.min(IB.i, n - 1)); const x = s[IB.i], letzter = IB.i === n - 1;
+  el.innerHTML = `<h3 style="margin:0 0 8px">📲 Installieren – Schritt für Schritt</h3>
+    <div class="ib-wahl" role="radiogroup" aria-label="Gerät und Browser">${INST_BILDER.map((w) => `<button type="button" class="chip${w.id === b.id ? " an" : ""}" role="radio" aria-checked="${w.id === b.id}" onclick="ibWahl('${w.id}')">${w.sym} ${esc(w.n)} <small>${esc(w.wo)}${w.id === e ? " · dein Gerät" : ""}</small></button>`).join("")}</div>
+    <div class="ib-schritt" aria-live="polite"><div class="ib-nr">Schritt ${IB.i + 1} von ${n}</div><b class="ib-t">${x.t}</b><div class="ib-x">${x.x}</div></div>
+    <div class="ib-rahmen${b.art ? " ib-gross" : ""}" aria-hidden="true"><div class="ib-bild rg-sim-${b.art || "handy"}"><div class="sim-band">Beispielbild – so sieht es aus</div>${x.bild()}</div></div>
+    <div class="ib-punkte" aria-hidden="true">${s.map((_, i) => `<i class="${i === IB.i ? "an" : ""}"></i>`).join("")}</div>
+    <div class="knoepfe ib-nav"><button type="button" class="knopf"${IB.i ? "" : " disabled"} onclick="ibBlaettern(-1)">‹ Zurück</button>${letzter ? '<button type="button" class="knopf haupt" onclick="fensterZu($(\'ibBlatt\'))">✅ Fertig</button>' : '<button type="button" class="knopf haupt" onclick="ibBlaettern(1)">Weiter ›</button>'}</div>
+    <div class="knoepfe"><button type="button" class="knopf klein" onclick="ibPdf()">📄 Als Blatt (PDF)</button><button type="button" class="knopf klein" onclick="ibVideo()">🎬 Als Video</button><button type="button" class="knopf klein" onclick="fensterZu($('ibBlatt'))">Schließen</button></div>`;
+  const w = el.querySelector(".ib-wahl"), an = w?.querySelector(".an"); if (an) w.scrollLeft = Math.max(0, an.offsetLeft - w.offsetLeft - 12); // gewählter Browser sichtbar
+  const r = el.querySelector(".ib-rahmen"); ibMass(r); ibZielZeigen(r, x.ziel);
+}
+// Das Bild ist ein ganzer Handy-Bildschirm (360 × 540, Tablet/PC 480 × 540) und wird passend verkleinert – so ist alles zu sehen, und es passt
+// zwischen Text und die Knöpfe unten (die bleiben stehen), ohne dass man schieben muss; zu klein wird es nie (mindestens 300 px hoch)
+function ibMass(r) {
+  const innen = r?.firstElementChild; if (!innen) return;
+  const w = r.classList.contains("ib-gross") ? 480 : 360, h = 540, platz = (r.parentElement?.clientWidth || 340) - 20;
+  const frei = innerHeight - r.getBoundingClientRect().top - 100;
+  const s = Math.max(.4, Math.min(1, platz / w, Math.max(300, Math.min(frei, 520)) / h));
+  innen.style.transform = `scale(${s})`; r.style.width = Math.round(w * s) + "px"; r.style.height = Math.round(h * s) + "px";
+}
+// Stelle zum Antippen leuchten lassen, Finger darunter (bzw. darüber, wenn sie ganz unten liegt) – innerhalb des Bildes
+function ibZielZeigen(r, ziel) {
+  const z = r && ziel && r.querySelector(`[data-s="${ziel}"]`); if (!z) return;
+  z.classList.add("ib-ziel");
+  requestAnimationFrame(() => {
+    const a = r.getBoundingClientRect(), b = z.getBoundingClientRect(); if (!a.width || !b.width) return;
+    const rand = (r.offsetWidth - r.clientWidth) / 2, x0 = a.left + rand, y0 = a.top + rand; // innerhalb des Rahmens messen
+    const hoehe = r.clientHeight, breite = r.clientWidth, unten = b.bottom - y0 > hoehe - 56, f = document.createElement("span");
+    f.className = "ib-finger"; f.textContent = unten ? "👇" : "👆";
+    f.style.left = Math.min(breite - 22, Math.max(22, b.left - x0 + b.width / 2)) + "px";
+    f.style.top = (unten ? Math.max(0, b.top - y0 - 40) : Math.min(hoehe - 40, b.bottom - y0 + 2)) + "px";
+    r.appendChild(f);
+  });
+}
+function ibPdf() {
+  const b = INST_BILDER.find((x) => x.id === IB.id); if (!b) return;
+  fensterZu($("ibBlatt"));
+  dokAnzeigen({ id: "anleitung:" + b.blatt, t: "📲 Anleitung: Installieren", url: APP_URL_CLUB + "dokumente/anleitungen/" + b.blatt + ".pdf" }).catch?.(meldeFehler);
+}
+function ibVideo() { const b = INST_BILDER.find((x) => x.id === IB.id); fensterZu($("ibBlatt")); rundgangStart(false, b?.video || "installieren"); }

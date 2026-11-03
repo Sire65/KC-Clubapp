@@ -7826,7 +7826,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.737.0 KC-CLUB-TEILE Stufe 1: Erklär-Videos liegen in teile/videos.js – Einstiege über Platzhalter, Katalog und Zustand im Hauptprogramm
 {
   const app = lies("app.js"), vid = lies("teile/videos.js");
-  assert.match(app, /videos: \{ einstieg: \["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl"\], sri: "sha384-/, "Video-Teil mit seinen 4 Einstiegen registriert");
+  assert.match(app, /videos: \{ einstieg: \["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"\], sri: "sha384-/, "Video-Teil mit seinen 5 Einstiegen registriert"); // 2.844.0 KC-CLUB-INST-BILDER
   for (const n of ["const RG = {", "const RUNDGAENGE = [", "const RG_INST_BROWSER = ", "function rgInstErkannt(", "const rgSichtbar = ", "function rgHinweisZeigen(", "function rgHinweisLos("])
     assert.ok(app.includes(n) && !vid.includes(n), `${n.slice(0, 28)} bleibt im Hauptprogramm (wird beim Start oder ohne Video gebraucht)`);
   for (const n of ["function rundgangSchritt(", "function rundgangEnde(", "const RG_WARUM = [", "function rgSprechen(", "function rgsZeigen("])
