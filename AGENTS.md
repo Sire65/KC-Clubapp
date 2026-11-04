@@ -73,3 +73,17 @@ Selten gebrauchte Programmteile liegen in `teile/<name>.js` und werden erst beim
    (und in der App würde das Teil nicht geladen).
 2. Neues Teil: Datei + Eintrag in `TEILE_LISTE` (app.js) + `TEILE` (sw.js). Tests lesen app.js und alle Teile über `tests/programm.mjs`.
 3. Nur auslagern, was nicht beim Start gebraucht wird; Einstiegs-Funktionen liefern beim ersten Aufruf ein Promise.
+
+## Browser-Tests nie gegen den echten Server (KC-TESTS-OHNE-ECHTSERVER, 04.11.2026, Wunsch Hansi nach „Fremde Anmeldeversuche“ durch einen Test-Browser)
+
+Ein Testlauf mit HeadlessChrome und ausgedachtem Schlüssel hat am 04.11. den echten Club-Server aufgerufen – im Sicherheits-Check standen
+dadurch 6 „fremde Anmeldeversuche“. Darum gilt für jeden Browser-Lauf (Playwright, Puppeteer, Bildschirmfotos, PDF-Erzeugung, Fehlersuche):
+
+1. **Jede Anfrage abschirmen:** `seite.route("**/*", …)` – eigene Seite durchlassen, `…/functions/v1/…` mit Testdaten beantworten (`r.fulfill`),
+   alles andere `r.abort()`; die direkte Leitung mit `routeWebSocket(/realtime\/v1\/websocket/, …)` nachbilden oder blockieren.
+   Vorlage: `tests/rundgang.browser.mjs`.
+2. **Nie mit echtem oder ausgedachtem Schlüssel gegen `ptblnpiroqftcvlsrhac.supabase.co`** – auch nicht „nur kurz zum Nachsehen“.
+   Echte Links sind Geheimnisse und werden nie in Tests benutzt.
+3. Wer am echten Server etwas prüfen muss, nutzt die eigenen Tabellen lesend (KC-SPARSAM-PROTOKOLLE) oder fragt Hansi.
+4. Der Test `tests/browser-abgeschirmt.test.mjs` prüft alle Browser-Skripte in `tests/` und `tools/`; ein roter Test verhindert das Einspielen.
+
