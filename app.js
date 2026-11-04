@@ -2136,7 +2136,7 @@ const FILME = [
   // KC-CLUB-KOPFFILM (Wunsch Hansi 04.11.2026 „Erklärvideo nur über den Kopfbereich – kein Admin-Bereich“). Quellen und Konzept: KC-Infrastructure-Control-Center kopffilm/
   // Gestaffelt (Wunsch Hansi 04.11. „4 Tage zurückhalten, nur Mitgliedern anbieten, die den ersten bereits gesehen haben – den anderen erst ein paar Tage später“):
   // wer den Ansichtfilm angesehen hat, bekommt ihn sofort (beim Start und in Technik → 🎬 Erklär-Videos), alle anderen ab KOPFFILM_AB.
-  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=1", bild: "film/kopf-vorschau.jpg",
+  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=2", bild: "film/kopf-vorschau.jpg",
     u: "Kopfzeile, Status und Lämpchen, Blättern mit ‹ › und « », gelbe Punkte, Wetter, Für dich, Demnächst, Fotos, Kommunikationszentrale, Startkarte und die Szenen im Kopf",
     wo: "unter Technik → 🎬 Erklär-Videos", get inVideos() { return this.fuer(); }, fuer: () => filmGesehen("ansichtfilm") || heuteIso() >= KOPFFILM_AB },
 ];
