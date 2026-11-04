@@ -2471,7 +2471,18 @@ const HILFE = [
   { id: "was_gespeichert", thema: "privat", sym: "🗂️", nur: () => !!ICH?.admin, t: "Was speichert die App über mich?", x: "Zur Fehlersuche und Unterstützung speichert die App 30 Tage lang, welche Bereiche und Fenster geöffnet, welche Hilfetexte, Erklär-Videos und Anleitungsfilme angesehen (bis zum Ende oder abgebrochen), welche Handlungen gemacht (z. B. zugesagt) und mit wem Nachrichten oder Anrufe ausgetauscht wurden – <b>ohne Inhalte</b>. Außerdem 180 Tage lang jeden App-Start: Zeitpunkt, Dauer, Gerät und Browser – damit die App schneller werden kann. Einsicht hat nur der Admin." },
   // 🛠️ Technik & Probleme lösen
   { id: "update", thema: "technik", sym: "🔄", t: "Neue Version holen", x: "Register <b>Technik</b> → „🔄 Update prüfen“. Steht dort „Neu“, einfach antippen – die App lädt die neue Version komplett und startet neu. Meist macht sie das auch von selbst.", zeig: hzTechnik },
-  { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen", x: "Dann startet die Club-App wie jede andere App mit eigenem Symbol. Die Anleitung für dein Handy steht unter ⚙️ → <b>„📲 App-Installation“</b> – mit Bildern, wie es in deinem Browser aussieht: <b>„🖼️ Mit Bildern zeigen“</b>.", zeig: () => einstiegHin("install") }, // 2.844.0 KC-CLUB-INST-BILDER
+  // 2.857.0 KC-CLUB-HILFE-INSTALL (Wunsch Hansi 04.11.2026 „die Tipps in die Hilfe mit Knöpfen, wie es installiert wird – einige haben Probleme, melden sich aber
+  // nicht und meckern dann hinterher, dass die App nicht gut läuft“): Hilfen mit Knöpfen, die es gleich erledigen (installieren, Bilder, Hilfe anfragen, prüfen)
+  { id: "installieren", thema: "technik", sym: "📲", t: "Die App auf den Startbildschirm legen (installieren)", seit: "2.857.0", x: "Öffnest du die Club-App immer über einen Link im Browser? Dann <b>installiere sie einmal</b>: Sie bekommt die <b>Kochmütze</b> auf dem Startbildschirm, <b>startet schneller</b>, <b>bleibt angemeldet</b> und <b>Benachrichtigungen kommen zuverlässig</b> (auf dem iPhone sogar nur so). Das dauert keine Minute. Mit <b>„📲 Jetzt installieren“</b> führt dich die App Schritt für Schritt – passend zu deinem Handy und Browser. Klappt es nicht, tippe <b>„🙋 Hilfe beim Installieren“</b> – Hansi meldet sich bei dir.",
+    knoepfe: [["📲 Jetzt installieren", "installJetzt()"], ["🖼️ Mit Bildern zeigen", "installAnleitung()"], ["🙋 Hilfe beim Installieren", "installHilfeAnfragen()"]] },
+  { id: "installiert_pruefen", thema: "technik", sym: "✅", t: "Ist meine App richtig installiert?", seit: "2.857.0", x: "Richtig installiert ist sie, wenn du die <b>Kochmütze</b> auf dem Startbildschirm hast <b>und</b> sie auch in der <b>App-Liste</b> deines Handys steht. Öffnest du sie über die Kochmütze, gibt es oben keine Adresszeile. Tippe auf <b>„🔍 Jetzt prüfen“</b> – die App sagt dir sofort, ob alles stimmt, und zeigt sonst, was zu tun ist.",
+    knoepfe: [["🔍 Jetzt prüfen", "einrichtenAssistent()"], ["🙋 Hilfe beim Installieren", "installHilfeAnfragen()"]] },
+  { id: "laeuft_nicht_rund", thema: "technik", sym: "🐢", t: "Die App läuft langsam oder nicht rund – was hilft?", seit: "2.857.0", x: "Meistens hilft einer dieser Schritte: 1) <b>Die App installieren</b> statt im Browser öffnen – das ist der häufigste Grund. 2) <b>Neue Version holen</b>. 3) Die App <b>ganz schließen</b> und neu öffnen. 4) Auf Android <b>Chrome</b> oder Samsung Internet nehmen, auf dem iPhone Safari oder Chrome. Hilft nichts davon: <b>„🆘 Problem melden“</b> – Hansi sieht dann genau, woran es liegt. <b>Bitte melde dich</b> – nur so kann es besser werden.",
+    knoepfe: [["📲 Installieren", "installJetzt()"], ["🔄 Neue Version holen", "updatePruefen(true)"], ["🆘 Problem melden", "fpProblemMelden()"]] },
+  { id: "push_kommt_nicht", thema: "technik", sym: "🔕", t: "Es kommen keine Benachrichtigungen", seit: "2.857.0", x: "Zuerst prüfen, ob die App <b>installiert</b> ist – auf dem iPhone kommen Benachrichtigungen <b>nur</b> in der installierten App. Dann <b>„🧪 Test an mich“</b> tippen: Kommt der Test, ist alles in Ordnung. Kommt er nicht, hilft Hansi gern.",
+    knoepfe: [["📲 Installieren", "installJetzt()"], ["🧪 Test an mich", "testAnMichStarten()"], ["🙋 Hilfe anfragen", "installHilfeAnfragen()"]] },
+  { id: "neues_handy", thema: "technik", sym: "📱", t: "Neues Handy oder zweites Gerät (z. B. Tablet)", seit: "2.857.0", x: "Auf dem alten Gerät <b>„🔢 Code für ein anderes Gerät“</b> tippen. Auf dem neuen Gerät die Club-App öffnen, installieren und den Code eintippen – fertig, ohne neuen Link.",
+    knoepfe: [["🔢 Code für ein anderes Gerät", "kurzcodeBlatt()"], ["📲 Installieren", "installJetzt()"]] },
   { id: "sicherheitskonzept", thema: "technik", sym: "🔐", t: "Wie sicher sind meine Daten?", x: "Ganz einfach erklärt – im Register <b>Technik</b> unter <b>„🔐 Sicherheit &amp; Datenschutz“</b>: ein kurzer Film und ein PDF zum Nachlesen – Zugang, Verschlüsselung, wer was sieht, Handy, Sicherungen, Prüfung durch KI und deine Rechte nach der DSGVO.", zeig: () => sdStart(), seit: "2.756.0" },
   { id: "sicherheitscheck", thema: "technik", sym: "🛡️", t: "Läuft alles sicher?", x: "Ein gutes Gefühl mit einem Tipp: Register Technik → „🛡️ Sicherheits-Check“ prüft, ob die App auf deinem Gerät sicher und richtig läuft. Grüne Haken = alles gut; sonst steht dabei, was zu tun ist.", zeig: () => sicherheitStart() },
   { id: "haengt", thema: "technik", sym: "🧯", t: "Die App hängt oder zeigt Altes", x: "Zuerst die App ganz schließen und neu öffnen. Hilft das nicht: Register Technik → „🔄 Update prüfen“. Bleibt das Problem, schreib kurz über <b>💭 Feedback</b>, was passiert ist. Fehler beim Starten meldet die App außerdem von selbst an Hansi – nur Technik, keine Inhalte.", zeig: () => zeige("feedback") },
@@ -3962,7 +3973,7 @@ const hzTxt = (x) => (typeof x === "function" ? x() : x) || "";
 const hzThemaId = (t) => (HILFE_THEMEN.some((x) => x.id === t) ? t : "weitere");
 // alle Einträge (für mich) – wird bei jedem Öffnen neu zusammengestellt, damit neue Tipps/Bereiche sofort mitgezählt werden
 function hzEintraege() {
-  const eintrag = (q, e, thema, los) => { try { return { id: q + ":" + e.id, thema, sym: e.sym, t: hzTxt(e.t), x: hzTxt(e.x), los: los || null, seit: e.seit || null }; } catch { return null; } };
+  const eintrag = (q, e, thema, los) => { try { return { id: q + ":" + e.id, thema, sym: e.sym, t: hzTxt(e.t), x: hzTxt(e.x), los: los || null, seit: e.seit || null, knoepfe: Array.isArray(e.knoepfe) ? e.knoepfe : null }; } catch { return null; } };
   return [
     ...HILFE.filter((e) => !e.nur || e.nur()).map((e) => eintrag("h", e, hzThemaId(e.thema), e.zeig)),
     ...TIPPS.map((e) => eintrag("t", e, hzThemaId(e.thema || HILFE_TIPP_THEMA[e.id]), e.testen)),
@@ -4107,7 +4118,7 @@ function hzZurueckZurHilfe() {
 function hzKarte(e, nr, themaZeigen) {
   const th = HILFE_THEMEN.find((x) => x.id === e.thema);
   return `<div class="karte hz-eintrag vorlese-karte" data-hz="${e.id}">${themaZeigen && th ? `<div class="hz-wo">Kapitel ${esc(nr.split(".")[0])} · ${th.sym} ${esc(th.t)}</div>` : ""}<h3><span class="hz-nr">${esc(nr)}</span><span>${e.sym} ${esc(e.t)}${hzIstNeu(e, HZ.vorher) ? ' <span class="hz-neu">neu</span>' : ""}</span></h3><p>${e.x}</p>
-    <div class="knoepfe">${e.los ? `<button class="knopf haupt klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${hzVideoKnoepfe(e.id)}${VORLESE_KNOPF}</div>${hzBewHtml(e.id)}</div>`;
+    <div class="knoepfe">${(e.knoepfe || []).map(([t, fn], i) => `<button class="knopf${i ? "" : " haupt"} klein" onclick="${fn}">${t}</button>`).join("") /* 2.857.0 KC-CLUB-HILFE-INSTALL: eigene Knöpfe (nur feste Aufrufe aus dem Programm) */}${e.los ? `<button class="knopf${e.knoepfe ? "" : " haupt"} klein" onclick="hzLos('${e.id}')">👉 Zeig mir wo</button>` : ""}${hzVideoKnoepfe(e.id)}${VORLESE_KNOPF}</div>${hzBewHtml(e.id)}</div>`;
 }
 // 2.348.0 KC-CLUB-VIDEO-VERKNUEPFT: gibt es zum Hilfe-Thema ein Erklär-Video, steht der Knopf gleich darunter
 function hzVideoKnoepfe(id) {
@@ -4745,7 +4756,7 @@ function zweiBrowserMelden(a) {
 async function onlinePing() {
   if (!KEY || !ICH || document.hidden) return;
   try {
-    const r = await api("online", { fenster: fensterKennung() });
+    const r = await api("online", { fenster: fensterKennung(), ...installStandMelden() }); // 2.857.0 KC-CLUB-INSTALL-STAND
     if (r.fensterAnders) zweiBrowserMelden(r.fensterAnders); // KC-CLUB-ZWEI-BROWSER
     const vorher = [...ONL.ids].sort().join(); // KC-CLUB-ONLINE-EINE-QUELLE (2.24.18)
     ONL.zeigen = r.zeigen; ONL.liste = r.online || []; ONL.ids = new Set(ONL.liste.map((x) => x.person_id)); ONL.stand = Date.now();
@@ -13532,6 +13543,7 @@ function adZustand(id) {
       return gemessen([f, `${fs.filter((x) => x === "gruen").length} von ${fs.length} melden sich`]); }
     case "versionen": return gemessen(!r ? null : m.alteVersion ? ["gelb", `${m.alteVersion} mit alter Version`] : ["gruen", "alle aktuell"]);
     case "zugang": return gemessen(!r ? null : [m.nieAngemeldet ? "gelb" : "gruen", `${m.mitZugang} von ${m.gesamt} mit Zugang`]);
+    case "installiert": return ["keine", "Wer nutzt die App noch im Browser? · antippen"]; // 2.857.0 KC-CLUB-INSTALL-STAND
     case "strom": { const a = STROM.akku; return a ? ["keine", `Akku ${Math.round(a.level * 100)} %${a.charging ? " · lädt" : ""} · antippen`] : ["keine", "antippen"]; } // 2.799.0 KC-CLUB-STROM-UEBERSICHT
     case "anbieter": return typeof anbLage === "function" ? anbLage() : ["keine", "Neues & Wartungen · antippen"]; // 2.842.0 KC-CLUB-ANBIETER-NEUES (Teil erst beim Öffnen geladen)
     case "waechter": { if (!WCH.daten) return ["keine", `${WCH_LISTE.length} Wächter · antippen`]; const z = wchZaehlen(); // 2.726.0 KC-CLUB-WAECHTER (Stand vom letzten Öffnen)
@@ -13557,7 +13569,7 @@ const AD_KACHELN = [
   ["neon", "🪞", "Neon-Spiegel", "ueb"], ["backup", "🛟", "Backups", "ueb"], ["b2", "💾", "B2-Backup", "ueb"], ["not", "🚑", "Notbetrieb", "ueb"],
   ["comm", "📨", "Communicator", "dienst"], ["mail", "✉️", "Mail · Brevo", "dienst"], ["push", "🔔", "Push", "dienst"], ["kasse", "🧾", "Kasse · Gateway", "dienst"],
   ["programme", "💻", "KC-Programme", "dienst"], ["rt", "⚡", "Direkte Leitung", "ueb"], ["versionen", "📱", "Versionen", "app"], ["fehler", "🩺", "Fehler", "app"], ["nutzung", "👥", "Nutzung", "app"],
-  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["strom", "🔋", "Stromverbrauch", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"], ["anbieter", "📰", "Anbieter", "app"], // 2.842.0 KC-CLUB-ANBIETER-NEUES
+  ["zugang", "🔑", "Zugänge", "app"], ["wartung", "🛠️", "Wartung", "app"], ["stumm", "📵", "Ohne Benachrichtigungen", "app"], ["strom", "🔋", "Stromverbrauch", "app"], ["installiert", "📲", "Installiert?", "app"], ["freigaben", "🚦", "Freigaben", "app"], ["inkognito", "🕶️", "Inkognito", "app"], ["stadt", "🏙️", "Stadt-Termine", "app"], ["anbieter", "📰", "Anbieter", "app"], // 2.842.0 KC-CLUB-ANBIETER-NEUES
   ...Object.entries(AD_DIENSTE).map(([k, d]) => ["l-" + k, d.sym, d.t, "link"]),
 ];
 KACHELN.admin = AD_KACHELN.map(([id, sym, t, gr]) => ({ id: "ad-" + id, sym, t, nur: () => !!ICH?.admin, aktion: `adBlatt('${id}')`,
@@ -14063,6 +14075,7 @@ function adBlatt(id) {
   if (id === "waechter") return wchStart(); // 2.726.0 KC-CLUB-WAECHTER
   if (id === "anbieter") return anbStart(); // 2.842.0 KC-CLUB-ANBIETER-NEUES
   if (id === "strom") return stromBlatt(); // 2.799.0 KC-CLUB-STROM-UEBERSICHT
+  if (id === "installiert") return installStandListe(); // 2.857.0 KC-CLUB-INSTALL-STAND
   AD.offen = id;
   const r = adLage(), z = adZustand(id), m = r?.mitglieder, c = r?.communicator, e = AD.ext;
   const kopf = (sym, t) => `<h3 style="margin:0">${sym} ${esc(t)}</h3><p class="hinweis" style="margin:0">${r ? `Stand ${esc(zeitKurz(r.zeit))} Uhr${adAlt() ? " · ⚠️ veraltet" : ""}` : "Noch keine Daten"}${e.zeit ? ` · Prüfung ${esc(fZeit.format(new Date(e.zeit)))} Uhr` : ""}</p>`;
@@ -33907,7 +33920,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", installStandBlatt: "📲 Wer nutzt die App wie?", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",
@@ -35172,6 +35185,26 @@ const FP_HINWEISE = [
     schritte: ["⚡ <b>startet schneller</b> und braucht weniger Akku", "🔐 <b>bleibt angemeldet</b> – kein Link mehr suchen", "🔔 <b>Benachrichtigungen kommen zuverlässig</b> (auf dem iPhone nur so)",
       "⏱️ Dauert <b>keine Minute</b> – und wer möchte, bekommt Hilfe dabei"] },
 ];
+// 2.857.0 KC-CLUB-INSTALL-STAND (Wunsch Hansi 04.11.2026 „Liste im Admin-Bereich: wer nutzt die App noch im Browser“): beim ersten Lebenszeichen einer
+// Sitzung schickt die App mit, wie sie läuft (app · verknuepfung · browser) und auf welchem Gerät (z. B. „Android 14 · Chrome“) – der Server merkt es nur,
+// wenn es sich ändert (keine Inhalte, nur diese zwei Angaben).
+let INSTALL_STAND_GESENDET = false;
+function installStandMelden() { if (INSTALL_STAND_GESENDET) return {}; INSTALL_STAND_GESENDET = true; try { const pc = einrichtenGeraet().pc; return { startArt: pc ? "pc" : START_ART, geraet: `${pc ? "PC" : fpSystem().replace(/ [\d.]+$/, "")} · ${fpBrowser()}`.slice(0, 60) }; } catch { return {}; } }
+// 2.857.0 KC-CLUB-INSTALL-STAND: Admin-Liste „📲 Installiert?“ – je Mitglied die Geräte: ✅ installiert · 🔗 nur Verknüpfung · 🌐 im Browser · ❔ noch nicht gesehen.
+// Bei Browser/Verknüpfung: „💡 Tipp schicken“ (Hilfe-Tipp mit Rückmeldung) oder „💬 Nachricht“ – so lassen sich die erreichen, die sich nicht von selbst melden.
+const INSTALL_ART_TEXT = { app: ["✅", "installiert"], verknuepfung: ["🔗", "nur Verknüpfung"], browser: ["🌐", "im Browser"], pc: ["💻", "am PC"] };
+async function installStandListe() {
+  if (!ICH?.admin) return;
+  let r; try { r = await api("install_stand", {}, { warten: true }); } catch (e) { return meldeFehler(e); }
+  const l = r.mitglieder || [], stufe = (m) => !m.geraete.length ? 3 : m.geraete.some((g) => g.art === "browser") ? 0 : m.geraete.some((g) => g.art === "verknuepfung") ? 1 : 2;
+  const gruppen = [["🌐 Noch im Browser", 0], ["🔗 Nur als Verknüpfung (besser richtig installieren)", 1], ["✅ Installiert oder am PC", 2], ["❔ Noch nicht gesehen (wird ab 2.857.0 gemerkt)", 3]];
+  const zeile = (m) => `<div class="tipp-stand" style="align-items:start"><span><b>${esc(m.name)}</b>${m.geraete.map((g) => `<br><small class="hinweis">${INSTALL_ART_TEXT[g.art]?.[0] || "❔"} ${esc(g.geraet)} · ${esc(INSTALL_ART_TEXT[g.art]?.[1] || g.art)} · ${esc(wann(g.am))}</small>`).join("")}</span>
+    ${stufe(m) <= 1 ? `<span class="knoepfe" style="margin:0;justify-content:flex-end"><button class="knopf klein" onclick="tippSenden({ an: [${jsArg(m.person_id)}], problem: 'App installieren' })">💡 Tipp</button><button class="knopf klein" onclick="fensterZu($('installStandBlatt'));direkt(${jsArg(m.person_id)})">💬</button></span>` : ""}</div>`;
+  blattAuf("installStandBlatt", `<h3 style="margin:0">📲 Wer nutzt die App wie?</h3><p class="hinweis" style="margin:2px 0 8px">Je Gerät, zuletzt gesehen. Nur Handy/Tablet zählt – am PC ist Browser normal.</p>
+    <p style="margin:0 0 8px">${gruppen.map(([t, k]) => `${t.split(" ")[0]} <b>${l.filter((m) => stufe(m) === k).length}</b>`).join(" · ")}</p>
+    ${gruppen.map(([t, k]) => { const g = l.filter((m) => stufe(m) === k); return g.length ? `<details${k <= 1 ? " open" : ""}><summary><b>${esc(t)}</b> (${g.length})</summary>${g.map(zeile).join("")}</details>` : ""; }).join("")}
+    <div class="knoepfe"><button class="knopf" onclick="fensterZu($('installStandBlatt'))">Schließen</button></div>`);
+}
 // KC-CLUB-INSTALL-EINLADUNG: Handy/Tablet im Browser (nicht PC, nicht schon installiert) – und wie oft die App so schon geöffnet wurde (je Gerät)
 const installNoetig = () => { try { return START_ART === "browser" && !schonInstalliert && !einrichtenGeraet().pc; } catch { return false; } };
 const installBrowserStarts = () => { try { return Number(localStorage.getItem("kc_club_browser_starts")) || 0; } catch { return 0; } };

@@ -56,7 +56,7 @@ assert.equal(klopfVerpasst([{ id: "x", von: ICH, an: "A", status: "abgebrochen",
 {
   const server = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
   const app = programmText();
-  assert.ok(/from "\.\/anklopfen-verpasst\.js"/.test(server) && /case "anklopfen_verpasst_gesehen"/.test(server) && /"klopf_verpasst"\]\)/.test(server), "Server: Baustein, Aktion, Merker");
+  assert.ok(/from "\.\/anklopfen-verpasst\.js"/.test(server) && /case "anklopfen_verpasst_gesehen"/.test(server) && /"klopf_verpasst"(, "app_stand")?\]\)/.test(server), "Server: Baustein, Aktion, Merker");
   assert.ok(/return json\(\{ ok: true, push: klopfPushStand\(req\?\.\[0\]\) \}\)/.test(server), "Auflegen meldet den Stand");
   assert.ok(/if \(kVerp\.length\) \{/.test(server) && /if \(wartend\.length\) \{/.test(server), "Zusatzabfragen nur bei Bedarf");
   assert.ok(/klopfVerpasstZeigen\(\(r\.klopfVerpasst \|\| \[\]\)/.test(app) && /api\("anklopfen_verpasst_gesehen", \{ bis \}\)/.test(app), "App: Hinweis + gesehen");
