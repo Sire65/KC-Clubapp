@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.858.0 – Rundgang zeigt die richtige Kopf-Seite (KC-CLUB-VIDEO-KOPFSEITE, Fund Hansi)
+- Im Rundgang „Die App im Überblick“ beschreiben „Das Info-Laufband“ und „Drei kleine Felder“ die erste Kopf-Seite. Stand der Kopf auf einer anderen Seite (z. B. Wetter), redete das Video von der ersten Seite und zeigte eine andere.
+- Jetzt blättern beide Schritte vorher auf die erste Seite und klappen den Kopf aus; nach dem Video steht wieder die vorher eingestellte Seite da.
+- Test: tests/video-kopfseite.test.mjs. Rückweg: Version 2.857.0 einspielen.
+
 ## 2.857.0 – Zeitansage: Video „Installieren mit Chrome (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 4 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (⋮ → App installieren bzw. Zum Startbildschirm hinzufügen → Installieren). Zeitansage „knapp eine Minute“ eingeschaltet.
 - Rückweg: Version 2.856.0 einspielen.

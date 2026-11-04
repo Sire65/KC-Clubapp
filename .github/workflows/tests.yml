@@ -116,6 +116,7 @@ jobs:
       - run: node tests/aufgabe-gemeinsam.test.mjs
       - run: node tests/kachel-drehzeichen.test.mjs
       - run: node tests/video-zeitansage.test.mjs
+      - run: node tests/video-kopfseite.test.mjs
       - run: node tests/rechner-spur-besuche.test.mjs
       - run: node tests/tippflaechen.test.mjs
       - run: node tests/nutzung-alle.test.mjs
