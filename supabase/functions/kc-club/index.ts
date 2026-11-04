@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.850.0";
+const SERVER_VERSION = "2.851.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1235,7 +1235,7 @@ async function onlinePushMelden(wer: Ich, ua = "") {
   const anAdmins = ger ? ids.filter((id) => admins.has(id)) : [];
   await Promise.all([senden(anAdmins, `${name} (${ger})`, ":a"), senden(ids.filter((id) => !anAdmins.includes(id)), name, "")]);
 }
-// KC-CLUB-ONLINE-PUSH: wer „X ist online/offline“ bekommt – gemeinsam für die Online- und die Offline-Meldung (2.850.0 KC-CLUB-OFFLINE-PUSH)
+// KC-CLUB-ONLINE-PUSH: wer „X ist online/offline“ bekommt – gemeinsam für die Online- und die Offline-Meldung (2.851.0 KC-CLUB-OFFLINE-PUSH)
 async function onlinePushEmpfaenger(werId: string): Promise<{ ids: string[]; admins: Set<string> } | null> {
   // KC-CLUB-ONLINE-PUSH-ALLE (2.22.17, Wunsch Hansi): Admins wie bisher (Standard an), alle anderen Mitglieder, die es selbst
   // eingeschaltet haben (Standard aus) – z. B. Klaus bekommt „🟢 Hansi ist jetzt online“.
@@ -1253,7 +1253,7 @@ async function onlinePushEmpfaenger(werId: string): Promise<{ ids: string[]; adm
   if (!ids.length) return null;
   return { ids, admins };
 }
-// ---------- 2.850.0 KC-CLUB-OFFLINE-PUSH (Wunsch Hansi 04.11.2026 „Push, wenn sich die Mitglieder wieder abgemeldet haben – bisher bekomme ich nur,
+// ---------- 2.851.0 KC-CLUB-OFFLINE-PUSH (Wunsch Hansi 04.11.2026 „Push, wenn sich die Mitglieder wieder abgemeldet haben – bisher bekomme ich nur,
 // wenn sie sich anmelden“) ----------
 // Die App meldet sich nicht ab (schließen, Handy aus, kein Netz) – sie hört nur auf, sich zu melden. Darum schaut der Minuten-Lauf (geplant_faellig), wessen
 // letzte Meldung (online_seit.zuletzt) länger als ONLINE_SEK her ist und noch nicht als offline gemeldet wurde (wert.offline = Beginn dieser Sitzung).
@@ -9026,7 +9026,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       const lauf = await geplantFaelligLauf();
       const warteschlange = await mailWarteschlange().catch((e) => ({ fehler: String(e) })); // 2.520.0 KC-COMM-WARTEN
       const wecker = await weckerFaelligLauf().catch((e) => ({ fehler: String(e) })); // 2.640.0 KC-CLUB-UHR-WECKER
-      // 2.850.0 KC-CLUB-OFFLINE-PUSH – sparsam (Hansi: „kostet das wieder Datenbank? Da müssen wir sparen“): nur jede 5. Minute → 288 kleine Abfragen am Tag
+      // 2.851.0 KC-CLUB-OFFLINE-PUSH – sparsam (Hansi: „kostet das wieder Datenbank? Da müssen wir sparen“): nur jede 5. Minute → 288 kleine Abfragen am Tag
       const offline = new Date().getUTCMinutes() % OFFLINE_TAKT_MIN === 0 ? await offlinePushLauf().catch((e) => ({ fehler: String(e) })) : null;
       return json({ ok: true, ...lauf, warteschlange, wecker, offline });
     }

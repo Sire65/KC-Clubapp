@@ -110,6 +110,7 @@ jobs:
       - run: node tests/anbieter-neues.test.mjs
       - run: node tests/inst-bilder.test.mjs
       - run: node tests/aufgabe-gemeinsam.test.mjs
+      - run: node tests/kachel-drehzeichen.test.mjs
       - run: node tests/rechner-spur-besuche.test.mjs
       - run: node tests/tippflaechen.test.mjs
       - run: node tests/nutzung-alle.test.mjs

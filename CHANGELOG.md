@@ -1,12 +1,24 @@
 # Änderungen
 
-## 2.850.0 – 2026-11-04 – 💬 Nachrichten-Kachel blinkt wie der Knopf (KC-CLUB-NACHRICHT-BLINKEN) · 🔴 Push „… ist offline“ (KC-CLUB-OFFLINE-PUSH) · „WA“ statt grünem Punkt (KC-CLUB-WA-ZEICHEN) · Server 2.850.0
+## 2.851.0 – 2026-11-04 – 💬 Nachrichten-Kachel blinkt wie der Knopf (KC-CLUB-NACHRICHT-BLINKEN) · 🔴 Push „… ist offline“ (KC-CLUB-OFFLINE-PUSH) · „WA“ statt grünem Punkt (KC-CLUB-WA-ZEICHEN) · Server 2.851.0
 Wunsch Hansi (04.11.): „Bau ein, dass jeweils die Kachel blinkt, wenn eine ungelesene Nachricht da ist, genau wie der Button Nachricht.“
 - Bei ungelesenen Nachrichten blinken jetzt gleich: der Knopf „Nachrichten“ unten, die Nachrichten-Kachel und das Feld „Neue Nachr.“ auf der Startseite – grün (bis 2 Tage), orange (3–4 Tage), rot (älter). Ist das Alter noch unbekannt, blinkt es grün (vorher: gar nicht).
 - Ohne Effekte („✨ Animierte Knöpfe“ aus), bei „Bewegung verringern“ und in der Strom-Ruhe: fester farbiger Rand statt Blinken. Die Pinnwand-Kachel pulsiert bei neuen Zetteln schon seit 2.763.0 (rot, mit Anzahl).
 - **🔴 Push, wenn sich jemand abmeldet** (KC-CLUB-OFFLINE-PUSH, Wunsch Hansi 04.11.: „Push, wenn sich die Mitglieder wieder abgemeldet haben – bisher bekomme ich nur, wenn sie sich anmelden“): „🔴 Klaus ist offline (10:32 Uhr) – War in der App von 10:05 bis 10:32 Uhr (27 Min.)“. Die App meldet sich nicht ab (schließen, Handy aus, kein Netz) – der Server-Minutenlauf erkennt das am fehlenden Lebenszeichen und meldet 5–10 Minuten danach (kurz weglegen löst nichts aus), je Sitzung einmal. Gleiche Empfänger und Regeln wie „ist jetzt online“ (⚙️ „📲 Push, wenn sich jemand an- und abmeldet“, Ruhezeit, unsichtbar, keine Testkonten). Sparsam: nur jede 5. Minute eine kleine Abfrage (288 am Tag ≈ 4 App-Starts), je Abmeldung ein paar mehr; die Meldung kommt 5–10 Min. nach dem letzten Lebenszeichen. Test: `tests/offline-push.test.mjs`.
 - **WhatsApp-Zeichen statt grünem Punkt** (KC-CLUB-WA-ZEICHEN, Fund Hansi 04.11.: „bei Thomas Hess ist ein grüner Punkt – in seinen Einstellungen hat er aber orange für beschäftigt“): In den Empfänger-Listen stand 🟢 für „WhatsApp-Nummer vorhanden“ und sah aus wie der Status „verfügbar“. Jetzt ein kleines grünes „WA“ – genau wie der Knopf „WA“ unten im Chat; der echte Status steht beim Namen (z. B. „🟠 beschäftigt“, „🏖️ im Urlaub bis 10.11.“ – „verfügbar“ wird nicht extra gezeigt).
-- Rückweg: App 2.848.0, Server 2.846.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.850.0, Server 2.846.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+## 2.850.0 – 2026-11-04 – 🧹 Erklärfilm: Zahl am Reiter und Kacheln umdrehen mit dem 🔄 (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 04.11.: „Erklärung, dass die Zahl im Register die Anzahl eingeblendeter Kacheln zeigt, z. B. 10/18 – und erwähnen, dass man die Kacheln umdrehen kann, aber dass es dazu ein eigenes Video gibt.“ – sofort eingespielt (Wunsch Hansi).
+- Film „Deine App – so, wie du sie willst“ neu (3:24 Min.): die Reiter zeigen wie in der App **eingeblendet/gesamt** (z. B. „Club 4/12“, nach dem Ausblenden „10/12“), eine Szene erklärt die Zahl.
+- Neue Szene **Kacheln umdrehen** passend zu 2.849.0 (KC-CLUB-KACHEL-DREHZEICHEN): Kacheln mit Rückseite tragen das kleine 🔄, der Finger tippt es an, Doppeltipp wird genannt; Hinweis auf das Erklär-Video „🎨 Oberfläche nach Wunsch“.
+- `film/app-selbst-einrichten.mp4?v=5`, gleiche Kennung `ansichtfilm`. Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests unverändert grün. Rückweg: App 2.849.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.849.0 – Kacheln umdrehen mit dem 🔄 (KC-CLUB-KACHEL-DREHZEICHEN, Wunschliste #80)
+- Kacheln mit Rückseite zeigen oben rechts ein kleines 🔄. Antippen dreht sie sofort um; hinten dreht dasselbe Zeichen an derselben Stelle zurück. Doppeltipp geht weiter. Eine Zahl auf der Kachel rückt daneben.
+- Neue Rückseiten: Dienstpläne (Mein Dienst, Dienstwünsche, Alle Dienstpläne), Hilfe & Tipps (Frag Twinkey, Erklär-Videos, Alle Hilfen), Büro (Eingang – nur Clubleitung, Büro öffnen).
+- Einstellungstext und Hilfe-Eintrag ergänzt. Test: tests/kachel-drehzeichen.test.mjs. Rückweg: Version 2.848.0 einspielen.
 
 ## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)
 Gesamtprüfung vor der Auslieferung (Bericht: KICC `docs/club-app-pruefung/PRUEFBERICHT-2026-11-04.md`, Freigabe Hansi 04.11.). Nur Fehlerbehebung, keine neue Funktion.

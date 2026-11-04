@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.850.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.851.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2128,8 +2128,8 @@ const FILME = [
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
   // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
   // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
-  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3 Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=4", bild: "film/app-einrichten-vorschau.jpg",
-    u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, Kachelgröße (2, 3 oder 4 nebeneinander), nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=5", bild: "film/app-einrichten-vorschau.jpg",
+    u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, Kachelgröße (2, 3 oder 4 nebeneinander), die Zahl am Reiter, Kacheln umdrehen mit dem 🔄, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
     wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
@@ -2591,6 +2591,7 @@ const HILFE = [
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_nadeln", thema: "club", sym: "📍", t: "Wo sind die Zettel, die ich schon gelesen habe?", x: "Damit die Pinnwand nicht zu voll wird, hängt ein Zettel nur noch <b>bis zum Tag nach dem ersten Ansehen</b> groß an der Wand. Danach findest du ihn unten über <b>„🗂️ Ältere Zettel ansehen“</b>. Deine eigenen Zettel – und für die Clubleitung alle gelesenen – stecken als <b>farbige Nadel oben im Rahmen</b>: antippen macht den Zettel wieder groß, <b>„📌 wieder als Nadel“</b> steckt ihn zurück. <b>Wichtige</b> Zettel bleiben groß, bis du „✓ Erledigt“ tippst. Gelöscht wird nichts." }, // 2.813.0 KC-CLUB-PINNWAND-NADELN
   { id: "anbieter_neues", thema: "technik", sym: "📰", nur: () => !!ICH?.admin, t: "Anbieter: Neues, Störungen, Wartungen", x: "Admin-Bereich → Kachel <b>„📰 Anbieter“</b>: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – <b>angekündigte Wartungen</b>, <b>Störungen</b> der letzten 14 Tage und <b>Neuerungen</b> der letzten 30 Tage. Oben steht die Lage in einem Satz. Meldungen aus anderen Regionen oder fernen Rechenzentren werden ausgeblendet (nur gezählt). Die Anbieter schreiben englisch – antippen öffnet die Original-Seite. <b>„💡 Prüfen lassen“</b> setzt eine Neuerung auf die Wunschliste, dann prüft Claude, ob wir sie übernehmen können. Kostet nichts: nur öffentliche Seiten, abgefragt erst beim Öffnen." }, // 2.842.0 KC-CLUB-ANBIETER-NEUES
+  { id: "kachel_drehzeichen", thema: "start", sym: "🔄", t: "Kacheln umdrehen: das kleine 🔄", x: "Kacheln mit einem kleinen <b>🔄</b> oben rechts haben eine <b>Rückseite mit Schnellaktionen</b> – z. B. Termine (＋ Neu), Nachrichten (Neue Nachricht), Dienstpläne (Mein Dienst, Dienstwünsche), Hilfe (Frag Twinkey, Erklär-Videos), Büro (Eingang). <b>🔄 antippen</b> dreht die Kachel um, hinten dreht dasselbe Zeichen sie zurück (nach 8 Sekunden auch von selbst). Doppelt auf die Kachel tippen geht weiterhin. Abschalten: ⚙️ Einstellungen → Darstellung → „🔄 Kacheln umdrehen“." }, // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN
   { id: "nutzung_alle", thema: "technik", sym: "📈", t: "So nutzen wir die App – Zahlen für alle", x: "Wann ist im Club am meisten los? Die Kachel <b>„📈 So nutzen wir die App“</b> (Register Technik) zeigt es als Farbfeld (Wochentag × Uhrzeit) – dazu, wie viele Mitglieder da waren, wie viele Nachrichten, Push und E-Mails verschickt wurden, welche Bereiche am beliebtesten sind und was noch zu entdecken ist. Wähle 7, 30 oder 90 Tage; Pfeile vergleichen mit dem Zeitraum davor. Es sind <b>nur Summen</b> – niemand wird einzeln gezählt, und Inhalte werden nie gezählt. Feld oder Säule antippen zeigt die genaue Zahl." }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
@@ -11729,6 +11730,10 @@ const KACHEL_RUECK = {
   einstellungen: [["🎨", "Darstellung", () => einstiegHin("darstellung")], ["⚙️", "Alle Einstellungen", () => zeige("einstellungen")]],
   spiele: [["♟️", "Schach", () => spStart("pc", "schach")], ["🧑‍🍳", "Fang den Koch", () => spStart("pc", "fdk")], ["🎲", "Mensch ärgere dich nicht", () => spStart("pc", "mae")]],
   schulung_admin: [["📝", "Besuche", () => scStart("besuche")], ["📅", "Termine & Einladungen", () => scStart("termine")]],
+  // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN (Wunschliste #80 „prüfe, ob es weitere Kacheln gibt, wo noch Funktionen bzw. Shortcuts hinpassen“): weitere Rückseiten
+  dienste: [["🙋", "Mein Dienst", () => mdStart()], ["📝", "Dienstwünsche", () => dwOeffnen()], ["📅", "Alle Dienstpläne", () => zeige("dienste")]],
+  hilfezentrum: [["🧑‍🍳", "Frag Twinkey", () => twFrageStart()], ["🎬", "Erklär-Videos", () => erklaerVideos()], ["❓", "Alle Hilfen", () => hzStart()]],
+  buero: [["📥", "Eingang", async () => { await buStart(); buEingang(); }, () => !!ICH?.vorstand], ["🗂️", "Büro öffnen", () => buStart()]],
 };
 const krAn = () => !einfach() && einst("kachelrueck", true);
 const krAktionen = (id) => (KACHEL_RUECK[id] || []).filter((a) => !a[3] || a[3]());
@@ -11740,7 +11745,7 @@ function krUmdrehen(el, zurueck) {
   setTimeout(() => {
     if (zurueck || el.classList.contains("kr-hinten")) { el.classList.remove("kr-hinten"); KR.offen = null; clearTimeout(KR.zu); try { kachelnZeigen(); } catch {} return; }
     el.classList.add("kr-hinten"); KR.offen = id;
-    el.innerHTML = `<div class="kr-titel">${k?.sym || ""} ${esc(k?.t || "")}</div>${krAktionen(id).map((a, i) => `<span class="kr-akt" role="button" tabindex="0" data-kr="${i}">${a[0]} ${esc(a[1])}</span>`).join("")}<span class="kr-zurueck" role="button" tabindex="0" data-kr="zu" aria-label="Zurückdrehen">↩</span>`;
+    el.innerHTML = `<div class="kr-titel">${k?.sym || ""} ${esc(k?.t || "")}</div>${krAktionen(id).map((a, i) => `<span class="kr-akt" role="button" tabindex="0" data-kr="${i}">${a[0]} ${esc(a[1])}</span>`).join("")}<span class="kr-zurueck kr-zeichen" role="button" tabindex="0" data-kr="zu" aria-label="Zurückdrehen" title="Zurückdrehen">🔄</span>`; // 2.849.0: gleiches Zeichen wie vorne
     requestAnimationFrame(() => el.classList.remove("kr-dreht"));
     clearTimeout(KR.zu); KR.zu = setTimeout(() => { if (KR.offen === id && el.isConnected) krUmdrehen(el, true); }, 8000);
     try { spur("kachel_rueck"); } catch {}
@@ -11757,6 +11762,8 @@ window.addEventListener("click", (e) => {
     const akt = krAktionen(el.dataset.id)[Number(a.dataset.kr)]; krUmdrehen(el, true); if (akt) try { akt[2](); } catch (x) { meldeFehler(x); }
     return;
   }
+  // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN (#80): das kleine 🔄 vorne dreht die Kachel sofort um (auch per Tastatur) – Doppeltipp geht weiter
+  if (e.target.closest?.(".kr-zeichen") && krAn() && krAktionen(el.dataset.id).length) { e.preventDefault(); e.stopImmediatePropagation(); clearTimeout(KR.warte); KR.letzt = { id: null, t: 0 }; return krUmdrehen(el); }
   if (!krAn() || !krAktionen(el.dataset.id).length || e.detail === 0 || el.dataset.krDurch) return; // Tastatur/Screenreader: sofort öffnen
   e.preventDefault(); e.stopImmediatePropagation();
   const jetzt = Date.now(), id = el.dataset.id;
@@ -11823,7 +11830,7 @@ function kachelnZeigen() {
     const z = k.zahl ? k.zahl() : 0;
     const kl = typeof k.klasse === "function" ? k.klasse() : k.klasse; // 2.20.0: Klasse auch berechnet (Lämpchen im Admin-Register)
     return `<button class="kachel${k.bald ? " bald" : ""}${kl ? " " + kl : ""}${k.neuFarbe && z ? " neu-da" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
-      <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}</button>`;
+      <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}${!k.bald && krAn() && krAktionen(k.id).length ? '<span class="kr-zeichen" role="button" tabindex="0" aria-label="Kachel umdrehen – Schnellaktionen auf der Rückseite" title="Umdrehen: Schnellaktionen">🔄</span>' : ""}</button>`; // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN
   }).join("");
   zahlenHochzaehlen($("raster"), ".kachel[data-id] > .zahl", (el) => "k:" + el.parentElement.dataset.id); // 2.172.0 KC-CLUB-EFFEKTE-2
   kachelZuletztMarkieren(); // 2.355.0
@@ -17475,7 +17482,7 @@ function zaehlerZeigen() {
   $("fussZaehler").title = unsicher ? "Nicht alle Unterhaltungen konnten gezählt werden" : "";
   // 2.800.0 KC-CLUB-NACHRICHT-ALTER (Wunsch #61 Hansi): der Knopf „Nachrichten“ unten blinkt, solange etwas ungelesen ist – bis 2 Tage grün,
   // 3. und 4. Tag orange, danach rot (Stufe rechnet der Server, Baustein KC-CLUB-NACHRICHT-MAHNUNG). Stufe unbekannt → nur die Zahl, kein Blinken.
-  // 2.849.0 KC-CLUB-NACHRICHT-BLINKEN (Wunsch Hansi 04.11.2026 „die Kachel blinkt, wenn eine ungelesene Nachricht da ist, genau wie der Button Nachricht“):
+  // 2.851.0 KC-CLUB-NACHRICHT-BLINKEN (Wunsch Hansi 04.11.2026 „die Kachel blinkt, wenn eine ungelesene Nachricht da ist, genau wie der Button Nachricht“):
   // Knopf unten, Nachrichten-Kachel und Feld „Neue Nachr.“ blinken gleich – Farbe nach Alter; ist das Alter (noch) unbekannt: grün statt gar nicht
   const st = n && !unsicher ? (NACHRICHT_STUFEN.includes(INIT?.nachrichtMahnung?.stufe) ? INIT.nachrichtMahnung.stufe : "gruen") : null, fk = document.querySelector('#fuss [data-v="nachrichten"]');
   if (fk) { NACHRICHT_STUFEN.forEach((x) => fk.classList.toggle("alt-" + x, st === x)); fk.title = st ? NACHRICHT_STUFE_TEXT[st] : ""; }
@@ -23453,7 +23460,7 @@ function neuWeiter() {
 // nach dem Senden wird der Text an WhatsApp übergeben – bei einer Person direkt an ihren Chat, sonst über „Teilen“ (Gruppe wählen).
 let ZW = { push: false, email: false, whatsapp: false }, CHAT = null;
 const wegIcons = (m) => { const w = m?.wege || {}; return `<span class="wege" title="🔔 Push · ✉️ E-Mail · WhatsApp"><i class="${w.push ? "" : "nein"}">🔔</i><i class="${w.mail ? "" : "nein"}">✉️</i><i class="wa-zeichen${w.whatsapp ? "" : " nein"}" aria-label="WhatsApp">${WA_ZEICHEN}</i></span>`; };
-// 2.850.0 KC-CLUB-WA-ZEICHEN (Fund Hansi 04.11.2026 „bei Thomas Hess ist ein grüner Punkt – in seinen Einstellungen hat er aber orange für beschäftigt“): das 🟢 für
+// 2.851.0 KC-CLUB-WA-ZEICHEN (Fund Hansi 04.11.2026 „bei Thomas Hess ist ein grüner Punkt – in seinen Einstellungen hat er aber orange für beschäftigt“): das 🟢 für
 // „WhatsApp-Nummer da“ sah aus wie der Status „verfügbar“. Jetzt ein kleines grünes „WA“ wie der Knopf unten im Chat (Wunsch Hansi „sollte gleich sein“); der Status steht als eigene Marke beim Namen.
 const WA_ZEICHEN = '<b class="wa-mini">WA</b>'; // gleich wie der grüne Knopf „WA“ unten im Chat (waKnopf)
 function zustellZeigen() {

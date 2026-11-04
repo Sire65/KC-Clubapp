@@ -11,7 +11,7 @@ assert.ok(/const stufe = !offen\.length \|\| !a2 \? null : !a2\.alt \? "gruen" :
 assert.ok(/return \{ alt: pk\.alt, wichtig: pk\.wichtig, tage: MAHNUNG_TAGE, stufe \};/.test(server), "Stufe geht mit der Mahnung an die App");
 // App: Knopf „Nachrichten“ bekommt die Klasse, nur mit sicherer Zahl
 const z = app.slice(app.indexOf("function zaehlerZeigen()"), app.indexOf("function zaehlerZeigen()") + 1500);
-// 2.849.0 KC-CLUB-NACHRICHT-BLINKEN: Stufe unbekannt → grün (vorher: gar nicht); unsichere Zahl → kein Blinken
+// 2.851.0 KC-CLUB-NACHRICHT-BLINKEN: Stufe unbekannt → grün (vorher: gar nicht); unsichere Zahl → kein Blinken
 assert.ok(/const st = n && !unsicher \? \(NACHRICHT_STUFEN\.includes\(INIT\?\.nachrichtMahnung\?\.stufe\) \? INIT\.nachrichtMahnung\.stufe : "gruen"\) : null/.test(z) && /fk\.classList\.toggle\("alt-" \+ x, st === x\)/.test(z), "Klasse je Stufe, unbekannt grün, unsicher keine");
 assert.ok(app.includes('NACHRICHT_STUFEN.forEach((x) => k.classList.toggle("na-" + x, st === x))'), "Kachel blinkt wie der Knopf");
 // Aussehen: grün / orange / rot, blinkt; aus bei „Animierte Knöpfe“ aus; Strom-Ruhe hält alle Animationen an
