@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.855.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.856.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2027,7 +2027,7 @@ function rgInstErkannt() { const g = einrichtenGeraet(); return g.pc ? null : g.
 const RUNDGAENGE = [
   { id: "warum", stand: "1", zeit: "04.11.2026", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Clubleben in einer App: vereinfachen, organisieren, erinnern, helfen – und Spaß (ca. 3 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
   // 2.276.0 KC-CLUB-VIDEO-INSTALL (Wunsch Hansi): Installieren – Einführung, je Browser ein Video, weitere Geräte, Link und Code
-  { id: "installieren", stand: "1", sym: "📲", t: "App installieren – so geht’s", u: "Persönlicher Link, Browser wählen, Kochmütze auf dem Startbildschirm (ca. 2 Min.)", st: () => RG_INST_START },
+  { id: "installieren", stand: "1", zeit: "04.11.2026", sym: "📲", t: "App installieren – so geht’s", u: "Persönlicher Link, Browser wählen, Kochmütze auf dem Startbildschirm (ca. 2 Min.)", st: () => RG_INST_START },
   { id: "inst_chrome", stand: "1", sym: "🔵", t: "Installieren mit Chrome (Android)", u: "Drei Punkte, App installieren, Installieren (ca. 1 Min.)", st: () => RG_INST_CHROME },
   { id: "inst_edge", stand: "1", sym: "🌊", t: "Installieren mit Edge (Android)", u: "Menü, Zum Telefon hinzufügen, Installieren (ca. 1 Min.)", st: () => RG_INST_EDGE },
   { id: "inst_samsung", stand: "1", sym: "🟣", t: "Installieren mit Samsung Internet", u: "Menü, Seite hinzufügen zu, Startbildschirm (ca. 1 Min.)", st: () => RG_INST_SAMSUNG },

@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.856.0 – Zeitansage: Video „App installieren – so geht’s“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 9 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Link per WhatsApp/E-Mail, 5 Browser, 6-stelliger Code für weitere Geräte). Zeitansage „etwa zwei Minuten“ eingeschaltet.
+- Rückweg: Version 2.855.0 einspielen.
+
 ## 2.855.0 – 2026-11-04 – 🎓 Hilfe auf dem neuesten Stand: Hilfe-Zentrum, Twinkey, Lupe und Erklär-Videos zu allen Neuheiten 2.672–2.847 (KC-CLUB-HILFE-NACHTRAG-6) · 🐞 „👋 Was ist neu“ wirkt wieder · nur App
 Wunsch Hansi (04.11.): „Überprüfe mal wieder komplett, ob die Hilfetexte, Lupe, Twinkey, Videos aktuell sind, denn es sind ja neue Funktionen dazugekommen oder geändert.“ Geprüft wurden alle Versionen seit dem letzten Nachtrag (2.672.0–2.847.0) gegen Hilfe-Zentrum, „Kurz erklärt“, Twinkey, Lupe, Sprachbefehle, „?“-Kontexthilfe und Erklär-Videos – nur Mitglieder-Funktionen, Clubleitungs-Einträge nur mit `nur:`-Schranke, nichts von Admin.
 - **🐞 Fehler behoben (an der Quelle):** Seit 2.847.0 (Pinnwand nie von selbst) kam auch das Fenster „👋 Schön, dass du da bist – seit deinem letzten Besuch ist neu“ nicht mehr – auch bei Mitgliedern, die „👋 Beim Öffnen zeigen, was neu ist“ bewusst eingeschaltet haben. Jetzt kommt es wieder (nur dann); Zettel-Fenster und Pinnwand gehen weiterhin nie von selbst auf. Test `tests/pinnwand-nie-auto.test.mjs` erweitert.
