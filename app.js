@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.848.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.849.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -15900,7 +15900,8 @@ function infoTreffen() {
   return `<div class="il" id="infoLaufband"></div><!-- 2.439.0 KC-CLUB-INFO-LAUFBAND -->
     <div class="kacheln3">
       ${(() => { const m = n ? nachrichtMahnung() : null; /* KC-CLUB-NACHRICHT-MAHNUNG (2.223.0) */
-        return `<button class="mini${n ? " mini-neu" : ""}${m ? " " + m.klasse : ""}"${m ? ` title="${esc(m.titel)}"` : ""} onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${m?.wichtig ? "❗" : ""}${n}</b><span>${m?.wichtig ? "Wichtig!" : m ? "Lange offen" : "Neue Nachr."}</span>`; })()}${mpfeil("nachrichten", n > 0, n)}</button>
+        const na = n && !INIT?.ungelesenUnsicher ? (["gruen", "orange", "rot"].includes(INIT?.nachrichtMahnung?.stufe) ? INIT.nachrichtMahnung.stufe : "gruen") : ""; // KC-CLUB-NACHRICHT-BLINKEN
+        return `<button class="mini${n ? " mini-neu" : ""}${na ? " na-" + na : ""}${m ? " " + m.klasse : ""}"${m ? ` title="${esc(m.titel)}"` : ""} onclick="zeige('nachrichten')">${n ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}<b>${m?.wichtig ? "❗" : ""}${n}</b><span>${m?.wichtig ? "Wichtig!" : m ? "Lange offen" : "Neue Nachr."}</span>`; })()}${mpfeil("nachrichten", n > 0, n)}</button>
       ${(() => { const on = ONL.zeigen && mpOnline() > 0; /* 2.207.0 KC-CLUB-MINI-ONLINE-AMEISEN (Wunsch Hansi): ist jemand online, läuft um die ganze Kachel ein Ameisenlauf – wie bei neuen Nachrichten, in Online-Grün */
         return `<button class="mini${on ? " mini-online" : ""}" onclick="mgNurOnline()">${on ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}`; })()}<b class="mini-zeile">${INIT?.mitgliederAnzahl || "–"}${ONL.zeigen ? onlineZahlHtml() : ""}</b>${onlineNamenHtml()}<span>Mitglieder${inkognitoAn() ? '<i class="inko-marke" title="Inkognito ist an – niemand sieht dich online">🕶️</i>' : ""}</span>${mpfeil("mitglieder", ONL.zeigen && mpOnline() > 0, mpOnline())}</button>
       <button id="cdKachel" class="mini${frist ? " mini-frist frist-" + frist : ""}" onclick="cdTippen()">${frist ? '<svg class="ameisen" aria-hidden="true"><rect width="100%" height="100%" rx="16"/></svg>' : ""}${cdInhalt(bisTreffen)}${mpfeil("termin", !!t, t ? `${t.id || t.beginn}|${frist}` : "", frist)}</button>
@@ -17474,11 +17475,13 @@ function zaehlerZeigen() {
   $("fussZaehler").title = unsicher ? "Nicht alle Unterhaltungen konnten gezählt werden" : "";
   // 2.800.0 KC-CLUB-NACHRICHT-ALTER (Wunsch #61 Hansi): der Knopf „Nachrichten“ unten blinkt, solange etwas ungelesen ist – bis 2 Tage grün,
   // 3. und 4. Tag orange, danach rot (Stufe rechnet der Server, Baustein KC-CLUB-NACHRICHT-MAHNUNG). Stufe unbekannt → nur die Zahl, kein Blinken.
-  const st = n && !unsicher ? INIT?.nachrichtMahnung?.stufe : null, fk = document.querySelector('#fuss [data-v="nachrichten"]');
+  // 2.849.0 KC-CLUB-NACHRICHT-BLINKEN (Wunsch Hansi 04.11.2026 „die Kachel blinkt, wenn eine ungelesene Nachricht da ist, genau wie der Button Nachricht“):
+  // Knopf unten, Nachrichten-Kachel und Feld „Neue Nachr.“ blinken gleich – Farbe nach Alter; ist das Alter (noch) unbekannt: grün statt gar nicht
+  const st = n && !unsicher ? (NACHRICHT_STUFEN.includes(INIT?.nachrichtMahnung?.stufe) ? INIT.nachrichtMahnung.stufe : "gruen") : null, fk = document.querySelector('#fuss [data-v="nachrichten"]');
   if (fk) { NACHRICHT_STUFEN.forEach((x) => fk.classList.toggle("alt-" + x, st === x)); fk.title = st ? NACHRICHT_STUFE_TEXT[st] : ""; }
   // KC-CLUB-NEU-KACHEL (1.21.4): Farbe und Zahl der Nachrichten-Kachel sofort mitziehen (ohne die Startseite neu zu zeichnen)
   document.querySelectorAll('.kachel[data-id="kommunikation"]:not(.bearb)').forEach((k) => {
-    k.classList.toggle("neu-da", n > 0); let z = k.querySelector(".zahl");
+    k.classList.toggle("neu-da", n > 0); NACHRICHT_STUFEN.forEach((x) => k.classList.toggle("na-" + x, st === x)); let z = k.querySelector(".zahl");
     if (n && !z) { z = document.createElement("span"); z.className = "zahl"; k.appendChild(z); }
     if (z) { if (n) z.textContent = n; else z.remove(); }
   });

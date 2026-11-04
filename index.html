@@ -2884,6 +2884,13 @@
   .fuss-leiste button[class*="alt-"] .zaehler { background: var(--na); }
   @keyframes nachrichtAlter { 0%, 100% { box-shadow: inset 0 0 0 2px var(--na); } 50% { box-shadow: inset 0 0 0 2px transparent; background: color-mix(in srgb, var(--na) 18%, transparent); } }
   .ohne-anim .fuss-leiste button[class*="alt-"] { animation: none; box-shadow: inset 0 0 0 2px var(--na); }
+  /* 2.849.0 KC-CLUB-NACHRICHT-BLINKEN: Nachrichten-Kachel und Feld „Neue Nachr.“ blinken wie der Knopf unten (Farbe nach Alter; Strom-Ruhe / ohne Effekte: fester Rand) */
+  .kachel.na-gruen, .mini.na-gruen { --na: #2e9e4f; } .kachel.na-orange, .mini.na-orange { --na: #e88a12; } .kachel.na-rot, .mini.na-rot { --na: #d0202e; }
+  .kachel[class*="na-"], .mini[class*="na-"] { animation: nachrichtKachel 1.4s ease-in-out infinite; }
+  .kachel[class*="na-"] .zahl { background: var(--na); }
+  @keyframes nachrichtKachel { 0%, 100% { box-shadow: inset 0 0 0 3px var(--na), var(--schatten); } 50% { box-shadow: inset 0 0 0 3px transparent, var(--schatten); filter: brightness(1.08); } }
+  .ohne-anim .kachel[class*="na-"], .ohne-anim .mini[class*="na-"] { animation: none; box-shadow: inset 0 0 0 3px var(--na), var(--schatten); }
+  @media (prefers-reduced-motion: reduce) { .kachel[class*="na-"], .mini[class*="na-"], .fuss-leiste button[class*="alt-"] { animation: none; box-shadow: inset 0 0 0 3px var(--na); } }
   .fuss-leiste .zaehler { position: absolute; top: 2px; right: 18%; background: var(--rot); color: #fff; border-radius: 10px; font-size: .7rem; padding: 1px 6px; }
 
   /* KC-CLUB-DRUCK (0.53.0): schmaler Druckknopf rechts, Auswahlfenster, Druckseite */
@@ -6723,7 +6730,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.848.0" data-v="2.848.0"></script>
+<script src="app.js?v=2.849.0" data-v="2.849.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

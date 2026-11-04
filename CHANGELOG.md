@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.849.0 – 2026-11-04 – 💬 Nachrichten-Kachel blinkt wie der Knopf (KC-CLUB-NACHRICHT-BLINKEN)
+Wunsch Hansi (04.11.): „Bau ein, dass jeweils die Kachel blinkt, wenn eine ungelesene Nachricht da ist, genau wie der Button Nachricht.“
+- Bei ungelesenen Nachrichten blinken jetzt gleich: der Knopf „Nachrichten“ unten, die Nachrichten-Kachel und das Feld „Neue Nachr.“ auf der Startseite – grün (bis 2 Tage), orange (3–4 Tage), rot (älter). Ist das Alter noch unbekannt, blinkt es grün (vorher: gar nicht).
+- Ohne Effekte („✨ Animierte Knöpfe“ aus), bei „Bewegung verringern“ und in der Strom-Ruhe: fester farbiger Rand statt Blinken. Die Pinnwand-Kachel pulsiert bei neuen Zetteln schon seit 2.763.0 (rot, mit Anzahl).
+- Rückweg: App 2.848.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+
 ## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)
 Gesamtprüfung vor der Auslieferung (Bericht: KICC `docs/club-app-pruefung/PRUEFBERICHT-2026-11-04.md`, Freigabe Hansi 04.11.). Nur Fehlerbehebung, keine neue Funktion.
 - **Mitglieder-Tipp löschte das Einstiegs-Fenster:** `tippZeigen` öffnete sein Fenster unter der Kennung `tippBlatt` – `blattAuf` entfernt dabei das gleichnamige feste Fenster der Einstiegs-Tipps (mit `tippText`, `tippJa` …). Danach brach z. B. der Hinweis nach dem Umschalten auf die erweiterte Ansicht mit einem Programmfehler ab. Der Mitglieder-Tipp hat jetzt eigene Kennungen `mtBlatt` / `mtText`.
