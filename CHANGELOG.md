@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.857.0 – Zeitansage: Video „Installieren mit Chrome (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 4 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (⋮ → App installieren bzw. Zum Startbildschirm hinzufügen → Installieren). Zeitansage „knapp eine Minute“ eingeschaltet.
+- Rückweg: Version 2.856.0 einspielen.
+
 ## 2.856.0 – Zeitansage: Video „App installieren – so geht’s“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 9 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Link per WhatsApp/E-Mail, 5 Browser, 6-stelliger Code für weitere Geräte). Zeitansage „etwa zwei Minuten“ eingeschaltet.
 - Rückweg: Version 2.855.0 einspielen.
