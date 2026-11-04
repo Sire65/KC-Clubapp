@@ -2133,14 +2133,17 @@ const FILME = [
   { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=5", bild: "film/app-einrichten-vorschau.jpg",
     u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, Kachelgröße (2, 3 oder 4 nebeneinander), die Zahl am Reiter, Kacheln umdrehen mit dem 🔄, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
     wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
-  // KC-CLUB-KOPFFILM (Wunsch Hansi 04.11.2026 „Erklärvideo nur über den Kopfbereich – kein Admin-Bereich“): für alle einmal beim Start (nach dem Ansichtfilm),
-  // oben in Technik → 🎬 Erklär-Videos; Quellen und Konzept: KC-Infrastructure-Control-Center kopffilm/
+  // KC-CLUB-KOPFFILM (Wunsch Hansi 04.11.2026 „Erklärvideo nur über den Kopfbereich – kein Admin-Bereich“). Quellen und Konzept: KC-Infrastructure-Control-Center kopffilm/
+  // Gestaffelt (Wunsch Hansi 04.11. „4 Tage zurückhalten, nur Mitgliedern anbieten, die den ersten bereits gesehen haben – den anderen erst ein paar Tage später“):
+  // wer den Ansichtfilm angesehen hat, bekommt ihn sofort (beim Start und in Technik → 🎬 Erklär-Videos), alle anderen ab KOPFFILM_AB.
   { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=1", bild: "film/kopf-vorschau.jpg",
     u: "Kopfzeile, Status und Lämpchen, Blättern mit ‹ › und « », gelbe Punkte, Wetter, Für dich, Demnächst, Fotos, Kommunikationszentrale, Startkarte und die Szenen im Kopf",
-    wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
+    wo: "unter Technik → 🎬 Erklär-Videos", get inVideos() { return this.fuer(); }, fuer: () => filmGesehen("ansichtfilm") || heuteIso() >= KOPFFILM_AB },
 ];
 const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => (f.fuer() && !f.wo) || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
+const KOPFFILM_AB = "2026-11-08"; // KC-CLUB-KOPFFILM: ab hier für alle (vorher nur, wer den Ansichtfilm gesehen hat)
+const filmGesehen = (id) => ["angesehen", "ende"].includes(INIT?.einstellungen?.filme?.[id]?.wie); // „Nein, danke“ zählt nicht als gesehen
 const filmErledigt = (id) => !!INIT?.einstellungen?.filme?.[id]?.z;
 const FILM_START = { versuche: 0 };
 async function filmMerken(id, wie) {
