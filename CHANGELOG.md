@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.857.0 – 2026-11-04 – 🧭 Neuer Erklärfilm „Der Kopf der Club-App“ (KC-CLUB-KOPFFILM) · nur App
+Wunsch Hansi 04.11.: „Ein neues Erklärvideo nur über den Kopfbereich … kein Adminbereich erwähnen und nicht zeigen. Film darf nicht zu lang werden, soll aber alle Funktionen erklären, auch die Fotoanzeige.“ Konzept freigegeben („Passt“), mit freundlicher, sachlicher Stimme und Filmlänge am Anfang.
+- Film (2:47 Min., Hochformat, Sprecher mit Untertiteln): Kopfzeile (Logo, 🌙 Tag/Nacht/Automatik, ↻), Status-Knopf und Lämpchen, ⌃/⌃⌃, erste Karte (Treffen mit Zusagen, drei Felder), ‹ › und « », gelbe Punkte, Schnellstart, Wetter (Tag antippen, lange festhalten), Für dich, Demnächst, Neueste Fotos, Kommunikationszentrale, Startkarte, Szenen im Kopf (⚙️ Mehr → ✨ Effekte, 🔄 Automatik), Eselsohr mit Hinweis aufs eigene Video. Kein Admin-Bereich.
+- `FILME` Eintrag `kopffilm` (`film/kopf-der-app.mp4`, `film/kopf-vorschau.jpg`): für alle einmal beim Start angeboten (nach dem Ansichtfilm), oben in Technik → 🎬 Erklär-Videos; „👀 Wer hat ihn gesehen?“ für den Admin wie beim Ansichtfilm.
+- Quellen, Konzept und Drehbuch: KC-Infrastructure-Control-Center `kopffilm/`. Tests: `tests/film-hinweis.test.mjs` erweitert. Rückweg: App 2.856.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (der Film meldet sich beim Start selbst).
+
 ## 2.856.0 – Zeitansage: Video „App installieren – so geht’s“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 9 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Link per WhatsApp/E-Mail, 5 Browser, 6-stelliger Code für weitere Geräte). Zeitansage „etwa zwei Minuten“ eingeschaltet.
 - Rückweg: Version 2.855.0 einspielen.

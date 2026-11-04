@@ -59,4 +59,7 @@ const vi = fs.readFileSync("teile/videos.js", "utf8");
 assert.ok(/FILME : \[\]\)\.filter\(\(f\) => f\.inVideos\)/.test(vi) && /filmZeigen\(/.test(vi) && /ICH\?\.admin \? `<button[^`]*filmZuschauer\(/.test(vi), "Film oben in den Erklär-Videos, 👀 nur Admin");
 const fz = server.slice(server.indexOf('case "film_zuschauer"'), server.indexOf('case "spur_liste"'));
 assert.ok(/nurAdmin\(ich\)/.test(fz) && /\^\[a-z\]\{2,24\}\$/.test(fz) && /eq\("schluessel", "filme"\)/.test(fz) && !/nachricht|chat|inhalt/i.test(fz.replace(/keine Inhalte/, "")), "Server film_zuschauer: nur Admin, nur Einstellung „filme“ (Regel 19)");
+// KC-CLUB-KOPFFILM (04.11.2026): eigener Film über den Kopfbereich, für alle, in den Erklär-Videos – ohne Admin-Bereich
+assert.ok(/\{ id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", [^\n]*datei: "film\/kopf-der-app\.mp4/.test(reg) && /Kommunikationszentrale, Startkarte und die Szenen im Kopf",\s+wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: \(\) => true \}/.test(reg), "Kopffilm in FILME");
+assert.ok(!/admin/i.test(reg.slice(reg.indexOf('id: "kopffilm"'), reg.indexOf("];", reg.indexOf('id: "kopffilm"')))), "Kopffilm: kein Admin-Bereich");
 console.log("film-hinweis: alle Prüfungen bestanden");

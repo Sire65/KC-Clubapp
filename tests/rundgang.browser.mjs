@@ -18,7 +18,7 @@ const WURZEL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const heute = new Date().toISOString().slice(0, 10);
 
 const INIT = { ok: true, ich: { person_id: "KC-P-TEST-RUNDGANG", vorname: "Test", name: "Test Rundgang", admin: true, vorstand: true, aemter: ["Admin"], rollen: [] },
-  einstellungen: { begruessung: { gesehen: true }, unterstuetzung: "normal", einweisung: { an: false, gesehen: {} }, spiel_einladung: { an: false }, ansicht: { art: "erweitert", gewaehlt: true }, filme: { ansichtfilm: { wie: "ende", z: "2026-11-02T08:00:00.000Z" } } }, // KC-CLUB-ANSICHTFILM: Start-Angebot schon erledigt (sonst liegt das Film-Fenster über der Startseite)
+  einstellungen: { begruessung: { gesehen: true }, unterstuetzung: "normal", einweisung: { an: false, gesehen: {} }, spiel_einladung: { an: false }, ansicht: { art: "erweitert", gewaehlt: true }, filme: { ansichtfilm: { wie: "ende", z: "2026-11-02T08:00:00.000Z" }, kopffilm: { wie: "ende", z: "2026-11-04T08:00:00.000Z" } } }, // KC-CLUB-ANSICHTFILM: Start-Angebot schon erledigt (sonst liegt das Film-Fenster über der Startseite)
   mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {}, kacheln: null };
 // Leere, aber vollständige Antworten – so wie der Server sie ohne Inhalte liefert
 const ANTWORTEN = {
