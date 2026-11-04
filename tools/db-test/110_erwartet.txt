@@ -1,0 +1,4 @@
+ein_zeitplan=t
+offline_bedingung=t
+wecker_bleibt=t
+abfrage_laeuft=t

@@ -9,5 +9,7 @@ assert.ok(lauf.includes("x.wert.offline !== x.wert.seit") && lauf.includes('.eq(
 assert.ok(srv.includes("const OFFLINE_WARTE_MS = 3 * 60000, OFFLINE_TAKT_MIN = 5;") && lauf.includes("ONLINE_SEK * 1000 - OFFLINE_WARTE_MS"), "kurzes Weglegen löst nichts aus");
 assert.ok(meld.includes("onlineZeigenMap([pid])") && meld.includes("inkognitoSet([pid])") && meld.includes("await onlinePushEmpfaenger(pid)"), "gleiche Regeln wie online");
 assert.ok(meld.includes('routerSenden("club_online"') && meld.includes("🔴 ${name} ist offline"), "Push wie online, nur Push");
-assert.ok(srv.includes("const offline = new Date().getUTCMinutes() % OFFLINE_TAKT_MIN === 0 ? await offlinePushLauf().catch(") && srv.includes("OFFLINE_TAKT_MIN = 5;"), "nur jede 5. Minute (sparsam)");
+assert.ok(srv.includes("const offline = new Date().getUTCMinutes() % OFFLINE_TAKT_MIN === 0 ? await offlinePushLauf().catch("), "Server: jede 5. Minute (passt zum Zeitplan)");
+const mig = fs.readFileSync(new URL("../supabase/migrations/20261104_kc_club_offline_push_zeitplan.sql", import.meta.url), "utf8");
+assert.ok(mig.includes("extract(minute from now())::int % 5 = 0") && mig.includes("interval '330 seconds'") && mig.includes("kc_club_wecker") && mig.includes("kc_club_geplant"), "Zeitplan: jede 5. Minute, nur bei Bedarf, alles Bisherige bleibt");
 console.log("offline-push: ok");
