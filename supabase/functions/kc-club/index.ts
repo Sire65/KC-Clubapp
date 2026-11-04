@@ -1258,7 +1258,7 @@ async function onlinePushEmpfaenger(werId: string): Promise<{ ids: string[]; adm
 // Die App meldet sich nicht ab (schließen, Handy aus, kein Netz) – sie hört nur auf, sich zu melden. Darum schaut der Minuten-Lauf (geplant_faellig), wessen
 // letzte Meldung (online_seit.zuletzt) länger als ONLINE_SEK her ist und noch nicht als offline gemeldet wurde (wert.offline = Beginn dieser Sitzung).
 // Gleiche Empfänger und Regeln wie „ist jetzt online“ (Einstellung online_push, Ruhezeit, unsichtbar/inkognito, keine Testkonten). Eine Abfrage je Minute.
-const OFFLINE_WARTE_MS = 3 * 60000;
+const OFFLINE_WARTE_MS = 3 * 60000, OFFLINE_TAKT_MIN = 5;
 async function offlinePushLauf() {
   // erst nach OFFLINE_WARTE_MS ohne Lebenszeichen – kurz das Handy weggelegt oder ein Funkloch löst noch keine Meldung aus
   const jetztMs = Date.now(), bis = new Date(jetztMs - ONLINE_SEK * 1000 - OFFLINE_WARTE_MS).toISOString(), von = new Date(jetztMs - ONLINE_SEK * 1000 - OFFLINE_WARTE_MS - 20 * 60000).toISOString();
@@ -9026,7 +9026,8 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       const lauf = await geplantFaelligLauf();
       const warteschlange = await mailWarteschlange().catch((e) => ({ fehler: String(e) })); // 2.520.0 KC-COMM-WARTEN
       const wecker = await weckerFaelligLauf().catch((e) => ({ fehler: String(e) })); // 2.640.0 KC-CLUB-UHR-WECKER
-      const offline = await offlinePushLauf().catch((e) => ({ fehler: String(e) })); // 2.850.0 KC-CLUB-OFFLINE-PUSH
+      // 2.850.0 KC-CLUB-OFFLINE-PUSH – sparsam (Hansi: „kostet das wieder Datenbank? Da müssen wir sparen“): nur jede 5. Minute → 288 kleine Abfragen am Tag
+      const offline = new Date().getUTCMinutes() % OFFLINE_TAKT_MIN === 0 ? await offlinePushLauf().catch((e) => ({ fehler: String(e) })) : null;
       return json({ ok: true, ...lauf, warteschlange, wecker, offline });
     }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
