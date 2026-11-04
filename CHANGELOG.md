@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.849.0 – 2026-11-04 – Gesamtprüfung Teil 2: lesbarer, besser antippbar, einheitlich (KC-CLUB-PRUEFUNG-1104-B)
+Punkte 1–7 aus der Gesamtprüfung (Freigabe Hansi 04.11.: „vorsichtig, nix kaputt machen, ordentlich ausgerichtet und gut bedienbar“). Jede Änderung im Browser bei 320/360/390/430/800 px, normal und mit großer Schrift nachgemessen.
+- **💬 Nachrichten – Leiste oben:** Die Wörter unter den Symbolen sind 12 statt 10 px groß und werden nie mehr gekürzt („Favori…“, „Ungel…“). Jeder Knopf ist so breit wie sein Wort; reicht der Platz nicht, kommt eine zweite, gemittelte Reihe – nichts liegt versteckt hinter Wischen. Bei 390 px passen die sechs Mitglieder-Knöpfe weiter in eine Reihe.
+- **❓ Hilfe & Tipps:** Der Link „💭 Feedback“ im Satz ist größer antippbar (vorher 20 px hoch), ohne dass sich die Zeile verschiebt. Auf schmalen Handys (unter 400 px) zeigt der Suchen-Knopf nur 🔍 – das Eingabefeld wird dadurch rund 60 px breiter (320 px mit großer Schrift: 134 → 209 px).
+- **Barrierefreiheit:** Umschalter Fotos/Videos als benannte Gruppe mit „gedrückt“-Zustand (wie die übrigen Ein/Aus-Knöpfe, statt einer falschen Reiter-Rolle); Kamera-Auslöser hat einen Namen für Bildschirmleser.
+- **Einheitlich „Wird geladen …“** statt „Lädt …“ (Archiv, Sprüche, Übersicht, Dokument-Ansicht, Anrufbeantworter). Ausnahme: der kleine Abspiel-Knopf in der Sprechblase.
+- **🪑 Runder Tisch – Tasche:** Zweimal schnell auf „💼 Nächstes“ getippt schickte dasselbe Teil doppelt. Jetzt wird ein weiterer Tipp ignoriert, solange ein Teil unterwegs ist. Der Browser-Test wartete hier zu kurz (das PDF aus einem früheren Schritt war noch zu sehen) und war deshalb gelegentlich rot.
+- Startseite (Punkt 1): nachgemessen – Pfeile, Versionsanzeige und Online-Punkt haben schon unsichtbar vergrößerte Tippflächen (≥ 24 px, seit 2.481.0), keine Änderung nötig.
+- Bewusst nicht geändert: das Schloss 🔓 in den Klapp-Zeilen (Klappen-Kern, 21 Bereiche) und die LED-Punkte im Verbindungsknopf – Umbau des Kerns wäre riskanter als der Nutzen.
+- Test: `tests/pruefung-1104.test.mjs` (Teil B), `tests/tisch-live.browser.mjs`. Rückweg: App 2.848.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)
 Gesamtprüfung vor der Auslieferung (Bericht: KICC `docs/club-app-pruefung/PRUEFBERICHT-2026-11-04.md`, Freigabe Hansi 04.11.). Nur Fehlerbehebung, keine neue Funktion.
 - **Mitglieder-Tipp löschte das Einstiegs-Fenster:** `tippZeigen` öffnete sein Fenster unter der Kennung `tippBlatt` – `blattAuf` entfernt dabei das gleichnamige feste Fenster der Einstiegs-Tipps (mit `tippText`, `tippJa` …). Danach brach z. B. der Hinweis nach dem Umschalten auf die erweiterte Ansicht mit einem Programmfehler ab. Der Mitglieder-Tipp hat jetzt eigene Kennungen `mtBlatt` / `mtText`.

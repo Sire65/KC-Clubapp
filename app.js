@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.848.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.849.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -16,7 +16,7 @@ const TEILE_LISTE = {
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
-  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-Ofuk9Su6aMqisQIO1Mu5hAnG+DmE/fAMZhYaJUIWy0OtUUEXj8Vw/RI7LiH8Ck24" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
+  tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-6OyV3sDQAe37mm4/qdLlHmVzGECfXOYNUCPdaigfJfq5MSUyDpTwYibTolgei3xD" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
   buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-bTEiYXM6UcH05EqAohDWpDoNNWorAyk424xroS5KH5akurfSr8OS0RJ14TSFeLhy" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-0hVAT/G2Iy40pSzbHCQ3a74hEOk3fuk7XMSFGLqz9mutp6zCJhcKDHcjZ0iNKWUp" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
@@ -4143,7 +4143,7 @@ function hzZeigen() {
       <ul class="hz-inhalt">${themen.map((t) => `<li><button onclick="hzThema('${t.id}')"><span class="nr">${t.nr}</span><span class="sym">${t.sym}</span><span><b>${esc(t.t)}</b><small>${esc(t.u)}</small></span><span class="anz">${t.es.length} ${t.es.length === 1 ? "Hilfe" : "Hilfen"}</span></button></li>`).join("")}</ul></div>`
       + (neu.length ? `<div class="karte"><h3>🆕 Neu seit deinem letzten Besuch (${neu.length})</h3>${neu.map((e) => `<p style="margin:0 0 4px">${esc(nr[e.id])} ${e.sym} <a href="#" onclick="hzThema('${e.thema}');return false">${esc(e.t)}</a></p>`).join("")}</div>` : "")
       + (ICH?.admin ? `<div class="knoepfe" style="margin-top:10px"><button class="knopf klein" onclick="hzBewertungenZeigen()">📊 Bewertungen der Hilfen (nur Admin)</button></div>` : "") // KC-CLUB-HILFE-BEWERTUNG
-      + `<p class="hinweis" style="margin:10px 2px 0">Die Hilfe wächst mit der App: neue Funktionen, Tipps und Erklärungen erscheinen hier von selbst. Zum Ausdrucken oder als PDF: 🖨️ oben rechts. Etwas fehlt? Sag es über <a href="#" onclick="zeige('feedback');return false">💭 Feedback</a>.</p>`;
+      + `<p class="hinweis" style="margin:10px 2px 0">Die Hilfe wächst mit der App: neue Funktionen, Tipps und Erklärungen erscheinen hier von selbst. Zum Ausdrucken oder als PDF: 🖨️ oben rechts. Etwas fehlt? Sag es über <a href="#" class="tipp-link" onclick="zeige('feedback');return false">💭 Feedback</a>.</p>`;
   }
   $("hzInhalt").innerHTML = html;
   document.querySelector("#hzRegister button.an")?.scrollIntoView({ block: "nearest", inline: "center" });
@@ -5402,7 +5402,7 @@ function abZeichnen() {
 function abBlaettern(d) { ABBOX.i = Math.max(0, Math.min(ABBOX.liste.length - 1, ABBOX.i + d)); abZeichnen(); }
 async function abAbspielen() {
   const x = ABBOX.liste[ABBOX.i], ort = $("abSpieler"); if (!x || !ort) return;
-  ort.innerHTML = '<p class="hinweis" style="text-align:center">⏳ lädt …</p>';
+  ort.innerHTML = '<p class="hinweis" style="text-align:center">⏳ Wird geladen …</p>';
   let url; try { url = (await api("ab_anhoeren", { id: x.id })).url; } catch (e) { ort.innerHTML = ""; return meldeFehler(e); }
   if (!x.gehoert) { x.gehoert = new Date().toISOString(); abMerkerZeigen(ABBOX.liste.filter((y) => !y.gehoert).length); }
   const a = document.createElement("audio"); a.controls = true; a.src = url; a.preload = "auto"; a.style.width = "100%";
@@ -28940,7 +28940,7 @@ const VI = { daten: null, art: "fotos", datei: null, info: null };
 const sekText = (s) => `${Math.floor((s || 0) / 60)}:${String(Math.round((s || 0) % 60)).padStart(2, "0")}`;
 function faArt(art) {
   VI.art = art === "videos" && zugang() === "mitglied" ? "videos" : "fotos";
-  document.querySelectorAll("#faArtWahl button").forEach((b) => b.classList.toggle("an", b.dataset.art === VI.art));
+  document.querySelectorAll("#faArtWahl button").forEach((b) => { b.classList.toggle("an", b.dataset.art === VI.art); b.setAttribute("aria-pressed", String(b.dataset.art === VI.art)); }); // 2.849.0: Zustand auch für Bildschirmleser
   ["fotoForm", "fotoSpeicher", "fotoAlben", "fotoFilter", "faLeiste", "fotoListe"].forEach((id) => $(id)?.classList.toggle("fa-aus", VI.art === "videos"));
   $("videoBereich")?.classList.toggle("versteckt", VI.art !== "videos");
   if (VI.art === "videos") videosLaden();
@@ -32036,7 +32036,7 @@ const sprRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#985a0
 async function sprStart(reg) {
   AR.spruch = true; if (reg !== undefined) SPA.reg = reg;
   if (aktuelleAnsicht !== "archiv") { AR.ordner = null; AR.korb = false; zeige("archiv"); }
-  if (!SPA.daten) { $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>'; try { SPA.daten = await api("spruch_archiv", { a: "liste" }); } catch (e) { AR.spruch = false; return meldeFehler(e); } }
+  if (!SPA.daten) { $("arInhalt").innerHTML = '<p class="hinweis">Wird geladen …</p>'; try { SPA.daten = await api("spruch_archiv", { a: "liste" }); } catch (e) { AR.spruch = false; return meldeFehler(e); } }
   sprZeigen();
 }
 function sprZu() { AR.spruch = false; arZeigen(); }
@@ -32426,7 +32426,7 @@ const AR_FEST_TITEL = { schilder: "Schilder", anleitungen: "Anleitungen", weihna
 const arIstFest = (o, kennung) => !!o && !o.besitzer && ("kennung" in o ? o.kennung === kennung : o.titel === AR_FEST_TITEL[kennung]);
 function arStartFest(kennung) { AR.zielFest = kennung; arStart(); } // fester Club-Ordner (neuester Jahrgang), egal wie er gerade beschriftet ist
 async function arLaden() {
-  if (!AR.daten) $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>';
+  if (!AR.daten) $("arInhalt").innerHTML = '<p class="hinweis">Wird geladen …</p>';
   try { AR.daten = await api("archiv_liste");
     if (INIT) { const n = AR.daten.ordner.filter((o) => o.eigen).reduce((x, o) => x + (o.pruefung || 0), 0); if ((INIT.eingangskorb || 0) !== n) { INIT.eingangskorb = n; try { wichtigZeigen(); } catch {} } } // 2.432.0 KC-CLUB-EINGANGSKORB
     if (AR.zielEingang) { AR.zielEingang = false; const ze = AR.daten.ordner.find((o) => o.eigen && o.pruefung); if (ze) return arOrdnerOeffnen(ze.id); }
@@ -32674,7 +32674,7 @@ function blSeiteHtml(s) {
   const inhalt = s.art === "html" ? `<div class="bl-html">${s.html}</div>`
     : ["bild", "foto", "pdfseite"].includes(s.art) && s.url ? `<img src="${esc(s.url)}" alt="${esc(s.titel || "Seite")}" draggable="false" onclick="this.parentNode.classList.toggle('zoom')">`
     : s.art === "datei" ? `<div class="bl-datei">${arDateiSym(s.mime)}<b>${esc(s.name || s.titel || "Datei")}</b>${s.url ? `<button class="knopf haupt" data-url="${esc(s.url)}" onclick="extOeffnen(this.dataset.url)">📄 Öffnen</button>` : ""}</div>`
-    : `<div class="bl-laden">⏳ ${s.art === "pdf" ? "PDF wird geladen …" : "Lädt …"}</div>`;
+    : `<div class="bl-laden">⏳ ${s.art === "pdf" ? "PDF wird geladen …" : "Wird geladen …"}</div>`;
   return `<div class="bl-seite">${kopf}<div class="bl-inhalt">${inhalt}</div>${s.beschreibung && (s.teil || 1) === 1 ? `<div class="bl-text">${esc(s.beschreibung)}</div>` : ""}</div>`;
 }
 function blZeigen(richtung) {
@@ -33637,7 +33637,7 @@ async function arEinreichungZurueck(id) {
 }
 // ----- Papierkorb -----
 async function arKorbZeigen() {
-  $("arInhalt").innerHTML = '<p class="hinweis">Lädt …</p>';
+  $("arInhalt").innerHTML = '<p class="hinweis">Wird geladen …</p>';
   try {
     const k = await api("archiv_papierkorb");
     const bis = (x) => `endgültig weg am ${fTagDe(x.endgueltig_am.slice(0, 10))}`;

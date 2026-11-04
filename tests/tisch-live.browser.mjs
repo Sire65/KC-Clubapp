@@ -169,7 +169,11 @@ try {
   await warte(A, (ids) => ids.every((x) => RUND_DATEIEN.has(x)), [PDF, MUSIK], 15000, "💼 Tasche wird beim Platznehmen nicht vorgeladen");
   if (!(await A.seite.evaluate(() => !!document.querySelector('#tlBereich button[onclick="tlTascheNaechstes()"]')))) melde("[Anna] Knopf „💼 Nächstes“ fehlt");
   await A.seite.evaluate(() => tlTascheNaechstes());
+  // 2.849.0: erst weiter, wenn Annas erster Schritt fertig ist – das PDF aus Schritt 4 ist noch zu sehen, die Bedingung unten wäre sonst sofort erfüllt
+  await warte(A, (pdf) => tlTasche().find((x) => x.a === pdf)?.gezeigt === true && !TL.tascheSendet, PDF, 20000, "💼 PDF aus der Tasche gilt bei Anna nicht als gezeigt");
   for (const s of [B, C]) await warte(s, (pdf) => TL.zeige?.a === pdf && !!document.querySelector("#tlBuehne img.tl-seite"), PDF, 20000, "💼 PDF aus der Tasche erscheint nicht");
+  // 2.849.0: schnelles Doppeltippen schickt nichts doppelt
+  if (!(await A.seite.evaluate(() => { TL.tascheSendet = true; const vorher = tlTasche().filter((x) => !x.gezeigt).length; tlTascheNaechstes(); const nachher = tlTasche().filter((x) => !x.gezeigt).length; TL.tascheSendet = false; return vorher === nachher; }))) melde("[Anna] 💼 „Nächstes“ während des Sendens schickt trotzdem");
   await A.seite.evaluate(() => tlTascheNaechstes());
   for (const s of seiten) await warte(s, (m) => TL.musik?.a === m && !document.getElementById("tlMusikTon")?.paused, MUSIK, 20000, "💼 Lied aus der Tasche spielt nicht");
   if (await A.seite.evaluate(() => tlTasche().some((x) => !x.gezeigt) || !!document.querySelector('#tlBereich button[onclick="tlTascheNaechstes()"]'))) melde("[Anna] 💼 nach dem letzten Teil steht noch „Nächstes“ da");
