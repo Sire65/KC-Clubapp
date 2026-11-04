@@ -21,11 +21,13 @@ Funktion gedrosselt oder abgeschaltet wird:
 
 1. Neuerungen sammeln (Wunschliste, kleine Verbesserungen) und **gebündelt zu festen Terminen** einspielen:
    **12 Uhr und 20 Uhr** (deutsche Zeit). Bis dahin auf einem Arbeitszweig fertigstellen und testen.
-2. **Sofort einspielen** (ohne auf den Termin zu warten):
-   - wenn Hansi es will („wichtig“, „sofort“, „jetzt einspielen“) – Hansi kann jederzeit zwischendurch einspielen lassen,
-   - Fehler, die Mitglieder behindern,
-   - Sicherheitskorrekturen,
-   - Korrekturen an Datensicherung, Spiegelung oder Notbetrieb.
+2. **Außerhalb der Termine nur** (verschärft 04.11.2026, Hansi: „Ja bauen oder ich sage es explizit: Einspielen“):
+   - wenn Hansi es **ausdrücklich** sagt („einspielen“, „sofort“, „jetzt einspielen“) → Commit-Text enthält `[Hansi: einspielen]`,
+   - echte **Notfälle**: Sicherheitskorrektur, App für Mitglieder unbenutzbar (Start, Anmelden, Senden geht nicht), Datensicherung/Spiegelung/
+     Notbetrieb kaputt → Commit-Text enthält `[Notfall]`, vorher kurze Rückmeldung an Hansi.
+   - **Kein Notfall:** eine Meldung oder ein „Fund“ von Hansi (z. B. „Video zeigt die falsche Seite“), Schönheitsfehler, Texte, Videos –
+     fertig machen und zum nächsten Termin einspielen, oder Hansi fragen, ob er es sofort will. (Anlass: 2.856.0–2.858.0 am 04.11. zwischendurch
+     eingespielt, 2.858.0 kam um 18:22 an, als Hansi, Anne und Wilfried drin waren – danach Fehlermeldungen.)
 3. Ein Bündel = eine Version (eine Versionsnummer, ein Eintrag in `CHANGELOG.md` mit allen Punkten).
 4. Tests laufen vor jedem Hochladen automatisch; ein roter Test verhindert das Einspielen.
 
@@ -53,7 +55,17 @@ Schnittstelle (supabase-js, PostgREST) mit „permission denied“ – auch dem 
 
 ## Vor dem Einspielen: Ruhe prüfen (KC-EINSPIELEN-RUHIG, 27.10.2026, Wunsch Hansi „nicht gerade mit einer Spiegelung oder Datensicherung und nicht, wenn mehr als 2 drin sind“)
 
-Gilt für jedes Einspielen (12-/20-Uhr-Bündel und „sofort“), keine technische Sperre – jede Sitzung prüft selbst direkt vor dem Push auf `main`:
+Gilt für jedes Einspielen (12-/20-Uhr-Bündel und „sofort“). Jede Sitzung prüft selbst direkt vor dem Push auf `main` – **und seit 04.11.2026
+gibt es zusätzlich eine technische Sperre (KC-EINSPIELEN-SPERRE):** `tools/einspielen-ruhe.sh` läuft in „Seite veröffentlichen“ und „Server hochladen“
+direkt vor dem Wartungsfenster, also kurz bevor die Version bei den Mitgliedern ankommt (zwischen Push und Ankommen liegen ~6 Minuten):
+- neue App-/Server-Version nur **11:45–13:00 und 19:45–21:00 Uhr** (deutsche Zeit), sonst roter Ablauf und nichts geht raus –
+  außer `[Hansi: einspielen]` oder `[Notfall]` im Commit-Text (bzw. „Run workflow“ mit art = hansi/notfall),
+- Spiegelung/Sicherung oder **mehr als 2 in der App** → alle 5 Min. neu prüfen, höchstens 60 Min., dann roter Ablauf (Hansi fragen,
+  danach „Run workflow“ für **beide** Abläufe, sonst passen App und Server nicht zusammen); `[Notfall]` wartet nicht,
+- gezählt vom Club-Server (Aktion `einspielen_ruhe`, nur die Zahl, nur für die GitHub-Abläufe); Pushes ohne neue `version.json` (Werkzeuge, Doku) warten nicht.
+- Test `tests/einspielen-sperre.test.mjs`.
+
+Die eigene Prüfung jeder Sitzung vor dem Push bleibt:
 
 1. **Nicht während Spiegelung/Datensicherung** (Zeiten UTC; Berlin Winter +1, Sommer +2):
    - Neon-Spiegel: **4:05–4:30, 10:05–10:30, 16:05–16:30, 22:05–22:30** (Anstoß :10, Welle :11–:22),
@@ -62,7 +74,7 @@ Gilt für jedes Einspielen (12-/20-Uhr-Bündel und „sofort“), keine technisc
 2. **Nicht, wenn mehr als 2 Mitglieder in der App sind:**
    `select count(*) from kc_club_zugang where zuletzt_gesehen > now() - interval '3 minutes';` (nur lesen) – Ergebnis **> 2** → warten,
    alle 10 Minuten neu prüfen, höchstens 60 Minuten; danach Hansi fragen (nicht ungefragt trotzdem einspielen).
-3. Echte Notfälle (Sicherheit, Fehler, der Mitglieder behindert, Datensicherung kaputt) dürfen nach kurzer Rückmeldung an Hansi trotzdem sofort.
+3. Echte Notfälle (Sicherheit, App für Mitglieder unbenutzbar, Datensicherung kaputt) dürfen nach kurzer Rückmeldung an Hansi trotzdem sofort (`[Notfall]`).
 4. Die Prüfung nutzt nur die eigene Tabelle `kc_club_zugang` – keine Supabase-Protokolle durchsuchen (KC-SPARSAM-PROTOKOLLE).
 
 ## Programmteile nachladen (KC-CLUB-TEILE, 28.10.2026, Wunsch Hansi „Programm gut aufteilen“)

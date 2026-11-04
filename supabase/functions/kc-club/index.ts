@@ -4394,6 +4394,17 @@ async function einspielenLage() { // aktiv bis … (spätestes Ende der Abläufe
   return EINSPIEL_MERK;
 }
 const einspielenBis = async () => (await einspielenLage()).bis;
+// ---------- KC-EINSPIELEN-SPERRE (Wunsch Hansi 04.11.2026 „Eigentlich hätte ja kein Update reingespielt werden dürfen … Anne, Wilfried und ich waren drin“) ----------
+// Die Einspiel-Abläufe fragen direkt vor dem Hochladen, wie viele Personen gerade in der App sind (zuletzt gesehen < 3 Min., wie AGENTS.md
+// KC-EINSPIELEN-RUHIG). Nur eine Zahl – keine Namen, keine Inhalte. Ausweis wie einspielen_melden (GitHub-signiert, kein Geheimnis).
+async function einspielenRuhe(req: Request) {
+  const quelle = await einspielenQuelle(req);
+  if (!quelle) return json({ error: "nicht berechtigt" }, 401);
+  const { data, error } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true)
+    .gt("zuletzt_gesehen", new Date(Date.now() - 3 * 60000).toISOString()).limit(1000);
+  if (error) return json({ error: "nicht lesbar" }, 500);
+  return json({ ok: true, drin: new Set((data || []).map((z: any) => z.person_id)).size });
+}
 async function notfallNeustart(req: Request, p: any) {
   const waechter = await neustartWaechter(req), admin = waechter ? null : await neustartAdmin(req).catch(() => null);
   if (!waechter && !admin) return json({ error: "Nur für den Admin." }, 403);
@@ -9008,6 +9019,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       return json(await fraSchritt(p.erzwingen === true).catch((e) => ({ ok: false, fehler: txt(String((e as any)?.message || e), 200) })));
     }
     if (a === "notfall_neustart") return await notfallNeustart(req, p); // KC-CLUB-NOTFALL-NEUSTART (2.235.0): vor der normalen Anmeldung
+    if (a === "einspielen_ruhe") return await einspielenRuhe(req); // KC-EINSPIELEN-SPERRE: wie viele sind drin? (nur die Einspiel-Abläufe)
     if (a === "einspielen_melden") return await einspielenMelden(req, p); // 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: nur die beiden Einspiel-Abläufe (GitHub-Token)
     if (a === "notpaket") {
       const { data: geheim } = await db.rpc("kc_communication_get_server_secret", { p_name: "kc_club_cron_secret" });

@@ -9,6 +9,10 @@ on:
     paths:
       - "supabase/functions/kc-club/**"
   workflow_dispatch:
+    inputs:
+      art:
+        description: "termin (12/20 Uhr), hansi (Hansi hat „einspielen“ gesagt) oder notfall"
+        default: "termin"
 # 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: id-token für die Meldung „wird gerade eingespielt“ (GitHub-signiert, kein Geheimnis)
 permissions:
   contents: read
@@ -32,6 +36,18 @@ jobs:
       - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1
         with:
           version: 2.118.0
+      # KC-EINSPIELEN-SPERRE (04.11.2026): nur zum Termin 12/20 Uhr (oder Hansi sagt ausdrücklich „einspielen“), nicht während
+      # Spiegelung/Sicherung, nicht wenn mehr als 2 in der App sind – geprüft direkt hier, kurz bevor die Version ankommt.
+      - name: Termin und Ruhe abwarten
+        env:
+          NACHRICHT: ${{ github.event.head_commit.message }}
+          EINGABE: ${{ inputs.art }}
+          VORHER: ${{ github.event.before }}
+        run: |
+          art="${EINGABE:-termin}"
+          case "$NACHRICHT" in *"[Notfall]"*) art=notfall;; *"[Hansi: einspielen]"*) art=hansi;; esac
+          neu=ja
+          tools/einspielen-ruhe.sh "$art" "$neu"
       - name: Wartungsfenster an
         run: tools/einspielen-melden.sh an 5
       - name: Edge Function hochladen

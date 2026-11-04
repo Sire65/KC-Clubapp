@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      art:
+        description: "termin (12/20 Uhr), hansi (Hansi hat „einspielen“ gesagt) oder notfall"
+        default: "termin"
 permissions:
   contents: read
   pages: write
@@ -56,6 +60,22 @@ jobs:
       url: ${{ steps.seite.outputs.page_url }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # KC-EINSPIELEN-SPERRE (04.11.2026): nur zum Termin 12/20 Uhr (oder Hansi sagt ausdrücklich „einspielen“), nicht während
+      # Spiegelung/Sicherung, nicht wenn mehr als 2 in der App sind – geprüft direkt hier, kurz bevor die Version ankommt.
+      - name: Termin und Ruhe abwarten
+        env:
+          NACHRICHT: ${{ github.event.head_commit.message }}
+          EINGABE: ${{ inputs.art }}
+          VORHER: ${{ github.event.before }}
+        run: |
+          art="${EINGABE:-termin}"
+          case "$NACHRICHT" in *"[Notfall]"*) art=notfall;; *"[Hansi: einspielen]"*) art=hansi;; esac
+          neu=ja
+          # nur wenn sich die App-Version ändert, starten die Apps neu (Werkzeuge/Doku gehen ohne Warten raus)
+          if [ -n "$VORHER" ] && [ "$VORHER" != "0000000000000000000000000000000000000000" ] && git fetch -q --no-tags --depth=1 origin "$VORHER" 2>/dev/null; then
+            git diff --quiet "$VORHER" HEAD -- version.json && neu=nein
+          fi
+          tools/einspielen-ruhe.sh "$art" "$neu"
       # 2.736.0 KC-CLUB-EINSPIELEN-FENSTER: wer die App genau jetzt startet, sieht „Kurze Wartung“ (nie ein Abbruch des Ablaufs)
       - name: Wartungsfenster an
         run: tools/einspielen-melden.sh an 5
