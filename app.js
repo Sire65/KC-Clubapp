@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.853.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.854.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-hyTPb3cuDTVKL4ePvgVB8Li4eL7kyLSY4aP3iFg4MrkcRzDcgwfv6eAA2qztXQjl" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-KeLY83jEOyLFXPXwXNEfuZHOc2qZ1mGTf4AtIZQyMdDxOl+v6AEFasTCSzXYEci4" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
@@ -2023,7 +2023,7 @@ const RG_INST_BROWSER = [
 // Browser des Geräts → passendes Video (iPhone/iPad immer Safari-Weg, PC → weiteres Gerät)
 function rgInstErkannt() { const g = einrichtenGeraet(); return g.pc ? null : g.ios ? "safari" : g.browser; }
 const RUNDGAENGE = [
-  { id: "warum", stand: "1", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Clubleben in einer App: vereinfachen, organisieren, erinnern, helfen – und Spaß (ca. 3 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
+  { id: "warum", stand: "1", zeit: "04.11.2026", sym: "💡", t: "Warum diese App? – Zum Einstieg", u: "Clubleben in einer App: vereinfachen, organisieren, erinnern, helfen – und Spaß (ca. 3 Min.)", st: () => RG_WARUM }, // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4: als Erstes
   // 2.276.0 KC-CLUB-VIDEO-INSTALL (Wunsch Hansi): Installieren – Einführung, je Browser ein Video, weitere Geräte, Link und Code
   { id: "installieren", stand: "1", sym: "📲", t: "App installieren – so geht’s", u: "Persönlicher Link, Browser wählen, Kochmütze auf dem Startbildschirm (ca. 2 Min.)", st: () => RG_INST_START },
   { id: "inst_chrome", stand: "1", sym: "🔵", t: "Installieren mit Chrome (Android)", u: "Drei Punkte, App installieren, Installieren (ca. 1 Min.)", st: () => RG_INST_CHROME },

@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.854.0 – Erklär-Videos sagen ihre Dauer an (KC-CLUB-VIDEO-ZEITANSAGE, Wunsch Hansi)
+- Geprüfte Videos beginnen mit „Hallo <Vorname>! Dieses Video dauert etwa … Minuten.“ – die Dauer wird aus dem Video berechnet (wie „ca. … Min.“ in der Liste).
+- Je Video wird einzeln geprüft (alle Schritte im Browser, Inhalt noch aktuell) und dann freigeschaltet (Merkmal zeit in RUNDGAENGE).
+- Erstes Video: „Warum diese App?“ – alle 15 Schritte zeigen auf vorhandene Stellen; feste Angabe „In drei Minuten“ im Text entfernt (jetzt „etwa vier Minuten“, berechnet).
+- Test: tests/video-zeitansage.test.mjs. Rückweg: Version 2.853.0 einspielen.
+
 ## 2.853.0 – 🔄 überdeckt nichts mehr (KC-CLUB-KACHEL-DREHZEICHEN, Fund Hansi)
 - Bei 4 Kacheln nebeneinander (Symbol in der Mitte) schob das 🔄 oben rechts die Zahl auf das Symbol. Jetzt: 🔄 oben links, Zahl an ihrem gewohnten Platz oben rechts.
 - Bei 3 nebeneinander und bei großen Kacheln (Symbol links) bleibt 🔄 oben rechts, die Zahl daneben. Geprüft in allen drei Größen.

@@ -244,7 +244,7 @@ const RG_HELFEN = [
 const rgRegister = (r) => { if (!einfach() && reg !== r) { const alt = reg; register(r); RG.zurueck.push(() => register(alt)); } };
 const rgKachel = (id) => `#raster .kachel[data-id="${id}"]`;
 const RG_WARUM = [
-  { v: "start", t: "👋 Warum diese App?", x: "Schön, dass du da bist! In drei Minuten erzähle ich dir, warum es diese App gibt – und was du davon hast. Du musst nichts antippen, ich blättere selbst weiter." },
+  { v: "start", t: "👋 Warum diese App?", x: "Schön, dass du da bist! Ich erzähle dir, warum es diese App gibt – und was du davon hast. Du musst nichts antippen, ich blättere selbst weiter." },
   // 2.345.0 (Wunsch Hansi „Warum diese App: das Clubleben anzeigen und organisieren – alles in einer App; vereinfachen, besser organisieren,
   // Hilfestellung geben, aber auch Spaß machen und neugierig machen, was die App alles kann; sie erinnert an Termine u. v. m.“)
   { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "🧑‍🍳 Unser Clubleben in einer App",
@@ -2536,6 +2536,26 @@ const rgDauerText = (sek) => !sek ? "" : sek < 50 ? "unter 1 Min." : (() => { co
 // Themen-Kachel: nicht die Summe (wirkt lang), sondern die Spanne je Video – „je ½ bis 2 Min.“
 const rgHalbe = (sek) => { const m = Math.max(0.5, Math.round(sek / 30) / 2); return String(m).replace(/^0\.5$/, "½").replace(".5", "½"); };
 const rgSpanne = (liste) => { const d = liste.map(rgDauerSek).filter(Boolean); if (!d.length) return ""; const a = rgHalbe(Math.min(...d)), b = rgHalbe(Math.max(...d)); return a === b ? `je ca. ${a} Min.` : `je ${a} bis ${b} Min.`; };
+// ---------- 2.854.0 KC-CLUB-VIDEO-ZEITANSAGE (Wunsch Hansi 04.11.2026 „Sage bei allen Erklär-Videos nach deinem Hallo: Dieses Video dauert ca. 4 Minuten …
+// Nicht alle auf einmal, sondern immer einen vornehmen, prüfen, ob er noch aktuell ist, und dann die Zeitansage einbauen“) ----------
+// Je Video in RUNDGAENGE das Merkmal zeit: "<Datum der Prüfung>" – nur geprüfte Videos beginnen mit „Hallo <Vorname>! Dieses Video dauert etwa … Minuten.“
+// Die Dauer kommt aus rgDauerSek (wie die Anzeige in der Liste) – sie stimmt also auch nach späteren Änderungen am Video. Nur beim Start von vorn.
+const RG_ZAHLWORT = ["", "eine", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun", "zehn"];
+function rgDauerSprech(sek) {
+  if (!sek) return "";
+  if (sek < 50) return "knapp eine Minute";
+  const m = Math.round(sek / 30) / 2, g = Math.floor(m), halb = m !== g;
+  if (m > 10) return `etwa ${Math.round(m)} Minuten`;
+  if (!halb) return g === 1 ? "etwa eine Minute" : `etwa ${RG_ZAHLWORT[g]} Minuten`;
+  return g === 1 ? "etwa anderthalb Minuten" : `etwa ${RG_ZAHLWORT[g]}einhalb Minuten`;
+}
+function rgZeitAnsageDazu(st, tour) {
+  const dauer = rgDauerSprech(rgDauerSek(tour)); if (!dauer) return st;
+  const i = st.findIndex((x) => !x.nur || x.nur()); if (i < 0) return st;
+  const name = String(ICH?.vorname || "").trim(), orig = st[i];
+  const neu = st.slice(); neu[i] = { ...orig, x: () => `Hallo${name ? " " + name : ""}! Dieses Video dauert ${dauer}. ${rgText(orig)}` };
+  return neu;
+}
 const rgOhneMin = (u) => String(u || "").replace(/\s*\(ca\.\s*[\d½,.]+\s*Min\.\)/g, "");
 function erklaerVideos(thema) {
   RGL.thema = thema === undefined ? null : thema;
@@ -2760,6 +2780,7 @@ function rundgangStart(mitKnopf, id = "ueberblick", liste = [], startI = 0) {
   RG.verweise = []; // 2.799.0 KC-CLUB-VIDEO-VERWEIS-ENDE: erst auf der Schlusskarte anbieten
   const tour = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || RUNDGAENGE[0];
   RG.tour = tour.id; RG.st = tour.st(); RG.zurueck = []; RG.vorI = -1; RG.richtung = 1; RG.frage = false;
+  if (tour.zeit && !(startI | 0)) RG.st = rgZeitAnsageDazu(RG.st, tour); // 2.854.0 KC-CLUB-VIDEO-ZEITANSAGE
   RG.von = aktuelleAnsicht === "chat" ? "nachrichten" : aktuelleAnsicht; RG.an = true;
   rgRollenAnsicht(tour.ziel || "alle");
   rgHinweisZeigen(); // Hinweis-Karte auf der Startseite während eines Videos weg
