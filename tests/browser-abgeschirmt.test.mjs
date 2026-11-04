@@ -16,6 +16,10 @@ for (const f of dateien) {
   assert.ok(/\.abort\(\)/.test(s), `${f}: fremde Anfragen müssen mit abort() enden`);
   assert.ok(!/https:\/\/ptblnpiroqftcvlsrhac\.supabase\.co\/functions/.test(s.replace(/\/\/[^\n]*/g, "")), `${f}: ruft den echten Server direkt auf`);
   assert.ok(routes >= Math.min(gotos, 1), `${f}: ${gotos} Seitenaufrufe, ${routes} Abschirmung(en)`);
+  // Netzsperre (Pflicht seit 04.11.2026): jeder launch() bekommt die Sperre für Supabase, Cloudflare und GitHub
+  assert.ok(/--host-resolver-rules=MAP \*\.supabase\.co 0\.0\.0\.0, MAP \*\.supabase\.com 0\.0\.0\.0/.test(s), `${f}: Netzsperre --host-resolver-rules fehlt`);
+  const starts = [...s.matchAll(/\.launch\(([^)]*)\)/g)].map((m) => m[1]);
+  assert.ok(starts.length && starts.every((a) => a.includes("OHNE_ECHTSERVER")), `${f}: jeder launch() mit args: [OHNE_ECHTSERVER, …]`);
 }
 assert.ok(browser >= 3, `Browser-Skripte gefunden: ${browser}`);
 assert.ok(fs.readFileSync(new URL(".github/workflows/tests.yml", wurzel), "utf8").includes("node tests/browser-abgeschirmt.test.mjs"), "läuft in der CI");

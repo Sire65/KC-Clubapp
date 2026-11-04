@@ -18,7 +18,9 @@ await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
 const BASIS = `http://127.0.0.1:${server.address().port}`;
 const INIT = { ok: true, ich: { person_id: "KC-P-ANLEITUNG", vorname: "Mitglied", name: "Mitglied", admin: false, vorstand: false, aemter: [], rollen: [] },
   einstellungen: { begruessung: { gesehen: true }, unterstuetzung: "normal", einweisung: { an: false, gesehen: {} }, ansicht: { art: "erweitert", gewaehlt: true } }, mitglieder: [], treffen: [], chats: [], pinnwand: [], termine: [], zaehler: {} };
-const browser = await chromium.launch();
+// KC-TESTS-OHNE-ECHTSERVER: Netzsperre – der Browser erreicht Supabase, Cloudflare und GitHub gar nicht (zusätzlich zur Abschirmung unten)
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
+const browser = await chromium.launch({ args: [OHNE_ECHTSERVER] });
 const seite = await browser.newPage({ viewport: { width: 390, height: 844 } });
 await seite.route("**/*", (r) => { const u = new URL(r.request().url()); if (u.origin === BASIS) return r.continue();
   if (/\/functions\/v1\//.test(u.pathname)) return r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(/"init"/.test(r.request().postData() || "") ? INIT : { ok: true }) });

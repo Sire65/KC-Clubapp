@@ -85,5 +85,8 @@ dadurch 6 „fremde Anmeldeversuche“. Darum gilt für jeden Browser-Lauf (Play
 2. **Nie mit echtem oder ausgedachtem Schlüssel gegen `ptblnpiroqftcvlsrhac.supabase.co`** – auch nicht „nur kurz zum Nachsehen“.
    Echte Links sind Geheimnisse und werden nie in Tests benutzt.
 3. Wer am echten Server etwas prüfen muss, nutzt die eigenen Tabellen lesend (KC-SPARSAM-PROTOKOLLE) oder fragt Hansi.
-4. Der Test `tests/browser-abgeschirmt.test.mjs` prüft alle Browser-Skripte in `tests/` und `tools/`; ein roter Test verhindert das Einspielen.
+4. **Netzsperre ist Pflicht** (Vorschlag der Prüf-Sitzung, Freigabe Hansi 04.11.2026): jeder Browser startet mit
+   `--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0`
+   (Konstante `OHNE_ECHTSERVER` wie in `tests/rundgang.browser.mjs`) – dann kann er den echten Server auf keinem Weg erreichen, auch nicht aus Versehen.
+5. Der Test `tests/browser-abgeschirmt.test.mjs` prüft alle Browser-Skripte in `tests/` und `tools/` (Abschirmung und Netzsperre); ein roter Test verhindert das Einspielen.
 
