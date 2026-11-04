@@ -50,7 +50,7 @@ assert.ok(/## Chats sind privat – Agents lesen sie nie \(KC-CHATS-PRIVAT/.test
 // KC-CLUB-ANSICHTFILM (02.11.2026, Anregung Clubsitzung „die App ist zu voll“): für alle beim Start, oben in den Erklär-Videos, Zuschauer nur für den Admin
 assert.ok(/\{ id: "ansichtfilm", sym: "🧹", [^\n]*datei: "film\/app-selbst-einrichten\.mp4/.test(reg) && /wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: \(\) => true \}/.test(reg), "Ansichtfilm in FILME (alle, in den Erklär-Videos)");
 assert.ok(/\(f\.fuer\(\) && !f\.wo\) \|\| ICH\.admin/.test(app), "Filme mit eigenem Ort stehen nicht im Büro");
-assert.ok(/\$\{f\.wo \|\| "im Büro unter 🎬 Anleitung"\}/.test(pr), "Meldung nennt den richtigen Ort des Films");
+assert.ok(/\$\{f\.wo \|\| "im Büro oben unter 🎬 Film"\}/.test(pr), /* 2.855.0: Knopf heißt seit 2.768.0 „🎬 Film“ */ "Meldung nennt den richtigen Ort des Films");
 assert.ok(/v\.onended = \(\) => \{ ende\(true\); filmMerken\(f\.id, "ende"\);/.test(zg), "bis zum Ende dauerhaft gemerkt");
 assert.ok(/wie === "angesehen" && INIT\.einstellungen\?\.filme\?\.\[id\]\?\.wie === "ende"\) return;/.test(app), "„ende“ wird durch erneutes ▶ nicht überschrieben");
 const zu = app.slice(app.indexOf("async function filmZuschauer"), app.indexOf("function filmWahl"));

@@ -2671,7 +2671,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 232. 1.60.0: Bedienungsanleitung Club-App (PDF wie Kasse) in „Meine Dokumente“
 {
   // 1.81.0: Eintrag zeigt Version 2 (V1-Datei bleibt unverändert im Repo – Release-Artefakte sind unveränderlich)
-  assert.ok(/\{ id: "bedienung-club-app-v[23456789]", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V[23456789]\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt"); // 2.1.2: Version 3 (V1/V2 bleiben unverändert im Repo)
+  assert.ok(/\{ id: "bedienung-club-app-v([2-9]|1\d)", sym: "📖", t: "Bedienungsanleitung Club-App"[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V([2-9]|1\d)\.pdf"(, neuBis: "[\d-]+")? \}/.test(html), "Eintrag Bedienungsanleitung fehlt"); // 2.1.2: Version 3 (V1/V2 bleiben unverändert im Repo)
   assert.ok(/datei: "dokumente\/Koecheclub-App_Kurzanleitung\.pdf"/.test(html), "Kurzanleitung muss bleiben");
   const pdf = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url));
   assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && pdf.length < 8e6, "Anleitung-PDF fehlt oder zu groß");
@@ -2968,7 +2968,7 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   assert.ok(v2.subarray(0, 5).toString() === "%PDF-" && v2.length < 8e6, "Anleitung V2 fehlt oder zu groß");
   assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url)), "V1 muss unverändert bleiben");
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f2 = fs.readFileSync(new URL("../tools/anleitung/fotos2.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [23456789]/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
+  assert.ok(/anleitung: ([2-9]|1\d)/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f2), "fotos2 ohne echte Zugänge");
 }
 // 262. 1.82.0: Protokoll-Vorlage – Protokollführer, Ort, Entschuldigt bzw. fehlend, Gäste, Nächster Termin
@@ -3183,9 +3183,9 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(v3.subarray(0, 5).toString() === "%PDF-" && v3.length < 9e6, "Anleitung V3 fehlt oder zu groß");
   for (const v of [1, 2]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f3 = fs.readFileSync(new URL("../tools/anleitung/fotos3.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [3456789]/.test(inh) && /12\. Helfen & Leihen/.test(inh) && /13\. Bedienen, Anmelden & ohne Netz/.test(inh) && /Mit Code anmelden/.test(inh) && !/"s-herz"/.test(inh), "Inhalt V3");
+  assert.ok(/anleitung: ([3-9]|1\d)/.test(inh) && /12\. Helfen & Leihen/.test(inh) && /13\. Bedienen, Anmelden & ohne Netz/.test(inh) && /Mit Code anmelden/.test(inh) && !/"s-herz"/.test(inh), "Inhalt V3");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f3), "fotos3 ohne echte Zugänge");
-  assert.ok(/datei: "dokumente\/Koecheclub-App_Anleitung_V[3456789]\.pdf"/.test(html), "Anleitung in Meine Dokumente"); // 2.23.33: V4 löst V3 ab
+  assert.ok(/datei: "dokumente\/Koecheclub-App_Anleitung_V([3-9]|1\d)\.pdf"/.test(html), "Anleitung in Meine Dokumente"); // 2.23.33: V4 löst V3 ab
 }
 // 285. 2.2.0: Vertretung des Admins vorbereitet
 {
@@ -3917,7 +3917,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(v4.subarray(0, 5).toString() === "%PDF-" && v4.length < 9e6, "Anleitung V4 fehlt oder zu groß");
   for (const v of [1, 2, 3]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f4 = fs.readFileSync(new URL("../tools/anleitung/fotos4.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [456789]/.test(inh) && /14\. Spiele/.test(inh) && /15\. Hilfe & Tipps/.test(inh) && /16\. Dienstwünsche/.test(inh) && /17\. Meine Daten haben sich geändert/.test(inh), "Inhalt V4");
+  assert.ok(/anleitung: ([4-9]|1\d)/.test(inh) && /14\. Spiele/.test(inh) && /15\. Hilfe & Tipps/.test(inh) && /16\. Dienstwünsche/.test(inh) && /17\. Meine Daten haben sich geändert/.test(inh), "Inhalt V4");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}|KC-P-\d/.test(f4), "fotos4 nur Demodaten, ohne echte Zugänge/IDs");
   // 2.23.42: in „Meine Dokumente“ steht jetzt V5 (Test 391); die V4-Datei bleibt unverändert liegen
 }
@@ -4003,7 +4003,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(v5.subarray(0, 5).toString() === "%PDF-" && v5.length < 9e6, "Anleitung V5 fehlt oder zu groß");
   for (const v of [1, 2, 3, 4]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [56789]/.test(inh) && /▾ Alle auf \/ ▴ Alle zu/.test(inh) && /titel: "Neue Gruppe"/.test(inh), "Inhalt V5 (2.23.95: in V6 enthalten)");
+  assert.ok(/anleitung: ([5-9]|1\d)/.test(inh) && /▾ Alle auf \/ ▴ Alle zu/.test(inh) && /titel: "Neue Gruppe"/.test(inh), "Inhalt V5 (2.23.95: in V6 enthalten)");
   assert.ok(!/bedienung-club-app-v4/.test(html), "V4 nicht mehr in Meine Dokumente (2.23.95: V6 ersetzt V5, Test 445)");
 }
 // 392. 2.23.43: Start-Hinweis bei mehr als 5 Sachen im Eingangskorb (KC-CLUB-EINGANG-HINWEIS)
@@ -4552,8 +4552,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(v6.subarray(0, 5).toString() === "%PDF-" && v6.length < 10e6, "Anleitung V6 fehlt oder zu groß");
   for (const v of [1, 2, 3, 4, 5]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [6789]/.test(inh) && /titel: "18\. Neu in Version 6"/.test(inh) && !/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept/i.test(inh), "Inhalt V6 ohne Admin-Werkzeuge");
-  assert.ok(/\{ id: "bedienung-club-app-v[89]",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V[89]\.pdf"/.test(html) && !/bedienung-club-app-v[567]"/.test(html), "V8 in Meine Dokumente (2.96.0 ersetzt V7, 2.110.0 durch V9 ersetzt)");
+  assert.ok(/anleitung: ([6-9]|1\d)/.test(inh) && /titel: "18\. Neu in Version 6"/.test(inh) && !/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept/i.test(inh), "Inhalt V6 ohne Admin-Werkzeuge");
+  assert.ok(/\{ id: "bedienung-club-app-v(8|9|10)",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V(8|9|10)\.pdf"/.test(html) && !/bedienung-club-app-v[567]"/.test(html), "V8 in Meine Dokumente (2.96.0 ersetzt V7, 2.110.0 durch V9 ersetzt)");
 }
 
 // 446. 2.23.96: 10 Köche mit Schnauzer + drei neue Bartformen (Wunsch Hansi)
@@ -4747,7 +4747,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.24.15: Anleitung V7 (Teil 19), ohne Admin-Werkzeuge; Knopf „Pinnwand-Einträge“ richtig geschrieben
 {
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [789]/.test(inh) && /19\. Neu in Version 7/.test(inh) && !/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept|was speichert/i.test(inh), "Inhalt V7 ohne Admin-Werkzeuge");
+  assert.ok(/anleitung: ([7-9]|1\d)/.test(inh) && /19\. Neu in Version 7/.test(inh) && !/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept|was speichert/i.test(inh), "Inhalt V7 ohne Admin-Werkzeuge");
   assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V7.pdf", import.meta.url)).size < 10.5e6, "V7-PDF vorhanden, nicht zu groß");
   assert.ok(/p > 1 \? "Pinnwand-Einträge" : "Pinnwand-Eintrag"/.test(html) && !/Pinnwand-Eintrag\$\{p > 1/.test(html), "Pinnwand-Einträge mit ä");
 }
@@ -5795,14 +5795,14 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 {
   assert.ok(/t: "🔢 Die Zahl am Register"/.test(html) && /Steht dort zum Beispiel 10 von 12, sind 10 Kacheln sichtbar und 2 ausgeblendet/.test(html), "Register-Zahl erklärt");
   assert.ok(/puls: \["#register button\.an \.anz"\]/.test(html) && /rgAusDemo\(true\); \}, sel: \["#register button\.an"\]/.test(html), "live: eine Kachel ist ausgeblendet, die Zahl leuchtet auf");
-  assert.ok(/t: "🔴 Zahlen auf den Kacheln"/.test(html) && /ungelesene Nachrichten, Termine, auf die du noch nicht geantwortet hast, oder offene Zettel an der Pinnwand/.test(html), "Kachel-Zahlen erklärt");
-  assert.ok(/id: "oberflaeche", stand: "2"/.test(html), "Video-Stand erhöht");
+  assert.ok(/t: "🔴 Zahlen auf den Kacheln"/.test(html) && /ungelesene Nachrichten, Termine, auf die du noch nicht geantwortet hast, oder neue Zettel an der Pinnwand, die du noch nicht gesehen hast/.test(html), "Kachel-Zahlen erklärt"); // 2.855.0: seit 2.763.0 zählen nur neue Zettel
+  assert.ok(/id: "oberflaeche", stand: "[2-9]"/.test(html), "Video-Stand erhöht");
 }
 // 2.275.0 KC-CLUB-VIDEO-ZAHLEN-2 (Fund Hansi „nix von den Zahlen gesehen“): auch der Rundgang „die App im Überblick“ erklärt die Zahlen an Registern und Kacheln
 {
   assert.ok(/Hinten am Register steht, wie viele Kacheln darin sind\. Steht dort zum Beispiel 10 von 12/.test(html), "Rundgang: Register-Zahl");
   assert.ok(/puls: \["#raster \.kachel\[data-id\] > \.zahl"\], t: "🔲 Die Kacheln"/.test(html) && /oben in der Ecke eine Zahl: Sie zeigt, was auf dich wartet/.test(html), "Rundgang: Kachel-Zahlen leuchten auf und werden erklärt");
-  assert.ok(/id: "ueberblick", stand: "3"/.test(html), "Rundgang-Stand erhöht");
+  assert.ok(/id: "ueberblick", stand: "[3-9]"/.test(html), "Rundgang-Stand erhöht");
 }
 // 2.276.0 KC-CLUB-ANSICHT-NAME (Wunsch Hansi): Knopf unten heißt wie oben „Erweiterte Ansicht“
 {
@@ -8756,7 +8756,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.96.0: Bedienungsanleitung Version 8 (KC-CLUB-ANLEITUNG-V8)
 {
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: [89], app: "2\.(95|110)\.0"/.test(inh) /* 2.110.0: V9 */ && /titel: "20\. Neu in Version 8"/.test(inh) && /\["20\. Neu in Version 8",/.test(inh), "Teil 20 und Inhalt");
+  assert.ok(/anleitung: (8|9|10), app: "2\.(95|110|849|851|853|854)\.0"/.test(inh) /* 2.110.0: V9 */ && /titel: "20\. Neu in Version 8"/.test(inh) && /\["20\. Neu in Version 8",/.test(inh), "Teil 20 und Inhalt");
   assert.ok(!/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept|was speichert|fitness/i.test(inh), "keine Admin-Werkzeuge und keine nur für den Admin freigegebenen Bereiche");
   assert.ok(/Code <b>dort<\/b> eingeben – dann reicht ein einziger Code/.test(inh), "Start-Schritt: iPhone/iPad nur ein Code");
   assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V8.pdf", import.meta.url)).size < 10.5e6, "V8-PDF vorhanden, nicht zu groß");
@@ -8909,12 +8909,14 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.110.0: Hilfe-Zentrum + Bedienungsanleitung Version 9 zu allen Neuerungen seit V8 (KC-CLUB-ANLEITUNG-V9, Wunsch Hansi)
 {
   const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
-  assert.ok(/anleitung: 9, app: "2\.110\.0"/.test(inh) && /titel: "21\. Neu in Version 9"/.test(inh) && /\["21\. Neu in Version 9",/.test(inh), "Teil 21 und Inhalt");
+  assert.ok(/anleitung: 10, app: "2\.854\.0"/.test(inh) && /titel: "21\. Neu in Version 9"/.test(inh) && /\["21\. Neu in Version 9",/.test(inh), "Teil 21 und Inhalt"); // 2.854.0: V10
+  assert.ok(/titel: "22\. Neu in Version 10"/.test(inh) && /\["22\. Neu in Version 10",/.test(inh) && !/PLATZHALTER/.test(inh), "Teil 22 (V10) und Inhalt");
   assert.ok(!/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept|was speichert|fitness/i.test(inh), "keine Admin-Werkzeuge");
   for (const b of ["neu9-schnecke", "neu9-laden", "neu9-live", "neu9-wohin", "neu9-mail"]) assert.ok(inh.includes(`bild: "${b}"`), "Bild " + b);
   assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V9.pdf", import.meta.url)).size < 10.5e6, "V9-PDF vorhanden, nicht zu groß");
+  assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V10.pdf", import.meta.url)).size < 10.5e6, "V10-PDF vorhanden, nicht zu groß");
   assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Anleitung_V8.pdf", import.meta.url)), "V8 bleibt unverändert");
-  assert.ok(/\{ id: "bedienung-club-app-v9",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V9\.pdf"/.test(html), "V9 in Meine Dokumente");
+  assert.ok(/\{ id: "bedienung-club-app-v10",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V10\.pdf"/.test(html) && !/id: "bedienung-club-app-v9"/.test(html), "V10 in Meine Dokumente (ersetzt V9)");
   for (const id of ["schnecke", "laden_dauert", "twinkey_haengt", "termin_zahl", "notfallkontakt_wer", "aenderung_rueckfrage", "schritt_hilfe_ueberall", "code_ipad", "buero_einlesen", "buero_mail", "mitschauen", "wege_frage"])
     assert.ok(new RegExp(`\\{ id: "${id}", thema: "`).test(programm), "Hilfe-Eintrag " + id);
   assert.ok(/schickt die Datei direkt aus der App an Mitglieder \(An, CC, BCC\)/.test(programm), "Hinweis „Wohin damit?“ aktuell");
@@ -13537,7 +13539,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
   const wk = html.slice(html.indexOf("// 2.671.0 KC-CLUB-VIDEO-WECKER (Hilfe-Nachtrag 5)"), html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"));
   assert.ok(wk.length > 3000 && wk.length < 9000 && !/wkWeckerStellen\(\)|wkTimerStart\(|wkServer|api\(|wkKlingeln\(/.test(wk.replace(/'[^'\n]*'/g, "''").replace(/"[^"\n]*"/g, '""')), "Wecker-Video stellt nichts und sendet nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ RG\.wkZurueck = false;/.test(wk), "Wecker-Video stellt Stoppuhr und Anzeige zurück");
-  assert.ok(/\{ id: "effekte", stand: "3"/.test(html) && /t: "🌗 Schatten und Ecken"/.test(html) && /\{ id: "chatprofi", stand: "3"/.test(html) && /t: "⏳ Senden ohne Warten"/.test(html) && /\{ id: "nachricht", stand: "3"/.test(html) && /t: "📤 Wie verschicken\?"/.test(html), "Videos erweitert");
+  assert.ok(/\{ id: "effekte", stand: "3"/.test(html) && /t: "🌗 Schatten und Ecken"/.test(html) && /\{ id: "chatprofi", stand: "[3-9]"/.test(html) && /t: "⏳ Senden ohne Warten"/.test(html) && /\{ id: "nachricht", stand: "[3-9]"/.test(html) && /t: "📤 Wie verschicken\?"/.test(html), "Videos erweitert");
   assert.ok(/"h:uhr_wecker": \["wecker"\]/.test(html) && /"h:wie_verschicken": \["nachricht"\]/.test(html), "Twinkey bietet die Videos an");
   assert.ok(/\["⏰", "Wecker, Stoppuhr, Timer \(große Uhr\)"/.test(html) && /\["📤", "„Wie verschicken\?“/.test(html), "Lupe");
   assert.ok(/\[\/\^\(einen\? \|den \)\?\(wecker\|timer\|stoppuhr\|eieruhr\)/.test(html), "Sprachsuche Wecker");

@@ -26,7 +26,7 @@ const zu = (p) => p.evaluate(() => document.querySelectorAll('.blatt:not(.verste
 const b = await launch();
 const p = await seite(b);
 // 1) 👋 Meldung beim Öffnen (erfundene Zahlen: 3 Nachrichten, davon 1 in Gruppen, 1 Zettel, 1 Spiel)
-await p.evaluate(() => { zeige('start'); INIT.ungelesen = 3; INIT.ungelesenGruppen = 1; INIT.spieleDran = 1; RUHE_INFO = false; START_HASH = ''; window.scrollTo(0, 0);
+await p.evaluate(() => { zeige('start'); INIT.ungelesen = 3; INIT.ungelesenGruppen = 1; INIT.spieleDran = 1; RUHE_INFO = false; START_HASH = ''; window.scrollTo(0, 0); localStorage.setItem('kc_club_wasNeu2', '1'); /* V10: seit 2.835.0 von Haus aus aus */
   wasNeuZeigen([{ id: 'Z8', text: 'Schürzen abgeben' }]); });
 await p.waitForTimeout(900);
 await bild(p, 'neu7-wasneu', [{ sel: '#wasNeuBlatt .wn-zeile', i: 0, fx: .95, fy: .5 }, { sel: '#wasNeuBlatt [data-wn="n"]', fx: .95, fy: .5 }, { sel: '#wasNeuBlatt [data-wn="p"]', fx: .95, fy: .5 }, { sel: '#wasNeuBlatt [data-wn="sp"]', fx: .95, fy: .5 }, { sel: '#wasNeuBlatt [data-wn="aus"]', fx: 1.05, fy: .5 }]);

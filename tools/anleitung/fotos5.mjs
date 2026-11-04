@@ -39,7 +39,7 @@ await bild(p, 'neu-mitglieder', [{ sel: '.mg-kachel .avatar.mit-figur', i: 1, fx
 await p.evaluate(() => mgAnsichtSetzen('tafel')); await p.waitForTimeout(800);
 await p.evaluate(() => document.querySelector('#mgAnsichtOben')?.scrollIntoView({ block: 'start' })); await p.waitForTimeout(300);
 const yT = await p.evaluate(() => window.scrollY - 10);
-await bild(p, 'neu-tafel', [{ sel: '#mgAnsichtOben button[data-a="tafel"]', fx: .5, fy: .5 }, { sel: '.mg-tafel .mg-led', fx: .5, fy: .5 }, { sel: '.mg-tafel button', i: 2, fx: .88, fy: .5 }], yT);
+await bild(p, 'neu-tafel', [{ sel: '#mgAnsichtOben > .zk', fx: .5, fy: .5 }, { sel: '.mg-tafel .mg-led', fx: .5, fy: .5 }, { sel: '.mg-tafel button', i: 2, fx: .88, fy: .5 }], yT);
 await p.evaluate(() => mgAnsichtSetzen('kacheln'));
 // 3) Mitglied öffnen: Bild oben, antippen = groß
 const pid = await p.evaluate(() => MITGLIEDER[1].person_id);

@@ -14,12 +14,15 @@ const treffen2 = { ...treffen, id: "T2", titel: "Weihnachtsmarkt Aufbau", beginn
 export const msg = (id, eigen, von, text, min, extra = {}) => ({ id, eigen, von, text, zeit: vor(min), anlagen: [], reaktionen: [], antwortAuf: null, erwaehnt: [], erwaehntMich: false, bearbeitet: null, gemerkt: false, angeheftet: false, umfrage: null, kontakt: null, wichtig: false,
   ...(eigen ? { gelesenVon: [], gelesenAlle: false, zustellung: null, haken: "gesendet" } : {}), ...extra });
 export const ANTWORTEN = {
+  schnappschuss_bild: { ok: true, status: "live" }, // V10: „Hansi schaut zu“ – sonst beendet die App das Mitschauen sofort (Bild neu9-live)
   init: { ich: ICH, status: { status: "verfuegbar", hinweis: null, bis: null }, server: "1.59.0", ungelesen: 2, ungelesenLaut: 2, offeneAbstimmungen: 1, naechsterDienst: null,
     benachrichtigung: { termine: { push: true, email: true }, nachrichten: { push: true, email: false }, vorschlaege: { push: true, email: false }, dienste: { push: true, email: false }, geburtstage: { push: true, email: false }, pinnwand: { push: true, email: false } },
     hatMail: true, geburtstageHeute: [], geburtstagFreigabe: false, runderGeburtstagFreigabe: false, hatGeburtstag: false, kontaktFreigabe: { handy: true, festnetz: false, mail: true, adresse: false },
     terminfindungOffen: [], wartung: { an: false, hinweis: null, seit: null }, communicator: { farbe: "gruen", text: "KC Communicator: läuft" },
     notfall: { name: "Anna Mustermann", telefon: "0170 0000000", beziehung: "Ehefrau" },
-    einstellungen: { ansicht: { art: "einfach", gewaehlt: true }, begruessung: { gesehen: true }, tipps: { an: false }, design: { design: "klassik", modus: "tag" } },
+    einstellungen: { ansicht: { art: "einfach", gewaehlt: true }, begruessung: { gesehen: true }, tipps: { an: false }, unterstuetzung: "normal", design: { design: "klassik", modus: "tag" },
+      // V10: Film-Angebote beim Start schon erledigt (sonst verdeckt das Angebot die Bilder)
+      filme: Object.fromEntries(["clubsitzungablauf", "sicherheitsfilm", "ansichtfilm"].map((id) => [id, { wie: "ende", z: "2026-11-01T10:00:00Z" }])) },
     kalenderAbo: null, meineAufgaben: [], protokolleUngelesen: 0, naechstesTreffen: treffen, mitgliederAnzahl: 18, vapidPublicKey: null,
     pinnwandFristen: { erinnernTage: 3, pauseTage: 7, geaendertAm: null }, anrufAntworten: { texte: ["⏳ Bin gerade beschäftigt"], geaendertAm: null } },
   online: { zeigen: true, online: [{ person_id: "P2", name: "Erika Beispiel", vorname: "Erika", klopfbar: true }, { person_id: "P5", name: "Otto Muster", vorname: "Otto", klopfbar: true }], verpasst: [], klopfen: [], antworten: [], anrufe: [] },

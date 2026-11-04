@@ -84,7 +84,7 @@ const fehler = [];
 // KC-TESTS-OHNE-ECHTSERVER (2.852.0): zweite Sicherung neben seite.route – alle echten Server-Adressen der App zeigen ins Leere,
 // selbst eine Anfrage, die an der Abschirmung vorbeikäme (z. B. beim Schließen), erreicht nie den echten Club-Server.
 const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
-const browser = await chromium.launch({ args: [OHNE_ECHTSERVER] });
+const browser = await chromium.launch({ args: [OHNE_ECHTSERVER, "--no-proxy-server" /* 2.855.0: hinter einem Proxy löst sonst der Proxy die Namen auf */] });
 try {
   for (const g of GERAETE) {
     const ctx = await browser.newContext({ viewport: { width: g.w, height: g.h }, hasTouch: g.touch, isMobile: g.touch, serviceWorkers: "block", locale: "de-DE", timezoneId: "Europe/Berlin",

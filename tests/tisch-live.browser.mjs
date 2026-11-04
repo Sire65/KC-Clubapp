@@ -58,7 +58,7 @@ const fehler = [], melde = (t) => fehler.push(t);
 // KC-TESTS-OHNE-ECHTSERVER (2.852.0): zweite Sicherung neben seite.route – alle echten Server-Adressen der App zeigen ins Leere,
 // selbst eine Anfrage, die an der Abschirmung vorbeikäme (z. B. beim Schließen), erreicht nie den echten Club-Server.
 const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
-const browser = await chromium.launch({ args: [OHNE_ECHTSERVER, "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--autoplay-policy=no-user-gesture-required"] });
+const browser = await chromium.launch({ args: [OHNE_ECHTSERVER, "--no-proxy-server" /* 2.855.0: hinter einem Proxy löst sonst der Proxy die Namen auf */, "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--autoplay-policy=no-user-gesture-required"] });
 const TL_HERZ_PRUEF_MS = 16000; // ein Lebenszeichen-Takt (15 s) – danach darf nichts wieder anspringen
 const seiten = [];
 try {

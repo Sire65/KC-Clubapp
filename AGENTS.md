@@ -82,6 +82,10 @@ dadurch 6 „fremde Anmeldeversuche“. Darum gilt für jeden Browser-Lauf (Play
 1. **Jede Anfrage abschirmen:** `seite.route("**/*", …)` – eigene Seite durchlassen, `…/functions/v1/…` mit Testdaten beantworten (`r.fulfill`),
    alles andere `r.abort()`; die direkte Leitung mit `routeWebSocket(/realtime\/v1\/websocket/, …)` nachbilden oder blockieren.
    Vorlage: `tests/rundgang.browser.mjs`.
+   Warum die Abschirmung allein nicht reicht: Beim Schließen einer Seite schickt die App ihre letzten Wege noch mit `fetch(…, { keepalive: true })`
+   (app.js `spurSenden`) – dann ist die Abschirmung der Seite schon weg. Wahrscheinliche Quelle der 6 Versuche vom 04.11.: Bildschirmfoto-Läufe für die
+   Anleitung V10 (Schlüssel `aaaa…`, App 2.849.0 – Arbeitsstand jenes Bündels, eingespielt als 2.855.0). Darum zusätzlich die Netzsperre (Punkt 4) –
+   und in Umgebungen mit Proxy (Cloud-Sitzungen) dazu `"--no-proxy-server"`, sonst löst der Proxy die Namen auf und die Sperre greift nicht (geprüft 04.11.).
 2. **Nie mit echtem oder ausgedachtem Schlüssel gegen `ptblnpiroqftcvlsrhac.supabase.co`** – auch nicht „nur kurz zum Nachsehen“.
    Echte Links sind Geheimnisse und werden nie in Tests benutzt.
 3. Wer am echten Server etwas prüfen muss, nutzt die eigenen Tabellen lesend (KC-SPARSAM-PROTOKOLLE) oder fragt Hansi.

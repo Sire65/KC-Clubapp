@@ -1,5 +1,7 @@
 // Baut die Club-App-Anleitung als PDF – Gestaltung wie „Kurzanleitung Bilderrechner“ (Kasse)
-import { launch } from './basis.mjs';
+import { chromium } from 'playwright';
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0"; // KC-TESTS-OHNE-ECHTSERVER: Netzsperre
+
 import fs from 'fs';
 import { VERSION, INHALT, GUT_ZU_WISSEN, START_SCHRITTE, TEILE } from './inhalt.mjs';
 const S = process.env.S, D = `${S}/anl`, B = `${D}/bild`;
@@ -23,7 +25,7 @@ let html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
 :root { --blau: #1f3a5f; --gruen: #2e7d32; --linie: #d9d9d9; }
 .titel { text-align: center; padding-top: 18mm; } .titel img { width: 22mm; filter: brightness(0); } .titel h1 { font-size: 30pt; color: var(--blau); font-weight: 400; margin: 6mm 0 2mm; }
 .titel h2 { font-size: 15pt; color: #555; margin: 0 0 2mm; } .titel .klein { color: #777; font-size: 9pt; }
-h2.ih { color: var(--gruen); font-size: 14pt; margin: 10mm 0 3mm; } .inhalt { margin: 0 0 0 10mm; } .inhalt div { margin: 1.6mm 0; } .inhalt span { color: #666; }
+h2.ih { color: var(--gruen); font-size: 14pt; margin: 10mm 0 3mm; } .inhalt { margin: 0 0 0 10mm; } .inhalt div { margin: 1.1mm 0; } .inhalt span { color: #666; }
 .gut { margin-top: 10mm; border-left: 5px solid var(--gruen); background: #e8f5e9; border-radius: 2px; padding: 4mm 5mm; font-size: 9.5pt; } .gut p { margin: 0 0 2.5mm; }
 .neu { background: var(--gruen); color: #fff; font-size: 6.5pt; font-weight: 700; padding: 1px 4px; border-radius: 2px; vertical-align: middle; letter-spacing: .03em; }
 .teil { page-break-before: always; } h1.t { color: var(--blau); font-weight: 400; font-size: 20pt; margin: 0; } .unter { font-style: italic; color: #666; margin: 0 0 5mm; }
@@ -60,7 +62,8 @@ for (const t of TEILE) {
 html += `</body></html>`;
 fs.writeFileSync(`${D}/anleitung.html`, html);
 const muetze = fs.readFileSync(`${B}/muetze.webp`).toString('base64');
-const b = await launch(); const p = await (await b.newContext()).newPage();
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: [OHNE_ECHTSERVER, "--no-proxy-server"] }); const p = await (await b.newContext()).newPage();
+await p.route("**/*", (r) => (/^(file|data):/.test(r.request().url()) ? r.continue() : r.abort())); // KC-TESTS-OHNE-ECHTSERVER: nur eigene Dateien
 await p.goto(`file://${D}/anleitung.html`); await p.waitForTimeout(1500);
 await p.pdf({ path: `${D}/Koecheclub-App_Anleitung.pdf`, format: 'A4', printBackground: true, displayHeaderFooter: true, preferCSSPageSize: true,
   headerTemplate: `<div style="width:100%;margin:0 16mm;font-family:Lato,sans-serif;font-size:9px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1.6px solid #1f3a5f;padding-bottom:5px"><span style="display:flex;align-items:center;gap:8px;color:#1f3a5f;font-weight:700;font-size:11px"><img src="data:image/webp;base64,${muetze}" style="height:18px;filter:brightness(0)">Köcheclub Werne</span><span style="color:#555">Club-App · Anleitung · Version ${VERSION.anleitung}</span></div>`,

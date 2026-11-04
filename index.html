@@ -1380,7 +1380,8 @@
   .info { margin-top: 26px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 16px; }
   .info h2 { margin: 0; font-size: 1.5rem; }
   .info .unter { opacity: .9; margin-top: 4px; }
-  .kacheln3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+  .kacheln3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; } /* 2.855.0 KC-CLUB-DREI-FELDER: 1fr wuchs mit der Laufschrift der Online-Namen (2.731.0) und schob das Feld „Clubtreffen“ aus der Karte */
+  .kacheln3 > .mini { min-width: 0; }
   :root.gross .kacheln3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } :root.gross .kacheln3 .mini > span { min-width: 0; max-width: 100%; font-size: .64em; letter-spacing: 0; hyphens: auto; } /* 2.125.0 Gesamtprüfung 4: große Schrift – „Neue Nachr.“ machte die Startseite 15 px zu breit */
   /* 2.439.0 KC-CLUB-INFO-LAUFBAND: gerahmtes Info-Feld zwischen Überschrift und den 3 Feldern – genau so breit wie die 3 zusammen (beide füllen die Info-Karte),
      gleiche Rundung wie die Felder; Rahmenfarbe nach Wichtigkeit: rot = bitte erledigen, orange = Clubleitung, gold = Hinweis, weiß = schöne Info */
@@ -5860,7 +5861,7 @@
 
   <!-- FOTOALBUM (KC-CLUB-FOTOALBUM) -->
   <section id="v-fotos" class="versteckt">
-    <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf klein" onclick="faDiashow()" title="Diashow mit Musik – Album wählen" aria-label="Diashow starten">▶️ Diashow</button><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
+    <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf klein" onclick="faDiashow()" title="Diashow mit Musik – Album wählen" aria-label="Diashow starten">▶️ Diashow</button><button class="knopf haupt klein" onclick="faNeu()">＋ Neu</button></div>
     <!-- 2.711.0 KC-CLUB-VIDEOS: Fotos und Videos getrennt -->
     <div class="umschalter" id="faArtWahl" role="group" aria-label="Fotos oder Videos zeigen"><button type="button" data-art="fotos" class="an" aria-pressed="true" onclick="faArt('fotos')">📷 Fotos</button><button type="button" data-art="videos" aria-pressed="false" onclick="faArt('videos')">🎬 Videos</button></div>
     <div id="videoBereich" class="versteckt"><div id="videoForm" class="karte versteckt"></div><div id="videoPlatz"></div><div id="videoListe"></div></div>
@@ -6049,7 +6050,7 @@
       <div class="pw-emo" id="pwEmoSchnell"></div>
       <div class="emo-feld pw-emo-feld versteckt" id="pwEmoFeld" role="dialog" aria-label="Emoji auswählen"><div class="emo-reiter" id="pwEmoReiter"></div><div class="emo-gitter" id="pwEmoGitter"></div></div>
       <div class="hinweis" style="margin:8px 0 4px">Wichtigkeit</div>
-      <div class="umschalter" id="pwWichtig" data-zyklus="Wichtigkeit"><button data-w="0" onclick="pwFormWichtig(false)">📝 Normal</button><button data-w="1" onclick="pwFormWichtig(true)">❗ Hoch – beim Öffnen zeigen</button></div>
+      <div class="umschalter" id="pwWichtig" data-zyklus="Wichtigkeit"><button data-w="0" onclick="pwFormWichtig(false)">📝 Normal</button><button data-w="1" onclick="pwFormWichtig(true)">❗ Hoch – wichtig</button></div>
       <div class="hinweis" style="margin:4px 0 4px">Für wen?</div>
       <div class="umschalter modus3" id="pwFuer"><button data-f="ich" onclick="pwFuer('ich')">🙋 Nur für mich</button><button data-f="alle" onclick="pwFuer('alle')">👥 Für alle</button><button data-f="personen" onclick="pwFuer('personen')">✅ Bestimmte</button></div>
       <div id="pwPersonen" class="versteckt">
@@ -6747,7 +6748,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.854.0" data-v="2.854.0"></script>
+<script src="app.js?v=2.855.0" data-v="2.855.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

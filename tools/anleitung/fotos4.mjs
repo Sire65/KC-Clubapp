@@ -64,7 +64,7 @@ await zu(p); await stueck(p, 'frage-lupe', '#hzFrage', 40);
 // ---- Chats archivieren
 await p.evaluate(() => { document.querySelectorAll('.einw-karte').forEach((e) => e.remove()); unterhLaden(); }); await p.waitForTimeout(800);
 await stueck(p, 'chat-archiv-zeile', '.uh-archiv-zeile', 8);
-await p.evaluate(() => unterhTipp(UH.liste.find((u) => !u.archiviert).id)); await p.waitForTimeout(500);
+await p.evaluate(() => uhMenue(UH.liste.find((u) => !u.archiviert).id)); await p.waitForTimeout(500);
 await stueck(p, 'chat-aktionen', '.uhaktion', 6);
 // ---- Terminanfrage + Erinnerung
 await p.evaluate(() => { termineArt = 'liste'; zeige('termine'); }); await p.waitForTimeout(1200); await zu(p);

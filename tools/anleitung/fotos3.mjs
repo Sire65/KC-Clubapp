@@ -66,7 +66,7 @@ await p.context().close();
 p = await seite(b, {}); await p.reload(); await p.waitForTimeout(2500); await zu(p);
 await p.evaluate(() => mgNurOnline()); await p.waitForTimeout(900);
 await p.evaluate(() => window.scrollTo(0, 0));
-await bild(p, 'online-seite', [{ sel: '#mgFilter button[data-f="online"]' }, { sel: '#mitgliederListe .mg-kachel, #mitgliederListe > *' }]);
+await bild(p, 'online-seite', [{ sel: '#mgFilter > .zk', fx: 0.25 }, { sel: '#mitgliederListe .mg-kachel, #mitgliederListe > *' }]);
 await p.evaluate(() => zeige('start')); await p.waitForTimeout(500);
 await p.evaluate(() => verbindungBlatt()); await p.waitForTimeout(400);
 await stueck(p, 'verbindung-einfach', '#vbInhalt', 10);

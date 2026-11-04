@@ -1,5 +1,6 @@
 import { chromium } from 'playwright'; import fs from 'fs';
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' }); const p = await b.newPage();
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0"; // KC-TESTS-OHNE-ECHTSERVER: Netzsperre (dazu --no-proxy-server, sonst löst ein Proxy die Namen auf)
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: [OHNE_ECHTSERVER, "--no-proxy-server"] }); const p = await b.newPage();
 for (const n of process.argv.slice(2)) {
   const src = 'data:image/png;base64,' + fs.readFileSync(`bild-orig/${n}.png`).toString('base64');
   const F = Number(process.env.F || 0.62); const out = await p.evaluate(async ([src, F]) => { const i = new Image(); i.src = src; await i.decode(); const w = Math.round(i.width * F), h = Math.round(i.height * F);
