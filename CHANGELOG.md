@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.860.0 – Zeitansage: Video „Installieren mit Edge (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 4 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Menü unten ☰ → Zum Telefon hinzufügen → Installieren). Zeitansage „knapp eine Minute“ eingeschaltet.
+- Rückweg: Version 2.859.0 einspielen.
+
 ## 2.859.0 – 2026-11-04 – 20-Uhr-Bündel: 📲 Installieren leicht gemacht · 🧭 Erklärfilm „Der Kopf der Club-App“ · 🛑 Einspiel-Sperre · Server 2.859.0
 
 ### 📲 Einladung zum Installieren, Admin-Liste „Installiert?“, Hilfe mit Knöpfen (KC-CLUB-INSTALL-EINLADUNG, KC-CLUB-INSTALL-STAND, KC-CLUB-HILFE-INSTALL)
