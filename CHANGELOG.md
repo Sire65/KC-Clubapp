@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.853.0 – 🔄 überdeckt nichts mehr (KC-CLUB-KACHEL-DREHZEICHEN, Fund Hansi)
+- Bei 4 Kacheln nebeneinander (Symbol in der Mitte) schob das 🔄 oben rechts die Zahl auf das Symbol. Jetzt: 🔄 oben links, Zahl an ihrem gewohnten Platz oben rechts.
+- Bei 3 nebeneinander und bei großen Kacheln (Symbol links) bleibt 🔄 oben rechts, die Zahl daneben. Geprüft in allen drei Größen.
+- Test ergänzt. Rückweg: Version 2.852.0 einspielen.
+
 ## 2.852.0 – 2026-11-04 – Gesamtprüfung Teil 2: lesbarer, besser antippbar, einheitlich (KC-CLUB-PRUEFUNG-1104-B)
 Auf main 2.852.0 nummeriert (2.849.0–2.851.0 waren inzwischen vergeben). Punkte 1–7 aus der Gesamtprüfung (Freigabe Hansi 04.11.: „vorsichtig, nix kaputt machen, ordentlich ausgerichtet und gut bedienbar“). Jede Änderung im Browser bei 320/360/390/430/800 px, normal und mit großer Schrift nachgemessen.
 - **💬 Nachrichten – Leiste oben:** Die Wörter unter den Symbolen sind 12 statt 10 px groß und werden nie mehr gekürzt („Favori…“, „Ungel…“). Jeder Knopf ist so breit wie sein Wort; reicht der Platz nicht, kommt eine zweite, gemittelte Reihe – nichts liegt versteckt hinter Wischen. Bei 390 px passen die sechs Mitglieder-Knöpfe weiter in eine Reihe.

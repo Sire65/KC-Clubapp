@@ -2034,8 +2034,12 @@
     background: rgba(116,21,33,.10); box-shadow: inset 0 0 0 1px rgba(116,21,33,.22); cursor: pointer; z-index: 1; }
   #raster > .kachel > .kr-zeichen:hover, #raster > .kachel > .kr-zeichen:focus-visible { background: rgba(116,21,33,.22); }
   :root.dunkel #raster > .kachel > .kr-zeichen { background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
-  #raster.klein4 > .kachel > .kr-zeichen { transform: scale(.75); top: 2px; right: 2px; transform-origin: top right; } #raster.klein3 > .kachel > .kr-zeichen { transform: scale(.85); transform-origin: top right; }
-  #raster.klein4 > .kachel:has(> .kr-zeichen) > .zahl { right: 26px; } #raster.klein3 > .kachel:has(> .kr-zeichen) > .zahl { right: 34px; }
+  /* 2.853.0 (Fund Hansi: bei 4 Kacheln nebeneinander steht das Symbol in der Mitte – 🔄 rechts schob die Zahl aufs Symbol): dort 🔄 oben links, Zahl bleibt rechts.
+     Bei 3 nebeneinander und groß steht das Symbol links → 🔄 oben rechts, die Zahl daneben. */
+  #raster.klein3:not(.klein4) > .kachel > .kr-zeichen { transform: scale(.8); transform-origin: top right; top: 6px; right: 6px; }
+  #raster.klein3:not(.klein4) > .kachel:has(> .kr-zeichen) > .zahl { right: 36px; }
+  #raster.klein4 > .kachel > .kr-zeichen { right: auto; left: 3px; top: 3px; transform: scale(.7); transform-origin: top left; }
+  #raster.klein4 > .kachel:has(> .kr-zeichen) > .zahl { right: 4px; } /* wie ohne 🔄 */
   #raster > .kachel.kr-dreht { transform: perspective(600px) rotateY(90deg); }
   #raster > .kachel.kr-hinten { background: linear-gradient(135deg, var(--rot), var(--hero1)); color: #fff; display: flex; flex-direction: column; gap: 5px; align-items: stretch; justify-content: center; text-align: left; padding: 8px; }
   #raster > .kachel.kr-hinten .kr-titel { font-size: .75rem; font-weight: 800; opacity: .85; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 26px; }
@@ -6743,7 +6747,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.852.0" data-v="2.852.0"></script>
+<script src="app.js?v=2.853.0" data-v="2.853.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
