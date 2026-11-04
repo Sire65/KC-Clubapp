@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.849.0 – 2026-11-04 – 🧹 Erklärfilm: Zahl am Reiter und Kacheln umdrehen (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 04.11.: „Erklärung, dass die Zahl im Register die Anzahl eingeblendeter Kacheln zeigt, z. B. 10/18 – und erwähnen, dass man die Kacheln umdrehen kann, aber dass es dazu ein eigenes Video gibt.“
+- Film „Deine App – so, wie du sie willst“ neu (3:21 Min.): die Reiter zeigen wie in der App **eingeblendet/gesamt** (z. B. „Club 4/12“, nach dem Ausblenden „10/12“), neue Szene erklärt die Zahl; neue Szene **doppelt tippen = umdrehen** (Rückseite mit Abkürzungen) mit Hinweis auf das Erklär-Video „🎨 Oberfläche nach Wunsch“.
+- Umdrehen geht in der App nur per Doppeltipp (langes Drücken öffnet „Kacheln anordnen“) – so zeigt es auch der Film.
+- `film/app-selbst-einrichten.mp4?v=5`, gleiche Kennung `ansichtfilm`. Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests unverändert grün. Rückweg: App 2.848.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)
 Gesamtprüfung vor der Auslieferung (Bericht: KICC `docs/club-app-pruefung/PRUEFBERICHT-2026-11-04.md`, Freigabe Hansi 04.11.). Nur Fehlerbehebung, keine neue Funktion.
 - **Mitglieder-Tipp löschte das Einstiegs-Fenster:** `tippZeigen` öffnete sein Fenster unter der Kennung `tippBlatt` – `blattAuf` entfernt dabei das gleichnamige feste Fenster der Einstiegs-Tipps (mit `tippText`, `tippJa` …). Danach brach z. B. der Hinweis nach dem Umschalten auf die erweiterte Ansicht mit einem Programmfehler ab. Der Mitglieder-Tipp hat jetzt eigene Kennungen `mtBlatt` / `mtText`.
