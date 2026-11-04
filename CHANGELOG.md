@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.850.0 – 2026-11-04 – 🧹 Erklärfilm: Zahl am Reiter und Kacheln umdrehen mit dem 🔄 (KC-CLUB-ANSICHTFILM) · nur App
+Wunsch Hansi 04.11.: „Erklärung, dass die Zahl im Register die Anzahl eingeblendeter Kacheln zeigt, z. B. 10/18 – und erwähnen, dass man die Kacheln umdrehen kann, aber dass es dazu ein eigenes Video gibt.“ – sofort eingespielt (Wunsch Hansi).
+- Film „Deine App – so, wie du sie willst“ neu (3:24 Min.): die Reiter zeigen wie in der App **eingeblendet/gesamt** (z. B. „Club 4/12“, nach dem Ausblenden „10/12“), eine Szene erklärt die Zahl.
+- Neue Szene **Kacheln umdrehen** passend zu 2.849.0 (KC-CLUB-KACHEL-DREHZEICHEN): Kacheln mit Rückseite tragen das kleine 🔄, der Finger tippt es an, Doppeltipp wird genannt; Hinweis auf das Erklär-Video „🎨 Oberfläche nach Wunsch“.
+- `film/app-selbst-einrichten.mp4?v=5`, gleiche Kennung `ansichtfilm`. Quellen: KC-Infrastructure-Control-Center `ansichtfilm/`.
+- Tests unverändert grün. Rückweg: App 2.849.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.849.0 – Kacheln umdrehen mit dem 🔄 (KC-CLUB-KACHEL-DREHZEICHEN, Wunschliste #80)
 - Kacheln mit Rückseite zeigen oben rechts ein kleines 🔄. Antippen dreht sie sofort um; hinten dreht dasselbe Zeichen an derselben Stelle zurück. Doppeltipp geht weiter. Eine Zahl auf der Kachel rückt daneben.
 - Neue Rückseiten: Dienstpläne (Mein Dienst, Dienstwünsche, Alle Dienstpläne), Hilfe & Tipps (Frag Twinkey, Erklär-Videos, Alle Hilfen), Büro (Eingang – nur Clubleitung, Büro öffnen).
