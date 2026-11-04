@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.856.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.857.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -35158,13 +35158,30 @@ const FP_HINWEISE = [
   { id: "privat", wenn: () => window.KCFP && !KCFP.speicherOk,
     titel: "🔒 Privater Modus erkannt", text: () => "Dein Browser läuft im <b>privaten Modus</b>. Dann vergisst die App beim Schließen alles – auch deinen Zugang – und du musst jedes Mal neu starten.",
     schritte: ["Privates Fenster schließen", "Deinen persönlichen Link in einem <b>normalen</b> Fenster öffnen"], link: true },
-  { id: "mehrfach", wenn: () => (window.KCFP?.mehrfach || 0) >= 3,
+  { id: "mehrfach", wenn: () => (window.KCFP?.mehrfach || 0) >= 3, installieren: () => installNoetig(),
     titel: "🤔 Klappt etwas nicht?", text: () => "Du hast die App gerade mehrmals hintereinander geöffnet. Falls etwas hakt, hilft meistens einer dieser Schritte:",
-    schritte: () => [!navigator.onLine ? "📶 <b>Internet ist gerade aus</b> – WLAN oder mobile Daten einschalten" : "📶 Internet prüfen – WLAN oder mobile Daten an?",
+    schritte: () => [...(installNoetig() ? ["📲 <b>Die Club-App einmal installieren</b> – dann startet sie schneller, bleibt angemeldet und Benachrichtigungen kommen zuverlässig (Knopf unten)"] : []), !navigator.onLine ? "📶 <b>Internet ist gerade aus</b> – WLAN oder mobile Daten einschalten" : "📶 Internet prüfen – WLAN oder mobile Daten an?",
       NEUE_VERSION ? "🔄 Oben <b>„Jetzt aktualisieren“</b> tippen – du hast noch eine ältere Version" : "🔄 App ganz schließen und neu öffnen",
       FP_IOS && START_ART !== "app" ? "📱 Auf dem iPhone die App am besten über das Symbol auf dem Home-Bildschirm öffnen" : "📱 Die App über das Köcheclub-Symbol öffnen, nicht über einen alten Link",
       "🆘 Geht es immer noch nicht? <b>„Problem melden“</b> – <span class='admin-name'>Hansi</span> sieht dann genau, woran es liegt"], melden: true },
+  // 2.857.0 KC-CLUB-INSTALL-EINLADUNG (Wunsch Hansi 04.11.2026 „Installieren ist für die meisten noch eine Hürde – sie rufen die App immer nur auf“):
+  // wer die App auf Handy/Tablet schon mehrmals im Browser geöffnet hat, bekommt alle 3 Tage eine freundliche Einladung – mit „Jetzt installieren“
+  // (Android: ein Tipp), „Zeig mir wie“ (mit Bildern) und „Hilfe beim Installieren“ (Unterstützungs-Anfrage an Hansi). Am PC nicht.
+  { id: "installieren", wenn: () => installNoetig() && installBrowserStarts() >= 3, abstandTage: 3, installieren: () => true, hilfeInstall: true,
+    titel: "📲 Mach die Club-App zu einer echten App", text: () => `Du öffnest die Club-App bisher im Browser. Einmal installiert, hast du die <b>Kochmütze</b> auf dem Startbildschirm – und die App:`,
+    schritte: ["⚡ <b>startet schneller</b> und braucht weniger Akku", "🔐 <b>bleibt angemeldet</b> – kein Link mehr suchen", "🔔 <b>Benachrichtigungen kommen zuverlässig</b> (auf dem iPhone nur so)",
+      "⏱️ Dauert <b>keine Minute</b> – und wer möchte, bekommt Hilfe dabei"] },
 ];
+// KC-CLUB-INSTALL-EINLADUNG: Handy/Tablet im Browser (nicht PC, nicht schon installiert) – und wie oft die App so schon geöffnet wurde (je Gerät)
+const installNoetig = () => { try { return START_ART === "browser" && !schonInstalliert && !einrichtenGeraet().pc; } catch { return false; } };
+const installBrowserStarts = () => { try { return Number(localStorage.getItem("kc_club_browser_starts")) || 0; } catch { return 0; } };
+try { if (START_ART === "browser") localStorage.setItem("kc_club_browser_starts", String(installBrowserStarts() + 1)); } catch {}
+function installJetzt() { document.getElementById("fpFenster")?.remove(); fpNeu("install_einladung", { weg: installEreignis ? "ein_tipp" : "assistent" }); if (installEreignis) installieren(); else einrichtenAssistent(); }
+async function installHilfeAnfragen() {
+  document.getElementById("fpFenster")?.remove();
+  try { await api("unterstuetzung_senden", { punkte: ["startbild"], kontakt: ["persoenlich", "anruf"], text: "Bitte beim Installieren der Club-App helfen (Einladung in der App)" }, { warten: true });
+    melde("🙋 Hansi weiß Bescheid und hilft dir beim Installieren."); } catch (e) { meldeFehler(e); }
+}
 function fpHinweisPruefen() {
   if (document.getElementById("fpFenster")) return;
   const h = FP_HINWEISE.find((x) => { try { return x.wenn(); } catch { return false; } });
@@ -35179,8 +35196,10 @@ function fpHinweisPruefen() {
     <h3>${h.titel}</h3><p style="margin:0">${h.text()}</p>
     <ol class="fp-schritte">${schritte.map((x) => `<li>${x}</li>`).join("")}</ol>
     ${h.link && KEY ? `<button class="knopf haupt" onclick="fpLinkKopieren()">🔗 Meinen Link kopieren</button>` : ""}
+    ${h.installieren?.() ? `<button class="knopf haupt" onclick="installJetzt()">📲 ${installEreignis ? "Jetzt installieren – ein Tipp" : "Jetzt installieren"}</button><button class="knopf" onclick="document.getElementById('fpFenster').remove();installAnleitung()">🖼️ Zeig mir wie (mit Bildern)</button>` : ""}
+    ${h.hilfeInstall ? `<button class="knopf" onclick="installHilfeAnfragen()">🙋 Hilfe beim Installieren</button>` : ""}
     ${h.melden ? `<button class="knopf" onclick="document.getElementById('fpFenster').remove();fpProblemMelden()">🆘 Problem melden</button>` : ""}
-    <button class="knopf" onclick="document.getElementById('fpFenster').remove()">Verstanden</button></div>`;
+    <button class="knopf" onclick="document.getElementById('fpFenster').remove()">${h.id === "installieren" ? "Später" : "Verstanden"}</button></div>`;
   document.body.appendChild(f);
 }
 async function fpLinkKopieren() {

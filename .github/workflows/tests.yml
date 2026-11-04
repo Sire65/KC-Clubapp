@@ -79,6 +79,7 @@ jobs:
       - run: node tests/buero-fein.test.mjs
       - run: node tests/pinnwand-nie-auto.test.mjs
       - run: node tests/offline-push.test.mjs
+      - run: node tests/install-einladung.test.mjs
       # KC-CLUB-FA-NEU (2.855.0)
       - run: node tests/fa-neu.test.mjs
       # KC-CLUB-SPUR-FEE (2.855.0)

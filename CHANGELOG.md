@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.857.0 – 2026-11-04 – 📲 Einladung zum Installieren (KC-CLUB-INSTALL-EINLADUNG)
+Wunsch Hansi (04.11.): „Wenn Mitglieder die App sehr oft hintereinander aufrufen, bekommen sie Hilfe angeboten – dabei soll stehen, dass sie die App installieren sollten. Installieren ist für die meisten noch eine Hürde, statt immer nur aufzurufen.“
+- **„🤔 Klappt etwas nicht?“** (mehrmals hintereinander geöffnet): als erster Schritt „📲 Die Club-App einmal installieren“ und Knöpfe „Jetzt installieren“ und „Zeig mir wie (mit Bildern)“ – nur auf Handy/Tablet im Browser.
+- **Neue Einladung** für alle, die die App auf Handy/Tablet schon 3-mal im Browser geöffnet haben – höchstens alle 3 Tage: „📲 Mach die Club-App zu einer echten App“ mit den Vorteilen (startet schneller, bleibt angemeldet, Benachrichtigungen zuverlässig, keine Minute). Knöpfe: **Jetzt installieren** (Android mit einem Tipp, sonst der Assistent für das erkannte Gerät), **Zeig mir wie (mit Bildern)**, **🙋 Hilfe beim Installieren** (schickt Hansi eine Unterstützungs-Anfrage „App auf den Startbildschirm“, Kontakt persönlich/Anruf), **Später**. Am PC und bei installierter App nie.
+- Test: `tests/install-einladung.test.mjs`. Rückweg: App 2.856.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+
 ## 2.856.0 – Zeitansage: Video „App installieren – so geht’s“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 9 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Link per WhatsApp/E-Mail, 5 Browser, 6-stelliger Code für weitere Geräte). Zeitansage „etwa zwei Minuten“ eingeschaltet.
 - Rückweg: Version 2.855.0 einspielen.
