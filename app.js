@@ -23454,8 +23454,8 @@ function neuWeiter() {
 let ZW = { push: false, email: false, whatsapp: false }, CHAT = null;
 const wegIcons = (m) => { const w = m?.wege || {}; return `<span class="wege" title="🔔 Push · ✉️ E-Mail · WhatsApp"><i class="${w.push ? "" : "nein"}">🔔</i><i class="${w.mail ? "" : "nein"}">✉️</i><i class="wa-zeichen${w.whatsapp ? "" : " nein"}" aria-label="WhatsApp">${WA_ZEICHEN}</i></span>`; };
 // 2.850.0 KC-CLUB-WA-ZEICHEN (Fund Hansi 04.11.2026 „bei Thomas Hess ist ein grüner Punkt – in seinen Einstellungen hat er aber orange für beschäftigt“): das 🟢 für
-// „WhatsApp-Nummer da“ sah aus wie der Status „verfügbar“. Jetzt ein kleines WhatsApp-Zeichen (Sprechblase mit Hörer); der Status steht als eigene Marke beim Namen.
-const WA_ZEICHEN = '<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z" fill="#25d366"/><path d="M8.6 7.2c.2-.4.4-.4.7-.4h.5c.2 0 .4 0 .6.4l.8 1.9c.1.2.1.4 0 .6l-.4.6c-.1.2-.2.3 0 .6.4.7 1 1.4 1.7 1.9.6.4 1 .6 1.3.7.2.1.4 0 .5-.1l.6-.8c.2-.2.4-.2.6-.1l1.8.9c.2.1.4.2.4.4.1.3 0 1.1-.4 1.6-.4.5-1.3.9-2 .9-.8 0-2.4-.4-4.2-2-1.6-1.4-2.6-3.2-2.8-3.8-.3-.9 0-1.7.3-2.2z" fill="#fff"/></svg>';
+// „WhatsApp-Nummer da“ sah aus wie der Status „verfügbar“. Jetzt ein kleines grünes „WA“ wie der Knopf unten im Chat (Wunsch Hansi „sollte gleich sein“); der Status steht als eigene Marke beim Namen.
+const WA_ZEICHEN = '<b class="wa-mini">WA</b>'; // gleich wie der grüne Knopf „WA“ unten im Chat (waKnopf)
 function zustellZeigen() {
   const b = (k, t) => `<button class="${ZW[k] ? "an" : ""}" onclick="ZW.${k}=!ZW.${k};zustellZeigen()">${t}</button>`;
   // 2.386.0 KC-CLUB-ZUSTELL-ALLE (Wunsch Hansi): „✅ Alle“ markiert Push, E-Mail und WhatsApp auf einmal – noch einmal tippen nimmt alle drei weg
