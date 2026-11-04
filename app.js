@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.847.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.848.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -11055,7 +11055,7 @@ function nuVorschlagPruefen(versuch = 0) {
   const st = nuTag(); nuSpeichern(st);
   if (!ICH || st.aus || RG?.an) return;
   const h = heuteIso();
-  if (nuTageZwischen(st.seit, h) < NU_MIN_TAGE || st.tage.length < NU_MIN_NUTZTAGE || (st.zuletzt && nuTageZwischen(st.zuletzt, h) < NU_ABSTAND_TAGE) || $("nuBlatt")) return;
+  if (nuTageZwischen(st.seit, h) < NU_MIN_TAGE || st.tage.length < NU_MIN_NUTZTAGE || (st.zuletzt && nuTageZwischen(st.zuletzt, h) < NU_ABSTAND_TAGE) || $("nvBlatt")) return;
   if (document.hidden || aktuelleAnsicht !== "start" || document.querySelector(FENSTER_OFFEN) || kaBearb) { if (versuch < 8) setTimeout(() => nuVorschlagPruefen(versuch + 1), 12000); return; }
   const frei = nuFreischaltenPasst(st), k = frei ? null : nuVerbergenKandidat(st);
   if (!frei && !k) return;
@@ -11065,7 +11065,7 @@ function nuVorschlagPruefen(versuch = 0) {
     : `<h3 style="margin:4px 0">Ein kleiner Vorschlag 💡</h3><p style="margin:0 0 10px">Die Kachel <b>„${k.sym} ${esc(k.t)}“</b> hast du in den letzten 4 Wochen nicht geöffnet. Soll ich sie <b>ausblenden</b>? Deine Startseite wird übersichtlicher – zurückholen geht jederzeit.</p>`;
   const knoepfe = frei ? `<button type="button" class="knopf haupt" data-w="frei">✨ Ja, freischalten</button><button type="button" class="knopf" data-w="spaeter">⏰ Später</button><button type="button" class="knopf" data-w="nein">🙂 Nein, danke</button>`
     : `<button type="button" class="knopf haupt" data-w="weg">🙈 Ja, ausblenden</button><button type="button" class="knopf" data-w="nein">👍 Nein, behalten</button>`;
-  const f = blattAuf("nuBlatt", `<div class="bw-ein"><div class="bw-ein-figur">${bwFigur("winken", 0, "", 0, .5, 0, new Date().getDate())}</div>${text}
+  const f = blattAuf("nvBlatt", `<div class="bw-ein"><div class="bw-ein-figur">${bwFigur("winken", 0, "", 0, .5, 0, new Date().getDate())}</div>${text}
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">${knoepfe}<button type="button" class="knopf klein" data-w="aus">🔕 Keine Vorschläge mehr</button></div></div>`);
   f.querySelectorAll("[data-w]").forEach((b) => b.onclick = () => { const w = b.dataset.w, s = nuStand(); f.remove();
     if (w === "weg") kaSichtbar(k.id, false);
@@ -15992,19 +15992,19 @@ async function tippZeigen(id) {
   const t = r.tipp, m = r.meins;
   if (m && !t.rueckmeldung) tippErledigt(id); // ohne Rückmeldung: angesehen = erledigt
   const offen = m && t.rueckmeldung && !m.antwort;
-  blattAuf("tippBlatt", `<h3 style="margin:0 0 2px">💡 ${t.vonVorname ? `Ein Tipp von ${esc(t.vonVorname)}` : "Ein Tipp für dich"}</h3><p class="hinweis" style="margin:0 0 8px">${esc(wann(t.erstellt_am))}</p>
+  blattAuf("mtBlatt", `<h3 style="margin:0 0 2px">💡 ${t.vonVorname ? `Ein Tipp von ${esc(t.vonVorname)}` : "Ein Tipp für dich"}</h3><p class="hinweis" style="margin:0 0 8px">${esc(wann(t.erstellt_am))}</p>
     <div class="tipp-karte"><b>${esc(t.problem)}</b><div style="margin-top:4px">${tippAbsatz(t.text)}</div>${tippAnlagenHtml(t.anlagen)}</div>
     ${offen ? `<div class="hl-frage" style="margin-top:12px">Bitte gib eine Rückmeldung, ob dir dieser Tipp geholfen hat.</div>
       <div class="tipp-antworten">${TIPP_ANTW.map(([a, txt]) => `<button type="button" class="knopf${a === "geholfen" ? " haupt" : ""}" onclick="tippAntwort(${jsArg(id)}, ${jsArg(a)})">${txt}</button>`).join("")}</div>
-      <label class="feld" style="margin-top:8px">Ein paar Worte <small class="hinweis">(freiwillig – hilft bei „Nein“ und „anderes“)</small><textarea id="tippText" rows="2" maxlength="500" placeholder="Was ist das Problem?"></textarea></label>
-      <div class="knoepfe"><button type="button" class="knopf klein" onclick="tippAntwort(${jsArg(id)}, 'keine')">🙅 Ich möchte darauf nicht antworten</button><button class="knopf" onclick="fensterZu($('tippBlatt'))">Später</button></div>`
-    : `${m?.antwort ? `<p class="hinweis" style="margin:10px 0 0">Deine Rückmeldung: <b>${esc(TIPP_ANTW_TEXT[m.antwort] || m.antwort)}</b></p>` : ""}<div class="knoepfe"><button class="knopf" onclick="fensterZu($('tippBlatt'))">Schließen</button></div>`}`);
+      <label class="feld" style="margin-top:8px">Ein paar Worte <small class="hinweis">(freiwillig – hilft bei „Nein“ und „anderes“)</small><textarea id="mtText" rows="2" maxlength="500" placeholder="Was ist das Problem?"></textarea></label>
+      <div class="knoepfe"><button type="button" class="knopf klein" onclick="tippAntwort(${jsArg(id)}, 'keine')">🙅 Ich möchte darauf nicht antworten</button><button class="knopf" onclick="fensterZu($('mtBlatt'))">Später</button></div>`
+    : `${m?.antwort ? `<p class="hinweis" style="margin:10px 0 0">Deine Rückmeldung: <b>${esc(TIPP_ANTW_TEXT[m.antwort] || m.antwort)}</b></p>` : ""}<div class="knoepfe"><button class="knopf" onclick="fensterZu($('mtBlatt'))">Schließen</button></div>`}`);
 }
 async function tippAntwort(id, antwort) {
-  const text = ($("tippText")?.value || "").trim();
+  const text = ($("mtText")?.value || "").trim();
   try {
     const r = await api("tipp_antwort", { id, antwort, text }, { warten: true });
-    fensterZu($("tippBlatt")); tippErledigt(id);
+    fensterZu($("mtBlatt")); tippErledigt(id);
     melde(antwort === "keine" ? "🙅 In Ordnung – wir fragen nicht mehr nach." : r?.anfrage ? "🙋 Danke! Hansi weiß Bescheid und meldet sich bei dir." : "💡 Danke für deine Rückmeldung!");
   } catch (e) { meldeFehler(e); }
 }
@@ -32031,7 +32031,7 @@ function updateSelbst() {
 // ([Name] → Vorname), eigene Sprüche anlegen/ändern/löschen, Vorlagen ausblenden.
 const SPA = { daten: null, reg: "", suche: "" };
 const sprOhneMarke = (t) => String(t).replace(/^(?:\d️?⃣)+\s*/u, ""); // „8️⃣0️⃣“ vorn ist nur die Markierung im Archiv
-const sprRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#b36b00" onclick="sprStart()" title="Mein Spruch-Archiv"><span class="sym">📜</span>
+const sprRuecken = () => ICH?.admin ? `<button class="ordner" style="--of:#985a00" onclick="sprStart()" title="Mein Spruch-Archiv"><span class="sym">📜</span>
     <span class="schild"><span class="jahr wort">Sprüche</span><span class="name">nur für mich</span></span><span class="anz">${SPA.daten ? SPA.daten.register.reduce((n, r) => n + r.sprueche.length, 0) + " Sprüche" : "Anlässe"}</span><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""><span class="loch"></span></button>` : "";
 async function sprStart(reg) {
   AR.spruch = true; if (reg !== undefined) SPA.reg = reg;
@@ -32046,7 +32046,7 @@ function sprZeigen() {
   if (SPA.reg && !d.register.some((r) => r.id === SPA.reg)) SPA.reg = "";
   const alle = d.register.reduce((n, r) => n + r.sprueche.length, 0);
   const tab = (id, t, n, i) => `<button class="${SPA.reg === id ? "an" : ""}" style="--rf:${i ? AR_FARBEN[(i - 1) % AR_FARBEN.length] : "var(--grau)"}" onclick="SPA.reg='${id}';sprZeigen()">${esc(t)} <small>${n}</small></button>`;
-  $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:#b36b00"><span class="sym">📜</span><div><b>Sprüche</b><div class="klein">Dein Spruch-Archiv · nur du siehst es</div></div><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></div>
+  $("arInhalt").innerHTML = `<div class="ar-kopf" style="--of:#985a00"><span class="sym">📜</span><div><b>Sprüche</b><div class="klein">Dein Spruch-Archiv · nur du siehst es</div></div><img class="muetze" src="kc-kochmuetze-weiss.webp" alt=""></div>
     <div class="knoepfe" style="margin:8px 0"><button class="knopf klein" onclick="sprZu()">⬅️ Zum Regal</button><button class="knopf klein haupt" onclick="sprForm()">＋ Eigener Spruch</button><button class="knopf klein" onclick="ggUebersicht()">🎂 Meine Geburtstagsgrüße</button></div>
     <input id="spSuche" class="ar-ordnersuche" type="search" autocomplete="off" placeholder="🔍 Sprüche durchsuchen … (z. B. 80, Hochzeit, Wein)" value="${esc(SPA.suche)}" oninput="SPA.suche=this.value;sprListe()">
     <div class="ar-register">${[["", "Alle", alle], ...d.register.map((r) => [r.id, `${r.sym} ${r.t}`, r.sprueche.length])].map(([id, t, n], i) => tab(id, t, n, i)).join("")}</div>
@@ -33876,7 +33876,7 @@ const FENSTER_NAMEN = {
   linkBlatt: "🔗 App-Link erzeugt", ltStartBlatt: "🔴 Live-Abstimmung: nächster Termin", maBlatt: "🧭 Mikrofon-Assistent", mdBlatt: "🗓️ Mein Dienst", mdatBlatt: "🔐 Meine Daten",
   mfAnbieten: "🚗 Mitfahrgelegenheit anbieten", mfBescheid: "🚗 Noch keine Mitfahrgelegenheit", mfBlatt: "👥 Ein Mitglied fragen", mgGrBlatt: "📋 Meine Gruppen", mikroHilfe: "🎙️ Mikrofon ist gesperrt",
   mikroWahlBlatt: "🎤 Was möchtest du?", mindestBlatt: "🆕 Bitte die App aktualisieren", neuBlatt: "🆕 Neuigkeiten", neuWahlBlatt: "➕ Neu: Auswahl", neustartBlatt: "🔄 Supabase neu starten",
-  nfpBlatt: "📌 Pinnwand-Zettel", notInfoBlatt: "ℹ️ Was ist los?", notfallBlatt: "🚨 SOS an alle", ntBlatt: "📅 Als Termin übernehmen", nuBlatt: "💡 Vorschlag der Bühne",
+  nfpBlatt: "📌 Pinnwand-Zettel", notInfoBlatt: "ℹ️ Was ist los?", notfallBlatt: "🚨 SOS an alle", ntBlatt: "📅 Als Termin übernehmen", nvBlatt: "💡 Vorschlag der Bühne",
   onlineBlatt: "🟢 Gerade online", personenBlatt: "👉 Wer?", prBlatt: "🧪 Probephase", pwTeilBlatt: "📌 Zettel abnehmen", rcAngebotBlatt: "🧳 Reise-Checkliste angeboten",
   rcBlatt: "🧳 Meine Reise-Checkliste", rgAuswBlatt: "📊 Auswertung der Erklär-Videos", rgListeBlatt: "🎬 Erklär-Videos (Liste)", rgsBlatt: "🗣️ Stimme für Videos wählen", rolleBlatt: "🎖️ Rolle/Amt",
   anbBlatt: "📰 Anbieter – Neues & Wartungen", // 2.842.0 KC-CLUB-ANBIETER-NEUES
@@ -33889,7 +33889,7 @@ const FENSTER_NAMEN = {
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
   svBlatt: "⚙️ Sitzungs-Vorgaben", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
-  teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", tippBlatt: "💡 Tipp des Tages", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
+  teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",
   vwMenueBlatt: "📤 Wie verschicken – nur diese Nachricht", vwSicherBlatt: "⚠️ Versand: Rückfrage", waEinfBlatt: "📋 Aus WhatsApp einfügen", wasNeuBlatt: "🆕 Was ist neu", wbBerichtBlatt: "📊 Wochenbericht",

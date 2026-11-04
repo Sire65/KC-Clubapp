@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)
+Gesamtprüfung vor der Auslieferung (Bericht: KICC `docs/club-app-pruefung/PRUEFBERICHT-2026-11-04.md`, Freigabe Hansi 04.11.). Nur Fehlerbehebung, keine neue Funktion.
+- **Mitglieder-Tipp löschte das Einstiegs-Fenster:** `tippZeigen` öffnete sein Fenster unter der Kennung `tippBlatt` – `blattAuf` entfernt dabei das gleichnamige feste Fenster der Einstiegs-Tipps (mit `tippText`, `tippJa` …). Danach brach z. B. der Hinweis nach dem Umschalten auf die erweiterte Ansicht mit einem Programmfehler ab. Der Mitglieder-Tipp hat jetzt eigene Kennungen `mtBlatt` / `mtText`.
+- **Kachel-Vorschlag und „So nutzen wir die App“ teilten sich `nuBlatt`:** War die Nutzungs-Übersicht offen, kam kein Kachel-Vorschlag; in den „Wegen der Mitglieder“ stand die Übersicht als „Vorschlag der Bühne“. Der Kachel-Vorschlag heißt jetzt `nvBlatt`.
+- `FENSTER_NAMEN`: doppelte Schlüssel `nuBlatt`/`tippBlatt` aufgelöst (`nvBlatt` „💡 Vorschlag der Bühne“, `mtBlatt` „💡 Ein Tipp für dich“; „Tipp des Tages“ ist `tdtBlatt`).
+- **Kontrast:** Ordner „📜 Mein Spruch-Archiv“ (Archiv, nur Admin) `#b36b00` → `#985a00` – Schrift jetzt 5,0 : 1 statt 3,79 : 1 (WCAG AA), in allen Designs.
+- Test: `tests/pruefung-1104.test.mjs`. Rückweg: App 2.847.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.847.0 – 2026-11-03 – 📌 Pinnwand geht nie mehr von selbst auf (KC-CLUB-PINNWAND-NIE-AUTO)
 Hansi (03.11.): „Öffnet bei den Mitgliedern immer automatisch die Pinnwand?“ → Entscheidung „Nie von selbst öffnen“.
 - Beim Start der App öffnen sich weder Zettel-Fenster (neue Zettel) noch die Pinnwand (❗ wichtige, nicht abgehakte Zettel, neue Hilfe-Aufrufe). Seit 2.835.0 („Was ist neu“ aus) kamen neue Zettel direkt als Fenster.
