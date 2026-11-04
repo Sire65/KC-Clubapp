@@ -1,10 +1,11 @@
 # Änderungen
 
-## 2.849.0 – 2026-11-04 – 💬 Nachrichten-Kachel blinkt wie der Knopf (KC-CLUB-NACHRICHT-BLINKEN)
+## 2.850.0 – 2026-11-04 – 💬 Nachrichten-Kachel blinkt wie der Knopf (KC-CLUB-NACHRICHT-BLINKEN) · 🔴 Push „… ist offline“ (KC-CLUB-OFFLINE-PUSH) · Server 2.850.0
 Wunsch Hansi (04.11.): „Bau ein, dass jeweils die Kachel blinkt, wenn eine ungelesene Nachricht da ist, genau wie der Button Nachricht.“
 - Bei ungelesenen Nachrichten blinken jetzt gleich: der Knopf „Nachrichten“ unten, die Nachrichten-Kachel und das Feld „Neue Nachr.“ auf der Startseite – grün (bis 2 Tage), orange (3–4 Tage), rot (älter). Ist das Alter noch unbekannt, blinkt es grün (vorher: gar nicht).
 - Ohne Effekte („✨ Animierte Knöpfe“ aus), bei „Bewegung verringern“ und in der Strom-Ruhe: fester farbiger Rand statt Blinken. Die Pinnwand-Kachel pulsiert bei neuen Zetteln schon seit 2.763.0 (rot, mit Anzahl).
-- Rückweg: App 2.848.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+- **🔴 Push, wenn sich jemand abmeldet** (KC-CLUB-OFFLINE-PUSH, Wunsch Hansi 04.11.: „Push, wenn sich die Mitglieder wieder abgemeldet haben – bisher bekomme ich nur, wenn sie sich anmelden“): „🔴 Klaus ist offline (10:32 Uhr) – War in der App von 10:05 bis 10:32 Uhr (27 Min.)“. Die App meldet sich nicht ab (schließen, Handy aus, kein Netz) – der Server-Minutenlauf erkennt das am fehlenden Lebenszeichen und meldet gut 5 Minuten danach (kurz weglegen löst nichts aus), je Sitzung einmal. Gleiche Empfänger und Regeln wie „ist jetzt online“ (⚙️ „📲 Push, wenn sich jemand an- und abmeldet“, Ruhezeit, unsichtbar, keine Testkonten). Eine Abfrage je Minute. Test: `tests/offline-push.test.mjs`.
+- Rückweg: App 2.848.0, Server 2.846.0. Update-Hinweis: nur „Kleine Systemanpassung“.
 
 ## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)
 Gesamtprüfung vor der Auslieferung (Bericht: KICC `docs/club-app-pruefung/PRUEFBERICHT-2026-11-04.md`, Freigabe Hansi 04.11.). Nur Fehlerbehebung, keine neue Funktion.

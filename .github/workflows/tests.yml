@@ -78,6 +78,7 @@ jobs:
       - run: node tests/video-dauer.test.mjs
       - run: node tests/buero-fein.test.mjs
       - run: node tests/pinnwand-nie-auto.test.mjs
+      - run: node tests/offline-push.test.mjs
       # KC-CLUB-PRUEFUNG-1104 (2.848.0): doppelte Fenster-Kennungen, Kontrast
       - run: node tests/pruefung-1104.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)

@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.846.0";
+const SERVER_VERSION = "2.850.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1220,20 +1220,8 @@ async function onlinePushMelden(wer: Ich, ua = "") {
   if (wer.person_id.startsWith("KC-P-TEST")) return;
   if ((await onlineZeigenMap([wer.person_id])).get(wer.person_id) === false) return;
   if ((await inkognitoSet([wer.person_id])).has(wer.person_id)) return; // KC-CLUB-INKOGNITO
-  // KC-CLUB-ONLINE-PUSH-ALLE (2.22.17, Wunsch Hansi): Admins wie bisher (Standard an), alle anderen Mitglieder, die es selbst
-  // eingeschaltet haben (Standard aus) – z. B. Klaus bekommt „🟢 Hansi ist jetzt online“.
-  const [{ data: ad }, { data: wahl }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id").eq("ist_admin", true),
-    db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_push"), aktiveMitglieder()]);
-  const aktivIds = new Set(aktiv.map((m) => m.person_id)), admins = new Set((ad ?? []).map((x: any) => x.person_id as string));
-  const freiwillig = (wahl ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id as string);
-  let ids = [...new Set([...admins, ...freiwillig])].filter((id) => id !== wer.person_id && aktivIds.has(id) && !id.startsWith("KC-P-TEST"));
-  if (!ids.length) return;
-  const aus = new Set((wahl ?? []).filter((x: any) => x.wert?.an === false).map((x: any) => x.person_id));
-  // 1.64.0 (Fund Hansi): auch wenn der Admin gerade „online“ ist – bei mehreren Geräten (Handy + Tablet) entscheidet jedes Gerät
-  // selbst: App sichtbar → Ton/Ansage in der App (Service Worker), sonst normale Mitteilung.
-  const ruhe = await ruhendePersonen(ids);
-  ids = ids.filter((id) => !aus.has(id) && !ruhe.has(id));
-  if (!ids.length) return;
+  const e = await onlinePushEmpfaenger(wer.person_id); if (!e) return;
+  const { ids, admins } = e;
   const name = wer.vorname || wer.name;
   // 2.390.0 KC-CLUB-ONLINE-PUSH-ZEIT (Fund Hansi „die Push kam, als ich den PC anmachte – Klaus war aber gar nicht mehr online“): Uhrzeit im Titel,
   // Tag + Uhrzeit im Text. Der Service Worker erkennt daran verspätet zugestellte Mitteilungen und schreibt dann „war um … online“.
@@ -1246,6 +1234,56 @@ async function onlinePushMelden(wer: Ich, ua = "") {
     `club-online:${wer.person_id}:${Math.floor(Date.now() / ONLINE_PUSH_PAUSE_MS)}${k}`) : Promise.resolve();
   const anAdmins = ger ? ids.filter((id) => admins.has(id)) : [];
   await Promise.all([senden(anAdmins, `${name} (${ger})`, ":a"), senden(ids.filter((id) => !anAdmins.includes(id)), name, "")]);
+}
+// KC-CLUB-ONLINE-PUSH: wer „X ist online/offline“ bekommt – gemeinsam für die Online- und die Offline-Meldung (2.850.0 KC-CLUB-OFFLINE-PUSH)
+async function onlinePushEmpfaenger(werId: string): Promise<{ ids: string[]; admins: Set<string> } | null> {
+  // KC-CLUB-ONLINE-PUSH-ALLE (2.22.17, Wunsch Hansi): Admins wie bisher (Standard an), alle anderen Mitglieder, die es selbst
+  // eingeschaltet haben (Standard aus) – z. B. Klaus bekommt „🟢 Hansi ist jetzt online“.
+  const [{ data: ad }, { data: wahl }, aktiv] = await Promise.all([db.from("kc_club_rollen").select("person_id").eq("ist_admin", true),
+    db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_push"), aktiveMitglieder()]);
+  const aktivIds = new Set(aktiv.map((m) => m.person_id)), admins = new Set((ad ?? []).map((x: any) => x.person_id as string));
+  const freiwillig = (wahl ?? []).filter((x: any) => x.wert?.an === true).map((x: any) => x.person_id as string);
+  let ids = [...new Set([...admins, ...freiwillig])].filter((id) => id !== werId && aktivIds.has(id) && !id.startsWith("KC-P-TEST"));
+  if (!ids.length) return null;
+  const aus = new Set((wahl ?? []).filter((x: any) => x.wert?.an === false).map((x: any) => x.person_id));
+  // 1.64.0 (Fund Hansi): auch wenn der Admin gerade „online“ ist – bei mehreren Geräten (Handy + Tablet) entscheidet jedes Gerät
+  // selbst: App sichtbar → Ton/Ansage in der App (Service Worker), sonst normale Mitteilung.
+  const ruhe = await ruhendePersonen(ids);
+  ids = ids.filter((id) => !aus.has(id) && !ruhe.has(id));
+  if (!ids.length) return null;
+  return { ids, admins };
+}
+// ---------- 2.850.0 KC-CLUB-OFFLINE-PUSH (Wunsch Hansi 04.11.2026 „Push, wenn sich die Mitglieder wieder abgemeldet haben – bisher bekomme ich nur,
+// wenn sie sich anmelden“) ----------
+// Die App meldet sich nicht ab (schließen, Handy aus, kein Netz) – sie hört nur auf, sich zu melden. Darum schaut der Minuten-Lauf (geplant_faellig), wessen
+// letzte Meldung (online_seit.zuletzt) länger als ONLINE_SEK her ist und noch nicht als offline gemeldet wurde (wert.offline = Beginn dieser Sitzung).
+// Gleiche Empfänger und Regeln wie „ist jetzt online“ (Einstellung online_push, Ruhezeit, unsichtbar/inkognito, keine Testkonten). Eine Abfrage je Minute.
+const OFFLINE_WARTE_MS = 3 * 60000;
+async function offlinePushLauf() {
+  // erst nach OFFLINE_WARTE_MS ohne Lebenszeichen – kurz das Handy weggelegt oder ein Funkloch löst noch keine Meldung aus
+  const jetztMs = Date.now(), bis = new Date(jetztMs - ONLINE_SEK * 1000 - OFFLINE_WARTE_MS).toISOString(), von = new Date(jetztMs - ONLINE_SEK * 1000 - OFFLINE_WARTE_MS - 20 * 60000).toISOString();
+  const { data, error } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_seit").gte("wert->>zuletzt", von).lte("wert->>zuletzt", bis).limit(40);
+  if (error) return { offline: 0, fehler: error.message };
+  const offen = (data ?? []).filter((x: any) => x.wert?.seit && x.wert?.zuletzt && x.wert.offline !== x.wert.seit && !String(x.person_id).startsWith("KC-P-TEST"));
+  let n = 0;
+  for (const x of offen) {
+    // erst vermerken (nur wenn sich seitdem nichts getan hat), dann melden – so geht nichts doppelt raus
+    const { data: ok } = await db.from("kc_club_person_einstellung").update({ wert: { ...x.wert, offline: x.wert.seit } })
+      .eq("person_id", x.person_id).eq("schluessel", "online_seit").eq("wert->>zuletzt", x.wert.zuletzt).select("person_id");
+    if (!ok?.length) continue;
+    await offlinePushMelden(x.person_id, x.wert.seit, x.wert.zuletzt).then(() => { n++; }, (e) => console.error("offline push", String(e)));
+  }
+  return { offline: n };
+}
+async function offlinePushMelden(pid: string, seit: string, zuletzt: string) {
+  if ((await onlineZeigenMap([pid])).get(pid) === false) return;
+  if ((await inkognitoSet([pid])).has(pid)) return; // KC-CLUB-INKOGNITO
+  const e = await onlinePushEmpfaenger(pid); if (!e) return;
+  const p = (await personen([pid])).get(pid), name = vorname(p ?? null) || p?.display_name || "Ein Mitglied";
+  const a = new Date(seit), z = new Date(zuletzt), min = Math.max(1, Math.round((z.getTime() - a.getTime()) / 60000));
+  await routerSenden("club_online", e.ids, { titel: `🔴 ${name} ist offline (${fZeit.format(z)} Uhr)`, kurz: `War in der App von ${fZeit.format(a)} bis ${fZeit.format(z)} Uhr (${min} Min.)`,
+    betreff: `Köcheclub Werne – ${name} ist offline`, text: `${p?.display_name || name} war von ${fZeit.format(a)} bis ${fZeit.format(z)} Uhr in der Köcheclub-App.`, url: APP_URL },
+    `club-offline:${pid}:${seit}`);
 }
 // 2.6.1: mitInkognito = auch der unsichtbare Admin (z. B. als Empfänger eines Hilfe-Aufrufs „an alle online“ – nur sichtbar ist er nicht)
 // KC-CLUB-ONLINE-SEIT (2.25.5, Wunsch Hansi „wenn online, dann online seit …“): Beginn der aktuellen Sitzung je Person merken.
@@ -8988,7 +9026,8 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       const lauf = await geplantFaelligLauf();
       const warteschlange = await mailWarteschlange().catch((e) => ({ fehler: String(e) })); // 2.520.0 KC-COMM-WARTEN
       const wecker = await weckerFaelligLauf().catch((e) => ({ fehler: String(e) })); // 2.640.0 KC-CLUB-UHR-WECKER
-      return json({ ok: true, ...lauf, warteschlange, wecker });
+      const offline = await offlinePushLauf().catch((e) => ({ fehler: String(e) })); // 2.850.0 KC-CLUB-OFFLINE-PUSH
+      return json({ ok: true, ...lauf, warteschlange, wecker, offline });
     }
     // ----- Zeitplaner: Erinnerung am Vortag (ab 9 Uhr) an alle, die nicht abgesagt haben -----
     if (a === "wartung") {
