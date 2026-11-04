@@ -23405,7 +23405,7 @@ function empfListe() {
   ].join("");
   $("empfListe").innerHTML = MITGLIEDER.filter((m) => m.person_id !== ICH.person_id && (!q || m.name.toLowerCase().includes(q))).map((m) => `<label${okKl(m, empfWahl.personen.includes(m.person_id))}>
     <input type="checkbox"${okAttr(m, empfWahl.personen.includes(m.person_id))} ${empfWahl.personen.includes(m.person_id) ? "checked" : ""} onchange="personWahl('${m.person_id}', this.checked)">
-    <span style="flex:1">${esc(m.name)}${okZusatz(m)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
+    <span style="flex:1">${esc(m.name)}${okZusatz(m)}${m.aemter?.length ? ` <span class="marke">${esc(m.aemter.join(", "))}</span>` : ""}${statusArt(m.status) !== "verfuegbar" ? ` <span class="stmarke st-${statusArt(m.status)}">${esc(statusKurz(m.status))}</span>` : ""}</span>${wegIcons(m)}</label>`).join("") || '<p class="hinweis">Niemand gefunden.</p>'; // KC-CLUB-RC-PRUEFUNG (20.10.2026): leere Suche sichtbar machen
   $("empfGewaehlt").textContent = empfTest() ? "nur du selbst (Test)" : (empfWahl.personen.map((p) => MITGLIEDER.find((m) => m.person_id === p)?.name).filter(Boolean).join(", ") || "niemand");
 }
 function gruppeWahl(a) {
@@ -23452,7 +23452,10 @@ function neuWeiter() {
 // Nichts gewählt = so, wie jedes Mitglied es eingestellt hat. WhatsApp geht nicht über einen Dienst (kostenlos, keine API):
 // nach dem Senden wird der Text an WhatsApp übergeben – bei einer Person direkt an ihren Chat, sonst über „Teilen“ (Gruppe wählen).
 let ZW = { push: false, email: false, whatsapp: false }, CHAT = null;
-const wegIcons = (m) => { const w = m?.wege || {}; return `<span class="wege" title="🔔 Push · ✉️ E-Mail · 🟢 WhatsApp"><i class="${w.push ? "" : "nein"}">🔔</i><i class="${w.mail ? "" : "nein"}">✉️</i><i class="${w.whatsapp ? "" : "nein"}">🟢</i></span>`; };
+const wegIcons = (m) => { const w = m?.wege || {}; return `<span class="wege" title="🔔 Push · ✉️ E-Mail · WhatsApp"><i class="${w.push ? "" : "nein"}">🔔</i><i class="${w.mail ? "" : "nein"}">✉️</i><i class="wa-zeichen${w.whatsapp ? "" : " nein"}" aria-label="WhatsApp">${WA_ZEICHEN}</i></span>`; };
+// 2.850.0 KC-CLUB-WA-ZEICHEN (Fund Hansi 04.11.2026 „bei Thomas Hess ist ein grüner Punkt – in seinen Einstellungen hat er aber orange für beschäftigt“): das 🟢 für
+// „WhatsApp-Nummer da“ sah aus wie der Status „verfügbar“. Jetzt ein kleines WhatsApp-Zeichen (Sprechblase mit Hörer); der Status steht als eigene Marke beim Namen.
+const WA_ZEICHEN = '<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z" fill="#25d366"/><path d="M8.6 7.2c.2-.4.4-.4.7-.4h.5c.2 0 .4 0 .6.4l.8 1.9c.1.2.1.4 0 .6l-.4.6c-.1.2-.2.3 0 .6.4.7 1 1.4 1.7 1.9.6.4 1 .6 1.3.7.2.1.4 0 .5-.1l.6-.8c.2-.2.4-.2.6-.1l1.8.9c.2.1.4.2.4.4.1.3 0 1.1-.4 1.6-.4.5-1.3.9-2 .9-.8 0-2.4-.4-4.2-2-1.6-1.4-2.6-3.2-2.8-3.8-.3-.9 0-1.7.3-2.2z" fill="#fff"/></svg>';
 function zustellZeigen() {
   const b = (k, t) => `<button class="${ZW[k] ? "an" : ""}" onclick="ZW.${k}=!ZW.${k};zustellZeigen()">${t}</button>`;
   // 2.386.0 KC-CLUB-ZUSTELL-ALLE (Wunsch Hansi): „✅ Alle“ markiert Push, E-Mail und WhatsApp auf einmal – noch einmal tippen nimmt alle drei weg
