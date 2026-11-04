@@ -7,6 +7,11 @@
 import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module";
 const require = createRequire("/opt/node-tools/node_modules/");
 const { chromium } = require("playwright");
+// KC-TESTS-OHNE-ECHTSERVER (2.856.0): Netzsperre + Abschirmung – nie gegen den echten Club-Server. Jeder neue Kontext bricht alles ab, was nicht
+// an die eigene Seite geht; die Testdaten-Antworten dieses Skripts (seite.route) haben Vorrang und bleiben wie sie sind.
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
+const abschirmen = async (z) => { await z.route("**/*", (r) => (/^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/|data:|blob:|file:)/.test(r.request().url()) ? r.continue() : r.abort())); await z.routeWebSocket(/realtime\/v1\/websocket/, (ws) => ws.close()); };
+const schirmeAb = (b) => { const nc = b.newContext.bind(b); b.newContext = async (...a) => { const c = await nc(...a); await abschirmen(c); return c; }; return b; };
 const modulOrt = process.argv[2] || process.env.KC_NODE_TURN || "";
 let Turn; try { Turn = createRequire(path.join(path.resolve(modulOrt), "x.js"))("node-turn"); } catch { console.log("node-turn nicht gefunden – Aufruf: node tools/anruf/anruf-turn-browser.mjs <ordner mit node_modules/node-turn>"); process.exit(2); }
 const wurzel = path.resolve(new URL("../..", import.meta.url).pathname);
@@ -47,7 +52,7 @@ async function server(wer, action, p) {
     default: return { ok: true };
   }
 }
-const browser = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] });
+const browser = schirmeAb(await chromium.launch({ args: [OHNE_ECHTSERVER, "--no-proxy-server", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] }));
 async function geraet(pid, nurUmleitung = true) {
   const ctx = await browser.newContext({ viewport: { width: 400, height: 800 } });
   // kein direkter Weg: nur umgeleitete Kandidaten erlaubt (die App selbst setzt das nie – sie nimmt die Umleitung nur bei Bedarf)

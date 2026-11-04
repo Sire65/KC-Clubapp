@@ -7,6 +7,11 @@
 import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module"; import { execSync } from "node:child_process";
 const require = createRequire("/opt/node-tools/node_modules/");
 const { chromium } = require("playwright");
+// KC-TESTS-OHNE-ECHTSERVER (2.856.0): Netzsperre + Abschirmung – nie gegen den echten Club-Server. Jeder neue Kontext bricht alles ab, was nicht
+// an die eigene Seite geht; die Testdaten-Antworten dieses Skripts (seite.route) haben Vorrang und bleiben wie sie sind.
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
+const abschirmen = async (z) => { await z.route("**/*", (r) => (/^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/|data:|blob:|file:)/.test(r.request().url()) ? r.continue() : r.abort())); await z.routeWebSocket(/realtime\/v1\/websocket/, (ws) => ws.close()); };
+const schirmeAb = (b) => { const nc = b.newContext.bind(b); b.newContext = async (...a) => { const c = await nc(...a); await abschirmen(c); return c; }; return b; };
 const wurzel = path.resolve(new URL("../..", import.meta.url).pathname), VORHER = process.argv.includes("--vorher");
 const appJs = VORHER ? execSync("git show HEAD:app.js", { cwd: wurzel, maxBuffer: 1 << 28 }) : fs.readFileSync(path.join(wurzel, "app.js"));
 const typ = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".webmanifest": "application/json" };
@@ -41,7 +46,7 @@ function server(wer, action, p) {
   }
 }
 
-const browser = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] });
+const browser = schirmeAb(await chromium.launch({ args: [OHNE_ECHTSERVER, "--no-proxy-server", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] }));
 async function geraet(pid) {
   const ctx = await browser.newContext({ viewport: { width: 400, height: 800 } });
   const s = await ctx.newPage();

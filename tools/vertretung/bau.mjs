@@ -1,5 +1,10 @@
 import { chromium } from 'playwright';
 import fs from 'fs';
+// KC-TESTS-OHNE-ECHTSERVER (2.856.0): Netzsperre + Abschirmung – nie gegen den echten Club-Server. Jeder neue Kontext bricht alles ab, was nicht
+// an die eigene Seite geht; die Testdaten-Antworten dieses Skripts (seite.route) haben Vorrang und bleiben wie sie sind.
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
+const abschirmen = async (z) => { await z.route("**/*", (r) => (/^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/|data:|blob:|file:)/.test(r.request().url()) ? r.continue() : r.abort())); await z.routeWebSocket(/realtime\/v1\/websocket/, (ws) => ws.close()); };
+const schirmeAb = (b) => { const nc = b.newContext.bind(b); b.newContext = async (...a) => { const c = await nc(...a); await abschirmen(c); return c; }; return b; };
 const D = process.env.D, F = `${process.env.S}/anl/fonts`;
 const muetze = fs.readFileSync('/home/user/kc-clubapp/kc-kochmuetze-weiss.webp').toString('base64');
 const fall = (t, schritte) => `<div class="fall"><h4>${t}</h4><ol>${schritte.map((x) => `<li>${x}</li>`).join('')}</ol></div>`;
@@ -66,7 +71,7 @@ ${dienst.map(([d, w, b]) => `<tr><td><b>${d}</b></td><td>${w}</td><td class="lee
 ${Array.from({ length: 8 }, () => '<tr><td class="leer"></td><td></td><td></td><td></td></tr>').join('')}</table></section>
 </body></html>`;
 fs.writeFileSync(`${D}/vertretung.html`, html);
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' }); const p = await (await b.newContext()).newPage();
+const b = schirmeAb(await chromium.launch({ args: [OHNE_ECHTSERVER, "--no-proxy-server"], executablePath: '/opt/pw-browsers/chromium' })); const p = await (await b.newContext()).newPage();
 await p.goto(`file://${D}/vertretung.html`); await p.waitForTimeout(800);
 await p.pdf({ path: `${D}/Vertretung_Admin_V1.pdf`, format: 'A4', printBackground: true, displayHeaderFooter: true, preferCSSPageSize: true,
   headerTemplate: `<div style="width:100%;margin:0 16mm;font-family:Lato,sans-serif;font-size:9px;display:flex;justify-content:space-between;border-bottom:1.6px solid #1f3a5f;padding-bottom:4px"><span style="display:flex;align-items:center;gap:8px;color:#1f3a5f;font-weight:700;font-size:11px"><img src="data:image/webp;base64,${muetze}" style="height:16px;filter:brightness(0)">Köcheclub Werne</span><span style="color:#555">Vertretung des Admins · vertraulich</span></div>`,

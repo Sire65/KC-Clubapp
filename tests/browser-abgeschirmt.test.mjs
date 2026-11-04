@@ -7,9 +7,8 @@ const wurzel = new URL("../", import.meta.url);
 const alle = (d) => fs.readdirSync(new URL(d + "/", wurzel), { withFileTypes: true }).flatMap((e) => e.name === "node_modules" || e.isSymbolicLink() ? []
   : e.isDirectory() ? alle(`${d}/${e.name}`) : /\.(mjs|js|cjs)$/.test(e.name) ? [`${d}/${e.name}`] : []);
 const dateien = ["tests", "tools"].flatMap(alle).filter((f) => f !== "tests/browser-abgeschirmt.test.mjs");
-// Ältere Werkzeug-Skripte (vor KC-TESTS-OHNE-ECHTSERVER), noch nicht umgestellt – OFFEN: beim nächsten Gebrauch abschirmen und hier streichen.
-// Bis dahin nicht ausführen (oder nur mit Netzsperre: args ["--no-proxy-server", "--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE localhost , EXCLUDE 127.0.0.1"]).
-const ALT_OFFEN = new Set(["tools/abstimmung-paket/ap-browser.mjs", "tools/anklopfen-hinweis/anklopfen-hinweis-browser.mjs", "tools/anruf/anruf-browser.mjs", "tools/anruf/anruf-turn-browser.mjs", "tools/chat-nur-hg/nur-hg-browser.mjs", "tools/chat-sparsam/chat-stand-browser.mjs", "tools/chat-sparsam/chat-takt-browser.mjs", "tools/chat-sparsam/schreibt-hinweis-browser.mjs", "tools/dienstwunsch/dw-laufband-browser.mjs", "tools/einst-wegweiser/ew-browser.mjs", "tools/fernhilfe/fern-bedienen-test.mjs", "tools/fernhilfe/fh-aenderungen-browser.mjs", "tools/kachel-ecken/kachel-ecken-browser.mjs", "tools/link-vorschau/lv-browser.mjs", "tools/nachsenden/nachsenden-browser.mjs", "tools/rose/rose-browser.mjs", "tools/schatten/schatten-browser.mjs", "tools/simjue/karussell-browser.mjs", "tools/unterstuetzung/ua-browser.mjs", "tools/versand-vorwahl/versand-vorwahl-browser.mjs", "tools/vertretung/bau.mjs", "tools/wecker-ton/wecker-ton-browser.mjs", "tools/wildwest/ww-browser.mjs", "tools/wueste/wu-browser.mjs"]);
+// 2.856.0: alle älteren Werkzeug-Skripte umgestellt (Abschirmung je Kontext + Netzsperre) – neue Ausnahmen gibt es nicht.
+const ALT_OFFEN = new Set([]);
 let browser = 0;
 for (const f of dateien) {
   const s = fs.readFileSync(new URL(f, wurzel), "utf8");

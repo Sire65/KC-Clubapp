@@ -4,6 +4,11 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 const require = createRequire("/opt/node-tools/node_modules/");
 const { chromium } = require("playwright");
+// KC-TESTS-OHNE-ECHTSERVER (2.856.0): Netzsperre + Abschirmung – nie gegen den echten Club-Server. Jeder neue Kontext bricht alles ab, was nicht
+// an die eigene Seite geht; die Testdaten-Antworten dieses Skripts (seite.route) haben Vorrang und bleiben wie sie sind.
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
+const abschirmen = async (z) => { await z.route("**/*", (r) => (/^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/|data:|blob:|file:)/.test(r.request().url()) ? r.continue() : r.abort())); await z.routeWebSocket(/realtime\/v1\/websocket/, (ws) => ws.close()); };
+const schirmeAb = (b) => { const nc = b.newContext.bind(b); b.newContext = async (...a) => { const c = await nc(...a); await abschirmen(c); return c; }; return b; };
 const wurzel = new URL("../../", import.meta.url), lies = (p) => fs.readFileSync(new URL(p, wurzel), "utf8");
 const ziel = process.argv[2] || "/tmp/claude-0/-home-user/873368a4-1393-5000-bd3c-6ded628e8b84/scratchpad/rose";
 const app = lies("app.js"), html = lies("index.html");
@@ -20,7 +25,7 @@ const seite = `<!doctype html><html><head><meta charset="utf-8"><meta name="view
   const jzSimJueZeit = () => true, themaSchriftLaden = () => {}, api = async () => ({ ok: true });
   ${js.replace(/setInterval\([^\n]*\n/, "\n")}
 </script></body></html>`;
-const browser = await chromium.launch();
+const browser = schirmeAb(await chromium.launch({ args: [OHNE_ECHTSERVER, "--no-proxy-server"] }));
 try {
   const page = await browser.newPage({ viewport: { width: 393, height: 873 }, deviceScaleFactor: 2, reducedMotion: "reduce" });
   await page.route("http://test.local/**", (r) => { const u = new URL(r.request().url());
