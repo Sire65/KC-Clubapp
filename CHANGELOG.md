@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.852.0 – 2026-11-04 – Gesamtprüfung Teil 2: lesbarer, besser antippbar, einheitlich (KC-CLUB-PRUEFUNG-1104-B)
+Auf main 2.852.0 nummeriert (2.849.0–2.851.0 waren inzwischen vergeben). Punkte 1–7 aus der Gesamtprüfung (Freigabe Hansi 04.11.: „vorsichtig, nix kaputt machen, ordentlich ausgerichtet und gut bedienbar“). Jede Änderung im Browser bei 320/360/390/430/800 px, normal und mit großer Schrift nachgemessen.
+- **💬 Nachrichten – Leiste oben:** Die Wörter unter den Symbolen sind 12 statt 10 px groß und werden nie mehr gekürzt („Favori…“, „Ungel…“). Jeder Knopf ist so breit wie sein Wort; reicht der Platz nicht, kommt eine zweite, gemittelte Reihe – nichts liegt versteckt hinter Wischen. Bei 390 px passen die sechs Mitglieder-Knöpfe weiter in eine Reihe.
+- **❓ Hilfe & Tipps:** Der Link „💭 Feedback“ im Satz ist größer antippbar (vorher 20 px hoch), ohne dass sich die Zeile verschiebt. Auf schmalen Handys (unter 400 px) zeigt der Suchen-Knopf nur 🔍 – das Eingabefeld wird dadurch rund 60 px breiter (320 px mit großer Schrift: 134 → 209 px).
+- **Barrierefreiheit:** Umschalter Fotos/Videos als benannte Gruppe mit „gedrückt“-Zustand (wie die übrigen Ein/Aus-Knöpfe, statt einer falschen Reiter-Rolle); Kamera-Auslöser hat einen Namen für Bildschirmleser.
+- **Einheitlich „Wird geladen …“** statt „Lädt …“ (Archiv, Sprüche, Übersicht, Dokument-Ansicht, Anrufbeantworter). Ausnahme: der kleine Abspiel-Knopf in der Sprechblase.
+- **🪑 Runder Tisch – Tasche:** Zweimal schnell auf „💼 Nächstes“ getippt schickte dasselbe Teil doppelt. Jetzt wird ein weiterer Tipp ignoriert, solange ein Teil unterwegs ist. Der Browser-Test wartete hier zu kurz (das PDF aus einem früheren Schritt war noch zu sehen) und war deshalb gelegentlich rot.
+- Startseite (Punkt 1): nachgemessen – Pfeile, Versionsanzeige und Online-Punkt haben schon unsichtbar vergrößerte Tippflächen (≥ 24 px, seit 2.481.0), keine Änderung nötig.
+- Bewusst nicht geändert: das Schloss 🔓 in den Klapp-Zeilen (Klappen-Kern, 21 Bereiche) und die LED-Punkte im Verbindungsknopf – Umbau des Kerns wäre riskanter als der Nutzen.
+- **Tests ohne Echtserver (KC-TESTS-OHNE-ECHTSERVER):** Bei den lokalen Prüfläufen dieser Version (04.11., 06:47–07:08 UTC) kamen 6 abgelehnte „fremde Anmeldeversuche“ (HeadlessChrome/153, App 2.849.0) beim echten Server an – harmlos, alle abgelehnt, Einträge bleiben stehen. Der genaue Weg ließ sich nicht nachstellen (Rundgang und Tisch-Live schicken nachweislich nichts nach draußen). Darum zusätzlich zur Abschirmung per `seite.route`: Browser-Tests starten Chromium mit `--host-resolver-rules`, alle echten Server-Adressen der App zeigen ins Leere.
+- Test: `tests/pruefung-1104.test.mjs` (Teil B), `tests/tisch-live.browser.mjs`. Rückweg: App 2.851.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.851.0 – 2026-11-04 – 💬 Nachrichten-Kachel blinkt wie der Knopf (KC-CLUB-NACHRICHT-BLINKEN) · 🔴 Push „… ist offline“ (KC-CLUB-OFFLINE-PUSH) · „WA“ statt grünem Punkt (KC-CLUB-WA-ZEICHEN) · Server 2.851.0
 Wunsch Hansi (04.11.): „Bau ein, dass jeweils die Kachel blinkt, wenn eine ungelesene Nachricht da ist, genau wie der Button Nachricht.“
 - Bei ungelesenen Nachrichten blinken jetzt gleich: der Knopf „Nachrichten“ unten, die Nachrichten-Kachel und das Feld „Neue Nachr.“ auf der Startseite – grün (bis 2 Tage), orange (3–4 Tage), rot (älter). Ist das Alter noch unbekannt, blinkt es grün (vorher: gar nicht).

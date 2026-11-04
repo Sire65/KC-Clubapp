@@ -597,7 +597,13 @@ async function tlInsAlbum(a, n, mime) {
 // ---- 2.774.0 KC-CLUB-TISCH-TASCHE: vorher Gepacktes mit einem Tipp zeigen bzw. abspielen (Datei liegt schon hochgeladen, meist schon auf dem Gerät) ----
 // Zeigen = derselbe Weg wie „Vom Gerät“: Anlage in den Tisch-Chat (alle haben sie danach), dann „Zeigen“ bzw. „Musik für alle“.
 function tlTasche(arten) { const T = typeof RUND !== "undefined" ? RUND.tasche?.[TL.id] : null; return (T?.meine || []).filter((x) => !arten || arten.includes(x.art)); }
-function tlTascheNaechstes() { const x = tlTasche().find((y) => !y.gezeigt); if (!x) return melde("💼 In deiner Tasche ist nichts mehr, was noch nicht gezeigt wurde."); tlAusTasche(x); }
+// 2.852.0 KC-CLUB-PRUEFUNG-1104-B: zweimal schnell getippt → dasselbe Teil ging zweimal raus (es gilt erst nach dem Senden als gezeigt).
+// Solange ein Teil unterwegs ist, wird ein weiterer Tipp auf „Nächstes“ ignoriert.
+async function tlTascheNaechstes() {
+  if (TL.tascheSendet) return;
+  const x = tlTasche().find((y) => !y.gezeigt); if (!x) return melde("💼 In deiner Tasche ist nichts mehr, was noch nicht gezeigt wurde.");
+  TL.tascheSendet = true; try { await tlAusTasche(x); } finally { TL.tascheSendet = false; }
+}
 async function tlAusTasche(x) {
   const t = tlTisch(); if (!x || !t?.chat) return;
   if (!tlRegel().darfZeigen) return melde("💼 Zeigen geht im Redestab-Modus mit dem Redestab – frag die Leitung.", true);

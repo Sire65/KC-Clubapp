@@ -3258,6 +3258,7 @@
   .such-knopf { flex: none; width: auto !important; margin: 0 !important; padding: 8px 12px !important; white-space: nowrap; } /* 2.23.56 KC-CLUB-SUCHEN-KNOPF */
   .su-kopf .such-knopf { padding: 6px 10px !important; font-size: .9rem; } .su-kopf:has(.such-knopf) .su-lupe { display: none; }
   @media (max-width: 520px) { .su-kopf .su-filterknopf span { display: none; } } /* Platz fürs Suchfeld: Filter nur als ⚙️ */ .tw-zeile .hz-suche { flex: 1; min-width: 0; margin: 0; } .tw-zeile .tw-fragen { flex: none; width: auto; margin: 0; padding: 8px 12px; }
+  @media (max-width: 400px) { .hz-suchfeld .such-wort { display: none; } .hz-suchfeld .such-knopf { min-width: 48px; min-height: 44px; padding: 8px 10px !important; } } /* 2.852.0 KC-CLUB-PRUEFUNG-1104-B: schmales Handy – Suchen-Knopf nur als 🔍, damit das Eingabefeld Platz hat */
   .tw-nicht { background: none; border: 0; color: var(--textGruen); text-decoration: underline; padding: 6px 0 0; font: inherit; font-size: .9rem; cursor: pointer; }
   .tw-meine { margin-top: 8px; } .tw-meine > summary { font-weight: 800; cursor: pointer; padding: 6px 0; } .tw-frage-zeile { border-top: 1px solid var(--linie, #ddd); padding: 6px 0; }
   .tw-admin-knopf { width: 100%; margin-top: 8px; } /* 2.23.51 KC-CLUB-MITGLIEDER-FRAGEN */
@@ -3329,12 +3330,13 @@
   .kom-leiste .knopf { flex: 1 1 auto; text-align: center; }
   /* 2.729.0 KC-CLUB-KOM-SYMBOLE: Symbol mit kleinem Wort darunter – alle Knöpfe in einer Reihe (⚙️ Darstellung → „Knöpfe oben in Nachrichten“) */
   .kom-leiste .kl-k { display: none; } .kom-leiste .ab-merker { margin: 0; }
-  html.kom-sym .kom-leiste { flex-wrap: nowrap; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  html.kom-sym .kom-leiste { flex-wrap: wrap; gap: 4px; justify-content: center; }
   html.kom-sym .kom-leiste::-webkit-scrollbar { display: none; }
-  html.kom-sym .kom-leiste .knopf:not(.versteckt) { flex: 1 0 44px; min-width: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 5px 2px 4px; line-height: 1.1; min-height: 0; }
+  html.kom-sym .kom-leiste .knopf:not(.versteckt) { flex: 1 0 auto; min-width: 44px; max-width: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 5px 5px 4px; line-height: 1.1; min-height: 0; }
   html.kom-sym .kom-leiste .kl-i { font-size: 1.3rem; line-height: 1; }
   html.kom-sym .kom-leiste .kl-t { display: none; }
-  html.kom-sym .kom-leiste .kl-k { display: block; font-size: .64rem; letter-spacing: -.02em; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  html.kom-sym .kom-leiste .kl-k { display: block; font-size: .75rem; letter-spacing: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  /* 2.852.0 KC-CLUB-PRUEFUNG-1104-B: Wörter unter den Symbolen 12 px statt 10 px und nie mehr „Favori…“ – jeder Knopf so breit wie sein Wort; reicht die Zeile nicht, lässt sie sich wischen (wie die Kapitel in Hilfe & Tipps) */
   .kopf2 h2 { margin: 0; font-size: 1.35rem; flex: 1; }
   /* KC-CLUB-CHAT-KOPF (1.20.1): Chat-Kopf klebt oben (wie WhatsApp); Nachrichten, zu denen gesprungen wird, nicht darunter verstecken */
   /* KC-CLUB-CHAT-KOPF-BILD (2.24.19, Wunsch Hansi): oben zuerst Bild (Avatar bzw. Gruppensymbol), dann der Name in einer Zeile; Knöpfe ganz rechts */
@@ -3424,6 +3426,7 @@
   /* 2.425.0 KC-CLUB-GENERALCHECK: Gefahr deutlich anders als der weinrote Hauptknopf – hell mit kräftig rotem Rand */
   /* 2.425.0 KC-CLUB-GENERALCHECK (Barrierefreiheit): winzige Ziele (Online-Lämpchen 9 px, Versionsnummer) bekommen eine unsichtbar größere Tippfläche */
   #ledOnline, #ledRt, .kopf-version { position: relative; } #ledOnline::after, #ledRt::after { content: ""; position: absolute; inset: -8px -10px; } .kopf-version::after { content: ""; position: absolute; inset: -10px -4px; } /* 2.481.0 KC-CLUB-TIPPFLAECHE (TÜV: ≥ 24 px Trefffläche, WCAG 2.5.8) */
+  .tipp-link { padding: 12px 4px; margin: 0 -4px; } /* 2.852.0 KC-CLUB-PRUEFUNG-1104-B: Textlink im Satz – größere Trefffläche ohne Verschieben der Zeile (Innenabstand bei Textelementen ändert die Zeilenhöhe nicht) */
   .knopf.dlg-gefahr, .knopf.haupt.dlg-gefahr { background: #fff; border: 2px solid #c62828; color: #b3261e; font-weight: 700; }
   :root.dunkel .knopf.dlg-gefahr, :root.dunkel .knopf.haupt.dlg-gefahr { background: transparent; border-color: #ff8a7a; color: #ff8a7a; }
   .blatt-innen { background: var(--karte); width: min(560px, 100%); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
@@ -5855,7 +5858,7 @@
   <section id="v-fotos" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="faKopfZurueck()" aria-label="Zurück">‹</button><h2>📷 Fotoalbum</h2><button class="knopf klein" onclick="faDiashow()" title="Diashow mit Musik – Album wählen" aria-label="Diashow starten">▶️ Diashow</button><button class="knopf haupt klein" onclick="fotoForm()">＋ Neu</button></div>
     <!-- 2.711.0 KC-CLUB-VIDEOS: Fotos und Videos getrennt -->
-    <div class="umschalter" id="faArtWahl" role="tablist"><button type="button" data-art="fotos" class="an" onclick="faArt('fotos')">📷 Fotos</button><button type="button" data-art="videos" onclick="faArt('videos')">🎬 Videos</button></div>
+    <div class="umschalter" id="faArtWahl" role="group" aria-label="Fotos oder Videos zeigen"><button type="button" data-art="fotos" class="an" aria-pressed="true" onclick="faArt('fotos')">📷 Fotos</button><button type="button" data-art="videos" aria-pressed="false" onclick="faArt('videos')">🎬 Videos</button></div>
     <div id="videoBereich" class="versteckt"><div id="videoForm" class="karte versteckt"></div><div id="videoPlatz"></div><div id="videoListe"></div></div>
     <div id="fotoForm" class="karte versteckt"></div>
     <div id="fotoSpeicher"></div>
@@ -5982,7 +5985,7 @@
   <!-- KC-CLUB-ARCHIV (1.2.0): Aktenordner mit Registern und Jahreszahl -->
   <section id="v-archiv" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="arZurueck()" aria-label="Zurück">‹</button><h2 id="arKopf">🗄️ Archiv</h2></div>
-    <div id="arInhalt"><p class="hinweis">Lädt …</p></div>
+    <div id="arInhalt"><p class="hinweis">Wird geladen …</p></div>
   </section>
 
   <!-- KC-CLUB-PROGRAMME (0.83.0): freigegebene Programme (Registry PROGRAMME) -->
@@ -6002,7 +6005,7 @@
   <section id="v-ueberblick" class="versteckt">
     <div class="kopf2"><button class="zurueck" onclick="zurueck('dokumente')" aria-label="Zurück">‹</button><h2>🗺️ Club-App auf einen Blick</h2></div>
     <div class="knoepfe" style="margin:0 2px 10px"><button class="knopf klein" onclick="druckStarten('ueberblick')">🖨️ Drucken</button></div>
-    <div id="ueInhalt"><p class="hinweis">Lädt …</p></div>
+    <div id="ueInhalt"><p class="hinweis">Wird geladen …</p></div>
   </section>
 
   <!-- KC-CLUB-HILFEZENTRUM (2.23.0, Wunsch Hansi): alle Tipps und Hinweise nach Themen – Deckblatt mit Inhalt, Register je Thema -->
@@ -6012,7 +6015,7 @@
     <button type="button" class="knopf rg-start-knopf" onclick="erklaerVideos()">🎬 Erklär-Videos mit Ton – Rundgang, Einstellungen, Nachricht, Termin …</button><!-- KC-CLUB-RUNDGANG (2.241.0) -->
     <button type="button" class="knopf haupt tw-chef-knopf" onclick="twFrageStart()">🧑‍🍳 Frag Twinkey – einfach fragen oder 🎤 sprechen</button><!-- 2.23.49 KC-CLUB-TWINKEY (früher Küchenchef) -->
     <label class="hz-suchfeld" for="hzSuche"><span class="hz-such-titel">🔍 Wonach suchst du?</span>
-      <span class="such-zeile"><input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();hzSucheKnopf()}" autocomplete="off" enterkeyhint="search"><button type="button" class="knopf haupt such-knopf" onclick="hzSucheKnopf()">🔍 Suchen</button></span></label><!-- 2.23.56 KC-CLUB-SUCHEN-KNOPF -->
+      <span class="such-zeile"><input type="search" id="hzSuche" data-diktat="einmal" class="hz-suche" placeholder="Hier tippen – z. B. „Farbe“ oder „Ton“" oninput="hzSuchen(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();hzSucheKnopf()}" autocomplete="off" enterkeyhint="search"><button type="button" class="knopf haupt such-knopf" onclick="hzSucheKnopf()" aria-label="Suchen">🔍<span class="such-wort"> Suchen</span></button></span></label><!-- 2.23.56 KC-CLUB-SUCHEN-KNOPF -->
     <nav class="hz-reg" id="hzRegister" aria-label="Hilfe-Themen"></nav>
     <div id="hzInhalt"></div>
   </section>
@@ -6468,7 +6471,7 @@
 </div>
 
 <div class="appkamera versteckt" id="appKamera"><div class="ak-info" id="akInfo">📷 Kamera</div><video id="akVideo" playsinline muted autoplay></video>
-  <div class="ak-leiste"><button title="Schließen" onclick="appKameraZu()">✕</button><button class="ausloeser" title="Foto aufnehmen" onclick="appKameraAusloesen()"></button><button title="Kamera wechseln" onclick="appKameraWechseln()">🔄</button></div></div>
+  <div class="ak-leiste"><button title="Schließen" onclick="appKameraZu()">✕</button><button class="ausloeser" title="Foto aufnehmen" aria-label="Foto aufnehmen" onclick="appKameraAusloesen()"></button><button title="Kamera wechseln" onclick="appKameraWechseln()">🔄</button></div></div>
 <div class="fotobetrachter versteckt" id="fotoBetrachter">
   <div class="fb-kopf"><button onclick="fotoSchliessen()" title="Schließen">✕</button><span id="fbZaehler"></span><span style="width:44px"></span></div>
   <img id="fbBild" alt="Foto – antippen für Details" onclick="fotoDetails()">
@@ -6740,7 +6743,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.851.0" data-v="2.851.0"></script>
+<script src="app.js?v=2.852.0" data-v="2.852.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

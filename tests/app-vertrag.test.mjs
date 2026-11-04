@@ -4140,7 +4140,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 405. 2.23.56: sichtbarer „🔍 Suchen“-Knopf im Hilfe-Zentrum und in der Lupe (KC-CLUB-SUCHEN-KNOPF)
 {
-  assert.ok(/id="hzSuche"[^>]*><button type="button" class="knopf haupt such-knopf" onclick="hzSucheKnopf\(\)">🔍 Suchen<\/button>/.test(html), "Knopf im Hilfe-Zentrum");
+  assert.ok(/id="hzSuche"[^>]*><button type="button" class="knopf haupt such-knopf" onclick="hzSucheKnopf\(\)" aria-label="Suchen">🔍<span class="such-wort"> Suchen<\/span><\/button>/.test(html), "Knopf im Hilfe-Zentrum"); // 2.852.0: Wort auf schmalen Handys ausgeblendet
   assert.ok(/onclick="suSucheKnopf\(\)">🔍 Suchen<\/button>/.test(html), "Knopf in der Lupe-Suche");
   assert.ok(/function hzSucheKnopf\(\)[\s\S]{0,300}hzSuchen\(q\); f\.blur\(\)/.test(html) && /function suSucheKnopf\(\)[\s\S]{0,300}SU\.q = q; f\.blur\(\); suJetzt\(\)/.test(html), "sucht und schließt die Tastatur");
   assert.ok(/onclick="twAntworten\(null,true\)">➤ Fragen<\/button>/.test(html), "Twinkey hat seinen Knopf");
