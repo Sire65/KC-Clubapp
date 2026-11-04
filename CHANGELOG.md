@@ -7,6 +7,14 @@ Wunsch Hansi (04.11.): „Wenn Mitglieder die App sehr oft hintereinander aufruf
 - **📲 Admin-Kachel „Installiert?“** (KC-CLUB-INSTALL-STAND, Wunsch Hansi 04.11.: „Ja, baue die Liste im Admin-Bereich“): je Mitglied und Gerät – 🌐 im Browser · 🔗 nur Verknüpfung · ✅ installiert · 💻 am PC · ❔ noch nicht gesehen, mit „zuletzt“. Bei Browser/Verknüpfung direkt „💡 Tipp“ (Hilfe-Tipp „App installieren“ mit Rückmeldung) oder „💬“. Die App schickt beim ersten Lebenszeichen der Sitzung mit, wie sie läuft (keine Inhalte); der Server merkt es nur bei Änderung (in der schon vorhandenen Abfrage, keine zusätzliche Leseabfrage). Erst ab dieser Version gesammelt.
 - **❓ Hilfe mit Knöpfen** (KC-CLUB-HILFE-INSTALL, Wunsch Hansi: „einige haben Probleme, melden sich aber nicht und meckern hinterher, dass die App nicht gut läuft“): Kapitel Technik – „Die App auf den Startbildschirm legen“ (📲 Jetzt installieren · 🖼️ Mit Bildern · 🙋 Hilfe beim Installieren), „✅ Ist meine App richtig installiert?“ (🔍 Jetzt prüfen), „🐢 Die App läuft langsam oder nicht rund“ (📲 Installieren · 🔄 Neue Version · 🆘 Problem melden – „bitte melde dich“), „🔕 Es kommen keine Benachrichtigungen“ (📲 · 🧪 Test an mich · 🙋), „📱 Neues Handy oder zweites Gerät“ (🔢 Code · 📲). Hilfe-Karten können jetzt eigene Knöpfe haben.
 - Tests: `tests/install-einladung.test.mjs`, `tests/install-stand.test.mjs`. Rückweg: App 2.856.0, Server 2.851.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+## 2.858.0 – Rundgang zeigt die richtige Kopf-Seite (KC-CLUB-VIDEO-KOPFSEITE, Fund Hansi)
+- Im Rundgang „Die App im Überblick“ beschreiben „Das Info-Laufband“ und „Drei kleine Felder“ die erste Kopf-Seite. Stand der Kopf auf einer anderen Seite (z. B. Wetter), redete das Video von der ersten Seite und zeigte eine andere.
+- Jetzt blättern beide Schritte vorher auf die erste Seite und klappen den Kopf aus; nach dem Video steht wieder die vorher eingestellte Seite da.
+- Test: tests/video-kopfseite.test.mjs. Rückweg: Version 2.857.0 einspielen.
+
+## 2.857.0 – Zeitansage: Video „Installieren mit Chrome (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 4 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (⋮ → App installieren bzw. Zum Startbildschirm hinzufügen → Installieren). Zeitansage „knapp eine Minute“ eingeschaltet.
+- Rückweg: Version 2.856.0 einspielen.
 
 ## 2.856.0 – Zeitansage: Video „App installieren – so geht’s“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 9 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Link per WhatsApp/E-Mail, 5 Browser, 6-stelliger Code für weitere Geräte). Zeitansage „etwa zwei Minuten“ eingeschaltet.
