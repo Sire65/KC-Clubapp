@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.849.0 – Kacheln umdrehen mit dem 🔄 (KC-CLUB-KACHEL-DREHZEICHEN, Wunschliste #80)
+- Kacheln mit Rückseite zeigen oben rechts ein kleines 🔄. Antippen dreht sie sofort um; hinten dreht dasselbe Zeichen an derselben Stelle zurück. Doppeltipp geht weiter. Eine Zahl auf der Kachel rückt daneben.
+- Neue Rückseiten: Dienstpläne (Mein Dienst, Dienstwünsche, Alle Dienstpläne), Hilfe & Tipps (Frag Twinkey, Erklär-Videos, Alle Hilfen), Büro (Eingang – nur Clubleitung, Büro öffnen).
+- Einstellungstext und Hilfe-Eintrag ergänzt. Test: tests/kachel-drehzeichen.test.mjs. Rückweg: Version 2.848.0 einspielen.
+
 ## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)
 Gesamtprüfung vor der Auslieferung (Bericht: KICC `docs/club-app-pruefung/PRUEFBERICHT-2026-11-04.md`, Freigabe Hansi 04.11.). Nur Fehlerbehebung, keine neue Funktion.
 - **Mitglieder-Tipp löschte das Einstiegs-Fenster:** `tippZeigen` öffnete sein Fenster unter der Kennung `tippBlatt` – `blattAuf` entfernt dabei das gleichnamige feste Fenster der Einstiegs-Tipps (mit `tippText`, `tippJa` …). Danach brach z. B. der Hinweis nach dem Umschalten auf die erweiterte Ansicht mit einem Programmfehler ab. Der Mitglieder-Tipp hat jetzt eigene Kennungen `mtBlatt` / `mtText`.

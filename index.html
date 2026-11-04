@@ -2028,6 +2028,14 @@
   /* KC-CLUB-KACHEL-MINI (2.54.0): 4 nebeneinander – nur Symbol und Name */
   /* KC-CLUB-KACHEL-RUECKSEITE (2.54.0): Kachel dreht sich (halbe Drehung, Inhalt wechselt, zurück) */
   #raster > .kachel { transition: transform .16s ease-in; }
+  /* 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN (#80): kleines 🔄 oben rechts = „diese Kachel hat eine Rückseite“; hinten an derselben Stelle zum Zurückdrehen. Eine Zahl rückt daneben. */
+  #raster > .kachel:has(> .kr-zeichen) > .zahl { right: 42px; }
+  #raster > .kachel > .kr-zeichen { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: .82rem; line-height: 1;
+    background: rgba(116,21,33,.10); box-shadow: inset 0 0 0 1px rgba(116,21,33,.22); cursor: pointer; z-index: 1; }
+  #raster > .kachel > .kr-zeichen:hover, #raster > .kachel > .kr-zeichen:focus-visible { background: rgba(116,21,33,.22); }
+  :root.dunkel #raster > .kachel > .kr-zeichen { background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+  #raster.klein4 > .kachel > .kr-zeichen { transform: scale(.75); top: 2px; right: 2px; transform-origin: top right; } #raster.klein3 > .kachel > .kr-zeichen { transform: scale(.85); transform-origin: top right; }
+  #raster.klein4 > .kachel:has(> .kr-zeichen) > .zahl { right: 26px; } #raster.klein3 > .kachel:has(> .kr-zeichen) > .zahl { right: 34px; }
   #raster > .kachel.kr-dreht { transform: perspective(600px) rotateY(90deg); }
   #raster > .kachel.kr-hinten { background: linear-gradient(135deg, var(--rot), var(--hero1)); color: #fff; display: flex; flex-direction: column; gap: 5px; align-items: stretch; justify-content: center; text-align: left; padding: 8px; }
   #raster > .kachel.kr-hinten .kr-titel { font-size: .75rem; font-weight: 800; opacity: .85; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 26px; }
@@ -6306,7 +6314,7 @@
       <!-- KC-CLUB-SENDE-EFFEKT (2.175.0, Wunsch Hansi) -->
       <div class="schalter" style="display:block"><div><b>✉️ Effekt beim Senden</b><div class="hinweis">Wenn du eine Nachricht abschickst, fliegt sie davon – als Papierflieger in Schlangenlinien, als weiße Brieftaube mit Kuvert oder im gelben Postauto. Ist die Nachricht als ❗ wichtig markiert, fährt ein Wagen mit Blaulicht. Verschlüsselte Nachrichten (🔒) bringt immer der 🕵️ Geheimagent mit Aktenkoffer – er ist nicht als fester Bote wählbar, damit man ihn sofort als „geheim“ erkennt. Beim Empfänger kommt sie genauso an – die Taube lässt dort das Kuvert fallen, das Postauto liefert ab.</div></div>
         <div class="reg-effekt-wahl" id="sendeEffektWahl"></div><button type="button" class="knopf klein" onclick="sendeEffektVorschau(this)">▶ Vorschau</button> <button type="button" class="knopf klein" onclick="blaulichtVorschau(this)">🚨 Vorschau „wichtig“</button> <button type="button" class="knopf klein" onclick="agentVorschau(this)">🕵️ Vorschau „verschlüsselt“</button></div>
-      <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Doppelt auf eine Kachel tippen – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“). Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
+      <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Das kleine 🔄 oben rechts antippen (oder doppelt auf die Kachel tippen) – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“), 🔄 dreht zurück. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
       <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
       <div class="schalter"><div><b>📡 Verbindungs-Symbol in Nachrichten</b><div class="hinweis">Oben links in 💬 Nachrichten: Router im WLAN, Satellit im Mobilfunk – antippen zeigt die Verbindungsqualität. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setNetzSymbol" onchange="einstellung('netzSymbol', this.checked);netzSymbolZeigen()"></div> <!-- KC-CLUB-NETZ-SYMBOL 2.429.0 -->
       <details class="abh-klappe" data-abh="setNetzSymbol"><summary>✨ Blinken</summary> <!-- 2.478.0 KC-CLUB-EINST-KLAPPEN: klappt mit dem Häkchen darüber auf -->
@@ -6723,7 +6731,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.848.0" data-v="2.848.0"></script>
+<script src="app.js?v=2.849.0" data-v="2.849.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
