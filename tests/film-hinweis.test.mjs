@@ -14,7 +14,7 @@ for (const [, id, datei, bild, fuer] of filme) {
   assert.ok(fs.existsSync(pfad) && fs.statSync(pfad).size > 1e6, `Film fehlt: ${datei}`);
   assert.ok(fs.existsSync(bild), `Vorschaubild fehlt: ${bild}`);
   assert.ok(datei.startsWith("film/") && bild.startsWith("film/"), `${id}: Film gehört nach film/ (Service Worker lässt film/ aus)`);
-  assert.ok((/aemter/.test(fuer) || /^(false|true) \}/.test(fuer)) && !/person_id|vorname|name ===/.test(fuer), `${id}: Zielgruppe nach Amt (oder false = kein Start-Hinweis, true = alle Mitglieder), nicht nach Person`); // 2.756.0; KC-CLUB-ANSICHTFILM: true = alle
+  assert.ok((/aemter/.test(fuer) || /^(false|true) \}/.test(fuer) || /^filmGesehen\("[a-z]+"\) \|\| heuteIso\(\) >= [A-Z_]+ \}/.test(fuer)) && !/person_id|vorname|name ===/.test(fuer), `${id}: Zielgruppe nach Amt (oder false = kein Start-Hinweis, true = alle Mitglieder), nicht nach Person`); // 2.756.0; KC-CLUB-ANSICHTFILM: true = alle
 }
 assert.ok(sw.includes('url.pathname.includes("/film/")) return;'), "Service Worker muss film/ auslassen");
 // Start-Fenster: nach den anderen Start-Fenstern, drei Wahlmöglichkeiten, direkter Start des Films
@@ -59,4 +59,14 @@ const vi = fs.readFileSync("teile/videos.js", "utf8");
 assert.ok(/FILME : \[\]\)\.filter\(\(f\) => f\.inVideos\)/.test(vi) && /filmZeigen\(/.test(vi) && /ICH\?\.admin \? `<button[^`]*filmZuschauer\(/.test(vi), "Film oben in den Erklär-Videos, 👀 nur Admin");
 const fz = server.slice(server.indexOf('case "film_zuschauer"'), server.indexOf('case "spur_liste"'));
 assert.ok(/nurAdmin\(ich\)/.test(fz) && /\^\[a-z\]\{2,24\}\$/.test(fz) && /eq\("schluessel", "filme"\)/.test(fz) && !/nachricht|chat|inhalt/i.test(fz.replace(/keine Inhalte/, "")), "Server film_zuschauer: nur Admin, nur Einstellung „filme“ (Regel 19)");
+// KC-CLUB-KOPFFILM (04.11.2026): eigener Film über den Kopfbereich, für alle, in den Erklär-Videos – ohne Admin-Bereich
+assert.ok(/\{ id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", [^\n]*datei: "film\/kopf-der-app\.mp4/.test(reg) && /wo: "unter Technik → 🎬 Erklär-Videos", get inVideos\(\) \{ return this\.fuer\(\); \}, fuer: \(\) => filmGesehen\("ansichtfilm"\) \|\| heuteIso\(\) >= KOPFFILM_AB \}/.test(reg), "Kopffilm in FILME, gestaffelt");
+// gestaffelt: erst wer den Ansichtfilm gesehen hat (nicht „Nein, danke“), alle anderen ab KOPFFILM_AB
+assert.ok(/const KOPFFILM_AB = "\d{4}-\d{2}-\d{2}"/.test(app) && /const filmGesehen = \(id\) => \["angesehen", "ende"\]\.includes\(INIT\?\.einstellungen\?\.filme\?\.\[id\]\?\.wie\)/.test(app), "Kopffilm gestaffelt");
+{ // Verhalten durchspielen
+  const fuer = (wie, heute) => { const INIT = { einstellungen: { filme: wie ? { ansichtfilm: { wie, z: "2026-11-02T08:00:00Z" } } : {} } }, heuteIso = () => heute, KOPFFILM_AB = /const KOPFFILM_AB = "([^"]+)"/.exec(app)[1];
+    const filmGesehen = (id) => ["angesehen", "ende"].includes(INIT?.einstellungen?.filme?.[id]?.wie); return filmGesehen("ansichtfilm") || heuteIso() >= KOPFFILM_AB; };
+  assert.ok(fuer("ende", "2026-11-04") && fuer("angesehen", "2026-11-04") && !fuer(null, "2026-11-04") && !fuer("nein", "2026-11-07") && fuer(null, "2026-11-08") && fuer("nein", "2026-11-09"), "Kopffilm: Staffelung");
+}
+assert.ok(!/admin/i.test(reg.slice(reg.indexOf('id: "kopffilm"'), reg.indexOf("];", reg.indexOf('id: "kopffilm"')))), "Kopffilm: kein Admin-Bereich");
 console.log("film-hinweis: alle Prüfungen bestanden");

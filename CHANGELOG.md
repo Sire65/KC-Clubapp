@@ -1,12 +1,30 @@
 # Änderungen
 
-## 2.857.0 – 2026-11-04 – 📲 Einladung zum Installieren, Admin-Liste „Installiert?“, Hilfe mit Knöpfen (KC-CLUB-INSTALL-EINLADUNG, KC-CLUB-INSTALL-STAND, KC-CLUB-HILFE-INSTALL) · Server 2.857.0
+## 2.859.0 – 2026-11-04 – 20-Uhr-Bündel: 📲 Installieren leicht gemacht · 🧭 Erklärfilm „Der Kopf der Club-App“ · 🛑 Einspiel-Sperre · Server 2.859.0
+
+### 📲 Einladung zum Installieren, Admin-Liste „Installiert?“, Hilfe mit Knöpfen (KC-CLUB-INSTALL-EINLADUNG, KC-CLUB-INSTALL-STAND, KC-CLUB-HILFE-INSTALL)
 Wunsch Hansi (04.11.): „Wenn Mitglieder die App sehr oft hintereinander aufrufen, bekommen sie Hilfe angeboten – dabei soll stehen, dass sie die App installieren sollten. Installieren ist für die meisten noch eine Hürde, statt immer nur aufzurufen.“
 - **„🤔 Klappt etwas nicht?“** (mehrmals hintereinander geöffnet): als erster Schritt „📲 Die Club-App einmal installieren“ und Knöpfe „Jetzt installieren“ und „Zeig mir wie (mit Bildern)“ – nur auf Handy/Tablet im Browser.
 - **Neue Einladung** für alle, die die App auf Handy/Tablet schon 3-mal im Browser geöffnet haben – höchstens alle 3 Tage: „📲 Mach die Club-App zu einer echten App“ mit den Vorteilen (startet schneller, bleibt angemeldet, Benachrichtigungen zuverlässig, keine Minute). Knöpfe: **Jetzt installieren** (Android mit einem Tipp, sonst der Assistent für das erkannte Gerät), **Zeig mir wie (mit Bildern)**, **🙋 Hilfe beim Installieren** (schickt Hansi eine Unterstützungs-Anfrage „App auf den Startbildschirm“, Kontakt persönlich/Anruf), **Später**. Am PC und bei installierter App nie.
 - **📲 Admin-Kachel „Installiert?“** (KC-CLUB-INSTALL-STAND, Wunsch Hansi 04.11.: „Ja, baue die Liste im Admin-Bereich“): je Mitglied und Gerät – 🌐 im Browser · 🔗 nur Verknüpfung · ✅ installiert · 💻 am PC · ❔ noch nicht gesehen, mit „zuletzt“. Bei Browser/Verknüpfung direkt „💡 Tipp“ (Hilfe-Tipp „App installieren“ mit Rückmeldung) oder „💬“. Die App schickt beim ersten Lebenszeichen der Sitzung mit, wie sie läuft (keine Inhalte); der Server merkt es nur bei Änderung (in der schon vorhandenen Abfrage, keine zusätzliche Leseabfrage). Erst ab dieser Version gesammelt.
 - **❓ Hilfe mit Knöpfen** (KC-CLUB-HILFE-INSTALL, Wunsch Hansi: „einige haben Probleme, melden sich aber nicht und meckern hinterher, dass die App nicht gut läuft“): Kapitel Technik – „Die App auf den Startbildschirm legen“ (📲 Jetzt installieren · 🖼️ Mit Bildern · 🙋 Hilfe beim Installieren), „✅ Ist meine App richtig installiert?“ (🔍 Jetzt prüfen), „🐢 Die App läuft langsam oder nicht rund“ (📲 Installieren · 🔄 Neue Version · 🆘 Problem melden – „bitte melde dich“), „🔕 Es kommen keine Benachrichtigungen“ (📲 · 🧪 Test an mich · 🙋), „📱 Neues Handy oder zweites Gerät“ (🔢 Code · 📲). Hilfe-Karten können jetzt eigene Knöpfe haben.
-- Tests: `tests/install-einladung.test.mjs`, `tests/install-stand.test.mjs`. Rückweg: App 2.856.0, Server 2.851.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+- Tests: `tests/install-einladung.test.mjs`, `tests/install-stand.test.mjs`. 
+
+### 🧭 Neuer Erklärfilm „Der Kopf der Club-App“ (KC-CLUB-KOPFFILM)
+Wunsch Hansi 04.11.: „Ein neues Erklärvideo nur über den Kopfbereich … kein Adminbereich erwähnen und nicht zeigen. Film darf nicht zu lang werden, soll aber alle Funktionen erklären, auch die Fotoanzeige.“ Konzept freigegeben („Passt“), mit freundlicher, sachlicher Stimme und Filmlänge am Anfang.
+- Film (2:47 Min., Hochformat, Sprecher mit Untertiteln): Kopfzeile (Logo, 🌙 Tag/Nacht/Automatik, ↻), Status-Knopf und Lämpchen, ⌃/⌃⌃, erste Karte (Treffen mit Zusagen, drei Felder), ‹ › und « », gelbe Punkte, Schnellstart, Wetter (Tag antippen, lange festhalten), Für dich, Demnächst, Neueste Fotos, Kommunikationszentrale, Startkarte, Szenen im Kopf (⚙️ Mehr → ✨ Effekte, 🔄 Automatik), Eselsohr mit Hinweis aufs eigene Video. Kein Admin-Bereich.
+- `FILME` Eintrag `kopffilm` (`film/kopf-der-app.mp4`, `film/kopf-vorschau.jpg`), **gestaffelt** (Wunsch Hansi 04.11. „4 Tage zurückhalten, nur Mitgliedern anbieten, die den ersten bereits gesehen haben – den anderen erst ein paar Tage später“): wer „Deine App – so, wie du sie willst“ angesehen hat, bekommt ihn sofort beim Start und in Technik → 🎬 Erklär-Videos; alle anderen ab **08.11.2026** (`KOPFFILM_AB`). „Nein, danke“ zum ersten Film zählt nicht als gesehen. „👀 Wer hat ihn gesehen?“ für den Admin wie beim Ansichtfilm.
+- Quellen, Konzept und Drehbuch: KC-Infrastructure-Control-Center `kopffilm/`. Tests: `tests/film-hinweis.test.mjs` erweitert. Rückweg: App 2.856.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (der Film meldet sich beim Start selbst).
+
+### 🛑 Einspiel-Sperre (KC-EINSPIELEN-SPERRE, Wunsch Hansi 04.11.: „Eigentlich hätte ja kein Update reingespielt werden dürfen … Anne, Wilfried und ich waren drin“ – „Ja bauen oder ich sage es explizit: Einspielen“)
+- 2.856.0–2.858.0 wurden heute zwischendurch eingespielt; 2.858.0 kam um 18:22 an, als drei in der App waren – danach Fehlermeldungen (18:31–18:36).
+- Neu: „Seite veröffentlichen“ und „Server hochladen“ prüfen **direkt vor dem Ankommen** (`tools/einspielen-ruhe.sh`): neue Version nur 11:45–13:00 und 19:45–21:00 Uhr, außer `[Hansi: einspielen]` / `[Notfall]` im Commit-Text; nicht während Spiegelung/Sicherung; bei mehr als 2 in der App alle 5 Min. neu prüfen, höchstens 60 Min., sonst geht nichts raus. Die Zahl liefert der Club-Server (neue Aktion `einspielen_ruhe`, nur für die GitHub-Abläufe, nur eine Zahl).
+- AGENTS.md: außerhalb der Termine nur, wenn Hansi ausdrücklich „einspielen“ sagt, oder bei echtem Notfall; ein „Fund“ ist kein Notfall.
+- Test `tests/einspielen-sperre.test.mjs`.
+
+Rückweg: App 2.858.0, Server 2.851.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.858.0 – Rundgang zeigt die richtige Kopf-Seite (KC-CLUB-VIDEO-KOPFSEITE, Fund Hansi)
 - Im Rundgang „Die App im Überblick“ beschreiben „Das Info-Laufband“ und „Drei kleine Felder“ die erste Kopf-Seite. Stand der Kopf auf einer anderen Seite (z. B. Wetter), redete das Video von der ersten Seite und zeigte eine andere.
 - Jetzt blättern beide Schritte vorher auf die erste Seite und klappen den Kopf aus; nach dem Video steht wieder die vorher eingestellte Seite da.
@@ -15,7 +33,6 @@ Wunsch Hansi (04.11.): „Wenn Mitglieder die App sehr oft hintereinander aufruf
 ## 2.857.0 – Zeitansage: Video „Installieren mit Chrome (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 4 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (⋮ → App installieren bzw. Zum Startbildschirm hinzufügen → Installieren). Zeitansage „knapp eine Minute“ eingeschaltet.
 - Rückweg: Version 2.856.0 einspielen.
-
 ## 2.856.0 – Zeitansage: Video „App installieren – so geht’s“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 9 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Link per WhatsApp/E-Mail, 5 Browser, 6-stelliger Code für weitere Geräte). Zeitansage „etwa zwei Minuten“ eingeschaltet.
 - Rückweg: Version 2.855.0 einspielen.

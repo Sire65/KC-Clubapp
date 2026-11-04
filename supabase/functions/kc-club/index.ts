@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.857.0";
+const SERVER_VERSION = "2.859.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1286,7 +1286,7 @@ async function offlinePushMelden(pid: string, seit: string, zuletzt: string) {
     `club-offline:${pid}:${seit}`);
 }
 // 2.6.1: mitInkognito = auch der unsichtbare Admin (z. B. als Empfänger eines Hilfe-Aufrufs „an alle online“ – nur sichtbar ist er nicht)
-// ---------- 2.857.0 KC-CLUB-INSTALL-STAND (Wunsch Hansi 04.11.2026 „Liste im Admin-Bereich, wer die App noch im Browser nutzt“) ----------
+// ---------- 2.859.0 KC-CLUB-INSTALL-STAND (Wunsch Hansi 04.11.2026 „Liste im Admin-Bereich, wer die App noch im Browser nutzt“) ----------
 // Je Mitglied und Gerät: läuft die App installiert (app), als Verknüpfung oder im Browser – und wann zuletzt. Geschrieben wird nur, wenn sich etwas ändert
 // oder der letzte Stand älter als 3 Tage ist (die Liste zeigt „zuletzt gesehen“). Höchstens 5 Geräte je Person.
 const INSTALL_ARTEN = new Set(["app", "verknuepfung", "browser", "pc"]);
@@ -10479,7 +10479,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
       }
 
       // ----- KC-CLUB-FEHLERPROTOKOLL (0.93.0) -----
-      case "install_stand": { // 2.857.0 KC-CLUB-INSTALL-STAND: Admin-Liste „Wer nutzt die App wie?“
+      case "install_stand": { // 2.859.0 KC-CLUB-INSTALL-STAND: Admin-Liste „Wer nutzt die App wie?“
         nurAdmin(ich);
         const [aktiv, { data }] = await Promise.all([aktiveMitglieder(), db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "app_stand")]);
         const st = new Map((data ?? []).map((x: any) => [x.person_id as string, x.wert?.geraete || {}]));
@@ -15263,7 +15263,7 @@ Köcheclub-App`,
         const t = Date.now(), seit = new Date(t - ANKLOPFEN_SEK * 1000).toISOString(), seit10 = new Date(t - 600000).toISOString();
         const klingelEnde = new Date(t - ANRUF_KLINGEL_SEK * 1000).toISOString();
         const [{ data: meine }, { data: klopf }, { data: spAn }, { data: anrufe24 }] = await Promise.all([
-          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).in("schluessel", ["online_seit", "fenster", "online", "vorfuehren", "schnappschuss", "klopf_verpasst", "app_stand"]), // 2.857.0: + app_stand (KC-CLUB-INSTALL-STAND)
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).in("schluessel", ["online_seit", "fenster", "online", "vorfuehren", "schnappschuss", "klopf_verpasst", "app_stand"]), // 2.859.0: + app_stand (KC-CLUB-INSTALL-STAND)
           db.from("kc_club_anklopfen").select("*") // 2.647.0: auch art (sobald die Spalte da ist)
             .or(`and(an.eq.${ich.person_id},erstellt_am.gte."${new Date(t - 86400000).toISOString()}"),and(von.eq.${ich.person_id},erstellt_am.gte."${seit10}")`).order("erstellt_am", { ascending: false }).limit(60), // 2.567.0: an mich 24 h (verpasst)
           // KC-CLUB-SPIEL-LIVE (2.22.6, Wunsch Hansi): frische Herausforderungen an mich (15 Min.) – die App zeigt sie sofort als Fenster
@@ -15282,7 +15282,7 @@ Köcheclub-App`,
           fensterAbgleich(ich, p.fenster, req, mein.get("fenster") ?? null).catch(() => null), // KC-CLUB-ZWEI-BROWSER
           zeigen ? onlineJetztMit(["anklopfen", "online_seit", ...(ich.admin ? ["fenster"] : [])]) : Promise.resolve({ on: new Set<string>(), einst: new Map<string, Map<string, any>>() }),
           liveTerminKurz().catch(() => null), // KC-CLUB-LIVE-TERMIN (2.231.0): auch ohne direkte Leitung bemerken
-          ich.nurLesen ? Promise.resolve(null) : installStandMerken(ich.person_id, p, mein.get("app_stand") ?? null).catch(() => null), // 2.857.0 KC-CLUB-INSTALL-STAND
+          ich.nurLesen ? Promise.resolve(null) : installStandMerken(ich.person_id, p, mein.get("app_stand") ?? null).catch(() => null), // 2.859.0 KC-CLUB-INSTALL-STAND
         ]);
         const { anMich: anMich0, vonMir: vonMir0 } = onlineAnklopfenTeilen(klopf ?? [], ich.person_id, seit, seit10);
         // KC-CLUB-GESPRAECHE: „dazukommen“ läuft getrennt vom normalen Anklopfen (eigene Frage im Anrufbildschirm, eigener Wartestand)
