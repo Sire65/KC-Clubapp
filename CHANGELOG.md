@@ -9,6 +9,7 @@ Punkte 1–7 aus der Gesamtprüfung (Freigabe Hansi 04.11.: „vorsichtig, nix k
 - **🪑 Runder Tisch – Tasche:** Zweimal schnell auf „💼 Nächstes“ getippt schickte dasselbe Teil doppelt. Jetzt wird ein weiterer Tipp ignoriert, solange ein Teil unterwegs ist. Der Browser-Test wartete hier zu kurz (das PDF aus einem früheren Schritt war noch zu sehen) und war deshalb gelegentlich rot.
 - Startseite (Punkt 1): nachgemessen – Pfeile, Versionsanzeige und Online-Punkt haben schon unsichtbar vergrößerte Tippflächen (≥ 24 px, seit 2.481.0), keine Änderung nötig.
 - Bewusst nicht geändert: das Schloss 🔓 in den Klapp-Zeilen (Klappen-Kern, 21 Bereiche) und die LED-Punkte im Verbindungsknopf – Umbau des Kerns wäre riskanter als der Nutzen.
+- **Tests ohne Echtserver (KC-TESTS-OHNE-ECHTSERVER):** Bei den lokalen Prüfläufen dieser Version (04.11., 06:47–07:08 UTC) kamen 6 abgelehnte „fremde Anmeldeversuche“ (HeadlessChrome/153, App 2.849.0) beim echten Server an – harmlos, alle abgelehnt, Einträge bleiben stehen. Der genaue Weg ließ sich nicht nachstellen (Rundgang und Tisch-Live schicken nachweislich nichts nach draußen). Darum zusätzlich zur Abschirmung per `seite.route`: Browser-Tests starten Chromium mit `--host-resolver-rules`, alle echten Server-Adressen der App zeigen ins Leere.
 - Test: `tests/pruefung-1104.test.mjs` (Teil B), `tests/tisch-live.browser.mjs`. Rückweg: App 2.848.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.848.0 – 2026-11-04 – Gesamtprüfung: doppelte Fenster-Kennungen und Kontrast (KC-CLUB-PRUEFUNG-1104)

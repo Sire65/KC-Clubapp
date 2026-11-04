@@ -81,7 +81,10 @@ const DP_PAKET = { id: "77777777-2222-3333-4444-555555555555", titel: "Druckpake
 Object.assign(ANTWORTEN, { schild_liste: { schilder: [DP_PAKET] }, anlage_url: { url: `${BASIS}/dokumente/Koecheclub-App_Kurzanleitung.pdf` } });
 
 const fehler = [];
-const browser = await chromium.launch();
+// KC-TESTS-OHNE-ECHTSERVER (2.849.0): zweite Sicherung neben seite.route – alle echten Server-Adressen der App zeigen ins Leere,
+// selbst eine Anfrage, die an der Abschirmung vorbeikäme (z. B. beim Schließen), erreicht nie den echten Club-Server.
+const OHNE_ECHTSERVER = "--host-resolver-rules=MAP *.supabase.co 0.0.0.0, MAP *.supabase.com 0.0.0.0, MAP *.workers.dev 0.0.0.0, MAP speed.cloudflare.com 0.0.0.0, MAP api.github.com 0.0.0.0";
+const browser = await chromium.launch({ args: [OHNE_ECHTSERVER] });
 try {
   for (const g of GERAETE) {
     const ctx = await browser.newContext({ viewport: { width: g.w, height: g.h }, hasTouch: g.touch, isMobile: g.touch, serviceWorkers: "block", locale: "de-DE", timezoneId: "Europe/Berlin",

@@ -62,4 +62,10 @@ for (const f of spr) assert.ok(kontrast("f9f3eb", f) >= 4.5, `Spruch-Archiv #${f
   assert.ok(/async function tlTascheNaechstes\(\) \{\n  if \(TL\.tascheSendet\) return;/.test(tl) && tl.includes("TL.tascheSendet = true; try { await tlAusTasche(x); } finally { TL.tascheSendet = false; }"), "Sperre beim Senden");
 }
 
+// KC-TESTS-OHNE-ECHTSERVER (2.849.0): Browser-Tests sperren die echten Server-Adressen zusätzlich auf Netz-Ebene
+for (const t of ["rundgang", "tisch-live"]) {
+  const b = fs.readFileSync(new URL(`./${t}.browser.mjs`, import.meta.url), "utf8");
+  assert.ok(/const OHNE_ECHTSERVER = "--host-resolver-rules=MAP \*\.supabase\.co 0\.0\.0\.0, MAP \*\.supabase\.com 0\.0\.0\.0, MAP \*\.workers\.dev 0\.0\.0\.0,/.test(b) && /chromium\.launch\(\{ args: \[OHNE_ECHTSERVER/.test(b), `${t}: Browser ohne Echtserver`);
+}
+
 console.log("pruefung-1104: ok");
