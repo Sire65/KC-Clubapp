@@ -15,6 +15,7 @@ const browser = schirmeAb(await chromium.launch({ args: [OHNE_ECHTSERVER, "--no-
 const seite = await browser.newPage(); const fehler = []; seite.on("pageerror", (e) => fehler.push(String(e)));
 await seite.route(/supabase\.co/, (r) => r.fulfill({ status: 200, contentType: "application/json", body: '{"error":"test"}' }));
 await seite.goto("http://localhost:8801/index.html"); await seite.waitForTimeout(2500);
+await seite.evaluate(() => teilLaden("szenen")); // 2.856.0: Kopf-Szenen liegen seit KC-CLUB-TEILE (Stufe 3b) in teile/szenen.js und kommen erst bei Bedarf
 const ok = (b, t) => { if (!b) { console.error("FEHLER:", t); process.exit(1); } console.log("ok:", t); };
 const r = await seite.evaluate(() => {
   ICH = { ...(ICH || {}), vorname: "Hansi", name: "Hansi Test" };

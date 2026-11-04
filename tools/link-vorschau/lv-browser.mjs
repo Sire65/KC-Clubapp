@@ -21,6 +21,8 @@ const erg = await seite.evaluate(async () => {
   const VOR = { url: "https://www.beispiel.de/rezept", titel: "Rouladen <img src=x onerror=window.__xss=1>", text: "Omas Rezept \"lecker\"", seite: "Beispiel", bild: "https://www.beispiel.de/b.jpg" };
   window.__api = []; api = async (a, p) => { __api.push({ a, p }); if (a === "link_vorschau") return { vorschau: VOR }; if (a === "nachricht_senden") return { ok: true, id: "t1", mid: "m1" }; return { ok: true }; };
   chatLaden = async () => {}; chatId = "t1"; CHAT = { teilnehmer: [] };
+  ICH = ICH || { person_id: "P1", vorname: "Klaus", name: "Klaus Test", admin: false, vorstand: false }; // 2.856.0: die Sende-Warteschlange sendet nur mit Anmeldung (Testperson)
+  MITGLIEDER = []; // 2.856.0: senden() holt seit KC-CLUB-VERSANDWAHL (2.649.0) vorher die Mitglieder – ohne Liste brach das Senden im Test still ab
   const t = document.getElementById("text"); t.value = "Schau mal https://www.beispiel.de/rezept lecker"; t.dispatchEvent(new Event("input", { bubbles: true }));
   await warte(1300);
   r.abgerufen = __api.filter((x) => x.a === "link_vorschau").map((x) => x.p.url);
@@ -30,12 +32,12 @@ const erg = await seite.evaluate(async () => {
   // nochmal tippen ohne neuen Link → kein neuer Abruf
   t.value += " !"; t.dispatchEvent(new Event("input", { bubbles: true })); await warte(1000);
   r.keinDoppelAbruf = __api.filter((x) => x.a === "link_vorschau").length === 1;
-  WICHTIG = false; await senden(); const s1 = __api.find((x) => x.a === "nachricht_senden");
+  WICHTIG = false; await senden(); await warte(1200); /* 2.856.0: Senden läuft über die Warteschlange (KC-CLUB-TEMPO-VERSAND) */ const s1 = __api.find((x) => x.a === "nachricht_senden");
   r.sendetUrl = s1?.p?.vorschau_url; r.entwurfWegNachSenden = !document.querySelector("#lvEntwurf .lv-karte");
   // ✖ = ohne Vorschau senden
   t.value = "Noch einer https://www.beispiel.de/rezept"; t.dispatchEvent(new Event("input", { bubbles: true })); await warte(1300);
   document.querySelector("#lvEntwurf .lv-weg")?.click(); r.wegtippen = !document.querySelector("#lvEntwurf .lv-karte");
-  __api.length = 0; await senden(); r.ohneUrl = !("vorschau_url" in (__api.find((x) => x.a === "nachricht_senden")?.p || { vorschau_url: 1 }));
+  __api.length = 0; await senden(); await warte(1200); /* 2.856.0: Senden läuft über die Warteschlange (KC-CLUB-TEMPO-VERSAND) */ r.ohneUrl = !("vorschau_url" in (__api.find((x) => x.a === "nachricht_senden")?.p || { vorschau_url: 1 }));
   // Karte in der Nachricht
   const html = lvKarteHtml(VOR); const d = document.createElement("div"); d.innerHTML = html; document.body.appendChild(d);
   r.karteLink = d.querySelector("a.lv-karte")?.getAttribute("href"); r.karteRel = d.querySelector("a.lv-karte")?.getAttribute("rel");
@@ -43,7 +45,7 @@ const erg = await seite.evaluate(async () => {
   r.jsAbgelehnt = lvKarteHtml({ ...VOR, url: "javascript:alert(1)" }) === "" && !/src="http:/.test(lvKarteHtml({ ...VOR, bild: "http://x.de/b.jpg" }));
   // 2.490.0: „www.…“ ohne https:// und sofortiges Senden (Karte noch nicht geladen) → Server bekommt den Link trotzdem
   __api.length = 0; t.value = "Guck mal www.puerform.de"; t.dispatchEvent(new Event("input", { bubbles: true }));
-  await senden(); r.wwwSofort = __api.find((x) => x.a === "nachricht_senden")?.p?.vorschau_url;
+  await senden(); await warte(1200); /* 2.856.0: Senden läuft über die Warteschlange (KC-CLUB-TEMPO-VERSAND) */ r.wwwSofort = __api.find((x) => x.a === "nachricht_senden")?.p?.vorschau_url;
   t.value = "nochmal www.puerform.de/seite."; t.dispatchEvent(new Event("input", { bubbles: true })); await warte(1300);
   r.wwwAbruf = __api.filter((x) => x.a === "link_vorschau").map((x) => x.p.url).pop();
   // App-Sprung-Links bekommen keine Vorschau

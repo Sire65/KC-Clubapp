@@ -100,14 +100,14 @@ ok(e1?.titel === "Grillfest?" && e1.optionen.join("/") === "Ja/Nein/Enthaltung" 
 // Vorlage „Technik, Bilderrechner, Abrechnung“ übernehmen und starten
 const vo = await seite.evaluate(async () => { const warte = (t) => new Promise((x) => setTimeout(x, t)), e = {};
   vorschlagForm("abstimmung", false); await vfVorlagen(); await warte(300);
-  e.liste = !!$("vfVorlageBlatt"); $("vfVorlageBlatt").querySelector("[data-i='0']").click(); await warte(200);
+  e.liste = !!$("vfVorlageBlatt"); [...$("vfVorlageBlatt").querySelectorAll("[data-i]")].find((b) => /Technik, Bilderrechner/.test(b.textContent)).click(); /* 2.856.0: am Namen wählen */ await warte(200);
   e.titel = $("vfTitel").value; e.bereiche = [...document.querySelectorAll("#vfPaket .sp-projekt input[placeholder='z. B. Technik']")].map((x) => x.value);
   e.wennGewaehlt = [...document.querySelectorAll("#vfPaket select")].map((s) => s.selectedOptions[0]?.textContent).filter((t) => !/immer/.test(t));
   await vorschlagSpeichern(document.querySelector("#vorschlagForm .knopf.haupt")); await warte(200);
   e.an = __api.filter((x) => x[0] === "abstimmungspaket_speichern").pop()?.[1]; return e; });
 await bild("3-vorlage");
 const f5 = vo.an?.fragen?.[5];
-ok(vo.liste && vo.titel === "Technik, Bilderrechner, Abrechnung" && vo.bereiche.join("|") === "Technik|Bilderrechner|Abrechnung" && vo.an?.fragen.length === 12, "📄 Vorlage: Überschrift, 3 Bereiche, 12 Fragen");
+ok(vo.liste && vo.titel === "Technik, Bilderrechner, Abrechnung" && vo.bereiche.join("|") === "Technik|Bilderrechner|Abrechnung|Verkauf" && vo.an?.fragen.length === 14, "📄 Vorlage: Überschrift, 4 Bereiche, 14 Fragen (2.681.0: Bereich Verkauf, Frage 13/14)");
 ok(f5?.mehrfach === true && f5.wenn?.nr === 4 && f5.wenn.antwort === "Ja" && f5.optionen.length === 11 && /Frage 5 .*= Ja/.test(vo.wennGewaehlt[0] || ""), "„Wer zählt zu den Helfern?“: mehrere ankreuzen, nur bei Frage 5 = Ja");
 // Anzeige: Folgefrage erst nach „Ja“, ankreuzen schickt die Liste
 const an = await seite.evaluate(async () => { const warte = (t) => new Promise((x) => setTimeout(x, t)), e = {};
@@ -118,16 +118,16 @@ const an = await seite.evaluate(async () => { const warte = (t) => new Promise((
   const alt = api; api = async (a, p) => { if (a === "vorschlag_stimme") { __api.push([a, p]); const v = __liste.find((x) => x.id === p.id); v.meine = p.wahl; v.abgestimmt = Array.isArray(p.wahl) ? p.wahl.length > 0 : true; return { ok: true }; } return alt(a, p); };
   await vorschlaegeLaden(); vorschlagPaketInfo("PK2"); await warte(100);
   const titel = () => [...$("vorschlagInfo").querySelectorAll(".pk-frage-titel")].map((x) => x.textContent);
-  e.vorher = titel().length; e.helferVorher = titel().some((t) => /Helfern/.test(t)); e.stand = /0 von 11/.test($("vorschlagInfo").textContent);
+  e.vorher = titel().length; e.helferVorher = titel().some((t) => /Helfern/.test(t)); e.stand = /0 von 12/.test($("vorschlagInfo").textContent);
   stimme("V4", "Ja"); await warte(300);
-  e.helferNach = titel().some((t) => /Helfern/.test(t)); e.stand2 = /1 von 12/.test($("vorschlagInfo").textContent);
+  e.helferNach = titel().some((t) => /Helfern/.test(t)); e.stand2 = /1 von 13/.test($("vorschlagInfo").textContent);
   pkKreuz("V5", "Feuerwehr"); await warte(300); pkKreuz("V5", "Bauhof"); await warte(300);
   e.gesendet = __api.filter((x) => x[0] === "vorschlag_stimme" && x[1].id === "V5").pop()?.[1].wahl;
   e.angekreuzt = [...$("vorschlagInfo").querySelectorAll(".wahl button.an")].map((b) => b.textContent.trim());
   return e; });
 await bild("4-helfer");
 console.log(JSON.stringify(an));
-ok(an.vorher === 11 && !an.helferVorher && an.stand && an.helferNach && an.stand2, "Folgefrage „Wer zählt zu den Helfern?“ erscheint erst nach „Ja“ (11 → 12 Fragen)");
+ok(an.vorher === 12 && !an.helferVorher && an.stand && an.helferNach && an.stand2, "Folgefrage „Wer zählt zu den Helfern?“ erscheint erst nach „Ja“ (12 → 13 Fragen; 2.681.0: auch „Zu welchem Preis?“ ist eine Folgefrage)");
 ok(an.gesendet?.join("/") === "Bauhof/Feuerwehr" && an.angekreuzt.some((t) => /Feuerwehr/.test(t)) && an.angekreuzt.some((t) => /Bauhof/.test(t)), "mehrere ankreuzen: Liste in Reihenfolge der Antworten");
 // 2.557.0 KC-CLUB-ABSTIMMUNG-DRUCK: Ankreuzbogen und Ergebnis auf dem Kopfbogen
 const dr = await seite.evaluate(async () => { const e = {};
@@ -143,7 +143,7 @@ const dr = await seite.evaluate(async () => { const e = {};
   DRUCK = { art: "abstimmungErgebnis", param: { pid: "PK2" } }; await druckSeiteBauen();
   e.ergebnis = /Zwischenstand/.test($("druck").textContent) && /haben abgestimmt/.test($("druck").textContent) && /Bauhof/.test($("druck").textContent); return e; });
 console.log(JSON.stringify(dr));
-ok(dr.knoepfe === 2 && dr.kopf && dr.fragen === 12 && dr.bereiche.join("|") === "📂 Technik|📂 Bilderrechner|📂 Abrechnung" && dr.folge && dr.name, "🖨️ Ankreuzbogen: Kopfbogen, Tabelle mit 12 Fragen nach Bereichen, Folgefrage-Hinweis, eigener Name + QR automatisch");
+ok(dr.knoepfe === 2 && dr.kopf && dr.fragen === 14 && dr.bereiche.join("|") === "📂 Technik|📂 Bilderrechner|📂 Abrechnung|📂 Verkauf" && dr.folge && dr.name, "🖨️ Ankreuzbogen: Kopfbogen, Tabelle mit 14 Fragen nach Bereichen (2.681.0), Folgefrage-Hinweis, eigener Name + QR automatisch");
 ok(dr.mitglied && dr.alle === 3, "Für wen: Mitglied über die Suche, „alle“ = je Mitglied ein Bogen");
 ok(dr.ergebnis, "📊 Ergebnis drucken: Zwischenstand mit Stimmen je Frage");
 // 2.559.0 KC-CLUB-DRUCK-SENDEN: aus der Druckvorschau als PDF-Anlage in eine neue Club-App-Nachricht
@@ -159,7 +159,7 @@ console.log(JSON.stringify(se));
 ok(se.knopf && se.hoch?.mime === "application/pdf" && /\.pdf$/.test(se.hoch.name) && se.hoch.groesse > 1000 && se.anlagen.join() === "A1:" + se.hoch.name && se.ansicht === "neu" && se.vorschauZu, "💬 In der Club-App senden: PDF hochgeladen, „Neue Nachricht“ mit PDF-Anlage offen");
 // 2.560.0 KC-CLUB-ABSTIMMUNG-BOGEN-ENTWURF: Bogen schon aus dem Formular (vor dem Start)
 const en = await seite.evaluate(async () => { const w = (t) => new Promise((x) => setTimeout(x, t)), e = {};
-  druckVorschauZu(); zeige("vorschlaege"); await w(200); vorschlagForm("abstimmung", false); await vfVorlagen(); await w(300); $("vfVorlageBlatt").querySelector("[data-i='0']").click(); await w(200);
+  druckVorschauZu(); zeige("vorschlaege"); await w(200); vorschlagForm("abstimmung", false); await vfVorlagen(); await w(300); [...$("vfVorlageBlatt").querySelectorAll("[data-i]")].find((b) => /Technik, Bilderrechner/.test(b.textContent)).click(); /* 2.856.0: am Namen wählen */ await w(200);
   e.knopf = !!$("vfBogenKnopf"); const vorher = __api.length; $("vfBogenKnopf").click(); await w(600);
   if (!$("druckBlatt").classList.contains("versteckt")) { document.querySelector('input[name="abFuer"][value="leer"]').checked = true; await druckVorschau(); await w(300); }
   e.vorschau = !$("druckVorschau").classList.contains("versteckt") && !!$("druckVorschauSenden");
@@ -167,6 +167,6 @@ const en = await seite.evaluate(async () => { const w = (t) => new Promise((x) =
   e.nichtsGespeichert = !__api.slice(vorher).some((x) => /speichern/.test(x[0])); e.formOffen = !$("vorschlagForm").classList.contains("versteckt");
   druckVorschauZu(); return e; });
 console.log(JSON.stringify(en));
-ok(en.knopf && en.vorschau && en.fragen === 12 && en.leer && en.nichtsGespeichert && en.formOffen, "🖨️ Bogen ansehen / senden schon im Formular: leerer Bogen mit 12 Fragen, nichts gespeichert, Formular bleibt");
+ok(en.knopf && en.vorschau && en.fragen === 14 && en.leer && en.nichtsGespeichert && en.formOffen, "🖨️ Bogen ansehen / senden schon im Formular: leerer Bogen mit 14 Fragen, nichts gespeichert, Formular bleibt");
 ok(!fehler.length, "keine Skriptfehler" + (fehler.length ? ": " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();

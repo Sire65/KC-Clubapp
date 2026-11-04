@@ -11,7 +11,7 @@ const abschirmen = async (z) => { await z.route("**/*", (r) => (/^(https?:\/\/(l
 const schirmeAb = (b) => { const nc = b.newContext.bind(b); b.newContext = async (...a) => { const c = await nc(...a); await abschirmen(c); return c; }; return b; };
 const wurzel = new URL("../../", import.meta.url), lies = (p) => fs.readFileSync(new URL(p, wurzel), "utf8");
 const ziel = process.argv[2] || "/tmp/claude-0/-home-user/873368a4-1393-5000-bd3c-6ded628e8b84/scratchpad/rose";
-const app = lies("app.js"), html = lies("index.html");
+const app = lies("teile/szenen.js"), html = lies("index.html"); // 2.856.0: die Rose liegt seit KC-CLUB-TEILE in teile/szenen.js
 const js = app.slice(app.indexOf("// KC-CLUB-ROSE-ANFANG"), app.indexOf("// KC-CLUB-ROSE-ENDE"));
 const css = html.slice(html.indexOf("/* KC-CLUB-ROSE-CSS-ANFANG */"), html.indexOf("/* KC-CLUB-ROSE-CSS-ENDE */"));
 if (!js || !css) throw new Error("Marker KC-CLUB-ROSE fehlen");

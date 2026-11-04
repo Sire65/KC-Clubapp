@@ -1,4 +1,5 @@
-import { chromium } from 'playwright';
+import { createRequire } from 'node:module';
+const { chromium } = createRequire(import.meta.url)(process.env.PW_CORE || 'playwright'); // 2.856.0: wie die anderen Werkzeuge (PW_CORE) – das ESM-import fand das globale playwright nicht
 import fs from 'fs';
 // KC-TESTS-OHNE-ECHTSERVER (2.856.0): Netzsperre + Abschirmung – nie gegen den echten Club-Server. Jeder neue Kontext bricht alles ab, was nicht
 // an die eigene Seite geht; die Testdaten-Antworten dieses Skripts (seite.route) haben Vorrang und bleiben wie sie sind.
