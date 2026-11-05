@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.866.0 – Zeitansage: Videos „Installieren auf iPhone und iPad (Safari)“ und „Installieren mit Firefox (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Safari geprüft: alle 7 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (drei Punkte → Teilen → Zum Home-Bildschirm → „Als Web-App öffnen“ an → Hinzufügen → Kochmütze → einmal Code aus ⚙️ → 📲 App-Installation → „🧭 Schritt für Schritt einrichten“).
+- Firefox geprüft: alle 5 Schritte ok. Ein Satz vorsichtiger: „Am PC kann Firefox die App meistens nicht installieren“ (neuere Firefox-Versionen unter Windows können Web-Apps teilweise anheften).
+- Zeitansage für beide eingeschaltet. Rückweg: Version 2.865.0 einspielen.
+- Dazu das Konzept „Mein Garten“ (docs/KONZEPT_SAMEN_GARTEN.md, Wunschliste #84) – nur Text, noch keine Funktion.
+
 ## 2.865.0 – 2026-11-05 – 📖 Lange PDFs schonend · 🟢 Online heißt wirklich in der App · 👣 „geöffnet“ im Verlauf (KC-CLUB-DOK-SCHONEND, KC-CLUB-ONLINE-ECHT, KC-CLUB-SPUR-START-SERVER) · Server 2.865.0
 ### 📖 Lange PDFs: nur die sichtbaren Seiten zeichnen (KC-CLUB-DOK-SCHONEND)
 Fund Hansi (05.11.): „Unter Anleitung Version 10 bleibt das PDF leer“ – weißer Hintergrund auf Android (installierte App, Chrome 156); die Kurzanleitung erscheint sofort.
