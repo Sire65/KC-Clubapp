@@ -1940,8 +1940,8 @@
   .kuckuck { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top)); z-index: 9500; width: 150px; transform: translate(-50%, -130%); transition: transform .5s cubic-bezier(.3,1.4,.5,1);
     filter: drop-shadow(0 10px 18px rgba(0,0,0,.4)); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .kuckuck.an { transform: translate(-50%, 0); }
-  /* 2.807.0 KC-CLUB-UHR-X (Wunsch #65): rotes X oben rechts an jeder Stunden-Uhr */
-  .kuckuck .kk-x { position: absolute; top: -4px; right: 6px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; background: #c62828; color: #fff;
+  /* 2.807.0 KC-CLUB-UHR-X (Wunsch #65): rotes X an jeder Stunden-Uhr · 2.862.0 (Wunsch #83): nach oben links, damit die Zahl der Schläge oben rechts frei bleibt */
+  .kuckuck .kk-x { position: absolute; top: -4px; left: -6px; z-index: 2; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; background: #c62828; color: #fff;
     font: 700 18px/1 system-ui, sans-serif; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
   .kuckuck svg { display: block; width: 100%; height: auto; overflow: visible; }
   .kuckuck .kk-tuer { transform-box: fill-box; transform-origin: left center; transition: transform .25s ease-out; }
@@ -2039,6 +2039,10 @@
      Bei 3 nebeneinander und groß steht das Symbol links → 🔄 oben rechts, die Zahl daneben. */
   #raster.klein3:not(.klein4) > .kachel > .kr-zeichen { transform: scale(.8); transform-origin: top right; top: 6px; right: 6px; }
   #raster.klein3:not(.klein4) > .kachel:has(> .kr-zeichen) > .zahl { right: 36px; }
+  /* 2.862.0 KC-CLUB-KACHEL-NURTEST (Wunsch #83): rotes ✕ unten links = noch nicht veröffentlicht (nur Admin) */
+  #raster > .kachel > .k-nurtest { position: absolute; left: 6px; bottom: 6px; width: 18px; height: 18px; border-radius: 50%; background: #c62828; color: #fff; font: 800 11px/18px system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 1.5px #fff; pointer-events: none; z-index: 1; }
+  #raster.klein3 > .kachel > .k-nurtest { left: 4px; bottom: 4px; transform: scale(.85); transform-origin: bottom left; }
+  #raster.klein4 > .kachel > .k-nurtest { left: 3px; bottom: 3px; transform: scale(.75); transform-origin: bottom left; }
   #raster.klein4 > .kachel > .kr-zeichen { right: auto; left: 3px; top: 3px; transform: scale(.7); transform-origin: top left; }
   #raster.klein4 > .kachel:has(> .kr-zeichen) > .zahl { right: 4px; } /* wie ohne 🔄 */
   #raster > .kachel.kr-dreht { transform: perspective(600px) rotateY(90deg); }

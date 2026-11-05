@@ -3,7 +3,9 @@
 ## 2.862.0 – Abbrüche beim Notfall-Paket werden vermerkt (KC-CLUB-NOTPAKET-ABBRUCH, Wunsch Hansi)
 - Bricht der Server mitten im Bau des Notfall-Pakets ab („CPU Time exceeded“), blieb das bisher unbemerkt (04.11. 21–1 Uhr mehrere stille Abbrüche, erst der sechste Versuch klappte). Jetzt merkt sich jeder Bau seinen Beginn (neue Spalte bau_start); der nächste Lauf erkennt einen Abbruch und trägt „Bau abgebrochen (Server-Rechenzeit überschritten)“ als Fehler und im Protokoll ein.
 - Neuer Wächter 🧯 Notfall-Paket (Admin → Wächter, Gruppe Datensicherung): grün mit „letzter Fehler …“ als Hinweis, gelb erst, wenn auch der Neuversuch nach der Fehlerpause fehlt, rot, wenn das Paket älter als ein Tag ist. Gelb/Rot meldet sich wie alle Wächter.
-- Migration 20261105_kc_club_notpaket_abbruch.sql (schon eingespielt, nur eine neue Spalte). Test: tests/notpaket-abbruch.test.mjs. Rückweg: Version 2.861.0 einspielen.
+- Migration 20261105_kc_club_notpaket_abbruch.sql (schon eingespielt, nur eine neue Spalte). Test: tests/notpaket-abbruch.test.mjs.
+- Dazu Wunschliste #83 (KC-CLUB-KACHEL-NURTEST): Kacheln, die noch nicht für alle veröffentlicht sind (Freigaben → „nur Admin“), zeigen dem Admin unten links ein kleines rotes ✕ – Mitglieder sehen nichts. An den Stunden-Uhren sitzt das rote ✕ jetzt oben links, die Zahl der Schläge oben rechts ist wieder frei. Test: tests/kachel-nurtest.test.mjs.
+- Rückweg: Version 2.861.0 einspielen.
 
 ## 2.861.0 – Zeitansage: Video „Installieren mit Samsung Internet“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 5 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Menü ☰ → Seite hinzufügen zu → Startbildschirm → Hinzufügen). Zeitansage „knapp eine Minute“ eingeschaltet.

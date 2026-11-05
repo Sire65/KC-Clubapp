@@ -11846,6 +11846,9 @@ function reisswolf(el) {
     return new Promise((ok) => setTimeout(() => { box.remove(); ok(); }, 1250));
   } catch { return Promise.resolve(); }
 }
+// 2.862.0 KC-CLUB-KACHEL-NURTEST (Wunsch #83): kleines rotes ✕ unten links an Kacheln, die noch nicht für alle freigegeben sind – nur der Admin sieht es.
+// Nur Kacheln, die in der Freigaben-Registry stehen (k.freigabe oder k.id); ohne geladene Freigaben kein ✕ (unbekannt ≠ „nicht veröffentlicht“).
+const kachelNurTest = (k) => { const f = INIT?.freigaben, id = k.freigabe || k.id; return !!(ICH?.admin && f && Object.prototype.hasOwnProperty.call(f, id) && f[id] !== "alle"); };
 function kachelnZeigen() {
   if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
   if (KR.offen && document.querySelector("#raster > .kachel.kr-hinten")) return; // 2.54.0: Rückseite bleibt, bis sie zurückdreht
@@ -11882,7 +11885,7 @@ function kachelnZeigen() {
     const z = k.zahl ? k.zahl() : 0;
     const kl = typeof k.klasse === "function" ? k.klasse() : k.klasse; // 2.20.0: Klasse auch berechnet (Lämpchen im Admin-Register)
     return `<button class="kachel${k.bald ? " bald" : ""}${kl ? " " + kl : ""}${k.neuFarbe && z ? " neu-da" : ""}" data-id="${k.id}" onclick="${k.bald ? `melde('„${k.t}“ kommt in einer der nächsten Versionen.')` : k.aktion || `zeige('${k.v}')`}">
-      <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}${!k.bald && krAn() && krAktionen(k.id).length ? '<span class="kr-zeichen" role="button" tabindex="0" aria-label="Kachel umdrehen – Schnellaktionen auf der Rückseite" title="Umdrehen: Schnellaktionen">🔄</span>' : ""}</button>`; // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN
+      <div class="sym">${k.sym}</div><b>${esc(k.t)}</b><small>${esc(typeof k.u === "function" ? k.u() : k.u)}</small>${k.bald ? '<span class="zahl">bald</span>' : z ? `<span class="zahl">${z}</span>` : ""}${!k.bald && krAn() && krAktionen(k.id).length ? '<span class="kr-zeichen" role="button" tabindex="0" aria-label="Kachel umdrehen – Schnellaktionen auf der Rückseite" title="Umdrehen: Schnellaktionen">🔄</span>' : ""}${kachelNurTest(k) ? '<span class="k-nurtest" title="Noch nicht veröffentlicht – nur für dich (Admin)" aria-label="Noch nicht veröffentlicht">✕</span>' : ""}</button>`; // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN · 2.862.0 KC-CLUB-KACHEL-NURTEST
   }).join("");
   zahlenHochzaehlen($("raster"), ".kachel[data-id] > .zahl", (el) => "k:" + el.parentElement.dataset.id); // 2.172.0 KC-CLUB-EFFEKTE-2
   kachelZuletztMarkieren(); // 2.355.0
