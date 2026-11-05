@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.859.0";
+const SERVER_VERSION = "2.862.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1158,7 +1158,7 @@ const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_st
 const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
 const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt",
   "update_selbst", "update_start"]); // 2.310.2 KC-CLUB-FP-RUHIG: Updates sind Info, kein Fehler
-FP_INFO.add("update_mindest"); FP_INFO.add("schluessel_zurueck"); // KC-CLUB-SCHLUESSEL-SICHERN: still wiederhergestellt = Info // KC-CLUB-MINDESTVERSION (RC 20.10.2026): erzwungenes Update ist Info, kein Fehler
+FP_INFO.add("update_mindest"); FP_INFO.add("leitung"); /* 2.862.0 KC-CLUB-LEITUNG-MESSUNG */ FP_INFO.add("schluessel_zurueck"); // KC-CLUB-SCHLUESSEL-SICHERN: still wiederhergestellt = Info // KC-CLUB-MINDESTVERSION (RC 20.10.2026): erzwungenes Update ist Info, kein Fehler
 const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
 const fpNurBrowser = (d: any) => /^Script error\.?$/i.test(String(d?.text ?? "").trim()) && !d?.datei && !Number(d?.zeile) && !String(d?.stapel ?? "").trim();
 function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
@@ -1186,7 +1186,7 @@ async function fpNurNeue(liste: any[], eingrenzen: (q: any) => any) {
   let da = new Set<string>();
   if (zs.length) {
     const { data } = await eingrenzen(db.from("kc_club_protokoll").select("aktion,z:details->>z").gte("zeit", new Date(Date.now() - 86400000).toISOString()).in("details->>z", zs)).limit(500);
-    da = new Set((data ?? []).map((x: any) => String(x.aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "") + "|" + x.z));
+    da = new Set((data ?? []).map((x: any) => String(x.aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "").replace(/^leitung_messung$/, "leitung") + "|" + x.z));
   }
   const neu = new Set<string>();
   return liste.filter((e: any) => { const k = fpArt(e?.art) + "|" + String(e?.z ?? ""); if (da.has(k) || neu.has(k)) return false; neu.add(k); return true; });
@@ -5062,7 +5062,7 @@ const START_TAGE = 180;
 // PROT_ZIEL_ZEILEN erreicht sind – und es steht eine Zeile „protokoll_waechter“ mit den Zahlen im Protokoll (nie Inhalte).
 // Läuft im nächtlichen Wartungslauf; spur (30 Tage) und app_start (180 Tage) behalten ihre eigenen Fristen.
 const PROT_LAERM_TAGE = 60, PROT_ALT_TAGE = 365, PROT_MAX_ZEILEN = 50000, PROT_ZIEL_ZEILEN = 40000;
-const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "sos_geoeffnet", "buero_mail_versuch"]; // 2.122.0: Mail-Bremse braucht ihn nur 1 Minute
+const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "leitung_messung", "sos_geoeffnet", "buero_mail_versuch"]; // 2.122.0: Mail-Bremse braucht ihn nur 1 Minute
 const PROT_LAERM_PRAEFIX = ["diagnose_%", "fehler_update_%"];
 const PROT_WICHTIG = ["%zugang%", "%link%", "%kurzcode%", "%sperr%", "%rolle%", "%recht%", "admin_%", "%geloescht%", "%endgueltig%", "%entfernt%",
   "%zusammengefuehrt%", "%freigab%", "%notbetrieb%", "%sicherheit%", "%schnappschuss%", "%mitschau%", "notfall_%", "hilferuf", "aenderung_%", "erstattung%",
@@ -8531,6 +8531,9 @@ function fpSauber(d: any): Record<string, unknown> {
   return out;
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
+// 2.862.0 KC-CLUB-LEITUNG-MESSUNG: Messwerte der direkten Leitung (nur Zahlen) als eigene Art – kein Fehler, nicht im Fehler-Eingang
+const FP_MESSUNG: Record<string, string> = { leitung: "leitung_messung" };
+const fpAktion = (x: unknown) => FP_MESSUNG[fpArt(x)] ?? "fehler_" + fpArt(x);
 // ---------- 2.550.0 KC-CLUB-FEHLVERSUCHE (Wunsch Hansi „herausfinden, wer ohne gültigen Link in unsere App will“) ----------
 // Öffnet dasselbe Gerät (anonyme Geräte-Kennung der App) die App FV_SCHWELLE-mal in FV_STUNDEN Stunden ohne gültigen Link, bekommen die
 // Admins einen Push mit Anzahl, Uhrzeit und grobem Gerätetyp (System/Browser, wie die App sie meldet). Je Gerät höchstens 1× am Tag,
@@ -10493,7 +10496,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const platz = Math.max(0, Math.min(200 - (count ?? 0), liste.length));
         if (!platz) return json({ ok: true, gespeichert: 0 });
         const ua = txt(req.headers.get("user-agent"), 200), version = txt(req.headers.get("x-club-version"), 20);
-        await db.from("kc_club_protokoll").insert(liste.slice(0, platz).map((e: any) => ({ person_id: ich.person_id, aktion: "fehler_" + fpArt(e?.art), details: { ...fpSauber(e), ua, version } })));
+        await db.from("kc_club_protokoll").insert(liste.slice(0, platz).map((e: any) => ({ person_id: ich.person_id, aktion: fpAktion(e?.art), details: { ...fpSauber(e), ua, version } })));
         await fehlerAlarm(ich, liste.slice(0, platz), ua, version).catch(() => null); // KC-CLUB-FEHLER-ALARM (2.48.0)
         return json({ ok: true, gespeichert: platz });
       }

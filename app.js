@@ -1,11 +1,11 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.861.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.862.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
 // ---------- 2.727.0 KC-CLUB-TEILE (Prüfbericht C Stufe 0, Wunsch Hansi 28.10.2026 „gut aufteilen, damit später alles besser, schneller, sicherer läuft“) ----------
 // Selten gebrauchte Programmteile liegen in teile/<name>.js und werden erst beim ersten Gebrauch geladen – als normales Skript dieser Seite,
-// Adresse mit ?v=APP_VERSION. Registry TEILE_LISTE: je Teil die Einstiegs-Funktionen und der Fingerabdruck (sri). Für jede Einstiegs-Funktion steht ein
+// Adresse mit ?h=<Kurz-Fingerabdruck> (2.862.0 KC-CLUB-UPDATE-NUR-GEAENDERT, vorher ?v=APP_VERSION). Registry TEILE_LISTE: je Teil die Einstiegs-Funktionen und der Fingerabdruck (sri). Für jede Einstiegs-Funktion steht ein
 // Platzhalter bereit, der das Teil lädt und dann die echte Funktion aufruft (das Teil ersetzt den Platzhalter). Der Browser führt ein Teil nur aus,
 // wenn sein Fingerabdruck passt – nie ein Teil aus einer anderen Version (kein Mischstand, Regel 16); passt er nicht, wird nach einem Update gesucht.
 // Der Service Worker legt alle Teile beim Update zusammen mit app.js in den Speicher dieser Version (alles oder nichts) – auch ohne Netz da.
@@ -28,6 +28,8 @@ const TEILE_LISTE = {
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
+// 2.862.0 KC-CLUB-UPDATE-NUR-GEAENDERT: Kurz-Fingerabdruck für die Adresse – gleiche Rechnung in tools/teile-pruefsumme.mjs (für sw.js)
+const teilKennung = (sri) => String(sri).slice(7, 23).replace(/\+/g, "-").replace(/\//g, "_");
 // 2.752.0 (Stufe 3): Teile, die andere Teile brauchen, laden diese vorher (z. B. Videos führen Rätsel und Bühne der Rückseite vor);
 // teilDa(name) sagt ohne Laden, ob ein Teil schon da ist (für „aufräumen, falls offen“).
 const TEILE_BRAUCHT = { videos: ["rueckseite", "szenen", "hilfe"] };
@@ -36,7 +38,7 @@ const teilDa = (name) => !!TEILE_DA[name];
 function teilLaden(name) {
   const t = TEILE_LISTE[name]; if (!t) return Promise.reject(new Error("Unbekannter Programmteil: " + name));
   if (TEILE_STAND[name]) return TEILE_STAND[name];
-  const versuch = (rest) => skriptLaden(`teile/${name}.js?v=${APP_VERSION}`, t.sri)
+  const versuch = (rest) => skriptLaden(`teile/${name}.js?h=${teilKennung(t.sri)}`, t.sri)
     .catch((e) => (rest > 0 && navigator.onLine !== false ? new Promise((ok) => setTimeout(ok, 1500)).then(() => versuch(rest - 1)) : Promise.reject(e)));
   return (TEILE_STAND[name] = Promise.all((TEILE_BRAUCHT[name] || []).map(teilLaden)).then(() => versuch(1)).then(() => {
     if (t.einstieg.some((f) => typeof window[f] !== "function" || window[f]._teil)) throw new Error("Programmteil " + name + " unvollständig");
@@ -4841,17 +4843,20 @@ function rtVerbinden() {
   if (RT.ws && RT.kanal === kanal && RT.ws.readyState <= 1) return; // steht schon / baut gerade auf
   rtTrennen(); RT.kanal = kanal; RT.zu = false;
   let ws; try { ws = new WebSocket(`${RT_URL}?apikey=${RT_KEY}&vsn=1.0.0`); } catch { return rtSpaeter(); }
+  RTM.aufbauAb = document.hidden ? 0 : performance.now(); // 2.862.0 KC-CLUB-LEITUNG-MESSUNG: Aufbau-Dauer (nur bei sichtbarer App)
   RT.ws = ws;
   const senden = (o) => { try { ws.send(JSON.stringify({ ...o, ref: String(++RT.ref) })); } catch {} };
   ws.onopen = () => {
     senden({ topic: "realtime:" + kanal, event: "phx_join", payload: { config: { broadcast: { self: false }, presence: { key: "" }, private: false } } });
     if (INIT?.rtClub) senden({ topic: "realtime:" + INIT.rtClub, event: "phx_join", payload: { config: { broadcast: { self: false }, presence: { key: RT.anwKey }, private: false } } }); // KC-CLUB-ANWESENHEIT
-    clearInterval(RT.herz); RT.herz = setInterval(() => senden({ topic: "phoenix", event: "heartbeat", payload: {} }), RT_HERZ_MS);
+    clearInterval(RT.herz); RT.herz = setInterval(() => { senden({ topic: "phoenix", event: "heartbeat", payload: {} });
+      RTM.herzRef = String(RT.ref); RTM.herzAb = document.hidden ? 0 : performance.now(); }, RT_HERZ_MS); // 2.862.0 KC-CLUB-LEITUNG-MESSUNG: Hin und zurück messen
   };
   ws.onmessage = (e) => {
     let d; try { d = JSON.parse(e.data); } catch { return; }
     RT.letzte = Date.now(); // jede Antwort (auch auf den Herzschlag) zeigt: Leitung lebt
-    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
+    if (d.topic === "phoenix" && d.event === "phx_reply" && d.ref === RTM.herzRef && RTM.herzAb) { if (!document.hidden) rtMessWert("rtt", performance.now() - RTM.herzAb); RTM.herzAb = 0; } // 2.862.0
+    if (d.event === "phx_reply" && d.topic === "realtime:" + kanal && d.payload?.status === "ok" && !RT.ok) { if (RTM.aufbauAb && !document.hidden) rtMessWert("aufbau", performance.now() - RTM.aufbauAb); RTM.aufbauAb = 0; RT.ok = true; RT.warte = 1000; onlineTakt(); rtNachholen(); rtLedZeigen(); }
     else if (d.event === "broadcast" && d.payload?.event === "neu") rtSignal(d.payload.payload || {});
     else if (INIT?.rtClub && d.topic === "realtime:" + INIT.rtClub) { // KC-CLUB-ANWESENHEIT
       if (d.event === "phx_reply" && d.payload?.status === "ok" && !RT.anw) {
@@ -4862,7 +4867,8 @@ function rtVerbinden() {
       }
     }
   };
-  ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; RT.ok = false; RT.anw = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
+  ws.onclose = () => { if (RT.ws !== ws) return; const war = RT.ok; if (war && !RT.zu && !document.hidden) RTM.abbrueche++; // 2.862.0 KC-CLUB-LEITUNG-MESSUNG
+    RT.ok = false; RT.anw = false; RT.ws = null; clearInterval(RT.herz); if (war) onlineTakt(); if (!RT.zu) rtSpaeter(); rtLedZeigen(); };
   ws.onerror = () => {};
 }
 function rtSpaeter() { clearTimeout(RT.neu); RT.naechster = Date.now() + RT.warte; RT.neu = setTimeout(rtVerbinden, RT.warte); RT.warte = Math.min(RT.warte * 2, RT_WARTE_MAX_MS); }
@@ -4887,7 +4893,31 @@ function rtLedZeigen() {
   const [farbe, text] = rtZustand();
   led.className = "led led-rt " + farbe; led.title = text; led.setAttribute("aria-label", text);
 }
-setInterval(() => { if (!document.hidden) rtLedZeigen(); }, 3000); // 2.360.0: im Hintergrund nichts malen
+setInterval(() => { if (!document.hidden) { rtLedZeigen(); rtMessTakt(); } }, 3000); // 2.360.0: im Hintergrund nichts malen
+// ---------- 2.862.0 KC-CLUB-LEITUNG-MESSUNG (Wunsch Hansi 05.11.2026 „prüfe, ob alles besser läuft mit der direkten Leitung – Informationen sollen schneller kommen“) ----------
+// Jedes Gerät misst nur Zahlen, nie Inhalte, nur solange die App sichtbar ist: Anteil der Zeit, in der die Leitung stand; Antwortzeit der Leitung
+// (Herzschlag hin und zurück – beide Zeiten vom Gerät, kein Uhrenproblem); Dauer des Aufbaus; Abbrüche einer stehenden Leitung; empfangene Signale.
+// Gemeldet über das Geräte-Protokoll (Art „leitung“ → Server speichert „leitung_messung“, kein Fehler, 60 Tage): beim Wegschalten der App,
+// spätestens alle 30 Min. sichtbarer Zeit, nur ab 1 Min. Messzeit. Auswertung: SQL auf kc_club_protokoll (aktion = 'leitung_messung').
+const RT_MESS_MS = 30 * 60000, RT_MESS_MIN_MS = 60000, RT_MESS_MAX_WERTE = 200;
+const RTM = { sicht: 0, steht: 0, letzt: 0, rtt: [], aufbau: [], abbrueche: 0, signale0: 0, herzRef: "", herzAb: 0, aufbauAb: 0 };
+function rtMessWert(art, ms) { const l = RTM[art]; if (l && ms >= 0 && ms < 120000 && l.length < RT_MESS_MAX_WERTE) l.push(ms); }
+function rtMessTakt() {
+  const j = Date.now(), d = RTM.letzt ? Math.min(j - RTM.letzt, 10000) : 0; RTM.letzt = j;
+  if (!INIT?.rtKanal || typeof WebSocket === "undefined" || document.body.classList.contains("im-notbetrieb")) return; // ohne Leitung nichts zu messen
+  RTM.sicht += d; if (RT.ok && j - (RT.letzte || 0) < RT_STILL_MS) RTM.steht += d; // Regel 11: „antwortet nicht“ zählt nicht als steht
+  if (RTM.sicht >= RT_MESS_MS) rtMessMelden();
+}
+function rtMessMelden() {
+  if (RTM.sicht >= RT_MESS_MIN_MS) {
+    const s = [...RTM.rtt].sort((a, b) => a - b), q = (p) => (s.length ? Math.round(s[Math.min(s.length - 1, Math.floor(p * s.length))]) : null);
+    fpNeu("leitung", { sek: Math.round(RTM.sicht / 1000), steht_pct: Math.round((RTM.steht / RTM.sicht) * 100), rtt_n: s.length, rtt_ms: q(0.5), rtt_p90_ms: q(0.9),
+      rtt_max_ms: s.length ? Math.round(s[s.length - 1]) : null, aufbau_n: RTM.aufbau.length, aufbau_ms: RTM.aufbau.length ? Math.round(Math.max(...RTM.aufbau)) : null,
+      abbrueche: RTM.abbrueche, signale: Math.max(0, RT.signale - RTM.signale0), netz: navigator.connection?.effectiveType || "" });
+  }
+  Object.assign(RTM, { sicht: 0, steht: 0, rtt: [], aufbau: [], abbrueche: 0, signale0: RT.signale });
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) return; rtMessMelden(); RTM.letzt = 0; RTM.herzAb = 0; RTM.aufbauAb = 0; try { window.KCFP?.senden?.(false); } catch {} });
 // ---------- KC-CLUB-FERNHILFE F1: Live-Bild und Zeiger über einen geheimen, verschlüsselten Kanal je Sitzung (Konzept docs/FERNHILFE_KONZEPT.md) ----------
 // Bisher ging jedes Live-Bild in die Datenbank und wurde alle 0,8 s abgeholt (≈ 100–375 Abfragen je Minute). Jetzt gehen Bild und Zeiger direkt
 // von Gerät zu Gerät über Supabase Realtime (Broadcast – keine Datenbank). Kanal und Schlüssel vergibt der Server je Sitzung nur an die beiden;
