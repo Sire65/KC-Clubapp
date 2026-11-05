@@ -1,6 +1,6 @@
 # Konzept: Ist-Stunden an Tagen ohne Stechuhr (Aufbau, Nachbereitung, Sonderzeiten für den Club)
 
-Stand 05.11.2026 · Kennzeichen **DP2-F-IST-OHNE-UHR** · Status: **Konzept, Frage 1 entschieden, weitere Fragen in Abschnitt 6 – erst nach Freigabe Hansi bauen.**
+Stand 05.11.2026 · Kennzeichen **DP2-F-IST-OHNE-UHR** · Status: **freigegeben von Hansi (05.11.2026) – bereit für Codex (Abschnitt 7).**
 
 Wunsch Hansi: „Die Wunschphase ist vorbei. Es gibt einen Sollplan. Z. B. an den Aufbautagen hat sich Thomas von 10.00 bis 15.00
 eingetragen. Aber um 13.00 war schon alles fertig. Da an den Aufbautagen nicht per Stechuhr gestempelt wird, müssen die Stunden
@@ -56,14 +56,14 @@ Musst du an deiner Zeit etwas ändern?
                                               [ Übernehmen ]
   ```
   → Istzeit mit den neuen Zeiten, Quelle `self_change`, Kennzeichen **geändert**. Das Original (Soll) wird mitgespeichert.
-  Die Änderung ist **sofort in DP2 übernommen** (siehe Frage 6.3 zur Bestätigung).
+  Die Änderung ist **sofort in DP2 übernommen** (nur **mehr Stunden als geplant** muss der Planer erst bestätigen, siehe 6.3).
 - **„Ich war nicht da“** → keine Istzeit, Sollschicht „nicht erschienen“ (Grund aus der Auswahl). Der Planer sieht es.
 - Bis zum Abschluss des Istplans kann man die eigene Angabe **einmal neu öffnen und ändern** (wieder protokolliert).
 
 ### Schritt 2 – Erinnerung
 
 Wer nicht antwortet, bekommt am nächsten Tag **eine** Erinnerung. Der Zettel bleibt in „Mein Dienst“, bis er beantwortet ist.
-Was nach Ablauf der Frist gilt, ist **Frage 6.1**.
+Antwortet jemand bis **3 Tage nach dem Tag** nicht, gilt das **Soll als Ist**, gekennzeichnet **„⏳ nicht beantwortet“** (6.1). Der Planer sieht es.
 
 ### Schritt 3 – Planer
 
@@ -107,7 +107,7 @@ Material holen, Vorbereitung zuhause …
   (öffnet die vorhandene Erstattung, vorausgefüllt mit Tag und Anlass). Die Fahrt selbst steht nicht in den Stunden.
 - **Neu:** Anlass **„Sonstiges für den Club“** ohne festen Sondereinsatz, damit jede Clubarbeit meldbar ist (Tätigkeit + Bemerkung Pflicht).
 - Wie bisher: Status „gemeldet“ → Planer bestätigt oder lehnt mit Grund ab → Istzeit `self_report`. Das bleibt so, weil es dafür
-  keinen Plan gibt, mit dem man vergleichen könnte (siehe Frage 6.4).
+  keinen Plan gibt, mit dem man vergleichen könnte (entschieden, 6.4).
 
 ## 5. Für wen gilt was?
 
@@ -119,15 +119,14 @@ Material holen, Vorbereitung zuhause …
 
 Einstellung je Tag: `stempeluhr: false` (Standard für `prep` und `after`), damit es später auch für andere Tage gilt.
 
-## 6. Offene Fragen an Hansi (Vorschlag jeweils fett)
+## 6. Entscheidungen Hansi (05.11.2026)
 
-1. **Keine Antwort bis zur Frist** (3 Tage nach dem Tag): **Es gilt das Soll, gekennzeichnet „⏳ nicht beantwortet“**, und der Planer
-   sieht es? Oder es zählt nichts, bis jemand antwortet?
-2. ~~Fahrzeit~~ **entschieden (05.11.):** Fahrzeit zählt nie, nur vor Ort. Km-Pauschale gesondert über die Erstattung.
-3. **Änderungen ohne Bestätigung übernehmen?** **Ja, sofort übernommen, als „geändert“ markiert.** Clubsprecher, Kassenwart und Admin
-   bekommen Bescheid, der Planer kann korrigieren. Ausnahme: **Mehr Stunden als geplant** (länger geblieben) braucht die Bestätigung des Planers?
-4. **Sonderzeiten für den Club:** **Weiter mit Bestätigung durch den Planer** (wie heute)?
-5. **Pausen:** **Gleiche Pausenregel wie an Standtagen.**
+1. **Keine Antwort bis zur Frist** (3 Tage nach dem Tag): Es gilt das **Soll als Ist**, gekennzeichnet **„⏳ nicht beantwortet“**. Der Planer sieht es.
+2. **Fahrzeit zählt nie** als Arbeitszeit, nur die Zeit vor Ort. Die km-Pauschale gibt man gesondert über die Erstattung an.
+3. **Änderungen werden sofort übernommen**, gekennzeichnet „geändert“. Clubsprecher, Kassenwart und Admin bekommen Bescheid, der Planer kann korrigieren.
+   **Ausnahme: mehr Stunden als geplant** (länger geblieben) zählen erst nach Bestätigung durch den Planer.
+4. **Sonderzeiten für den Club** zählen wie bisher erst nach Bestätigung durch den Planer.
+5. **Pausen:** gleiche Pausenregel wie an Standtagen. Das ist mein Vorschlag, Hansi wurde dazu nicht ausdrücklich gefragt; er kann es noch ändern.
 
 ## 7. Auftrag für Codex (nach Antwort auf Abschnitt 6)
 
@@ -152,7 +151,8 @@ Dazu die Meldung weiterer Sonderzeiten für den Club. Der Sollplan bleibt unver�
    - `passt` → Istzeit = Soll, Quelle `self_confirm`. `aendern` → Istzeit mit neuen Zeiten (Viertelstunden, Ende nach Beginn, höchstens 16 Std.),
      Quelle `self_change`, `original` = Soll, `geaendert: true`, Grund Pflicht. `nicht_da` → keine Istzeit, Sollschicht `absent` mit Grund.
    - Je Solldienst höchstens **eine** Istzeit. Eine erneute Angabe ändert sie (Version +1), legt aber kein Duplikat an.
-   - Protokoll `actual.self_answer` (vorher/nachher). Je nach Antwort auf 6.3: Mehr als Soll → Status `zu_bestaetigen`.
+   - Protokoll `actual.self_answer` (vorher/nachher). Mehr Stunden als Soll → Status `zu_bestaetigen` (zählt erst nach Bestätigung durch den Planer, `roster.actual.correct`).
+   - Frist: 3 Tage nach dem Tag ohne Antwort → Istzeit = Soll, Quelle `no_answer`, Kennzeichen „⏳ nicht beantwortet“ (Zeitplan, einmal je Dienst).
 3. **Rückfrage und Erinnerung (Server kc-club):**
    - Zeitplan: am Tag ab Soll-Ende des letzten Dienstes, spätestens 19 Uhr, an jede Person mit Solldienst eine Nachricht/Push mit drei Knöpfen.
    - Am Folgetag eine Erinnerung an alle ohne Antwort. Push nur 9–20 Uhr, je Person und Tag höchstens Rückfrage + 1 Erinnerung.
