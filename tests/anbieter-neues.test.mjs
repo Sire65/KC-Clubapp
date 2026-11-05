@@ -38,7 +38,7 @@ assert.ok(A.github.fehler.length === 3 && A.github.status.length === 0, "nicht e
 assert.ok(A.b2.feeds === false && !A.b2.fehler.length, "B2: nur Link");
 const d2 = await holen(false); assert.equal(d2, d, "30 Min. gemerkt");
 // App: Teil, Kachel, Lage (UNKNOWN nie OK)
-assert.ok(/anbieter: \{ einstieg: \["anbStart"\], sri: "sha384-[A-Za-z0-9+/=]{64}" \}/.test(app) && /"anbieter"/.test(sw.match(/const TEILE = \[[^\]]*\]/)[0]), "Teil registriert (App + Service Worker)");
+assert.ok(/anbieter: \{ einstieg: \["anbStart"\], sri: "sha384-[A-Za-z0-9+/=]{64}" \}/.test(app) && /anbieter: "/.test(sw.match(/const TEILE = \{[^}]*\}/)[0]), "Teil registriert (App + Service Worker)");
 assert.ok(/\["anbieter", "📰", "Anbieter", "app"\]/.test(app) && /if \(id === "anbieter"\) return anbStart\(\);/.test(app), "Admin-Kachel");
 assert.ok(/case "anbieter": return typeof anbLage === "function" \? anbLage\(\) : \["keine", /.test(app), "Kachel ohne Daten: grau, nie OK");
 const l0 = teil.indexOf("const anbAktuell"), lcode = teil.slice(l0, teil.indexOf("async function anbStart"));

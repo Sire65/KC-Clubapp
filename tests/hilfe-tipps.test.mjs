@@ -5,7 +5,7 @@ import { programmText } from "./programm.mjs";
 const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const app = programmText(), haupt = lies("app.js"), teil = lies("teile/hilfetipp.js"), server = lies("supabase/functions/kc-club/index.ts"), mig = lies("supabase/migrations/20261103_kc_club_hilfe_tipps.sql");
 // Programmteil: Senden/Übersicht nachladbar, Ansehen/Antworten im Hauptprogramm
-assert.ok(haupt.includes('hilfetipp: { einstieg: ["tippSenden", "tippListe"]') && lies("sw.js").includes('"hilfetipp"'), "Teil eingetragen");
+assert.ok(haupt.includes('hilfetipp: { einstieg: ["tippSenden", "tippListe"]') && lies("sw.js").includes('hilfetipp: "'), "Teil eingetragen");
 for (const f of ["tippZeigen", "tippAntwort", "tippLaufband", "tippMeine"]) assert.ok(new RegExp(`(async )?function ${f}\\(`).test(haupt), "im Hauptprogramm: " + f);
 for (const f of ["tsSenden", "tsAnleitungWahl", "tsDateien", "tippErinnern", "tsVorlageNehmen"]) assert.ok(teil.includes(`function ${f}(`), "im Teil: " + f);
 // Ampel grün → gelb → rot; bei rot „Jetzt antworten“ / „Möchte nicht antworten“; mit Rückmeldung nicht wegklickbar
