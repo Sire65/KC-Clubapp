@@ -159,6 +159,7 @@ jobs:
       - run: node tests/spur-wieder.test.mjs
       - run: node tests/einspielen-fenster.test.mjs
       - run: node tests/einspielen-sperre.test.mjs
+      - run: node tests/video-nachrichten.test.mjs
       - run: node tests/nt-gruss.test.mjs
       - run: node tests/ungelesen-admin.test.mjs
       - run: node tests/vorladen-foto.test.mjs
