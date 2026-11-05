@@ -8,6 +8,7 @@ manuell berichtigt werden.“
 Entscheidung Hansi (05.11.): „**Jeder muss selber seinen Plan anpassen.** Nach jedem Aufbau und jeder Nachbereitung soll jeder gefragt
 werden, ob er etwas an seiner Einsatzzeit ändern muss. **Wenn nein, bleibt es dabei. Wenn ja, werden die neuen Zeiten in DP2
 übernommen – als geändert.** Und dann gibt es ja noch weitere Sonderzeiten, in denen man etwas für den Club erledigt hat.“
+Ergänzung Hansi (05.11.): „**Bei jeder Zeitänderung müssen Clubsprecher, Kassenwart und Admin Bescheid bekommen.**“
 
 ## 1. Ausgangslage (Stand Code)
 
@@ -25,6 +26,7 @@ werden, ob er etwas an seiner Einsatzzeit ändern muss. **Wenn nein, bleibt es d
 3. **„Nein, passt“ = das Soll gilt als Ist** (Kennzeichen „bestätigt“). Der Normalfall braucht nur einen Tipp.
 4. Zeiten in **Viertelstunden**, Auswahl statt Freitext, nur eigene Einsätze.
 5. Jede Änderung wird protokolliert (wer, wann, vorher/nachher). Der Planer sieht alle „geändert“-Fälle in einer Liste.
+6. **Bei jeder Zeitänderung bekommen Clubsprecher, Kassenwart und Admin Bescheid** (Abschnitt 3a).
 
 ## 3. Ablauf nach jedem Aufbau- und Nachbereitungstag
 
@@ -67,7 +69,28 @@ Was nach Ablauf der Frist gilt, ist **Frage 6.1**.
 - `closePlan` zählt „keine Antwort“ als ungeklärt. Ein Abschluss ist dann nur mit Begründung möglich (wie heute).
 - Kontoauszug des Mitglieds: „Aufbau 02.12. · Soll 10:00–15:00 · Ist 10:00–13:00 ✏️ geändert (früher fertig)“.
 
-## 4. Weitere Sonderzeiten für den Club
+## 3a. Bescheid an Clubsprecher, Kassenwart und Admin
+
+**Wann:** bei jeder Zeitänderung, also immer, wenn das Ist vom Soll abweicht oder neue Stunden dazukommen:
+- ✏️ Mitglied ändert seine Zeit (auch beim erneuten Ändern),
+- 🚫 „Ich war nicht da“,
+- Planer korrigiert eine Istzeit,
+- ➕ neue Sonderzeit für den Club gemeldet (und später bestätigt oder abgelehnt).
+
+**Nicht** bei „✓ Nein, passt so“, denn da ändert sich nichts.
+
+**Wie:**
+- Nachricht in der Club-App mit Push (wie die Änderungsmeldungen „Neue Anschrift“ an Clubsprecher, Kassenwart und Admin).
+- Empfänger: alle mit Amt **Clubsprecher** oder **Kassenwart** (`kc_club_rollen.aemter`) und der **Admin**. Wer selbst ändert, bekommt
+  keine Nachricht über sich selbst.
+- Inhalt kurz und ohne Freitext anderer Personen außer dem Grund:
+  „✏️ Thomas H. – Aufbau Mi 02.12.: **10:00–13:00 statt 10:00–15:00** (−2 Std., früher fertig)“
+  bzw. „➕ Anne K. – Sonderzeit 28.11. Einkauf: 2,5 Std. gemeldet“.
+- Ein Knopf **„📋 Alle Änderungen ansehen“** öffnet die Liste „Geändert von Mitgliedern“ (Soll · Ist · Grund · wann).
+- Ändern sich am selben Abend viele Zeiten, gilt: Nachricht je Änderung, aber **Push höchstens einmal je 15 Minuten** je
+  Empfänger („3 neue Zeitänderungen“). So wird niemand mit Pushes überschüttet.
+
+
 
 Gemeint sind Zeiten **ohne Solldienst**, in denen jemand etwas für den Club erledigt hat: einkaufen, Getränke zuhause mischen, Fahrten,
 Material holen, Vorbereitung zuhause …
@@ -95,8 +118,8 @@ Einstellung je Tag: `stempeluhr: false` (Standard für `prep` und `after`), dami
 1. **Keine Antwort bis zur Frist** (3 Tage nach dem Tag): **Es gilt das Soll, gekennzeichnet „⏳ nicht beantwortet“**, und der Planer
    sieht es? Oder es zählt nichts, bis jemand antwortet?
 2. **Fahrzeit beim Aufbau/bei der Nachbereitung:** **Nur die Zeit vor Ort** (wie an Standtagen). Bei Sonderzeiten zählt weiter „von zuhause bis zuhause“.
-3. **Änderungen ohne Bestätigung übernehmen?** **Ja, sofort übernommen, als „geändert“ markiert.** Der Planer sieht die Liste und kann
-   korrigieren. Ausnahme: **Mehr Stunden als geplant** (länger geblieben) braucht die Bestätigung des Planers?
+3. **Änderungen ohne Bestätigung übernehmen?** **Ja, sofort übernommen, als „geändert“ markiert.** Clubsprecher, Kassenwart und Admin
+   bekommen Bescheid, der Planer kann korrigieren. Ausnahme: **Mehr Stunden als geplant** (länger geblieben) braucht die Bestätigung des Planers?
 4. **Sonderzeiten für den Club:** **Weiter mit Bestätigung durch den Planer** (wie heute)?
 5. **Pausen:** **Gleiche Pausenregel wie an Standtagen.**
 
@@ -134,15 +157,24 @@ Dazu die Meldung weiterer Sonderzeiten für den Club. Der Sollplan bleibt unver�
    - Darunter „➕ Ich habe noch etwas anderes für den Club erledigt“ → vorhandene Stundenmeldung mit neuem Anlass **„Sonstiges für den Club“**.
    - Kontoauszug: Soll · Ist · Kennzeichen (✓/✏️/🚫/⏳).
    - Twinkey-Einträge „Meine Aufbau-Zeit ändern“ und „Sonderzeit für den Club melden“. Hilfe-Text.
-5. **DP2 Planer-Ansicht:** Spalten Soll · Ist · Kennzeichen, Liste „Geändert von Mitgliedern“, Filter „keine Antwort“.
+5. **Bescheid an Clubsprecher, Kassenwart, Admin (Server):**
+   - Bei `self_change`, `nicht_da`, Planer-Korrektur (`correctActual`) sowie bei Sonderzeit-Meldung, -Bestätigung und -Ablehnung
+     eine Nachricht an alle mit Amt Clubsprecher oder Kassenwart (`kc_club_rollen.aemter`) und an den Admin.
+     Nicht an die Person, die die Änderung gemacht hat. Nicht bei `passt`.
+   - Text: Name, Tag/Anlass, neue Zeit statt Soll, Differenz in Stunden, Grund. Knopf „📋 Alle Änderungen ansehen“.
+   - Push gebündelt: je Empfänger höchstens einer je 15 Minuten („n neue Zeitänderungen“).
+   - Vorbild: Empfänger-Regel der Änderungsmeldungen (`an: ["Clubsprecher", "Kassenwart", "admin"]`, `AE_AN_NAME`).
+6. **DP2 Planer-Ansicht:** Spalten Soll · Ist · Kennzeichen, Liste „Geändert von Mitgliedern“, Filter „keine Antwort“.
    Planer-Korrektur wie bisher mit Grund + Nachricht ans Mitglied. `closePlan` zählt „keine Antwort“ als ungeklärt.
-6. **Tests (rot verhindert das Einspielen):**
+7. **Tests (rot verhindert das Einspielen):**
    - Thomas Soll 10–15, „ändern“ 10–13, Grund „früher fertig“ → Ist 10–13, Kennzeichen geändert, Original 10–15, Soll unverändert.
    - „passt“ → Ist = Soll, bestätigt. „nicht da“ → keine Istzeit, Schicht `absent`.
    - Fremder Dienst, Standtag, zukünftiger Tag, abgeschlossener Istplan → abgelehnt. Zweite Angabe → kein Duplikat, Version +1.
    - Viertelstunden, Ende nach Beginn, höchstens 16 Std.
    - Erinnerung nur einmal, nur 9–20 Uhr, nur an Personen ohne Antwort.
    - Stundenmeldung „Sonstiges für den Club“ ohne Sondereinsatz → gemeldet → bestätigt → Istzeit `self_report`.
+   - Bescheid: Änderung → Nachricht an Clubsprecher, Kassenwart und Admin (nicht an den Ändernden). „Passt“ → keine Nachricht.
+     Fünf Änderungen in 10 Minuten → je Empfänger nur ein Push.
    - Browser-Rundgang abgeschirmt: Zettel auf einem 360-px-Handy bedienbar.
-7. **Ende:** Eintrag in `CHANGELOG.md`, Hilfe-Text, Rückweg (Version davor), neue Tabelle mit Rechten. Hansi in einfachen Worten berichten.
+8. **Ende:** Eintrag in `CHANGELOG.md`, Hilfe-Text, Rückweg (Version davor), neue Tabelle mit Rechten. Hansi in einfachen Worten berichten.
    Einspielen nur zum Termin.
