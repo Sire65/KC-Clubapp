@@ -42,8 +42,34 @@ const rgFeld = (id) => () => $(id)?.closest(".feld, .schalter, label") || $(id);
 // KC-CLUB-ERKLAERVIDEOS-PULS (2.247.0, Wunsch Hansi): Knöpfe und Felder, die erwähnt werden, pulsieren nacheinander – man sieht sofort, was gemeint ist.
 // Station: puls = [Wähler | Funktion → Element(e)]; ohne Liste pulst ein kleines Ziel selbst kurz. Wähler finden nur Sichtbares.
 const rgOn = (teil, hoch) => () => { const e = [...document.querySelectorAll("[onclick]")].find((x) => x.getAttribute("onclick").includes(teil) && rgSichtbar(x)); return hoch && e ? e.closest(hoch) || e : e; };
+// KC-CLUB-VIDEO-SATZPULS (Fund Hansi 05.11.2026 „Text und Inhalt nicht synchron – manchmal wird ein Button erklärt, aber ein anderer angezeigt“):
+// Der Takt oben läuft im Kreis (höchstens 2,6 s je Knopf) – bei langen Sätzen ist er schneller fertig als die Stimme und beginnt von vorn.
+// Station mit pulsSaetze: [Satznummer je puls-Eintrag] → jeder Knopf blinkt genau ab dem Satz, in dem er erklärt wird (gleiche Nummer = blinken
+// zusammen). Gesteuert vom Sprecher selbst (Handy-Stimme: Beginn jedes Satzes; geladene Stimme: vor jedem Satz); ohne Ton nach Lesezeit.
+const rgSaetze = (text) => String(text).match(/[^.!?]+[.!?]*/g) || [String(text)];
+function rgSatzPuls(s, n) {
+  if (!RG.an || RG.st[RG.i] !== s || !s.pulsSaetze) return;
+  const ziele = (s.puls || []).map((q) => { try { const e = typeof q === "function" ? q() : [...document.querySelectorAll(q)].find(rgSichtbar); return [e].flat().find((x) => x && rgSichtbar(x)) || null; } catch { return null; } });
+  const ab = Math.max(-1, ...s.pulsSaetze.filter((a, k) => a <= n && ziele[k])), an = ziele.filter((e, k) => e && s.pulsSaetze[k] === ab);
+  document.querySelectorAll(".rg-puls").forEach((e) => { if (!an.includes(e)) e.classList.remove("rg-puls"); });
+  an.forEach((e) => { if (!e.classList.contains("rg-puls")) { void e.offsetWidth; e.classList.add("rg-puls"); } });
+  // im Fenster das erklärte Element nach oben holen – unten liegt die Tafel mit dem Text darüber (nie die Seite selbst verschieben)
+  const e0 = an[0], box = e0?.closest(".blatt-innen, .sim-dialog");
+  if (box) { // Rahmen folgt dem erklärten Knopf (sonst holt rgHin das große Fenster-Ziel immer wieder an den Anfang); liegt er tief, rückt die Tafel nach oben
+    if (box.scrollHeight > box.clientHeight + 4) try { const r = e0.getBoundingClientRect(), b = box.getBoundingClientRect(); box.scrollTo({ top: Math.max(0, box.scrollTop + r.top - b.top - 48), behavior: "smooth" }); } catch {}
+    RG.ziel = e0; rgLage(); for (const ms of [450, 1000]) setTimeout(() => { if (RG.an && RG.ziel === e0) rgLage(); }, ms);
+  }
+}
+function rgSatz(n) { RG.satzNr = n; const s = RG.st[RG.i]; if (s?.pulsSaetze) rgSatzPuls(s, n); if (s?.beiSatz && RG.an) try { s.beiSatz(n); } catch {} } // beiSatz: Vorführung im Takt der Sätze
 function rgPulsStart(s) {
   rgPulsStop();
+  if (s.pulsSaetze) { // satzweise statt im Takt
+    rgSatzPuls(s, RG.satzNr | 0);
+    if (!RG.ton && !rgpAktiv()) { // ohne Stimme: Sätze nach Lesezeit (wie rgSprechen: 420 ms je Wort)
+      let t = 0; RG.satzUhren = rgSaetze(rgText(s)).map((x, n) => { const u = setTimeout(() => rgSatz(n), t); t += x.trim().split(/\s+/).length * 420; return u; });
+    }
+    return;
+  }
   let els = (s.puls || (s.kacheln || []).map(rgKachel)).flatMap((q) => { try { return typeof q === "function" ? [q()].flat().filter(Boolean) : [...document.querySelectorAll(q)]; } catch { return []; } }).filter(rgSichtbar);
   if (!els.length && RG.ziel && RG.ziel.getBoundingClientRect().height < 120) els = [RG.ziel];
   if (!els.length) return;
@@ -51,7 +77,7 @@ function rgPulsStart(s) {
   let i = 0; const schritt = () => { if (!RG.an) return rgPulsStop(); els.forEach((e) => e.classList.remove("rg-puls")); const e = els[i++ % els.length]; void e.offsetWidth; e.classList.add("rg-puls"); };
   RG.pulsUhr = setTimeout(function los() { schritt(); RG.pulsUhr = setTimeout(los, takt); }, 500); // kurz nach dem Hinblättern beginnen
 }
-function rgPulsStop() { clearTimeout(RG.pulsUhr); document.querySelectorAll(".rg-puls").forEach((e) => e.classList.remove("rg-puls")); }
+function rgPulsStop() { clearTimeout(RG.pulsUhr); (RG.satzUhren || []).forEach(clearTimeout); RG.satzUhren = []; document.querySelectorAll(".rg-puls").forEach((e) => e.classList.remove("rg-puls")); }
 const rgKlappe = (name) => `#v-einstellungen details[data-klappe="${name}"]`;
 // Bereich aufklappen und beim Ende wieder in den alten Zustand bringen (auch das gemerkte Auf/Zu)
 function rgAuf(...namen) { for (const n of namen) { const d = document.querySelector(rgKlappe(n)); for (let x = d; x; x = x.parentElement?.closest("details")) if (!x.open) { const y = x; y.open = true; RG.zurueck.push(() => { y.open = false; }); } rgEuSeite(d); } } // 2.469.0: auch den Hauptbereich (KC-CLUB-EINST-GRUPPEN)
@@ -1705,88 +1731,118 @@ const RG_GEHEIM = [
 // rechts, die Info neben jeder Nachricht, die Nachrichtenliste und die Verschlüsselung mit Schlüsselbund – alles komplett, aber einfach und strukturiert“).
 // Eigene Texte in dieser Reihenfolge; bewährte Schritte (Formular, Beispiel-Chat, Geheim-Chat) werden aus den Einzelvideos übernommen.
 // Es wird NIE etwas gesendet oder gespeichert: Beispiel-Chat (rgChatprofiAuf), Geheim-Beispiel (rgGeheimAuf) und Bilder (rgSim).
-const rgAus = (liste, t, x) => { const s = liste.find((y) => y.t === t); return s ? (x ? { ...s, x } : s) : null; };
+const rgAus = (liste, t, mehr) => { const s = liste.find((y) => y.t === t); return s ? (typeof mehr === "string" ? { ...s, x: mehr } : { ...s, ...(mehr || {}) }) : null; };
 const rgNaLeiste = () => { const l = $("versandLeiste"); if (l?.classList.contains("versteckt")) { l.classList.remove("versteckt"); RG.zurueck.push(() => { if (!$("text")?.value.trim()) l.classList.add("versteckt"); }); } };
 const rgNaChat = (f) => () => { rgChatprofiAuf(); f?.(); };
 // Beispieltext ins Schreibfeld (nur gezeigt, nie gesendet) – der alte Text kommt am Ende über rgChatprofiAuf zurück
 const rgNaText = () => { const t = $("text"); if (t && !t.value) { t.value = "Bin um sieben da 👍"; t.dispatchEvent(new Event("input", { bubbles: true })); } rgNaLeiste(); };
 const rgNaFormat = (an) => { try { naFormatLeiste(an); } catch {} };
-// Wunsch Hansi 05.11.: „Baue lieber Folge 1 und Folge 2 – einfache Sachen in Folge 1, Besonderheiten in Folge 2“.
-// Folge 1: Plus Neu, schreiben, normal senden, Wichtig, Express mit Bestätigung, ⓘ/Haken/antippen, Chat-Liste.
-// Folge 2: kleine Zeile (F, Farbe/Marker, nur die anderen …), WhatsApp hin und zurück, Bildschirmfoto, Tage gruppiert, ⋮, Verschlüsseln & Schlüsselbund.
+// Wunsch Hansi 05.11.: „Baue lieber Folge 1 und Folge 2 – einfache Sachen in Folge 1, Besonderheiten in Folge 2“; Fund Hansi 05.11. „Text und Inhalt nicht
+// immer synchron – manchmal wird ein Button erklärt, aber ein anderer angezeigt“ + „in Teil 2 auch, dass man sich einen Hintergrund festlegen kann“.
+// Darum: je Satz höchstens ein Knopf (bzw. eine Gruppe), Knöpfe in der Reihenfolge des Bildschirms, pulsSaetze = Satz, in dem der Knopf blinkt (KC-CLUB-VIDEO-SATZPULS).
+// Sätze enden mit . ! ? – keine Abkürzungen mit Punkt im Text (sonst zählen die Sätze falsch; Test prüft die Anzahl).
+const rgNaKnopf = (wurzel, anfang) => () => [...document.querySelectorAll(wurzel + " button")].find((b) => b.textContent.trim().startsWith(anfang) && rgSichtbar(b)) || null;
+const rgNaCf = () => { rgChatprofiAuf(); $("chatBlatt")?.classList.add("versteckt"); if (!$("cfBlatt")) { cfOeffnen(); RG.zurueck.push(() => $("cfBlatt")?.remove()); } $("cfBlatt")?.classList.add("rg-zeigen"); }; // nur zeigen – angetippt wird nichts
 const RG_NACHRICHTEN_1 = () => [
   { v: "nachrichten", sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten – Folge 1: das Einfache",
     x: "Das ist Folge eins zu den Nachrichten – das Einfache: eine Nachricht schreiben und senden, Wichtig und Express, was die Zeichen an einer Nachricht bedeuten und die Liste deiner Chats. Die Besonderheiten zeigt dir Folge zwei. Keine Sorge: Ich sende und speichere nichts – alle Beispiele verschwinden wieder." },
-  rgAus(RG_NACHRICHT, "💬 Neue Nachricht", "Eine neue Nachricht beginnst du in Nachrichten oben rechts mit Plus Neu."),
-  rgAus(RG_NACHRICHT, "👤 An wen?"),
-  rgAus(RG_NACHRICHT, "✏️ Betreff"),
-  { v: "chat", tippVor: rgOn("neuWeiter()"), vor: rgNaChat(rgNaText), sel: ["#eingabe"], mussSel: true, puls: ["#text", "#sendenKnopf", '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]'], t: "⌨️ Kurz schreiben",
-    x: "Mit Weiter kommst du zum Schreiben – hier in einem Beispiel-Chat. Unten ins Feld schreibst du deine Nachricht; kurz und knapp genügt, zum Beispiel: Bin um sieben da. Statt zu tippen kannst du auch das Mikrofon nehmen. Unter dem Feld findest du die Büroklammer für Fotos und Dateien und das Smiley für Emojis." },
-  { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, puls: ["#normalKnopf", "#sendenKnopf"], t: "📝 Normal senden",
-    x: "Sobald etwas im Feld steht, erscheint darüber der Versand. Normal ist schon angehakt – das ist der Alltag. Du tippst einfach auf den Pfeil, und die Nachricht geht los, mit Benachrichtigung so, wie der Empfänger es eingestellt hat." },
-  { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, puls: ["#wichtigKnopf"], t: "❗ Wichtig",
-    x: "Mit Wichtig bekommt deine Nachricht einen orangefarbenen Rahmen – sie fällt im Chat sofort auf. Vergessen? Am kleinen Pfeil deiner Nachricht kannst du sie auch nachträglich wichtig machen." },
-  { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, puls: ["#expressKnopf"], t: "🏎️ Express – höchstens 5 am Tag",
-    x: "Eilt es wirklich, nimmst du Express: Die Nachricht kommt sofort an – auch nachts und auch, wenn der Chat stumm ist. Beim Empfänger geht ein Fenster auf. Weil das stört, gibt es höchstens fünf Express-Sendungen am Tag. Neben Express steht, wie viele du schon hattest – zum Beispiel zwei von fünf. Wichtig und Express gehen auch zusammen." },
+  rgAus(RG_NACHRICHT, "💬 Neue Nachricht", { x: "Eine neue Nachricht beginnst du in Nachrichten oben rechts mit Plus Neu." }),
+  rgAus(RG_NACHRICHT, "👤 An wen?", { puls: ["#neuGruppen .knopf", "#schnellEmpf", "#empfSuche"], pulsSaetze: [1, 2, 3],
+    x: "Jetzt wählst du, an wen die Nachricht geht. Ganz oben stehen deine Gruppen – antippen, und du schreibst direkt hinein. Darunter die Schnellwahl: alle, die gerade online sind, alle Mitglieder oder ein Amt wie den Clubsprecher. Und darunter suchst du einen Namen, zum Beispiel Anne, und hakst ihn an – auch mehrere gehen." }),
+  rgAus(RG_NACHRICHT, "✏️ Betreff", { puls: ["#neuBetreff", rgOn("neuWeiter()")], pulsSaetze: [0, 3],
+    x: "Ein Betreff ist freiwillig – praktisch bei Gruppen. Schreibst du nur einer Person und ohne Betreff, geht es gleich in euren bisherigen Chat. Mit Betreff beginnt ein eigener Chat zu diesem Thema. Dann tippst du auf Weiter zum Schreiben." }),
+  { v: "chat", tippVor: rgOn("neuWeiter()"), vor: rgNaChat(rgNaText), sel: ["#eingabe"], mussSel: true, t: "⌨️ Kurz schreiben",
+    puls: ["#text", "#mikroKnopf", '#eingabe [title="Anlage"]', "#emoKnopf"], pulsSaetze: [1, 2, 3, 4],
+    x: "Mit Weiter kommst du zum Schreiben – ich zeige es dir in einem Beispiel-Chat. Unten ins Feld schreibst du deine Nachricht, kurz und knapp genügt: Bin um sieben da. Statt zu tippen, kannst du auch ins Mikrofon sprechen. Mit der Büroklammer hängst du Fotos und Dateien an. Und das Smiley bringt dir die Emojis." },
+  { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, t: "📝 Normal senden", puls: ["#normalKnopf", "#sendenKnopf"], pulsSaetze: [1, 2],
+    x: "Sobald etwas im Feld steht, erscheint darüber die Zeile Versand. Normal ist schon angehakt – das ist der Alltag. Dann tippst du auf den Pfeil, und die Nachricht geht los." },
+  { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, t: "❗ Wichtig", puls: ["#wichtigKnopf"], pulsSaetze: [0],
+    x: "Daneben steht Wichtig. Damit bekommt deine Nachricht einen orangefarbenen Rahmen und fällt im Chat sofort auf." },
+  { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, t: "🏎️ Express – höchstens 5 am Tag", puls: ["#expressKnopf"], pulsSaetze: [0],
+    x: "Rechts daneben steht Express – für das, was wirklich eilt. Die Nachricht kommt sofort an, auch nachts und auch, wenn der Chat stumm ist. Beim Empfänger geht dafür ein eigenes Fenster auf. Weil das stört, gibt es höchstens fünf Express-Sendungen am Tag. Hakst du Express an, steht daneben, wie viele du heute schon hattest. Wichtig und Express kannst du auch zusammen anhaken." },
   { v: "nachrichten", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 10px">🏎️ Express – die Bestätigung</h3>
       <div class="blase meine" style="margin:0 0 8px auto;max-width:90%" data-s="blase">Kannst du mich gleich anrufen? <small>✓✓</small></div>
-      <div class="hinweis" data-s="was" style="padding:8px 10px;border-radius:10px;background:var(--karte2)">🏎️ Per Express versandt um 19:05<br>Anne: 📬 angekommen um 19:05 · 👁️ gelesen um 19:07</div></div></div>`, "ueber"),
-    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="blase"]', '#rgSim [data-s="was"]'], t: "📬 Express mit Bestätigung",
-    x: "Bei Express bekommst du eine Bestätigung: Unter deiner Nachricht steht, wann sie verschickt wurde – und für jeden Empfänger, wann sie angekommen ist und wann sie gelesen wurde. So weißt du genau, dass deine Nachricht da ist." },
-  { v: "chat", vor: rgNaChat(), sel: [rgChatprofiBlase(9)], mussSel: true, puls: ["#msg-rg-cp-9 .na-info", "#msg-rg-cp-9 .haken", "#msg-rg-cp-9 .na-pfeil"], t: "ⓘ Die Info an jeder Nachricht",
-    x: "Jetzt schauen wir in einen Beispiel-Chat. Neben jeder Nachricht stehen kleine Zeichen. Das i öffnet die Info: wer die Nachricht geschrieben hat, wer sie bekommen hat und wer sie wann gelesen hat. Der kleine Pfeil daneben bietet Weiterleiten, Kopieren, Ausschneiden, Archivieren, Wichtig und Löschen." },
-  rgAus(RG_CHATPROFI, "✔️ Was die Haken bedeuten"),
-  rgAus(RG_CHATPROFI, "👆 Nachricht antippen", "Und tippst du eine Nachricht selbst an, kannst du schnell mit einem Bild reagieren, zum Beispiel Daumen hoch – oder antworten, oben anheften, merken und kopieren. Eigene Nachrichten kannst du hier auch bearbeiten oder zurückholen, solange sie noch niemand gelesen hat."),
-  rgAus(RG_NACHRICHT, "🗂️ Übersicht gegliedert", "Zum Schluss die Liste deiner Chats. Chats mit Neuem stehen oben, mit roter Zahl, und fallen kurz mit einem Rahmen auf. Unter jedem Chat siehst du, wie es um deine letzte Nachricht steht – zum Beispiel angekommen oder gelesen. Oben gliederst du die Liste nach Zeit, nach Art oder nach Name; mit den Pfeilen klappst du alles auf oder zu."),
-  rgAus(RG_NACHRICHT, "👥 Gruppe & mehr"),
+      <div class="hinweis" data-s="versandt" style="padding:6px 10px;border-radius:10px;background:var(--karte2);margin:0 0 6px">🏎️ Per Express versandt um 19:05</div>
+      <div class="hinweis" data-s="anne" style="padding:6px 10px;border-radius:10px;background:var(--karte2)">Anne: 📬 angekommen um 19:05 · 👁️ gelesen um 19:07</div></div></div>`, "ueber"),
+    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, t: "📬 Express mit Bestätigung",
+    puls: ['#rgSim [data-s="blase"]', '#rgSim [data-s="versandt"]', '#rgSim [data-s="anne"]'], pulsSaetze: [0, 1, 2],
+    x: "Bei Express bekommst du eine Bestätigung. Unter deiner Nachricht steht, wann sie verschickt wurde. Und für jeden Empfänger, wann sie angekommen ist und wann er sie gelesen hat. So weißt du genau, dass deine Nachricht da ist." },
+  { v: "chat", vor: rgNaChat(), sel: [rgChatprofiBlase(9)], mussSel: true, t: "ⓘ Die Info an jeder Nachricht", puls: ["#msg-rg-cp-9 .na-info", "#msg-rg-cp-9 .na-pfeil"], pulsSaetze: [1, 3],
+    x: "Jetzt schauen wir in einen Beispiel-Chat. Neben jeder deiner Nachrichten steht ein kleines i. Es öffnet die Info: wer die Nachricht bekommen hat und wer sie wann gelesen hat. Darüber sitzt der kleine Pfeil. Er bietet Weiterleiten, Kopieren, Ausschneiden, Archivieren, Wichtig und Löschen." },
+  rgAus(RG_CHATPROFI, "✔️ Was die Haken bedeuten", { puls: ["#msg-rg-cp-9 .haken", "#msg-rg-cp-8 .haken", "#msg-rg-cp-7 .haken", "#msg-rg-cp-9 .haken"], pulsSaetze: [1, 2, 3, 4],
+    x: "Unten an deinen Nachrichten stehen Haken. Ein grauer Haken heißt: gesendet. Zwei graue Haken heißen: auf dem Handy angekommen. Zwei blaue Haken heißen: gelesen. Tippst du die Haken an, siehst du genau, bei wem sie angekommen ist und wer sie gelesen hat – mit Uhrzeit." }),
+  rgAus(RG_CHATPROFI, "👆 Nachricht antippen", { puls: ["#naMenue .na-schnell", rgChatprofiKnopf("#naMenue", "↩️ Antworten"), rgChatprofiKnopf("#naMenue", "📌 Oben anheften"), rgChatprofiKnopf("#naMenue", "⭐ Merken"), rgChatprofiKnopf("#naMenue", "📋 Kopieren")], pulsSaetze: [1, 2, 3, 4, 5],
+    x: "Tippst du eine Nachricht an, öffnet sich dieses Menü. Oben reagierst du schnell mit einem Bild, zum Beispiel Daumen hoch. Darunter kannst du antworten. Oder du heftest die Nachricht oben an, damit sie nicht wegrutscht. Mit Merken findest du sie später schnell wieder. Und Kopieren legt den Text in die Zwischenablage, zum Beispiel für eine E-Mail." }),
+  rgAus(RG_NACHRICHT, "🗂️ Übersicht gegliedert", { puls: [".uhg-neu", "#unterhListe .uhg-leiste > button", "#unterhListe .uhg-alle button"], pulsSaetze: [1, 3, 4],
+    x: "Zurück in der Übersicht siehst du die Liste deiner Chats. Chats mit Neuem stehen ganz oben, mit roter Zahl. Unter jedem Chat steht, wie es um deine letzte Nachricht steht, zum Beispiel angekommen oder gelesen. Oben ordnest du die Liste nach Zeit, nach Art oder nach Name. Mit den Pfeilen daneben klappst du alle Abschnitte auf oder zu." }),
+  { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], t: "👥 Gruppe, Favoriten, Gemerkt, Test",
+    puls: ['#v-nachrichten .kom-leiste [onclick="gruppeForm()"]', "#uhFavKnopf", '#v-nachrichten .kom-leiste [onclick="gemerktZeigen()"]', '#v-nachrichten .kom-leiste [onclick="testAnMichStarten()"]'], pulsSaetze: [0, 1, 2, 3],
+    x: "Oben in der Leiste legst du mit Gruppe eine eigene Gruppe an, zum Beispiel fürs Küchenteam. Mit dem Stern Favoriten siehst du nur deine Lieblings-Chats. Gemerkt zeigt alle Nachrichten, die du dir gemerkt hast. Und Test schickt dir selbst eine Probe – so prüfst du, ob Push und E-Mail ankommen." },
   { v: "nachrichten", video: "nachrichten_2", t: "✅ Fertig mit Folge 1",
-    x: "Das war Folge eins: Plus Neu, schreiben und normal senden, Wichtig und Express, die Zeichen an einer Nachricht und die Liste deiner Chats. Probier es aus – am besten mit einer Nachricht an dich selbst über Test. In Folge zwei geht es um die Besonderheiten: die kleine Zeile über dem Schreibfeld, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte und das Verschlüsseln." },
+    x: "Das war Folge eins: Plus Neu, schreiben und normal senden, Wichtig und Express, die Zeichen an einer Nachricht und die Liste deiner Chats. Probier es aus – am besten mit einer Nachricht an dich selbst über Test. In Folge zwei geht es um die Besonderheiten: die kleine Zeile über dem Schreibfeld, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte, deinen Chat-Hintergrund und das Verschlüsseln." },
 ].filter(Boolean);
 const RG_NACHRICHTEN_2 = () => [
   { v: "nachrichten", sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten – Folge 2: Besonderheiten",
-    x: "Das ist Folge zwei zu den Nachrichten – die Besonderheiten: die kleine Zeile über dem Schreibfeld mit fett, Farbe und Marker, nur die Nachrichten des anderen, WhatsApp in beide Richtungen, das Bildschirmfoto mit Markierung, die Ordnung im Chat, die drei Punkte oben rechts und das Verschlüsseln mit Schlüsselbund. Wie man schreibt und sendet, zeigt Folge eins. Ich sende und speichere nichts – alles ist nur ein Beispiel." },
-  { v: "chat", vor: rgNaChat(() => { const t = $("text"); if (t?.value === "Bin um sieben da 👍") { t.value = ""; t.dispatchEvent(new Event("input", { bubbles: true })); } }), sel: [".eg-griffe"], mussSel: true, puls: ["#egKlapp", "#egTast", "#fettKnopf", "#chatFilterKnopf", "#grussKnopf", "#weKnopf"], t: "🧰 Die kleine Zeile",
-    x: "Los geht es mit der kleinen, schmalen Zeile direkt über dem Schreibfeld – hier in einem Beispiel-Chat. Mit dem kleinen Pfeil klappst du den Schreibbereich weg und siehst mehr Nachrichten, die Tastatur-Taste blendet die Tastatur aus und ein. Dazu kommen: F für Hervorheben, die Personen für die Ansicht, die Grußformel und Plus für weitere Empfänger." },
-  { v: "chat", vor: rgNaChat(() => { rgNaFormat(true); RG.zurueck.push(() => rgNaFormat(false)); }), nach: () => rgNaFormat(false), sel: ["#formatLeiste"], mussSel: true,
-    puls: ["#fettKnopf", "#formatLeiste button"], t: "𝐅 Fett, kursiv, Farbe und Marker",
-    x: "Tippst du auf F, steht darüber: fett, kursiv und durchgestrichen – und die Farben Rot, Blau und Grün. Gelb ist ein Textmarker, wie mit dem Leuchtstift. Erst ein Wort im Feld markieren – lange drücken oder doppelt tippen –, dann die Wahl antippen. Wer eine ältere App hat, sieht einfach das Wort." },
-  { v: "chat", vor: rgNaChat(), nach: () => { try { chatFilterSetzen("alle", true); } catch {} }, sel: ["#chatFilterKnopf"], mussSel: true, puls: ["#chatFilterKnopf"],
-    live: async (L) => { await L.warte(2500); await L.tipp("#chatFilterKnopf"); try { chatFilterSetzen("andere"); } catch {} await L.warte(2500); try { chatFilterSetzen("meine"); } catch {} await L.warte(2500); try { chatFilterSetzen("alle", true); } catch {} },
-    t: "👥 Nur die Nachrichten des anderen",
-    x: "Mit dem Personen-Knopf siehst du in langen Chats schneller, was du suchst: Einmal tippen – nur die Nachrichten der anderen. Zweimal – nur deine eigenen. Dreimal – nur der Chat-Hintergrund. Und noch einmal – wieder alle. Beim nächsten Öffnen sind immer alle zu sehen." },
-  { v: "chat", vor: rgNaChat(), sel: ["#grussKnopf", "#weKnopf", "#ntZeilenKnopf"], mussSel: true, puls: ["#grussKnopf", "#weKnopf", "#ntZeilenKnopf", "#vnKnopf"], t: "✍️ Gruß, weitere Empfänger, Termin, Schloss",
-    x: "Die Feder setzt eine Grußformel ein, zum Beispiel Liebe Grüße. Mit Plus nimmst du weitere Mitglieder dazu. Der Kalender übernimmt einen Termin aus der Nachricht – Tag und Uhrzeit liest die App selbst heraus. Und das Schloss verschlüsselt – dazu kommen wir am Ende dieser Folge." },
-  { v: "chat", vor: rgNaChat(), sel: ["#waKnopf", "#waEinfKnopf"], mussSel: true, puls: ["#waKnopf"], t: "🟢 Vom Club nach WhatsApp",
-    x: "WhatsApp: Ist jemand in der App noch selten unterwegs? Dann schreibst du deinen Text hier und tippst auf den grünen Knopf WA. Der Text wird nach WhatsApp übernommen – du musst ihn nicht noch einmal tippen." },
+    x: "Das ist Folge zwei zu den Nachrichten – die Besonderheiten: die kleine Zeile über dem Schreibfeld, WhatsApp in beide Richtungen, das Bildschirmfoto mit Markierung, die Ordnung im Chat, die drei Punkte oben rechts, dein eigener Chat-Hintergrund und das Verschlüsseln mit Schlüsselbund. Wie man schreibt und sendet, zeigt Folge eins. Ich sende und speichere nichts – alles ist nur ein Beispiel." },
+  { v: "chat", vor: rgNaChat(() => { const t = $("text"); if (t?.value === "Bin um sieben da 👍") { t.value = ""; t.dispatchEvent(new Event("input", { bubbles: true })); } }), sel: [".eg-griffe"], mussSel: true, t: "🧰 Die kleine Zeile",
+    puls: ["#egKlapp", "#egTast", "#egTon"], pulsSaetze: [1, 2, 3],
+    x: "Über dem Schreibfeld sitzt eine kleine, schmale Zeile – hier in einem Beispiel-Chat. Ganz links klappt der kleine Pfeil den Schreibbereich weg, dann siehst du mehr Nachrichten. Daneben blendet die Tastatur-Taste die Tastatur aus und wieder ein. Der Lautsprecher schaltet die Tippgeräusche an oder aus. Die übrigen Knöpfe zeige ich dir jetzt einzeln." },
+  { v: "chat", vor: rgNaChat(() => { rgNaFormat(true); RG.zurueck.push(() => rgNaFormat(false)); }), nach: () => rgNaFormat(false), sel: ["#formatLeiste"], mussSel: true, t: "𝐅 Fett, kursiv, Farbe und Marker",
+    puls: ["#fettKnopf", '#formatLeiste [aria-label="fett"]', '#formatLeiste [aria-label="kursiv"]', '#formatLeiste [aria-label="durchgestrichen"]', "#formatLeiste .fl-rot", "#formatLeiste .fl-blau", "#formatLeiste .fl-gruen", "#formatLeiste .fl-gelb", "#text"],
+    pulsSaetze: [0, 1, 1, 1, 2, 2, 2, 3, 4],
+    x: "Daneben steht F – damit hebst du Wörter hervor. Tippst du darauf, erscheint diese Leiste: fett, kursiv und durchgestrichen. Dazu die Farben Rot, Blau und Grün. Gelb ist ein Textmarker, wie mit dem Leuchtstift. So geht es: erst ein Wort im Schreibfeld markieren – lange drücken oder doppelt tippen –, dann die Wahl antippen." },
+  { v: "chat", vor: rgNaChat(), nach: () => { try { chatFilterSetzen("alle", true); } catch {} }, sel: ["#chatFilterKnopf"], mussSel: true, t: "👥 Nur die Nachrichten des anderen",
+    puls: ["#chatFilterKnopf"], pulsSaetze: [0],
+    beiSatz: (n) => { const w = ["alle", "andere", "meine", "keine", "alle"][n]; if (w) try { chatFilterSetzen(w, n === 4); } catch {} },
+    x: "Der Knopf mit den Personen ändert, welche Nachrichten du siehst. Einmal tippen: nur die Nachrichten der anderen. Zweimal: nur deine eigenen. Dreimal: nur der Chat-Hintergrund. Und noch einmal: wieder alle. Beim nächsten Öffnen siehst du sowieso wieder alle." },
+  { v: "chat", vor: rgNaChat(), sel: [".eg-griffe"], mussSel: true, t: "🔒 Schloss, Termin, Plus und Gruß",
+    puls: ["#vnKnopf", "#ntZeilenKnopf", "#weKnopf", "#grussKnopf"], pulsSaetze: [0, 1, 2, 3],
+    x: "Das Schloss verschlüsselt eine Nachricht – dazu kommen wir am Ende dieser Folge. Der Kalender übernimmt einen Termin aus einer Nachricht; Tag und Uhrzeit liest die App selbst heraus. Mit Plus nimmst du weitere Mitglieder dazu – sie bekommen die Nachricht auch. Und die Feder setzt eine Grußformel ein, zum Beispiel Liebe Grüße." },
+  { v: "chat", vor: rgNaChat(), sel: ["#waKnopf"], mussSel: true, t: "🟢 Vom Club nach WhatsApp", puls: ["#waKnopf"], pulsSaetze: [2],
+    x: "Jetzt zu WhatsApp. Ist jemand in der App noch selten unterwegs? Dann schreibst du deinen Text wie immer und tippst unten auf den grünen Knopf WA. Der Text wird nach WhatsApp übernommen – du musst ihn nicht noch einmal tippen." },
+  { v: "chat", vor: rgNaChat(), sel: ["#waEinfKnopf"], mussSel: true, t: "📋 Von WhatsApp in den Club", puls: ["#waEinfKnopf"], pulsSaetze: [1],
+    x: "Und umgekehrt: Steht etwas Wichtiges in WhatsApp, drückst du es dort lange und kopierst es. Dann tippst du hier auf das Klemmbrett: Aus WhatsApp einfügen." },
   { v: "chat", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 8px">📋 Aus WhatsApp einfügen</h3>
       <div class="hinweis" data-s="feld" style="padding:8px 10px;border-radius:10px;background:var(--karte2);white-space:pre-line">[05.11.26, 18:02] Anne: Wer bringt den Grill mit?\n[05.11.26, 18:05] Klaus: Ich!</div>
       <div class="knoepfe" style="margin-top:8px"><span class="knopf haupt" data-s="los">✅ Übernehmen</span></div>
       <p class="hinweis" data-s="teilen" style="margin:10px 0 0">Oder in WhatsApp: Nachricht lange drücken → <b>Teilen</b> → <b>Köcheclub</b> → in einen Chat, ins Fotoalbum oder ins Archiv.</p></div></div>`, "ueber"),
-    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ["#waEinfKnopf", '#rgSim [data-s="feld"]', '#rgSim [data-s="los"]', '#rgSim [data-s="teilen"]'], t: "📋 Von WhatsApp in den Club",
-    x: "Und umgekehrt: Steht etwas Wichtiges in WhatsApp, kopierst du es dort und tippst hier auf das Klemmbrett – Aus WhatsApp einfügen. Die App räumt Datum und Namen ordentlich auf, du tippst auf Übernehmen und sendest selbst. Oder du drückst die Nachricht in WhatsApp lange, tippst auf Teilen und wählst Köcheclub – dann entscheidest du: in einen Chat, ins Fotoalbum oder ins eigene Archiv. Ungefragt geht nichts raus." },
-  { v: "chat", vor: rgNaChat(), sel: ["#bfChatKnopf"], mussSel: true, puls: ["#bfChatKnopf"], t: "📸 Bildschirmfoto",
-    x: "Das Bildschirmfoto: Willst du jemandem etwas auf deinem Bildschirm zeigen – zum Beispiel, wo ein Knopf ist oder wo etwas nicht klappt? Tipp auf die Kamera. Es erscheint ein roter Auslöser; du gehst in Ruhe an die Stelle und drückst ihn." },
+    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, t: "📋 Einfügen und übernehmen",
+    puls: ['#rgSim [data-s="feld"]', '#rgSim [data-s="los"]', '#rgSim [data-s="teilen"]'], pulsSaetze: [0, 2, 3],
+    x: "Es öffnet sich dieses Fenster mit dem kopierten Text. Die App räumt Datum und Namen ordentlich auf. Mit Übernehmen steht der Text in deinem Schreibfeld – senden tust du selbst. Noch ein Weg: In WhatsApp lange drücken, Teilen und Köcheclub wählen. Dann entscheidest du, ob es in einen Chat, ins Fotoalbum oder in dein Archiv geht." },
+  { v: "chat", vor: rgNaChat(), sel: ["#bfChatKnopf"], mussSel: true, t: "📸 Bildschirmfoto", puls: ["#bfChatKnopf"], pulsSaetze: [1],
+    x: "Willst du jemandem zeigen, wo ein Knopf ist oder wo etwas nicht klappt? Dann tippst du unten auf die Kamera. Es erscheint ein roter Auslöser. Du gehst in Ruhe an die Stelle und drückst ihn." },
   { v: "chat", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 8px">📸 Bildschirmfoto</h3>
       <div data-s="bild" style="position:relative;height:150px;border-radius:10px;background:var(--karte2);overflow:hidden"><div style="position:absolute;left:18px;top:20px;right:18px;height:24px;border-radius:6px;background:var(--rand)"></div><div style="position:absolute;left:18px;top:60px;width:55%;height:24px;border-radius:6px;background:var(--rand)"></div>
         <div style="position:absolute;left:10px;top:52px;width:62%;height:40px;border:3px solid #e53935;border-radius:50%"></div><div style="position:absolute;right:30px;top:100px;color:#1e88e5;font-size:28px;transform:rotate(-30deg)">➜</div></div>
-      <div data-s="farben" style="display:flex;gap:8px;margin:8px 0">${["#e53935", "#1e88e5", "#43a047", "#fdd835", "#000"].map((c) => `<span style="width:22px;height:22px;border-radius:50%;background:${c};display:inline-block"></span>`).join("")} <span class="hinweis">↩️ 🧽</span></div>
+      <div style="display:flex;gap:8px;margin:8px 0;align-items:center"><span data-s="farben" style="display:inline-flex;gap:8px">${["#e53935", "#1e88e5", "#43a047", "#fdd835", "#000"].map((c) => `<span style="width:22px;height:22px;border-radius:50%;background:${c};display:inline-block"></span>`).join("")}</span> <span class="hinweis" data-s="rueck">↩️ 🧽</span></div>
       <div class="knoepfe" data-s="weg"><span class="knopf haupt">💬 In den Chat</span><span class="knopf">🆘 Als Problem</span><span class="knopf">🗄️ Archiv</span></div></div></div>`, "ueber"),
-    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="bild"]', '#rgSim [data-s="farben"]', '#rgSim [data-s="weg"]'], t: "🖍️ Markieren in Farbe",
-    x: "Auf dem Foto kreist du mit dem Finger ein oder malst einen Pfeil, wo es langgeht. Die Stiftfarbe wählst du mit den Farbpunkten darunter – Rot, Blau, Grün, Gelb oder Schwarz. Der Pfeil zurück nimmt den letzten Strich weg, der Schwamm alles. Dann schickst du das Foto in den Chat, meldest es als Problem oder legst es in dein Archiv." },
+    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, t: "🖍️ Markieren in Farbe",
+    puls: ['#rgSim [data-s="bild"]', '#rgSim [data-s="farben"]', '#rgSim [data-s="rueck"]', '#rgSim [data-s="weg"]'], pulsSaetze: [0, 1, 2, 3],
+    x: "Auf dem Foto kreist du mit dem Finger ein oder malst einen Pfeil, wo es langgeht. Die Stiftfarbe wählst du mit den Farbpunkten: Rot, Blau, Grün, Gelb oder Schwarz. Der Pfeil zurück nimmt den letzten Strich weg, der Schwamm alles. Dann schickst du das Foto in den Chat, meldest es als Problem oder legst es in dein Archiv." },
   { v: "chat", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 10px">📂 Übersichtlich gruppiert</h3>
       ${[["KW 43/26", "28 Nachrichten · Anne, Klaus, Du"], ["Mo, 02.11.26", "6 Nachrichten · Klaus, Du"], ["Gestern", "4 Nachrichten · Anne"]].map(([d, w], i) => `<div data-s="z${i}" style="display:flex;justify-content:space-between;gap:8px;padding:8px 10px;margin:0 0 6px;border-radius:10px;background:var(--karte2)"><span>▸ ${w}</span><b>${d}</b></div>`).join("")}
       <div class="hinweis" style="text-align:center;margin:6px 0" data-s="heute">— Heute —</div><span class="knopf klein" data-s="alle">⤢ Alle aufklappen</span></div></div>`, "ueber"),
-    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="z1"]', '#rgSim [data-s="z0"]', '#rgSim [data-s="heute"]', '#rgSim [data-s="alle"]'], t: "📂 Nachrichten gruppiert",
-    x: "Ordnung im Chat: Damit lange Chats übersichtlich bleiben, sind frühere Tage zu einer Zeile zusammengefasst: wie viele Nachrichten, von wem, und rechts das Datum. Ältere Wochen stehen als eine Zeile mit der Kalenderwoche. Heute und alles Ungelesene bleibt offen. Antippen klappt einen Tag auf, Alle aufklappen öffnet alles." },
-  { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: [rgChatprofiKnopf("#chatBlatt", "🔊 Vorlesen ab"), "#chatBlatt .blatt-innen"], mussSel: true,
-    puls: [rgChatprofiKnopf("#chatBlatt", "🔊 Vorlesen ab"), "#chatSlKnopf", rgChatprofiKnopf("#chatBlatt .na-pfeil-knoepfe", "🖨️ Ausdrucken"), "#chatArchivKnopf"], t: "⋮ Die drei Punkte oben rechts",
-    x: "Oben rechts im Chat sitzen die drei Punkte. Dort findest du alles für den ganzen Chat: vorlesen lassen, Selbstlöschen, den ganzen Chat kopieren, ausdrucken oder in dein Archiv legen, den Chat stumm schalten oder archivieren – und bei Gruppen: Gruppe bearbeiten. Bei Zweier-Chats steht hier auch der Schlüsselbund." },
-  rgAus(RG_GEHEIM, "🔒 Schloss an", "Zum Schluss: geheim schreiben. Für Vertrauliches – zum Beispiel einen Code – tippst du in der kleinen Zeile auf das Schloss. Es wird grün; jetzt schreibst du ganz normal."),
-  rgAus(RG_GEHEIM, "❓ Erst die Rückfrage"),
-  rgAus(RG_GEHEIM, "🔑 Den Schlüssel festlegen"),
-  rgAus(RG_GEHEIM, "🔑 Bequemer: der Schlüsselbund"),
+    nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, t: "📂 Nachrichten gruppiert",
+    puls: ['#rgSim [data-s="z1"]', '#rgSim [data-s="z2"]', '#rgSim [data-s="z0"]', '#rgSim [data-s="heute"]', '#rgSim [data-s="alle"]'], pulsSaetze: [1, 1, 2, 3, 4],
+    x: "Jetzt zur Ordnung im Chat. Damit lange Chats übersichtlich bleiben, steht jeder frühere Tag in einer Zeile: wie viele Nachrichten, von wem, und rechts das Datum. Ältere Wochen stehen zusammen in einer Zeile mit der Kalenderwoche. Heute und alles Ungelesene bleibt offen. Antippen klappt einen Tag auf, Alle aufklappen öffnet alles." },
+  { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: ["#chatBlatt .blatt-innen"], mussSel: true, t: "⋮ Die drei Punkte oben rechts",
+    puls: [rgNaKnopf("#chatBlatt", "8 Stunden"), rgNaKnopf("#chatBlatt", "🔊 Vorlesen ab"), rgNaKnopf("#chatBlatt", "🔊 Ganzen"), rgNaKnopf("#chatBlatt", "📋 Kopieren"), rgNaKnopf("#chatBlatt", "🖨️ Ausdrucken"), rgNaKnopf("#chatBlatt", "🗄️ Chat in mein")],
+    pulsSaetze: [1, 2, 2, 3, 3, 3],
+    x: "Oben rechts im Chat sitzen drei Punkte – dort ist alles für den ganzen Chat. Ganz oben schaltest du den Chat stumm, für eine Weile oder immer. Darunter lässt du dir vorlesen: ab den neuen Nachrichten oder den ganzen Chat. Den ganzen Chat kannst du kopieren, ausdrucken oder in dein Archiv legen." },
+  { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), sel: ["#chatBlatt .blatt-innen"], mussSel: true, t: "⋮ Farben, Selbstlöschen, Archivieren",
+    puls: [rgNaKnopf("#chatBlatt", "🎨 Chat-Farben"), "#chatSlKnopf", "#chatArchivKnopf"], pulsSaetze: [0, 1, 2],
+    x: "Mit Chat-Farben und Hintergrund gestaltest du deine Chats – das zeige ich dir gleich. Bei Selbstlöschen verschwinden neue Nachrichten nach einer festen Zeit. Und Chat archivieren räumt den Chat aus deiner Liste, bis du ihn wieder brauchst." },
+  { v: "chat", vor: rgNaCf, nach: () => $("cfBlatt")?.remove(), sel: ["#cfInhalt"], mussSel: true, t: "🎨 Dein Chat-Hintergrund",
+    puls: ["#cfBlatt .cf-vorschau", () => $("cfBlatt")?.querySelectorAll(".cf-farben")[0], () => $("cfBlatt")?.querySelectorAll(".cf-farben")[1], "#cfBlatt .cf-hgs", "#cfBlatt .cf-foto-wahl"], pulsSaetze: [1, 2, 2, 3, 4],
+    x: "Unter Chat-Farben und Hintergrund richtest du dir deinen Chat-Bereich ein. Oben siehst du gleich, wie es aussieht. Du wählst die Farbe deiner Sprechblasen und die der anderen. Als Hintergrund gibt es Motive, zum Beispiel Wolken, Sonnenuntergang oder Schneeberge. Oder du nimmst ein eigenes Foto – aus der Galerie, mit der Kamera oder als Datei – und stellst ein, wie deutlich es sein soll. Das gilt für alle deine Chats und nur bei dir; die anderen sehen ihre eigenen Farben." },
+  rgAus(RG_GEHEIM, "🔒 Schloss an", { puls: ["#vnKnopf"], pulsSaetze: [1],
+    x: "Zum Schluss: geheim schreiben. Für Vertrauliches, zum Beispiel einen Code, tippst du in der kleinen Zeile auf das Schloss. Es wird grün – jetzt schreibst du ganz normal." }),
+  rgAus(RG_GEHEIM, "❓ Erst die Rückfrage", { pulsSaetze: [1, 2],
+    x: "Weil man das Schloss schnell aus Versehen antippt, fragt die App vor dem Senden nach. Ja, mit Schlüssel – dann wird verschlüsselt. Oder Normal senden – das schaltet das Schloss aus und schickt die Nachricht wie immer." }),
+  rgAus(RG_GEHEIM, "🔑 Den Schlüssel festlegen", { pulsSaetze: [0] }),
+  rgAus(RG_GEHEIM, "🔑 Bequemer: der Schlüsselbund", { pulsSaetze: [0] }),
   { v: "nachrichten", video: "geheim", t: "✅ Fertig mit Folge 2",
-    x: "Das war Folge zwei: die kleine Zeile, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte und das Verschlüsseln. Zu einigen Teilen gibt es eigene, ausführlichere Videos, zum Beispiel Chat für Fortgeschrittene und Geheim schreiben. Probier es in Ruhe aus – kaputt machen kannst du nichts." },
+    x: "Das war Folge zwei: die kleine Zeile, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte, dein Chat-Hintergrund und das Verschlüsseln. Zu einigen Teilen gibt es eigene, ausführlichere Videos, zum Beispiel Chat für Fortgeschrittene und Geheim schreiben. Probier es in Ruhe aus – kaputt machen kannst du nichts." },
 ].filter(Boolean);
 // ---------- 2.348.0 KC-CLUB-VIDEO-GRUPPEN (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
 // 2.348.0 KC-CLUB-VIDEO-GRUPPEN: zeigt das Formular „Neue Gruppe“ mit einem Beispiel (Küchenteam) und einen Beispiel-Gruppenchat – nur auf dem
@@ -3034,13 +3090,14 @@ function rgpAbspielen(d) {
     RGP.quelle = q; q.start();
   });
 }
-async function rgpSprich(text) { // true = bis zum Ende gesprochen, false = unterbrochen
+async function rgpSprich(text, beiSatz) { // true = bis zum Ende gesprochen, false = unterbrochen; beiSatz(n) vor jedem Satz (KC-CLUB-VIDEO-SATZPULS)
   const lauf = ++RGP.lauf, saetze = (String(text).match(/[^.!?]+[.!?]*/g) || [String(text)]).map((x) => x.trim()).filter(Boolean);
   if (!saetze.length) return true;
   let naechst = rgpRechnen(saetze[0]);
   for (let i = 0; i < saetze.length; i++) {
     const d = await naechst; if (lauf !== RGP.lauf) return false;
     naechst = i + 1 < saetze.length ? rgpRechnen(saetze[i + 1]) : null;
+    try { beiSatz?.(i); } catch {}
     await rgpAbspielen(d); if (lauf !== RGP.lauf) return false;
   }
   return true;
@@ -3146,7 +3203,7 @@ function rgZeigen() {
     return;
   }
   if (RG.vorI !== RG.i) { // Station wechselt: vorige aufräumen, neue vorbereiten (nur einmal – nicht beim Fortsetzen nach Pause)
-    const alt = RG.st[RG.vorI]; RG.vorI = RG.i; RG.liveI = -1; try { alt?.nach?.(); } catch {}
+    const alt = RG.st[RG.vorI]; RG.vorI = RG.i; RG.liveI = -1; RG.satzNr = 0; try { alt?.nach?.(); } catch {}
     if (s.v !== aktuelleAnsicht) zeige(s.v, true); // ohne neue Verlaufs-Einträge – „Zurück“ bleibt wie vorher
     if (!s.nur || s.nur()) try { s.vor?.(); } catch (e) { console.warn("rundgang vor", e); }
     if (!s.nur || s.nur()) try { rgAutoSicht(s); } catch (e) { console.warn("rundgang sicht", e); } // 2.346.0 KC-CLUB-VIDEO-PASST
@@ -3174,18 +3231,19 @@ function rgHin() { const e = RG.ziel; if (!e) return scrollTo(0, 0);
 // Ohne Sprachausgabe oder wenn das Handy kein „fertig“ meldet: Lesezeit nach Wortzahl.
 function rgSprechen(text) {
   // Mindestzeit: Handys ohne deutsche Stimme melden „fertig“ oft sofort – dann bleibt der Text trotzdem lange genug zum Lesen stehen
-  const lauf = RG.lauf, saetze = text.match(/[^.!?]+[.!?]*/g) || [text], lesezeit = 2500 + text.split(/\s+/).length * 420, frueh = Date.now() + lesezeit * 0.75;
+  const lauf = RG.lauf, saetze = rgSaetze(text), lesezeit = 2500 + text.split(/\s+/).length * 420, frueh = Date.now() + lesezeit * 0.75;
   const weiter = () => { if (lauf === RG.lauf && RG.an && !RG.pause && RG.liveLaeuft) { RG.nachLive = weiter; return; } // erst die Live-Vorführung zu Ende
     if (lauf === RG.lauf && RG.an && !RG.pause) { clearTimeout(RG.uhr); RG.uhr = setTimeout(() => { if (!rgVerweis(RG.st[RG.i])) rundgangSchritt(1, true); }, Math.max(1200, frueh - Date.now())); } };
   if (rgpAktiv()) { // 2.348.0: heruntergeladene Stimme spricht
     RG.uhr = setTimeout(weiter, lesezeit * 3 + 8000); // Sicherheitsnetz (Rechnen dauert auf alten Handys etwas)
-    rgpSprich(text).then((fertig) => { if (fertig && lauf === RG.lauf) weiter(); }).catch(() => { if (lauf === RG.lauf) weiter(); });
+    RG.satzNr = 0; rgpSprich(text, (n) => { if (lauf === RG.lauf) rgSatz(n); }).then((fertig) => { if (fertig && lauf === RG.lauf) weiter(); }).catch(() => { if (lauf === RG.lauf) weiter(); });
     return;
   }
   if (!RG.ton) return weiter();
   RG.uhr = setTimeout(weiter, lesezeit * 1.8); // Sicherheitsnetz
   try {
-    saetze.forEach((x, n) => { const u = rgAusgabe(x.trim()); if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
+    RG.satzNr = 0;
+    saetze.forEach((x, n) => { const u = rgAusgabe(x.trim()); u.onstart = () => { if (lauf === RG.lauf) rgSatz(n); }; if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
   } catch { weiter(); }
 }
 function rgLage() {
