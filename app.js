@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.861.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.862.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13631,6 +13631,10 @@ const WCH_LISTE = [
   { id: "systemcheck", gruppe: "betrieb", sym: "🚨", name: "System-Check", kurz: "Gesamtprüfung", job: "kc-system-check-auto-15m",
     beobachtet: "die ganze Technik in einer Prüfung (Datenbank, Server, Dienste); doppelte Alarme werden unterdrückt", grenze: "Fehler oder Warnung", wo: "Datenbank (Zeitplan) → System-Check",
     meldet: "Zusätzlich eigene Push/E-Mail über den Communicator bei Fehler, Warnung und Entwarnung.", tun: "Meldung lesen, dann unter 📊 Lage nachsehen" },
+  { id: "notpaket", gruppe: "sicherung", sym: "🧯", name: "Notfall-Paket", kurz: "Kopie für den Ersatz-Server aktuell?", // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH
+    beobachtet: "ob das Notfall-Paket für den Ersatz-Server (Notbetrieb) gebaut wird – auch wenn der Server mitten im Bau abbricht (Rechenzeit)", grenze: "gelb, wenn auch der Neuversuch nach 30 Min. fehlschlägt; rot, wenn das Paket älter als ein Tag ist", takt: "alle 15 Min. (nachts nur einmal)", wo: "Server (Zeitplan)",
+    ergebnis: (d) => { const n = d?.notpaket; return n?.hochgeladen_am ? `gebaut ${wchUhr(n.hochgeladen_am)}${n.mitglieder ? ` · ${n.mitglieder} Mitglieder` : ""}${n.fehler_am ? ` · letzter Fehler ${wchUhr(n.fehler_am)}` : ""}` : ""; },
+    meldet: "Jeder Fehler und jeder Abbruch steht im Protokoll (notpaket_fehler); bleibt es gelb oder rot, meldet sich der Wächter.", tun: "Admin → 🚑 Notbetrieb ansehen; meist klappt der nächste Bau von selbst", seit: "05.11.2026" },
   { id: "messung", gruppe: "betrieb", sym: "⚖️", name: "Mess-Stationen", kurz: "Tempo und Größe", job: "kc-club-messung-30min",
     beobachtet: "Antwortzeit, Verbindungen, Netzfehler und Größe der Datenbank (dazu alle 30 Min. die Last je Bereich)", grenze: "Antwortzeit über 300 ms = auffällig", wo: "Datenbank (2 Zeitpläne)",
     ergebnis: (d) => { const a = d.mess?.api, b = d.mess?.db; return [a && `Antwortzeit ${a.db_ms} ms`, b && `${b.verbindungen} Verbindungen`, b && `${b.net_fehler} Netzfehler`, b?.bytes && `Datenbank ${Math.round(b.bytes / 1048576)} MB`].filter(Boolean).join(" · "); },
