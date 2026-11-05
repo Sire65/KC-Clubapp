@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.860.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.861.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2030,7 +2030,7 @@ const RUNDGAENGE = [
   { id: "installieren", stand: "1", zeit: "04.11.2026", sym: "📲", t: "App installieren – so geht’s", u: "Persönlicher Link, Browser wählen, Kochmütze auf dem Startbildschirm (ca. 2 Min.)", st: () => RG_INST_START },
   { id: "inst_chrome", stand: "1", zeit: "04.11.2026", sym: "🔵", t: "Installieren mit Chrome (Android)", u: "Drei Punkte, App installieren, Installieren (ca. 1 Min.)", st: () => RG_INST_CHROME },
   { id: "inst_edge", stand: "1", zeit: "04.11.2026", sym: "🌊", t: "Installieren mit Edge (Android)", u: "Menü, Zum Telefon hinzufügen, Installieren (ca. 1 Min.)", st: () => RG_INST_EDGE },
-  { id: "inst_samsung", stand: "1", sym: "🟣", t: "Installieren mit Samsung Internet", u: "Menü, Seite hinzufügen zu, Startbildschirm (ca. 1 Min.)", st: () => RG_INST_SAMSUNG },
+  { id: "inst_samsung", stand: "1", zeit: "05.11.2026", sym: "🟣", t: "Installieren mit Samsung Internet", u: "Menü, Seite hinzufügen zu, Startbildschirm (ca. 1 Min.)", st: () => RG_INST_SAMSUNG },
   { id: "inst_safari", stand: "1", sym: "🧭", t: "Installieren auf iPhone und iPad (Safari)", u: "Teilen, Zum Home-Bildschirm, Code eingeben (ca. 2 Min.)", st: () => RG_INST_SAFARI },
   { id: "inst_firefox", stand: "1", sym: "🦊", t: "Installieren mit Firefox (Android)", u: "Drei Punkte, Zum Startbildschirm hinzufügen (ca. 1 Min.)", st: () => RG_INST_FIREFOX },
   { id: "inst_geraet", stand: "1", sym: "💻", t: "Weiteres Gerät: Tablet oder PC", u: "Mit dem 6-stelligen Code anmelden und installieren (ca. 2 Min.)", st: () => RG_INST_GERAET },

@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.861.0 – Zeitansage: Video „Installieren mit Samsung Internet“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 5 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Menü ☰ → Seite hinzufügen zu → Startbildschirm → Hinzufügen). Zeitansage „knapp eine Minute“ eingeschaltet.
+- Rückweg: Version 2.860.0 einspielen.
+
 ## 2.860.0 – Zeitansage: Video „Installieren mit Edge (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 4 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (Menü unten ☰ → Zum Telefon hinzufügen → Installieren). Zeitansage „knapp eine Minute“ eingeschaltet.
 - Rückweg: Version 2.859.0 einspielen.
