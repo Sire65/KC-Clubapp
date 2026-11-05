@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.863.0";
+const SERVER_VERSION = "2.865.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1302,9 +1302,27 @@ async function installStandMerken(pid: string, p: any, vorab: { wert: any } | nu
 // KC-CLUB-ONLINE-SEIT (2.25.5, Wunsch Hansi „wenn online, dann online seit …“): Beginn der aktuellen Sitzung je Person merken.
 // Die App meldet sich alle 15–60 s („online“); liegt die letzte Meldung länger als ONLINE_SEK zurück, beginnt eine neue Sitzung.
 // Geschrieben wird nur bei neuer Sitzung oder alle 30 s (Einstellungs-Tabelle, Schlüssel „online_seit“ – keine neue Tabelle).
+// KC-CLUB-ONLINE-ECHT (Wunsch Hansi 05.11.2026: „Wenn sie bei mir als online angezeigt wird und ich klopfe an, sollte sie auch wirklich online sein“ –
+// Andrea galt nach dem Weglegen der App noch bis zu 150 s als online): Die App meldet beim Weglegen „weg“ (online_seit.weg). Wer „weg“ gemeldet hat
+// und seitdem nicht wieder sichtbar war (online_seit.zuletzt kommt nur von der sichtbaren App), gilt sofort als nicht online – Online-Liste, Anklopfen,
+// „an alle Online“, Push-Unterdrückung. Ohne „weg“ (alte App, Meldung nicht angekommen) bleibt es bei den 150 s.
+const ONLINE_WEG_TOLERANZ_MS = 3000;
+const SPUR_START_VERZUG_MS = 1500, SPUR_START_FENSTER_MS = 3 * 60000; // KC-CLUB-SPUR-START-SERVER: die App meldet den Start 1,5 s nach dem Öffnen // ein Online-Ping, der kurz vor dem Weglegen abging und erst danach ankommt, hebt „weg“ nicht auf
+const istWeg = (w: any) => !!w?.weg && Date.parse(w.weg) >= (Date.parse(w.zuletzt || "") || 0);
+async function wegSet(ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const { data } = await db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "online_seit").in("person_id", ids);
+  return new Set((data ?? []).filter((x: any) => istWeg(x.wert)).map((x: any) => x.person_id as string));
+}
+async function wegMerken(pid: string) {
+  const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
+  await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { ...(data?.wert || {}), weg: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+}
 async function onlineSeitMerken(pid: string, vorab?: { wert: any } | null) { // KC-CLUB-ONLINE-SPARSAM: vorab = schon gelesener Eintrag (undefined = selbst lesen)
   const { data } = vorab !== undefined ? { data: vorab } : await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
-  const jetztMs = Date.now(), z = Date.parse(data?.wert?.zuletzt || ""), neu = !(z > 0) || jetztMs - z > ONLINE_SEK * 1000;
+  const jetztMs = Date.now(), z = Date.parse(data?.wert?.zuletzt || ""), w = Date.parse(data?.wert?.weg || "");
+  if (w > 0 && jetztMs - w < ONLINE_WEG_TOLERANZ_MS) return; // KC-CLUB-ONLINE-ECHT: verspäteter Ping von vor dem Weglegen
+  const warWeg = istWeg(data?.wert), neu = !(z > 0) || jetztMs - z > ONLINE_SEK * 1000 || warWeg; // nach „weg“ beginnt eine neue Sitzung
   if (!neu && jetztMs - z < 30000) return;
   await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { seit: neu ? jetzt() : data!.wert.seit, zuletzt: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
 }
@@ -1315,13 +1333,14 @@ const IN_APP_SEK = 75;
 async function geradeInDerApp(ids: string[]): Promise<Set<string>> {
   if (!ids.length) return new Set();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).in("person_id", ids).gte("zuletzt_gesehen", new Date(Date.now() - IN_APP_SEK * 1000).toISOString());
-  return new Set((data ?? []).map((x: any) => x.person_id));
+  const drin = (data ?? []).map((x: any) => x.person_id as string), weg = await wegSet(drin).catch(() => new Set<string>()); // KC-CLUB-ONLINE-ECHT: App weggelegt → wieder Push
+  return new Set(drin.filter((id) => !weg.has(id)));
 }
 async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", seit).not("person_id", "like", "KC-P-TEST%");
-  const ids = (data ?? []).map((x: any) => x.person_id), [zeigen, inko] = await Promise.all([onlineZeigenMap(ids), inkognitoSet(ids)]);
-  return new Set(ids.filter((id: string) => zeigen.get(id) !== false && (mitInkognito || !inko.has(id))));
+  const ids = (data ?? []).map((x: any) => x.person_id), [zeigen, inko, weg] = await Promise.all([onlineZeigenMap(ids), inkognitoSet(ids), wegSet(ids).catch(() => new Set<string>())]);
+  return new Set(ids.filter((id: string) => zeigen.get(id) !== false && (mitInkognito || !inko.has(id)) && !weg.has(id))); // KC-CLUB-ONLINE-ECHT
 }
 // KC-CLUB-ONLINE-SPARSAM (2.485.0): wie onlineJetzt(), holt aber „online“, „inkognito“ und weitere Einstellungen der Online-Leute in EINER Abfrage
 // 2.597.0 KC-CLUB-ONLINE-PAKET (Prüfung „bündeln statt einzeln nacheinander“, Wunsch Hansi „sorgfältig und vorsichtig“): Zugang, Einstellungen
@@ -1339,12 +1358,13 @@ async function onlinePaketHolen(seit: string, weitere: string[]): Promise<{ ids:
 }
 async function onlineJetztMit(weitere: string[]): Promise<{ on: Set<string>; einst: Map<string, Map<string, any>> }> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
+  if (!weitere.includes("online_seit")) weitere = [...weitere, "online_seit"]; // KC-CLUB-ONLINE-ECHT: für „weg“
   const pk = await onlinePaketHolen(seit, weitere);
   if (pk) {
     const einst = new Map<string, Map<string, any>>();
     for (const x of pk.einst) { const m = einst.get(x.schluessel) ?? new Map(); m.set(x.person_id, x.wert); einst.set(x.schluessel, m); }
     const inko = new Set(pk.inko.map(String)), ids = [...new Set(pk.ids.map(String))];
-    const erg = { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id))), einst };
+    const erg = { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))), einst };
     const t0 = Date.now();
     if (Math.random() < 1 / ONLINE_PAKET_VERGLEICH) nebenbei(onlineJetztMitAlt(weitere, seit).then(async (alt) => {
       const a = [...alt.on].sort().join(), b = [...erg.on].sort().join();
@@ -1371,7 +1391,7 @@ async function onlineJetztMitAlt(weitere: string[], seit: string): Promise<{ on:
   const inkoAn = ids.filter((id) => einst.get("inkognito")?.get(id)?.an === true);
   let inko = new Set<string>(); // 2.6.1: Inkognito gilt nur, solange die Person Admin ist (wie inkognitoSet)
   if (inkoAn.length) { const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true).in("person_id", inkoAn); inko = new Set((ad ?? []).map((x: any) => x.person_id as string)); }
-  return { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id))), einst };
+  return { on: new Set(ids.filter((id) => einst.get("online")?.get(id)?.zeigen !== false && !inko.has(id) && !istWeg(einst.get("online_seit")?.get(id)))), einst };
 }
 // Anklopfen an mich (offen, ANKLOPFEN_SEK, neueste 3) und von mir (10 Min.) aus einer gemeinsamen Abfrage – wie vorher die zwei Abfragen
 const klopfArt = (a: unknown) => (a === "sprechen" || a === "dazukommen" ? a : "schreiben"); // KC-CLUB-GESPRAECHE: + dazukommen
@@ -14504,6 +14524,23 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const schritte = data.flatMap((z: any) => (Array.isArray(z.details?.s) ? z.details.s : []).map((x: any) => ({ p: z.person_id as string, t: Number(x[0]), w: String(x[1]), mit: x[2] == null ? null : String(x[2]) })))
           .filter((x: any) => berlinTag(new Date(x.t)) === tag).sort((a: any, b: any) => a.t - b.t)
           .filter(function (this: Set<string>, x: any) { const k = `${x.p}|${x.t}|${x.w}|${x.mit ?? ""}`; if (this.has(k)) return false; this.add(k); return true; }, new Set<string>()); // KC-CLUB-SPUR-KEEPALIVE: doppelt gesendete Schritte nur einmal
+        // KC-CLUB-SPUR-START-SERVER (Fund Hansi 05.11.2026: „Thomas ist online, aber in seinem Verlauf ist nix zu sehen“ – iPhone/Chrome, nur kurz drin,
+        // die Schritte blieben auf dem Handy): den Start meldet die App einmal je Sitzung 1,5 s nach dem Öffnen (diagnose_start, normaler Aufruf).
+        // Fehlt dazu innerhalb von 3 Min. ein Schritt „geöffnet“/„wieder geöffnet“ vom Handy, steht „geöffnet“ trotzdem im Verlauf. Nur Uhrzeit, nie Inhalte.
+        {
+          let q = db.from("kc_club_protokoll").select("person_id,zeit,details").eq("aktion", "diagnose_start").not("person_id", "is", null)
+            .gte("zeit", new Date(t0 - 86400000).toISOString()).lt("zeit", new Date(t0 + 2 * 86400000).toISOString()).limit(2000);
+          if (pid) q = q.eq("person_id", pid);
+          const { data: st } = await q;
+          let dazu = 0;
+          for (const z of st ?? []) {
+            const d: any = (z as any).details || {}, p0 = String((z as any).person_id), t = Date.parse((z as any).zeit) - SPUR_START_VERZUG_MS;
+            if (d.zugang_kopiert || d.zugang_pc || !p0.startsWith("KC-P-") || !Number.isFinite(t) || berlinTag(new Date(t)) !== tag) continue;
+            if (schritte.some((x: any) => x.p === p0 && Math.abs(x.t - t) < SPUR_START_FENSTER_MS && (x.w === "geoeffnet" || /^wieder_/.test(x.w)))) continue;
+            schritte.push({ p: p0, t, w: "geoeffnet", mit: null }); dazu++;
+          }
+          if (dazu) schritte.sort((a: any, b: any) => a.t - b.t);
+        }
         if (!pid) {
           // KC-CLUB-SPUR-JETZT (2.81.0, Wunsch Hansi „was macht jeder gerade, was ruft er auf“): letzter Schritt je Person (nur die Art, nie Inhalte)
           const je = new Map<string, { anzahl: number; erste: number; letzte: number; w: string; k: string | null }>();
@@ -15274,6 +15311,10 @@ Köcheclub-App`,
       }
 
       // ----- Online & Anklopfen (KC-CLUB-ONLINE) -----
+      case "weg": { // KC-CLUB-ONLINE-ECHT: App wurde weggelegt (in den Hintergrund oder geschlossen) – sofort nicht mehr online
+        if (!ich.nurLesen) await wegMerken(ich.person_id);
+        return json({ ok: true });
+      }
       case "online": {
         // KC-CLUB-ONLINE-SPARSAM (2.485.0, Rangliste 18.10.: 17 Abfragen je Online-Meldung, 20 % aller gemessenen): gleiche Antwort, weniger Abfragen –
         // eigene Einstellungen in EINER Abfrage, Anklopfen und Anrufe je in EINER Abfrage (Aufteilen in onlineAnklopfenTeilen/onlineAnrufeTeilen),
