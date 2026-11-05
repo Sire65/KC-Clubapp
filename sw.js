@@ -1,16 +1,20 @@
 // KC Club-App – Service Worker: Seite zuerst aus dem Netz (offline aus dem Speicher), Push-Benachrichtigungen, Update.
 // VERSION muss bei jeder neuen Version mit version.json, APP_VERSION in app.js und app.js?v= in index.html übereinstimmen.
-const VERSION = "2.862.0";
+const VERSION = "2.863.0";
 const CACHE = "kc-club-" + VERSION;
 const DATEIEN = ["./", "index.html", "app.js?v=" + VERSION, "manifest.webmanifest", "kc-kochmuetze-weiss.webp", "icon-192.png", "icon-512.png", "badge-anruf.png", "badge-video.png", "badge-muetze.png", "kuckuck-ruf.mp3"]; // 2.406.0: Kuckucksruf (CC0-Aufnahme) // 2.237.0: Statusleisten-Symbole für laufende Gespräche
 // KC-CLUB-SCHNELLSTART-DATEI (2.24.8): das Programm app.js?v=<Version> ändert sich nie unter derselben Adresse → aus dem Speicher
 // dieser Version liefern (schnell, vom Handy fertig übersetzt); fehlt es dort, aus dem Netz holen und merken.
-// 2.731.0 KC-CLUB-TEILE (Prüfbericht C): nachladbare Programmteile teile/<name>.js?v=<Version> – gleiche Namen wie TEILE_LISTE in app.js.
+// 2.731.0 KC-CLUB-TEILE (Prüfbericht C): nachladbare Programmteile – gleiche Namen wie TEILE_LISTE in app.js.
+// 2.863.0 KC-CLUB-UPDATE-NUR-GEAENDERT (Wunsch Hansi 05.11.: „prüfe, ob bei Updates jedes Mal das komplette Programm übertragen werden muss“):
+// Adresse teile/<name>.js?h=<Kurz-Fingerabdruck> statt ?v=<Version>. Ein unverändertes Teil behält seine Adresse – beim Update wird es aus dem
+// Speicher der alten Version übernommen statt neu geladen (≈ 550 KB weniger je Update). Die Adresse bezeichnet genau einen Inhalt: nie Mischstand
+// (Regel 16), der Browser prüft zusätzlich den vollen Fingerabdruck (sri). Werte pflegt tools/teile-pruefsumme.mjs (der Vertragstest prüft sie).
 // Sie gehören zum Programm dieser Version: beim Einrichten mit in den Speicher (alles oder nichts), danach aus dem Speicher wie app.js.
-const TEILE = ["anbieter", "buero", "hilfe", "hilfetipp", "magazin", "nutzung", "probe", "rechner", "rueckseite", "spiele", "strom", "szenen", "tischlive", "videos"];
-DATEIEN.push(...TEILE.map((t) => `teile/${t}.js?v=${VERSION}`));
+const TEILE = { anbieter: "P5YH-VJ7JvIqD3Aj", buero: "bTEiYXM6UcH05EqA", hilfe: "qPS9_H66zIS2QeGH", hilfetipp: "cOxaOEtxAQP_CZRK", magazin: "Cw5edAdzYjNjuxiW", nutzung: "V8qj7CYfmmydkhpp", probe: "11uzQ0U_9pY4FZjT", rechner: "UWrOf1EIXxhsoWWw", rueckseite: "NDuho5dgDL13uhtc", spiele: "df8Lw0oCMMrnIIB7", strom: "dNcc30G8i65eI40h", szenen: "s4RdrCFjnxFICz5Z", tischlive: "RCmsKY-DTRfsCMRH", videos: "8ImQSJ85jgmgYX-W" };
+DATEIEN.push(...Object.entries(TEILE).map(([t, h]) => `teile/${t}.js?h=${h}`));
 const istProgramm = (url) => url.pathname.endsWith("/app.js") && url.searchParams.get("v") === VERSION;
-const istTeil = (url) => /\/teile\/[a-z0-9-]+\.js$/.test(url.pathname) && url.searchParams.get("v") === VERSION;
+const istTeil = (url) => { const m = /\/teile\/([a-z0-9-]+)\.js$/.exec(url.pathname); return !!m && Object.prototype.hasOwnProperty.call(TEILE, m[1]) && url.searchParams.get("h") === TEILE[m[1]]; };
 
 // KC-CLUB-UPDATE-SICHER (1.97.0): beim Einrichten die Dateien am Browser-Zwischenspeicher VORBEI holen (cache: "reload") –
 // sonst kann ein neuer Speicher noch die alte Seite enthalten (Mischstand alt/neu, AGENTS Regel 16)

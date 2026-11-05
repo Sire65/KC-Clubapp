@@ -28,7 +28,7 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 - **Registry** `TEILE_LISTE` in `app.js`: je Teil die Einstiegs-Funktionen und der Fingerabdruck (`sri`, sha384).
 - **Platzhalter**: Für jede Einstiegs-Funktion steht beim Start ein Platzhalter bereit. Erster Aufruf → Teil laden → echte Funktion aufrufen.
   Steht eine Funktion (noch) in `app.js`, gilt die – der Platzhalter wird dann gar nicht angelegt.
-- **Nie Mischstand** (Regel 16): Teil-Adresse `teile/<name>.js?v=<Version>`; der Browser führt ein Teil nur aus, wenn der Fingerabdruck
+- **Nie Mischstand** (Regel 16): Teil-Adresse `teile/<name>.js?h=<Kurz-Fingerabdruck>` (seit 2.863.0, vorher `?v=<Version>` – ein unverändertes Teil wird beim Update aus dem Speicher übernommen statt neu geladen); der Browser führt ein Teil nur aus, wenn der Fingerabdruck
   exakt passt. Passt er nicht (z. B. alte App, Server hat schon die neue Datei), wird das Teil nicht ausgeführt und nach einem Update gesucht.
 - **Service Worker**: `TEILE` in `sw.js` – beim Update kommen alle Teile mit app.js in den Speicher der neuen Version (alles oder nichts),
   danach aus dem Speicher, auch ohne Netz.
@@ -38,7 +38,7 @@ Release-Artefakte sind unveränderlich (AGENTS Regel 17) – zurück geht es imm
 ## Pflege-Regeln
 
 1. Nach jeder Änderung an `teile/*.js`: `node tools/teile-pruefsumme.mjs` (sonst wird der Vertragstest rot).
-2. Neues Teil: Datei `teile/<name>.js`, Eintrag in `TEILE_LISTE` (app.js) und `TEILE` (sw.js), Fingerabdruck eintragen.
+2. Neues Teil: Datei `teile/<name>.js`, Eintrag in `TEILE_LISTE` (app.js) und `TEILE` (sw.js), dann `node tools/teile-pruefsumme.mjs` – trägt den Fingerabdruck in app.js und den Kurz-Fingerabdruck in sw.js ein.
 3. Ein Teil darf nur Funktionen enthalten, die **nicht beim Start** gebraucht werden. Was das Hauptprogramm von einem Teil braucht, geht nur
    über Einstiegs-Funktionen (Platzhalter). Kein `const`/`let` mit gleichem Namen wie im Hauptprogramm (der Vertragstest übersetzt alles zusammen).
 4. `import()` in einem Teil löst sich vom Teil aus auf (teile/…) – nur `import(new URL("lib/…", location.href).href)` benutzen (Test prüft das).

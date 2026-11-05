@@ -15,7 +15,7 @@ assert.ok(bu.includes('if (w === "ton") anrufen(pid, false); else if (w === "vid
 assert.ok(!/\["👥", "Nachricht an Mitglieder"/.test(bu) && bu.includes('[L, "🪧", "Schild drucken", "Hinweis · Preisliste · Öffnungszeiten", "schStart()"]'), "Füller nur Handgeschriebenes, Schild beim Drucker");
 assert.ok(html.includes('grid-template-areas: "lampe monitor monitor kalender" "korb monitor monitor drucker" "handy kaffee fueller telefon" "tastatur tastatur tastatur rechner";'));
 // Rechner: eigener Teil, kein eval, Sprache, Sprachbefehl von überall
-assert.ok(app.includes('rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-') && lies("sw.js").includes('"rechner"'));
+assert.ok(app.includes('rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-') && lies("sw.js").includes('rechner: "'));
 assert.ok(!/\beval\(|new Function/.test(re), "kein eval");
 assert.ok(app.includes('if (b.art === "rechnen") { sbStopp(); return rechnerOeffnen(b.was); }'));
 const k = new Function(re.slice(re.indexOf("const RE_WORT"), re.indexOf("const reHuebsch")) + "; return { rechnerAusdruck, rechnerRechnen };")();

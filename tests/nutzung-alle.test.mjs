@@ -15,7 +15,7 @@ assert.ok(/ich\.zugang !== "mitglied"\) throw/.test(s) && /\[7, 30, 90\]\.includ
 assert.ok(/x\.geraete >= NUTZUNG_ALLE_MIN/.test(s) && /const NUTZUNG_ALLE_MIN = 3;/.test(server), "kleine Gruppen nicht erkennbar");
 assert.ok(/const \{ version: _v, \.\.\.rest \} = data/.test(s), "App-Version nicht an Mitglieder");
 // App: eigenes Nachlade-Teil, Kachel unter Technik, Hilfe
-assert.ok(/nutzung: \{ einstieg: \["nuStart"\], sri: "sha384-/.test(app) && /"nutzung"/.test(sw), "Teil mit Fingerabdruck und im Offline-Speicher");
+assert.ok(/nutzung: \{ einstieg: \["nuStart"\], sri: "sha384-/.test(app) && /nutzung: "/.test(sw), "Teil mit Fingerabdruck und im Offline-Speicher");
 assert.ok(/\{ id: "nutzung_alle", sym: "📈", t: "So nutzen wir die App",[^\n]*aktion: "nuStart\(\)"/.test(app), "Kachel unter Technik");
 assert.ok(/id: "nutzung_alle", thema: "technik"/.test(app) && /nuBlatt: "📈 So nutzen wir die App"/.test(app), "Hilfe und Fenstername");
 for (const f of ["nuWannHtml", "nuTageHtml", "nuVersandHtml", "nuBereicheHtml", "nuGeraeteHtml", "nuPfeil"]) assert.ok(teil.includes(`function ${f}(`), f);
