@@ -9,6 +9,8 @@ Entscheidung Hansi (05.11.): „**Jeder muss selber seinen Plan anpassen.** Nach
 werden, ob er etwas an seiner Einsatzzeit ändern muss. **Wenn nein, bleibt es dabei. Wenn ja, werden die neuen Zeiten in DP2
 übernommen – als geändert.** Und dann gibt es ja noch weitere Sonderzeiten, in denen man etwas für den Club erledigt hat.“
 Ergänzung Hansi (05.11.): „**Bei jeder Zeitänderung müssen Clubsprecher, Kassenwart und Admin Bescheid bekommen.**“
+Entscheidung Hansi (05.11.): „**Fahrzeit zählt nicht als Arbeitszeit, sondern nur vor Ort. Km-Pauschale muss gesondert angegeben werden über Erstattung.**“
+→ Das gilt für **alle** Zeiten ohne Stechuhr, auch für Sonderzeiten. Die bisherige Regel „von zuhause bis zuhause“ (Betreiber 15.10.2026) entfällt.
 
 ## 1. Ausgangslage (Stand Code)
 
@@ -27,6 +29,8 @@ Ergänzung Hansi (05.11.): „**Bei jeder Zeitänderung müssen Clubsprecher, Ka
 4. Zeiten in **Viertelstunden**, Auswahl statt Freitext, nur eigene Einsätze.
 5. Jede Änderung wird protokolliert (wer, wann, vorher/nachher). Der Planer sieht alle „geändert“-Fälle in einer Liste.
 6. **Bei jeder Zeitänderung bekommen Clubsprecher, Kassenwart und Admin Bescheid** (Abschnitt 3a).
+7. **Fahrzeit zählt nie als Arbeitszeit.** Es zählt nur die Zeit vor Ort bzw. die Zeit der eigentlichen Arbeit. Gefahrene Kilometer
+   rechnet man **gesondert über die Erstattung** ab (km-Pauschale, nur Fahrer der Fahrgemeinschaft).
 
 ## 3. Ablauf nach jedem Aufbau- und Nachbereitungstag
 
@@ -97,8 +101,10 @@ Material holen, Vorbereitung zuhause …
 
 - Die Rückfrage aus Schritt 1 hat unten zusätzlich **„➕ Ich habe noch etwas anderes für den Club erledigt“**. Der Knopf steht auch dauerhaft
   in „Mein Dienst“ und bei Twinkey.
-- Er öffnet die vorhandene **Stundenmeldung** (`hour-reports.js`): Einsatz bzw. Anlass, Tag, Zeit (bei Fahrten von zuhause bis zuhause),
-  Tätigkeit aus der Auswahl, auf Wunsch weitere Kollegen, danach „🚗 Fahrtkosten/Auslagen erfassen“.
+- Er öffnet die vorhandene **Stundenmeldung** (`hour-reports.js`): Einsatz bzw. Anlass, Tag, Zeit **nur der Arbeit vor Ort, ohne Fahrzeit**,
+  Tätigkeit aus der Auswahl, auf Wunsch weitere Kollegen.
+- Danach kommt der Hinweis: „**Gefahren?** Kilometer bitte über die Erstattung angeben“ mit dem Knopf **„🚗 Fahrtkosten / km-Pauschale erfassen“**
+  (öffnet die vorhandene Erstattung, vorausgefüllt mit Tag und Anlass). Die Fahrt selbst steht nicht in den Stunden.
 - **Neu:** Anlass **„Sonstiges für den Club“** ohne festen Sondereinsatz, damit jede Clubarbeit meldbar ist (Tätigkeit + Bemerkung Pflicht).
 - Wie bisher: Status „gemeldet“ → Planer bestätigt oder lehnt mit Grund ab → Istzeit `self_report`. Das bleibt so, weil es dafür
   keinen Plan gibt, mit dem man vergleichen könnte (siehe Frage 6.4).
@@ -117,7 +123,7 @@ Einstellung je Tag: `stempeluhr: false` (Standard für `prep` und `after`), dami
 
 1. **Keine Antwort bis zur Frist** (3 Tage nach dem Tag): **Es gilt das Soll, gekennzeichnet „⏳ nicht beantwortet“**, und der Planer
    sieht es? Oder es zählt nichts, bis jemand antwortet?
-2. **Fahrzeit beim Aufbau/bei der Nachbereitung:** **Nur die Zeit vor Ort** (wie an Standtagen). Bei Sonderzeiten zählt weiter „von zuhause bis zuhause“.
+2. ~~Fahrzeit~~ **entschieden (05.11.):** Fahrzeit zählt nie, nur vor Ort. Km-Pauschale gesondert über die Erstattung.
 3. **Änderungen ohne Bestätigung übernehmen?** **Ja, sofort übernommen, als „geändert“ markiert.** Clubsprecher, Kassenwart und Admin
    bekommen Bescheid, der Planer kann korrigieren. Ausnahme: **Mehr Stunden als geplant** (länger geblieben) braucht die Bestätigung des Planers?
 4. **Sonderzeiten für den Club:** **Weiter mit Bestätigung durch den Planer** (wie heute)?
@@ -164,9 +170,19 @@ Dazu die Meldung weiterer Sonderzeiten für den Club. Der Sollplan bleibt unver�
    - Text: Name, Tag/Anlass, neue Zeit statt Soll, Differenz in Stunden, Grund. Knopf „📋 Alle Änderungen ansehen“.
    - Push gebündelt: je Empfänger höchstens einer je 15 Minuten („n neue Zeitänderungen“).
    - Vorbild: Empfänger-Regel der Änderungsmeldungen (`an: ["Clubsprecher", "Kassenwart", "admin"]`, `AE_AN_NAME`).
-6. **DP2 Planer-Ansicht:** Spalten Soll · Ist · Kennzeichen, Liste „Geändert von Mitgliedern“, Filter „keine Antwort“.
+6. **Fahrzeit zählt nicht (Entscheidung Hansi 05.11., ersetzt „Betreiber 2026-10-15“):**
+   - `dp2/src/core/hour-reports.js`: Kommentar und Regel anpassen. Ende höchstens 24:00 statt 30:00 (`MAX_END`), höchstens 12 Std. statt 16 (`MAX_SPAN`).
+     Tätigkeit „Transport / Fahrt“ umbenennen in **„Transport / Material holen (Ladezeit vor Ort)“**, dazu der Hinweis „Fahrzeit über Erstattung“.
+     Bereits gemeldete Zeilen bleiben unverändert, der Planer entscheidet sie wie bisher.
+   - Twinkey (`dp2/src/ui/twinkey.js`, Frage „Wann bist du zuhause losgefahren …? Die Fahrzeit zählt mit.“) → **„Von wann bis wann warst du vor Ort
+     im Einsatz? Die Fahrzeit zählt nicht – Kilometer gibst du gleich danach über die Erstattung an.“**
+   - Club-App Hilfe (`app.js` Eintrag `sonderstunden`, `teile/hilfe.js` `sonderstunden-melden`): „von zuhause bis zuhause“ ersetzen durch
+     „nur die Zeit vor Ort, Kilometer über die Erstattung“.
+   - Nach jeder Stundenmeldung und nach „✏️ Ja, ändern“ den Knopf „🚗 Fahrtkosten / km-Pauschale erfassen“ anbieten (vorhandene Erstattung,
+     vorausgefüllt). Die km-Pauschale gilt weiter nur für Fahrer (Fahrgemeinschaft).
+7. **DP2 Planer-Ansicht:** Spalten Soll · Ist · Kennzeichen, Liste „Geändert von Mitgliedern“, Filter „keine Antwort“.
    Planer-Korrektur wie bisher mit Grund + Nachricht ans Mitglied. `closePlan` zählt „keine Antwort“ als ungeklärt.
-7. **Tests (rot verhindert das Einspielen):**
+8. **Tests (rot verhindert das Einspielen):**
    - Thomas Soll 10–15, „ändern“ 10–13, Grund „früher fertig“ → Ist 10–13, Kennzeichen geändert, Original 10–15, Soll unverändert.
    - „passt“ → Ist = Soll, bestätigt. „nicht da“ → keine Istzeit, Schicht `absent`.
    - Fremder Dienst, Standtag, zukünftiger Tag, abgeschlossener Istplan → abgelehnt. Zweite Angabe → kein Duplikat, Version +1.
@@ -175,6 +191,8 @@ Dazu die Meldung weiterer Sonderzeiten für den Club. Der Sollplan bleibt unver�
    - Stundenmeldung „Sonstiges für den Club“ ohne Sondereinsatz → gemeldet → bestätigt → Istzeit `self_report`.
    - Bescheid: Änderung → Nachricht an Clubsprecher, Kassenwart und Admin (nicht an den Ändernden). „Passt“ → keine Nachricht.
      Fünf Änderungen in 10 Minuten → je Empfänger nur ein Push.
+   - Fahrzeit: Ende nach 24:00 bzw. mehr als 12 Std. → abgelehnt. Twinkey- und Hilfetexte enthalten nicht mehr „zuhause bis zuhause“.
+     Nach der Meldung steht der Knopf zur Erstattung da.
    - Browser-Rundgang abgeschirmt: Zettel auf einem 360-px-Handy bedienbar.
-8. **Ende:** Eintrag in `CHANGELOG.md`, Hilfe-Text, Rückweg (Version davor), neue Tabelle mit Rechten. Hansi in einfachen Worten berichten.
+9. **Ende:** Eintrag in `CHANGELOG.md`, Hilfe-Text, Rückweg (Version davor), neue Tabelle mit Rechten. Hansi in einfachen Worten berichten.
    Einspielen nur zum Termin.
