@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.863.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.864.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9406,6 +9406,7 @@ const dokAktuell = () => (DOKA.anl && DOKA.anl.id === DOKA.id ? DOKA.anl : DOKUM
 function dokFensterZurueck() { const z = DOKA.zurueck; DOKA.zurueck = null; for (const b of z?.blaetter || []) if (b.isConnected) b.classList.remove("versteckt"); }
 const dokZurueckZiel = () => DOKA.zurueck?.ansicht || (DOKA.anl ? "chat" : dokAktuell()?.ort === "technik" ? "programme" : dokAktuell()?.ort === "sicherheit" ? "start" : "dokumente"); // 2.756.0
 async function dokAnzeigen(d, ausHistorie) {
+  DOKA.beob?.disconnect(); DOKA.beob = null; try { DOKA.pdf?.destroy(); } catch {} DOKA.pdf = null; // 2.864.0: vorige Anzeige beenden
   DOKA.id = d.id; DOKA.bilder = []; DOKA.fehler = ""; DOKA.anl = d.datei instanceof Blob || d.url ? d : null; const lauf = ++DOKA.lauf;
   if (DOKA.anl && !ausHistorie && aktuelleAnsicht !== "dokansicht") { // Anlage aus einem offenen Fenster: Fenster beiseite, Rückweg merken (KC-CLUB-ANLAGE-UEBER-FENSTER)
     const offen = [...document.querySelectorAll(".blatt:not(.versteckt)")]; offen.forEach((b) => b.classList.add("versteckt"));
@@ -9419,16 +9420,24 @@ async function dokAnzeigen(d, ausHistorie) {
     const pdfjs = await pdfjsHolen();
     const pdf = await pdfjs.getDocument(d.datei instanceof Blob ? { data: new Uint8Array(await d.datei.arrayBuffer()), isEvalSupported: false } : { url: dokUrl(d), isEvalSupported: false }).promise;
     const breite = Math.min(1400, Math.round(($("dokaSeiten").clientWidth || innerWidth) * Math.min(2, devicePixelRatio || 1)));
+    if (lauf !== DOKA.lauf) return pdf.destroy();
+    // 2.864.0 KC-CLUB-DOK-SCHONEND (Fund Hansi 05.11.: „Unter Anleitung Version 10 bleibt das PDF leer“, Android/Chrome 156; 3 Seiten gehen sofort):
+    // nicht mehr alle Seiten auf einmal zeichnen und als Bilder halten (77 Seiten ≈ 230 MB Bildspeicher), sondern Platzhalter in Seitengröße und nur
+    // die Seiten nahe am Bildschirm zeichnen; weit entfernte geben ihren Bildspeicher frei (das gezeichnete Bild bleibt gemerkt). Weiße Seite → einmal
+    // mit halber Breite neu zeichnen und als Hinweis melden (nur Seitenzahl/Breite).
+    const s1 = (await pdf.getPage(1)).getViewport({ scale: 1 });
+    if (lauf !== DOKA.lauf) return pdf.destroy();
+    Object.assign(DOKA, { pdf, breite, seiten: pdf.numPages, bilder: new Array(pdf.numPages).fill(null), warte: new Set(), nah: new Set(), laeuft: null, weissGemeldet: false });
+    const box = $("dokaSeiten");
     for (let n = 1; n <= pdf.numPages; n++) {
-      if (lauf !== DOKA.lauf) return pdf.destroy();
-      $("dokaStand").textContent = `Seite ${n} von ${pdf.numPages} wird geladen …`;
-      const src = await pdfSeiteAlsBild(pdf, n, breite);
-      if (lauf !== DOKA.lauf) return pdf.destroy();
-      DOKA.bilder.push(src);
-      const img = new Image(); img.src = src; img.alt = `Seite ${n}`; img.className = "doka-seite"; $("dokaSeiten").appendChild(img);
+      const img = new Image(); img.alt = `Seite ${n}`; img.className = "doka-seite"; img.dataset.n = n; img.style.aspectRatio = `${s1.width} / ${s1.height}`; box.appendChild(img);
     }
+    DOKA.beob?.disconnect();
+    DOKA.beob = new IntersectionObserver((liste) => { for (const e of liste) dokSeiteNah(lauf, +e.target.dataset.n, e.isIntersecting); }, { rootMargin: DOK_VORAUS });
+    box.querySelectorAll(".doka-seite").forEach((img) => DOKA.beob.observe(img));
     $("dokaStand").textContent = `${pdf.numPages} Seite${pdf.numPages > 1 ? "n" : ""}${IST_IOS_APP() ? " · iPhone: Klappt Drucken nicht, „📤 Teilen“ und dort drucken." : ""}`;
-    $("dokaDrucken").disabled = false; pdf.destroy();
+    $("dokaDrucken").disabled = false;
+    DOKA.nah.add(1); DOKA.warte.add(1); await dokZeichnen(lauf); // erste Seite sofort (die Anlage-Diagnose zählt danach die gezeichneten Seiten)
   } catch (e) {
     if (lauf !== DOKA.lauf) return;
     DOKA.fehler = String(e?.message || e).slice(0, 150); // 2.166.0: für die Anlage-Diagnose
@@ -9444,14 +9453,72 @@ async function pdfSeiteAlsBild(pdf, n, breite) {
   await seite.render({ canvasContext: cx, viewport: vp }).promise;
   const src = c.toDataURL("image/jpeg", 0.85); c.width = c.height = 0; return src;
 }
-function dokAufraeumen() { DOKA.lauf++; DOKA.id = null; DOKA.bilder = []; DOKA.anl = null; $("dokaSeiten").innerHTML = ""; }
+// 2.864.0 KC-CLUB-DOK-SCHONEND: Seiten nahe am Bildschirm (3 Bildschirme voraus/zurück) zeigen, weiter entfernte freigeben
+const DOK_VORAUS = "300% 0px";
+function dokSeiteNah(lauf, n, nah) {
+  if (lauf !== DOKA.lauf) return;
+  const img = document.querySelector(`#dokaSeiten .doka-seite[data-n="${n}"]`); if (!img) return;
+  if (!nah) { DOKA.nah.delete(n); DOKA.warte.delete(n); if (img.getAttribute("src")) img.removeAttribute("src"); return; }
+  DOKA.nah.add(n);
+  if (DOKA.bilder[n - 1]) { if (!img.getAttribute("src")) img.src = DOKA.bilder[n - 1]; return; }
+  DOKA.warte.add(n); dokZeichnen(lauf);
+}
+// eine Seite nach der anderen, die vorderste zuerst; läuft schon eine Runde, wartet der Aufrufer auf dieselbe
+function dokZeichnen(lauf) {
+  if (DOKA.laeuft) return DOKA.laeuft;
+  const pdf = DOKA.pdf, breite = DOKA.breite;
+  return (DOKA.laeuft = (async () => {
+    try {
+      await null; // erst eintragen, dann loslaufen – sonst bliebe „läuft“ bei leerer Warteschlange für immer stehen
+      while (DOKA.warte.size && lauf === DOKA.lauf) {
+        const n = Math.min(...DOKA.warte); DOKA.warte.delete(n);
+        if (DOKA.bilder[n - 1]) continue;
+        let src = await pdfSeiteAlsBild(pdf, n, breite);
+        if (lauf !== DOKA.lauf) return;
+        if (await dokBildWeiss(src)) { // Zeichnen klappte nicht (Grafik-Speicher) – kleiner noch einmal
+          const klein = await pdfSeiteAlsBild(pdf, n, Math.round(breite / 2)), nochWeiss = await dokBildWeiss(klein);
+          if (lauf !== DOKA.lauf) return;
+          if (!DOKA.weissGemeldet) { DOKA.weissGemeldet = true; fpNeu("dokument", { text: "PDF-Seite weiß gezeichnet", seite: n, seiten: DOKA.seiten, breite, nochmal: nochWeiss ? "weiß" : "ok" }); }
+          if (!nochWeiss) src = klein;
+        }
+        DOKA.bilder[n - 1] = src;
+        const img = document.querySelector(`#dokaSeiten .doka-seite[data-n="${n}"]`); if (img && DOKA.nah.has(n)) img.src = src;
+      }
+    } catch (e) {
+      if (lauf !== DOKA.lauf) return; // Anzeige inzwischen geschlossen/gewechselt – kein Fehler
+      DOKA.warte.clear(); // nicht endlos neu versuchen (auch nicht beim Druck-Vorbereiten)
+      DOKA.fehler = String(e?.message || e).slice(0, 150); fpNeu("dokument", { text: "PDF-Anzeige: " + (e?.message || e) });
+      $("dokaStand").innerHTML = `Die Anzeige klappt auf diesem Gerät nicht. <button class="knopf klein" onclick="dokExtern()">↗ Im PDF-Betrachter öffnen</button>`;
+    } finally { if (lauf === DOKA.lauf) DOKA.laeuft = null; }
+  })());
+}
+// ganz weiß? (verkleinert prüfen – Text und Bilder geben dunkle Punkte)
+async function dokBildWeiss(src) {
+  try {
+    const im = new Image(); im.src = src; await im.decode();
+    const c = document.createElement("canvas"); c.width = 40; c.height = 56; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0, 40, 56);
+    const d = x.getImageData(0, 0, 40, 56).data; for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] < 720) return false;
+    return true;
+  } catch { return false; }
+}
+// für Drucken: fehlende Seiten nachzeichnen (nur gemerkt, nicht angezeigt – spart Bildspeicher)
+async function dokAlleSeiten() {
+  const lauf = DOKA.lauf; if (!DOKA.pdf) return;
+  for (let n = 1; n <= DOKA.seiten; n++) if (!DOKA.bilder[n - 1]) DOKA.warte.add(n);
+  if (!DOKA.warte.size) return;
+  $("dokaStand").textContent = "Seiten für den Druck werden vorbereitet …";
+  while (DOKA.warte.size && lauf === DOKA.lauf) await dokZeichnen(lauf);
+  if (lauf === DOKA.lauf) $("dokaStand").textContent = `${DOKA.seiten} Seite${DOKA.seiten > 1 ? "n" : ""}`;
+}
+function dokAufraeumen() { DOKA.lauf++; DOKA.id = null; DOKA.bilder = []; DOKA.anl = null; DOKA.beob?.disconnect(); DOKA.beob = null; try { DOKA.pdf?.destroy(); } catch {} DOKA.pdf = null; DOKA.warte?.clear(); DOKA.nah?.clear(); DOKA.laeuft = null; $("dokaSeiten").innerHTML = ""; }
 function dokExtern() { const d = dokAktuell(); if (d) extOeffnen(dokUrl(d)); }
 function dokDruckSeite() {
-  const d = dokAktuell(); if (!d || !DOKA.bilder.length) return null;
-  return { ohneRahmen: true, randlos: true, titel: d.t, html: DOKA.bilder.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") };
+  const d = dokAktuell(), fertig = DOKA.bilder.filter(Boolean); if (!d || !fertig.length || fertig.length < (DOKA.seiten || 0)) return null; // 2.864.0: alle Seiten gezeichnet
+  return { ohneRahmen: true, randlos: true, titel: d.t, html: fertig.map((b) => `<img class="dseite" src="${b}" alt="">`).join("") };
 }
 async function dokDrucken() {
   DRUCK = { art: "dokument", param: DOKA.id };
+  try { await dokAlleSeiten(); } catch (e) { return meldeFehler(e); } // 2.864.0 KC-CLUB-DOK-SCHONEND: fehlende Seiten erst zeichnen
   try { if (!(await druckSeiteBauen())) return melde("Bitte warten, bis alle Seiten geladen sind."); } catch (e) { return meldeFehler(e); }
   druckJetzt();
 }
@@ -23415,7 +23482,7 @@ async function anlageDateiZeigen() {
       // vorgeladen → direkt anzeigen; sonst holt der Betrachter sie selbst über einen frischen Link
       const quelle = t.datei ? { datei: t.datei } : { url: (await api("anlage_url", { id: t.id })).url };
       await dokAnzeigen({ id: "anl:" + t.id, t: t.name || "Dokument", ...quelle });
-      return diag(DOKA.bilder.length ? "angezeigt" : "nicht_angezeigt", { weg: t.datei ? "datei" : "link", seiten: DOKA.bilder.length, vorladen: fTxt(t.fehler), anzeige: DOKA.fehler || "" });
+      return diag(DOKA.bilder.some(Boolean) ? "angezeigt" : "nicht_angezeigt", { weg: t.datei ? "datei" : "link", seiten: DOKA.seiten || 0, vorladen: fTxt(t.fehler), anzeige: DOKA.fehler || "" });
     } catch (e) { diag("fehler", { fehler: fTxt(e), vorladen: fTxt(t.fehler) }); return meldeFehler(e); }
   }
   if (t.datei) { const url = URL.createObjectURL(t.datei); const w = window.open(url, "_blank"); if (w) { try { w.opener = null; } catch {} return; } return anlageLinkZeigen(url, t.name || "Datei"); }
