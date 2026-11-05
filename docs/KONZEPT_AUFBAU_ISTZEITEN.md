@@ -128,7 +128,7 @@ Einstellung je Tag: `stempeluhr: false` (Standard für `prep` und `after`), dami
 4. **Sonderzeiten für den Club** zählen wie bisher erst nach Bestätigung durch den Planer.
 5. **Pausen:** gleiche Pausenregel wie an Standtagen. Das ist mein Vorschlag, Hansi wurde dazu nicht ausdrücklich gefragt; er kann es noch ändern.
 
-## 7. Auftrag für Codex (nach Antwort auf Abschnitt 6)
+## 7. Auftrag für Codex (freigegeben 05.11.2026)
 
 **Ziel:** Nach jedem Tag ohne Stechuhr (Aufbau 02./03.12., Nachbereitung 14.12.) fragt die Club-App jede eingeplante Person, ob sie
 ihre Einsatzzeit ändern muss. „Nein“ → Soll wird Ist (bestätigt). „Ja“ → neue Zeiten werden als Ist übernommen, gekennzeichnet „geändert“.
