@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.864.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.865.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-NolwO/0a+Grn3B1PPe3r9CrCjAXwY6DqwOAgdHM+71xp0nIaMhQKOzmCeVizLKVe" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-t3BwfUMaIZyQ5VII5+doc7GZ302TysgcL8Y5n590JcMAw9fwfucV2OaCj0a+Xjb8" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
@@ -2033,8 +2033,8 @@ const RUNDGAENGE = [
   { id: "inst_chrome", stand: "1", zeit: "04.11.2026", sym: "🔵", t: "Installieren mit Chrome (Android)", u: "Drei Punkte, App installieren, Installieren (ca. 1 Min.)", st: () => RG_INST_CHROME },
   { id: "inst_edge", stand: "1", zeit: "04.11.2026", sym: "🌊", t: "Installieren mit Edge (Android)", u: "Menü, Zum Telefon hinzufügen, Installieren (ca. 1 Min.)", st: () => RG_INST_EDGE },
   { id: "inst_samsung", stand: "1", zeit: "05.11.2026", sym: "🟣", t: "Installieren mit Samsung Internet", u: "Menü, Seite hinzufügen zu, Startbildschirm (ca. 1 Min.)", st: () => RG_INST_SAMSUNG },
-  { id: "inst_safari", stand: "1", sym: "🧭", t: "Installieren auf iPhone und iPad (Safari)", u: "Teilen, Zum Home-Bildschirm, Code eingeben (ca. 2 Min.)", st: () => RG_INST_SAFARI },
-  { id: "inst_firefox", stand: "1", sym: "🦊", t: "Installieren mit Firefox (Android)", u: "Drei Punkte, Zum Startbildschirm hinzufügen (ca. 1 Min.)", st: () => RG_INST_FIREFOX },
+  { id: "inst_safari", stand: "1", zeit: "05.11.2026", sym: "🧭", t: "Installieren auf iPhone und iPad (Safari)", u: "Teilen, Zum Home-Bildschirm, Code eingeben (ca. 2 Min.)", st: () => RG_INST_SAFARI },
+  { id: "inst_firefox", stand: "1", zeit: "05.11.2026", sym: "🦊", t: "Installieren mit Firefox (Android)", u: "Drei Punkte, Zum Startbildschirm hinzufügen (ca. 1 Min.)", st: () => RG_INST_FIREFOX },
   { id: "inst_geraet", stand: "1", sym: "💻", t: "Weiteres Gerät: Tablet oder PC", u: "Mit dem 6-stelligen Code anmelden und installieren (ca. 2 Min.)", st: () => RG_INST_GERAET },
   { id: "inst_codes", stand: "1", sym: "🔑", t: "Link, Code & Co. – die Unterschiede", u: "Persönlicher Link, Code, Link verloren, Link einfügen (ca. 2 Min.)", st: () => RG_INST_CODES },
   { id: "ueberblick", stand: "4", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },

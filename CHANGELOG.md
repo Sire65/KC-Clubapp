@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.865.0 – Zeitansage: Videos „Installieren auf iPhone und iPad (Safari)“ und „Installieren mit Firefox (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Safari geprüft: alle 7 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (drei Punkte → Teilen → Zum Home-Bildschirm → „Als Web-App öffnen“ an → Hinzufügen → Kochmütze → einmal Code aus ⚙️ → 📲 App-Installation → „🧭 Schritt für Schritt einrichten“).
+- Firefox geprüft: alle 5 Schritte ok. Ein Satz vorsichtiger: „Am PC kann Firefox die App meistens nicht installieren“ (neuere Firefox-Versionen unter Windows können Web-Apps teilweise anheften).
+- Zeitansage für beide eingeschaltet. Rückweg: Version 2.864.0 einspielen.
+
 ## 2.864.0 – 2026-11-05 – 📨 Erklär-Videos „Nachrichten“ in zwei Folgen (KC-CLUB-VIDEO-NACHRICHTEN) · nur App
 Wunsch Hansi (05.11.): „Baue ein Anleitungsvideo nur für die Nachrichtenfunktion mit ca. Zeitangabe. Beginne mit einfachen Funktionen mit Plus Neu, dann kurze Nachricht schreiben und normal senden, dann Wichtig und Express mit Bestätigung und höchstens 5 am Tag, dann die kleine schmale Zeile (Marker, fett, nur Nachrichten des anderen), WhatsApp-Übernahme in beide Richtungen, Bildschirmfoto mit Markierung in Farbe, das Gruppieren im Chat, die 3 Punkte oben rechts, die Info neben jeder Nachricht, die Nachrichtenliste – und die Verschlüsselung mit Schlüsselbund. Alles komplett, aber einfach und strukturiert.“ – dann: „Baue lieber Folge 1 und Folge 2. Einfache Sachen in Folge 1 und Besonderheiten in Folge 2.“
 - **Zwei neue Videos** unter Technik → 🎬 Erklär-Videos → „💬 Schreiben & Kontakt“ ganz vorn, je **ca. 5 Min.**, beide mit Zeitansage („Hallo <Vorname>! Dieses Video dauert etwa fünf Minuten.“):

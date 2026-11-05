@@ -1147,7 +1147,7 @@ const RG_INST_FIREFOX = [
     live: rgSimTipp('[data-s="ok"]', () => simHome()) },
   ...RG_INST_ENDE("firefox"),
   { v: "start", vor: rgSimNeu(() => simPc()), sel: ["#rgSim .sim-fenster"], t: "💻 Am PC",
-    x: "Gut zu wissen: Am PC kann Firefox keine Apps installieren. Dort nimmst du Chrome oder Edge – wie das geht, zeigt das Video Weiteres Gerät." },
+    x: "Gut zu wissen: Am PC kann Firefox die App meistens nicht installieren. Dort nimmst du Chrome oder Edge – wie das geht, zeigt das Video Weiteres Gerät." },
 ];
 const RG_INST_START = [
   { v: "start", vor: rgSimNeu(simWhatsApp), sel: ['#rgSim [data-s="blase"]'], t: "📲 So kommst du zur App",
