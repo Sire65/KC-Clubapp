@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.866.0 – 2026-11-05 – 🎬 Nachrichten-Videos überarbeitet: Bild und Ton synchron, Chat-Hintergrund in Folge 2 (KC-CLUB-VIDEO-SATZPULS) · nur App
+## 2.867.0 – 2026-11-05 – 🎬 Nachrichten-Videos überarbeitet: Bild und Ton synchron, Chat-Hintergrund in Folge 2 (KC-CLUB-VIDEO-SATZPULS) · nur App
 Fund Hansi (05.11.): „Die Videos müssen beide noch überarbeitet werden. Text und Inhalt sind nicht immer konform bzw. synchron. Manchmal wird ein Button erklärt, aber ein anderer Button wird angezeigt. Und in Teil 2 auch erwähnen, dass man sich einen Hintergrund festlegen kann.“
 - **Ursache:** Die erwähnten Knöpfe blinkten bisher im festen Takt nacheinander (höchstens 2,6 s je Knopf) und begannen dann von vorn – bei langen Sätzen war der Takt schneller fertig als die Stimme, und es blinkte ein anderer Knopf als der, von dem gerade die Rede war. Außerdem stimmte die Reihenfolge teils nicht mit dem Text überein (z. B. „Gruppe & mehr“: erklärt wurden Gruppe, Gemerkt, Favoriten, Test – geblinkt hat „Kartei“).
 - **Neu: Blinken satzweise** (für Videos, die es nutzen): Jeder Knopf blinkt genau ab dem Satz, in dem er erklärt wird – gesteuert von der Stimme selbst (Handy-Stimme und heruntergeladene Stimme melden den Beginn jedes Satzes), ohne Ton nach Lesezeit. In Fenstern (⋮, Chat-Farben, Beispielbilder) folgt auch der Rahmen dem erklärten Knopf und das Fenster rollt ihn ins Bild; die Text-Tafel weicht aus. Andere Videos bleiben unverändert.
@@ -8,7 +8,13 @@ Fund Hansi (05.11.): „Die Videos müssen beide noch überarbeitet werden. Text
 - **Folge 2: neuer Schritt „🎨 Dein Chat-Hintergrund“** – ⋮ → Chat-Farben & Hintergrund: Vorschau, Farbe der eigenen und der fremden Sprechblasen, Motive (Wolken, Sonnenuntergang, Schneeberge …), eigenes Foto aus Galerie/Kamera/Datei mit Stärke. Gilt für alle eigenen Chats und nur für einen selbst. Nichts wird umgestellt.
 - Folge 1 ca. 5 Min., Folge 2 ca. 6 Min. (Zeitansage rechnet selbst).
 - Tests: `tests/video-nachrichten.test.mjs` (Satznummer je Knopf passt zum Text, Reihenfolge, keine Abkürzungen mit Punkt, Sprecher meldet Sätze, Hintergrund-Schritt); Browser-Prüfung `tools/hilfe/video-nachrichten-browser.mjs` grün, dazu je Satz geprüft, welcher Knopf blinkt.
-- Rückweg: App 2.865.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.866.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.866.0 – Zeitansage: Videos „Installieren auf iPhone und iPad (Safari)“ und „Installieren mit Firefox (Android)“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Safari geprüft: alle 7 Schritte zeigen auf vorhandene Stellen; Inhalt aktuell (drei Punkte → Teilen → Zum Home-Bildschirm → „Als Web-App öffnen“ an → Hinzufügen → Kochmütze → einmal Code aus ⚙️ → 📲 App-Installation → „🧭 Schritt für Schritt einrichten“).
+- Firefox geprüft: alle 5 Schritte ok. Ein Satz vorsichtiger: „Am PC kann Firefox die App meistens nicht installieren“ (neuere Firefox-Versionen unter Windows können Web-Apps teilweise anheften).
+- Zeitansage für beide eingeschaltet. Rückweg: Version 2.865.0 einspielen.
+- Dazu das Konzept „Mein Garten“ (docs/KONZEPT_SAMEN_GARTEN.md, Wunschliste #84) – nur Text, noch keine Funktion.
+
 ## 2.865.0 – 2026-11-05 – 📖 Lange PDFs schonend · 🟢 Online heißt wirklich in der App · 👣 „geöffnet“ im Verlauf (KC-CLUB-DOK-SCHONEND, KC-CLUB-ONLINE-ECHT, KC-CLUB-SPUR-START-SERVER) · Server 2.865.0
 ### 📖 Lange PDFs: nur die sichtbaren Seiten zeichnen (KC-CLUB-DOK-SCHONEND)
 Fund Hansi (05.11.): „Unter Anleitung Version 10 bleibt das PDF leer“ – weißer Hintergrund auf Android (installierte App, Chrome 156); die Kurzanleitung erscheint sofort.
