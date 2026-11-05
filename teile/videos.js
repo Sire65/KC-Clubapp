@@ -1247,7 +1247,7 @@ function rgRollenAnsicht(ziel) {
 const RG_THEMEN = [
   { id: "einstieg", sym: "🚀", t: "Einstieg", videos: ["warum", "ueberblick", "einfach", "spezial", "hilfe", "probleme", "schulung", "feedback"] },
   { id: "installieren", sym: "📲", t: "App installieren", videos: ["installieren", "inst_chrome", "inst_edge", "inst_samsung", "inst_safari", "inst_firefox", "inst_geraet", "inst_codes"] }, // 2.276.0 KC-CLUB-VIDEO-INSTALL
-  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachrichten_alles", "zentrale", "sprache", "nachricht", "chatprofi", "geheim", "gruppen", "mitglieder", "pinnwand"] },
+  { id: "kontakt", sym: "💬", t: "Schreiben & Kontakt", videos: ["nachrichten_1", "nachrichten_2", "zentrale", "sprache", "nachricht", "chatprofi", "geheim", "gruppen", "mitglieder", "pinnwand"] },
   { id: "termine", sym: "📅", t: "Termine & Dienst", videos: ["termin", "terminfinden", "zusagen", "todo", "dienst"] },
   { id: "club", sym: "🗄️", t: "Club & Archiv", videos: ["fotos", "lesen", "rezepte", "aktionen", "archiv", "vorschlag", "helfen", "erstattung"] },
   { id: "ich", sym: "👤", t: "Ich & meine App", videos: ["status", "meinedaten", "push", "privat", "einstellungen", "oberflaeche", "effekte", "rueckseite", "wecker", "anpassen", "figur", "figurbau", "technik", "studio"] },
@@ -1711,21 +1711,21 @@ const rgNaChat = (f) => () => { rgChatprofiAuf(); f?.(); };
 // Beispieltext ins Schreibfeld (nur gezeigt, nie gesendet) – der alte Text kommt am Ende über rgChatprofiAuf zurück
 const rgNaText = () => { const t = $("text"); if (t && !t.value) { t.value = "Bin um sieben da 👍"; t.dispatchEvent(new Event("input", { bubbles: true })); } rgNaLeiste(); };
 const rgNaFormat = (an) => { try { naFormatLeiste(an); } catch {} };
-const RG_NACHRICHTEN = () => [
-  { v: "nachrichten", sel: ["#v-nachrichten .kopf2"], t: "💬 Alles rund um Nachrichten",
-    x: "In diesem Video zeige ich dir die Nachrichten Schritt für Schritt: zuerst das Einfache – eine Nachricht schreiben und senden. Dann Wichtig und Express, die kleine Zeile über dem Schreibfeld, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte, die Info an jeder Nachricht, die Liste deiner Chats und zum Schluss das Verschlüsseln. Keine Sorge: Ich sende und speichere nichts – alle Beispiele verschwinden wieder." },
-  // 1. Das Einfache
-  rgAus(RG_NACHRICHT, "💬 Neue Nachricht", "Teil eins, das Einfache. Eine neue Nachricht beginnst du in Nachrichten oben rechts mit Plus Neu."),
+// Wunsch Hansi 05.11.: „Baue lieber Folge 1 und Folge 2 – einfache Sachen in Folge 1, Besonderheiten in Folge 2“.
+// Folge 1: Plus Neu, schreiben, normal senden, Wichtig, Express mit Bestätigung, ⓘ/Haken/antippen, Chat-Liste.
+// Folge 2: kleine Zeile (F, Farbe/Marker, nur die anderen …), WhatsApp hin und zurück, Bildschirmfoto, Tage gruppiert, ⋮, Verschlüsseln & Schlüsselbund.
+const RG_NACHRICHTEN_1 = () => [
+  { v: "nachrichten", sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten – Folge 1: das Einfache",
+    x: "Das ist Folge eins zu den Nachrichten – das Einfache: eine Nachricht schreiben und senden, Wichtig und Express, was die Zeichen an einer Nachricht bedeuten und die Liste deiner Chats. Die Besonderheiten zeigt dir Folge zwei. Keine Sorge: Ich sende und speichere nichts – alle Beispiele verschwinden wieder." },
+  rgAus(RG_NACHRICHT, "💬 Neue Nachricht", "Eine neue Nachricht beginnst du in Nachrichten oben rechts mit Plus Neu."),
   rgAus(RG_NACHRICHT, "👤 An wen?"),
   rgAus(RG_NACHRICHT, "✏️ Betreff"),
-  // Schreiben/Versand im Beispiel-Chat zeigen: auf der Seite „Neu“ ist das Schreibfeld nicht zu sehen (Schritte wurden sonst still übersprungen)
   { v: "chat", tippVor: rgOn("neuWeiter()"), vor: rgNaChat(rgNaText), sel: ["#eingabe"], mussSel: true, puls: ["#text", "#sendenKnopf", '#eingabe [title="Anlage"]', '#eingabe [title^="Mikrofon"]', '#eingabe [title="Emoji einfügen"]'], t: "⌨️ Kurz schreiben",
     x: "Mit Weiter kommst du zum Schreiben – hier in einem Beispiel-Chat. Unten ins Feld schreibst du deine Nachricht; kurz und knapp genügt, zum Beispiel: Bin um sieben da. Statt zu tippen kannst du auch das Mikrofon nehmen. Unter dem Feld findest du die Büroklammer für Fotos und Dateien und das Smiley für Emojis." },
   { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, puls: ["#normalKnopf", "#sendenKnopf"], t: "📝 Normal senden",
     x: "Sobald etwas im Feld steht, erscheint darüber der Versand. Normal ist schon angehakt – das ist der Alltag. Du tippst einfach auf den Pfeil, und die Nachricht geht los, mit Benachrichtigung so, wie der Empfänger es eingestellt hat." },
-  // 2. Wichtig und Express
   { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, puls: ["#wichtigKnopf"], t: "❗ Wichtig",
-    x: "Teil zwei: Wichtig und Express. Mit Wichtig bekommt deine Nachricht einen orangefarbenen Rahmen – sie fällt im Chat sofort auf. Vergessen? Am kleinen Pfeil deiner Nachricht kannst du sie auch nachträglich wichtig machen." },
+    x: "Mit Wichtig bekommt deine Nachricht einen orangefarbenen Rahmen – sie fällt im Chat sofort auf. Vergessen? Am kleinen Pfeil deiner Nachricht kannst du sie auch nachträglich wichtig machen." },
   { v: "chat", vor: rgNaChat(rgNaText), sel: ["#versandLeiste"], mussSel: true, puls: ["#expressKnopf"], t: "🏎️ Express – höchstens 5 am Tag",
     x: "Eilt es wirklich, nimmst du Express: Die Nachricht kommt sofort an – auch nachts und auch, wenn der Chat stumm ist. Beim Empfänger geht ein Fenster auf. Weil das stört, gibt es höchstens fünf Express-Sendungen am Tag. Neben Express steht, wie viele du schon hattest – zum Beispiel zwei von fünf. Wichtig und Express gehen auch zusammen." },
   { v: "nachrichten", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 10px">🏎️ Express – die Bestätigung</h3>
@@ -1733,9 +1733,20 @@ const RG_NACHRICHTEN = () => [
       <div class="hinweis" data-s="was" style="padding:8px 10px;border-radius:10px;background:var(--karte2)">🏎️ Per Express versandt um 19:05<br>Anne: 📬 angekommen um 19:05 · 👁️ gelesen um 19:07</div></div></div>`, "ueber"),
     nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="blase"]', '#rgSim [data-s="was"]'], t: "📬 Express mit Bestätigung",
     x: "Bei Express bekommst du eine Bestätigung: Unter deiner Nachricht steht, wann sie verschickt wurde – und für jeden Empfänger, wann sie angekommen ist und wann sie gelesen wurde. So weißt du genau, dass deine Nachricht da ist." },
-  // 3. Die kleine Zeile über dem Schreibfeld (Beispiel-Chat)
+  { v: "chat", vor: rgNaChat(), sel: [rgChatprofiBlase(9)], mussSel: true, puls: ["#msg-rg-cp-9 .na-info", "#msg-rg-cp-9 .haken", "#msg-rg-cp-9 .na-pfeil"], t: "ⓘ Die Info an jeder Nachricht",
+    x: "Jetzt schauen wir in einen Beispiel-Chat. Neben jeder Nachricht stehen kleine Zeichen. Das i öffnet die Info: wer die Nachricht geschrieben hat, wer sie bekommen hat und wer sie wann gelesen hat. Der kleine Pfeil daneben bietet Weiterleiten, Kopieren, Ausschneiden, Archivieren, Wichtig und Löschen." },
+  rgAus(RG_CHATPROFI, "✔️ Was die Haken bedeuten"),
+  rgAus(RG_CHATPROFI, "👆 Nachricht antippen", "Und tippst du eine Nachricht selbst an, kannst du schnell mit einem Bild reagieren, zum Beispiel Daumen hoch – oder antworten, oben anheften, merken und kopieren. Eigene Nachrichten kannst du hier auch bearbeiten oder zurückholen, solange sie noch niemand gelesen hat."),
+  rgAus(RG_NACHRICHT, "🗂️ Übersicht gegliedert", "Zum Schluss die Liste deiner Chats. Chats mit Neuem stehen oben, mit roter Zahl, und fallen kurz mit einem Rahmen auf. Unter jedem Chat siehst du, wie es um deine letzte Nachricht steht – zum Beispiel angekommen oder gelesen. Oben gliederst du die Liste nach Zeit, nach Art oder nach Name; mit den Pfeilen klappst du alles auf oder zu."),
+  rgAus(RG_NACHRICHT, "👥 Gruppe & mehr"),
+  { v: "nachrichten", video: "nachrichten_2", t: "✅ Fertig mit Folge 1",
+    x: "Das war Folge eins: Plus Neu, schreiben und normal senden, Wichtig und Express, die Zeichen an einer Nachricht und die Liste deiner Chats. Probier es aus – am besten mit einer Nachricht an dich selbst über Test. In Folge zwei geht es um die Besonderheiten: die kleine Zeile über dem Schreibfeld, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte und das Verschlüsseln." },
+].filter(Boolean);
+const RG_NACHRICHTEN_2 = () => [
+  { v: "nachrichten", sel: ["#v-nachrichten .kopf2"], t: "💬 Nachrichten – Folge 2: Besonderheiten",
+    x: "Das ist Folge zwei zu den Nachrichten – die Besonderheiten: die kleine Zeile über dem Schreibfeld mit fett, Farbe und Marker, nur die Nachrichten des anderen, WhatsApp in beide Richtungen, das Bildschirmfoto mit Markierung, die Ordnung im Chat, die drei Punkte oben rechts und das Verschlüsseln mit Schlüsselbund. Wie man schreibt und sendet, zeigt Folge eins. Ich sende und speichere nichts – alles ist nur ein Beispiel." },
   { v: "chat", vor: rgNaChat(() => { const t = $("text"); if (t?.value === "Bin um sieben da 👍") { t.value = ""; t.dispatchEvent(new Event("input", { bubbles: true })); } }), sel: [".eg-griffe"], mussSel: true, puls: ["#egKlapp", "#egTast", "#fettKnopf", "#chatFilterKnopf", "#grussKnopf", "#weKnopf"], t: "🧰 Die kleine Zeile",
-    x: "Teil drei: die kleine, schmale Zeile direkt über dem Schreibfeld – hier in einem Beispiel-Chat. Mit dem kleinen Pfeil klappst du den Schreibbereich weg und siehst mehr Nachrichten, die Tastatur-Taste blendet die Tastatur aus und ein. Dazu kommen: F für Hervorheben, die Personen für die Ansicht, die Grußformel und Plus für weitere Empfänger." },
+    x: "Los geht es mit der kleinen, schmalen Zeile direkt über dem Schreibfeld – hier in einem Beispiel-Chat. Mit dem kleinen Pfeil klappst du den Schreibbereich weg und siehst mehr Nachrichten, die Tastatur-Taste blendet die Tastatur aus und ein. Dazu kommen: F für Hervorheben, die Personen für die Ansicht, die Grußformel und Plus für weitere Empfänger." },
   { v: "chat", vor: rgNaChat(() => { rgNaFormat(true); RG.zurueck.push(() => rgNaFormat(false)); }), nach: () => rgNaFormat(false), sel: ["#formatLeiste"], mussSel: true,
     puls: ["#fettKnopf", "#formatLeiste button"], t: "𝐅 Fett, kursiv, Farbe und Marker",
     x: "Tippst du auf F, steht darüber: fett, kursiv und durchgestrichen – und die Farben Rot, Blau und Grün. Gelb ist ein Textmarker, wie mit dem Leuchtstift. Erst ein Wort im Feld markieren – lange drücken oder doppelt tippen –, dann die Wahl antippen. Wer eine ältere App hat, sieht einfach das Wort." },
@@ -1744,19 +1755,17 @@ const RG_NACHRICHTEN = () => [
     t: "👥 Nur die Nachrichten des anderen",
     x: "Mit dem Personen-Knopf siehst du in langen Chats schneller, was du suchst: Einmal tippen – nur die Nachrichten der anderen. Zweimal – nur deine eigenen. Dreimal – nur der Chat-Hintergrund. Und noch einmal – wieder alle. Beim nächsten Öffnen sind immer alle zu sehen." },
   { v: "chat", vor: rgNaChat(), sel: ["#grussKnopf", "#weKnopf", "#ntZeilenKnopf"], mussSel: true, puls: ["#grussKnopf", "#weKnopf", "#ntZeilenKnopf", "#vnKnopf"], t: "✍️ Gruß, weitere Empfänger, Termin, Schloss",
-    x: "Die Feder setzt eine Grußformel ein, zum Beispiel Liebe Grüße. Mit Plus nimmst du weitere Mitglieder dazu. Der Kalender übernimmt einen Termin aus der Nachricht – Tag und Uhrzeit liest die App selbst heraus. Und das Schloss verschlüsselt – dazu kommen wir am Ende." },
-  // 4. WhatsApp
+    x: "Die Feder setzt eine Grußformel ein, zum Beispiel Liebe Grüße. Mit Plus nimmst du weitere Mitglieder dazu. Der Kalender übernimmt einen Termin aus der Nachricht – Tag und Uhrzeit liest die App selbst heraus. Und das Schloss verschlüsselt – dazu kommen wir am Ende dieser Folge." },
   { v: "chat", vor: rgNaChat(), sel: ["#waKnopf", "#waEinfKnopf"], mussSel: true, puls: ["#waKnopf"], t: "🟢 Vom Club nach WhatsApp",
-    x: "Teil vier: WhatsApp. Ist jemand in der App noch selten unterwegs? Dann schreibst du deinen Text hier und tippst auf den grünen Knopf WA. Der Text wird nach WhatsApp übernommen – du musst ihn nicht noch einmal tippen." },
+    x: "WhatsApp: Ist jemand in der App noch selten unterwegs? Dann schreibst du deinen Text hier und tippst auf den grünen Knopf WA. Der Text wird nach WhatsApp übernommen – du musst ihn nicht noch einmal tippen." },
   { v: "chat", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 8px">📋 Aus WhatsApp einfügen</h3>
       <div class="hinweis" data-s="feld" style="padding:8px 10px;border-radius:10px;background:var(--karte2);white-space:pre-line">[05.11.26, 18:02] Anne: Wer bringt den Grill mit?\n[05.11.26, 18:05] Klaus: Ich!</div>
       <div class="knoepfe" style="margin-top:8px"><span class="knopf haupt" data-s="los">✅ Übernehmen</span></div>
       <p class="hinweis" data-s="teilen" style="margin:10px 0 0">Oder in WhatsApp: Nachricht lange drücken → <b>Teilen</b> → <b>Köcheclub</b> → in einen Chat, ins Fotoalbum oder ins Archiv.</p></div></div>`, "ueber"),
     nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ["#waEinfKnopf", '#rgSim [data-s="feld"]', '#rgSim [data-s="los"]', '#rgSim [data-s="teilen"]'], t: "📋 Von WhatsApp in den Club",
     x: "Und umgekehrt: Steht etwas Wichtiges in WhatsApp, kopierst du es dort und tippst hier auf das Klemmbrett – Aus WhatsApp einfügen. Die App räumt Datum und Namen ordentlich auf, du tippst auf Übernehmen und sendest selbst. Oder du drückst die Nachricht in WhatsApp lange, tippst auf Teilen und wählst Köcheclub – dann entscheidest du: in einen Chat, ins Fotoalbum oder ins eigene Archiv. Ungefragt geht nichts raus." },
-  // 5. Bildschirmfoto mit Markierung
   { v: "chat", vor: rgNaChat(), sel: ["#bfChatKnopf"], mussSel: true, puls: ["#bfChatKnopf"], t: "📸 Bildschirmfoto",
-    x: "Teil fünf: das Bildschirmfoto. Willst du jemandem etwas auf deinem Bildschirm zeigen – zum Beispiel, wo ein Knopf ist oder wo etwas nicht klappt? Tipp auf die Kamera. Es erscheint ein roter Auslöser; du gehst in Ruhe an die Stelle und drückst ihn." },
+    x: "Das Bildschirmfoto: Willst du jemandem etwas auf deinem Bildschirm zeigen – zum Beispiel, wo ein Knopf ist oder wo etwas nicht klappt? Tipp auf die Kamera. Es erscheint ein roter Auslöser; du gehst in Ruhe an die Stelle und drückst ihn." },
   { v: "chat", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 8px">📸 Bildschirmfoto</h3>
       <div data-s="bild" style="position:relative;height:150px;border-radius:10px;background:var(--karte2);overflow:hidden"><div style="position:absolute;left:18px;top:20px;right:18px;height:24px;border-radius:6px;background:var(--rand)"></div><div style="position:absolute;left:18px;top:60px;width:55%;height:24px;border-radius:6px;background:var(--rand)"></div>
         <div style="position:absolute;left:10px;top:52px;width:62%;height:40px;border:3px solid #e53935;border-radius:50%"></div><div style="position:absolute;right:30px;top:100px;color:#1e88e5;font-size:28px;transform:rotate(-30deg)">➜</div></div>
@@ -1764,31 +1773,20 @@ const RG_NACHRICHTEN = () => [
       <div class="knoepfe" data-s="weg"><span class="knopf haupt">💬 In den Chat</span><span class="knopf">🆘 Als Problem</span><span class="knopf">🗄️ Archiv</span></div></div></div>`, "ueber"),
     nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="bild"]', '#rgSim [data-s="farben"]', '#rgSim [data-s="weg"]'], t: "🖍️ Markieren in Farbe",
     x: "Auf dem Foto kreist du mit dem Finger ein oder malst einen Pfeil, wo es langgeht. Die Stiftfarbe wählst du mit den Farbpunkten darunter – Rot, Blau, Grün, Gelb oder Schwarz. Der Pfeil zurück nimmt den letzten Strich weg, der Schwamm alles. Dann schickst du das Foto in den Chat, meldest es als Problem oder legst es in dein Archiv." },
-  // 6. Ordnung im Chat: Tage gruppiert
   { v: "chat", vor: rgSimNeu(() => `<div class="sim-dialog-hg"><div class="sim-dialog karte" data-s="dlg"><h3 style="margin:0 0 10px">📂 Übersichtlich gruppiert</h3>
       ${[["KW 43/26", "28 Nachrichten · Anne, Klaus, Du"], ["Mo, 02.11.26", "6 Nachrichten · Klaus, Du"], ["Gestern", "4 Nachrichten · Anne"]].map(([d, w], i) => `<div data-s="z${i}" style="display:flex;justify-content:space-between;gap:8px;padding:8px 10px;margin:0 0 6px;border-radius:10px;background:var(--karte2)"><span>▸ ${w}</span><b>${d}</b></div>`).join("")}
       <div class="hinweis" style="text-align:center;margin:6px 0" data-s="heute">— Heute —</div><span class="knopf klein" data-s="alle">⤢ Alle aufklappen</span></div></div>`, "ueber"),
     nach: rgSimWeg, sel: ['#rgSim [data-s="dlg"]'], mussSel: true, puls: ['#rgSim [data-s="z1"]', '#rgSim [data-s="z0"]', '#rgSim [data-s="heute"]', '#rgSim [data-s="alle"]'], t: "📂 Nachrichten gruppiert",
-    x: "Teil sechs: Ordnung im Chat. Damit lange Chats übersichtlich bleiben, sind frühere Tage zu einer Zeile zusammengefasst: wie viele Nachrichten, von wem, und rechts das Datum. Ältere Wochen stehen als eine Zeile mit der Kalenderwoche. Heute und alles Ungelesene bleibt offen. Antippen klappt einen Tag auf, Alle aufklappen öffnet alles." },
-  // 7. Die drei Punkte oben rechts
+    x: "Ordnung im Chat: Damit lange Chats übersichtlich bleiben, sind frühere Tage zu einer Zeile zusammengefasst: wie viele Nachrichten, von wem, und rechts das Datum. Ältere Wochen stehen als eine Zeile mit der Kalenderwoche. Heute und alles Ungelesene bleibt offen. Antippen klappt einen Tag auf, Alle aufklappen öffnet alles." },
   { v: "chat", vor: () => rgChatprofiBlatt("chatBlatt"), nach: () => rgFest("chatBlatt", false), tippVor: "#chatMenueKnopf", sel: [rgChatprofiKnopf("#chatBlatt", "🔊 Vorlesen ab"), "#chatBlatt .blatt-innen"], mussSel: true,
     puls: [rgChatprofiKnopf("#chatBlatt", "🔊 Vorlesen ab"), "#chatSlKnopf", rgChatprofiKnopf("#chatBlatt .na-pfeil-knoepfe", "🖨️ Ausdrucken"), "#chatArchivKnopf"], t: "⋮ Die drei Punkte oben rechts",
-    x: "Teil sieben: Oben rechts im Chat sitzen die drei Punkte. Dort findest du alles für den ganzen Chat: vorlesen lassen, Selbstlöschen, den ganzen Chat kopieren, ausdrucken oder in dein Archiv legen, den Chat stumm schalten oder archivieren – und bei Gruppen: Gruppe bearbeiten. Bei Zweier-Chats steht hier auch der Schlüsselbund." },
-  // 8. Die Info neben jeder Nachricht
-  { v: "chat", vor: rgNaChat(), sel: [rgChatprofiBlase(9)], mussSel: true, puls: ["#msg-rg-cp-9 .na-info", "#msg-rg-cp-9 .haken", "#msg-rg-cp-9 .na-pfeil"], t: "ⓘ Die Info an jeder Nachricht",
-    x: "Teil acht: Neben jeder Nachricht stehen kleine Zeichen. Das i öffnet die Info: wer die Nachricht geschrieben hat, wer sie bekommen hat und wer sie wann gelesen hat. Der kleine Pfeil daneben bietet Weiterleiten, Kopieren, Ausschneiden, Archivieren, Wichtig und Löschen." },
-  rgAus(RG_CHATPROFI, "✔️ Was die Haken bedeuten"),
-  rgAus(RG_CHATPROFI, "👆 Nachricht antippen", "Und tippst du eine Nachricht selbst an, kannst du schnell mit einem Bild reagieren, zum Beispiel Daumen hoch – oder antworten, oben anheften, merken und kopieren. Eigene Nachrichten kannst du hier auch bearbeiten oder zurückholen, solange sie noch niemand gelesen hat."),
-  // 9. Die Nachrichtenliste
-  rgAus(RG_NACHRICHT, "🗂️ Übersicht gegliedert", "Teil neun: die Liste deiner Chats. Chats mit Neuem stehen oben, mit roter Zahl, und fallen kurz mit einem Rahmen auf. Unter jedem Chat siehst du, wie es um deine letzte Nachricht steht – zum Beispiel angekommen oder gelesen. Oben gliederst du die Liste nach Zeit, nach Art oder nach Name; mit den Pfeilen klappst du alles auf oder zu."),
-  rgAus(RG_NACHRICHT, "👥 Gruppe & mehr"),
-  // 10. Verschlüsseln und Schlüsselbund (Geheim-Beispiel)
-  rgAus(RG_GEHEIM, "🔒 Schloss an", "Teil zehn, zum Schluss: geheim schreiben. Für Vertrauliches – zum Beispiel einen Code – tippst du in der kleinen Zeile auf das Schloss. Es wird grün; jetzt schreibst du ganz normal."),
+    x: "Oben rechts im Chat sitzen die drei Punkte. Dort findest du alles für den ganzen Chat: vorlesen lassen, Selbstlöschen, den ganzen Chat kopieren, ausdrucken oder in dein Archiv legen, den Chat stumm schalten oder archivieren – und bei Gruppen: Gruppe bearbeiten. Bei Zweier-Chats steht hier auch der Schlüsselbund." },
+  rgAus(RG_GEHEIM, "🔒 Schloss an", "Zum Schluss: geheim schreiben. Für Vertrauliches – zum Beispiel einen Code – tippst du in der kleinen Zeile auf das Schloss. Es wird grün; jetzt schreibst du ganz normal."),
   rgAus(RG_GEHEIM, "❓ Erst die Rückfrage"),
   rgAus(RG_GEHEIM, "🔑 Den Schlüssel festlegen"),
   rgAus(RG_GEHEIM, "🔑 Bequemer: der Schlüsselbund"),
-  { v: "nachrichten", video: "geheim", t: "✅ Fertig",
-    x: "Das war alles rund um Nachrichten: Plus Neu und normal senden, Wichtig und Express, die kleine Zeile, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte, die Info und die Liste – und das Verschlüsseln. Zu einigen Teilen gibt es eigene, ausführlichere Videos, zum Beispiel Chat für Fortgeschrittene und Geheim schreiben. Probier es aus – am besten mit einer Nachricht an dich selbst über Test." },
+  { v: "nachrichten", video: "geheim", t: "✅ Fertig mit Folge 2",
+    x: "Das war Folge zwei: die kleine Zeile, WhatsApp, das Bildschirmfoto, die Ordnung im Chat, die drei Punkte und das Verschlüsseln. Zu einigen Teilen gibt es eigene, ausführlichere Videos, zum Beispiel Chat für Fortgeschrittene und Geheim schreiben. Probier es in Ruhe aus – kaputt machen kannst du nichts." },
 ].filter(Boolean);
 // ---------- 2.348.0 KC-CLUB-VIDEO-GRUPPEN (Wunsch Hansi „für alle Themen Videos – logisch aufgebaut, gut erklärt“) ----------
 // 2.348.0 KC-CLUB-VIDEO-GRUPPEN: zeigt das Formular „Neue Gruppe“ mit einem Beispiel (Küchenteam) und einen Beispiel-Gruppenchat – nur auf dem

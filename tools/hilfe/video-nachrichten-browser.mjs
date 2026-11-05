@@ -36,22 +36,20 @@ async function video(id, ms = 700) {
     return schritte;
   }, { id, ms });
 }
-const n = await video("nachrichten_alles");
-for (const s of n) console.log(`${String(s.i).padStart(2)} ${s.muss ? (s.sichtbar ? "✓" : "✗") : s.sichtbar ? "·" : "-"} ${s.t}`);
-const fehltPflicht = n.filter((s) => s.muss && !s.sichtbar).map((s) => s.t), fehltOhne = n.filter((s) => !s.muss && s.sel !== false && !s.sichtbar).map((s) => s.t);
-ok(n.length >= 28, "alle Schritte durchlaufen (" + n.length + ")");
-ok(!fehltPflicht.length, "alle Pflicht-Ziele sichtbar" + (fehltPflicht.length ? " – fehlt: " + fehltPflicht.join(" | ") : ""));
-if (fehltOhne.length) console.log("Hinweis – ohne sichtbares Ziel (Text läuft trotzdem):", fehltOhne.join(" | "));
-ok(n[0].t === "💬 Alles rund um Nachrichten" && n[1].t === "💬 Neue Nachricht" && n.at(-1).t === "✅ Fertig", "Reihenfolge: Einstieg, Plus Neu … Fertig");
-const reihe = ["📝 Normal senden", "❗ Wichtig", "🏎️ Express – höchstens 5 am Tag", "📬 Express mit Bestätigung", "🧰 Die kleine Zeile", "𝐅 Fett, kursiv, Farbe und Marker", "👥 Nur die Nachrichten des anderen",
-  "🟢 Vom Club nach WhatsApp", "📋 Von WhatsApp in den Club", "📸 Bildschirmfoto", "🖍️ Markieren in Farbe", "📂 Nachrichten gruppiert", "⋮ Die drei Punkte oben rechts", "ⓘ Die Info an jeder Nachricht", "🗂️ Übersicht gegliedert", "🔒 Schloss an", "🔑 Bequemer: der Schlüsselbund"];
-const pos = reihe.map((t) => n.findIndex((s) => s.t === t));
-ok(pos.every((p, i) => p >= 0 && (i === 0 || p > pos[i - 1])), "alle Teile in Hansis Reihenfolge" + (pos.some((p) => p < 0) ? " – fehlt: " + reihe.filter((t, i) => pos[i] < 0).join(", ") : ""));
+const ergebnis = {};
+for (const [id, min] of [["nachrichten_1", 13], ["nachrichten_2", 14]]) {
+  const n = await video(id); ergebnis[id] = n; console.log("— " + id);
+  for (const s of n) console.log(`${String(s.i).padStart(2)} ${s.muss ? (s.sichtbar ? "✓" : "✗") : s.sichtbar ? "·" : "-"} ${s.t}`);
+  const fehlt = n.filter((s) => s.muss && !s.sichtbar).map((s) => s.t);
+  ok(n.length >= min, id + ": alle Schritte durchlaufen (" + n.length + ")");
+  ok(!fehlt.length, id + ": alle Pflicht-Ziele sichtbar" + (fehlt.length ? " – fehlt: " + fehlt.join(" | ") : ""));
+  ok(/^✅ Fertig mit Folge/.test(n.at(-1).t), id + ": endet mit Fertig");
+}
 const nach = await seite.evaluate(() => ({ sim: !!$("rgSim"), api: api === __apiEcht, filter: CHAT_FILTER_STAND, format: !$("formatLeiste").classList.contains("versteckt"), blatt: !$("chatBlatt").classList.contains("versteckt"),
-  senden: __api.filter((x) => /senden|speichern|setzen|einstellung|merken|gesehen|loeschen|hochladen|anlegen/.test(x.a)).map((x) => x.a), dauer: rgDauerSek(RUNDGAENGE.find((r) => r.id === "nachrichten_alles")) }));
+  senden: __api.filter((x) => /senden|speichern|setzen|einstellung|merken|gesehen|loeschen|hochladen|anlegen/.test(x.a)).map((x) => x.a), dauer: ["nachrichten_1", "nachrichten_2"].map((id) => Math.round(rgDauerSek(RUNDGAENGE.find((r) => r.id === id)))) }));
 ok(!nach.sim && nach.api && nach.filter === "alle" && !nach.format && !nach.blatt, "danach: kein Beispielbild, alle Nachrichten sichtbar, F-Leiste und ⋮-Fenster zu");
 ok(!nach.senden.length, "nichts gesendet oder gespeichert" + (nach.senden.length ? " – " + nach.senden.join(",") : ""));
-console.log(`Dauer laut Video: ${Math.round(nach.dauer)} s (≈ ${(nach.dauer / 60).toFixed(1)} Min.)`);
+console.log(`Dauer laut Video: Folge 1 ${nach.dauer[0]} s (≈ ${(nach.dauer[0] / 60).toFixed(1)} Min.), Folge 2 ${nach.dauer[1]} s (≈ ${(nach.dauer[1] / 60).toFixed(1)} Min.)`);
 ok(!fehler.length, "keine Fehler auf der Seite" + (fehler.length ? " – " + fehler.join(" | ") : ""));
 await browser.close(); srv.close();
 console.log("video-nachrichten-browser: alle Prüfungen bestanden");

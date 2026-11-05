@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-SELY4Qk5WRJRcd3iowphysdUGMH+FI0WRqCErIzpp975otayTf6hDCy/wgEstYaM" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-NolwO/0a+Grn3B1PPe3r9CrCjAXwY6DqwOAgdHM+71xp0nIaMhQKOzmCeVizLKVe" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
@@ -2041,7 +2041,8 @@ const RUNDGAENGE = [
   { id: "einstellungen", stand: "2", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
   { id: "oberflaeche", stand: "3", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
   { id: "nachricht", stand: "4", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger, schreiben, Express, Favoriten (ca. 2 Min.)", st: () => RG_NACHRICHT },
-  { id: "nachrichten_alles", stand: "1", zeit: "05.11.2026", sym: "📨", t: "Nachrichten – alles Schritt für Schritt", u: "Plus Neu, normal senden, Wichtig, Express mit Bestätigung, kleine Zeile (fett, Marker, nur die anderen), WhatsApp hin und zurück, Bildschirmfoto, Tage gruppiert, ⋮, ⓘ, Chat-Liste, Verschlüsseln & Schlüsselbund (ca. 10 Min.)", st: () => RG_NACHRICHTEN() }, // KC-CLUB-VIDEO-NACHRICHTEN (Wunsch Hansi 05.11.2026)
+  { id: "nachrichten_1", stand: "1", zeit: "05.11.2026", sym: "📨", t: "Nachrichten – Folge 1: das Einfache", u: "Plus Neu, an wen, kurz schreiben, normal senden, Wichtig, Express mit Bestätigung (höchstens 5 am Tag), ⓘ und Haken, Liste deiner Chats (ca. 5 Min.)", st: () => RG_NACHRICHTEN_1() }, // KC-CLUB-VIDEO-NACHRICHTEN (Wunsch Hansi 05.11.2026)
+  { id: "nachrichten_2", stand: "1", zeit: "05.11.2026", sym: "✨", t: "Nachrichten – Folge 2: Besonderheiten", u: "Kleine Zeile (fett, Farbe, Marker, nur die anderen), WhatsApp hin und zurück, Bildschirmfoto mit Markierung, Tage gruppiert, ⋮, Verschlüsseln & Schlüsselbund (ca. 5 Min.)", st: () => RG_NACHRICHTEN_2() },
   { id: "termin", stand: "1", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
   { id: "pinnwand", stand: "2", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
   { id: "mitglieder", stand: "2", sym: "👥", t: "Mitglieder, anklopfen & anrufen", u: "Ansicht, Kachel, schreiben, anrufen (ca. 1 Min.)", st: () => RG_MITGLIEDER },
