@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7763,7 +7763,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(sql, /revoke all on function public\.kc_club_waechter_lage\(\) from public, anon, authenticated;/, "nicht öffentlich");
   assert.match(sql, /grant execute on function public\.kc_club_waechter_lage\(\) to service_role;/, "nur Club-Server");
   assert.ok(!/create table/i.test(sql), "keine neue Tabelle");
-  assert.equal((programm.match(/^\s*\{ id: "[a-z]+", gruppe: "(sicherung|betrieb|schutz|app)", sym: /gm) || []).length, 24, "24 Wächter (15 + 9 Sicherheits-Wächter)");
+  assert.equal((programm.match(/^\s*\{ id: "[a-z]+", gruppe: "(sicherung|betrieb|schutz|app)", sym: /gm) || []).length, 25, "25 Wächter (15 + 9 Sicherheits-Wächter + 🧯 Notfall-Paket 2.862.0)");
   assert.ok(/\["waechter", "🛡️", "Wächter", "ueb"\]/.test(programm) && /if \(id === "waechter"\) return wchStart\(\);/.test(programm), "Kachel im Admin");
   assert.match(programm, /\/\^https:\\\/\\\/github\\\.com\\\/\/\.test\(g\.link/, "nur GitHub-Links");
   // Melden + Wochenbericht
@@ -7772,7 +7772,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(server, /if \(f === "grau"\) \{ if \(a\) neu\[w\.id\] = a; continue; \}/, "unbekannt meldet nichts");
   assert.match(server, /routerSenden\("club_fehler", an, \{ titel,/, "Push + Mail an die Admins");
   assert.match(server, /abschnitte\.splice\(3, 0, \["🛡️ Wächter"/, "Wächter im Wochenbericht");
-  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 22, "22 Wächter auf dem Server (🐌 und 💤 nur im Gerät)");
+  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 23, "23 Wächter auf dem Server (🐌 und 💤 nur im Gerät; 2.862.0: + 🧯 Notfall-Paket)");
   // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER
   assert.match(server, /siZaehlen\(a, ich\); \/\/ 2\.726\.0/, "jede Aktion wird gezählt");
   assert.match(server, /default: siUnbekannt\(a, ich\); return json/, "unbekannte Befehle fallen auf");
@@ -7796,7 +7796,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const reg = [...liste.matchAll(/\n  ([a-z0-9-]+): \{ einstieg: \[([^\]]*)\], sri: "([^"]*)" \}/g)].map((m) => ({ name: m[1], einstieg: [...m[2].matchAll(/"([^"]+)"/g)].map((x) => x[1]), sri: m[3] }));
   const dateien = fs.readdirSync(new URL("../teile/", import.meta.url)).filter((f) => f.endsWith(".js")).map((f) => f.slice(0, -3)).sort();
   assert.deepEqual(reg.map((t) => t.name).sort(), dateien, "TEILE_LISTE in app.js = Dateien in teile/");
-  const swTeile = JSON.parse(sw.match(/const TEILE = (\[[^\]]*\]);/)[1]);
+  const swTeile = [...(sw.match(/const TEILE = \{([^}]*)\};/)?.[1] || "").matchAll(/([a-z0-9-]+): "/g)].map((m) => m[1]); // 2.863.0: { name: "Kurz-Fingerabdruck" }
   assert.deepEqual([...swTeile].sort(), dateien, "TEILE in sw.js = Dateien in teile/ (sonst fehlt ein Teil offline / beim Update)");
   for (const t of reg) {
     const inhalt = fs.readFileSync(new URL(`../teile/${t.name}.js`, import.meta.url));
@@ -7809,9 +7809,18 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   }
   assert.ok(app.indexOf("const TEILE_LISTE = {") < app.indexOf("const API ="), "Platzhalter stehen bereit, bevor das Programm loslegt");
   assert.match(app, /function skriptLaden\(src, integrity\) \{[^\n]*if \(integrity\) x\.integrity = integrity;/, "Teile nur mit passendem Fingerabdruck (nie Mischstand, Regel 16)");
-  assert.match(app, /skriptLaden\(`teile\/\$\{name\}\.js\?v=\$\{APP_VERSION\}`, t\.sri\)/, "Teil-Adresse mit Version und Fingerabdruck");
+  assert.match(app, /skriptLaden\(`teile\/\$\{name\}\.js\?h=\$\{teilKennung\(t\.sri\)\}`, t\.sri\)/, "Teil-Adresse mit Kurz-Fingerabdruck, geprüft mit vollem Fingerabdruck"); // 2.863.0 KC-CLUB-UPDATE-NUR-GEAENDERT
   assert.match(app, /try \{ updatePruefen\(false\); \} catch \{\}/, "passt ein Teil nicht: nach Update suchen");
-  assert.match(sw, /DATEIEN\.push\(\.\.\.TEILE\.map\(\(t\) => `teile\/\$\{t\}\.js\?v=\$\{VERSION\}`\)\);/, "Teile beim Update mit in den Speicher (alles oder nichts)");
+  assert.match(sw, /DATEIEN\.push\(\.\.\.Object\.entries\(TEILE\)\.map\(\(\[t, h\]\) => `teile\/\$\{t\}\.js\?h=\$\{h\}`\)\);/, "Teile beim Update mit in den Speicher (alles oder nichts)");
+  // 2.863.0 KC-CLUB-UPDATE-NUR-GEAENDERT: sw.js kennt je Teil denselben Kurz-Fingerabdruck wie app.js – sonst lädt die App eine Adresse, die der Service Worker nicht eingerichtet hat
+  {
+    const kurz = (sri) => String(sri).slice(7, 23).replace(/\+/g, "-").replace(/\//g, "_");
+    assert.ok(app.includes('const teilKennung = (sri) => String(sri).slice(7, 23).replace(/\\+/g, "-").replace(/\\//g, "_");'), "teilKennung in app.js");
+    const swTeile = Object.fromEntries([...(/const TEILE = \{([^}]*)\};/.exec(sw)?.[1] || "").matchAll(/([a-z0-9]+): "([^"]*)"/g)].map((m) => [m[1], m[2]]));
+    assert.deepEqual(Object.keys(swTeile).sort(), reg.map((t) => t.name).sort(), "sw.js TEILE = TEILE_LISTE");
+    for (const t of reg) assert.equal(swTeile[t.name], kurz(t.sri), `sw.js: Kurz-Fingerabdruck von ${t.name} veraltet – node tools/teile-pruefsumme.mjs`);
+    assert.match(sw, /const istTeil = \(url\) => \{ const m = [^\n]*hasOwnProperty\.call\(TEILE, m\[1\]\) && url\.searchParams\.get\("h"\) === TEILE\[m\[1\]\]; \};/, "Service Worker liefert nur Teile mit passendem Fingerabdruck aus dem Speicher");
+  }
   assert.match(sw, /if \(istProgramm\(url\) \|\| istTeil\(url\)\) \{/, "Teile aus dem Speicher dieser Version");
   assert.match(sw, /ignoreSearch: !url\.pathname\.endsWith\("\/app\.js"\) && !url\.pathname\.includes\("\/teile\/"\)/, "offline nie ein Teil einer anderen Version");
   assert.match(lies("docs/AUFTEILEN.md"), /sicherung\/vor-aufteilen-2\.725\.0/, "Rückweg-Anleitung mit Sicherungs-Zweig");

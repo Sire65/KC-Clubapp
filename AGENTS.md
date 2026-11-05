@@ -83,7 +83,7 @@ Selten gebrauchte Programmteile liegen in `teile/<name>.js` und werden erst beim
 
 1. Nach jeder Änderung an `teile/*.js`: `node tools/teile-pruefsumme.mjs` – sonst passt der Fingerabdruck nicht, der Vertragstest wird rot
    (und in der App würde das Teil nicht geladen).
-2. Neues Teil: Datei + Eintrag in `TEILE_LISTE` (app.js) + `TEILE` (sw.js). Tests lesen app.js und alle Teile über `tests/programm.mjs`.
+2. Neues Teil: Datei + Eintrag in `TEILE_LISTE` (app.js) + `TEILE` (sw.js); `tools/teile-pruefsumme.mjs` trägt die Fingerabdrücke in beide ein (seit 2.863.0 steht der Kurz-Fingerabdruck in der Adresse – unveränderte Teile werden beim Update nicht neu geladen). Tests lesen app.js und alle Teile über `tests/programm.mjs`.
 3. Nur auslagern, was nicht beim Start gebraucht wird; Einstiegs-Funktionen liefern beim ersten Aufruf ein Promise.
 
 ## Browser-Tests nie gegen den echten Server (KC-TESTS-OHNE-ECHTSERVER, 04.11.2026, Wunsch Hansi nach „Fremde Anmeldeversuche“ durch einen Test-Browser)

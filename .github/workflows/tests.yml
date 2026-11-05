@@ -87,6 +87,8 @@ jobs:
       - run: node tests/spur-fee.test.mjs
       # KC-CLUB-PRUEFUNG-1104 (2.848.0): doppelte Fenster-Kennungen, Kontrast
       - run: node tests/pruefung-1104.test.mjs
+      # KC-CLUB-LEITUNG-MESSUNG + KC-CLUB-UPDATE-NUR-GEAENDERT (2.863.0)
+      - run: node tests/leitung-messung.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
@@ -103,6 +105,7 @@ jobs:
       - run: node tests/nachricht-alter.test.mjs
       - run: node tests/db-viel-zu-tun.test.mjs
       - run: node tests/uhr-x.test.mjs
+      - run: node tests/kachel-nurtest.test.mjs
       - run: node tests/klappe-gleich.test.mjs
       - run: node tests/pinnwand-nadeln.test.mjs
       - run: node tests/pinnwand-admin-mehr.test.mjs
@@ -119,6 +122,7 @@ jobs:
       - run: node tests/kachel-drehzeichen.test.mjs
       - run: node tests/video-zeitansage.test.mjs
       - run: node tests/video-kopfseite.test.mjs
+      - run: node tests/notpaket-abbruch.test.mjs
       - run: node tests/rechner-spur-besuche.test.mjs
       - run: node tests/tippflaechen.test.mjs
       - run: node tests/nutzung-alle.test.mjs

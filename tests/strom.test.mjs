@@ -10,7 +10,7 @@ assert.ok(html.includes(":root.kc-strom-ruhe *, :root.kc-strom-ruhe *::before, :
 assert.ok(app.includes("const STROM_RUHE_MS = 180000") && app.includes("const ruhe = document.hidden || (Date.now() - STROM.bedient > STROM_RUHE_MS && !stromZuschauen());"));
 assert.ok(app.includes("if (RG?.an || ES?.offen ||") && app.includes('return [...document.querySelectorAll("video, audio")].some((m) => !m.paused && !m.ended);'));
 // 2) Übersicht: nachgeladener Teil, Admin-Kachel, Anzeige ohne eigene Abfragen außer strom_uebersicht
-assert.ok(app.includes('strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-') && lies("sw.js").includes('"strom"'), "Teil angemeldet");
+assert.ok(app.includes('strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-') && lies("sw.js").includes('strom: "'), "Teil angemeldet");
 assert.ok(app.includes('["strom", "🔋", "Stromverbrauch", "app"]') && app.includes('if (id === "strom") return stromBlatt();'));
 assert.ok(lies("teile/strom.js").includes("Dieses Gerät gibt den Akkustand nicht heraus (iPhone"), "iPhone: nicht messbar");
 // 3) Messung: nur sichtbar und ohne Laden, einmal am Tag gemeldet, nur Zahlen; Server prüft und begrenzt

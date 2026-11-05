@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.859.0";
+const SERVER_VERSION = "2.863.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1158,7 +1158,7 @@ const FP_FILTER = "aktion.like.fehler_%,aktion.eq.hilferuf,aktion.eq.diagnose_st
 const FP_SCHWER = new Set(["hilferuf", "hilferuf_anonym", "start_kaputt"]);
 const FP_INFO = new Set(["alte_version", "update_getippt", "umgebung", "startzeit", "hinweis", "link_kopiert", "diagnose_start", "zugang_angefordert", "offline", "anonym_admin_benachrichtigt",
   "update_selbst", "update_start"]); // 2.310.2 KC-CLUB-FP-RUHIG: Updates sind Info, kein Fehler
-FP_INFO.add("update_mindest"); FP_INFO.add("schluessel_zurueck"); // KC-CLUB-SCHLUESSEL-SICHERN: still wiederhergestellt = Info // KC-CLUB-MINDESTVERSION (RC 20.10.2026): erzwungenes Update ist Info, kein Fehler
+FP_INFO.add("update_mindest"); FP_INFO.add("leitung"); /* 2.863.0 KC-CLUB-LEITUNG-MESSUNG */ FP_INFO.add("schluessel_zurueck"); // KC-CLUB-SCHLUESSEL-SICHERN: still wiederhergestellt = Info // KC-CLUB-MINDESTVERSION (RC 20.10.2026): erzwungenes Update ist Info, kein Fehler
 const FP_VOLL = 300; // ab so vielen Einträgen fragt die Tagesinfo, ob geleert werden soll
 const fpNurBrowser = (d: any) => /^Script error\.?$/i.test(String(d?.text ?? "").trim()) && !d?.datei && !Number(d?.zeile) && !String(d?.stapel ?? "").trim();
 function fpStufe(aktion: string, d: any): "schwer" | "hinweis" | "info" {
@@ -1186,7 +1186,7 @@ async function fpNurNeue(liste: any[], eingrenzen: (q: any) => any) {
   let da = new Set<string>();
   if (zs.length) {
     const { data } = await eingrenzen(db.from("kc_club_protokoll").select("aktion,z:details->>z").gte("zeit", new Date(Date.now() - 86400000).toISOString()).in("details->>z", zs)).limit(500);
-    da = new Set((data ?? []).map((x: any) => String(x.aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "") + "|" + x.z));
+    da = new Set((data ?? []).map((x: any) => String(x.aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "").replace(/^leitung_messung$/, "leitung") + "|" + x.z));
   }
   const neu = new Set<string>();
   return liste.filter((e: any) => { const k = fpArt(e?.art) + "|" + String(e?.z ?? ""); if (da.has(k) || neu.has(k)) return false; neu.add(k); return true; });
@@ -5062,7 +5062,7 @@ const START_TAGE = 180;
 // PROT_ZIEL_ZEILEN erreicht sind – und es steht eine Zeile „protokoll_waechter“ mit den Zahlen im Protokoll (nie Inhalte).
 // Läuft im nächtlichen Wartungslauf; spur (30 Tage) und app_start (180 Tage) behalten ihre eigenen Fristen.
 const PROT_LAERM_TAGE = 60, PROT_ALT_TAGE = 365, PROT_MAX_ZEILEN = 50000, PROT_ZIEL_ZEILEN = 40000;
-const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "sos_geoeffnet", "buero_mail_versuch"]; // 2.122.0: Mail-Bremse braucht ihn nur 1 Minute
+const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "leitung_messung", "sos_geoeffnet", "buero_mail_versuch"]; // 2.122.0: Mail-Bremse braucht ihn nur 1 Minute
 const PROT_LAERM_PRAEFIX = ["diagnose_%", "fehler_update_%"];
 const PROT_WICHTIG = ["%zugang%", "%link%", "%kurzcode%", "%sperr%", "%rolle%", "%recht%", "admin_%", "%geloescht%", "%endgueltig%", "%entfernt%",
   "%zusammengefuehrt%", "%freigab%", "%notbetrieb%", "%sicherheit%", "%schnappschuss%", "%mitschau%", "notfall_%", "hilferuf", "aenderung_%", "erstattung%",
@@ -7863,6 +7863,9 @@ const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: stri
   { id: "last", sym: "🚦", name: "Last-Wächter", job: "kc-traffic-guard-15m", befund: (d) => { const x = d.last; return !x || x.stufe === "normal" ? null : [x.stufe === "critical" ? "rot" : "gelb", x.stufe === "critical" ? "sehr hohe Last" : "erhöhte Last", x.ursache || ""]; } },
   { id: "betriebw", sym: "👁️", name: "Betriebs-Wächter", job: "kc-live-operations-watch-minute" },
   { id: "systemcheck", sym: "🚨", name: "System-Check", job: "kc-system-check-auto-15m" },
+  // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: Notfall-Paket (Kopie für den Ersatz-Server). Gelb erst, wenn auch der Neuversuch nach der Fehlerpause fehlt
+  // (Fehler ≥ 45 Min. alt und kein neueres Paket) – ein einzelner Abbruch mit gelungenem Neuversuch steht nur im Protokoll und hier als Hinweis.
+  { id: "notpaket", sym: "🧯", name: "Notfall-Paket", app: (d) => notpaketBefund(d.notpaket) },
   { id: "messung", sym: "⚖️", name: "Mess-Stationen", job: "kc-club-messung-30min", befund: (d) => (d.mess?.api?.db_ms > 300 ? ["gelb", "Datenbank langsam", `Antwortzeit ${d.mess.api.db_ms} ms`] : null) },
   { id: "zugang", sym: "🛂", name: "Zugangs-Wächter", job: "kicc-access-watch-minute" },
   // 🔒 Sicherheits-Wächter (2.726.0 KC-CLUB-SICHERHEIT-WAECHTER) – bewertet aus Zählungen (d.sicherheit) und dem Datenleck-Check (d.leck)
@@ -7933,10 +7936,22 @@ function waechterBewerten(d: any): Record<string, [string, string, string]> {
   }
   return out;
 }
+function notpaketBefund(x: any): [string, string, string] {
+  if (!x?.url) return ["grau", "nicht eingerichtet", ""];
+  const t = (v: unknown) => (v ? Date.parse(String(v)) : NaN), hoch = t(x.hochgeladen_am), fehlerAm = t(x.fehler_am), jetztMs = Date.now();
+  const zeit = (ms: number) => fZeit.format(new Date(ms)) + " Uhr";
+  if (!Number.isFinite(hoch)) return ["rot", "noch kein Paket", x.fehler ? String(x.fehler) : ""];
+  if (jetztMs - hoch > 26 * 3600000) return ["rot", "Paket älter als ein Tag", `Zuletzt gebaut ${zeit(hoch)}.${x.fehler ? " Letzter Fehler: " + x.fehler : ""}`];
+  if (Number.isFinite(fehlerAm) && fehlerAm > hoch && jetztMs - fehlerAm >= 45 * 60000) return ["gelb", "Bau klappt gerade nicht", `${x.fehler || "Fehler"} (seit ${zeit(fehlerAm)}). Das alte Paket von ${zeit(hoch)} gilt weiter.`];
+  const zuletzt = Number.isFinite(fehlerAm) && jetztMs - fehlerAm < 24 * 3600000 ? ` · letzter Fehler ${zeit(fehlerAm)}${x.fehler ? "" : " (danach wieder gebaut)"}` : "";
+  return ["gruen", "aktuell", `Gebaut ${zeit(hoch)}${zuletzt}`];
+}
 async function waechterLage(): Promise<any> {
   const { data, error } = await db.rpc("kc_club_waechter_lage");
   if (error || !data) throw new Fehler("Wächter-Lage nicht lesbar.", 500);
-  const d: any = { ...(data as any), github: await waechterGithub() };
+  const nb = await notStand().catch(() => null); // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: nur Zeiten und Fehlertext – nie die Schlüssel
+  const d: any = { ...(data as any), github: await waechterGithub(),
+    notpaket: nb ? { url: !!nb.url, hochgeladen_am: nb.hochgeladen_am ?? null, fehler: nb.fehler ?? null, fehler_am: nb.fehler_am ?? null, bau_start: nb.bau_start ?? null, mitglieder: nb.mitglieder ?? null } : null };
   d.bewertung = waechterBewerten(d); return d;
 }
 // Alle 15 Min. (Wartung): meldet sich ein Wächter neu mit Gelb/Rot (oder steigt von Gelb auf Rot) → Push + Mail an die Admins (Weg „club_fehler“);
@@ -8531,6 +8546,9 @@ function fpSauber(d: any): Record<string, unknown> {
   return out;
 }
 const fpArt = (x: unknown) => txt(x, 24).toLowerCase().replace(/[^a-z_]/g, "") || "allg";
+// 2.863.0 KC-CLUB-LEITUNG-MESSUNG: Messwerte der direkten Leitung (nur Zahlen) als eigene Art – kein Fehler, nicht im Fehler-Eingang
+const FP_MESSUNG: Record<string, string> = { leitung: "leitung_messung" };
+const fpAktion = (x: unknown) => FP_MESSUNG[fpArt(x)] ?? "fehler_" + fpArt(x);
 // ---------- 2.550.0 KC-CLUB-FEHLVERSUCHE (Wunsch Hansi „herausfinden, wer ohne gültigen Link in unsere App will“) ----------
 // Öffnet dasselbe Gerät (anonyme Geräte-Kennung der App) die App FV_SCHWELLE-mal in FV_STUNDEN Stunden ohne gültigen Link, bekommen die
 // Admins einen Push mit Anzahl, Uhrzeit und grobem Gerätetyp (System/Browser, wie die App sie meldet). Je Gerät höchstens 1× am Tag,
@@ -10493,7 +10511,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const platz = Math.max(0, Math.min(200 - (count ?? 0), liste.length));
         if (!platz) return json({ ok: true, gespeichert: 0 });
         const ua = txt(req.headers.get("user-agent"), 200), version = txt(req.headers.get("x-club-version"), 20);
-        await db.from("kc_club_protokoll").insert(liste.slice(0, platz).map((e: any) => ({ person_id: ich.person_id, aktion: "fehler_" + fpArt(e?.art), details: { ...fpSauber(e), ua, version } })));
+        await db.from("kc_club_protokoll").insert(liste.slice(0, platz).map((e: any) => ({ person_id: ich.person_id, aktion: fpAktion(e?.art), details: { ...fpSauber(e), ua, version } })));
         await fehlerAlarm(ich, liste.slice(0, platz), ua, version).catch(() => null); // KC-CLUB-FEHLER-ALARM (2.48.0)
         return json({ ok: true, gespeichert: platz });
       }
@@ -20358,6 +20376,7 @@ const NOT_PARALLEL = 4, NOT_TEIL_MS = 60000;
 // KC-CLUB-NOTPAKET-PUFFER (2.453.0): 4 Mitglieder je Teil-Aufruf (17 → 5 Aufrufe). Gleiche Leseabfragen innerhalb des Teils nur einmal
 // (DB_PUFFER). Rechenzeit je Aufruf ≈ 4/17 des früheren Gesamtlaufs, weit unter der Grenze, die 2.124.0 zum Aufteilen zwang.
 const NOT_GRUPPE = 4, NOT_GRUPPE_MS = 140000;
+const NOT_ABBRUCH_MS = NOT_GRUPPE_MS + 60000; // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: länger dauert kein Bau (ein Bau braucht sonst 20–35 s)
 const NOT_ABSTAND_MIN = 180, NOT_NACHT_AB = 22, NOT_NACHT_BIS = 6; // 2.491.0 KC-CLUB-NOTPAKET-SELTENER
 async function notpaketMitglied(personId: string): Promise<Record<string, unknown> | null> {
   const [{ data: p0 }, { data: ro }] = await Promise.all([
@@ -20602,6 +20621,16 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
   await notSchluessel(); // Schlüsselpaar gleich anlegen – den öffentlichen Teil braucht der Ersatz-Server schon beim Einrichten
   const st = await notStand();
   if (!st.url) return { ok: true, aus: "Ersatz-Server noch nicht eingerichtet" };
+  // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH (Wunsch Hansi 05.11.2026 „damit so was vermerkt wird“): Bricht der Server mitten im Bau ab („CPU Time
+  // exceeded“, Status 546), läuft kein catch – der Abbruch blieb bisher unbemerkt (04.11. 21–1 Uhr fünf stille Abbrüche). Jetzt steht beim
+  // Start des Baus bau_start; ist er beim nächsten Lauf noch da und älter als jeder Bau dauern kann, wird „Bau abgebrochen“ als Fehler
+  // eingetragen (Admin → Notbetrieb, Protokoll notpaket_fehler) – danach gilt die normale Fehlerpause.
+  if (st.bau_start && Date.now() - Date.parse(String(st.bau_start)) > NOT_ABBRUCH_MS) {
+    const fehler = "Bau abgebrochen (Server-Rechenzeit überschritten) – altes Paket bleibt";
+    await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: st.bau_start, bau_start: null }).eq("id", 1);
+    await protokoll(null, "notpaket_fehler", { erzwungen: false, fehler, abgebrochen: true, seit: st.bau_start }).catch(() => {});
+    Object.assign(st, { fehler, fehler_am: st.bau_start, bau_start: null });
+  }
   const { data: fp } = await db.rpc("kc_club_notpaket_fingerabdruck");
   const ziel = String(st.url).replace(/\/+$/, "");
   const { privat } = await notSchluessel();
@@ -20637,6 +20666,7 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
       await db.from("kc_club_notbetrieb").update({ bestaetigt_am: erstellt, fehler: null }).eq("id", 1);
       return { ok: true, unveraendert: true };
     }
+    await db.from("kc_club_notbetrieb").update({ bau_start: jetzt() }).eq("id", 1); // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: Bau beginnt
     const dbVorher = DB_AUS.n, t0 = Date.now();
     // 2.491.0 KC-CLUB-NOTPAKET-NUR-GEAENDERTE: Zähler VOR dem Bau lesen (was währenddessen dazukommt, fällt beim nächsten Mal auf)
     const plan = erzwingen ? null : await notTeilPlan().catch(() => null);
@@ -20657,7 +20687,7 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
     const anzahl = Object.keys(mitglieder).length;
     const roh = await gzip(JSON.stringify({ format: 1, erstellt, stand: erstellt, fingerabdruck: fp, server: SERVER_VERSION, mitglieder }));
     await senden("/paket", roh, "application/gzip");
-    await db.from("kc_club_notbetrieb").update({ fingerabdruck: fp, hochgeladen_am: erstellt, bestaetigt_am: erstellt, groesse: roh.length, mitglieder: anzahl, dauer_ms: Date.now() - t0, fehler: null }).eq("id", 1);
+    await db.from("kc_club_notbetrieb").update({ fingerabdruck: fp, hochgeladen_am: erstellt, bestaetigt_am: erstellt, groesse: roh.length, mitglieder: anzahl, dauer_ms: Date.now() - t0, fehler: null, bau_start: null }).eq("id", 1);
     // Vorrat für den nächsten Teilbau (fehlt die Tabelle noch, bleibt es einfach beim Komplettbau)
     if (zaehler) await db.from("kc_club_notpaket_vorrat").upsert({ id: 1, paket_gz: b64(roh), zaehler, voll_am: teilbau ? plan?.vollAm ?? null : erstellt, geaendert_am: erstellt }).then(() => {}, () => {});
     // KC-CLUB-NOTPAKET-PUFFER (2.453.0): je Bau Grund und Datenbank-Abfragen festhalten (nur Zahlen, keine Inhalte) – Messgrundlage für weitere Einsparungen
@@ -20669,7 +20699,7 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
     return { ok: true, mitglieder: anzahl, neu_gebaut: paket.anzahl, teilbau, groesse: roh.length, ms: Date.now() - t0, db: paket.db, grund };
   } catch (e) {
     const fehler = txt(e instanceof Error ? e.message : String(e), 300);
-    await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: jetzt() }).eq("id", 1);
+    await db.from("kc_club_notbetrieb").update({ fehler, fehler_am: jetzt(), bau_start: null }).eq("id", 1);
     // KC-CLUB-NOTPAKET-FEHLERPAUSE: auch der Fehlschlag kommt ins Protokoll – die Lastwarnung kennt so die Ursache (vorher „unbekannt“)
     await protokoll(null, "notpaket_fehler", { erzwungen: erzwingen, fehler }).catch(() => {});
     return { ok: false, fehler };
