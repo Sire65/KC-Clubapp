@@ -43,4 +43,6 @@ assert.ok(sl.includes('Math.abs(x.t - t) < SPUR_START_FENSTER_MS && (x.w === "ge
 assert.ok(sl.includes('schritte.push({ p: p0, t, w: "geoeffnet", mit: null });') && !/mit: (d|z)\./.test(sl), "nur Uhrzeit, kein „mit wem“");
 assert.ok(/const SPUR_START_VERZUG_MS = 1500, SPUR_START_FENSTER_MS = 3 \* 60000;/.test(server), "Zeiten");
 assert.ok(app.includes('setTimeout(() => api("diagnose", { art: "start", daten: { start: START_ART, referrer: (document.referrer || "").slice(0, 80) } }).catch(() => {}), 1500);'), "App meldet den Start 1,5 s nach dem Öffnen (einmal je Sitzung)");
+// Gäste und Aushilfen dürfen nur Aktionen aus ZUGANG_AKTIONEN – „weg“ muss dabei sein, sonst bleiben sie bis zu 150 s „online“
+for (const [q, n] of [[app, "app.js"], [server, "Server"]]) { const i = q.indexOf("const ZUGANG_AKTIONEN"); assert.ok(/basis: \[[^\]]*"weg"/.test(q.slice(i, q.indexOf("};", i))), `${n}: „weg“ für Gäste/Aushilfen erlaubt`); }
 console.log("online-echt: ok");

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.869.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.871.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-CY9OKXrriRyOo8Xkp9jmwDhHLRgvcUgBPEcR+csfkxug+9kxzXbd4/oE4hqaXyTL" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-99RiSwV9Nxy4IRPyHGd4L1AL+GAB5ZurtzT6LFhufSptdzvfma7sGPIEWO8Q6qyb" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
@@ -25,6 +25,7 @@ const TEILE_LISTE = {
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
+  garten: { einstieg: ["gartenStart", "gartenTag"], sri: "sha384-6aJ7BC8onHSBkTJfke0PZ2xpqNkKve2zPAKRfEciPgMowI960w0UXsF+SgwXCHMm" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
 };
 const TEILE_STAND = {};
@@ -2035,9 +2036,9 @@ const RUNDGAENGE = [
   { id: "inst_samsung", stand: "1", zeit: "05.11.2026", sym: "🟣", t: "Installieren mit Samsung Internet", u: "Menü, Seite hinzufügen zu, Startbildschirm (ca. 1 Min.)", st: () => RG_INST_SAMSUNG },
   { id: "inst_safari", stand: "1", zeit: "05.11.2026", sym: "🧭", t: "Installieren auf iPhone und iPad (Safari)", u: "Teilen, Zum Home-Bildschirm, Code eingeben (ca. 2 Min.)", st: () => RG_INST_SAFARI },
   { id: "inst_firefox", stand: "1", zeit: "05.11.2026", sym: "🦊", t: "Installieren mit Firefox (Android)", u: "Drei Punkte, Zum Startbildschirm hinzufügen (ca. 1 Min.)", st: () => RG_INST_FIREFOX },
-  { id: "inst_geraet", stand: "1", sym: "💻", t: "Weiteres Gerät: Tablet oder PC", u: "Mit dem 6-stelligen Code anmelden und installieren (ca. 2 Min.)", st: () => RG_INST_GERAET },
-  { id: "inst_codes", stand: "1", sym: "🔑", t: "Link, Code & Co. – die Unterschiede", u: "Persönlicher Link, Code, Link verloren, Link einfügen (ca. 2 Min.)", st: () => RG_INST_CODES },
-  { id: "ueberblick", stand: "4", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
+  { id: "inst_geraet", stand: "1", zeit: "06.11.2026", sym: "💻", t: "Weiteres Gerät: Tablet oder PC", u: "Mit dem 6-stelligen Code anmelden und installieren (ca. 2 Min.)", st: () => RG_INST_GERAET },
+  { id: "inst_codes", stand: "1", zeit: "06.11.2026", sym: "🔑", t: "Link, Code & Co. – die Unterschiede", u: "Persönlicher Link, Code, Link verloren, Link einfügen (ca. 2 Min.)", st: () => RG_INST_CODES },
+  { id: "ueberblick", stand: "4", zeit: "06.11.2026", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
   { id: "einstellungen", stand: "2", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
   { id: "oberflaeche", stand: "3", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
   { id: "nachricht", stand: "4", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger, schreiben, Express, Favoriten (ca. 2 Min.)", st: () => RG_NACHRICHT },
@@ -2615,6 +2616,7 @@ const HILFE = [
   { id: "pinnwand_neu_puls", thema: "club", sym: "📌", t: "Die Pinnwand pulsiert bei neuen Zetteln", x: "Hängt ein neuer Zettel an der Pinnwand, den du noch nicht gesehen hast – oder ein Hilfe-Aufruf, auf den du noch nicht geantwortet hast –, <b>pulsiert die Kachel 📌 Pinnwand rot</b> und zeigt die <b>Anzahl</b>. Dazu steht im <b>📣 Info-Laufband</b> „📌 Ein neuer Zettel an der Pinnwand“ – antippen öffnet die Pinnwand. Von selbst geht die Pinnwand nicht auf; ist die App gerade offen, kommt nur eine kurze Meldung „📌 Neuer Zettel an der Pinnwand von …“. Sobald du die Pinnwand öffnest, hört das Pulsieren auf. Ist nichts neu, steht auch keine Zahl da. Ohne Effekte (⚙️ → „✨ Effekte“) gibt es statt des Pulsierens einen festen roten Rand.", zeig: () => zeige("start"), seit: "2.763.0" },
   { id: "pinnwand_alt", thema: "club", sym: "📌", t: "Wenn ein Zettel schon länger hängt", x: "Die App fragt nach einiger Zeit freundlich nach, ob dein Zettel noch hängen soll. Ein Tipp auf <b>„Hängen lassen“</b> genügt – oder du nimmst ihn ab, und die Wand bleibt übersichtlich.", zeig: () => zeige("pinnwand"), seit: "2.23.1" },
   { id: "pinnwand_nadeln", thema: "club", sym: "📍", t: "Wo sind die Zettel, die ich schon gelesen habe?", x: "Damit die Pinnwand nicht zu voll wird, hängt ein Zettel nur noch <b>bis zum Tag nach dem ersten Ansehen</b> groß an der Wand. Danach findest du ihn unten über <b>„🗂️ Ältere Zettel ansehen“</b>. Deine eigenen Zettel – und für die Clubleitung alle gelesenen – stecken als <b>farbige Nadel oben im Rahmen</b>: antippen macht den Zettel wieder groß, <b>„📌 wieder als Nadel“</b> steckt ihn zurück. <b>Wichtige</b> Zettel bleiben groß, bis du „✓ Erledigt“ tippst. Gelöscht wird nichts.", seit: "2.813.0" }, // 2.813.0 KC-CLUB-PINNWAND-NADELN
+  { id: "mein_garten", thema: "privat", sym: "🌱", nur: () => frei("garten"), t: "Mein Garten: Samen säen und Pflanze großziehen", x: "Kachel <b>„🌱 Mein Garten“</b> (Meins): Für Tage in der App (7, 25, 50, 100, 200, 365) und für besondere Taten – z. B. dein erstes eigenes Rezept oder ein Beitrag für die Club-Küche – gibt es ein <b>🎁 Samentütchen</b>. Öffnen, eine von 12 Pflanzen aussuchen, aussäen. Die Pflanze wächst über echte Tage. <b>💧 Gießen</b> etwa alle 3 Tage, <b>🧪 Düngen</b> etwa alle 3 Wochen – oder <b>🤖 Gärtner kümmert sich</b> einschalten. Sie geht nie ein, ohne Wasser wächst sie nur langsamer. Im <b>🏡 Club-Garten</b> siehst du die Pflanzen der anderen, wenn sie sie freigegeben haben." },
   { id: "anbieter_neues", thema: "technik", sym: "📰", nur: () => !!ICH?.admin, t: "Anbieter: Neues, Störungen, Wartungen", x: "Admin-Bereich → Kachel <b>„📰 Anbieter“</b>: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – <b>angekündigte Wartungen</b>, <b>Störungen</b> der letzten 14 Tage und <b>Neuerungen</b> der letzten 30 Tage. Oben steht die Lage in einem Satz. Meldungen aus anderen Regionen oder fernen Rechenzentren werden ausgeblendet (nur gezählt). Die Anbieter schreiben englisch – antippen öffnet die Original-Seite. <b>„💡 Prüfen lassen“</b> setzt eine Neuerung auf die Wunschliste, dann prüft Claude, ob wir sie übernehmen können. Kostet nichts: nur öffentliche Seiten, abgefragt erst beim Öffnen." }, // 2.842.0 KC-CLUB-ANBIETER-NEUES
   { id: "kachel_drehzeichen", thema: "start", sym: "🔄", t: "Kacheln umdrehen: das kleine 🔄", x: "Kacheln mit einem kleinen <b>🔄</b> oben rechts haben eine <b>Rückseite mit Schnellaktionen</b> – z. B. Termine (＋ Neu), Nachrichten (Neue Nachricht), Dienstpläne (Mein Dienst, Dienstwünsche), Hilfe (Frag Twinkey, Erklär-Videos), Büro (Eingang). <b>🔄 antippen</b> dreht die Kachel um, hinten dreht dasselbe Zeichen sie zurück (nach 8 Sekunden auch von selbst). Doppelt auf die Kachel tippen geht weiterhin. Abschalten: ⚙️ Einstellungen → Darstellung → „🔄 Kacheln umdrehen“." }, // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN
   { id: "nutzung_alle", thema: "technik", sym: "📈", t: "So nutzen wir die App – Zahlen für alle", x: "Wann ist im Club am meisten los? Die Kachel <b>„📈 So nutzen wir die App“</b> (Register Technik) zeigt es als Farbfeld (Wochentag × Uhrzeit) – dazu, wie viele Mitglieder da waren, wie viele Nachrichten, Push und E-Mails verschickt wurden, welche Bereiche am beliebtesten sind und was noch zu entdecken ist. Wähle 7, 30 oder 90 Tage; Pfeile vergleichen mit dem Zeitraum davor. Es sind <b>nur Summen</b> – niemand wird einzeln gezählt, und Inhalte werden nie gezählt. Feld oder Säule antippen zeigt die genaue Zahl." }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE
@@ -9686,6 +9688,7 @@ const KACHELN = {
     { id: "aenderung", sym: "✏️", t: "Änderung melden", u: "Neue Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
     { id: "unterstuetzung", sym: "🙋", t: "Unterstützung anfragen", u: "Hilfe bei der Club-App", aktion: "uaStart()", nur: () => !ICH?.admin }, // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => smOffen().length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
+    { id: "garten", sym: "🌱", t: "Mein Garten", u: () => (nurTest("garten") ? "🔒 nur für dich (Test) · " : "") + gartenKurz(), zahl: () => gartenSpeicher()?.g?.offen || 0, aktion: "gartenStart()", nur: () => frei("garten") }, // KC-CLUB-SAMEN (#84)
     { id: "fitness", sym: "🏋️", t: "Fit bleiben", u: () => (nurTest("fitness") ? "🔒 nur für dich (Test) · " : "") + "Übungen mit Twinkey", aktion: "fiStart()", nur: () => frei("fitness") }, // KC-CLUB-FITNESS (2.55.0)
     // 2.143.0 KC-CLUB-STUDIO (Wunsch Hansi): Kachel nur unter „Meins“ und nur, solange ein Mitglied freigeschaltet ist – der Admin nutzt die Studio-Karte im Kopf
     { id: "studio", sym: "🎬", t: "Studio", u: () => studioStufe() === "alles" ? "Foto · Mitschauen · Live zeigen" : "Live zeigen", aktion: "stOeffnen()", nur: () => !ICH?.admin && !!studioStufe() },
@@ -9721,7 +9724,7 @@ const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur(
 // und nur passende Kacheln zeigt. Gast: Termine, Nachrichten, SOS (nur Clubleitung), Spiele, Hilfe/Einstellungen. Aushilfe: dazu Mein Dienst,
 // Dienstwünsche, Fotoalbum ansehen, Schulung. Der Vertragstest prüft, dass ZUGANG_AKTIONEN hier und im Server gleich sind.
 const ZUGANG_AKTIONEN = {
-  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "weg", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
@@ -11970,6 +11973,17 @@ function reisswolf(el) {
 // 2.862.0 KC-CLUB-KACHEL-NURTEST (Wunsch #83): kleines rotes ✕ unten links an Kacheln, die noch nicht für alle freigegeben sind – nur der Admin sieht es.
 // Nur Kacheln, die in der Freigaben-Registry stehen (k.freigabe oder k.id); ohne geladene Freigaben kein ✕ (unbekannt ≠ „nicht veröffentlicht“).
 const kachelNurTest = (k) => { const f = INIT?.freigaben, id = k.freigabe || k.id; return !!(ICH?.admin && f && Object.prototype.hasOwnProperty.call(f, id) && f[id] !== "alle"); };
+// KC-CLUB-SAMEN (#84): Kachel-Text aus dem Zwischenspeicher des Geräts (kein Abruf); einmal am Tag beim Start den Tag zählen (lädt teile/garten.js)
+const gartenSpeicher = () => { try { return JSON.parse(localStorage.getItem("kc_club_garten") || "null"); } catch { return null; } };
+function gartenKurz() {
+  const g = gartenSpeicher()?.g; if (!g) return "Samen säen · Pflanze großziehen";
+  if (g.offen) return `🎁 ${g.offen === 1 ? "Ein Samentütchen" : g.offen + " Samentütchen"} wartet`;
+  return g.pflanzen?.length ? `${g.pflanzen.length} Pflanze${g.pflanzen.length === 1 ? "" : "n"} · ${g.tage} Tage dabei` : `${g.tage} Tage dabei`;
+}
+function gartenTagPruefen() {
+  if (!ICH || zugang() !== "mitglied" || !frei("garten") || gartenSpeicher()?.tag === heuteIso()) return;
+  gartenTag().catch(() => {}); // still – im schlechtesten Fall morgen wieder
+}
 function kachelnZeigen() {
   if (ZIEHEN) return; // nicht neu zeichnen, während eine Kachel am Finger hängt
   if (KR.offen && document.querySelector("#raster > .kachel.kr-hinten")) return; // 2.54.0: Rückseite bleibt, bis sie zurückdreht
@@ -17395,7 +17409,7 @@ async function neuLadenRoh(vonHand) {
     if (!ONL.timer) nachUpdatePruefen(begruesst);
     if (!ONL.timer) { onlinePing(); onlineTakt(); pushAktivPruefen(); herzStarten(); const a = /#anklopfen=([0-9a-f-]{36})/.exec(START_HASH || ""); if (a) anklopfenAusLink(a[1]); const c = /#anruf=([0-9a-f-]{36})/.exec(START_HASH || ""); if (c) { ONL.erledigt.add("r" + c[1]); anrufEingehend(c[1]); } }
     if (!PW.startGeprueft) { PW.startGeprueft = true; pwStart(begruesst); }
-    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
+    if (!SH_START.geprueft) { SH_START.geprueft = true; setTimeout(startHinweisPruefen, 2500); setTimeout(filmHinweisPruefen, 4000); setTimeout(eingangHinweisPruefen, 5000); setTimeout(neuesGeraetFragen, 6000); setTimeout(gartenTagPruefen, 8000); setTimeout(() => lsPruefen(true), 1500); } // KC-CLUB-START-HINWEIS · 2.726.0 neues Gerät + Liegen-Schutz
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
@@ -34086,6 +34100,7 @@ const FENSTER_NAMEN = {
   onlineBlatt: "🟢 Gerade online", personenBlatt: "👉 Wer?", prBlatt: "🧪 Probephase", pwTeilBlatt: "📌 Zettel abnehmen", rcAngebotBlatt: "🧳 Reise-Checkliste angeboten",
   rcBlatt: "🧳 Meine Reise-Checkliste", rgAuswBlatt: "📊 Auswertung der Erklär-Videos", rgListeBlatt: "🎬 Erklär-Videos (Liste)", rgsBlatt: "🗣️ Stimme für Videos wählen", rolleBlatt: "🎖️ Rolle/Amt",
   anbBlatt: "📰 Anbieter – Neues & Wartungen", // 2.842.0 KC-CLUB-ANBIETER-NEUES
+  gtBlatt: "🌱 Mein Garten", gtTuete: "🎁 Samentütchen", gtClub: "🏡 Club-Garten", // KC-CLUB-SAMEN (#84)
   bueKatalogBlatt: "🛒 Büro-Katalog", // 2.840.0 KC-CLUB-BUERO-EINRICHTEN
   rundeBlatt: "🔗 Feste Gruppe bilden", rzBlatt: "📖 Club-Rezeptbuch", sbBlatt: "🤔 Das kenne ich noch nicht", sbListeBlatt: "📋 Das kannst du sagen", sbPersonBlatt: "🎙️ Sprache: mit wem?",
   sbtBlatt: "🎓 Sprach-Training", scAbBlatt: "🚫 Schulung absagen", scBlatt: "🎓 Schulungen", scChronikBlatt: "📜 Schulung: Ablauf", scFestBlatt: "📅 Festen Termin geben",

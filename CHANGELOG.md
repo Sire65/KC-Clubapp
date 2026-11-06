@@ -1,9 +1,28 @@
 # Änderungen
 
-## 2.869.0 – 2026-11-06 – Ausweich für schlechte Telefonate immer bereit
+## 2.871.0 – 2026-11-06 – Ausweich für schlechte Telefonate immer bereit
 - Prüfung Hansi 06.11.: Der Vorrat an Zugangsdaten für den Umleitungs-Server (TURN, Metered) wurde nur beim Anrufen erneuert – seit 04.11. war alles abgelaufen, der nächste Anruf wäre ohne Umleitung gelaufen. Die stündliche Wartung hält ihn jetzt frisch (KC-CLUB-TURN-FRISCH). Versendete Push-Meldungen werden nach 180 Tagen gelöscht, bisher ohne Grenze (KC-CLUB-PUSH-AUFRAEUMEN).
 - Admin → 🛡️ Wächter: neuer Wächter „📞 Telefon-Umleitung (Metered)“ – zeigt, ob gültige Zugangsdaten bereitliegen, ob Metered ablehnt, und den Monatsverbrauch; meldet sich bei Gelb/Rot (KC-CLUB-WAECHTER-TURN).
 - Admin → 👣 Wege der Mitglieder: „Gerade in der App“ zeigt jetzt auch, wer die Online-Anzeige ausgeschaltet hat (🙈); im Schalter steht klein „Für Hilfe und Sicherheit sieht der Admin weiterhin, wann du in der App warst.“ (KC-CLUB-SPUR-ALLE-DA).
+
+## 2.870.0 – 🌱 Mein Garten: Samen säen und eine Pflanze großziehen (KC-CLUB-SAMEN, Wunschliste #84) · Server 2.870.0
+- Neue Kachel „🌱 Mein Garten“ (Meins) – **erst nur für Hansi zum Testen** (Freigaben → „🌱 Mein Garten“, Standard nur Admin; Wunsch Hansi „noch nicht veröffentlichen“).
+- Für Tage dabei (7, 25, 50, 100, 200, 365, danach je 365 – Pausen egal) und für besondere Taten (erstes eigenes Rezept, erster Beitrag für die Club-Küche) gibt es ein 🎁 Samentütchen. 12 Pflanzen: Rose, Sonnenblume, Tulpe · Basilikum, Rosmarin, Schnittlauch · Lavendel, Johannisbeere, Hortensie · Apfel-, Zitronen-, Olivenbaum.
+- Aussäen mit kleinem Film (Gießkanne, Samen, Spross). Die Pflanze wächst über echte Tage in 5 Stufen (Kräuter/Blumen ~3, Sträucher ~5, Bäume ~8 Wochen). 💧 Gießen ~alle 3 Tage, 🧪 Düngen ~alle 3 Wochen oder 🤖 „Gärtner kümmert sich“. Sie geht nie ein – ohne Wasser wächst sie halb so schnell und lässt die Blätter hängen.
+- Nach dem ersten Säen fragt die App, ob die Pflanzen in den 🏡 Club-Garten dürfen (jederzeit umschaltbar); dort stehen nur freigegebene Pflanzen mit Vornamen.
+- Beim Start höchstens ein kleiner Hinweis am Tag (neues Tütchen, gewachsen, Durst, „wurde heute gedüngt“) – kein Fenster, keine Push-Nachricht; wartet, bis kein anderes Fenster offen ist.
+- Sparsam (Wunsch Hansi): eine Tabellenzeile je Mitglied (kc_club_garten), höchstens ein Abruf je Tag und Gerät; Wachstum rechnet die App selbst, kein Zeitplan im Hintergrund. Bisherige Tage einmalig aus den App-Starts im Protokoll, höchstens 3 Samen nachträglich. Programmteil teile/garten.js wird erst beim Gebrauch geladen, Bilder sind gezeichnet (keine Downloads).
+- Dazu Wunschliste #81: Video „Weiteres Gerät: Tablet oder PC“ geprüft und Zeitansage eingeschaltet. Dabei gefunden und behoben: Schritt 2 „⚙️ Auf dem Handy: Code holen“ wurde seit den Einstellungs-Seiten still übersprungen (der Abschnitt ging auf, die Seite nicht) – jetzt über rgAuf wie in den anderen Videos; alle 7 Schritte laufen.
+- Ebenso Video „Link, Code & Co. – die Unterschiede“ geprüft (9 Schritte ok, Angaben stimmen: Code 15 Min., Link verloren, Link einfügen, „Dieser Link gilt nicht mehr“) und Zeitansage eingeschaltet.
+- Ebenso „Rundgang: die App im Überblick“ geprüft (18 Schritte ok) – Zeitansage an, „In ein paar Minuten“ im Willkommen-Schritt entfernt (die Ansage nennt die Dauer jetzt genau).
+- Migration 20261105_kc_club_garten.sql (schon eingespielt, nur eine neue Tabelle). Test: tests/garten.test.mjs. Rückweg: Version 2.869.0 einspielen (die Tabelle stört nicht).
+## 2.869.0 – 2026-11-06 – 📏 Datenvolumen-Messung im Club-Server, „weg“ auch für Gäste/Aushilfen (KC-CLUB-EGRESS-MESSUNG, KC-CLUB-ONLINE-ECHT) · App + Server – 12-Uhr-Termin
+Anlass: Supabase-Warnung 05.11.2026 – Datenvolumen (Egress) im letzten Abrechnungszeitraum über dem kostenlosen Kontingent, Schonfrist bis 16.11.; laut Übersicht 85–90 % über die Datenbank-Schnittstelle (PostgREST). Freigabe Hansi: „Ja, bau die Messung für 12 Uhr ein“.
+- **Messung:** Der Club-Server zählt im Speicher, wie viele Bytes die Datenbank-Schnittstelle je Tabelle/Funktion und je App-Aktion zurückgibt und wie groß die Antworten an die Apps sind. Alle 10 Minuten je Server-Instanz eine Zeile `egress_messung` im Protokoll (nur Namen und Zahlen, keine Inhalte, keine Personen; 60 Tage). Gepufferte Antworten zählen nicht (kosten nichts). Keine zusätzliche Abfrage pro Aufruf, keine Kosten.
+- Auswertung: `select details from kc_club_protokoll where aktion = 'egress_messung'` – Felder `db`/`aktion`/`antwort` = `{ Name: [Anzahl, Bytes, Bytes laut Content-Length] }`. Danach die größten Verbraucher gezielt verkleinern (vor dem 16.11.).
+- **Gäste und Aushilfen:** Die Meldung „weg“ (App weggelegt) war für sie nicht freigegeben – sie galten dadurch bis zu 150 s weiter als online. Jetzt in `ZUGANG_AKTIONEN.basis` (App und Server).
+- Test: `tests/egress-messung.test.mjs`, `tests/online-echt.test.mjs` erweitert. Rückweg: Server 2.865.0 / App 2.868.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.868.0 – 2026-11-06 – 🔇 Erklär-Videos laufen weiter, wenn die Handy-Stimme nicht antwortet (KC-CLUB-VIDEO-STIMME-STUMM) · nur App
 Fund Hansi 06.11. (Android): „Folge 1 und 2 laufen nicht bzw. ohne Ton – andere auch nicht“, „Tafel kommt, steht still“; Hörprobe: Thorsten und Dii gehen, gewählt war „Deutsch Deutschland“ (Google-Sprachausgabe im Handy).
