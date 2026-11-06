@@ -67,6 +67,7 @@ jobs:
       - run: node tests/anwesenheit.test.mjs
       - run: node tests/rt-dienst.test.mjs
       - run: node tests/browser-abgeschirmt.test.mjs
+      - run: node tests/turn-frisch.test.mjs
       - run: node tests/schreibtisch.test.mjs
       - run: node tests/anleitungen.test.mjs
       - run: node tests/hilfe-tipps.test.mjs

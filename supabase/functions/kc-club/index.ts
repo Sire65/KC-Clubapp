@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.865.0";
+const SERVER_VERSION = "2.868.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -9143,6 +9143,12 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       // KC-CLUB-STARTSTATISTIK (2.31.0): App-Starts nur 180 Tage aufbewahren
       if (stuendlich) { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "app_start").lt("zeit", new Date(Date.now() - START_TAGE * 86400000).toISOString()); if (error) console.error("app_start loeschen", error.message); }
       if (stuendlich) await protokollWaechter().catch((e) => console.error("protokoll waechter", String(e))); // KC-CLUB-PROTOKOLL-WAECHTER (2.114.0)
+      // KC-CLUB-TURN-FRISCH (06.11.2026, Prüfung Hansi „Ausweich für schlechte Telefonate“): Vorrat an Umleitungs-Zugangsdaten stündlich
+      // frisch halten – bisher nur beim Anrufen erneuert; nach 7 Tagen ohne Anruf war alles abgelaufen und der nächste Anruf lief ohne Umleitung
+      // (neue Zugangsdaten gelten erst nach 3 Min.). turnZugang legt nur bei Bedarf an (ab 2 Tagen Restlaufzeit), wirft nie.
+      if (stuendlich) await turnZugang().catch(() => null);
+      // KC-CLUB-PUSH-AUFRAEUMEN (06.11.2026): versendete Push-Meldungen (Titel, Zustellstand) nur 180 Tage aufbewahren – bisher ohne Grenze
+      if (stuendlich) await db.from("kc_member_push_messages").delete().lt("created_at", new Date(Date.now() - 180 * 86400000).toISOString()).then(() => {}, () => {});
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       if (stuendlich) { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
