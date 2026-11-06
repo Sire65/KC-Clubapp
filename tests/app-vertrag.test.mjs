@@ -7251,8 +7251,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.550.0 KC-CLUB-FEHLVERSUCHE: wiederholte Versuche ohne gültigen Link vom selben Gerät → Push an Admins (gedrosselt, ohne IP)
 {
-  const f = server.slice(server.indexOf("async function fehlversucheMelden"), server.indexOf("async function fehlversucheMelden") + 2600);
-  assert.ok(/const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;/.test(server) && /if \(\(n \?\? 0\) < FV_SCHWELLE \|\| \(schon \?\? 0\) > 0 \|\| \(heute \?\? 0\) >= FV_MAX_TAG\) return;/.test(f), "Schwelle und Drossel");
+  const f = server.slice(server.indexOf("async function fehlversucheMelden"), server.indexOf("async function fehlversucheMelden") + 5200);
+  assert.ok(/const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;/.test(server) && /if \(\(heute \?\? 0\) >= FV_MAX_TAG\) return;/.test(f) && /const jeGeraet = \(n \?\? 0\) >= FV_SCHWELLE && !\(schon \?\? 0\);/.test(f) && /if \(!jeGeraet && !wechselnd\) return;/.test(f), "Schwelle und Drossel (2.874.0: auch wechselnde Kennungen, eigener Test nicht-rein)");
   assert.ok(/const adm = await adminIds\(\);/.test(f) && /routerSenden\("club_nachricht_push", adm,/.test(f) && !/x-forwarded-for|cf-connecting-ip/i.test(f), "Push nur an Admins, keine IP");
   assert.ok(/\["ohne_link", "link_ungueltig"\]\.includes\(fpArt\(e\?\.art\)\)/.test(server) && /google-read-aloud\/i;/.test(server), "Auslöser: ohne/ungültiger Link · Vorlesedienst ist Roboter");
 }

@@ -6,6 +6,9 @@ Wunsch Hansi 06.11.2026: „Können wir noch mehr über die Standleitung erledig
 - Steht die Leitung, fragt die App die Terminanfragen nur noch alle 30 statt 5 Min. zur Sicherheit nach (ohne Leitung wie bisher).
 - Sparbremse: „spricht“, „diktiert“ und „livetermin“ zählen jetzt wie „tippt“ zu den teuren Signalen (ab 70 % des kostenlosen Kontingents aus) – waren vergessen.
 - Notfall-Ablauf „Sicherung lesen“ läuft mit Node 22 statt 20 (Node 20 ohne Pflege).
+- **Fund Hansi 06.11. (Christina kam tagelang nicht in die App):** Ihr Handy hatte den persönlichen Link vergessen (ab 01.11. nur noch „ohne Link“ geöffnet, jedes Mal mit neuer Geräte-Kennung) – die Meldung „wiederholte Versuche“ zählte je Geräte-Kennung und kam deshalb nie an.
+  - Server: wiederholte Versuche werden jetzt auch über wechselnde Geräte-Kennungen erkannt (gleiche Browser-Kennung, ≥ 3 in 2 Std., ≥ 2 Kennungen) → Push „Handy merkt sich den Link nicht – nachfragen, neuen Link schicken“ (KC-CLUB-FEHLVERSUCHE-WECHSELND).
+  - Anmeldeseite: neue Karte „🆘 Ich komme nicht rein“ – Name eintragen, Hansi bekommt sofort Push + E-Mail (KC-CLUB-NICHT-REIN). Test: tests/nicht-rein.test.mjs.
 - Bewusst nicht: Lebenszeichen seltener – der KC System Check zeigt ein Programm nach 90 s ohne Lebenszeichen als veraltet (PROGRAM_HEARTBEAT_MAX_AGE_MS).
 - Datenbank: supabase/migrations/20261106_kc_club_rt_terminanfrage.sql, Probelauf tools/db-test/111_*. Test: tests/rt-terminanfrage.test.mjs. Rückweg: Version 2.873.0 einspielen, Trigger kc_club_rt_ta_* löschen.
 

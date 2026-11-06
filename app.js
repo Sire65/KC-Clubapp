@@ -35522,6 +35522,17 @@ async function fpLinkKopieren() {
   fpNeu("link_kopiert", { ok });
   melde(ok ? "🔗 Dein Link ist kopiert – jetzt in Safari/Chrome oben einfügen" : "Kopieren ging nicht – bitte den Link aus deiner Mail/WhatsApp nehmen", !ok);
 }
+// 2.874.0 KC-CLUB-NICHT-REIN (Fund Hansi 06.11.: Christina kam tagelang nicht in die App – das Handy hatte den Link vergessen, sie hatte keinen Weg,
+// Bescheid zu geben): auf der Anmeldeseite „🆘 Ich komme nicht rein“ – Name eintragen, die Admins bekommen sofort Push + E-Mail (Weg hilferuf_anonym:
+// je Gerät höchstens 1× am Tag, insgesamt höchstens 3 je Stunde). Nur Name, Gerät und Browser – kein Link, kein Schlüssel.
+function nichtReinMelden() {
+  const name = ($("nrName")?.value || "").replace(/\s+/g, " ").trim().slice(0, 60), a = $("nrAntwort");
+  if (name.length < 2) { a.textContent = "Bitte deinen Namen eintragen, damit " + adminName() + " weiß, wer es ist."; $("nrName")?.focus(); return; }
+  fpNeu("hilferuf_anonym", { text: `${name} kommt nicht in die App (Anmeldeseite „Persönlicher Link nötig“)`, browser: fpBrowser(), system: fpSystem(), start: START_ART });
+  try { window.KCFP?.senden(true); } catch {}
+  $("nrKnopf").disabled = true; setTimeout(() => { if ($("nrKnopf")) $("nrKnopf").disabled = false; }, 60000);
+  a.innerHTML = `✅ ${esc(adminName())} hat Bescheid bekommen und schickt dir einen neuen Link.<br>Den neuen Link dann bitte in <b>Chrome</b> öffnen (Samsung: im Browser „Internet“).`;
+}
 async function fpProblemMelden() {
   const text = (await eingabe("Was klappt nicht? (freiwillig, ein paar Worte reichen)\n\n" + adminName() + " bekommt eine Nachricht und sieht automatisch, welches Handy, welcher Browser und welche Version du hast.", ""));
   if (text === null) return;

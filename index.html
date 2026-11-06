@@ -5785,6 +5785,11 @@
   <div class="karte"><h3>📋 Link einfügen</h3><p style="margin-top:0">Du hast den Link in einer Mail oder WhatsApp, aber die App öffnet sich nicht damit (z. B. auf dem <b>iPhone</b> vom Home-Bildschirm)? Link dort <b>lange drücken → Kopieren</b>, dann hier einfügen:</p>
     <label class="feld">Dein persönlicher Link<input id="linkEinfuegen" inputmode="url" autocomplete="off" placeholder="https://sire65.github.io/KC-Clubapp/?k=…"></label>
     <div class="knoepfe"><button class="knopf haupt" onclick="linkUebernehmen()">✅ Link übernehmen</button><button class="knopf" onclick="linkAusZwischenablage()">📋 Aus Zwischenablage</button></div></div>
+  <!-- 2.874.0 KC-CLUB-NICHT-REIN (Fund Hansi 06.11.: Christina kam tagelang nicht rein und hatte keinen Weg, Bescheid zu geben) -->
+  <div class="karte"><h3>🆘 Ich komme nicht rein</h3><p style="margin-top:0">Nichts davon klappt? Dann gib <b class="admin-name">Hansi</b> kurz Bescheid – du bekommst einen neuen Link.</p>
+    <label class="feld">Dein Name<input id="nrName" autocomplete="name" maxlength="60" placeholder="Vor- und Nachname"></label>
+    <div class="knoepfe"><button class="knopf haupt" id="nrKnopf" onclick="nichtReinMelden()">🆘 <span class="admin-name">Hansi</span> Bescheid geben</button></div>
+    <p class="hinweis" id="nrAntwort" style="margin-bottom:0"></p></div>
 </div>
 
 <div id="app" class="versteckt">

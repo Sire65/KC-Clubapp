@@ -8686,22 +8686,37 @@ const fpAktion = (x: unknown) => FP_MESSUNG[fpArt(x)] ?? "fehler_" + fpArt(x);
 // Admins einen Push mit Anzahl, Uhrzeit und grobem Gerätetyp (System/Browser, wie die App sie meldet). Je Gerät höchstens 1× am Tag,
 // insgesamt höchstens FV_MAX_TAG Meldungen am Tag. Keine IP-Adresse; Roboter/Vorschau-Dienste kommen gar nicht bis hierher (FP_ROBOTER).
 const FV_SCHWELLE = 3, FV_STUNDEN = 2, FV_MAX_TAG = 5;
-async function fehlversucheMelden(geraet: string, e: any) {
+// 2.874.0 KC-CLUB-FEHLVERSUCHE-WECHSELND (Fund Hansi 06.11.: Christina kam tagelang nicht in die App, niemand merkte es): Merkt sich ein Handy
+// nichts (Browserdaten gelöscht, Speicher voll, Aufräum-App), bekommt es bei JEDEM Öffnen eine neue Geräte-Kennung – die Zählung je Gerät erreicht
+// die Schwelle nie. Darum zusätzlich: FV_SCHWELLE Versuche in FV_STUNDEN Stunden mit genau derselben Browser-Kennung (User-Agent) über verschiedene
+// Geräte-Kennungen → Meldung „wechselnde Kennung – Handy merkt sich den Link nicht“ (je Browser-Kennung höchstens 1× am Tag, gleiche Tagesgrenze).
+async function fehlversucheMelden(geraet: string, e: any, ua = "") {
   const seit = new Date(Date.now() - FV_STUNDEN * 3600000).toISOString(), tag = new Date(Date.now() - 86400000).toISOString();
-  const [{ count: n }, { count: schon }, { count: heute }] = await Promise.all([
-    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).in("aktion", ["fehler_anonym_ohne_link", "fehler_anonym_link_ungueltig"]).eq("details->>geraet", geraet).gte("zeit", seit),
+  const ARTEN = ["fehler_anonym_ohne_link", "fehler_anonym_link_ungueltig"], uaKurz = ua.slice(0, 200), keine = Promise.resolve({ count: 0 });
+  const [{ count: n }, { count: schon }, { count: heute }, { count: nUa }, { count: schonUa }, { data: kennungen }] = await Promise.all([
+    db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).in("aktion", ARTEN).eq("details->>geraet", geraet).gte("zeit", seit),
     db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehlversuche_gemeldet").eq("details->>geraet", geraet).gte("zeit", tag),
     db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehlversuche_gemeldet").gte("zeit", tag),
+    uaKurz ? db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).in("aktion", ARTEN).eq("details->>ua", uaKurz).gte("zeit", seit) : keine,
+    uaKurz ? db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "fehlversuche_gemeldet").eq("details->>ua", uaKurz).gte("zeit", tag) : keine,
+    uaKurz ? db.from("kc_club_protokoll").select("details").in("aktion", ARTEN).eq("details->>ua", uaKurz).gte("zeit", seit).limit(20) : Promise.resolve({ data: [] }),
   ]);
-  if ((n ?? 0) < FV_SCHWELLE || (schon ?? 0) > 0 || (heute ?? 0) >= FV_MAX_TAG) return;
+  if ((heute ?? 0) >= FV_MAX_TAG) return;
+  const verschiedene = new Set(((kennungen ?? []) as any[]).map((x) => x?.details?.geraet).filter(Boolean)).size;
+  const jeGeraet = (n ?? 0) >= FV_SCHWELLE && !(schon ?? 0);
+  const wechselnd = !jeGeraet && (nUa ?? 0) >= FV_SCHWELLE && verschiedene >= 2 && !(schonUa ?? 0) && !(schon ?? 0);
+  if (!jeGeraet && !wechselnd) return;
+  const anzahl = jeGeraet ? n : nUa;
   const geraetText = [txt(e?.system, 40), txt(e?.browser, 40)].filter(Boolean).join(", ") || "unbekanntes Gerät";
   const art = fpArt(e?.art) === "link_ungueltig" ? "mit einem ungültigen Link" : "ohne persönlichen Link";
-  await protokoll(null, "fehlversuche_gemeldet", { geraet, anzahl: n, art: fpArt(e?.art), system: txt(e?.system, 40), browser: txt(e?.browser, 40) });
+  await protokoll(null, "fehlversuche_gemeldet", { geraet, anzahl, art: fpArt(e?.art), system: txt(e?.system, 40), browser: txt(e?.browser, 40), ...(wechselnd ? { ua: uaKurz, wechselnd: verschiedene } : {}) });
   const adm = await adminIds(); if (!adm.length) return;
-  await routerSenden("club_nachricht_push", adm, { titel: `🔑 ${n}× versucht, die Club-App ${art} zu öffnen`,
-    kurz: `${geraetText} · zuletzt ${NOT_UHR.format(new Date())} Uhr · Gerät ${geraet}`, betreff: "Köcheclub-App: wiederholte Versuche ohne gültigen Link",
-    text: `Dasselbe Gerät hat in den letzten ${FV_STUNDEN} Stunden ${n}-mal versucht, die Club-App ${art} zu öffnen.\nGerät: ${geraetText}\nGeräte-Kennung: ${geraet}\nGesehen hat es nur den Anmelde-Hinweis – keine Club-Daten.\nEinzelheiten: Admin → 🩺 Fehler.`,
-    url: APP_URL }, `club-fehlversuche:${geraet}:${berlinTag(new Date())}`);
+  await routerSenden("club_nachricht_push", adm, { titel: `🔑 ${anzahl}× versucht, die Club-App ${art} zu öffnen`,
+    kurz: `${geraetText} · zuletzt ${NOT_UHR.format(new Date())} Uhr · ${wechselnd ? "Handy merkt sich den Link nicht" : "Gerät " + geraet}`, betreff: "Köcheclub-App: wiederholte Versuche ohne gültigen Link",
+    text: wechselnd
+      ? `In den letzten ${FV_STUNDEN} Stunden wurde die Club-App ${anzahl}-mal ${art} geöffnet – immer mit demselben Handy-Typ (${geraetText}), aber jedes Mal mit einer neuen Geräte-Kennung (${verschiedene} verschiedene).\nDas passiert, wenn sich ein Handy nichts merkt (Browserdaten gelöscht, Aufräum-App, Speicher voll). Vermutlich kommt ein Mitglied nicht mehr in die App – am besten nachfragen und einen neuen Link schicken.\nGesehen hat es nur den Anmelde-Hinweis – keine Club-Daten.\nEinzelheiten: Admin → 🩺 Fehler.`
+      : `Dasselbe Gerät hat in den letzten ${FV_STUNDEN} Stunden ${anzahl}-mal versucht, die Club-App ${art} zu öffnen.\nGerät: ${geraetText}\nGeräte-Kennung: ${geraet}\nGesehen hat es nur den Anmelde-Hinweis – keine Club-Daten.\nEinzelheiten: Admin → 🩺 Fehler.`,
+    url: APP_URL }, wechselnd ? `club-fehlversuche-ua:${berlinTag(new Date())}:${(await sha256(uaKurz)).slice(0, 16)}` : `club-fehlversuche:${geraet}:${berlinTag(new Date())}`);
 }
 // KC-CLUB-FEHLER-ALARM (2.48.0, Wunsch Hansi: „bekomme ich als Admin Push und E-Mail über solche Fälle?“): ernste Fälle eines
 // angemeldeten Mitglieds → Admins sofort per Push + E-Mail (wie „Problem melden“, Weg club_nachricht). Nicht an den Verursacher selbst,
@@ -9705,7 +9720,7 @@ Köcheclub Werne`,
       await db.from("kc_club_protokoll").insert(neu.map((e: any) => ({ person_id: null, aktion: "fehler_anonym_" + fpArt(e?.art), details: { ...fpSauber(e), geraet, ua, version } })));
       // 2.550.0 KC-CLUB-FEHLVERSUCHE (Wunsch Hansi): mehrere Versuche ohne gültigen Link vom selben Gerät → Push an die Admins
       const zf = neu.filter((e: any) => ["ohne_link", "link_ungueltig"].includes(fpArt(e?.art)));
-      if (zf.length) nebenbei(fehlversucheMelden(geraet, zf[zf.length - 1]).catch((x) => console.error("fehlversuche", String(x))));
+      if (zf.length) nebenbei(fehlversucheMelden(geraet, zf[zf.length - 1], ua).catch((x) => console.error("fehlversuche", String(x))));
       if (alarm && !schonGemeldet) {
         await db.from("kc_club_protokoll").insert({ person_id: null, aktion: "fehler_anonym_admin_benachrichtigt", details: { geraet } });
         const { data: admins } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
