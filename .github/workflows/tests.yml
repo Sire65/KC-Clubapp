@@ -93,6 +93,7 @@ jobs:
       - run: node tests/dok-schonend.test.mjs
       # KC-CLUB-ONLINE-ECHT + KC-CLUB-SPUR-START-SERVER
       - run: node tests/online-echt.test.mjs
+      - run: node tests/egress-messung.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
@@ -110,6 +111,7 @@ jobs:
       - run: node tests/db-viel-zu-tun.test.mjs
       - run: node tests/uhr-x.test.mjs
       - run: node tests/kachel-nurtest.test.mjs
+      - run: node tests/garten.test.mjs
       - run: node tests/klappe-gleich.test.mjs
       - run: node tests/pinnwand-nadeln.test.mjs
       - run: node tests/pinnwand-admin-mehr.test.mjs
@@ -134,6 +136,7 @@ jobs:
       - run: node tests/protokoll-foto.test.mjs
       - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/video-abgleich.test.mjs
+      - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs

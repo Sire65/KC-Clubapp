@@ -1,6 +1,6 @@
 # Konzept: Samen säen und eine eigene Pflanze großziehen („Mein Garten“)
 
-Stand 05.11.2026 · Kennzeichen **KC-CLUB-SAMEN** · Wunschliste **#84** · Status: **Konzept – wartet auf Hansis Antworten (Abschnitt 9)**
+Stand 05.11.2026 · Kennzeichen **KC-CLUB-SAMEN** · Wunschliste **#84** · Status: **Stufe 1 + Club-Garten + besondere Taten gebaut (2.867.0), nur für Hansi im Test.** Antworten Hansi 05.11.: 1 ja (auch Taten), 2 A (eigene Kachel), 3 ok, 4 kein Push, 5 Club-Garten ja – nach dem Säen fragen, 6 ja (nie eingehen).
 
 Wunsch Hansi (05.11.2026): „Wenn man in der Club-App was erreicht hat oder oft drin ist oder 50 Tage z. B., dann öffnet das Mitglied
 einen Samen und kann wählen, welchen Samen er möchte – Blumen, Bäume, Sträucher usw. Dann Frage: Möchtest du deinen Samen ausbringen?

@@ -8,7 +8,7 @@
 // Während des Rundgangs ist die App gesperrt (nichts wird versehentlich angetippt). Stationen = Registry RUNDGANG:
 // v = Ansicht (zeige), sel = Kandidaten (das erste sichtbare wird hervorgehoben; keins sichtbar → nur Text; mussSel → Station auslassen).
 const RUNDGANG = [
-  { v: "start", t: "👋 Willkommen", x: "Willkommen zum Rundgang durch die Köcheclub-App! In ein paar Minuten zeige ich dir, wie die App aussieht und was sie alles kann. Du musst nichts antippen – ich blättere selbst weiter. Mit Pause hältst du an." },
+  { v: "start", t: "👋 Willkommen", x: "Willkommen zum Rundgang durch die Köcheclub-App! Ich zeige dir, wie die App aussieht und was sie alles kann. Du musst nichts antippen – ich blättere selbst weiter. Mit Pause hältst du an." },
   { v: "start", sel: [".hero .kopfzeile"], puls: ["#v-start .kopfzeile .logo", "#modusKnopf", "#aktualisierenKnopf"], video: "anpassen", t: "🧑‍🍳 Der Kopf", x: "Ganz oben der Kopf der App. Die Kochmütze führt zur Internetseite des Clubs, darunter steht die Version. Rechts schaltest du zwischen hellen und dunklen Farben um oder frischst die App auf." },
   { v: "start", sel: ["#statusChip"], t: "🟢 Dein Status", x: "Hier stellst du deinen Status ein – zum Beispiel verfügbar oder im Urlaub. Die anderen Mitglieder sehen ihn bei deinem Namen." },
   // 2.858.0 KC-CLUB-VIDEO-KOPFSEITE (Fund Hansi 04.11.: „redet von der ersten Seite, im Hintergrund war eine andere Seite vom Kopf“): Laufband und
@@ -1205,7 +1205,7 @@ const simPcDialog = () => PC_DIALOG.replace("{adr}", esc(simAdr()));
 const RG_INST_GERAET = [
   { v: "start", vor: rgSimNeu(() => simTablet(simAnmeldung("tablet")), "tablet"), sel: ["#rgSim .sim-tablet"], t: "💻 Noch ein Gerät",
     x: "Du nutzt die App schon auf dem Handy und möchtest sie auch auf dem Tablet oder am PC? Dafür brauchst du keinen neuen Link – ein 6-stelliger Code reicht." },
-  { v: "einstellungen", vor: () => { rgSimWeg(); const d = document.querySelector('#v-einstellungen details[data-klappe="install"]'); if (d && !d.open) { d.open = true; RG.zurueck.push(() => { d.open = false; }); } },
+  { v: "einstellungen", vor: () => { rgSimWeg(); rgAuf("install"); }, // 2.868.0: über rgAuf, damit auch die Seite „App-Installation“ aufgeht (vorher still übersprungen)
     sel: ['#v-einstellungen [onclick="kurzcodeBlatt()"]'], mussSel: true, t: "⚙️ Auf dem Handy: Code holen",
     x: "Auf dem Handy öffnest du die Einstellungen und dort App-Installation. Tippe auf Code für ein anderes Gerät.",
     live: async (L) => { await L.tipp('#v-einstellungen [onclick="kurzcodeBlatt()"]'); await L.warte(250); rgSim(simCodeBlatt(), "ueber"); RG.ziel = document.querySelector('#rgSim [data-s="code"]'); rgLage(); } },
@@ -3229,6 +3229,13 @@ function rgHin() { const e = RG.ziel; if (!e) return scrollTo(0, 0);
   e.scrollIntoView({ block: e.getBoundingClientRect().height > innerHeight * 0.45 ? "start" : "center", behavior: "instant" }); }
 // Text satzweise vorlesen (lange Texte brechen auf manchen Handys sonst ab); danach kurz warten und weiterblättern.
 // Ohne Sprachausgabe oder wenn das Handy kein „fertig“ meldet: Lesezeit nach Wortzahl.
+const RG_STIMME_WARTE_MS = 5000; // KC-CLUB-VIDEO-STIMME-STUMM: so lange darf die Handy-Stimme bis zum ersten Wort brauchen
+function rgStummHinweis() {
+  const geladen = typeof rgpKann === "function" && rgpKann();
+  melde(geladen ? "🔇 Die Stimme des Handys antwortet gerade nicht – das Video läuft ohne Ton weiter. Tipp: Bei 🗣️ Stimme & Tempo „Dii“ oder „Thorsten“ wählen, die sprechen immer."
+    : "🔇 Die Stimme des Handys antwortet gerade nicht – das Video läuft ohne Ton weiter. Lies einfach mit.");
+  spur("rg_stumm", RG.tour); // in den Wegen sichtbar, ohne Inhalte
+}
 function rgSprechen(text) {
   // Mindestzeit: Handys ohne deutsche Stimme melden „fertig“ oft sofort – dann bleibt der Text trotzdem lange genug zum Lesen stehen
   const lauf = RG.lauf, saetze = rgSaetze(text), lesezeit = 2500 + text.split(/\s+/).length * 420, frueh = Date.now() + lesezeit * 0.75;
@@ -3241,9 +3248,21 @@ function rgSprechen(text) {
   }
   if (!RG.ton) return weiter();
   RG.uhr = setTimeout(weiter, lesezeit * 1.8); // Sicherheitsnetz
+  // KC-CLUB-VIDEO-STIMME-STUMM (Fund Hansi 06.11.2026, Android: „Tafel kommt, steht still, kein Ton“ – die Google-Sprachausgabe antwortete nicht,
+  // Thorsten und Dii gingen): beginnt die Handy-Stimme nach 5 s nicht zu sprechen, läuft das Video ohne Ton weiter (Lesezeit) und ein Hinweis
+  // empfiehlt eine geladene Stimme. Gilt bis zum Ende dieses Videos (RG.ton wird beim nächsten Start neu bestimmt).
+  let gestartet = false; clearTimeout(RG.stummUhr);
+  RG.stummUhr = setTimeout(() => {
+    if (gestartet || lauf !== RG.lauf || !RG.an || RG.pause) return;
+    try { if (speechSynthesis.speaking) return; } catch {}
+    try { speechSynthesis.cancel(); } catch {}
+    RG.ton = false; rgStummHinweis();
+    const s = RG.st[RG.i]; if (s?.pulsSaetze) try { rgPulsStart(s); } catch {}
+    clearTimeout(RG.uhr); weiter();
+  }, RG_STIMME_WARTE_MS);
   try {
     RG.satzNr = 0;
-    saetze.forEach((x, n) => { const u = rgAusgabe(x.trim()); u.onstart = () => { if (lauf === RG.lauf) rgSatz(n); }; if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
+    saetze.forEach((x, n) => { const u = rgAusgabe(x.trim()); u.onstart = () => { gestartet = true; if (lauf === RG.lauf) rgSatz(n); }; if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
   } catch { weiter(); }
 }
 function rgLage() {

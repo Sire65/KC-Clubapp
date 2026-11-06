@@ -20,8 +20,10 @@ const R = app.slice(app.indexOf("const RUNDGAENGE = ["), app.indexOf("\n];", app
 const geprueft = [...R.matchAll(/\{ id: "([a-z_0-9]+)", stand: "\d+", zeit: "(\d\d\.\d\d\.\d{4})"/g)].map((m) => m[1]);
 assert.ok(geprueft.includes("warum"), "„Warum diese App?“ ist geprüft");
 for (const id of geprueft) {
-  const name = (R.match(new RegExp(`id: "${id}"[^\\n]*st: \\(\\) => (RG_[A-Z_0-9]+)`)) || [])[1]; assert.ok(name, "Schritte von " + id);
+  const name = (R.match(new RegExp(`id: "${id}"[^\\n]*st: \\(\\) => (RG_[A-Z_0-9]+|RUNDGANG)\\b`)) || [])[1]; assert.ok(name, "Schritte von " + id);
   const s0 = v.indexOf(`const ${name} = [`), schritte = v.slice(s0, v.indexOf("\n];", s0));
-  assert.ok(!/In (ein|zwei|drei|vier|fünf|\d+) Minuten/i.test(schritte), `${id}: keine feste Minutenzahl mehr im Text`);
+  assert.ok(!/In (ein|zwei|drei|vier|fünf|ein paar|\d+) Minuten/i.test(schritte), `${id}: keine feste Minutenzahl mehr im Text`);
 }
+// 2.868.0: „Weiteres Gerät“ Schritt 2 öffnet die Seite „App-Installation“ über rgAuf (vorher wurde er still übersprungen)
+{ assert.ok(/sel: \['#v-einstellungen \[onclick="kurzcodeBlatt\(\)"\]'\], mussSel: true/.test(v) && /vor: \(\) => \{ rgSimWeg\(\); rgAuf\("install"\); \}/.test(v), "inst_geraet: Code-Knopf über rgAuf erreichbar"); }
 console.log(`video-zeitansage: alle Prüfungen bestanden (${geprueft.length} Video${geprueft.length === 1 ? "" : "s"} geprüft)`);
