@@ -26,6 +26,6 @@ assert.ok(app.includes('{ id: "turn", gruppe: "betrieb", sym: "📞", name: "Tel
 const sp = server.slice(server.indexOf('case "spur_liste"'), server.indexOf('case "spur_liste"') + 9000);
 assert.ok(sp.includes("nurAdmin(ich);") && sp.includes('gt("zuletzt_gesehen", new Date(Date.now() - 180000)') && sp.includes("return json({ tag, jetztDa, personen:"));
 assert.ok(app.includes("const da = new Map((r.jetztDa || []).map((x) => [x.person_id, x]));") && app.includes("🙈 Online-Anzeige aus"));
-assert.ok(fs.readFileSync(new URL("../index.html", import.meta.url), "utf8").includes("Der Admin sieht in der Nutzungs-Übersicht weiterhin, wann du in der App warst."), "Transparenz im Schalter");
+assert.ok(fs.readFileSync(new URL("../index.html", import.meta.url), "utf8").includes("Für Hilfe und Sicherheit sieht der Admin weiterhin, wann du in der App warst."), "Transparenz im Schalter");
 assert.ok(fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8").includes("node tests/turn-frisch.test.mjs"), "läuft in der CI");
 console.log("turn-frisch: ok");

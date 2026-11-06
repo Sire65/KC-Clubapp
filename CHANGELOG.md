@@ -3,7 +3,7 @@
 ## 2.868.0 – 2026-11-06 – Ausweich für schlechte Telefonate immer bereit
 - Prüfung Hansi 06.11.: Der Vorrat an Zugangsdaten für den Umleitungs-Server (TURN, Metered) wurde nur beim Anrufen erneuert – seit 04.11. war alles abgelaufen, der nächste Anruf wäre ohne Umleitung gelaufen. Die stündliche Wartung hält ihn jetzt frisch (KC-CLUB-TURN-FRISCH). Versendete Push-Meldungen werden nach 180 Tagen gelöscht, bisher ohne Grenze (KC-CLUB-PUSH-AUFRAEUMEN).
 - Admin → 🛡️ Wächter: neuer Wächter „📞 Telefon-Umleitung (Metered)“ – zeigt, ob gültige Zugangsdaten bereitliegen, ob Metered ablehnt, und den Monatsverbrauch; meldet sich bei Gelb/Rot (KC-CLUB-WAECHTER-TURN).
-- Admin → 👣 Wege der Mitglieder: „Gerade in der App“ zeigt jetzt auch, wer die Online-Anzeige ausgeschaltet hat (🙈); im Schalter steht für die Mitglieder, dass der Admin das sieht (KC-CLUB-SPUR-ALLE-DA).
+- Admin → 👣 Wege der Mitglieder: „Gerade in der App“ zeigt jetzt auch, wer die Online-Anzeige ausgeschaltet hat (🙈); im Schalter steht klein „Für Hilfe und Sicherheit sieht der Admin weiterhin, wann du in der App warst.“ (KC-CLUB-SPUR-ALLE-DA).
 
 ## 2.867.0 – 2026-11-05 – 🎬 Nachrichten-Videos überarbeitet: Bild und Ton synchron, Chat-Hintergrund in Folge 2 (KC-CLUB-VIDEO-SATZPULS) · nur App
 Fund Hansi (05.11.): „Die Videos müssen beide noch überarbeitet werden. Text und Inhalt sind nicht immer konform bzw. synchron. Manchmal wird ein Button erklärt, aber ein anderer Button wird angezeigt. Und in Teil 2 auch erwähnen, dass man sich einen Hintergrund festlegen kann.“
