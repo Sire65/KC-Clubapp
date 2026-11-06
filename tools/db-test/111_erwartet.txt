@@ -1,0 +1,7 @@
+neu=1
+gelesen=0
+antwort=1
+absage=2
+inhalt=0
+bremse70_spricht=0
+bremse70_terminanfrage=1
