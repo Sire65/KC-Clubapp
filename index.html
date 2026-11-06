@@ -1986,6 +1986,36 @@
   .ak-inhalt:empty { display: none; } .ak-karte { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; padding: 12px; border-radius: 12px; background: #f3e9dc; color: #1d1a17; border: 1px solid #e0cfb9; }
   .ak-gross { font-size: 2.4rem; line-height: 1; } .ak-ueber { margin: 8px 0 2px; font-weight: 800; color: #741521; }
   .ak-liste { margin: 0; padding-left: 20px; } .ak-liste li { margin: 2px 0; } .ak-tipp { margin: 8px 0 0; font-style: italic; }
+  /* 2.869.0 KC-CLUB-ADVENT-2026: Rathaus Werne im Advent (Bild: Hansi) als Hintergrund, Türchen halbdurchsichtig, Sorten-Legende, Kinderriegel, Einladung */
+  .ak-blatt .blatt-innen { background: #1b1815 url(advent/rathaus.webp) 24% center / cover no-repeat; color: #f3e9dc; position: relative; }
+  @media (min-aspect-ratio: 4/3) { .ak-blatt .blatt-innen { background-position: left center; } }
+  .ak-blatt .blatt-innen::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,10,8,.45), rgba(20,10,8,.08) 35%, rgba(20,10,8,.6)); pointer-events: none; border-radius: inherit; }
+  .ak-blatt .blatt-innen > * { position: relative; }
+  .ak-blatt h3, .ak-hinweis, .ak-legende, .ak-quelle { text-shadow: 0 1px 4px rgba(0,0,0,.85); }
+  .ak-hinweis { margin: 4px 0 10px; } .ak-quelle { margin: 10px 0 0; font-size: .72rem; opacity: .8; text-align: right; }
+  .ak-blatt .ak-tuer { background: rgba(116,21,33,.74); border-color: rgba(224,207,185,.85); box-shadow: 0 3px 8px rgba(0,0,0,.35); }
+  .ak-blatt .ak-tuer .ak-zahl { background: rgba(116,21,33,.0); } .ak-blatt .ak-tuer.auf { background: rgba(243,233,220,.93); }
+  .ak-tuer .ak-art { position: absolute; top: 3px; left: 5px; font-size: .62rem; font-weight: 800; color: #741521; display: none; } .ak-tuer.auf .ak-art { display: block; }
+  /* Hansi 06.11.: „Das 24. Türchen ist immer größer“ – 2 × 2 Felder; die eine freie Ecke im 4er-Raster füllt die Kochmütze (bei 3 Spalten geht es genau auf) */
+  .ak-raster { grid-auto-flow: dense; } .ak-tuer.ak-24 { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; font-size: 2.6rem; } .ak-tuer.ak-24 .ak-sym { font-size: 3.4rem; }
+  .ak-muetze { display: grid; place-items: center; aspect-ratio: 1; border-radius: 10px; border: 2px dashed rgba(224,207,185,.5); } .ak-muetze img { width: 60%; opacity: .85; }
+  body.grosseschrift .ak-muetze { display: none; }
+  .ak-tuer.ak-24 { border-color: #d4a017; border-width: 3px; } .ak-tuer.ak-24::after { content: "★"; position: absolute; top: 1px; right: 5px; font-size: .7rem; color: #d4a017; }
+  .ak-legende { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; font-size: .8rem; }
+  .ak-marke { display: inline-block; font-size: .72rem; font-weight: 800; background: #741521; color: #f3e9dc; border-radius: 99px; padding: 2px 8px; margin-bottom: 4px; }
+  .ak-link, .ak-fach { display: block; width: 100%; margin-top: 10px; text-align: center; text-decoration: none; }
+  .ak-link { background: #741521; color: #f3e9dc; font-weight: 800; } .ak-blatt .ak-kopf .knopf { background: #f3e9dc; color: #741521; font-weight: 900; }
+  @media (min-width: 700px) { .ak-blatt .ak-raster { max-width: 540px; margin-left: auto; } .ak-blatt .ak-legende, .ak-blatt .ak-fach, .ak-blatt .ak-inhalt { max-width: 540px; margin-left: auto; } }
+  .ak-fach { background: rgba(243,233,220,.92); color: #741521; font-weight: 800; }
+  .ak-nasch { display: block; width: 100%; margin: 4px 0; text-align: left; }
+  .ak-riegel-karte > div, .ak-einladung { width: 100%; } .ak-einladung { text-align: center; } .ak-einladung h4 { margin: 6px 0; color: #741521; font: 700 1.3rem Georgia, serif; }
+  .ak-riegel { margin: 10px auto 6px; width: min(230px, 80%); height: 50px; border-radius: 8px; background: linear-gradient(180deg, #5a3418, #3d220f); position: relative; transform: rotate(-4deg); box-shadow: 0 4px 10px rgba(0,0,0,.35); animation: akRiegel .7s ease-out; }
+  .ak-riegel span { position: absolute; inset: 13px 0 auto; height: 24px; background: #fff; display: grid; place-items: center; font: 900 .85rem system-ui, sans-serif; color: #741521; letter-spacing: .04em; }
+  @keyframes akRiegel { from { transform: translateY(30px) rotate(-14deg); opacity: 0; } to { transform: rotate(-4deg); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .ak-riegel { animation: none; } }
+  .ak-gutschein { border: 2px dashed #741521; border-radius: 10px; padding: 8px 10px; margin-top: 8px; }
+  .ak-antwort { margin-top: 10px; } .ak-unterschrift { margin-top: 8px; color: #741521; font-style: italic; }
+  body.grosseschrift .ak-raster { grid-template-columns: repeat(3, 1fr); }
   @media (prefers-reduced-motion: reduce) { .kuckuck, .kuckuck * { transition: none !important; animation: none !important; } }
   :root.ohne-anim .jz-schicht, :root.ohne-anim .gb-kerze .gb-flamme { animation: none; } :root.ohne-anim .jz-schicht { display: none; }
   .konfetti i { position: absolute; display: block; border-radius: 2px; font-style: normal; font-size: 18px; line-height: 1; will-change: transform, opacity; }
@@ -6330,7 +6360,7 @@
         <div class="kr-unten"><span id="kachelEckenText" class="hinweis">Standard</span><button type="button" class="knopf klein" id="kachelEckenStandard" onclick="kachelEckenSetzen(null)">↺ Standard</button></div></div></div>
       <div class="schalter"><div><b>🕰️ Uhr zur vollen Stunde</b><div class="hinweis">Solange die App offen ist, kommt zu jeder vollen Stunde die Uhr – Kuckuck, Big Ben, Kölner Dom und mehr (unten auswählen) – und schlägt so oft, wie es Uhr ist (nachts 22–7 Uhr ohne Ton). Antippen schließt sie. Gilt für dieses Gerät.</div></div><button type="button" class="knopf klein" onclick="kuckuckZeigen(kkJetzt().h, true)" title="Kuckucksuhr jetzt mit Ton zeigen">🔊 Probe</button><input type="checkbox" id="setKuckuck" onchange="einstellung('kuckuck', this.checked)"></div> <!-- 2.402.0 KC-CLUB-KUCKUCKSUHR -->
       <details class="su-wahl" data-abh="setKuckuck"><summary>🔔 Welche Uhr? <small class="hinweis">– jede Uhr zum Aufklappen, ▶ zum Anhören, mehrere = jede Stunde eine andere</small></summary><div id="stundenUhrWahl"></div></details> <!-- 2.467.0 KC-CLUB-STUNDENUHREN -->
-      <div class="schalter versteckt" id="setAdventZeile"><div><b>🎄 Adventskalender</b><div class="hinweis">Vom 1. bis 24. Dezember jeden Tag ein Türchen mit einer Bastelanleitung für eine kleine süße Nascherei – Erinnerung oben im Info-Laufband. Aus: keine Erinnerung. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="akZeigen()">🎄 Kalender ansehen</button></div><input type="checkbox" id="setAdvent" aria-label="Adventskalender an oder aus" onchange="einstellung('advent', this.checked)"></div> <!-- 2.468.0 KC-CLUB-ADVENTSKALENDER -->
+      <div class="schalter versteckt" id="setAdventZeile"><div><b>🎄 Adventskalender</b><div class="hinweis">Vom 1. bis 24. Dezember jeden Tag ein Türchen – Naschereien, Bastel- und Deko-Ideen, sonntags eine Überraschung – Erinnerung oben im Info-Laufband. Aus: keine Erinnerung. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" style="margin-top:6px" onclick="akZeigen()">🎄 Kalender ansehen</button></div><input type="checkbox" id="setAdvent" aria-label="Adventskalender an oder aus" onchange="einstellung('advent', this.checked)"></div> <!-- 2.468.0 KC-CLUB-ADVENTSKALENDER -->
       <div class="schalter"><div><b>🧚 Die kleine Fee</b><div class="hinweis">Bei jedem 20. Start kommt die Fee – und beim Antippen gibt sie dir einen Spruch. Aus: sie kommt nicht mehr. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" id="feeKnopf" style="margin-top:6px" onclick="feeKommt(true)">🧚 Fee ansehen</button></div><input type="checkbox" id="setFee" aria-label="Die kleine Fee an oder aus" onchange="einstellung('fee', this.checked)"></div> <!-- 2.373.0 KC-CLUB-FEE: eigene Zeile; 2.379.0: abschaltbar -->
       <div class="schalter"><div><b>🐞 Der Marienkäfer</b><div class="hinweis">Bei jedem 50. Start krabbelt ein Marienkäfer über die Startseite, schaut dich an und lächelt – antippen für einen Glücksspruch. Aus: er kommt nicht mehr. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" id="kaeferKnopf" style="margin-top:6px" onclick="kaeferKommt(true)">🐞 Marienkäfer ansehen</button></div><input type="checkbox" id="setKaefer" aria-label="Der Marienkäfer an oder aus" onchange="einstellung('kaefer', this.checked)"></div> <!-- KC-CLUB-MARIENKAEFER -->
       <div class="schalter"><div><b>🍀 Der Glücksklee</b><div class="hinweis">Bei jedem 25. Start weht ein Windstoß ein vierblättriges Kleeblatt herein – antippen für einen Glücksspruch. Aus: es kommt nicht mehr. Gilt für dieses Gerät.</div><button type="button" class="knopf klein" id="kleeKnopf" style="margin-top:6px" onclick="kleeKommt(true)">🍀 Kleeblatt ansehen</button></div><input type="checkbox" id="setKlee" aria-label="Der Glücksklee an oder aus" onchange="einstellung('klee', this.checked)"></div> <!-- KC-CLUB-GLUECKSKLEE -->
@@ -6772,7 +6802,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.872.0" data-v="2.872.0"></script>
+<script src="app.js?v=2.873.0" data-v="2.873.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

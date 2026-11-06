@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.873.0 – 2026-11-06 – 🎄 Neuer Adventskalender: Rathaus Werne, Basteln & Deko, Kinderriegel, Einladung zum Frühstück (KC-CLUB-ADVENT-2026) · nur App · 12-Uhr-Termin [Hansi: einspielen]
+Wunsch Hansi (06.11.): „Neues Konzept zum Adventskalender – als Hintergrund das Rathaus-Bild aus der TV-Präsentation, abwechselnd Bastelanleitung,
+Deko-Anleitung, ein Kinderriegel, 24. Türchen Einladung zum Frühstück im Januar oder Februar.“ Konzept: `docs/adventskalender-2026/`.
+- **Hintergrund:** das Alte Rathaus im Advent (Bild von Hansi, 1280 × 720, 110 KB, `advent/rathaus.webp` – wird erst beim Öffnen des Kalenders geladen). Türchen halbdurchsichtig weinrot, das Rathaus schimmert durch.
+- **Vier Sorten im Wechsel:** 🍬 Nascherei → ✂️ Basteln → 🕯️ Deko; an den Adventssonntagen 6./13./20.12. 🍫 Kinderriegel-Gutschein (Riegel gibt es beim Weihnachtsessen im Januar – kein Abhaken, kein Server).
+- **Basteln/Deko:** kleine Symbole, Kurzanleitung (Material, 4 Schritte, Tipp, Dauer, mit Kindern?) und Knopf „🔗 Zur ausführlichen Anleitung“ – 16 Links, am 06.11. im Browser geprüft (frei zugänglich, ohne Anmeldung).
+- **Türchen 24:** immer doppelt so groß (2 × 2, die freie Ecke füllt die Kochmütze); Weihnachtsgruß + Einladung zum Frühstück bei Hansi („Weil das Grillen im August bei mir leider ausgefallen ist …“, „Termin wird noch bekannt gegeben“); Antwort über die vorhandene Abstimmung (Vorschläge → 🗳️, Titel mit „Frühstück“) – kein neuer Server-Weg.
+- **Keine Anleitung geht verloren:** alle 22 Nasch-Anleitungen im Fach „📖 Alle Naschereien“ (die aus dem Kalender erst, wenn ihr Türchen dran war).
+- **Nur Mitglieder:** Gäste und Aushilfen sehen den Kalender nicht (Hilfe, Einstellungen, Laufband). Bis 30.11. weiter Überraschung (nur Admin sieht ihn – Vorschau aller Türchen).
+- Tests: `tests/advent-2026.test.mjs`, Vertragstest angepasst. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“ (Überraschung). Rückweg: App 2.872.0.
+
 ## 2.872.0 – 2026-11-06 – 🐞 Marienkäfer und 🍀 Glücksklee auf der Startseite (KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE) · Server 2.872.0
 Wunsch Hansi (06.11.): „Bau einen Marienkäfer, der durchs Bild krabbelt, bei allen nach jedem 50. Start. Er geht bis zur Mitte, bleibt stehen, dreht den Kopf zum Mitglied und lächelt. Dann geht er weiter.“ – „Über die ganze Startseite. Und antippen. Nur Käfer. Und bei jedem 25. Start lass ein vierblättriges Kleeblatt mit einem Windstoß von oben ins Bild gepustet werden und antippen ein Glücksspruch.“
 - **🐞 Marienkäfer – jeder 50. Start:** krabbelt mit wackelnden Beinchen und Fühlern von links unten über die ganze Startseite zur Mitte, bleibt stehen, dreht sich zum Mitglied (Vorderansicht mit Augen, Bäckchen und Lächeln, blinzelt), dreht sich zurück und krabbelt rechts hinaus (etwa 13 s). Antippen: einer von 8 Glückssprüchen.

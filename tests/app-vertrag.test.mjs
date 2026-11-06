@@ -6790,15 +6790,15 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.468.0 KC-CLUB-ADVENTSKALENDER (Wunschliste #17): 24 Türchen 1.–24.12., nur bis heute zu öffnen, Erinnerung im Laufband, abschaltbar
 {
-  const ak = html.slice(html.indexOf("const AK_TUERCHEN = ["), html.indexOf("const AK_REIHE"));
-  assert.equal((ak.match(/\{ sym: "/g) || []).length, 24, "24 Türchen");
-  assert.equal((ak.match(/\{ sym: "[^"]+", t: "[^"]+", z: \[[^\]]+\], s: \[[^\]]+\], tipp: "/g) || []).length, 24, "jedes Türchen: Zutaten, Schritte, Tipp (Bastelanleitung)");
+  const ak = html.slice(html.indexOf("const AK_NASCH = ["), html.indexOf("const AK_REIHE"));
+  // 2.869.0 KC-CLUB-ADVENT-2026: Nasch-Anleitungen stehen jetzt in AK_NASCH (Fach „Alle Naschereien“), der Kalender in AK_TUERCHEN – Einzelprüfung in tests/advent-2026.test.mjs
+  assert.equal((ak.match(/\{ sym: "[^"]+", t: "[^"]+", z: \[[^\]]+\], s: \[[^\]]+\], tipp: "/g) || []).length, 23, "alle 23 bisherigen Anleitungen (Zutaten, Schritte, Tipp) bleiben erhalten");
   for (const w of ["Lokomotive aus Dominosteinen", "Schneemann aus Pfeffernüssen", "Lebkuchen-Kerze mit Mandel-Flamme", "Hexenhaus aus Butterkeksen", "Engel aus Nudeln"]) assert.ok(ak.includes(w), "Wunsch Hansi: " + w);
   const reihe = JSON.parse(html.match(/const AK_REIHE = (\[[^\]]+\])/)[1]);
   assert.deepEqual([...reihe].sort((a, b) => a - b), Array.from({ length: 24 }, (_, i) => i + 1), "jede Zahl genau einmal");
   assert.ok(/const akHeute = \(d = new Date\(\)\) => d\.getMonth\(\) === 11 \? Math\.min\(d\.getDate\(\), 24\) : 0;/.test(html), "nur im Dezember");
-  assert.ok(/if \(n > h && !\(!h && ICH\?\.admin\)\) \{/.test(html), "spätere Türchen bleiben zu (Vorschau nur Admin außerhalb Dezember)");
-  assert.ok(/if \(ah && akAn\(\) && !akOffen\(\)\.includes\(ah\)\) add\(\{ id: "advent:" \+ ah/.test(html), "Laufband-Erinnerung nur solange heute zu");
+  assert.ok(/if \(n > h && !akVorschau\(\)\) \{/.test(html) && /const akVorschau = \(\) => !akHeute\(\) && !!ICH\?\.admin;/.test(html), "spätere Türchen bleiben zu (Vorschau nur Admin außerhalb Dezember)");
+  assert.ok(/if \(ah && akAn\(\) && akSichtbar\(\) && !akOffen\(\)\.includes\(ah\)\) add\(\{ id: "advent:" \+ ah/.test(html), "Laufband-Erinnerung nur solange heute zu (und nur für Mitglieder)");
   assert.ok(/id="setAdvent"[^>]*onchange="einstellung\('advent', this\.checked\)"/.test(lies("index.html")) && /\$\("setAdvent"\)\.checked = akAn\(\)/.test(html), "abschaltbar");
   assert.ok(/\.ak-tuer \{[^}]*background: #741521/.test(lies("index.html")) && /\.ak-tuer:not\(\.auf\) \.ak-sym \{ visibility: hidden; \}/.test(lies("index.html")), "Corporate Design, Bild erst nach Öffnen");
 }
@@ -6960,7 +6960,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.482.0 KC-CLUB-ADVENT-UEBERRASCHUNG (Wunsch Hansi): vor Dezember für Mitglieder unsichtbar (Hilfe, Neu-Tipps, Einstellungen)
 {
-  assert.ok(/\{ id: "adventskalender", nur: \(\) => akSichtbar\(\),/.test(html) && /const akSichtbar = \(\) => !!ICH\?\.admin \|\| new Date\(\)\.getMonth\(\) === 11;/.test(html), "Hilfe-Eintrag erst ab Dezember");
+  assert.ok(/\{ id: "adventskalender", nur: \(\) => akSichtbar\(\),/.test(html) && /const akSichtbar = \(\) => zugang\(\) === "mitglied" && \(!!ICH\?\.admin \|\| new Date\(\)\.getMonth\(\) === 11\);/.test(html), "Hilfe-Eintrag erst ab Dezember");
   assert.ok(/<div class="schalter versteckt" id="setAdventZeile">/.test(lies("index.html")) && /if \(v === "einstellungen"\) akSichtbarSetzen\(\);/.test(html), "Schalter unter Effekte erst ab Dezember (Admin immer)");
   const ak = html.slice(html.indexOf("const akHeute"), html.indexOf("const akHeute") + 400);
   assert.ok(/getMonth\(\) === 11/.test(ak), "Laufband-Erinnerung nur im Dezember");
