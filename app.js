@@ -9721,7 +9721,7 @@ const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur(
 // und nur passende Kacheln zeigt. Gast: Termine, Nachrichten, SOS (nur Clubleitung), Spiele, Hilfe/Einstellungen. Aushilfe: dazu Mein Dienst,
 // Dienstwünsche, Fotoalbum ansehen, Schulung. Der Vertragstest prüft, dass ZUGANG_AKTIONEN hier und im Server gleich sind.
 const ZUGANG_AKTIONEN = {
-  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "weg", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
