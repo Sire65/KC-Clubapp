@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.867.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.868.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -20,6 +20,7 @@ const TEILE_LISTE = {
   buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-bTEiYXM6UcH05EqAohDWpDoNNWorAyk424xroS5KH5akurfSr8OS0RJ14TSFeLhy" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-qPS9/H66zIS2QeGHqQQs5CFqN4+XZns2HL1FnQYWzUWbVrYpK/BLZN111UDmKbRH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
+  glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
   magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine"], sri: "sha384-Cw5edAdzYjNjuxiW2gHIQYlIESZp2I0Y93SIDgS2AE1mrdRact6S1p4+fbFlKsrG" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
@@ -1163,7 +1164,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -2529,6 +2530,8 @@ const HILFE = [
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Über dem Schreibfeld <b>🏎️ Express</b> anhaken, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – neben Express steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Express und <b>❗ Wichtig</b> kannst du auch zusammen anhaken. Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
+  { id: "kaefer", thema: "darstellung", sym: "🐞", t: "Ein Marienkäfer krabbelt vorbei", x: "Bei jedem <b>50. Start</b> krabbelt ein kleiner Marienkäfer über die Startseite, bleibt in der Mitte stehen, <b>schaut dich an und lächelt</b> – dann krabbelt er weiter. <b>Tipp ihn an</b> für einen Glücksspruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🐞 Der Marienkäfer</b>.", zeig: () => einstiegHin("effekte", "setKaefer"), seit: "2.868.0" }, // KC-CLUB-MARIENKAEFER
+  { id: "klee", thema: "darstellung", sym: "🍀", t: "Ein Glücksklee weht herein", x: "Bei jedem <b>25. Start</b> pustet ein Windstoß ein <b>vierblättriges Kleeblatt</b> von oben ins Bild. Es bleibt kurz liegen, dann weht es der Wind wieder fort. <b>Tipp es an</b> für einen Glücksspruch. Es kommt immer nur eine Überraschung: Glückskeks vor Marienkäfer vor Kleeblatt vor Fee. Ansehen oder abschalten: <b>⚙️ → ✨ Effekte → 🍀 Der Glücksklee</b>.", zeig: () => einstiegHin("effekte", "setKlee"), seit: "2.868.0" }, // KC-CLUB-GLUECKSKLEE
   { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen. Verschlüsselte Nachrichten (🔒, mit Schlüssel oder Schlüsselbund) bringt immer der <b>🕵️ Geheimagent</b> mit Aktenkoffer – vorher dreht sich am Senden-Knopf kurz ein 🔑 Schlüssel. Nur 🏎️ Express geht vor (Rennwagen).", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
   { id: "zurueckholen", thema: "nachrichten", sym: "↩️", t: "Vertippt? Nachricht zurückholen", x: "Solange noch niemand deine Nachricht gelesen hat, kannst du sie <b>zurückholen</b>: Nachricht antippen (am PC: rechte Maustaste) oder im <b>ⓘ</b>-Fenster → <b>„↩️ Zurückholen und ändern“</b>. Sie verschwindet für alle und steht wieder in deinem Schreibfeld – ändern und neu senden.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-ZURUECKHOLEN
   { id: "spaeter_senden", thema: "nachrichten", sym: "⏰", t: "Nachricht später senden – auch jeden Montag", x: "Nachricht schreiben, unten auf <b>⏰</b> tippen, Zeit wählen (z. B. <b>morgen früh 8 Uhr</b>) und wie oft (<b>einmal</b>, <b>jeden Tag</b>, <b>werktags</b>, <b>jeden Montag</b> …). Bis dahin steht sie blass unten im Chat – nur du siehst sie. Rechts daneben ein <b>⏰</b>: antippen zeigt Zeit, Wiederholung und Benachrichtigung, dazu <b>✏️ Ändern</b> (Zeit oder Text), <b>📤 Jetzt senden</b> und <b>🗑️ Löschen</b>. Gesendet wird auch, wenn dein Handy aus ist.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-SPAETER-SENDEN
@@ -2933,6 +2936,8 @@ const SB_EINST = [
   { k: "wetter", re: /wetter/, klappe: "darstellung", id: "meinWetterort", t: "Wetterort" },
   { k: "animation", re: /animation|bewegung/, klappe: "effekte", id: "setAnimiert", t: "Bewegungen" },
   { k: "fee", re: /\bfee\b|feen|zauberspruch|spruch der fee/, klappe: "effekte", id: "setFee", t: "Die kleine Fee" }, // 2.379.0
+  { k: "kaefer", re: /marienk[äa]fer|k[äa]fer|krabbel/, klappe: "effekte", id: "setKaefer", t: "Der Marienkäfer" }, // KC-CLUB-MARIENKAEFER
+  { k: "klee", re: /kleeblatt|gl[üu]cksklee|\bklee\b|vierbl[äa]ttrig/, klappe: "effekte", id: "setKlee", t: "Der Glücksklee" }, // KC-CLUB-GLUECKSKLEE
   { k: "feiertage", re: /feiertag/, klappe: "startseite", id: "setFeiertage", t: "Feiertage" },
   { k: "ferien", re: /ferien|schulferien|bundesl/, klappe: "startseite", id: "setFerien", t: "Schulferien" }, // 2.484.0 KC-CLUB-FERIEN
   { k: "ansicht", re: /mitglieder ?ansicht|ansicht der mitglieder/, klappe: "startseite", id: "mgAnsichtWahl", t: "Mitglieder-Ansicht" },
@@ -10620,6 +10625,34 @@ async function keksOeffnen(knopf) {
 }
 // KC-CLUB-FEE (2.372.0, Wunsch Hansi): bei jeder 20. Anmeldung (Server zählt je Mitglied über alle Geräte) schwebt eine kleine Fee
 // durchs obere Startbild – bleibt kurz stehen, lächelt, fliegt weiter. Antippen = ein motivierender Spruch. „🧚 Fee ansehen“ zeigt sie jederzeit.
+// KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (Wunsch Hansi 06.11.2026): Glückssprüche zum Antippen (Ablauf: teile/glueck.js)
+const KAEFER_SPRUECHE = [
+  "Glück gehabt! Ein Marienkäfer bringt Glück – schön, dass du da bist. 🐞",
+  "Klein, aber oho: Heute gelingt dir etwas richtig Gutes.",
+  "Ich habe sieben Punkte – und du heute sieben gute Gründe zu lächeln.",
+  "Wer mich sieht, hat einen Glückstag. Mach was draus!",
+  "Langsam, aber zielstrebig – so kommt man auch ans Ziel.",
+  "Ein Marienkäfer auf der Hand heißt: Ein Wunsch geht in Erfüllung.",
+  "Schön, dass du so oft vorbeischaust – der Club freut sich über dich!",
+  "Das Glück krabbelt manchmal leise herein – heute zu dir.",
+];
+const KLEE_SPRUECHE = [
+  "Vier Blätter, viel Glück: Heute klappt dir alles! 🍀",
+  "Glück ist, mit lieben Menschen am Herd zu stehen.",
+  "Das erste Blatt für Hoffnung, das zweite für Glaube, das dritte für Liebe – und das vierte für Glück.",
+  "Wer ein vierblättriges Kleeblatt findet, darf sich etwas wünschen.",
+  "Glück ist das Einzige, das sich verdoppelt, wenn man es teilt.",
+  "Ein guter Tag beginnt mit einem Lächeln – und einer Prise Glück.",
+  "Manchmal weht einem das Glück einfach zu.",
+  "Viel Glück für alles, was du heute vorhast!",
+  "Glück ist kein Zufall – es ist eine gute Gemeinschaft.",
+  "Heute ist dein Glückstag – vielleicht gelingt das neue Rezept besonders gut.",
+  "Wer lacht, hat mehr vom Leben. Lach mal wieder! 😊",
+  "Das Glück wohnt dort, wo man gern zusammenkommt – im Club zum Beispiel.",
+  "Ein Kleeblatt für dich: Bleib gesund und gut gelaunt!",
+  "Glück ist, wenn das Essen schmeckt und die Gesellschaft stimmt.",
+  "Vier Blätter, ein Wunsch: Möge dir heute alles leicht von der Hand gehen.",
+];
 const FEE_SPRUECHE = [
   "Heute ist ein guter Tag, um etwas Leckeres zu zaubern. ✨",
   "Du bist ein wichtiger Teil vom Club – schön, dass es dich gibt!",
@@ -32035,7 +32068,7 @@ function startMessFertig() {
   spur(window.KCFP?.ausHinter ? spurWieder(KCFP.ausHinter) : "geoeffnet"); setTimeout(spurSenden, 3000); // 2.729.0 KC-CLUB-SPUR-WIEDER
   // KC-CLUB-STARTSTATISTIK (2.31.0, Wunsch Hansi): jeden Start mit Dauer, Gerät und Browser melden (für die Startstatistik des Admins)
   setTimeout(() => api("start_melden", { ms: eintrag.ges, teile: p, netz: eintrag.netz, quelle: eintrag.quelle, v: APP_VERSION, spar: SPAR.an, hinter: !!START_MESS.hinter,
-    app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).then((r) => { if (r?.keks) setTimeout(() => keksZeigen(r.keks), 1500); else if (r?.fee) setTimeout(feeKommt, 1500); }).catch(() => {}), 1500); // 2.372.0 KC-CLUB-FEE: jede 20. Anmeldung
+    app: matchMedia("(display-mode: standalone)").matches || navigator.standalone === true, system: fpSystem(), browser: fpBrowser(), bildschirm: `${screen.width}x${screen.height}` }).then((r) => { if (r?.keks) setTimeout(() => keksZeigen(r.keks), 1500); else if (r?.kaefer) setTimeout(() => kaeferKommt(), 1500); else if (r?.klee) setTimeout(() => kleeKommt(), 1500); else if (r?.fee) setTimeout(feeKommt, 1500); }).catch(() => {}), 1500); // 2.372.0 KC-CLUB-FEE: jede 20. Anmeldung
 }
 const sek = (ms) => (ms / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " s";
 function startMessHtml() {
@@ -34070,7 +34103,7 @@ const FENSTER_NAMEN = {
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
   erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
-  fdkFrageBlatt: "🧪 Hygienekontrolle", fdkKarteBlatt: "🃏 Fang den Koch: Karte", fdkRegelBlatt: "📖 So geht Fang den Koch", feeBlatt: "🧚 Die Fee", fiBlatt: "🏋️ Fit bleiben",
+  fdkFrageBlatt: "🧪 Hygienekontrolle", fdkKarteBlatt: "🃏 Fang den Koch: Karte", fdkRegelBlatt: "📖 So geht Fang den Koch", feeBlatt: "🧚 Die Fee", kaeferBlatt: "🐞 Der Marienkäfer", kleeBlatt: "🍀 Der Glücksklee", fiBlatt: "🏋️ Fit bleiben",
   flAng: "✏️ Angaben ändern", flInfo: "📣 Mitglieder informieren", ggBlatt: "🎂 Meine Geburtstagsgrüße", ggWahlBlatt: "🎂 Geburtstagsgruß wählen", gmFenster: "⭐ Gemerkte Nachrichten",
   gpBlatt: "⏰ Geplante Nachricht", gpMenue: "⏰ Geplante Nachricht", hbBlatt: "🎂 Geburtstagsgruß", herzBlatt: "❤️ Lebenszeichen", hilfeInfo: "🙋 Hilfe-Aufruf ansehen",
   hzBewBlatt: "📊 Bewertungen der Hilfen", ilLesenBlatt: "📰 Info-Feld: Meldung gelesen", ivBlatt: "🗂️ Inhaltsverzeichnis", kaBlatt: "📵 Wen herausnehmen?", kalWahlBlatt: "📅 Kalender wählen",
@@ -34156,7 +34189,7 @@ try {
 // Kennung → Name (nur für den Admin-Bildschirm): Fenster, Hilfe, Videos, Filme
 function spurMitName(w, k) {
   try {
-    if (w === "fenster") { const fee = /^feeBlatt:(\d+)$/.exec(k || ""); if (fee) { const s = FEE_SPRUECHE[Number(fee[1])]; return s ? `${FENSTER_NAMEN.feeBlatt}: „${s}“` : FENSTER_NAMEN.feeBlatt; } } // 2.855.0 KC-CLUB-SPUR-FEE
+    if (w === "fenster") { const fee = /^(feeBlatt|kaeferBlatt|kleeBlatt):(\d+)$/.exec(k || ""); if (fee) { const s = { feeBlatt: FEE_SPRUECHE, kaeferBlatt: KAEFER_SPRUECHE, kleeBlatt: KLEE_SPRUECHE }[fee[1]][Number(fee[2])]; return s ? `${FENSTER_NAMEN[fee[1]]}: „${s}“` : FENSTER_NAMEN[fee[1]]; } } // 2.855.0 KC-CLUB-SPUR-FEE
     if (w === "fenster") return FENSTER_NAMEN[k] || `„${k}“`; // ohne Namen: die Kennung (der Vertragstest meldet das)
     if (w === "hz_kapitel") { const t = HILFE_THEMEN.find((x) => x.id === k); return t ? `${t.sym} ${t.t}` : k; }
     if (w === "hz_frage") return NZ_NAMEN[k] || k;
@@ -34249,7 +34282,7 @@ function spuGruppen(z, weit) {
   const g = { seiten: [], fenster: [], hilfe: [], videos: {}, filme: {}, taten: [], sonst: [] };
   for (const [key, n] of Object.entries(z || {})) {
     const [w, k] = key.split("|");
-    if (w === "fenster") { const name = spurMitName(w, /^feeBlatt:/.test(k || "") ? "feeBlatt" : k), da = g.fenster.find((x) => x[0] === name); if (da) da[1] += n; else g.fenster.push([name, n]); } // KC-CLUB-SPUR-FEE: alle Sprüche zählen als ein Fenster „🧚 Die Fee“
+    if (w === "fenster") { const name = spurMitName(w, (/^(feeBlatt|kaeferBlatt|kleeBlatt):/.exec(k || "") || [])[1] || k), da = g.fenster.find((x) => x[0] === name); if (da) da[1] += n; else g.fenster.push([name, n]); } // KC-CLUB-SPUR-FEE: alle Sprüche zählen als ein Fenster „🧚 Die Fee“
     else if (/^hz_/.test(w)) g.hilfe.push([spurZeile({ w, k }), n]);
     else if (/^(rg|film)_(start|ende|ab)$/.test(w) && k) { const ziel = w.startsWith("rg") ? g.videos : g.filme, v = (ziel[k] = ziel[k] || { name: spurMitName(w, k), start: 0, ende: 0, ab: 0, weit: "" });
       if (/_start$/.test(w)) v.start += n; else if (/_ende$/.test(w)) v.ende += n; else { v.ab += n; v.weit = weit?.[key] || v.weit; } }

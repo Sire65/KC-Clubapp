@@ -157,7 +157,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.865.0";
+const SERVER_VERSION = "2.868.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -14353,9 +14353,12 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (keks) {
           const [aid] = await adminIds().catch(() => [] as string[]);
           const von = aid && aid !== ich.person_id ? vorname((await personen([aid])).get(aid) ?? null) : "";
-          return json({ ok: true, anmeldungen, fee: false, keks: { n: tage, von: von || null } });
+          return json({ ok: true, anmeldungen, fee: false, kaefer: false, klee: false, keks: { n: tage, von: von || null } });
         }
-        return json({ ok: true, anmeldungen, fee: anmeldungen % 20 === 0 });
+        // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (Wunsch Hansi 06.11.2026): 🐞 jeder 50. Start, 🍀 jeder 25. – immer nur eine Überraschung:
+        // Glückskeks (oben) vor Marienkäfer vor Kleeblatt vor Fee (z. B. 100. Start: nur der Käfer). Gleicher Zähler wie die Fee, keine weitere Abfrage.
+        const kaefer = anmeldungen % 50 === 0, klee = !kaefer && anmeldungen % 25 === 0;
+        return json({ ok: true, anmeldungen, kaefer, klee, fee: !kaefer && !klee && anmeldungen % 20 === 0 });
       }
       case "start_statistik": {
         nurAdmin(ich);

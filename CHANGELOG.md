@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.868.0 – 2026-11-06 – 🐞 Marienkäfer und 🍀 Glücksklee auf der Startseite (KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE) · Server 2.868.0
+Wunsch Hansi (06.11.): „Bau einen Marienkäfer, der durchs Bild krabbelt, bei allen nach jedem 50. Start. Er geht bis zur Mitte, bleibt stehen, dreht den Kopf zum Mitglied und lächelt. Dann geht er weiter.“ – „Über die ganze Startseite. Und antippen. Nur Käfer. Und bei jedem 25. Start lass ein vierblättriges Kleeblatt mit einem Windstoß von oben ins Bild gepustet werden und antippen ein Glücksspruch.“
+- **🐞 Marienkäfer – jeder 50. Start:** krabbelt mit wackelnden Beinchen und Fühlern von links unten über die ganze Startseite zur Mitte, bleibt stehen, dreht sich zum Mitglied (Vorderansicht mit Augen, Bäckchen und Lächeln, blinzelt), dreht sich zurück und krabbelt rechts hinaus (etwa 13 s). Antippen: einer von 8 Glückssprüchen.
+- **🍀 Glücksklee – jeder 25. Start:** ein Windstoß (helle Wind-Striche, mit Ton ein leises Rauschen) pustet ein vierblättriges Kleeblatt von oben ins Bild; es wirbelt herab, bleibt 8 s liegen und wiegt sich, ein zweiter Windstoß weht es fort. Antippen: einer von 15 Glückssprüchen.
+- **Immer nur eine Überraschung:** Glückskeks-Tag vor Marienkäfer vor Kleeblatt vor Fee (100., 200. … Start: nur der Käfer). Der Server entscheidet mit dem schon vorhandenen Start-Zähler der Fee – keine neue Tabelle, keine weitere Abfrage.
+- Nur auf der Startseite und erst, wenn kein Fenster offen ist (z. B. Tipp des Tages); nicht im Sparmodus, bei „weniger Bewegung“ oder abgeschalteten Effekten. Abschaltbar und zum Ansehen: ⚙️ → ✨ Effekte → „🐞 Der Marienkäfer“ / „🍀 Der Glücksklee“. Lupe findet „Marienkäfer“, „Kleeblatt“. Hilfe-Einträge. In den Wegen steht „🐞/🍀 …: „<Spruch>““ (nur die Nummer wird gespeichert).
+- Eigener Programmteil `teile/glueck.js` (wird erst geladen, wenn der Käfer oder das Kleeblatt kommt).
+- Tests: `tests/glueck.test.mjs` (Reihenfolge der Überraschungen, Einstellungen, Wege, nichts gespeichert); Browser-Prüfung `tools/hilfe/glueck-browser.mjs` (abgeschirmt): Käfer steht in der Mitte und schaut nach vorn, Klee liegt und wird weggeweht, Antippen zeigt Sprüche, abgeschaltet kommt nichts.
+- Rückweg: App 2.867.0, Server 2.865.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.867.0 – 2026-11-05 – 🎬 Nachrichten-Videos überarbeitet: Bild und Ton synchron, Chat-Hintergrund in Folge 2 (KC-CLUB-VIDEO-SATZPULS) · nur App
 Fund Hansi (05.11.): „Die Videos müssen beide noch überarbeitet werden. Text und Inhalt sind nicht immer konform bzw. synchron. Manchmal wird ein Button erklärt, aber ein anderer Button wird angezeigt. Und in Teil 2 auch erwähnen, dass man sich einen Hintergrund festlegen kann.“
 - **Ursache:** Die erwähnten Knöpfe blinkten bisher im festen Takt nacheinander (höchstens 2,6 s je Knopf) und begannen dann von vorn – bei langen Sätzen war der Takt schneller fertig als die Stimme, und es blinkte ein anderer Knopf als der, von dem gerade die Rede war. Außerdem stimmte die Reihenfolge teils nicht mit dem Text überein (z. B. „Gruppe & mehr“: erklärt wurden Gruppe, Gemerkt, Favoriten, Test – geblinkt hat „Kartei“).
