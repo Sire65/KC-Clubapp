@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.871.0 – 2026-11-06 – Ausweich für schlechte Telefonate immer bereit
+- Prüfung Hansi 06.11.: Der Vorrat an Zugangsdaten für den Umleitungs-Server (TURN, Metered) wurde nur beim Anrufen erneuert – seit 04.11. war alles abgelaufen, der nächste Anruf wäre ohne Umleitung gelaufen. Die stündliche Wartung hält ihn jetzt frisch (KC-CLUB-TURN-FRISCH). Versendete Push-Meldungen werden nach 180 Tagen gelöscht, bisher ohne Grenze (KC-CLUB-PUSH-AUFRAEUMEN).
+- Admin → 🛡️ Wächter: neuer Wächter „📞 Telefon-Umleitung (Metered)“ – zeigt, ob gültige Zugangsdaten bereitliegen, ob Metered ablehnt, und den Monatsverbrauch; meldet sich bei Gelb/Rot (KC-CLUB-WAECHTER-TURN).
+- Admin → 👣 Wege der Mitglieder: „Gerade in der App“ zeigt jetzt auch, wer die Online-Anzeige ausgeschaltet hat (🙈); im Schalter steht klein „Für Hilfe und Sicherheit sieht der Admin weiterhin, wann du in der App warst.“ (KC-CLUB-SPUR-ALLE-DA).
+
 ## 2.870.0 – 🌱 Mein Garten: Samen säen und eine Pflanze großziehen (KC-CLUB-SAMEN, Wunschliste #84) · Server 2.870.0
 - Neue Kachel „🌱 Mein Garten“ (Meins) – **erst nur für Hansi zum Testen** (Freigaben → „🌱 Mein Garten“, Standard nur Admin; Wunsch Hansi „noch nicht veröffentlichen“).
 - Für Tage dabei (7, 25, 50, 100, 200, 365, danach je 365 – Pausen egal) und für besondere Taten (erstes eigenes Rezept, erster Beitrag für die Club-Küche) gibt es ein 🎁 Samentütchen. 12 Pflanzen: Rose, Sonnenblume, Tulpe · Basilikum, Rosmarin, Schnittlauch · Lavendel, Johannisbeere, Hortensie · Apfel-, Zitronen-, Olivenbaum.
