@@ -135,6 +135,7 @@ jobs:
       - run: node tests/protokoll-foto.test.mjs
       - run: node tests/protokoll-archiv.test.mjs
       - run: node tests/video-abgleich.test.mjs
+      - run: node tests/video-stimme-stumm.test.mjs
       - run: node tests/teilen-eigen.test.mjs
       - run: node tests/clubabend-anwesend.test.mjs
       - run: node tests/sitzung-schritte.test.mjs
