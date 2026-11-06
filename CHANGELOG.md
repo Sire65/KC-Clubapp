@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.869.0 – 2026-11-06 – 📏 Datenvolumen-Messung im Club-Server, „weg“ auch für Gäste/Aushilfen (KC-CLUB-EGRESS-MESSUNG, KC-CLUB-ONLINE-ECHT) · App + Server – 12-Uhr-Termin
+Anlass: Supabase-Warnung 05.11.2026 – Datenvolumen (Egress) im letzten Abrechnungszeitraum über dem kostenlosen Kontingent, Schonfrist bis 16.11.; laut Übersicht 85–90 % über die Datenbank-Schnittstelle (PostgREST). Freigabe Hansi: „Ja, bau die Messung für 12 Uhr ein“.
+- **Messung:** Der Club-Server zählt im Speicher, wie viele Bytes die Datenbank-Schnittstelle je Tabelle/Funktion und je App-Aktion zurückgibt und wie groß die Antworten an die Apps sind. Alle 10 Minuten je Server-Instanz eine Zeile `egress_messung` im Protokoll (nur Namen und Zahlen, keine Inhalte, keine Personen; 60 Tage). Gepufferte Antworten zählen nicht (kosten nichts). Keine zusätzliche Abfrage pro Aufruf, keine Kosten.
+- Auswertung: `select details from kc_club_protokoll where aktion = 'egress_messung'` – Felder `db`/`aktion`/`antwort` = `{ Name: [Anzahl, Bytes, Bytes laut Content-Length] }`. Danach die größten Verbraucher gezielt verkleinern (vor dem 16.11.).
+- **Gäste und Aushilfen:** Die Meldung „weg“ (App weggelegt) war für sie nicht freigegeben – sie galten dadurch bis zu 150 s weiter als online. Jetzt in `ZUGANG_AKTIONEN.basis` (App und Server).
+- Test: `tests/egress-messung.test.mjs`, `tests/online-echt.test.mjs` erweitert. Rückweg: Server 2.865.0 / App 2.868.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.868.0 – 2026-11-06 – 🔇 Erklär-Videos laufen weiter, wenn die Handy-Stimme nicht antwortet (KC-CLUB-VIDEO-STIMME-STUMM) · nur App
 Fund Hansi 06.11. (Android): „Folge 1 und 2 laufen nicht bzw. ohne Ton – andere auch nicht“, „Tafel kommt, steht still“; Hörprobe: Thorsten und Dii gehen, gewählt war „Deutsch Deutschland“ (Google-Sprachausgabe im Handy).
 - Ursache: Die Google-Sprachausgabe des Handys nahm die Sätze an, sprach aber nicht – die App wartete auf die Stimme (Sicherheitsnetz erst nach Lesezeit × 1,8, ca. 30–60 s). In den Wegen: 4 Abbrüche nach 7–20 s bei Schritt 1–3.
