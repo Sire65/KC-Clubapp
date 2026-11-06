@@ -37,7 +37,7 @@ for (const st of teil.split(/\n(?=  \{ v:|  rgAus\()/).slice(1)) {
   if (puls) assert.equal(eintraege(puls[1]), n.length, `${titel}: je Knopf eine Satznummer`);
   assert.ok(!/\b(z|u|ca|bzw|usw|Nr)\. /.test(x), `${titel}: keine Abkürzung mit Punkt im gesprochenen Text`);
 }
-assert.ok(/function rgSatzPuls\(s, n\)/.test(v) && /u\.onstart = \(\) => \{ if \(lauf === RG\.lauf\) rgSatz\(n\); \};/.test(v) && /try \{ beiSatz\?\.\(i\); \} catch \{\}/.test(v), "Sprecher meldet jeden Satz (Handy-Stimme und geladene Stimme)");
+assert.ok(/function rgSatzPuls\(s, n\)/.test(v) && /u\.onstart = \(\) => \{ (gestartet = true; )?if \(lauf === RG\.lauf\) rgSatz\(n\); \};/.test(v) && /try \{ beiSatz\?\.\(i\); \} catch \{\}/.test(v), "Sprecher meldet jeden Satz (Handy-Stimme und geladene Stimme)");
 assert.ok(/if \(!RG\.ton && !rgpAktiv\(\)\) \{ \/\/ ohne Stimme: Sätze nach Lesezeit/.test(v), "ohne Ton: Sätze nach Lesezeit");
 assert.ok(/"🎨 Dein Chat-Hintergrund"/.test(f2) && /\$\("cfBlatt"\)\?\.classList\.add\("rg-zeigen"\)/.test(v), "Folge 2 zeigt den Chat-Hintergrund (Fenster wird im Video angezeigt)");
 // nichts senden: nur Beispiel-Chat, Geheim-Beispiel und Bilder; keine Sende-/Speicher-Aufrufe

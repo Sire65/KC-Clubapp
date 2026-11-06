@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.868.0 – 2026-11-06 – 🔇 Erklär-Videos laufen weiter, wenn die Handy-Stimme nicht antwortet (KC-CLUB-VIDEO-STIMME-STUMM) · nur App
+Fund Hansi 06.11. (Android): „Folge 1 und 2 laufen nicht bzw. ohne Ton – andere auch nicht“, „Tafel kommt, steht still“; Hörprobe: Thorsten und Dii gehen, gewählt war „Deutsch Deutschland“ (Google-Sprachausgabe im Handy).
+- Ursache: Die Google-Sprachausgabe des Handys nahm die Sätze an, sprach aber nicht – die App wartete auf die Stimme (Sicherheitsnetz erst nach Lesezeit × 1,8, ca. 30–60 s). In den Wegen: 4 Abbrüche nach 7–20 s bei Schritt 1–3.
+- Jetzt: Beginnt die Handy-Stimme nach **5 s** nicht zu sprechen (`RG_STIMME_WARTE_MS`), läuft das Video **ohne Ton weiter** (nach Lesezeit, Knöpfe blinken satzweise weiter) und ein Hinweis empfiehlt „Dii“ oder „Thorsten“ (geladene Stimmen, unabhängig von der Handy-Stimme). Beim nächsten Video wird die Handy-Stimme wieder versucht. In den Wegen: „🔇 Handy-Stimme antwortete nicht“.
+- Geladene Stimmen (Dii, Thorsten) sind nicht betroffen. Test: `tests/video-stimme-stumm.test.mjs`; Browser-Prüfung mit stummer und normaler Handy-Stimme (abgeschirmt). Rückweg: App 2.867.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.867.0 – 2026-11-05 – 🎬 Nachrichten-Videos überarbeitet: Bild und Ton synchron, Chat-Hintergrund in Folge 2 (KC-CLUB-VIDEO-SATZPULS) · nur App
 Fund Hansi (05.11.): „Die Videos müssen beide noch überarbeitet werden. Text und Inhalt sind nicht immer konform bzw. synchron. Manchmal wird ein Button erklärt, aber ein anderer Button wird angezeigt. Und in Teil 2 auch erwähnen, dass man sich einen Hintergrund festlegen kann.“
 - **Ursache:** Die erwähnten Knöpfe blinkten bisher im festen Takt nacheinander (höchstens 2,6 s je Knopf) und begannen dann von vorn – bei langen Sätzen war der Takt schneller fertig als die Stimme, und es blinkte ein anderer Knopf als der, von dem gerade die Rede war. Außerdem stimmte die Reihenfolge teils nicht mit dem Text überein (z. B. „Gruppe & mehr“: erklärt wurden Gruppe, Gemerkt, Favoriten, Test – geblinkt hat „Kartei“).
