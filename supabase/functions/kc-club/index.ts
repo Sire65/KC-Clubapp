@@ -190,7 +190,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.871.0";
+const SERVER_VERSION = "2.872.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -7972,6 +7972,7 @@ const WAECHTER: { id: string; sym: string; name: string; job?: string; gh?: stri
   // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: Notfall-Paket (Kopie für den Ersatz-Server). Gelb erst, wenn auch der Neuversuch nach der Fehlerpause fehlt
   // (Fehler ≥ 45 Min. alt und kein neueres Paket) – ein einzelner Abbruch mit gelungenem Neuversuch steht nur im Protokoll und hier als Hinweis.
   { id: "notpaket", sym: "🧯", name: "Notfall-Paket", app: (d) => notpaketBefund(d.notpaket) },
+  { id: "turn", sym: "📞", name: "Telefon-Umleitung (Metered)", app: (d) => turnBefund(d.turn) }, // KC-CLUB-WAECHTER-TURN
   { id: "messung", sym: "⚖️", name: "Mess-Stationen", job: "kc-club-messung-30min", befund: (d) => (d.mess?.api?.db_ms > 300 ? ["gelb", "Datenbank langsam", `Antwortzeit ${d.mess.api.db_ms} ms`] : null) },
   { id: "zugang", sym: "🛂", name: "Zugangs-Wächter", job: "kicc-access-watch-minute" },
   // 🔒 Sicherheits-Wächter (2.726.0 KC-CLUB-SICHERHEIT-WAECHTER) – bewertet aus Zählungen (d.sicherheit) und dem Datenleck-Check (d.leck)
@@ -8052,11 +8053,36 @@ function notpaketBefund(x: any): [string, string, string] {
   const zuletzt = Number.isFinite(fehlerAm) && jetztMs - fehlerAm < 24 * 3600000 ? ` · letzter Fehler ${zeit(fehlerAm)}${x.fehler ? "" : " (danach wieder gebaut)"}` : "";
   return ["gruen", "aktuell", `Gebaut ${zeit(hoch)}${zuletzt}`];
 }
+// KC-CLUB-WAECHTER-TURN (06.11.2026, Wunsch Hansi „Metered in die Admin-Überwachung“): Lage der Telefon-Umleitung – gültige Zugangsdaten
+// (eigene Tabelle), letzter Absagegrund von Metered (im Speicher) und Monatsverbrauch (Metered, höchstens alle 6 Std. gefragt). Nie Schlüssel/Passwort.
+let TURN_VERBRAUCH: { t: number; v: { kontingentGB: number; verbrauchtGB: number } | null } | null = null;
+async function turnLage() {
+  if (!turnSchluessel()) return { eingerichtet: false };
+  const t = Date.now();
+  const { data } = await db.from("kc_club_turn_vorrat").select("gueltig_bis,nutzbar_ab").gt("gueltig_bis", new Date(t + TURN.restMs).toISOString()).order("gueltig_bis", { ascending: false }).limit(3);
+  const z = (data ?? []).find((x: any) => Date.parse(x.nutzbar_ab) <= t) as any;
+  if (!TURN_VERBRAUCH || t - TURN_VERBRAUCH.t > 6 * 3600000) {
+    try { const u = await turnAbruf("/api/v1/turn/current_usage"); const k = Number(u?.quotaInGB), v = Number(u?.usageInGB);
+      TURN_VERBRAUCH = { t, v: Number.isFinite(k) && Number.isFinite(v) ? { kontingentGB: k, verbrauchtGB: v } : null }; }
+    catch { TURN_VERBRAUCH = { t, v: TURN_VERBRAUCH?.v ?? null }; }
+  }
+  return { eingerichtet: true, bis: z?.gueltig_bis ?? null, grund: TURN_GRUND?.kurz ?? null, grundText: TURN_GRUND?.text ?? null, verbrauch: TURN_VERBRAUCH?.v ?? null };
+}
+function turnBefund(x: any): [string, string, string] {
+  if (!x) return ["grau", "unbekannt", ""];
+  if (!x.eingerichtet) return ["grau", "nicht eingerichtet", "Schlüssel METERED_TURN_SECRET_KEY fehlt – Anrufe laufen ohne Umleitung"];
+  if (x.grund) return ["rot", `Metered: ${x.grund}`, x.grundText || ""];
+  const v = x.verbrauch, vt = v && v.kontingentGB > 0 ? ` · ${v.verbrauchtGB.toFixed(2)} von ${v.kontingentGB} GB im Monat` : "";
+  if (!x.bis) return ["gelb", "keine gültigen Zugangsdaten", `Die stündliche Wartung legt neue an; bis dahin laufen Anrufe ohne Umleitung${vt}`];
+  if (v && v.kontingentGB > 0 && v.verbrauchtGB / v.kontingentGB >= 0.8) return ["gelb", "Monatskontingent fast verbraucht", vt.replace(/^ · /, "")];
+  return ["gruen", `bereit bis ${new Date(x.bis).toLocaleDateString("de-DE", { timeZone: TZ, day: "2-digit", month: "2-digit" })}${vt}`, ""];
+}
 async function waechterLage(): Promise<any> {
   const { data, error } = await db.rpc("kc_club_waechter_lage");
   if (error || !data) throw new Fehler("Wächter-Lage nicht lesbar.", 500);
   const nb = await notStand().catch(() => null); // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: nur Zeiten und Fehlertext – nie die Schlüssel
   const d: any = { ...(data as any), github: await waechterGithub(),
+    turn: await turnLage().catch(() => null), // KC-CLUB-WAECHTER-TURN
     notpaket: nb ? { url: !!nb.url, hochgeladen_am: nb.hochgeladen_am ?? null, fehler: nb.fehler ?? null, fehler_am: nb.fehler_am ?? null, bau_start: nb.bau_start ?? null, mitglieder: nb.mitglieder ?? null } : null };
   d.bewertung = waechterBewerten(d); return d;
 }
@@ -9229,6 +9255,12 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       // KC-CLUB-STARTSTATISTIK (2.31.0): App-Starts nur 180 Tage aufbewahren
       if (stuendlich) { const { error } = await db.from("kc_club_protokoll").delete().eq("aktion", "app_start").lt("zeit", new Date(Date.now() - START_TAGE * 86400000).toISOString()); if (error) console.error("app_start loeschen", error.message); }
       if (stuendlich) await protokollWaechter().catch((e) => console.error("protokoll waechter", String(e))); // KC-CLUB-PROTOKOLL-WAECHTER (2.114.0)
+      // KC-CLUB-TURN-FRISCH (06.11.2026, Prüfung Hansi „Ausweich für schlechte Telefonate“): Vorrat an Umleitungs-Zugangsdaten stündlich
+      // frisch halten – bisher nur beim Anrufen erneuert; nach 7 Tagen ohne Anruf war alles abgelaufen und der nächste Anruf lief ohne Umleitung
+      // (neue Zugangsdaten gelten erst nach 3 Min.). turnZugang legt nur bei Bedarf an (ab 2 Tagen Restlaufzeit), wirft nie.
+      if (stuendlich) await turnZugang().catch(() => null);
+      // KC-CLUB-PUSH-AUFRAEUMEN (06.11.2026): versendete Push-Meldungen (Titel, Zustellstand) nur 180 Tage aufbewahren – bisher ohne Grenze
+      if (stuendlich) await db.from("kc_member_push_messages").delete().lt("created_at", new Date(Date.now() - 180 * 86400000).toISOString()).then(() => {}, () => {});
       // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): Geräte-Kennungen nur 100 Tage aufbewahren
       if (stuendlich) { const { error } = await db.from("kc_club_nutzung_geraete").delete().lt("tag", berlinTag(new Date(Date.now() - 100 * 86400000))); if (error) console.error("nutzung geraete loeschen", error.message); }
       // Abstimmungen mit abgelaufener Frist beenden (Ergebnis geht an alle)
@@ -14686,7 +14718,14 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
             if (je.has(id) || !id.startsWith("KC-P-") || berlinTag(new Date(t)) !== tag) continue;
             const e = stoer.get(id) ?? { erste: t, letzte: t, netz: false }; e.erste = Math.min(e.erste, t); e.letzte = Math.max(e.letzte, t); e.netz ||= (z as any).aktion === "fehler_api"; stoer.set(id, e); }
           const leute = await personen([...je.keys(), ...stoer.keys()]);
-          return json({ tag, personen: [...[...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
+          // KC-CLUB-SPUR-ALLE-DA (06.11.2026, Wunsch Hansi „als Admin brauche ich die Übersicht – auch wer die Online-Anzeige aus hat“): wer in den
+          // letzten 3 Min. in der App war (Zugangstabelle, gleiche Regel wie KC-EINSPIELEN-RUHIG) – unabhängig von der Online-Anzeige, nur hier für den Admin.
+          // „verborgen“: Online-Anzeige aus oder inkognito – die App kennzeichnet sie. Nur Kennung, keine Inhalte.
+          const { data: daZ } = tag === berlinTag(new Date()) ? await db.from("kc_club_zugang").select("person_id").gt("zuletzt_gesehen", new Date(Date.now() - 180000).toISOString()).limit(100) : { data: [] as any[] };
+          const daIds = (daZ ?? []).map((x: any) => String(x.person_id)).filter((id: string) => id.startsWith("KC-P-") && !id.startsWith("KC-P-TEST"));
+          const sichtbar = daIds.length ? (await onlineJetztMit([]).catch(() => null))?.on ?? null : null;
+          const jetztDa = daIds.map((id: string) => ({ person_id: id, verborgen: sichtbar ? !sichtbar.has(id) : null }));
+          return json({ tag, jetztDa, personen: [...[...je.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: e.anzahl,
             erste: new Date(e.erste).toISOString(), letzte: new Date(e.letzte).toISOString(), zuletzt: e.w, zk: e.k })),
             ...[...stoer.entries()].map(([id, e]) => ({ person_id: id, name: leute.get(id)?.display_name || id, anzahl: 0, erste: new Date(e.erste).toISOString(),
               letzte: new Date(e.letzte).toISOString(), zuletzt: null, stoerung: e.netz ? "netz" : "app" }))].sort((a, b) => b.letzte.localeCompare(a.letzte)) });

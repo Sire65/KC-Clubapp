@@ -1,6 +1,6 @@
 # Änderungen
 
-## 2.871.0 – 2026-11-06 – 🐞 Marienkäfer und 🍀 Glücksklee auf der Startseite (KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE) · Server 2.871.0
+## 2.872.0 – 2026-11-06 – 🐞 Marienkäfer und 🍀 Glücksklee auf der Startseite (KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE) · Server 2.872.0
 Wunsch Hansi (06.11.): „Bau einen Marienkäfer, der durchs Bild krabbelt, bei allen nach jedem 50. Start. Er geht bis zur Mitte, bleibt stehen, dreht den Kopf zum Mitglied und lächelt. Dann geht er weiter.“ – „Über die ganze Startseite. Und antippen. Nur Käfer. Und bei jedem 25. Start lass ein vierblättriges Kleeblatt mit einem Windstoß von oben ins Bild gepustet werden und antippen ein Glücksspruch.“
 - **🐞 Marienkäfer – jeder 50. Start:** krabbelt mit wackelnden Beinchen und Fühlern von links unten über die ganze Startseite zur Mitte, bleibt stehen, dreht sich zum Mitglied (Vorderansicht mit Augen, Bäckchen und Lächeln, blinzelt), dreht sich zurück und krabbelt rechts hinaus (etwa 13 s). Antippen: einer von 8 Glückssprüchen.
 - **🍀 Glücksklee – jeder 25. Start:** ein Windstoß (helle Wind-Striche, mit Ton ein leises Rauschen) pustet ein vierblättriges Kleeblatt von oben ins Bild; es wirbelt herab, bleibt 8 s liegen und wiegt sich, ein zweiter Windstoß weht es fort. Antippen: einer von 15 Glückssprüchen.
@@ -8,7 +8,12 @@ Wunsch Hansi (06.11.): „Bau einen Marienkäfer, der durchs Bild krabbelt, bei 
 - Nur auf der Startseite und erst, wenn kein Fenster offen ist (z. B. Tipp des Tages); nicht im Sparmodus, bei „weniger Bewegung“ oder abgeschalteten Effekten. Abschaltbar und zum Ansehen: ⚙️ → ✨ Effekte → „🐞 Der Marienkäfer“ / „🍀 Der Glücksklee“. Lupe findet „Marienkäfer“, „Kleeblatt“. Hilfe-Einträge. In den Wegen steht „🐞/🍀 …: „<Spruch>““ (nur die Nummer wird gespeichert).
 - Eigener Programmteil `teile/glueck.js` (wird erst geladen, wenn der Käfer oder das Kleeblatt kommt).
 - Tests: `tests/glueck.test.mjs` (Reihenfolge der Überraschungen, Einstellungen, Wege, nichts gespeichert); Browser-Prüfung `tools/hilfe/glueck-browser.mjs` (abgeschirmt): Käfer steht in der Mitte und schaut nach vorn, Klee liegt und wird weggeweht, Antippen zeigt Sprüche, abgeschaltet kommt nichts.
-- Rückweg: App 2.870.0, Server 2.870.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.871.0, Server 2.871.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+## 2.871.0 – 2026-11-06 – Ausweich für schlechte Telefonate immer bereit
+- Prüfung Hansi 06.11.: Der Vorrat an Zugangsdaten für den Umleitungs-Server (TURN, Metered) wurde nur beim Anrufen erneuert – seit 04.11. war alles abgelaufen, der nächste Anruf wäre ohne Umleitung gelaufen. Die stündliche Wartung hält ihn jetzt frisch (KC-CLUB-TURN-FRISCH). Versendete Push-Meldungen werden nach 180 Tagen gelöscht, bisher ohne Grenze (KC-CLUB-PUSH-AUFRAEUMEN).
+- Admin → 🛡️ Wächter: neuer Wächter „📞 Telefon-Umleitung (Metered)“ – zeigt, ob gültige Zugangsdaten bereitliegen, ob Metered ablehnt, und den Monatsverbrauch; meldet sich bei Gelb/Rot (KC-CLUB-WAECHTER-TURN).
+- Admin → 👣 Wege der Mitglieder: „Gerade in der App“ zeigt jetzt auch, wer die Online-Anzeige ausgeschaltet hat (🙈); im Schalter steht klein „Für Hilfe und Sicherheit sieht der Admin weiterhin, wann du in der App warst.“ (KC-CLUB-SPUR-ALLE-DA).
+
 ## 2.870.0 – 🌱 Mein Garten: Samen säen und eine Pflanze großziehen (KC-CLUB-SAMEN, Wunschliste #84) · Server 2.870.0
 - Neue Kachel „🌱 Mein Garten“ (Meins) – **erst nur für Hansi zum Testen** (Freigaben → „🌱 Mein Garten“, Standard nur Admin; Wunsch Hansi „noch nicht veröffentlichen“).
 - Für Tage dabei (7, 25, 50, 100, 200, 365, danach je 365 – Pausen egal) und für besondere Taten (erstes eigenes Rezept, erster Beitrag für die Club-Küche) gibt es ein 🎁 Samentütchen. 12 Pflanzen: Rose, Sonnenblume, Tulpe · Basilikum, Rosmarin, Schnittlauch · Lavendel, Johannisbeere, Hortensie · Apfel-, Zitronen-, Olivenbaum.
