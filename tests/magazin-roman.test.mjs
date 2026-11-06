@@ -25,6 +25,8 @@ for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
 for (const b of r.bilder) assert.ok(out.includes(esc(b.alt.replace(/^Bleistiftskizze: /, ""))) || out.includes(esc(b.alt)), "Bild " + b.wo);
+for (const b of r.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); assert.ok(out.includes(`src="${b.datei}"`) && out.includes('loading="lazy"')); }
+assert.ok(r.bilder.every((b) => b.da), "alle vier Skizzen eingesetzt");
 assert.ok(out.includes('class="mag-roman-ende"') && out.includes("<b>Fortsetzung in der nächsten Ausgabe</b>"));
 assert.ok(!/<p><\/p>/.test(out));
 for (const k of [".mag-roman ", ".mag-roman-text ", ".mag-roman-bild ", ".mag-roman-ende "]) assert.ok(html.includes(k), "CSS " + k);
