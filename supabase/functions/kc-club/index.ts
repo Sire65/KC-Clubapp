@@ -190,7 +190,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.869.0";
+const SERVER_VERSION = "2.870.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -5280,6 +5280,7 @@ const FUNKTIONEN: Record<string, { t: string; u: string; standard: "alle" | "adm
   magazin: { t: "📰 Club-Küche (Magazin)", u: "Monatliches Club-Magazin zum Blättern – Gerüst, Redaktion wird in der Clubsitzung gefragt", standard: "admin" }, // KC-CLUB-MAGAZIN-GERUEST
   wm_prospekt: { t: "🎄 Weihnachtsmarkt-Prospekt", u: "Angebot und Preise zum Blättern – Seiten aus dem Club-Ordner Weihnachtsmarkt", standard: "admin" }, // KC-CLUB-WM-PROSPEKT
   runder_tisch: { t: "🪑 Runder Tisch", u: "Zu einem Thema einladen, Platz nehmen, gemeinsam schreiben und zeigen (höchstens 18)", standard: "admin" }, // 2.762.0 KC-CLUB-RUNDER-TISCH (erst Hansi testet)
+  garten: { t: "🌱 Mein Garten", u: "Samentütchen für Tage dabei, eigene Pflanze gießen und wachsen sehen, Club-Garten", standard: "admin" }, // KC-CLUB-SAMEN (#84) – erst Hansi testet
 };
 const FREIGABE = { bis: 0, werte: new Map<string, string>() };
 async function freigaben(): Promise<Record<string, "alle" | "admin">> {
@@ -5288,6 +5289,55 @@ async function freigaben(): Promise<Record<string, "alle" | "admin">> {
     if (!error) { FREIGABE.werte = new Map((data ?? []).map((x: any) => [x.funktion, x.fuer])); FREIGABE.bis = Date.now() + MERK_MS; } // KC-CLUB-START-SPARSAM-2: 15 s → MERK_MS, Speichern leert
   }
   return Object.fromEntries(Object.entries(FUNKTIONEN).map(([id, f]) => [id, (FREIGABE.werte.get(id) === "alle" || FREIGABE.werte.get(id) === "admin" ? FREIGABE.werte.get(id) : f.standard) as "alle" | "admin"]));
+}
+// ---------- KC-CLUB-SAMEN (Wunschliste #84, Konzept docs/KONZEPT_SAMEN_GARTEN.md, Antworten Hansi 05.11.2026) ----------
+// „Mein Garten“: für Tage dabei (7, 25, 50, 100, 200, 365, dann je 365) und besondere Taten gibt es ein Samentütchen; daraus wächst eine Pflanze.
+// Sparsam (Wunsch Hansi): EINE Zeile je Person (kc_club_garten), Wachstum rechnet die App aus den Daten – kein Zeitplan, kein Hintergrundlauf,
+// höchstens ein Aufruf „garten_tag“ je Tag und Gerät, sonst nur beim Öffnen des Gartens. Die Pflanze geht nie ein (ohne Wasser nur halb so schnell).
+// Club-Garten: nur Pflanzen, die das Mitglied selbst freigegeben hat (Frage nach dem ersten Säen). Freigabe „garten“, Standard nur Admin.
+const GARTEN_ARTEN: Record<string, number> = { // Art → Tage bis zur vollen Pracht (gleich halten mit GT_ARTEN in teile/garten.js)
+  rose: 21, sonnenblume: 21, tulpe: 21, basilikum: 21, rosmarin: 21, schnittlauch: 21, lavendel: 35, johannisbeere: 35, hortensie: 35, apfel: 56, zitrone: 56, olive: 56,
+};
+const GARTEN_TATEN: Record<string, string> = { rezept: "Erstes eigenes Rezept im Rezeptbuch", magazin: "Erster Beitrag für die Club-Küche" }; // je Tat einmal ein Samen
+const GARTEN_SCHWELLEN = [7, 25, 50, 100, 200, 365];
+const GARTEN_WASSER_TAGE = 3, GARTEN_DUENGER_TAGE = 21, GARTEN_NACHTRAG_MAX = 3, GARTEN_PFLANZEN_MAX = 24;
+const gartenSchwellenBis = (tage: number) => GARTEN_SCHWELLEN.filter((s) => s <= tage).length + Math.max(0, Math.floor(tage / 365) - 1);
+// Wachstum in „Tagen“ bis jetzt (gleiche Rechnung wie gtWachs in teile/garten.js): mit Wasser voll, danach halb so schnell; Automatik = immer voll
+function gartenWachs(p: any, jetztMs: number, auto: boolean) {
+  const st = Date.parse(p.stand), bis = auto ? Infinity : Date.parse(p.gegossen) + GARTEN_WASSER_TAGE * 864e5;
+  const voll = Math.max(0, Math.min(jetztMs, bis) - st), halb = Math.max(0, jetztMs - Math.max(st, bis));
+  return (Number(p.wachs) || 0) + (voll + halb / 2) / 864e5;
+}
+const gartenDarf = async (ich: Ich) => ich.zugang === "mitglied" && (ich.admin || (await freigaben()).garten === "alle");
+function gartenAus(g: any) {
+  const verdient = gartenSchwellenBis(g.tage) + (g.taten || []).length;
+  return { tage: g.tage, offen: Math.max(0, verdient - g.geoeffnet), naechste: GARTEN_SCHWELLEN.find((s) => s > g.tage) ?? (Math.floor(g.tage / 365) + 1) * 365,
+    taten: g.taten || [], pflanzen: g.pflanzen || [], automatik: !!g.automatik, club: !!g.club, clubGefragt: !!g.club_gefragt };
+}
+async function gartenLesen(pid: string, anlegen: boolean) {
+  const { data, error } = await db.from("kc_club_garten").select("*").eq("person_id", pid).maybeSingle();
+  if (error) throw new Fehler("Der Garten ist gerade nicht erreichbar.", 503);
+  if (data || !anlegen) return data;
+  // Neu: bisherige Tage dabei einmalig aus den App-Starts im Protokoll (soweit noch vorhanden); höchstens GARTEN_NACHTRAG_MAX Samen nachträglich
+  const { data: starts } = await db.from("kc_club_protokoll").select("zeit").eq("person_id", pid).eq("aktion", "app_start").order("zeit", { ascending: false }).limit(3000);
+  const tage = new Set((starts ?? []).map((s: any) => berlinTag(new Date(s.zeit)))).size;
+  const zeile = { person_id: pid, tage, letzter_tag: berlinTag(new Date()), geoeffnet: Math.max(0, gartenSchwellenBis(tage) - GARTEN_NACHTRAG_MAX), taten: [], pflanzen: [] };
+  const { data: neu, error: e2 } = await db.from("kc_club_garten").upsert(zeile, { onConflict: "person_id", ignoreDuplicates: true }).select("*").maybeSingle();
+  if (e2) throw new Fehler("Der Garten konnte nicht angelegt werden.", 503);
+  return neu ?? (await db.from("kc_club_garten").select("*").eq("person_id", pid).single()).data;
+}
+async function gartenSchreiben(pid: string, felder: Record<string, unknown>) {
+  const { data, error } = await db.from("kc_club_garten").update({ ...felder, geaendert_am: jetzt() }).eq("person_id", pid).select("*").single();
+  if (error) throw new Fehler("Im Garten hat das gerade nicht geklappt – bitte nochmal.", 503);
+  return data;
+}
+// Besondere Tat → einmal ein Samen. Nur wenn das Mitglied schon einen Garten hat (sonst keine Abfrage-Kette bei jedem Rezept); Fehler stören nie die eigentliche Aktion.
+async function gartenTat(pid: string, tat: string) {
+  if (!GARTEN_TATEN[tat]) return;
+  try {
+    const { data: g } = await db.from("kc_club_garten").select("taten").eq("person_id", pid).maybeSingle();
+    if (g && !(g.taten || []).includes(tat)) await db.from("kc_club_garten").update({ taten: [...(g.taten || []), tat], geaendert_am: jetzt() }).eq("person_id", pid);
+  } catch { /* nie die Rezept-/Magazin-Aktion stören */ }
 }
 // ---------- 2.590.0 KC-CLUB-DIENST-STEMPEL (Konzept „Dienst-Anmeldung in der Club-App“, Stufe 1) ----------
 // Lage für die App: geplante Dienste heute (und gestern, über Mitternacht), Stand (angemeldet seit …), Buchungen der letzten 36 Std.
@@ -11842,6 +11892,46 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ rezepte: (data ?? []).map((x: any) => ({ ...x, thema: x.thema ?? null, ...bw(x.id), vonName: leute.get(x.von)?.display_name || "Mitglied", eigen: x.von === ich.person_id, darf: x.von === ich.person_id || ich.admin })),
           themen: Object.keys(REZEPT_THEMEN).filter((t) => rzThemaSaison(t)), redaktion, sterneAb: REZEPT_STERNE_AB });
       }
+      // KC-CLUB-SAMEN (#84): „Mein Garten“ – je Aufruf höchstens eine Lese- und eine Schreib-Abfrage (eine Zeile je Person)
+      case "garten_tag": case "garten_saeen": case "garten_pflege": case "garten_auto": case "garten_club": {
+        if (!(await gartenDarf(ich))) throw new Fehler("Mein Garten ist noch nicht freigegeben.", 403);
+        let g = await gartenLesen(ich.person_id, true);
+        const heute = berlinTag(new Date()), jetztIso = jetzt(), jMs = Date.parse(jetztIso);
+        if (a === "garten_tag") {
+          if (!g.letzter_tag || g.letzter_tag < heute) g = await gartenSchreiben(ich.person_id, { tage: g.tage + 1, letzter_tag: heute });
+        } else if (a === "garten_saeen") {
+          const art = String(p.art || "");
+          if (!GARTEN_ARTEN[art]) throw new Fehler("Diese Pflanze gibt es nicht.");
+          if (gartenAus(g).offen < 1) throw new Fehler("Du hast gerade kein Samentütchen.", 409);
+          const pf = g.pflanzen || [];
+          if (pf.some((x: any) => x.art === art)) throw new Fehler("Diese Pflanze wächst schon bei dir – such dir eine andere aus.", 409);
+          if (pf.length >= GARTEN_PFLANZEN_MAX) throw new Fehler("Dein Garten ist voll.", 409);
+          const neu = { id: crypto.randomUUID().slice(0, 8), art, gesaet: jetztIso, gegossen: jetztIso, geduengt: jetztIso, stand: jetztIso, wachs: 0 };
+          g = await gartenSchreiben(ich.person_id, { pflanzen: [...pf, neu], geoeffnet: g.geoeffnet + 1 });
+          await protokoll(ich.person_id, "garten_gesaet", { art });
+        } else if (a === "garten_pflege") {
+          const was = String(p.was || ""); if (!["giessen", "duengen"].includes(was)) throw new Fehler("Unbekannte Pflege.");
+          const pf = (g.pflanzen || []).map((x: any) => x.id !== String(p.id || "") ? x : was === "giessen"
+            ? { ...x, wachs: Math.round(gartenWachs(x, jMs, !!g.automatik) * 1000) / 1000, stand: jetztIso, gegossen: jetztIso }
+            : { ...x, wachs: Math.round((gartenWachs(x, jMs, !!g.automatik) + (jMs - Date.parse(x.geduengt) >= GARTEN_DUENGER_TAGE * 864e5 ? 1 : 0)) * 1000) / 1000, stand: jetztIso, geduengt: jetztIso });
+          if (!pf.some((x: any) => x.stand === jetztIso)) throw new Fehler("Pflanze nicht gefunden.", 404);
+          g = await gartenSchreiben(ich.person_id, { pflanzen: pf });
+        } else if (a === "garten_auto") { // Umschalten: bisheriges Wachstum festhalten, ab jetzt mit der neuen Einstellung weiterrechnen
+          const an = p.an === true;
+          if (an !== !!g.automatik) g = await gartenSchreiben(ich.person_id, { automatik: an, pflanzen: (g.pflanzen || []).map((x: any) => ({ ...x, wachs: Math.round(gartenWachs(x, jMs, !!g.automatik) * 1000) / 1000, stand: jetztIso, gegossen: jetztIso })) });
+        } else { // garten_club: Pflanzen im Club-Garten zeigen ja/nein (auch „gefragt“ merken)
+          g = await gartenSchreiben(ich.person_id, { club: p.an === true, club_gefragt: true });
+        }
+        return json({ ok: true, garten: gartenAus(g), jetzt: jetztIso });
+      }
+      case "garten_clubgarten": { // nur beim Öffnen des Club-Gartens: freigegebene Pflanzen mit Vornamen
+        if (!(await gartenDarf(ich))) throw new Fehler("Mein Garten ist noch nicht freigegeben.", 403);
+        const { data, error } = await db.from("kc_club_garten").select("person_id,pflanzen,automatik").eq("club", true).limit(200);
+        if (error) throw new Fehler("Der Club-Garten ist gerade nicht erreichbar.", 503);
+        const leute = await personen((data ?? []).map((x: any) => x.person_id));
+        return json({ ok: true, jetzt: jetzt(), beete: (data ?? []).filter((x: any) => (x.pflanzen || []).length).map((x: any) => ({ name: vorname(leute.get(x.person_id)) || "Mitglied", ich: x.person_id === ich.person_id, automatik: !!x.automatik,
+          pflanzen: (x.pflanzen || []).map((q: any) => ({ art: q.art, gesaet: q.gesaet, gegossen: q.gegossen, stand: q.stand, wachs: q.wachs })) })) });
+      }
       case "rezept_bewerten": { // 2.730.0 KC-CLUB-REZEPT-WEIHNACHT: Sterne 1–5 (oder keine) und „nachgebacken“ – eine Zeile je Mitglied und Rezept
         await nurWennFrei("rezepte", ich, "Das Rezeptbuch");
         const { data: r } = await db.from("kc_club_rezepte").select("id,von").eq("id", String(p.id || "")).is("geloescht_am", null).maybeSingle();
@@ -11882,6 +11972,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           const { count } = await db.from("kc_club_rezepte").select("id", { count: "exact", head: true }).eq("von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 3600000).toISOString());
           if ((count ?? 0) >= 20) throw new Fehler("Du hast gerade sehr viele Rezepte eingestellt – bitte etwas später weitermachen.", 429);
           const { data: neu, error } = await db.from("kc_club_rezepte").insert({ ...zeile, von: ich.person_id }).select("id").single();
+          if (!error) gartenTat(ich.person_id, "rezept"); // KC-CLUB-SAMEN: erstes eigenes Rezept → ein Samen (wartet nicht)
           if (error || !neu) throw new Fehler("Rezept konnte nicht gespeichert werden.", 500);
           id = neu.id;
         }
@@ -12242,6 +12333,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (art === "portraet" && !zustimmung) throw new Fehler("Für das Porträt bitte zustimmen, dass es im Magazin erscheinen darf.");
         if (!(await protokollPlatz(ich.person_id, "magazin_eingereicht", 10))) throw new Fehler("Du hast gerade schon mehrere Beiträge geschickt – bitte später weitere.", 429);
         const { data: b, error } = await db.from("kc_club_magazin_beitrag").insert({ von: ich.person_id, art, titel, text: text || null, anlagen, zustimmung }).select("id").single();
+        if (!error) gartenTat(ich.person_id, "magazin"); // KC-CLUB-SAMEN: erster Beitrag für die Club-Küche → ein Samen (wartet nicht)
         if (error || !b) throw new Fehler("Der Beitrag konnte nicht gespeichert werden – bitte gleich noch einmal.", 500);
         await protokoll(ich.person_id, "magazin_eingereicht", { beitrag: b.id, art, anlagen: anlagen.length });
         const ziel = (await magRedaktionIds()).filter((x) => x !== ich.person_id);

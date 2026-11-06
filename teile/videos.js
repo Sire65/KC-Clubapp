@@ -8,7 +8,7 @@
 // Während des Rundgangs ist die App gesperrt (nichts wird versehentlich angetippt). Stationen = Registry RUNDGANG:
 // v = Ansicht (zeige), sel = Kandidaten (das erste sichtbare wird hervorgehoben; keins sichtbar → nur Text; mussSel → Station auslassen).
 const RUNDGANG = [
-  { v: "start", t: "👋 Willkommen", x: "Willkommen zum Rundgang durch die Köcheclub-App! In ein paar Minuten zeige ich dir, wie die App aussieht und was sie alles kann. Du musst nichts antippen – ich blättere selbst weiter. Mit Pause hältst du an." },
+  { v: "start", t: "👋 Willkommen", x: "Willkommen zum Rundgang durch die Köcheclub-App! Ich zeige dir, wie die App aussieht und was sie alles kann. Du musst nichts antippen – ich blättere selbst weiter. Mit Pause hältst du an." },
   { v: "start", sel: [".hero .kopfzeile"], puls: ["#v-start .kopfzeile .logo", "#modusKnopf", "#aktualisierenKnopf"], video: "anpassen", t: "🧑‍🍳 Der Kopf", x: "Ganz oben der Kopf der App. Die Kochmütze führt zur Internetseite des Clubs, darunter steht die Version. Rechts schaltest du zwischen hellen und dunklen Farben um oder frischst die App auf." },
   { v: "start", sel: ["#statusChip"], t: "🟢 Dein Status", x: "Hier stellst du deinen Status ein – zum Beispiel verfügbar oder im Urlaub. Die anderen Mitglieder sehen ihn bei deinem Namen." },
   // 2.858.0 KC-CLUB-VIDEO-KOPFSEITE (Fund Hansi 04.11.: „redet von der ersten Seite, im Hintergrund war eine andere Seite vom Kopf“): Laufband und
@@ -1205,7 +1205,7 @@ const simPcDialog = () => PC_DIALOG.replace("{adr}", esc(simAdr()));
 const RG_INST_GERAET = [
   { v: "start", vor: rgSimNeu(() => simTablet(simAnmeldung("tablet")), "tablet"), sel: ["#rgSim .sim-tablet"], t: "💻 Noch ein Gerät",
     x: "Du nutzt die App schon auf dem Handy und möchtest sie auch auf dem Tablet oder am PC? Dafür brauchst du keinen neuen Link – ein 6-stelliger Code reicht." },
-  { v: "einstellungen", vor: () => { rgSimWeg(); const d = document.querySelector('#v-einstellungen details[data-klappe="install"]'); if (d && !d.open) { d.open = true; RG.zurueck.push(() => { d.open = false; }); } },
+  { v: "einstellungen", vor: () => { rgSimWeg(); rgAuf("install"); }, // 2.868.0: über rgAuf, damit auch die Seite „App-Installation“ aufgeht (vorher still übersprungen)
     sel: ['#v-einstellungen [onclick="kurzcodeBlatt()"]'], mussSel: true, t: "⚙️ Auf dem Handy: Code holen",
     x: "Auf dem Handy öffnest du die Einstellungen und dort App-Installation. Tippe auf Code für ein anderes Gerät.",
     live: async (L) => { await L.tipp('#v-einstellungen [onclick="kurzcodeBlatt()"]'); await L.warte(250); rgSim(simCodeBlatt(), "ueber"); RG.ziel = document.querySelector('#rgSim [data-s="code"]'); rgLage(); } },
