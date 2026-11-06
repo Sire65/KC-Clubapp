@@ -9,7 +9,7 @@ assert.ok(app.includes('aktion: "magMenue()", nur: () => frei("magazin") }') && 
 assert.ok(teil.includes('if (!frei("magazin")) return') && teil.includes('if (!frei("wm_prospekt")) return'));
 // Gerüst: Titel, Kopf mit Ausgabe-Nr., Inhaltsverzeichnis mit Sprung, Rubriken, Impressum, Blättern
 const f = new Function(teil.slice(teil.indexOf("const MAG_START"), teil.indexOf("const MAG_RUBRIKEN")) + "; return magNummer;")();
-assert.equal(f(2026, 12), 1); assert.equal(f(2027, 1), 2); assert.equal(f(2027, 12), 13);
+assert.equal(f(2027, 1), 1); assert.equal(f(2027, 2), 2); assert.equal(f(2027, 12), 12); assert.equal(f(2026, 12), 1, "vor dem Start: Nr. 1");
 assert.ok(teil.includes("Ausgabe Nr. ${nr}") && teil.includes('class="mag-titelfoto"') && teil.includes('onclick="blGehe(${start + i})"') && teil.includes("§ Impressum"), "Titelblatt, Inhalt, Impressum");
 for (const r of ["rezept", "backstube", "saison", "tipp", "rueckblick", "portraet", "termine", "hobby", "links"]) assert.ok(teil.includes(`{ id: "${r}"`), "Rubrik " + r);
 assert.ok(teil.includes("blOeffnen(`📰 Club-Küche Nr.") && teil.includes("blOeffnen(`🎄 Weihnachtsmarkt-Prospekt"), "Blättern mit dem gemeinsamen Baustein");

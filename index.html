@@ -5349,6 +5349,31 @@
   .mag-termine { padding-left: 1.1em; line-height: 1.6; } .mag-rezept h3 { margin: 8px 0 2px; color: #741521; } .mag-rezept h4 { margin: 10px 0 2px; } .mag-foto { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; }
   @media (max-width: 480px) { .mag-impressum { grid-template-columns: minmax(0, 1fr); gap: 2px 0; } .mag-impressum dd { margin-bottom: 8px; } }
   .mag-impressum { display: grid; grid-template-columns: minmax(0, 11.5em) minmax(0, 1fr); gap: 8px 12px; font-family: system-ui, sans-serif; font-size: .92rem; } .mag-impressum dt { font-weight: 700; color: #741521; overflow-wrap: normal; hyphens: auto; -webkit-hyphens: auto; } .mag-impressum dd { margin: 0; }
+  /* KC-CLUB-MAGAZIN-NR1: Heftseiten wie in einer Zeitschrift – Spalten, farbige Kästen, Bonzettel für den Witz, Faktenleiste, Bildraster */
+  .mag-spalten { line-height: 1.55; hyphens: auto; } .mag-spalten p { margin: 0 0 .7em; } .mag-spalten h4 { margin: .4em 0 .3em; color: #741521; break-after: avoid; }
+  .mag-spalten { columns: 15em 2; column-gap: 22px; column-rule: 1px solid #e6dccf; } /* zwei Spalten erst, wenn jede mindestens 15em breit ist (Tablet, PC) */
+  .mag-artikel { margin: 0 0 14px; } .mag-artikel h3, .mag-kasten h3 { margin: 0 0 8px; font-size: 1.15rem; line-height: 1.2; text-wrap: balance; }
+  .mag-warum { margin: 0 0 2px !important; font: 800 .7rem system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #2f5d4e; }
+  .mag-zitatzeile { break-inside: avoid; margin: .3em 0 .9em; padding: 8px 0; border-block: 3px solid #2b1a1c; font: 600 1.05rem/1.25 system-ui, sans-serif; text-align: left; }
+  .mag-kasten { background: #2f5d4e; color: #f3f7f4; border-radius: 4px; padding: 14px 16px; margin: 10px 0 14px; } .mag-kasten .mag-warum { color: #f5d68a; } .mag-kasten .mag-spalten { column-rule-color: rgba(243,247,244,.25); }
+  .mag-kasten ol { margin: 0 0 .7em; padding-left: 1.2em; } .mag-kasten li { margin-bottom: .3em; }
+  .mag-kasten-wein { background: #741521; } .mag-marke-klein { display: block; margin-bottom: 4px; font: 800 .7rem system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #f5d68a; }
+  .mag-merke { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 6px 0 0; padding-top: 8px; border-top: 1px solid rgba(243,247,244,.3); font: .88rem system-ui, sans-serif; } .mag-merke dt { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; color: #f5d68a; } .mag-merke dd { margin: 0; }
+  .mag-bon { background: #fffdf2; font: .88rem/1.5 ui-monospace, Menlo, monospace; padding: 16px 16px 22px; margin: 6px 4px 14px; box-shadow: 0 2px 10px rgba(43,26,28,.18); transform: rotate(-1deg);
+    -webkit-mask: radial-gradient(circle at 6px 100%, transparent 5px, #000 5.5px) -6px 0 / 12px 100% repeat-x; mask: radial-gradient(circle at 6px 100%, transparent 5px, #000 5.5px) -6px 0 / 12px 100% repeat-x; }
+  .mag-bon-kopf, .mag-bon-fuss { display: flex; justify-content: space-between; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: #7a6a5f; }
+  .mag-bon-kopf { border-bottom: 1px dashed #7a6a5f; padding-bottom: 4px; margin-bottom: 8px; } .mag-bon-fuss { border-top: 1px dashed #7a6a5f; padding-top: 4px; margin-top: 8px; }
+  .mag-bon-titel { font: 800 1.25rem system-ui, sans-serif; margin-bottom: 8px; } .mag-bon p { margin: 0 0 8px; } .mag-bon small { display: block; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #7a6a5f; font-size: .7rem; }
+  @media (prefers-reduced-motion: reduce) { .mag-bon { transform: none; } }
+  .mag-schlag { margin: 0 0 6px; font-size: 1.3rem; line-height: 1.15; text-wrap: balance; }
+  .mag-fakten { display: grid; grid-template-columns: repeat(auto-fit, minmax(7em, 1fr)); border-block: 2px solid #2b1a1c; margin: 10px 0 12px; } .mag-fakten div { padding: 6px 8px; border-left: 1px solid #e6dccf; display: grid; } .mag-fakten div:first-child { border-left: 0; }
+  .mag-fakten small { font: .66rem system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #7a6a5f; } .mag-fakten b { font: 800 1.15rem system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+  .mag-offen { background: #fff1b8; color: #6b5200; font: .82rem system-ui, sans-serif; padding: 0 .3em; border-radius: 2px; }
+  .mag-preise { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font: .9rem system-ui, sans-serif; } .mag-preise li { display: flex; gap: 6px; align-items: baseline; } .mag-preise i { flex: 1; border-bottom: 1px dotted rgba(243,247,244,.5); } .mag-preise b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .mag-zitat { margin: 12px 0; padding: 10px 14px; border-left: 4px solid #f5d68a; background: #faf4ea; font-style: italic; } .mag-danke { border: 2px solid #2b1a1c; padding: 10px 12px; margin: 10px 0; font: .9rem/1.45 system-ui, sans-serif; }
+  .mag-h4 { margin: 14px 0 6px; color: #741521; } .mag-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9em), 1fr)); gap: 8px; } .mag-fotos figure { margin: 0; display: grid; gap: 3px; }
+  .mag-foto-platz { aspect-ratio: 4 / 3; max-width: 100%; display: grid; place-items: center; font-size: 1.6rem; border: 1px dashed #c9a96e; background: repeating-linear-gradient(135deg, #faf4ea 0 10px, #f2e9da 10px 20px); }
+  .mag-fotos figcaption { font: italic .78rem system-ui, sans-serif; color: #7a6a5f; }
   /* KC-CLUB-UMBLAETTERN: die alte Seite klappt wie bei einem Prospekt um (nur beim Blättern, danach entfernt) */
   .bl-buehne { position: relative; }
   .bl-umblatt { position: absolute; z-index: 3; transform-style: preserve-3d; pointer-events: none; will-change: transform; }
@@ -6807,7 +6832,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.875.0" data-v="2.875.0"></script>
+<script src="app.js?v=2.876.0" data-v="2.876.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

@@ -6,8 +6,9 @@
 // alles, was später die Redaktion schreibt, steht als sichtbarer Platzhalter da. Nichts wird gespeichert, nichts verschickt.
 // Nach jeder Änderung: node tools/teile-pruefsumme.mjs
 
-// Ausgabe Nr. 1 = Dezember 2026, danach jeden Monat eine Nummer weiter
-const MAG_START = { jahr: 2026, monat: 12 };
+// Ausgabe Nr. 1 = Januar 2027 (KC-CLUB-MAGAZIN-NR1, Wunsch Hansi 06.11.2026 „die erste Ausgabe soll im Januar 2027 erscheinen mit der Nachlese und
+// Impressionen vom Weihnachtsmarkt“; vorher Dezember 2026), danach jeden Monat eine Nummer weiter
+const MAG_START = { jahr: 2027, monat: 1 };
 const MAG_MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const magNummer = (j, m) => Math.max(1, (j - MAG_START.jahr) * 12 + (m - MAG_START.monat) + 1);
 // Rubriken in Heft-Reihenfolge (Registry): sym, Titel, Kurztext fürs Inhaltsverzeichnis, Platzhalter für die Redaktion; auto = füllt die App selbst
@@ -23,6 +24,59 @@ const MAG_RUBRIKEN = [
   { id: "hobby", sym: "🧶", t: "Hobbyecke", u: "Garten, Heimwerken, Stricken & Co. (später)", platz: "Später: Garten, Heimwerken, Stricken und Häkeln – was Mitglieder neben der Küche gerne machen." },
   { id: "links", sym: "🔗", t: "Linktipps", u: "Gefunden und empfohlen (später)", platz: "Später: empfehlenswerte Seiten und Videos. Gesundheitsthemen nur als Link." },
 ];
+// KC-CLUB-MAGAZIN-NR1: Heftinhalt je Ausgabe (Registry Nr. → Rubrik-ID → Inhalt). Was hier steht, ersetzt den Platzhalter der Rubrik; alles andere bleibt
+// Platzhalter für die Redaktion. Offene Angaben (Zahlen, Zitate, Fotos) als { platz: "…" } – nie erfundene Ergebnisse eintragen.
+const MAG_AUSGABEN = {
+  1: {
+    schlagzeilen: [["📸", "Nachlese: unser Weihnachtsmarkt 2026"], ["😄", "Der Witz vom Pass"], ["💡", "Aus der Trickkiste: Jus und Beurre blanc"]],
+    rueckblick: {
+      titel: "Elf Tage Grünkohl, Glühwein und gute Laune", vorspann: "Weihnachtsmarkt Werne vom 2. bis 14. Dezember 2026: zwei Tage Aufbau, elf Markttage – Rückblick auf unseren Stand.",
+      fakten: [["Zeitraum", "02.–14.12."], ["Markttage", "11"], ["Helfende", null], ["Portionen Eintopf", null]],
+      abschnitte: [
+        ["", "Am 2. und 3. Dezember wurde aufgebaut, ab dem 4. Dezember war unser Stand geöffnet.", "Ein bis zwei Sätze zur Stimmung am Eröffnungstag."],
+        ["Was auf den Tisch kam", "Das Herzstück war wieder der Grünkohleintopf nach Köcheclub-Rezept, daneben Sauerkrauteintopf mit Kassler und Speck, Kartoffelknirpse mit Dip oder Hering und die Mettwurst, die wir für unsere Gäste aufgeschnitten haben.", "Was lief am besten? War etwas ausverkauft?"],
+        ["Hinter dem Tresen", "Ohne Dienstplan geht auf so einem Markt nichts.", "Wie viele Mitglieder haben mitgemacht, wie viele Stunden kamen zusammen? Wer ist eingesprungen, als es eng wurde?"],
+        ["Unterm Strich", "", "Ergebnis in einem Satz und wofür der Erlös verwendet wird."],
+      ],
+      angebot: [["Grünkohleintopf", "5,50"], ["Sauerkrauteintopf", "5,50"], ["Kartoffelknirpse mit Dip", "3,50"], ["… mit Hering", "4,50"], ["Mettwurst", "1,50"], ["Glühwein rot oder weiß", "5,50"], ["Eierlikörpunsch", "6,50"], ["Feuerzangenbowle", "9,00"], ["Roter Feger, Winterapfel", "4,50"]],
+      danke: "An alle, die Dienste übernommen, geschnippelt, ausgeschenkt und abends noch gespült haben.",
+      zitat: null,
+      fotos: ["Der Stand am Abend", "Grünkohl im Kessel", "Aufbau am 2. Dezember", "Team hinter dem Tresen", "Feuerzangenbowle", "Letzter Abend"],
+    },
+    witz: { titel: "Niedrigtemperatur", zeilen: [["Souschef", "„Chef, wir arbeiten heute ausschließlich mit Niedrigtemperatur!“"], ["Küchenchef", "„Sehr gut. Dann fangen wir gleich mit der Stimmung in der Küche an.“"]] },
+    tipp: [
+      { titel: "Die Jus ist konzentriert, schmeckt aber flach",
+        kniff: "Kurz vor dem Servieren ein paar Tropfen Verjus oder einen milden Essig einarbeiten. Schmecken soll man die Säure nicht, nur ihre Wirkung. Das Salz erst ganz am Ende einstellen.",
+        warum: "Eine Reduktion bündelt Gelatine und Umami, aber ohne Säure fehlt der Sauce die Spannung. Säure hebt die Aromen voneinander ab. Salz konzentriert sich mit jedem Liter, der verdampft – darum gehört die finale Würzung ans Ende.",
+        merke: "Was vor der Reduktion richtig gesalzen ist, ist danach fast immer zu salzig." },
+      { titel: "Die Beurre blanc ist gebrochen, und der Pass wartet", kasten: true,
+        schritte: ["Sauce sofort vom Herd nehmen.", "In einem zweiten Topf mit einem Löffel Reduktion aus Weißwein, Essig und Schalotte neu beginnen – alternativ etwas Sahne, notfalls lauwarmes Wasser.", "Die gebrochene Sauce nach und nach unter kräftigem Schlagen einarbeiten."],
+        warum: "Butter ist selbst eine Emulsion. Wird sie zu heiß, trennen sich Fett und Wasser. In einer kleinen, mäßig warmen Wasserphase lassen sich die Fetttröpfchen wieder fein verteilen; mit Reduktion oder Sahne bleibt die Sauce aromatisch stabiler als mit reinem Wasser.",
+        werte: [["50–60 °C", "Wohlfühlbereich der Emulsion"], ["ab ~65 °C", "Fett und Wasser trennen sich"], ["kalt", "Butter würfeln, portionsweise einschlagen"]] },
+    ],
+  },
+};
+// Bausteine für die Heftseiten (Klassen in index.html: mag-spalten, mag-kasten, mag-bon, mag-fakten, mag-merke, mag-fotos)
+const magOffen = (t) => `<span class="mag-offen">✍️ ${esc(t)}</span>`;
+function magHeftHtml(id, x) {
+  if (id === "witz") return `<div class="mag-bon" role="note"><div class="mag-bon-kopf"><span>Bon ${String(magNummer(MAG.jahr, MAG.monat)).padStart(4, "0")}</span><span>Pass</span></div>
+    <div class="mag-bon-titel">${esc(x.titel)}</div>${x.zeilen.map(([wer, was], i) => `<p><small>${esc(wer)}</small>${i === x.zeilen.length - 1 ? `<b>${esc(was)}</b>` : esc(was)}</p>`).join("")}
+    <div class="mag-bon-fuss"><span>1× Pointe</span><span>sofort raus</span></div></div>${magPlatz("Euer Küchenwitz für die nächste Ausgabe?", "witz")}`;
+  if (id === "tipp") return x.map((t) => t.kasten
+    ? `<section class="mag-kasten"><small class="mag-marke-klein">Aus der Trickkiste des Küchenmeisters</small><h3>${esc(t.titel)}</h3><div class="mag-spalten"><p class="mag-warum">Der Kniff</p><ol>${t.schritte.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+       <p class="mag-warum">Warum es funktioniert</p><p>${esc(t.warum)}</p></div>${t.werte ? `<dl class="mag-merke">${t.werte.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl>` : ""}</section>`
+    : `<section class="mag-artikel"><h3>${esc(t.titel)}</h3><div class="mag-spalten"><p class="mag-warum">Der Kniff</p><p>${esc(t.kniff)}</p>${t.merke ? `<blockquote class="mag-zitatzeile">${esc(t.merke)}</blockquote>` : ""}
+       <p class="mag-warum">Warum es funktioniert</p><p>${esc(t.warum)}</p></div></section>`).join("") + magPlatz("Euer Kniff aus der Küche für die nächste Ausgabe?", "tipp");
+  if (id === "rueckblick") return `<h3 class="mag-schlag">${esc(x.titel)}</h3><p class="mag-lead">${esc(x.vorspann)}</p>
+    <div class="mag-fakten">${x.fakten.map(([k, v]) => `<div><small>${esc(k)}</small><b>${v == null ? "✍️ __" : esc(v)}</b></div>`).join("")}</div>
+    <div class="mag-spalten">${x.abschnitte.map(([h, t, offen]) => `${h ? `<h4>${esc(h)}</h4>` : ""}<p>${t ? esc(t) + " " : ""}${offen ? magOffen(offen) : ""}</p>`).join("")}</div>
+    <section class="mag-kasten mag-kasten-wein"><small class="mag-marke-klein">Unser Angebot am Stand</small><ul class="mag-preise">${x.angebot.map(([n, p]) => `<li><span>${esc(n)}</span><i></i><b>${esc(p)} €</b></li>`).join("")}</ul></section>
+    <blockquote class="mag-zitat">${x.zitat ? esc(x.zitat) : magOffen("Zitat eines Mitglieds oder Gastes vom Stand, mit Name und Rolle")}</blockquote>
+    <div class="mag-danke"><b>Danke!</b> ${esc(x.danke)} ${magOffen("ggf. Partner, Sponsoren oder die Stadt Werne nennen")}</div>
+    <h4 class="mag-h4">📸 Impressionen</h4><div class="mag-fotos">${x.fotos.map((f) => `<figure><div class="mag-foto-platz">📷</div><figcaption>${esc(f)}</figcaption></figure>`).join("")}</div>
+    ${magPlatz("Fotos vom Weihnachtsmarkt bitte über „Beitrag einsenden“ schicken – nur mit Einverständnis der abgebildeten Personen.", "rueckblick")}`;
+  return "";
+}
 // Saisonkalender (Deutschland, Freiland/Lager) – je Monat Gemüse, Obst, Kräuter
 const MAG_SAISON = [
   ["Grünkohl, Rosenkohl, Lauch, Wirsing, Pastinaken, Schwarzwurzeln", "Äpfel und Birnen (Lager)", "Petersilie (Topf)"],
@@ -61,7 +115,7 @@ function magSeiten({ termine, rezept }) {
   const nr = magNummer(MAG.jahr, MAG.monat), mon = `${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`;
   const seiten = [];
   // Titelblatt: Kopf, Ausgabe-Nr., Titelfoto (Platzhalter bis die Redaktion eins wählt), drei Schlagzeilen
-  const schlag = MAG_RUBRIKEN.filter((r) => !/später/.test(r.u)).slice(0, 3);
+  const heft = MAG_AUSGABEN[nr] || {}, schlag = heft.schlagzeilen ? heft.schlagzeilen.map(([sym, t]) => ({ sym, t })) : MAG_RUBRIKEN.filter((r) => !/später/.test(r.u)).slice(0, 3);
   seiten.push({ art: "html", register: "Titel", titel: "", html: `<div class="mag-titel">
     <div class="mag-titel-kopf"><span class="mag-marke">CLUB-KÜCHE</span><span class="mag-unter">Das Magazin des Köcheclubs Werne</span>
       <span class="mag-ausgabe">Ausgabe Nr. ${nr} · ${mon}</span></div>
@@ -82,6 +136,7 @@ function magSeiten({ termine, rezept }) {
         <p class="hinweis">${esc([rezept.kategorie, rezept.portionen ? rezept.portionen + " Portionen" : "", rezept.vonName ? "von " + rezept.vonName : ""].filter(Boolean).join(" · "))}</p>
         ${Array.isArray(rezept.zutaten) && rezept.zutaten.length ? `<h4>Zutaten</h4><ul>${rezept.zutaten.slice(0, 14).map((z) => `<li>${esc(typeof z === "string" ? z : [z.menge, z.einheit, z.name].filter(Boolean).join(" "))}</li>`).join("")}</ul>` : ""}
         ${rezept.zubereitung ? `<h4>Zubereitung</h4><p>${esc(String(rezept.zubereitung)).slice(0, 900).replace(/\n/g, "<br>")}</p>` : ""}<p class="hinweis">Vorschlag aus dem Rezeptbuch – die Redaktion wählt später das Rezept des Monats.</p></div>`;
+    else if (heft[r.id]) inhalt = magHeftHtml(r.id, heft[r.id]);
     else inhalt = magPlatz(r.platz || "Hier kommt der Beitrag der Redaktion hin.", r.id);
     seiten.push({ art: "html", register: r.t, titel: "", html: magSeite(`<h2 class="mag-h"><span>${r.sym}</span> ${esc(r.t)}</h2><p class="mag-unterzeile">${esc(r.u)}</p>${inhalt}`, start + i + 1) });
   });

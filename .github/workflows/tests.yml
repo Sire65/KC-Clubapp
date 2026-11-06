@@ -75,6 +75,7 @@ jobs:
       - run: node tests/buero-namensschild.test.mjs
       - run: node tests/umblaettern.test.mjs
       - run: node tests/magazin-geruest.test.mjs
+      - run: node tests/magazin-nr1.test.mjs
       - run: node tests/magazin-postfach.test.mjs
       - run: node tests/video-dauer.test.mjs
       - run: node tests/buero-fein.test.mjs
