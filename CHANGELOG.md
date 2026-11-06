@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.874.0 – Terminanfragen über die Standleitung, Sparbremse vollständig (KC-CLUB-RT-TERMINANFRAGE)
+Wunsch Hansi 06.11.2026: „Können wir noch mehr über die Standleitung erledigen?“ – „Ja umsetzen“.
+- Terminanfragen an der direkten Leitung: neue Anfrage → Signal an den Empfänger, Antwort/Gegenvorschlag → an den Absender, Absage/neue Zeit → an alle Empfänger. Der Hinweis „📨 Neue Terminanfrage“ kommt damit sofort statt bis zu 5 Min. später.
+- Steht die Leitung, fragt die App die Terminanfragen nur noch alle 30 statt 5 Min. zur Sicherheit nach (ohne Leitung wie bisher).
+- Sparbremse: „spricht“, „diktiert“ und „livetermin“ zählen jetzt wie „tippt“ zu den teuren Signalen (ab 70 % des kostenlosen Kontingents aus) – waren vergessen.
+- Notfall-Ablauf „Sicherung lesen“ läuft mit Node 22 statt 20 (Node 20 ohne Pflege).
+- Bewusst nicht: Lebenszeichen seltener – der KC System Check zeigt ein Programm nach 90 s ohne Lebenszeichen als veraltet (PROGRAM_HEARTBEAT_MAX_AGE_MS).
+- Datenbank: supabase/migrations/20261106_kc_club_rt_terminanfrage.sql, Probelauf tools/db-test/111_*. Test: tests/rt-terminanfrage.test.mjs. Rückweg: Version 2.873.0 einspielen, Trigger kc_club_rt_ta_* löschen.
+
 ## 2.873.0 – 2026-11-06 – 🎄 Neuer Adventskalender: Rathaus Werne, Basteln & Deko, Kinderriegel, Einladung zum Frühstück (KC-CLUB-ADVENT-2026) · nur App · 12-Uhr-Termin [Hansi: einspielen]
 Wunsch Hansi (06.11.): „Neues Konzept zum Adventskalender – als Hintergrund das Rathaus-Bild aus der TV-Präsentation, abwechselnd Bastelanleitung,
 Deko-Anleitung, ein Kinderriegel, 24. Türchen Einladung zum Frühstück im Januar oder Februar.“ Konzept: `docs/adventskalender-2026/`.

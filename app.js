@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.873.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.874.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -5056,6 +5056,7 @@ function rtSignal(s) {
   if (s.art === "gelesen") { if (s.thread && s.thread === chatId && aktuelleAnsicht === "chat") chatSignalLaden(true); return; } // 2.596.0: gebündelt
   if (s.art === "online") { onlinePing(); return; }
   if (s.art === "livetermin") { ltHolen(); return; } // KC-CLUB-LIVE-TERMIN (2.231.0)
+  if (s.art === "terminanfrage") { clearTimeout(RT.ta); RT.ta = setTimeout(taSignal, 600 + Math.random() * 1400); return; } // 2.874.0 KC-CLUB-RT-TERMINANFRAGE
   if (s.art === "eingang") { eingangNeu(); return; } // KC-CLUB-EINGANG-SOFORT (2.741.0): Unterlagen im Eingangskorb – sofort fragen
   if (s.art === "pinnwand") { clearTimeout(RT.pw); RT.pw = setTimeout(() => { pwLive(); if (aktuelleAnsicht === "pinnwand") pwLaden(); }, 800); return; }
   if (s.art === "termin" || s.art === "abstimmung") {
@@ -28420,7 +28421,15 @@ async function taHinweisPruefen(versuch = 0) {
     melde(w === "heute" ? "🌙 Heute frage ich nicht mehr – die Anfrage steht unter 📅 Termine." : "⏰ Später – in 2 Stunden erinnere ich dich wieder.");
   }));
 }
-setInterval(() => taHinweisPruefen(9), TAH_TAKT_MS);
+// 2.874.0 KC-CLUB-RT-TERMINANFRAGE (Wunsch Hansi 06.11. „mehr über die Standleitung“): neue Anfrage, Antwort, Gegenvorschlag oder Absage melden sich
+// selbst (Signal „terminanfrage“). Steht die Leitung, fragt der Takt nur noch jedes 6. Mal (alle 30 statt 5 Min.) zur Sicherheit; ohne Leitung wie bisher.
+let TAH_TICK = 0;
+setInterval(() => { if (rtAn() && ++TAH_TICK % 6) return; taHinweisPruefen(9); }, TAH_TAKT_MS);
+function taSignal() {
+  if (document.hidden) return; // beim Zurückkommen fragt die App ohnehin nach (visibilitychange)
+  TAH_ZULETZT = 0; taHinweisPruefen(9);
+  if ($("terminanfragen")?.offsetParent) taLaden(); // Liste gerade zu sehen → frisch holen
+}
 document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(() => taHinweisPruefen(9), 2500); });
 async function taAntwort(id, antwort) {
   let notiz = "";

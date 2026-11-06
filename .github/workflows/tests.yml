@@ -125,6 +125,7 @@ jobs:
       - run: node tests/buero-einrichten.test.mjs
       - run: node tests/anbieter-neues.test.mjs
       - run: node tests/inst-bilder.test.mjs
+      - run: node tests/rt-terminanfrage.test.mjs
       - run: node tests/aufgabe-gemeinsam.test.mjs
       - run: node tests/kachel-drehzeichen.test.mjs
       - run: node tests/video-zeitansage.test.mjs
