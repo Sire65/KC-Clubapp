@@ -3229,6 +3229,13 @@ function rgHin() { const e = RG.ziel; if (!e) return scrollTo(0, 0);
   e.scrollIntoView({ block: e.getBoundingClientRect().height > innerHeight * 0.45 ? "start" : "center", behavior: "instant" }); }
 // Text satzweise vorlesen (lange Texte brechen auf manchen Handys sonst ab); danach kurz warten und weiterblättern.
 // Ohne Sprachausgabe oder wenn das Handy kein „fertig“ meldet: Lesezeit nach Wortzahl.
+const RG_STIMME_WARTE_MS = 5000; // KC-CLUB-VIDEO-STIMME-STUMM: so lange darf die Handy-Stimme bis zum ersten Wort brauchen
+function rgStummHinweis() {
+  const geladen = typeof rgpKann === "function" && rgpKann();
+  melde(geladen ? "🔇 Die Stimme des Handys antwortet gerade nicht – das Video läuft ohne Ton weiter. Tipp: Bei 🗣️ Stimme & Tempo „Dii“ oder „Thorsten“ wählen, die sprechen immer."
+    : "🔇 Die Stimme des Handys antwortet gerade nicht – das Video läuft ohne Ton weiter. Lies einfach mit.");
+  spur("rg_stumm", RG.tour); // in den Wegen sichtbar, ohne Inhalte
+}
 function rgSprechen(text) {
   // Mindestzeit: Handys ohne deutsche Stimme melden „fertig“ oft sofort – dann bleibt der Text trotzdem lange genug zum Lesen stehen
   const lauf = RG.lauf, saetze = rgSaetze(text), lesezeit = 2500 + text.split(/\s+/).length * 420, frueh = Date.now() + lesezeit * 0.75;
@@ -3241,9 +3248,21 @@ function rgSprechen(text) {
   }
   if (!RG.ton) return weiter();
   RG.uhr = setTimeout(weiter, lesezeit * 1.8); // Sicherheitsnetz
+  // KC-CLUB-VIDEO-STIMME-STUMM (Fund Hansi 06.11.2026, Android: „Tafel kommt, steht still, kein Ton“ – die Google-Sprachausgabe antwortete nicht,
+  // Thorsten und Dii gingen): beginnt die Handy-Stimme nach 5 s nicht zu sprechen, läuft das Video ohne Ton weiter (Lesezeit) und ein Hinweis
+  // empfiehlt eine geladene Stimme. Gilt bis zum Ende dieses Videos (RG.ton wird beim nächsten Start neu bestimmt).
+  let gestartet = false; clearTimeout(RG.stummUhr);
+  RG.stummUhr = setTimeout(() => {
+    if (gestartet || lauf !== RG.lauf || !RG.an || RG.pause) return;
+    try { if (speechSynthesis.speaking) return; } catch {}
+    try { speechSynthesis.cancel(); } catch {}
+    RG.ton = false; rgStummHinweis();
+    const s = RG.st[RG.i]; if (s?.pulsSaetze) try { rgPulsStart(s); } catch {}
+    clearTimeout(RG.uhr); weiter();
+  }, RG_STIMME_WARTE_MS);
   try {
     RG.satzNr = 0;
-    saetze.forEach((x, n) => { const u = rgAusgabe(x.trim()); u.onstart = () => { if (lauf === RG.lauf) rgSatz(n); }; if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
+    saetze.forEach((x, n) => { const u = rgAusgabe(x.trim()); u.onstart = () => { gestartet = true; if (lauf === RG.lauf) rgSatz(n); }; if (n === saetze.length - 1) { u.onend = weiter; u.onerror = (e) => { if (e?.error !== "interrupted" && e?.error !== "canceled") weiter(); }; } speechSynthesis.speak(u); });
   } catch { weiter(); }
 }
 function rgLage() {

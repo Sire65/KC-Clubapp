@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.867.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.868.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-pvc3JsOaRxhun0zLhnFS0alq6EyJsLMVln0MUTaL15W+YmIYYWUCvoeW5nDn99mP" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-CY9OKXrriRyOo8Xkp9jmwDhHLRgvcUgBPEcR+csfkxug+9kxzXbd4/oE4hqaXyTL" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
@@ -34107,7 +34107,7 @@ Object.assign(SPUR_WAS, {
   unterstuetzung_keine: "🤝 Unterstützung gewählt: keine", unterstuetzung_etwas: "🤝 Unterstützung gewählt: etwas", unterstuetzung_viel: "🤝 Unterstützung gewählt: viel",
   hz_kapitel: "❓ Hilfe-Kapitel geöffnet:", hz_eintrag: "❓ Hilfetext aufgerufen:", hz_zeig: "👉 Hilfe „Zeig mir wo“:", hz_vorlesen: "🔊 Hilfetext vorgelesen:",
   hz_frage: "❔ „?“ angetippt auf der Seite", hz_suche: "🔍 In der Hilfe gesucht (Suchwort wird nicht gespeichert)", hz_gut: "👍 Hilfe war hilfreich:", hz_schlecht: "👎 Hilfe war nicht hilfreich:", hz_bew_weg: "↩️ Hilfe-Bewertung zurückgenommen:",
-  rg_start: "🎬 Erklär-Video gestartet:", rg_ende: "✅ Erklär-Video bis zum Ende gesehen:",
+  rg_start: "🎬 Erklär-Video gestartet:", rg_stumm: "🔇 Erklär-Video: Handy-Stimme antwortete nicht, ohne Ton weiter –", rg_ende: "✅ Erklär-Video bis zum Ende gesehen:",
   film_start: "🎞️ Anleitungsfilm gestartet:", film_ende: "✅ Anleitungsfilm bis zum Ende gesehen:",
   film_frage_an: "🎞️ Film-Angebot beim Start: ▶ jetzt ansehen –", film_frage_spaeter: "🎞️ Film-Angebot beim Start: ⏰ später –", film_frage_nein: "🎞️ Film-Angebot beim Start: 🙅 nein danke –",
   tat_termin_ja: "✅ Termin zugesagt", tat_termin_nein: "❌ Termin abgesagt", tat_termin_vl: "❔ Termin: vielleicht", tat_termin_antwort: "📅 Termin beantwortet",
