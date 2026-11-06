@@ -7763,7 +7763,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(sql, /revoke all on function public\.kc_club_waechter_lage\(\) from public, anon, authenticated;/, "nicht öffentlich");
   assert.match(sql, /grant execute on function public\.kc_club_waechter_lage\(\) to service_role;/, "nur Club-Server");
   assert.ok(!/create table/i.test(sql), "keine neue Tabelle");
-  assert.equal((programm.match(/^\s*\{ id: "[a-z]+", gruppe: "(sicherung|betrieb|schutz|app)", sym: /gm) || []).length, 25, "25 Wächter (15 + 9 Sicherheits-Wächter + 🧯 Notfall-Paket 2.862.0)");
+  assert.equal((programm.match(/^\s*\{ id: "[a-z]+", gruppe: "(sicherung|betrieb|schutz|app)", sym: /gm) || []).length, 26, "26 Wächter (15 + 9 Sicherheits-Wächter + 🧯 Notfall-Paket 2.862.0 + 📞 Telefon-Umleitung 2.868.0)");
   assert.ok(/\["waechter", "🛡️", "Wächter", "ueb"\]/.test(programm) && /if \(id === "waechter"\) return wchStart\(\);/.test(programm), "Kachel im Admin");
   assert.match(programm, /\/\^https:\\\/\\\/github\\\.com\\\/\/\.test\(g\.link/, "nur GitHub-Links");
   // Melden + Wochenbericht
@@ -7772,7 +7772,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(server, /if \(f === "grau"\) \{ if \(a\) neu\[w\.id\] = a; continue; \}/, "unbekannt meldet nichts");
   assert.match(server, /routerSenden\("club_fehler", an, \{ titel,/, "Push + Mail an die Admins");
   assert.match(server, /abschnitte\.splice\(3, 0, \["🛡️ Wächter"/, "Wächter im Wochenbericht");
-  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 23, "23 Wächter auf dem Server (🐌 und 💤 nur im Gerät; 2.862.0: + 🧯 Notfall-Paket)");
+  assert.equal((server.match(/^  \{ id: "[a-z]+", sym: "[^"]+", name: "[^"]+", (job|gh|app)/gm) || []).length, 24, "24 Wächter auf dem Server (🐌 und 💤 nur im Gerät; 2.862.0: + 🧯 Notfall-Paket; 2.868.0: + 📞 Telefon-Umleitung)");
   // 2.726.0 KC-CLUB-SICHERHEIT-WAECHTER
   assert.match(server, /siZaehlen\(a, ich\); \/\/ 2\.726\.0/, "jede Aktion wird gezählt");
   assert.match(server, /default: siUnbekannt\(a, ich\); return json/, "unbekannte Befehle fallen auf");
