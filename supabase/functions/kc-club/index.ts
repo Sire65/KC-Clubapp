@@ -62,7 +62,7 @@ const DB_AUS = { n: 0 }; // zählt abgebrochene Abfragen (je Anfrage vorher/nach
 // gleichzeitige andere Anfragen sehen ihn nie), lebt nur so lange wie der Aufruf und wird bei jedem Schreiben geleert. Fehler werden nie gepuffert.
 type DbAntwort = { status: number; statusText: string; headers: [string, string][]; body: ArrayBuffer | null };
 // KC-CLUB-DB-SPARSAM (2.464.0): haltbarMs > 0 → eine gepufferte Antwort gilt nur so lange (normale App-Aufrufe); 0 → den ganzen Aufruf (Notpaket-Teil, nur lesend).
-type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string; treffer?: Map<string, number> };
+type DbPuffer = { antworten: Map<string, Promise<DbAntwort>>; zeit: Map<string, number>; netz: number; puffer: number; haltbarMs: number; aktion?: string; treffer?: Map<string, number>; antwortBytes?: number };
 const dbPufferNeu = (haltbarMs: number): DbPuffer => ({ antworten: new Map(), zeit: new Map(), netz: 0, puffer: 0, haltbarMs });
 // Schreibt etwas außerhalb der Schnittstelle (andere Server-Funktion, direkter Datenbank-Weg), muss der Puffer des Aufrufs weg – nie veraltet lesen.
 const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | undefined; if (pf) { pf.antworten.clear(); pf.zeit.clear(); } };
@@ -99,14 +99,47 @@ const dbFetch: typeof fetch = (input, init) => {
   }
   return a.then((x) => new Response(x.body && x.body.byteLength ? x.body.slice(0) : null, { status: x.status, statusText: x.statusText, headers: x.headers }));
 };
+// KC-CLUB-EGRESS-MESSUNG (2.869.0, Supabase-Warnung 05.11.2026 „Egress überschritten, Schonfrist bis 16.11.“, Freigabe Hansi „bau die Messung für 12 Uhr ein“):
+// Jede Server-Instanz zählt im Speicher, wie viele Bytes die Datenbank-Schnittstelle (PostgREST) je Ziel (Tabelle/Funktion, Methode) und je App-Aktion
+// zurückgibt und wie groß die Antworten an die Apps sind. Alle EGRESS_MS eine Zeile „egress_messung“ ins Protokoll – nur Namen und Zahlen, nie Inhalte oder Personen.
+// Auswertung: SQL auf kc_club_protokoll (aktion = 'egress_messung'), Feld db/aktion/antwort = { name: [Anzahl, Bytes, Bytes laut Content-Length] }.
+const EGRESS_MS = 10 * 60000, EGRESS_MAX_NAMEN = 300, EGRESS_TOP = 40;
+type EgressMap = Map<string, [number, number, number]>;
+const EGRESS = { ab: Date.now(), db: new Map() as EgressMap, aktion: new Map() as EgressMap, antwort: new Map() as EgressMap };
+function egressDazu(m: EgressMap, k: string, b: number, cl = 0) {
+  if (!m.has(k) && m.size >= EGRESS_MAX_NAMEN) k = "andere";
+  const x = m.get(k) || [0, 0, 0]; x[0]++; x[1] += b; x[2] += cl; m.set(k, x);
+}
+function egressZiel(url: string, methode: string) {
+  const m = /\/(rest|storage|auth|functions)\/v1\/(?:object\/(?:public\/|sign\/|authenticated\/)?)?(rpc\/)?([A-Za-z0-9_-]+)/.exec(url);
+  return `${methode} ${!m ? "andere" : m[1] === "rest" ? (m[2] ? "rpc/" : "") + m[3] : m[1] + "/" + m[3]}`;
+}
+function egressZaehlen(r: Response, url: string, methode: string): Response {
+  const cl = Number(r.headers.get("content-length")) || 0, pf = DB_PUFFER.getStore() as DbPuffer | undefined, ziel = egressZiel(url, methode);
+  const fertig = (b: number) => { try { egressDazu(EGRESS.db, ziel, b, cl); egressDazu(EGRESS.aktion, String(pf?.aktion || "ohne").slice(0, 40), b, cl); } catch {} };
+  if (!r.body) { fertig(0); return r; }
+  let n = 0;
+  const zaehler = new TransformStream<Uint8Array, Uint8Array>({ transform(c, ctl) { n += c.byteLength; ctl.enqueue(c); }, flush() { fertig(n); } });
+  return new Response(r.body.pipeThrough(zaehler), { status: r.status, statusText: r.statusText, headers: r.headers });
+}
+const egressTop = (m: EgressMap) => Object.fromEntries([...m].sort((a, b) => b[1][1] - a[1][1]).slice(0, EGRESS_TOP));
+function egressMelden(sofort = false) {
+  if (!EGRESS.db.size && !EGRESS.antwort.size) return;
+  if (!sofort && Date.now() - EGRESS.ab < EGRESS_MS) return;
+  const details = { sek: Math.round((Date.now() - EGRESS.ab) / 1000), db: egressTop(EGRESS.db), aktion: egressTop(EGRESS.aktion), antwort: egressTop(EGRESS.antwort), version: SERVER_VERSION };
+  EGRESS.ab = Date.now(); EGRESS.db = new Map(); EGRESS.aktion = new Map(); EGRESS.antwort = new Map();
+  nebenbei(protokoll(null, "egress_messung", details).catch((e) => console.error("egress_messung", String(e))));
+}
+try { addEventListener("beforeunload", () => egressMelden(true)); } catch {} // Instanz wird beendet → Rest noch melden (wenn die Laufzeit es zulässt)
 const dbFetchNetz: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-  if (!url.includes("/rest/v1/")) return fetch(input, init);
-  const zeit = AbortSignal.timeout(DB_ZEIT_MS), ri = init as RequestInit | undefined;
+  const ri = init as RequestInit | undefined, methode = String(ri?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
+  if (!url.includes("/rest/v1/")) return fetch(input, init); // Dateien (Speicher) unverändert – deren Volumen zeigt Supabase getrennt
+  const zeit = AbortSignal.timeout(DB_ZEIT_MS);
   // KC-CLUB-START-SPARSAM-2: Schreiben in eine gemerkte Tabelle → Merker dieser Instanz vorher UND nachher leeren (nie veraltet nach eigenem Speichern)
-  const schreibt = !["GET", "HEAD"].includes(String(ri?.method || (input instanceof Request ? input.method : "GET")).toUpperCase());
+  const schreibt = !["GET", "HEAD"].includes(methode);
   if (schreibt) merkerVergessen(url);
-  const r = fetch(input, { ...ri, signal: ri?.signal ? AbortSignal.any([ri.signal, zeit]) : zeit }).catch((e) => {
+  const r = fetch(input, { ...ri, signal: ri?.signal ? AbortSignal.any([ri.signal, zeit]) : zeit }).then((x) => egressZaehlen(x, url, methode)).catch((e) => {
     if (zeit.aborted) { DB_AUS.n++; console.error("DB-Zeitgrenze", DB_ZEIT_MS, "ms"); }
     throw e;
   });
@@ -157,7 +190,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.865.0";
+const SERVER_VERSION = "2.869.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -297,8 +330,11 @@ const cors = {
   // gemerkter Erlaubnis erst nach bis zu 2 Std. – neue Kopfzeilen deshalb vorher hier eintragen und erst später in der App benutzen.
   "Access-Control-Max-Age": "7200",
 };
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" } });
+const json = (body: unknown, status = 200) => {
+  const b = new TextEncoder().encode(JSON.stringify(body)), pf = DB_PUFFER.getStore() as DbPuffer | undefined;
+  if (pf) pf.antwortBytes = (pf.antwortBytes || 0) + b.byteLength; // KC-CLUB-EGRESS-MESSUNG: Größe der Antwort an die App
+  return new Response(b, { status, headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" } });
+};
 class Fehler extends Error { constructor(msg: string, public status = 400, public extra?: Record<string, unknown>) { super(msg); } } // extra: KC-CLUB-ZUGANG-HILFE (Grund bei 401)
 // KC-CLUB-RC-PRUEFUNG (20.10.2026): Schreiben mit Rückmeldung – schlägt es fehl, meldet die App das ehrlich statt „gespeichert“ (Freigaben, Notfall, Zusagen, Links)
 function schreibOk<R extends { error: unknown }>(r: R, was = "Speichern"): R { if (r?.error) throw new Fehler(`${was} hat nicht geklappt – bitte gleich noch einmal versuchen.`, 500); return r; }
@@ -4161,7 +4197,7 @@ type Zugang = "mitglied" | "aushilfe" | "gast";
 // Mitglieder, keine Termine, keine Chats, keine Kontaktdaten. Absichtlich nicht in ZUGANG_AKTIONEN (die Liste gilt auch für die App-Oberfläche).
 const TISCHGAST_AKTIONEN = ["tischgast_init", "tisch_platz", "tisch_verlassen", "anlage_url", "anruf_wege", "diagnose", "ping"] as const;
 const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
-  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "weg", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
@@ -5082,7 +5118,7 @@ const START_TAGE = 180;
 // PROT_ZIEL_ZEILEN erreicht sind – und es steht eine Zeile „protokoll_waechter“ mit den Zahlen im Protokoll (nie Inhalte).
 // Läuft im nächtlichen Wartungslauf; spur (30 Tage) und app_start (180 Tage) behalten ihre eigenen Fristen.
 const PROT_LAERM_TAGE = 60, PROT_ALT_TAGE = 365, PROT_MAX_ZEILEN = 50000, PROT_ZIEL_ZEILEN = 40000;
-const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "leitung_messung", "sos_geoeffnet", "buero_mail_versuch"]; // 2.122.0: Mail-Bremse braucht ihn nur 1 Minute
+const PROT_LAERM = ["mitglied_details", "aenderungen_angesehen", "meine_daten_angesehen", "fehler_alte_version", "fehler_umgebung", "fehler_startzeit", "leitung_messung", "egress_messung", "sos_geoeffnet", "buero_mail_versuch"]; // 2.122.0: Mail-Bremse braucht ihn nur 1 Minute
 const PROT_LAERM_PRAEFIX = ["diagnose_%", "fehler_update_%"];
 const PROT_WICHTIG = ["%zugang%", "%link%", "%kurzcode%", "%sperr%", "%rolle%", "%recht%", "admin_%", "%geloescht%", "%endgueltig%", "%entfernt%",
   "%zusammengefuehrt%", "%freigab%", "%notbetrieb%", "%sicherheit%", "%schnappschuss%", "%mitschau%", "notfall_%", "hilferuf", "aenderung_%", "erstattung%",
@@ -9665,6 +9701,7 @@ Deno.serve((req) => {
   return DB_PUFFER.run(pf, async () => {
     const t0 = Date.now(), antwort = await kcAnfrage(req);
     if (pf.netz + pf.puffer >= DB_LOG_AB) console.log(JSON.stringify({ db: txt(pf.aktion || req.method, 40), netz: pf.netz, puffer: pf.puffer, ms: Date.now() - t0 }));
+    try { egressDazu(EGRESS.antwort, String(pf.aktion || req.method).slice(0, 40), pf.antwortBytes ?? (Number(antwort.headers.get("content-length")) || 0)); egressMelden(); } catch {} // KC-CLUB-EGRESS-MESSUNG
     return antwort;
   });
 });

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.868.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.869.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -9721,7 +9721,7 @@ const kachelnAlle = (r) => KACHELN[r].filter((k) => !k.bald && (!k.nur || k.nur(
 // und nur passende Kacheln zeigt. Gast: Termine, Nachrichten, SOS (nur Clubleitung), Spiele, Hilfe/Einstellungen. Aushilfe: dazu Mein Dienst,
 // Dienstwünsche, Fotoalbum ansehen, Schulung. Der Vertragstest prüft, dass ZUGANG_AKTIONEN hier und im Server gleich sind.
 const ZUGANG_AKTIONEN = {
-  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
+  basis: ["init", "kurzcode_erzeugen", "ping", "diagnose", "online", "weg", "start_melden", "spur_melden", "nutzung_melden", "verlassen_erinnern", "video_bewerten", "stimmen",
     "vorlese_stimmen", "sicherheit_pruefen", "verbindung_melden", "sicherheit_melden", "lebenszeichen", "notbetrieb_nachtragen", "zugang_link_mailen",
     "wetter", "wetter_ort_suchen", "treffen_liste", "treffen_antwort", "erinnerung_setzen", "kalender", "kalender_abo", "kalender_abo_holen", "privattermin_speichern",
     "privattermin_loeschen", "privattermine_liste", "countdowns", "terminumfragen_liste", "terminumfrage_antwort", "mitglieder", "mitglied_details",
