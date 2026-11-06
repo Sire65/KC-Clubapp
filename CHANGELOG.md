@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.875.0 – Zeitansage: Video „Alle Einstellungen erklärt“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 18 Schritte zeigen auf vorhandene Stellen; alle Einstellungs-Bereiche für Mitglieder sind drin (App-Info und „Clubleitung beim Start“ gehören nicht dazu). Zeitansage eingeschaltet.
+- Rückweg: Version 2.874.0 einspielen.
+
 ## 2.874.0 – Terminanfragen über die Standleitung, Sparbremse vollständig (KC-CLUB-RT-TERMINANFRAGE)
 Wunsch Hansi 06.11.2026: „Können wir noch mehr über die Standleitung erledigen?“ – „Ja umsetzen“.
 - Terminanfragen an der direkten Leitung: neue Anfrage → Signal an den Empfänger, Antwort/Gegenvorschlag → an den Absender, Absage/neue Zeit → an alle Empfänger. Der Hinweis „📨 Neue Terminanfrage“ kommt damit sofort statt bis zu 5 Min. später.

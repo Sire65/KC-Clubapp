@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.874.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.875.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2040,7 +2040,7 @@ const RUNDGAENGE = [
   { id: "inst_geraet", stand: "1", zeit: "06.11.2026", sym: "💻", t: "Weiteres Gerät: Tablet oder PC", u: "Mit dem 6-stelligen Code anmelden und installieren (ca. 2 Min.)", st: () => RG_INST_GERAET },
   { id: "inst_codes", stand: "1", zeit: "06.11.2026", sym: "🔑", t: "Link, Code & Co. – die Unterschiede", u: "Persönlicher Link, Code, Link verloren, Link einfügen (ca. 2 Min.)", st: () => RG_INST_CODES },
   { id: "ueberblick", stand: "4", zeit: "06.11.2026", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
-  { id: "einstellungen", stand: "2", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
+  { id: "einstellungen", stand: "2", zeit: "06.11.2026", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
   { id: "oberflaeche", stand: "3", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
   { id: "nachricht", stand: "4", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger, schreiben, Express, Favoriten (ca. 2 Min.)", st: () => RG_NACHRICHT },
   { id: "nachrichten_1", stand: "2", zeit: "05.11.2026", sym: "📨", t: "Nachrichten – Folge 1: das Einfache", u: "Plus Neu, an wen, kurz schreiben, normal senden, Wichtig, Express mit Bestätigung (höchstens 5 am Tag), ⓘ und Haken, Liste deiner Chats (ca. 5 Min.)", st: () => RG_NACHRICHTEN_1() }, // KC-CLUB-VIDEO-NACHRICHTEN (Wunsch Hansi 05.11.2026)
