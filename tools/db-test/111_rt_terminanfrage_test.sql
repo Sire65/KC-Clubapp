@@ -21,7 +21,7 @@ begin
   update public.kc_club_terminanfragen set status = 'abgesagt' where id = v_id;
   select count(*) into n_absage from realtime.messages where inserted_at >= t0 - interval '1 minute' and topic = kb and payload->>'art' = 'terminanfrage';
   -- 4. nur die Art, nie Inhalt
-  select count(*) into n_inhalt from realtime.messages where inserted_at >= t0 - interval '1 minute' and topic in (ka, kb) and (payload - 'art') <> '{}'::jsonb;
+  select count(*) into n_inhalt from realtime.messages where inserted_at >= t0 - interval '1 minute' and topic in (ka, kb) and (payload - 'art' - 'id') <> '{}'::jsonb; -- id setzt Supabase selbst
   -- 5. Sparbremse: ab 70 % kein „spricht“ mehr, „terminanfrage“ schon
   insert into public.kc_club_rt_zaehler (monat, anzahl) values (to_char(now() at time zone 'Europe/Berlin', 'YYYY-MM'), 1500000)
     on conflict (monat) do update set anzahl = 1500000;
