@@ -1,11 +1,12 @@
 # Änderungen
 
-## 2.876.0 – 2026-11-06 – 📰 Club-Küche Nr. 1 = Januar 2027: Rückblick Weihnachtsmarkt, Witz vom Pass, Küchentipps (KC-CLUB-MAGAZIN-NR1) · nur App
+## 2.876.0 – 2026-11-06 – 📰 Club-Küche Nr. 1 = Januar 2027: Rückblick Weihnachtsmarkt, Witz vom Pass, Küchentipps, Fortsetzungsroman Folge 1 (KC-CLUB-MAGAZIN-NR1, KC-CLUB-MAGAZIN-ROMAN) · nur App
 Wunsch Hansi (06.11.): „Die erste Ausgabe soll im Januar 2027 erscheinen mit der Nachlese und Impressionen vom Weihnachtsmarkt“ – dazu ein Witz und ein, zwei Tipps, „so wie in richtigen Zeitschriften: mehrspaltig, in farbigen Kästen“.
 - **Ausgabe Nr. 1 = Januar 2027** (vorher Dezember 2026). Bis dahin zeigt „📖 Ausgabe lesen“ weiter Nr. 1.
 - **Heftinhalt je Ausgabe** (Registry `MAG_AUSGABEN` in `teile/magazin.js`): ersetzt den Platzhalter der Rubrik, alle anderen Rubriken bleiben Platzhalter. Titelblatt-Schlagzeilen je Ausgabe.
 - **📸 Rückblick:** Nachlese Weihnachtsmarkt 02.–14.12.2026 mit Faktenleiste, zweispaltigem Text, weinrotem Angebotskasten (Preise aus der Preisliste), Zitat, Dank und Bildraster „Impressionen“. Ergebnisse, Zitat und Fotos sind gelb markierte Platzhalter – werden nach dem Markt eingetragen, nichts erfunden. Fotos nur mit Einverständnis.
 - **😄 Küchenwitz des Monats** als Bonzettel, **💡 Küchentipp** zweispaltig (Jus) und im grünen Kasten (Beurre blanc mit Temperaturwerten); unter jedem „✉️ Beitrag dafür einsenden“.
+- **📖 Neue Rubrik „Fortsetzungsroman“** (KC-CLUB-MAGAZIN-ROMAN, Wunsch Hansi 06.11.: „In jeder der 12 Ausgaben kommt ein Teil“): „Hinter dem Pass – Ein Roman aus der Welt der Profiküche“, **Folge 1 von 12 „Die Neue“** vollständig und ungekürzt (Übergabe ChatGPT, KC-Communication Zweig `roman-hinter-dem-pass-uebergabe-2026-11-06`). Eine ruhige Lesespalte statt Mini-Spalten, Initiale, Zwischenüberschriften mit Zierzeichen, „Fortsetzung in der nächsten Ausgabe“ im abgesetzten Kasten. Vier Plätze für die Bleistiftskizzen (Aufmacher Lena/Jonas, Alte Mühle, Arbeit am Posten, Trüffel) – bis die Bilddateien da sind, ein zurückhaltender Bildplatz mit Beschreibung. Nur Folge 1 im Programm, keine internen Planungsunterlagen. Test: `tests/magazin-roman.test.mjs`.
 - Magazin bleibt bis zur Freigabe nur für den Admin. Test: `tests/magazin-nr1.test.mjs`, `tests/magazin-geruest.test.mjs` angepasst. Rückweg: App 2.875.0.
 
 ## 2.875.0 – Zeitansage: Video „Alle Einstellungen erklärt“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)

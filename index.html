@@ -5374,6 +5374,21 @@
   .mag-h4 { margin: 14px 0 6px; color: #741521; } .mag-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9em), 1fr)); gap: 8px; } .mag-fotos figure { margin: 0; display: grid; gap: 3px; }
   .mag-foto-platz { aspect-ratio: 4 / 3; max-width: 100%; display: grid; place-items: center; font-size: 1.6rem; border: 1px dashed #c9a96e; background: repeating-linear-gradient(135deg, #faf4ea 0 10px, #f2e9da 10px 20px); }
   .mag-fotos figcaption { font: italic .78rem system-ui, sans-serif; color: #7a6a5f; }
+  /* KC-CLUB-MAGAZIN-ROMAN: Fortsetzungsroman – eine ruhige Lesespalte, Bleistiftskizzen ohne Rahmen, Ende klar abgesetzt */
+  .mag-roman { max-width: 36em; margin: 0 auto; font-family: Georgia, "Times New Roman", serif; color: #2b1a1c; }
+  .mag-roman-kopf { display: grid; gap: 2px; text-align: center; padding: 6px 0 12px; border-bottom: 1px solid #c9b8a6; margin-bottom: 14px; }
+  .mag-roman-reihe { font-size: clamp(1.6rem, 6.5vw, 2.3rem); font-weight: 700; letter-spacing: .14em; line-height: 1.05; }
+  .mag-roman-unter { font-style: italic; color: #7a6a5f; } .mag-roman-folge { margin-top: 6px; font: 700 .74rem system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #741521; }
+  .mag-roman-vorspann { font-style: italic; font-size: 1.05rem; line-height: 1.55; color: #5a4a40; margin: 12px 0 18px; }
+  .mag-roman-text { font-size: 1.04rem; line-height: 1.65; hyphens: auto; overflow-wrap: break-word; }
+  .mag-roman-text p { margin: 0 0 .75em; } .mag-roman-text > p:first-of-type::first-letter { float: left; font-size: 3.3em; line-height: .85; padding: .05em .08em 0 0; color: #741521; font-weight: 700; }
+  .mag-roman-text h3 { margin: 1.6em 0 .6em; font-size: 1.12rem; line-height: 1.25; color: #741521; text-wrap: balance; }
+  .mag-roman-text h3::before { content: "❧"; display: block; text-align: center; color: #c9a96e; font-size: 1rem; margin-bottom: .5em; }
+  .mag-roman-bild { margin: 14px auto 18px; max-width: 26em; } .mag-roman-bild.gross { max-width: 100%; margin-top: 4px; }
+  .mag-roman-bild img { display: block; width: 100%; height: auto; max-width: 100%; mix-blend-mode: multiply; }
+  .mag-roman-bild.fehlt { aspect-ratio: 3 / 2; max-width: min(100%, 26em); display: grid; place-content: center; gap: 4px; text-align: center; padding: 12px; border: 1px dashed #c9b8a6; background: #faf6ee; color: #7a6a5f; font: .82rem system-ui, sans-serif; }
+  .mag-roman-bild.fehlt.gross { aspect-ratio: 16 / 9; max-width: 100%; } .mag-roman-bild.fehlt span { font-weight: 700; }
+  .mag-roman-ende { margin-top: 26px; padding: 16px 18px; border-top: 3px double #741521; background: #faf4ea; font: .95rem/1.55 system-ui, sans-serif; } .mag-roman-ende p { margin: 0 0 .6em; } .mag-roman-ende p:first-child { font-size: 1.05rem; color: #741521; }
   /* KC-CLUB-UMBLAETTERN: die alte Seite klappt wie bei einem Prospekt um (nur beim Blättern, danach entfernt) */
   .bl-buehne { position: relative; }
   .bl-umblatt { position: absolute; z-index: 3; transform-style: preserve-3d; pointer-events: none; will-change: transform; }
