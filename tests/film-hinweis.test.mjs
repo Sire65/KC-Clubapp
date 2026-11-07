@@ -25,14 +25,14 @@ assert.ok(/▶ Film jetzt ansehen/.test(pr) && /⏰ Später/.test(pr) && /Nein, 
 assert.ok(/if \(wahl === "an"\) return filmZeigen\(f\.id\);/.test(pr), "Ansehen startet den Film direkt");
 assert.ok(/filmMerken\(f\.id, "nein"\)/.test(pr) && !/filmMerken\(f\.id, "spaeter"\)/.test(pr), "Später wird nicht gemerkt (fragt wieder)");
 const zg = app.slice(app.indexOf("function filmZeigen"), app.indexOf("function filmWahl"));
-assert.ok(/<video src=/.test(zg) && /controls autoplay playsinline/.test(zg) && /v\.onplay = \(\) => filmMerken\(f\.id, "angesehen"\)/.test(zg), "Abspieler");
+assert.ok(/<video src=/.test(zg) && /controls autoplay playsinline/.test(zg) && /v\.ontimeupdate = \(\) => \{ if \(!lang && \(v\.currentTime \|\| 0\) >= FILM_KURZ_S\) \{ lang = true; filmMerken\(f\.id, "angesehen"\); \} \};/.test(zg), "Abspieler (2.879.0: angesehen erst ab 60 s, siehe film-kurz.test.mjs)");
 assert.ok(/✕ Schließen/.test(zg) && /v\.onerror/.test(zg), "Schließen und Fehlermeldung");
 assert.ok(/#filmSchicht \{ position: fixed/.test(html), "Abspiel-Schicht gestaltet");
 // Büro: Knopf in Raum- und Listenansicht
 assert.ok(/buIkon\("💼", "Tasche", "atStart\(\)", "Aktentasche"\) : "",\s+buFilmKnopf\(\),/.test(app) && /buKopfKnoepfe\(true, naechst\)/.test(app) && /buKopfKnoepfe\(false, null\)/.test(app), "🎬 Anleitung im Büro (Raum + Liste) – 2.768.0 als Icon-Knopf im gemeinsamen Kopf");
 // Server: Einstellung „filme“ nur mit geprüften Werten
 const e = server.slice(server.indexOf("  filme: (w) =>"), server.indexOf("  rundgang: (w) =>"));
-assert.ok(/\^\[a-z\]\{2,24\}\$/.test(e) && /\["angesehen", "ende", "nein"\]/.test(e) && /slice\(0, 30\)/.test(e), "Server-Einstellung filme geprüft");
+assert.ok(/\^\[a-z\]\{2,24\}\$/.test(e) && /\["angesehen", "ende", "nein", "kurz"\]/.test(e) /* 2.879.0 KC-CLUB-FILM-KURZ */ && /slice\(0, 30\)/.test(e), "Server-Einstellung filme geprüft");
 // 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: Kachel unter Technik öffnet Film + PDF; das PDF liegt im Repo und steht nicht in „Meine Dokumente“
 const technik = app.slice(app.indexOf("  programme: ["), app.indexOf("  admin: [],"));
 assert.ok(/\{ id: "datenschutz", sym: "🔐", t: "Sicherheit & Datenschutz",[^\n]*aktion: "sdStart\(\)" \}/.test(technik), "Kachel 🔐 Sicherheit & Datenschutz unter Technik");
@@ -52,7 +52,7 @@ assert.ok(/\{ id: "ansichtfilm", sym: "🧹", [^\n]*datei: "film\/app-selbst-ein
 assert.ok(/\(f\.fuer\(\) && !f\.wo\) \|\| ICH\.admin/.test(app), "Filme mit eigenem Ort stehen nicht im Büro");
 assert.ok(/\$\{f\.wo \|\| "im Büro oben unter 🎬 Film"\}/.test(pr), /* 2.855.0: Knopf heißt seit 2.768.0 „🎬 Film“ */ "Meldung nennt den richtigen Ort des Films");
 assert.ok(/v\.onended = \(\) => \{ ende\(true\); filmMerken\(f\.id, "ende"\);/.test(zg), "bis zum Ende dauerhaft gemerkt");
-assert.ok(/wie === "angesehen" && INIT\.einstellungen\?\.filme\?\.\[id\]\?\.wie === "ende"\) return;/.test(app), "„ende“ wird durch erneutes ▶ nicht überschrieben");
+assert.ok(/if \(wie === "angesehen" && vorher === "ende"\) return;/.test(app) /* 2.879.0: „vorher“ = gemerkter Stand */, "„ende“ wird durch erneutes ▶ nicht überschrieben");
 const zu = app.slice(app.indexOf("async function filmZuschauer"), app.indexOf("function filmWahl"));
 assert.ok(/!ICH\?\.admin\) return/.test(zu) && /api\("film_zuschauer"/.test(zu) && /meldeFehler\(e\)/.test(zu), "Zuschauer-Liste nur Admin, Fehler sichtbar (Regel 11)");
 const vi = fs.readFileSync("teile/videos.js", "utf8");

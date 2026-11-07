@@ -2150,12 +2150,18 @@ const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => (f.fuer() && !f.wo) || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
 const KOPFFILM_AB = "2026-11-08"; // KC-CLUB-KOPFFILM: ab hier für alle (vorher nur, wer den Ansichtfilm gesehen hat)
 const filmGesehen = (id) => ["angesehen", "ende"].includes(INIT?.einstellungen?.filme?.[id]?.wie); // „Nein, danke“ zählt nicht als gesehen
-const filmErledigt = (id) => !!INIT?.einstellungen?.filme?.[id]?.z;
+// 2.879.0 KC-CLUB-FILM-KURZ (Wunsch Hansi 07.11.2026, Anlass: Willfried schloss den Film nach 17 s und bekam ihn nie wieder angeboten): „angesehen“ erst nach
+// FILM_KURZ_S Sekunden Abspielzeit. Wer vorher schließt, bekommt „kurz“ (mit Zähler n) und den Film beim nächsten Start wieder angeboten – mit dem Hinweis,
+// dass er zuletzt unter 60 Sekunden lief. Höchstens FILM_KURZ_MAX-mal, dann nicht mehr von selbst (jederzeit über f.wo). Wer ihn schon gesehen hatte, bleibt dabei.
+const FILM_KURZ_S = 60, FILM_KURZ_MAX = 3;
+const filmErledigt = (id) => { const e = INIT?.einstellungen?.filme?.[id]; return !!e?.z && !(e.wie === "kurz" && (e.n || 1) < FILM_KURZ_MAX); };
 const FILM_START = { versuche: 0 };
 async function filmMerken(id, wie) {
-  if (!INIT || INIT.einstellungen?.filme?.[id]?.wie === wie) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
-  if (wie === "angesehen" && INIT.einstellungen?.filme?.[id]?.wie === "ende") return; // KC-CLUB-ANSICHTFILM: „bis zum Ende“ nicht durch erneutes ▶ überschreiben
-  const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString() } };
+  const vorher = INIT?.einstellungen?.filme?.[id]?.wie;
+  if (!INIT || (vorher === wie && wie !== "kurz")) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
+  if (wie === "angesehen" && vorher === "ende") return; // KC-CLUB-ANSICHTFILM: „bis zum Ende“ nicht durch erneutes ▶ überschreiben
+  if (wie === "kurz" && ["angesehen", "ende"].includes(vorher)) return; // KC-CLUB-FILM-KURZ: schon gesehen → kurzes Nochmal-Reinschauen ändert nichts
+  const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString(), ...(wie === "kurz" ? { n: (alt[id]?.wie === "kurz" ? alt[id].n || 1 : 0) + 1 } : {}) } };
   INIT.einstellungen = { ...(INIT.einstellungen || {}), filme: neu };
   try { await einstSpeichern("filme", neu); } catch (e) { console.warn("filme", e); } // Regel 11: bei Fehler fragt die App beim nächsten Start einfach noch einmal
 }
@@ -2164,7 +2170,9 @@ async function filmHinweisPruefen() {
   if (document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht, #filmSchicht") || aktuelleAnsicht !== "start") { if (++FILM_START.versuche < 20) setTimeout(filmHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
   const wahl = await new Promise((fertig) => {
     let d; const zu = (w) => { d?.remove(); fertig(w); };
+    const kurz = INIT?.einstellungen?.filme?.[f.id]?.wie === "kurz"; // KC-CLUB-FILM-KURZ
     d = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname || ICH.name)},</h3><p class="dlg-text">für dich gibt es einen Anleitungsfilm:</p>
+      ${kurz ? '<p class="hinweis film-kurz-hinweis" style="margin:0 0 8px">⏱️ Letztes Mal ist der Film unter 60 Sekunden gelaufen. Falls es ein technisches Problem gab, kannst du den Film hier nochmal starten.</p>' : ""}
       <button type="button" class="film-karte" data-w="an"><img src="${esc(f.bild)}" alt=""><span><b>${f.sym} ${esc(f.t)}</b><small>${esc(f.u)}</small><small>⏱️ ${esc(f.dauer)}</small></span></button>
       <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">▶ Film jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nein">Nein, danke</button></div>`, () => zu("spaeter"));
     d.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
@@ -2187,8 +2195,9 @@ function filmZeigen(id) {
   let gemeldet = false; const ende = (bis) => { if (gemeldet) return; gemeldet = true; const d = Math.max(1, Math.round((v.duration || 0) / 60)), m = Math.min(d, Math.round((v.currentTime || 0) / 60));
     spur(bis ? "film_ende" : `film_ab_${m}_${d}`, f.id); };
   spur("film_start", f.id);
-  s.querySelector("[data-zu]").onclick = () => { ende(false); zu(); };
-  v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
+  // KC-CLUB-FILM-KURZ (2.879.0): „angesehen“ erst nach 60 Sekunden Abspielzeit (vorher: schon beim ersten ▶) – schließt jemand früher, gilt „kurz“
+  let lang = false; v.ontimeupdate = () => { if (!lang && (v.currentTime || 0) >= FILM_KURZ_S) { lang = true; filmMerken(f.id, "angesehen"); } };
+  s.querySelector("[data-zu]").onclick = () => { ende(false); if (!lang) filmMerken(f.id, "kurz"); zu(); };
   v.onended = () => { ende(true); filmMerken(f.id, "ende"); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro oben unter 🎬 Film"}.`); };
   v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
   v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
@@ -2202,7 +2211,7 @@ async function filmZuschauer(id) {
   const block = (sym, titel, l) => `<h4 style="margin:12px 0 4px">${sym} ${titel} (${l.length})</h4>${l.length ? `<p class="hinweis" style="margin:0">${l.map((p) => `${esc(p.name)}${p.z ? ` <small>· ${esc(new Date(p.z).toLocaleDateString("de-DE"))}</small>` : ""}`).join(", ")}</p>` : `<p class="hinweis" style="margin:0">–</p>`}`;
   const d = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">👀 ${f.sym} ${esc(f.t)}</h3>
     <p class="hinweis" style="margin:0">Wer den Film gesehen hat – ohne Inhalte, nur ob und wann.</p>
-    ${block("✅", "Bis zum Ende", gruppe("ende"))}${block("▶", "Angefangen", gruppe("angesehen"))}${block("🙅", "Nein, danke", gruppe("nein"))}${block("⏳", "Noch nicht", gruppe(null))}`, () => d.remove());
+    ${block("✅", "Bis zum Ende", gruppe("ende"))}${block("▶", "Angefangen", gruppe("angesehen"))}${block("⏱️", "Unter 1 Minute geschlossen – wird nochmal angeboten", gruppe("kurz"))}${block("🙅", "Nein, danke", gruppe("nein"))}${block("⏳", "Noch nicht", gruppe(null))}`, () => d.remove());
   d.querySelector('[data-a="zu"]').onclick = () => d.remove();
 }
 function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere → auswählen
