@@ -1,10 +1,24 @@
 # Änderungen
 
-## 2.879.0 – 2026-11-07 – 📷 Foto zum Rezept des Monats (Club-Küche Nr. 1) · nur App
+## 2.881.0 – 2026-11-07 – 📷 Foto zum Rezept des Monats (Club-Küche Nr. 1) · nur App
 - Hansi hat ein eigenes Bild zu „Hähnchen mit Spitzkohl in Schmandsoße“ geschickt (07.11., mit ChatGPT erstellt, nicht das Bild der Rezeptseite; zweite, bessere Fassung). Es steht jetzt im Heft über dem Rezept (statt „📷 Foto folgt“), als `magazin/rezept/haehnchen-spitzkohl.webp` (aus dem Bildschirmfoto ausgeschnitten, ohne Ecken und Teilen-Knopf, 804 × 624). Darunter klein: „Abbildung mit KI erstellt – ein echtes Foto folgt, sobald jemand das Rezept nachkocht.“ (Hansi: „Ein wirkliches gekochtes kommt irgendwann später.“) Lädt jemand später im Rezeptbuch ein Foto hoch, hat dieses Vorrang.
 - Test: `tests/magazin-rezept.test.mjs`; im abgeschirmten Browser geprüft (Bild geladen, Seite 3/14).
-- Rückweg: App 2.878.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Rückweg: App 2.880.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
+## 2.880.0 – Film unter 1 Minute geschlossen → nochmal anbieten (KC-CLUB-FILM-KURZ)
+Wunsch Hansi 07.11.2026 (Anlass: Willfried schloss den Film „Deine App – so, wie du sie willst“ nach 17 Sekunden und bekam ihn danach nie wieder angeboten):
+„Wer zu schnell abbricht, unter einer Minute, sollte den Film nochmals angeboten bekommen mit dem Hinweis …“
+- Ein Film gilt erst nach 60 Sekunden Abspielzeit als „angesehen“ (vorher schon beim ersten ▶).
+- Wer ihn vorher mit ✕ schließt, bekommt ihn beim nächsten Start wieder angeboten – mit dem Hinweis „⏱️ Letztes Mal ist der Film unter 60 Sekunden gelaufen. Falls es ein technisches Problem gab, kannst du den Film hier nochmal starten.“ Höchstens 3-mal, danach nur noch über Technik → 🎬 Erklär-Videos.
+- Wer den Film schon gesehen hatte, bleibt „gesehen“, auch wenn er kurz nochmal reinschaut.
+- Admin-Zuschauerliste (👀): neue Gruppe „⏱️ Unter 1 Minute geschlossen – wird nochmal angeboten“.
+- Server: Einstellung „filme“ kennt „kurz“ mit Zähler. Test: tests/film-kurz.test.mjs. Rückweg: Version 2.879.0 einspielen.
+
+## 2.879.0 – Zeitansage: Videos „Oberfläche nach Wunsch“, „Neue Nachricht schreiben“ und „Termin eintragen“, zwei unsichtbare Schritte behoben (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- „Oberfläche nach Wunsch“ geprüft in beiden Ansichten (erweitert 18, einfach 9 Schritte; „Erweiterte Ansicht“ und „Kacheln anordnen“ gelten nur in der einfachen Ansicht).
+- „Neue Nachricht schreiben“: Nach „Weiter“ lud die Seite „Neu“ frisch mit verstecktem Schreibfeld – der Schritt „🏎️ Express“ wurde übersprungen, bei „⏰ Später senden“ zeigte das Video auf einen unsichtbaren Knopf. Jetzt blendet jeder dieser Schritte das Schreibfeld selbst ein (rgEingabeZeigen), alle 10 Schritte laufen. Test in tests/video-zeitansage.test.mjs.
+- Ebenso „Termin eintragen“ geprüft (8 Schritte ok; Auswahl „Privater Termin“ / „Terminanfrage“ wie in der App).
+- Zeitansage für beide eingeschaltet. Rückweg: Version 2.878.0 einspielen.
 ## 2.878.0 – 2026-11-07 – 🧯 Notfall-Paket bricht nicht mehr ab und spart Datenvolumen (KC-CLUB-NOTPAKET-LEICHTER, KC-CLUB-NOTPAKET-PAUSE-WAECHST) · Server 2.878.0 – [Hansi: einspielen]
 Anlass: Auswertung der Datenvolumen-Messung (2.869.0, Supabase-Warnung 05.11., Schonfrist bis 16.11.). Freigabe Hansi 06.11.: „Ja, mach es so wie du vorschlägst“.
 - **Befund:** Seit 06.11. 9:24 Uhr brach der Bau des Notfall-Pakets 16-mal hintereinander ab (Server-Grenzen, 546), erst um 1:39 Uhr klappte er wieder. Jeder Versuch holte trotzdem 3–6 MB aus der Datenbank – fast das gesamte gemessene Datenvolumen (≈ 60 MB in 13 Std.). Das Ersatz-Paket war dabei bis zu 19 Std. alt.

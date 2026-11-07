@@ -2199,7 +2199,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
     .map(([id, v]: [string, any]) => [id, { n: Math.max(0, Math.min(9999, Math.floor(Number(v?.n) || 0))), z: v?.z && !isNaN(Date.parse(String(v.z))) ? new Date(String(v.z)).toISOString() : null }])),
   // KC-CLUB-FILM-HINWEIS (2.738.0, Wunsch Hansi): Anleitungsfilme beim Start – je Film angesehen/„Nein, danke“ und wann (höchstens 30 Filme)
   filme: (w) => Object.fromEntries(Object.entries(w && typeof w === "object" && !Array.isArray(w) ? w : {}).filter(([id]) => /^[a-z]{2,24}$/.test(id)).slice(0, 30)
-    .map(([id, v]: [string, any]) => [id, { wie: ["angesehen", "ende", "nein"].includes(String(v?.wie)) ? String(v.wie) : null, /* KC-CLUB-ANSICHTFILM: + „ende“ (bis zum Ende gesehen) */ z: v?.z && !isNaN(Date.parse(String(v.z))) ? new Date(String(v.z)).toISOString() : null }])),
+    .map(([id, v]: [string, any]) => [id, { wie: ["angesehen", "ende", "nein", "kurz"].includes(String(v?.wie)) ? String(v.wie) : null, /* KC-CLUB-ANSICHTFILM: + „ende“ (bis zum Ende gesehen) · 2.880.0 KC-CLUB-FILM-KURZ: + „kurz“ (unter 60 s geschlossen) */ z: v?.z && !isNaN(Date.parse(String(v.z))) ? new Date(String(v.z)).toISOString() : null,
+      ...(String(v?.wie) === "kurz" ? { n: Math.min(9, Math.max(1, Math.round(Number(v?.n) || 1))) } : {}) }])),
   rundgang: (w) => ({ erledigt: w?.erledigt && !isNaN(Date.parse(String(w.erledigt))) ? new Date(String(w.erledigt)).toISOString() : null, wie: ["angesehen", "nein"].includes(String(w?.wie)) ? String(w.wie) : null }),
   einweisung: (w) => ({ an: w?.an !== false, gesehen: Object.fromEntries(Object.entries(w?.gesehen && typeof w.gesehen === "object" ? w.gesehen : {})
     .filter(([id, d]) => KA_ID.test(id) && typeof d === "string" && !isNaN(Date.parse(d))).slice(0, 40).map(([id, d]) => [id, new Date(String(d)).toISOString()])) }),

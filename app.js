@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.879.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.881.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-99RiSwV9Nxy4IRPyHGd4L1AL+GAB5ZurtzT6LFhufSptdzvfma7sGPIEWO8Q6qyb" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-0tIJn7T4I5a9qyNEUFcUjE1TQXE5YpXb46IfL8ATVQ4jCWdugwE9dJQywt1Oqgn5" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
@@ -2041,11 +2041,11 @@ const RUNDGAENGE = [
   { id: "inst_codes", stand: "1", zeit: "06.11.2026", sym: "🔑", t: "Link, Code & Co. – die Unterschiede", u: "Persönlicher Link, Code, Link verloren, Link einfügen (ca. 2 Min.)", st: () => RG_INST_CODES },
   { id: "ueberblick", stand: "4", zeit: "06.11.2026", sym: "🗺️", t: "Rundgang: die App im Überblick", u: "Oberfläche, Knöpfe, Register und was die App kann (ca. 3 Min.)", st: () => RUNDGANG },
   { id: "einstellungen", stand: "2", zeit: "06.11.2026", sym: "⚙️", t: "Alle Einstellungen erklärt", u: "Was jede Einstellung bedeutet – mit Beispielen (ca. 6 Min.)", st: () => RG_EINSTELLUNGEN },
-  { id: "oberflaeche", stand: "3", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
-  { id: "nachricht", stand: "4", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger, schreiben, Express, Favoriten (ca. 2 Min.)", st: () => RG_NACHRICHT },
+  { id: "oberflaeche", stand: "3", zeit: "06.11.2026", sym: "🎨", t: "Oberfläche nach Wunsch", u: "Kopf einrollen, Kacheln verschieben, verbergen, umdrehen, Zahlen, Register, Wischen (ca. 3 Min.)", st: () => RG_OBERFLAECHE }, // 2.258.0 KC-CLUB-ERKLAERVIDEOS-OBERFLAECHE
+  { id: "nachricht", stand: "4", zeit: "07.11.2026", sym: "💬", t: "Neue Nachricht schreiben", u: "Empfänger, schreiben, Express, Favoriten (ca. 2 Min.)", st: () => RG_NACHRICHT },
   { id: "nachrichten_1", stand: "2", zeit: "05.11.2026", sym: "📨", t: "Nachrichten – Folge 1: das Einfache", u: "Plus Neu, an wen, kurz schreiben, normal senden, Wichtig, Express mit Bestätigung (höchstens 5 am Tag), ⓘ und Haken, Liste deiner Chats (ca. 5 Min.)", st: () => RG_NACHRICHTEN_1() }, // KC-CLUB-VIDEO-NACHRICHTEN (Wunsch Hansi 05.11.2026)
   { id: "nachrichten_2", stand: "2", zeit: "05.11.2026", sym: "✨", t: "Nachrichten – Folge 2: Besonderheiten", u: "Kleine Zeile (fett, Farbe, Marker, nur die anderen), WhatsApp hin und zurück, Bildschirmfoto mit Markierung, Tage gruppiert, ⋮, Chat-Hintergrund, Verschlüsseln & Schlüsselbund (ca. 6 Min.)", st: () => RG_NACHRICHTEN_2() },
-  { id: "termin", stand: "1", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
+  { id: "termin", stand: "1", zeit: "07.11.2026", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
   { id: "pinnwand", stand: "2", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
   { id: "mitglieder", stand: "2", sym: "👥", t: "Mitglieder, anklopfen & anrufen", u: "Ansicht, Kachel, schreiben, anrufen (ca. 1 Min.)", st: () => RG_MITGLIEDER },
   { id: "zusagen", stand: "1", sym: "✅", t: "Zu- und absagen", u: "Antworten, Mitfahrt, Kalender (ca. 1 Min.)", st: () => RG_ZUSAGEN },
@@ -2150,12 +2150,18 @@ const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => (f.fuer() && !f.wo) || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
 const KOPFFILM_AB = "2026-11-08"; // KC-CLUB-KOPFFILM: ab hier für alle (vorher nur, wer den Ansichtfilm gesehen hat)
 const filmGesehen = (id) => ["angesehen", "ende"].includes(INIT?.einstellungen?.filme?.[id]?.wie); // „Nein, danke“ zählt nicht als gesehen
-const filmErledigt = (id) => !!INIT?.einstellungen?.filme?.[id]?.z;
+// 2.880.0 KC-CLUB-FILM-KURZ (Wunsch Hansi 07.11.2026, Anlass: Willfried schloss den Film nach 17 s und bekam ihn nie wieder angeboten): „angesehen“ erst nach
+// FILM_KURZ_S Sekunden Abspielzeit. Wer vorher schließt, bekommt „kurz“ (mit Zähler n) und den Film beim nächsten Start wieder angeboten – mit dem Hinweis,
+// dass er zuletzt unter 60 Sekunden lief. Höchstens FILM_KURZ_MAX-mal, dann nicht mehr von selbst (jederzeit über f.wo). Wer ihn schon gesehen hatte, bleibt dabei.
+const FILM_KURZ_S = 60, FILM_KURZ_MAX = 3;
+const filmErledigt = (id) => { const e = INIT?.einstellungen?.filme?.[id]; return !!e?.z && !(e.wie === "kurz" && (e.n || 1) < FILM_KURZ_MAX); };
 const FILM_START = { versuche: 0 };
 async function filmMerken(id, wie) {
-  if (!INIT || INIT.einstellungen?.filme?.[id]?.wie === wie) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
-  if (wie === "angesehen" && INIT.einstellungen?.filme?.[id]?.wie === "ende") return; // KC-CLUB-ANSICHTFILM: „bis zum Ende“ nicht durch erneutes ▶ überschreiben
-  const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString() } };
+  const vorher = INIT?.einstellungen?.filme?.[id]?.wie;
+  if (!INIT || (vorher === wie && wie !== "kurz")) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
+  if (wie === "angesehen" && vorher === "ende") return; // KC-CLUB-ANSICHTFILM: „bis zum Ende“ nicht durch erneutes ▶ überschreiben
+  if (wie === "kurz" && ["angesehen", "ende"].includes(vorher)) return; // KC-CLUB-FILM-KURZ: schon gesehen → kurzes Nochmal-Reinschauen ändert nichts
+  const alt = INIT.einstellungen?.filme || {}, neu = { ...alt, [id]: { wie, z: new Date().toISOString(), ...(wie === "kurz" ? { n: (alt[id]?.wie === "kurz" ? alt[id].n || 1 : 0) + 1 } : {}) } };
   INIT.einstellungen = { ...(INIT.einstellungen || {}), filme: neu };
   try { await einstSpeichern("filme", neu); } catch (e) { console.warn("filme", e); } // Regel 11: bei Fehler fragt die App beim nächsten Start einfach noch einmal
 }
@@ -2164,7 +2170,9 @@ async function filmHinweisPruefen() {
   if (document.querySelector(FENSTER_OFFEN + ", .dlg, #rgSchicht, #filmSchicht") || aktuelleAnsicht !== "start") { if (++FILM_START.versuche < 20) setTimeout(filmHinweisPruefen, 3000); return; } // erst wenn nichts anderes offen ist
   const wahl = await new Promise((fertig) => {
     let d; const zu = (w) => { d?.remove(); fertig(w); };
+    const kurz = INIT?.einstellungen?.filme?.[f.id]?.wie === "kurz"; // KC-CLUB-FILM-KURZ
     d = dlgOeffnen(`<h3 class="dlg-kopf">Hallo ${esc(ICH.vorname || ICH.name)},</h3><p class="dlg-text">für dich gibt es einen Anleitungsfilm:</p>
+      ${kurz ? '<p class="hinweis film-kurz-hinweis" style="margin:0 0 8px">⏱️ Letztes Mal ist der Film unter 60 Sekunden gelaufen. Falls es ein technisches Problem gab, kannst du den Film hier nochmal starten.</p>' : ""}
       <button type="button" class="film-karte" data-w="an"><img src="${esc(f.bild)}" alt=""><span><b>${f.sym} ${esc(f.t)}</b><small>${esc(f.u)}</small><small>⏱️ ${esc(f.dauer)}</small></span></button>
       <div class="dlg-knoepfe sh-knoepfe"><button class="knopf haupt" data-w="an">▶ Film jetzt ansehen</button><button class="knopf" data-w="spaeter">⏰ Später</button><button class="knopf" data-w="nein">Nein, danke</button></div>`, () => zu("spaeter"));
     d.querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => zu(b.dataset.w)));
@@ -2187,8 +2195,9 @@ function filmZeigen(id) {
   let gemeldet = false; const ende = (bis) => { if (gemeldet) return; gemeldet = true; const d = Math.max(1, Math.round((v.duration || 0) / 60)), m = Math.min(d, Math.round((v.currentTime || 0) / 60));
     spur(bis ? "film_ende" : `film_ab_${m}_${d}`, f.id); };
   spur("film_start", f.id);
-  s.querySelector("[data-zu]").onclick = () => { ende(false); zu(); };
-  v.onplay = () => filmMerken(f.id, "angesehen"); // einmal gestartet = nicht mehr beim Start anbieten
+  // KC-CLUB-FILM-KURZ (2.880.0): „angesehen“ erst nach 60 Sekunden Abspielzeit (vorher: schon beim ersten ▶) – schließt jemand früher, gilt „kurz“
+  let lang = false; v.ontimeupdate = () => { if (!lang && (v.currentTime || 0) >= FILM_KURZ_S) { lang = true; filmMerken(f.id, "angesehen"); } };
+  s.querySelector("[data-zu]").onclick = () => { ende(false); if (!lang) filmMerken(f.id, "kurz"); zu(); };
   v.onended = () => { ende(true); filmMerken(f.id, "ende"); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro oben unter 🎬 Film"}.`); };
   v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
   v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
@@ -2202,7 +2211,7 @@ async function filmZuschauer(id) {
   const block = (sym, titel, l) => `<h4 style="margin:12px 0 4px">${sym} ${titel} (${l.length})</h4>${l.length ? `<p class="hinweis" style="margin:0">${l.map((p) => `${esc(p.name)}${p.z ? ` <small>· ${esc(new Date(p.z).toLocaleDateString("de-DE"))}</small>` : ""}`).join(", ")}</p>` : `<p class="hinweis" style="margin:0">–</p>`}`;
   const d = dlgOeffnen(`<button type="button" class="dlg-x" data-a="zu" aria-label="Schließen">✕</button><h3 class="dlg-kopf">👀 ${f.sym} ${esc(f.t)}</h3>
     <p class="hinweis" style="margin:0">Wer den Film gesehen hat – ohne Inhalte, nur ob und wann.</p>
-    ${block("✅", "Bis zum Ende", gruppe("ende"))}${block("▶", "Angefangen", gruppe("angesehen"))}${block("🙅", "Nein, danke", gruppe("nein"))}${block("⏳", "Noch nicht", gruppe(null))}`, () => d.remove());
+    ${block("✅", "Bis zum Ende", gruppe("ende"))}${block("▶", "Angefangen", gruppe("angesehen"))}${block("⏱️", "Unter 1 Minute geschlossen – wird nochmal angeboten", gruppe("kurz"))}${block("🙅", "Nein, danke", gruppe("nein"))}${block("⏳", "Noch nicht", gruppe(null))}`, () => d.remove());
   d.querySelector('[data-a="zu"]').onclick = () => d.remove();
 }
 function filmWahl() { // Büro → 🎬 Anleitung: ein Film → sofort, mehrere → auswählen
