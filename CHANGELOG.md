@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.883.0 – Zeitansage: Video „Zettel an die Pinnwand“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 7 Schritte zeigen auf vorhandene Stellen. Zeitansage eingeschaltet.
+- Richtigstellung zu 2.879.0: „Express“ und „Später senden“ im Nachrichten-Video waren auch vorher sichtbar – der Fund kam von einem zu schnell weiterschaltenden Prüfwerkzeug. Die Änderung (Schreibfeld je Schritt einblenden) bleibt, sie schadet nicht. Der Fund bei „Weiteres Gerät“ (2.870.0) war echt.
+- Rückweg: Version 2.882.0 einspielen.
+
 ## 2.882.0 – 📰 Club-Küche: Vorwort, alle Ausgaben, Drucken/Teilen/Ablegen, Startnachricht (KC-CLUB-MAGAZIN-VORWORT, KC-CLUB-MAGAZIN-ARCHIV, KC-CLUB-DRUCK-ABLEGEN, Wunsch Hansi)
 - **Vorwort** mit festem Platz gleich nach dem Titelblatt (Seite 2, auch im Inhaltsverzeichnis). Nr. 1 (Januar 2027) hat ihr Vorwort; Ausgaben ohne eigenes zeigen einen Platzhalter für die Redaktion.
 - **📚 Alle Ausgaben** im Magazin-Menü: Kacheln für den ganzen Jahrgang (Nr. 1–12) mit Stand (erschienen / 🔒 Entwurf / in Vorbereitung). Mitglieder sehen nur erschienene Ausgaben (Erscheinungstag erreicht, Nr. 1: 01.01.2027), der Admin alle.

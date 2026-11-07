@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.882.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.883.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2046,7 +2046,7 @@ const RUNDGAENGE = [
   { id: "nachrichten_1", stand: "2", zeit: "05.11.2026", sym: "📨", t: "Nachrichten – Folge 1: das Einfache", u: "Plus Neu, an wen, kurz schreiben, normal senden, Wichtig, Express mit Bestätigung (höchstens 5 am Tag), ⓘ und Haken, Liste deiner Chats (ca. 5 Min.)", st: () => RG_NACHRICHTEN_1() }, // KC-CLUB-VIDEO-NACHRICHTEN (Wunsch Hansi 05.11.2026)
   { id: "nachrichten_2", stand: "2", zeit: "05.11.2026", sym: "✨", t: "Nachrichten – Folge 2: Besonderheiten", u: "Kleine Zeile (fett, Farbe, Marker, nur die anderen), WhatsApp hin und zurück, Bildschirmfoto mit Markierung, Tage gruppiert, ⋮, Chat-Hintergrund, Verschlüsseln & Schlüsselbund (ca. 6 Min.)", st: () => RG_NACHRICHTEN_2() },
   { id: "termin", stand: "1", zeit: "07.11.2026", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
-  { id: "pinnwand", stand: "2", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
+  { id: "pinnwand", stand: "2", zeit: "07.11.2026", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
   { id: "mitglieder", stand: "2", sym: "👥", t: "Mitglieder, anklopfen & anrufen", u: "Ansicht, Kachel, schreiben, anrufen (ca. 1 Min.)", st: () => RG_MITGLIEDER },
   { id: "zusagen", stand: "1", sym: "✅", t: "Zu- und absagen", u: "Antworten, Mitfahrt, Kalender (ca. 1 Min.)", st: () => RG_ZUSAGEN },
   { id: "fotos", stand: "2", sym: "📷", t: "Fotoalbum", u: "Fotos hochladen, suchen, Alben (ca. 1 Min.)", st: () => RG_FOTOS },
