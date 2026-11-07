@@ -190,7 +190,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.878.0";
+const SERVER_VERSION = "2.883.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2229,6 +2229,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-LIVETIPPEN (0.56.0): andere sehen live, was ich in einer Unterhaltung tippe (Standard: aus – freiwillig)
   live_tippen: (w) => ({ an: w?.an === true }),
   // KC-CLUB-RUHEZEIT (0.98.0): „Nicht stören“ – in diesem Zeitraum kein Push (Anrufe kommen weiter durch)
+  // 2.883.0 KC-CLUB-FRIST-ERINNERUNG (Wunsch Hansi 07.11.2026): Erinnerung vor ablaufenden Fristen – Wege, wie früh, welche Fristen
+  fristen: (w) => fristWahl(w),
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
@@ -8209,6 +8211,113 @@ async function antwortErinnerung2T() {
       url: APP_URL + "#termine" }, `club-antwort-2t:${t.id}`).catch((e) => console.error("antwort 2t", String(e)));
   }
 }
+// 2.883.0 KC-CLUB-FRIST-ERINNERUNG (Wunsch Hansi 07.11.2026: „dass Mitglieder einen Tag vorher informiert werden, z. B. Einspruchsfrist für Protokoll
+// vom xx.yy. läuft morgen ab, oder Zeit zum Abstimmen über Vorschlag von Thomas läuft morgen ab – möchtest du noch deine Stimme abgeben? … damit keine Fristen
+// übersehen werden, mit Voreinstellungen über Zahnrad“): Die stündliche Wartung schaut nach Fristen in den nächsten FRIST_MAX_TAGE Tagen –
+// Einspruchsfrist veröffentlichter Protokolle, offene Abstimmungen (nur wer noch nicht abgestimmt hat), offene Terminumfragen (nur wer noch nicht geantwortet
+// hat). Jedes Mitglied bekommt je Frist EINE Erinnerung, so früh wie es eingestellt hat (Standard: 1 Tag vorher, Push). Nur 8–21 Uhr, nicht in den letzten
+// 2 Stunden. „Schon erinnert“ steht im Protokoll (frist_erinnert: Art, Kennung, Personen – keine Inhalte), erst merken, dann senden – nie doppelt.
+const FRIST_STANDARD = { push: true, email: false, tage: 1, protokoll: true, abstimmung: true, umfrage: true };
+const FRIST_MAX_TAGE = 3, FRIST_MIN_STD = 2, FRIST_VORLAUF_STD = 4, FRIST_VON_STD = 8, FRIST_BIS_STD = 21;
+type FristWahl = typeof FRIST_STANDARD;
+function fristWahl(w: any): FristWahl {
+  const tage = Math.round(Number(w?.tage));
+  return { push: w?.push !== false, email: w?.email === true, tage: tage >= 1 && tage <= FRIST_MAX_TAGE ? tage : FRIST_STANDARD.tage,
+    protokoll: w?.protokoll !== false, abstimmung: w?.abstimmung !== false, umfrage: w?.umfrage !== false };
+}
+// „heute“, „morgen“, „übermorgen“, „in 3 Tagen“ (Kalendertage in Berlin)
+function fristWann(bis: string, jetzt0 = new Date()) {
+  const tag = (d: Date) => Date.parse(berlinTag(d) + "T12:00:00Z");
+  const n = Math.round((tag(new Date(bis)) - tag(jetzt0)) / 86400000);
+  return n <= 0 ? "heute" : n === 1 ? "morgen" : n === 2 ? "übermorgen" : `in ${n} Tagen`;
+}
+// wer bekommt die Erinnerung jetzt? (Einstellung je Person, wie viele Stunden noch, schon erinnert)
+function fristFaellig(art: "protokoll" | "abstimmung" | "umfrage", stdRest: number, wahl: FristWahl, schon: boolean) {
+  if (schon || !wahl[art] || (!wahl.push && !wahl.email)) return false;
+  return stdRest <= wahl.tage * 24 + FRIST_VORLAUF_STD && stdRest >= FRIST_MIN_STD;
+}
+async function fristErinnerung() {
+  const std = berlinStunde(new Date());
+  if (std < FRIST_VON_STD || std >= FRIST_BIS_STD) return;
+  const jetztMs = Date.now(), von = new Date(jetztMs + FRIST_MIN_STD * 3600000).toISOString(), bis = new Date(jetztMs + (FRIST_MAX_TAGE * 24 + FRIST_VORLAUF_STD) * 3600000).toISOString();
+  const [{ data: prs }, { data: vs }, { data: us }] = await Promise.all([
+    db.from("kc_club_sitzungsprotokolle").select("id,titel,datum,verfasser,einspruch_bis").eq("status", "veroeffentlicht").gt("einspruch_bis", von).lte("einspruch_bis", bis),
+    db.from("kc_club_vorschlaege").select("id,art,titel,frist,erstellt_von,ziel_ids,paket").eq("status", "offen").gt("frist", von).lte("frist", bis),
+    db.from("kc_club_terminumfragen").select("id,titel,frist,erstellt_von").eq("status", "offen").gt("frist", von).lte("frist", bis),
+  ]);
+  if (!(prs?.length || vs?.length || us?.length)) return; // der Normalfall: eine kleine Abfrage je Art, sonst nichts
+  type Frist = { s: string; art: "protokoll" | "abstimmung" | "umfrage"; bis: string; ziel: string[]; vars: (wann: string) => Record<string, unknown> };
+  const fristen: Frist[] = [], alle = (await sammelEmpfaenger()).map((x) => x.person_id), probe = await probeListe();
+  const datum = (d: string) => new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(d + "T12:00:00Z"));
+  // Protokolle: alle Mitglieder außer Verfasser und wer schon einen Einwand geschrieben hat
+  if (prs?.length) {
+    const { data: ew } = await db.from("kc_club_sitzungsprotokoll_einwaende").select("protokoll_id,person_id").in("protokoll_id", prs.map((x: any) => x.id));
+    for (const pr of prs as any[]) {
+      const hat = new Set((ew ?? []).filter((x: any) => x.protokoll_id === pr.id).map((x: any) => x.person_id));
+      const vom = pr.datum ? datum(pr.datum) : "";
+      fristen.push({ s: "protokoll:" + pr.id, art: "protokoll", bis: pr.einspruch_bis, ziel: alle.filter((id) => id !== pr.verfasser && !hat.has(id)),
+        vars: (w) => ({ titel: `⏳ Einspruchsfrist endet ${w}`, kurz: `Protokoll ${vom ? "vom " + vom : "„" + txt(pr.titel, 60) + "“"}: Einspruch noch bis ${wann(pr.einspruch_bis)} möglich.`,
+          betreff: `Köcheclub Werne – Einspruchsfrist endet ${w}: Protokoll ${vom ? "vom " + vom : txt(pr.titel, 60)}`,
+          text: `Hallo,\n\ndie Einspruchsfrist für das Protokoll ${vom ? "vom " + vom : "„" + txt(pr.titel, 80) + "“"} endet ${w} (${wann(pr.einspruch_bis, true)}).\n\nWenn etwas nicht stimmt, kannst du bis dahin in der Club-App einen Einwand schreiben: ${APP_URL}#protokolle\n\nViele Grüße\nKöcheclub Werne\n\n(Diese Erinnerung kannst du in der App unter ⚙️ Einstellungen → Benachrichtigungen → Fristen ändern.)`,
+          url: APP_URL + "#protokolle" }) });
+    }
+  }
+  // Abstimmungen: je Abstimmung bzw. je Abstimmungspaket einmal; nur wer abstimmen darf und noch gar nicht abgestimmt hat
+  const abst = (vs ?? []).filter((v: any) => !unterstuetzbar(v.art));
+  if (abst.length) {
+    const { data: st } = await db.from("kc_club_stimmen").select("vorschlag_id,person_id").in("vorschlag_id", abst.map((v: any) => v.id));
+    const gruppen = new Map<string, any[]>();
+    for (const v of abst as any[]) { const k = v.paket?.id ? "paket:" + v.paket.id : "vorschlag:" + v.id; gruppen.set(k, [...(gruppen.get(k) ?? []), v]); }
+    const leute = await personen([...new Set(abst.map((v: any) => v.erstellt_von).filter(Boolean))] as string[]);
+    for (const [s, g] of gruppen) {
+      const v0 = g[0], ids = new Set(g.map((v: any) => v.id)), frist = g.map((v: any) => v.frist).sort()[0];
+      const hat = new Set((st ?? []).filter((x: any) => ids.has(x.vorschlag_id)).map((x: any) => x.person_id));
+      const titel = txt(v0.paket?.titel || v0.titel, 80), von = vorname(leute.get(v0.erstellt_von) ?? null);
+      fristen.push({ s, art: "abstimmung", bis: frist, ziel: (v0.ziel_ids ?? alle).filter((id: string) => alle.includes(id) && !hat.has(id) && !probe.has(id)),
+        vars: (w) => ({ titel: `🗳️ Abstimmung endet ${w}`, kurz: `„${titel}“${von ? ` (Vorschlag von ${von})` : ""} – abstimmen bis ${wann(frist)}. Möchtest du noch deine Stimme abgeben?`,
+          betreff: `Köcheclub Werne – Abstimmung endet ${w}: ${titel}`,
+          text: `Hallo,\n\ndie Abstimmung „${titel}“${von ? ` (Vorschlag von ${von})` : ""} endet ${w} (${wann(frist, true)}).\n\nMöchtest du noch deine Stimme abgeben? ${APP_URL}#vorschlaege\n\nViele Grüße\nKöcheclub Werne\n\n(Diese Erinnerung kannst du in der App unter ⚙️ Einstellungen → Benachrichtigungen → Fristen ändern.)`,
+          url: APP_URL + "#vorschlaege" }) });
+    }
+  }
+  // Terminumfragen: wer noch keinen Termin beantwortet hat
+  if (us?.length) {
+    const { data: op } = await db.from("kc_club_terminumfrage_optionen").select("id,umfrage_id").in("umfrage_id", us.map((u: any) => u.id));
+    const { data: an } = (op ?? []).length ? await db.from("kc_club_terminumfrage_antworten").select("option_id,person_id").in("option_id", (op ?? []).map((o: any) => o.id)) : { data: [] as any[] };
+    const umfrageVon = new Map((op ?? []).map((o: any) => [o.id, o.umfrage_id]));
+    for (const u of us as any[]) {
+      const hat = new Set((an ?? []).filter((x: any) => umfrageVon.get(x.option_id) === u.id).map((x: any) => x.person_id));
+      fristen.push({ s: "umfrage:" + u.id, art: "umfrage", bis: u.frist, ziel: alle.filter((id) => id !== u.erstellt_von && !hat.has(id)),
+        vars: (w) => ({ titel: `📅 Terminumfrage endet ${w}`, kurz: `„${txt(u.titel, 80)}“ – bis ${wann(u.frist)}. Möchtest du noch angeben, wann du kannst?`,
+          betreff: `Köcheclub Werne – Terminumfrage endet ${w}: ${txt(u.titel, 80)}`,
+          text: `Hallo,\n\ndie Terminumfrage „${txt(u.titel, 80)}“ endet ${w} (${wann(u.frist, true)}).\n\nMöchtest du noch angeben, wann du kannst? ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne\n\n(Diese Erinnerung kannst du in der App unter ⚙️ Einstellungen → Benachrichtigungen → Fristen ändern.)`,
+          url: APP_URL + "#termine" }) });
+    }
+  }
+  const ziele = [...new Set(fristen.flatMap((f) => f.ziel))];
+  if (!ziele.length) return;
+  const [{ data: ein }, { data: schonP }] = await Promise.all([
+    db.from("kc_club_person_einstellung").select("person_id,wert").eq("schluessel", "fristen").in("person_id", ziele),
+    db.from("kc_club_protokoll").select("details").eq("aktion", "frist_erinnert").gte("zeit", new Date(jetztMs - (FRIST_MAX_TAGE + 30) * 86400000).toISOString()).in("details->>s", fristen.map((f) => f.s)).limit(2000),
+  ]);
+  const wahl = new Map((ein ?? []).map((x: any) => [x.person_id, fristWahl(x.wert)]));
+  const schon = new Map<string, Set<string>>();
+  for (const r of schonP ?? []) { const d: any = (r as any).details; if (!schon.has(d?.s)) schon.set(d?.s, new Set()); for (const p of d?.p ?? []) schon.get(d.s)!.add(p); }
+  for (const f of fristen) {
+    const stdRest = (Date.parse(f.bis) - jetztMs) / 3600000, je = new Map<string, string[]>();
+    for (const id of f.ziel) {
+      const w = wahl.get(id) ?? FRIST_STANDARD;
+      if (!fristFaellig(f.art, stdRest, w, !!schon.get(f.s)?.has(id))) continue;
+      const wege = [w.push ? "push" : "", w.email ? "email" : ""].filter(Boolean).join("+");
+      je.set(wege, [...(je.get(wege) ?? []), id]);
+    }
+    const ids = [...je.values()].flat();
+    if (!ids.length) continue;
+    await protokoll(null, "frist_erinnert", { s: f.s, art: f.art, p: ids }); // erst merken, dann senden – nie doppelt
+    const vars = f.vars(fristWann(f.bis));
+    for (const [wege, gruppe] of je) await sendenGewaehlt("club_erinnerung", gruppe, wege.split("+"), vars, `club-frist:${f.s}:${wege}`).catch((e) => console.error("frist erinnerung", String(e)));
+  }
+}
 // KC-CLUB-WICHTIG-UNGELESEN (2.287.0, Wunsch Hansi „nachvollziehen, ob er sie gelesen hat“): Eine ❗ wichtige Nachricht ist nach 24 Std.
 // bei jemandem noch nicht gelesen → EINMAL ein Push an den Absender mit den Namen. Ältere als 3 Tage werden nicht mehr nachgemeldet.
 // „Schon gemeldet“ steht im Protokoll (erst merken, dann senden – nie doppelt). Notfälle laufen über ihren eigenen Weg.
@@ -9255,6 +9364,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       if (stuendlich) await rtZaehlerWarnen().catch((e) => console.error("rt zaehler", String(e))); // KC-CLUB-RT-SPARBREMSE (2.230.0)
       await gastgeberStandLauf().catch((e) => console.error("gastgeber stand", String(e))); // KC-CLUB-GASTGEBER-STAND (2.238.0)
       if (stuendlich) await antwortErinnerung2T().catch((e) => console.error("antwort 2t", String(e))); // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0)
+      if (stuendlich) await fristErinnerung().catch((e) => console.error("frist erinnerung", String(e))); // 2.883.0 KC-CLUB-FRIST-ERINNERUNG
       if (stuendlich) await wichtigUngelesenMelden().catch((e) => console.error("wichtig ungelesen", String(e))); // KC-CLUB-WICHTIG-UNGELESEN (2.287.0)
       await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
       if (stuendlich) await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
