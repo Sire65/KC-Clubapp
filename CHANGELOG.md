@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.888.0 – Zeitansage: Videos „Mitglieder, anklopfen & anrufen“, „Zu- und absagen“, „Fotoalbum“ und „Erstattung beantragen“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft mit Beispiel-Mitgliedern: alle Schritte zeigen auf vorhandene Stellen („🍳 Gruppen“ erscheint nur, wenn es Gruppen gibt). Zeitansage eingeschaltet.
+- Ebenso „Zu- und absagen“ geprüft (mit Beispieltermin alle Schritte ok). Der Mitfahren-Schritt sagt jetzt, dass „Mitfahren“ erst nach „Ich komme“ erscheint – vorher war im Bild nichts davon zu sehen.
+- Ebenso „Fotoalbum“ geprüft (5 Schritte ok; Videos höchstens 60 Sekunden, eigene Alben – stimmt mit der App überein).
+- Ebenso „Erstattung beantragen“ geprüft (6 Schritte ok; sechs Arten, Bon, Überweisung oder bar – wie in der App).
+- Rückweg: Version 2.887.0 einspielen.
 ## 2.887.0 – 2026-11-08 – 📊 Nutzungsstatistik je Person: „Meine Nutzung“ und „Nutzung je Mitglied“ (KC-CLUB-NUTZUNG-PERSON) · App + Server 2.887.0 + Datenbank
 Wunsch Hansi 07.11.: „Pro Person eine Nutzungsstatistik. Mit Filter am besten unter Meins oder Technik. Zeige dort wie viel Nachrichten versendet, Termine, Bildschirmzeit, Zeit im Hintergrund und was fehlt noch. Am besten auch mit Grafiken.“ Konzept 08.11., Antworten: alle 3 Stufen, für den Admin nicht sperrbar, Mitglieder erfahren es nicht eigens – in „Meine Nutzung“ steht, dass für die Statistik bestimmte Sachen aufgezeichnet werden.
 - **🙋 Meins → „📊 Meine Nutzung“** (jedes Mitglied, nur die eigenen Zahlen) und **🛠️ Technik → „📊 Nutzung je Mitglied“** (nur Admin: Rangliste, sortierbar nach Zeit, Nachrichten, Tagen, Starts, Antworten, Fehler; Name antippen = alle Zahlen dieser Person).

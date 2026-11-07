@@ -5677,7 +5677,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.251.0 KC-CLUB-ERKLAERVIDEOS-PULS + -3 (Wunsch Hansi): erwähnte Knöpfe/Felder pulsieren; 7 weitere Videos
 {
   assert.ok(/function rgPulsStart\(s\)/.test(html) && /function rgStille\(\) \{ rgPulsStop\(\);/.test(html) && /\.rg-puls \{ animation: rgPuls/.test(seite) && /prefers-reduced-motion: reduce\) \{ \.rg-puls/.test(seite), "Puls nacheinander, stoppt beim Weiterblättern, ruhige Variante ohne Bewegung");
-  assert.ok(["mitglieder", "zusagen", "fotos", "erstattung", "hilfe", "sos", "helfen"].every((id) => new RegExp(`\\{ id: "${id}", stand: "\\d+", sym:`).test(html)), "7 neue Videos registriert");
+  assert.ok(["mitglieder", "zusagen", "fotos", "erstattung", "hilfe", "sos", "helfen"].every((id) => new RegExp(`\\{ id: "${id}", stand: "\\d+", (zeit: "[\\d.]+", )?sym:`).test(html)), "7 neue Videos registriert");
   const neu = html.slice(html.indexOf("// KC-CLUB-ERKLAERVIDEOS-3"), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR"));
   assert.ok(neu.length > 2000 && !/api\(|anrufen\(|anklopfen\(|erstattungSenden\(|sosAnrufen\(|faHochladen|einstellung_setzen/.test(neu.replace(/rgOn\("[^"]*"\)/g, "")), "neue Videos rufen nicht an, senden/speichern/laden nichts hoch");
   assert.ok(/SOS\.suche = ""; SOS\.offen = null; sosZeigen\(\); sosLaden\(\);/.test(neu) && /if \(n < 16\) setTimeout\(\(\) => rgTreffenZeigen\(n \+ 1\), 250\)/.test(neu), "SOS wie sosStart gefüllt; Termin-Info wartet auf die Liste");
