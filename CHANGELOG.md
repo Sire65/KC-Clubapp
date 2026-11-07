@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.879.0 – Zeitansage: Videos „Oberfläche nach Wunsch“, „Neue Nachricht schreiben“ und „Termin eintragen“, zwei unsichtbare Schritte behoben (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- „Oberfläche nach Wunsch“ geprüft in beiden Ansichten (erweitert 18, einfach 9 Schritte; „Erweiterte Ansicht“ und „Kacheln anordnen“ gelten nur in der einfachen Ansicht).
+- „Neue Nachricht schreiben“: Nach „Weiter“ lud die Seite „Neu“ frisch mit verstecktem Schreibfeld – der Schritt „🏎️ Express“ wurde übersprungen, bei „⏰ Später senden“ zeigte das Video auf einen unsichtbaren Knopf. Jetzt blendet jeder dieser Schritte das Schreibfeld selbst ein (rgEingabeZeigen), alle 10 Schritte laufen. Test in tests/video-zeitansage.test.mjs.
+- Ebenso „Termin eintragen“ geprüft (8 Schritte ok; Auswahl „Privater Termin“ / „Terminanfrage“ wie in der App).
+- Zeitansage für beide eingeschaltet. Rückweg: Version 2.878.0 einspielen.
 ## 2.878.0 – 2026-11-07 – 🧯 Notfall-Paket bricht nicht mehr ab und spart Datenvolumen (KC-CLUB-NOTPAKET-LEICHTER, KC-CLUB-NOTPAKET-PAUSE-WAECHST) · Server 2.878.0 – [Hansi: einspielen]
 Anlass: Auswertung der Datenvolumen-Messung (2.869.0, Supabase-Warnung 05.11., Schonfrist bis 16.11.). Freigabe Hansi 06.11.: „Ja, mach es so wie du vorschlägst“.
 - **Befund:** Seit 06.11. 9:24 Uhr brach der Bau des Notfall-Pakets 16-mal hintereinander ab (Server-Grenzen, 546), erst um 1:39 Uhr klappte er wieder. Jeder Versuch holte trotzdem 3–6 MB aus der Datenbank – fast das gesamte gemessene Datenvolumen (≈ 60 MB in 13 Std.). Das Ersatz-Paket war dabei bis zu 19 Std. alt.

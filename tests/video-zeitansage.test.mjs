@@ -26,4 +26,6 @@ for (const id of geprueft) {
 }
 // 2.868.0: „Weiteres Gerät“ Schritt 2 öffnet die Seite „App-Installation“ über rgAuf (vorher wurde er still übersprungen)
 { assert.ok(/sel: \['#v-einstellungen \[onclick="kurzcodeBlatt\(\)"\]'\], mussSel: true/.test(v) && /vor: \(\) => \{ rgSimWeg\(\); rgAuf\("install"\); \}/.test(v), "inst_geraet: Code-Knopf über rgAuf erreichbar"); }
+// 2.877.0: „Neue Nachricht schreiben“ – Express und „Später senden“ blenden das Schreibfeld selbst ein (vorher nach „Weiter“ unsichtbar/übersprungen)
+assert.ok(/function rgEingabeZeigen\(\) \{/.test(v) && (v.match(/rgEingabeZeigen\(\)/g) || []).length >= 4 && /vor: \(\) => rgEingabeZeigen\(\), sel: \["#spaeterKnopf"\], mussSel: true/.test(v), "Nachricht-Video: Schritte 4–6 mit Schreibfeld");
 console.log(`video-zeitansage: alle Prüfungen bestanden (${geprueft.length} Video${geprueft.length === 1 ? "" : "s"} geprüft)`);
