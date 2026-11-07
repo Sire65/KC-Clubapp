@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.877.0 – 2026-11-07 – 🍲 Rezept des Monats in der Club-Küche Nr. 1: Hähnchen mit Spitzkohl in Schmandsoße (KC-CLUB-MAGAZIN-REZEPT) · nur App
+Wunsch Hansi (07.11.): „Bringe das Rezept in den Rezeptteil und als Rezept des Monats in die Clubzeitschrift.“ (Bildschirmfotos eines Rezepts aus dem Netz)
+- **Rezeptbuch:** „Hähnchen mit Spitzkohl in Schmandsoße“ (Hauptgericht, 4 Portionen, 25 Min., von Hansi) eingetragen – Zutaten mit Mengen (Portionen umrechenbar), Zubereitung in 6 Schritten in eigenen Worten, Club-Tipp zu den Beilagen. (Eintrag direkt in der Datenbank, schon sichtbar.)
+- **Club-Küche Nr. 1 (Januar 2027):** Die Seite „🍲 Rezept des Monats“ zeigt jetzt fest dieses Rezept (vorher: automatischer Vorschlag aus dem Rezeptbuch). Bekommt das Rezept im Rezeptbuch später ein eigenes Foto, erscheint es auch im Heft; bis dahin „📷 Foto folgt – wer es nachkocht: Foto gern an die Redaktion schicken!“. Das Foto der Vorlage wird bewusst nicht übernommen (fremde Bildrechte).
+- **Fehler behoben:** Zutaten aus dem Rezeptbuch (Format Menge/Einheit/Name) erschienen im Heft als leere Punkte – jetzt mit Menge und Einheit.
+- Test: `tests/magazin-rezept.test.mjs`; Heft im abgeschirmten Browser geblättert (Seite 3/14, Zutaten und Zubereitung vollständig).
+- Rückweg: App 2.876.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.876.0 – 2026-11-06 – 📰 Club-Küche Nr. 1 = Januar 2027: Rückblick Weihnachtsmarkt, Witz vom Pass, Küchentipps, Fortsetzungsroman Folge 1 (KC-CLUB-MAGAZIN-NR1, KC-CLUB-MAGAZIN-ROMAN) · nur App
 Wunsch Hansi (06.11.): „Die erste Ausgabe soll im Januar 2027 erscheinen mit der Nachlese und Impressionen vom Weihnachtsmarkt“ – dazu ein Witz und ein, zwei Tipps, „so wie in richtigen Zeitschriften: mehrspaltig, in farbigen Kästen“.
 - **Ausgabe Nr. 1 = Januar 2027** (vorher Dezember 2026). Bis dahin zeigt „📖 Ausgabe lesen“ weiter Nr. 1.
