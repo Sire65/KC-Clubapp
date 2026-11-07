@@ -57,8 +57,8 @@ const MAG_AUSGABEN = {
         [1, "TL", "Paprikapulver, edelsüß"], [1, "Prise", "Muskat"], [null, "", "Salz und Pfeffer"], [null, "", "Petersilie zum Garnieren"]].map(([m, e, n]) => ({ m, e, n })),
       zubereitung: "1. Vorbereiten: Hähnchenbrust in Streifen oder mundgerechte Stücke schneiden. Vom Spitzkohl die äußeren Blätter und den Strunk entfernen, den Kohl in feine Streifen schneiden. Zwiebel und Knoblauch schälen und fein würfeln.\n2. Anbraten: Öl in einer großen Pfanne erhitzen, das Hähnchen von allen Seiten goldbraun braten und kurz herausnehmen.\n3. Kohl dazu: Zwiebel und Knoblauch im Bratfett glasig dünsten, dann den Spitzkohl zugeben und mitbraten, bis er etwas zusammenfällt.\n4. Soße: Schmand mit Gemüsebrühe, Paprikapulver, Muskat, Salz und Pfeffer glatt rühren und über den Kohl gießen. Das Hähnchen wieder in die Pfanne geben.\n5. Schmoren: Zugedeckt bei mittlerer Hitze schmoren lassen, bis das Fleisch zart und der Kohl weich ist.\n6. Anrichten: Mit Salz, Pfeffer und Muskat abschmecken und mit frisch gehackter Petersilie bestreuen.\n\nTipp aus dem Club: Dazu passen Salzkartoffeln, Reis oder ein frisches Bauernbrot." },
     // KC-CLUB-MAGAZIN-BACKSTUBE (Wunsch Hansi 07.11.2026 „mach bei Backstube Rezept für Feenküsse“): steht im Rezeptbuch (id 8109ae04…); Text in
-    // eigenen Worten. Foto erst, wenn Hansi bestätigt, dass es sein eigenes ist (Bild im Rezeptbuch vom 02.11., Vorlage familienkost.de).
-    backstube: { id: "8109ae04-2caf-4e53-8e51-f28fe332784f", titel: "Feenküsse", unter: "Mürbeteig-Taler mit Karamell-Nuss-Herz und Baiserhaube",
+    // eigenen Worten. Foto: Hansis eigenes Bild aus dem Rezeptbuch (bestätigt 07.11.2026 „Eigenes“).
+    backstube: { id: "8109ae04-2caf-4e53-8e51-f28fe332784f", foto: "18f7800f-bbc1-4c8f-9a3c-d6beb854a08d", titel: "Feenküsse", unter: "Mürbeteig-Taler mit Karamell-Nuss-Herz und Baiserhaube",
       fakten: [["Menge", "ca. 45 Stück"], ["Zubereitung", "ca. 25 Min."], ["Backen", "18 Min."], ["Kühlen", "1 Std."]],
       zutaten: [["Mürbeteig", ["160 g Weizenmehl", "60 g Zucker", "1 Päckchen Vanillezucker", "100 g kalte Butter", "2 Eigelb", "1 Prise Salz"]],
         ["Füllung", ["45 Toffifee"]], ["Baiserhaube", ["3 Eiweiß", "150 g Zucker", "1 Spritzer Zitronensaft"]]],
@@ -102,7 +102,7 @@ function magHeftHtml(id, x) {
   if (id === "roman") return magRomanHtml(x);
   if (id === "backstube") return `<div class="mag-rezept"><h3 class="mag-schlag">${esc(x.titel)}</h3><p class="mag-lead">${esc(x.unter)}</p>
     <div class="mag-fakten">${x.fakten.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join("")}</div>
-    <p class="hinweis" style="margin:4px 0 10px;padding:8px 10px;border:1px dashed currentColor;border-radius:10px;text-align:center">📷 <b>Foto folgt</b> – wer sie backt: Foto gern an die Redaktion schicken!</p>
+    ${x.foto ? `<img class="oa-bild mag-foto" data-anlage="${esc(x.foto)}" alt="${esc(x.titel)}">` : '<p class="hinweis" style="margin:4px 0 10px;padding:8px 10px;border:1px dashed currentColor;border-radius:10px;text-align:center">📷 <b>Foto folgt</b> – wer sie backt: Foto gern an die Redaktion schicken!</p>'}
     <h4>Zutaten</h4>${x.zutaten.map(([g, l]) => `<p style="margin:6px 0 2px"><b>${esc(g)}</b></p><ul>${l.map((z) => `<li>${esc(z)}</li>`).join("")}</ul>`).join("")}
     <h4>So wird's gemacht</h4><ol>${x.schritte.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
     <section class="mag-kasten"><small class="mag-marke-klein">Tipp aus der Backstube</small><p>${esc(x.tipp)}</p></section>

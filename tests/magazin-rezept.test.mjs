@@ -9,7 +9,7 @@ assert.ok(/z\.m \?\? z\.menge, z\.e \?\? z\.einheit, z\.n \?\? z\.name/.test(m),
 assert.ok(/📷 <b>Foto folgt<\/b>/.test(m) && !/leckerschmecker/i.test(m), "ohne fremdes Foto: Platzhalter");
 console.log("magazin-rezept: alle Prüfungen bestanden");
 // KC-CLUB-MAGAZIN-BACKSTUBE / -BASTELECKE (Wunsch Hansi 07.11.2026): Feenküsse in der Backstube, Karnevalsmaske in der Bastelecke
-assert.ok(/backstube: \{ id: "8109ae04-2caf-4e53-8e51-f28fe332784f", titel: "Feenküsse"/.test(m) && /if \(id === "backstube"\) return/.test(m), "Backstube: Feenküsse");
+assert.ok(/backstube: \{ id: "8109ae04-2caf-4e53-8e51-f28fe332784f", foto: "18f7800f-bbc1-4c8f-9a3c-d6beb854a08d", titel: "Feenküsse"/.test(m) && /if \(id === "backstube"\) return/.test(m), "Backstube: Feenküsse");
 assert.ok(/hobby: \{ marke: "Bastelecke", titel: "Helau und Alaaf: eine Maske aus dem Pappteller"/.test(m) && /Rosenmontag ist am 8\. Februar 2027/.test(m) && /if \(id === "hobby"\) return/.test(m), "Bastelecke: Karneval (Rosenmontag 8. Februar 2027)");
 assert.ok(/\{ id: "hobby", sym: "🧶", t: "Hobby- & Bastelecke", u: "Basteln, Garten, Heimwerken & Co\." \}|\{ id: "hobby", sym: "🧶", t: "Hobby- & Bastelecke", u: "Basteln, Garten, Heimwerken & Co\.",/.test(m), "Rubrik heißt Hobby- & Bastelecke, nicht mehr „später“");
 console.log("magazin-backstube/bastelecke: ok");
