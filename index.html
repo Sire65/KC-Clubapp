@@ -5306,6 +5306,8 @@
   .bl-inhalt.zoom img { max-width: none; max-height: none; width: 220%; cursor: zoom-out; }
   .bl-text { padding: 8px 12px; font-size: .92rem; border-top: 1px solid #e6dccf; max-height: 30%; overflow-y: auto; }
   .bl-html { padding: 16px 20px; overflow-y: auto; align-self: stretch; width: 100%; background: #fffdf6; }
+  .bl-buehne .bl-html { zoom: var(--blz, 1); } /* KC-CLUB-BLAETTERN-ZOOM: Schrift 100–160 % mit zwei Fingern, Text bricht neu um */
+  .bl-inhalt.zoom { touch-action: pan-x pan-y; } /* vergrößertes Bild auch seitlich verschieben (die Bühne selbst: pan-y, zwei Finger = Schrift-Zoom) */
   .bl-deckblatt { text-align: center; padding: 8vh 10px 20px; } .bl-deckblatt .bl-muetze { width: 110px; height: 110px; border-radius: 50%; background: #5d4037; display: inline-flex; align-items: center; justify-content: center; }
   .bl-deckblatt .bl-muetze img { width: 76px; } .bl-deckblatt h2 { font-size: 1.8rem; margin: 18px 0 4px; color: #5d4037; } .bl-deckblatt p { color: #6b5b53; margin: 0; }
   .bl-karte { text-align: center; padding: 6vh 8px 10px; } .bl-ksym { font-size: 3.4rem; } .bl-karte h2 { color: #5d4037; margin: 10px 0 8px; font-size: 1.45rem; }

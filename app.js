@@ -2531,6 +2531,7 @@ const HILFE = [
   { id: "schrift_zoom", thema: "darstellung", sym: "🔍", t: "Schrift größer ziehen – mit zwei Fingern", x: "Zu klein zum Lesen? Lege <b>zwei Finger</b> auf den Bildschirm und ziehe sie <b>auseinander</b> – Nachrichten, Zettel und Texte werden größer (Knöpfe und Leisten bleiben, wie sie sind). Zusammenschieben macht sie kleiner. Die Größe bleibt gemerkt. Zurück auf normal: mit zwei Fingern <b>doppelt tippen</b> oder unter ⚙️ → Darstellung → „🔍 Schriftgröße“. <b>Ganz ausschalten:</b> ⚙️ → Darstellung → „✌️ Schrift mit zwei Fingern ändern“ (A− / A+ gehen weiter). Ein aufliegender Daumen beim Scrollen verstellt die Schrift nicht mehr.", seit: "2.364.0" }, // 2.364.0 KC-CLUB-SCHRIFT-ZOOM
   { id: "express", thema: "nachrichten", sym: "🏎️", t: "Eilt? Als Express-Sendung schicken", x: "Über dem Schreibfeld <b>🏎️ Express</b> anhaken, dann senden: Ein Rennwagen bringt die Nachricht – sie kommt <b>sofort</b> an, auch bei stummgeschaltetem Chat und nachts. Beim Empfänger geht ein Fenster auf (Öffnen / Später / Nein) und er kann den <b>Empfang bestätigen</b> – das siehst du dann unter deiner Nachricht. Höchstens 5 am Tag – neben Express steht, wie viele du heute schon verschickt hast (z. B. <b>2/5</b>). Express und <b>❗ Wichtig</b> kannst du auch zusammen anhaken. Nur für Eiliges.", seit: "2.362.0" }, // 2.362.0 KC-CLUB-EXPRESS
   { id: "fee", thema: "darstellung", sym: "🧚", t: "Eine kleine Fee zu Besuch", x: "Bei jeder <b>20. Anmeldung</b> schwebt eine kleine Fee durchs obere Startbild, bleibt kurz stehen und lächelt. <b>Tipp sie an</b> – dann schenkt sie dir einen schönen Spruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🧚 Die kleine Fee</b>.", zeig: () => einstiegHin("effekte", "setFee"), seit: "2.372.0" },
+  { id: "blaettern_zoom", thema: "club", sym: "🔍", t: "Beim Blättern: Schrift größer mit zwei Fingern", x: "Im Club-Magazin, im Roman und überall, wo du blätterst: <b>zwei Finger auseinanderziehen</b> macht die Schrift größer (bis 160 %), zusammenschieben wieder kleiner. Der Text bricht neu um, und dein Handy merkt sich die Größe. <b>Umblättern</b> geht mit einem zügigen Wisch zur Seite oder mit ‹ ›. Wer langsam nach unten liest, blättert nicht mehr aus Versehen um.", seit: "2.877.0" }, // KC-CLUB-BLAETTERN-ZOOM
   { id: "kaefer", thema: "darstellung", sym: "🐞", t: "Ein Marienkäfer krabbelt vorbei", x: "Bei jedem <b>50. Start</b> krabbelt ein kleiner Marienkäfer über die Startseite, bleibt in der Mitte stehen, <b>schaut dich an und lächelt</b> – dann krabbelt er weiter. <b>Tipp ihn an</b> für einen Glücksspruch. Vorab ansehen oder per Häkchen abschalten: <b>⚙️ → ✨ Effekte → 🐞 Der Marienkäfer</b>.", zeig: () => einstiegHin("effekte", "setKaefer"), seit: "2.872.0" }, // KC-CLUB-MARIENKAEFER
   { id: "klee", thema: "darstellung", sym: "🍀", t: "Ein Glücksklee weht herein", x: "Bei jedem <b>25. Start</b> pustet ein Windstoß ein <b>vierblättriges Kleeblatt</b> von oben ins Bild. Es bleibt kurz liegen, dann weht es der Wind wieder fort. <b>Tipp es an</b> für einen Glücksspruch. Es kommt immer nur eine Überraschung: Glückskeks vor Marienkäfer vor Kleeblatt vor Fee. Ansehen oder abschalten: <b>⚙️ → ✨ Effekte → 🍀 Der Glücksklee</b>.", zeig: () => einstiegHin("effekte", "setKlee"), seit: "2.872.0" }, // KC-CLUB-GLUECKSKLEE
   { id: "boten", thema: "nachrichten", sym: "🚴", t: "Wer bringt deine Nachricht?", x: "Deinen Boten wählst du unter <b>⚙️ → „✨ Effekte“ → „✉️ Effekt beim Senden“</b>: Papierflieger, Brieftaube, Postauto, <b>Postbote mit Fahrrad</b>, <b>Flaschenpost</b>, <b>Rakete</b>, <b>Luftballon</b>, <b>Uhu mit Posttasche</b> oder <b>Baron Münchhausen</b> auf der Kanonenkugel – oder abwechselnd. Der Empfänger sieht deinen Boten auch ankommen. Verschlüsselte Nachrichten (🔒, mit Schlüssel oder Schlüsselbund) bringt immer der <b>🕵️ Geheimagent</b> mit Aktenkoffer – vorher dreht sich am Senden-Knopf kurz ein 🔑 Schlüssel. Nur 🏎️ Express geht vor (Rennwagen).", zeig: () => einstiegHin("effekte", "sendeEffektWahl"), seit: "2.362.0" },
@@ -33002,7 +33003,7 @@ function blAlbum() {
 function blOeffnen(titel, seiten, register) {
   BL.titel = titel; BL.seiten = seiten; BL.i = 0; BL.offen = true; BL.lauf++;
   BL.farben = Object.fromEntries(register.map((r, i) => [r, AR_FARBEN[i % AR_FARBEN.length]]));
-  $("blaettern").classList.remove("versteckt"); document.body.style.overflow = "hidden";
+  $("blaettern").classList.remove("versteckt"); document.body.style.overflow = "hidden"; blZoomSetzen(blZoomLesen()); // KC-CLUB-BLAETTERN-ZOOM
   history.pushState({ ...(history.state || {}), blaettern: true }, "", location.href);
   blZeigen(0);
 }
@@ -33092,8 +33093,37 @@ async function blNachladen() {
   }
   const nx = BL.seiten[BL.i + (blDoppel() ? 2 : 1)]; if (nx?.art === "bild" && nx.url) new Image().src = nx.url; // nächste Seite vorladen
 }
-$("blBuehne").addEventListener("touchstart", (e) => { BL.x = e.touches.length === 1 && !e.target.closest(".zoom") ? e.touches[0].clientX : null; }, { passive: true });
-$("blBuehne").addEventListener("touchend", (e) => { if (BL.x === null) return; const dx = e.changedTouches[0].clientX - BL.x; BL.x = null; if (Math.abs(dx) > 50) blWeiter(dx < 0 ? 1 : -1); }, { passive: true });
+// KC-CLUB-BLAETTERN-WISCHEN (Fund Hansi 07.11.2026 „Wenn man langsam liest und den Text langsam runterschiebt, klappt er auf einmal komplett ein –
+// das passiert oft“): vorher reichten 50 px zur Seite, egal wie weit der Finger dabei nach unten ging. Beim langsamen Lesen rutscht der Finger leicht
+// schräg – und die Seite blätterte um. Jetzt blättert nur ein deutlich waagerechter, zügiger Wisch; wer erst nach unten schiebt, liest – dann nie.
+// KC-CLUB-BLAETTERN-ZOOM (Wunsch Hansi „Textzoom mit 2 Fingern, aber nicht zu viel“): zwei Finger auseinander = Schrift größer (100–160 %), gilt für
+// Text-Seiten (Magazin, Roman, Karten), bleibt auf dem Gerät gemerkt. Der Text bricht neu um (CSS zoom), nichts ragt aus der Seite.
+const BL_ZOOM = [1, 1.6], BL_ZOOM_KEY = "kc_club_bl_zoom";
+let BL_T = null;
+const blZoomLesen = () => { try { return Math.min(BL_ZOOM[1], Math.max(BL_ZOOM[0], Number(localStorage.getItem(BL_ZOOM_KEY)) || 1)); } catch { return 1; } };
+function blZoomSetzen(z, merken) {
+  z = Math.round(Math.min(BL_ZOOM[1], Math.max(BL_ZOOM[0], z)) * 20) / 20; $("blBuehne").style.setProperty("--blz", z); BL.zoom = z;
+  if (merken) try { localStorage.setItem(BL_ZOOM_KEY, String(z)); } catch {}
+  return z;
+}
+const blAbstand = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+$("blBuehne").addEventListener("touchstart", (e) => {
+  if (e.touches.length === 2) { BL_T = { zwei: true, d0: blAbstand(e.touches) || 1, z0: BL.zoom || 1 }; return; }
+  BL_T = e.touches.length === 1 && !e.target.closest(".zoom") ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), lesen: false } : null;
+}, { passive: true });
+$("blBuehne").addEventListener("touchmove", (e) => {
+  if (!BL_T) return;
+  if (BL_T.zwei) { if (e.touches.length === 2 && e.target.closest(".bl-html")) blZoomSetzen(BL_T.z0 * blAbstand(e.touches) / BL_T.d0); return; }
+  const t = e.touches[0], dx = t.clientX - BL_T.x, dy = t.clientY - BL_T.y;
+  if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx) * 0.7) BL_T.lesen = true; // erst nach unten/oben geschoben = Lesen, kein Blättern
+}, { passive: true });
+$("blBuehne").addEventListener("touchend", (e) => {
+  if (!BL_T) return;
+  if (BL_T.zwei) { if (!e.touches.length) { const z = blZoomSetzen(BL.zoom || 1, true); melde(`🔍 Schrift ${Math.round(z * 100)} %`); BL_T = null; } return; }
+  const t = e.changedTouches[0], dx = t.clientX - BL_T.x, dy = t.clientY - BL_T.y, dauer = Date.now() - BL_T.t, lesen = BL_T.lesen; BL_T = null;
+  if (!lesen && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2.5 && dauer < 900) blWeiter(dx < 0 ? 1 : -1);
+}, { passive: true });
+$("blBuehne").addEventListener("touchcancel", () => { BL_T = null; }, { passive: true });
 document.addEventListener("keydown", (e) => { if (!BL.offen) return; if (e.key === "ArrowRight") blWeiter(1); else if (e.key === "ArrowLeft") blWeiter(-1); else if (e.key === "Escape") blZu(); });
 addEventListener("resize", () => { if (BL.offen) blZeigen(0); });
 // KC-CLUB-CHRONIK (1.64.0): Anleitung oben im Ordner (und als erste Seite beim Blättern) + Anlegen mit Gründungsjahr
