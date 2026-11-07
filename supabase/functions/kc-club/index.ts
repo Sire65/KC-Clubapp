@@ -190,7 +190,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.885.0";
+const SERVER_VERSION = "2.886.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2190,6 +2190,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   vorlesestimme: (w) => ({ art: w?.art === "m" || w?.art === "w" ? w.art : null }),
   // KC-CLUB-SPIEL-EINLADUNG (2.12.0, Wunsch Hansi): „Lust auf eine Partie?“ beim App-Start – „Keine Spiele“ schaltet aus (Standard an)
   spiel_einladung: (w) => ({ an: w?.an !== false }),
+  // KC-CLUB-PUSH-NEU-FRAGEN (07.11.2026): „Nicht mehr fragen“ bzw. „Nein“ (erst nach 7 Tagen wieder) – gilt auf allen Geräten
+  push_frage: (w) => ({ nie: w?.nie === true, bis: w?.bis && !isNaN(Date.parse(String(w.bis))) ? new Date(String(w.bis)).toISOString() : null }),
   // KC-CLUB-EINWEISUNG (2.4.0): Erklärkarte beim ersten Öffnen eines Bereichs – an/aus (Standard an) + welche schon gesehen
   // KC-CLUB-RUNDGANG-HINWEIS (2.243.0, Wunsch Hansi): Startseiten-Hinweis auf den Rundgang – erledigt (angesehen/„Nein, danke“) seit wann
   // KC-CLUB-START-HINWEIS (2.267.0, Wunsch Hansi): einmaliger Hinweis beim nächsten Start (vom Admin gesetzt); das Mitglied setzt nur „erledigt“
@@ -20376,7 +20378,11 @@ Köcheclub-App`,
         // 2.481.0 KC-CLUB-PUSH-ERLAUBNIS-WEG (Fall Dieter): aktive Abos mit genau derselben Geräte-Kennung (User-Agent) – hat das Handy die
         // Erlaubnis verloren, sind das die alten Abos DIESES Geräts (der Push-Dienst nimmt sie weiter an, das Handy zeigt sie aber nie)
         const ua = txt(p.ua, 400), gleich = ua ? (data ?? []).filter((x: any) => x.active && x.endpoint !== eigen && x.user_agent === ua).length : 0;
-        return json({ aktiv: (data ?? []).filter((x: any) => x.active).length, frueher: (data ?? []).length > 0, diesesBekannt: !!dies, diesesAktiv: !!dies?.active, gleichesGeraet: gleich });
+        // KC-CLUB-PUSH-NEU-FRAGEN (07.11.2026): Wahl „nicht mehr fragen / später“ und „Kommunikation aus“ (dann nie fragen)
+        const [{ data: pf }, ka] = await Promise.all([db.from("kc_club_person_einstellung").select("wert").eq("person_id", ich.person_id).eq("schluessel", "push_frage").maybeSingle(),
+          kommunikationAus().then((s) => s.has(ich.person_id), () => true)]);
+        return json({ aktiv: (data ?? []).filter((x: any) => x.active).length, frueher: (data ?? []).length > 0, diesesBekannt: !!dies, diesesAktiv: !!dies?.active, gleichesGeraet: gleich,
+          frage: pf?.wert ?? null, kommAus: ka });
       }
       // ----- KC-CLUB-GERAETE (0.98.0): welche Geräte bekommen meine Push-Meldungen? (nur eigene) -----
       case "geraete_liste": {

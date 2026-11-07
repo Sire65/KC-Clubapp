@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.885.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.886.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -32120,7 +32120,8 @@ async function pushPruefen() {
   // Jetzt: alte Abos DIESES Geräts abmelden – dann sagt das Anklopfen dem Gegenüber ehrlich „bekommt gerade keine Benachrichtigungen“.
   const altHier = (r.diesesAktiv ? 1 : 0) + (r.gleichesGeraet || 0);
   if (altHier) try { await api("push_abmelden", { endpoint: sub?.endpoint || "", erlaubnisWeg: true, ua: navigator.userAgent, erlaubnis: Notification.permission }); } catch {}
-  if (!r.frueher || (r.aktiv || 0) - altHier > 0) return; // nie Push gehabt (bewusst ohne) oder ein anderes Gerät bekommt ihn
+  if ((r.aktiv || 0) - altHier > 0) return; // ein anderes Gerät bekommt ihn
+  if (!r.frueher) return pushNeuFragen(r); // KC-CLUB-PUSH-NEU-FRAGEN (07.11.2026): nie Push gehabt → freundlich fragen (vorher: nie gefragt)
   const heute = heuteIso(); if (lsLesen("kc_club_push_wieder_gefragt") === heute) return; lsSetzen("kc_club_push_wieder_gefragt", heute);
   const gesperrt = Notification.permission === "denied";
   const f = dlgOeffnen(`<h3 class="dlg-kopf">🔔 Deine Benachrichtigungen sind aus</h3>
@@ -32129,6 +32130,27 @@ async function pushPruefen() {
     ${gesperrt ? `<p class="dlg-text">Sie sind im Handy gesperrt. So erlaubst du sie wieder: <b>Handy-Einstellungen → Apps → Chrome (bzw. Club-App) → Benachrichtigungen → an</b>. Danach die App neu öffnen.</p>` : ""}
     <div class="dlg-knoepfe">${gesperrt ? "" : '<button class="knopf haupt" data-w="an">🔔 Jetzt wieder einschalten</button>'}<button class="knopf" data-w="spaeter">Später</button></div>`, () => {});
   f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => { f.remove(); if (b.dataset.w === "an") await pushEinschalten(); }));
+}
+// KC-CLUB-PUSH-NEU-FRAGEN (07.11.2026, Wunsch Hansi): Wer noch nie Push hatte, wird beim Start gefragt – höchstens einmal am Tag.
+// Ja → sofort einschalten · Nein → in 7 Tagen wieder · Später → morgen wieder · Nicht mehr fragen → nie mehr (auf allen Geräten).
+// Nie bei „Kommunikation aus“; sind Benachrichtigungen im Handy gesperrt, steht dabei, wo man sie erlaubt.
+const PUSH_NEU_NEIN_TAGE = 7;
+function pushNeuFragen(r) {
+  const w = r?.frage || {};
+  if (r?.kommAus || w.nie || (w.bis && Date.parse(w.bis) > Date.now())) return;
+  const heute = heuteIso(); if (lsLesen("kc_club_push_neu_gefragt") === heute) return; lsSetzen("kc_club_push_neu_gefragt", heute);
+  const gesperrt = Notification.permission === "denied", vn = ICH?.vorname ? " " + esc(ICH.vorname) : "";
+  const merken = (wert) => api("einstellung_setzen", { schluessel: "push_frage", wert }).catch(() => {});
+  const f = dlgOeffnen(`<h3 class="dlg-kopf">🔔 Push einschalten?</h3>
+    <p class="dlg-text">Hallo${vn}, du hast noch nicht Push aktiviert. So erfährst du nicht zeitnah, wenn es etwas Neues in der Club-App gibt. Möchtest du jetzt einschalten?</p>
+    ${gesperrt ? `<p class="dlg-text">Dein Handy hat Benachrichtigungen für die Club-App gesperrt. So erlaubst du sie: <b>Handy-Einstellungen → Apps → Chrome (bzw. Club-App) → Benachrichtigungen → an</b>, danach die App neu öffnen.</p>` : ""}
+    <div class="dlg-knoepfe">${gesperrt ? "" : '<button class="knopf haupt" data-w="ja">🔔 Ja, jetzt einschalten</button>'}<button class="knopf" data-w="nein">Nein</button><button class="knopf" data-w="spaeter">Später</button><button class="knopf" data-w="nie">Nicht mehr fragen</button></div>`, () => {});
+  f.querySelectorAll("[data-w]").forEach((b) => (b.onclick = async () => {
+    f.remove(); const was = b.dataset.w;
+    if (was === "ja") return pushEinschalten();
+    if (was === "nein") merken({ bis: new Date(Date.now() + PUSH_NEU_NEIN_TAGE * 86400000).toISOString() });
+    if (was === "nie") { merken({ nie: true }); melde("In Ordnung – einschalten kannst du Push jederzeit unter ⚙️ → 🔔 Benachrichtigungen."); }
+  }));
 }
 async function pushUmschalten() {
   const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();

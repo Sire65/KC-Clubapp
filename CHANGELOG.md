@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.886.0 – 2026-11-07 – Push-Frage beim Start
+- Wunsch Hansi 07.11.: Wer Push noch nie eingeschaltet hat, wird beim Start freundlich gefragt („Hallo …, du hast noch nicht Push aktiviert …“) – 🔔 Ja (schaltet sofort ein), Nein (in 7 Tagen wieder), Später (morgen), Nicht mehr fragen. Höchstens einmal am Tag, nie bei „Kommunikation aus“; gesperrte Benachrichtigungen mit Hinweis, wo man sie erlaubt (KC-CLUB-PUSH-NEU-FRAGEN).
+
 ## 2.885.0 – 2026-11-07 – ⏳ Erinnerung vor Fristen: Protokoll-Einspruch, Abstimmungen, Terminumfragen (KC-CLUB-FRIST-ERINNERUNG) · App + Server 2.885.0 – 20-Uhr-Termin
 Wunsch Hansi 07.11.: „Mitglieder einen Tag vorher informieren, z. B. Einspruchsfrist für Protokoll vom xx.yy. läuft morgen ab, oder Zeit zum Abstimmen über Vorschlag von Thomas läuft morgen ab – möchtest du noch deine Stimme abgeben? … damit keine Fristen übersehen werden, mit Voreinstellungen über Zahnrad.“
 - **Server (stündliche Wartung):** sucht Fristen in den nächsten 3 Tagen – Einspruchsfrist veröffentlichter Protokolle (nicht an den Verfasser und nicht an wer schon einen Einwand geschrieben hat), offene Abstimmungen (je Abstimmung bzw. Abstimmungspaket einmal, nur wer abstimmen darf und noch nicht abgestimmt hat, nicht in der Probephase), offene Terminumfragen (nur wer noch nicht geantwortet hat). Text z. B. „🗳️ Abstimmung endet morgen – „Sommerfest“ (Vorschlag von Thomas) – abstimmen bis … Möchtest du noch deine Stimme abgeben?“
