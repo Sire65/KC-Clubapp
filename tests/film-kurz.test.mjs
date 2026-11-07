@@ -1,4 +1,4 @@
-// KC-CLUB-FILM-KURZ (2.879.0, Wunsch Hansi 07.11.2026): Film unter 60 s geschlossen → nochmal anbieten (mit Hinweis), höchstens 3-mal.
+// KC-CLUB-FILM-KURZ (2.880.0, Wunsch Hansi 07.11.2026): Film unter 60 s geschlossen → nochmal anbieten (mit Hinweis), höchstens 3-mal.
 // Aufruf: node tests/film-kurz.test.mjs (offline)
 import assert from "node:assert/strict";
 import fs from "node:fs";

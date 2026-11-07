@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.879.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.880.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2150,7 +2150,7 @@ const filmeFuerMich = () => (ICH ? FILME.filter((f) => f.fuer()) : []);
 const filmeImBuero = () => (ICH ? FILME.filter((f) => (f.fuer() && !f.wo) || ICH.admin) : []); // Admin sieht alle Filme (zum Prüfen)
 const KOPFFILM_AB = "2026-11-08"; // KC-CLUB-KOPFFILM: ab hier für alle (vorher nur, wer den Ansichtfilm gesehen hat)
 const filmGesehen = (id) => ["angesehen", "ende"].includes(INIT?.einstellungen?.filme?.[id]?.wie); // „Nein, danke“ zählt nicht als gesehen
-// 2.879.0 KC-CLUB-FILM-KURZ (Wunsch Hansi 07.11.2026, Anlass: Willfried schloss den Film nach 17 s und bekam ihn nie wieder angeboten): „angesehen“ erst nach
+// 2.880.0 KC-CLUB-FILM-KURZ (Wunsch Hansi 07.11.2026, Anlass: Willfried schloss den Film nach 17 s und bekam ihn nie wieder angeboten): „angesehen“ erst nach
 // FILM_KURZ_S Sekunden Abspielzeit. Wer vorher schließt, bekommt „kurz“ (mit Zähler n) und den Film beim nächsten Start wieder angeboten – mit dem Hinweis,
 // dass er zuletzt unter 60 Sekunden lief. Höchstens FILM_KURZ_MAX-mal, dann nicht mehr von selbst (jederzeit über f.wo). Wer ihn schon gesehen hatte, bleibt dabei.
 const FILM_KURZ_S = 60, FILM_KURZ_MAX = 3;
@@ -2195,7 +2195,7 @@ function filmZeigen(id) {
   let gemeldet = false; const ende = (bis) => { if (gemeldet) return; gemeldet = true; const d = Math.max(1, Math.round((v.duration || 0) / 60)), m = Math.min(d, Math.round((v.currentTime || 0) / 60));
     spur(bis ? "film_ende" : `film_ab_${m}_${d}`, f.id); };
   spur("film_start", f.id);
-  // KC-CLUB-FILM-KURZ (2.879.0): „angesehen“ erst nach 60 Sekunden Abspielzeit (vorher: schon beim ersten ▶) – schließt jemand früher, gilt „kurz“
+  // KC-CLUB-FILM-KURZ (2.880.0): „angesehen“ erst nach 60 Sekunden Abspielzeit (vorher: schon beim ersten ▶) – schließt jemand früher, gilt „kurz“
   let lang = false; v.ontimeupdate = () => { if (!lang && (v.currentTime || 0) >= FILM_KURZ_S) { lang = true; filmMerken(f.id, "angesehen"); } };
   s.querySelector("[data-zu]").onclick = () => { ende(false); if (!lang) filmMerken(f.id, "kurz"); zu(); };
   v.onended = () => { ende(true); filmMerken(f.id, "ende"); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro oben unter 🎬 Film"}.`); };
