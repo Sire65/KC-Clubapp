@@ -1,5 +1,10 @@
 # Änderungen
 
+## 2.879.0 – 2026-11-07 – 📷 Foto zum Rezept des Monats (Club-Küche Nr. 1) · nur App
+- Hansi hat ein eigenes Foto zu „Hähnchen mit Spitzkohl in Schmandsoße“ geschickt (07.11., nicht das Bild der Rezeptseite). Es steht jetzt im Heft über dem Rezept (statt „📷 Foto folgt“), als `magazin/rezept/haehnchen-spitzkohl.webp` (aus dem Bildschirmfoto ausgeschnitten, 1080 × 805). Lädt jemand später im Rezeptbuch ein Foto hoch, hat dieses Vorrang.
+- Test: `tests/magazin-rezept.test.mjs`; im abgeschirmten Browser geprüft (Bild geladen, Seite 3/14).
+- Rückweg: App 2.878.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.878.0 – 2026-11-07 – 🧯 Notfall-Paket bricht nicht mehr ab und spart Datenvolumen (KC-CLUB-NOTPAKET-LEICHTER, KC-CLUB-NOTPAKET-PAUSE-WAECHST) · Server 2.878.0 – [Hansi: einspielen]
 Anlass: Auswertung der Datenvolumen-Messung (2.869.0, Supabase-Warnung 05.11., Schonfrist bis 16.11.). Freigabe Hansi 06.11.: „Ja, mach es so wie du vorschlägst“.
 - **Befund:** Seit 06.11. 9:24 Uhr brach der Bau des Notfall-Pakets 16-mal hintereinander ab (Server-Grenzen, 546), erst um 1:39 Uhr klappte er wieder. Jeder Versuch holte trotzdem 3–6 MB aus der Datenbank – fast das gesamte gemessene Datenvolumen (≈ 60 MB in 13 Std.). Das Ersatz-Paket war dabei bis zu 19 Std. alt.
