@@ -1,7 +1,7 @@
 # Änderungen
 
 ## 2.879.0 – 2026-11-07 – 📷 Foto zum Rezept des Monats (Club-Küche Nr. 1) · nur App
-- Hansi hat ein eigenes Foto zu „Hähnchen mit Spitzkohl in Schmandsoße“ geschickt (07.11., nicht das Bild der Rezeptseite). Es steht jetzt im Heft über dem Rezept (statt „📷 Foto folgt“), als `magazin/rezept/haehnchen-spitzkohl.webp` (aus dem Bildschirmfoto ausgeschnitten, 1080 × 805). Lädt jemand später im Rezeptbuch ein Foto hoch, hat dieses Vorrang.
+- Hansi hat ein eigenes Bild zu „Hähnchen mit Spitzkohl in Schmandsoße“ geschickt (07.11., mit ChatGPT erstellt, nicht das Bild der Rezeptseite; zweite, bessere Fassung). Es steht jetzt im Heft über dem Rezept (statt „📷 Foto folgt“), als `magazin/rezept/haehnchen-spitzkohl.webp` (aus dem Bildschirmfoto ausgeschnitten, ohne Ecken und Teilen-Knopf, 804 × 624). Lädt jemand später im Rezeptbuch ein Foto hoch, hat dieses Vorrang.
 - Test: `tests/magazin-rezept.test.mjs`; im abgeschirmten Browser geprüft (Bild geladen, Seite 3/14).
 - Rückweg: App 2.878.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 

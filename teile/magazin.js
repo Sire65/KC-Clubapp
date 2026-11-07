@@ -52,7 +52,7 @@ const MAG_AUSGABEN = {
     // KC-CLUB-MAGAZIN-REZEPT (Wunsch Hansi 07.11.2026 „Bringe das Rezept in den Rezeptteil und als Rezept des Monats in die Clubzeitschrift“):
     // fest gewähltes Rezept des Monats. Steht im Rezeptbuch (id) – von dort kommt später auch ein eigenes Foto; die Kopie hier gilt, falls das
     // Rezeptbuch nicht geladen werden kann. Text in eigenen Worten; das Foto der Vorlage wird bewusst nicht übernommen (fremde Rechte).
-    // Foto: von Hansi geschickt am 07.11.2026 (eigenes Bild, nicht das der Rezeptseite) – liegt als magazin/rezept/haehnchen-spitzkohl.webp bei.
+    // Foto: Hansis eigenes Bild (mit ChatGPT erstellt, 07.11.2026; nicht das der Rezeptseite) – liegt als magazin/rezept/haehnchen-spitzkohl.webp bei.
     rezept: { id: "dca24732-021f-4042-b71c-a740a6ecf6e9", bild: "magazin/rezept/haehnchen-spitzkohl.webp", titel: "Hähnchen mit Spitzkohl in Schmandsoße", kategorie: "Hauptgericht", portionen: 4, dauer: 25, vonName: "Hansi",
       zutaten: [[400, "g", "Hähnchenbrustfilet"], [1, "", "kleiner Spitzkohl (ca. 600 g)"], [1, "", "Zwiebel"], [1, "", "Knoblauchzehe"], [1, "EL", "Öl"], [150, "g", "Schmand"], [200, "ml", "Gemüsebrühe"],
         [1, "TL", "Paprikapulver, edelsüß"], [1, "Prise", "Muskat"], [null, "", "Salz und Pfeffer"], [null, "", "Petersilie zum Garnieren"]].map(([m, e, n]) => ({ m, e, n })),
