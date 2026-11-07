@@ -1700,6 +1700,7 @@
   details.karte.fest > summary { cursor: default; }
   details.karte[open] > summary { margin-bottom: 8px; }
   .wahltabelle { width: 100%; border-collapse: collapse; }
+  .frist-zeile { display: flex; align-items: center; gap: 10px; padding: 8px 0; min-height: 44px; border-top: 1px solid var(--linie); } /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */
   .wahltabelle th { font-size: .8rem; color: var(--grau); font-weight: 800; padding: 4px; }
   .wahltabelle td { padding: 10px 4px; border-top: 1px solid var(--linie); }
   .wahltabelle td:not(:first-child), .wahltabelle th:not(:first-child) { text-align: center; width: 68px; }
@@ -6254,6 +6255,16 @@
       <p class="hinweis" style="margin:0 0 6px">Wobei möchtest du eine Nachricht aufs Handy (Push) oder eine E-Mail bekommen?</p>
       <table class="wahltabelle"><thead><tr><th></th><th>📲 Push</th><th>✉️ E-Mail</th></tr></thead><tbody id="wahlTabelle"></tbody></table>
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
+      <!-- 2.883.0 KC-CLUB-FRIST-ERINNERUNG -->
+      <div class="schalter"><div><b>⏳ Erinnerung vor Fristen</b><div class="hinweis" id="fristHinweis">Damit du keine Frist verpasst: Einspruch gegen Protokolle, Abstimmungen, Terminumfragen.</div></div>
+        <select id="fristTage" aria-label="Wie früh erinnern" onchange="fristSetzen()"><option value="0">aus</option><option value="1">1 Tag vorher</option><option value="2">2 Tage vorher</option><option value="3">3 Tage vorher</option></select></div>
+      <details class="abh-klappe" id="fristKlappe"><summary>⏳ Welche Fristen und wie?</summary>
+        <label class="frist-zeile"><input type="checkbox" id="fristProtokoll" onchange="fristSetzen()"> 📝 Einspruchsfrist für Protokolle</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristAbstimmung" onchange="fristSetzen()"> 🗳️ Abstimmungen, bei denen ich noch nicht abgestimmt habe</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristUmfrage" onchange="fristSetzen()"> 📅 Terminumfragen, bei denen ich noch nicht geantwortet habe</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristPush" onchange="fristSetzen()"> 📲 per Push</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristEmail" onchange="fristSetzen()"> ✉️ per E-Mail</label>
+      </details>
       <div class="schalter"><div><b>📲 Push auf diesem Handy</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
       <!-- 2.502.0 KC-CLUB-TIPP-GERAEUSCH -->
@@ -6849,7 +6860,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.883.0" data-v="2.883.0"></script>
+<script src="app.js?v=2.884.0" data-v="2.884.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
