@@ -5390,6 +5390,9 @@
   .mag-roman-bild img { display: block; width: 100%; height: auto; max-width: 100%; mix-blend-mode: multiply; }
   .mag-roman-bild.fehlt { aspect-ratio: 3 / 2; max-width: min(100%, 26em); display: grid; place-content: center; gap: 4px; text-align: center; padding: 12px; border: 1px dashed #c9b8a6; background: #faf6ee; color: #7a6a5f; font: .82rem system-ui, sans-serif; }
   .mag-roman-bild.fehlt.gross { aspect-ratio: 16 / 9; max-width: 100%; } .mag-roman-bild.fehlt span { font-weight: 700; }
+  .mag-roman-untertitel { font-style: italic; font-size: 1.02rem; color: #5a4a40; } /* Folge 2 ff.: Untertitel, „Was bisher geschah“, Szenenwechsel */
+  .mag-roman-bisher { margin: 0 0 20px; padding: 12px 14px; border-left: 3px solid #c9a96e; background: #faf4ea; font: .92rem/1.55 system-ui, sans-serif; color: #4a3a32; } .mag-roman-bisher b { display: block; margin-bottom: 4px; color: #741521; } .mag-roman-bisher p { margin: 0; }
+  .mag-roman-pause { border: 0; text-align: center; margin: 1.2em 0; height: 1.2em; } .mag-roman-pause::after { content: "* * *"; letter-spacing: .5em; color: #c9a96e; }
   .mag-roman-ende { margin-top: 26px; padding: 16px 18px; border-top: 3px double #741521; background: #faf4ea; font: .95rem/1.55 system-ui, sans-serif; } .mag-roman-ende p { margin: 0 0 .6em; } .mag-roman-ende p:first-child { font-size: 1.05rem; color: #741521; }
   /* KC-CLUB-UMBLAETTERN: die alte Seite klappt wie bei einem Prospekt um (nur beim Blättern, danach entfernt) */
   .bl-buehne { position: relative; }
@@ -6849,7 +6852,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.883.0" data-v="2.883.0"></script>
+<script src="app.js?v=2.884.0" data-v="2.884.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

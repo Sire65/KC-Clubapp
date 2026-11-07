@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.884.0 – 2026-11-07 – 📖 Club-Küche Nr. 2: Fortsetzungsroman „Hinter dem Pass“, Folge 2 „Die verschwundenen Trüffel“ (KC-CLUB-MAGAZIN-ROMAN)
+Wunsch Hansi (07.11.): „Du kannst Folge 2 übernehmen in das Heft 2“.
+- **Heft Nr. 2 (Februar 2027)** bekommt Folge 2 von 12 in der **Neufassung** „Ein Abend, der alles verändert“ (KC-Communication, Zweig `roman-hinter-dem-pass-uebergabe-2026-11-06`, Stand Lektorat `651c0ae`) – vollständig und ungekürzt (9 Kapitel, 338 Absätze); die verworfene erste Fassung ist nicht enthalten. Erscheint am 01.02.2027, bis dahin Entwurf nur für den Admin (Archiv „📚 Alle Ausgaben“ → Nr. 2).
+- Neu in der Darstellung: Untertitel der Folge, Kasten „Was bisher geschah …“, Szenenwechsel als „* * *“. Folge 1 in Heft 1 unverändert.
+- Bilder: drei Plätze nach dem neuen Bildplan (Paul mit Brotkorb, Kartoffeltaler beim Ausfall des Kombidämpfers, Lena an der Tür zum Getränkelager). Die Zeichnungen gibt es noch nicht – bis dahin ein zurückhaltender Bildplatz, keine alten Trüffel-/Lieferbilder.
+- Keine internen Planungsunterlagen im Programm; der Test sperrt Folge 3 ff. und bekannte Spoiler-Begriffe. Test: `tests/magazin-roman.test.mjs` erweitert. Rückweg: App 2.883.0.
+
 ## 2.883.0 – Zeitansage: Video „Zettel an die Pinnwand“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 7 Schritte zeigen auf vorhandene Stellen. Zeitansage eingeschaltet.
 - Richtigstellung zu 2.879.0: „Express“ und „Später senden“ im Nachrichten-Video waren auch vorher sichtbar – der Fund kam von einem zu schnell weiterschaltenden Prüfwerkzeug. Die Änderung (Schreibfeld je Schritt einblenden) bleibt, sie schadet nicht. Der Fund bei „Weiteres Gerät“ (2.870.0) war echt.

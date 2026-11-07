@@ -19,8 +19,8 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur Folge 1
-for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*[2-9]/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+// keine Spoiler, kein internes Material, nur veröffentlichte Folgen (1 und 2) – Folge 3 ff. nie vorab ins Programm
+for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([3-9]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -30,4 +30,17 @@ assert.ok(r.bilder.every((b) => b.da), "alle vier Skizzen eingesetzt");
 assert.ok(out.includes('class="mag-roman-ende"') && out.includes("<b>Fortsetzung in der nächsten Ausgabe</b>"));
 assert.ok(!/<p><\/p>/.test(out));
 for (const k of [".mag-roman ", ".mag-roman-text ", ".mag-roman-bild ", ".mag-roman-ende "]) assert.ok(html.includes(k), "CSS " + k);
+// Folge 2 in Heft 2 (Neufassung „Ein Abend, der alles verändert“), vollständig; Heft 1 unverändert
+const r2 = MAG_AUSGABEN[2].roman;
+assert.equal(MAG_AUSGABEN[2].erscheint, "2027-02-01"); assert.equal(r2.folge, 2); assert.equal(r2.titel, "Die verschwundenen Trüffel"); assert.equal(r2.untertitel, "Ein Abend, der alles verändert");
+assert.deepEqual(r2.text.filter(([a]) => a === "h").map(([, t]) => t), ["Achtundzwanzig Teller – und kein Ofen", "Ein Morgen mit offenen Fragen", "Der Mann mit dem Brotkorb", "Ein Platz am Pass", "Sophie weiß mehr", "Der Abend beginnt", "Die Entscheidung", "Ein Kompliment – und ein Blick", "Was Lena nicht hören sollte"]);
+assert.equal(r2.text.filter(([a]) => a === "p").length, 338, "Folge 2 nicht gekürzt"); assert.equal(r2.text.filter(([a]) => a === "s").length, 5, "Szenenwechsel");
+const alles2 = r2.text.filter(([a]) => a === "p").map(([, t]) => t).join("\n");
+assert.ok(alles2.startsWith("„Das darf jetzt nicht wahr sein!“") && alles2.endsWith("schon lange vor ihrem ersten Arbeitstag begonnen hatte."), "Anfang und Schluss Folge 2");
+assert.ok(alles2.includes("„Du kannst nicht so tun, als hätte es uns beide nie gegeben.“") && alles2.includes("achtundzwanzig vorgewärmte Teller") && alles2.includes("Kartoffeltaler"), "Neufassung, nicht die verworfene");
+assert.ok(r2.bisher.startsWith("Lena Hartmann hat ihre Ausbildung") && r2.ende.includes("**Folge 3 – Alte Geschichten**"));
+const out2 = magHeftHtml("roman", r2);
+assert.ok(out2.includes('class="mag-roman-bisher"') && out2.includes('class="mag-roman-untertitel"') && (out2.match(/mag-roman-pause/g) || []).length === 5);
+assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => !b.da && /^magazin\/roman\/f2-/.test(b.datei)) && !/<img/.test(out2), "Folge 2: noch keine Zeichnungen → Bildplatz, kein kaputtes Bild");
+for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertitel "]) assert.ok(html.includes(k), "CSS " + k);
 console.log("magazin-roman: ok");
