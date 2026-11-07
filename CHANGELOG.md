@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.883.0 – 2026-11-07 – 📖 Club-Küche Nr. 2: Fortsetzungsroman „Hinter dem Pass“, Folge 2 „Die verschwundenen Trüffel“ (KC-CLUB-MAGAZIN-ROMAN)
+Wunsch Hansi (07.11.): „Du kannst Folge 2 übernehmen in das Heft 2“.
+- **Heft Nr. 2 (Februar 2027)** bekommt Folge 2 von 12 in der **Neufassung** „Ein Abend, der alles verändert“ (KC-Communication, Zweig `roman-hinter-dem-pass-uebergabe-2026-11-06`, Stand Lektorat `651c0ae`) – vollständig und ungekürzt (9 Kapitel, 338 Absätze); die verworfene erste Fassung ist nicht enthalten. Erscheint am 01.02.2027, bis dahin Entwurf nur für den Admin (Archiv „📚 Alle Ausgaben“ → Nr. 2).
+- Neu in der Darstellung: Untertitel der Folge, Kasten „Was bisher geschah …“, Szenenwechsel als „* * *“. Folge 1 in Heft 1 unverändert.
+- Bilder: drei Plätze nach dem neuen Bildplan (Paul mit Brotkorb, Kartoffeltaler beim Ausfall des Kombidämpfers, Lena an der Tür zum Getränkelager). Die Zeichnungen gibt es noch nicht – bis dahin ein zurückhaltender Bildplatz, keine alten Trüffel-/Lieferbilder.
+- Keine internen Planungsunterlagen im Programm; der Test sperrt Folge 3 ff. und bekannte Spoiler-Begriffe. Test: `tests/magazin-roman.test.mjs` erweitert. Rückweg: App 2.882.0.
+
 ## 2.882.0 – 📰 Club-Küche: Vorwort, alle Ausgaben, Drucken/Teilen/Ablegen, Startnachricht (KC-CLUB-MAGAZIN-VORWORT, KC-CLUB-MAGAZIN-ARCHIV, KC-CLUB-DRUCK-ABLEGEN, Wunsch Hansi)
 - **Vorwort** mit festem Platz gleich nach dem Titelblatt (Seite 2, auch im Inhaltsverzeichnis). Nr. 1 (Januar 2027) hat ihr Vorwort; Ausgaben ohne eigenes zeigen einen Platzhalter für die Redaktion.
 - **📚 Alle Ausgaben** im Magazin-Menü: Kacheln für den ganzen Jahrgang (Nr. 1–12) mit Stand (erschienen / 🔒 Entwurf / in Vorbereitung). Mitglieder sehen nur erschienene Ausgaben (Erscheinungstag erreicht, Nr. 1: 01.01.2027), der Admin alle.
