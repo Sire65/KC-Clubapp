@@ -1,7 +1,27 @@
 # Änderungen
 
-## 2.883.0 – 2026-11-07 – Push-Frage beim Start
+## 2.886.0 – 2026-11-07 – Push-Frage beim Start
 - Wunsch Hansi 07.11.: Wer Push noch nie eingeschaltet hat, wird beim Start freundlich gefragt („Hallo …, du hast noch nicht Push aktiviert …“) – 🔔 Ja (schaltet sofort ein), Nein (in 7 Tagen wieder), Später (morgen), Nicht mehr fragen. Höchstens einmal am Tag, nie bei „Kommunikation aus“; gesperrte Benachrichtigungen mit Hinweis, wo man sie erlaubt (KC-CLUB-PUSH-NEU-FRAGEN).
+
+## 2.885.0 – 2026-11-07 – ⏳ Erinnerung vor Fristen: Protokoll-Einspruch, Abstimmungen, Terminumfragen (KC-CLUB-FRIST-ERINNERUNG) · App + Server 2.885.0 – 20-Uhr-Termin
+Wunsch Hansi 07.11.: „Mitglieder einen Tag vorher informieren, z. B. Einspruchsfrist für Protokoll vom xx.yy. läuft morgen ab, oder Zeit zum Abstimmen über Vorschlag von Thomas läuft morgen ab – möchtest du noch deine Stimme abgeben? … damit keine Fristen übersehen werden, mit Voreinstellungen über Zahnrad.“
+- **Server (stündliche Wartung):** sucht Fristen in den nächsten 3 Tagen – Einspruchsfrist veröffentlichter Protokolle (nicht an den Verfasser und nicht an wer schon einen Einwand geschrieben hat), offene Abstimmungen (je Abstimmung bzw. Abstimmungspaket einmal, nur wer abstimmen darf und noch nicht abgestimmt hat, nicht in der Probephase), offene Terminumfragen (nur wer noch nicht geantwortet hat). Text z. B. „🗳️ Abstimmung endet morgen – „Sommerfest“ (Vorschlag von Thomas) – abstimmen bis … Möchtest du noch deine Stimme abgeben?“
+- Je Frist und Mitglied **genau eine** Erinnerung (Protokoll `frist_erinnert` mit Art, Kennung und Personen – keine Inhalte; erst merken, dann senden). Nur 8–21 Uhr, nicht mehr in den letzten 2 Stunden; „Nicht stören“ gilt wie bei jeder Meldung. Ohne Fristen kostet es je Stunde nur drei kleine Abfragen.
+- **⚙️ Einstellungen → 🔔 Benachrichtigungen → ⏳ Erinnerung vor Fristen:** aus / 1 / 2 / 3 Tage vorher (Standard 1 Tag), welche Fristen (Protokolle, Abstimmungen, Terminumfragen), per Push und/oder E-Mail (Standard Push). Gespeichert als persönliche Einstellung `fristen` – keine Datenbank-Änderung.
+- Test: `tests/frist-erinnerung.test.mjs`. Rückweg: App 2.884.0 / Server 2.878.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.884.0 – 2026-11-07 – 📖 Club-Küche Nr. 2: Fortsetzungsroman „Hinter dem Pass“, Folge 2 „Die verschwundenen Trüffel“ (KC-CLUB-MAGAZIN-ROMAN)
+Wunsch Hansi (07.11.): „Du kannst Folge 2 übernehmen in das Heft 2“.
+- **Heft Nr. 2 (Februar 2027)** bekommt Folge 2 von 12 in der **Neufassung** „Ein Abend, der alles verändert“ (KC-Communication, Zweig `roman-hinter-dem-pass-uebergabe-2026-11-06`, Stand Lektorat `651c0ae`) – vollständig und ungekürzt (9 Kapitel, 338 Absätze); die verworfene erste Fassung ist nicht enthalten. Erscheint am 01.02.2027, bis dahin Entwurf nur für den Admin (Archiv „📚 Alle Ausgaben“ → Nr. 2).
+- Neu in der Darstellung: Untertitel der Folge, Kasten „Was bisher geschah …“, Szenenwechsel als „* * *“. Folge 1 in Heft 1 unverändert.
+- Bilder: drei Plätze nach dem neuen Bildplan (Paul mit Brotkorb, Kartoffeltaler beim Ausfall des Kombidämpfers, Lena an der Tür zum Getränkelager). Die Zeichnungen gibt es noch nicht – bis dahin ein zurückhaltender Bildplatz, keine alten Trüffel-/Lieferbilder.
+- Keine internen Planungsunterlagen im Programm; der Test sperrt Folge 3 ff. und bekannte Spoiler-Begriffe. Test: `tests/magazin-roman.test.mjs` erweitert. Rückweg: App 2.883.0.
+
+## 2.883.0 – Zeitansage: Video „Zettel an die Pinnwand“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 7 Schritte zeigen auf vorhandene Stellen. Zeitansage eingeschaltet.
+- Richtigstellung zu 2.879.0: „Express“ und „Später senden“ im Nachrichten-Video waren auch vorher sichtbar – der Fund kam von einem zu schnell weiterschaltenden Prüfwerkzeug. Die Änderung (Schreibfeld je Schritt einblenden) bleibt, sie schadet nicht. Der Fund bei „Weiteres Gerät“ (2.870.0) war echt.
+- Rückweg: Version 2.882.0 einspielen.
 
 ## 2.882.0 – 📰 Club-Küche: Vorwort, alle Ausgaben, Drucken/Teilen/Ablegen, Startnachricht (KC-CLUB-MAGAZIN-VORWORT, KC-CLUB-MAGAZIN-ARCHIV, KC-CLUB-DRUCK-ABLEGEN, Wunsch Hansi)
 - **Vorwort** mit festem Platz gleich nach dem Titelblatt (Seite 2, auch im Inhaltsverzeichnis). Nr. 1 (Januar 2027) hat ihr Vorwort; Ausgaben ohne eigenes zeigen einen Platzhalter für die Redaktion.

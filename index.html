@@ -1700,6 +1700,7 @@
   details.karte.fest > summary { cursor: default; }
   details.karte[open] > summary { margin-bottom: 8px; }
   .wahltabelle { width: 100%; border-collapse: collapse; }
+  .frist-zeile { display: flex; align-items: center; gap: 10px; padding: 8px 0; min-height: 44px; border-top: 1px solid var(--linie); } /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */
   .wahltabelle th { font-size: .8rem; color: var(--grau); font-weight: 800; padding: 4px; }
   .wahltabelle td { padding: 10px 4px; border-top: 1px solid var(--linie); }
   .wahltabelle td:not(:first-child), .wahltabelle th:not(:first-child) { text-align: center; width: 68px; }
@@ -5390,6 +5391,9 @@
   .mag-roman-bild img { display: block; width: 100%; height: auto; max-width: 100%; mix-blend-mode: multiply; }
   .mag-roman-bild.fehlt { aspect-ratio: 3 / 2; max-width: min(100%, 26em); display: grid; place-content: center; gap: 4px; text-align: center; padding: 12px; border: 1px dashed #c9b8a6; background: #faf6ee; color: #7a6a5f; font: .82rem system-ui, sans-serif; }
   .mag-roman-bild.fehlt.gross { aspect-ratio: 16 / 9; max-width: 100%; } .mag-roman-bild.fehlt span { font-weight: 700; }
+  .mag-roman-untertitel { font-style: italic; font-size: 1.02rem; color: #5a4a40; } /* Folge 2 ff.: Untertitel, „Was bisher geschah“, Szenenwechsel */
+  .mag-roman-bisher { margin: 0 0 20px; padding: 12px 14px; border-left: 3px solid #c9a96e; background: #faf4ea; font: .92rem/1.55 system-ui, sans-serif; color: #4a3a32; } .mag-roman-bisher b { display: block; margin-bottom: 4px; color: #741521; } .mag-roman-bisher p { margin: 0; }
+  .mag-roman-pause { border: 0; text-align: center; margin: 1.2em 0; height: 1.2em; } .mag-roman-pause::after { content: "* * *"; letter-spacing: .5em; color: #c9a96e; }
   .mag-roman-ende { margin-top: 26px; padding: 16px 18px; border-top: 3px double #741521; background: #faf4ea; font: .95rem/1.55 system-ui, sans-serif; } .mag-roman-ende p { margin: 0 0 .6em; } .mag-roman-ende p:first-child { font-size: 1.05rem; color: #741521; }
   /* KC-CLUB-UMBLAETTERN: die alte Seite klappt wie bei einem Prospekt um (nur beim Blättern, danach entfernt) */
   .bl-buehne { position: relative; }
@@ -6254,6 +6258,16 @@
       <p class="hinweis" style="margin:0 0 6px">Wobei möchtest du eine Nachricht aufs Handy (Push) oder eine E-Mail bekommen?</p>
       <table class="wahltabelle"><thead><tr><th></th><th>📲 Push</th><th>✉️ E-Mail</th></tr></thead><tbody id="wahlTabelle"></tbody></table>
       <p class="hinweis" style="font-size:.85rem" id="wahlHinweis">Nur Push: Kommt der Push nicht an, schicken wir automatisch eine E-Mail.</p>
+      <!-- 2.883.0 KC-CLUB-FRIST-ERINNERUNG -->
+      <div class="schalter"><div><b>⏳ Erinnerung vor Fristen</b><div class="hinweis" id="fristHinweis">Damit du keine Frist verpasst: Einspruch gegen Protokolle, Abstimmungen, Terminumfragen.</div></div>
+        <select id="fristTage" aria-label="Wie früh erinnern" onchange="fristSetzen()"><option value="0">aus</option><option value="1">1 Tag vorher</option><option value="2">2 Tage vorher</option><option value="3">3 Tage vorher</option></select></div>
+      <details class="abh-klappe" id="fristKlappe"><summary>⏳ Welche Fristen und wie?</summary>
+        <label class="frist-zeile"><input type="checkbox" id="fristProtokoll" onchange="fristSetzen()"> 📝 Einspruchsfrist für Protokolle</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristAbstimmung" onchange="fristSetzen()"> 🗳️ Abstimmungen, bei denen ich noch nicht abgestimmt habe</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristUmfrage" onchange="fristSetzen()"> 📅 Terminumfragen, bei denen ich noch nicht geantwortet habe</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristPush" onchange="fristSetzen()"> 📲 per Push</label>
+        <label class="frist-zeile"><input type="checkbox" id="fristEmail" onchange="fristSetzen()"> ✉️ per E-Mail</label>
+      </details>
       <div class="schalter"><div><b>📲 Push auf diesem Handy</b><div class="hinweis" id="pushStatus">…</div></div><button class="knopf klein" id="pushKnopf" onclick="pushUmschalten()">Einschalten</button></div>
       <div class="schalter"><div><b>🔊 Warnton bei neuer Nachricht</b><div class="hinweis">Kurzer Ton, wenn die App offen ist. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setTon" onchange="einstellung('ton', this.checked)"></div>
       <!-- 2.502.0 KC-CLUB-TIPP-GERAEUSCH -->
@@ -6849,7 +6863,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.883.0" data-v="2.883.0"></script>
+<script src="app.js?v=2.886.0" data-v="2.886.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

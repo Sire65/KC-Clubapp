@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.883.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.886.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22,7 +22,7 @@ const TEILE_LISTE = {
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-dmWJZ9o+pAbB2SHi+YEN7AjR+1UqDQjiKwfk14tcUC402dW4EdqN1FsShHwOXJUm" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-NILVItNnYXGNgheyAeKTZoQbT5UreVOma/RIf1u4f/jW7lkT7l9ZuKnQb1buGklH" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
@@ -2046,7 +2046,7 @@ const RUNDGAENGE = [
   { id: "nachrichten_1", stand: "2", zeit: "05.11.2026", sym: "📨", t: "Nachrichten – Folge 1: das Einfache", u: "Plus Neu, an wen, kurz schreiben, normal senden, Wichtig, Express mit Bestätigung (höchstens 5 am Tag), ⓘ und Haken, Liste deiner Chats (ca. 5 Min.)", st: () => RG_NACHRICHTEN_1() }, // KC-CLUB-VIDEO-NACHRICHTEN (Wunsch Hansi 05.11.2026)
   { id: "nachrichten_2", stand: "2", zeit: "05.11.2026", sym: "✨", t: "Nachrichten – Folge 2: Besonderheiten", u: "Kleine Zeile (fett, Farbe, Marker, nur die anderen), WhatsApp hin und zurück, Bildschirmfoto mit Markierung, Tage gruppiert, ⋮, Chat-Hintergrund, Verschlüsseln & Schlüsselbund (ca. 6 Min.)", st: () => RG_NACHRICHTEN_2() },
   { id: "termin", stand: "1", zeit: "07.11.2026", sym: "📅", t: "Termin eintragen", u: "Privater Termin, Wiederholen, Erinnerung (ca. 2 Min.)", st: () => RG_TERMIN },
-  { id: "pinnwand", stand: "2", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
+  { id: "pinnwand", stand: "2", zeit: "07.11.2026", sym: "📌", t: "Zettel an die Pinnwand", u: "Schreiben, wichtig, für wen, anheften (ca. 1 Min.)", st: () => RG_PINNWAND },
   { id: "mitglieder", stand: "2", sym: "👥", t: "Mitglieder, anklopfen & anrufen", u: "Ansicht, Kachel, schreiben, anrufen (ca. 1 Min.)", st: () => RG_MITGLIEDER },
   { id: "zusagen", stand: "1", sym: "✅", t: "Zu- und absagen", u: "Antworten, Mitfahrt, Kalender (ca. 1 Min.)", st: () => RG_ZUSAGEN },
   { id: "fotos", stand: "2", sym: "📷", t: "Fotoalbum", u: "Fotos hochladen, suchen, Alben (ca. 1 Min.)", st: () => RG_FOTOS },
@@ -17140,6 +17140,27 @@ function wahlZeigen() {
     <td><input type="checkbox" ${w[b]?.email ? "checked" : ""} onchange="wahlSetzen('${b}')" id="w_${b}_email" aria-label="${t} per E-Mail" ${INIT && !INIT.hatMail ? "disabled" : ""}></td></tr>`).join("");
   $("wahlHinweis").textContent = INIT && !INIT.hatMail ? "⚠️ Für dich ist keine E-Mail-Adresse hinterlegt – bitte " + adminName() + " Bescheid geben." : "Nur Push angehakt: Kommt der Push nicht an, schicken wir automatisch eine E-Mail. Nichts angehakt: keine Benachrichtigung.";
 }
+// 2.883.0 KC-CLUB-FRIST-ERINNERUNG (Wunsch Hansi 07.11.2026): Erinnerung vor ablaufenden Fristen – gespeichert als Einstellung „fristen“ (Server prüft)
+const FRIST_STANDARD = { push: true, email: false, tage: 1, protokoll: true, abstimmung: true, umfrage: true };
+function fristZeigen() {
+  if (!$("fristTage")) return;
+  const f = { ...FRIST_STANDARD, ...(INIT?.einstellungen?.fristen || {}) }, an = f.push || f.email;
+  $("fristTage").value = an ? String(f.tage) : "0";
+  $("fristProtokoll").checked = f.protokoll !== false; $("fristAbstimmung").checked = f.abstimmung !== false; $("fristUmfrage").checked = f.umfrage !== false;
+  $("fristPush").checked = !!f.push; $("fristEmail").checked = !!f.email; $("fristEmail").disabled = !!INIT && !INIT.hatMail;
+  ["fristProtokoll", "fristAbstimmung", "fristUmfrage", "fristPush"].forEach((id) => { $(id).disabled = !an; }); if (!an) $("fristEmail").disabled = true;
+  const welche = [f.protokoll !== false && "Protokolle", f.abstimmung !== false && "Abstimmungen", f.umfrage !== false && "Terminumfragen"].filter(Boolean);
+  $("fristHinweis").textContent = !an ? "Aus – du bekommst keine Erinnerung vor Fristen." : !welche.length ? "Keine Art ausgewählt – unten antippen."
+    : `${f.tage === 1 ? "1 Tag" : f.tage + " Tage"} vorher per ${[f.push && "Push", f.email && "E-Mail"].filter(Boolean).join(" und ")}: ${welche.join(", ")}.`;
+}
+async function fristSetzen() {
+  const tage = Number($("fristTage").value), alt = { ...FRIST_STANDARD, ...(INIT?.einstellungen?.fristen || {}) };
+  let push = $("fristPush").checked, email = $("fristEmail").checked;
+  if (!tage) { push = false; email = false; } else if (!alt.push && !alt.email && !push && !email) push = true; // wieder an → Push als Standard
+  const wert = { push, email, tage: tage || alt.tage || 1, protokoll: $("fristProtokoll").checked, abstimmung: $("fristAbstimmung").checked, umfrage: $("fristUmfrage").checked };
+  try { const r = await api("einstellung_setzen", { schluessel: "fristen", wert }); INIT.einstellungen = { ...(INIT.einstellungen || {}), fristen: r.wert }; fristZeigen(); melde("Gespeichert ✔"); }
+  catch (e) { meldeFehler(e); fristZeigen(); }
+}
 async function wahlSetzen(b) {
   const push = $(`w_${b}_push`).checked, email = $(`w_${b}_email`).checked;
   try {
@@ -17931,7 +17952,7 @@ function zeige(v, ausHistorie) {
 // stehende werden versteckt, alle zur Laufzeit gebauten entfernt (Rückfragen über ihr „Abbrechen“). Gilt für Handy-Zurück und Escape.
 document.querySelectorAll(".blatt").forEach((b) => { b.dataset.fest = "1"; });
 // 2.24.6 (Fehlerprotokoll Hansi: avSetzen → fensterZu(null), wenn „Mein Bild“ schon zu war): ein nicht (mehr) offenes Fenster ist schon zu
-function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
+function einstFuellen() { leitungStartZeigen(); setTimeout(abhKlappen, 900); /* 2.469.0 KC-CLUB-EINST-ABHAENGIG (Häkchen kommen teils erst vom Server) */ notProbeZeigen(); infoStartZeigen(); cdEinstellungenZeigen(); try { schalterZeilen($("v-einstellungen")); } catch {} tippSchalterZeigen(); einwSchalterZeigen(); stimmeWahlZeigen(); ansageSchalterZeigen(); ansStandZeigen(); ruheZeigen(); if (ICH?.admin) { $("adminBereich").classList.remove("versteckt"); pwFristenZeigen(); anrufAntwortenZeigen(); einstiegFristenZeigen(); $("adminErstattung").classList.remove("versteckt"); kmSatzAdminLaden(); $("adminWetter").classList.remove("versteckt"); wetterAdminLaden(); } appInfoZeigen(); installStandZeigen(); pushStatusZeigen(); wahlZeigen(); fristZeigen(); /* 2.883.0 KC-CLUB-FRIST-ERINNERUNG */ neuWahlZeigen(); meinWetterortZeigen(); geburtstagSchalterZeigen(); kontaktSchalterZeigen(); notfallZeigen(); kalenderAboZeigen(); anklopfenZeigen(); zuletztSchalterZeigen(); inkognitoZeigen(); elternMeineZeigen(); spEinstZeigen(); schnellWahlZeigen(); mgAnsichtWahlZeigen(); }
 function fensterZu(b) { if (!b) return; if (b._zu) b._zu(); else if (b.dataset.fest) b.classList.add("versteckt"); else b.remove(); }
 // 2.425.0 KC-CLUB-GENERALCHECK (Eingaben schützen): wer in einem Fenster etwas getippt hat und es aus Versehen schließt (daneben tippen,
 // ✕, Escape, Handy-„Zurück“), wird gefragt – vorher war der Text (z. B. SOS-Text, Termin-Vorschlag, Schild) ohne Rückfrage weg.
