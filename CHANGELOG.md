@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.883.0 – 2026-11-07 – Push-Frage beim Start
+- Wunsch Hansi 07.11.: Wer Push noch nie eingeschaltet hat, wird beim Start freundlich gefragt („Hallo …, du hast noch nicht Push aktiviert …“) – 🔔 Ja (schaltet sofort ein), Nein (in 7 Tagen wieder), Später (morgen), Nicht mehr fragen. Höchstens einmal am Tag, nie bei „Kommunikation aus“; gesperrte Benachrichtigungen mit Hinweis, wo man sie erlaubt (KC-CLUB-PUSH-NEU-FRAGEN).
+
 ## 2.882.0 – 📰 Club-Küche: Vorwort, alle Ausgaben, Drucken/Teilen/Ablegen, Startnachricht (KC-CLUB-MAGAZIN-VORWORT, KC-CLUB-MAGAZIN-ARCHIV, KC-CLUB-DRUCK-ABLEGEN, Wunsch Hansi)
 - **Vorwort** mit festem Platz gleich nach dem Titelblatt (Seite 2, auch im Inhaltsverzeichnis). Nr. 1 (Januar 2027) hat ihr Vorwort; Ausgaben ohne eigenes zeigen einen Platzhalter für die Redaktion.
 - **📚 Alle Ausgaben** im Magazin-Menü: Kacheln für den ganzen Jahrgang (Nr. 1–12) mit Stand (erschienen / 🔒 Entwurf / in Vorbereitung). Mitglieder sehen nur erschienene Ausgaben (Erscheinungstag erreicht, Nr. 1: 01.01.2027), der Admin alle.
