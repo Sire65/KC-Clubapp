@@ -10,7 +10,7 @@ Wunsch Hansi (07.11.): „Bringe das Rezept in den Rezeptteil und als Rezept des
 - **🔍 Schrift-Zoom mit zwei Fingern** (KC-CLUB-BLAETTERN-ZOOM, Wunsch Hansi: „Textzoom mit 2 Fingern zulassen, aber nicht zu viel“): auf Text-Seiten Schrift 100–160 %, der Text bricht neu um, die Größe bleibt auf dem Gerät gemerkt; kurze Anzeige „🔍 Schrift 140 %“. Hilfe-Eintrag „Beim Blättern: Schrift größer mit zwei Fingern“. Browser-Prüfung mit echten Touch-Gesten: `tools/hilfe/blaettern-wischen-browser.mjs`.
 - **Fehler behoben:** Zutaten aus dem Rezeptbuch (Format Menge/Einheit/Name) erschienen im Heft als leere Punkte – jetzt mit Menge und Einheit.
 - Test: `tests/magazin-rezept.test.mjs`; Heft im abgeschirmten Browser geblättert (Seite 3/14, Zutaten und Zubereitung vollständig).
-- Rückweg: App 2.876.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Sofort eingespielt auf Hansis Wunsch („Baue sofort ein“, 07.11. 09:40). Rückweg: App 2.876.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.876.0 – 2026-11-06 – 📰 Club-Küche Nr. 1 = Januar 2027: Rückblick Weihnachtsmarkt, Witz vom Pass, Küchentipps, Fortsetzungsroman Folge 1 (KC-CLUB-MAGAZIN-NR1, KC-CLUB-MAGAZIN-ROMAN) · nur App
 Wunsch Hansi (06.11.): „Die erste Ausgabe soll im Januar 2027 erscheinen mit der Nachlese und Impressionen vom Weihnachtsmarkt“ – dazu ein Witz und ein, zwei Tipps, „so wie in richtigen Zeitschriften: mehrspaltig, in farbigen Kästen“.
