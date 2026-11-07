@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -7141,7 +7141,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 
 // 2.535.0 KC-CLUB-NOTPAKET-FEHLERPAUSE (Server) + KC-CLUB-TEILEN-GROESSE
 {
-  assert.ok(/if \(!erzwingen && fehlerAm > \(zeitVon\(st\.hochgeladen_am\) \|\| 0\) && Date\.now\(\) - fehlerAm < 30 \* 60000\)/.test(server), "Notfall-Paket: Pause nach Fehlschlag");
+  assert.ok(/if \(!erzwingen && fehlerAm > \(zeitVon\(st\.hochgeladen_am\) \|\| 0\) && Date\.now\(\) - fehlerAm < (30 \* 60000|fehlerPauseMs)\)/.test(server), "Notfall-Paket: Pause nach Fehlschlag");
   assert.ok(/return \{ ok: true, gedrosselt: true, nachFehler: true,/.test(server), "Pause meldet gedrosselt");
   assert.ok(/await protokoll\(null, "notpaket_fehler", \{ erzwungen: erzwingen, fehler \}\)\.catch\(\(\) => \{\}\);/.test(server), "Fehlschlag kommt ins Protokoll");
   const swq = lies("sw.js");
@@ -9118,7 +9118,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 // 4xx. 2.122.0: Gesamtprüfung 4
 {
   // KC-CLUB-NOTPAKET-TEMPO: Notfall-Paket mit 4 parallelen Läufen statt nacheinander (vorher ~100 s → 546)
-  assert.ok(/const NOT_PARALLEL = 4(, NOT_TEIL_MS = 60000)?;/.test(server) && /Array\.from\(\{ length: Math\.min\(NOT_PARALLEL, liste\.length\) \}, async \(\) => \{ for \(let z = liste\.shift\(\); z; z = liste\.shift\(\)\) await teil\(z\); \}\)/.test(server), "Notpaket parallel");
+  assert.ok(/const NOT_PARALLEL = [24](, NOT_TEIL_MS = 60000)?;/.test(server) && /Array\.from\(\{ length: Math\.min\(NOT_PARALLEL, liste\.length\) \}, async \(\) => \{ for \(let z = liste\.shift\(\); z; z = liste\.shift\(\)\) await teil\(z\); \}\)/.test(server), "Notpaket parallel");
   // Anruf: Auflegen während der Vorbereitung
   const an = programm.slice(programm.indexOf("const lauf = RUF, art = RUF.art;"), programm.indexOf("const lauf = RUF, art = RUF.art;") + 1500);
   assert.ok(an.length > 100 && /if \(RUF !== lauf\) \{ try \{ strom\?\.getTracks/.test(an) && /catch \(e\) \{ if \(RUF !== lauf\) return; anrufAufraeumen\(\)/.test(an), "Anruf-Rennen abgefangen");
@@ -11898,7 +11898,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const nt = server.slice(server.indexOf('if (a === "notpaket_teil")'), server.indexOf('if (a === "notpaket_teil")') + 1500);
   assert.ok(/await DB_PUFFER\.run\(pf, async \(\) => \{ for \(const pid of pids\) mitglieder\[pid\] = await notpaketMitglied\(pid\); \}\);/.test(nt) && /const pf = dbPufferNeu\(0\)/.test(nt) && /pids\.length > NOT_GRUPPE/.test(nt), "Teil: Mitglieder nacheinander mit gemeinsamem Puffer, höchstens NOT_GRUPPE");
   const nb = server.slice(server.indexOf("async function notpaketBauen(geheim: string"), server.indexOf("// ---------- KC-CLUB-NOTBETRIEB-STUFE2"));
-  assert.ok(/const NOT_GRUPPE = 4, NOT_GRUPPE_MS = 140000;/.test(server) && /if \(!\(z\.person_id in j\.mitglieder\)\) throw new Error/.test(nb), "jedes Mitglied der Gruppe muss im Ergebnis stehen – sonst bleibt das alte Paket");
+  assert.ok(/const NOT_GRUPPE = [24], NOT_GRUPPE_MS = 140000;/.test(server) && /if \(!\(z\.person_id in j\.mitglieder\)\) throw new Error/.test(nb), "jedes Mitglied der Gruppe muss im Ergebnis stehen – sonst bleibt das alte Paket");
   assert.ok(/await protokoll\(null, "notpaket_gebaut", \{ grund, mitglieder: (paket\.)?anzahl, aufrufe: paket\.aufrufe, db_abfragen: paket\.db\.netz, db_gespart: paket\.db\.puffer/.test(server), "je Bau Grund und Abfragen im Protokoll (nur Zahlen)");
   assert.ok(/\/\/ @ts-types="\.\/db-puffer\.d\.ts"\nimport \{ DB_PUFFER \} from "\.\/db-puffer\.js";/.test(server), "Node-Typen verändern die Server-Typen nicht");
 }

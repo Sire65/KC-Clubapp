@@ -103,7 +103,7 @@ const dbFetch: typeof fetch = (input, init) => {
 // Jede Server-Instanz zählt im Speicher, wie viele Bytes die Datenbank-Schnittstelle (PostgREST) je Ziel (Tabelle/Funktion, Methode) und je App-Aktion
 // zurückgibt und wie groß die Antworten an die Apps sind. Alle EGRESS_MS eine Zeile „egress_messung“ ins Protokoll – nur Namen und Zahlen, nie Inhalte oder Personen.
 // Auswertung: SQL auf kc_club_protokoll (aktion = 'egress_messung'), Feld db/aktion/antwort = { name: [Anzahl, Bytes, Bytes laut Content-Length] }.
-const EGRESS_MS = 10 * 60000, EGRESS_MAX_NAMEN = 300, EGRESS_TOP = 40;
+const EGRESS_MS = 3 * 60000, EGRESS_MAX_NAMEN = 300, EGRESS_TOP = 40; // 2.877.0: 3 statt 10 Min. – App-Instanzen leben oft kürzer als 10 Min.
 type EgressMap = Map<string, [number, number, number]>;
 const EGRESS = { ab: Date.now(), db: new Map() as EgressMap, aktion: new Map() as EgressMap, antwort: new Map() as EgressMap };
 function egressDazu(m: EgressMap, k: string, b: number, cl = 0) {
@@ -190,7 +190,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.872.0";
+const SERVER_VERSION = "2.878.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -9202,6 +9202,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       for (const pid of pids) if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid) || pid.startsWith("KC-P-TEST")) return json({ error: "Ungültig" }, 400);
       if (!pids.length || pids.length > NOT_GRUPPE) return json({ error: "Ungültig" }, 400);
       const pf = dbPufferNeu(0), mitglieder: Record<string, unknown> = {};
+      pf.aktion = "notpaket_teil"; // 2.877.0 KC-CLUB-EGRESS-MESSUNG: Datenbank-Volumen der Teile benannt (vorher „ohne“)
       const vorratGeben = p.vorratGeben === true, vorratNeu = notVorratLaden(pf, p.vorrat); // 2.491.0 KC-CLUB-NOTPAKET-GEMEINSAM
       if (vorratGeben) pf.treffer = new Map();
       await DB_PUFFER.run(pf, async () => { for (const pid of pids) mitglieder[pid] = await notpaketMitglied(pid); });
@@ -20599,10 +20600,13 @@ async function gzip(text: string): Promise<Uint8Array> {
 // „CPU Time exceeded“ (Status 546) abgebrochen – die Rechenzeit je Server-Aufruf ist begrenzt. Darum baut jetzt JEDES Mitglied
 // in einem eigenen Server-Aufruf (Aktion „notpaket_teil“, nur mit dem Zeitplaner-Geheimnis), NOT_PARALLEL gleichzeitig.
 // Der Hauptlauf setzt nur zusammen. Fehlt auch nur ein Teil, bleibt das alte, vollständige Paket stehen (nie ein lückenhaftes).
-const NOT_PARALLEL = 4, NOT_TEIL_MS = 60000;
+// 2.877.0 KC-CLUB-NOTPAKET-LEICHTER (Messung 06./07.11.2026: 16 Abbrüche an einem Tag, je Versuch 3–6 MB Datenvolumen, Ersatz-Paket 19 Std. alt):
+// Teil-Aufrufe und Hauptlauf landen oft in derselben Server-Instanz – 4 gleichzeitige Teile mit je 4 Mitgliedern sprengten deren Grenzen (546).
+// Jetzt 2 Mitglieder je Teil, 2 gleichzeitig: dauert etwas länger (Grenze NOT_ABBRUCH_MS bleibt weit weg), braucht aber nur ein Viertel auf einmal.
+const NOT_PARALLEL = 2, NOT_TEIL_MS = 60000;
 // KC-CLUB-NOTPAKET-PUFFER (2.453.0): 4 Mitglieder je Teil-Aufruf (17 → 5 Aufrufe). Gleiche Leseabfragen innerhalb des Teils nur einmal
 // (DB_PUFFER). Rechenzeit je Aufruf ≈ 4/17 des früheren Gesamtlaufs, weit unter der Grenze, die 2.124.0 zum Aufteilen zwang.
-const NOT_GRUPPE = 4, NOT_GRUPPE_MS = 140000;
+const NOT_GRUPPE = 2, NOT_GRUPPE_MS = 140000; // 2.877.0 KC-CLUB-NOTPAKET-LEICHTER: 2 statt 4
 const NOT_ABBRUCH_MS = NOT_GRUPPE_MS + 60000; // 2.862.0 KC-CLUB-NOTPAKET-ABBRUCH: länger dauert kein Bau (ein Bau braucht sonst 20–35 s)
 const NOT_ABSTAND_MIN = 180, NOT_NACHT_AB = 22, NOT_NACHT_BIS = 6; // 2.491.0 KC-CLUB-NOTPAKET-SELTENER
 async function notpaketMitglied(personId: string): Promise<Record<string, unknown> | null> {
@@ -20844,6 +20848,19 @@ async function notEingangLauf() {
   await protokoll(null, "notbetrieb_nachgetragen", bericht);
   return { ok: true, ...bericht };
 }
+// 2.877.0 KC-CLUB-NOTPAKET-PAUSE-WAECHST (Messung 06.11.2026: Bau scheiterte 16× hintereinander, alle 45 Min. ein neuer Versuch mit je 3–6 MB):
+// Pause nach dem 1. Fehlschlag 30 Min., nach dem 2. 60 Min., ab dem 3. 120 Min. (seit dem letzten guten Paket gezählt). Das alte Paket bleibt so lange
+// gültig; der Admin sieht den Fehler wie bisher unter Notbetrieb. „Erzwingen“ baut immer sofort. Zählfehler → 30 Min. wie bisher.
+const NOT_FEHLER_PAUSE_MIN = [30, 60, 120];
+async function notFehlerPause(st: any, zeitVon: (x: unknown) => number): Promise<number> {
+  const seit = zeitVon(st.hochgeladen_am) || 0;
+  if (!(zeitVon(st.fehler_am) > seit)) return NOT_FEHLER_PAUSE_MIN[0] * 60000;
+  try {
+    const { count, error } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("aktion", "notpaket_fehler").gt("zeit", new Date(seit).toISOString());
+    if (error) return NOT_FEHLER_PAUSE_MIN[0] * 60000;
+    return NOT_FEHLER_PAUSE_MIN[Math.min(Math.max((count ?? 1) - 1, 0), NOT_FEHLER_PAUSE_MIN.length - 1)] * 60000;
+  } catch { return NOT_FEHLER_PAUSE_MIN[0] * 60000; }
+}
 async function notpaketLauf(erzwingen: boolean, geheim: string) {
   await notSchluessel(); // Schlüsselpaar gleich anlegen – den öffentlichen Teil braucht der Ersatz-Server schon beim Einrichten
   const st = await notStand();
@@ -20875,18 +20892,19 @@ async function notpaketLauf(erzwingen: boolean, geheim: string) {
     // nicht wegen geänderter Daten. Immer gebaut wird: neuer Tag (Datumsangaben wie „heute“), das erste Paket, nach einem Fehler (frühestens
     // nach 30 Min. wieder) und „erzwingen“. Der Nachtrag aus dem Notbetrieb läuft unverändert alle 15 Min.
     const zeitVon = (x: unknown) => (x ? Date.parse(String(x)) : NaN);
+    const fehlerPauseMs = await notFehlerPause(st, zeitVon); // 2.877.0 KC-CLUB-NOTPAKET-PAUSE-WAECHST
     if (!erzwingen && fp && st.fingerabdruck !== fp && st.hochgeladen_am) {
       const zuletzt = zeitVon(st.hochgeladen_am), std = berlinStunde(new Date()), nacht = std >= NOT_NACHT_AB || std < NOT_NACHT_BIS;
       const neuerTag = berlinTag(new Date(zuletzt)) !== berlinTag(new Date());
-      const nachFehler = zeitVon(st.fehler_am) > zuletzt && Date.now() - zeitVon(st.fehler_am) > 30 * 60000;
+      const nachFehler = zeitVon(st.fehler_am) > zuletzt && Date.now() - zeitVon(st.fehler_am) > fehlerPauseMs;
       if (!neuerTag && !nachFehler && (nacht || Date.now() - zuletzt < NOT_ABSTAND_MIN * 60000))
         return { ok: true, gedrosselt: true, nacht, naechsterBau: nacht ? null : new Date(zuletzt + NOT_ABSTAND_MIN * 60000).toISOString() };
     }
     // 2.535.0 KC-CLUB-NOTPAKET-FEHLERPAUSE (Lastwarnung 20.10.2026 16:03): nach einem Fehlschlag frühestens nach 30 Min. neu bauen – auch wenn
     // der Abstand seit dem letzten guten Paket schon um ist. Sonst baute jeder 15-Min.-Lauf erneut (~3.000 Abfragen je Versuch). Nicht bei „erzwingen“.
     const fehlerAm = zeitVon(st.fehler_am);
-    if (!erzwingen && fehlerAm > (zeitVon(st.hochgeladen_am) || 0) && Date.now() - fehlerAm < 30 * 60000)
-      return { ok: true, gedrosselt: true, nachFehler: true, naechsterBau: new Date(fehlerAm + 30 * 60000).toISOString() };
+    if (!erzwingen && fehlerAm > (zeitVon(st.hochgeladen_am) || 0) && Date.now() - fehlerAm < fehlerPauseMs)
+      return { ok: true, gedrosselt: true, nachFehler: true, naechsterBau: new Date(fehlerAm + fehlerPauseMs).toISOString() };
     if (!erzwingen && fp && st.fingerabdruck === fp) {
       // nichts geändert: nur „Stand ist aktuell bis jetzt“ melden (klein, signiert)
       await senden("/stand", new TextEncoder().encode(JSON.stringify({ stand: erstellt, fingerabdruck: fp })), "application/json");

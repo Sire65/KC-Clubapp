@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.878.0 – 2026-11-07 – 🧯 Notfall-Paket bricht nicht mehr ab und spart Datenvolumen (KC-CLUB-NOTPAKET-LEICHTER, KC-CLUB-NOTPAKET-PAUSE-WAECHST) · Server 2.878.0 – [Hansi: einspielen]
+Anlass: Auswertung der Datenvolumen-Messung (2.869.0, Supabase-Warnung 05.11., Schonfrist bis 16.11.). Freigabe Hansi 06.11.: „Ja, mach es so wie du vorschlägst“.
+- **Befund:** Seit 06.11. 9:24 Uhr brach der Bau des Notfall-Pakets 16-mal hintereinander ab (Server-Grenzen, 546), erst um 1:39 Uhr klappte er wieder. Jeder Versuch holte trotzdem 3–6 MB aus der Datenbank – fast das gesamte gemessene Datenvolumen (≈ 60 MB in 13 Std.). Das Ersatz-Paket war dabei bis zu 19 Std. alt.
+- **Leichter:** 2 statt 4 Mitglieder je Teil-Aufruf, 2 statt 4 gleichzeitig (Hauptlauf und Teile landen oft in derselben Server-Instanz). Ein Bau dauert etwas länger, braucht aber nur ein Viertel auf einmal.
+- **Wachsende Pause:** nach dem 1. Fehlschlag 30 Min., nach dem 2. 60 Min., ab dem 3. 120 Min. (bisher immer 30 Min. → bei Dauerfehler alle 45 Min. ein teurer Versuch). Das alte Paket bleibt gültig, der Admin sieht den Fehler wie bisher; „Erzwingen“ baut sofort.
+- **Messung genauer:** Teil-Aufrufe heißen jetzt „notpaket_teil“ (vorher „ohne“); jede Server-Instanz meldet alle 3 statt 10 Min. (App-Instanzen lebten oft kürzer – ihre Zahlen fehlten).
+- Test: `tests/egress-messung.test.mjs` erweitert. Rückweg: Server 2.872.0 (App 2.877.0).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.877.0 – 2026-11-07 – 📰 Club-Küche Nr. 1: Rezept des Monats, Backstube, Bastelecke · 🐞 Blättern ohne versehentliches Umblättern · 🔍 Schrift-Zoom (KC-CLUB-MAGAZIN-REZEPT, -BACKSTUBE, -BASTELECKE, KC-CLUB-BLAETTERN-WISCHEN, -ZOOM) · nur App
 Wunsch Hansi (07.11.): „Bringe das Rezept in den Rezeptteil und als Rezept des Monats in die Clubzeitschrift.“ (Bildschirmfotos eines Rezepts aus dem Netz)
 - **Rezeptbuch:** „Hähnchen mit Spitzkohl in Schmandsoße“ (Hauptgericht, 4 Portionen, 25 Min., von Hansi) eingetragen – Zutaten mit Mengen (Portionen umrechenbar), Zubereitung in 6 Schritten in eigenen Worten, Club-Tipp zu den Beilagen. (Eintrag direkt in der Datenbank, schon sichtbar.)
