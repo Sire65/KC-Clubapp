@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.881.0 – 📰 Club-Küche: Vorwort, alle Ausgaben, Drucken/Teilen/Ablegen, Startnachricht (KC-CLUB-MAGAZIN-VORWORT, KC-CLUB-MAGAZIN-ARCHIV, KC-CLUB-DRUCK-ABLEGEN, Wunsch Hansi)
+- **Vorwort** mit festem Platz gleich nach dem Titelblatt (Seite 2, auch im Inhaltsverzeichnis). Nr. 1 (Januar 2027) hat ihr Vorwort; Ausgaben ohne eigenes zeigen einen Platzhalter für die Redaktion.
+- **📚 Alle Ausgaben** im Magazin-Menü: Kacheln für den ganzen Jahrgang (Nr. 1–12) mit Stand (erschienen / 🔒 Entwurf / in Vorbereitung). Mitglieder sehen nur erschienene Ausgaben (Erscheinungstag erreicht, Nr. 1: 01.01.2027), der Admin alle.
+- **🖨️ Drucken / Teilen** je Ausgabe: ganze Ausgabe in der Druckvorschau mit Club-Kopf und -Fuß (ohne Knöpfe und Platzhalter, jede Rubrik auf neuer Seite) – drucken, als PDF speichern/teilen, in der Club-App senden und neu **🗄️ In meinem Ordner ablegen** (eigener Archiv-Ordner; Knopf nur bei Druckarten, die das anbieten).
+- **📣 Startnachricht** (nur Admin): öffnet die Startnachricht mit vorbereitetem Text (Ausgabe, Schlagzeilen, wo man sie findet); solange das Magazin nur für den Admin freigegeben ist, kommt vorher ein Hinweis.
+- Test: tests/magazin-archiv.test.mjs. Rückweg: Version 2.880.0 einspielen.
+
 ## 2.880.0 – Film unter 1 Minute geschlossen → nochmal anbieten (KC-CLUB-FILM-KURZ)
 Wunsch Hansi 07.11.2026 (Anlass: Willfried schloss den Film „Deine App – so, wie du sie willst“ nach 17 Sekunden und bekam ihn danach nie wieder angeboten):
 „Wer zu schnell abbricht, unter einer Minute, sollte den Film nochmals angeboten bekommen mit dem Hinweis …“

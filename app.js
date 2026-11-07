@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.880.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.881.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22,7 +22,7 @@ const TEILE_LISTE = {
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine"], sri: "sha384-x1KRyljEJFmmyIEhCy+b8FQ0yYPL9Mx72enSFpuQmN3MQXr8P/BsGNvMDy6/s244" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-kPjZEYqoJZ8PWlmEi00iT0RO0Wfb+HPVfqU58TfxKYXPnQzS5KTb1FCUGYrpPdTI" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
@@ -30708,6 +30708,7 @@ const DRUCKARTEN = {
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
   rezept: { bauen: (o, id) => druckRezept(id) },
+  magazin: { ablegen: { register: ["Club-Magazin", "Club-Küche", "Sonstiges"], stichworte: "Club-Küche, Magazin" }, bauen: (o, p) => magDruck(p) }, // KC-CLUB-MAGAZIN-ARCHIV: ganze Ausgabe drucken/PDF/senden/ablegen
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
   inhaltsverzeichnis: { titel: "🗂️ Inhaltsverzeichnis drucken / als PDF", optionen: () => ivOptionen(), bauen: () => druckInhaltsverzeichnis() }, // KC-CLUB-INHALTSVERZEICHNIS (2.79.0)
@@ -30789,6 +30790,7 @@ async function druckVorschau() {
   $("druckVorschauTitel").textContent = DRUCK.titel || "Vorschau";
   $("druckVorschauAendern").classList.toggle("versteckt", !DRUCKARTEN[DRUCK.art].optionen);
   $("druckVorschauTeilen").classList.toggle("versteckt", !IST_IOS_APP());
+  $("druckVorschauAblegen")?.classList.toggle("versteckt", !DRUCKARTEN[DRUCK.art]?.ablegen); // KC-CLUB-DRUCK-ABLEGEN: nur wo die Druckart es anbietet
   $("druckVorschauHinweis").textContent = IST_IOS_APP() ? "iPhone: Klappt das Drucken aus der App nicht, „📤 Teilen“ antippen und dort drucken oder als PDF sichern." : "Im Druckfenster kannst du auch „Als PDF speichern“ wählen.";
   v.classList.remove("versteckt"); document.body.style.overflow = "hidden";
   // A4-Blatt auf Bildschirmbreite verkleinern (1 mm ≈ 3,78 px)
@@ -30919,6 +30921,23 @@ async function druckInAppSenden() {
     await anlageInNeueNachricht([{ r, name }]);
   } catch (e) { meldeFehler(e); }
   finally { if (k) { k.disabled = false; k.textContent = "💬 In der Club-App senden"; } }
+}
+// KC-CLUB-DRUCK-ABLEGEN (Wunsch Hansi 07.11.2026, zuerst für die Club-Küche): dasselbe A4-PDF in den eigenen Ordner im Archiv legen (wie die Reise-Checkliste).
+// Nur Druckarten mit „ablegen“ zeigen den Knopf; Register: erstes passendes aus der Vorschlagsliste, sonst das erste des Ordners.
+async function druckAblegen() {
+  const k = $("druckVorschauAblegen"), cfg = DRUCKARTEN[DRUCK.art]?.ablegen; if (!cfg) return;
+  if (k) { k.disabled = true; k.textContent = "⏳ Wird abgelegt …"; }
+  try {
+    const ar = await api("archiv_liste", {}, { warten: true });
+    const jahr = +heuteIso().slice(0, 4), o = (ar.ordner || []).filter((x) => x.besitzer && x.eigen).sort((x, y) => (y.jahr === jahr) - (x.jahr === jahr) || y.jahr - x.jahr)[0];
+    if (!o) throw new Error("Dein persönlicher Ordner ist nicht verfügbar (liegt er im Papierkorb?).");
+    const reg = o.register?.length ? o.register : (ar.register || ["Sonstiges"]), register = (cfg.register || []).find((r) => reg.includes(r)) || reg[0];
+    const blob = await druckPdfBlob(), heute = heuteIso();
+    await api("archiv_hochladen", { ordner_id: o.id, register, titel: DRUCK.titel || "Ausdruck", datum: heute, stichworte: cfg.stichworte || "", name: druckDateiName(), mime: "application/pdf", daten: base64(await blob.arrayBuffer()) }, { warten: true });
+    if (typeof AR !== "undefined") AR.daten = null;
+    melde(`🗄️ Liegt in deinem Ordner ${o.jahr} (Register „${register}“)`);
+  } catch (e) { meldeFehler(e); }
+  finally { if (k) { k.disabled = false; k.textContent = "🗄️ In meinem Ordner ablegen"; } }
 }
 async function anlageInNeueNachricht(liste) { // hochgeladene Anlagen [{ r, name }] → „Neue Nachricht“ mit Empfängerwahl (Druckvorschau und Teilen an sich selbst)
   anlagen = [...anlagen.filter((a) => !a.laedt), ...liste.map(({ r, name }) => ({ id: r.id, name: r.name || name, laedt: false }))]; EINMAL = false;
@@ -34235,7 +34254,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", installStandBlatt: "📲 Wer nutzt die App wie?", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magArchivBlatt: "📚 Alle Ausgaben der Club-Küche", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", installStandBlatt: "📲 Wer nutzt die App wie?", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",
