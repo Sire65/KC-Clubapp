@@ -23,7 +23,7 @@ assert.ok(t.includes('class="mag-spalten"') && t.includes('class="mag-kasten"') 
 assert.ok(w.includes("mag-einsenden") && t.includes("mag-einsenden") && rb.includes("mag-einsenden"), "Einsenden-Knopf für die nächste Ausgabe");
 // Platzhalter bleiben für Rubriken ohne Heftinhalt; Ausgabe ohne Eintrag ändert nichts
 assert.ok(teil.includes("else if (heft[r.id]) inhalt = magHeftHtml(r.id, heft[r.id]);"));
-assert.equal(magHeftHtml("backstube", {}), "");
+assert.equal(magHeftHtml("portraet", {}), ""); // 2.878.0: Backstube und Bastelecke haben jetzt Heftinhalt
 // Gestaltung vorhanden
 for (const k of [".mag-spalten", ".mag-kasten", ".mag-bon", ".mag-fakten", ".mag-fotos", ".mag-offen"]) assert.ok(html.includes(k + " "), "CSS " + k);
 console.log("magazin-nr1: ok");

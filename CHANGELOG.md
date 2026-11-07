@@ -1,9 +1,11 @@
 # Änderungen
 
-## 2.877.0 – 2026-11-07 – 🍲 Rezept des Monats in der Club-Küche Nr. 1: Hähnchen mit Spitzkohl in Schmandsoße (KC-CLUB-MAGAZIN-REZEPT) · nur App
+## 2.877.0 – 2026-11-07 – 📰 Club-Küche Nr. 1: Rezept des Monats (Hähnchen mit Spitzkohl), Backstube (Feenküsse), Bastelecke (Karnevalsmaske) (KC-CLUB-MAGAZIN-REZEPT, -BACKSTUBE, -BASTELECKE) · nur App
 Wunsch Hansi (07.11.): „Bringe das Rezept in den Rezeptteil und als Rezept des Monats in die Clubzeitschrift.“ (Bildschirmfotos eines Rezepts aus dem Netz)
 - **Rezeptbuch:** „Hähnchen mit Spitzkohl in Schmandsoße“ (Hauptgericht, 4 Portionen, 25 Min., von Hansi) eingetragen – Zutaten mit Mengen (Portionen umrechenbar), Zubereitung in 6 Schritten in eigenen Worten, Club-Tipp zu den Beilagen. (Eintrag direkt in der Datenbank, schon sichtbar.)
 - **Club-Küche Nr. 1 (Januar 2027):** Die Seite „🍲 Rezept des Monats“ zeigt jetzt fest dieses Rezept (vorher: automatischer Vorschlag aus dem Rezeptbuch). Bekommt das Rezept im Rezeptbuch später ein eigenes Foto, erscheint es auch im Heft; bis dahin „📷 Foto folgt – wer es nachkocht: Foto gern an die Redaktion schicken!“. Das Foto der Vorlage wird bewusst nicht übernommen (fremde Bildrechte).
+- **🥐 Backstube** (Wunsch Hansi: „mach bei Backstube Rezept für Feenküsse“): Feenküsse – Mürbeteig-Taler mit Toffifee und Baiserhaube, ca. 45 Stück; Eckdaten, Zutaten nach Teig/Füllung/Haube, 6 Schritte in eigenen Worten, Tipp aus der Backstube (fettfreie Schüssel, Haltbarkeit). Steht auch im Rezeptbuch. Foto folgt – das Bild im Rezeptbuch wird erst übernommen, wenn feststeht, dass es ein eigenes ist.
+- **🧶 Hobby- & Bastelecke** (vorher „Hobbyecke (später)“; Wunsch Hansi: „bei Bastelecke suche aus dem Internet was raus, was zu Karneval passt“): „Helau und Alaaf: eine Maske aus dem Pappteller“ – Rosenmontag 8. Februar 2027, Material, 6 Schritte (Halbmaske oder venezianische Stabmaske), Kasten „Jecke Tischdeko in fünf Minuten“ (Konfetti-Teelicht, Gläser mit Tröte, Konfetti-Grußkarte). Ideen aus verbreiteten Bastelanleitungen, Text in eigenen Worten.
 - **Fehler behoben:** Zutaten aus dem Rezeptbuch (Format Menge/Einheit/Name) erschienen im Heft als leere Punkte – jetzt mit Menge und Einheit.
 - Test: `tests/magazin-rezept.test.mjs`; Heft im abgeschirmten Browser geblättert (Seite 3/14, Zutaten und Zubereitung vollständig).
 - Rückweg: App 2.876.0. Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.

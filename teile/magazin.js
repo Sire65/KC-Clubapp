@@ -22,7 +22,7 @@ const MAG_RUBRIKEN = [
   { id: "portraet", sym: "🧑‍🍳", t: "Mitglied im Porträt", u: "Wer kocht da eigentlich?", platz: "Ein Mitglied stellt sich vor: Foto, Werdegang, Lieblingsgericht – nur mit Zustimmung des Mitglieds." },
   { id: "roman", sym: "📖", t: "Fortsetzungsroman", u: "Ein Roman in zwölf Folgen", platz: "Hier erscheint die nächste Folge des Fortsetzungsromans." },
   { id: "termine", sym: "📅", t: "Termine im Monat", u: "Was im Club ansteht", auto: true },
-  { id: "hobby", sym: "🧶", t: "Hobbyecke", u: "Garten, Heimwerken, Stricken & Co. (später)", platz: "Später: Garten, Heimwerken, Stricken und Häkeln – was Mitglieder neben der Küche gerne machen." },
+  { id: "hobby", sym: "🧶", t: "Hobby- & Bastelecke", u: "Basteln, Garten, Heimwerken & Co.", platz: "Später: Garten, Heimwerken, Stricken und Häkeln – was Mitglieder neben der Küche gerne machen." },
   { id: "links", sym: "🔗", t: "Linktipps", u: "Gefunden und empfohlen (später)", platz: "Später: empfehlenswerte Seiten und Videos. Gesundheitsthemen nur als Link." },
 ];
 // KC-CLUB-MAGAZIN-NR1: Heftinhalt je Ausgabe (Registry Nr. → Rubrik-ID → Inhalt). Was hier steht, ersetzt den Platzhalter der Rubrik; alles andere bleibt
@@ -56,6 +56,25 @@ const MAG_AUSGABEN = {
       zutaten: [[400, "g", "Hähnchenbrustfilet"], [1, "", "kleiner Spitzkohl (ca. 600 g)"], [1, "", "Zwiebel"], [1, "", "Knoblauchzehe"], [1, "EL", "Öl"], [150, "g", "Schmand"], [200, "ml", "Gemüsebrühe"],
         [1, "TL", "Paprikapulver, edelsüß"], [1, "Prise", "Muskat"], [null, "", "Salz und Pfeffer"], [null, "", "Petersilie zum Garnieren"]].map(([m, e, n]) => ({ m, e, n })),
       zubereitung: "1. Vorbereiten: Hähnchenbrust in Streifen oder mundgerechte Stücke schneiden. Vom Spitzkohl die äußeren Blätter und den Strunk entfernen, den Kohl in feine Streifen schneiden. Zwiebel und Knoblauch schälen und fein würfeln.\n2. Anbraten: Öl in einer großen Pfanne erhitzen, das Hähnchen von allen Seiten goldbraun braten und kurz herausnehmen.\n3. Kohl dazu: Zwiebel und Knoblauch im Bratfett glasig dünsten, dann den Spitzkohl zugeben und mitbraten, bis er etwas zusammenfällt.\n4. Soße: Schmand mit Gemüsebrühe, Paprikapulver, Muskat, Salz und Pfeffer glatt rühren und über den Kohl gießen. Das Hähnchen wieder in die Pfanne geben.\n5. Schmoren: Zugedeckt bei mittlerer Hitze schmoren lassen, bis das Fleisch zart und der Kohl weich ist.\n6. Anrichten: Mit Salz, Pfeffer und Muskat abschmecken und mit frisch gehackter Petersilie bestreuen.\n\nTipp aus dem Club: Dazu passen Salzkartoffeln, Reis oder ein frisches Bauernbrot." },
+    // KC-CLUB-MAGAZIN-BACKSTUBE (Wunsch Hansi 07.11.2026 „mach bei Backstube Rezept für Feenküsse“): steht im Rezeptbuch (id 8109ae04…); Text in
+    // eigenen Worten. Foto erst, wenn Hansi bestätigt, dass es sein eigenes ist (Bild im Rezeptbuch vom 02.11., Vorlage familienkost.de).
+    backstube: { id: "8109ae04-2caf-4e53-8e51-f28fe332784f", titel: "Feenküsse", unter: "Mürbeteig-Taler mit Karamell-Nuss-Herz und Baiserhaube",
+      fakten: [["Menge", "ca. 45 Stück"], ["Zubereitung", "ca. 25 Min."], ["Backen", "18 Min."], ["Kühlen", "1 Std."]],
+      zutaten: [["Mürbeteig", ["160 g Weizenmehl", "60 g Zucker", "1 Päckchen Vanillezucker", "100 g kalte Butter", "2 Eigelb", "1 Prise Salz"]],
+        ["Füllung", ["45 Toffifee"]], ["Baiserhaube", ["3 Eiweiß", "150 g Zucker", "1 Spritzer Zitronensaft"]]],
+      schritte: ["Mehl, Zucker, Vanillezucker, Butter in Stückchen, Eigelb und Salz rasch zu einem glatten Mürbeteig verkneten, in Folie wickeln und etwa eine Stunde kalt stellen.",
+        "Ofen auf 170 °C Ober- und Unterhitze (150 °C Umluft) vorheizen. Den Teig dünn ausrollen, rund 45 kleine Kreise ausstechen und auf ein Blech mit Backpapier legen.",
+        "Auf jeden Taler mittig ein Toffifee setzen.",
+        "Eiweiß mit dem Zitronensaft steif schlagen, dann den Zucker langsam einrieseln lassen und etwa fünf Minuten weiterschlagen, bis der Eischnee glänzt.",
+        "Den Eischnee in einen Spritzbeutel füllen und auf jedes Toffifee einen kleinen Tupfen setzen.",
+        "Die Feenküsse etwa 18 Minuten backen, bis die Haube leicht Farbe nimmt, und auf dem Blech abkühlen lassen."],
+      tipp: "Das Eiweiß lässt sich nur steif schlagen, wenn Schüssel und Schneebesen fettfrei sind – ein Tropfen Eigelb genügt, und der Schnee wird nichts. In einer Blechdose halten sich die Feenküsse gut eine Woche." },
+    // KC-CLUB-MAGAZIN-BASTELECKE (Wunsch Hansi 07.11.2026 „bei Bastelecke suche aus dem Internet was raus, was zu Karneval passt, der im Februar ist“):
+    // Ideen aus verbreiteten Bastelanleitungen (Pappteller-Maske, Konfetti-Teelichter, Gläser mit Tröten), Anleitung in eigenen Worten.
+    hobby: { marke: "Bastelecke", titel: "Helau und Alaaf: eine Maske aus dem Pappteller", vorspann: "Rosenmontag ist am 8. Februar 2027 – Zeit für eine eigene Maske. Aus einem Pappteller wird in einer halben Stunde eine Halbmaske, schlicht oder venezianisch mit Federn und Glitzer.",
+      material: ["1 weißer Pappteller (am besten ein fester)", "Bleistift und Schere oder Bastelmesser", "Wasserfarben, Acrylfarben oder Filzstifte", "Glitzer, Pailletten, Federn – was die Bastelkiste hergibt", "Bastelkleber oder Heißkleber", "Gummiband (ca. 40 cm) oder ein Holzstab zum Halten", "Locher"],
+      schritte: ["Den Pappteller einmal quer halbieren. Die obere Hälfte wird die Maske.", "An der geraden Schnittkante mittig einen kleinen Bogen für die Nase ausschneiden.", "Die Maske vors Gesicht halten, die Augen mit dem Bleistift markieren und zwei Augenlöcher ausschneiden – lieber etwas größer, dann sieht man besser.", "Bemalen: kräftige Farben, Rauten wie beim Harlekin oder Gold und Schwarz für den venezianischen Stil. Gut trocknen lassen.", "Verzieren: Federn seitlich an den oberen Rand kleben, Glitzer und Pailletten nach Lust und Laune.", "Links und rechts ein Loch stanzen und das Gummiband durchziehen und verknoten – oder unten seitlich einen Holzstab ankleben, dann wird es eine Stabmaske wie in Venedig."],
+      schnell: { titel: "Jecke Tischdeko in fünf Minuten", ideen: [["Konfetti-Teelicht", "Ein Wasserglas außen dünn mit Bastelkleber bestreichen, in Konfetti wälzen, trocknen lassen und ein Teelicht hineinstellen."], ["Gläser mit Tröte", "Eine kleine Tröte mit einem bunten Pfeifenreiniger an den Stiel jedes Sektglases binden – jeder Gast hat seinen Tusch dabei."], ["Konfetti-Grußkarte", "Etwas Konfetti auf ein Stück Karton legen, mit Klarsichtfolie abdecken und ringsum festkleben. Einen netten Gruß dazuschreiben – fertig ist die Einladung zum Karnevalsabend."]] } },
     witz: { titel: "Niedrigtemperatur", zeilen: [["Souschef", "„Chef, wir arbeiten heute ausschließlich mit Niedrigtemperatur!“"], ["Küchenchef", "„Sehr gut. Dann fangen wir gleich mit der Stimmung in der Küche an.“"]] },
     tipp: [
       { titel: "Die Jus ist konzentriert, schmeckt aber flach",
@@ -81,6 +100,18 @@ function magHeftHtml(id, x) {
     : `<section class="mag-artikel"><h3>${esc(t.titel)}</h3><div class="mag-spalten"><p class="mag-warum">Der Kniff</p><p>${esc(t.kniff)}</p>${t.merke ? `<blockquote class="mag-zitatzeile">${esc(t.merke)}</blockquote>` : ""}
        <p class="mag-warum">Warum es funktioniert</p><p>${esc(t.warum)}</p></div></section>`).join("") + magPlatz("Euer Kniff aus der Küche für die nächste Ausgabe?", "tipp");
   if (id === "roman") return magRomanHtml(x);
+  if (id === "backstube") return `<div class="mag-rezept"><h3 class="mag-schlag">${esc(x.titel)}</h3><p class="mag-lead">${esc(x.unter)}</p>
+    <div class="mag-fakten">${x.fakten.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join("")}</div>
+    <p class="hinweis" style="margin:4px 0 10px;padding:8px 10px;border:1px dashed currentColor;border-radius:10px;text-align:center">📷 <b>Foto folgt</b> – wer sie backt: Foto gern an die Redaktion schicken!</p>
+    <h4>Zutaten</h4>${x.zutaten.map(([g, l]) => `<p style="margin:6px 0 2px"><b>${esc(g)}</b></p><ul>${l.map((z) => `<li>${esc(z)}</li>`).join("")}</ul>`).join("")}
+    <h4>So wird's gemacht</h4><ol>${x.schritte.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
+    <section class="mag-kasten"><small class="mag-marke-klein">Tipp aus der Backstube</small><p>${esc(x.tipp)}</p></section>
+    <p class="hinweis">🥐 Steht auch im Rezeptbuch – dort lassen sich die Mengen umrechnen.</p></div>${magPlatz("Euer Lieblingsgebäck für die nächste Ausgabe?", "backstube")}`;
+  if (id === "hobby") return `<small class="mag-marke-klein">${esc(x.marke)}</small><h3 class="mag-schlag">${esc(x.titel)}</h3><p class="mag-lead">${esc(x.vorspann)}</p>
+    <h4>Das brauchst du</h4><ul>${x.material.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>
+    <h4>Schritt für Schritt</h4><ol>${x.schritte.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
+    <section class="mag-kasten"><small class="mag-marke-klein">${esc(x.schnell.titel)}</small><dl class="mag-merke">${x.schnell.ideen.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></section>
+    ${magPlatz("Zeigt her eure Masken! Fotos und eigene Bastelideen gern über „Beitrag einsenden“.", "hobby")}`;
   if (id === "rueckblick") return `<h3 class="mag-schlag">${esc(x.titel)}</h3><p class="mag-lead">${esc(x.vorspann)}</p>
     <div class="mag-fakten">${x.fakten.map(([k, v]) => `<div><small>${esc(k)}</small><b>${v == null ? "✍️ __" : esc(v)}</b></div>`).join("")}</div>
     <div class="mag-spalten">${x.abschnitte.map(([h, t, offen]) => `${h ? `<h4>${esc(h)}</h4>` : ""}<p>${t ? esc(t) + " " : ""}${offen ? magOffen(offen) : ""}</p>`).join("")}</div>
