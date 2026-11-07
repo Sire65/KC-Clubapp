@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.882.0 – 📰 Club-Küche: Vorwort, alle Ausgaben, Drucken/Teilen/Ablegen, Startnachricht (KC-CLUB-MAGAZIN-VORWORT, KC-CLUB-MAGAZIN-ARCHIV, KC-CLUB-DRUCK-ABLEGEN, Wunsch Hansi)
+- **Vorwort** mit festem Platz gleich nach dem Titelblatt (Seite 2, auch im Inhaltsverzeichnis). Nr. 1 (Januar 2027) hat ihr Vorwort; Ausgaben ohne eigenes zeigen einen Platzhalter für die Redaktion.
+- **📚 Alle Ausgaben** im Magazin-Menü: Kacheln für den ganzen Jahrgang (Nr. 1–12) mit Stand (erschienen / 🔒 Entwurf / in Vorbereitung). Mitglieder sehen nur erschienene Ausgaben (Erscheinungstag erreicht, Nr. 1: 01.01.2027), der Admin alle.
+- **🖨️ Drucken / Teilen** je Ausgabe: ganze Ausgabe in der Druckvorschau mit Club-Kopf und -Fuß (ohne Knöpfe und Platzhalter, jede Rubrik auf neuer Seite) – drucken, als PDF speichern/teilen, in der Club-App senden und neu **🗄️ In meinem Ordner ablegen** (eigener Archiv-Ordner; Knopf nur bei Druckarten, die das anbieten).
+- **📣 Startnachricht** (nur Admin): öffnet die Startnachricht mit vorbereitetem Text (Ausgabe, Schlagzeilen, wo man sie findet); solange das Magazin nur für den Admin freigegeben ist, kommt vorher ein Hinweis.
+- Test: tests/magazin-archiv.test.mjs. Rückweg: Version 2.881.0 einspielen.
 ## 2.881.0 – 2026-11-07 – 📷 Foto zum Rezept des Monats (Club-Küche Nr. 1) · nur App
 - Hansi hat ein eigenes Bild zu „Hähnchen mit Spitzkohl in Schmandsoße“ geschickt (07.11., mit ChatGPT erstellt, nicht das Bild der Rezeptseite; zweite, bessere Fassung). Es steht jetzt im Heft über dem Rezept (statt „📷 Foto folgt“), als `magazin/rezept/haehnchen-spitzkohl.webp` (aus dem Bildschirmfoto ausgeschnitten, ohne Ecken und Teilen-Knopf, 804 × 624). Darunter klein: „Abbildung mit KI erstellt – ein echtes Foto folgt, sobald jemand das Rezept nachkocht.“ (Hansi: „Ein wirkliches gekochtes kommt irgendwann später.“) Lädt jemand später im Rezeptbuch ein Foto hoch, hat dieses Vorrang.
 - Test: `tests/magazin-rezept.test.mjs`; im abgeschirmten Browser geprüft (Bild geladen, Seite 3/14).

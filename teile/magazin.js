@@ -29,6 +29,17 @@ const MAG_RUBRIKEN = [
 // Platzhalter für die Redaktion. Offene Angaben (Zahlen, Zitate, Fotos) als { platz: "…" } – nie erfundene Ergebnisse eintragen.
 const MAG_AUSGABEN = {
   1: {
+    erscheint: "2027-01-01", // KC-CLUB-MAGAZIN-ARCHIV: ab diesem Tag für Mitglieder (sobald „magazin“ für alle freigegeben ist); vorher Entwurf, nur Admin
+    // KC-CLUB-MAGAZIN-VORWORT (Wunsch Hansi 07.11.2026 „ein Vorwort wie Chefredakteure in jeder Ausgabe“, fester Platz nach dem Titelblatt). **fett** erlaubt.
+    vorwort: { anrede: "Liebe Köchinnen und Köche, liebe Mitglieder,", gruss: "Viel Freude beim Blättern, Lesen und Nachkochen – und ein gutes, genussvolles Jahr 2027!", name: "Euer Hansi", rolle: "für die Redaktion der Club-Küche",
+      absaetze: [
+        "was Ihr gerade in der Hand haltet – oder besser: auf dem Handy –, ist eine Premiere: die erste Ausgabe der **Club-Küche**, unseres eigenen Magazins. Ab jetzt erscheint sie jeden Monat, nur für uns, direkt in der Club-App.",
+        "Den Anfang macht ein Blick zurück. Elf Tage Weihnachtsmarkt mitten in Werne: Grünkohl aus dem Kessel, Glühwein, Feuerzangenbowle – und vor allem viele Hände, die geschnippelt, ausgeschenkt und abends noch gespült haben. Die **Nachlese** ist unser Dankeschön an alle, die dabei waren.",
+        "Dann wird es praktisch. Das **Rezept des Monats** – Hähnchen mit Spitzkohl in Schmandsoße – steht in 25 Minuten auf dem Tisch und passt genau in den Januar. In der **Backstube** warten Feenküsse, die man nicht nur zu Weihnachten backen darf. Der **Küchentipp** kommt diesmal direkt vom Pass: was hilft, wenn die Jus flach schmeckt oder die Beurre blanc bricht. Wer jetzt nickt, weiß: Das ist uns allen schon passiert.",
+        "Zum ersten Mal gibt es auch einen **Fortsetzungsroman**. „Hinter dem Pass“ erzählt in zwölf Folgen vom Leben in einer Profiküche. Folge 1 begleitet Lena an ihrem ersten Tag in der „Alten Mühle“. Ich verrate nur so viel: Es bleibt nicht beim Gemüseschneiden.",
+        "Und weil Rosenmontag schon am 8. Februar ist, zeigt die **Bastelecke**, wie aus einem Pappteller eine Maske wird.",
+        "Ein Magazin lebt von seinen Leserinnen und Lesern. Schickt uns Eure Lieblingsrezepte, Fotos vom Clubabend, den besten Küchenwitz oder erzählt im **Porträt**, wie Ihr zum Kochen gekommen seid. Das geht ganz einfach in der App über **„Beitrag einsenden“**. Und wer Lust hat, in der Redaktion mitzumachen: Sprecht mich an!",
+      ] },
     schlagzeilen: [["📸", "Nachlese: unser Weihnachtsmarkt 2026"], ["😄", "Der Witz vom Pass"], ["💡", "Aus der Trickkiste: Jus und Beurre blanc"], ["📖", "Neu: „Hinter dem Pass“ – Fortsetzungsroman, Folge 1"]],
     rueckblick: {
       titel: "Elf Tage Grünkohl, Glühwein und gute Laune", vorspann: "Weihnachtsmarkt Werne vom 2. bis 14. Dezember 2026: zwei Tage Aufbau, elf Markttage – Rückblick auf unseren Stand.",
@@ -158,19 +169,32 @@ const magKopf = () => `<div class="mag-kopf"><b>CLUB-KÜCHE</b><span>Nr. ${magNu
 const magSeite = (inhalt, nr) => `<div class="mag-seite">${magKopf()}<div class="mag-rumpf">${inhalt}</div><div class="mag-fuss"><span>Köcheclub Werne</span><span>${nr}</span></div></div>`;
 const MAG_RUBRIK_ART = { rezept: "rezept", backstube: "backstube", tipp: "tipp", witz: "witz", rueckblick: "rueckblick", portraet: "portraet", hobby: "hobby", links: "link" };
 const magPlatz = (t, rubrik) => `<div class="mag-platz">✍️ <b>Platzhalter für die Redaktion</b><br>${esc(t)}${rubrik && MAG_RUBRIK_ART[rubrik] ? `<br><button type="button" class="knopf klein mag-einsenden" onclick="blZu();magEinsenden(${jsArg(MAG_RUBRIK_ART[rubrik])})">✉️ Beitrag dafür einsenden</button>` : ""}</div>`;
-async function magStart(jahr, monat) {
-  if (!frei("magazin")) return melde("Das Club-Magazin ist noch nicht freigegeben.", true);
-  const h = heuteIso(); MAG.jahr = jahr || +h.slice(0, 4); MAG.monat = monat || +h.slice(5, 7);
-  if (!jahr && magNummer(MAG.jahr, MAG.monat) === 1 && (MAG.jahr < MAG_START.jahr || (MAG.jahr === MAG_START.jahr && MAG.monat < MAG_START.monat))) Object.assign(MAG, { jahr: MAG_START.jahr, monat: MAG_START.monat }); // vor dem Start: Ausgabe Nr. 1 zeigen
-  melde("📰 Das Magazin wird zusammengestellt …");
+// KC-CLUB-MAGAZIN-ARCHIV (Wunsch Hansi 07.11.2026 „alle 12 Ausgaben sollen sich aufrufen lassen … ein Knopf zum Ausdrucken, in Ordner ablegen, weitersenden“):
+// Erschienen ist eine Ausgabe, wenn ihr Heft einen Erscheinungstag hat und der erreicht ist. Mitglieder sehen nur Erschienenes, der Admin alles (als Entwurf).
+const magErschienen = (nr) => { const e = MAG_AUSGABEN[nr]?.erscheint; return !!e && e <= heuteIso(); };
+const magJahrMonat = (nr) => { const i = MAG_START.monat - 1 + nr - 1; return [MAG_START.jahr + Math.floor(i / 12), (i % 12) + 1]; };
+const magNeueste = () => { let n = 0; for (let i = 1; i <= 120; i++) if (magErschienen(i)) n = i; return n; };
+async function magDaten() { // Termine des Monats + Rezept (fest gewählt, sonst Vorschlag) – für Lesen und Drucken
   const von = `${MAG.jahr}-${String(MAG.monat).padStart(2, "0")}-01`, bis = tagPlus(`${MAG.monat === 12 ? MAG.jahr + 1 : MAG.jahr}-${String(MAG.monat === 12 ? 1 : MAG.monat + 1).padStart(2, "0")}-01`, -1);
   const [kal, rz] = await Promise.allSettled([api("kalender", { von, bis }, { still: true }), frei("rezepte") ? api("rezepte_liste", {}, { still: true }) : Promise.reject(new Error("aus"))]);
   let termine = null; try { if (kal.status === "fulfilled") termine = demnaechstListe(kal.value).filter((x) => x.tag >= von && x.tag <= bis); } catch {}
   const rezepte = rz.status === "fulfilled" ? rz.value.rezepte || [] : [];
   const heftRz = (MAG_AUSGABEN[magNummer(MAG.jahr, MAG.monat)] || {}).rezept; // KC-CLUB-MAGAZIN-REZEPT: fest gewählt, sonst Vorschlag aus dem Rezeptbuch
   const rezept = heftRz ? { ...heftRz, ...(rezepte.find((r) => r.id === heftRz.id) || {}), gewaehlt: true } : rezepte.filter((r) => r.foto).sort((a, b) => (b.bewertung?.schnitt || 0) - (a.bewertung?.schnitt || 0) || String(b.erstellt_am).localeCompare(String(a.erstellt_am)))[0] || rezepte[0] || null;
+  return { termine, rezept };
+}
+async function magStart(jahr, monat) {
+  if (!frei("magazin")) return melde("Das Club-Magazin ist noch nicht freigegeben.", true);
+  const h = heuteIso(); MAG.jahr = jahr || +h.slice(0, 4); MAG.monat = monat || +h.slice(5, 7);
+  if (!jahr && magNummer(MAG.jahr, MAG.monat) === 1 && (MAG.jahr < MAG_START.jahr || (MAG.jahr === MAG_START.jahr && MAG.monat < MAG_START.monat))) Object.assign(MAG, { jahr: MAG_START.jahr, monat: MAG_START.monat }); // vor dem Start: Ausgabe Nr. 1 zeigen
+  if (!ICH?.admin && !magErschienen(magNummer(MAG.jahr, MAG.monat))) { // Mitglieder: nur Erschienenes – sonst die neueste erschienene Ausgabe
+    const n = magNeueste(); if (!n) return melde(`📰 Die erste Ausgabe der Club-Küche erscheint im ${MAG_MONATE[MAG_START.monat - 1]} ${MAG_START.jahr}.`);
+    if (jahr) melde(`📰 Diese Ausgabe ist noch nicht erschienen – hier ist die neueste.`); [MAG.jahr, MAG.monat] = magJahrMonat(n);
+  }
+  melde("📰 Das Magazin wird zusammengestellt …");
+  const { termine, rezept } = await magDaten();
   const seiten = magSeiten({ termine, rezept });
-  blOeffnen(`📰 Club-Küche Nr. ${magNummer(MAG.jahr, MAG.monat)} · ${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`, seiten, ["Titel", "Inhalt", ...MAG_RUBRIKEN.map((r) => r.t), "Impressum"]);
+  blOeffnen(`📰 Club-Küche Nr. ${magNummer(MAG.jahr, MAG.monat)} · ${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`, seiten, ["Titel", "Vorwort", "Inhalt", ...MAG_RUBRIKEN.map((r) => r.t), "Impressum"]);
 }
 function magSeiten({ termine, rezept }) {
   const nr = magNummer(MAG.jahr, MAG.monat), mon = `${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`;
@@ -183,10 +207,12 @@ function magSeiten({ termine, rezept }) {
     <div class="mag-titelfoto" role="img" aria-label="Titelfoto (Platzhalter)"><img src="kc-kochmuetze-weiss.webp" alt=""><small>Titelfoto – wählt die Redaktion</small></div>
     <ul class="mag-schlagzeilen">${schlag.map((r) => `<li><span>${r.sym}</span> ${esc(r.t)}</li>`).join("")}</ul>
     <div class="mag-entwurf">Entwurf · nur für den Admin sichtbar</div></div>` });
+  // KC-CLUB-MAGAZIN-VORWORT: fester Platz gleich nach dem Titelblatt (Seite 2), jede Ausgabe ihr eigenes – sonst Platzhalter für die Redaktion
+  seiten.push({ art: "html", register: "Vorwort", titel: "", html: magSeite(`<h2 class="mag-h"><span>✒️</span> Vorwort</h2>${heft.vorwort ? magVorwortHtml(heft.vorwort) : magPlatz("Hier steht das Vorwort der Redaktion zu dieser Ausgabe – ein paar persönliche Zeilen: was drin ist, was ansteht, ein Dank an alle, die mitgemacht haben.")}`, 2) });
   // Inhaltsverzeichnis (antippen springt zur Seite)
-  const start = 2; // 0 Titel, 1 Inhalt, ab 2 die Rubriken
-  seiten.push({ art: "html", register: "Inhalt", titel: "", html: magSeite(`<h2 class="mag-h">Inhalt</h2><ol class="mag-inhalt">${MAG_RUBRIKEN.map((r, i) => `<li><button type="button" onclick="blGehe(${start + i})"><span class="mag-sym">${r.sym}</span><span><b>${esc(r.t)}</b><small>${esc(r.u)}</small></span><span class="mag-seitenzahl">${start + i + 1}</span></button></li>`).join("")}
-      <li><button type="button" onclick="blGehe(${start + MAG_RUBRIKEN.length})"><span class="mag-sym">§</span><span><b>Impressum</b><small>Wer das Magazin macht</small></span><span class="mag-seitenzahl">${start + MAG_RUBRIKEN.length + 1}</span></button></li></ol>`, 2) });
+  const start = 3; // 0 Titel, 1 Vorwort, 2 Inhalt, ab 3 die Rubriken
+  seiten.push({ art: "html", register: "Inhalt", titel: "", html: magSeite(`<h2 class="mag-h">Inhalt</h2><ol class="mag-inhalt"><li><button type="button" onclick="blGehe(1)"><span class="mag-sym">✒️</span><span><b>Vorwort</b><small>Ein paar Zeilen der Redaktion</small></span><span class="mag-seitenzahl">2</span></button></li>${MAG_RUBRIKEN.map((r, i) => `<li><button type="button" onclick="blGehe(${start + i})"><span class="mag-sym">${r.sym}</span><span><b>${esc(r.t)}</b><small>${esc(r.u)}</small></span><span class="mag-seitenzahl">${start + i + 1}</span></button></li>`).join("")}
+      <li><button type="button" onclick="blGehe(${start + MAG_RUBRIKEN.length})"><span class="mag-sym">§</span><span><b>Impressum</b><small>Wer das Magazin macht</small></span><span class="mag-seitenzahl">${start + MAG_RUBRIKEN.length + 1}</span></button></li></ol>`, 3) });
   // Rubriken
   MAG_RUBRIKEN.forEach((r, i) => {
     let inhalt = "";
@@ -256,10 +282,58 @@ function magMenue() {
   blattAuf("magMenueBlatt", `<h3 style="margin:0">📰 Club-Küche</h3><p class="hinweis" style="margin:2px 0 10px">Das Magazin des Köcheclubs – Ausgabe Nr. ${nr}${nurTest("magazin") ? " · 🔒 Entwurf, nur für dich" : ""}</p>
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" style="min-height:52px" onclick="fensterZu($('magMenueBlatt'));magStart()">📖 Ausgabe lesen</button>
+      <button class="knopf" style="min-height:48px" onclick="fensterZu($('magMenueBlatt'));magArchiv()">📚 Alle Ausgaben</button>
       <button class="knopf" style="min-height:48px" onclick="fensterZu($('magMenueBlatt'));magEinsenden()">✉️ Beitrag einsenden</button>
       <button class="knopf" onclick="fensterZu($('magMenueBlatt'));magMeine()">📬 Meine Beiträge</button>
       ${istMagRedaktion() ? `<button class="knopf" onclick="fensterZu($('magMenueBlatt'));magPostfach()">📥 Redaktions-Postfach</button>` : ""}
       <button class="knopf" onclick="fensterZu($('magMenueBlatt'))">Schließen</button></div>`);
+}
+// KC-CLUB-MAGAZIN-VORWORT: Anrede, Absätze, Gruß, Unterschrift – **fett** wird fett, sonst nur Text (kein HTML aus dem Heft)
+const magFett = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+const magVorwortHtml = (v) => `<div class="mag-vorwort"><p class="mag-lead"><b>${esc(v.anrede)}</b></p>${(v.absaetze || []).map((a) => `<p>${magFett(a)}</p>`).join("")}
+  ${v.gruss ? `<p>${magFett(v.gruss)}</p>` : ""}<p class="mag-unterschrift" style="margin-top:14px;font-style:italic">${esc(v.name || "")}${v.rolle ? `<br><small>${esc(v.rolle)}</small>` : ""}</p></div>`;
+// KC-CLUB-MAGAZIN-ARCHIV: alle Ausgaben des Jahrgangs als Kacheln – Mitglieder sehen Erschienenes, der Admin auch Entwürfe; je Ausgabe Lesen, Drucken/Teilen/Ablegen
+// und (nur Admin) „Als Startnachricht“. Keine eigene Abfrage – die Liste kommt aus dem Programm.
+function magArchiv() {
+  if (!frei("magazin")) return melde("Das Club-Magazin ist noch nicht freigegeben.", true);
+  const bis = Math.max(12, magNeueste()), adm = !!ICH?.admin;
+  const kachel = (nr) => {
+    const [j, m] = magJahrMonat(nr), heft = MAG_AUSGABEN[nr] || {}, da = magErschienen(nr), gefuellt = Object.keys(heft).some((k) => k !== "erscheint");
+    if (!adm && !da) return `<div class="karte mag-archiv-k" style="display:flex;flex-direction:column;gap:3px;opacity:.55"><b>Nr. ${nr}</b><small>${MAG_MONATE[m - 1]} ${j}</small><small>erscheint im ${MAG_MONATE[m - 1]}</small></div>`;
+    const stand = da ? "📰 erschienen" : gefuellt ? `🔒 Entwurf${heft.erscheint ? " · erscheint " + esc(fTagDp.format(new Date(heft.erscheint + "T12:00:00Z"))) : ""}` : "✍️ in Vorbereitung";
+    return `<div class="karte mag-archiv-k" style="display:flex;flex-direction:column;gap:3px"><b>Nr. ${nr} · ${MAG_MONATE[m - 1]} ${j}</b><small>${stand}</small>${heft.schlagzeilen ? `<small>${esc(heft.schlagzeilen[0][1])}</small>` : ""}
+      <div class="knoepfe" style="margin-top:6px"><button class="knopf klein haupt" onclick="fensterZu($('magArchivBlatt'));magStart(${j}, ${m})">📖 Lesen</button>
+        <button class="knopf klein" onclick="magDrucken(${nr})" title="Drucken, als PDF teilen, in der Club-App senden oder im Ordner ablegen">🖨️ Drucken / Teilen</button>
+        ${adm ? `<button class="knopf klein" onclick="magStartnachricht(${nr})" title="Allen Mitgliedern als Startnachricht ankündigen">📣 Startnachricht</button>` : ""}</div></div>`;
+  };
+  blattAuf("magArchivBlatt", `<h3 style="margin:0">📚 Alle Ausgaben der Club-Küche</h3>
+    <p class="hinweis" style="margin:2px 0 10px">${adm ? "Du siehst alle Ausgaben – Mitglieder nur die erschienenen." + (nurTest("magazin") ? " Das Magazin ist noch 🔒 nur für dich freigegeben." : "") : "Antippen zum Lesen. Drucken, als PDF teilen oder im eigenen Ordner ablegen geht über „🖨️ Drucken / Teilen“."}</p>
+    <div class="mag-archiv" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">${Array.from({ length: bis }, (_, i) => kachel(i + 1)).join("")}</div>
+    <div class="knoepfe"><button class="knopf haupt" onclick="fensterZu($('magArchivBlatt'))">Schließen</button></div>`);
+}
+// Drucken / PDF / In der Club-App senden / Im Ordner ablegen – über die gemeinsame Druckvorschau (CD-Kopf und -Fuß, AGENTS Regel 19)
+async function magDrucken(nr) {
+  if (!ICH?.admin && !magErschienen(nr)) return melde("Diese Ausgabe ist noch nicht erschienen.");
+  [MAG.jahr, MAG.monat] = magJahrMonat(nr); melde("🖨️ Die Ausgabe wird für den Druck zusammengestellt …");
+  try { druckStarten("magazin", { nr, ...(await magDaten()) }); } catch (e) { meldeFehler(e); }
+}
+function magDruck(p) { // DRUCKARTEN.magazin.bauen – alle Seiten außer Titelblatt und Inhaltsverzeichnis, je Rubrik eine neue Seite, ohne Knöpfe
+  [MAG.jahr, MAG.monat] = magJahrMonat(p.nr);
+  const stil = [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules].map((r) => r.cssText); } catch { return []; } }).filter((t) => /\.mag-/.test(t) && !/^@media/.test(t)).join("\n");
+  const seiten = magSeiten({ termine: p.termine, rezept: p.rezept }).filter((x) => x.register !== "Titel" && x.register !== "Inhalt")
+    .map((x, i) => `<section class="mag-druckseite"${i ? ' style="break-before:page;page-break-before:always"' : ""}>${x.html.replace(/<button[\s\S]*?<\/button>/g, "").replace(/<div class="mag-entwurf">[\s\S]*?<\/div>/g, "")}</section>`).join("");
+  return { titel: `Club-Küche Nr. ${p.nr} · ${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`, unter: "Das Magazin des Köcheclubs Werne", fuss: "Club-Küche",
+    html: `<style>${stil} #druck .mag-seite{min-height:0} #druck .mag-platz{display:none}</style>${seiten}` };
+}
+// Admin: Startnachricht an alle mit vorbereitetem Text (Empfänger, Lesebestätigung und Senden wie gewohnt in der Startnachricht)
+async function magStartnachricht(nr) {
+  const [j, m] = magJahrMonat(nr), heft = MAG_AUSGABEN[nr] || {};
+  if (nurTest("magazin") && !(await frage("🔒 Das Magazin ist noch nur für dich freigegeben – Mitglieder können es erst lesen, wenn du unter Freigaben „📰 Club-Küche“ auf „für alle“ stellst.\n\nTrotzdem die Startnachricht vorbereiten?", { ja: "Vorbereiten", nein: "Abbrechen" }))) return;
+  fensterZu($("magArchivBlatt"));
+  const inhalt = (heft.schlagzeilen || []).map(([sym, t]) => `${sym} ${t}`).join("\n");
+  const text = `📰 Die Club-Küche Nr. ${nr} (${MAG_MONATE[m - 1]} ${j}) ist da – unser Club-Magazin!\n\n${inhalt ? inhalt + "\n\n" : ""}Zu finden in der App: Kachel „📰 Club-Küche“ → „📖 Ausgabe lesen“. Viel Spaß beim Blättern!`;
+  await snStart(); const t = $("snText"); if (t) { t.value = text; t.dispatchEvent(new Event("input")); }
+  melde("📣 Text ist vorbereitet – Empfänger prüfen und senden");
 }
 function magEinsenden(art) {
   if (!frei("magazin")) return melde("Das Club-Magazin ist noch nicht freigegeben.", true);
