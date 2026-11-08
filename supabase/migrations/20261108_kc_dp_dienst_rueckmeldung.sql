@@ -33,6 +33,10 @@ create table if not exists public.kc_dp_dienst_rueckmeldung (
   planer_grund text check (char_length(coalesce(planer_grund, '')) <= 500),
   entschieden_von uuid, entschieden_am timestamptz,
   gefragt_am timestamptz, erinnert_am timestamptz, beantwortet_am timestamptz,
+  -- Wunsch Hansi 08.11.: „Wie warst du heute zufrieden mit deinem Dienst? 3 Lachgesichter … Waren die Schichten richtig besetzt? Ja, zu viel, zu wenig – hilft bei der Planung“
+  zufrieden smallint check (zufrieden between 1 and 3),            -- 1 = 😀 gut, 2 = 🙂 geht so, 3 = ☹️ nicht gut (freiwillig)
+  besetzung text check (besetzung in ('zu_wenig', 'passt', 'zu_viel')), -- freiwillig
+  feedback_am timestamptz,
   version integer not null default 0,
   erstellt_am timestamptz not null default now(), geaendert_am timestamptz not null default now(),
   unique (org_id, dienst_ref, person_id),
@@ -62,7 +66,8 @@ begin
   return coalesce((select jsonb_agg(jsonb_build_object('id', r.id, 'event_id', r.event_id, 'dienst_ref', r.dienst_ref, 'person_id', r.person_id, 'work_date', r.work_date,
       'bereich', r.bereich, 'soll_start', r.soll_start, 'soll_ende', r.soll_ende, 'soll_pause', r.soll_pause, 'ergebnis', r.ergebnis, 'ist_start', r.ist_start, 'ist_ende', r.ist_ende,
       'pause_min', r.pause_min, 'grund', r.grund, 'bemerkung', r.bemerkung, 'planer_status', r.planer_status, 'planer_grund', r.planer_grund, 'entschieden_am', r.entschieden_am,
-      'gefragt_am', r.gefragt_am, 'beantwortet_am', r.beantwortet_am, 'version', r.version, 'geaendert_am', r.geaendert_am) order by r.work_date, r.soll_start)
+      'gefragt_am', r.gefragt_am, 'beantwortet_am', r.beantwortet_am, 'version', r.version, 'geaendert_am', r.geaendert_am,
+      'zufrieden', r.zufrieden, 'besetzung', r.besetzung, 'feedback_am', r.feedback_am) order by r.work_date, r.soll_start)
     from public.kc_dp_dienst_rueckmeldung r
     where r.org_id = p_org_id and r.work_date between p_von and p_bis and (v_planer or r.person_id = v_person)), '[]'::jsonb);
 end $$;

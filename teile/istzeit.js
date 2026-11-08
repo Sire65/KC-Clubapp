@@ -57,9 +57,10 @@ function irZeichnen() {
     <b>${esc(irTag(s))} · geplant ${esc(irUhr(s))}–${esc(irUhr(e))}</b> <span class="hinweis">(${esc(irDauer(soll))}${d.pause ? `, ${d.pause} Min. Pause` : ""}${d.bereich ? ` · ${esc(d.bereich)}` : ""})</span>
     <p style="margin:8px 0">${status}</p>${knoepfe}
     ${IRB.modus === "zeiten" || IRB.modus === "korrektur" ? irZeitenHtml(d) : IRB.modus === "nicht" ? irNichtHtml() : ""}
+    ${!IRB.modus && (d.antwort || z === "erfasst") && d.antwort?.ergebnis !== "nicht_da" && Date.now() <= Date.parse(d.frist) ? irFeedbackHtml(d) : ""}
     ${z !== "zu" ? `<p class="hinweis" style="margin:8px 0 0">Eintragen bis ${esc(irTag(Date.parse(d.frist)))} (7 Tage) oder bis der Planer den Tag abschließt.</p>` : ""}
   </div>
-  <div class="knoepfe" style="margin-top:10px">${ICH?.admin || (ICH?.aemter || []).some((a) => a === "Clubsprecher" || a === "Kassenwart") ? '<button class="knopf" onclick="irAenderungen()">📋 Alle Zeitänderungen</button>' : ""}<button class="knopf" onclick="fensterZu($('irBlatt'))">Schließen</button></div>`;
+  <div class="knoepfe" style="margin-top:10px">${(() => { const n = l.find((x) => x.ref !== d.ref && (x.zustand === "offen" || x.zustand === "halb")); return n ? `<button class="knopf haupt" onclick="IRB.ref='${esc(n.ref)}';IRB.modus=null;irZeichnen()">➡️ Nächster offener Dienst</button>` : ""; })()}${ICH?.admin || (ICH?.aemter || []).some((a) => a === "Clubsprecher" || a === "Kassenwart") ? '<button class="knopf" onclick="irAenderungen()">📋 Alle Zeitänderungen</button>' : ""}<button class="knopf" onclick="fensterZu($('irBlatt'))">Schließen</button></div>`;
   if (IRB.modus) irVorschau();
 }
 function irModus(m) {
@@ -128,9 +129,23 @@ async function irAntworten(ergebnis) {
     const r = await api("ist_antworten", p, { warten: true });
     IRL = r.lage?.aktiv ? r.lage : IRL; irKarteZeichnen();
     melde(ergebnis === "passt" ? "✅ Übernommen – danke!" : ergebnis === "nicht_da" ? "❌ Gemeldet – danke!" : r.status === "zu_bestaetigen" ? "✏️ Gespeichert – der Planer schaut kurz drüber" : "✏️ Gespeichert – danke!");
-    const naechster = (IRL?.dienste || []).find((x) => x.zustand === "offen" || x.zustand === "halb");
-    IRB.modus = null; IRB.ref = naechster?.ref || d.ref; irZeichnen();
+    IRB.modus = null; IRB.ref = d.ref; irZeichnen(); // beim Dienst bleiben – darunter die freiwilligen Fragen zu Zufriedenheit und Besetzung
   } catch (e) { meldeFehler(e); }
+}
+// Wunsch Hansi 08.11.: „Wie warst du heute zufrieden mit deinem Dienst?“ (3 Gesichter) und „Waren die Schichten richtig besetzt?“ – freiwillig, ein Tipp speichert
+const IR_GESICHT = [[1, "😀", "gut"], [2, "🙂", "geht so"], [3, "☹️", "nicht gut"]], IR_BESETZT = [["zu_wenig", "Zu wenig"], ["passt", "Genau richtig"], ["zu_viel", "Zu viele"]];
+function irFeedbackHtml(d) {
+  const f = d.feedback || {}, heute = irTag(Date.parse(d.start)) === irTag(Date.now());
+  return `<div class="ir-zeiten ir-feedback"><p style="margin:2px 0 6px"><b>Wie zufrieden warst du ${heute ? "heute" : "an dem Tag"} mit deinem Dienst?</b> <span class="hinweis">(freiwillig)</span></p>
+    <div class="ir-gesichter" role="group" aria-label="Zufriedenheit">${IR_GESICHT.map(([w, g, t]) => `<button type="button" class="ir-gesicht${f.zufrieden === w ? " an" : ""}" aria-pressed="${f.zufrieden === w}" onclick="irFeedback({ zufrieden: ${w} })"><span aria-hidden="true">${g}</span><small>${t}</small></button>`).join("")}</div>
+    <p style="margin:10px 0 6px"><b>Waren die Schichten richtig besetzt?</b></p>
+    <div class="ir-gruende" role="group" aria-label="Besetzung">${IR_BESETZT.map(([w, t]) => `<button type="button" class="stmarke${f.besetzung === w ? " an" : ""}" aria-pressed="${f.besetzung === w}" onclick="irFeedback({ besetzung: '${w}' })">${t}</button>`).join("")}</div>
+    <p class="hinweis" style="margin:6px 0 0">Das hilft bei der weiteren Planung. Danke!</p></div>`;
+}
+async function irFeedback(werte) {
+  const d = irDienst(); if (!d) return;
+  try { const r = await api("ist_feedback", { ref: d.ref, ...werte }, { warten: true }); IRL = r.lage?.aktiv ? r.lage : IRL; melde("Danke für deine Rückmeldung! 🙏"); irZeichnen(); }
+  catch (e) { meldeFehler(e); }
 }
 // Clubsprecher, Kassenwart, Admin: alle Zeitänderungen der letzten 30 Tage
 async function irAenderungen() {
@@ -141,5 +156,7 @@ async function irAenderungen() {
       <td>${x.ergebnis === "nicht_da" ? "🚫 nicht da" : `${x.ergebnis === "korrektur" ? "🧾 " : "✏️ "}${esc(z(x.ist_start))}–${esc(z(x.ist_ende))}`}<br><small>statt ${esc(z(x.soll_start))}–${esc(z(x.soll_ende))}${x.grund ? ` · ${esc(x.grund)}` : ""}</small></td>
       <td><small>${IR_STATUS[x.planer_status] || esc(x.planer_status)}</small></td></tr>`).join("")}</table>`
     : '<p class="hinweis">Keine Zeitänderungen in den letzten 30 Tagen.</p>';
+  if ((r.stimmung || []).length) $("irAeInhalt").insertAdjacentHTML("beforeend", `<h4 style="margin:12px 0 4px">😀 Stimmung &amp; Besetzung</h4><table class="vb-tabelle ir-ae">${r.stimmung.map((g) => `<tr><td><b>${esc(irTag(Date.parse(g.tag + "T12:00:00Z")))}</b>${g.bereich ? `<br><small>${esc(g.bereich)}</small>` : ""}</td>
+      <td>😀 ${g.gut} · 🙂 ${g.mittel} · ☹️ ${g.schlecht}</td><td><small>zu wenig ${g.zu_wenig} · richtig ${g.passt} · zu viele ${g.zu_viel}</small></td></tr>`).join("")}</table>`);
   $("irAeInhalt").insertAdjacentHTML("beforeend", `<div class="knoepfe" style="margin-top:10px"><button class="knopf" onclick="fensterZu($('irAeBlatt'))">Schließen</button></div>`);
 }

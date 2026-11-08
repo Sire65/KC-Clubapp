@@ -5809,6 +5809,9 @@
   .ir-zeiten { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--linie); }
   .ir-zeile { display: flex; flex-wrap: wrap; gap: 8px; } .ir-zeile label { display: grid; gap: 2px; font-weight: 700; font-size: .9rem; flex: 1 1 100px; } .ir-zeile select { min-height: 44px; width: 100%; }
   .ir-gruende { display: flex; flex-wrap: wrap; gap: 6px; } .ir-gruende .stmarke { cursor: pointer; border: 1.5px solid var(--linie); min-height: 36px; } .ir-gruende .stmarke.an { border-color: var(--rot); background: var(--karte2); }
+  .ir-gesichter { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .ir-gesicht { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; min-height: 64px; border-radius: 14px; border: 2px solid var(--linie); background: var(--karte); color: inherit; font: inherit; cursor: pointer; }
+  .ir-gesicht span { font-size: 2rem; line-height: 1; } .ir-gesicht small { font-weight: 700; color: var(--grau); } .ir-gesicht.an { border-color: var(--rot); background: var(--karte2); }
   .ir-vorschau { margin: 8px 0 0; } .ir-fehler { color: var(--textOrange); font-weight: 700; }
   /* KC-CLUB-NUTZUNG-PERSON: 📊 Meine Nutzung / Nutzung je Mitglied (gleiche Bausteine wie nu-*) */
   .np-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }

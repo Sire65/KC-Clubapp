@@ -4223,7 +4223,7 @@ const ZUGANG_AKTIONEN: Record<"basis" | "aushilfe", readonly string[]> = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"], // 2.590.0: Aushilfen dürfen sich auch anmelden (Hansi 22.10.); 2.606.0: und Dienste tauschen
 };
 const ZUGANG_ERLAUBT = { gast: new Set(ZUGANG_AKTIONEN.basis), aushilfe: new Set([...ZUGANG_AKTIONEN.basis, ...ZUGANG_AKTIONEN.aushilfe]), tischgast: new Set<string>(TISCHGAST_AKTIONEN) };
 const zugangAus = (r: any): Zugang => (r?.ist_admin ? "mitglied" : r?.zugang === "gast" || r?.zugang === "aushilfe" ? r.zugang : "mitglied");
@@ -5744,6 +5744,7 @@ async function irLage(ich: Ich) {
   const liste = dienste.map((d) => {
     const r = (rm ?? []).find((x: any) => x.dienst_ref === d.ref) ?? null, e = irErfasst(d, buch ?? []), zustand = irZustand(d, r, e, t, zuTage.has(d.datum));
     return { ref: d.ref, datum: d.datum, start: iso(d.startMs), ende: iso(d.endeMs), pause: d.pause, bereich: d.bereich, zustand, frist: iso(d.endeMs + IR.fristTage * 86400000), abgeschlossen: zuTage.has(d.datum),
+      feedback: r && (r.zufrieden || r.besetzung) ? { zufrieden: r.zufrieden, besetzung: r.besetzung } : null,
       erfasst: e, antwort: r?.ergebnis ? { ergebnis: r.ergebnis, start: r.ist_start, ende: r.ist_ende, pause: r.pause_min, grund: r.grund, status: r.planer_status, planerGrund: r.planer_grund, am: r.beantwortet_am } : null };
   }).filter((x) => x.zustand !== "spaeter").sort((a, b) => Date.parse(b.start) - Date.parse(a.start));
   return { aktiv: true, dienste: liste, offen: liste.filter((x) => x.zustand === "offen" || x.zustand === "halb").length, gruende: IR_GRUENDE, nichtDa: IR_NICHT_DA,
@@ -13423,12 +13424,41 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         return json({ ok: true, status: planerStatus, lage: await irLage(ich) });
       }
+      // Wunsch Hansi 08.11.: nach dem Dienst „Wie zufrieden warst du?“ (😀 🙂 ☹️) und „Waren die Schichten richtig besetzt?“ – freiwillig, für die Planung
+      case "ist_feedback": {
+        await nurWennFrei("ist_rueckfrage", ich, "Ist-Zeiten bestätigen");
+        if (ich.nurLesen) throw new Fehler("Nur ansehen – hier kann nichts eingetragen werden.", 403);
+        const t = Date.now(), heute = berlinTag(new Date(t)), ref = txt(p.ref, 120);
+        const zufrieden = p.zufrieden == null ? undefined : [1, 2, 3].includes(Number(p.zufrieden)) ? Number(p.zufrieden) : NaN;
+        const besetzung = p.besetzung == null ? undefined : ["zu_wenig", "passt", "zu_viel"].includes(String(p.besetzung)) ? String(p.besetzung) : "ungueltig";
+        if (Number.isNaN(zufrieden) || besetzung === "ungueltig" || (zufrieden === undefined && besetzung === undefined)) throw new Fehler("Bitte ein Gesicht bzw. eine Antwort wählen.");
+        const d = (await irDienste(Array.from({ length: IR.fristTage + 2 }, (_, i) => tagDazu(heute, -i)), ich.person_id)).find((x) => x.ref === ref);
+        if (!d) throw new Fehler("Diesen Dienst gibt es (nicht mehr) für dich.", 404);
+        if (t < d.endeMs - IR.vorEndeMin * 60000) throw new Fehler("Der Dienst ist noch nicht vorbei.", 409);
+        if (t > d.endeMs + IR.fristTage * 86400000) throw new Fehler("Das geht nur bis 7 Tage nach dem Dienst.", 409);
+        const jetztIso = new Date(t).toISOString(), werte = { ...(zufrieden !== undefined ? { zufrieden } : {}), ...(besetzung !== undefined ? { besetzung } : {}), feedback_am: jetztIso, geaendert_am: jetztIso };
+        const { data: alt } = await db.from("kc_dp_dienst_rueckmeldung").select("id").eq("org_id", ORG).eq("dienst_ref", ref).eq("person_id", ich.person_id).maybeSingle();
+        const { error } = alt ? await db.from("kc_dp_dienst_rueckmeldung").update(werte).eq("id", alt.id)
+          : await db.from("kc_dp_dienst_rueckmeldung").insert({ org_id: ORG, event_id: d.event, dienst_ref: ref, person_id: ich.person_id, work_date: d.datum, bereich: d.bereich,
+            soll_start: new Date(d.startMs).toISOString(), soll_ende: new Date(d.endeMs).toISOString(), soll_pause: d.pause || 0, ...werte });
+        if (error) throw new Fehler("Konnte nicht gespeichert werden – bitte gleich noch einmal.", 503);
+        await protokoll(ich.person_id, "ist_feedback", { ref, ...(zufrieden !== undefined ? { zufrieden } : {}), ...(besetzung !== undefined ? { besetzung } : {}) });
+        return json({ ok: true, lage: await irLage(ich) });
+      }
       case "ist_aenderungen": { // Clubsprecher, Kassenwart, Admin: Zeitänderungen der letzten 30 Tage (nur Zeiten und Grund)
         if (!ich.admin && !ich.aemter.some((a) => a === "Clubsprecher" || a === "Kassenwart")) throw new Fehler("Nur für Clubsprecher, Kassenwart und Admin.", 403);
         const { data } = await db.from("kc_dp_dienst_rueckmeldung").select("person_id,work_date,bereich,soll_start,soll_ende,soll_pause,ergebnis,ist_start,ist_ende,pause_min,grund,planer_status,planer_grund,beantwortet_am")
           .eq("org_id", ORG).neq("ergebnis", "passt").not("ergebnis", "is", null).gte("work_date", tagDazu(berlinTag(new Date()), -30)).order("beantwortet_am", { ascending: false }).limit(200);
         const leute = await personen([...new Set((data ?? []).map((x: any) => x.person_id))] as string[]);
-        return json({ liste: (data ?? []).map((x: any) => ({ ...x, name: leute.get(x.person_id)?.display_name || x.person_id })) });
+        // Stimmung & Besetzung je Tag und Bereich (nur Anzahlen, keine Namen)
+        const { data: fb } = await db.from("kc_dp_dienst_rueckmeldung").select("work_date,bereich,zufrieden,besetzung").eq("org_id", ORG).not("feedback_am", "is", null)
+          .gte("work_date", tagDazu(berlinTag(new Date()), -30)).limit(1000);
+        const je = new Map<string, any>();
+        for (const x of fb ?? []) { const k = `${x.work_date}|${x.bereich || ""}`; const g = je.get(k) ?? { tag: x.work_date, bereich: x.bereich || null, gut: 0, mittel: 0, schlecht: 0, zu_wenig: 0, passt: 0, zu_viel: 0 };
+          if (x.zufrieden === 1) g.gut++; else if (x.zufrieden === 2) g.mittel++; else if (x.zufrieden === 3) g.schlecht++;
+          if (x.besetzung && x.besetzung in g) g[x.besetzung]++; je.set(k, g); }
+        return json({ liste: (data ?? []).map((x: any) => ({ ...x, name: leute.get(x.person_id)?.display_name || x.person_id })),
+          stimmung: [...je.values()].sort((a, b) => String(b.tag).localeCompare(String(a.tag)) || String(a.bereich).localeCompare(String(b.bereich))) });
       }
       // Admin: wer ist heute im Dienst (Plan + Buchungen), nachtragen für andere, Dienst-Orte
       // ----- 2.606.0 KC-CLUB-DIENST-TAUSCH: Tauschbörse (anbieten → übernehmen → Planer bestätigt) -----

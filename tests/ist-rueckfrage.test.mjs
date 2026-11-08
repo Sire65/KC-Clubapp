@@ -70,10 +70,18 @@ assert.ok(eri.includes("t >= d.endeMs + IR.nachMin * 60000") && /const IR = \{ n
 assert.ok(eri.includes('std >= IR.vonStd && std < IR.bisStd') && eri.includes('if (r?.ergebnis || e?.komplett || (e?.kommen && !e?.gehen && e.quelle === "app")) continue;'), "Erinnerung nur 9–20 Uhr; nicht bei Antwort, Kasse oder Live-Anmeldung");
 assert.ok(eri.includes("// erst merken, dann senden – nie doppelt") && eri.includes('sendenGewaehlt("club_dienst", [d.person], ["push"]'), "höchstens Frage + Erinnerung");
 assert.ok(server.includes("const irErin = await irErinnern().catch("), "läuft im Zeitplaner");
-assert.ok(server.includes('"dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten"]') && app.includes('"dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten"]'), "auch für Aushilfen (alle im Plan)");
+assert.ok(server.includes('"dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"]') && app.includes('"dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten", "ist_feedback"]'), "auch für Aushilfen (alle im Plan)");
 assert.ok(/ist_rueckfrage: \{ t: "✅ Ist-Zeiten nach dem Dienst bestätigen",[^\n]*standard: "admin" \}/.test(server), "erst nur Admin (Test), Freigabe für alle per Schalter");
 const ae = st('case "ist_aenderungen": {', "// Admin: wer ist heute im Dienst");
 assert.ok(ae.includes('if (!ich.admin && !ich.aemter.some((a) => a === "Clubsprecher" || a === "Kassenwart")) throw'), "Änderungsliste nur Leitung");
+
+// --- Wunsch Hansi 08.11.: Zufriedenheit (3 Gesichter) und Besetzung – freiwillig, für die Planung ---
+assert.ok(/zufrieden smallint check \(zufrieden between 1 and 3\)/.test(mig) && /besetzung text check \(besetzung in \('zu_wenig', 'passt', 'zu_viel'\)\)/.test(mig) && mig.includes("'zufrieden', r.zufrieden, 'besetzung', r.besetzung"), "Datenbank + DP2-Liste");
+const fbS = st('case "ist_feedback": {', 'case "ist_aenderungen": {');
+assert.ok(fbS.includes('await nurWennFrei("ist_rueckfrage"') && fbS.includes("[1, 2, 3].includes(Number(p.zufrieden))") && fbS.includes('["zu_wenig", "passt", "zu_viel"].includes(String(p.besetzung))') && fbS.includes("t > d.endeMs + IR.fristTage * 86400000"), "Server prüft Werte, eigener Dienst, 7 Tage");
+assert.ok(teil.includes('const IR_GESICHT = [[1, "😀", "gut"], [2, "🙂", "geht so"], [3, "☹️", "nicht gut"]]') && teil.includes("Waren die Schichten richtig besetzt?") && teil.includes('IR_BESETZT = [["zu_wenig", "Zu wenig"], ["passt", "Genau richtig"], ["zu_viel", "Zu viele"]]'), "3 Gesichter + Besetzung");
+assert.ok(teil.includes('d.antwort?.ergebnis !== "nicht_da" && Date.now() <= Date.parse(d.frist) ? irFeedbackHtml(d)'), "nach der Antwort (bzw. Kassen-Erfassung) anbieten, nicht bei „nicht da“");
+assert.ok(server.includes("stimmung: [...je.values()]"), "Leitung sieht Stimmung & Besetzung je Tag/Bereich (nur Anzahlen)");
 
 // --- App ---
 assert.ok(/istzeit: \{ einstieg: \["irOeffnen", "irAenderungen"\], sri: "sha384-/.test(app) && /istzeit: "[A-Za-z0-9_-]{16}"/.test(sw), "Teil mit Fingerabdruck");
