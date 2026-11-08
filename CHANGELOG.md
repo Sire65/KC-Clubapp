@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.887.0 – 2026-11-08 – 📊 Nutzungsstatistik je Person: „Meine Nutzung“ und „Nutzung je Mitglied“ (KC-CLUB-NUTZUNG-PERSON) · App + Server 2.887.0 + Datenbank
+Wunsch Hansi 07.11.: „Pro Person eine Nutzungsstatistik. Mit Filter am besten unter Meins oder Technik. Zeige dort wie viel Nachrichten versendet, Termine, Bildschirmzeit, Zeit im Hintergrund und was fehlt noch. Am besten auch mit Grafiken.“ Konzept 08.11., Antworten: alle 3 Stufen, für den Admin nicht sperrbar, Mitglieder erfahren es nicht eigens – in „Meine Nutzung“ steht, dass für die Statistik bestimmte Sachen aufgezeichnet werden.
+- **🙋 Meins → „📊 Meine Nutzung“** (jedes Mitglied, nur die eigenen Zahlen) und **🛠️ Technik → „📊 Nutzung je Mitglied“** (nur Admin: Rangliste, sortierbar nach Zeit, Nachrichten, Tagen, Starts, Antworten, Fehler; Name antippen = alle Zahlen dieser Person).
+- **Filter:** heute, 7 Tage, 30 Tage, dieses Jahr, eigene Tage; Ansicht Alles / Zeit / Nachrichten / Termine / Bereiche / Technik. Pfeile = Vergleich mit dem gleich langen Zeitraum davor.
+- **Zahlen:** Bildschirmzeit (App sichtbar) und Zeit im Hintergrund (App offen, weggelegt) je Tag; Nachrichten (Einzelchat, Gruppen, Foto/Video, Sprache) – nur gezählt, nie gelesen; Anrufe (gemacht, angenommen, verpasst, Minuten); Antworten auf Clubtermine (zugesagt, abgesagt, keine Antwort), selbst angelegte Termine, Abstimmungen, Terminumfragen, Pinnwand-Zettel; Starts, aktive Tage; meistgenutzte Bereiche; Wochentag × Uhrzeit; Geräteart, App-Version, zuletzt da, Push erhalten/geöffnet, echte Fehler.
+- **Grafiken** (selbst gezeichnet, kein fremder Dienst): Kacheln mit Pfeil, gestapelte Säulen je Tag (ab 63 Tagen je Woche, ab 200 je Monat), Anteil-Balken, Ring, Farbfeld. Antippen = genaue Zahl.
+- **Messung:** Die App zählt die Sekunden selbst (ein Stück sichtbar höchstens 6 Std., Hintergrund höchstens 12 Std.) und schickt sie mit der vorhandenen Nutzungsmeldung – kein zusätzlicher Aufruf im Takt. Die namenlose Nutzungsstatistik bleibt unverändert ohne Person.
+- **Datenbank** (Migration `20261108_kc_club_nutzung_person.sql`): Tabelle `kc_club_nutzung_person` (eine Zeile je Mitglied und Tag, nur Zahlen), `kc_club_nutzung_person_dazu`, `kc_club_nutzung_bericht` (zählt in der Datenbank – es werden nur Summen übertragen), `kc_club_nutzung_person_verdichten` (nach 1 Jahr nur noch Monate, nachts 3 Uhr). Nur Club-Server, RLS, gespiegelt und gesichert.
+- Nicht gezählt: Probephase, Gäste/Aushilfen, Testkonten, Vertretungen. Hilfe-Eintrag „Meine Nutzung“. Test: `tests/nutzung-person.test.mjs`; Browser-Prüfung abgeschirmt.
+- Rückweg: App/Server 2.886.0; Datenbank siehe Kopf der Migration (nur additiv).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.886.0 – 2026-11-07 – Push-Frage beim Start
 - Wunsch Hansi 07.11.: Wer Push noch nie eingeschaltet hat, wird beim Start freundlich gefragt („Hallo …, du hast noch nicht Push aktiviert …“) – 🔔 Ja (schaltet sofort ein), Nein (in 7 Tagen wieder), Später (morgen), Nicht mehr fragen. Höchstens einmal am Tag, nie bei „Kommunikation aus“; gesperrte Benachrichtigungen mit Hinweis, wo man sie erlaubt (KC-CLUB-PUSH-NEU-FRAGEN).
 

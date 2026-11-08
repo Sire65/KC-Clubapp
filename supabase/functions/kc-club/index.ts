@@ -190,7 +190,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.886.0";
+const SERVER_VERSION = "2.887.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -8320,6 +8320,39 @@ async function fristErinnerung() {
     for (const [wege, gruppe] of je) await sendenGewaehlt("club_erinnerung", gruppe, wege.split("+"), vars, `club-frist:${f.s}:${wege}`).catch((e) => console.error("frist erinnerung", String(e)));
   }
 }
+// ---------- KC-CLUB-NUTZUNG-PERSON (Wunsch Hansi 07./08.11.2026: Nutzungsstatistik je Person – Nachrichten, Termine, Bildschirmzeit, Zeit im Hintergrund,
+// Grafiken, Filter; „Meins“ für jeden die eigenen Zahlen, „Technik“ für den Admin alle). Nie Inhalte: die Datenbank zählt nur (kc_club_nutzung_bericht).
+// Gemessen werden je Mitglied und Tag: Sekunden sichtbar / im Hintergrund (zählt die App), Antipper je Bereich und Stunde (wie die namenlose Nutzung), Geräteart.
+// Nicht gezählt: Probephase (nutzung_melden endet vorher), Gäste/Aushilfen, Testkonten, Vertretungen, nur-lesende Zugänge.
+const NP_TAGE_MAX = 366;
+const npGeraet = (ua: string) => /iPad|Tablet|Android(?!.*Mobile)/i.test(ua) ? "tablet" : /Mobi|iPhone|Android/i.test(ua) ? "handy" : "pc";
+async function nutzungPersonMerken(ich: Ich, req: Request, paare: [string, number][], stunden: [number, number][], zeit: unknown) {
+  if (ich.zugang !== "mitglied" || ich.nurLesen || ich.vertreter || ich.person_id.startsWith("KC-P-TEST")) return;
+  const heute = berlinTag(new Date()), geraet = npGeraet(req.headers.get("user-agent") ?? "");
+  // Zeiten je Tag aus der App: { "2026-11-08": [sichtbar_s, hintergrund_s] } – höchstens 4 Tage, die Datenbank prüft Tag und Grenzen nochmal
+  const zt = zeit && typeof zeit === "object" ? Object.entries(zeit as Record<string, unknown>).filter(([t, w]) => /^\d{4}-\d{2}-\d{2}$/.test(t) && Array.isArray(w)).slice(0, 4) : [];
+  const tage = new Map<string, [number, number]>(zt.map(([t, w]: [string, any]) => [t, [Math.max(0, Math.min(86400, Math.round(Number(w[0]) || 0))), Math.max(0, Math.min(86400, Math.round(Number(w[1]) || 0)))]]));
+  if (!tage.has(heute) && (paare.length || stunden.length)) tage.set(heute, [0, 0]);
+  for (const [tag, [s, h]] of tage) {
+    const istHeute = tag === heute;
+    if (!s && !h && !(istHeute && (paare.length || stunden.length))) continue;
+    const { error } = await db.rpc("kc_club_nutzung_person_dazu", { p_person: ich.person_id, p_tag: tag, p_sichtbar: s, p_hintergrund: h,
+      p_bereiche: istHeute ? Object.fromEntries(paare.filter(([b]) => !b.startsWith("hs_"))) : {}, p_stunden: istHeute ? Object.fromEntries(stunden.map(([x, n]) => [String(x), n])) : {}, p_geraet: geraet });
+    if (error) { console.error("nutzung person", error.message); return; }
+  }
+}
+function npZeitraum(p: any) {
+  const iso = (x: unknown) => (/^\d{4}-\d{2}-\d{2}$/.test(String(x)) ? String(x) : null);
+  const bis = iso(p?.bis) ?? berlinTag(new Date()), von = iso(p?.von) ?? tagDazu(bis, -29);
+  const tage = Math.round((Date.parse(bis + "T12:00:00Z") - Date.parse(von + "T12:00:00Z")) / 86400000) + 1;
+  if (!(tage >= 1 && tage <= NP_TAGE_MAX)) throw new Fehler(`Bitte einen Zeitraum von 1 bis ${NP_TAGE_MAX} Tagen wählen.`);
+  return { von, bis, tage, vorVon: tagDazu(von, -tage), vorBis: tagDazu(von, -1) };
+}
+async function nutzungBericht(von: string, bis: string, ids: string[], details: boolean): Promise<Record<string, any>> {
+  const { data, error } = await db.rpc("kc_club_nutzung_bericht", { p_von: von, p_bis: bis, p_personen: ids, p_details: details });
+  if (error) throw new Fehler("Die Nutzungsstatistik ist gerade nicht verfügbar.", 503);
+  return (data ?? {}) as Record<string, any>;
+}
 // KC-CLUB-WICHTIG-UNGELESEN (2.287.0, Wunsch Hansi „nachvollziehen, ob er sie gelesen hat“): Eine ❗ wichtige Nachricht ist nach 24 Std.
 // bei jemandem noch nicht gelesen → EINMAL ein Push an den Absender mit den Namen. Ältere als 3 Tage werden nicht mehr nachgemeldet.
 // „Schon gemeldet“ steht im Protokoll (erst merken, dann senden – nie doppelt). Notfälle laufen über ihren eigenen Weg.
@@ -9367,6 +9400,7 @@ const kcAnfrage = async (req: Request): Promise<Response> => {
       await gastgeberStandLauf().catch((e) => console.error("gastgeber stand", String(e))); // KC-CLUB-GASTGEBER-STAND (2.238.0)
       if (stuendlich) await antwortErinnerung2T().catch((e) => console.error("antwort 2t", String(e))); // KC-CLUB-ANTWORT-ERINNERUNG-2T (2.240.0)
       if (stuendlich) await fristErinnerung().catch((e) => console.error("frist erinnerung", String(e))); // 2.883.0 KC-CLUB-FRIST-ERINNERUNG
+      if (stuendlich && berlinStunde(new Date()) === 3) { const { error } = await db.rpc("kc_club_nutzung_person_verdichten"); if (error) console.error("nutzung verdichten", error.message); } // KC-CLUB-NUTZUNG-PERSON: älter als 1 Jahr → Monate
       if (stuendlich) await wichtigUngelesenMelden().catch((e) => console.error("wichtig ungelesen", String(e))); // KC-CLUB-WICHTIG-UNGELESEN (2.287.0)
       await archivKopieLauf().catch((e) => archivKopieStand("fehler", String((e as any)?.message || e), {})); // KC-CLUB-ARCHIV-KOPIE (2.232.0): nur nachts 2–5 Uhr
       if (stuendlich) await probeErinnern().catch((e) => console.error("probe erinnern", String(e))); // KC-CLUB-PROBEPHASE (2.51.0)
@@ -14941,6 +14975,22 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         }
         return json({ videos: [...m.values()] }); // nur Zahlen – keine Namen
       }
+      // KC-CLUB-NUTZUNG-PERSON: eigene Zahlen (jedes Mitglied) bzw. Zahlen einer Person / Übersicht aller (nur Admin) – mit Vorzeitraum für den Vergleich
+      case "nutzung_person": {
+        if (ich.zugang !== "mitglied") throw new Fehler("Die Nutzungsstatistik ist nur für Mitglieder.", 403);
+        const zr = npZeitraum(p);
+        if (p.alle === true) {
+          nurAdmin(ich);
+          const leute = await aktiveMitglieder(), ids = leute.map((x) => x.person_id);
+          const [jetzt0, vorher] = await Promise.all([nutzungBericht(zr.von, zr.bis, ids, false), nutzungBericht(zr.vorVon, zr.vorBis, ids, false)]);
+          return json({ ...zr, alle: leute.map((x) => ({ person_id: x.person_id, name: x.display_name, vorname: vorname(x), daten: jetzt0[x.person_id] ?? null, vorher: vorher[x.person_id] ?? null })) });
+        }
+        const pid = p.person && p.person !== ich.person_id ? String(p.person) : ich.person_id;
+        if (pid !== ich.person_id) nurAdmin(ich);
+        if (!/^KC-P-[A-Z0-9-]{1,40}$/.test(pid)) throw new Fehler("Ungültig.");
+        const [jetzt0, vorher, leute] = await Promise.all([nutzungBericht(zr.von, zr.bis, [pid], true), nutzungBericht(zr.vorVon, zr.vorBis, [pid], false), personen([pid])]);
+        return json({ ...zr, person_id: pid, name: leute.get(pid)?.display_name ?? pid, daten: jetzt0[pid] ?? null, vorher: vorher[pid] ?? null });
+      }
       case "nutzung_melden": {
         if (await ichInProbe(ich)) return json({ ok: true, probe: true }); // KC-CLUB-PROBEPHASE: Probe zählt nicht in der Nutzung
         const z = (p.zaehler && typeof p.zaehler === "object") ? p.zaehler : {};
@@ -14952,6 +15002,8 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const sp = Object.entries(st).filter(([h, n]) => /^([01]?\d|2[0-3])$/.test(String(h)) && Number.isFinite(Number(n)) && Number(n) > 0).slice(0, 24)
           .map(([h, n]) => [Number(h), Math.min(200, Math.round(Number(n)))] as [number, number]);
         if (sp.length) { const { error } = await db.rpc("kc_club_nutzung_stunden_zaehlen", { p_tag: berlinTag(new Date()), p_stunden: sp.map((x) => x[0]), p_anzahlen: sp.map((x) => x[1]) }); if (error) console.error("nutzung stunden", error.message); }
+        // KC-CLUB-NUTZUNG-PERSON (2.887.0): getrennt von den namenlosen Zählern (die bleiben ohne Person) – eigene Tabelle je Mitglied und Tag für „📊 Meine Nutzung“
+        await nutzungPersonMerken(ich, req, paare, sp, p.zeit).catch((e) => console.error("nutzung person", String(e))); // KC-CLUB-NUTZUNG-PERSON
         // KC-CLUB-NUTZUNG-PERSONEN (2.6.0): zufällige Geräte-Kennung (aus der App, mit keiner Person verknüpft) je Tag + Bereich –
         // nur um „von wie vielen verschiedenen“ zu zählen. Die Person (ich) wird hier bewusst NICHT gespeichert.
         const geraet = String(p.geraet || ""), heute = (Array.isArray(p.heute) ? p.heute : []).map(String).filter((b: string) => NUTZUNG_BEREICHE.has(b)).slice(0, 40);
