@@ -81,6 +81,7 @@ jobs:
       - run: node tests/magazin-roman.test.mjs
       - run: node tests/magazin-postfach.test.mjs
       - run: node tests/magazin-raetsel.test.mjs
+      - run: node tests/magazin-heft.test.mjs
       - run: node tests/video-dauer.test.mjs
       - run: node tests/buero-fein.test.mjs
       - run: node tests/pinnwand-nie-auto.test.mjs

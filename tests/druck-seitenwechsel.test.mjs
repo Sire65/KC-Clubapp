@@ -9,5 +9,5 @@ assert.ok(/const DS_ATOM = "tr, li, p, h1, h2, h3/.test(app) && /\[style\*='brea
 assert.ok(/break-after:page/.test(f) && /teile\.push\(\[a0, y\]\)/.test(f), "erzwungene Wechsel (ein Bogen je Mitglied) bleiben, Zählung je Bogen");
 assert.ok(/`Seite \$\{i \+ 1\} von \$\{stuecke\.length\}`/.test(f) && /\$\{datum\} · \$\{nr\}/.test(f) && /g\.drawImage\(logo,/.test(f), "Kopf ab Seite 2: Logo, Titel, Datum, Seite x von y");
 assert.ok(/if \(ende <= seiteH \+ 2\) return null;/.test(f) && /catch \(e\) \{ console\.warn\("Seitenwechsel", e\); return null; \}/.test(f), "eine Seite oder Fehler → wie bisher");
-assert.ok(/return pdfAusCanvas\(c, DRUCK\.quer, druckSeitenBilden\(c, el, breite, DRUCK\.quer\)\);/.test(app) && /function pdfAusCanvas\(c, quer, seiten = null\)/.test(app), "PDF nutzt die Seiten");
+assert.ok(/return pdfAusCanvas\(c, DRUCK\.quer, druckSeitenBilden\(c, el, breite, DRUCK\.quer\)\);/.test(app) && /function pdfAusCanvas\(c, quer, seiten = null(, masse = null)?\)/.test(app), "PDF nutzt die Seiten");
 console.log("druck-seitenwechsel: alle Prüfungen bestanden");

@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.891.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.892.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -22,7 +22,7 @@ const TEILE_LISTE = {
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-CfN28s4C7ibicKk+Nxgh7Z74/ObiceJPRgizgneJ6lj1LPEBri2Ae0nsh8Zs7tgd" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-+XPiBZVV0DXbEVHRdZZ61PXu8bgw24Hdzg8ZaaeYRi5RETWWe1HGubIWGbB1HUND" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
@@ -30826,8 +30826,9 @@ function druckVorschauZu() { $("druckVorschau").classList.add("versteckt"); $("d
   const danach = DRUCK?.danach; if (danach) { DRUCK.danach = null; setTimeout(danach, 250); } } // 2.526.0: z. B. Ablage-Frage nach dem Erstattungsantrag
 // ---------- 2.526.0 KC-CLUB-DRUCK-PDF: „📄 PDF“ in jeder Druckvorschau – echtes A4-PDF (mehrseitig) aus der Druckseite. html2canvas liegt in lib/,
 // das PDF baut die App selbst (wie bei den Schildern) – nichts geht an fremde Dienste. Teilen, wo das Handy es kann, sonst herunterladen.
-function pdfAusCanvas(c, quer, seiten = null) { // seiten: fertige Seiten-Bilder (KC-CLUB-DRUCK-SEITENWECHSEL) – sonst wie bisher in A4-Stücke schneiden
-  const pw = quer ? 841.89 : 595.28, ph = quer ? 595.28 : 841.89, seiteH = Math.round(c.width * ph / pw);
+function pdfAusCanvas(c, quer, seiten = null, masse = null) { // seiten: fertige Seiten-Bilder (KC-CLUB-DRUCK-SEITENWECHSEL) – sonst wie bisher in A4-Stücke schneiden
+  // masse: [Breite, Höhe] in Punkt für andere Formate (KC-CLUB-MAGAZIN-HEFT: A5) – ohne Angabe wie bisher A4
+  const pw = masse ? masse[0] : quer ? 841.89 : 595.28, ph = masse ? masse[1] : quer ? 595.28 : 841.89, seiteH = Math.round(c.width * ph / pw);
   const n = seiten ? seiten.length : Math.max(1, Math.ceil((c.height - seiteH * 0.03) / seiteH)), bilder = [];
   for (let i = 0; i < n; i++) {
     let s = seiten?.[i];
@@ -34328,7 +34329,7 @@ const FENSTER_NAMEN = {
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",
   arWohinBlatt: "🗄️ Dokument ablegen", asBlatt: "⚠️ Die App läuft nicht rund", atArchivBlatt: "🗄️ Aus dem Archiv dazulegen", schArchivBlatt: "🖨️ Druckpaket: aus dem Archiv", tlArchivBlatt: "🔴 Live: Unterlage aus dem Archiv", atBlatt: "💼 Aktentasche packen", atDruckBlatt: "🖨️ Was soll gedruckt werden?",
-  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magArchivBlatt: "📚 Alle Ausgaben der Club-Küche", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", installStandBlatt: "📲 Wer nutzt die App wie?", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
+  atDruckSchrittBlatt: "🖨️ Drucken Schritt für Schritt", atFreiBlatt: "📤 Freigeben – in den Eingangskorb", prInfoBlatt: "📣 Protokoll: Info an Mitglieder", stromBlatt: "🔋 Stromverbrauch", rechnerBlatt: "🧮 Tischrechner", magMenueBlatt: "📰 Club-Küche", magArchivBlatt: "📚 Alle Ausgaben der Club-Küche", magHeftBlatt: "📖 Club-Küche als Heft drucken", magEinBlatt: "✉️ Beitrag für die Club-Küche", magMeineBlatt: "📬 Meine Beiträge", magPostBlatt: "📥 Redaktions-Postfach", installStandBlatt: "📲 Wer nutzt die App wie?", tippBlatt: "💡 Tipp", tippMeineBlatt: "💡 Meine Tipps", tippSendBlatt: "💡 Lösung schicken", tippListeBlatt: "💡 Gesendete Tipps", tippAnlBlatt: "📚 Anleitung dazulegen", anleitungBlatt: "📚 Anleitungen", anleitungWgBlatt: "📤 Anleitung weitergeben", atListe: "💼 Aktentasche: Inhalt", atMenue: "💼 Aktentasche: Unterlage", avBlatt: "🧑‍🍳 Mein Bild",
   avGrossBlatt: "🧑‍🍳 Mein Bild groß", avKombiBlatt: "ⓘ Wie viele Figuren möglich sind", avbBlatt: "🧩 Figur zusammenstellen", avfBlatt: "📷 Dein Foto", begruessungBlatt: "👋 Begrüßung",
   bestandInfo: "📦 Bestand ansehen", bfBlatt: "📸 Dein Bildschirmfoto", boInfo: "🔁 Börse: ansehen", bsBlatt: "📝 Bericht", buAufgabeBlatt: "🗓️ Sitzungs-Aufgabe (Frage beim Start)",
   buDruckerBlatt: "🖨️ Was möchtest du drucken?", buEinBlatt: "📥 Büro: Eingangskorb-Posten", buEinladung: "📨 Büro: Einladung/Erinnerung/Änderung senden", buFest: "🎂 Büro: Geburtstag/Jubiläum", buFuellerBlatt: "✒️ Was möchtest du schreiben?",
