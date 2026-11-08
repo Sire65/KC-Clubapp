@@ -5737,9 +5737,9 @@ async function irLage(ich: Ich) {
   const [{ data: rm }, { data: buch0 }, { data: tg }, kasse] = await Promise.all([
     db.from("kc_dp_dienst_rueckmeldung").select("*").eq("org_id", ORG).eq("person_id", ich.person_id).in("dienst_ref", dienste.map((d) => d.ref)),
     db.from("kc_dp_stempel").select("person_id,art,zeit,quelle,pause_min,dienst_ref,storniert_am").eq("person_id", ich.person_id).gte("zeit", von).lte("zeit", bis).is("storniert_am", null).limit(200),
-    db.from("kc_dp_days_published").select("work_date,status").eq("org_id", ORG).in("work_date", tage), irKasseLesen([ich.person_id], tage)]);
+    db.from("kc_dp_days_published").select("work_date,status,ist:payload->>istStatus").eq("org_id", ORG).in("work_date", tage), irKasseLesen([ich.person_id], tage)]);
   const buch = [...(buch0 ?? []), ...kasse];
-  const zuTage = new Set((tg ?? []).filter((x: any) => x.status === "closed").map((x: any) => x.work_date));
+  const zuTage = new Set((tg ?? []).filter((x: any) => x.status === "closed" || x.ist === "closed").map((x: any) => x.work_date)); // DP2 veröffentlicht den Abschluss je Tag (payload.istStatus)
   const iso = (ms: number) => new Date(ms).toISOString();
   const liste = dienste.map((d) => {
     const r = (rm ?? []).find((x: any) => x.dienst_ref === d.ref) ?? null, e = irErfasst(d, buch ?? []), zustand = irZustand(d, r, e, t, zuTage.has(d.datum));
@@ -13380,9 +13380,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_dp_dienst_rueckmeldung").select("*").eq("org_id", ORG).eq("dienst_ref", ref).eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_dp_stempel").select("person_id,art,zeit,quelle,pause_min,dienst_ref,storniert_am").eq("person_id", ich.person_id)
             .gte("zeit", new Date(d.startMs - IR.fensterStd * 3600000).toISOString()).lte("zeit", new Date(d.endeMs + IR.fensterStd * 3600000).toISOString()).is("storniert_am", null).limit(100),
-          db.from("kc_dp_days_published").select("status").eq("org_id", ORG).eq("work_date", d.datum).maybeSingle(), irKasseLesen([ich.person_id], [d.datum, tagDazu(d.datum, 1)])]);
+          db.from("kc_dp_days_published").select("status,ist:payload->>istStatus").eq("org_id", ORG).eq("work_date", d.datum).maybeSingle(), irKasseLesen([ich.person_id], [d.datum, tagDazu(d.datum, 1)])]);
         const buch = [...(buch0 ?? []), ...kasse];
-        const e = irErfasst(d, buch), zustand = irZustand(d, alt, e, t, tg?.status === "closed");
+        const e = irErfasst(d, buch), zustand = irZustand(d, alt, e, t, tg?.status === "closed" || (tg as any)?.ist === "closed");
         if (zustand === "spaeter") throw new Fehler("Der Dienst ist noch nicht vorbei.", 409);
         if (zustand === "zu") throw new Fehler("Dieser Dienst ist abgeschlossen – Änderungen bitte über den Planer.", 409);
         if (e?.komplett && ergebnis !== "korrektur") throw new Fehler("Deine Zeiten sind schon erfasst (Kasse bzw. App) – bei einem Fehler bitte „Korrektur melden“.", 409);

@@ -83,6 +83,7 @@ assert.ok(teil.includes('const IR_GESICHT = [[1, "😀", "gut"], [2, "🙂", "ge
 assert.ok(teil.includes('d.antwort?.ergebnis !== "nicht_da" && Date.now() <= Date.parse(d.frist) ? irFeedbackHtml(d)'), "nach der Antwort (bzw. Kassen-Erfassung) anbieten, nicht bei „nicht da“");
 assert.ok(server.includes("stimmung: [...je.values()]"), "Leitung sieht Stimmung & Besetzung je Tag/Bereich (nur Anzahlen)");
 
+assert.ok(server.includes('x.status === "closed" || x.ist === "closed"') && server.includes('tg?.status === "closed" || (tg as any)?.ist === "closed"'), "Tagesabschluss aus DP2 (payload.istStatus) beendet das Fragen");
 // --- App ---
 assert.ok(/istzeit: \{ einstieg: \["irOeffnen", "irAenderungen"\], sri: "sha384-/.test(app) && /istzeit: "[A-Za-z0-9_-]{16}"/.test(sw), "Teil mit Fingerabdruck");
 assert.ok(html.includes('<div id="irKarte"></div>') && app.includes('else if (h === "#istzeit") irOeffnen();') && app.includes('else if (h === "#istaenderungen") irAenderungen();'), "Startkarte und Links aus dem Push");
