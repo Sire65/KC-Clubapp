@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.890.0 – Zeitansage: Videos „Hilfe, Suche & Twinkey“, „SOS – Notfall“ und „Helfen & Leihen“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 7 Schritte zeigen auf vorhandene Stellen; die Lupe sucht wie gesagt in Nachrichten, Terminen, Archiv und Pinnwand. Zeitansage eingeschaltet.
+- Ebenso „SOS – Notfall“ geprüft (5 Schritte ok, mit Beispiel-Kontakten; Notfallkontakt unter Einstellungen → Privatsphäre stimmt).
+- Ebenso „Helfen & Leihen“ geprüft (4 Schritte ok; drei Bereiche Wer kann helfen / Ausleihen / Börse wie in der App).
+- Rückweg: Version 2.889.0 einspielen.
+
 ## 2.889.0 – 2026-11-08 – 📰 Club-Küche wie eine Profi-Zeitschrift: Rätsel-Ecke, Küchenlatein, „Im nächsten Heft“, Lesezeit; Roman Folgen 2–5 (KC-CLUB-MAGAZIN-RAETSEL, KC-CLUB-MAGAZIN-PROFI, Wunsch Hansi 08.11.2026)
 - Eingespielt am 08.11.2026 um 18:15 Uhr auf ausdrücklichen Wunsch Hansi („Dann spiel jetzt ein“), außerhalb der Termine; Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
 - **🧩 Rätsel-Ecke** (neue Rubrik vor den Linktipps): Fehlerbild „Finde die 10 Fehler“ (eigene Zeichnung einer Clubküche, Fehler im Bild antippen, grüne Kreise, Zähler, 💡 Auflösen) und **Kreuzworträtsel „Küche & Backstube“** (20 Fachbegriffe und Küchengeräte, Lösungswort aus den gelben Feldern, Umlaute als AE/OE/UE – „ü“ wird automatisch „UE“, ✔️ Prüfen). Der Stand bleibt auf dem Gerät und beim Blättern erhalten, nichts wird verschickt. Bilder: `magazin/raetsel/`.
