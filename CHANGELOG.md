@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.893.0 – 2026-11-08 – 🗓️ Ist-Zeiten nach dem Dienst selbst bestätigen, 😀 Zufriedenheit & Besetzung, ⏳ Start-Balken mit Prozent (KC-CLUB-IST-RUECKFRAGE, KC-CLUB-START-BALKEN) · App + Server 2.893.0 + Datenbank – 20-Uhr-Termin
+Wünsche Hansi 08.11.: „Die Mitglieder können ihre wirklichen Dienstzeiten selber eintragen … Soll ich die als Ist-Zeiten übernehmen? Ja, nein, Änderung … Grund freiwillig … im Abgleich mit DP2 … abfangen, wenn über die Kasse auch Dienstzeiten mit QR-Code übernommen werden“; „Wie warst du heute zufrieden mit deinem Dienst – 3 Lachgesichter … Waren die Schichten richtig besetzt?“; „Beim Start einen Laufbalken mit Dauer und Prozent“.
+- **Rückfrage nach dem Dienst** („🗓️ Wie lief dein Dienst?“, Startkarte und Push 15 Min. nach Dienstende, wenn noch nicht eingetragen; Erinnerung nach 3 Std., nur 9–20 Uhr; danach in der App bis 7 Tage bzw. bis DP2 den Tag abschließt): ✅ Ja, stimmt · ✏️ Andere Zeiten (5-Minuten-Raster, Pause, Grund freiwillig, Vorschau „statt … → …“) · ❌ War nicht da · 🧾 Korrektur melden. Nicht passende Knöpfe ausgegraut – antippen erklärt, warum.
+- **Kasse/QR ohne Konflikte:** Sind Kommen und Gehen schon erfasst (gemeinsames Buch `kc_dp_stempel` oder Stechuhr `kc_dp_timeclock_actuals`), wird nicht gefragt – nur „Korrektur melden“ (Planer entscheidet); nur Kommen erfasst → „Wann bist du gegangen?“; live angemeldet → wie bisher „Abmelden vergessen?“. Rangfolge in DP2: Planer > Kasse > App live > Selbstangabe.
+- „Laut Plan“ und Abweichungen unter 15 Min. zählen sofort; ab 15 Min., „nicht da“ und Korrektur bestätigt der Planer. Bei jeder Zeitänderung Bescheid an Clubsprecher, Kassenwart und Admin (Push höchstens alle 15 Min. je Empfänger), Liste „📋 Alle Zeitänderungen“ mit „😀 Stimmung & Besetzung“ je Tag/Bereich (nur Anzahlen).
+- **Zufriedenheit & Besetzung** (freiwillig, nach der Antwort): 😀 gut · 🙂 geht so · ☹️ nicht gut; „Waren die Schichten richtig besetzt?“ Zu wenig · Genau richtig · Zu viele.
+- Für alle im Plan (auch Aushilfen); Live-Anmelden bleibt. **Erst nur Admin (Test)** – Freigabe „✅ Ist-Zeiten nach dem Dienst bestätigen“.
+- **Datenbank** (`20261108_kc_dp_dienst_rueckmeldung.sql`): Tabelle `kc_dp_dienst_rueckmeldung` (eine Zeile je Person und Dienst), DP2-Funktionen `kc_dp_rueckmeldungen_liste` / `kc_dp_rueckmeldung_entscheiden` (angemeldet, DP-Rolle wie bei Sonderstunden; Mitglieder nur die eigenen). DP2-Seite (Kontoauszug, Planer-Fenster, Tagesabschluss) auf Sire65/dp3 Zweig `claude/ist-rueckmeldung` (Build 308 RC).
+- **⏳ Start-Balken:** Ladeanzeige mit Fortschritt in Prozent und Sekunden (geschätzt aus den letzten Starts des Geräts, höchstens 95 % bis das Programm läuft), nach einem Update „🔄 Die neue Version wird eingerichtet …“.
+- Tests: `tests/ist-rueckfrage.test.mjs`, `tests/start-balken.test.mjs`; Browser-Prüfung abgeschirmt. Rückweg: App 2.892.0 / Server 2.887.0 (Datenbank nur additiv).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.892.0 – 2026-11-08 – ✏️ Club-Küche: Bleistiftzeichnungen für „Hinter dem Pass“, Folge 3, 4 und 5 (KC-CLUB-MAGAZIN-ROMAN) · nur App [Hansi: einspielen]
 Wunsch Hansi (08.11.): „Check mal ob jetzt alle Zeichnungen auf GitHub liegen und übernehmen dann in die Folgen“ – „Ja alles einspielen“.
 - Quelle: KC-Communication, Zweig `roman-hinter-dem-pass-uebergabe-2026-11-06`, `illustrationen/folge-03` bis `folge-05` (Stand `d0e2247`). Graustufen-WebP in `magazin/roman/`, höchstens 1000 px breit, je unter 180 KB.

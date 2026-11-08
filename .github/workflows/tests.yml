@@ -102,6 +102,8 @@ jobs:
       - run: node tests/egress-messung.test.mjs
       - run: node tests/frist-erinnerung.test.mjs
       - run: node tests/nutzung-person.test.mjs
+      - run: node tests/ist-rueckfrage.test.mjs
+      - run: node tests/start-balken.test.mjs
       # KC-CLUB-FILM-HINWEIS (2.738.0)
       - run: node tests/film-hinweis.test.mjs
       # KC-CLUB-EINLADUNG-AN, KC-CLUB-SAMMEL-ANSAGE (2.739.0)
