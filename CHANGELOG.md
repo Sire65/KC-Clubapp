@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.892.0 – 2026-11-08 – ✏️ Club-Küche: Bleistiftzeichnungen für „Hinter dem Pass“, Folge 3, 4 und 5 (KC-CLUB-MAGAZIN-ROMAN) · nur App [Hansi: einspielen]
+Wunsch Hansi (08.11.): „Check mal ob jetzt alle Zeichnungen auf GitHub liegen und übernehmen dann in die Folgen“ – „Ja alles einspielen“.
+- Quelle: KC-Communication, Zweig `roman-hinter-dem-pass-uebergabe-2026-11-06`, `illustrationen/folge-03` bis `folge-05` (Stand `d0e2247`). Graustufen-WebP in `magazin/roman/`, höchstens 1000 px breit, je unter 180 KB.
+- **Eingesetzt:** Folge 3 alle drei (Paul/Lena/Jonas an der Mühle, Küche vor dem Service, Sophie/Lena/Jonas), Folge 4 „Warten am Bahnübergang“, Folge 5 beide (Entschuldigung, rote Marzipanrose) – Gesichter gegen die Figurenreferenz geprüft.
+- **Zurückgehalten (Bildplatz bleibt):** Folge 4 „Mike am Gemüseposten“ – Jonas und Mike gegen die Figurenreferenz vertauscht (Jonas dunkel gelockt, Mike hell); Folge 4 „Vorwürfe in der Klinik“ – Küchenleute im Hintergrund, laut Einbauanweisung nicht erlaubt. Neu zeichnen lassen.
+- Für Folge 2 gibt es noch keine Zeichnungen; Folge 6 ist noch nicht im Magazin. Figurenreferenz und Kontaktbogen nicht im Programm.
+- Test `tests/magazin-roman.test.mjs`: prüft alle eingesetzten Bilder aller Hefte (vorhanden, klein, WebP). Rückweg: App 2.891.0.
+
 ## 2.891.0 – 2026-11-08 – ⌨️ Blättern: Handy-Tastatur bleibt offen – Kreuzworträtsel im Magazin ausfüllbar (KC-CLUB-BLAETTERN-TASTATUR, Fund Hansi)
 - **Fehler:** Im Club-Magazin ließ sich das Kreuzworträtsel am Handy nicht ausfüllen – „Tastatur kommt nicht“. Ursache: Die aufgehende Tastatur verkleinert das Fenster, und das Blättern baute bei jeder Größenänderung die Seite neu auf. Das angetippte Kästchen verschwand, die Tastatur ging sofort wieder zu.
 - **Behoben an der Quelle (gemeinsamer Blätter-Baustein):** neu aufgebaut wird nur noch, wenn Einzel-/Doppelseite tatsächlich wechselt (Tablet/PC drehen). Gilt für alles, was blättert (Magazin, Prospekt, Archiv, Chronik, Clubleben).
