@@ -19,8 +19,9 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–5; 3–5 als Entwurf, Auftrag Hansi 08.11.2026) – Folge 6 ff. nie vorab ins Programm
-for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([6-9]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter|Verena Falk|Luttermann|Mara Seifert/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–5 und 9 als Entwurf, Aufträge Hansi 08.11.2026) – Folgen 6–8 und 10–12 nie vorab ins Programm.
+// Verena Falk, Karl Luttermann und Mara Seifert treten ab Folge 9 in der veröffentlichten Handlung auf; ihre geheimen Pläne (Dossiers) bleiben draußen.
+for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([6-8]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -89,4 +90,15 @@ for (const [nr, h] of Object.entries(MAG_AUSGABEN)) for (const b of (h.roman?.bi
   const f = new URL("../" + b.datei, import.meta.url), st = fs.statSync(f), kopf = fs.readFileSync(f).subarray(0, 12).toString("latin1");
   assert.ok(st.size > 5000 && st.size < 200000 && kopf.startsWith("RIFF") && kopf.endsWith("WEBP"), `Heft ${nr}: ${b.datei}`); }
 assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n) => /referenz|kontakt/i.test(n)), "keine internen Bilder");
+// Folge 9 in Heft 9 (September 2027, Entwurf): vollständig nach folgen/09-auf-messers-schneide.md, Bildplätze statt fehlender Zeichnungen
+{ const r = MAG_AUSGABEN[9].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[9].erscheint, "2027-09-01"); assert.equal(r.folge, 9); assert.equal(r.titel, "Auf Messers Schneide"); assert.equal(r.untertitel, "Kein Koch lässt einen Kollegen im Regen stehen");
+  assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Fünf Uhr morgens", "Ein Knall", "Beinahe", "Sieben Uhr achtundfünfzig", "Zwölf Plätze", "Ein Fehler, der nicht kleiner wurde", "Neunzig Minuten", "Die andere Küche", "Der Geschmack der Entscheidung", "Drei Namen", "Der Anruf", "Etwas zu feiern", "Eine Frage in der Bäckerei", "Eine kleine Trattoria", "Jemand am Fenster"]);
+  assert.equal(p.length, 522, "Folge 9 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 4854, "Folge 9 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "„Du siehst aus, als hättest du die Nacht durchgearbeitet.“"); assert.equal(p.at(-1), "Noch nicht.");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 10 – Gerüchte und Gezeiten**");
+  assert.ok(p.some((t) => t.includes("Zander")) && !p.some((t) => t.includes("Rehrücken")), "Wettbewerbsgericht Zander, kein Rehrücken");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => !b.da && b.datei.startsWith("magazin/roman/f9-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Fünf Uhr morgens", "h:Neunzig Minuten"], "Bildstellen laut Einbauanweisung");
+  const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 2); }
 console.log("magazin-roman: ok");
