@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.894.0 – Zeitansage: Video „Spiele“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 8 Schritte zeigen auf vorhandene Stellen (Tic-Tac-Toe mit Feldgröße 3 × 3 / 4 × 4, leicht/mittel/schwer). Zeitansage eingeschaltet.
+- Rückweg: Version 2.893.0 einspielen.
+
 ## 2.893.0 – 2026-11-08 – 🗓️ Ist-Zeiten nach dem Dienst selbst bestätigen, 😀 Zufriedenheit & Besetzung, ⏳ Start-Balken mit Prozent (KC-CLUB-IST-RUECKFRAGE, KC-CLUB-START-BALKEN) · App + Server 2.893.0 + Datenbank – 20-Uhr-Termin
 Wünsche Hansi 08.11.: „Die Mitglieder können ihre wirklichen Dienstzeiten selber eintragen … Soll ich die als Ist-Zeiten übernehmen? Ja, nein, Änderung … Grund freiwillig … im Abgleich mit DP2 … abfangen, wenn über die Kasse auch Dienstzeiten mit QR-Code übernommen werden“; „Wie warst du heute zufrieden mit deinem Dienst – 3 Lachgesichter … Waren die Schichten richtig besetzt?“; „Beim Start einen Laufbalken mit Dauer und Prozent“.
 - **Rückfrage nach dem Dienst** („🗓️ Wie lief dein Dienst?“, Startkarte und Push 15 Min. nach Dienstende, wenn noch nicht eingetragen; Erinnerung nach 3 Std., nur 9–20 Uhr; danach in der App bis 7 Tage bzw. bis DP2 den Tag abschließt): ✅ Ja, stimmt · ✏️ Andere Zeiten (5-Minuten-Raster, Pause, Grund freiwillig, Vorschau „statt … → …“) · ❌ War nicht da · 🧾 Korrektur melden. Nicht passende Knöpfe ausgegraut – antippen erklärt, warum.
