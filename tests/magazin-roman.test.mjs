@@ -52,9 +52,9 @@ for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertit
   assert.equal(p.length, 339, "Folge 3 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3285, "Folge 3 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "„Alle raus! Sofort!“"); assert.equal(p.at(-1), "Und plötzlich wurde ihm klar, dass dieser Abend, an dem die Alte Mühle stillgestanden hatte, ihn vielleicht noch etwas ganz anderes kosten würde.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 4 – Ein Kuss zu viel**");
-  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => !b.da && b.datei.startsWith("magazin/roman/f3-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f3-") && b.alt.startsWith("Bleistiftskizze: ")));
   assert.ok(!/Kuss/.test(r.bilder.map((b) => b.alt).join(" ")), "Bildtexte verraten nichts");
-  const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 3); }
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3, "Folge 3: alle drei Zeichnungen"); }
 // Folge 4 in Heft 4 (Entwurf): vollständig nach folgen/04-ein-kuss-zu-viel.md, Bildplätze statt fehlender Zeichnungen
 { const r = MAG_AUSGABEN[4].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[4].erscheint, "2027-04-01"); assert.equal(r.folge, 4); assert.equal(r.titel, "Ein Kuss zu viel"); assert.equal(r.untertitel, "Der falsche Schnitt");
@@ -62,9 +62,11 @@ for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertit
   assert.equal(p.length, 304, "Folge 4 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 2901, "Folge 4 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "Am Morgen nach dem Brand sah die Alte Mühle aus, als habe jemand ihr den Atem genommen."); assert.equal(p.at(-1), "Jetzt fragte sie sich, ob sie morgen überhaupt noch dorthin zurückkehren durfte.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 5 – Die rote Marzipanrose**");
-  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => !b.da && b.datei.startsWith("magazin/roman/f4-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f4-") && b.alt.startsWith("Bleistiftskizze: ")));
   assert.ok(!/Kuss/.test(r.bilder.map((b) => b.alt).join(" ")), "Bildtexte verraten nichts");
-  const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 3); }
+  // KC-CLUB-MAGAZIN-ZEICHNUNGEN (08.11.2026): nur der Bahnübergang ist eingesetzt; Gemüseposten (Jonas/Mike nicht nach Figurenreferenz) und Klinik (Küchenleute im Hintergrund) zurückgehalten
+  assert.deepEqual(r.bilder.map((b) => b.da), [false, true, false]);
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 1 && (o.match(/mag-roman-bild/g) || []).length === 3); }
 // Folge 5 in Heft 5 (Mai 2027, Entwurf): vollständig nach folgen/05-die-rote-marzipanrose.md, Bildplätze statt fehlender Zeichnungen
 const r5 = MAG_AUSGABEN[5].roman;
 assert.equal(MAG_AUSGABEN[5].erscheint, "2027-05-01"); assert.equal(r5.folge, 5); assert.equal(r5.von, 12); assert.equal(r5.titel, "Die rote Marzipanrose"); assert.equal(r5.untertitel, "Was ein Wort anrichten kann");
@@ -80,6 +82,11 @@ assert.ok(r5.bisher.startsWith("Seit rund drei Monaten macht Lena Hartmann ihre 
 assert.deepEqual(r5.ende.slice(0, 2), ["**Fortsetzung in der nächsten Ausgabe**", "**Folge 6 – Die Kündigung**"]);
 assert.ok(!JSON.stringify(r5).includes("<!--") && !/BILD \d/.test(JSON.stringify(r5)), "Bildhinweise der Vorlage nicht als Lesetext");
 const out5 = magHeftHtml("roman", r5);
-assert.equal(r5.bilder.length, 2); assert.ok(r5.bilder.every((b) => !b.da && /^magazin\/roman\/f5-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: ")) && !/<img/.test(out5), "Folge 5: Zeichnungen fehlen noch → Bildplatz");
+assert.equal(r5.bilder.length, 2); assert.ok(r5.bilder.every((b) => b.da && /^magazin\/roman\/f5-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: ")) && (out5.match(/<img /g) || []).length === 2, "Folge 5: beide Zeichnungen");
 assert.ok(out5.includes('class="mag-roman-bisher"') && (out5.match(/mag-roman-bild/g) || []).length === 2);
+// alle eingesetzten Zeichnungen aller Hefte: Datei da, klein, Graustufen-WebP; Figurenreferenz/Kontaktbogen nie im Programm
+for (const [nr, h] of Object.entries(MAG_AUSGABEN)) for (const b of (h.roman?.bilder || []).filter((x) => x.da)) {
+  const f = new URL("../" + b.datei, import.meta.url), st = fs.statSync(f), kopf = fs.readFileSync(f).subarray(0, 12).toString("latin1");
+  assert.ok(st.size > 5000 && st.size < 200000 && kopf.startsWith("RIFF") && kopf.endsWith("WEBP"), `Heft ${nr}: ${b.datei}`); }
+assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n) => /referenz|kontakt/i.test(n)), "keine internen Bilder");
 console.log("magazin-roman: ok");
