@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.890.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.891.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -33200,7 +33200,10 @@ $("blBuehne").addEventListener("touchend", (e) => {
 }, { passive: true });
 $("blBuehne").addEventListener("touchcancel", () => { BL_T = null; }, { passive: true });
 document.addEventListener("keydown", (e) => { if (!BL.offen) return; if (e.key === "ArrowRight") blWeiter(1); else if (e.key === "ArrowLeft") blWeiter(-1); else if (e.key === "Escape") blZu(); });
-addEventListener("resize", () => { if (BL.offen) blZeigen(0); });
+// KC-CLUB-BLAETTERN-TASTATUR (2.891.0, Fund Hansi 08.11.2026 „Ich kann nicht schreiben im Kreuzworträtsel. Tastatur kommt nicht“): Die Handy-Tastatur
+// verkleinert das Fenster (resize). Früher baute das Blättern dann die Seite neu auf – das angetippte Eingabefeld verschwand, die Tastatur ging sofort zu.
+// Neu aufbauen nur noch, wenn Einzel-/Doppelseite wirklich wechselt (Tablet/PC drehen oder Fenster deutlich breiter/schmaler).
+addEventListener("resize", () => { if (BL.offen && blDoppel() !== $("blBuehne").classList.contains("doppel")) blZeigen(0); });
 // KC-CLUB-CHRONIK (1.64.0): Anleitung oben im Ordner (und als erste Seite beim Blättern) + Anlegen mit Gründungsjahr
 // KC-CLUB-ORDNER-EINLEITUNG (1.86.0, Wunsch Hansi): Einleitung eines Clubordners – erste Zeile Überschrift, Absätze durch Leerzeile
 function arEinleitungHtml(t) {

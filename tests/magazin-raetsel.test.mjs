@@ -41,5 +41,8 @@ assert.ok(teil.includes("Lesezeit") && html.includes(".mag-lesezeit"), "Lesezeit
 const vor = teil.slice(teil.indexOf("KC-CLUB-MAGAZIN-PROFI: „Im nächsten Heft“"), teil.indexOf('register: "Vorschau"'));
 assert.ok(vor.length > 100 && !/Folge \d|folge \+ 1/.test(vor), "Vorschau nennt keine Folgennummer oder Inhalte späterer Folgen");
 for (const k of [".mag-fb-flaeche", ".mag-fb-marke", ".mag-kw-gitter", ".mag-kw-feld", ".mag-kw-wort", ".mag-latein-herkunft", ".mag-vorschau"]) assert.ok(html.includes(k), "Stil " + k);
+// KC-CLUB-BLAETTERN-TASTATUR (2.891.0): die Handy-Tastatur (resize) darf die Blätter-Seite nicht neu aufbauen – sonst verschwindet das Eingabefeld
+const app = lies("app.js"), rz = app.match(/addEventListener\("resize", \(\) => \{ if \(BL\.offen[^\n]*/)?.[0] || "";
+assert.ok(rz.includes('blDoppel() !== $("blBuehne").classList.contains("doppel")') && rz.includes("blZeigen(0)"), "Blättern zeichnet bei Größenänderung nur neu, wenn Einzel-/Doppelseite wechselt");
 assert.ok(!/\|\|=/.test(teil));
 console.log("magazin-raetsel: ok");

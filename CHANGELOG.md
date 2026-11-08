@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.891.0 – 2026-11-08 – ⌨️ Blättern: Handy-Tastatur bleibt offen – Kreuzworträtsel im Magazin ausfüllbar (KC-CLUB-BLAETTERN-TASTATUR, Fund Hansi)
+- **Fehler:** Im Club-Magazin ließ sich das Kreuzworträtsel am Handy nicht ausfüllen – „Tastatur kommt nicht“. Ursache: Die aufgehende Tastatur verkleinert das Fenster, und das Blättern baute bei jeder Größenänderung die Seite neu auf. Das angetippte Kästchen verschwand, die Tastatur ging sofort wieder zu.
+- **Behoben an der Quelle (gemeinsamer Blätter-Baustein):** neu aufgebaut wird nur noch, wenn Einzel-/Doppelseite tatsächlich wechselt (Tablet/PC drehen). Gilt für alles, was blättert (Magazin, Prospekt, Archiv, Chronik, Clubleben).
+- Im abgeschirmten Browser nachgestellt (Handy: Kästchen antippen, Fenster durch Tastatur verkleinert → vorher Fokus weg, jetzt bleibt er; Tippen kommt an) und Drehen auf Doppelseite geprüft. Test: `tests/magazin-raetsel.test.mjs` erweitert. Rückweg: Version 2.890.0 einspielen.
 ## 2.890.0 – Zeitansage: Videos „Hilfe, Suche & Twinkey“, „SOS – Notfall“ und „Helfen & Leihen“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 7 Schritte zeigen auf vorhandene Stellen; die Lupe sucht wie gesagt in Nachrichten, Terminen, Archiv und Pinnwand. Zeitansage eingeschaltet.
 - Ebenso „SOS – Notfall“ geprüft (5 Schritte ok, mit Beispiel-Kontakten; Notfallkontakt unter Einstellungen → Privatsphäre stimmt).
