@@ -19,7 +19,7 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur freigegebene Folgen (1, 2, 4 als Entwurf) – Folge 5 ff. nie vorab ins Programm
+// keine Spoiler, kein internes Material, nur freigegebene Folgen (1, 2; 3 und 4 als Entwurf) – Folge 5 ff. nie vorab ins Programm
 for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([5-9]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
@@ -55,4 +55,11 @@ assert.ok(r4.ende.includes("**Folge 5 – Die rote Marzipanrose**") && r4.bisher
 assert.deepEqual(r4.bilder.map((b) => b.datei), ["magazin/roman/04-01-mike-am-gemueseposten.webp", "magazin/roman/04-02-warten-am-bahnuebergang.webp", "magazin/roman/04-03-vorwuerfe-in-der-klinik.webp"]);
 assert.ok(!/figurenreferenz|kontaktbogen/i.test(teil.replace(/Figurenreferenz und Kontaktbogen gehören NICHT ins Magazin/, "")), "interne Bilder nie im Programm");
 for (const b of r4.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild Folge 4: " + b.datei); }
+// Folge 3 in Heft 3 (Entwurf), vollständig
+const r3 = MAG_AUSGABEN[3].roman;
+assert.equal(MAG_AUSGABEN[3].erscheint, "2027-03-01"); assert.equal(r3.folge, 3); assert.equal(r3.titel, "Alte Geschichten"); assert.equal(r3.untertitel, "Als die Alte Mühle plötzlich stillstand");
+assert.equal(r3.text.filter(([a]) => a === "h").length, 12); assert.equal(r3.text.filter(([a]) => a === "p").length, 339, "Folge 3 nicht gekürzt");
+assert.ok(!/<!--|@@BILD|BILD \d/.test(JSON.stringify(r3)) && r3.ende.includes("**Folge 4 – Ein Kuss zu viel**"));
+assert.deepEqual(r3.bilder.map((b) => b.wo), ["absatz:51", "absatz:124", "h:Ein Kuss im Schatten"]);
+for (const b of r3.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild Folge 3: " + b.datei); }
 console.log("magazin-roman: ok");
