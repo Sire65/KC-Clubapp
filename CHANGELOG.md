@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.891.0 – Zeitansage: Video „Spiele“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- Geprüft: alle 8 Schritte zeigen auf vorhandene Stellen (Tic-Tac-Toe mit Feldgröße 3 × 3 / 4 × 4, leicht/mittel/schwer). Zeitansage eingeschaltet.
+- Rückweg: Version 2.890.0 einspielen.
+
 ## 2.890.0 – Zeitansage: Videos „Hilfe, Suche & Twinkey“, „SOS – Notfall“ und „Helfen & Leihen“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 7 Schritte zeigen auf vorhandene Stellen; die Lupe sucht wie gesagt in Nachrichten, Terminen, Archiv und Pinnwand. Zeitansage eingeschaltet.
 - Ebenso „SOS – Notfall“ geprüft (5 Schritte ok, mit Beispiel-Kontakten; Notfallkontakt unter Einstellungen → Privatsphäre stimmt).

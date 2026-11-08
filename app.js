@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.890.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.891.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2055,7 +2055,7 @@ const RUNDGAENGE = [
   { id: "hilfe", stand: "2", zeit: "08.11.2026", sym: "❓", t: "Hilfe, Suche & Twinkey", u: "Twinkey, Hilfe-Suche, Lupe und Sprachsuche – so findest du jede Antwort (ca. 2 Min.)", st: () => RG_HILFE }, // 2.533.0 Fassung 2
   { id: "sos", stand: "1", zeit: "08.11.2026", sym: "🆘", t: "SOS – Notfall", u: "Notrufe, Standort, Notfallpass (ca. 1 Min.)", st: () => RG_SOS },
   { id: "helfen", stand: "1", zeit: "08.11.2026", sym: "🤝", t: "Helfen & Leihen", u: "Hilfe, Ausleihen, Börse (ca. 1 Min.)", st: () => RG_HELFEN },
-  { id: "spiele", stand: "1", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
+  { id: "spiele", stand: "1", zeit: "08.11.2026", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
   { id: "archiv", stand: "1", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
   { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
   { id: "dienst", stand: "2", sym: "🗓️", t: "Mein Dienst & Dienstplan", u: "Wünsche, Sollplan, gearbeitete Zeiten, Wochenplan, 📊 wer kann wann (ca. 2 Min.)", st: () => RG_DIENST }, // 2.269.0 KC-CLUB-ERKLAERVIDEOS-5
