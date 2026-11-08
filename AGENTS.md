@@ -106,3 +106,20 @@ dadurch 6 „fremde Anmeldeversuche“. Darum gilt für jeden Browser-Lauf (Play
    (Konstante `OHNE_ECHTSERVER` wie in `tests/rundgang.browser.mjs`) – dann kann er den echten Server auf keinem Weg erreichen, auch nicht aus Versehen.
 5. Der Test `tests/browser-abgeschirmt.test.mjs` prüft alle Browser-Skripte in `tests/` und `tools/` (Abschirmung und Netzsperre); ein roter Test verhindert das Einspielen.
 
+## Neue SECURITY-DEFINER-Funktionen sofort ins Prüfregister (KC-SECURITY-DEFINER-REGISTER, 08.11.2026, Wunsch Hansi „Ja mach die Regel“)
+
+Der KC System Check meldet GELB („SECURITY-DEFINER-Ausführungsrecht(e) · prüfen“), sobald eine Funktion mit `security definer` in `public`
+von angemeldeten Programmen (`authenticated`) oder Unangemeldeten (`anon`) aufgerufen werden darf und nicht im Prüfregister steht
+(zuletzt 08.11.2026 durch `kc_dp_rueckmeldung_entscheiden`/`kc_dp_rueckmeldungen_liste`). Darum:
+
+1. **Nur der Club-Server ruft sie auf?** Dann `revoke all on function public.<name>(…) from public, anon, authenticated;` und
+   `grant execute … to service_role;` – kein Eintrag nötig (das ist der Normalfall).
+2. **Ein Programm ruft sie direkt auf (DP2/DP3, KC Manager …)?** Die Funktion prüft zuerst `auth.uid()` und die Rolle/Mitgliedschaft,
+   dann trägt **dieselbe Migration** sie ein:
+   `insert into public.kc_security_reviewed_exceptions (object_schema, object_name, object_type, finding_code, decision, reason, reviewed_at, review_after, active)`
+   mit `finding_code = 'security_definer_authenticated_execute'` (bzw. `…_anon_execute`), `decision = 'accepted_required'`, einer Begründung
+   (welche Prüfung schützt sie) und `review_after = now() + interval '6 months'` – wiederholbar mit `where not exists (…)`.
+   Vorlage: `supabase/migrations/20261108_kc_pruefregister_rueckmeldung.sql`.
+3. `anon` nur, wenn es wirklich ohne Anmeldung gehen muss (geheimer Schlüssel/Token in der Funktion) – sonst `revoke … from public, anon`.
+4. Der Test `tests/security-definer-register.test.mjs` prüft alle Migrationen ab 08.11.2026; ein roter Test verhindert das Einspielen.
+
