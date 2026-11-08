@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.886.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.887.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -25,6 +25,7 @@ const TEILE_LISTE = {
   magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-NILVItNnYXGNgheyAeKTZoQbT5UreVOma/RIf1u4f/jW7lkT7l9ZuKnQb1buGklH" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
+  nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   garten: { einstieg: ["gartenStart", "gartenTag"], sri: "sha384-6aJ7BC8onHSBkTJfke0PZ2xpqNkKve2zPAKRfEciPgMowI960w0UXsF+SgwXCHMm" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
   probe: { einstieg: ["teilProbe"], sri: "sha384-11uzQ0U/9pY4FZjTqOq5jlmzO0XsA4hQVrV8iqqTT7Jp9y3/VSG/gTIggGmcZud8" }, // Probe für den Nachlade-Weg (Klick-Rundgang, Sicherheits-Check)
@@ -2632,6 +2633,7 @@ const HILFE = [
   { id: "mein_garten", thema: "privat", sym: "🌱", nur: () => frei("garten"), t: "Mein Garten: Samen säen und Pflanze großziehen", x: "Kachel <b>„🌱 Mein Garten“</b> (Meins): Für Tage in der App (7, 25, 50, 100, 200, 365) und für besondere Taten – z. B. dein erstes eigenes Rezept oder ein Beitrag für die Club-Küche – gibt es ein <b>🎁 Samentütchen</b>. Öffnen, eine von 12 Pflanzen aussuchen, aussäen. Die Pflanze wächst über echte Tage. <b>💧 Gießen</b> etwa alle 3 Tage, <b>🧪 Düngen</b> etwa alle 3 Wochen – oder <b>🤖 Gärtner kümmert sich</b> einschalten. Sie geht nie ein, ohne Wasser wächst sie nur langsamer. Im <b>🏡 Club-Garten</b> siehst du die Pflanzen der anderen, wenn sie sie freigegeben haben." },
   { id: "anbieter_neues", thema: "technik", sym: "📰", nur: () => !!ICH?.admin, t: "Anbieter: Neues, Störungen, Wartungen", x: "Admin-Bereich → Kachel <b>„📰 Anbieter“</b>: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – <b>angekündigte Wartungen</b>, <b>Störungen</b> der letzten 14 Tage und <b>Neuerungen</b> der letzten 30 Tage. Oben steht die Lage in einem Satz. Meldungen aus anderen Regionen oder fernen Rechenzentren werden ausgeblendet (nur gezählt). Die Anbieter schreiben englisch – antippen öffnet die Original-Seite. <b>„💡 Prüfen lassen“</b> setzt eine Neuerung auf die Wunschliste, dann prüft Claude, ob wir sie übernehmen können. Kostet nichts: nur öffentliche Seiten, abgefragt erst beim Öffnen." }, // 2.842.0 KC-CLUB-ANBIETER-NEUES
   { id: "kachel_drehzeichen", thema: "start", sym: "🔄", t: "Kacheln umdrehen: das kleine 🔄", x: "Kacheln mit einem kleinen <b>🔄</b> oben rechts haben eine <b>Rückseite mit Schnellaktionen</b> – z. B. Termine (＋ Neu), Nachrichten (Neue Nachricht), Dienstpläne (Mein Dienst, Dienstwünsche), Hilfe (Frag Twinkey, Erklär-Videos), Büro (Eingang). <b>🔄 antippen</b> dreht die Kachel um, hinten dreht dasselbe Zeichen sie zurück (nach 8 Sekunden auch von selbst). Doppelt auf die Kachel tippen geht weiterhin. Abschalten: ⚙️ Einstellungen → Darstellung → „🔄 Kacheln umdrehen“." }, // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN
+  { id: "meine_nutzung", thema: "privat", sym: "📊", t: "Meine Nutzung – wie viel bin ich in der App?", x: "Unter <b>Meins → „📊 Meine Nutzung“</b> siehst du deine eigenen Zahlen: wie lange die App offen war (<b>Bildschirmzeit</b>) und wie lange sie im <b>Hintergrund</b> lief, wie viele <b>Nachrichten</b> du geschrieben hast, deine <b>Antworten auf Termine</b>, Abstimmungen, Anrufe, die meistgenutzten Bereiche und wann du am meisten in der App bist. Oben wählst du den <b>Zeitraum</b> (heute, 7 oder 30 Tage, dieses Jahr oder eigene Tage) und was du sehen möchtest. Für die Statistik werden dafür bestimmte Sachen aufgezeichnet – nur Zeiten und Anzahlen, nie, was du schreibst." },
   { id: "nutzung_alle", thema: "technik", sym: "📈", t: "So nutzen wir die App – Zahlen für alle", x: "Wann ist im Club am meisten los? Die Kachel <b>„📈 So nutzen wir die App“</b> (Register Technik) zeigt es als Farbfeld (Wochentag × Uhrzeit) – dazu, wie viele Mitglieder da waren, wie viele Nachrichten, Push und E-Mails verschickt wurden, welche Bereiche am beliebtesten sind und was noch zu entdecken ist. Wähle 7, 30 oder 90 Tage; Pfeile vergleichen mit dem Zeitraum davor. Es sind <b>nur Summen</b> – niemand wird einzeln gezählt, und Inhalte werden nie gezählt. Feld oder Säule antippen zeigt die genaue Zahl." }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
   { id: "foto_teilen", thema: "club", sym: "📥", t: "Fotos direkt aus der Galerie schicken", x: "Ist die Club-App installiert, taucht sie beim Teilen in der Handy-Galerie auf: Foto auswählen → <b>Teilen → Köcheclub</b>. Es landet im <b>📥 Ablagekorb</b>, und Hansi legt es ins Fotoalbum – Fotos bleiben im Original, das Aufnahmedatum bleibt erhalten. Bis 10 Dateien auf einmal.", seit: "2.23.1" },
@@ -9701,6 +9703,7 @@ const KACHELN = {
     // KC-CLUB-AUSWEIS-QR (2.443.0, Wunschliste #9): Mitgliedsausweis als QR – an Kasse und Stechuhr vor den Scanner halten
     { id: "ausweis", sym: "🪪", t: "Mein Ausweis-QR", u: "Für Kasse & Stechuhr", aktion: "ausweisZeigen()" },
     { id: "meinedaten", sym: "🔐", t: "Meine Daten", u: "Was ist über mich gespeichert?", aktion: "mdatStart()" },
+    { id: "meine_nutzung", sym: "📊", t: "Meine Nutzung", u: "Zeit in der App, Nachrichten, Termine", aktion: "npStart()", nur: () => zugang() === "mitglied" }, // KC-CLUB-NUTZUNG-PERSON
     { id: "aenderung", sym: "✏️", t: "Änderung melden", u: "Neue Anschrift, Telefon, Größe …", aktion: "aeStart()", zahl: () => (ICH?.vorstand || ICH?.admin ? AE.offen : 0) },
     { id: "unterstuetzung", sym: "🙋", t: "Unterstützung anfragen", u: "Hilfe bei der Club-App", aktion: "uaStart()", nur: () => !ICH?.admin }, // 2.492.0 KC-CLUB-UNTERSTUETZUNG-ANFRAGE
     { id: "schulungen", sym: "🎓", t: "Meine Schulung", u: "Termin aussuchen · Zusammenfassungen", aktion: "smStart()", zahl: () => smOffen().length }, // 2.23.62 KC-CLUB-SCHULUNG-MITGLIED
@@ -9723,6 +9726,7 @@ const KACHELN = {
     { id: "twinkey", sym: "🧑‍🍳", t: "Frag Twinkey", u: "Frage tippen oder 🎤 sprechen", aktion: "twFrageStart()" }, // 2.23.49 KC-CLUB-TWINKEY (früher „Frag den Küchenchef“)
     { id: "erklaer", sym: "🎬", t: "Erklär-Videos", u: "Rundgänge mit Ton – Schritt für Schritt", aktion: "erklaerVideos()" }, // KC-CLUB-ERKLAERVIDEOS (2.244.0)
     { id: "nutzung_alle", sym: "📈", t: "So nutzen wir die App", u: "Wann, wie oft, welche Bereiche", aktion: "nuStart()", nur: () => zugang() === "mitglied" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE (Wunsch #73)
+    { id: "nutzung_person", sym: "📊", t: "Nutzung je Mitglied", u: "Statistik pro Person (Admin)", aktion: "npAlle()", nur: () => !!ICH?.admin }, // KC-CLUB-NUTZUNG-PERSON
   ],
   // KC-CLUB-ADMIN-REGISTER (2.20.0, Wunsch Hansi): Register „Admin“ – nur Admin/Vertretung; kleine Kacheln (3 je Reihe) mit Lämpchen,
   // Antippen öffnet ein Blatt mit Einzelheiten, Grafik und den Werkzeugen für genau diese Stelle (siehe AD_KACHELN weiter unten)
@@ -34209,16 +34213,40 @@ function nzZaehlen(v) {
   const st = nzStunde(); nzStdPuffer[st] = (nzStdPuffer[st] || 0) + 1; nzStdSchreiben();
   const h = nzHeuteLesen(); if (!h.offen.includes(v) && !h.gesendet.includes(v)) { h.offen.push(v); nzHeuteSchreiben(h); }
 }
+// ---------- KC-CLUB-NUTZUNG-PERSON (Wunsch Hansi 07./08.11.2026): Bildschirmzeit (App sichtbar) und Zeit im Hintergrund (App offen, aber weggelegt) je Tag –
+// nur Sekunden, im Gerät gemerkt (höchstens 4 Tage) und mit der Nutzungsmeldung geschickt (beim Weglegen; im 2-Minuten-Takt nur, wenn ohnehin etwas geht –
+// kein zusätzlicher Aufruf). Ein Stück „sichtbar“ zählt höchstens 6 Std., „Hintergrund“ höchstens 12 Std. (danach hat das Handy die App meist beendet).
+const NP_SICHT_MAX = 6 * 3600, NP_WEG_MAX = 12 * 3600, NP_SPEICHER = "kc_club_np_zeit";
+const NP = { sichtAb: document.hidden ? 0 : Date.now(), wegAb: document.hidden ? Date.now() : 0 };
+const npZeitLesen = () => { try { const z = JSON.parse(localStorage.getItem(NP_SPEICHER) || "{}"); return z && typeof z === "object" && !Array.isArray(z) ? z : {}; } catch { return {}; } };
+const npZeitSchreiben = (z) => { try { localStorage.setItem(NP_SPEICHER, JSON.stringify(z)); } catch {} };
+function npZeitDazu(z, tag, s, h) { const w = Array.isArray(z[tag]) ? z[tag] : [0, 0]; w[0] = (Number(w[0]) || 0) + s; w[1] = (Number(w[1]) || 0) + h; z[tag] = w; for (const k of Object.keys(z).sort().slice(0, -4)) delete z[k]; return z; }
+function npBuchen(i, ab, bis, max) {
+  const sek = Math.min(max, Math.round((bis - ab) / 1000)); if (!ab || !(sek > 0)) return;
+  npZeitSchreiben(npZeitDazu(npZeitLesen(), heuteIso(), i === 0 ? sek : 0, i === 1 ? sek : 0));
+}
+function npSichtBuchen() { if (NP.sichtAb && !document.hidden) { const j = Date.now(); npBuchen(0, NP.sichtAb, j, NP_SICHT_MAX); NP.sichtAb = j; } }
+// vor der Nutzungsmeldung beim Weglegen (Reihenfolge der Zuhörer), damit das letzte Stück gleich mitgeht
+document.addEventListener("visibilitychange", () => {
+  const j = Date.now();
+  if (document.hidden) { if (NP.sichtAb) npBuchen(0, NP.sichtAb, j, NP_SICHT_MAX); NP.sichtAb = 0; NP.wegAb = j; }
+  else { if (NP.wegAb) npBuchen(1, NP.wegAb, j, NP_WEG_MAX); NP.wegAb = 0; NP.sichtAb = j; }
+});
 async function nzSenden() {
-  const h = nzHeuteLesen(), heute = h.offen.slice(0, 40);
-  if (!INIT || (!Object.keys(nzPuffer).length && !heute.length)) return;
+  const weg = document.hidden; // beim Weglegen immer die Zeiten mitschicken, sonst nur, wenn ohnehin gemeldet wird
+  npSichtBuchen();
+  const h = nzHeuteLesen(), heute = h.offen.slice(0, 40), zeitAlle = npZeitLesen(), mitAnderem = Object.keys(nzPuffer).length || heute.length;
+  const zeit = Object.keys(zeitAlle).length && (weg || mitAnderem) ? zeitAlle : null;
+  if (!INIT || (!mitAnderem && !zeit)) return;
   const z = nzPuffer; nzPuffer = {}; try { localStorage.setItem("kc_club_nutzung", "{}"); } catch {}
   const std = nzStdPuffer; nzStdPuffer = {}; nzStdSchreiben();
+  if (zeit) npZeitSchreiben({});
   try {
-    const r = await api("nutzung_melden", { zaehler: z, ...(Object.keys(std).length ? { stunden: std } : {}), ...(NZ_GERAET && heute.length ? { geraet: NZ_GERAET, heute } : {}) });
+    const r = await api("nutzung_melden", { zaehler: z, ...(Object.keys(std).length ? { stunden: std } : {}), ...(NZ_GERAET && heute.length ? { geraet: NZ_GERAET, heute } : {}), ...(zeit ? { zeit } : {}) });
     const n = nzHeuteLesen(); if (n.tag === h.tag && r?.heuteOk !== false) { n.gesendet = [...new Set([...n.gesendet, ...heute])]; n.offen = n.offen.filter((b) => !heute.includes(b)); nzHeuteSchreiben(n); }
   } catch { for (const [k, n] of Object.entries(z)) nzPuffer[k] = (nzPuffer[k] || 0) + n; try { localStorage.setItem("kc_club_nutzung", JSON.stringify(nzPuffer)); } catch {}
-    for (const [k, n] of Object.entries(std)) nzStdPuffer[k] = (nzStdPuffer[k] || 0) + n; nzStdSchreiben(); }
+    for (const [k, n] of Object.entries(std)) nzStdPuffer[k] = (nzStdPuffer[k] || 0) + n; nzStdSchreiben();
+    if (zeit) { const zz = npZeitLesen(); for (const [t, w] of Object.entries(zeit)) npZeitDazu(zz, t, Number(w?.[0]) || 0, Number(w?.[1]) || 0); npZeitSchreiben(zz); } }
 }
 setInterval(nzSenden, sparTakt(NZ_TAKT_MS));
 document.addEventListener("visibilitychange", () => { if (document.hidden) nzSenden(); });
@@ -34292,7 +34320,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",

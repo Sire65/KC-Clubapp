@@ -22,7 +22,7 @@ assert.ok(server.includes("if (pf) pf.antwortBytes = (pf.antwortBytes || 0) + b.
 assert.ok(server.includes("egressDazu(EGRESS.antwort, String(pf.aktion || req.method).slice(0, 40), pf.antwortBytes ?? (Number(antwort.headers.get(\"content-length\")) || 0)); egressMelden(); } catch {}"), "Antwort je Aktion, Melden ohne Fehler für die App");
 const melden = server.slice(server.indexOf("function egressMelden("), server.indexOf("const dbFetchNetz"));
 assert.ok(melden.includes('protokoll(null, "egress_messung", details)') && /const details = \{ sek: [^}]*db: egressTop\(EGRESS\.db\), aktion: egressTop\(EGRESS\.aktion\), antwort: egressTop\(EGRESS\.antwort\), version: SERVER_VERSION \};/.test(melden), "nur Namen und Zahlen, ohne Person");
-assert.ok(/const EGRESS_MS = 3 \* 60000, EGRESS_MAX_NAMEN = 300, EGRESS_TOP = 40;/.test(server), "alle 10 Minuten, gedeckelt");
+assert.ok(/const EGRESS_MS = 30000, EGRESS_MAX_NAMEN = 300, EGRESS_TOP = 40, EGRESS_BIS = Date\.parse\("2026-11-21T00:00:00Z"\);/.test(server) && server.includes("if (Date.now() > EGRESS_BIS) {"), "alle 30 s, gedeckelt, befristet");
 assert.ok(/const PROT_LAERM = \[[^\]]*"egress_messung"/.test(server), "nach 60 Tagen aufgeräumt");
 
 // --- Zähl-Strom gibt die Daten unverändert weiter ---
