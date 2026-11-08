@@ -25,6 +25,7 @@ const TEILE_LISTE = {
   magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-NILVItNnYXGNgheyAeKTZoQbT5UreVOma/RIf1u4f/jW7lkT7l9ZuKnQb1buGklH" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
+  istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-1jzbO5EDYFCIeXXt2DO73xrUoD9zmzFqUWLJhznd01SDS/0yASCkKzNM4lCVMwep" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
   nutzperson: { einstieg: ["npStart", "npAlle"], sri: "sha384-Z+v9oW3/Vp/DObApKnj6423OFyD/mLKqkI6+rUmBzRUYABaoE9X1rnta/qubtMEX" }, // KC-CLUB-NUTZUNG-PERSON: „📊 Meine Nutzung“ / „📊 Nutzung je Mitglied“ (nur beim Öffnen)
   nutzung: { einstieg: ["nuStart"], sri: "sha384-V8qj7CYfmmydkhppRZkaB/XjF0ATARL/4dwYcdXMeRUQ+cFMm2ijWGLzZIt1uha/" }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE: „📈 So nutzen wir die App“ für alle (nur beim Öffnen)
   garten: { einstieg: ["gartenStart", "gartenTag"], sri: "sha384-6aJ7BC8onHSBkTJfke0PZ2xpqNkKve2zPAKRfEciPgMowI960w0UXsF+SgwXCHMm" }, // KC-CLUB-SAMEN (#84): „🌱 Mein Garten“ – nur beim Öffnen und einmal am Tag beim Start
@@ -2633,6 +2634,7 @@ const HILFE = [
   { id: "mein_garten", thema: "privat", sym: "🌱", nur: () => frei("garten"), t: "Mein Garten: Samen säen und Pflanze großziehen", x: "Kachel <b>„🌱 Mein Garten“</b> (Meins): Für Tage in der App (7, 25, 50, 100, 200, 365) und für besondere Taten – z. B. dein erstes eigenes Rezept oder ein Beitrag für die Club-Küche – gibt es ein <b>🎁 Samentütchen</b>. Öffnen, eine von 12 Pflanzen aussuchen, aussäen. Die Pflanze wächst über echte Tage. <b>💧 Gießen</b> etwa alle 3 Tage, <b>🧪 Düngen</b> etwa alle 3 Wochen – oder <b>🤖 Gärtner kümmert sich</b> einschalten. Sie geht nie ein, ohne Wasser wächst sie nur langsamer. Im <b>🏡 Club-Garten</b> siehst du die Pflanzen der anderen, wenn sie sie freigegeben haben." },
   { id: "anbieter_neues", thema: "technik", sym: "📰", nur: () => !!ICH?.admin, t: "Anbieter: Neues, Störungen, Wartungen", x: "Admin-Bereich → Kachel <b>„📰 Anbieter“</b>: schaut bei Supabase, Neon, Cloudflare, GitHub, Deno und Backblaze nach – <b>angekündigte Wartungen</b>, <b>Störungen</b> der letzten 14 Tage und <b>Neuerungen</b> der letzten 30 Tage. Oben steht die Lage in einem Satz. Meldungen aus anderen Regionen oder fernen Rechenzentren werden ausgeblendet (nur gezählt). Die Anbieter schreiben englisch – antippen öffnet die Original-Seite. <b>„💡 Prüfen lassen“</b> setzt eine Neuerung auf die Wunschliste, dann prüft Claude, ob wir sie übernehmen können. Kostet nichts: nur öffentliche Seiten, abgefragt erst beim Öffnen." }, // 2.842.0 KC-CLUB-ANBIETER-NEUES
   { id: "kachel_drehzeichen", thema: "start", sym: "🔄", t: "Kacheln umdrehen: das kleine 🔄", x: "Kacheln mit einem kleinen <b>🔄</b> oben rechts haben eine <b>Rückseite mit Schnellaktionen</b> – z. B. Termine (＋ Neu), Nachrichten (Neue Nachricht), Dienstpläne (Mein Dienst, Dienstwünsche), Hilfe (Frag Twinkey, Erklär-Videos), Büro (Eingang). <b>🔄 antippen</b> dreht die Kachel um, hinten dreht dasselbe Zeichen sie zurück (nach 8 Sekunden auch von selbst). Doppelt auf die Kachel tippen geht weiterhin. Abschalten: ⚙️ Einstellungen → Darstellung → „🔄 Kacheln umdrehen“." }, // 2.849.0 KC-CLUB-KACHEL-DREHZEICHEN
+  { id: "ist_zeiten", thema: "termine", sym: "🗓️", t: "Ist-Zeiten nach dem Dienst bestätigen", nur: () => frei("ist_rueckfrage"), x: "Nach jedem Dienst fragt die App: <b>„Wie lief dein Dienst?“</b> – 15 Minuten nach Dienstende kommt eine Nachricht, auf der Startseite steht eine Karte. <b>✅ Ja, stimmt</b> übernimmt die geplante Zeit. <b>✏️ Andere Zeiten</b>: Beginn, Ende und Pause wählen, Grund freiwillig (z. B. länger geblieben). <b>❌ War nicht da</b>: mit Grund, wenn du magst. Hat die Kasse (QR-Ausweis) oder „Dienst anmelden“ deine Zeiten schon erfasst, musst du nichts tun – stimmt dort etwas nicht, tippst du <b>🧾 Korrektur melden</b>. Knöpfe, die gerade nicht passen, sind grau – antippen sagt dir, warum. Eintragen geht 7 Tage lang oder bis der Planer den Tag abschließt; größere Änderungen schaut der Planer kurz an. Auch unter <b>🗓️ Mein Dienst</b>." },
   { id: "meine_nutzung", thema: "privat", sym: "📊", t: "Meine Nutzung – wie viel bin ich in der App?", x: "Unter <b>Meins → „📊 Meine Nutzung“</b> siehst du deine eigenen Zahlen: wie lange die App offen war (<b>Bildschirmzeit</b>) und wie lange sie im <b>Hintergrund</b> lief, wie viele <b>Nachrichten</b> du geschrieben hast, deine <b>Antworten auf Termine</b>, Abstimmungen, Anrufe, die meistgenutzten Bereiche und wann du am meisten in der App bist. Oben wählst du den <b>Zeitraum</b> (heute, 7 oder 30 Tage, dieses Jahr oder eigene Tage) und was du sehen möchtest. Für die Statistik werden dafür bestimmte Sachen aufgezeichnet – nur Zeiten und Anzahlen, nie, was du schreibst." },
   { id: "nutzung_alle", thema: "technik", sym: "📈", t: "So nutzen wir die App – Zahlen für alle", x: "Wann ist im Club am meisten los? Die Kachel <b>„📈 So nutzen wir die App“</b> (Register Technik) zeigt es als Farbfeld (Wochentag × Uhrzeit) – dazu, wie viele Mitglieder da waren, wie viele Nachrichten, Push und E-Mails verschickt wurden, welche Bereiche am beliebtesten sind und was noch zu entdecken ist. Wähle 7, 30 oder 90 Tage; Pfeile vergleichen mit dem Zeitraum davor. Es sind <b>nur Summen</b> – niemand wird einzeln gezählt, und Inhalte werden nie gezählt. Feld oder Säule antippen zeigt die genaue Zahl." }, // 2.829.0 KC-CLUB-NUTZUNG-ALLE
   { id: "foto_details", thema: "club", sym: "ℹ️", t: "Wann und wo war das?", x: "Im Fotoalbum ein Bild groß öffnen und auf <b>„ℹ️ Details“</b> tippen – dann siehst du, wann das Foto aufgenommen wurde und, falls bekannt, wo.", zeig: () => zeige("fotos"), seit: "2.23.1" },
@@ -9762,7 +9764,7 @@ const ZUGANG_AKTIONEN = {
   aushilfe: ["mein_dienst", "dienstwunsch_laden", "dienstwunsch_speichern", "dienst_gruss", "dienste", "dienst_freigabe", "meine_eingaben",
     "eingaben_bestaetigen", "wunschbogen_mailen", "eingaben_ablegen", "fotos_neueste", "fotos_liste", "foto_oeffnen",
     "schulung_meine", "schulung_antwort",
-    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
+    "sondereinsatz_zusage", "stunden_melden", "mein_ausweis", "dienst_stand", "dienst_buchen", "dienst_korrigieren", "dienst_tausch_liste", "dienst_tausch_anbieten", "dienst_tausch_aktion", "dp_einzelplan", "ist_offen", "ist_antworten"], // 2.590.0 KC-CLUB-DIENST-STEMPEL; 2.606.0 KC-CLUB-DIENST-TAUSCH
 };
 const ZUGANG_KACHELN = { basis: ["termine", "kommunikation", "sos", "spiele", "status", "einstellungen", "hilfezentrum", "twinkey", "erklaer", "update", "sicherheit", "feedback", "test"],
   aushilfe: ["mein_dienst", "meindienst", "dienstwunsch", "fotos", "schulungen", "ausweis"] };
@@ -16697,6 +16699,8 @@ function hashSprung(h) {
     else if (h === "#mikrofon") mikroAssistent(); // KC-CLUB-MIKRO-ASSISTENT (2.23.72)
     else if (h === "#anrufbeantworter") abOeffnen(); // 2.568.0 KC-CLUB-ANRUFBEANTWORTER (Link aus dem Push)
     else if (h === "#dienststempel") dsOeffnen(); // 2.590.0 KC-CLUB-DIENST-STEMPEL (Link aus der Erinnerung)
+    else if (h === "#istzeit") irOeffnen(); // KC-CLUB-IST-RUECKFRAGE (Link aus der Rückfrage nach dem Dienst)
+    else if (h === "#istaenderungen") irAenderungen(); // KC-CLUB-IST-RUECKFRAGE: Bescheid an Clubsprecher/Kassenwart/Admin
     else if (h === "#diensttausch") dtOeffnen(); // 2.606.0 KC-CLUB-DIENST-TAUSCH (Link aus dem Push)
     else if (h === "#tisch") rundOeffnen(); // 2.762.0 KC-CLUB-RUNDER-TISCH
     else if (/^#tisch=[0-9a-f-]{36}$/.test(h)) rundOeffnen(h.slice(7)); // 2.762.0: „Gleich: Runder Tisch …“ aus dem Push
@@ -17548,7 +17552,7 @@ async function neuLadenRoh(vonHand) {
   if (!INIT) sofortStart(); // KC-CLUB-SOFORTSTART (2.113.0): gespeicherten Stand sofort zeigen, frisch laden im Hintergrund
   try {
     INIT = await initAnfrage; if (window.KCFP?.schlaeft) return; /* 2.394.0 Fenster inzwischen geleert */ if (!START_MESS.initBis) { START_MESS.initAb = tInit; START_MESS.initBis = performance.now(); } /* KC-CLUB-KACHEL-ZAHLEN */ ICH = INIT.ich; einstOffenAnwenden(); /* 2.6.1: noch laufende Speicherungen nicht überschreiben */ adminNamenSetzen(); document.body.classList.toggle("ist-admin", !!ICH?.admin); inkognitoZeigen(); einwZeigen(aktuelleAnsicht); schluesselSichern(KEY); /* KC-CLUB-SCHLUESSEL-SICHERN */ if (document.body.classList.contains("rg-ohne-admin")) document.body.classList.remove("ist-admin"); /* KC-CLUB-ERKLAERVIDEOS-ROLLEN: im Video für alle bleibt Admin aus */ stKnopf(); /* KC-CLUB-STUDIO */ cfUebernehmen(INIT?.einstellungen?.chat_farben); /* KC-CLUB-CHAT-FARBEN */ // KC-CLUB-KOPF-EINFACH
-    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
+    alarmPruefen(); /* KC-CLUB-NOTFALL-MELDUNG */ setTimeout(() => { try { irLaden(); } catch {} }, 3000); /* KC-CLUB-IST-RUECKFRAGE */ try { expressPruefen(); } catch {} /* 2.362.0 KC-CLUB-EXPRESS */ setTimeout(() => { try { abStandZeigen(INIT?.ab); } catch {} }, 2500); /* 2.568.0 KC-CLUB-ANRUFBEANTWORTER */ try { dsLageSetzen(INIT?.dienstStempel); } catch {} /* 2.590.0 KC-CLUB-DIENST-STEMPEL */ try { rundKarteZeichnen(); } catch {} /* 2.762.0 KC-CLUB-RUNDER-TISCH */ setTimeout(() => { try { snPruefen(); } catch {} }, 1500); /* 2.482.0 KC-CLUB-STARTNACHRICHT */ document.body.classList.toggle("sos-frei", sosDarf()); /* KC-CLUB-SOS-FREIGABE */ fpNachAnmeldung(); // KC-CLUB-FEHLERPROTOKOLL
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln);
     if ($("setLiveTippen")) $("setLiveTippen").checked = liveTippen();
     if ($("setWichtigFrage")) $("setWichtigFrage").checked = versandImmerAn(); // KC-CLUB-WICHTIGKEIT-FRAGE (2.287.0) → 2.524.0 KC-CLUB-VERSANDART: Leiste immer zeigen
@@ -20148,6 +20152,7 @@ async function mdStart() {
       ${ist.anzahl ? `<div>${ist.anzahl} Einsätze · <b>${mdHm(ist.istMin)} Std.</b> gearbeitet${ist.sollMin ? ` · geplant waren ${mdHm(ist.sollMin)} Std. (${ist.istMin - ist.sollMin >= 0 ? "+" : "–"}${mdHm(Math.abs(ist.istMin - ist.sollMin))})` : ""}</div>
         ${ist.liste.map((d) => `<div>• ${esc(mdTag(d.datum))} ${esc(d.start)}–${esc(d.ende)} Uhr</div>`).join("")}`
         : `<div class="ta-st-gv">Noch keine Ist-Zeiten vorhanden – sie erscheinen hier, sobald die Stempeluhr sie liefert.</div>`}
+      ${frei("ist_rueckfrage") ? `<div class="knoepfe"><button class="knopf ${(IRL?.dienste || []).some((d) => d.zustand === "offen" || d.zustand === "halb") ? "haupt " : ""}klein" onclick="$('mdBlatt').remove();irOeffnen()">🗓️ Meine Ist-Zeiten bestätigen${(() => { const n = (IRL?.dienste || []).filter((d) => d.zustand === "offen" || d.zustand === "halb").length; return n ? ` (${n} offen)` : ""; })()}</button></div>` : ""}
       ${frei("dienst_stempel") ? `<div class="knoepfe"><button class="knopf haupt klein" onclick="$('mdBlatt').remove();dsOeffnen()">🟢 Kommen / Gehen buchen${nurTest("dienst_stempel") ? " 🔒" : ""}</button></div>` : ""}</div>${mdSonder(MD_D?.sonder)}`; // 2.590.0 KC-CLUB-DIENST-STEMPEL
 }
 // ---------- 2.606.0 KC-CLUB-DIENST-TAUSCH (Wunsch Hansi „Dienst-Tausch-Börse hört sich gut an“) ----------
@@ -20759,6 +20764,24 @@ function dsKarteZeichnen() {
     <small>${an ? `läuft seit ${esc(dsUhr(Date.parse(l.stand.seit)))} (${esc(DS_QUELLE[l.stand.quelle] || "App")})${d ? ` · geplant bis ${esc(dsUhr(Date.parse(d.ende)))}` : ""}` : d ? `heute ${esc(dsUhr(Date.parse(d.start)))}–${esc(dsUhr(Date.parse(d.ende)))} Uhr${d.bereich ? " · " + esc(d.bereich) : ""}` : ""}${warte ? ` · ⏳ ${warte} Buchung wird übertragen` : ""}</small></span><span class="ds-pfeil">›</span></button>`;
 }
 const DS_NACHLADEN = { lief: false };
+// ---------- KC-CLUB-IST-RUECKFRAGE: Karte „Wie lief dein Dienst?“ (Blatt im Teil „istzeit“). Laden kurz nach dem Start und beim Zurückkommen (höchstens alle 10 Min.) ----------
+let IRL = null, IR_ZULETZT = 0;
+async function irLaden() {
+  if (!INIT || !frei("ist_rueckfrage") || zugang() === "gast") return;
+  IR_ZULETZT = Date.now();
+  try { const r = await api("ist_offen", {}, { still: true }); IRL = r?.aktiv ? r : null; } catch { return; }
+  irKarteZeichnen();
+}
+function irKarteZeichnen() {
+  const el = $("irKarte"); if (!el) return;
+  const offen = (IRL?.dienste || []).filter((d) => d.zustand === "offen" || d.zustand === "halb");
+  if (!offen.length) { el.innerHTML = ""; return; }
+  const d = offen[0], f = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }), u = new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const test = nurTest("ist_rueckfrage") ? ' <span class="ds-test" title="Nur für dich sichtbar – noch nicht freigegeben">🔒 Test</span>' : "";
+  el.innerHTML = `<button type="button" class="ds-karte ds-aus" onclick="irOeffnen('${esc(d.ref)}')"><span class="ds-sym">🗓️</span><span class="ds-text"><b>Wie lief dein Dienst?${test}</b>
+    <small>${esc(f.format(new Date(d.start)))}–${esc(u.format(new Date(d.ende)))} · ${d.zustand === "halb" ? "Wann bist du gegangen?" : "Ist-Zeit bestätigen"}${offen.length > 1 ? ` · ${offen.length} offen` : ""}</small></span></button>`;
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - IR_ZULETZT > 10 * 60000) irLaden(); });
 setInterval(() => { try { dsKarteZeichnen(); dsWarteSenden(); } catch {} }, 60000);
 // ohne Netz: Buchung merken und nachschicken (mit der gewählten Zeit)
 const DS_WARTE = "kc_club_ds_warte";
@@ -34320,7 +34343,7 @@ const FENSTER_NAMEN = {
   abBlatt: "📼 Mein Anrufbeantworter", ttBlatt: "🔬 Internet-Tiefentest", wchBlatt: "🛡️ Wächter", wchInfoBlatt: "🛡️ Wächter: Einzelheiten", wuBlatt: "📝 Wunschliste",
   stadtBlatt: "🏙️ Termine der Stadt Werne", uaBlatt: "🙋 Unterstützung bei der Club-App", treffenInfo: "📅 Termin-Details", ugBlatt: "📭 Noch nicht gelesen", snAdmin: "📣 Startnachricht schreiben",
   ltBlatt: "🔴 Live-Abstimmung", aeBlatt: "✏️ Meine Daten haben sich geändert", aeEingBlatt: "📬 Änderungen der Mitglieder", ausweisBlatt: "🪪 Mitgliedsausweis", fdkAbgabeBlatt: "🃏 Fang den Koch: Abgabe",
-  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
+  abAufnahmeBlatt: "🎙️ Sprachaufnahme", ablageBlatt: "🗄️ Ablage", ablkBlatt: "📥 Ablagekorb", ablkEgBlatt: "📥 In die Eingangskörbe der Mitglieder", pfoBlatt: "🔎 Protokoll-Fotos lesen", prWunschBlatt: "✏️ Protokoll: Änderung wünschen", nuBlatt: "📈 So nutzen wir die App", npBlatt: "📊 Nutzungsstatistik", irBlatt: "🗓️ Meine Ist-Zeiten", irAeBlatt: "📋 Zeitänderungen", impressumBlatt: "§ Impressum", teilnahmeBlatt: "👥 Teilnahme an den Sitzungen", einlEgBlatt: "👥 Einlesen: in die Eingangskörbe", adBlatt: "🛠️ Verwaltung",
   adbBlatt: "📒 Adressbuch", adbFormBlatt: "📒 Adresse melden/ändern", adminBlatt: "🛠️ Verwaltungsfenster", akBlatt: "🎄 Adventskalender", alarmBlatt: "🚨 Notfall-Meldung",
   alarmVorschau: "🚨 Notfall-Probe", ampelInfo: "🚦 Die Ampel", angebotInfo: "🎁 Angebot ansehen", anlAnsehBlatt: "📎 Anhang", anlBlatt: "📄 Anhang",
   anlLinkBlatt: "📄 Anhang (Link)", anlageBlatt: "📎 Anlage hinzufügen", ansichtBlatt: "👓 Ansicht wählen", arMenue: "🗄️ Archiv: Dokument", arWegBlatt: "🗑️ Dokument entfernen",

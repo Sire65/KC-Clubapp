@@ -5801,6 +5801,15 @@
   .nu-zeile { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; cursor: pointer; }
   .nu-zeile > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .nu-zeile > b { min-width: 3.2em; text-align: right; }
   .nu-entdecken { margin: 2px 2px 0 0; cursor: pointer; border: 1px solid var(--linie); }
+  /* KC-CLUB-IST-RUECKFRAGE: Meine Ist-Zeiten (ausgegraute Knöpfe bleiben antippbar und sagen, warum) */
+  .ir-knoepfe { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .ir-knoepfe .knopf { min-height: 48px; }
+  .knopf.ir-aus { opacity: .45; filter: grayscale(1); cursor: not-allowed; }
+  #irBlatt .blatt-innen > *, #irBlatt .ir-knoepfe > * { min-width: 0; }
+  .ir-reiter { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0 8px; } .ir-reiter .stmarke { cursor: pointer; border: 1.5px solid var(--linie); min-height: 36px; } .ir-reiter .stmarke.an { border-color: var(--rot); background: var(--karte2); }
+  .ir-zeiten { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--linie); }
+  .ir-zeile { display: flex; flex-wrap: wrap; gap: 8px; } .ir-zeile label { display: grid; gap: 2px; font-weight: 700; font-size: .9rem; flex: 1 1 100px; } .ir-zeile select { min-height: 44px; width: 100%; }
+  .ir-gruende { display: flex; flex-wrap: wrap; gap: 6px; } .ir-gruende .stmarke { cursor: pointer; border: 1.5px solid var(--linie); min-height: 36px; } .ir-gruende .stmarke.an { border-color: var(--rot); background: var(--karte2); }
+  .ir-vorschau { margin: 8px 0 0; } .ir-fehler { color: var(--textOrange); font-weight: 700; }
   /* KC-CLUB-NUTZUNG-PERSON: 📊 Meine Nutzung / Nutzung je Mitglied (gleiche Bausteine wie nu-*) */
   .np-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
   .np-eigen { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 2px; } .np-eigen input { min-height: 40px; }
@@ -5884,6 +5893,7 @@
     </div>
     <div id="updateHinweis"></div>
     <div id="dsKarte"></div><!-- 2.590.0 KC-CLUB-DIENST-STEMPEL: Dienst beginnen/beenden -->
+    <div id="irKarte"></div><!-- KC-CLUB-IST-RUECKFRAGE: Wie lief dein Dienst? -->
     <div id="rundKarte"></div><!-- 2.762.0 KC-CLUB-RUNDER-TISCH: „Gleich: Runder Tisch …“ -->
     <div id="rgHinweis"></div><!-- KC-CLUB-RUNDGANG-HINWEIS (2.243.0) -->
     <div class="abschnitt"><h3><button type="button" class="sz-link" onclick="schnellstartOben()" title="Antippen: oben die Schnellstart-Symbole zeigen">Schnellzugriff</button> <button type="button" class="ansichtname ein" onclick="ansichtWechseln()" title="Antippen: zur erweiterten Ansicht wechseln">&gt; Einfache Ansicht &lt;</button><button type="button" class="ansichtname erw" onclick="ansichtWechseln()" title="Antippen: zur einfachen Ansicht wechseln">&lt; Erweiterte Ansicht &gt;</button></h3><button class="marke" id="versionMarke" style="border:none;cursor:pointer" title="Mein Ausweis-QR" onclick="versionMarkeTipp()">v–</button></div>

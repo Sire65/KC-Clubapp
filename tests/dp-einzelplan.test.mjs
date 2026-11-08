@@ -13,7 +13,7 @@ assert.ok(/await nurWennFrei\("dp_einzelplan", ich, "Der Einzelplan"\);/.test(fa
 assert.ok(/const pid = ich\.admin && typeof p\.fuer === "string" && \/\^KC-P-\[A-Z0-9-\]\{1,30\}\$\/\.test\(p\.fuer\) \? p\.fuer : ich\.person_id;/.test(fall), "andere Personen nur für den Admin");
 assert.ok(/personen: ich\.admin \?/.test(fall), "Personenliste nur für den Admin");
 assert.ok(/dp_einzelplan: \{ t: "📄 Mein Einzelplan \(Dienstplan\)"[^\n]*standard: "admin" \}/.test(server), "Freigabe, zuerst nur Admin");
-assert.ok(/"dienst_tausch_aktion", "dp_einzelplan"\]/.test(server) && /"dienst_tausch_aktion", "dp_einzelplan"\]/.test(app), "auch für Aushilfen (Server und App gleich)");
+assert.ok(/"dienst_tausch_aktion", "dp_einzelplan"(, "ist_offen", "ist_antworten")?\]/.test(server) && /"dienst_tausch_aktion", "dp_einzelplan"(, "ist_offen", "ist_antworten")?\]/.test(app), "auch für Aushilfen (Server und App gleich)");
 assert.ok(/\$\{frei\("dp_einzelplan"\) \? `<button class="knopf klein" onclick="\$\('mdBlatt'\)\.remove\(\);epStart\(\)">📄 Mein Einzelplan/.test(app), "Knopf unter Mein Dienst");
 assert.ok(/einzelplan: \{ titel: "📄 Einzelplan", get optionen\(\) \{ return ICH\?\.admin \? epOptionen : undefined; \}/.test(app), "Druckart, Personenwahl nur Admin");
 assert.ok(/return \{ titel: `Einzelplan \$\{d\.name \|\| ""\}`\.trim\(\), ohneRahmen: true, quer: true, html \};/.test(app), "A4 quer");
