@@ -34,8 +34,10 @@ for (const k of [".mag-roman ", ".mag-roman-text ", ".mag-roman-bild ", ".mag-ro
 const r2 = MAG_AUSGABEN[2].roman;
 assert.equal(MAG_AUSGABEN[2].erscheint, "2027-02-01"); assert.equal(r2.folge, 2); assert.equal(r2.titel, "Die verschwundenen Trüffel"); assert.equal(r2.untertitel, "Ein Abend, der alles verändert");
 assert.deepEqual(r2.text.filter(([a]) => a === "h").map(([, t]) => t), ["Achtundzwanzig Teller – und kein Ofen", "Ein Morgen mit offenen Fragen", "Der Mann mit dem Brotkorb", "Ein Platz am Pass", "Sophie weiß mehr", "Der Abend beginnt", "Die Entscheidung", "Ein Kompliment – und ein Blick", "Was Lena nicht hören sollte"]);
-assert.equal(r2.text.filter(([a]) => a === "p").length, 338, "Folge 2 nicht gekürzt"); assert.equal(r2.text.filter(([a]) => a === "s").length, 5, "Szenenwechsel");
+assert.equal(r2.text.filter(([a]) => a === "p").length, 342, "Folge 2 nicht gekürzt (Zeitachsen-Neufassung 08.11.2026)"); assert.equal(r2.text.filter(([a]) => a === "s").length, 5, "Szenenwechsel");
 const alles2 = r2.text.filter(([a]) => a === "p").map(([, t]) => t).join("\n");
+assert.ok(alles2.includes("Lena war seit sechs Wochen in der Ausbildung.") && !alles2.includes("Es war erst ihr zweiter Arbeitstag.") && !/am zweiten Tag/.test(alles2), "Folge 2: Zeitachse sechs Wochen, nicht der zweite Arbeitstag");
+assert.ok(r2.vorspann.startsWith("Sechs Wochen nach ihrem Ausbildungsbeginn") && r2.bilder.some((b) => b.wo === "absatz:335"), "Folge 2: neuer Vorspann, Schlussbild hinter Absatz 335");
 assert.ok(alles2.startsWith("„Das darf jetzt nicht wahr sein!“") && alles2.endsWith("schon lange vor ihrem ersten Arbeitstag begonnen hatte."), "Anfang und Schluss Folge 2");
 assert.ok(alles2.includes("„Du kannst nicht so tun, als hätte es uns beide nie gegeben.“") && alles2.includes("achtundzwanzig vorgewärmte Teller") && alles2.includes("Kartoffeltaler"), "Neufassung, nicht die verworfene");
 assert.ok(r2.bisher.startsWith("Lena Hartmann hat ihre Ausbildung") && r2.ende.includes("**Folge 3 – Alte Geschichten**"));
