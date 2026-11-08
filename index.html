@@ -86,6 +86,37 @@
   // 2.481.0 KC-CLUB-LADEANZEIGE: lädt das Programm lange, erklärt die Ladeanzeige es (15 s) und bietet später „Neu laden“ an (45 s)
   setTimeout(function () { var l = document.getElementById("appLaedtLang"); if (l) l.hidden = false; }, 15000);
   setTimeout(function () { var k = document.getElementById("appLaedtNeu"); if (k) k.hidden = false; }, 45000);
+  // KC-CLUB-START-BALKEN (Wunsch Hansi 08.11.2026: „Beim Start einen Laufbalken mit Dauer und Prozent – gerade hat der Start etwas gedauert, wahrscheinlich wegen Update“):
+  // Fortschritt in Prozent und vergangene Sekunden, geschätzt aus den letzten Starts dieses Geräts (kc_club_startmess: Seite + Programm + Einrichten, Mittelwert).
+  // Nach einem Update (kc_club_neustart_update bzw. neues Programm aus dem Netz) dauert es länger – dann steht das dabei. Der Balken nähert sich 95 %, bis das
+  // Programm läuft (app.js entfernt die Anzeige). Nur Anzeige, keine Anfrage. Altes, einfaches JavaScript (ES5).
+  (function () {
+    var t0 = START, erw = 2500, upd = false;
+    try {
+      var l = JSON.parse(localStorage.getItem("kc_club_startmess") || "[]"), ms = [], netz = [];
+      for (var i = 0; i < l.length && i < 8; i++) { var p = l[i] && l[i].p || {}, x = (p.seite || 0) + (p.programm || 0) + (p.einrichten || 0); if (x > 0) { ms.push(x); if (l[i].quelle === "netz") netz.push(x); } }
+      ms.sort(function (a, b) { return a - b; }); netz.sort(function (a, b) { return a - b; });
+      if (ms.length) erw = ms[Math.floor(ms.length / 2)];
+      upd = typeof durchUpdate !== "undefined" && !!durchUpdate;
+      if (upd) erw = netz.length ? netz[Math.floor(netz.length / 2)] : erw * 3;
+      erw = Math.max(800, Math.min(30000, erw));
+    } catch (e) {}
+    var lang = false, gesetzt = false, text, fuell, zahl, balken;
+    function schritt() {
+      if (!fuell) { // das Skript steht im Kopf – die Anzeige gibt es erst, wenn der Körper gelesen ist
+        text = document.getElementById("appLaedtText"); fuell = document.getElementById("appLaedtFuell"); zahl = document.getElementById("appLaedtZahl"); balken = document.getElementById("appLaedtBalken");
+        if (!fuell || !zahl || !balken) { if (Date.now() - t0 < 60000) setTimeout(schritt, 50); return; }
+      }
+      if (!gesetzt) { gesetzt = true; if (upd && text) text.textContent = "🔄 Die neue Version wird eingerichtet …"; }
+      if (!document.getElementById("appLaedt")) return; // Programm läuft – Anzeige ist weg
+      var t = Math.max(0, Date.now() - t0), pct = Math.min(95, Math.round(95 * (1 - Math.exp(-2.3 * t / erw))));
+      fuell.style.width = pct + "%"; balken.setAttribute("aria-valuenow", String(pct));
+      zahl.textContent = pct + " % · " + (t / 1000).toFixed(1).replace(".", ",") + " s";
+      if (!lang && t > erw * 1.6 && t > 3000 && text) { lang = true; text.textContent = upd ? "🔄 Neue Version wird geladen – das dauert einmalig etwas länger …" : "Die Club-App wird geladen – dauert heute etwas länger …"; }
+      setTimeout(schritt, 100);
+    }
+    schritt();
+  })();
   var startPruefN = 0;
   setTimeout(function startPruefen() {
     if (window.KCFP.startOk || window.KCFP.ohneLink) return; // KC-CLUB-ZUGANG-HILFE: ohne gültigen Link ist die Hilfe-Seite kein „hängender Start“
@@ -5689,10 +5720,11 @@
   .app-laedt-logo { width: 96px; height: 96px; border-radius: 50%; background: #741521; display: flex; align-items: center; justify-content: center; }
   .app-laedt-name { font-family: Georgia, "Times New Roman", serif; font-size: 1.6rem; font-weight: 700; }
   .app-laedt-text { font-size: 1.1rem; color: #4a2a20; }
-  .app-laedt-balken { width: 160px; height: 6px; border-radius: 3px; background: rgba(116, 21, 33, .18); overflow: hidden; }
-  .app-laedt-balken i { display: block; width: 40%; height: 100%; border-radius: 3px; background: #741521; animation: appLaedt 1.4s ease-in-out infinite; }
+  .app-laedt-balken { width: 220px; height: 8px; border-radius: 3px; background: rgba(116, 21, 33, .18); overflow: hidden; }
+  .app-laedt-balken i { display: block; width: 0; height: 100%; border-radius: 3px; background: #741521; transition: width .1s linear; } /* KC-CLUB-START-BALKEN: echter Fortschritt statt Endlos-Lauf */
+  .app-laedt-zahl { font-size: .95rem; font-weight: 700; color: #4a2a20; font-variant-numeric: tabular-nums; min-height: 1.3em; }
   @keyframes appLaedt { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
-  @media (prefers-reduced-motion: reduce) { .app-laedt-balken i { animation: none; width: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .app-laedt-balken i { transition: none; } }
   .app-laedt-lang { max-width: 320px; font-size: 1rem; color: #4a2a20; }
   .app-laedt-lang button { margin-top: 10px; min-height: 44px; padding: 8px 18px; border: 0; border-radius: 12px; background: #741521; color: #fff; font-size: 1rem; font-weight: 700; }
   body:has(#app:not(.versteckt)) #appLaedt, body:has(#gesperrt:not(.versteckt)) #appLaedt { display: none; }
@@ -5834,7 +5866,9 @@
 <!-- 2.481.0 KC-CLUB-LADEANZEIGE (TÜV 18.10.: erster Start / Update bei schwachem Netz 9–31 s leere Fläche): sofort sichtbar im CD, bis das
      Programm läuft (app.js entfernt sie). Dauert es lange, erklärt sie sich und bietet „Neu laden“ an. Altes, einfaches JavaScript (ES5). -->
 <div id="appLaedt" class="app-laedt" role="status" aria-live="polite"><div class="app-laedt-logo"><img src="kc-kochmuetze-weiss.webp" alt="" width="64" height="43"></div>
-  <div class="app-laedt-name">Köcheclub Werne</div><div class="app-laedt-text">Die Club-App wird geladen …</div><div class="app-laedt-balken"><i></i></div>
+  <div class="app-laedt-name">Köcheclub Werne</div><div class="app-laedt-text" id="appLaedtText">Die Club-App wird geladen …</div>
+  <div class="app-laedt-balken" id="appLaedtBalken" role="progressbar" aria-label="Ladefortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="appLaedtFuell"></i></div>
+  <div class="app-laedt-zahl" id="appLaedtZahl" aria-hidden="true">0 %</div>
   <div class="app-laedt-lang" id="appLaedtLang" hidden>Das Netz ist gerade langsam – die App lädt noch. Beim nächsten Mal geht es schneller.<br><button type="button" id="appLaedtNeu" hidden onclick="location.reload()">🔄 Neu laden</button></div></div>
 <div id="gesperrt" class="seite versteckt">
   <div class="hero"><div class="kopfzeile"><div class="logo"><img src="kc-kochmuetze-weiss.webp" alt=""></div><div><div class="marke-klein">KÖCHECLUB WERNE</div><div class="titel">Willkommen</div></div></div></div>
