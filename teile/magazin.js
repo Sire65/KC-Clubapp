@@ -269,7 +269,7 @@ function magFbHtml(f, nr, loesung) {
   const bild = (src, t) => `<figure class="mag-fb-bild"><figcaption>${t}</figcaption><div class="mag-fb-flaeche" onclick="magFbTipp(event, ${nr}, this)"><img src="${esc(src)}" alt="Küchenszene, ${t}" draggable="false">${marken}</div></figure>`;
   const fertig = gef.length === f.fehler.length;
   return `<div class="mag-fb" data-nr="${nr}"><div class="mag-fb-bilder">${bild(f.a, "Bild A")}${bild(f.b, "Bild B")}</div>
-    <p class="mag-fb-stand"><b>${gef.length} von ${f.fehler.length}</b> gefunden${fertig ? " – 🎉 alle!" : ""}${!fertig ? ` <button type="button" class="knopf klein" onclick="magFbAufloesen(${nr})">💡 Auflösen</button>` : ""}</p>
+    <p class="mag-fb-stand mag-nur-bildschirm"><b>${gef.length} von ${f.fehler.length}</b> gefunden${fertig ? " – 🎉 alle!" : ""}${!fertig ? ` <button type="button" class="knopf klein" onclick="magFbAufloesen(${nr})">💡 Auflösen</button>` : ""}</p>
     ${fertig ? `<ol class="mag-fb-liste">${f.fehler.map((x) => `<li>${esc(x[3])}</li>`).join("")}</ol>` : ""}</div>`;
 }
 function magRaetselSeiteNeu(nr) { // gespeicherte Seite neu erzeugen, damit der Stand beim Zurückblättern erhalten bleibt
@@ -307,9 +307,9 @@ function magKwHtml(k, nr, geloest) {
   const wort = k.loesung.felder.map(([r, c], i) => `<span><i>${i + 1}</i>${esc(geloest ? k.zeilen[r][c] : st.kw[r + "," + c] || "")}</span>`).join("");
   return `<div class="mag-kw" data-nr="${nr}"><div class="mag-kw-gitter" style="grid-template-columns:repeat(${k.zeilen[0].length}, minmax(0, 1fr))">${gitter}</div>
     <p class="mag-warum">Lösungswort${geloest ? "" : " (gelbe Felder)"}</p><div class="mag-kw-wort">${wort}</div>
-    ${geloest ? "" : `<p class="hinweis mag-kw-hinweis">Umlaute als zwei Buchstaben: Ä = AE, Ö = OE, Ü = UE – wer „ü“ tippt, bekommt „UE“. Feld antippen, nochmal antippen wechselt die Richtung.</p>
+    ${geloest ? "" : `<p class="hinweis mag-kw-hinweis mag-nur-bildschirm">Umlaute als zwei Buchstaben: Ä = AE, Ö = OE, Ü = UE – wer „ü“ tippt, bekommt „UE“. Feld antippen, nochmal antippen wechselt die Richtung.</p>
     <div class="mag-kw-fragen"><div><p class="mag-warum">Waagerecht</p><ol>${liste("A")}</ol></div><div><p class="mag-warum">Senkrecht</p><ol>${liste("D")}</ol></div></div>
-    <p><button type="button" class="knopf klein" onclick="magKwPruefen(${nr})">✔️ Prüfen</button> <span class="mag-kw-meldung" aria-live="polite"></span></p>`}</div>`;
+    <p class="mag-nur-bildschirm"><button type="button" class="knopf klein" onclick="magKwPruefen(${nr})">✔️ Prüfen</button> <span class="mag-kw-meldung" aria-live="polite"></span></p>`}</div>`;
 }
 function magKwMarkieren(nr, r, c) {
   const k = magRDaten(nr).kreuzwort, e = k && magKwEintrag(k, r, c, MAGK.dir);
@@ -369,7 +369,7 @@ function magKwPruefen(nr) {
 }
 function magRaetselHtml(x, nr) {
   let h = "";
-  if (x.fehlerbild) h += `<section class="mag-artikel"><h3 class="mag-schlag">🔍 ${esc(x.fehlerbild.titel)}</h3><p class="mag-lead">Bild B unterscheidet sich an genau ${x.fehlerbild.fehler.length} Stellen von Bild A. Fehler einfach im Bild antippen.</p>${magFbHtml(x.fehlerbild, nr)}</section>`;
+  if (x.fehlerbild) h += `<section class="mag-artikel"><h3 class="mag-schlag">🔍 ${esc(x.fehlerbild.titel)}</h3><p class="mag-lead">Bild B unterscheidet sich an genau ${x.fehlerbild.fehler.length} Stellen von Bild A. <span class="mag-nur-bildschirm">Fehler einfach im Bild antippen.</span><span class="mag-nur-druck">Kreise sie in Bild B ein!</span></p>${magFbHtml(x.fehlerbild, nr)}</section>`;
   if (x.kreuzwort) h += `<section class="mag-artikel"><h3 class="mag-schlag">✏️ Kreuzworträtsel: ${esc(x.kreuzwort.titel)}</h3>${magKwHtml(x.kreuzwort, nr)}</section>`;
   if (x.fehlerbild || x.kreuzwort) h += `<p class="hinweis">Die Auflösung steht im nächsten Heft. Noch mehr Rätsel: auf der Rückseite der App (Eselsohr) unter 🧩 Rätsel.</p>`;
   else h += magPlatz("Neue Rätsel für diese Ausgabe – ein Fehlerbild und ein Kreuzworträtsel – wählt die Redaktion.", "raetsel");
@@ -523,6 +523,7 @@ function magMenue() {
     <div class="knoepfe" style="flex-direction:column;align-items:stretch">
       <button class="knopf haupt" style="min-height:52px" onclick="fensterZu($('magMenueBlatt'));magStart()">📖 Ausgabe lesen</button>
       <button class="knopf" style="min-height:48px" onclick="fensterZu($('magMenueBlatt'));magArchiv()">📚 Alle Ausgaben</button>
+      <button class="knopf" style="min-height:48px" onclick="fensterZu($('magMenueBlatt'));magHeft(${nr})">📖 Als Heft drucken (Broschüre)</button>
       <button class="knopf" style="min-height:48px" onclick="fensterZu($('magMenueBlatt'));magEinsenden()">✉️ Beitrag einsenden</button>
       <button class="knopf" onclick="fensterZu($('magMenueBlatt'));magMeine()">📬 Meine Beiträge</button>
       ${istMagRedaktion() ? `<button class="knopf" onclick="fensterZu($('magMenueBlatt'));magPostfach()">📥 Redaktions-Postfach</button>` : ""}
@@ -544,6 +545,7 @@ function magArchiv() {
     return `<div class="karte mag-archiv-k" style="display:flex;flex-direction:column;gap:3px"><b>Nr. ${nr} · ${MAG_MONATE[m - 1]} ${j}</b><small>${stand}</small>${heft.schlagzeilen ? `<small>${esc(heft.schlagzeilen[0][1])}</small>` : ""}
       <div class="knoepfe" style="margin-top:6px"><button class="knopf klein haupt" onclick="fensterZu($('magArchivBlatt'));magStart(${j}, ${m})">📖 Lesen</button>
         <button class="knopf klein" onclick="magDrucken(${nr})" title="Drucken, als PDF teilen, in der Club-App senden oder im Ordner ablegen">🖨️ Drucken / Teilen</button>
+        <button class="knopf klein" onclick="fensterZu($('magArchivBlatt'));magHeft(${nr})" title="Als A5-Heft zum Falten und Klammern">📖 Als Heft</button>
         ${adm ? `<button class="knopf klein" onclick="magStartnachricht(${nr})" title="Allen Mitgliedern als Startnachricht ankündigen">📣 Startnachricht</button>` : ""}</div></div>`;
   };
   blattAuf("magArchivBlatt", `<h3 style="margin:0">📚 Alle Ausgaben der Club-Küche</h3>
@@ -564,6 +566,158 @@ function magDruck(p) { // DRUCKARTEN.magazin.bauen – alle Seiten außer Titelb
     .map((x, i) => `<section class="mag-druckseite"${i ? ' style="break-before:page;page-break-before:always"' : ""}>${x.html.replace(/<button[\s\S]*?<\/button>/g, "").replace(/<div class="mag-entwurf">[\s\S]*?<\/div>/g, "")}</section>`).join("");
   return { titel: `Club-Küche Nr. ${p.nr} · ${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`, unter: "Das Magazin des Köcheclubs Werne", fuss: "Club-Küche",
     html: `<style>${stil} #druck .mag-seite{min-height:0} #druck .mag-platz{display:none}</style>${seiten}` };
+}
+// ---------- KC-CLUB-MAGAZIN-HEFT (Wunsch Hansi 08.11.2026 „Bau den Knopf ein, damit man als Broschüre drucken kann“) ----------
+// „📖 Als Heft drucken“: die Ausgabe als A5-Heft zum Falten und Klammern (Rückendrahtheftung). Der Inhalt läuft durch eine unsichtbare A5-Spalte,
+// Seitenwechsel nur zwischen Absätzen (Überschrift bleibt beim Text, Rätselgitter/Bilder/Kästen nie zerteilt); kleine Rubriken teilen sich Seiten,
+// Vorwort, Inhalt, Roman und Rätsel beginnen neu. Jede Seite zeichnet der Browser selbst (SVG-Bild wie druckPdfBlob), das PDF schreibt die App
+// (pdfAusCanvas) – nichts geht an fremde Dienste. Ergebnis: „Heft A5“ (Seiten in Lesereihenfolge, für den Copyshop) und „Druckbögen A4 quer“
+// (Seiten so angeordnet, dass beidseitig über die kurze Kante gedruckt, gefaltet und geklammert das Heft entsteht). Seitenzahl immer durch 4 teilbar:
+// fehlende Seiten werden „Notizen & eigene Rezepte“. Rätsel im Druck leer (keine eigenen Einträge, keine gefundenen Kreise, keine Bildschirm-Hinweise).
+const MAGH = { b: 560, oben: 54, unten: 50, seite: 42, k: 2, cache: null };
+MAGH.W = MAGH.b * MAGH.k; MAGH.H = Math.round(MAGH.W * 595.28 / 419.53); MAGH.h = MAGH.H / MAGH.k; MAGH.cb = MAGH.b - 2 * MAGH.seite; MAGH.ch = MAGH.h - MAGH.oben - MAGH.unten;
+const MAGH_ATOM = "p, li, h2, h3, h4, dt, dd, tr, figure, img, blockquote, hr, .mag-kw-gitter, .mag-kw-wort, .mag-fb-bilder, .mag-bon, .mag-kasten, .mag-fakten, .mag-spalten, .mag-roman-bisher, .mag-zitatzeile, .mag-roman-kopf, .mag-roman-vorspann, .mag-schlagzeilen li, .mag-rezept > img, .notiz-zeile, .mag-kw-fragen";
+const MAGH_TITEL = "h2, h3, h4, .mag-warum, .mag-unterzeile, .mag-latein-herkunft, figcaption"; // bleiben beim folgenden Text
+const magXml = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+function magHeft(nr) {
+  if (!ICH?.admin && !magErschienen(nr)) return melde("Diese Ausgabe ist noch nicht erschienen.");
+  const [j, m] = magJahrMonat(nr);
+  blattAuf("magHeftBlatt", `<h3 style="margin:0">📖 Club-Küche Nr. ${nr} als Heft drucken</h3>
+    <p class="hinweis" style="margin:4px 0 10px">${MAG_MONATE[m - 1]} ${j} · A5-Heft zum Falten und Klammern${magErschienen(nr) ? "" : " · 🔒 Entwurf"}</p>
+    <div id="magHeftStand" class="hinweis" aria-live="polite" style="min-height:1.4em">Das Heft wird Seite für Seite gesetzt – das dauert am Handy etwa eine Minute.</div>
+    <div class="knoepfe" id="magHeftKnoepfe" style="flex-direction:column;align-items:stretch"><button class="knopf haupt" style="min-height:52px" onclick="magHeftBauen(${nr})">📖 Heft erstellen</button></div>
+    <details style="margin-top:10px"><summary><b>So wird es ein Heft</b></summary><ul style="margin:6px 0 0;padding-left:1.2em;line-height:1.5">
+      <li><b>Copyshop:</b> „Heft A5“ mitnehmen und „A5-Broschüre mit Rückendrahtheftung“ sagen.</li>
+      <li><b>Selbst drucken:</b> „Druckbögen A4 quer“ <b>beidseitig</b> drucken, Wenden <b>an der kurzen Kante</b>. Blätter in der Reihenfolge lassen, alle zusammen in der Mitte falten, zwei Klammern in den Falz (Heftgerät mit langem Arm oder Klammern von außen durchstecken und innen umbiegen).</li>
+      <li>Seitenzahl ist immer durch 4 teilbar – freie Seiten werden „Notizen & eigene Rezepte“.</li></ul></details>
+    <div class="knoepfe"><button class="knopf" onclick="fensterZu($('magHeftBlatt'))">Schließen</button></div>`);
+}
+const magHeftStand = (t) => { const el = $("magHeftStand"); if (el) el.textContent = t; };
+async function magDatenUrl(src) { const b = await (await fetch(src, { signal: zeitSignal(20000) })).blob(); return await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(b); }); }
+async function magHeftBild(html, css, ohneHintergrund) { // eine A5-Seite (CSS-Pixel MAGH.b × MAGH.h) → Canvas in Druckauflösung
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${MAGH.W}" height="${MAGH.H}" viewBox="0 0 ${MAGH.b} ${MAGH.h}"><foreignObject x="0" y="0" width="${MAGH.b}" height="${MAGH.h}"><div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:${MAGH.b}px;height:${MAGH.h}px;overflow:hidden;background:${ohneHintergrund ? "transparent" : "#fff"}"><style>${magXml(css)}</style>${html}</div></foreignObject></svg>`;
+  const bild = await new Promise((ok, fehler) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => fehler(new Error("Eine Heftseite konnte nicht gezeichnet werden.")); im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); });
+  const c = document.createElement("canvas"); c.width = MAGH.W; c.height = MAGH.H; const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(bild, 0, 0, c.width, c.height); return c;
+}
+function magHeftRahmen(c, nr, seite, mon) { // Kopfzeile und Seitenzahl außen (gerade Seiten links, ungerade rechts)
+  const g = c.getContext("2d"), k = MAGH.k, s = MAGH.seite; g.save(); g.scale(k, k); g.textBaseline = "alphabetic";
+  g.fillStyle = "#741521"; g.font = "bold 9px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  const marke = "C L U B - K Ü C H E", nrText = `Nr. ${nr} · ${mon}`, gerade = seite % 2 === 0;
+  g.textAlign = gerade ? "left" : "right"; g.fillText(marke, gerade ? s : MAGH.b - s, 30);
+  g.fillStyle = "#7a6a5f"; g.font = "9px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"; g.textAlign = gerade ? "right" : "left"; g.fillText(nrText, gerade ? MAGH.b - s : s, 30);
+  g.strokeStyle = "#741521"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(s, 36); g.lineTo(MAGH.b - s, 36); g.moveTo(s, 38.2); g.lineTo(MAGH.b - s, 38.2); g.stroke();
+  g.fillStyle = "#741521"; g.font = "bold 10px Georgia, 'Times New Roman', serif"; g.textAlign = gerade ? "left" : "right"; g.fillText(String(seite), gerade ? s : MAGH.b - s, MAGH.h - 22);
+  g.fillStyle = "#9a8a7f"; g.font = "italic 8px Georgia, 'Times New Roman', serif"; g.textAlign = "center"; g.fillText("Köcheclub Werne", MAGH.b / 2, MAGH.h - 22);
+  g.restore();
+}
+function magHeftUmbruch(atome, a, ende) { // Seitenende ab a: höchstens eine Seite, nie in einem Atom, Überschrift nicht allein unten
+  const max = a + MAGH.ch; if (ende <= max) return ende;
+  let y = max;
+  for (let i = 0; i < 400; i++) { const s = atome.find((x) => x.o < y - 0.5 && x.u > y + 0.5); if (!s) break; y = s.o; }
+  if (y <= a + MAGH.ch * 0.25) return max; // ein Block höher als eine Seite – dann eben hart schneiden
+  for (let i = 0; i < 6; i++) { // Überschrift + Unterzeile + Zwischentitel nicht allein unten stehen lassen – auch mehrere hintereinander
+    const letzte = atome.filter((x) => x.u <= y + 0.5 && x.o >= a && x.u - x.o > 2).sort((p, q) => q.u - p.u)[0];
+    if (!letzte?.titel || letzte.o <= a + MAGH.ch * 0.3) break; y = letzte.o;
+  }
+  return y;
+}
+async function magHeftSeiten(nr) {
+  const [j, m] = magJahrMonat(nr); [MAG.jahr, MAG.monat] = [j, m]; const mon = `${MAG_MONATE[m - 1]} ${j}`;
+  magHeftStand("Inhalte werden zusammengestellt …");
+  const alle = magSeiten(await magDaten());
+  const nurPlatz = (x) => { const t = document.createElement("div"); t.innerHTML = x.html; t.querySelectorAll(".mag-platz, .mag-kopf, .mag-fuss, .mag-h, .mag-unterzeile").forEach((e) => e.remove()); return !t.textContent.trim() && !t.querySelector("img, .mag-roman-bild, .mag-kw"); };
+  const titel = alle.find((x) => x.register === "Titel"), fluss = alle.filter((x) => x.register !== "Titel" && (x.register === "Inhalt" || !nurPlatz(x)));
+  const NEU = new Set(["Vorwort", "Inhalt", "Fortsetzungsroman", "Rätsel-Ecke"]);
+  const symVon = (r) => ({ Vorwort: "✒️", Vorschau: "🔭", Impressum: "§" })[r] || MAG_RUBRIKEN.find((x) => x.t === r)?.sym || "•";
+  const inhaltHtml = (zahlen) => `<h2 class="mag-h">Inhalt</h2><ol class="mag-inhalt mag-heft-inhalt">${fluss.filter((x) => x.register !== "Inhalt").map((x) => `<li><span class="mag-sym">${symVon(x.register)}</span><span><b>${esc(x.register === "Vorschau" ? "Im nächsten Heft" : x.register)}</b></span><span class="mag-seitenzahl">${zahlen?.[x.register] ?? "00"}</span></li>`).join("")}</ol>`;
+  const sauber = (h) => h.replace(/<button[\s\S]*?<\/button>/g, "").replace(/<div class="mag-entwurf">[\s\S]*?<\/div>/g, "").replace(/<div class="mag-kopf">[\s\S]*?<\/div>/, "").replace(/<div class="mag-fuss">[\s\S]*?<\/div><\/div>$/, "</div>");
+  const box = document.createElement("div");
+  box.innerHTML = `<section class="hs hs-titel">${sauber(titel.html)}</section>` + fluss.map((x, i) => `<section class="hs${NEU.has(x.register) || fluss[i - 1]?.register === "Inhalt" ? " neu" : ""}" data-reg="${esc(x.register)}">${x.register === "Inhalt" ? inhaltHtml(null) : sauber(x.html)}</section>`).join("");
+  // Rätsel im Druck: leer – keine eigenen Einträge, keine gefundenen Kreise, keine Lösungsliste (die steht in der Auflösung des nächsten Hefts)
+  box.querySelectorAll(".mag-kw input, .mag-fb-marke, .mag-fb .mag-fb-liste, .mag-nur-bildschirm, .mag-platz").forEach((e) => e.remove());
+  box.querySelectorAll(".mag-kw:not(.mag-aufloesung .mag-kw) .mag-kw-wort span").forEach((sp) => { [...sp.childNodes].forEach((n) => { if (n.nodeType === 3) n.remove(); }); });
+  box.querySelectorAll("[onclick]").forEach((e) => e.removeAttribute("onclick"));
+  magHeftStand("Bilder werden eingebettet …");
+  for (const img of [...box.querySelectorAll("img")]) {
+    try { if (img.dataset.anlage && !img.getAttribute("src")) await bildLaden(img); img.src = await magDatenUrl(img.src); img.removeAttribute("loading"); img.removeAttribute("data-anlage"); img.classList.remove("oa-bild"); }
+    catch { (img.closest("figure") || img).remove(); }
+  }
+  let ruecken = ""; try { ruecken = await magDatenUrl("kc-kochmuetze-weiss.webp"); } catch {}
+  const stil = [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules].map((r) => r.cssText); } catch { return []; } }).filter((t) => /\.mag-/.test(t) && !/^@media/.test(t)).join("\n");
+  const css = `${stil}
+    .heft { width: ${MAGH.cb}px; font: 12.5px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #2b1a1c; }
+    .hs { display: flow-root; padding: 0 0 18px; } .hs .mag-seite { min-height: 0; display: block; } .hs .mag-rumpf { padding: 0; }
+    .hs .mag-h { font-size: 21px; margin-top: 0; } .hs .mag-unterzeile { font-size: 11.5px; margin-bottom: 8px; } .hs .mag-lead { font-size: 13px; }
+    .hs .mag-roman-reihe { font-size: 25px; } .hs .mag-roman-text { font-size: 12.5px; line-height: 1.5; text-align: justify; hyphens: auto; } .hs .mag-roman-bild { max-width: 100%; }
+    .hs .mag-spalten { columns: 2; column-gap: 16px; } .hs .mag-fb-bilder { grid-template-columns: 1fr; justify-items: center; gap: 8px; } .hs .mag-fb-bild { width: 74%; } .hs .mag-kw-gitter { max-width: 100%; }
+    .hs .mag-kw-fragen { grid-template-columns: 1fr 1fr; font-size: 11px; } .hs .mag-kw-fragen ol { font-size: 11px; line-height: 1.35; }
+    .hs .mag-fb-liste { columns: 2; font-size: 11px; } .hs .mag-foto { max-height: 200px; } .hs .mag-bon { transform: none; }
+    .hs .mag-nur-druck { display: inline !important; } .hs .mag-platz, .hs .mag-nur-bildschirm, .hs .mag-roman-bild.fehlt { display: none !important; }
+    .hs-titel .mag-titel { width: ${MAGH.b}px; height: ${MAGH.h}px; box-sizing: border-box; border-radius: 0; padding: 26px 24px; }
+    .mag-heft-inhalt li { display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dotted #c9b8a6; }
+    .notiz h2 { font: 700 17px Georgia, "Times New Roman", serif; color: #741521; margin: 0 0 6px; } .notiz-zeile { height: 27px; border-bottom: 0.6px solid #c9b8a6; }
+    .rueck { width: ${MAGH.b}px; height: ${MAGH.h}px; display: grid; place-items: center; text-align: center; background: linear-gradient(180deg, #741521, #4d0e16); color: #fff8ee; font-family: Georgia, "Times New Roman", serif; }`;
+  // Messen in einem unsichtbaren Rahmen mit genau der Druckbreite
+  magHeftStand("Seiten werden umbrochen …");
+  const ifr = document.createElement("iframe"); ifr.setAttribute("aria-hidden", "true");
+  ifr.style.cssText = `position:fixed;left:-20000px;top:0;width:${MAGH.b}px;height:1000px;border:0;pointer-events:none`; document.body.appendChild(ifr);
+  try {
+    await new Promise((ok) => { ifr.onload = ok; ifr.srcdoc = `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>html,body{margin:0;background:#fff} ${css}</style></head><body><div class="heft">${box.innerHTML}</div></body></html>`; });
+    const doc = ifr.contentDocument, heft = doc.querySelector(".heft");
+    await Promise.all([...doc.images].map((i) => i.decode?.().catch(() => {})));
+    const titelEl = heft.querySelector(".hs-titel"); titelEl.remove(); // das Titelblatt ist eine eigene, randlose Seite
+    const oben0 = heft.getBoundingClientRect().top, pos = (e) => { const r = e.getBoundingClientRect(); return { o: r.top - oben0, u: r.bottom - oben0 }; };
+    const sek = [...heft.querySelectorAll(":scope > .hs")].map((e) => ({ e, reg: e.dataset.reg, neu: e.classList.contains("neu"), ...pos(e) }));
+    const atome = [...heft.querySelectorAll(MAGH_ATOM)].map((e) => ({ ...pos(e), titel: e.matches(MAGH_TITEL) })).filter((x) => x.u - x.o > 1 && x.u - x.o < MAGH.ch * 0.92);
+    sek.forEach((s) => { if (s.reg) atome.push({ o: s.o, u: s.o + 1, titel: false }); }); // Rubrikanfang ist ein guter Umbruchpunkt
+    const ende = sek[sek.length - 1].u, grenzen = [...sek.filter((s, i) => i && s.neu).map((s) => s.o), ende];
+    const seiten = []; let a = 0;
+    for (const b of grenzen) { while (b - a > 4) { const z = magHeftUmbruch(atome, a, b); seiten.push([a, z]); const weiter = atome.filter((x) => x.o >= z - 0.5).sort((p, q) => p.o - q.o)[0]; a = Math.min(b, Math.max(z, weiter && weiter.o < b ? weiter.o : z)); } a = b; }
+    // Seitenzahlen fürs Inhaltsverzeichnis (Seite 1 = Titel)
+    const zahlen = {}; sek.forEach((s) => { const i = seiten.findIndex(([y1, y2]) => s.o < y2 - 0.5); if (s.reg && s.reg !== "Inhalt") zahlen[s.reg] = i + 2; });
+    const inh = sek.find((s) => s.reg === "Inhalt"); if (inh) inh.e.innerHTML = inhaltHtml(zahlen);
+    const notizen = (4 - ((seiten.length + 2) % 4)) % 4, gesamt = seiten.length + 2 + notizen, xml = new XMLSerializer(), bilder = [];
+    magHeftStand(`Seite 1 von ${gesamt} wird gezeichnet …`);
+    bilder.push(await magHeftBild(`<div class="heft-titel">${xml.serializeToString(titelEl)}</div>`, css));
+    for (let i = 0; i < seiten.length; i++) {
+      const [y1, y2] = seiten[i], teile = sek.filter((s) => s.u > y1 + 0.5 && s.o < y2 - 0.5);
+      magHeftStand(`Seite ${i + 2} von ${gesamt} wird gezeichnet …`);
+      const html = `<div class="heft" style="position:absolute;left:${MAGH.seite}px;top:${MAGH.oben}px;height:${(y2 - y1).toFixed(1)}px;overflow:hidden">${teile.map((s) => `<div style="position:absolute;left:0;top:${(s.o - y1).toFixed(1)}px;width:${MAGH.cb}px">${xml.serializeToString(s.e)}</div>`).join("")}</div>`;
+      const c = await magHeftBild(html, css); magHeftRahmen(c, nr, i + 2, mon); bilder.push(c);
+    }
+    for (let i = 0; i < notizen; i++) { const c = await magHeftBild(`<div class="heft" style="position:absolute;left:${MAGH.seite}px;top:${MAGH.oben}px"><section class="hs notiz"><h2>Notizen &amp; eigene Rezepte</h2>${'<div class="notiz-zeile"></div>'.repeat(Math.floor((MAGH.ch - 40) / 27))}</section></div>`, css); magHeftRahmen(c, nr, bilder.length + 1, mon); bilder.push(c); }
+    bilder.push(await magHeftBild(`<div class="rueck"><div><div style="font:800 30px Georgia,serif;letter-spacing:.08em">CLUB-KÜCHE</div><div style="font-style:italic;opacity:.9;margin:4px 0 26px">Das Magazin des Köcheclubs Werne</div>${ruecken ? `<img src="${ruecken}" alt="" style="width:110px;opacity:.9"/>` : ""}<div style="margin-top:22px;font:600 11px system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#f5d68a">Nr. ${nr} · ${esc(mon)}</div><div style="margin-top:6px;font:11px system-ui,sans-serif;opacity:.8">Nur für Mitglieder · auch in der Club-App</div></div></div>`, css));
+    return bilder;
+  } finally { ifr.remove(); }
+}
+// Heftreihenfolge: Bogen s vorne n−2s | 1+2s, hinten 2+2s | n−1−2s (Seitenzahlen ab 1; n durch 4 teilbar)
+const magHeftReihenfolge = (n) => Array.from({ length: n / 4 }, (_, s) => [[n - 2 * s, 1 + 2 * s], [2 + 2 * s, n - 1 - 2 * s]]).flat();
+function magHeftBoegen(seiten) { // A5-Seiten → A4-quer-Bögen in Heftreihenfolge
+  const n = seiten.length, W = 2 * MAGH.W, H = Math.round(W * 595.28 / 841.89), f = H / MAGH.H, w = MAGH.W * f, rand = (W - 2 * w) / 2, boegen = [];
+  for (const [l, r] of magHeftReihenfolge(n)) {
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    g.drawImage(seiten[l - 1], rand, 0, w, H); g.drawImage(seiten[r - 1], rand + w, 0, w, H); boegen.push(c);
+  }
+  return boegen;
+}
+async function magHeftBauen(nr) {
+  const kn = $("magHeftKnoepfe"); if (kn) kn.innerHTML = '<button class="knopf" disabled>⏳ Heft wird gesetzt …</button>';
+  try {
+    const seiten = await magHeftSeiten(nr); MAGH.cache = { nr, seiten };
+    magHeftStand(`✅ Fertig: ${seiten.length} Seiten A5 = ${seiten.length / 4} Blätter A4. Jetzt auswählen:`);
+    if (kn) kn.innerHTML = `<button class="knopf haupt" style="min-height:52px" onclick="magHeftPdf(${nr}, 'a5')">📄 Heft A5 – für den Copyshop</button>
+      <button class="knopf" style="min-height:52px" onclick="magHeftPdf(${nr}, 'boegen')">🖨️ Druckbögen A4 quer – selbst drucken</button>`;
+  } catch (e) { magHeftStand(""); if (kn) kn.innerHTML = `<button class="knopf haupt" onclick="magHeftBauen(${nr})">📖 Nochmal versuchen</button>`; meldeFehler(e); }
+}
+async function magHeftPdf(nr, art) { // frischer Tipp → Teilen klappt (sonst Download)
+  const seiten = MAGH.cache?.nr === nr ? MAGH.cache.seiten : null; if (!seiten) return magHeftBauen(nr);
+  const boegen = art === "boegen" ? magHeftBoegen(seiten) : null;
+  const blob = boegen ? pdfAusCanvas(boegen[0], true, boegen) : pdfAusCanvas(seiten[0], false, seiten, [419.53, 595.28]);
+  const name = `Club-Kueche_Nr${nr}_${boegen ? "Druckboegen_A4_quer" : "Heft_A5"}.pdf`, datei = new File([blob], name, { type: "application/pdf" });
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000); melde(`📄 ${boegen ? "Druckbögen" : "Heft"} gespeichert (Downloads)`);
 }
 // Admin: Startnachricht an alle mit vorbereitetem Text (Empfänger, Lesebestätigung und Senden wie gewohnt in der Startnachricht)
 async function magStartnachricht(nr) {
