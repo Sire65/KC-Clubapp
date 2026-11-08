@@ -17,12 +17,15 @@ const MAG_RUBRIKEN = [
   { id: "backstube", sym: "🥐", t: "Backstube", u: "Gebäck passend zur Jahreszeit", platz: "Plätzchen, Kuchen, Brot – Rezepte aus der Backstube der Mitglieder." },
   { id: "saison", sym: "🧺", t: "Saisonkalender", u: "Was jetzt frisch ist", auto: true },
   { id: "tipp", sym: "💡", t: "Küchentipp", u: "Ein Kniff aus der Profiküche", platz: "Ein kurzer Tipp aus der Küche – zum Beispiel, wie Saucen nicht gerinnen oder Messer lange scharf bleiben." },
+  // KC-CLUB-MAGAZIN-PROFI (Wunsch Hansi 08.11.2026 „Clubzeitschrift so anpassen wie du oben vorgeschlagen hast“): Küchenlatein, Rätsel-Ecke, Vorschau, Lesezeit
+  { id: "latein", sym: "📚", t: "Küchenlatein", u: "Ein Fachbegriff, einfach erklärt", platz: "Hier erklärt die Redaktion einen Fachbegriff aus der Profiküche – was er heißt, woher er kommt und wie es geht." },
   { id: "witz", sym: "😄", t: "Küchenwitz des Monats", u: "Zum Schmunzeln", platz: "Hier steht der Küchenwitz des Monats – eingesandt von Mitgliedern." },
   { id: "rueckblick", sym: "📸", t: "Rückblick", u: "Fotos und Eindrücke vom Clubleben", platz: "Bilder und ein paar Sätze vom letzten Clubabend, von Ausflügen und vom Weihnachtsmarkt." },
   { id: "portraet", sym: "🧑‍🍳", t: "Mitglied im Porträt", u: "Wer kocht da eigentlich?", platz: "Ein Mitglied stellt sich vor: Foto, Werdegang, Lieblingsgericht – nur mit Zustimmung des Mitglieds." },
   { id: "roman", sym: "📖", t: "Fortsetzungsroman", u: "Ein Roman in zwölf Folgen", platz: "Hier erscheint die nächste Folge des Fortsetzungsromans." },
   { id: "termine", sym: "📅", t: "Termine im Monat", u: "Was im Club ansteht", auto: true },
   { id: "hobby", sym: "🧶", t: "Hobby- & Bastelecke", u: "Basteln, Garten, Heimwerken & Co.", platz: "Später: Garten, Heimwerken, Stricken und Häkeln – was Mitglieder neben der Küche gerne machen." },
+  { id: "raetsel", sym: "🧩", t: "Rätsel-Ecke", u: "Fehlerbild und Kreuzworträtsel – Auflösung im nächsten Heft", platz: "Hier stehen die Rätsel dieser Ausgabe: ein Fehlerbild und ein Kreuzworträtsel rund um Küche und Backstube." },
   { id: "links", sym: "🔗", t: "Linktipps", u: "Gefunden und empfohlen (später)", platz: "Später: empfehlenswerte Seiten und Videos. Gesundheitsthemen nur als Link." },
 ];
 // KC-CLUB-MAGAZIN-NR1: Heftinhalt je Ausgabe (Registry Nr. → Rubrik-ID → Inhalt). Was hier steht, ersetzt den Platzhalter der Rubrik; alles andere bleibt
@@ -98,10 +101,60 @@ const MAG_AUSGABEN = {
         warum: "Butter ist selbst eine Emulsion. Wird sie zu heiß, trennen sich Fett und Wasser. In einer kleinen, mäßig warmen Wasserphase lassen sich die Fetttröpfchen wieder fein verteilen; mit Reduktion oder Sahne bleibt die Sauce aromatisch stabiler als mit reinem Wasser.",
         werte: [["50–60 °C", "Wohlfühlbereich der Emulsion"], ["ab ~65 °C", "Fett und Wasser trennen sich"], ["kalt", "Butter würfeln, portionsweise einschlagen"]] },
     ],
+    // KC-CLUB-MAGAZIN-PROFI: Küchenlatein in eigenen Worten
+    latein: { begriff: "Mise en place", aussprache: "[mis ã plas]", herkunft: "Französisch: „an seinen Platz gestellt“",
+      heisst: "Alles, was für ein Gericht gebraucht wird, liegt fertig bereit, bevor der Herd angeht: Zutaten abgewogen, gewaschen und geschnitten, Gewürze und Geräte griffbereit. In der Profiküche erledigt jeder Posten seine Mise en place, bevor der Service beginnt.",
+      schritte: ["Das Rezept einmal ganz durchlesen.", "Zutaten abwiegen und in Schälchen stellen – in der Reihenfolge, in der sie gebraucht werden.", "Gemüse putzen und schneiden, Kräuter zupfen.", "Geräte bereitlegen: Pfanne, Kelle, Sieb, Abtropfschale.", "Einen Abfallbehälter und ein feuchtes Tuch an den Platz stellen."],
+      warum: "Wer vorbereitet hat, muss beim Anbraten nicht mehr suchen oder schneiden. Nichts brennt an, nichts wird vergessen – und die Küche bleibt aufgeräumt.",
+      merke: "Erst vorbereiten, dann kochen." },
+    // KC-CLUB-MAGAZIN-RAETSEL (Wunsch Hansi 08.11.2026 „Rätsel Ecke … 10 Fehler in 2 Bildern in einer Küchenszene und ein Kreuzworträtsel mit Fachausdrücken und
+    // Gegenständen“): eigene Zeichnung und eigene Rätseltexte. Erzeugt und geprüft mit KC-Infrastructure-Control-Center docs/club-magazin-raetselecke
+    // (fehlerbild.py: genau 10 wirksame Fehler; kreuzwort.py: jede Buchstabenfolge ist ein gewolltes Wort). Fehler: [x, y, Radius, Text] im Bild 400 × 300.
+    raetsel: {
+      fehlerbild: { titel: "Finde die 10 Fehler", a: "magazin/raetsel/nr01-kueche-a.svg", b: "magazin/raetsel/nr01-kueche-b.svg", loesung: "magazin/raetsel/nr01-kueche-loesung.svg",
+        fehler: [[55, 42, 26, "Die Uhr zeigt eine andere Zeit"],
+          [160, 66, 22, "Der linke Vorhang hat eine andere Farbe"],
+          [356, 42, 20, "Auf dem Regal fehlt ein Vorratsglas"],
+          [200, 151, 14, "Der Griff auf dem Topfdeckel fehlt"],
+          [218, 128, 16, "Eine Dampfwolke fehlt"],
+          [335, 128, 22, "Statt der Kelle hängt ein Schneebesen"],
+          [352, 182, 16, "Die Möhre hat kein Grün mehr"],
+          [240, 222, 14, "Am Herd fehlt ein Drehknopf"],
+          [233, 88, 14, "Die Blume auf der Fensterbank blüht in anderer Farbe"],
+          [55, 132, 16, "Am Kühlschrank: Stern statt Herz"]] },
+      kreuzwort: { titel: "Küche & Backstube", zeilen: [".......S....R..L", ".......I...KELLE", "B..BAISER...I..G", "I...B..B.M..B..I", "S...L...JULIENNE", "K..WOK...E.....R", "U...E.T..R.ZESTE", "I.D.S.E..B...C.N", "TRANCHIEREN..H..", "..M.H.G..T...N..", "M.P.E.S.HEFETEIG", "O.F.N.C..I...E.A", "E.G...H..G...B.N", "R.A...A......E.A", "SPRITZBEUTEL.S.C", "E.E...E......E.H", "R.N.MARINIEREN.E"],
+        fragen: [[4, "A", 1, 11, "KELLE", "Großer Schöpflöffel"],
+          [6, "A", 2, 3, "BAISER", "Gebäck aus steif geschlagenem Eiweiß und Zucker"],
+          [9, "A", 4, 8, "JULIENNE", "Gemüse in feinste Streifen geschnitten"],
+          [10, "A", 5, 3, "WOK", "Asiatische Pfanne mit gewölbtem Boden"],
+          [12, "A", 6, 11, "ZESTE", "Feiner Streifen Zitrusschale"],
+          [15, "A", 8, 0, "TRANCHIEREN", "Braten fachgerecht in Scheiben schneiden"],
+          [17, "A", 10, 8, "HEFETEIG", "Muss vor dem Backen gehen"],
+          [19, "A", 14, 0, "SPRITZBEUTEL", "Für Tupfen aus Sahne oder Teig"],
+          [20, "A", 16, 4, "MARINIEREN", "In Würzflüssigkeit einlegen"],
+          [1, "D", 0, 7, "SIEB", "Trennt Nudeln vom Kochwasser"],
+          [2, "D", 0, 12, "REIBE", "Für Käse, Möhren und Muskat"],
+          [3, "D", 0, 15, "LEGIEREN", "Suppe oder Soße mit Eigelb und Sahne binden"],
+          [5, "D", 2, 0, "BISKUIT", "Luftiger Teig ohne Fett für Tortenböden"],
+          [7, "D", 2, 4, "ABLOESCHEN", "Angebratenes mit Flüssigkeit aufgießen"],
+          [8, "D", 3, 9, "MUERBETEIG", "Teig aus Mehl, Butter, Zucker – Boden für Obstkuchen"],
+          [11, "D", 6, 6, "TEIGSCHABER", "Gummispatel, der die Schüssel sauber macht"],
+          [13, "D", 6, 13, "SCHNEEBESEN", "Küchengerät zum Aufschlagen von Sahne und Eiweiß"],
+          [14, "D", 7, 2, "DAMPFGAREN", "Garen über heißem Wasserdampf"],
+          [16, "D", 10, 0, "MOERSER", "Schale mit Stößel für Gewürze"],
+          [18, "D", 10, 15, "GANACHE", "Creme aus Schokolade und heißer Sahne"]],
+        loesung: { wort: "KOECHECLUB", anzeige: "KÖCHECLUB", felder: [[5, 0], [5, 4], [10, 9], [7, 13], [8, 5], [15, 13], [11, 6], [1, 14], [4, 9], [7, 9]] } },
+    },
   },
   2: {
     erscheint: "2027-02-01", // KC-CLUB-MAGAZIN-ARCHIV: bis dahin Entwurf, nur Admin
     schlagzeilen: [["📖", "Hinter dem Pass, Folge 2: Die verschwundenen Trüffel"]],
+    latein: { begriff: "Blanchieren", aussprache: "[blã-schie-ren]", herkunft: "Französisch „blanchir“: weiß machen",
+      heisst: "Gemüse kurz in reichlich sprudelnd kochendes Salzwasser geben und sofort in Eiswasser abschrecken. Es gart nur an, bleibt bissfest und behält seine kräftige Farbe.",
+      schritte: ["Einen großen Topf mit viel Wasser aufsetzen und salzen.", "Daneben eine Schüssel mit Eiswasser bereitstellen.", "Gemüse portionsweise ins sprudelnde Wasser geben – Spinat wenige Sekunden, Brokkoliröschen etwa 2 Minuten, grüne Bohnen etwa 3 Minuten.", "Mit der Schaumkelle herausheben und sofort ins Eiswasser geben.", "Abtropfen lassen und weiterverarbeiten oder einfrieren."],
+      warum: "Die kurze Hitze stoppt Enzyme, die Farbe und Geschmack abbauen. Das Eiswasser beendet das Garen sofort – deshalb bleibt grünes Gemüse grün und knackig, auch nach dem Einfrieren.",
+      merke: "Viel Wasser, kurze Zeit, eiskalt abschrecken." },
+    raetsel: { aufloesung: 1 }, // KC-CLUB-MAGAZIN-RAETSEL: Auflösung der Rätsel aus Nr. 1; neue Rätsel für Nr. 2 wählt die Redaktion
     // KC-CLUB-MAGAZIN-ROMAN: Folge 2 von 12 (Wunsch Hansi 07.11.2026 „Du kannst Folge 2 übernehmen in das Heft 2“). Quelle: KC-Communication Zweig
     // roman-hinter-dem-pass-uebergabe-2026-11-06, folgen/02-die-verschwundenen-trueffel.md in der NEUFASSUNG (Lektorat 651c0ae) – vollständig, ungekürzt;
     // die erste Fassung ist verworfen. Bilder: Motive laut redaktion/folge-02-einbauanweisung.md, die Zeichnungen gibt es noch nicht (da:false → Bildplatz).
@@ -120,6 +173,8 @@ function magHeftHtml(id, x) {
     : `<section class="mag-artikel"><h3>${esc(t.titel)}</h3><div class="mag-spalten"><p class="mag-warum">Der Kniff</p><p>${esc(t.kniff)}</p>${t.merke ? `<blockquote class="mag-zitatzeile">${esc(t.merke)}</blockquote>` : ""}
        <p class="mag-warum">Warum es funktioniert</p><p>${esc(t.warum)}</p></div></section>`).join("") + magPlatz("Euer Kniff aus der Küche für die nächste Ausgabe?", "tipp");
   if (id === "roman") return magRomanHtml(x);
+  if (id === "latein") return magLateinHtml(x);
+  if (id === "raetsel") return magRaetselHtml(x, magNummer(MAG.jahr, MAG.monat));
   if (id === "backstube") return `<div class="mag-rezept"><h3 class="mag-schlag">${esc(x.titel)}</h3><p class="mag-lead">${esc(x.unter)}</p>
     <div class="mag-fakten">${x.fakten.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join("")}</div>
     ${x.foto ? `<img class="oa-bild mag-foto" data-anlage="${esc(x.foto)}" alt="${esc(x.titel)}">` : '<p class="hinweis" style="margin:4px 0 10px;padding:8px 10px;border:1px dashed currentColor;border-radius:10px;text-align:center">📷 <b>Foto folgt</b> – wer sie backt: Foto gern an die Redaktion schicken!</p>'}
@@ -151,12 +206,144 @@ function magRomanBild(b) {
 function magRomanHtml(x) {
   const bild = (wo) => (x.bilder || []).filter((b) => b.wo === wo).map(magRomanBild).join("");
   let absatz = 0;
+  // KC-CLUB-MAGAZIN-PROFI: Lesezeit wie in Zeitschriften – gemütliches Lesetempo (ca. 180 Wörter pro Minute)
+  const woerter = x.text.reduce((n, [, t]) => n + String(t || "").split(/\s+/).filter(Boolean).length, 0), minuten = Math.max(1, Math.round(woerter / 180));
   const text = x.text.map(([art, t]) => art === "h" ? `<h3>${magInline(t)}</h3>${bild("h:" + t)}` : art === "s" ? '<hr class="mag-roman-pause">' : `<p>${magInline(t)}</p>${bild("absatz:" + ++absatz)}`).join("");
   return `<article class="mag-roman" lang="de"><header class="mag-roman-kopf"><span class="mag-roman-reihe">${esc(x.reihe)}</span><span class="mag-roman-unter">${esc(x.unter)}</span>
-      <span class="mag-roman-folge">Folge ${x.folge} von ${x.von} – ${esc(x.titel)}</span>${x.untertitel ? `<span class="mag-roman-untertitel">${esc(x.untertitel)}</span>` : ""}</header>${bild("kopf")}<p class="mag-roman-vorspann">${magInline(x.vorspann)}</p>
+      <span class="mag-roman-folge">Folge ${x.folge} von ${x.von} – ${esc(x.titel)}</span>${x.untertitel ? `<span class="mag-roman-untertitel">${esc(x.untertitel)}</span>` : ""}<span class="mag-lesezeit">⏱️ ca. ${minuten} Min. Lesezeit</span></header>${bild("kopf")}<p class="mag-roman-vorspann">${magInline(x.vorspann)}</p>
     ${x.bisher ? `<aside class="mag-roman-bisher"><b>Was bisher geschah …</b><p>${magInline(x.bisher)}</p></aside>` : ""}
     <div class="mag-roman-text">${text}</div><footer class="mag-roman-ende">${x.ende.map((t) => `<p>${magInline(t)}</p>`).join("")}</footer></article>`;
 }
+// KC-CLUB-MAGAZIN-PROFI: Küchenlatein – Begriff, Aussprache, Herkunft, Bedeutung, So geht's, Warum, Merksatz
+const magLateinHtml = (x) => `<section class="mag-artikel mag-latein"><h3 class="mag-schlag">${esc(x.begriff)}</h3><p class="mag-latein-herkunft">${esc(x.aussprache || "")}${x.aussprache && x.herkunft ? " · " : ""}${esc(x.herkunft || "")}</p>
+  <p class="mag-lead">${esc(x.heisst)}</p><div class="mag-spalten"><p class="mag-warum">So geht's</p><ol>${x.schritte.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
+  <p class="mag-warum">Warum es funktioniert</p><p>${esc(x.warum)}</p></div>${x.merke ? `<blockquote class="mag-zitatzeile">${esc(x.merke)}</blockquote>` : ""}</section>`;
+
+// ---------- KC-CLUB-MAGAZIN-RAETSEL: Rätsel-Ecke (Fehlerbild zum Antippen, Kreuzworträtsel zum Ausfüllen, Auflösung im nächsten Heft) ----------
+// Die Seiten werden beim Blättern jedes Mal neu aus HTML gebaut – darum steht der Stand in MAGR (nur auf diesem Gerät, kc_club_mag_raetsel) und die
+// Seite wird nach jeder Änderung neu erzeugt (magRaetselSeiteNeu). Nichts wird verschickt; Umlaute wie im Kreuzworträtsel üblich (Ä = AE, Ö = OE, Ü = UE).
+const MAGR = (() => { try { return JSON.parse(localStorage.getItem("kc_club_mag_raetsel") || "{}") || {}; } catch { return {}; } })();
+const MAGK = { dir: "A" };
+const magRMerken = () => { try { localStorage.setItem("kc_club_mag_raetsel", JSON.stringify(MAGR)); } catch {} };
+const magRStand = (nr) => MAGR[nr] || (MAGR[nr] = { gef: [], kw: {} });
+const magRDaten = (nr) => (MAG_AUSGABEN[nr] || {}).raetsel || {};
+function magFbHtml(f, nr, loesung) {
+  const st = magRStand(nr), gef = loesung ? f.fehler.map((_, i) => i) : st.gef.filter((i) => f.fehler[i]);
+  const marken = gef.map((i) => { const [x, y, r] = f.fehler[i]; return `<i class="mag-fb-marke" style="left:${(x / 4).toFixed(2)}%;top:${(y / 3).toFixed(2)}%;width:${(r / 2).toFixed(2)}%"></i>`; }).join("");
+  const bild = (src, t) => `<figure class="mag-fb-bild"><figcaption>${t}</figcaption><div class="mag-fb-flaeche" onclick="magFbTipp(event, ${nr}, this)"><img src="${esc(src)}" alt="Küchenszene, ${t}" draggable="false">${marken}</div></figure>`;
+  const fertig = gef.length === f.fehler.length;
+  return `<div class="mag-fb" data-nr="${nr}"><div class="mag-fb-bilder">${bild(f.a, "Bild A")}${bild(f.b, "Bild B")}</div>
+    <p class="mag-fb-stand"><b>${gef.length} von ${f.fehler.length}</b> gefunden${fertig ? " – 🎉 alle!" : ""}${!fertig ? ` <button type="button" class="knopf klein" onclick="magFbAufloesen(${nr})">💡 Auflösen</button>` : ""}</p>
+    ${fertig ? `<ol class="mag-fb-liste">${f.fehler.map((x) => `<li>${esc(x[3])}</li>`).join("")}</ol>` : ""}</div>`;
+}
+function magRaetselSeiteNeu(nr) { // gespeicherte Seite neu erzeugen, damit der Stand beim Zurückblättern erhalten bleibt
+  const k = (BL.seiten || []).findIndex((s) => s.magRubrik === "raetsel"); if (k < 0) return;
+  const r = MAG_RUBRIKEN.find((x) => x.id === "raetsel"); BL.seiten[k].html = magRubrikSeite(r, magHeftHtml("raetsel", magRDaten(nr)), BL.seiten[k].magSeitenNr);
+}
+function magFbNeu(nr) {
+  const f = magRDaten(nr).fehlerbild; if (!f) return;
+  document.querySelectorAll(`.mag-fb[data-nr="${nr}"]`).forEach((el) => { el.outerHTML = magFbHtml(f, nr); });
+  magRaetselSeiteNeu(nr);
+}
+function magFbTipp(ev, nr, el) {
+  const f = magRDaten(nr).fehlerbild; if (!f) return;
+  const b = el.getBoundingClientRect(); if (!b.width) return;
+  const x = (ev.clientX - b.left) / b.width * 400, y = (ev.clientY - b.top) / b.height * 300, st = magRStand(nr);
+  const t = f.fehler.map(([fx, fy, fr], i) => ({ i, d: Math.hypot(fx - x, fy - y), fr })).filter((o) => !st.gef.includes(o.i) && o.d <= o.fr + 8).sort((p, q) => p.d - q.d)[0];
+  if (!t) { try { navigator.vibrate?.(12); } catch {} return melde("🔍 Da ist kein Fehler – weitersuchen!"); }
+  st.gef.push(t.i); magRMerken(); magFbNeu(nr);
+  melde(st.gef.length === f.fehler.length ? "🎉 Alle Fehler gefunden!" : `✔️ ${f.fehler[t.i][3]} (${st.gef.length} von ${f.fehler.length})`);
+}
+function magFbAufloesen(nr) { const f = magRDaten(nr).fehlerbild; if (!f) return; magRStand(nr).gef = f.fehler.map((_, i) => i); magRMerken(); magFbNeu(nr); }
+const magKwEintrag = (k, r, c, dir) => k.fragen.find(([, d, rr, cc, w]) => d === dir && (d === "A" ? rr === r && c >= cc && c < cc + w.length : cc === c && r >= rr && r < rr + w.length));
+const magKwFeld = (nr, r, c) => document.querySelector(`.mag-kw[data-nr="${nr}"] input[data-r="${r}"][data-c="${c}"]`);
+function magKwHtml(k, nr, geloest) {
+  const st = magRStand(nr), num = {}, lw = {};
+  k.fragen.forEach(([n, , r, c]) => { num[r + "," + c] = n; });
+  k.loesung.felder.forEach(([r, c], i) => { lw[r + "," + c] = i + 1; });
+  const gitter = k.zeilen.map((z, r) => [...z].map((ch, c) => {
+    if (ch === ".") return '<span class="mag-kw-leer"></span>';
+    const key = r + "," + c, wert = geloest ? ch : st.kw[key] || "";
+    return `<span class="mag-kw-feld${lw[key] ? " lw" : ""}">${num[key] ? `<small>${num[key]}</small>` : ""}${lw[key] ? `<em>${lw[key]}</em>` : ""}${geloest ? `<b>${ch}</b>`
+      : `<input data-nr="${nr}" data-r="${r}" data-c="${c}" value="${esc(wert)}" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Zeile ${r + 1}, Spalte ${c + 1}" onpointerdown="MAGK.vorher = MAGK.feld" onclick="magKwKlick(this)" onfocus="magKwFokus(this)" oninput="magKwEin(this)" onkeydown="magKwTaste(event, this)">`}</span>`;
+  }).join("")).join("");
+  const liste = (dir) => k.fragen.filter((f) => f[1] === dir).sort((a, b) => a[0] - b[0]).map(([n, d, , , w, frage]) => `<li${geloest ? "" : ` onclick="magKwFrage(${nr}, ${n}, '${d}')"`}><b>${n}</b> ${esc(geloest ? w : frage)}${geloest ? "" : ` <small>(${w.length})</small>`}</li>`).join("");
+  const wort = k.loesung.felder.map(([r, c], i) => `<span><i>${i + 1}</i>${esc(geloest ? k.zeilen[r][c] : st.kw[r + "," + c] || "")}</span>`).join("");
+  return `<div class="mag-kw" data-nr="${nr}"><div class="mag-kw-gitter" style="grid-template-columns:repeat(${k.zeilen[0].length}, minmax(0, 1fr))">${gitter}</div>
+    <p class="mag-warum">Lösungswort${geloest ? "" : " (gelbe Felder)"}</p><div class="mag-kw-wort">${wort}</div>
+    ${geloest ? "" : `<p class="hinweis mag-kw-hinweis">Umlaute als zwei Buchstaben: Ä = AE, Ö = OE, Ü = UE – wer „ü“ tippt, bekommt „UE“. Feld antippen, nochmal antippen wechselt die Richtung.</p>
+    <div class="mag-kw-fragen"><div><p class="mag-warum">Waagerecht</p><ol>${liste("A")}</ol></div><div><p class="mag-warum">Senkrecht</p><ol>${liste("D")}</ol></div></div>
+    <p><button type="button" class="knopf klein" onclick="magKwPruefen(${nr})">✔️ Prüfen</button> <span class="mag-kw-meldung" aria-live="polite"></span></p>`}</div>`;
+}
+function magKwMarkieren(nr, r, c) {
+  const k = magRDaten(nr).kreuzwort, e = k && magKwEintrag(k, r, c, MAGK.dir);
+  document.querySelectorAll(`.mag-kw[data-nr="${nr}"] .mag-kw-feld.an`).forEach((x) => x.classList.remove("an"));
+  if (e) for (let i = 0; i < e[4].length; i++) magKwFeld(nr, e[1] === "A" ? e[2] : e[2] + i, e[1] === "A" ? e[3] + i : e[3])?.parentNode.classList.add("an");
+}
+function magKwFokus(el) { // auch beim Weiterspringen nach jedem Buchstaben – darum hier nie die Richtung umschalten, nur wenn das Feld keine hat
+  const nr = +el.dataset.nr, r = +el.dataset.r, c = +el.dataset.c, k = magRDaten(nr).kreuzwort; if (!k) return;
+  if (!magKwEintrag(k, r, c, MAGK.dir)) MAGK.dir = MAGK.dir === "A" ? "D" : "A";
+  MAGK.feld = el; magKwMarkieren(nr, r, c);
+}
+function magKwKlick(el) { // dasselbe Feld nochmal angetippt (war vor dem Tippen schon ausgewählt) = Richtung wechseln, wenn es dort auch ein Wort gibt
+  const nr = +el.dataset.nr, r = +el.dataset.r, c = +el.dataset.c, k = magRDaten(nr).kreuzwort, neu = MAGK.dir === "A" ? "D" : "A";
+  if (k && MAGK.vorher === el && magKwEintrag(k, r, c, neu)) { MAGK.dir = neu; magKwMarkieren(nr, r, c); }
+  MAGK.vorher = null;
+}
+function magKwFrage(nr, n, dir) { const k = magRDaten(nr).kreuzwort, e = k?.fragen.find((f) => f[0] === n && f[1] === dir); if (!e) return; MAGK.dir = dir; MAGK.feld = null; const el = magKwFeld(nr, e[2], e[3]); if (el) { MAGK.feld = el; el.focus(); magKwMarkieren(nr, e[2], e[3]); } }
+function magKwNaechstes(k, r, c, schritt) {
+  const e = magKwEintrag(k, r, c, MAGK.dir); if (!e) return null;
+  const i = (e[1] === "A" ? c - e[3] : r - e[2]) + schritt; if (i < 0 || i >= e[4].length) return null;
+  return e[1] === "A" ? [e[2], e[3] + i] : [e[2] + i, e[3]];
+}
+function magKwWortNeu(nr) {
+  const k = magRDaten(nr).kreuzwort, st = magRStand(nr);
+  document.querySelectorAll(`.mag-kw[data-nr="${nr}"] .mag-kw-wort span`).forEach((s, i) => { const [r, c] = k.loesung.felder[i]; s.innerHTML = `<i>${i + 1}</i>${esc(st.kw[r + "," + c] || "")}`; });
+  magRMerken(); magRaetselSeiteNeu(nr);
+}
+function magKwEin(el) {
+  const nr = +el.dataset.nr, k = magRDaten(nr).kreuzwort, st = magRStand(nr); if (!k) return;
+  let r = +el.dataset.r, c = +el.dataset.c;
+  let v = el.value.toUpperCase().replace(/Ä/g, "AE").replace(/Ö/g, "OE").replace(/Ü/g, "UE").replace(/ß/g, "SS").replace(/[^A-Z]/g, "");
+  const alt = st.kw[r + "," + c] || ""; if (v.length > 1 && alt && v.startsWith(alt)) v = v.slice(alt.length); // in ein volles Feld getippt
+  if (!v) { el.value = ""; delete st.kw[r + "," + c]; return magKwWortNeu(nr); }
+  let ziel = null;
+  for (const ch of v) {
+    const f = magKwFeld(nr, r, c); if (!f) break;
+    f.value = ch; st.kw[r + "," + c] = ch; f.parentNode.classList.remove("falsch");
+    const n = magKwNaechstes(k, r, c, 1); if (!n) { ziel = null; break; } [r, c] = n; ziel = n;
+  }
+  magKwWortNeu(nr);
+  if (ziel) { const f = magKwFeld(nr, ziel[0], ziel[1]); if (f) { MAGK.feld = f; f.focus(); } }
+}
+function magKwTaste(ev, el) {
+  if (ev.key !== "Backspace" || el.value) return;
+  const nr = +el.dataset.nr, k = magRDaten(nr).kreuzwort, n = k && magKwNaechstes(k, +el.dataset.r, +el.dataset.c, -1); if (!n) return;
+  ev.preventDefault(); const f = magKwFeld(nr, n[0], n[1]); if (!f) return;
+  f.value = ""; delete magRStand(nr).kw[n[0] + "," + n[1]]; MAGK.feld = f; f.focus(); magKwWortNeu(nr);
+}
+function magKwPruefen(nr) {
+  const k = magRDaten(nr).kreuzwort, st = magRStand(nr); if (!k) return;
+  let leer = 0, falsch = 0;
+  k.zeilen.forEach((z, r) => [...z].forEach((ch, c) => { if (ch === ".") return; const v = st.kw[r + "," + c] || "", f = magKwFeld(nr, r, c);
+    if (!v) leer++; else if (v !== ch) falsch++; f?.parentNode.classList.toggle("falsch", !!v && v !== ch); }));
+  const t = !leer && !falsch ? `🎉 Alles richtig! Das Lösungswort lautet ${k.loesung.anzeige}.`
+    : (falsch ? (falsch === 1 ? "1 Buchstabe stimmt" : falsch + " Buchstaben stimmen") + " noch nicht (rot). " : "Bisher alles richtig. ") + (leer ? (leer === 1 ? "1 Feld ist" : leer + " Felder sind") + " noch leer." : "");
+  document.querySelectorAll(`.mag-kw[data-nr="${nr}"] .mag-kw-meldung`).forEach((m) => { m.textContent = t; }); melde(t);
+}
+function magRaetselHtml(x, nr) {
+  let h = "";
+  if (x.fehlerbild) h += `<section class="mag-artikel"><h3 class="mag-schlag">🔍 ${esc(x.fehlerbild.titel)}</h3><p class="mag-lead">Bild B unterscheidet sich an genau ${x.fehlerbild.fehler.length} Stellen von Bild A. Fehler einfach im Bild antippen.</p>${magFbHtml(x.fehlerbild, nr)}</section>`;
+  if (x.kreuzwort) h += `<section class="mag-artikel"><h3 class="mag-schlag">✏️ Kreuzworträtsel: ${esc(x.kreuzwort.titel)}</h3>${magKwHtml(x.kreuzwort, nr)}</section>`;
+  if (x.fehlerbild || x.kreuzwort) h += `<p class="hinweis">Die Auflösung steht im nächsten Heft. Noch mehr Rätsel: auf der Rückseite der App (Eselsohr) unter 🧩 Rätsel.</p>`;
+  else h += magPlatz("Neue Rätsel für diese Ausgabe – ein Fehlerbild und ein Kreuzworträtsel – wählt die Redaktion.", "raetsel");
+  const a = x.aufloesung && magRDaten(x.aufloesung);
+  if (a && (a.fehlerbild || a.kreuzwort)) h += `<section class="mag-artikel mag-aufloesung"><h3 class="mag-schlag">Auflösung der Rätsel aus Nr. ${x.aufloesung}</h3>
+    ${a.fehlerbild ? `<figure class="mag-fb-bild"><img src="${esc(a.fehlerbild.loesung)}" alt="Lösung: Bild B mit den markierten Fehlern" loading="lazy"></figure><ol class="mag-fb-liste">${a.fehlerbild.fehler.map((f) => `<li>${esc(f[3])}</li>`).join("")}</ol>` : ""}
+    ${a.kreuzwort ? `<p class="mag-lead">Lösungswort: <b>${esc(a.kreuzwort.loesung.anzeige)}</b></p>${magKwHtml(a.kreuzwort, x.aufloesung, true)}` : ""}</section>`;
+  return h;
+}
+
 // Saisonkalender (Deutschland, Freiland/Lager) – je Monat Gemüse, Obst, Kräuter
 const MAG_SAISON = [
   ["Grünkohl, Rosenkohl, Lauch, Wirsing, Pastinaken, Schwarzwurzeln", "Äpfel und Birnen (Lager)", "Petersilie (Topf)"],
@@ -175,6 +362,7 @@ const MAG_SAISON = [
 const MAG = { jahr: 0, monat: 0 };
 // gemeinsamer Seitenrahmen: Kopf „CLUB-KÜCHE · Nr. 1 · Dezember 2026“, Inhalt, Fuß mit Seitenzahl
 const magKopf = () => `<div class="mag-kopf"><b>CLUB-KÜCHE</b><span>Nr. ${magNummer(MAG.jahr, MAG.monat)} · ${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}</span></div>`;
+const magRubrikSeite = (r, inhalt, nr) => magSeite(`<h2 class="mag-h"><span>${r.sym}</span> ${esc(r.t)}</h2><p class="mag-unterzeile">${esc(r.u)}</p>${inhalt}`, nr);
 const magSeite = (inhalt, nr) => `<div class="mag-seite">${magKopf()}<div class="mag-rumpf">${inhalt}</div><div class="mag-fuss"><span>Köcheclub Werne</span><span>${nr}</span></div></div>`;
 const MAG_RUBRIK_ART = { rezept: "rezept", backstube: "backstube", tipp: "tipp", witz: "witz", rueckblick: "rueckblick", portraet: "portraet", hobby: "hobby", links: "link" };
 const magPlatz = (t, rubrik) => `<div class="mag-platz">✍️ <b>Platzhalter für die Redaktion</b><br>${esc(t)}${rubrik && MAG_RUBRIK_ART[rubrik] ? `<br><button type="button" class="knopf klein mag-einsenden" onclick="blZu();magEinsenden(${jsArg(MAG_RUBRIK_ART[rubrik])})">✉️ Beitrag dafür einsenden</button>` : ""}</div>`;
@@ -203,7 +391,7 @@ async function magStart(jahr, monat) {
   melde("📰 Das Magazin wird zusammengestellt …");
   const { termine, rezept } = await magDaten();
   const seiten = magSeiten({ termine, rezept });
-  blOeffnen(`📰 Club-Küche Nr. ${magNummer(MAG.jahr, MAG.monat)} · ${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`, seiten, ["Titel", "Vorwort", "Inhalt", ...MAG_RUBRIKEN.map((r) => r.t), "Impressum"]);
+  blOeffnen(`📰 Club-Küche Nr. ${magNummer(MAG.jahr, MAG.monat)} · ${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`, seiten, ["Titel", "Vorwort", "Inhalt", ...MAG_RUBRIKEN.map((r) => r.t), "Vorschau", "Impressum"]);
 }
 function magSeiten({ termine, rezept }) {
   const nr = magNummer(MAG.jahr, MAG.monat), mon = `${MAG_MONATE[MAG.monat - 1]} ${MAG.jahr}`;
@@ -221,7 +409,8 @@ function magSeiten({ termine, rezept }) {
   // Inhaltsverzeichnis (antippen springt zur Seite)
   const start = 3; // 0 Titel, 1 Vorwort, 2 Inhalt, ab 3 die Rubriken
   seiten.push({ art: "html", register: "Inhalt", titel: "", html: magSeite(`<h2 class="mag-h">Inhalt</h2><ol class="mag-inhalt"><li><button type="button" onclick="blGehe(1)"><span class="mag-sym">✒️</span><span><b>Vorwort</b><small>Ein paar Zeilen der Redaktion</small></span><span class="mag-seitenzahl">2</span></button></li>${MAG_RUBRIKEN.map((r, i) => `<li><button type="button" onclick="blGehe(${start + i})"><span class="mag-sym">${r.sym}</span><span><b>${esc(r.t)}</b><small>${esc(r.u)}</small></span><span class="mag-seitenzahl">${start + i + 1}</span></button></li>`).join("")}
-      <li><button type="button" onclick="blGehe(${start + MAG_RUBRIKEN.length})"><span class="mag-sym">§</span><span><b>Impressum</b><small>Wer das Magazin macht</small></span><span class="mag-seitenzahl">${start + MAG_RUBRIKEN.length + 1}</span></button></li></ol>`, 3) });
+      <li><button type="button" onclick="blGehe(${start + MAG_RUBRIKEN.length})"><span class="mag-sym">🔭</span><span><b>Im nächsten Heft</b><small>Was die nächste Ausgabe bringt</small></span><span class="mag-seitenzahl">${start + MAG_RUBRIKEN.length + 1}</span></button></li>
+      <li><button type="button" onclick="blGehe(${start + MAG_RUBRIKEN.length + 1})"><span class="mag-sym">§</span><span><b>Impressum</b><small>Wer das Magazin macht</small></span><span class="mag-seitenzahl">${start + MAG_RUBRIKEN.length + 2}</span></button></li></ol>`, 3) });
   // Rubriken
   MAG_RUBRIKEN.forEach((r, i) => {
     let inhalt = "";
@@ -234,8 +423,14 @@ function magSeiten({ termine, rezept }) {
         ${rezept.zubereitung ? `<h4>Zubereitung</h4><p>${esc(String(rezept.zubereitung)).slice(0, rezept.gewaehlt ? 2000 : 900).replace(/\n/g, "<br>")}</p>` : ""}<p class="hinweis">${rezept.gewaehlt ? "🍲 Rezept des Monats – ausgewählt von der Redaktion. Steht auch im Rezeptbuch." : "Vorschlag aus dem Rezeptbuch – die Redaktion wählt später das Rezept des Monats."}</p></div>`;
     else if (heft[r.id]) inhalt = magHeftHtml(r.id, heft[r.id]);
     else inhalt = magPlatz(r.platz || "Hier kommt der Beitrag der Redaktion hin.", r.id);
-    seiten.push({ art: "html", register: r.t, titel: "", html: magSeite(`<h2 class="mag-h"><span>${r.sym}</span> ${esc(r.t)}</h2><p class="mag-unterzeile">${esc(r.u)}</p>${inhalt}`, start + i + 1) });
+    seiten.push({ art: "html", register: r.t, titel: "", html: magRubrikSeite(r, inhalt, start + i + 1), magRubrik: r.id, magSeitenNr: start + i + 1 });
   });
+  // KC-CLUB-MAGAZIN-PROFI: „Im nächsten Heft“ – Schlagzeilen der nächsten Ausgabe (falls schon festgelegt), Auflösung der Rätsel, Fortsetzung des Romans
+  const vorNr = start + MAG_RUBRIKEN.length + 1, [nj, nm] = magJahrMonat(nr + 1), naechstes = MAG_AUSGABEN[nr + 1] || {};
+  const vorschau = [...(naechstes.schlagzeilen || []), ...(heft.raetsel?.fehlerbild || heft.raetsel?.kreuzwort ? [["🧩", "Die Auflösung der Rätsel aus diesem Heft"]] : []),
+    ...(heft.roman && heft.roman.folge < heft.roman.von && !(naechstes.schlagzeilen || []).some(([s]) => s === "📖") ? [["📖", "Wie geht es weiter? Die nächste Folge unseres Fortsetzungsromans"]] : [])];
+  seiten.push({ art: "html", register: "Vorschau", titel: "", html: magSeite(`<h2 class="mag-h"><span>🔭</span> Im nächsten Heft</h2><p class="mag-unterzeile">Club-Küche Nr. ${nr + 1} erscheint am 1. ${MAG_MONATE[nm - 1]} ${nj}</p>
+    ${vorschau.length ? `<ul class="mag-schlagzeilen mag-vorschau">${vorschau.map(([sym, t]) => `<li><span>${sym}</span> ${esc(t)}</li>`).join("")}</ul>` : ""}${naechstes.schlagzeilen ? "" : magPlatz("Hier kündigt die Redaktion die Themen der nächsten Ausgabe an.")}`, vorNr) });
   // Impressum (Angaben aus dem Impressum der App, Redaktion noch offen)
   const I = typeof IMPRESSUM !== "undefined" ? IMPRESSUM : null;
   seiten.push({ art: "html", register: "Impressum", titel: "", html: magSeite(`<h2 class="mag-h">§ Impressum</h2><dl class="mag-impressum">
@@ -244,7 +439,7 @@ function magSeiten({ termine, rezept }) {
       <dt>Redaktion</dt><dd>${magPlatz("Wird in der nächsten Clubsitzung gefragt: Wer hat Lust, redaktionell mitzuarbeiten?")}</dd>
       <dt>Verantwortlich für den Inhalt</dt><dd>${I?.vertreten ? esc(I.vertreten) : "wird festgelegt"}</dd>
       <dt>Erscheinungsweise</dt><dd>monatlich, nur für Mitglieder in der Club-App</dd>
-      <dt>Fotos und Rezepte</dt><dd>von Mitgliedern, mit ihrer Zustimmung</dd></dl>`, start + MAG_RUBRIKEN.length + 1) });
+      <dt>Fotos und Rezepte</dt><dd>von Mitgliedern, mit ihrer Zustimmung</dd></dl>`, start + MAG_RUBRIKEN.length + 2) });
   return seiten;
 }
 

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.889.0 – 2026-11-08 – 📰 Club-Küche wie eine Profi-Zeitschrift: Rätsel-Ecke, Küchenlatein, „Im nächsten Heft“, Lesezeit (KC-CLUB-MAGAZIN-RAETSEL, KC-CLUB-MAGAZIN-PROFI, Wunsch Hansi 08.11.2026)
+- **🧩 Rätsel-Ecke** (neue Rubrik vor den Linktipps): Fehlerbild „Finde die 10 Fehler“ (eigene Zeichnung einer Clubküche, Fehler im Bild antippen, grüne Kreise, Zähler, 💡 Auflösen) und **Kreuzworträtsel „Küche & Backstube“** (20 Fachbegriffe und Küchengeräte, Lösungswort aus den gelben Feldern, Umlaute als AE/OE/UE – „ü“ wird automatisch „UE“, ✔️ Prüfen). Der Stand bleibt auf dem Gerät und beim Blättern erhalten, nichts wird verschickt. Bilder: `magazin/raetsel/`.
+- **Auflösung im nächsten Heft:** Nr. 2 zeigt das Lösungsbild mit allen 10 Fehlern, das Lösungswort und das ausgefüllte Gitter aus Nr. 1; neue Rätsel für Nr. 2 als Platzhalter für die Redaktion.
+- **📚 Küchenlatein** (neue Rubrik nach dem Küchentipp): ein Fachbegriff einfach erklärt – Nr. 1 „Mise en place“, Nr. 2 „Blanchieren“ (Aussprache, Herkunft, So geht's, Warum, Merksatz; eigene Texte).
+- **🔭 Im nächsten Heft** (neue Seite vor dem Impressum, im Inhaltsverzeichnis und als Register): Erscheinungstag und Schlagzeilen der nächsten Ausgabe, Auflösung der Rätsel, Fortsetzung des Romans – ohne Inhalte späterer Folgen.
+- **⏱️ Lesezeit** im Kopf des Fortsetzungsromans (gemütliches Lesetempo, z. B. Folge 1: ca. 15 Min.).
+- Bestehende Rubriken, Reihenfolge und Inhalte unverändert; Rätsel und Küchenlatein auch im Druck. Weiterhin nur für den Admin sichtbar, bis „magazin“ freigegeben ist.
+- Erzeugt und geprüft mit KC-Infrastructure-Control-Center `docs/club-magazin-raetselecke` (genau 10 wirksame Fehler; Gitter ohne ungewollte Wörter). Im abgeschirmten Browser geprüft (Handy und PC: Antippen, Tippen mit Umlaut, Prüfen, Zurückblättern, Auflösung in Nr. 2, Druck, kein Programmfehler, nichts ragt über den Rand).
+- Test: `tests/magazin-raetsel.test.mjs` (neu, in den Tests-Ablauf aufgenommen). Rückweg: Version 2.888.0 einspielen.
 ## 2.888.0 – Zeitansage: Videos „Mitglieder, anklopfen & anrufen“, „Zu- und absagen“, „Fotoalbum“ und „Erstattung beantragen“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft mit Beispiel-Mitgliedern: alle Schritte zeigen auf vorhandene Stellen („🍳 Gruppen“ erscheint nur, wenn es Gruppen gibt). Zeitansage eingeschaltet.
 - Ebenso „Zu- und absagen“ geprüft (mit Beispieltermin alle Schritte ok). Der Mitfahren-Schritt sagt jetzt, dass „Mitfahren“ erst nach „Ich komme“ erscheint – vorher war im Bild nichts davon zu sehen.
