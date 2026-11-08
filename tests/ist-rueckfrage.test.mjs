@@ -19,7 +19,7 @@ assert.ok(/p_status = 'abgelehnt' and coalesce\(length\(trim\(p_grund\)\), 0\) =
 
 // --- Server: Regeln (Typen entfernt, echte Funktionen) ---
 const st = (a, b) => server.slice(server.indexOf(a), server.indexOf(b, server.indexOf(a)));
-const code = st("const IR = {", "const IR_GRUENDE") + st("function irErfasst(", "async function irLage(")
+const code = (st("const IR = {", "const IR_GRUENDE") + st("function irErfasst(", "// Die Stechuhr der Kasse") + st("// Zustand eines Dienstes", "async function irLage("))
   .replace("(d: any, buch: any[])", "(d, buch)").replace("(d: any, r: any, e: any, t: number, zu: boolean)", "(d, r, e, t, zu)").replace("(a: number, b: number, pause: number)", "(a, b, pause)");
 const R = new Function(code + "; return { IR, irErfasst, irZustand, irMin };")();
 const H = 3600000, t0 = Date.UTC(2026, 11, 5, 10, 0), d = { ref: "S1", person: "KC-P-1", startMs: t0, endeMs: t0 + 4 * H, pause: 0 };
@@ -42,6 +42,15 @@ assert.equal(R.irZustand(d, { ergebnis: "passt" }, null, ende + H, false), "bean
 assert.equal(R.irZustand(d, null, null, ende + 8 * 24 * H, false), "zu", "nach 7 Tagen zu");
 assert.equal(R.irZustand(d, null, null, ende + H, true), "zu", "Tag abgeschlossen → zu");
 assert.equal(R.irMin(t0, t0 + 4 * H, 30), 210);
+
+// Stechuhr der Kasse (kc_dp_timeclock_actuals) zählt wie eine Kassen-Buchung – auch über Mitternacht
+const kb = st("function irKasseBuchungen(", "const irKasseLesen").replace("(rows: any[])", "(rows)").replace(/\(x: any\)/g, "(x)");
+const dsMs = (tag, uhr) => { const [h, m] = String(uhr).split(":").map(Number); return Date.UTC(+tag.slice(0, 4), +tag.slice(5, 7) - 1, +tag.slice(8, 10), h - 1, m); };
+const KB = new Function("dsMs", kb + "; return irKasseBuchungen;")(dsMs);
+const z = KB([{ person_id: "KC-P-1", work_date: "2026-12-05", start_time: "18:00:00", end_time: "01:30:00", break_minutes: 15, status: "recorded" }, { person_id: "KC-P-1", work_date: "2026-12-05", start_time: "10:00", end_time: "12:00", status: "voided" }]);
+assert.equal(z.length, 2, "storniert (voided) zählt nicht");
+assert.ok(z[0].art === "in" && z[1].art === "out" && Date.parse(z[1].zeit) - Date.parse(z[0].zeit) === 7.5 * H && z[1].pause_min === 15 && z[0].quelle === "kasse", "über Mitternacht, Quelle Kasse");
+assert.ok(server.includes("const buch = [...(buch0 ?? []), ...kasse];") && (server.match(/irKasseLesen\(/g) || []).length >= 3, "überall mitgeprüft (Lage, Erinnerung, Antwort)");
 
 // --- Server: Ablauf ---
 const ant = st('case "ist_antworten": {', 'case "ist_aenderungen": {');

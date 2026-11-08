@@ -5709,6 +5709,16 @@ function irErfasst(d: any, buch: any[]) {
   const rang = ["planer", "kasse", "app"], quelle = rang.find((q) => z.some((x) => x.quelle === q)) || "app";
   return { kommen: kommen?.zeit ?? null, gehen: gehen?.zeit ?? null, quelle, pause: gehen?.pause_min ?? null, komplett: !!(kommen && gehen) };
 }
+// Die Stechuhr der Kasse liefert heute an DP2 über kc_dp_timeclock_actuals (Tag + Uhrzeiten) – als Kommen/Gehen der Quelle „kasse“ mitprüfen
+function irKasseBuchungen(rows: any[]) {
+  return (rows ?? []).filter((x: any) => x.status !== "voided" && x.person_id && x.start_time).flatMap((x: any) => {
+    const a = dsMs(x.work_date, x.start_time); let b = x.end_time ? dsMs(x.work_date, x.end_time) : null; if (b != null && b <= a) b += 86400000;
+    return [{ person_id: x.person_id, art: "in", zeit: new Date(a).toISOString(), quelle: "kasse", dienst_ref: null, storniert_am: null, pause_min: null },
+      ...(b != null ? [{ person_id: x.person_id, art: "out", zeit: new Date(b).toISOString(), quelle: "kasse", dienst_ref: null, storniert_am: null, pause_min: Number(x.break_minutes) || 0 }] : [])];
+  });
+}
+const irKasseLesen = (pids: string[], tage: string[]) => db.from("kc_dp_timeclock_actuals").select("person_id,work_date,start_time,end_time,break_minutes,status").eq("org_id", ORG).in("person_id", pids).in("work_date", tage).limit(500)
+  .then((r: any) => irKasseBuchungen(r.data ?? []), () => [] as any[]);
 // Zustand eines Dienstes für das Mitglied
 function irZustand(d: any, r: any, e: any, t: number, zu: boolean) {
   if (t < d.endeMs - IR.vorEndeMin * 60000) return "spaeter";
@@ -5724,10 +5734,11 @@ async function irLage(ich: Ich) {
   const dienste = (await irDienste(tage, ich.person_id)).filter((d) => d.startMs <= t + 86400000);
   if (!dienste.length) return { aktiv: true, dienste: [], offen: 0, gruende: IR_GRUENDE, nichtDa: IR_NICHT_DA, regeln: { abweichMin: IR.abweichMin, schrittMin: IR.schrittMin, spannStd: IR.spannStd } };
   const von = new Date(Math.min(...dienste.map((d) => d.startMs)) - IR.fensterStd * 3600000).toISOString(), bis = new Date(Math.max(...dienste.map((d) => d.endeMs)) + IR.fensterStd * 3600000).toISOString();
-  const [{ data: rm }, { data: buch }, { data: tg }] = await Promise.all([
+  const [{ data: rm }, { data: buch0 }, { data: tg }, kasse] = await Promise.all([
     db.from("kc_dp_dienst_rueckmeldung").select("*").eq("org_id", ORG).eq("person_id", ich.person_id).in("dienst_ref", dienste.map((d) => d.ref)),
     db.from("kc_dp_stempel").select("person_id,art,zeit,quelle,pause_min,dienst_ref,storniert_am").eq("person_id", ich.person_id).gte("zeit", von).lte("zeit", bis).is("storniert_am", null).limit(200),
-    db.from("kc_dp_days_published").select("work_date,status").eq("org_id", ORG).in("work_date", tage)]);
+    db.from("kc_dp_days_published").select("work_date,status").eq("org_id", ORG).in("work_date", tage), irKasseLesen([ich.person_id], tage)]);
+  const buch = [...(buch0 ?? []), ...kasse];
   const zuTage = new Set((tg ?? []).filter((x: any) => x.status === "closed").map((x: any) => x.work_date));
   const iso = (ms: number) => new Date(ms).toISOString();
   const liste = dienste.map((d) => {
@@ -5757,9 +5768,11 @@ async function irErinnern() {
     && t >= d.endeMs + IR.nachMin * 60000 && t < d.endeMs + 24 * 3600000);
   if (!dienste.length) return 0;
   const pids = [...new Set(dienste.map((d) => d.person))];
-  const [{ data: rm }, { data: buch }] = await Promise.all([
+  const [{ data: rm }, { data: buch0 }, kasse] = await Promise.all([
     db.from("kc_dp_dienst_rueckmeldung").select("id,dienst_ref,person_id,ergebnis,gefragt_am,erinnert_am").eq("org_id", ORG).in("dienst_ref", dienste.map((d) => d.ref)).in("person_id", pids),
-    db.from("kc_dp_stempel").select("person_id,art,zeit,quelle,pause_min,dienst_ref,storniert_am").in("person_id", pids).gte("zeit", new Date(t - 40 * 3600000).toISOString()).is("storniert_am", null).limit(1000)]);
+    db.from("kc_dp_stempel").select("person_id,art,zeit,quelle,pause_min,dienst_ref,storniert_am").in("person_id", pids).gte("zeit", new Date(t - 40 * 3600000).toISOString()).is("storniert_am", null).limit(1000),
+    irKasseLesen(pids, [tagDazu(heute, -1), heute])]);
+  const buch = [...(buch0 ?? []), ...kasse];
   const std = berlinStunde(new Date(t)), uhr = (ms: number) => new Intl.DateTimeFormat("de-DE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(ms));
   let n = 0;
   for (const d of dienste) {
@@ -13362,12 +13375,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!["passt", "geaendert", "nicht_da", "korrektur"].includes(ergebnis)) throw new Fehler("Bitte eine Antwort wählen.");
         const d = (await irDienste(Array.from({ length: IR.fristTage + 2 }, (_, i) => tagDazu(heute, -i)), ich.person_id)).find((x) => x.ref === ref);
         if (!d) throw new Fehler("Diesen Dienst gibt es (nicht mehr) für dich.", 404);
-        const [{ data: alt }, { data: buch }, { data: tg }] = await Promise.all([
+        const [{ data: alt }, { data: buch0 }, { data: tg }, kasse] = await Promise.all([
           db.from("kc_dp_dienst_rueckmeldung").select("*").eq("org_id", ORG).eq("dienst_ref", ref).eq("person_id", ich.person_id).maybeSingle(),
           db.from("kc_dp_stempel").select("person_id,art,zeit,quelle,pause_min,dienst_ref,storniert_am").eq("person_id", ich.person_id)
             .gte("zeit", new Date(d.startMs - IR.fensterStd * 3600000).toISOString()).lte("zeit", new Date(d.endeMs + IR.fensterStd * 3600000).toISOString()).is("storniert_am", null).limit(100),
-          db.from("kc_dp_days_published").select("status").eq("org_id", ORG).eq("work_date", d.datum).maybeSingle()]);
-        const e = irErfasst(d, buch ?? []), zustand = irZustand(d, alt, e, t, tg?.status === "closed");
+          db.from("kc_dp_days_published").select("status").eq("org_id", ORG).eq("work_date", d.datum).maybeSingle(), irKasseLesen([ich.person_id], [d.datum, tagDazu(d.datum, 1)])]);
+        const buch = [...(buch0 ?? []), ...kasse];
+        const e = irErfasst(d, buch), zustand = irZustand(d, alt, e, t, tg?.status === "closed");
         if (zustand === "spaeter") throw new Fehler("Der Dienst ist noch nicht vorbei.", 409);
         if (zustand === "zu") throw new Fehler("Dieser Dienst ist abgeschlossen – Änderungen bitte über den Planer.", 409);
         if (e?.komplett && ergebnis !== "korrektur") throw new Fehler("Deine Zeiten sind schon erfasst (Kasse bzw. App) – bei einem Fehler bitte „Korrektur melden“.", 409);
