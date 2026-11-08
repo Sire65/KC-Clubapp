@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.894.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.895.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2158,6 +2158,9 @@ const filmGesehen = (id) => ["angesehen", "ende"].includes(INIT?.einstellungen?.
 const FILM_KURZ_S = 60, FILM_KURZ_MAX = 3;
 const filmErledigt = (id) => { const e = INIT?.einstellungen?.filme?.[id]; return !!e?.z && !(e.wie === "kurz" && (e.n || 1) < FILM_KURZ_MAX); };
 const FILM_START = { versuche: 0 };
+// 2.895.0 KC-CLUB-FILM-ZURUECK (Fund Hansi 08.11.2026, Karla: „▶ Ansehen“ → 28 s später „👋 Hinweis beim Verlassen“ → Film wieder angeboten → „Nein, danke“):
+// die Zurück-Taste des Handys kannte die Film-Schicht nicht – auf der Startseite hieß „Zurück“ deshalb „App verlassen“. Jetzt schließt sie zuerst den Film (wie ✕).
+let FILM_ZU = null;
 async function filmMerken(id, wie) {
   const vorher = INIT?.einstellungen?.filme?.[id]?.wie;
   if (!INIT || (vorher === wie && wie !== "kurz")) return; // schon so gemerkt – nicht bei jedem ▶ neu speichern
@@ -2192,7 +2195,7 @@ function filmZeigen(id) {
   s.innerHTML = `<div class="film-kopf"><b>${f.sym} ${esc(f.t)}</b><button type="button" class="knopf klein" data-zu>✕ Schließen</button></div>
     <video src="${esc(f.datei)}" poster="${esc(f.bild)}" controls autoplay playsinline preload="auto"></video>`;
   document.body.appendChild(s); document.body.style.overflow = "hidden";
-  const v = s.querySelector("video"), zu = () => { v.pause(); s.remove(); document.body.style.overflow = ""; };
+  const v = s.querySelector("video"), zu = () => { v.pause(); s.remove(); document.body.style.overflow = ""; FILM_ZU = null; };
   // KC-CLUB-SPUR-VOLL: gestartet / bis zum Ende / geschlossen nach x von y Minuten
   let gemeldet = false; const ende = (bis) => { if (gemeldet) return; gemeldet = true; const d = Math.max(1, Math.round((v.duration || 0) / 60)), m = Math.min(d, Math.round((v.currentTime || 0) / 60));
     spur(bis ? "film_ende" : `film_ab_${m}_${d}`, f.id); };
@@ -2200,6 +2203,7 @@ function filmZeigen(id) {
   // KC-CLUB-FILM-KURZ (2.880.0): „angesehen“ erst nach 60 Sekunden Abspielzeit (vorher: schon beim ersten ▶) – schließt jemand früher, gilt „kurz“
   let lang = false; v.ontimeupdate = () => { if (!lang && (v.currentTime || 0) >= FILM_KURZ_S) { lang = true; filmMerken(f.id, "angesehen"); } };
   s.querySelector("[data-zu]").onclick = () => { ende(false); if (!lang) filmMerken(f.id, "kurz"); zu(); };
+  FILM_ZU = () => s.querySelector("[data-zu]")?.click(); // KC-CLUB-FILM-ZURUECK: Zurück-Taste = ✕
   v.onended = () => { ende(true); filmMerken(f.id, "ende"); zu(); melde(`🎬 Film zu Ende – du findest ihn jederzeit ${f.wo || "im Büro oben unter 🎬 Film"}.`); };
   v.onerror = () => melde("⚠️ Der Film lässt sich gerade nicht laden – bitte Internet prüfen und nochmal versuchen.", true);
   v.play?.()?.catch(() => {}); // falls das Handy Autoplay sperrt: Abspielen über ▶ in der Leiste
@@ -18106,6 +18110,7 @@ let letztesZurueck = 0;
 // Ansicht wieder“): ‹ geht im Verlauf zurück, wenn es eine vorige App-Ansicht gibt (Tiefe im Verlaufseintrag), sonst zur Zielansicht
 function zurueck(ziel) { if ((history.state?.tiefe || 0) > 1) history.back(); else zeige(ziel || "start"); }
 window.addEventListener("popstate", (e) => {
+  if (FILM_ZU && $("filmSchicht")) { FILM_ZU(); if (VERLAUF.state) history.pushState(VERLAUF.state, "", VERLAUF.url); return; } // 2.895.0 KC-CLUB-FILM-ZURUECK: zuerst nur den Film schließen
   if (RG.an) rundgangEnde(true); // KC-CLUB-RUNDGANG: „Zurück“ beendet den Rundgang
   if (BL.zurueck) { BL.zurueck = false; return; } // KC-CLUB-BLAETTERN: mit ✕ geschlossen
   if (BL.offen) { blZu(true); return; } // „Zurück“ schließt zuerst das Blättern

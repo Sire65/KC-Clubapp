@@ -92,6 +92,8 @@ jobs:
       - run: node tests/fa-neu.test.mjs
       # KC-CLUB-SPUR-FEE (2.855.0)
       - run: node tests/spur-fee.test.mjs
+      # KC-CLUB-FILM-ZURUECK (2.895.0)
+      - run: node tests/film-zurueck.test.mjs
       # KC-CLUB-PRUEFUNG-1104 (2.848.0): doppelte Fenster-Kennungen, Kontrast
       - run: node tests/pruefung-1104.test.mjs
       # KC-CLUB-LEITUNG-MESSUNG + KC-CLUB-UPDATE-NUR-GEAENDERT (2.863.0)

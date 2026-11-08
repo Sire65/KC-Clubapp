@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.895.0 – 2026-11-08 – 🎬 Zurück-Taste schließt den Film, nicht die App (KC-CLUB-FILM-ZURUECK) · nur App
+Fund Hansi (08.11., Wege von Karla): „▶ Film jetzt ansehen“ um 21:14:27 – 28 s später „👋 Hinweis beim Verlassen“, die App ging zu; beim nächsten Öffnen kam das Film-Angebot wieder, dann „Nein, danke“.
+- Ursache: Der Film läuft in einer eigenen Schicht, die die Zurück-Taste des Handys nicht kannte. Fenster schließt „Zurück“ zuerst – den Film nicht; auf der Startseite hieß „Zurück“ deshalb „App verlassen“ (Film lief im Hintergrund weiter, kein Wege-Eintrag „geschlossen nach …“). Im Browser nachgestellt: genau dieser Ablauf.
+- Jetzt: Zurück schließt zuerst nur den Film – wie ✕ (Wege-Eintrag „geschlossen nach x von y Min.“, unter 60 s gilt „kurz“ → der Film wird später mit Hinweis noch einmal angeboten). Die Seite bleibt stehen, kein Hinweis beim Verlassen.
+- Karla steht jetzt auf „Nein, danke“ – der Film wird ihr nicht mehr von selbst angeboten; sie findet ihn unter Technik → 🎬 Erklär-Videos.
+- Test `tests/film-zurueck.test.mjs`, Browser-Probe (abgeschirmt) vorher/nachher. Rückweg: App 2.894.0. Update-Hinweis: nur „Kleine Systemanpassung“.
+
 ## 2.894.0 – Zeitansage: Video „Spiele“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - Geprüft: alle 8 Schritte zeigen auf vorhandene Stellen (Tic-Tac-Toe mit Feldgröße 3 × 3 / 4 × 4, leicht/mittel/schwer). Zeitansage eingeschaltet.
 - Rückweg: Version 2.893.0 einspielen.
