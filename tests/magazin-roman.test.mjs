@@ -19,8 +19,8 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur veröffentlichte Folgen (1 und 2) – Folge 3 ff. nie vorab ins Programm
-for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([3-9]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+// keine Spoiler, kein internes Material, nur freigegebene Folgen (1, 2, 4 als Entwurf) – Folge 5 ff. nie vorab ins Programm
+for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([5-9]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -43,4 +43,16 @@ const out2 = magHeftHtml("roman", r2);
 assert.ok(out2.includes('class="mag-roman-bisher"') && out2.includes('class="mag-roman-untertitel"') && (out2.match(/mag-roman-pause/g) || []).length === 5);
 assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => !b.da && /^magazin\/roman\/f2-/.test(b.datei)) && !/<img/.test(out2), "Folge 2: noch keine Zeichnungen → Bildplatz, kein kaputtes Bild");
 for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertitel "]) assert.ok(html.includes(k), "CSS " + k);
+// Folge 4 in Heft 4 (Entwurf), vollständig; Bild-Kommentare der Vorlage entfernt; nur die drei Szenenbilder, nie Figurenreferenz/Kontaktbogen
+const r4 = MAG_AUSGABEN[4].roman;
+assert.equal(MAG_AUSGABEN[4].erscheint, "2027-04-01"); assert.equal(r4.folge, 4); assert.equal(r4.titel, "Ein Kuss zu viel"); assert.equal(r4.untertitel, "Der falsche Schnitt");
+assert.deepEqual(r4.text.filter(([a]) => a === "h").map(([, t]) => t), ["Ein Bild, das nicht verschwinden wollte", "Zwei Wochen später", "Kartoffeln sind keine Strafe", "Zwischen Jonas und Sophie", "Der zweite Montag", "Der falsche Schnitt", "Zwanzig Minuten", "Der Regionalexpress", "In der Notaufnahme", "Der Mann im Porsche"]);
+assert.equal(r4.text.filter(([a]) => a === "p").length, 304, "Folge 4 nicht gekürzt");
+const alles4 = r4.text.map(([, t]) => t).join("\n");
+assert.ok(alles4.startsWith("Ein Bild, das nicht verschwinden wollte\nAm Morgen nach dem Brand") && alles4.endsWith("ob sie morgen überhaupt noch dorthin zurückkehren durfte."), "Anfang und Schluss Folge 4");
+assert.ok(!/<!--|BILD \d/.test(JSON.stringify(r4)), "keine Bild-Kommentare im Text");
+assert.ok(r4.ende.includes("**Folge 5 – Die rote Marzipanrose**") && r4.bisher.startsWith("Seit fast drei Monaten"));
+assert.deepEqual(r4.bilder.map((b) => b.datei), ["magazin/roman/04-01-mike-am-gemueseposten.webp", "magazin/roman/04-02-warten-am-bahnuebergang.webp", "magazin/roman/04-03-vorwuerfe-in-der-klinik.webp"]);
+assert.ok(!/figurenreferenz|kontaktbogen/i.test(teil.replace(/Figurenreferenz und Kontaktbogen gehören NICHT ins Magazin/, "")), "interne Bilder nie im Programm");
+for (const b of r4.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild Folge 4: " + b.datei); }
 console.log("magazin-roman: ok");
