@@ -1,6 +1,7 @@
 # Änderungen
 
 ## 2.889.0 – 2026-11-08 – 📰 Club-Küche wie eine Profi-Zeitschrift: Rätsel-Ecke, Küchenlatein, „Im nächsten Heft“, Lesezeit; Roman Folgen 2–5 (KC-CLUB-MAGAZIN-RAETSEL, KC-CLUB-MAGAZIN-PROFI, Wunsch Hansi 08.11.2026)
+- Eingespielt am 08.11.2026 um 18:15 Uhr auf ausdrücklichen Wunsch Hansi („Dann spiel jetzt ein“), außerhalb der Termine; Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
 - **🧩 Rätsel-Ecke** (neue Rubrik vor den Linktipps): Fehlerbild „Finde die 10 Fehler“ (eigene Zeichnung einer Clubküche, Fehler im Bild antippen, grüne Kreise, Zähler, 💡 Auflösen) und **Kreuzworträtsel „Küche & Backstube“** (20 Fachbegriffe und Küchengeräte, Lösungswort aus den gelben Feldern, Umlaute als AE/OE/UE – „ü“ wird automatisch „UE“, ✔️ Prüfen). Der Stand bleibt auf dem Gerät und beim Blättern erhalten, nichts wird verschickt. Bilder: `magazin/raetsel/`.
 - **Auflösung im nächsten Heft:** Nr. 2 zeigt das Lösungsbild mit allen 10 Fehlern, das Lösungswort und das ausgefüllte Gitter aus Nr. 1; neue Rätsel für Nr. 2 als Platzhalter für die Redaktion.
 - **📚 Küchenlatein** (neue Rubrik nach dem Küchentipp): ein Fachbegriff einfach erklärt – Nr. 1 „Mise en place“, Nr. 2 „Blanchieren“ (Aussprache, Herkunft, So geht's, Warum, Merksatz; eigene Texte).
