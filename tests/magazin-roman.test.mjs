@@ -19,8 +19,8 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur beauftragte Folgen (1, 2 und – Auftrag Hansi 08.11.2026 – 5) – andere Folgen nie vorab ins Programm
-for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([346-9]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter|Verena Falk|Luttermann|Mara Seifert/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–5; 3–5 als Entwurf, Auftrag Hansi 08.11.2026) – Folge 6 ff. nie vorab ins Programm
+for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([6-9]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter|Verena Falk|Luttermann|Mara Seifert/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -43,6 +43,26 @@ const out2 = magHeftHtml("roman", r2);
 assert.ok(out2.includes('class="mag-roman-bisher"') && out2.includes('class="mag-roman-untertitel"') && (out2.match(/mag-roman-pause/g) || []).length === 5);
 assert.equal(r2.bilder.length, 3); assert.ok(r2.bilder.every((b) => !b.da && /^magazin\/roman\/f2-/.test(b.datei)) && !/<img/.test(out2), "Folge 2: noch keine Zeichnungen → Bildplatz, kein kaputtes Bild");
 for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertitel "]) assert.ok(html.includes(k), "CSS " + k);
+// Folge 3 in Heft 3 (Entwurf): vollständig nach folgen/03-alte-geschichten.md, Bildplätze statt fehlender Zeichnungen
+{ const r = MAG_AUSGABEN[3].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[3].erscheint, "2027-03-01"); assert.equal(r.folge, 3); assert.equal(r.titel, "Alte Geschichten"); assert.equal(r.untertitel, "Als die Alte Mühle plötzlich stillstand");
+  assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Wo ist Lena?", "Ein Satz, der blieb", "Was einmal gewesen war", "Der Mann, der schweigt", "Fünf Wochen, die etwas veränderten", "Der große Abend", "Der Geruch", "Jemand fehlt", "Die Alte Mühle bleibt dunkel", "Der Bäcker mit dem Schlüssel", "Was wirklich zählt", "Ein Kuss im Schatten"]);
+  assert.equal(p.length, 339, "Folge 3 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3285, "Folge 3 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "„Alle raus! Sofort!“"); assert.equal(p.at(-1), "Und plötzlich wurde ihm klar, dass dieser Abend, an dem die Alte Mühle stillgestanden hatte, ihn vielleicht noch etwas ganz anderes kosten würde.");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 4 – Ein Kuss zu viel**");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => !b.da && b.datei.startsWith("magazin/roman/f3-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.ok(!/Kuss/.test(r.bilder.map((b) => b.alt).join(" ")), "Bildtexte verraten nichts");
+  const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 3); }
+// Folge 4 in Heft 4 (Entwurf): vollständig nach folgen/04-ein-kuss-zu-viel.md, Bildplätze statt fehlender Zeichnungen
+{ const r = MAG_AUSGABEN[4].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[4].erscheint, "2027-04-01"); assert.equal(r.folge, 4); assert.equal(r.titel, "Ein Kuss zu viel"); assert.equal(r.untertitel, "Der falsche Schnitt");
+  assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Ein Bild, das nicht verschwinden wollte", "Zwei Wochen später", "Kartoffeln sind keine Strafe", "Zwischen Jonas und Sophie", "Der zweite Montag", "Der falsche Schnitt", "Zwanzig Minuten", "Der Regionalexpress", "In der Notaufnahme", "Der Mann im Porsche"]);
+  assert.equal(p.length, 304, "Folge 4 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 2901, "Folge 4 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "Am Morgen nach dem Brand sah die Alte Mühle aus, als habe jemand ihr den Atem genommen."); assert.equal(p.at(-1), "Jetzt fragte sie sich, ob sie morgen überhaupt noch dorthin zurückkehren durfte.");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 5 – Die rote Marzipanrose**");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => !b.da && b.datei.startsWith("magazin/roman/f4-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.ok(!/Kuss/.test(r.bilder.map((b) => b.alt).join(" ")), "Bildtexte verraten nichts");
+  const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 3); }
 // Folge 5 in Heft 5 (Mai 2027, Entwurf): vollständig nach folgen/05-die-rote-marzipanrose.md, Bildplätze statt fehlender Zeichnungen
 const r5 = MAG_AUSGABEN[5].roman;
 assert.equal(MAG_AUSGABEN[5].erscheint, "2027-05-01"); assert.equal(r5.folge, 5); assert.equal(r5.von, 12); assert.equal(r5.titel, "Die rote Marzipanrose"); assert.equal(r5.untertitel, "Was ein Wort anrichten kann");
