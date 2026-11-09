@@ -19,10 +19,11 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–10; 3–10 als Entwurf, Aufträge Hansi 08./09.11.2026) – Folgen 11–12 nie vorab ins Programm.
-// „Sylt“ (Umbau, unverbindliche Perspektive) gehört ab Folge 10 zur veröffentlichten Handlung; Investorin, Täter, Insolvenz und Lenas Familie bleiben gesperrt.
+// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–11; 3–11 als Entwurf, Aufträge Hansi 08./09.11.2026) – Folge 12 (Finale) nie vorab ins Programm.
+// Zur veröffentlichten Handlung gehören: „Sylt“ ab Folge 10; Elisabeth Winter und die Erkrankung von Lenas Mutter ab Folge 11 (ohne Diagnose).
+// Weiter gesperrt: Täter, Investorin als Entscheidung, eine eröffnete/beantragte Insolvenz – Rettung, Sylt- und Liebesentscheidung bleiben Folge 12.
 // Verena Falk, Karl Luttermann und Mara Seifert treten ab Folge 9 in der veröffentlichten Handlung auf; ihre geheimen Pläne (Dossiers) bleiben draußen.
-for (const w of [/\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*1[12]\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter/, /Mutter (ist |war )?(schwer )?(krank|erkrankt)/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+for (const w of [/\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*12\b/, /Täter|Investorin|Insolvenz(verfahren| beantragt| angemeldet| eröffnet)/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -144,4 +145,16 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
   assert.equal(r.bilder[1].datei, MAG_AUSGABEN[5].roman.bilder.find((b) => b.wo === "h:Die Rose").datei, "Erinnerungsbild = dieselbe Datei wie in Folge 5");
   const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 2); }
+// Folge 11 in Heft 11 (November 2027, Entwurf): vollständig nach folgen/11-zwischen-den-ufern.md, drei Zeichnungen
+{ const r = MAG_AUSGABEN[11].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t), h = r.text.filter(([a]) => a === "h").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[11].erscheint, "2027-11-01"); assert.equal(r.folge, 11); assert.equal(r.titel, "Zwischen den Ufern"); assert.equal(r.untertitel, "Wenn Bleiben nicht dasselbe ist wie Festhalten");
+  assert.deepEqual(h, ["Der Tisch, an dem niemand aufstand", "Ein Blatt Papier gegen die Angst", "Die Frau, die Tisch sechs kannte", "Die Nacht der alten Rezepte", "Ein Abend mit vier Gängen", "Was ein guter Teller nicht beweist", "Die Rechnung am nächsten Morgen", "Der Anruf aus der Heimat", "Eine andere Art von Verantwortung", "Der Abschied, der keiner war", "Der Satz, den Jonas zurückwünschte", "Zwei Menschen an einem Bahnhof", "Das Zimmer mit der offenen Tür", "Zwischen zwei Leben", "Die Frage, die niemand hören sollte", "Zwei Nachrichten"]);
+  assert.ok(h.indexOf("Der Abschied, der keiner war") < h.indexOf("Der Satz, den Jonas zurückwünschte") && h.indexOf("Der Satz, den Jonas zurückwünschte") < h.indexOf("Zwei Menschen an einem Bahnhof"), "Lektorat: Abschied vor dem Satz und vor der Bahnfahrt");
+  assert.equal(p.length, 484, "Folge 11 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 4782, "Folge 11 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "Als Bertram zu Ende gesprochen hatte, blieb es im Gastraum still."); assert.equal(p.at(-1), "Und schrieb eine Antwort, die Lena erst am Abend lesen würde.");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der letzten Ausgabe**" && r.ende[1] === "**Folge 12 – Alle Sterne dieser Welt**");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f11-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:79", "absatz:279", "absatz:331"], "Bildstellen laut Manuskript");
+  for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3); }
 console.log("magazin-roman: ok");
