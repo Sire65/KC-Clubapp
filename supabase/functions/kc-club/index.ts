@@ -193,7 +193,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.893.0";
+const SERVER_VERSION = "2.897.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1356,6 +1356,23 @@ async function wegSet(ids: string[]): Promise<Set<string>> {
 async function wegMerken(pid: string) {
   const { data } = await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
   await db.from("kc_club_person_einstellung").upsert({ person_id: pid, schluessel: "online_seit", wert: { ...(data?.wert || {}), weg: jetzt() }, geaendert_am: jetzt() }, { onConflict: "person_id,schluessel" });
+}
+// KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026, Fund Hansi „Anne ist drin, wird aber nirgends angezeigt“): „online“ hing bisher NUR an der eigenen
+// Online-Meldung der App. Kam die nicht an (Anne, Karla) oder kam sie zu selten (seit 2.846.0 alle 2 Min., im Sparmodus ×3 = 6 Min. – der Server
+// zeigt aber nur 150 s nach der letzten Meldung), verschwand das Mitglied. Jetzt zählt jede Anfrage einer SICHTBAREN App (_sichtbar)
+// als Lebenszeichen (Feld _sichtbar: 1 im Inhalt – keine neue Kopfzeile, damit App und Server beim Einspielen nie über CORS stolpern) – höchstens alle 30 s je Person und Server-Instanz geschrieben, im Hintergrund (bremst die Anfrage nicht).
+// Nicht: weg, die eigene Online-Meldung (macht es selbst), Hintergrund-Meldungen ohne _sichtbar (Wege beim Schließen, Push-Quittungen), Testkonten, nur lesend.
+const ONLINE_ANFRAGE_MS = 30000, ONLINE_ANFRAGE_LETZT = new Map<string, number>();
+function onlineBeiAnfrage(ich: Ich, a: string, p: any) {
+  try {
+    if (p?._sichtbar !== 1 || a === "online" || a === "weg" || ich.nurLesen || !ich.person_id.startsWith("KC-P-") || ich.person_id.startsWith("KC-P-TEST")) return;
+    const t = Date.now(), l = ONLINE_ANFRAGE_LETZT.get(ich.person_id) ?? 0;
+    if (t - l < ONLINE_ANFRAGE_MS) return;
+    ONLINE_ANFRAGE_LETZT.set(ich.person_id, t);
+    if (ONLINE_ANFRAGE_LETZT.size > 500) ONLINE_ANFRAGE_LETZT.clear();
+    const lauf = onlineSeitMerken(ich.person_id).catch(() => null);
+    try { (globalThis as any).EdgeRuntime?.waitUntil?.(lauf); } catch { /* läuft trotzdem */ }
+  } catch { /* nie die Anfrage stören */ }
 }
 async function onlineSeitMerken(pid: string, vorab?: { wert: any } | null) { // KC-CLUB-ONLINE-SPARSAM: vorab = schon gelesener Eintrag (undefined = selbst lesen)
   const { data } = vorab !== undefined ? { data: vorab } : await db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "online_seit").maybeSingle();
@@ -10024,6 +10041,7 @@ Köcheclub Werne`,
       if (bis) return json({ error: "Wir führen gerade eine kurze Wartung durch.", einspielen: true, vorname: ich.vorname, bis, fertig }, 423);
     }
     const anmeldungMs = Date.now() - tAnm;
+    onlineBeiAnfrage(ich, a, p); // KC-CLUB-ONLINE-JEDE-ANFRAGE
     // KC-CLUB-VERTRETUNG: „fuer“ = für ein anderes Mitglied handeln (nur erlaubte Aktionen, Erlaubnis jedes Mal neu geprüft)
     // 2.677.0 KC-CLUB-VERTRETUNG-NUR-ERLAUBT (Fall Klaus 26.10.): „fuer“ heißt nur bei den Vertretungs-Aktionen „für ein Mitglied handeln“. Andere
     // Aktionen nutzen das Feld selbst (anruf_neu_antwort: ICE-Kennung, todo_anlegen „ich/alle“, pinnwand_anheften, dienst_tausch_aktion, clubjahr_speichern,

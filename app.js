@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.896.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.897.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -4734,7 +4734,7 @@ function tippSchalter(an) { tippSpeichern({ an, ...(an ? { zuletzt: null } : {})
 // ---------- KC-CLUB-ONLINE (0.29.0): wer ist online, Anklopfen, schneller Direkt-Chat ----------
 // Die App meldet sich alle 60 s beim Server (nur wenn sichtbar). Online = in den letzten 2½ Minuten da gewesen.
 let PUSH_AKTIV = false; // KC-CLUB-ANRUF-TAKT (0.80.0): dieses Gerät bekommt Push → Online-Takt darf langsamer sein
-let ONL = { zeigen: true, ids: new Set(), liste: [], erledigt: new Set(), wartet: null, timer: null, takt: 0 };
+let ONL = { zeigen: true, ids: new Set(), liste: [], erledigt: new Set(), wartet: null, timer: null, takt: 0, fehlerFolge: 0, fehlerGemeldet: false };
 // ---------- KC-CLUB-ZWEI-FENSTER + KC-CLUB-ZWEI-BROWSER (Wunsch Hansi „abfangen, wenn das Programm 2× auf dem gleichen Gerät geöffnet ist – im gleichen
 // Browser und in 2 verschiedenen; dann Meldung: das andere Fenster bzw. den anderen Browser schließen“) ----------
 // 1) Gleicher Browser, mehrere Fenster/Tabs: Funkkanal zwischen den Fenstern (BroadcastChannel, bleibt im Gerät). Das neue Fenster fragt „wer ist da?“;
@@ -4842,7 +4842,11 @@ async function onlinePing() {
       else if (a.status === "spaeter" && a.antwort) { melde(`👋 ${a.an.vorname}: „${a.antwort}“`); try { navigator.vibrate?.(60); } catch {} }
       else if (a.status === "spaeter") melde(`⏳ ${a.an.vorname} hat gerade keine Zeit – schreib eine Nachricht, sie/er meldet sich.`);
     }
-  } catch {}
+    ONL.fehlerFolge = 0;
+  } catch (e) {
+    // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026): Online-Meldung scheitert zweimal hintereinander → einmal je Sitzung ins Fehlerprotokoll (vorher völlig still)
+    if (++ONL.fehlerFolge >= 2 && !ONL.fehlerGemeldet && navigator.onLine) { ONL.fehlerGemeldet = true; try { fpNeu("api", { aktion: "online", text: String(e?.message || e).slice(0, 160) }); } catch {} }
+  }
 }
 // ---------- KC-CLUB-REALTIME (2.226.0, Wunsch Hansi „direkte Leitung statt ständig nachfragen“) ----------
 // Die App hält eine offene Leitung (Supabase Realtime, Broadcast, kostenlos) auf ihrem eigenen, nicht erratbaren Kanal (init.rtKanal).
@@ -4857,7 +4861,8 @@ const RT = { ws: null, ok: false, ref: 0, herz: null, neu: null, warte: 1000, ka
 // Supabase Presence) – nur Zufallskennung, kein Name. Kommt ein anderes Gerät dazu oder geht, fragt die App gleich beim Server nach, wer da ist
 // (der Server entscheidet die Sichtbarkeit). Darum genügt der regelmäßige Abgleich dann alle 2 statt jede Minute (spart Datenbank-Abfragen).
 // Höchstens ein Extra-Abgleich je 20 s und zufällig 2–6 s versetzt, damit nicht alle Geräte gleichzeitig fragen.
-const ANW_TAKT_MS = 120000, ANW_ABSTAND_MS = 20000;
+const ANW_TAKT_MS = 90000, ANW_ABSTAND_MS = 20000; // KC-CLUB-ONLINE-JEDE-ANFRAGE (09.11.2026): 90 s statt 120 s – der Server zeigt „online“ nur 150 s nach der letzten Meldung
+const ONLINE_TAKT_MAX_MS = 90000; // nie seltener als alle 90 s melden, auch im Sparmodus (vorher bis zu 6 Min. → Mitglied verschwand nach 2½ Min.)
 function anwAnders() {
   if (RT.anwUhr) return;
   const warte = Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now());
@@ -5165,7 +5170,7 @@ function onlineTakt() {
   clearInterval(ONL.timer);
   // KC-CLUB-ANRUF-TAKT (0.80.0): ohne Push erfährt die App von einem Anruf nur über diesen Takt – ein Anruf klingelt 45 s,
   // darum dann alle 15 s nachsehen (mit Push weckt der Push die offene App sofort, 60 s reichen).
-  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : sparTakt(rtAn() && RT.anw ? ANW_TAKT_MS : PUSH_AKTIV || rtAn() ? 60000 : 15000)); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push · KC-CLUB-ANWESENHEIT: Anwesenheit steht → alle 2 Min.
+  ONL.timer = setInterval(onlinePing, ONL.wartet ? 4000 : Math.min(ONLINE_TAKT_MAX_MS, sparTakt(rtAn() && RT.anw ? ANW_TAKT_MS : PUSH_AKTIV || rtAn() ? 60000 : 15000))); // KC-CLUB-SPARMODUS: seltener · KC-CLUB-REALTIME: Leitung steht → wie mit Push · KC-CLUB-ANWESENHEIT: Anwesenheit steht → alle 2 Min.
 }
 document.addEventListener("visibilitychange", () => { // KC-CLUB-WER-IST-DA (2.454.0): nach ≥ 10 Min. im Hintergrund wieder „wer ist da“ – vor dem Ping
   if (document.hidden) WER_DA.weg = Date.now(); else if (WER_DA.weg && Date.now() - WER_DA.weg >= ANSAGE_PAUSE_MS) WER_DA.faellig = true;
@@ -8536,7 +8541,7 @@ async function apiRoh(action, daten = {}, zweiterVersuch = false, abbruch = null
   // sonst drehte sich die Sanduhr bis zu 2½ Minuten und der Notbetrieb sprang nicht an
   // 2.1.1: Lesen 25 s; Schreiben 140 s (der Server speichert zuerst und benachrichtigt dann – das darf dauern, sonst doppelt)
   const zeitMs = API_LESEN.test(action) ? 25000 : 140000;
-  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION, ...(TG_GERAET ? { "x-tg-geraet": TG_GERAET } : {}) }, body: JSON.stringify({ action, ...daten }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
+  try { r = await fetch(adresse, { method: "POST", headers: { "Content-Type": "application/json", "x-club-token": KEY, "x-club-version": APP_VERSION, ...(TG_GERAET ? { "x-tg-geraet": TG_GERAET } : {}) }, body: JSON.stringify({ action, ...daten, ...(typeof document !== "undefined" && !document.hidden ? { _sichtbar: 1 } : {}) /* KC-CLUB-ONLINE-JEDE-ANFRAGE */ }), signal: zeitSignalMit(zeitMs, abbruch) }); if (action !== "lebenszeichen") verkehrZaehlen(); }
   catch (fe) { if (abbruch?.aborted) { VB.laufend = Math.max(0, VB.laufend - 1); vbDatenLed(); throw Object.assign(new Error("Abgebrochen."), { abgebrochen: true }); } // KC-CLUB-LADE-SICHERHEIT
     if (fe?.name === "TimeoutError" || fe?.name === "AbortError") { vbEnde(false, 0, "Server antwortet nicht"); try { if (navigator.onLine) schneckeMessen(zeitMs); } catch {} /* KC-CLUB-SCHNECKE: nur Anzeige, darf api() nie stören */ throw Object.assign(new Error(schwerOder(API_LESEN.test(action) ? "Der Server antwortet gerade nicht – bitte gleich nochmal versuchen." : "Der Server antwortet gerade nicht – bitte kurz prüfen, ob es angekommen ist, bevor du es nochmal sendest.")), { leitung: true, zeit: true }); }
     // Region weg → Standardweg. 2.425.0 KC-CLUB-GENERALCHECK: nur Lesen still wiederholen – „Failed to fetch“ kann auch NACH dem Absenden kommen
