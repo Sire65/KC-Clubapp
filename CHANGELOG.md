@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.898.0 – 2026-11-09 – 📉 Weniger Datenvolumen: Fehler-Überwachung und Aktionen-Liste (KC-CLUB-SPAR-FP, KC-CLUB-SPAR-AKTIONEN) · Server 2.898.0 – 12-Uhr-Termin
+Auswertung der Egress-Messung 08./09.11. (gut 17 Std.: ≈ 17 MB gemessen, hochgerechnet 2–3,5 GB/Monat inkl. Notfall-Paket – unter 5 GB). Freigabe Hansi: „Ja, bau beides für 12 Uhr ein“.
+- **Fehler-Überwachung (alle 15 Min.):** „seit der letzten Meldung“ stand seit dem 14.10. still – jeder Lauf las die ältesten 500 Einträge seitdem mit allen Einzelheiten (≈ 0,3 MB je Lauf, bis ≈ 30 MB am Tag) und sah neue schwere Fehler dahinter gar nicht. Jetzt höchstens die letzten 24 Std. (Nacht-Ruhezeit passt hinein), zuerst nur Zeit und Art, Einzelheiten nur für Skript-/Sicherheitsmeldungen und Hilferufe. Nebenbei behoben: neue schwere Fehler werden wieder gemeldet.
+- **Aktionen-Liste aus der Verwaltung (≈ 52 KB, bei App-Start und Countdowns):** je Server-Instanz gemerkt; vor jeder Nutzung wird nur der Stand gefragt (wenige Bytes) – gleich → gemerkte Liste, geändert → neu. Nie veraltet.
+- Test: `tests/spar-egress.test.mjs`. Rückweg: Server 2.897.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.897.0 – 2026-11-09 – Online-Anzeige wieder zuverlässig
 - Fund Hansi 09.11. („Anne ist drin, wird aber nirgends angezeigt“): „online“ hing nur an der eigenen Online-Meldung der App. Seit 2.846.0 kam sie bei stehender Leitung nur alle 2 Min., im Sparmodus alle 6 Min. – der Server zeigt aber nur 150 s nach der letzten Meldung; kam die erste nicht an (Anne, Karla), war man unsichtbar. Jetzt zählt jede Anfrage einer sichtbaren App als Lebenszeichen (höchstens alle 30 s gespeichert), die App meldet sich nie seltener als alle 90 s, und scheitert die Online-Meldung, steht es einmal im Fehlerprotokoll (KC-CLUB-ONLINE-JEDE-ANFRAGE).
 

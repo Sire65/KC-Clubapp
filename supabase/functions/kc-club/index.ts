@@ -193,7 +193,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.897.0";
+const SERVER_VERSION = "2.898.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1231,11 +1231,19 @@ async function fpNurNeue(liste: any[], eingrenzen: (q: any) => any) {
   return liste.filter((e: any) => { const k = fpArt(e?.art) + "|" + String(e?.z ?? ""); if (da.has(k) || neu.has(k)) return false; neu.add(k); return true; });
 }
 const FP_ROBOTER = /bot\b|bot\/|crawler|spider|crawl|slurp|headlesschrome|lighthouse|facebookexternalhit|google-read-aloud/i; // 2.550.0: + Google-Vorlesedienst (20.10. nachts) // Suchmaschinen & Vorschau-Dienste sind keine Mitglieder
+// 2.898.0 KC-CLUB-SPAR-FP (Egress-Messung 08./09.11.: größter Leser des Protokolls): „seit der letzten Meldung“ stand seit 14.10. still – jeder 15-Min.-Lauf
+// las die ältesten 500 Einträge seitdem mit allen Einzelheiten (≈ 0,3 MB je Lauf) und sah neue schwere Fehler dahinter gar nicht. Jetzt höchstens die letzten
+// FP_FENSTER_STD Stunden (die Nacht-Ruhezeit passt hinein), zuerst nur Zeit/Art (klein), Einzelheiten nur für die wenigen Arten, die sie zur Einstufung brauchen.
+const FP_FENSTER_STD = 24, FP_MIT_DETAILS = /^fehler_(anonym_)?(skript|sicherheit)$/;
 async function fpUeberwachen() {
   const { data: letzte } = await db.from("kc_club_protokoll").select("zeit").eq("aktion", "fp_schwer_gemeldet").order("zeit", { ascending: false }).limit(1);
-  const seit = letzte?.[0]?.zeit ?? new Date(Date.now() - 3600000).toISOString();
-  const { data: neu } = await db.from("kc_club_protokoll").select("zeit,person_id,aktion,details").or(FP_FILTER).gt("zeit", seit).order("zeit").limit(500);
-  const schwer = (neu ?? []).filter((x: any) => fpStufe(x.aktion, x.details) === "schwer");
+  const fenster = new Date(Date.now() - FP_FENSTER_STD * 3600000).toISOString(), l0 = letzte?.[0]?.zeit;
+  const seit = l0 && l0 > fenster ? l0 : fenster;
+  const { data: kopf } = await db.from("kc_club_protokoll").select("id,zeit,person_id,aktion").or(FP_FILTER).gt("zeit", seit).order("zeit", { ascending: false }).limit(500);
+  const roh = (kopf ?? []).reverse(), brauchtDetails = roh.filter((x: any) => FP_MIT_DETAILS.test(x.aktion) || FP_SCHWER.has(String(x.aktion).replace(/^fehler_anonym_/, "").replace(/^fehler_/, "")));
+  const { data: det } = brauchtDetails.length ? await db.from("kc_club_protokoll").select("id,details").in("id", brauchtDetails.map((x: any) => x.id)) : { data: [] as any[] };
+  const dMap = new Map((det ?? []).map((x: any) => [x.id, x.details])), neu = roh.map((x: any) => ({ ...x, details: dMap.get(x.id) ?? {} }));
+  const schwer = neu.filter((x: any) => fpStufe(x.aktion, x.details) === "schwer");
   if (!schwer.length) return { schwer: 0 };
   const { data: ad } = await db.from("kc_club_rollen").select("person_id").eq("ist_admin", true);
   const ids = (ad ?? []).map((x: any) => x.person_id as string), ruhe = await ruhendePersonen(ids);
@@ -7426,10 +7434,18 @@ function reiseverlauf(beschreibung: unknown) {
     .map((m) => ({ datum: `${m[3]}-${m[2]}-${m[1]}`, ort: m[4].trim() }));
 }
 async function aktionenRoh() {
+  if (AKT_MERK) {
+    const { data: st, error } = await db.from(AKTIONEN_QUELLE.tabelle).select("updated_at").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.aktionen).maybeSingle();
+    if (!error && st && (st.updated_at ?? null) === AKT_MERK.stand) return { liste: structuredClone(AKT_MERK.liste), stand: AKT_MERK.stand };
+  }
   const { data } = await db.from(AKTIONEN_QUELLE.tabelle).select("payload,updated_at").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.aktionen).maybeSingle();
   const liste = (Array.isArray(data?.payload?.data) ? data.payload.data : []).filter((a: any) => /^\d{4}-\d{2}-\d{2}$/.test(String(a?.dateFrom || "")));
+  if (data) AKT_MERK = { stand: data.updated_at ?? null, liste: structuredClone(liste) };
   return { liste, stand: data?.updated_at ?? null };
 }
+// 2.898.0 KC-CLUB-SPAR-AKTIONEN (Egress-Messung 08./09.11.: Aktionen-Liste ≈ 52 KB je Abruf, bei App-Start und Countdowns): gemerkt je Server-Instanz;
+// vor jeder Nutzung nur den Stand (updated_at, wenige Bytes) fragen – gleich → gemerkte Liste, geändert → neu laden. Nie veraltet.
+let AKT_MERK: { stand: string | null; liste: any[] } | null = null;
 async function aktionenLesen(ich: Ich) {
   const [{ liste, stand }, { data: mg }, leute] = await Promise.all([
     aktionenRoh(),
