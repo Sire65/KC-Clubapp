@@ -1167,7 +1167,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBalken", "netzBalken"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -8736,14 +8736,32 @@ function netzQualitaet() {
   return { stufe, ms, farbe: ["", "rot", "gelb", "gruen", "gruen"][stufe], text: ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][stufe] + (ms == null ? " (Schätzung des Handys)" : "") };
 }
 const NETZ_NAME = { wlan: "📶 WLAN", mobil: "🛰️ Mobilfunk" };
+// KC-CLUB-NETZ-BALKEN (09.11.2026, Wunsch Hansi): gut sichtbarer Balken mit 4 Strichen auf der Startseite (Statusleiste) und neben dem
+// Router/Satelliten in 💬 Nachrichten. Gleiche Quelle wie das Symbol (netzQualitaet: echte Antwortzeiten, keine Extra-Abfragen).
+// Signalstärke in dBm und 4G/5G gibt kein Browser heraus – gezeigt wird die Verbindung zum Club-Server.
+function netzStricheHtml(q) {
+  const n = q.stufe == null ? 0 : q.stufe;
+  return `<span class="nb-striche" aria-hidden="true">${[1, 2, 3, 4].map((i) => `<i${i <= n ? ' class="an"' : ""}></i>`).join("")}</span>`;
+}
+function netzBalkenZeigen(art, q) {
+  const b = $("netzBalken"); if (!b) return;
+  const an = einst("netzBalken", true); b.classList.toggle("versteckt", !an); if (!an) return;
+  const sym = q.stufe === 0 ? "✕" : art === "wlan" ? "📶" : art === "mobil" ? "📱" : "🌐";
+  const wort = q.stufe === 0 ? "Offline" : q.stufe == null ? "…" : ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][q.stufe];
+  const schl = [art, q.stufe, q.farbe, einst("animiert", true)].join("|"); if (b.dataset.schl === schl) return; b.dataset.schl = schl; // nur bei Änderung neu zeichnen
+  b.className = "nb-chip nb-" + q.farbe + (einst("animiert", true) ? " nb-puls" : "");
+  b.innerHTML = `<span class="nb-art">${sym}</span>${netzStricheHtml(q)}<span class="nb-text">${esc(wort)}</span>`;
+  b.title = `${art ? NETZ_NAME[art] : "Netzart unbekannt"} · ${q.text} – antippen für Einzelheiten`; b.setAttribute("aria-label", b.title);
+}
 function netzSymbolZeigen() {
+  try { const na = netzArtJetzt(); netzBalkenZeigen(na.art, netzQualitaet()); } catch {} // KC-CLUB-NETZ-BALKEN
   const b = $("naNetz"); if (!b) return;
   const an = einst("netzSymbol", true); b.classList.toggle("versteckt", !an); if (!an) return;
-  const { art, quelle } = netzArtJetzt(), q = netzQualitaet(), schl = [art, q.stufe, q.farbe].join("|");
+  const { art, quelle } = netzArtJetzt(), q = netzQualitaet(), schl = [art, q.stufe, q.farbe, einst("netzBalken", true)].join("|");
   b.classList.toggle("nz-blink", einst("netzBlinken", true) && einst("animiert", true) && q.stufe !== 0);
   b.title = `${art ? NETZ_NAME[art] + (quelle === "gewaehlt" ? " (von dir gewählt)" : "") : "Netzart unbekannt"} · ${q.text} – antippen für Infos`;
   b.setAttribute("aria-label", b.title);
-  if (b.dataset.schl !== schl) { b.dataset.schl = schl; b.innerHTML = netzSvg(art, q.stufe, q.farbe); }
+  if (b.dataset.schl !== schl) { b.dataset.schl = schl; b.innerHTML = netzSvg(art, q.stufe, q.farbe) + (einst("netzBalken", true) ? netzStricheHtml(q).replace('class="nb-striche"', `class="nb-striche" style="--nb-farbe:${{ gruen: "#2e9d5b", gelb: "#d9a21b", rot: "#d0453f" }[q.farbe] || "#9aa0a6"}"`) : ""); }
   if (VB.netzAnsicht && !$("verbindungBlatt").classList.contains("versteckt")) netzBlattZeigen();
 }
 function netzBlatt() { VB.netzAnsicht = true; netzBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); }

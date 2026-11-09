@@ -1,12 +1,13 @@
 # Änderungen
 
-## 2.903.0 – 2026-11-09 – 🔄 Terminanfrage: Gegenvorschlag erlauben ja/nein (KC-CLUB-ANFRAGE-GEGENVORSCHLAG) · Server 2.903.0
+## 2.903.0 – 2026-11-09 – 🔄 Terminanfrage: Gegenvorschlag erlauben ja/nein (KC-CLUB-ANFRAGE-GEGENVORSCHLAG) · 📶 Verbindungs-Balken (KC-CLUB-NETZ-BALKEN) · Server 2.903.0
 Wunsch Hansi 09.11.: „Baue ein bei Terminanfrage ob Gegenvorschlag erlaubt ist“.
 - Formular „📨 Terminanfrage“: neues Häkchen **🔄 Gegenvorschlag erlauben** (Standard an = wie bisher). Aus: die Zeit steht fest, die Angefragten antworten nur mit Ja, Vielleicht oder Nein.
 - Angefragte sehen statt „🔄 Andere Zeit vorschlagen“ den Hinweis „🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich“; wer angefragt hat, sieht „🔒 ohne Gegenvorschläge“. E-Mail/Push-Text nennt es ebenfalls.
 - Server lehnt einen Gegenvorschlag bei solchen Anfragen ab (auch bei alten App-Ständen). Spiel-Termine unverändert.
 - Migration `20261109_kc_club_terminanfrage_gegenvorschlag.sql` (Spalte `gegenvorschlag`, Standard true – bestehende Anfragen bleiben erlaubt), Probelauf `tools/db-test/112_*`. Fehlt die Spalte noch, meldet der Server beim Abschalten einen Hinweis statt falsch zu speichern.
 - Hilfe „Wie steht meine Terminanfrage?“ ergänzt. Test: `tests/anfrage-gegenvorschlag.test.mjs`. Rückweg: App 2.902.0, Server 2.902.0.
+- **📶 Verbindungs-Balken** (Wunsch Hansi 09.11.: „Balken, wie stark die Verbindung ist per WLAN oder 5G“ – „Router und Satellit fallen nicht so auf“): auf der Startseite in der Statusleiste 📶 WLAN / 📱 Mobilfunk mit 4 Strichen (grün sehr gut/gut, gelb mäßig, rot schwach und pulsierend, ✕ offline; ab 480 px Breite auch das Wort); dieselben Striche neben Router/Satellit in 💬 Nachrichten. Antippen → Verbindungs-Blatt. Quelle wie bisher die echten Antwortzeiten zum Club-Server (keine Extra-Abfragen). Signalstärke und 4G/5G gibt kein Browser heraus; WLAN/Mobilfunk erkennt nur Android, am iPhone einmal im Blatt wählen. Abschaltbar: ⚙️ → „✨ Effekte“. Test `tests/netz-balken.test.mjs`, Browser-Prüfung `tools/hilfe/netz-balken-browser.mjs`.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.902.0 – 2026-11-09 – 📰 Ordner „Zeitungsartikel“ auch im Büro-Aktenschrank (KC-CLUB-ZEITUNGSARTIKEL) · Server 2.902.0
