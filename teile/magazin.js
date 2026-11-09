@@ -285,6 +285,8 @@ function magRomanBild(b) {
   return b.da ? `<figure class="mag-roman-bild${b.gross ? " gross" : ""}"><img src="${esc(b.datei)}" alt="${esc(b.alt)}" loading="lazy" decoding="async"></figure>`
     : `<figure class="mag-roman-bild${b.gross ? " gross" : ""} fehlt" role="img" aria-label="${esc(b.alt)}"><span>✏️ Bleistiftskizze folgt</span><small>${esc(b.alt.replace(/^Bleistiftskizze: /, ""))}</small></figure>`;
 }
+// KC-CLUB-MAGAZIN-ROMAN-NACHWEIS (Wunsch Hansi 09.11.2026 „Story by Hans-Joachim Koch, Skizzen by KI“): Urheberangabe je Romanreihe – im Romankopf und im Impressum
+const MAG_ROMAN_NACHWEIS = { "HINTER DEM PASS": "Story by Hans-Joachim Koch · Skizzen by KI" };
 function magRomanHtml(x) {
   const bild = (wo) => (x.bilder || []).filter((b) => b.wo === wo).map(magRomanBild).join("");
   let absatz = 0;
@@ -292,7 +294,7 @@ function magRomanHtml(x) {
   const woerter = x.text.reduce((n, [, t]) => n + String(t || "").split(/\s+/).filter(Boolean).length, 0), minuten = Math.max(1, Math.round(woerter / 180));
   const text = x.text.map(([art, t]) => art === "h" ? `<h3>${magInline(t)}</h3>${bild("h:" + t)}` : art === "s" ? '<hr class="mag-roman-pause">' : `<p>${magInline(t)}</p>${bild("absatz:" + ++absatz)}`).join("");
   return `<article class="mag-roman" lang="de"><header class="mag-roman-kopf"><span class="mag-roman-reihe">${esc(x.reihe)}</span><span class="mag-roman-unter">${esc(x.unter)}</span>
-      <span class="mag-roman-folge">Folge ${x.folge} von ${x.von} – ${esc(x.titel)}</span>${x.untertitel ? `<span class="mag-roman-untertitel">${esc(x.untertitel)}</span>` : ""}<span class="mag-lesezeit">⏱️ ca. ${minuten} Min. Lesezeit</span></header>${bild("kopf")}<p class="mag-roman-vorspann">${magInline(x.vorspann)}</p>
+      <span class="mag-roman-folge">Folge ${x.folge} von ${x.von} – ${esc(x.titel)}</span>${x.untertitel ? `<span class="mag-roman-untertitel">${esc(x.untertitel)}</span>` : ""}${MAG_ROMAN_NACHWEIS[x.reihe] ? `<span class="mag-roman-nachweis">${esc(MAG_ROMAN_NACHWEIS[x.reihe])}</span>` : ""}<span class="mag-lesezeit">⏱️ ca. ${minuten} Min. Lesezeit</span></header>${bild("kopf")}<p class="mag-roman-vorspann">${magInline(x.vorspann)}</p>
     ${x.bisher ? `<aside class="mag-roman-bisher"><b>Was bisher geschah …</b><p>${magInline(x.bisher)}</p></aside>` : ""}
     <div class="mag-roman-text">${text}</div><footer class="mag-roman-ende">${x.ende.map((t) => `<p>${magInline(t)}</p>`).join("")}</footer></article>`;
 }
@@ -521,7 +523,8 @@ function magSeiten({ termine, rezept }) {
       <dt>Redaktion</dt><dd>${magPlatz("Wird in der nächsten Clubsitzung gefragt: Wer hat Lust, redaktionell mitzuarbeiten?")}</dd>
       <dt>Verantwortlich für den Inhalt</dt><dd>${I?.vertreten ? esc(I.vertreten) : "wird festgelegt"}</dd>
       <dt>Erscheinungsweise</dt><dd>monatlich, nur für Mitglieder in der Club-App</dd>
-      <dt>Fotos und Rezepte</dt><dd>von Mitgliedern, mit ihrer Zustimmung</dd></dl>`, start + MAG_RUBRIKEN.length + 2) });
+      <dt>Fotos und Rezepte</dt><dd>von Mitgliedern, mit ihrer Zustimmung</dd>
+      ${heft.roman && MAG_ROMAN_NACHWEIS[heft.roman.reihe] ? `<dt>Fortsetzungsroman</dt><dd>„${esc(heft.roman.reihe.charAt(0) + heft.roman.reihe.slice(1).toLowerCase().replace(/ pass$/, " Pass"))}“ – ${esc(MAG_ROMAN_NACHWEIS[heft.roman.reihe])}</dd>` : ""}</dl>`, start + MAG_RUBRIKEN.length + 2) });
   return seiten;
 }
 
