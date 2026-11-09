@@ -193,7 +193,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.899.0";
+const SERVER_VERSION = "2.901.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -4962,6 +4962,7 @@ const FESTE_ORDNER: Record<string, { art: string; titel: string; jahrweise: bool
   vertraege: { art: "sonstiges", titel: "Verträge", jahrweise: false },
   schilder: { art: "sonstiges", titel: "Schilder", jahrweise: false },
   anleitungen: { art: "sonstiges", titel: "Anleitungen", jahrweise: false },
+  zeitungsartikel: { art: "sonstiges", titel: "Zeitungsartikel", jahrweise: false }, // KC-CLUB-ZEITUNGSARTIKEL (Wunsch Hansi 09.11.2026): für alle Mitglieder, auch im Büro-Aktenschrank
 };
 const ORDNER_KENNUNG_VON = new Map([[ADMIN_ORDNER, "admin"], [MITGLIEDER_ORDNER, "personal"], [DIENSTPLAN_ORDNER, "dienstplaene"]] as [typeof ADMIN_ORDNER, string][]);
 // Kennung eines Ordners: die gespeicherte; nur solange die Spalte noch fehlt (Migration nicht eingespielt) nach ursprünglicher

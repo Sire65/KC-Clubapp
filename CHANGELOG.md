@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.901.0 – 2026-11-09 – 📰 Ordner „Zeitungsartikel“ auch im Büro-Aktenschrank (KC-CLUB-ZEITUNGSARTIKEL) · Server 2.901.0
+Wunsch Hansi (09.11.): Artikel aus wa.de („Grünkohl jahrelang falsch gegessen?“ – mit Küchenmeister Hans-Joachim Koch, 03.11.2026) als PDF in einen Ordner „Zeitungsartikel“ und in den privaten Ordner – „Ist im Büro auch der Ordner Zeitungsartikel?“ – „Ja, bauen und um 12 Uhr einspielen“.
+- Archiv: neuer Clubordner **Zeitungsartikel** (für alle Mitglieder, Register „Köcheclub in der Presse“), der Artikel liegt darin (von Hansi hochgeladen) und zusätzlich in Hansis privatem Ordner, Register „Zeitungsartikel“ (dieselbe Datei). (Datenbank, seit 09.11. vormittags.)
+- **Büro → Aktenschrank:** eigener Ordner **📰 Zeitungsartikel** neben der Chronik – ein Tipp öffnet den Ordner direkt. Gefunden wird er über eine feste Kennung (`zeitungsartikel` in FESTE_ORDNER), Umbenennen trennt die Verbindung nicht. Sprachbefehl im Büro: „Zeitung“, „Presse“, „Artikel“.
+- Migration `20261109_kc_club_zeitungsartikel_kennung.sql` (nur die Kennung, wiederholbar – bereits gesetzt).
+- Tests: `tests/ordner-kennung.test.mjs` erweitert. Rückweg: App 2.900.0, Server 2.899.0.
+
 ## 2.900.0 – 2026-11-09 – 📖 Club-Küche Nr. 11: „Hinter dem Pass“, Folge 11 „Zwischen den Ufern“ als Entwurf (KC-CLUB-MAGAZIN-ROMAN, Freigabe Hansi)
 - Vollständig und ungekürzt aus dem Übergabe-Zweig (KC-Communication `roman-hinter-dem-pass-uebergabe-2026-11-06`, b28a2f4) nach `redaktion/folge-11-einbauanweisung.md`: 16 Zwischenüberschriften, 484 Absätze, Ausblick „Folge 12 – Alle Sterne dieser Welt“; Kapitelreihenfolge laut Lektorat (Abschied vor dem „Satz“ und vor der Bahnfahrt). Erscheint 01.11.2027, bis dahin nur Admin.
 - Drei Bleistiftzeichnungen direkt aus dem Übergabe-Zweig (`illustrationen/folge-11/`, WebP unverändert, Prüfsummen laut Anweisung) als `magazin/roman/f11-*.webp`, an den Bildstellen des Manuskripts, Alt-Texte laut Anweisung.

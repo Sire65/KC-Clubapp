@@ -16,7 +16,7 @@ assert.ok(fs.existsSync(new URL("../tools/db-test/105_ordner_kennung_test.sql", 
 // Registry im Server – jede Kennung der Migration steht in FESTE_ORDNER (und umgekehrt)
 const reg = srv.match(/const FESTE_ORDNER[^=]*= \{([\s\S]*?)\n\};/)[1];
 const regK = [...reg.matchAll(/^\s+([a-z_]+): \{/gm)].map((m) => m[1]).sort();
-const migK = [...mig.matchAll(/\('([a-z_]+)', '[^']+'\)/g)].map((m) => m[1]).sort();
+const migK = [...(mig + lies("supabase/migrations/20261109_kc_club_zeitungsartikel_kennung.sql")).matchAll(/\('([a-z_]+)', '[^']+'\)/g)].map((m) => m[1]).sort(); // 2.901.0: + Zeitungsartikel
 assert.deepEqual(migK, regK, "Migration und Registry kennen dieselben festen Ordner");
 const appK = Object.keys(Function(`return ${app.match(/const AR_FEST_TITEL = (\{[\s\S]*?\});/)[1]}`)()).sort();
 assert.deepEqual(appK, regK, "App-Rückfall kennt dieselben festen Ordner");
