@@ -11493,8 +11493,8 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.417.0 KC-CLUB-WERBEFILM-SEITE: Filmseite film/ für Mitglieder ohne App – eigenständig, ohne Anmeldung/Daten, nicht im Offline-Speicher
 {
   const fs_ = fs.existsSync, film = lies("film/index.html");
-  assert.ok(fs_(new URL("../film/werbefilm.mp4", import.meta.url)) && fs_(new URL("../film/werbefilm-bild.jpg", import.meta.url)) && fs_(new URL("../film/werbefilm-vorschau.jpg", import.meta.url)), "Filmseite: Film, Startbild und Vorschaubild vorhanden");
-  assert.ok(/<video[^>]*playsinline[^>]*poster="werbefilm-bild\.jpg"/.test(film) && /<source src="werbefilm\.mp4" type="video\/mp4">/.test(film), "Filmseite: Video spielt im Handy-Browser (playsinline, Startbild, mp4)");
+  assert.ok(fs_(new URL("../film/werbefilm.mp4", import.meta.url)) && fs_(new URL("../film/werbefilm-bild.webp", import.meta.url)) && fs_(new URL("../film/werbefilm-vorschau.jpg", import.meta.url)), "Filmseite: Film, Startbild und Vorschaubild vorhanden");
+  assert.ok(/<video[^>]*playsinline[^>]*poster="werbefilm-bild\.webp"/.test(film) && /<source src="werbefilm\.mp4" type="video\/mp4">/.test(film), "Filmseite: Video spielt im Handy-Browser (playsinline, Startbild, mp4)");
   assert.ok(/name="robots" content="noindex, nofollow"/.test(film) && /property="og:image" content="https:\/\/sire65\.github\.io\/KC-Clubapp\/film\/werbefilm-vorschau\.jpg"/.test(film), "Filmseite: nicht in Suchmaschinen, Vorschaubild für WhatsApp");
   assert.ok(!/app\.js|supabase|<form|<input/i.test(film), "Filmseite: kein Programm, keine Anmeldung, keine Eingaben");
   assert.ok(/Zugangslink bekommst du bei <b>Hansi<\/b>/.test(film) && /since 1991/.test(film), "Filmseite: Hinweis Zugangslink bei Hansi, „since 1991“");
