@@ -1,11 +1,20 @@
 # Änderungen
 
-## 2.901.0 – 2026-11-09 – 📰 Ordner „Zeitungsartikel“ auch im Büro-Aktenschrank (KC-CLUB-ZEITUNGSARTIKEL) · Server 2.901.0
+## 2.902.0 – 2026-11-09 – 📰 Ordner „Zeitungsartikel“ auch im Büro-Aktenschrank (KC-CLUB-ZEITUNGSARTIKEL) · Server 2.902.0
 Wunsch Hansi (09.11.): Artikel aus wa.de („Grünkohl jahrelang falsch gegessen?“ – mit Küchenmeister Hans-Joachim Koch, 03.11.2026) als PDF in einen Ordner „Zeitungsartikel“ und in den privaten Ordner – „Ist im Büro auch der Ordner Zeitungsartikel?“ – „Ja, bauen und um 12 Uhr einspielen“.
 - Archiv: neuer Clubordner **Zeitungsartikel** (für alle Mitglieder, Register „Köcheclub in der Presse“), der Artikel liegt darin (von Hansi hochgeladen) und zusätzlich in Hansis privatem Ordner, Register „Zeitungsartikel“ (dieselbe Datei). (Datenbank, seit 09.11. vormittags.)
 - **Büro → Aktenschrank:** eigener Ordner **📰 Zeitungsartikel** neben der Chronik – ein Tipp öffnet den Ordner direkt. Gefunden wird er über eine feste Kennung (`zeitungsartikel` in FESTE_ORDNER), Umbenennen trennt die Verbindung nicht. Sprachbefehl im Büro: „Zeitung“, „Presse“, „Artikel“.
 - Migration `20261109_kc_club_zeitungsartikel_kennung.sql` (nur die Kennung, wiederholbar – bereits gesetzt).
-- Tests: `tests/ordner-kennung.test.mjs` erweitert. Rückweg: App 2.900.0, Server 2.899.0.
+- Tests: `tests/ordner-kennung.test.mjs` erweitert. Rückweg: App 2.901.0, Server 2.901.0.
+## 2.901.0 – 2026-11-09 – 📤 Kontakt weiterleiten – auch an Personen außerhalb des Clubs (KC-CLUB-KONTAKT-EXTERN) · Server 2.901.0
+Wunsch Hansi 09.11.: „Kontakt weiterleiten auch zu Fremden, z. B. durch Push, E-Mail, Postfach usw.“ – Freigabe „Wie vorgeschlagen, 2. Nein, alles andere ja, 12 Uhr einspielen“.
+- **Mitgliedsseite → „📤 Kontakt weiterleiten“:** Angaben ankreuzen, dann **📤 Teilen …** (Teilen-Menü des Handys: WhatsApp, SMS, Mail-App, AirDrop … mit Kontaktkarte .vcf), **✉️ E-Mail** (eigenes Mail-Programm, Betreff und Angaben vorausgefüllt) oder **📋 Kopieren**. Die eigene Karte geht immer.
+- E-Mail über das eigene Mail-Programm, weil der Club-Mailversand nur hinterlegte Mitgliedsadressen kennt (keine fremden Adressen über den Club-Server).
+- **Nur mit Erlaubnis:** ⚙️ → Privatsphäre → „📤 Auch an Personen außerhalb des Clubs“ (**Standard aus**), und nur Angaben, die das Mitglied für Mitglieder freigegeben hat – auch der Admin gibt nicht mehr weiter. Nicht erlaubt → Knöpfe ausgegraut mit Erklärung.
+- Keine Benachrichtigung an das Mitglied (Hansi: „2. Nein“). Der Server prüft vor jedem Weitergeben und protokolliert nur wer, wessen Kontakt, Weg und Felder – nie Empfänger oder Inhalt; höchstens 30 je Person und Tag.
+- Innerhalb des Clubs bleibt es beim Chat „👤 Kontakt teilen“. Keine Datenbank-Änderung (Einstellung `kontakt_extern` in `kc_club_person_einstellung`).
+- Test: `tests/kontakt-extern.test.mjs`. Rückweg: App 2.900.0, Server 2.899.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.900.0 – 2026-11-09 – 📖 Club-Küche Nr. 11: „Hinter dem Pass“, Folge 11 „Zwischen den Ufern“ als Entwurf (KC-CLUB-MAGAZIN-ROMAN, Freigabe Hansi)
 - Vollständig und ungekürzt aus dem Übergabe-Zweig (KC-Communication `roman-hinter-dem-pass-uebergabe-2026-11-06`, b28a2f4) nach `redaktion/folge-11-einbauanweisung.md`: 16 Zwischenüberschriften, 484 Absätze, Ausblick „Folge 12 – Alle Sterne dieser Welt“; Kapitelreihenfolge laut Lektorat (Abschied vor dem „Satz“ und vor der Bahnfahrt). Erscheint 01.11.2027, bis dahin nur Admin.
