@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.903.0 – 2026-11-09 – 🔄 Terminanfrage: Gegenvorschlag erlauben ja/nein (KC-CLUB-ANFRAGE-GEGENVORSCHLAG) · Server 2.903.0
+Wunsch Hansi 09.11.: „Baue ein bei Terminanfrage ob Gegenvorschlag erlaubt ist“.
+- Formular „📨 Terminanfrage“: neues Häkchen **🔄 Gegenvorschlag erlauben** (Standard an = wie bisher). Aus: die Zeit steht fest, die Angefragten antworten nur mit Ja, Vielleicht oder Nein.
+- Angefragte sehen statt „🔄 Andere Zeit vorschlagen“ den Hinweis „🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich“; wer angefragt hat, sieht „🔒 ohne Gegenvorschläge“. E-Mail/Push-Text nennt es ebenfalls.
+- Server lehnt einen Gegenvorschlag bei solchen Anfragen ab (auch bei alten App-Ständen). Spiel-Termine unverändert.
+- Migration `20261109_kc_club_terminanfrage_gegenvorschlag.sql` (Spalte `gegenvorschlag`, Standard true – bestehende Anfragen bleiben erlaubt), Probelauf `tools/db-test/112_*`. Fehlt die Spalte noch, meldet der Server beim Abschalten einen Hinweis statt falsch zu speichern.
+- Hilfe „Wie steht meine Terminanfrage?“ ergänzt. Test: `tests/anfrage-gegenvorschlag.test.mjs`. Rückweg: App 2.902.0, Server 2.902.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.902.0 – 2026-11-09 – 📰 Ordner „Zeitungsartikel“ auch im Büro-Aktenschrank (KC-CLUB-ZEITUNGSARTIKEL) · Server 2.902.0
 Wunsch Hansi (09.11.): Artikel aus wa.de („Grünkohl jahrelang falsch gegessen?“ – mit Küchenmeister Hans-Joachim Koch, 03.11.2026) als PDF in einen Ordner „Zeitungsartikel“ und in den privaten Ordner – „Ist im Büro auch der Ordner Zeitungsartikel?“ – „Ja, bauen und um 12 Uhr einspielen“.
 - Archiv: neuer Clubordner **Zeitungsartikel** (für alle Mitglieder, Register „Köcheclub in der Presse“), der Artikel liegt darin (von Hansi hochgeladen) und zusätzlich in Hansis privatem Ordner, Register „Zeitungsartikel“ (dieselbe Datei). (Datenbank, seit 09.11. vormittags.)

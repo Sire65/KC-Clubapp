@@ -193,7 +193,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.902.0";
+const SERVER_VERSION = "2.903.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -8924,7 +8924,7 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
     const e = (zeilen ?? []).filter((z: any) => z.anfrage_id === a.id);
     const mein = e.find((z: any) => z.person_id === ich.person_id);
     return {
-      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
+      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
       meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
@@ -10673,8 +10673,13 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const { count } = await db.from("kc_club_terminanfragen").select("id", { count: "exact", head: true }).eq("erstellt_von", ich.person_id).gte("erstellt_am", new Date(Date.now() - 86400000).toISOString());
         if ((count ?? 0) >= ANFRAGE_MAX_JE_TAG) throw new Fehler("Heute sind schon sehr viele Anfragen verschickt worden – bitte morgen weiter.", 429);
         const ort = txt(p.ort, 200) || null, notiz = txt(p.notiz, 1000) || null;
-        const { data: a, error } = await db.from("kc_club_terminanfragen").insert({ erstellt_von: ich.person_id, anlass, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null,
-          ort, notiz, frist: frist ? frist.toISOString() : null, spiel_id: spielId, erinnerung_min: erinnerungMin }).select().single();
+        // KC-CLUB-ANFRAGE-GEGENVORSCHLAG (09.11.2026, Wunsch Hansi): wer anfragt, legt fest, ob Gegenvorschläge erlaubt sind (Standard: ja)
+        const gegenvorschlag = spielId ? true : p.gegenvorschlag !== false;
+        const werte: Record<string, unknown> = { erstellt_von: ich.person_id, anlass, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null,
+          ort, notiz, frist: frist ? frist.toISOString() : null, spiel_id: spielId, erinnerung_min: erinnerungMin };
+        if (!gegenvorschlag) werte.gegenvorschlag = false;
+        let { data: a, error } = await db.from("kc_club_terminanfragen").insert(werte).select().single();
+        if (!gegenvorschlag && error && (error.code === "42703" || error.code === "PGRST204" || /gegenvorschlag/.test(String(error.message || "")))) throw new Fehler("„Gegenvorschlag erlauben“ abschalten geht erst nach dem nächsten Server-Update – bitte das Häkchen gesetzt lassen.", 409);
         if (error || !a) throw new Fehler("Speichern fehlgeschlagen.", 500);
         const { error: e2 } = await db.from("kc_club_terminanfrage_empfaenger").insert(ziel.map((person_id) => ({ anfrage_id: a.id, person_id })));
         if (e2) { await db.from("kc_club_terminanfragen").delete().eq("id", a.id); throw new Fehler("Speichern fehlgeschlagen.", 500); }
@@ -10682,7 +10687,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const versand = await senden("club_treffen", ziel, {
           titel: `📨 Terminanfrage von ${ich.vorname}`, kurz: `${anlass} – ${wann(a.beginn)}${ort ? " – " + ort : ""}`,
           betreff: `Köcheclub Werne – Terminanfrage von ${ich.name}: ${anlass}`,
-          text: `Hallo,\n\n${ich.name} fragt dich an:\n\n📌 ${anlass}\n📅 ${anfrageWann(a)}${ort ? "\n📍 " + ort : ""}${notiz ? "\n📝 " + notiz : ""}${frist ? `\n⏳ Bitte antworten bis ${wann(a.frist)}` : ""}\n\nBitte in der Köcheclub-App antworten: Ja, Vielleicht oder Nein.\n${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+          text: `Hallo,\n\n${ich.name} fragt dich an:\n\n📌 ${anlass}\n📅 ${anfrageWann(a)}${ort ? "\n📍 " + ort : ""}${notiz ? "\n📝 " + notiz : ""}${frist ? `\n⏳ Bitte antworten bis ${wann(a.frist)}` : ""}\n\nBitte in der Köcheclub-App antworten: Ja, Vielleicht oder Nein.${gegenvorschlag ? "" : "\n🔒 Bei dieser Anfrage sind keine Gegenvorschläge möglich – die Zeit steht fest."}\n${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: spielId ? `${APP_URL}#spiel=${spielId}` : APP_URL + "#termine",
         }, `club-terminanfrage:${a.id}`);
         await protokoll(ich.person_id, "terminanfrage_gesendet", { anfrage: a.id, empfaenger: ziel.length, beginn: a.beginn, versand });
@@ -10737,6 +10742,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (!a || !z) throw new Fehler("Anfrage nicht gefunden.", 404);
         if (a.status !== "offen") throw new Fehler("Diese Anfrage wurde abgesagt.", 409);
         if (a.spiel_id) throw new Fehler("Bei Spiel-Terminen bitte „Passt nicht“ wählen und einen neuen Termin vorschlagen.", 409);
+        if (a.gegenvorschlag === false) throw new Fehler("Bei dieser Anfrage sind keine Gegenvorschläge möglich – bitte mit Ja, Vielleicht oder Nein antworten.", 409); // KC-CLUB-ANFRAGE-GEGENVORSCHLAG
         const vb = new Date(String(p.beginn || "")), ve = p.ende ? new Date(String(p.ende)) : null;
         if (isNaN(vb.getTime())) throw new Fehler("Bitte Datum und Uhrzeit angeben.");
         if (vb.getTime() < Date.now()) throw new Fehler("Der Vorschlag liegt in der Vergangenheit.");
