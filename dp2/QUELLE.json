@@ -1,8 +1,8 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "776d0396ce06aa4e988ca96c8cc68193d04497fb",
-  "commitDatum": "2026-10-30T16:17:00+01:00",
+  "commit": "2fbed683b0de3e986fcdf88e5d157a3206b3988e",
+  "commitDatum": "2026-11-09T19:52:04+00:00",
   "dp2Version": "0.20.0-build306",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
@@ -191,7 +191,7 @@
     "assets/kc-login-startbild-v01917.webp": "f85a7e0c7996a9585524ef7b3a9e233e0cb6a75008d832194b18119af31a4220",
     "assets/kc-login-startbild.webp": "c2e250d35eba2a098cd27af353820c56e8da305998321573a1119579e077dee9",
     "assets/kc-logo.svg": "53e2199a80045f6fcf99d830e6f53235a90643c5715fff7ef3ead4ac84dd517c",
-    "assets/kc-original-kochmuetze.png": "37497e4568badf6efcdcdf039fd9b6c42e93cf6727919c4d06bcdae4ae0be9fe",
+    "assets/kc-original-kochmuetze.png": "42c8514f2da8c49bfb43ce6a227ce39895b1b3cfa84b96ae756706f01bae5656",
     "assets/twinkey/audio/actual.wav": "36e7373877e540d4cd51ca18e47ce796c2dc86d0b59bcb7898ce7168ebd295da",
     "assets/twinkey/audio/availability.wav": "a4e94364defdc0c82f2205e4bb6981580fc4a200651ecacef59dce7a54a2febd",
     "assets/twinkey/audio/blocks.wav": "dfa5d011838553a4cca1cded3dfafa58765b0bb1032cd9f3338cfd28e2c1a6dc",
