@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.899.0 – 2026-11-09 – 📉 Weniger Datenvolumen: Fehler-Überwachung und Aktionen-Liste (KC-CLUB-SPAR-FP, KC-CLUB-SPAR-AKTIONEN) · Server 2.899.0 – [Hansi: einspielen]
+Auswertung der Egress-Messung 08./09.11. (gut 17 Std.: ≈ 17 MB gemessen, hochgerechnet 2–3,5 GB/Monat inkl. Notfall-Paket – unter 5 GB). Freigabe Hansi: „Ja, bau beides für 12 Uhr ein“.
+- **Fehler-Überwachung (alle 15 Min.):** „seit der letzten Meldung“ stand seit dem 14.10. still – jeder Lauf las die ältesten 500 Einträge seitdem mit allen Einzelheiten (≈ 0,3 MB je Lauf, bis ≈ 30 MB am Tag) und sah neue schwere Fehler dahinter gar nicht. Jetzt höchstens die letzten 24 Std. (Nacht-Ruhezeit passt hinein), zuerst nur Zeit und Art, Einzelheiten nur für Skript-/Sicherheitsmeldungen und Hilferufe. Nebenbei behoben: neue schwere Fehler werden wieder gemeldet.
+- **Aktionen-Liste aus der Verwaltung (≈ 52 KB, bei App-Start und Countdowns):** je Server-Instanz gemerkt; vor jeder Nutzung wird nur der Stand gefragt (wenige Bytes) – gleich → gemerkte Liste, geändert → neu. Nie veraltet.
+- Test: `tests/spar-egress.test.mjs`. Rückweg: Server 2.897.0 (App 2.898.0).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.898.0 – 2026-11-09 – 📖 Club-Küche: „Hinter dem Pass“, Folgen 6, 7, 8 und 10 als Entwurf (KC-CLUB-MAGAZIN-ROMAN, Wunsch Hansi)
 - Vollständig und ungekürzt aus dem Übergabe-Zweig (KC-Communication `roman-hinter-dem-pass-uebergabe-2026-11-06`, 468af86) nach den Einbauanweisungen: Nr. 6 „Die Kündigung“ (01.06.2027), Nr. 7 „Am Limit: Die Küche ohne Chef“ (01.07.), Nr. 8 „Der letzte freie Platz“ (01.08.), Nr. 10 „Gerüchte und Gezeiten“ (01.10.) – je mit Schlagzeile auf dem Titelblatt; bis zum Erscheinungstag nur Admin.
 - Bilder: Folge 6 beide Original-Bleistiftzeichnungen (`magazin/roman/f6-*.webp`), Folge 10 beide Zeichnungen (die Marzipanrose als Erinnerungsbild = dieselbe Datei wie in Folge 5); Folgen 7 und 8 vorerst beschriftete Bildplätze (Zeichnungen liegen nur im ZIP).
