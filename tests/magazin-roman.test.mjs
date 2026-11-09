@@ -19,9 +19,10 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–9; 3–9 als Entwurf, Aufträge Hansi 08./09.11.2026) – Folgen 10–12 nie vorab ins Programm.
+// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–10; 3–10 als Entwurf, Aufträge Hansi 08./09.11.2026) – Folgen 11–12 nie vorab ins Programm.
+// „Sylt“ (Umbau, unverbindliche Perspektive) gehört ab Folge 10 zur veröffentlichten Handlung; Investorin, Täter, Insolvenz und Lenas Familie bleiben gesperrt.
 // Verena Falk, Karl Luttermann und Mara Seifert treten ab Folge 9 in der veröffentlichten Handlung auf; ihre geheimen Pläne (Dossiers) bleiben draußen.
-for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*1[0-2]\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+for (const w of [/\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*1[12]\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter/, /Mutter (ist |war )?(schwer )?(krank|erkrankt)/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -131,4 +132,16 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => !b.da && b.datei.startsWith("magazin/roman/f9-") && b.alt.startsWith("Bleistiftskizze: ")));
   assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Fünf Uhr morgens", "h:Neunzig Minuten"], "Bildstellen laut Einbauanweisung");
   const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 2); }
+// Folge 10 in Heft 10 (Oktober 2027, Entwurf): vollständig nach folgen/10-geruechte-und-gezeiten.md, beide Zeichnungen
+{ const r = MAG_AUSGABEN[10].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[10].erscheint, "2027-10-01"); assert.equal(r.folge, 10); assert.equal(r.titel, "Gerüchte und Gezeiten"); assert.equal(r.untertitel, "Der Preis eines Traums");
+  assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Ein Satz bekommt Beine", "Nicht jeder muss alles wissen", "Ein Gespräch im Lager", "Die zweite Handschrift", "Ein ungewohnter Platz für einen Küchenchef", "Ein Angebot, das noch keines ist", "Eine andere Perspektive", "Kino ohne Hintergedanken", "Die Rechnung auf der anderen Seite", "Die Besprechung"]);
+  assert.equal(p.length, 386, "Folge 10 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3817, "Folge 10 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "„Na, war die Pasta gut?“"); assert.equal(p.at(-1), "Und plötzlich klang es, als könnte es jederzeit verstummen.");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 11 – Zwischen den Ufern**");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.da && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Eine andere Perspektive", "h:Kino ohne Hintergedanken"], "Bildstellen laut Einbauanweisung");
+  for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
+  assert.equal(r.bilder[1].datei, MAG_AUSGABEN[5].roman.bilder.find((b) => b.wo === "h:Die Rose").datei, "Erinnerungsbild = dieselbe Datei wie in Folge 5");
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 2); }
 console.log("magazin-roman: ok");
