@@ -1,5 +1,8 @@
 # Änderungen
 
+## 2.897.0 – 2026-11-09 – Online-Anzeige wieder zuverlässig
+- Fund Hansi 09.11. („Anne ist drin, wird aber nirgends angezeigt“): „online“ hing nur an der eigenen Online-Meldung der App. Seit 2.846.0 kam sie bei stehender Leitung nur alle 2 Min., im Sparmodus alle 6 Min. – der Server zeigt aber nur 150 s nach der letzten Meldung; kam die erste nicht an (Anne, Karla), war man unsichtbar. Jetzt zählt jede Anfrage einer sichtbaren App als Lebenszeichen (höchstens alle 30 s gespeichert), die App meldet sich nie seltener als alle 90 s, und scheitert die Online-Meldung, steht es einmal im Fehlerprotokoll (KC-CLUB-ONLINE-JEDE-ANFRAGE).
+
 ## 2.896.0 – 2026-11-08 – 📖 Club-Küche als Heft drucken: A5-Broschüre zum Falten und Klammern (KC-CLUB-MAGAZIN-HEFT, Wunsch Hansi) · Roman Folge 9 als Entwurf
 - **📖 Als Heft drucken (Broschüre)** im Magazin-Menü und **📖 Als Heft** bei jeder Ausgabe unter „Alle Ausgaben“: setzt die Ausgabe Seite für Seite als **A5-Heft** und liefert zwei PDFs – **Heft A5** (Lesereihenfolge, für den Copyshop: „A5-Broschüre, Rückendrahtheftung“) und **Druckbögen A4 quer** (beidseitig, Wenden an der kurzen Kante, falten, klammern – die Seiten liegen schon in Heftreihenfolge).
 - Professioneller Satz: Titelblatt randlos, Vorwort, **Inhaltsverzeichnis mit den echten Druckseiten**, Kopfzeile mit Ausgabe, Seitenzahl außen, weinrote Rückseite. Seitenwechsel nur zwischen Absätzen; Überschriften bleiben beim Text; Rätselgitter, Bilder und Kästen werden nie zerteilt; kleine Rubriken teilen sich eine Seite, Vorwort/Inhalt/Roman/Rätsel beginnen neu. Seitenzahl immer durch 4 teilbar – freie Seiten werden „Notizen & eigene Rezepte“. Rubriken ohne Inhalt und fehlende Zeichnungen erscheinen nicht auf Papier.

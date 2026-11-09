@@ -14,7 +14,7 @@ const block = app.slice(app.indexOf("// KC-CLUB-ANWESENHEIT (03.11.2026"), app.i
 assert.ok(!/person_id|ICH\.|vorname|INIT\.ich/.test(block.replace(/\/\/[^\n]*/g, "")), "keine Person im Anwesenheits-Kanal");
 // Andere kommen/gehen → Server fragen (gebremst), eigener Schlüssel zählt nicht
 assert.ok(app.includes("if (keys.some((k) => k !== RT.anwKey)) anwAnders();"));
-assert.ok(app.includes("const ANW_TAKT_MS = 120000, ANW_ABSTAND_MS = 20000;") && app.includes("Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now())"), "höchstens alle 20 s, versetzt");
+assert.ok(/const ANW_TAKT_MS = \d+, ANW_ABSTAND_MS = 20000;/.test(app) && app.includes("Math.max(2000 + Math.random() * 4000, RT.anwLetzt + ANW_ABSTAND_MS - Date.now())"), "höchstens alle 20 s, versetzt");
 // Takt: nur mit Leitung + Anwesenheit alle 2 Min. (Regel KC-EINSPIELEN-RUHIG zählt 3 Min. – passt), sonst wie bisher
 assert.ok(app.includes("sparTakt(rtAn() && RT.anw ? ANW_TAKT_MS : PUSH_AKTIV || rtAn() ? 60000 : 15000)"));
 assert.ok(ANW() <= 180000, "Abgleich spätestens alle 3 Min.");
