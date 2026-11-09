@@ -34,6 +34,14 @@ s = await stand(1800, "mobil"); ok(s.an === 2 && /nb-gelb/.test(s.kl) && /Mäßi
 s = await stand(4000, "wlan"); ok(s.an === 1 && /nb-rot/.test(s.kl) && /Schwach/.test(s.text), "schwach: 1 roter Strich"); await bild("netz-schwach");
 await seite.setViewportSize({ width: 360, height: 780 }); await seite.waitForTimeout(300); await bild("netz-schmal");
 ok(await seite.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1 && !$("netzBalken").querySelector(".nb-text").offsetWidth), "schmales Handy (360 px): nur Symbol + Striche, nichts läuft über");
+const frei = () => seite.evaluate(() => { const b = $("netzBalken").getBoundingClientRect(), treff = [];
+  const pruef = (n, r) => { if (r && r.width && !(r.right <= b.left || r.left >= b.right || r.bottom <= b.top || r.top >= b.bottom)) treff.push(n); };
+  for (const q of ["#kopfPfeilHalb", "#kopfPfeil", "#statusChip", ".kopflogo"]) pruef(q, document.querySelector("#v-start " + q)?.getBoundingClientRect());
+  for (const q of [".marke-klein", "#begruessung"]) { const e = document.querySelector("#v-start " + q); if (e) { const r = document.createRange(); r.selectNodeContents(e); pruef(q, r.getBoundingClientRect()); } }
+  return treff; });
+for (const ansicht of ["erweitert", "einfach"]) { await seite.evaluate((a) => { document.body.classList.toggle("einfach", a === "einfach"); $("begruessung").textContent = "Guten Abend, Hans-Joachim!"; }, ansicht);
+  for (const w of [360, 412]) { await seite.setViewportSize({ width: w, height: 780 }); await seite.waitForTimeout(250); const t = await frei(); ok(!t.length, `${ansicht} ${w} px: Balken verdeckt nichts` + (t.length ? " – " + t.join(", ") : "")); if (w === 360) await bild("netz-" + ansicht + "-360"); } }
+await seite.evaluate(() => document.body.classList.remove("einfach"));
 await seite.setViewportSize({ width: 400, height: 800 });
 await seite.evaluate(() => $("netzBalken").click()); await seite.waitForTimeout(300);
 ok(await seite.evaluate(() => !$("verbindungBlatt").classList.contains("versteckt") && /Verbindungsqualität/.test($("vbInhalt").textContent)), "Antippen öffnet das Verbindungs-Blatt");

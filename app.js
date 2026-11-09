@@ -8736,7 +8736,7 @@ function netzQualitaet() {
   return { stufe, ms, farbe: ["", "rot", "gelb", "gruen", "gruen"][stufe], text: ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][stufe] + (ms == null ? " (Schätzung des Handys)" : "") };
 }
 const NETZ_NAME = { wlan: "📶 WLAN", mobil: "🛰️ Mobilfunk" };
-// KC-CLUB-NETZ-BALKEN (09.11.2026, Wunsch Hansi): gut sichtbarer Balken mit 4 Strichen auf der Startseite (Statusleiste) und neben dem
+// KC-CLUB-NETZ-BALKEN (09.11.2026, Wunsch Hansi): gut sichtbarer Balken mit 4 Strichen auf der Startseite (oben rechts im Kopf, schwebt) und neben dem
 // Router/Satelliten in 💬 Nachrichten. Gleiche Quelle wie das Symbol (netzQualitaet: echte Antwortzeiten, keine Extra-Abfragen).
 // Signalstärke in dBm und 4G/5G gibt kein Browser heraus – gezeigt wird die Verbindung zum Club-Server.
 function netzStricheHtml(q) {
