@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.904.0 – 2026-11-09 – 📖 Club-Küche: Lektorat, Urheberangabe, Zeichnungen Folge 7–9 und Folge 12 „Alle Sterne dieser Welt“ (Finale) · 🖼️ Film-Vorschaubilder als WebP (KC-CLUB-MAGAZIN-LEKTORAT, KC-CLUB-MAGAZIN-ROMAN-NACHWEIS, KC-CLUB-MAGAZIN-ROMAN, KC-BILDER-WEBP)
+Wünsche Hansi 09.11.: „Story by Hans-Joachim Koch, Skizzen by KI … wirklich gut checken“ – „Mit nächstem Termin“; „Baue die Zeichnungen für Folge 7 bis 9 ein und baue die Texte ein bisschen um“; „Spiele auch Folge 12 ein in das Heft mit Zeichnungen“ – „Ja, heute mit einspielen“; „umwandeln in webp … kleiner machen und schneller laden“.
+- **Urheberangabe** „Story by Hans-Joachim Koch · Skizzen by KI“ im Romankopf jeder Folge und im Impressum (`MAG_ROMAN_NACHWEIS`).
+- **Lektorat** Roman Folgen 1–11 und Rubriken: 61 Sprach-/Rechtschreibkorrekturen, dazu 36 Stellen in der Handlung stimmig gemacht (Zeitachse, wer wo ist, Voss nach dem Krankenhaus). Nichts gekürzt.
+- **Zeichnungen Folge 7–9** eingesetzt (7 neue Bilder, je < 180 KB); das Schuster-Bild in Folge 8 bleibt zurückgehalten (Jonas passt nicht zur Figurenreferenz).
+- **Club-Küche Nr. 12** (erscheint 01.12.2027, bis dahin Entwurf nur für Admin): Folge 12 „Alle Sterne dieser Welt“ vollständig und ungekürzt (16 Zwischenüberschriften, 542 Absätze) mit drei Bleistiftzeichnungen (`magazin/roman/f12-*.webp`). Lektorat passend zu Folge 7–11 (Voss zu Hause, beim Timo-Gespräch nur telefonisch da, eine Mappe mit zwei Blättern, Wettbewerb wie Folge 9).
+- Spoiler-Test: Auflösungen nur in Folge 12; interne Planung (Figurenbibel, Handlungsbogen, Zeitachse) nie im Programm.
+- **Film-Vorschaubilder** (4 Filme in der App, Startbild der Filmseite) als WebP statt JPG: 207 KB → 107 KB. WhatsApp-Vorschaubild, App-Symbole und DP2-Dateien bleiben unverändert.
+- Tests: `tests/magazin-roman.test.mjs`, `tests/app-vertrag.test.mjs`. Rückweg: App 2.903.0. Server unverändert (2.903.0).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.903.0 – 2026-11-09 – 🔄 Terminanfrage: Gegenvorschlag erlauben ja/nein (KC-CLUB-ANFRAGE-GEGENVORSCHLAG) · 📶 Verbindungs-Balken (KC-CLUB-NETZ-BALKEN) · Server 2.903.0
 Wunsch Hansi 09.11.: „Baue ein bei Terminanfrage ob Gegenvorschlag erlaubt ist“.
 - Formular „📨 Terminanfrage“: neues Häkchen **🔄 Gegenvorschlag erlauben** (Standard an = wie bisher). Aus: die Zeit steht fest, die Angefragten antworten nur mit Ja, Vielleicht oder Nein.
