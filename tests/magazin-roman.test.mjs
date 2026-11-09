@@ -19,9 +19,9 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2599, "nicht gekürzt: Wortzahl");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–5 und 9 als Entwurf, Aufträge Hansi 08.11.2026) – Folgen 6–8 und 10–12 nie vorab ins Programm.
+// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–9; 3–9 als Entwurf, Aufträge Hansi 08./09.11.2026) – Folgen 10–12 nie vorab ins Programm.
 // Verena Falk, Karl Luttermann und Mara Seifert treten ab Folge 9 in der veröffentlichten Handlung auf; ihre geheimen Pläne (Dossiers) bleiben draußen.
-for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*([6-8]|1[0-2])\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+for (const w of [/Sylt/i, /\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*1[0-2]\b/, /Täter|Insolvenz|Investorin/i, /Elisabeth Winter/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -90,6 +90,36 @@ for (const [nr, h] of Object.entries(MAG_AUSGABEN)) for (const b of (h.roman?.bi
   const f = new URL("../" + b.datei, import.meta.url), st = fs.statSync(f), kopf = fs.readFileSync(f).subarray(0, 12).toString("latin1");
   assert.ok(st.size > 5000 && st.size < 200000 && kopf.startsWith("RIFF") && kopf.endsWith("WEBP"), `Heft ${nr}: ${b.datei}`); }
 assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n) => /referenz|kontakt/i.test(n)), "keine internen Bilder");
+// Folge 6 in Heft 6 (Entwurf): vollständig nach folgen/06-die-kuendigung.md
+{ const r = MAG_AUSGABEN[6].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[6].erscheint, "2027-06-01"); assert.equal(r.folge, 6); assert.equal(r.titel, "Die Kündigung"); assert.equal(r.untertitel, "Was in einer Küche verloren gehen kann");
+  assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Die Tür zum Nebenflur", "Was eine Küche zusammenhält", "Der Mann mit den guten Händen", "Die Auswertung", "Achtunddreißig Gäste", "Ein Service, der nicht auseinanderfiel", "Ein Gespräch, das keiner hören sollte", "Die Kündigung", "Der leere Posten", "Die Rechnung des nächsten Tages", "Zehn nach sechs"]);
+  assert.equal(p.length, 365, "Folge 6 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3326, "Folge 6 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "Matthias Voss wartete."); assert.equal(p.at(-1), "„Herr Voss liegt im Krankenhaus.“");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 7 – Am Limit: Die Küche ohne Chef**");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f6-") && b.alt.startsWith("Bleistiftskizze: ")));
+  for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(b.da && st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 2 && o.includes('loading="lazy"'), "Folge 6: beide Zeichnungen eingesetzt"); }
+// Folge 7 in Heft 7 (Entwurf): vollständig nach folgen/07-am-limit-die-kueche-ohne-chef.md
+{ const r = MAG_AUSGABEN[7].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[7].erscheint, "2027-07-01"); assert.equal(r.folge, 7); assert.equal(r.titel, "Am Limit: Die Küche ohne Chef"); assert.equal(r.untertitel, "Ein Wochenende, das keiner vergessen wird");
+  assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Zehn nach sechs", "Die Liste an der Wand", "Herr Bertram zieht die Kochjacke an", "Die Kunst des Weglassens", "Freitag, sechzehn Uhr einundvierzig", "Der Pass", "Ein Satz aus dem Krankenhaus", "Samstag: Die andere Rechnung", "Die Gesellschaft, die man absagte", "Sonntag: Der letzte Topf", "Das, was niemand nachkochen kann", "Der Umschlag"]);
+  assert.equal(p.length, 423, "Folge 7 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 4157, "Folge 7 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "„Was heißt, er liegt im Krankenhaus?“"); assert.equal(p.at(-1), "Und blieb stehen.");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 8 – Der letzte freie Platz**");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f7-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.ok(r.bilder.every((b) => !b.da)); const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 3, "Folge 7: Zeichnungen fehlen noch → Bildplatz"); }
+// Folge 8 in Heft 8 (Entwurf): vollständig nach folgen/08-der-letzte-freie-platz.md
+{ const r = MAG_AUSGABEN[8].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.equal(MAG_AUSGABEN[8].erscheint, "2027-08-01"); assert.equal(r.folge, 8); assert.equal(r.titel, "Der letzte freie Platz"); assert.equal(r.untertitel, "Was man nicht aufgeben darf");
+  assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Der Knopf", "Der Mut, jemanden um etwas zu bitten", "Die Nachricht aus Portugal", "Die Frau, die keine Unordnung mochte", "Ein Teller, der etwas beweist", "Der Mann am Meer", "Dreiundvierzig Minuten zu spät", "Nicht die Heldin, nicht der Held", "Der zweite Versuch", "Eine Frage der Fahrt", "Was in einer Tasche Platz hat", "Die Nachricht"]);
+  assert.equal(p.length, 419, "Folge 8 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3712, "Folge 8 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "Auf dem Bildschirm standen nur zwei Wörter."); assert.equal(p.at(-1), "Eigentlich.");
+  assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 9 – Auf Messers Schneide**");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f8-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.ok(r.bilder.every((b) => !b.da)); const o = magHeftHtml("roman", r); assert.ok(!/<img/.test(o) && (o.match(/mag-roman-bild/g) || []).length === 3, "Folge 8: Zeichnungen fehlen noch → Bildplatz"); }
+// Folge 6: Timo ist kein überführter Dieb – gekündigt wird wegen dokumentierter Pflichtverletzungen
+assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihnen keinen Diebstahl nachweisen")), "Folge 6 ohne Diebstahlsbehauptung");
 // Folge 9 in Heft 9 (September 2027, Entwurf): vollständig nach folgen/09-auf-messers-schneide.md, Bildplätze statt fehlender Zeichnungen
 { const r = MAG_AUSGABEN[9].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[9].erscheint, "2027-09-01"); assert.equal(r.folge, 9); assert.equal(r.titel, "Auf Messers Schneide"); assert.equal(r.untertitel, "Kein Koch lässt einen Kollegen im Regen stehen");
