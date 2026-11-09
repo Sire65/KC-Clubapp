@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.898.0 – 2026-11-09 – 📖 Club-Küche: „Hinter dem Pass“, Folgen 6, 7, 8 und 10 als Entwurf (KC-CLUB-MAGAZIN-ROMAN, Wunsch Hansi)
+- Vollständig und ungekürzt aus dem Übergabe-Zweig (KC-Communication `roman-hinter-dem-pass-uebergabe-2026-11-06`, 468af86) nach den Einbauanweisungen: Nr. 6 „Die Kündigung“ (01.06.2027), Nr. 7 „Am Limit: Die Küche ohne Chef“ (01.07.), Nr. 8 „Der letzte freie Platz“ (01.08.), Nr. 10 „Gerüchte und Gezeiten“ (01.10.) – je mit Schlagzeile auf dem Titelblatt; bis zum Erscheinungstag nur Admin.
+- Bilder: Folge 6 beide Original-Bleistiftzeichnungen (`magazin/roman/f6-*.webp`), Folge 10 beide Zeichnungen (die Marzipanrose als Erinnerungsbild = dieselbe Datei wie in Folge 5); Folgen 7 und 8 vorerst beschriftete Bildplätze (Zeichnungen liegen nur im ZIP).
+- Interne Planung nicht im Programm. Test `tests/magazin-roman.test.mjs` prüft Folgen 6–8 und 10 auf Vollständigkeit; „Sylt“ gehört ab Folge 10 zur Handlung, Folgen 11–12, Investorin, Täter, Insolvenz und Lenas Familie bleiben gesperrt. Im abgeschirmten Browser geprüft (Handy, Tablet, PC). Rückweg: Version 2.897.0 einspielen.
 ## 2.897.0 – 2026-11-09 – Online-Anzeige wieder zuverlässig
 - Fund Hansi 09.11. („Anne ist drin, wird aber nirgends angezeigt“): „online“ hing nur an der eigenen Online-Meldung der App. Seit 2.846.0 kam sie bei stehender Leitung nur alle 2 Min., im Sparmodus alle 6 Min. – der Server zeigt aber nur 150 s nach der letzten Meldung; kam die erste nicht an (Anne, Karla), war man unsichtbar. Jetzt zählt jede Anfrage einer sichtbaren App als Lebenszeichen (höchstens alle 30 s gespeichert), die App meldet sich nie seltener als alle 90 s, und scheitert die Online-Meldung, steht es einmal im Fehlerprotokoll (KC-CLUB-ONLINE-JEDE-ANFRAGE).
 
