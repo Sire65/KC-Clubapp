@@ -2131,20 +2131,20 @@ const FILME = [
   // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
   // 2.750.0 (Wunsch Hansi 29.10. „Film für Klaus neu anpassen“): Fassung mit Frage beim Start, Schritt für Schritt und Frist 3 Tage vorher – wieder eigene Kennung
   // 2.753.0 (Wunsch Hansi 29.10. „Video auch anpassen, die Vertretung zeigen – mit dem Kassenwart“): Ablauf wie im Leben (2.751.0) – wieder eigene Kennung
-  { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "14½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.jpg",
+  { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "14½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.webp",
     u: "Neue Fassung: Tagesordnung und Einladung (3 Tage vorher), bis zur Sitzung erinnern, Änderungen, Vertretung durch den Kassenwart, einen Tag vorher vorbereiten, zuletzt die Aktentasche mit Mitnehm-Liste – am Abend Clubabend Live mit Freigeben, „Zum Schluss“ und Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
   // 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: für alle Mitglieder über Technik → 🔐 Sicherheit & Datenschutz – kein Hinweis beim Start (fuer: false)
-  { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "3 Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=2", bild: "film/sicherheit-vorschau.jpg",
+  { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "3 Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=2", bild: "film/sicherheit-vorschau.webp",
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
   // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
   // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
-  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=5", bild: "film/app-einrichten-vorschau.jpg",
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=5", bild: "film/app-einrichten-vorschau.webp",
     u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, Kachelgröße (2, 3 oder 4 nebeneinander), die Zahl am Reiter, Kacheln umdrehen mit dem 🔄, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
     wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
   // KC-CLUB-KOPFFILM (Wunsch Hansi 04.11.2026 „Erklärvideo nur über den Kopfbereich – kein Admin-Bereich“). Quellen und Konzept: KC-Infrastructure-Control-Center kopffilm/
   // Gestaffelt (Wunsch Hansi 04.11. „4 Tage zurückhalten, nur Mitgliedern anbieten, die den ersten bereits gesehen haben – den anderen erst ein paar Tage später“):
   // wer den Ansichtfilm angesehen hat, bekommt ihn sofort (beim Start und in Technik → 🎬 Erklär-Videos), alle anderen ab KOPFFILM_AB.
-  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=2", bild: "film/kopf-vorschau.jpg",
+  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=2", bild: "film/kopf-vorschau.webp",
     u: "Kopfzeile, Status und Lämpchen, Blättern mit ‹ › und « », gelbe Punkte, Wetter, Für dich, Demnächst, Fotos, Kommunikationszentrale, Startkarte und die Szenen im Kopf",
     wo: "unter Technik → 🎬 Erklär-Videos", get inVideos() { return this.fuer(); }, fuer: () => filmGesehen("ansichtfilm") || heuteIso() >= KOPFFILM_AB },
 ];
