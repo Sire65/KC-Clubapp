@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.900.0 – 2026-11-09 – 📤 Kontakt weiterleiten – auch an Personen außerhalb des Clubs (KC-CLUB-KONTAKT-EXTERN) · Server 2.900.0
+Wunsch Hansi 09.11.: „Kontakt weiterleiten auch zu Fremden, z. B. durch Push, E-Mail, Postfach usw.“ – Freigabe „Wie vorgeschlagen, 2. Nein, alles andere ja, 12 Uhr einspielen“.
+- **Mitgliedsseite → „📤 Kontakt weiterleiten“:** Angaben ankreuzen, dann **📤 Teilen …** (Teilen-Menü des Handys: WhatsApp, SMS, Mail-App, AirDrop … mit Kontaktkarte .vcf), **✉️ E-Mail** (eigenes Mail-Programm, Betreff und Angaben vorausgefüllt) oder **📋 Kopieren**. Die eigene Karte geht immer.
+- E-Mail über das eigene Mail-Programm, weil der Club-Mailversand nur hinterlegte Mitgliedsadressen kennt (keine fremden Adressen über den Club-Server).
+- **Nur mit Erlaubnis:** ⚙️ → Privatsphäre → „📤 Auch an Personen außerhalb des Clubs“ (**Standard aus**), und nur Angaben, die das Mitglied für Mitglieder freigegeben hat – auch der Admin gibt nicht mehr weiter. Nicht erlaubt → Knöpfe ausgegraut mit Erklärung.
+- Keine Benachrichtigung an das Mitglied (Hansi: „2. Nein“). Der Server prüft vor jedem Weitergeben und protokolliert nur wer, wessen Kontakt, Weg und Felder – nie Empfänger oder Inhalt; höchstens 30 je Person und Tag.
+- Innerhalb des Clubs bleibt es beim Chat „👤 Kontakt teilen“. Keine Datenbank-Änderung (Einstellung `kontakt_extern` in `kc_club_person_einstellung`).
+- Test: `tests/kontakt-extern.test.mjs`. Rückweg: App/Server 2.899.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.899.0 – 2026-11-09 – 📉 Weniger Datenvolumen: Fehler-Überwachung und Aktionen-Liste (KC-CLUB-SPAR-FP, KC-CLUB-SPAR-AKTIONEN) · Server 2.899.0 – [Hansi: einspielen]
 Auswertung der Egress-Messung 08./09.11. (gut 17 Std.: ≈ 17 MB gemessen, hochgerechnet 2–3,5 GB/Monat inkl. Notfall-Paket – unter 5 GB). Freigabe Hansi: „Ja, bau beides für 12 Uhr ein“.
 - **Fehler-Überwachung (alle 15 Min.):** „seit der letzten Meldung“ stand seit dem 14.10. still – jeder Lauf las die ältesten 500 Einträge seitdem mit allen Einzelheiten (≈ 0,3 MB je Lauf, bis ≈ 30 MB am Tag) und sah neue schwere Fehler dahinter gar nicht. Jetzt höchstens die letzten 24 Std. (Nacht-Ruhezeit passt hinein), zuerst nur Zeit und Art, Einzelheiten nur für Skript-/Sicherheitsmeldungen und Hilferufe. Nebenbei behoben: neue schwere Fehler werden wieder gemeldet.

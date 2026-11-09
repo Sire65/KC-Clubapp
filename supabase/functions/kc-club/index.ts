@@ -193,7 +193,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.899.0";
+const SERVER_VERSION = "2.900.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -2261,6 +2261,8 @@ const EINSTELLUNGEN: Record<string, (w: any) => unknown> = {
   // KC-CLUB-RUHEZEIT (0.98.0): „Nicht stören“ – in diesem Zeitraum kein Push (Anrufe kommen weiter durch)
   // 2.883.0 KC-CLUB-FRIST-ERINNERUNG (Wunsch Hansi 07.11.2026): Erinnerung vor ablaufenden Fristen – Wege, wie früh, welche Fristen
   fristen: (w) => fristWahl(w),
+  // KC-CLUB-KONTAKT-EXTERN (Wunsch Hansi 09.11.2026): „Meine Kontaktdaten dürfen an Personen außerhalb des Clubs weitergegeben werden“ – Standard aus
+  kontakt_extern: (w) => ({ an: w?.an === true }),
   ruhezeit: (w) => {
     const zeit = (x: unknown, std: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(x)) ? String(x) : std;
     return { an: w?.an === true, von: zeit(w?.von, "22:00"), bis: zeit(w?.bis, "07:00"), erwaehnung: w?.erwaehnung !== false };
@@ -14041,6 +14043,25 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         return json({ ok: true });
       }
 
+      // KC-CLUB-KONTAKT-EXTERN: Weitergabe an Fremde (Teilen-Menü, Mail-Programm, Kopieren) – geht vom Handy aus; hier nur prüfen und protokollieren
+      // (wer, wessen Kontakt, welcher Weg, welche Felder – nie Empfänger oder Inhalt). Höchstens 30 je Person und Tag.
+      case "kontakt_weitergeben": {
+        if (ich.zugang !== "mitglied") throw new Fehler("Nur für Mitglieder.", 403);
+        const pid = String(p.person_id || ""), weg = ["teilen", "mail", "kopieren"].includes(String(p.weg)) ? String(p.weg) : "teilen";
+        const felder = (Array.isArray(p.felder) ? p.felder : []).map(String).filter((f: string) => KONTAKT_FELDER.includes(f));
+        const selbst = pid === ich.person_id;
+        if (!selbst) {
+          const [{ data: e }, { data: fr }] = await Promise.all([
+            db.from("kc_club_person_einstellung").select("wert").eq("person_id", pid).eq("schluessel", "kontakt_extern").maybeSingle(),
+            db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", pid)]);
+          if ((e?.wert as any)?.an !== true) throw new Fehler("Das Mitglied hat die Weitergabe an Personen außerhalb des Clubs nicht freigegeben.", 403);
+          if (felder.some((f: string) => !(fr ?? []).find((x: any) => x.bereich === "kontakt_" + f)?.erlaubt)) throw new Fehler("Diese Angabe hat das Mitglied nicht freigegeben.", 403);
+        }
+        const { count } = await db.from("kc_club_protokoll").select("id", { count: "exact", head: true }).eq("person_id", ich.person_id).eq("aktion", "kontakt_weitergegeben").gte("zeit", new Date(Date.now() - 86400000).toISOString());
+        if ((count ?? 0) >= 30) throw new Fehler("Heute schon sehr oft weitergegeben – bitte morgen wieder.", 429);
+        await protokoll(ich.person_id, "kontakt_weitergegeben", { fuer: pid, weg, felder });
+        return json({ ok: true });
+      }
       case "kontakt_freigabe": {
         const feld = String(p.feld || "");
         if (!KONTAKT_FELDER.includes(feld)) throw new Fehler("Unbekannte Angabe.");
@@ -14059,7 +14080,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", pid),
           db.from("kc_club_rollen").select("aemter").eq("person_id", pid).maybeSingle(),
           statusMap([pid], true),
-          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ich.admin ? ["avatar", ...ROSE_KEYS, VERTRETUNG_KEY] : ["avatar"]), // 2.23.89: Bild oben · KC-CLUB-ROSE: Admin sieht die Merker in derselben Abfrage
+          db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", pid).in("schluessel", ich.admin ? ["avatar", ...ROSE_KEYS, VERTRETUNG_KEY, "kontakt_extern"] : ["avatar", "kontakt_extern"]), // 2.23.89: Bild oben · KC-CLUB-ROSE: Admin sieht die Merker in derselben Abfrage
         ]);
         const mdEinst: Record<string, any> = Object.fromEntries(((avL as any[]) ?? []).map((x: any) => [x.schluessel, x.wert])), avE = { wert: mdEinst.avatar };
         const frei = (b: string) => !!(fr ?? []).find((x: any) => x.bereich === b)?.erlaubt;
@@ -14086,6 +14107,10 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           avatar: typeof (avE?.wert as any)?.figur === "string" ? (avE!.wert as any).figur : null,
           geburtstag: pe.birth_date && (selbst || frei("geburtstag")) ? String(pe.birth_date).slice(5, 10) : null,
           kontakt,
+          // KC-CLUB-KONTAKT-EXTERN: an Fremde weiterleiten nur, wenn das Mitglied es erlaubt (die eigene Karte immer) – und nur Felder, die es selbst
+          // für Mitglieder freigegeben hat (auch der Admin sieht mehr, darf das aber nicht nach draußen geben)
+          extern: selbst || mdEinst.kontakt_extern?.an === true,
+          externFelder: Object.keys(kontakt).filter((f) => selbst || frei("kontakt_" + f)),
           // welche Angaben freigegeben sind (nur für mich selbst bzw. Admin – für „nur für dich sichtbar“)
           ...(selbst || ich.admin ? { freigegeben: Object.fromEntries(KONTAKT_FELDER.map((f) => [f, frei("kontakt_" + f)])) } : {}),
           darfKontakte: ich.kontakte || ich.admin,
