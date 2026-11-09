@@ -1,5 +1,9 @@
 # Änderungen
 
+## 2.900.0 – 2026-11-09 – 📖 Club-Küche Nr. 11: „Hinter dem Pass“, Folge 11 „Zwischen den Ufern“ als Entwurf (KC-CLUB-MAGAZIN-ROMAN, Freigabe Hansi)
+- Vollständig und ungekürzt aus dem Übergabe-Zweig (KC-Communication `roman-hinter-dem-pass-uebergabe-2026-11-06`, b28a2f4) nach `redaktion/folge-11-einbauanweisung.md`: 16 Zwischenüberschriften, 484 Absätze, Ausblick „Folge 12 – Alle Sterne dieser Welt“; Kapitelreihenfolge laut Lektorat (Abschied vor dem „Satz“ und vor der Bahnfahrt). Erscheint 01.11.2027, bis dahin nur Admin.
+- Drei Bleistiftzeichnungen direkt aus dem Übergabe-Zweig (`illustrationen/folge-11/`, WebP unverändert, Prüfsummen laut Anweisung) als `magazin/roman/f11-*.webp`, an den Bildstellen des Manuskripts, Alt-Texte laut Anweisung.
+- Interne Planung nicht im Programm. Test `tests/magazin-roman.test.mjs` prüft Folge 11; Elisabeth Winter und Lenas erkrankte Mutter gehören ab Folge 11 zur Handlung, Folge 12 (Finale), „Täter“ und ein Insolvenzverfahren bleiben gesperrt. Im abgeschirmten Browser geprüft (Handy, Tablet, PC). Rückweg: Version 2.899.0 einspielen.
 ## 2.899.0 – 2026-11-09 – 📉 Weniger Datenvolumen: Fehler-Überwachung und Aktionen-Liste (KC-CLUB-SPAR-FP, KC-CLUB-SPAR-AKTIONEN) · Server 2.899.0 – [Hansi: einspielen]
 Auswertung der Egress-Messung 08./09.11. (gut 17 Std.: ≈ 17 MB gemessen, hochgerechnet 2–3,5 GB/Monat inkl. Notfall-Paket – unter 5 GB). Freigabe Hansi: „Ja, bau beides für 12 Uhr ein“.
 - **Fehler-Überwachung (alle 15 Min.):** „seit der letzten Meldung“ stand seit dem 14.10. still – jeder Lauf las die ältesten 500 Einträge seitdem mit allen Einzelheiten (≈ 0,3 MB je Lauf, bis ≈ 30 MB am Tag) und sah neue schwere Fehler dahinter gar nicht. Jetzt höchstens die letzten 24 Std. (Nacht-Ruhezeit passt hinein), zuerst nur Zeit und Art, Einzelheiten nur für Skript-/Sicherheitsmeldungen und Hilferufe. Nebenbei behoben: neue schwere Fehler werden wieder gemeldet.
