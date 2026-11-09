@@ -19,11 +19,12 @@ assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") &
 assert.ok(alles.includes("**Périgord-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
 assert.equal(r.text.length, 350, "nicht gekürzt: 9 Zwischenüberschriften + 341 Absätze"); assert.equal(alles.split(/\s+/).length, 2608, "nicht gekürzt: Wortzahl (nach Lektorat 09.11.2026)");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
-// keine Spoiler, kein internes Material, nur beauftragte Folgen (1–11; 3–11 als Entwurf, Aufträge Hansi 08./09.11.2026) – Folge 12 (Finale) nie vorab ins Programm.
-// Zur veröffentlichten Handlung gehören: „Sylt“ ab Folge 10; Elisabeth Winter und die Erkrankung von Lenas Mutter ab Folge 11 (ohne Diagnose).
-// Weiter gesperrt: Täter, Investorin als Entscheidung, eine eröffnete/beantragte Insolvenz – Rettung, Sylt- und Liebesentscheidung bleiben Folge 12.
+// Kein internes Material (Figurenbibel, Handlungsbogen, Täterakte, Zeitachse) im Programm. Alle 12 Folgen sind beauftragt; Folge 12 (Finale, mit Auflösungen)
+// freigegeben von Hansi 09.11.2026 („Spiele auch Folge 12 ein in das Heft mit Zeichnungen“ / „Ja, heute mit einspielen“) – Spoiler daher nur noch in Folge 12 erlaubt.
 // Verena Falk, Karl Luttermann und Mara Seifert treten ab Folge 9 in der veröffentlichten Handlung auf; ihre geheimen Pläne (Dossiers) bleiben draußen.
-for (const w of [/\bLuca\b/, /ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen/i, /"folge":\s*12\b/, /Täter|Investorin|Insolvenz(verfahren| beantragt| angemeldet| eröffnet)/i]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+for (const w of [/ehemalige Partnerin/i, /Figurenbibel\.md|handlungsbogen|zeitachse-folgen|Geheimakte/i, /"folge":\s*1[3-9]\b/]) assert.ok(!w.test(teil.replace("interne Planung (Figurenbibel, Handlungsbogen)", "")), "verboten: " + w);
+// Auflösungen nur in Folge 12 (Reimers Feinkost taucht als Lieferant schon früher auf – gewollte Spur; die Aufklärung erst im Finale)
+for (let n = 1; n <= 11; n++) assert.ok(!/Dann Konrad Reimers\.|zusätzlichen kleinen Kühltasche|\bLuca\b/.test(JSON.stringify(MAG_AUSGABEN[n].roman)), "Spoiler vor Folge 12 in Heft " + n);
 // Darstellung: Bilder mit Alt-Text, fehlende Datei als Bildplatz, Ende abgesetzt
 const out = magHeftHtml("roman", r);
 assert.equal(r.bilder.length, 4); assert.ok(r.bilder.every((b) => b.alt && /^magazin\/roman\/0[1-5]-.+\.webp$/.test(b.datei)));
@@ -158,6 +159,19 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der letzten Ausgabe**" && r.ende[1] === "**Folge 12 – Alle Sterne dieser Welt**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f11-") && b.alt.startsWith("Bleistiftskizze: ")));
   assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:79", "absatz:279", "absatz:331"], "Bildstellen laut Manuskript");
+  for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
+  const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3); }
+// Folge 12 in Heft 12 (Dezember 2027, Finale): vollständig nach folgen/12-alle-sterne-dieser-welt.md, drei Zeichnungen, Lektorat 09.11.2026
+{ const r = MAG_AUSGABEN[12].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t), h = r.text.filter(([a]) => a === "h").map(([, t]) => t), a = p.join(" ");
+  assert.equal(MAG_AUSGABEN[12].erscheint, "2027-12-01"); assert.equal(r.folge, 12); assert.equal(r.von, 12); assert.equal(r.titel, "Alle Sterne dieser Welt"); assert.equal(r.untertitel, "Was bleibt, wenn alles auf dem Spiel stand");
+  assert.deepEqual(h, ["Die Nachricht, die keiner hörte", "Der Preis der Freiheit", "Drei Wochen, in denen nichts sicher war", "Die Zahlen hinter den Trüffeln", "Der Mann, dem niemand geglaubt hatte", "Ein Haus bekommt eine zweite Chance", "Die schwere Kunst, nicht alles allein zu tragen", "Ein Besucher mit einer Rezeptkarte", "Was Paul verlor", "Eine Frau, die weitergeht", "Die Insel und die Frau im Wind", "Ein letzter Versuch", "Der Tag der Prüfung", "Die Entscheidung von damals", "Wieder an der Mühle", "Alle Sterne dieser Welt"]);
+  assert.equal(p.length, 542, "Folge 12 nicht gekürzt: Absätze"); assert.equal(a.split(/\s+/).length, 5631, "Folge 12 nicht gekürzt: Wortzahl des Lesetexts (nach Lektorat)");
+  assert.ok(p[0].startsWith("*Du musst heute nichts entscheiden.")); assert.equal(p[p.length - 1], "Und hinter dem Pass begann das Leben.");
+  assert.ok(r.bisher && r.ende[0] === "**Ende des Romans „Hinter dem Pass“**");
+  // Lektorat: Voss ist zu Hause (Folge 11), beim Timo-Gespräch nur telefonisch da; eine Mappe mit zwei Blättern (Folge 11); Wettbewerb wie Folge 9
+  assert.ok(!/Voss im Krankenhaus|Voss schloss kurz die Augen|Voss lächelte traurig|beiden Mappen|zweite Mappe|verschwundene Gemüse|jetzigen Küchenchef/.test(a), "Ungereimtheiten Folge 12");
+  assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f12-") && b.alt.startsWith("Bleistiftskizze: ")));
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:172", "absatz:460", "absatz:542"], "Bildstellen laut Einbauanweisung");
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
   const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3); }
 console.log("magazin-roman: ok");
