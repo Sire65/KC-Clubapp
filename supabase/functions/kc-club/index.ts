@@ -70,7 +70,8 @@ const dbPufferLeeren = () => { const pf = DB_PUFFER.getStore() as DbPuffer | und
 // Jede andere Funktion gilt vorsichtshalber als Schreiben. (Messung 2.453.0: diese drei leerten den Puffer mehrmals je Mitglied → nur 2 % gespart.)
 const DB_RPC_NUR_LESEN = new Set(["kc_club_rt_kanal", "kc_club_ungelesen_je_chat", "kc_communication_get_server_secret", "kc_club_kachel_zahlen", "kc_club_chat_stand",
   // 2.602.0 KC-CLUB-START-KERN: auch die Pakete sind STABLE (Postgres verbietet darin jedes Schreiben) – sie leerten bisher bei jedem Start den Puffer
-  "kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket", "kc_club_online_jetzt", "kc_club_nachricht_mahnung", "kc_club_unterhaltungen_paket"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
+  "kc_club_start_kern", "kc_club_start_paket", "kc_club_unterhaltung_paket", "kc_club_comm_paket", "kc_club_buero_paket", "kc_club_online_jetzt", "kc_club_nachricht_mahnung", "kc_club_unterhaltungen_paket",
+  "kc_club_manager_mitglieder_kurz", "kc_club_comm_paket_kurz"]); // 2.496.0: Kachel-Zahlen · 2.510.0: Chat-Fingerabdruck (beide STABLE, nur lesend)
 const dbFetch: typeof fetch = (input, init) => {
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
   const pf = url.includes("/rest/v1/") ? DB_PUFFER.getStore() as DbPuffer | undefined : undefined;
@@ -193,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.903.0";
+const SERVER_VERSION = "2.905.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -3554,11 +3555,30 @@ const buendelAus = async () => { try { const k: any = await konfigZeile("start_b
 async function commLesenPaket(seit7: string, seit24: string): Promise<any[] | null> {
   if (await buendelAus()) return null;
   try {
+    // 2.905.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: bis zu 500 Aufträge ≈ 70 KB je Abruf, nur zum Zählen): die Datenbank zählt selbst (≈ 0,1 KB).
+    // Fehlt die neue Funktion (noch nicht eingespielt) → das bisherige Paket mit der Auftragsliste; beides fehlerhaft → einzeln wie bisher.
+    const k: any = await db.rpc("kc_club_comm_paket_kurz", { p_seit7: seit7, p_seit24: seit24, p_fehler: COMM_FEHLER, p_ok: COMM_OK });
+    const kd = k?.data, kz = kd?.zahlen;
+    if (!k?.error && kd && typeof kd === "object" && Array.isArray(kd.wege) && Array.isArray(kd.alle24) && kz && typeof kz.status === "object" && Array.isArray(kz.f24))
+      return [{ data: kd.st ?? null, error: null }, { data: kd.wege, error: null }, { data: kd.bericht ?? null, error: null }, { data: commZahlenNorm(kz), error: null }, { data: kd.alle24, error: null }];
     const r: any = await db.rpc("kc_club_comm_paket", { p_seit7: seit7, p_seit24: seit24, p_fehler: COMM_FEHLER });
     const d = r?.data;
     if (r?.error || !d || typeof d !== "object" || !Array.isArray(d.wege) || !Array.isArray(d.auftr) || !Array.isArray(d.alle24)) return null;
-    return [{ data: d.st ?? null, error: null }, { data: d.wege, error: null }, { data: d.bericht ?? null, error: null }, { data: d.auftr, error: null }, { data: d.alle24, error: null }];
+    return [{ data: d.st ?? null, error: null }, { data: d.wege, error: null }, { data: d.bericht ?? null, error: null }, { data: commZahlen(d.auftr, seit24), error: null }, { data: d.alle24, error: null }];
   } catch { return null; }
+}
+// KC-CLUB-SPAR-KURZ: was die Ampel aus den Aufträgen rechnet – Anzahl je Status, fehlgeschlagene der letzten 24 Std., zuletzt gesendet
+function commZahlenNorm(z: any) {
+  const status: Record<string, number> = {};
+  for (const k of Object.keys(z?.status ?? {}).sort()) status[k] = Number(z.status[k]) || 0;
+  return { status, f24: (Array.isArray(z?.f24) ? z.f24 : []).map((x: any) => ({ status: String(x?.status ?? ""), error_code: x?.error_code ?? null })), letzte: z?.letzte ?? null };
+}
+function commZahlen(liste: any[], seit24: string) {
+  const status: Record<string, number> = {};
+  for (const x of liste ?? []) status[x.status] = (status[x.status] ?? 0) + 1;
+  const ab = Date.parse(seit24);
+  return commZahlenNorm({ status, f24: (liste ?? []).filter((x: any) => COMM_FEHLER.includes(x.status) && Date.parse(x.created_at) >= ab),
+    letzte: (liste ?? []).find((x: any) => COMM_OK.includes(x.status))?.sent_at ?? null });
 }
 function commLesenEinzeln(seit7: string, seit24: string): Promise<any[]> {
   return Promise.all([
@@ -3568,7 +3588,7 @@ function commLesenEinzeln(seit7: string, seit24: string): Promise<any[]> {
     db.from("kc_communication_requests").select("status,channel,sent_at,created_at,error_code").eq("source_program", "kc-club").gte("created_at", seit7).order("created_at", { ascending: false }).limit(500),
     // fehlgeschlagene Aufträge aller Programme (24 h) – ersetzt den Zähler „failed“ des Zustandsberichts, der Empfängerfehler mitzählt
     db.from("kc_communication_requests").select("status,error_code").in("status", COMM_FEHLER).gte("created_at", seit24).limit(500),
-  ]);
+  ]).then((r: any[]) => { r[3] = { ...r[3], data: commZahlen(r[3]?.data ?? [], seit24) }; return r; });
 }
 function commLesen(frisch: boolean): Promise<any[]> {
   if (!frisch && COMM_MERK && Date.now() - COMM_MERK.t <= MERK_MS) return COMM_MERK.v;
@@ -3586,7 +3606,7 @@ function commLesen(frisch: boolean): Promise<any[]> {
 }
 async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
   const seit24 = new Date(Date.now() - 86400000).toISOString();
-  const [[{ data: st }, { data: wege }, { data: bericht }, { data: auftr }, { data: alle24 }], erreichbar] = await Promise.all([
+  const [[{ data: st }, { data: wege }, { data: bericht }, { data: zahlen }, { data: alle24 }], erreichbar] = await Promise.all([
     commLesen(erreichbarkeit),
     erreichbarkeit ? (async () => {
       const t0 = Date.now();
@@ -3594,13 +3614,14 @@ async function communicatorStatus(ich: Ich, erreichbarkeit = false) {
       catch { return { ok: false, ms: null }; }
     })() : Promise.resolve(null),
   ]);
-  const liste = auftr ?? [];
+  // KC-CLUB-SPAR-KURZ: gleiche Rechnung wie bisher, nur aus den Zahlen (commZahlen) statt aus der Auftragsliste
+  const z = zahlen ?? { status: {}, f24: [], letzte: null }, f24: any[] = z.f24 ?? [];
   const systemFehler24 = (alle24 ?? []).filter(commSystemFehler).length;
-  const zahl = (arr: string[]) => liste.filter((x: any) => arr.includes(x.status)).length;
+  const zahl = (arr: string[]) => arr.reduce((n, s) => n + (Number(z.status?.[s]) || 0), 0);
   const club = { gesendet: zahl(COMM_OK), offen: zahl(COMM_OFFEN), fehler: zahl(COMM_FEHLER),
-    fehler24: liste.filter((x: any) => commSystemFehler(x) && x.created_at >= seit24).length,
-    ohneWeg24: liste.filter((x: any) => COMM_FEHLER.includes(x.status) && !commSystemFehler(x) && x.created_at >= seit24).length,
-    letzte: liste.find((x: any) => COMM_OK.includes(x.status))?.sent_at ?? null };
+    fehler24: f24.filter((x: any) => commSystemFehler(x)).length,
+    ohneWeg24: f24.filter((x: any) => !commSystemFehler(x)).length,
+    letzte: z.letzte ?? null };
   const kanal = (k: string) => {
     const w = (wege ?? []).filter((x: any) => x.channel === k);
     if (!w.length) return { zustand: "aus", letzterErfolg: null };
@@ -7449,10 +7470,20 @@ async function aktionenRoh() {
 // 2.899.0 KC-CLUB-SPAR-AKTIONEN (Egress-Messung 08./09.11.: Aktionen-Liste ≈ 52 KB je Abruf, bei App-Start und Countdowns): gemerkt je Server-Instanz;
 // vor jeder Nutzung nur den Stand (updated_at, wenige Bytes) fragen – gleich → gemerkte Liste, geändert → neu laden. Nie veraltet.
 let AKT_MERK: { stand: string | null; liste: any[] } | null = null;
+// 2.905.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: die Mitgliederliste des KC Managers ist ≈ 109 KB, vor allem Ansprüche/Fähigkeiten – gelesen bei jedem
+// App-Start, Countdown, Kontakt, Büro-Festtag und Notfall-Paket): nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) über die Datenbank-Funktion,
+// gleiche Form wie bisher ({ data: { payload: { data: [...] } } }). Fehlt die Funktion oder antwortet sie nicht → wie bisher alles lesen.
+async function managerMitglieder(): Promise<{ data: any; error?: any }> {
+  try {
+    const r: any = await db.rpc("kc_club_manager_mitglieder_kurz", { p_org: ORG });
+    if (!r?.error && Array.isArray(r?.data?.data)) return { data: r.data.data.length ? { payload: r.data } : null, error: null };
+  } catch { /* Rückfall unten */ }
+  return await db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle();
+}
 async function aktionenLesen(ich: Ich) {
   const [{ liste, stand }, { data: mg }, leute] = await Promise.all([
     aktionenRoh(),
-    db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
+    managerMitglieder(),
     aktiveMitglieder(),
   ]);
   const kern = new Map(leute.map((p) => [namensSchluessel(p.given_name || p.display_name.split(" ")[0], (p as any).family_name || p.display_name.split(" ").slice(-1)[0]), p]));
@@ -7486,7 +7517,7 @@ async function aktionenLesen(ich: Ich) {
 // Sichtbar: eigene Daten immer; Admin alles; sonst nur, was das Mitglied freigegeben hat – und nur mit Recht „Kontakte sehen“.
 const KONTAKT_FELDER = ["handy", "festnetz", "mail", "adresse"];
 async function festnetzAusManager(p: any) {
-  const { data: mg } = await db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle();
+  const { data: mg } = await managerMitglieder();
   const schluessel = namensSchluessel(p.given_name || p.display_name.split(" ")[0], p.family_name || p.display_name.split(" ").slice(-1)[0]);
   const m: any = (Array.isArray(mg?.payload?.data) ? mg.payload.data : []).find((x: any) => namensSchluessel(x.firstName, x.lastName) === schluessel);
   return txt(m?.phone, 40) || null;
@@ -11770,7 +11801,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         const [leute, { data: fr }, { data: mg }] = await Promise.all([
           aktiveMitglieder(),
           db.from("kc_club_freigaben").select("person_id,bereich").in("bereich", ["geburtstag", "runder_geburtstag"]).eq("erlaubt", true),
-          db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
+          managerMitglieder(),
         ]);
         const frei = new Set((fr ?? []).filter((x: any) => x.bereich === "geburtstag").map((x: any) => x.person_id));
         // KC-CLUB-RUNDER-GEBURTSTAG: Alter nur, wenn das Mitglied es freigegeben hat – und nur bei runden Geburtstagen
@@ -11869,7 +11900,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_core_people").select("person_id,phone,email,street,postal_code,city,birth_date,given_name,family_name,display_name").in("person_id", ids),
           db.from("kc_club_freigaben").select("person_id,bereich,erlaubt").in("person_id", ids).eq("erlaubt", true),
           db.from("kc_club_rollen").select("person_id,aemter").in("person_id", ids),
-          db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
+          managerMitglieder(),
         ]);
         const mgListe = Array.isArray(mg?.payload?.data) ? mg.payload.data : [];
         const ausManager = (p: any) => mgListe.find((x: any) => namensSchluessel(x.firstName, x.lastName) === namensSchluessel(p.given_name || p.display_name.split(" ")[0], p.family_name || p.display_name.split(" ").slice(-1)[0]));
@@ -14140,7 +14171,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           db.from("kc_club_freigaben").select("person_id,bereich,erlaubt").in("person_id", ids).like("bereich", "kontakt_%"),
           db.from("kc_club_rollen").select("person_id,aemter,ist_admin,ist_vorstand").in("person_id", ids),
           ich.vorstand ? db.from("kc_club_notfall").select("person_id,name,telefon,beziehung").in("person_id", ids) : db.from("kc_club_notfall").select("person_id,name,telefon,beziehung").eq("person_id", ich.person_id),
-          db.from(AKTIONEN_QUELLE.tabelle).select("payload").eq("org_id", ORG).eq("section_key", AKTIONEN_QUELLE.mitglieder).maybeSingle(),
+          managerMitglieder(),
         ]);
         const pm = new Map((pe ?? []).map((x: any) => [x.person_id, x])), rm = new Map((rollen ?? []).map((x: any) => [x.person_id, x])), nm = new Map((nf ?? []).map((x: any) => [x.person_id, x]));
         const mgl: any[] = Array.isArray(mg?.payload?.data) ? mg.payload.data : [];

@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.905.0 – 2026-11-10 – 📉 Weniger Datenvolumen: Mitgliederliste und Versand-Ampel (KC-CLUB-SPAR-KURZ) · Server 2.905.0 + Datenbank
+Egress-Auswertung 10.11. (26 Std. nach 2.899.0). Freigabe Hansi: „Ja alles sparsamer machen – trotzdem muss alles sicher und schnell laufen. Keine Geschwindigkeitseinbußen“.
+- **Mitgliederliste aus dem KC Manager:** ≈ 109 KB je Abruf (vor allem Ansprüche/Fähigkeiten), gelesen bei App-Start, Countdowns, Kontakt, Büro-Festtagen und im Notfall-Paket. Jetzt liefert die Datenbank nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) – gleiche Form, gleiche Reihenfolge. Die „gemerkte Aktionen-Liste“ aus 2.899.0 sparte dagegen kaum (Aktionen sind nur 2 KB; die Server-Instanzen leben zu kurz).
+- **Versand-Ampel (Communicator):** statt bis zu 500 Aufträgen der letzten 7 Tage (≈ 70 KB) zählt die Datenbank selbst und schickt nur die Zahlen (≈ 0,1 KB) – gleiche Rechnung (gesendet/offen/Fehler, Fehler der letzten 24 Std. getrennt nach System/Empfänger, zuletzt gesendet).
+- **Sicher und schnell:** beide Datenbank-Funktionen nur lesend, nur für den Club-Server; fehlen sie oder antworten sie nicht, liest der Server wie bisher (Rückfall) – nichts fällt aus. Weniger Daten = kürzere Wartezeit, keine zusätzliche Abfrage. Stichproben-Vergleich alt ↔ neu der Ampel bleibt.
+- Erwartete Ersparnis: rund 9 MB am Tag (≈ 30 % des gemessenen Datenvolumens).
+- Datenbank: `supabase/migrations/20261110_kc_club_spar_kurz.sql` (Workflow „Datenbank einspielen“). Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.903.0 (App 2.904.0), Funktionen dürfen bleiben.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.904.0 – 2026-11-09 – 📖 Club-Küche: Lektorat, Urheberangabe, Zeichnungen Folge 7–9 und Folge 12 „Alle Sterne dieser Welt“ (Finale) · 🖼️ Film-Vorschaubilder als WebP (KC-CLUB-MAGAZIN-LEKTORAT, KC-CLUB-MAGAZIN-ROMAN-NACHWEIS, KC-CLUB-MAGAZIN-ROMAN, KC-BILDER-WEBP)
 Wünsche Hansi 09.11.: „Story by Hans-Joachim Koch, Skizzen by KI … wirklich gut checken“ – „Mit nächstem Termin“; „Baue die Zeichnungen für Folge 7 bis 9 ein und baue die Texte ein bisschen um“; „Spiele auch Folge 12 ein in das Heft mit Zeichnungen“ – „Ja, heute mit einspielen“; „umwandeln in webp … kleiner machen und schneller laden“.
 - **Urheberangabe** „Story by Hans-Joachim Koch · Skizzen by KI“ im Romankopf jeder Folge und im Impressum (`MAG_ROMAN_NACHWEIS`).
