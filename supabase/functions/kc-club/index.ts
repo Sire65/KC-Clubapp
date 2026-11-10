@@ -14446,7 +14446,9 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19): Runde = mehrere Personen ohne feste Gruppe. Für das Angebot „Daraus eine feste Gruppe machen?“:
         // wer sie begonnen hat und wie viele weitere Runden (ohne Gruppe) genau dieselben Teilnehmer haben.
         let runde: { ersteller: boolean; gleiche: number } | null = null;
-        if (!gr && (tn ?? []).length >= 3) {
+        // 2.905.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: ≈ 5 MB am Tag Teilnehmerlisten fast nur im Notfall-Paket): nicht beim Bau des Notfall-Pakets
+        // (nurLesen) – „Daraus eine feste Gruppe machen?“ kann man im Notbetrieb nicht annehmen; dafür lud jeder Chat die Teilnehmer ALLER Chats des Mitglieds.
+        if (!gr && (tn ?? []).length >= 3 && !ich.nurLesen) {
           const satz = (tn ?? []).map((x: any) => x.person_id).sort().join("|");
           const { data: meineTh } = await db.from("kc_communication_thread_participants").select("thread_id").eq("person_id", ich.person_id).neq("thread_id", id);
           const andereIds = (meineTh ?? []).map((x: any) => x.thread_id).slice(0, 500);
