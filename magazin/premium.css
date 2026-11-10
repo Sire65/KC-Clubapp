@@ -6,7 +6,7 @@
  * A5/A4-Broschürenerstellung bleiben erhalten.
  */
 
-.mag-seite, .mag-titel:not(.wm-titel) {
+.mag-seite:not(.wm-seite), .mag-titel:not(.wm-titel) {
   --mag-paper: #fffdf8;
   --mag-paper-warm: #f8f2e9;
   --mag-paper-deep: #eee5d7;
@@ -21,11 +21,11 @@
 }
 
 /* 1. Papier, Seitentitel, Fußzeilen: ruhig und redaktionell. */
-.mag-seite {
+.mag-seite:not(.wm-seite) {
   background: var(--mag-paper);
   color: var(--mag-ink);
 }
-.mag-kopf {
+.mag-seite:not(.wm-seite) .mag-kopf {
   gap: 1rem;
   padding: 15px clamp(16px, 4.8%, 34px) 10px;
   border-bottom: 1px solid var(--mag-gold);
@@ -34,17 +34,17 @@
   letter-spacing: .13em;
   color: var(--mag-wine);
 }
-.mag-kopf b {
+.mag-seite:not(.wm-seite) .mag-kopf b {
   font-family: Georgia, "Times New Roman", serif;
   font-size: .92rem;
   font-weight: 800;
   letter-spacing: .10em;
 }
-.mag-rumpf {
+.mag-seite:not(.wm-seite) .mag-rumpf {
   padding: clamp(20px, 4.6vw, 36px) clamp(18px, 5vw, 40px);
   overflow-wrap: break-word;
 }
-.mag-fuss {
+.mag-seite:not(.wm-seite) .mag-fuss {
   padding: 12px clamp(18px, 5%, 36px);
   border-top: 1px solid var(--mag-line);
   background: #fcf9f4;
@@ -52,7 +52,7 @@
   font: 600 .69rem/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
   letter-spacing: .035em;
 }
-.mag-h {
+.mag-seite:not(.wm-seite) .mag-h {
   position: relative;
   padding: 0 0 .68em;
   margin: 0 0 .55em;
@@ -61,7 +61,7 @@
   letter-spacing: -.025em;
   text-wrap: balance;
 }
-.mag-h::after {
+.mag-seite:not(.wm-seite) .mag-h::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -70,17 +70,17 @@
   width: min(6.5rem, 27%);
   background: var(--mag-gold);
 }
-.mag-unterzeile {
+.mag-seite:not(.wm-seite) .mag-unterzeile {
   margin: -.22rem 0 1.3rem;
   color: var(--mag-muted);
   font: italic clamp(.9rem, 3.2vw, 1rem)/1.5 Georgia, "Times New Roman", serif;
 }
-.mag-lead {
+.mag-seite:not(.wm-seite) .mag-lead {
   font: 400 clamp(1.03rem, 3.4vw, 1.18rem)/1.55 Georgia, "Times New Roman", serif;
   color: var(--mag-ink);
   text-wrap: pretty;
 }
-.mag-schlag {
+.mag-seite:not(.wm-seite) .mag-schlag {
   color: var(--mag-wine);
   font: 700 clamp(1.45rem, 4.3vw, 2rem)/1.18 Georgia, "Times New Roman", serif;
   letter-spacing: -.018em;
@@ -110,7 +110,7 @@
   inset: clamp(10px, 2.4vw, 18px);
   border: 1px solid rgba(232,214,174,.46);
   pointer-events: none;
-  z-index: -1;
+  z-index: 2;
 }
 .mag-titel:not(.wm-titel)::after {
   content: "";
@@ -123,7 +123,7 @@
   border-radius: 50%;
   box-shadow: 0 0 0 30px rgba(245,225,182,.025), 0 0 0 65px rgba(245,225,182,.02);
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 .mag-titel:not(.wm-titel) .mag-titel-kopf {
   position: relative;
@@ -339,7 +339,7 @@
   font: italic 1.13rem/1.5 Georgia, "Times New Roman", serif;
   text-align: left;
 }
-.mag-platz {
+.mag-seite:not(.wm-seite) .mag-platz {
   border: 1px dashed #bba581;
   border-left: 3px solid var(--mag-gold);
   border-radius: 4px;
@@ -568,9 +568,9 @@
 
 /* 8. Mobile & Tablet – keine winzigen Spalten und kein horizontales Scrollen. */
 @media (max-width: 520px) {
-  .mag-rumpf { padding: 19px 17px 25px; }
-  .mag-kopf { padding: 12px 16px 9px; letter-spacing: .045em; }
-  .mag-kopf b { font-size: .82rem; }
+  .mag-seite:not(.wm-seite) .mag-rumpf { padding: 19px 17px 25px; }
+  .mag-seite:not(.wm-seite) .mag-kopf { padding: 12px 16px 9px; letter-spacing: .045em; }
+  .mag-seite:not(.wm-seite) .mag-kopf b { font-size: .82rem; }
   .mag-titel:not(.wm-titel) { padding: 20px; gap: 12px; }
   .mag-titel:not(.wm-titel) .mag-titelfoto { min-height: 155px; }
   .mag-titel:not(.wm-titel) .mag-titelfoto::after { letter-spacing: .10em; }
@@ -584,7 +584,7 @@
 @media (max-width: 350px) {
   .mag-titel:not(.wm-titel) .mag-marke { font-size: 2.05rem; }
   .mag-titel:not(.wm-titel) .mag-titelfoto::before { font-size: 2.6rem; }
-  .mag-kopf span { font-size: .66rem; }
+  .mag-seite:not(.wm-seite) .mag-kopf span { font-size: .66rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mag-inhalt > li > button { transition: none; }
@@ -598,7 +598,7 @@
   .mag-titel:not(.wm-titel) .mag-schlagzeilen li { border-top-color: #e6cca4; }
 }
 @media print {
-  .mag-seite, .mag-rumpf { background: #fff; }
+  .mag-seite:not(.wm-seite), .mag-seite:not(.wm-seite) .mag-rumpf { background: #fff; }
   .mag-kasten { box-shadow: none; }
   .mag-roman-bild img { filter: none; }
   .mag-inhalt > li > button { transition: none; }
