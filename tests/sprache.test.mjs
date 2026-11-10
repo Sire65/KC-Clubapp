@@ -24,6 +24,7 @@ assert.doesNotMatch(teil, /\bapi\(|fetch\(/, "Umschalten fragt nichts beim Serve
 // Wörterbuch: nur Text → Text, keine doppelten Schlüssel
 const dict = teil.slice(teil.indexOf("const SP_EN = {"), teil.indexOf("\n};", teil.indexOf("const SP_EN = {")));
 const schl = [...dict.matchAll(/"([^"]+)": "/g)].map((m) => m[1]);
+for (const [, k, v] of dict.matchAll(/"([^"]+)": "([^"]*)"/g)) assert.ok(!v.includes("=") || k.includes("="), `Eintrag „${k}“ falsch eingelesen (= im Wert)`);
 assert.equal(new Set(schl).size, schl.length, "kein Begriff doppelt: " + schl.filter((x, i) => schl.indexOf(x) !== i).join(", "));
 assert.ok(schl.length >= 140, "Wörterbuch Stufe 1 vollständig (" + schl.length + ")");
 // Erklärvideos (deutsch gesprochen, finden Knöpfe am deutschen Text): während des Videos Bedienung deutsch, danach wieder English

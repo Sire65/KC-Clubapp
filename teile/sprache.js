@@ -340,10 +340,10 @@ const SP_EN = {
   "Vereinbarungen und nächste Schritte": "Agreements and next steps", "Bemerkungen (für die Abrechnung, nur für dich": "Remarks (for the claim, only for you",
   "Antwort bis (freiwillig": "Answer by (optional", "Antworten bis (freiwillig": "Answers by (optional",
   "Treffpunkt / Abfahrt (freiwillig": "Meeting point / departure (optional", "Bemerkung": "Remark", "Anlass": "Occasion",
-  "Datum (leer": "Aufnahmedatum aus dem Foto=Date (empty = date taken from the photo", "Beschreibung": "Description", "Preisliste": "Price list",
+  "Datum (leer = Aufnahmedatum aus dem Foto": "Date (empty = date taken from the photo", "Beschreibung": "Description", "Preisliste": "Price list",
   "Kleingedrucktes": "Small print", "Fußzeile": "Footer", "Welche Aufgaben": "Which tasks", "Geordnet nach": "Sorted by",
   "Eigene Idee für eine Funktion (freiwillig": "Own idea for a feature (optional", "Deine Nachricht (freiwillig": "Your message (optional",
-  "Rabatt in % (leer": "zum Eintragen=Discount in % (empty = to fill in", "Nummer von": "Number from", "Weiteres Amt (freiwillig": "Further office (optional",
+  "Rabatt in % (leer = zum Eintragen": "Discount in % (empty = to fill in", "Nummer von": "Number from", "Weiteres Amt (freiwillig": "Further office (optional",
   "Handynummer": "Mobile number", "Spruch": "Saying", "Was kommt rein": "What goes in", "Beschriftung": "Label", "Einleitung (freiwillig": "Introduction (optional",
   "Stichworte (freiwillig, mit Komma trennen": "Keywords (optional, separate with commas", "Wie lange": "How long", "bis einschließlich": "up to and including",
   "Deine E-Mail-Adresse": "Your e-mail address", "Dein persönlicher Link": "Your personal link", "Dein Name": "Your name", "Protokollführer": "Minute-taker",
@@ -606,7 +606,7 @@ const SP_EN = {
   "Normal – heller Schatten und feine Lichtkante": "Normal – light shadow and fine light edge",
   "Stark – deutliches Leuchten und helle Kante": "Strong – clear glow and bright edge", "Ecken der Kacheln": "Tile corners", "gewählt": "selected", "Leicht": "Light",
   "Mittel": "Medium", "Kräftig": "Strong", "Sehr kräftig": "Very strong", "Auszahlung": "Payout", "Wichtigkeit": "Priority", "Antwort-Knopf": "Reply button",
-  "Tag/Nacht": "Day/night", "Kachelgröße": "Tile size", "Angehakt": "kein Wechsel, wie bisher=Ticked = no change, as before",
+  "Tag/Nacht": "Day/night", "Kachelgröße": "Tile size", "Angehakt = kein Wechsel, wie bisher": "Ticked = no change, as before",
   "Nur ausgeblendete zeigen": "Show hidden only", "ausgeblendete Kacheln – anzeigen": "hidden tiles – show", "neue Nachricht": "new message",
   "neue Nachrichten": "new messages", "Mitglieder online": "members online", "Kurze Zettel · wichtig & erledigt": "Short notes · important & done",
   "Tipp des Tages, Vorlesen, Sprachsteuerung, Einweisungen": "Tip of the day, reading aloud, voice control, introductions",
@@ -687,6 +687,8 @@ const SP_EN = {
   "Als erledigt markieren? Die Anzeige verschwindet für die anderen": "Mark as done? The display disappears for the others",
   "Alle Kacheln wieder in der ursprünglichen Reihenfolge und alle einblenden": "All tiles back in the original order and show all", "Wirklich löschen": "Really delete",
   "Wirklich abbrechen": "Really cancel", "Wirklich verlassen": "Really leave", "Möchtest du jetzt den Rundgang sehen": "Would you like to see the tour now",
+  // Rest aus dem zweiten Englisch-Rundgang
+  "Kochmütze": "Chef's hat", "noch": "left", "jetzt Platz nehmen": "take a seat now", "und 1 weiterer – jetzt Platz nehmen": "and 1 more – take a seat now", "und 1 weiterer – zurück zum Tisch": "and 1 more – back to the table", "fett": "bold", "kursiv": "italic", "durch": "strike", "Express": "Express", "Verbindung": "Connection", "An Google Maps senden (Teilen": "Send to Google Maps (share", "Adresse kopieren": "Copy address", "An wen": "To whom", "Gerade online": "Online now", "Nur das Wichtigste, große Knöpfe": "Only the essentials, large buttons", "Empfohlen für den Anfang": "Recommended to start with", "Alle Funktionen der App": "All features of the app", "Sehr gut": "Very good", "Gut": "Good", "Mäßig": "Fair", "Schwach": "Weak", "Offline": "Offline", "Ton · Kamera · Bildschirm · Unterlagen zeigen": "Sound · camera · screen · show documents", "Teile": "items", "Ausdrucke": "prints",
 };
 // Wo übersetzt wird (Bedienelemente) – und wo nie (Inhalte)
 const SP_FUSS = { "Start": "Home" }; // nur in der Leiste unten – „▶ Start“ in Spielen bleibt „Start“
