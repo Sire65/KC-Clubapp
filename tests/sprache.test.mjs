@@ -26,6 +26,10 @@ const dict = teil.slice(teil.indexOf("const SP_EN = {"), teil.indexOf("\n};", te
 const schl = [...dict.matchAll(/"([^"]+)": "/g)].map((m) => m[1]);
 assert.equal(new Set(schl).size, schl.length, "kein Begriff doppelt: " + schl.filter((x, i) => schl.indexOf(x) !== i).join(", "));
 assert.ok(schl.length >= 140, "Wörterbuch Stufe 1 vollständig (" + schl.length + ")");
+// Erklärvideos (deutsch gesprochen, finden Knöpfe am deutschen Text): während des Videos Bedienung deutsch, danach wieder English
+const vid = lies("teile/videos.js");
+assert.match(vid, /spracheEn\(\) && typeof spracheDeutsch === "function" && !spracheDeutsch\._teil\) \{ spracheDeutsch\(\); RG\.warEn = true; \}/);
+assert.match(vid, /if \(RG\.warEn\) \{ RG\.warEn = false; setTimeout\(\(\) => \{ if \(!RG\.an && spracheEn\(\)\) spracheEnglisch\(\); \}, 0\); \}/);
 // Teil-Namen dürfen keine Namen aus app.js überdecken (sonst „already declared“ – beim Bau zweimal passiert: SP, SPR)
 const oben = [...teil.matchAll(/^(?:const|let|var|function|async function) ([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]);
 for (const n of oben) assert.doesNotMatch(app, new RegExp(`^(?:const|let|var|function|async function) ${n.replace("$", "\\$")}\\b|^let [^;\\n]*\\b${n}\\b\\s*=`, "m"), `Name ${n} gibt es schon in app.js`);

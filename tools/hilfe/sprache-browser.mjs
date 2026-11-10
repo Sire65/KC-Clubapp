@@ -49,6 +49,11 @@ for (const w of [360, 412]) { await seite.setViewportSize({ width: w, height: 78
     if (!(f.bottom <= tx.top || f.right <= tx.left || f.left >= tx.right)) treff.push("spKnopf/Schriftzug"); return treff; });
   ok(!t.length, `${w} px: Pfeile, Flagge und Balken mit Abstand nebeneinander` + (t.length ? " – " + t.join(", ") : "")); }
 await seite.setViewportSize({ width: 400, height: 800 });
+// Erklärvideo: währenddessen deutsch, danach wieder English
+await seite.evaluate(async () => { await teilLaden("videos"); try { speechSynthesis.speak = () => {}; } catch {} rundgangStart(false); }); await seite.waitForTimeout(900);
+ok((await lage()).fuss.join(",").includes("Start,Termine"), "Erklärvideo läuft: Bedienung deutsch (Video spricht deutsch)");
+await seite.evaluate(() => rundgangEnde(true)); await seite.waitForTimeout(600);
+ok((await lage()).fuss.join(",").includes("Home,Events"), "nach dem Video wieder English");
 // zurück auf Deutsch (ab hier zählen: Umschalten allein fragt nichts beim Server an)
 await seite.waitForTimeout(1500); const apiVorher = await seite.evaluate(() => __api.length);
 await seite.evaluate(() => $("spKnopf").click()); await seite.waitForTimeout(500);

@@ -91,6 +91,7 @@ try {
       // kein „HeadlessChrome“: sonst schreibt das Fehlerprotokoll (absichtlich) nichts mit
       userAgent: g.touch ? "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36"
         : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36" });
+    if (process.env.RUNDGANG_SPRACHE === "en") await ctx.addInitScript(() => { try { localStorage.setItem("kc_club_englisch", "1"); } catch {} }); // KC-CLUB-SPRACHE: ganzer Rundgang mit englischer Bedienung
     const seite = await ctx.newPage(), melde = (t) => fehler.push(`[${g.name}] ${t}`);
     seite.on("pageerror", (e) => melde("Programmfehler: " + String(e.message || e).slice(0, 200)));
     await seite.route("**/*", (r) => {

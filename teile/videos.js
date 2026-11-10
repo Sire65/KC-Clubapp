@@ -2930,6 +2930,8 @@ function rgVerweisWahl(w, id) {
 }
 function rundgangStart(mitKnopf, id = "ueberblick", liste = [], startI = 0) {
   rundgangEnde(true); einwKarteWeg(); vorlesenStopp();
+  // KC-CLUB-SPRACHE: Erklärvideos sprechen deutsch und finden Knöpfe an ihrem deutschen Text – solange ein Video läuft, Bedienung deutsch
+  if (typeof spracheEn === "function" && spracheEn() && typeof spracheDeutsch === "function" && !spracheDeutsch._teil) { spracheDeutsch(); RG.warEn = true; }
   RG.liste = Array.isArray(liste) ? liste.slice() : []; // KC-CLUB-VIDEO-THEMEN: danach noch abzuspielen
   RG.verweise = []; // 2.799.0 KC-CLUB-VIDEO-VERWEIS-ENDE: erst auf der Schlusskarte anbieten
   const tour = RUNDGAENGE.find((x) => x.id === id && (!x.nur || x.nur())) || RUNDGAENGE[0];
@@ -3368,6 +3370,7 @@ function rundgangPause() {
   if (RG.pause) { rgStille(); $("rgPause").textContent = "▶ Weiter"; } else rgZeigen();
 }
 function rundgangEnde(still) {
+  if (RG.warEn) { RG.warEn = false; setTimeout(() => { if (!RG.an && spracheEn()) spracheEnglisch(); }, 0); } // KC-CLUB-SPRACHE: nach dem Video wieder English
   if (!RG.an && !$("rgSchicht")) return;
   const bisEnde = !still && RG.frage, naechst = bisEnde ? (RG.liste || []).find((id) => RUNDGAENGE.some((x) => x.id === id && (!x.nur || x.nur()))) : null;
   const rest = naechst ? RG.liste.slice(RG.liste.indexOf(naechst) + 1) : [], von = RG.von; if (!bisEnde) RG.liste = []; // ✕ Beenden stoppt auch die Reihe
