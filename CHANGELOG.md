@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.905.0 – 2026-11-10 – 🇩🇪/🇬🇧 Sprache umschalten: Bedienung auf Englisch (KC-CLUB-SPRACHE, Stufe 1)
+Wunsch Hansi 10.11.: „Oben im Kopf … die deutsche und englische Flagge als Togglebutton … Bedienelemente auf Englisch, nicht die Inhalte. Und die Begrüßung Good morning Hans“ – nach Beispielbildern: „Geht es auch mit einer Flagge … die beiden Kopfpfeile weiter mittig“ – „Ja bau das so und dann nach und nach die ganzen Bedienelemente auf Sprache umstellen“.
+- Oben an der Kante des Kopfes: **eine Flagge** zeigt die eingestellte Sprache, antippen wechselt Deutsch ↔ English (je Gerät gemerkt). Pfeile ⌃ ⌃⌃ etwas nach links, rechts daneben Flagge und Verbindungs-Balken – alle in einer Linie, nichts überlappt (geprüft 360/412 px).
+- **English:** Begrüßung nach Tageszeit („Good morning / afternoon / evening, Hans!“), Leiste unten (Home, Events, Messages, Members, More), Seitentitel, Register, Schnellzugriff, Klappen in ⚙️ More und die häufigsten Knöpfe (Close, Cancel, Save, Back, Delete, Later …). **Inhalte bleiben deutsch** (Nachrichten, Termine, Namen, Kacheltexte, Hilfe, Zeitschrift).
+- Technik: nachladbares Teil `teile/sprache.js` (nur bei 🇬🇧 geladen, keine Server-Abfrage), Wörterbuch `SP_EN` mit exaktem Textvergleich nur in Bedienelementen; zurück auf Deutsch stellt jeden Originaltext wieder her. Weitere Bereiche folgen nach und nach (einfach `SP_EN` erweitern).
+- Tests: `tests/sprache.test.mjs`, Browser-Prüfung `tools/hilfe/sprache-browser.mjs`. Rückweg: App 2.904.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.904.0 – 2026-11-09 – 📖 Club-Küche: Lektorat, Urheberangabe, Zeichnungen Folge 7–9 und Folge 12 „Alle Sterne dieser Welt“ (Finale) · 🖼️ Film-Vorschaubilder als WebP (KC-CLUB-MAGAZIN-LEKTORAT, KC-CLUB-MAGAZIN-ROMAN-NACHWEIS, KC-CLUB-MAGAZIN-ROMAN, KC-BILDER-WEBP)
 Wünsche Hansi 09.11.: „Story by Hans-Joachim Koch, Skizzen by KI … wirklich gut checken“ – „Mit nächstem Termin“; „Baue die Zeichnungen für Folge 7 bis 9 ein und baue die Texte ein bisschen um“; „Spiele auch Folge 12 ein in das Heft mit Zeichnungen“ – „Ja, heute mit einspielen“; „umwandeln in webp … kleiner machen und schneller laden“.
 - **Urheberangabe** „Story by Hans-Joachim Koch · Skizzen by KI“ im Romankopf jeder Folge und im Impressum (`MAG_ROMAN_NACHWEIS`).

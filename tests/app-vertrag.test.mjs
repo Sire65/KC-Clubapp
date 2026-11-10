@@ -10235,7 +10235,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
   assert.ok(/id="kopfPfeilHalb"[^>]*onclick="kopfRollo\('halb'\)"/.test(start) && /id="kopfPfeil"[^>]*onclick="kopfRollo\('ganz'\)"/.test(start), "zwei Pfeile im Kopf");
-  assert.ok(/\.kopf-pfeil\.kp-halb \{ left: calc\(50% - (\d+)px\); \} \.kopf-pfeil\.kp-ganz \{ left: calc\(50% \+ \1px\); \}/.test(html), "Pfeile symmetrisch zur Mitte");
+  assert.ok(/\.kopf-pfeil\.kp-halb \{ left: calc\(50% - 62px\); \} \.kopf-pfeil\.kp-ganz \{ left: calc\(50% - 6px\); \}/.test(html), "Pfeile nebeneinander, etwas links der Mitte (KC-CLUB-SPRACHE: rechts daneben Flagge und Verbindungs-Balken)");
   const ab = Number(/kp-halb \{ left: calc\(50% - (\d+)px\)/.exec(html)[1]); assert.ok(ab * 2 - 56 >= 40, "mindestens 40 px Abstand zwischen den Laschen");
   assert.ok(/#v-start \.hero\.halb-eingerollt > #heroInfo, #v-start \.hero\.halb-eingerollt > #infoPunkte \{ display: none; \}/.test(html) && !/halb-eingerollt > \.statusleiste/.test(html), "halb: Statusleiste mit LEDs bleibt");
   assert.ok(/const ROLLO_RANG = \{ offen: 0, halb: 1, ganz: 2 \};/.test(html) && /art === "halb" \? \(von === "offen" \? "halb" : von === "halb" \? "offen" : "halb"\) : \(von === "ganz" \? "offen" : "ganz"\)/.test(html), "drei Stellungen, logische Übergänge");
