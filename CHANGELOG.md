@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.906.0 – Zeitansage in acht Erklär-Videos (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+Je Video im Browser Schritt für Schritt geprüft (wo nötig mit Beispieldaten), Texte mit der App verglichen, dann Zeitansage eingeschaltet:
+- **Archiv & Clubchronik:** 7 Schritte – Suche/Jahr/Art, Mein Ordner, Clubchronik, Clubleben, geöffneter Ordner mit Registern, Inhaltsverzeichnis.
+- **Vorschlag einreichen:** 6 Schritte – „＋ Neu“, Art Thema/Spende, Thema, Termin, „Clubsprecher & Kassenwart benachrichtigen“, „Vorschlagen“.
+- **Mein Dienst & Dienstplan:** 13 Schritte – Mein Dienst, Wunsch-Fenster mit Fertig/Bogen, Dienstplan, Vergleich, Übersicht. „Zeiten von der Stempeluhr“ passt weiter, solange die Ist-Rückfrage (2.893.0) nur im Test ist.
+- **Mein Status:** 5 Schritte – Status im Kopf, verfügbar/beschäftigt/Urlaub/krank/nicht erreichbar, Urlaub mit „bis“, Speichern, Kachel.
+- **Protokolle & Dokumente:** 5 Schritte – Kachel, Liste, Liste/Kacheln + Filter Jahr/Monat/Ort/Protokollführer, Meine Dokumente.
+- **Meine Daten & Änderungen:** 5 Schritte – Übersicht drucken/sichern, „Änderung melden“ (wird angetippt), Anschrift/Telefon/E-Mail/Kleidergröße, Meine letzten Meldungen.
+- **Rezeptbuch:** 6 Schritte – Suche/Arten, Portionen umrechnen, Zutaten abhaken, Einkaufsliste/Drucken/Teilen, ＋ Neues Rezept.
+- **Meine Schulung:** 4 Schritte – Kachel, freie Termine, „Kein Termin passt“, Zusammenfassungen im Archiv.
+- Rückweg: Version 2.905.0 einspielen.
+
 ## 2.905.0 – 2026-11-10 – 🇩🇪/🇬🇧 Sprache umschalten: Bedienung auf Englisch (KC-CLUB-SPRACHE, Stufe 1 + 2)
 Wunsch Hansi 10.11.: „Oben im Kopf … die deutsche und englische Flagge als Togglebutton … Bedienelemente auf Englisch, nicht die Inhalte. Und die Begrüßung Good morning Hans“ – nach Beispielbildern: „Geht es auch mit einer Flagge … die beiden Kopfpfeile weiter mittig“ – „Ja bau das so und dann nach und nach die ganzen Bedienelemente auf Sprache umstellen“.
 - Oben an der Kante des Kopfes: **eine Flagge** zeigt die eingestellte Sprache, antippen wechselt Deutsch ↔ English (je Gerät gemerkt). Pfeile ⌃ ⌃⌃ etwas nach links, rechts daneben Flagge und Verbindungs-Balken – alle in einer Linie, nichts überlappt (geprüft 360/412 px).

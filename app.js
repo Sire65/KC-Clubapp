@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.905.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.906.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2058,14 +2058,14 @@ const RUNDGAENGE = [
   { id: "sos", stand: "1", zeit: "08.11.2026", sym: "🆘", t: "SOS – Notfall", u: "Notrufe, Standort, Notfallpass (ca. 1 Min.)", st: () => RG_SOS },
   { id: "helfen", stand: "1", zeit: "08.11.2026", sym: "🤝", t: "Helfen & Leihen", u: "Hilfe, Ausleihen, Börse (ca. 1 Min.)", st: () => RG_HELFEN },
   { id: "spiele", stand: "1", zeit: "08.11.2026", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
-  { id: "archiv", stand: "1", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
-  { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
-  { id: "dienst", stand: "2", sym: "🗓️", t: "Mein Dienst & Dienstplan", u: "Wünsche, Sollplan, gearbeitete Zeiten, Wochenplan, 📊 wer kann wann (ca. 2 Min.)", st: () => RG_DIENST }, // 2.269.0 KC-CLUB-ERKLAERVIDEOS-5
-  { id: "status", stand: "1", sym: "🟢", t: "Mein Status", u: "Verfügbar, Urlaub, krank – mit Hinweis (ca. 1 Min.)", st: () => RG_STATUS },
-  { id: "lesen", stand: "1", sym: "📄", t: "Protokolle & Dokumente", u: "Nachlesen, filtern, Anleitungen drucken (ca. 1 Min.)", st: () => RG_LESEN },
-  { id: "meinedaten", stand: "1", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
-  { id: "rezepte", stand: "1", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
-  { id: "schulung", stand: "1", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
+  { id: "archiv", stand: "1", zeit: "10.11.2026", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
+  { id: "vorschlag", stand: "1", zeit: "10.11.2026", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+  { id: "dienst", stand: "2", zeit: "10.11.2026", sym: "🗓️", t: "Mein Dienst & Dienstplan", u: "Wünsche, Sollplan, gearbeitete Zeiten, Wochenplan, 📊 wer kann wann (ca. 2 Min.)", st: () => RG_DIENST }, // 2.269.0 KC-CLUB-ERKLAERVIDEOS-5
+  { id: "status", stand: "1", zeit: "10.11.2026", sym: "🟢", t: "Mein Status", u: "Verfügbar, Urlaub, krank – mit Hinweis (ca. 1 Min.)", st: () => RG_STATUS },
+  { id: "lesen", stand: "1", zeit: "10.11.2026", sym: "📄", t: "Protokolle & Dokumente", u: "Nachlesen, filtern, Anleitungen drucken (ca. 1 Min.)", st: () => RG_LESEN },
+  { id: "meinedaten", stand: "1", zeit: "10.11.2026", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
+  { id: "rezepte", stand: "1", zeit: "10.11.2026", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
+  { id: "schulung", stand: "1", zeit: "10.11.2026", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
   { id: "feedback", stand: "1", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
   { id: "aktionen", stand: "1", sym: "🧳", t: "Aktionen & Reisen", u: "Ausflüge, Reiseverlauf, Preis, Checkliste (ca. 1 Min.)", st: () => RG_AKTIONEN }, // 2.271.0 KC-CLUB-ERKLAERVIDEOS-7
   { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
