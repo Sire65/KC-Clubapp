@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.911.0 – 2026-11-10 – 📰 Club-Küche im Premium-Design · 📖 „Hinter dem Pass“ zweiter Durchgang (KC-CLUB-MAGAZIN-PREMIUM, KC-CLUB-MAGAZIN-LEKTORAT)
+Hansi 10.11.: „Ja, mach so und spiel um 20 Uhr ein“ (Design) · „OK Mach weiter“ (Roman).
+- **Premium-Design** (Entwurf ChatGPT, Zweig `magazin-premium-design-2026-11-10`): `magazin/premium.css` – edlere Titelseite (weinrot-gold, „Handwerk / Geschichten / Gemeinschaft“), Inhaltsverzeichnis, Rubrikköpfe mit Goldlinie, Rezept- und Romantypografie, Mobil-Einspaltensatz, Fokus/Kontrast. Nur Club-Küche, Weihnachtsmarkt-Prospekt unverändert. Im Offline-Speicher (sw.js), Test `tests/magazin-premium.test.mjs`.
+- Nachgebessert: komplett in `@media screen` – Heft-Druck und Drucken bleiben beim bewährten Satz (A5-Heft 40 statt 52 Seiten, keine geteilten Zeilen; Probedruck pixelgleich); ab 900 px Breite kompakteres Vorwort (passt mit Unterschrift auf eine Seite).
+- **Roman, zweiter Durchgang:** 204 Änderungen in allen 12 Folgen (Realität, Dialoge, Humor, „nickte“ seltener) – u. a. Burgunder- statt Périgord-Trüffel, Verbandbuch/D-Arzt/BG, Jagdgesellschaft F4 ein Termin und F6 eigenes Menü, Berufskolleg/Köcheverband, Wettbewerbsregeln, Polizei/Anzeige. Absätze, Überschriften und Bildstellen unverändert (F4-Überschrift „Die Regionalbahn“). Wortcheck: keine unbekannten Wörter.
+- Rückweg: App 2.910.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.910.0 – Zeitansage: Videos „Feedback geben“, „Aktionen & Reisen“, „Fit bleiben“, „Studio: live zeigen“, „Technik: Update & Sicherheit“, „Versteckte Helfer“, „Wecker, Stoppuhr & Timer“, „Die Rückseite: Eselsohr“ und „Kommunikationszentrale“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - **Feedback geben:** 5 Schritte geprüft – Kachel, drei Schritte zum Antippen, Ideen/Mitteilung (mit Mikrofon), „ohne Namen“, Danke mit „schon umgesetzt“.
 - **Aktionen & Reisen:** 4 Schritte geprüft – Kachel, kommende Aktionen mit Tagen bis dahin, Einzelheiten (Reiseverlauf, wer dabei ist, Preis pro Person, Veranstalter mit Telefon, Fotos, bei einer Kreuzfahrt die eigene Reise-Checkliste – Satz im Video entsprechend genauer).
