@@ -1,3 +1,7 @@
+/* KC-CLUB-MAGAZIN-PREMIUM (10.11.2026, Freigabe Hansi „Ja, mach so“): nur für den Bildschirm.
+ * Die Druckwege (magDruck, Heft A5/Bögen) übernehmen nur .mag-Regeln außerhalb von @media – so bleibt der
+ * bewährte Drucksatz (sauberer Seitenumbruch, 40 statt 52 A5-Seiten) unverändert. */
+@media screen {
 /*
  * CLUB-KÜCHE | Premium-Editorial-Look
  * 2026-11-10 – Gestaltungsebene über dem bestehenden Magazin.
@@ -652,4 +656,13 @@
 .wm-seite .mag-schlagzeilen {
   display: grid;
   gap: 6px;
+}
+
+/* Breite Ansicht (PC/Tablet quer, Doppelseite): Vorwort und Lauftext wieder auf eine Seite */
+@media (min-width: 900px) {
+  .mag-rumpf .mag-vorwort { font-size: .9rem; line-height: 1.5; margin-top: 0; }
+  .mag-rumpf .mag-vorwort p { margin: 0 0 .5rem; }
+  .mag-seite:not(.wm-seite) .mag-rumpf { padding: 14px 24px; }
+  .mag-seite:not(.wm-seite) .mag-h { font-size: 1.5rem; margin-bottom: .4rem; }
+}
 }
