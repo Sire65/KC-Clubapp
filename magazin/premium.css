@@ -603,3 +603,53 @@
   .mag-roman-bild img { filter: none; }
   .mag-inhalt > li > button { transition: none; }
 }
+
+
+/* Weihnachtsmarkt-Prospekt: bestehende grüne Optik bewusst erhalten.
+ * Diese Seiten nutzen einige .mag- Bausteine mit; Premium betrifft nur Club-Küche. */
+.wm-seite.mag-seite {
+  background: transparent;
+  color: #2b1a1c;
+}
+.wm-seite .mag-kopf {
+  gap: 8px;
+  padding: 10px 16px 6px;
+  border-bottom: 3px double #1f5a3a;
+  background: transparent;
+  color: #1f5a3a;
+  font: .78rem/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .06em;
+}
+.wm-seite .mag-kopf b {
+  font: 700 .95rem/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .14em;
+}
+.wm-seite .mag-rumpf {
+  padding: 14px 18px;
+  overflow-wrap: anywhere;
+}
+.wm-seite .mag-h {
+  margin: 0 0 4px;
+  padding: 0;
+  color: #1f5a3a;
+  font: 700 1.45rem/1.3 Georgia, "Times New Roman", serif;
+  letter-spacing: normal;
+}
+.wm-seite .mag-h::after { content: none; }
+.wm-seite .mag-lead {
+  color: #2b1a1c;
+  font: 400 1.02rem/1.5 Georgia, "Times New Roman", serif;
+}
+.wm-seite .mag-platz {
+  padding: 12px 14px;
+  margin: 8px 0;
+  border: 2px dashed #c9a96e;
+  border-radius: 10px;
+  background: #fff8e6;
+  color: #6b5435;
+  font: .92rem/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wm-seite .mag-schlagzeilen {
+  display: grid;
+  gap: 6px;
+}
