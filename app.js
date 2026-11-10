@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.916.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.917.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-WuxxWEMDeGDbKiU0AOCrKUAn1ehEOyJhT/gZJVVadlUGhRPZ3NyaoZjXoIZdiuqf" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-Ej84SdVLrXGKaLBQuoLFGzFVbQq9KLkfHbJwXX1EceA3VSFaDeLQjeYzzU+G4KCi" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
@@ -2079,9 +2079,9 @@ const RUNDGAENGE = [
   { id: "wecker", stand: "1", zeit: "10.11.2026", sym: "⏰", t: "Wecker, Stoppuhr & Timer", u: "Eselsohr, Uhr, Wecker stellen, Stoppuhr mit Runden, Timer – und wenn es klingelt (ca. 2 Min.)", st: () => RG_WECKER, nur: () => esAn() }, // 2.671.0 KC-CLUB-VIDEO-WECKER
   { id: "rueckseite", stand: "2", zeit: "10.11.2026", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr, Bühne mit Twinkey, Spiegel und Rätsel – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
   { id: "zentrale", stand: "1", zeit: "10.11.2026", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
-  { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
-  { id: "anpassen", stand: "2", sym: "🎨", t: "Meine App nach meinem Geschmack", u: "Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus & Eselsohr – alle Möglichkeiten (ca. 4 Min.)", st: () => RG_ANPASSEN }, // 2.344.0 KC-CLUB-VIDEO-ANPASSEN
-  { id: "effekte", stand: "3", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Kopf auf und zu, Geburtstags-Vogel, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 4 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
+  { id: "sprache", stand: "1", zeit: "10.11.2026", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
+  { id: "anpassen", stand: "2", zeit: "11.11.2026", sym: "🎨", t: "Meine App nach meinem Geschmack", u: "Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus & Eselsohr – alle Möglichkeiten (ca. 4 Min.)", st: () => RG_ANPASSEN }, // 2.344.0 KC-CLUB-VIDEO-ANPASSEN
+  { id: "effekte", stand: "3", zeit: "11.11.2026", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Kopf auf und zu, Geburtstags-Vogel, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 4 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
   { id: "figur", stand: "2", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: einfache oder hochwertige Figur antippen, übernehmen (ca. 2 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "2", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Kacheln, Stil, Haare, Mütze, Gesicht, Brille, Schmuck, Kochjacke – und später bearbeiten (ca. 3 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
   { id: "leitung", stand: "2", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
@@ -22375,8 +22375,8 @@ function sjOeffnen() {
   };
 }
 function blattAuf(id, html) {
-  document.getElementById(id)?.remove();
-  const f = document.createElement("div"); f.id = id; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.dataset.dyn = "1";
+  const alt = document.getElementById(id), rgZeigen = !!alt?.classList.contains("rg-zeigen"); alt?.remove(); // 2.912.0: im Erklär-Video vorgeführtes Fenster bleibt sichtbar, wenn es sich neu aufbaut (z. B. Sprachbefehle nach dem Nachladen)
+  const f = document.createElement("div"); f.id = id; f.className = rgZeigen ? "blatt rg-zeigen" : "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.dataset.dyn = "1";
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">${html}</div>`;
   f.onclick = (e) => { if (e.target === f) fensterZuFragen(f); }; // 2.425.0: daneben getippt → bei Eingaben erst fragen
   document.body.appendChild(f); return f;
