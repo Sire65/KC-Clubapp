@@ -41,6 +41,11 @@ ok(await seite.evaluate(() => $("spNeu").children[0].textContent === "💾 Save"
 const toast = await seite.evaluate(async () => { melde("💾 Gespeichert"); melde("Bitte ein Datum wählen.", true); await new Promise((r) => setTimeout(r, 150));
   const t = [...document.querySelectorAll("body > .meldung")].map((m) => m.textContent); document.querySelectorAll("body > .meldung").forEach((m) => m.remove()); return t; });
 ok(toast.includes("💾 Saved") && toast.includes("Please choose a date."), "kurze Meldungen unten englisch: " + toast.join(" · "));
+const dlg = await seite.evaluate(async () => { const p = frage("Eintrag löschen?"); await new Promise((r) => setTimeout(r, 150));
+  const f = [...document.querySelectorAll(".dlg-blatt")].pop(), t = [f?.querySelector(".dlg-kopf")?.textContent, ...[...(f?.querySelectorAll("button") || [])].map((b) => b.textContent)]; f?.querySelector("[data-w='0']")?.click(); return t; });
+ok(dlg[0] === "Delete entry?" && dlg.some((x) => /Delete/.test(x)) && dlg.some((x) => /Cancel/.test(x)), "Rückfrage-Fenster englisch: " + dlg.join(" · "));
+const muster = await seite.evaluate(async () => { document.body.insertAdjacentHTML("beforeend", '<div id="spMu"><button>Di., 10.11., 19:30 Uhr</button><button>3 neue Nachrichten</button><button>Anfrage an Klaus</button></div>'); await new Promise((r) => setTimeout(r, 100)); return [...$("spMu").children].map((b) => b.textContent); });
+ok(muster.join("|") === "Tue, 10.11., 19:30|3 new messages|Request to Klaus", "Datum, Zahlen und Namen: " + muster.join(" · "));
 await seite.evaluate(() => zeige("einstellungen")); await seite.waitForTimeout(500);
 ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen summary")].some((s) => /✨ Effects/.test(s.textContent))), "⚙️ More: Klappen-Überschriften englisch");
 ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen .schalter > div > b")].some((b) => /Flip tiles/.test(b.textContent))), "⚙️ More: Schalter-Namen englisch (🔄 Flip tiles)");

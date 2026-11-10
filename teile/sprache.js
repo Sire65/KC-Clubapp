@@ -587,10 +587,110 @@ const SP_EN = {
   "Der Brief bleibt als Entwurf im Büro": "The letter stays as a draft in the office", "Mitglied nicht in der Liste gefunden": "Member not found in the list",
   "Jemand anderes hat schon geantwortet": "Someone else has already answered", "Das Bild konnte nicht gelesen werden": "The picture couldn't be read",
   "Bitte mindestens eine Frage eingeben": "Please enter at least one question", "Bitte mindestens 2 Termine eintragen": "Please enter at least 2 dates",
+  // Stufe 7 (10.11.2026): gefunden beim Klick-Rundgang auf Englisch (fehlende Bedientexte), Wochentage, Monate
+  "Alle zu": "Close all", "Diese Uhr verwenden": "Use this clock", "Fest": "Fixed", "Wechsel": "Change", "Immer an": "Always on", "Abwechselnd": "Alternating",
+  "Meine Tasche": "My briefcase", "Ansicht": "View", "Gemerkt": "Saved", "Täglich anders": "Different every day", "Nach Jahreszeit": "By season",
+  "nur im Dezember": "only in December", "App & Geräte": "App & devices", "Erneut prüfen": "Check again", "Hinein": "Go in", "Ich setz mich dazu": "I'll join",
+  "Doch nicht": "Never mind", "Heutiges Datum": "Today's date", "Aufs Handy": "To the phone", "Beides": "Both", "Standort": "Location", "Status": "Status",
+  "Mitfahrt": "Lift", "Wo bin ich": "Where am I", "Notfallpass": "Emergency pass", "Hilfe suchen": "Find help", "Bildschirmfoto": "Screenshot",
+  "Startzeit zuletzt": "Last start time", "Mit Code anmelden": "Log in with code", "Persönlicher Link nötig": "Personal link needed", "Link verloren": "Lost the link",
+  "Link einfügen": "Paste link", "Ich komme nicht rein": "I can't get in", "Dieser Link gilt nicht mehr": "This link is no longer valid",
+  "Bescheid geben": "Let them know", "Anrufb": "Ans. m", "Wonach suchst du": "What are you looking for", "Kurze Nachricht": "Short message", "Zeichen": "characters",
+  "Neue Gruppe": "New group", "Push": "Push", "E-Mail": "E-mail", "per Push": "by push", "per E-Mail": "by e-mail", "Nur E-Mail": "E-mail only", "Nur Push": "Push only",
+  "Alles": "Everything", "Nur in der App": "In the app only", "Wie jeder es eingestellt hat": "As everyone has set it",
+  "Alle Sprachbefehle anzeigen – antippen führt aus": "Show all voice commands – tap to run", "Worum geht's? (freiwillig": "What is it about? (optional",
+  "Ernstfall simulieren (Supabase weg, nur dieses Gerät": "Simulate emergency (Supabase gone, this device only",
+  "Automatisch (passt hell und dunkel": "Automatic (fits light and dark", "Schwarz": "Black", "Braun": "Brown", "Weinrot": "Wine red", "Gold": "Gold", "Eigene": "Own",
+  "Unten": "Bottom", "Unten rechts": "Bottom right", "Unten links": "Bottom left", "Oben": "Top", "Rundum (Leuchten": "All round (glow",
+  "Aus – Felder im Kopf ohne Schatten": "Off – header fields without shadow", "Aus – Schatten wie am Tag": "Off – shadow as in daytime",
+  "Normal – heller Schatten und feine Lichtkante": "Normal – light shadow and fine light edge",
+  "Stark – deutliches Leuchten und helle Kante": "Strong – clear glow and bright edge", "Ecken der Kacheln": "Tile corners", "gewählt": "selected", "Leicht": "Light",
+  "Mittel": "Medium", "Kräftig": "Strong", "Sehr kräftig": "Very strong", "Auszahlung": "Payout", "Wichtigkeit": "Priority", "Antwort-Knopf": "Reply button",
+  "Tag/Nacht": "Day/night", "Kachelgröße": "Tile size", "Angehakt": "kein Wechsel, wie bisher=Ticked = no change, as before",
+  "Nur ausgeblendete zeigen": "Show hidden only", "ausgeblendete Kacheln – anzeigen": "hidden tiles – show", "neue Nachricht": "new message",
+  "neue Nachrichten": "new messages", "Mitglieder online": "members online", "Kurze Zettel · wichtig & erledigt": "Short notes · important & done",
+  "Tipp des Tages, Vorlesen, Sprachsteuerung, Einweisungen": "Tip of the day, reading aloud, voice control, introductions",
+  "Online-Anzeige, Anklopfen, Spiele, was andere von mir sehen": "Online display, knocking, games, what others see of me",
+  "Installation, PC/Tablet, Version": "Installation, PC/tablet, version", "Was jede Einstellung bewirkt – zum Nachlesen": "What each setting does – to read up",
+  "Push, Warnton, Nicht stören, @Erwähnungen": "Push, alert tone, do not disturb, @mentions",
+  "Farben, Themen, Schriftgröße, Tag/Nacht, Sparmodus": "Colours, themes, text size, day/night, saving mode",
+  "Uhr, Jahreszeiten, Fee, Senden, Reißwolf": "Clock, seasons, fairy, sending, shredder",
+  "Kacheln, Schnellstart, Info-Feld, einfache Ansicht": "Tiles, quick start, info box, simple view",
+  "Pinnwand, Anrufe, Einstieg, Erstattung, Wetter": "Notice board, calls, getting started, reimbursement, weather",
+  "Neuigkeiten, Nicht stören, Farbe, Schrift, Hilfe": "News, do not disturb, colour, text, help", "Montag": "Monday", "Dienstag": "Tuesday", "Mittwoch": "Wednesday",
+  "Donnerstag": "Thursday", "Freitag": "Friday", "Samstag": "Saturday", "Sonntag": "Sunday", "Januar": "January", "Februar": "February", "März": "March",
+  "April": "April", "Mai": "May", "Juni": "June", "Juli": "July", "August": "August", "September": "September", "Oktober": "October", "November": "November",
+  "Dezember": "December", "heute": "today", "morgen": "tomorrow", "gestern": "yesterday", "Mein Geburtstag (30 Tage vorher": "My birthday (30 days before",
+  "Geburtstage der Mitglieder (14 Tage vorher": "Members' birthdays (14 days before", "Weihnachten (ab Oktober": "Christmas (from October",
+  "Silvester (im Dezember": "New Year's Eve (in December", "Meine privaten Termine mit Häkchen „Auf der Startseite“": "My private events ticked “On the home page”",
+  "Reisen & Ausflüge, bei denen ich dabei bin": "Trips & outings I'm part of", "Weihnachtsmarkt (Club-Termin": "Christmas market (club event",
+  "Abstimmungen, bei denen ich noch nicht abgestimmt habe": "Votes I haven't voted in yet",
+  "Terminumfragen, bei denen ich noch nicht geantwortet habe": "Date polls I haven't answered yet", "Einspruchsfrist für Protokolle": "Objection period for minutes",
+  "Mail mit Anhang, kein Push": "E-mail with attachment, no push", "Hinweis aufs Handy": "Notice to the phone",
+  "danach je Person in WhatsApp öffnen": "then open in WhatsApp per person", "Push, E-Mail und WhatsApp": "Push, e-mail and WhatsApp",
+  "keine Benachrichtigung": "no notification", "bisheriger Weg": "previous way", "Fenster mit allen Wegen und Vorschau": "Window with all ways and preview",
+  "Wenn andere meine Nachrichten vorlesen, klinge ich wie": "When others read my messages aloud, I sound like",
+  "Fehlerprotokoll & Startprobleme der Mitglieder": "Error log & members' start problems",
+  "Tagesordnung – ein Punkt je Zeile (höchstens 12": "Agenda – one item per line (at most 12",
+  "Alle Eingeladenen bekommen Bescheid (im Test nur Admins": "All invitees are notified (in the test only admins", "Seminar / Fortbildung": "Seminar / training",
+  "Besprechung": "Meeting", "Ausflug": "Outing", "Ideen für den Club": "Ideas for the club", "Rezepte": "Recipes",
+  "Erklär-Videos mit Ton – Rundgang, Einstellungen, Nachricht, Termin": "Explainer videos with sound – tour, settings, message, event",
+  "Frag Twinkey – einfach fragen oder 🎤 sprechen": "Ask Twinkey – just ask or 🎤 speak", "Schilder-Druckerei": "Sign printer", "Jalousie (Standard": "Blind (default",
+  "Automatisch – jedes Mal ein anderer": "Automatic – a different one each time", "Passend zum Thema bzw. zur Jahreszeit": "Matching the theme or season",
+  "Nach Kalender": "By calendar", "Automatik": "Automatic", "Umdrehen": "Flip", "Hereindrehen": "Spin in", "Spielautomat": "Slot machine", "Magnet": "Magnet",
+  "Pfanne": "Pan", "Einfliegen": "Fly in", "Horizontal drehen": "Turn horizontally", "Vertikal drehen": "Turn vertically", "Fallblatt-Uhr": "Split-flap clock",
+  "Kachel-Zug": "Tile train", "Papierflieger": "Paper plane", "Brieftaube": "Carrier pigeon", "Postauto": "Post van", "Postbote mit Fahrrad": "Postman on a bike",
+  "Flaschenpost": "Message in a bottle", "Rakete": "Rocket", "Luftballon": "Balloon", "Uhu mit Posttasche": "Owl with mail bag", "Wimpel": "Pennants",
+  "Lichterkette": "Fairy lights", "Laternen": "Lanterns", "Kartenstapel": "Card stack", "Leichte Kacheln": "Light tiles",
+  "Vorschau nächster Clubabend": "Preview of next club night",
+  "Antwort bis": "Answer by", "Antworten bis": "Answers by", "Anmelden bis": "Register by", "Abstimmen bis": "Vote by", "gültig bis": "valid until", "Frist bis": "Deadline",
+  // Stufe 8 (10.11.2026): Fragen in Rückfrage-Fenstern (frage) – Überschrift und Text
+  "Spielstand gegen den Computer auf 0 : 0 zurücksetzen": "Reset score against the computer to 0 : 0",
+  "Neues Spiel beginnen? Das laufende Spiel wird nicht gewertet": "Start a new game? The current game won't be counted",
+  "Dieses Dokument ablehnen? Es wird gelöscht und der Absender bekommt Bescheid": "Decline this document? It will be deleted and the sender is notified",
+  "Diesen Brief verwerfen": "Discard this letter",
+  "Der Entwurf wird gelöscht – er wurde nicht verschickt und nicht gedruckt": "The draft will be deleted – it was not sent and not printed",
+  "Diese nicht gesendete Nachricht löschen": "Delete this unsent message",
+  "Sie wurde nicht verschickt – niemand hat sie bekommen": "It was not sent – nobody received it", "Startnachricht zurückziehen": "Withdraw start message",
+  "Wer sie noch nicht gelesen hat, bekommt sie nicht mehr": "Anyone who hasn't read it yet won't get it any more",
+  "Spiel abbrechen? Diese Partie wird nicht gewertet – dein Spielstand bleibt": "Abort game? This round won't be counted – your score stays",
+  "Protokoll freigeben": "Release minutes",
+  "Danach kann es veröffentlicht werden und alle Mitglieder bekommen es": "Afterwards it can be published and all members get it",
+  "Notfallpass auf diesem Gerät löschen": "Delete emergency pass on this device",
+  "Deine bisherigen Antworten werden gelöscht und du fängst von vorn an": "Your previous answers will be deleted and you start again",
+  "Neuen, leeren Brief beginnen? Der jetzige Entwurf wird verworfen": "Start a new, empty letter? The current draft will be discarded",
+  "Neue Partie beginnen? Die laufende Partie wird nicht gewertet": "Start a new round? The current round won't be counted",
+  "Nachricht jetzt an alle Mitglieder senden": "Send message to all members now", "Meldung zurückziehen": "Withdraw report",
+  "Live-Abstimmung beenden, ohne einen Termin festzulegen": "End live vote without fixing a date",
+  "Kacheln wieder in der ursprünglichen Reihenfolge": "Tiles back in the original order",
+  "Gemerkte Nutzung auf diesem Gerät löschen? Die App fängt neu an zu zählen": "Delete saved usage on this device? The app starts counting again",
+  "Frage verwerfen": "Discard question", "Foto dieses Mitglieds entfernen": "Remove this member's photo",
+  "Es ist noch kein Foto und keine Datei angehängt. Trotzdem veröffentlichen": "No photo or file attached yet. Publish anyway", "Eintrag löschen": "Delete entry",
+  "Eingabe verwerfen": "Discard input",
+  "In diesem Fenster steht Text, der noch nicht gespeichert oder gesendet ist": "This window contains text that hasn't been saved or sent yet",
+  "Dieses Foto endgültig löschen": "Delete this photo permanently",
+  "Dieses Angebot beenden? Die Kachel verschwindet für alle": "End this offer? The tile disappears for everyone",
+  "Diesen privaten Termin löschen": "Delete this private event", "Diesen km-Satz löschen": "Delete this rate per km",
+  "Diesen eigenen Spruch löschen": "Delete this own saying", "Diesen Schritt streichen": "Remove this step", "Diesen Punkt löschen": "Delete this item",
+  "Diesen Einwand löschen": "Delete this objection", "Diesen Eintrag samt Dateien endgültig löschen": "Delete this entry with its files permanently",
+  "Diese Trainingseinheit löschen": "Delete this training unit", "Diese Partie aus der Liste löschen": "Delete this round from the list",
+  "Diese Nachricht für alle löschen": "Delete this message for everyone",
+  "Diese Mitfahrgelegenheit löschen? Wer schon mitfährt, bekommt Bescheid": "Delete this lift? Anyone already riding is notified",
+  "Diese Meldung zurückziehen": "Withdraw this report", "Diese Freigabe jetzt beenden": "End this sharing now",
+  "Diese Anlage aus dem Protokoll entfernen": "Remove this attachment from the minutes",
+  "Die eingetragenen Aufgaben jetzt an die Mitglieder schicken": "Send the entered tasks to the members now",
+  "Den Aufnahmeort bei diesem Foto für alle entfernen": "Remove the location of this photo for everyone",
+  "Das lässt sich nicht rückgängig machen": "This cannot be undone", "Deinen bisherigen Text durch die Vorlage ersetzen": "Replace your text with the template",
+  "Deine Einreichung zurückziehen? Sie wird gelöscht": "Withdraw your submission? It will be deleted", "Aus der Tasche nehmen": "Take out of the briefcase",
+  "Aufruf schließen? Danach kann niemand mehr zusagen": "Close request? Afterwards nobody can accept any more", "Aufgabe löschen": "Delete task",
+  "App-PIN entfernen": "Remove app PIN", "Antwort zurücknehmen und neu wählen": "Withdraw answer and choose again",
+  "Als erledigt markieren? Die Anzeige verschwindet für die anderen": "Mark as done? The display disappears for the others",
+  "Alle Kacheln wieder in der ursprünglichen Reihenfolge und alle einblenden": "All tiles back in the original order and show all", "Wirklich löschen": "Really delete",
+  "Wirklich abbrechen": "Really cancel", "Wirklich verlassen": "Really leave", "Möchtest du jetzt den Rundgang sehen": "Would you like to see the tour now",
 };
 // Wo übersetzt wird (Bedienelemente) – und wo nie (Inhalte)
 const SP_FUSS = { "Start": "Home" }; // nur in der Leiste unten – „▶ Start“ in Spielen bleibt „Start“
-const SP_BEDIEN = "button, label, summary, legend, th, option, .kopf2 h2, .blatt h3, .karte > h3, .abschnitt > h3, .schalter > div > b, .meldung, .fuss-leiste, .sz-link, .ansichtname, .register, [data-sp]";
+const SP_BEDIEN = "button, label, summary, legend, th, option, .kopf2 h2, .blatt h3, .karte > h3, .abschnitt > h3, .schalter > div > b, .dlg-text, .meldung, .fuss-leiste, .sz-link, .ansichtname, .register, [data-sp]";
 const SP_NIE = "#chat, .chat, .nachricht, .na-text, .bl-buehne, .mag-seite, .magazin, [data-sp-nein], input, textarea, select, [contenteditable], script, style";
 const SP_ATTR = ["placeholder", "title", "aria-label"];
 const SPRACHE_LAUF = { an: false, beob: null };
@@ -599,13 +699,41 @@ function spUebersetzt(t, fuss) {
   if (!t || !t.trim()) return null;
   const m = String(t).match(/^([\s\P{L}]*?)(\p{L}[\s\S]*?\p{L}|\p{L})([\s\P{L}]*)$/u); // Symbol/Leerraum davor und dahinter bleiben
   if (!m) return null;
-  const en = (fuss ? SP_FUSS[m[2]] : undefined) ?? SP_EN[m[2]] ?? SP_EN[m[2].replace(/\s+/g, " ")]; if (en == null) return null;
-  return m[1] + en + m[3];
+  const en = (fuss ? SP_FUSS[m[2]] : undefined) ?? SP_EN[m[2]] ?? SP_EN[m[2].replace(/\s+/g, " ")];
+  if (en != null) return m[1] + en + m[3];
+  for (const [re, f] of SP_MUSTER) { const x = m[2].match(re); if (x) { const r = f(x); if (r != null) return m[1] + r + m[3]; } }
+  return spDatum(String(t));
+}
+// Texte mit Zahlen/Namen: Zahlen davor/dahinter erledigt schon der Kern-Vergleich („3 neue Nachrichten“ → Kern „neue Nachrichten“).
+// Hier nur Muster mit Zahl oder Text in der Mitte.
+const SP_MUSTER = [
+  [/^Tippen: ([\s\S]+)$/, (x) => "Tap: " + (spUebersetzt(x[1]) ?? x[1])],
+  [/^von (\d+) an$/, (x) => `of ${x[1]} on`],
+  [/^von (\d+)$/, (x) => `of ${x[1]}`],
+  [/^(\d+) von (\d+)$/, (x) => `${x[1]} of ${x[2]}`],
+  [/^Antwort bis ([\d.]+)$/, (x) => `Answer by ${x[1]}`],
+  [/^bis ([\d.:]+(?: Uhr)?)$/, (x) => `until ${x[1].replace(" Uhr", "")}`],
+  [/^vor (\d+) (Min|Std|Tag|Tagen|Minuten|Stunden)$/, (x) => `${x[1]} ${{ Min: "min", Minuten: "min", Std: "h", Stunden: "h", Tag: "day", Tagen: "days" }[x[2]]} ago`],
+  [/^Version ([\d.]+)$/, (x) => `Version ${x[1]}`],
+  [/^Anfrage an (.+)$/, (x) => `Request to ${x[1]}`],
+  [/^von ([A-ZÄÖÜ][\p{L}-]+(?: [A-ZÄÖÜ][\p{L}-]+)?)$/u, (x) => `from ${x[1]}`],
+  [/^an ([A-ZÄÖÜ][\p{L}-]+(?: [A-ZÄÖÜ][\p{L}-]+)?)$/u, (x) => `to ${x[1]}`],
+  [/^Hallo ([A-ZÄÖÜ][\p{L}-]+)$/u, (x) => `Hello ${x[1]}`],
+];
+// Datum/Uhrzeit: „Di., 10.11., 19:30 Uhr“ → „Tue, 10.11., 19:30“ – nur wenn ALLE Wörter Wochentag/heute/morgen/Uhr/bis/ab sind
+const SP_TAG = { Mo: "Mon", Di: "Tue", Mi: "Wed", Do: "Thu", Fr: "Fri", Sa: "Sat", So: "Sun", heute: "today", morgen: "tomorrow", gestern: "yesterday",
+  Heute: "Today", Morgen: "Tomorrow", Gestern: "Yesterday", Uhr: "", bis: "to", ab: "from" };
+function spDatum(t) {
+  const w = t.match(/\p{L}+/gu) || []; if (!w.length || !w.every((x) => Object.prototype.hasOwnProperty.call(SP_TAG, x)) || !/\d/.test(t)) return null;
+  const vor = t.match(/^\s*/)[0], nach = t.match(/\s*$/)[0];
+  const r = t.trim().replace(/\p{L}+\.?/gu, (x) => { const k = x.replace(/\.$/, ""); return SP_TAG[k] + (x.endsWith(".") && !/^(Mo|Di|Mi|Do|Fr|Sa|So)$/.test(k) ? "." : ""); })
+    .replace(/\s+([,·])/g, "$1").replace(/\s{2,}/g, " ").trim();
+  return vor + r + nach;
 }
 function spKnoten(n) {
   const p = n.parentElement; if (!p || !p.closest(SP_BEDIEN) || p.closest(SP_NIE)) return;
   if (n.__spDe != null && n.nodeValue === n.__spEn) return; // schon übersetzt
-  const en = spUebersetzt(n.nodeValue, !!p.closest(".fuss-leiste")); if (en == null) return;
+  const en = spUebersetzt(n.nodeValue, !!p.closest(".fuss-leiste")); if (en == null) { if (window.SP_SAMMELN && /[a-zäöüß]{3}/.test(n.nodeValue)) { const k = n.nodeValue.trim(); window.SP_SAMMELN.set(k, (window.SP_SAMMELN.get(k) || 0) + 1); } return; } // SP_SAMMELN: nur für Tests (welche Bedientexte fehlen noch)
   n.__spDe = n.nodeValue; n.__spEn = en; n.nodeValue = en;
 }
 function spElement(e) {
