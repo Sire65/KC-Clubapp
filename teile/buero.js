@@ -515,6 +515,7 @@ const BU_REGAL = [
   { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartFest('weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
   { id: "besprechungen", sym: "🤝", t: "Besprechungen", farbe: "#6b6f86", fn: "arStartFest('besprechungen')", recht: "L" }, // KC-CLUB-ARCHIV-KOPIEREN (2.59.0): Entwürfe/Unterlagen, bevor es ein Protokoll ist
   { id: "chronik", sym: "📖", t: "Chronik", farbe: "#8a6d4e", fn: "arStartArt('chronik')" },
+  { id: "zeitungsartikel", sym: "📰", t: "Zeitungsartikel", farbe: "#6b5d4f", fn: "arStartFest('zeitungsartikel')" }, // KC-CLUB-ZEITUNGSARTIKEL (Wunsch Hansi 09.11.2026): Presseberichte über den Club
   { id: "archiv", sym: "🗄️", t: "Archiv", farbe: "#5f5a57", fn: "arStart()" },
   { id: "inhalt", sym: "🗂️", t: "Inhaltsverzeichnis", farbe: "#5d6b5a", fn: "ivAnsicht()" }, // 2.144.0: erst auf dem Bildschirm (antippbar), Drucken darin // KC-CLUB-INHALTSVERZEICHNIS (2.79.0): alle Ordner als PDF/Ausdruck
   { id: "verwaltung", sym: "🔐", t: "Freigaben", farbe: "#55606b", fn: "buRechte()", recht: "A" },
@@ -1034,7 +1035,7 @@ const BU_SPRACHE = [
 const BU_REGAL_WORTE = { sitzung: ["sitzung", "sitzungen", "vorbereiten", "einladung"], nachher: ["nachbereitung", "nachher", "mitschrift"], protokolle: ["protokoll", "protokolle"],
   feste: ["geburtstag", "geburtstage", "jubilaum", "jubilaen", "feste"], fl: ["freud", "leid", "trauer", "hochzeit"], liste: ["mitglieder", "mitgliederliste", "adressen"],
   termine: ["termin", "termine", "kalender"], briefe: ["brief", "briefe", "briefbogen"], erstattung: ["erstattung", "kasse", "kosten"], chronik: ["chronik", "geschichte"],
-  archiv: ["archiv"], verwaltung: ["freigabe", "freigaben", "rechte"] };
+  archiv: ["archiv"], zeitungsartikel: ["zeitung", "zeitungsartikel", "presse", "artikel"], verwaltung: ["freigabe", "freigaben", "rechte"] };
 const sprWorte = (t) => suNorm(t).replace(/[^a-z0-9ß ]/g, " ").split(/\s+/).filter(Boolean);
 // Text → Befehl { fn, t } oder null (rein, testbar). Reihenfolge: Anrufen/Nachricht mit Name → Regal-Ordner → Schreibtisch.
 function buSprachDeuten(text, mitglieder = [], darf = () => true) {

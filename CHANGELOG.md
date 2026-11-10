@@ -1,5 +1,41 @@
 # Änderungen
 
+## 2.905.0 – 2026-11-10 – 📉 Weniger Datenvolumen: Mitgliederliste und Versand-Ampel (KC-CLUB-SPAR-KURZ) · Server 2.905.0 + Datenbank
+Egress-Auswertung 10.11. (26 Std. nach 2.899.0). Freigabe Hansi: „Ja alles sparsamer machen – trotzdem muss alles sicher und schnell laufen. Keine Geschwindigkeitseinbußen“.
+- **Mitgliederliste aus dem KC Manager:** ≈ 109 KB je Abruf (vor allem Ansprüche/Fähigkeiten), gelesen bei App-Start, Countdowns, Kontakt, Büro-Festtagen und im Notfall-Paket. Jetzt liefert die Datenbank nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) – gleiche Form, gleiche Reihenfolge. Die „gemerkte Aktionen-Liste“ aus 2.899.0 sparte dagegen kaum (Aktionen sind nur 2 KB; die Server-Instanzen leben zu kurz).
+- **Versand-Ampel (Communicator):** statt bis zu 500 Aufträgen der letzten 7 Tage (≈ 70 KB) zählt die Datenbank selbst und schickt nur die Zahlen (≈ 0,1 KB) – gleiche Rechnung (gesendet/offen/Fehler, Fehler der letzten 24 Std. getrennt nach System/Empfänger, zuletzt gesendet).
+- **Sicher und schnell:** beide Datenbank-Funktionen nur lesend, nur für den Club-Server; fehlen sie oder antworten sie nicht, liest der Server wie bisher (Rückfall) – nichts fällt aus. Weniger Daten = kürzere Wartezeit, keine zusätzliche Abfrage. Stichproben-Vergleich alt ↔ neu der Ampel bleibt.
+- Erwartete Ersparnis: rund 9 MB am Tag (≈ 30 % des gemessenen Datenvolumens).
+- Datenbank: `supabase/migrations/20261110_kc_club_spar_kurz.sql` (Workflow „Datenbank einspielen“). Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.903.0 (App 2.904.0), Funktionen dürfen bleiben.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.904.0 – 2026-11-09 – 📖 Club-Küche: Lektorat, Urheberangabe, Zeichnungen Folge 7–9 und Folge 12 „Alle Sterne dieser Welt“ (Finale) · 🖼️ Film-Vorschaubilder als WebP (KC-CLUB-MAGAZIN-LEKTORAT, KC-CLUB-MAGAZIN-ROMAN-NACHWEIS, KC-CLUB-MAGAZIN-ROMAN, KC-BILDER-WEBP)
+Wünsche Hansi 09.11.: „Story by Hans-Joachim Koch, Skizzen by KI … wirklich gut checken“ – „Mit nächstem Termin“; „Baue die Zeichnungen für Folge 7 bis 9 ein und baue die Texte ein bisschen um“; „Spiele auch Folge 12 ein in das Heft mit Zeichnungen“ – „Ja, heute mit einspielen“; „umwandeln in webp … kleiner machen und schneller laden“.
+- **Urheberangabe** „Story by Hans-Joachim Koch · Skizzen by KI“ im Romankopf jeder Folge und im Impressum (`MAG_ROMAN_NACHWEIS`).
+- **Lektorat** Roman Folgen 1–11 und Rubriken: 61 Sprach-/Rechtschreibkorrekturen, dazu 36 Stellen in der Handlung stimmig gemacht (Zeitachse, wer wo ist, Voss nach dem Krankenhaus). Nichts gekürzt.
+- **Zeichnungen Folge 7–9** eingesetzt (7 neue Bilder, je < 180 KB); das Schuster-Bild in Folge 8 bleibt zurückgehalten (Jonas passt nicht zur Figurenreferenz).
+- **Club-Küche Nr. 12** (erscheint 01.12.2027, bis dahin Entwurf nur für Admin): Folge 12 „Alle Sterne dieser Welt“ vollständig und ungekürzt (16 Zwischenüberschriften, 542 Absätze) mit drei Bleistiftzeichnungen (`magazin/roman/f12-*.webp`). Lektorat passend zu Folge 7–11 (Voss zu Hause, beim Timo-Gespräch nur telefonisch da, eine Mappe mit zwei Blättern, Wettbewerb wie Folge 9).
+- Spoiler-Test: Auflösungen nur in Folge 12; interne Planung (Figurenbibel, Handlungsbogen, Zeitachse) nie im Programm.
+- **Film-Vorschaubilder** (4 Filme in der App, Startbild der Filmseite) als WebP statt JPG: 207 KB → 107 KB. WhatsApp-Vorschaubild, App-Symbole und DP2-Dateien bleiben unverändert.
+- Tests: `tests/magazin-roman.test.mjs`, `tests/app-vertrag.test.mjs`. Rückweg: App 2.903.0. Server unverändert (2.903.0).
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.903.0 – 2026-11-09 – 🔄 Terminanfrage: Gegenvorschlag erlauben ja/nein (KC-CLUB-ANFRAGE-GEGENVORSCHLAG) · 📶 Verbindungs-Balken (KC-CLUB-NETZ-BALKEN) · Server 2.903.0
+Wunsch Hansi 09.11.: „Baue ein bei Terminanfrage ob Gegenvorschlag erlaubt ist“.
+- Formular „📨 Terminanfrage“: neues Häkchen **🔄 Gegenvorschlag erlauben** (Standard an = wie bisher). Aus: die Zeit steht fest, die Angefragten antworten nur mit Ja, Vielleicht oder Nein.
+- Angefragte sehen statt „🔄 Andere Zeit vorschlagen“ den Hinweis „🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich“; wer angefragt hat, sieht „🔒 ohne Gegenvorschläge“. E-Mail/Push-Text nennt es ebenfalls.
+- Server lehnt einen Gegenvorschlag bei solchen Anfragen ab (auch bei alten App-Ständen). Spiel-Termine unverändert.
+- Migration `20261109_kc_club_terminanfrage_gegenvorschlag.sql` (Spalte `gegenvorschlag`, Standard true – bestehende Anfragen bleiben erlaubt), Probelauf `tools/db-test/112_*`. Fehlt die Spalte noch, meldet der Server beim Abschalten einen Hinweis statt falsch zu speichern.
+- Hilfe „Wie steht meine Terminanfrage?“ ergänzt. Test: `tests/anfrage-gegenvorschlag.test.mjs`. Rückweg: App 2.902.0, Server 2.902.0.
+- **📶 Verbindungs-Balken** (Wunsch Hansi 09.11.: „Balken, wie stark die Verbindung ist per WLAN oder 5G“ – „Router und Satellit fallen nicht so auf“): auf der Startseite oben rechts in der Ecke des roten Kopfes (schwebt – verschiebt und verdeckt nichts, Wunsch Hansi) 📶 WLAN / 📱 Mobilfunk mit 4 Strichen (grün sehr gut/gut, gelb mäßig, rot schwach und pulsierend, ✕ offline; ab 600 px Breite auch das Wort); dieselben Striche neben Router/Satellit in 💬 Nachrichten. Antippen → Verbindungs-Blatt. Quelle wie bisher die echten Antwortzeiten zum Club-Server (keine Extra-Abfragen). Signalstärke und 4G/5G gibt kein Browser heraus; WLAN/Mobilfunk erkennt nur Android, am iPhone einmal im Blatt wählen. Abschaltbar: ⚙️ → „✨ Effekte“. Test `tests/netz-balken.test.mjs`, Browser-Prüfung `tools/hilfe/netz-balken-browser.mjs`.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.902.0 – 2026-11-09 – 📰 Ordner „Zeitungsartikel“ auch im Büro-Aktenschrank (KC-CLUB-ZEITUNGSARTIKEL) · Server 2.902.0
+Wunsch Hansi (09.11.): Artikel aus wa.de („Grünkohl jahrelang falsch gegessen?“ – mit Küchenmeister Hans-Joachim Koch, 03.11.2026) als PDF in einen Ordner „Zeitungsartikel“ und in den privaten Ordner – „Ist im Büro auch der Ordner Zeitungsartikel?“ – „Ja, bauen und um 12 Uhr einspielen“.
+- Archiv: neuer Clubordner **Zeitungsartikel** (für alle Mitglieder, Register „Köcheclub in der Presse“), der Artikel liegt darin (von Hansi hochgeladen) und zusätzlich in Hansis privatem Ordner, Register „Zeitungsartikel“ (dieselbe Datei). (Datenbank, seit 09.11. vormittags.)
+- **Büro → Aktenschrank:** eigener Ordner **📰 Zeitungsartikel** neben der Chronik – ein Tipp öffnet den Ordner direkt. Gefunden wird er über eine feste Kennung (`zeitungsartikel` in FESTE_ORDNER), Umbenennen trennt die Verbindung nicht. Sprachbefehl im Büro: „Zeitung“, „Presse“, „Artikel“.
+- Migration `20261109_kc_club_zeitungsartikel_kennung.sql` (nur die Kennung, wiederholbar – bereits gesetzt).
+- Tests: `tests/ordner-kennung.test.mjs` erweitert. Rückweg: App 2.901.0, Server 2.901.0.
 ## 2.901.0 – 2026-11-09 – 📤 Kontakt weiterleiten – auch an Personen außerhalb des Clubs (KC-CLUB-KONTAKT-EXTERN) · Server 2.901.0
 Wunsch Hansi 09.11.: „Kontakt weiterleiten auch zu Fremden, z. B. durch Push, E-Mail, Postfach usw.“ – Freigabe „Wie vorgeschlagen, 2. Nein, alles andere ja, 12 Uhr einspielen“.
 - **Mitgliedsseite → „📤 Kontakt weiterleiten“:** Angaben ankreuzen, dann **📤 Teilen …** (Teilen-Menü des Handys: WhatsApp, SMS, Mail-App, AirDrop … mit Kontaktkarte .vcf), **✉️ E-Mail** (eigenes Mail-Programm, Betreff und Angaben vorausgefüllt) oder **📋 Kopieren**. Die eigene Karte geht immer.

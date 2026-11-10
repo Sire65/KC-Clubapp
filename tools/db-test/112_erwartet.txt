@@ -1,0 +1,3 @@
+standard_erlaubt=t
+abschaltbar=t
+bestehende_erlaubt=t

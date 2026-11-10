@@ -5180,6 +5180,19 @@
   .kopf-version.neu { color: #ffe066; }
   .kopftext .gruss, body.einfach .kopftext .gruss { position: static; display: block; max-width: none; text-align: left; font-size: 1.2rem; line-height: 1.2; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kopfrechts, body.einfach .kopfrechts { align-self: center; }
+  /* KC-CLUB-NETZ-BALKEN (09.11.2026, Wunsch Hansi „Balken, wie stark die Verbindung ist – Router und Satellit fallen nicht so auf“) */
+  .nb-chip { position: absolute; top: 3px; right: 18px; z-index: 3; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 0 0 12px 12px; padding: 2px 8px 3px; background: rgba(0,0,0,.22); color: #fff; font-weight: 800; font-size: .8rem; line-height: 1; cursor: pointer; white-space: nowrap; }
+  .nb-chip .nb-text { display: none; } @media (min-width: 600px) { .nb-chip .nb-text { display: inline; } } /* Handy: nur Symbol + Striche */
+  .nb-chip .nb-art { font-size: .95rem; line-height: 1; }
+  .nb-striche { display: inline-flex; align-items: flex-end; gap: 2px; height: 15px; }
+  .nb-striche i { width: 5px; border-radius: 1.5px; background: rgba(255,255,255,.35); }
+  .nb-striche i:nth-child(1) { height: 25%; } .nb-striche i:nth-child(2) { height: 50%; } .nb-striche i:nth-child(3) { height: 75%; } .nb-striche i:nth-child(4) { height: 100%; }
+  .nb-striche i.an { background: var(--nb-farbe, #2e9d5b); }
+  .nb-chip.nb-gruen { --nb-farbe: #3fd17a; } .nb-chip.nb-gelb { --nb-farbe: #ffc531; } .nb-chip.nb-rot { --nb-farbe: #ff6b63; background: rgba(208,69,63,.45); }
+  .nb-chip.nb-rot.nb-puls { animation: nbPuls 1.6s ease-in-out infinite; }
+  @keyframes nbPuls { 50% { background: rgba(208,69,63,.8); } }
+  .na-netz .nb-striche { height: 14px; margin-left: 2px; } .na-netz .nb-striche i { width: 4px; background: rgba(128,128,128,.3); } .na-netz { display: inline-flex; align-items: center; }
+  @media (prefers-reduced-motion: reduce) { .nb-chip.nb-rot.nb-puls { animation: none; } }
   .statusleiste { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 7px 10px 10px; border-radius: 16px; background: rgba(0,0,0,.2); min-height: 38px; }
   .statusleiste .statuschip { margin-top: 0; flex: 0 1 auto; min-width: 0; }
   .sl-luecke { flex: 1 1 0; }
@@ -5424,6 +5437,7 @@
   .mag-roman-bild.fehlt.gross { aspect-ratio: 16 / 9; max-width: 100%; } .mag-roman-bild.fehlt span { font-weight: 700; }
   /* KC-CLUB-MAGAZIN-PROFI: Lesezeit, Küchenlatein, Vorschau – KC-CLUB-MAGAZIN-RAETSEL: Fehlerbild und Kreuzworträtsel */
   .mag-lesezeit { margin-top: 4px; font: .74rem system-ui, sans-serif; color: #7a6a5f; }
+  .mag-roman-nachweis { margin-top: 6px; font: italic .82rem Georgia, "Times New Roman", serif; color: #5a4a40; letter-spacing: .02em; }
   .mag-latein-herkunft { margin: -2px 0 10px; font: italic .9rem system-ui, sans-serif; color: #7a6a5f; }
   .mag-spalten ol { margin: 0 0 .7em; padding-left: 1.2em; } .mag-spalten li { margin-bottom: .3em; }
   .mag-vorschau li { border-color: #e6dccf; padding-top: 6px; }
@@ -5931,6 +5945,7 @@
     <div class="hero">
       <!-- KC-CLUB-KOPF-ROLLO (2.159.0, Wunsch Hansi): Pfeil oben mittig rollt den Kopf wie eine Jalousie hoch (mehr Platz) und wieder runter -->
       <!-- KC-CLUB-KOPF-ROLLO-2 (2.214.0, Wunsch Hansi): links ⌃ = halb (Statusleiste mit LEDs bleibt), rechts ⌃⌃ = ganz; symmetrisch, mit Abstand -->
+      <button type="button" class="nb-chip versteckt" id="netzBalken" onclick="netzBlatt()" aria-label="Verbindung"></button><!-- KC-CLUB-NETZ-BALKEN: oben rechts in der Ecke des Kopfes – schwebt, verschiebt und verdeckt nichts (Wunsch Hansi) -->
       <button type="button" class="kopf-pfeil kp-halb" id="kopfPfeilHalb" title="Kopf halb einrollen – Statusleiste mit LEDs bleibt" aria-label="Kopf halb einrollen" aria-expanded="true" onclick="kopfRollo('halb')"><span>⌃</span></button>
       <button type="button" class="kopf-pfeil kp-ganz" id="kopfPfeil" title="Kopf ganz einrollen – nur die Kopfzeile bleibt" aria-label="Kopf ganz einrollen" aria-expanded="true" onclick="kopfRollo('ganz')"><span class="kp-doppel">⌃<b>⌃</b></span></button>
       <!-- KC-CLUB-KOPF-GLANZ (2.400.0, Wunsch Hansi): beim Start läuft einmal ein heller Lichtschein von links nach rechts über den Kopf -->
@@ -6538,6 +6553,7 @@
       <div class="schalter"><div><b>🔄 Kacheln umdrehen</b><div class="hinweis">Das kleine 🔄 oben rechts antippen (oder doppelt auf die Kachel tippen) – hinten stehen Schnellaktionen (z. B. „Neue Nachricht“), 🔄 dreht zurück. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setKachelRueck" onchange="einstellung('kachelrueck', this.checked)"></div> <!-- KC-CLUB-KACHEL-RUECKSEITE 2.54.0 -->
       <div class="schalter"><div><b>🗑️ Reißwolf beim Löschen</b><div class="hinweis">Gelöschtes läuft sichtbar durch den Aktenvernichter. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setReisswolf" onchange="einstellung('reisswolf', this.checked)"></div> <!-- KC-CLUB-REISSWOLF 2.54.0 -->
       <div class="schalter"><div><b>📡 Verbindungs-Symbol in Nachrichten</b><div class="hinweis">Oben links in 💬 Nachrichten: Router im WLAN, Satellit im Mobilfunk – antippen zeigt die Verbindungsqualität. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setNetzSymbol" onchange="einstellung('netzSymbol', this.checked);netzSymbolZeigen()"></div> <!-- KC-CLUB-NETZ-SYMBOL 2.429.0 -->
+      <div class="schalter"><div><b>📶 Verbindungs-Balken auf der Startseite</b><div class="hinweis">Oben rechts im roten Kopf: WLAN 📶 oder Mobilfunk 📱 mit 4 Strichen – je mehr grüne Striche, desto besser die Verbindung zum Club-Server. Antippen zeigt Einzelheiten. Gilt für dieses Gerät.</div></div><input type="checkbox" id="setNetzBalken" onchange="einstellung('netzBalken', this.checked);netzSymbolZeigen()"></div> <!-- KC-CLUB-NETZ-BALKEN -->
       <details class="abh-klappe" data-abh="setNetzSymbol"><summary>✨ Blinken</summary> <!-- 2.478.0 KC-CLUB-EINST-KLAPPEN: klappt mit dem Häkchen darüber auf -->
         <div class="schalter"><div><b>✨ Verbindungs-Symbol blinkt</b><div class="hinweis">Wellen und Lämpchen blinken (aus = ruhiges Symbol).</div></div><input type="checkbox" id="setNetzBlinken" onchange="einstellung('netzBlinken', this.checked);netzSymbolZeigen()"></div>
       </details>
@@ -6952,7 +6968,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.901.0" data-v="2.901.0"></script>
+<script src="app.js?v=2.905.0" data-v="2.905.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

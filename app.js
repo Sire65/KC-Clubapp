@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.901.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.905.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -17,12 +17,12 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-bTEiYXM6UcH05EqAohDWpDoNNWorAyk424xroS5KH5akurfSr8OS0RJ14TSFeLhy" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-ihp9aBNW71yi9gY5iD70sY8fE78+o552ZT+16rmcT5ANlHYOuHurmndyITVqbI3n" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-qPS9/H66zIS2QeGHqQQs5CFqN4+XZns2HL1FnQYWzUWbVrYpK/BLZN111UDmKbRH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-Qgr/olb5ELufOAZhqytxDHq1d8KmLksZEbGjrXIDDUPR6E1WUkMh5axZmPZ/GzJr" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-Vg+aMWslYQ/zg6eq/BZ0OwLMWOhCI8i3EUsOWZzjoVZB/M3Z+Q1vMJ2EF9hZOFoO" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
@@ -1167,7 +1167,7 @@ function anwendenDesign() {
   const MODUS_ZEICHEN = { auto: ["A", "Automatik"], tag: ["T", "Immer Tag"], nacht: ["N", "Immer Nacht"] }, mz = MODUS_ZEICHEN[DS.modus] || MODUS_ZEICHEN.auto;
   if ($("modusKnopf")) { $("modusKnopf").innerHTML = `${nacht ? "☀️" : "🌙"}<span class="modusbuchstabe" aria-hidden="true">${mz[0]}</span>`;
     $("modusKnopf").title = `Tag/Nacht umschalten – eingestellt: ${mz[1]}`; $("modusKnopf").setAttribute("aria-label", `Tag/Nacht umschalten, eingestellt: ${mz[1]}`); }
-  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
+  jzWahlZeigen(); jzDekoWahlZeigen(); $("setFeiertage").checked = einst("feiertage", true); $("setFerien").checked = einst("ferien", true); ferienLaenderZeigen(); /* 2.484.0 KC-CLUB-FERIEN */ $("setGross").checked = $("setGrossE").checked = einst("gross", false); szAnzeigeEinstellung(); $("setAnimiert").checked = einst("animiert", true); regEffektZeigen(); if ($("setKuckuck")) $("setKuckuck").checked = einst("kuckuck", true); suWahlZeigen(); kopfEffektEinstellungen(); schattenEinstellungen(); kachelEckenAnwenden(); vwVorwahlEinstellungen(); /* KC-CLUB-KOPF-EFFEKTE */ tippTonZeigen(); /* KC-CLUB-TIPP-GERAEUSCH */ if ($("setGbVogel")) $("setGbVogel").checked = gbvAn(); /* KC-CLUB-GEBURTSTAG-VOGEL */ if ($("setAdventGesteck")) $("setAdventGesteck").checked = agAn(); /* 2.572.0 KC-CLUB-ADVENTSGESTECK */ if ($("setFee")) $("setFee").checked = einst("fee", true); for (const k of ["kaefer", "klee"]) { const c = $("set" + k[0].toUpperCase() + k.slice(1)); if (c) c.checked = einst(k, true); } /* KC-CLUB-MARIENKAEFER, KC-CLUB-GLUECKSKLEE */ ["kachelStart", "kachelWelle", "kachelWackeln", "kachelAbschied"].forEach((k) => { const c = $("set_" + k); if (c) c.checked = einst(k, true); }); /* 2.566.0 KC-CLUB-KACHEL-EXTRAS */ if ($("setAdvent")) $("setAdvent").checked = akAn(); sendeEffektZeigen(); if ($("setJahreszeit")) $("setJahreszeit").checked = einst("jahreszeit", true); if ($("setEselsohr")) $("setEselsohr").checked = esAn(); if ($("setKachelRueck")) $("setKachelRueck").checked = einst("kachelrueck", true); if ($("setReisswolf")) $("setReisswolf").checked = einst("reisswolf", true); for (const [id, k] of [["setNetzSymbol", "netzSymbol"], ["setNetzBalken", "netzBalken"], ["setNetzBlinken", "netzBlinken"], ["setChatEinklappen", "chatEinklappen"], ["setChatKW", "chatKW"], ["setKomSym", "komSym"]]) if ($(id)) $(id).checked = einst(k, true); if ($("setUhGlied")) $("setUhGlied").value = uhGlied(); /* 2.720.0 KC-CLUB-NACHRICHTEN-GLIEDERUNG */ pinAnzeige(); /* 2.726.0 KC-CLUB-LIEGEN-SCHUTZ */ // 2.429.0 if ($("setWasNeu")) $("setWasNeu").checked = einst("wasNeu2", false); $("setTon").checked = einst("ton", true);
   designWahlZeigen();
   try { $("setEselsohr").checked = esAn(); $("setBwEinladung").checked = !bwEinStand().aus; $("setKachelVorschlag").checked = !nuStand().aus; kaAuswahlZeigen(); } catch (e) { /* 2.314.0: vor dem Aufbau der Rückseite noch nicht da */ }
   try { themaSchriftAnwenden(); } catch {} // 2.333.0 KC-CLUB-THEMEN-SCHRIFT
@@ -2131,20 +2131,20 @@ const FILME = [
   // 2.742.0: neue Fassung (Brief, „An wen?“, Aktentasche freigeben) – eigene Kennung, damit sie auch angeboten wird, wer die erste schon gesehen hat
   // 2.750.0 (Wunsch Hansi 29.10. „Film für Klaus neu anpassen“): Fassung mit Frage beim Start, Schritt für Schritt und Frist 3 Tage vorher – wieder eigene Kennung
   // 2.753.0 (Wunsch Hansi 29.10. „Video auch anpassen, die Vertretung zeigen – mit dem Kassenwart“): Ablauf wie im Leben (2.751.0) – wieder eigene Kennung
-  { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "14½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.jpg",
+  { id: "clubsitzungablauf", sym: "🎬", t: "Clubsitzung vorbereiten und leiten", dauer: "14½ Min. mit Ton", datei: "film/clubsitzung-anleitung.mp4?v=4", bild: "film/clubsitzung-vorschau.webp",
     u: "Neue Fassung: Tagesordnung und Einladung (3 Tage vorher), bis zur Sitzung erinnern, Änderungen, Vertretung durch den Kassenwart, einen Tag vorher vorbereiten, zuletzt die Aktentasche mit Mitnehm-Liste – am Abend Clubabend Live mit Freigeben, „Zum Schluss“ und Live-Abstimmung", fuer: () => (ICH?.aemter || []).includes("Clubsprecher") },
   // 2.756.0 KC-CLUB-SICHERHEITSKONZEPT: für alle Mitglieder über Technik → 🔐 Sicherheit & Datenschutz – kein Hinweis beim Start (fuer: false)
-  { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "3 Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=2", bild: "film/sicherheit-vorschau.jpg",
+  { id: "sicherheitsfilm", sym: "🔐", t: "Wie sicher sind deine Daten?", dauer: "3 Min. mit Ton", datei: "film/sicherheit-datenschutz.mp4?v=2", bild: "film/sicherheit-vorschau.webp",
     u: "Zugang, Türsteher, Verschlüsselung, Privatsphäre, Handy, Sicherungen, Prüfung durch KI (die keine Chats liest) und deine Rechte – einfach erklärt", wo: "unter Technik → 🔐 Sicherheit & Datenschutz", fuer: () => false },
   // KC-CLUB-ANSICHTFILM (Anregung Clubsitzung „die App ist zu voll“, Wunsch Hansi 02.11.2026): für alle Mitglieder einmal beim Start angeboten,
   // jederzeit oben in Technik → 🎬 Erklär-Videos (inVideos). Wer ihn gesehen hat: 👀 in der Film-Karte (nur Admin, Server „film_zuschauer“).
-  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=5", bild: "film/app-einrichten-vorschau.jpg",
+  { id: "ansichtfilm", sym: "🧹", t: "Deine App – so, wie du sie willst", dauer: "3½ Min. mit Ton", datei: "film/app-selbst-einrichten.mp4?v=5", bild: "film/app-einrichten-vorschau.webp",
     u: "Einfache und erweiterte Ansicht, wofür Club, Meins und Technik da sind und wie du sie anordnest, Kacheln lange drücken und mit ◀ ▲ ▼ ▶ verschieben, ausblenden, Beispiel mit nur 4 Kacheln, Kachelgröße (2, 3 oder 4 nebeneinander), die Zahl am Reiter, Kacheln umdrehen mit dem 🔄, nur ausgeblendete zeigen, Kopf einrollen, Startmeldungen aus – und wo es weitere Erklär-Videos gibt",
     wo: "unter Technik → 🎬 Erklär-Videos", inVideos: true, fuer: () => true },
   // KC-CLUB-KOPFFILM (Wunsch Hansi 04.11.2026 „Erklärvideo nur über den Kopfbereich – kein Admin-Bereich“). Quellen und Konzept: KC-Infrastructure-Control-Center kopffilm/
   // Gestaffelt (Wunsch Hansi 04.11. „4 Tage zurückhalten, nur Mitgliedern anbieten, die den ersten bereits gesehen haben – den anderen erst ein paar Tage später“):
   // wer den Ansichtfilm angesehen hat, bekommt ihn sofort (beim Start und in Technik → 🎬 Erklär-Videos), alle anderen ab KOPFFILM_AB.
-  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=2", bild: "film/kopf-vorschau.jpg",
+  { id: "kopffilm", sym: "🧭", t: "Der Kopf der Club-App", dauer: "3 Min. mit Ton", datei: "film/kopf-der-app.mp4?v=2", bild: "film/kopf-vorschau.webp",
     u: "Kopfzeile, Status und Lämpchen, Blättern mit ‹ › und « », gelbe Punkte, Wetter, Für dich, Demnächst, Fotos, Kommunikationszentrale, Startkarte und die Szenen im Kopf",
     wo: "unter Technik → 🎬 Erklär-Videos", get inVideos() { return this.fuer(); }, fuer: () => filmGesehen("ansichtfilm") || heuteIso() >= KOPFFILM_AB },
 ];
@@ -2467,7 +2467,7 @@ const HILFE = [
   { id: "zurueck", thema: "start", sym: "‹", t: "„Zurück“ bleibt in der App", x: "Die Zurück-Taste deines Handys oder der Pfeil <b>‹</b> oben links geht eine Ansicht zurück – die App schließt sich dabei nicht. Ist ein Fenster offen, schließt „Zurück“ zuerst nur das Fenster, deine Eingabe bleibt stehen." },
   { id: "frage_knopf", thema: "start", sym: "❓", t: "Das Fragezeichen unten rechts", x: "Das runde <b>„?“</b> neben der Lupe öffnet in jedem Bereich gleich die passende Hilfe. Stört es dich? <b>Lange darauf drücken</b> blendet es aus. Zurück holst du es unter ⚙️ Einstellungen → <b>„❓ Fragezeichen unten rechts“</b>. Beim Runterscrollen gleiten die runden Knöpfe kurz weg, damit sie nichts verdecken – beim Hochscrollen oder am Seitenende sind sie wieder da.", zeig: () => einstiegHin(einfach() ? "einfach" : "ansagen", einfach() ? "setHzFrageE" : "setHzFrage"), seit: "2.23.5" },
   { id: "einstellung_suchen", thema: "start", sym: "🔍", t: "Jede Einstellung schnell finden", x: "In den Einstellungen findest du mit der <b>Lupe 🔍 unten rechts</b> jede Einstellung – z. B. „Ton“ oder „Farbe“ eingeben. Bereiche öffnest du durch Antippen der Überschrift, mit dem Schloss 🔒 hältst du sie offen oder zu.", zeig: () => zeige("einstellungen") },
-  { id: "anfrage_status", thema: "termine", sym: "📨", t: "Wie steht meine Terminanfrage?", x: "Unter <b>📅 Termine</b> steht bei deiner Anfrage <b>„Anfrage an …“</b> und der Stand: <b>📨 angefragt</b>, <b>👁️ gelesen</b>, <b>✅ bestätigt</b>, <b>🤔 vielleicht</b>, <b>❌ abgelehnt</b>, <b>🔄 Gegenvorschlag</b> (eine andere Zeit – mit <b>„✅ Neue Zeit annehmen“</b> oder <b>„❌ Passt nicht“</b> entscheidest du) oder <b>⌛ abgelaufen</b>, wenn bis zur Frist bzw. bis zum Termin keine Antwort kam. Wirst du angefragt, kannst du mit <b>„🔄 Andere Zeit vorschlagen“</b> selbst eine Zeit vorschlagen.", zeig: () => zeige("termine"), seit: "2.23.50" },
+  { id: "anfrage_status", thema: "termine", sym: "📨", t: "Wie steht meine Terminanfrage?", x: "Unter <b>📅 Termine</b> steht bei deiner Anfrage <b>„Anfrage an …“</b> und der Stand: <b>📨 angefragt</b>, <b>👁️ gelesen</b>, <b>✅ bestätigt</b>, <b>🤔 vielleicht</b>, <b>❌ abgelehnt</b>, <b>🔄 Gegenvorschlag</b> (eine andere Zeit – mit <b>„✅ Neue Zeit annehmen“</b> oder <b>„❌ Passt nicht“</b> entscheidest du) oder <b>⌛ abgelaufen</b>, wenn bis zur Frist bzw. bis zum Termin keine Antwort kam. Wirst du angefragt, kannst du mit <b>„🔄 Andere Zeit vorschlagen“</b> selbst eine Zeit vorschlagen. Beim Anfragen legst du mit dem Häkchen <b>„🔄 Gegenvorschlag erlauben“</b> fest, ob das geht – ohne Häkchen steht die Zeit fest (🔒) und es gibt nur Ja, Vielleicht oder Nein.", zeig: () => zeige("termine"), seit: "2.23.50" },
   { id: "anfrage_hinweis", thema: "termine", sym: "📨", t: "Hinweis: neue Terminanfrage", x: "Fragt dich jemand nach einem Termin, sagt dir die App das beim Öffnen und zwischendurch: <b>„📨 Du hast eine neue Terminanfrage“</b>. <b>👀 Ja, jetzt ansehen</b> bringt dich hin, <b>⏰ Später</b> erinnert in 2 Stunden, <b>🌙 Heute nicht mehr fragen</b> wartet bis morgen. Sobald du geantwortet hast, kommt der Hinweis nicht mehr.", zeig: () => zeige("termine"), seit: "2.23.52" },
   { id: "meine_schulung", thema: "termine", sym: "🎓", t: "Termin für die Schulung aussuchen", x: "Hat Hansi dich zur Schulung eingeladen, tippst du auf die Kachel <b>🎓 Meine Schulung</b> (Register „Meins“) – oder auf den Hinweis beim Start. Dort siehst du die freien Termine und tippst <b>„✅ Diesen Termin nehmen“</b>. Passt keiner: <b>„💬 Kein Termin passt“</b> und bis zu zwei eigene Vorschläge machen. Hansi bestätigt den Termin, dann steht er dort mit Ort und du kannst ihn in deinen Handy-Kalender übernehmen. Der Link aus der Mail funktioniert weiterhin.", zeig: () => smStart(), seit: "2.23.62" },
   { id: "besuche", thema: "termine", sym: "📝", t: "Besuchsprotokoll (Admin)", x: "In <b>🎓 Schulungen</b> → <b>📝 Besuche</b> trägst du jeden Besuch ein: Mitglied, Ort, Datum, Zeit, km, Gesprächspunkte 1–7, Notizen und ein Foto vom Papierprotokoll. Oben siehst du Besuche, Stunden und km je Jahr. Mit <b>„📅 Geplant“</b> merkst du einen Besuch vor – auf Wunsch mit Terminbestätigung ans Mitglied. Nach dem Besuch: Häkchen raus, ausfüllen, <b>Speichern &amp; senden</b> – das Mitglied bekommt die Zusammenfassung per Push und Mail (du als BCC), eine Kopie liegt in seinem Archiv-Ordner.", zeig: () => scStart("besuche"), nur: () => !!ICH?.admin, seit: "2.23.61" },
@@ -8736,14 +8736,32 @@ function netzQualitaet() {
   return { stufe, ms, farbe: ["", "rot", "gelb", "gruen", "gruen"][stufe], text: ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][stufe] + (ms == null ? " (Schätzung des Handys)" : "") };
 }
 const NETZ_NAME = { wlan: "📶 WLAN", mobil: "🛰️ Mobilfunk" };
+// KC-CLUB-NETZ-BALKEN (09.11.2026, Wunsch Hansi): gut sichtbarer Balken mit 4 Strichen auf der Startseite (oben rechts im Kopf, schwebt) und neben dem
+// Router/Satelliten in 💬 Nachrichten. Gleiche Quelle wie das Symbol (netzQualitaet: echte Antwortzeiten, keine Extra-Abfragen).
+// Signalstärke in dBm und 4G/5G gibt kein Browser heraus – gezeigt wird die Verbindung zum Club-Server.
+function netzStricheHtml(q) {
+  const n = q.stufe == null ? 0 : q.stufe;
+  return `<span class="nb-striche" aria-hidden="true">${[1, 2, 3, 4].map((i) => `<i${i <= n ? ' class="an"' : ""}></i>`).join("")}</span>`;
+}
+function netzBalkenZeigen(art, q) {
+  const b = $("netzBalken"); if (!b) return;
+  const an = einst("netzBalken", true); b.classList.toggle("versteckt", !an); if (!an) return;
+  const sym = q.stufe === 0 ? "✕" : art === "wlan" ? "📶" : art === "mobil" ? "📱" : "🌐";
+  const wort = q.stufe === 0 ? "Offline" : q.stufe == null ? "…" : ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][q.stufe];
+  const schl = [art, q.stufe, q.farbe, einst("animiert", true)].join("|"); if (b.dataset.schl === schl) return; b.dataset.schl = schl; // nur bei Änderung neu zeichnen
+  b.className = "nb-chip nb-" + q.farbe + (einst("animiert", true) ? " nb-puls" : "");
+  b.innerHTML = `<span class="nb-art">${sym}</span>${netzStricheHtml(q)}<span class="nb-text">${esc(wort)}</span>`;
+  b.title = `${art ? NETZ_NAME[art] : "Netzart unbekannt"} · ${q.text} – antippen für Einzelheiten`; b.setAttribute("aria-label", b.title);
+}
 function netzSymbolZeigen() {
+  try { const na = netzArtJetzt(); netzBalkenZeigen(na.art, netzQualitaet()); } catch {} // KC-CLUB-NETZ-BALKEN
   const b = $("naNetz"); if (!b) return;
   const an = einst("netzSymbol", true); b.classList.toggle("versteckt", !an); if (!an) return;
-  const { art, quelle } = netzArtJetzt(), q = netzQualitaet(), schl = [art, q.stufe, q.farbe].join("|");
+  const { art, quelle } = netzArtJetzt(), q = netzQualitaet(), schl = [art, q.stufe, q.farbe, einst("netzBalken", true)].join("|");
   b.classList.toggle("nz-blink", einst("netzBlinken", true) && einst("animiert", true) && q.stufe !== 0);
   b.title = `${art ? NETZ_NAME[art] + (quelle === "gewaehlt" ? " (von dir gewählt)" : "") : "Netzart unbekannt"} · ${q.text} – antippen für Infos`;
   b.setAttribute("aria-label", b.title);
-  if (b.dataset.schl !== schl) { b.dataset.schl = schl; b.innerHTML = netzSvg(art, q.stufe, q.farbe); }
+  if (b.dataset.schl !== schl) { b.dataset.schl = schl; b.innerHTML = netzSvg(art, q.stufe, q.farbe) + (einst("netzBalken", true) ? netzStricheHtml(q).replace('class="nb-striche"', `class="nb-striche" style="--nb-farbe:${{ gruen: "#2e9d5b", gelb: "#d9a21b", rot: "#d0453f" }[q.farbe] || "#9aa0a6"}"`) : ""); }
   if (VB.netzAnsicht && !$("verbindungBlatt").classList.contains("versteckt")) netzBlattZeigen();
 }
 function netzBlatt() { VB.netzAnsicht = true; netzBlattZeigen(); $("verbindungBlatt").classList.remove("versteckt"); }
@@ -27444,11 +27462,12 @@ function taKarte(a) {
     ${a.ort ? `<div>📍 ${esc(a.ort)}</div>` : ""}
     <div class="hinweis" style="font-size:.85rem">${a.vonMir ? `<b>Anfrage an ${esc(taAnWen(a))}</b>` : "von " + esc(a.von.name) + " · an " + (a.empfaenger.length === 1 ? "dich" : a.empfaenger.length + " Mitglieder")}</div>
     ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}${oaAnzeige(a.anlagen)}
+    ${a.vonMir && !ab && !a.spiel && a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem">🔒 ohne Gegenvorschläge</div>` : ""}
     ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
       ${a.meine ? `<div class="hinweis" style="font-size:.8rem;margin-top:4px">Nochmal auf deine Antwort tippen nimmt sie zurück.${a.meineNotiz ? ` Deine Notiz: „${esc(a.meineNotiz)}“` : ""}</div>` : ""}
       ${a.meinVorschlag ? `<div class="hinweis" style="margin-top:4px">🔄 Dein Gegenvorschlag: <b>${esc(taVWann(a.meinVorschlag))}</b> – ${esc(a.von.vorname)} entscheidet.</div>` : ""}
-      ${a.spiel ? "" : `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taGegenvorschlag('${a.id}')">🔄 ${a.meinVorschlag ? "Anderen Vorschlag machen" : "Andere Zeit vorschlagen"}</button>`}` : ""}
+      ${a.spiel ? "" : a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem;margin-top:6px">🔒 Gegenvorschläge sind bei dieser Anfrage nicht möglich – die Zeit steht fest.</div>` : `<button type="button" class="knopf klein" style="margin-top:6px" onclick="taGegenvorschlag('${a.id}')">🔄 ${a.meinVorschlag ? "Anderen Vorschlag machen" : "Andere Zeit vorschlagen"}</button>`}` : ""}
     ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${taKalHtml(a, ab)}
@@ -27471,6 +27490,7 @@ const taVWann = (v) => wann(v.beginn) + (v.ende ? ` – ${fZeit.format(new Date(
 const taAnWen = (a) => (a.empfaenger.length === 1 ? a.empfaenger[0].vorname || a.empfaenger[0].name : a.empfaenger.length <= 3 ? a.empfaenger.map((e) => e.vorname || e.name).join(", ") : a.empfaenger.length + " Mitglieder");
 function taGegenvorschlag(id) {
   const a = TA.liste.find((x) => x.id === id); if (!a) return;
+  if (a.gegenvorschlag === false) return melde("Bei dieser Anfrage sind keine Gegenvorschläge möglich.", true); // KC-CLUB-ANFRAGE-GEGENVORSCHLAG
   const v = a.meinVorschlag || { beginn: a.beginn, ende: a.ende };
   const tag = berlinIso(v.beginn), zeit = fZeit.format(new Date(v.beginn)), bis = v.ende ? fZeit.format(new Date(v.ende)) : "";
   const f = blattAuf("taGvBlatt", `<h3 style="margin:0">🔄 Andere Zeit vorschlagen</h3>
@@ -28617,6 +28637,7 @@ async function taForm(vorwahl) {
     <div class="zwei"><label class="feld">bis (freiwillig)<input id="taBis" type="time"></label><label class="feld">Antwort bis (freiwillig)<input id="taFrist" type="date" min="${heuteIso()}"></label></div>
     ${comboFeld("taOrt", "Ort", [...ORT_VORSCHLAEGE, ...TR_ORTE], "", "– noch offen –", "✏️ Anderer Ort …", "z. B. Parkplatz Markt")}
     <label class="feld">Notiz (freiwillig)<textarea id="taNotiz" rows="2" maxlength="1000" placeholder="z. B. Bitte Schürze mitbringen"></textarea></label>
+    <label class="schalter" style="margin:4px 0 8px"><span>🔄 Gegenvorschlag erlauben<span class="hinweis" style="display:block;font-size:.82rem">Aus: Die Zeit steht fest – nur Ja, Vielleicht oder Nein.</span></span><input type="checkbox" id="taGegenvorschlag" checked></label>
     ${oaFeld("ta")}
     <div class="knoepfe"><button class="knopf haupt" onclick="einmal(this, taSenden)">📨 Anfrage senden</button><button class="knopf" onclick="$('terminanfrageForm').classList.add('versteckt')">Abbrechen</button></div>`;
   taEmpfListe();
@@ -28656,7 +28677,8 @@ async function taSenden() {
   if (n >= ZE_RUECKFRAGE_AB && !(await frage(`Anfrage wirklich an ${taWerText()} senden?`))) return;
   try {
     const r = await api("terminanfrage_senden", { an: TA.wahl.gruppe ? { gruppe: TA.wahl.gruppe.id } : { personen: TA.wahl.personen }, anlass, beginn, ende,
-      ort: $("taOrt").value.trim(), notiz: $("taNotiz").value.trim(), frist: frist ? taZeitpunkt(frist, "23:59") : null, anlagen: oaIds("ta") });
+      ort: $("taOrt").value.trim(), notiz: $("taNotiz").value.trim(), frist: frist ? taZeitpunkt(frist, "23:59") : null, anlagen: oaIds("ta"),
+      gegenvorschlag: $("taGegenvorschlag") ? $("taGegenvorschlag").checked : true }); // KC-CLUB-ANFRAGE-GEGENVORSCHLAG
     oaLeeren("ta"); $("terminanfrageForm").classList.add("versteckt");
     melde(`📨 Anfrage an ${r.empfaenger} ${r.empfaenger === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
     TA.markiert = r.id; await taLaden(); erinAnfrage(r.id); // KC-CLUB-ERINNERUNG-WAHL
@@ -32932,7 +32954,7 @@ function arStartTitel(titel) { AR.zielTitel = titel; arStart(); } // Club-Ordner
 // Registry im Server (FESTE_ORDNER); archiv_liste liefert je Ordner kennung + dauerhaft. AR_FEST_TITEL nur als Rückfall, falls ein
 // älterer Server noch keine Kennung schickt (Schlüssel fehlt) – dann wie bisher nach der ursprünglichen Beschriftung.
 const AR_FEST_TITEL = { schilder: "Schilder", anleitungen: "Anleitungen", weihnachtsmarkt: "Weihnachtsmarkt", besprechungen: "Besprechungen", vertraege: "Verträge",
-  admin: "Admin", personal: "Personal", dienstplaene: "Dienstpläne", protokolle: "Protokolle" };
+  admin: "Admin", personal: "Personal", dienstplaene: "Dienstpläne", protokolle: "Protokolle", zeitungsartikel: "Zeitungsartikel" }; // KC-CLUB-ZEITUNGSARTIKEL
 const arIstFest = (o, kennung) => !!o && !o.besitzer && ("kennung" in o ? o.kennung === kennung : o.titel === AR_FEST_TITEL[kennung]);
 function arStartFest(kennung) { AR.zielFest = kennung; arStart(); } // fester Club-Ordner (neuester Jahrgang), egal wie er gerade beschriftet ist
 async function arLaden() {

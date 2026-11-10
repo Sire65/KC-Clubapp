@@ -107,6 +107,9 @@ jobs:
       - run: node tests/egress-messung.test.mjs
       - run: node tests/frist-erinnerung.test.mjs
       - run: node tests/kontakt-extern.test.mjs
+      - run: node tests/spar-kurz.test.mjs
+      - run: node tests/anfrage-gegenvorschlag.test.mjs
+      - run: node tests/netz-balken.test.mjs
       - run: node tests/nutzung-person.test.mjs
       - run: node tests/ist-rueckfrage.test.mjs
       - run: node tests/start-balken.test.mjs
