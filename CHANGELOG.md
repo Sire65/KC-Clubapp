@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.910.0 – Zeitansage: Videos „Feedback geben“, „Aktionen & Reisen“, „Fit bleiben“, „Studio: live zeigen“, „Technik: Update & Sicherheit“, „Versteckte Helfer“, „Wecker, Stoppuhr & Timer“, „Die Rückseite: Eselsohr“ und „Kommunikationszentrale“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Feedback geben:** 5 Schritte geprüft – Kachel, drei Schritte zum Antippen, Ideen/Mitteilung (mit Mikrofon), „ohne Namen“, Danke mit „schon umgesetzt“.
+- **Aktionen & Reisen:** 4 Schritte geprüft – Kachel, kommende Aktionen mit Tagen bis dahin, Einzelheiten (Reiseverlauf, wer dabei ist, Preis pro Person, Veranstalter mit Telefon, Fotos, bei einer Kreuzfahrt die eigene Reise-Checkliste – Satz im Video entsprechend genauer).
+- **Fit bleiben:** 5 Schritte geprüft – Kachel, Hinweis „Verstanden“, Stufe Sanft (im Sitzen)/Mittel/Fordernd und Dauer, „Los geht's“, Auswertung.
+- **Studio: live zeigen:** 3 Schritte geprüft – Kachel (nur Mitglieder mit Freischaltung), Mitglied wählen + Zustimmung, verdeckte Chats/Nachrichten/Büro, 🙈 Vorhang, höchstens 30 Minuten.
+- **Technik:** 7 Schritte geprüft – Update, Version im Kopf, Sicherheits-Check, Test an mich, Freigegebene Programme (z. B. Kassen-Schulung).
+- **Versteckte Helfer:** alle 30 Schritte geprüft und **auf den neuesten Stand gebracht** – neu sind zwei Schritte für die Helfer aus dieser Woche: 📶 **Verbindungs-Balken** oben rechts im Kopf (KC-CLUB-NETZ-BALKEN) und 🇩🇪 **Flagge** für Deutsch/Englisch (KC-CLUB-SPRACHE). Untertitel in der Video-Liste ergänzt.
+- **Wecker, Stoppuhr & Timer:** 8 Schritte geprüft – Eselsohr, Reiter Uhr, Wecker stellen, Stoppuhr mit Runden, Timer (1/3/5/10/15 Min.), Klingeln mit Schlummern (10 Min.), „Antippen für Ton“.
+- **Die Rückseite:** alle 14 Schritte geprüft. **Fehler behoben:** Bei „Große Uhr“ führt das Video etwa 6 Sekunden lang die vier Uhren vor – wer schneller auf „Weiter“ tippte, bekam danach die Uhr wieder über die Bühne gemalt („Bühne“ blieb leer). Die Vorführung hört jetzt auf, sobald ein anderer Reiter dran ist. Außerdem stimmt der erste Satz wieder: „sieben Dinge“ statt „fünf“ (es gibt sieben Reiter).
+- **Kommunikationszentrale:** 7 Schritte geprüft – Hinweis ohne Zentrale-Karte, Anzeige oben, An wen (Alle/Online/Keiner/Auswahl), Pult (Anrufen, Video, Anklopfen, Sprache, Chat, Standort, Termin), Zusätzlich Push/E-Mail/WhatsApp, Schnellnachricht.
+- Zeitansage in allen neun eingeschaltet. Rückweg: Version 2.909.0 einspielen.
+
 ## 2.909.0 – 2026-11-10 – ⛵ Neue Szene „Am See“ mit Wasserfall, Booten und Sturm (KC-CLUB-SEE) · ⚡ Clubabend Live und Mitfahrten über die direkte Leitung (KC-CLUB-RT-CLUBABEND-MITFAHRT) · Server 2.909.0
 Wunsch Hansi 10.11.: „Neue Szene. Links einen Wasserfall, unten einen See, darauf ein paar Segelboote, ein Ruderboot, zwischendurch ein Polizeiboot mit Blaulicht. Dann zieht ein Sturm auf, es fängt an zu regnen, dann auch Blitze. Und der Sturm pustet alles weg und dann fängt alles wieder von vorne an.“
 - Im Kopf der Startseite (Lauf ≈ 72 s): links stürzt ein **Wasserfall** vom Felsen in den **See** (Gischt, Wellen), zwei **Segelboote** und ein **Ruderboot** (Ruderer zieht im Takt) kreuzen, zweimal fährt das **Polizeiboot** mit blinkendem **Blaulicht** vorbei.

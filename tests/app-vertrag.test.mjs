@@ -13544,7 +13544,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
     assert.ok(new RegExp(`\\{ id: "${id}", thema: "`).test(hz), "Hilfe-Eintrag " + id);
   for (const id of ["wecker", "wecker-stumm", "kachel-effekt", "wie-verschicken", "auch-an", "nachricht-aendern", "sanduhr", "vorher-abrufen", "anklopfen-art", "anklopfen-blass", "zettel-teil-ab", "abstimmung-mehrere", "pdf-senden", "clubabend", "clubmoment", "spassstimme", "glueckskeks", "schatten-kopf"])
     assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?"`).test(html), "Twinkey-Frage " + id);
-  assert.ok(/\{ id: "wecker", stand: "1", sym: "⏰", t: "Wecker, Stoppuhr & Timer"[^\n]*st: \(\) => RG_WECKER, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"rueckseite", "wecker"/.test(html), "Video Wecker registriert (nur mit Eselsohr), im Thema");
+  assert.ok(/\{ id: "wecker", stand: "1", (zeit: "[\d.]+", )?sym: "⏰", t: "Wecker, Stoppuhr & Timer"[^\n]*st: \(\) => RG_WECKER, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"rueckseite", "wecker"/.test(html), "Video Wecker registriert (nur mit Eselsohr), im Thema");
   const wk = html.slice(html.indexOf("// 2.671.0 KC-CLUB-VIDEO-WECKER (Hilfe-Nachtrag 5)"), html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"));
   assert.ok(wk.length > 3000 && wk.length < 9000 && !/wkWeckerStellen\(\)|wkTimerStart\(|wkServer|api\(|wkKlingeln\(/.test(wk.replace(/'[^'\n]*'/g, "''").replace(/"[^"\n]*"/g, '""')), "Wecker-Video stellt nichts und sendet nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ RG\.wkZurueck = false;/.test(wk), "Wecker-Video stellt Stoppuhr und Anzeige zurück");
