@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.909.0 – 2026-11-10 – ⛵ Neue Szene „Am See“ mit Wasserfall, Booten und Sturm (KC-CLUB-SEE)
+Wunsch Hansi 10.11.: „Neue Szene. Links einen Wasserfall, unten einen See, darauf ein paar Segelboote, ein Ruderboot, zwischendurch ein Polizeiboot mit Blaulicht. Dann zieht ein Sturm auf, es fängt an zu regnen, dann auch Blitze. Und der Sturm pustet alles weg und dann fängt alles wieder von vorne an.“
+- Im Kopf der Startseite (Lauf ≈ 72 s): links stürzt ein **Wasserfall** vom Felsen in den **See** (Gischt, Wellen), zwei **Segelboote** und ein **Ruderboot** (Ruderer zieht im Takt) kreuzen, zweimal fährt das **Polizeiboot** mit blinkendem **Blaulicht** vorbei.
+- Ab 34 s **Sturm**: Wolken ziehen auf, es wird dunkel, ab 40 s **Regen** (schräg), ab 46 s **Blitze** mit Aufleuchten; ab 56 s **pustet der Sturm alles weg** (Boote kippen und treiben weg, Wolken und Regen fliegen davon) – es klart auf, danach beginnt alles von vorn.
+- Thema „⛵ Am See“ in ⚙️ → Darstellung (Design Nordsee, Wimpel in Meeresfarben), Vorschau-Knopf bei den Jahreszeiten, Hilfe-Eintrag „Thema Am See“.
+- Sparsam: höchstens 120 Regentropfen, 7 Wolken, ohne Schatten-Effekte; nichts wird gesendet. Tests: `tests/see.test.mjs`, Browser-Prüfung `tools/hilfe/see-browser.mjs`. Rückweg: App 2.908.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.908.0 – 2026-11-10 – 🧑‍🍳 Twinkey: verkleinerte Original-Kochmütze (KC-BILDER-WEBP)
 Wunsch Hansi 09.11.: „Kochmütze verkleinern“.
 - `dp2/assets/kc-original-kochmuetze.png` 288 KB → 48 KB (800 × 588 Pixel, 64 Farben – gleiches Aussehen). In DP2 geändert (dp3 `claude/kochmuetze-klein-clubapp`, 2fbed68) und mit `tools/dp2-twinkey-uebernehmen.mjs` übernommen; nur Bild und `dp2/QUELLE.json` ändern sich. Das eigenständige DP2 hat sie seit Build 254.

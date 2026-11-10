@@ -601,7 +601,7 @@ function jzbGastMalen(c, g) {
 // 🥨 Oktoberfest: blau-weiße Wimpel, Brezn, Fass wird angezapft („O'zapft is!“), zwei Maßkrüge stoßen an („Prost!“), Lebkuchenherz mit Namen.
 // 🌴 Karibik: Meer mit Wellen, Strand und Palme (ab und zu fällt eine Kokosnuss), Segelboot, Papagei oder springender Fisch, der Vorname
 // wird in den Sand geschrieben – eine Welle holt ihn; zum Schluss Sonnenuntergang. Alles nur Bild, nichts wird gespeichert oder gesendet.
-const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen", "disco"]; // 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
+const JZB_FESTE = ["kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen", "disco", "see"]; // 10.11.2026: + See (KC-CLUB-SEE) · 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.446.0: + Kegeln · 2.332.0: + Karneval, Halloween · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof
 const JZB_FEST_DAUER = 120; // Sekunden je Lauf
 // 2.617.0 KC-CLUB-SIMJUE-FEUERWERK (Wunsch Hansi „am Montag 21 Uhr Feuerwerk gleichzeitig mit dem echten Feuerwerk“): am Sim-Jü-Montag von 21:00 bis 21:20
 // steigen in der Sim-Jü-Szene ununterbrochen Raketen (mehr, größer, auch Goldregen), der Himmel wird dunkel – und das Bild bleibt in der Zeit nicht stehen.
@@ -620,6 +620,7 @@ function jzbFest(dt) {
   const F = J.fest; F.t += dt;
   if (J.saison === "kirmes" && F.vm) return jzbVmSchritt(F, dt); // 2.682.0 KC-CLUB-VIEHMARKT
   if (J.saison === "disco") return jzbDsSchritt(F, dt); // 2.811.0 KC-CLUB-DISCO
+  if (J.saison === "see") return jzbSeeSchritt(F, dt); // KC-CLUB-SEE: Wasserfall, See, Boote, Polizeiboot – Sturm, Regen, Blitze, alles wird weggepustet
   if (J.saison === "seifenblasen") return jzbSbSchritt(F, dt); // 2.633.0: Kinder pusten Seifenblasen, die Scheibe verschmiert, der Fensterputzer putzt
   if (J.saison === "baustelle") return jzbBsSchritt(F, dt); // 2.617.0: Radlader, Kipplaster, Abgas-Name, Arbeiter – zum Schluss wird der Kopf gesprengt
   if (J.saison === "wueste") return jzbWuSchritt(F, dt); // 2.548.0: Pyramiden, Karawane, Oase, Pharao, Flaschengeist – Name aus Goldstaub, Sonnenuntergang
@@ -716,7 +717,7 @@ function jzbSpritzerMalen(c, F) {
 function jzbFestMalen(c) {
   const J = JZB, F = J.fest; if (!F) return;
   c.save(); c.globalAlpha = F.a;
-  if (J.saison === "disco") jzbDsMalen(c, F); else if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "seifenblasen") jzbSeifenblasenMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
+  if (J.saison === "see") jzbSeeMalen(c, F); else if (J.saison === "disco") jzbDsMalen(c, F); else if (J.saison === "kirmes") jzbKirmesMalen(c, F); else if (J.saison === "wiesn") jzbWiesnMalen(c, F); else if (J.saison === "karneval") jzbKarnevalMalen(c, F); else if (J.saison === "halloween") jzbHalloweenMalen(c, F); else if (J.saison === "unterwasser") jzbUnterwasserMalen(c, F); else if (J.saison === "weltraum") jzbWeltraumMalen(c, F); else if (J.saison === "wildwest") jzbWildwestMalen(c, F); else if (J.saison === "wueste") jzbWuesteMalen(c, F); else if (J.saison === "baustelle") jzbBaustelleMalen(c, F); else if (J.saison === "seifenblasen") jzbSeifenblasenMalen(c, F); else if (J.saison === "bauernhof") jzbBauernhofMalen(c, F); else if (J.saison === "kegeln") jzbKegelnMalen(c, F); else jzbKaribikMalen(c, F);
   c.restore();
 }
 // ---------- KC-CLUB-ROSE (24.10.2026, Wunsch Hansi): einmalig eine rote Baccara-Rose aus der Sim-Jü-Schießbude – „Nur für dich“ ----------
@@ -4990,6 +4991,143 @@ function discoMalen(c, D, w, h, k, T, a = 1) { // ganze Szene; T: laufende Zeit 
 // Kopf: Lauf im Rahmen der Themen-Bühne (jzbFest → jzbDsSchritt, jzbFestMalen → jzbDsMalen)
 function jzbDsSchritt(F, dt) { const J = JZB; F.ds = F.ds || discoNeu(); F.a = 1; if (discoSchritt(F.ds, dt, J.w, J.h, J.k)) { J.fest = null; return jzbLaufEnde(); } }
 function jzbDsMalen(c, F) { if (F.ds) discoMalen(c, F.ds, JZB.w, JZB.h, JZB.k, JZB.T); }
+// ---------- KC-CLUB-SEE (10.11.2026, Wunsch Hansi „neue Szene: links ein Wasserfall, unten ein See, darauf ein paar Segelboote, ein Ruderboot,
+// zwischendurch ein Polizeiboot mit Blaulicht. Dann zieht ein Sturm auf, es regnet, dann Blitze – der Sturm pustet alles weg, dann fängt alles von vorne an“) ----------
+// Ein Lauf ≈ 72 s: ruhiger See mit Wasserfall, 2 Segelboote, Ruderboot, zweimal das Polizeiboot → ab 34 s Wolken und Dunkelheit → ab 40 s Regen →
+// ab 46 s Blitze → ab 56 s pustet der Sturm Boote, Wolken und Regen weg → es klart auf, Bild blendet aus, nächster Lauf beginnt von vorn.
+// Sparsam: höchstens 120 Regentropfen, 7 Wolken, keine shadowBlur-Effekte. Nur Bild, nichts wird gespeichert oder gesendet.
+const SEE_DAUER = 72, SEE_DUNKEL = [34, 42, 62, 68], SEE_REGEN = [40, 46], SEE_BLITZ = [46, 60], SEE_STURM = 56;
+function seeNeu() {
+  return { t: 0, boote: [
+      { art: "segel", x: .38, v: 7, segel: "#ffffff", fahne: "#e63946", rumpf: "#7a4b2a" },
+      { art: "segel", x: .74, v: -5, segel: "#ffd166", fahne: "#1d4e89", rumpf: "#f4f1ea" },
+      { art: "ruder", x: .55, v: 9, rumpf: "#8a5a32" },
+    ], polizei: null, polizeiPlan: [14, 29], wolken: [], regen: [], regenRest: 0, blitz: null, blitzUhr: 0, init: false };
+}
+const seeWasserY = (h) => h * .72;
+const seeDunkel = (t) => t < SEE_DUNKEL[0] ? 0 : t < SEE_DUNKEL[1] ? (t - SEE_DUNKEL[0]) / (SEE_DUNKEL[1] - SEE_DUNKEL[0]) : t < SEE_DUNKEL[2] ? 1 : Math.max(0, 1 - (t - SEE_DUNKEL[2]) / (SEE_DUNKEL[3] - SEE_DUNKEL[2]));
+const seeRegenStaerke = (t) => t < SEE_REGEN[0] || t > SEE_STURM + 7 ? 0 : t < SEE_REGEN[1] ? (t - SEE_REGEN[0]) / (SEE_REGEN[1] - SEE_REGEN[0]) : t < SEE_STURM + 3 ? 1 : Math.max(0, 1 - (t - SEE_STURM - 3) / 4);
+const seeWind = (t) => t < SEE_STURM ? (t > SEE_DUNKEL[0] ? .15 : 0) : Math.min(1, (t - SEE_STURM) / 3);
+function seeSchritt(S, dt, w, h, k) { // gibt true zurück, wenn der Lauf zu Ende ist
+  S.t += dt; const t = S.t, wind = seeWind(t), wy = seeWasserY(h);
+  if (!S.init) { S.init = true; for (const b of S.boote) { b.x *= w; b.vx = b.v * k; b.kipp = 0; b.weg = false; } }
+  // Boote: ruhig hin und her – im Sturm nach rechts weggepustet, gekippt
+  for (const b of S.boote) {
+    if (wind >= .5) { b.vx += wind * 140 * k * dt; b.kipp = Math.min(.55, b.kipp + dt * .5); }
+    b.x += b.vx * dt;
+    if (wind < .5) { const li = w * .27, re = w * .96; if (b.x < li && b.vx < 0) b.vx = -b.vx; if (b.x > re && b.vx > 0) b.vx = -b.vx; }
+    if (b.x > w + 80 * k) b.weg = true;
+  }
+  // Polizeiboot: zweimal quer über den See, mit Blaulicht
+  if (!S.polizei && S.polizeiPlan.length && t >= S.polizeiPlan[0]) { const von = S.polizeiPlan.length === 2 ? 1 : -1; S.polizeiPlan.shift();
+    S.polizei = { x: von > 0 ? w + 60 * k : w * .2, dir: -von, vx: -von * 46 * k, kipp: 0 }; }
+  if (S.polizei) { const P = S.polizei; if (wind >= .5) { P.vx = Math.max(P.vx, 0) + wind * 160 * k * dt; P.dir = 1; P.kipp = Math.min(.5, P.kipp + dt * .5); }
+    P.x += P.vx * dt; if (P.x < w * .18 - 60 * k || P.x > w + 90 * k) S.polizei = null; }
+  // Wolken ziehen auf – im Sturm fliegen sie nach rechts weg
+  if (t > SEE_DUNKEL[0] - 2 && t < SEE_STURM && S.wolken.length < 7 && Math.random() < dt * 1.2)
+    S.wolken.push({ x: w + 60 * k, y: h * (.04 + Math.random() * .26), r: (18 + Math.random() * 16) * k, vx: -(14 + Math.random() * 10) * k });
+  for (const c of S.wolken) { c.vx = wind >= .5 ? c.vx + wind * 220 * k * dt : c.vx; c.x += c.vx * dt; if (c.vx < 0 && c.x < w * .35) c.vx *= 1 - dt * .8; }
+  S.wolken = S.wolken.filter((c) => c.x < w + 120 * k);
+  // Regen: schräg, je mehr Wind, desto schräger
+  const st = seeRegenStaerke(t); S.regenRest += st * 150 * dt;
+  while (S.regenRest >= 1 && S.regen.length < 120) { S.regenRest -= 1; S.regen.push({ x: Math.random() * (w + 80 * k) - 60 * k, y: -10 * k - Math.random() * 20 * k, v: (260 + Math.random() * 120) * k }); }
+  if (S.regen.length >= 120) S.regenRest = 0;
+  for (const r of S.regen) { r.y += r.v * dt; r.x += (40 + wind * 260) * k * dt; }
+  S.regen = S.regen.filter((r) => r.y < wy + 4 * k && r.x < w + 40 * k);
+  // Blitze
+  if (S.blitz) { S.blitz.t += dt; if (S.blitz.t > .32) S.blitz = null; }
+  if (t > SEE_BLITZ[0] && t < SEE_BLITZ[1] && (S.blitzUhr -= dt) <= 0) {
+    S.blitzUhr = 1.4 + Math.random() * 2.2; const x0 = w * (.3 + Math.random() * .6), weg = [[x0, 0]]; let x = x0, y = 0;
+    while (y < wy) { y += (10 + Math.random() * 14) * k; x += (Math.random() - .5) * 22 * k; weg.push([x, Math.min(y, wy)]); }
+    S.blitz = { t: 0, weg, ast: weg.slice(2, 2 + Math.max(2, Math.floor(weg.length / 3))).map(([px, py], i) => [px + (i + 1) * 9 * k, py + (i + 1) * 7 * k]) };
+  }
+  return t >= SEE_DAUER;
+}
+function seeSegelboot(c, b, wy, k, T) {
+  const s = k, bob = Math.sin(T * 1.8 + b.x * .01) * 1.2 * s, y = wy + 2 * s + bob, d = b.vx >= 0 ? 1 : -1;
+  c.save(); c.translate(b.x, y); c.rotate((Math.sin(T * 1.3 + b.x) * .04) + b.kipp);
+  c.fillStyle = b.rumpf; c.beginPath(); c.moveTo(-15 * s, -4 * s); c.lineTo(15 * s, -4 * s); c.lineTo(10 * s, 3 * s); c.lineTo(-10 * s, 3 * s); c.closePath(); c.fill();
+  c.strokeStyle = "#5b4636"; c.lineWidth = 1.3 * s; c.beginPath(); c.moveTo(0, -4 * s); c.lineTo(0, -32 * s); c.stroke();
+  c.fillStyle = b.segel; c.beginPath(); c.moveTo(1 * s, -31 * s); c.lineTo(1 * s, -6 * s); c.lineTo(13 * d * s, -6 * s); c.closePath(); c.fill(); // Großsegel
+  c.globalAlpha *= .92; c.beginPath(); c.moveTo(-1 * s, -27 * s); c.lineTo(-1 * s, -7 * s); c.lineTo(-9 * d * s, -7 * s); c.closePath(); c.fill(); c.globalAlpha /= .92; // Vorsegel
+  c.fillStyle = b.fahne; c.beginPath(); c.moveTo(0, -32 * s); c.lineTo(-6 * d * s, -30 * s); c.lineTo(0, -28 * s); c.closePath(); c.fill();
+  c.restore();
+}
+function seeRuderboot(c, b, wy, k, T) {
+  const s = k, bob = Math.sin(T * 2.1 + 1) * 1.1 * s, y = wy + 2 * s + bob, d = b.vx >= 0 ? 1 : -1, zug = Math.sin(T * 3.4);
+  c.save(); c.translate(b.x, y); c.rotate(Math.sin(T * 1.7) * .03 + b.kipp); c.scale(d, 1);
+  c.fillStyle = b.rumpf; c.beginPath(); c.moveTo(-12 * s, -3 * s); c.quadraticCurveTo(0, 6 * s, 12 * s, -4 * s); c.lineTo(-12 * s, -3 * s); c.fill();
+  c.strokeStyle = "#5a3a1e"; c.lineWidth = 1 * s; c.beginPath(); c.moveTo(-12 * s, -3 * s); c.lineTo(12 * s, -4 * s); c.stroke();
+  // Ruderer (rote Jacke, Mütze) – sitzt mit dem Rücken zur Fahrtrichtung und zieht an den Rudern
+  const lehn = zug * 2 * s; c.fillStyle = "#c0392b"; c.fillRect(-3 * s - lehn * .3, -11 * s, 6 * s, 8 * s);
+  c.fillStyle = "#f1c19a"; c.beginPath(); c.arc(-lehn * .5, -14 * s, 3.2 * s, 0, 7); c.fill();
+  c.fillStyle = "#1d4e89"; c.beginPath(); c.arc(-lehn * .5, -15 * s, 3.3 * s, Math.PI, 0); c.fill();
+  c.strokeStyle = "#a07850"; c.lineWidth = 1.4 * s; c.beginPath(); c.moveTo(-lehn * .4, -8 * s); c.lineTo(9 * s + zug * 6 * s, 1 * s + Math.abs(zug) * 2 * s); c.stroke(); // Ruder
+  c.restore();
+}
+function seePolizeiboot(c, P, wy, k, T) {
+  const s = k, y = wy + 2 * s + Math.sin(T * 2.6) * .8 * s, an = Math.floor(T * 6) % 2 === 0;
+  c.save(); c.translate(P.x, y); c.rotate(P.kipp); c.scale(P.dir, 1);
+  c.fillStyle = "#f4f6f8"; c.beginPath(); c.moveTo(-20 * s, -6 * s); c.lineTo(22 * s, -6 * s); c.lineTo(16 * s, 3 * s); c.lineTo(-18 * s, 3 * s); c.closePath(); c.fill();
+  c.fillStyle = "#1d4e89"; c.fillRect(-18 * s, -3 * s, 36 * s, 2 * s); // blauer Streifen
+  c.fillStyle = "#e8edf2"; c.fillRect(-10 * s, -14 * s, 14 * s, 8 * s); c.fillStyle = "#7fa7c9"; c.fillRect(-7 * s, -12 * s, 4 * s, 3 * s); c.fillRect(-1 * s, -12 * s, 4 * s, 3 * s); // Kajüte
+  c.save(); c.scale(P.dir, 1); c.fillStyle = "#1d4e89"; c.font = `bold ${5 * s}px system-ui, sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("POLIZEI", 2 * s * P.dir, -10 * s + 6.5 * s); c.restore();
+  c.fillStyle = "#3a4a5a"; c.fillRect(-4 * s, -17 * s, 4 * s, 3 * s);
+  c.fillStyle = an ? "#2f7bff" : "#123a7a"; c.beginPath(); c.arc(-2 * s, -18 * s, 2.2 * s, 0, 7); c.fill(); // Blaulicht
+  if (an) { c.globalAlpha *= .35; c.beginPath(); c.arc(-2 * s, -18 * s, 8 * s, 0, 7); c.fill(); c.globalAlpha /= .35; }
+  // Bugwelle
+  c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 1.2 * s; c.beginPath(); c.moveTo(-24 * s, 2 * s); c.quadraticCurveTo(-30 * s, 0, -36 * s, 3 * s); c.stroke();
+  c.restore();
+}
+function seeMalen(c, S, w, h, k, T, a = 1) { // ganze Szene; T: laufende Zeit; a: Gesamt-Deckkraft
+  const t = S.t, wy = seeWasserY(h), dunkel = seeDunkel(t), wind = seeWind(t);
+  const ein = Math.min(1, t / 2.5), aus = t > SEE_DAUER - 4 ? Math.max(0, (SEE_DAUER - t) / 4) : 1, A = a * ein * aus;
+  c.save(); c.globalAlpha = A;
+  // Himmel: tagsüber hell, im Sturm dunkelgrau
+  const g = c.createLinearGradient(0, 0, 0, wy);
+  g.addColorStop(0, dunkel > 0 ? `rgba(${Math.round(120 - 70 * dunkel)},${Math.round(180 - 120 * dunkel)},${Math.round(230 - 150 * dunkel)},.55)` : "rgba(120,180,230,.45)");
+  g.addColorStop(1, `rgba(${Math.round(200 - 120 * dunkel)},${Math.round(225 - 135 * dunkel)},${Math.round(240 - 140 * dunkel)},.35)`);
+  c.fillStyle = g; c.fillRect(0, 0, w, wy);
+  // ferne Hügel am anderen Ufer
+  c.fillStyle = `rgba(${Math.round(60 - 25 * dunkel)},${Math.round(110 - 45 * dunkel)},${Math.round(70 - 25 * dunkel)},.75)`;
+  c.beginPath(); c.moveTo(w * .18, wy); for (let i = 0; i <= 10; i++) { const x = w * .18 + (w * .82) * i / 10; c.lineTo(x, wy - (10 + Math.sin(i * 1.7) * 6 + (i % 3) * 3) * k); } c.lineTo(w, wy); c.closePath(); c.fill();
+  // See
+  const sg = c.createLinearGradient(0, wy, 0, h); sg.addColorStop(0, `rgba(${Math.round(60 - 30 * dunkel)},${Math.round(140 - 70 * dunkel)},${Math.round(190 - 80 * dunkel)},.9)`);
+  sg.addColorStop(1, `rgba(${Math.round(20 - 10 * dunkel)},${Math.round(80 - 40 * dunkel)},${Math.round(130 - 60 * dunkel)},.95)`); c.fillStyle = sg; c.fillRect(0, wy, w, h - wy);
+  c.strokeStyle = `rgba(255,255,255,${.35 + .2 * wind})`; c.lineWidth = 1;
+  for (let r = 0; r < 4; r++) { const yy = wy + (6 + r * 9) * k, amp = (1 + wind * 3 + dunkel) * k; c.beginPath();
+    for (let x = 0; x <= w; x += 6 * k) { const y = yy + Math.sin(x / (14 * k) + T * (1.4 + wind * 3) + r) * amp; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+  // Fels links mit Wasserfall
+  c.fillStyle = `rgb(${Math.round(110 - 40 * dunkel)},${Math.round(98 - 35 * dunkel)},${Math.round(86 - 30 * dunkel)})`;
+  c.beginPath(); c.moveTo(0, h * .1); c.lineTo(w * .1, h * .13); c.lineTo(w * .19, h * .2); c.lineTo(w * .22, wy + 3 * k); c.lineTo(0, wy + 3 * k); c.closePath(); c.fill();
+  c.fillStyle = `rgb(${Math.round(70 - 25 * dunkel)},${Math.round(130 - 50 * dunkel)},${Math.round(70 - 25 * dunkel)})`; // Gras oben
+  c.beginPath(); c.moveTo(0, h * .1); c.lineTo(w * .1, h * .13); c.lineTo(w * .19, h * .2); c.lineTo(w * .19, h * .23); c.lineTo(w * .1, h * .16); c.lineTo(0, h * .13); c.closePath(); c.fill();
+  const fx = w * .135, fb = Math.max(14 * k, w * .05), fo = h * .19;
+  const wg = c.createLinearGradient(fx, 0, fx + fb, 0); wg.addColorStop(0, "rgba(160,215,245,.85)"); wg.addColorStop(.5, "rgba(225,245,255,.95)"); wg.addColorStop(1, "rgba(150,205,240,.85)");
+  c.fillStyle = wg; c.beginPath(); c.moveTo(fx, fo); c.lineTo(fx + fb, fo); c.lineTo(fx + fb * 1.15 + wind * 10 * k, wy); c.lineTo(fx - fb * .1 + wind * 6 * k, wy); c.closePath(); c.fill();
+  c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 1.2 * k; // fallende Streifen
+  for (let i = 0; i < 6; i++) { const sx = fx + fb * (.12 + i * .15), lang = 9 * k, off = ((T * 120 * k + i * 23 * k) % (wy - fo)); c.beginPath(); c.moveTo(sx + (off / (wy - fo)) * wind * 8 * k, fo + off); c.lineTo(sx + (off / (wy - fo)) * wind * 8 * k, Math.min(wy, fo + off + lang)); c.stroke(); }
+  c.fillStyle = "rgba(255,255,255,.75)"; // Gischt unten
+  for (let i = 0; i < 5; i++) { const r = (5 + Math.sin(T * 4 + i * 1.9) * 2) * k; c.beginPath(); c.arc(fx + fb * (i / 4) * 1.1 + wind * 14 * k * (i / 4), wy + 1 * k, r, 0, 7); c.fill(); }
+  // Boote
+  for (const b of S.boote) { if (b.weg) continue; if (b.art === "segel") seeSegelboot(c, b, wy, k, T); else seeRuderboot(c, b, wy, k, T); }
+  if (S.polizei) seePolizeiboot(c, S.polizei, wy, k, T);
+  // Dunkelheit über allem, dann Wolken, Regen, Blitz
+  if (dunkel > 0) { c.fillStyle = `rgba(15,20,35,${.38 * dunkel})`; c.fillRect(0, 0, w, h); }
+  for (const cl of S.wolken) { c.fillStyle = `rgba(${Math.round(90 - 30 * dunkel)},${Math.round(95 - 30 * dunkel)},${Math.round(110 - 30 * dunkel)},.92)`;
+    for (const [dx, dy, f] of [[-1, .2, .7], [0, 0, 1], [1, .25, .75], [.5, -.3, .7], [-.5, -.25, .65]]) { c.beginPath(); c.arc(cl.x + dx * cl.r, cl.y + dy * cl.r, cl.r * f, 0, 7); c.fill(); } }
+  if (S.regen.length) { c.strokeStyle = "rgba(200,220,255,.7)"; c.lineWidth = 1; c.beginPath(); const sx = (6 + wind * 18) * k;
+    for (const r of S.regen) { c.moveTo(r.x, r.y); c.lineTo(r.x - sx * .4, r.y - 9 * k); } c.stroke(); }
+  if (S.blitz) { const q = Math.max(0, 1 - S.blitz.t / .32);
+    c.fillStyle = `rgba(235,240,255,${.45 * q})`; c.fillRect(0, 0, w, h); // Himmel blitzt auf
+    for (const [farbe, breite] of [["rgba(170,190,255,.45)", 5 * k], ["#ffffff", 1.8 * k]]) { c.globalAlpha = A * q; c.strokeStyle = farbe; c.lineWidth = breite; c.beginPath();
+      S.blitz.weg.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
+      if (S.blitz.ast.length) { c.beginPath(); c.moveTo(...S.blitz.weg[2]); for (const p of S.blitz.ast) c.lineTo(...p); c.stroke(); } }
+    c.globalAlpha = A; }
+  c.restore();
+}
+function jzbSeeSchritt(F, dt) { const J = JZB; F.see = F.see || seeNeu(); F.a = 1; if (seeSchritt(F.see, dt, J.w, J.h, J.k)) { J.fest = null; return jzbLaufEnde(); } }
+function jzbSeeMalen(c, F) { if (F.see) seeMalen(c, F.see, JZB.w, JZB.h, JZB.k, JZB.T); }
 // Bühne „Nur Musik hören → Disco“: dieselbe Szene als Hintergrund hinter Twinkey (ohne Twinkey-Solo – er tanzt dort schon vorne).
 // Eigene Leinwand, höchstens 20 Bilder/s, hält an, sobald die Bühne weg ist, die Musik pausiert oder die App im Hintergrund ist.
 const DISCO_B = { cv: null, D: null, laeuft: false, uhr: 0, letzt: 0, T: 0 };

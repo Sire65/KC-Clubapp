@@ -6,7 +6,7 @@ const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8")
 const app = programmText(), html = lies("index.html");
 // Thema, Szene, Deko, Hilfe
 assert.ok(app.includes('{ id: "disco", sym: "🪩", name: "Disco", design: "disko", jz: "disco"'), "Thema Disco");
-assert.ok(/const JZB_ARTEN = \[[^\]]*"disco"\];/.test(app) && /const JZB_FESTE = \[[^\]]*"disco"\];/.test(app) && app.includes("disco: [\"lichter\", \"bunt\"]"));
+assert.ok(/const JZB_ARTEN = \[[^\]]*"disco"(?:, "see")?\];/.test(app) && /const JZB_FESTE = \[[^\]]*"disco"(?:, "see")?\];/.test(app) && app.includes("disco: [\"lichter\", \"bunt\"]"));
 assert.ok(app.includes('if (J.saison === "disco") return jzbDsSchritt(F, dt);') && app.includes('if (J.saison === "disco") jzbDsMalen(c, F);'));
 assert.ok(app.includes('{ id: "disco", thema: "darstellung", sym: "🪩", t: "Thema Disco"'), "Hilfe");
 // Ablauf: 4 Tänzer, Twinkey-Solo, Nebel; sparsam (24 Lichtpunkte, 12 Nebelwolken, kein shadowBlur)

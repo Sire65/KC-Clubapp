@@ -111,6 +111,7 @@ jobs:
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
       - run: node tests/sprache.test.mjs
+      - run: node tests/see.test.mjs
       - run: node tests/nutzung-person.test.mjs
       - run: node tests/ist-rueckfrage.test.mjs
       - run: node tests/start-balken.test.mjs
