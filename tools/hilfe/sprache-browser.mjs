@@ -38,8 +38,12 @@ ok(l.fuss.join(",").includes("Home,Events,Messages,Members,More"), "Leiste unten
 ok(l.spiel === "▶ Start" && l.chat === "Abbrechen" && l.inhalt !== "Events Werne 2027", "Inhalte bleiben deutsch (Spiel-Start, Chat, Inhaltsknopf)"); await bild("sprache-en");
 await seite.evaluate(() => { document.body.insertAdjacentHTML("beforeend", '<div id="spNeu"><button>💾 Speichern</button><button title="Schließen">✕</button></div>'); }); await seite.waitForTimeout(200);
 ok(await seite.evaluate(() => $("spNeu").children[0].textContent === "💾 Save" && $("spNeu").children[1].title === "Close"), "später gezeichnete Knöpfe werden auch übersetzt (💾 Save, Hinweis „Close“)");
+const toast = await seite.evaluate(async () => { melde("💾 Gespeichert"); melde("Bitte ein Datum wählen.", true); await new Promise((r) => setTimeout(r, 150));
+  const t = [...document.querySelectorAll("body > .meldung")].map((m) => m.textContent); document.querySelectorAll("body > .meldung").forEach((m) => m.remove()); return t; });
+ok(toast.includes("💾 Saved") && toast.includes("Please choose a date."), "kurze Meldungen unten englisch: " + toast.join(" · "));
 await seite.evaluate(() => zeige("einstellungen")); await seite.waitForTimeout(500);
 ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen summary")].some((s) => /✨ Effects/.test(s.textContent))), "⚙️ More: Klappen-Überschriften englisch");
+ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen .schalter > div > b")].some((b) => /Flip tiles/.test(b.textContent))), "⚙️ More: Schalter-Namen englisch (🔄 Flip tiles)");
 await seite.evaluate(() => zeige("start", true));
 // nichts überlappt (Pfeile, Flagge, Balken, Schriftzug)
 for (const w of [360, 412]) { await seite.setViewportSize({ width: w, height: 780 }); await seite.waitForTimeout(250);
