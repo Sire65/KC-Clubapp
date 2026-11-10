@@ -517,6 +517,8 @@ const SP_EN = {
   "Schulferien im Kalender": "School holidays in the calendar", "Tages-Übersicht beim Start": "Daily overview at start",
   "Hinweis: viel im Eingangskorb": "Note: a lot in the in-tray", "Tipps anzeigen": "Show tips", "Club-Thema übernehmen": "Adopt club theme", "Ansage": "Announcement",
   "Standard: nur nächstes Clubtreffen": "Default: only next club meeting",
+  // Kopf: kleine Felder und eigener Status (Auswahl, keine Inhalte)
+  "Neue Nachr": "New msgs", "Lange offen": "Open a long time", "verfügbar": "available", "beschäftigt": "busy", "im Urlaub": "on holiday", "krank": "ill", "nicht erreichbar": "unavailable", "Ruhezeit": "quiet time", "Club-Treffen": "Club meeting", "Clubtreffen": "Club meeting", "Nächstes Treffen": "Next meeting", "Kein Termin geplant": "No event planned",
 };
 // Wo übersetzt wird (Bedienelemente) – und wo nie (Inhalte)
 const SP_FUSS = { "Start": "Home" }; // nur in der Leiste unten – „▶ Start“ in Spielen bleibt „Start“
