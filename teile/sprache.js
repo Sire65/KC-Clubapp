@@ -422,6 +422,13 @@ const SP_EN = {
   "Suchen (Name, Firma, Ort": "Search (name, company, place", "offen": "open", "Deine Antwort": "Your answer", "Suchen … (ab 2 Buchstaben": "Search … (from 2 letters",
   "Hier eintippen": "Type here", "Rezept oder Zutat suchen": "Search recipe or ingredient", "Wobei brauchst du noch Hilfe": "What do you still need help with",
   "Was ist das Problem": "What is the problem",
+  // Kacheln der Startseite (Namen = Wegweiser; die Untertitel sind Inhalt und bleiben deutsch)
+  "Clubabend Live": "Club night live", "Unser Clubjahr": "Our club year", "Runder Tisch": "Round table", "Unterstützung": "Support", "Schulungen": "Trainings",
+  "Ungelesen": "Unread", "Rezeptbuch": "Recipe book", "Club-Küche": "Club kitchen", "Weihnachtsmarkt-Prospekt": "Christmas market brochure", "Mein Status": "My status",
+  "Mein Bild": "My picture", "Mein Dienst": "My duty", "Dienstwünsche": "Duty wishes", "Erstattung": "Reimbursement", "Meine Nutzung": "My usage",
+  "Unterstützung anfragen": "Request support", "Meine Schulung": "My training", "Mein Garten": "My garden", "Fit bleiben": "Stay fit", "Studio": "Studio",
+  "Meine Einstellungen": "My settings", "Sicherheit & Datenschutz": "Security & privacy", "Einstellungen erklärt": "Settings explained", "Frag Twinkey": "Ask Twinkey",
+  "Erklär-Videos": "Explainer videos", "So nutzen wir die App": "How we use the app", "Nutzung je Mitglied": "Usage per member",
 };
 // Wo übersetzt wird (Bedienelemente) – und wo nie (Inhalte)
 const SP_FUSS = { "Start": "Home" }; // nur in der Leiste unten – „▶ Start“ in Spielen bleibt „Start“
