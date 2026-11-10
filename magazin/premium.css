@@ -1,0 +1,605 @@
+/*
+ * CLUB-KÜCHE | Premium-Editorial-Look
+ * 2026-11-10 – Gestaltungsebene über dem bestehenden Magazin.
+ * Keine Manuskript- oder Freigabelogik. Keine externen Schriften.
+ * Die vorhandenen weißen Druckseiten, die Navigation und die
+ * A5/A4-Broschürenerstellung bleiben erhalten.
+ */
+
+:root {
+  --mag-paper: #fffdf8;
+  --mag-paper-warm: #f8f2e9;
+  --mag-paper-deep: #eee5d7;
+  --mag-ink: #2b2020;
+  --mag-muted: #71635c;
+  --mag-wine: #741521;
+  --mag-wine-dark: #3c1019;
+  --mag-gold: #c9a96e;
+  --mag-gold-light: #e8d6ae;
+  --mag-line: #e6dacb;
+  --mag-green: #315f50;
+}
+
+/* 1. Papier, Seitentitel, Fußzeilen: ruhig und redaktionell. */
+.mag-seite {
+  background: var(--mag-paper);
+  color: var(--mag-ink);
+}
+.mag-kopf {
+  gap: 1rem;
+  padding: 15px clamp(16px, 4.8%, 34px) 10px;
+  border-bottom: 1px solid var(--mag-gold);
+  background: linear-gradient(180deg, #fffefa, var(--mag-paper));
+  font: 650 .7rem/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .13em;
+  color: var(--mag-wine);
+}
+.mag-kopf b {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .92rem;
+  font-weight: 800;
+  letter-spacing: .10em;
+}
+.mag-rumpf {
+  padding: clamp(20px, 4.6vw, 36px) clamp(18px, 5vw, 40px);
+  overflow-wrap: break-word;
+}
+.mag-fuss {
+  padding: 12px clamp(18px, 5%, 36px);
+  border-top: 1px solid var(--mag-line);
+  background: #fcf9f4;
+  color: var(--mag-muted);
+  font: 600 .69rem/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .035em;
+}
+.mag-h {
+  position: relative;
+  padding: 0 0 .68em;
+  margin: 0 0 .55em;
+  color: var(--mag-wine);
+  font: 700 clamp(1.65rem, 5.7vw, 2.3rem)/1.11 Georgia, "Times New Roman", serif;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+.mag-h::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: min(6.5rem, 27%);
+  background: var(--mag-gold);
+}
+.mag-unterzeile {
+  margin: -.22rem 0 1.3rem;
+  color: var(--mag-muted);
+  font: italic clamp(.9rem, 3.2vw, 1rem)/1.5 Georgia, "Times New Roman", serif;
+}
+.mag-lead {
+  font: 400 clamp(1.03rem, 3.4vw, 1.18rem)/1.55 Georgia, "Times New Roman", serif;
+  color: var(--mag-ink);
+  text-wrap: pretty;
+}
+.mag-schlag {
+  color: var(--mag-wine);
+  font: 700 clamp(1.45rem, 4.3vw, 2rem)/1.18 Georgia, "Times New Roman", serif;
+  letter-spacing: -.018em;
+  text-wrap: balance;
+}
+
+/* 2. Aufmacher – bewusst typografische Titelgestaltung, kein falsches Stockfoto.
+ * Sobald die Redaktion echte Titelbilder freigibt, kann der Titelbereich eine
+ * Bildvariante erhalten, ohne die Heftstruktur neu zu bauen. */
+.mag-titel:not(.wm-titel) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-height: 100%;
+  gap: clamp(12px, 3vw, 22px);
+  padding: clamp(21px, 5vw, 42px);
+  background:
+    radial-gradient(ellipse 70% 50% at 97% 22%, rgba(205,164,111,.18), transparent 76%),
+    radial-gradient(ellipse 85% 45% at 0% 80%, rgba(14,7,9,.32), transparent 80%),
+    linear-gradient(156deg, #7b1c2a 0%, #54131f 46%, #2e1019 100%);
+  color: #fff9ef;
+}
+.mag-titel:not(.wm-titel)::before {
+  content: "";
+  position: absolute;
+  inset: clamp(10px, 2.4vw, 18px);
+  border: 1px solid rgba(232,214,174,.46);
+  pointer-events: none;
+  z-index: -1;
+}
+.mag-titel:not(.wm-titel)::after {
+  content: "";
+  position: absolute;
+  right: -7%;
+  top: 21%;
+  width: 55%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(245,225,182,.14);
+  border-radius: 50%;
+  box-shadow: 0 0 0 30px rgba(245,225,182,.025), 0 0 0 65px rgba(245,225,182,.02);
+  pointer-events: none;
+  z-index: -1;
+}
+.mag-titel:not(.wm-titel) .mag-titel-kopf {
+  position: relative;
+  z-index: 1;
+  padding-bottom: clamp(14px, 3.4vw, 24px);
+  border-bottom: 1px solid rgba(255,246,221,.58);
+  text-align: left;
+  gap: .28rem;
+}
+.mag-titel:not(.wm-titel) .mag-marke {
+  font: 800 clamp(2.3rem, 9.5vw, 5rem)/.92 Georgia, "Times New Roman", serif;
+  letter-spacing: -.035em;
+  color: #fff9ef;
+  overflow-wrap: normal;
+}
+.mag-titel:not(.wm-titel) .mag-unter {
+  font: italic clamp(.91rem, 2.8vw, 1.16rem)/1.3 Georgia, "Times New Roman", serif;
+  letter-spacing: .01em;
+  opacity: .92;
+}
+.mag-titel:not(.wm-titel) .mag-ausgabe {
+  margin-top: clamp(9px, 2vw, 15px);
+  color: #f4dba5;
+  font: 750 .7rem/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .2em;
+}
+.mag-titel:not(.wm-titel) .mag-titelfoto {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: clamp(168px, 30vh, 310px);
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(100deg, rgba(36,8,17,.62), rgba(36,8,17,.05) 78%),
+    repeating-linear-gradient(-23deg, transparent 0 29px, rgba(241,213,158,.045) 30px, transparent 32px),
+    radial-gradient(ellipse at 75% 55%, #a56865 0%, #78343e 35%, #4e1825 83%);
+  box-shadow: inset 0 0 0 1px rgba(244,216,166,.23);
+}
+.mag-titel:not(.wm-titel) .mag-titelfoto::before {
+  content: "GENUSS";
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  color: rgba(255,246,231,.15);
+  font: 800 clamp(3rem, 12.5vw, 6.3rem)/1 Georgia, "Times New Roman", serif;
+  letter-spacing: -.04em;
+  pointer-events: none;
+}
+.mag-titel:not(.wm-titel) .mag-titelfoto::after {
+  content: "HANDWERK  /  GESCHICHTEN  /  GEMEINSCHAFT";
+  position: absolute;
+  bottom: 12%;
+  left: 6%;
+  max-width: 88%;
+  font: 700 clamp(.63rem, 1.7vw, .84rem)/1.8 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .19em;
+  text-shadow: 0 1px 10px #310e19;
+  color: #f5dcaa;
+}
+.mag-titel:not(.wm-titel) .mag-titelfoto img {
+  position: relative;
+  z-index: 1;
+  width: clamp(90px, 25%, 150px);
+  max-width: 42%;
+  height: auto;
+  filter: drop-shadow(0 5px 16px rgba(14,4,10,.45));
+  opacity: .97;
+}
+.mag-titel:not(.wm-titel) .mag-titelfoto small {
+  display: none;
+}
+.mag-titel:not(.wm-titel) .mag-schlagzeilen {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  color: #fff9ef;
+}
+.mag-titel:not(.wm-titel) .mag-schlagzeilen li {
+  align-items: flex-start;
+  gap: .75em;
+  padding: .67em 0;
+  border-top: 1px solid rgba(244,223,183,.26);
+  font: 500 clamp(.93rem, 2.8vw, 1.08rem)/1.35 Georgia, "Times New Roman", serif;
+}
+.mag-titel:not(.wm-titel) .mag-schlagzeilen li:first-child {
+  font: 700 clamp(1.16rem, 4vw, 1.65rem)/1.18 Georgia, "Times New Roman", serif;
+  letter-spacing: -.01em;
+}
+.mag-titel:not(.wm-titel) .mag-schlagzeilen li span {
+  flex: 0 0 1.65em;
+  width: 1.65em;
+  text-align: center;
+}
+.mag-titel:not(.wm-titel) .mag-entwurf {
+  display: none; /* Kein dauerhaft eingeblendetes "Entwurf" auf Leser-Titelseiten. */
+}
+
+/* 3. Inhaltsverzeichnis als redaktionell gestaltete Registerseite. */
+.mag-inhalt {
+  margin: 1rem 0 0;
+  padding: 0;
+  gap: 0;
+  counter-reset: mag-register;
+}
+.mag-inhalt > li {
+  position: relative;
+  counter-increment: mag-register;
+}
+.mag-inhalt > li > button {
+  gap: clamp(10px, 2.6vw, 18px);
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto;
+  width: 100%;
+  min-height: 58px;
+  border-bottom: 1px solid var(--mag-line);
+  padding: 12px 6px;
+  text-align: left;
+  border-radius: 0;
+  transition: background-color .18s ease, padding-left .18s ease;
+}
+.mag-inhalt > li > button:hover {
+  background: #f7f0e5;
+  padding-left: 12px;
+}
+.mag-inhalt > li > button:focus-visible {
+  outline: 3px solid var(--mag-wine);
+  outline-offset: -3px;
+  background: #faf1e3;
+}
+.mag-inhalt .mag-sym {
+  font-size: 1.3rem;
+  filter: saturate(.75);
+}
+.mag-inhalt b {
+  color: var(--mag-ink);
+  font: 700 clamp(.96rem, 2.8vw, 1.1rem)/1.25 Georgia, "Times New Roman", serif;
+}
+.mag-inhalt small {
+  margin-top: 3px;
+  color: var(--mag-muted);
+  font: 400 .77rem/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.mag-seitenzahl {
+  color: var(--mag-wine);
+  font: 700 .87rem/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 4. Artikeltypografie, Vorwort, Porträts und Infokästen. */
+.mag-rumpf p:not(.mag-roman-text p) {
+  text-wrap: pretty;
+}
+.mag-rumpf .mag-spalten {
+  column-rule: 0;
+  column-gap: clamp(20px, 4.5vw, 34px);
+  font: 400 1rem/1.68 Georgia, "Times New Roman", serif;
+}
+.mag-rumpf .mag-spalten h4 {
+  margin-top: 1em;
+  color: var(--mag-wine);
+  font: 700 1.09rem/1.35 Georgia, "Times New Roman", serif;
+}
+.mag-rumpf .mag-vorwort {
+  max-width: 45em;
+  margin: .5rem auto;
+  font: 400 clamp(1.02rem, 2.8vw, 1.1rem)/1.73 Georgia, "Times New Roman", serif;
+}
+.mag-rumpf .mag-vorwort p {
+  margin: 0 0 1.1rem;
+}
+.mag-unterschrift {
+  padding-top: 14px;
+  border-top: 1px solid var(--mag-gold-light);
+  color: var(--mag-wine);
+}
+.mag-kasten {
+  position: relative;
+  overflow: hidden;
+  margin: 20px 0 24px;
+  padding: clamp(18px, 4vw, 26px);
+  border: 0;
+  border-radius: 3px;
+  background: var(--mag-green);
+  color: #f5f7f3;
+  box-shadow: 0 7px 17px rgba(29,44,35,.12);
+}
+.mag-kasten::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(248,239,209,.2);
+  pointer-events: none;
+}
+.mag-kasten .mag-marke-klein,
+.mag-kasten .mag-warum {
+  color: #ffdea1;
+}
+.mag-kasten h3 {
+  font: 700 clamp(1.25rem, 3.7vw, 1.7rem)/1.25 Georgia, "Times New Roman", serif;
+  text-wrap: balance;
+}
+.mag-zitat,
+.mag-zitatzeile {
+  position: relative;
+  margin: 1.5em 0;
+  padding: 1em 0 1em 1em;
+  border-left: 3px solid var(--mag-gold);
+  border-block: 0;
+  color: var(--mag-wine-dark);
+  font: italic 1.13rem/1.5 Georgia, "Times New Roman", serif;
+  text-align: left;
+}
+.mag-platz {
+  border: 1px dashed #bba581;
+  border-left: 3px solid var(--mag-gold);
+  border-radius: 4px;
+  background: #faf3e6;
+  color: #765e42;
+}
+
+/* 5. Rezeptreportagen – große Originalbilder, klare Mengen/Fakten und Schritte. */
+.mag-rezept {
+  max-width: 48rem;
+  margin-inline: auto;
+  color: var(--mag-ink);
+  font: 400 1rem/1.65 Georgia, "Times New Roman", serif;
+}
+.mag-rezept .mag-foto {
+  display: block;
+  width: 100%;
+  max-height: none;
+  aspect-ratio: 3 / 2;
+  margin: .2rem 0 1.2rem;
+  border-radius: 3px;
+  object-fit: cover;
+  box-shadow: 0 6px 20px rgba(59,37,31,.12);
+}
+.mag-rezept > h3 {
+  margin: .5rem 0 .5rem;
+  color: var(--mag-wine);
+  font: 700 clamp(1.55rem, 4.5vw, 2.14rem)/1.18 Georgia, "Times New Roman", serif;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+}
+.mag-rezept > h4 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1.5rem 0 .7rem;
+  font: 800 .74rem/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mag-wine);
+}
+.mag-rezept > h4::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--mag-line);
+}
+.mag-rezept ul,
+.mag-rezept ol {
+  margin: .5rem 0 1rem;
+  padding-left: 1.45rem;
+}
+.mag-rezept li {
+  padding: .24rem 0 .35rem;
+  border-bottom: 1px solid rgba(210,192,169,.45);
+}
+.mag-rezept .hinweis {
+  color: var(--mag-muted);
+  line-height: 1.5;
+}
+.mag-fakten {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+  border-block: 1px solid var(--mag-gold);
+  background: linear-gradient(180deg, #fffcf7, #f6f0e6);
+}
+.mag-fakten div {
+  gap: 5px;
+  padding: 13px 11px;
+  border-left: 1px solid var(--mag-line);
+}
+.mag-fakten small {
+  color: var(--mag-muted);
+  font-size: .67rem;
+}
+.mag-fakten b {
+  color: var(--mag-wine);
+  font: 750 1.08rem/1.2 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.mag-fotos {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+  gap: clamp(10px, 2.4vw, 18px);
+}
+.mag-fotos figure {
+  gap: 6px;
+}
+.mag-fotos figcaption {
+  color: var(--mag-muted);
+  font: italic .85rem/1.45 Georgia, "Times New Roman", serif;
+}
+.mag-foto-platz {
+  border: 1px dashed #bca98f;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, #fcf9f4 0 14px, #f3ecdf 14px 28px);
+}
+
+/* 6. Roman: leiser Buchsatz, einheitliche Zeichnungen, bessere Atempausen. */
+.mag-roman {
+  max-width: 40.5rem;
+  margin-inline: auto;
+  color: var(--mag-ink);
+}
+.mag-roman-kopf {
+  gap: .35rem;
+  padding: .7rem 0 1.55rem;
+  border-bottom: 2px solid var(--mag-gold);
+  margin-bottom: 1.55rem;
+}
+.mag-roman-reihe {
+  color: var(--mag-wine-dark);
+  font: 700 clamp(1.9rem, 6vw, 3rem)/1.08 Georgia, "Times New Roman", serif;
+  letter-spacing: -.02em;
+}
+.mag-roman-unter {
+  color: var(--mag-muted);
+  font: italic 1rem/1.35 Georgia, "Times New Roman", serif;
+}
+.mag-roman-folge {
+  margin-top: .8rem;
+  color: var(--mag-wine);
+  font-weight: 800;
+  letter-spacing: .11em;
+}
+.mag-roman-untertitel {
+  color: var(--mag-wine-dark);
+  font: italic clamp(1.02rem, 2.8vw, 1.18rem)/1.4 Georgia, "Times New Roman", serif;
+}
+.mag-roman-nachweis,
+.mag-lesezeit {
+  color: var(--mag-muted);
+}
+.mag-roman-vorspann {
+  margin: 1.1rem 0 1.5rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--mag-gold);
+  color: #5a4741;
+  font: italic clamp(1.06rem, 3.1vw, 1.19rem)/1.63 Georgia, "Times New Roman", serif;
+}
+.mag-roman-bisher {
+  margin: 1.4rem 0 1.9rem;
+  padding: clamp(16px, 3.5vw, 22px);
+  border-block: 1px solid var(--mag-line);
+  background: #f7f1e8;
+  border-radius: 3px;
+  color: #51403c;
+}
+.mag-roman-bisher > b {
+  color: var(--mag-wine);
+  font: 800 .71rem/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.mag-roman-bisher p {
+  margin: .65em 0 0;
+  font: 400 .98rem/1.6 Georgia, "Times New Roman", serif;
+}
+.mag-roman-text {
+  font: 400 clamp(1.02rem, 2.65vw, 1.11rem)/1.76 Georgia, "Times New Roman", serif;
+  letter-spacing: .003em;
+  hyphens: auto;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+.mag-roman-text p {
+  margin: 0 0 .99em;
+  orphans: 3;
+  widows: 3;
+}
+.mag-roman-text > p:first-of-type::first-letter {
+  color: var(--mag-wine);
+  font-size: 3.28em;
+}
+.mag-roman-text h3 {
+  position: relative;
+  margin: 2.05em 0 .9em;
+  padding-top: .8em;
+  border-top: 1px solid var(--mag-line);
+  color: var(--mag-wine);
+  font: 700 clamp(1.2rem, 3.6vw, 1.46rem)/1.25 Georgia, "Times New Roman", serif;
+  text-wrap: balance;
+}
+.mag-roman-text h3::before {
+  content: "✦";
+  display: inline-block;
+  margin-right: .45em;
+  color: var(--mag-gold);
+  font-size: .74em;
+}
+.mag-roman-bild {
+  max-width: min(100%, 28rem);
+  margin: 1.6rem auto 1.95rem;
+}
+.mag-roman-bild img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  mix-blend-mode: multiply;
+  filter: contrast(1.04);
+}
+.mag-roman-ende {
+  margin-top: 2.25rem;
+  padding: 1.5rem .5rem .35rem;
+  border-top: 2px solid var(--mag-gold);
+  text-align: center;
+  color: var(--mag-muted);
+  font: italic .97rem/1.55 Georgia, "Times New Roman", serif;
+}
+
+/* 7. Weitere redaktionelle Kleinteile. */
+.mag-bon {
+  box-shadow: 0 5px 22px rgba(43,26,28,.13);
+}
+.mag-vorschau li {
+  border-color: var(--mag-line);
+  font: 550 1.02rem/1.45 Georgia, "Times New Roman", serif;
+}
+.mag-impressum dt {
+  color: var(--mag-wine);
+}
+.mag-impressum dd {
+  line-height: 1.55;
+}
+.mag-aufloesung {
+  border-color: var(--mag-wine);
+}
+
+/* 8. Mobile & Tablet – keine winzigen Spalten und kein horizontales Scrollen. */
+@media (max-width: 520px) {
+  .mag-rumpf { padding: 19px 17px 25px; }
+  .mag-kopf { padding: 12px 16px 9px; letter-spacing: .045em; }
+  .mag-kopf b { font-size: .82rem; }
+  .mag-titel:not(.wm-titel) { padding: 20px; gap: 12px; }
+  .mag-titel:not(.wm-titel) .mag-titelfoto { min-height: 155px; }
+  .mag-titel:not(.wm-titel) .mag-titelfoto::after { letter-spacing: .10em; }
+  .mag-inhalt > li > button { grid-template-columns: 1.75rem minmax(0,1fr) auto; min-height: 50px; gap: 9px; }
+  .mag-rumpf .mag-spalten { columns: 1 !important; }
+  .mag-roman-text { line-height: 1.69; }
+  .mag-rezept .mag-foto { aspect-ratio: 4 / 3; }
+  .mag-fakten { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .mag-fakten div:nth-child(odd) { border-left: 0; }
+}
+@media (max-width: 350px) {
+  .mag-titel:not(.wm-titel) .mag-marke { font-size: 2.05rem; }
+  .mag-titel:not(.wm-titel) .mag-titelfoto::before { font-size: 2.6rem; }
+  .mag-kopf span { font-size: .66rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mag-inhalt > li > button { transition: none; }
+}
+@media (prefers-contrast: more) {
+  .mag-unterzeile,
+  .mag-fuss,
+  .mag-inhalt small,
+  .mag-roman-nachweis,
+  .mag-lesezeit { color: #514441; }
+  .mag-titel:not(.wm-titel) .mag-schlagzeilen li { border-top-color: #e6cca4; }
+}
+@media print {
+  .mag-seite, .mag-rumpf { background: #fff; }
+  .mag-kasten { box-shadow: none; }
+  .mag-roman-bild img { filter: none; }
+  .mag-inhalt > li > button { transition: none; }
+}
