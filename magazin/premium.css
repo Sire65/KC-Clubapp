@@ -6,7 +6,7 @@
  * A5/A4-Broschürenerstellung bleiben erhalten.
  */
 
-:root {
+.mag-seite, .mag-titel:not(.wm-titel) {
   --mag-paper: #fffdf8;
   --mag-paper-warm: #f8f2e9;
   --mag-paper-deep: #eee5d7;
