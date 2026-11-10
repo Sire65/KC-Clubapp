@@ -26,6 +26,15 @@ test("Editorial-Komponenten fuer Cover, Rubriken, Rezepte, Bilder und Roman", ()
   assert.match(style, /@media print/);
 });
 
+test("Weihnachtsmarkt-Prospekt bleibt gruen und unveraendert im Look", () => {
+  assert.match(style, /\.mag-titel:not\(\.wm-titel\)/);
+  assert.match(style, /\.wm-seite \.mag-kopf\s*\{/);
+  assert.match(style, /\.wm-seite \.mag-rumpf\s*\{/);
+  assert.match(style, /\.wm-seite \.mag-h::after\s*\{ content: none; \}/);
+  assert.match(style, /\.wm-seite \.mag-platz\s*\{/);
+  assert.doesNotMatch(style, /@import\s+url\(/);
+});
+
 test("Magazinlogik fuer Blättern, Roman, Archiv und A5-Druck bleibt vorhanden", () => {
   for (const name of [
     "magStart(", "magSeiten(", "magRomanHtml(", "magArchiv(",
