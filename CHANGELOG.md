@@ -1,13 +1,37 @@
 # Änderungen
 
-## 2.905.0 – 2026-11-10 – 📉 Weniger Datenvolumen: Mitgliederliste und Versand-Ampel (KC-CLUB-SPAR-KURZ) · Server 2.905.0 + Datenbank
+## 2.907.0 – 2026-11-10 – 📉 Weniger Datenvolumen: Mitgliederliste und Versand-Ampel (KC-CLUB-SPAR-KURZ) · Server 2.907.0 + Datenbank
 Egress-Auswertung 10.11. (26 Std. nach 2.899.0). Freigabe Hansi: „Ja alles sparsamer machen – trotzdem muss alles sicher und schnell laufen. Keine Geschwindigkeitseinbußen“.
 - **Mitgliederliste aus dem KC Manager:** ≈ 109 KB je Abruf (vor allem Ansprüche/Fähigkeiten), gelesen bei App-Start, Countdowns, Kontakt, Büro-Festtagen und im Notfall-Paket. Jetzt liefert die Datenbank nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) – gleiche Form, gleiche Reihenfolge. Die „gemerkte Aktionen-Liste“ aus 2.899.0 sparte dagegen kaum (Aktionen sind nur 2 KB; die Server-Instanzen leben zu kurz).
 - **Versand-Ampel (Communicator):** statt bis zu 500 Aufträgen der letzten 7 Tage (≈ 70 KB) zählt die Datenbank selbst und schickt nur die Zahlen (≈ 0,1 KB) – gleiche Rechnung (gesendet/offen/Fehler, Fehler der letzten 24 Std. getrennt nach System/Empfänger, zuletzt gesendet).
 - **Sicher und schnell:** beide Datenbank-Funktionen nur lesend, nur für den Club-Server; fehlen sie oder antworten sie nicht, liest der Server wie bisher (Rückfall) – nichts fällt aus. Weniger Daten = kürzere Wartezeit, keine zusätzliche Abfrage. Stichproben-Vergleich alt ↔ neu der Ampel bleibt.
 - **Notfall-Paket – Teilnehmerlisten (≈ 5 MB am Tag, fast nur hier):** beim Bau jedes Chats prüfte der Server für Runden (mehrere Personen, keine feste Gruppe), ob es weitere Runden mit denselben Leuten gibt – und lud dafür die Teilnehmer **aller** Chats des Mitglieds. Das braucht nur der Vorschlag „Daraus eine feste Gruppe machen?“, den man im Notbetrieb nicht annehmen kann → beim Bau des Notfall-Pakets weggelassen. Inhalt des Notfall-Pakets und die App selbst unverändert.
 - Erwartete Ersparnis: rund 12–14 MB am Tag (≈ 40 % des gemessenen Datenvolumens).
-- Datenbank: `supabase/migrations/20261110_kc_club_spar_kurz.sql` (Workflow „Datenbank einspielen“). Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.903.0 (App 2.904.0), Funktionen dürfen bleiben.
+- Datenbank: `supabase/migrations/20261110_kc_club_spar_kurz.sql` (Workflow „Datenbank einspielen“). Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.903.0 (App 2.906.0), Funktionen dürfen bleiben.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.906.0 – Zeitansage in acht Erklär-Videos (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+Je Video im Browser Schritt für Schritt geprüft (wo nötig mit Beispieldaten), Texte mit der App verglichen, dann Zeitansage eingeschaltet:
+- **Archiv & Clubchronik:** 7 Schritte – Suche/Jahr/Art, Mein Ordner, Clubchronik, Clubleben, geöffneter Ordner mit Registern, Inhaltsverzeichnis.
+- **Vorschlag einreichen:** 6 Schritte – „＋ Neu“, Art Thema/Spende, Thema, Termin, „Clubsprecher & Kassenwart benachrichtigen“, „Vorschlagen“.
+- **Mein Dienst & Dienstplan:** 13 Schritte – Mein Dienst, Wunsch-Fenster mit Fertig/Bogen, Dienstplan, Vergleich, Übersicht. „Zeiten von der Stempeluhr“ passt weiter, solange die Ist-Rückfrage (2.893.0) nur im Test ist.
+- **Mein Status:** 5 Schritte – Status im Kopf, verfügbar/beschäftigt/Urlaub/krank/nicht erreichbar, Urlaub mit „bis“, Speichern, Kachel.
+- **Protokolle & Dokumente:** 5 Schritte – Kachel, Liste, Liste/Kacheln + Filter Jahr/Monat/Ort/Protokollführer, Meine Dokumente.
+- **Meine Daten & Änderungen:** 5 Schritte – Übersicht drucken/sichern, „Änderung melden“ (wird angetippt), Anschrift/Telefon/E-Mail/Kleidergröße, Meine letzten Meldungen.
+- **Rezeptbuch:** 6 Schritte – Suche/Arten, Portionen umrechnen, Zutaten abhaken, Einkaufsliste/Drucken/Teilen, ＋ Neues Rezept.
+- **Meine Schulung:** 4 Schritte – Kachel, freie Termine, „Kein Termin passt“, Zusammenfassungen im Archiv.
+- Rückweg: Version 2.905.0 einspielen.
+
+## 2.905.0 – 2026-11-10 – 🇩🇪/🇬🇧 Sprache umschalten: Bedienung auf Englisch (KC-CLUB-SPRACHE, Stufe 1 + 2)
+Wunsch Hansi 10.11.: „Oben im Kopf … die deutsche und englische Flagge als Togglebutton … Bedienelemente auf Englisch, nicht die Inhalte. Und die Begrüßung Good morning Hans“ – nach Beispielbildern: „Geht es auch mit einer Flagge … die beiden Kopfpfeile weiter mittig“ – „Ja bau das so und dann nach und nach die ganzen Bedienelemente auf Sprache umstellen“.
+- Oben an der Kante des Kopfes: **eine Flagge** zeigt die eingestellte Sprache, antippen wechselt Deutsch ↔ English (je Gerät gemerkt). Pfeile ⌃ ⌃⌃ etwas nach links, rechts daneben Flagge und Verbindungs-Balken – alle in einer Linie, nichts überlappt (geprüft 360/412 px).
+- **English:** Begrüßung nach Tageszeit („Good morning / afternoon / evening, Hans!“), Leiste unten (Home, Events, Messages, Members, More), Seitentitel, Register, Schnellzugriff, Klappen in ⚙️ More und die häufigsten Knöpfe (Close, Cancel, Save, Back, Delete, Later …). **Inhalte bleiben deutsch** (Nachrichten, Termine, Namen, Kacheltexte, Hilfe, Zeitschrift).
+- Stufe 2 gleich mit (Hansi: „damit um 12 Uhr schon viele Bereiche umgestellt sind“): rund 2.270 Begriffe – Knöpfe, Feldbeschriftungen, Auswahllisten, Suchfelder, Menüs, die Schalter-Namen in ⚙️ More , die kurzen Meldungen unten (z. B. „💾 Saved“), die kleinen Felder im Kopf („New msgs“) und der eigene Status („available“, „busy“ …) aus Terminen, Nachrichten, Mitgliedern, Büro, Archiv, Hilfe, Spielen, Zeitschrift, Erstattung, Dienstplan und die Kachel-Namen der Startseite.
+- **Texte mit Zahlen, Namen und Datum:** „3 new messages“, „Request to Klaus“, „Answer by 12.11.“, „Tue, 10.11., 19:30“, „5 min ago“, Wochentage und Monate; **Rückfrage-Fenster** („Delete entry?“, „This cannot be undone“ …). Fehlende Bedientexte wurden mit einem Klick-Rundgang auf Englisch gesammelt (Sammler `window.SP_SAMMELN`, nur für Tests).
+- **Erklärtexte unter den Schaltern in ⚙️ More** ebenfalls englisch (Wunsch Hansi „Einbau“).
+- Erklärvideos sprechen deutsch: während ein Video läuft, ist die Bedienung deutsch, danach wieder English. Der ganze Klick-Rundgang lief auch auf English ohne Programmfehler (`RUNDGANG_SPRACHE=en node tests/rundgang.browser.mjs`).
+- Technik: nachladbares Teil `teile/sprache.js` (nur bei 🇬🇧 geladen, keine Server-Abfrage), Wörterbuch `SP_EN` mit exaktem Textvergleich nur in Bedienelementen; zurück auf Deutsch stellt jeden Originaltext wieder her. Weitere Bereiche folgen nach und nach (einfach `SP_EN` erweitern).
+- Tests: `tests/sprache.test.mjs`, Browser-Prüfung `tools/hilfe/sprache-browser.mjs`. Rückweg: App 2.904.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.904.0 – 2026-11-09 – 📖 Club-Küche: Lektorat, Urheberangabe, Zeichnungen Folge 7–9 und Folge 12 „Alle Sterne dieser Welt“ (Finale) · 🖼️ Film-Vorschaubilder als WebP (KC-CLUB-MAGAZIN-LEKTORAT, KC-CLUB-MAGAZIN-ROMAN-NACHWEIS, KC-CLUB-MAGAZIN-ROMAN, KC-BILDER-WEBP)

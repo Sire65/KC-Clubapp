@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.905.0";
+const SERVER_VERSION = "2.907.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -3555,7 +3555,7 @@ const buendelAus = async () => { try { const k: any = await konfigZeile("start_b
 async function commLesenPaket(seit7: string, seit24: string): Promise<any[] | null> {
   if (await buendelAus()) return null;
   try {
-    // 2.905.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: bis zu 500 Aufträge ≈ 70 KB je Abruf, nur zum Zählen): die Datenbank zählt selbst (≈ 0,1 KB).
+    // 2.907.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: bis zu 500 Aufträge ≈ 70 KB je Abruf, nur zum Zählen): die Datenbank zählt selbst (≈ 0,1 KB).
     // Fehlt die neue Funktion (noch nicht eingespielt) → das bisherige Paket mit der Auftragsliste; beides fehlerhaft → einzeln wie bisher.
     const k: any = await db.rpc("kc_club_comm_paket_kurz", { p_seit7: seit7, p_seit24: seit24, p_fehler: COMM_FEHLER, p_ok: COMM_OK });
     const kd = k?.data, kz = kd?.zahlen;
@@ -7470,7 +7470,7 @@ async function aktionenRoh() {
 // 2.899.0 KC-CLUB-SPAR-AKTIONEN (Egress-Messung 08./09.11.: Aktionen-Liste ≈ 52 KB je Abruf, bei App-Start und Countdowns): gemerkt je Server-Instanz;
 // vor jeder Nutzung nur den Stand (updated_at, wenige Bytes) fragen – gleich → gemerkte Liste, geändert → neu laden. Nie veraltet.
 let AKT_MERK: { stand: string | null; liste: any[] } | null = null;
-// 2.905.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: die Mitgliederliste des KC Managers ist ≈ 109 KB, vor allem Ansprüche/Fähigkeiten – gelesen bei jedem
+// 2.907.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: die Mitgliederliste des KC Managers ist ≈ 109 KB, vor allem Ansprüche/Fähigkeiten – gelesen bei jedem
 // App-Start, Countdown, Kontakt, Büro-Festtag und Notfall-Paket): nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) über die Datenbank-Funktion,
 // gleiche Form wie bisher ({ data: { payload: { data: [...] } } }). Fehlt die Funktion oder antwortet sie nicht → wie bisher alles lesen.
 async function managerMitglieder(): Promise<{ data: any; error?: any }> {
@@ -14446,7 +14446,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-GRUPPE-AUS-RUNDE (2.24.19): Runde = mehrere Personen ohne feste Gruppe. Für das Angebot „Daraus eine feste Gruppe machen?“:
         // wer sie begonnen hat und wie viele weitere Runden (ohne Gruppe) genau dieselben Teilnehmer haben.
         let runde: { ersteller: boolean; gleiche: number } | null = null;
-        // 2.905.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: ≈ 5 MB am Tag Teilnehmerlisten fast nur im Notfall-Paket): nicht beim Bau des Notfall-Pakets
+        // 2.907.0 KC-CLUB-SPAR-KURZ (Egress 09./10.11.: ≈ 5 MB am Tag Teilnehmerlisten fast nur im Notfall-Paket): nicht beim Bau des Notfall-Pakets
         // (nurLesen) – „Daraus eine feste Gruppe machen?“ kann man im Notbetrieb nicht annehmen; dafür lud jeder Chat die Teilnehmer ALLER Chats des Mitglieds.
         if (!gr && (tn ?? []).length >= 3 && !ich.nurLesen) {
           const satz = (tn ?? []).map((x: any) => x.person_id).sort().join("|");

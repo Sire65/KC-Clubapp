@@ -1,4 +1,4 @@
-// 2.905.0 KC-CLUB-SPAR-KURZ (Egress-Auswertung 10.11.2026, Hansi: „Ja alles sparsamer machen – trotzdem sicher und schnell, keine Geschwindigkeitseinbußen“).
+// 2.907.0 KC-CLUB-SPAR-KURZ (Egress-Auswertung 10.11.2026, Hansi: „Ja alles sparsamer machen – trotzdem sicher und schnell, keine Geschwindigkeitseinbußen“).
 // Mitgliederliste des KC Managers gekürzt (≈ 109 KB → 3 KB), Communicator-Ampel zählt in der Datenbank (≈ 70 KB → 0,1 KB). Aufruf: node tests/spar-kurz.test.mjs
 import fs from "node:fs";
 import assert from "node:assert/strict";

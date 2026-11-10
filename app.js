@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.905.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.907.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,8 +12,9 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-56MTJm2/i+oMN9yj9N22JGPXlL72S4xuwybMktYu8wzCxLEGh8aeZX2vlqWJBlXo" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-/mAGAbqXRYnkVuVG1RsbpdMSAEloFcggVl1hj0QKglBQ0NN8Wj8aL8ihe72N4/mj" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
+  sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
@@ -1666,7 +1667,7 @@ function begruessungPruefen() {
   BG_GEZEIGT = true;
   const installiert = START_ART === "app";
   const tipp = (nr, titel, text) => `<div class="bgtipp"><b class="nr">${nr}</b><div><b>${titel}</b><div class="hinweis" style="margin:2px 0 0">${text}</div></div></div>`;
-  $("begruessungText").innerHTML = `<h3 style="font-size:1.3rem">Hallo ${esc(ICH.vorname || ICH.name)}! 👋</h3>
+  $("kopfGruss").innerHTML = `<h3 style="font-size:1.3rem">Hallo ${esc(ICH.vorname || ICH.name)}! 👋</h3>
     <p style="margin:0 0 6px">Schön, dass du dabei bist – ich freue mich, dass du die <b>Köcheclub-App</b> ausprobierst. Drei kleine Tipps für den Start:</p>
     ${tipp(1, installiert ? "✅ Richtig installiert – prima!" : "📲 Richtig installieren", installiert
       ? "Die App öffnest du ab jetzt einfach über ihr Symbol."
@@ -2057,14 +2058,14 @@ const RUNDGAENGE = [
   { id: "sos", stand: "1", zeit: "08.11.2026", sym: "🆘", t: "SOS – Notfall", u: "Notrufe, Standort, Notfallpass (ca. 1 Min.)", st: () => RG_SOS },
   { id: "helfen", stand: "1", zeit: "08.11.2026", sym: "🤝", t: "Helfen & Leihen", u: "Hilfe, Ausleihen, Börse (ca. 1 Min.)", st: () => RG_HELFEN },
   { id: "spiele", stand: "1", zeit: "08.11.2026", sym: "🎲", t: "Spiele", u: "Spiel aussuchen, gegen Computer oder Mitglieder (ca. 1 Min.)", st: () => RG_SPIELE },
-  { id: "archiv", stand: "1", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
-  { id: "vorschlag", stand: "1", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
-  { id: "dienst", stand: "2", sym: "🗓️", t: "Mein Dienst & Dienstplan", u: "Wünsche, Sollplan, gearbeitete Zeiten, Wochenplan, 📊 wer kann wann (ca. 2 Min.)", st: () => RG_DIENST }, // 2.269.0 KC-CLUB-ERKLAERVIDEOS-5
-  { id: "status", stand: "1", sym: "🟢", t: "Mein Status", u: "Verfügbar, Urlaub, krank – mit Hinweis (ca. 1 Min.)", st: () => RG_STATUS },
-  { id: "lesen", stand: "1", sym: "📄", t: "Protokolle & Dokumente", u: "Nachlesen, filtern, Anleitungen drucken (ca. 1 Min.)", st: () => RG_LESEN },
-  { id: "meinedaten", stand: "1", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
-  { id: "rezepte", stand: "1", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
-  { id: "schulung", stand: "1", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
+  { id: "archiv", stand: "1", zeit: "10.11.2026", sym: "🗄️", t: "Archiv & Clubchronik", u: "Mein Ordner, Chronik, Clubleben, Inhaltsverzeichnis (ca. 1 Min.)", st: () => RG_ARCHIV },
+  { id: "vorschlag", stand: "1", zeit: "10.11.2026", sym: "🗳️", t: "Vorschlag einreichen", u: "Thema oder Spende vorschlagen (ca. 1 Min.)", st: () => RG_VORSCHLAG },
+  { id: "dienst", stand: "2", zeit: "10.11.2026", sym: "🗓️", t: "Mein Dienst & Dienstplan", u: "Wünsche, Sollplan, gearbeitete Zeiten, Wochenplan, 📊 wer kann wann (ca. 2 Min.)", st: () => RG_DIENST }, // 2.269.0 KC-CLUB-ERKLAERVIDEOS-5
+  { id: "status", stand: "1", zeit: "10.11.2026", sym: "🟢", t: "Mein Status", u: "Verfügbar, Urlaub, krank – mit Hinweis (ca. 1 Min.)", st: () => RG_STATUS },
+  { id: "lesen", stand: "1", zeit: "10.11.2026", sym: "📄", t: "Protokolle & Dokumente", u: "Nachlesen, filtern, Anleitungen drucken (ca. 1 Min.)", st: () => RG_LESEN },
+  { id: "meinedaten", stand: "1", zeit: "10.11.2026", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
+  { id: "rezepte", stand: "1", zeit: "10.11.2026", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
+  { id: "schulung", stand: "1", zeit: "10.11.2026", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
   { id: "feedback", stand: "1", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
   { id: "aktionen", stand: "1", sym: "🧳", t: "Aktionen & Reisen", u: "Ausflüge, Reiseverlauf, Preis, Checkliste (ca. 1 Min.)", st: () => RG_AKTIONEN }, // 2.271.0 KC-CLUB-ERKLAERVIDEOS-7
   { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
@@ -8736,6 +8737,35 @@ function netzQualitaet() {
   return { stufe, ms, farbe: ["", "rot", "gelb", "gruen", "gruen"][stufe], text: ["", "Schwach", "Mäßig", "Gut", "Sehr gut"][stufe] + (ms == null ? " (Schätzung des Handys)" : "") };
 }
 const NETZ_NAME = { wlan: "📶 WLAN", mobil: "🛰️ Mobilfunk" };
+// ---------- KC-CLUB-SPRACHE (10.11.2026, Wunsch Hansi) ----------
+// Eine Flagge oben im Kopf zeigt die eingestellte Sprache; antippen wechselt 🇩🇪 ↔ 🇬🇧 (je Gerät gemerkt). Englisch = nur Bedienelemente
+// (teile/sprache.js, Wörterbuch SP_EN), Inhalte bleiben deutsch. Begrüßung auf Englisch nach Tageszeit: „Good morning, Hans!“.
+const SP_FLAGGE = {
+  de: '<svg viewBox="0 0 5 3" class="sp-flagge" aria-hidden="true"><rect width="5" height="1" fill="#000"/><rect y="1" width="5" height="1" fill="#DD0000"/><rect y="2" width="5" height="1" fill="#FFCE00"/></svg>',
+  en: '<svg viewBox="0 0 60 30" class="sp-flagge" aria-hidden="true"><clipPath id="spT"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#spT)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></svg>',
+};
+const spracheEn = () => einst("englisch", false);
+function kopfGruss() {
+  const vn = ICH?.vorname || ""; if (!spracheEn()) return "Hallo" + (vn ? " " + vn : "") + "!";
+  const h = new Date().getHours();
+  return (h >= 5 && h < 12 ? "Good morning" : h >= 12 && h < 18 ? "Good afternoon" : "Good evening") + (vn ? ", " + vn : "") + "!";
+}
+function spracheKnopfZeigen() {
+  const b = $("spKnopf"); if (!b) return; const en = spracheEn();
+  b.innerHTML = SP_FLAGGE[en ? "en" : "de"];
+  b.title = en ? "Language: English – tap for Deutsch" : "Sprache: Deutsch – antippen für English"; b.setAttribute("aria-label", b.title);
+}
+async function spracheAnwenden() {
+  spracheKnopfZeigen(); if ($("begruessung") && ICH) $("begruessung").textContent = kopfGruss();
+  try { if (spracheEn()) await spracheEnglisch(); else if (typeof spracheDeutsch === "function" && !spracheDeutsch._teil) spracheDeutsch(); else document.documentElement.lang = "de"; }
+  catch (e) { meldeFehler?.(e); }
+  spracheKnopfZeigen();
+}
+function spracheUmschalten() {
+  einstellung("englisch", !spracheEn()); spracheAnwenden();
+  melde(spracheEn() ? "🇬🇧 English – buttons & menus (contents stay German)" : "🇩🇪 Deutsch");
+}
+setTimeout(() => { spracheKnopfZeigen(); if (spracheEn()) spracheAnwenden(); }, 0);
 // KC-CLUB-NETZ-BALKEN (09.11.2026, Wunsch Hansi): gut sichtbarer Balken mit 4 Strichen auf der Startseite (oben rechts im Kopf, schwebt) und neben dem
 // Router/Satelliten in 💬 Nachrichten. Gleiche Quelle wie das Symbol (netzQualitaet: echte Antwortzeiten, keine Extra-Abfragen).
 // Signalstärke in dBm und 4G/5G gibt kein Browser heraus – gezeigt wird die Verbindung zum Club-Server.
@@ -17595,7 +17625,7 @@ async function neuLadenRoh(vonHand) {
     if (!begruesst) ustPruefen(); // KC-CLUB-UNTERSTUETZUNG (2.85.0): einmal fragen, wie viel Hilfe gewünscht ist
     designUebernehmen(INIT.einstellungen?.design); infoFelderAktualisieren(); infoStartUebernehmen(INIT.einstellungen?.infofeld); ansichtInfo();
     VB.wartung = INIT.wartung || null; VB.server = INIT.server || null; vbCommSetzen(INIT.communicator || null);
-    $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; try { gedenkenZeigen(); } catch {}
+    $("begruessung").textContent = kopfGruss(); try { gedenkenZeigen(); } catch {}
     meinStatusZeigen();
     $("ichName").textContent = ICH.name + (ICH.aemter?.length ? ` (${ICH.aemter.join(", ")})` : ICH.admin ? " (Admin)" : "");
     $("neuTreffenKnopf").classList.remove("versteckt"); // KC-CLUB-PRIVATTERMIN: „＋ Neu“ für alle (Mitglieder: privat)
@@ -17638,7 +17668,7 @@ function standZeigen(g, vorab) {
   try {
     INIT = { ...g.init, _offline: g.zeit, _vorab: vorab }; ICH = INIT.ich; adminNamenSetzen();
     if (!kaBearb) kaUebernehmen(INIT.einstellungen?.kacheln); ansichtUebernehmen(INIT.einstellungen?.ansicht); designUebernehmen(INIT.einstellungen?.design);
-    $("begruessung").textContent = "Hallo " + ICH.vorname + "!"; meinStatusZeigen(); gedenkenZeigen();
+    $("begruessung").textContent = kopfGruss(); meinStatusZeigen(); gedenkenZeigen();
     heroZeigen(); registerZeigen(); kachelnZeigen(); wichtigZeigen(); zaehlerZeigen(); kachelStartEffekt(); kachelNeuWackeln(1300); // 2.566.0 KC-CLUB-KACHEL-EXTRAS (einmal je Start)
   } catch {}
   offlineStandZeigen(true); if (ICH) startBereitLoesen(); return true;
