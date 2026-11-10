@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.907.0";
+const SERVER_VERSION = "2.909.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -1400,6 +1400,13 @@ async function geradeInDerApp(ids: string[]): Promise<Set<string>> {
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).in("person_id", ids).gte("zuletzt_gesehen", new Date(Date.now() - IN_APP_SEK * 1000).toISOString());
   const drin = (data ?? []).map((x: any) => x.person_id as string), weg = await wegSet(drin).catch(() => new Set<string>()); // KC-CLUB-ONLINE-ECHT: App weggelegt → wieder Push
   return new Set(drin.filter((id) => !weg.has(id)));
+}
+// KC-CLUB-RT-CLUBABEND-MITFAHRT (10.11.2026, Wunsch Hansi „ja beides bauen“): kurzes Signal über die direkte Leitung an alle, die gerade in der App sind
+// (ohne den, der es ausgelöst hat) – deren offenes Fenster lädt sich still neu. Nur die Art geht raus, kein Inhalt; Zähler/Sparbremse in kc_club_rt_klingeln.
+async function rtKlingelnInApp(art: string, ohne?: string) {
+  const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", new Date(Date.now() - IN_APP_SEK * 1000).toISOString()).limit(300);
+  const ids = [...new Set((data ?? []).map((x: any) => String(x.person_id)))].filter((id) => id !== ohne);
+  if (ids.length) await db.rpc("kc_club_rt_klingeln", { p_personen: ids, p_art: art }).then(() => {}, () => {});
 }
 async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
@@ -18075,6 +18082,7 @@ Köcheclub Werne`,
             url: APP_URL + (art === "aktion" ? "#aktion=" + bid : "#termine"),
           }, `club-mitfahrt-angebot:${art}:${bid}:${ich.person_id}`);
         }
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         await protokoll(ich.person_id, "mitfahrt_angeboten", { bezug_art: art, bezug_id: bid, plaetze, versandSuche });
         return json({ ok: true });
       }
@@ -18099,6 +18107,7 @@ Köcheclub Werne`,
           text: `Hallo,\n\n${ich.name} ${p.dabei === false ? "fährt doch nicht bei dir mit" : "fährt bei dir mit"} – ${titel}.\n\nAlle Mitfahrer siehst du in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + (m.bezug_art === "aktion" ? "#aktion=" + m.bezug_id : "#termine"),
         }, `club-mitfahrt:${m.id}:${ich.person_id}:${Date.now()}`);
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         await protokoll(ich.person_id, p.dabei === false ? "mitfahrt_abgesagt" : "mitfahrt_zugesagt", { mitfahrt: m.id, versand });
         return json({ ok: true });
       }
@@ -18110,6 +18119,7 @@ Köcheclub Werne`,
         if (!titel) throw new Fehler("Termin nicht gefunden.", 404);
         if (p.an === false) {
           await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", art).eq("bezug_id", bid).eq("person_id", ich.person_id);
+          await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
           await protokoll(ich.person_id, "mitfahrt_suche_beendet", { bezug_art: art, bezug_id: bid });
           return json({ ok: true });
         }
@@ -18127,6 +18137,7 @@ Köcheclub Werne`,
           text: `Hallo,\n\n${ich.name} sucht eine Mitfahrgelegenheit zu „${titel}“ – du hast noch freie Plätze.\n\nIn der Köcheclub-App: ${APP_URL}${art === "aktion" ? "#aktion=" + bid : "#termine"}\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + (art === "aktion" ? "#aktion=" + bid : "#termine"),
         }, `club-mitfahrt-suche:${art}:${bid}:${ich.person_id}`) : null;
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         await protokoll(ich.person_id, "mitfahrt_gesucht", { bezug_art: art, bezug_id: bid, versand });
         return json({ ok: true, fahrerBenachrichtigt: fahrer.length });
       }
@@ -18138,6 +18149,7 @@ Köcheclub Werne`,
         const { data: pl } = await db.from("kc_club_mitfahrt_platz").select("person_id").eq("mitfahrt_id", m.id);
         await geloescht(ich, "mitfahrt", { mitfahrt: m, mitfahrer: (pl ?? []).map((x: any) => x.person_id) });
         await db.from("kc_club_mitfahrt").delete().eq("id", m.id);
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         const ziel = (pl ?? []).map((x: any) => x.person_id).filter((id: string) => id !== ich.person_id);
         if (ziel.length) {
           const titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
@@ -18424,6 +18436,7 @@ Köcheclub Werne`,
         if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
         // Anwesenheit gleich ins Protokoll (nur solange es ein Entwurf ist)
         if (typeof p.anwesend === "string") await db.from("kc_club_sitzungsprotokolle").update({ anwesend: [...anwesend] }).eq("treffen_id", tid).eq("status", "entwurf");
+        await rtKlingelnInApp("clubabend", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT: offene Clubabend-Fenster sofort frisch
         await protokoll(ich.person_id, "clubabend_gesetzt", { treffen: tid, ...(typeof p.erledigt === "string" ? { top: true } : {}), ...(typeof p.anwesend === "string" ? { anwesend: anwesend.size } : {}), ...(p.album_id ? { album: true } : {}) });
         return json(await clubabendStand(ich, t));
       }

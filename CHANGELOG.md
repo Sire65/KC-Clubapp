@@ -1,11 +1,15 @@
 # Änderungen
 
-## 2.909.0 – 2026-11-10 – ⛵ Neue Szene „Am See“ mit Wasserfall, Booten und Sturm (KC-CLUB-SEE)
+## 2.909.0 – 2026-11-10 – ⛵ Neue Szene „Am See“ mit Wasserfall, Booten und Sturm (KC-CLUB-SEE) · ⚡ Clubabend Live und Mitfahrten über die direkte Leitung (KC-CLUB-RT-CLUBABEND-MITFAHRT) · Server 2.909.0
 Wunsch Hansi 10.11.: „Neue Szene. Links einen Wasserfall, unten einen See, darauf ein paar Segelboote, ein Ruderboot, zwischendurch ein Polizeiboot mit Blaulicht. Dann zieht ein Sturm auf, es fängt an zu regnen, dann auch Blitze. Und der Sturm pustet alles weg und dann fängt alles wieder von vorne an.“
 - Im Kopf der Startseite (Lauf ≈ 72 s): links stürzt ein **Wasserfall** vom Felsen in den **See** (Gischt, Wellen), zwei **Segelboote** und ein **Ruderboot** (Ruderer zieht im Takt) kreuzen, zweimal fährt das **Polizeiboot** mit blinkendem **Blaulicht** vorbei.
 - Ab 34 s **Sturm**: Wolken ziehen auf, es wird dunkel, ab 40 s **Regen** (schräg), ab 46 s **Blitze** mit Aufleuchten; ab 56 s **pustet der Sturm alles weg** (Boote kippen und treiben weg, Wolken und Regen fliegen davon) – es klart auf, danach beginnt alles von vorn.
 - Thema „⛵ Am See“ in ⚙️ → Darstellung (Design Nordsee, Wimpel in Meeresfarben), Vorschau-Knopf bei den Jahreszeiten, Hilfe-Eintrag „Thema Am See“.
 - Sparsam: höchstens 120 Regentropfen, 7 Wolken, ohne Schatten-Effekte; nichts wird gesendet. Tests: `tests/see.test.mjs`, Browser-Prüfung `tools/hilfe/see-browser.mjs`. Rückweg: App 2.908.0.
+- **⚡ Direkte Leitung – Prüfung und Ausbau** (Wunsch Hansi „Check, ob die direkte Leitung überall zum Einsatz kommt“ → „Ja, beides bauen“): Messung der letzten 3 Tage: Leitung steht im Schnitt 97 %, Antwort 72 ms. Fast alle Bereiche melden sich schon sofort.
+  - **Clubabend Live:** Abhaken der Tagesordnung, Anwesende, Album → Signal „clubabend“; offene Clubabend-Fenster laden sofort statt bis zu 20 s später. Steht die Leitung, fragt der Takt nur noch alle 2 Min. zur Sicherheit (vorher alle 20 s je Handy).
+  - **Mitfahrgelegenheiten:** anbieten, mitfahren, absagen, suchen, löschen → Signal „mitfahrt“; wer gerade Termine oder die Aktion offen hat, sieht es sofort (nie mitten ins Eintippen oder über einem offenen Fenster).
+  - Server: `rtKlingelnInApp` schickt nur an Mitglieder, die gerade in der App sind, ohne den Auslöser, nur die Art (kein Inhalt), über `kc_club_rt_klingeln` (Zähler und Sparbremse). Keine Datenbank-Änderung. Tests `tests/rt-clubabend-mitfahrt.test.mjs`, Browser `tools/hilfe/rt-clubabend-mitfahrt-browser.mjs`. Rückweg Server: 2.907.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 
 ## 2.908.0 – 2026-11-10 – 🧑‍🍳 Twinkey: verkleinerte Original-Kochmütze (KC-BILDER-WEBP)

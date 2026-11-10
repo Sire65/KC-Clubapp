@@ -5092,6 +5092,9 @@ function rtSignal(s) {
     return;
   }
   if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
+  // KC-CLUB-RT-CLUBABEND-MITFAHRT (10.11.2026): offenes Clubabend-Fenster bzw. Termine/Aktion mit Mitfahrgelegenheiten sofort frisch (leicht gestreut)
+  if (s.art === "clubabend") { if ($("caBlatt") && CA.holen) { clearTimeout(RT.ca); RT.ca = setTimeout(() => CA.holen?.(), 300 + Math.random() * 900); } return; }
+  if (s.art === "mitfahrt") { if (!document.hidden && (aktuelleAnsicht === "termine" || aktuelleAnsicht === "aktion")) { clearTimeout(RT.mf); RT.mf = setTimeout(() => { if (document.querySelector(FENSTER_OFFEN) || $("mfAnbieten") || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "")) return; /* nie mitten ins Eintippen */ mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); }, 600 + Math.random() * 1400); } return; }
   if (s.art === "dienst") { clearTimeout(RT.dt); RT.dt = setTimeout(dtSignalLaden, 600 + Math.random() * 1400); return; } // KC-CLUB-RT-DIENST
   if (s.art === "ab") { abStandHolen(); return; } // 2.568.0 KC-CLUB-ANRUFBEANTWORTER: neue Nachricht bzw. abgehört
   // KC-CLUB-REALTIME-SPIELE (2.228.0): Zug/Herausforderung/Aufgabe – offenes Spiel sofort holen, sonst Einladungen/„du bist dran“ auffrischen
@@ -26198,7 +26201,7 @@ async function cjEnde(ende) {
 // nur Clubleitung; Sorge, dass alle zu Hause anklicken – ich bin vor Ort“): alle sehen den Abend, nur die Clubleitung ändert (Server prüft das).
 // Anwesenheit trägt die Clubleitung vor Ort ein (kein „Ich bin da“ von zu Hause). Solange das Fenster offen ist, alle 20 s neu (alle sehen den Stand).
 const CA_VORHER_MIN = 120, CA_DAUER_STD = 6, CA_TAKT_MS = 20000;
-const CA = { stand: null, takt: null, offen: new Set(["top"]) };
+const CA = { stand: null, takt: null, offen: new Set(["top"]), holen: null, laeuft: false, nochmal: false, tick: 0 };
 function caHeute() {
   const t = INIT?.naechstesTreffen; if (!t?.beginn || (t.art && t.art !== "treffen")) return false;
   const b = Date.parse(t.beginn), ende = t.ende ? Date.parse(t.ende) + 3600000 : b + CA_DAUER_STD * 3600000, j = Date.now();
@@ -26211,7 +26214,11 @@ async function caOeffnen(vorschau, treffenId) {
     if (r.auswahl) return caAuswahl(vorschau, r.auswahl);
     treffenId = r.treffen?.id || treffenId; // der Takt bleibt bei genau diesem Abend
     CA.stand = r; caZeichnen(); clearInterval(CA.takt);
-    CA.takt = setInterval(async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; try { const n = await api("clubabend", daten()); if (n.aktiv && !n.auswahl && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {} }, CA_TAKT_MS);
+    // KC-CLUB-RT-CLUBABEND-MITFAHRT (10.11.2026): Änderungen kommen als Signal „clubabend“ sofort – steht die Leitung, fragt der Takt nur alle 2 Min. zur Sicherheit
+    CA.holen = async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (CA.laeuft) { CA.nochmal = true; return; } CA.laeuft = true;
+      try { const n = await api("clubabend", daten()); if (n.aktiv && !n.auswahl && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {}
+      CA.laeuft = false; if (CA.nochmal) { CA.nochmal = false; CA.holen(); } };
+    CA.tick = 0; CA.takt = setInterval(() => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; if (rtAn() && ++CA.tick % 6) return; CA.holen(); }, CA_TAKT_MS);
   } catch (e) { meldeFehler(e); }
 }
 function caAuswahl(vorschau, liste) {
