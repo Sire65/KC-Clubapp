@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.907.0 – 2026-11-10 – 📉 Weniger Datenvolumen: Mitgliederliste und Versand-Ampel (KC-CLUB-SPAR-KURZ) · Server 2.907.0 + Datenbank
+Egress-Auswertung 10.11. (26 Std. nach 2.899.0). Freigabe Hansi: „Ja alles sparsamer machen – trotzdem muss alles sicher und schnell laufen. Keine Geschwindigkeitseinbußen“.
+- **Mitgliederliste aus dem KC Manager:** ≈ 109 KB je Abruf (vor allem Ansprüche/Fähigkeiten), gelesen bei App-Start, Countdowns, Kontakt, Büro-Festtagen und im Notfall-Paket. Jetzt liefert die Datenbank nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) – gleiche Form, gleiche Reihenfolge. Die „gemerkte Aktionen-Liste“ aus 2.899.0 sparte dagegen kaum (Aktionen sind nur 2 KB; die Server-Instanzen leben zu kurz).
+- **Versand-Ampel (Communicator):** statt bis zu 500 Aufträgen der letzten 7 Tage (≈ 70 KB) zählt die Datenbank selbst und schickt nur die Zahlen (≈ 0,1 KB) – gleiche Rechnung (gesendet/offen/Fehler, Fehler der letzten 24 Std. getrennt nach System/Empfänger, zuletzt gesendet).
+- **Sicher und schnell:** beide Datenbank-Funktionen nur lesend, nur für den Club-Server; fehlen sie oder antworten sie nicht, liest der Server wie bisher (Rückfall) – nichts fällt aus. Weniger Daten = kürzere Wartezeit, keine zusätzliche Abfrage. Stichproben-Vergleich alt ↔ neu der Ampel bleibt.
+- **Notfall-Paket – Teilnehmerlisten (≈ 5 MB am Tag, fast nur hier):** beim Bau jedes Chats prüfte der Server für Runden (mehrere Personen, keine feste Gruppe), ob es weitere Runden mit denselben Leuten gibt – und lud dafür die Teilnehmer **aller** Chats des Mitglieds. Das braucht nur der Vorschlag „Daraus eine feste Gruppe machen?“, den man im Notbetrieb nicht annehmen kann → beim Bau des Notfall-Pakets weggelassen. Inhalt des Notfall-Pakets und die App selbst unverändert.
+- Erwartete Ersparnis: rund 12–14 MB am Tag (≈ 40 % des gemessenen Datenvolumens).
+- Datenbank: `supabase/migrations/20261110_kc_club_spar_kurz.sql` (Workflow „Datenbank einspielen“). Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.903.0 (App 2.906.0), Funktionen dürfen bleiben.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.906.0 – Zeitansage in acht Erklär-Videos (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 Je Video im Browser Schritt für Schritt geprüft (wo nötig mit Beispieldaten), Texte mit der App verglichen, dann Zeitansage eingeschaltet:
 - **Archiv & Clubchronik:** 7 Schritte – Suche/Jahr/Art, Mein Ordner, Clubchronik, Clubleben, geöffneter Ordner mit Registern, Inhaltsverzeichnis.
