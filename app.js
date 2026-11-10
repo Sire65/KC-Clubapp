@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.909.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.910.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-/mAGAbqXRYnkVuVG1RsbpdMSAEloFcggVl1hj0QKglBQ0NN8Wj8aL8ihe72N4/mj" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-zHPV7EWRhh4yLNK49wIhs6MbaZemY2okAs9P23uGzb/2EIQ+GoyZRxqvWimRmuPF" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
@@ -2067,15 +2067,15 @@ const RUNDGAENGE = [
   { id: "meinedaten", stand: "1", zeit: "10.11.2026", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
   { id: "rezepte", stand: "1", zeit: "10.11.2026", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
   { id: "schulung", stand: "1", zeit: "10.11.2026", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
-  { id: "feedback", stand: "1", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
-  { id: "aktionen", stand: "1", sym: "🧳", t: "Aktionen & Reisen", u: "Ausflüge, Reiseverlauf, Preis, Checkliste (ca. 1 Min.)", st: () => RG_AKTIONEN }, // 2.271.0 KC-CLUB-ERKLAERVIDEOS-7
-  { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
-  { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
-  { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
-  { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Eselsohr, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
-  { id: "wecker", stand: "1", sym: "⏰", t: "Wecker, Stoppuhr & Timer", u: "Eselsohr, Uhr, Wecker stellen, Stoppuhr mit Runden, Timer – und wenn es klingelt (ca. 2 Min.)", st: () => RG_WECKER, nur: () => esAn() }, // 2.671.0 KC-CLUB-VIDEO-WECKER
-  { id: "rueckseite", stand: "2", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr, Bühne mit Twinkey, Spiegel und Rätsel – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
-  { id: "zentrale", stand: "1", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
+  { id: "feedback", stand: "1", zeit: "10.11.2026", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
+  { id: "aktionen", stand: "1", zeit: "10.11.2026", sym: "🧳", t: "Aktionen & Reisen", u: "Ausflüge, Reiseverlauf, Preis, Checkliste (ca. 1 Min.)", st: () => RG_AKTIONEN }, // 2.271.0 KC-CLUB-ERKLAERVIDEOS-7
+  { id: "fit", stand: "1", zeit: "10.11.2026", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
+  { id: "studio", stand: "1", zeit: "10.11.2026", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
+  { id: "technik", stand: "1", zeit: "10.11.2026", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
+  { id: "spezial", stand: "1", zeit: "10.11.2026", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Verbindungs-Balken, Flagge, Schnellzugriff, Eselsohr, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
+  { id: "wecker", stand: "1", zeit: "10.11.2026", sym: "⏰", t: "Wecker, Stoppuhr & Timer", u: "Eselsohr, Uhr, Wecker stellen, Stoppuhr mit Runden, Timer – und wenn es klingelt (ca. 2 Min.)", st: () => RG_WECKER, nur: () => esAn() }, // 2.671.0 KC-CLUB-VIDEO-WECKER
+  { id: "rueckseite", stand: "2", zeit: "10.11.2026", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr, Bühne mit Twinkey, Spiegel und Rätsel – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
+  { id: "zentrale", stand: "1", zeit: "10.11.2026", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
   { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
   { id: "anpassen", stand: "2", sym: "🎨", t: "Meine App nach meinem Geschmack", u: "Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus & Eselsohr – alle Möglichkeiten (ca. 4 Min.)", st: () => RG_ANPASSEN }, // 2.344.0 KC-CLUB-VIDEO-ANPASSEN
   { id: "effekte", stand: "3", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Kopf auf und zu, Geburtstags-Vogel, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 4 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
