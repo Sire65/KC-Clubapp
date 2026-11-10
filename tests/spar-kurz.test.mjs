@@ -54,4 +54,7 @@ assert.deepEqual(R.commZahlen([], seit24), { status: {}, f24: [], letzte: null }
 const cs = stueck("async function communicatorStatus", "const kanal = ");
 assert.ok(/const zahl = \(arr: string\[\]\) => arr\.reduce\(\(n, s\) => n \+ \(Number\(z\.status\?\.\[s\]\) \|\| 0\), 0\);/.test(cs), "Anzahl je Statusgruppe");
 assert.ok(/fehler24: f24\.filter\(\(x: any\) => commSystemFehler\(x\)\)\.length/.test(cs) && /ohneWeg24: f24\.filter\(\(x: any\) => !commSystemFehler\(x\)\)\.length/.test(cs), "System- und Empfängerfehler getrennt");
+// 5. Notfall-Paket: keine „Runde → feste Gruppe“-Prüfung (lud die Teilnehmer aller Chats je Chat); in der App unverändert
+assert.ok(/if \(!gr && \(tn \?\? \[\]\)\.length >= 3 && !ich\.nurLesen\) \{/.test(server), "Runden-Prüfung nicht im Notfall-Paket");
+assert.ok(/const ich: Ich = \{ \.\.\.ichAus\(p0, ro \?\? null\), nurLesen: true \};/.test(server), "Notfall-Paket baut mit nurLesen");
 console.log("✅ spar-kurz: alle Prüfungen bestanden");
