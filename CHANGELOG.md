@@ -1,5 +1,11 @@
 # Änderungen
 
+## 2.908.0 – 2026-11-10 – 🧑‍🍳 Twinkey: verkleinerte Original-Kochmütze (KC-BILDER-WEBP)
+Wunsch Hansi 09.11.: „Kochmütze verkleinern“.
+- `dp2/assets/kc-original-kochmuetze.png` 288 KB → 48 KB (800 × 588 Pixel, 64 Farben – gleiches Aussehen). In DP2 geändert (dp3 `claude/kochmuetze-klein-clubapp`, 2fbed68) und mit `tools/dp2-twinkey-uebernehmen.mjs` übernommen; nur Bild und `dp2/QUELLE.json` ändern sich. Das eigenständige DP2 hat sie seit Build 254.
+- Test: `tests/app-vertrag.test.mjs` kennt den neuen DP2-Stand. Rückweg: App 2.907.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.907.0 – 2026-11-10 – 📉 Weniger Datenvolumen: Mitgliederliste und Versand-Ampel (KC-CLUB-SPAR-KURZ) · Server 2.907.0 + Datenbank
 Egress-Auswertung 10.11. (26 Std. nach 2.899.0). Freigabe Hansi: „Ja alles sparsamer machen – trotzdem muss alles sicher und schnell laufen. Keine Geschwindigkeitseinbußen“.
 - **Mitgliederliste aus dem KC Manager:** ≈ 109 KB je Abruf (vor allem Ansprüche/Fähigkeiten), gelesen bei App-Start, Countdowns, Kontakt, Büro-Festtagen und im Notfall-Paket. Jetzt liefert die Datenbank nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) – gleiche Form, gleiche Reihenfolge. Die „gemerkte Aktionen-Liste“ aus 2.899.0 sparte dagegen kaum (Aktionen sind nur 2 KB; die Server-Instanzen leben zu kurz).
