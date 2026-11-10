@@ -49,6 +49,7 @@ ok(muster.join("|") === "Tue, 10.11., 19:30|3 new messages|Request to Klaus", "D
 await seite.evaluate(() => zeige("einstellungen")); await seite.waitForTimeout(500);
 ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen summary")].some((s) => /✨ Effects/.test(s.textContent))), "⚙️ More: Klappen-Überschriften englisch");
 ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen .schalter > div > b")].some((b) => /Flip tiles/.test(b.textContent))), "⚙️ More: Schalter-Namen englisch (🔄 Flip tiles)");
+ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen .schalter .hinweis")].some((h) => /^Deleted items visibly run through the shredder\. Applies to this device\.$/.test(h.textContent.trim()))), "⚙️ More: Erklärtexte unter den Schaltern englisch");
 await seite.evaluate(() => zeige("start", true));
 // nichts überlappt (Pfeile, Flagge, Balken, Schriftzug)
 for (const w of [360, 412]) { await seite.setViewportSize({ width: w, height: 780 }); await seite.waitForTimeout(250);
