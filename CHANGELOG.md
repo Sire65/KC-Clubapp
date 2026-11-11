@@ -5,6 +5,7 @@ Wunsch Hansi 11.11.: „Ja, überarbeite Staffel 1 sanft“ – damit Staffel 1 
 - **Rhythmus:** Kurze Erzählfetzen zu ruhigen Absätzen zusammengeführt (je Folge etwa halb so viele Absätze, Ø 16–20 statt 8–11 Wörter). Wechselrede bleibt Zeile für Zeile.
 - **Zeigen statt erklären:** Gefühlssätze durch kleine Handlungen ersetzt, „nickte“/„sah sie an“ ausgedünnt; je Folge ein bis zwei leise Werne-Eindrücke (Mühlbach, Lippe, St. Christophorus).
 - **Aus Lenas Notizbuch** jetzt auch in allen 12 Folgen von Staffel 1 (Trüffel lagern, Kartoffeltaler, Küchenalarm, Möhren sicher schneiden, Marzipanrose, Jus, Schmorgericht kühlen, Perlhuhnbrust, Rote Bete, Entenbrust, Essenz klären, Geflügelbrühe).
+- Antworten Hansi 11.11.: Folge 2 – Jonas brät den Zander, Voss hält den Pass; Folge 3 – Walnussbrot-Probierscheibe geglättet; Folge 6/7 – der dritte Gast heißt Kegelclub „Gut Holz“; Staffel 2 – Leon ist Sous-Chef.
 - Handlung, Namen, Zahlen, Überschriften, erster und letzter Absatz jeder Folge unverändert; nichts gekürzt (Wortzahl ±2 %); Skizzen an denselben Stellen.
 - Tests: `tests/magazin-roman.test.mjs` (neue Absatz- und Wortzahlen, Notizbuch je Folge). Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.919.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.

@@ -54,7 +54,7 @@ for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertit
 { const r = MAG_AUSGABEN[3].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[3].erscheint, "2027-03-01"); assert.equal(r.folge, 3); assert.equal(r.titel, "Alte Geschichten"); assert.equal(r.untertitel, "Als die Alte Mühle plötzlich stillstand");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Wo ist Lena?", "Ein Satz, der blieb", "Was einmal gewesen war", "Der Mann, der schweigt", "Fünf Wochen, die etwas veränderten", "Der große Abend", "Der Geruch", "Jemand fehlt", "Die Alte Mühle bleibt dunkel", "Der Bäcker mit dem Schlüssel", "Was wirklich zählt", "Ein Kuss im Schatten"]);
-  assert.equal(p.length, 191, "Folge 3 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3388, "Folge 3 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 191, "Folge 3 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3394, "Folge 3 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "„Alle raus! Sofort!“"); assert.equal(p.at(-1), "Und plötzlich wurde ihm klar, dass dieser Abend, an dem die Alte Mühle stillgestanden hatte, ihn vielleicht noch etwas ganz anderes kosten würde.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 4 – Ein Kuss zu viel**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f3-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -98,7 +98,7 @@ assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n
 { const r = MAG_AUSGABEN[6].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[6].erscheint, "2027-06-01"); assert.equal(r.folge, 6); assert.equal(r.titel, "Die Kündigung"); assert.equal(r.untertitel, "Was in einer Küche verloren gehen kann");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Die Tür zum Nebenflur", "Was eine Küche zusammenhält", "Der Mann mit den guten Händen", "Die Auswertung", "Achtunddreißig Gäste", "Ein Service, der nicht auseinanderfiel", "Ein Gespräch, das keiner hören sollte", "Die Kündigung", "Der leere Posten", "Die Rechnung des nächsten Tages", "Zehn nach sechs"]);
-  assert.equal(p.length, 209, "Folge 6 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3440, "Folge 6 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 209, "Folge 6 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3442, "Folge 6 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "Matthias Voss wartete."); assert.equal(p.at(-1), "„Herr Voss liegt im Krankenhaus.“");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 7 – Am Limit: Die Küche ohne Chef**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f6-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -108,7 +108,7 @@ assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n
 { const r = MAG_AUSGABEN[7].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[7].erscheint, "2027-07-01"); assert.equal(r.folge, 7); assert.equal(r.titel, "Am Limit: Die Küche ohne Chef"); assert.equal(r.untertitel, "Ein Wochenende, das keiner vergessen wird");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Zehn nach sechs", "Die Liste an der Wand", "Herr Bertram zieht die Kochjacke an", "Die Kunst des Weglassens", "Freitag, sechzehn Uhr einundvierzig", "Der Pass", "Ein Satz aus dem Krankenhaus", "Samstag: Die andere Rechnung", "Die Gesellschaft, die man absagte", "Sonntag: Der letzte Topf", "Das, was niemand nachkochen kann", "Der Umschlag"]);
-  assert.equal(p.length, 242, "Folge 7 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 4273, "Folge 7 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 242, "Folge 7 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 4277, "Folge 7 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "„Was heißt, er liegt im Krankenhaus?“"); assert.equal(p.at(-1), "Und blieb stehen.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 8 – Der letzte freie Platz**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f7-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -200,3 +200,11 @@ console.log("magazin-roman Staffel 2: ok");
 for (let n = 1; n <= 12; n++) { const r = MAG_AUSGABEN[n].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t), w = p.join(" ").split(/\s+/).length, o = magHeftHtml("roman", r);
   assert.ok(w / p.length >= 15, "Folge " + n + ": Absätze zusammengeführt (Ø ≥ 15 Wörter)"); assert.ok(r.notiz && r.notiz.length > 80 && o.includes('class="mag-roman-notiz"') && !r.staffel, "Folge " + n + ": Lenas Notizbuch, keine Staffelzeile"); }
 console.log("magazin-roman Staffel 1 sanft: ok");
+// Antworten Hansi 11.11.2026: Folge 2 – Jonas brät den Zander, Voss hält den Pass; Folge 3 – Walnussbrot-Probierscheibe vertrocknet; Folge 6/7 – dritter Gast heißt Kegelclub „Gut Holz“;
+// Staffel 2 – Leon ist Sous-Chef (wie am Ende von Staffel 1)
+{ const t = (n) => JSON.stringify(MAG_AUSGABEN[n].roman);
+  assert.ok(!/Voss trat selbst an den Fischposten/.test(t(2)) && /legte Jonas die Zanderfilets/.test(t(2)), "Folge 2: wer brät den Zander");
+  assert.ok(/Probierscheibe von damals/.test(t(3)) && !/noch keine Minute, es zu probieren/.test(t(3)), "Folge 3: Walnussbrot");
+  assert.ok(!/Jagdclub/.test(t(6) + t(7)) && /Kegelclub „Gut Holz“/.test(t(6)) && /Kegelclub/.test(t(7)), "Folge 6/7: Kegelclub");
+  assert.ok(/Leon als Sous-Chef/.test(t(13)) && !/Leon als erfahrener Geselle/.test(t(13)), "Staffel 2: Leon Sous-Chef"); }
+console.log("magazin-roman Antworten Hansi: ok");
