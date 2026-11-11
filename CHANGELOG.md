@@ -6,6 +6,7 @@ Wunsch #88, Hansi 11.11.: „Ja, mach Beispielbild für 88“ – „Fac eigene 
 - **Warte-Münze (Kochmütze):** die Rückseite zeigt abwechselnd „since 1991“ und das eigene Gesicht – so, wie jeder es hinterlegt hat (gebaute Figur, Galerie-Bild oder Foto). Wer nichts gewählt hat, sieht wie bisher nur „since 1991“. Andere Wartebilder unverändert.
 - Keine Datenbank-, keine Server-Änderung. Test `tests/muenze-gesicht.test.mjs`, Browser `tools/hilfe/muenze-gesicht-browser.mjs` (nur Testdaten). Rückweg: App 2.912.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 11.11. 08:55 Uhr auf Wunsch Hansi („Jetzt einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
 
 ## 2.912.0 – 2026-11-11 – 📒 Buchungsliste Erstattungen für Kassenwart und Clubsprecher (KC-CLUB-ERSTATTUNG-BUCHUNGEN) · 🎄 Prospekt-Kopfzeile korrigiert · Server 2.912.0
 Wunsch Hansi 10./11.11.: „Buchungsliste mit ID, Name, Vorname, gefahren km, Erstattungsbetrag. Filter nach Jahr, Monat, Fahrkosten alle Gruppe oder bestimmte zum Anhaken. Darin sollen die kompletten eingereichten Kosten summiert draufstehen. Filtertasten zum Einklappen mit den üblichen Pfeilen. Für den Kassenwart“ – „Beide Gruppen vorsehen und Clubsprecher darf auch sehen. Dahinter noch zwei Spalten mit Bar am, überwiesen am mit Logo. Und Schrift mit Fußzeile in Corporate Design.“
