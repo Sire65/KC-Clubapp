@@ -222,6 +222,6 @@ console.log("magazin-roman Antworten Hansi: ok");
   assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:28",  "absatz:86"]); assert.ok(p[85].startsWith("Am Montag bestand sie.")); assert.ok(p[27].startsWith("Dann stand er auf") && p[25].startsWith("Lena setzte sich neben ihn") && p.includes("Ralle sah nicht hin. Nach einer Weile sagte er: „Zwanzig Jahre hab ich die gefüttert.“"), "Folge 5: neuer Absatz Mauer am Teich, Bild dahinter");
   const st = fs.statSync(new URL("../" + r.bilder[0].datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000); }
 { const r = MAG_AUSGABEN[18].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:45"]); assert.equal(p[44], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:45",  "absatz:92"]); assert.ok(p[91].startsWith("Henrik legte ihr den Arm")); assert.equal(p[44], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
   assert.ok(!/Kinderklinik|krank/i.test(r.bilder[0].alt), "Bildtext verrät nichts über Emmas Krankheit"); }
 console.log("magazin-roman Staffel-2-Bilder: ok");
