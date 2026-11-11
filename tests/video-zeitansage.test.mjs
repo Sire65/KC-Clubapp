@@ -29,3 +29,9 @@ for (const id of geprueft) {
 // 2.877.0: „Neue Nachricht schreiben“ – Express und „Später senden“ blenden das Schreibfeld selbst ein (vorher nach „Weiter“ unsichtbar/übersprungen)
 assert.ok(/function rgEingabeZeigen\(\) \{/.test(v) && (v.match(/rgEingabeZeigen\(\)/g) || []).length >= 4 && /vor: \(\) => rgEingabeZeigen\(\), sel: \["#spaeterKnopf"\], mussSel: true/.test(v), "Nachricht-Video: Schritte 4–6 mit Schreibfeld");
 console.log(`video-zeitansage: alle Prüfungen bestanden (${geprueft.length} Video${geprueft.length === 1 ? "" : "s"} geprüft)`);
+
+// 2.912.0: Fenster, das im Video vorgeführt wird und sich neu aufbaut (blattAuf mit gleicher id), bleibt sichtbar (rg-zeigen bleibt),
+// sonst versteckt es body.rg-an .blatt:not(.rg-zeigen) – so war die Liste „Alle Befehle“ im Video Sprachsteuerung leer.
+{ const a = app.indexOf("function blattAuf("), body = app.slice(a, app.indexOf("\n}", a));
+  assert.ok(/rgZeigen = !!alt\?\.classList\.contains\("rg-zeigen"\)/.test(body) && /rgZeigen \? "blatt rg-zeigen" : "blatt"/.test(body), "blattAuf behält rg-zeigen beim Neuaufbau");
+  assert.ok(/t: "📋 Alle Befehle"/.test(v) && /rgBlatt\("sbListeBlatt", sbListe\); for \(const ms of \[200, 800, 1800\]\) setTimeout\(rgNeuZielen, ms\)/.test(v), "Video Sprachsteuerung: Rahmen nach dem Neuaufbau nachziehen"); }

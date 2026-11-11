@@ -33,4 +33,6 @@ assert.equal(lauf(["notfall", "ja"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" 
 assert.equal(lauf(["termin", "nein"], { EINSPIEL_UHR: "1816", EINSPIEL_DRIN: "9" }), 0, "keine neue Version → nichts abzuwarten");
 // Regel steht in AGENTS.md
 assert.ok(/KC-EINSPIELEN-SPERRE/.test(agents) && /\[Hansi: einspielen\]/.test(agents) && /\[Notfall\]/.test(agents), "Regel in AGENTS.md");
+// 2.917.0 KC-CLUB-RUNDGANG-PFLICHT (Hansi 11.11.2026): veröffentlicht wird nur nach grünem Klick-Rundgang
+assert.ok(/\n  rundgang:\n[\s\S]*?node tests\/rundgang\.browser\.mjs/.test(seite) && /\n  bauen:\n    needs: \[tests, rundgang\]/.test(seite), "Rundgang ist Pflicht vor dem Bauen");
 console.log("einspielen-sperre: alle Prüfungen bestanden");

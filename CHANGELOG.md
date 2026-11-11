@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.917.0 – Klick-Rundgang wird Pflicht vor dem Veröffentlichen (KC-CLUB-RUNDGANG-PFLICHT) · Video „Sprachsteuerung“: Liste „Alle Befehle“ wieder sichtbar · Zeitansage auch in „Meine App nach meinem Geschmack“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Fehler behoben:** Im Erklär-Video „Sprachsteuerung komplett“ blieb bei Schritt 6 „📋 Alle Befehle“ der Bildschirm auf den Einstellungen stehen – die Befehlsliste war unsichtbar und ohne Rahmen. Ursache: Die Liste baut sich nach dem Laden der gelernten Sätze neu auf; das neue Fenster verlor dabei das Merkmal „wird im Video gezeigt“ und wurde (wie alle anderen Fenster während eines Videos) versteckt. Behoben an der Quelle in `blattAuf`: baut sich ein vorgeführtes Fenster neu auf, bleibt es sichtbar. Dazu zieht das Video den Rahmen nach dem Neuaufbau nach.
+- Alle übrigen Schritte geprüft (Einschalten, Mikrofon, Nachricht an Klaus mit Weiterdiktieren, weitere Befehle, Lernen, Diktieren überall). Zeitansage eingeschaltet.
+- **Effekte & Wetter:** alle 19 Schritte geprüft (mit Beispiel-Wetter): Kachel-Effekte, Kopf auf/zu, Geburtstags-Vogel, die vier Jahreszeiten, Einstellungen unter Effekte, Wetter-Tage antippen und lange festhalten. Zeitansage eingeschaltet.
+- **Meine App nach meinem Geschmack:** alle 14 Schritte geprüft (Themen, Schrift des Themas, Farbdesign, Tag/Nacht, große Schrift, Jahreszeiten-Bild, Deko, Kachel- und Sende-Effekte, Animationen, Sparmodus, Eselsohr). Zeitansage eingeschaltet.
+- **Klick-Rundgang ist jetzt Pflicht** (Hansi 11.11.: „Ja, zur Pflicht machen“): Seit 04.11. waren alle 80 Läufe grün, ohne Fehlalarm. `seite-veroeffentlichen.yml` hat dafür den Schritt `rundgang` (wie im Tests-Ablauf, gut 2 Minuten); gebaut und veröffentlicht wird erst, wenn Tests **und** Rundgang grün sind – sonst bleibt die alte Version online.
+- Test: `tests/video-zeitansage.test.mjs` erweitert, `tests/einspielen-sperre.test.mjs` prüft die Pflicht. Rückweg: Version 2.916.0 einspielen.
 ## 2.916.0 – 2026-11-11 – ⌃ Kopf in vier Stufen einfahren (KC-CLUB-KOPF-4-STUFEN)
 Wunsch Hansi 11.11.: „4 Knöpfe zum Einfahren des Kopfes: 1 weg = die 3 Terminfelder, 2 weg = Info-Laufschrift, 3 weg = LED, 4 = wie jetzt“ – entschieden: ein Knopf, vier Punkte.
 - Der Knopf oben fährt den Kopf jetzt in **vier Schritten**: 1× tippen → die **drei Felder** (Neue Nachr., Mitglieder, Clubtreffen) weg · 2× → auch die **Info-Laufschrift** weg · 3× → auch die **Statusleiste mit den LEDs** weg (nur Kopfzeile, Pfeil zeigt nach unten) · 4× → **alles wieder da**.
