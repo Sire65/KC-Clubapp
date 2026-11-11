@@ -444,11 +444,11 @@ const rgAusKandidat = () => kacheln(reg).filter((x) => !x.bald).pop()?.id || "";
 const RG_OBERFLAECHE = [
   { v: "start", vor: () => { rgKopf("offen"); rgAnordnen(false); if (!einfach() && !RG.regStart) { RG.regStart = reg; RG.zurueck.push(() => { const a = RG.regStart; RG.regStart = null; if (a && reg !== a) register(a); }); } }, t: "🎨 Deine Wunsch-Oberfläche",
     x: "So gestaltest du dir die Startseite selbst – ganz nach deinen Bedürfnissen. Ich mache dir alles vor; gespeichert wird nichts, und am Ende ist alles wieder wie vorher." },
-  { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfPfeilHalb", "#kopfPfeil"], puls: ["#kopfPfeilHalb", "#kopfPfeil"], t: "⌃ Die beiden Pfeile oben",
-    x: "Ganz oben siehst du zwei Pfeile. Damit rollst du den farbigen Kopf ein wie eine Jalousie – dann ist mehr Platz für die Kacheln." },
-  { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "⌃ Halb einrollen", x: "Ich tippe auf den linken Pfeil: Der Kopf rollt halb ein – die Zeile mit deinem Status bleibt stehen.",
-    live: async (L) => { await L.tipp("#kopfPfeilHalb"); await kopfRolloFahren("halb"); } },
-  { v: "start", vor: () => rgKopf("halb"), sel: ["#v-start .hero"], t: "⌃⌃ Ganz einrollen", x: "Jetzt der rechte Pfeil: Der Kopf rollt ganz ein, nur die oberste Zeile bleibt. Nochmal antippen – und er rollt wieder aus.",
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfPfeil"], puls: ["#kopfPfeil"], t: "⌃ Der Knopf oben", // KC-CLUB-KOPF-EIN-KNOPF (11.11.2026)
+    x: "Ganz oben in der Mitte ist ein Knopf mit einem Pfeil und drei Punkten. Damit rollst du den farbigen Kopf ein wie eine Jalousie – in drei Stufen. Die Punkte zeigen dir, wo du gerade bist." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "⌃ Einmal tippen: halb", x: "Ich tippe einmal: Der Kopf rollt halb ein – die Zeile mit deinem Status bleibt stehen. Jetzt leuchten zwei Punkte.",
+    live: async (L) => { await L.tipp("#kopfPfeil"); await kopfRolloFahren("halb"); } },
+  { v: "start", vor: () => rgKopf("halb"), sel: ["#v-start .hero"], t: "⌃ Nochmal: ganz – und wieder auf", x: "Nochmal tippen: Der Kopf rollt ganz ein, nur die oberste Zeile bleibt, ein Punkt leuchtet, der Pfeil zeigt nach unten. Ein drittes Mal – und er rollt wieder aus. Lange drücken klappt ihn sofort ganz auf.",
     live: async (L) => { await L.tipp("#kopfPfeil"); await kopfRolloFahren("ganz"); await L.warte(1800); await L.tipp("#kopfPfeil"); await kopfRolloFahren("offen"); } },
   { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], mussSel: true, t: "‹ › Pfeile links und rechts",
     x: "Im farbigen Info-Feld blätterst du mit den Pfeilen links und rechts durch den nächsten Termin, das Wetter und Neues für dich. Ich blättere einmal weiter – und wieder zurück.",

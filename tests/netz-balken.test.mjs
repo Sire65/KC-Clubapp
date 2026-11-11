@@ -6,7 +6,7 @@ import { programmText } from "./programm.mjs";
 const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), app = programmText();
 assert.match(html, /<button type="button" class="nb-chip versteckt" id="netzBalken" onclick="netzBlatt\(\)"/, "Balken im Kopf, antippen → Verbindungs-Blatt");
 assert.match(html, /\.nb-chip \{ position: absolute; top: 3px; right: 18px;/, "schwebt oben rechts – verschiebt nichts");
-assert.ok(html.indexOf('id="netzBalken"') < html.indexOf('id="kopfPfeilHalb"') && !/sl-luecke"><\/span>\s*<button[^>]*netzBalken/.test(html), "nicht mehr in der Statusleiste");
+assert.ok(html.indexOf('id="netzBalken"') < html.indexOf('id="kopfPfeil"') && !/sl-luecke"><\/span>\s*<button[^>]*netzBalken/.test(html), "nicht mehr in der Statusleiste");
 assert.match(html, /id="setNetzBalken" onchange="einstellung\('netzBalken', this\.checked\);netzSymbolZeigen\(\)"/, "abschaltbar in ⚙️ Effekte");
 assert.match(html, /\.nb-chip\.nb-rot\.nb-puls \{ animation: nbPuls/, "schwache Verbindung pulsiert rot");
 assert.match(app, /\["setNetzBalken", "netzBalken"\]/, "Einstellung wird beim Öffnen gesetzt");

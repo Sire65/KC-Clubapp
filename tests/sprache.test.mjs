@@ -6,7 +6,7 @@ const lies = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8")
 const app = lies("app.js"), html = lies("index.html"), teil = lies("teile/sprache.js"), sw = lies("sw.js");
 // eine Flagge im Kopf, Pfeile etwas nach links
 assert.match(html, /<button type="button" class="sp-knopf" id="spKnopf" onclick="spracheUmschalten\(\)"/);
-assert.match(html, /\.kopf-pfeil\.kp-halb \{ left: calc\(50% - 62px\); \} \.kopf-pfeil\.kp-ganz \{ left: calc\(50% - 6px\); \}/);
+assert.match(html, /\.kopf-pfeil\.kp-eins \{ left: calc\(50% - 16px\);/); // KC-CLUB-KOPF-EIN-KNOPF: ein Knopf mittig statt zwei Pfeile
 assert.match(html, /\.sp-knopf \{ position: absolute; top: 0; right: 98px;/, "Flagge zwischen Pfeilen und Verbindungs-Balken");
 // nur geladen, wenn jemand Englisch wählt; je Gerät gemerkt
 assert.match(app, /\n  sprache: \{ einstieg: \["spracheEnglisch", "spracheDeutsch"\], sri: "sha384-[^"]+" \}/);

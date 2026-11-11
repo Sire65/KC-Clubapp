@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.915.0 – 2026-11-11 – ⌃ Ein Knopf für den Kopf statt zwei Pfeile (KC-CLUB-KOPF-EIN-KNOPF)
+Wunsch Hansi 11.11.: „Oben im Kopf gibt es 2 × Pfeil … oder soll es ein Toggle werden, der nur einen Knopf“ – Beispielbild Variante B – „Bauen und direkt einbauen“.
+- **Ein Knopf** oben statt der beiden Laschen ⌃ und ⌃⌃: antippen fährt den Kopf Stufe für Stufe ein – offen → halb (Statusleiste mit LEDs bleibt) → ganz (nur Kopfzeile) → wieder offen.
+- **Drei Punkte** im Knopf zeigen die Stufe (●●● offen, ●●○ halb, ●○○ ganz); auf der letzten Stufe zeigt der Pfeil nach unten. **Lange drücken** klappt den Kopf sofort ganz auf.
+- **Neues** (Nachricht, neues Mitglied, jemand neu online) bei eingefahrenem Kopf: der Knopf leuchtet/blinkt wie bisher die Pfeile. Stufe wird je Gerät gemerkt wie bisher.
+- Knopf etwas links der Mitte – Flagge und Verbindungs-Balken haben Platz (geprüft 360/412 px). Erklär-Video „Oberfläche nach Wunsch“ zeigt den neuen Knopf.
+- Keine Datenbank-, keine Server-Änderung. Browser `tools/hilfe/kopf-knopf-browser.mjs` (nur Testdaten), Vertragstests angepasst. Rückweg: App 2.914.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.914.0 – 2026-11-11 – 📅 Club-Küche: Termine im Januar · Heft ohne private Termine (KC-CLUB-MAGAZIN-TERMINE)
 Wunsch Hansi 11.11.: „Schreibe bei Termine in Club Magazin in Januar: voraussichtliches Clubessen (Termin und Ort wird noch abgestimmt), Nachbesprechung Weihnachtsmarkt, nächste Clubsitzung, Geburtstage Mitglieder im Januar“ – „Einspielen“.
 - Heft 1, „Termine im Monat“: Clubessen (voraussichtlich im Januar, Termin und Ort werden noch abgestimmt), Nachbesprechung Weihnachtsmarkt, Nächste Clubsitzung (je „Termin folgt“), darunter Kalendertermine des Monats und „🎂 Geburtstage im Januar“ (nur freigegebene Geburtstage, wie im Kalender).

@@ -53,7 +53,7 @@ ok(await seite.evaluate(() => [...document.querySelectorAll("#v-einstellungen .s
 await seite.evaluate(() => zeige("start", true));
 // nichts überlappt (Pfeile, Flagge, Balken, Schriftzug)
 for (const w of [360, 412]) { await seite.setViewportSize({ width: w, height: 780 }); await seite.waitForTimeout(250);
-  const t = await seite.evaluate(() => { const ids = ["kopfPfeilHalb", "kopfPfeil", "spKnopf", "netzBalken"], r = ids.map((i) => $(i).getBoundingClientRect()), treff = [];
+  const t = await seite.evaluate(() => { const ids = ["kopfPfeil", "spKnopf", "netzBalken"], r = ids.map((i) => $(i).getBoundingClientRect()), treff = [];
     for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (r[i].width && r[j].width && !(r[i].right + 4 <= r[j].left || r[j].right + 4 <= r[i].left)) treff.push(ids[i] + "/" + ids[j]);
     const rg = document.createRange(); rg.selectNodeContents(document.querySelector("#v-start .marke-klein")); const tx = rg.getBoundingClientRect(), f = r[2];
     if (!(f.bottom <= tx.top || f.right <= tx.left || f.left >= tx.right)) treff.push("spKnopf/Schriftzug"); return treff; });

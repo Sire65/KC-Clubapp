@@ -5714,7 +5714,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(b.length > 3000 && /\{ id: "oberflaeche", stand: "\d+",[^\n]*st: \(\) => RG_OBERFLAECHE \}/.test(html) && /\{ id: "ich", [^\n]*videos: \[[^\]]*"einstellungen", "oberflaeche"[^\]]*\]/.test(html), "Video registriert, im Thema „Ich & meine App“ (Liste darf wachsen)");
   const code = b.replace(/\/\/[^\n]*/g, "").replace(/'[^'\n]*'/g, "''"); // ohne Kommentare und Knopf-Wähler ('[onclick^="kaBearbeiten(false)"]')
   assert.ok(!/kaSpeichern\(|kaBearbeiten\(|api\(|localStorage\.setItem|kopfRollo\(|kaSichtbar\(|kaStandard\(\)|einstellung_setzen/.test(code), "nichts speichern: Kopf, Anordnen, Ausblenden und Register nur auf dem Bildschirm");
-  for (const z of ["#kopfPfeilHalb", "#kopfPfeil", "#heroInfo .ipfeil", ".kstrg button", ".kweg", ".kachel.bearb.aus", "#kaAusHinweis", "kr-hinten", "#register", ".wischhinweis"]) assert.ok(b.includes(z), `zeigt ${z}`);
+  for (const z of ["#kopfPfeil", "#heroInfo .ipfeil", ".kstrg button", ".kweg", ".kachel.bearb.aus", "#kaAusHinweis", "kr-hinten", "#register", ".wischhinweis"]) assert.ok(b.includes(z), `zeigt ${z}`);
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.kopfAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => rgAusDemo\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgRegisterTausch\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => \{ RG\.drehZurueck = false; rgDrehen\(false\); \}\)/.test(b) /* 2.261.0: nur einmal gemerkt */ && /RG\.zurueck\.push\(\(\) => \{ if \(RG\.reihAlt\) \{ KA\.reihenfolge = RG\.reihAlt\.r;/.test(b) && /if \(a !== null && a !== INFO_I\) infoGehe\(a, -1\)/.test(b), "alles wird zurückgestellt");
 }
 
@@ -7216,7 +7216,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(ersterBlick \? n > 0 : n > KPN\.n\) KPN\.nachricht = true;/.test(programm) && /if \(KPN\.mg !== null && mg > KPN\.mg\) KPN\.mitglied = true;/.test(programm)
     && /if \(KPN\.ids && ids\) for \(const id of ids\) if \(!KPN\.ids\.has\(id\)\) KPN\.neuOnline\.add\(id\);/.test(programm), "neue Nachricht, neue Mitglieder, neu online");
   assert.ok(/for \(const id of \[\.\.\.KPN\.neuOnline\]\) if \(!ids \|\| !ids\.has\(id\)\) KPN\.neuOnline\.delete\(id\);/.test(programm) && /KPN\.an = KPN\.nachricht \|\| KPN\.mitglied \|\| KPN\.neuOnline\.size > 0;/.test(programm), "wieder offline → Blinken aus; Nachricht/Mitglied bleibt an");
-  assert.ok(/\[\["kopfPfeil", "ganz"\], \["kopfPfeilHalb", "halb"\]\]/.test(programm) && /if \(stand === "offen"\) (KPN\.an = false;|\{ KPN\.an = KPN\.nachricht = KPN\.mitglied = false; KPN\.neuOnline\.clear\(\); \})/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet (2.587.0: auch alle Gründe)");
+  assert.ok(/\[\["kopfPfeil"\]\]\.forEach[\s\S]{0,160}const an = KPN\.an && stand !== "offen";/.test(programm) && /if \(stand === "offen"\) (KPN\.an = false;|\{ KPN\.an = KPN\.nachricht = KPN\.mitglied = false; KPN\.neuOnline\.clear\(\); \})/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet (2.587.0: auch alle Gründe)");
   assert.ok(/\.kopf-pfeil\.kp-neu \{[^}]*animation: kpNeu/.test(seite) && /\.kopf-pfeil\.kp-neu\.still \{ animation: none;/.test(seite), "Blinken, ohne Bewegung fest leuchtend");
 }
 // 2.545.0 KC-CLUB-KOPF-SEIT: „since 1991“ klein unter der Kochmütze im Kopf
@@ -9735,16 +9735,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.160.0 (Hansi: „zu schnell, läuft nicht hoch wie eine Jalousie“): echte Lamellen klappen zu, Jalousie fährt mit Abschlussleiste langsam hoch
 {
   const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
-  assert.ok(/<button type="button" class="kopf-pfeil[^"]*" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\('ganz'\)">/.test(start), "Pfeil oben im Kopf der Startseite");
+  assert.ok(/<button type="button" class="kopf-pfeil[^"]*" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\('weiter'\)">/.test(start), "Pfeil oben im Kopf der Startseite (KC-CLUB-KOPF-EIN-KNOPF: ein Knopf, drei Stufen)");
   assert.ok(/\.kopf-pfeil \{ position: absolute; top: 0; left: 50%; transform: translateX\(-50%\)/.test(html), "Pfeil mittig oben");
   assert.ok(/#v-start \.hero\.eingerollt > \.statusleiste, #v-start \.hero\.eingerollt > #heroInfo, #v-start \.hero\.eingerollt > #infoPunkte \{ display: none; \}/.test(html), "Statusleiste + Infofeld rollen ein, Kopfzeile bleibt");
-  assert.ok(/\.kopf-pfeil\.dreh span \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
+  assert.ok(/\.kopf-pfeil\.dreh span\.kp-p \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
   assert.ok(/\.rl-lamelle \{[^}]*linear-gradient/.test(html) && /\.rollo-leiste \{ position: absolute;[^}]*bottom: 0/.test(html), "Lamellen und Abschlussleiste");
   const f = html.slice(html.indexOf("async function kopfRolloFahren("), html.indexOf("function kopfRollo(art"));
   assert.ok(/ROLLO_FAHRT_MS = 1400/.test(html) && /await klappen\(false\);[\s\S]{0,80}await fahren\(gross, klein\);/.test(f) && /await fahren\(klein, gross\);[\s\S]{0,80}await klappen\(true\);/.test(f), "hoch: zuklappen, dann hochfahren – runter umgekehrt");
   assert.ok(!/prefers-reduced-motion/.test(f) && /typeof h\.animate !== "function" \|\| !h\.getClientRects\(\)\.length\) return kopfRolloSetzen\(ziel\)/.test(f) && /if \(h\.dataset\.rollt\) return;/.test(f) && /finally \{[\s\S]{0,200}vorhang\.remove\(\); leiste\.remove\(\); delete h\.dataset\.rollt;/.test(f), "läuft auf Antippen immer (2.161.0), kein Doppelstart, räumt immer auf");
-  assert.ok(/function kopfRollo\(art = "ganz"\) \{[\s\S]{0,600}localStorage\.removeItem\(KOPF_ROLLO\) : localStorage\.setItem\(KOPF_ROLLO, ziel === "ganz" \? "1" : "halb"\)/.test(html) && /try \{ const w = localStorage\.getItem\(KOPF_ROLLO\); if \(w === "1"\) kopfRolloSetzen\("ganz"\); else if \(w === "halb"\) kopfRolloSetzen\("halb"\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
-  assert.ok(/[gk]\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
+  assert.ok(/function kopfRollo\(art = "ganz"\) \{[\s\S]{0,900}localStorage\.removeItem\(KOPF_ROLLO\) : localStorage\.setItem\(KOPF_ROLLO, ziel === "ganz" \? "1" : "halb"\)/.test(html) && /try \{ const w = localStorage\.getItem\(KOPF_ROLLO\); if \(w === "1"\) kopfRolloSetzen\("ganz"\); else if \(w === "halb"\) kopfRolloSetzen\("halb"\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
+  assert.ok(/g\.setAttribute\("aria-expanded", stand === "offen" \? "true" : "false"\)/.test(html), "Vorlesehilfe kennt den Zustand");
 }
 // 2.162.0 KC-CLUB-START-PARALLEL-3 (Wunsch Hansi „Start optimieren, nicht schlechter“): weniger Datenbank-Anfragen beim Start, gleicher Inhalt
 {
@@ -10234,9 +10234,11 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.214.0 KC-CLUB-KOPF-ROLLO-2 (Wunsch Hansi): zweite Jalousie – links ⌃ halb (Statusleiste mit LEDs bleibt), rechts ⌃⌃ ganz; symmetrisch mit Abstand
 {
   const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
-  assert.ok(/id="kopfPfeilHalb"[^>]*onclick="kopfRollo\('halb'\)"/.test(start) && /id="kopfPfeil"[^>]*onclick="kopfRollo\('ganz'\)"/.test(start), "zwei Pfeile im Kopf");
-  assert.ok(/\.kopf-pfeil\.kp-halb \{ left: calc\(50% - 62px\); \} \.kopf-pfeil\.kp-ganz \{ left: calc\(50% - 6px\); \}/.test(html), "Pfeile nebeneinander, etwas links der Mitte (KC-CLUB-SPRACHE: rechts daneben Flagge und Verbindungs-Balken)");
-  const ab = Number(/kp-halb \{ left: calc\(50% - (\d+)px\)/.exec(html)[1]); assert.ok(ab * 2 - 56 >= 40, "mindestens 40 px Abstand zwischen den Laschen");
+  // KC-CLUB-KOPF-EIN-KNOPF (11.11.2026, Wunsch Hansi „B bauen“): statt zwei Laschen ein Knopf – offen → halb → ganz → offen, lange drücken: ganz auf
+  assert.ok(!/id="kopfPfeilHalb"/.test(start) && /id="kopfPfeil"[^>]*onclick="kopfRollo\('weiter'\)"><span class="kp-p">⌃<\/span><span class="kp-dots" aria-hidden="true">(<i class="an"><\/i>){3}<\/span>/.test(start), "ein Knopf mit Pfeil und drei Punkten");
+  assert.ok(/art === "weiter" \? \(\{ offen: "halb", halb: "ganz", ganz: "offen" \}\[von\] \|\| "halb"\)/.test(html) && /const ziel = art === "auf" \? "offen"/.test(html), "drei Stufen der Reihe nach, lange drücken = auf");
+  assert.ok(/if \(art === "weiter" && KOPF_LANG\.lang\) \{ KOPF_LANG\.lang = false; return; \}/.test(html), "nach langem Drücken zählt der Klick nicht doppelt");
+  assert.ok(/k = \{ offen: 3, halb: 2, ganz: 1 \}\[stand\] \|\| 3/.test(html) && /\.kopf-pfeil\.kp-eins \{ left: calc\(50% - 16px\);/.test(html), "Punkte zeigen die Stufe, Knopf mittig");
   assert.ok(/#v-start \.hero\.halb-eingerollt > #heroInfo, #v-start \.hero\.halb-eingerollt > #infoPunkte \{ display: none; \}/.test(html) && !/halb-eingerollt > \.statusleiste/.test(html), "halb: Statusleiste mit LEDs bleibt");
   assert.ok(/const ROLLO_RANG = \{ offen: 0, halb: 1, ganz: 2 \};/.test(html) && /art === "halb" \? \(von === "offen" \? "halb" : von === "halb" \? "offen" : "halb"\) : \(von === "ganz" \? "offen" : "ganz"\)/.test(html), "drei Stellungen, logische Übergänge");
   assert.ok(/if \(document\.querySelector\("#v-start \.hero"\)\?\.dataset\.rollt\) return;/.test(html), "während der Fahrt nichts merken");

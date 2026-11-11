@@ -36,7 +36,7 @@ await seite.setViewportSize({ width: 360, height: 780 }); await seite.waitForTim
 ok(await seite.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1 && !$("netzBalken").querySelector(".nb-text").offsetWidth), "schmales Handy (360 px): nur Symbol + Striche, nichts läuft über");
 const frei = () => seite.evaluate(() => { const b = $("netzBalken").getBoundingClientRect(), treff = [];
   const pruef = (n, r) => { if (r && r.width && !(r.right <= b.left || r.left >= b.right || r.bottom <= b.top || r.top >= b.bottom)) treff.push(n); };
-  for (const q of ["#kopfPfeilHalb", "#kopfPfeil", "#statusChip", ".kopflogo"]) pruef(q, document.querySelector("#v-start " + q)?.getBoundingClientRect());
+  for (const q of ["#kopfPfeil", "#statusChip", ".kopflogo"]) pruef(q, document.querySelector("#v-start " + q)?.getBoundingClientRect());
   for (const q of [".marke-klein", "#begruessung"]) { const e = document.querySelector("#v-start " + q); if (e) { const r = document.createRange(); r.selectNodeContents(e); pruef(q, r.getBoundingClientRect()); } }
   return treff; });
 for (const ansicht of ["erweitert", "einfach"]) { await seite.evaluate((a) => { document.body.classList.toggle("einfach", a === "einfach"); $("begruessung").textContent = "Guten Abend, Hans-Joachim!"; }, ansicht);

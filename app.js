@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.914.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.915.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-zHPV7EWRhh4yLNK49wIhs6MbaZemY2okAs9P23uGzb/2EIQ+GoyZRxqvWimRmuPF" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-NbjhqojaAvfDYKH9mmbckfkpBpfYxJvoK2TSPsOYUqB6Y6nw4RRTm95oV6NbdzoO" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
@@ -12239,15 +12239,18 @@ function kopfNeuPruefen() {
 }
 function kopfPfeilNeuZeigen(stand = kopfRolloStand()) {
   const ruhig = !fxAn();
-  [["kopfPfeil", "ganz"], ["kopfPfeilHalb", "halb"]].forEach(([id, s]) => { const p = $(id); if (!p) return;
-    const an = KPN.an && stand === s; p.classList.toggle("kp-neu", an); p.classList.toggle("still", an && ruhig);
+  [["kopfPfeil"]].forEach(([id]) => { const p = $(id); if (!p) return; // KC-CLUB-KOPF-EIN-KNOPF: ein Knopf – leuchtet in beiden eingerollten Stufen
+    const an = KPN.an && stand !== "offen"; p.classList.toggle("kp-neu", an); p.classList.toggle("still", an && ruhig);
     if (an) p.title = "Neues im Kopf (Nachrichten oder Mitglieder) – antippen zum Ausrollen"; });
 }
 function kopfPfeileZeigen(stand) {
   if (stand === "offen") { KPN.an = KPN.nachricht = KPN.mitglied = false; KPN.neuOnline.clear(); } // ausgerollt: die drei Felder sind wieder zu sehen
-  const g = $("kopfPfeil"), hb = $("kopfPfeilHalb");
-  if (g) { const zu = stand === "ganz"; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", zu ? "false" : "true"); g.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf ganz einrollen – nur die Kopfzeile bleibt"; g.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf ganz einrollen"); }
-  if (hb) { const zu = stand !== "offen"; hb.classList.toggle("dreh", zu); hb.setAttribute("aria-expanded", zu ? "false" : "true"); hb.title = stand === "halb" ? "Kopf ausrollen – alles zeigen" : stand === "ganz" ? "Kopf halb ausrollen – Statusleiste mit LEDs zeigen" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt"; hb.setAttribute("aria-label", hb.title.split(" – ")[0]); }
+  // KC-CLUB-KOPF-EIN-KNOPF (11.11.2026): ein Knopf – Punkte zeigen die Stufe, Pfeil zeigt auf der letzten Stufe nach unten
+  const g = $("kopfPfeil");
+  if (g) { const zu = stand === "ganz", k = { offen: 3, halb: 2, ganz: 1 }[stand] || 3; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", stand === "offen" ? "true" : "false");
+    g.querySelectorAll(".kp-dots i").forEach((d, i) => d.classList.toggle("an", i < k));
+    g.title = stand === "offen" ? "Kopf halb einrollen – Statusleiste mit LEDs bleibt" : stand === "halb" ? "Kopf ganz einrollen – nur die Kopfzeile bleibt (lange drücken: ganz aufklappen)" : "Kopf ausrollen – alles zeigen";
+    g.setAttribute("aria-label", g.title.split(" – ")[0]); }
   kopfPfeilNeuZeigen(stand);
 }
 async function kopfRolloFahren(ziel, vorgabe) { // vorgabe: nur Erklär-Video – zeigt einen Effekt, ohne die Einstellung zu ändern
@@ -12459,10 +12462,22 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   }
 }
 // art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb
+// KC-CLUB-KOPF-EIN-KNOPF (11.11.2026, Wunsch Hansi): „weiter“ = ein Knopf, drei Stufen offen → halb → ganz → offen; „auf“ = lange drücken, sofort ganz auf
+const KOPF_LANG = { t: 0, lang: false };
+function kopfKnopfLang(e) {
+  clearTimeout(KOPF_LANG.t); KOPF_LANG.lang = false;
+  if (e.type !== "pointerdown") return;
+  KOPF_LANG.t = setTimeout(() => { if (kopfRolloStand() === "offen") return; KOPF_LANG.lang = true; try { navigator.vibrate?.(25); } catch {} kopfRollo("auf"); }, 600);
+}
+try { addEventListener("pointerdown", (e) => { if (e.target?.closest?.("#kopfPfeil")) kopfKnopfLang(e); }, true);
+  for (const t of ["pointerup", "pointercancel", "pointerleave"]) addEventListener(t, (e) => { if (e.target?.closest?.("#kopfPfeil")) kopfKnopfLang(e); }, true); } catch {}
 function kopfRollo(art = "ganz") {
+  if (art === "weiter" && KOPF_LANG.lang) { KOPF_LANG.lang = false; return; } // war lange gedrückt – der Klick danach zählt nicht
   if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
   const von = kopfRolloStand();
-  const ziel = art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
+  const ziel = art === "auf" ? "offen" : art === "weiter" ? ({ offen: "halb", halb: "ganz", ganz: "offen" }[von] || "halb")
+    : art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
+  if (ziel === von) return;
   kopfRolloFahren(ziel);
   try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : "halb"); } catch {}
 }
