@@ -215,4 +215,7 @@ console.log("magazin-roman Antworten Hansi: ok");
   for (const b of [...b14, ...b15]) { assert.ok(b.da && /^magazin\/roman\/s2-0[23]-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: "));
     const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
   assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 2); }
+{ const r = MAG_AUSGABEN[16].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:41"]); assert.ok(p[40].startsWith("Die Kinder hatten die Telefone") && !p.some((t) => /zwei halbwüchsigen Söhnen|Die Söhne hatten/.test(t)), "Folge 4: Bild Ostern bei Kerzenlicht, Familie mit Junge und Mädchen");
+  const st = fs.statSync(new URL("../" + r.bilder[0].datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000); }
 console.log("magazin-roman Staffel-2-Bilder: ok");
