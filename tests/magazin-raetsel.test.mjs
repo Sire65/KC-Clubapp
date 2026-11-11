@@ -65,5 +65,6 @@ for (const k of [".mag-fb-flaeche", ".mag-fb-marke", ".mag-kw-gitter", ".mag-kw-
 // KC-CLUB-BLAETTERN-TASTATUR (2.891.0): die Handy-Tastatur (resize) darf die Blätter-Seite nicht neu aufbauen – sonst verschwindet das Eingabefeld
 const app = lies("app.js"), rz = app.match(/addEventListener\("resize", \(\) => \{ if \(BL\.offen[^\n]*/)?.[0] || "";
 assert.ok(rz.includes('blDoppel() !== $("blBuehne").classList.contains("doppel")') && rz.includes("blZeigen(0)"), "Blättern zeichnet bei Größenänderung nur neu, wenn Einzel-/Doppelseite wechselt");
+assert.ok(/\.mag-fb-stand \.knopf, \.mag-kw \.knopf \{ background: #741521; color: #fff;/.test(html), "Rätsel-Knöpfe lesbar: Weinrot mit weißer Schrift");
 assert.ok(!/\|\|=/.test(teil));
 console.log("magazin-raetsel: ok");
