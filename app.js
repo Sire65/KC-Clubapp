@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.915.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.916.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,7 +12,7 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-NbjhqojaAvfDYKH9mmbckfkpBpfYxJvoK2TSPsOYUqB6Y6nw4RRTm95oV6NbdzoO" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-WuxxWEMDeGDbKiU0AOCrKUAn1ehEOyJhT/gZJVVadlUGhRPZ3NyaoZjXoIZdiuqf" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
@@ -12203,9 +12203,9 @@ let infoLetztes = "";
 // 2.214.0 KC-CLUB-KOPF-ROLLO-2 (Wunsch Hansi): zweite Jalousie – links ⌃ rollt nur das Infofeld ein (Statusleiste mit LEDs bleibt),
 // rechts ⌃⌃ rollt wie bisher alles bis auf die Kopfzeile ein. Drei Stellungen: offen / halb / ganz. Gleiche Lamellen-Mechanik für beide.
 const KOPF_ROLLO = "kc_club_kopf_eingerollt", ROLLO_FAHRT_MS = 1400, ROLLO_KLAPP_MS = 320, ROLLO_VERSATZ_MS = 22;
-const ROLLO_RANG = { offen: 0, halb: 1, ganz: 2 };
-const kopfRolloStand = () => { const h = document.querySelector("#v-start .hero"); return h?.classList.contains("eingerollt") ? "ganz" : h?.classList.contains("halb-eingerollt") ? "halb" : "offen"; };
-function kopfRolloKlassen(h, stand) { h.classList.toggle("eingerollt", stand === "ganz"); h.classList.toggle("halb-eingerollt", stand === "halb"); requestAnimationFrame(jzEisLaenge); } // 2.278.0: Eiszapfen-Länge neu messen
+const ROLLO_RANG = { offen: 0, felder: 1, halb: 2, ganz: 3 }; // KC-CLUB-KOPF-4-STUFEN (11.11.2026): „felder“ = nur die drei Felder weg
+const kopfRolloStand = () => { const h = document.querySelector("#v-start .hero"); return h?.classList.contains("eingerollt") ? "ganz" : h?.classList.contains("halb-eingerollt") ? "halb" : h?.classList.contains("felder-eingerollt") ? "felder" : "offen"; };
+function kopfRolloKlassen(h, stand) { h.classList.toggle("eingerollt", stand === "ganz"); h.classList.toggle("halb-eingerollt", stand === "halb"); h.classList.toggle("felder-eingerollt", stand === "felder"); requestAnimationFrame(jzEisLaenge); } // 2.278.0: Eiszapfen-Länge neu messen
 function kopfRolloSetzen(stand) {
   if (stand === true) stand = "ganz"; else if (!stand) stand = "offen";
   const h = document.querySelector("#v-start .hero"); if (!h) return;
@@ -12247,12 +12247,15 @@ function kopfPfeileZeigen(stand) {
   if (stand === "offen") { KPN.an = KPN.nachricht = KPN.mitglied = false; KPN.neuOnline.clear(); } // ausgerollt: die drei Felder sind wieder zu sehen
   // KC-CLUB-KOPF-EIN-KNOPF (11.11.2026): ein Knopf – Punkte zeigen die Stufe, Pfeil zeigt auf der letzten Stufe nach unten
   const g = $("kopfPfeil");
-  if (g) { const zu = stand === "ganz", k = { offen: 3, halb: 2, ganz: 1 }[stand] || 3; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", stand === "offen" ? "true" : "false");
+  if (g) { const zu = stand === "ganz", k = { offen: 4, felder: 3, halb: 2, ganz: 1 }[stand] || 4; /* KC-CLUB-KOPF-4-STUFEN: vier Punkte */ g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", stand === "offen" ? "true" : "false");
     g.querySelectorAll(".kp-dots i").forEach((d, i) => d.classList.toggle("an", i < k));
-    g.title = stand === "offen" ? "Kopf halb einrollen – Statusleiste mit LEDs bleibt" : stand === "halb" ? "Kopf ganz einrollen – nur die Kopfzeile bleibt (lange drücken: ganz aufklappen)" : "Kopf ausrollen – alles zeigen";
+    g.title = stand === "offen" ? (kopfFelderDa() ? "Kopf einrollen – zuerst die drei Felder" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt") : stand === "felder" ? "Kopf weiter einrollen – Info-Laufschrift weg (lange drücken: ganz aufklappen)" : stand === "halb" ? "Kopf ganz einrollen – nur die Kopfzeile bleibt (lange drücken: ganz aufklappen)" : "Kopf ausrollen – alles zeigen";
     g.setAttribute("aria-label", g.title.split(" – ")[0]); }
   kopfPfeilNeuZeigen(stand);
 }
+// KC-CLUB-KOPF-4-STUFEN: Unterkante der Info-Laufschrift im Kopf (Stufe „felder“: nur die drei Felder darunter verschwinden)
+function kopfLaufbandUnten(h, sl) { const lb = h.querySelector("#infoLaufband") || h.querySelector("#heroInfo"); return lb && lb.getClientRects().length ? Math.round(lb.getBoundingClientRect().bottom - h.getBoundingClientRect().top) : sl.offsetTop + sl.offsetHeight; }
+const kopfFelderDa = () => !!document.querySelector("#v-start .hero #heroInfo .kacheln3")?.getClientRects().length; // einfache Ansicht ohne die drei Felder → Stufe überspringen
 async function kopfRolloFahren(ziel, vorgabe) { // vorgabe: nur Erklär-Video – zeigt einen Effekt, ohne die Einstellung zu ändern
   const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile"), sl = h?.querySelector(".statusleiste");
   const von = kopfRolloStand(); if (von === ziel) return;
@@ -12264,7 +12267,7 @@ async function kopfRolloFahren(ziel, vorgabe) { // vorgabe: nur Erklär-Video �
   const zu = ROLLO_RANG[ziel] > ROLLO_RANG[von];
   const hoehe = (s) => { kopfRolloKlassen(h, s); return h.offsetHeight; };
   // Die Jalousie deckt nur den Teil ab, der verschwindet: bei „halb“ alles unter der Statusleiste, bei „ganz“ alles unter der Kopfzeile
-  const kante = (s) => (s === "ganz" ? kz.offsetTop + kz.offsetHeight : sl.offsetTop + sl.offsetHeight) + 6;
+  const kante = (s) => (s === "ganz" ? kz.offsetTop + kz.offsetHeight : s === "felder" ? kopfLaufbandUnten(h, sl) : sl.offsetTop + sl.offsetHeight) + 6; // KC-CLUB-KOPF-4-STUFEN: „felder“ – unter der Info-Laufschrift
   const offenerStand = zu ? von : ziel, engerStand = zu ? ziel : von;
   const klein = hoehe(engerStand), gross = hoehe(offenerStand), oben = kante(engerStand); // Messung im offeneren Stand
   // KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi 19.10.2026): statt Jalousie auf Wunsch Lamellenvorhang (zur Seite) oder Climber (Lamellen klappen hoch)
@@ -12475,11 +12478,11 @@ function kopfRollo(art = "ganz") {
   if (art === "weiter" && KOPF_LANG.lang) { KOPF_LANG.lang = false; return; } // war lange gedrückt – der Klick danach zählt nicht
   if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
   const von = kopfRolloStand();
-  const ziel = art === "auf" ? "offen" : art === "weiter" ? ({ offen: "halb", halb: "ganz", ganz: "offen" }[von] || "halb")
+  const ziel = art === "auf" ? "offen" : art === "weiter" ? ({ offen: kopfFelderDa() ? "felder" : "halb", felder: "halb", halb: "ganz", ganz: "offen" }[von] || "halb")
     : art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
   if (ziel === von) return;
   kopfRolloFahren(ziel);
-  try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : "halb"); } catch {}
+  try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : ziel); } catch {}
 }
 // 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi): der Lichtschein über dem Kopf läuft beim Öffnen der App einmal durch (Klasse „lauf“ in index.html).
 // Ist er durch (oder bricht ab, z. B. beim Wechsel auf eine andere Seite), wird „lauf“ entfernt – beim Zurückkehren zur Startseite startet er nicht erneut.
@@ -13387,7 +13390,7 @@ function kuckuckPruefen() {
 // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: hat Android den Ton im Hintergrund angehalten, gibt ihn das nächste Tippen wieder frei (nur wenn er schon da ist)
 addEventListener("pointerdown", () => { try { if (audio && audio.state === "suspended") audio.resume(); } catch {} }, { capture: true, passive: true });
 setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
-try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
+try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); else if (w === "felder") kopfRolloSetzen("felder"); } catch {}
 function heroZeigen(richtung) {
   kopfNeuPruefen(); // 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: heroZeigen läuft nach jedem Abgleich und jedem Online-Takt
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();

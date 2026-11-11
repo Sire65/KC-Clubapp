@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.916.0 – 2026-11-11 – ⌃ Kopf in vier Stufen einfahren (KC-CLUB-KOPF-4-STUFEN)
+Wunsch Hansi 11.11.: „4 Knöpfe zum Einfahren des Kopfes: 1 weg = die 3 Terminfelder, 2 weg = Info-Laufschrift, 3 weg = LED, 4 = wie jetzt“ – entschieden: ein Knopf, vier Punkte.
+- Der Knopf oben fährt den Kopf jetzt in **vier Schritten**: 1× tippen → die **drei Felder** (Neue Nachr., Mitglieder, Clubtreffen) weg · 2× → auch die **Info-Laufschrift** weg · 3× → auch die **Statusleiste mit den LEDs** weg (nur Kopfzeile, Pfeil zeigt nach unten) · 4× → **alles wieder da**.
+- **Vier Punkte** zeigen die Stufe (●●●● ●●●○ ●●○○ ●○○○). Lange drücken klappt sofort ganz auf; Leuchten bei Neuem in jeder eingefahrenen Stufe; Stufe je Gerät gemerkt.
+- Einfache Ansicht ohne die drei Felder: der erste Schritt wird übersprungen. Erklär-Video „Oberfläche nach Wunsch“ zeigt die vier Schritte.
+- Keine Datenbank-, keine Server-Änderung. Browser `tools/hilfe/kopf-knopf-browser.mjs` (nur Testdaten). Rückweg: App 2.915.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.915.0 – 2026-11-11 – ⌃ Ein Knopf für den Kopf statt zwei Pfeile (KC-CLUB-KOPF-EIN-KNOPF)
 Wunsch Hansi 11.11.: „Oben im Kopf gibt es 2 × Pfeil … oder soll es ein Toggle werden, der nur einen Knopf“ – Beispielbild Variante B – „Bauen und direkt einbauen“.
 - **Ein Knopf** oben statt der beiden Laschen ⌃ und ⌃⌃: antippen fährt den Kopf Stufe für Stufe ein – offen → halb (Statusleiste mit LEDs bleibt) → ganz (nur Kopfzeile) → wieder offen.
