@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.913.0 – 2026-11-11 – 💡 Büro-Lampe gespiegelt · 🪙 Warte-Münze mit eigenem Gesicht (Wunsch #88, KC-CLUB-LAMPE-GESPIEGELT, KC-CLUB-MUENZE-GESICHT)
+Wunsch #88, Hansi 11.11.: „Ja, mach Beispielbild für 88“ – „Fac eigene Gesicht wie jeder hinterlegt hat. Auch Foto. Wenn nix gewählt, nur since 1991“
+- **Büro-Lampe:** gespiegelt, Schirm leicht schräg, der Lichtkegel fällt nach rechts auf den Schreibtisch (nur wenn die Lampe an ist).
+- **Warte-Münze (Kochmütze):** die Rückseite zeigt abwechselnd „since 1991“ und das eigene Gesicht – so, wie jeder es hinterlegt hat (gebaute Figur, Galerie-Bild oder Foto). Wer nichts gewählt hat, sieht wie bisher nur „since 1991“. Andere Wartebilder unverändert.
+- Keine Datenbank-, keine Server-Änderung. Test `tests/muenze-gesicht.test.mjs`, Browser `tools/hilfe/muenze-gesicht-browser.mjs` (nur Testdaten). Rückweg: App 2.912.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.912.0 – 2026-11-11 – 📒 Buchungsliste Erstattungen für Kassenwart und Clubsprecher (KC-CLUB-ERSTATTUNG-BUCHUNGEN) · 🎄 Prospekt-Kopfzeile korrigiert · Server 2.912.0
 Wunsch Hansi 10./11.11.: „Buchungsliste mit ID, Name, Vorname, gefahren km, Erstattungsbetrag. Filter nach Jahr, Monat, Fahrkosten alle Gruppe oder bestimmte zum Anhaken. Darin sollen die kompletten eingereichten Kosten summiert draufstehen. Filtertasten zum Einklappen mit den üblichen Pfeilen. Für den Kassenwart“ – „Beide Gruppen vorsehen und Clubsprecher darf auch sehen. Dahinter noch zwei Spalten mit Bar am, überwiesen am mit Logo. Und Schrift mit Fußzeile in Corporate Design.“
 - **Wo:** Büro-Eingang und Erstattungsseite → „📒 Buchungsliste“. **Wer:** Kassenwart, Clubsprecher, übrige Clubleitung und Admin (prüft der Server; Abruf protokolliert ohne Beträge).

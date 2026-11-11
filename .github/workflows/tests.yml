@@ -111,6 +111,7 @@ jobs:
       - run: node tests/spar-kurz.test.mjs
       - run: node tests/anfrage-gegenvorschlag.test.mjs
       - run: node tests/netz-balken.test.mjs
+      - run: node tests/muenze-gesicht.test.mjs
       - run: node tests/sprache.test.mjs
       - run: node tests/see.test.mjs
       - run: node tests/rt-clubabend-mitfahrt.test.mjs
