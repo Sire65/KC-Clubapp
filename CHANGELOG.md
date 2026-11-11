@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.914.0 – 2026-11-11 – 📅 Club-Küche: Termine im Januar · Heft ohne private Termine (KC-CLUB-MAGAZIN-TERMINE)
+Wunsch Hansi 11.11.: „Schreibe bei Termine in Club Magazin in Januar: voraussichtliches Clubessen (Termin und Ort wird noch abgestimmt), Nachbesprechung Weihnachtsmarkt, nächste Clubsitzung, Geburtstage Mitglieder im Januar“ – „Einspielen“.
+- Heft 1, „Termine im Monat“: Clubessen (voraussichtlich im Januar, Termin und Ort werden noch abgestimmt), Nachbesprechung Weihnachtsmarkt, Nächste Clubsitzung (je „Termin folgt“), darunter Kalendertermine des Monats und „🎂 Geburtstage im Januar“ (nur freigegebene Geburtstage, wie im Kalender).
+- Fund: die Rubrik nutzte die persönliche Demnächst-Liste (eigene Dienste, private Termine, Terminanfragen – wären beim Drucken/Teilen mitgegangen; zudem erst ab heute). Jetzt nur Club-Termine und Geburtstage des ganzen Heftmonats (`magTermine`).
+- Test: `tests/magazin-termine.test.mjs`. Rückweg: App 2.913.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.913.0 – 2026-11-11 – 💡 Büro-Lampe gespiegelt · 🪙 Warte-Münze mit eigenem Gesicht (Wunsch #88, KC-CLUB-LAMPE-GESPIEGELT, KC-CLUB-MUENZE-GESICHT)
 Wunsch #88, Hansi 11.11.: „Ja, mach Beispielbild für 88“ – „Fac eigene Gesicht wie jeder hinterlegt hat. Auch Foto. Wenn nix gewählt, nur since 1991“
 - **Büro-Lampe:** gespiegelt, Schirm leicht schräg, der Lichtkegel fällt nach rechts auf den Schreibtisch (nur wenn die Lampe an ist).
