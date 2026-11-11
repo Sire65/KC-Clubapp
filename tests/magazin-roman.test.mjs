@@ -224,4 +224,5 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[18].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:33", "absatz:46", "absatz:93"]); assert.ok(p[92].startsWith("Henrik legte ihr den Arm") && p[32].startsWith("Zur Belohnung schickte Jonas ihn an den Nebenposten")); assert.equal(p[45], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
   assert.ok(!/Kinderklinik|krank/i.test(r.bilder[0].alt), "Bildtext verrät nichts über Emmas Krankheit"); }
+assert.deepEqual(MAG_AUSGABEN[19].roman.bilder.map((b) => b.wo), ["h:Was Luca sah"]);
 console.log("magazin-roman Staffel-2-Bilder: ok");
