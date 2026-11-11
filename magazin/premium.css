@@ -552,6 +552,25 @@
   font: italic .97rem/1.55 Georgia, "Times New Roman", serif;
 }
 
+.mag-roman-notiz {
+  margin: 1.6rem 0 0;
+  padding: clamp(16px, 3.5vw, 22px);
+  border: 1px dashed var(--mag-gold);
+  background: #fbf6ec;
+  border-radius: 3px;
+  color: #51403c;
+  font: 400 .98rem/1.6 Georgia, "Times New Roman", serif;
+}
+.mag-roman-notiz > b {
+  color: var(--mag-wine);
+  font: 800 .71rem/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.mag-roman-staffel {
+  color: var(--mag-wine);
+}
+
 /* 7. Weitere redaktionelle Kleinteile. */
 .mag-bon {
   box-shadow: 0 5px 22px rgba(43,26,28,.13);

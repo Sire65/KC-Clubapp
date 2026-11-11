@@ -16,7 +16,7 @@ assert.equal(erschienen(AUS, () => "2026-12-31")(1), false); assert.equal(erschi
 assert.ok(/if \(!ICH\?\.admin && !magErschienen\(magNummer\(MAG\.jahr, MAG\.monat\)\)\)/.test(m), "Mitglieder sehen keine Entwürfe");
 assert.ok(/erscheint: "2027-01-01"/.test(m), "Nr. 1 erscheint am 01.01.2027");
 // Archiv: Kacheln, mindestens 12, Knöpfe
-assert.ok(/const bis = Math\.max\(12, magNeueste\(\)\)/.test(m) && /📚 Alle Ausgaben/.test(m) && /onclick="fensterZu\(\$\('magMenueBlatt'\)\);magArchiv\(\)"/.test(m), "Archiv im Menü, 12 Ausgaben");
+assert.ok(/bis = Math\.max\(12, magNeueste\(\), adm \? Math\.max\(\.\.\.Object\.keys\(MAG_AUSGABEN\)\.map\(Number\)\) : 0\)/.test(m) && /📚 Alle Ausgaben/.test(m) && /onclick="fensterZu\(\$\('magMenueBlatt'\)\);magArchiv\(\)"/.test(m), "Archiv im Menü, 12 Ausgaben (Admin: auch vorgebaute Entwürfe 2028, KC-CLUB-MAGAZIN-STAFFEL-2)");
 assert.ok(/onclick="magDrucken\(\$\{nr\}\)"/.test(m) && /\$\{adm \? `<button class="knopf klein" onclick="magStartnachricht\(\$\{nr\}\)"/.test(m), "Drucken/Teilen für alle, Startnachricht nur Admin");
 // Druck: gemeinsame Druckvorschau (CD), ohne Knöpfe/Platzhalter, Ablegen nur wo angeboten
 assert.ok(/magazin: \{ ablegen: \{ register: \["Club-Magazin", "Club-Küche", "Sonstiges"\]/.test(app) && /bauen: \(o, p\) => magDruck\(p\)/.test(app), "Druckart magazin");
