@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.919.0 – 2026-11-11 – 📖 Club-Küche: Fortsetzungsroman Staffel 2 „Was der Mühlbach weiß“ in den Heften 13–24 (KC-CLUB-MAGAZIN-STAFFEL-2)
+Wunsch Hansi 11.11.: „Ja mach Lektorat und einbauen“ – „Alle 12 jetzt“.
+- **Hinter dem Pass, Staffel 2:** alle 12 Folgen vollständig und ungekürzt als Entwurf in den Heften Nr. 13–24 (Januar–Dezember 2028), nach Lektorat und Kontinuitätsprüfung (Quelle: KC-Communication, Zweig `roman-staffel-2-entwurf`). Mitglieder sehen jedes Heft erst ab seinem Erscheinungstag, der Admin im Archiv schon jetzt.
+- Romankopf zeigt die **Staffel**; am Folgenende der Kasten **„Aus Lenas Notizbuch“** (Küchenkniff), in Folge 12 das Rezept **„Gefüllte Bachforelle Mühlbach“**. Skizzen folgen später.
+- Archiv: der Admin sieht auch die vorgebauten Hefte 2028.
+- Tests: `tests/magazin-roman.test.mjs` (Staffel 2, Auflösung erst in Folge 12), `tests/magazin-archiv.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.918.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.918.0 – 2026-11-11 – 📰 Club-Küche: Kraut des Monats · Schon gewusst? · Hefte 2–12 vorgebaut (KC-CLUB-MAGAZIN-KRAEUTER, KC-CLUB-MAGAZIN-SCHON-GEWUSST, KC-CLUB-MAGAZIN-VORBAU)
 Wunsch Hansi 11.11.: „was die Professionellen noch drin haben, wie Wussten Sie schon …“, „bei Saison noch Kräuterkunde“, „Profitipps … schon in die nächsten Ausgaben einbauen, damit die Hefte schon fast fertig gebaut sind“.
 - **🌿 Kraut des Monats** im Saisonkalender (12 Kräuter: Herkunft, Geschmack, Küche, Profi-Tipp; Warnhinweise Bärlauch/Maiglöckchen, Kirschlorbeer).

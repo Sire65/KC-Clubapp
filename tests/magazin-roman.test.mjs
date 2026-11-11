@@ -175,3 +175,24 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
   const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3); }
 console.log("magazin-roman: ok");
+// KC-CLUB-MAGAZIN-STAFFEL-2 (11.11.2026, Wunsch Hansi „Ja mach Lektorat und einbauen“ / „Alle 12 jetzt“): Staffel 2 „Was der Mühlbach weiß“ in den Heften 13–24 (2028), Entwurf
+{ const titel = ["Das Wasser am Mühlrad", "Ein Kanister im Schnee", "Schaum am Wehr", "Silberne Bäuche", "Was das Labor sagt", "Ralles Geheimnis", "Die Fabrik am Oberlauf", "Ein Gast mit Notizbuch", "Die Pacht", "Der Sack im Schuppen", "Die Liste", "Forelle Mühlbach"];
+  for (let i = 1; i <= 12; i++) {
+    const h = MAG_AUSGABEN[12 + i], r = h.roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t), o = magHeftHtml("roman", r), js = JSON.stringify(r);
+    assert.equal(h.erscheint, `2028-${String(i).padStart(2, "0")}-01`, "Heft " + (12 + i) + " erscheint");
+    assert.equal(r.reihe, "HINTER DEM PASS"); assert.equal(r.staffel, "Staffel 2 – Was der Mühlbach weiß"); assert.equal(r.folge, i); assert.equal(r.von, 12); assert.equal(r.titel, titel[i - 1]);
+    assert.ok(r.vorspann && r.bisher && r.untertitel && p.length > 80 && p.join(" ").split(/\s+/).length > 2500, "Folge " + i + " vollständig");
+    assert.ok(r.notiz && o.includes('class="mag-roman-notiz"') && o.includes('class="mag-roman-staffel"') && o.includes("Story by Hans-Joachim Koch"), "Notizbuch, Staffel, Nachweis");
+    assert.ok(!/<!--|BILD \d|zeitachse|freigabe:|status:/.test(js) && !/<p><\/p>/.test(o), "keine Redaktionshinweise");
+    assert.ok(r.ende[0] === (i === 12 ? "**Ende der zweiten Staffel**" : i === 11 ? "**Fortsetzung in der letzten Ausgabe**" : "**Fortsetzung in der nächsten Ausgabe**"));
+    if (i < 12) assert.equal(r.ende[1], `**Folge ${i + 1} – ${titel[i]}**`);
+    // Auflösung (Geständnis, Täter) erst in Folge 12
+    if (i < 12) assert.ok(!/räumte Gerd Hollmann|Hollmann gesteht|die Tat ein/.test(js), "Spoiler vor Folge 12 (Staffel 2) in Heft " + (12 + i));
+  }
+  const r = MAG_AUSGABEN[24].roman, o = magHeftHtml("roman", r);
+  assert.ok(r.rezept && o.includes('class="mag-roman-rezept"') && o.includes("Gefüllte Bachforelle „Mühlbach“") && !/Meerrettich/.test(JSON.stringify(r.rezept)), "Rezept Forelle Mühlbach, ohne Meerrettich");
+  assert.ok(!/Ralle hat es mir erlaubt/.test(r.notiz) && /Voss hat es mir erlaubt/.test(r.notiz), "Rezept gehört Voss");
+  for (const k of [".mag-roman-notiz ", ".mag-roman-rezept ", ".mag-roman-staffel "]) assert.ok(html.includes(k), "CSS " + k);
+  // internes Material der Staffel 2 nie im Programm
+  assert.ok(!/handlungsentwurf|stilprobe|kontinuitaet-staffel|AUFTRAG-L|lektorat-\d/i.test(teil), "keine internen Staffel-2-Dateien"); }
+console.log("magazin-roman Staffel 2: ok");
