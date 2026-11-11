@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.912.0";
+const SERVER_VERSION = "2.919.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -557,6 +557,11 @@ async function sammelEmpfaenger(): Promise<(Person & { birth_date?: string })[]>
 async function ohneNurGezielt(ids: string[]): Promise<string[]> {
   const aus = await nurGezielt().catch((e) => { console.error("ohneNurGezielt", String(e)); return null; });
   return aus ? ids.filter((id) => !aus.has(id)) : [];
+}
+// 2.919.0 KC-CLUB-START-KLEIN: je Tag (deutsche Zeit) nur der erste Start – wie das Start-Paket; gezählt werden nur Tage und der erste Start
+function startTage(liste: any[] | null): any[] {
+  const tage = new Set<string>();
+  return (liste ?? []).filter((x: any) => { const t = berlinTag(new Date(x.zeit)); if (tage.has(t)) return false; tage.add(t); return true; });
 }
 async function protokoll(person: string | null, aktion: string, details: Record<string, unknown> = {}) {
   await db.from("kc_club_protokoll").insert({ person_id: person, aktion, details });
@@ -6938,7 +6943,7 @@ async function startPaketVergleich(ich: Ich, pk: any) { // nebenbei: bisherige E
     db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", ich.person_id),
     db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
     db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id),
-    db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf"),
+    db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf").neq("schluessel", "dp_druck").neq("schluessel", "dp_druck_konfig"),
     db.from("kc_club_spiele").select("id", { count: "exact", head: true }).or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`),
     db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
     db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
@@ -6950,9 +6955,16 @@ async function startPaketVergleich(ich: Ich, pk: any) { // nebenbei: bisherige E
   ]);
   const abw: string[] = [], pr = (k: string, alt: any, neu: any) => { if (!spGleich(alt, neu)) abw.push(k); };
   pr("nd", nd.data, pk.nd); pr("wahl", wahl.data, pk.wahl); pr("mail", mail.data, pk.mail); pr("frei", frei.data, pk.frei); pr("einst", einst.data, pk.einst);
-  pr("spiele", spiele.count ?? 0, pk.spiele); pr("notfall", nf.data, pk.notfall); pr("kabo", kab.data, pk.kabo); pr("starts", starts.data, pk.starts);
+  pr("spiele", spiele.count ?? 0, pk.spiele); pr("notfall", nf.data, pk.notfall); pr("kabo", kab.data, pk.kabo); pr("starts", startTage(starts.data), pk.starts);
   pr("feedback", fb.count ?? 0, pk.feedback); pr("au", au.data, pk.au); pr("pv", pv.data, pk.pv); pr("vor", vor.data, pk.vor);
-  if (abw.length) await protokoll(ich.person_id, "start_paket_abweichung", { teile: abw });
+  // 2.919.0 KC-CLUB-START-KLEIN: „einst“ wich 19× in 2 Tagen ab – welche Einstellung (nur der Name, nie der Wert), damit man sieht, ob es nur ein
+  // Schreiben zwischen den beiden Lesungen war (z. B. beim Start gesetzte Einstellung) oder ein echter Unterschied
+  const einstNamen = abw.includes("einst") ? (() => {
+    const m = (l: any[] | null) => new Map<string, unknown>((l ?? []).map((x: any) => [String(x.schluessel), x.wert]));
+    const a = m(einst.data), b = m(pk.einst);
+    return [...new Set([...a.keys(), ...b.keys()])].filter((k) => !a.has(k) || !b.has(k) || !spGleich(a.get(k), b.get(k))).sort().slice(0, 10);
+  })() : null;
+  if (abw.length) await protokoll(ich.person_id, "start_paket_abweichung", { teile: abw, ...(einstNamen ? { einst: einstNamen } : {}) });
 }
 // ----- 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27, Hansi: „Kachel Clubabend – nur am Clubabend; Tagesordnung, abhaken nur Clubleitung;
 // Sorge, dass alle zu Hause anklicken – ich bin vor Ort“): alle Mitglieder SEHEN den Abend (Tagesordnung, wer da ist, Fotos, Geburtstage,
@@ -10268,7 +10280,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-START-PARALLEL-2 (2.155.0, Wunsch Hansi „heute öfter langsam“): auch die übrigen Ketten (stumme Chats, Aufgaben/Protokolle,
         // Terminumfragen, Einstellungen & Co.) sofort mitstarten – vorher liefen sie erst nacheinander nach dem Zählen. Inhalt bleibt gleich.
         // KC-CLUB-START-SPARSAM (2.489.0): meine Einstellungen EINMAL holen – „stumm“ (für die Zähler) und alle übrigen (pRest) daraus
-        const pEinst = pPaket.then((pk) => pk ? { data: pk.einst, error: null } : db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf")); // 2.449.0: Bild-Verlauf nicht ins Start-Paket
+        const pEinst = pPaket.then((pk) => pk ? { data: pk.einst, error: null } : db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf").neq("schluessel", "dp_druck").neq("schluessel", "dp_druck_konfig")); // 2.449.0: Bild-Verlauf nicht ins Start-Paket
         const pStumm = pEinst.then((r: any) => ({ data: r.error ? null : (r.data ?? []).find((x: any) => x.schluessel === "stumm") ?? null }));
         const pAufgaben = (async () => {
           // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
@@ -10332,7 +10344,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           pinnwandFristen().catch(() => ({ ...PINNWAND_FRISTEN_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG: an wie vielen Tagen die App genutzt wurde (Start je Sitzung = diagnose_start) und seit wann –
           // Tage statt Starts, damit mehrfaches Öffnen am ersten Tag nicht schon Tipps auslöst
-          pPaket.then((pk) => pk ? { data: pk.starts, error: null } : db.from("kc_club_protokoll").select("zeit").eq("person_id", ich.person_id).eq("aktion", "diagnose_start").order("zeit").limit(1000)),
+          pPaket.then((pk) => pk ? { data: pk.starts, error: null } : db.from("kc_club_protokoll").select("zeit").eq("person_id", ich.person_id).eq("aktion", "diagnose_start").order("zeit").limit(1000).then((r: any) => ({ ...r, data: startTage(r.data) }))),
           einstiegFristen().catch(() => ({ ...EINSTIEG_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG-FEEDBACK (0.73.0): schon Feedback abgegeben? Dann nicht mehr danach fragen
           pPaket.then((pk) => pk ? { count: pk.feedback, data: null, error: null } : db.from("kc_club_feedback").select("person_id", { count: "exact", head: true }).eq("person_id", ich.person_id)),

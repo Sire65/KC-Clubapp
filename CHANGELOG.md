@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.919.0 – 2026-11-11 – ⚡ Kleinerer App-Start (KC-CLUB-START-KLEIN) · Server 2.919.0 + Datenbank
+Egress-Auswertung 11.11. (24 Std. nach 2.907.0: −47 %). Hansi: „Checke was das ausmacht und was man noch verbessern kann an Qualität und Geschwindigkeit“.
+- **Start-Paket beim Admin ≈ 51 KB statt ≈ 5 KB:** die Dienstplan-Druckdaten (`dp_druck` ≈ 27 KB, `dp_druck_konfig` ≈ 4 KB) lagen in den Einstellungen und gingen bei jedem Start mit (Datenbank → Server → App) – die App holt sie nur über „Dienstplan drucken“. Jetzt nicht mehr im Start.
+- **Starttage:** statt jedes einzelnen Starts (bis 1000 Zeitpunkte) je Tag nur der erste – gezählt werden nur die Tage und der erste Start. Geprüft bei allen 17 Mitgliedern: gleiche Tage, gleicher erster Start (14 KB → 3 KB).
+- **Qualität:** der Stichproben-Vergleich meldete „Einstellungen weichen ab“ 19× in 2 Tagen – jetzt steht dabei, welche Einstellung (nur der Name, nie der Wert), damit sich klärt, ob es nur ein gleichzeitiges Speichern war.
+- Rückfall und Vergleich lesen genauso; nur lesend, nur der Club-Server. Datenbank: `supabase/migrations/20261111_kc_club_start_klein.sql`. Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.912.0 (App 2.918.0) + `20261021_kc_club_start_paket.sql`.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.918.0 – 2026-11-11 – 📰 Club-Küche: Kraut des Monats · Schon gewusst? · Hefte 2–12 vorgebaut (KC-CLUB-MAGAZIN-KRAEUTER, KC-CLUB-MAGAZIN-SCHON-GEWUSST, KC-CLUB-MAGAZIN-VORBAU)
 Wunsch Hansi 11.11.: „was die Professionellen noch drin haben, wie Wussten Sie schon …“, „bei Saison noch Kräuterkunde“, „Profitipps … schon in die nächsten Ausgaben einbauen, damit die Hefte schon fast fertig gebaut sind“.
 - **🌿 Kraut des Monats** im Saisonkalender (12 Kräuter: Herkunft, Geschmack, Küche, Profi-Tipp; Warnhinweise Bärlauch/Maiglöckchen, Kirschlorbeer).
