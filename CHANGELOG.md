@@ -1,5 +1,111 @@
 # Änderungen
 
+## 2.919.0 – 2026-11-11 – ⚡ Kleinerer App-Start (KC-CLUB-START-KLEIN) · Server 2.919.0 + Datenbank
+Egress-Auswertung 11.11. (24 Std. nach 2.907.0: −47 %). Hansi: „Checke was das ausmacht und was man noch verbessern kann an Qualität und Geschwindigkeit“.
+- **Start-Paket beim Admin ≈ 51 KB statt ≈ 5 KB:** die Dienstplan-Druckdaten (`dp_druck` ≈ 27 KB, `dp_druck_konfig` ≈ 4 KB) lagen in den Einstellungen und gingen bei jedem Start mit (Datenbank → Server → App) – die App holt sie nur über „Dienstplan drucken“. Jetzt nicht mehr im Start.
+- **Starttage:** statt jedes einzelnen Starts (bis 1000 Zeitpunkte) je Tag nur der erste – gezählt werden nur die Tage und der erste Start. Geprüft bei allen 17 Mitgliedern: gleiche Tage, gleicher erster Start (14 KB → 3 KB).
+- **Qualität:** der Stichproben-Vergleich meldete „Einstellungen weichen ab“ 19× in 2 Tagen – jetzt steht dabei, welche Einstellung (nur der Name, nie der Wert), damit sich klärt, ob es nur ein gleichzeitiges Speichern war.
+- Rückfall und Vergleich lesen genauso; nur lesend, nur der Club-Server. Datenbank: `supabase/migrations/20261111_kc_club_start_klein.sql`. Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.912.0 (App 2.918.0) + `20261021_kc_club_start_paket.sql`.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.918.0 – 2026-11-11 – 📰 Club-Küche: Kraut des Monats · Schon gewusst? · Hefte 2–12 vorgebaut (KC-CLUB-MAGAZIN-KRAEUTER, KC-CLUB-MAGAZIN-SCHON-GEWUSST, KC-CLUB-MAGAZIN-VORBAU)
+Wunsch Hansi 11.11.: „was die Professionellen noch drin haben, wie Wussten Sie schon …“, „bei Saison noch Kräuterkunde“, „Profitipps … schon in die nächsten Ausgaben einbauen, damit die Hefte schon fast fertig gebaut sind“.
+- **🌿 Kraut des Monats** im Saisonkalender (12 Kräuter: Herkunft, Geschmack, Küche, Profi-Tipp; Warnhinweise Bärlauch/Maiglöckchen, Kirschlorbeer).
+- **💡 Schon gewusst?** beim Küchentipp – drei Kniffe je Heft (Heft 1 mit Hansis Zitronen- und Zwiebeltrick).
+- **Hefte 2–12 vorgebaut:** je zwei Küchentipps, Küchenlatein (Fond, Pochieren, Montieren, Julienne, Marinieren, Confieren, Glacieren, Parieren, Arrosieren, Tranchieren), Küchenwitz, Termine 2027 mit Datum, Schlagzeilen. Backstube, Rückblick, Porträt, Hobby, Linktipps bleiben für Mitglieder frei.
+- Tests: `tests/magazin-kraeuter.test.mjs` (auch Vorbau). Rückweg: App 2.917.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.917.0 – Klick-Rundgang wird Pflicht vor dem Veröffentlichen (KC-CLUB-RUNDGANG-PFLICHT) · Video „Sprachsteuerung“: Liste „Alle Befehle“ wieder sichtbar · Zeitansage auch in „Meine App nach meinem Geschmack“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Fehler behoben:** Im Erklär-Video „Sprachsteuerung komplett“ blieb bei Schritt 6 „📋 Alle Befehle“ der Bildschirm auf den Einstellungen stehen – die Befehlsliste war unsichtbar und ohne Rahmen. Ursache: Die Liste baut sich nach dem Laden der gelernten Sätze neu auf; das neue Fenster verlor dabei das Merkmal „wird im Video gezeigt“ und wurde (wie alle anderen Fenster während eines Videos) versteckt. Behoben an der Quelle in `blattAuf`: baut sich ein vorgeführtes Fenster neu auf, bleibt es sichtbar. Dazu zieht das Video den Rahmen nach dem Neuaufbau nach.
+- Alle übrigen Schritte geprüft (Einschalten, Mikrofon, Nachricht an Klaus mit Weiterdiktieren, weitere Befehle, Lernen, Diktieren überall). Zeitansage eingeschaltet.
+- **Effekte & Wetter:** alle 19 Schritte geprüft (mit Beispiel-Wetter): Kachel-Effekte, Kopf auf/zu, Geburtstags-Vogel, die vier Jahreszeiten, Einstellungen unter Effekte, Wetter-Tage antippen und lange festhalten. Zeitansage eingeschaltet.
+- **Meine App nach meinem Geschmack:** alle 14 Schritte geprüft (Themen, Schrift des Themas, Farbdesign, Tag/Nacht, große Schrift, Jahreszeiten-Bild, Deko, Kachel- und Sende-Effekte, Animationen, Sparmodus, Eselsohr). Zeitansage eingeschaltet.
+- **Klick-Rundgang ist jetzt Pflicht** (Hansi 11.11.: „Ja, zur Pflicht machen“): Seit 04.11. waren alle 80 Läufe grün, ohne Fehlalarm. `seite-veroeffentlichen.yml` hat dafür den Schritt `rundgang` (wie im Tests-Ablauf, gut 2 Minuten); gebaut und veröffentlicht wird erst, wenn Tests **und** Rundgang grün sind – sonst bleibt die alte Version online.
+- Test: `tests/video-zeitansage.test.mjs` erweitert, `tests/einspielen-sperre.test.mjs` prüft die Pflicht. Rückweg: Version 2.916.0 einspielen.
+## 2.916.0 – 2026-11-11 – ⌃ Kopf in vier Stufen einfahren (KC-CLUB-KOPF-4-STUFEN)
+Wunsch Hansi 11.11.: „4 Knöpfe zum Einfahren des Kopfes: 1 weg = die 3 Terminfelder, 2 weg = Info-Laufschrift, 3 weg = LED, 4 = wie jetzt“ – entschieden: ein Knopf, vier Punkte.
+- Der Knopf oben fährt den Kopf jetzt in **vier Schritten**: 1× tippen → die **drei Felder** (Neue Nachr., Mitglieder, Clubtreffen) weg · 2× → auch die **Info-Laufschrift** weg · 3× → auch die **Statusleiste mit den LEDs** weg (nur Kopfzeile, Pfeil zeigt nach unten) · 4× → **alles wieder da**.
+- **Vier Punkte** zeigen die Stufe (●●●● ●●●○ ●●○○ ●○○○). Lange drücken klappt sofort ganz auf; Leuchten bei Neuem in jeder eingefahrenen Stufe; Stufe je Gerät gemerkt.
+- Einfache Ansicht ohne die drei Felder: der erste Schritt wird übersprungen. Erklär-Video „Oberfläche nach Wunsch“ zeigt die vier Schritte.
+- Keine Datenbank-, keine Server-Änderung. Browser `tools/hilfe/kopf-knopf-browser.mjs` (nur Testdaten). Rückweg: App 2.915.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 11.11. 09:58 Uhr auf Wunsch Hansi („Einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+
+## 2.915.0 – 2026-11-11 – ⌃ Ein Knopf für den Kopf statt zwei Pfeile (KC-CLUB-KOPF-EIN-KNOPF)
+Wunsch Hansi 11.11.: „Oben im Kopf gibt es 2 × Pfeil … oder soll es ein Toggle werden, der nur einen Knopf“ – Beispielbild Variante B – „Bauen und direkt einbauen“.
+- **Ein Knopf** oben statt der beiden Laschen ⌃ und ⌃⌃: antippen fährt den Kopf Stufe für Stufe ein – offen → halb (Statusleiste mit LEDs bleibt) → ganz (nur Kopfzeile) → wieder offen.
+- **Drei Punkte** im Knopf zeigen die Stufe (●●● offen, ●●○ halb, ●○○ ganz); auf der letzten Stufe zeigt der Pfeil nach unten. **Lange drücken** klappt den Kopf sofort ganz auf.
+- **Neues** (Nachricht, neues Mitglied, jemand neu online) bei eingefahrenem Kopf: der Knopf leuchtet/blinkt wie bisher die Pfeile. Stufe wird je Gerät gemerkt wie bisher.
+- Knopf etwas links der Mitte – Flagge und Verbindungs-Balken haben Platz (geprüft 360/412 px). Erklär-Video „Oberfläche nach Wunsch“ zeigt den neuen Knopf.
+- Keine Datenbank-, keine Server-Änderung. Browser `tools/hilfe/kopf-knopf-browser.mjs` (nur Testdaten), Vertragstests angepasst. Rückweg: App 2.914.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 11.11. 09:34 Uhr auf Wunsch Hansi („Einspielen“), Ruhe geprüft: 1 in der App, keine Spiegelung/Sicherung.
+
+## 2.914.0 – 2026-11-11 – 📅 Club-Küche: Termine im Januar · Heft ohne private Termine (KC-CLUB-MAGAZIN-TERMINE)
+Wunsch Hansi 11.11.: „Schreibe bei Termine in Club Magazin in Januar: voraussichtliches Clubessen (Termin und Ort wird noch abgestimmt), Nachbesprechung Weihnachtsmarkt, nächste Clubsitzung, Geburtstage Mitglieder im Januar“ – „Einspielen“.
+- Heft 1, „Termine im Monat“: Clubessen (voraussichtlich im Januar, Termin und Ort werden noch abgestimmt), Nachbesprechung Weihnachtsmarkt, Nächste Clubsitzung (je „Termin folgt“), darunter Kalendertermine des Monats und „🎂 Geburtstage im Januar“ (nur freigegebene Geburtstage, wie im Kalender).
+- Fund: die Rubrik nutzte die persönliche Demnächst-Liste (eigene Dienste, private Termine, Terminanfragen – wären beim Drucken/Teilen mitgegangen; zudem erst ab heute). Jetzt nur Club-Termine und Geburtstage des ganzen Heftmonats (`magTermine`).
+- Test: `tests/magazin-termine.test.mjs`. Rückweg: App 2.913.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.913.0 – 2026-11-11 – 💡 Büro-Lampe gespiegelt · 🪙 Warte-Münze mit eigenem Gesicht (Wunsch #88, KC-CLUB-LAMPE-GESPIEGELT, KC-CLUB-MUENZE-GESICHT)
+Wunsch #88, Hansi 11.11.: „Ja, mach Beispielbild für 88“ – „Fac eigene Gesicht wie jeder hinterlegt hat. Auch Foto. Wenn nix gewählt, nur since 1991“
+- **Büro-Lampe:** gespiegelt, Schirm leicht schräg, der Lichtkegel fällt nach rechts auf den Schreibtisch (nur wenn die Lampe an ist).
+- **Warte-Münze (Kochmütze):** die Rückseite zeigt abwechselnd „since 1991“ und das eigene Gesicht – so, wie jeder es hinterlegt hat (gebaute Figur, Galerie-Bild oder Foto). Wer nichts gewählt hat, sieht wie bisher nur „since 1991“. Andere Wartebilder unverändert.
+- Keine Datenbank-, keine Server-Änderung. Test `tests/muenze-gesicht.test.mjs`, Browser `tools/hilfe/muenze-gesicht-browser.mjs` (nur Testdaten). Rückweg: App 2.912.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 11.11. 08:55 Uhr auf Wunsch Hansi („Jetzt einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+
+## 2.912.0 – 2026-11-11 – 📒 Buchungsliste Erstattungen für Kassenwart und Clubsprecher (KC-CLUB-ERSTATTUNG-BUCHUNGEN) · 🎄 Prospekt-Kopfzeile korrigiert · Server 2.912.0
+Wunsch Hansi 10./11.11.: „Buchungsliste mit ID, Name, Vorname, gefahren km, Erstattungsbetrag. Filter nach Jahr, Monat, Fahrkosten alle Gruppe oder bestimmte zum Anhaken. Darin sollen die kompletten eingereichten Kosten summiert draufstehen. Filtertasten zum Einklappen mit den üblichen Pfeilen. Für den Kassenwart“ – „Beide Gruppen vorsehen und Clubsprecher darf auch sehen. Dahinter noch zwei Spalten mit Bar am, überwiesen am mit Logo. Und Schrift mit Fußzeile in Corporate Design.“
+- **Wo:** Büro-Eingang und Erstattungsseite → „📒 Buchungsliste“. **Wer:** Kassenwart, Clubsprecher, übrige Clubleitung und Admin (prüft der Server; Abruf protokolliert ohne Beträge).
+- **Summen oben:** Buchungen, km, gesamt eingereicht – davon ⏳ offen, 💶 bar, 🏦 überwiesen; rechnet bei jedem Filter neu. Summenzeile auch unter der Liste.
+- **Filter** (je mit ▸/▾ einklappbar, gemerkt): Jahr, Monat, Kostenart (alle oder angehakt: Fahrtkosten, Einkauf, Kraftstoff, Parken, Kaution, Sonstiges), Mitglieder-Gruppe, einzelne Mitglieder (anhaken), Stand. Datum = Tag der Fahrt/Auslage.
+- **Spalten:** ID (Mitgliedsnummer), Name, Vorname, Datum, Kostenart, km, Betrag, 💶 Bar am, 🏦 Überwiesen am; sortierbar. Ansicht je Buchung oder je Mitglied (antippen klappt die Buchungen auf).
+- **Drucken / PDF** im Club-Design (Kopf mit Logo, Schrift, Fußzeile; A4 quer), in der Club-App senden oder im Ordner „Kasse“ ablegen; **CSV für Excel**.
+- **🎄 Weihnachtsmarkt-Prospekt:** Kopfzeile wieder genau wie vor dem Premium-Design (Hansi 11.11.: „Kopfzeile korrigieren“). Der Regelblock in `magazin/premium.css`, der den Prospekt nachbilden sollte, wich in Schrift und Zeilenhöhe ab und ist entfernt; geprüft: jedes Element auf Handy und PC mit und ohne Premium-Design gleich. Test `magazin-premium` angepasst.
+- Keine Datenbank-Änderung. Tests `tests/erstattung-buchungen.test.mjs`, Browser `tools/hilfe/buchungsliste-browser.mjs` (nur Testdaten). Rückweg: App 2.911.0, Server 2.909.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.911.0 – 2026-11-10 – 📰 Club-Küche im Premium-Design · 📖 „Hinter dem Pass“ zweiter Durchgang (KC-CLUB-MAGAZIN-PREMIUM, KC-CLUB-MAGAZIN-LEKTORAT)
+Hansi 10.11.: „Ja, mach so und spiel um 20 Uhr ein“ (Design) · „OK Mach weiter“ (Roman).
+- **Premium-Design** (Entwurf ChatGPT, Zweig `magazin-premium-design-2026-11-10`): `magazin/premium.css` – edlere Titelseite (weinrot-gold, „Handwerk / Geschichten / Gemeinschaft“), Inhaltsverzeichnis, Rubrikköpfe mit Goldlinie, Rezept- und Romantypografie, Mobil-Einspaltensatz, Fokus/Kontrast. Nur Club-Küche, Weihnachtsmarkt-Prospekt unverändert. Im Offline-Speicher (sw.js), Test `tests/magazin-premium.test.mjs`.
+- Nachgebessert: komplett in `@media screen` – Heft-Druck und Drucken bleiben beim bewährten Satz (A5-Heft 40 statt 52 Seiten, keine geteilten Zeilen; Probedruck pixelgleich); ab 900 px Breite kompakteres Vorwort (passt mit Unterschrift auf eine Seite).
+- **Roman, zweiter Durchgang:** 204 Änderungen in allen 12 Folgen (Realität, Dialoge, Humor, „nickte“ seltener) – u. a. Burgunder- statt Périgord-Trüffel, Verbandbuch/D-Arzt/BG, Jagdgesellschaft F4 ein Termin und F6 eigenes Menü, Berufskolleg/Köcheverband, Wettbewerbsregeln, Polizei/Anzeige. Absätze, Überschriften und Bildstellen unverändert (F4-Überschrift „Die Regionalbahn“). Wortcheck: keine unbekannten Wörter.
+- Rückweg: App 2.910.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.910.0 – Zeitansage: Videos „Feedback geben“, „Aktionen & Reisen“, „Fit bleiben“, „Studio: live zeigen“, „Technik: Update & Sicherheit“, „Versteckte Helfer“, „Wecker, Stoppuhr & Timer“, „Die Rückseite: Eselsohr“ und „Kommunikationszentrale“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Feedback geben:** 5 Schritte geprüft – Kachel, drei Schritte zum Antippen, Ideen/Mitteilung (mit Mikrofon), „ohne Namen“, Danke mit „schon umgesetzt“.
+- **Aktionen & Reisen:** 4 Schritte geprüft – Kachel, kommende Aktionen mit Tagen bis dahin, Einzelheiten (Reiseverlauf, wer dabei ist, Preis pro Person, Veranstalter mit Telefon, Fotos, bei einer Kreuzfahrt die eigene Reise-Checkliste – Satz im Video entsprechend genauer).
+- **Fit bleiben:** 5 Schritte geprüft – Kachel, Hinweis „Verstanden“, Stufe Sanft (im Sitzen)/Mittel/Fordernd und Dauer, „Los geht's“, Auswertung.
+- **Studio: live zeigen:** 3 Schritte geprüft – Kachel (nur Mitglieder mit Freischaltung), Mitglied wählen + Zustimmung, verdeckte Chats/Nachrichten/Büro, 🙈 Vorhang, höchstens 30 Minuten.
+- **Technik:** 7 Schritte geprüft – Update, Version im Kopf, Sicherheits-Check, Test an mich, Freigegebene Programme (z. B. Kassen-Schulung).
+- **Versteckte Helfer:** alle 30 Schritte geprüft und **auf den neuesten Stand gebracht** – neu sind zwei Schritte für die Helfer aus dieser Woche: 📶 **Verbindungs-Balken** oben rechts im Kopf (KC-CLUB-NETZ-BALKEN) und 🇩🇪 **Flagge** für Deutsch/Englisch (KC-CLUB-SPRACHE). Untertitel in der Video-Liste ergänzt.
+- **Wecker, Stoppuhr & Timer:** 8 Schritte geprüft – Eselsohr, Reiter Uhr, Wecker stellen, Stoppuhr mit Runden, Timer (1/3/5/10/15 Min.), Klingeln mit Schlummern (10 Min.), „Antippen für Ton“.
+- **Die Rückseite:** alle 14 Schritte geprüft. **Fehler behoben:** Bei „Große Uhr“ führt das Video etwa 6 Sekunden lang die vier Uhren vor – wer schneller auf „Weiter“ tippte, bekam danach die Uhr wieder über die Bühne gemalt („Bühne“ blieb leer). Die Vorführung hört jetzt auf, sobald ein anderer Reiter dran ist. Außerdem stimmt der erste Satz wieder: „sieben Dinge“ statt „fünf“ (es gibt sieben Reiter).
+- **Kommunikationszentrale:** 7 Schritte geprüft – Hinweis ohne Zentrale-Karte, Anzeige oben, An wen (Alle/Online/Keiner/Auswahl), Pult (Anrufen, Video, Anklopfen, Sprache, Chat, Standort, Termin), Zusätzlich Push/E-Mail/WhatsApp, Schnellnachricht.
+- Zeitansage in allen neun eingeschaltet. Rückweg: Version 2.909.0 einspielen.
+
+## 2.909.0 – 2026-11-10 – ⛵ Neue Szene „Am See“ mit Wasserfall, Booten und Sturm (KC-CLUB-SEE) · ⚡ Clubabend Live und Mitfahrten über die direkte Leitung (KC-CLUB-RT-CLUBABEND-MITFAHRT) · Server 2.909.0
+Wunsch Hansi 10.11.: „Neue Szene. Links einen Wasserfall, unten einen See, darauf ein paar Segelboote, ein Ruderboot, zwischendurch ein Polizeiboot mit Blaulicht. Dann zieht ein Sturm auf, es fängt an zu regnen, dann auch Blitze. Und der Sturm pustet alles weg und dann fängt alles wieder von vorne an.“
+- Im Kopf der Startseite (Lauf ≈ 72 s): links stürzt ein **Wasserfall** vom Felsen in den **See** (Gischt, Wellen), zwei **Segelboote** und ein **Ruderboot** (Ruderer zieht im Takt) kreuzen, zweimal fährt das **Polizeiboot** mit blinkendem **Blaulicht** vorbei.
+- Ab 34 s **Sturm**: Wolken ziehen auf, es wird dunkel, ab 40 s **Regen** (schräg), ab 46 s **Blitze** mit Aufleuchten; ab 56 s **pustet der Sturm alles weg** (Boote kippen und treiben weg, Wolken und Regen fliegen davon) – es klart auf, danach beginnt alles von vorn.
+- Thema „⛵ Am See“ in ⚙️ → Darstellung (Design Nordsee, Wimpel in Meeresfarben), Vorschau-Knopf bei den Jahreszeiten, Hilfe-Eintrag „Thema Am See“.
+- Sparsam: höchstens 120 Regentropfen, 7 Wolken, ohne Schatten-Effekte; nichts wird gesendet. Tests: `tests/see.test.mjs`, Browser-Prüfung `tools/hilfe/see-browser.mjs`. Rückweg: App 2.908.0.
+- **⚡ Direkte Leitung – Prüfung und Ausbau** (Wunsch Hansi „Check, ob die direkte Leitung überall zum Einsatz kommt“ → „Ja, beides bauen“): Messung der letzten 3 Tage: Leitung steht im Schnitt 97 %, Antwort 72 ms. Fast alle Bereiche melden sich schon sofort.
+  - **Clubabend Live:** Abhaken der Tagesordnung, Anwesende, Album → Signal „clubabend“; offene Clubabend-Fenster laden sofort statt bis zu 20 s später. Steht die Leitung, fragt der Takt nur noch alle 2 Min. zur Sicherheit (vorher alle 20 s je Handy).
+  - **Mitfahrgelegenheiten:** anbieten, mitfahren, absagen, suchen, löschen → Signal „mitfahrt“; wer gerade Termine oder die Aktion offen hat, sieht es sofort (nie mitten ins Eintippen oder über einem offenen Fenster).
+  - Server: `rtKlingelnInApp` schickt nur an Mitglieder, die gerade in der App sind, ohne den Auslöser, nur die Art (kein Inhalt), über `kc_club_rt_klingeln` (Zähler und Sparbremse). Keine Datenbank-Änderung. Tests `tests/rt-clubabend-mitfahrt.test.mjs`, Browser `tools/hilfe/rt-clubabend-mitfahrt-browser.mjs`. Rückweg Server: 2.907.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.908.0 – 2026-11-10 – 🧑‍🍳 Twinkey: verkleinerte Original-Kochmütze (KC-BILDER-WEBP)
+Wunsch Hansi 09.11.: „Kochmütze verkleinern“.
+- `dp2/assets/kc-original-kochmuetze.png` 288 KB → 48 KB (800 × 588 Pixel, 64 Farben – gleiches Aussehen). In DP2 geändert (dp3 `claude/kochmuetze-klein-clubapp`, 2fbed68) und mit `tools/dp2-twinkey-uebernehmen.mjs` übernommen; nur Bild und `dp2/QUELLE.json` ändern sich. Das eigenständige DP2 hat sie seit Build 254.
+- Test: `tests/app-vertrag.test.mjs` kennt den neuen DP2-Stand. Rückweg: App 2.907.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.907.0 – 2026-11-10 – 📉 Weniger Datenvolumen: Mitgliederliste und Versand-Ampel (KC-CLUB-SPAR-KURZ) · Server 2.907.0 + Datenbank
 Egress-Auswertung 10.11. (26 Std. nach 2.899.0). Freigabe Hansi: „Ja alles sparsamer machen – trotzdem muss alles sicher und schnell laufen. Keine Geschwindigkeitseinbußen“.
 - **Mitgliederliste aus dem KC Manager:** ≈ 109 KB je Abruf (vor allem Ansprüche/Fähigkeiten), gelesen bei App-Start, Countdowns, Kontakt, Büro-Festtagen und im Notfall-Paket. Jetzt liefert die Datenbank nur Kennung, Namen, Telefon, Eintritt, Austritt (≈ 3 KB) – gleiche Form, gleiche Reihenfolge. Die „gemerkte Aktionen-Liste“ aus 2.899.0 sparte dagegen kaum (Aktionen sind nur 2 KB; die Server-Instanzen leben zu kurz).

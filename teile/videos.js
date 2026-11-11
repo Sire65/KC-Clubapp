@@ -444,11 +444,13 @@ const rgAusKandidat = () => kacheln(reg).filter((x) => !x.bald).pop()?.id || "";
 const RG_OBERFLAECHE = [
   { v: "start", vor: () => { rgKopf("offen"); rgAnordnen(false); if (!einfach() && !RG.regStart) { RG.regStart = reg; RG.zurueck.push(() => { const a = RG.regStart; RG.regStart = null; if (a && reg !== a) register(a); }); } }, t: "🎨 Deine Wunsch-Oberfläche",
     x: "So gestaltest du dir die Startseite selbst – ganz nach deinen Bedürfnissen. Ich mache dir alles vor; gespeichert wird nichts, und am Ende ist alles wieder wie vorher." },
-  { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfPfeilHalb", "#kopfPfeil"], puls: ["#kopfPfeilHalb", "#kopfPfeil"], t: "⌃ Die beiden Pfeile oben",
-    x: "Ganz oben siehst du zwei Pfeile. Damit rollst du den farbigen Kopf ein wie eine Jalousie – dann ist mehr Platz für die Kacheln." },
-  { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "⌃ Halb einrollen", x: "Ich tippe auf den linken Pfeil: Der Kopf rollt halb ein – die Zeile mit deinem Status bleibt stehen.",
-    live: async (L) => { await L.tipp("#kopfPfeilHalb"); await kopfRolloFahren("halb"); } },
-  { v: "start", vor: () => rgKopf("halb"), sel: ["#v-start .hero"], t: "⌃⌃ Ganz einrollen", x: "Jetzt der rechte Pfeil: Der Kopf rollt ganz ein, nur die oberste Zeile bleibt. Nochmal antippen – und er rollt wieder aus.",
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#kopfPfeil"], puls: ["#kopfPfeil"], t: "⌃ Der Knopf oben", // KC-CLUB-KOPF-EIN-KNOPF / KC-CLUB-KOPF-4-STUFEN (11.11.2026)
+    x: "Ganz oben ist ein Knopf mit einem Pfeil und vier Punkten. Damit rollst du den farbigen Kopf ein wie eine Jalousie – Stück für Stück. Die Punkte zeigen dir, wo du gerade bist." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#v-start .hero"], t: "⌃ Einmal tippen: Felder weg", x: "Ich tippe einmal: Die drei Felder unten im Kopf verschwinden – die Laufschrift bleibt. Jetzt leuchten drei Punkte.",
+    live: async (L) => { await L.tipp("#kopfPfeil"); await kopfRolloFahren(kopfFelderDa() ? "felder" : "halb"); } },
+  { v: "start", vor: () => rgKopf(kopfFelderDa() ? "felder" : "offen"), sel: ["#v-start .hero"], t: "⌃ Nochmal: Laufschrift weg", x: "Nochmal tippen: Auch die Laufschrift ist weg – die Zeile mit deinem Status und den Lämpchen bleibt stehen. Zwei Punkte.",
+    live: async (L) => { await L.tipp("#kopfPfeil"); await kopfRolloFahren("halb"); } },
+  { v: "start", vor: () => rgKopf("halb"), sel: ["#v-start .hero"], t: "⌃ Und nochmal: ganz – dann wieder auf", x: "Ein drittes Mal: Der Kopf rollt ganz ein, nur die oberste Zeile bleibt, ein Punkt leuchtet, der Pfeil zeigt nach unten. Ein viertes Mal – und alles ist wieder da. Lange drücken klappt ihn sofort ganz auf.",
     live: async (L) => { await L.tipp("#kopfPfeil"); await kopfRolloFahren("ganz"); await L.warte(1800); await L.tipp("#kopfPfeil"); await kopfRolloFahren("offen"); } },
   { v: "start", nur: () => !einfach(), vor: () => { rgKopf("offen"); rgInfo(); }, sel: ["#heroInfo"], mussSel: true, t: "‹ › Pfeile links und rechts",
     x: "Im farbigen Info-Feld blätterst du mit den Pfeilen links und rechts durch den nächsten Termin, das Wetter und Neues für dich. Ich blättere einmal weiter – und wieder zurück.",
@@ -642,7 +644,7 @@ const RG_AKTIONEN = [
   { v: "aktionen", sel: ["#aktionListe"], t: "🗺️ Was steht an?",
     x: "Hier stehen die kommenden Aktionen – mit Datum und wie viele Tage es noch sind. Ist eine vorbei, findest du sie mit ihren Fotos im Archiv." },
   { v: "aktionen", sel: ["#aktionListe"], t: "👆 Alle Einzelheiten",
-    x: "Tippst du eine Aktion an, siehst du alles: den Reiseverlauf, wer dabei ist, den Preis pro Person und den Veranstalter mit Telefonnummer. Dazu deine eigene Reise-Checkliste zum Abhaken und die Fotos." },
+    x: "Tippst du eine Aktion an, siehst du alles: den Reiseverlauf, wer dabei ist, den Preis pro Person und den Veranstalter mit Telefonnummer. Dazu die Fotos – und fährst du bei einer Kreuzfahrt mit, deine eigene Reise-Checkliste zum Abhaken." },
   { v: "aktionen", t: "✅ Fertig", x: "So bist du bei jedem Ausflug gut vorbereitet. Fragen zur Reise? Schreib einfach der Clubleitung." },
 ];
 const RG_FIT = [
@@ -724,6 +726,10 @@ const RG_SPEZIAL = [
     nach: () => rgFest("verbindungBlatt", false) },
   { v: "start", vor: () => rgKopf("offen"), sel: ["#sparZeichen", "#v-start .statusleiste"], t: "🐌 🐢 Kleine Zeichen",
     x: "Manchmal tauchen oben kleine Tiere auf. Eine Schnecke heißt: Das Netz ist gerade langsam – bitte etwas Geduld und nicht mehrfach tippen. Eine Schildkröte heißt: Der Sparmodus ist an, die App spart Akku. Antippen erklärt beides." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#netzBalken", "#v-start .hero"], puls: ["#netzBalken"], t: "📶 Der Verbindungs-Balken", // 2.909.0 KC-CLUB-NETZ-BALKEN
+    x: "Oben rechts im Kopf zeigen vier Striche, wie gut deine Verbindung zum Club gerade ist – wie der Empfang am Handy. Antippen zeigt dir Einzelheiten." },
+  { v: "start", vor: () => rgKopf("offen"), sel: ["#spKnopf", "#v-start .hero"], puls: ["#spKnopf"], t: "🇩🇪 Die Flagge", // 2.909.0 KC-CLUB-SPRACHE
+    x: "Die kleine Flagge im Kopf zeigt die Sprache. Antippen wechselt zwischen Deutsch und Englisch – dann sind Knöpfe und Menüs englisch, die Inhalte bleiben deutsch. Hier schalte ich nicht um." },
   { v: "start", nur: () => !einfach(), vor: () => rgKopf("ganz"), sel: [".sz-link"], puls: [".sz-link"], t: "⚡ Das Wort „Schnellzugriff“",
     x: "Das Wort Schnellzugriff über den Kacheln ist selbst ein Knopf: Antippen zeigt oben im Info-Feld deine Schnellstart-Symbole – ein Tipp, und es geht sofort los.",
     live: async (L) => { await L.tipp(".sz-link"); rgKopf("offen"); rgInfoKarte("schnellstart"); L.ziel(); } },
@@ -786,11 +792,12 @@ function rgBuehneVorfuehren() { // laufende Bühne nur zeigen: Küchen-Übung, R
 }
 function rgUhrVorfuehren(L) { // alle vier Uhren kurz zeigen, danach wieder die eigene
   const alt = esLies("uhr", "digital"); let i = 0;
-  return (async () => { try { for (const [k] of ES_UHREN) { esSchreib("uhr", k); esUhrZeigen($("hrFlaeche")); L.ziel(); await L.warte(i++ ? 1700 : 1200); } } finally { esSchreib("uhr", alt); esUhrZeigen($("hrFlaeche")); } })();
+  const nochUhr = () => RG.an && esLies("tab", "uhr") === "uhr"; // 2.910.0: wer schon weitergetippt hat (z. B. zur Bühne), bekommt die Uhr nicht wieder drübergemalt
+  return (async () => { try { for (const [k] of ES_UHREN) { if (!nochUhr()) break; esSchreib("uhr", k); esUhrZeigen($("hrFlaeche")); L.ziel(); await L.warte(i++ ? 1700 : 1200); } } finally { esSchreib("uhr", alt); if (nochUhr()) esUhrZeigen($("hrFlaeche")); } })();
 }
 const RG_RUECKSEITE = [
   { v: "start", vor: () => { rgKopf("offen"); esEinsetzen(); }, sel: ["#eselsohr"], mussSel: true, puls: ["#eselsohr"], t: "📄 Das Eselsohr",
-    x: "Unten rechts im grünen Kopf ist eine kleine Ecke umgeknickt – das Eselsohr. Tippst du doppelt darauf, dreht sich der ganze Kopf um wie ein Blatt Papier. Nach links ziehen geht auch. Auf der Rückseite warten fünf Dinge auf dich." },
+    x: "Unten rechts im grünen Kopf ist eine kleine Ecke umgeknickt – das Eselsohr. Tippst du doppelt darauf, dreht sich der ganze Kopf um wie ein Blatt Papier. Nach links ziehen geht auch. Auf der Rückseite warten sieben Dinge auf dich." },
   { v: "start", vor: () => rgRueck("uhr"), sel: ["#heroRueck .hr-tabs"], mussSel: true, t: "🗂️ Sieben Reiter",
     x: "Oben stehen sieben Reiter nebeneinander: Diashow, Tafel, Flipchart, Uhr, Bühne, Spiegel und Rätsel. Ein Tipp wechselt dorthin. Die Rückseite nutzt den ganzen Bildschirm bis zur Leiste unten.",
     live: async (L) => { await L.tipp('#heroRueck [data-tab="dia"]'); esTab("dia"); L.ziel(); } },
@@ -850,7 +857,7 @@ const RG_SPRACHE = [
     x: "Ist sie an, sitzt unten links ein Mikrofon. Antippen, dann erscheint Ich höre zu – und du sagst, was du möchtest." },
   { v: "start", nur: () => sbAn(), vor: () => rgKopf("offen"), sel: ["#sbKnopf"], mussSel: true, t: "✋ Lange drücken",
     x: "Hältst du das Mikrofon lange gedrückt, fragt die App, ob du die Sprachsteuerung ausschalten möchtest. Kurz tippen hört wie immer zu.", live: async (L) => { await L.tipp("#sbKnopf", "lang"); } },
-  { v: "einstellungen", vor: () => { rgAuf("ansagen"); rgBlatt("sbListeBlatt", sbListe); }, sel: ["#sbListeInhalt", "#sbListeBlatt .blatt-innen"], mussSel: true, t: "📋 Alle Befehle",
+  { v: "einstellungen", vor: () => { rgAuf("ansagen"); rgBlatt("sbListeBlatt", sbListe); for (const ms of [200, 800, 1800]) setTimeout(rgNeuZielen, ms); }, sel: ["#sbListeInhalt", "#sbListeBlatt .blatt-innen"], mussSel: true, t: "📋 Alle Befehle", // 2.912.0: Liste baut sich nach dem Laden der gelernten Sätze neu – Rahmen nachziehen
     x: "Was du sagen kannst, steht in der Liste aller Sprachbefehle – oben mit Suche. Antippen führt den Befehl gleich aus, als hättest du ihn gesagt. Über diese Liste schaltest du das Mikrofon auch stumm und wieder an." },
   { v: "einstellungen", vor: () => { rgAuf("ansagen"); rgBlatt("sbListeBlatt", sbListe); }, sel: [() => [...document.querySelectorAll("#sbListeInhalt .sb-befehl")].find((b) => /Nachricht an Klaus“/.test(b.textContent)), "#sbListeInhalt"], t: "✍️ Nachricht an Klaus – und weiter diktieren",
     x: "Sagst du Nachricht an Klaus, öffnet die App den Chat mit Klaus und fragt: Soll ich das Diktieren gleich einschalten? Sagst du ja, sprichst du einfach weiter – dein Text erscheint im Feld. Abschicken tust du selbst. Sagst du gleich Nachricht an Klaus: Bin gleich da, steht der Text schon drin." },

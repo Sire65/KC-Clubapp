@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.907.0";
+const SERVER_VERSION = "2.919.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -557,6 +557,11 @@ async function sammelEmpfaenger(): Promise<(Person & { birth_date?: string })[]>
 async function ohneNurGezielt(ids: string[]): Promise<string[]> {
   const aus = await nurGezielt().catch((e) => { console.error("ohneNurGezielt", String(e)); return null; });
   return aus ? ids.filter((id) => !aus.has(id)) : [];
+}
+// 2.919.0 KC-CLUB-START-KLEIN: je Tag (deutsche Zeit) nur der erste Start – wie das Start-Paket; gezählt werden nur Tage und der erste Start
+function startTage(liste: any[] | null): any[] {
+  const tage = new Set<string>();
+  return (liste ?? []).filter((x: any) => { const t = berlinTag(new Date(x.zeit)); if (tage.has(t)) return false; tage.add(t); return true; });
 }
 async function protokoll(person: string | null, aktion: string, details: Record<string, unknown> = {}) {
   await db.from("kc_club_protokoll").insert({ person_id: person, aktion, details });
@@ -1400,6 +1405,13 @@ async function geradeInDerApp(ids: string[]): Promise<Set<string>> {
   const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).in("person_id", ids).gte("zuletzt_gesehen", new Date(Date.now() - IN_APP_SEK * 1000).toISOString());
   const drin = (data ?? []).map((x: any) => x.person_id as string), weg = await wegSet(drin).catch(() => new Set<string>()); // KC-CLUB-ONLINE-ECHT: App weggelegt → wieder Push
   return new Set(drin.filter((id) => !weg.has(id)));
+}
+// KC-CLUB-RT-CLUBABEND-MITFAHRT (10.11.2026, Wunsch Hansi „ja beides bauen“): kurzes Signal über die direkte Leitung an alle, die gerade in der App sind
+// (ohne den, der es ausgelöst hat) – deren offenes Fenster lädt sich still neu. Nur die Art geht raus, kein Inhalt; Zähler/Sparbremse in kc_club_rt_klingeln.
+async function rtKlingelnInApp(art: string, ohne?: string) {
+  const { data } = await db.from("kc_club_zugang").select("person_id").eq("aktiv", true).gte("zuletzt_gesehen", new Date(Date.now() - IN_APP_SEK * 1000).toISOString()).limit(300);
+  const ids = [...new Set((data ?? []).map((x: any) => String(x.person_id)))].filter((id) => id !== ohne);
+  if (ids.length) await db.rpc("kc_club_rt_klingeln", { p_personen: ids, p_art: art }).then(() => {}, () => {});
 }
 async function onlineJetzt(mitInkognito = false): Promise<Set<string>> {
   const seit = new Date(Date.now() - ONLINE_SEK * 1000).toISOString();
@@ -6931,7 +6943,7 @@ async function startPaketVergleich(ich: Ich, pk: any) { // nebenbei: bisherige E
     db.from("kc_club_benachrichtigung").select("bereich,push,email").eq("person_id", ich.person_id),
     db.from("kc_core_people").select("email").eq("person_id", ich.person_id).maybeSingle(),
     db.from("kc_club_freigaben").select("bereich,erlaubt").eq("person_id", ich.person_id),
-    db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf"),
+    db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf").neq("schluessel", "dp_druck").neq("schluessel", "dp_druck_konfig"),
     db.from("kc_club_spiele").select("id", { count: "exact", head: true }).or(`and(status.eq.laeuft,dran.eq.${ich.person_id}),and(status.eq.angefragt,an.eq.${ich.person_id})`),
     db.from("kc_club_notfall").select("name,telefon,beziehung").eq("person_id", ich.person_id).maybeSingle(),
     db.from("kc_club_kalender_abo").select("erstellt_am,zuletzt_abgerufen").eq("person_id", ich.person_id).maybeSingle(),
@@ -6943,9 +6955,16 @@ async function startPaketVergleich(ich: Ich, pk: any) { // nebenbei: bisherige E
   ]);
   const abw: string[] = [], pr = (k: string, alt: any, neu: any) => { if (!spGleich(alt, neu)) abw.push(k); };
   pr("nd", nd.data, pk.nd); pr("wahl", wahl.data, pk.wahl); pr("mail", mail.data, pk.mail); pr("frei", frei.data, pk.frei); pr("einst", einst.data, pk.einst);
-  pr("spiele", spiele.count ?? 0, pk.spiele); pr("notfall", nf.data, pk.notfall); pr("kabo", kab.data, pk.kabo); pr("starts", starts.data, pk.starts);
+  pr("spiele", spiele.count ?? 0, pk.spiele); pr("notfall", nf.data, pk.notfall); pr("kabo", kab.data, pk.kabo); pr("starts", startTage(starts.data), pk.starts);
   pr("feedback", fb.count ?? 0, pk.feedback); pr("au", au.data, pk.au); pr("pv", pv.data, pk.pv); pr("vor", vor.data, pk.vor);
-  if (abw.length) await protokoll(ich.person_id, "start_paket_abweichung", { teile: abw });
+  // 2.919.0 KC-CLUB-START-KLEIN: „einst“ wich 19× in 2 Tagen ab – welche Einstellung (nur der Name, nie der Wert), damit man sieht, ob es nur ein
+  // Schreiben zwischen den beiden Lesungen war (z. B. beim Start gesetzte Einstellung) oder ein echter Unterschied
+  const einstNamen = abw.includes("einst") ? (() => {
+    const m = (l: any[] | null) => new Map<string, unknown>((l ?? []).map((x: any) => [String(x.schluessel), x.wert]));
+    const a = m(einst.data), b = m(pk.einst);
+    return [...new Set([...a.keys(), ...b.keys()])].filter((k) => !a.has(k) || !b.has(k) || !spGleich(a.get(k), b.get(k))).sort().slice(0, 10);
+  })() : null;
+  if (abw.length) await protokoll(ich.person_id, "start_paket_abweichung", { teile: abw, ...(einstNamen ? { einst: einstNamen } : {}) });
 }
 // ----- 2.569.0 KC-CLUB-CLUBABEND (Wunschliste #27, Hansi: „Kachel Clubabend – nur am Clubabend; Tagesordnung, abhaken nur Clubleitung;
 // Sorge, dass alle zu Hause anklicken – ich bin vor Ort“): alle Mitglieder SEHEN den Abend (Tagesordnung, wer da ist, Fotos, Geburtstage,
@@ -10261,7 +10280,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         // KC-CLUB-START-PARALLEL-2 (2.155.0, Wunsch Hansi „heute öfter langsam“): auch die übrigen Ketten (stumme Chats, Aufgaben/Protokolle,
         // Terminumfragen, Einstellungen & Co.) sofort mitstarten – vorher liefen sie erst nacheinander nach dem Zählen. Inhalt bleibt gleich.
         // KC-CLUB-START-SPARSAM (2.489.0): meine Einstellungen EINMAL holen – „stumm“ (für die Zähler) und alle übrigen (pRest) daraus
-        const pEinst = pPaket.then((pk) => pk ? { data: pk.einst, error: null } : db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf")); // 2.449.0: Bild-Verlauf nicht ins Start-Paket
+        const pEinst = pPaket.then((pk) => pk ? { data: pk.einst, error: null } : db.from("kc_club_person_einstellung").select("schluessel,wert").eq("person_id", ich.person_id).neq("schluessel", "avatar_verlauf").neq("schluessel", "dp_druck").neq("schluessel", "dp_druck_konfig")); // 2.449.0: Bild-Verlauf nicht ins Start-Paket
         const pStumm = pEinst.then((r: any) => ({ data: r.error ? null : (r.data ?? []).find((x: any) => x.schluessel === "stumm") ?? null }));
         const pAufgaben = (async () => {
           // KC-CLUB-AUFGABEN / KC-CLUB-PROTOKOLLE: meine offenen Aufgaben, ungelesene Protokolle
@@ -10325,7 +10344,7 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
           pinnwandFristen().catch(() => ({ ...PINNWAND_FRISTEN_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG: an wie vielen Tagen die App genutzt wurde (Start je Sitzung = diagnose_start) und seit wann –
           // Tage statt Starts, damit mehrfaches Öffnen am ersten Tag nicht schon Tipps auslöst
-          pPaket.then((pk) => pk ? { data: pk.starts, error: null } : db.from("kc_club_protokoll").select("zeit").eq("person_id", ich.person_id).eq("aktion", "diagnose_start").order("zeit").limit(1000)),
+          pPaket.then((pk) => pk ? { data: pk.starts, error: null } : db.from("kc_club_protokoll").select("zeit").eq("person_id", ich.person_id).eq("aktion", "diagnose_start").order("zeit").limit(1000).then((r: any) => ({ ...r, data: startTage(r.data) }))),
           einstiegFristen().catch(() => ({ ...EINSTIEG_STANDARD, geaendertAm: null })),
           // KC-CLUB-EINSTIEG-FEEDBACK (0.73.0): schon Feedback abgegeben? Dann nicht mehr danach fragen
           pPaket.then((pk) => pk ? { count: pk.feedback, data: null, error: null } : db.from("kc_club_feedback").select("person_id", { count: "exact", head: true }).eq("person_id", ich.person_id)),
@@ -17634,6 +17653,42 @@ Köcheclub Werne`,
         return json({ csv, anzahl: liste.length, positionen: liste.reduce((n: number, a: any) => n + (a.positionen ?? []).length, 0), summe: Math.round(liste.reduce((n: number, a: any) => n + Number(a.summe || 0), 0) * 100) / 100,
           ids: liste.map((a: any) => a.id), schonUebernommen: liste.filter((a: any) => a.exportiert_am).length });
       }
+      // KC-CLUB-ERSTATTUNG-BUCHUNGEN (11.11.2026, Wunsch Hansi „Buchungsliste für den Kassenwart: ID, Name, Vorname, km, Erstattungsbetrag, Bar am,
+      // überwiesen am – Filter Jahr, Monat, Kostenart, Gruppe, einzelne Mitglieder; Summen“): eine Zeile je Position eines Jahres (Datum der Fahrt/Auslage),
+      // abgelehnte Anträge nie. Sehen dürfen Kassenwart, Clubsprecher, Vorstand und Admin. Gruppen nur mit Mitgliederliste (kein Chat-Inhalt).
+      case "erstattung_buchungen": {
+        if (!ich.admin && !ich.vorstand && !(ich.aemter || []).some((a: string) => /^(kassenwart|clubsprecher)/i.test(a))) throw new Fehler("Die Buchungsliste sehen Kassenwart, Clubsprecher und Admin.", 403);
+        const heuteJ = +berlinTag(new Date()).slice(0, 4), jahr = Math.round(Number(p.jahr)) || heuteJ;
+        if (jahr < 2020 || jahr > heuteJ + 1) throw new Fehler("Bitte ein gültiges Jahr wählen.");
+        const { data, error } = await db.from("kc_club_erstattung").select("id,person_id,positionen,status,ausgezahlt,erledigt_am,erstellt_am").neq("status", "abgelehnt")
+          .gte("erstellt_am", `${jahr - 1}-07-01`).lt("erstellt_am", `${jahr + 1}-07-01`).order("erstellt_am").limit(3000);
+        if (error) throw new Fehler("Erstattungen konnten nicht geladen werden – bitte noch einmal versuchen.", 500);
+        const zeilen: any[] = [];
+        for (const a of data ?? []) {
+          const am = a.erledigt_am ? berlinTag(new Date(a.erledigt_am)) : null;
+          (a.positionen ?? []).forEach((x: any, i: number) => {
+            const d = /^\d{4}-\d{2}-\d{2}$/.test(String(x?.datum || "")) ? String(x.datum) : berlinTag(new Date(a.erstellt_am));
+            if (+d.slice(0, 4) !== jahr) return;
+            const art = ["fahrt", "einkauf", "kraftstoff", "parken", "kaution"].includes(x?.art) ? x.art : "sonstiges";
+            zeilen.push({ id: `${a.id}:${i}`, a: a.id, p: a.person_id, d, art, km: art === "fahrt" ? Math.round((Number(x.km) || 0) * 10) / 10 : 0,
+              b: Math.round((Number(x.betrag) || 0) * 100) / 100, st: a.status === "erstattet" ? "erstattet" : "offen", bar: a.status === "erstattet" && a.ausgezahlt === "bar" ? am : null,
+              ueb: a.status === "erstattet" && a.ausgezahlt !== "bar" ? am : null });
+          });
+        }
+        const pids = [...new Set(zeilen.map((z) => z.p))];
+        const [{ data: pe }, { data: gr }] = await Promise.all([
+          pids.length ? db.from("kc_core_personen").select("person_id,mitgliedsnummer,vorname,nachname,name").in("person_id", pids) : Promise.resolve({ data: [] as any[] }),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").limit(200)]);
+        const gids = (gr ?? []).map((g: any) => g.thread_id);
+        const { data: tn } = gids.length && pids.length ? await db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", gids).in("person_id", pids) : { data: [] as any[] };
+        const personenOut: Record<string, any> = {};
+        for (const x of pe ?? []) { const teile = String(x.name || "").trim().split(/\s+/);
+          personenOut[x.person_id] = { nr: x.mitgliedsnummer || "", vorname: x.vorname || teile[0] || "", nachname: x.nachname || teile.slice(1).join(" ") || "" }; }
+        const gruppen = (gr ?? []).map((g: any) => ({ id: g.thread_id, name: g.name, symbol: g.symbol || "👥", personen: (tn ?? []).filter((t: any) => t.thread_id === g.thread_id).map((t: any) => t.person_id) }))
+          .filter((g: any) => g.personen.length).sort((x: any, y: any) => String(x.name).localeCompare(String(y.name), "de"));
+        await protokoll(ich.person_id, "erstattung_buchungsliste", { jahr, zeilen: zeilen.length });
+        return json({ jahr, zeilen, personen: personenOut, gruppen });
+      }
       case "erstattung_export_markieren": {
         nurLeitung(ich);
         const ids = (Array.isArray(p.ids) ? p.ids : []).map(String).filter((x: string) => /^[0-9a-f-]{36}$/i.test(x)).slice(0, 2000);
@@ -18075,6 +18130,7 @@ Köcheclub Werne`,
             url: APP_URL + (art === "aktion" ? "#aktion=" + bid : "#termine"),
           }, `club-mitfahrt-angebot:${art}:${bid}:${ich.person_id}`);
         }
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         await protokoll(ich.person_id, "mitfahrt_angeboten", { bezug_art: art, bezug_id: bid, plaetze, versandSuche });
         return json({ ok: true });
       }
@@ -18099,6 +18155,7 @@ Köcheclub Werne`,
           text: `Hallo,\n\n${ich.name} ${p.dabei === false ? "fährt doch nicht bei dir mit" : "fährt bei dir mit"} – ${titel}.\n\nAlle Mitfahrer siehst du in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + (m.bezug_art === "aktion" ? "#aktion=" + m.bezug_id : "#termine"),
         }, `club-mitfahrt:${m.id}:${ich.person_id}:${Date.now()}`);
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         await protokoll(ich.person_id, p.dabei === false ? "mitfahrt_abgesagt" : "mitfahrt_zugesagt", { mitfahrt: m.id, versand });
         return json({ ok: true });
       }
@@ -18110,6 +18167,7 @@ Köcheclub Werne`,
         if (!titel) throw new Fehler("Termin nicht gefunden.", 404);
         if (p.an === false) {
           await db.from("kc_club_mitfahrt_suche").delete().eq("bezug_art", art).eq("bezug_id", bid).eq("person_id", ich.person_id);
+          await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
           await protokoll(ich.person_id, "mitfahrt_suche_beendet", { bezug_art: art, bezug_id: bid });
           return json({ ok: true });
         }
@@ -18127,6 +18185,7 @@ Köcheclub Werne`,
           text: `Hallo,\n\n${ich.name} sucht eine Mitfahrgelegenheit zu „${titel}“ – du hast noch freie Plätze.\n\nIn der Köcheclub-App: ${APP_URL}${art === "aktion" ? "#aktion=" + bid : "#termine"}\n\nViele Grüße\nKöcheclub Werne`,
           url: APP_URL + (art === "aktion" ? "#aktion=" + bid : "#termine"),
         }, `club-mitfahrt-suche:${art}:${bid}:${ich.person_id}`) : null;
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         await protokoll(ich.person_id, "mitfahrt_gesucht", { bezug_art: art, bezug_id: bid, versand });
         return json({ ok: true, fahrerBenachrichtigt: fahrer.length });
       }
@@ -18138,6 +18197,7 @@ Köcheclub Werne`,
         const { data: pl } = await db.from("kc_club_mitfahrt_platz").select("person_id").eq("mitfahrt_id", m.id);
         await geloescht(ich, "mitfahrt", { mitfahrt: m, mitfahrer: (pl ?? []).map((x: any) => x.person_id) });
         await db.from("kc_club_mitfahrt").delete().eq("id", m.id);
+        await rtKlingelnInApp("mitfahrt", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT
         const ziel = (pl ?? []).map((x: any) => x.person_id).filter((id: string) => id !== ich.person_id);
         if (ziel.length) {
           const titel = (await mitfahrtBezugTitel(m.bezug_art, m.bezug_id)) || "Termin";
@@ -18424,6 +18484,7 @@ Köcheclub Werne`,
         if (error) throw new Fehler("Konnte nicht gespeichert werden.", 500);
         // Anwesenheit gleich ins Protokoll (nur solange es ein Entwurf ist)
         if (typeof p.anwesend === "string") await db.from("kc_club_sitzungsprotokolle").update({ anwesend: [...anwesend] }).eq("treffen_id", tid).eq("status", "entwurf");
+        await rtKlingelnInApp("clubabend", ich.person_id); // KC-CLUB-RT-CLUBABEND-MITFAHRT: offene Clubabend-Fenster sofort frisch
         await protokoll(ich.person_id, "clubabend_gesetzt", { treffen: tid, ...(typeof p.erledigt === "string" ? { top: true } : {}), ...(typeof p.anwesend === "string" ? { anwesend: anwesend.size } : {}), ...(p.album_id ? { album: true } : {}) });
         return json(await clubabendStand(ich, t));
       }

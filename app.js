@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.907.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.919.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -12,18 +12,18 @@ const APP_STUFE = "RC";
 // Pflege: gleiche Namen in sw.js (TEILE); nach jeder Änderung an teile/*.js: node tools/teile-pruefsumme.mjs (der Vertragstest prüft beides).
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-/mAGAbqXRYnkVuVG1RsbpdMSAEloFcggVl1hj0QKglBQ0NN8Wj8aL8ihe72N4/mj" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
-  szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-s4RdrCFjnxFICz5ZFRp7J2AGQ6cJ8xATW2MXrizG7jfmTEnQ4Nh/ZybuaFFsk3ac" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-Ej84SdVLrXGKaLBQuoLFGzFVbQq9KLkfHbJwXX1EceA3VSFaDeLQjeYzzU+G4KCi" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-ihp9aBNW71yi9gY5iD70sY8fE78+o552ZT+16rmcT5ANlHYOuHurmndyITVqbI3n" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-3R20qEHqksVdLLMEYPdN5HiBCpGuyT15Jp7pMtNRpFPvdwxgfTnPr01dxRWMF4Y6" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-qPS9/H66zIS2QeGHqQQs5CFqN4+XZns2HL1FnQYWzUWbVrYpK/BLZN111UDmKbRH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
   hilfetipp: { einstieg: ["tippSenden", "tippListe"], sri: "sha384-cOxaOEtxAQP/CZRKEEryWTGLYs/TRIWVXRitip1nRotyRzYD9GRoisKEzLGKAbGF" }, // 2.835.0 KC-CLUB-HILFE-TIPPS: Clubleitung – Lösung schicken, Vorlagen, Gesendete Tipps
-  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-Vg+aMWslYQ/zg6eq/BZ0OwLMWOhCI8i3EUsOWZzjoVZB/M3Z+Q1vMJ2EF9hZOFoO" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
+  magazin: { einstieg: ["magStart", "wmProspekt", "magMenue", "magEinsenden", "magPostfach", "magMeine", "magArchiv", "magDruck"], sri: "sha384-U74o9FY6cGrqm7zHr+UcEjzKilgZStT3Gm3Ke438mfeFmtzmtzA0Z/o9lFL0z/Pk" }, // KC-CLUB-MAGAZIN-GERUEST: Club-Küche und Weihnachtsmarkt-Prospekt (Gerüst, blättern)
   strom: { einstieg: ["stromBlatt", "stromZeichnen"], sri: "sha384-dNcc30G8i65eI40hbgDTGIIBdKAE/KdpRichStzNk1mt1gGPNa+DYvNq03rjI4M/" }, // 2.799.0 KC-CLUB-STROM-UEBERSICHT: Admin „🔋 Stromverbrauch“ (nur beim Öffnen)
   anbieter: { einstieg: ["anbStart"], sri: "sha384-P5YH+VJ7JvIqD3Aj7m229epWr/Qh32v5T1bHLTneKzD1mvcFbAjsObnettv63rNh" }, // 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78): Admin-Kachel „📰 Anbieter“ (nur beim Öffnen)
   istzeit: { einstieg: ["irOeffnen", "irAenderungen"], sri: "sha384-LzIjOhEBd8XATuT8V19PFecWXSkWfEIIs+lWADFW+NrmCLfIl4LwmECdGwvhZbp7" }, // KC-CLUB-IST-RUECKFRAGE: „🗓️ Meine Ist-Zeiten“ nach dem Dienst (nur beim Öffnen)
@@ -223,6 +223,9 @@ function wbVorschau() {
 function wbEinsetzen(b, text) {
   const m = $("warten")?.querySelector(".muetze"); if (!m) return;
   m.classList.toggle("wb-motiv", b.id !== "muetze"); m.innerHTML = wbGrafik(b);
+  // KC-CLUB-MUENZE-GESICHT (Wunsch #88, 11.11.2026): eigenes Gesicht (Avatar oder Foto) auf jeder zweiten Rückseite – nichts gewählt: nur „since 1991“
+  let av = ""; if (b.id === "muetze") try { av = avatarSvg(INIT?.einstellungen?.avatar?.figur, 56) || ""; } catch { av = ""; }
+  m.classList.toggle("mit-av", !!av); if (av) m.insertAdjacentHTML("beforeend", `<span class="muetze-av" aria-hidden="true">${av}</span>`);
   if (text) $("wartenText").textContent = text;
 }
 function wbWahlZeigen() {
@@ -1054,6 +1057,7 @@ const THEMEN = [
   { id: "weihnachten", sym: "🎄", name: "Weihnachten", design: "weinberg", jz: "advent", effekt: "taube", schrift: "weihnacht", kopf: "bude" },
   { id: "silvester", sym: "🎆", name: "Silvester", design: "disko", jz: "silvester", effekt: "flieger", schrift: "schwung", kopf: "theater" },
   { id: "disco", sym: "🪩", name: "Disco", design: "disko", jz: "disco", effekt: "flieger", schrift: "schwung", kopf: "theater" }, // 2.811.0 KC-CLUB-DISCO (Wunschliste #58)
+  { id: "see", sym: "⛵", name: "Am See", design: "nordsee", jz: "see", effekt: "taube", schrift: "strand" }, // KC-CLUB-SEE (10.11.2026, Wunsch Hansi): Wasserfall, Boote, Sturm
 ];
 // 2.331.0: Feste nach Kalender – Oktoberfest (Samstag nach dem 15.9. bis 1. Oktobersonntag, mindestens bis 3.10.) und Sim-Jü in Werne
 // (Samstag bis Dienstag um Simon und Juda, 28.10. – der Dienstag, der dem 28.10. am nächsten liegt; 2026: 24.–27.10.)
@@ -2066,18 +2070,18 @@ const RUNDGAENGE = [
   { id: "meinedaten", stand: "1", zeit: "10.11.2026", sym: "🔐", t: "Meine Daten & Änderungen", u: "Was gespeichert ist – und neue Anschrift & Co. melden (ca. 1 Min.)", st: () => RG_DATEN },
   { id: "rezepte", stand: "1", zeit: "10.11.2026", sym: "📖", t: "Rezeptbuch", u: "Suchen, Portionen umrechnen, Einkaufsliste, eigenes Rezept (ca. 1 Min.)", st: () => RG_REZEPTE, nur: () => frei("rezepte") }, // 2.270.0 KC-CLUB-ERKLAERVIDEOS-6
   { id: "schulung", stand: "1", zeit: "10.11.2026", sym: "🎓", t: "Meine Schulung", u: "Termin mit Hansi aussuchen, Zusammenfassung (ca. 1 Min.)", st: () => RG_SCHULUNG },
-  { id: "feedback", stand: "1", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
-  { id: "aktionen", stand: "1", sym: "🧳", t: "Aktionen & Reisen", u: "Ausflüge, Reiseverlauf, Preis, Checkliste (ca. 1 Min.)", st: () => RG_AKTIONEN }, // 2.271.0 KC-CLUB-ERKLAERVIDEOS-7
-  { id: "fit", stand: "1", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
-  { id: "studio", stand: "1", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
-  { id: "technik", stand: "1", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
-  { id: "spezial", stand: "1", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Schnellzugriff, Eselsohr, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
-  { id: "wecker", stand: "1", sym: "⏰", t: "Wecker, Stoppuhr & Timer", u: "Eselsohr, Uhr, Wecker stellen, Stoppuhr mit Runden, Timer – und wenn es klingelt (ca. 2 Min.)", st: () => RG_WECKER, nur: () => esAn() }, // 2.671.0 KC-CLUB-VIDEO-WECKER
-  { id: "rueckseite", stand: "2", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr, Bühne mit Twinkey, Spiegel und Rätsel – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
-  { id: "zentrale", stand: "1", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
-  { id: "sprache", stand: "1", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
-  { id: "anpassen", stand: "2", sym: "🎨", t: "Meine App nach meinem Geschmack", u: "Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus & Eselsohr – alle Möglichkeiten (ca. 4 Min.)", st: () => RG_ANPASSEN }, // 2.344.0 KC-CLUB-VIDEO-ANPASSEN
-  { id: "effekte", stand: "3", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Kopf auf und zu, Geburtstags-Vogel, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 4 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
+  { id: "feedback", stand: "1", zeit: "10.11.2026", sym: "💭", t: "Feedback geben", u: "Antippen, Ideen schreiben, auch ohne Namen (ca. 1 Min.)", st: () => RG_FEEDBACK },
+  { id: "aktionen", stand: "1", zeit: "10.11.2026", sym: "🧳", t: "Aktionen & Reisen", u: "Ausflüge, Reiseverlauf, Preis, Checkliste (ca. 1 Min.)", st: () => RG_AKTIONEN }, // 2.271.0 KC-CLUB-ERKLAERVIDEOS-7
+  { id: "fit", stand: "1", zeit: "10.11.2026", sym: "🏋️", t: "Fit bleiben", u: "Übungen mit Twinkey – Stufe, Dauer, Auswertung (ca. 1 Min.)", st: () => RG_FIT, nur: () => frei("fitness") },
+  { id: "studio", stand: "1", zeit: "10.11.2026", sym: "🎬", t: "Studio: live zeigen", u: "Einem Mitglied die eigene App live zeigen (ca. 1 Min.)", st: () => RG_STUDIO, nur: () => !!studioStufe() },
+  { id: "technik", stand: "1", zeit: "10.11.2026", sym: "🔧", t: "Technik: Update & Sicherheit", u: "Version, Sicherheits-Check, Test an mich, Programme (ca. 2 Min.)", st: () => RG_TECHNIK },
+  { id: "spezial", stand: "1", zeit: "10.11.2026", sym: "🔎", t: "Versteckte Helfer", u: "Kochmütze, Tag/Nacht, Pfeile, Pünktchen, Wischen, Lämpchen, Verbindungs-Balken, Flagge, Schnellzugriff, Eselsohr, Kacheln, 3 × 3 / 4 × 4, Lupe, Hand, Fragezeichen (ca. 5 Min.)", st: () => RG_SPEZIAL }, // 2.272.0 KC-CLUB-ERKLAERVIDEOS-8
+  { id: "wecker", stand: "1", zeit: "10.11.2026", sym: "⏰", t: "Wecker, Stoppuhr & Timer", u: "Eselsohr, Uhr, Wecker stellen, Stoppuhr mit Runden, Timer – und wenn es klingelt (ca. 2 Min.)", st: () => RG_WECKER, nur: () => esAn() }, // 2.671.0 KC-CLUB-VIDEO-WECKER
+  { id: "rueckseite", stand: "2", zeit: "10.11.2026", sym: "📄", t: "Die Rückseite: Eselsohr", u: "Diashow, Tafel, Flipchart, große Uhr, Bühne mit Twinkey, Spiegel und Rätsel – Regler für Musik und Stimme (ca. 3 Min.)", st: () => RG_RUECKSEITE, nur: () => esAn() }, // 2.300.0
+  { id: "zentrale", stand: "1", zeit: "10.11.2026", sym: "📡", t: "Kommunikationszentrale", u: "Im Kopf: an wen, Pult, Anrufen, Anklopfen, Schnellnachricht (ca. 2 Min.)", st: () => RG_ZENTRALE },
+  { id: "sprache", stand: "1", zeit: "10.11.2026", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
+  { id: "anpassen", stand: "2", zeit: "11.11.2026", sym: "🎨", t: "Meine App nach meinem Geschmack", u: "Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus & Eselsohr – alle Möglichkeiten (ca. 4 Min.)", st: () => RG_ANPASSEN }, // 2.344.0 KC-CLUB-VIDEO-ANPASSEN
+  { id: "effekte", stand: "3", zeit: "11.11.2026", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Kopf auf und zu, Geburtstags-Vogel, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 4 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
   { id: "figur", stand: "2", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: einfache oder hochwertige Figur antippen, übernehmen (ca. 2 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
   { id: "figurbau", stand: "2", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Kacheln, Stil, Haare, Mütze, Gesicht, Brille, Schmuck, Kochjacke – und später bearbeiten (ca. 3 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
   { id: "leitung", stand: "2", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
@@ -2710,6 +2714,7 @@ const HILFE = [
   { id: "wildwest", thema: "darstellung", sym: "🤠", t: "Thema Wilder Westen", x: "Im Thema <b>🤠 Wilder Westen</b> liegt unten im Kopf der Startseite die Prärie: Links steht ein <b>Tipi</b>, davor knistert das <b>Lagerfeuer</b>. Am Feuer sitzen <b>zwei Indianer</b>, daneben steht der <b>Häuptling</b> mit Federhaube und raucht die <b>Friedenspfeife</b> – aus dem Rauch entsteht am Himmel Buchstabe für Buchstabe <b>dein Vorname</b>, bis ihn der Wind verweht; rechts ragen große <b>Saguaro-Kakteen</b> auf. Am Horizont ziehen <b>Büffel</b> vorbei, ab und zu rollt ein <b>Windstoß</b> einen Steppenläufer durchs Bild. Zwei <b>Cowboys</b> reiten vorbei, die <b>Postkutsche „Köcheclub“</b> rumpelt durch, und zwei Cowboys <b>duellieren</b> sich – „PENG!“, einer fällt, ein <b>flacher Wagen</b> bringt den Verwundeten mit Kopfverband weg. Zum Schluss bebt der Boden: eine <b>riesige Büffelherde</b> trampelt alles nieder, eine <b>Staubwolke</b> deckt alles zu – und aus dem Staub fängt die Szene von vorne an. Vorschau: ⚙️ → ✨ Effekte → 🤠 Wilder Westen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.529.0" },
   { id: "viehmarkt", thema: "darstellung", sym: "🐄", t: "Viehmarkt auf Sim-Jü", x: "Am <b>Sim-Jü-Dienstag</b> (Vieh- und Krammarkt) zeigt der Kopf der Startseite abwechselnd mit der Kirmes-Szene den <b>🐄 Viehmarkt</b>: links Kuh, Schwein und ein Hühnerkäfig, der Händler mit Pfeife feilscht mit zwei Bauern – per <b>Handschlag</b> wird verkauft –, ein Bauer mit Holzschuhen führt seinen Haflinger vorbei, rechts ruft die Händlerin am Kurzwarenstand. Zum Schluss büxt das Ferkel aus, und nach einem „Prost!“ ist Feierabend. Dann trabt ein <b>🐂 Stier</b> mit großen Hörnern und Nasenring herein und schnaubt deinen Namen in den Himmel.", seit: "2.682.0" },
   { id: "disco", thema: "darstellung", sym: "🪩", t: "Thema Disco", x: "Im Thema <b>🪩 Disco</b> wird es unten im Kopf der Startseite Nacht: Das <b>Schwarzlicht</b> flackert an, links legt der <b>DJ</b> auf, oben dreht sich die <b>Diskokugel</b> und wirft Lichtpunkte, auf der leuchtenden Tanzfläche tanzen <b>vier Leute</b> – zwischendurch legt <b>Twinkey ein Solo</b> im Spot hin. Dann zischt die <b>Nebelmaschine</b>, alles versinkt im Nebel, und es beginnt von vorn. <b>Am Clubabend und zu Silvester</b> wechselt der Kopf von selbst alle 2 Minuten zwischen Disco und deiner Szene. Auf der <b>🎭 Bühne</b> läuft die Disco bei „Nur Musik hören → Disco“ hinter Twinkey. Wählen: ⚙️ → <b>🎨 Darstellung</b> → <b>🎭 Themen</b>.", seit: "2.811.0" },
+  { id: "see", thema: "darstellung", sym: "⛵", t: "Thema Am See", x: "Im Thema <b>⛵ Am See</b> stürzt links ein <b>Wasserfall</b> in einen See. Darauf kreuzen <b>Segelboote</b> und ein <b>Ruderboot</b>, zwischendurch fährt das <b>Polizeiboot mit Blaulicht</b> vorbei. Dann zieht ein <b>Sturm</b> auf: Es wird dunkel, es <b>regnet</b>, <b>Blitze</b> zucken – und der Sturm pustet alles weg. Danach klart es auf und alles beginnt von vorn. Einstellen: ⚙️ → „🎨 Darstellung“ → Thema „⛵ Am See“ oder bei den Jahreszeiten die Vorschau.", zeig: () => zeige("einstellungen"), seit: "2.909.0" },
   { id: "seifenblasen", thema: "darstellung", sym: "🫧", t: "Thema Seifenblasen", x: "Im Thema <b>🫧 Seifenblasen</b> kommt unten im Kopf der Startseite ein <b>Kind</b> auf die Wiese und pustet <b>Seifenblasen</b> – kleine, große, leicht schillernd wie echte. Dann kommen von links und rechts <b>weitere Kinder</b> dazu. Die Blasen steigen, <b>platzen</b> und hinterlassen <b>Schlieren auf der Scheibe</b> – der Kopf wird immer verschmierter. Ab und zu wölbt eine <b>dicke Blase</b> den Kopf kurz wie ein <b>Fischauge</b>. Zum Schluss kommt der <b>Fensterputzer</b> mit Leiter, Eimer und Tuch und wischt die Scheibe wieder sauber – dann beginnt alles von vorn. Tippen geht durch die Schlieren hindurch. Vorschau: ⚙️ → ✨ Effekte → 🫧 Seifenblasen.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.633.0" },
   { id: "baustelle", thema: "darstellung", sym: "🚧", t: "Thema Baustelle", x: "Im Thema <b>🚧 Baustelle</b> liegt rechts im Kopf der Startseite ein <b>Erdhaufen</b>. Ein <b>Radlader in Baustellengelb</b> schaufelt ihn Ladung für Ladung auf einen <b>Kipplaster</b> – und aus seinem Auspuff steigen Rauchwolken, die <b>deinen Vornamen</b> in den Himmel schreiben. Zwischendurch laufen <b>Bauarbeiter mit gelben Helmen</b> durchs Bild. Dann kommt das <b>Sprengkommando</b>, verteilt überall Dynamit, zählt 3 – 2 – 1 und drückt den Auslöser: <b>der ganze Kopf fliegt in die Luft</b> (mit Ton, wenn der Ton an ist – Rumms und klirrendes Glas) und für ein paar Sekunden sieht der Bildschirm aus wie <b>gesprungenes Handyglas</b>. Kurz danach ist er wieder da und alles beginnt von vorn. Vorschau: ⚙️ → ✨ Effekte → 🚧 Baustelle.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.617.0" },
   { id: "wueste", thema: "darstellung", sym: "🐪", t: "Thema Wüste", x: "Im Thema <b>🐪 Wüste</b> liegt unten im Kopf der Startseite die Wüste: hinten die <b>Pyramiden</b>, links eine <b>Oase</b> mit Palmen, vorne zieht eine <b>Karawane</b> vorbei. Dann wird der <b>Pharao auf seiner Sänfte</b> herangetragen, und rechts steigt ein <b>Flaschengeist aus der Lampe</b>. Er verbeugt sich, schnippt – und aus der Lampe schreibt <b>Goldstaub langsam deinen Vornamen</b> in den Himmel. Danach wirbelt er zurück in die Lampe, die <b>Sonne geht hinter den Pyramiden unter</b>, Sterne und Halbmond erscheinen, die Karawane rastet an der Oase – und es wird wieder Tag. Vorschau: ⚙️ → ✨ Effekte → 🐪 Wüste.", zeig: () => einstiegHin("effekte", "jzWahl"), seit: "2.548.0" },
@@ -5090,6 +5095,9 @@ function rtSignal(s) {
     return;
   }
   if (s.art === "klopfen" || s.art === "anruf") { onlinePing(); if (RUF?.id) anrufPruefen(); return; }
+  // KC-CLUB-RT-CLUBABEND-MITFAHRT (10.11.2026): offenes Clubabend-Fenster bzw. Termine/Aktion mit Mitfahrgelegenheiten sofort frisch (leicht gestreut)
+  if (s.art === "clubabend") { if ($("caBlatt") && CA.holen) { clearTimeout(RT.ca); RT.ca = setTimeout(() => CA.holen?.(), 300 + Math.random() * 900); } return; }
+  if (s.art === "mitfahrt") { if (!document.hidden && (aktuelleAnsicht === "termine" || aktuelleAnsicht === "aktion")) { clearTimeout(RT.mf); RT.mf = setTimeout(() => { if (document.querySelector(FENSTER_OFFEN) || $("mfAnbieten") || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "")) return; /* nie mitten ins Eintippen */ mitfahrtNeuLaden(aktuelleAnsicht === "aktion" ? "aktion" : "treffen"); }, 600 + Math.random() * 1400); } return; }
   if (s.art === "dienst") { clearTimeout(RT.dt); RT.dt = setTimeout(dtSignalLaden, 600 + Math.random() * 1400); return; } // KC-CLUB-RT-DIENST
   if (s.art === "ab") { abStandHolen(); return; } // 2.568.0 KC-CLUB-ANRUFBEANTWORTER: neue Nachricht bzw. abgehört
   // KC-CLUB-REALTIME-SPIELE (2.228.0): Zug/Herausforderung/Aufgabe – offenes Spiel sofort holen, sonst Einladungen/„du bist dran“ auffrischen
@@ -7399,7 +7407,7 @@ const TW_VIDEOS = { "h:videos_album": ["fotos"], "f:video-album": ["fotos"], "h:
   "h:info_laufband": ["oberflaeche"], "h:kachel_auswahl": ["oberflaeche"], "h:kachel_vorschlag": ["oberflaeche"], "h:gelesen_von": ["chatprofi"], "h:tastatur_knopf": ["chatprofi"],
   "h:schreiben_klappen": ["chatprofi"], "h:tage_einklappen": ["chatprofi"], "h:anlage_mitschicken": ["vorschlag"], "h:termin_link_prospekt": ["termin"], "h:sonderstunden": ["dienst", "erstattung"],
   "h:avatar_bearbeiten": ["figur", "figurbau"], "h:schuerze": ["figurbau"], "h:foto_muetze": ["figur"], "h:bild_zuletzt": ["figur"], "h:stundenuhren": ["effekte"], "h:kuckuck_ton": ["effekte"],
-  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:wueste": ["anpassen"], "h:disco": ["anpassen"], "h:baustelle": ["anpassen"], "h:seifenblasen": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
+  "h:unterwasserwelt": ["anpassen"], "h:weltraum": ["anpassen"], "h:bauernhof": ["anpassen"], "h:kegeln": ["anpassen"], "h:wildwest": ["anpassen"], "h:wueste": ["anpassen"], "h:disco": ["anpassen"], "h:baustelle": ["anpassen"], "h:seifenblasen": ["anpassen"], "h:see": ["anpassen"], "h:eingangskorb_mitglied": ["archiv"], "f:wer-gelesen": ["chatprofi"], "f:sonderstunden-melden": ["dienst"],
   "h:status": ["status"], "h:erstattung": ["erstattung"], "h:feedback": ["feedback"], "h:daten_geaendert": ["meinedaten"], "h:meine_daten": ["privat", "meinedaten"], "h:aenderung_rueckfrage": ["meinedaten"], "h:wer_online": ["mitglieder"], "h:anruf_kachel": ["mitglieder"], "h:mitglieder_ansicht": ["mitglieder"], "h:bild_punkt": ["mitglieder"], "h:pinnwand_antwort": ["pinnwand"], "h:pinnwand_wichtig": ["pinnwand"], "h:pinnwand_alt": ["pinnwand"], "h:foto_details": ["fotos"], "h:foto_teilen": ["fotos"], "h:hilfe_anbieten": ["helfen"], "h:hilfe_veroeffentlichen": ["helfen"], "h:hilfe_absprache": ["helfen"], "h:vorschlag_unterstuetzen": ["vorschlag"], "h:spende": ["vorschlag"], "h:abstimmung_ziel": ["vorschlag"], "h:spiel_mitglieder": ["spiele"], "h:spiel_schach": ["spiele"], "h:spiel_pause": ["spiele"], "h:ttt_toene": ["spiele"], "h:spiele_fdk_dk_mg": ["spiele"], "h:spiele_leiste": ["spiele"], "h:aktionen_kacheln": ["aktionen"], "h:wo_bin_ich": ["sos"], "h:notfallkontakt": ["sos"], "h:notfallpass_sichern": ["sos"], "h:notfallkontakt_wer": ["sos"], "h:mein_dienst": ["dienst"], "h:dienst_erinnerung": ["dienst"], "h:dw_fertig": ["dienst"], "h:wunschbogen": ["dienst"], "h:meine_schulung": ["schulung"], "h:kalender_blaettern": ["zusagen"], "h:naechstes_treffen": ["zusagen"], "h:termin_zahl": ["zusagen"], "h:drucken": ["zusagen"], "h:wiederholen": ["terminfinden", "termin"], "h:kachel_lang": ["oberflaeche"], "h:kachel_aus": ["oberflaeche"], "h:register_ziehen": ["oberflaeche"], "h:register_wischen": ["oberflaeche"], "h:ansicht": ["einfach", "oberflaeche"], "h:rundgang": ["ueberblick"], "h:ueberblick": ["ueberblick"], "h:twinkey": ["hilfe"], "h:einstellung_suchen": ["hilfe"], "h:diktat_feld": ["sprache"], "h:sprache_einstellung": ["sprache"], "h:installieren": ["installieren"], "h:pc_tablet": ["inst_geraet"], "h:code_geraet": ["privat", "inst_codes", "inst_geraet"], "h:code_ipad": ["inst_safari", "inst_codes"], "h:update": ["probleme", "technik"], "h:version": ["probleme", "technik"], "h:sicherheitscheck": ["probleme", "technik"], "h:programme_frei": ["technik"], "h:nacht": ["anpassen"], "h:schrift": ["anpassen"], "h:animiert": ["anpassen"], "h:wetter_tage": ["effekte"], "h:protokoll_aufgaben": ["todo", "lesen"], "h:push": ["push"], "h:push_selbst": ["push"], "h:test_an_mich": ["push"], "h:meine_geraete": ["push"], "h:anklopfton": ["push"], "h:ansage_nachholen": ["push"], "h:ansage_verlassen": ["push"], "t:ruhe": ["push"], "f:ruhe": ["push"], "h:privatsphaere": ["privat"], "h:zugangslink": ["privat"], "h:live_tippen": ["privat"], "h:zuletzt_da": ["privat"], "h:link_verloren": ["privat"], "h:abmelden": ["privat"], "f:daten": ["privat"], "h:haengt": ["probleme"], "h:laden_dauert": ["probleme"], "h:zwei_fenster": ["probleme"], "h:verbindung": ["probleme"], "h:mikrofon": ["probleme"], "h:verbindung_senden": ["probleme"], "h:app_schliessen": ["probleme"], "h:twinkey_haengt": ["probleme"], "h:pfeil_menue": ["chatprofi"], "h:anheften": ["chatprofi"], "h:merken": ["chatprofi"], "h:weiterleiten": ["chatprofi"], "h:haken": ["chatprofi"], "h:sprachtempo": ["chatprofi"], "h:chat_vorlesen": ["chatprofi"], "h:chat_abstimmung": ["chatprofi"], "h:selbstloeschen": ["chatprofi"], "h:entwurf": ["chatprofi"], "h:ohne_netz": ["chatprofi"], "h:chat_archiv": ["chatprofi"], "h:chat_ganz": ["chatprofi"], "h:wichtig_nachtraeglich": ["chatprofi"], "h:kopieren": ["chatprofi"], "h:neue_linie": ["chatprofi"], "h:gruppe_bereiche": ["gruppen"], "h:gruppen_admin": ["gruppen"], "h:gruppe_loeschen": ["gruppen"], "h:terminanfrage": ["terminfinden"], "h:anfrage_status": ["terminfinden"], "h:anfrage_vorbehalt": ["terminfinden"], "h:terminfindung": ["terminfinden"], "h:todo": ["todo"], "h:erst_einfach": ["einfach"], "h:es_musik": ["buehne"], "h:club_song": ["buehne"], "h:bw_einladung": ["buehne"], "h:eingangskorb": ["buero"], "h:eingang_hinweis": ["buero"], "h:ablage_mehrere": ["buero"], "h:buero_sprache": ["buero"], "h:buero_einlesen": ["buero"], "h:buero_einlesen_eingang": ["buero"], "h:buero_mail": ["buero"], "h:schilder": ["buero"],
 }; // 2.254.0 KC-CLUB-ERKLAERVIDEOS-4
 // Hinweis beim Start: Admin hat mit „📱 in der Club-App“ geantwortet
@@ -7600,7 +7608,7 @@ const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.sa
 async function erstattungLaden() {
   try {
     // 2.588.0 KC-CLUB-ERSTATTUNG-CSV (Hansi suchte „CSV-Datei erstellen“ unter Erstattung): der Excel-Knopf auch hier – nur für die Clubleitung
-    if ($("ersLeitung")) $("ersLeitung").innerHTML = ICH?.vorstand || ICH?.admin ? '<div class="karte" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px"><b>Für die Clubleitung:</b> alle eingereichten Erstattungen als Datei für Excel</span><button type="button" class="knopf" style="width:auto" onclick="ersCsvOeffnen()">📊 CSV für Excel erstellen</button></div>' : "";
+    if ($("ersLeitung")) $("ersLeitung").innerHTML = ICH?.vorstand || ICH?.admin || (ICH?.aemter || []).some((a) => /^(kassenwart|clubsprecher)/i.test(a)) ? '<div class="karte" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px"><b>Für die Clubleitung:</b> Buchungsliste mit Summen und alle Erstattungen als Datei für Excel</span><button type="button" class="knopf haupt" style="width:auto" onclick="ersBuchOeffnen()">📒 Buchungsliste</button><button type="button" class="knopf" style="width:auto" onclick="ersCsvOeffnen()">📊 CSV für Excel erstellen</button></div>' : ""; // KC-CLUB-ERSTATTUNG-BUCHUNGEN: auch Kassenwart/Clubsprecher
     const r = await api("erstattung_meine");
     Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true,
       sondereinsaetze: r.sondereinsaetze || [] }); // KC-CLUB-ERSTATTUNG-SONDER (2.419.0)
@@ -11109,7 +11117,7 @@ const JZ_DEKO_FARBEN = { bunt: ["#e63946", "#ffb703", "#2a9d8f", "#3a86ff", "#ff
   bayern: ["#1f6fd1", "#ffffff"], herbst: ["#e85d04", "#ffba08", "#dc2f02", "#f48c06", "#9d0208"], karibik: ["#ff006e", "#ffbe0b", "#00bbf9", "#00f5d4", "#fb5607"],
   warm: ["#ffd27a", "#fff0c2", "#ffc65c"], gold: ["#ffd700", "#fff1a8", "#f5c542", "#ffe680"], halloween: ["#ff7a00", "#9b4dca", "#ffae42", "#7b2cbf"],
   meer: ["#00b4d8", "#90e0ef", "#ffd166", "#ff6b9a", "#06d6a0"], all: ["#ffffff", "#9bb7ff", "#ffd166", "#c77dff"], hof: ["#9b2226", "#e9c46a", "#6a994e", "#f8f9fa"], western: ["#9b2226", "#e9c46a", "#264653", "#bc6c25"], wueste: ["#1d4e89", "#ffd166", "#9b2226", "#2a9d8f"], baustelle: ["#ffd000", "#1d1d1d", "#ff7b00", "#ffffff"], seifenblasen: ["#7fd3ff", "#ff8fb1", "#ffd166", "#b9f3c9", "#c7a6ff"] }; // 2.617.0: baustelle // 2.548.0: wueste // 2.529.0: western · 2.434.0 · 2.444.0: all (Weltraum) · 2.445.0: hof
-const JZ_DEKO_AUTO = { disco: ["lichter", "bunt"], herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
+const JZ_DEKO_AUTO = { see: ["wimpel", "meer"], disco: ["lichter", "bunt"], herbst: ["laternen", "herbst"], advent: ["lichter", "warm"], silvester: ["lichter", "gold"], sommer: ["wimpel", "bunt"], fruehling: ["wimpel", "pastell"],
   wiesn: ["wimpel", "bayern"], karneval: ["wimpel", "bunt"], kirmes: ["lichter", "bunt"], karibik: ["laternen", "karibik"], halloween: ["lichter", "halloween"], unterwasser: ["wimpel", "meer"], weltraum: ["lichter", "all"], bauernhof: ["wimpel", "hof"], kegeln: ["lichter", "warm"], wildwest: ["wimpel", "western"], wueste: ["laternen", "wueste"], baustelle: ["wimpel", "baustelle"], seifenblasen: ["wimpel", "seifenblasen"] }; // 2.617.0: + Baustelle // 2.548.0: + Wüste // 2.529.0: + Wilder Westen
 const JZ_DEKO_STANDARD = { wimpel: "bunt", lichter: "warm", laternen: "herbst" };
 const jzDekoWahl = () => { try { const w = localStorage.getItem("kc_club_jzDeko"); return JZ_DEKO_WAHL.some(([k]) => k === w) ? w : "auto"; } catch { return "auto"; } };
@@ -11922,7 +11930,7 @@ function bwTrainingKnoepfe(an) { document.body.classList.toggle("bw-training", !
 // 🌻 Sommer: eine Sonnenblume wächst (jeder 3. Lauf drei), eine Biene besucht sie – abends Glühwürmchen. Am Ende fallen die Blütenblätter, Windstoß.
 // Ein <canvas> im Kopf; zeichnet nur, wenn die Startseite im Bild und die App im Vordergrund ist. Aus bei „✨ Animierte Knöpfe“ aus,
 // Sparmodus oder „Bewegung reduzieren“ (dann wie bisher). Tippen geht durch (pointer-events: none). Lauf-Zähler je Gerät (kc_club_jzLauf).
-const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen", "disco"]; // 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
+const JZB_ARTEN = ["herbst", "advent", "winter", "fruehling", "sommer", "kirmes", "wiesn", "karibik", "karneval", "halloween", "unterwasser", "weltraum", "bauernhof", "kegeln", "wildwest", "wueste", "baustelle", "seifenblasen", "disco", "see"]; // KC-CLUB-SEE · 2.633.0: + Seifenblasen · 2.617.0: + Baustelle · 2.548.0: + Wüste · 2.529.0: + Wilder Westen · 2.331.0: + Themen-Bühnen · 2.434.0: + Unterwasserwelt · 2.444.0: + Weltraum · 2.445.0: + Bauernhof · 2.446.0: + Kegeln
 // → ausgelagert nach teile/szenen.js (KC-CLUB-TEILE): KC-CLUB-TEILE Stufe 3b (Prüfbericht C, Wunsch Hansi 28.10.2026 „lass die Szenen ruhig etwas später starten“): Kopf-Szenen –
 const JZB_EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
 const JZB = { lauf: 0, vorschau: "" };
@@ -11932,7 +11940,7 @@ let jzbAkkuKnapp = false;
 // ---------- 2.355.0 KC-CLUB-VORSCHAU-ENDE (Fund Hansi „in den Einstellungen z. B. Nikolaus-Stiefel gewählt, wird angezeigt – wie bekomme ich ihn
 // wieder weg?“): solange eine Vorschau läuft, steht auf der Startseite ein Knopf „✕ Vorschau beenden“ (vorher nur „📅 Heute“ in den Einstellungen)
 const JZ_VORSCHAU_NAME = { nikolaus: "Nikolaus-Stiefel", regen: "Regen", topf: "Kochtopf am Treffen-Tag", ostern: "Ostereier", igel: "Igel", kuerbis: "Kürbis-Hund", twinkey: "Twinkey fegt",
-  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", wueste: "Wüste", baustelle: "Baustelle", seifenblasen: "Seifenblasen", advent: "Advent" };
+  herbst: "Herbst", winter: "Winter", fruehling: "Frühling", sommer: "Sommer", kirmes: "Sim-Jü", wiesn: "Oktoberfest", karibik: "Karibik", karneval: "Karneval", halloween: "Halloween", unterwasser: "Unterwasserwelt", see: "Am See", weltraum: "Weltraum", bauernhof: "Bauernhof", kegeln: "Kegelabend", wildwest: "Wilder Westen", wueste: "Wüste", baustelle: "Baustelle", seifenblasen: "Seifenblasen", advent: "Advent" };
 function jzVorschauLeiste(v = aktuelleAnsicht) {
   const an = !!(JZB.vorschau || JZB.extra) && v === "start" && !(typeof RG !== "undefined" && RG.an);
   let b = $("jzVorschauAus");
@@ -12195,9 +12203,9 @@ let infoLetztes = "";
 // 2.214.0 KC-CLUB-KOPF-ROLLO-2 (Wunsch Hansi): zweite Jalousie – links ⌃ rollt nur das Infofeld ein (Statusleiste mit LEDs bleibt),
 // rechts ⌃⌃ rollt wie bisher alles bis auf die Kopfzeile ein. Drei Stellungen: offen / halb / ganz. Gleiche Lamellen-Mechanik für beide.
 const KOPF_ROLLO = "kc_club_kopf_eingerollt", ROLLO_FAHRT_MS = 1400, ROLLO_KLAPP_MS = 320, ROLLO_VERSATZ_MS = 22;
-const ROLLO_RANG = { offen: 0, halb: 1, ganz: 2 };
-const kopfRolloStand = () => { const h = document.querySelector("#v-start .hero"); return h?.classList.contains("eingerollt") ? "ganz" : h?.classList.contains("halb-eingerollt") ? "halb" : "offen"; };
-function kopfRolloKlassen(h, stand) { h.classList.toggle("eingerollt", stand === "ganz"); h.classList.toggle("halb-eingerollt", stand === "halb"); requestAnimationFrame(jzEisLaenge); } // 2.278.0: Eiszapfen-Länge neu messen
+const ROLLO_RANG = { offen: 0, felder: 1, halb: 2, ganz: 3 }; // KC-CLUB-KOPF-4-STUFEN (11.11.2026): „felder“ = nur die drei Felder weg
+const kopfRolloStand = () => { const h = document.querySelector("#v-start .hero"); return h?.classList.contains("eingerollt") ? "ganz" : h?.classList.contains("halb-eingerollt") ? "halb" : h?.classList.contains("felder-eingerollt") ? "felder" : "offen"; };
+function kopfRolloKlassen(h, stand) { h.classList.toggle("eingerollt", stand === "ganz"); h.classList.toggle("halb-eingerollt", stand === "halb"); h.classList.toggle("felder-eingerollt", stand === "felder"); requestAnimationFrame(jzEisLaenge); } // 2.278.0: Eiszapfen-Länge neu messen
 function kopfRolloSetzen(stand) {
   if (stand === true) stand = "ganz"; else if (!stand) stand = "offen";
   const h = document.querySelector("#v-start .hero"); if (!h) return;
@@ -12231,17 +12239,23 @@ function kopfNeuPruefen() {
 }
 function kopfPfeilNeuZeigen(stand = kopfRolloStand()) {
   const ruhig = !fxAn();
-  [["kopfPfeil", "ganz"], ["kopfPfeilHalb", "halb"]].forEach(([id, s]) => { const p = $(id); if (!p) return;
-    const an = KPN.an && stand === s; p.classList.toggle("kp-neu", an); p.classList.toggle("still", an && ruhig);
+  [["kopfPfeil"]].forEach(([id]) => { const p = $(id); if (!p) return; // KC-CLUB-KOPF-EIN-KNOPF: ein Knopf – leuchtet in beiden eingerollten Stufen
+    const an = KPN.an && stand !== "offen"; p.classList.toggle("kp-neu", an); p.classList.toggle("still", an && ruhig);
     if (an) p.title = "Neues im Kopf (Nachrichten oder Mitglieder) – antippen zum Ausrollen"; });
 }
 function kopfPfeileZeigen(stand) {
   if (stand === "offen") { KPN.an = KPN.nachricht = KPN.mitglied = false; KPN.neuOnline.clear(); } // ausgerollt: die drei Felder sind wieder zu sehen
-  const g = $("kopfPfeil"), hb = $("kopfPfeilHalb");
-  if (g) { const zu = stand === "ganz"; g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", zu ? "false" : "true"); g.title = zu ? "Kopf ausrollen – alles zeigen" : "Kopf ganz einrollen – nur die Kopfzeile bleibt"; g.setAttribute("aria-label", zu ? "Kopf ausrollen" : "Kopf ganz einrollen"); }
-  if (hb) { const zu = stand !== "offen"; hb.classList.toggle("dreh", zu); hb.setAttribute("aria-expanded", zu ? "false" : "true"); hb.title = stand === "halb" ? "Kopf ausrollen – alles zeigen" : stand === "ganz" ? "Kopf halb ausrollen – Statusleiste mit LEDs zeigen" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt"; hb.setAttribute("aria-label", hb.title.split(" – ")[0]); }
+  // KC-CLUB-KOPF-EIN-KNOPF (11.11.2026): ein Knopf – Punkte zeigen die Stufe, Pfeil zeigt auf der letzten Stufe nach unten
+  const g = $("kopfPfeil");
+  if (g) { const zu = stand === "ganz", k = { offen: 4, felder: 3, halb: 2, ganz: 1 }[stand] || 4; /* KC-CLUB-KOPF-4-STUFEN: vier Punkte */ g.classList.toggle("dreh", zu); g.setAttribute("aria-expanded", stand === "offen" ? "true" : "false");
+    g.querySelectorAll(".kp-dots i").forEach((d, i) => d.classList.toggle("an", i < k));
+    g.title = stand === "offen" ? (kopfFelderDa() ? "Kopf einrollen – zuerst die drei Felder" : "Kopf halb einrollen – Statusleiste mit LEDs bleibt") : stand === "felder" ? "Kopf weiter einrollen – Info-Laufschrift weg (lange drücken: ganz aufklappen)" : stand === "halb" ? "Kopf ganz einrollen – nur die Kopfzeile bleibt (lange drücken: ganz aufklappen)" : "Kopf ausrollen – alles zeigen";
+    g.setAttribute("aria-label", g.title.split(" – ")[0]); }
   kopfPfeilNeuZeigen(stand);
 }
+// KC-CLUB-KOPF-4-STUFEN: Unterkante der Info-Laufschrift im Kopf (Stufe „felder“: nur die drei Felder darunter verschwinden)
+function kopfLaufbandUnten(h, sl) { const lb = h.querySelector("#infoLaufband") || h.querySelector("#heroInfo"); return lb && lb.getClientRects().length ? Math.round(lb.getBoundingClientRect().bottom - h.getBoundingClientRect().top) : sl.offsetTop + sl.offsetHeight; }
+const kopfFelderDa = () => !!document.querySelector("#v-start .hero #heroInfo .kacheln3")?.getClientRects().length; // einfache Ansicht ohne die drei Felder → Stufe überspringen
 async function kopfRolloFahren(ziel, vorgabe) { // vorgabe: nur Erklär-Video – zeigt einen Effekt, ohne die Einstellung zu ändern
   const h = document.querySelector("#v-start .hero"), kz = h?.querySelector(".kopfzeile"), sl = h?.querySelector(".statusleiste");
   const von = kopfRolloStand(); if (von === ziel) return;
@@ -12253,7 +12267,7 @@ async function kopfRolloFahren(ziel, vorgabe) { // vorgabe: nur Erklär-Video �
   const zu = ROLLO_RANG[ziel] > ROLLO_RANG[von];
   const hoehe = (s) => { kopfRolloKlassen(h, s); return h.offsetHeight; };
   // Die Jalousie deckt nur den Teil ab, der verschwindet: bei „halb“ alles unter der Statusleiste, bei „ganz“ alles unter der Kopfzeile
-  const kante = (s) => (s === "ganz" ? kz.offsetTop + kz.offsetHeight : sl.offsetTop + sl.offsetHeight) + 6;
+  const kante = (s) => (s === "ganz" ? kz.offsetTop + kz.offsetHeight : s === "felder" ? kopfLaufbandUnten(h, sl) : sl.offsetTop + sl.offsetHeight) + 6; // KC-CLUB-KOPF-4-STUFEN: „felder“ – unter der Info-Laufschrift
   const offenerStand = zu ? von : ziel, engerStand = zu ? ziel : von;
   const klein = hoehe(engerStand), gross = hoehe(offenerStand), oben = kante(engerStand); // Messung im offeneren Stand
   // KC-CLUB-KOPF-EFFEKTE (Wunsch Hansi 19.10.2026): statt Jalousie auf Wunsch Lamellenvorhang (zur Seite) oder Climber (Lamellen klappen hoch)
@@ -12451,12 +12465,24 @@ async function kopfEffektAnimieren(effekt, h, zu, gross, klein, oben) {
   }
 }
 // art "ganz" (rechts ⌃⌃): offen/halb → ganz, ganz → offen · art "halb" (links ⌃): offen → halb, halb → offen, ganz → halb
+// KC-CLUB-KOPF-EIN-KNOPF (11.11.2026, Wunsch Hansi): „weiter“ = ein Knopf, drei Stufen offen → halb → ganz → offen; „auf“ = lange drücken, sofort ganz auf
+const KOPF_LANG = { t: 0, lang: false };
+function kopfKnopfLang(e) {
+  clearTimeout(KOPF_LANG.t); KOPF_LANG.lang = false;
+  if (e.type !== "pointerdown") return;
+  KOPF_LANG.t = setTimeout(() => { if (kopfRolloStand() === "offen") return; KOPF_LANG.lang = true; try { navigator.vibrate?.(25); } catch {} kopfRollo("auf"); }, 600);
+}
+try { addEventListener("pointerdown", (e) => { if (e.target?.closest?.("#kopfPfeil")) kopfKnopfLang(e); }, true);
+  for (const t of ["pointerup", "pointercancel", "pointerleave"]) addEventListener(t, (e) => { if (e.target?.closest?.("#kopfPfeil")) kopfKnopfLang(e); }, true); } catch {}
 function kopfRollo(art = "ganz") {
+  if (art === "weiter" && KOPF_LANG.lang) { KOPF_LANG.lang = false; return; } // war lange gedrückt – der Klick danach zählt nicht
   if (document.querySelector("#v-start .hero")?.dataset.rollt) return; // läuft schon – nichts merken, was nicht passiert
   const von = kopfRolloStand();
-  const ziel = art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
+  const ziel = art === "auf" ? "offen" : art === "weiter" ? ({ offen: kopfFelderDa() ? "felder" : "halb", felder: "halb", halb: "ganz", ganz: "offen" }[von] || "halb")
+    : art === "halb" ? (von === "offen" ? "halb" : von === "halb" ? "offen" : "halb") : (von === "ganz" ? "offen" : "ganz");
+  if (ziel === von) return;
   kopfRolloFahren(ziel);
-  try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : "halb"); } catch {}
+  try { ziel === "offen" ? localStorage.removeItem(KOPF_ROLLO) : localStorage.setItem(KOPF_ROLLO, ziel === "ganz" ? "1" : ziel); } catch {}
 }
 // 2.400.0 KC-CLUB-KOPF-GLANZ (Wunsch Hansi): der Lichtschein über dem Kopf läuft beim Öffnen der App einmal durch (Klasse „lauf“ in index.html).
 // Ist er durch (oder bricht ab, z. B. beim Wechsel auf eine andere Seite), wird „lauf“ entfernt – beim Zurückkehren zur Startseite startet er nicht erneut.
@@ -13364,7 +13390,7 @@ function kuckuckPruefen() {
 // 2.428.0 KC-CLUB-KUCKUCK-FREIGABE: hat Android den Ton im Hintergrund angehalten, gibt ihn das nächste Tippen wieder frei (nur wenn er schon da ist)
 addEventListener("pointerdown", () => { try { if (audio && audio.state === "suspended") audio.resume(); } catch {} }, { capture: true, passive: true });
 setInterval(kuckuckPruefen, 15000); document.addEventListener("visibilitychange", () => { if (!document.hidden) kuckuckPruefen(); });
-try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); } catch {}
+try { const w = localStorage.getItem(KOPF_ROLLO); if (w === "1") kopfRolloSetzen("ganz"); else if (w === "halb") kopfRolloSetzen("halb"); else if (w === "felder") kopfRolloSetzen("felder"); } catch {}
 function heroZeigen(richtung) {
   kopfNeuPruefen(); // 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: heroZeigen läuft nach jedem Abgleich und jedem Online-Takt
   const f = INFO_FELDER[INFO_I] || INFO_FELDER[0], inhalt = f.html();
@@ -22349,8 +22375,8 @@ function sjOeffnen() {
   };
 }
 function blattAuf(id, html) {
-  document.getElementById(id)?.remove();
-  const f = document.createElement("div"); f.id = id; f.className = "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.dataset.dyn = "1";
+  const alt = document.getElementById(id), rgZeigen = !!alt?.classList.contains("rg-zeigen"); alt?.remove(); // 2.912.0: im Erklär-Video vorgeführtes Fenster bleibt sichtbar, wenn es sich neu aufbaut (z. B. Sprachbefehle nach dem Nachladen)
+  const f = document.createElement("div"); f.id = id; f.className = rgZeigen ? "blatt rg-zeigen" : "blatt"; f.setAttribute("role", "dialog"); f.setAttribute("aria-modal", "true"); f.dataset.dyn = "1";
   f.innerHTML = `<div class="blatt-innen" style="max-height:88vh;overflow-y:auto">${html}</div>`;
   f.onclick = (e) => { if (e.target === f) fensterZuFragen(f); }; // 2.425.0: daneben getippt → bei Eingaben erst fragen
   document.body.appendChild(f); return f;
@@ -26196,7 +26222,7 @@ async function cjEnde(ende) {
 // nur Clubleitung; Sorge, dass alle zu Hause anklicken – ich bin vor Ort“): alle sehen den Abend, nur die Clubleitung ändert (Server prüft das).
 // Anwesenheit trägt die Clubleitung vor Ort ein (kein „Ich bin da“ von zu Hause). Solange das Fenster offen ist, alle 20 s neu (alle sehen den Stand).
 const CA_VORHER_MIN = 120, CA_DAUER_STD = 6, CA_TAKT_MS = 20000;
-const CA = { stand: null, takt: null, offen: new Set(["top"]) };
+const CA = { stand: null, takt: null, offen: new Set(["top"]), holen: null, laeuft: false, nochmal: false, tick: 0 };
 function caHeute() {
   const t = INIT?.naechstesTreffen; if (!t?.beginn || (t.art && t.art !== "treffen")) return false;
   const b = Date.parse(t.beginn), ende = t.ende ? Date.parse(t.ende) + 3600000 : b + CA_DAUER_STD * 3600000, j = Date.now();
@@ -26209,7 +26235,11 @@ async function caOeffnen(vorschau, treffenId) {
     if (r.auswahl) return caAuswahl(vorschau, r.auswahl);
     treffenId = r.treffen?.id || treffenId; // der Takt bleibt bei genau diesem Abend
     CA.stand = r; caZeichnen(); clearInterval(CA.takt);
-    CA.takt = setInterval(async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; try { const n = await api("clubabend", daten()); if (n.aktiv && !n.auswahl && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {} }, CA_TAKT_MS);
+    // KC-CLUB-RT-CLUBABEND-MITFAHRT (10.11.2026): Änderungen kommen als Signal „clubabend“ sofort – steht die Leitung, fragt der Takt nur alle 2 Min. zur Sicherheit
+    CA.holen = async () => { if (!$("caBlatt")) return clearInterval(CA.takt); if (CA.laeuft) { CA.nochmal = true; return; } CA.laeuft = true;
+      try { const n = await api("clubabend", daten()); if (n.aktiv && !n.auswahl && $("caBlatt")) { CA.stand = n; caZeichnen(); } } catch {}
+      CA.laeuft = false; if (CA.nochmal) { CA.nochmal = false; CA.holen(); } };
+    CA.tick = 0; CA.takt = setInterval(() => { if (!$("caBlatt")) return clearInterval(CA.takt); if (document.hidden) return; if (rtAn() && ++CA.tick % 6) return; CA.holen(); }, CA_TAKT_MS);
   } catch (e) { meldeFehler(e); }
 }
 function caAuswahl(vorschau, liste) {
@@ -30819,6 +30849,7 @@ const DRUCKARTEN = {
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
   rezept: { bauen: (o, id) => druckRezept(id) },
+  buchungsliste: { ablegen: { register: ["Kasse", "Erstattungen", "Sonstiges"], stichworte: "Erstattung, Buchungsliste, Kasse" }, bauen: () => eblDruck() }, // KC-CLUB-ERSTATTUNG-BUCHUNGEN
   magazin: { ablegen: { register: ["Club-Magazin", "Club-Küche", "Sonstiges"], stichworte: "Club-Küche, Magazin" }, bauen: (o, p) => magDruck(p) }, // KC-CLUB-MAGAZIN-ARCHIV: ganze Ausgabe drucken/PDF/senden/ablegen
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
@@ -34483,7 +34514,7 @@ const FENSTER_NAMEN = {
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
-  erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
+  erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
   fdkFrageBlatt: "🧪 Hygienekontrolle", fdkKarteBlatt: "🃏 Fang den Koch: Karte", fdkRegelBlatt: "📖 So geht Fang den Koch", feeBlatt: "🧚 Die Fee", kaeferBlatt: "🐞 Der Marienkäfer", kleeBlatt: "🍀 Der Glücksklee", fiBlatt: "🏋️ Fit bleiben",
   flAng: "✏️ Angaben ändern", flInfo: "📣 Mitglieder informieren", ggBlatt: "🎂 Meine Geburtstagsgrüße", ggWahlBlatt: "🎂 Geburtstagsgruß wählen", gmFenster: "⭐ Gemerkte Nachrichten",

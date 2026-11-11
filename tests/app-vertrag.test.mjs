@@ -1667,7 +1667,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 142. 1.13.0: DP2 Build 251 Button-Logik (unverändert übernommen) + offene Club-App-Angaben zählen als eigene Daten
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[134567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen"); // 2.804.0: DP2 Build 306 RC (Commit 776d039, Übergabe von Codex)
+  assert.ok(/^(f893f5d|c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(5[134567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version) && q.reihenfolge.includes("src/ui/member-button-logic.js"), "DP2 Build 251 (ab 1.17.2: Build 253 RC) mit Button-Logik übernommen"); // 2.804.0: DP2 Build 306 RC (Commit 776d039, Übergabe von Codex)
   const d = lies("dp2-club/daten.js");
   assert.ok(/status: "confirmed", source: "club_app"/.test(d) && /K\.wishes = \[\.\.\.\(D\.meine\?\.entries \|\| \[\]\)\.map/.test(d), "Eingangs-Angaben (auch Status offen) zählen in DP2 als eigene aktive Wünsche");
 }
@@ -1702,7 +1702,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 
 // 146. 1.16.1: DP2-Nachtrag + Cache-Schlüssel mit Commit
 {
-  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
+  assert.ok(/^(c0d279a|d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(JSON.parse(lies("dp2/QUELLE.json")).commit), "Nachtrag c0d279a übernommen (ab 1.17.2 im gemeinsamen Stand d50ed58 enthalten)");
   assert.ok(/quelle\.dp2Version \+ "-" \+ String\(quelle\.commit \|\| ""\)\.slice\(0, 7\)/.test(lies("dp2-club/lader.js")), "Cache-Schlüssel mit Commit");
 }
 
@@ -1732,7 +1732,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 149. 1.17.2: DP2 Build 253 RC (dp3 d50ed58) – gemeinsamer Stand aus Club-App-Schnittstelle und PDF-/QR-Korrekturen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[34567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
+  assert.ok(/^(d50ed58|3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(5[34567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 253 RC (d50ed58) oder neuer übernommen");
   for (const f of ["src/core/document-identity.js", "src/vendor/qrcode-generator.js", "src/core/personalized-forms.js", "src/adapters/pdf.js", "src/ui/member-button-logic.js"])
     assert.ok(q.reihenfolge.includes(f), `${f} fehlt in der DP2-Übernahme`);
   assert.ok(q.reihenfolge.indexOf("src/adapters/pdf.js") < q.reihenfolge.indexOf("src/ui/original-brand.js") || !q.reihenfolge.includes("src/ui/original-brand.js"), "PDF-Baustein vor dem Abschluss geladen");
@@ -1792,7 +1792,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 151. 1.18.1: DP2 Build 254 RC (dp3 3945960) – Meine Angaben ausdrucken (PDF mit QR, Abfrage, Vorschau) + Sperrtag ohne V/H/B
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[4567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
+  assert.ok(/^(3945960|ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(5[4567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 254 RC (3945960) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/wish-print.css"), "Ausdruck-Baustein fehlt in der Übernahme");
   assert.ok(/frame-src blob:/.test(lies("dienstwunsch.html")) && !/frame-src 'none'/.test(lies("dienstwunsch.html")), "PDF-Vorschau braucht frame-src blob: (nur selbst erzeugte PDFs)");
   assert.ok(/window\.confirm\(FRAGE\)/.test(lies("dp2/src/ui/wish-print.js")) && /filledPdf/.test(lies("dp2/src/core/personalized-forms.js")), "Sicherheitsabfrage/ausgefüllter Bogen fehlt");
@@ -2282,7 +2282,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 199. 1.44.1: DP2 Build 255 RC (dp3 ae349c0) – Reservierung je PC beim Club-App-Wunscheingang (KC-DP-WUNSCH-SPERRE)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
+  assert.ok(/^(ae349c0|51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(5[567]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 255 RC (ae349c0) oder neuer übernommen");
   assert.ok(q.reihenfolge.includes("src/ui/wish-print.js") && q.reihenfolge.includes("src/ui/member-button-logic.js"), "Build-254-Bausteine (Ausdruck, Button-Logik) bleiben enthalten");
   assert.ok(/kc_dp_wish_inbox_claim/.test(lies("supabase/migrations/20261001_kc_dp_wunsch_eingang_sperre.sql")), "Datenbankseite der Reservierung vorhanden");
 }
@@ -2297,7 +2297,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 201. 1.45.1: DP2 Build 256 RC (dp3 51518cc) – Twinkey einfacher und fehlersicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(5[67]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
+  assert.ok(/^(51518cc|37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(5[67]|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 256 RC (51518cc) oder neuer übernommen");
   assert.ok(/id="swProgress"/.test(sw) && /id="swNextOpen"/.test(sw) && /id="swNextDay"/.test(sw), "Fortschritt und nächster offener Tag");
   assert.ok(/function confirmOpenDays\(\)/.test(sw) && /if\(confirmOpenDays\(\)\)finishOverview\(false\)/.test(sw), "Rückfrage vor „Fertig“ bei offenen Tagen");
   assert.ok(/if\(!can\.length\)can=\[\{start:null,end:null,wishZone:'B'\}\];/.test(sw) && /id="swWholeDay"/.test(sw), "Kann-Zeit nicht vorausgefüllt, ganze Zeit nur per Knopf");
@@ -2333,7 +2333,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
 // 205. 1.47.1: DP2 Build 257 RC (dp3 37bd067) – Twinkey übersichtlicher (KC-DP-TWINKEY-EINFACH)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js"), tw = lies("dp2/src/ui/twinkey.js");
-  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(57|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
+  assert.ok(/^(37bd067|d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(57|6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 257 RC (37bd067) oder neuer übernommen");
   assert.ok(/id="swNoBlock"/.test(sw) && /!blockChosen&&blockMode==='none'\?\['Bitte zuerst wählen/.test(sw), "Sperren als klare Antwort, Weiter ohne Antwort gesperrt");
   assert.ok(!/id="swBackTop"/.test(sw) && /\(step==='wish'\?teamButton\(\):''\)/.test(sw), "ein Zurück je Schritt, Besetzung nur bei der Wunschzeit");
   assert.ok(/<details[^>]*class="sw-more"/.test(sw) && /sw-day-tile/.test(sw) && /\(Kann-Zeit\)/.test(sw) && /\(Wunschzeit\)/.test(sw), "kurze Zusammenfassung, Kacheln, Begriffe in Klammern wie Papier/Excel");
@@ -5099,7 +5099,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.41.0 KC-CLUB-DIENSTWUNSCH: DP2 Build 262 RC (dp3 d8976b9) – Builds 258–260 betreffen die Mitglieder-Eingabe (Twinkey)
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), sw = lies("dp2/src/ui/simple-wish-assistant.js");
-  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
+  assert.ok(/^(d8976b9|ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(6[2345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 262 RC (d8976b9) oder neuer übernommen");
   assert.ok(/Deine Dienstzeiten wurden erfolgreich verschickt\./.test(sw) && /if\(saved!==true\)throw Error\('Versand nicht bestätigt\.'\)/.test(sw), "Build 258: Bestätigung nur nach bestätigtem Speichern");
   assert.ok(/laeuft = \(async \(\) => \{ do \{ nochmal = false; await senden\(\); \} while \(nochmal\); return true; \}\)\(\)/.test(lies("dp2-club/daten.js")), "Club-App meldet erfolgreiches Speichern mit true (Fehler werfen)");
   assert.ok(/sw-helper-fold/.test(sw) && /sw-fold sw-days/.test(sw), "Build 260: kompakte Tagesauswahl");
@@ -5146,7 +5146,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.44.0 KC-CLUB-DIENSTWUNSCH / KC-DP-KLAPPBEREICH: DP2 Build 263 RC (dp3 ceefe07) – Klappbereiche wie in der Club-App
 {
   const q = JSON.parse(lies("dp2/QUELLE.json")), fs = lies("dp2/src/ui/fold-sections.js");
-  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit) && /^0\.20\.0-build(2(6[345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
+  assert.ok(/^(ceefe07|6972df3|252f22f|77fa25f|c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit) && /^0\.20\.0-build(2(6[345678]|8[56789]|9[01])|306)$/.test(q.dp2Version), "DP2 Build 263 RC (ceefe07) oder neuer übernommen (2.284.0: Build 264)");
   assert.ok(q.reihenfolge.includes("src/ui/fold-sections.js") && q.reihenfolge.includes("src/ui/fold-sections.css"), "Klappbaustein wird geladen");
   assert.ok(/kc_dp_klappe_/.test(fs) && /kc_dp_fest_/.test(fs) && /Zuklappen/.test(fs), "Schloss, gemerkter Zustand, unten Zuklappen (eigener DP2-Speicherschlüssel)");
   assert.ok(/data-klappe="tw-more"/.test(lies("dp2/src/ui/simple-wish-assistant.js")), "Mitgliederbereiche mit festen Schlüsseln");
@@ -5714,7 +5714,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(b.length > 3000 && /\{ id: "oberflaeche", stand: "\d+",[^\n]*st: \(\) => RG_OBERFLAECHE \}/.test(html) && /\{ id: "ich", [^\n]*videos: \[[^\]]*"einstellungen", "oberflaeche"[^\]]*\]/.test(html), "Video registriert, im Thema „Ich & meine App“ (Liste darf wachsen)");
   const code = b.replace(/\/\/[^\n]*/g, "").replace(/'[^'\n]*'/g, "''"); // ohne Kommentare und Knopf-Wähler ('[onclick^="kaBearbeiten(false)"]')
   assert.ok(!/kaSpeichern\(|kaBearbeiten\(|api\(|localStorage\.setItem|kopfRollo\(|kaSichtbar\(|kaStandard\(\)|einstellung_setzen/.test(code), "nichts speichern: Kopf, Anordnen, Ausblenden und Register nur auf dem Bildschirm");
-  for (const z of ["#kopfPfeilHalb", "#kopfPfeil", "#heroInfo .ipfeil", ".kstrg button", ".kweg", ".kachel.bearb.aus", "#kaAusHinweis", "kr-hinten", "#register", ".wischhinweis"]) assert.ok(b.includes(z), `zeigt ${z}`);
+  for (const z of ["#kopfPfeil", "#heroInfo .ipfeil", ".kstrg button", ".kweg", ".kachel.bearb.aus", "#kaAusHinweis", "kr-hinten", "#register", ".wischhinweis"]) assert.ok(b.includes(z), `zeigt ${z}`);
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ const a = RG\.kopfAlt;/.test(b) && /RG\.zurueck\.push\(\(\) => rgAusDemo\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => rgRegisterTausch\(false\)\)/.test(b) && /RG\.zurueck\.push\(\(\) => \{ RG\.drehZurueck = false; rgDrehen\(false\); \}\)/.test(b) /* 2.261.0: nur einmal gemerkt */ && /RG\.zurueck\.push\(\(\) => \{ if \(RG\.reihAlt\) \{ KA\.reihenfolge = RG\.reihAlt\.r;/.test(b) && /if \(a !== null && a !== INFO_I\) infoGehe\(a, -1\)/.test(b), "alles wird zurückgestellt");
 }
 
@@ -5909,7 +5909,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.289.0 KC-DP-PLANERPAPIERE-QR (Wunsch Hansi, Paket 2): Leerplan, Papierplanung, Dienstplan mit QR – DP2 Build 267 übernommen
 {
   const q = JSON.parse(lies("dp2/QUELLE.json"));
-  assert.ok(/^0\.20\.0-build(2(6[78]|8[56789]|9[01])|306)$/.test(q.dp2Version) && /^(c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
+  assert.ok(/^0\.20\.0-build(2(6[78]|8[56789]|9[01])|306)$/.test(q.dp2Version) && /^(c8d014b|769305a|94955a5|33dc365|32e8a23|face442|70ce71a|bb2eb01|5039a20|776d039|2fbed68)/.test(q.commit), "DP2 Build 267 (ab 2.312.0: 268) übernommen");
   assert.ok(/if\(meta\.personId\)x\.personId=String\(meta\.personId\);if\(meta\.date\)x\.date=String\(meta\.date\)/.test(lies("dp2/src/core/document-identity.js")), "Dokument-QR mit Person und Tag");
   assert.ok(/\.doc-qr\[data-kc-qr\]/.test(lies("dp2/src/adapters/pdf.js")), "PDF zeichnet den Papier-QR je Seite");
 }
@@ -5919,7 +5919,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const srv = Number\(j\?\.srvMs\) \|\| Number\(r\.headers\?\.get\?\.\("x-club-ms"\)\);.{0,200}schneckeMessen\(Math\.max\(0, performance\.now\(\) - t0 - \(Number\.isFinite\(srv\) && srv > 0 \? srv : 0\)\)\);/.test(html), "Schnecke misst nur die Netzzeit (Serverrechenzeit abgezogen)");
   assert.ok(/const pSchulungZahl = ich\.admin \? schulungStand\(ich, null\)/.test(server) && /(\(kz as any\)\.schulung = await pSchulungZahl;|const sw = await pSchulungZahl;)/.test(server), "Schulungszahl parallel zu den Kachelzahlen");
   assert.ok(/for \(const x of \[pProtFehlt, pNachfrage, pBald\]\) x\.catch\(\(\) => \{\}\);/.test(server) && /\.\.\.\(await pProtFehlt\)/.test(server) && /const bald = \(await pBald\)\.filter\(/.test(server), "Schulungsstand liest parallel, ohne unbehandelte Fehler");
-  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907)\.0"/.test(server), "Serverversion erhöht");
+  assert.ok(/const SERVER_VERSION = "2\.(301|312|319|321|323|341|342|350|351|352|362|363|365|368|369|372|382|384|385|387|388|389|390|391|397|403|412|414|418|419|420|422|423|424|425|426|431|432|433|440|442|443|447|448|449|452|453|456|458|461|462|463|464|475|477|478|480|481|482|483|484|485|486|489|490|491|492|493|494|495|496|499|501|502|503|504|506|507|508|509|510|511|512|517|519|520|521|527|529|531|535|536|537|538|539|540|541|549|550|551|554|555|556|563|564|565|567|568|569|576|578|579|581|582|583|584|590|593|597|598|599|600|601|602|603|604|606|607|608|609|614|625|626|629|630|634|635|639|640|641|642|644|646|647|649|654|663|664|665|666|667|668|669|672|673|674|675|676|677|683|685|687|688|689|690|692|693|694|695|696|699|709|710|712|721|722|723|724|726|728|729|730|731|736|738|739|740|741|743|754|755|760|761|762|763|764|765|766|772|773|774|775|776|781|783|784|785|786|789|790|792|795|796|799|800|802|804|806|809|810|813|814|817|818|822|824|829|830|833|834|835|839|840|841|842|843|844|845|846|850|851|857|859|862|863|865|869|870|871|872|878|885|886|887|893|897|899|900|901|902|903|907|909|912|919)\.0"/.test(server), "Serverversion erhöht");
 }
 
 // 2.302.0 KC-CLUB-BUEHNE-MUSIK (Wunsch Hansi „auf der Bühne nur Musik anhören – mehr verschiedene Stücke, auch Reggae“)
@@ -6114,7 +6114,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.332.0 KC-CLUB-THEMEN-BUEHNE-2 (Wunsch Hansi „weitere Themen: Ostern, Karneval und Halloween“)
 {
   for (const [id, jz] of [["ostern", "fruehling"], ["karneval", "karneval"], ["halloween", "halloween"]]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", name: "[^"]+", design: "[a-z]+", jz: "${jz}", effekt: "[a-z]+"`).test(html), `Thema ${id}`);
-  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
+  assert.ok(/const JZB_FESTE = \["kirmes", "wiesn", "karibik", "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?)?)?)?)?\];/.test(html) && /else if \(J\.saison === "karneval"\) jzbKarnevalMalen\(c, F\); else if \(J\.saison === "halloween"\) jzbHalloweenMalen\(c, F\);/.test(html), "Karneval und Halloween auf der Bühne");
   assert.ok(/const txt = name \? `Helau, \$\{name\}!` : "Helau!";/.test(html) && /const txt = name \? `Buuuh, \$\{name\}!` : "Buuuh!";/.test(html), "Vorname auf dem Wagen und beim Gespenst");
   assert.ok(/if \(te === "ostern" && J\.saison === "fruehling"\) x\.ostern = true;/.test(html) && /J\.gaeste\.push\(\{ typ: "osterhase", x: J\.w \+ 24, t: 0 \}\)/.test(html) && /if \(e\.da === false && hase\) continue;/.test(html) && /!v\.gef && v\.da !== false/.test(html), "Ostern: Osterhase legt die Eier, erst dann sicht- und findbar");
   assert.ok(/function osterSonntag\(jahr\)/.test(html) && /const ostern = osterSonntag\(jahr\);/.test(html), "eine Osterformel für Feiertage und Themen");
@@ -6565,7 +6565,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.444.0 KC-CLUB-WELTRAUM (Wunschliste #2): Thema Weltraum mit eigener Szene (Sterne, Planet, Rakete, Astronaut schreibt den Namen, UFO)
 {
   assert.ok(/\{ id: "weltraum", sym: "🚀", name: "Weltraum", design: "tiefsee", jz: "weltraum"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"weltraum"(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "weltraum"\) return jzbWrSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "weltraum"\) jzbWeltraumMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const w = programm.slice(programm.indexOf("function jzbWrSchritt("), programm.indexOf("function jzbWrBahn("));
   assert.ok(/if \(t >= JZB_WR_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(w), "Lauf endet, neuer Lauf");
@@ -6576,7 +6576,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.445.0 KC-CLUB-BAUERNHOF (Wunschliste #3): Thema Bauernhof – ein Tag von Morgen bis Nacht, dann wieder Morgen
 {
   assert.ok(/\{ id: "bauernhof", sym: "🐄", name: "Bauernhof", design: "kuechengruen", jz: "bauernhof"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"bauernhof"(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "bauernhof"\) return jzbBhSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "bauernhof"\) jzbBauernhofMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const b = programm.slice(programm.indexOf("function jzbBhSchritt("), programm.indexOf("function jzbBhHimmel("));
   assert.ok(/if \(t >= JZB_BH_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(b) && /if \(abend\) \{ T\.ziel = st\.tuer;/.test(b) && /B\.tor = Math\.max\(0, B\.tor - dt \* \.8\)/.test(b), "abends in den Stall, Tor zu, neuer Lauf");
@@ -6588,7 +6588,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.446.0 KC-CLUB-KEGELN (Wunschliste #4): Thema Kegelabend – 6 Würfe, Tafel mit Namen und Strichen, „Alle Neune“, Tafel wischen
 {
   assert.ok(/\{ id: "kegeln", sym: "🎳", name: "Kegelabend", design: "schokolade", jz: "kegeln"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "kegeln"\) return jzbKgSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "kegeln"\) jzbKegelnMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbKgNeu("), programm.indexOf("function jzbKgKegelMalen("));
   assert.ok(/i === JZB_KG_WUERFE - 1 \? 9 :/.test(g) && /if \(t >= JZB_KG_DAUER\) \{ J\.fest = null; return jzbLaufEnde\(\); \}/.test(g) && /K\.wisch = Math\.min\(1, K\.wisch \+ dt \/ 3\)/.test(g), "letzter Wurf alle Neune, Tafel wischen, neuer Lauf");
@@ -7216,7 +7216,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/if \(ersterBlick \? n > 0 : n > KPN\.n\) KPN\.nachricht = true;/.test(programm) && /if \(KPN\.mg !== null && mg > KPN\.mg\) KPN\.mitglied = true;/.test(programm)
     && /if \(KPN\.ids && ids\) for \(const id of ids\) if \(!KPN\.ids\.has\(id\)\) KPN\.neuOnline\.add\(id\);/.test(programm), "neue Nachricht, neue Mitglieder, neu online");
   assert.ok(/for \(const id of \[\.\.\.KPN\.neuOnline\]\) if \(!ids \|\| !ids\.has\(id\)\) KPN\.neuOnline\.delete\(id\);/.test(programm) && /KPN\.an = KPN\.nachricht \|\| KPN\.mitglied \|\| KPN\.neuOnline\.size > 0;/.test(programm), "wieder offline → Blinken aus; Nachricht/Mitglied bleibt an");
-  assert.ok(/\[\["kopfPfeil", "ganz"\], \["kopfPfeilHalb", "halb"\]\]/.test(programm) && /if \(stand === "offen"\) (KPN\.an = false;|\{ KPN\.an = KPN\.nachricht = KPN\.mitglied = false; KPN\.neuOnline\.clear\(\); \})/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet (2.587.0: auch alle Gründe)");
+  assert.ok(/\[\["kopfPfeil"\]\]\.forEach[\s\S]{0,160}const an = KPN\.an && stand !== "offen";/.test(programm) && /if \(stand === "offen"\) (KPN\.an = false;|\{ KPN\.an = KPN\.nachricht = KPN\.mitglied = false; KPN\.neuOnline\.clear\(\); \})/.test(programm), "Pfeil der aktuellen Stellung, Ausrollen beendet (2.587.0: auch alle Gründe)");
   assert.ok(/\.kopf-pfeil\.kp-neu \{[^}]*animation: kpNeu/.test(seite) && /\.kopf-pfeil\.kp-neu\.still \{ animation: none;/.test(seite), "Blinken, ohne Bewegung fest leuchtend");
 }
 // 2.545.0 KC-CLUB-KOPF-SEIT: „since 1991“ klein unter der Kochmütze im Kopf
@@ -7236,7 +7236,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.548.0 KC-CLUB-WUESTE + KC-CLUB-FRIEDENSPFEIFE-2: Thema Wüste (Pyramiden, Karawane, Oase, Pharao, Flaschengeist, Goldstaub-Name, Sonnenuntergang) · Pfeife langsamer
 {
   assert.ok(/\{ id: "wueste", sym: "🐪", name: "Wüste", design: "sonnenuntergang", jz: "wueste"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest", "wueste"(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "wueste"\) return jzbWuSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wueste"\) jzbWuesteMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   assert.ok(/JZB_WU_NAME_AB = 47, JZB_WU_TAKT = 2\.6/.test(programm) && /const jzbWuName = \(\) => \[\.\.\.\(jzbEisNameText\(\) \|\| "Köcheclub"\)\]\.slice\(0, 12\);/.test(programm), "Name langsam aus Goldstaub, ohne Namen Köcheclub");
   assert.ok(/jahreszeitVorschau\('wueste'\)">🐪 Wüste</.test(seite) && /\{ id: "wueste", thema: "darstellung"/.test(programm) && /\{ id: "wueste", sym: "🐪", t: "Gibt es ein Thema mit Pyramiden und Pharao\?"/.test(programm), "Vorschau, Hilfe, Twinkey");
@@ -9735,16 +9735,16 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.160.0 (Hansi: „zu schnell, läuft nicht hoch wie eine Jalousie“): echte Lamellen klappen zu, Jalousie fährt mit Abschlussleiste langsam hoch
 {
   const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
-  assert.ok(/<button type="button" class="kopf-pfeil[^"]*" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\('ganz'\)">/.test(start), "Pfeil oben im Kopf der Startseite");
+  assert.ok(/<button type="button" class="kopf-pfeil[^"]*" id="kopfPfeil"[^>]*aria-expanded="true"[^>]*onclick="kopfRollo\('weiter'\)">/.test(start), "Pfeil oben im Kopf der Startseite (KC-CLUB-KOPF-EIN-KNOPF: ein Knopf, drei Stufen)");
   assert.ok(/\.kopf-pfeil \{ position: absolute; top: 0; left: 50%; transform: translateX\(-50%\)/.test(html), "Pfeil mittig oben");
   assert.ok(/#v-start \.hero\.eingerollt > \.statusleiste, #v-start \.hero\.eingerollt > #heroInfo, #v-start \.hero\.eingerollt > #infoPunkte \{ display: none; \}/.test(html), "Statusleiste + Infofeld rollen ein, Kopfzeile bleibt");
-  assert.ok(/\.kopf-pfeil\.dreh span \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
+  assert.ok(/\.kopf-pfeil\.dreh span\.kp-p \{ transform: rotate\(180deg\)/.test(html), "Pfeil dreht sich um");
   assert.ok(/\.rl-lamelle \{[^}]*linear-gradient/.test(html) && /\.rollo-leiste \{ position: absolute;[^}]*bottom: 0/.test(html), "Lamellen und Abschlussleiste");
   const f = html.slice(html.indexOf("async function kopfRolloFahren("), html.indexOf("function kopfRollo(art"));
   assert.ok(/ROLLO_FAHRT_MS = 1400/.test(html) && /await klappen\(false\);[\s\S]{0,80}await fahren\(gross, klein\);/.test(f) && /await fahren\(klein, gross\);[\s\S]{0,80}await klappen\(true\);/.test(f), "hoch: zuklappen, dann hochfahren – runter umgekehrt");
   assert.ok(!/prefers-reduced-motion/.test(f) && /typeof h\.animate !== "function" \|\| !h\.getClientRects\(\)\.length\) return kopfRolloSetzen\(ziel\)/.test(f) && /if \(h\.dataset\.rollt\) return;/.test(f) && /finally \{[\s\S]{0,200}vorhang\.remove\(\); leiste\.remove\(\); delete h\.dataset\.rollt;/.test(f), "läuft auf Antippen immer (2.161.0), kein Doppelstart, räumt immer auf");
-  assert.ok(/function kopfRollo\(art = "ganz"\) \{[\s\S]{0,600}localStorage\.removeItem\(KOPF_ROLLO\) : localStorage\.setItem\(KOPF_ROLLO, ziel === "ganz" \? "1" : "halb"\)/.test(html) && /try \{ const w = localStorage\.getItem\(KOPF_ROLLO\); if \(w === "1"\) kopfRolloSetzen\("ganz"\); else if \(w === "halb"\) kopfRolloSetzen\("halb"\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
-  assert.ok(/[gk]\.setAttribute\("aria-expanded", zu \? "false" : "true"\)/.test(html), "Vorlesehilfe kennt den Zustand");
+  assert.ok(/function kopfRollo\(art = "ganz"\) \{[\s\S]{0,900}localStorage\.removeItem\(KOPF_ROLLO\) : localStorage\.setItem\(KOPF_ROLLO, ziel === "ganz" \? "1" : ziel\)/.test(html) && /try \{ const w = localStorage\.getItem\(KOPF_ROLLO\); if \(w === "1"\) kopfRolloSetzen\("ganz"\); else if \(w === "halb"\) kopfRolloSetzen\("halb"\); else if \(w === "felder"\) kopfRolloSetzen\("felder"\); \} catch \{\}/.test(html), "Zustand gemerkt, Speicherfehler harmlos");
+  assert.ok(/g\.setAttribute\("aria-expanded", stand === "offen" \? "true" : "false"\)/.test(html), "Vorlesehilfe kennt den Zustand");
 }
 // 2.162.0 KC-CLUB-START-PARALLEL-3 (Wunsch Hansi „Start optimieren, nicht schlechter“): weniger Datenbank-Anfragen beim Start, gleicher Inhalt
 {
@@ -10234,11 +10234,13 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 // 2.214.0 KC-CLUB-KOPF-ROLLO-2 (Wunsch Hansi): zweite Jalousie – links ⌃ halb (Statusleiste mit LEDs bleibt), rechts ⌃⌃ ganz; symmetrisch mit Abstand
 {
   const start = html.slice(html.indexOf('<section id="v-start">'), html.indexOf('<div class="kopfzeile">', html.indexOf('<section id="v-start">')));
-  assert.ok(/id="kopfPfeilHalb"[^>]*onclick="kopfRollo\('halb'\)"/.test(start) && /id="kopfPfeil"[^>]*onclick="kopfRollo\('ganz'\)"/.test(start), "zwei Pfeile im Kopf");
-  assert.ok(/\.kopf-pfeil\.kp-halb \{ left: calc\(50% - 62px\); \} \.kopf-pfeil\.kp-ganz \{ left: calc\(50% - 6px\); \}/.test(html), "Pfeile nebeneinander, etwas links der Mitte (KC-CLUB-SPRACHE: rechts daneben Flagge und Verbindungs-Balken)");
-  const ab = Number(/kp-halb \{ left: calc\(50% - (\d+)px\)/.exec(html)[1]); assert.ok(ab * 2 - 56 >= 40, "mindestens 40 px Abstand zwischen den Laschen");
+  // KC-CLUB-KOPF-EIN-KNOPF (11.11.2026, Wunsch Hansi „B bauen“): statt zwei Laschen ein Knopf – offen → halb → ganz → offen, lange drücken: ganz auf
+  assert.ok(!/id="kopfPfeilHalb"/.test(start) && /id="kopfPfeil"[^>]*onclick="kopfRollo\('weiter'\)"><span class="kp-p">⌃<\/span><span class="kp-dots" aria-hidden="true">(<i class="an"><\/i>){4}<\/span>/.test(start), "ein Knopf mit Pfeil und vier Punkten (KC-CLUB-KOPF-4-STUFEN)");
+  assert.ok(/art === "weiter" \? \(\{ offen: kopfFelderDa\(\) \? "felder" : "halb", felder: "halb", halb: "ganz", ganz: "offen" \}\[von\] \|\| "halb"\)/.test(html) && /const ziel = art === "auf" \? "offen"/.test(html), "drei Stufen der Reihe nach, lange drücken = auf");
+  assert.ok(/if \(art === "weiter" && KOPF_LANG\.lang\) \{ KOPF_LANG\.lang = false; return; \}/.test(html), "nach langem Drücken zählt der Klick nicht doppelt");
+  assert.ok(/k = \{ offen: 4, felder: 3, halb: 2, ganz: 1 \}\[stand\] \|\| 4/.test(html) && /#v-start \.hero\.felder-eingerollt > #heroInfo \.kacheln3 \{ display: none; \}/.test(html) && /const ROLLO_RANG = \{ offen: 0, felder: 1, halb: 2, ganz: 3 \}/.test(html) && /\.kopf-pfeil\.kp-eins \{ left: calc\(50% - 16px\);/.test(html), "Punkte zeigen die Stufe, Knopf mittig");
   assert.ok(/#v-start \.hero\.halb-eingerollt > #heroInfo, #v-start \.hero\.halb-eingerollt > #infoPunkte \{ display: none; \}/.test(html) && !/halb-eingerollt > \.statusleiste/.test(html), "halb: Statusleiste mit LEDs bleibt");
-  assert.ok(/const ROLLO_RANG = \{ offen: 0, halb: 1, ganz: 2 \};/.test(html) && /art === "halb" \? \(von === "offen" \? "halb" : von === "halb" \? "offen" : "halb"\) : \(von === "ganz" \? "offen" : "ganz"\)/.test(html), "drei Stellungen, logische Übergänge");
+  assert.ok(/const ROLLO_RANG = \{ offen: 0, felder: 1, halb: 2, ganz: 3 \};/.test(html) && /art === "halb" \? \(von === "offen" \? "halb" : von === "halb" \? "offen" : "halb"\) : \(von === "ganz" \? "offen" : "ganz"\)/.test(html), "vier Stellungen (KC-CLUB-KOPF-4-STUFEN), logische Übergänge");
   assert.ok(/if \(document\.querySelector\("#v-start \.hero"\)\?\.dataset\.rollt\) return;/.test(html), "während der Fahrt nichts merken");
 }
 // 2.215.0 KC-CLUB-SPIELE-LEISTE: alle Spiele mit derselben Knopfleiste (Neues Spiel, Abbrechen, Töne, Ansage) im festen Raster
@@ -10551,7 +10553,7 @@ assert.ok(/localStorage\.getItem\("kc_club_fdk2"\)[^\n]*if \(alt\?\.stand\) w = 
 {
   const b = html.slice(html.indexOf("// ---------- KC-CLUB-JAHRESZEIT-BUEHNE"), html.indexOf("// ---------- KC-CLUB-KONFETTI (2.169.0)")) + lies("teile/szenen.js"); // 2.758.0: Szenen in teile/szenen.js
   assert.ok(b.length > 1000, "Bühne vorhanden");
-  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\)\) \{ if \(!teilDa\("szenen"\)\) return szenenSpaeter\(\); if \(jzbStart\(h, jetzt\)\) return; \}/.test(html) /* 2.758.0 */ && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
+  assert.ok(/if \(JZB_ARTEN\.includes\(jetzt\)\) \{ if \(!teilDa\("szenen"\)\) return szenenSpaeter\(\); if \(jzbStart\(h, jetzt\)\) return; \}/.test(html) /* 2.758.0 */ && /const JZB_ARTEN = \["herbst", "advent", "winter", "fruehling", "sommer"(?:, "kirmes", "wiesn", "karibik"(?:, "karneval", "halloween"(?:, "unterwasser"(?:, "weltraum"(?:, "bauernhof"(?:, "kegeln"(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?)?)?)?)?)?)?\];/.test(b), "Bühne für Herbst/Advent/Winter/Frühling/Sommer, Silvester bleibt Feuerwerk, ruhig bei „Bewegung reduzieren“");
   assert.ok(/J\.wind = \{ dir: \(J\.lauf >> 1\) % 2 \? -1 : 1/.test(b), "Windstoß abwechselnd von links und rechts (2.259.0: über die Wind-Läufe, dazwischen Twinkey)");
   assert.ok(/if \(J\.lauf % 3 === 2\) (jzbSchneemannStart|\(Math\.floor\(J\.lauf \/ 3\) % 2 \? jzbIgluStart : jzbSchneemannStart\))\(\); else (if \(J\.lauf % 2\) jzbBesuchStart\("schippen"\); else )?jzbWindStart\(\);/.test(b) && /muetze: J\.art === "advent" \? "weihnacht" : "koch"/.test(b), "jeder 3. Lauf ein Schneemann (ab 2.320.0 abwechselnd mit dem Iglu; Advent mit Weihnachtsmütze)");
   assert.ok(/if \(document\.hidden \|\| !JZB\.imBild\) \{ JZB\.letzt = 0; return; \}/.test(b) && /if \(!jzbDarf\(\)\) return jahreszeitKopf\(\);/.test(b), "zeichnet nur sichtbar, schaltet mit Effekte/Sparmodus ab");
@@ -11060,7 +11062,7 @@ function BW_LOB_ANZAHL(b) { const m = /const BW_LOB = \[([\s\S]*?)\];/.exec(b); 
   for (const id of ["raetsel", "club_song", "kopf_besucher", "deko_leiste", "sparmodus", "akku", "anpassen"]) assert.ok(new RegExp(`\\{ id: "${id}", thema: "[a-z]+", sym: "[^"]+", t: "[^"]+", x: "[^"]+", zeig: `).test(html), "Hilfe: " + id);
   for (const w of ["Thema wählen", "Deko an der Leiste", "Sparmodus / Akku sparen", "Erklär-Video: Meine App nach meinem Geschmack", "Trainingsuhr auf der Bühne", "Dienstwünsche: Bestätigung per E-Mail"]) assert.ok(html.includes(`"${w}`), "Lupe: " + w);
   for (const id of ["aussehen", "kopf-ruhig", "raetsel"]) assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?", x: `).test(html), "Twinkey: " + id);
-  assert.ok(/\{ id: "anpassen", stand: "\d+", sym: "🎨", t: "Meine App nach meinem Geschmack"[^\n]*st: \(\) => RG_ANPASSEN \}/.test(html) && /videos: \[[^\]]*"rueckseite", ("wecker", )?"anpassen"/.test(html), "Video registriert, im Thema Ich & meine App");
+  assert.ok(/\{ id: "anpassen", stand: "\d+", (zeit: "[\d.]+", )?sym: "🎨", t: "Meine App nach meinem Geschmack"[^\n]*st: \(\) => RG_ANPASSEN \}/.test(html) && /videos: \[[^\]]*"rueckseite", ("wecker", )?"anpassen"/.test(html), "Video registriert, im Thema Ich & meine App");
   const v = html.slice(html.indexOf("const RG_ANPASSEN = ["), html.indexOf("// KC-CLUB-ERKLAERVIDEOS-FIGUR (2.248.0"));
   for (const id of ["themaWahl", "themaSchriftAn", "designWahl", "modusWahl", "setGross", "setJahreszeit", "jzDekoWahl", "regEffektWahl", "setAnimiert", "sparWahl", "setEselsohr"]) { assert.ok(v.includes(id), "Station zeigt " + id); assert.ok(lies("index.html").includes(`id="${id}"`), "Feld da: " + id); }
   assert.ok(!/live:/.test(v), "nur vorgeführt – nichts wird umgestellt");
@@ -11801,7 +11803,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.434.0 KC-CLUB-UNTERWASSER: Thema Unterwasserwelt mit eigener Szene (Regen füllt, Stöpsel leert)
 {
   assert.ok(/\{ id: "unterwasser", sym: "🐠", name: "Unterwasserwelt", design: "nordsee", jz: "unterwasser"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"unterwasser"(?:, "weltraum")?(?:, "bauernhof")?(?:, "kegeln")?(?:, "wildwest")?(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "unterwasser"\) return jzbUwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "unterwasser"\) jzbUnterwasserMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const u = programm.slice(programm.indexOf("function jzbUwSchritt("), programm.indexOf("function jzbUwSog("));
   assert.ok(/U\.phase = "ablauf"; U\.at = 0; U\.plopp = 0;/.test(u) && /J\.fest = null; return jzbLaufEnde\(\);/.test(u), "Stöpsel → ablaufen → neuer Lauf");
@@ -12347,7 +12349,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 // 2.529.0 KC-CLUB-WILDWEST (Wunsch Hansi): Thema Wilder Westen – Tipi, Lagerfeuer, Büffel am Horizont, Cowboys, Postkutsche, Herde trampelt alles nieder, Staubwolke, von vorn
 {
   assert.ok(/\{ id: "wildwest", sym: "🤠", name: "Wilder Westen", design: "ocker", jz: "wildwest"/.test(programm), "Thema eingetragen");
-  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?\]/.test(programm), "Bühne bekannt");
+  assert.ok(/const JZB_ARTEN = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm) && /const JZB_FESTE = \[[^\]]*"wildwest"(?:, "wueste")?(?:, "baustelle")?(?:, "seifenblasen")?(?:, "disco")?(?:, "see")?\]/.test(programm), "Bühne bekannt");
   assert.ok(/if \(J\.saison === "wildwest"\) return jzbWwSchritt\(F, dt\);/.test(programm) && /else if \(J\.saison === "wildwest"\) jzbWildwestMalen\(c, F\);/.test(programm), "Schritt und Malen verdrahtet");
   const g = programm.slice(programm.indexOf("function jzbWwSchritt("), programm.indexOf("function jzbWwBueffelMalen("));
   assert.ok(/if \(t >= JZB_WW_DAUER\) \{ J\.fest = null; J\.wwStaub = true; return jzbLaufEnde\(\); \}/.test(g) && /W\.zeltFall = Math\.min\(1, W\.zeltFall \+ dt \* 1\.6\)/.test(g) && /W\.feuerAus = Math\.min\(1, W\.feuerAus \+ dt \* 3\)/.test(g), "Herde trampelt Zelt und Feuer nieder, nächster Lauf aus der Staubwolke");
@@ -12622,7 +12624,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const mig = lies("supabase/migrations/20261021_kc_club_start_paket.sql");
   assert.ok(/db\.rpc\("kc_club_start_paket", \{ p_person: ich\.person_id, p_org: ORG, p_heute: berlinTag\(new Date\(\)\) \}\)/.test(server), "ein Aufruf für die kleinen Start-Abfragen");
   assert.ok(/konfigZeile\("start_paket"\)/.test(server) && /if \(\(k as any\)\?\.data\?\.wert\?\.aus\) return null;/.test(server) && /\} catch \{ return null; \}/.test(server), "Not-Aus + Fehler → bisheriger Weg");
-  assert.ok(/protokoll\(ich\.person_id, "start_paket_abweichung", \{ teile: abw \}\)/.test(server) && /Math\.random\(\) < 1 \/ START_PAKET_VERGLEICH\) nebenbei\(startPaketVergleich\(ich, pk\)\)/.test(server), "Vergleich alt ↔ neu nebenbei, Abweichungen ins Protokoll");
+  assert.ok(/protokoll\(ich\.person_id, "start_paket_abweichung", \{ teile: abw(, \.\.\.\(einstNamen \? \{ einst: einstNamen \} : \{\}\))? \}\)/.test(server) && /Math\.random\(\) < 1 \/ START_PAKET_VERGLEICH\) nebenbei\(startPaketVergleich\(ich, pk\)\)/.test(server), "Vergleich alt ↔ neu nebenbei, Abweichungen ins Protokoll");
   const init = server.slice(server.indexOf(server.includes("const pPaket = startPaket(ich, pKern);") ? "const pPaket = startPaket(ich, pKern);" : "const pPaket = startPaket(ich);"), server.indexOf("const [naechstes, { data: teil, error: teilFehler }, mitglieder]")); // 2.602.0: Paket kommt aus dem Kern
   for (const [teil, alt] of [["vor", 'db.from("kc_club_vorschlaege").select("id,art,ziel_ids,erstellt_von,treffen_id").eq("status", "offen").limit(1000)'], ["nd", 'db.from("kc_dp_plan_published")'],
     ["wahl", 'db.from("kc_club_benachrichtigung").select("bereich,push,email")'], ["frei", 'db.from("kc_club_freigaben").select("bereich,erlaubt")'], ["spiele", 'db.from("kc_club_spiele")'],
@@ -12757,7 +12759,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 }
 // 2.588.0 KC-CLUB-ERSTATTUNG-CSV: Excel-Knopf auch unter „Erstattung“ (Hansi suchte ihn dort) – nur Clubleitung
 {
-  assert.ok(/<div id="ersLeitung"><\/div>/.test(lies("index.html")) && /\$\("ersLeitung"\)\.innerHTML = ICH\?\.vorstand \|\| ICH\?\.admin \? [^\n]*onclick="ersCsvOeffnen\(\)">📊 CSV für Excel erstellen<\/button>/.test(html), "Knopf unter Erstattung, nur Clubleitung");
+  assert.ok(/<div id="ersLeitung"><\/div>/.test(lies("index.html")) && /\$\("ersLeitung"\)\.innerHTML = ICH\?\.vorstand \|\| ICH\?\.admin(?: \|\| \(ICH\?\.aemter \|\| \[\]\)\.some\(\(a\) => \/\^\(kassenwart\|clubsprecher\)\/i\.test\(a\)\))? \? [^\n]*onclick="ersCsvOeffnen\(\)">📊 CSV für Excel erstellen<\/button>/.test(html), "Knopf unter Erstattung, nur Clubleitung (seit KC-CLUB-ERSTATTUNG-BUCHUNGEN auch Kassenwart/Clubsprecher)");
 }
 // 2.589.0 KC-CLUB-INFO-LESEN: Info-Meldungen ohne eigenes Ziel (z. B. Zeitumstellung) öffnen beim Antippen den ganzen Text
 {
@@ -13544,7 +13546,7 @@ assert.ok(/:where\(:root\.sch-an\) :is\(\.kachel,[^)]*\.register button\) \{ box
     assert.ok(new RegExp(`\\{ id: "${id}", thema: "`).test(hz), "Hilfe-Eintrag " + id);
   for (const id of ["wecker", "wecker-stumm", "kachel-effekt", "wie-verschicken", "auch-an", "nachricht-aendern", "sanduhr", "vorher-abrufen", "anklopfen-art", "anklopfen-blass", "zettel-teil-ab", "abstimmung-mehrere", "pdf-senden", "clubabend", "clubmoment", "spassstimme", "glueckskeks", "schatten-kopf"])
     assert.ok(new RegExp(`\\{ id: "${id}", sym: "[^"]+", t: "[^"]+\\?"`).test(html), "Twinkey-Frage " + id);
-  assert.ok(/\{ id: "wecker", stand: "1", sym: "⏰", t: "Wecker, Stoppuhr & Timer"[^\n]*st: \(\) => RG_WECKER, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"rueckseite", "wecker"/.test(html), "Video Wecker registriert (nur mit Eselsohr), im Thema");
+  assert.ok(/\{ id: "wecker", stand: "1", (zeit: "[\d.]+", )?sym: "⏰", t: "Wecker, Stoppuhr & Timer"[^\n]*st: \(\) => RG_WECKER, nur: \(\) => esAn\(\) \}/.test(html) && /videos: \[[^\]]*"rueckseite", "wecker"/.test(html), "Video Wecker registriert (nur mit Eselsohr), im Thema");
   const wk = html.slice(html.indexOf("// 2.671.0 KC-CLUB-VIDEO-WECKER (Hilfe-Nachtrag 5)"), html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"));
   assert.ok(wk.length > 3000 && wk.length < 9000 && !/wkWeckerStellen\(\)|wkTimerStart\(|wkServer|api\(|wkKlingeln\(/.test(wk.replace(/'[^'\n]*'/g, "''").replace(/"[^"\n]*"/g, '""')), "Wecker-Video stellt nichts und sendet nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{ RG\.wkZurueck = false;/.test(wk), "Wecker-Video stellt Stoppuhr und Anzeige zurück");
