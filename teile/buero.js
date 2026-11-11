@@ -1478,7 +1478,7 @@ function buEingangHtml() {
     <div class="karte bu-gruss"><span class="hinweis">Antippen → bearbeiten, zurück in den Eingang oder zum Ordner. Es bleibt hier, bis es erledigt ist; mit 🗄️ Ablegen in einen oder mehrere Ordner legen (auch in den Ordner des Mitglieds).</span></div>
     ${!geladen ? '<div class="karte hinweis">Wird geladen …</div>' : !zeig.length && P.length ? '<div class="karte hinweis">Zu diesem Filter liegt nichts im Eingang – <button class="knopf klein" onclick="ekfLeeren()">↺ Alle zeigen</button></div>' : P.length ? `<div class="karte" style="padding:4px 12px">${zeig.map(([x, i]) => `<button class="bu-ein-zeile" onclick="buEinPosten(${i})"><span class="sym">${esc(x.sym)}</span>
       <span class="txt"><small>${esc(x.gruppe)}</small><b>${esc(x.titel)}</b><small>${esc(x.unter)}</small></span><span class="pfeil">›</span></button>`).join("")}</div>` : '<div class="karte hinweis">📭 Alles erledigt – im Eingang liegt nichts 👍</div>'}
-    <div class="knoepfe"><button class="knopf" onclick="ersCsvOeffnen()">📊 Erstattungen für Excel (CSV)</button><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
+    <div class="knoepfe"><button class="knopf" onclick="ersBuchOeffnen()">📒 Buchungsliste</button><button class="knopf" onclick="ersCsvOeffnen()">📊 Erstattungen für Excel (CSV)</button><button class="knopf" onclick="buEingangLaden()">↻ Neu laden</button><button class="knopf" onclick="buZurueck()">🗂️ Zurück ins Büro</button></div>`;
 }
 // ---------- 2.583.0 KC-CLUB-ERSTATTUNG-CSV (Wunsch Hansi „Erstattungen als CSV, damit der Kassierer sie in seine Excel-Tabelle übernehmen kann“) ----------
 // Alles per Auswahl (kein Freitext): was (nur neue / alle im Zeitraum), Zeitraum, Status, Form (je Position / je Antrag). Die Datei rechnet der Server
@@ -2529,4 +2529,123 @@ async function anlWgSenden(knopf) {
       else await api("archiv_eingang_verteilen", { personen: ids, name: f.name, mime: f.type, daten, titel: anlOhneSym(x.titel), register: "Sonstiges", notiz: text, letzte: true, anzahl: 1 }, { warten: true }); }
     $("anleitungWgBlatt")?.remove(); melde(`📤 Anleitung an ${ids.length} ${ids.length === 1 ? "Mitglied" : "Mitglieder"} gesendet`);
   } catch (e) { meldeFehler(e); knopf.disabled = false; }
+}
+// ---------- KC-CLUB-ERSTATTUNG-BUCHUNGEN (11.11.2026, Wunsch Hansi „Buchungsliste für den Kassenwart“) ----------
+// ID, Name, Vorname, Datum, Kostenart, km, Erstattungsbetrag, 💶 Bar am, 🏦 Überwiesen am – Summen oben und unten. Filter (jeder mit ▸/▾ einklappbar):
+// Jahr, Monat, Kostenart (alle oder angehakt), Mitglieder-Gruppe, einzelne Mitglieder, Stand. Ansicht je Buchung oder je Mitglied (antippen klappt auf).
+// Datum = Tag der Fahrt/Auslage. Sehen dürfen Kassenwart, Clubsprecher, die übrige Clubleitung und der Admin (prüft der Server). Druck/PDF im Club-Design (Druckvorschau).
+const EBL_ARTEN = [["fahrt", "🚗", "Fahrtkosten"], ["einkauf", "🛒", "Einkauf"], ["kraftstoff", "⛽", "Kraftstoff"], ["parken", "🅿️", "Parken"], ["kaution", "🔐", "Kaution"], ["sonstiges", "📎", "Sonstiges"]];
+const EBL_MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const EBL = { jahr: 0, daten: null, laedt: false, monat: 0, arten: [], gruppe: "", personen: [], stand: "alle", ansicht: "buchung", sort: "d", ab: false, auf: {}, mAuf: {} };
+const eblDarf = () => !!(ICH?.admin || ICH?.vorstand || (ICH?.aemter || []).some((a) => /^(kassenwart|clubsprecher)/i.test(a)));
+const eblEur = (n) => (Math.round(n * 100) / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+const eblKm = (n) => (Math.round(n * 10) / 10).toLocaleString("de-DE", { maximumFractionDigits: 1 });
+const eblTag = (d) => (d ? `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(2, 4)}` : "");
+function eblMerken() { try { localStorage.setItem("kc_club_ebl", JSON.stringify({ monat: EBL.monat, arten: EBL.arten, gruppe: EBL.gruppe, personen: EBL.personen, stand: EBL.stand, ansicht: EBL.ansicht, sort: EBL.sort, ab: EBL.ab, auf: EBL.auf })); } catch {} }
+function eblLaden() { try { const g = JSON.parse(localStorage.getItem("kc_club_ebl") || "null"); if (g) Object.assign(EBL, { monat: +g.monat || 0, arten: Array.isArray(g.arten) ? g.arten : [], gruppe: String(g.gruppe || ""),
+  personen: Array.isArray(g.personen) ? g.personen : [], stand: ["alle", "offen", "erstattet"].includes(g.stand) ? g.stand : "alle", ansicht: g.ansicht === "mitglied" ? "mitglied" : "buchung", sort: String(g.sort || "d"), ab: !!g.ab, auf: g.auf || {} }); } catch {} }
+async function ersBuchOeffnen(jahr) {
+  if (!eblDarf()) return melde("Die Buchungsliste sehen Kassenwart, Clubsprecher und Admin.", true);
+  if (!EBL.jahr) eblLaden();
+  EBL.jahr = jahr || EBL.jahr || +heuteIso().slice(0, 4); EBL.daten = null; EBL.laedt = true; eblZeichnen();
+  try { EBL.daten = await api("erstattung_buchungen", { jahr: EBL.jahr }, { warten: true }); } catch (e) { meldeFehler(e); }
+  EBL.laedt = false; eblZeichnen();
+}
+function eblPerson(pid) { const p = EBL.daten?.personen?.[pid] || {}; return { nr: p.nr || "–", vorname: p.vorname || "", nachname: p.nachname || (p.vorname ? "" : "Mitglied") }; }
+function eblGefiltert() {
+  const D = EBL.daten; if (!D) return [];
+  const gr = EBL.gruppe ? new Set((D.gruppen.find((g) => g.id === EBL.gruppe)?.personen) || []) : null, pe = EBL.personen.length ? new Set(EBL.personen) : null, ar = EBL.arten.length ? new Set(EBL.arten) : null;
+  return D.zeilen.filter((z) => (!EBL.monat || +z.d.slice(5, 7) === EBL.monat) && (!ar || ar.has(z.art)) && (!gr || gr.has(z.p)) && (!pe || pe.has(z.p)) && (EBL.stand === "alle" || z.st === EBL.stand));
+}
+function eblSumme(L) { return L.reduce((s, z) => ({ n: s.n + 1, km: s.km + z.km, b: s.b + z.b, offen: s.offen + (z.st === "offen" ? z.b : 0), bar: s.bar + (z.bar ? z.b : 0), ueb: s.ueb + (z.ueb ? z.b : 0) }), { n: 0, km: 0, b: 0, offen: 0, bar: 0, ueb: 0 }); }
+function eblSortiert(L) {
+  const k = EBL.sort, f = { nr: (z) => eblPerson(z.p).nr, name: (z) => eblPerson(z.p).nachname, vorname: (z) => eblPerson(z.p).vorname, d: (z) => z.d, art: (z) => z.art, km: (z) => z.km, b: (z) => z.b, bar: (z) => z.bar || "", ueb: (z) => z.ueb || "" }[k] || ((z) => z.d);
+  const r = [...L].sort((x, y) => { const a = f(x), b = f(y); return typeof a === "number" ? a - b : String(a).localeCompare(String(b), "de", { numeric: true }); }); return EBL.ab ? r.reverse() : r;
+}
+function eblFilterText() {
+  const D = EBL.daten, t = [`Jahr ${EBL.jahr}`, EBL.monat ? EBL_MONATE[EBL.monat - 1] : "alle Monate", EBL.arten.length ? EBL.arten.map((a) => EBL_ARTEN.find((x) => x[0] === a)?.[2]).join(", ") : "alle Kostenarten"];
+  if (EBL.gruppe) t.push("Gruppe " + (D?.gruppen.find((g) => g.id === EBL.gruppe)?.name || "")); if (EBL.personen.length) t.push(EBL.personen.length === 1 ? eblName(EBL.personen[0]) : `${EBL.personen.length} Mitglieder`);
+  if (EBL.stand !== "alle") t.push(EBL.stand === "offen" ? "nur offen" : "nur erstattet"); return t.join(" · ");
+}
+const eblName = (pid) => { const p = eblPerson(pid); return `${p.vorname} ${p.nachname}`.trim(); };
+function eblFilterBlock(k, titel, wert, inhalt) {
+  return `<details class="ebl-f"${EBL.auf[k] ? " open" : ""} data-k="${k}"><summary><b>${titel}</b><span class="ebl-wert">${esc(wert)}</span></summary><div class="ebl-f-inhalt">${inhalt}</div></details>`;
+}
+function eblChip(f, w, an, t) { return `<button type="button" class="knopf klein${an ? " haupt" : ""}" data-ebl="${f}" data-w="${esc(String(w))}" aria-pressed="${an}">${t}</button>`; }
+function eblZeichnen() {
+  const D = EBL.daten, L = eblSortiert(eblGefiltert()), S = eblSumme(L), hj = +heuteIso().slice(0, 4), jahre = []; for (let j = Math.max(2026, hj - 4); j <= hj; j++) jahre.push(j);
+  const personenAlle = D ? [...new Set(D.zeilen.map((z) => z.p))].sort((a, b) => eblPerson(a).nachname.localeCompare(eblPerson(b).nachname, "de")) : [];
+  const filter = !D ? "" : [
+    eblFilterBlock("jahr", "Jahr", String(EBL.jahr), jahre.map((j) => eblChip("jahr", j, j === EBL.jahr, j)).join("")),
+    eblFilterBlock("monat", "Monat", EBL.monat ? EBL_MONATE[EBL.monat - 1] : "alle", eblChip("monat", 0, !EBL.monat, "Alle") + EBL_MONATE.map((m, i) => eblChip("monat", i + 1, EBL.monat === i + 1, m.slice(0, 3))).join("")),
+    eblFilterBlock("art", "Kostenart", EBL.arten.length ? EBL.arten.map((a) => EBL_ARTEN.find((x) => x[0] === a)?.[1]).join(" ") : "alle",
+      eblChip("art", "", !EBL.arten.length, "☑ Alle") + EBL_ARTEN.map(([id, sym, t]) => eblChip("art", id, EBL.arten.includes(id), `${EBL.arten.includes(id) ? "☑" : "☐"} ${sym} ${t}`)).join("")),
+    eblFilterBlock("gruppe", "Gruppe", EBL.gruppe ? (D.gruppen.find((g) => g.id === EBL.gruppe)?.name || "–") : "alle",
+      eblChip("gruppe", "", !EBL.gruppe, "Alle") + (D.gruppen.length ? D.gruppen.map((g) => eblChip("gruppe", g.id, EBL.gruppe === g.id, `${g.symbol} ${esc(g.name)}`)).join("") : '<span class="hinweis">Keine Gruppe mit Erstattungen in diesem Jahr.</span>')),
+    eblFilterBlock("person", "Mitglieder", EBL.personen.length ? (EBL.personen.length === 1 ? eblName(EBL.personen[0]) : `${EBL.personen.length} angehakt`) : "alle",
+      eblChip("person", "", !EBL.personen.length, "☑ Alle") + personenAlle.map((pid) => eblChip("person", pid, EBL.personen.includes(pid), `${EBL.personen.includes(pid) ? "☑" : "☐"} ${esc(eblName(pid))}`)).join("")),
+    eblFilterBlock("stand", "Stand", { alle: "offen + erstattet", offen: "nur offen", erstattet: "nur erstattet" }[EBL.stand],
+      eblChip("stand", "alle", EBL.stand === "alle", "Offen + erstattet") + eblChip("stand", "offen", EBL.stand === "offen", "⏳ Nur offen") + eblChip("stand", "erstattet", EBL.stand === "erstattet", "✅ Nur erstattet")),
+  ].join("");
+  const kopf = (k, t, re) => `<th${re ? ' class="re"' : ""}><button type="button" class="ebl-sort" data-s="${k}" aria-label="Sortieren nach ${t}">${t}${EBL.sort === k ? (EBL.ab ? " ▾" : " ▴") : ""}</button></th>`;
+  const zeile = (z) => { const p = eblPerson(z.p), a = EBL_ARTEN.find((x) => x[0] === z.art) || EBL_ARTEN[5];
+    return `<tr><td class="nr">${esc(p.nr)}</td><td>${esc(p.nachname)}</td><td>${esc(p.vorname)}</td><td>${eblTag(z.d)}</td><td title="${a[2]}">${a[1]}</td><td class="re">${z.km ? eblKm(z.km) : ""}</td><td class="re"><b>${eblEur(z.b)}</b></td>
+      <td>${z.bar ? "💶 " + eblTag(z.bar) : ""}</td><td>${z.ueb ? "🏦 " + eblTag(z.ueb) : z.st === "offen" ? '<span class="ebl-offen">⏳ offen</span>' : ""}</td></tr>`; };
+  const sumZeile = `<tr class="ebl-summe"><td colspan="5">Summe · ${S.n} ${S.n === 1 ? "Buchung" : "Buchungen"}</td><td class="re">${eblKm(S.km)}</td><td class="re"><b>${eblEur(S.b)}</b></td><td>${S.bar ? "💶 " + eblEur(S.bar) : ""}</td><td>${S.ueb ? "🏦 " + eblEur(S.ueb) : ""}</td></tr>`;
+  let tabelle = "";
+  if (D && EBL.ansicht === "buchung") tabelle = `<table class="ebl-tab"><thead><tr>${kopf("nr", "ID")}${kopf("name", "Name")}${kopf("vorname", "Vorname")}${kopf("d", "Datum")}${kopf("art", "Art")}${kopf("km", "km", 1)}${kopf("b", "Betrag", 1)}${kopf("bar", "💶 Bar am")}${kopf("ueb", "🏦 Überwiesen am")}</tr></thead><tbody>${L.map(zeile).join("")}</tbody><tfoot>${sumZeile}</tfoot></table>`;
+  if (D && EBL.ansicht === "mitglied") {
+    const je = new Map(); for (const z of L) { if (!je.has(z.p)) je.set(z.p, []); je.get(z.p).push(z); }
+    const reihen = [...je.entries()].sort((a, b) => eblPerson(a[0]).nachname.localeCompare(eblPerson(b[0]).nachname, "de")).map(([pid, zs]) => { const s = eblSumme(zs), p = eblPerson(pid), auf = !!EBL.mAuf[pid];
+      return `<tr class="ebl-m" data-m="${esc(pid)}" tabindex="0" aria-expanded="${auf}"><td class="nr">${auf ? "▾" : "▸"} ${esc(p.nr)}</td><td>${esc(p.nachname)}</td><td>${esc(p.vorname)}</td><td colspan="2">${s.n} ${s.n === 1 ? "Buchung" : "Buchungen"}</td><td class="re">${s.km ? eblKm(s.km) : ""}</td><td class="re"><b>${eblEur(s.b)}</b></td><td>${s.bar ? "💶 " + eblEur(s.bar) : ""}</td><td>${s.ueb ? "🏦 " + eblEur(s.ueb) : s.offen ? '<span class="ebl-offen">⏳ ' + eblEur(s.offen) + "</span>" : ""}</td></tr>`
+        + (auf ? zs.map((z) => zeile(z).replace("<tr>", '<tr class="ebl-unter">')).join("") : ""); }).join("");
+    tabelle = `<table class="ebl-tab"><thead><tr><th>ID</th><th>Name</th><th>Vorname</th><th colspan="2">Buchungen</th><th class="re">km</th><th class="re">Betrag</th><th>💶 Bar</th><th>🏦 Überwiesen</th></tr></thead><tbody>${reihen}</tbody><tfoot>${sumZeile}</tfoot></table>`;
+  }
+  blattAuf("eblBlatt", `<h3 style="margin:0">📒 Buchungsliste Erstattungen ${EBL.jahr}</h3>
+    ${!D ? `<div class="karte hinweis">${EBL.laedt ? "⏳ Wird geladen …" : "Konnte nicht geladen werden."}</div>` : `
+    <div class="ebl-summen" aria-live="polite"><div><b>${S.n}</b><small>${S.n === 1 ? "Buchung" : "Buchungen"}</small></div><div><b>${eblKm(S.km)}</b><small>km</small></div><div class="gross"><b>${eblEur(S.b)}</b><small>gesamt eingereicht</small></div>
+      <div><b>${eblEur(S.offen)}</b><small>⏳ offen</small></div><div><b>${eblEur(S.bar)}</b><small>💶 bar</small></div><div><b>${eblEur(S.ueb)}</b><small>🏦 überwiesen</small></div></div>
+    <div class="ebl-filter">${filter}<div class="knoepfe" style="margin:6px 0 0"><button type="button" class="knopf klein" data-k="zurueck">↺ Filter zurücksetzen</button>
+      <span class="ebl-ansicht">${eblChip("ansicht", "buchung", EBL.ansicht === "buchung", "Je Buchung")}${eblChip("ansicht", "mitglied", EBL.ansicht === "mitglied", "Je Mitglied")}</span></div></div>
+    ${L.length ? `<div class="ebl-rolle">${tabelle}</div>` : '<div class="karte hinweis">📭 Zu diesem Filter gibt es keine Buchungen.</div>'}
+    <div class="knoepfe"><button type="button" class="knopf haupt" data-k="druck"${L.length ? "" : " disabled"}>🖨️ Drucken / PDF</button><button type="button" class="knopf" data-k="csv"${L.length ? "" : " disabled"}>📊 Für Excel (CSV)</button><button type="button" class="knopf" data-k="neu">↻ Neu laden</button></div>`}
+    <div class="knoepfe"><button type="button" class="knopf" onclick="fensterZu($('eblBlatt'))">Schließen</button></div>`);
+  const f = $("eblBlatt"); if (!f) return;
+  f.querySelectorAll("details.ebl-f").forEach((d) => d.addEventListener("toggle", () => { EBL.auf[d.dataset.k] = d.open; eblMerken(); }));
+  f.querySelectorAll("[data-ebl]").forEach((b) => (b.onclick = () => eblWahl(b.dataset.ebl, b.dataset.w)));
+  f.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => { if (EBL.sort === b.dataset.s) EBL.ab = !EBL.ab; else { EBL.sort = b.dataset.s; EBL.ab = false; } eblMerken(); eblZeichnen(); }));
+  f.querySelectorAll("[data-m]").forEach((r) => { const um = () => { EBL.mAuf[r.dataset.m] = !EBL.mAuf[r.dataset.m]; eblZeichnen(); }; r.onclick = um; r.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); um(); } }; });
+  f.querySelector('[data-k="zurueck"]')?.addEventListener("click", () => { Object.assign(EBL, { monat: 0, arten: [], gruppe: "", personen: [], stand: "alle" }); eblMerken(); eblZeichnen(); });
+  f.querySelector('[data-k="druck"]')?.addEventListener("click", () => druckStarten("buchungsliste"));
+  f.querySelector('[data-k="csv"]')?.addEventListener("click", eblCsv);
+  f.querySelector('[data-k="neu"]')?.addEventListener("click", () => ersBuchOeffnen(EBL.jahr));
+}
+function eblWahl(feld, w) {
+  if (feld === "jahr") { eblMerken(); return ersBuchOeffnen(+w); }
+  if (feld === "monat") EBL.monat = +w || 0;
+  if (feld === "art") EBL.arten = !w ? [] : EBL.arten.includes(w) ? EBL.arten.filter((x) => x !== w) : [...EBL.arten, w];
+  if (feld === "gruppe") EBL.gruppe = w || "";
+  if (feld === "person") EBL.personen = !w ? [] : EBL.personen.includes(w) ? EBL.personen.filter((x) => x !== w) : [...EBL.personen, w];
+  if (feld === "stand") EBL.stand = w;
+  if (feld === "ansicht") EBL.ansicht = w;
+  eblMerken(); eblZeichnen();
+}
+function eblDruck() { // DRUCKARTEN.buchungsliste – Kopf, Schrift und Fußzeile im Club-Design kommen aus der Druckvorschau
+  const L = eblSortiert(eblGefiltert()), S = eblSumme(L), td = 'style="padding:4px 6px;border-bottom:1px solid #e4d7c4"', re = 'style="padding:4px 6px;border-bottom:1px solid #e4d7c4;text-align:right;font-variant-numeric:tabular-nums"';
+  const zeilen = L.map((z) => { const p = eblPerson(z.p), a = EBL_ARTEN.find((x) => x[0] === z.art) || EBL_ARTEN[5];
+    return `<tr><td ${td}>${esc(p.nr)}</td><td ${td}>${esc(p.nachname)}</td><td ${td}>${esc(p.vorname)}</td><td ${td}>${eblTag(z.d)}</td><td ${td}>${a[2]}</td><td ${re}>${z.km ? eblKm(z.km) : ""}</td><td ${re}>${eblEur(z.b)}</td><td ${td}>${z.bar ? "💶 " + eblTag(z.bar) : ""}</td><td ${td}>${z.ueb ? "🏦 " + eblTag(z.ueb) : z.st === "offen" ? "offen" : ""}</td></tr>`; }).join("");
+  const th = (t, r) => `<th style="padding:5px 6px;border-bottom:2px solid #741521;color:#741521;text-align:${r ? "right" : "left"};font-size:.85em">${t}</th>`;
+  const html = `<p style="margin:0 0 8px">${esc(eblFilterText())}</p>
+    <p style="margin:0 0 10px"><b>${S.n} ${S.n === 1 ? "Buchung" : "Buchungen"} · ${eblKm(S.km)} km · ${eblEur(S.b)} gesamt</b> – davon offen ${eblEur(S.offen)} · bar ${eblEur(S.bar)} · überwiesen ${eblEur(S.ueb)}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:10.5pt"><thead><tr>${th("ID")}${th("Name")}${th("Vorname")}${th("Datum")}${th("Kostenart")}${th("km", 1)}${th("Betrag", 1)}${th("💶 Bar am")}${th("🏦 Überwiesen am")}</tr></thead>
+      <tbody>${zeilen}</tbody><tfoot><tr><td colspan="5" style="padding:6px;border-top:2px solid #741521"><b>Summe</b></td><td style="padding:6px;border-top:2px solid #741521;text-align:right"><b>${eblKm(S.km)}</b></td><td style="padding:6px;border-top:2px solid #741521;text-align:right"><b>${eblEur(S.b)}</b></td><td style="padding:6px;border-top:2px solid #741521">${S.bar ? eblEur(S.bar) : ""}</td><td style="padding:6px;border-top:2px solid #741521">${S.ueb ? eblEur(S.ueb) : ""}</td></tr></tfoot></table>`;
+  return { titel: `Buchungsliste Erstattungen ${EBL.jahr}`, unter: `Stand: ${new Date().toLocaleDateString("de-DE")}`, html, quer: true };
+}
+async function eblCsv() {
+  const L = eblSortiert(eblGefiltert()), z = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`, n = (x) => String(Math.round(x * 100) / 100).replace(".", ",");
+  const kopf = ["ID", "Name", "Vorname", "Datum", "Kostenart", "km", "Betrag (€)", "Bar am", "Überwiesen am", "Stand"];
+  const csv = "﻿" + [kopf.map(z).join(";"), ...L.map((x) => { const p = eblPerson(x.p); return [p.nr, p.nachname, p.vorname, eblTag(x.d), (EBL_ARTEN.find((a) => a[0] === x.art) || EBL_ARTEN[5])[2], x.km ? n(x.km) : "", n(x.b), eblTag(x.bar), eblTag(x.ueb), x.st].map(z).join(";"); })].join("\r\n");
+  const datei = new File([csv], `Buchungsliste_Erstattungen_${EBL.jahr}${EBL.monat ? "-" + String(EBL.monat).padStart(2, "0") : ""}.csv`, { type: "text/csv" });
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: "Buchungsliste (CSV)" }); return; } } catch (x) { if (x?.name === "AbortError") return; }
+  const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); melde("💾 CSV gespeichert – in Excel öffnen");
 }

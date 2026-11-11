@@ -5904,6 +5904,17 @@
   .np-person { width: 100%; background: none; border: 0; border-top: 1px solid var(--linie); color: inherit; font: inherit; text-align: left; min-height: 44px; }
   .imp-fehlt { color: var(--textOrange); font-weight: 700; } .imp-hinweis { border: 2px dashed var(--gold, #c9a227); margin: 8px 0; } /* 2.830.0 KC-CLUB-IMPRESSUM */
   .tn-quote { display: inline-block; width: 48px; height: 8px; border-radius: 4px; background: var(--karte2); vertical-align: middle; overflow: hidden; } .tn-quote i { display: block; height: 100%; background: var(--gruen, #2e8b57); } .tn-tabelle { width: 100%; } .tn-tabelle td, .tn-tabelle th { padding: 4px 3px; } .tn-tabelle td:first-child { overflow-wrap: anywhere; } .tn-tabelle td:last-child { white-space: nowrap; } .tn-quote { width: 30px; } /* 2.830.0 KC-CLUB-TEILNAHME */
+  /* KC-CLUB-ERSTATTUNG-BUCHUNGEN: Buchungsliste für den Kassenwart */
+  .ebl-summen { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 12px 14px; margin: 8px 0; border-radius: 12px; background: var(--karte2); font-variant-numeric: tabular-nums; }
+  .ebl-summen > div { display: flex; flex-direction: column; min-width: 70px; } .ebl-summen b { font-size: 1.05rem; } .ebl-summen .gross b { font-size: 1.35rem; color: var(--textRot, var(--rot)); } .ebl-summen small { color: var(--grau); font-size: .78rem; }
+  .ebl-f { border-bottom: 1px solid var(--linie); } .ebl-f summary { display: flex; align-items: center; gap: 8px; padding: 9px 2px; cursor: pointer; min-height: 40px; }
+  .ebl-wert { margin-left: auto; color: var(--grau); font-size: .88rem; text-align: right; } .ebl-f-inhalt { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 10px; }
+  .ebl-ansicht { display: inline-flex; gap: 4px; margin-left: auto; }
+  .ebl-rolle { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
+  .ebl-tab { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; } .ebl-tab th, .ebl-tab td { padding: 7px 6px; border-bottom: 1px solid var(--linie); text-align: left; white-space: nowrap; }
+  .ebl-tab th { position: sticky; top: 0; background: var(--karte); } .ebl-tab .re { text-align: right; } .ebl-tab .nr { color: var(--grau); }
+  .ebl-sort { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--rot); cursor: pointer; } .ebl-offen { color: var(--textOrange, #b26a00); }
+  .ebl-summe td { border-top: 2px solid var(--rot); font-weight: 700; } .ebl-m { cursor: pointer; } .ebl-m:hover, .ebl-m:focus-visible { background: var(--karte2); } .ebl-unter td { font-size: .84rem; color: var(--grau); background: var(--karte2); }
 </style>
 <!-- Club-Küche: redaktionelles Premium-Design, nur für Magazin (nicht Weihnachtsmarkt-Prospekt) -->
 <link rel="stylesheet" href="magazin/premium.css">
@@ -6974,7 +6985,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.911.0" data-v="2.911.0"></script>
+<script src="app.js?v=2.912.0" data-v="2.912.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

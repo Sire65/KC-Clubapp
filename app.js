@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.911.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.912.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -18,7 +18,7 @@ const TEILE_LISTE = {
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
   spiele: { einstieg: ["spStart", "spZeigen", "spLaden", "spNachsehen", "spOeffnen", "spTab", "spZurueck", "spArtWahl", "spArtSchalten", "spBereitSetzen", "spEinlSchalter", "spEinlAntwort", "spLiveAntwort", "spMitgliedKnopf"], sri: "sha384-df8Lw0oCMMrnIIB7cpSpJ2Q2SKgIao/dXXHLrjtixnNByKoeFvC3pVc6zGaNCcVw" }, // Stufe 2: Spiele (Schach, Doppelkopf, Bauernskat, MÄDN, Fang den Koch, Küchenterror)
   tischlive: { einstieg: ["tlStart", "tlStopp", "tlZeichnen", "tlPlatz", "tlRegeln"], sri: "sha384-RCmsKY+DTRfsCMRHkJVG2UJlySANNdHxnEdMps4tkL9kgf8DC5O/b1jMcwVeY3XB" }, // 2.766.0 KC-CLUB-RUNDER-TISCH-LIVE: Ton, Kamera, Bildschirm, Unterlagen zeigen am Tisch
-  buero: { einstieg: ["buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-ihp9aBNW71yi9gY5iD70sY8fE78+o552ZT+16rmcT5ANlHYOuHurmndyITVqbI3n" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
+  buero: { einstieg: ["ersBuchOeffnen", "eblDruck", "buStart", "buEingang", "buEingangLaden", "buLaden", "buZeigen", "buZurueck", "buNachherNeu", "buSitzungOeffnen", "buFeste", "buFreudLeid", "buNeuOeffnen", "buNeuWeg", "begruessungSenden", "tiHeuteAus", "dvStart", "ersCsvOeffnen", "ggUebersicht", "ggWahl", "leitungStartSetzen", "sbBrief", "druckSitzung", "druckBrief", "druckFeste", "druckMitgliederliste", "druckDienstUebersicht", "adbStart", "buAufgabePruefen", "buInformierenFragen"], sri: "sha384-DOLEwITI2K750IeMn6y5AUcZR/C5iBRa0yAcqhp43Zg4aGtMATnSthnvva0M6d2h" }, // Stufe 4: Büro-Werkzeuge der Clubleitung – beim ersten Öffnen des Büros; Ausdrucke (DRUCKARTEN) warten über die druck…-Platzhalter
   hilfe: { einstieg: ["twFrageStart", "twOffenStart", "sucheAuf", "suSucheKnopf"], sri: "sha384-qPS9/H66zIS2QeGHqQQs5CFqN4+XZns2HL1FnQYWzUWbVrYpK/BLZN111UDmKbRH" }, // Stufe 5: Hilfe-Werkzeuge (Frag Twinkey, Mitglied fragen, Schnellsuche) – beim ersten Antippen
   rechner: { einstieg: ["rechnerOeffnen"], sri: "sha384-UWrOf1EIXxhsoWWwxnLDzpzALsaxzNGXgeqoLAjVvqoQ6wbFnIGxYTkQPFpiRuQ4" }, // 2.811.0 KC-CLUB-RECHNER: Tischrechner im Büro, „rechne …“ per Sprache
   glueck: { einstieg: ["kaeferKommt", "kleeKommt"], sri: "sha384-hbPb96l3YrlvBxe1zJJfotwARA0pEPKKaDyb1BBVooEi5BCYbfYqihmMYABmlsg4" }, // KC-CLUB-MARIENKAEFER / KC-CLUB-GLUECKSKLEE (06.11.2026): 🐞 jeder 50., 🍀 jeder 25. Start
@@ -7605,7 +7605,7 @@ const satzAm = (datum) => { let s = ERS.standard ?? 0.38; for (const x of ERS.sa
 async function erstattungLaden() {
   try {
     // 2.588.0 KC-CLUB-ERSTATTUNG-CSV (Hansi suchte „CSV-Datei erstellen“ unter Erstattung): der Excel-Knopf auch hier – nur für die Clubleitung
-    if ($("ersLeitung")) $("ersLeitung").innerHTML = ICH?.vorstand || ICH?.admin ? '<div class="karte" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px"><b>Für die Clubleitung:</b> alle eingereichten Erstattungen als Datei für Excel</span><button type="button" class="knopf" style="width:auto" onclick="ersCsvOeffnen()">📊 CSV für Excel erstellen</button></div>' : "";
+    if ($("ersLeitung")) $("ersLeitung").innerHTML = ICH?.vorstand || ICH?.admin || (ICH?.aemter || []).some((a) => /^(kassenwart|clubsprecher)/i.test(a)) ? '<div class="karte" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:180px"><b>Für die Clubleitung:</b> Buchungsliste mit Summen und alle Erstattungen als Datei für Excel</span><button type="button" class="knopf haupt" style="width:auto" onclick="ersBuchOeffnen()">📒 Buchungsliste</button><button type="button" class="knopf" style="width:auto" onclick="ersCsvOeffnen()">📊 CSV für Excel erstellen</button></div>' : ""; // KC-CLUB-ERSTATTUNG-BUCHUNGEN: auch Kassenwart/Clubsprecher
     const r = await api("erstattung_meine");
     Object.assign(ERS, { kmSatz: r.kmSatz, standard: r.standard, saetze: r.saetze || [], gruende: r.gruende, arten: r.arten, antraege: r.antraege || [], abgerechnet: r.besucheAbgerechnet || [], geladen: true,
       sondereinsaetze: r.sondereinsaetze || [] }); // KC-CLUB-ERSTATTUNG-SONDER (2.419.0)
@@ -30828,6 +30828,7 @@ const DRUCKARTEN = {
   chat: { bauen: () => druckChat() }, // 2.23.80: ganzer Chat
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
   rezept: { bauen: (o, id) => druckRezept(id) },
+  buchungsliste: { ablegen: { register: ["Kasse", "Erstattungen", "Sonstiges"], stichworte: "Erstattung, Buchungsliste, Kasse" }, bauen: () => eblDruck() }, // KC-CLUB-ERSTATTUNG-BUCHUNGEN
   magazin: { ablegen: { register: ["Club-Magazin", "Club-Küche", "Sonstiges"], stichworte: "Club-Küche, Magazin" }, bauen: (o, p) => magDruck(p) }, // KC-CLUB-MAGAZIN-ARCHIV: ganze Ausgabe drucken/PDF/senden/ablegen
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
@@ -34492,7 +34493,7 @@ const FENSTER_NAMEN = {
   dtBlatt: "🗓️ Dienst-Tausch", dvBlatt: "📊 Dienstzeiten-Übersicht", dwSperreBlatt: "💡 Sperrzeit nicht nötig", egBlatt: "📥 Mein Eingangskorb", eingangBlatt: "📥 In den Eingangskorb eines Mitglieds",
   einlBlatt: "📥 Dokument einlesen", ekAblageBlatt: "🗄️ Eingangskorb: ablegen", ekDwBlatt: "📅 Dienstzeiten", ekErstBlatt: "💶 Erstattung", ekHinweisBlatt: "📥 Hinweis: Eingangskorb",
   ekNachBlatt: "🔎 Nachverfolgen", elternBlatt: "👪 Eltern-Handy", entwicklerBlatt: "👨‍💻 Über den Entwickler", erBlatt: "✅ Alles eingerichtet", ibBlatt: "🖼️ Installieren mit Bildern", erinBlatt: "🔔 Erinnerung für dich",
-  erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
+  erkBlatt: "💡 Vorschlag aus der Nachricht", ersBesBlatt: "🎓 Fahrten aus Besuchen", ersCsvBlatt: "📊 Erstattungen für Excel", eblBlatt: "📒 Buchungsliste", esTafelBlatt: "📤 Tafel sichern", ewBlatt: "🧭 Einstellungen erklärt",
   expressBlatt: "🏎️ Express-Sendung", externBlatt: "🌐 Externer Inhalt", faAlbenKorb: "🗑️ Gelöschte Alben", faAlbumBlatt: "📸 Foto in welches Album?", faAlbumForm: "📸 Album anlegen/ändern",
   fdkFrageBlatt: "🧪 Hygienekontrolle", fdkKarteBlatt: "🃏 Fang den Koch: Karte", fdkRegelBlatt: "📖 So geht Fang den Koch", feeBlatt: "🧚 Die Fee", kaeferBlatt: "🐞 Der Marienkäfer", kleeBlatt: "🍀 Der Glücksklee", fiBlatt: "🏋️ Fit bleiben",
   flAng: "✏️ Angaben ändern", flInfo: "📣 Mitglieder informieren", ggBlatt: "🎂 Meine Geburtstagsgrüße", ggWahlBlatt: "🎂 Geburtstagsgruß wählen", gmFenster: "⭐ Gemerkte Nachrichten",
