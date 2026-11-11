@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.922.0 – 2026-11-12 – 🧩 Club-Küche: Rätsel-Ecke für die Hefte 2–12 (KC-CLUB-MAGAZIN-RAETSEL-HEFTE)
+Wunsch Hansi 11.11.: „Baue neue Bilderrätsel für die weiteren Ausgaben und Kreuzworträtsel für alle 12 Ausgaben“.
+- **Fehlerbild je Heft** („Finde die 10 Fehler“), jedes mit eigener Szene zum Monat: Karneval in der Backstube, Fischstand, Osterfrühstück, Spargelzeit, Erdbeer-Konditorei, Picknick am Mühlteich, Grillabend, Hofladen zum Erntedank, Herbstküche, Martinsgans am Pass, Weihnachtsbäckerei. Genau 10 wirksame Fehler, Fundkreise überlappen nicht, keine Schrift im Bild.
+- **Kreuzworträtsel je Heft** mit Begriffen zum Monat (18–21 Begriffe, Lösungswörter KAMELLE, FISCHER, OSTERNEST, MAIBAUM, ERDBEERE, PICKNICK, GRILLFEST, ERNTEDANK, KÜRBIS, LATERNE, PLÄTZCHEN); jede Buchstabenfolge ist ein gewolltes Wort, keine Frage verrät die Antwort.
+- **Auflösung** jeweils im nächsten Heft (Nr. 13 löst Nr. 12 auf).
+- Erzeugt mit KC-Infrastructure-Control-Center `docs/club-magazin-raetselecke/hefte/`. Test: `tests/magazin-raetsel.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.921.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.921.0 – 2026-11-11 – ⚡ Kleinerer App-Start (KC-CLUB-START-KLEIN) · Server 2.921.0 + Datenbank
 Egress-Auswertung 11.11. (24 Std. nach 2.907.0: −47 %). Hansi: „Checke was das ausmacht und was man noch verbessern kann an Qualität und Geschwindigkeit“.
 - **Start-Paket beim Admin ≈ 51 KB statt ≈ 5 KB:** die Dienstplan-Druckdaten (`dp_druck` ≈ 27 KB, `dp_druck_konfig` ≈ 4 KB) lagen in den Einstellungen und gingen bei jedem Start mit (Datenbank → Server → App) – die App holt sie nur über „Dienstplan drucken“. Jetzt nicht mehr im Start.

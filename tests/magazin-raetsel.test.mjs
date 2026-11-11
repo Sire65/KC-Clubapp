@@ -29,7 +29,28 @@ for (const [n, d, r, c, w, frage] of kw.fragen) {
 }
 assert.equal(kw.loesung.felder.map(([r, c]) => Z[r][c]).join(""), kw.loesung.wort, "Lösungswort aus den gelben Feldern");
 assert.equal(kw.loesung.anzeige.replace("Ö", "OE"), kw.loesung.wort);
-assert.deepEqual(daten.MAG_AUSGABEN[2].raetsel, { aufloesung: 1 }, "Auflösung von Nr. 1 steht in Nr. 2");
+// KC-CLUB-MAGAZIN-RAETSEL-HEFTE (11.11.2026): Hefte 2–12 je ein eigenes Fehlerbild und Kreuzworträtsel, Auflösung immer im nächsten Heft (Nr. 13 löst Nr. 12 auf)
+const themen = new Set(), loesungen = new Set();
+for (let n = 2; n <= 12; n++) {
+  const r = daten.MAG_AUSGABEN[n].raetsel, f = r.fehlerbild, k = r.kreuzwort, Z = k.zeilen, W = Z[0].length;
+  assert.equal(r.aufloesung, n - 1, `Nr. ${n} löst Nr. ${n - 1} auf`);
+  assert.equal(f.fehler.length, 10, `Nr. ${n}: genau 10 Fehler`);
+  for (const [x, y, rad, t] of f.fehler) assert.ok(x - rad >= -2 && x + rad <= 402 && y - rad >= -2 && y + rad <= 302 && rad >= 10 && t.length > 5, `Nr. ${n}: Fehler im Bild – ${t}`);
+  f.fehler.forEach(([x, y, r1], i) => f.fehler.slice(i + 1).forEach(([x2, y2, r2]) => assert.ok(Math.hypot(x - x2, y - y2) >= r1 + r2 - 0.5, `Nr. ${n}: Fundkreise überlappen`)));
+  for (const b of [f.a, f.b, f.loesung]) { assert.ok(b.startsWith(`magazin/raetsel/nr${String(n).padStart(2, "0")}-`) && fs.existsSync(new URL("../" + b, import.meta.url)), `Nr. ${n}: Bild fehlt ${b}`); assert.ok(!/<text/.test(lies(b)) || b === f.loesung, `Nr. ${n}: keine Schrift im Rätselbild ${b}`); }
+  assert.notEqual(lies(f.a), lies(f.b)); themen.add(f.a);
+  assert.ok(Z.every((z) => z.length === W && /^[A-Z.]+$/.test(z)), `Nr. ${n}: Gitter`);
+  const fo = []; Z.forEach((z) => fo.push(...z.split(".").filter((w) => w.length > 1)));
+  for (let c = 0; c < W; c++) fo.push(...Z.map((z) => z[c]).join("").split(".").filter((w) => w.length > 1));
+  assert.deepEqual(fo.sort(), k.fragen.map((x) => x[4]).sort(), `Nr. ${n}: keine ungewollten Wörter`);
+  for (const [nn, d, rr, cc, w, frage] of k.fragen) { assert.ok(frage.length > 5 && !frage.toUpperCase().replace(/Ä/g, "AE").replace(/Ö/g, "OE").replace(/Ü/g, "UE").includes(w), `Nr. ${n} ${nn}${d}: Frage verrät nichts`);
+    assert.equal([...w].map((_, i) => d === "A" ? Z[rr][cc + i] : Z[rr + i][cc]).join(""), w, `Nr. ${n} ${nn}${d} liegt richtig`); }
+  assert.ok(k.fragen.length >= 18, `Nr. ${n}: mindestens 18 Begriffe`);
+  assert.equal(k.loesung.felder.map(([rr, cc]) => Z[rr][cc]).join(""), k.loesung.wort, `Nr. ${n}: Lösungswort`);
+  assert.equal(k.loesung.anzeige.replace(/Ä/g, "AE").replace(/Ö/g, "OE").replace(/Ü/g, "UE"), k.loesung.wort); loesungen.add(k.loesung.wort);
+}
+assert.equal(themen.size, 11, "jedes Heft eine eigene Szene"); assert.equal(loesungen.size, 11, "jedes Heft ein eigenes Lösungswort");
+assert.deepEqual(daten.MAG_AUSGABEN[13].raetsel, { aufloesung: 12 }, "Auflösung von Nr. 12 steht in Nr. 13");
 // Bedienung und Darstellung
 for (const f of ["function magFbTipp", "function magKwEin", "function magKwPruefen", "function magRaetselSeiteNeu", "function magRaetselHtml", "kc_club_mag_raetsel"]) assert.ok(teil.includes(f), f);
 assert.ok(teil.includes('.replace(/Ü/g, "UE")') && teil.includes('.replace(/ß/g, "SS")'), "Umlaute werden zu AE/OE/UE");
