@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.922.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.923.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -2089,15 +2089,15 @@ const RUNDGAENGE = [
   // 2.348.0 KC-CLUB-VIDEOS-NEU (Wunsch Hansi „für alle Themen Videos“)
   { id: "push", stand: "1", zeit: "11.11.2026", sym: "🔔", t: "Benachrichtigungen richtig einrichten", u: "Push einschalten, je Bereich wählen, Test an mich, Meine Geräte, Anklopfton – und was tun, wenn nichts ankommt (ca. 4 Min.)", st: () => RG_PUSH }, // 2.348.0
   { id: "privat", stand: "2", zeit: "11.11.2026", sym: "🔒", t: "Privatsphäre & Handy weitergeben", u: "Wer sieht was: online, zuletzt da, Tippen, Geburtstag, Kontakt – Abmelden, persönlicher Link, Link verloren, Meine Daten (ca. 4 Min.)", st: () => RG_PRIVAT }, // 2.348.0
-  { id: "probleme", stand: "1", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
+  { id: "probleme", stand: "1", zeit: "11.11.2026", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
   { id: "chatprofi", stand: "4", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat, „… schreibt dir gerade“ (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0 · 2.533.0 Fassung 2
   { id: "geheim", stand: "2", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent – und so kommt es beim Empfänger an: Mitteilung, Schlüssel eingeben, Schlüsselbund – nichts wird gesendet (ca. 5 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
   { id: "gruppen", stand: "1", zeit: "11.11.2026", sym: "👥", t: "Gruppen anlegen & verwalten", u: "Neue Gruppe, Name & Symbol, Mitglieder, Bereiche klappen, Gruppen-Admin, auflösen – und in Nachricht oder Terminanfrage nutzen (ca. 3 Min.)", st: () => RG_GRUPPEN }, // 2.348.0
-  { id: "terminfinden", stand: "1", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
+  { id: "terminfinden", stand: "1", zeit: "11.11.2026", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
   { id: "todo", stand: "1", zeit: "11.11.2026", sym: "✅", t: "Die gemeinsame To-do-Liste", u: "Umschalter To-do, Aufgabe eintragen, verteilen, abhaken, Frist-Erinnerung, Aufgaben aus Protokollen (ca. 3 Min.)", st: () => RG_TODO }, // 2.348.0
-  { id: "einfach", stand: "1", sym: "👴", t: "Die einfache Ansicht", u: "Große Kacheln, die Leiste unten, das Fragezeichen – und wie du umschaltest (ca. 3 Min.)", st: () => RG_EINFACH }, // 2.348.0
-  { id: "raetsel", stand: "1", sym: "🧩", t: "Rätsel & Bestenliste", u: "Werne oder Küche, Bild wird schärfer, roter Buzzer, 6 Antworten, Punkte, Wochen-Rätsel und Club-Bestenliste (ca. 3 Min.)", st: () => RG_RAETSEL, nur: () => esAn() }, // 2.348.0
-  { id: "buehne", stand: "1", sym: "🎭", t: "Bühne, Musik & Club-Song", u: "Bereitlegen, Twinkey turnt vor, Trainingsuhr, Regler, nur Musik hören, Club-Song zum Mitsingen, Einladung zur Bewegung (ca. 4 Min.)", st: () => RG_BUEHNE, nur: () => esAn() }, // 2.348.0
+  { id: "einfach", stand: "1", zeit: "12.11.2026", sym: "👴", t: "Die einfache Ansicht", u: "Große Kacheln, die Leiste unten, das Fragezeichen – und wie du umschaltest (ca. 3 Min.)", st: () => RG_EINFACH }, // 2.348.0
+  { id: "raetsel", stand: "1", zeit: "12.11.2026", sym: "🧩", t: "Rätsel & Bestenliste", u: "Werne oder Küche, Bild wird schärfer, roter Buzzer, 6 Antworten, Punkte, Wochen-Rätsel und Club-Bestenliste (ca. 3 Min.)", st: () => RG_RAETSEL, nur: () => esAn() }, // 2.348.0
+  { id: "buehne", stand: "1", zeit: "12.11.2026", sym: "🎭", t: "Bühne, Musik & Club-Song", u: "Bereitlegen, Twinkey turnt vor, Trainingsuhr, Regler, nur Musik hören, Club-Song zum Mitsingen, Einladung zur Bewegung (ca. 4 Min.)", st: () => RG_BUEHNE, nur: () => esAn() }, // 2.348.0
   { id: "buero", stand: "2", ziel: "leitung", sym: "🗂️", t: "Büro im Alltag", u: "Eingangskorb, Bestätigung für Dienstwünsche, ablegen, einlesen, E-Mail mit Anhang, Schilder-Druckerei – nur für die Clubleitung (ca. 4 Min.)", st: () => RG_BUERO, nur: () => !!(ICH?.buero || ICH?.vorstand) }, // 2.348.0
 ];
 const RG = { an: false, i: 0, pause: false, uhr: 0, lauf: 0, ziel: null, ton: false, von: "start", richtung: 1, wach: null, tour: "ueberblick", st: [], zurueck: [], vorI: -1, liste: [], liveTok: 0, liveI: -1, tippI: -1 };
@@ -17951,6 +17951,8 @@ async function einstSpeichern(schluessel, wert) {
 // außer Start und SOS warten jetzt auf die Anmeldung und öffnen sich dann von selbst (zuletzt angetippter Bereich gewinnt).
 const ZEIGE_OHNE_ICH = new Set(["start", "sos"]);
 let startBereitLoesen; const startBereit = new Promise((ok) => { startBereitLoesen = ok; });
+// 2.923.0 KC-CLUB-FRAGE-AB-START: das „?“ unten rechts kam bisher erst mit dem ersten Seitenwechsel (hzFrageEinsetzen läuft in zeige) – auf der Startseite direkt nach dem Öffnen fehlte es
+startBereit.then(() => { try { if (aktuelleAnsicht === "start" && !$("hzFrage")) hzFrageEinsetzen("start"); } catch {} });
 let ZEIGE_WARTET = null;
 function zeige(v, ausHistorie) {
   if (v !== "dokansicht" && DOKA.zurueck) dokFensterZurueck(); // 2.822.0 KC-CLUB-ANLAGE-UEBER-FENSTER

@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.923.0 – Zeitansage: Videos „Termin ausmachen & Tag finden“, „Wenn etwas nicht klappt“, „Die einfache Ansicht“, „Rätsel & Bestenliste“ und „Bühne, Musik & Club-Song“ · „?“ gleich nach dem Start (KC-CLUB-VIDEO-ZEITANSAGE, KC-CLUB-FRAGE-AB-START, Wunschliste #81)
+- **Termin finden:** alle 18 Schritte geprüft (Terminanfrage, An wen, Anlass/Tag/Uhrzeit, Antwort bis, Senden, Stand, gefragt werden, Gegenvorschlag, unter Vorbehalt, Tag finden mit Umfrage, Serientermine, Reihe ändern/löschen).
+- **Wenn etwas nicht klappt:** 13 Schritte geprüft (Schließen/neu öffnen, Update, Version, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check, Problem melden; ein Schritt nur in der einfachen Ansicht).
+- **Die einfache Ansicht:** 20 Schritte geprüft. **Fehler in der App behoben:** Das runde „?“ unten rechts (Hilfe zum Bereich) erschien auf der Startseite erst, nachdem man einmal eine andere Seite geöffnet hatte – direkt nach dem Öffnen fehlte es. Darum übersprang das Video den Schritt „❓ Das Fragezeichen“. Jetzt ist das „?“ gleich nach dem Start da (ausgeblendet bleibt es weiter, wenn man es selbst ausgeschaltet hat).
+- **Rätsel & Bestenliste:** 16 Schritte geprüft (Eselsohr, Reiter, Werne/Küche, Bild wird schärfer, Buzzer, sechs Antworten, Wochen-Rätsel, Bestenliste, Bildnachweise, eigene Club-Fotos).
+- **Bühne, Musik & Club-Song:** alle 17 Schritte geprüft (Sitzen/Stehen/Küchenhelfer, Dauer, Bereitlegen, Twinkey, Trainingsuhr, Regler, Nur Musik, Musikrichtung, Club-Song mit Mitsingen, Einladung).
+- Zeitansage in allen fünf eingeschaltet. Test: `tests/video-zeitansage.test.mjs` erweitert. Rückweg: Version 2.922.0 einspielen.
 ## 2.922.0 – 2026-11-12 – 🖨️ Club-Küche als Heft: am PC wieder selbst drucken (KC-CLUB-HEFT-PC-DRUCK)
 Fund Hansi 12.11.: „Ich kann nicht selber drucken. Es kommt ein Fenster mit Freigeben, aber sonst passiert nix.“
 - „📄 Heft A5“ und „🖨️ Druckbögen A4 quer“ gaben die PDF immer ans Teilen-Menü – am Windows-PC ist das nur „Freigeben“ ohne Drucker. Jetzt öffnet sich am PC die PDF in einem **neuen Tab** (Browser-Ansicht mit 🖨️ Drucken, Hinweis „beidseitig, Wenden an der kurzen Kante“). Der Tab geht sofort beim Tippen auf, damit der Browser ihn nicht als Pop-up sperrt; gesperrt → die PDF wird gespeichert (Downloads).

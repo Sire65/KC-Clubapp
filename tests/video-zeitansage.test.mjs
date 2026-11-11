@@ -37,3 +37,5 @@ console.log(`video-zeitansage: alle Prüfungen bestanden (${geprueft.length} Vid
   assert.ok(/t: "📋 Alle Befehle"/.test(v) && /rgBlatt\("sbListeBlatt", sbListe\); for \(const ms of \[200, 800, 1800\]\) setTimeout\(rgNeuZielen, ms\)/.test(v), "Video Sprachsteuerung: Rahmen nach dem Neuaufbau nachziehen"); }
 // 2.919.0: Video „Gruppen“ Schritt 3 – zeige("gruppe") öffnet seit 2.480.0 nur mit vorbereitetem Formular (sonst Nachrichten): erst Formular, dann Seite
 assert.ok(/vor: \(\) => \{ rgGruppenForm\(0\); if \(aktuelleAnsicht !== "gruppe"\) zeige\("gruppe", true\); \}, sel: \["#grVorhanden details"/.test(v), "Gruppen-Video: Schritt „Deine Gruppen“ zeigt die Gruppen-Seite");
+// 2.922.0 KC-CLUB-FRAGE-AB-START: „?“ unten rechts gleich nach dem Öffnen auf der Startseite (vorher erst nach dem ersten Seitenwechsel – Video „Einfache Ansicht“ übersprang den Schritt)
+assert.ok(/startBereit\.then\(\(\) => \{ try \{ if \(aktuelleAnsicht === "start" && !\$\("hzFrage"\)\) hzFrageEinsetzen\("start"\); \} catch \{\} \}\);/.test(app), "Fragezeichen gleich nach dem Start");
