@@ -7,6 +7,7 @@ Wunsch Hansi 11.11.: „4 Knöpfe zum Einfahren des Kopfes: 1 weg = die 3 Termin
 - Einfache Ansicht ohne die drei Felder: der erste Schritt wird übersprungen. Erklär-Video „Oberfläche nach Wunsch“ zeigt die vier Schritte.
 - Keine Datenbank-, keine Server-Änderung. Browser `tools/hilfe/kopf-knopf-browser.mjs` (nur Testdaten). Rückweg: App 2.915.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 11.11. 09:58 Uhr auf Wunsch Hansi („Einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
 
 ## 2.915.0 – 2026-11-11 – ⌃ Ein Knopf für den Kopf statt zwei Pfeile (KC-CLUB-KOPF-EIN-KNOPF)
 Wunsch Hansi 11.11.: „Oben im Kopf gibt es 2 × Pfeil … oder soll es ein Toggle werden, der nur einen Knopf“ – Beispielbild Variante B – „Bauen und direkt einbauen“.
