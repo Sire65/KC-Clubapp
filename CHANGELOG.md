@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.919.0 – Zeitansage: Videos „Benachrichtigungen richtig einrichten“, „Privatsphäre & Handy weitergeben“, „Gruppen anlegen & verwalten“ und „Die gemeinsame To-do-Liste“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Benachrichtigungen:** 17 Schritte geprüft (Push auf diesem Handy, je Bereich, Ruhezeit, Test an mich, Meine Geräte, Anklopfton, Ansagen, Selbstreparatur, „Benachrichtigungen sind aus“, Fehlersuche, Installation).
+- **Privatsphäre:** 19 Schritte geprüft und **ergänzt**: Bei „Meine Kontaktdaten“ erwähnt das Video jetzt auch die neue Einstellung „📤 Auch an Personen außerhalb des Clubs“ (KC-CLUB-KONTAKT-EXTERN, 2.901.0) – von Haus aus aus.
+- **Gruppen:** 14 Schritte geprüft. **Fehler behoben:** Bei Schritt 3 „📋 Deine Gruppen“ blieb der Bildschirm etwa 10 Sekunden auf den Nachrichten stehen, ohne Rahmen – obwohl das Video schon „Das Fenster Neue Gruppe öffnet sich“ sagte. Ursache: Die Gruppen-Seite öffnet sich seit 2.480.0 nur mit vorbereitetem Formular, das Video bereitete es aber erst nach dem Umschalten vor. Jetzt erst Formular, dann Seite.
+- **To-do-Liste:** alle 15 Schritte geprüft (Umschalten, Eintragen, Wer, für mich/alle, Pflichtfeld, Abhaken, Frist-Erinnerung, Aufgaben aus dem Protokoll, Startseite).
+- Zeitansage in allen vier eingeschaltet. Test: `tests/video-zeitansage.test.mjs` erweitert. Rückweg: Version 2.918.0 einspielen.
+
 ## 2.918.0 – 2026-11-11 – 📰 Club-Küche: Kraut des Monats · Schon gewusst? · Hefte 2–12 vorgebaut (KC-CLUB-MAGAZIN-KRAEUTER, KC-CLUB-MAGAZIN-SCHON-GEWUSST, KC-CLUB-MAGAZIN-VORBAU)
 Wunsch Hansi 11.11.: „was die Professionellen noch drin haben, wie Wussten Sie schon …“, „bei Saison noch Kräuterkunde“, „Profitipps … schon in die nächsten Ausgaben einbauen, damit die Hefte schon fast fertig gebaut sind“.
 - **🌿 Kraut des Monats** im Saisonkalender (12 Kräuter: Herkunft, Geschmack, Küche, Profi-Tipp; Warnhinweise Bärlauch/Maiglöckchen, Kirschlorbeer).

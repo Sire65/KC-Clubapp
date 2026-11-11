@@ -35,3 +35,5 @@ console.log(`video-zeitansage: alle Prüfungen bestanden (${geprueft.length} Vid
 { const a = app.indexOf("function blattAuf("), body = app.slice(a, app.indexOf("\n}", a));
   assert.ok(/rgZeigen = !!alt\?\.classList\.contains\("rg-zeigen"\)/.test(body) && /rgZeigen \? "blatt rg-zeigen" : "blatt"/.test(body), "blattAuf behält rg-zeigen beim Neuaufbau");
   assert.ok(/t: "📋 Alle Befehle"/.test(v) && /rgBlatt\("sbListeBlatt", sbListe\); for \(const ms of \[200, 800, 1800\]\) setTimeout\(rgNeuZielen, ms\)/.test(v), "Video Sprachsteuerung: Rahmen nach dem Neuaufbau nachziehen"); }
+// 2.919.0: Video „Gruppen“ Schritt 3 – zeige("gruppe") öffnet seit 2.480.0 nur mit vorbereitetem Formular (sonst Nachrichten): erst Formular, dann Seite
+assert.ok(/vor: \(\) => \{ rgGruppenForm\(0\); if \(aktuelleAnsicht !== "gruppe"\) zeige\("gruppe", true\); \}, sel: \["#grVorhanden details"/.test(v), "Gruppen-Video: Schritt „Deine Gruppen“ zeigt die Gruppen-Seite");
