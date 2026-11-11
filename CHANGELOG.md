@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.918.0 – 2026-11-11 – 📰 Club-Küche: Kraut des Monats · Schon gewusst? · Hefte 2–12 vorgebaut (KC-CLUB-MAGAZIN-KRAEUTER, KC-CLUB-MAGAZIN-SCHON-GEWUSST, KC-CLUB-MAGAZIN-VORBAU)
+Wunsch Hansi 11.11.: „was die Professionellen noch drin haben, wie Wussten Sie schon …“, „bei Saison noch Kräuterkunde“, „Profitipps … schon in die nächsten Ausgaben einbauen, damit die Hefte schon fast fertig gebaut sind“.
+- **🌿 Kraut des Monats** im Saisonkalender (12 Kräuter: Herkunft, Geschmack, Küche, Profi-Tipp; Warnhinweise Bärlauch/Maiglöckchen, Kirschlorbeer).
+- **💡 Schon gewusst?** beim Küchentipp – drei Kniffe je Heft (Heft 1 mit Hansis Zitronen- und Zwiebeltrick).
+- **Hefte 2–12 vorgebaut:** je zwei Küchentipps, Küchenlatein (Fond, Pochieren, Montieren, Julienne, Marinieren, Confieren, Glacieren, Parieren, Arrosieren, Tranchieren), Küchenwitz, Termine 2027 mit Datum, Schlagzeilen. Backstube, Rückblick, Porträt, Hobby, Linktipps bleiben für Mitglieder frei.
+- Tests: `tests/magazin-kraeuter.test.mjs` (auch Vorbau). Rückweg: App 2.917.0. Server unverändert.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.917.0 – Klick-Rundgang wird Pflicht vor dem Veröffentlichen (KC-CLUB-RUNDGANG-PFLICHT) · Video „Sprachsteuerung“: Liste „Alle Befehle“ wieder sichtbar · Zeitansage auch in „Meine App nach meinem Geschmack“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
 - **Fehler behoben:** Im Erklär-Video „Sprachsteuerung komplett“ blieb bei Schritt 6 „📋 Alle Befehle“ der Bildschirm auf den Einstellungen stehen – die Befehlsliste war unsichtbar und ohne Rahmen. Ursache: Die Liste baut sich nach dem Laden der gelernten Sätze neu auf; das neue Fenster verlor dabei das Merkmal „wird im Video gezeigt“ und wurde (wie alle anderen Fenster während eines Videos) versteckt. Behoben an der Quelle in `blattAuf`: baut sich ein vorgeführtes Fenster neu auf, bleibt es sichtbar. Dazu zieht das Video den Rahmen nach dem Neuaufbau nach.
 - Alle übrigen Schritte geprüft (Einschalten, Mikrofon, Nachricht an Klaus mit Weiterdiktieren, weitere Befehle, Lernen, Diktieren überall). Zeitansage eingeschaltet.
