@@ -446,6 +446,65 @@ function magRaetselHtml(x, nr) {
 }
 
 // Saisonkalender (Deutschland, Freiland/Lager) – je Monat Gemüse, Obst, Kräuter
+// KC-CLUB-MAGAZIN-KRAEUTER + KC-CLUB-MAGAZIN-SCHON-GEWUSST (Wunsch Hansi 11.11.2026 „was die Professionellen noch drin haben, wie Wussten Sie schon …
+// (Zitrone mit Pergament auf der Reibe, Zwiebel mit Schale von oben nach unten halbieren) … Oder auch bei Saison noch Kräuterkunde: jeweils ein Kraut
+// erklären, wo es herkommt und wofür es in der Küche gebraucht werden kann“). Vorbild: „Kleine Warenkunde“ und Kurztipps in Fachmagazinen (KÜCHE, VKD).
+// Je Monat ein Kraut (passend zum Saisonkalender) und drei Kniffe je Heft (Nr. 1–12; danach von vorn).
+const MAG_KRAEUTER = [
+  { n: "Petersilie", l: "Petroselinum crispum", her: "Stammt aus dem Mittelmeerraum und wird bei uns seit dem Mittelalter in Kloster- und Bauerngärten gezogen.", geschmack: "Frisch, grün, leicht herb – die glatte Sorte ist aromatischer als die krause.", kueche: "Allrounder für Suppen, Saucen, Kartoffeln, Fisch und Fleisch; Hauptdarsteller in Gremolata, Persillade und Tabouleh. Die Stiele geben Fonds und Brühen Würze.", tipp: "Erst kurz vor dem Servieren zugeben – lange gekocht verliert sie Farbe und Aroma. Die Stiele gehören ins Bouquet garni." },
+  { n: "Schnittlauch", l: "Allium schoenoprasum", her: "Ein Lauchgewächs, das in Europa und Asien auch wild wächst – im Winter gibt es ihn aus dem Topf.", geschmack: "Mild zwiebelig, frisch.", kueche: "Rührei, Quark, Kräuterbutter, Kartoffelsalat, klare Suppen, Fischsaucen. Die lila Blüten sind essbar und hübsch auf Salaten.", tipp: "Mit einem sehr scharfen Messer in feine Röllchen schneiden, nicht hacken – sonst wird er matschig und bitter. Nie mitkochen." },
+  { n: "Bärlauch", l: "Allium ursinum", her: "Wächst bei uns wild in feuchten Laubwäldern; Saison etwa von März bis Mai, vor der Blüte am zartesten.", geschmack: "Kräftig nach Knoblauch, aber ohne den langen Nachgeruch.", kueche: "Pesto, Bärlauchbutter, Suppe, Spätzle, Risotto, Frischkäse, Dips.", tipp: "Vorsicht beim Sammeln: Maiglöckchen und Herbstzeitlose sehen ähnlich aus und sind giftig. Jedes Bärlauchblatt hat einen eigenen Stiel und riecht beim Zerreiben nach Knoblauch – Hände zwischendurch waschen, sonst täuscht der Geruch an den Fingern. Nur kurz erhitzen." },
+  { n: "Kerbel", l: "Anthriscus cerefolium", her: "Kommt aus Südosteuropa und Westasien; die Römer brachten ihn nach Mitteleuropa. Ein klassisches Frühlingskraut.", geschmack: "Zart, süßlich, mit feiner Anisnote.", kueche: "Kerbelsuppe (traditionell am Gründonnerstag), Frankfurter Grüne Soße, Fines herbes, Eierspeisen, Fisch, junges Gemüse.", tipp: "Sehr empfindlich: nur zupfen oder grob schneiden und erst ganz zum Schluss zugeben. Getrocknet schmeckt er nach fast nichts." },
+  { n: "Dill", l: "Anethum graveolens", her: "Stammt aus Westasien und dem östlichen Mittelmeerraum; in Skandinavien und Osteuropa ein Grundgewürz.", geschmack: "Frisch, leicht süßlich, etwas anisartig.", kueche: "Lachs und Gravlax, Gurkensalat, Kartoffeln, Dillsauce, Krabben. Dillblüten und -samen kommen ins Einmachglas für Gewürzgurken.", tipp: "Nicht mitkochen, sondern über das fertige Gericht geben. Lässt sich gut einfrieren – fein geschnitten im Gefrierbeutel." },
+  { n: "Minze", l: "Mentha (z. B. Pfefferminze, Nana-Minze)", her: "Ursprünglich aus dem Mittelmeerraum und dem Orient; heute gibt es Dutzende Sorten, viele wachsen wuchernd im Garten.", geschmack: "Kühl und frisch; Pfefferminze kräftig-scharf (Menthol), Nana-Minze milder und süßer.", kueche: "Taboulé, Tzatziki, Joghurtsaucen, Erbsen, Lamm, Obstsalat, Desserts, Tee und Sommergetränke.", tipp: "Blätter zupfen oder in Streifen schneiden statt fein hacken – sonst werden sie schnell schwarz. Erst kurz vor dem Servieren zugeben." },
+  { n: "Basilikum", l: "Ocimum basilicum", her: "Stammt aus dem tropischen Asien (Indien) und kam über den Orient in die Mittelmeerküche.", geschmack: "Süßlich-würzig, leicht pfeffrig; Thai-Basilikum schmeckt deutlich nach Anis.", kueche: "Tomate in jeder Form, Caprese, Pesto alla genovese, Pasta, Pizza, Salate; Thai-Basilikum in Currys und Wok-Gerichten.", tipp: "Nicht in den Kühlschrank – unter 10 °C wird es schwarz. Wie Blumen ins Wasserglas stellen. Blätter zupfen oder reißen, Hitze nur ganz zum Schluss." },
+  { n: "Oregano", l: "Origanum vulgare", her: "Wächst im Mittelmeerraum, als „Wilder Dost“ aber auch bei uns an sonnigen Hängen.", geschmack: "Würzig, leicht bitter, kräftig – getrocknet sogar intensiver als frisch (eine Ausnahme unter den Kräutern).", kueche: "Pizza, Tomatensauce, griechischer Salat, Grillgemüse, Lamm, Feta. Sein milder Verwandter, der Majoran, gehört an Wurst, Kartoffelsuppe und Leberknödel.", tipp: "Getrockneten Oregano zwischen den Handflächen zerreiben, bevor er in den Topf kommt – das weckt die ätherischen Öle." },
+  { n: "Salbei", l: "Salvia officinalis", her: "Stammt aus dem nördlichen Mittelmeerraum; im Mittelalter in jedem Klostergarten zu finden.", geschmack: "Kräftig, herb-würzig, leicht bitter.", kueche: "Saltimbocca, Salbeibutter zu Gnocchi und Pasta, Kürbis, Kalbsleber, Schweinebraten, Bohnen.", tipp: "Sparsam dosieren. In heißer Butter oder Öl kurz frittiert werden die Blätter knusprig und milder – eine schöne Garnitur." },
+  { n: "Rosmarin", l: "Salvia rosmarinus", her: "Stammt aus dem Mittelmeerraum, wächst dort an Küsten und auf trockenen Hängen; botanisch gehört er heute zur Gattung Salbei.", geschmack: "Harzig, kräftig, leicht nach Kampfer.", kueche: "Lamm, Kartoffeln, Ofengemüse, Focaccia, Wild, Schmorgerichte, Marinaden.", tipp: "Hitzefest: ganze Zweige mitschmoren und vor dem Servieren herausnehmen. Für Speisen ohne Garzeit die Nadeln sehr fein hacken." },
+  { n: "Thymian", l: "Thymus vulgaris", her: "Stammt aus dem westlichen Mittelmeerraum; viele Sorten, darunter Zitronenthymian.", geschmack: "Würzig, warm, leicht herb.", kueche: "Fonds, Schmorgerichte, Bouquet garni, Pilze, Kartoffeln, Braten, Tomatensaucen; Zitronenthymian zu Fisch und Geflügel.", tipp: "Verträgt lange Garzeiten. Die Blättchen gegen die Wuchsrichtung vom Zweig abstreifen – mit zwei Fingern, das geht schnell." },
+  { n: "Lorbeer", l: "Laurus nobilis", her: "Stammt aus dem östlichen Mittelmeerraum; aus seinen Zweigen wurden in der Antike die Siegerkränze geflochten.", geschmack: "Würzig, leicht bitter, mit feiner Süße.", kueche: "Rotkohl, Sauerbraten, Wild, Fonds, Suppen, Marinaden, Hülsenfrüchte.", tipp: "Mitkochen und vor dem Servieren entfernen. Frische Blätter sind intensiver als getrocknete. Nicht verwechseln mit Kirschlorbeer aus dem Garten – der ist giftig." },
+];
+const MAG_SCHON_GEWUSST = [
+  ["Zitrone abreiben ohne Verlust: Ein Blatt Pergament- oder Backpapier straff über die feine Reibe legen und die Zitrone darauf reiben. Den Abrieb vorsichtig mit dem Messerrücken abschaben – nichts bleibt hängen, und die Reibe bleibt sauber.",
+    "Zwiebeln mit Schale von oben nach unten halbieren – von der Spitze zur Wurzel. So lässt sich die Schale viel leichter abziehen.",
+    "Knoblauchzehe kurz mit der flachen Messerklinge andrücken – die Schale springt ab und lässt sich mühelos lösen."],
+  ["Ingwer mit der Kante eines Teelöffels schälen: Es geht nur die dünne Haut ab, nicht das gute Innere.",
+    "Eier lassen sich kühlschrankkalt besser trennen – Eiweiß schlägt dagegen bei Zimmertemperatur höher auf.",
+    "Ein feuchtes Tuch unter dem Schneidbrett – und nichts rutscht mehr."],
+  ["Kräuter nur trocken hacken: Nasse Kräuter werden matschig. Vorher gut trocken tupfen und mit scharfem Messer nur wenige Male durchgehen.",
+    "Petersilien- und Kerbelstiele nicht wegwerfen – sie geben Fonds und Brühen viel Aroma.",
+    "Bärlauch sammeln? Jedes Blatt einzeln abzupfen und auf den Knoblauchduft achten – Maiglöckchen sehen ähnlich aus und sind giftig."],
+  ["Spargel flach aufs Brett oder über den Unterarm legen und knapp unter dem Kopf mit dem Schälen beginnen – so bricht er nicht. Schalen und Enden ergeben einen guten Spargelfond.",
+    "Radieschen, Salat und Kräuter, die schlappmachen, werden in Eiswasser wieder knackig.",
+    "Hollandaise geronnen? Einen Esslöffel heißes Wasser oder ein frisches Eigelb in eine saubere Schüssel geben und die geronnene Sauce tröpfchenweise einschlagen."],
+  ["Erdbeeren erst waschen, dann entstielen – sonst ziehen sie Wasser und verlieren Aroma.",
+    "Rhabarberblätter gehören nicht in den Topf: Sie enthalten viel Oxalsäure. Junge Stangen müssen kaum geschält werden.",
+    "Salat erst kurz vor dem Servieren anmachen – Dressing lässt die Blätter in wenigen Minuten zusammenfallen."],
+  ["Tomaten häuten: oben kreuzweise einritzen, 10 bis 20 Sekunden in kochendes Wasser, sofort in Eiswasser – die Haut lässt sich abziehen.",
+    "Basilikum gehört nicht in den Kühlschrank, sondern wie ein Blumenstrauß ins Wasserglas.",
+    "Kirschen ohne Entsteiner: Kirsche auf eine leere Flasche setzen und den Stein mit einem Ess-Stäbchen in die Flasche drücken."],
+  ["Mehr Saft aus Zitronen: vor dem Halbieren mit der flachen Hand kräftig über die Arbeitsfläche rollen.",
+    "Grillgut etwa eine halbe Stunde vorher aus dem Kühlschrank nehmen – es gart gleichmäßiger.",
+    "Ist die Avocado reif? Den kleinen Stielansatz abziehen: Grün darunter heißt reif, braun heißt überreif."],
+  ["Maiskörner sauber abschneiden: den Kolben senkrecht in die Mitte einer Gugelhupfform stellen – die Körner fallen in die Form statt auf die Arbeitsfläche.",
+    "Paprika häuten: im heißen Ofen rösten, bis die Haut Blasen wirft, kurz abgedeckt ruhen lassen – dann löst sich die Haut fast von selbst.",
+    "Fleisch immer quer zur Faser schneiden – so wird es auf dem Teller zarter."],
+  ["Pilze nicht im Wasser baden – sie saugen sich voll. Mit Pinsel oder Küchenpapier säubern.",
+    "Pilze in nicht zu voller, heißer Pfanne braten und erst zum Schluss salzen – sonst ziehen sie Wasser und dünsten statt zu braten.",
+    "Angeschnittene Äpfel und Birnen bleiben hell, wenn man sie mit etwas Zitronensaft beträufelt."],
+  ["Harten Kürbis kurz im Ofen oder in der Mikrowelle anwärmen – dann lässt er sich viel leichter schneiden. Hokkaido kann mit Schale gegessen werden.",
+    "Walnüsse kurz in der trockenen Pfanne rösten – sie schmecken intensiver und weniger bitter.",
+    "Quitten vor dem Verarbeiten mit einem trockenen Tuch abreiben – so ist der pelzige Flaum weg."],
+  ["Braten nach dem Garen 5 bis 10 Minuten locker abgedeckt ruhen lassen – der Saft verteilt sich, statt auf dem Brett zu landen.",
+    "Rotkohl bleibt rot mit etwas Säure – Essig, säuerliche Äpfel oder Rotwein. Ohne Säure, etwa bei kalkhaltigem Wasser, färbt er sich blau.",
+    "Fett von Brühe und Sauce: kurz kalt stellen, das Fett setzt sich oben ab und lässt sich abheben."],
+  ["Plätzchenteig zwischen zwei Lagen Backpapier ausrollen – nichts klebt, und es braucht kaum Mehl.",
+    "Butter schnell weich: in kleine Würfel schneiden oder auf der groben Reibe reiben.",
+    "Ausgekratzte Vanilleschoten in ein Glas Zucker stecken – nach ein paar Tagen ist der Vanillezucker fertig."],
+];
+const magKraut = (monat) => { const k = MAG_KRAEUTER[(monat - 1) % 12]; return `<div class="mag-kasten mag-kraut"><h4>🌿 Kraut des Monats: ${esc(k.n)} <small><i>(${esc(k.l)})</i></small></h4>
+  <p><b>Herkunft:</b> ${esc(k.her)}</p><p><b>Geschmack:</b> ${esc(k.geschmack)}</p><p><b>In der Küche:</b> ${esc(k.kueche)}</p><p><b>Profi-Tipp:</b> ${esc(k.tipp)}</p></div>`; };
+const magSchonGewusst = (nr) => { const l = MAG_SCHON_GEWUSST[(nr - 1) % 12]; return `<div class="mag-kasten mag-gewusst"><h4>💡 Schon gewusst?</h4><ul>${l.map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>`; };
 const MAG_SAISON = [
   ["Grünkohl, Rosenkohl, Lauch, Wirsing, Pastinaken, Schwarzwurzeln", "Äpfel und Birnen (Lager)", "Petersilie (Topf)"],
   ["Grünkohl, Rosenkohl, Feldsalat, Chicorée, Rote Bete", "Äpfel und Birnen (Lager)", "Schnittlauch (Topf)"],
@@ -542,6 +601,8 @@ function magSeiten({ termine, rezept }) {
         ${rezept.zubereitung ? `<h4>Zubereitung</h4><p>${esc(String(rezept.zubereitung)).slice(0, rezept.gewaehlt ? 2000 : 900).replace(/\n/g, "<br>")}</p>` : ""}<p class="hinweis">${rezept.gewaehlt ? "🍲 Rezept des Monats – ausgewählt von der Redaktion. Steht auch im Rezeptbuch." : "Vorschlag aus dem Rezeptbuch – die Redaktion wählt später das Rezept des Monats."}</p></div>`;
     else if (heft[r.id]) inhalt = magHeftHtml(r.id, heft[r.id]);
     else inhalt = magPlatz(r.platz || "Hier kommt der Beitrag der Redaktion hin.", r.id);
+    if (r.id === "saison") inhalt += magKraut(MAG.monat); // KC-CLUB-MAGAZIN-KRAEUTER
+    if (r.id === "tipp") inhalt += magSchonGewusst(nr); // KC-CLUB-MAGAZIN-SCHON-GEWUSST
     seiten.push({ art: "html", register: r.t, titel: "", html: magRubrikSeite(r, inhalt, start + i + 1), magRubrik: r.id, magSeitenNr: start + i + 1 });
   });
   // KC-CLUB-MAGAZIN-PROFI: „Im nächsten Heft“ – Schlagzeilen der nächsten Ausgabe (falls schon festgelegt), Auflösung der Rätsel, Fortsetzung des Romans
