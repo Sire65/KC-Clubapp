@@ -218,4 +218,7 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[16].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Sechzig kleine Fische", "absatz:41", "absatz:65"]); assert.equal(p[64], "Ralle hob immer alles auf."); assert.ok(p[40].startsWith("Die Kinder hatten die Telefone") && !p.some((t) => /zwei halbwüchsigen Söhnen|Die Söhne hatten/.test(t)), "Folge 4: Bild Ostern bei Kerzenlicht, Familie mit Junge und Mädchen");
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, b.datei); } assert.ok(p.some((t) => t.includes("dann hockte Lena sich unten ans Ufer"))); }
+{ const r = MAG_AUSGABEN[17].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:28"]); assert.ok(p[27].startsWith("Dann stand er auf") && p[25].startsWith("Lena setzte sich neben ihn") && p.includes("Ralle sah nicht hin. Nach einer Weile sagte er: „Zwanzig Jahre hab ich die gefüttert.“"), "Folge 5: neuer Absatz Mauer am Teich, Bild dahinter");
+  const st = fs.statSync(new URL("../" + r.bilder[0].datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000); }
 console.log("magazin-roman Staffel-2-Bilder: ok");
