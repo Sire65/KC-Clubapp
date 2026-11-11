@@ -57,7 +57,7 @@ assert.ok(/fehler24: f24\.filter\(\(x: any\) => commSystemFehler\(x\)\)\.length/
 // 5. Notfall-Paket: keine „Runde → feste Gruppe“-Prüfung (lud die Teilnehmer aller Chats je Chat); in der App unverändert
 assert.ok(/if \(!gr && \(tn \?\? \[\]\)\.length >= 3 && !ich\.nurLesen\) \{/.test(server), "Runden-Prüfung nicht im Notfall-Paket");
 assert.ok(/const ich: Ich = \{ \.\.\.ichAus\(p0, ro \?\? null\), nurLesen: true \};/.test(server), "Notfall-Paket baut mit nurLesen");
-// 6. 2.919.0 KC-CLUB-START-KLEIN: Start-Paket ohne Dienstplan-Druckdaten, je Tag nur der erste Start (gleiche Tage, gleicher erster Start)
+// 6. 2.921.0 KC-CLUB-START-KLEIN: Start-Paket ohne Dienstplan-Druckdaten, je Tag nur der erste Start (gleiche Tage, gleicher erster Start)
 {
   const m2 = lies("supabase/migrations/20261111_kc_club_start_klein.sql"), o2 = m2.replace(/--[^\n]*/g, "");
   assert.ok(/schluessel not in \('avatar_verlauf', 'dp_druck', 'dp_druck_konfig'\)/.test(m2), "Druckdaten nicht im Start");

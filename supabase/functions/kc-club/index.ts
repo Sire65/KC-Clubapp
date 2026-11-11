@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.919.0";
+const SERVER_VERSION = "2.921.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -558,7 +558,7 @@ async function ohneNurGezielt(ids: string[]): Promise<string[]> {
   const aus = await nurGezielt().catch((e) => { console.error("ohneNurGezielt", String(e)); return null; });
   return aus ? ids.filter((id) => !aus.has(id)) : [];
 }
-// 2.919.0 KC-CLUB-START-KLEIN: je Tag (deutsche Zeit) nur der erste Start – wie das Start-Paket; gezählt werden nur Tage und der erste Start
+// 2.921.0 KC-CLUB-START-KLEIN: je Tag (deutsche Zeit) nur der erste Start – wie das Start-Paket; gezählt werden nur Tage und der erste Start
 function startTage(liste: any[] | null): any[] {
   const tage = new Set<string>();
   return (liste ?? []).filter((x: any) => { const t = berlinTag(new Date(x.zeit)); if (tage.has(t)) return false; tage.add(t); return true; });
@@ -6957,7 +6957,7 @@ async function startPaketVergleich(ich: Ich, pk: any) { // nebenbei: bisherige E
   pr("nd", nd.data, pk.nd); pr("wahl", wahl.data, pk.wahl); pr("mail", mail.data, pk.mail); pr("frei", frei.data, pk.frei); pr("einst", einst.data, pk.einst);
   pr("spiele", spiele.count ?? 0, pk.spiele); pr("notfall", nf.data, pk.notfall); pr("kabo", kab.data, pk.kabo); pr("starts", startTage(starts.data), pk.starts);
   pr("feedback", fb.count ?? 0, pk.feedback); pr("au", au.data, pk.au); pr("pv", pv.data, pk.pv); pr("vor", vor.data, pk.vor);
-  // 2.919.0 KC-CLUB-START-KLEIN: „einst“ wich 19× in 2 Tagen ab – welche Einstellung (nur der Name, nie der Wert), damit man sieht, ob es nur ein
+  // 2.921.0 KC-CLUB-START-KLEIN: „einst“ wich 19× in 2 Tagen ab – welche Einstellung (nur der Name, nie der Wert), damit man sieht, ob es nur ein
   // Schreiben zwischen den beiden Lesungen war (z. B. beim Start gesetzte Einstellung) oder ein echter Unterschied
   const einstNamen = abw.includes("einst") ? (() => {
     const m = (l: any[] | null) => new Map<string, unknown>((l ?? []).map((x: any) => [String(x.schluessel), x.wert]));

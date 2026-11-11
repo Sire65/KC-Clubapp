@@ -1,12 +1,39 @@
 # Änderungen
 
-## 2.919.0 – 2026-11-11 – ⚡ Kleinerer App-Start (KC-CLUB-START-KLEIN) · Server 2.919.0 + Datenbank
+## 2.921.0 – 2026-11-11 – ⚡ Kleinerer App-Start (KC-CLUB-START-KLEIN) · Server 2.921.0 + Datenbank
 Egress-Auswertung 11.11. (24 Std. nach 2.907.0: −47 %). Hansi: „Checke was das ausmacht und was man noch verbessern kann an Qualität und Geschwindigkeit“.
 - **Start-Paket beim Admin ≈ 51 KB statt ≈ 5 KB:** die Dienstplan-Druckdaten (`dp_druck` ≈ 27 KB, `dp_druck_konfig` ≈ 4 KB) lagen in den Einstellungen und gingen bei jedem Start mit (Datenbank → Server → App) – die App holt sie nur über „Dienstplan drucken“. Jetzt nicht mehr im Start.
 - **Starttage:** statt jedes einzelnen Starts (bis 1000 Zeitpunkte) je Tag nur der erste – gezählt werden nur die Tage und der erste Start. Geprüft bei allen 17 Mitgliedern: gleiche Tage, gleicher erster Start (14 KB → 3 KB).
 - **Qualität:** der Stichproben-Vergleich meldete „Einstellungen weichen ab“ 19× in 2 Tagen – jetzt steht dabei, welche Einstellung (nur der Name, nie der Wert), damit sich klärt, ob es nur ein gleichzeitiges Speichern war.
-- Rückfall und Vergleich lesen genauso; nur lesend, nur der Club-Server. Datenbank: `supabase/migrations/20261111_kc_club_start_klein.sql`. Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.912.0 (App 2.918.0) + `20261021_kc_club_start_paket.sql`.
+- Rückfall und Vergleich lesen genauso; nur lesend, nur der Club-Server. Datenbank: `supabase/migrations/20261111_kc_club_start_klein.sql`. Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.912.0 (App 2.920.0) + `20261021_kc_club_start_paket.sql`.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.920.0 – 2026-11-11 – 📖 Club-Küche: Fortsetzungsroman Staffel 2 „Was der Mühlbach weiß“ (Hefte 13–24) · Staffel 1 sanft überarbeitet (KC-CLUB-MAGAZIN-STAFFEL-2, KC-CLUB-MAGAZIN-STAFFEL-1-SANFT)
+Ein Bündel (20-Uhr-Termin 11.11.).
+
+**Staffel 2:**
+Wunsch Hansi 11.11.: „Ja mach Lektorat und einbauen“ – „Alle 12 jetzt“.
+- **Hinter dem Pass, Staffel 2:** alle 12 Folgen vollständig und ungekürzt als Entwurf in den Heften Nr. 13–24 (Januar–Dezember 2028), nach Lektorat und Kontinuitätsprüfung (Quelle: KC-Communication, Zweig `roman-staffel-2-entwurf`). Mitglieder sehen jedes Heft erst ab seinem Erscheinungstag, der Admin im Archiv schon jetzt.
+- Romankopf zeigt die **Staffel**; am Folgenende der Kasten **„Aus Lenas Notizbuch“** (Küchenkniff), in Folge 12 das Rezept **„Gefüllte Bachforelle Mühlbach“**. Skizzen folgen später.
+- Archiv: der Admin sieht auch die vorgebauten Hefte 2028.
+- Tests: `tests/magazin-roman.test.mjs` (Staffel 2, Auflösung erst in Folge 12), `tests/magazin-archiv.test.mjs`. Keine Datenbank-, keine Server-Änderung.
+
+**Staffel 1 sanft:**
+Wunsch Hansi 11.11.: „Ja, überarbeite Staffel 1 sanft“ – damit Staffel 1 und Staffel 2 gleich klingen (Menü-Methode).
+- **Rhythmus:** Kurze Erzählfetzen zu ruhigen Absätzen zusammengeführt (je Folge etwa halb so viele Absätze, Ø 16–20 statt 8–11 Wörter). Wechselrede bleibt Zeile für Zeile.
+- **Zeigen statt erklären:** Gefühlssätze durch kleine Handlungen ersetzt, „nickte“/„sah sie an“ ausgedünnt; je Folge ein bis zwei leise Werne-Eindrücke (Mühlbach, Lippe, St. Christophorus).
+- **Aus Lenas Notizbuch** jetzt auch in allen 12 Folgen von Staffel 1 (Trüffel lagern, Kartoffeltaler, Küchenalarm, Möhren sicher schneiden, Marzipanrose, Jus, Schmorgericht kühlen, Perlhuhnbrust, Rote Bete, Entenbrust, Essenz klären, Geflügelbrühe).
+- Antworten Hansi 11.11.: Folge 2 – Jonas brät den Zander, Voss hält den Pass; Folge 3 – Walnussbrot-Probierscheibe geglättet; Folge 6/7 – der dritte Gast heißt Kegelclub „Gut Holz“; Staffel 2 – Leon ist Sous-Chef.
+- Handlung, Namen, Zahlen, Überschriften, erster und letzter Absatz jeder Folge unverändert; nichts gekürzt (Wortzahl ±2 %); Skizzen an denselben Stellen.
+- Tests: `tests/magazin-roman.test.mjs` (neue Absatz- und Wortzahlen, Notizbuch je Folge). Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.919.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
+## 2.919.0 – Zeitansage: Videos „Benachrichtigungen richtig einrichten“, „Privatsphäre & Handy weitergeben“, „Gruppen anlegen & verwalten“ und „Die gemeinsame To-do-Liste“ (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Benachrichtigungen:** 17 Schritte geprüft (Push auf diesem Handy, je Bereich, Ruhezeit, Test an mich, Meine Geräte, Anklopfton, Ansagen, Selbstreparatur, „Benachrichtigungen sind aus“, Fehlersuche, Installation).
+- **Privatsphäre:** 19 Schritte geprüft und **ergänzt**: Bei „Meine Kontaktdaten“ erwähnt das Video jetzt auch die neue Einstellung „📤 Auch an Personen außerhalb des Clubs“ (KC-CLUB-KONTAKT-EXTERN, 2.901.0) – von Haus aus aus.
+- **Gruppen:** 14 Schritte geprüft. **Fehler behoben:** Bei Schritt 3 „📋 Deine Gruppen“ blieb der Bildschirm etwa 10 Sekunden auf den Nachrichten stehen, ohne Rahmen – obwohl das Video schon „Das Fenster Neue Gruppe öffnet sich“ sagte. Ursache: Die Gruppen-Seite öffnet sich seit 2.480.0 nur mit vorbereitetem Formular, das Video bereitete es aber erst nach dem Umschalten vor. Jetzt erst Formular, dann Seite.
+- **To-do-Liste:** alle 15 Schritte geprüft (Umschalten, Eintragen, Wer, für mich/alle, Pflichtfeld, Abhaken, Frist-Erinnerung, Aufgaben aus dem Protokoll, Startseite).
+- Zeitansage in allen vier eingeschaltet. Test: `tests/video-zeitansage.test.mjs` erweitert. Rückweg: Version 2.918.0 einspielen.
 
 ## 2.918.0 – 2026-11-11 – 📰 Club-Küche: Kraut des Monats · Schon gewusst? · Hefte 2–12 vorgebaut (KC-CLUB-MAGAZIN-KRAEUTER, KC-CLUB-MAGAZIN-SCHON-GEWUSST, KC-CLUB-MAGAZIN-VORBAU)
 Wunsch Hansi 11.11.: „was die Professionellen noch drin haben, wie Wussten Sie schon …“, „bei Saison noch Kräuterkunde“, „Profitipps … schon in die nächsten Ausgaben einbauen, damit die Hefte schon fast fertig gebaut sind“.

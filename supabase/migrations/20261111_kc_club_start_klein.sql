@@ -13,7 +13,7 @@ returns jsonb language sql stable set search_path = public as $$
     -- Benachrichtigungs-Wahl + eigene E-Mail
     'wahl', coalesce((select jsonb_agg(to_jsonb(x)) from (select bereich, push, email from kc_club_benachrichtigung where person_id = p_person) x), '[]'::jsonb),
     'mail', (select to_jsonb(x) from (select email from kc_core_people where person_id = p_person limit 1) x),
-    -- Freigaben, Einstellungen (ohne Bild-Verlauf; 2.919.0 ohne Dienstplan-Druckdaten des Admins – die holt die Aktion dp_druck selbst)
+    -- Freigaben, Einstellungen (ohne Bild-Verlauf; 2.921.0 ohne Dienstplan-Druckdaten des Admins – die holt die Aktion dp_druck selbst)
     'frei', coalesce((select jsonb_agg(to_jsonb(x)) from (select bereich, erlaubt from kc_club_freigaben where person_id = p_person) x), '[]'::jsonb),
     'einst', coalesce((select jsonb_agg(to_jsonb(x)) from (select schluessel, wert from kc_club_person_einstellung where person_id = p_person and schluessel not in ('avatar_verlauf', 'dp_druck', 'dp_druck_konfig')) x), '[]'::jsonb),
     -- Spiele, bei denen ich dran bin / angefragt

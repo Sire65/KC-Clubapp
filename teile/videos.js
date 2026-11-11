@@ -1395,7 +1395,7 @@ const RG_PRIVAT = [
   rgPrivat({ sel: [rgFeld("setLiveTippen")], puls: ["#setLiveTippen"], t: "👁️ Sieht man mein Tippen?",
     x: "Sehen andere, was ich tippe? Nein – solange du es nicht willst. Andere sehen live, was ich tippe ist von Haus aus aus; dann sehen die anderen nur: schreibt. Schaltest du es ein, können die anderen – wenn sie mögen – sogar deine Tastenanschläge hören." }),
   rgPrivat({ sel: [rgFeld("setKontakt_mail")], puls: ["#setKontakt_handy", "#setKontakt_festnetz", "#setKontakt_mail", "#setKontakt_adresse", rgOn("mitgliedOeffnen(ICH.person_id)")], t: "📱 Meine Kontaktdaten",
-    x: "Darunter bestimmst du, was andere Mitglieder sehen: deine Handynummer, Festnetznummer, E-Mail-Adresse und Adresse. Mit So sehen mich die anderen prüfst du das Ergebnis." }),
+    x: "Darunter bestimmst du, was andere Mitglieder sehen: deine Handynummer, Festnetznummer, E-Mail-Adresse und Adresse. Ob Mitglieder diese Angaben auch an Personen außerhalb des Clubs weiterleiten dürfen, entscheidest du darunter – von Haus aus ist das aus. Mit So sehen mich die anderen prüfst du das Ergebnis." }), // 2.919.0: + KC-CLUB-KONTAKT-EXTERN (2.901.0)
   rgPrivat({ sel: [rgFeld("nfName")], puls: ["#nfName", "#nfTel", "#nfBez"], t: "🆘 Mein Notfallkontakt",
     x: "Beim Notfallkontakt trägst du eine andere Person ein, die im Notfall benachrichtigt werden soll – zum Beispiel deine Frau oder einen Nachbarn. Den sehen nur Clubsprecher, Kassenwart und Admin." }),
   rgPrivat({ sel: [rgOn("geraetAbmelden()", ".schalter")], puls: [rgOn("geraetAbmelden()")], t: "🚪 Handy weitergeben",
@@ -1935,7 +1935,7 @@ const rgGruppenSumm = (n) => `#v-gruppe details[data-klappe="${n}"] > summary`;
 const RG_GRUPPEN = [
   { v: "nachrichten", sel: ["#v-nachrichten .kom-leiste"], t: "👋 Eigene Gruppen", x: "In diesem Video zeige ich dir, wie du eine eigene Gruppe anlegst – zum Beispiel fürs Küchenteam –, wer sie verwaltet, wie du sie nutzt und wieder auflöst. Keine Sorge: Ich lege nichts an und lösche nichts." },
   { v: "nachrichten", sel: [rgGruppenKnopf("#v-nachrichten .kom-leiste", "👥 Gruppe")], t: "👥 Der Knopf Gruppe", x: "Los geht es in Nachrichten: Oben tippst du auf Gruppe." },
-  { v: "gruppe", tippVor: rgGruppenKnopf("#v-nachrichten .kom-leiste", "👥 Gruppe"), vor: () => rgGruppenForm(0), sel: ["#grVorhanden details", "#v-gruppe .kopf2"], t: "📋 Deine Gruppen",
+  { v: "gruppe", tippVor: rgGruppenKnopf("#v-nachrichten .kom-leiste", "👥 Gruppe"), vor: () => { rgGruppenForm(0); if (aktuelleAnsicht !== "gruppe") zeige("gruppe", true); }, sel: ["#grVorhanden details", "#v-gruppe .kopf2"], t: "📋 Deine Gruppen", // 2.920.0: zeige("gruppe") geht seit 2.480.0 nur mit vorbereitetem Formular (GR) – erst Formular, dann Seite
     x: "Das Fenster Neue Gruppe öffnet sich. Ganz oben stehen deine Gruppen – antippen, und du schreibst direkt hinein. Darunter legst du eine weitere Gruppe an." },
   { v: "gruppe", vor: () => rgGruppenForm(1), sel: ['#v-gruppe details[data-klappe="gr_name"]'], puls: ["#grName", "#grSymbole button.an"], t: "✏️ Name und Symbol",
     x: "Unter Name und Symbol gibst du der Gruppe einen Namen, zum Beispiel Küchenteam, und tippst ein passendes Symbol an." },
