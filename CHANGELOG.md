@@ -8,6 +8,7 @@ Wunsch Hansi 11.11.: „Oben im Kopf gibt es 2 × Pfeil … oder soll es ein Tog
 - Knopf etwas links der Mitte – Flagge und Verbindungs-Balken haben Platz (geprüft 360/412 px). Erklär-Video „Oberfläche nach Wunsch“ zeigt den neuen Knopf.
 - Keine Datenbank-, keine Server-Änderung. Browser `tools/hilfe/kopf-knopf-browser.mjs` (nur Testdaten), Vertragstests angepasst. Rückweg: App 2.914.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 11.11. 09:34 Uhr auf Wunsch Hansi („Einspielen“), Ruhe geprüft: 1 in der App, keine Spiegelung/Sicherung.
 
 ## 2.914.0 – 2026-11-11 – 📅 Club-Küche: Termine im Januar · Heft ohne private Termine (KC-CLUB-MAGAZIN-TERMINE)
 Wunsch Hansi 11.11.: „Schreibe bei Termine in Club Magazin in Januar: voraussichtliches Clubessen (Termin und Ort wird noch abgestimmt), Nachbesprechung Weihnachtsmarkt, nächste Clubsitzung, Geburtstage Mitglieder im Januar“ – „Einspielen“.
