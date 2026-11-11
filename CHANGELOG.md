@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.920.0 – 2026-11-11 – 📖 Club-Küche: Fortsetzungsroman Staffel 1 sanft überarbeitet (KC-CLUB-MAGAZIN-STAFFEL-1-SANFT)
+Wunsch Hansi 11.11.: „Ja, überarbeite Staffel 1 sanft“ – damit Staffel 1 und Staffel 2 gleich klingen (Menü-Methode).
+- **Rhythmus:** Kurze Erzählfetzen zu ruhigen Absätzen zusammengeführt (je Folge etwa halb so viele Absätze, Ø 16–20 statt 8–11 Wörter). Wechselrede bleibt Zeile für Zeile.
+- **Zeigen statt erklären:** Gefühlssätze durch kleine Handlungen ersetzt, „nickte“/„sah sie an“ ausgedünnt; je Folge ein bis zwei leise Werne-Eindrücke (Mühlbach, Lippe, St. Christophorus).
+- **Aus Lenas Notizbuch** jetzt auch in allen 12 Folgen von Staffel 1 (Trüffel lagern, Kartoffeltaler, Küchenalarm, Möhren sicher schneiden, Marzipanrose, Jus, Schmorgericht kühlen, Perlhuhnbrust, Rote Bete, Entenbrust, Essenz klären, Geflügelbrühe).
+- Handlung, Namen, Zahlen, Überschriften, erster und letzter Absatz jeder Folge unverändert; nichts gekürzt (Wortzahl ±2 %); Skizzen an denselben Stellen.
+- Tests: `tests/magazin-roman.test.mjs` (neue Absatz- und Wortzahlen, Notizbuch je Folge). Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.919.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.919.0 – 2026-11-11 – 📖 Club-Küche: Fortsetzungsroman Staffel 2 „Was der Mühlbach weiß“ in den Heften 13–24 (KC-CLUB-MAGAZIN-STAFFEL-2)
 Wunsch Hansi 11.11.: „Ja mach Lektorat und einbauen“ – „Alle 12 jetzt“.
 - **Hinter dem Pass, Staffel 2:** alle 12 Folgen vollständig und ungekürzt als Entwurf in den Heften Nr. 13–24 (Januar–Dezember 2028), nach Lektorat und Kontinuitätsprüfung (Quelle: KC-Communication, Zweig `roman-staffel-2-entwurf`). Mitglieder sehen jedes Heft erst ab seinem Erscheinungstag, der Admin im Archiv schon jetzt.
