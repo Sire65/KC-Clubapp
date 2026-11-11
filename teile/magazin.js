@@ -32,6 +32,14 @@ const MAG_RUBRIKEN = [
 // Platzhalter für die Redaktion. Offene Angaben (Zahlen, Zitate, Fotos) als { platz: "…" } – nie erfundene Ergebnisse eintragen.
 const MAG_AUSGABEN = {
   1: {
+    // KC-CLUB-MAGAZIN-TERMINE (Wunsch Hansi 11.11.2026 „Bei Termine im Januar: voraussichtliches Clubessen (Termin und Ort wird noch abgestimmt),
+    // Nachbesprechung Weihnachtsmarkt, nächste Clubsitzung, Geburtstage Mitglieder im Januar“). Feste Einträge stehen vor den Kalenderterminen;
+    // die Geburtstage kommen automatisch aus dem Kalender (nur wer seinen Geburtstag in der App freigegeben hat).
+    termine_fest: [
+      { sym: "🍽️", text: "Clubessen", wann: "voraussichtlich im Januar", info: "Termin und Ort werden noch abgestimmt." },
+      { sym: "🎄", text: "Nachbesprechung Weihnachtsmarkt", wann: "Termin folgt", info: "Rückblick, Zahlen und was wir beim nächsten Markt anders machen." },
+      { sym: "📋", text: "Nächste Clubsitzung", wann: "Termin folgt", info: "Die Einladung kommt wie immer über die Club-App." },
+    ],
     erscheint: "2027-01-01", // KC-CLUB-MAGAZIN-ARCHIV: ab diesem Tag für Mitglieder (sobald „magazin“ für alle freigegeben ist); vorher Entwurf, nur Admin
     // KC-CLUB-MAGAZIN-VORWORT (Wunsch Hansi 07.11.2026 „ein Vorwort wie Chefredakteure in jeder Ausgabe“, fester Platz nach dem Titelblatt). **fett** erlaubt.
     vorwort: { anrede: "Liebe Köchinnen und Köche, liebe Mitglieder,", gruss: "Viel Freude beim Blättern, Lesen und Nachkochen – und ein gutes, genussvolles Jahr 2027!", name: "Euer Hansi", rolle: "für die Redaktion der Club-Küche",
@@ -464,10 +472,19 @@ const magPlatz = (t, rubrik) => `<div class="mag-platz">✍️ <b>Platzhalter f�
 const magErschienen = (nr) => { const e = MAG_AUSGABEN[nr]?.erscheint; return !!e && e <= heuteIso(); };
 const magJahrMonat = (nr) => { const i = MAG_START.monat - 1 + nr - 1; return [MAG_START.jahr + Math.floor(i / 12), (i % 12) + 1]; };
 const magNeueste = () => { let n = 0; for (let i = 1; i <= 120; i++) if (magErschienen(i)) n = i; return n; };
+// KC-CLUB-MAGAZIN-TERMINE (11.11.2026): nur Club-Termine (Treffen, Aktionen) und freigegebene Geburtstage des Heftmonats – nie eigene Dienste,
+// private Termine oder Terminanfragen des Lesers (das Heft wird gedruckt und geteilt). Ohne „ab heute“-Grenze, damit auch ein Heft im Voraus stimmt.
+function magTermine(k, von, bis) {
+  const e = [], jahr = von.slice(0, 4);
+  for (const t of k.treffen || []) if (t.status !== "abgesagt") e.push({ tag: berlinIso(t.beginn), zeit: t.ganztaegig ? "" : fZeit.format(new Date(t.beginn)), sym: "📅", text: t.titel + (t.ort ? " · " + t.ort : "") });
+  for (const a of k.aktionen || []) e.push({ tag: a.von < von ? von : a.von, sym: "🧳", text: a.titel });
+  for (const g of k.geburtstage || []) e.push({ tag: `${jahr}-${g.md}`, sym: "🎂", text: g.name || g.vorname || "", geburtstag: true });
+  return e.filter((x) => x.tag >= von && x.tag <= bis).sort((a, b) => (a.tag + (a.zeit || "")).localeCompare(b.tag + (b.zeit || "")));
+}
 async function magDaten() { // Termine des Monats + Rezept (fest gewählt, sonst Vorschlag) – für Lesen und Drucken
   const von = `${MAG.jahr}-${String(MAG.monat).padStart(2, "0")}-01`, bis = tagPlus(`${MAG.monat === 12 ? MAG.jahr + 1 : MAG.jahr}-${String(MAG.monat === 12 ? 1 : MAG.monat + 1).padStart(2, "0")}-01`, -1);
   const [kal, rz] = await Promise.allSettled([api("kalender", { von, bis }, { still: true }), frei("rezepte") ? api("rezepte_liste", {}, { still: true }) : Promise.reject(new Error("aus"))]);
-  let termine = null; try { if (kal.status === "fulfilled") termine = demnaechstListe(kal.value).filter((x) => x.tag >= von && x.tag <= bis); } catch {}
+  let termine = null; try { if (kal.status === "fulfilled") termine = magTermine(kal.value, von, bis); } catch {}
   const rezepte = rz.status === "fulfilled" ? rz.value.rezepte || [] : [];
   const heftRz = (MAG_AUSGABEN[magNummer(MAG.jahr, MAG.monat)] || {}).rezept; // KC-CLUB-MAGAZIN-REZEPT: fest gewählt, sonst Vorschlag aus dem Rezeptbuch
   const rezept = heftRz ? { ...heftRz, ...(rezepte.find((r) => r.id === heftRz.id) || {}), gewaehlt: true } : rezepte.filter((r) => r.foto).sort((a, b) => (b.bewertung?.schnitt || 0) - (a.bewertung?.schnitt || 0) || String(b.erstellt_am).localeCompare(String(a.erstellt_am)))[0] || rezepte[0] || null;
@@ -508,8 +525,17 @@ function magSeiten({ termine, rezept }) {
   MAG_RUBRIKEN.forEach((r, i) => {
     let inhalt = "";
     if (r.id === "saison") { const [g, o, k] = MAG_SAISON[MAG.monat - 1]; inhalt = `<p class="mag-lead">Was im ${MAG_MONATE[MAG.monat - 1]} frisch aus der Region kommt:</p><dl class="mag-saison"><dt>🥬 Gemüse</dt><dd>${esc(g)}</dd><dt>🍎 Obst</dt><dd>${esc(o)}</dd><dt>🌿 Kräuter</dt><dd>${esc(k)}</dd></dl>`; }
-    else if (r.id === "termine") inhalt = termine == null ? '<p class="hinweis">Die Termine konnten gerade nicht geladen werden.</p>' : termine.length
-      ? `<ul class="mag-termine">${termine.slice(0, 14).map((x) => `<li><b>${esc(fTagDp.format(new Date(x.tag + "T12:00:00Z")))}${x.zeit ? ", " + esc(x.zeit) : ""}</b> ${x.sym} ${esc(x.text)}</li>`).join("")}</ul>` : `<p class="mag-lead">Im ${MAG_MONATE[MAG.monat - 1]} steht noch nichts im Kalender.</p>`;
+    else if (r.id === "termine") { // KC-CLUB-MAGAZIN-TERMINE: feste Einträge der Redaktion, Kalendertermine, Geburtstage
+      const fest = (MAG_AUSGABEN[magNummer(MAG.jahr, MAG.monat)] || {}).termine_fest || [], mon = MAG_MONATE[MAG.monat - 1];
+      const tagText = (x) => `${esc(fTagDp.format(new Date(x.tag + "T12:00:00Z")))}${x.zeit ? ", " + esc(x.zeit) : ""}`;
+      const kal = (termine || []).filter((x) => !x.geburtstag), geb = (termine || []).filter((x) => x.geburtstag);
+      inhalt = (fest.length ? `<ul class="mag-termine">${fest.map((x) => `<li><b>${esc(x.sym)} ${esc(x.text)}</b> – ${esc(x.wann)}${x.info ? `<br><small>${esc(x.info)}</small>` : ""}</li>`).join("")}</ul>` : "")
+        + (termine == null ? '<p class="hinweis">Die Termine aus dem Kalender konnten gerade nicht geladen werden.</p>'
+          : kal.length ? `${fest.length ? "<h4>Im Kalender</h4>" : ""}<ul class="mag-termine">${kal.slice(0, 14).map((x) => `<li><b>${tagText(x)}</b> ${x.sym} ${esc(x.text)}</li>`).join("")}</ul>`
+          : fest.length ? "" : `<p class="mag-lead">Im ${mon} steht noch nichts im Kalender.</p>`)
+        + (termine == null ? "" : `<h4>🎂 Geburtstage im ${mon}</h4>${geb.length ? `<ul class="mag-termine">${geb.map((x) => `<li><b>${tagText(x)}</b> ${esc(x.text)}</li>`).join("")}</ul><p class="hinweis">Herzlichen Glückwunsch von der Redaktion!</p>`
+          : `<p class="hinweis">Hier stehen alle, die ihren Geburtstag in der Club-App freigegeben haben.</p>`}`);
+    }
     else if (r.id === "rezept" && rezept) inhalt = `<div class="mag-rezept">${rezept.foto ? `<img class="oa-bild mag-foto" data-anlage="${esc(rezept.foto)}" alt="${esc(rezept.titel)}">` : rezept.bild ? `<img class="mag-foto" src="${esc(rezept.bild)}" alt="${esc(rezept.titel)}" loading="lazy" style="width:100%;border-radius:8px;display:block;margin:0 0 2px">${rezept.bildText ? `<p class="hinweis" style="margin:0 0 8px;font-size:.78rem;font-style:italic">${esc(rezept.bildText)}</p>` : ""}` : rezept.gewaehlt ? '<p class="hinweis" style="margin:4px 0 10px;padding:8px 10px;border:1px dashed currentColor;border-radius:10px;text-align:center">📷 <b>Foto folgt</b> – wer es nachkocht: Foto gern an die Redaktion schicken!</p>' : ""}<h3>${esc(rezept.titel)}</h3>
         <p class="hinweis">${esc([rezept.kategorie && rezept.kategorie[0].toUpperCase() + rezept.kategorie.slice(1), rezept.portionen ? rezept.portionen + " Portionen" : "", rezept.dauer ? rezept.dauer + " Minuten" : "", rezept.vonName ? "von " + rezept.vonName : ""].filter(Boolean).join(" · "))}</p>
         ${Array.isArray(rezept.zutaten) && rezept.zutaten.length ? `<h4>Zutaten</h4><ul>${rezept.zutaten.slice(0, 16).map((z) => `<li>${esc(typeof z === "string" ? z : [z.m ?? z.menge, z.e ?? z.einheit, z.n ?? z.name].filter((x) => x !== null && x !== undefined && x !== "").map((x) => typeof x === "number" ? String(x).replace(".", ",") : x).join(" "))}</li>`).join("")}</ul>` : ""}
