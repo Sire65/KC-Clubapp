@@ -5,6 +5,7 @@ Wunsch Hansi 11.11.: „Baue neue Bilderrätsel für die weiteren Ausgaben und K
 - **Fehlerbild je Heft** („Finde die 10 Fehler“), jedes mit eigener Szene zum Monat: Karneval in der Backstube, Fischstand, Osterfrühstück, Spargelzeit, Erdbeer-Konditorei, Picknick am Mühlteich, Grillabend, Hofladen zum Erntedank, Herbstküche, Martinsgans am Pass, Weihnachtsbäckerei. Genau 10 wirksame Fehler, Fundkreise überlappen nicht, keine Schrift im Bild.
 - **Kreuzworträtsel je Heft** mit Begriffen zum Monat (18–21 Begriffe, Lösungswörter KAMELLE, FISCHER, OSTERNEST, MAIBAUM, ERDBEERE, PICKNICK, GRILLFEST, ERNTEDANK, KÜRBIS, LATERNE, PLÄTZCHEN); jede Buchstabenfolge ist ein gewolltes Wort, keine Frage verrät die Antwort.
 - **Auflösung** jeweils im nächsten Heft (Nr. 13 löst Nr. 12 auf).
+- **Fortsetzungsroman Staffel 2:** erste drei Bleistiftzeichnungen eingebaut (Heft 14: Schnee an der Mühle, Voss und die Schalotten; Heft 15: Schaum am Wehr) – Graustufen-WebP, Gesichter gegen Staffel 1 geprüft.
 - **Knöpfe lesbar** (auch Heft 1): „💡 Auflösen“ und „✔️ Prüfen“ hatten dunkle Schrift auf dunklem Grund – jetzt Weinrot mit weißer Schrift; Umlaut-Hinweis dunkler.
 - Erzeugt mit KC-Infrastructure-Control-Center `docs/club-magazin-raetselecke/hefte/`. Test: `tests/magazin-raetsel.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.921.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.

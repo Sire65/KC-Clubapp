@@ -208,3 +208,11 @@ console.log("magazin-roman Staffel 1 sanft: ok");
   assert.ok(!/Jagdclub/.test(t(6) + t(7)) && /Kegelclub „Gut Holz“/.test(t(6)) && /Kegelclub/.test(t(7)), "Folge 6/7: Kegelclub");
   assert.ok(/Leon als Sous-Chef/.test(t(13)) && !/Leon als erfahrener Geselle/.test(t(13)), "Staffel 2: Leon Sous-Chef"); }
 console.log("magazin-roman Antworten Hansi: ok");
+// KC-CLUB-MAGAZIN-STAFFEL-2-BILDER (11.11.2026, Wunsch Hansi „Bau die fertigen Bilder schon mit ein“): geprüfte Zeichnungen Staffel 2, Graustufen-WebP
+{ const b14 = MAG_AUSGABEN[14].roman.bilder, b15 = MAG_AUSGABEN[15].roman.bilder;
+  assert.deepEqual(b14.map((b) => b.wo), ["absatz:1", "h:Vierzig Kilo"]); assert.deepEqual(b15.map((b) => b.wo), ["absatz:27"]);
+  assert.ok(MAG_AUSGABEN[15].roman.text.filter(([a]) => a === "p")[26][1].startsWith("Sie stellte die Tonne ab"), "Schaum-Bild hinter dem Foto-Absatz");
+  for (const b of [...b14, ...b15]) { assert.ok(b.da && /^magazin\/roman\/s2-0[23]-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: "));
+    const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
+  assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 2); }
+console.log("magazin-roman Staffel-2-Bilder: ok");
