@@ -57,4 +57,18 @@ assert.ok(/fehler24: f24\.filter\(\(x: any\) => commSystemFehler\(x\)\)\.length/
 // 5. Notfall-Paket: keine „Runde → feste Gruppe“-Prüfung (lud die Teilnehmer aller Chats je Chat); in der App unverändert
 assert.ok(/if \(!gr && \(tn \?\? \[\]\)\.length >= 3 && !ich\.nurLesen\) \{/.test(server), "Runden-Prüfung nicht im Notfall-Paket");
 assert.ok(/const ich: Ich = \{ \.\.\.ichAus\(p0, ro \?\? null\), nurLesen: true \};/.test(server), "Notfall-Paket baut mit nurLesen");
+// 6. 2.921.0 KC-CLUB-START-KLEIN: Start-Paket ohne Dienstplan-Druckdaten, je Tag nur der erste Start (gleiche Tage, gleicher erster Start)
+{
+  const m2 = lies("supabase/migrations/20261111_kc_club_start_klein.sql"), o2 = m2.replace(/--[^\n]*/g, "");
+  assert.ok(/schluessel not in \('avatar_verlauf', 'dp_druck', 'dp_druck_konfig'\)/.test(m2), "Druckdaten nicht im Start");
+  assert.ok(/order by zeit limit 1000\) s group by \(s\.zeit at time zone 'Europe\/Berlin'\)::date/.test(m2), "aus denselben ersten 1000 Starts, je Tag (deutsche Zeit) einer");
+  assert.ok(/language sql stable/.test(m2) && !/\b(insert|update|delete|security definer)\b/i.test(o2) && /from public, anon, authenticated;/.test(m2) && /to service_role;/.test(m2), "nur lesend, nur Server");
+  assert.equal((server.match(/\.neq\("schluessel", "avatar_verlauf"\)\.neq\("schluessel", "dp_druck"\)\.neq\("schluessel", "dp_druck_konfig"\)/g) || []).length, 2, "Rückfall + Vergleich lesen dasselbe");
+  assert.ok(/\.limit\(1000\)\.then\(\(r: any\) => \(\{ \.\.\.r, data: startTage\(r\.data\) \}\)\)/.test(server) && /pr\("starts", startTage\(starts\.data\), pk\.starts\)/.test(server), "Rückfall + Vergleich je Tag");
+  const st = new Function("berlinTag", stueck("function startTage(", "\n}\n").replace("(liste: any[] | null): any[]", "(liste)").replace("new Set<string>()", "new Set()").replace(/\(x: any\)/g, "(x)") + "\n}; return startTage;")((d) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(d));
+  const l = [{ zeit: "2026-11-09T22:30:00Z" }, { zeit: "2026-11-09T23:30:00Z" }, { zeit: "2026-11-10T08:00:00Z" }, { zeit: "2026-11-11T07:00:00Z" }];
+  assert.deepEqual(st(l).map((x) => x.zeit), ["2026-11-09T22:30:00Z", "2026-11-09T23:30:00Z", "2026-11-11T07:00:00Z"], "23:30 Uhr und 0:30 Uhr deutscher Zeit sind zwei Tage");
+  assert.deepEqual(st(null), []);
+  assert.ok(/einst: einstNamen/.test(server) && /new Map<string, unknown>\(\(l \?\? \[\]\)\.map\(\(x: any\) => \[String\(x\.schluessel\), x\.wert\]\)\)/.test(server), "bei Abweichung nur die Namen der Einstellungen");
+}
 console.log("✅ spar-kurz: alle Prüfungen bestanden");

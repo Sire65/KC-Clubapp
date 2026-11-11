@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.921.0 – 2026-11-11 – ⚡ Kleinerer App-Start (KC-CLUB-START-KLEIN) · Server 2.921.0 + Datenbank
+Egress-Auswertung 11.11. (24 Std. nach 2.907.0: −47 %). Hansi: „Checke was das ausmacht und was man noch verbessern kann an Qualität und Geschwindigkeit“.
+- **Start-Paket beim Admin ≈ 51 KB statt ≈ 5 KB:** die Dienstplan-Druckdaten (`dp_druck` ≈ 27 KB, `dp_druck_konfig` ≈ 4 KB) lagen in den Einstellungen und gingen bei jedem Start mit (Datenbank → Server → App) – die App holt sie nur über „Dienstplan drucken“. Jetzt nicht mehr im Start.
+- **Starttage:** statt jedes einzelnen Starts (bis 1000 Zeitpunkte) je Tag nur der erste – gezählt werden nur die Tage und der erste Start. Geprüft bei allen 17 Mitgliedern: gleiche Tage, gleicher erster Start (14 KB → 3 KB).
+- **Qualität:** der Stichproben-Vergleich meldete „Einstellungen weichen ab“ 19× in 2 Tagen – jetzt steht dabei, welche Einstellung (nur der Name, nie der Wert), damit sich klärt, ob es nur ein gleichzeitiges Speichern war.
+- Rückfall und Vergleich lesen genauso; nur lesend, nur der Club-Server. Datenbank: `supabase/migrations/20261111_kc_club_start_klein.sql`. Test: `tests/spar-kurz.test.mjs`. Rückweg: Server 2.912.0 (App 2.920.0) + `20261021_kc_club_start_paket.sql`.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.920.0 – 2026-11-11 – 📖 Club-Küche: Fortsetzungsroman Staffel 2 „Was der Mühlbach weiß“ (Hefte 13–24) · Staffel 1 sanft überarbeitet (KC-CLUB-MAGAZIN-STAFFEL-2, KC-CLUB-MAGAZIN-STAFFEL-1-SANFT)
 Ein Bündel (20-Uhr-Termin 11.11.).
 
