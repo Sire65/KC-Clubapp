@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.909.0";
+const SERVER_VERSION = "2.912.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -17640,6 +17640,42 @@ Köcheclub Werne`,
         await protokoll(ich.person_id, "erstattung_csv", { antraege: liste.length, form, status, nurNeu: p.nurNeu === true, von: von || null, bis: bis || null });
         return json({ csv, anzahl: liste.length, positionen: liste.reduce((n: number, a: any) => n + (a.positionen ?? []).length, 0), summe: Math.round(liste.reduce((n: number, a: any) => n + Number(a.summe || 0), 0) * 100) / 100,
           ids: liste.map((a: any) => a.id), schonUebernommen: liste.filter((a: any) => a.exportiert_am).length });
+      }
+      // KC-CLUB-ERSTATTUNG-BUCHUNGEN (11.11.2026, Wunsch Hansi „Buchungsliste für den Kassenwart: ID, Name, Vorname, km, Erstattungsbetrag, Bar am,
+      // überwiesen am – Filter Jahr, Monat, Kostenart, Gruppe, einzelne Mitglieder; Summen“): eine Zeile je Position eines Jahres (Datum der Fahrt/Auslage),
+      // abgelehnte Anträge nie. Sehen dürfen Kassenwart, Clubsprecher, Vorstand und Admin. Gruppen nur mit Mitgliederliste (kein Chat-Inhalt).
+      case "erstattung_buchungen": {
+        if (!ich.admin && !ich.vorstand && !(ich.aemter || []).some((a: string) => /^(kassenwart|clubsprecher)/i.test(a))) throw new Fehler("Die Buchungsliste sehen Kassenwart, Clubsprecher und Admin.", 403);
+        const heuteJ = +berlinTag(new Date()).slice(0, 4), jahr = Math.round(Number(p.jahr)) || heuteJ;
+        if (jahr < 2020 || jahr > heuteJ + 1) throw new Fehler("Bitte ein gültiges Jahr wählen.");
+        const { data, error } = await db.from("kc_club_erstattung").select("id,person_id,positionen,status,ausgezahlt,erledigt_am,erstellt_am").neq("status", "abgelehnt")
+          .gte("erstellt_am", `${jahr - 1}-07-01`).lt("erstellt_am", `${jahr + 1}-07-01`).order("erstellt_am").limit(3000);
+        if (error) throw new Fehler("Erstattungen konnten nicht geladen werden – bitte noch einmal versuchen.", 500);
+        const zeilen: any[] = [];
+        for (const a of data ?? []) {
+          const am = a.erledigt_am ? berlinTag(new Date(a.erledigt_am)) : null;
+          (a.positionen ?? []).forEach((x: any, i: number) => {
+            const d = /^\d{4}-\d{2}-\d{2}$/.test(String(x?.datum || "")) ? String(x.datum) : berlinTag(new Date(a.erstellt_am));
+            if (+d.slice(0, 4) !== jahr) return;
+            const art = ["fahrt", "einkauf", "kraftstoff", "parken", "kaution"].includes(x?.art) ? x.art : "sonstiges";
+            zeilen.push({ id: `${a.id}:${i}`, a: a.id, p: a.person_id, d, art, km: art === "fahrt" ? Math.round((Number(x.km) || 0) * 10) / 10 : 0,
+              b: Math.round((Number(x.betrag) || 0) * 100) / 100, st: a.status === "erstattet" ? "erstattet" : "offen", bar: a.status === "erstattet" && a.ausgezahlt === "bar" ? am : null,
+              ueb: a.status === "erstattet" && a.ausgezahlt !== "bar" ? am : null });
+          });
+        }
+        const pids = [...new Set(zeilen.map((z) => z.p))];
+        const [{ data: pe }, { data: gr }] = await Promise.all([
+          pids.length ? db.from("kc_core_personen").select("person_id,mitgliedsnummer,vorname,nachname,name").in("person_id", pids) : Promise.resolve({ data: [] as any[] }),
+          db.from("kc_club_gruppen").select("thread_id,name,symbol").limit(200)]);
+        const gids = (gr ?? []).map((g: any) => g.thread_id);
+        const { data: tn } = gids.length && pids.length ? await db.from("kc_communication_thread_participants").select("thread_id,person_id").in("thread_id", gids).in("person_id", pids) : { data: [] as any[] };
+        const personenOut: Record<string, any> = {};
+        for (const x of pe ?? []) { const teile = String(x.name || "").trim().split(/\s+/);
+          personenOut[x.person_id] = { nr: x.mitgliedsnummer || "", vorname: x.vorname || teile[0] || "", nachname: x.nachname || teile.slice(1).join(" ") || "" }; }
+        const gruppen = (gr ?? []).map((g: any) => ({ id: g.thread_id, name: g.name, symbol: g.symbol || "👥", personen: (tn ?? []).filter((t: any) => t.thread_id === g.thread_id).map((t: any) => t.person_id) }))
+          .filter((g: any) => g.personen.length).sort((x: any, y: any) => String(x.name).localeCompare(String(y.name), "de"));
+        await protokoll(ich.person_id, "erstattung_buchungsliste", { jahr, zeilen: zeilen.length });
+        return json({ jahr, zeilen, personen: personenOut, gruppen });
       }
       case "erstattung_export_markieren": {
         nurLeitung(ich);

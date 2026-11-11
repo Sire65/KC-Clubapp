@@ -28,10 +28,8 @@ test("Editorial-Komponenten fuer Cover, Rubriken, Rezepte, Bilder und Roman", ()
 
 test("Weihnachtsmarkt-Prospekt bleibt gruen und unveraendert im Look", () => {
   assert.match(style, /\.mag-titel:not\(\.wm-titel\)/);
-  assert.match(style, /\.wm-seite \.mag-kopf\s*\{/);
-  assert.match(style, /\.wm-seite \.mag-rumpf\s*\{/);
-  assert.match(style, /\.wm-seite \.mag-h::after\s*\{ content: none; \}/);
-  assert.match(style, /\.wm-seite \.mag-platz\s*\{/);
+  // Weihnachtsmarkt-Prospekt: keine eigenen Regeln (eine Nachbildung wich in Schrift/Zeilenhöhe ab) – nur Ausschlüsse :not(.wm-seite)/:not(.wm-titel)
+  assert.doesNotMatch(style.replace(/\/\*[\s\S]*?\*\//g, ""), /(^|[\s,}])\.wm-(seite|titel)\b(?!\))/m, "keine Regeln, die den Weihnachtsmarkt-Prospekt gestalten");
   assert.doesNotMatch(style, /@import\s+url\(/);
 });
 

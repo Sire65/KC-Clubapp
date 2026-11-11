@@ -1,5 +1,24 @@
 # Änderungen
 
+## 2.913.0 – 2026-11-11 – 💡 Büro-Lampe gespiegelt · 🪙 Warte-Münze mit eigenem Gesicht (Wunsch #88, KC-CLUB-LAMPE-GESPIEGELT, KC-CLUB-MUENZE-GESICHT)
+Wunsch #88, Hansi 11.11.: „Ja, mach Beispielbild für 88“ – „Fac eigene Gesicht wie jeder hinterlegt hat. Auch Foto. Wenn nix gewählt, nur since 1991“
+- **Büro-Lampe:** gespiegelt, Schirm leicht schräg, der Lichtkegel fällt nach rechts auf den Schreibtisch (nur wenn die Lampe an ist).
+- **Warte-Münze (Kochmütze):** die Rückseite zeigt abwechselnd „since 1991“ und das eigene Gesicht – so, wie jeder es hinterlegt hat (gebaute Figur, Galerie-Bild oder Foto). Wer nichts gewählt hat, sieht wie bisher nur „since 1991“. Andere Wartebilder unverändert.
+- Keine Datenbank-, keine Server-Änderung. Test `tests/muenze-gesicht.test.mjs`, Browser `tools/hilfe/muenze-gesicht-browser.mjs` (nur Testdaten). Rückweg: App 2.912.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 11.11. 08:55 Uhr auf Wunsch Hansi („Jetzt einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+
+## 2.912.0 – 2026-11-11 – 📒 Buchungsliste Erstattungen für Kassenwart und Clubsprecher (KC-CLUB-ERSTATTUNG-BUCHUNGEN) · 🎄 Prospekt-Kopfzeile korrigiert · Server 2.912.0
+Wunsch Hansi 10./11.11.: „Buchungsliste mit ID, Name, Vorname, gefahren km, Erstattungsbetrag. Filter nach Jahr, Monat, Fahrkosten alle Gruppe oder bestimmte zum Anhaken. Darin sollen die kompletten eingereichten Kosten summiert draufstehen. Filtertasten zum Einklappen mit den üblichen Pfeilen. Für den Kassenwart“ – „Beide Gruppen vorsehen und Clubsprecher darf auch sehen. Dahinter noch zwei Spalten mit Bar am, überwiesen am mit Logo. Und Schrift mit Fußzeile in Corporate Design.“
+- **Wo:** Büro-Eingang und Erstattungsseite → „📒 Buchungsliste“. **Wer:** Kassenwart, Clubsprecher, übrige Clubleitung und Admin (prüft der Server; Abruf protokolliert ohne Beträge).
+- **Summen oben:** Buchungen, km, gesamt eingereicht – davon ⏳ offen, 💶 bar, 🏦 überwiesen; rechnet bei jedem Filter neu. Summenzeile auch unter der Liste.
+- **Filter** (je mit ▸/▾ einklappbar, gemerkt): Jahr, Monat, Kostenart (alle oder angehakt: Fahrtkosten, Einkauf, Kraftstoff, Parken, Kaution, Sonstiges), Mitglieder-Gruppe, einzelne Mitglieder (anhaken), Stand. Datum = Tag der Fahrt/Auslage.
+- **Spalten:** ID (Mitgliedsnummer), Name, Vorname, Datum, Kostenart, km, Betrag, 💶 Bar am, 🏦 Überwiesen am; sortierbar. Ansicht je Buchung oder je Mitglied (antippen klappt die Buchungen auf).
+- **Drucken / PDF** im Club-Design (Kopf mit Logo, Schrift, Fußzeile; A4 quer), in der Club-App senden oder im Ordner „Kasse“ ablegen; **CSV für Excel**.
+- **🎄 Weihnachtsmarkt-Prospekt:** Kopfzeile wieder genau wie vor dem Premium-Design (Hansi 11.11.: „Kopfzeile korrigieren“). Der Regelblock in `magazin/premium.css`, der den Prospekt nachbilden sollte, wich in Schrift und Zeilenhöhe ab und ist entfernt; geprüft: jedes Element auf Handy und PC mit und ohne Premium-Design gleich. Test `magazin-premium` angepasst.
+- Keine Datenbank-Änderung. Tests `tests/erstattung-buchungen.test.mjs`, Browser `tools/hilfe/buchungsliste-browser.mjs` (nur Testdaten). Rückweg: App 2.911.0, Server 2.909.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.911.0 – 2026-11-10 – 📰 Club-Küche im Premium-Design · 📖 „Hinter dem Pass“ zweiter Durchgang (KC-CLUB-MAGAZIN-PREMIUM, KC-CLUB-MAGAZIN-LEKTORAT)
 Hansi 10.11.: „Ja, mach so und spiel um 20 Uhr ein“ (Design) · „OK Mach weiter“ (Roman).
 - **Premium-Design** (Entwurf ChatGPT, Zweig `magazin-premium-design-2026-11-10`): `magazin/premium.css` – edlere Titelseite (weinrot-gold, „Handwerk / Geschichten / Gemeinschaft“), Inhaltsverzeichnis, Rubrikköpfe mit Goldlinie, Rezept- und Romantypografie, Mobil-Einspaltensatz, Fokus/Kontrast. Nur Club-Küche, Weihnachtsmarkt-Prospekt unverändert. Im Offline-Speicher (sw.js), Test `tests/magazin-premium.test.mjs`.
