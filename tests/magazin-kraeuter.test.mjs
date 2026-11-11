@@ -15,3 +15,15 @@ assert.ok(/Kraut des Monats: Petersilie/.test(d.magKraut(1)) && /Lorbeer/.test(d
 assert.ok(/Schon gewusst\?/.test(d.magSchonGewusst(1)) && (d.magSchonGewusst(1).match(/<li>/g) || []).length === 3);
 assert.ok(/r\.id === "saison"\) inhalt \+= magKraut/.test(teil) && /r\.id === "tipp"\) inhalt \+= magSchonGewusst/.test(teil), "Einbau in Saison und Küchentipp");
 console.log("magazin-kraeuter: ok");
+// KC-CLUB-MAGAZIN-VORBAU (11.11.2026): Hefte 2–12 vorgefüllt – Küchentipp (2), Witz, Küchenlatein, Termine, Schlagzeilen
+{ const a = new Function("esc", teil.slice(teil.indexOf("const MAG_START"), teil.indexOf("// Bausteine für die Heftseiten")) + "; return MAG_AUSGABEN;")((t) => String(t));
+  const begriffe = new Set();
+  for (let n = 2; n <= 12; n++) { const h = a[n];
+    assert.equal(h.tipp.length, 2, `Heft ${n}: zwei Küchentipps`); assert.ok(h.tipp[0].kniff && h.tipp[0].merke && h.tipp[1].kasten && h.tipp[1].schritte.length >= 3, `Heft ${n}: Tipp-Format`);
+    assert.ok(h.witz?.zeilen?.length >= 2, `Heft ${n}: Witz`); assert.ok(h.latein?.begriff, `Heft ${n}: Küchenlatein`); begriffe.add(h.latein.begriff);
+    assert.ok(h.termine_fest.length >= 2 && h.termine_fest.every((x) => x.sym && x.text && x.wann), `Heft ${n}: Termine`);
+    assert.ok(h.schlagzeilen[0][1].startsWith("Hinter dem Pass, Folge " + n), `Heft ${n}: Roman bleibt erste Schlagzeile`); }
+  assert.equal(begriffe.size, 11, "jeder Begriff nur einmal");
+  assert.ok(a[3].termine_fest.some((x) => /Ostern/.test(x.text) && /28\. und Mo\., 29\. März/.test(x.wann)), "Ostern 2027 am 28. März");
+  assert.ok(a[2].termine_fest.some((x) => x.text === "Rosenmontag" && /8\. Februar/.test(x.wann)), "Rosenmontag 8. Februar 2027"); }
+console.log("magazin-vorbau: ok");
