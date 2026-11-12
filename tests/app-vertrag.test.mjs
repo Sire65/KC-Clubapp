@@ -2705,13 +2705,13 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/dokument: \{ bauen: \(\) => dokDruckSeite\(\) \}/.test(html) && /s\.randlos \? " margin: 0;" : ""/.test(html), "Druck über den Druck-Kern fehlt");
   assert.ok(/isEvalSupported: false/.test(html) && /PDFJS_BIB = "lib\/pdfjs\/pdf\.min\.js\?v=4\.10\.38"/.test(html), "pdf.js lokal und ohne eval");
   for (const f of ["pdf.min.js", "pdf.worker.min.js", "LICENSE"]) assert.ok(fs.existsSync(new URL("../lib/pdfjs/" + f, import.meta.url)), "lib/pdfjs/" + f + " fehlt");
-  assert.ok(fs.readFileSync(new URL("../lib/pdfjs/pdf.min.js", import.meta.url), "utf8").includes('4.10.38'), "falsche pdf.js-Version");
+  assert.ok(lies("lib/pdfjs/pdf.min.js").includes('4.10.38'), "falsche pdf.js-Version");
   assert.ok(/if \(vorher === "dokansicht" && v !== "dokansicht"\) dokAufraeumen\(\);/.test(html) && /h\.startsWith\("#dokument="\)/.test(html) && /s\.v === "dokansicht" && s\.id/.test(html), "Zurück/Link/Speicher freigeben fehlt");
 }
 
 // 235. 1.63.0: Fotoalben (Auswahl, Name, privat/alle, Archiv-Regal)
 {
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1630_foto_alben.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261003_kc_club_v1630_foto_alben.sql");
   assert.ok(/create table if not exists kc_club_foto_alben/.test(mig) && /sichtbar in \('privat', 'alle'\)/.test(mig) && /foto_id uuid not null references kc_club_fotos\(id\) on delete cascade/.test(mig) && /enable row level security/.test(mig), "Migration Alben fehlt");
   for (const a of ["foto_album_speichern", "foto_album_fotos", "foto_album_loeschen", "foto_alben_papierkorb", "foto_album_wiederherstellen"]) assert.ok(server.includes(`case "${a}"`), "Server-Aktion fehlt: " + a);
   assert.ok(/const darfAlbumSehen = \(ich: Ich, a: any\) => !a\.geloescht_am && \(a\.besitzer === ich\.person_id \|\| a\.sichtbar === "alle"\)/.test(server), "privat nur für Besitzer");
@@ -2735,7 +2735,7 @@ for (const k of ["club_geburtstag", "club_geburtstag_push", "club_geburtstag_bei
   assert.ok(/\} else if \(darfDokSehen\(ich, o, x, \[\]\) && /.test(server), "Link zu fremder Einreichung gesperrt");
   const bl = server.slice(server.indexOf('case "archiv_blaettern"'), server.indexOf('case "archiv_pruefung"'));
   assert.ok(/archivOrdnerHolen\(ich, p\.ordner_id, false, "lesen"\)/.test(bl) && /\.eq\("status", "ok"\)/.test(bl) && /darfDokSehen\(ich, o, d, o\._freigaben\)/.test(bl), "Blättern nur Sichtbares");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1640_chronik.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261003_kc_club_v1640_chronik.sql");
   assert.ok(/add column if not exists einreichen boolean not null default false/.test(mig) && /add column if not exists beschreibung text not null default ''/.test(mig), "Migration Chronik fehlt");
   assert.ok(/id="blaettern"/.test(html) && /function blOrdner\(id\)/.test(html) && /function blAlbum\(\)/.test(html) && /onclick="blOrdner\('\$\{o\.id\}'\)"/.test(html) && /onclick="blAlbum\(\)"/.test(html), "Blättern fehlt");
   assert.ok(/if \(BL\.offen\) \{ blZu\(true\); return; \}/.test(html), "Zurück-Taste schließt Blättern");
@@ -2967,7 +2967,7 @@ assert.ok(/id: "emoji",[^\n]*unter dem Schreibfeld<\/b> auf <b>😊<\/b>/.test(h
   const v2 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V2.pdf", import.meta.url));
   assert.ok(v2.subarray(0, 5).toString() === "%PDF-" && v2.length < 8e6, "Anleitung V2 fehlt oder zu groß");
   assert.ok(fs.existsSync(new URL("../dokumente/Koecheclub-App_Anleitung_V1.pdf", import.meta.url)), "V1 muss unverändert bleiben");
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f2 = fs.readFileSync(new URL("../tools/anleitung/fotos2.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs"), f2 = lies("tools/anleitung/fotos2.mjs");
   assert.ok(/anleitung: ([2-9]|1\d)/.test(inh) && /10\. Fotos & Alben/.test(inh) && /11\. Archiv & Chronik/.test(inh) && /<b>Club<\/b> = alles rund um den Club/.test(inh) && !/Programme<\/b> = Dienstplan/.test(inh), "Inhalt V2");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f2), "fotos2 ohne echte Zugänge");
 }
@@ -2985,7 +2985,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/naechster_termin: txt\(p\.naechster_termin, 200\) \|\| null/.test(server) && /naechster_termin: pr\.naechster_termin \?\? null/.test(server) && /async function protokollNaechsterVorschlag\(pr: any\)/.test(server), "Server speichert/liefert, schlägt vor");
   assert.ok(/<input id="prN" maxlength="200"/.test(html) && /naechster_termin: \$\("prN"\)\?\.value \?\? ""/.test(html), "Formular");
   assert.ok(/<b>📅 Nächster Termin:<\/b> \$\{esc\(p\.naechster_termin\)\}/.test(html) && /<b>Nächster Termin:<\/b> \$\{esc\(p\.naechster_termin\)\}<\/p>` : ""\}\n      <div class="unterschrift">/.test(html), "Ansicht und Ausdruck");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1840_protokoll_naechster_termin.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261003_kc_club_v1840_protokoll_naechster_termin.sql");
   assert.ok(/add column if not exists naechster_termin text/.test(mig) && /Rückweg:/.test(mig), "Migration");
 }
 // 265. 1.85.0: Zoom beim Öffnen
@@ -2998,7 +2998,7 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
 {
   assert.ok(/einleitung: o\.besitzer \? null : o\.einleitung \?\? null/.test(server) && /\(werte as any\)\.einleitung = String\(p\.einleitung/.test(server), "Server liefert/speichert Einleitung (nicht für persönliche Ordner)");
   assert.ok(/function arEinleitungHtml\(t\)/.test(html) && /<textarea id="arEinleitung"/.test(html) && /\.\.\.\(r\.ordner\.einleitung \? \[\{ art: "html", titel: r\.ordner\.einleitung\.trim\(\)\.split/.test(html), "Ordner-Ansicht, Formular, Blättern");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1860_ordner_einleitung.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261003_kc_club_v1860_ordner_einleitung.sql");
   assert.ok(/add column if not exists einleitung text/.test(mig) && /Rückweg:/.test(mig), "Migration");
 }
 // 267. 1.87.0: Kurzcode-Anmeldung + Einrichtungs-Assistent
@@ -3011,13 +3011,13 @@ assert.ok(/<h2>🗂️ Büro<\/h2><span class="bu-kopfgruss" id="buKopfGruss"><\
   assert.ok(/<input id="kcCode" class="kc-code" inputmode="numeric" autocomplete="one-time-code"/.test(html) && /function kurzcodeEinloesen\((hier)?\)/.test(html), "Code-Feld auf dem Anmeldebildschirm");
   for (const g of ["g.ios", "g.android && g.browser === \"samsung\"", "g.android"]) assert.ok(html.includes(`if (${g}`), "Assistent: " + g);
   assert.ok(/function einrichtenEinmal\(\)/.test(html) && /lsSetzen\("kc_club_einrichten_gezeigt", "1"\)/.test(html) && /if \(START_ART !== "app"\) return einrichtenAssistent\(\);/.test(html), "einmal von selbst, sonst über installHilfe");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261003_kc_club_v1870_kurzcode.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261003_kc_club_v1870_kurzcode.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on kc_club_kurzcodes from anon, authenticated/.test(mig), "Tabelle nur für den Server");
 }
 // 268. 1.88.0: Einrichtungskarte (QR) und „hat die Club-App verlassen“
 {
   assert.ok(/einrichtungskarte: \{ bauen: \(o, param\) => druckEinrichtungskarte\(param\) \}/.test(html) && /sc\.src = "lib\/qrcode\/qrcode\.js"/.test(html), "Druckart + QR lokal");
-  assert.ok(fs.existsSync(new URL("../lib/qrcode/qrcode.js", import.meta.url)) && /MIT/.test(fs.readFileSync(new URL("../lib/qrcode/README.txt", import.meta.url), "utf8")), "QR-Baustein mit Lizenzhinweis");
+  assert.ok(fs.existsSync(new URL("../lib/qrcode/qrcode.js", import.meta.url)) && /MIT/.test(lies("lib/qrcode/README.txt")), "QR-Baustein mit Lizenzhinweis");
   const k = html.slice(html.indexOf("async function einrichtungskarte("), html.indexOf("async function linkTeilen("));
   assert.ok(/if \(m\.app && !\(await frage\(/.test(k) && /api\("link_erzeugen"/.test(k) && !/kurzcode/.test(k.slice(k.indexOf("function druckEinrichtungskarte"))), "Rückfrage bei aktivem Link, kein Code auf Papier");
   assert.ok(/onclick="einrichtungskarte\('\$\{m\.person_id\}'\)"><span class="kt-ico">🖨️<\/span>Einrichtungs&shy;karte<\/button>/.test(html), "Knopf beim Mitglied");
@@ -3182,7 +3182,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   const v3 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V3.pdf", import.meta.url));
   assert.ok(v3.subarray(0, 5).toString() === "%PDF-" && v3.length < 9e6, "Anleitung V3 fehlt oder zu groß");
   for (const v of [1, 2]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f3 = fs.readFileSync(new URL("../tools/anleitung/fotos3.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs"), f3 = lies("tools/anleitung/fotos3.mjs");
   assert.ok(/anleitung: ([3-9]|1\d)/.test(inh) && /12\. Helfen & Leihen/.test(inh) && /13\. Bedienen, Anmelden & ohne Netz/.test(inh) && /Mit Code anmelden/.test(inh) && !/"s-herz"/.test(inh), "Inhalt V3");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}/.test(f3), "fotos3 ohne echte Zugänge");
   assert.ok(/datei: "dokumente\/Koecheclub-App_Anleitung_V([3-9]|1\d)\.pdf"/.test(html), "Anleitung in Meine Dokumente"); // 2.23.33: V4 löst V3 ab
@@ -3196,7 +3196,7 @@ assert.ok(/HL\.infoNach = f\.id; melde\(r\.benachrichtigt \? "💾 Gespeichert �
   assert.ok(/admins: await adminAnzahl\(\)/.test(server) && /r\.admins != null && r\.admins < 2/.test(html), "Admin-Zentrale warnt");
   assert.ok(/await adminAbwesendPruefen\(\)\.catch/.test(server) && /eq\("aktion", "admin_abwesend_gemeldet"\)\.gte\("zeit", new Date\(Date\.now\(\) - 7 \* 86400000\)/.test(server), "Hinweis an Clubleitung gedrosselt");
   assert.ok(/\{ id: "vertretung", sym: "🛡️"[^\n]*nur: \(\) => !!ICH\?\.admin \}/.test(html) && /DOKUMENTE\.filter\(\(d\) => !d\.nur \|\| d\.nur\(\)\)/.test(html), "Dokument nur für Admins");
-  const pdf = fs.readFileSync(new URL("../dokumente/Vertretung_Admin_V1.pdf", import.meta.url)), werkzeug = fs.readFileSync(new URL("../tools/vertretung/bau.mjs", import.meta.url), "utf8");
+  const pdf = fs.readFileSync(new URL("../dokumente/Vertretung_Admin_V1.pdf", import.meta.url)), werkzeug = lies("tools/vertretung/bau.mjs");
   assert.ok(pdf.subarray(0, 5).toString() === "%PDF-" && !/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}|passwort:/i.test(werkzeug), "Vertretungs-PDF da, Werkzeug ohne Geheimnisse");
   assert.ok(!/OK = per WhatsApp schicken\\nAbbrechen = in die Zwischenablage kopieren/.test(html) && /data-w="kopie">📋 Kopieren/.test(html), "Link-Fenster mit echten Knöpfen");
 }
@@ -3848,7 +3848,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 375. 2.23.28: leerer persönlicher Wunschbogen (DP2-Matrix, QR = Mitglieds-ID) drucken / an mich mailen (KC-CLUB-WUNSCHBOGEN)
 {
-  const daten = fs.readFileSync(new URL("../dp2-club/daten.js", import.meta.url), "utf8");
+  const daten = lies("dp2-club/daten.js");
   assert.ok(/K\.people = \(K\.people \|\| \[\]\)\.map\(\(p\) => \(p\.personId === ich \? \{ \.\.\.p, formProfileId: ich \} : p\)\);/.test(daten), "QR-Profil = Mitglieds-ID");
   assert.ok(/await F\.downloadPdf\("matrix", ich\);/.test(daten) && /finally \{ P\.download = herunterladen; \}/.test(daten), "DP2s eigener Druckteil (Matrix), Download zurückgesetzt");
   assert.ok(/e\.origin !== location\.origin \|\| e\.source !== parent/.test(daten), "nur Anfragen der Club-App");
@@ -3886,7 +3886,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 378. 2.23.29: Twinkey-Fenster – Mütze hinten „since 1991“, Kopf in zwei Reihen, Meldungen sichtbar, Mail-Bestätigung im Fenster
 {
-  const dw = fs.readFileSync(new URL("../dienstwunsch.html", import.meta.url), "utf8");
+  const dw = lies("dienstwunsch.html");
   assert.ok(/#dwLaden \.muetze::after\{content:"since\\A 1991"/.test(dw) && /#dwLaden \.muetze img\{backface-visibility:hidden/.test(dw), "Twinkey-Ladeseite: Rückseite since 1991");
   assert.ok(/<div class="dw-kopf"><div class="dw-reihe">/.test(html) && /\.dw-aktionen \{ display: grid; grid-template-columns: 1fr 1fr;/.test(html), "Kopf in zwei Reihen");
   assert.ok(/\.meldung \{[^}]*z-index: 2300;/.test(html), "Meldungen über Vollbild-Fenstern");
@@ -3916,7 +3916,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const v4 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V4.pdf", import.meta.url));
   assert.ok(v4.subarray(0, 5).toString() === "%PDF-" && v4.length < 9e6, "Anleitung V4 fehlt oder zu groß");
   for (const v of [1, 2, 3]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8"), f4 = fs.readFileSync(new URL("../tools/anleitung/fotos4.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs"), f4 = lies("tools/anleitung/fotos4.mjs");
   assert.ok(/anleitung: ([4-9]|1\d)/.test(inh) && /14\. Spiele/.test(inh) && /15\. Hilfe & Tipps/.test(inh) && /16\. Dienstwünsche/.test(inh) && /17\. Meine Daten haben sich geändert/.test(inh), "Inhalt V4");
   assert.ok(!/ptblnpiroqftcvlsrhac|service_role|eyJ[A-Za-z0-9_-]{20}|KC-P-\d/.test(f4), "fotos4 nur Demodaten, ohne echte Zugänge/IDs");
   // 2.23.42: in „Meine Dokumente“ steht jetzt V5 (Test 391); die V4-Datei bleibt unverändert liegen
@@ -3928,7 +3928,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const hb = server.slice(server.indexOf('case "hilfe_bewerten"'), server.indexOf('case "wunschbogen_mailen"'));
   assert.ok(/\^\[a-z\]:\[a-z0-9_-\]\{1,48\}\$/.test(hb) && /onConflict: "person_id,hilfe_id"/.test(hb) && /nurAdmin\(ich\);/.test(hb), "Server: prüfen, je Person eine Zeile, Auswertung nur Admin");
   assert.ok(!/person_id/.test(hb.slice(hb.indexOf('case "hilfe_bewertungen"'), hb.indexOf("return json({ bewertungen"))) || /select\("hilfe_id,wert,notiz,geaendert_am"\)/.test(hb), "Auswertung ohne Namen");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261004_kc_club_v22334_hilfe_bewertung.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261004_kc_club_v22334_hilfe_bewertung.sql");
   assert.ok(/enable row level security/.test(mig) && /revoke all on table kc_club_hilfe_bewertung from anon, authenticated/.test(mig), "RLS an, kein Direktzugriff");
 }
 // 384. 2.23.35: „Schnellzugriff“ → Schnellstart-Karte oben (KC-CLUB-SCHNELLZUGRIFF-LINK)
@@ -4002,7 +4002,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const v5 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V5.pdf", import.meta.url));
   assert.ok(v5.subarray(0, 5).toString() === "%PDF-" && v5.length < 9e6, "Anleitung V5 fehlt oder zu groß");
   for (const v of [1, 2, 3, 4]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs");
   assert.ok(/anleitung: ([5-9]|1\d)/.test(inh) && /▾ Alle auf \/ ▴ Alle zu/.test(inh) && /titel: "Neue Gruppe"/.test(inh), "Inhalt V5 (2.23.95: in V6 enthalten)");
   assert.ok(!/bedienung-club-app-v4/.test(html), "V4 nicht mehr in Meine Dokumente (2.23.95: V6 ersetzt V5, Test 445)");
 }
@@ -4551,7 +4551,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const v6 = fs.readFileSync(new URL("../dokumente/Koecheclub-App_Anleitung_V6.pdf", import.meta.url));
   assert.ok(v6.subarray(0, 5).toString() === "%PDF-" && v6.length < 10e6, "Anleitung V6 fehlt oder zu groß");
   for (const v of [1, 2, 3, 4, 5]) assert.ok(fs.existsSync(new URL(`../dokumente/Koecheclub-App_Anleitung_V${v}.pdf`, import.meta.url)), `V${v} muss unverändert bleiben`);
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs");
   assert.ok(/anleitung: ([6-9]|1\d)/.test(inh) && /titel: "18\. Neu in Version 6"/.test(inh) && !/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept/i.test(inh), "Inhalt V6 ohne Admin-Werkzeuge");
   assert.ok(/\{ id: "bedienung-club-app-v(8|9|10)",[^}]*datei: "dokumente\/Koecheclub-App_Anleitung_V(8|9|10)\.pdf"/.test(html) && !/bedienung-club-app-v[567]"/.test(html), "V8 in Meine Dokumente (2.96.0 ersetzt V7, 2.110.0 durch V9 ersetzt)");
 }
@@ -4746,7 +4746,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.24.15: Anleitung V7 (Teil 19), ohne Admin-Werkzeuge; Knopf „Pinnwand-Einträge“ richtig geschrieben
 {
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs");
   assert.ok(/anleitung: ([7-9]|1\d)/.test(inh) && /19\. Neu in Version 7/.test(inh) && !/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept|was speichert/i.test(inh), "Inhalt V7 ohne Admin-Werkzeuge");
   assert.ok(fs.statSync(new URL("../dokumente/Koecheclub-App_Anleitung_V7.pdf", import.meta.url)).size < 10.5e6, "V7-PDF vorhanden, nicht zu groß");
   assert.ok(/p > 1 \? "Pinnwand-Einträge" : "Pinnwand-Eintrag"/.test(html) && !/Pinnwand-Eintrag\$\{p > 1/.test(html), "Pinnwand-Einträge mit ä");
@@ -5367,7 +5367,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const pk = lies("tools/cloudflare/paket-bauen.mjs");
   assert.ok(/const NIE = \[\/\^supabase\\\/\/, \/\^tests\\\/\/, \/\^tools\\\/\/, \/\^docs\\\/\//.test(pk), "Server-Code, Tests, Werkzeuge, Doku nie im Paket");
   assert.ok(/\/sw\.js\n  Cache-Control: no-cache/.test(pk) && /\/version\.json\n  Cache-Control: no-store/.test(pk), "atomares Update auch bei Cloudflare");
-  const wl = fs.readFileSync(new URL("../tools/cloudflare/weiterleitung/index.html", import.meta.url), "utf8");
+  const wl = lies("tools/cloudflare/weiterleitung/index.html");
   assert.ok(/location\.replace\(NEU \+ location\.search \+ location\.hash\)/.test(wl), "Weiterleitung nimmt persönlichen Link und Sprungziel mit");
   assert.ok(!/cloudflare/i.test(fs.readdirSync(new URL("../.github/workflows/", import.meta.url)).join(" ")) || true, "noch kein Veröffentlichungs-Workflow");
 }
@@ -7101,7 +7101,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 // 2.524.0 KC-CLUB-VERSANDART (Wunsch Hansi): ❗ und 🏎️ raus aus der Knopfreihe – Versand-Leiste über dem Schreibfeld:
 // 📝 Normal vorgewählt; Wichtig oder Express nimmt den Haken bei Normal raus; Wichtig + Express zusammen; nach dem Senden wieder Normal
 {
-  const vm = await import("node:vm"), ix = lies("index.html"), js = programmText();
+  const vm = await import("node:vm"), ix = lies("index.html"), js = programmText().replace(/\r\n/g, "\n");
   const innen = ix.slice(ix.indexOf('<div class="innen">'), ix.indexOf("</div>", ix.indexOf('id="bfChatKnopf"')));
   assert.ok(!/id="wichtigKnopf"|id="expressKnopf"/.test(innen), "❗ und 🏎️ nicht mehr in der Knopfreihe");
   assert.ok(/id="waKnopf" onclick="waSenden\(\)">WA<\/button>/.test(innen), "WA bleibt am bisherigen Platz (Variante A)");
@@ -7404,13 +7404,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /const KLOPF_VIBRATION = \[350, 150, 350, 150, 600\];/, "kräftige Anklopf-Vibration");
   assert.match(programm, /setTimeout\(\(\) => \{ try \{ navigator\.vibrate\?\.\(KLOPF_VIBRATION\); \} catch \{\} \}, 700\); \/\/ erst der Ton, dann vibrieren/, "erst Ton, dann vibrieren");
   assert.match(programm, /klopfTonSpielen\(klopfStand\(\)\.ton\); klopfWiederholen\(k\.id\);/, "wiederholt, solange die Frage offen ist");
-  assert.match(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8"), /\/\^👋\/\.test\(titel\) \? \[350, 150, 350, 150, 600\]/, "Push vibriert beim Anklopfen kräftig");
+  assert.match(lies("sw.js"), /\/\^👋\/\.test\(titel\) \? \[350, 150, 350, 150, 600\]/, "Push vibriert beim Anklopfen kräftig");
   assert.match(programm, /if \(klopfSprechenAnnehmen\(\) \|\| dazuAnnehmen\(\)\) return; \/\/ 2\.647\.0/, "Rückruf wird beim Anklopfer von selbst angenommen (auch nach Dazukommen, KC-CLUB-GESPRAECHE)");
   assert.match(programm, /RUF\.art === "video" \|\| RUF\.konferenzId \|\| RUF\.gegen\?\.person_id !== w\.pid\) return false;/, "nur genau diese Person, nur Ton, nur 90 s");
   assert.match(server, /insert\(\{ von: ich\.person_id, an, \.\.\.\(art === "sprechen" \? \{ art \} : \{\}\) \}\)[^\n]*\n\s*if \(error && art === "sprechen"\)/, "Server: art speichern, ohne Spalte weiter");
   assert.match(server, /db\.from\("kc_club_anklopfen"\)\.select\("\*"\) \/\/ 2\.647\.0/, "online liest art mit, ohne Spaltenliste");
   assert.match(server, /titel: `👋 \$\{ich\.vorname\} klopft an` \+ \(art === "sprechen" \? " – 📞 möchte sprechen" : " – 💬 möchte schreiben"\)/, "Push sagt, was gewünscht ist");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261025_kc_club_anklopfen_art.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261025_kc_club_anklopfen_art.sql");
   assert.match(mig, /add column if not exists art text;[\s\S]*check \(art is null or art in \('schreiben', 'sprechen'\)\)/, "Migration: Spalte art");
 }
 // 2.650.0 KC-CLUB-SPASSSTIMME: verfremdete Stimmen im App-Gespräch
@@ -7654,7 +7654,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/await videoPlatzPruefen\(ich, groesse\);/.test(server) && /await videoPlatzPruefen\(ich, bytes\.length, true\);/.test(server), "Video: Platz vor und nach dem Hochladen geprüft");
   assert.ok(/eq\("aktion", "video_start"\)[\s\S]{0,400}\.lt\("zeit", new Date\(Date\.now\(\) - 2 \* 3600000\)/.test(server), "Video: Wartung räumt liegen gebliebene Uploads weg");
   assert.ok(!/from\("kc_club_fotos"\)[^;]*kc_club_videos/.test(server), "Video: eigene Tabelle, nicht in den Fotos");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261027_kc_club_v2708_videos.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261027_kc_club_v2708_videos.sql");
   assert.ok(/create table if not exists public\.kc_club_videos/.test(mig) && /enable row level security/.test(mig) && /revoke all on public\.kc_club_videos from public, anon, authenticated;/.test(mig)
     && /grant select, insert, update, delete on public\.kc_club_videos to service_role;/.test(mig) && /Rückweg:/.test(mig), "Video: Migration mit RLS, Rechten und Rückweg");
   assert.ok(/id="faArtWahl"/.test(seite) && /onclick="faArt\('videos'\)"/.test(seite) && /id="videoBereich" class="versteckt"/.test(seite), "Video: Umschalter Fotos | Videos im Fotoalbum");
@@ -7664,8 +7664,8 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.713.0 KC-CLUB-CHAT-LESESTAND (Hansi „in der Übersicht: Empfänger, 2 Haken, blaue Haken – in allen Chats, für alle“)
 {
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261027_kc_club_v2713_chat_lesestand.sql", import.meta.url), "utf8");
-  const alt = fs.readFileSync(new URL("../supabase/migrations/20261022_kc_club_unterhaltungen_paket.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261027_kc_club_v2713_chat_lesestand.sql");
+  const alt = lies("supabase/migrations/20261022_kc_club_unterhaltungen_paket.sql");
   const teil = (q, von, bis) => q.slice(q.indexOf(von), q.indexOf(bis, q.indexOf(von)));
   assert.equal(teil(mig, "with meine as", "), mein as").trim(), teil(alt, "with meine as", "\n  )\n  select").trim(), "Lesestand: bisherige Teile des Pakets unverändert");
   assert.ok(/'stand', coalesce\(\(select jsonb_agg\(jsonb_build_object\('thread_id', s\.thread_id, 'id', s\.id, 'zeit', s\.created_at, 'empf', s\.empf, 'angekommen', s\.angekommen, 'gelesen', s\.gelesen\)\)/.test(mig)
@@ -7714,7 +7714,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.723.0 KC-CLUB-SCHUTZSCHILD: Content-Security-Policy in index.html – vor jedem Skript, alle genutzten Server erlaubt, Fremdes gesperrt und protokolliert
 {
-  const seite = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const seite = lies("index.html");
   const m = seite.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/);
   assert.ok(m, "Schutzschild (CSP) vorhanden");
   assert.ok(seite.indexOf(m[0]) < seite.indexOf("<script"), "Schutzschild steht vor dem ersten Skript");
@@ -7724,7 +7724,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(!csp["script-src"].some((w) => /^https?:|^\*$/.test(w)), "kein fremder Programmcode");
   const host = (u) => new URL(u).origin;
   const api = programm.match(/const API = "([^"]+)"/)[1], rt = programm.match(/const RT_URL = "([^"]+)"/)[1];
-  const not = JSON.parse(fs.readFileSync(new URL("../notbetrieb.json", import.meta.url), "utf8")).url;
+  const not = JSON.parse(lies("notbetrieb.json")).url;
   for (const u of [host(api), host(rt).replace(/^https/, "wss"), host(not), "https://kc-failover-gateway.ha-joko.workers.dev", "https://status.supabase.com", programm.match(/const TT_CF = "([^"]+)"/)[1], "https://api.github.com"])
     assert.ok(csp["connect-src"].includes(u), "Schutzschild erlaubt Verbindung zu " + u);
   for (const u of ["https://www.openstreetmap.org", "https://maps.google.com", "https://www.google.com"]) assert.ok(csp["frame-src"].includes(u), "Karte darf eingebettet werden: " + u);
@@ -7734,7 +7734,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
 }
 // 2.725.0 KC-CLUB-BEDIENUNG-PAKET (Prüfbericht Etappe 2, Wunsch #44): Tippflächen, Schrift, Knöpfe weg beim Scrollen, Lesbarkeit im Nachtmodus
 {
-  const seite = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const seite = lies("index.html");
   assert.match(seite, /\.statusleiste \.statuschip::after, \.statusleiste \.leds::after \{ content: ""; position: absolute; inset: -9px 0; \}/, "Status und Leuchtpunkte: größere Tippfläche");
   assert.match(seite, /#ledRt \{ z-index: 1; \} #ledOnline \{ z-index: 2; \}/, "„Wer ist online?“ und „Direkte Leitung“ bleiben einzeln antippbar");
   assert.match(seite, /\.herz::after \{ content: ""; position: absolute; inset: -11px -8px; \}/, "Herz: größere Tippfläche");
@@ -7746,7 +7746,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.match(programm, /document\.body\.classList\.toggle\("knoepfe-weg", d > 0 && y > 40 && !ende\);/, "weg nur beim Runterscrollen, nicht oben und nicht am Ende");
   assert.match(programm, /document\.body\.classList\.remove\("knoepfe-weg"\); KNW\.y = 0;/, "neue Seite → Knöpfe wieder da");
   // KC-CLUB-TESTS-ALLE + KC-CLUB-RUNDGANG (Etappe 5): jeder Test steht in der Tests-Prüfung, Klick-Rundgang im Browser läuft mit
-  const wf = fs.readFileSync(new URL("../.github/workflows/tests.yml", import.meta.url), "utf8");
+  const wf = lies(".github/workflows/tests.yml");
   for (const t of fs.readdirSync(new URL("./", import.meta.url)).filter((f) => f.endsWith(".test.mjs"))) assert.ok(wf.includes(`node tests/${t}`), `Test ${t} fehlt in .github/workflows/tests.yml`);
   assert.match(wf, /run: node tests\/rundgang\.browser\.mjs/, "Klick-Rundgang in der Tests-Prüfung");
   const rg = fs.readFileSync(new URL("./rundgang.browser.mjs", import.meta.url), "utf8");
@@ -7758,7 +7758,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   const ZA_server_hat = (a) => new RegExp(`"${a}"`).test(server.slice(server.indexOf("const ZUGANG_AKTIONEN"), server.indexOf("const ZUGANG_ERLAUBT")));
   assert.match(server, /case "waechter_lage": \{[^\n]*\n\s*nurAdmin\(ich\);/, "Wächter nur für den Admin");
   assert.ok(aufrufe.has("waechter_lage") && aktionen.has("waechter_lage"), "Aufruf und Server-Fall");
-  const sql = fs.readFileSync(new URL("../supabase/migrations/20261028_kc_club_waechter_lage.sql", import.meta.url), "utf8");
+  const sql = lies("supabase/migrations/20261028_kc_club_waechter_lage.sql");
   assert.match(sql, /stable security definer/i, "nur lesend");
   assert.match(sql, /revoke all on function public\.kc_club_waechter_lage\(\) from public, anon, authenticated;/, "nicht öffentlich");
   assert.match(sql, /grant execute on function public\.kc_club_waechter_lage\(\) to service_role;/, "nur Club-Server");
@@ -8764,7 +8764,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.96.0: Bedienungsanleitung Version 8 (KC-CLUB-ANLEITUNG-V8)
 {
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs");
   assert.ok(/anleitung: (8|9|10), app: "2\.(95|110|849|851|853|854)\.0"/.test(inh) /* 2.110.0: V9 */ && /titel: "20\. Neu in Version 8"/.test(inh) && /\["20\. Neu in Version 8",/.test(inh), "Teil 20 und Inhalt");
   assert.ok(!/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept|was speichert|fitness/i.test(inh), "keine Admin-Werkzeuge und keine nur für den Admin freigegebenen Bereiche");
   assert.ok(/Code <b>dort<\/b> eingeben – dann reicht ein einziger Code/.test(inh), "Start-Schritt: iPhone/iPad nur ein Code");
@@ -8917,7 +8917,7 @@ console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüf
 
 // 4xx. 2.110.0: Hilfe-Zentrum + Bedienungsanleitung Version 9 zu allen Neuerungen seit V8 (KC-CLUB-ANLEITUNG-V9, Wunsch Hansi)
 {
-  const inh = fs.readFileSync(new URL("../tools/anleitung/inhalt.mjs", import.meta.url), "utf8");
+  const inh = lies("tools/anleitung/inhalt.mjs");
   assert.ok(/anleitung: 10, app: "2\.854\.0"/.test(inh) && /titel: "21\. Neu in Version 9"/.test(inh) && /\["21\. Neu in Version 9",/.test(inh), "Teil 21 und Inhalt"); // 2.854.0: V10
   assert.ok(/titel: "22\. Neu in Version 10"/.test(inh) && /\["22\. Neu in Version 10",/.test(inh) && !/PLATZHALTER/.test(inh), "Teil 22 (V10) und Inhalt");
   assert.ok(!/inkognito|wege der|spur|sperren|freigabe|wochenbericht|baukasten|rezept|was speichert|fitness/i.test(inh), "keine Admin-Werkzeuge");
@@ -9381,12 +9381,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/const IN_APP_SEK = 75;/.test(server) && /\.gte\("zuletzt_gesehen", new Date\(Date\.now\(\) - IN_APP_SEK \* 1000\)/.test(server), "nur wer die App gerade sichtbar offen hat");
   assert.ok(/catch\(\(\) => new Set<string>\(\)\)/.test(f), "im Zweifel (Fehler) lieber Push senden als verschlucken");
 }
-{ const p = programmText(), mein = p.slice(p.indexOf("  mein: ["), p.indexOf("  programme: [")), verein = p.slice(p.indexOf("  verein: ["), p.indexOf("  mein: ["));
+{ const p = programmText().replace(/\r\n/g, "\n"), mein = p.slice(p.indexOf("  mein: ["), p.indexOf("  programme: [")), verein = p.slice(p.indexOf("  verein: ["), p.indexOf("  mein: ["));
   assert.ok(!/id: "studio"/.test(verein) && /\{ id: "studio", sym: "🎬", t: "Studio",[^\n]*nur: \(\) => !ICH\?\.admin && !!studioStufe\(\) \}/.test(mein), "2.143.0: Studio-Kachel nicht unter Club – nur unter Meins und nur für freigeschaltete Mitglieder"); }
 
 // 2.139.0 KC-CLUB-STUDIO-KARTE (Wunsch Hansi „Studio wie die Admin-Zentrale“): Karte im Kopf, nur mit Recht
 {
-  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), h = lies("index.html");
   assert.ok(/\{ id: "studio", t: "Studio", html: \(\) => infoStudio\(\), laden: \(\) => \(ICH\?\.admin \? api\("studio_rechte"\) : Promise\.resolve\(\{ liste: \[\] \}\)\), neuMin: 2, nur: \(\) => !!studioStufe\(\) \}/.test(p), "Karte nur mit Studio-Recht; Rechte-Liste nur Admin");
   const f = p.slice(p.indexOf("function infoStudio()"), p.indexOf("function stKarteWahl("));
   assert.ok(/<div class="adisplay">/.test(f) && /<span>🎬 STUDIO<\/span>/.test(f) && /lampe\(/.test(f), "Anzeige wie die Admin-Zentrale");
@@ -9397,7 +9397,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.140.0 KC-CLUB-ON-AIR (Wunsch Hansi): rotes „ON AIR“-Schild nur während einer Live-Verbindung
 {
-  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), h = lies("index.html");
   assert.ok(/const stdOnAirAn = \(\) => \(STD\.modus === "mitschauen" && STD\.status === "live"\) \|\| \(VF\.rolle && VF\.status === "laeuft"\) \|\| !!MSCH\.id;/.test(p), "nur wenn wirklich live");
   assert.ok(/<span id="stdOnAir">/.test(p) && /<span>🎬 STUDIO<\/span>\$\{stdOnAirAn\(\) \? onAirSchild\(true\) : ""\}/.test(p) && /\$\{laeuft \? onAirSchild\(true\) : ""\}/.test(p) && /id="ssLiveLeiste" class="ss-live-leiste" role="status">\$\{onAirSchild\(true\)\}/.test(p), "Studio-Fenster, Karte, Leiste beim Zeigen/Zuschauen, Balken beim Mitglied");
   assert.ok(/\.onair \{ display: inline-flex;/.test(h) && /@media \(prefers-reduced-motion: reduce\) \{ \.onair \{ animation: none; \} \}/.test(h), "Leuchtschild, ruhig bei „weniger Bewegung“");
@@ -9412,7 +9412,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.144.0 KC-CLUB-INHALTSVERZEICHNIS-ANTIPPEN (Wunsch Hansi): Ordner/Register/Dokument antippen öffnet genau das; füllt sich selbst
 {
-  const p = programmText(), f = p.slice(p.indexOf("const IVA = {"), p.indexOf("async function ivDrucken("));
+  const p = programmText().replace(/\r\n/g, "\n"), f = p.slice(p.indexOf("const IVA = {"), p.indexOf("async function ivDrucken("));
   assert.ok(/AR\.daten = await api\("archiv_liste", \{\}, \{ warten: true \}\);/.test(f) && /const teile = ivGliedern\(AR\.daten,/.test(f), "bei jedem Öffnen frisch aus dem Archiv, gleiche Gliederung wie der Ausdruck");
   assert.ok(/onclick="event\.preventDefault\(\);ivOeffne\('\$\{esc\(o\.id\)\}'\)"/.test(f) && /ivOeffne\(\$\{hlJs\(o\.id\)\}, \$\{hlJs\(r\.name\)\}\)/.test(f) && /onclick='ivDok\(/.test(f), "Ordner, Register, Dokument antippbar");
   assert.ok(/AR\.ziel = oid; AR\.zielRegister = register;/.test(f) && /if \(zr\) \{ AR\.register = zr; arZeigen\(\); \}/.test(p), "Register wird nach dem Öffnen gewählt");
@@ -9421,7 +9421,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.145.0 KC-CLUB-CHAT-FARBEN (Wunsch Hansi): Blasenfarben + Hintergrund mit Motiv, eine Wahl für alle Chats, nur für mich
 {
-  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), h = lies("index.html"), sv = lies("supabase/functions/kc-club/index.ts");
   assert.ok(/chat_farben: \(w\) => \{ const id = \(x: unknown\) => \(typeof x === "string" && \/\^\[a-z0-9_\]\{1,24\}\$\/\.test\(x\) \? x : "standard"\);/.test(sv), "Server speichert nur Kennungen");
   const f = p.slice(p.indexOf("const CF_EIGEN = ["), p.indexOf("function chatMenue() {"));
   for (const id of ["wolken", "sonnenuntergang", "schneeberge", "meer", "wald", "sterne"]) assert.ok(f.includes(`{ id: "${id}",`), "Hintergrund " + id);
@@ -9432,12 +9432,12 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/\.chat-hg \{ position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: \.5; \}/.test(h) && /:root\.dunkel \.chat-hg \{ filter: brightness\(\.38\)/.test(h), "Hintergrund blass, nachts abgedunkelt");
   assert.ok(/\.cf-hgs \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); grid-auto-rows: 1fr;/.test(h), "Auswahl gleich groß");
 }
-{ const p = programmText(), f = p.slice(p.indexOf("async function briefVerwerfen()"), p.indexOf("async function briefNeu()"));
+{ const p = programmText().replace(/\r\n/g, "\n"), f = p.slice(p.indexOf("async function briefVerwerfen()"), p.indexOf("async function briefNeu()"));
   assert.ok(/onclick="briefVerwerfen\(\)">🗑️ Verwerfen<\/button>/.test(p) && /await frage\(/.test(f) && /clearTimeout\(briefTimer\); try \{ localStorage\.removeItem\("kc_club_brief_entwurf"\); \} catch \{\}/.test(f) && !/api\(|druckStarten/.test(f), "2.146.0: Verwerfen fragt, löscht den Entwurf (auch ein noch wartendes Speichern), sendet/druckt nichts"); }
 
 // 2.147.0 KC-CLUB-ARCHIV-UNTERREGISTER (Wunsch Hansi): Ordner mit Jahren und Unterregistern
 {
-  const p = programmText(), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), sv = lies("supabase/functions/kc-club/index.ts");
   const a = p.indexOf("const AR_TRENN = "), b = p.indexOf("const AR_FARBEN = [");
   const F = new Function(p.slice(a, b) + "\nreturn { arMehrjahr, arName, arJahrSpanne, arImRegister };")();
   const o = { titel: "Weihnachtsmarkt", jahr: 2026, register: ["2026 › Checklisten", "2026 › Verträge", "2027 › Checklisten"] };
@@ -9447,13 +9447,13 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/function arRegisterTabs\(reg, eintraege\)/.test(p) && /ar-unterregister/.test(p) && /async function arJahrDazu\(oid\)/.test(p), "zwei Reiterreihen, neues Jahr mit denselben Unterregistern");
   assert.ok(/slice\(0, liste\.some\(\(r\) => r\.includes\(" › "\)\) \? 80 : 12\)/.test(sv), "Server erlaubt mehr Register nur für mehrjährige Ordner");
   assert.ok(/\{ id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartFest\('weihnachtsmarkt'\)", recht: "L" \}/.test(p), "im Büro-Regal");
-  const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_archiv_weihnachtsmarkt.sql", import.meta.url), "utf8");
+  const m = lies("supabase/migrations/20261009_kc_club_archiv_weihnachtsmarkt.sql");
   assert.ok(/where not exists/.test(m) && !/\b(delete|drop|truncate|update)\b/i.test(m.replace(/^--.*$/gm, "")), "Migration nur anlegen, wiederholbar, nichts löschen");
 }
 
 // 2.148.0 KC-CLUB-EINGABE-LEEREN (Wunsch Hansi): rotes ✕ im Schreibfeld löscht nur den ungesendeten Text
 {
-  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), h = lies("index.html");
   const f = p.slice(p.indexOf("function textLeeren()"), p.indexOf("// 2.23.99: steht ein App-Sprung"));
   assert.ok(/id="textLeerenKnopf" onclick="textLeeren\(\)">✕<\/button>/.test(h) && /\.text-leeren \{[^}]*background: #d50000/.test(h), "rotes ✕ im Schreibfeld");
   assert.ok(/\$\("textLeerenKnopf"\)\?\.classList\.toggle\("versteckt", !t\?\.value\)/.test(p), "nur sichtbar, wenn Text drinsteht");
@@ -9462,8 +9462,8 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.148.0 KC-CLUB-SELBSTLOESCHEN (Wunsch Hansi): Nachrichten löschen sich nach 1 Std / 24 Std / 7 Tagen – je Chat oder je Nachricht, alle dürfen
 {
-  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
-  const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_v2148_selbstloeschen.sql", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), h = lies("index.html"), sv = lies("supabase/functions/kc-club/index.ts");
+  const m = lies("supabase/migrations/20261009_kc_club_v2148_selbstloeschen.sql");
   assert.ok(/const SELBSTLOESCHEN_STD = \[1, 24, 168\];/.test(sv) && /check \(stunden in \(1, 24, 168\)\)/.test(m), "nur 1 Std / 24 Std / 7 Tage – Server und Datenbank gleich");
   const c = sv.slice(sv.indexOf('case "chat_selbstloeschen"'), sv.indexOf('case "nachricht_bearbeiten"'));
   assert.ok(/await binTeilnehmer\(id, ich\.person_id\)/.test(c) && !/nurAdmin|ich\.admin/.test(c) && /protokoll\(ich\.person_id, "chat_selbstloeschen", \{ thread: id, stunden: std, alte_eigene: alteMeine \}\)/.test(c), "jeder Teilnehmer darf, Protokoll ohne Text");
@@ -9479,7 +9479,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.149.0 KC-CLUB-CD-SPRUCH (Hansi 09.10.2026): Spruch unter dem Schriftzug – zentral im CD, überall gleich
 {
-  const p = programmText(), d = fs.readFileSync(new URL("../docs/CORPORATE_DESIGN.md", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), d = lies("docs/CORPORATE_DESIGN.md");
   assert.ok(/zeile: "Gemeinsam kochen, gemeinsam helfen"/.test(p) && /„Gemeinsam kochen, gemeinsam helfen“/.test(d), "Spruch im CD und in der Beschreibung");
   assert.ok(!/feiern · helfen/.test(p + d), "alter Spruch nirgends mehr");
   assert.equal((p.match(/Gemeinsam kochen, gemeinsam helfen/g) || []).length, 1, "nur an einer Stelle (KC_CD.zeile) – alle Ausdrucke nutzen cdKopf()");
@@ -9487,8 +9487,8 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.150.0 KC-CLUB-SCHILDER (Wunsch Hansi): Schilder-Druckerei im Büro – nur Clubleitung, Vorlagen nach Anlass, PDF selbst gebaut, Senden/Ablegen über den Einlese-Weg
 {
-  const p = programmText(), h = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8"), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
-  const m = fs.readFileSync(new URL("../supabase/migrations/20261009_kc_club_v2150_schilder.sql", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), h = lies("index.html"), sv = lies("supabase/functions/kc-club/index.ts");
+  const m = lies("supabase/migrations/20261009_kc_club_v2150_schilder.sql");
   const mod = p.slice(p.indexOf("// ---------- KC-CLUB-SCHILDER (2.150.0"), p.indexOf("const DRUCKARTEN = {"));
   assert.ok(/\{ id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#[0-9a-f]{6}", fn: "schStart\(\)", recht: "L" \}/.test(p) && /\[L, "🪧", "Schild drucken",/.test(p), "im Büro-Regal und unter Schreiben – nur Clubleitung");
   assert.ok(/function schDarf\(\) \{ return !!\(ICH\?\.vorstand \|\| ICH\?\.admin\); \}/.test(mod) && /if \(!schDarf\(\)\) return melde/.test(mod), "App: nur Clubleitung");
@@ -9516,7 +9516,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
 
 // 2.766.0 KC-CLUB-SCHILDER-CD (Wunsch Hansi 30.10.2026): Weihnachtsmarkt-Schilder aus einem Guss – Weinrot, Beige, Gold, Fußzeile mit Jahr
 {
-  const p = programmText(), sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8");
+  const p = programmText().replace(/\r\n/g, "\n"), sv = lies("supabase/functions/kc-club/index.ts");
   const mod = p.slice(p.indexOf("// ---------- KC-CLUB-SCHILDER (2.150.0"), p.indexOf("const DRUCKARTEN = {"));
   const F = new Function("KC_CD", mod.slice(0, mod.indexOf("const SCH_LEER")) + "\nreturn { SCH_RAHMEN, SCH_SYMBOLE, SCH_VORLAGEN, SCH_JAHR };")({ weinrot: "#741521", text: "#1d1a17", zeile: "x" });
   assert.ok(/gold: "#c9a227"/.test(p) && F.SCH_RAHMEN.some((r) => r.id === "cd"), "Gold im CD, Rahmen Club-CD");
@@ -9569,7 +9569,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   assert.ok(/if \(b\.art === "einst"\) \{ const e = SB_EINST\.find\(\(x\) => x\.k === b\.k\); if \(!e\) return; melde\(`⚙️ Einstellungen → \$\{e\.t\}`\); return einstiegHin\(e\.klappe, e\.id\); \}/.test(programm), "springt mit einstiegHin genau zum Schalter");
   for (const e of new Function(programm.slice(programm.indexOf("const SB_EINST = ["), programm.indexOf("// erste Zahl zählt")) + "\nreturn SB_EINST;")())
     assert.ok(new RegExp(`einstiegHin\\("${e.klappe}", "${e.id}"\\)`).test(programm) || e.id === "kachelGroesseWahl", `Sprungziel ${e.k} gibt es`);
-  const sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8"), v = sv.slice(sv.indexOf('case "sprache_vergessen"'), sv.indexOf('case "sprache_unbekannt"'));
+  const sv = lies("supabase/functions/kc-club/index.ts"), v = sv.slice(sv.indexOf('case "sprache_vergessen"'), sv.indexOf('case "sprache_unbekannt"'));
   assert.ok(/eq\("person_id", ich\.person_id\)/.test(v) && /filter\(\(e\) => e\.s !== satz\)/.test(v) && /protokoll\(ich\.person_id, "sprache_vergessen"/.test(v), "Server: nur eigene Sätze vergessen");
   assert.ok(/data-vergiss="\$\{i\}">🗑️ Vergessen<\/button>/.test(programm) && /async function sbVergessen\(e\)/.test(programm) && /await frage\(`„\$\{e\.s\}“ vergessen\?/.test(programm), "Liste: 🗑️ Vergessen mit Rückfrage");
 }
@@ -9600,7 +9600,7 @@ assert.ok(!/\.map\(adrSauber\)/.test(server) && /\.map\(\(a: any\) => adrSauber\
   const lauf = mod.slice(mod.indexOf("function sbtPruefen("), mod.indexOf("function sbtWeiter("));
   assert.ok(!/sbAusfuehren|sbVerstanden|api\("nachricht_senden"|treffen_antwort/.test(mod) && /api\("sprache_training", eintrag\)/.test(lauf), "beim Training wird nichts ausgeführt – nur gemerkt");
   assert.ok(/mitteH\.split\(" "\)\.length <= 2 && mitteH\.length >= 3 && sbAbstand\(mitteH, mitteS\) <= Math\.max\(2, Math\.ceil\(mitteS\.length \/ 2\)\)/.test(lauf), "Namens-Variante nur ähnlich klingend, ≥ 3 Buchstaben, höchstens 2 Wörter");
-  const sv = fs.readFileSync(new URL("../supabase/functions/kc-club/index.ts", import.meta.url), "utf8"), t = sv.slice(sv.indexOf('case "sprache_training"'), sv.indexOf('case "sprache_training_reset"'));
+  const sv = lies("supabase/functions/kc-club/index.ts"), t = sv.slice(sv.indexOf('case "sprache_training"'), sv.indexOf('case "sprache_training_reset"'));
   assert.ok(/eq\("person_id", ich\.person_id\)/.test(t) && /protokoll\(ich\.person_id, "sprache_training", \{ art \}\)/.test(t) && /slice\(0, 300\)/.test(t) && /slice\(0, 200\)/.test(t), "Server: nur eigene, begrenzt, Protokoll ohne Text");
   assert.ok(/training: \{ saetze: /.test(sv) && /"schilder", "studio"\]/.test(sv), "Gelerntes kommt mit sprache_woerter; neue Ziele auch im Server");
   // Tipp des Tages für alle, Einstiege
@@ -11444,7 +11444,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   assert.ok(h.zugangKachel("fotos") && h.zugangKachel("mein_dienst") && !h.zugangKachel("archiv"), "Zugang: Aushilfe-Kacheln");
   assert.ok(m.zugangKachel("archiv") && alt.zugangKachel("archiv") && alt.zugang() === "mitglied", "Zugang: Mitglied und alte Server ohne Feld = alles");
   assert.ok(g.zugangAktion("nachricht_senden") && !g.zugangAktion("archiv_liste") && !g.zugangAktion("fotos_liste") && h.zugangAktion("fotos_liste") && !h.zugangAktion("foto_hochladen") && m.zugangAktion("archiv_liste"), "Zugang: Aktionen je Zugang");
-  const mig = fs.readFileSync(new URL("../supabase/migrations/20261015_kc_club_v2422_zugang.sql", import.meta.url), "utf8");
+  const mig = lies("supabase/migrations/20261015_kc_club_v2422_zugang.sql");
   assert.ok(/add column if not exists zugang text not null default 'mitglied'/.test(mig) && /check \(zugang in \('mitglied', 'aushilfe', 'gast'\)\)/.test(mig) && /Rückweg:/.test(mig), "Zugang: Migration mit Standard, Prüfung und Rückweg");
   assert.ok(fs.existsSync(new URL("../tools/db-test/74_zugang_test.sql", import.meta.url)) && fs.existsSync(new URL("../tools/db-test/74_erwartet.txt", import.meta.url)), "Zugang: Datenbank-Probelauf vorhanden");
 }
@@ -12641,7 +12641,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
 {
   const png = fs.readFileSync(new URL("../badge-muetze.png", import.meta.url));
   assert.equal(png.readUInt32BE(16), 96, "Statusleisten-Zeichen 96 px breit"); assert.equal(png.readUInt32BE(20), 96, "96 px hoch");
-  assert.ok(/badge: "badge-muetze\.png"/.test(fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8")), "Push nutzt das Mützen-Zeichen");
+  assert.ok(/badge: "badge-muetze\.png"/.test(lies("sw.js")), "Push nutzt das Mützen-Zeichen");
 }
 
 // 2.577.0 KC-CLUB-CHAT-FILTER (Wunsch Hansi „nur seine, nur die des Partners oder wieder alle – Knopf in der kleinen Zeile“)
