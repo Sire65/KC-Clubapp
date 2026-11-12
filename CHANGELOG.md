@@ -1,5 +1,17 @@
 # Änderungen
 
+## 2.924.0 – 2026-11-12 – 🧩 Club-Küche: Rätsel-Ecke für die Hefte 2–12 (KC-CLUB-MAGAZIN-RAETSEL-HEFTE)
+Wunsch Hansi 11.11.: „Baue neue Bilderrätsel für die weiteren Ausgaben und Kreuzworträtsel für alle 12 Ausgaben“.
+- **Fehlerbild je Heft** („Finde die 10 Fehler“), jedes mit eigener Szene zum Monat: Karneval in der Backstube, Fischstand, Osterfrühstück, Spargelzeit, Erdbeer-Konditorei, Picknick am Mühlteich, Grillabend, Hofladen zum Erntedank, Herbstküche, Martinsgans am Pass, Weihnachtsbäckerei. Genau 10 wirksame Fehler, Fundkreise überlappen nicht, keine Schrift im Bild.
+- **Kreuzworträtsel je Heft** mit Begriffen zum Monat (18–21 Begriffe, Lösungswörter KAMELLE, FISCHER, OSTERNEST, MAIBAUM, ERDBEERE, PICKNICK, GRILLFEST, ERNTEDANK, KÜRBIS, LATERNE, PLÄTZCHEN); jede Buchstabenfolge ist ein gewolltes Wort, keine Frage verrät die Antwort.
+- **Auflösung** jeweils im nächsten Heft (Nr. 13 löst Nr. 12 auf).
+- **Fortsetzungsroman Staffel 2:** erste 13 Bleistiftzeichnungen eingebaut (Heft 19: Luca und die Fotos; Heft 18: Spargel schälen – dazu ein neuer Absatz, Ralle und Emma auf der Bank, Miras Hochzeitstorte; Heft 17: Lena und Ralle auf der Mauer, Lenas Prüfung – dazu neuer kurzer Absatz in Folge 5 auf Wunsch Hansi; Heft 14: Schnee an der Mühle, Voss und die Schalotten; Heft 15: Schaum am Wehr; Heft 16: Setzlinge, Ostern bei Kerzenlicht, der Morgen danach, Herr Akın nimmt Proben – im Text dazu „Familie mit Junge und Mädchen“ statt „zwei Söhnen“ und Lena hockt beim Einsetzen am Ufer) – Graustufen-WebP, Gesichter gegen Staffel 1 geprüft.
+- Antworten Hansi 12.11. (Staffel 2): Bertram wird gesiezt („Herr Bertram“, von Mrs. Vogt „Mr. Bertram“), nur Hollmann duzt ihn – „Louis“, französisch ausgesprochen; Martinsgänse auf sieben Blechen; „Zwischenprüfung“ bleibt; Onkel Georg ist der Bruder der Mutter.
+- **Fortsetzungsroman nachgeschärft nach Verlagsgutachten** (Wunsch Hansi 12.11. „Beide angehen“): Staffel 1 ohne Vorwegnahmen des Erzählers, Steckbriefe und Amtsdeutsch, kürzere Erklär-Dialoge, neue Cliffhanger (Folge 1, 3, 4, 5, 7, 8, 9, 10, 11); Staffel 2 mit leiseren Hinweisen auf den Täter, stärkeren falschen Fährten (Verena, Metallwerk), weniger Wiederholungen (Glocke, Kopfweiden, Voss-Sprüche) und Vorschauen ohne Spoiler. Handlung, Bilder und Notizbuch unverändert.
+- **Knöpfe lesbar** (auch Heft 1): „💡 Auflösen“ und „✔️ Prüfen“ hatten dunkle Schrift auf dunklem Grund – jetzt Weinrot mit weißer Schrift; Umlaut-Hinweis dunkler.
+- Erzeugt mit KC-Infrastructure-Control-Center `docs/club-magazin-raetselecke/hefte/`. Test: `tests/magazin-raetsel.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.923.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.923.0 – Zeitansage: Videos „Termin ausmachen & Tag finden“, „Wenn etwas nicht klappt“, „Die einfache Ansicht“, „Rätsel & Bestenliste“ und „Bühne, Musik & Club-Song“ · „?“ gleich nach dem Start (KC-CLUB-VIDEO-ZEITANSAGE, KC-CLUB-FRAGE-AB-START, Wunschliste #81)
 - **Termin finden:** alle 18 Schritte geprüft (Terminanfrage, An wen, Anlass/Tag/Uhrzeit, Antwort bis, Senden, Stand, gefragt werden, Gegenvorschlag, unter Vorbehalt, Tag finden mit Umfrage, Serientermine, Reihe ändern/löschen).
 - **Wenn etwas nicht klappt:** 13 Schritte geprüft (Schließen/neu öffnen, Update, Version, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check, Problem melden; ein Schritt nur in der einfachen Ansicht).
