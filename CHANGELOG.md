@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.940.0 – Zeitansage: Videos „Koch-Figur als Bild aussuchen“, „Eigene Figur zusammenstellen“, „Chat für Fortgeschrittene“ und „Geheim schreiben“ – damit haben alle Erklär-Videos die Zeitansage · Video-Rahmen bleibt am Ziel (KC-CLUB-VIDEO-ZEITANSAGE, Wunschliste #81)
+- **Fehler in allen Erklär-Videos behoben:** Wird eine Ansicht während eines Schritts neu gezeichnet (z. B. die Kacheln kurz nach dem Wechsel aufs Register „Meins“), blieb der gelbe Rahmen am alten, verschwundenen Element hängen und war weg – so im Video „Koch-Figur“ beim ersten Schritt „Mein Bild“. Jetzt sucht das Video sein Ziel neu, sobald es verschwunden ist.
+- **Koch-Figur:** Schritte geprüft (Mein Bild, einfache/hochwertige Figuren, antippen, übernehmen, eigene Figur, individuell anpassen, eigenes Foto; „Kochjacke wechselt“ nur mit eigenem Bild).
+- **Eigene Figur zusammenstellen:** alle 16 Schritte geprüft (Vorschau, Kacheln, Stil, Koch/Köchin, Haut und Haare, Kopf, Bart, Gesicht, Brille, Schmuck, Kochjacke, Hintergrund, Info, Speichern).
+- **Chat für Fortgeschrittene:** 26 Schritte geprüft (Trenner, Antippen, Zitat, Anheften, Merken, Pfeil, wichtig, Haken, Sprachnachricht schneller, Vorlesen, Abstimmen, Selbstlöschen, Entwurf, ohne Netz, später senden, Drucken, Archivieren, Gemerktes, schreibt gerade, senden ohne Warten, ändern, an weitere; „Archivierte Chats“ nur, wenn es welche gibt).
+- **Geheim schreiben:** alle 17 Schritte geprüft (Schloss, Rückfrage, Schlüssel, Geheimagent, Mitteilung, Ankunft, Einmal-Schlüssel, falscher Schlüssel, Schlüsselbund, Datei, gut zu wissen).
+- **Damit sagen alle Erklär-Videos zu Beginn ihre Dauer an** (Wunsch #81 erledigt).
+- Zeitansage in allen vier eingeschaltet. Test: `tests/video-zeitansage.test.mjs` erweitert. Rückweg: Version 2.939.0 einspielen.
 ## 2.939.0 – 2026-11-13 – 🔗 Alter Link: kurze, klare Anleitung (KC-CLUB-ALTER-LINK-KLAR)
 Wunsch Hansi nach dem Fall Marianne (13.11.: drei abgelehnte Anmeldungen, immer mit dem am 09.10. ersetzten Link – vermutlich ein altes Startsymbol): Öffnet jemand die App mit einem **ersetzten** Link und hat schon einen neueren, gültigen Link, zeigt die App Hansis Starttext: „Hallo …, du versuchst gerade, die Club-App über alte Zugangsdaten zu öffnen. Aus Sicherheitsgründen ist das nicht möglich. Entferne am besten das Kochmützen-Symbol … 📲 Du hast am TT.MM.JJJJ schon einen neuen Link bekommen – per WhatsApp von Hansi …“ Darunter weiter „Hansi Bescheid geben“, „Neuen Link per Mail“ und der 6-stellige Code. Der Server meldet dafür nur `neuerLink` (ja/nein) und das Datum des neuen Links (`neuSeit`) in der Zugangs-Hilfe – nie den Link selbst. Ohne neueren Link bleibt die bisherige Erklärung.
 

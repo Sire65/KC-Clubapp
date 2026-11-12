@@ -39,3 +39,5 @@ console.log(`video-zeitansage: alle Prüfungen bestanden (${geprueft.length} Vid
 assert.ok(/vor: \(\) => \{ rgGruppenForm\(0\); if \(aktuelleAnsicht !== "gruppe"\) zeige\("gruppe", true\); \}, sel: \["#grVorhanden details"/.test(v), "Gruppen-Video: Schritt „Deine Gruppen“ zeigt die Gruppen-Seite");
 // 2.922.0 KC-CLUB-FRAGE-AB-START: „?“ unten rechts gleich nach dem Öffnen auf der Startseite (vorher erst nach dem ersten Seitenwechsel – Video „Einfache Ansicht“ übersprang den Schritt)
 assert.ok(/startBereit\.then\(\(\) => \{ try \{ if \(aktuelleAnsicht === "start" && !\$\("hzFrage"\)\) hzFrageEinsetzen\("start"\); \} catch \{\} \}\);/.test(app), "Fragezeichen gleich nach dem Start");
+// 2.925.0: neu gezeichnete Ansicht (z. B. Kacheln nach Registerwechsel) – Rahmen springt aufs neue Element statt am verschwundenen zu hängen
+assert.ok(/RG\.ziel && !RG\.ziel\.isConnected\) \{ RG\.ziel = rgZiel\(s\) \|\| RG\.ziel; rgPulsStart\(s\); \}/.test(v), "Video-Rahmen folgt neu gezeichnetem Ziel");

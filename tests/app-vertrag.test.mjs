@@ -7207,7 +7207,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   for (const t of ["📲 Beim Empfänger: die Mitteilung", "🕵️ Der Agent liefert ab", "🔑 Einmal-Schlüssel: eintippen", "❌ Falscher Schlüssel", "🔑 Mit Schlüsselbund: öffnet sich von selbst"])
     assert.ok(seg.includes(`t: "${t}"`), "Video-Station: " + t);
   assert.ok(/ankunftEffekt\(el, "agent"\)/.test(seg), "Agent kommt beim Empfänger an (vorhandener Effekt)");
-  assert.ok(/\{ id: "geheim", stand: "2", sym: "🕵️"/.test(programm), "Video-Stand 2");
+  assert.ok(/\{ id: "geheim", stand: "2", (zeit: "[\d.]+", )?sym: "🕵️"/.test(programm), "Video-Stand 2");
 }
 // 2.544.0 KC-CLUB-KOPF-PFEIL-NEU: bei eingerolltem Kopf blinkt der Pfeil der Stellung, wenn Neues (Nachrichten, Mitglieder) ankommt
 {
@@ -12430,7 +12430,7 @@ assert.ok(/einstiegHin\("effekte", "(feeKnopf|setFee)"\)/.test(html) && /id="fee
   const su = html.slice(html.indexOf("function suAppListe"), html.indexOf("function suAppListe") + 30000);
   assert.ok(/\["🔒", "Nachricht verschlüsselt senden/.test(su) && /\["🔑", "Schlüsselbund/.test(su) && /\["📥", "Teilen → Köcheclub \(Ablagekorb\)"/.test(su) && /\["📝", "Normal, Wichtig, Express/.test(su), "Lupe findet die Neuheiten");
   assert.ok(/\[\/verschlüssel\|geheime\? nachricht\|geheim schreiben\/, "verschlüsselt"\]/.test(html) && html.indexOf("[/verschlüssel|") < html.indexOf("let q; if ((q = t.match(/^(?:such"), "Sprachsuche: Verschlüsseln & Co. → Lupe");
-  assert.ok(/\{ id: "geheim", stand: "\d+", sym: "🕵️"[^\n]*st: \(\) => RG_GEHEIM \}/.test(html) && /videos: \[[^\]]*"chatprofi", "geheim"/.test(html), "Video „Geheim schreiben“ registriert und im Thema");
+  assert.ok(/\{ id: "geheim", stand: "\d+", (zeit: "[\d.]+", )?sym: "🕵️"[^\n]*st: \(\) => RG_GEHEIM \}/.test(html) && /videos: \[[^\]]*"chatprofi", "geheim"/.test(html), "Video „Geheim schreiben“ registriert und im Thema");
   const g = html.slice(html.indexOf("// ---------- 2.533.0 KC-CLUB-VIDEO-GEHEIM"), html.indexOf("const RG_GR_ID"));
   assert.ok(g.length > 3000 && !/vnVer\(|vnUmschalten\(|vbMenue\(|localStorage\.setItem|senden\(/.test(g), "Video verschlüsselt, speichert und sendet nichts");
   assert.ok(/RG\.zurueck\.push\(\(\) => \{\s*RG\.ghAn = false; api = alt\.api;/.test(g) && /VN\.klar\.delete\(rgGeheimAuf2\(\)\)/.test(g), "am Ende alles zurück");

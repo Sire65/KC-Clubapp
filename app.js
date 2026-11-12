@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.939.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.940.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -13,7 +13,7 @@ const APP_STUFE = "RC";
 // Rückweg: docs/AUFTEILEN.md.
 const TEILE_LISTE = {
   etiketten: { einstieg: ["peStart"], sri: "sha384-hZPVTBtZRkjm/gH7EiiPwId/cpV/5bFoQ/Zasy+rHzKYdMbfrZ1Muv762mCmZd7d" }, // KC-CLUB-PREISETIKETTEN (12.11.2026): Büro → Drucker → 🏷️ Preisetiketten (nur Clubleitung)
-  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-A2zAwhQmdtDsHob2o/8SE342QNblyiSmunmih4H34/CVV7LE5grpMD6cv6OiUvjg" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
+  videos: { einstieg: ["erklaerVideos", "rgListeAbspielen", "rundgangStart", "stimmenWahl", "installAnleitung"], sri: "sha384-SF133G1bPVhIfBpvN6X87Wj07EElgjIIAYpK6I/22MbnXbxI8cCl5o+e3x5HUTi3" }, // Stufe 1: Erklär-Videos (Abspieler, Drehbücher, Stimmen)
   szenen: { einstieg: ["jahreszeitVorschau"], sri: "sha384-mAuFkYPP7UnZNUqE/gD38eJ/THfwNSgLrJyvGLQUb5PBmCArQZ8wIH5DiImNHvlj" }, // Stufe 3b: Kopf-Szenen (Jahreszeiten, Sim-Jü, Themen) – kurz nach dem Start über szenenSpaeter
   sprache: { einstieg: ["spracheEnglisch", "spracheDeutsch"], sri: "sha384-Chqwpd0bk+v+mxRc527Icw9RRT0IZz4d+WrsNvcZpIK+RuYs+rbn2Nt+2eebNasd" }, // KC-CLUB-SPRACHE: Bedienung auf Englisch – nur geladen, wenn jemand 🇬🇧 wählt
   rueckseite: { einstieg: ["bwClubSong"], sri: "sha384-NDuho5dgDL13uhtcTY8d0cGESAWhk+B+5qyWyvBuOxPgmADzmvY9YFCcwWM0s+kx" }, // Stufe 3: Rückseite (Rätsel, Spiegel, Diashow, Tafel, Flipchart, Bühne) – sonst über esTab
@@ -2083,16 +2083,16 @@ const RUNDGAENGE = [
   { id: "sprache", stand: "1", zeit: "10.11.2026", sym: "🎙️", t: "Sprachsteuerung komplett", u: "Einschalten, Mikrofon, alle Befehle, weiter diktieren, Training (ca. 3 Min.)", st: () => RG_SPRACHE },
   { id: "anpassen", stand: "2", zeit: "11.11.2026", sym: "🎨", t: "Meine App nach meinem Geschmack", u: "Themen, Farben, Tag/Nacht, Schrift, Jahreszeiten-Bild, Deko, Effekte, Sparmodus & Eselsohr – alle Möglichkeiten (ca. 4 Min.)", st: () => RG_ANPASSEN }, // 2.344.0 KC-CLUB-VIDEO-ANPASSEN
   { id: "effekte", stand: "3", zeit: "11.11.2026", sym: "✨", t: "Effekte & Wetter", u: "Kacheln, Kopf auf und zu, Geburtstags-Vogel, Jahreszeiten im Kopf, Twinkey, Wetter-Tage – und wo du alles abschaltest (ca. 4 Min.)", st: () => RG_EFFEKTE }, // 2.265.0 KC-CLUB-ERKLAERVIDEOS-EFFEKTE
-  { id: "figur", stand: "2", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: einfache oder hochwertige Figur antippen, übernehmen (ca. 2 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
-  { id: "figurbau", stand: "2", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Kacheln, Stil, Haare, Mütze, Gesicht, Brille, Schmuck, Kochjacke – und später bearbeiten (ca. 3 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
+  { id: "figur", stand: "2", zeit: "12.11.2026", sym: "🧑‍🍳", t: "Koch-Figur als Bild aussuchen", u: "Mein Bild: einfache oder hochwertige Figur antippen, übernehmen (ca. 2 Min.)", st: () => RG_FIGUR, nur: () => frei("avatar") }, // 2.248.0 KC-CLUB-ERKLAERVIDEOS-FIGUR
+  { id: "figurbau", stand: "2", zeit: "12.11.2026", sym: "🧩", t: "Eigene Figur zusammenstellen", u: "Kacheln, Stil, Haare, Mütze, Gesicht, Brille, Schmuck, Kochjacke – und später bearbeiten (ca. 3 Min.)", st: () => RG_FIGUR_BAU, nur: () => frei("avatar") && frei("avatar_baukasten") },
   { id: "leitung", stand: "2", ziel: "leitung", sym: "🗂️", t: "Für die Clubleitung: Büro & mehr", u: "Büro, Termine für alle, Abstimmung, eigene Einstellungen – nur für die Clubleitung", st: () => RG_LEITUNG, nur: () => !!(ICH?.buero || ICH?.vorstand) },
   { id: "admin", stand: "1", ziel: "admin", sym: "🛠️", t: "Für Admins: Leitstand", u: "Admin-Register, Lämpchen, Admin-Einstellungen – nur für Admins", st: () => RG_ADMIN, nur: () => !!ICH?.admin },
   // 2.348.0 KC-CLUB-VIDEOS-NEU (Wunsch Hansi „für alle Themen Videos“)
   { id: "push", stand: "1", zeit: "11.11.2026", sym: "🔔", t: "Benachrichtigungen richtig einrichten", u: "Push einschalten, je Bereich wählen, Test an mich, Meine Geräte, Anklopfton – und was tun, wenn nichts ankommt (ca. 4 Min.)", st: () => RG_PUSH }, // 2.348.0
   { id: "privat", stand: "2", zeit: "11.11.2026", sym: "🔒", t: "Privatsphäre & Handy weitergeben", u: "Wer sieht was: online, zuletzt da, Tippen, Geburtstag, Kontakt – Abmelden, persönlicher Link, Link verloren, Meine Daten (ca. 4 Min.)", st: () => RG_PRIVAT }, // 2.348.0
   { id: "probleme", stand: "1", zeit: "11.11.2026", sym: "🛠️", t: "Wenn etwas nicht klappt", u: "App neu öffnen, Update, Lämpchen, Schnecke, Laden dauert, zweimal offen, Mikrofon, Sicherheits-Check – und wann du Hansi fragst (ca. 4 Min.)", st: () => RG_PROBLEME }, // 2.348.0
-  { id: "chatprofi", stand: "4", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat, „… schreibt dir gerade“ (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0 · 2.533.0 Fassung 2
-  { id: "geheim", stand: "2", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent – und so kommt es beim Empfänger an: Mitteilung, Schlüssel eingeben, Schlüsselbund – nichts wird gesendet (ca. 5 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
+  { id: "chatprofi", stand: "4", zeit: "12.11.2026", sym: "💬", t: "Chat für Fortgeschrittene", u: "Antippen, Pfeil, Haken, Sprachtempo, Vorlesen, Abstimmung, Selbstlöschen, Entwurf, Archiv, ganzer Chat, „… schreibt dir gerade“ (ca. 5 Min.)", st: () => RG_CHATPROFI }, // 2.348.0 · 2.533.0 Fassung 2
+  { id: "geheim", stand: "2", zeit: "12.11.2026", sym: "🕵️", t: "Geheim schreiben: verschlüsseln & Schlüsselbund", u: "Schloss, Rückfrage, Schlüssel, Geheimagent – und so kommt es beim Empfänger an: Mitteilung, Schlüssel eingeben, Schlüsselbund – nichts wird gesendet (ca. 5 Min.)", st: () => RG_GEHEIM }, // 2.533.0 KC-CLUB-VIDEO-GEHEIM
   { id: "gruppen", stand: "1", zeit: "11.11.2026", sym: "👥", t: "Gruppen anlegen & verwalten", u: "Neue Gruppe, Name & Symbol, Mitglieder, Bereiche klappen, Gruppen-Admin, auflösen – und in Nachricht oder Terminanfrage nutzen (ca. 3 Min.)", st: () => RG_GRUPPEN }, // 2.348.0
   { id: "terminfinden", stand: "1", zeit: "11.11.2026", sym: "📅", t: "Termin ausmachen & Tag finden", u: "Terminanfrage, Stand der Anfrage, Gegenvorschlag unter Vorbehalt, Terminfindung, Terminreihen (ca. 4 Min.)", st: () => RG_TERMINFINDEN }, // 2.348.0
   { id: "todo", stand: "1", zeit: "11.11.2026", sym: "✅", t: "Die gemeinsame To-do-Liste", u: "Umschalter To-do, Aufgabe eintragen, verteilen, abhaken, Frist-Erinnerung, Aufgaben aus Protokollen (ca. 3 Min.)", st: () => RG_TODO }, // 2.348.0
