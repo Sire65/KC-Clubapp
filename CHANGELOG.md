@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.930.0 – 2026-11-12 – 🗂️ Büro: Ordnernamen beim Darüberfahren lesbar, Preisetiketten-Kachel
+KC-CLUB-ORDNER-SCHILD, Wunsch Hansi („wenn man mit der Maus über einen Ordner im Büro geht, soll der Ordnerrückentext als Tooltip angezeigt werden – die Beschriftung ist quer und nicht so gut lesbar“, Wahl Variante 2; „der Knopf für Preisetiketten kann rechts neben Allgemein, damit eine Zeile gespart wird“).
+- Büro-Regal: Maus über einen Ordnerrücken → sofort ein **waagerechtes Namensschild** über dem Ordner (Symbol, voller Name, ggf. „· 3 neu“), im Stil des Ordneretiketts; bleibt immer im sichtbaren Bereich.
+- Auch mit der Tastatur (Tab) und auf Handy/Tablet durch **langes Drücken** (kurz tippen öffnet wie bisher).
+- Archiv der Mitglieder geprüft: dort stehen die Namen schon waagerecht und vollständig (mit Umbruch), dazu gibt es den Tooltip – keine Änderung nötig.
+- 🪧 Schilder-Druckerei: **🏷️ Preisetiketten** als Kachel rechts neben „Allgemein“ statt eigener Zeile.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.929.0 – 2026-11-12 – 🏷️ Preisetiketten in den Farben der Warengruppen
 KC-CLUB-PREISETIKETTEN, Wunsch Hansi („die Warengruppen in der Kasse haben verschiedene Farben – die sollen auf die Etiketten“, Wahl Vorschlag B; „in den Ordner Schilderdruck, keinen eigenen Ordner“):
 - Oben auf jedem Etikett ein **Kopfband in der Farbe der Warengruppe** wie an der Kasse (Getränke dunkelblau, Speisen braun, Pfand blau, Sonstiges grau – so wie im PC-Manager eingestellt), darin klein die Warengruppe und groß der Name; Rahmen in derselben Farbe. Bei sehr heller Gruppenfarbe dunkle Schrift. QR-Code bleibt schwarz auf weiß, BAR-Etikett grün.

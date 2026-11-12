@@ -3754,6 +3754,10 @@
   .bu-ordner:hover, .bu-ordner:focus-visible { transform: translateY(-8px); box-shadow: 0 8px 14px rgba(0,0,0,.25); }
   .bu-ordner:active { transform: translateY(-12px) scale(1.02); }
   .bu-osym { font-size: 1.25rem; line-height: 1; }
+  /* 2.930.0 KC-CLUB-ORDNER-SCHILD: waagerechtes Namensschild über dem Ordnerrücken (wie das Etikett des Ordners) */
+  #buOrdnerSchild { position: fixed; z-index: 4000; display: none; pointer-events: none; white-space: nowrap; background: #fbf7ef; color: #3b2f2a; border: 1px solid #cbb994; border-radius: 6px;
+    padding: 5px 11px; font-weight: 800; font-size: .95rem; box-shadow: 0 3px 10px rgba(0,0,0,.28); }
+  .bu-ordner { -webkit-touch-callout: none; }
   .bu-otext { flex: 1; writing-mode: vertical-rl; transform: rotate(180deg); background: #fbf7ef; color: #3b2f2a; border-radius: 3px; padding: 6px 3px; font-weight: 800; font-size: .86rem; letter-spacing: .02em;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 150px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
   .bu-oloch { width: 15px; height: 15px; border-radius: 50%; background: rgba(0,0,0,.25); box-shadow: inset 0 2px 3px rgba(0,0,0,.35); }
@@ -7002,7 +7006,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.929.0" data-v="2.929.0"></script>
+<script src="app.js?v=2.930.0" data-v="2.930.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>
