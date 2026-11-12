@@ -226,3 +226,9 @@ console.log("magazin-roman Antworten Hansi: ok");
   assert.ok(!/Kinderklinik|krank/i.test(r.bilder[0].alt), "Bildtext verrät nichts über Emmas Krankheit"); }
 assert.deepEqual(MAG_AUSGABEN[19].roman.bilder.map((b) => b.wo), ["h:Was Luca sah"]);
 console.log("magazin-roman Staffel-2-Bilder: ok");
+// Antworten Hansi 12.11.2026: Louis Bertram – gesiezt „Herr Bertram“ (Hollmann duzt: „Louis“, französisch); Martinsgänse: vierzehn auf sieben Blechen; Zwischenprüfung bleibt
+{ const t = (n) => JSON.stringify(MAG_AUSGABEN[n].roman.text);
+  assert.ok(/„Louis\.“ Er sprach es aus/.test(t(24)) && !/„Bertram\. Dreißig Jahre/.test(t(24)), "Hollmann sagt Louis");
+  assert.ok(/Die Zahlen sind gut, Herr Bertram/.test(t(23)) && /Mr\. Bertram\? Is it the party/.test(t(23)) && /vierzehn Gänse auf sieben Blechen/.test(t(23)), "Folge 11");
+  assert.ok(/Zwischenprüfung/.test(t(17)), "Zwischenprüfung bleibt"); }
+console.log("magazin-roman Antworten 12.11.: ok");
