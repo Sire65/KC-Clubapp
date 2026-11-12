@@ -17,7 +17,7 @@ assert.deepEqual(h, ["Ein Morgen voller Erwartungen", "Hinter den Kulissen", "De
 const alles = r.text.filter(([a]) => a === "p").map(([, t]) => t).join("\n");
 assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") && alles.endsWith("Voss wartete. Timo sagte nichts."), "Anfang und Schluss");
 assert.ok(alles.includes("**Burgunder-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
-assert.equal(r.text.length, 177, "nicht gekürzt: 9 Zwischenüberschriften + 168 Absätze (Runde 4, 12.11.2026)"); assert.equal(alles.split(/\s+/).length, 3022, "nicht gekürzt: Wortzahl (sanfte Überarbeitung 11.11.2026)");
+assert.equal(r.text.length, 179, "nicht gekürzt: 9 Zwischenüberschriften + 170 Absätze (aktueller Stand)"); assert.equal(alles.split(/\s+/).length, 3182, "nicht gekürzt: Wortzahl (sanfte Überarbeitung 11.11.2026)");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
 // Kein internes Material (Figurenbibel, Handlungsbogen, Täterakte, Zeitachse) im Programm. Alle 12 Folgen sind beauftragt; Folge 12 (Finale, mit Auflösungen)
 // freigegeben von Hansi 09.11.2026 („Spiele auch Folge 12 ein in das Heft mit Zeichnungen“ / „Ja, heute mit einspielen“) – Spoiler daher nur noch in Folge 12 erlaubt.
@@ -39,11 +39,11 @@ for (const k of [".mag-roman ", ".mag-roman-text ", ".mag-roman-bild ", ".mag-ro
 const r2 = MAG_AUSGABEN[2].roman;
 assert.equal(MAG_AUSGABEN[2].erscheint, "2027-02-01"); assert.equal(r2.folge, 2); assert.equal(r2.titel, "Die verschwundenen Trüffel"); assert.equal(r2.untertitel, "Ein Abend, der alles verändert");
 assert.deepEqual(r2.text.filter(([a]) => a === "h").map(([, t]) => t), ["Achtundzwanzig Teller – und kein Ofen", "Ein Morgen mit offenen Fragen", "Der Mann mit dem Brotkorb", "Ein Platz am Pass", "Sophie weiß mehr", "Der Abend beginnt", "Die Entscheidung", "Ein Kompliment – und ein Blick", "Was Lena nicht hören sollte"]);
-assert.equal(r2.text.filter(([a]) => a === "p").length, 205, "Folge 2 nicht gekürzt (sanft überarbeitet 11.11.2026)"); assert.equal(r2.text.filter(([a]) => a === "s").length, 5, "Szenenwechsel");
+assert.equal(r2.text.filter(([a]) => a === "p").length, 204, "Folge 2 nicht gekürzt (sanft überarbeitet 11.11.2026)"); assert.equal(r2.text.filter(([a]) => a === "s").length, 5, "Szenenwechsel");
 const alles2 = r2.text.filter(([a]) => a === "p").map(([, t]) => t).join("\n");
 assert.ok(/sechs Wochen/.test(alles2) && !alles2.includes("Es war erst ihr zweiter Arbeitstag.") && !/am zweiten Tag/.test(alles2), "Folge 2: Zeitachse sechs Wochen, nicht der zweite Arbeitstag");
-assert.ok(r2.vorspann.length > 40 && r2.bilder.some((b) => b.wo === "absatz:200"), "Folge 2: neuer Vorspann, Schlussbild hinter dem Abgang (Runde 4)");
-assert.ok(alles2.startsWith("„Das darf jetzt nicht wahr sein!“") && alles2.endsWith("Du kannst nicht so tun, als hätte es uns beide nie gegeben.*"), "Anfang und Schluss Folge 2");
+assert.ok(r2.vorspann.length > 40 && r2.bilder.some((b) => b.wo === "absatz:198"), "Folge 2: neuer Vorspann, Schlussbild hinter dem Abgang (Runde 4)");
+assert.ok(alles2.startsWith("„Das darf jetzt nicht wahr sein!“") && alles2.endsWith("sich anders überlegen konnte, und schaltete das Telefon aus."), "Anfang und Schluss Folge 2");
 assert.ok(alles2.includes("„Du kannst nicht so tun, als hätte es uns beide nie gegeben.“") && alles2.includes("achtundzwanzig vorgewärmte Teller") && alles2.includes("Kartoffeltaler"), "Neufassung, nicht die verworfene");
 assert.ok(r2.bisher.length > 40 && r2.ende.includes("**Folge 3 – Alte Geschichten**"));
 const out2 = magHeftHtml("roman", r2);
@@ -54,7 +54,7 @@ for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertit
 { const r = MAG_AUSGABEN[3].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[3].erscheint, "2027-03-01"); assert.equal(r.folge, 3); assert.equal(r.titel, "Alte Geschichten"); assert.equal(r.untertitel, "Als die Alte Mühle plötzlich stillstand");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Wo ist Lena?", "Ein Satz, der blieb", "Was einmal gewesen war", "Der Mann, der schweigt", "Fünf Wochen, die etwas veränderten", "Der große Abend", "Der Geruch", "Jemand fehlt", "Die Alte Mühle bleibt dunkel", "Der Bäcker mit dem Schlüssel", "Was wirklich zählt", "Ein Kuss im Schatten"]);
-  assert.equal(p.length, 199, "Folge 3 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3584, "Folge 3 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 199, "Folge 3 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3670, "Folge 3 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "„Alle raus! Sofort!“"); assert.equal(p.at(-1), "„Also“, sagte Sophie in die Dunkelheit hinein.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 4 – Ein Kuss zu viel**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f3-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -64,7 +64,7 @@ for (const k of [".mag-roman-bisher ", ".mag-roman-pause ", ".mag-roman-untertit
 { const r = MAG_AUSGABEN[4].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[4].erscheint, "2027-04-01"); assert.equal(r.folge, 4); assert.equal(r.titel, "Ein Kuss zu viel"); assert.equal(r.untertitel, "Der falsche Schnitt");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Ein Bild, das nicht verschwinden wollte", "Zwei Wochen später", "Kartoffeln sind keine Strafe", "Zwischen Jonas und Sophie", "Der zweite Montag", "Der falsche Schnitt", "Zwanzig Minuten", "Die Regionalbahn", "In der Notaufnahme", "Der Mann im Porsche"]);
-  assert.equal(p.length, 184, "Folge 4 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3109, "Folge 4 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 186, "Folge 4 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3204, "Folge 4 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "Am Morgen nach dem Brand sah die Alte Mühle aus, als habe jemand ihr den Atem genommen."); assert.equal(p.at(-1), "Mike senkte den Kopf. Sein Vater wählte bereits Bertrams Nummer. „Herr Bertram? Seidel hier. Wir müssen über Ihre Auszubildende sprechen. Und zwar sofort.“");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 5 – Die rote Marzipanrose**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f4-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -78,8 +78,8 @@ assert.equal(MAG_AUSGABEN[5].erscheint, "2027-05-01"); assert.equal(r5.folge, 5)
 assert.equal(r5.reihe, "HINTER DEM PASS"); assert.equal(r5.unter, "Ein Roman aus der Welt der Profiküche");
 assert.deepEqual(r5.text.filter(([a]) => a === "h").map(([, t]) => t), ["Das Wort, das blieb", "Die Tür bleibt offen", "Drei Aussagen", "Ein Teller ohne Hunger", "Was der Vater nicht hören wollte", "Ein Brief, der nicht abgeschickt wurde", "Die schwerste Entschuldigung", "Die Stelle, an der nichts mehr gesagt werden musste", "Die Rose", "Nicht alles gehört jemandem", "Zwei Teller und ein unausgesprochener Satz", "Die andere Liste"]);
 const alles5 = r5.text.filter(([a]) => a === "p").map(([, t]) => t);
-assert.equal(alles5.length, 254, "Folge 5 nicht gekürzt: Absätze"); assert.equal(alles5.join(" ").split(/\s+/).length, 4109, "Folge 5 nicht gekürzt: Wortzahl des Lesetexts (gezählt im Manuskript)");
-assert.equal(alles5[0], "„Fristlos.“"); assert.ok(alles5.at(-1) === "Er brach ab und sah auf die leere Zeile.", "Anfang und Schluss Folge 5");
+assert.equal(alles5.length, 254, "Folge 5 nicht gekürzt: Absätze"); assert.equal(alles5.join(" ").split(/\s+/).length, 4153, "Folge 5 nicht gekürzt: Wortzahl des Lesetexts (gezählt im Manuskript)");
+assert.equal(alles5[0], "„Fristlos.“"); assert.ok(alles5.at(-1) === "Er brach ab. Er sah nicht mehr auf die leere Zeile, sondern auf Voss.", "Anfang und Schluss Folge 5");
 assert.ok(alles5.some((t) => t.includes("18.42 Uhr. Rücknahme Mehrwegkisten.")) && alles5.some((t) => t.includes("Marzipan")), "Cliffhanger und Marzipanrose");
 assert.ok(r5.bisher.length > 40 && r5.vorspann.length > 40);
 assert.deepEqual(r5.ende.slice(0, 2), ["**Fortsetzung in der nächsten Ausgabe**", "**Folge 6 – Die Kündigung**"]);
@@ -96,7 +96,7 @@ assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n
 { const r = MAG_AUSGABEN[6].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[6].erscheint, "2027-06-01"); assert.equal(r.folge, 6); assert.equal(r.titel, "Die Kündigung"); assert.equal(r.untertitel, "Was in einer Küche verloren gehen kann");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Die Tür zum Nebenflur", "Was eine Küche zusammenhält", "Der Mann mit den guten Händen", "Die Auswertung", "Achtunddreißig Gäste", "Ein Service, der nicht auseinanderfiel", "Ein Gespräch, das keiner hören sollte", "Die Kündigung", "Der leere Posten", "Die Rechnung des nächsten Tages", "Zehn nach sechs"]);
-  assert.equal(p.length, 206, "Folge 6 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3656, "Folge 6 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 211, "Folge 6 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3763, "Folge 6 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "Matthias Voss wartete."); assert.equal(p.at(-1), "„Herr Voss liegt im Krankenhaus.“");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 7 – Am Limit: Die Küche ohne Chef**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f6-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -106,7 +106,7 @@ assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n
 { const r = MAG_AUSGABEN[7].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[7].erscheint, "2027-07-01"); assert.equal(r.folge, 7); assert.equal(r.titel, "Am Limit: Die Küche ohne Chef"); assert.equal(r.untertitel, "Ein Wochenende, das keiner vergessen wird");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Zehn nach sechs", "Die Liste an der Wand", "Herr Bertram zieht die Kochjacke an", "Die Kunst des Weglassens", "Freitag, sechzehn Uhr einundvierzig", "Der Pass", "Ein Satz aus dem Krankenhaus", "Samstag: Die andere Rechnung", "Die Gesellschaft, die man absagte", "Sonntag: Der letzte Topf", "Das, was niemand nachkochen kann", "Der Umschlag"]);
-  assert.equal(p.length, 249, "Folge 7 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 4560, "Folge 7 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 219, "Folge 7 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 4346, "Folge 7 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "„Was heißt, er liegt im Krankenhaus?“"); assert.equal(p.at(-1), "Jonas zog den Ordner mit seinem Ausbildungsvertrag aus dem Regal. Er wusste, was darin stand, und schlug ihn trotzdem auf. *Ausbilder: Matthias Voss.* Er dachte an den Pflasterstreifen über der Kanüle, an die Hand auf der Krankenhausdecke, und an Voss' Frau, die am Telefon jedes Mal fragte, ob es wirklich nicht bis morgen warten könne. Für das grüne Feld brauchte er die Unterschrift eines Mannes, der gerade keinen Dienstplan lesen sollte. Für das rote brauchte er nur sich selbst.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 8 – Der letzte freie Platz**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f7-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -116,7 +116,7 @@ assert.ok(!fs.readdirSync(new URL("../magazin/roman/", import.meta.url)).some((n
 { const r = MAG_AUSGABEN[8].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[8].erscheint, "2027-08-01"); assert.equal(r.folge, 8); assert.equal(r.titel, "Der letzte freie Platz"); assert.equal(r.untertitel, "Was man nicht aufgeben darf");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Der Knopf", "Der Mut, jemanden um etwas zu bitten", "Die Nachricht aus Portugal", "Die Frau, die keine Unordnung mochte", "Ein Teller, der etwas beweist", "Der Mann am Meer", "Dreiundvierzig Minuten zu spät", "Nicht die Heldin, nicht der Held", "Der zweite Versuch", "Eine Frage der Fahrt", "Was in einer Tasche Platz hat", "Die Nachricht"]);
-  assert.equal(p.length, 247, "Folge 8 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3941, "Folge 8 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 246, "Folge 8 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3967, "Folge 8 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "Auf dem Bildschirm standen nur zwei Wörter."); assert.equal(p.at(-1), "Jonas drehte das Display nach unten. Neben der Wohnungstür stand die Kühltasche, fertig gepackt, der Reißverschluss zu. Obenauf lag Lenas Liste, jede Zeile mit einem Haken. Nur hinter *Sellerie* stand ein kleiner Pfeil. Jonas stellte den Wecker auf halb fünf und löschte das Licht.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 9 – Auf Messers Schneide**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.datei.startsWith("magazin/roman/f8-") && b.alt.startsWith("Bleistiftskizze: ")));
@@ -128,8 +128,8 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
 { const r = MAG_AUSGABEN[9].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[9].erscheint, "2027-09-01"); assert.equal(r.folge, 9); assert.equal(r.titel, "Auf Messers Schneide"); assert.equal(r.untertitel, "Kein Koch lässt einen Kollegen im Regen stehen");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Fünf Uhr morgens", "Ein Knall", "Beinahe", "Sieben Uhr achtundfünfzig", "Zwölf Plätze", "Ein Fehler, der nicht kleiner wurde", "Neunzig Minuten", "Die andere Küche", "Der Geschmack der Entscheidung", "Drei Namen", "Der Anruf", "Etwas zu feiern", "Eine Frage in der Bäckerei", "Eine kleine Trattoria", "Jemand am Fenster"]);
-  assert.equal(p.length, 295, "Folge 9 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 5061, "Folge 9 nicht gekürzt: Wortzahl des Lesetexts");
-  assert.equal(p[0], "„Du siehst aus, als hättest du die Nacht durchgearbeitet.“"); assert.equal(p.at(-1), "Zwei graue Haken. Zwei blaue. Oben im Chat erschien *Nora schreibt …*, und drinnen hob Jonas sein Glas und stieß mit Lena an, ohne aufzusehen.");
+  assert.equal(p.length, 294, "Folge 9 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 5138, "Folge 9 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p[0], "„Du siehst aus, als hättest du die Nacht durchgearbeitet.“"); assert.equal(p.at(-1), "Sophie steckte das Telefon ein und drehte sich um. Zwei Schritte hinter ihr stand Paul Brinkmann, eine Hand am Lenker seines Fahrrads. Wie lange er schon dort stand, wusste sie nicht. Er sah nicht durch die Scheibe, sondern auf die Tasche, in der ihr Telefon steckte, und dann in ihr Gesicht, bis sie den Blick senkte. „Mittwoch“, sagte er leise, mehr zu sich selbst als zu ihr. Dann schob er das Rad an ihr vorbei über den dunklen Markt, ohne sich umzudrehen.");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 10 – Gerüchte und Gezeiten**");
   assert.ok(p.some((t) => t.includes("Zander")) && !p.some((t) => t.includes("Rehrücken")), "Wettbewerbsgericht Zander, kein Rehrücken");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f9-") && b.alt.startsWith("Bleistiftskizze: "))); for (const b of r.bilder.filter((x) => x.da)) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
@@ -139,7 +139,7 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
 { const r = MAG_AUSGABEN[10].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.equal(MAG_AUSGABEN[10].erscheint, "2027-10-01"); assert.equal(r.folge, 10); assert.equal(r.titel, "Gerüchte und Gezeiten"); assert.equal(r.untertitel, "Der Preis eines Traums");
   assert.deepEqual(r.text.filter(([a]) => a === "h").map(([, t]) => t), ["Ein Satz bekommt Beine", "Nicht jeder muss alles wissen", "Ein Gespräch im Lager", "Die zweite Handschrift", "Ein ungewohnter Platz für einen Küchenchef", "Ein Angebot, das noch keines ist", "Eine andere Perspektive", "Kino ohne Hintergedanken", "Die Rechnung auf der anderen Seite", "Die Besprechung"]);
-  assert.equal(p.length, 202, "Folge 10 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3939, "Folge 10 nicht gekürzt: Wortzahl des Lesetexts");
+  assert.equal(p.length, 203, "Folge 10 nicht gekürzt: Absätze"); assert.equal(p.join(" ").split(/\s+/).length, 3997, "Folge 10 nicht gekürzt: Wortzahl des Lesetexts");
   assert.equal(p[0], "„Na, war die Pasta gut?“"); assert.equal(p.at(-1), "„Dann“, sagte er leise, „kann ich Ihnen nicht versprechen, dass wir die Alte Mühle offen halten können.“");
   assert.ok(r.bisher && r.ende[0] === "**Fortsetzung in der nächsten Ausgabe**" && r.ende[1] === "**Folge 11 – Zwischen den Ufern**");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 2 && r.bilder.every((b) => b.da && b.alt.startsWith("Bleistiftskizze: ")));
@@ -162,13 +162,13 @@ assert.ok(MAG_AUSGABEN[6].roman.text.some(([, x]) => x.includes("Wir können Ihn
 { const r = MAG_AUSGABEN[12].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t), h = r.text.filter(([a]) => a === "h").map(([, t]) => t), a = p.join(" ");
   assert.equal(MAG_AUSGABEN[12].erscheint, "2027-12-01"); assert.equal(r.folge, 12); assert.equal(r.von, 12); assert.equal(r.titel, "Alle Sterne dieser Welt"); assert.equal(r.untertitel, "Was bleibt, wenn alles auf dem Spiel stand");
   assert.deepEqual(h, ["Die Nachricht, die keiner hörte", "Der Preis der Freiheit", "Drei Wochen, in denen nichts sicher war", "Die Zahlen hinter den Trüffeln", "Leergut", "Der Mann, dem niemand geglaubt hatte", "Ein Haus bekommt eine zweite Chance", "Die schwere Kunst, nicht alles allein zu tragen", "Ein Besucher mit einer Rezeptkarte", "Was Paul verlor", "Eine Frau, die weitergeht", "Die Insel und die Frau im Wind", "Ein letzter Versuch", "Der Tag der Prüfung", "Die Entscheidung von damals", "Wieder an der Mühle", "Alle Sterne dieser Welt"]);
-  assert.equal(p.length, 299, "Folge 12 nicht gekürzt: Absätze"); assert.equal(a.split(/\s+/).length, 6338, "Folge 12 nicht gekürzt: Wortzahl des Lesetexts (nach Lektorat)");
+  assert.equal(p.length, 304, "Folge 12 nicht gekürzt: Absätze"); assert.equal(a.split(/\s+/).length, 6613, "Folge 12 nicht gekürzt: Wortzahl des Lesetexts (nach Lektorat)");
   assert.ok(p[0].startsWith("*Du musst heute nichts entscheiden.")); assert.equal(p[p.length - 1], "Spät, als die letzten Gäste gegangen waren, trug Lena die leeren Brotkörbe hinaus in den Hof und stellte sie neben die Tür, wo Paul sie am Morgen abholen würde. Dann drehte sie sich um. Die Fenster der Alten Mühle leuchteten über dem dunklen Teich. Hinter der beschlagenen Küchenscheibe wischte Jonas den Pass, Mira hielt einen Löffel gegen das Licht, und am Fenstertisch hatte Voss die Brille in die Stirn geschoben und zeigte Bertram und Elisabeth Winter etwas auf der Dessertkarte. In der dunklen Scheibe der Eingangstür sah Lena ihr eigenes Gesicht, müde, einen Brandstreifen am Handgelenk, und dahinter das Licht. Das Mühlrad drehte sich. Sie zog die Tür auf, und drinnen roch es nach Jus und frischem Kaffee.");
   assert.ok(r.bisher && r.ende[0] === "**Ende des Romans „Hinter dem Pass“**");
   // Lektorat: Voss ist zu Hause (Folge 11), beim Timo-Gespräch nur telefonisch da; eine Mappe mit zwei Blättern (Folge 11); Wettbewerb wie Folge 9
   assert.ok(!/Voss im Krankenhaus|Voss schloss kurz die Augen|Voss lächelte traurig|beiden Mappen|zweite Mappe|verschwundene Gemüse|jetzigen Küchenchef/.test(a), "Ungereimtheiten Folge 12");
   assert.ok(!JSON.stringify(r).includes("<!--") && r.bilder.length === 3 && r.bilder.every((b) => b.da && b.datei.startsWith("magazin/roman/f12-") && b.alt.startsWith("Bleistiftskizze: ")));
-  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:104", "absatz:254", "absatz:299"], "Bildstellen laut Einbauanweisung");
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:109", "absatz:259", "absatz:304"], "Bildstellen laut Einbauanweisung");
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "Bild vorhanden und klein: " + b.datei); }
   const o = magHeftHtml("roman", r); assert.ok((o.match(/<img /g) || []).length === 3); }
 console.log("magazin-roman: ok");
@@ -213,13 +213,13 @@ console.log("magazin-roman Antworten Hansi: ok");
     const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
   assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 2); }
 { const r = MAG_AUSGABEN[16].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Sechzig kleine Fische", "absatz:44", "absatz:67", "h:Herr Akın"]); assert.equal(p[66], "Ralle hob immer alles auf."); assert.ok(p[43].startsWith("Die Kinder hatten die Telefone") && !p.some((t) => /zwei halbwüchsigen Söhnen|Die Söhne hatten/.test(t)), "Folge 4: Bild Ostern bei Kerzenlicht, Familie mit Junge und Mädchen");
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["h:Sechzig kleine Fische", "absatz:46", "absatz:69", "h:Herr Akın"]); assert.equal(p[68], "Ralle hob immer alles auf."); assert.ok(p[45].startsWith("Die Kinder hatten die Telefone") && !p.some((t) => /zwei halbwüchsigen Söhnen|Die Söhne hatten/.test(t)), "Folge 4: Bild Ostern bei Kerzenlicht, Familie mit Junge und Mädchen");
   for (const b of r.bilder) { const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, b.datei); } assert.ok(p.some((t) => t.includes("dann hockte Lena sich unten ans Ufer"))); }
 { const r = MAG_AUSGABEN[17].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:28", "absatz:95"]); assert.ok(p[94].startsWith("Am Montag bestand sie.")); assert.ok(p[27].startsWith("Dann stand er auf") && p[25].startsWith("Lena setzte sich neben ihn") && p.includes("Ralle sah nicht hin. Nach einer Weile sagte er: „Zwanzig Jahre hab ich die gefüttert.“"), "Folge 5: neuer Absatz Mauer am Teich, Bild dahinter");
   const st = fs.statSync(new URL("../" + r.bilder[0].datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000); }
 { const r = MAG_AUSGABEN[18].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:26", "absatz:39", "absatz:86"]); assert.ok(p[85].startsWith("Henrik legte ihr den Arm") && p[25].startsWith("Zur Belohnung schickte Jonas ihn an den Nebenposten")); assert.equal(p[38], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
+  assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:21", "absatz:34", "absatz:88"]); assert.ok(p[87].startsWith("Henrik legte ihr den Arm") && p[20].startsWith("Zur Belohnung schickte Jonas ihn an den Nebenposten")); assert.equal(p[33], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
   assert.ok(!/Kinderklinik|krank/i.test(r.bilder[0].alt), "Bildtext verrät nichts über Emmas Krankheit"); }
 assert.deepEqual(MAG_AUSGABEN[19].roman.bilder.map((b) => b.wo), ["h:Was Luca sah"]);
 console.log("magazin-roman Staffel-2-Bilder: ok");

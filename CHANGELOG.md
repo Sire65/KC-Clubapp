@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.931.0 – 2026-11-12 – 📖 Club-Küche: Fachbegriffe erklärt · Fortsetzungsroman nach vier Gutachten überarbeitet (KC-CLUB-MAGAZIN-FACHBEGRIFFE, KC-CLUB-MAGAZIN-ROMAN-RUNDE-5)
+Wünsche Hansi 12.11.: „Übersetzungen für Nicht-Fachleute … im Roman könnte der Jonas oder Herr Voss das zu Lena oder Mike sagen, im Heft kann es in Klammern dahinter stehen“; „alle Stufen angehen, damit wir besser werden“; „Ja a nehmen“.
+- **Fachbegriffe im Heft:** rund 40 Begriffe (Brunoise, Julienne, Mise en place, blanchieren, pochieren, montieren, Fond, Jus, Reduktion, Pass, Posten …) bekommen beim ersten Vorkommen je Heftseite eine kurze Erklärung in Klammern – am Bildschirm und im gedruckten Heft. Nicht im Roman, Küchenlatein, Rätsel und Witz; Überschriften bleiben frei.
+- **Fortsetzungsroman (Staffel 1 und 2) nach vier unabhängigen Verlagsgutachten überarbeitet:** Fachbegriffe erklären die Figuren im Gespräch (Jonas, Voss, Leon, Mira, Timo an Lena bzw. Mike). Staffel 1: Lena überführt den Trüffeldieb selbst (Beleg-Original, eigene Notizen, Kühldaten), Mira als zweite Verdächtige, neue Cliffhanger, Rahmentexte ohne Spoiler. Staffel 2: zweiter Fischzüchter Hubert Lammerding und Getränkehändler Dirk Wessels als falsche Fährten, falsches Alibi für den Täter, Lena löst den Fall selbst und geht im Finale ein Risiko ein, weniger Floskeln.
+- Bilder und Lenas Notizbuch bleiben; Rezept-Garzeit korrigiert (ca. 12 Min.).
+- Tests: `tests/magazin-fachbegriffe.test.mjs` (neu), `tests/magazin-roman.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.930.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.930.0 – 2026-11-12 – 🗂️ Büro: Ordnernamen beim Darüberfahren lesbar, Preisetiketten-Kachel
 KC-CLUB-ORDNER-SCHILD, Wunsch Hansi („wenn man mit der Maus über einen Ordner im Büro geht, soll der Ordnerrückentext als Tooltip angezeigt werden – die Beschriftung ist quer und nicht so gut lesbar“, Wahl Variante 2; „der Knopf für Preisetiketten kann rechts neben Allgemein, damit eine Zeile gespart wird“).
 - Büro-Regal: Maus über einen Ordnerrücken → sofort ein **waagerechtes Namensschild** über dem Ordner (Symbol, voller Name, ggf. „· 3 neu“), im Stil des Ordneretiketts; bleibt immer im sichtbaren Bereich.
