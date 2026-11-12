@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.926.0 – 2026-11-12 – 🖨️ Heft am PC: PDF sichtbar anzeigen und drucken (KC-CLUB-HEFT-PC-DRUCK-3)
+Fund Hansi 12.11. (Bildschirmfoto): „Fehler beim Drucken – Beim Drucken ist ein Fehler aufgetreten“ nach „🖨️ Jetzt drucken“.
+- Ursache: Chrome/Edge können eine PDF aus einem unsichtbaren Rahmen nicht drucken (2.925.0).
+- Jetzt heißt der Knopf **🖨️ PDF anzeigen und drucken**: Die PDF erscheint groß über der App mit der Werkzeugleiste des Browsers (Drucker-Symbol oben rechts, „1 / 20“), dazu „Im neuen Tab“, „Speichern“ und „Schließen“. Kein verstecktes Drucken mehr.
+- Test: `tests/heft-pc-druck.test.mjs`. Rückweg: App 2.925.0 („PDF in neuem Tab öffnen“ funktioniert dort). Nur Programmteil Magazin.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.925.0 – 2026-11-12 – 🖨️ Club-Küche als Heft am PC: Drucken, Öffnen, Speichern (KC-CLUB-HEFT-PC-DRUCK-2)
 Fund Hansi 12.11.: „der Ausdruck klappt nicht, es ist nur eine Seite rausgekommen am PC … ich will jetzt ein Heft drucken“.
 - Ursache: Am PC öffnete die App beim Tippen sofort einen Tab mit „⏳ Die PDF wird erstellt …“ und lud die PDF erst danach hinein – kam sie dort nicht an oder wurde vorher gedruckt, kam genau diese eine Platzhalter-Seite heraus. Die PDF selbst war vollständig (Nr. 1: 36 Seiten A5 bzw. 18 Druckseiten A4 quer).
