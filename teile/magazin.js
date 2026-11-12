@@ -859,6 +859,7 @@ function magHeft(nr) {
     <details style="margin-top:10px"><summary><b>So wird es ein Heft</b></summary><ul style="margin:6px 0 0;padding-left:1.2em;line-height:1.5">
       <li><b>Copyshop:</b> „Heft A5“ mitnehmen und „A5-Broschüre mit Rückendrahtheftung“ sagen.</li>
       <li><b>Selbst drucken:</b> „Druckbögen A4 quer“ <b>beidseitig</b> drucken, Wenden <b>an der kurzen Kante</b>. Blätter in der Reihenfolge lassen, alle zusammen in der Mitte falten, zwei Klammern in den Falz (Heftgerät mit langem Arm oder Klammern von außen durchstecken und innen umbiegen).</li>
+      <li><b>Am PC:</b> die PDF öffnet sich in einem neuen Tab – dort auf 🖨️ Drucken. <b>Am Handy:</b> im Teilen-Menü „Drucken“ wählen oder die Datei an den PC schicken.</li>
       <li>Seitenzahl ist immer durch 4 teilbar – freie Seiten werden „Notizen & eigene Rezepte“.</li></ul></details>
     <div class="knoepfe"><button class="knopf" onclick="fensterZu($('magHeftBlatt'))">Schließen</button></div>`);
 }
@@ -982,13 +983,29 @@ async function magHeftBauen(nr) {
 }
 async function magHeftPdf(nr, art) { // frischer Tipp → Teilen klappt (sonst Download)
   const seiten = MAGH.cache?.nr === nr ? MAGH.cache.seiten : null; if (!seiten) return magHeftBauen(nr);
-  const boegen = art === "boegen" ? magHeftBoegen(seiten) : null;
-  const blob = boegen ? pdfAusCanvas(boegen[0], true, boegen) : pdfAusCanvas(seiten[0], false, seiten, [419.53, 595.28]);
+  // KC-CLUB-HEFT-PC-DRUCK: den Tab sofort beim Tippen öffnen (sonst sperrt der Browser das Pop-up, wenn das PDF-Setzen ein paar Sekunden dauert)
+  const tab = magAmPC() ? window.open("", "_blank") : null;
+  try { if (tab) tab.document.write('<p style="font:16px system-ui;padding:24px">⏳ Die PDF wird erstellt …</p>'); } catch { /* egal */ }
+  let boegen, blob;
+  try { boegen = art === "boegen" ? magHeftBoegen(seiten) : null; blob = boegen ? pdfAusCanvas(boegen[0], true, boegen) : pdfAusCanvas(seiten[0], false, seiten, [419.53, 595.28]); }
+  catch (e) { try { tab?.close(); } catch { /* egal */ } throw e; }
   const name = `Club-Kueche_Nr${nr}_${boegen ? "Druckboegen_A4_quer" : "Heft_A5"}.pdf`, datei = new File([blob], name, { type: "application/pdf" });
-  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  // KC-CLUB-HEFT-PC-DRUCK (Fund Hansi 12.11.2026: „Ich kann nicht selber drucken. Es kommt ein Fenster mit Freigeben, aber sonst passiert nix“):
+  // Am PC (Windows/Mac ohne Touch) öffnet das Teilen-Menü nur „Freigeben“ – dort gibt es keinen Drucker. Darum am PC die PDF in einem neuen Tab öffnen
+  // (Browser-Ansicht mit 🖨️ Drucken), geht das nicht (Pop-up gesperrt) → speichern. Handy/Tablet wie bisher über Teilen (dort gibt es „Drucken“).
+  if (magAmPC()) {
+    if (tab && !tab.closed) {
+      const url = URL.createObjectURL(datei); tab.location.href = url; setTimeout(() => URL.revokeObjectURL(url), 10 * 60000);
+      melde(`🖨️ ${boegen ? "Druckbögen" : "Heft"} im neuen Tab geöffnet – dort oben rechts auf Drucken (oder Strg+P)${boegen ? ". Beidseitig, Wenden an der kurzen Kante" : ""}`); return;
+    }
+  } else {
+    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  }
   const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000); melde(`📄 ${boegen ? "Druckbögen" : "Heft"} gespeichert (Downloads)`);
+  setTimeout(() => URL.revokeObjectURL(url), 60000); melde(`📄 ${boegen ? "Druckbögen" : "Heft"} gespeichert (Downloads) – dort öffnen und drucken`);
 }
+// PC = kein Handy/Tablet: kein „Mobile/Android/iPhone/iPad“ und kein iPad im Desktop-Modus (Macintosh mit Touch)
+const magAmPC = () => !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "") && !(/Macintosh/.test(navigator.userAgent || "") && (navigator.maxTouchPoints || 0) > 1);
 // Admin: Startnachricht an alle mit vorbereitetem Text (Empfänger, Lesebestätigung und Senden wie gewohnt in der Startnachricht)
 async function magStartnachricht(nr) {
   const [j, m] = magJahrMonat(nr), heft = MAG_AUSGABEN[nr] || {};

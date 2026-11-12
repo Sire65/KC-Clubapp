@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.922.0 – 2026-11-12 – 🖨️ Club-Küche als Heft: am PC wieder selbst drucken (KC-CLUB-HEFT-PC-DRUCK)
+Fund Hansi 12.11.: „Ich kann nicht selber drucken. Es kommt ein Fenster mit Freigeben, aber sonst passiert nix.“
+- „📄 Heft A5“ und „🖨️ Druckbögen A4 quer“ gaben die PDF immer ans Teilen-Menü – am Windows-PC ist das nur „Freigeben“ ohne Drucker. Jetzt öffnet sich am PC die PDF in einem **neuen Tab** (Browser-Ansicht mit 🖨️ Drucken, Hinweis „beidseitig, Wenden an der kurzen Kante“). Der Tab geht sofort beim Tippen auf, damit der Browser ihn nicht als Pop-up sperrt; gesperrt → die PDF wird gespeichert (Downloads).
+- Handy und Tablet (auch iPad) wie bisher über das Teilen-Menü (dort gibt es „Drucken“). Erklärung im Heft-Fenster ergänzt.
+- Test: `tests/heft-pc-druck.test.mjs`. Rückweg: App 2.921.0. Nur die App (Programmteil Magazin), kein Server, keine Datenbank.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.921.0 – 2026-11-11 – ⚡ Kleinerer App-Start (KC-CLUB-START-KLEIN) · Server 2.921.0 + Datenbank
 Egress-Auswertung 11.11. (24 Std. nach 2.907.0: −47 %). Hansi: „Checke was das ausmacht und was man noch verbessern kann an Qualität und Geschwindigkeit“.
 - **Start-Paket beim Admin ≈ 51 KB statt ≈ 5 KB:** die Dienstplan-Druckdaten (`dp_druck` ≈ 27 KB, `dp_druck_konfig` ≈ 4 KB) lagen in den Einstellungen und gingen bei jedem Start mit (Datenbank → Server → App) – die App holt sie nur über „Dienstplan drucken“. Jetzt nicht mehr im Start.
