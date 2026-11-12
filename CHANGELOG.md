@@ -8,6 +8,7 @@ Wunsch Hansi 12.11.: „Es gibt eine Terminanfrage von mir an Klaus. Baue dort e
 - Häkchen und Punkte werden nur auf dem eigenen Gerät gemerkt – keine Datenbank-, keine Server-Änderung, nichts geht an andere.
 - Test `tests/ta-tagesordnung.test.mjs`, Browser `tools/hilfe/ta-tagesordnung-browser.mjs` (nur Testdaten). Rückweg: App 2.931.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:23 Uhr zum 20-Uhr-Termin, Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
 
 ## 2.931.0 – 2026-11-12 – 📖 Club-Küche: Fachbegriffe erklärt · Fortsetzungsroman nach vier Gutachten überarbeitet (KC-CLUB-MAGAZIN-FACHBEGRIFFE, KC-CLUB-MAGAZIN-ROMAN-RUNDE-5)
 Wünsche Hansi 12.11.: „Übersetzungen für Nicht-Fachleute … im Roman könnte der Jonas oder Herr Voss das zu Lena oder Mike sagen, im Heft kann es in Klammern dahinter stehen“; „alle Stufen angehen, damit wir besser werden“; „Ja a nehmen“.
