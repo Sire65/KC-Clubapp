@@ -873,7 +873,7 @@ function magHeft(nr) {
     <details style="margin-top:10px"><summary><b>So wird es ein Heft</b></summary><ul style="margin:6px 0 0;padding-left:1.2em;line-height:1.5">
       <li><b>Copyshop:</b> „Heft A5“ mitnehmen und „A5-Broschüre mit Rückendrahtheftung“ sagen.</li>
       <li><b>Selbst drucken:</b> „Druckbögen A4 quer“ <b>beidseitig</b> drucken, Wenden <b>an der kurzen Kante</b>. Blätter in der Reihenfolge lassen, alle zusammen in der Mitte falten, zwei Klammern in den Falz (Heftgerät mit langem Arm oder Klammern von außen durchstecken und innen umbiegen).</li>
-      <li><b>Am PC:</b> die PDF öffnet sich in einem neuen Tab – dort auf 🖨️ Drucken. <b>Am Handy:</b> im Teilen-Menü „Drucken“ wählen oder die Datei an den PC schicken.</li>
+      <li><b>Am PC:</b> nach dem Erstellen „🖨️ Jetzt drucken“ – oder die PDF im neuen Tab öffnen bzw. speichern und von dort drucken. <b>Am Handy:</b> im Teilen-Menü „Drucken“ wählen oder die Datei an den PC schicken.</li>
       <li>Seitenzahl ist immer durch 4 teilbar – freie Seiten werden „Notizen & eigene Rezepte“.</li></ul></details>
     <div class="knoepfe"><button class="knopf" onclick="fensterZu($('magHeftBlatt'))">Schließen</button></div>`);
 }
@@ -997,26 +997,43 @@ async function magHeftBauen(nr) {
 }
 async function magHeftPdf(nr, art) { // frischer Tipp → Teilen klappt (sonst Download)
   const seiten = MAGH.cache?.nr === nr ? MAGH.cache.seiten : null; if (!seiten) return magHeftBauen(nr);
-  // KC-CLUB-HEFT-PC-DRUCK: den Tab sofort beim Tippen öffnen (sonst sperrt der Browser das Pop-up, wenn das PDF-Setzen ein paar Sekunden dauert)
-  const tab = magAmPC() ? window.open("", "_blank") : null;
-  try { if (tab) tab.document.write('<p style="font:16px system-ui;padding:24px">⏳ Die PDF wird erstellt …</p>'); } catch { /* egal */ }
-  let boegen, blob;
-  try { boegen = art === "boegen" ? magHeftBoegen(seiten) : null; blob = boegen ? pdfAusCanvas(boegen[0], true, boegen) : pdfAusCanvas(seiten[0], false, seiten, [419.53, 595.28]); }
-  catch (e) { try { tab?.close(); } catch { /* egal */ } throw e; }
+  const boegen = art === "boegen" ? magHeftBoegen(seiten) : null;
+  const blob = boegen ? pdfAusCanvas(boegen[0], true, boegen) : pdfAusCanvas(seiten[0], false, seiten, [419.53, 595.28]);
   const name = `Club-Kueche_Nr${nr}_${boegen ? "Druckboegen_A4_quer" : "Heft_A5"}.pdf`, datei = new File([blob], name, { type: "application/pdf" });
-  // KC-CLUB-HEFT-PC-DRUCK (Fund Hansi 12.11.2026: „Ich kann nicht selber drucken. Es kommt ein Fenster mit Freigeben, aber sonst passiert nix“):
-  // Am PC (Windows/Mac ohne Touch) öffnet das Teilen-Menü nur „Freigeben“ – dort gibt es keinen Drucker. Darum am PC die PDF in einem neuen Tab öffnen
-  // (Browser-Ansicht mit 🖨️ Drucken), geht das nicht (Pop-up gesperrt) → speichern. Handy/Tablet wie bisher über Teilen (dort gibt es „Drucken“).
-  if (magAmPC()) {
-    if (tab && !tab.closed) {
-      const url = URL.createObjectURL(datei); tab.location.href = url; setTimeout(() => URL.revokeObjectURL(url), 10 * 60000);
-      melde(`🖨️ ${boegen ? "Druckbögen" : "Heft"} im neuen Tab geöffnet – dort oben rechts auf Drucken (oder Strg+P)${boegen ? ". Beidseitig, Wenden an der kurzen Kante" : ""}`); return;
-    }
-  } else {
-    try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
-  }
-  const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000); melde(`📄 ${boegen ? "Druckbögen" : "Heft"} gespeichert (Downloads) – dort öffnen und drucken`);
+  // KC-CLUB-HEFT-PC-DRUCK-2 (Fund Hansi 12.11.2026 „der Ausdruck klappt nicht, es ist nur eine Seite rausgekommen am PC“): der vorab geöffnete Tab zeigte
+  // „⏳ Die PDF wird erstellt …“ und lud die PDF erst danach – kam die nicht an (Browser/Erweiterung) oder wurde vorher gedruckt, kam genau diese eine Seite heraus.
+  // Jetzt am PC: kein Tab vorab, sondern drei Knöpfe im Heft-Fenster, erst wenn die fertige PDF da ist – Drucken (PDF im unsichtbaren Rahmen, Druckfenster
+  // des Browsers), Öffnen (Link in neuem Tab, eigener Klick → keine Pop-up-Sperre) und Speichern. Handy/Tablet wie bisher über das Teilen-Menü.
+  if (magAmPC()) return magHeftPcAktionen(nr, art, datei, seiten.length, boegen?.length || 0);
+  try { if (navigator.canShare?.({ files: [datei] })) { await teilenMitRueckfall({ files: [datei], title: name }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  magHeftSpeichern(datei);
+}
+function magHeftSpeichern(datei) {
+  const url = URL.createObjectURL(datei), a = document.createElement("a"); a.href = url; a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000); melde(`📄 ${/Druckboegen/.test(datei.name) ? "Druckbögen" : "Heft"} gespeichert (Downloads) – dort öffnen und drucken`);
+}
+const MAGHP = { url: null, datei: null };
+function magHeftPcAktionen(nr, art, datei, nSeiten, nBoegen) {
+  if (MAGHP.url) URL.revokeObjectURL(MAGHP.url);
+  MAGHP.datei = datei; MAGHP.url = URL.createObjectURL(datei);
+  const bo = art === "boegen", kn = $("magHeftKnoepfe"); if (!kn) return magHeftSpeichern(datei);
+  kn.innerHTML = `<p class="hinweis" style="margin:0 0 6px">✅ ${bo ? `Druckbögen fertig: ${nBoegen} Druckseiten A4 quer = ${nBoegen / 2} Blätter beidseitig (${nSeiten} Heftseiten)` : `Heft A5 fertig: ${nSeiten} Seiten`}.
+      Im Druckfenster: <b>Seiten: Alle</b>${bo ? ", <b>beidseitig</b>, Wenden an der <b>kurzen Kante</b>, Format <b>A4 quer</b>, Größe <b>100 % / tatsächliche Größe</b>" : ""}.</p>
+    <button class="knopf haupt" style="min-height:52px" onclick="magHeftDrucken()">🖨️ Jetzt drucken</button>
+    <a class="knopf" style="min-height:48px;display:flex;align-items:center;justify-content:center;text-decoration:none" href="${MAGHP.url}" target="_blank" rel="noopener">🔎 PDF in neuem Tab öffnen</a>
+    <button class="knopf" style="min-height:48px" onclick="magHeftSpeichern(MAGHP.datei)">💾 PDF speichern (Downloads)</button>
+    <button class="knopf" style="min-height:44px" onclick="magHeftBauen(${nr})">↩︎ Zurück zur Auswahl</button>`;
+}
+function magHeftDrucken() { // die PDF in einem unsichtbaren Rahmen laden und das Druckfenster des Browsers öffnen – druckt alle Seiten der PDF
+  if (!MAGHP.url) return;
+  document.getElementById("magHeftDruckRahmen")?.remove();
+  const f = document.createElement("iframe"); f.id = "magHeftDruckRahmen"; f.setAttribute("aria-hidden", "true");
+  f.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none";
+  let fertig = false;
+  const ersatz = setTimeout(() => { if (!fertig) { melde("🔎 Das Druckfenster kam nicht – die PDF öffnet sich im neuen Tab, dort Strg+P"); window.open(MAGHP.url, "_blank", "noopener"); } }, 8000);
+  f.onload = () => { setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); fertig = true; clearTimeout(ersatz); } catch { /* Ersatz greift */ } }, 600); };
+  f.src = MAGHP.url; document.body.appendChild(f);
+  melde("🖨️ Das Druckfenster öffnet sich – bei „Seiten“ „Alle“ lassen");
 }
 // PC = kein Handy/Tablet: kein „Mobile/Android/iPhone/iPad“ und kein iPad im Desktop-Modus (Macintosh mit Touch)
 const magAmPC = () => !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "") && !(/Macintosh/.test(navigator.userAgent || "") && (navigator.maxTouchPoints || 0) > 1);
