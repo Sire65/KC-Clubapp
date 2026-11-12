@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.935.0 – 2026-11-12 – 📖 Roman: fünftes Lektoratsgutachten eingearbeitet
+Wunsch Hansi 12.11.: „baue die 5 punkte noch und mache die einträge in der Club app neu und in den 2 pdfs“.
+- Staffel 2, Folge 1 (Heft 13): Erinnerung an Lenas ersten Tag passt jetzt zu Staffel 1 (Jonas erklärt Brunoise, Lenas Würfel waren gut) – kein Widerspruch mehr. Weniger Erklär-Dialog: im Text nur noch Pass, Brunoise, Salamander; Posten, Pâtisserie, Bon, geklärte Butter stehen im Notizbuch-Kasten.
+- Staffel 2, Folge 12 (Heft 24): Wildkamera glaubwürdig – ein Fuchs löst die Bilderserie aus, der Wagen ist im Glas dahinter zu sehen. Onkel Georg: ein Satz, warum er auch Hartmann heißt.
+- Staffel 2, Folge 7 (Heft 19): Schlusssatz zeigt nicht mehr auf den Täter.
+- Staffel 1: Folge 11 (Heft 11) – Voss' Nachricht verrät die Lösung nicht mehr; Folge 8 (Heft 8) – Schluss ohne Hinweis auf den Sellerie; Folge 7 (Heft 7) – Rückblick: Jonas ist nicht der Restaurantbesitzer.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Rückweg: App 2.934.0.
+
 ## 2.934.0 – 2026-11-12 – ✏️ Terminanfrage ändern / ergänzen und Bescheid geben (KC-CLUB-TA-AENDERN) · Server 2.934.0
 Wunsch Hansi 12.11.: „Baue noch ein Ändern der Anfrage, damit man selber noch ändern und was dazuschreiben kann. Dann den anderen informieren, dass sich noch weitere Punkte ergeben haben.“
 - Bei der eigenen Terminanfrage neuer Knopf **„✏️ Ändern / ergänzen“**: Anlass, Ort und Notiz/Punkte (ein Punkt je Zeile) ändern. Die Zeit bleibt – dafür gelten die Antworten (andere Zeit: absagen und neu anfragen).
