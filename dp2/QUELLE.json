@@ -1,9 +1,9 @@
 {
   "hinweis": "Unverändert aus KC DP2 übernommen – NICHT hier bearbeiten. Änderungen in DP2 machen und neu übernehmen (tools/dp2-twinkey-uebernehmen.mjs).",
   "repository": "Sire65/dp3",
-  "commit": "2fbed683b0de3e986fcdf88e5d157a3206b3988e",
-  "commitDatum": "2026-11-09T19:52:04+00:00",
-  "dp2Version": "0.20.0-build306",
+  "commit": "9b439961e5647a1096702e3952200ca84a8d2b20",
+  "commitDatum": "2026-11-12T11:37:42+01:00",
+  "dp2Version": "0.20.0-build309",
   "vorlage": "twinkey-test.html (ohne twinkey-test-data.js, twinkey-test-boot.js)",
   "reihenfolge": [
     "src/ui/app.css",
@@ -163,7 +163,7 @@
     "src/core/auth.js": "d04dab8b66efb62f9ac7d9e1da071e2eed88f1a0ee14f9135da41a78d6c39a65",
     "src/core/planning.js": "e9cc3732c85ec65d992e79b806be8a4ab791b0106ecb1ff1a21dc6e8e40686ab",
     "src/core/workflow.js": "c847ab923e52ae1c895061d94630270d7c6a3416aa3d417b92a16a6f5fffb2c9",
-    "src/core/actual.js": "69a0ccb46792fbf8e298d3749499a98256c5a2166f8ff4f06a57a3359df75ba8",
+    "src/core/actual.js": "91cc9b7bddf1a9a3fb47aa9085131044ab88f7faf01a1543e67794186eafeddb",
     "src/core/special-events.js": "05683345e386c7c06df198fe982df78a81fb3227a72cb8ddf58beb7b54fa4119",
     "src/core/hour-reports.js": "b789966b1ba51bd5ecbe31ec9e0e3a819cc9962dc3398b71ee876d043f18f489",
     "src/core/special-event-signups.js": "bedf892e0bbf48223c8cf07a63480d2ba877123343f677ac8f0f3fb988bc160f",
@@ -205,7 +205,7 @@
     "assets/twinkey/audio/review.wav": "16225e682645f07f7bd8a0d80d828c2c54584efd21f6597b4f6edc7be5b8bf81",
     "assets/twinkey/audio/standby.wav": "bcb43748153f70bce750487ce2f27fd930237a525646c76b54a68c85df1d4b31",
     "assets/twinkey/audio/tasks.wav": "1c6c7e3d6f61767b9b9a3596ee52fc7c268a8c5bb21d8c75b62759ad70d98a0e",
-    "assets/twinkey/audio/texts.json": "9492a3bbf0db0eb309f2288e574a1c7d4a645bb6d0c0d1eec3fd0ca4cf3e5027",
+    "assets/twinkey/audio/texts.json": "74bd35689a53654b92ddca5c95b75ce8b8747174a705fae0f0df9e88307e97c0",
     "assets/twinkey/audio/welcome.wav": "fc65daaee6a5bd5f93cbb1b7b9a92a81cacc4ef830994c6185fb6c39329c9831",
     "assets/twinkey/audio/wish.wav": "38137899e79ca1d06488c0a9d229388414950ecd627385dd2923e4ed22ac224c",
     "assets/twinkey/audio/zone.wav": "d1c4c0dbb54b80ab9bd5513588ce8e707cd4645314f329e7c91d092396a2abd5"
