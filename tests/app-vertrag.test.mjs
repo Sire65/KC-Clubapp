@@ -7909,7 +7909,7 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/const essbar = !\/\^\(Pfand\|Sonstiges\)\$\/i\.test/.test(programm) && /\(b < 0 \? "−" : ""\)/.test(programm), "Preisetiketten: Pfand/Sonstiges ohne Allergene, Rückgabe mit Minus");
   assert.ok(/🎯 Probe \$\{PE\.format\} × \$\{PE\.format\} cm/.test(programm), "Preisetiketten: Probe in der gewählten Größe");
   // 2.929.0 (Wunsch Hansi „in den Ordner Schilderdruck, keinen eigenen Ordner“): nur Knopf in der Schilder-Druckerei, kein Regal-Ordner
-  assert.ok(!/\{ id: "preisetiketten", sym: "🏷️"/.test(programm) && /onclick="peStart\(\)">🏷️ Preisetiketten für Kessel/.test(programm), "Preisetiketten: in der Schilder-Druckerei, kein eigener Ordner im Regal");
+  assert.ok(!/\{ id: "preisetiketten", sym: "🏷️"/.test(programm) && /<button class="knopf sdr-pe" onclick="peStart\(\)"[^>]*><span>🏷️<\/span>Preisetiketten<\/button><\/div>/.test(programm), "Preisetiketten: in der Schilder-Druckerei, kein eigener Ordner im Regal");
   assert.ok(/const PE_FARBWAHL = \[\["gruppe", "Warengruppe"\], \["artikel", "Artikel"\], \["keine", "Grau \(Schwarz-Weiß\)"\]\]/.test(programm) && /ok\(a\.warengruppeFarbe\)/.test(programm) && /const bh = 10 \* u, schrift = peHell\(farbe\) \? "#111" : "#fff"/.test(programm), "Preisetiketten: Kopfband in der Warengruppenfarbe, Farb-Schalter, Kontrast");
 }
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);

@@ -30209,8 +30209,7 @@ function schZeigen() {
   const vor = schVorlagenFuer(SDR.anlass), gesp = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && !schIstPaket(x)), pakete = (SDR.liste || []).filter((x) => x.anlass === SDR.anlass && schIstPaket(x));
   const f = blattAuf("schBlatt", `<h3 style="margin:0 0 2px">🪧 Schilder-Druckerei</h3>
     <p class="hinweis" style="margin:0 0 10px">1. Anlass und Vorlage wählen · 2. Text ändern · 3. Aussehen · 4. 🖨️ Drucken oder 📤 an Mitglieder senden (die drucken zuhause)</p>
-    <button class="knopf" style="width:100%;margin:0 0 10px" onclick="peStart()">🏷️ Preisetiketten für Kessel, Becher & Kasse (8–5 cm, Foto, Preis, Allergene, QR) …</button>
-    <div class="sdr-anlaesse">${SCH_ANLAESSE.map((a) => `<button class="knopf${a.id === SDR.anlass ? " haupt" : ""}" onclick="SDR.anlass='${a.id}';schZeigen()"><span>${a.sym}</span>${esc(a.t)}</button>`).join("")}</div>
+    <div class="sdr-anlaesse">${SCH_ANLAESSE.map((a) => `<button class="knopf${a.id === SDR.anlass ? " haupt" : ""}" onclick="SDR.anlass='${a.id}';schZeigen()"><span>${a.sym}</span>${esc(a.t)}</button>`).join("")}<button class="knopf sdr-pe" onclick="peStart()" title="Preisetiketten für Kessel, Becher &amp; Kasse – 8 bis 5 cm, Foto, Preis, Allergene, QR-Code"><span>🏷️</span>Preisetiketten</button></div> <!-- 2.930.0 (Wunsch Hansi): Preisetiketten als Kachel neben „Allgemein“ – spart eine Zeile -->
     <h4 style="margin:12px 0 6px">📋 Vorlagen</h4>
     <div class="sdr-vorlagen">${vor.map((v) => `<button class="sdr-vorlage" onclick="schVorlage('${v.id}')"><canvas data-schmini="${v.id}"></canvas><span>${esc(schName(v))}</span></button>`).join("")}</div>
     <h4 style="margin:14px 0 6px">💾 Gespeicherte Schilder${gesp.length ? ` (${gesp.length})` : ""}</h4>
