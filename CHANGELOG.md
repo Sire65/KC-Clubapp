@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.925.0 – 2026-11-12 – 🖨️ Club-Küche als Heft am PC: Drucken, Öffnen, Speichern (KC-CLUB-HEFT-PC-DRUCK-2)
+Fund Hansi 12.11.: „der Ausdruck klappt nicht, es ist nur eine Seite rausgekommen am PC … ich will jetzt ein Heft drucken“.
+- Ursache: Am PC öffnete die App beim Tippen sofort einen Tab mit „⏳ Die PDF wird erstellt …“ und lud die PDF erst danach hinein – kam sie dort nicht an oder wurde vorher gedruckt, kam genau diese eine Platzhalter-Seite heraus. Die PDF selbst war vollständig (Nr. 1: 36 Seiten A5 bzw. 18 Druckseiten A4 quer).
+- Jetzt am PC kein Tab vorab: Nach „📄 Heft A5“ bzw. „🖨️ Druckbögen“ erscheinen im Heft-Fenster **🖨️ Jetzt drucken** (Druckfenster des Browsers mit der ganzen PDF), **🔎 PDF in neuem Tab öffnen** und **💾 PDF speichern**, dazu der Hinweis „Seiten: Alle, beidseitig, Wenden an der kurzen Kante, A4 quer, 100 %“. Handy/Tablet unverändert (Teilen-Menü).
+- Test: `tests/heft-pc-druck.test.mjs` (neu gefasst); Browser-Probe mit Testdaten (Knöpfe, 18 Seiten in der PDF, Speichern). Rückweg: App 2.924.0. Nur Programmteil Magazin.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.924.0 – 2026-11-12 – 🧩 Club-Küche: Rätsel-Ecke für die Hefte 2–12 (KC-CLUB-MAGAZIN-RAETSEL-HEFTE)
 Wunsch Hansi 11.11.: „Baue neue Bilderrätsel für die weiteren Ausgaben und Kreuzworträtsel für alle 12 Ausgaben“.
 - **Fehlerbild je Heft** („Finde die 10 Fehler“), jedes mit eigener Szene zum Monat: Karneval in der Backstube, Fischstand, Osterfrühstück, Spargelzeit, Erdbeer-Konditorei, Picknick am Mühlteich, Grillabend, Hofladen zum Erntedank, Herbstküche, Martinsgans am Pass, Weihnachtsbäckerei. Genau 10 wirksame Fehler, Fundkreise überlappen nicht, keine Schrift im Bild.
