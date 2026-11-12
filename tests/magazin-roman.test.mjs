@@ -207,11 +207,11 @@ console.log("magazin-roman Staffel 1 sanft: ok");
 console.log("magazin-roman Antworten Hansi: ok");
 // KC-CLUB-MAGAZIN-STAFFEL-2-BILDER (11.11.2026, Wunsch Hansi „Bau die fertigen Bilder schon mit ein“): geprüfte Zeichnungen Staffel 2, Graustufen-WebP
 { const b14 = MAG_AUSGABEN[14].roman.bilder, b15 = MAG_AUSGABEN[15].roman.bilder;
-  assert.deepEqual(b14.map((b) => b.wo), ["absatz:1", "h:Vierzig Kilo"]); assert.deepEqual(b15.map((b) => b.wo), ["absatz:27"]);
+  assert.deepEqual(b14.map((b) => b.wo), ["absatz:1", "h:Vierzig Kilo", "absatz:94"]); assert.ok(MAG_AUSGABEN[14].roman.text.filter(([a]) => a === "p")[93][1].startsWith("Nina rannte."), "Bild „Lena hilft“ hinter dem Absatz mit dem Griff"); assert.deepEqual(b15.map((b) => b.wo), ["absatz:27"]);
   assert.ok(MAG_AUSGABEN[15].roman.text.filter(([a]) => a === "p")[26][1].startsWith("Sie stellte die Tonne ab"), "Schaum-Bild hinter dem Foto-Absatz");
   for (const b of [...b14, ...b15]) { assert.ok(b.da && /^magazin\/roman\/s2-0[23]-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: "));
     const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
-  assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 2); }
+  assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 3); }
 // Heft 13 (12.11.2026): Zeichnung „Mikes erster Tag“ hinter dem Absatz mit der Schalottenkiste
 { const r = MAG_AUSGABEN[13].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:12 magazin/roman/s2-01-02-mikes-erster-tag.webp"]); assert.ok(p[11].startsWith("„Erste Aufgabe.“ Sie schob ihm eine Kiste hin"));
