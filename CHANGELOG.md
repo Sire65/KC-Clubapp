@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.937.0 – 2026-11-12 – 📋 Tagesordnung: nur die echten Punkte, in der richtigen Reihenfolge (KC-CLUB-TA-TAGESORDNUNG-2)
+Fund Hansi 12.11.: „Die Frage ist kein Tagesordnungspunkt und Nr. 12 ‚Hansi‘ war meine Unterschrift – baue das besser in der Reihenfolge.“
+- „📋 Als Tagesordnung übernehmen“ nimmt aus der Notiz nur die **Aufzählung** (1., 2., … oder Spiegelstriche), wenn eine da ist – Anrede, Frage/Einleitung, Gruß und Unterschrift bleiben draußen, die Reihenfolge bleibt.
+- Ohne Aufzählung: alles vor dem Gruß, ohne Anrede und ohne Zeilen, die mit „?“ oder „:“ enden.
+- In Hansis Anfrage an Klaus (13.11.) stehen die nachgetragenen Punkte jetzt als 10. und 11. hinter Punkt 9 statt nach der Unterschrift.
+- Keine Datenbank-, keine Server-Änderung. Test `tests/ta-tagesordnung.test.mjs` erweitert. Rückweg: App 2.936.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:55 Uhr im 20-Uhr-Termin (Besprechung am 13.11. um 11:30), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
 ## 2.936.0 – 2026-11-12 – 🗓️ Dienstplan: Wunschzeiten zuerst, gerecht gekürzt (KC-CLUB-DP-WUNSCH-ZUERST)
 Wunsch Hansi („Wunschzeiten der Leute ausreizen und ihnen nicht unbedingt weniger Stunden geben – wer 47 Std. wünscht, bekommt sie; bei Überbesetzung bei dem streichen, der viel hat, damit wir zu einem gerechten Plan kommen“) – Dienstplan-Rechnung Regel 8, eingeschaltet mit `dp_druck_konfig.wunschZuerst = true`:
 1. Jeder bekommt an jedem Tag seinen Wunschblock (im Bedarf, höchstens 8 Std. bzw. seine Grenze). Wer insgesamt weniger Wunschstunden hat, kommt zuerst; wer mehr hat, bekommt den Teil seines Wunsches, in dem noch jemand fehlt.

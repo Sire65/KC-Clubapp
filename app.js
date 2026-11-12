@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.936.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.937.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27546,8 +27546,16 @@ function taKarte(a) {
 const TA_TO_KEY = "kc_club_ta_tagesordnung";
 function taToLesen() { try { const m = JSON.parse(lsLesen(TA_TO_KEY) || "{}"); return m && typeof m === "object" ? m : {}; } catch { return {}; } }
 function taToMerken(id, st) { const m = taToLesen(); if (st) m[id] = st; else delete m[id]; lsSetzen(TA_TO_KEY, JSON.stringify(m)); }
-function taToAusNotiz(notiz) {
-  return String(notiz || "").split(/\r?\n|;/).map((z) => z.replace(/^\s*(?:TOP\s*\d+\s*[:.)-]?|\d{1,2}\s*[.)]|[-–•*·▪►✓✔☐☑]+)\s*/i, "").trim()).filter((z) => z.length > 1).slice(0, 20);
+function taToAusNotiz(notiz) { // KC-CLUB-TA-TAGESORDNUNG-2 (12.11.2026, Fund Hansi: „die Frage ist kein Tagesordnungspunkt und ‚Hansi‘ war meine Unterschrift“)
+  const LISTE = /^\s*(?:TOP\s*\d+\s*[:.)-]?|\d{1,2}\s*[.)]|[-–•*·▪►✓✔☐☑]+)\s*/i;
+  const GRUSS = /^(?:(?:viele|liebe|beste|herzliche|schöne)\s+)?gr(?:ü|ue)(?:ß|ss)e\b|^gru(?:ß|ss)\b|^(?:lg|vg|mfg)\b|^bis (?:morgen|dann|bald)\b/i;
+  const zeilen = String(notiz || "").split(/\r?\n/).map((z) => z.trim()).filter(Boolean);
+  const liste = zeilen.filter((z) => LISTE.test(z));
+  // Steht eine Aufzählung drin (mind. 2 Punkte), zählen nur deren Punkte – Anrede, Frage, Gruß und Unterschrift bleiben draußen, die Reihenfolge bleibt.
+  // Sonst: alles vor dem Gruß, ohne Anrede und ohne Fragen/Einleitungen („…?“, „…:“).
+  const quelle = liste.length >= 2 ? liste : zeilen.slice(0, (zeilen.findIndex((z) => GRUSS.test(z)) + 1 || zeilen.length + 1) - 1)
+    .filter((z) => !/^(?:hallo|hi|hey|moin|servus|liebe[rs]?|guten (?:morgen|tag|abend))\b/i.test(z) && !/[?:]\s*$/.test(z));
+  return quelle.flatMap((z) => z.split(";")).map((z) => z.replace(LISTE, "").trim()).filter((z) => z.length > 1).slice(0, 20);
 }
 function taToPunkte(a) { const st = taToLesen()[a.id] || {}, aus = new Set(st.aus || []);
   return [...taToAusNotiz(a.notiz).map((t, i) => ({ t, k: "n" + i })), ...(st.extra || []).map((t, i) => ({ t, k: "e" + i, eigen: true }))].map((p) => ({ ...p, an: !aus.has(p.k) })); }

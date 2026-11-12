@@ -11,6 +11,10 @@ const m = /function taToAusNotiz\(notiz\) \{([\s\S]*?)\n\}/.exec(app); assert.ok
 const taToAusNotiz = new Function("notiz", m[1]);
 assert.deepEqual(taToAusNotiz("1. Weihnachtsmarkt Dienstplan\n- Einkauf Glühwein; Kasse\n• Sonstiges\n\nTOP 5: Termine 2027\n2) x"), ["Weihnachtsmarkt Dienstplan", "Einkauf Glühwein", "Kasse", "Sonstiges", "Termine 2027"]);
 assert.deepEqual(taToAusNotiz(""), []);
+// KC-CLUB-TA-TAGESORDNUNG-2 (Fund Hansi 12.11.): Anrede/Frage, Gruß und Unterschrift sind keine Punkte; Reihenfolge der Aufzählung bleibt
+assert.deepEqual(taToAusNotiz("Hallo Klaus, hast du morgen Zeit? Folgende Punkte:\n\n1. Dienstplan\n2. Metallschilder: Menge, Größe\n7. Preisliste: wer druckt?\n10. Finger-Barcode-Reader\n\nViele Grüße\nHansi"),
+  ["Dienstplan", "Metallschilder: Menge, Größe", "Preisliste: wer druckt?", "Finger-Barcode-Reader"]);
+assert.deepEqual(taToAusNotiz("Hallo Klaus,\nKasse prüfen\nDeko kaufen; Lichterkette\nHast du Zeit?\nViele Grüße\nHansi"), ["Kasse prüfen", "Deko kaufen", "Lichterkette"], "ohne Aufzählung: alles vor dem Gruß, ohne Anrede und Fragen");
 assert.deepEqual(taToAusNotiz(null), []);
 assert.equal(taToAusNotiz(Array.from({ length: 30 }, (_, i) => "Punkt " + i).join("\n")).length, 20, "höchstens 20 Punkte");
 // Vorlage wie die Sitzungs-Vorlage aus dem Büro: Schreiblinien je TOP, Anwesend zum Ankreuzen, Beschlüsse, nächster Termin, Unterschriften
