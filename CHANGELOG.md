@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.932.0 – 2026-11-12 – 📋 Terminanfrage als Tagesordnung übernehmen · 🗂️ Besprechungsvorlage (KC-CLUB-TA-TAGESORDNUNG)
+Wunsch Hansi 12.11.: „Es gibt eine Terminanfrage von mir an Klaus. Baue dort ein: als Tagesordnung übernehmen mit einem Häkchen und dann daraus eine Besprechungsvorlage bauen mit den Punkten.“
+- In jeder Terminanfrage (für den, der anfragt, und für alle, die zugesagt oder „vielleicht“ gesagt haben) ein Häkchen **„📋 Als Tagesordnung übernehmen“**.
+- Die **Notiz der Anfrage wird in Punkte zerlegt** (je Zeile oder „;“, Aufzählungszeichen/Nummern weg). Jeder Punkt hat ein eigenes Häkchen; weitere Punkte lassen sich ergänzen (✕ entfernt eigene).
+- **„🗂️ Besprechungsvorlage“** druckt im Club-Design: Anlass, Termin, Ort, Protokollführer, Teilnehmer zum Abhaken (mit Rückmeldung), Tagesordnung mit Platz für Notizen/Ergebnis und „Wer? Bis wann?“, „Verschiedenes“, nächster Termin. Drucken, PDF, senden oder in der Ablage ablegen.
+- Häkchen und Punkte werden nur auf dem eigenen Gerät gemerkt – keine Datenbank-, keine Server-Änderung, nichts geht an andere.
+- Test `tests/ta-tagesordnung.test.mjs`, Browser `tools/hilfe/ta-tagesordnung-browser.mjs` (nur Testdaten). Rückweg: App 2.931.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.931.0 – 2026-11-12 – 📖 Club-Küche: Fachbegriffe erklärt · Fortsetzungsroman nach vier Gutachten überarbeitet (KC-CLUB-MAGAZIN-FACHBEGRIFFE, KC-CLUB-MAGAZIN-ROMAN-RUNDE-5)
 Wünsche Hansi 12.11.: „Übersetzungen für Nicht-Fachleute … im Roman könnte der Jonas oder Herr Voss das zu Lena oder Mike sagen, im Heft kann es in Klammern dahinter stehen“; „alle Stufen angehen, damit wir besser werden“; „Ja a nehmen“.
 - **Fachbegriffe im Heft:** rund 40 Begriffe (Brunoise, Julienne, Mise en place, blanchieren, pochieren, montieren, Fond, Jus, Reduktion, Pass, Posten …) bekommen beim ersten Vorkommen je Heftseite eine kurze Erklärung in Klammern – am Bildschirm und im gedruckten Heft. Nicht im Roman, Küchenlatein, Rätsel und Witz; Überschriften bleiben frei.

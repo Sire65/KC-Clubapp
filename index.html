@@ -3328,6 +3328,10 @@
   .bs-fotos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; } .bs-mini { height: 40px; border-radius: 6px; vertical-align: middle; } #bsBlatt textarea { width: 100%; box-sizing: border-box; }
   .ta-kal-alt { margin: 8px 0 0; padding: 8px; border-radius: 8px; background: #d6eaf8; color: #1b4f72; display: grid; gap: 6px; } .ta-kal-alt .knopf { width: auto; justify-self: start; } /* 2.23.58 */
   .ta-vk { margin: 4px 0 2px; } .ta-vorbehalt { margin: 6px 0 0; padding: 6px 8px; border-radius: 8px; background: #fdebd0; color: #7e5109; } #taVkBlatt textarea { width: 100%; box-sizing: border-box; } #taVkBlatt label { display: grid; gap: 2px; } .ta-gv-zeit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } #taGvBlatt label { display: grid; gap: 2px; }
+  /* KC-CLUB-TA-TAGESORDNUNG (12.11.2026): Häkchen „Als Tagesordnung übernehmen“ und Punkte in der Terminanfrage */
+  .ta-to { margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--gold) 12%, transparent); } .ta-to-schalter { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .ta-to-liste { margin: 6px 0 4px; padding-left: 22px; } .ta-to-liste li { margin: 2px 0; } .ta-to-liste label { display: inline-flex; align-items: flex-start; gap: 6px; cursor: pointer; } .ta-to-weg { border: none; background: none; color: var(--rot); font-size: 1rem; cursor: pointer; padding: 0 4px; }
+  .ta-to-neu { display: flex; gap: 6px; } .ta-to-neu input { flex: 1; min-width: 0; }
   /* 2.23.48 KC-CLUB-KUECHENCHEF → 2.23.49 KC-CLUB-TWINKEY */
   .tw-chef-knopf { width: 100%; margin: 8px 0 4px; text-align: center !important; }
   .tw-blatt .blatt-innen, #twOffenBlatt .blatt-innen { max-height: 92vh !important; }
@@ -7007,7 +7011,7 @@
 <!-- KC-CLUB-DRUCK: Druckseite direkt unter <body> (im Druck wird alles andere ausgeblendet) -->
 <div id="druck"></div>
 
-<script src="app.js?v=2.931.0" data-v="2.931.0"></script>
+<script src="app.js?v=2.932.0" data-v="2.932.0"></script>
 <script src="kc-traffic-guard-ui.js?v=4"></script>
 </body>
 </html>

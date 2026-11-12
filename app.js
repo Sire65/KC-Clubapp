@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.931.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.932.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27534,7 +27534,63 @@ function taKarte(a) {
     ${ab ? "" : `<details style="margin-top:8px"${a.vonMir ? " open" : ""}><summary class="hinweis">✅ ${n("ja")} · 🤔 ${n("vielleicht")} · ❌ ${n("nein")} · ⏳ ${offen} offen</summary>${wer}</details>`}
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${taKalHtml(a, ab)}
+    ${!ab && !a.spiel && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? taToSchalterHtml(a) : ""}
     ${a.vonMir && !ab ? `<div class="knoepfe"><button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
+}
+// KC-CLUB-TA-TAGESORDNUNG (12.11.2026, Wunsch Hansi „als Tagesordnung übernehmen mit einem Häkchen und daraus eine Besprechungsvorlage bauen mit den Punkten“):
+// In der Terminanfrage ein Häkchen „📋 Als Tagesordnung übernehmen“ – die Notiz wird in Punkte zerlegt (je Zeile bzw. „;“, Aufzählungszeichen weg),
+// jeder Punkt hat ein eigenes Häkchen, eigene Punkte lassen sich ergänzen. „🗂️ Besprechungsvorlage“ druckt im Club-Design: Anlass, Termin, Ort,
+// Teilnehmer zum Abhaken, Tagesordnung mit Platz für Notizen/Ergebnis und „Wer? Bis wann?“, Verschiedenes, nächster Termin.
+// Nur auf diesem Gerät gemerkt (localStorage) – keine Datenbank-Änderung, nichts geht an andere.
+const TA_TO_KEY = "kc_club_ta_tagesordnung";
+function taToLesen() { try { const m = JSON.parse(lsLesen(TA_TO_KEY) || "{}"); return m && typeof m === "object" ? m : {}; } catch { return {}; } }
+function taToMerken(id, st) { const m = taToLesen(); if (st) m[id] = st; else delete m[id]; lsSetzen(TA_TO_KEY, JSON.stringify(m)); }
+function taToAusNotiz(notiz) {
+  return String(notiz || "").split(/\r?\n|;/).map((z) => z.replace(/^\s*(?:TOP\s*\d+\s*[:.)-]?|\d{1,2}\s*[.)]|[-–•*·▪►✓✔☐☑]+)\s*/i, "").trim()).filter((z) => z.length > 1).slice(0, 20);
+}
+function taToPunkte(a) { const st = taToLesen()[a.id] || {}, aus = new Set(st.aus || []);
+  return [...taToAusNotiz(a.notiz).map((t, i) => ({ t, k: "n" + i })), ...(st.extra || []).map((t, i) => ({ t, k: "e" + i, eigen: true }))].map((p) => ({ ...p, an: !aus.has(p.k) })); }
+function taToSchalterHtml(a) {
+  const an = !!taToLesen()[a.id]?.an;
+  return `<div class="ta-to"><label class="ta-to-schalter"><input type="checkbox"${an ? " checked" : ""} onchange="taToSchalten('${a.id}', this.checked)"> 📋 <b>Als Tagesordnung übernehmen</b></label>
+    <div id="taTo-${a.id}">${an ? taToListeHtml(a) : ""}</div></div>`;
+}
+function taToListeHtml(a) {
+  const P = taToPunkte(a), n = P.filter((p) => p.an).length;
+  return `<ol class="ta-to-liste">${P.map((p) => `<li><label><input type="checkbox"${p.an ? " checked" : ""} onchange="taToPunkt('${a.id}', '${p.k}', this.checked)"> <span>${esc(p.t)}</span></label>${p.eigen ? ` <button type="button" class="ta-to-weg" title="Punkt entfernen" aria-label="Punkt entfernen" onclick="taToWeg('${a.id}', '${p.k}')">✕</button>` : ""}</li>`).join("")}</ol>
+    ${P.length ? "" : `<p class="hinweis" style="margin:4px 0">In der Notiz stehen keine Punkte – trag sie hier ein.</p>`}
+    <div class="ta-to-neu"><input type="text" id="taToNeu-${a.id}" maxlength="160" placeholder="Weiterer Punkt …" onkeydown="if (event.key === 'Enter') { event.preventDefault(); taToDazu('${a.id}'); }"><button type="button" class="knopf klein" onclick="taToDazu('${a.id}')">＋</button></div>
+    <button type="button" class="knopf haupt klein" style="margin-top:6px"${n ? "" : " disabled"} onclick="druckStarten('besprechung', '${a.id}')">🗂️ Besprechungsvorlage (${n} ${n === 1 ? "Punkt" : "Punkte"})</button>`;
+}
+function taToNeuZeichnen(id) { const a = TA.liste.find((x) => x.id === id), z = $("taTo-" + id); if (a && z) z.innerHTML = taToLesen()[id]?.an ? taToListeHtml(a) : ""; }
+function taToSchalten(id, an) { const st = taToLesen()[id] || {}; taToMerken(id, an ? { ...st, an: true } : (st.extra?.length || st.aus?.length ? { ...st, an: false } : null)); taToNeuZeichnen(id); }
+function taToPunkt(id, k, an) { const st = taToLesen()[id] || { an: true }, aus = new Set(st.aus || []); if (an) aus.delete(k); else aus.add(k); taToMerken(id, { ...st, aus: [...aus] }); taToNeuZeichnen(id); }
+function taToDazu(id) { const f = $("taToNeu-" + id), t = (f?.value || "").trim().slice(0, 160); if (!t) return f?.focus();
+  const st = taToLesen()[id] || { an: true }; if ((st.extra || []).length >= 20) return melde("Höchstens 20 eigene Punkte.");
+  taToMerken(id, { ...st, extra: [...(st.extra || []), t] }); taToNeuZeichnen(id); setTimeout(() => $("taToNeu-" + id)?.focus(), 30); }
+function taToWeg(id, k) { const st = taToLesen()[id] || {}, i = Number(k.slice(1)), extra = [...(st.extra || [])]; extra.splice(i, 1);
+  const aus = (st.aus || []).filter((x) => !x.startsWith("e")).concat((st.aus || []).filter((x) => x.startsWith("e")).map((x) => Number(x.slice(1))).filter((j) => j !== i).map((j) => "e" + (j > i ? j - 1 : j)));
+  taToMerken(id, { ...st, extra, aus }); taToNeuZeichnen(id); }
+function taBesprechungDruck(id) { // DRUCKARTEN.besprechung – Kopf, Schrift und Fußzeile im Club-Design kommen aus der Druckvorschau
+  const a = TA.liste.find((x) => x.id === id); if (!a) { melde("Die Terminanfrage ist nicht mehr da."); return null; }
+  const P = taToPunkte(a).filter((p) => p.an), rot = "#741521", rand = "border:1px solid #cdbba5";
+  const th = (t, w) => `<th style="padding:5px 6px;border-bottom:2px solid ${rot};color:${rot};text-align:left;font-size:.85em${w ? ";width:" + w : ""}">${t}</th>`;
+  const tn = [...new Map([[a.vonMir ? ICH?.person_id : a.von?.person_id, { name: a.vonMir ? ICH?.name : a.von?.name, rolle: "lädt ein" }], ...a.empfaenger.map((e) => [e.person_id, { name: e.name, rolle: taStatus(a, e).t }])]).values()].filter((x) => x.name);
+  const top = (nr, t, hoch) => `<tr><td style="padding:6px;${rand};font-weight:700;color:${rot};text-align:center">${nr}</td><td style="padding:6px;${rand};font-weight:600">${esc(t)}</td><td style="padding:6px;${rand};height:${hoch}mm"></td><td style="padding:6px;${rand}"></td></tr>`;
+  const html = `<table style="width:100%;border-collapse:collapse;font-size:10.5pt;margin:0 0 10px"><tbody>
+      <tr><td style="padding:3px 6px;width:30mm;color:#5b544d">Anlass</td><td style="padding:3px 6px"><b>${esc(a.anlass)}</b></td></tr>
+      <tr><td style="padding:3px 6px;color:#5b544d">Termin</td><td style="padding:3px 6px">${esc(wann(a.beginn))}${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}</td></tr>
+      ${a.ort ? `<tr><td style="padding:3px 6px;color:#5b544d">Ort</td><td style="padding:3px 6px">${esc(a.ort)}</td></tr>` : ""}
+      <tr><td style="padding:3px 6px;color:#5b544d">Protokoll</td><td style="padding:3px 6px;border-bottom:1px solid #999">&nbsp;</td></tr></tbody></table>
+    <h2 style="font-size:12pt;color:${rot};margin:10px 0 4px">Teilnehmer</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:10pt"><thead><tr>${th("anwesend", "18mm")}${th("Name")}${th("Rückmeldung", "40mm")}</tr></thead><tbody>
+      ${tn.map((x) => `<tr><td style="padding:4px 6px;${rand};text-align:center">☐</td><td style="padding:4px 6px;${rand}">${esc(x.name)}</td><td style="padding:4px 6px;${rand};color:#5b544d">${esc(x.rolle)}</td></tr>`).join("")}
+      <tr><td style="padding:4px 6px;${rand};text-align:center">☐</td><td style="padding:4px 6px;${rand}"></td><td style="padding:4px 6px;${rand}"></td></tr></tbody></table>
+    <h2 style="font-size:12pt;color:${rot};margin:12px 0 4px">Tagesordnung</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:10.5pt"><thead><tr>${th("TOP", "12mm")}${th("Punkt", "58mm")}${th("Notizen / Ergebnis")}${th("Wer? Bis wann?", "34mm")}</tr></thead><tbody>
+      ${P.map((p, i) => top(i + 1, p.t, P.length > 8 ? 14 : 22)).join("")}${top(P.length + 1, "Verschiedenes", 16)}</tbody></table>
+    <p style="margin:12px 0 0">Nächster Termin: <span style="display:inline-block;min-width:90mm;border-bottom:1px solid #999">&nbsp;</span></p>`;
+  return { titel: `Besprechung: ${a.anlass}`, unter: `${wann(a.beginn)}${a.ort ? " · " + a.ort : ""}`, rechts: "Besprechungsvorlage", html, fuss: `${P.length} ${P.length === 1 ? "Punkt" : "Punkte"} aus der Terminanfrage` };
 }
 // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50, Wunsch Hansi): Stand je Empfänger – angefragt → gelesen → bestätigt / vielleicht / abgelehnt /
 // Gegenvorschlag; ohne Antwort nach der Antwortfrist bzw. nach Beginn: abgelaufen. Eine Stelle für Liste, Kalender und Überblick.
@@ -30872,6 +30928,7 @@ const DRUCKARTEN = {
   meinedaten: { bauen: () => druckMeineDaten() }, // KC-CLUB-MEINE-DATEN (2.23.82)
   rezept: { bauen: (o, id) => druckRezept(id) },
   buchungsliste: { ablegen: { register: ["Kasse", "Erstattungen", "Sonstiges"], stichworte: "Erstattung, Buchungsliste, Kasse" }, bauen: () => eblDruck() }, // KC-CLUB-ERSTATTUNG-BUCHUNGEN
+  besprechung: { ablegen: { register: ["Besprechungen", "Protokolle", "Sonstiges"], stichworte: "Besprechung, Tagesordnung, Terminanfrage" }, bauen: (o, id) => taBesprechungDruck(id) }, // KC-CLUB-TA-TAGESORDNUNG
   magazin: { ablegen: { register: ["Club-Magazin", "Club-Küche", "Sonstiges"], stichworte: "Club-Küche, Magazin" }, bauen: (o, p) => magDruck(p) }, // KC-CLUB-MAGAZIN-ARCHIV: ganze Ausgabe drucken/PDF/senden/ablegen
   fitness: { bauen: () => fiDruck() }, // KC-CLUB-FITNESS (2.55.0) // KC-CLUB-REZEPTBUCH (2.23.83)
   kmabrechnung: { titel: "🖨️ km-Abrechnung drucken", optionen: () => druckKmOptionen(), bauen: () => druckKmAbrechnung() }, // KC-CLUB-KM-ABRECHNUNG (2.25.3)
