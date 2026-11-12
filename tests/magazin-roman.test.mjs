@@ -212,10 +212,10 @@ console.log("magazin-roman Antworten Hansi: ok");
   for (const b of [...b14, ...b15]) { assert.ok(b.da && /^magazin\/roman\/s2-0[23]-/.test(b.datei) && b.alt.startsWith("Bleistiftskizze: "));
     const st = fs.statSync(new URL("../" + b.datei, import.meta.url)); assert.ok(st.size > 5000 && st.size < 200000, "klein: " + b.datei); }
   assert.ok(magHeftHtml("roman", MAG_AUSGABEN[14].roman).includes("Skizzen by KI") && (magHeftHtml("roman", MAG_AUSGABEN[14].roman).match(/<img /g) || []).length === 3); }
-// Heft 20 (12.11.2026): Zeichnung „Die Scheunenküche“ hinter dem Abruf am improvisierten Pass
+// Heft 20 (12.11.2026): Zeichnungen „Die Scheunenküche“ (hinter dem Abruf) und „Timo“ (Bank an der Rathausmauer)
 { const r = MAG_AUSGABEN[20].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
-  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp"]); assert.equal(p[20], "„Zwanzig.“");
-  assert.ok(r.bilder[0].da && r.bilder[0].alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + r.bilder[0].datei, import.meta.url)).size < 200000 && magHeftHtml("roman", r).includes("Skizzen by KI")); }
+  assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:21 magazin/roman/s2-08-01-scheunenkueche.webp", "absatz:70 magazin/roman/s2-08-02-timo.webp"]); assert.equal(p[20], "„Zwanzig.“"); assert.ok(p[69].includes("setzten sich damit auf eine Bank an der Rathausmauer"), "Timo-Bild an der Bank");
+  for (const b of r.bilder) assert.ok(b.da && b.alt.startsWith("Bleistiftskizze: ") && fs.statSync(new URL("../" + b.datei, import.meta.url)).size < 200000, b.datei); assert.ok(magHeftHtml("roman", r).includes("Skizzen by KI")); }
 // Heft 13 (12.11.2026): Zeichnungen „Mikes erster Tag“ (Schalottenkiste) und „Bischofsmütze“ und „Forelle für Tisch neun“ (je ein neuer Absatz dazu, Bilder von Hansi)
 { const r = MAG_AUSGABEN[13].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo + " " + b.datei), ["absatz:12 magazin/roman/s2-01-02-mikes-erster-tag.webp", "absatz:118 magazin/roman/s2-01-04-bischofsmuetze.webp", "absatz:125 magazin/roman/s2-01-03-forelle-fuer-tisch-neun.webp"]); assert.ok(p[11].startsWith("„Erste Aufgabe.“ Sie schob ihm eine Kiste hin")); assert.ok(p[117].startsWith("Am Nachmittag fehlte im Service eine Kraft") && p[117].includes("Bischofsmütze")); assert.ok(p[124].startsWith("Weil im Service immer noch jemand fehlte, trug Lena die Forellen für Tisch neun"));
