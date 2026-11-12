@@ -1,11 +1,19 @@
 # Änderungen
 
-## 2.935.0 – 2026-11-12 – 🗓️ Dienstplan: Wunschzeiten zuerst, gerecht gekürzt (KC-CLUB-DP-WUNSCH-ZUERST)
+## 2.936.0 – 2026-11-12 – 🗓️ Dienstplan: Wunschzeiten zuerst, gerecht gekürzt (KC-CLUB-DP-WUNSCH-ZUERST)
 Wunsch Hansi („Wunschzeiten der Leute ausreizen und ihnen nicht unbedingt weniger Stunden geben – wer 47 Std. wünscht, bekommt sie; bei Überbesetzung bei dem streichen, der viel hat, damit wir zu einem gerechten Plan kommen“) – Dienstplan-Rechnung Regel 8, eingeschaltet mit `dp_druck_konfig.wunschZuerst = true`:
 1. Jeder bekommt an jedem Tag seinen Wunschblock (im Bedarf, höchstens 8 Std. bzw. seine Grenze). Wer insgesamt weniger Wunschstunden hat, kommt zuerst; wer mehr hat, bekommt den Teil seines Wunsches, in dem noch jemand fehlt.
 2. Bleibt am Rand eine Überbesetzung, wird bei dem gekürzt, der die meisten Wunschstunden hat (Dienst bleibt mind. 2 Std.).
 3. Dann füllt die bisherige Rechnung die Lücken mit Kann-Zeiten. Sperrtage, Sperrzeiten, freier Tag nach 5 Tagen, Obergrenzen und „nur mit anderen“ gelten weiter.
 Probe mit den Wunschplänen vom 12.11.: Lücken 28,5 statt 33 Std.; Karla, Ruth, Reinhilde, Hansi, Klaus, Steven kommen nahe an ihren Wunsch.
+
+## 2.935.0 – 2026-11-12 – 📖 Roman: fünftes Lektoratsgutachten eingearbeitet
+Wunsch Hansi 12.11.: „baue die 5 punkte noch und mache die einträge in der Club app neu und in den 2 pdfs“.
+- Staffel 2, Folge 1 (Heft 13): Erinnerung an Lenas ersten Tag passt jetzt zu Staffel 1 (Jonas erklärt Brunoise, Lenas Würfel waren gut) – kein Widerspruch mehr. Weniger Erklär-Dialog: im Text nur noch Pass, Brunoise, Salamander; Posten, Pâtisserie, Bon, geklärte Butter stehen im Notizbuch-Kasten.
+- Staffel 2, Folge 12 (Heft 24): Wildkamera glaubwürdig – ein Fuchs löst die Bilderserie aus, der Wagen ist im Glas dahinter zu sehen. Onkel Georg: ein Satz, warum er auch Hartmann heißt.
+- Staffel 2, Folge 7 (Heft 19): Schlusssatz zeigt nicht mehr auf den Täter.
+- Staffel 1: Folge 11 (Heft 11) – Voss' Nachricht verrät die Lösung nicht mehr; Folge 8 (Heft 8) – Schluss ohne Hinweis auf den Sellerie; Folge 7 (Heft 7) – Rückblick: Jonas ist nicht der Restaurantbesitzer.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“. Rückweg: App 2.934.0.
 
 ## 2.934.0 – 2026-11-12 – ✏️ Terminanfrage ändern / ergänzen und Bescheid geben (KC-CLUB-TA-AENDERN) · Server 2.934.0
 Wunsch Hansi 12.11.: „Baue noch ein Ändern der Anfrage, damit man selber noch ändern und was dazuschreiben kann. Dann den anderen informieren, dass sich noch weitere Punkte ergeben haben.“

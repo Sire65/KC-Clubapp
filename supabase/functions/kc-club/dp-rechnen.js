@@ -27,7 +27,7 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // bekommt auch keine Bereitschaft, die kürzer ist als sein Mindestdienst – dann ist der/die Nächste in der Reihe dran.
 // 2.789.0 (Wunsch Hansi „Willfried Bereitschaft 06.12. 14–19, 08.12. 20–23, 09.12. 20–23“): bereitschaftFest [{ d, name, von, bis }] steht fest im Plan,
 // die automatische Bereitschaft kommt dazu (nicht für dieselbe Person am selben Tag).
-// 2.935.0 KC-CLUB-DP-WUNSCH-ZUERST (Wunsch Hansi „Wunschzeiten der Leute ausreizen, nicht unbedingt weniger Stunden geben – wer 47 Std. wünscht,
+// 2.936.0 KC-CLUB-DP-WUNSCH-ZUERST (Wunsch Hansi „Wunschzeiten der Leute ausreizen, nicht unbedingt weniger Stunden geben – wer 47 Std. wünscht,
 // bekommt sie; bei Überbesetzung bei dem streichen, der viel hat“): wunschZuerst – zuerst bekommt jeder an jedem Tag seinen Wunschblock (im Bedarf,
 // höchstens max/maxDienst Std.), dann werden überbesetzte Ränder bei dem gekürzt, der insgesamt die meisten Wunschstunden hat, dann füllt die
 // bisherige Rechnung die Lücken mit Kann-Zeiten. Sperren, Ruhetag nach maxTageAmStueck, maxGesamt und „nur mit anderen“ gelten weiter.
