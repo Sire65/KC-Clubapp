@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.935.0 – 2026-11-12 – 🗓️ Dienstplan: Wunschzeiten zuerst, gerecht gekürzt (KC-CLUB-DP-WUNSCH-ZUERST)
+Wunsch Hansi („Wunschzeiten der Leute ausreizen und ihnen nicht unbedingt weniger Stunden geben – wer 47 Std. wünscht, bekommt sie; bei Überbesetzung bei dem streichen, der viel hat, damit wir zu einem gerechten Plan kommen“) – Dienstplan-Rechnung Regel 8, eingeschaltet mit `dp_druck_konfig.wunschZuerst = true`:
+1. Jeder bekommt an jedem Tag seinen Wunschblock (im Bedarf, höchstens 8 Std. bzw. seine Grenze). Wer insgesamt weniger Wunschstunden hat, kommt zuerst; wer mehr hat, bekommt den Teil seines Wunsches, in dem noch jemand fehlt.
+2. Bleibt am Rand eine Überbesetzung, wird bei dem gekürzt, der die meisten Wunschstunden hat (Dienst bleibt mind. 2 Std.).
+3. Dann füllt die bisherige Rechnung die Lücken mit Kann-Zeiten. Sperrtage, Sperrzeiten, freier Tag nach 5 Tagen, Obergrenzen und „nur mit anderen“ gelten weiter.
+Probe mit den Wunschplänen vom 12.11.: Lücken 28,5 statt 33 Std.; Karla, Ruth, Reinhilde, Hansi, Klaus, Steven kommen nahe an ihren Wunsch.
+
 ## 2.934.0 – 2026-11-12 – ✏️ Terminanfrage ändern / ergänzen und Bescheid geben (KC-CLUB-TA-AENDERN) · Server 2.934.0
 Wunsch Hansi 12.11.: „Baue noch ein Ändern der Anfrage, damit man selber noch ändern und was dazuschreiben kann. Dann den anderen informieren, dass sich noch weitere Punkte ergeben haben.“
 - Bei der eigenen Terminanfrage neuer Knopf **„✏️ Ändern / ergänzen“**: Anlass, Ort und Notiz/Punkte (ein Punkt je Zeile) ändern. Die Zeit bleibt – dafür gelten die Antworten (andere Zeit: absagen und neu anfragen).
