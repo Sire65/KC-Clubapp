@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.928.0 – 2026-11-12 – 🏷️ Preisetiketten: Pfand, Sonstiges, BAR-Code, Ordner im Büro
+KC-CLUB-PREISETIKETTEN, Wunsch Hansi („weitere Warengruppen wie Pfand, Sonstiges – auch das Außer-Haus-Gefäß“, „der BAR-Barcode, der den Kassiervorgang abschließt“, „Probeetikett im gewünschten Maß“, „auch in den Ordner Druckstudio im Büro“):
+- Alle Warengruppen mit Artikelnummer: Getränke, Speisen, **Pfand** (Ausgabe und Rückgabe mit „−2,00“), **Sonstiges** (z. B. Außer-Haus-Becher, Wertmarke). Bei Pfand und Sonstiges keine Allergen-/Zusatzstoff-Zeilen (keine Lebensmittel).
+- Neue Gruppe **Kassen-Codes** mit dem Etikett **BAR**: QR-Code `CMD-CHECKOUT` – an der Kasse gescannt = bar kassieren, Verkauf abschließen.
+- 🎯 Probe trägt die gewählte Größe im Knopf („Probe 6 × 6 cm“) und geht auch ohne gewählte Anzahl (Etikett aus der Vorschau).
+- Büro: eigener Ordner **🏷️ Preisetiketten** im Regal neben der Schilder-Druckerei, und in der 🪧 Schilder-Druckerei oben ein Knopf dorthin.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.927.0 – 2026-11-12 – 🖨️ Heft am PC: PDF sichtbar anzeigen und drucken (KC-CLUB-HEFT-PC-DRUCK-3)
 Fund Hansi 12.11. (Bildschirmfoto): „Fehler beim Drucken – Beim Drucken ist ein Fehler aufgetreten“ nach „🖨️ Jetzt drucken“.
 - Ursache: Chrome/Edge können eine PDF aus einem unsichtbaren Rahmen nicht drucken (2.925.0).

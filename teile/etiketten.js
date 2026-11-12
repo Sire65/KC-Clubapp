@@ -14,7 +14,10 @@ const PE_FORMATE = [8, 7, 6, 5];
 const PE_BAUSTEINE = [["name", "Name"], ["foto", "Foto"], ["preis", "Preis"], ["pfand", "„inkl. Pfand“"], ["qr", "QR-Code"], ["nummer", "Art.-Nr. unter QR"],
   ["allergene", "Allergene"], ["zusatz", "Zusatzstoffe"], ["alkohol", "„Enthält Alkohol“"], ["rahmen", "Farbiger Rahmen"]];
 const peKasse = () => new URL("../Kasse/", location.href).href; // Kasse liegt auf derselben Adresse (sire65.github.io/Kasse/)
-const peZahl = (b) => (Math.round(b * 100) / 100).toFixed(2).replace(".", ",");
+const peZahl = (b) => (b < 0 ? "−" : "") + (Math.round(Math.abs(b) * 100) / 100).toFixed(2).replace(".", ","); // Rückgabe: „−2,00“
+// 12.11.2026 (Wunsch Hansi „auch der BAR-Barcode, der den Kassiervorgang abschließt“): Kassen-Steuercodes als eigene Etiketten. CMD-CHECKOUT = genau
+// das, was die Kasse beim Scannen als „bar kassieren / Verkauf abschließen“ versteht (Kasse pos/app.js, SCANNER_WEGE_LIESMICH.md).
+const PE_CODES = [{ id: "cmd-bar", name: "BAR – bezahlen", nummer: "CMD-CHECKOUT", kategorie: "Kassen-Codes", spezial: "bar", farbe: "#1b5e20", preis: 0, pfand: [], sortierung: 0 }];
 const pePfand = (a) => (a.pfand || []).reduce((s, k) => s + (Number(k.betrag) || 0), 0);
 const pePreis = (a) => (Number.isFinite(PE.preis[a.id]) ? PE.preis[a.id] : Number(a.preis) || 0);
 // Bogen A4: Etiketten stoßen aneinander (nur ein Schnitt dazwischen), rundum mindestens 6 mm Rand für die Schnittmarken
@@ -32,7 +35,7 @@ async function peLaden() {
     const d = await (await fetch(peKasse() + "etiketten/artikel.json?x=" + Date.now(), { cache: "no-store", signal: zeitSignal(15000) })).json();
     PE.artikel = d.artikel || []; PE.quelle = "kasse"; PE.stand = d.stand || null;
   }
-  PE.artikel = PE.artikel.filter((a) => a && a.nummer && a.name).sort((x, y) => String(x.kategorie).localeCompare(String(y.kategorie), "de") || (x.sortierung ?? 999) - (y.sortierung ?? 999) || String(x.name).localeCompare(String(y.name), "de"));
+  PE.artikel = [...PE.artikel.filter((a) => a && a.nummer && a.name), ...PE_CODES].sort((x, y) => String(x.kategorie).localeCompare(String(y.kategorie), "de") || (x.sortierung ?? 999) - (y.sortierung ?? 999) || String(x.name).localeCompare(String(y.name), "de"));
 }
 function peGruppen() { return [...new Set(PE.artikel.map((a) => a.kategorie || "Sonstiges"))]; }
 function peSichtbar() { return PE.artikel.filter((a) => PE.gruppe === "alle" || (a.kategorie || "Sonstiges") === PE.gruppe); }
@@ -45,7 +48,7 @@ function peZeigen() {
     : "⚠️ Grundstand aus der Kasse – noch nicht vom PC-Manager veröffentlicht. Im PC-Manager „🏷️ Für Preisetiketten in der Club-App veröffentlichen“ antippen, dann stehen hier die aktuellen Preise. Preise bitte prüfen.";
   const liste = peSichtbar().map((a) => `<div class="pe-zeile${PE.anzahl[a.id] ? " pe-an" : ""}" data-id="${esc(a.id)}">
       <button type="button" class="pe-name" data-vorschau="${esc(a.id)}" title="In der Vorschau zeigen"><b>${esc(a.name)}</b><small>${esc(a.kategorie || "")} · ${esc(a.nummer)}${pePfand(a) ? ` · inkl. ${peZahl(pePfand(a))} Pfand` : ""}</small></button>
-      <label class="pe-preis" title="Artikelpreis ohne Pfand – nur für diesen Druck">€ <input type="text" inputmode="decimal" data-preis="${esc(a.id)}" value="${peZahl(pePreis(a))}"></label>
+      ${a.spezial ? '<span class="pe-preis hinweis">Kassen-Code</span>' : `<label class="pe-preis" title="Artikelpreis ohne Pfand – nur für diesen Druck">€ <input type="text" inputmode="decimal" data-preis="${esc(a.id)}" value="${peZahl(pePreis(a))}"></label>`}
       <span class="pe-anz"><button type="button" class="knopf klein" data-minus="${esc(a.id)}" aria-label="weniger">−</button><b>${PE.anzahl[a.id] || 0}</b><button type="button" class="knopf klein" data-plus="${esc(a.id)}" aria-label="mehr">＋</button></span></div>`).join("");
   const f = blattAuf("peBlatt", `<h3 style="margin-top:0">🏷️ Preisetiketten</h3>
     <p class="hinweis" style="margin:0 0 8px">${esc(quelle)}</p>
@@ -53,8 +56,8 @@ function peZeigen() {
     <div class="pe-reihe"><b>Auf dem Etikett</b>${PE_BAUSTEINE.map(([k, t]) => `<label class="pe-haken"><input type="checkbox" data-aus="${k}" ${PE.aus[k] ? "checked" : ""}> ${esc(t)}</label>`).join("")}</div>
     <div class="pe-oben"><div class="pe-vorschau"><canvas id="peVorschau" aria-label="Vorschau"></canvas><small class="hinweis" id="peVorschauText"></small></div>
       <div class="pe-info"><b>${n} Etikett${n === 1 ? "" : "en"}</b><br><span class="hinweis">${r.sp} × ${r.ze} = ${je} je A4-Blatt${n ? ` · ${blaetter} Blatt` : ""}</span>
-        <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" data-a="druck" ${n ? "" : "disabled"}>🖨️ Drucken</button><button class="knopf" data-a="probe" ${n ? "" : "disabled"}>🎯 Probe (1 Etikett + 5-cm-Maß)</button></div>
-        <p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Drucken mit <b>100 %</b> (nicht „an Seite anpassen“). Der QR-Code enthält die Artikelnummer – bitte einmal an der Kasse scannen.</p></div></div>
+        <div class="knoepfe" style="margin-top:8px"><button class="knopf haupt" data-a="druck" ${n ? "" : "disabled"}>🖨️ Drucken</button><button class="knopf" data-a="probe">🎯 Probe ${PE.format} × ${PE.format} cm (1 Etikett + 5-cm-Maß)</button></div>
+        <p class="hinweis" style="margin:6px 0 0;font-size:.85rem">Probe: das Etikett aus der Vorschau in der gewählten Größe – Größe oben umstellen, dann erneut. Drucken mit <b>100 %</b> (nicht „an Seite anpassen“). Der QR-Code enthält die Artikelnummer – bitte einmal an der Kasse scannen.</p></div></div>
     <div class="pe-reihe"><b>Warengruppe</b>${["alle", ...peGruppen()].map((g) => `<button type="button" class="chip${PE.gruppe === g ? " an" : ""}" data-gruppe="${esc(g)}">${g === "alle" ? "Alle" : esc(g)}</button>`).join("")}
       <span style="margin-left:auto"><button type="button" class="knopf klein" data-alle="1">＋1 für alle hier</button> <button type="button" class="knopf klein" data-alle="0">Alle auf 0</button></span></div>
     <div class="pe-liste">${liste || '<p class="hinweis">Keine Artikel.</p>'}</div>
@@ -75,8 +78,8 @@ function peZeigen() {
     PE.anzahl[id] = Math.max(0, Math.min(200, (PE.anzahl[id] || 0) + (b.dataset.plus ? 1 : -1))); PE.vorschauId = id; neu(); }));
   f.querySelectorAll("[data-alle]").forEach((b) => (b.onclick = () => { peSichtbar().forEach((a) => (PE.anzahl[a.id] = b.dataset.alle === "1" ? Math.min(200, (PE.anzahl[a.id] || 0) + 1) : 0)); neu(); }));
   f.querySelectorAll("[data-vorschau]").forEach((b) => (b.onclick = () => { PE.vorschauId = b.dataset.vorschau; peVorschau(); }));
-  f.querySelectorAll("[data-preis]").forEach((i) => (i.onchange = () => { const v = Number(String(i.value).replace(",", ".")); const a = PE.artikel.find((x) => x.id === i.dataset.preis);
-    if (Number.isFinite(v) && v >= 0 && v < 1000) PE.preis[i.dataset.preis] = Math.round(v * 100) / 100; else delete PE.preis[i.dataset.preis];
+  f.querySelectorAll("[data-preis]").forEach((i) => (i.onchange = () => { const v = Number(String(i.value).replace("−", "-").replace(",", ".")); const a = PE.artikel.find((x) => x.id === i.dataset.preis);
+    if (Number.isFinite(v) && v > -1000 && v < 1000) PE.preis[i.dataset.preis] = Math.round(v * 100) / 100; else delete PE.preis[i.dataset.preis];
     i.value = peZahl(pePreis(a)); PE.vorschauId = i.dataset.preis; peVorschau(); }));
   f.querySelectorAll("[data-a]").forEach((b) => (b.onclick = () => peDrucken(b.dataset.a === "probe", b)));
   peVorschau();
@@ -124,13 +127,16 @@ function peUmbruch(g, stuecke, breite) {
 async function peEtikett(g, a, x0, y0, K) {
   const M = PE_MM, u = K / 70, O = PE.aus, farbe = /^#[0-9a-f]{3,8}$/i.test(a.farbe || "") ? a.farbe : "#173765";
   const X = (mm) => (x0 + mm) * M, Y = (mm) => (y0 + mm) * M;
+  if (a.spezial === "bar") return peBarEtikett(g, a, X, Y, K, u, farbe);
   g.save(); g.fillStyle = "#fff"; g.fillRect(X(0), Y(0), K * M, K * M);
   if (O.rahmen) { g.lineWidth = 0.8 * u * M; g.strokeStyle = farbe; peRund(g, X(0.4 * u), Y(0.4 * u), (K - 0.8 * u) * M, (K - 0.8 * u) * M, 5 * u * M); g.stroke(); }
   const L = 3.6 * u, R = 3.2 * u, T = 2.4 * u, B = 2 * u, innen = K - L - R;
   let y = T;
   if (O.name) { let gr = 4.8 * u; g.font = `800 ${gr * M}px ${PE_SCHRIFT}`; while (g.measureText(a.name).width > innen * M && gr > 2.4 * u) { gr -= 0.1 * u; g.font = `800 ${gr * M}px ${PE_SCHRIFT}`; }
     g.fillStyle = farbe; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText(a.name, X(L + innen / 2), Y(y + gr * 0.9)); y += gr * 1.05 + 0.8 * u; }
-  const unten = K - B, textAn = O.allergene || O.zusatz || (O.alkohol && a.alkohol), links = O.foto || textAn, rechts = O.preis || O.qr;
+  // Pfand und Sonstiges (Glas, Becher, Wertmarke …) sind keine Lebensmittel – dort keine Allergen-/Zusatzstoff-Zeilen
+  const essbar = !/^(Pfand|Sonstiges)$/i.test(String(a.kategorie || ""));
+  const textAn = essbar && (O.allergene || O.zusatz || (O.alkohol && a.alkohol)), unten = K - B, links = O.foto || textAn, rechts = O.preis || O.qr;
   const lw = links && rechts ? 26.5 * u : innen, rx = links && rechts ? L + lw + 2 * u : L, rw = links && rechts ? innen - lw - 2 * u : innen;
   // links: Foto, darunter Allergene/Zusatzstoffe
   if (links) {
@@ -173,6 +179,18 @@ async function peEtikett(g, a, x0, y0, K) {
       if (O.nummer) { g.font = `700 ${2.5 * u * M}px ${PE_SCHRIFT}`; g.fillStyle = "#111"; g.textAlign = "center"; g.fillText(String(a.nummer), X(rx + rw / 2), Y(unten - 0.6 * u)); }
     }
   }
+  g.restore();
+}
+// BAR-Etikett: großes „BAR“, QR-Code CMD-CHECKOUT so groß wie möglich, kurzer Hinweis – Bausteine (Foto, Allergene …) gelten hier nicht
+function peBarEtikett(g, a, X, Y, K, u, farbe) {
+  const M = PE_MM; g.save(); g.fillStyle = "#fff"; g.fillRect(X(0), Y(0), K * M, K * M);
+  g.lineWidth = 0.8 * u * M; g.strokeStyle = farbe; peRund(g, X(0.4 * u), Y(0.4 * u), (K - 0.8 * u) * M, (K - 0.8 * u) * M, 5 * u * M); g.stroke();
+  g.textAlign = "center"; g.fillStyle = farbe; g.font = `900 ${11 * u * M}px ${PE_SCHRIFT}`; g.fillText("BAR", X(K / 2), Y(12.5 * u));
+  g.fillStyle = "#333"; g.font = `700 ${3 * u * M}px ${PE_SCHRIFT}`; g.fillText("Scannen = bar kassieren", X(K / 2), Y(17 * u));
+  if (window.qrcode) { const q = qrcode(0, "M"); q.addData(String(a.nummer)); q.make(); const n = q.getModuleCount(), s = Math.min(K - 14 * u, K - 26 * u), z = (s * M) / (n + 4);
+    const qx = X((K - s) / 2), qy = Y(19 * u); g.fillStyle = "#000";
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(Math.floor(qx + (c + 2) * z), Math.floor(qy + (r + 2) * z), Math.ceil(z), Math.ceil(z)); }
+  g.fillStyle = "#555"; g.font = `400 ${2.5 * u * M}px ${PE_SCHRIFT}`; g.fillText("Verkauf abschließen · " + a.nummer, X(K / 2), Y(K - 2.6 * u));
   g.restore();
 }
 // A4-Seiten (300 dpi) mit Schnittmarken außen; Probe: 1 Etikett + 5-cm-Messbalken

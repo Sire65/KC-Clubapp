@@ -7903,6 +7903,13 @@ for (const [name, txt] of [["index.html", html], ["kc-club", server]]) {
   assert.ok(/"peStart\(\)"/.test(programm) && /preisetiketten: \{ bauen:/.test(programm), "Preisetiketten: im Büro-Drucker und im Druck-Kern");
   assert.ok(/async function druckSchild\(\)/.test(programm) && /gedreht = quer \? await schildGedreht\(SDR\.bildUrl\) : null/.test(programm) && /@media print\{#druck \.sch-bild\{display:none!important\}\}/.test(programm), "Schild quer: im Druck gedreht auf Hochformat, Vorschau aufrecht");
 }
+// 2.928.0 KC-CLUB-PREISETIKETTEN: Pfand/Sonstiges, BAR-Code, Probe je Größe, Ordner im Büro
+{
+  assert.ok(/nummer: "CMD-CHECKOUT", kategorie: "Kassen-Codes", spezial: "bar"/.test(programm) && /if \(a\.spezial === "bar"\) return peBarEtikett\(/.test(programm), "Preisetiketten: BAR-Etikett mit CMD-CHECKOUT");
+  assert.ok(/const essbar = !\/\^\(Pfand\|Sonstiges\)\$\/i\.test/.test(programm) && /\(b < 0 \? "−" : ""\)/.test(programm), "Preisetiketten: Pfand/Sonstiges ohne Allergene, Rückgabe mit Minus");
+  assert.ok(/🎯 Probe \$\{PE\.format\} × \$\{PE\.format\} cm/.test(programm), "Preisetiketten: Probe in der gewählten Größe");
+  assert.ok(/\{ id: "preisetiketten", sym: "🏷️", t: "Preisetiketten", farbe: "#7c4a2d", fn: "peStart\(\)", recht: "L" \}/.test(programm) && /onclick="peStart\(\)">🏷️ Preisetiketten für Kessel/.test(programm), "Preisetiketten: Ordner im Büro-Regal und Knopf in der Schilder-Druckerei");
+}
 console.log(`OK – Köcheclub-App ${appV}: ${aufrufe.size} API-Aktionen geprüft`);
 
 // 112. 0.91.0: Pinnwand-Knopf bleibt „＋ Zettel“, Stand klein daneben, bei vollen Plätzen Erklärung (KC-CLUB-PINNWAND-KNOPF)

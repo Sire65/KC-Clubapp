@@ -510,6 +510,7 @@ const BU_REGAL = [
   { id: "termine", sym: "📅", t: "Termine", farbe: "#8b6f5a", fn: "buTermine()", recht: "S" },
   { id: "briefe", sym: "✉️", t: "Briefe", farbe: "#6e6a5c", fn: "buBrief()", recht: "S" },
   { id: "schilder", sym: "🪧", t: "Schilder-Druckerei", farbe: "#7a5c3e", fn: "schStart()", recht: "L" },
+  { id: "preisetiketten", sym: "🏷️", t: "Preisetiketten", farbe: "#7c4a2d", fn: "peStart()", recht: "L" }, // KC-CLUB-PREISETIKETTEN (Wunsch Hansi 12.11.: „auch in den Ordner Druckstudio im Büro“)
   { id: "anleitungen", sym: "📚", t: "Anleitungen", farbe: "#4f6d7a", fn: "anlStart()", recht: "L" }, // 2.822.0 KC-CLUB-ANLEITUNGEN (Wunschliste #68) // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten … // KC-CLUB-SCHILDER (2.150.0): Hinweise, Preislisten, Öffnungszeiten …
   { id: "erstattung", sym: "💶", t: "Erstattung", farbe: "#7a7f5e", fn: "zeige('erstattung')", recht: "L" },
   { id: "weihnachtsmarkt", sym: "🎄", t: "Weihnachtsmarkt", farbe: "#2e5d3a", fn: "arStartFest('weihnachtsmarkt')", recht: "L" }, // 2.147.0 (Wunsch Hansi): Ordner mit Jahren und Unterregistern
