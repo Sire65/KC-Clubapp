@@ -17,7 +17,7 @@ assert.deepEqual(h, ["Ein Morgen voller Erwartungen", "Hinter den Kulissen", "De
 const alles = r.text.filter(([a]) => a === "p").map(([, t]) => t).join("\n");
 assert.ok(alles.startsWith("Um sieben Minuten vor sieben stand Lena Hartmann") && alles.endsWith("Voss wartete. Timo sagte nichts."), "Anfang und Schluss");
 assert.ok(alles.includes("**Burgunder-Trüffel – 240 Gramm.**") && alles.includes("**180 Gramm.**") && alles.includes("Sechzig Gramm fehlten."), "Trüffelbestände");
-assert.equal(r.text.length, 179, "nicht gekürzt: 9 Zwischenüberschriften + 170 Absätze (aktueller Stand)"); assert.equal(alles.split(/\s+/).length, 3182, "nicht gekürzt: Wortzahl (sanfte Überarbeitung 11.11.2026)");
+assert.equal(r.text.length, 179, "nicht gekürzt: 9 Zwischenüberschriften + 170 Absätze (aktueller Stand)"); assert.equal(alles.split(/\s+/).length, 3193, "nicht gekürzt: Wortzahl (sanfte Überarbeitung 11.11.2026)");
 assert.equal(r.ende[0], "**Fortsetzung in der nächsten Ausgabe**");
 // Kein internes Material (Figurenbibel, Handlungsbogen, Täterakte, Zeitachse) im Programm. Alle 12 Folgen sind beauftragt; Folge 12 (Finale, mit Auflösungen)
 // freigegeben von Hansi 09.11.2026 („Spiele auch Folge 12 ein in das Heft mit Zeichnungen“ / „Ja, heute mit einspielen“) – Spoiler daher nur noch in Folge 12 erlaubt.

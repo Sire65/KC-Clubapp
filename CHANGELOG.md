@@ -5,6 +5,7 @@ Wünsche Hansi 12.11.: „Übersetzungen für Nicht-Fachleute … im Roman könn
 - **Fachbegriffe im Heft:** rund 40 Begriffe (Brunoise, Julienne, Mise en place, blanchieren, pochieren, montieren, Fond, Jus, Reduktion, Pass, Posten …) bekommen beim ersten Vorkommen je Heftseite eine kurze Erklärung in Klammern – am Bildschirm und im gedruckten Heft. Nicht im Roman, Küchenlatein, Rätsel und Witz; Überschriften bleiben frei.
 - **Fortsetzungsroman (Staffel 1 und 2) nach vier unabhängigen Verlagsgutachten überarbeitet:** Fachbegriffe erklären die Figuren im Gespräch (Jonas, Voss, Leon, Mira, Timo an Lena bzw. Mike). Staffel 1: Lena überführt den Trüffeldieb selbst (Beleg-Original, eigene Notizen, Kühldaten), Mira als zweite Verdächtige, neue Cliffhanger, Rahmentexte ohne Spoiler. Staffel 2: zweiter Fischzüchter Hubert Lammerding und Getränkehändler Dirk Wessels als falsche Fährten, falsches Alibi für den Täter, Lena löst den Fall selbst und geht im Finale ein Risiko ein, weniger Floskeln.
 - Bilder und Lenas Notizbuch bleiben; Rezept-Garzeit korrigiert (ca. 12 Min.).
+- Fund Hansi: Brunoise richtig erklärt – sehr kleine Würfel von 1–2 mm (Karotte, Sellerie, Lauch, Zwiebel …), nicht „wie Zuckerkörner“ (Heft-Klammer, Staffel 1 Folge 1 und 9, Staffel 2 Folge 1).
 - Tests: `tests/magazin-fachbegriffe.test.mjs` (neu), `tests/magazin-roman.test.mjs`. Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.930.0.
 - Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
 

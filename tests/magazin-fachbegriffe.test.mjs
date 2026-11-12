@@ -7,7 +7,7 @@ const code = teil.slice(teil.indexOf("const MAG_ERKL_OHNE"), teil.indexOf("// Ba
 const { magErklaeren, MAG_ERKL_OHNE } = new Function(code + "; return { magErklaeren, MAG_ERKL_OHNE };")();
 const e = (s) => magErklaeren(s);
 let r = e("<p>Die Zwiebel in Brunoise schneiden. Danach noch mehr Brunoise.</p>");
-assert.equal(r, '<p>Die Zwiebel in Brunoise <span class="mag-erkl">(ganz feine Würfel, von Gemüse oder auch Fleisch)</span> schneiden. Danach noch mehr Brunoise.</p>', "nur beim ersten Vorkommen");
+assert.equal(r, '<p>Die Zwiebel in Brunoise <span class="mag-erkl">(sehr kleine Würfel von 1–2 mm, etwa aus Karotte, Sellerie, Lauch oder Zwiebel)</span> schneiden. Danach noch mehr Brunoise.</p>', "nur beim ersten Vorkommen");
 r = e("<h3>Julienne schneiden</h3><p>Möhren in Julienne schneiden.</p>");
 assert.ok(/<h3>Julienne schneiden<\/h3>/.test(r) && /Julienne <span class="mag-erkl">\(feine Streifen\)<\/span> schneiden/.test(r), "Überschrift frei, erklärt im Text");
 r = e("<p>Julienne (feine Streifen) und Mise en place: alles bereit.</p>");
