@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.929.0 – 2026-11-12 – 🏷️ Preisetiketten in den Farben der Warengruppen
+KC-CLUB-PREISETIKETTEN, Wunsch Hansi („die Warengruppen in der Kasse haben verschiedene Farben – die sollen auf die Etiketten“, Wahl Vorschlag B; „in den Ordner Schilderdruck, keinen eigenen Ordner“):
+- Oben auf jedem Etikett ein **Kopfband in der Farbe der Warengruppe** wie an der Kasse (Getränke dunkelblau, Speisen braun, Pfand blau, Sonstiges grau – so wie im PC-Manager eingestellt), darin klein die Warengruppe und groß der Name; Rahmen in derselben Farbe. Bei sehr heller Gruppenfarbe dunkle Schrift. QR-Code bleibt schwarz auf weiß, BAR-Etikett grün.
+- Schalter **Farbe**: Warengruppe · Artikel · Grau (für Schwarz-Weiß-Drucker).
+- Die Preisetiketten sind nur noch in der **🪧 Schilder-Druckerei** (und im 🖨️ Drucker) – kein eigener Ordner im Regal.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.928.0 – 2026-11-12 – 🏷️ Preisetiketten: Pfand, Sonstiges, BAR-Code, Ordner im Büro
 KC-CLUB-PREISETIKETTEN, Wunsch Hansi („weitere Warengruppen wie Pfand, Sonstiges – auch das Außer-Haus-Gefäß“, „der BAR-Barcode, der den Kassiervorgang abschließt“, „Probeetikett im gewünschten Maß“, „auch in den Ordner Druckstudio im Büro“):
 - Alle Warengruppen mit Artikelnummer: Getränke, Speisen, **Pfand** (Ausgabe und Rückgabe mit „−2,00“), **Sonstiges** (z. B. Außer-Haus-Becher, Wertmarke). Bei Pfand und Sonstiges keine Allergen-/Zusatzstoff-Zeilen (keine Lebensmittel).

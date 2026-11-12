@@ -7,12 +7,18 @@
 // Artikel: zuerst der vom PC-Manager veröffentlichte Stand (aktuelle Preise, Aktion etiketten_artikel), sonst der Grundstand der Kasse
 // (/Kasse/etiketten/artikel.json). Preise lassen sich für diesen Druck von Hand ändern. Gezeichnet wird als Bild in 300 dpi
 // (wie der Händler-Ausweis) – so kann kein PDF-Betrachter Fotos weglassen. Fehlende Angaben: rot „⚠ nicht erfasst“ (UNKNOWN nie als OK).
-const PE = { artikel: null, quelle: null, stand: null, format: 6, anzahl: {}, preis: {}, gruppe: "alle", vorschauId: null, bilder: new Map(),
+const PE = { artikel: null, quelle: null, stand: null, format: 6, farbWahl: "gruppe", anzahl: {}, preis: {}, gruppe: "alle", vorschauId: null, bilder: new Map(),
   aus: { name: true, foto: true, preis: true, pfand: true, qr: true, nummer: true, allergene: true, zusatz: true, alkohol: true, rahmen: true } };
 const PE_MM = 300 / 25.4, PE_SCHRIFT = '"Carlito","Lato","Helvetica Neue",Arial,sans-serif';
 const PE_FORMATE = [8, 7, 6, 5];
-const PE_BAUSTEINE = [["name", "Name"], ["foto", "Foto"], ["preis", "Preis"], ["pfand", "„inkl. Pfand“"], ["qr", "QR-Code"], ["nummer", "Art.-Nr. unter QR"],
-  ["allergene", "Allergene"], ["zusatz", "Zusatzstoffe"], ["alkohol", "„Enthält Alkohol“"], ["rahmen", "Farbiger Rahmen"]];
+const PE_BAUSTEINE = [["name", "Name im Farbband"], ["foto", "Foto"], ["preis", "Preis"], ["pfand", "„inkl. Pfand“"], ["qr", "QR-Code"], ["nummer", "Art.-Nr. unter QR"],
+  ["allergene", "Allergene"], ["zusatz", "Zusatzstoffe"], ["alkohol", "„Enthält Alkohol“"], ["rahmen", "Rahmen"]];
+// 12.11.2026 (Wunsch Hansi „die Warengruppen in der Kasse haben verschiedene Farben – die sollen auf die Etiketten“; Wahl: Vorschlag B Kopfband):
+// Farbe der Warengruppe wie an der Kasse (vom PC-Manager mitgeschickt), wahlweise die Artikelfarbe oder Grau für Schwarz-Weiß-Drucker
+const PE_FARBWAHL = [["gruppe", "Warengruppe"], ["artikel", "Artikel"], ["keine", "Grau (Schwarz-Weiß)"]];
+const peFarbe = (a) => { const ok = (f) => /^#[0-9a-f]{6}$/i.test(f || "") ? f : null;
+  return PE.farbWahl === "keine" ? "#4b4b4b" : PE.farbWahl === "artikel" ? ok(a.farbe) || "#173765" : ok(a.warengruppeFarbe) || ok(a.farbe) || "#173765"; };
+const peHell = (f) => { const n = parseInt(f.slice(1), 16), [r, g, b] = [n >> 16, (n >> 8) & 255, n & 255]; return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.62; }; // helle Farbe → dunkle Schrift
 const peKasse = () => new URL("../Kasse/", location.href).href; // Kasse liegt auf derselben Adresse (sire65.github.io/Kasse/)
 const peZahl = (b) => (b < 0 ? "−" : "") + (Math.round(Math.abs(b) * 100) / 100).toFixed(2).replace(".", ","); // Rückgabe: „−2,00“
 // 12.11.2026 (Wunsch Hansi „auch der BAR-Barcode, der den Kassiervorgang abschließt“): Kassen-Steuercodes als eigene Etiketten. CMD-CHECKOUT = genau
@@ -53,6 +59,7 @@ function peZeigen() {
   const f = blattAuf("peBlatt", `<h3 style="margin-top:0">🏷️ Preisetiketten</h3>
     <p class="hinweis" style="margin:0 0 8px">${esc(quelle)}</p>
     <div class="pe-reihe"><b>Größe</b>${PE_FORMATE.map((k) => `<button type="button" class="chip${PE.format === k ? " an" : ""}" data-format="${k}">${k} × ${k} cm</button>`).join("")}</div>
+    <div class="pe-reihe"><b>Farbe</b>${PE_FARBWAHL.map(([k, t]) => `<button type="button" class="chip${PE.farbWahl === k ? " an" : ""}" data-farbe="${k}">${esc(t)}</button>`).join("")}</div>
     <div class="pe-reihe"><b>Auf dem Etikett</b>${PE_BAUSTEINE.map(([k, t]) => `<label class="pe-haken"><input type="checkbox" data-aus="${k}" ${PE.aus[k] ? "checked" : ""}> ${esc(t)}</label>`).join("")}</div>
     <div class="pe-oben"><div class="pe-vorschau"><canvas id="peVorschau" aria-label="Vorschau"></canvas><small class="hinweis" id="peVorschauText"></small></div>
       <div class="pe-info"><b>${n} Etikett${n === 1 ? "" : "en"}</b><br><span class="hinweis">${r.sp} × ${r.ze} = ${je} je A4-Blatt${n ? ` · ${blaetter} Blatt` : ""}</span>
@@ -72,6 +79,7 @@ function peZeigen() {
   const neu = () => { const y = f.querySelector(".blatt-innen")?.scrollTop || 0; peZeigen(); const g = document.querySelector("#peBlatt .blatt-innen"); if (g) g.scrollTop = y; };
   f.querySelector("[data-zu]").onclick = () => f.remove();
   f.querySelectorAll("[data-format]").forEach((b) => (b.onclick = () => { PE.format = Number(b.dataset.format); neu(); }));
+  f.querySelectorAll("[data-farbe]").forEach((b) => (b.onclick = () => { PE.farbWahl = b.dataset.farbe; neu(); }));
   f.querySelectorAll("[data-aus]").forEach((b) => (b.onchange = () => { PE.aus[b.dataset.aus] = b.checked; peVorschau(); }));
   f.querySelectorAll("[data-gruppe]").forEach((b) => (b.onclick = () => { PE.gruppe = b.dataset.gruppe; neu(); }));
   f.querySelectorAll("[data-plus],[data-minus]").forEach((b) => (b.onclick = () => { const id = b.dataset.plus || b.dataset.minus;
@@ -125,15 +133,22 @@ function peUmbruch(g, stuecke, breite) {
 }
 // Ein Etikett zeichnen; x0/y0/K in mm (Maße wie das 7x7-Etikett, mal K/70)
 async function peEtikett(g, a, x0, y0, K) {
-  const M = PE_MM, u = K / 70, O = PE.aus, farbe = /^#[0-9a-f]{3,8}$/i.test(a.farbe || "") ? a.farbe : "#173765";
+  const M = PE_MM, u = K / 70, O = PE.aus, farbe = a.spezial ? (a.farbe || "#1b5e20") : peFarbe(a);
   const X = (mm) => (x0 + mm) * M, Y = (mm) => (y0 + mm) * M;
   if (a.spezial === "bar") return peBarEtikett(g, a, X, Y, K, u, farbe);
   g.save(); g.fillStyle = "#fff"; g.fillRect(X(0), Y(0), K * M, K * M);
   if (O.rahmen) { g.lineWidth = 0.8 * u * M; g.strokeStyle = farbe; peRund(g, X(0.4 * u), Y(0.4 * u), (K - 0.8 * u) * M, (K - 0.8 * u) * M, 5 * u * M); g.stroke(); }
   const L = 3.6 * u, R = 3.2 * u, T = 2.4 * u, B = 2 * u, innen = K - L - R;
   let y = T;
-  if (O.name) { let gr = 4.8 * u; g.font = `800 ${gr * M}px ${PE_SCHRIFT}`; while (g.measureText(a.name).width > innen * M && gr > 2.4 * u) { gr -= 0.1 * u; g.font = `800 ${gr * M}px ${PE_SCHRIFT}`; }
-    g.fillStyle = farbe; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText(a.name, X(L + innen / 2), Y(y + gr * 0.9)); y += gr * 1.05 + 0.8 * u; }
+  // Kopfband (Vorschlag B): oben in der Warengruppenfarbe, darin klein die Warengruppe und groß der Name – wie die farbigen Reiter an der Kasse
+  if (O.name) {
+    const bh = 10 * u, schrift = peHell(farbe) ? "#111" : "#fff";
+    g.save(); peRund(g, X(0.8 * u), Y(0.8 * u), (K - 1.6 * u) * M, (K - 1.6 * u) * M, 4.6 * u * M); g.clip(); g.fillStyle = farbe; g.fillRect(X(0), Y(0), K * M, bh * M); g.restore();
+    g.fillStyle = schrift; g.textAlign = "center"; g.textBaseline = "alphabetic";
+    if (a.kategorie) { g.globalAlpha = 0.85; g.font = `700 ${2.2 * u * M}px ${PE_SCHRIFT}`; g.fillText(String(a.kategorie).toUpperCase().split("").join("\u200A"), X(K / 2), Y(3.6 * u)); g.globalAlpha = 1; }
+    let gr = 4.6 * u; g.font = `800 ${gr * M}px ${PE_SCHRIFT}`; while (g.measureText(a.name).width > innen * M && gr > 2.4 * u) { gr -= 0.1 * u; g.font = `800 ${gr * M}px ${PE_SCHRIFT}`; }
+    g.fillText(a.name, X(L + innen / 2), Y(a.kategorie ? 8.3 * u : 6.6 * u)); y = bh + 1.4 * u;
+  }
   // Pfand und Sonstiges (Glas, Becher, Wertmarke …) sind keine Lebensmittel – dort keine Allergen-/Zusatzstoff-Zeilen
   const essbar = !/^(Pfand|Sonstiges)$/i.test(String(a.kategorie || ""));
   const textAn = essbar && (O.allergene || O.zusatz || (O.alkohol && a.alkohol)), unten = K - B, links = O.foto || textAn, rechts = O.preis || O.qr;
