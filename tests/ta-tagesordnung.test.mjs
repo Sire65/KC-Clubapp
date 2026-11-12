@@ -13,6 +13,8 @@ assert.deepEqual(taToAusNotiz("1. Weihnachtsmarkt Dienstplan\n- Einkauf Glühwei
 assert.deepEqual(taToAusNotiz(""), []);
 assert.deepEqual(taToAusNotiz(null), []);
 assert.equal(taToAusNotiz(Array.from({ length: 30 }, (_, i) => "Punkt " + i).join("\n")).length, 20, "höchstens 20 Punkte");
-// Vorlage: Teilnehmer zum Abhaken, TOP-Tabelle mit Notizen und Wer/Bis wann, Verschiedenes, nächster Termin
-for (const t of ["Teilnehmer", "Tagesordnung", "Notizen / Ergebnis", "Wer? Bis wann?", "Verschiedenes", "Nächster Termin", "Besprechung: "]) assert.ok(app.includes(t), t);
+// Vorlage wie die Sitzungs-Vorlage aus dem Büro: Schreiblinien je TOP, Anwesend zum Ankreuzen, Beschlüsse, nächster Termin, Unterschriften
+const f = app.slice(app.indexOf("function taBesprechungDruck(id)"), app.indexOf("\n}\n", app.indexOf("function taBesprechungDruck(id)")));
+for (const t of ["Protokollführer", "Anwesend", "Entschuldigt bzw. fehlend", "Gäste", "Tagesordnung", "TOP ${i + 1}: ${esc(t.t)}</div>${linien(zeilen)}", "Beschlüsse / Sonstiges", "Nächster Termin", "Protokoll (Name, Unterschrift)", "Besprechungsleitung (Name, Unterschrift)", "Besprechung: "]) assert.ok(f.includes(t), t);
+assert.ok(f.includes('<div style="border-bottom:1px solid #999;height:8.5mm"></div>'), "dieselben Schreiblinien wie die Sitzungs-Vorlage");
 console.log("ta-tagesordnung: ok");

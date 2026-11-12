@@ -1,5 +1,13 @@
 # Änderungen
 
+## 2.933.0 – 2026-11-12 – 🗂️ Besprechungsvorlage wie die Sitzungs-Vorlage – mit Schreiblinien (KC-CLUB-TA-TAGESORDNUNG)
+Hansi 12.11.: „Es gibt bereits eine Vorlage mit Tagesordnung und Linien zum handschriftlichen Eintrag – die kannst du dafür nehmen, mit Logo und Kopf und CD.“
+- Die Besprechungsvorlage aus der Terminanfrage hat jetzt denselben Aufbau wie die **Sitzungs-Vorlage aus dem Büro**: Protokollführer, Ort, Anlass, **Anwesend zum Ankreuzen** (plus freie Zeile), Entschuldigt bzw. fehlend, Gäste, **je TOP Schreiblinien** zum Mitschreiben, Beschlüsse / Sonstiges, nächster Termin (Datum, Uhrzeit, Ort), Unterschriften Protokoll und Besprechungsleitung.
+- Logo, Kopf und Fußzeile im Club-Design wie bei allen Ausdrucken. Statt der Tabelle aus 2.932.0.
+- Keine Datenbank-, keine Server-Änderung. Rückweg: App 2.932.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:31 Uhr im 20-Uhr-Termin, Ruhe geprüft: 1 in der App, keine Spiegelung/Sicherung.
+
 ## 2.932.0 – 2026-11-12 – 📋 Terminanfrage als Tagesordnung übernehmen · 🗂️ Besprechungsvorlage (KC-CLUB-TA-TAGESORDNUNG)
 Wunsch Hansi 12.11.: „Es gibt eine Terminanfrage von mir an Klaus. Baue dort ein: als Tagesordnung übernehmen mit einem Häkchen und dann daraus eine Besprechungsvorlage bauen mit den Punkten.“
 - In jeder Terminanfrage (für den, der anfragt, und für alle, die zugesagt oder „vielleicht“ gesagt haben) ein Häkchen **„📋 Als Tagesordnung übernehmen“**.

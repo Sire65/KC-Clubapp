@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.932.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.933.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27540,7 +27540,8 @@ function taKarte(a) {
 // KC-CLUB-TA-TAGESORDNUNG (12.11.2026, Wunsch Hansi „als Tagesordnung übernehmen mit einem Häkchen und daraus eine Besprechungsvorlage bauen mit den Punkten“):
 // In der Terminanfrage ein Häkchen „📋 Als Tagesordnung übernehmen“ – die Notiz wird in Punkte zerlegt (je Zeile bzw. „;“, Aufzählungszeichen weg),
 // jeder Punkt hat ein eigenes Häkchen, eigene Punkte lassen sich ergänzen. „🗂️ Besprechungsvorlage“ druckt im Club-Design: Anlass, Termin, Ort,
-// Teilnehmer zum Abhaken, Tagesordnung mit Platz für Notizen/Ergebnis und „Wer? Bis wann?“, Verschiedenes, nächster Termin.
+// wie die Sitzungs-Vorlage aus dem Büro: Protokollführer, Ort, Anwesend zum Ankreuzen, Entschuldigt, Gäste, je TOP Schreiblinien, Beschlüsse/Sonstiges,
+// nächster Termin, Unterschriften (Hansi 12.11.: „es gibt bereits eine Vorlage mit Tagesordnung und Linien – die nehmen, mit Logo, Kopf und CD“).
 // Nur auf diesem Gerät gemerkt (localStorage) – keine Datenbank-Änderung, nichts geht an andere.
 const TA_TO_KEY = "kc_club_ta_tagesordnung";
 function taToLesen() { try { const m = JSON.parse(lsLesen(TA_TO_KEY) || "{}"); return m && typeof m === "object" ? m : {}; } catch { return {}; } }
@@ -27571,26 +27572,27 @@ function taToDazu(id) { const f = $("taToNeu-" + id), t = (f?.value || "").trim(
 function taToWeg(id, k) { const st = taToLesen()[id] || {}, i = Number(k.slice(1)), extra = [...(st.extra || [])]; extra.splice(i, 1);
   const aus = (st.aus || []).filter((x) => !x.startsWith("e")).concat((st.aus || []).filter((x) => x.startsWith("e")).map((x) => Number(x.slice(1))).filter((j) => j !== i).map((j) => "e" + (j > i ? j - 1 : j)));
   taToMerken(id, { ...st, extra, aus }); taToNeuZeichnen(id); }
-function taBesprechungDruck(id) { // DRUCKARTEN.besprechung – Kopf, Schrift und Fußzeile im Club-Design kommen aus der Druckvorschau
+function taBesprechungDruck(id) { // DRUCKARTEN.besprechung – wie die Sitzungs-Vorlage aus dem Büro (druckSitzung): Schreiblinien zum Mitschreiben; Logo, Kopf und Fußzeile im Club-Design kommen aus der Druckvorschau
   const a = TA.liste.find((x) => x.id === id); if (!a) { melde("Die Terminanfrage ist nicht mehr da."); return null; }
-  const P = taToPunkte(a).filter((p) => p.an), rot = "#741521", rand = "border:1px solid #cdbba5";
-  const th = (t, w) => `<th style="padding:5px 6px;border-bottom:2px solid ${rot};color:${rot};text-align:left;font-size:.85em${w ? ";width:" + w : ""}">${t}</th>`;
-  const tn = [...new Map([[a.vonMir ? ICH?.person_id : a.von?.person_id, { name: a.vonMir ? ICH?.name : a.von?.name, rolle: "lädt ein" }], ...a.empfaenger.map((e) => [e.person_id, { name: e.name, rolle: taStatus(a, e).t }])]).values()].filter((x) => x.name);
-  const top = (nr, t, hoch) => `<tr><td style="padding:6px;${rand};font-weight:700;color:${rot};text-align:center">${nr}</td><td style="padding:6px;${rand};font-weight:600">${esc(t)}</td><td style="padding:6px;${rand};height:${hoch}mm"></td><td style="padding:6px;${rand}"></td></tr>`;
-  const html = `<table style="width:100%;border-collapse:collapse;font-size:10.5pt;margin:0 0 10px"><tbody>
-      <tr><td style="padding:3px 6px;width:30mm;color:#5b544d">Anlass</td><td style="padding:3px 6px"><b>${esc(a.anlass)}</b></td></tr>
-      <tr><td style="padding:3px 6px;color:#5b544d">Termin</td><td style="padding:3px 6px">${esc(wann(a.beginn))}${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}</td></tr>
-      ${a.ort ? `<tr><td style="padding:3px 6px;color:#5b544d">Ort</td><td style="padding:3px 6px">${esc(a.ort)}</td></tr>` : ""}
-      <tr><td style="padding:3px 6px;color:#5b544d">Protokoll</td><td style="padding:3px 6px;border-bottom:1px solid #999">&nbsp;</td></tr></tbody></table>
-    <h2 style="font-size:12pt;color:${rot};margin:10px 0 4px">Teilnehmer</h2>
-    <table style="width:100%;border-collapse:collapse;font-size:10pt"><thead><tr>${th("anwesend", "18mm")}${th("Name")}${th("Rückmeldung", "40mm")}</tr></thead><tbody>
-      ${tn.map((x) => `<tr><td style="padding:4px 6px;${rand};text-align:center">☐</td><td style="padding:4px 6px;${rand}">${esc(x.name)}</td><td style="padding:4px 6px;${rand};color:#5b544d">${esc(x.rolle)}</td></tr>`).join("")}
-      <tr><td style="padding:4px 6px;${rand};text-align:center">☐</td><td style="padding:4px 6px;${rand}"></td><td style="padding:4px 6px;${rand}"></td></tr></tbody></table>
-    <h2 style="font-size:12pt;color:${rot};margin:12px 0 4px">Tagesordnung</h2>
-    <table style="width:100%;border-collapse:collapse;font-size:10.5pt"><thead><tr>${th("TOP", "12mm")}${th("Punkt", "58mm")}${th("Notizen / Ergebnis")}${th("Wer? Bis wann?", "34mm")}</tr></thead><tbody>
-      ${P.map((p, i) => top(i + 1, p.t, P.length > 8 ? 14 : 22)).join("")}${top(P.length + 1, "Verschiedenes", 16)}</tbody></table>
-    <p style="margin:12px 0 0">Nächster Termin: <span style="display:inline-block;min-width:90mm;border-bottom:1px solid #999">&nbsp;</span></p>`;
-  return { titel: `Besprechung: ${a.anlass}`, unter: `${wann(a.beginn)}${a.ort ? " · " + a.ort : ""}`, rechts: "Besprechungsvorlage", html, fuss: `${P.length} ${P.length === 1 ? "Punkt" : "Punkte"} aus der Terminanfrage` };
+  const P = taToPunkte(a).filter((p) => p.an);
+  const linien = (n) => Array.from({ length: n }, () => '<div style="border-bottom:1px solid #999;height:8.5mm"></div>').join("");
+  const box = () => '<span style="display:inline-block;width:4.2mm;height:4.2mm;border:1.4px solid #222;margin-right:2mm;vertical-align:-0.6mm"></span>';
+  const h = (t) => `<h2 style="font-size:4.6mm;margin:6mm 0 2mm;border-bottom:2px solid #741521;padding-bottom:1mm">${t}</h2>`;
+  const strich = (mm) => `<span style="display:inline-block;width:${mm}mm;border-bottom:1px solid #555;height:4mm;vertical-align:-1mm"></span>`;
+  const zeile = (t, inhalt) => `<div style="font-size:3.6mm;margin:0 0 2mm"><b>${t}:</b> ${inhalt}</div>`;
+  const alle = [{ name: a.vonMir ? ICH?.name : a.von?.name, antwort: "ja" }, ...a.empfaenger.map((e) => ({ name: e.name, antwort: e.antwort, notiz: e.notiz }))].filter((x) => x.name);
+  const nein = alle.filter((x) => x.antwort === "nein"), rest = alle.filter((x) => x.antwort !== "nein");
+  const zeilen = P.length > 6 ? 3 : 4;
+  const html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 6mm;margin:0 0 1mm">${zeile("Protokollführer", strich(48))}${zeile("Ort", a.ort ? esc(a.ort) : strich(55))}</div>
+    ${zeile("Anlass", `<b>${esc(a.anlass)}</b>`)}
+    ${h("Anwesend")}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5mm 4mm;font-size:3.6mm">${rest.map((x) => `<div>${box()}${esc(x.name)}</div>`).join("")}<div>${box()}${strich(32)}</div></div>
+    <p style="margin:3mm 0 0;font-size:3.6mm"><b>Entschuldigt bzw. fehlend:</b> ${nein.length ? nein.map((x) => esc(x.name) + (x.notiz ? ` (${esc(x.notiz)})` : "")).join(", ") + " · " : ""}${strich(nein.length ? 50 : 120)}</p>
+    <p style="margin:2mm 0 0;font-size:3.6mm"><b>Gäste:</b> ${strich(150)}</p>
+    ${h("Tagesordnung")}${P.map((t, i) => `<div style="break-inside:avoid;margin:0 0 3mm"><div style="font-size:4mm;font-weight:800;margin-top:3mm">TOP ${i + 1}: ${esc(t.t)}</div>${linien(zeilen)}</div>`).join("")}
+    <div style="break-inside:avoid">${h("Beschlüsse / Sonstiges")}${linien(Math.max(3, zeilen))}
+    <p style="margin:3mm 0 0;font-size:3.8mm"><b>Nächster Termin:</b> Datum ${strich(30)} Uhrzeit ${strich(18)} Ort ${strich(55)}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:9mm;font-size:3.3mm"><div style="border-top:1px solid #222;padding-top:1mm">Protokoll (Name, Unterschrift)</div><div style="border-top:1px solid #222;padding-top:1mm">Besprechungsleitung (Name, Unterschrift)</div></div></div>`;
+  return { titel: `Besprechung: ${a.anlass}`, unter: `${wann(a.beginn, true)}${a.ort ? " · " + a.ort : ""}`, html, fuss: "Besprechungsvorlage aus der Terminanfrage" };
 }
 // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50, Wunsch Hansi): Stand je Empfänger – angefragt → gelesen → bestätigt / vielleicht / abgelehnt /
 // Gegenvorschlag; ohne Antwort nach der Antwortfrist bzw. nach Beginn: abgelaufen. Eine Stelle für Liste, Kalender und Überblick.

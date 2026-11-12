@@ -35,8 +35,8 @@ l = await lage(); ok(l.punkte.length === 5 && l.punkte[3].startsWith("☐") && l
 if (B) { const r = await seite.evaluate(() => { const b = $("ta-A1").getBoundingClientRect(); return { x: 0, y: Math.max(0, b.y + scrollY - 8), width: innerWidth, height: b.height + 16 }; }); await seite.screenshot({ path: B + "/ta-karte.png", clip: r, fullPage: true }); }
 await seite.evaluate(() => taLaden()); await seite.waitForTimeout(400);
 l = await lage(); ok(l.an && l.punkte.length === 5 && l.punkte[3].startsWith("☐"), "nach Neuladen gemerkt");
-const d = await seite.evaluate(() => { const r = taBesprechungDruck("A1"); return { titel: r.titel, tops: (r.html.match(/<tr><td style="padding:6px;[^"]*font-weight:700/g) || []).length, html: r.html }; });
-ok(d.titel === "Besprechung: Vorbereitung Weihnachtsmarkt" && d.tops === 5 && /Klaus Probe/.test(d.html) && /Hans Test/.test(d.html) && /Verschiedenes/.test(d.html) && !/Deko für die Hütte/.test(d.html) && /Termine 2027/.test(d.html), "Vorlage: 4 Punkte + Verschiedenes, Teilnehmer, abgewählter Punkt fehlt");
+const d = await seite.evaluate(() => { const r = taBesprechungDruck("A1"); return { titel: r.titel, tops: (r.html.match(/>TOP \d+: /g) || []).length, linien: (r.html.match(/height:8\.5mm/g) || []).length, html: r.html }; });
+ok(d.titel === "Besprechung: Vorbereitung Weihnachtsmarkt" && d.tops === 4 && d.linien >= 16 && /Klaus Probe/.test(d.html) && /Hans Test/.test(d.html) && /Beschlüsse \/ Sonstiges/.test(d.html) && !/Deko für die Hütte/.test(d.html) && /Termine 2027/.test(d.html), `Vorlage: ${d.tops} TOPs mit Schreiblinien (${d.linien}), Anwesende, abgewählter Punkt fehlt`);
 await seite.click('#ta-A1 [onclick^="druckStarten"]'); await seite.waitForTimeout(2500);
 ok(await seite.evaluate(() => !$("druckVorschau").classList.contains("versteckt") && /Tagesordnung/.test($("druckVorschauRahmen").contentDocument?.body?.textContent || "")), "Knopf öffnet die Druckvorschau");
 if (B) { await seite.evaluate(async () => { druckVorschauZu(); await druckSeiteBauen(); }); await seite.waitForTimeout(800); await seite.emulateMedia({ colorScheme: "light" });
