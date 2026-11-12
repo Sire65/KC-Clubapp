@@ -873,7 +873,7 @@ function magHeft(nr) {
     <details style="margin-top:10px"><summary><b>So wird es ein Heft</b></summary><ul style="margin:6px 0 0;padding-left:1.2em;line-height:1.5">
       <li><b>Copyshop:</b> „Heft A5“ mitnehmen und „A5-Broschüre mit Rückendrahtheftung“ sagen.</li>
       <li><b>Selbst drucken:</b> „Druckbögen A4 quer“ <b>beidseitig</b> drucken, Wenden <b>an der kurzen Kante</b>. Blätter in der Reihenfolge lassen, alle zusammen in der Mitte falten, zwei Klammern in den Falz (Heftgerät mit langem Arm oder Klammern von außen durchstecken und innen umbiegen).</li>
-      <li><b>Am PC:</b> nach dem Erstellen „🖨️ Jetzt drucken“ – oder die PDF im neuen Tab öffnen bzw. speichern und von dort drucken. <b>Am Handy:</b> im Teilen-Menü „Drucken“ wählen oder die Datei an den PC schicken.</li>
+      <li><b>Am PC:</b> nach dem Erstellen „🖨️ PDF anzeigen und drucken“ (dort oben rechts das Drucker-Symbol) – oder die PDF im neuen Tab öffnen bzw. speichern und von dort drucken. <b>Am Handy:</b> im Teilen-Menü „Drucken“ wählen oder die Datei an den PC schicken.</li>
       <li>Seitenzahl ist immer durch 4 teilbar – freie Seiten werden „Notizen & eigene Rezepte“.</li></ul></details>
     <div class="knoepfe"><button class="knopf" onclick="fensterZu($('magHeftBlatt'))">Schließen</button></div>`);
 }
@@ -1019,21 +1019,24 @@ function magHeftPcAktionen(nr, art, datei, nSeiten, nBoegen) {
   const bo = art === "boegen", kn = $("magHeftKnoepfe"); if (!kn) return magHeftSpeichern(datei);
   kn.innerHTML = `<p class="hinweis" style="margin:0 0 6px">✅ ${bo ? `Druckbögen fertig: ${nBoegen} Druckseiten A4 quer = ${nBoegen / 2} Blätter beidseitig (${nSeiten} Heftseiten)` : `Heft A5 fertig: ${nSeiten} Seiten`}.
       Im Druckfenster: <b>Seiten: Alle</b>${bo ? ", <b>beidseitig</b>, Wenden an der <b>kurzen Kante</b>, Format <b>A4 quer</b>, Größe <b>100 % / tatsächliche Größe</b>" : ""}.</p>
-    <button class="knopf haupt" style="min-height:52px" onclick="magHeftDrucken()">🖨️ Jetzt drucken</button>
+    <button class="knopf haupt" style="min-height:52px" onclick="magHeftDrucken()">🖨️ PDF anzeigen und drucken</button>
     <a class="knopf" style="min-height:48px;display:flex;align-items:center;justify-content:center;text-decoration:none" href="${MAGHP.url}" target="_blank" rel="noopener">🔎 PDF in neuem Tab öffnen</a>
     <button class="knopf" style="min-height:48px" onclick="magHeftSpeichern(MAGHP.datei)">💾 PDF speichern (Downloads)</button>
     <button class="knopf" style="min-height:44px" onclick="magHeftBauen(${nr})">↩︎ Zurück zur Auswahl</button>`;
 }
-function magHeftDrucken() { // die PDF in einem unsichtbaren Rahmen laden und das Druckfenster des Browsers öffnen – druckt alle Seiten der PDF
+function magHeftDrucken() { // KC-CLUB-HEFT-PC-DRUCK-3 (Fund Hansi 12.11.2026: „Fehler beim Drucken“): Chrome/Edge können eine PDF aus einem unsichtbaren Rahmen
+  // nicht drucken. Jetzt zeigt die App die PDF groß im eigenen Fenster – mit der Werkzeugleiste des Browsers (🖨️ Drucken oben rechts, Seitenzahl „1 / 20“).
   if (!MAGHP.url) return;
-  document.getElementById("magHeftDruckRahmen")?.remove();
-  const f = document.createElement("iframe"); f.id = "magHeftDruckRahmen"; f.setAttribute("aria-hidden", "true");
-  f.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none";
-  let fertig = false;
-  const ersatz = setTimeout(() => { if (!fertig) { melde("🔎 Das Druckfenster kam nicht – die PDF öffnet sich im neuen Tab, dort Strg+P"); window.open(MAGHP.url, "_blank", "noopener"); } }, 8000);
-  f.onload = () => { setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); fertig = true; clearTimeout(ersatz); } catch { /* Ersatz greift */ } }, 600); };
-  f.src = MAGHP.url; document.body.appendChild(f);
-  melde("🖨️ Das Druckfenster öffnet sich – bei „Seiten“ „Alle“ lassen");
+  document.getElementById("magHeftAnsicht")?.remove();
+  const d = document.createElement("div"); d.id = "magHeftAnsicht";
+  d.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(20,10,12,.88);display:flex;flex-direction:column;padding:10px;gap:8px";
+  d.innerHTML = `<div style="display:flex;gap:8px;align-items:center;color:#fff;font:15px system-ui,sans-serif;flex-wrap:wrap">
+      <b style="flex:1;min-width:220px">🖨️ Oben rechts in der PDF auf das Drucker-Symbol – oder Strg+P. Seiten: Alle${/Druckboegen/.test(MAGHP.datei?.name || "") ? ", beidseitig, Wenden an der kurzen Kante, A4 quer, 100 %" : ""}.</b>
+      <a class="knopf klein" href="${MAGHP.url}" target="_blank" rel="noopener" style="text-decoration:none">🔎 Im neuen Tab</a>
+      <button class="knopf klein" onclick="magHeftSpeichern(MAGHP.datei)">💾 Speichern</button>
+      <button class="knopf klein haupt" onclick="document.getElementById('magHeftAnsicht')?.remove()">✕ Schließen</button></div>
+    <iframe title="Heft als PDF" src="${MAGHP.url}" style="flex:1;width:100%;border:0;border-radius:8px;background:#fff"></iframe>`;
+  document.body.appendChild(d);
 }
 // PC = kein Handy/Tablet: kein „Mobile/Android/iPhone/iPad“ und kein iPad im Desktop-Modus (Macintosh mit Touch)
 const magAmPC = () => !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "") && !(/Macintosh/.test(navigator.userAgent || "") && (navigator.maxTouchPoints || 0) > 1);

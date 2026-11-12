@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.927.0 – 2026-11-12 – 🖨️ Heft am PC: PDF sichtbar anzeigen und drucken (KC-CLUB-HEFT-PC-DRUCK-3)
+Fund Hansi 12.11. (Bildschirmfoto): „Fehler beim Drucken – Beim Drucken ist ein Fehler aufgetreten“ nach „🖨️ Jetzt drucken“.
+- Ursache: Chrome/Edge können eine PDF aus einem unsichtbaren Rahmen nicht drucken (2.925.0).
+- Jetzt heißt der Knopf **🖨️ PDF anzeigen und drucken**: Die PDF erscheint groß über der App mit der Werkzeugleiste des Browsers (Drucker-Symbol oben rechts, „1 / 20“), dazu „Im neuen Tab“, „Speichern“ und „Schließen“. Kein verstecktes Drucken mehr.
+- Test: `tests/heft-pc-druck.test.mjs`. Rückweg: App 2.926.0 („PDF in neuem Tab öffnen“ funktioniert dort). Nur Programmteil Magazin.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+
 ## 2.926.0 – 2026-11-12 – 🏷️ Preisetiketten im Büro-Drucker · Schild quer auf jedem Gerät
 - KC-CLUB-PREISETIKETTEN: Wunsch Hansi („Preisetiketten in die Club-App – Formate 8x8, 7x7, 6x6, 5x5, mit oder ohne Foto, Allergene, Preis usw., völlig flexibel, auch nach Warengruppen; Anzahl und Vorschau“, „die Club-App muss auch die aktuellen Preise übernehmen“; Wahl: PC-Manager veröffentlicht + im Dialog änderbar, nur Clubleitung). **Büro → 🖨️ Drucker → 🏷️ Preisetiketten**: Größe wählen, Bausteine an/aus (Name, Foto, Preis, „inkl. Pfand“, QR-Code, Art.-Nr., Allergene, Zusatzstoffe, „Enthält Alkohol“, farbiger Rahmen), Warengruppe (Getränke, Speisen …), Anzahl je Artikel, Live-Vorschau, 🎯 Probe mit 5-cm-Maß, Druck als A4-Bogen mit Schnittmarken (8×8: 6, 7×7: 8, 6×6: 12, 5×5: 15 je Blatt). Aufbau wie die erprobten Kesselschild-Etiketten: Foto links, Preis inkl. Pfand ohne €-Zeichen rechts, darunter der QR-Code mit der Artikelnummer. Preise: zuerst der vom PC-Manager veröffentlichte Stand (neue Tabelle `kc_etikett_artikel_stand`, Migration `20261112_kc_etikett_artikel_stand.sql`, Server-Aktion `etiketten_artikel`), sonst der Grundstand der Kasse (`/Kasse/etiketten/artikel.json`) mit Hinweis; jeder Preis für den Druck von Hand änderbar. Gezeichnet in 300 dpi als Bild (kein Betrachter kann Fotos weglassen). Fehlende Angaben rot „⚠ nicht erfasst“. Nachladbarer Programmteil `teile/etiketten.js`.
 - KC-CLUB-SCHILD-QUER: Fund Hansi („Drucken von Preisliste übernimmt nicht Querformat“). Handy-Druckdienste und iPhone ignorieren die Querformat-Anweisung. Ein Querformat-Schild wird beim Drucken jetzt um 90° gedreht auf ein Hochformat-Blatt gelegt – das Papier sieht aus wie quer gedruckt, auf jedem Gerät; die Vorschau bleibt aufrecht.
