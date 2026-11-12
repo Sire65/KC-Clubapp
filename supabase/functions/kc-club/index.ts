@@ -194,7 +194,7 @@ const schwerText = (l: { was: string; rest: number }) => `Zurzeit hat die Datenb
 const dbWeg = () => { const l = schwerLage(); return json({ error: l ? schwerText(l) : "Die Datenbank antwortet gerade nicht – bitte gleich noch einmal versuchen.", db: "weg", ...(l ? { schwer: l } : {}) }, 503); };
 const db = createClient(SUPA, SERVICE, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: dbFetch } });
 
-const SERVER_VERSION = "2.921.0";
+const SERVER_VERSION = "2.934.0";
 const START_VORAB = new Set(["init", "online", "unterhaltungen", "unterhaltung"]); // 2.839.0 KC-CLUB-START-VORAB: häufige Aktionen – Vorab-Lesen parallel zur Anmeldung
 // ---------- 2.842.0 KC-CLUB-ANBIETER-NEUES (Wunschliste #78, Wunsch Hansi 03.11.2026 „Einen Knopf im Adminbereich, der bei allen unseren Anbietern wie
 // Supabase, Neon, Cloudflare, B2, GitHub usw. nach Updates schaut … neue Version, Changelog, Ankündigung von Wartungsarbeiten“) ----------
@@ -8974,7 +8974,7 @@ async function terminanfragenListe(ich: Ich, zeitraum?: { von: string; bis: stri
     const e = (zeilen ?? []).filter((z: any) => z.anfrage_id === a.id);
     const mein = e.find((z: any) => z.person_id === ich.person_id);
     return {
-      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
+      id: a.id, anlass: a.anlass, beginn: a.beginn, ende: a.ende, ort: a.ort, notiz: a.notiz, frist: a.frist, status: a.status, spiel: !!a.spiel_id, erstelltAm: a.erstellt_am, geaendertAm: a.geaendert_am, gegenvorschlag: a.gegenvorschlag !== false, vorbehalt: a.vorbehalt ?? null, anlagen: anl.get(a.id) ?? [],
       vonMir: a.erstellt_von === ich.person_id, von: { person_id: a.erstellt_von, name: name(a.erstellt_von), vorname: vorname(leute.get(a.erstellt_von)) || name(a.erstellt_von) },
       meine: mein?.antwort ?? null, meineNotiz: mein?.notiz ?? null, meinGelesen: mein?.gelesen_am ?? null, // KC-CLUB-TERMINANFRAGE-STATUS (2.23.50)
       meinVorschlag: mein?.vorschlag_beginn ? { beginn: mein.vorschlag_beginn, ende: mein.vorschlag_ende } : null, erinnerung: erin.get(a.id) ?? null, erinnerungStandard: a.erinnerung_min || 0,
@@ -10885,6 +10885,41 @@ async function aktionAusfuehren(a: string, p: any, ich: Ich, req: Request, t0Anf
         if (a.erstellt_von !== ich.person_id) throw new Fehler("Absagen kann nur, wer angefragt hat.", 403);
         if (a.status === "abgesagt") return json({ ok: true });
         return json({ ok: true, versand: await anfrageAbsagen(ich, a, txt(p.grund, 300), true) });
+      }
+
+      // KC-CLUB-TA-AENDERN (12.11.2026, Wunsch Hansi „ändern der Anfrage, damit man selber noch ändern und was dazuschreiben kann – dann den anderen
+      // informieren, dass sich noch weitere Punkte ergeben haben“): wer angefragt hat, ändert Anlass, Ort und Notiz (Zeit bleibt – die Antworten gelten dafür).
+      // Auf Wunsch Bescheid an alle Angefragten (ohne die, die abgelehnt haben) mit den neuen Zeilen der Notiz und einem kurzen eigenen Hinweis.
+      case "terminanfrage_aendern": {
+        const { data: a } = await db.from("kc_club_terminanfragen").select("*").eq("id", String(p.id || "")).maybeSingle();
+        if (!a) throw new Fehler("Anfrage nicht gefunden.", 404);
+        if (a.erstellt_von !== ich.person_id) throw new Fehler("Ändern kann nur, wer angefragt hat.", 403);
+        if (a.status === "abgesagt") throw new Fehler("Die Anfrage ist abgesagt.", 409);
+        if (a.spiel_id) throw new Fehler("Termine zu einer Partie lassen sich hier nicht ändern.", 409);
+        if (new Date(a.ende || a.beginn).getTime() < Date.now() - 3600000) throw new Fehler("Der Termin ist schon vorbei.", 409);
+        const anlass = txt(p.anlass, 120); if (!anlass) throw new Fehler("Bitte einen Anlass angeben.");
+        const ort = txt(p.ort, 200) || null, notiz = txt(p.notiz, 1000) || null, hinweis = txt(p.hinweis, 300);
+        if (anlass === a.anlass && ort === (a.ort || null) && notiz === (a.notiz || null)) return json({ ok: true, unveraendert: true });
+        const stand = new Date().toISOString();
+        const { error } = await db.from("kc_club_terminanfragen").update({ anlass, ort, notiz, geaendert_am: stand }).eq("id", a.id).eq("erstellt_von", ich.person_id);
+        if (error) throw new Fehler("Speichern fehlgeschlagen.", 500);
+        const zeilen = (t: string | null) => String(t || "").split(/\r?\n/).map((z) => z.trim()).filter(Boolean);
+        const alt = new Set(zeilen(a.notiz)), neu = zeilen(notiz).filter((z) => !alt.has(z));
+        let versand: unknown = null, empfaenger = 0;
+        if (p.informieren !== false) {
+          const { data: em } = await db.from("kc_club_terminanfrage_empfaenger").select("person_id,antwort").eq("anfrage_id", a.id);
+          const ziel = (em ?? []).filter((e: any) => e.antwort !== "nein").map((e: any) => String(e.person_id));
+          empfaenger = ziel.length;
+          if (ziel.length) versand = await senden("club_treffen", ziel, {
+            titel: `✏️ ${ich.vorname} hat die Terminanfrage ergänzt`,
+            kurz: `${anlass} – ${wann(a.beginn)}${neu.length ? ` · neu: ${neu.slice(0, 3).join(" · ").slice(0, 120)}` : ""}`,
+            betreff: `Köcheclub Werne – Terminanfrage ergänzt: ${anlass}`,
+            text: `Hallo,\n\n${ich.name} hat die Terminanfrage ergänzt – es haben sich noch weitere Punkte ergeben:\n\n📌 ${anlass}\n📅 ${anfrageWann(a)}${ort ? "\n📍 " + ort : ""}${neu.length ? "\n\nNeu dazugekommen:\n" + neu.map((z) => "• " + z.replace(/^[-–•*]\s*/, "")).join("\n") : ""}${hinweis ? "\n\n💬 " + hinweis : ""}\n\nAlles ansehen in der Köcheclub-App: ${APP_URL}#termine\n\nViele Grüße\nKöcheclub Werne`,
+            url: APP_URL + "#termine",
+          }, `club-terminanfrage-geaendert:${a.id}:${stand}`);
+        }
+        await protokoll(ich.person_id, "terminanfrage_geaendert", { anfrage: a.id, neue_zeilen: neu.length, informiert: empfaenger, versand });
+        return json({ ok: true, neu: neu.length, informiert: empfaenger, versand });
       }
 
       // ----- KC-CLUB-STANDORT (0.92.0) -----

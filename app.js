@@ -1,5 +1,5 @@
 // Köcheclub-App – Programm (KC-CLUB-SCHNELLSTART-DATEI, 2.24.8): wird von index.html geladen, nie allein benutzen.
-const APP_VERSION = "2.933.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
+const APP_VERSION = "2.934.0"; // gleich halten mit sw.js, version.json und app.js?v= in index.html (siehe CHANGELOG.md)
 // KC-CLUB-FREIGABESTUFE (AGENTS Regel 9: DEV → RC → FINAL): gleich halten mit "stufe" in version.json. RC = Testwoche vor der
 // fertigen Version; nur der Admin sieht die Stufe neben der Versionsnummer (Mitglieder sollen nicht verunsichert werden).
 const APP_STUFE = "RC";
@@ -27524,7 +27524,7 @@ function taKarte(a) {
     <div>📅 <b>${esc(wann(a.beginn))}</b>${a.ende ? ` – ${esc(fZeit.format(new Date(a.ende)))} Uhr` : ""}</div>
     ${a.ort ? `<div>📍 ${esc(a.ort)}</div>` : ""}
     <div class="hinweis" style="font-size:.85rem">${a.vonMir ? `<b>Anfrage an ${esc(taAnWen(a))}</b>` : "von " + esc(a.von.name) + " · an " + (a.empfaenger.length === 1 ? "dich" : a.empfaenger.length + " Mitglieder")}</div>
-    ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}${oaAnzeige(a.anlagen)}
+    ${a.notiz ? `<p class="hinweis" style="white-space:pre-wrap;margin:6px 0 0">📝 ${esc(a.notiz)}</p>` : ""}${a.geaendertAm && a.erstelltAm && new Date(a.geaendertAm) - new Date(a.erstelltAm) > 60000 && !ab ? `<div class="hinweis" style="font-size:.8rem">✏️ ergänzt am ${esc(wann(a.geaendertAm))}</div>` : ""}${oaAnzeige(a.anlagen)}
     ${a.vonMir && !ab && !a.spiel && a.gegenvorschlag === false ? `<div class="hinweis" style="font-size:.82rem">🔒 ohne Gegenvorschläge</div>` : ""}
     ${a.vorbehalt && !ab ? `<p class="ta-vorbehalt">🤔 <b>Unter Vorbehalt</b> (${esc(a.vonMir ? "deiner" : a.von.vorname)}): „${esc(a.vorbehalt)}“</p>` : ""}
     ${!a.vonMir && !ab ? `<div class="ta-antw">${k("ja")}${k("vielleicht")}${k("nein")}</div>
@@ -27535,7 +27535,7 @@ function taKarte(a) {
     ${!ab && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? erinZeileHtml(a.erinnerung, `erinAnfrage('${a.id}')`, a.erinnerungStandard) : ""}
     ${taKalHtml(a, ab)}
     ${!ab && !a.spiel && (a.vonMir || a.meine === "ja" || a.meine === "vielleicht") ? taToSchalterHtml(a) : ""}
-    ${a.vonMir && !ab ? `<div class="knoepfe"><button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
+    ${a.vonMir && !ab ? `<div class="knoepfe">${a.spiel ? "" : `<button class="knopf klein" onclick="taAendern('${a.id}')">✏️ Ändern / ergänzen</button>`}<button class="knopf klein" onclick="taAbsagen('${a.id}')">🚫 Absagen</button></div>` : ""}</div>`;
 }
 // KC-CLUB-TA-TAGESORDNUNG (12.11.2026, Wunsch Hansi „als Tagesordnung übernehmen mit einem Häkchen und daraus eine Besprechungsvorlage bauen mit den Punkten“):
 // In der Terminanfrage ein Häkchen „📋 Als Tagesordnung übernehmen“ – die Notiz wird in Punkte zerlegt (je Zeile bzw. „;“, Aufzählungszeichen weg),
@@ -27627,6 +27627,28 @@ function taGegenvorschlag(id) {
     if (ende && ende < beginn) return melde("⏰ Das Ende liegt vor dem Beginn.");
     try { await api("terminanfrage_gegenvorschlag", { id, beginn: beginn.toISOString(), ende: ende ? ende.toISOString() : null, notiz: $("taGvNotiz").value.trim() });
       f.remove(); melde(`🔄 Vorschlag ist an ${a.von.vorname} geschickt`); TA.markiert = id; await taLaden(); } catch (e) { meldeFehler(e); }
+  };
+}
+// KC-CLUB-TA-AENDERN (12.11.2026, Wunsch Hansi): wer angefragt hat, ändert Anlass, Ort und Notiz (z. B. weitere Tagesordnungspunkte) und gibt
+// auf Wunsch allen Angefragten Bescheid – mit den neuen Zeilen und einem kurzen Hinweis. Die Zeit bleibt (dafür gelten die Antworten).
+function taAendern(id) {
+  const a = TA.liste.find((x) => x.id === id); if (!a || !a.vonMir) return;
+  const an = a.empfaenger.filter((e) => e.antwort !== "nein").map((e) => e.name.split(" ")[0]);
+  const f = blattAuf("taAeBlatt", `<h3 style="margin:0">✏️ Anfrage ändern / ergänzen</h3>
+    <p class="hinweis" style="margin:0">📅 ${esc(wann(a.beginn))} – die Zeit bleibt. Für eine andere Zeit bitte absagen und neu anfragen.</p>
+    <label>Anlass<input id="taAeAnlass" maxlength="120" value="${esc(a.anlass)}"></label>
+    <label>Ort <small class="hinweis">(freiwillig)</small><input id="taAeOrt" maxlength="200" value="${esc(a.ort || "")}"></label>
+    <label>Notiz / Punkte <small class="hinweis">(ein Punkt je Zeile)</small><textarea id="taAeNotiz" rows="7" maxlength="1000" data-diktat>${esc(a.notiz || "")}</textarea></label>
+    ${an.length ? `<label class="ta-ae-info"><input type="checkbox" id="taAeInfo" checked> 📨 ${esc(an.length === 1 ? an[0] : an.length + " Angefragten")} Bescheid geben, dass sich weitere Punkte ergeben haben</label>
+    <label id="taAeHinweisFeld">Kurzer Hinweis dazu <small class="hinweis">(freiwillig)</small><input id="taAeHinweis" maxlength="300" data-diktat placeholder="z. B. Es sind noch zwei Punkte dazugekommen."></label>` : ""}
+    <button class="knopf haupt" id="taAeOk">💾 Speichern</button><button class="knopf" onclick="$('taAeBlatt').remove()">Abbrechen</button>`);
+  const info = f.querySelector("#taAeInfo"); if (info) info.onchange = () => $("taAeHinweisFeld")?.classList.toggle("versteckt", !info.checked);
+  setTimeout(() => { const t = $("taAeNotiz"); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 60);
+  f.querySelector("#taAeOk").onclick = async () => {
+    const anlass = $("taAeAnlass").value.trim(); if (!anlass) return melde("📌 Bitte einen Anlass angeben.");
+    try { const r = await api("terminanfrage_aendern", { id, anlass, ort: $("taAeOrt").value.trim(), notiz: $("taAeNotiz").value.trim(), informieren: !!info?.checked, hinweis: $("taAeHinweis")?.value.trim() || "" }, { warten: true });
+      f.remove(); melde(r.unveraendert ? "Nichts geändert." : r.informiert ? `✏️ Gespeichert – ${r.informiert === 1 ? an[0] || "der Angefragte" : r.informiert + " Angefragte"} ${r.informiert === 1 ? "bekommt" : "bekommen"} Bescheid` : "✏️ Gespeichert");
+      TA.markiert = id; await taLaden(); } catch (e) { meldeFehler(e); }
   };
 }
 // KC-CLUB-ANFRAGE-VORBEHALT (2.23.57, Wunsch Hansi): Gegenvorschlag annehmen, unter Vorbehalt annehmen oder ablehnen – mit kurzem Text
@@ -34621,7 +34643,7 @@ const FENSTER_NAMEN = {
   smHinweisBlatt: "🎓 Du bist zur Schulung eingeladen", smVBlatt: "💬 Kein Termin passt", snBlatt: "📣 Startnachricht", sosInfo: "🆘 Meine SOS-Angaben", spAn: "💬 An wen?",
   spEinlBlatt: "🎲 Spiel-Einladung", spHerausBlatt: "🎲 Herausfordern", spLiveBlatt: "🎲 Spiel-Herausforderung", spTerminBlatt: "📅 Termin für die Partie", sperreBlatt: "🔒 Personen sperren",
   sprForm: "💬 Eigener Spruch", sprungBlatt: "🔘 Knopf in die Nachricht", spurFrageBlatt: "🟢 Frage: Wege ansehen?", statusBlatt: "🙂 Mein Status", studioBlatt: "🎬 Studio",
-  svBlatt: "⚙️ Sitzungs-Vorgaben", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
+  svBlatt: "⚙️ Sitzungs-Vorgaben", taAeBlatt: "✏️ Terminanfrage ändern", taGvBlatt: "🔄 Andere Zeit vorschlagen", taHinweisBlatt: "📨 Hinweis: Terminanfragen", taVkBlatt: "🔄 Gegenvorschlag", tdtBlatt: "💡 Tipp des Tages",
   teilenBlatt: "📥 Mit Köcheclub geteilt", themaFrage: "✅ Zusage: Thema/Mitbringen", mtBlatt: "💡 Ein Tipp für dich", twBlatt: "🧑‍🍳 Frag Twinkey", twOffenBlatt: "📥 Fragen an Twinkey",
   uaAdminBlatt: "🙋 Unterstützungs-Anfragen", ustBlatt: "🤝 Wie viel Unterstützung möchtest du?", verbindungBlatt: "📡 Verbindung", verlassenBlatt: "👋 Hinweis beim Verlassen", verpasstBlatt: "👋 Verpasstes Anklopfen",
   versandBlatt: "📤 Wie verschicken?", vfAuswahlBlatt: "👥 Auswahl: an wen", vfVorlageBlatt: "📄 Vorlage übernehmen", vorschlagBearb: "✏️ Vorschlag bearbeiten", vorschlagInfo: "💡 Vorschlag ansehen",

@@ -1,5 +1,15 @@
 # Änderungen
 
+## 2.934.0 – 2026-11-12 – ✏️ Terminanfrage ändern / ergänzen und Bescheid geben (KC-CLUB-TA-AENDERN) · Server 2.934.0
+Wunsch Hansi 12.11.: „Baue noch ein Ändern der Anfrage, damit man selber noch ändern und was dazuschreiben kann. Dann den anderen informieren, dass sich noch weitere Punkte ergeben haben.“
+- Bei der eigenen Terminanfrage neuer Knopf **„✏️ Ändern / ergänzen“**: Anlass, Ort und Notiz/Punkte (ein Punkt je Zeile) ändern. Die Zeit bleibt – dafür gelten die Antworten (andere Zeit: absagen und neu anfragen).
+- Häkchen **„📨 … Bescheid geben, dass sich weitere Punkte ergeben haben“** (vorbelegt) mit kurzem eigenem Hinweis: die Angefragten (ohne die, die abgelehnt haben) bekommen eine Nachricht mit den **neu dazugekommenen Zeilen**.
+- In der Anfrage steht danach „✏️ ergänzt am …“. Neue Punkte erscheinen sofort unter „📋 Als Tagesordnung übernehmen“ und in der Besprechungsvorlage.
+- Server: neue Aktion `terminanfrage_aendern` (nur wer angefragt hat, nicht abgesagt, nicht vorbei, nicht bei Partien); Protokoll ohne Inhalte. Keine Datenbank-Änderung (Spalte `geaendert_am` gab es schon).
+- Test `tests/ta-aendern.test.mjs`, Browser `tools/hilfe/ta-tagesordnung-browser.mjs` erweitert (nur Testdaten). Rückweg: App 2.933.0, Server 2.921.0.
+- Update-Hinweis für Mitglieder: nur „Kleine Systemanpassung“.
+- Eingespielt 12.11. 20:40 Uhr auf Wunsch Hansi („sofort einspielen“), Ruhe geprüft: 0 in der App, keine Spiegelung/Sicherung.
+
 ## 2.933.0 – 2026-11-12 – 🗂️ Besprechungsvorlage wie die Sitzungs-Vorlage – mit Schreiblinien (KC-CLUB-TA-TAGESORDNUNG)
 Hansi 12.11.: „Es gibt bereits eine Vorlage mit Tagesordnung und Linien zum handschriftlichen Eintrag – die kannst du dafür nehmen, mit Logo und Kopf und CD.“
 - Die Besprechungsvorlage aus der Terminanfrage hat jetzt denselben Aufbau wie die **Sitzungs-Vorlage aus dem Büro**: Protokollführer, Ort, Anlass, **Anwesend zum Ankreuzen** (plus freie Zeile), Entschuldigt bzw. fehlend, Gäste, **je TOP Schreiblinien** zum Mitschreiben, Beschlüsse / Sonstiges, nächster Termin (Datum, Uhrzeit, Ort), Unterschriften Protokoll und Besprechungsleitung.

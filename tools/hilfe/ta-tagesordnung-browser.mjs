@@ -21,7 +21,8 @@ const ANF = [{ id: "A1", vonMir: true, anlass: "Vorbereitung Weihnachtsmarkt", b
   von: { person_id: "P1", name: "Hans Test", vorname: "Hans" }, empfaenger: [{ person_id: "P2", name: "Klaus Probe", antwort: "ja" }] }];
 await seite.evaluate((ANF) => { ICH = { ...(ICH || {}), person_id: "P1", name: "Hans Test", vorname: "Hans" }; $("gesperrt").classList.add("versteckt"); $("app").classList.remove("versteckt");
   try { localStorage.removeItem("kc_club_ta_tagesordnung"); } catch {} document.documentElement.style.colorScheme = "light";
-  window.__api = []; api = async (a, p) => { __api.push(a); return a === "terminanfragen_liste" ? { anfragen: JSON.parse(JSON.stringify(ANF)) } : a === "unterhaltungen" ? { unterhaltungen: [] } : {}; };
+  window.__api = []; window.__aendern = null; api = async (a, p) => { __api.push(a); if (a === "terminanfrage_aendern") { __aendern = p; ANF[0].notiz = p.notiz; return { ok: true, neu: 2, informiert: 1 }; }
+    return a === "terminanfragen_liste" ? { anfragen: JSON.parse(JSON.stringify(ANF)) } : a === "unterhaltungen" ? { unterhaltungen: [] } : {}; };
   zeige("termine"); }, ANF);
 await seite.waitForTimeout(1200); await seite.evaluate(() => taLaden()); await seite.waitForTimeout(500);
 await seite.evaluate(() => document.querySelectorAll(".meldung, .blatt:not(.versteckt)").forEach((e) => e.remove()));
@@ -41,7 +42,20 @@ await seite.click('#ta-A1 [onclick^="druckStarten"]'); await seite.waitForTimeou
 ok(await seite.evaluate(() => !$("druckVorschau").classList.contains("versteckt") && /Tagesordnung/.test($("druckVorschauRahmen").contentDocument?.body?.textContent || "")), "Knopf öffnet die Druckvorschau");
 if (B) { await seite.evaluate(async () => { druckVorschauZu(); await druckSeiteBauen(); }); await seite.waitForTimeout(800); await seite.emulateMedia({ colorScheme: "light" });
   await seite.pdf({ path: B + "/Beispiel-Besprechungsvorlage.pdf", format: "A4", printBackground: true, preferCSSPageSize: true }); }
-const fremd = (await seite.evaluate(() => __api)).filter((a) => !/^(terminanfragen_liste|terminanfrage_gelesen|unterhaltungen|spur_melden|start_melden|init|countdowns|treffen|treffen_liste|privattermine|todo_liste|terminfindung_liste|terminumfragen|terminumfragen_liste|privattermine_liste|einstellung_setzen)$/.test(a));
+// KC-CLUB-TA-AENDERN: Anfrage ändern/ergänzen, Klaus Bescheid geben
+await seite.evaluate(() => druckVorschauZu?.());
+await seite.evaluate(() => document.querySelectorAll(".meldung").forEach((e) => e.remove()));
+await seite.click('#ta-A1 [onclick^="taAendern"]'); await seite.waitForTimeout(300);
+const dlg = await seite.evaluate(() => ({ notiz: $("taAeNotiz")?.value, info: $("taAeInfo")?.checked, text: $("taAeBlatt")?.textContent.replace(/\s+/g, " ") }));
+ok(dlg.info && /Klaus Bescheid geben/.test(dlg.text) && /Dienstplan Stand/.test(dlg.notiz), "Ändern-Fenster: Notiz vorbelegt, „Klaus Bescheid geben“ angehakt");
+await seite.evaluate(() => { $("taAeNotiz").value += "\n- Neuer Finger-Barcode-Reader\n- Seltene Nutzung der Club-App"; $("taAeHinweis").value = "Es sind noch zwei Punkte dazugekommen."; });
+if (B) { await seite.evaluate(() => document.querySelectorAll(".meldung").forEach((e) => e.remove())); await seite.screenshot({ path: B + "/ta-aendern.png" }); }
+await seite.click("#taAeOk"); await seite.waitForTimeout(800);
+const ae = await seite.evaluate(() => __aendern);
+ok(ae && ae.id === "A1" && ae.informieren === true && /Finger-Barcode-Reader/.test(ae.notiz) && ae.hinweis === "Es sind noch zwei Punkte dazugekommen.", "gespeichert mit Bescheid und Hinweis");
+const nachher = await seite.evaluate(() => [...document.querySelectorAll("#ta-A1 .ta-to-liste li span")].map((x) => x.textContent));
+ok(nachher.includes("Neuer Finger-Barcode-Reader") && nachher.includes("Seltene Nutzung der Club-App"), "neue Punkte stehen in der Tagesordnung: " + nachher.join(" · "));
+const fremd = (await seite.evaluate(() => __api)).filter((a) => a !== "terminanfrage_aendern" && !/^(terminanfragen_liste|terminanfrage_gelesen|unterhaltungen|spur_melden|start_melden|init|countdowns|treffen|treffen_liste|privattermine|todo_liste|terminfindung_liste|terminumfragen|terminumfragen_liste|privattermine_liste|einstellung_setzen)$/.test(a));
 ok(!fremd.length, "nichts an den Server gespeichert" + (fremd.length ? " – " + fremd.join(",") : ""));
 ok(!fehler.filter((f) => !/tdt|unterhaltung/i.test(f)).length, "keine Fehler auf der Seite" + (fehler.length ? " – " + fehler.slice(0, 3).join(" | ") : ""));
 await browser.close(); srv.close();
