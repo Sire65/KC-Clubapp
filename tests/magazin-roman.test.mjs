@@ -226,7 +226,7 @@ console.log("magazin-roman Antworten Hansi: ok");
 { const r = MAG_AUSGABEN[18].roman, p = r.text.filter(([a]) => a === "p").map(([, t]) => t);
   assert.deepEqual(r.bilder.map((b) => b.wo), ["absatz:21", "absatz:34", "absatz:88"]); assert.ok(p[87].startsWith("Henrik legte ihr den Arm") && p[20].startsWith("Zur Belohnung schickte Jonas ihn an den Nebenposten")); assert.equal(p[33], "Lena hatte Ralle noch nie lachen sehen. Nicht so.");
   assert.ok(!/Kinderklinik|krank/i.test(r.bilder[0].alt), "Bildtext verrät nichts über Emmas Krankheit"); }
-assert.deepEqual(MAG_AUSGABEN[19].roman.bilder.map((b) => b.wo), ["h:Was Luca sah"]);
+assert.deepEqual(MAG_AUSGABEN[19].roman.bilder.map((b) => b.wo), ["absatz:12", "h:Was Luca sah"]); assert.ok(MAG_AUSGABEN[19].roman.text.filter(([a]) => a === "p")[11][1].startsWith("Am Dienstag gingen sie noch einmal den Bach hinauf"), "Pättken-Bild am Bachweg");
 console.log("magazin-roman Staffel-2-Bilder: ok");
 // Antworten Hansi 12.11.2026: Louis Bertram – gesiezt „Herr Bertram“ (Hollmann duzt: „Louis“, französisch); Martinsgänse: vierzehn auf sieben Blechen; Zwischenprüfung bleibt
 { const t = (n) => JSON.stringify(MAG_AUSGABEN[n].roman.text);
