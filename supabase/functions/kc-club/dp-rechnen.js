@@ -27,7 +27,11 @@ const vgl = (a, b) => (a < b ? -1 : a > b ? 1 : 0); // wie Pythons sorted() für
 // bekommt auch keine Bereitschaft, die kürzer ist als sein Mindestdienst – dann ist der/die Nächste in der Reihe dran.
 // 2.789.0 (Wunsch Hansi „Willfried Bereitschaft 06.12. 14–19, 08.12. 20–23, 09.12. 20–23“): bereitschaftFest [{ d, name, von, bis }] steht fest im Plan,
 // die automatische Bereitschaft kommt dazu (nicht für dieselbe Person am selben Tag).
-export const DP_REGEL = 7;
+// 2.936.0 KC-CLUB-DP-WUNSCH-ZUERST (Wunsch Hansi „Wunschzeiten der Leute ausreizen, nicht unbedingt weniger Stunden geben – wer 47 Std. wünscht,
+// bekommt sie; bei Überbesetzung bei dem streichen, der viel hat“): wunschZuerst – zuerst bekommt jeder an jedem Tag seinen Wunschblock (im Bedarf,
+// höchstens max/maxDienst Std.), dann werden überbesetzte Ränder bei dem gekürzt, der insgesamt die meisten Wunschstunden hat, dann füllt die
+// bisherige Rechnung die Lücken mit Kann-Zeiten. Sperren, Ruhetag nach maxTageAmStueck, maxGesamt und „nur mit anderen“ gelten weiter.
+export const DP_REGEL = 8;
 
 export function dpRechnen(e) {
   const MAXLEN = e.max ?? 8, FAIR = e.fair ?? 1.5, LO = e.von ?? 8, HI = e.bis ?? 23, DECKEL = e.wunschDeckel !== false, ANTEIL = Number.isFinite(e.wunschAnteil) ? e.wunschAnteil : 0.5;
@@ -70,8 +74,36 @@ export function dpRechnen(e) {
   const vortag = (d, n) => { const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() - n); return x.toISOString().slice(0, 10); };
   const ruhetag = (n, d) => { const t = tageVon.get(n); if (!t || MAXTAGE === Infinity) return false; for (let i = 1; i <= MAXTAGE; i++) if (!t.has(vortag(d, i))) return false; return true; };
   const hours = new Map(), plan = new Map(), gapsJe = new Map();
+  const WZ = e.wunschZuerst === true, wBlock = new Map(), wSumme = new Map(); // Wunschblock je (Person, Tag) und geplante Wunschstunden je Person
+  if (WZ) for (const [k, m] of av) {
+    const [n, d] = k.split("\u0000"), need = dem.get(d); if (!need) continue;
+    const L = lim(n), ss = [...m.keys()].filter((s) => m.get(s)[0] === 3 && need.has(s) && need.get(s)[0] > 0).sort((a, b) => a - b), bl = []; let cur = null;
+    for (const s of ss) { if (cur && Math.abs(cur[1] - s) < 1e-9) cur[1] = s + H; else bl.push(cur = [s, s + H]); }
+    const b = bl.sort((x, y) => (y[1] - y[0]) - (x[1] - x[0]) || x[0] - y[0])[0]; if (!b || L.begleitet) continue;
+    const len = Math.min(b[1] - b[0], MAXLEN, L.maxDienst); if (len < Math.max(H, L.minDienst) - 1e-9) continue;
+    wBlock.set(k, [b[0], b[0] + len]); wSumme.set(n, (wSumme.get(n) || 0) + len);
+  }
   for (const d of [...dem.keys()].sort(vgl)) {
     const need = dem.get(d), staff = new Map([...need.keys()].map((s) => [s, []])), used = new Set(), liste = [];
+    if (WZ) { // 1. jeder bekommt seinen Wunschblock
+      // wer insgesamt weniger Wunschstunden hat, kommt zuerst; wer mehr hat, bekommt den Teil seines Wunschblocks, in dem noch jemand fehlt
+      for (const n of [...people].sort((x, y) => (wSumme.get(x) || 0) - (wSumme.get(y) || 0) || vgl(x, y))) {
+        const b = wBlock.get(k2(n, d)), L = lim(n); if (!b || ruhetag(n, d)) continue; const mind = Math.max(2, L.minDienst);
+        let best = null, cur = null; for (const s of slots(b[0], b[1])) { if (staff.get(s).length < need.get(s)[0]) { if (cur) cur[1] = s + H; else cur = [s, s + H]; if (!best || cur[1] - cur[0] > best[1] - best[0]) best = [...cur]; } else cur = null; }
+        if (!best) continue; if (best[1] - best[0] < mind - 1e-9) { best = [best[0], Math.min(b[1], best[0] + mind)]; if (best[1] - best[0] < mind - 1e-9) best = [Math.max(b[0], best[1] - mind), best[1]]; } // mind. 2 Std., notfalls etwas über den Bedarf
+        const len = Math.min(best[1] - best[0], L.maxGesamt - (hours.get(n) || 0)); if (len < mind - 1e-9) continue;
+        used.add(n); liste.push([n, best[0], best[0] + len]); hours.set(n, (hours.get(n) || 0) + len); for (const s of slots(best[0], best[0] + len)) staff.get(s)?.push(n); }
+      // 2. Überbesetzung: Ränder bei dem kürzen, der insgesamt die meisten Wunschstunden hat (Dienst bleibt mind. 2 Std.), ganz überzählige Dienste streichen
+      const ueber = (s) => !need.has(s) || staff.get(s).length > need.get(s)[0], weg = (n, s) => { if (staff.has(s)) staff.set(s, staff.get(s).filter((x) => x !== n)); };
+      for (let r = 0; r < 400; r++) {
+        const kand = liste.filter((z) => !z.fest && (ueber(z[1]) || ueber(z[2] - H))).sort((x, y) => (wSumme.get(y[0]) || 0) - (wSumme.get(x[0]) || 0) || (hours.get(y[0]) || 0) - (hours.get(x[0]) || 0) || vgl(x[0], y[0]));
+        const z = kand[0]; if (!z) break; const mind = Math.max(2, lim(z[0]).minDienst);
+        if (slots(z[1], z[2]).every(ueber)) { for (const s of slots(z[1], z[2])) weg(z[0], s); hours.set(z[0], hours.get(z[0]) - (z[2] - z[1])); wSumme.set(z[0], (wSumme.get(z[0]) || 0) - (z[2] - z[1])); liste.splice(liste.indexOf(z), 1); used.delete(z[0]); continue; }
+        if (z[2] - z[1] - H < mind - 1e-9) { z.fest = true; continue; } // kürzer geht nicht – bleibt
+        const vorn = ueber(z[1]), s = vorn ? z[1] : z[2] - H; weg(z[0], s); hours.set(z[0], hours.get(z[0]) - H); wSumme.set(z[0], (wSumme.get(z[0]) || 0) - H);
+        if (vorn) z[1] += H; else z[2] -= H;
+      }
+    }
     const zoneOf = (x, s) => av.get(k2(x, d)).get(s)[1];
     const gain = (n, a, b) => {
       let sc = 0;
